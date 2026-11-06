@@ -210,5 +210,4 @@ Todas as regras de comissão e bônus serão **configuráveis pelos donos**, com
 2. **Portal da nota:** qual portal o dono usa para emitir (o da Secretaria da Fazenda do estado, outro emissor gratuito, outro sistema)? E qual tipo de nota sai: de consumidor (NFC-e) ou a nota "completa" (NF-e)?
 3. **Contador:** a empresa tem um contador que faz a contabilidade e os impostos? Ele precisará validar a configuração fiscal antes da automação.
 4. **Financeiras:** a financeira repassa à loja exatamente o valor do aparelho menos a entrada, ou desconta alguma taxa da loja? Em quantos dias?
-5. **Assistência:** hoje o conserto é feito na própria loja pelo vendedor, ou existe um técnico/local central que recebe os aparelhos das lojas?
-6. **Nogle:** a documentação pede, no login da API, uma chave de um destes três tipos: **franquia**, **marca/MVNO** ou **PDV**. No ERP da Nogle, em qual dessas áreas a chave de API da Ora foi gerada? (Responder só a área, nunca a chave.)
+5. **Nogle:** a documentação pede, no login da API, uma chave de um destes três tipos: **franquia**, **marca/MVNO** ou **PDV**. No ERP da Nogle, em qual dessas áreas a chave de API da Ora foi gerada? (Responder só a área, nunca a chave.)
