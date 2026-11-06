@@ -1,0 +1,3275 @@
+{
+  "generated_date": "2026-11-05",
+  "status": "initial-planning-only",
+  "requirements_count": 172,
+  "items": [
+    {
+      "id": "ORA-ORG-001",
+      "domain": "ORG",
+      "module": "Organização, lojas e usuários",
+      "priority": "P0",
+      "stage": 1,
+      "requirement": "Cadastrar empresa, organização, 14 lojas e loja piloto",
+      "acceptance": "Usuários autorizados selecionam unidade; IDs e dados fiscais coerentes.",
+      "status": "planned-not-implemented",
+      "implementer": "Claude Code / Codex (definir por issue)",
+      "reviewer": "outro agente + aceite humano quando crítico",
+      "implementation_files": [],
+      "test_evidence": [],
+      "issue_url": null,
+      "pr_url": null,
+      "dependencies": [
+        "Verificar regras de negócio e critérios de aceite do domínio"
+      ]
+    },
+    {
+      "id": "ORA-ORG-002",
+      "domain": "ORG",
+      "module": "Organização, lojas e usuários",
+      "priority": "P0",
+      "stage": 1,
+      "requirement": "Associar usuários a uma ou múltiplas lojas com função e vigência",
+      "acceptance": "Bloqueio testado para loja sem vínculo.",
+      "status": "planned-not-implemented",
+      "implementer": "Claude Code / Codex (definir por issue)",
+      "reviewer": "outro agente + aceite humano quando crítico",
+      "implementation_files": [],
+      "test_evidence": [],
+      "issue_url": null,
+      "pr_url": null,
+      "dependencies": [
+        "Verificar regras de negócio e critérios de aceite do domínio"
+      ]
+    },
+    {
+      "id": "ORA-ORG-003",
+      "domain": "ORG",
+      "module": "Organização, lojas e usuários",
+      "priority": "P0",
+      "stage": 1,
+      "requirement": "Gerir perfis diretoria, regional, gerente, vendedor, financeiro, fiscal, marketing e atendimento",
+      "acceptance": "Matriz de autorização versionada e auditada.",
+      "status": "planned-not-implemented",
+      "implementer": "Claude Code / Codex (definir por issue)",
+      "reviewer": "outro agente + aceite humano quando crítico",
+      "implementation_files": [],
+      "test_evidence": [],
+      "issue_url": null,
+      "pr_url": null,
+      "dependencies": [
+        "Verificar regras de negócio e critérios de aceite do domínio"
+      ]
+    },
+    {
+      "id": "ORA-ORG-004",
+      "domain": "ORG",
+      "module": "Organização, lojas e usuários",
+      "priority": "P0",
+      "stage": 1,
+      "requirement": "Isolar dados por loja na API e PostgreSQL/RLS",
+      "acceptance": "Testes de acesso cruzado e negação por ID arbitrário.",
+      "status": "planned-not-implemented",
+      "implementer": "Claude Code / Codex (definir por issue)",
+      "reviewer": "outro agente + aceite humano quando crítico",
+      "implementation_files": [],
+      "test_evidence": [],
+      "issue_url": null,
+      "pr_url": null,
+      "dependencies": [
+        "Verificar regras de negócio e critérios de aceite do domínio"
+      ]
+    },
+    {
+      "id": "ORA-ORG-005",
+      "domain": "ORG",
+      "module": "Organização, lojas e usuários",
+      "priority": "P0",
+      "stage": 1,
+      "requirement": "Histórico de alterações de papéis, políticas e configurações",
+      "acceptance": "Auditoria identifica ator, horário, alvo e motivo.",
+      "status": "planned-not-implemented",
+      "implementer": "Claude Code / Codex (definir por issue)",
+      "reviewer": "outro agente + aceite humano quando crítico",
+      "implementation_files": [],
+      "test_evidence": [],
+      "issue_url": null,
+      "pr_url": null,
+      "dependencies": [
+        "Verificar regras de negócio e critérios de aceite do domínio"
+      ]
+    },
+    {
+      "id": "ORA-ORG-006",
+      "domain": "ORG",
+      "module": "Organização, lojas e usuários",
+      "priority": "P0",
+      "stage": 1,
+      "requirement": "Login, recuperação de conta e revogação de sessão",
+      "acceptance": "Acessos revogados deixam de funcionar; mensagens neutras.",
+      "status": "planned-not-implemented",
+      "implementer": "Claude Code / Codex (definir por issue)",
+      "reviewer": "outro agente + aceite humano quando crítico",
+      "implementation_files": [],
+      "test_evidence": [],
+      "issue_url": null,
+      "pr_url": null,
+      "dependencies": [
+        "Verificar regras de negócio e critérios de aceite do domínio"
+      ]
+    },
+    {
+      "id": "ORA-ORG-007",
+      "domain": "ORG",
+      "module": "Organização, lojas e usuários",
+      "priority": "P1",
+      "stage": 1,
+      "requirement": "Autenticação reforçada para perfis privilegiados",
+      "acceptance": "MFA e política de sessão validados com segurança.",
+      "status": "planned-not-implemented",
+      "implementer": "Claude Code / Codex (definir por issue)",
+      "reviewer": "outro agente + aceite humano quando crítico",
+      "implementation_files": [],
+      "test_evidence": [],
+      "issue_url": null,
+      "pr_url": null,
+      "dependencies": [
+        "Verificar regras de negócio e critérios de aceite do domínio"
+      ]
+    },
+    {
+      "id": "ORA-ORG-008",
+      "domain": "ORG",
+      "module": "Organização, lojas e usuários",
+      "priority": "P1",
+      "stage": 1,
+      "requirement": "Configurar horários, endereços, caixas e dados fiscais por loja",
+      "acceptance": "Mudanças versionadas com regras de vigência.",
+      "status": "planned-not-implemented",
+      "implementer": "Claude Code / Codex (definir por issue)",
+      "reviewer": "outro agente + aceite humano quando crítico",
+      "implementation_files": [],
+      "test_evidence": [],
+      "issue_url": null,
+      "pr_url": null,
+      "dependencies": [
+        "Verificar regras de negócio e critérios de aceite do domínio"
+      ]
+    },
+    {
+      "id": "ORA-ORG-009",
+      "domain": "ORG",
+      "module": "Organização, lojas e usuários",
+      "priority": "P1",
+      "stage": 1,
+      "requirement": "Gerir unidades regionais, grupos e metas agregadas",
+      "acceptance": "Relatórios respeitam hierarquia de acesso.",
+      "status": "planned-not-implemented",
+      "implementer": "Claude Code / Codex (definir por issue)",
+      "reviewer": "outro agente + aceite humano quando crítico",
+      "implementation_files": [],
+      "test_evidence": [],
+      "issue_url": null,
+      "pr_url": null,
+      "dependencies": [
+        "Verificar regras de negócio e critérios de aceite do domínio"
+      ]
+    },
+    {
+      "id": "ORA-ORG-010",
+      "domain": "ORG",
+      "module": "Organização, lojas e usuários",
+      "priority": "P2",
+      "stage": 1,
+      "requirement": "Preparar multi-CNPJ/UF para expansão física nacional",
+      "acceptance": "Vínculos fiscais e locais operam sem dados globais hard-coded.",
+      "status": "planned-not-implemented",
+      "implementer": "Claude Code / Codex (definir por issue)",
+      "reviewer": "outro agente + aceite humano quando crítico",
+      "implementation_files": [],
+      "test_evidence": [],
+      "issue_url": null,
+      "pr_url": null,
+      "dependencies": [
+        "Verificar regras de negócio e critérios de aceite do domínio"
+      ]
+    },
+    {
+      "id": "ORA-CAT-001",
+      "domain": "CAT",
+      "module": "Catálogo e precificação",
+      "priority": "P0",
+      "stage": 2,
+      "requirement": "Cadastrar categorias, marcas, produtos, variantes e SKUs",
+      "acceptance": "SKU interno identificado e único no escopo definido.",
+      "status": "planned-not-implemented",
+      "implementer": "Claude Code / Codex (definir por issue)",
+      "reviewer": "outro agente + aceite humano quando crítico",
+      "implementation_files": [],
+      "test_evidence": [],
+      "issue_url": null,
+      "pr_url": null,
+      "dependencies": [
+        "Verificar regras de negócio e critérios de aceite do domínio"
+      ]
+    },
+    {
+      "id": "ORA-CAT-002",
+      "domain": "CAT",
+      "module": "Catálogo e precificação",
+      "priority": "P0",
+      "stage": 2,
+      "requirement": "Importar produtos e preços da Rein somente por CSV/XLSX",
+      "acceptance": "Prévia, validação, relatório de erro, confirmação e rollback lógico.",
+      "status": "planned-not-implemented",
+      "implementer": "Claude Code / Codex (definir por issue)",
+      "reviewer": "outro agente + aceite humano quando crítico",
+      "implementation_files": [],
+      "test_evidence": [],
+      "issue_url": null,
+      "pr_url": null,
+      "dependencies": [
+        "Verificar regras de negócio e critérios de aceite do domínio"
+      ]
+    },
+    {
+      "id": "ORA-CAT-003",
+      "domain": "CAT",
+      "module": "Catálogo e precificação",
+      "priority": "P0",
+      "stage": 2,
+      "requirement": "Não consumir API Rein em nenhuma operação diária",
+      "acceptance": "Nenhum módulo de runtime depende de rede/credencial Rein.",
+      "status": "planned-not-implemented",
+      "implementer": "Claude Code / Codex (definir por issue)",
+      "reviewer": "outro agente + aceite humano quando crítico",
+      "implementation_files": [],
+      "test_evidence": [],
+      "issue_url": null,
+      "pr_url": null,
+      "dependencies": [
+        "Verificar regras de negócio e critérios de aceite do domínio"
+      ]
+    },
+    {
+      "id": "ORA-CAT-004",
+      "domain": "CAT",
+      "module": "Catálogo e precificação",
+      "priority": "P0",
+      "stage": 2,
+      "requirement": "Cadastrar preços vigentes por loja/canal conforme regra",
+      "acceptance": "Preço final tem origem explicável e histórico.",
+      "status": "planned-not-implemented",
+      "implementer": "Claude Code / Codex (definir por issue)",
+      "reviewer": "outro agente + aceite humano quando crítico",
+      "implementation_files": [],
+      "test_evidence": [],
+      "issue_url": null,
+      "pr_url": null,
+      "dependencies": [
+        "Verificar regras de negócio e critérios de aceite do domínio"
+      ]
+    },
+    {
+      "id": "ORA-CAT-005",
+      "domain": "CAT",
+      "module": "Catálogo e precificação",
+      "priority": "P0",
+      "stage": 2,
+      "requirement": "Diferenciar smartphone, acessório, chip e serviço comercial",
+      "acceptance": "Tipos exigem campos apropriados sem tabelas isoladas de venda.",
+      "status": "planned-not-implemented",
+      "implementer": "Claude Code / Codex (definir por issue)",
+      "reviewer": "outro agente + aceite humano quando crítico",
+      "implementation_files": [],
+      "test_evidence": [],
+      "issue_url": null,
+      "pr_url": null,
+      "dependencies": [
+        "Verificar regras de negócio e critérios de aceite do domínio"
+      ]
+    },
+    {
+      "id": "ORA-CAT-006",
+      "domain": "CAT",
+      "module": "Catálogo e precificação",
+      "priority": "P0",
+      "stage": 2,
+      "requirement": "Pesquisar por nome, SKU e, quando aplicável, IMEI/ICCID",
+      "acceptance": "Busca rápida funciona no celular sem leitor.",
+      "status": "planned-not-implemented",
+      "implementer": "Claude Code / Codex (definir por issue)",
+      "reviewer": "outro agente + aceite humano quando crítico",
+      "implementation_files": [],
+      "test_evidence": [],
+      "issue_url": null,
+      "pr_url": null,
+      "dependencies": [
+        "Verificar regras de negócio e critérios de aceite do domínio"
+      ]
+    },
+    {
+      "id": "ORA-CAT-007",
+      "domain": "CAT",
+      "module": "Catálogo e precificação",
+      "priority": "P1",
+      "stage": 2,
+      "requirement": "Programar vigência de promoções e campanhas comerciais",
+      "acceptance": "Preço aplicado respeita período e autorização.",
+      "status": "planned-not-implemented",
+      "implementer": "Claude Code / Codex (definir por issue)",
+      "reviewer": "outro agente + aceite humano quando crítico",
+      "implementation_files": [],
+      "test_evidence": [],
+      "issue_url": null,
+      "pr_url": null,
+      "dependencies": [
+        "Verificar regras de negócio e critérios de aceite do domínio"
+      ]
+    },
+    {
+      "id": "ORA-CAT-008",
+      "domain": "CAT",
+      "module": "Catálogo e precificação",
+      "priority": "P1",
+      "stage": 2,
+      "requirement": "Custo de produto/lote/entrada e margem gerencial",
+      "acceptance": "Custo histórico de venda não muda retroativamente.",
+      "status": "planned-not-implemented",
+      "implementer": "Claude Code / Codex (definir por issue)",
+      "reviewer": "outro agente + aceite humano quando crítico",
+      "implementation_files": [],
+      "test_evidence": [],
+      "issue_url": null,
+      "pr_url": null,
+      "dependencies": [
+        "Verificar regras de negócio e critérios de aceite do domínio"
+      ]
+    },
+    {
+      "id": "ORA-CAT-009",
+      "domain": "CAT",
+      "module": "Catálogo e precificação",
+      "priority": "P1",
+      "stage": 2,
+      "requirement": "Canais externos usam mapeamento de SKU e IDs próprios",
+      "acceptance": "Identificadores externos não substituem PK interna.",
+      "status": "planned-not-implemented",
+      "implementer": "Claude Code / Codex (definir por issue)",
+      "reviewer": "outro agente + aceite humano quando crítico",
+      "implementation_files": [],
+      "test_evidence": [],
+      "issue_url": null,
+      "pr_url": null,
+      "dependencies": [
+        "Verificar regras de negócio e critérios de aceite do domínio"
+      ]
+    },
+    {
+      "id": "ORA-CAT-010",
+      "domain": "CAT",
+      "module": "Catálogo e precificação",
+      "priority": "P2",
+      "stage": 2,
+      "requirement": "Permitir importação assistida em lote de fotos/atributos",
+      "acceptance": "Erros não criam duplicatas nem sobrescritas silenciosas.",
+      "status": "planned-not-implemented",
+      "implementer": "Claude Code / Codex (definir por issue)",
+      "reviewer": "outro agente + aceite humano quando crítico",
+      "implementation_files": [],
+      "test_evidence": [],
+      "issue_url": null,
+      "pr_url": null,
+      "dependencies": [
+        "Verificar regras de negócio e critérios de aceite do domínio"
+      ]
+    },
+    {
+      "id": "ORA-INV-001",
+      "domain": "INV",
+      "module": "Estoque, serial/IMEI e suprimentos",
+      "priority": "P0",
+      "stage": 3,
+      "requirement": "Manter disponibilidade por loja e localização física",
+      "acceptance": "Reserva/venda nunca usa saldo de outra loja sem transferência.",
+      "status": "planned-not-implemented",
+      "implementer": "Claude Code / Codex (definir por issue)",
+      "reviewer": "outro agente + aceite humano quando crítico",
+      "implementation_files": [],
+      "test_evidence": [],
+      "issue_url": null,
+      "pr_url": null,
+      "dependencies": [
+        "Verificar regras de negócio e critérios de aceite do domínio"
+      ]
+    },
+    {
+      "id": "ORA-INV-002",
+      "domain": "INV",
+      "module": "Estoque, serial/IMEI e suprimentos",
+      "priority": "P0",
+      "stage": 3,
+      "requirement": "Identificar aparelho por IMEI/serial e impedir venda duplicada",
+      "acceptance": "Concorrência e unique indexes bloqueiam duplicidade.",
+      "status": "planned-not-implemented",
+      "implementer": "Claude Code / Codex (definir por issue)",
+      "reviewer": "outro agente + aceite humano quando crítico",
+      "implementation_files": [],
+      "test_evidence": [],
+      "issue_url": null,
+      "pr_url": null,
+      "dependencies": [
+        "Verificar regras de negócio e critérios de aceite do domínio"
+      ]
+    },
+    {
+      "id": "ORA-INV-003",
+      "domain": "INV",
+      "module": "Estoque, serial/IMEI e suprimentos",
+      "priority": "P0",
+      "stage": 3,
+      "requirement": "Registrar cada entrada/saída em livro auditável de estoque",
+      "acceptance": "Saldo reconciliável com movimentos e motivos.",
+      "status": "planned-not-implemented",
+      "implementer": "Claude Code / Codex (definir por issue)",
+      "reviewer": "outro agente + aceite humano quando crítico",
+      "implementation_files": [],
+      "test_evidence": [],
+      "issue_url": null,
+      "pr_url": null,
+      "dependencies": [
+        "Verificar regras de negócio e critérios de aceite do domínio"
+      ]
+    },
+    {
+      "id": "ORA-INV-004",
+      "domain": "INV",
+      "module": "Estoque, serial/IMEI e suprimentos",
+      "priority": "P0",
+      "stage": 3,
+      "requirement": "Receber estoque inicial validado por contagem real",
+      "acceptance": "Divergências e aprovadores ficam registrados.",
+      "status": "planned-not-implemented",
+      "implementer": "Claude Code / Codex (definir por issue)",
+      "reviewer": "outro agente + aceite humano quando crítico",
+      "implementation_files": [],
+      "test_evidence": [],
+      "issue_url": null,
+      "pr_url": null,
+      "dependencies": [
+        "Verificar regras de negócio e critérios de aceite do domínio"
+      ]
+    },
+    {
+      "id": "ORA-INV-005",
+      "domain": "INV",
+      "module": "Estoque, serial/IMEI e suprimentos",
+      "priority": "P0",
+      "stage": 3,
+      "requirement": "Reservar estoque durante checkout e liberar em expiração/cancelamento",
+      "acceptance": "Concorrência entre caixas e canais não vende duas vezes.",
+      "status": "planned-not-implemented",
+      "implementer": "Claude Code / Codex (definir por issue)",
+      "reviewer": "outro agente + aceite humano quando crítico",
+      "implementation_files": [],
+      "test_evidence": [],
+      "issue_url": null,
+      "pr_url": null,
+      "dependencies": [
+        "Verificar regras de negócio e critérios de aceite do domínio"
+      ]
+    },
+    {
+      "id": "ORA-INV-006",
+      "domain": "INV",
+      "module": "Estoque, serial/IMEI e suprimentos",
+      "priority": "P0",
+      "stage": 3,
+      "requirement": "Bloquear venda de IMEI indisponível/transferido/reservado",
+      "acceptance": "Mensagem operacional clara e sem mutações parciais.",
+      "status": "planned-not-implemented",
+      "implementer": "Claude Code / Codex (definir por issue)",
+      "reviewer": "outro agente + aceite humano quando crítico",
+      "implementation_files": [],
+      "test_evidence": [],
+      "issue_url": null,
+      "pr_url": null,
+      "dependencies": [
+        "Verificar regras de negócio e critérios de aceite do domínio"
+      ]
+    },
+    {
+      "id": "ORA-INV-007",
+      "domain": "INV",
+      "module": "Estoque, serial/IMEI e suprimentos",
+      "priority": "P1",
+      "stage": 3,
+      "requirement": "Transferência entre lojas com trânsito/recebimento",
+      "acceptance": "Origem e destino confirmam quantidades e divergências.",
+      "status": "planned-not-implemented",
+      "implementer": "Claude Code / Codex (definir por issue)",
+      "reviewer": "outro agente + aceite humano quando crítico",
+      "implementation_files": [],
+      "test_evidence": [],
+      "issue_url": null,
+      "pr_url": null,
+      "dependencies": [
+        "Verificar regras de negócio e critérios de aceite do domínio"
+      ]
+    },
+    {
+      "id": "ORA-INV-008",
+      "domain": "INV",
+      "module": "Estoque, serial/IMEI e suprimentos",
+      "priority": "P1",
+      "stage": 3,
+      "requirement": "Inventário cíclico e ajuste com aprovação",
+      "acceptance": "Trilha permite reconstruir antes/depois e justificativa.",
+      "status": "planned-not-implemented",
+      "implementer": "Claude Code / Codex (definir por issue)",
+      "reviewer": "outro agente + aceite humano quando crítico",
+      "implementation_files": [],
+      "test_evidence": [],
+      "issue_url": null,
+      "pr_url": null,
+      "dependencies": [
+        "Verificar regras de negócio e critérios de aceite do domínio"
+      ]
+    },
+    {
+      "id": "ORA-INV-009",
+      "domain": "INV",
+      "module": "Estoque, serial/IMEI e suprimentos",
+      "priority": "P1",
+      "stage": 3,
+      "requirement": "Compras e recebimento de fornecedores",
+      "acceptance": "Pedido, nota/entrega, custo e entrada identificáveis.",
+      "status": "planned-not-implemented",
+      "implementer": "Claude Code / Codex (definir por issue)",
+      "reviewer": "outro agente + aceite humano quando crítico",
+      "implementation_files": [],
+      "test_evidence": [],
+      "issue_url": null,
+      "pr_url": null,
+      "dependencies": [
+        "Verificar regras de negócio e critérios de aceite do domínio"
+      ]
+    },
+    {
+      "id": "ORA-INV-010",
+      "domain": "INV",
+      "module": "Estoque, serial/IMEI e suprimentos",
+      "priority": "P1",
+      "stage": 3,
+      "requirement": "Histórico de reparo/devolução e condição de unidade",
+      "acceptance": "Produto retornado não reaparece automaticamente como novo.",
+      "status": "planned-not-implemented",
+      "implementer": "Claude Code / Codex (definir por issue)",
+      "reviewer": "outro agente + aceite humano quando crítico",
+      "implementation_files": [],
+      "test_evidence": [],
+      "issue_url": null,
+      "pr_url": null,
+      "dependencies": [
+        "Verificar regras de negócio e critérios de aceite do domínio"
+      ]
+    },
+    {
+      "id": "ORA-INV-011",
+      "domain": "INV",
+      "module": "Estoque, serial/IMEI e suprimentos",
+      "priority": "P1",
+      "stage": 3,
+      "requirement": "Controle de ICCID de chip físico quando exigido",
+      "acceptance": "ICCID não é atribuído a duas ativações incompatíveis.",
+      "status": "planned-not-implemented",
+      "implementer": "Claude Code / Codex (definir por issue)",
+      "reviewer": "outro agente + aceite humano quando crítico",
+      "implementation_files": [],
+      "test_evidence": [],
+      "issue_url": null,
+      "pr_url": null,
+      "dependencies": [
+        "Verificar regras de negócio e critérios de aceite do domínio"
+      ]
+    },
+    {
+      "id": "ORA-INV-012",
+      "domain": "INV",
+      "module": "Estoque, serial/IMEI e suprimentos",
+      "priority": "P2",
+      "stage": 3,
+      "requirement": "Transferência para CD e alocação futura a canais nacionais",
+      "acceptance": "Apropriação de localização e logística auditável.",
+      "status": "planned-not-implemented",
+      "implementer": "Claude Code / Codex (definir por issue)",
+      "reviewer": "outro agente + aceite humano quando crítico",
+      "implementation_files": [],
+      "test_evidence": [],
+      "issue_url": null,
+      "pr_url": null,
+      "dependencies": [
+        "Verificar regras de negócio e critérios de aceite do domínio"
+      ]
+    },
+    {
+      "id": "ORA-CRM-001",
+      "domain": "CRM",
+      "module": "Clientes, CRM, oportunidades e contratos",
+      "priority": "P0",
+      "stage": 4,
+      "requirement": "Cadastro de cliente com dados mínimos e finalidade",
+      "acceptance": "Dados obrigatórios dependem da operação; LGPD documentada.",
+      "status": "planned-not-implemented",
+      "implementer": "Claude Code / Codex (definir por issue)",
+      "reviewer": "outro agente + aceite humano quando crítico",
+      "implementation_files": [],
+      "test_evidence": [],
+      "issue_url": null,
+      "pr_url": null,
+      "dependencies": [
+        "Verificar regras de negócio e critérios de aceite do domínio"
+      ]
+    },
+    {
+      "id": "ORA-CRM-002",
+      "domain": "CRM",
+      "module": "Clientes, CRM, oportunidades e contratos",
+      "priority": "P0",
+      "stage": 4,
+      "requirement": "Relacionar cliente às compras/IMEIs/chips/linhas e atendimentos",
+      "acceptance": "Perfil 360 apresenta histórico autorizado por loja/função.",
+      "status": "planned-not-implemented",
+      "implementer": "Claude Code / Codex (definir por issue)",
+      "reviewer": "outro agente + aceite humano quando crítico",
+      "implementation_files": [],
+      "test_evidence": [],
+      "issue_url": null,
+      "pr_url": null,
+      "dependencies": [
+        "Verificar regras de negócio e critérios de aceite do domínio"
+      ]
+    },
+    {
+      "id": "ORA-CRM-003",
+      "domain": "CRM",
+      "module": "Clientes, CRM, oportunidades e contratos",
+      "priority": "P0",
+      "stage": 4,
+      "requirement": "Pesquisar cliente por identificadores protegidos",
+      "acceptance": "Resultados evitam expor CPF desnecessariamente.",
+      "status": "planned-not-implemented",
+      "implementer": "Claude Code / Codex (definir por issue)",
+      "reviewer": "outro agente + aceite humano quando crítico",
+      "implementation_files": [],
+      "test_evidence": [],
+      "issue_url": null,
+      "pr_url": null,
+      "dependencies": [
+        "Verificar regras de negócio e critérios de aceite do domínio"
+      ]
+    },
+    {
+      "id": "ORA-CRM-004",
+      "domain": "CRM",
+      "module": "Clientes, CRM, oportunidades e contratos",
+      "priority": "P0",
+      "stage": 4,
+      "requirement": "Registrar lead, origem, atendente, vendedor responsável e etapa",
+      "acceptance": "Funil mostra histórico e próximo passo.",
+      "status": "planned-not-implemented",
+      "implementer": "Claude Code / Codex (definir por issue)",
+      "reviewer": "outro agente + aceite humano quando crítico",
+      "implementation_files": [],
+      "test_evidence": [],
+      "issue_url": null,
+      "pr_url": null,
+      "dependencies": [
+        "Verificar regras de negócio e critérios de aceite do domínio"
+      ]
+    },
+    {
+      "id": "ORA-CRM-005",
+      "domain": "CRM",
+      "module": "Clientes, CRM, oportunidades e contratos",
+      "priority": "P1",
+      "stage": 4,
+      "requirement": "Atividades, lembretes, follow-up e motivos de perda",
+      "acceptance": "Histórico com autor e vencimento.",
+      "status": "planned-not-implemented",
+      "implementer": "Claude Code / Codex (definir por issue)",
+      "reviewer": "outro agente + aceite humano quando crítico",
+      "implementation_files": [],
+      "test_evidence": [],
+      "issue_url": null,
+      "pr_url": null,
+      "dependencies": [
+        "Verificar regras de negócio e critérios de aceite do domínio"
+      ]
+    },
+    {
+      "id": "ORA-CRM-006",
+      "domain": "CRM",
+      "module": "Clientes, CRM, oportunidades e contratos",
+      "priority": "P1",
+      "stage": 4,
+      "requirement": "Detecção e mesclagem controlada de cadastros duplicados",
+      "acceptance": "Não perde compras/documentos; operação auditável.",
+      "status": "planned-not-implemented",
+      "implementer": "Claude Code / Codex (definir por issue)",
+      "reviewer": "outro agente + aceite humano quando crítico",
+      "implementation_files": [],
+      "test_evidence": [],
+      "issue_url": null,
+      "pr_url": null,
+      "dependencies": [
+        "Verificar regras de negócio e critérios de aceite do domínio"
+      ]
+    },
+    {
+      "id": "ORA-CRM-007",
+      "domain": "CRM",
+      "module": "Clientes, CRM, oportunidades e contratos",
+      "priority": "P1",
+      "stage": 4,
+      "requirement": "Registros de consentimento/preferência de comunicação",
+      "acceptance": "Retirada afeta automações e respeita obrigações.",
+      "status": "planned-not-implemented",
+      "implementer": "Claude Code / Codex (definir por issue)",
+      "reviewer": "outro agente + aceite humano quando crítico",
+      "implementation_files": [],
+      "test_evidence": [],
+      "issue_url": null,
+      "pr_url": null,
+      "dependencies": [
+        "Verificar regras de negócio e critérios de aceite do domínio"
+      ]
+    },
+    {
+      "id": "ORA-CRM-008",
+      "domain": "CRM",
+      "module": "Clientes, CRM, oportunidades e contratos",
+      "priority": "P1",
+      "stage": 4,
+      "requirement": "Contratos/anexos de venda, garantia, financiamento e telecom",
+      "acceptance": "Acesso, assinatura, guarda e retenção adequados.",
+      "status": "planned-not-implemented",
+      "implementer": "Claude Code / Codex (definir por issue)",
+      "reviewer": "outro agente + aceite humano quando crítico",
+      "implementation_files": [],
+      "test_evidence": [],
+      "issue_url": null,
+      "pr_url": null,
+      "dependencies": [
+        "Verificar regras de negócio e critérios de aceite do domínio"
+      ]
+    },
+    {
+      "id": "ORA-CRM-009",
+      "domain": "CRM",
+      "module": "Clientes, CRM, oportunidades e contratos",
+      "priority": "P1",
+      "stage": 4,
+      "requirement": "Histórico omnichannel de compras físicas/online",
+      "acceptance": "Pedido externo e venda vinculados sem sobrescrever origem.",
+      "status": "planned-not-implemented",
+      "implementer": "Claude Code / Codex (definir por issue)",
+      "reviewer": "outro agente + aceite humano quando crítico",
+      "implementation_files": [],
+      "test_evidence": [],
+      "issue_url": null,
+      "pr_url": null,
+      "dependencies": [
+        "Verificar regras de negócio e critérios de aceite do domínio"
+      ]
+    },
+    {
+      "id": "ORA-CRM-010",
+      "domain": "CRM",
+      "module": "Clientes, CRM, oportunidades e contratos",
+      "priority": "P2",
+      "stage": 4,
+      "requirement": "Segmentação comercial e valor de vida do cliente",
+      "acceptance": "Segmentos minimizam dados e são explicáveis.",
+      "status": "planned-not-implemented",
+      "implementer": "Claude Code / Codex (definir por issue)",
+      "reviewer": "outro agente + aceite humano quando crítico",
+      "implementation_files": [],
+      "test_evidence": [],
+      "issue_url": null,
+      "pr_url": null,
+      "dependencies": [
+        "Verificar regras de negócio e critérios de aceite do domínio"
+      ]
+    },
+    {
+      "id": "ORA-POS-001",
+      "domain": "POS",
+      "module": "PDV mobile e vendas",
+      "priority": "P0",
+      "stage": 5,
+      "requirement": "Efetuar venda completa em celular sem notebook",
+      "acceptance": "E2E em smartphone real da loja piloto.",
+      "status": "planned-not-implemented",
+      "implementer": "Claude Code / Codex (definir por issue)",
+      "reviewer": "outro agente + aceite humano quando crítico",
+      "implementation_files": [],
+      "test_evidence": [],
+      "issue_url": null,
+      "pr_url": null,
+      "dependencies": [
+        "Verificar regras de negócio e critérios de aceite do domínio"
+      ]
+    },
+    {
+      "id": "ORA-POS-002",
+      "domain": "POS",
+      "module": "PDV mobile e vendas",
+      "priority": "P0",
+      "stage": 5,
+      "requirement": "Busca rápida por nome/SKU/IMEI e carrinho responsivo",
+      "acceptance": "Usabilidade e velocidade validadas com vendedor.",
+      "status": "planned-not-implemented",
+      "implementer": "Claude Code / Codex (definir por issue)",
+      "reviewer": "outro agente + aceite humano quando crítico",
+      "implementation_files": [],
+      "test_evidence": [],
+      "issue_url": null,
+      "pr_url": null,
+      "dependencies": [
+        "Verificar regras de negócio e critérios de aceite do domínio"
+      ]
+    },
+    {
+      "id": "ORA-POS-003",
+      "domain": "POS",
+      "module": "PDV mobile e vendas",
+      "priority": "P0",
+      "stage": 5,
+      "requirement": "Itens mistos em venda: aparelho, acessório, chip, ativação, recarga",
+      "acceptance": "Itens mantêm natureza e regras próprias sem dupla contabilização.",
+      "status": "planned-not-implemented",
+      "implementer": "Claude Code / Codex (definir por issue)",
+      "reviewer": "outro agente + aceite humano quando crítico",
+      "implementation_files": [],
+      "test_evidence": [],
+      "issue_url": null,
+      "pr_url": null,
+      "dependencies": [
+        "Verificar regras de negócio e critérios de aceite do domínio"
+      ]
+    },
+    {
+      "id": "ORA-POS-004",
+      "domain": "POS",
+      "module": "PDV mobile e vendas",
+      "priority": "P0",
+      "stage": 5,
+      "requirement": "Selecionar IMEI físico disponível antes de concluir",
+      "acceptance": "Reserva e baixa atomizadas no banco.",
+      "status": "planned-not-implemented",
+      "implementer": "Claude Code / Codex (definir por issue)",
+      "reviewer": "outro agente + aceite humano quando crítico",
+      "implementation_files": [],
+      "test_evidence": [],
+      "issue_url": null,
+      "pr_url": null,
+      "dependencies": [
+        "Verificar regras de negócio e critérios de aceite do domínio"
+      ]
+    },
+    {
+      "id": "ORA-POS-005",
+      "domain": "POS",
+      "module": "PDV mobile e vendas",
+      "priority": "P0",
+      "stage": 5,
+      "requirement": "Calcular preço/desconto e totais server-side",
+      "acceptance": "Cliente não consegue alterar preço enviado.",
+      "status": "planned-not-implemented",
+      "implementer": "Claude Code / Codex (definir por issue)",
+      "reviewer": "outro agente + aceite humano quando crítico",
+      "implementation_files": [],
+      "test_evidence": [],
+      "issue_url": null,
+      "pr_url": null,
+      "dependencies": [
+        "Verificar regras de negócio e critérios de aceite do domínio"
+      ]
+    },
+    {
+      "id": "ORA-POS-006",
+      "domain": "POS",
+      "module": "PDV mobile e vendas",
+      "priority": "P0",
+      "stage": 5,
+      "requirement": "Solicitar aprovação do gerente para desconto acima do limite",
+      "acceptance": "Aprovador, limite, motivo, prazo e decisão auditáveis.",
+      "status": "planned-not-implemented",
+      "implementer": "Claude Code / Codex (definir por issue)",
+      "reviewer": "outro agente + aceite humano quando crítico",
+      "implementation_files": [],
+      "test_evidence": [],
+      "issue_url": null,
+      "pr_url": null,
+      "dependencies": [
+        "Verificar regras de negócio e critérios de aceite do domínio"
+      ]
+    },
+    {
+      "id": "ORA-POS-007",
+      "domain": "POS",
+      "module": "PDV mobile e vendas",
+      "priority": "P0",
+      "stage": 5,
+      "requirement": "Suportar múltiplos pagamentos na mesma venda",
+      "acceptance": "Soma, troco, confirmação e estorno consistentes.",
+      "status": "planned-not-implemented",
+      "implementer": "Claude Code / Codex (definir por issue)",
+      "reviewer": "outro agente + aceite humano quando crítico",
+      "implementation_files": [],
+      "test_evidence": [],
+      "issue_url": null,
+      "pr_url": null,
+      "dependencies": [
+        "Verificar regras de negócio e critérios de aceite do domínio"
+      ]
+    },
+    {
+      "id": "ORA-POS-008",
+      "domain": "POS",
+      "module": "PDV mobile e vendas",
+      "priority": "P0",
+      "stage": 5,
+      "requirement": "Vincular venda a vendedor, loja, cliente quando aplicável e canal",
+      "acceptance": "Atribuição preservada em todas as consultas.",
+      "status": "planned-not-implemented",
+      "implementer": "Claude Code / Codex (definir por issue)",
+      "reviewer": "outro agente + aceite humano quando crítico",
+      "implementation_files": [],
+      "test_evidence": [],
+      "issue_url": null,
+      "pr_url": null,
+      "dependencies": [
+        "Verificar regras de negócio e critérios de aceite do domínio"
+      ]
+    },
+    {
+      "id": "ORA-POS-009",
+      "domain": "POS",
+      "module": "PDV mobile e vendas",
+      "priority": "P0",
+      "stage": 5,
+      "requirement": "Consultar status e comprovantes sem concluir pagamento pendente",
+      "acceptance": "Vendedor vê pendência e ação de reprocessamento segura.",
+      "status": "planned-not-implemented",
+      "implementer": "Claude Code / Codex (definir por issue)",
+      "reviewer": "outro agente + aceite humano quando crítico",
+      "implementation_files": [],
+      "test_evidence": [],
+      "issue_url": null,
+      "pr_url": null,
+      "dependencies": [
+        "Verificar regras de negócio e critérios de aceite do domínio"
+      ]
+    },
+    {
+      "id": "ORA-POS-010",
+      "domain": "POS",
+      "module": "PDV mobile e vendas",
+      "priority": "P0",
+      "stage": 5,
+      "requirement": "Cancelar e devolver sem apagar origem",
+      "acceptance": "Reversão reflexa em estoque, pagamentos, fiscal e comissões.",
+      "status": "planned-not-implemented",
+      "implementer": "Claude Code / Codex (definir por issue)",
+      "reviewer": "outro agente + aceite humano quando crítico",
+      "implementation_files": [],
+      "test_evidence": [],
+      "issue_url": null,
+      "pr_url": null,
+      "dependencies": [
+        "Verificar regras de negócio e critérios de aceite do domínio"
+      ]
+    },
+    {
+      "id": "ORA-POS-011",
+      "domain": "POS",
+      "module": "PDV mobile e vendas",
+      "priority": "P0",
+      "stage": 5,
+      "requirement": "Gerar solicitação fiscal a partir da venda em poucos toques",
+      "acceptance": "Vendedor não precisa escolher documento fiscal incorreto.",
+      "status": "planned-not-implemented",
+      "implementer": "Claude Code / Codex (definir por issue)",
+      "reviewer": "outro agente + aceite humano quando crítico",
+      "implementation_files": [],
+      "test_evidence": [],
+      "issue_url": null,
+      "pr_url": null,
+      "dependencies": [
+        "Verificar regras de negócio e critérios de aceite do domínio"
+      ]
+    },
+    {
+      "id": "ORA-POS-012",
+      "domain": "POS",
+      "module": "PDV mobile e vendas",
+      "priority": "P1",
+      "stage": 5,
+      "requirement": "Troca com diferença de preço e meios de pagamento",
+      "acceptance": "Histórico e estoque correto na devolução/saída.",
+      "status": "planned-not-implemented",
+      "implementer": "Claude Code / Codex (definir por issue)",
+      "reviewer": "outro agente + aceite humano quando crítico",
+      "implementation_files": [],
+      "test_evidence": [],
+      "issue_url": null,
+      "pr_url": null,
+      "dependencies": [
+        "Verificar regras de negócio e critérios de aceite do domínio"
+      ]
+    },
+    {
+      "id": "ORA-POS-013",
+      "domain": "POS",
+      "module": "PDV mobile e vendas",
+      "priority": "P1",
+      "stage": 5,
+      "requirement": "Venda parcelada/PayJoy/boleto por fluxo homologado",
+      "acceptance": "Etapas reais, aprovação e termos exigidos.",
+      "status": "planned-not-implemented",
+      "implementer": "Claude Code / Codex (definir por issue)",
+      "reviewer": "outro agente + aceite humano quando crítico",
+      "implementation_files": [],
+      "test_evidence": [],
+      "issue_url": null,
+      "pr_url": null,
+      "dependencies": [
+        "Verificar regras de negócio e critérios de aceite do domínio"
+      ]
+    },
+    {
+      "id": "ORA-POS-014",
+      "domain": "POS",
+      "module": "PDV mobile e vendas",
+      "priority": "P1",
+      "stage": 5,
+      "requirement": "Aplicar campanhas, combos e regras por loja",
+      "acceptance": "Persistência da regra aplicada para auditoria.",
+      "status": "planned-not-implemented",
+      "implementer": "Claude Code / Codex (definir por issue)",
+      "reviewer": "outro agente + aceite humano quando crítico",
+      "implementation_files": [],
+      "test_evidence": [],
+      "issue_url": null,
+      "pr_url": null,
+      "dependencies": [
+        "Verificar regras de negócio e critérios de aceite do domínio"
+      ]
+    },
+    {
+      "id": "ORA-POS-015",
+      "domain": "POS",
+      "module": "PDV mobile e vendas",
+      "priority": "P1",
+      "stage": 5,
+      "requirement": "Atalhos para supervisor e estados offline/sem rede",
+      "acceptance": "Sem venda presumida como concluída sem confirmação.",
+      "status": "planned-not-implemented",
+      "implementer": "Claude Code / Codex (definir por issue)",
+      "reviewer": "outro agente + aceite humano quando crítico",
+      "implementation_files": [],
+      "test_evidence": [],
+      "issue_url": null,
+      "pr_url": null,
+      "dependencies": [
+        "Verificar regras de negócio e critérios de aceite do domínio"
+      ]
+    },
+    {
+      "id": "ORA-POS-016",
+      "domain": "POS",
+      "module": "PDV mobile e vendas",
+      "priority": "P2",
+      "stage": 5,
+      "requirement": "Entrada por leitor USB/Bluetooth ou câmera",
+      "acceptance": "Sem mudança na regra central de busca/checkout.",
+      "status": "planned-not-implemented",
+      "implementer": "Claude Code / Codex (definir por issue)",
+      "reviewer": "outro agente + aceite humano quando crítico",
+      "implementation_files": [],
+      "test_evidence": [],
+      "issue_url": null,
+      "pr_url": null,
+      "dependencies": [
+        "Verificar regras de negócio e critérios de aceite do domínio"
+      ]
+    },
+    {
+      "id": "ORA-PAY-001",
+      "domain": "PAY",
+      "module": "Pagamentos, PicPay e caixa",
+      "priority": "P0",
+      "stage": 5,
+      "requirement": "Registrar dinheiro, Pix direto, Pix PicPay POS e cartões",
+      "acceptance": "Provider, terminal, método e comprovante quando disponível.",
+      "status": "planned-not-implemented",
+      "implementer": "Claude Code / Codex (definir por issue)",
+      "reviewer": "outro agente + aceite humano quando crítico",
+      "implementation_files": [],
+      "test_evidence": [],
+      "issue_url": null,
+      "pr_url": null,
+      "dependencies": [
+        "Verificar regras de negócio e critérios de aceite do domínio"
+      ]
+    },
+    {
+      "id": "ORA-PAY-002",
+      "domain": "PAY",
+      "module": "Pagamentos, PicPay e caixa",
+      "priority": "P0",
+      "stage": 5,
+      "requirement": "Suportar financiamento, boleto, parcelamento e pagamentos online",
+      "acceptance": "Estados e elegibilidade definidos por integração específica.",
+      "status": "planned-not-implemented",
+      "implementer": "Claude Code / Codex (definir por issue)",
+      "reviewer": "outro agente + aceite humano quando crítico",
+      "implementation_files": [],
+      "test_evidence": [],
+      "issue_url": null,
+      "pr_url": null,
+      "dependencies": [
+        "Verificar regras de negócio e critérios de aceite do domínio"
+      ]
+    },
+    {
+      "id": "ORA-PAY-003",
+      "domain": "PAY",
+      "module": "Pagamentos, PicPay e caixa",
+      "priority": "P0",
+      "stage": 5,
+      "requirement": "Diferenciar autorizado, pago, liquidado, estornado e conciliado",
+      "acceptance": "Relatórios não misturam venda com dinheiro recebido.",
+      "status": "planned-not-implemented",
+      "implementer": "Claude Code / Codex (definir por issue)",
+      "reviewer": "outro agente + aceite humano quando crítico",
+      "implementation_files": [],
+      "test_evidence": [],
+      "issue_url": null,
+      "pr_url": null,
+      "dependencies": [
+        "Verificar regras de negócio e critérios de aceite do domínio"
+      ]
+    },
+    {
+      "id": "ORA-PAY-004",
+      "domain": "PAY",
+      "module": "Pagamentos, PicPay e caixa",
+      "priority": "P0",
+      "stage": 5,
+      "requirement": "Abrir caixa com saldo inicial e responsável",
+      "acceptance": "Uma sessão ativa segundo regra por gaveta/terminal.",
+      "status": "planned-not-implemented",
+      "implementer": "Claude Code / Codex (definir por issue)",
+      "reviewer": "outro agente + aceite humano quando crítico",
+      "implementation_files": [],
+      "test_evidence": [],
+      "issue_url": null,
+      "pr_url": null,
+      "dependencies": [
+        "Verificar regras de negócio e critérios de aceite do domínio"
+      ]
+    },
+    {
+      "id": "ORA-PAY-005",
+      "domain": "PAY",
+      "module": "Pagamentos, PicPay e caixa",
+      "priority": "P0",
+      "stage": 5,
+      "requirement": "Registrar sangria, suprimento, reforço, devolução e saída autorizada",
+      "acceptance": "Cada movimento tem motivo, autor e impacto no saldo.",
+      "status": "planned-not-implemented",
+      "implementer": "Claude Code / Codex (definir por issue)",
+      "reviewer": "outro agente + aceite humano quando crítico",
+      "implementation_files": [],
+      "test_evidence": [],
+      "issue_url": null,
+      "pr_url": null,
+      "dependencies": [
+        "Verificar regras de negócio e critérios de aceite do domínio"
+      ]
+    },
+    {
+      "id": "ORA-PAY-006",
+      "domain": "PAY",
+      "module": "Pagamentos, PicPay e caixa",
+      "priority": "P0",
+      "stage": 5,
+      "requirement": "Fechar caixa com valor contado e diferença",
+      "acceptance": "Gerente confere e aprova divergência.",
+      "status": "planned-not-implemented",
+      "implementer": "Claude Code / Codex (definir por issue)",
+      "reviewer": "outro agente + aceite humano quando crítico",
+      "implementation_files": [],
+      "test_evidence": [],
+      "issue_url": null,
+      "pr_url": null,
+      "dependencies": [
+        "Verificar regras de negócio e critérios de aceite do domínio"
+      ]
+    },
+    {
+      "id": "ORA-PAY-007",
+      "domain": "PAY",
+      "module": "Pagamentos, PicPay e caixa",
+      "priority": "P0",
+      "stage": 5,
+      "requirement": "Conciliação manual PicPay POS usando referência/comprovante",
+      "acceptance": "Sem API não se presume liquidação automática.",
+      "status": "planned-not-implemented",
+      "implementer": "Claude Code / Codex (definir por issue)",
+      "reviewer": "outro agente + aceite humano quando crítico",
+      "implementation_files": [],
+      "test_evidence": [],
+      "issue_url": null,
+      "pr_url": null,
+      "dependencies": [
+        "Verificar regras de negócio e critérios de aceite do domínio"
+      ]
+    },
+    {
+      "id": "ORA-PAY-008",
+      "domain": "PAY",
+      "module": "Pagamentos, PicPay e caixa",
+      "priority": "P0",
+      "stage": 5,
+      "requirement": "Evitar confirmação duplicada via webhook/retry",
+      "acceptance": "Constraints de evento externo e idempotency key.",
+      "status": "planned-not-implemented",
+      "implementer": "Claude Code / Codex (definir por issue)",
+      "reviewer": "outro agente + aceite humano quando crítico",
+      "implementation_files": [],
+      "test_evidence": [],
+      "issue_url": null,
+      "pr_url": null,
+      "dependencies": [
+        "Verificar regras de negócio e critérios de aceite do domínio"
+      ]
+    },
+    {
+      "id": "ORA-PAY-009",
+      "domain": "PAY",
+      "module": "Pagamentos, PicPay e caixa",
+      "priority": "P1",
+      "stage": 5,
+      "requirement": "Importar extratos de adquirente/banco por arquivo validado",
+      "acceptance": "Linhas conciliadas, discrepâncias e taxas reportadas.",
+      "status": "planned-not-implemented",
+      "implementer": "Claude Code / Codex (definir por issue)",
+      "reviewer": "outro agente + aceite humano quando crítico",
+      "implementation_files": [],
+      "test_evidence": [],
+      "issue_url": null,
+      "pr_url": null,
+      "dependencies": [
+        "Verificar regras de negócio e critérios de aceite do domínio"
+      ]
+    },
+    {
+      "id": "ORA-PAY-010",
+      "domain": "PAY",
+      "module": "Pagamentos, PicPay e caixa",
+      "priority": "P1",
+      "stage": 5,
+      "requirement": "Reconciliar taxas, parcelas e datas de repasse",
+      "acceptance": "Venda bruta vs líquido recebido visíveis.",
+      "status": "planned-not-implemented",
+      "implementer": "Claude Code / Codex (definir por issue)",
+      "reviewer": "outro agente + aceite humano quando crítico",
+      "implementation_files": [],
+      "test_evidence": [],
+      "issue_url": null,
+      "pr_url": null,
+      "dependencies": [
+        "Verificar regras de negócio e critérios de aceite do domínio"
+      ]
+    },
+    {
+      "id": "ORA-PAY-011",
+      "domain": "PAY",
+      "module": "Pagamentos, PicPay e caixa",
+      "priority": "P1",
+      "stage": 5,
+      "requirement": "Gerir chargebacks, estornos, antecipação e ajustes",
+      "acceptance": "Efeito financeiro e comissão não duplicado.",
+      "status": "planned-not-implemented",
+      "implementer": "Claude Code / Codex (definir por issue)",
+      "reviewer": "outro agente + aceite humano quando crítico",
+      "implementation_files": [],
+      "test_evidence": [],
+      "issue_url": null,
+      "pr_url": null,
+      "dependencies": [
+        "Verificar regras de negócio e critérios de aceite do domínio"
+      ]
+    },
+    {
+      "id": "ORA-PAY-012",
+      "domain": "PAY",
+      "module": "Pagamentos, PicPay e caixa",
+      "priority": "P1",
+      "stage": 5,
+      "requirement": "Permitir múltiplas maquininhas/provedores por loja",
+      "acceptance": "Terminal tem identificação e escopo correto.",
+      "status": "planned-not-implemented",
+      "implementer": "Claude Code / Codex (definir por issue)",
+      "reviewer": "outro agente + aceite humano quando crítico",
+      "implementation_files": [],
+      "test_evidence": [],
+      "issue_url": null,
+      "pr_url": null,
+      "dependencies": [
+        "Verificar regras de negócio e critérios de aceite do domínio"
+      ]
+    },
+    {
+      "id": "ORA-PAY-013",
+      "domain": "PAY",
+      "module": "Pagamentos, PicPay e caixa",
+      "priority": "P2",
+      "stage": 5,
+      "requirement": "Integração automática com PicPay POS se API contratual confirmada",
+      "acceptance": "Contrato, autenticação, eventos e homologação aprovados.",
+      "status": "planned-not-implemented",
+      "implementer": "Claude Code / Codex (definir por issue)",
+      "reviewer": "outro agente + aceite humano quando crítico",
+      "implementation_files": [],
+      "test_evidence": [],
+      "issue_url": null,
+      "pr_url": null,
+      "dependencies": [
+        "Verificar regras de negócio e critérios de aceite do domínio"
+      ]
+    },
+    {
+      "id": "ORA-PAY-014",
+      "domain": "PAY",
+      "module": "Pagamentos, PicPay e caixa",
+      "priority": "P2",
+      "stage": 5,
+      "requirement": "Pix/checkout web e links por provedores validados",
+      "acceptance": "Confirmação no backend antes de fulfill/baixa definitiva.",
+      "status": "planned-not-implemented",
+      "implementer": "Claude Code / Codex (definir por issue)",
+      "reviewer": "outro agente + aceite humano quando crítico",
+      "implementation_files": [],
+      "test_evidence": [],
+      "issue_url": null,
+      "pr_url": null,
+      "dependencies": [
+        "Verificar regras de negócio e critérios de aceite do domínio"
+      ]
+    },
+    {
+      "id": "ORA-FIN-001",
+      "domain": "FIN",
+      "module": "Financeiro e controladoria",
+      "priority": "P0",
+      "stage": 6,
+      "requirement": "Resumo diário de vendas x recebimentos x produção comercial",
+      "acceptance": "Categorias e status reconciliáveis.",
+      "status": "planned-not-implemented",
+      "implementer": "Claude Code / Codex (definir por issue)",
+      "reviewer": "outro agente + aceite humano quando crítico",
+      "implementation_files": [],
+      "test_evidence": [],
+      "issue_url": null,
+      "pr_url": null,
+      "dependencies": [
+        "Verificar regras de negócio e critérios de aceite do domínio"
+      ]
+    },
+    {
+      "id": "ORA-FIN-002",
+      "domain": "FIN",
+      "module": "Financeiro e controladoria",
+      "priority": "P0",
+      "stage": 6,
+      "requirement": "DRE/margem gerencial com custo, taxa e desconto",
+      "acceptance": "Números não são apresentados como contabilidade formal auditada.",
+      "status": "planned-not-implemented",
+      "implementer": "Claude Code / Codex (definir por issue)",
+      "reviewer": "outro agente + aceite humano quando crítico",
+      "implementation_files": [],
+      "test_evidence": [],
+      "issue_url": null,
+      "pr_url": null,
+      "dependencies": [
+        "Verificar regras de negócio e critérios de aceite do domínio"
+      ]
+    },
+    {
+      "id": "ORA-FIN-003",
+      "domain": "FIN",
+      "module": "Financeiro e controladoria",
+      "priority": "P0",
+      "stage": 6,
+      "requirement": "Contas a receber ligadas a venda, vencimento e meio",
+      "acceptance": "Aging e status dependem de confirmação.",
+      "status": "planned-not-implemented",
+      "implementer": "Claude Code / Codex (definir por issue)",
+      "reviewer": "outro agente + aceite humano quando crítico",
+      "implementation_files": [],
+      "test_evidence": [],
+      "issue_url": null,
+      "pr_url": null,
+      "dependencies": [
+        "Verificar regras de negócio e critérios de aceite do domínio"
+      ]
+    },
+    {
+      "id": "ORA-FIN-004",
+      "domain": "FIN",
+      "module": "Financeiro e controladoria",
+      "priority": "P0",
+      "stage": 6,
+      "requirement": "Contas a pagar ligadas a fornecedor/origem",
+      "acceptance": "Vencimentos e responsabilidades autorizadas.",
+      "status": "planned-not-implemented",
+      "implementer": "Claude Code / Codex (definir por issue)",
+      "reviewer": "outro agente + aceite humano quando crítico",
+      "implementation_files": [],
+      "test_evidence": [],
+      "issue_url": null,
+      "pr_url": null,
+      "dependencies": [
+        "Verificar regras de negócio e critérios de aceite do domínio"
+      ]
+    },
+    {
+      "id": "ORA-FIN-005",
+      "domain": "FIN",
+      "module": "Financeiro e controladoria",
+      "priority": "P0",
+      "stage": 6,
+      "requirement": "Rastrear recebíveis e repasses por loja/adquirente",
+      "acceptance": "Diferenças e pendências visíveis ao financeiro.",
+      "status": "planned-not-implemented",
+      "implementer": "Claude Code / Codex (definir por issue)",
+      "reviewer": "outro agente + aceite humano quando crítico",
+      "implementation_files": [],
+      "test_evidence": [],
+      "issue_url": null,
+      "pr_url": null,
+      "dependencies": [
+        "Verificar regras de negócio e critérios de aceite do domínio"
+      ]
+    },
+    {
+      "id": "ORA-FIN-006",
+      "domain": "FIN",
+      "module": "Financeiro e controladoria",
+      "priority": "P1",
+      "stage": 6,
+      "requirement": "Conciliação bancária e contas multiempresa",
+      "acceptance": "Imports/matches reproduzíveis com aprovação.",
+      "status": "planned-not-implemented",
+      "implementer": "Claude Code / Codex (definir por issue)",
+      "reviewer": "outro agente + aceite humano quando crítico",
+      "implementation_files": [],
+      "test_evidence": [],
+      "issue_url": null,
+      "pr_url": null,
+      "dependencies": [
+        "Verificar regras de negócio e critérios de aceite do domínio"
+      ]
+    },
+    {
+      "id": "ORA-FIN-007",
+      "domain": "FIN",
+      "module": "Financeiro e controladoria",
+      "priority": "P1",
+      "stage": 6,
+      "requirement": "Gestão de inadimplência e cobranças autorizadas",
+      "acceptance": "Ações e consentimentos com auditoria.",
+      "status": "planned-not-implemented",
+      "implementer": "Claude Code / Codex (definir por issue)",
+      "reviewer": "outro agente + aceite humano quando crítico",
+      "implementation_files": [],
+      "test_evidence": [],
+      "issue_url": null,
+      "pr_url": null,
+      "dependencies": [
+        "Verificar regras de negócio e critérios de aceite do domínio"
+      ]
+    },
+    {
+      "id": "ORA-FIN-008",
+      "domain": "FIN",
+      "module": "Financeiro e controladoria",
+      "priority": "P1",
+      "stage": 6,
+      "requirement": "Relatório financeiro consolidado por loja/região/rede",
+      "acceptance": "RBAC respeita visão global vs local.",
+      "status": "planned-not-implemented",
+      "implementer": "Claude Code / Codex (definir por issue)",
+      "reviewer": "outro agente + aceite humano quando crítico",
+      "implementation_files": [],
+      "test_evidence": [],
+      "issue_url": null,
+      "pr_url": null,
+      "dependencies": [
+        "Verificar regras de negócio e critérios de aceite do domínio"
+      ]
+    },
+    {
+      "id": "ORA-FIN-009",
+      "domain": "FIN",
+      "module": "Financeiro e controladoria",
+      "priority": "P1",
+      "stage": 6,
+      "requirement": "Exportações CSV/XLSX/PDF de relatórios autorizados",
+      "acceptance": "Filtros e dados sensíveis protegidos.",
+      "status": "planned-not-implemented",
+      "implementer": "Claude Code / Codex (definir por issue)",
+      "reviewer": "outro agente + aceite humano quando crítico",
+      "implementation_files": [],
+      "test_evidence": [],
+      "issue_url": null,
+      "pr_url": null,
+      "dependencies": [
+        "Verificar regras de negócio e critérios de aceite do domínio"
+      ]
+    },
+    {
+      "id": "ORA-FIN-010",
+      "domain": "FIN",
+      "module": "Financeiro e controladoria",
+      "priority": "P2",
+      "stage": 6,
+      "requirement": "Previsão de fluxo de caixa e simulações",
+      "acceptance": "Premissas explicadas e separadas de fatos.",
+      "status": "planned-not-implemented",
+      "implementer": "Claude Code / Codex (definir por issue)",
+      "reviewer": "outro agente + aceite humano quando crítico",
+      "implementation_files": [],
+      "test_evidence": [],
+      "issue_url": null,
+      "pr_url": null,
+      "dependencies": [
+        "Verificar regras de negócio e critérios de aceite do domínio"
+      ]
+    },
+    {
+      "id": "ORA-PERF-001",
+      "domain": "PERF",
+      "module": "Vendedor, metas, comissões e bonificações",
+      "priority": "P0",
+      "stage": 6,
+      "requirement": "Contar individualmente aparelhos, acessórios, chips, ativações e recargas",
+      "acceptance": "Painel por vendedor/loja/período sem duplicidade.",
+      "status": "planned-not-implemented",
+      "implementer": "Claude Code / Codex (definir por issue)",
+      "reviewer": "outro agente + aceite humano quando crítico",
+      "implementation_files": [],
+      "test_evidence": [],
+      "issue_url": null,
+      "pr_url": null,
+      "dependencies": [
+        "Verificar regras de negócio e critérios de aceite do domínio"
+      ]
+    },
+    {
+      "id": "ORA-PERF-002",
+      "domain": "PERF",
+      "module": "Vendedor, metas, comissões e bonificações",
+      "priority": "P0",
+      "stage": 6,
+      "requirement": "Registrar performance_event único por origem/ação confirmada",
+      "acceptance": "Retries de API não criam duas bonificações.",
+      "status": "planned-not-implemented",
+      "implementer": "Claude Code / Codex (definir por issue)",
+      "reviewer": "outro agente + aceite humano quando crítico",
+      "implementation_files": [],
+      "test_evidence": [],
+      "issue_url": null,
+      "pr_url": null,
+      "dependencies": [
+        "Verificar regras de negócio e critérios de aceite do domínio"
+      ]
+    },
+    {
+      "id": "ORA-PERF-003",
+      "domain": "PERF",
+      "module": "Vendedor, metas, comissões e bonificações",
+      "priority": "P0",
+      "stage": 6,
+      "requirement": "Distinguir quantidade, valor bruto, margem, receita elegível e comissão",
+      "acceptance": "Extrato explica cálculo de cada evento.",
+      "status": "planned-not-implemented",
+      "implementer": "Claude Code / Codex (definir por issue)",
+      "reviewer": "outro agente + aceite humano quando crítico",
+      "implementation_files": [],
+      "test_evidence": [],
+      "issue_url": null,
+      "pr_url": null,
+      "dependencies": [
+        "Verificar regras de negócio e critérios de aceite do domínio"
+      ]
+    },
+    {
+      "id": "ORA-PERF-004",
+      "domain": "PERF",
+      "module": "Vendedor, metas, comissões e bonificações",
+      "priority": "P0",
+      "stage": 6,
+      "requirement": "Definir meta por vendedor, loja, categoria e período",
+      "acceptance": "Alteração não reescreve resultado histórico.",
+      "status": "planned-not-implemented",
+      "implementer": "Claude Code / Codex (definir por issue)",
+      "reviewer": "outro agente + aceite humano quando crítico",
+      "implementation_files": [],
+      "test_evidence": [],
+      "issue_url": null,
+      "pr_url": null,
+      "dependencies": [
+        "Verificar regras de negócio e critérios de aceite do domínio"
+      ]
+    },
+    {
+      "id": "ORA-PERF-005",
+      "domain": "PERF",
+      "module": "Vendedor, metas, comissões e bonificações",
+      "priority": "P0",
+      "stage": 6,
+      "requirement": "Painel do gestor mostra metas e resultados da equipe",
+      "acceptance": "Filtragem loja e perfil aplicada no servidor.",
+      "status": "planned-not-implemented",
+      "implementer": "Claude Code / Codex (definir por issue)",
+      "reviewer": "outro agente + aceite humano quando crítico",
+      "implementation_files": [],
+      "test_evidence": [],
+      "issue_url": null,
+      "pr_url": null,
+      "dependencies": [
+        "Verificar regras de negócio e critérios de aceite do domínio"
+      ]
+    },
+    {
+      "id": "ORA-PERF-006",
+      "domain": "PERF",
+      "module": "Vendedor, metas, comissões e bonificações",
+      "priority": "P1",
+      "stage": 6,
+      "requirement": "Regras de bonificação por categoria/campanha/margem/escala",
+      "acceptance": "Edição versionada e período de vigência.",
+      "status": "planned-not-implemented",
+      "implementer": "Claude Code / Codex (definir por issue)",
+      "reviewer": "outro agente + aceite humano quando crítico",
+      "implementation_files": [],
+      "test_evidence": [],
+      "issue_url": null,
+      "pr_url": null,
+      "dependencies": [
+        "Verificar regras de negócio e critérios de aceite do domínio"
+      ]
+    },
+    {
+      "id": "ORA-PERF-007",
+      "domain": "PERF",
+      "module": "Vendedor, metas, comissões e bonificações",
+      "priority": "P1",
+      "stage": 6,
+      "requirement": "Ajustar comissão por cancelamento/devolução conforme regra",
+      "acceptance": "Comprovante de origem e reversão sem apagar histórico.",
+      "status": "planned-not-implemented",
+      "implementer": "Claude Code / Codex (definir por issue)",
+      "reviewer": "outro agente + aceite humano quando crítico",
+      "implementation_files": [],
+      "test_evidence": [],
+      "issue_url": null,
+      "pr_url": null,
+      "dependencies": [
+        "Verificar regras de negócio e critérios de aceite do domínio"
+      ]
+    },
+    {
+      "id": "ORA-PERF-008",
+      "domain": "PERF",
+      "module": "Vendedor, metas, comissões e bonificações",
+      "priority": "P1",
+      "stage": 6,
+      "requirement": "Apurar e aprovar fechamento de bonificação",
+      "acceptance": "Totais detalhados, contestação e trilha de aprovação.",
+      "status": "planned-not-implemented",
+      "implementer": "Claude Code / Codex (definir por issue)",
+      "reviewer": "outro agente + aceite humano quando crítico",
+      "implementation_files": [],
+      "test_evidence": [],
+      "issue_url": null,
+      "pr_url": null,
+      "dependencies": [
+        "Verificar regras de negócio e critérios de aceite do domínio"
+      ]
+    },
+    {
+      "id": "ORA-PERF-009",
+      "domain": "PERF",
+      "module": "Vendedor, metas, comissões e bonificações",
+      "priority": "P1",
+      "stage": 6,
+      "requirement": "Metas coletivas/regional e rankings configuráveis",
+      "acceptance": "Desempate transparente e autorização adequada.",
+      "status": "planned-not-implemented",
+      "implementer": "Claude Code / Codex (definir por issue)",
+      "reviewer": "outro agente + aceite humano quando crítico",
+      "implementation_files": [],
+      "test_evidence": [],
+      "issue_url": null,
+      "pr_url": null,
+      "dependencies": [
+        "Verificar regras de negócio e critérios de aceite do domínio"
+      ]
+    },
+    {
+      "id": "ORA-PERF-010",
+      "domain": "PERF",
+      "module": "Vendedor, metas, comissões e bonificações",
+      "priority": "P2",
+      "stage": 6,
+      "requirement": "IA recomenda campanhas/metas com aprovação humana",
+      "acceptance": "Sem alterar remuneração automaticamente.",
+      "status": "planned-not-implemented",
+      "implementer": "Claude Code / Codex (definir por issue)",
+      "reviewer": "outro agente + aceite humano quando crítico",
+      "implementation_files": [],
+      "test_evidence": [],
+      "issue_url": null,
+      "pr_url": null,
+      "dependencies": [
+        "Verificar regras de negócio e critérios de aceite do domínio"
+      ]
+    },
+    {
+      "id": "ORA-FISC-001",
+      "domain": "FISC",
+      "module": "Fiscal, nota e conformidade",
+      "priority": "P0",
+      "stage": 7,
+      "requirement": "Solicitar nota diretamente da venda no celular",
+      "acceptance": "Fluxo intuitivo e prefill de dados necessários.",
+      "status": "planned-not-implemented",
+      "implementer": "Claude Code / Codex (definir por issue)",
+      "reviewer": "outro agente + aceite humano quando crítico",
+      "implementation_files": [],
+      "test_evidence": [],
+      "issue_url": null,
+      "pr_url": null,
+      "dependencies": [
+        "Verificar regras de negócio e critérios de aceite do domínio"
+      ]
+    },
+    {
+      "id": "ORA-FISC-002",
+      "domain": "FISC",
+      "module": "Fiscal, nota e conformidade",
+      "priority": "P0",
+      "stage": 7,
+      "requirement": "Fluxo interno de aprovação de solicitações pelo gestor conforme política",
+      "acceptance": "Auditoria sem impedir obrigação legal de emissão.",
+      "status": "planned-not-implemented",
+      "implementer": "Claude Code / Codex (definir por issue)",
+      "reviewer": "outro agente + aceite humano quando crítico",
+      "implementation_files": [],
+      "test_evidence": [],
+      "issue_url": null,
+      "pr_url": null,
+      "dependencies": [
+        "Verificar regras de negócio e critérios de aceite do domínio"
+      ]
+    },
+    {
+      "id": "ORA-FISC-003",
+      "domain": "FISC",
+      "module": "Fiscal, nota e conformidade",
+      "priority": "P0",
+      "stage": 7,
+      "requirement": "Identificar perfil fiscal por produto/serviço/UF/CNPJ",
+      "acceptance": "Regras homologadas com contador/especialista.",
+      "status": "planned-not-implemented",
+      "implementer": "Claude Code / Codex (definir por issue)",
+      "reviewer": "outro agente + aceite humano quando crítico",
+      "implementation_files": [],
+      "test_evidence": [],
+      "issue_url": null,
+      "pr_url": null,
+      "dependencies": [
+        "Verificar regras de negócio e critérios de aceite do domínio"
+      ]
+    },
+    {
+      "id": "ORA-FISC-004",
+      "domain": "FISC",
+      "module": "Fiscal, nota e conformidade",
+      "priority": "P0",
+      "stage": 7,
+      "requirement": "Integrar provedor fiscal homologado para documento correto",
+      "acceptance": "Estados emitido/autorizado/rejeitado/contingência claros.",
+      "status": "planned-not-implemented",
+      "implementer": "Claude Code / Codex (definir por issue)",
+      "reviewer": "outro agente + aceite humano quando crítico",
+      "implementation_files": [],
+      "test_evidence": [],
+      "issue_url": null,
+      "pr_url": null,
+      "dependencies": [
+        "Verificar regras de negócio e critérios de aceite do domínio"
+      ]
+    },
+    {
+      "id": "ORA-FISC-005",
+      "domain": "FISC",
+      "module": "Fiscal, nota e conformidade",
+      "priority": "P0",
+      "stage": 7,
+      "requirement": "Guardar chave, protocolo, referência e evidências legais com segurança",
+      "acceptance": "Controle de acesso e retenção definidos.",
+      "status": "planned-not-implemented",
+      "implementer": "Claude Code / Codex (definir por issue)",
+      "reviewer": "outro agente + aceite humano quando crítico",
+      "implementation_files": [],
+      "test_evidence": [],
+      "issue_url": null,
+      "pr_url": null,
+      "dependencies": [
+        "Verificar regras de negócio e critérios de aceite do domínio"
+      ]
+    },
+    {
+      "id": "ORA-FISC-006",
+      "domain": "FISC",
+      "module": "Fiscal, nota e conformidade",
+      "priority": "P0",
+      "stage": 7,
+      "requirement": "Tratar falha fiscal, reprocesso, contingência e cancelamento",
+      "acceptance": "Nenhum documento duplicado nem venda marcada indevidamente.",
+      "status": "planned-not-implemented",
+      "implementer": "Claude Code / Codex (definir por issue)",
+      "reviewer": "outro agente + aceite humano quando crítico",
+      "implementation_files": [],
+      "test_evidence": [],
+      "issue_url": null,
+      "pr_url": null,
+      "dependencies": [
+        "Verificar regras de negócio e critérios de aceite do domínio"
+      ]
+    },
+    {
+      "id": "ORA-FISC-007",
+      "domain": "FISC",
+      "module": "Fiscal, nota e conformidade",
+      "priority": "P1",
+      "stage": 7,
+      "requirement": "Mapear cenários NF-e/NFC-e/NFS-e/NFCom conforme natureza",
+      "acceptance": "Matriz validada por contador com decisões por UF e operação.",
+      "status": "planned-not-implemented",
+      "implementer": "Claude Code / Codex (definir por issue)",
+      "reviewer": "outro agente + aceite humano quando crítico",
+      "implementation_files": [],
+      "test_evidence": [],
+      "issue_url": null,
+      "pr_url": null,
+      "dependencies": [
+        "Verificar regras de negócio e critérios de aceite do domínio"
+      ]
+    },
+    {
+      "id": "ORA-FISC-008",
+      "domain": "FISC",
+      "module": "Fiscal, nota e conformidade",
+      "priority": "P1",
+      "stage": 7,
+      "requirement": "Conciliação fiscal de vendas, tributos e documentos",
+      "acceptance": "Pendências e divergências alertadas.",
+      "status": "planned-not-implemented",
+      "implementer": "Claude Code / Codex (definir por issue)",
+      "reviewer": "outro agente + aceite humano quando crítico",
+      "implementation_files": [],
+      "test_evidence": [],
+      "issue_url": null,
+      "pr_url": null,
+      "dependencies": [
+        "Verificar regras de negócio e critérios de aceite do domínio"
+      ]
+    },
+    {
+      "id": "ORA-FISC-009",
+      "domain": "FISC",
+      "module": "Fiscal, nota e conformidade",
+      "priority": "P1",
+      "stage": 7,
+      "requirement": "Devolução, troca, cancelamento e correção fiscal",
+      "acceptance": "Fluxos e prazos homologados com fiscal.",
+      "status": "planned-not-implemented",
+      "implementer": "Claude Code / Codex (definir por issue)",
+      "reviewer": "outro agente + aceite humano quando crítico",
+      "implementation_files": [],
+      "test_evidence": [],
+      "issue_url": null,
+      "pr_url": null,
+      "dependencies": [
+        "Verificar regras de negócio e critérios de aceite do domínio"
+      ]
+    },
+    {
+      "id": "ORA-FISC-010",
+      "domain": "FISC",
+      "module": "Fiscal, nota e conformidade",
+      "priority": "P2",
+      "stage": 7,
+      "requirement": "Multi-UF/multi-CNPJ e reforma tributária preparada",
+      "acceptance": "Alterações versionadas e conformes à norma vigente.",
+      "status": "planned-not-implemented",
+      "implementer": "Claude Code / Codex (definir por issue)",
+      "reviewer": "outro agente + aceite humano quando crítico",
+      "implementation_files": [],
+      "test_evidence": [],
+      "issue_url": null,
+      "pr_url": null,
+      "dependencies": [
+        "Verificar regras de negócio e critérios de aceite do domínio"
+      ]
+    },
+    {
+      "id": "ORA-CONNECT-001",
+      "domain": "CONNECT",
+      "module": "Ora Connect, chips, ativações e recargas",
+      "priority": "P0",
+      "stage": 10,
+      "requirement": "Cadastrar e vender chip físico ligado ao estoque e vendedor",
+      "acceptance": "Unidade/ICCID e venda reconciliáveis.",
+      "status": "planned-not-implemented",
+      "implementer": "Claude Code / Codex (definir por issue)",
+      "reviewer": "outro agente + aceite humano quando crítico",
+      "implementation_files": [],
+      "test_evidence": [],
+      "issue_url": null,
+      "pr_url": null,
+      "dependencies": [
+        "Verificar regras de negócio e critérios de aceite do domínio"
+      ]
+    },
+    {
+      "id": "ORA-CONNECT-002",
+      "domain": "CONNECT",
+      "module": "Ora Connect, chips, ativações e recargas",
+      "priority": "P0",
+      "stage": 10,
+      "requirement": "Separar evento de venda de chip do evento de ativação",
+      "acceptance": "Quantidades, status, valor e comissão independentes.",
+      "status": "planned-not-implemented",
+      "implementer": "Claude Code / Codex (definir por issue)",
+      "reviewer": "outro agente + aceite humano quando crítico",
+      "implementation_files": [],
+      "test_evidence": [],
+      "issue_url": null,
+      "pr_url": null,
+      "dependencies": [
+        "Verificar regras de negócio e critérios de aceite do domínio"
+      ]
+    },
+    {
+      "id": "ORA-CONNECT-003",
+      "domain": "CONNECT",
+      "module": "Ora Connect, chips, ativações e recargas",
+      "priority": "P0",
+      "stage": 10,
+      "requirement": "Separar recarga como operação telecom com status próprio",
+      "acceptance": "Total pago e valor repassado/receita reconhecida não confundidos.",
+      "status": "planned-not-implemented",
+      "implementer": "Claude Code / Codex (definir por issue)",
+      "reviewer": "outro agente + aceite humano quando crítico",
+      "implementation_files": [],
+      "test_evidence": [],
+      "issue_url": null,
+      "pr_url": null,
+      "dependencies": [
+        "Verificar regras de negócio e critérios de aceite do domínio"
+      ]
+    },
+    {
+      "id": "ORA-CONNECT-004",
+      "domain": "CONNECT",
+      "module": "Ora Connect, chips, ativações e recargas",
+      "priority": "P0",
+      "stage": 10,
+      "requirement": "Registrar Nogle como integração externa por adapter",
+      "acceptance": "Sem endpoint presumido; contrato deve vir dos docs autenticados.",
+      "status": "planned-not-implemented",
+      "implementer": "Claude Code / Codex (definir por issue)",
+      "reviewer": "outro agente + aceite humano quando crítico",
+      "implementation_files": [],
+      "test_evidence": [],
+      "issue_url": null,
+      "pr_url": null,
+      "dependencies": [
+        "Verificar regras de negócio e critérios de aceite do domínio"
+      ]
+    },
+    {
+      "id": "ORA-CONNECT-005",
+      "domain": "CONNECT",
+      "module": "Ora Connect, chips, ativações e recargas",
+      "priority": "P0",
+      "stage": 10,
+      "requirement": "Refletir ativação somente após resposta verificada da Nogle",
+      "acceptance": "Falhas ficam pendentes/revisão sem gerar sucesso falso.",
+      "status": "planned-not-implemented",
+      "implementer": "Claude Code / Codex (definir por issue)",
+      "reviewer": "outro agente + aceite humano quando crítico",
+      "implementation_files": [],
+      "test_evidence": [],
+      "issue_url": null,
+      "pr_url": null,
+      "dependencies": [
+        "Verificar regras de negócio e critérios de aceite do domínio"
+      ]
+    },
+    {
+      "id": "ORA-CONNECT-006",
+      "domain": "CONNECT",
+      "module": "Ora Connect, chips, ativações e recargas",
+      "priority": "P0",
+      "stage": 10,
+      "requirement": "Atribuir performance de ativação/recarga ao vendedor de origem",
+      "acceptance": "Evento idempotente e elegibilidade transparente.",
+      "status": "planned-not-implemented",
+      "implementer": "Claude Code / Codex (definir por issue)",
+      "reviewer": "outro agente + aceite humano quando crítico",
+      "implementation_files": [],
+      "test_evidence": [],
+      "issue_url": null,
+      "pr_url": null,
+      "dependencies": [
+        "Verificar regras de negócio e critérios de aceite do domínio"
+      ]
+    },
+    {
+      "id": "ORA-CONNECT-007",
+      "domain": "CONNECT",
+      "module": "Ora Connect, chips, ativações e recargas",
+      "priority": "P1",
+      "stage": 10,
+      "requirement": "Consulta/atualização de linha e plano conforme API disponível",
+      "acceptance": "Permissão e rate limit respeitados.",
+      "status": "planned-not-implemented",
+      "implementer": "Claude Code / Codex (definir por issue)",
+      "reviewer": "outro agente + aceite humano quando crítico",
+      "implementation_files": [],
+      "test_evidence": [],
+      "issue_url": null,
+      "pr_url": null,
+      "dependencies": [
+        "Verificar regras de negócio e critérios de aceite do domínio"
+      ]
+    },
+    {
+      "id": "ORA-CONNECT-008",
+      "domain": "CONNECT",
+      "module": "Ora Connect, chips, ativações e recargas",
+      "priority": "P1",
+      "stage": 10,
+      "requirement": "Portabilidade, contrato e venda de plano conforme contrato",
+      "acceptance": "Jornada e documentos homologados.",
+      "status": "planned-not-implemented",
+      "implementer": "Claude Code / Codex (definir por issue)",
+      "reviewer": "outro agente + aceite humano quando crítico",
+      "implementation_files": [],
+      "test_evidence": [],
+      "issue_url": null,
+      "pr_url": null,
+      "dependencies": [
+        "Verificar regras de negócio e critérios de aceite do domínio"
+      ]
+    },
+    {
+      "id": "ORA-CONNECT-009",
+      "domain": "CONNECT",
+      "module": "Ora Connect, chips, ativações e recargas",
+      "priority": "P1",
+      "stage": 10,
+      "requirement": "Reconciliar repasses/bonificações Nogle e operação local",
+      "acceptance": "Divergências rastreáveis e reversão segura.",
+      "status": "planned-not-implemented",
+      "implementer": "Claude Code / Codex (definir por issue)",
+      "reviewer": "outro agente + aceite humano quando crítico",
+      "implementation_files": [],
+      "test_evidence": [],
+      "issue_url": null,
+      "pr_url": null,
+      "dependencies": [
+        "Verificar regras de negócio e critérios de aceite do domínio"
+      ]
+    },
+    {
+      "id": "ORA-CONNECT-010",
+      "domain": "CONNECT",
+      "module": "Ora Connect, chips, ativações e recargas",
+      "priority": "P1",
+      "stage": 10,
+      "requirement": "Recuperar falha de rede com reconsulta sem reativação duplicada",
+      "acceptance": "Idempotência/reconciliação externa aprovadas.",
+      "status": "planned-not-implemented",
+      "implementer": "Claude Code / Codex (definir por issue)",
+      "reviewer": "outro agente + aceite humano quando crítico",
+      "implementation_files": [],
+      "test_evidence": [],
+      "issue_url": null,
+      "pr_url": null,
+      "dependencies": [
+        "Verificar regras de negócio e critérios de aceite do domínio"
+      ]
+    },
+    {
+      "id": "ORA-CONNECT-011",
+      "domain": "CONNECT",
+      "module": "Ora Connect, chips, ativações e recargas",
+      "priority": "P2",
+      "stage": 10,
+      "requirement": "eSIM, contratação digital e entrega de chip nacional",
+      "acceptance": "Implementar somente se Nogle suportar e acordo permitir.",
+      "status": "planned-not-implemented",
+      "implementer": "Claude Code / Codex (definir por issue)",
+      "reviewer": "outro agente + aceite humano quando crítico",
+      "implementation_files": [],
+      "test_evidence": [],
+      "issue_url": null,
+      "pr_url": null,
+      "dependencies": [
+        "Verificar regras de negócio e critérios de aceite do domínio"
+      ]
+    },
+    {
+      "id": "ORA-ONLINE-001",
+      "domain": "ONLINE",
+      "module": "E-commerce e vendas online",
+      "priority": "P1",
+      "stage": 11,
+      "requirement": "Site de aparelhos, acessórios e planos Ora Connect",
+      "acceptance": "Catálogo e estoque centralizados; não criar outro sistema de venda.",
+      "status": "planned-not-implemented",
+      "implementer": "Claude Code / Codex (definir por issue)",
+      "reviewer": "outro agente + aceite humano quando crítico",
+      "implementation_files": [],
+      "test_evidence": [],
+      "issue_url": null,
+      "pr_url": null,
+      "dependencies": [
+        "Verificar regras de negócio e critérios de aceite do domínio"
+      ]
+    },
+    {
+      "id": "ORA-ONLINE-002",
+      "domain": "ONLINE",
+      "module": "E-commerce e vendas online",
+      "priority": "P1",
+      "stage": 11,
+      "requirement": "Carrinho/checkout online e pedido com status",
+      "acceptance": "Pagamento confirmado antes de liberar fulfillment.",
+      "status": "planned-not-implemented",
+      "implementer": "Claude Code / Codex (definir por issue)",
+      "reviewer": "outro agente + aceite humano quando crítico",
+      "implementation_files": [],
+      "test_evidence": [],
+      "issue_url": null,
+      "pr_url": null,
+      "dependencies": [
+        "Verificar regras de negócio e critérios de aceite do domínio"
+      ]
+    },
+    {
+      "id": "ORA-ONLINE-003",
+      "domain": "ONLINE",
+      "module": "E-commerce e vendas online",
+      "priority": "P1",
+      "stage": 11,
+      "requirement": "Atribuir origem online, campanhas e vendedor quando aplicável",
+      "acceptance": "Sem atribuição indevida ou dupla comissão.",
+      "status": "planned-not-implemented",
+      "implementer": "Claude Code / Codex (definir por issue)",
+      "reviewer": "outro agente + aceite humano quando crítico",
+      "implementation_files": [],
+      "test_evidence": [],
+      "issue_url": null,
+      "pr_url": null,
+      "dependencies": [
+        "Verificar regras de negócio e critérios de aceite do domínio"
+      ]
+    },
+    {
+      "id": "ORA-ONLINE-004",
+      "domain": "ONLINE",
+      "module": "E-commerce e vendas online",
+      "priority": "P1",
+      "stage": 11,
+      "requirement": "Frete, CEP, retirada em loja e entrega com rastreio",
+      "acceptance": "Reserva e prazos consistentes.",
+      "status": "planned-not-implemented",
+      "implementer": "Claude Code / Codex (definir por issue)",
+      "reviewer": "outro agente + aceite humano quando crítico",
+      "implementation_files": [],
+      "test_evidence": [],
+      "issue_url": null,
+      "pr_url": null,
+      "dependencies": [
+        "Verificar regras de negócio e critérios de aceite do domínio"
+      ]
+    },
+    {
+      "id": "ORA-ONLINE-005",
+      "domain": "ONLINE",
+      "module": "E-commerce e vendas online",
+      "priority": "P1",
+      "stage": 11,
+      "requirement": "Devolução, arrependimento e reembolso de venda online",
+      "acceptance": "Prazo/regra legal homologado e efeitos auditados.",
+      "status": "planned-not-implemented",
+      "implementer": "Claude Code / Codex (definir por issue)",
+      "reviewer": "outro agente + aceite humano quando crítico",
+      "implementation_files": [],
+      "test_evidence": [],
+      "issue_url": null,
+      "pr_url": null,
+      "dependencies": [
+        "Verificar regras de negócio e critérios de aceite do domínio"
+      ]
+    },
+    {
+      "id": "ORA-ONLINE-006",
+      "domain": "ONLINE",
+      "module": "E-commerce e vendas online",
+      "priority": "P1",
+      "stage": 11,
+      "requirement": "Reserva de IMEI por pedido/canal anti-overselling",
+      "acceptance": "Pedido online concorrente com loja não vende unidade duplicada.",
+      "status": "planned-not-implemented",
+      "implementer": "Claude Code / Codex (definir por issue)",
+      "reviewer": "outro agente + aceite humano quando crítico",
+      "implementation_files": [],
+      "test_evidence": [],
+      "issue_url": null,
+      "pr_url": null,
+      "dependencies": [
+        "Verificar regras de negócio e critérios de aceite do domínio"
+      ]
+    },
+    {
+      "id": "ORA-ONLINE-007",
+      "domain": "ONLINE",
+      "module": "E-commerce e vendas online",
+      "priority": "P2",
+      "stage": 11,
+      "requirement": "Contratação online de planos/chips/eSIM se habilitado",
+      "acceptance": "Validação de identidade/contrato, antifraude e cobertura.",
+      "status": "planned-not-implemented",
+      "implementer": "Claude Code / Codex (definir por issue)",
+      "reviewer": "outro agente + aceite humano quando crítico",
+      "implementation_files": [],
+      "test_evidence": [],
+      "issue_url": null,
+      "pr_url": null,
+      "dependencies": [
+        "Verificar regras de negócio e critérios de aceite do domínio"
+      ]
+    },
+    {
+      "id": "ORA-ONLINE-008",
+      "domain": "ONLINE",
+      "module": "E-commerce e vendas online",
+      "priority": "P2",
+      "stage": 11,
+      "requirement": "Expansão interestadual com parâmetros fiscais e logísticos",
+      "acceptance": "Multi-UF testado antes da abertura nacional.",
+      "status": "planned-not-implemented",
+      "implementer": "Claude Code / Codex (definir por issue)",
+      "reviewer": "outro agente + aceite humano quando crítico",
+      "implementation_files": [],
+      "test_evidence": [],
+      "issue_url": null,
+      "pr_url": null,
+      "dependencies": [
+        "Verificar regras de negócio e critérios de aceite do domínio"
+      ]
+    },
+    {
+      "id": "ORA-MKTPL-001",
+      "domain": "MKTPL",
+      "module": "Marketplaces e channel manager",
+      "priority": "P1",
+      "stage": 11,
+      "requirement": "Preparar adaptadores separados Mercado Livre/Shopee/TikTok Shop",
+      "acceptance": "Contratos e permissões confirmados antes do deploy.",
+      "status": "planned-not-implemented",
+      "implementer": "Claude Code / Codex (definir por issue)",
+      "reviewer": "outro agente + aceite humano quando crítico",
+      "implementation_files": [],
+      "test_evidence": [],
+      "issue_url": null,
+      "pr_url": null,
+      "dependencies": [
+        "Verificar regras de negócio e critérios de aceite do domínio"
+      ]
+    },
+    {
+      "id": "ORA-MKTPL-002",
+      "domain": "MKTPL",
+      "module": "Marketplaces e channel manager",
+      "priority": "P1",
+      "stage": 11,
+      "requirement": "Sincronizar SKU/preço/estoque/anúncio conforme recursos",
+      "acceptance": "Evitam overselling e divergência detectável.",
+      "status": "planned-not-implemented",
+      "implementer": "Claude Code / Codex (definir por issue)",
+      "reviewer": "outro agente + aceite humano quando crítico",
+      "implementation_files": [],
+      "test_evidence": [],
+      "issue_url": null,
+      "pr_url": null,
+      "dependencies": [
+        "Verificar regras de negócio e critérios de aceite do domínio"
+      ]
+    },
+    {
+      "id": "ORA-MKTPL-003",
+      "domain": "MKTPL",
+      "module": "Marketplaces e channel manager",
+      "priority": "P1",
+      "stage": 11,
+      "requirement": "Importar pedido marketplace com ID externo e dedupe",
+      "acceptance": "Reenvio de webhook não duplica pedido/reserva.",
+      "status": "planned-not-implemented",
+      "implementer": "Claude Code / Codex (definir por issue)",
+      "reviewer": "outro agente + aceite humano quando crítico",
+      "implementation_files": [],
+      "test_evidence": [],
+      "issue_url": null,
+      "pr_url": null,
+      "dependencies": [
+        "Verificar regras de negócio e critérios de aceite do domínio"
+      ]
+    },
+    {
+      "id": "ORA-MKTPL-004",
+      "domain": "MKTPL",
+      "module": "Marketplaces e channel manager",
+      "priority": "P1",
+      "stage": 11,
+      "requirement": "Tratar entrega/frete/etiquetas/rastreio por canal",
+      "acceptance": "Estados de fulfillment corretos e não inventados.",
+      "status": "planned-not-implemented",
+      "implementer": "Claude Code / Codex (definir por issue)",
+      "reviewer": "outro agente + aceite humano quando crítico",
+      "implementation_files": [],
+      "test_evidence": [],
+      "issue_url": null,
+      "pr_url": null,
+      "dependencies": [
+        "Verificar regras de negócio e critérios de aceite do domínio"
+      ]
+    },
+    {
+      "id": "ORA-MKTPL-005",
+      "domain": "MKTPL",
+      "module": "Marketplaces e channel manager",
+      "priority": "P1",
+      "stage": 11,
+      "requirement": "Conciliação de tarifas, comissões e repasses por marketplace",
+      "acceptance": "Lucratividade por pedido/canal explicável.",
+      "status": "planned-not-implemented",
+      "implementer": "Claude Code / Codex (definir por issue)",
+      "reviewer": "outro agente + aceite humano quando crítico",
+      "implementation_files": [],
+      "test_evidence": [],
+      "issue_url": null,
+      "pr_url": null,
+      "dependencies": [
+        "Verificar regras de negócio e critérios de aceite do domínio"
+      ]
+    },
+    {
+      "id": "ORA-MKTPL-006",
+      "domain": "MKTPL",
+      "module": "Marketplaces e channel manager",
+      "priority": "P1",
+      "stage": 11,
+      "requirement": "Cancelamentos, devoluções e reembolsos por canal",
+      "acceptance": "Estoque/financeiro/fiscal/commission reversos.",
+      "status": "planned-not-implemented",
+      "implementer": "Claude Code / Codex (definir por issue)",
+      "reviewer": "outro agente + aceite humano quando crítico",
+      "implementation_files": [],
+      "test_evidence": [],
+      "issue_url": null,
+      "pr_url": null,
+      "dependencies": [
+        "Verificar regras de negócio e critérios de aceite do domínio"
+      ]
+    },
+    {
+      "id": "ORA-MKTPL-007",
+      "domain": "MKTPL",
+      "module": "Marketplaces e channel manager",
+      "priority": "P2",
+      "stage": 11,
+      "requirement": "Sincronização near-real-time por webhooks/adapters",
+      "acceptance": "Rate limits/retries monitorados.",
+      "status": "planned-not-implemented",
+      "implementer": "Claude Code / Codex (definir por issue)",
+      "reviewer": "outro agente + aceite humano quando crítico",
+      "implementation_files": [],
+      "test_evidence": [],
+      "issue_url": null,
+      "pr_url": null,
+      "dependencies": [
+        "Verificar regras de negócio e critérios de aceite do domínio"
+      ]
+    },
+    {
+      "id": "ORA-MKTPL-008",
+      "domain": "MKTPL",
+      "module": "Marketplaces e channel manager",
+      "priority": "P2",
+      "stage": 11,
+      "requirement": "Métricas por anúncio/canal/produto e margem",
+      "acceptance": "Valores reconciliados sem confundir receita bruta com líquida.",
+      "status": "planned-not-implemented",
+      "implementer": "Claude Code / Codex (definir por issue)",
+      "reviewer": "outro agente + aceite humano quando crítico",
+      "implementation_files": [],
+      "test_evidence": [],
+      "issue_url": null,
+      "pr_url": null,
+      "dependencies": [
+        "Verificar regras de negócio e critérios de aceite do domínio"
+      ]
+    },
+    {
+      "id": "ORA-WHATS-001",
+      "domain": "WHATS",
+      "module": "WhatsApp, atendimento e automação",
+      "priority": "P1",
+      "stage": 11,
+      "requirement": "WhatsApp Business Platform oficial conectado ao CRM",
+      "acceptance": "Conta/números/escopos homologados; templates válidos.",
+      "status": "planned-not-implemented",
+      "implementer": "Claude Code / Codex (definir por issue)",
+      "reviewer": "outro agente + aceite humano quando crítico",
+      "implementation_files": [],
+      "test_evidence": [],
+      "issue_url": null,
+      "pr_url": null,
+      "dependencies": [
+        "Verificar regras de negócio e critérios de aceite do domínio"
+      ]
+    },
+    {
+      "id": "ORA-WHATS-002",
+      "domain": "WHATS",
+      "module": "WhatsApp, atendimento e automação",
+      "priority": "P1",
+      "stage": 11,
+      "requirement": "Caixa de entrada multiatendente com atribuição à loja/vendedor",
+      "acceptance": "Mensagens e transferência auditadas.",
+      "status": "planned-not-implemented",
+      "implementer": "Claude Code / Codex (definir por issue)",
+      "reviewer": "outro agente + aceite humano quando crítico",
+      "implementation_files": [],
+      "test_evidence": [],
+      "issue_url": null,
+      "pr_url": null,
+      "dependencies": [
+        "Verificar regras de negócio e critérios de aceite do domínio"
+      ]
+    },
+    {
+      "id": "ORA-WHATS-003",
+      "domain": "WHATS",
+      "module": "WhatsApp, atendimento e automação",
+      "priority": "P1",
+      "stage": 11,
+      "requirement": "Leads orgânicos e pagos identificados por origem consentida",
+      "acceptance": "Campanha e UTM preservados quando disponíveis.",
+      "status": "planned-not-implemented",
+      "implementer": "Claude Code / Codex (definir por issue)",
+      "reviewer": "outro agente + aceite humano quando crítico",
+      "implementation_files": [],
+      "test_evidence": [],
+      "issue_url": null,
+      "pr_url": null,
+      "dependencies": [
+        "Verificar regras de negócio e critérios de aceite do domínio"
+      ]
+    },
+    {
+      "id": "ORA-WHATS-004",
+      "domain": "WHATS",
+      "module": "WhatsApp, atendimento e automação",
+      "priority": "P1",
+      "stage": 11,
+      "requirement": "Histórico 360 de conversas/negócios por cliente",
+      "acceptance": "Política de retenção/consentimento aplicada.",
+      "status": "planned-not-implemented",
+      "implementer": "Claude Code / Codex (definir por issue)",
+      "reviewer": "outro agente + aceite humano quando crítico",
+      "implementation_files": [],
+      "test_evidence": [],
+      "issue_url": null,
+      "pr_url": null,
+      "dependencies": [
+        "Verificar regras de negócio e critérios de aceite do domínio"
+      ]
+    },
+    {
+      "id": "ORA-WHATS-005",
+      "domain": "WHATS",
+      "module": "WhatsApp, atendimento e automação",
+      "priority": "P1",
+      "stage": 11,
+      "requirement": "Respostas rápidas, etiquetas, SLA e repasse para humano",
+      "acceptance": "Handoff sempre acessível.",
+      "status": "planned-not-implemented",
+      "implementer": "Claude Code / Codex (definir por issue)",
+      "reviewer": "outro agente + aceite humano quando crítico",
+      "implementation_files": [],
+      "test_evidence": [],
+      "issue_url": null,
+      "pr_url": null,
+      "dependencies": [
+        "Verificar regras de negócio e critérios de aceite do domínio"
+      ]
+    },
+    {
+      "id": "ORA-WHATS-006",
+      "domain": "WHATS",
+      "module": "WhatsApp, atendimento e automação",
+      "priority": "P1",
+      "stage": 11,
+      "requirement": "Templates e mensagens proativas em conformidade Meta",
+      "acceptance": "Sem spam nem envio sem permissão/consentimento apropriado.",
+      "status": "planned-not-implemented",
+      "implementer": "Claude Code / Codex (definir por issue)",
+      "reviewer": "outro agente + aceite humano quando crítico",
+      "implementation_files": [],
+      "test_evidence": [],
+      "issue_url": null,
+      "pr_url": null,
+      "dependencies": [
+        "Verificar regras de negócio e critérios de aceite do domínio"
+      ]
+    },
+    {
+      "id": "ORA-WHATS-007",
+      "domain": "WHATS",
+      "module": "WhatsApp, atendimento e automação",
+      "priority": "P2",
+      "stage": 11,
+      "requirement": "IA supervisionada para qualificação e sugestão de respostas",
+      "acceptance": "Ações sensíveis exigem revisão e logs.",
+      "status": "planned-not-implemented",
+      "implementer": "Claude Code / Codex (definir por issue)",
+      "reviewer": "outro agente + aceite humano quando crítico",
+      "implementation_files": [],
+      "test_evidence": [],
+      "issue_url": null,
+      "pr_url": null,
+      "dependencies": [
+        "Verificar regras de negócio e critérios de aceite do domínio"
+      ]
+    },
+    {
+      "id": "ORA-WHATS-008",
+      "domain": "WHATS",
+      "module": "WhatsApp, atendimento e automação",
+      "priority": "P2",
+      "stage": 11,
+      "requirement": "Recuperação de carrinho e pós-venda sob consentimento",
+      "acceptance": "Taxa de resposta/conversão mensurada.",
+      "status": "planned-not-implemented",
+      "implementer": "Claude Code / Codex (definir por issue)",
+      "reviewer": "outro agente + aceite humano quando crítico",
+      "implementation_files": [],
+      "test_evidence": [],
+      "issue_url": null,
+      "pr_url": null,
+      "dependencies": [
+        "Verificar regras de negócio e critérios de aceite do domínio"
+      ]
+    },
+    {
+      "id": "ORA-META-001",
+      "domain": "META",
+      "module": "Meta Ads e atribuição",
+      "priority": "P1",
+      "stage": 11,
+      "requirement": "Importar insights autorizados de Meta Ads por conta/campanha",
+      "acceptance": "OAuth/scopes revisados; dados de custo e período auditáveis.",
+      "status": "planned-not-implemented",
+      "implementer": "Claude Code / Codex (definir por issue)",
+      "reviewer": "outro agente + aceite humano quando crítico",
+      "implementation_files": [],
+      "test_evidence": [],
+      "issue_url": null,
+      "pr_url": null,
+      "dependencies": [
+        "Verificar regras de negócio e critérios de aceite do domínio"
+      ]
+    },
+    {
+      "id": "ORA-META-002",
+      "domain": "META",
+      "module": "Meta Ads e atribuição",
+      "priority": "P1",
+      "stage": 11,
+      "requirement": "Capturar UTM e origem de leads de site/WhatsApp",
+      "acceptance": "Jornada vincula campanha, oportunidade e venda quando possível.",
+      "status": "planned-not-implemented",
+      "implementer": "Claude Code / Codex (definir por issue)",
+      "reviewer": "outro agente + aceite humano quando crítico",
+      "implementation_files": [],
+      "test_evidence": [],
+      "issue_url": null,
+      "pr_url": null,
+      "dependencies": [
+        "Verificar regras de negócio e critérios de aceite do domínio"
+      ]
+    },
+    {
+      "id": "ORA-META-003",
+      "domain": "META",
+      "module": "Meta Ads e atribuição",
+      "priority": "P1",
+      "stage": 11,
+      "requirement": "Mostrar gasto, CTR, CPC, CPL, CPA e ROAS quando calculáveis",
+      "acceptance": "Fórmulas, período e limitações explicitadas.",
+      "status": "planned-not-implemented",
+      "implementer": "Claude Code / Codex (definir por issue)",
+      "reviewer": "outro agente + aceite humano quando crítico",
+      "implementation_files": [],
+      "test_evidence": [],
+      "issue_url": null,
+      "pr_url": null,
+      "dependencies": [
+        "Verificar regras de negócio e critérios de aceite do domínio"
+      ]
+    },
+    {
+      "id": "ORA-META-004",
+      "domain": "META",
+      "module": "Meta Ads e atribuição",
+      "priority": "P1",
+      "stage": 11,
+      "requirement": "Funil por vendedor/loja/campanha e atribuição",
+      "acceptance": "Dupla contagem/dedup de conversões minimizada.",
+      "status": "planned-not-implemented",
+      "implementer": "Claude Code / Codex (definir por issue)",
+      "reviewer": "outro agente + aceite humano quando crítico",
+      "implementation_files": [],
+      "test_evidence": [],
+      "issue_url": null,
+      "pr_url": null,
+      "dependencies": [
+        "Verificar regras de negócio e critérios de aceite do domínio"
+      ]
+    },
+    {
+      "id": "ORA-META-005",
+      "domain": "META",
+      "module": "Meta Ads e atribuição",
+      "priority": "P2",
+      "stage": 11,
+      "requirement": "Conversions API/eventos com consentimento e dedupe",
+      "acceptance": "Sem rastrear dados sem base legal/autorização.",
+      "status": "planned-not-implemented",
+      "implementer": "Claude Code / Codex (definir por issue)",
+      "reviewer": "outro agente + aceite humano quando crítico",
+      "implementation_files": [],
+      "test_evidence": [],
+      "issue_url": null,
+      "pr_url": null,
+      "dependencies": [
+        "Verificar regras de negócio e critérios de aceite do domínio"
+      ]
+    },
+    {
+      "id": "ORA-META-006",
+      "domain": "META",
+      "module": "Meta Ads e atribuição",
+      "priority": "P2",
+      "stage": 11,
+      "requirement": "Analisar margem e CAC por campanha",
+      "acceptance": "Distingue métrica estimada de valor liquidado.",
+      "status": "planned-not-implemented",
+      "implementer": "Claude Code / Codex (definir por issue)",
+      "reviewer": "outro agente + aceite humano quando crítico",
+      "implementation_files": [],
+      "test_evidence": [],
+      "issue_url": null,
+      "pr_url": null,
+      "dependencies": [
+        "Verificar regras de negócio e critérios de aceite do domínio"
+      ]
+    },
+    {
+      "id": "ORA-AI-001",
+      "domain": "AI",
+      "module": "Inteligência artificial e análise",
+      "priority": "P1",
+      "stage": 12,
+      "requirement": "Painéis básicos e alertas desde o MVP",
+      "acceptance": "KPIs operacionais calculados de fatos transacionais.",
+      "status": "planned-not-implemented",
+      "implementer": "Claude Code / Codex (definir por issue)",
+      "reviewer": "outro agente + aceite humano quando crítico",
+      "implementation_files": [],
+      "test_evidence": [],
+      "issue_url": null,
+      "pr_url": null,
+      "dependencies": [
+        "Verificar regras de negócio e critérios de aceite do domínio"
+      ]
+    },
+    {
+      "id": "ORA-AI-002",
+      "domain": "AI",
+      "module": "Inteligência artificial e análise",
+      "priority": "P2",
+      "stage": 12,
+      "requirement": "IA auxilia atendimento e qualificação de leads",
+      "acceptance": "Base de conhecimento versionada, revisão e handoff.",
+      "status": "planned-not-implemented",
+      "implementer": "Claude Code / Codex (definir por issue)",
+      "reviewer": "outro agente + aceite humano quando crítico",
+      "implementation_files": [],
+      "test_evidence": [],
+      "issue_url": null,
+      "pr_url": null,
+      "dependencies": [
+        "Verificar regras de negócio e critérios de aceite do domínio"
+      ]
+    },
+    {
+      "id": "ORA-AI-003",
+      "domain": "AI",
+      "module": "Inteligência artificial e análise",
+      "priority": "P2",
+      "stage": 12,
+      "requirement": "IA sugere produtos, respostas e roteamento de cliente",
+      "acceptance": "Sem enviar informações sensíveis não autorizadas.",
+      "status": "planned-not-implemented",
+      "implementer": "Claude Code / Codex (definir por issue)",
+      "reviewer": "outro agente + aceite humano quando crítico",
+      "implementation_files": [],
+      "test_evidence": [],
+      "issue_url": null,
+      "pr_url": null,
+      "dependencies": [
+        "Verificar regras de negócio e critérios de aceite do domínio"
+      ]
+    },
+    {
+      "id": "ORA-AI-004",
+      "domain": "AI",
+      "module": "Inteligência artificial e análise",
+      "priority": "P2",
+      "stage": 12,
+      "requirement": "IA resume campanhas, metas e falhas operacionais",
+      "acceptance": "Valores e fonte verificáveis; sem inventar dados.",
+      "status": "planned-not-implemented",
+      "implementer": "Claude Code / Codex (definir por issue)",
+      "reviewer": "outro agente + aceite humano quando crítico",
+      "implementation_files": [],
+      "test_evidence": [],
+      "issue_url": null,
+      "pr_url": null,
+      "dependencies": [
+        "Verificar regras de negócio e critérios de aceite do domínio"
+      ]
+    },
+    {
+      "id": "ORA-AI-005",
+      "domain": "AI",
+      "module": "Inteligência artificial e análise",
+      "priority": "P2",
+      "stage": 12,
+      "requirement": "Autorização humana obrigatória para operações financeiras/fiscais",
+      "acceptance": "Auditoria de proposta/aprovador/execução.",
+      "status": "planned-not-implemented",
+      "implementer": "Claude Code / Codex (definir por issue)",
+      "reviewer": "outro agente + aceite humano quando crítico",
+      "implementation_files": [],
+      "test_evidence": [],
+      "issue_url": null,
+      "pr_url": null,
+      "dependencies": [
+        "Verificar regras de negócio e critérios de aceite do domínio"
+      ]
+    },
+    {
+      "id": "ORA-AI-006",
+      "domain": "AI",
+      "module": "Inteligência artificial e análise",
+      "priority": "P2",
+      "stage": 12,
+      "requirement": "Controle de custo por chamada de modelo e retenção",
+      "acceptance": "Orçamento configurável, logs redigidos e alertas.",
+      "status": "planned-not-implemented",
+      "implementer": "Claude Code / Codex (definir por issue)",
+      "reviewer": "outro agente + aceite humano quando crítico",
+      "implementation_files": [],
+      "test_evidence": [],
+      "issue_url": null,
+      "pr_url": null,
+      "dependencies": [
+        "Verificar regras de negócio e critérios de aceite do domínio"
+      ]
+    },
+    {
+      "id": "ORA-AI-007",
+      "domain": "AI",
+      "module": "Inteligência artificial e análise",
+      "priority": "P2",
+      "stage": 12,
+      "requirement": "Avaliação de qualidade e red-team de agentes",
+      "acceptance": "Testes de prompt injection e permissões aprovados.",
+      "status": "planned-not-implemented",
+      "implementer": "Claude Code / Codex (definir por issue)",
+      "reviewer": "outro agente + aceite humano quando crítico",
+      "implementation_files": [],
+      "test_evidence": [],
+      "issue_url": null,
+      "pr_url": null,
+      "dependencies": [
+        "Verificar regras de negócio e critérios de aceite do domínio"
+      ]
+    },
+    {
+      "id": "ORA-REPORT-001",
+      "domain": "REPORT",
+      "module": "Gestão, BI e relatórios",
+      "priority": "P0",
+      "stage": 7,
+      "requirement": "Dashboard diretoria consolidado das 14 lojas",
+      "acceptance": "Filtro por período, loja, vendedor, natureza e status.",
+      "status": "planned-not-implemented",
+      "implementer": "Claude Code / Codex (definir por issue)",
+      "reviewer": "outro agente + aceite humano quando crítico",
+      "implementation_files": [],
+      "test_evidence": [],
+      "issue_url": null,
+      "pr_url": null,
+      "dependencies": [
+        "Verificar regras de negócio e critérios de aceite do domínio"
+      ]
+    },
+    {
+      "id": "ORA-REPORT-002",
+      "domain": "REPORT",
+      "module": "Gestão, BI e relatórios",
+      "priority": "P0",
+      "stage": 7,
+      "requirement": "Dashboard gerente de loja: caixa, metas, aprovação de desconto/NF",
+      "acceptance": "Só dados autorizados; alertas com link ao fato original.",
+      "status": "planned-not-implemented",
+      "implementer": "Claude Code / Codex (definir por issue)",
+      "reviewer": "outro agente + aceite humano quando crítico",
+      "implementation_files": [],
+      "test_evidence": [],
+      "issue_url": null,
+      "pr_url": null,
+      "dependencies": [
+        "Verificar regras de negócio e critérios de aceite do domínio"
+      ]
+    },
+    {
+      "id": "ORA-REPORT-003",
+      "domain": "REPORT",
+      "module": "Gestão, BI e relatórios",
+      "priority": "P0",
+      "stage": 7,
+      "requirement": "Dashboard vendedor mobile: produção do dia, metas e atalhos",
+      "acceptance": "Dados apenas do escopo autorizado.",
+      "status": "planned-not-implemented",
+      "implementer": "Claude Code / Codex (definir por issue)",
+      "reviewer": "outro agente + aceite humano quando crítico",
+      "implementation_files": [],
+      "test_evidence": [],
+      "issue_url": null,
+      "pr_url": null,
+      "dependencies": [
+        "Verificar regras de negócio e critérios de aceite do domínio"
+      ]
+    },
+    {
+      "id": "ORA-REPORT-004",
+      "domain": "REPORT",
+      "module": "Gestão, BI e relatórios",
+      "priority": "P0",
+      "stage": 7,
+      "requirement": "Relatório de chips vendidos, ativações e recargas separadamente",
+      "acceptance": "Produção não implica faturamento tributável idêntico.",
+      "status": "planned-not-implemented",
+      "implementer": "Claude Code / Codex (definir por issue)",
+      "reviewer": "outro agente + aceite humano quando crítico",
+      "implementation_files": [],
+      "test_evidence": [],
+      "issue_url": null,
+      "pr_url": null,
+      "dependencies": [
+        "Verificar regras de negócio e critérios de aceite do domínio"
+      ]
+    },
+    {
+      "id": "ORA-REPORT-005",
+      "domain": "REPORT",
+      "module": "Gestão, BI e relatórios",
+      "priority": "P0",
+      "stage": 7,
+      "requirement": "Relatório por método de pagamento e terminal PicPay",
+      "acceptance": "Distinção pagamento/pêndencia/liquidação/reconciliação.",
+      "status": "planned-not-implemented",
+      "implementer": "Claude Code / Codex (definir por issue)",
+      "reviewer": "outro agente + aceite humano quando crítico",
+      "implementation_files": [],
+      "test_evidence": [],
+      "issue_url": null,
+      "pr_url": null,
+      "dependencies": [
+        "Verificar regras de negócio e critérios de aceite do domínio"
+      ]
+    },
+    {
+      "id": "ORA-REPORT-006",
+      "domain": "REPORT",
+      "module": "Gestão, BI e relatórios",
+      "priority": "P1",
+      "stage": 7,
+      "requirement": "Relatórios de margem, vendedor e ranking configurável",
+      "acceptance": "Comissão/estorno reconciliáveis.",
+      "status": "planned-not-implemented",
+      "implementer": "Claude Code / Codex (definir por issue)",
+      "reviewer": "outro agente + aceite humano quando crítico",
+      "implementation_files": [],
+      "test_evidence": [],
+      "issue_url": null,
+      "pr_url": null,
+      "dependencies": [
+        "Verificar regras de negócio e critérios de aceite do domínio"
+      ]
+    },
+    {
+      "id": "ORA-REPORT-007",
+      "domain": "REPORT",
+      "module": "Gestão, BI e relatórios",
+      "priority": "P1",
+      "stage": 7,
+      "requirement": "Alertas de estoque mínimo/IMEI/caixa divergente/fiscal pendente",
+      "acceptance": "Notificação contextual e auditada.",
+      "status": "planned-not-implemented",
+      "implementer": "Claude Code / Codex (definir por issue)",
+      "reviewer": "outro agente + aceite humano quando crítico",
+      "implementation_files": [],
+      "test_evidence": [],
+      "issue_url": null,
+      "pr_url": null,
+      "dependencies": [
+        "Verificar regras de negócio e critérios de aceite do domínio"
+      ]
+    },
+    {
+      "id": "ORA-REPORT-008",
+      "domain": "REPORT",
+      "module": "Gestão, BI e relatórios",
+      "priority": "P2",
+      "stage": 7,
+      "requirement": "Dashboard expansão nacional por marketplace, ads e canais",
+      "acceptance": "Receitas/fees/margens por canal.",
+      "status": "planned-not-implemented",
+      "implementer": "Claude Code / Codex (definir por issue)",
+      "reviewer": "outro agente + aceite humano quando crítico",
+      "implementation_files": [],
+      "test_evidence": [],
+      "issue_url": null,
+      "pr_url": null,
+      "dependencies": [
+        "Verificar regras de negócio e critérios de aceite do domínio"
+      ]
+    },
+    {
+      "id": "ORA-QUAL-001",
+      "domain": "QUAL",
+      "module": "Segurança, qualidade, operação e compliance",
+      "priority": "P0",
+      "stage": 1,
+      "requirement": "CI, lint, typecheck, testes e code review obrigatórios",
+      "acceptance": "PR sem CI verde não libera merge.",
+      "status": "planned-not-implemented",
+      "implementer": "Claude Code / Codex (definir por issue)",
+      "reviewer": "outro agente + aceite humano quando crítico",
+      "implementation_files": [],
+      "test_evidence": [],
+      "issue_url": null,
+      "pr_url": null,
+      "dependencies": [
+        "Verificar regras de negócio e critérios de aceite do domínio"
+      ]
+    },
+    {
+      "id": "ORA-QUAL-002",
+      "domain": "QUAL",
+      "module": "Segurança, qualidade, operação e compliance",
+      "priority": "P0",
+      "stage": 1,
+      "requirement": "RLS e autorização negada por padrão, testadas por loja",
+      "acceptance": "Testes positivos e negativos com dois vendedores/lojas.",
+      "status": "planned-not-implemented",
+      "implementer": "Claude Code / Codex (definir por issue)",
+      "reviewer": "outro agente + aceite humano quando crítico",
+      "implementation_files": [],
+      "test_evidence": [],
+      "issue_url": null,
+      "pr_url": null,
+      "dependencies": [
+        "Verificar regras de negócio e critérios de aceite do domínio"
+      ]
+    },
+    {
+      "id": "ORA-QUAL-003",
+      "domain": "QUAL",
+      "module": "Segurança, qualidade, operação e compliance",
+      "priority": "P0",
+      "stage": 1,
+      "requirement": "Auditoria imutável de operações e aprovações críticas",
+      "acceptance": "Prova quem fez o quê e quando.",
+      "status": "planned-not-implemented",
+      "implementer": "Claude Code / Codex (definir por issue)",
+      "reviewer": "outro agente + aceite humano quando crítico",
+      "implementation_files": [],
+      "test_evidence": [],
+      "issue_url": null,
+      "pr_url": null,
+      "dependencies": [
+        "Verificar regras de negócio e critérios de aceite do domínio"
+      ]
+    },
+    {
+      "id": "ORA-QUAL-004",
+      "domain": "QUAL",
+      "module": "Segurança, qualidade, operação e compliance",
+      "priority": "P0",
+      "stage": 1,
+      "requirement": "Segredos em ambientes seguros sem exposição no Git/cliente",
+      "acceptance": "Secret scanning e testes de configuração.",
+      "status": "planned-not-implemented",
+      "implementer": "Claude Code / Codex (definir por issue)",
+      "reviewer": "outro agente + aceite humano quando crítico",
+      "implementation_files": [],
+      "test_evidence": [],
+      "issue_url": null,
+      "pr_url": null,
+      "dependencies": [
+        "Verificar regras de negócio e critérios de aceite do domínio"
+      ]
+    },
+    {
+      "id": "ORA-QUAL-005",
+      "domain": "QUAL",
+      "module": "Segurança, qualidade, operação e compliance",
+      "priority": "P0",
+      "stage": 1,
+      "requirement": "Backups e ensaio de restauração de banco e anexos",
+      "acceptance": "RPO/RTO definidos com responsável e evidência.",
+      "status": "planned-not-implemented",
+      "implementer": "Claude Code / Codex (definir por issue)",
+      "reviewer": "outro agente + aceite humano quando crítico",
+      "implementation_files": [],
+      "test_evidence": [],
+      "issue_url": null,
+      "pr_url": null,
+      "dependencies": [
+        "Verificar regras de negócio e critérios de aceite do domínio"
+      ]
+    },
+    {
+      "id": "ORA-QUAL-006",
+      "domain": "QUAL",
+      "module": "Segurança, qualidade, operação e compliance",
+      "priority": "P0",
+      "stage": 1,
+      "requirement": "Observabilidade de erros, latência, filas e conciliação",
+      "acceptance": "Alertas e dashboards com dono e severidade.",
+      "status": "planned-not-implemented",
+      "implementer": "Claude Code / Codex (definir por issue)",
+      "reviewer": "outro agente + aceite humano quando crítico",
+      "implementation_files": [],
+      "test_evidence": [],
+      "issue_url": null,
+      "pr_url": null,
+      "dependencies": [
+        "Verificar regras de negócio e critérios de aceite do domínio"
+      ]
+    },
+    {
+      "id": "ORA-QUAL-007",
+      "domain": "QUAL",
+      "module": "Segurança, qualidade, operação e compliance",
+      "priority": "P0",
+      "stage": 1,
+      "requirement": "Migrations versionadas, não destrutivas, testadas",
+      "acceptance": "Revisão humana e rollback/roll-forward preparados.",
+      "status": "planned-not-implemented",
+      "implementer": "Claude Code / Codex (definir por issue)",
+      "reviewer": "outro agente + aceite humano quando crítico",
+      "implementation_files": [],
+      "test_evidence": [],
+      "issue_url": null,
+      "pr_url": null,
+      "dependencies": [
+        "Verificar regras de negócio e critérios de aceite do domínio"
+      ]
+    },
+    {
+      "id": "ORA-QUAL-008",
+      "domain": "QUAL",
+      "module": "Segurança, qualidade, operação e compliance",
+      "priority": "P0",
+      "stage": 1,
+      "requirement": "Plano de contingência para internet, pagamentos e fiscal",
+      "acceptance": "Equipe piloto sabe como operar com segurança.",
+      "status": "planned-not-implemented",
+      "implementer": "Claude Code / Codex (definir por issue)",
+      "reviewer": "outro agente + aceite humano quando crítico",
+      "implementation_files": [],
+      "test_evidence": [],
+      "issue_url": null,
+      "pr_url": null,
+      "dependencies": [
+        "Verificar regras de negócio e critérios de aceite do domínio"
+      ]
+    },
+    {
+      "id": "ORA-QUAL-009",
+      "domain": "QUAL",
+      "module": "Segurança, qualidade, operação e compliance",
+      "priority": "P0",
+      "stage": 1,
+      "requirement": "Piloto com testes de usuário, caixa e fechamento diário",
+      "acceptance": "Critérios de go/no-go assinados.",
+      "status": "planned-not-implemented",
+      "implementer": "Claude Code / Codex (definir por issue)",
+      "reviewer": "outro agente + aceite humano quando crítico",
+      "implementation_files": [],
+      "test_evidence": [],
+      "issue_url": null,
+      "pr_url": null,
+      "dependencies": [
+        "Verificar regras de negócio e critérios de aceite do domínio"
+      ]
+    },
+    {
+      "id": "ORA-QUAL-010",
+      "domain": "QUAL",
+      "module": "Segurança, qualidade, operação e compliance",
+      "priority": "P1",
+      "stage": 1,
+      "requirement": "Performance mobile e testes em dispositivos/internet reais",
+      "acceptance": "SLOs aprovados e comparados com resultado.",
+      "status": "planned-not-implemented",
+      "implementer": "Claude Code / Codex (definir por issue)",
+      "reviewer": "outro agente + aceite humano quando crítico",
+      "implementation_files": [],
+      "test_evidence": [],
+      "issue_url": null,
+      "pr_url": null,
+      "dependencies": [
+        "Verificar regras de negócio e critérios de aceite do domínio"
+      ]
+    },
+    {
+      "id": "ORA-QUAL-011",
+      "domain": "QUAL",
+      "module": "Segurança, qualidade, operação e compliance",
+      "priority": "P1",
+      "stage": 1,
+      "requirement": "LGPD: bases legais, retenção, direitos do titular e minimização",
+      "acceptance": "Encarregado/jurídico revisa e aprova políticas.",
+      "status": "planned-not-implemented",
+      "implementer": "Claude Code / Codex (definir por issue)",
+      "reviewer": "outro agente + aceite humano quando crítico",
+      "implementation_files": [],
+      "test_evidence": [],
+      "issue_url": null,
+      "pr_url": null,
+      "dependencies": [
+        "Verificar regras de negócio e critérios de aceite do domínio"
+      ]
+    },
+    {
+      "id": "ORA-QUAL-012",
+      "domain": "QUAL",
+      "module": "Segurança, qualidade, operação e compliance",
+      "priority": "P1",
+      "stage": 1,
+      "requirement": "Testes de carga, concorrência e disaster recovery",
+      "acceptance": "Sem venda/IMEI duplo, serviço retorna ao estado previsto.",
+      "status": "planned-not-implemented",
+      "implementer": "Claude Code / Codex (definir por issue)",
+      "reviewer": "outro agente + aceite humano quando crítico",
+      "implementation_files": [],
+      "test_evidence": [],
+      "issue_url": null,
+      "pr_url": null,
+      "dependencies": [
+        "Verificar regras de negócio e critérios de aceite do domínio"
+      ]
+    },
+    {
+      "id": "ORA-QUAL-013",
+      "domain": "QUAL",
+      "module": "Segurança, qualidade, operação e compliance",
+      "priority": "P1",
+      "stage": 1,
+      "requirement": "Processo de resposta a incidentes e suporte às lojas",
+      "acceptance": "Playbook, contatos e rastreio de incidentes.",
+      "status": "planned-not-implemented",
+      "implementer": "Claude Code / Codex (definir por issue)",
+      "reviewer": "outro agente + aceite humano quando crítico",
+      "implementation_files": [],
+      "test_evidence": [],
+      "issue_url": null,
+      "pr_url": null,
+      "dependencies": [
+        "Verificar regras de negócio e critérios de aceite do domínio"
+      ]
+    },
+    {
+      "id": "ORA-QUAL-014",
+      "domain": "QUAL",
+      "module": "Segurança, qualidade, operação e compliance",
+      "priority": "P2",
+      "stage": 1,
+      "requirement": "Análise de segurança periódica e monitoramento de dependências",
+      "acceptance": "Atualizações e vulnerabilidades triadas.",
+      "status": "planned-not-implemented",
+      "implementer": "Claude Code / Codex (definir por issue)",
+      "reviewer": "outro agente + aceite humano quando crítico",
+      "implementation_files": [],
+      "test_evidence": [],
+      "issue_url": null,
+      "pr_url": null,
+      "dependencies": [
+        "Verificar regras de negócio e critérios de aceite do domínio"
+      ]
+    }
+  ]
+}

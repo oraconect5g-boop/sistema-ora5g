@@ -1,0 +1,26 @@
+# Segredos e configurações locais — nunca versionar
+.env
+.env.*
+!.env.example
+*.pem
+*.pfx
+*.p12
+*.key
+certificados/
+
+# Dados reais (exports da Rein, bases de clientes) não entram no Git
+dados_reais/
+*.csv.local
+
+# Dependências e builds
+node_modules/
+.next/
+out/
+dist/
+coverage/
+playwright-report/
+test-results/
+
+# Sistema
+.DS_Store
+Thumbs.db
