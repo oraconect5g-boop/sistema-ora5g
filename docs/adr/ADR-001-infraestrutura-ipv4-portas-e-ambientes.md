@@ -65,7 +65,7 @@ Regras de DNS:
 
 | Porta | Protocolo | Serviço | Motivo |
 |---|---|---|---|
-| 22 | TCP | SSH | Administração do servidor. **Somente login por chave**, senha desativada, proteção contra tentativas repetidas (fail2ban). Pode ser movida para outra porta numa etapa futura, documentando a mudança |
+| **22022** | TCP | SSH | Administração do servidor (porta definida pela HostGator, conferida em 06/11/2026; a 22 está fechada). **Somente login por chave**, senha desativada, proteção contra tentativas repetidas (fail2ban). Pode ser movida para outra porta numa etapa futura, documentando a mudança |
 | 80 | TCP | Caddy | Emissão/renovação do certificado HTTPS (Let's Encrypt, desafio HTTP) e redirecionamento automático para 443 |
 | 443 | TCP | Caddy | Todo o tráfego real (HTTPS) dos quatro endereços acima e os avisos (webhooks) das integrações |
 

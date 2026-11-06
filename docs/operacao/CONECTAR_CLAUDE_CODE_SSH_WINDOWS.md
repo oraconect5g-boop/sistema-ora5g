@@ -54,7 +54,7 @@ Cole o texto abaixo, salve e feche. Se o Bloco de Notas salvar como `config.txt`
 Host ora5g-dev
     HostName 69.6.214.94
     User dev
-    Port 22
+    Port 22022
     IdentityFile ~/.ssh/id_ed25519
 ```
 
