@@ -137,9 +137,29 @@ Credenciais **nunca** são compartilhadas entre ambientes. Se a VPS ficar aperta
 - O mapa de portas fica versionado e qualquer novo serviço precisa de uma porta da faixa reservada, registrada neste ADR.
 - O modo sessão do pooler tem limite de conexões por plano; a aplicação usará **poucas conexões reutilizadas** (pool pequeno por processo).
 
+## 4A. Revisão de 06/11/2026 — a VPS veio com cPanel/WHM
+
+**Fatos informados pelo proprietário:** VPS HostGator com **cPanel/WHM**, **16 GB de RAM, 8 núcleos, 500 GB de disco**; e-mail da empresa ficará na HostGator (incluso no plano por 1 ano); o proprietário quer **todo o ecossistema na HostGator**, mantendo o domínio registrado no Registro.br; sistema operacional e IPv4 ainda a consultar.
+
+**Domínio:** domínios `.com.br` são registrados no Registro.br; não é preciso transferir. Basta **delegar o DNS**: no Registro.br, trocar os servidores DNS do domínio pelos indicados pela HostGator e passar a administrar os registros no WHM/cPanel.
+
+**Opções para o sistema conviver com o cPanel:**
+
+| | Opção A — manter cPanel (recomendada pelo objetivo do proprietário) | Opção B — reinstalar sem cPanel |
+|---|---|---|
+| E-mail, DNS e certificados | Pelo cPanel (e-mail incluso, AutoSSL) | Precisam de outro serviço |
+| Entrada HTTPS (80/443) | **Apache do cPanel** encaminha `app`/`loja`/`hml-*` para `127.0.0.1:30xx/31xx` por arquivos de inclusão suportados pelo cPanel (sobrevivem às atualizações) | Caddy, como no item 2.3 |
+| Execução do sistema | Serviços Node gerenciados pelo **systemd**, nas mesmas portas internas. Docker só no CI, para evitar conflito com o firewall do cPanel | Docker, como no item 2.6 |
+| Portas abertas | Além de 22/80/443, as do cPanel (painéis 2083/2087, webmail 2096, e-mail 25/465/587/993/995, DNS 53 se o DNS ficar na própria VPS). Acesso aos painéis restrito | Somente 22/80/443 |
+| Risco | Mais serviços expostos; configuração precisa respeitar o cPanel | Perde a conveniência do pacote HostGator |
+
+As faixas internas 3000–3099 (produção) e 3100–3199 (homologação) **não colidem** com as portas padrão do cPanel e ficam mantidas nas duas opções. Com 16 GB de RAM, produção e homologação cabem na mesma VPS.
+
+**Pendente:** escolha do proprietário entre A e B.
+
 ## 5. Perguntas que bloqueiam a aprovação
 
-1. **A VPS veio com cPanel/WHM instalado?** Se sim, o Apache dele usa as portas 80 e 443 e há duas saídas: (a) reinstalar a VPS com Ubuntu limpo, sem cPanel, recomendado; ou (b) fazer o Apache do cPanel encaminhar para o sistema, o que é mais complexo e frágil.
-2. Sistema operacional, memória, processador e disco da VPS.
-3. O e-mail `@ora5g.com.br` vai continuar na HostGator? Precisamos de uma caixa `nao-responda@ora5g.com.br` para envio automático.
+1. ~~A VPS veio com cPanel/WHM?~~ **Sim (06/11).** Ver seção 4A: falta escolher entre a opção A e a B.
+2. ~~Memória, processador e disco.~~ **16 GB, 8 núcleos, 500 GB (06/11).** Falta o **sistema operacional** (aparece no WHM, em *Server Information*) e o **IPv4**.
+3. ~~E-mail.~~ **Fica na HostGator (06/11).** Criar a caixa `nao-responda@ora5g.com.br` depois que o DNS for delegado. Atenção: o e-mail é gratuito só no primeiro ano.
 4. ~~Quem administra o DNS do `ora5g.com.br` hoje?~~ **Respondido em 06/11: Registro.br.** Os registros A (`app`, `loja`, `hml-app`, `hml-loja`) serão criados no painel de DNS do Registro.br, sem nenhum AAAA. Antes de qualquer alteração, a zona atual (principalmente MX, SPF, DKIM e DMARC do e-mail) será exportada e anexada a este ADR, para não perder nenhum registro. Registro CAA só se o painel oferecer (é opcional).
