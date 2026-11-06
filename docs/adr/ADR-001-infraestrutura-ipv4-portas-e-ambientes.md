@@ -139,7 +139,7 @@ Credenciais **nunca** são compartilhadas entre ambientes. Se a VPS ficar aperta
 
 ## 4A. Revisão de 06/11/2026 — a VPS veio com cPanel/WHM
 
-**Fatos informados pelo proprietário:** VPS HostGator com **cPanel/WHM**, **16 GB de RAM, 8 núcleos, 500 GB de disco**; e-mail da empresa ficará na HostGator (incluso no plano por 1 ano); o proprietário quer **todo o ecossistema na HostGator**, mantendo o domínio registrado no Registro.br; sistema operacional e IPv4 ainda a consultar.
+**Fatos informados pelo proprietário:** VPS HostGator com **cPanel/WHM**, **16 GB de RAM, 500 GB de disco** (processador corrigido para 4 vCPUs após conferência no WHM); e-mail da empresa ficará na HostGator (incluso no plano por 1 ano); o proprietário quer **todo o ecossistema na HostGator**, mantendo o domínio registrado no Registro.br; sistema operacional e IPv4 ainda a consultar.
 
 **Domínio:** domínios `.com.br` são registrados no Registro.br; não é preciso transferir. Basta **delegar o DNS**: no Registro.br, trocar os servidores DNS do domínio pelos indicados pela HostGator e passar a administrar os registros no WHM/cPanel.
 
@@ -157,9 +157,25 @@ As faixas internas 3000–3099 (produção) e 3100–3199 (homologação) **não
 
 **Pendente:** escolha do proprietário entre A e B.
 
+**Dados conferidos no WHM em 06/11/2026 (prints enviados pelo proprietário):**
+
+| Item | Valor |
+|---|---|
+| IPv4 público (único, compartilhado) | `69.6.214.94` — campo IPv6 vazio no WHM, confirmando servidor só IPv4 |
+| Nome do servidor | `dedi-16403309.ora5g.com.br` |
+| Sistema operacional | Família Red Hat Enterprise Linux 9 (kernel `el9_7`), **não Ubuntu**; distribuição exata a confirmar (provavelmente AlmaLinux 9 ou CloudLinux 9) |
+| Processador | **4 vCPUs** AMD EPYC (corrige a informação anterior de 8 núcleos) |
+| Memória | 16 GB + 4 GB de swap; ~1,4 GB em uso |
+| Disco | 512 GiB; partição principal com 469 GB livres. `/tmp` tem só 3,9 GB, então builds não rodam no servidor (são feitos no GitHub Actions) |
+| Placa de rede | `ens3` |
+| Servidores DNS configurados no WHM | `ns1.ora5g.com.br` e `ns2.ora5g.com.br` (DNS rodando na própria VPS) |
+| Conta cPanel | `ora5g.com.br`, criada em 04/11/2026, no IP 69.6.214.94 |
+
+Consequências: os scripts do servidor serão escritos para a família Red Hat 9 (`dnf`, `firewalld`/CSF, `systemd`), e não para Ubuntu. Com 4 vCPUs e 16 GB, produção e homologação continuam cabendo na mesma VPS, desde que as builds sejam feitas fora dela.
+
 ## 5. Perguntas que bloqueiam a aprovação
 
 1. ~~A VPS veio com cPanel/WHM?~~ **Sim (06/11).** Ver seção 4A: falta escolher entre a opção A e a B.
-2. ~~Memória, processador e disco.~~ **16 GB, 8 núcleos, 500 GB (06/11).** Falta o **sistema operacional** (aparece no WHM, em *Server Information*) e o **IPv4**.
+2. ~~Memória, processador e disco.~~ **16 GB, 4 vCPUs, 512 GiB, família Red Hat 9, IPv4 69.6.214.94 (06/11)** — ver dados conferidos na seção 4A.
 3. ~~E-mail.~~ **Fica na HostGator (06/11).** Criar a caixa `nao-responda@ora5g.com.br` depois que o DNS for delegado. Atenção: o e-mail é gratuito só no primeiro ano.
 4. ~~Quem administra o DNS do `ora5g.com.br` hoje?~~ **Respondido em 06/11: o domínio está no Registro.br; o proprietário quer delegar o DNS para a HostGator (seção 4A).** Depois da delegação, os registros A (`app`, `loja`, `hml-app`, `hml-loja`) serão criados no editor de zona do WHM/cPanel, sem nenhum AAAA. Antes de qualquer alteração, a zona atual (principalmente MX, SPF, DKIM e DMARC do e-mail) será exportada e anexada a este ADR, para não perder nenhum registro. Registro CAA só se o painel oferecer (é opcional).
