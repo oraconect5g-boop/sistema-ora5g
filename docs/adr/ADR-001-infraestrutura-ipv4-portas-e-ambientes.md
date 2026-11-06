@@ -161,7 +161,8 @@ As faixas internas 3000–3099 (produção) e 3100–3199 (homologação) **não
 
 | Item | Valor |
 |---|---|
-| IPv4 público (único, compartilhado) | `69.6.214.94` — campo IPv6 vazio no WHM, confirmando servidor só IPv4 |
+| IPv4 públicos | `69.6.214.94` (principal, compartilhado: site, e-mail, `ns1`, sistema) e `69.6.214.23` (secundário, interface `ens3:cp1`, usado pelo `ns2`). **Não excluir o `.23`**: sem ele o `ns2` deixa de responder. Campo IPv6 vazio no WHM, confirmando servidor só IPv4 |
+| DNS — situação em 06/11 | Domínio ainda delegado ao Hostoo (`ns1/ns2/ns3.hostoo.io`). O conteúdo antigo no Hostoo **não será mais usado** (proprietário). Zona `ora5g.com.br` no WHM conferida: NS, A, MX, SPF, DKIM e DMARC presentes, nenhum AAAA. Delegação planejada: `ns1.ora5g.com.br` → `69.6.214.94`, `ns2.ora5g.com.br` → `69.6.214.23` |
 | Nome do servidor | `dedi-16403309.ora5g.com.br` |
 | Sistema operacional | Família Red Hat Enterprise Linux 9 (kernel `el9_7`), **não Ubuntu**; distribuição exata a confirmar (provavelmente AlmaLinux 9 ou CloudLinux 9) |
 | Processador | **4 vCPUs** AMD EPYC (corrige a informação anterior de 8 núcleos) |
