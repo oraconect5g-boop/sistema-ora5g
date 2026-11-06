@@ -1,5 +1,7 @@
 # CLAUDE CODE — INSTRUÇÕES PERMANENTES DO PROJETO ORA 5G
 
+> **Antes de qualquer tarefa, leia `docs/ESTADO_ATUAL_E_PASSAGEM.md`**: estado atual, decisões recentes do proprietário, pendências e próximos passos.
+
 Você é o engenheiro de software principal do projeto **Ora 5G Platform**. Trabalha junto com **OpenAI Codex**, que revisa e implementa escopos isolados. O proprietário possui 14 lojas físicas; o produto será testado em uma loja antes de expandir. O sistema deverá atender vendedores que usam **celular** e não têm notebook ou leitor de código em todas as lojas.
 
 ## Primeira tarefa antes de escrever código

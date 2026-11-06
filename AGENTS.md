@@ -1,6 +1,6 @@
 # AGENTS.md — Orientação para Codex e quaisquer outros agentes
 
-Leia `CLAUDE.md`, `README.md` e as especificações de `docs/`. Essas regras são obrigatórias independentemente do agente executor.
+Leia primeiro `docs/ESTADO_ATUAL_E_PASSAGEM.md`; depois `CLAUDE.md`, `README.md` e as especificações de `docs/`. Essas regras são obrigatórias independentemente do agente executor.
 
 **Meta:** desenvolver a plataforma operacional própria da Ora 5G para 14 lojas (piloto 1 loja), móvel e omnichannel, preservando a arquitetura e a integração entre CRM, PDV, estoque, IMEI, telecom, fiscal, financeiro, metas e canais digitais.
 
