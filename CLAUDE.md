@@ -29,7 +29,7 @@ Você é o engenheiro de software principal do projeto **Ora 5G Platform**. Trab
 
 ## Trabalho com Codex
 - Não editar a mesma área/arquivo simultaneamente. Branch/worktree por issue; PR curto.
-- Implementador e revisor devem ser agentes diferentes, preferencialmente alternando papéis quando apropriado.
+- Implementador e revisor devem ser agentes diferentes. Por decisão do proprietário (06/11/2026), os papéis são fixos: Claude Code programa e Codex revisa (ver seção final).
 - Cada PR deve incluir escopo, requisitos associados, testes executados/evidências, impacto de banco, riscos e plano de rollback.
 - Human-in-the-loop para mudanças de acesso, banco de produção, fiscal, recebimento, segurança e release.
 
