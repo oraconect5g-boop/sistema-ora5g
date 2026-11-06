@@ -123,21 +123,26 @@ Credenciais **nunca** são compartilhadas entre ambientes. Se a VPS ficar aperta
 
 ### 2.7 Acesso ao servidor (decisão do proprietário, 06/11/2026)
 
-**Regra:** Claude Code e Codex **nunca acessam o SSH do servidor**, nem juntos nem separados. Os agentes só trabalham no GitHub (branches e PRs). **Toda a programação é feita no GitHub**: nenhum código, configuração ou script é editado diretamente no servidor; o que chega ao servidor sai sempre do repositório, por deploy aprovado.
+**Decisão do proprietário (06/11/2026, revisada no mesmo dia):** um agente programa, o outro revisa; o programador trabalha por SSH no servidor e precisa de acesso direto às chaves de desenvolvimento e homologação para não travar o trabalho; os dois acompanham o mesmo GitHub.
 
-| Quem | Acesso ao servidor |
-|---|---|
-| Claude Code | **Nenhum.** Escreve scripts e configurações no repositório |
-| Codex | **Nenhum.** Revisa e implementa no repositório |
-| GitHub Actions (job de deploy) | Único acesso automatizado, com o usuário `deploy` e a chave guardada nos Secrets do GitHub, que os agentes não conseguem ler |
-| Proprietário | Acesso pessoal (root/WHM) com a própria chave |
+| Quem | Papel | Acesso ao servidor | Acesso a chaves (`.env`) |
+|---|---|---|---|
+| **Claude Code** | **Programador**: código, testes, banco, scripts, homologação | **SSH** com o usuário `dev`, na área de desenvolvimento/homologação | **Lê e edita** `.env` de **desenvolvimento** e de **homologação**; edita `.env.example` no Git |
+| **Codex** | **Revisor**: confere código, aponta bugs e desvios do plano, faz correções pequenas no PR | **Nenhum.** Trabalha só no GitHub | **Nenhum.** Testa com valores fictícios |
+| GitHub Actions | Deploy | Usuário `deploy`, só com aprovação do proprietário | Lê os Secrets do GitHub |
+| Proprietário | Aprova PRs e publicações | Root/WHM com a própria chave | Único com acesso ao `.env` de **produção** |
 
-Garantias contra acesso simultâneo:
-1. **Fila única de deploy:** o workflow usa `concurrency` do GitHub Actions com um grupo por ambiente e sem cancelar o que está em andamento. Um segundo deploy espera o primeiro terminar.
-2. **Trava no próprio servidor:** o script de deploy usa `flock` em um arquivo de trava. Se outro deploy (ou um comando manual) estiver rodando, ele para sem mexer em nada.
-3. **Aprovação humana:** os ambientes `homologacao` e `producao` do GitHub exigem aprovação do proprietário antes de o job conectar ao servidor.
-4. **Usuário `deploy` limitado:** só pode reiniciar os serviços do sistema e trocar a versão publicada; não administra o cPanel, o e-mail nem o DNS.
-5. **Registro:** cada deploy deixa no GitHub quem aprovou, qual versão foi publicada e o resultado.
+Regras:
+1. **Só o Claude Code usa SSH.** Como o Codex trabalha pelo GitHub, nunca há dois agentes no servidor ao mesmo tempo. A trava `flock` de sessão e de deploy continua, para impedir que uma publicação aconteça enquanto o Claude trabalha.
+2. **Área do programador:** usuário Linux `dev`, sem `sudo` geral, com pasta própria (`/home/dev/sistema-ora5g`), rodando a homologação nas portas **31xx**. Sem acesso ao WHM, ao e-mail, ao DNS nem aos arquivos de produção.
+3. **Chaves separadas por ambiente:** desenvolvimento e homologação usam **credenciais de teste/sandbox** sempre que o fornecedor oferecer; produção tem chaves próprias que os agentes nunca veem. Se uma chave de homologação vazar, a produção não é afetada.
+4. **Cuidados do programador com o `.env`:** arquivo com permissão `600`, fora do Git (já bloqueado no `.gitignore`); **nunca exibir valores** em mensagens, logs, commits ou PRs; para conferir, usar o script `verificar-env`, que mostra só o **nome** das variáveis presentes ou faltando.
+5. **Código sempre no GitHub:** o Claude programa no servidor, mas todo código vai para uma branch e um PR. Nada vai para a produção sem PR revisado pelo Codex e aprovado pelo proprietário.
+6. **Revisão em tempo real:** cada envio do Claude aparece no PR; o Codex revisa a cada atualização e registra apontamentos no próprio PR. Correção grande é devolvida ao Claude; o Codex só corrige diretamente ajustes pequenos.
+7. **Produção:** só muda por deploy do GitHub Actions, com fila única (`concurrency`), trava no servidor e aprovação do proprietário. O usuário `deploy` só troca a versão e reinicia os serviços.
+8. **Registro:** cada sessão SSH do `dev` e cada deploy ficam registrados (quem, quando, o que mudou).
+
+Pendente: confirmar que o Claude Code rodará no computador do proprietário (de onde o SSH alcança o servidor).
 
 ## 3. Alternativas consideradas
 

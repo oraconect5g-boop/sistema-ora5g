@@ -25,5 +25,9 @@ A hierarquia é: decisão explícita recente do usuário > regras validadas/ADRs
 ## Não-negociáveis
 Rein apenas importação por arquivos; Nogle sem endpoints presumidos; PicPay POS sem assumir integração automática; segurança/LGPD; vendedores mobile-first; venda mista por categoria e por pagamento; contabilidade gerencial vs formal separadas; comissão por evento idempotente; auditoria e reconciliação.
 
-## Acesso ao servidor (decisão do proprietário, 06/11/2026)
-Nenhum agente (Claude Code, Codex ou outro) acessa o servidor por SSH, painel WHM/cPanel ou qualquer outro meio. Toda a programação acontece no GitHub (branches e PRs). O único acesso automatizado ao servidor é o job de deploy do GitHub Actions, com fila única, trava no servidor e aprovação do proprietário. Detalhes: `docs/adr/ADR-001-infraestrutura-ipv4-portas-e-ambientes.md`, seção 2.7.
+## Papéis e acesso ao servidor (decisão do proprietário, 06/11/2026)
+- **Claude Code = programador.** Trabalha por SSH no servidor, com o usuário `dev`, na área de desenvolvimento/homologação (portas 31xx). Tem acesso ao `.env` de desenvolvimento e de homologação; nunca exibe valores de chaves em mensagens, logs, commits ou PRs.
+- **Codex = revisor.** Não acessa o servidor nem o `.env`. Revisa cada PR no GitHub: confere aderência ao plano e aos ADRs, procura bugs e falhas de permissão, aponta correções. Pode fazer apenas correções pequenas; mudanças maiores voltam ao Claude Code.
+- Os dois acompanham o mesmo repositório; todo código passa por branch e PR.
+- Produção: só por deploy do GitHub Actions aprovado pelo proprietário. Nenhum agente acessa o `.env` de produção.
+- Detalhes: `docs/adr/ADR-001-infraestrutura-ipv4-portas-e-ambientes.md`, seção 2.7.
