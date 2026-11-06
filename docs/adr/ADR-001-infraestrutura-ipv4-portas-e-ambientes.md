@@ -123,7 +123,7 @@ Credenciais **nunca** são compartilhadas entre ambientes. Se a VPS ficar aperta
 
 ### 2.7 Acesso ao servidor (decisão do proprietário, 06/11/2026)
 
-**Regra:** Claude Code e Codex **nunca acessam o SSH do servidor**, nem juntos nem separados. Os agentes só trabalham no GitHub (branches e PRs).
+**Regra:** Claude Code e Codex **nunca acessam o SSH do servidor**, nem juntos nem separados. Os agentes só trabalham no GitHub (branches e PRs). **Toda a programação é feita no GitHub**: nenhum código, configuração ou script é editado diretamente no servidor; o que chega ao servidor sai sempre do repositório, por deploy aprovado.
 
 | Quem | Acesso ao servidor |
 |---|---|
