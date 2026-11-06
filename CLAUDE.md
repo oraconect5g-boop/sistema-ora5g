@@ -40,3 +40,8 @@ Você é o engenheiro de software principal do projeto **Ora 5G Platform**. Trab
 
 ## Primeira resposta ao proprietário
 Diga o que você entendeu, quais arquivos realmente leu, o que encontrou implementado no repositório, quais riscos impedem avançar sem validação e a primeira entrega executável pequena. Priorize a Etapa 0 e não prometa sistema pronto de uma vez.
+
+## Acesso ao servidor (decisão do proprietário, 06/11/2026)
+- Claude Code e Codex **nunca** acessam o servidor (SSH, WHM/cPanel ou outro meio), nem simultânea nem separadamente.
+- Toda a programação é feita no GitHub; nada é editado diretamente no servidor.
+- O único acesso automatizado é o deploy do GitHub Actions, com fila única, trava no servidor e aprovação do proprietário (ADR-001, seção 2.7).
