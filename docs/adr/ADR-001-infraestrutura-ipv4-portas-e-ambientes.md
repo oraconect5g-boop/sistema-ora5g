@@ -142,4 +142,4 @@ Credenciais **nunca** são compartilhadas entre ambientes. Se a VPS ficar aperta
 1. **A VPS veio com cPanel/WHM instalado?** Se sim, o Apache dele usa as portas 80 e 443 e há duas saídas: (a) reinstalar a VPS com Ubuntu limpo, sem cPanel, recomendado; ou (b) fazer o Apache do cPanel encaminhar para o sistema, o que é mais complexo e frágil.
 2. Sistema operacional, memória, processador e disco da VPS.
 3. O e-mail `@ora5g.com.br` vai continuar na HostGator? Precisamos de uma caixa `nao-responda@ora5g.com.br` para envio automático.
-4. Quem administra o DNS do `ora5g.com.br` hoje (HostGator, Registro.br ou outro)?
+4. ~~Quem administra o DNS do `ora5g.com.br` hoje?~~ **Respondido em 06/11: Registro.br.** Os registros A (`app`, `loja`, `hml-app`, `hml-loja`) serão criados no painel de DNS do Registro.br, sem nenhum AAAA. Antes de qualquer alteração, a zona atual (principalmente MX, SPF, DKIM e DMARC do e-mail) será exportada e anexada a este ADR, para não perder nenhum registro. Registro CAA só se o painel oferecer (é opcional).
