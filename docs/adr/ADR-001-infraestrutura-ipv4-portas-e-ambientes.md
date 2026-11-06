@@ -121,6 +121,24 @@ Credenciais **nunca** são compartilhadas entre ambientes. Se a VPS ficar aperta
 - Deploy em produção **somente com aprovação humana** (CLAUDE.md, *human-in-the-loop*).
 - Rollback: voltar para a imagem anterior marcada com a versão.
 
+### 2.7 Acesso ao servidor (decisão do proprietário, 06/11/2026)
+
+**Regra:** Claude Code e Codex **nunca acessam o SSH do servidor**, nem juntos nem separados. Os agentes só trabalham no GitHub (branches e PRs).
+
+| Quem | Acesso ao servidor |
+|---|---|
+| Claude Code | **Nenhum.** Escreve scripts e configurações no repositório |
+| Codex | **Nenhum.** Revisa e implementa no repositório |
+| GitHub Actions (job de deploy) | Único acesso automatizado, com o usuário `deploy` e a chave guardada nos Secrets do GitHub, que os agentes não conseguem ler |
+| Proprietário | Acesso pessoal (root/WHM) com a própria chave |
+
+Garantias contra acesso simultâneo:
+1. **Fila única de deploy:** o workflow usa `concurrency` do GitHub Actions com um grupo por ambiente e sem cancelar o que está em andamento. Um segundo deploy espera o primeiro terminar.
+2. **Trava no próprio servidor:** o script de deploy usa `flock` em um arquivo de trava. Se outro deploy (ou um comando manual) estiver rodando, ele para sem mexer em nada.
+3. **Aprovação humana:** os ambientes `homologacao` e `producao` do GitHub exigem aprovação do proprietário antes de o job conectar ao servidor.
+4. **Usuário `deploy` limitado:** só pode reiniciar os serviços do sistema e trocar a versão publicada; não administra o cPanel, o e-mail nem o DNS.
+5. **Registro:** cada deploy deixa no GitHub quem aprovou, qual versão foi publicada e o resultado.
+
 ## 3. Alternativas consideradas
 
 | Alternativa | Por que não agora |
