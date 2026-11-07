@@ -18,7 +18,7 @@
     },
     "ORA-ORG-002": {
       "status": "parcial",
-      "nota": "Vínculos com vigência, um vendedor em várias lojas, bloqueio testado. Falta a tela de gestão de usuários (ORA-008).",
+      "nota": "Vínculos com vigência, um vendedor em várias lojas, bloqueio testado. A tela de usuários existe só na demonstração (troca de loja da sessão, bloquear/desbloquear sem gravar); falta a tela real ligada ao banco.",
       "evidencia": "acesso.test.ts (T1, T2/T3, T7)"
     },
     "ORA-ORG-003": {
@@ -53,8 +53,8 @@
     },
     "ORA-CAT-006": {
       "status": "parcial",
-      "nota": "Validação de IMEI (dígito verificador) e ICCID prontas e testadas. Falta a busca no banco.",
-      "evidencia": "packages/dominio/src/identificadores.ts"
+      "nota": "Validação de IMEI (dígito verificador), ICCID e CPF prontas e testadas; busca por nome, marca, SKU, código de barras e final do IMEI na demonstração. Falta a busca no banco.",
+      "evidencia": "packages/dominio/src/identificadores.ts; apps/plataforma/src/app/demo/vender/PDV.tsx"
     },
     "ORA-INV-002": {
       "status": "parcial",
@@ -68,8 +68,8 @@
     },
     "ORA-POS-006": {
       "status": "demonstracao",
-      "nota": "Regra que decide quando precisa de aprovação está pronta; a fila de aprovação existe só na demonstração.",
-      "evidencia": "packages/dominio/src/desconto.ts; apps/plataforma/src/app/demo/aprovacoes"
+      "nota": "Regra que decide quando precisa de aprovação está pronta; pedido com motivo, resposta simulada, cancelamento quando o carrinho muda e fila com aprovar/negar (justificativa obrigatória) existem só na demonstração.",
+      "evidencia": "packages/dominio/src/desconto.ts; apps/plataforma/src/app/demo/aprovacoes; apps/plataforma/src/app/demo/vender"
     },
     "ORA-POS-007": {
       "status": "parcial",
@@ -88,18 +88,18 @@
     },
     "ORA-REPORT-001": {
       "status": "demonstracao",
-      "nota": "Painel da rede só com dados fictícios.",
-      "evidencia": "apps/plataforma/src/app/demo"
+      "nota": "Painel da rede (ou de uma loja escolhida no topo) com faturamento, meta, ranking das lojas, mix, recebimentos por meio, vendas por hora e alertas. Só dados fictícios.",
+      "evidencia": "apps/plataforma/src/app/demo; apps/plataforma/e2e/demonstracao.spec.ts"
     },
     "ORA-REPORT-002": {
       "status": "demonstracao",
-      "nota": "Painel do gerente só com dados fictícios.",
-      "evidencia": "apps/plataforma/src/app/demo"
+      "nota": "Painel do gerente: equipe inteira contra a meta, caixa previsto × contado, aprovações e alertas da loja. Só dados fictícios.",
+      "evidencia": "apps/plataforma/src/app/demo; apps/plataforma/e2e/demonstracao.spec.ts"
     },
     "ORA-REPORT-003": {
       "status": "demonstracao",
-      "nota": "Início do vendedor no celular só com dados fictícios.",
-      "evidencia": "apps/plataforma/src/app/demo"
+      "nota": "Início do vendedor no celular: meta do dia, produção por categoria, vendas por loja (vendedor em duas lojas) e atalhos. Só dados fictícios.",
+      "evidencia": "apps/plataforma/src/app/demo; apps/plataforma/e2e/demonstracao.spec.ts"
     },
     "ORA-CONNECT-004": {
       "status": "bloqueado",
@@ -140,6 +140,51 @@
       "status": "parcial",
       "nota": "Três migrations versionadas, aplicadas do zero nos testes e no ora5g-dev, com reversão documentada; correções por migration nova, sem reescrever a aplicada. Falta homologação e procedimento de produção.",
       "evidencia": "packages/banco/supabase"
+    },
+    "ORA-REPORT-004": {
+      "status": "demonstracao",
+      "nota": "Relatório de chips, ativações, portabilidades e recargas por dia e por vendedor, só confirmadas. Só dados fictícios.",
+      "evidencia": "apps/plataforma/src/app/demo; apps/plataforma/e2e/demonstracao.spec.ts"
+    },
+    "ORA-REPORT-005": {
+      "status": "demonstracao",
+      "nota": "Recebimentos por meio de pagamento e situação de conciliação (autorizado, liquidado, conciliado). Só dados fictícios.",
+      "evidencia": "apps/plataforma/src/app/demo; apps/plataforma/e2e/demonstracao.spec.ts"
+    },
+    "ORA-REPORT-006": {
+      "status": "demonstracao",
+      "nota": "Relatórios de margem, ticket, descontos e ranking de lojas e vendedores por período (7, 14 e 30 dias), com exportação CSV. Ranking para o vendedor aguarda a decisão P3.",
+      "evidencia": "apps/plataforma/src/app/demo; apps/plataforma/e2e/demonstracao.spec.ts"
+    },
+    "ORA-REPORT-007": {
+      "status": "demonstracao",
+      "nota": "Alertas de estoque mínimo, caixa divergente, nota parada, OS parada e ativação com falha, no sino e no painel. Só dados fictícios.",
+      "evidencia": "apps/plataforma/src/app/demo; apps/plataforma/e2e/demonstracao.spec.ts"
+    },
+    "ORA-PERF-005": {
+      "status": "demonstracao",
+      "nota": "Painel do gestor com metas e produção de todos os vendedores do escopo; o vendedor vê só os próprios números. Só dados fictícios.",
+      "evidencia": "apps/plataforma/src/app/demo; apps/plataforma/e2e/demonstracao.spec.ts"
+    },
+    "ORA-FIN-008": {
+      "status": "demonstracao",
+      "nota": "Visão financeira por loja ou da rede (recebimentos, caixas, financeiras, contas e fluxo de caixa de 14 dias). Só dados fictícios.",
+      "evidencia": "apps/plataforma/src/app/demo; apps/plataforma/e2e/demonstracao.spec.ts"
+    },
+    "ORA-FIN-009": {
+      "status": "demonstracao",
+      "nota": "Exportação CSV (ponto e vírgula, abre no Excel em português) das telas de vendas, estoque, metas, relatórios, recebimentos, usuários e auditoria. XLSX e PDF ainda não.",
+      "evidencia": "apps/plataforma/src/app/demo; apps/plataforma/e2e/demonstracao.spec.ts"
+    },
+    "ORA-POS-008": {
+      "status": "demonstracao",
+      "nota": "Venda da demonstração ligada a vendedor, loja da sessão e cliente (busca exata ou cadastro na hora). Nada é gravado.",
+      "evidencia": "apps/plataforma/src/app/demo; apps/plataforma/e2e/demonstracao.spec.ts"
+    },
+    "ORA-PAY-003": {
+      "status": "demonstracao",
+      "nota": "Situação por meio de pagamento separando autorizado, pago, liquidado e conciliado na tela de caixa. Só dados fictícios.",
+      "evidencia": "apps/plataforma/src/app/demo; apps/plataforma/e2e/demonstracao.spec.ts"
     }
   }
 }
