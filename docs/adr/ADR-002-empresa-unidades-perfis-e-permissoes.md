@@ -1,6 +1,6 @@
 # ADR-002 — Empresa, unidades, perfis e permissões (fundação do acesso)
 
-**Status:** Proposta (aguarda aprovação do proprietário e revisão do Codex)
+**Status:** Aceita pelo proprietário em 07/11/2026, como proposta (perguntas 1, 3 e 5 da seção 5 respondidas: sim). Perguntas 2 (ranking) e 4 (técnico) seguem abertas, sem bloquear o banco. Implementada em `packages/banco` (ORA-004/005)
 **Data:** 06/11/2026 · **Autor:** Claude Code
 **Requisitos:** ORA-ORG-001 a 006 (P0), ORA-ORG-007 a 010 (preparados, não implementados), ORA-QUAL-001
 **Decisões de origem:** DEC-U18 (piloto Santa Cândida), DEC-U19 (CNPJ raiz + filiais), DEC-U33 (login por e-mail, celular pessoal), DEC-U34 (vendedor em várias lojas), DEC-U42/U43 (perfis reais), DEC-U47 (técnico central), loja online como unidade (plano de 06/11)

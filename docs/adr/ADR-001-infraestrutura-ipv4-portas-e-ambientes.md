@@ -1,6 +1,6 @@
 # ADR-001 — Infraestrutura: servidor só IPv4, mapa de portas, domínios e ambientes
 
-**Status:** Proposta (aguarda aprovação do proprietário e revisão do Codex)
+**Status:** Aceita pelo proprietário em 07/11/2026, com a **opção A** da seção 4A (manter o cPanel). Delegação do DNS no Registro.br ainda pendente (P12)
 **Data:** 06/11/2026 · **Autor:** Claude Code
 **Requisitos relacionados:** ORA-QUAL-001 a 009, ORA-ONLINE-*, DEC-U18 a DEC-U49, decisão de 06/11 "servidor sem IPv6"
 
@@ -178,7 +178,7 @@ Pendente: confirmar que o Claude Code rodará no computador do proprietário (de
 
 As faixas internas 3000–3099 (produção) e 3100–3199 (homologação) **não colidem** com as portas padrão do cPanel e ficam mantidas nas duas opções. Com 16 GB de RAM, produção e homologação cabem na mesma VPS.
 
-**Pendente:** escolha do proprietário entre A e B.
+**Decidido em 07/11/2026:** opção A (manter o cPanel). As configurações do Apache e do systemd exigem root e ficam com o proprietário, com passo a passo do Claude Code.
 
 **Dados conferidos no WHM em 06/11/2026 (prints enviados pelo proprietário):**
 

@@ -1,6 +1,6 @@
 # Estado atual do projeto e passagem de contexto
 
-**Atualizado em:** 06/11/2026, 19h20 · **Por:** Claude Code (sessão de planejamento na nuvem)
+**Atualizado em:** 07/11/2026 · **Por:** Claude Code (programador, no servidor)
 **Para:** o Claude Code que programa no servidor (usuário `dev`) e o Codex (revisor)
 
 > Leia este arquivo **antes de qualquer tarefa**. Ele resume duas conversas longas com o proprietário (05 e 06/11/2026). Os detalhes estão nos documentos citados; em caso de dúvida, a decisão mais recente do proprietário vale mais que qualquer documento antigo.
@@ -17,6 +17,8 @@
 | **Codex** | **Revisor.** Trabalha só no GitHub: revisa cada PR, aponta bugs e desvios do plano, faz só correções pequenas. Não acessa o servidor |
 
 Papéis **fixos** (decisão do proprietário). Detalhes: ADR-001, seção 2.7.
+
+**Merges (decisão do proprietário, 07/11/2026):** o Claude Code faz os merges na `main` depois de rodar no servidor, a partir de instalação limpa, a mesma sequência do CI. O Codex continua revisando os commits no GitHub e aponta correções, que voltam como novos commits. Limitação atual: o Claude Code não enxerga o resultado do CI no GitHub (a Deploy key não acessa a API); o proprietário confere a aba Actions.
 
 ## 2. O negócio em 10 linhas
 
@@ -43,7 +45,8 @@ Papéis **fixos** (decisão do proprietário). Detalhes: ADR-001, seção 2.7.
 | Zona DNS no WHM | Conferida: A, MX, SPF, DKIM, DMARC, nenhum AAAA |
 | Domínios do sistema | `app`, `loja`, `hml-app`, `hml-loja` `.ora5g.com.br` (só registros A) — ainda não criados |
 | Portas internas | **30xx produção, 31xx homologação**, sempre em `127.0.0.1` |
-| Banco | **Supabase gerenciado**, pelo **pooler em modo sessão (5432)**, porque a conexão direta é só IPv6. Projeto de dev **ainda não autorizado** |
+| Banco | **Supabase gerenciado**, pelo **pooler em modo sessão (5432)**, porque a conexão direta é só IPv6. Projeto de dev **`ora5g-dev`** (`qgnbeuugklzzcevdzrvg`, São Paulo, gratuito) criado em 07/11 com as migrations aplicadas. Faltam no `.env.local` do servidor: `SUPABASE_SECRET_KEY` e `DATABASE_URL` (o proprietário preenche) |
+| Node no servidor | 22.23.4 em `~/.local/opt/node` (pacote oficial com checksum conferido; o nvm foi bloqueado pela política de segurança do ambiente) |
 | Node no servidor | Usar `127.0.0.1` (nunca `localhost`) e `NODE_OPTIONS=--dns-result-order=ipv4first` |
 
 ## 4. Documentos (onde está cada coisa)
@@ -61,23 +64,23 @@ Papéis **fixos** (decisão do proprietário). Detalhes: ADR-001, seção 2.7.
 | `docs/etapa-1/PLANO_DE_INICIO_DA_IMPLEMENTACAO.md` | Semanas 1–4 (ORA-001 a ORA-012), loja online como canal |
 | `docs/operacao/CONECTAR_CLAUDE_CODE_SSH_WINDOWS.md` | Como o proprietário conectou o Claude Code ao servidor |
 
-**Situação no Git:** tudo isso está na branch **`docs/adr-002-acesso`** (que contém as branches anteriores). A `main` só tem o pacote original e a Etapa 0. **PR ainda não aberto/mergeado.**
+**Situação no Git (07/11):** a documentação e o código estão na **`main`**: ORA-002 (PR #1), ORA-003 e ORA-004/005. O código fica em `apps/plataforma`, `packages/config` e `packages/banco`; cada pasta tem um README.
 
 ## 5. Decisões pendentes do proprietário
 
 | # | Pergunta | Onde |
 |---|---|---|
-| P1 | Confirmar **opção A**: manter o cPanel (Apache encaminha para o sistema; serviços Node via systemd) | ADR-001 §4A |
-| P2 | Administrador sem vender e sem aprovar desconto/nota? | ADR-002 §5 |
+| ~~P1~~ | **Respondida 07/11:** opção A, manter o cPanel | ADR-001 §4A |
+| ~~P2~~ | **Respondida 07/11:** sim, administrador não vende nem aprova | ADR-002 §5 |
 | P3 | Ranking com nome dos colegas ou só posição própria? | ADR-002 §5 |
-| P4 | Qualquer vendedor encontra cliente por CPF/telefone em qualquer loja? | ADR-002 §5 |
+| ~~P4~~ | **Respondida 07/11:** sim, por busca exata registrada | ADR-002 §5 |
 | P5 | Técnico com login próprio ou só mensagens? É funcionário ou terceiro? | ADR-002 §5 |
-| P6 | Tabelas do banco com nomes em português? | ADR-002 §5 |
+| ~~P6~~ | **Respondida 07/11:** sim | ADR-002 §5 |
 | P7 | Qual portal emite a nota hoje e qual tipo (NFC-e ou NF-e)? Há contador? | Decisões 06/11 §6 |
 | P8 | Financeiras repassam preço − entrada sem taxa? Em quantos dias? | Decisões 06/11 §6 |
 | P9 | Tipo da chave Nogle (franquia, marca/MVNO ou PDV) | Decisões 06/11 §3 |
 | P10 | Loja online: CNPJ emissor, origem do estoque, transportadora, domínio final | Plano §8 |
-| P11 | Autorizar criação do projeto Supabase de desenvolvimento (plano gratuito) | Plano §6 |
+| ~~P11~~ | **Respondida 07/11:** autorizado; projeto `ora5g-dev` criado | Plano §6 |
 | P12 | Delegação do DNS no Registro.br: feita ou não? | ADR-001 §4A |
 | P13 | Contexto da conversa com o ChatGPT/Codex: o proprietário vai trazer o resumo | Seção 7 |
 
@@ -85,12 +88,14 @@ Papéis **fixos** (decisão do proprietário). Detalhes: ADR-001, seção 2.7.
 
 ## 6. Próximos passos do programador (em ordem)
 
-1. **Parte E do guia de conexão:** chave só deste repositório (deploy key) e clone em `/home/dev/sistema-ora5g`, com checkout da branch `docs/adr-002-acesso` até ela ser mergeada.
-2. **Preparar o Node no servidor sem root:** Node 22 LTS instalado na pasta do `dev` (ex.: via `nvm`), sem `sudo`. Conferir acesso ao registro do npm a partir do servidor.
-3. Revisar este documento com o proprietário e registrar as respostas das pendências que ele trouxer.
-4. **ORA-002:** esqueleto do monorepo (Next.js, TypeScript estrito, ESLint, Vitest, Playwright, versões fixadas, página `/saude`), numa branch própria com PR para o Codex revisar. Pode começar antes das pendências, porque não depende delas.
-5. **ORA-003:** CI no GitHub Actions + validação de variáveis + bloqueio de segredos.
-6. **ORA-004/005:** primeira migration e RLS **somente depois** da aprovação do ADR-002 e da autorização do Supabase.
+Feito em 07/11: deploy key e clone; Node 22 no servidor; **ORA-002** (esqueleto e `/saude`); **ORA-003** (CI, validação de variáveis, detector de segredos); **ORA-004/005** (primeira migration, RLS e testes T1–T12, aplicada no `ora5g-dev`).
+
+1. **ORA-006 — login:** e-mail e senha pelo Supabase Auth, sessão por turno, escolha da unidade com `selecionar_unidade`, bloqueio imediato. Depende de o proprietário preencher `SUPABASE_SECRET_KEY` e `DATABASE_URL` no servidor e de definir o e-mail de envio (SMTP da HostGator) para a recuperação de senha.
+2. **ORA-007 — catálogo:** produto, variação, tipo de item, código de barras, custo, preço com histórico, "publicar online".
+3. **ORA-009 — importador do CSV da Rein** em modo prévia. Depende do CSV de exemplo (anonimizado).
+4. **ORA-010 — estoque e IMEI**, com teste de concorrência.
+5. **ORA-012 — homologação na VPS (opção A):** o Claude prepara a aplicação e o passo a passo; Apache e systemd exigem root e ficam com o proprietário. Depende também da delegação do DNS (P12).
+6. Ainda abertos no ADR-002: ranking (P3) e técnico (P5).
 
 ## 7. Contexto da conversa com o ChatGPT
 
