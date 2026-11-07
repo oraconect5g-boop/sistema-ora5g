@@ -30,6 +30,14 @@ O bloqueio B1 misturava grupos: o login usa só endereço e chave pública (já 
 
 A migration `20261107140000_correcoes_revisao_codex` foi aplicada no `ora5g-dev` e a impressão digital do esquema (funções, políticas, índices e colunas da auditoria) é idêntica à do banco de teste. O verificador do Supabase não apontou nada novo além das 3 funções que o aplicativo chama de propósito.
 
-## Teste da publicação (REV-012), no servidor
+## Teste da publicação (REV-012), no servidor — resultado
 
-Ver a seção "Resultado no servidor" abaixo, preenchida depois da execução.
+Executado em 07/11/2026 com commits de teste só locais (nunca enviados ao GitHub, apagados depois):
+
+| Cenário | O que aconteceu | Versão no ar depois |
+|---|---|---|
+| Publicação normal da `main` (`00a35f9`), convertendo o layout antigo | Montou em `versoes/00a35f9` em 18 s, trocou o link e subiu; a versão anterior virou `versoes/b516446-antiga` | `00a35f9`, `/saude` e `/demo` com HTTP 200 |
+| Versão que não compila (erro de sintaxe proposital) | "FALHOU ao montar"; pasta da tentativa removida; nada parado | `00a35f9`, sem interrupção |
+| Versão que compila mas não sobe (encerra ao iniciar) | Trocou, não respondeu em `/saude`, voltou o link para a anterior e a reiniciou em ~50 s no total | `00a35f9`, `/saude` e `/demo` com HTTP 200 |
+
+Em todos os casos a trava de publicação ficou livre ao final, e o reinício automático pelo `cron` continua valendo (o `cron` chama o script pelo link da versão ativa).

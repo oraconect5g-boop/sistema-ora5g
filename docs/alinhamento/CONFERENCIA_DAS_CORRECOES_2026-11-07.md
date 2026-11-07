@@ -1,6 +1,6 @@
 # Conferência das correções do Claude e orientação para a próxima implementação
 
-**Data:** 07/11/2026 · **Base congelada:** 00a35f970d977e3766571de4f3ac67978e7a2ef1
+**Data:** 07/11/2026 · **Base do código:** 00a35f970d977e3766571de4f3ac67978e7a2ef1 · **Adendo documental:** 503fa54170c9a83c4ae8433e473f4b3362072798
 **Revisor:** Codex · **Programador:** Claude Code
 **Stack mantida:** TypeScript, React/Next.js, Tailwind, Node.js e SQL PostgreSQL/Supabase.
 
@@ -37,7 +37,7 @@ As decisões verificáveis são as desta conversa e as preservadas no planejamen
 | REV-009 / #11 | Proxy do Next.js 16 chama getClaims e propaga cookies e cabeçalhos antes de /conta | Implementação presente e build válida. Expiração/renovação com usuário real ainda pendente; manter issue aberta até comprovar |
 | REV-010 | ehPerfil passa a usar Object.hasOwn | Nove casos independentes de dinheiro/perfil e regressões do projeto passaram; E2E com cookies herdados passou no celular e desktop |
 | REV-011 | Status testado/homologado separados; segurança e login parciais; gerador atualizado | Conferência do arquivo gerado passou. Isso prova consistência do relatório; não certifica todos os status de negócio nem homologa requisitos |
-| REV-012 | Build fora da versão ativa, troca de link e tentativa de retorno à anterior | Melhoria confirmada por inspeção e sintaxe Bash. Codex não executou o script na VPS. Ainda há REV-016 e falta completar a evidência operacional descrita abaixo |
+| REV-012 | Build fora da versão ativa, troca de link e tentativa de retorno à anterior | Melhoria confirmada por inspeção e sintaxe Bash. Codex não executou o script na VPS. Ainda há REV-016; o relato operacional foi acrescentado depois, conforme seção abaixo |
 | REV-013 | Vendedor deixa de ver margem/limite numérico; busca usa telefone completo | E2E passou nos dois tamanhos. Fixtures ainda contêm custo fictício no cliente; na implementação real, filtrar o payload no servidor, além de ocultar a exibição |
 | REV-014 | /conta distingue erro do serviço de ausência de perfil/unidade; log só com códigos | Correção confirmada por inspeção. Falta teste automatizado que force erro de consulta; pode ser feito com serviço simulado, sem credencial real |
 
@@ -73,7 +73,7 @@ Este PR propõe apps/plataforma/.env.example, com quatro variáveis da aplicaç�
 
 ### Evidência de publicação e isolamento dos testes
 
-A resposta do Claude afirma testes de build/start com falha no servidor, mas a seção final “Resultado no servidor” ainda é uma instrução para preencher e não contém os resultados. Registrar commit implantado, condições fictícias, resultado de cada falha e versão preservada/recuperada. O Codex não confirma execução remota a partir da afirmação.
+Na base 00a35f97, a resposta ainda deixava o resultado dos testes de publicação por preencher. O adendo 503fa541, que altera somente essa documentação, registrou os três cenários: publicação normal, falha de compilação sem interromper a versão ativa e falha de inicialização com retorno à anterior em cerca de 50 segundos. O Claude informa que /saude e /demo responderam HTTP 200 ao final, com 00a35f9 ativo, e que as travas ficaram livres. Essa é uma melhoria da evidência registrada, não uma execução remota repetida pelo Codex. O teste de mudança de ambiente no mesmo SHA da REV-016 continua sem cobertura.
 
 Uma primeira execução E2E local encontrou EADDRINUSE na porta auxiliar 3199 deixada por execução anterior. Depois de encerrar o servidor de teste conhecido e liberar a porta, a suíte inteira passou. O helper servidor-auxiliar.ts termina o npx, mas pode deixar o Next descendente vivo; isso foi observado novamente após a suíte. Ajustar o encerramento/espera da árvore de processos e a escolha/verificação da porta antes de repetir testes em ambiente compartilhado. Não encerrar processos de homologação para resolver colisão de teste.
 
