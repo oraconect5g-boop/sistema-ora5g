@@ -44,7 +44,8 @@ esac
 [ -f "$DIR/apps/plataforma/.next/BUILD_ID" ] || { echo "$(date -Is) sem build; rode publicar.sh" >>"$LOGS/garantir.log"; exit 1; }
 
 cd "$DIR/apps/plataforma"
-nohup "$DIR/node_modules/.bin/next" start -H 127.0.0.1 -p "$PORTA" >>"$LOGS/plataforma.log" 2>&1 &
+# 8>&- 9>&-: o servidor não pode herdar as travas (senão ninguém mais publica nem vigia).
+nohup "$DIR/node_modules/.bin/next" start -H 127.0.0.1 -p "$PORTA" >>"$LOGS/plataforma.log" 2>&1 8>&- 9>&- &
 echo $! >"$PID"
 
 for _ in $(seq 1 60); do
