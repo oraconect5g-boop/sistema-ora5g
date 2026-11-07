@@ -1,0 +1,16 @@
+{
+  "name": "@ora5g/config",
+  "version": "0.1.0",
+  "private": true,
+  "type": "module",
+  "exports": {
+    "./tsconfig.base.json": "./tsconfig.base.json",
+    "./eslint": "./eslint.config.mjs"
+  },
+  "devDependencies": {
+    "eslint-config-next": "16.4.5"
+  },
+  "peerDependencies": {
+    "eslint": "9.39.5"
+  }
+}
