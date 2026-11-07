@@ -6,6 +6,7 @@ test("responde 200 e informa que o sistema esta no ar", async ({ page }) => {
   expect(resposta?.status()).toBe(200);
   await expect(page.getByRole("heading", { name: "Sistema no ar" })).toBeVisible();
   await expect(page.locator("html")).toHaveAttribute("lang", "pt-BR");
+  await expect(page.getByTestId("conexao-supabase")).toHaveText(/conectado|não configurado neste ambiente|sem resposta/);
 });
 
 test("calcula o horario no acesso, nao na construcao do aplicativo", async ({ page }) => {

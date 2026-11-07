@@ -2,7 +2,7 @@ import type { NextConfig } from "next";
 
 const configuracao: NextConfig = {
   poweredByHeader: false,
-  transpilePackages: ["@ora5g/config"],
+  transpilePackages: ["@ora5g/config", "@ora5g/dominio"],
 };
 
 export default configuracao;

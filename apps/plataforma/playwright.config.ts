@@ -1,7 +1,16 @@
 import { defineConfig, devices } from "@playwright/test";
 
+// No servidor de desenvolvimento, carrega o .env.local para os testes saberem se o Supabase
+// está configurado (o teste de login real só roda nesse caso). No CI o arquivo não existe.
+try {
+  process.loadEnvFile(".env.local");
+} catch {
+  // sem .env.local: segue com as variáveis do ambiente
+}
+
 // Sempre 127.0.0.1, nunca localhost: o servidor nao tem IPv6 (ADR-001, secao 2.4).
-const enderecoBase = "http://127.0.0.1:3100";
+// Porta 3180: testes do programador. A 3100 fica livre para a homologacao (ADR-001).
+const enderecoBase = "http://127.0.0.1:3180";
 
 export default defineConfig({
   testDir: "./e2e",
@@ -23,7 +32,7 @@ export default defineConfig({
     },
   ],
   webServer: {
-    command: "npm run start",
+    command: "npx next start -H 127.0.0.1 -p 3180",
     url: `${enderecoBase}/saude`,
     reuseExistingServer: false,
     timeout: 60_000,

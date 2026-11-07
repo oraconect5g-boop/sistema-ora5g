@@ -1,6 +1,13 @@
 # Plataforma Ora 5G
 
-Aplicativo Next.js da plataforma interna (`app.ora5g.com.br`). Por enquanto só tem a página `/saude`.
+Aplicativo Next.js da plataforma interna (`app.ora5g.com.br`).
+
+| Endereço | O que é |
+|---|---|
+| `/` | Entrada, com acesso ao login e à demonstração |
+| `/entrar`, `/conta` | Login real pelo Supabase (chave pública + RLS). Ainda sem recuperação de senha nem escolha de loja |
+| `/demo/...` | **Demonstração com dados fictícios**, 12 telas e 4 perfis (dono, gerente, vendedor, administrador). Nada é gravado. Some quando `APP_ENV=producao` |
+| `/saude` | Confere o aplicativo e se o login do Supabase responde |
 
 Os comandos rodam na raiz do repositório:
 
@@ -15,7 +22,9 @@ Os comandos rodam na raiz do repositório:
 
 O `test:e2e` exige `npm run build` antes e, na primeira vez, `npx -w @ora5g/plataforma playwright install chromium`.
 
-O aplicativo escuta só em `127.0.0.1:3100`, a porta de homologação da plataforma no ADR-001.
+Portas (ADR-001): `npm run start` usa `127.0.0.1:3100` (homologação); os testes E2E usam `3180` e o teste de inicialização sobe um servidor temporário em `3199`. Nunca `localhost`.
+
+Visual: Tailwind CSS com os tokens provisórios do guia de design em `src/app/global.css`; a cor de ação foi escurecida para `#0A7D72` para atingir contraste AA com texto branco.
 
 ## Configuração (variáveis de ambiente)
 

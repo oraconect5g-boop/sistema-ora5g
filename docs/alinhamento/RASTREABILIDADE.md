@@ -1,0 +1,286 @@
+# Rastreabilidade dos 172 requisitos
+
+> Arquivo GERADO por `node scripts/gerar-rastreabilidade.mjs` a partir de `backlog.json` e `docs/alinhamento/status-requisitos.json` (atualizado em 2026-11-07). Não edite à mão.
+
+"Feito" significa implementado e testado **em desenvolvimento**; nada foi homologado nem aceito pelo proprietário ainda. "Demonstração" é só tela com dados fictícios.
+
+## Resumo por domínio
+
+| Domínio | Total | P0 | No piloto | Feito | Parcial | Demonstração | Respeitado | Bloqueado | Não iniciado |
+|---|---|---|---|---|---|---|---|---|---|
+| ORG | 10 | 6 | 6 | 0 | 6 | 0 | 0 | 0 | 4 |
+| CAT | 10 | 6 | 6 | 0 | 2 | 0 | 1 | 0 | 7 |
+| INV | 12 | 6 | 7 | 0 | 1 | 0 | 0 | 0 | 11 |
+| CRM | 10 | 4 | 3 | 0 | 0 | 0 | 0 | 0 | 10 |
+| POS | 16 | 11 | 11 | 0 | 2 | 1 | 0 | 0 | 13 |
+| PAY | 14 | 8 | 8 | 0 | 1 | 0 | 0 | 0 | 13 |
+| FIN | 10 | 5 | 1 | 0 | 0 | 0 | 0 | 0 | 10 |
+| PERF | 10 | 5 | 5 | 0 | 1 | 0 | 0 | 0 | 9 |
+| FISC | 10 | 6 | 6 | 0 | 0 | 0 | 0 | 2 | 8 |
+| CONNECT | 11 | 6 | 3 | 0 | 0 | 0 | 0 | 1 | 10 |
+| ONLINE | 8 | 0 | 0 | 0 | 0 | 0 | 0 | 0 | 8 |
+| MKTPL | 8 | 0 | 0 | 0 | 0 | 0 | 0 | 0 | 8 |
+| WHATS | 8 | 0 | 0 | 0 | 0 | 0 | 0 | 0 | 8 |
+| META | 6 | 0 | 0 | 0 | 0 | 0 | 0 | 0 | 6 |
+| AI | 7 | 0 | 0 | 0 | 0 | 0 | 0 | 0 | 7 |
+| REPORT | 8 | 5 | 5 | 0 | 0 | 3 | 0 | 0 | 5 |
+| QUAL | 14 | 9 | 9 | 2 | 3 | 0 | 0 | 0 | 9 |
+| **Total** | **172** | **77** | **70** | **2** | **16** | **4** | **1** | **3** | **146** |
+
+## ORG — Organização, lojas e usuários
+
+| ID | Prio. | Piloto | Requisito | Aceite | Status | Nota e evidência |
+|---|---|---|---|---|---|---|
+| ORA-ORG-001 | P0 | sim | Cadastrar empresa, organização, 14 lojas e loja piloto | Usuários autorizados selecionam unidade; IDs e dados fiscais coerentes. | 🟡 parcial | Tabelas organização/empresa/unidade com CNPJ validado no banco e escolha da unidade na sessão. Falta cadastrar as 14 lojas reais (lista com CNPJs pendente) e a tela de gestão. Evidência: `packages/banco/supabase/migrations/20261107120000_fundacao_acesso.sql; packages/banco/src/acesso.test.ts (T10)` |
+| ORA-ORG-002 | P0 | sim | Associar usuários a uma ou múltiplas lojas com função e vigência | Bloqueio testado para loja sem vínculo. | 🟡 parcial | Vínculos com vigência, um vendedor em várias lojas, bloqueio testado. Falta a tela de gestão de usuários (ORA-008). Evidência: `acesso.test.ts (T1, T2/T3, T7)` |
+| ORA-ORG-003 | P0 | sim | Gerir perfis diretoria, regional, gerente, vendedor, financeiro, fiscal, marketing e atendimento | Matriz de autorização versionada e auditada. | 🟡 parcial | 5 papéis do ADR-002 (dono, administrador, gerente, vendedor, técnico) com matriz versionada por migration. Regional, financeiro, fiscal, marketing e atendimento entram depois por migration. Evidência: `migration fundacao_acesso (catálogo de papéis e permissões)` |
+| ORA-ORG-004 | P0 | sim | Isolar dados por loja na API e PostgreSQL/RLS | Testes de acesso cruzado e negação por ID arbitrário. | 🟡 parcial | RLS e funções do banco testadas (negação por ID arbitrário e troca de unidade). A API/servidor do aplicativo ainda não usa essas funções nas telas reais. Evidência: `acesso.test.ts` |
+| ORA-ORG-005 | P0 | sim | Histórico de alterações de papéis, políticas e configurações | Auditoria identifica ator, horário, alvo e motivo. | 🟡 parcial | Auditoria imutável existe e registra troca de unidade e tentativas negadas. FALTA: mudanças em vínculos, perfis e papéis ainda não geram auditoria automática. Evidência: `acesso.test.ts (T9)` |
+| ORA-ORG-006 | P0 | sim | Login, recuperação de conta e revogação de sessão | Acessos revogados deixam de funcionar; mensagens neutras. | 🟡 parcial | Bloqueio de usuário e encerramento de vínculo cortam o acesso no banco na hora. Falta login no aplicativo, recuperação de senha (depende de SMTP) e sessão por turno. Evidência: `acesso.test.ts (T6, T7)` |
+| ORA-ORG-007 | P1 | — | Autenticação reforçada para perfis privilegiados | MFA e política de sessão validados com segurança. | ⬜ não iniciado |  |
+| ORA-ORG-008 | P1 | — | Configurar horários, endereços, caixas e dados fiscais por loja | Mudanças versionadas com regras de vigência. | ⬜ não iniciado |  |
+| ORA-ORG-009 | P1 | — | Gerir unidades regionais, grupos e metas agregadas | Relatórios respeitam hierarquia de acesso. | ⬜ não iniciado |  |
+| ORA-ORG-010 | P2 | — | Preparar multi-CNPJ/UF para expansão física nacional | Vínculos fiscais e locais operam sem dados globais hard-coded. | ⬜ não iniciado |  |
+
+## CAT — Catálogo e precificação
+
+| ID | Prio. | Piloto | Requisito | Aceite | Status | Nota e evidência |
+|---|---|---|---|---|---|---|
+| ORA-CAT-001 | P0 | sim | Cadastrar categorias, marcas, produtos, variantes e SKUs | SKU interno identificado e único no escopo definido. | ⬜ não iniciado |  |
+| ORA-CAT-002 | P0 | sim | Importar produtos e preços da Rein somente por CSV/XLSX | Prévia, validação, relatório de erro, confirmação e rollback lógico. | ⬜ não iniciado |  |
+| ORA-CAT-003 | P0 | sim | Não consumir API Rein em nenhuma operação diária | Nenhum módulo de runtime depende de rede/credencial Rein. | ✔️ respeitado | Nenhum código usa a API da Rein. Importação só por arquivo (DEC-U04/DEC-U24). Evidência: `busca no repositório` |
+| ORA-CAT-004 | P0 | sim | Cadastrar preços vigentes por loja/canal conforme regra | Preço final tem origem explicável e histórico. | ⬜ não iniciado |  |
+| ORA-CAT-005 | P0 | sim | Diferenciar smartphone, acessório, chip e serviço comercial | Tipos exigem campos apropriados sem tabelas isoladas de venda. | 🟡 parcial | Tipos de item (aparelho, acessório, chip, ativação, recarga, serviço) e suas exigências modelados nas regras de negócio puras. Falta tabela de catálogo (ADR-003). Evidência: `packages/dominio/src/venda.ts` |
+| ORA-CAT-006 | P0 | sim | Pesquisar por nome, SKU e, quando aplicável, IMEI/ICCID | Busca rápida funciona no celular sem leitor. | 🟡 parcial | Validação de IMEI (dígito verificador) e ICCID prontas e testadas. Falta a busca no banco. Evidência: `packages/dominio/src/identificadores.ts` |
+| ORA-CAT-007 | P1 | — | Programar vigência de promoções e campanhas comerciais | Preço aplicado respeita período e autorização. | ⬜ não iniciado |  |
+| ORA-CAT-008 | P1 | — | Custo de produto/lote/entrada e margem gerencial | Custo histórico de venda não muda retroativamente. | ⬜ não iniciado |  |
+| ORA-CAT-009 | P1 | — | Canais externos usam mapeamento de SKU e IDs próprios | Identificadores externos não substituem PK interna. | ⬜ não iniciado |  |
+| ORA-CAT-010 | P2 | — | Permitir importação assistida em lote de fotos/atributos | Erros não criam duplicatas nem sobrescritas silenciosas. | ⬜ não iniciado |  |
+
+## INV — Estoque, serial/IMEI e suprimentos
+
+| ID | Prio. | Piloto | Requisito | Aceite | Status | Nota e evidência |
+|---|---|---|---|---|---|---|
+| ORA-INV-001 | P0 | sim | Manter disponibilidade por loja e localização física | Reserva/venda nunca usa saldo de outra loja sem transferência. | ⬜ não iniciado |  |
+| ORA-INV-002 | P0 | sim | Identificar aparelho por IMEI/serial e impedir venda duplicada | Concorrência e unique indexes bloqueiam duplicidade. | 🟡 parcial | IMEI com dígito verificador validado. Falta unicidade e reserva no banco (ADR-003, ORA-010). Evidência: `packages/dominio/src/identificadores.test.ts` |
+| ORA-INV-003 | P0 | sim | Registrar cada entrada/saída em livro auditável de estoque | Saldo reconciliável com movimentos e motivos. | ⬜ não iniciado |  |
+| ORA-INV-004 | P0 | sim | Receber estoque inicial validado por contagem real | Divergências e aprovadores ficam registrados. | ⬜ não iniciado |  |
+| ORA-INV-005 | P0 | sim | Reservar estoque durante checkout e liberar em expiração/cancelamento | Concorrência entre caixas e canais não vende duas vezes. | ⬜ não iniciado |  |
+| ORA-INV-006 | P0 | sim | Bloquear venda de IMEI indisponível/transferido/reservado | Mensagem operacional clara e sem mutações parciais. | ⬜ não iniciado |  |
+| ORA-INV-007 | P1 | — | Transferência entre lojas com trânsito/recebimento | Origem e destino confirmam quantidades e divergências. | ⬜ não iniciado |  |
+| ORA-INV-008 | P1 | — | Inventário cíclico e ajuste com aprovação | Trilha permite reconstruir antes/depois e justificativa. | ⬜ não iniciado |  |
+| ORA-INV-009 | P1 | — | Compras e recebimento de fornecedores | Pedido, nota/entrega, custo e entrada identificáveis. | ⬜ não iniciado |  |
+| ORA-INV-010 | P1 | — | Histórico de reparo/devolução e condição de unidade | Produto retornado não reaparece automaticamente como novo. | ⬜ não iniciado |  |
+| ORA-INV-011 | P1 | sim | Controle de ICCID de chip físico quando exigido | ICCID não é atribuído a duas ativações incompatíveis. | ⬜ não iniciado |  |
+| ORA-INV-012 | P2 | — | Transferência para CD e alocação futura a canais nacionais | Apropriação de localização e logística auditável. | ⬜ não iniciado |  |
+
+## CRM — Clientes, CRM, oportunidades e contratos
+
+| ID | Prio. | Piloto | Requisito | Aceite | Status | Nota e evidência |
+|---|---|---|---|---|---|---|
+| ORA-CRM-001 | P0 | sim | Cadastro de cliente com dados mínimos e finalidade | Dados obrigatórios dependem da operação; LGPD documentada. | ⬜ não iniciado |  |
+| ORA-CRM-002 | P0 | sim | Relacionar cliente às compras/IMEIs/chips/linhas e atendimentos | Perfil 360 apresenta histórico autorizado por loja/função. | ⬜ não iniciado |  |
+| ORA-CRM-003 | P0 | sim | Pesquisar cliente por identificadores protegidos | Resultados evitam expor CPF desnecessariamente. | ⬜ não iniciado |  |
+| ORA-CRM-004 | P0 | — | Registrar lead, origem, atendente, vendedor responsável e etapa | Funil mostra histórico e próximo passo. | ⬜ não iniciado |  |
+| ORA-CRM-005 | P1 | — | Atividades, lembretes, follow-up e motivos de perda | Histórico com autor e vencimento. | ⬜ não iniciado |  |
+| ORA-CRM-006 | P1 | — | Detecção e mesclagem controlada de cadastros duplicados | Não perde compras/documentos; operação auditável. | ⬜ não iniciado |  |
+| ORA-CRM-007 | P1 | — | Registros de consentimento/preferência de comunicação | Retirada afeta automações e respeita obrigações. | ⬜ não iniciado |  |
+| ORA-CRM-008 | P1 | — | Contratos/anexos de venda, garantia, financiamento e telecom | Acesso, assinatura, guarda e retenção adequados. | ⬜ não iniciado |  |
+| ORA-CRM-009 | P1 | — | Histórico omnichannel de compras físicas/online | Pedido externo e venda vinculados sem sobrescrever origem. | ⬜ não iniciado |  |
+| ORA-CRM-010 | P2 | — | Segmentação comercial e valor de vida do cliente | Segmentos minimizam dados e são explicáveis. | ⬜ não iniciado |  |
+
+## POS — PDV mobile e vendas
+
+| ID | Prio. | Piloto | Requisito | Aceite | Status | Nota e evidência |
+|---|---|---|---|---|---|---|
+| ORA-POS-001 | P0 | sim | Efetuar venda completa em celular sem notebook | E2E em smartphone real da loja piloto. | ⬜ não iniciado |  |
+| ORA-POS-002 | P0 | sim | Busca rápida por nome/SKU/IMEI e carrinho responsivo | Usabilidade e velocidade validadas com vendedor. | ⬜ não iniciado |  |
+| ORA-POS-003 | P0 | sim | Itens mistos em venda: aparelho, acessório, chip, ativação, recarga | Itens mantêm natureza e regras próprias sem dupla contabilização. | ⬜ não iniciado |  |
+| ORA-POS-004 | P0 | sim | Selecionar IMEI físico disponível antes de concluir | Reserva e baixa atomizadas no banco. | ⬜ não iniciado |  |
+| ORA-POS-005 | P0 | sim | Calcular preço/desconto e totais server-side | Cliente não consegue alterar preço enviado. | 🟡 parcial | Cálculo de totais e limite de desconto por margem em regra pura testada (DEC-U41). Falta executar no servidor e gravar no banco. Evidência: `packages/dominio/src/desconto.ts` |
+| ORA-POS-006 | P0 | sim | Solicitar aprovação do gerente para desconto acima do limite | Aprovador, limite, motivo, prazo e decisão auditáveis. | 🖼️ demonstração | Regra que decide quando precisa de aprovação está pronta; a fila de aprovação existe só na demonstração. Evidência: `packages/dominio/src/desconto.ts; apps/plataforma/src/app/demo/aprovacoes` |
+| ORA-POS-007 | P0 | sim | Suportar múltiplos pagamentos na mesma venda | Soma, troco, confirmação e estorno consistentes. | 🟡 parcial | Pagamento misto, troco e venda financiada (entrada + financeira, sem juros) em regra pura testada. Falta registro no banco. Evidência: `packages/dominio/src/pagamento.ts` |
+| ORA-POS-008 | P0 | sim | Vincular venda a vendedor, loja, cliente quando aplicável e canal | Atribuição preservada em todas as consultas. | ⬜ não iniciado |  |
+| ORA-POS-009 | P0 | sim | Consultar status e comprovantes sem concluir pagamento pendente | Vendedor vê pendência e ação de reprocessamento segura. | ⬜ não iniciado |  |
+| ORA-POS-010 | P0 | sim | Cancelar e devolver sem apagar origem | Reversão reflexa em estoque, pagamentos, fiscal e comissões. | ⬜ não iniciado |  |
+| ORA-POS-011 | P0 | sim | Gerar solicitação fiscal a partir da venda em poucos toques | Vendedor não precisa escolher documento fiscal incorreto. | ⬜ não iniciado |  |
+| ORA-POS-012 | P1 | — | Troca com diferença de preço e meios de pagamento | Histórico e estoque correto na devolução/saída. | ⬜ não iniciado |  |
+| ORA-POS-013 | P1 | — | Venda parcelada/PayJoy/boleto por fluxo homologado | Etapas reais, aprovação e termos exigidos. | ⬜ não iniciado |  |
+| ORA-POS-014 | P1 | — | Aplicar campanhas, combos e regras por loja | Persistência da regra aplicada para auditoria. | ⬜ não iniciado |  |
+| ORA-POS-015 | P1 | — | Atalhos para supervisor e estados offline/sem rede | Sem venda presumida como concluída sem confirmação. | ⬜ não iniciado |  |
+| ORA-POS-016 | P2 | — | Entrada por leitor USB/Bluetooth ou câmera | Sem mudança na regra central de busca/checkout. | ⬜ não iniciado |  |
+
+## PAY — Pagamentos, PicPay e caixa
+
+| ID | Prio. | Piloto | Requisito | Aceite | Status | Nota e evidência |
+|---|---|---|---|---|---|---|
+| ORA-PAY-001 | P0 | sim | Registrar dinheiro, Pix direto, Pix PicPay POS e cartões | Provider, terminal, método e comprovante quando disponível. | ⬜ não iniciado |  |
+| ORA-PAY-002 | P0 | sim | Suportar financiamento, boleto, parcelamento e pagamentos online | Estados e elegibilidade definidos por integração específica. | 🟡 parcial | Regra da venda financiada PayJoy/Aiva (DEC-U38) e e-mail obrigatório na PayJoy (DEC-U30) testadas. Falta registro e repasse. Evidência: `packages/dominio/src/pagamento.test.ts` |
+| ORA-PAY-003 | P0 | sim | Diferenciar autorizado, pago, liquidado, estornado e conciliado | Relatórios não misturam venda com dinheiro recebido. | ⬜ não iniciado |  |
+| ORA-PAY-004 | P0 | sim | Abrir caixa com saldo inicial e responsável | Uma sessão ativa segundo regra por gaveta/terminal. | ⬜ não iniciado |  |
+| ORA-PAY-005 | P0 | sim | Registrar sangria, suprimento, reforço, devolução e saída autorizada | Cada movimento tem motivo, autor e impacto no saldo. | ⬜ não iniciado |  |
+| ORA-PAY-006 | P0 | sim | Fechar caixa com valor contado e diferença | Gerente confere e aprova divergência. | ⬜ não iniciado |  |
+| ORA-PAY-007 | P0 | sim | Conciliação manual PicPay POS usando referência/comprovante | Sem API não se presume liquidação automática. | ⬜ não iniciado |  |
+| ORA-PAY-008 | P0 | sim | Evitar confirmação duplicada via webhook/retry | Constraints de evento externo e idempotency key. | ⬜ não iniciado |  |
+| ORA-PAY-009 | P1 | — | Importar extratos de adquirente/banco por arquivo validado | Linhas conciliadas, discrepâncias e taxas reportadas. | ⬜ não iniciado |  |
+| ORA-PAY-010 | P1 | — | Reconciliar taxas, parcelas e datas de repasse | Venda bruta vs líquido recebido visíveis. | ⬜ não iniciado |  |
+| ORA-PAY-011 | P1 | — | Gerir chargebacks, estornos, antecipação e ajustes | Efeito financeiro e comissão não duplicado. | ⬜ não iniciado |  |
+| ORA-PAY-012 | P1 | — | Permitir múltiplas maquininhas/provedores por loja | Terminal tem identificação e escopo correto. | ⬜ não iniciado |  |
+| ORA-PAY-013 | P2 | — | Integração automática com PicPay POS se API contratual confirmada | Contrato, autenticação, eventos e homologação aprovados. | ⬜ não iniciado |  |
+| ORA-PAY-014 | P2 | — | Pix/checkout web e links por provedores validados | Confirmação no backend antes de fulfill/baixa definitiva. | ⬜ não iniciado |  |
+
+## FIN — Financeiro e controladoria
+
+| ID | Prio. | Piloto | Requisito | Aceite | Status | Nota e evidência |
+|---|---|---|---|---|---|---|
+| ORA-FIN-001 | P0 | sim | Resumo diário de vendas x recebimentos x produção comercial | Categorias e status reconciliáveis. | ⬜ não iniciado |  |
+| ORA-FIN-002 | P0 | — | DRE/margem gerencial com custo, taxa e desconto | Números não são apresentados como contabilidade formal auditada. | ⬜ não iniciado |  |
+| ORA-FIN-003 | P0 | — | Contas a receber ligadas a venda, vencimento e meio | Aging e status dependem de confirmação. | ⬜ não iniciado |  |
+| ORA-FIN-004 | P0 | — | Contas a pagar ligadas a fornecedor/origem | Vencimentos e responsabilidades autorizadas. | ⬜ não iniciado |  |
+| ORA-FIN-005 | P0 | — | Rastrear recebíveis e repasses por loja/adquirente | Diferenças e pendências visíveis ao financeiro. | ⬜ não iniciado |  |
+| ORA-FIN-006 | P1 | — | Conciliação bancária e contas multiempresa | Imports/matches reproduzíveis com aprovação. | ⬜ não iniciado |  |
+| ORA-FIN-007 | P1 | — | Gestão de inadimplência e cobranças autorizadas | Ações e consentimentos com auditoria. | ⬜ não iniciado |  |
+| ORA-FIN-008 | P1 | — | Relatório financeiro consolidado por loja/região/rede | RBAC respeita visão global vs local. | ⬜ não iniciado |  |
+| ORA-FIN-009 | P1 | — | Exportações CSV/XLSX/PDF de relatórios autorizados | Filtros e dados sensíveis protegidos. | ⬜ não iniciado |  |
+| ORA-FIN-010 | P2 | — | Previsão de fluxo de caixa e simulações | Premissas explicadas e separadas de fatos. | ⬜ não iniciado |  |
+
+## PERF — Vendedor, metas, comissões e bonificações
+
+| ID | Prio. | Piloto | Requisito | Aceite | Status | Nota e evidência |
+|---|---|---|---|---|---|---|
+| ORA-PERF-001 | P0 | sim | Contar individualmente aparelhos, acessórios, chips, ativações e recargas | Painel por vendedor/loja/período sem duplicidade. | 🟡 parcial | Contagem de produção por categoria (aparelho, acessório, chip, ativação só confirmada, recarga) em regra pura testada. Falta ledger de performance no banco. Evidência: `packages/dominio/src/venda.test.ts` |
+| ORA-PERF-002 | P0 | sim | Registrar performance_event único por origem/ação confirmada | Retries de API não criam duas bonificações. | ⬜ não iniciado |  |
+| ORA-PERF-003 | P0 | sim | Distinguir quantidade, valor bruto, margem, receita elegível e comissão | Extrato explica cálculo de cada evento. | ⬜ não iniciado |  |
+| ORA-PERF-004 | P0 | sim | Definir meta por vendedor, loja, categoria e período | Alteração não reescreve resultado histórico. | ⬜ não iniciado |  |
+| ORA-PERF-005 | P0 | sim | Painel do gestor mostra metas e resultados da equipe | Filtragem loja e perfil aplicada no servidor. | ⬜ não iniciado |  |
+| ORA-PERF-006 | P1 | — | Regras de bonificação por categoria/campanha/margem/escala | Edição versionada e período de vigência. | ⬜ não iniciado |  |
+| ORA-PERF-007 | P1 | — | Ajustar comissão por cancelamento/devolução conforme regra | Comprovante de origem e reversão sem apagar histórico. | ⬜ não iniciado |  |
+| ORA-PERF-008 | P1 | — | Apurar e aprovar fechamento de bonificação | Totais detalhados, contestação e trilha de aprovação. | ⬜ não iniciado |  |
+| ORA-PERF-009 | P1 | — | Metas coletivas/regional e rankings configuráveis | Desempate transparente e autorização adequada. | ⬜ não iniciado |  |
+| ORA-PERF-010 | P2 | — | IA recomenda campanhas/metas com aprovação humana | Sem alterar remuneração automaticamente. | ⬜ não iniciado |  |
+
+## FISC — Fiscal, nota e conformidade
+
+| ID | Prio. | Piloto | Requisito | Aceite | Status | Nota e evidência |
+|---|---|---|---|---|---|---|
+| ORA-FISC-001 | P0 | sim | Solicitar nota diretamente da venda no celular | Fluxo intuitivo e prefill de dados necessários. | ⬜ não iniciado |  |
+| ORA-FISC-002 | P0 | sim | Fluxo interno de aprovação de solicitações pelo gestor conforme política | Auditoria sem impedir obrigação legal de emissão. | ⬜ não iniciado |  |
+| ORA-FISC-003 | P0 | sim | Identificar perfil fiscal por produto/serviço/UF/CNPJ | Regras homologadas com contador/especialista. | ⛔ bloqueado | Depende do contador e do emissor fiscal (P7). Evidência: `docs/ESTADO_ATUAL_E_PASSAGEM.md §5` |
+| ORA-FISC-004 | P0 | sim | Integrar provedor fiscal homologado para documento correto | Estados emitido/autorizado/rejeitado/contingência claros. | ⛔ bloqueado | Depende do emissor fiscal contratado e do certificado A1. Evidência: `docs/etapa-0/ETAPA_0_DECISOES_2026-11-06.md §2A` |
+| ORA-FISC-005 | P0 | sim | Guardar chave, protocolo, referência e evidências legais com segurança | Controle de acesso e retenção definidos. | ⬜ não iniciado |  |
+| ORA-FISC-006 | P0 | sim | Tratar falha fiscal, reprocesso, contingência e cancelamento | Nenhum documento duplicado nem venda marcada indevidamente. | ⬜ não iniciado |  |
+| ORA-FISC-007 | P1 | — | Mapear cenários NF-e/NFC-e/NFS-e/NFCom conforme natureza | Matriz validada por contador com decisões por UF e operação. | ⬜ não iniciado |  |
+| ORA-FISC-008 | P1 | — | Conciliação fiscal de vendas, tributos e documentos | Pendências e divergências alertadas. | ⬜ não iniciado |  |
+| ORA-FISC-009 | P1 | — | Devolução, troca, cancelamento e correção fiscal | Fluxos e prazos homologados com fiscal. | ⬜ não iniciado |  |
+| ORA-FISC-010 | P2 | — | Multi-UF/multi-CNPJ e reforma tributária preparada | Alterações versionadas e conformes à norma vigente. | ⬜ não iniciado |  |
+
+## CONNECT — Ora Connect, chips, ativações e recargas
+
+| ID | Prio. | Piloto | Requisito | Aceite | Status | Nota e evidência |
+|---|---|---|---|---|---|---|
+| ORA-CONNECT-001 | P0 | sim | Cadastrar e vender chip físico ligado ao estoque e vendedor | Unidade/ICCID e venda reconciliáveis. | ⬜ não iniciado |  |
+| ORA-CONNECT-002 | P0 | sim | Separar evento de venda de chip do evento de ativação | Quantidades, status, valor e comissão independentes. | ⬜ não iniciado |  |
+| ORA-CONNECT-003 | P0 | sim | Separar recarga como operação telecom com status próprio | Total pago e valor repassado/receita reconhecida não confundidos. | ⬜ não iniciado |  |
+| ORA-CONNECT-004 | P0 | — | Registrar Nogle como integração externa por adapter | Sem endpoint presumido; contrato deve vir dos docs autenticados. | ⛔ bloqueado | Contrato Nogle parcial (só autenticação e consultas). Falta o tipo da chave (P9) e as rotas de ativação/recarga. Evidência: `docs/etapa-0/ETAPA_0_DECISOES_2026-11-06.md §3` |
+| ORA-CONNECT-005 | P0 | — | Refletir ativação somente após resposta verificada da Nogle | Falhas ficam pendentes/revisão sem gerar sucesso falso. | ⬜ não iniciado |  |
+| ORA-CONNECT-006 | P0 | — | Atribuir performance de ativação/recarga ao vendedor de origem | Evento idempotente e elegibilidade transparente. | ⬜ não iniciado |  |
+| ORA-CONNECT-007 | P1 | — | Consulta/atualização de linha e plano conforme API disponível | Permissão e rate limit respeitados. | ⬜ não iniciado |  |
+| ORA-CONNECT-008 | P1 | — | Portabilidade, contrato e venda de plano conforme contrato | Jornada e documentos homologados. | ⬜ não iniciado |  |
+| ORA-CONNECT-009 | P1 | — | Reconciliar repasses/bonificações Nogle e operação local | Divergências rastreáveis e reversão segura. | ⬜ não iniciado |  |
+| ORA-CONNECT-010 | P1 | — | Recuperar falha de rede com reconsulta sem reativação duplicada | Idempotência/reconciliação externa aprovadas. | ⬜ não iniciado |  |
+| ORA-CONNECT-011 | P2 | — | eSIM, contratação digital e entrega de chip nacional | Implementar somente se Nogle suportar e acordo permitir. | ⬜ não iniciado |  |
+
+## ONLINE — E-commerce e vendas online
+
+| ID | Prio. | Piloto | Requisito | Aceite | Status | Nota e evidência |
+|---|---|---|---|---|---|---|
+| ORA-ONLINE-001 | P1 | — | Site de aparelhos, acessórios e planos Ora Connect | Catálogo e estoque centralizados; não criar outro sistema de venda. | ⬜ não iniciado |  |
+| ORA-ONLINE-002 | P1 | — | Carrinho/checkout online e pedido com status | Pagamento confirmado antes de liberar fulfillment. | ⬜ não iniciado |  |
+| ORA-ONLINE-003 | P1 | — | Atribuir origem online, campanhas e vendedor quando aplicável | Sem atribuição indevida ou dupla comissão. | ⬜ não iniciado |  |
+| ORA-ONLINE-004 | P1 | — | Frete, CEP, retirada em loja e entrega com rastreio | Reserva e prazos consistentes. | ⬜ não iniciado |  |
+| ORA-ONLINE-005 | P1 | — | Devolução, arrependimento e reembolso de venda online | Prazo/regra legal homologado e efeitos auditados. | ⬜ não iniciado |  |
+| ORA-ONLINE-006 | P1 | — | Reserva de IMEI por pedido/canal anti-overselling | Pedido online concorrente com loja não vende unidade duplicada. | ⬜ não iniciado |  |
+| ORA-ONLINE-007 | P2 | — | Contratação online de planos/chips/eSIM se habilitado | Validação de identidade/contrato, antifraude e cobertura. | ⬜ não iniciado |  |
+| ORA-ONLINE-008 | P2 | — | Expansão interestadual com parâmetros fiscais e logísticos | Multi-UF testado antes da abertura nacional. | ⬜ não iniciado |  |
+
+## MKTPL — Marketplaces e channel manager
+
+| ID | Prio. | Piloto | Requisito | Aceite | Status | Nota e evidência |
+|---|---|---|---|---|---|---|
+| ORA-MKTPL-001 | P1 | — | Preparar adaptadores separados Mercado Livre/Shopee/TikTok Shop | Contratos e permissões confirmados antes do deploy. | ⬜ não iniciado |  |
+| ORA-MKTPL-002 | P1 | — | Sincronizar SKU/preço/estoque/anúncio conforme recursos | Evitam overselling e divergência detectável. | ⬜ não iniciado |  |
+| ORA-MKTPL-003 | P1 | — | Importar pedido marketplace com ID externo e dedupe | Reenvio de webhook não duplica pedido/reserva. | ⬜ não iniciado |  |
+| ORA-MKTPL-004 | P1 | — | Tratar entrega/frete/etiquetas/rastreio por canal | Estados de fulfillment corretos e não inventados. | ⬜ não iniciado |  |
+| ORA-MKTPL-005 | P1 | — | Conciliação de tarifas, comissões e repasses por marketplace | Lucratividade por pedido/canal explicável. | ⬜ não iniciado |  |
+| ORA-MKTPL-006 | P1 | — | Cancelamentos, devoluções e reembolsos por canal | Estoque/financeiro/fiscal/commission reversos. | ⬜ não iniciado |  |
+| ORA-MKTPL-007 | P2 | — | Sincronização near-real-time por webhooks/adapters | Rate limits/retries monitorados. | ⬜ não iniciado |  |
+| ORA-MKTPL-008 | P2 | — | Métricas por anúncio/canal/produto e margem | Valores reconciliados sem confundir receita bruta com líquida. | ⬜ não iniciado |  |
+
+## WHATS — WhatsApp, atendimento e automação
+
+| ID | Prio. | Piloto | Requisito | Aceite | Status | Nota e evidência |
+|---|---|---|---|---|---|---|
+| ORA-WHATS-001 | P1 | — | WhatsApp Business Platform oficial conectado ao CRM | Conta/números/escopos homologados; templates válidos. | ⬜ não iniciado |  |
+| ORA-WHATS-002 | P1 | — | Caixa de entrada multiatendente com atribuição à loja/vendedor | Mensagens e transferência auditadas. | ⬜ não iniciado |  |
+| ORA-WHATS-003 | P1 | — | Leads orgânicos e pagos identificados por origem consentida | Campanha e UTM preservados quando disponíveis. | ⬜ não iniciado |  |
+| ORA-WHATS-004 | P1 | — | Histórico 360 de conversas/negócios por cliente | Política de retenção/consentimento aplicada. | ⬜ não iniciado |  |
+| ORA-WHATS-005 | P1 | — | Respostas rápidas, etiquetas, SLA e repasse para humano | Handoff sempre acessível. | ⬜ não iniciado |  |
+| ORA-WHATS-006 | P1 | — | Templates e mensagens proativas em conformidade Meta | Sem spam nem envio sem permissão/consentimento apropriado. | ⬜ não iniciado |  |
+| ORA-WHATS-007 | P2 | — | IA supervisionada para qualificação e sugestão de respostas | Ações sensíveis exigem revisão e logs. | ⬜ não iniciado |  |
+| ORA-WHATS-008 | P2 | — | Recuperação de carrinho e pós-venda sob consentimento | Taxa de resposta/conversão mensurada. | ⬜ não iniciado |  |
+
+## META — Meta Ads e atribuição
+
+| ID | Prio. | Piloto | Requisito | Aceite | Status | Nota e evidência |
+|---|---|---|---|---|---|---|
+| ORA-META-001 | P1 | — | Importar insights autorizados de Meta Ads por conta/campanha | OAuth/scopes revisados; dados de custo e período auditáveis. | ⬜ não iniciado |  |
+| ORA-META-002 | P1 | — | Capturar UTM e origem de leads de site/WhatsApp | Jornada vincula campanha, oportunidade e venda quando possível. | ⬜ não iniciado |  |
+| ORA-META-003 | P1 | — | Mostrar gasto, CTR, CPC, CPL, CPA e ROAS quando calculáveis | Fórmulas, período e limitações explicitadas. | ⬜ não iniciado |  |
+| ORA-META-004 | P1 | — | Funil por vendedor/loja/campanha e atribuição | Dupla contagem/dedup de conversões minimizada. | ⬜ não iniciado |  |
+| ORA-META-005 | P2 | — | Conversions API/eventos com consentimento e dedupe | Sem rastrear dados sem base legal/autorização. | ⬜ não iniciado |  |
+| ORA-META-006 | P2 | — | Analisar margem e CAC por campanha | Distingue métrica estimada de valor liquidado. | ⬜ não iniciado |  |
+
+## AI — Inteligência artificial e análise
+
+| ID | Prio. | Piloto | Requisito | Aceite | Status | Nota e evidência |
+|---|---|---|---|---|---|---|
+| ORA-AI-001 | P1 | — | Painéis básicos e alertas desde o MVP | KPIs operacionais calculados de fatos transacionais. | ⬜ não iniciado |  |
+| ORA-AI-002 | P2 | — | IA auxilia atendimento e qualificação de leads | Base de conhecimento versionada, revisão e handoff. | ⬜ não iniciado |  |
+| ORA-AI-003 | P2 | — | IA sugere produtos, respostas e roteamento de cliente | Sem enviar informações sensíveis não autorizadas. | ⬜ não iniciado |  |
+| ORA-AI-004 | P2 | — | IA resume campanhas, metas e falhas operacionais | Valores e fonte verificáveis; sem inventar dados. | ⬜ não iniciado |  |
+| ORA-AI-005 | P2 | — | Autorização humana obrigatória para operações financeiras/fiscais | Auditoria de proposta/aprovador/execução. | ⬜ não iniciado |  |
+| ORA-AI-006 | P2 | — | Controle de custo por chamada de modelo e retenção | Orçamento configurável, logs redigidos e alertas. | ⬜ não iniciado |  |
+| ORA-AI-007 | P2 | — | Avaliação de qualidade e red-team de agentes | Testes de prompt injection e permissões aprovados. | ⬜ não iniciado |  |
+
+## REPORT — Gestão, BI e relatórios
+
+| ID | Prio. | Piloto | Requisito | Aceite | Status | Nota e evidência |
+|---|---|---|---|---|---|---|
+| ORA-REPORT-001 | P0 | sim | Dashboard diretoria consolidado das 14 lojas | Filtro por período, loja, vendedor, natureza e status. | 🖼️ demonstração | Painel da rede só com dados fictícios. Evidência: `apps/plataforma/src/app/demo` |
+| ORA-REPORT-002 | P0 | sim | Dashboard gerente de loja: caixa, metas, aprovação de desconto/NF | Só dados autorizados; alertas com link ao fato original. | 🖼️ demonstração | Painel do gerente só com dados fictícios. Evidência: `apps/plataforma/src/app/demo` |
+| ORA-REPORT-003 | P0 | sim | Dashboard vendedor mobile: produção do dia, metas e atalhos | Dados apenas do escopo autorizado. | 🖼️ demonstração | Início do vendedor no celular só com dados fictícios. Evidência: `apps/plataforma/src/app/demo` |
+| ORA-REPORT-004 | P0 | sim | Relatório de chips vendidos, ativações e recargas separadamente | Produção não implica faturamento tributável idêntico. | ⬜ não iniciado |  |
+| ORA-REPORT-005 | P0 | sim | Relatório por método de pagamento e terminal PicPay | Distinção pagamento/pêndencia/liquidação/reconciliação. | ⬜ não iniciado |  |
+| ORA-REPORT-006 | P1 | — | Relatórios de margem, vendedor e ranking configurável | Comissão/estorno reconciliáveis. | ⬜ não iniciado |  |
+| ORA-REPORT-007 | P1 | — | Alertas de estoque mínimo/IMEI/caixa divergente/fiscal pendente | Notificação contextual e auditada. | ⬜ não iniciado |  |
+| ORA-REPORT-008 | P2 | — | Dashboard expansão nacional por marketplace, ads e canais | Receitas/fees/margens por canal. | ⬜ não iniciado |  |
+
+## QUAL — Segurança, qualidade, operação e compliance
+
+| ID | Prio. | Piloto | Requisito | Aceite | Status | Nota e evidência |
+|---|---|---|---|---|---|---|
+| ORA-QUAL-001 | P0 | sim | CI, lint, typecheck, testes e code review obrigatórios | PR sem CI verde não libera merge. | 🟡 parcial | CI com lint, tipos, testes, build, auditoria, E2E e detector de segredos. Proteção da main não ativada; merges diretos pelo Claude Code por decisão de 07/11. Evidência: `.github/workflows/ci.yml` |
+| ORA-QUAL-002 | P0 | sim | RLS e autorização negada por padrão, testadas por loja | Testes positivos e negativos com dois vendedores/lojas. | ✅ feito | RLS negando por padrão, testada com várias lojas e perfis (T1–T3, T6–T10) e com mutações. Evidência: `packages/banco/src/acesso.test.ts` |
+| ORA-QUAL-003 | P0 | sim | Auditoria imutável de operações e aprovações críticas | Prova quem fez o quê e quando. | 🟡 parcial | Auditoria só de inserção, inclusive para o dono do banco. Operações críticas futuras (venda, caixa, aprovação) ainda não existem. Evidência: `acesso.test.ts (T9)` |
+| ORA-QUAL-004 | P0 | sim | Segredos em ambientes seguros sem exposição no Git/cliente | Secret scanning e testes de configuração. | ✅ feito | Detector de segredos no CI (arquivos e commits do PR), validação de variáveis na inicialização, .env fora do Git com permissão 600. Evidência: `packages/config/src/segredos.ts; packages/config/src/ambiente.ts` |
+| ORA-QUAL-005 | P0 | sim | Backups e ensaio de restauração de banco e anexos | RPO/RTO definidos com responsável e evidência. | ⬜ não iniciado |  |
+| ORA-QUAL-006 | P0 | sim | Observabilidade de erros, latência, filas e conciliação | Alertas e dashboards com dono e severidade. | ⬜ não iniciado |  |
+| ORA-QUAL-007 | P0 | sim | Migrations versionadas, não destrutivas, testadas | Revisão humana e rollback/roll-forward preparados. | 🟡 parcial | Migrations versionadas, aplicadas do zero nos testes, com reversão documentada. Falta homologação e procedimento de produção. Evidência: `packages/banco/supabase` |
+| ORA-QUAL-008 | P0 | sim | Plano de contingência para internet, pagamentos e fiscal | Equipe piloto sabe como operar com segurança. | ⬜ não iniciado |  |
+| ORA-QUAL-009 | P0 | sim | Piloto com testes de usuário, caixa e fechamento diário | Critérios de go/no-go assinados. | ⬜ não iniciado |  |
+| ORA-QUAL-010 | P1 | — | Performance mobile e testes em dispositivos/internet reais | SLOs aprovados e comparados com resultado. | ⬜ não iniciado |  |
+| ORA-QUAL-011 | P1 | — | LGPD: bases legais, retenção, direitos do titular e minimização | Encarregado/jurídico revisa e aprova políticas. | ⬜ não iniciado |  |
+| ORA-QUAL-012 | P1 | — | Testes de carga, concorrência e disaster recovery | Sem venda/IMEI duplo, serviço retorna ao estado previsto. | ⬜ não iniciado |  |
+| ORA-QUAL-013 | P1 | — | Processo de resposta a incidentes e suporte às lojas | Playbook, contatos e rastreio de incidentes. | ⬜ não iniciado |  |
+| ORA-QUAL-014 | P2 | — | Análise de segurança periódica e monitoramento de dependências | Atualizações e vulnerabilidades triadas. | ⬜ não iniciado |  |
+

@@ -1,5 +1,6 @@
 import type { Metadata } from "next";
 
+import { conferirConexaoSupabase } from "../../lib/supabase/configuracao";
 import { formatarHorario, obterEstadoSaude } from "../../saude/estado";
 
 export const metadata: Metadata = { title: "Saúde do sistema | Ora 5G" };
@@ -7,23 +8,32 @@ export const metadata: Metadata = { title: "Saúde do sistema | Ora 5G" };
 // Precisa ser calculada a cada acesso: uma pagina estatica continuaria "no ar" com horario antigo.
 export const dynamic = "force-dynamic";
 
-export default function PaginaSaude() {
+const TEXTO_CONEXAO = {
+  conectado: "conectado",
+  nao_configurado: "não configurado neste ambiente",
+  sem_resposta: "sem resposta",
+} as const;
+
+export default async function PaginaSaude() {
   const estado = obterEstadoSaude();
+  const conexao = await conferirConexaoSupabase();
 
   return (
-    <main>
-      <h1>Sistema no ar</h1>
-      <dl>
-        <dt>Serviço</dt>
+    <main className="mx-auto max-w-xl p-4">
+      <h1 className="text-2xl font-bold">Sistema no ar</h1>
+      <dl className="mt-4 grid grid-cols-[max-content_minmax(0,1fr)] gap-x-3 gap-y-1">
+        <dt className="font-semibold">Serviço</dt>
         <dd>{estado.servico}</dd>
-        <dt>Versão</dt>
+        <dt className="font-semibold">Versão</dt>
         <dd>{estado.versao}</dd>
-        <dt>Verificado em</dt>
+        <dt className="font-semibold">Verificado em</dt>
         <dd>
           <time dateTime={estado.verificadoEm}>{formatarHorario(estado.verificadoEm)}</time>
         </dd>
+        <dt className="font-semibold">Login (Supabase)</dt>
+        <dd data-testid="conexao-supabase">{TEXTO_CONEXAO[conexao]}</dd>
       </dl>
-      <p>Esta página confere só o aplicativo. Banco de dados e integrações ainda não são verificados aqui.</p>
+      <p className="mt-4 text-sm text-suave">Confere o aplicativo e se o serviço de login responde. Não lê dados do banco.</p>
     </main>
   );
 }

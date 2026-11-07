@@ -1,12 +1,14 @@
 # ORA 5G — PACOTE DE TRANSFERÊNCIA PARA CLAUDE CODE E CODEX
 
+> **Estado atual (07/11/2026):** o projeto já tem código. Comece por `docs/ESTADO_ATUAL_E_PASSAGEM.md` e `docs/alinhamento/ANALISE_DO_PLANO.md`. Este README descreve o pacote de planejamento original.
+
 **Versão documental:** 2026-11-05 — baseline de planejamento, **não** evidência de software implementado.
 **Propósito:** permitir que Claude Code/Claude e OpenAI Codex continuem o desenvolvimento com o mesmo contexto, prioridades, limites de segurança e critérios de qualidade discutidos com o proprietário.
 
 ## Como importar
 
 ### Claude (interface de conversa)
-1. Anexe `ORA5G_DOSSIE_MESTRE_UNIFICADO.md` (arquivo único) e, se for útil, `referencias_visuais/ora5g_visao_geral_telas.png`.
+1. Anexe os arquivos de `docs/` (o antigo `ORA5G_DOSSIE_MESTRE_UNIFICADO.md` era só a concatenação deles e não está no repositório) e, se for útil, `referencias_visuais/ora5g_visao_geral_telas.png`.
 2. Cole o texto de `PARA_COLAR_NO_CLAUDE.md` na primeira mensagem.
 3. Peça uma leitura crítica e validação do entendimento ANTES de iniciar qualquer código.
 4. Os três relatórios detalhados em `originais/research/` podem ser anexados adicionalmente caso Claude precise consultar uma pesquisa específica.
@@ -22,7 +24,6 @@
 
 | Caminho | Conteúdo |
 |---|---|
-| `ORA5G_DOSSIE_MESTRE_UNIFICADO.md` | Contexto reunido em um único Markdown para anexar ao Claude |
 | `PARA_COLAR_NO_CLAUDE.md` | Prompt pronto para iniciar a conversa |
 | `CLAUDE.md` | Regras obrigatórias para Claude Code |
 | `AGENTS.md` | Regras compartilhadas para Codex e agentes |
