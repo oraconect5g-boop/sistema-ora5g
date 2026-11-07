@@ -90,7 +90,7 @@ Papéis **fixos** (decisão do proprietário). Detalhes: ADR-001, seção 2.7.
 
 ## 6. Próximos passos do programador (em ordem)
 
-Feito em 07/11: deploy key e clone; Node 22; **ORA-002**; **ORA-003**; **ORA-004/005** (aplicada no `ora5g-dev`); **regras de negócio puras** (dinheiro, IMEI/ICCID, desconto por margem, pagamento misto e financiado, produção por categoria); **versão de demonstração** com 12 telas e 4 perfis, desligada em produção; **login real** ligado ao Supabase (recusa credencial errada com mensagem neutra, testado contra o projeto real); **homologação** rodando no servidor em `127.0.0.1:3100` (faltam, com o proprietário: autorizar o `crontab` de reinício automático e publicar o subdomínio `hml-app`; ver `deploy/homologacao/LEIA-ME.md`).
+Feito em 07/11: deploy key e clone; Node 22; **ORA-002**; **ORA-003**; **ORA-004/005** (aplicada no `ora5g-dev`); **regras de negócio puras** (dinheiro, IMEI/ICCID, desconto por margem, pagamento misto e financiado, produção por categoria); **versão de demonstração** com 12 telas e 4 perfis, desligada em produção; **login real** ligado ao Supabase (recusa credencial errada com mensagem neutra, testado contra o projeto real); **homologação** rodando no servidor em `127.0.0.1:3100`, com reinício automático pelo `crontab` (autorizado em 07/11). Falta o proprietário publicar o subdomínio `hml-app` no cPanel (ver `deploy/homologacao/LEIA-ME.md`).
 
 1. **Responder aos achados do Codex** em `docs/alinhamento/REVISOES_CODEX.md`.
 2. **Auditoria automática** de mudanças em vínculos, perfis e papéis (ORA-ORG-005).
