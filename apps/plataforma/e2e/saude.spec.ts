@@ -51,3 +51,14 @@ test("atrás do Apache, os arquivos de índice abrem a página inicial", async (
   expect((await request.get("/index")).status()).toBe(404);
   expect((await request.get("/indice.php")).status()).toBe(404);
 });
+
+test("com os cabeçalhos que o Apache envia, a página inicial e a demonstração abrem", async ({ request }) => {
+  const doApache = { "X-Forwarded-Host": "ora5g.com.br", "X-Forwarded-Proto": "https", "X-Forwarded-For": "203.0.113.10" };
+  for (const caminho of ["/", "/index.php", "/index.html", "/demo", "/entrar", "/saude"]) {
+    const resposta = await request.get(caminho, { headers: doApache });
+    expect(resposta.status(), caminho).toBe(200);
+  }
+  const troca = await request.get("/demo/perfil/usar?p=vendedor", { headers: doApache, maxRedirects: 0 });
+  expect(troca.status()).toBe(303);
+  expect(troca.headers()["location"]).toBe("/demo");
+});

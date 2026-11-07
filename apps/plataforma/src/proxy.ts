@@ -3,14 +3,7 @@ import { NextResponse, type NextRequest } from "next/server";
 
 import { configuracaoSupabase } from "./lib/supabase/configuracao";
 
-// Atrás do Apache do cPanel, um pedido da raiz ("/") chega como o arquivo de índice que o
-// Apache procura (index.php, index.html, default.htm...). Esses nomes viram a página inicial.
-const INDICE_DO_APACHE = /^\/(index|default|home)\.[a-z0-9]{1,6}$/i;
-
 export async function proxy(requisicao: NextRequest) {
-  if (INDICE_DO_APACHE.test(requisicao.nextUrl.pathname)) {
-    return NextResponse.rewrite(new URL("/", requisicao.url));
-  }
   return renovarSessao(requisicao);
 }
 
@@ -40,6 +33,4 @@ async function renovarSessao(requisicao: NextRequest) {
   return resposta;
 }
 
-export const config = {
-  matcher: ["/conta/:path*", "/((?:index|default|home|Default|Home|INDEX)\\.[a-zA-Z0-9]{1,6})"],
-};
+export const config = { matcher: ["/conta/:path*"] };
