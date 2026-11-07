@@ -33,7 +33,7 @@ As decisões verificáveis são as desta conversa e as preservadas no planejamen
 | REV-005 / #6 | Encerrar vínculo sem mudar seu conteúdo não depende de papel ativo | Regressões passaram; reabrir/criar com papel inativo e trocar conteúdo pelo atalho continuam recusados |
 | REV-006 / #7 | Índice único passa a incluir organização | Mesmo usuário pode ser dono em duas organizações, sem duplicar vínculo aberto na mesma; teste passou. Isso era expansão futura, não bloqueio das 14 lojas na mesma organização |
 | REV-007 / #9 | Parser trata milhares sem centavos e limites seguros | Casos 1.000 e 1.000.000 agora produzem 100.000 e 100.000.000 centavos; testes originais independentes passaram |
-| REV-008 / #10 | Rejeição em runtime de NaN, fração, negativos, valores inseguros e tipos desconhecidos | Casos originais foram corrigidos no domínio. A integração da UI com a exceção ainda falha no REV-015; não remover a validação para esconder esse problema |
+| REV-008 / #10 | Rejeição em runtime de NaN, fração, negativos, valores inseguros e tipos desconhecidos | Casos originais foram corrigidos no domínio. Restam um limite de arredondamento em valores altos na #10 e a integração da UI no REV-015; não remover a validação para esconder o problema |
 | REV-009 / #11 | Proxy do Next.js 16 chama getClaims e propaga cookies e cabeçalhos antes de /conta | Implementação presente e build válida. Expiração/renovação com usuário real ainda pendente; manter issue aberta até comprovar |
 | REV-010 | ehPerfil passa a usar Object.hasOwn | Nove casos independentes de dinheiro/perfil e regressões do projeto passaram; E2E com cookies herdados passou no celular e desktop |
 | REV-011 | Status testado/homologado separados; segurança e login parciais; gerador atualizado | Conferência do arquivo gerado passou. Isso prova consistência do relatório; não certifica todos os status de negócio nem homologa requisitos |
@@ -63,6 +63,14 @@ Por inspeção de publicar.sh: quando encontra BUILD_ID e o mesmo SHA, reaprovei
 
 **Aceite:** considerar a configuração relevante na identidade do artefato; configuração de runtime e artefato devem corresponder. Testar duas configurações fictícias no mesmo SHA e retorno em falha, preservando a combinação anterior. Não imprimir valores nem alterar a versão ativa antecipadamente. Rebuild continua necessário quando um valor público é incorporado à build.
 
+### REV-008 — resíduo de aritmética exata em valores altos
+
+Os quatro defeitos originais da #10 foram corrigidos. Um teste independente posterior encontrou um limite ainda não coberto: preco=2000000000012, custo=1999800000001, taxaMeioPagamento=0, tetoCategoria=1 e margemMinima=1 (valores monetários em centavos, percentuais em pontos-base). O helper retorna desconto máximo 11; o teto racional inteiro exato permite 10.
+
+A referência usa (custo × 10000 + fator − 1) / fator em inteiros, com fator=9999. A divisão em ponto flutuante arredonda antes de Math.ceil. Os valores são muito altos para uma venda habitual do piloto, mas continuam na faixa aceita pelos helpers e pelo numeric(14,2) planejado; não atribuir a esse resíduo o mesmo impacto dos quatro casos P1 originais.
+
+Completar a aritmética inteira exata ou rejeitar explicitamente uma faixa de negócio insegura antes do cálculo. BigInt interno é recurso da mesma stack TypeScript/JavaScript; não exige mudança de linguagem. A #10 fica aberta com esse resíduo documentado. Não houve operação real com esses valores.
+
 ### CONFIG-001 — grupos implementados; guia e compatibilidade por concluir
 
 **Issue:** [#12](https://github.com/oraconect5g-boop/sistema-ora5g/issues/12).
@@ -85,7 +93,7 @@ Uma primeira execução E2E local encontrou EADDRINUSE na porta auxiliar 3199 de
 | Testes existentes locais | 172 passaram: 18 aplicação, 44 banco, 42 configuração, 68 domínio; 4 todo no banco |
 | Provas independentes originais reaplicadas | 14 passaram: cinco do banco e nove de leitura/validação/perfis. Os mesmos casos haviam falhado na base anterior |
 | E2E existentes locais, com porta auxiliar livre | 35 passaram; 5 pulados: dois casos de login com serviço real sem configuração local e três duplicações intencionais dos testes auxiliares no celular |
-| Novo E2E adversarial de desconto acima do preço | Uma falha reproduziu REV-015; não pertence à suíte existente nem foi integrado como teste vermelho |
+| Novos testes adversariais | Um E2E falhou reproduzindo REV-015; um teste de domínio falhou no teto exato de valores altos (esperado 10/obtido 11). Não pertencem à suíte existente nem foram integrados como testes vermelhos |
 | Lint, tipos e build | Passaram; avisos da regra de diretório pages dos pacotes sem Next continuam sem falha do comando |
 | Rastreabilidade e scripts | --conferir e bash -n passaram; não houve execução de deploy |
 | Modelo mínimo | Grupo aplicacao passou. Configuração pública fictícia passou sem SQL/credencial administrativa; não houve login real |
