@@ -31,7 +31,7 @@ export default async function Financeiro() {
             ))}
           </Tabela>
         </Cartao>
-        <Cartao titulo="Financeiras" subtitulo="Entrada na loja + restante a receber (DEC-U38)">
+        <Cartao titulo="Financeiras" subtitulo="Entrada na loja + restante a receber">
           <Tabela colunas={["Financeira", "Vendas", "Entradas", "A receber"]} legenda="Vendas financiadas">
             {FINANCEIRAS.map((f) => (
               <tr key={f.nome}><Celula>{f.nome}</Celula><Celula>{f.vendas}</Celula><Celula>{formatarBRL(f.entradas)}</Celula><Celula>{formatarBRL(f.aReceber)}</Celula></tr>
@@ -45,7 +45,7 @@ export default async function Financeiro() {
             <li className="flex justify-between gap-2 py-2"><span>NFC-e de exemplo · venda PV-24860</span><Selo tom="sucesso">Autorizada (exemplo)</Selo></li>
           </ul>
         </Cartao>
-        <Aviso tom="aviso" titulo="Emissão automática depende de terceiros">Emissor fiscal por API, certificado A1 e validação do contador (P7). Hoje a nota segue manual, pelo dono.</Aviso>
+        <Aviso tom="aviso" titulo="Emissão automática depende de terceiros">Emissor fiscal por API, certificado A1 e validação do contador. Hoje a nota segue manual, pelo dono.</Aviso>
       </div>
     </>
   );

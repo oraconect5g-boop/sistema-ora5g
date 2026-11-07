@@ -165,14 +165,14 @@ export function PDV({ podeVerMargem }: { podeVerMargem: boolean }) {
             ))}
           </ul>
         </Cartao>
-        <Cartao titulo="Nota fiscal" subtitulo="O dono recebe o pedido pronto e aprova em 1 toque (DEC-U20)">
+        <Cartao titulo="Nota fiscal" subtitulo="O dono recebe o pedido pronto e aprova em 1 toque">
           {nota ? (
             <Aviso tom="sucesso">Solicitação enviada para aprovação. A nota irá por {nota === "email" ? "e-mail" : "WhatsApp"} depois de autorizada.</Aviso>
           ) : (
             <div className="flex flex-wrap gap-2">
               <Botao onClick={() => setNota("email")} disabled={!cliente?.email}>Solicitar nota por e-mail</Botao>
               <Botao variante="secundario" onClick={() => setNota("whatsapp")}>Solicitar por WhatsApp</Botao>
-              {!cliente?.email && <p className="w-full text-xs text-suave">Sem e-mail do cliente: a nota vai por WhatsApp (DEC-U22).</p>}
+              {!cliente?.email && <p className="w-full text-xs text-suave">Sem e-mail do cliente: a nota vai por WhatsApp.</p>}
             </div>
           )}
         </Cartao>
@@ -291,7 +291,7 @@ export function PDV({ podeVerMargem }: { podeVerMargem: boolean }) {
               ))}
             </ul>
           )}
-          <p className="mt-2 text-xs text-suave">O vendedor não edita preço: só aplica desconto, e o sistema limita pela margem (DEC-U26/U41). Parâmetros de exemplo.</p>
+          <p className="mt-2 text-xs text-suave">O vendedor não edita preço: só aplica desconto, e o sistema limita pela margem. Parâmetros de exemplo.</p>
         </Cartao>
       </div>
 
@@ -344,7 +344,7 @@ export function PDV({ podeVerMargem }: { podeVerMargem: boolean }) {
         ) : precisaAprovacao ? (
           <Botao className="w-full" onClick={() => setSituacao("aprovacao_enviada")}>Pedir aprovação do desconto</Botao>
         ) : (
-          <Botao className="w-full text-base" disabled={!podeConcluir} onClick={() => setSituacao("concluida")}>Conferir e concluir venda</Botao>
+          <Botao className="w-full text-base" disabled={!podeConcluir} onClick={() => { setSituacao("concluida"); window.scrollTo({ top: 0 }); }}>Conferir e concluir venda</Botao>
         )}
         <p className="text-xs text-suave">Demonstração: preços, estoque e pagamentos são fictícios; nada é gravado e nenhum pagamento é cobrado.</p>
       </div>

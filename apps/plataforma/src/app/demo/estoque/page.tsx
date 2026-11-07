@@ -46,7 +46,7 @@ export default async function Estoque() {
           ))}
         </Tabela>
       </Cartao>
-      <div className="mt-4"><Aviso>Dois vendedores nunca reservam o mesmo IMEI: no sistema real a reserva é feita no banco com bloqueio (tarefa ORA-010).</Aviso></div>
+      <div className="mt-4"><Aviso>Dois vendedores nunca reservam o mesmo IMEI: no sistema real a reserva é feita no banco com bloqueio.</Aviso></div>
     </>
   );
 }

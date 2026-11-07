@@ -24,7 +24,7 @@ export const LOJAS = [
 ];
 
 export const UNIDADES_ESPECIAIS = [
-  { nome: "Loja Online", tipo: "Online", observacao: "Emite pela Santa Cândida até a decisão P10" },
+  { nome: "Loja Online", tipo: "Online", observacao: "CNPJ emissor ainda a definir" },
   { nome: "Assistência (técnico central)", tipo: "Assistência", observacao: "Guarda aparelhos de clientes; não é estoque de venda" },
 ];
 

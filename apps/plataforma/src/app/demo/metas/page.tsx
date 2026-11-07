@@ -14,7 +14,7 @@ export default async function Metas() {
   return (
     <>
       <TituloPagina titulo="Metas e desempenho" subtitulo="Turno por loja, produção por categoria e meta do dia" />
-      <Cartao titulo={perfil === "vendedor" ? "Minha produção" : "Equipe · Santa Cândida"} subtitulo="Chips, ativações, portabilidades, recargas e assistências contam (DEC-U46)">
+      <Cartao titulo={perfil === "vendedor" ? "Minha produção" : "Equipe · Santa Cândida"} subtitulo="Chips, ativações, portabilidades, recargas e assistências contam">
         <Tabela colunas={["Vendedor", "Meta", "Aparelhos", "Acessórios", "Chips", "Ativações", "Portab.", "Recargas", "OS", "Dias / lojas no mês"]} legenda="Produção por vendedor">
           {ordenados.map((v) => {
             const pct = (v.vendido / v.meta) * 100;
@@ -31,8 +31,8 @@ export default async function Metas() {
         </Tabela>
       </Cartao>
       <div className="mt-4 grid gap-4 lg:grid-cols-2">
-        <Aviso titulo="Incentivos em estudo (DEC-U45)">Extrato em tempo real, metas diárias, bônus por margem saudável e conquistas. As regras de comissão serão configuráveis pelos donos, com histórico.</Aviso>
-        <Aviso tom="aviso" titulo="Decisão pendente (P3)">Os vendedores verão o ranking com o nome dos colegas ou só a própria posição? Nesta demonstração, o vendedor vê só os próprios números.</Aviso>
+        <Aviso titulo="Incentivos em estudo">Extrato em tempo real, metas diárias, bônus por margem saudável e conquistas. As regras de comissão serão configuráveis pelos donos, com histórico.</Aviso>
+        <Aviso tom="aviso" titulo="Decisão pendente">Os vendedores verão o ranking com o nome dos colegas ou só a própria posição? Nesta demonstração, o vendedor vê só os próprios números.</Aviso>
       </div>
     </>
   );
