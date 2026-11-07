@@ -1,12 +1,8 @@
-// Roda uma vez quando o servidor inicia: sem configuracao completa, o sistema nao sobe (ORA-003).
-// O processo encerra com erro (em vez de ficar no ar sem atender) para o systemd e o deploy perceberem.
+// Roda uma vez quando o servidor inicia (ORA-003). A parte que usa APIs do Node fica em
+// arquivo separado, carregado só no runtime Node (padrão recomendado pelo Next.js).
 export async function register() {
-  if (process.env.NEXT_RUNTIME !== "nodejs") return;
-  const { carregarAmbiente } = await import("@ora5g/config/ambiente");
-  try {
-    carregarAmbiente(process.env, ["aplicacao"]);
-  } catch (erro) {
-    console.error(erro instanceof Error ? erro.message : erro);
-    process.exit(1);
+  if (process.env.NEXT_RUNTIME === "nodejs") {
+    const { validarAmbienteOuEncerrar } = await import("./instrumentacao-node");
+    await validarAmbienteOuEncerrar();
   }
 }
