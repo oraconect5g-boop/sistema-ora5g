@@ -37,6 +37,18 @@ jobs:
       - name: Procurar segredos nos commits do PR
         if: github.event_name == 'pull_request'
         run: npm run segredos -- --historico "origin/${{ github.base_ref }}..HEAD"
+      # REV-003: no envio direto à main também confere cada commit novo, inclusive
+      # segredo adicionado e removido no mesmo envio. Sem "antes" conhecido, confere tudo.
+      - name: Procurar segredos nos commits enviados
+        if: github.event_name == 'push'
+        env:
+          ANTES: ${{ github.event.before }}
+        run: |
+          if [ -n "$ANTES" ] && [ "$ANTES" != "0000000000000000000000000000000000000000" ] && git cat-file -e "$ANTES^{commit}" 2>/dev/null; then
+            npm run segredos -- --historico "$ANTES..HEAD"
+          else
+            npm run segredos -- --historico HEAD
+          fi
       - name: Rastreabilidade dos requisitos em dia
         run: node scripts/gerar-rastreabilidade.mjs --conferir
       - run: npm ci
