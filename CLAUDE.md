@@ -48,4 +48,5 @@ Diga o que você entendeu, quais arquivos realmente leu, o que encontrou impleme
 - Você trabalha por SSH com o usuário `dev`, na área de desenvolvimento/homologação (portas 31xx), e pode ler e editar o `.env` de desenvolvimento e de homologação.
 - **Nunca exiba valores do `.env`** em respostas, logs, commits ou PRs; para conferir, use o script `verificar-env`, que mostra só nomes.
 - Todo código vai para branch e PR revisado pelo Codex; nada é publicado em produção sem deploy aprovado pelo proprietário. Você não acessa o `.env` de produção, o WHM, o e-mail nem o DNS.
+- **Merges (decisão do proprietário, 07/11/2026):** você faz os merges na `main` depois de rodar no servidor, a partir de instalação limpa, a mesma sequência do CI (`npm ci`, `segredos`, `lint`, `typecheck`, `test`, `build`, `audit --omit=dev`, `test:e2e`). O Codex continua revisando os commits; correções voltam como novos commits.
 - Detalhes: ADR-001, seção 2.7.
