@@ -5,7 +5,7 @@
 set -euo pipefail
 
 BASE="$HOME/homologacao"
-DIR="$BASE/plataforma"
+DIR="$BASE/plataforma"   # link para a versão ativa em $BASE/versoes/<commit>
 LOGS="$BASE/logs"
 PID="$BASE/plataforma.pid"
 PORTA=3100

@@ -45,7 +45,7 @@ Papéis **fixos** (decisão do proprietário). Detalhes: ADR-001, seção 2.7.
 | Zona DNS no WHM | Conferida: A, MX, SPF, DKIM, DMARC, nenhum AAAA |
 | Domínios do sistema | `app`, `loja`, `hml-app`, `hml-loja` `.ora5g.com.br` (só registros A) — ainda não criados |
 | Portas internas | **30xx produção, 31xx homologação**, sempre em `127.0.0.1` |
-| Banco | **Supabase gerenciado**, pelo **pooler em modo sessão (5432)**, porque a conexão direta é só IPv6. Projeto de dev **`ora5g-dev`** (`qgnbeuugklzzcevdzrvg`, São Paulo, gratuito) criado em 07/11 com as migrations aplicadas. Faltam no `.env.local` do servidor: `SUPABASE_SECRET_KEY` e `DATABASE_URL` (o proprietário preenche) |
+| Banco | **Supabase gerenciado**, pelo **pooler em modo sessão (5432)**, porque a conexão direta é só IPv6. Projeto de dev **`ora5g-dev`** (`qgnbeuugklzzcevdzrvg`, São Paulo, gratuito) criado em 07/11 com as migrations aplicadas. Endereço e chave pública já configurados (bastam para o login). `SUPABASE_SECRET_KEY` e `DATABASE_URL` só serão necessárias para worker, scripts de banco e criação de usuários pelo sistema (o proprietário preenche no servidor) |
 | Node no servidor | 22.23.4 em `~/.local/opt/node` (pacote oficial com checksum conferido; o nvm foi bloqueado pela política de segurança do ambiente) |
 | Node no servidor | Usar `127.0.0.1` (nunca `localhost`) e `NODE_OPTIONS=--dns-result-order=ipv4first` |
 
@@ -92,7 +92,7 @@ Papéis **fixos** (decisão do proprietário). Detalhes: ADR-001, seção 2.7.
 
 Feito em 07/11: deploy key e clone; Node 22; **ORA-002**; **ORA-003**; **ORA-004/005** (aplicada no `ora5g-dev`); **regras de negócio puras** (dinheiro, IMEI/ICCID, desconto por margem, pagamento misto e financiado, produção por categoria); **versão de demonstração** com 12 telas e 4 perfis, desligada em produção; **login real** ligado ao Supabase (recusa credencial errada com mensagem neutra, testado contra o projeto real); **homologação** rodando no servidor em `127.0.0.1:3100`, com reinício automático pelo `crontab` (autorizado em 07/11). Falta o proprietário publicar o subdomínio `hml-app` no cPanel (ver `deploy/homologacao/LEIA-ME.md`).
 
-1. **Responder aos achados do Codex** em `docs/alinhamento/REVISOES_CODEX.md`.
+1. **Revisão do Codex de 07/11:** os 14 achados (REV-001 a REV-014) foram tratados: 13 com teste de regressão e o REV-009 (renovação de sessão) sem teste com usuário real, que ainda não existe; respostas em `docs/alinhamento/RESPOSTAS_A_REVISAO_2026-11-07.md`. Aguardam a revisão do Codex sobre as correções.
 2. **Auditoria automática** de mudanças em vínculos, perfis e papéis (ORA-ORG-005).
 3. **ADR-003** (operação comercial, tipos de item, ledger de estoque), revisado pelo Codex e aceito pelo proprietário.
 4. **ORA-006** completo: escolha da loja na sessão, sessão por turno, recuperação de senha (depende do SMTP), usuários de teste.

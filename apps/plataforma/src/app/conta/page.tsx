@@ -15,10 +15,27 @@ export default async function Conta() {
   const { data: usuario } = await supabase.auth.getUser();
   if (!usuario.user) redirect("/entrar");
 
-  const [{ data: perfil }, { data: unidades }] = await Promise.all([
+  const [perfilResposta, unidadesResposta] = await Promise.all([
     supabase.from("perfis_usuario").select("nome, email, status").eq("id", usuario.user.id).maybeSingle(),
     supabase.from("unidades").select("id, nome, tipo").order("nome"),
   ]);
+
+  // REV-014: falha do serviço não pode virar "sem perfil" ou "sem loja".
+  if (perfilResposta.error || unidadesResposta.error) {
+    console.error("conta: falha ao consultar o banco", {
+      perfil: perfilResposta.error?.code ?? null,
+      unidades: unidadesResposta.error?.code ?? null,
+    });
+    return (
+      <main className="mx-auto max-w-lg px-4 py-10">
+        <Cartao titulo="Minha conta">
+          <Aviso tom="perigo" titulo="Não foi possível carregar seus dados agora">Tente de novo em alguns instantes. Se continuar, avise o administrador.</Aviso>
+        </Cartao>
+      </main>
+    );
+  }
+  const perfil = perfilResposta.data;
+  const unidades = unidadesResposta.data;
 
   return (
     <main className="mx-auto max-w-lg px-4 py-10">

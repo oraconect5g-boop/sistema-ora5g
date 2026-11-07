@@ -2,30 +2,30 @@
 
 > Arquivo GERADO por `node scripts/gerar-rastreabilidade.mjs` a partir de `backlog.json` e `docs/alinhamento/status-requisitos.json` (atualizado em 2026-11-07). Não edite à mão.
 
-"Feito" significa implementado e testado **em desenvolvimento**; nada foi homologado nem aceito pelo proprietário ainda. "Demonstração" é só tela com dados fictícios.
+"Testado" = implementado e testado em desenvolvimento, aguardando revisão do Codex e homologação. "Homologado" = aceito pelo proprietário em homologação (nenhum ainda). "Demonstração" é só tela com dados fictícios.
 
 ## Resumo por domínio
 
-| Domínio | Total | P0 | No piloto | Feito | Parcial | Demonstração | Respeitado | Bloqueado | Não iniciado |
-|---|---|---|---|---|---|---|---|---|---|
-| ORG | 10 | 6 | 6 | 0 | 6 | 0 | 0 | 0 | 4 |
-| CAT | 10 | 6 | 6 | 0 | 2 | 0 | 1 | 0 | 7 |
-| INV | 12 | 6 | 7 | 0 | 1 | 0 | 0 | 0 | 11 |
-| CRM | 10 | 4 | 3 | 0 | 0 | 0 | 0 | 0 | 10 |
-| POS | 16 | 11 | 11 | 0 | 2 | 1 | 0 | 0 | 13 |
-| PAY | 14 | 8 | 8 | 0 | 1 | 0 | 0 | 0 | 13 |
-| FIN | 10 | 5 | 1 | 0 | 0 | 0 | 0 | 0 | 10 |
-| PERF | 10 | 5 | 5 | 0 | 1 | 0 | 0 | 0 | 9 |
-| FISC | 10 | 6 | 6 | 0 | 0 | 0 | 0 | 2 | 8 |
-| CONNECT | 11 | 6 | 3 | 0 | 0 | 0 | 0 | 1 | 10 |
-| ONLINE | 8 | 0 | 0 | 0 | 0 | 0 | 0 | 0 | 8 |
-| MKTPL | 8 | 0 | 0 | 0 | 0 | 0 | 0 | 0 | 8 |
-| WHATS | 8 | 0 | 0 | 0 | 0 | 0 | 0 | 0 | 8 |
-| META | 6 | 0 | 0 | 0 | 0 | 0 | 0 | 0 | 6 |
-| AI | 7 | 0 | 0 | 0 | 0 | 0 | 0 | 0 | 7 |
-| REPORT | 8 | 5 | 5 | 0 | 0 | 3 | 0 | 0 | 5 |
-| QUAL | 14 | 9 | 9 | 2 | 3 | 0 | 0 | 0 | 9 |
-| **Total** | **172** | **77** | **70** | **2** | **16** | **4** | **1** | **3** | **146** |
+| Domínio | Total | P0 | No piloto | Homologado | Testado | Parcial | Demonstração | Respeitado | Bloqueado | Não iniciado |
+|---|---|---|---|---|---|---|---|---|---|---|
+| ORG | 10 | 6 | 6 | 0 | 0 | 6 | 0 | 0 | 0 | 4 |
+| CAT | 10 | 6 | 6 | 0 | 0 | 2 | 0 | 1 | 0 | 7 |
+| INV | 12 | 6 | 7 | 0 | 0 | 1 | 0 | 0 | 0 | 11 |
+| CRM | 10 | 4 | 3 | 0 | 0 | 0 | 0 | 0 | 0 | 10 |
+| POS | 16 | 11 | 11 | 0 | 0 | 2 | 1 | 0 | 0 | 13 |
+| PAY | 14 | 8 | 8 | 0 | 0 | 1 | 0 | 0 | 0 | 13 |
+| FIN | 10 | 5 | 1 | 0 | 0 | 0 | 0 | 0 | 0 | 10 |
+| PERF | 10 | 5 | 5 | 0 | 0 | 1 | 0 | 0 | 0 | 9 |
+| FISC | 10 | 6 | 6 | 0 | 0 | 0 | 0 | 0 | 2 | 8 |
+| CONNECT | 11 | 6 | 3 | 0 | 0 | 0 | 0 | 0 | 1 | 10 |
+| ONLINE | 8 | 0 | 0 | 0 | 0 | 0 | 0 | 0 | 0 | 8 |
+| MKTPL | 8 | 0 | 0 | 0 | 0 | 0 | 0 | 0 | 0 | 8 |
+| WHATS | 8 | 0 | 0 | 0 | 0 | 0 | 0 | 0 | 0 | 8 |
+| META | 6 | 0 | 0 | 0 | 0 | 0 | 0 | 0 | 0 | 6 |
+| AI | 7 | 0 | 0 | 0 | 0 | 0 | 0 | 0 | 0 | 7 |
+| REPORT | 8 | 5 | 5 | 0 | 0 | 0 | 3 | 0 | 0 | 5 |
+| QUAL | 14 | 9 | 9 | 0 | 0 | 5 | 0 | 0 | 0 | 9 |
+| **Total** | **172** | **77** | **70** | **0** | **0** | **18** | **4** | **1** | **3** | **146** |
 
 ## ORG — Organização, lojas e usuários
 
@@ -34,9 +34,9 @@
 | ORA-ORG-001 | P0 | sim | Cadastrar empresa, organização, 14 lojas e loja piloto | Usuários autorizados selecionam unidade; IDs e dados fiscais coerentes. | 🟡 parcial | Tabelas organização/empresa/unidade com CNPJ validado no banco e escolha da unidade na sessão. Falta cadastrar as 14 lojas reais (lista com CNPJs pendente) e a tela de gestão. Evidência: `packages/banco/supabase/migrations/20261107120000_fundacao_acesso.sql; packages/banco/src/acesso.test.ts (T10)` |
 | ORA-ORG-002 | P0 | sim | Associar usuários a uma ou múltiplas lojas com função e vigência | Bloqueio testado para loja sem vínculo. | 🟡 parcial | Vínculos com vigência, um vendedor em várias lojas, bloqueio testado. Falta a tela de gestão de usuários (ORA-008). Evidência: `acesso.test.ts (T1, T2/T3, T7)` |
 | ORA-ORG-003 | P0 | sim | Gerir perfis diretoria, regional, gerente, vendedor, financeiro, fiscal, marketing e atendimento | Matriz de autorização versionada e auditada. | 🟡 parcial | 5 papéis do ADR-002 (dono, administrador, gerente, vendedor, técnico) com matriz versionada por migration. Regional, financeiro, fiscal, marketing e atendimento entram depois por migration. Evidência: `migration fundacao_acesso (catálogo de papéis e permissões)` |
-| ORA-ORG-004 | P0 | sim | Isolar dados por loja na API e PostgreSQL/RLS | Testes de acesso cruzado e negação por ID arbitrário. | 🟡 parcial | RLS e funções do banco testadas (negação por ID arbitrário e troca de unidade). A API/servidor do aplicativo ainda não usa essas funções nas telas reais. Evidência: `acesso.test.ts` |
-| ORA-ORG-005 | P0 | sim | Histórico de alterações de papéis, políticas e configurações | Auditoria identifica ator, horário, alvo e motivo. | 🟡 parcial | Auditoria imutável existe e registra troca de unidade e tentativas negadas. FALTA: mudanças em vínculos, perfis e papéis ainda não geram auditoria automática. Evidência: `acesso.test.ts (T9)` |
-| ORA-ORG-006 | P0 | sim | Login, recuperação de conta e revogação de sessão | Acessos revogados deixam de funcionar; mensagens neutras. | 🟡 parcial | Bloqueio de usuário e encerramento de vínculo cortam o acesso no banco na hora. Falta login no aplicativo, recuperação de senha (depende de SMTP) e sessão por turno. Evidência: `acesso.test.ts (T6, T7)` |
+| ORA-ORG-004 | P0 | sim | Isolar dados por loja na API e PostgreSQL/RLS | Testes de acesso cruzado e negação por ID arbitrário. | 🟡 parcial | RLS e funções do banco testadas, inclusive negação por ID arbitrário, troca de unidade e isolamento entre organizações (REV-001/REV-002 corrigidos em 07/11, aguardando revisão do Codex). As telas reais ainda não usam essas funções além de /conta. Evidência: `packages/banco/src/acesso.test.ts; packages/banco/src/revisao-codex.test.ts` |
+| ORA-ORG-005 | P0 | sim | Histórico de alterações de papéis, políticas e configurações | Auditoria identifica ator, horário, alvo e motivo. | 🟡 parcial | Auditoria imutável com organização dona do evento (REV-002) registra troca de unidade e tentativas negadas. FALTA: mudanças em vínculos, perfis e papéis ainda não geram auditoria automática. Evidência: `acesso.test.ts (T9); revisao-codex.test.ts (REV-002)` |
+| ORA-ORG-006 | P0 | sim | Login, recuperação de conta e revogação de sessão | Acessos revogados deixam de funcionar; mensagens neutras. | 🟡 parcial | Login por e-mail e senha no aplicativo (/entrar, mensagem neutra), /conta lendo pelo RLS, sessão renovada no proxy (REV-009) e bloqueio/encerramento de vínculo cortando acesso no banco. FALTA: recuperação de senha (SMTP), escolha da loja na sessão pelo aplicativo, sessão por turno e teste com usuário real. Evidência: `apps/plataforma/src/app/entrar; apps/plataforma/src/proxy.ts; e2e/entrar.spec.ts; acesso.test.ts (T6, T7)` |
 | ORA-ORG-007 | P1 | — | Autenticação reforçada para perfis privilegiados | MFA e política de sessão validados com segurança. | ⬜ não iniciado |  |
 | ORA-ORG-008 | P1 | — | Configurar horários, endereços, caixas e dados fiscais por loja | Mudanças versionadas com regras de vigência. | ⬜ não iniciado |  |
 | ORA-ORG-009 | P1 | — | Gerir unidades regionais, grupos e metas agregadas | Relatórios respeitam hierarquia de acesso. | ⬜ não iniciado |  |
@@ -97,9 +97,9 @@
 | ORA-POS-002 | P0 | sim | Busca rápida por nome/SKU/IMEI e carrinho responsivo | Usabilidade e velocidade validadas com vendedor. | ⬜ não iniciado |  |
 | ORA-POS-003 | P0 | sim | Itens mistos em venda: aparelho, acessório, chip, ativação, recarga | Itens mantêm natureza e regras próprias sem dupla contabilização. | ⬜ não iniciado |  |
 | ORA-POS-004 | P0 | sim | Selecionar IMEI físico disponível antes de concluir | Reserva e baixa atomizadas no banco. | ⬜ não iniciado |  |
-| ORA-POS-005 | P0 | sim | Calcular preço/desconto e totais server-side | Cliente não consegue alterar preço enviado. | 🟡 parcial | Cálculo de totais e limite de desconto por margem em regra pura testada (DEC-U41). Falta executar no servidor e gravar no banco. Evidência: `packages/dominio/src/desconto.ts` |
+| ORA-POS-005 | P0 | sim | Calcular preço/desconto e totais server-side | Cliente não consegue alterar preço enviado. | 🟡 parcial | Totais e limite de desconto por margem em regra pura testada, com validação em tempo de execução (REV-007/REV-008 corrigidos). Falta executar no servidor e gravar no banco. Evidência: `packages/dominio/src/desconto.ts; packages/dominio/src/revisao-codex.test.ts` |
 | ORA-POS-006 | P0 | sim | Solicitar aprovação do gerente para desconto acima do limite | Aprovador, limite, motivo, prazo e decisão auditáveis. | 🖼️ demonstração | Regra que decide quando precisa de aprovação está pronta; a fila de aprovação existe só na demonstração. Evidência: `packages/dominio/src/desconto.ts; apps/plataforma/src/app/demo/aprovacoes` |
-| ORA-POS-007 | P0 | sim | Suportar múltiplos pagamentos na mesma venda | Soma, troco, confirmação e estorno consistentes. | 🟡 parcial | Pagamento misto, troco e venda financiada (entrada + financeira, sem juros) em regra pura testada. Falta registro no banco. Evidência: `packages/dominio/src/pagamento.ts` |
+| ORA-POS-007 | P0 | sim | Suportar múltiplos pagamentos na mesma venda | Soma, troco, confirmação e estorno consistentes. | 🟡 parcial | Pagamento misto, troco e venda financiada em regra pura testada, com entrada e valores validados (REV-008). Falta registro no banco. Evidência: `packages/dominio/src/pagamento.ts; revisao-codex.test.ts` |
 | ORA-POS-008 | P0 | sim | Vincular venda a vendedor, loja, cliente quando aplicável e canal | Atribuição preservada em todas as consultas. | ⬜ não iniciado |  |
 | ORA-POS-009 | P0 | sim | Consultar status e comprovantes sem concluir pagamento pendente | Vendedor vê pendência e ação de reprocessamento segura. | ⬜ não iniciado |  |
 | ORA-POS-010 | P0 | sim | Cancelar e devolver sem apagar origem | Reversão reflexa em estoque, pagamentos, fiscal e comissões. | ⬜ não iniciado |  |
@@ -269,13 +269,13 @@
 
 | ID | Prio. | Piloto | Requisito | Aceite | Status | Nota e evidência |
 |---|---|---|---|---|---|---|
-| ORA-QUAL-001 | P0 | sim | CI, lint, typecheck, testes e code review obrigatórios | PR sem CI verde não libera merge. | 🟡 parcial | CI com lint, tipos, testes, build, auditoria, E2E e detector de segredos. Proteção da main não ativada; merges diretos pelo Claude Code por decisão de 07/11. Evidência: `.github/workflows/ci.yml` |
-| ORA-QUAL-002 | P0 | sim | RLS e autorização negada por padrão, testadas por loja | Testes positivos e negativos com dois vendedores/lojas. | ✅ feito | RLS negando por padrão, testada com várias lojas e perfis (T1–T3, T6–T10) e com mutações. Evidência: `packages/banco/src/acesso.test.ts` |
+| ORA-QUAL-001 | P0 | sim | CI, lint, typecheck, testes e code review obrigatórios | PR sem CI verde não libera merge. | 🟡 parcial | CI com lint, tipos, testes, build, auditoria, E2E, rastreabilidade e detector de segredos nos arquivos, nos commits do PR e nos commits de cada envio à main (REV-003). Proteção da main não ativada; merges diretos pelo Claude Code por decisão de 07/11. Evidência: `.github/workflows/ci.yml` |
+| ORA-QUAL-002 | P0 | sim | RLS e autorização negada por padrão, testadas por loja | Testes positivos e negativos com dois vendedores/lojas. | 🟡 parcial | RLS negando por padrão, testada com várias lojas, perfis e duas organizações. Defeitos de isolamento REV-001/REV-002 corrigidos em 07/11 com regressões; aguardando revisão do Codex antes de voltar a 'testado'. Evidência: `packages/banco/src/acesso.test.ts; packages/banco/src/revisao-codex.test.ts` |
 | ORA-QUAL-003 | P0 | sim | Auditoria imutável de operações e aprovações críticas | Prova quem fez o quê e quando. | 🟡 parcial | Auditoria só de inserção, inclusive para o dono do banco. Operações críticas futuras (venda, caixa, aprovação) ainda não existem. Evidência: `acesso.test.ts (T9)` |
-| ORA-QUAL-004 | P0 | sim | Segredos em ambientes seguros sem exposição no Git/cliente | Secret scanning e testes de configuração. | ✅ feito | Detector de segredos no CI (arquivos e commits do PR), validação de variáveis na inicialização, .env fora do Git com permissão 600. Evidência: `packages/config/src/segredos.ts; packages/config/src/ambiente.ts` |
+| ORA-QUAL-004 | P0 | sim | Segredos em ambientes seguros sem exposição no Git/cliente | Secret scanning e testes de configuração. | 🟡 parcial | Detector de segredos (arquivos, commits do PR e do envio à main), validação de variáveis na inicialização e no login, chave pública conferida (sem secreta nem service_role). REV-003/REV-004 corrigidos em 07/11; aguardando revisão do Codex. Evidência: `packages/config/src/segredos.ts; packages/config/src/ambiente.ts; packages/config/src/historico-segredos.test.ts` |
 | ORA-QUAL-005 | P0 | sim | Backups e ensaio de restauração de banco e anexos | RPO/RTO definidos com responsável e evidência. | ⬜ não iniciado |  |
 | ORA-QUAL-006 | P0 | sim | Observabilidade de erros, latência, filas e conciliação | Alertas e dashboards com dono e severidade. | ⬜ não iniciado |  |
-| ORA-QUAL-007 | P0 | sim | Migrations versionadas, não destrutivas, testadas | Revisão humana e rollback/roll-forward preparados. | 🟡 parcial | Migrations versionadas, aplicadas do zero nos testes, com reversão documentada. Falta homologação e procedimento de produção. Evidência: `packages/banco/supabase` |
+| ORA-QUAL-007 | P0 | sim | Migrations versionadas, não destrutivas, testadas | Revisão humana e rollback/roll-forward preparados. | 🟡 parcial | Três migrations versionadas, aplicadas do zero nos testes e no ora5g-dev, com reversão documentada; correções por migration nova, sem reescrever a aplicada. Falta homologação e procedimento de produção. Evidência: `packages/banco/supabase` |
 | ORA-QUAL-008 | P0 | sim | Plano de contingência para internet, pagamentos e fiscal | Equipe piloto sabe como operar com segurança. | ⬜ não iniciado |  |
 | ORA-QUAL-009 | P0 | sim | Piloto com testes de usuário, caixa e fechamento diário | Critérios de go/no-go assinados. | ⬜ não iniciado |  |
 | ORA-QUAL-010 | P1 | — | Performance mobile e testes em dispositivos/internet reais | SLOs aprovados e comparados com resultado. | ⬜ não iniciado |  |

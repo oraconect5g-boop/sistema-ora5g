@@ -33,7 +33,9 @@ const lerSeguro = (texto: string): number | null => {
 };
 const reaisParaTexto = (centavos: number) => (centavos / 100).toFixed(2).replace(".", ",");
 
-export function PDV() {
+// podeVerMargem: só quem tem "custo.ver" (dono, gerente). O vendedor vê apenas "dentro do limite"
+// ou "precisa de aprovação" (ADR-002 §2.4; REV-013).
+export function PDV({ podeVerMargem }: { podeVerMargem: boolean }) {
   const [seq, setSeq] = useState(1);
   const proximo = () => {
     setSeq((s) => s + 1);
@@ -78,9 +80,10 @@ export function PDV() {
     setItens([...itens, { id: proximo(), produto, quantidade: 1, imei, iccid, descontoTexto: "" }]);
   }
 
+  // Busca EXATA pelo telefone completo com DDD (ADR-002: nada de busca parcial ou lista).
   function buscarCliente() {
     const digitos = buscaCliente.replace(/\D/g, "");
-    const achado = CLIENTES.find((c) => digitos.length >= 4 && (c.telefone.replace(/\D/g, "").endsWith(digitos) || c.cpfFinal.replace(/\D/g, "") === digitos));
+    const achado = digitos.length >= 10 ? CLIENTES.find((c) => c.telefone.replace(/\D/g, "") === digitos) : undefined;
     setCliente(achado ? { nome: achado.nome, email: achado.email } : null);
     setClienteNaoEncontrado(!achado);
   }
@@ -189,12 +192,13 @@ export function PDV() {
             </div>
           ) : (
             <form className="flex gap-2" onSubmit={(e) => { e.preventDefault(); buscarCliente(); }}>
-              <label className="sr-only" htmlFor="busca-cliente">CPF ou telefone do cliente</label>
-              <input id="busca-cliente" value={buscaCliente} onChange={(e) => setBuscaCliente(e.target.value)} inputMode="numeric" placeholder="Final do telefone ou CPF (ex.: 0001)" className="min-h-11 min-w-0 flex-1 rounded-botao border border-borda px-3 text-sm" />
+              <label className="sr-only" htmlFor="busca-cliente">Telefone do cliente com DDD (busca exata)</label>
+              <input id="busca-cliente" value={buscaCliente} onChange={(e) => setBuscaCliente(e.target.value)} inputMode="numeric" autoComplete="off" placeholder="Telefone completo com DDD" className="min-h-11 min-w-0 flex-1 rounded-botao border border-borda px-3 text-sm" />
               <Botao type="submit" variante="secundario">Buscar</Botao>
             </form>
           )}
-          {clienteNaoEncontrado && !cliente && <p className="mt-2 text-sm text-suave">Cliente não encontrado. Siga com a venda e vincule depois.</p>}
+          {clienteNaoEncontrado && !cliente && <p className="mt-2 text-sm text-suave">Nenhum cliente com esse telefone exato. Siga com a venda e vincule depois.</p>}
+          <p className="mt-2 text-xs text-suave">Busca exata por telefone ou CPF completo; no sistema real cada consulta fica registrada (LGPD).</p>
         </Cartao>
 
         <Cartao titulo="Produtos" subtitulo="Busque por nome, SKU, código de barras ou IMEI. Sem leitor de código.">
@@ -269,7 +273,12 @@ export function PDV() {
                     )}
                     <Botao variante="perigo" aria-label={`Remover ${item.produto.nome}`} onClick={() => setItens(itens.filter((i) => i.id !== item.id))}><Trash2 aria-hidden className="size-4" /></Botao>
                   </div>
-                  {avaliacao && avaliacao.situacao !== "sem_desconto" && (
+                  {avaliacao && avaliacao.situacao !== "sem_desconto" && !podeVerMargem && (
+                    <p className="mt-2 text-sm">
+                      {avaliacao.situacao === "dentro_do_limite" ? <Selo tom="sucesso">Dentro do limite</Selo> : <Selo tom="aviso">Precisa de aprovação do gerente ou dono</Selo>}
+                    </p>
+                  )}
+                  {avaliacao && avaliacao.situacao !== "sem_desconto" && podeVerMargem && (
                     <p className="mt-2 text-sm">
                       {avaliacao.situacao === "dentro_do_limite" && <Selo tom="sucesso">Dentro do limite</Selo>}
                       {avaliacao.situacao === "precisa_aprovacao" && <Selo tom="aviso">Precisa de aprovação do gerente ou dono</Selo>}

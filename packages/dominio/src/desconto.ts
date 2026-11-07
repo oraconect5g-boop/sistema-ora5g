@@ -1,4 +1,4 @@
-import { aplicarPercentual, type Centavos, type PontosBase } from "./dinheiro";
+import { aplicarPercentual, exigirCentavos, exigirPontosBase, type Centavos, type PontosBase } from "./dinheiro";
 
 // Desconto por margem (DEC-U41, ETAPA_0_DECISOES §2B):
 // o vendedor pode dar até o MENOR entre (a) o teto da categoria e (b) o desconto que
@@ -25,6 +25,11 @@ export type ResultadoDesconto = {
 
 // Margem após desconto e taxa: ((P-D)(1-t) - C) / (P-D) >= m  =>  P-D >= C / (1-t-m)
 export function limiteDeDesconto({ preco, custo, taxaMeioPagamento, politica }: EntradaDesconto): ResultadoDesconto {
+  exigirCentavos(preco, "preço");
+  exigirCentavos(custo, "custo");
+  exigirPontosBase(taxaMeioPagamento, "taxa do meio de pagamento");
+  exigirPontosBase(politica.tetoCategoria, "teto da categoria");
+  exigirPontosBase(politica.margemMinima, "margem mínima");
   const fatorLiquido = 10_000 - taxaMeioPagamento - politica.margemMinima;
   const teto = aplicarPercentual(preco, politica.tetoCategoria);
   if (fatorLiquido <= 0) return { maximoSemAprovacao: 0, motivoDoLimite: "sem_margem" };

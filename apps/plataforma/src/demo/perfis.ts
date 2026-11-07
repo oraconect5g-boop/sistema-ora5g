@@ -12,7 +12,8 @@ export type Perfil = keyof typeof PERFIS;
 export const PERFIL_PADRAO: Perfil = "dono";
 export const COOKIE_PERFIL = "ora_demo_perfil";
 
-export const ehPerfil = (valor: unknown): valor is Perfil => typeof valor === "string" && valor in PERFIS;
+// Object.hasOwn e não "in": "constructor", "__proto__" e "toString" não são perfis (REV-010).
+export const ehPerfil = (valor: unknown): valor is Perfil => typeof valor === "string" && Object.hasOwn(PERFIS, valor);
 
 export type Pagina =
   | "inicio" | "vender" | "estoque" | "aprovacoes" | "connect" | "assistencia" | "metas"

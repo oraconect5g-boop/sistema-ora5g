@@ -7,11 +7,30 @@ const AMBIENTES = ["development", "homologacao", "producao"] as const;
 
 const textoObrigatorio = z.string().trim().min(1, "obrigatória");
 
+// Servidor só IPv4 (ADR-001): nem "localhost" (pode virar ::1) nem endereço IPv6 literal.
+const hostIpv4OuNome = (valor: string) => {
+  const host = new URL(valor).hostname;
+  return host !== "localhost" && !host.startsWith("[") && !host.includes(":");
+};
+
 const enderecoIpv4 = textoObrigatorio
   .pipe(z.url({ protocol: /^https?$/, error: "precisa ser um endereço http(s) válido" }))
-  .refine((valor) => new URL(valor).hostname !== "localhost", {
-    error: "use 127.0.0.1, nunca localhost (servidor só IPv4)",
-  });
+  .refine(hostIpv4OuNome, { error: "use 127.0.0.1 ou um nome de domínio; nunca localhost nem IPv6 (servidor só IPv4)" });
+
+// Chave PÚBLICA do Supabase (REV-004): só a publishable nova ou a "anon" antiga (JWT com
+// role=anon). Chave secreta, service_role ou qualquer outro formato é recusado.
+function chavePublicaValida(valor: string): boolean {
+  if (/^sb_publishable_[A-Za-z0-9_-]{10,}$/.test(valor)) return true;
+  const partes = valor.split(".");
+  if (partes.length !== 3 || !partes.every((p) => /^[A-Za-z0-9_-]+$/.test(p))) return false;
+  try {
+    const base64 = partes[1]!.replace(/-/g, "+").replace(/_/g, "/");
+    const conteudo = JSON.parse(atob(base64.padEnd(Math.ceil(base64.length / 4) * 4, "="))) as { role?: unknown };
+    return conteudo.role === "anon";
+  } catch {
+    return false;
+  }
+}
 
 const grupoAplicacao = z.object({
   APP_ENV: z.enum(AMBIENTES, { error: `use ${AMBIENTES.join(", ")}` }),
@@ -20,14 +39,18 @@ const grupoAplicacao = z.object({
   APP_DEFAULT_CURRENCY: z.literal("BRL").default("BRL"),
 });
 
-const grupoSupabase = z.object({
-  NEXT_PUBLIC_SUPABASE_URL: textoObrigatorio.pipe(
-    z.url({ protocol: /^https$/, error: "precisa ser https" }),
-  ),
-  NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY: textoObrigatorio.refine(
-    (valor) => !valor.startsWith("sb_secret_"),
-    { error: "recebeu uma chave SECRETA; aqui vai só a chave pública (publishable)" },
-  ),
+// Login e leitura pelo RLS: só endereço e chave pública (vão para o navegador).
+const grupoSupabasePublico = z.object({
+  NEXT_PUBLIC_SUPABASE_URL: textoObrigatorio
+    .pipe(z.url({ protocol: /^https$/, error: "precisa ser https" }))
+    .refine(hostIpv4OuNome, { error: "use o nome do projeto Supabase; nunca localhost nem IPv6" }),
+  NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY: textoObrigatorio.refine(chavePublicaValida, {
+    error: "não é uma chave pública do Supabase (publishable ou anon); chave secreta ou service_role nunca vai aqui",
+  }),
+});
+
+// Só no servidor: worker, migrations e tarefas administrativas. O login não precisa delas.
+const grupoSupabaseServidor = z.object({
   SUPABASE_SECRET_KEY: textoObrigatorio,
   DATABASE_URL: textoObrigatorio.refine(conexaoPeloPooler, {
     error: "use a conexão do pooler em modo sessão (porta 5432); a conexão direta é só IPv6",
@@ -36,7 +59,8 @@ const grupoSupabase = z.object({
 
 export const GRUPOS = {
   aplicacao: grupoAplicacao,
-  supabase: grupoSupabase,
+  supabase_publico: grupoSupabasePublico,
+  supabase_servidor: grupoSupabaseServidor,
 } as const;
 
 export type NomeGrupo = keyof typeof GRUPOS;

@@ -94,3 +94,44 @@ test("pagamento misto mostra troco e o que falta", async ({ page }) => {
   await page.getByLabel("Valor R$").fill("50,00");
   await expect(page.getByText("Falta receber R$ 29,00")).toBeVisible();
 });
+
+test("REV-010: cookie de perfil adulterado não derruba a demonstração", async ({ page, context }) => {
+  for (const valor of ["constructor", "__proto__", "toString", "inexistente"]) {
+    await context.clearCookies();
+    await context.addCookies([{ name: "ora_demo_perfil", value: valor, url: "http://127.0.0.1:3180" }]);
+    const resposta = await page.goto("/demo");
+    expect(resposta?.status(), valor).toBe(200);
+    await expect(page.getByRole("heading", { name: "Visão geral da Ora" })).toBeVisible();
+  }
+});
+
+test("REV-013: vendedor não vê margem; gerente vê", async ({ page }) => {
+  const pedirDescontoAlto = async () => {
+    await page.goto("/demo/vender");
+    await page.getByLabel("Buscar produto").fill("iphone");
+    await page.getByRole("button", { name: "Adicionar iPhone 15 128 GB" }).click();
+    await page.getByRole("button", { name: /^IMEI/ }).first().click();
+    await page.getByLabel("Desconto R$").fill("400,00");
+    await expect(page.getByText("Precisa de aprovação do gerente ou dono")).toBeVisible();
+  };
+  await usarPerfil(page, "vendedor");
+  await pedirDescontoAlto();
+  await expect(page.getByText(/margem que sobra/)).toHaveCount(0);
+  await expect(page.getByText(/Limite sem aprovação/)).toHaveCount(0);
+
+  await usarPerfil(page, "gerente");
+  await pedirDescontoAlto();
+  await expect(page.getByText(/margem que sobra/)).toBeVisible();
+});
+
+test("REV-013: busca de cliente só pelo telefone completo", async ({ page }) => {
+  await usarPerfil(page, "vendedor");
+  await page.goto("/demo/vender");
+  const campo = page.getByLabel("Telefone do cliente com DDD (busca exata)");
+  await campo.fill("0001");
+  await page.getByRole("button", { name: "Buscar" }).click();
+  await expect(page.getByText("Nenhum cliente com esse telefone exato.")).toBeVisible();
+  await campo.fill("(41) 9 0000-0001");
+  await page.getByRole("button", { name: "Buscar" }).click();
+  await expect(page.getByText("Mariana S. (fictícia)")).toBeVisible();
+});
