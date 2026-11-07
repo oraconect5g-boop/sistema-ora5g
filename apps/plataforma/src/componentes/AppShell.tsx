@@ -63,7 +63,7 @@ export function AppShell({ perfil, children }: { perfil: Perfil; children: React
         {atalhos.map((p) => (
           <LinkNavegacao key={p} href={PAGINAS[p].caminho} variante="inferior">
             <Icone nome={PAGINAS[p].icone} />
-            {PAGINAS[p].titulo.split(" ")[0]}
+            {PAGINAS[p].curto}
           </LinkNavegacao>
         ))}
         {demais.length > 0 && (

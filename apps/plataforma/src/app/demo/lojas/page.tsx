@@ -10,8 +10,8 @@ export default async function Lojas() {
   if (!permitido) return <SemPermissao perfil={perfil} pagina="Lojas e usuários" />;
   return (
     <>
-      <TituloPagina titulo="Lojas e usuários" subtitulo="Empresa com CNPJ raiz e uma filial por loja (DEC-U19)" />
-      <Cartao titulo="Unidades" subtitulo="Nomes das lojas 02 a 14 aguardam a lista oficial (B4)">
+      <TituloPagina titulo="Lojas e usuários" subtitulo="Empresa com CNPJ raiz e uma filial por loja" />
+      <Cartao titulo="Unidades" subtitulo="Nomes das lojas 02 a 14 aguardam a lista oficial">
         <Tabela colunas={["Unidade", "Tipo", "Vendas hoje", "Situação"]} legenda="Unidades da rede">
           {LOJAS.map((l) => (
             <tr key={l.codigo}>
@@ -27,7 +27,7 @@ export default async function Lojas() {
         </Tabela>
       </Cartao>
       <div className="mt-4 grid gap-4 lg:grid-cols-2">
-        <Cartao titulo="Vínculos (exemplo)" subtitulo="Um vendedor pode trabalhar em várias lojas (DEC-U34)">
+        <Cartao titulo="Vínculos (exemplo)" subtitulo="Um vendedor pode trabalhar em várias lojas">
           <ul className="space-y-2 text-sm">
             <li>Ana · vendedora · Santa Cândida</li>
             <li>Lucas · vendedor · Santa Cândida e Loja 03</li>

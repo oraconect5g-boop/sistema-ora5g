@@ -8,7 +8,7 @@ export default async function EscolherPerfil() {
   const atual = await perfilAtual();
   return (
     <>
-      <TituloPagina titulo="Escolha o perfil da demonstração" subtitulo="Cada perfil vê telas e permissões diferentes, como no ADR-002." />
+      <TituloPagina titulo="Escolha o perfil da demonstração" subtitulo="Cada perfil vê telas e permissões diferentes." />
       <div className="grid gap-4 sm:grid-cols-2">
         {(Object.keys(PERFIS) as Perfil[]).map((p) => (
           <Cartao key={p}>
