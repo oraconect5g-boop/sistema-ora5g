@@ -1,4 +1,4 @@
-import type { Centavos } from "./dinheiro";
+import { exigirCentavos, multiplicarCentavos, somarCentavos, type Centavos } from "./dinheiro";
 import { iccidValido, imeiValido } from "./identificadores";
 
 // Uma operação comercial, muitos itens de naturezas diferentes (invariante 1).
@@ -32,8 +32,13 @@ export type ItemVenda = {
 
 export function validarItem(item: ItemVenda): string[] {
   const erros: string[] = [];
+  if (!Object.hasOwn(TIPOS_DE_ITEM, item.tipo)) return ["Tipo de item desconhecido"];
   const tipo = TIPOS_DE_ITEM[item.tipo];
   if (!Number.isSafeInteger(item.quantidade) || item.quantidade < 1) erros.push("Quantidade inválida");
+  if (!Number.isSafeInteger(item.precoUnitario) || item.precoUnitario < 0) erros.push("Preço inválido");
+  if (item.desconto !== undefined && (!Number.isSafeInteger(item.desconto) || item.desconto < 0)) erros.push("Desconto inválido");
+  if (erros.length > 0) return erros;
+  if (!Number.isSafeInteger(item.precoUnitario * item.quantidade)) return ["Valor do item grande demais"];
   if (tipo.exigeImei) {
     if (item.quantidade !== 1) erros.push("Aparelho é vendido um por IMEI");
     if (!item.imei || !imeiValido(item.imei)) erros.push("IMEI inválido");
@@ -43,8 +48,12 @@ export function validarItem(item: ItemVenda): string[] {
   return erros;
 }
 
+// Lança RangeError se o item tiver valores inválidos: valide com validarItem antes.
 export function totalDoItem(item: ItemVenda): Centavos {
-  return item.precoUnitario * item.quantidade - (item.desconto ?? 0);
+  const bruto = multiplicarCentavos(item.precoUnitario, item.quantidade);
+  const desconto = exigirCentavos(item.desconto ?? 0, "desconto");
+  if (desconto > bruto) throw new RangeError("Desconto maior que o item");
+  return bruto - desconto;
 }
 
 // Recarga: o valor de face NÃO é receita da Ora (invariante 4); fica separado no total.
@@ -53,9 +62,10 @@ export function totaisDaVenda(itens: readonly ItemVenda[]) {
   let descontos = 0;
   let valorDeFaceRecargas = 0;
   for (const item of itens) {
-    total += totalDoItem(item);
-    descontos += item.desconto ?? 0;
-    if (item.tipo === "recarga") valorDeFaceRecargas += totalDoItem(item);
+    const valor = totalDoItem(item);
+    total = somarCentavos(total, valor);
+    descontos = somarCentavos(descontos, item.desconto ?? 0);
+    if (item.tipo === "recarga") valorDeFaceRecargas = somarCentavos(valorDeFaceRecargas, valor);
   }
   return { total, descontos, valorDeFaceRecargas };
 }
@@ -67,6 +77,8 @@ export type Producao = Record<TipoItem, number>;
 export function producaoDaVenda(itens: readonly ItemVenda[]): Producao {
   const producao = Object.fromEntries(Object.keys(TIPOS_DE_ITEM).map((t) => [t, 0])) as Producao;
   for (const item of itens) {
+    if (!Object.hasOwn(TIPOS_DE_ITEM, item.tipo)) throw new RangeError("Tipo de item desconhecido");
+    if (!Number.isSafeInteger(item.quantidade) || item.quantidade < 1) throw new RangeError("Quantidade inválida");
     const telecom = item.tipo === "ativacao" || item.tipo === "portabilidade" || item.tipo === "recarga";
     if (telecom && item.situacaoTelecom !== "confirmada") continue;
     producao[item.tipo] += item.quantidade;

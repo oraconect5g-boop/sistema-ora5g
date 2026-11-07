@@ -1,4 +1,4 @@
-import type { Centavos } from "./dinheiro";
+import { exigirCentavos, type Centavos } from "./dinheiro";
 
 // Pagamento misto (ORA-POS-007) e venda financiada (DEC-U38):
 // na PayJoy/Aiva lança-se o preço do aparelho e a entrada; o restante fica "a receber da
@@ -33,16 +33,31 @@ export function conferirPagamentos(
   pagamentos: readonly Pagamento[],
   cliente: { email?: string | null } = {},
 ): ResultadoPagamento {
+  exigirCentavos(total, "total da venda");
   const erros: string[] = [];
   let recebidoNaLoja = 0;
   let aReceberDeFinanceiras = 0;
   let pagoEmDinheiro = 0;
 
   for (const p of pagamentos) {
-    if (!Number.isSafeInteger(p.valor) || p.valor <= 0) erros.push(`${MEIOS[p.meio].nome}: valor precisa ser maior que zero`);
+    if (!Object.hasOwn(MEIOS, p.meio)) {
+      erros.push("Meio de pagamento desconhecido");
+      continue;
+    }
+    if (!Number.isSafeInteger(p.valor) || p.valor <= 0) {
+      erros.push(`${MEIOS[p.meio].nome}: valor precisa ser maior que zero`);
+      continue;
+    }
     if (MEIOS[p.meio].financeira) {
       const entrada = p.entrada ?? 0;
-      if (entrada < 0 || entrada > p.valor) erros.push(`${MEIOS[p.meio].nome}: entrada maior que o valor financiado`);
+      if (!Number.isSafeInteger(entrada) || entrada < 0) {
+        erros.push(`${MEIOS[p.meio].nome}: entrada inválida`);
+        continue;
+      }
+      if (entrada > p.valor) {
+        erros.push(`${MEIOS[p.meio].nome}: entrada maior que o valor financiado`);
+        continue;
+      }
       recebidoNaLoja += entrada;
       aReceberDeFinanceiras += p.valor - entrada;
       if (p.meio === "payjoy" && !cliente.email) erros.push("PayJoy exige o e-mail do cliente");
@@ -53,6 +68,7 @@ export function conferirPagamentos(
   }
 
   const pago = recebidoNaLoja + aReceberDeFinanceiras;
+  if (!Number.isSafeInteger(pago)) erros.push("Soma dos pagamentos grande demais");
   const excedente = Math.max(0, pago - total);
   const troco = Math.min(excedente, pagoEmDinheiro);
   if (excedente > troco) erros.push("Pagamento maior que o total sem dinheiro para dar troco");
