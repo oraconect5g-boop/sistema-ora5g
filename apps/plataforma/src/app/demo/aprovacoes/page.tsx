@@ -1,63 +1,71 @@
-import { avaliarDesconto, formatarBRL } from "@ora5g/dominio";
+import { avaliarDesconto, MEIOS } from "@ora5g/dominio";
+import { ClipboardCheck, FileText, ShieldCheck } from "lucide-react";
+import type { Metadata } from "next";
 
 import { SemPermissao } from "../../../componentes/SemPermissao";
-import { Aviso, Cartao, Selo, TituloPagina } from "../../../componentes/ui";
-import { APROVACOES, POLITICAS, PRODUTOS } from "../../../demo/dados";
+import { Aviso, Indicador, TituloPagina } from "../../../componentes/ui";
+import { aprovacoesVisiveis } from "../../../demo/consultas";
+import { nomeDaLoja, nomeDaPessoa, POLITICAS, produto, TAXA_DO_MEIO } from "../../../demo/dados";
+import { PERFIS, REDE } from "../../../demo/perfis";
 import { acessoDaPagina } from "../../../demo/sessao";
-import { Decisao } from "./Fila";
+import { brl, numero, percentualDePontosBase } from "../../../lib/formato";
+import { FilaDeAprovacoes, type PedidoAprovacao } from "./Fila";
+
+export const metadata: Metadata = { title: "Aprovações" };
 
 export default async function Aprovacoes() {
-  const { perfil, permitido } = await acessoDaPagina("aprovacoes");
-  if (!permitido) return <SemPermissao perfil={perfil} pagina="Aprovações" />;
+  const contexto = await acessoDaPagina("aprovacoes");
+  if (!contexto.permitido) return <SemPermissao perfil={contexto.perfil} pagina="Aprovações" />;
+
+  const pedidos: PedidoAprovacao[] = aprovacoesVisiveis(contexto).map((a) => {
+    const v = a.venda;
+    const base = {
+      id: a.id,
+      tipo: a.tipo,
+      numero: v.numero,
+      loja: nomeDaLoja(v.loja),
+      vendedor: nomeDaPessoa(v.vendedor),
+      cliente: v.cliente ?? "Cliente não identificado",
+      descricao: v.itens.map((i) => i.nome).join(" + "),
+      total: brl(v.total),
+      esperaMinutos: v.pedido?.esperaMinutos ?? 0,
+      motivo: v.pedido?.motivo ?? "—",
+    };
+    const aparelho = v.itens.find((i) => i.desconto > 0);
+    const p = aparelho ? produto(aparelho.sku) : undefined;
+    const pagamento = v.pagamentos[0];
+    if (a.tipo !== "desconto" || !aparelho || !p || !pagamento) return base;
+    const avaliacao = avaliarDesconto({ preco: aparelho.precoUnitario, custo: aparelho.custoUnitario, taxaMeioPagamento: TAXA_DO_MEIO[pagamento.meio], politica: POLITICAS[p.categoria] }, aparelho.desconto);
+    return {
+      ...base,
+      desconto: {
+        pedido: `${brl(aparelho.desconto)} de ${brl(aparelho.precoUnitario)}`,
+        precoOriginal: brl(aparelho.precoUnitario),
+        meio: MEIOS[pagamento.meio].nome,
+        limite: brl(avaliacao.maximoSemAprovacao),
+        margem: percentualDePontosBase(avaliacao.margemResultante),
+        abaixoDoCusto: avaliacao.situacao === "abaixo_do_custo",
+      },
+    };
+  });
+
+  const contar = (tipo: PedidoAprovacao["tipo"]) => pedidos.filter((p) => p.tipo === tipo).length;
+
   return (
     <>
-      <TituloPagina titulo="Aprovações" subtitulo="Descontos, notas e cancelamentos. Ninguém aprova o próprio pedido." />
-      <div className="space-y-4">
-        <Cartao titulo="Descontos acima do limite" subtitulo="A margem que sobra é calculada pela regra de negócio, com a taxa do meio de pagamento">
-          <ul className="divide-y divide-borda">
-            {APROVACOES.descontos.map((d) => {
-              const produto = PRODUTOS.find((p) => p.sku === d.sku)!;
-              const a = avaliarDesconto({ preco: produto.preco, custo: produto.custo, taxaMeioPagamento: d.taxaMeio, politica: POLITICAS[produto.categoria] }, d.desconto);
-              return (
-                <li key={d.venda} className="flex flex-col gap-3 py-3 sm:flex-row sm:items-center sm:justify-between">
-                  <div className="min-w-0 text-sm">
-                    <p className="font-semibold">{d.venda} · {produto.nome} · {d.vendedor}</p>
-                    <p className="text-suave">Pedido: {formatarBRL(d.desconto)} de {formatarBRL(produto.preco)} · {d.meio} · há {d.minutos} min</p>
-                    <p className="text-suave">Motivo: {d.motivo}</p>
-                    <p className="mt-1">Limite sem aprovação: {formatarBRL(a.maximoSemAprovacao)} · margem que sobra: <strong className={a.margemResultante < 0 ? "text-perigo" : ""}>{(a.margemResultante / 100).toFixed(1)}%</strong>{a.situacao === "abaixo_do_custo" && <span className="ml-2"><Selo tom="perigo">Abaixo do custo</Selo></span>}</p>
-                  </div>
-                  <Decisao id={d.venda} />
-                </li>
-              );
-            })}
-          </ul>
-        </Cartao>
-        <Cartao titulo="Notas fiscais a emitir" subtitulo="Pedido chega pronto; aprovar dispara a emissão e o envio automático (quando o emissor estiver contratado)">
-          <ul className="divide-y divide-borda">
-            {APROVACOES.notas.map((n) => (
-              <li key={n.venda} className="flex flex-col gap-3 py-3 sm:flex-row sm:items-center sm:justify-between">
-                <div className="text-sm">
-                  <p className="font-semibold">{n.venda} · {formatarBRL(n.valor)} · {n.vendedor}</p>
-                  <p className="text-suave">Envio ao cliente: {n.contato}</p>
-                  <p className="mt-1">Venda feita há <strong>{n.minutos} min</strong> {n.minutos > 30 && <Selo tom="perigo">Atrasada: confirmar prazo com o contador</Selo>}</p>
-                </div>
-                <Decisao id={n.venda} />
-              </li>
-            ))}
-          </ul>
-        </Cartao>
-        <Cartao titulo="Cancelamentos">
-          <ul className="divide-y divide-borda">
-            {APROVACOES.cancelamentos.map((c) => (
-              <li key={c.venda} className="flex flex-col gap-3 py-3 sm:flex-row sm:items-center sm:justify-between">
-                <div className="text-sm"><p className="font-semibold">{c.venda} · {formatarBRL(c.valor)} · {c.vendedor}</p><p className="text-suave">{c.motivo}</p></div>
-                <Decisao id={c.venda} />
-              </li>
-            ))}
-          </ul>
-        </Cartao>
-        <Aviso tom="aviso">Aprovação interna não substitui a autorização fiscal da SEFAZ, e não pode atrasar uma nota obrigatória por lei.</Aviso>
+      <TituloPagina
+        sobretitulo={contexto.loja === REDE ? "Rede inteira" : nomeDaLoja(contexto.loja)}
+        titulo="Aprovações"
+        subtitulo="Descontos, notas e cancelamentos. Ninguém aprova o próprio pedido; tudo fica na auditoria."
+      />
+      <div className="mb-4 grid grid-cols-2 gap-3 sm:gap-4 xl:grid-cols-4">
+        <Indicador rotulo="Aguardando decisão" valor={numero(pedidos.length)} icone={ClipboardCheck} tom={pedidos.length > 0 ? "atencao" : "bom"} detalhe="Pedidos de hoje" />
+        <Indicador rotulo="Descontos" valor={numero(contar("desconto"))} icone={ShieldCheck} detalhe="Acima do limite do vendedor" />
+        <Indicador rotulo="Notas fiscais" valor={numero(contar("nota"))} icone={FileText} detalhe="Pedido pronto para o dono" />
+        <Indicador rotulo="Cancelamentos" valor={numero(contar("cancelamento"))} icone={ClipboardCheck} detalhe="Com justificativa anexada" />
       </div>
+      <FilaDeAprovacoes pedidos={pedidos} aprovador={PERFIS[contexto.perfil].pessoa} />
+      <Aviso tom="aviso" className="mt-4">Aprovação interna não substitui a autorização fiscal da SEFAZ e não pode atrasar uma nota obrigatória por lei.</Aviso>
     </>
   );
 }

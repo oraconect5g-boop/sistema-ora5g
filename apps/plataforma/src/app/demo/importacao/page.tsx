@@ -1,11 +1,17 @@
 import { imeiValido, lerReais } from "@ora5g/dominio";
+import { CircleAlert, FileSpreadsheet, FileUp, ListChecks, UserCheck } from "lucide-react";
+import type { Metadata } from "next";
 
 import { SemPermissao } from "../../../componentes/SemPermissao";
-import { Aviso, Cartao, Celula, Indicador, Selo, Tabela, TituloPagina } from "../../../componentes/ui";
+import { Aviso, Cartao, Celula, Etapas, Indicador, Selo, Tabela, TituloPagina } from "../../../componentes/ui";
 import { LINHAS_CSV_REIN } from "../../../demo/dados";
 import { acessoDaPagina } from "../../../demo/sessao";
+import { numero } from "../../../lib/formato";
+import { AprovarImportacao } from "./Aprovar";
 
-// Prévia do importador (ORA-009): as linhas são conferidas pelas regras de negócio reais.
+export const metadata: Metadata = { title: "Importar CSV da Rein" };
+
+// Prévia do importador (ORA-009): as linhas são conferidas pelas regras de negócio reais do domínio.
 function conferirLinhas() {
   const vistos = new Map<string, number>();
   return LINHAS_CSV_REIN.map((l) => {
@@ -22,32 +28,54 @@ function conferirLinhas() {
   });
 }
 
+const ETAPAS = ["Enviar arquivo", "Prévia e conferência", "Aprovação do dono", "Importado", "Conferência física na loja"];
+
 export default async function Importacao() {
-  const { perfil, permitido } = await acessoDaPagina("importacao");
-  if (!permitido) return <SemPermissao perfil={perfil} pagina="Importar CSV da Rein" />;
+  const contexto = await acessoDaPagina("importacao");
+  if (!contexto.permitido) return <SemPermissao perfil={contexto.perfil} pagina="Importar CSV da Rein" />;
   const linhas = conferirLinhas();
   const comErro = linhas.filter((l) => l.problemas.length > 0).length;
+  const papel = contexto.perfil === "dono" ? "dono" : "administrador";
+
   return (
     <>
-      <TituloPagina titulo="Importar estoque da Rein (prévia)" subtitulo="Só por arquivo, nunca pela API da Rein. Nada é gravado até o dono aprovar." />
-      <div className="grid grid-cols-2 gap-3 lg:grid-cols-4">
-        <Indicador rotulo="Linhas lidas" valor={String(linhas.length)} />
-        <Indicador rotulo="Prontas" valor={String(linhas.length - comErro)} tom="bom" />
-        <Indicador rotulo="Com problema" valor={String(comErro)} tom="atencao" />
-        <Indicador rotulo="Aprovação" valor="Dono" detalhe="Administrador executa" />
-      </div>
-      <Cartao titulo="Prévia do arquivo (exemplo)" subtitulo="Formato real a confirmar quando o CSV da Santa Cândida chegar" className="mt-4">
-        <Tabela colunas={["Linha", "SKU", "Produto", "Preço", "Custo", "Qtd.", "Conferência"]} legenda="Prévia da importação">
-          {linhas.map((l) => (
-            <tr key={l.linha}>
-              <Celula>{l.linha}</Celula><Celula>{l.sku}</Celula><Celula>{l.nome}</Celula><Celula>R$ {l.preco}</Celula>
-              <Celula>{l.custo ? `R$ ${l.custo}` : "—"}</Celula><Celula>{l.quantidade}</Celula>
-              <Celula>{l.problemas.length === 0 ? <Selo tom="sucesso">Pronta</Selo> : l.problemas.map((p) => <span key={p} className="mb-1 block"><Selo tom="perigo">{p}</Selo></span>)}</Celula>
-            </tr>
-          ))}
-        </Tabela>
+      <TituloPagina titulo="Importar estoque da Rein (prévia)" subtitulo="Só por arquivo, nunca pela API da Rein. Nada é gravado até o dono aprovar." acao={<AprovarImportacao papel={papel} prontas={linhas.length - comErro} comProblema={comErro} />} />
+      <Cartao>
+        <Etapas etapas={ETAPAS} atual={papel === "dono" ? 2 : 1} rotulo="Etapas da importação" />
+        <ol className="mt-3 hidden grid-cols-5 gap-2 text-center text-xs text-suave sm:grid">
+          {ETAPAS.map((e) => <li key={e}>{e}</li>)}
+        </ol>
       </Cartao>
-      <div className="mt-4"><Aviso tom="aviso">Depois da importação, os IMEIs precisam ser conferidos fisicamente na loja antes de a Ora assumir o estoque.</Aviso></div>
+
+      <div className="mt-4 grid grid-cols-2 gap-3 sm:gap-4 xl:grid-cols-4">
+        <Indicador rotulo="Linhas lidas" valor={numero(linhas.length)} icone={FileSpreadsheet} detalhe="Arquivo de exemplo" />
+        <Indicador rotulo="Prontas" valor={numero(linhas.length - comErro)} icone={ListChecks} tom="bom" detalhe="Entram na aprovação" />
+        <Indicador rotulo="Com problema" valor={numero(comErro)} icone={CircleAlert} tom="atencao" detalhe="Ficam de fora até corrigir" />
+        <Indicador rotulo="Quem aprova" valor="Dono" icone={UserCheck} detalhe="O administrador executa" />
+      </div>
+
+      <div className="mt-4 grid gap-4 xl:grid-cols-3">
+        <Cartao titulo="Enviar arquivo" subtitulo="CSV ou planilha exportada da Rein" icone={FileUp}>
+          <div className="rounded-xl border-2 border-dashed border-borda-forte bg-fundo/60 px-4 py-8 text-center">
+            <FileSpreadsheet aria-hidden className="mx-auto size-8 text-suave" />
+            <p className="mt-2 text-sm font-semibold">estoque-santa-candida-exemplo.csv</p>
+            <p className="text-xs text-suave">{linhas.length} linhas · arquivo de exemplo da demonstração</p>
+          </div>
+          <p className="mt-3 text-xs text-suave">O envio de arquivos reais liga quando o formato do CSV da Rein for confirmado (pendência B3). O mesmo arquivo importado duas vezes não duplica nada.</p>
+        </Cartao>
+        <Cartao titulo="Prévia do arquivo" subtitulo="Cada linha conferida pelas mesmas regras do sistema" className="xl:col-span-2">
+          <Tabela colunas={["Linha", "SKU", "Produto", "Preço", "Custo", "Qtd.", "Conferência"]} legenda="Prévia da importação" minimo="min-w-[46rem]">
+            {linhas.map((l) => (
+              <tr key={l.linha} className={l.problemas.length > 0 ? "bg-perigo-clara/30" : ""}>
+                <Celula className="numeros">{l.linha}</Celula><Celula className="text-suave">{l.sku}</Celula><Celula>{l.nome}</Celula><Celula className="numeros">R$ {l.preco}</Celula>
+                <Celula className="numeros">{l.custo ? `R$ ${l.custo}` : "—"}</Celula><Celula className="numeros">{l.quantidade}</Celula>
+                <Celula>{l.problemas.length === 0 ? <Selo tom="sucesso" ponto>Pronta</Selo> : <span className="flex flex-col items-start gap-1">{l.problemas.map((p) => <Selo key={p} tom="perigo">{p}</Selo>)}</span>}</Celula>
+              </tr>
+            ))}
+          </Tabela>
+        </Cartao>
+      </div>
+      <Aviso tom="aviso" className="mt-4">Depois da importação, os IMEIs precisam ser conferidos fisicamente na loja antes de a Ora assumir o estoque.</Aviso>
     </>
   );
 }
