@@ -58,3 +58,13 @@ A demonstração usa cookie de perfil apenas para dados fictícios; ele não pod
 Claude implementa em branch e cita o ID/issue no commit. Para cada correção, registrar novo commit, teste de regressão e resultado do CI. Codex revisa o novo código e então atualiza a situação do achado. Correção proposta ou issue aberta não conta como correção concluída.
 
 Manter as constatações com a base histórica; atualizar o status ao lado da evidência. Não apagar auditoria nem reescrever migrations aplicadas. As regras de negócio e a linguagem permanecem as aprovadas.
+
+## Atualização da conferência em 00a35f97
+
+Os registros acima preservam a fotografia histórica dos achados. Claude integrou correções em 00a35f970d977e3766571de4f3ac67978e7a2ef1 após o PR #8. A conferência independente de cada correção, testes, status e limites está em [CONFERENCIA_DAS_CORRECOES_2026-11-07.md](CONFERENCIA_DAS_CORRECOES_2026-11-07.md).
+
+O CI dessa base passou; localmente passaram 172 testes e 35 E2E (5 pulados), além de 14 provas independentes originais. Sessão real e implantação remota não foram testadas pelo Codex.
+
+Pendências novas: [REV-015 / #13](https://github.com/oraconect5g-boop/sistema-ora5g/issues/13), desconto maior que o item derruba a tela; [REV-016 / #14](https://github.com/oraconect5g-boop/sistema-ora5g/issues/14), reaproveitamento de release ignora atualização do ambiente no mesmo SHA. A [CONFIG-001 / #12](https://github.com/oraconect5g-boop/sistema-ora5g/issues/12) está parcialmente atendida pelos novos grupos público/servidor.
+
+O modelo mínimo e o roteiro de apresentação → login → operação real estão em [CONFIGURACAO_E_TRANSICAO_DO_MOCKUP.md](CONFIGURACAO_E_TRANSICAO_DO_MOCKUP.md). Manter TypeScript/React/Next.js/Node.js e PostgreSQL/Supabase, sem reabrir decisões de linguagem ou reduzir o escopo.

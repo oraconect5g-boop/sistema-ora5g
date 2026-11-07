@@ -1,28 +1,66 @@
 @import "tailwindcss";
 
-/* Design tokens provisórios (docs/08 e referencias_visuais/guia_design.md), aguardando a marca oficial.
-   "acao" foi escurecida de #0EAE9F para #0A7D72 para texto branco atingir contraste AA. */
+/* Tokens visuais da Ora 5G (docs/08 e referencias_visuais/guia_design.md), aguardando a marca oficial.
+   Ajustes para acessibilidade: "acao" escurecida de #0EAE9F para #0A7D72 (texto branco com contraste AA);
+   avisos em texto usam âmbar escuro (#B45309), porque o laranja #ED9B37 não tem contraste para texto. */
 @theme {
-  --color-fundo: #f5f8fb;
-  --color-navegacao: #0e192b;
-  --color-navegacao-2: #17253a;
-  --color-texto: #122237;
-  --color-suave: #5b6b80;
+  --color-fundo: #f3f6f9;
+  --color-superficie: #ffffff;
+  --color-navegacao: #0a1322;
+  --color-navegacao-2: #111d33;
+  --color-navegacao-3: #1a2943;
+  --color-texto: #0f1d33;
+  --color-suave: #55657a;
+  --color-borda: #e2e8f0;
+  --color-borda-forte: #cbd5e1;
+
   --color-acao: #0a7d72;
   --color-acao-escura: #075f57;
+  --color-acao-clara: #e6f5f3;
   --color-destaque: #13d9c7;
-  --color-info: #348bf4;
-  --color-borda: #e4eaf0;
-  --color-sucesso: #16ab79;
-  --color-aviso: #ed9b37;
-  --color-perigo: #c63b3b;
-  --radius-cartao: 14px;
+  --color-info: #2563d4;
+  --color-info-clara: #eaf1fd;
+  --color-sucesso: #12805c;
+  --color-sucesso-clara: #e7f6ef;
+  --color-aviso: #b45309;
+  --color-aviso-clara: #fff4e0;
+  --color-perigo: #c03535;
+  --color-perigo-clara: #fdecec;
+
+  /* Gráficos: paleta categórica validada (daltonismo e contraste) com scripts/validate_palette.js
+     do guia de visualização. Ordem fixa: a cor segue a entidade, nunca a posição no ranking. */
+  --color-serie-1: #0f9f90;
+  --color-serie-2: #2a78d6;
+  --color-serie-3: #eb6834;
+  --color-serie-4: #6250d6;
+  --color-serie-5: #eda100;
+  --color-serie-6: #e87ba4;
+  --color-grade: #edf1f5;
+  --color-eixo: #cfd8e3;
+
+  --radius-cartao: 16px;
   --radius-botao: 11px;
   --font-sans: var(--fonte-inter), system-ui, sans-serif;
+
+  --shadow-cartao: 0 1px 2px rgb(15 29 51 / 0.04), 0 2px 8px -2px rgb(15 29 51 / 0.06);
+  --shadow-flutuante: 0 12px 32px -8px rgb(15 29 51 / 0.22), 0 2px 6px rgb(15 29 51 / 0.06);
+
+  --animate-surgir: surgir 0.18s ease-out;
+  --animate-subir: subir 0.22s ease-out;
+
+  @keyframes surgir {
+    from { opacity: 0; transform: translateY(-4px); }
+    to { opacity: 1; transform: translateY(0); }
+  }
+  @keyframes subir {
+    from { opacity: 0; transform: translateY(16px); }
+    to { opacity: 1; transform: translateY(0); }
+  }
 }
 
 html {
   -webkit-text-size-adjust: 100%;
+  scroll-padding-top: 6rem;
 }
 
 body {
@@ -30,9 +68,41 @@ body {
   color: var(--color-texto);
   font-family: var(--font-sans);
   line-height: 1.5;
+  -webkit-font-smoothing: antialiased;
 }
 
 :focus-visible {
   outline: 3px solid var(--color-info);
   outline-offset: 2px;
+}
+
+/* Diálogos nativos (<dialog>): fundo escurecido e entrada suave. */
+dialog::backdrop {
+  background: rgb(10 19 34 / 0.55);
+  backdrop-filter: blur(2px);
+}
+
+/* Tabelas de números alinham pelos dígitos. */
+.numeros {
+  font-variant-numeric: tabular-nums;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  *,
+  *::before,
+  *::after {
+    animation-duration: 0.01ms !important;
+    transition-duration: 0.01ms !important;
+    scroll-behavior: auto !important;
+  }
+}
+
+/* Impressão do comprovante: só o conteúdo, sem menus. */
+@media print {
+  .nao-imprimir {
+    display: none !important;
+  }
+  body {
+    background: #fff;
+  }
 }

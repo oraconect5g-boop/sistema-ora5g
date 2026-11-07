@@ -12,10 +12,10 @@
 | CAT | 10 | 6 | 6 | 0 | 0 | 2 | 0 | 1 | 0 | 7 |
 | INV | 12 | 6 | 7 | 0 | 0 | 1 | 0 | 0 | 0 | 11 |
 | CRM | 10 | 4 | 3 | 0 | 0 | 0 | 0 | 0 | 0 | 10 |
-| POS | 16 | 11 | 11 | 0 | 0 | 2 | 1 | 0 | 0 | 13 |
-| PAY | 14 | 8 | 8 | 0 | 0 | 1 | 0 | 0 | 0 | 13 |
-| FIN | 10 | 5 | 1 | 0 | 0 | 0 | 0 | 0 | 0 | 10 |
-| PERF | 10 | 5 | 5 | 0 | 0 | 1 | 0 | 0 | 0 | 9 |
+| POS | 16 | 11 | 11 | 0 | 0 | 2 | 2 | 0 | 0 | 12 |
+| PAY | 14 | 8 | 8 | 0 | 0 | 1 | 1 | 0 | 0 | 12 |
+| FIN | 10 | 5 | 1 | 0 | 0 | 0 | 2 | 0 | 0 | 8 |
+| PERF | 10 | 5 | 5 | 0 | 0 | 1 | 1 | 0 | 0 | 8 |
 | FISC | 10 | 6 | 6 | 0 | 0 | 0 | 0 | 0 | 2 | 8 |
 | CONNECT | 11 | 6 | 3 | 0 | 0 | 0 | 0 | 0 | 1 | 10 |
 | ONLINE | 8 | 0 | 0 | 0 | 0 | 0 | 0 | 0 | 0 | 8 |
@@ -23,16 +23,16 @@
 | WHATS | 8 | 0 | 0 | 0 | 0 | 0 | 0 | 0 | 0 | 8 |
 | META | 6 | 0 | 0 | 0 | 0 | 0 | 0 | 0 | 0 | 6 |
 | AI | 7 | 0 | 0 | 0 | 0 | 0 | 0 | 0 | 0 | 7 |
-| REPORT | 8 | 5 | 5 | 0 | 0 | 0 | 3 | 0 | 0 | 5 |
+| REPORT | 8 | 5 | 5 | 0 | 0 | 0 | 7 | 0 | 0 | 1 |
 | QUAL | 14 | 9 | 9 | 0 | 0 | 5 | 0 | 0 | 0 | 9 |
-| **Total** | **172** | **77** | **70** | **0** | **0** | **18** | **4** | **1** | **3** | **146** |
+| **Total** | **172** | **77** | **70** | **0** | **0** | **18** | **13** | **1** | **3** | **137** |
 
 ## ORG — Organização, lojas e usuários
 
 | ID | Prio. | Piloto | Requisito | Aceite | Status | Nota e evidência |
 |---|---|---|---|---|---|---|
 | ORA-ORG-001 | P0 | sim | Cadastrar empresa, organização, 14 lojas e loja piloto | Usuários autorizados selecionam unidade; IDs e dados fiscais coerentes. | 🟡 parcial | Tabelas organização/empresa/unidade com CNPJ validado no banco e escolha da unidade na sessão. Falta cadastrar as 14 lojas reais (lista com CNPJs pendente) e a tela de gestão. Evidência: `packages/banco/supabase/migrations/20261107120000_fundacao_acesso.sql; packages/banco/src/acesso.test.ts (T10)` |
-| ORA-ORG-002 | P0 | sim | Associar usuários a uma ou múltiplas lojas com função e vigência | Bloqueio testado para loja sem vínculo. | 🟡 parcial | Vínculos com vigência, um vendedor em várias lojas, bloqueio testado. Falta a tela de gestão de usuários (ORA-008). Evidência: `acesso.test.ts (T1, T2/T3, T7)` |
+| ORA-ORG-002 | P0 | sim | Associar usuários a uma ou múltiplas lojas com função e vigência | Bloqueio testado para loja sem vínculo. | 🟡 parcial | Vínculos com vigência, um vendedor em várias lojas, bloqueio testado. A tela de usuários existe só na demonstração (troca de loja da sessão, bloquear/desbloquear sem gravar); falta a tela real ligada ao banco. Evidência: `acesso.test.ts (T1, T2/T3, T7)` |
 | ORA-ORG-003 | P0 | sim | Gerir perfis diretoria, regional, gerente, vendedor, financeiro, fiscal, marketing e atendimento | Matriz de autorização versionada e auditada. | 🟡 parcial | 5 papéis do ADR-002 (dono, administrador, gerente, vendedor, técnico) com matriz versionada por migration. Regional, financeiro, fiscal, marketing e atendimento entram depois por migration. Evidência: `migration fundacao_acesso (catálogo de papéis e permissões)` |
 | ORA-ORG-004 | P0 | sim | Isolar dados por loja na API e PostgreSQL/RLS | Testes de acesso cruzado e negação por ID arbitrário. | 🟡 parcial | RLS e funções do banco testadas, inclusive negação por ID arbitrário, troca de unidade e isolamento entre organizações (REV-001/REV-002 corrigidos em 07/11, aguardando revisão do Codex). As telas reais ainda não usam essas funções além de /conta. Evidência: `packages/banco/src/acesso.test.ts; packages/banco/src/revisao-codex.test.ts` |
 | ORA-ORG-005 | P0 | sim | Histórico de alterações de papéis, políticas e configurações | Auditoria identifica ator, horário, alvo e motivo. | 🟡 parcial | Auditoria imutável com organização dona do evento (REV-002) registra troca de unidade e tentativas negadas. FALTA: mudanças em vínculos, perfis e papéis ainda não geram auditoria automática. Evidência: `acesso.test.ts (T9); revisao-codex.test.ts (REV-002)` |
@@ -51,7 +51,7 @@
 | ORA-CAT-003 | P0 | sim | Não consumir API Rein em nenhuma operação diária | Nenhum módulo de runtime depende de rede/credencial Rein. | ✔️ respeitado | Nenhum código usa a API da Rein. Importação só por arquivo (DEC-U04/DEC-U24). Evidência: `busca no repositório` |
 | ORA-CAT-004 | P0 | sim | Cadastrar preços vigentes por loja/canal conforme regra | Preço final tem origem explicável e histórico. | ⬜ não iniciado |  |
 | ORA-CAT-005 | P0 | sim | Diferenciar smartphone, acessório, chip e serviço comercial | Tipos exigem campos apropriados sem tabelas isoladas de venda. | 🟡 parcial | Tipos de item (aparelho, acessório, chip, ativação, recarga, serviço) e suas exigências modelados nas regras de negócio puras. Falta tabela de catálogo (ADR-003). Evidência: `packages/dominio/src/venda.ts` |
-| ORA-CAT-006 | P0 | sim | Pesquisar por nome, SKU e, quando aplicável, IMEI/ICCID | Busca rápida funciona no celular sem leitor. | 🟡 parcial | Validação de IMEI (dígito verificador) e ICCID prontas e testadas. Falta a busca no banco. Evidência: `packages/dominio/src/identificadores.ts` |
+| ORA-CAT-006 | P0 | sim | Pesquisar por nome, SKU e, quando aplicável, IMEI/ICCID | Busca rápida funciona no celular sem leitor. | 🟡 parcial | Validação de IMEI (dígito verificador), ICCID e CPF prontas e testadas; busca por nome, marca, SKU, código de barras e final do IMEI na demonstração. Falta a busca no banco. Evidência: `packages/dominio/src/identificadores.ts; apps/plataforma/src/app/demo/vender/PDV.tsx` |
 | ORA-CAT-007 | P1 | — | Programar vigência de promoções e campanhas comerciais | Preço aplicado respeita período e autorização. | ⬜ não iniciado |  |
 | ORA-CAT-008 | P1 | — | Custo de produto/lote/entrada e margem gerencial | Custo histórico de venda não muda retroativamente. | ⬜ não iniciado |  |
 | ORA-CAT-009 | P1 | — | Canais externos usam mapeamento de SKU e IDs próprios | Identificadores externos não substituem PK interna. | ⬜ não iniciado |  |
@@ -98,9 +98,9 @@
 | ORA-POS-003 | P0 | sim | Itens mistos em venda: aparelho, acessório, chip, ativação, recarga | Itens mantêm natureza e regras próprias sem dupla contabilização. | ⬜ não iniciado |  |
 | ORA-POS-004 | P0 | sim | Selecionar IMEI físico disponível antes de concluir | Reserva e baixa atomizadas no banco. | ⬜ não iniciado |  |
 | ORA-POS-005 | P0 | sim | Calcular preço/desconto e totais server-side | Cliente não consegue alterar preço enviado. | 🟡 parcial | Totais e limite de desconto por margem em regra pura testada, com validação em tempo de execução (REV-007/REV-008 corrigidos). Falta executar no servidor e gravar no banco. Evidência: `packages/dominio/src/desconto.ts; packages/dominio/src/revisao-codex.test.ts` |
-| ORA-POS-006 | P0 | sim | Solicitar aprovação do gerente para desconto acima do limite | Aprovador, limite, motivo, prazo e decisão auditáveis. | 🖼️ demonstração | Regra que decide quando precisa de aprovação está pronta; a fila de aprovação existe só na demonstração. Evidência: `packages/dominio/src/desconto.ts; apps/plataforma/src/app/demo/aprovacoes` |
+| ORA-POS-006 | P0 | sim | Solicitar aprovação do gerente para desconto acima do limite | Aprovador, limite, motivo, prazo e decisão auditáveis. | 🖼️ demonstração | Regra que decide quando precisa de aprovação está pronta; pedido com motivo, resposta simulada, cancelamento quando o carrinho muda e fila com aprovar/negar (justificativa obrigatória) existem só na demonstração. Evidência: `packages/dominio/src/desconto.ts; apps/plataforma/src/app/demo/aprovacoes; apps/plataforma/src/app/demo/vender` |
 | ORA-POS-007 | P0 | sim | Suportar múltiplos pagamentos na mesma venda | Soma, troco, confirmação e estorno consistentes. | 🟡 parcial | Pagamento misto, troco e venda financiada em regra pura testada, com entrada e valores validados (REV-008). Falta registro no banco. Evidência: `packages/dominio/src/pagamento.ts; revisao-codex.test.ts` |
-| ORA-POS-008 | P0 | sim | Vincular venda a vendedor, loja, cliente quando aplicável e canal | Atribuição preservada em todas as consultas. | ⬜ não iniciado |  |
+| ORA-POS-008 | P0 | sim | Vincular venda a vendedor, loja, cliente quando aplicável e canal | Atribuição preservada em todas as consultas. | 🖼️ demonstração | Venda da demonstração ligada a vendedor, loja da sessão e cliente (busca exata ou cadastro na hora). Nada é gravado. Evidência: `apps/plataforma/src/app/demo; apps/plataforma/e2e/demonstracao.spec.ts` |
 | ORA-POS-009 | P0 | sim | Consultar status e comprovantes sem concluir pagamento pendente | Vendedor vê pendência e ação de reprocessamento segura. | ⬜ não iniciado |  |
 | ORA-POS-010 | P0 | sim | Cancelar e devolver sem apagar origem | Reversão reflexa em estoque, pagamentos, fiscal e comissões. | ⬜ não iniciado |  |
 | ORA-POS-011 | P0 | sim | Gerar solicitação fiscal a partir da venda em poucos toques | Vendedor não precisa escolher documento fiscal incorreto. | ⬜ não iniciado |  |
@@ -116,7 +116,7 @@
 |---|---|---|---|---|---|---|
 | ORA-PAY-001 | P0 | sim | Registrar dinheiro, Pix direto, Pix PicPay POS e cartões | Provider, terminal, método e comprovante quando disponível. | ⬜ não iniciado |  |
 | ORA-PAY-002 | P0 | sim | Suportar financiamento, boleto, parcelamento e pagamentos online | Estados e elegibilidade definidos por integração específica. | 🟡 parcial | Regra da venda financiada PayJoy/Aiva (DEC-U38) e e-mail obrigatório na PayJoy (DEC-U30) testadas. Falta registro e repasse. Evidência: `packages/dominio/src/pagamento.test.ts` |
-| ORA-PAY-003 | P0 | sim | Diferenciar autorizado, pago, liquidado, estornado e conciliado | Relatórios não misturam venda com dinheiro recebido. | ⬜ não iniciado |  |
+| ORA-PAY-003 | P0 | sim | Diferenciar autorizado, pago, liquidado, estornado e conciliado | Relatórios não misturam venda com dinheiro recebido. | 🖼️ demonstração | Situação por meio de pagamento separando autorizado, pago, liquidado e conciliado na tela de caixa. Só dados fictícios. Evidência: `apps/plataforma/src/app/demo; apps/plataforma/e2e/demonstracao.spec.ts` |
 | ORA-PAY-004 | P0 | sim | Abrir caixa com saldo inicial e responsável | Uma sessão ativa segundo regra por gaveta/terminal. | ⬜ não iniciado |  |
 | ORA-PAY-005 | P0 | sim | Registrar sangria, suprimento, reforço, devolução e saída autorizada | Cada movimento tem motivo, autor e impacto no saldo. | ⬜ não iniciado |  |
 | ORA-PAY-006 | P0 | sim | Fechar caixa com valor contado e diferença | Gerente confere e aprova divergência. | ⬜ não iniciado |  |
@@ -140,8 +140,8 @@
 | ORA-FIN-005 | P0 | — | Rastrear recebíveis e repasses por loja/adquirente | Diferenças e pendências visíveis ao financeiro. | ⬜ não iniciado |  |
 | ORA-FIN-006 | P1 | — | Conciliação bancária e contas multiempresa | Imports/matches reproduzíveis com aprovação. | ⬜ não iniciado |  |
 | ORA-FIN-007 | P1 | — | Gestão de inadimplência e cobranças autorizadas | Ações e consentimentos com auditoria. | ⬜ não iniciado |  |
-| ORA-FIN-008 | P1 | — | Relatório financeiro consolidado por loja/região/rede | RBAC respeita visão global vs local. | ⬜ não iniciado |  |
-| ORA-FIN-009 | P1 | — | Exportações CSV/XLSX/PDF de relatórios autorizados | Filtros e dados sensíveis protegidos. | ⬜ não iniciado |  |
+| ORA-FIN-008 | P1 | — | Relatório financeiro consolidado por loja/região/rede | RBAC respeita visão global vs local. | 🖼️ demonstração | Visão financeira por loja ou da rede (recebimentos, caixas, financeiras, contas e fluxo de caixa de 14 dias). Só dados fictícios. Evidência: `apps/plataforma/src/app/demo; apps/plataforma/e2e/demonstracao.spec.ts` |
+| ORA-FIN-009 | P1 | — | Exportações CSV/XLSX/PDF de relatórios autorizados | Filtros e dados sensíveis protegidos. | 🖼️ demonstração | Exportação CSV (ponto e vírgula, abre no Excel em português) das telas de vendas, estoque, metas, relatórios, recebimentos, usuários e auditoria. XLSX e PDF ainda não. Evidência: `apps/plataforma/src/app/demo; apps/plataforma/e2e/demonstracao.spec.ts` |
 | ORA-FIN-010 | P2 | — | Previsão de fluxo de caixa e simulações | Premissas explicadas e separadas de fatos. | ⬜ não iniciado |  |
 
 ## PERF — Vendedor, metas, comissões e bonificações
@@ -152,7 +152,7 @@
 | ORA-PERF-002 | P0 | sim | Registrar performance_event único por origem/ação confirmada | Retries de API não criam duas bonificações. | ⬜ não iniciado |  |
 | ORA-PERF-003 | P0 | sim | Distinguir quantidade, valor bruto, margem, receita elegível e comissão | Extrato explica cálculo de cada evento. | ⬜ não iniciado |  |
 | ORA-PERF-004 | P0 | sim | Definir meta por vendedor, loja, categoria e período | Alteração não reescreve resultado histórico. | ⬜ não iniciado |  |
-| ORA-PERF-005 | P0 | sim | Painel do gestor mostra metas e resultados da equipe | Filtragem loja e perfil aplicada no servidor. | ⬜ não iniciado |  |
+| ORA-PERF-005 | P0 | sim | Painel do gestor mostra metas e resultados da equipe | Filtragem loja e perfil aplicada no servidor. | 🖼️ demonstração | Painel do gestor com metas e produção de todos os vendedores do escopo; o vendedor vê só os próprios números. Só dados fictícios. Evidência: `apps/plataforma/src/app/demo; apps/plataforma/e2e/demonstracao.spec.ts` |
 | ORA-PERF-006 | P1 | — | Regras de bonificação por categoria/campanha/margem/escala | Edição versionada e período de vigência. | ⬜ não iniciado |  |
 | ORA-PERF-007 | P1 | — | Ajustar comissão por cancelamento/devolução conforme regra | Comprovante de origem e reversão sem apagar histórico. | ⬜ não iniciado |  |
 | ORA-PERF-008 | P1 | — | Apurar e aprovar fechamento de bonificação | Totais detalhados, contestação e trilha de aprovação. | ⬜ não iniciado |  |
@@ -256,13 +256,13 @@
 
 | ID | Prio. | Piloto | Requisito | Aceite | Status | Nota e evidência |
 |---|---|---|---|---|---|---|
-| ORA-REPORT-001 | P0 | sim | Dashboard diretoria consolidado das 14 lojas | Filtro por período, loja, vendedor, natureza e status. | 🖼️ demonstração | Painel da rede só com dados fictícios. Evidência: `apps/plataforma/src/app/demo` |
-| ORA-REPORT-002 | P0 | sim | Dashboard gerente de loja: caixa, metas, aprovação de desconto/NF | Só dados autorizados; alertas com link ao fato original. | 🖼️ demonstração | Painel do gerente só com dados fictícios. Evidência: `apps/plataforma/src/app/demo` |
-| ORA-REPORT-003 | P0 | sim | Dashboard vendedor mobile: produção do dia, metas e atalhos | Dados apenas do escopo autorizado. | 🖼️ demonstração | Início do vendedor no celular só com dados fictícios. Evidência: `apps/plataforma/src/app/demo` |
-| ORA-REPORT-004 | P0 | sim | Relatório de chips vendidos, ativações e recargas separadamente | Produção não implica faturamento tributável idêntico. | ⬜ não iniciado |  |
-| ORA-REPORT-005 | P0 | sim | Relatório por método de pagamento e terminal PicPay | Distinção pagamento/pêndencia/liquidação/reconciliação. | ⬜ não iniciado |  |
-| ORA-REPORT-006 | P1 | — | Relatórios de margem, vendedor e ranking configurável | Comissão/estorno reconciliáveis. | ⬜ não iniciado |  |
-| ORA-REPORT-007 | P1 | — | Alertas de estoque mínimo/IMEI/caixa divergente/fiscal pendente | Notificação contextual e auditada. | ⬜ não iniciado |  |
+| ORA-REPORT-001 | P0 | sim | Dashboard diretoria consolidado das 14 lojas | Filtro por período, loja, vendedor, natureza e status. | 🖼️ demonstração | Painel da rede (ou de uma loja escolhida no topo) com faturamento, meta, ranking das lojas, mix, recebimentos por meio, vendas por hora e alertas. Só dados fictícios. Evidência: `apps/plataforma/src/app/demo; apps/plataforma/e2e/demonstracao.spec.ts` |
+| ORA-REPORT-002 | P0 | sim | Dashboard gerente de loja: caixa, metas, aprovação de desconto/NF | Só dados autorizados; alertas com link ao fato original. | 🖼️ demonstração | Painel do gerente: equipe inteira contra a meta, caixa previsto × contado, aprovações e alertas da loja. Só dados fictícios. Evidência: `apps/plataforma/src/app/demo; apps/plataforma/e2e/demonstracao.spec.ts` |
+| ORA-REPORT-003 | P0 | sim | Dashboard vendedor mobile: produção do dia, metas e atalhos | Dados apenas do escopo autorizado. | 🖼️ demonstração | Início do vendedor no celular: meta do dia, produção por categoria, vendas por loja (vendedor em duas lojas) e atalhos. Só dados fictícios. Evidência: `apps/plataforma/src/app/demo; apps/plataforma/e2e/demonstracao.spec.ts` |
+| ORA-REPORT-004 | P0 | sim | Relatório de chips vendidos, ativações e recargas separadamente | Produção não implica faturamento tributável idêntico. | 🖼️ demonstração | Relatório de chips, ativações, portabilidades e recargas por dia e por vendedor, só confirmadas. Só dados fictícios. Evidência: `apps/plataforma/src/app/demo; apps/plataforma/e2e/demonstracao.spec.ts` |
+| ORA-REPORT-005 | P0 | sim | Relatório por método de pagamento e terminal PicPay | Distinção pagamento/pêndencia/liquidação/reconciliação. | 🖼️ demonstração | Recebimentos por meio de pagamento e situação de conciliação (autorizado, liquidado, conciliado). Só dados fictícios. Evidência: `apps/plataforma/src/app/demo; apps/plataforma/e2e/demonstracao.spec.ts` |
+| ORA-REPORT-006 | P1 | — | Relatórios de margem, vendedor e ranking configurável | Comissão/estorno reconciliáveis. | 🖼️ demonstração | Relatórios de margem, ticket, descontos e ranking de lojas e vendedores por período (7, 14 e 30 dias), com exportação CSV. Ranking para o vendedor aguarda a decisão P3. Evidência: `apps/plataforma/src/app/demo; apps/plataforma/e2e/demonstracao.spec.ts` |
+| ORA-REPORT-007 | P1 | — | Alertas de estoque mínimo/IMEI/caixa divergente/fiscal pendente | Notificação contextual e auditada. | 🖼️ demonstração | Alertas de estoque mínimo, caixa divergente, nota parada, OS parada e ativação com falha, no sino e no painel. Só dados fictícios. Evidência: `apps/plataforma/src/app/demo; apps/plataforma/e2e/demonstracao.spec.ts` |
 | ORA-REPORT-008 | P2 | — | Dashboard expansão nacional por marketplace, ads e canais | Receitas/fees/margens por canal. | ⬜ não iniciado |  |
 
 ## QUAL — Segurança, qualidade, operação e compliance

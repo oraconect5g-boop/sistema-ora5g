@@ -7,12 +7,12 @@ import "./global.css";
 const inter = Inter({ subsets: ["latin"], variable: "--fonte-inter", display: "swap" });
 
 export const metadata: Metadata = {
-  title: "Ora 5G",
+  title: { default: "Ora 5G", template: "%s | Ora 5G" },
   description: "Plataforma de gestão integrada da Ora 5G",
   robots: { index: false, follow: false },
 };
 
-export const viewport: Viewport = { themeColor: "#0e192b", width: "device-width", initialScale: 1 };
+export const viewport: Viewport = { themeColor: "#0a1322", width: "device-width", initialScale: 1 };
 
 export default function LayoutRaiz({ children }: { children: ReactNode }) {
   return (

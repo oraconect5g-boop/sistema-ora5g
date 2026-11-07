@@ -39,3 +39,22 @@ export function completarComDigitoVerificador(baseSemDigito: string): string {
   }
   throw new Error("Base inválida");
 }
+
+// CPF (11 dígitos) com os dois dígitos verificadores (módulo 11). Usado na busca EXATA de cliente
+// (ADR-002 §2.4): sem CPF válido completo não há consulta, e cada consulta real fica registrada (LGPD).
+export function cpfValido(texto: string): boolean {
+  const cpf = soDigitos(texto);
+  if (!/^\d{11}$/.test(cpf) || /^(\d)\1{10}$/.test(cpf)) return false;
+  const digito = (quantos: number) => {
+    let soma = 0;
+    for (let i = 0; i < quantos; i++) soma += Number(cpf[i]) * (quantos + 1 - i);
+    return ((soma * 10) % 11) % 10;
+  };
+  return digito(9) === Number(cpf[9]) && digito(10) === Number(cpf[10]);
+}
+
+// Telefone brasileiro só com dígitos (DDD + número de 8 ou 9 dígitos), para comparação exata.
+export function normalizarTelefone(texto: string): string | null {
+  const digitos = texto.replace(/\D/g, "").replace(/^55(?=\d{10,11}$)/, "");
+  return /^[1-9]{2}9?\d{8}$/.test(digitos) ? digitos : null;
+}

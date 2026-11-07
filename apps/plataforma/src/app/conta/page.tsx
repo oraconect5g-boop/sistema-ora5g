@@ -1,11 +1,12 @@
 import type { Metadata } from "next";
 import { redirect } from "next/navigation";
 
-import { Aviso, Botao, Cartao } from "../../componentes/ui";
+import { Marca } from "../../componentes/Marca";
+import { Aviso, Avatar, Botao, Cartao } from "../../componentes/ui";
 import { clienteSupabaseServidor } from "../../lib/supabase/servidor";
 import { sair } from "../entrar/acoes";
 
-export const metadata: Metadata = { title: "Minha conta | Ora 5G" };
+export const metadata: Metadata = { title: "Minha conta" };
 export const dynamic = "force-dynamic";
 
 // Primeira tela real ligada ao banco: perfil e lojas vêm do Supabase, filtrados pelo RLS.
@@ -28,7 +29,8 @@ export default async function Conta() {
     });
     return (
       <main className="mx-auto max-w-lg px-4 py-10">
-        <Cartao titulo="Minha conta">
+        <Marca tamanho="text-2xl" />
+        <Cartao titulo="Minha conta" className="mt-6">
           <Aviso tom="perigo" titulo="Não foi possível carregar seus dados agora">Tente de novo em alguns instantes. Se continuar, avise o administrador.</Aviso>
         </Cartao>
       </main>
@@ -39,9 +41,10 @@ export default async function Conta() {
 
   return (
     <main className="mx-auto max-w-lg px-4 py-10">
-      <Cartao titulo="Minha conta" subtitulo={usuario.user.email}>
+      <Marca tamanho="text-2xl" />
+      <Cartao titulo="Minha conta" subtitulo={usuario.user.email} className="mt-6">
         {perfil ? (
-          <p className="text-sm">{perfil.nome} · {perfil.status}</p>
+          <p className="flex items-center gap-3 text-sm"><Avatar nome={perfil.nome} /> <span><strong>{perfil.nome}</strong><span className="block text-suave">Situação: {perfil.status}</span></span></p>
         ) : (
           <Aviso tom="aviso">Usuário sem perfil cadastrado na Ora. Peça ao administrador para criar o seu vínculo.</Aviso>
         )}
