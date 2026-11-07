@@ -81,9 +81,11 @@ Todas as demais portas de entrada ficam **fechadas**. HTTP/3 (UDP 443) desativad
 | 3100 | Plataforma (Next.js) | Homologação |
 | 3101 | Loja online (Next.js) | Homologação |
 | 3110 | Worker — verificação de saúde | Homologação |
+| 3180 | Plataforma rodando nos testes E2E do programador (servidor de desenvolvimento) | Desenvolvimento |
+| 3199 | Servidor temporário dos testes de inicialização (sobe e desce durante o teste) | Desenvolvimento |
 | 2019 | API administrativa do Caddy (padrão do Caddy, só local) | Servidor |
 
-Faixas **reservadas**: 3000–3099 produção, 3100–3199 homologação. Nenhum outro serviço pode usar essas faixas. Banco de dados **não roda na VPS** (fica no Supabase), então **não há porta 5432 aberta** no servidor.
+Faixas **reservadas**: 3000–3099 produção, 3100–3199 homologação. Nenhum outro serviço pode usar essas faixas. Exceções registradas (07/11/2026): 3180 e 3199, usadas só pelos testes automáticos no servidor do programador, sempre em `127.0.0.1` e nunca expostas. Banco de dados **não roda na VPS** (fica no Supabase), então **não há porta 5432 aberta** no servidor.
 
 **Saídas do servidor (para fora):**
 

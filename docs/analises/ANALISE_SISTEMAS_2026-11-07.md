@@ -1,8 +1,10 @@
 # Análise de sistemas, aderência ao escopo e andamento — 07/11/2026
 
 **Projeto:** Ora 5G Platform · **Analista/revisor:** Codex · **Implementador:** Claude Code  
-**Base de código:** `main`, commit `17524a5da68815e61b4c1eacd85b519b118969bf`  
+**Bases de código:** revisão inicial `17524a5da68815e61b4c1eacd85b519b118969bf`; revisão complementar `a152516dd2651ea403d7bd158d4cc3a4fe14a6cb`.  
 **Pedido do proprietário:** analisar defeitos e andamento, documentar no GitHub e preservar a linguagem e a arquitetura já adotadas.
+
+> **Evolução durante a revisão:** a main avançou. As seções 1–14 preservam a fotografia inicial em `17524a5`; o **estado mais recente está na seção 15** e no [registro de achados](../alinhamento/REVISOES_CODEX.md). O login parcial, a demonstração, as regras de domínio e os scripts novos já foram considerados na revisão complementar.
 
 ## 1. Parecer executivo
 
@@ -228,3 +230,74 @@ Cada tarefa/correção deve registrar:
 A cobertura corresponde ao código/configuração da main no commit informado e ao lockfile; não é uma auditoria manual linha por linha de dependências de terceiros ou de todas as branches históricas. O protótipo HTML é referência visual sem conexão à aplicação operacional; imagens e vídeos não são evidência de módulos implementados.
 
 As conclusões valem para esta fotografia. Ao corrigir uma issue, atualizar resultado, commit e evidência sem apagar a constatação original. Se a main avançar, comparar os novos commits antes de reaproveitar este parecer. Os resultados desta revisão não permitem afirmar que produção está publicada, que sofreu invasão ou que está indisponível.
+
+## 15. Revisão complementar da evolução até a152516d
+
+Durante a documentação, a main recebeu nove commits depois da fotografia inicial: regras de domínio, demonstração, login, scripts de homologação, alinhamento/rastreabilidade e duas correções do vigia. Esta seção atualiza o andamento; não deve ser lida como implantação ou aceite de produção.
+
+### 15.1 Estado atual comparado ao plano
+
+| Área | Evolução verificada no código | O que ainda falta |
+|---|---|---|
+| Stack | TypeScript/React/Next.js/Node/PostgreSQL mantidos; Tailwind, Lucide e clientes Supabase com versões fixadas acrescentados | Nenhuma mudança de linguagem recomendada |
+| ORG / ORA-006 | Login por senha no servidor, mensagem neutra, cookies SSR, /conta com getUser e consultas ao RLS | Recuperação, seleção da unidade na sessão, limite por turno, fluxo de usuário de teste e correção da renovação SSR |
+| CAT | Tipos de item e validadores no pacote dominio; telas e produtos fictícios | Catálogo persistente, custo/preço histórico, busca real e ADR-003 |
+| INV | Validação de IMEI/ICCID e seleção simulada na demonstração | Ledger, unicidade, saldo/reserva real, transferências e concorrência no banco |
+| CRM | Telas e busca em dados fictícios | Busca exata real, auditoria da consulta, autorização e cadastro/histórico |
+| POS | Regras compartilhadas, carrinho e conclusão demonstrativa | Corrigir valores monetários, revalidar no servidor, persistir operação e garantir idempotência |
+| PAY | Regra de pagamento misto/financeira e troco com testes | Corrigir limites/inteiros; pagamentos, repasses e confirmação externa reais |
+| FIN | Tela demonstrativa | Recebíveis, caixa, conciliação e lançamentos persistentes |
+| PERF | Contagem pura por categoria e confirmação telecom | Ledger idempotente, turnos, metas e regras reais de comissão |
+| FISC | Fila/telas demonstrativas | Provedor, contador, matriz legal, solicitação/aprovação e emissão reais |
+| CONNECT | Demonstração de consultas/operações | Adaptador Nogle, contrato completo e testes autorizados |
+| ONLINE / MKTPL | Demonstração de canais | Loja, pedidos, reservas, frete e adaptadores externos |
+| WHATS / META / AI | Não há integração operacional | Credenciais/contratos, consentimentos e implementação nas fases previstas |
+| REPORT | Painéis com selo fixo de demonstração | Números reais e rastreabilidade até os fatos persistentes |
+| QUAL | 110 testes existentes, E2E ampliado e rastreabilidade gerada/conferida no CI | Novas regressões, testes de sessão real, restauração, observabilidade, auditoria completa e homologação |
+| ORA-012 | Scripts e configuração de proxy versionados; correção de herança das travas presente | Publicação externa e supervisão dependem do proprietário; robustez de publicação e rollback precisam de melhoria |
+
+As tabelas operacionais de venda, pagamento e estoque continuam ausentes. A demonstração é identificada, não persiste dados e é desativada em produção. Ela é avanço de UX, não comprovação de operação real.
+
+A documentação nova do Claude foi consultada: [análise do plano](../alinhamento/ANALISE_DO_PLANO.md), [pedido ao Codex](../alinhamento/PEDIDO_DE_REVISAO_CODEX.md), [rastreabilidade](../alinhamento/RASTREABILIDADE.md) e status-requisitos.json. Concordância com o escopo geral e a stack não significa aprovação irrestrita dos aceites: os achados bloqueantes precisam ser corrigidos.
+
+### 15.2 Achados adicionais e efeitos nos já registrados
+
+- **REV-007 / [#9](https://github.com/oraconect5g-boop/sistema-ora5g/issues/9), bloqueante de dinheiro:** lerReais('1.000') e lerReais('1.000.000') retornam 100 centavos. O primeiro valor deveria ser 100000 e o segundo 100000000.
+- **REV-008 / [#10](https://github.com/oraconect5g-boop/sistema-ora5g/issues/10), bloqueante de dinheiro:** entrada financeira de 0.5 centavo é aceita; validarItem aceita desconto negativo e preço NaN; leitura de reais não rejeita inteiro inseguro.
+- **REV-009 / [#11](https://github.com/oraconect5g-boop/sistema-ora5g/issues/11), importante de sessão:** escrita de cookie na renderização é ignorada e não existe proxy de renovação. Revisão estática confrontada com a documentação oficial; não foi testada expiração com usuário real.
+- **REV-010, importante na demonstração:** ehPerfil usa o operador in, aceitando constructor, __proto__ e toString. Teste HTTP local: trocar para constructor faz /demo responder 500; sem cookie, responde 200. Não concede acesso a dados reais, mas quebra a demonstração.
+- **REV-011, importante de rastreabilidade:** ORA-QUAL-002 e ORA-QUAL-004 aparecem como feito apesar dos defeitos abertos; ORA-ORG-006 ainda diz que falta login na aplicação, embora o login parcial já exista. Atualizar status e evidência pelo gerador, sem editar o Markdown gerado manualmente.
+- **REV-012, importante de operação:** publicar.sh instala dependências sobre a cópia em uso, para o serviço e só depois gera a build. Uma falha de instalação/build não tem retorno automático ao artefato anterior. É risco derivado do script, não diagnóstico de queda real na VPS.
+- **REV-013, importante de aderência da UX:** o PDV da demonstração exibe a margem resultante ao vendedor; o ADR-002 permite apenas indicar limite/aprovação. A busca demonstrativa aceita final de CPF/telefone, enquanto o fluxo real exige busca exata e auditada. Dados são fictícios; não foi demonstrado vazamento real. Alinhar o protótipo antes de transformá-lo em interface real.
+- **REV-014, importante de diagnóstico:** /conta descarta os campos error das consultas e apresenta falha de perfil/unidades como ausência de cadastro/vínculo. Distinguir erro do serviço de resultado vazio, com mensagem segura e diagnóstico sem segredo.
+
+REV-001 a REV-006 permanecem aplicáveis: os arquivos SQL e o validador apontados não mudaram nessa evolução; o workflow ainda pula o histórico no evento push. A nova configuracaoSupabase lê URL/chave com trim e não usa o grupo de validação Supabase. Com o login em uso, integrar essa validação passa a ser requisito imediato, sem exigir chave privilegiada para requisições de usuário.
+
+A ausência de SUPABASE_SECRET_KEY ou DATABASE_URL não bloqueia por si só o login por senha via API pública: esse fluxo usa URL, chave pública e Auth. São dependências de worker/migrations/acesso SQL quando esses recursos forem usados. A análise do Claude mistura esses grupos no bloqueio B1; corrigir a documentação sem solicitar ou expor valores.
+
+### 15.3 Evidência adicional desta revisão
+
+| Check em a152516d | Resultado local |
+|---|---|
+| Instalação limpa, scanner de arquivos, lint, tipos e build | Passaram |
+| Testes existentes | 110 passaram: 4 aplicação, 33 banco, 32 configuração, 41 domínio; 4 todo no banco |
+| E2E | 28 passaram; 4 pulados: 2 testes de credenciais Supabase sem configuração e 2 duplicações intencionais dos testes auxiliares no celular |
+| Rastreabilidade gerada | --conferir passou com o conteúdo original preservado, inclusive suas quebras de linha |
+| Auditoria de produção | Zero vulnerabilidades reportadas |
+| Sintaxe dos dois scripts de homologação | bash -n passou; scripts não executados no servidor |
+| Testes adversariais adicionais | 9 testes falharam conforme esperado: 3 de leitura/limite de reais, 3 de validação monetária e 3 de perfil herdado |
+| Cookie de perfil herdado | /demo retornou HTTP 500 com constructor; sem cookie, HTTP 200 |
+| Sessão real e implantação | Não testadas: sem uso de credenciais reais, sem acesso à VPS, sem ligar tarefa persistente |
+
+[CI da main em a152516d](https://github.com/oraconect5g-boop/sistema-ora5g/actions/runs/42383556054): sucesso. CI não comprova os testes pulados nem os novos casos adversariais. Não é possível certificar estabilidade da sessão real ou da implantação por essa execução.
+
+### 15.4 Ordem recomendada atualizada
+
+1. Corrigir as duas falhas de isolamento SQL e as regras monetárias (REV-001/002/007/008); endurecer a configuração do login (REV-004).
+2. Concluir sessão SSR e ORA-006, além de tratar auditoria automática de acesso e as demais correções importantes.
+3. Atualizar a rastreabilidade honestamente e revisar/aceitar ADR-003.
+4. Implementar catálogo, importação CSV em prévia e estoque/IMEI concorrente; substituir as telas demonstrativas uma a uma.
+5. Homologar por fluxo real e por usuário/perfil no celular, sem reutilizar o cookie de demonstração como autorização.
+6. Manter o restante do plano de seis meses e suas dependências externas visíveis. A linguagem e o escopo de negócio permanecem os mesmos.
+
+O registro estruturado para o Claude está em [REVISOES_CODEX.md](../alinhamento/REVISOES_CODEX.md), no caminho previsto pelas instruções atuais dos agentes. Ele complementa esta análise histórica e evita exigir alteração ampla dos arquivos de instruções.

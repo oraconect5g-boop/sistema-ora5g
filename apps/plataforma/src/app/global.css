@@ -1,29 +1,38 @@
-*,
-*::before,
-*::after {
-  box-sizing: border-box;
+@import "tailwindcss";
+
+/* Design tokens provisórios (docs/08 e referencias_visuais/guia_design.md), aguardando a marca oficial.
+   "acao" foi escurecida de #0EAE9F para #0A7D72 para texto branco atingir contraste AA. */
+@theme {
+  --color-fundo: #f5f8fb;
+  --color-navegacao: #0e192b;
+  --color-navegacao-2: #17253a;
+  --color-texto: #122237;
+  --color-suave: #5b6b80;
+  --color-acao: #0a7d72;
+  --color-acao-escura: #075f57;
+  --color-destaque: #13d9c7;
+  --color-info: #348bf4;
+  --color-borda: #e4eaf0;
+  --color-sucesso: #16ab79;
+  --color-aviso: #ed9b37;
+  --color-perigo: #c63b3b;
+  --radius-cartao: 14px;
+  --radius-botao: 11px;
+  --font-sans: var(--fonte-inter), system-ui, sans-serif;
+}
+
+html {
+  -webkit-text-size-adjust: 100%;
 }
 
 body {
-  margin: 0;
-  padding: 16px;
-  font-family: system-ui, sans-serif;
+  background: var(--color-fundo);
+  color: var(--color-texto);
+  font-family: var(--font-sans);
   line-height: 1.5;
-  color: #1a1a1a;
-  background: #fff;
 }
 
-dl {
-  display: grid;
-  grid-template-columns: max-content minmax(0, 1fr);
-  gap: 4px 12px;
-}
-
-dt {
-  font-weight: 600;
-}
-
-dd {
-  margin: 0;
-  overflow-wrap: anywhere;
+:focus-visible {
+  outline: 3px solid var(--color-info);
+  outline-offset: 2px;
 }
