@@ -41,3 +41,13 @@ test("endereco inexistente responde 404", async ({ request }) => {
 
   expect(resposta.status()).toBe(404);
 });
+
+test("atrás do Apache, os arquivos de índice abrem a página inicial", async ({ request }) => {
+  for (const caminho of ["/", "/index.php", "/index.html", "/index.htm", "/default.htm", "/Default.html", "/index.php8"]) {
+    const resposta = await request.get(caminho);
+    expect(resposta.status(), caminho).toBe(200);
+    expect(await resposta.text(), caminho).toContain("Plataforma de gestão integrada");
+  }
+  expect((await request.get("/index")).status()).toBe(404);
+  expect((await request.get("/indice.php")).status()).toBe(404);
+});
