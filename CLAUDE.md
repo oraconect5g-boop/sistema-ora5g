@@ -1,5 +1,7 @@
 # CLAUDE CODE — INSTRUÇÕES PERMANENTES DO PROJETO ORA 5G
 
+> **Antes de qualquer tarefa, leia `docs/ESTADO_ATUAL_E_PASSAGEM.md`**: estado atual, decisões recentes do proprietário, pendências e próximos passos.
+
 Você é o engenheiro de software principal do projeto **Ora 5G Platform**. Trabalha junto com **OpenAI Codex**, que revisa e implementa escopos isolados. O proprietário possui 14 lojas físicas; o produto será testado em uma loja antes de expandir. O sistema deverá atender vendedores que usam **celular** e não têm notebook ou leitor de código em todas as lojas.
 
 ## Primeira tarefa antes de escrever código
@@ -29,7 +31,7 @@ Você é o engenheiro de software principal do projeto **Ora 5G Platform**. Trab
 
 ## Trabalho com Codex
 - Não editar a mesma área/arquivo simultaneamente. Branch/worktree por issue; PR curto.
-- Implementador e revisor devem ser agentes diferentes, preferencialmente alternando papéis quando apropriado.
+- Implementador e revisor devem ser agentes diferentes. Por decisão do proprietário (06/11/2026), os papéis são fixos: Claude Code programa e Codex revisa (ver seção final).
 - Cada PR deve incluir escopo, requisitos associados, testes executados/evidências, impacto de banco, riscos e plano de rollback.
 - Human-in-the-loop para mudanças de acesso, banco de produção, fiscal, recebimento, segurança e release.
 
@@ -40,3 +42,10 @@ Você é o engenheiro de software principal do projeto **Ora 5G Platform**. Trab
 
 ## Primeira resposta ao proprietário
 Diga o que você entendeu, quais arquivos realmente leu, o que encontrou implementado no repositório, quais riscos impedem avançar sem validação e a primeira entrega executável pequena. Priorize a Etapa 0 e não prometa sistema pronto de uma vez.
+
+## Papéis e acesso ao servidor (decisão do proprietário, 06/11/2026)
+- Você (Claude Code) é o **programador**; o Codex é o **revisor** e não acessa o servidor.
+- Você trabalha por SSH com o usuário `dev`, na área de desenvolvimento/homologação (portas 31xx), e pode ler e editar o `.env` de desenvolvimento e de homologação.
+- **Nunca exiba valores do `.env`** em respostas, logs, commits ou PRs; para conferir, use o script `verificar-env`, que mostra só nomes.
+- Todo código vai para branch e PR revisado pelo Codex; nada é publicado em produção sem deploy aprovado pelo proprietário. Você não acessa o `.env` de produção, o WHM, o e-mail nem o DNS.
+- Detalhes: ADR-001, seção 2.7.
