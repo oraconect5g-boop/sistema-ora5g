@@ -20,14 +20,23 @@ jobs:
     timeout-minutes: 15
     env:
       NEXT_TELEMETRY_DISABLED: "1"
+      # Valores ficticios so para o CI; nenhum segredo real aqui.
+      APP_ENV: development
+      NEXT_PUBLIC_APP_URL: http://127.0.0.1:3100
     steps:
       - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
         with:
           persist-credentials: false
+          fetch-depth: 0
       - uses: actions/setup-node@949feb2413d6458794dcd2491c4babbbce0c15c1 # v7.1.0
         with:
           node-version-file: .nvmrc
           cache: npm
+      - name: Procurar segredos nos arquivos
+        run: npm run segredos
+      - name: Procurar segredos nos commits do PR
+        if: github.event_name == 'pull_request'
+        run: npm run segredos -- --historico "origin/${{ github.base_ref }}..HEAD"
       - run: npm ci
       - run: npm run lint
       - run: npm run typecheck

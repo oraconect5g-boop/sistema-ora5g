@@ -16,3 +16,20 @@ Os comandos rodam na raiz do repositório:
 O `test:e2e` exige `npm run build` antes e, na primeira vez, `npx -w @ora5g/plataforma playwright install chromium`.
 
 O aplicativo escuta só em `127.0.0.1:3100`, a porta de homologação da plataforma no ADR-001.
+
+## Configuração (variáveis de ambiente)
+
+O sistema confere as variáveis ao iniciar e **encerra com erro** se faltar alguma obrigatória. As regras estão em `packages/config/src/ambiente.ts`.
+
+Em desenvolvimento, crie `apps/plataforma/.env.local` (permissão `600`, nunca vai para o Git) com pelo menos:
+
+```
+APP_ENV=development
+NEXT_PUBLIC_APP_URL=http://127.0.0.1:3100
+```
+
+Para conferir um arquivo sem mostrar valores: `npm run verificar-env -- apps/plataforma/.env.local aplicacao,supabase`.
+
+## Segredos
+
+`npm run segredos` procura chaves e senhas nos arquivos do projeto; `npm run segredos -- --historico origin/main..HEAD` confere também os commits. O CI roda os dois e bloqueia o PR se achar algo. Os valores nunca são exibidos.
