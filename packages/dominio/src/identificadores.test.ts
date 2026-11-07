@@ -1,6 +1,6 @@
 import { describe, expect, it } from "vitest";
 
-import { completarComDigitoVerificador, iccidValido, imeiValido, mascararIdentificador } from "./identificadores";
+import { completarComDigitoVerificador, cpfValido, iccidValido, imeiValido, mascararIdentificador, normalizarTelefone } from "./identificadores";
 
 // Identificadores FICTÍCIOS gerados com dígito verificador válido.
 const imei = completarComDigitoVerificador("35209900176148");
@@ -35,4 +35,32 @@ describe("ICCID", () => {
 
 it("mostra só o final do identificador", () => {
   expect(mascararIdentificador(imei)).toBe(`•••• ${imei.slice(-4)}`);
+});
+
+describe("CPF", () => {
+  // CPFs FICTÍCIOS com dígitos verificadores válidos (base 000.000.00X).
+  it("aceita CPF com dígitos verificadores corretos, com ou sem pontuação", () => {
+    expect(cpfValido("000.000.001-91")).toBe(true);
+    expect(cpfValido("00000000272")).toBe(true);
+  });
+
+  it("recusa dígito trocado, tamanho errado e números repetidos", () => {
+    expect(cpfValido("000.000.001-92")).toBe(false);
+    expect(cpfValido("000.000.001-9")).toBe(false);
+    expect(cpfValido("111.111.111-11")).toBe(false);
+    expect(cpfValido("")).toBe(false);
+  });
+});
+
+describe("telefone", () => {
+  it("normaliza celular e fixo com DDD, com ou sem +55", () => {
+    expect(normalizarTelefone("(41) 9 0000-0001")).toBe("41900000001");
+    expect(normalizarTelefone("+55 41 3333-4444")).toBe("4133334444");
+  });
+
+  it("recusa número incompleto ou sem DDD (a busca é exata, nunca parcial)", () => {
+    expect(normalizarTelefone("0001")).toBeNull();
+    expect(normalizarTelefone("90000-0001")).toBeNull();
+    expect(normalizarTelefone("(01) 9 0000-0001")).toBeNull();
+  });
 });
