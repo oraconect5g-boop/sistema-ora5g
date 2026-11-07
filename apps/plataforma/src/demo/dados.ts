@@ -91,8 +91,8 @@ export const SALDOS_ACESSORIOS = [
 export const CHIPS = Array.from({ length: 4 }, (_, i) => iccid(i + 1));
 
 export const CLIENTES = [
-  { nome: "Mariana S. (fictícia)", telefone: "(41) 9 0000-0001", email: "mariana@exemplo.invalid", cpfFinal: "001-01" },
-  { nome: "Carlos L. (fictício)", telefone: "(41) 9 0000-0002", email: null, cpfFinal: "002-02" },
+  { nome: "Mariana S. (fictícia)", telefone: "(41) 9 0000-0001", email: "mariana@exemplo.invalid" },
+  { nome: "Carlos L. (fictício)", telefone: "(41) 9 0000-0002", email: null },
 ];
 
 export const APROVACOES = {

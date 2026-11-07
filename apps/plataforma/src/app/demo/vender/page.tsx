@@ -9,7 +9,7 @@ export default async function Vender() {
   return (
     <>
       <TituloPagina titulo="Nova venda" subtitulo="Santa Cândida · atendimento de demonstração" />
-      <PDV />
+      <PDV podeVerMargem={perfil === "dono" || perfil === "gerente"} />
     </>
   );
 }

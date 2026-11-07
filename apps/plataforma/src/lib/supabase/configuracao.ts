@@ -1,8 +1,25 @@
-// Endereço e chave PÚBLICA do Supabase (respeitam RLS). A chave secreta nunca passa por aqui.
+import { verificarAmbiente } from "@ora5g/config/ambiente";
+
+// Endereço e chave PÚBLICA do Supabase, validados pela mesma regra da inicialização (REV-004):
+// chave secreta, service_role, http, localhost ou IPv6 são recusados aqui também.
+// Lê o ambiente em tempo de execução (só servidor); a chave secreta nunca passa por aqui.
+let avisoJaRegistrado = false;
+
 export function configuracaoSupabase(): { url: string; chavePublica: string } | null {
-  const url = process.env.NEXT_PUBLIC_SUPABASE_URL?.trim();
-  const chavePublica = process.env.NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY?.trim();
-  return url && chavePublica ? { url, chavePublica } : null;
+  const ambiente = process.env;
+  const url = ambiente["NEXT_PUBLIC_SUPABASE_URL"];
+  const chave = ambiente["NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY"];
+  if (!url?.trim() && !chave?.trim()) return null;
+
+  const resultado = verificarAmbiente({ NEXT_PUBLIC_SUPABASE_URL: url, NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY: chave }, ["supabase_publico"]);
+  if (!resultado.ok) {
+    if (!avisoJaRegistrado) {
+      console.error(`Configuração pública do Supabase recusada: ${resultado.problemas.map((p) => `${p.variavel} (${p.motivo})`).join("; ")}`);
+      avisoJaRegistrado = true;
+    }
+    return null;
+  }
+  return { url: resultado.configuracao.NEXT_PUBLIC_SUPABASE_URL, chavePublica: resultado.configuracao.NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY };
 }
 
 export type SituacaoConexao = "conectado" | "nao_configurado" | "sem_resposta";
