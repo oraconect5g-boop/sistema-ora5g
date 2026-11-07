@@ -152,7 +152,7 @@ Regra: decisão explícita mais recente do proprietário > ADR aceito > requisit
 | R4 | Catálogo e estoque começarem sem ADR-003 | ADR-003 é a próxima entrega técnica; nenhuma tabela de venda/estoque antes dele |
 | R5 | Auditoria de mudanças de acesso incompleta (ORG-005) | Gatilhos de auditoria em vínculos/perfis na próxima migration |
 | R6 | Desconto por margem sem parâmetros reais | Valores da demonstração são exemplos; motor real só com B6 |
-| R7 | Aplicação de homologação rodando como processo do usuário `dev` (sem systemd) | `crontab` com reinício automático; migrar para serviço systemd quando o proprietário puder (root) |
+| R7 | Aplicação de homologação rodando como processo do usuário `dev`, sem systemd e, até autorização do proprietário, sem `crontab` de reinício | Ligar o `crontab` (comando em `deploy/homologacao/LEIA-ME.md`); depois migrar para serviço systemd (root) |
 | R8 | Plano gratuito do Supabase (pausa por inatividade, sem backup com recuperação pontual) | Suficiente para dev; Pro antes do piloto real (custo a aprovar) |
 
 ---

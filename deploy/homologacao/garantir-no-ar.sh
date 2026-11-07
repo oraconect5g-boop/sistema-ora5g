@@ -20,7 +20,7 @@ fi
 export PATH="$HOME/.local/bin:/usr/local/bin:/usr/bin:/bin"
 export NODE_OPTIONS="--dns-result-order=ipv4first" NEXT_TELEMETRY_DISABLED=1
 
-no_ar() { curl -fsS --max-time 5 -o /dev/null "http://127.0.0.1:$PORTA/saude"; }
+no_ar() { curl -fsS --max-time 5 -o /dev/null "http://127.0.0.1:$PORTA/saude" 2>/dev/null; }
 
 pid_na_porta() { ss -ltnpH "sport = :$PORTA" 2>/dev/null | grep -o 'pid=[0-9]*' | head -1 | cut -d= -f2; }
 
