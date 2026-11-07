@@ -38,6 +38,17 @@ ssh -p 22022 -L 3100:127.0.0.1:3100 dev@69.6.214.94
 
 Com essa janela aberta, acesse `http://127.0.0.1:3100/demo` no navegador do computador.
 
+## Caminho rápido para uma apresentação: domínio principal (temporário)
+
+Situação conferida em 07/11/2026: `https://ora5g.com.br` mostra só "Index of /" (a `public_html` da conta `wwora5` está vazia) e já tem certificado válido (Let's Encrypt, `*.ora5g.com.br` e `ora5g.com.br`). Por isso o domínio principal pode mostrar a plataforma na hora, sem criar nada no DNS:
+
+1. WHM → Listar contas → linha do `ora5g.com.br` → ícone **cP** (abre o cPanel da conta `wwora5`).
+2. **Gerenciador de Arquivos → `public_html`** → Configurações → marcar "Mostrar arquivos ocultos".
+3. **+ Arquivo** → nome `.htaccess` → Editar → colar o conteúdo de `deploy/homologacao/htaccess-dominio-principal.txt` → Salvar.
+4. Abrir `https://ora5g.com.br/demo`.
+
+Para desfazer, apague o `.htaccess` da `public_html`. A página fica com aviso de demonstração e pede aos buscadores para não indexar. Quando o `hml-app` estiver pronto, volte o domínio principal ao site institucional.
+
 ## Publicar no endereço `hml-app.ora5g.com.br` (proprietário, pelo cPanel, sem root)
 
 O DNS do domínio já está no próprio servidor (`ns1`/`ns2.ora5g.com.br`), então o cPanel cria o registro sozinho.
