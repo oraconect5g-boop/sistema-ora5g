@@ -9,7 +9,7 @@ A plataforma de homologação roda **só em `127.0.0.1:3100`**. O Apache do cPan
 | Código publicado | `~/homologacao/plataforma` (cópia separada da `main`, via `git worktree`) |
 | Variáveis da homologação | `~/homologacao/plataforma.env` (permissão `600`, fora do Git) |
 | Logs | `~/homologacao/logs/` (`plataforma.log`, `garantir.log`, `publicar-*.log`) |
-| Reinício automático | **Ainda não ligado.** Precisa da autorização do proprietário para instalar o `crontab` do `dev` (comando abaixo). Sem ele, a homologação não volta sozinha depois de reiniciar o servidor ou de uma falha |
+| Reinício automático | **Ligado em 07/11/2026** (autorizado pelo proprietário): `crontab` do `dev` roda `garantir-no-ar.sh` no boot e a cada 5 minutos. Testado: com o serviço parado, o `cron` o subiu de volta sozinho |
 
 ## Comandos (no servidor, usuário `dev`)
 
@@ -20,9 +20,9 @@ A plataforma de homologação roda **só em `127.0.0.1:3100`**. O Apache do cPan
 | `~/homologacao/plataforma/deploy/homologacao/garantir-no-ar.sh --parar` | Para (o cron sobe de novo em até 5 minutos; para desligar de vez, remova as linhas do `crontab -e`) |
 | `curl -s 127.0.0.1:3100/saude` | Confere se está no ar |
 
-## Ligar o reinício automático (uma vez, no servidor, usuário `dev`)
+## Reinício automático (`crontab` do `dev`, já instalado)
 
-Instala duas linhas no `crontab` do `dev`: uma sobe a plataforma quando o servidor liga, a outra confere a cada 5 minutos.
+Duas linhas: uma sobe a plataforma quando o servidor liga, a outra confere a cada 5 minutos. Para reinstalar num servidor novo:
 
 ```
 ( crontab -l 2>/dev/null; echo '@reboot $HOME/homologacao/plataforma/deploy/homologacao/garantir-no-ar.sh'; echo '*/5 * * * * $HOME/homologacao/plataforma/deploy/homologacao/garantir-no-ar.sh' ) | crontab -
