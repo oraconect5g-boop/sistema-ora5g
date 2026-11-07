@@ -92,12 +92,15 @@ Papéis **fixos** (decisão do proprietário). Detalhes: ADR-001, seção 2.7.
 
 Feito em 07/11: deploy key e clone; Node 22; **ORA-002**; **ORA-003**; **ORA-004/005** (aplicada no `ora5g-dev`); **regras de negócio puras** (dinheiro, IMEI/ICCID, desconto por margem, pagamento misto e financiado, produção por categoria); **versão de demonstração** com 12 telas e 4 perfis, desligada em produção; **login real** ligado ao Supabase (recusa credencial errada com mensagem neutra, testado contra o projeto real); **homologação** rodando no servidor em `127.0.0.1:3100`, com reinício automático pelo `crontab` (autorizado em 07/11). **Desde 07/11, `https://ora5g.com.br` mostra temporariamente a plataforma** (`.htaccess` na `public_html` da conta `wwora5`, colocado pelo proprietário) para a primeira apresentação; conferido por navegador de celular. Quando o subdomínio `hml-app` existir, apagar esse `.htaccess` para o domínio principal voltar ao site institucional (ver `deploy/homologacao/LEIA-ME.md`).
 
+**Novo visual e revisão do front-end (07/11, pedido do proprietário):** demonstração refeita com gráficos, 17 telas e 5 perfis (inclui Vendas, Produtos e preços, Relatórios, Auditoria e o perfil Técnico como opção para a P5), **loja da sessão** (vendedor com duas lojas troca no topo; gestão vê todos os vendedores, vendedor só os próprios números), 14 defeitos de tela corrigidos, inclusive o **REV-015** (desconto maior que o item derrubava a venda). Relatório: `docs/alinhamento/REVISAO_FRONTEND_2026-11-07.md`. Integrado também o guia do Codex `docs/alinhamento/CONFIGURACAO_E_TRANSICAO_DO_MOCKUP.md` (modelo mínimo `apps/plataforma/.env.example`).
+
 1. **Revisão do Codex de 07/11:** os 14 achados (REV-001 a REV-014) foram tratados: 13 com teste de regressão e o REV-009 (renovação de sessão) sem teste com usuário real, que ainda não existe; respostas em `docs/alinhamento/RESPOSTAS_A_REVISAO_2026-11-07.md`. Aguardam a revisão do Codex sobre as correções.
 2. **Auditoria automática** de mudanças em vínculos, perfis e papéis (ORA-ORG-005).
 3. **ADR-003** (operação comercial, tipos de item, ledger de estoque), revisado pelo Codex e aceito pelo proprietário.
 4. **ORA-006** completo: escolha da loja na sessão, sessão por turno, recuperação de senha (depende do SMTP), usuários de teste.
 5. **ORA-007** catálogo, **ORA-009** importador (depende do CSV), **ORA-010** estoque e IMEI com teste de concorrência.
-6. Trocar as telas da demonstração pelas reais, uma a uma, conforme cada módulo fica pronto.
+6. Trocar as telas da demonstração pelas reais, uma a uma, conforme cada módulo fica pronto (reaproveitar `src/componentes` e as regras de `src/demo/consultas.ts` como contrato de quem vê o quê).
+7. Resíduos da conferência do Codex: **REV-016** (republicar o mesmo commit não troca o ambiente), resíduo de arredondamento do **REV-008** em valores muito altos, teste automático do erro de consulta do **REV-014** e compatibilidade da **CONFIG-001**.
 
 ## 7. Contexto da conversa com o ChatGPT
 

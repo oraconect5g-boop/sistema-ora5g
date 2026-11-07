@@ -1,88 +1,108 @@
-import { Ellipsis } from "lucide-react";
+import { FlaskConical, RefreshCw } from "lucide-react";
 import Link from "next/link";
 import type { ReactNode } from "react";
 
-import { ACESSO, ATALHOS_CELULAR, PAGINAS, PERFIS, type Perfil } from "../demo/perfis";
+import { LOJAS, nomeDaLoja } from "../demo/dados";
+import { ACESSO, ATALHOS_CELULAR, GRUPOS, PAGINAS, PERFIS, REDE, type Pagina } from "../demo/perfis";
+import type { ContextoDemo } from "../demo/sessao";
+import { Avisos, MenuPerfil, SeletorLoja, type ItemAviso, type OpcaoLoja } from "./BarraSuperior";
 import { Icone } from "./Icone";
+import { Marca } from "./Marca";
 import { LinkNavegacao } from "./LinkNavegacao";
+import { NavegacaoCelular, type ItemNavegacao } from "./NavegacaoCelular";
 
-function Marca() {
-  return (
-    <span className="text-xl font-extrabold tracking-tight">
-      ora<span className="text-destaque">5G</span>
-    </span>
-  );
+export const nomeDoEscopo = (loja: string) => (loja === REDE ? "Rede inteira (14 lojas)" : nomeDaLoja(loja));
+
+function opcoesDeLoja(contexto: ContextoDemo): OpcaoLoja[] {
+  return contexto.lojas.map((codigo) => {
+    const loja = LOJAS.find((l) => l.codigo === codigo);
+    return {
+      codigo,
+      nome: codigo === REDE ? "Rede inteira" : nomeDaLoja(codigo),
+      detalhe: codigo === REDE ? "Consolidado das 14 lojas" : loja ? `${loja.bairro}${loja.piloto ? " · piloto" : ""}` : undefined,
+    };
+  });
 }
 
-export function AppShell({ perfil, children }: { perfil: Perfil; children: ReactNode }) {
-  const paginas = ACESSO[perfil];
-  const atalhos = ATALHOS_CELULAR[perfil];
-  const demais = paginas.filter((p) => !atalhos.includes(p));
+export function AppShell({ contexto, avisos, pendencias, children }: {
+  contexto: ContextoDemo;
+  avisos: readonly ItemAviso[];
+  pendencias: Partial<Record<Pagina, number>>;
+  children: ReactNode;
+}) {
+  const { perfil } = contexto;
   const dados = PERFIS[perfil];
+  const paginas = ACESSO[perfil];
+  const opcoes = opcoesDeLoja(contexto);
+  const atual = opcoes.find((o) => o.codigo === contexto.loja) ?? { codigo: contexto.loja, nome: nomeDoEscopo(contexto.loja) };
+
+  const item = (p: Pagina): ItemNavegacao => ({ href: PAGINAS[p].caminho, titulo: PAGINAS[p].titulo, curto: PAGINAS[p].curto, icone: PAGINAS[p].icone, emblema: pendencias[p] });
+  const atalhos = ATALHOS_CELULAR[perfil].filter((p) => paginas.includes(p));
+  const grupos = GRUPOS.map((grupo) => ({ grupo, paginas: paginas.filter((p) => PAGINAS[p].grupo === grupo) })).filter((g) => g.paginas.length > 0);
+  const gruposDoMais = grupos
+    .map((g) => ({ grupo: g.grupo, itens: g.paginas.filter((p) => !atalhos.includes(p)).map(item) }))
+    .filter((g) => g.itens.length > 0);
 
   return (
-    <div className="min-h-dvh lg:pl-64">
-      <a href="#conteudo" className="sr-only focus:not-sr-only focus:absolute focus:left-2 focus:top-2 focus:z-50 focus:rounded focus:bg-white focus:px-3 focus:py-2">
+    <div className="min-h-dvh lg:pl-[17rem]">
+      <a href="#conteudo" className="sr-only focus:not-sr-only focus:fixed focus:left-2 focus:top-2 focus:z-[60] focus:rounded-lg focus:bg-white focus:px-3 focus:py-2 focus:shadow-flutuante">
         Pular para o conteúdo
       </a>
 
-      <aside className="fixed inset-y-0 left-0 hidden w-64 flex-col bg-navegacao px-3 py-5 text-white lg:flex" aria-label="Menu principal">
-        <div className="px-3 pb-1 text-white"><Marca /></div>
-        <p className="px-3 pb-4 text-xs font-semibold uppercase tracking-widest text-slate-400">Gestão integrada</p>
-        <nav className="flex flex-1 flex-col gap-1">
-          {paginas.map((p) => (
-            <LinkNavegacao key={p} href={PAGINAS[p].caminho} variante="lateral">
-              <Icone nome={PAGINAS[p].icone} />
-              {PAGINAS[p].titulo}
-            </LinkNavegacao>
+      <aside aria-label="Menu principal" className="nao-imprimir fixed inset-y-0 left-0 z-40 hidden w-[17rem] flex-col bg-gradient-to-b from-navegacao to-navegacao-2 text-white lg:flex">
+        <div className="flex items-center gap-2.5 px-6 pb-2 pt-6">
+          <Marca claro tamanho="text-[26px]" />
+        </div>
+        <p className="px-6 pb-4 text-[11px] font-semibold uppercase tracking-[0.18em] text-slate-500">Gestão integrada</p>
+        <nav className="flex-1 space-y-5 overflow-y-auto px-3 pb-4">
+          {grupos.map((g) => (
+            <div key={g.grupo}>
+              <p className="px-3 pb-1.5 text-[11px] font-semibold uppercase tracking-[0.14em] text-slate-500">{g.grupo}</p>
+              <div className="space-y-0.5">
+                {g.paginas.map((p) => (
+                  <LinkNavegacao key={p} href={PAGINAS[p].caminho} variante="lateral" icone={<Icone nome={PAGINAS[p].icone} className="size-[18px]" />} emblema={pendencias[p]}>
+                    {PAGINAS[p].titulo}
+                  </LinkNavegacao>
+                ))}
+              </div>
+            </div>
           ))}
         </nav>
-        <p className="px-3 text-xs text-slate-400">● Ambiente de demonstração</p>
+        <div className="m-3 rounded-2xl bg-white/[0.06] p-3 ring-1 ring-inset ring-white/10">
+          <p className="flex items-center gap-2 text-xs font-semibold text-amber-300"><FlaskConical aria-hidden className="size-3.5" /> Ambiente de demonstração</p>
+          <p className="mt-1 text-xs text-slate-400">14 lojas · dados fictícios · nada é gravado</p>
+          <Link href="/demo/perfil" className="mt-2 inline-flex items-center gap-1.5 text-xs font-semibold text-destaque hover:underline">
+            <RefreshCw aria-hidden className="size-3.5" /> Trocar perfil ({dados.nome})
+          </Link>
+        </div>
       </aside>
 
-      <div role="status" className="sticky top-0 z-30 flex flex-wrap items-center justify-between gap-x-3 gap-y-1 bg-aviso/95 px-4 py-2 text-sm font-semibold text-navegacao">
-        <span>DEMONSTRAÇÃO · dados fictícios · nada é gravado</span>
-        <Link href="/demo/perfil" className="underline underline-offset-2">
-          Perfil: {dados.nome} (trocar)
+      <div role="note" aria-label="Aviso de demonstração" className="nao-imprimir sticky top-0 z-40 flex min-h-9 items-center justify-center gap-x-3 border-b border-amber-300/70 bg-gradient-to-r from-amber-100 via-amber-50 to-amber-100 px-4 py-1.5 text-xs text-amber-950 lg:justify-between lg:px-8">
+        <span className="flex min-w-0 items-center gap-2">
+          <FlaskConical aria-hidden className="size-4 shrink-0 text-amber-700" />
+          <span><strong className="font-bold uppercase tracking-wide">Demonstração</strong> · dados fictícios · nada é gravado</span>
+        </span>
+        <Link href="/demo/perfil" className="hidden shrink-0 items-center gap-1 font-semibold underline-offset-2 hover:underline lg:inline-flex">
+          Perfil: {dados.nome} · trocar
         </Link>
       </div>
 
-      <header className="flex items-center justify-between gap-3 border-b border-borda bg-white px-4 py-3 lg:px-8">
-        <div className="text-navegacao lg:hidden"><Marca /></div>
-        <div className="min-w-0 text-right lg:text-left">
-          <p className="truncate text-sm font-semibold">{dados.pessoa}</p>
-          <p className="truncate text-xs text-suave">{dados.escopo}</p>
+      <header className="nao-imprimir relative z-30 border-b border-borda bg-white/90 backdrop-blur lg:sticky lg:top-9">
+        <div className="mx-auto flex min-h-16 max-w-[1400px] items-center gap-2 px-4 sm:gap-3 sm:px-6 lg:px-8">
+          <Link href="/demo" aria-label="Início" className="mr-auto shrink-0 lg:hidden"><Marca /></Link>
+          <div className="hidden lg:block"><SeletorLoja atual={atual} opcoes={opcoes} /></div>
+          <div className="min-w-0 lg:hidden"><SeletorLoja atual={atual} opcoes={opcoes} compacto /></div>
+          <div className="hidden flex-1 lg:block" />
+          <Avisos itens={avisos} />
+          <MenuPerfil pessoa={dados.pessoa} papel={dados.nome} escopo={nomeDoEscopo(contexto.loja)} />
         </div>
       </header>
 
-      <main id="conteudo" className="mx-auto max-w-6xl px-4 pb-28 pt-5 lg:px-8 lg:pb-10">
+      <main id="conteudo" className="mx-auto max-w-[1400px] px-4 pb-28 pt-5 sm:px-6 sm:pt-7 lg:px-8 lg:pb-12">
         {children}
       </main>
 
-      <nav aria-label="Atalhos" className="fixed inset-x-0 bottom-0 z-30 flex border-t border-borda bg-white pb-[env(safe-area-inset-bottom)] lg:hidden">
-        {atalhos.map((p) => (
-          <LinkNavegacao key={p} href={PAGINAS[p].caminho} variante="inferior">
-            <Icone nome={PAGINAS[p].icone} />
-            {PAGINAS[p].curto}
-          </LinkNavegacao>
-        ))}
-        {demais.length > 0 && (
-          <details className="relative flex-1">
-            <summary className="flex min-h-14 cursor-pointer list-none flex-col items-center justify-center gap-0.5 text-[11px] font-medium text-suave">
-              <Ellipsis aria-hidden className="size-5" />
-              Mais
-            </summary>
-            <div className="absolute bottom-16 right-2 w-64 rounded-cartao border border-borda bg-white p-2 shadow-lg">
-              {demais.map((p) => (
-                <LinkNavegacao key={p} href={PAGINAS[p].caminho} variante="lista">
-                  <Icone nome={PAGINAS[p].icone} />
-                  {PAGINAS[p].titulo}
-                </LinkNavegacao>
-              ))}
-            </div>
-          </details>
-        )}
-      </nav>
+      <NavegacaoCelular atalhos={atalhos.map(item)} grupos={gruposDoMais} pessoa={dados.pessoa} papel={dados.nome} loja={nomeDoEscopo(contexto.loja)} />
     </div>
   );
 }

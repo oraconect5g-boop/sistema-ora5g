@@ -78,3 +78,17 @@ CI da main passou (42392229369). Localmente passaram lint, tipos, build, 18 test
 A #13 / REV-015 continua P1: o teste independente de desconto maior que o item voltou a derrubar o PDV. Foi registrada a [#16 / REV-017](https://github.com/oraconect5g-boop/sistema-ora5g/issues/16), P2, em entrar/page.tsx:11–15 e 26: erro=__proto__ causa HTTP 500 por propriedade herdada do catálogo de mensagens. É defeito anterior identificado nesta revisão. Correção: validar tipo e chave própria, preservando mensagens neutras e cobrindo parâmetros inválidos.
 
 As pendências #10, #11, #12 e #14 continuam conforme seus limites. Atualizar o estado compartilhado: sete issues antigas já foram encerradas, mas a fila de revisão ainda omite os novos achados. Corrigir #13/#16 antes da próxima apresentação; nenhum teste, alteração de ambiente ou publicação foi feito no servidor pelo Codex.
+
+## Auditoria funcional e Supabase em 56ec9de
+
+Inventário completo em [AUDITORIA_FUNCIONAL_E_SUPABASE_2026-11-07.md](../analises/AUDITORIA_FUNCIONAL_E_SUPABASE_2026-11-07.md). O usuário pediu análise de front-end, backend, migrations, banco e Supabase; foram consultados código, testes e metadados/contagens do projeto de desenvolvimento em modo de leitura, sem SSH/.env ou alteração remota.
+
+- Front-end: 17 páginas de /demo, incluindo perfil, e cinco perfis; operações comerciais ainda fictícias. Backend real: Auth/SSR, /conta, validação de ambiente e saúde.
+- Banco: dez tabelas RLS, 14 funções, 29 índices e cinco gatilhos. Organização, empresa, unidade, perfil, vínculo, contexto, auditoria e usuários/sessões Auth estão com contagem zero; catálogo de acesso tem cinco papéis, 31 permissões e 69 relações.
+- REV-015 / #13: correção confirmada no celular e computador; issue encerrada.
+- REV-017 / #16: query herdada no login continua causando HTTP 500.
+- [REV-018 / #17](https://github.com/oraconect5g-boop/sistema-ora5g/issues/17), P2: três versões de migrations diferem entre Git e histórico remoto, embora os objetos comparados correspondam. Conciliar antes de novas aplicações, preservando dados; nenhum repair/reset foi executado.
+- [REV-019 / #18](https://github.com/oraconect5g-boop/sistema-ora5g/issues/18), P2: acessórios podem ir a N+1 com saldo N e conclusão continua habilitada; reproduzido em navegador local.
+- 210 testes e 63 E2E passaram; nove E2E pulados por configuração/viewport. Mais dois testes de mostrar/esconder senha passaram com configuração pública fictícia. Os testes extras de #16/#18 reproduziram os defeitos e não foram integrados como testes vermelhos.
+- Advisors: sem aviso de health, três avisos das RPCs SECURITY DEFINER intencionais, 12 índices ainda sem uso. Storage, Edge Functions e Realtime de tabelas do aplicativo ainda não configurados no projeto consultado.
+- O modelo mínimo e o guia já foram incorporados na main. Os registros anteriores mantêm sua base histórica; esta seção é a conferência mais recente.
