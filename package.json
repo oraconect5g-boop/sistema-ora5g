@@ -14,6 +14,8 @@
     "typecheck": "npm run typecheck --workspaces --if-present",
     "test": "npm run test --workspaces --if-present",
     "build": "npm run build --workspaces --if-present",
-    "test:e2e": "npm run test:e2e --workspaces --if-present"
+    "test:e2e": "npm run test:e2e --workspaces --if-present",
+    "segredos": "node packages/config/scripts/procurar-segredos.ts",
+    "verificar-env": "node packages/config/scripts/verificar-env.ts"
   }
 }
