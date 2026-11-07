@@ -25,7 +25,7 @@ for (const id of Object.keys(status.requisitos)) {
   if (!validos.includes(status.requisitos[id].status)) throw new Error(`${id}: status inválido`);
 }
 
-const ROTULO = { feito: "✅ feito", parcial: "🟡 parcial", demonstracao: "🖼️ demonstração", respeitado: "✔️ respeitado", bloqueado: "⛔ bloqueado", nao_iniciado: "⬜ não iniciado" };
+const ROTULO = { homologado: "✅ homologado", testado: "🧪 testado", parcial: "🟡 parcial", demonstracao: "🖼️ demonstração", respeitado: "✔️ respeitado", bloqueado: "⛔ bloqueado", nao_iniciado: "⬜ não iniciado" };
 const linhas = backlog.items.map((i) => {
   const s = status.requisitos[i.id] ?? { status: "nao_iniciado", nota: "", evidencia: "" };
   return { ...i, st: s.status, nota: s.nota ?? "", evidencia: s.evidencia ?? "", piloto: noPiloto(i.id) };
@@ -37,13 +37,13 @@ const celula = (t) => String(t).replaceAll("|", "\\|").replaceAll("\n", " ");
 
 let md = `# Rastreabilidade dos 172 requisitos\n\n`;
 md += `> Arquivo GERADO por \`node scripts/gerar-rastreabilidade.mjs\` a partir de \`backlog.json\` e \`docs/alinhamento/status-requisitos.json\` (atualizado em ${status.atualizado_em}). Não edite à mão.\n\n`;
-md += `"Feito" significa implementado e testado **em desenvolvimento**; nada foi homologado nem aceito pelo proprietário ainda. "Demonstração" é só tela com dados fictícios.\n\n`;
-md += `## Resumo por domínio\n\n| Domínio | Total | P0 | No piloto | Feito | Parcial | Demonstração | Respeitado | Bloqueado | Não iniciado |\n|---|---|---|---|---|---|---|---|---|---|\n`;
+md += `"Testado" = implementado e testado em desenvolvimento, aguardando revisão do Codex e homologação. "Homologado" = aceito pelo proprietário em homologação (nenhum ainda). "Demonstração" é só tela com dados fictícios.\n\n`;
+md += `## Resumo por domínio\n\n| Domínio | Total | P0 | No piloto | Homologado | Testado | Parcial | Demonstração | Respeitado | Bloqueado | Não iniciado |\n|---|---|---|---|---|---|---|---|---|---|---|\n`;
 for (const d of dominios) {
   const l = linhas.filter((x) => x.domain === d);
-  md += `| ${d} | ${l.length} | ${l.filter((x) => x.priority === "P0").length} | ${l.filter((x) => x.piloto).length} | ${contar(l, "feito")} | ${contar(l, "parcial")} | ${contar(l, "demonstracao")} | ${contar(l, "respeitado")} | ${contar(l, "bloqueado")} | ${contar(l, "nao_iniciado")} |\n`;
+  md += `| ${d} | ${l.length} | ${l.filter((x) => x.priority === "P0").length} | ${l.filter((x) => x.piloto).length} | ${contar(l, "homologado")} | ${contar(l, "testado")} | ${contar(l, "parcial")} | ${contar(l, "demonstracao")} | ${contar(l, "respeitado")} | ${contar(l, "bloqueado")} | ${contar(l, "nao_iniciado")} |\n`;
 }
-md += `| **Total** | **${linhas.length}** | **${linhas.filter((x) => x.priority === "P0").length}** | **${linhas.filter((x) => x.piloto).length}** | **${contar(linhas, "feito")}** | **${contar(linhas, "parcial")}** | **${contar(linhas, "demonstracao")}** | **${contar(linhas, "respeitado")}** | **${contar(linhas, "bloqueado")}** | **${contar(linhas, "nao_iniciado")}** |\n\n`;
+md += `| **Total** | **${linhas.length}** | **${linhas.filter((x) => x.priority === "P0").length}** | **${linhas.filter((x) => x.piloto).length}** | **${contar(linhas, "homologado")}** | **${contar(linhas, "testado")}** | **${contar(linhas, "parcial")}** | **${contar(linhas, "demonstracao")}** | **${contar(linhas, "respeitado")}** | **${contar(linhas, "bloqueado")}** | **${contar(linhas, "nao_iniciado")}** |\n\n`;
 
 for (const d of dominios) {
   const l = linhas.filter((x) => x.domain === d);

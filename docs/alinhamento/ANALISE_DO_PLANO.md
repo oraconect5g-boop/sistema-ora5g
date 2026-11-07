@@ -79,7 +79,7 @@
 | ORA-003 CI, variáveis, segredos | ✅ | Proteção da `main` (proprietário) para valer como bloqueio |
 | ORA-004/005 migration de acesso + RLS | ✅ em dev | Homologação |
 | Auditoria automática de mudanças em vínculos/perfis/papéis (ORA-ORG-005) | ⬜ **falta** | — |
-| ORA-006 login, recuperação de senha, sessão por turno, escolha de loja | 🟡 conexão com o Supabase pronta; telas e fluxo faltam | SMTP para recuperação de senha; `SUPABASE_SECRET_KEY` e `DATABASE_URL` no servidor; criar usuários de teste |
+| ORA-006 login, recuperação de senha, sessão por turno, escolha de loja | 🟡 login por senha, `/conta` pelo RLS e renovação de sessão prontos; faltam recuperação, escolha da loja na sessão, turno e teste com usuário real | SMTP para recuperação de senha; usuário de teste (criar exige a chave secreta ou o painel do Supabase) |
 | **ADR-003** operação comercial, tipos de item, ledger de estoque | ⬜ **falta e bloqueia catálogo/estoque** | Revisão do Codex + aceite do proprietário |
 | ORA-007 catálogo (produto, variação, tipo, código de barras, custo, preço com histórico, publicar online) | ⬜ | ADR-003 |
 | ORA-008 telas de catálogo, lojas e usuários (AppShell real) | 🖼️ só demonstração | ORA-006, ORA-007 |
@@ -102,7 +102,7 @@ Ordem de Serviço (DEC-U44/U47), turnos e desempenho (DEC-U40), metas e incentiv
 
 | # | O que falta | Trava | Prazo sugerido |
 |---|---|---|---|
-| B1 | `SUPABASE_SECRET_KEY` e `DATABASE_URL` no `.env.local` do servidor | Login, worker, scripts de banco | já |
+| B1 | `SUPABASE_SECRET_KEY` e `DATABASE_URL` no `.env.local` do servidor | **Não travam o login** (que usa só endereço e chave pública, já configurados). Travam worker, scripts de banco e criação de usuários pelo sistema (correção apontada pelo Codex em 07/11) | antes do ORA-008 |
 | B2 | E-mail de envio (SMTP da HostGator, caixa `nao-responda@ora5g.com.br`) | Recuperação de senha, envio de nota e OS | 20/11 |
 | B3 | CSV de estoque da Rein (anonimizado) | Importador (ORA-009) e catálogo real | 20/11 |
 | B4 | Lista das 14 lojas com CNPJ e endereço | Cadastro real das unidades | 20/11 |
@@ -166,4 +166,4 @@ Regra: decisão explícita mais recente do proprietário > ADR aceito > requisit
 5. **Decisões estruturais** (tabela nova de domínio, estado de venda, integração) só com ADR; o Codex revisa o ADR antes do código.
 6. **Sem invenção:** nenhuma rota de Nogle, PicPay, fiscal ou marketplace sem documentação oficial; nenhum valor de negócio (margem, teto, comissão) sem decisão do proprietário — usar parâmetros configuráveis marcados "exemplo".
 
-O pedido de revisão atual está em `docs/alinhamento/PEDIDO_DE_REVISAO_CODEX.md`.
+O pedido de revisão atual está em `docs/alinhamento/PEDIDO_DE_REVISAO_CODEX.md`. A revisão do Codex de 07/11 está em `docs/alinhamento/REVISOES_CODEX.md` e `docs/analises/ANALISE_SISTEMAS_2026-11-07.md`; as respostas do Claude, achado por achado, em `docs/alinhamento/RESPOSTAS_A_REVISAO_2026-11-07.md`.

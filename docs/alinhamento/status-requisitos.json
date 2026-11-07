@@ -1,7 +1,8 @@
 {
   "_leia": "Status real de cada requisito do backlog.json. Só entram aqui os que saíram de 'nao_iniciado'. Atualize no mesmo commit da entrega e rode: node scripts/gerar-rastreabilidade.mjs",
   "_status_validos": {
-    "feito": "implementado e testado no escopo atual, em desenvolvimento (ainda sem homologação nem aceite humano)",
+    "homologado": "aceito pelo proprietário em homologação (nenhum ainda)",
+    "testado": "implementado e testado em desenvolvimento; aguardando revisão do Codex e homologação",
     "parcial": "parte implementada e testada; a nota diz o que falta",
     "demonstracao": "existe só como tela de demonstração com dados fictícios; nada real",
     "respeitado": "restrição que o código atual cumpre (ex.: não usar API da Rein)",
@@ -10,31 +11,135 @@
   },
   "atualizado_em": "2026-11-07",
   "requisitos": {
-    "ORA-ORG-001": { "status": "parcial", "nota": "Tabelas organização/empresa/unidade com CNPJ validado no banco e escolha da unidade na sessão. Falta cadastrar as 14 lojas reais (lista com CNPJs pendente) e a tela de gestão.", "evidencia": "packages/banco/supabase/migrations/20261107120000_fundacao_acesso.sql; packages/banco/src/acesso.test.ts (T10)" },
-    "ORA-ORG-002": { "status": "parcial", "nota": "Vínculos com vigência, um vendedor em várias lojas, bloqueio testado. Falta a tela de gestão de usuários (ORA-008).", "evidencia": "acesso.test.ts (T1, T2/T3, T7)" },
-    "ORA-ORG-003": { "status": "parcial", "nota": "5 papéis do ADR-002 (dono, administrador, gerente, vendedor, técnico) com matriz versionada por migration. Regional, financeiro, fiscal, marketing e atendimento entram depois por migration.", "evidencia": "migration fundacao_acesso (catálogo de papéis e permissões)" },
-    "ORA-ORG-004": { "status": "parcial", "nota": "RLS e funções do banco testadas (negação por ID arbitrário e troca de unidade). A API/servidor do aplicativo ainda não usa essas funções nas telas reais.", "evidencia": "acesso.test.ts" },
-    "ORA-ORG-005": { "status": "parcial", "nota": "Auditoria imutável existe e registra troca de unidade e tentativas negadas. FALTA: mudanças em vínculos, perfis e papéis ainda não geram auditoria automática.", "evidencia": "acesso.test.ts (T9)" },
-    "ORA-ORG-006": { "status": "parcial", "nota": "Bloqueio de usuário e encerramento de vínculo cortam o acesso no banco na hora. Falta login no aplicativo, recuperação de senha (depende de SMTP) e sessão por turno.", "evidencia": "acesso.test.ts (T6, T7)" },
-    "ORA-CAT-003": { "status": "respeitado", "nota": "Nenhum código usa a API da Rein. Importação só por arquivo (DEC-U04/DEC-U24).", "evidencia": "busca no repositório" },
-    "ORA-CAT-005": { "status": "parcial", "nota": "Tipos de item (aparelho, acessório, chip, ativação, recarga, serviço) e suas exigências modelados nas regras de negócio puras. Falta tabela de catálogo (ADR-003).", "evidencia": "packages/dominio/src/venda.ts" },
-    "ORA-CAT-006": { "status": "parcial", "nota": "Validação de IMEI (dígito verificador) e ICCID prontas e testadas. Falta a busca no banco.", "evidencia": "packages/dominio/src/identificadores.ts" },
-    "ORA-INV-002": { "status": "parcial", "nota": "IMEI com dígito verificador validado. Falta unicidade e reserva no banco (ADR-003, ORA-010).", "evidencia": "packages/dominio/src/identificadores.test.ts" },
-    "ORA-POS-005": { "status": "parcial", "nota": "Cálculo de totais e limite de desconto por margem em regra pura testada (DEC-U41). Falta executar no servidor e gravar no banco.", "evidencia": "packages/dominio/src/desconto.ts" },
-    "ORA-POS-006": { "status": "demonstracao", "nota": "Regra que decide quando precisa de aprovação está pronta; a fila de aprovação existe só na demonstração.", "evidencia": "packages/dominio/src/desconto.ts; apps/plataforma/src/app/demo/aprovacoes" },
-    "ORA-POS-007": { "status": "parcial", "nota": "Pagamento misto, troco e venda financiada (entrada + financeira, sem juros) em regra pura testada. Falta registro no banco.", "evidencia": "packages/dominio/src/pagamento.ts" },
-    "ORA-PAY-002": { "status": "parcial", "nota": "Regra da venda financiada PayJoy/Aiva (DEC-U38) e e-mail obrigatório na PayJoy (DEC-U30) testadas. Falta registro e repasse.", "evidencia": "packages/dominio/src/pagamento.test.ts" },
-    "ORA-PERF-001": { "status": "parcial", "nota": "Contagem de produção por categoria (aparelho, acessório, chip, ativação só confirmada, recarga) em regra pura testada. Falta ledger de performance no banco.", "evidencia": "packages/dominio/src/venda.test.ts" },
-    "ORA-REPORT-001": { "status": "demonstracao", "nota": "Painel da rede só com dados fictícios.", "evidencia": "apps/plataforma/src/app/demo" },
-    "ORA-REPORT-002": { "status": "demonstracao", "nota": "Painel do gerente só com dados fictícios.", "evidencia": "apps/plataforma/src/app/demo" },
-    "ORA-REPORT-003": { "status": "demonstracao", "nota": "Início do vendedor no celular só com dados fictícios.", "evidencia": "apps/plataforma/src/app/demo" },
-    "ORA-CONNECT-004": { "status": "bloqueado", "nota": "Contrato Nogle parcial (só autenticação e consultas). Falta o tipo da chave (P9) e as rotas de ativação/recarga.", "evidencia": "docs/etapa-0/ETAPA_0_DECISOES_2026-11-06.md §3" },
-    "ORA-FISC-003": { "status": "bloqueado", "nota": "Depende do contador e do emissor fiscal (P7).", "evidencia": "docs/ESTADO_ATUAL_E_PASSAGEM.md §5" },
-    "ORA-FISC-004": { "status": "bloqueado", "nota": "Depende do emissor fiscal contratado e do certificado A1.", "evidencia": "docs/etapa-0/ETAPA_0_DECISOES_2026-11-06.md §2A" },
-    "ORA-QUAL-001": { "status": "parcial", "nota": "CI com lint, tipos, testes, build, auditoria, E2E e detector de segredos. Proteção da main não ativada; merges diretos pelo Claude Code por decisão de 07/11.", "evidencia": ".github/workflows/ci.yml" },
-    "ORA-QUAL-002": { "status": "feito", "nota": "RLS negando por padrão, testada com várias lojas e perfis (T1–T3, T6–T10) e com mutações.", "evidencia": "packages/banco/src/acesso.test.ts" },
-    "ORA-QUAL-003": { "status": "parcial", "nota": "Auditoria só de inserção, inclusive para o dono do banco. Operações críticas futuras (venda, caixa, aprovação) ainda não existem.", "evidencia": "acesso.test.ts (T9)" },
-    "ORA-QUAL-004": { "status": "feito", "nota": "Detector de segredos no CI (arquivos e commits do PR), validação de variáveis na inicialização, .env fora do Git com permissão 600.", "evidencia": "packages/config/src/segredos.ts; packages/config/src/ambiente.ts" },
-    "ORA-QUAL-007": { "status": "parcial", "nota": "Migrations versionadas, aplicadas do zero nos testes, com reversão documentada. Falta homologação e procedimento de produção.", "evidencia": "packages/banco/supabase" }
+    "ORA-ORG-001": {
+      "status": "parcial",
+      "nota": "Tabelas organização/empresa/unidade com CNPJ validado no banco e escolha da unidade na sessão. Falta cadastrar as 14 lojas reais (lista com CNPJs pendente) e a tela de gestão.",
+      "evidencia": "packages/banco/supabase/migrations/20261107120000_fundacao_acesso.sql; packages/banco/src/acesso.test.ts (T10)"
+    },
+    "ORA-ORG-002": {
+      "status": "parcial",
+      "nota": "Vínculos com vigência, um vendedor em várias lojas, bloqueio testado. Falta a tela de gestão de usuários (ORA-008).",
+      "evidencia": "acesso.test.ts (T1, T2/T3, T7)"
+    },
+    "ORA-ORG-003": {
+      "status": "parcial",
+      "nota": "5 papéis do ADR-002 (dono, administrador, gerente, vendedor, técnico) com matriz versionada por migration. Regional, financeiro, fiscal, marketing e atendimento entram depois por migration.",
+      "evidencia": "migration fundacao_acesso (catálogo de papéis e permissões)"
+    },
+    "ORA-ORG-004": {
+      "status": "parcial",
+      "nota": "RLS e funções do banco testadas, inclusive negação por ID arbitrário, troca de unidade e isolamento entre organizações (REV-001/REV-002 corrigidos em 07/11, aguardando revisão do Codex). As telas reais ainda não usam essas funções além de /conta.",
+      "evidencia": "packages/banco/src/acesso.test.ts; packages/banco/src/revisao-codex.test.ts"
+    },
+    "ORA-ORG-005": {
+      "status": "parcial",
+      "nota": "Auditoria imutável com organização dona do evento (REV-002) registra troca de unidade e tentativas negadas. FALTA: mudanças em vínculos, perfis e papéis ainda não geram auditoria automática.",
+      "evidencia": "acesso.test.ts (T9); revisao-codex.test.ts (REV-002)"
+    },
+    "ORA-ORG-006": {
+      "status": "parcial",
+      "nota": "Login por e-mail e senha no aplicativo (/entrar, mensagem neutra), /conta lendo pelo RLS, sessão renovada no proxy (REV-009) e bloqueio/encerramento de vínculo cortando acesso no banco. FALTA: recuperação de senha (SMTP), escolha da loja na sessão pelo aplicativo, sessão por turno e teste com usuário real.",
+      "evidencia": "apps/plataforma/src/app/entrar; apps/plataforma/src/proxy.ts; e2e/entrar.spec.ts; acesso.test.ts (T6, T7)"
+    },
+    "ORA-CAT-003": {
+      "status": "respeitado",
+      "nota": "Nenhum código usa a API da Rein. Importação só por arquivo (DEC-U04/DEC-U24).",
+      "evidencia": "busca no repositório"
+    },
+    "ORA-CAT-005": {
+      "status": "parcial",
+      "nota": "Tipos de item (aparelho, acessório, chip, ativação, recarga, serviço) e suas exigências modelados nas regras de negócio puras. Falta tabela de catálogo (ADR-003).",
+      "evidencia": "packages/dominio/src/venda.ts"
+    },
+    "ORA-CAT-006": {
+      "status": "parcial",
+      "nota": "Validação de IMEI (dígito verificador) e ICCID prontas e testadas. Falta a busca no banco.",
+      "evidencia": "packages/dominio/src/identificadores.ts"
+    },
+    "ORA-INV-002": {
+      "status": "parcial",
+      "nota": "IMEI com dígito verificador validado. Falta unicidade e reserva no banco (ADR-003, ORA-010).",
+      "evidencia": "packages/dominio/src/identificadores.test.ts"
+    },
+    "ORA-POS-005": {
+      "status": "parcial",
+      "nota": "Totais e limite de desconto por margem em regra pura testada, com validação em tempo de execução (REV-007/REV-008 corrigidos). Falta executar no servidor e gravar no banco.",
+      "evidencia": "packages/dominio/src/desconto.ts; packages/dominio/src/revisao-codex.test.ts"
+    },
+    "ORA-POS-006": {
+      "status": "demonstracao",
+      "nota": "Regra que decide quando precisa de aprovação está pronta; a fila de aprovação existe só na demonstração.",
+      "evidencia": "packages/dominio/src/desconto.ts; apps/plataforma/src/app/demo/aprovacoes"
+    },
+    "ORA-POS-007": {
+      "status": "parcial",
+      "nota": "Pagamento misto, troco e venda financiada em regra pura testada, com entrada e valores validados (REV-008). Falta registro no banco.",
+      "evidencia": "packages/dominio/src/pagamento.ts; revisao-codex.test.ts"
+    },
+    "ORA-PAY-002": {
+      "status": "parcial",
+      "nota": "Regra da venda financiada PayJoy/Aiva (DEC-U38) e e-mail obrigatório na PayJoy (DEC-U30) testadas. Falta registro e repasse.",
+      "evidencia": "packages/dominio/src/pagamento.test.ts"
+    },
+    "ORA-PERF-001": {
+      "status": "parcial",
+      "nota": "Contagem de produção por categoria (aparelho, acessório, chip, ativação só confirmada, recarga) em regra pura testada. Falta ledger de performance no banco.",
+      "evidencia": "packages/dominio/src/venda.test.ts"
+    },
+    "ORA-REPORT-001": {
+      "status": "demonstracao",
+      "nota": "Painel da rede só com dados fictícios.",
+      "evidencia": "apps/plataforma/src/app/demo"
+    },
+    "ORA-REPORT-002": {
+      "status": "demonstracao",
+      "nota": "Painel do gerente só com dados fictícios.",
+      "evidencia": "apps/plataforma/src/app/demo"
+    },
+    "ORA-REPORT-003": {
+      "status": "demonstracao",
+      "nota": "Início do vendedor no celular só com dados fictícios.",
+      "evidencia": "apps/plataforma/src/app/demo"
+    },
+    "ORA-CONNECT-004": {
+      "status": "bloqueado",
+      "nota": "Contrato Nogle parcial (só autenticação e consultas). Falta o tipo da chave (P9) e as rotas de ativação/recarga.",
+      "evidencia": "docs/etapa-0/ETAPA_0_DECISOES_2026-11-06.md §3"
+    },
+    "ORA-FISC-003": {
+      "status": "bloqueado",
+      "nota": "Depende do contador e do emissor fiscal (P7).",
+      "evidencia": "docs/ESTADO_ATUAL_E_PASSAGEM.md §5"
+    },
+    "ORA-FISC-004": {
+      "status": "bloqueado",
+      "nota": "Depende do emissor fiscal contratado e do certificado A1.",
+      "evidencia": "docs/etapa-0/ETAPA_0_DECISOES_2026-11-06.md §2A"
+    },
+    "ORA-QUAL-001": {
+      "status": "parcial",
+      "nota": "CI com lint, tipos, testes, build, auditoria, E2E, rastreabilidade e detector de segredos nos arquivos, nos commits do PR e nos commits de cada envio à main (REV-003). Proteção da main não ativada; merges diretos pelo Claude Code por decisão de 07/11.",
+      "evidencia": ".github/workflows/ci.yml"
+    },
+    "ORA-QUAL-002": {
+      "status": "parcial",
+      "nota": "RLS negando por padrão, testada com várias lojas, perfis e duas organizações. Defeitos de isolamento REV-001/REV-002 corrigidos em 07/11 com regressões; aguardando revisão do Codex antes de voltar a 'testado'.",
+      "evidencia": "packages/banco/src/acesso.test.ts; packages/banco/src/revisao-codex.test.ts"
+    },
+    "ORA-QUAL-003": {
+      "status": "parcial",
+      "nota": "Auditoria só de inserção, inclusive para o dono do banco. Operações críticas futuras (venda, caixa, aprovação) ainda não existem.",
+      "evidencia": "acesso.test.ts (T9)"
+    },
+    "ORA-QUAL-004": {
+      "status": "parcial",
+      "nota": "Detector de segredos (arquivos, commits do PR e do envio à main), validação de variáveis na inicialização e no login, chave pública conferida (sem secreta nem service_role). REV-003/REV-004 corrigidos em 07/11; aguardando revisão do Codex.",
+      "evidencia": "packages/config/src/segredos.ts; packages/config/src/ambiente.ts; packages/config/src/historico-segredos.test.ts"
+    },
+    "ORA-QUAL-007": {
+      "status": "parcial",
+      "nota": "Três migrations versionadas, aplicadas do zero nos testes e no ora5g-dev, com reversão documentada; correções por migration nova, sem reescrever a aplicada. Falta homologação e procedimento de produção.",
+      "evidencia": "packages/banco/supabase"
+    }
   }
 }
