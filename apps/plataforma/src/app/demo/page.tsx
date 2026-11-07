@@ -129,7 +129,7 @@ function VisaoRede() {
 function VisaoAdministrador() {
   return (
     <>
-      <TituloPagina titulo="Administração do sistema" subtitulo="Usuários, lojas, integrações e importação. O administrador não vende nem aprova (ADR-002)." />
+      <TituloPagina titulo="Administração do sistema" subtitulo="Usuários, lojas, integrações e importação. O administrador não vende nem aprova." />
       <div className="grid grid-cols-2 gap-3 lg:grid-cols-4">
         <Indicador rotulo="Lojas cadastradas" valor={`${LOJAS.length} + 2`} detalhe="Físicas + online e assistência" />
         <Indicador rotulo="Usuários" valor="38" detalhe="2 donos, 1 admin, 35 vendedores" />
@@ -144,7 +144,7 @@ function VisaoAdministrador() {
             <li>• Cadastrar a chave da Nogle e o emissor fiscal (quando contratados)</li>
           </ul>
         </Cartao>
-        <Aviso tom="aviso" titulo="Separação de funções">O administrador vê custos e relatórios, mas não registra venda nem aprova desconto ou nota. O banco recusa essas ações (teste T8).</Aviso>
+        <Aviso tom="aviso" titulo="Separação de funções">O administrador vê custos e relatórios, mas não registra venda nem aprova desconto ou nota. O banco recusa essas ações.</Aviso>
       </div>
     </>
   );

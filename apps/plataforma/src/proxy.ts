@@ -3,10 +3,14 @@ import { NextResponse, type NextRequest } from "next/server";
 
 import { configuracaoSupabase } from "./lib/supabase/configuracao";
 
+export async function proxy(requisicao: NextRequest) {
+  return renovarSessao(requisicao);
+}
+
 // REV-009: renova a sessão do Supabase ANTES de renderizar as páginas com login.
 // Em componente de servidor os cookies são só leitura; aqui a renovação é gravada na resposta,
 // junto com os cabeçalhos que impedem cache de resposta com sessão (exigência do @supabase/ssr).
-export async function proxy(requisicao: NextRequest) {
+async function renovarSessao(requisicao: NextRequest) {
   const configuracao = configuracaoSupabase();
   if (!configuracao) return NextResponse.next();
 

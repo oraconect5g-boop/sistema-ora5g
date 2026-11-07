@@ -10,7 +10,7 @@ export default async function Assistencia() {
   if (!permitido) return <SemPermissao perfil={perfil} pagina="Assistência" />;
   return (
     <>
-      <TituloPagina titulo="Assistência técnica (Ordem de Serviço)" subtitulo="Substitui a folha de papel e o grupo de WhatsApp (DEC-U44/U47)" />
+      <TituloPagina titulo="Assistência técnica (Ordem de Serviço)" subtitulo="Substitui a folha de papel e o grupo de WhatsApp" />
       <div className="grid gap-4 lg:grid-cols-2">
         {ORDENS_SERVICO.map((os) => (
           <Cartao key={os.numero} titulo={`${os.numero} · ${os.aparelho}`} subtitulo={`${os.cliente} · ${os.defeito}`} acao={os.dias >= 5 ? <Selo tom="perigo">Parada há {os.dias} dias</Selo> : <Selo tom="info">Etapa {os.etapa + 1} de {ETAPAS_OS.length}</Selo>}>

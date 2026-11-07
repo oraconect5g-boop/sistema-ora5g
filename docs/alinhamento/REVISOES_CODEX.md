@@ -68,3 +68,13 @@ O CI dessa base passou; localmente passaram 172 testes e 35 E2E (5 pulados), al�
 Pendências novas: [REV-015 / #13](https://github.com/oraconect5g-boop/sistema-ora5g/issues/13), desconto maior que o item derruba a tela; [REV-016 / #14](https://github.com/oraconect5g-boop/sistema-ora5g/issues/14), reaproveitamento de release ignora atualização do ambiente no mesmo SHA. A [CONFIG-001 / #12](https://github.com/oraconect5g-boop/sistema-ora5g/issues/12) está parcialmente atendida pelos novos grupos público/servidor.
 
 O modelo mínimo e o roteiro de apresentação → login → operação real estão em [CONFIGURACAO_E_TRANSICAO_DO_MOCKUP.md](CONFIGURACAO_E_TRANSICAO_DO_MOCKUP.md). Manter TypeScript/React/Next.js/Node.js e PostgreSQL/Supabase, sem reabrir decisões de linguagem ou reduzir o escopo.
+
+## Revisão incremental da apresentação em 8e1625d
+
+O lote posterior a 503fa541 contém 10 commits e 19 arquivos, com ajustes de Apache, textos, atalhos e rolagem. A análise por arquivo está em [REVISAO_INCREMENTAL_2026-11-07_8e1625d.md](../analises/REVISAO_INCREMENTAL_2026-11-07_8e1625d.md). Stack e escopo preservados; não há novas tabelas de operação.
+
+CI da main passou (42392229369). Localmente passaram lint, tipos, build, 18 testes da aplicação e 39 E2E (5 pulados), além dos testes extras de POST/origem, /conta com proxy e polimento móvel.
+
+A #13 / REV-015 continua P1: o teste independente de desconto maior que o item voltou a derrubar o PDV. Foi registrada a [#16 / REV-017](https://github.com/oraconect5g-boop/sistema-ora5g/issues/16), P2, em entrar/page.tsx:11–15 e 26: erro=__proto__ causa HTTP 500 por propriedade herdada do catálogo de mensagens. É defeito anterior identificado nesta revisão. Correção: validar tipo e chave própria, preservando mensagens neutras e cobrindo parâmetros inválidos.
+
+As pendências #10, #11, #12 e #14 continuam conforme seus limites. Atualizar o estado compartilhado: sete issues antigas já foram encerradas, mas a fila de revisão ainda omite os novos achados. Corrigir #13/#16 antes da próxima apresentação; nenhum teste, alteração de ambiente ou publicação foi feito no servidor pelo Codex.

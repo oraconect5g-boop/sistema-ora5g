@@ -8,7 +8,7 @@ export default async function Clientes() {
   if (!permitido) return <SemPermissao perfil={perfil} pagina="Clientes" />;
   return (
     <>
-      <TituloPagina titulo="Clientes e atendimento" subtitulo="Busca exata por CPF ou telefone; nada de lista completa para o vendedor (ADR-002)" />
+      <TituloPagina titulo="Clientes e atendimento" subtitulo="Busca exata por CPF ou telefone; nada de lista completa para o vendedor" />
       <div className="grid gap-4 lg:grid-cols-2">
         <Cartao titulo="Leads e conversas" subtitulo="Origem do contato preservada para medir campanhas">
           <Tabela colunas={["Cliente", "Origem", "Interesse", "Responsável", "Etapa"]} legenda="Leads">
@@ -26,7 +26,7 @@ export default async function Clientes() {
         </Cartao>
       </div>
       <div className="mt-4">
-        <Aviso tom="aviso" titulo="WhatsApp oficial ainda não conectado">A integração usa só a API oficial da Meta (APIs não oficiais arriscam bloquear os números). Base de clientes começa vazia (DEC-U32).</Aviso>
+        <Aviso tom="aviso" titulo="WhatsApp oficial ainda não conectado">A integração usa só a API oficial da Meta (APIs não oficiais arriscam bloquear os números). Base de clientes começa vazia.</Aviso>
       </div>
     </>
   );

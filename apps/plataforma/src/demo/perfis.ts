@@ -19,19 +19,19 @@ export type Pagina =
   | "inicio" | "vender" | "estoque" | "aprovacoes" | "connect" | "assistencia" | "metas"
   | "financeiro" | "clientes" | "canais" | "lojas" | "importacao";
 
-export const PAGINAS: Record<Pagina, { titulo: string; caminho: string; icone: string }> = {
-  inicio: { titulo: "Início", caminho: "/demo", icone: "inicio" },
-  vender: { titulo: "Vender", caminho: "/demo/vender", icone: "vender" },
-  estoque: { titulo: "Estoque e IMEI", caminho: "/demo/estoque", icone: "estoque" },
-  aprovacoes: { titulo: "Aprovações", caminho: "/demo/aprovacoes", icone: "aprovacoes" },
-  connect: { titulo: "Ora Connect", caminho: "/demo/connect", icone: "connect" },
-  assistencia: { titulo: "Assistência (OS)", caminho: "/demo/assistencia", icone: "assistencia" },
-  metas: { titulo: "Metas e desempenho", caminho: "/demo/metas", icone: "metas" },
-  financeiro: { titulo: "Caixa, financeiro e notas", caminho: "/demo/financeiro", icone: "financeiro" },
-  clientes: { titulo: "Clientes e WhatsApp", caminho: "/demo/clientes", icone: "clientes" },
-  canais: { titulo: "Canais online", caminho: "/demo/canais", icone: "canais" },
-  lojas: { titulo: "Lojas e usuários", caminho: "/demo/lojas", icone: "lojas" },
-  importacao: { titulo: "Importar CSV da Rein", caminho: "/demo/importacao", icone: "importacao" },
+export const PAGINAS: Record<Pagina, { titulo: string; curto: string; caminho: string; icone: string }> = {
+  inicio: { titulo: "Início", curto: "Início", caminho: "/demo", icone: "inicio" },
+  vender: { titulo: "Vender", curto: "Vender", caminho: "/demo/vender", icone: "vender" },
+  estoque: { titulo: "Estoque e IMEI", curto: "Estoque", caminho: "/demo/estoque", icone: "estoque" },
+  aprovacoes: { titulo: "Aprovações", curto: "Aprovações", caminho: "/demo/aprovacoes", icone: "aprovacoes" },
+  connect: { titulo: "Ora Connect", curto: "Connect", caminho: "/demo/connect", icone: "connect" },
+  assistencia: { titulo: "Assistência (OS)", curto: "OS", caminho: "/demo/assistencia", icone: "assistencia" },
+  metas: { titulo: "Metas e desempenho", curto: "Metas", caminho: "/demo/metas", icone: "metas" },
+  financeiro: { titulo: "Caixa, financeiro e notas", curto: "Caixa", caminho: "/demo/financeiro", icone: "financeiro" },
+  clientes: { titulo: "Clientes e WhatsApp", curto: "Clientes", caminho: "/demo/clientes", icone: "clientes" },
+  canais: { titulo: "Canais online", curto: "Canais", caminho: "/demo/canais", icone: "canais" },
+  lojas: { titulo: "Lojas e usuários", curto: "Lojas", caminho: "/demo/lojas", icone: "lojas" },
+  importacao: { titulo: "Importar CSV da Rein", curto: "Importar", caminho: "/demo/importacao", icone: "importacao" },
 };
 
 // Matriz do ADR-002 §2.4 aplicada às telas da demonstração.

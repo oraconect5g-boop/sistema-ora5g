@@ -9,7 +9,7 @@ export function SemPermissao({ perfil, pagina }: { perfil: Perfil; pagina: strin
       <ShieldAlert aria-hidden className="mx-auto size-10 text-aviso" />
       <h1 className="mt-3 text-xl font-bold">Sem permissão</h1>
       <p className="mt-2 text-sm text-suave">
-        O perfil <strong>{PERFIS[perfil].nome}</strong> não acessa <strong>{pagina}</strong> (matriz do ADR-002). No sistema real,
+        O perfil <strong>{PERFIS[perfil].nome}</strong> não acessa <strong>{pagina}</strong> (matriz de permissões). No sistema real,
         o banco também recusa a consulta, mesmo que alguém digite o endereço.
       </p>
       <BotaoLink href="/demo" className="mt-5">Voltar ao início</BotaoLink>

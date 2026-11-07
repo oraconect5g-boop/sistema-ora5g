@@ -1,0 +1,17 @@
+# Ora 5G — DOMÍNIO PRINCIPAL (ora5g.com.br) mostrando TEMPORARIAMENTE a plataforma de homologação
+# (apresentação). Colar como .htaccess dentro de public_html, no cPanel da conta wwora5.
+# Para desfazer: apagar este arquivo. A plataforma continua só em 127.0.0.1:3100 (nunca exposta direto).
+RewriteEngine On
+
+# Validação do certificado (AutoSSL) fica no Apache
+RewriteRule ^\.well-known/ - [L]
+
+# Sempre HTTPS
+RewriteCond %{HTTPS} !=on
+RewriteRule ^ https://%{HTTP_HOST}%{REQUEST_URI} [R=301,L]
+
+# Avisa a plataforma que o acesso original foi por HTTPS
+RequestHeader set X-Forwarded-Proto "https"
+
+# Proxy para a plataforma
+RewriteRule ^(.*)$ http://127.0.0.1:3100/$1 [P,L]
