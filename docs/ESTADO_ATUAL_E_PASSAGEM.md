@@ -64,7 +64,9 @@ Papéis **fixos** (decisão do proprietário). Detalhes: ADR-001, seção 2.7.
 | `docs/etapa-1/PLANO_DE_INICIO_DA_IMPLEMENTACAO.md` | Semanas 1–4 (ORA-001 a ORA-012), loja online como canal |
 | `docs/operacao/CONECTAR_CLAUDE_CODE_SSH_WINDOWS.md` | Como o proprietário conectou o Claude Code ao servidor |
 
-**Situação no Git (07/11):** a documentação e o código estão na **`main`**: ORA-002 (PR #1), ORA-003 e ORA-004/005. O código fica em `apps/plataforma`, `packages/config` e `packages/banco`; cada pasta tem um README.
+**Situação no Git (07/11):** tudo na **`main`**: ORA-002 (PR #1), ORA-003, ORA-004/005, regras de negócio puras (`packages/dominio`), versão de demonstração (`apps/plataforma/src/app/demo`), login real ligado ao Supabase e scripts de homologação (`deploy/homologacao`). Cada pasta tem um README.
+
+**Alinhamento com o Codex:** a análise completa do plano × realidade está em `docs/alinhamento/ANALISE_DO_PLANO.md`; o status de cada um dos 172 requisitos em `docs/alinhamento/RASTREABILIDADE.md` (gerado por `node scripts/gerar-rastreabilidade.mjs`); o pedido de revisão em `docs/alinhamento/PEDIDO_DE_REVISAO_CODEX.md`.
 
 ## 5. Decisões pendentes do proprietário
 
@@ -81,21 +83,21 @@ Papéis **fixos** (decisão do proprietário). Detalhes: ADR-001, seção 2.7.
 | P9 | Tipo da chave Nogle (franquia, marca/MVNO ou PDV) | Decisões 06/11 §3 |
 | P10 | Loja online: CNPJ emissor, origem do estoque, transportadora, domínio final | Plano §8 |
 | ~~P11~~ | **Respondida 07/11:** autorizado; projeto `ora5g-dev` criado | Plano §6 |
-| P12 | Delegação do DNS no Registro.br: feita ou não? | ADR-001 §4A |
+| ~~P12~~ | **Conferido 07/11:** delegação feita; o DNS responde por `ns1`/`ns2.ora5g.com.br` no próprio servidor | ADR-001 §4A |
 | P13 | Contexto da conversa com o ChatGPT/Codex: o proprietário vai trazer o resumo | Seção 7 |
 
 **Não decidir nada disso sozinho.** Pode preparar opções reversíveis.
 
 ## 6. Próximos passos do programador (em ordem)
 
-Feito em 07/11: deploy key e clone; Node 22 no servidor; **ORA-002** (esqueleto e `/saude`); **ORA-003** (CI, validação de variáveis, detector de segredos); **ORA-004/005** (primeira migration, RLS e testes T1–T12, aplicada no `ora5g-dev`).
+Feito em 07/11: deploy key e clone; Node 22; **ORA-002**; **ORA-003**; **ORA-004/005** (aplicada no `ora5g-dev`); **regras de negócio puras** (dinheiro, IMEI/ICCID, desconto por margem, pagamento misto e financiado, produção por categoria); **versão de demonstração** com 12 telas e 4 perfis, desligada em produção; **login real** ligado ao Supabase (recusa credencial errada com mensagem neutra, testado contra o projeto real); **homologação** rodando no servidor em `127.0.0.1:3100` com reinício automático (falta o proprietário publicar o subdomínio, ver `deploy/homologacao/LEIA-ME.md`).
 
-1. **ORA-006 — login:** e-mail e senha pelo Supabase Auth, sessão por turno, escolha da unidade com `selecionar_unidade`, bloqueio imediato. Depende de o proprietário preencher `SUPABASE_SECRET_KEY` e `DATABASE_URL` no servidor e de definir o e-mail de envio (SMTP da HostGator) para a recuperação de senha.
-2. **ORA-007 — catálogo:** produto, variação, tipo de item, código de barras, custo, preço com histórico, "publicar online".
-3. **ORA-009 — importador do CSV da Rein** em modo prévia. Depende do CSV de exemplo (anonimizado).
-4. **ORA-010 — estoque e IMEI**, com teste de concorrência.
-5. **ORA-012 — homologação na VPS (opção A):** o Claude prepara a aplicação e o passo a passo; Apache e systemd exigem root e ficam com o proprietário. Depende também da delegação do DNS (P12).
-6. Ainda abertos no ADR-002: ranking (P3) e técnico (P5).
+1. **Responder aos achados do Codex** em `docs/alinhamento/REVISOES_CODEX.md`.
+2. **Auditoria automática** de mudanças em vínculos, perfis e papéis (ORA-ORG-005).
+3. **ADR-003** (operação comercial, tipos de item, ledger de estoque), revisado pelo Codex e aceito pelo proprietário.
+4. **ORA-006** completo: escolha da loja na sessão, sessão por turno, recuperação de senha (depende do SMTP), usuários de teste.
+5. **ORA-007** catálogo, **ORA-009** importador (depende do CSV), **ORA-010** estoque e IMEI com teste de concorrência.
+6. Trocar as telas da demonstração pelas reais, uma a uma, conforme cada módulo fica pronto.
 
 ## 7. Contexto da conversa com o ChatGPT
 

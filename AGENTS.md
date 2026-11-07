@@ -1,6 +1,6 @@
 # AGENTS.md — Orientação para Codex e quaisquer outros agentes
 
-Leia primeiro `docs/ESTADO_ATUAL_E_PASSAGEM.md`; depois `CLAUDE.md`, `README.md` e as especificações de `docs/`. Essas regras são obrigatórias independentemente do agente executor.
+Leia primeiro `docs/ESTADO_ATUAL_E_PASSAGEM.md` e `docs/alinhamento/ANALISE_DO_PLANO.md`; depois `CLAUDE.md`, `README.md` e as especificações de `docs/`. O pedido de revisão em aberto está em `docs/alinhamento/PEDIDO_DE_REVISAO_CODEX.md`. Essas regras são obrigatórias independentemente do agente executor.
 
 **Meta:** desenvolver a plataforma operacional própria da Ora 5G para 14 lojas (piloto 1 loja), móvel e omnichannel, preservando a arquitetura e a integração entre CRM, PDV, estoque, IMEI, telecom, fiscal, financeiro, metas e canais digitais.
 
@@ -23,7 +23,7 @@ Leia primeiro `docs/ESTADO_ATUAL_E_PASSAGEM.md`; depois `CLAUDE.md`, `README.md`
 A hierarquia é: decisão explícita recente do usuário > regras validadas/ADRs > requisitos propostos > pesquisas históricas > referências visuais > inferências de agentes. Se houver conflito, não faça suposições silenciosas.
 
 ## Não-negociáveis
-Rein apenas importação por arquivos; Nogle sem endpoints presumidos; PicPay POS sem assumir integração automática; segurança/LGPD; vendedores mobile-first; venda mista por categoria e por pagamento; contabilidade gerencial vs formal separadas; comissão por evento idempotente; auditoria e reconciliação.
+Rein apenas importação por arquivos (produtos, preços e estoque, DEC-U24); Nogle sem endpoints presumidos; PicPay POS sem assumir integração automática; segurança/LGPD; vendedores mobile-first; venda mista por categoria e por pagamento; contabilidade gerencial vs formal separadas; comissão por evento idempotente; auditoria e reconciliação.
 
 ## Papéis e acesso ao servidor (decisão do proprietário, 06/11/2026)
 - **Claude Code = programador.** Trabalha por SSH no servidor, com o usuário `dev`, na área de desenvolvimento/homologação (portas 31xx). Tem acesso ao `.env` de desenvolvimento e de homologação; nunca exibe valores de chaves em mensagens, logs, commits ou PRs.

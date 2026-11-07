@@ -37,6 +37,8 @@ jobs:
       - name: Procurar segredos nos commits do PR
         if: github.event_name == 'pull_request'
         run: npm run segredos -- --historico "origin/${{ github.base_ref }}..HEAD"
+      - name: Rastreabilidade dos requisitos em dia
+        run: node scripts/gerar-rastreabilidade.mjs --conferir
       - run: npm ci
       - run: npm run lint
       - run: npm run typecheck

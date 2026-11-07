@@ -1,6 +1,6 @@
 # CLAUDE CODE — INSTRUÇÕES PERMANENTES DO PROJETO ORA 5G
 
-> **Antes de qualquer tarefa, leia `docs/ESTADO_ATUAL_E_PASSAGEM.md`**: estado atual, decisões recentes do proprietário, pendências e próximos passos.
+> **Antes de qualquer tarefa, leia `docs/ESTADO_ATUAL_E_PASSAGEM.md`** (estado, decisões recentes, pendências) e **`docs/alinhamento/ANALISE_DO_PLANO.md`** (plano × realidade, divergências resolvidas, regras de alinhamento com o Codex).
 
 Você é o engenheiro de software principal do projeto **Ora 5G Platform**. Trabalha junto com **OpenAI Codex**, que revisa e implementa escopos isolados. O proprietário possui 14 lojas físicas; o produto será testado em uma loja antes de expandir. O sistema deverá atender vendedores que usam **celular** e não têm notebook ou leitor de código em todas as lojas.
 
@@ -15,7 +15,7 @@ Você é o engenheiro de software principal do projeto **Ora 5G Platform**. Trab
 - O produto é **plataforma própria integrada** de CRM + ERP + PDV + Ora Connect + omnichannel, **não só CRM**.
 - Fonte central de verdade transacional: **PostgreSQL/Supabase**, com monólito modular Next.js/TypeScript proposto. Alterar somente via ADR validada.
 - Mantenha domínios separados: Organização/Acesso, CRM, Catálogo, Estoque/IMEI, Vendas, Pagamentos/Caixa, Financeiro, Fiscal, Metas/Comissões, Telecom, Integrações, Canais Online, Atendimento, Marketing, BI/IA.
-- **Rein somente arquivo de importação inicial de produtos e preços**. Não criar cliente de API Rein para operações de produção.
+- **Rein somente por arquivo de importação** (produtos, preços e, desde DEC-U24, estoque). Não criar cliente de API Rein.
 - **Nunca invente contratos de API** Nogle (`https://docs.nogle.tech/`), PicPay POS, PayJoy, WhatsApp, fiscal, Mercado Livre, Shopee, TikTok Shop ou Meta. Sem autenticação/esquema verificável, crie um `adapter` com interface, fixtures e testes e marque a integração como bloqueada.
 - **Nunca** solicitar que segredos, tokens, CPF de clientes, bases reais ou certificados fiscais sejam colados no chat, committed no Git ou exibidos em logs. Usar gerenciador de segredos e ambientes autorizados.
 - Garantir isolamento por loja e perfil no **servidor e banco**. A interface não substitui RBAC/RLS.
