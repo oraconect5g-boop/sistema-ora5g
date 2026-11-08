@@ -45,7 +45,12 @@ export ORA_PUBLICANDO=1 ORA_HML_BASE="$BASE" ORA_HML_PORTA="$PORTA"
 # ainda que o arquivo de origem seja editado durante a publicação.
 RETRATO="$BASE/.ambiente-em-publicacao"
 install -m 600 "$ENV_HML" "$RETRATO"
-trap 'rm -f "$RETRATO"' EXIT
+# ADR-002 §2.5: a chave secreta e a conexão direta ao banco são só do worker (apps/worker); o
+# aplicativo web, que atende as requisições das pessoas, recebe o arquivo sem elas.
+RETRATO_WEB="$BASE/.ambiente-web-em-publicacao"
+install -m 600 /dev/null "$RETRATO_WEB"
+grep -vE '^[[:space:]]*(export[[:space:]]+)?(SUPABASE_SECRET_KEY|DATABASE_URL)[[:space:]]*=' "$RETRATO" >"$RETRATO_WEB" || true
+trap 'rm -f "$RETRATO" "$RETRATO_WEB"' EXIT
 CONFIG="$(sha256sum "$RETRATO" | cut -c1-12)"
 
 git -C "$REPO" fetch -q origin
@@ -59,7 +64,8 @@ no_ar() { curl -fsS --max-time 10 -o /dev/null "http://127.0.0.1:$PORTA/saude"; 
 # Mesma combinação já montada: build completa, mesmo commit e a mesma cópia do ambiente.
 pronta() {
   [ -f "$1/apps/plataforma/.next/BUILD_ID" ] && [ "$(git -C "$1" rev-parse HEAD 2>/dev/null)" = "$SHA" ] &&
-    cmp -s "$1/apps/plataforma/.env.local" "$RETRATO"
+    cmp -s "$1/apps/plataforma/.env.local" "$RETRATO_WEB" &&
+    { [ ! -d "$1/apps/worker" ] || cmp -s "$1/apps/worker/.env.local" "$RETRATO"; }
 }
 # Em teste isolado, o garantir-no-ar.sh da versão precisa conhecer ORA_HML_BASE/ORA_HML_PORTA:
 # um antigo pararia e reiniciaria a homologação real (porta 3100).
@@ -81,7 +87,8 @@ else
   if [ -e "$NOVA" ]; then git -C "$REPO" worktree remove --force "$NOVA" 2>/dev/null || rm -rf "$NOVA"; fi
   git -C "$REPO" worktree prune
   git -C "$REPO" worktree add -q --detach "$NOVA" "$SHA"
-  install -m 600 "$RETRATO" "$NOVA/apps/plataforma/.env.local"
+  install -m 600 "$RETRATO_WEB" "$NOVA/apps/plataforma/.env.local"
+  if [ -d "$NOVA/apps/worker" ]; then install -m 600 "$RETRATO" "$NOVA/apps/worker/.env.local"; fi
   echo "Montando $CURTO ($REF)..."
   # Ambiente limpo: a build lê a configuração só do arquivo instalado, nunca do terminal de quem
   # publica (um APP_ENV ou NEXT_PUBLIC_* exportado ali iria para a build sem mudar a identidade).
