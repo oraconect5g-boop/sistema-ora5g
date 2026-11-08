@@ -9,6 +9,7 @@
     { "versao": "20261108150432", "nome": "auditoria_automatica_acesso", "md5": "7b8296f808c4db3ee8a9d910952ec21b", "aplicada_em": "2026-11-08" },
     { "versao": "20261108150620", "nome": "catalogo_estoque", "md5": "b5d498c865a0bae257061bbe48fcfbf3", "aplicada_em": "2026-11-08" },
     { "versao": "20261108151325", "nome": "indices_catalogo_estoque", "md5": "78cf93f4b911d5d631a1ae83f4565ed8", "aplicada_em": "2026-11-08" },
-    { "versao": "20261108195850", "nome": "integridade_estoque", "md5": "9795cbcaed323e380191c70659415dbc", "aplicada_em": "2026-11-08" }
+    { "versao": "20261108195850", "nome": "integridade_estoque", "md5": "9795cbcaed323e380191c70659415dbc", "aplicada_em": "2026-11-08" },
+    { "versao": "20261108202654", "nome": "acesso_sessao_e_equipe", "md5": "358ae9818908896b186681924ddcde04", "aplicada_em": "2026-11-08" }
   ]
 }

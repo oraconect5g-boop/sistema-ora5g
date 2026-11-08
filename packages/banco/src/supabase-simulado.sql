@@ -7,7 +7,14 @@ create role service_role nologin noinherit bypassrls;
 
 create schema auth;
 grant usage on schema auth to anon, authenticated, service_role;
-create table auth.users (id uuid primary key, email text);
+create table auth.users (id uuid primary key, email text, banned_until timestamptz);
+-- Sessões do Auth: o login cria a linha; sair ou revogar apaga. Só as colunas que o banco lê.
+create table auth.sessions (
+  id uuid primary key,
+  user_id uuid not null references auth.users (id) on delete cascade,
+  created_at timestamptz not null default now(),
+  not_after timestamptz
+);
 
 create function auth.jwt() returns jsonb
 language sql stable

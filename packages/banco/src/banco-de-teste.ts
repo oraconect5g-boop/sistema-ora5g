@@ -22,22 +22,27 @@ export interface ExecutorSql {
 export const supabaseSimulado = () => readFileSync(join(PASTA, "src", "supabase-simulado.sql"), "utf8");
 export const reversao = (nome: string) => readFileSync(join(PASTA, "supabase", "reversao", nome), "utf8");
 
-// Banco limpo, com o "Supabase simulado" e as migrations aplicadas do zero (todas, ou só as
-// anteriores a "antesDe", para comparar com uma reversão).
-export async function criarBanco(antesDe?: string): Promise<PGlite> {
+// Banco limpo, com o "Supabase simulado" e as migrations aplicadas do zero: todas, só as
+// anteriores a "antesDe" ou até "ate" (inclusive), para comparar com uma reversão.
+export async function criarBanco(limite: { antesDe?: string; ate?: string } = {}): Promise<PGlite> {
   const db = new PGlite();
   await db.exec(supabaseSimulado());
   for (const { nome, sql } of migrations()) {
-    if (antesDe && nome >= antesDe) break;
+    if (limite.antesDe && nome >= limite.antesDe) break;
     await db.exec(sql);
+    if (limite.ate && nome >= limite.ate) break;
   }
   return db;
 }
 
 export type Sessao = { usuario: string; sessao?: string };
 
-// Executa como um usuário logado (papel authenticated), como faria a API do Supabase.
-export async function comoUsuario<T>(db: PGlite, sessao: Sessao | null, acao: () => Promise<T>): Promise<T> {
+// Executa como um usuário logado (papel authenticated), como faria a API do Supabase. Com sessão,
+// a linha de auth.sessions é criada como no login (a regra do turno lê a hora em que ela começou).
+export async function comoUsuario<T>(db: PGlite, sessao: Sessao | null, acao: () => Promise<T>, opcoes: { criarSessao?: boolean } = {}): Promise<T> {
+  if (sessao?.sessao && opcoes.criarSessao !== false) {
+    await db.query("insert into auth.sessions (id, user_id) values ($1, $2) on conflict (id) do nothing", [sessao.sessao, sessao.usuario]);
+  }
   const claims = sessao
     ? JSON.stringify({ sub: sessao.usuario, session_id: sessao.sessao, role: "authenticated" })
     : "";
@@ -76,4 +81,21 @@ export function comDigitoLuhn(base: string): string {
     if (soma % 10 === 0) return numero;
   }
   throw new Error("base inválida");
+}
+
+// Retrato do esquema (funções com corpo e permissões, colunas, gatilhos, restrições, permissões
+// e matriz de papéis) para comparar o banco depois de uma reversão com o banco de antes.
+export async function retratoDoEsquema(db: PGlite): Promise<string[]> {
+  const { rows } = await db.query<{ item: string }>(`
+    select 'funcao ' || p.oid::regprocedure || ' ' || md5(pg_get_functiondef(p.oid)) || ' ' || coalesce(p.proacl::text, '') as item
+    from pg_proc p where p.pronamespace in ('public'::regnamespace, 'privado'::regnamespace)
+    union all select 'coluna ' || table_schema || '.' || table_name || '.' || column_name || ' ' || data_type
+    from information_schema.columns where table_schema in ('public', 'privado')
+    union all select 'gatilho ' || tgrelid::regclass || '.' || tgname from pg_trigger where not tgisinternal
+    union all select 'restricao ' || conrelid::regclass || '.' || conname from pg_constraint where connamespace in ('public'::regnamespace, 'privado'::regnamespace)
+    union all select 'politica ' || schemaname || '.' || tablename || '.' || policyname from pg_policies where schemaname in ('public', 'privado')
+    union all select 'permissao ' || codigo from public.permissoes
+    union all select 'papel ' || papel || ' ' || permissao from public.papel_permissoes
+    order by 1`);
+  return rows.map((r) => r.item);
 }
