@@ -9,6 +9,7 @@ Migrations em `supabase/migrations/`, aplicadas em ordem pelo nome. Reversões (
 | `20261107151305_correcoes_revisao_codex.sql` | REV-001, REV-002, REV-005 e REV-006 da revisão do Codex de 07/11 |
 | `20261108150432_auditoria_automatica_acesso.sql` | ORA-ORG-005: toda mudança em organizações, empresas, unidades, perfis, papéis, permissões e vínculos vai para a auditoria (ator, horário, alvo, antes/depois, motivo), separada por organização |
 | `20261108150620_catalogo_estoque.sql` | ADR-003 (proposto): categorias, marcas, produtos, variações (SKU), preços e custos com histórico, itens com IMEI/ICCID, livro de estoque só de inserção, saldo sem negativo, reservas com trava e idempotência |
+| `20261108151325_indices_catalogo_estoque.sql` | Índices das chaves estrangeiras compostas do catálogo e estoque recomendados pelo verificador do Supabase |
 
 ### Versões iguais às do Supabase (REV-018 / #17)
 
@@ -36,7 +37,7 @@ Até 08/11 os três arquivos acima tinham versões `20261107120000`, `…130000`
 
 | Ambiente | Projeto | Situação |
 |---|---|---|
-| Desenvolvimento | `ora5g-dev` (`qgnbeuugklzzcevdzrvg`, São Paulo, plano gratuito) | 5 migrations aplicadas (07 e 08/11/2026), lista em `supabase/aplicadas-dev.json` |
+| Desenvolvimento | `ora5g-dev` (`qgnbeuugklzzcevdzrvg`, São Paulo, plano gratuito) | 6 migrations aplicadas (07 e 08/11/2026), lista em `supabase/aplicadas-dev.json` |
 | Homologação | a criar | — |
 | Produção | a criar | — |
 
