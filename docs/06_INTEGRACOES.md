@@ -20,6 +20,8 @@
 | IA / LLM | Atendimento e inteligência | Desejado; modelo/API/custo a escolher | Tools com permissão, RAG, guardrails, supervisão humana e gastos monitorados. |
 
 ## Nogle — contrato a obter antes de codificar
+
+> **Atualização 07/11/2026:** endpoints, autenticação e formatos de resposta estão em `docs/integracoes/NOGLE_API_REFERENCIA.md` (62 funções, lidas da documentação oficial). Continuam em aberto: tipo de chave (P9), sandbox, idempotência, webhooks e limites.
 1. Autenticação: método, scopes, ambientes, rotação e expiração de token, concessão de cliente/operadora.
 2. Catálogo: planos e produtos realmente acessíveis à conta Ora.
 3. Dados de cliente/contrato, limites de CPF e retenção, consentimentos e documentação.

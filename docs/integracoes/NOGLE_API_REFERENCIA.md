@@ -1,0 +1,191 @@
+# API NOGLE (Contel Telecom) — referência completa para a Ora Connect
+
+**Fonte oficial:** https://docs.nogle.tech/ (coleção Postman publicada pela Contel Telecom, "API NOGLE").
+**Lida por inteiro em:** 07/11/2026 · **Cópia guardada:** `docs/integracoes/nogle/colecao-postman-2026-11-07.json` (SHA-256 `002d13dab3099a95c1e018bdc9d0d63dba30adcacfa141efccdd062f29c88ead`).
+**Catálogo no código:** `apps/plataforma/src/integracoes/nogle/catalogo.ts`, gerado por `node scripts/gerar-catalogo-nogle.mjs` e conferido no CI (`--conferir`).
+
+A leitura de 06/11 (`docs/etapa-0/ETAPA_0_DECISOES_2026-11-06.md` §3) tinha visto só 22 funções. A coleção completa tem **62 funções em 16 grupos**, inclusive ativação, recarga, portabilidade, bloqueio, consumo, compra de chip com entrega, carteira e gestão de pontos de venda. Nenhuma rota abaixo foi inventada: tudo vem da cópia guardada.
+
+## 1. Como a API funciona (o que a documentação diz)
+
+| Item | O que está documentado |
+|---|---|
+| Endereço | `https://api.conteltelecom.com.br`, sempre HTTPS; REST com JSON |
+| Autenticação | `POST /auth/token` devolve um token temporário (Bearer). Quando expira, pede-se outro. O tempo de validade não é informado |
+| Tipos de chave | **Franquia:** `chave_acesso` + `chave_acesso_franquia`. **Marca/MVNO:** só `chave_acesso`. **PDV:** `chave_acesso` + `chave_acesso_pdv`. A documentação não diz o que cada tipo pode usar (decisão **P9**) |
+| Pagamento | Ativação, recarga e compra aceitam `LINK` (link ao cliente) ou `SALDO` (carteira pré-paga da Ora na Contel; a margem da Ora fica retida). As respostas também trazem campos de Pix, boleto e cartão |
+| Suporte | ti@conteltelecom.com.br, resposta em até 12 horas úteis |
+| Não documentado | ambiente de testes (sandbox), proteção contra pedido repetido (idempotência), avisos automáticos (webhooks), limites de uso, validade do token |
+
+**Formatos de resposta** (o adaptador normaliza todos; `apps/plataforma/src/integracoes/nogle/regras.ts`, testado com os exemplos da documentação):
+`{retorno, mensagem, ...}` (falha de negócio pode vir com HTTP 200 e `retorno: false`) · `{status, mensagem, data}` (atendimento e pagamento) · `{message, errors}` (validação, às vezes com HTTP 200) · `{erro}` (404) · só `{mensagem}` (ambíguo: sucesso no apelido, erro na ativação) · lista ou objeto sem envelope (FAQ, logística, saldo).
+
+**Códigos e listas documentados:** situação do ICCID (88 virgem, 11 ativo, 33 ativação em processamento, 22 erro na ativação, 99 inválido); status de portabilidade (Aguardando confirmação, Portabilidade em andamento, Sucesso, Portabilidade negada; 3 dias úteis depois do aceite); motivos de bloqueio (PERDA, ROUBO, TROCA, BLOQUEIO DE IMEI, INADIMPLÊNCIA); motivos de cancelamento (EX após 75 dias sem recarga, PORTOUT, TROCA DE CHIP, PORTABILIDADE ENTRE MARCAS, SOLICITAÇÃO DO CLIENTE); minutos acima de 999 = ilimitados; compra de "apenas chip" com `id_plano` 88888; até 15 chips por compra.
+
+## 2. As 62 funções e onde aparecem na Ora
+
+"Na Ora" e "Quem" são **proposta** (validar com o proprietário e a Contel). "Antes de repetir" é a regra da Ora para falhas: sem idempotência documentada, consultar antes de reenviar (ORA-CONNECT-010).
+
+**Token**
+
+| Função | Rota | Na Ora | Quem | Notas |
+|---|---|---|---|---|
+| Autenticação | `POST /auth/token` | Integração | Sistema | — |
+
+**Geral**
+
+| Função | Rota | Na Ora | Quem | Notas |
+|---|---|---|---|---|
+| Listar DDDs | `GET /ddds` | Ativar chip | Loja | — |
+| Listar Planos | `GET /planos` | Ativar chip | Loja | — |
+| Listar Planos Campanhas | `GET /planosCampanhas` | Recarga | Loja | — |
+| Listar Estados | `GET /estados` | Ativar chip | Loja | — |
+| Listar Cidades | `GET /cidades/UF` | Ativar chip | Loja | — |
+| Logística | `GET /logistica` | Chips e entrega | Loja | — |
+
+**Cliente**
+
+| Função | Rota | Na Ora | Quem | Notas |
+|---|---|---|---|---|
+| Criar | `POST /cliente/criar` | Ativar chip | Loja | — |
+| Atualizar | `PUT /cliente/atualizar` | Ativar chip | Loja | — |
+| Consultar | `GET /cliente/buscar` | Ativar chip | Loja | GET com corpo |
+| Linhas do Cliente | `GET /cliente/linhas` | Consultar linha | Loja | GET com corpo |
+| Listar | `GET /cliente/listar` | Carteira e relatórios | Gerente e dono | GET com corpo |
+
+**Linha**
+
+| Função | Rota | Na Ora | Quem | Notas |
+|---|---|---|---|---|
+| Detalhes da linha | `GET /linhas/detalhes` | Consultar linha | Loja | GET com corpo |
+| Consultar Saldo | `GET /linhas/saldo` | Consultar linha | Loja | GET com corpo |
+| Histórico de Recargas | `GET /linhas/historico` | Consultar linha | Loja | GET com corpo |
+| Validar Existência | `GET /linhas/verificaExistencia` | Consultar linha | Loja | GET com corpo |
+| Consultar pelo ICCID | `GET /linhas/numeroPeloIccid` | Consultar linha | Loja | GET com corpo |
+| Validar Titularidade | `GET /linhas/validaTitularidade` | Consultar linha | Loja | GET com corpo |
+| Listar Todas | `GET /linhas/listar` | Carteira e relatórios | Gerente e dono | GET com corpo |
+| Estoque Virgem | `GET /linhas/estoque` | Chips e entrega | Loja | GET com corpo |
+| Recargas Solicitadas | `GET /linhas/cobrancasGeradas` | Consultar linha | Loja | GET com corpo |
+| Atualizar Apelido Linha | `POST /linhas/atualizar` | Consultar linha | Loja | — |
+
+**Histórico de consumo**
+
+| Função | Rota | Na Ora | Quem | Notas |
+|---|---|---|---|---|
+| Dados | `GET /linhas/consumo/dados` | Consultar linha | Loja | GET com corpo |
+| Voz | `GET /linhas/consumo/voz` | Consultar linha | Loja | GET com corpo |
+| SMS | `GET /linhas/consumo/sms` | Consultar linha | Loja | GET com corpo |
+
+**Ativação**
+
+| Função | Rota | Na Ora | Quem | Notas |
+|---|---|---|---|---|
+| Ativação | `POST /ativacao/solicitar` | Ativar chip | Loja | antes de repetir: /ativacao/validaIccid, /ativacao/detalhar |
+| Detalhar Ativação | `GET /ativacao/detalhar` | Ativar chip | Loja | GET com corpo |
+| Verifica Plano Pago | `GET /ativacao/verificaPlanoPago` | Ativar chip | Loja | GET com corpo |
+| Validar ICCID | `POST /ativacao/validaIccid` | Ativar chip | Loja | — |
+
+**Recarga**
+
+| Função | Rota | Na Ora | Quem | Notas |
+|---|---|---|---|---|
+| Solicitar Recarga | `POST /recarga/solicitar` | Recarga | Loja | antes de repetir: /linhas/historico, /linhas/cobrancasGeradas |
+| Bloqueio / Desbloqueio | `POST /recarga/alterarStatusRecargaAutomatica` | Recarga | Gerente e dono | — |
+| Saldo - Programar | `POST /recarga/saldo/adicionar` | Recarga | Gerente e dono | — |
+
+**Portabilidade**
+
+| Função | Rota | Na Ora | Quem | Notas |
+|---|---|---|---|---|
+| Solicitar Portabilidade | `POST /portabilidade/solicitar` | Portabilidade | Loja | antes de repetir: /portabilidade/status |
+| Consultar Status | `GET /portabilidade/status` | Portabilidade | Loja | GET com corpo |
+| Operadoras Disponíveis | `GET /portabilidade/operadorasDisponiveis` | Portabilidade | Loja | — |
+| Reenviar SMS | `POST /portabilidade/reenviarsms` | Portabilidade | Loja | — |
+
+**Compra**
+
+| Função | Rota | Na Ora | Quem | Notas |
+|---|---|---|---|---|
+| Cadastrar Compra | `POST /compra/solicitar` | Chips e entrega | Loja | antes de repetir: /pagamento |
+| Rastreio | `POST /compra/rastrear` | Chips e entrega | Loja | — |
+
+**Atendimento**
+
+| Função | Rota | Na Ora | Quem | Notas |
+|---|---|---|---|---|
+| Bloqueio | `POST /atendimento/bloqueio` | Bloqueio e atendimento | Gerente e dono | antes de repetir: /linhas/detalhes |
+| Desbloqueio | `POST /atendimento/desbloqueio` | Bloqueio e atendimento | Gerente e dono | antes de repetir: /linhas/detalhes |
+
+**Relatórios**
+
+| Função | Rota | Na Ora | Quem | Notas |
+|---|---|---|---|---|
+| Portabilidades | `GET /portabilidade/listar` | Carteira e relatórios | Gerente e dono | GET com corpo |
+| Ativações | `GET /relatorios/ativacoes` | Carteira e relatórios | Gerente e dono | GET com corpo |
+| Recargas | `GET /relatorios/recargas` | Carteira e relatórios | Gerente e dono | GET com corpo |
+| Transações | `GET /relatorios/transacoes` | Carteira e relatórios | Gerente e dono | GET com corpo |
+
+**FAQ**
+
+| Função | Rota | Na Ora | Quem | Notas |
+|---|---|---|---|---|
+| Categorias | `GET /faq/categorias` | Bloqueio e atendimento | Loja | — |
+| Perguntas e Respostas | `GET /faq/categoria/X` | Bloqueio e atendimento | Loja | — |
+
+**Validações**
+
+| Função | Rota | Na Ora | Quem | Notas |
+|---|---|---|---|---|
+| CEP | `POST /validar/cep` | Ativar chip | Loja | — |
+| CPF | `POST /validar/cpf` | Ativar chip | Loja | — |
+| CNPJ | `POST /validar/cnpj` | Ativar chip | Loja | — |
+
+**Pagamento**
+
+| Função | Rota | Na Ora | Quem | Notas |
+|---|---|---|---|---|
+| Pagamento | `POST /pagamento` | Recarga | Loja | — |
+
+**Saldo**
+
+| Função | Rota | Na Ora | Quem | Notas |
+|---|---|---|---|---|
+| Consulta de saldo | `GET /saldo/saldo` | Carteira e relatórios | Gerente e dono | — |
+| Extrato | `GET /saldo/extrato` | Carteira e relatórios | Gerente e dono | GET com corpo |
+| Recargas Programadas | `GET /saldo/programado` | Carteira e relatórios | Gerente e dono | GET com corpo |
+
+**PDV**
+
+| Função | Rota | Na Ora | Quem | Notas |
+|---|---|---|---|---|
+| Criar | `POST /pdv/cadastrar` | Integração | Administração | — |
+| Novo usuário | `POST /pdv/usuario` | Integração | Administração | — |
+| Inativar | `DELETE /pdv/inativar` | Integração | Administração | — |
+| Atualizar | `PUT /pdv/atualizar` | Integração | Administração | — |
+| Buscar Estoque | `GET /pdv/estoque` | Chips e entrega | Loja | GET com corpo |
+| Listar | `GET /pdv/listar` | Integração | Administração | — |
+| Transferir chip físico - unidade | `POST /pdv/transferir-chip-fisico-unidade` | Chips e entrega | Gerente e dono | — |
+| Transferir chip físico - lote | `POST /pdv/transferir-chip-fisico-lote` | Chips e entrega | Gerente e dono | — |
+| Transferir chip eSIM | `POST /pdv/transferir-chip-esim` | Chips e entrega | Gerente e dono | — |
+
+## 3. Perguntas para a Contel antes de ligar
+
+1. **Tipo da chave da Ora (P9):** franquia, marca/MVNO ou PDV? Quais das 62 funções cada tipo libera?
+2. **GET com corpo:** 25 consultas mandam os dados no corpo de um GET (`/linhas/detalhes`, `/cliente/buscar`...). A API aceita os mesmos dados como parâmetros no endereço? O `fetch` do Node e os navegadores não enviam corpo em GET.
+3. **Ambiente de testes:** existe sandbox? Se não, uma linha e um chip de teste para homologar.
+4. **Pedido repetido:** existe chave de idempotência ou aviso automático (webhook) de ativação, recarga e portabilidade?
+5. **Validade do token** e limite de chamadas por minuto.
+6. **Corpo da recarga:** a tabela pede `numero` e `id_plano`; o exemplo manda `numeros: [{ numero, id_plano }]`. Qual vale?
+7. **Exemplo de portabilidade** com sucesso vem com `retorno: false`: é erro do exemplo?
+8. **Troca de chip:** aparece como motivo de cancelamento, mas não há rota para pedir. Como fazer pela API?
+9. **Pix, boleto e cartão:** as respostas têm esses campos, mas o pagamento documentado é `LINK` ou `SALDO`. Quais formas a Ora pode usar?
+
+## 4. O que já está pronto e o que falta
+
+| Pronto (testado) | Falta |
+|---|---|
+| Catálogo das 62 funções gerado da cópia oficial e conferido no CI | Cliente HTTP no servidor (só depois da P9 e das credenciais no gerenciador de segredos) |
+| Normalização das respostas e regras de ICCID, portabilidade, bloqueio e cancelamento (14 testes) | Tabelas de operação telecom no banco (ADR próprio), com estado, auditoria e reconsulta |
+| Tela Ora Connect da demonstração com todas as funções, simuladas no formato documentado (18 testes E2E) | Homologação com linha de teste da Contel |
+
+**Nunca** colocar chaves no código, no chat ou no navegador: `NOGLE_API_BASE_URL`, `NOGLE_AUTH_KEY_TYPE` e `NOGLE_ACCESS_KEY` já estão no catálogo de variáveis (`docs/integracoes/VARIAVEIS_DE_AMBIENTE.md`) e só serão lidas pelo servidor.

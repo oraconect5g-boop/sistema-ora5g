@@ -134,6 +134,8 @@ Todas as regras de comissão e bônus serão **configuráveis pelos donos**, com
 
 ## 3. Contrato Nogle — descoberta parcial (fonte oficial)
 
+> **Atualização 07/11/2026:** a coleção oficial foi lida por inteiro (62 funções em 16 grupos, inclusive ativação, recarga, portabilidade, bloqueio e chip/eSIM). Referência completa: `docs/integracoes/NOGLE_API_REFERENCIA.md`. O texto abaixo é o registro histórico da leitura parcial de 06/11.
+
 **Fonte:** documentação pública em `https://docs.nogle.tech/` (coleção Postman publicada pela Contel Telecom). Lida em 06/11/2026. **Leitura incompleta:** a ferramenta só exibiu a primeira parte da coleção; as rotas de **ativação, recarga, portabilidade e chip/eSIM não apareceram ainda** e não serão presumidas.
 
 | Item | O que a documentação mostra |
