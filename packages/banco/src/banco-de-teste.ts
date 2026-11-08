@@ -13,11 +13,24 @@ export function migrations(): { nome: string; sql: string }[] {
     .map((nome) => ({ nome, sql: readFileSync(join(PASTA_MIGRATIONS, nome), "utf8") }));
 }
 
-// Banco limpo, com o "Supabase simulado" e todas as migrations aplicadas do zero.
-export async function criarBanco(): Promise<PGlite> {
+// O que os cenários usam de um banco: vale para o PGlite e para uma conexão PostgreSQL real.
+export interface ExecutorSql {
+  exec(sql: string): Promise<unknown>;
+  query<T = Record<string, unknown>>(sql: string, params?: unknown[]): Promise<{ rows: T[] }>;
+}
+
+export const supabaseSimulado = () => readFileSync(join(PASTA, "src", "supabase-simulado.sql"), "utf8");
+export const reversao = (nome: string) => readFileSync(join(PASTA, "supabase", "reversao", nome), "utf8");
+
+// Banco limpo, com o "Supabase simulado" e as migrations aplicadas do zero (todas, ou só as
+// anteriores a "antesDe", para comparar com uma reversão).
+export async function criarBanco(antesDe?: string): Promise<PGlite> {
   const db = new PGlite();
-  await db.exec(readFileSync(join(PASTA, "src", "supabase-simulado.sql"), "utf8"));
-  for (const { sql } of migrations()) await db.exec(sql);
+  await db.exec(supabaseSimulado());
+  for (const { nome, sql } of migrations()) {
+    if (antesDe && nome >= antesDe) break;
+    await db.exec(sql);
+  }
   return db;
 }
 

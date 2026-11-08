@@ -1,6 +1,4 @@
-import type { PGlite } from "@electric-sql/pglite";
-
-import { comDigitoLuhn } from "./banco-de-teste";
+import { comDigitoLuhn, type ExecutorSql } from "./banco-de-teste";
 import { ids } from "./cenario";
 
 // Catálogo e estoque FICTÍCIOS para os testes do ADR-003 (sobre o cenário de acesso).
@@ -28,7 +26,7 @@ export const cat = {
 
 export const itens: Record<"a1" | "a2" | "b1" | "chipA", string> = { a1: "", a2: "", b1: "", chipA: "" };
 
-export async function montarCatalogo(db: PGlite) {
+export async function montarCatalogo(db: ExecutorSql) {
   const c = cat;
   const o = ids.organizacao;
   await db.exec(`
