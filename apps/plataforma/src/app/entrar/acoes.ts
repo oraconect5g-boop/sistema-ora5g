@@ -15,7 +15,7 @@ export async function entrar(dados: FormData) {
 
   const { error } = await supabase.auth.signInWithPassword({ email, password: senha });
   if (error) redirect("/entrar?erro=credenciais");
-  redirect("/conta");
+  redirect("/escolher-loja");
 }
 
 export async function sair() {

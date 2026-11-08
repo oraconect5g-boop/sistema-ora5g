@@ -2,6 +2,7 @@ import { createServerClient } from "@supabase/ssr";
 import { cookies } from "next/headers";
 
 import { configuracaoSupabase } from "./configuracao";
+import type { Database } from "./tipos-banco";
 
 // Cliente do Supabase no servidor, com a sessão do usuário nos cookies:
 // toda consulta passa pelo RLS do banco como o próprio usuário.
@@ -9,7 +10,7 @@ export async function clienteSupabaseServidor() {
   const configuracao = configuracaoSupabase();
   if (!configuracao) return null;
   const loja = await cookies();
-  return createServerClient(configuracao.url, configuracao.chavePublica, {
+  return createServerClient<Database>(configuracao.url, configuracao.chavePublica, {
     cookies: {
       getAll: () => loja.getAll(),
       setAll: (lista) => {
@@ -22,3 +23,5 @@ export async function clienteSupabaseServidor() {
     },
   });
 }
+
+export type ClienteSupabase = NonNullable<Awaited<ReturnType<typeof clienteSupabaseServidor>>>;
