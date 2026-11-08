@@ -33,7 +33,7 @@
     },
     "ORA-ORG-005": {
       "status": "testado",
-      "nota": "Auditoria automática (gatilho) em organizações, empresas, unidades, perfis, papéis, permissões, matriz papel × permissão, vínculos e categorias: ator, horário, alvo, antes/depois e motivo, separada por organização (REV-002). Aplicada no ora5g-dev em 08/11. Aguardando revisão do Codex.",
+      "nota": "Auditoria automática (gatilho) em organizações, empresas, unidades, perfis, papéis, permissões, matriz papel × permissão, vínculos e categorias: ator, horário, alvo, antes/depois e motivo, separada por organização (REV-002). Aplicada no ora5g-dev em 08/11. Conferido pelo Codex em 08/11 nos testes de banco e na correspondência dos objetos remotos. Homologação pelo proprietário e uso por usuário real continuam pendentes.",
       "evidencia": "packages/banco/supabase/migrations/20261108150432_auditoria_automatica_acesso.sql; packages/banco/src/auditoria-acesso.test.ts"
     },
     "ORA-ORG-006": {
@@ -138,7 +138,7 @@
     },
     "ORA-QUAL-007": {
       "status": "parcial",
-      "nota": "Três migrations versionadas, aplicadas do zero nos testes e no ora5g-dev, com reversão documentada; correções por migration nova, sem reescrever a aplicada. FALTA: conciliar as versões do histórico remoto com as do Git (REV-018/#17, apontado pelo Codex), homologação e procedimento de produção.",
+      "nota": "Seis migrations versionadas e aplicadas do zero nos testes. Em 08/11 o Codex confirmou versão, nome e hash iguais ao histórico remoto, além dos objetos comparados; REV-018/#17 encerrado. Reversões lidas, destinadas só a banco descartável, não executadas nesta revisão. Faltam homologação, procedimento de produção e correções de estoque por migration nova (#19 a #22).",
       "evidencia": "packages/banco/supabase"
     },
     "ORA-REPORT-004": {
@@ -252,9 +252,9 @@
       "evidencia": "packages/banco/supabase/migrations/20261108150620_catalogo_estoque.sql; packages/banco/src/catalogo-estoque.test.ts"
     },
     "ORA-INV-003": {
-      "status": "testado",
-      "nota": "Livro de estoque só de inserção (nem o dono do banco altera), saldo mantido pelo livro e conferido contra ele, sem estoque negativo, idempotência por chave. Aplicado no ora5g-dev em 08/11. Aguardando revisão do Codex.",
-      "evidencia": "packages/banco/supabase/migrations/20261108150620_catalogo_estoque.sql; packages/banco/src/catalogo-estoque.test.ts"
+      "status": "parcial",
+      "nota": "Livro imutável e saldo igual à soma dos movimentos passam nos testes existentes. Revisão independente de 08/11 reproduziu entrada serializada sem movimento por colisão de chave (REV-022/#21) e saldo inflado por segunda entrada do mesmo aparelho (REV-023/#22). Corrigir por migration nova e provar posição por item, rollback e idempotência antes de voltar a testado.",
+      "evidencia": "packages/banco/supabase/migrations/20261108150620_catalogo_estoque.sql; packages/banco/src/catalogo-estoque.test.ts; docs/analises/AUDITORIA_CLAUDE_CODE_2026-11-08.md; issues #21 e #22"
     },
     "ORA-INV-004": {
       "status": "parcial",
