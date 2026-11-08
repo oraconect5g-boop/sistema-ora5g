@@ -130,3 +130,29 @@ ORA-ORG-005 mantém testado em desenvolvimento. ORA-INV-003 volta a parcial por 
 Supabase: 20 tabelas com RLS, 33 funções, 167 colunas, 131 constraints comparáveis, 83 índices, 19 gatilhos, 20 policies e 20 grants examinados correspondentes ao banco limpo. Sem usuário/sessão Auth ou perfil; há semente fictícia. Consultas foram somente de leitura, sem .env, chaves, dados pessoais individuais ou mudanças remotas.
 
 Próximos passos: corrigir #19–#22; concluir acesso e renovação real; aceitar ADR-003; integrar catálogo/estoque; importar Rein por arquivo; depois PDV/caixa, piloto, Nogle/fiscal e canais. O plano, os critérios e as dependências estão na auditoria.
+
+## Conferência de 08/11/2026 — main 55d10af e relatório do Claude Web
+
+Parecer mais recente: [REVISAO_CLAUDE_E_RELATORIO_WEB_2026-11-08.md](../analises/REVISAO_CLAUDE_E_RELATORIO_WEB_2026-11-08.md). Comparação desde 7f5fd41: 19 commits, 78 arquivos, incluindo documentação anterior do próprio Codex. Relatório enviado pelo proprietário lido integralmente e confrontado com código/decisões; suas recomendações sobre exclusão de itens telecom, importação de estoque e escopo de OS exigem os ajustes registrados.
+
+**#19–#24 / REV-020 a REV-025 encerradas** após prova independente: seis testes originais de banco e quatro execuções originais de navegador passaram. CI da main [42521842775](https://github.com/oraconect5g-boop/sistema-ora5g/actions/runs/42521842775) aprovado. Localmente: instalação limpa, lint, tipos e build aprovados; **397 testes passaram, 4 TODO; 124 E2E passaram, 10 pulados**.
+
+Novos achados reproduzidos separadamente:
+
+| ID / issue | Gravidade | Defeito |
+|---|---|---|
+| REV-026 / [#27](https://github.com/oraconect5g-boop/sistema-ora5g/issues/27) | P1 | Bloqueio global de pessoa compartilhada afeta organização fora da autoridade do gestor |
+| REV-027 / [#28](https://github.com/oraconect5g-boop/sistema-ora5g/issues/28) | P1 | E-mail Auth divergente permite autoconcessão por convite e worker |
+| REV-028 / [#29](https://github.com/oraconect5g-boop/sistema-ora5g/issues/29) | P1 | Duas revogações concorrentes deixam organização sem dono |
+| REV-029 / [#30](https://github.com/oraconect5g-boop/sistema-ora5g/issues/30) | P2 | Worker conclui convite de emissor bloqueado sem revalidar autoridade |
+| REV-030 / [#31](https://github.com/oraconect5g-boop/sistema-ora5g/issues/31) | P2, demo | Face de recarga entra no faturamento e margem fictícia |
+| REV-031 / [#32](https://github.com/oraconect5g-boop/sistema-ora5g/issues/32) | P2, demo | Indicador “só confirmadas” inclui ativação pendente e conta linhas |
+
+[Evidências](../analises/evidencias/2026-11-08-web/LEIA-ME.md): seis assertions deliberadamente falham na base, fora do CI normal. As falhas de indicadores são anteriores ao lote. Corrigir banco por migration nova e preservar stack.
+
+Supabase consultado somente para metadados/contagens: oito migrations da main correspondem ao histórico; há uma nona de fotos em andamento sem código na main no corte, que não foi homologada. Banco sem usuários/sessões Auth/perfis/convites. #11 continua aberta sem renovação real comprovada; #26 continua aguardando entrega/revisão de fotos. Nenhum acesso ao servidor/.env ou alteração remota.
+
+173 requisitos, 71 no piloto; status declarados: 3 testados em desenvolvimento, 26 parciais, 22 demonstrações, 2 bloqueados, 119 não iniciados, 1 restrição respeitada, 0 homologados. As correções de estoque delimitadas foram conferidas; o núcleo comercial/Nogle não está pronto.
+
+**Orientação recente do proprietário:** a Nogle/Contel mantém os fatos oficiais telecom; a Ora relaciona venda, loja, vendedor, recorrência e repasse, sem dupla contagem. Ler [NOGLE_REGISTRO_OFICIAL_E_DESEMPENHO.md](NOGLE_REGISTRO_OFICIAL_E_DESEMPENHO.md) e o [adendo ao prompt](ADENDO_PROMPT_REVISAO_WEB_E_NOGLE.md). Renovação de plano é diferente de comissão recorrente; nenhuma taxa ou rota de repasse foi presumida.
+

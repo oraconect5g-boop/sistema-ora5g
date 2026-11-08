@@ -18,7 +18,7 @@
     },
     "ORA-ORG-002": {
       "status": "parcial",
-      "nota": "Vínculos com vigência e várias lojas por pessoa. Tela real /equipe ligada ao banco: convidar, dar loja ou função, encerrar acesso e bloquear, sempre com motivo e auditoria; mudança vale na sessão aberta (testado). Convite vira pessoa no Auth pelo worker (precisa SUPABASE_SECRET_KEY e SMTP). Falta: homologar com pessoas reais.",
+      "nota": "Vínculos com vigência e várias lojas por pessoa. Tela real /equipe ligada ao banco: convidar, dar loja ou função, encerrar acesso e bloquear, sempre com motivo e auditoria; mudança vale na sessão aberta (testado). Convite vira pessoa no Auth pelo worker (precisa SUPABASE_SECRET_KEY e SMTP). Falta: homologar com pessoas reais. Revisão independente em 55d10af: corrigir gestão de equipe e conclusão de convites (#27 a #30); testes existentes verdes não cobrem essas falhas. Não homologado.",
       "evidencia": "acesso.test.ts (T1, T2/T3, T7); packages/banco/src/acesso-equipe.test.ts; apps/plataforma/src/app/equipe; apps/worker"
     },
     "ORA-ORG-003": {
@@ -28,7 +28,7 @@
     },
     "ORA-ORG-004": {
       "status": "parcial",
-      "nota": "RLS e funções do banco testadas, inclusive negação por ID arbitrário, troca de unidade e isolamento entre organizações (REV-001/REV-002 corrigidos em 07/11, aguardando revisão do Codex). As telas reais ainda não usam essas funções além de /conta.",
+      "nota": "RLS e funções do banco testadas; REV-001/REV-002 já conferidos. Telas reais de início, escolha de loja e equipe usam Auth/RLS/RPC. Revisão Codex em 55d10af encontrou bloqueio cruzado entre organizações (#27), autoconcessão por convite (#28) e perda concorrente de donos (#29); corrigir antes do aceite de gestão. Não homologado.",
       "evidencia": "packages/banco/src/acesso.test.ts; packages/banco/src/revisao-codex.test.ts"
     },
     "ORA-ORG-005": {
@@ -38,7 +38,7 @@
     },
     "ORA-ORG-006": {
       "status": "parcial",
-      "nota": "Login real com escolha da loja, sessão por turno no banco (sessão viva no Auth, até 12 h e no mesmo dia: sair ou revogar corta o acesso na hora, mesmo com token válido), bloqueio e encerramento de vínculo imediatos, saída forçada com mensagem neutra, convite e recuperação por link com definição de senha. Testado no banco (acesso-equipe.test.ts) e nas regras/E2E do app. FALTA: SMTP e modelos de e-mail no painel (proprietário), prova com usuário real (#11, depende da SUPABASE_SECRET_KEY) e confirmação de senha recente para ações da equipe (ADR-002 §2.6).",
+      "nota": "Login real com escolha da loja, sessão por turno no banco (sessão viva no Auth, até 12 h e no mesmo dia: sair ou revogar corta o acesso na hora, mesmo com token válido), bloqueio e encerramento de vínculo imediatos, saída forçada com mensagem neutra, convite e recuperação por link com definição de senha. Testado no banco (acesso-equipe.test.ts) e nas regras/E2E do app. FALTA: SMTP e modelos de e-mail no painel (proprietário), prova com usuário real (#11, depende da SUPABASE_SECRET_KEY) e confirmação de senha recente para ações da equipe (ADR-002 §2.6). Revisão independente em 55d10af: corrigir gestão de equipe e conclusão de convites (#27 a #30); testes existentes verdes não cobrem essas falhas. Não homologado.",
       "evidencia": "packages/banco/supabase/migrations/20261108202654_acesso_sessao_e_equipe.sql; packages/banco/src/acesso-equipe.test.ts; apps/plataforma/src/lib/acesso; apps/plataforma/e2e/acesso-real.spec.ts"
     },
     "ORA-CAT-003": {
@@ -58,8 +58,8 @@
     },
     "ORA-INV-002": {
       "status": "testado",
-      "nota": "IMEI, IMEI2 e ICCID num conjunto único por organização (REV-020/#19 corrigido por migration nova, aplicada no ora5g-dev em 08/11). Provado com duas conexões simultâneas num PostgreSQL 17 real: mesmo IMEI em duas entradas, IMEI de um × IMEI2 de outro e o mesmo aparelho disputado por dois vendedores. Aguardando revisão do Codex. Falta a baixa pela venda real (ADR-004).",
-      "evidencia": "packages/banco/supabase/migrations/20261108195850_integridade_estoque.sql; packages/banco/src/integridade-estoque.test.ts; packages/banco/src/concorrencia.test.ts"
+      "nota": "IMEI, IMEI2 e ICCID num conjunto único por organização (REV-020/#19 corrigido por migration nova, aplicada no ora5g-dev em 08/11). Provado com duas conexões simultâneas num PostgreSQL 17 real: mesmo IMEI em duas entradas, IMEI de um × IMEI2 de outro e o mesmo aparelho disputado por dois vendedores. Correção delimitada conferida pelo Codex em 08/11 na base 55d10af: reproduções independentes e concorrência passaram; issues de integridade encerradas. Não é homologação operacional. Falta a baixa pela venda real (ADR-004).",
+      "evidencia": "packages/banco/supabase/migrations/20261108195850_integridade_estoque.sql; packages/banco/src/integridade-estoque.test.ts; packages/banco/src/concorrencia.test.ts; docs/analises/REVISAO_CLAUDE_E_RELATORIO_WEB_2026-11-08.md"
     },
     "ORA-POS-005": {
       "status": "parcial",
@@ -253,8 +253,8 @@
     },
     "ORA-INV-003": {
       "status": "testado",
-      "nota": "Livro só de inserção; saldo = soma do livro e posição de cada aparelho/chip controlada pelo próprio livro, com o item travado (REV-022/#21 e REV-023/#22 corrigidos; saída legítima voltou a funcionar: o upsert antigo recusava toda saída). privado.divergencias_estoque() confere livro × saldo × itens × reservas e a migration só termina sem divergência. Regressões e concorrência real passando. Aguardando revisão do Codex.",
-      "evidencia": "packages/banco/supabase/migrations/20261108195850_integridade_estoque.sql; packages/banco/src/integridade-estoque.test.ts; packages/banco/src/concorrencia.test.ts"
+      "nota": "Livro só de inserção; saldo = soma do livro e posição de cada aparelho/chip controlada pelo próprio livro, com o item travado (REV-022/#21 e REV-023/#22 corrigidos; saída legítima voltou a funcionar: o upsert antigo recusava toda saída). privado.divergencias_estoque() confere livro × saldo × itens × reservas e a migration só termina sem divergência. Regressões e concorrência real passando. Correção delimitada conferida pelo Codex em 08/11 na base 55d10af: reproduções independentes e concorrência passaram; issues de integridade encerradas. Não é homologação operacional.",
+      "evidencia": "packages/banco/supabase/migrations/20261108195850_integridade_estoque.sql; packages/banco/src/integridade-estoque.test.ts; packages/banco/src/concorrencia.test.ts; docs/analises/REVISAO_CLAUDE_E_RELATORIO_WEB_2026-11-08.md"
     },
     "ORA-INV-004": {
       "status": "parcial",
