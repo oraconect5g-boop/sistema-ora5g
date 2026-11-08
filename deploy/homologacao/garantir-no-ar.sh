@@ -2,13 +2,18 @@
 # Mantém a plataforma de HOMOLOGAÇÃO no ar em 127.0.0.1:3100 (ADR-001, opção A).
 # Roda como o usuário dev: pelo cron a cada 5 minutos e no boot, e pelo publicar.sh.
 # Uso: garantir-no-ar.sh [--reiniciar | --parar]
+# Teste isolado (REV-016): ORA_HML_BASE=<outra pasta> ORA_HML_PORTA=<outra porta>, sempre juntas.
 set -euo pipefail
 
-BASE="$HOME/homologacao"
-DIR="$BASE/plataforma"   # link para a versão ativa em $BASE/versoes/<commit>
+BASE="${ORA_HML_BASE:-$HOME/homologacao}"
+PORTA="${ORA_HML_PORTA:-3100}"
+if { [ "$BASE" = "$HOME/homologacao" ] && [ "$PORTA" != 3100 ]; } || { [ "$BASE" != "$HOME/homologacao" ] && [ "$PORTA" = 3100 ]; }; then
+  echo "ORA_HML_BASE e ORA_HML_PORTA mudam juntas (teste isolado) ou nenhuma (homologação real)." >&2
+  exit 1
+fi
+DIR="$BASE/plataforma"   # link para a versão ativa em $BASE/versoes/<commit>-<configuração>
 LOGS="$BASE/logs"
 PID="$BASE/plataforma.pid"
-PORTA=3100
 mkdir -p "$LOGS"
 
 # Durante uma publicação (build em andamento) o cron não mexe em nada.
@@ -45,11 +50,14 @@ esac
 
 cd "$DIR/apps/plataforma"
 # 8>&- 9>&-: o servidor não pode herdar as travas (senão ninguém mais publica nem vigia).
-nohup "$DIR/node_modules/.bin/next" start -H 127.0.0.1 -p "$PORTA" >>"$LOGS/plataforma.log" 2>&1 8>&- 9>&- &
+# env -i (REV-016): a configuração vem só do .env.local da versão, a mesma usada na build;
+# nada exportado no terminal de quem reinicia passa por cima dela.
+nohup env -i HOME="$HOME" PATH="$PATH" NODE_OPTIONS="$NODE_OPTIONS" NEXT_TELEMETRY_DISABLED=1 \
+  "$DIR/node_modules/.bin/next" start -H 127.0.0.1 -p "$PORTA" >>"$LOGS/plataforma.log" 2>&1 8>&- 9>&- &
 echo $! >"$PID"
 
 for _ in $(seq 1 60); do
-  if no_ar; then echo "$(date -Is) no ar (versão $(git -C "$DIR" rev-parse --short HEAD))" >>"$LOGS/garantir.log"; exit 0; fi
+  if no_ar; then echo "$(date -Is) no ar (versão $(basename "$(readlink -f "$DIR")"))" >>"$LOGS/garantir.log"; exit 0; fi
   sleep 0.5
 done
 echo "$(date -Is) FALHOU ao subir; veja $LOGS/plataforma.log" >>"$LOGS/garantir.log"
