@@ -54,7 +54,8 @@ it("entrada serializada não pode reutilizar chave de movimento por quantidade",
   expect(await erroDe(() => db.query("select privado.registrar_item_serializado($1,$2,$3,null,null,'entrada_importacao','teste:capaA')", [ids.lojaA, cat.aparelho, novoImei]))).toBe("OR004");
 });
 it("saldo serializado não pode duplicar o mesmo aparelho com outra chave", async () => {
-  await db.query("select privado.lancar_movimento($1,$2,1,'entrada_compra',$3,null,null,null,'auditoria:entrada-duplicada')", [ids.lojaA, cat.aparelho, itens.a1]);
+  const rejeicao = await erroDe(() => db.query("select privado.lancar_movimento($1,$2,1,'entrada_compra',$3,null,null,null,'auditoria:entrada-duplicada')", [ids.lojaA, cat.aparelho, itens.a1]));
+  expect(rejeicao).not.toBeNull();
   const { rows } = await db.query<{ quantidade: number; itens: number }>("select s.quantidade, (select count(*)::int from public.itens_serializados i where i.unidade_id=s.unidade_id and i.variante_id=s.variante_id and i.situacao='disponivel') as itens from public.estoque_saldos s where unidade_id=$1 and variante_id=$2", [ids.lojaA, cat.aparelho]);
   expect(rows[0]?.quantidade).toBe(rows[0]?.itens);
 });

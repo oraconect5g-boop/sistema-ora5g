@@ -5,9 +5,11 @@ test("eSIM: não transfere mais do que as quatro unidades do estoque central", a
   await page.goto("/demo/connect?aba=chips");
   await page.getByRole("button", { name: "eSIM", exact: true }).click();
   await expect(page.getByText("Estoque virgem: 6 físicos · 4 eSIM.")).toBeVisible();
+  await expect(page.getByText("15", { exact: true })).toBeVisible();
   await page.getByLabel("Quantidade de eSIM").fill("5");
   await page.getByRole("button", { name: /^Transferir para/ }).click();
   await expect(page.getByText("5 eSIM transferidos para Santa Cândida.")).toHaveCount(0);
+  await expect(page.getByText("15", { exact: true })).toBeVisible();
 });
 
 test("recarga LINK paga conserva o meio de pagamento e não vira recebimento na loja", async ({ page }) => {
@@ -20,4 +22,5 @@ test("recarga LINK paga conserva o meio de pagamento e não vira recebimento na 
   await expect(page.getByText(/aguardando pagamento do link/)).toBeVisible();
   await page.getByRole("button", { name: "Cliente pagou (simulação)" }).click();
   await expect(page.getByText(/feita pelo saldo/)).toHaveCount(0);
+  await expect(page.getByText(/O cliente pagou.*na loja/)).toHaveCount(0);
 });

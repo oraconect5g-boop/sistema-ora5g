@@ -373,3 +373,43 @@ A classificação abaixo registra o método aplicado: leitura de código/testes/
 | [packages/dominio/src/desconto.ts](https://github.com/oraconect5g-boop/sistema-ora5g/blob/7f5fd413eee756015723a53b29680db0ec655a1f/packages/dominio/src/desconto.ts) | Leitura de código e verificações aplicáveis de lint/tipos/build/E2E |
 | [packages/dominio/src/revisao-codex.test.ts](https://github.com/oraconect5g-boop/sistema-ora5g/blob/7f5fd413eee756015723a53b29680db0ec655a1f/packages/dominio/src/revisao-codex.test.ts) | Leitura e execução da suíte; lacunas cobertas pelos adversariais |
 | [scripts/gerar-catalogo-nogle.mjs](https://github.com/oraconect5g-boop/sistema-ora5g/blob/7f5fd413eee756015723a53b29680db0ec655a1f/scripts/gerar-catalogo-nogle.mjs) | Leitura de código e verificações aplicáveis de lint/tipos/build/E2E |
+
+## Apêndice C — inventário das 33 funções SQL
+
+Somente os schemas public e privado da aplicação; funções gerenciadas de Auth/PostgreSQL não entram neste total. Assinatura e definição foram comparadas com as migrations; os privilégios abaixo foram lidos no banco de desenvolvimento. O schema privado não está exposto como RPC pública. As oito funções públicas têm EXECUTE negado para anon e search_path vazio. Os testes de regra e as falhas de integridade estão descritos acima; o inventário não representa homologação de todos os fluxos.
+
+| Função e assinatura | SECURITY DEFINER | EXECUTE de authenticated |
+|---|---|---|
+| `privado.atualizar_saldo()` | Sim | Não |
+| `privado.auditar_mudanca()` | Sim | Não |
+| `privado.auditoria_completar_organizacao()` | Não | Sim |
+| `privado.auditoria_imutavel()` | Não | Sim |
+| `privado.cnpj_valido(p_cnpj text)` | Não | Sim |
+| `privado.encerrar_reserva(p_reserva uuid, p_situacao text)` | Sim | Não |
+| `privado.expirar_reservas(p_unidade uuid, p_variante uuid)` | Sim | Não |
+| `privado.iccid_valido(p_iccid text)` | Não | Não |
+| `privado.imei_valido(p_imei text)` | Não | Não |
+| `privado.lancar_movimento(p_unidade uuid, p_variante uuid, p_quantidade integer, p_tipo text, p_item uuid, p_motivo text, p_referencia_tipo text, p_referencia_id text, p_chave text, p_usuario uuid)` | Sim | Não |
+| `privado.livro_imutavel()` | Não | Não |
+| `privado.luhn_valido(p_digitos text)` | Não | Não |
+| `privado.organizacoes_com_permissao(p_permissao text)` | Sim | Sim |
+| `privado.perfis_que_gero()` | Sim | Sim |
+| `privado.registrar_item_serializado(p_unidade uuid, p_variante uuid, p_imei text, p_imei2 text, p_iccid text, p_tipo text, p_chave text, p_usuario uuid, p_condicao text, p_numero_serie text)` | Sim | Não |
+| `privado.sessao_atual()` | Não | Sim |
+| `privado.tipo_da_variante(p_variante uuid)` | Sim | Não |
+| `privado.unidades_com_permissao(p_permissao text)` | Sim | Sim |
+| `privado.unidades_visiveis()` | Sim | Sim |
+| `privado.usuario_ativo()` | Sim | Sim |
+| `privado.validar_item_serializado()` | Não | Não |
+| `privado.validar_movimento()` | Não | Não |
+| `privado.validar_unidade()` | Não | Sim |
+| `privado.validar_vinculo()` | Não | Sim |
+| `privado.vinculos_vigentes()` | Sim | Sim |
+| `public.conferir_item(p_item uuid)` | Sim | Sim |
+| `public.disponibilidade_na_rede(p_variante uuid)` | Sim | Sim |
+| `public.liberar_reserva(p_reserva uuid)` | Sim | Sim |
+| `public.preco_vigente(p_variante uuid, p_unidade uuid, p_canal text, p_momento timestamp with time zone)` | Sim | Sim |
+| `public.reservar_estoque(p_variante uuid, p_quantidade integer, p_item uuid, p_chave text, p_origem text, p_minutos integer)` | Sim | Sim |
+| `public.selecionar_unidade(p_unidade uuid)` | Sim | Sim |
+| `public.tem_permissao(p_permissao text, p_unidade uuid)` | Sim | Sim |
+| `public.unidade_atual()` | Sim | Sim |
