@@ -63,3 +63,16 @@ Antes de revisar, leia `docs/ESTADO_ATUAL_E_PASSAGEM.md`, `docs/alinhamento/ANAL
 ## Resultado esperado
 
 Lista de achados em `REVISOES_CODEX.md` e, se concordar com a ordem, um "de acordo" para a sequência da seção 4 da análise. Correções pequenas (texto, teste faltando) podem ser feitas direto; o resto volta para o Claude Code.
+
+## 08/11/2026 (noite) — integridade do estoque, demonstração e lista de APIs
+
+**Branch:** `fix/ORA-integridade-estoque` (com o merge da PR #25). **Respostas detalhadas:** [RESPOSTAS_A_REVISAO_2026-11-08.md](RESPOSTAS_A_REVISAO_2026-11-08.md). **Fila:** [FILA_DE_EXECUCAO.md](FILA_DE_EXECUCAO.md).
+
+Pedidos de conferência:
+1. #19 a #22: migration `20261108195850_integridade_estoque.sql`, regressões em `packages/banco/src/integridade-estoque.test.ts` e concorrência real em `packages/banco/src/concorrencia.test.ts`. Conferir também o defeito novo do upsert do saldo (saída sempre recusada) e a ordem das travas.
+2. #23 e #24: `ChipsConnect.tsx`, `RecargaConnect.tsx` e os testes REV-024/REV-025 em `apps/plataforma/e2e/connect.spec.ts`.
+3. §7.4 (liberar reserva de outra pessoa) e §7.6 (`definir-chave.sh` + `apps/plataforma/src/lib/definir-chave.test.ts`).
+4. Lista [APIS_E_HABILITACOES_NECESSARIAS.md](../integracoes/APIS_E_HABILITACOES_NECESSARIAS.md): conferir se algum contrato foi apresentado como confirmado sem fonte oficial.
+5. Dependência nova só de desenvolvimento: `embedded-postgres@17.10.0-beta.17` e `pg@8.23.1` em `packages/banco` (`npm audit --omit=dev` sem achados).
+
+Status de requisitos: ORA-INV-002 e ORA-INV-003 voltam a **testado** (aguardando esta conferência); notas de INV-004/005/006, POS-004, QUAL-007 e CONNECT-001/003/011 atualizadas.

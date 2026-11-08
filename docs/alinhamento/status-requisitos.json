@@ -57,9 +57,9 @@
       "evidencia": "packages/dominio/src/identificadores.ts; apps/plataforma/src/app/demo/vender/PDV.tsx"
     },
     "ORA-INV-002": {
-      "status": "parcial",
-      "nota": "IMEI com dígito verificador e único na organização; reserva com trava de linha e índice único (a segunda tentativa é recusada). Falta: baixa na venda real (ADR-004) e prova com duas conexões simultâneas (precisa DATABASE_URL de desenvolvimento).",
-      "evidencia": "packages/dominio/src/identificadores.test.ts; packages/banco/supabase/migrations/20261108150620_catalogo_estoque.sql; packages/banco/src/catalogo-estoque.test.ts"
+      "status": "testado",
+      "nota": "IMEI, IMEI2 e ICCID num conjunto único por organização (REV-020/#19 corrigido por migration nova, aplicada no ora5g-dev em 08/11). Provado com duas conexões simultâneas num PostgreSQL 17 real: mesmo IMEI em duas entradas, IMEI de um × IMEI2 de outro e o mesmo aparelho disputado por dois vendedores. Aguardando revisão do Codex. Falta a baixa pela venda real (ADR-004).",
+      "evidencia": "packages/banco/supabase/migrations/20261108195850_integridade_estoque.sql; packages/banco/src/integridade-estoque.test.ts; packages/banco/src/concorrencia.test.ts"
     },
     "ORA-POS-005": {
       "status": "parcial",
@@ -138,7 +138,7 @@
     },
     "ORA-QUAL-007": {
       "status": "parcial",
-      "nota": "Seis migrations versionadas e aplicadas do zero nos testes. Em 08/11 o Codex confirmou versão, nome e hash iguais ao histórico remoto, além dos objetos comparados; REV-018/#17 encerrado. Reversões lidas, destinadas só a banco descartável, não executadas nesta revisão. Faltam homologação, procedimento de produção e correções de estoque por migration nova (#19 a #22).",
+      "nota": "Sete migrations versionadas e aplicadas do zero nos testes; nome, versão e md5 iguais ao histórico do ora5g-dev (registro em aplicadas-dev.json, conferido por teste). A reversão de integridade_estoque é testada: volta funções, colunas, gatilhos e permissões ao estado anterior. Faltam homologação e procedimento de produção.",
       "evidencia": "packages/banco/supabase"
     },
     "ORA-REPORT-004": {
@@ -188,7 +188,7 @@
     },
     "ORA-CONNECT-001": {
       "status": "demonstracao",
-      "nota": "Venda do chip no PDV e estoque de chips por loja (físico e eSIM), com transferência do estoque central. Só dados fictícios.",
+      "nota": "Venda do chip no PDV e estoque de chips por loja (físico e eSIM), com transferência do estoque central limitada ao estoque virgem, que é baixado (REV-024/#23 corrigido). Só dados fictícios.",
       "evidencia": "apps/plataforma/src/app/demo/connect; apps/plataforma/e2e/connect.spec.ts"
     },
     "ORA-CONNECT-002": {
@@ -198,7 +198,7 @@
     },
     "ORA-CONNECT-003": {
       "status": "demonstracao",
-      "nota": "Recarga com estado próprio (aguardando pagamento ou confirmada), avulsa ou programada pelo saldo. Só dados fictícios.",
+      "nota": "Recarga com estado próprio (aguardando pagamento ou confirmada), avulsa ou programada pelo saldo; o meio escolhido (LINK ou SALDO) vale até a confirmação, sem misturar caixa da loja e carteira da Ora (REV-025/#24 corrigido). Só dados fictícios.",
       "evidencia": "apps/plataforma/src/app/demo/connect; apps/plataforma/e2e/connect.spec.ts"
     },
     "ORA-CONNECT-005": {
@@ -228,7 +228,7 @@
     },
     "ORA-CONNECT-011": {
       "status": "demonstracao",
-      "nota": "eSIM na ativação e compra de chip com entrega e rastreio no formato da API. Só dados fictícios.",
+      "nota": "eSIM na ativação e compra de chip com entrega e rastreio no formato da API; eSIM transferido sai do estoque virgem (REV-024). Só dados fictícios.",
       "evidencia": "apps/plataforma/src/app/demo/connect; apps/plataforma/e2e/connect.spec.ts"
     },
     "ORA-CAT-001": {
@@ -252,24 +252,24 @@
       "evidencia": "packages/banco/supabase/migrations/20261108150620_catalogo_estoque.sql; packages/banco/src/catalogo-estoque.test.ts"
     },
     "ORA-INV-003": {
-      "status": "parcial",
-      "nota": "Livro imutável e saldo igual à soma dos movimentos passam nos testes existentes. Revisão independente de 08/11 reproduziu entrada serializada sem movimento por colisão de chave (REV-022/#21) e saldo inflado por segunda entrada do mesmo aparelho (REV-023/#22). Corrigir por migration nova e provar posição por item, rollback e idempotência antes de voltar a testado.",
-      "evidencia": "packages/banco/supabase/migrations/20261108150620_catalogo_estoque.sql; packages/banco/src/catalogo-estoque.test.ts; docs/analises/AUDITORIA_CLAUDE_CODE_2026-11-08.md; issues #21 e #22"
+      "status": "testado",
+      "nota": "Livro só de inserção; saldo = soma do livro e posição de cada aparelho/chip controlada pelo próprio livro, com o item travado (REV-022/#21 e REV-023/#22 corrigidos; saída legítima voltou a funcionar: o upsert antigo recusava toda saída). privado.divergencias_estoque() confere livro × saldo × itens × reservas e a migration só termina sem divergência. Regressões e concorrência real passando. Aguardando revisão do Codex.",
+      "evidencia": "packages/banco/supabase/migrations/20261108195850_integridade_estoque.sql; packages/banco/src/integridade-estoque.test.ts; packages/banco/src/concorrencia.test.ts"
     },
     "ORA-INV-004": {
       "status": "parcial",
-      "nota": "Conferência física do IMEI/ICCID pelo celular registrada e auditada (conferir_item). Falta: importação aprovada da Rein e relatório de divergências.",
+      "nota": "Conferência física do IMEI/ICCID pelo celular registrada e auditada (conferir_item); relatório de divergências do estoque no banco (privado.divergencias_estoque, 08/11). Falta: importação aprovada da Rein, aprovadores do ajuste e tela.",
       "evidencia": "packages/banco/supabase/migrations/20261108150620_catalogo_estoque.sql; packages/banco/src/catalogo-estoque.test.ts"
     },
     "ORA-INV-005": {
       "status": "parcial",
-      "nota": "Reserva com prazo, liberação, vencimento e idempotência no banco. Falta: ligar ao checkout real e a rotina periódica de vencimento.",
-      "evidencia": "packages/banco/supabase/migrations/20261108150620_catalogo_estoque.sql; packages/banco/src/catalogo-estoque.test.ts"
+      "nota": "Reserva com prazo, liberação, vencimento e idempotência no banco; a mesma chave só repete a mesma reserva (REV-021/#20). Concorrência real provada: último item, mesma chave, liberação × nova reserva e vencimento disputado; a rotina de vencimento não espera item em venda. Liberar reserva de outra pessoa exige permissão e fica auditado. Falta: ligar ao checkout real e agendar a rotina.",
+      "evidencia": "packages/banco/supabase/migrations/20261108195850_integridade_estoque.sql; packages/banco/src/integridade-estoque.test.ts; packages/banco/src/concorrencia.test.ts; packages/banco/src/catalogo-estoque.test.ts"
     },
     "ORA-INV-006": {
       "status": "parcial",
-      "nota": "O banco recusa reservar IMEI/ICCID reservado, vendido ou de outra loja, com códigos próprios (OR002, OR003) e sem mudança parcial. Falta: mensagens na tela real.",
-      "evidencia": "packages/banco/supabase/migrations/20261108150620_catalogo_estoque.sql; packages/banco/src/catalogo-estoque.test.ts"
+      "nota": "O banco recusa reservar ou movimentar IMEI/ICCID reservado, vendido, de outra loja ou já no estoque, com códigos próprios (OR002, OR003, OR005) e sem mudança parcial (item e lançamento juntos ou nenhum). Falta: mensagens na tela real.",
+      "evidencia": "packages/banco/supabase/migrations/20261108195850_integridade_estoque.sql; packages/banco/src/integridade-estoque.test.ts; packages/banco/src/concorrencia.test.ts"
     },
     "ORA-INV-011": {
       "status": "parcial",
@@ -278,7 +278,7 @@
     },
     "ORA-POS-004": {
       "status": "parcial",
-      "nota": "Reserva do IMEI atômica no banco (trava + índice único); a escolha do IMEI na tela existe na demonstração. Falta a baixa na venda real (ADR-004).",
+      "nota": "Reserva do IMEI atômica no banco (trava + índice único, concorrência real provada); a saída por venda exige a reserva consumida antes e muda o item para vendido no mesmo lançamento. Falta a função de venda transacional (ADR-004) e a tela real.",
       "evidencia": "apps/plataforma/src/app/demo/vender/PDV.tsx; packages/banco/supabase/migrations/20261108150620_catalogo_estoque.sql; packages/banco/src/catalogo-estoque.test.ts"
     }
   }

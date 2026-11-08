@@ -94,3 +94,14 @@ O arquivo vira um **lote em prévia** (linhas normalizadas e erros, nada gravado
 Decisão do proprietário: **ORA-CAT-011, P0** exige foto principal de cada produto e imagem correspondente às variantes visualmente diferentes, com uso no catálogo, busca, estoque e PDV. O detalhe e os critérios estão em [FOTOS_DOS_PRODUTOS_2026-11-08.md](../alinhamento/FOTOS_DOS_PRODUTOS_2026-11-08.md), issue [#26](https://github.com/oraconect5g-boop/sistema-ora5g/issues/26).
 
 A implementação deverá acrescentar metadados de mídia vinculados à organização/produto/variante e armazenamento com autorização, por migration nova. As migrations já aplicadas continuam preservadas. Este complemento registra o requisito aprovado; o desenho técnico do ADR permanece proposto e não representa Storage ou fotos já implementados.
+
+## Complemento de integridade (08/11/2026, auditoria do Codex)
+
+Migration nova `20261108195850_integridade_estoque.sql` (as anteriores não mudam):
+- **Identificadores:** IMEI, IMEI2 e ICCID formam um conjunto único por organização (`privado.identificadores_itens`).
+- **Posição por item:** `itens_serializados.em_estoque` só muda pelo livro, com o item travado. Entrada exige o item fora do estoque; saída exige o item no estoque da loja; venda só depois de consumir a reserva. Situações: em estoque = `disponivel`/`reservado`; fora = `vendido`, `em_transito`, `baixado`.
+- **Idempotência:** chave repetida só devolve o resultado anterior se o conteúdo for o mesmo; senão `OR004`. Repetições simultâneas esperam a primeira.
+- **Ordem das travas:** chave → item → reserva → saldo. Venda com vários itens trava os itens em ordem antes de qualquer saldo.
+- **Código novo:** `OR005` (posição do item incompatível com o lançamento).
+- **Liberar reserva de outra pessoa:** permissão `reserva.liberar_outros` (dono e gerente), auditada.
+- **Conferência:** `privado.divergencias_estoque()`; zero linhas = íntegro.

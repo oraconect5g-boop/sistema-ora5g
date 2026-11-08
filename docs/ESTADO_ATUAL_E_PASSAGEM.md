@@ -1,8 +1,10 @@
 # Estado atual do projeto e passagem de contexto
 
-**Atualizado em:** 08/11/2026 · **Por:** Claude Code (programador, no servidor)
+**Atualizado em:** 08/11/2026 (noite) · **Por:** Claude Code (programador, no servidor)
 **Para:** o Claude Code que programa no servidor (usuário `dev`) e o Codex (revisor)
 
+> **Prioridade atual (08/11, PR #25):** núcleo real para sair da Rein — vendas, pagamentos/caixa e Ora Connect sobre acesso, catálogo, fotos e estoque íntegros, mais **cadastro de usuários e gestão da equipe** (pedido do proprietário). Fila com aceite e situação: **`docs/alinhamento/FILA_DE_EXECUCAO.md`**. APIs e habilitações: **`docs/integracoes/APIS_E_HABILITACOES_NECESSARIAS.md`**.
+>
 > **O que depende do proprietário (e-mails, chaves, painéis, decisões): `docs/PENDENCIAS_DO_PROPRIETARIO.md`.** Revisão do planejamento de 08/11: `docs/alinhamento/REVISAO_DO_PLANEJAMENTO_2026-11-08.md`.
 >
 > Leia este arquivo **antes de qualquer tarefa**. Ele resume duas conversas longas com o proprietário (05 e 06/11/2026). Os detalhes estão nos documentos citados; em caso de dúvida, a decisão mais recente do proprietário vale mais que qualquer documento antigo.
@@ -95,6 +97,15 @@ Papéis **fixos** (decisão do proprietário). Detalhes: ADR-001, seção 2.7.
 **Não decidir nada disso sozinho.** Pode preparar opções reversíveis.
 
 ## 6. Próximos passos do programador (em ordem)
+
+**Execução prioritária (08/11, noite) — onde parei e o que vem:**
+- Feito na branch `fix/ORA-integridade-estoque`: merge da PR #25; integridade do estoque (#19 a #22) por migration nova `20261108195850_integridade_estoque` (aplicada no `ora5g-dev`, registrada em `aplicadas-dev.json`), com regressões e **11 disputas com duas conexões num PostgreSQL 17 real** (`packages/banco/src/concorrencia.test.ts`, via `embedded-postgres`); defeito novo corrigido (saída de estoque falhava no upsert do saldo); demonstração #23 e #24; lista de APIs; `definir-chave.sh` aceita cifrão/aspas (§7.6). Respostas ao Codex: `docs/alinhamento/RESPOSTAS_A_REVISAO_2026-11-08.md`.
+- **Próximo:** item 5 da fila — acesso real + **cadastro de usuários e gestão da equipe** (branch `feature/ORA-006-acesso-equipe`). Só a criação de pessoas no Auth depende da `SUPABASE_SECRET_KEY`; banco, telas e testes avançam sem ela.
+- Depois: tipos gerados e centavos (6), catálogo/estoque reais com fotos (7), ADR-004 vendas (9), caixa e pagamentos (10), adaptador Nogle (11), fila fiscal (12), go/no-go (13).
+- Pastas para o proprietário enviar arquivos: `~/entrada/{rein,lojas,equipe,fotos}` (700). Nada recebido até 08/11.
+- Homologação continua na versão `0a19c71`; publicar de novo só com autorização do proprietário.
+
+Histórico anterior (07 e 08/11):
 
 Feito em 07/11: deploy key e clone; Node 22; **ORA-002**; **ORA-003**; **ORA-004/005** (aplicada no `ora5g-dev`); **regras de negócio puras** (dinheiro, IMEI/ICCID, desconto por margem, pagamento misto e financiado, produção por categoria); **versão de demonstração** com 12 telas e 4 perfis, desligada em produção; **login real** ligado ao Supabase (recusa credencial errada com mensagem neutra, testado contra o projeto real); **homologação** rodando no servidor em `127.0.0.1:3100`, com reinício automático pelo `crontab` (autorizado em 07/11). **Desde 07/11, `https://ora5g.com.br` mostra temporariamente a plataforma** (`.htaccess` na `public_html` da conta `wwora5`, colocado pelo proprietário) para a primeira apresentação; conferido por navegador de celular. Quando o subdomínio `hml-app` existir, apagar esse `.htaccess` para o domínio principal voltar ao site institucional (ver `deploy/homologacao/LEIA-ME.md`).
 
