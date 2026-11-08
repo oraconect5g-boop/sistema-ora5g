@@ -30,6 +30,8 @@ Confira a PR #25. Na preparação deste prompt, ela ainda estava aberta e contin
 
 Referência inicial: main 7f5fd41. Verifique o HEAD atual, o diff, as issues e o CI antes de decidir o que falta. Os documentos de 172 requisitos são fotografias históricas; o backlog atualizado tem 173, incluindo ORA-CAT-011, e 71 no recorte do piloto. Recalcule os números quando entregar funcionalidades.
 
+Se a deploy key não permitir consultar Actions/issues pela API, use os commits, documentos e reproduções disponíveis no Git, execute as verificações localmente e registre a conferência externa para o Codex. Não paralise o trabalho nem solicite um token amplo só para contornar essa limitação.
+
 Crie uma fila executável: requisito → issue → dependências → critério de aceite → branch/PR → teste → resultado. Use a decisão mais recente do proprietário quando um documento antigo divergir. Não atribua conteúdo a conversas privadas que não estejam disponíveis.
 
 2. STACK, ARQUITETURA E AUTONOMIA
@@ -248,7 +250,7 @@ Em cada entrega, mantenha atualizados:
 - issues/PRs com requisito, mudança, schema, testes, evidências e reversão;
 - lista de APIs/habilitações e pendências do proprietário.
 
-Mantenha o papel do Codex como revisor. Não declare que ele aprovou algo sem registro. Siga o processo de integração já autorizado: branches, verificações completas em instalação limpa, integração pelo Claude conforme a decisão vigente e revisão do Codex. Produção conserva a aprovação exigida pelo proprietário.
+Mantenha o papel do Codex como revisor. Não declare que ele aprovou algo sem registro. Siga o processo de integração já autorizado: branches, verificações completas em instalação limpa, integração pelo Claude conforme a decisão vigente e revisão do Codex. Se não puder abrir PR pela API, publique a branch e seu link de comparação, com o relatório completo; não declare uma PR criada sem que ela exista. Preserve o fluxo de integração já autorizado. Produção conserva a aprovação exigida pelo proprietário.
 
 Se a sessão/contexto terminar, deixe tarefas concluídas, próxima tarefa, branch/SHA, comandos, resultados e bloqueios no documento de passagem. Na retomada, continue do ponto registrado.
 
