@@ -79,3 +79,19 @@ Executado em 08/11/2026 em `~/teste-publicacao` (clone próprio, porta `3190`), 
 A homologação real (`3100`) não foi usada. Durante o teste, às 09:41, ela foi republicada por outra sessão (merge `5560efa` da Ora Connect, ainda com o `publicar.sh` anterior), o que a verificação do teste registrou; não houve ação deste teste sobre ela. O servidor de teste foi encerrado; a pasta `~/teste-publicacao` (3,4 GB, só dados fictícios) fica para o proprietário apagar.
 
 A próxima publicação deve usar o script novo: até lá, `~/homologacao/plataforma/deploy/homologacao/publicar.sh` ainda é o da versão no ar. Rodar `bash deploy/homologacao/publicar.sh` a partir do repositório com a `main` atualizada.
+
+## Sequência do CI antes do merge (08/11/2026)
+
+Rodada num clone limpo da branch no commit `ccfcfd4` (sem `.env.local`, sem caches de build), na raiz, com `APP_ENV=development` e `NEXT_PUBLIC_APP_URL=http://127.0.0.1:3100`, na ordem do `.github/workflows/ci.yml` da `main`:
+
+| Passo | Resultado |
+|---|---|
+| `npm run segredos` e `npm run segredos -- --historico 5560efa..HEAD` | Nenhum segredo encontrado |
+| `node scripts/gerar-rastreabilidade.mjs --conferir` e `node scripts/gerar-catalogo-nogle.mjs --conferir` | Em dia (172 requisitos; 62 funções da Nogle) |
+| `npm ci`, `npm run lint`, `npm run typecheck` | Passaram (só o aviso conhecido "Pages directory" nos pacotes sem Next) |
+| `npm test` | 261 passaram: plataforma 82, banco 44 (mais 4 `todo`), configuração 53, domínio 82 |
+| `npm run build` | Passou |
+| `npm audit --omit=dev` | 0 vulnerabilidades |
+| `npm run test:e2e` | 104 passaram e 10 foram pulados de propósito: 4 de login real (sem Supabase configurado, como no GitHub), 4 de inicialização no celular ("basta rodar uma vez") e 2 por tamanho de tela (CSV no celular, menu "Mais" no computador) |
+
+O commit seguinte só acrescenta esta tabela (documentação); nele foram repetidos o detector de segredos e as conferências de rastreabilidade e do catálogo. A homologação **não foi republicada**: o `ora5g.com.br` segue com a versão `5560efa` publicada por outra sessão; o REV-017 e a busca repetida só chegam ao endereço público numa próxima publicação, quando o proprietário pedir.
