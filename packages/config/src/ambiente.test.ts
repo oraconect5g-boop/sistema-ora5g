@@ -1,6 +1,6 @@
 import { describe, expect, it } from "vitest";
 
-import { AmbienteInvalido, carregarAmbiente, verificarAmbiente } from "./ambiente";
+import { AmbienteInvalido, carregarAmbiente, lerGrupos, verificarAmbiente } from "./ambiente";
 
 const aplicacaoValida = { APP_ENV: "development", NEXT_PUBLIC_APP_URL: "http://127.0.0.1:3100" };
 const segredoFalso = ["sb", "secret", "valorFalsoParaTeste123456"].join("_");
@@ -90,6 +90,25 @@ describe("grupo supabase_servidor (worker e migrations)", () => {
       const r = verificarAmbiente({ ...servidorValido, DATABASE_URL }, ["supabase_servidor"]);
       expect(!r.ok && r.problemas.map((p) => p.variavel)).toEqual(["DATABASE_URL"]);
     }
+  });
+});
+
+describe("CONFIG-001 — nomes de grupo do verificar-env", () => {
+  it("aceita os grupos atuais, com espaços e repetição", () => {
+    expect(lerGrupos("aplicacao,supabase_publico")).toEqual({ ok: true, grupos: ["aplicacao", "supabase_publico"] });
+    expect(lerGrupos(" aplicacao , aplicacao ")).toEqual({ ok: true, grupos: ["aplicacao"] });
+  });
+
+  it("o grupo antigo supabase é recusado com a orientação, sem virar outro grupo por conta própria", () => {
+    const r = lerGrupos("aplicacao,supabase");
+    expect(r.ok).toBe(false);
+    const mensagem = !r.ok ? r.erros.join(" ") : "";
+    expect(mensagem).toContain("supabase_publico");
+    expect(mensagem).toContain("o login nunca precisa dele");
+  });
+
+  it.each(["", " , ", "supabase_admin", "constructor", "toString", "__proto__"])("recusa %j", (texto) => {
+    expect(lerGrupos(texto).ok).toBe(false);
   });
 });
 

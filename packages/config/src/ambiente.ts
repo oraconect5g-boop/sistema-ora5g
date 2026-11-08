@@ -65,6 +65,26 @@ export const GRUPOS = {
 
 export type NomeGrupo = keyof typeof GRUPOS;
 
+// CONFIG-001: o grupo "supabase" (endereço, chave pública, chave secreta e banco juntos) foi
+// dividido em 07/11/2026 (REV-004). Sem apelido de propósito: o nome antigo exigiria a chave
+// secreta e o banco só para conferir o login, que precisa apenas do grupo público.
+const GRUPOS_REMOVIDOS: Readonly<Record<string, string>> = {
+  supabase:
+    "foi dividido em 07/11/2026. Para o login, use supabase_publico (só endereço e chave pública). " +
+    "supabase_servidor (chave secreta e banco) é só para worker, scripts de banco e migrations; o login nunca precisa dele",
+};
+
+// Lê a lista de grupos do verificar-env ("aplicacao,supabase_publico"). Nome desconhecido ou
+// removido vira erro explicado, nunca um grupo escolhido por aproximação.
+export function lerGrupos(texto: string): { ok: true; grupos: NomeGrupo[] } | { ok: false; erros: string[] } {
+  const nomes = texto.split(",").map((nome) => nome.trim()).filter(Boolean);
+  if (nomes.length === 0) return { ok: false, erros: ["informe ao menos um grupo"] };
+  const erros = nomes
+    .filter((nome) => !Object.hasOwn(GRUPOS, nome))
+    .map((nome) => `grupo ${nome}: ${Object.hasOwn(GRUPOS_REMOVIDOS, nome) ? GRUPOS_REMOVIDOS[nome] : "desconhecido"}`);
+  return erros.length > 0 ? { ok: false, erros } : { ok: true, grupos: [...new Set(nomes)] as NomeGrupo[] };
+}
+
 type ConfiguracaoDe<G extends NomeGrupo> = z.output<(typeof GRUPOS)[G]>;
 export type Configuracao<G extends NomeGrupo> = UniaoParaIntersecao<ConfiguracaoDe<G>>;
 type UniaoParaIntersecao<U> = (U extends unknown ? (x: U) => void : never) extends (

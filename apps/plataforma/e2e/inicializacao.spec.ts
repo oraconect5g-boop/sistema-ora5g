@@ -33,6 +33,30 @@ test("REV-004: o sistema recusa iniciar com chave privilegiada no campo público
   expect(servidor.saida()).not.toContain(conteudo);
 });
 
+test("CONFIG-001: com só o par público, o sistema sobe e oferece o login, sem chave secreta nem banco", async () => {
+  test.skip(test.info().project.name !== "computador", "basta rodar uma vez");
+
+  // Endereço .invalid e chave FICTÍCIA: nada é autenticado; só a configuração exigida na subida importa.
+  // As duas do grupo servidor ficam vazias de propósito (vazia = não definida, nem lida do .env.local).
+  const servidor = iniciarServidor({
+    APP_ENV: "development",
+    NEXT_PUBLIC_APP_URL: "http://127.0.0.1:3199",
+    NEXT_PUBLIC_SUPABASE_URL: "https://exemplo.supabase.invalid",
+    NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY: ["sb", "publishable", "valorFicticioDeTeste123"].join("_"),
+    SUPABASE_SECRET_KEY: "",
+    DATABASE_URL: "",
+  });
+  try {
+    await servidor.esperarNoAr();
+    const entrada = await (await fetch(`${servidor.url}/entrar`)).text();
+    expect(entrada).toContain("Entrar na plataforma");
+    expect(entrada).not.toContain("O login ainda não está configurado");
+    expect(servidor.saida()).not.toMatch(/SUPABASE_SECRET_KEY|DATABASE_URL/);
+  } finally {
+    await servidor.parar();
+  }
+});
+
 test("em produção a demonstração não existe", async () => {
   test.skip(test.info().project.name !== "computador", "basta rodar uma vez");
 
