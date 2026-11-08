@@ -1,6 +1,6 @@
 # Estado atual do projeto e passagem de contexto
 
-**Atualizado em:** 07/11/2026 · **Por:** Claude Code (programador, no servidor)
+**Atualizado em:** 08/11/2026 · **Por:** Claude Code (programador, no servidor)
 **Para:** o Claude Code que programa no servidor (usuário `dev`) e o Codex (revisor)
 
 > Leia este arquivo **antes de qualquer tarefa**. Ele resume duas conversas longas com o proprietário (05 e 06/11/2026). Os detalhes estão nos documentos citados; em caso de dúvida, a decisão mais recente do proprietário vale mais que qualquer documento antigo.
@@ -41,7 +41,7 @@ Papéis **fixos** (decisão do proprietário). Detalhes: ADR-001, seção 2.7.
 | IPv4 | `69.6.214.94` (principal) e `69.6.214.23` (usado pelo `ns2`, **não excluir**). **Sem IPv6** |
 | SSH | Porta **22022**, usuário `dev` criado, login só por chave, conexão do Windows do proprietário **testada e funcionando** |
 | Impressão digital ED25519 do servidor | `SHA256:qpqzb3QMPlzqESR9xKmrxkjAR/FNTWzHhCYusI73COA` |
-| Domínio | `ora5g.com.br` registrado no Registro.br; DNS ainda delegado ao Hostoo; troca para `ns1.ora5g.com.br` (.94) e `ns2.ora5g.com.br` (.23) **planejada, não confirmada** |
+| Domínio | `ora5g.com.br` registrado no Registro.br; DNS delegado ao próprio servidor, `ns1.ora5g.com.br` (.94) e `ns2.ora5g.com.br` (.23), **conferido em 07/11** (P12; antes estava no Hostoo) |
 | Zona DNS no WHM | Conferida: A, MX, SPF, DKIM, DMARC, nenhum AAAA |
 | Domínios do sistema | `app`, `loja`, `hml-app`, `hml-loja` `.ora5g.com.br` (só registros A) — ainda não criados |
 | Portas internas | **30xx produção, 31xx homologação**, sempre em `127.0.0.1` |
@@ -96,13 +96,13 @@ Feito em 07/11: deploy key e clone; Node 22; **ORA-002**; **ORA-003**; **ORA-004
 
 **Ora Connect e API Nogle (08/11, pedido do proprietário):** a documentação oficial (https://docs.nogle.tech/) foi lida por inteiro: 62 funções em 16 grupos, cópia guardada e catálogo gerado (`docs/integracoes/NOGLE_API_REFERENCIA.md`). A tela Ora Connect da demonstração ganhou abas com todas as funções (ativar chip físico ou eSIM, consultar linha, recarga, portabilidade, bloqueio, chips e entrega, carteira, integração), simuladas no formato documentado. Para ligar de verdade faltam a **P9** (tipo de chave), credenciais no gerenciador de segredos e as perguntas da seção 3 da referência.
 
-1. **Revisão do Codex de 07/11:** os 14 achados (REV-001 a REV-014) foram tratados: 13 com teste de regressão e o REV-009 (renovação de sessão) sem teste com usuário real, que ainda não existe; respostas em `docs/alinhamento/RESPOSTAS_A_REVISAO_2026-11-07.md`. Aguardam a revisão do Codex sobre as correções.
+1. **Fila de revisão com o Codex (atualizada em 08/11):** dos 14 achados de 07/11, o Codex conferiu as correções e encerrou sete issues com evidência (`docs/alinhamento/CONFERENCIA_DAS_CORRECOES_2026-11-07.md`); a **#13 / REV-015** (desconto maior que o item) também foi confirmada e encerrada na auditoria de 07/11 (`docs/analises/AUDITORIA_FUNCIONAL_E_SUPABASE_2026-11-07.md`). Corrigidos em 08/11 na branch `fix/residuos-codex-2026-11-07`, **aguardando revisão do Codex**: resíduo do **REV-008** (#10, aritmética exata em valores altos), teste do **REV-014**, **REV-016** (#14, republicar o mesmo commit com outro ambiente), **CONFIG-001** (#12) e **REV-017** (#16, `/entrar?erro=constructor` dava 500). Respostas: `docs/alinhamento/RESPOSTAS_A_REVISAO_2026-11-07.md`. Continua aberta a **#11 / REV-009**: renovação de sessão sem teste com usuário real, que ainda não existe.
 2. **Auditoria automática** de mudanças em vínculos, perfis e papéis (ORA-ORG-005).
 3. **ADR-003** (operação comercial, tipos de item, ledger de estoque), revisado pelo Codex e aceito pelo proprietário.
 4. **ORA-006** completo: escolha da loja na sessão, sessão por turno, recuperação de senha (depende do SMTP), usuários de teste.
 5. **ORA-007** catálogo, **ORA-009** importador (depende do CSV), **ORA-010** estoque e IMEI com teste de concorrência.
 6. Trocar as telas da demonstração pelas reais, uma a uma, conforme cada módulo fica pronto (reaproveitar `src/componentes` e as regras de `src/demo/consultas.ts` como contrato de quem vê o quê).
-7. Resíduos da conferência do Codex: **REV-016** (republicar o mesmo commit não troca o ambiente), resíduo de arredondamento do **REV-008** em valores muito altos, teste automático do erro de consulta do **REV-014** e compatibilidade da **CONFIG-001**.
+7. Achados novos do Codex na auditoria de 07/11, ainda **não tratados**: **#17 / REV-018** (as versões do histórico de migrations no Supabase diferem das do Git, embora os objetos correspondam; conciliar por procedimento revisado, sem `repair` nem `reset` às cegas) e **#18 / REV-019** (no PDV da demonstração, acessório aceita quantidade acima do saldo e a conclusão continua habilitada).
 
 ## 7. Contexto da conversa com o ChatGPT
 

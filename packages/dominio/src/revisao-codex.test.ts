@@ -2,7 +2,7 @@
 // validação de valores em tempo de execução em todos os pontos públicos.
 import { describe, expect, it } from "vitest";
 
-import { avaliarDesconto, limiteDeDesconto } from "./desconto";
+import { avaliarDesconto, limiteDeDesconto, type EntradaDesconto } from "./desconto";
 import { aplicarPercentual, exigirCentavos, formatarBRL, lerReais, multiplicarCentavos, pb, somarCentavos } from "./dinheiro";
 import { completarComDigitoVerificador } from "./identificadores";
 import { conferirPagamentos } from "./pagamento";
@@ -95,3 +95,96 @@ describe("REV-008 — valores inválidos nunca passam", () => {
     expect(totaisDaVenda(itens).total).toBe(189_900);
   });
 });
+
+// Resíduo da #10 apontado na conferência do Codex (07/11/2026): em valores altos, custo × 10000
+// passa de 2^53 e a divisão em ponto flutuante arredondava ANTES do Math.ceil, liberando
+// 1 centavo a mais de desconto. Centavos e pontos-base; os valores cabem no numeric(14,2).
+describe("REV-008 (resíduo) — aritmética inteira exata em valores altos", () => {
+  const casoDoCodex: EntradaDesconto = {
+    preco: 2_000_000_000_012,
+    custo: 1_999_800_000_001,
+    taxaMeioPagamento: 0,
+    politica: { tetoCategoria: 1, margemMinima: 1 },
+  };
+  // Margem mínima mantida com o desconto d: (preço − d) × fator líquido >= custo × 10000.
+  const mantemMargem = (e: EntradaDesconto, d: number) =>
+    (BigInt(e.preco) - BigInt(d)) * BigInt(10_000 - e.taxaMeioPagamento - e.politica.margemMinima) >= BigInt(e.custo) * 10_000n;
+
+  it("no caso do Codex o teto exato é 10 centavos, não 11", () => {
+    expect(limiteDeDesconto(casoDoCodex)).toEqual({ maximoSemAprovacao: 10, motivoDoLimite: "margem_minima" });
+    expect(mantemMargem(casoDoCodex, 10)).toBe(true);
+    expect(mantemMargem(casoDoCodex, 11)).toBe(false);
+  });
+
+  it("no limite exato o vendedor aplica sozinho; 1 centavo acima pede aprovação", () => {
+    expect(avaliarDesconto(casoDoCodex, 10).situacao).toBe("dentro_do_limite");
+    expect(avaliarDesconto(casoDoCodex, 11).situacao).toBe("precisa_aprovacao");
+  });
+
+  // Família de casos difíceis: custo × 10000 deixa resto 1 na divisão pelo fator líquido, então o
+  // preço mínimo exato é o quociente + 1. No ponto flutuante a fração 1/fator sumia (resultado 11).
+  it.each([9_999, 9_997, 9_973, 8_001, 7_001])("fator líquido %i com resto 1: o limite continua exato", (fator) => {
+    let inverso = 1;
+    while ((10_000 * inverso) % fator !== 1) inverso++;
+    const custo = inverso + fator * 300_000_007;
+    const precoMinimo = (BigInt(custo) * 10_000n - 1n) / BigInt(fator) + 1n;
+    const entrada: EntradaDesconto = {
+      preco: Number(precoMinimo) + 10,
+      custo,
+      taxaMeioPagamento: 0,
+      politica: { tetoCategoria: 1, margemMinima: 10_000 - fator },
+    };
+    expect(limiteDeDesconto(entrada)).toEqual({ maximoSemAprovacao: 10, motivoDoLimite: "margem_minima" });
+  });
+
+  it("em 2.000 casos de valor alto, o limite é sempre o maior desconto que mantém a margem", () => {
+    const sortear = geradorDeterministico(20_261_107);
+    const falhas: string[] = [];
+    for (let i = 0; i < 2_000; i++) {
+      const preco = sortear(1_000_000_000_000, 9_000_000_000_000);
+      const entrada: EntradaDesconto = {
+        preco,
+        custo: sortear(Math.floor(preco / 2), preco),
+        taxaMeioPagamento: sortear(0, 900),
+        politica: { tetoCategoria: sortear(0, 1_000), margemMinima: sortear(0, 3_000) },
+      };
+      const { maximoSemAprovacao: d, motivoDoLimite } = limiteDeDesconto(entrada);
+      const certo =
+        motivoDoLimite === "margem_minima"
+          ? mantemMargem(entrada, d) && !mantemMargem(entrada, d + 1)
+          : motivoDoLimite === "teto_da_categoria"
+            ? d === aplicarPercentual(entrada.preco, entrada.politica.tetoCategoria) && (d === 0 || mantemMargem(entrada, d))
+            : d === 0 && !mantemMargem(entrada, 1);
+      if (!certo) falhas.push(JSON.stringify({ entrada, d, motivoDoLimite }));
+    }
+    expect(falhas).toEqual([]);
+  });
+
+  it("a margem resultante é arredondada para baixo sem o erro do ponto flutuante", () => {
+    // lucro 3.333.000.003.332 × 10000 / preço 10.000.000.009.997 = 3332,99999999999990...
+    // O ponto flutuante chegava a 3333 (33,33%); o certo é 3332 (33,32%).
+    const entrada: EntradaDesconto = { preco: 10_000_000_009_997, custo: 6_667_000_006_665, taxaMeioPagamento: 0, politica: { tetoCategoria: 1, margemMinima: 0 } };
+    expect(avaliarDesconto(entrada, 0).margemResultante).toBe(3_332);
+  });
+
+  it("margem negativa enorme continua um inteiro seguro", () => {
+    const entrada: EntradaDesconto = { preco: Number.MAX_SAFE_INTEGER, custo: Number.MAX_SAFE_INTEGER, taxaMeioPagamento: 0, politica: { tetoCategoria: 1, margemMinima: 0 } };
+    const r = avaliarDesconto(entrada, Number.MAX_SAFE_INTEGER - 1);
+    expect(r.situacao).toBe("abaixo_do_custo");
+    expect(r.margemResultante).toBe(Number.MIN_SAFE_INTEGER);
+  });
+});
+
+// Sorteio reproduzível (mulberry32): mesma semente, mesmos casos em qualquer máquina.
+function geradorDeterministico(semente: number) {
+  let estado = semente >>> 0;
+  const proximo = () => {
+    estado = (estado + 0x6d2b79f5) >>> 0;
+    let t = estado;
+    t = Math.imul(t ^ (t >>> 15), t | 1);
+    t ^= t + Math.imul(t ^ (t >>> 7), t | 61);
+    return ((t ^ (t >>> 14)) >>> 0) / 4_294_967_296;
+  };
+  // 53 bits de sorteio: cobre também os algarismos finais dos valores altos.
+  return (minimo: number, maximo: number) => minimo + ((Math.floor(proximo() * 2 ** 32) * 2 ** 21 + Math.floor(proximo() * 2 ** 21)) % (maximo - minimo + 1));
+}

@@ -82,6 +82,8 @@ npm run verificar-env -- caminho-do-arquivo-administrativo supabase_servidor
 
 **Pendência de compatibilidade:** o grupo antigo `supabase` foi removido, mas orientações antigas ainda o citam. A [CONFIG-001 / #12](https://github.com/oraconect5g-boop/sistema-ora5g/issues/12) fica parcialmente atendida: atualizar todas as instruções e oferecer alias temporário, ou registrar a mudança e migrar os consumidores; separar SQL/API administrativa quando a primeira tarefa usar só uma delas. Não exigir o grupo servidor para login público ou apresentação.
 
+> **Atualização do Claude (07/11/2026, branch `fix/residuos-codex-2026-11-07`):** instruções alinhadas aos grupos atuais (`apps/plataforma/README.md` era a única que ainda citava `aplicacao,supabase`). Sem apelido para o nome antigo, de propósito: ele juntava chave secreta e banco ao par público e voltaria a exigir o grupo servidor para conferir o login. O `verificar-env` recusa `supabase` com a orientação acima (código de saída 2). Testes: `packages/config/src/verificar-env.test.ts` e bloco CONFIG-001 de `ambiente.test.ts`. Registro: `RESPOSTAS_A_REVISAO_2026-11-07.md`.
+
 ## 5. Inventário das 60 variáveis, sem valores
 
 | Grupo | Nomes existentes no modelo principal | Quando configurar |

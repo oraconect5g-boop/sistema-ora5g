@@ -4,6 +4,7 @@ import Link from "next/link";
 
 import { Marca } from "../../componentes/Marca";
 import { Aviso, Botao } from "../../componentes/ui";
+import { chaveDoCatalogo, type ValorDeParametro } from "../../lib/parametros";
 import { configuracaoSupabase } from "../../lib/supabase/configuracao";
 import { entrar } from "./acoes";
 import { CampoSenha } from "./CampoSenha";
@@ -11,17 +12,19 @@ import { CampoSenha } from "./CampoSenha";
 export const metadata: Metadata = { title: "Entrar" };
 export const dynamic = "force-dynamic";
 
-const ERROS: Record<string, string> = {
+// O código vem do endereço (?erro=...): só chave própria deste catálogo vira aviso (REV-017 / #16).
+// "__proto__", "constructor", "toString", código desconhecido ou repetido: nenhum aviso.
+const ERROS = {
   credenciais: "E-mail ou senha incorretos.",
   dados: "Preencha e-mail e senha.",
   configuracao: "O login ainda não está configurado neste ambiente.",
-};
+} as const;
 
 const classeCampo = "min-h-12 w-full rounded-botao border border-borda bg-slate-50/60 px-3.5 text-[15px] outline-none transition focus:border-acao focus:bg-white focus:ring-2 focus:ring-acao/20";
 const BARRAS = [42, 58, 50, 72, 66, 84, 78, 96];
 
-export default async function Entrar({ searchParams }: { searchParams: Promise<{ erro?: string }> }) {
-  const { erro } = await searchParams;
+export default async function Entrar({ searchParams }: { searchParams: Promise<{ erro?: ValorDeParametro }> }) {
+  const erro = chaveDoCatalogo(ERROS, (await searchParams).erro);
   const configurado = configuracaoSupabase() !== null;
   return (
     <main className="grid min-h-dvh bg-white lg:grid-cols-[minmax(0,1fr)_minmax(0,1.05fr)]">
@@ -30,7 +33,7 @@ export default async function Entrar({ searchParams }: { searchParams: Promise<{
         <div className="mx-auto flex w-full max-w-sm flex-1 flex-col justify-center py-10">
           <h1 className="text-3xl font-bold tracking-tight">Bem-vindo à Ora</h1>
           <p className="mt-1 text-suave">Acesse a plataforma de gestão integrada.</p>
-          {erro && ERROS[erro] && <Aviso tom="perigo" className="mt-5">{ERROS[erro]}</Aviso>}
+          {erro && <Aviso tom="perigo" className="mt-5">{ERROS[erro]}</Aviso>}
           {configurado ? (
             <form action={entrar} className="mt-6 space-y-4">
               <div>

@@ -37,7 +37,15 @@ APP_ENV=development
 NEXT_PUBLIC_APP_URL=http://127.0.0.1:3100
 ```
 
-Para conferir um arquivo sem mostrar valores: `npm run verificar-env -- apps/plataforma/.env.local aplicacao,supabase`.
+Para conferir um arquivo sem mostrar valores (a partir da raiz do monorepo):
+
+| Para quê | Comando |
+|---|---|
+| Apresentação, sem login | `npm run verificar-env -- apps/plataforma/.env.local aplicacao` |
+| Login real (endereço e chave **pública** do Supabase) | `npm run verificar-env -- apps/plataforma/.env.local aplicacao,supabase_publico` |
+| Só worker, scripts de banco e migrations | `npm run verificar-env -- <arquivo do serviço> supabase_servidor` |
+
+O login **nunca** precisa de `supabase_servidor` (chave secreta e banco). O antigo grupo `supabase`, que juntava os quatro, foi dividido em 07/11/2026 (REV-004); o comando recusa esse nome e explica qual usar (CONFIG-001). Guia por fase: `docs/alinhamento/CONFIGURACAO_E_TRANSICAO_DO_MOCKUP.md`.
 
 ## Segredos
 

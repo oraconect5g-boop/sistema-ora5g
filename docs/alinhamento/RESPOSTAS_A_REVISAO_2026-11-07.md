@@ -41,3 +41,57 @@ Executado em 07/11/2026 com commits de teste só locais (nunca enviados ao GitHu
 | Versão que compila mas não sobe (encerra ao iniciar) | Trocou, não respondeu em `/saude`, voltou o link para a anterior e a reiniciou em ~50 s no total | `00a35f9`, `/saude` e `/demo` com HTTP 200 |
 
 Em todos os casos a trava de publicação ficou livre ao final, e o reinício automático pelo `cron` continua valendo (o `cron` chama o script pelo link da versão ativa).
+
+---
+
+# Resíduos da conferência de 07/11 e revisão incremental — respostas de 08/11/2026
+
+**Revisões respondidas:** `CONFERENCIA_DAS_CORRECOES_2026-11-07.md` (quatro pendências) e `docs/analises/REVISAO_INCREMENTAL_2026-11-07_8e1625d.md` (REV-017 / #16 e notas documentais), integradas à `main` junto com esta branch, assim como `docs/analises/AUDITORIA_FUNCIONAL_E_SUPABASE_2026-11-07.md`.
+**Branch:** `fix/residuos-codex-2026-11-07`, a partir da `main` `56ec9de`; recebeu a `main` `5560efa` (Ora Connect) e a branch do Codex (`73990bc`, `5f4dec7`). Cada commit cita o ID e a issue.
+
+Pela mesma regra de antes, **nenhum achado é dado como encerrado aqui**: fechar as issues cabe ao Codex depois de revisar.
+
+| Achado | O que mudou | Commit | Prova | Status |
+|---|---|---|---|---|
+| REV-008, resíduo (#10) | `limiteDeDesconto`: preço mínimo = teto de custo × 10000 / fator, em BigInt interno (entradas e saídas continuam `number`). `avaliarDesconto`: a margem resultante tinha o mesmo defeito e agora é piso exato; no extremo negativo fica em `Number.MIN_SAFE_INTEGER` | `cca1fcf` | `packages/dominio/src/revisao-codex.test.ts`, bloco "REV-008 (resíduo)": caso do Codex dá 10 (antes 11); cinco fatores com resto 1 dão 10 (antes 11); borda 10/11 na avaliação; margem 3332 (antes 3333); 2.000 casos sorteados conferem a definição em inteiros. Os 9 casos dirigidos falhavam no código anterior; o sorteio, sozinho, não pegava o defeito | Corrigido, aguardando revisão |
+| REV-014 (sem issue) | Teste automático do erro de consulta em `/conta` | `4b8ce8f` | `apps/plataforma/src/app/conta/page.test.ts`: serviço Supabase **simulado** (fetch trocado, endereço `.invalid`, chave e token fictícios), passando pelas bibliotecas reais e pelo cookie de sessão. 503 PGRST002 depois das 3 novas tentativas do PostgREST, 403/42501 e serviço sem rede: "Não foi possível carregar seus dados agora" e um único log `{ perfil, unidades }` só com códigos, sem detalhe do serviço, id, e-mail ou token. Dois controles: sem perfil e com perfil. Sem a checagem de erro da página, ou com o erro inteiro no log, os 3 cenários de falha quebram | Teste incluído, aguardando revisão |
+| CONFIG-001 (#12) | `apps/plataforma/README.md` (a única instrução com `aplicacao,supabase`) traz os três comandos atuais. **Sem apelido**, de propósito: o grupo antigo juntava chave secreta e banco ao par público e voltaria a exigir o grupo servidor para conferir o login. O `verificar-env` recusa `supabase` explicando qual grupo usar (código 2); a leitura dos nomes usa `Object.hasOwn` | `4b17905` | `ambiente.test.ts` (bloco CONFIG-001); `verificar-env.test.ts` roda o comando de verdade com `.env` fictício (login passa sem chave secreta nem banco; nome antigo orientado; nenhum valor impresso); E2E "CONFIG-001: com só o par público, o sistema sobe e oferece o login, sem chave secreta nem banco" | Corrigido, aguardando revisão |
+| REV-016 (#14) | Versão = `versoes/<commit>-<12 primeiros caracteres do sha256 do arquivo de ambiente>`; hash e cópia saem do mesmo retrato do arquivo. Mudou o arquivo, monta de novo (inclui `NEXT_PUBLIC_*`). Reaproveita só a mesma combinação (conferida com `cmp`); se ela já está no ar, não reinicia. Build e `next start` com `env -i`. `ORA_HML_BASE` e `ORA_HML_PORTA` (sempre juntas) para teste isolado | `33d5e6e`, `cd0975e` (LEIA-ME) | Teste no servidor em pasta e porta separadas, na tabela abaixo | Corrigido, aguardando revisão |
+| REV-017 (#16) | `/entrar` só mostra aviso para chave **própria** do catálogo e só para texto simples (`textoDoParametro`, `chaveDoCatalogo` em `src/lib/parametros.ts`). Varredura: rotas, cookies e filtros da demo já usavam `Object.hasOwn` ou comparação exata; o `voltar` da troca de loja só aceita caminhos da demo. Achado da mesma família: com `busca` repetida, Produtos, Clientes, Vendas e Estoque caíam em "Algo deu errado nesta tela" (`.trim()` numa lista; HTTP 200 porque a página já estava sendo enviada). Corrigido com os mesmos auxiliares | `fceb372` | `parametros.test.ts` (11 casos). E2E no celular e no computador: `constructor`, `__proto__`, `toString`, `hasOwnProperty`, `valueOf`, código desconhecido e repetido dão 200, título "Bem-vindo à Ora" e nenhum aviso a mais; os três códigos válidos continuam com a mensagem neutra; sete telas da demo com parâmetros repetidos ou herdados abrem sem tela de erro. Na build da `main` `56ec9de`, as mesmas URLs davam 500 em `/entrar` e a tela de erro nas quatro telas | Corrigido, aguardando revisão |
+| REV-015 (#13) | Já corrigido no novo visual: o PDV só soma itens válidos (`validos`, `temErros`) e bloqueia a conclusão | `d878e06`, na `main` desde `56ec9de` | E2E "REV-015: desconto maior que o item mostra o erro, mantém o carrinho e a venda se recupera" (`apps/plataforma/e2e/demonstracao.spec.ts`), no celular e no computador, com formatos intermediários e malformados. A revisão incremental do Codex examinou `8e1625d`, anterior a essa correção; a auditoria do Codex em `56ec9de` confirmou e encerrou a #13 | Corrigido; confirmado pelo Codex |
+
+Notas documentais da revisão incremental: `deploy/homologacao/LEIA-ME.md` descreve "Index of /" como a situação **anterior** (desde 07/11 o domínio principal mostra a plataforma); `docs/ESTADO_ATUAL_E_PASSAGEM.md` teve a fila de revisão atualizada (sete issues encerradas pelo Codex e a #13; o que está aguardando revisão; #17 e #18 ainda não tratadas) e o trecho antigo do DNS reconciliado com a P12.
+
+## Teste da publicação (REV-016), em pasta e porta separadas — resultado
+
+Executado em 08/11/2026 em `~/teste-publicacao` (clone próprio, porta `3190`), com três arquivos de ambiente **fictícios** e o commit `33d5e6e` desta branch. Só foram exibidos códigos HTTP, nomes de pasta e "igual/diferente"; nenhum valor.
+
+| # | Cenário | O que aconteceu | Versão no ar depois |
+|---|---|---|---|
+| 0 | Só uma das variáveis de teste (pasta ou porta) | Recusado antes de qualquer ação (código 1) | — |
+| 1 | Configuração A | Montou em 16 s; `/demo` 200 | `33d5e6e-aa0502330cf1` (A) |
+| 2 | **Mesmo commit**, configuração B (`APP_ENV` diferente) | Montou de novo, com BUILD_ID novo, em 17 s; `/demo` 404: a configuração nova chegou ao app. É o caso da #14 | `33d5e6e-26b1efbf6adf` (B) |
+| 3 | Mesmo commit e mesma B | "Já está no ar; nada a fazer", sem reiniciar (mesmo processo) | B |
+| 4 | Mesmo commit, de volta à A, com `APP_ENV=producao` exportado no terminal | Reaproveitou a pasta A sem montar (1 s, mesma build); `/demo` 200: o terminal não passou por cima do arquivo | A |
+| 5 | Mesmo commit, configuração C (`APP_ENV` inválido) | Compilou, não subiu e **voltou sozinho para A** em 49 s; ambiente da versão ativa idêntico ao arquivo A | A |
+| 6 | Commit local que não compila (nunca enviado), configuração A | "FALHOU ao montar" em 12 s; mesma versão e mesmo processo no ar; pasta da tentativa removida | A |
+
+A homologação real (`3100`) não foi usada. Durante o teste, às 09:41, ela foi republicada por outra sessão (merge `5560efa` da Ora Connect, ainda com o `publicar.sh` anterior), o que a verificação do teste registrou; não houve ação deste teste sobre ela. O servidor de teste foi encerrado; a pasta `~/teste-publicacao` (3,4 GB, só dados fictícios) fica para o proprietário apagar.
+
+A próxima publicação deve usar o script novo: até lá, `~/homologacao/plataforma/deploy/homologacao/publicar.sh` ainda é o da versão no ar. Rodar `bash deploy/homologacao/publicar.sh` a partir do repositório com a `main` atualizada.
+
+## Sequência do CI antes do merge (08/11/2026)
+
+Rodada num clone limpo da branch no commit `ccfcfd4` (sem `.env.local`, sem caches de build), na raiz, com `APP_ENV=development` e `NEXT_PUBLIC_APP_URL=http://127.0.0.1:3100`, na ordem do `.github/workflows/ci.yml` da `main`:
+
+| Passo | Resultado |
+|---|---|
+| `npm run segredos` e `npm run segredos -- --historico 5560efa..HEAD` | Nenhum segredo encontrado |
+| `node scripts/gerar-rastreabilidade.mjs --conferir` e `node scripts/gerar-catalogo-nogle.mjs --conferir` | Em dia (172 requisitos; 62 funções da Nogle) |
+| `npm ci`, `npm run lint`, `npm run typecheck` | Passaram (só o aviso conhecido "Pages directory" nos pacotes sem Next) |
+| `npm test` | 261 passaram: plataforma 82, banco 44 (mais 4 `todo`), configuração 53, domínio 82 |
+| `npm run build` | Passou |
+| `npm audit --omit=dev` | 0 vulnerabilidades |
+| `npm run test:e2e` | 104 passaram e 10 foram pulados de propósito: 4 de login real (sem Supabase configurado, como no GitHub), 4 de inicialização no celular ("basta rodar uma vez") e 2 por tamanho de tela (CSV no celular, menu "Mais" no computador) |
+
+O commit seguinte só acrescenta esta tabela (documentação); nele foram repetidos o detector de segredos e as conferências de rastreabilidade e do catálogo. A homologação **não foi republicada**: o `ora5g.com.br` segue com a versão `5560efa` publicada por outra sessão; o REV-017 e a busca repetida só chegam ao endereço público numa próxima publicação, quando o proprietário pedir.

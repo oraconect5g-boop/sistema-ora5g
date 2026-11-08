@@ -1,13 +1,13 @@
 # Homologação no servidor (opção A do ADR-001: cPanel + Apache + processo do usuário `dev`)
 
-A plataforma de homologação roda **só em `127.0.0.1:3100`**. O Apache do cPanel recebe o acesso em `https://hml-app.ora5g.com.br` e encaminha para ela. Nada de produção é tocado aqui.
+A plataforma de homologação roda **só em `127.0.0.1:3100`**. O Apache do cPanel encaminha o acesso para ela: hoje, temporariamente, pelo domínio principal `https://ora5g.com.br` (seção abaixo); depois, por `https://hml-app.ora5g.com.br`. Nada de produção é tocado aqui.
 
 ## Como está montado
 
 | Peça | Onde |
 |---|---|
-| Código publicado | `~/homologacao/plataforma` (cópia separada da `main`, via `git worktree`) |
-| Variáveis da homologação | `~/homologacao/plataforma.env` (permissão `600`, fora do Git) |
+| Código publicado | `~/homologacao/plataforma`: link para a versão ativa em `~/homologacao/versoes/<commit>-<configuração>` (cada versão é uma cópia separada, via `git worktree`, com a própria build e a própria cópia do ambiente) |
+| Variáveis da homologação | `~/homologacao/plataforma.env` (permissão `600`, fora do Git). A publicação copia o arquivo para dentro da versão; editar o original não muda a versão no ar até publicar de novo |
 | Logs | `~/homologacao/logs/` (`plataforma.log`, `garantir.log`, `publicar-*.log`) |
 | Reinício automático | **Ligado em 07/11/2026** (autorizado pelo proprietário): `crontab` do `dev` roda `garantir-no-ar.sh` no boot e a cada 5 minutos. Testado: com o serviço parado, o `cron` o subiu de volta sozinho |
 
@@ -15,10 +15,37 @@ A plataforma de homologação roda **só em `127.0.0.1:3100`**. O Apache do cPan
 
 | Comando | O que faz |
 |---|---|
-| `~/homologacao/plataforma/deploy/homologacao/publicar.sh` | Atualiza para a `main` do GitHub, instala, gera a build e reinicia |
+| `~/homologacao/plataforma/deploy/homologacao/publicar.sh` | Atualiza para a `main` do GitHub, instala, gera a build e reinicia. Também é o jeito de aplicar uma mudança no `plataforma.env`, mesmo sem commit novo |
 | `~/homologacao/plataforma/deploy/homologacao/garantir-no-ar.sh --reiniciar` | Só reinicia |
 | `~/homologacao/plataforma/deploy/homologacao/garantir-no-ar.sh --parar` | Para (o cron sobe de novo em até 5 minutos; para desligar de vez, remova as linhas do `crontab -e`) |
 | `curl -s 127.0.0.1:3100/saude` | Confere se está no ar |
+
+## Mudar a configuração da homologação (REV-016)
+
+1. Edite `~/homologacao/plataforma.env` (continua com permissão `600`; nunca cole os valores em mensagens).
+2. Rode o `publicar.sh`.
+
+Cada versão é identificada pelo **commit + impressão digital do arquivo de ambiente** (os 12 primeiros caracteres do `sha256` do arquivo; os valores nunca aparecem). Por isso:
+
+| Situação | O que o `publicar.sh` faz |
+|---|---|
+| Arquivo mudou, mesmo commit | Monta uma versão nova (`npm ci` + build) e troca. Variáveis `NEXT_PUBLIC_*` e páginas estáticas ficam gravadas na build, então configuração nova sempre ganha build nova |
+| Mesmo commit e mesmo arquivo de uma versão guardada | Reaproveita a pasta, sem montar de novo |
+| Mesmo commit e mesmo arquivo da versão no ar | Avisa "nada a fazer" e não reinicia |
+| A versão nova não sobe | Volta o link para a anterior, que tem o próprio código **e** a própria cópia do ambiente: a combinação anterior volta inteira |
+
+A build e o `next start` rodam com ambiente limpo (`env -i`): uma variável exportada no terminal de quem publica ou reinicia não passa por cima do arquivo.
+
+## Testar a publicação sem tocar na homologação
+
+Os dois scripts aceitam outra pasta e outra porta, **sempre as duas juntas** (uma só é recusada), e o `publicar.sh` aceita outro clone:
+
+```
+ORA_HML_BASE=$HOME/teste-publicacao/base ORA_HML_PORTA=3190 ORA_REPO_DIR=$HOME/teste-publicacao/repo \
+  bash deploy/homologacao/publicar.sh origin/<branch>
+```
+
+A pasta precisa conter `plataforma.env` com valores fictícios. Em teste, o script só usa versões cujo `garantir-no-ar.sh` conhece essas variáveis, para nunca parar nem reiniciar a `3100`.
 
 ## Reinício automático (`crontab` do `dev`, já instalado)
 
@@ -40,7 +67,7 @@ Com essa janela aberta, acesse `http://127.0.0.1:3100/demo` no navegador do comp
 
 ## Caminho rápido para uma apresentação: domínio principal (temporário)
 
-Situação conferida em 07/11/2026: `https://ora5g.com.br` mostra só "Index of /" (a `public_html` da conta `wwora5` está vazia) e já tem certificado válido (Let's Encrypt, `*.ora5g.com.br` e `ora5g.com.br`). Por isso o domínio principal pode mostrar a plataforma na hora, sem criar nada no DNS:
+**Aplicado pelo proprietário em 07/11/2026:** desde então `https://ora5g.com.br` mostra a plataforma (temporário, para apresentações). Antes disso, na conferência de 07/11/2026, o endereço mostrava só "Index of /" (a `public_html` da conta `wwora5` estava vazia) e já tinha certificado válido (Let's Encrypt, `*.ora5g.com.br` e `ora5g.com.br`); por isso o domínio principal pôde mostrar a plataforma na hora, sem criar nada no DNS. Passos usados (para refazer ou conferir):
 
 1. WHM → Listar contas → linha do `ora5g.com.br` → ícone **cP** (abre o cPanel da conta `wwora5`).
 2. **Gerenciador de Arquivos → `public_html`** → Configurações → marcar "Mostrar arquivos ocultos".

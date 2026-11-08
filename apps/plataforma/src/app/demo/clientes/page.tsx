@@ -8,14 +8,16 @@ import { CLIENTES, CONVERSAS, ETAPAS_LEAD, LEADS, nomeDaLoja, primeiroNome, SUGE
 import { vePorVendedor } from "../../../demo/perfis";
 import { acessoDaPagina } from "../../../demo/sessao";
 import { brl } from "../../../lib/formato";
+import { textoDoParametro, type ValorDeParametro } from "../../../lib/parametros";
 import { Conversas } from "./Conversas";
 
 export const metadata: Metadata = { title: "Clientes e WhatsApp" };
 
-export default async function Clientes({ searchParams }: { searchParams: Promise<{ busca?: string }> }) {
+export default async function Clientes({ searchParams }: { searchParams: Promise<{ busca?: ValorDeParametro }> }) {
   const contexto = await acessoDaPagina("clientes");
   if (!contexto.permitido) return <SemPermissao perfil={contexto.perfil} pagina="Clientes" />;
-  const { busca = "" } = await searchParams;
+  // Parâmetro repetido chega como lista: vale como busca vazia (varredura do #16).
+  const busca = textoDoParametro((await searchParams).busca) ?? "";
   const termo = busca.trim().slice(0, 30);
   const telefone = normalizarTelefone(termo);
   const cpf = termo.replace(/\D/g, "");

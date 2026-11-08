@@ -38,8 +38,8 @@
     },
     "ORA-ORG-006": {
       "status": "parcial",
-      "nota": "Login por e-mail e senha no aplicativo (/entrar, mensagem neutra), /conta lendo pelo RLS, sessão renovada no proxy (REV-009) e bloqueio/encerramento de vínculo cortando acesso no banco. FALTA: recuperação de senha (SMTP), escolha da loja na sessão pelo aplicativo, sessão por turno e teste com usuário real.",
-      "evidencia": "apps/plataforma/src/app/entrar; apps/plataforma/src/proxy.ts; e2e/entrar.spec.ts; acesso.test.ts (T6, T7)"
+      "nota": "Login por e-mail e senha no aplicativo (/entrar, mensagem neutra; código de erro do endereço validado, REV-017/#16), /conta lendo pelo RLS e separando falha do serviço de ausência de perfil (REV-014, testado com serviço simulado), sessão renovada no proxy (REV-009) e bloqueio/encerramento de vínculo cortando acesso no banco. FALTA: recuperação de senha (SMTP), escolha da loja na sessão pelo aplicativo, sessão por turno e teste com usuário real.",
+      "evidencia": "apps/plataforma/src/app/entrar; apps/plataforma/src/proxy.ts; apps/plataforma/src/app/conta/page.test.ts; e2e/entrar.spec.ts; acesso.test.ts (T6, T7)"
     },
     "ORA-CAT-003": {
       "status": "respeitado",
@@ -63,7 +63,7 @@
     },
     "ORA-POS-005": {
       "status": "parcial",
-      "nota": "Totais e limite de desconto por margem em regra pura testada, com validação em tempo de execução (REV-007/REV-008 corrigidos). Falta executar no servidor e gravar no banco.",
+      "nota": "Totais e limite de desconto por margem em regra pura testada, com validação em tempo de execução (REV-007/REV-008 corrigidos) e limite e margem em inteiros exatos também em valores altos (resíduo do REV-008, 08/11). Falta executar no servidor e gravar no banco.",
       "evidencia": "packages/dominio/src/desconto.ts; packages/dominio/src/revisao-codex.test.ts"
     },
     "ORA-POS-006": {
@@ -133,12 +133,12 @@
     },
     "ORA-QUAL-004": {
       "status": "parcial",
-      "nota": "Detector de segredos (arquivos, commits do PR e do envio à main), validação de variáveis na inicialização e no login, chave pública conferida (sem secreta nem service_role). REV-003/REV-004 corrigidos em 07/11; aguardando revisão do Codex.",
-      "evidencia": "packages/config/src/segredos.ts; packages/config/src/ambiente.ts; packages/config/src/historico-segredos.test.ts"
+      "nota": "Detector de segredos (arquivos, commits do PR e do envio à main), validação de variáveis na inicialização e no login, chave pública conferida (sem secreta nem service_role). REV-003/REV-004 corrigidos em 07/11; grupos do verificar-env alinhados nas instruções e login sem exigir o grupo servidor (CONFIG-001, 08/11); aguardando revisão do Codex.",
+      "evidencia": "packages/config/src/segredos.ts; packages/config/src/ambiente.ts; packages/config/src/historico-segredos.test.ts; packages/config/src/verificar-env.test.ts"
     },
     "ORA-QUAL-007": {
       "status": "parcial",
-      "nota": "Três migrations versionadas, aplicadas do zero nos testes e no ora5g-dev, com reversão documentada; correções por migration nova, sem reescrever a aplicada. Falta homologação e procedimento de produção.",
+      "nota": "Três migrations versionadas, aplicadas do zero nos testes e no ora5g-dev, com reversão documentada; correções por migration nova, sem reescrever a aplicada. FALTA: conciliar as versões do histórico remoto com as do Git (REV-018/#17, apontado pelo Codex), homologação e procedimento de produção.",
       "evidencia": "packages/banco/supabase"
     },
     "ORA-REPORT-004": {
