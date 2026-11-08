@@ -220,6 +220,28 @@ test("atalhos do início do vendedor já montam a venda de chip e de recarga", a
   await expect(page.getByRole("combobox")).toHaveValue("3000");
 });
 
+// Varredura do #16: parâmetro repetido chega à página como lista; o .trim() da busca derrubava
+// estas telas ("Algo deu errado nesta tela", com HTTP 200 porque a página já estava sendo enviada).
+test("parâmetros repetidos ou com nome herdado no endereço não derrubam as telas com filtro", async ({ page }) => {
+  const erros: string[] = [];
+  page.on("pageerror", (erro) => erros.push(erro.message));
+  await usarPerfil(page, "dono");
+  for (const [caminho, titulo] of [
+    ["/demo/produtos?busca=capa&busca=cabo&categoria=a&categoria=b", "Produtos e preços"],
+    ["/demo/clientes?busca=a&busca=b", "Clientes e atendimento"],
+    ["/demo/vendas?busca=a&busca=b&situacao=constructor&vendedor=a&vendedor=b", "Vendas de hoje"],
+    ["/demo/estoque?busca=a&busca=b&aba=__proto__&situacao=a&situacao=b", "Estoque e rastreio por IMEI"],
+    ["/demo/relatorios?periodo=toString", "Relatórios"],
+    ["/demo/auditoria?tipo=valueOf", "Auditoria"],
+  ] as const) {
+    const resposta = await page.goto(caminho);
+    expect(resposta?.status(), caminho).toBe(200);
+    await expect(page.getByRole("heading", { level: 1, name: titulo }), caminho).toBeVisible();
+    await expect(page.getByText("Algo deu errado nesta tela"), caminho).toHaveCount(0);
+  }
+  expect(erros, "erros de JavaScript na página").toEqual([]);
+});
+
 test("REV-010: cookie de perfil adulterado não derruba a demonstração", async ({ page, context }) => {
   for (const valor of ["constructor", "__proto__", "toString", "inexistente"]) {
     await context.clearCookies();

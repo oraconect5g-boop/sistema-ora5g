@@ -9,18 +9,20 @@ import { HISTORICO_PRECOS, PRODUTOS, SALDOS_ACESSORIOS, VENDAVEL, type Categoria
 import { podeVerCusto } from "../../../demo/perfis";
 import { acessoDaPagina } from "../../../demo/sessao";
 import { agora, brl, dataCurta, diasAntes, numero, percentual } from "../../../lib/formato";
+import { textoDoParametro, type ValorDeParametro } from "../../../lib/parametros";
 import { PrecoEditavel } from "./PrecoEditavel";
 
 export const metadata: Metadata = { title: "Produtos e preços" };
 
 const CATEGORIAS: (Categoria | "todas")[] = ["todas", "Aparelhos", "Acessórios", "Ora Connect"];
 
-export default async function Produtos({ searchParams }: { searchParams: Promise<{ categoria?: string; busca?: string }> }) {
+export default async function Produtos({ searchParams }: { searchParams: Promise<{ categoria?: ValorDeParametro; busca?: ValorDeParametro }> }) {
   const contexto = await acessoDaPagina("produtos");
   if (!contexto.permitido) return <SemPermissao perfil={contexto.perfil} pagina="Produtos e preços" />;
   const parametros = await searchParams;
   const categoria = CATEGORIAS.find((c) => c === parametros.categoria) ?? "todas";
-  const busca = (parametros.busca ?? "").trim().toLowerCase().slice(0, 40);
+  // Parâmetro repetido (?busca=a&busca=b) chega como lista e derrubava a tela no .trim() (varredura do #16).
+  const busca = (textoDoParametro(parametros.busca) ?? "").trim().toLowerCase().slice(0, 40);
   const verCusto = podeVerCusto(contexto.perfil);
   const podeAlterar = contexto.perfil === "dono";
   const hoje = agora();

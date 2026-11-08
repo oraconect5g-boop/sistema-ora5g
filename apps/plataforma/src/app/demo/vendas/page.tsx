@@ -10,6 +10,7 @@ import { NOMES_NOTA, NOMES_SITUACAO, nomeDaLoja, nomeDaPessoa, resumoDeVendas, t
 import { REDE, vePorVendedor } from "../../../demo/perfis";
 import { acessoDaPagina } from "../../../demo/sessao";
 import { brl, brlCompacto, numero, percentual } from "../../../lib/formato";
+import { chaveDoCatalogo, textoDoParametro, type ValorDeParametro } from "../../../lib/parametros";
 
 export const metadata: Metadata = { title: "Vendas" };
 
@@ -26,15 +27,17 @@ type Filtro = keyof typeof FILTROS;
 
 const LIMITE = 60;
 
-export default async function Vendas({ searchParams }: { searchParams: Promise<{ situacao?: string; vendedor?: string; busca?: string }> }) {
+export default async function Vendas({ searchParams }: { searchParams: Promise<{ situacao?: ValorDeParametro; vendedor?: ValorDeParametro; busca?: ValorDeParametro }> }) {
   const contexto = await acessoDaPagina("vendas");
   if (!contexto.permitido) return <SemPermissao perfil={contexto.perfil} pagina="Vendas" />;
   const parametros = await searchParams;
-  const filtro: Filtro = Object.hasOwn(FILTROS, parametros.situacao ?? "") ? (parametros.situacao as Filtro) : "todas";
+  // Só texto simples e chave própria do catálogo; lista (parâmetro repetido) vale como ausente (varredura do #16).
+  const filtro: Filtro = chaveDoCatalogo(FILTROS, parametros.situacao) ?? "todas";
   const gestao = vePorVendedor(contexto.perfil);
   const vendedores = gestao ? vendedoresVisiveis(contexto) : [];
-  const vendedorFiltro = gestao && vendedores.some((v) => v.id === parametros.vendedor) ? parametros.vendedor : undefined;
-  const busca = (parametros.busca ?? "").trim().toLowerCase().slice(0, 40);
+  const vendedorPedido = textoDoParametro(parametros.vendedor);
+  const vendedorFiltro = gestao && vendedores.some((v) => v.id === vendedorPedido) ? vendedorPedido : undefined;
+  const busca = (textoDoParametro(parametros.busca) ?? "").trim().toLowerCase().slice(0, 40);
 
   const todas = vendasVisiveis(contexto);
   const doVendedor = vendedorFiltro ? todas.filter((v) => v.vendedor === vendedorFiltro) : todas;

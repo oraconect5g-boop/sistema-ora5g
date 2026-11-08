@@ -11,6 +11,7 @@ import { movimentosDoImei, nomeDaLoja, nomeDoProduto, PRODUTOS, SALDOS_ACESSORIO
 import { podeVerCusto, REDE } from "../../../demo/perfis";
 import { acessoDaPagina } from "../../../demo/sessao";
 import { brl, numero } from "../../../lib/formato";
+import { chaveDoCatalogo, textoDoParametro, type ValorDeParametro } from "../../../lib/parametros";
 
 export const metadata: Metadata = { title: "Estoque e IMEI" };
 
@@ -19,13 +20,14 @@ const ABAS = { aparelhos: "Aparelhos (IMEI)", acessorios: "Acessórios e chips",
 type Aba = keyof typeof ABAS;
 const SITUACOES: (SituacaoUnidade | "todas")[] = ["todas", "Disponível", "Conferido", "Reservado", "Em trânsito", "Vendido"];
 
-export default async function Estoque({ searchParams }: { searchParams: Promise<{ aba?: string; situacao?: string; busca?: string }> }) {
+export default async function Estoque({ searchParams }: { searchParams: Promise<{ aba?: ValorDeParametro; situacao?: ValorDeParametro; busca?: ValorDeParametro }> }) {
   const contexto = await acessoDaPagina("estoque");
   if (!contexto.permitido) return <SemPermissao perfil={contexto.perfil} pagina="Estoque" />;
   const parametros = await searchParams;
-  const aba: Aba = Object.hasOwn(ABAS, parametros.aba ?? "") ? (parametros.aba as Aba) : "aparelhos";
+  // Só texto simples e chave própria do catálogo; lista (parâmetro repetido) vale como ausente (varredura do #16).
+  const aba: Aba = chaveDoCatalogo(ABAS, parametros.aba) ?? "aparelhos";
   const situacao = SITUACOES.find((s) => s === parametros.situacao) ?? "todas";
-  const busca = (parametros.busca ?? "").trim().toLowerCase().slice(0, 40);
+  const busca = (textoDoParametro(parametros.busca) ?? "").trim().toLowerCase().slice(0, 40);
   const rede = contexto.loja === REDE;
   const verCusto = podeVerCusto(contexto.perfil);
 
