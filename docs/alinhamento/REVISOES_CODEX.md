@@ -1,7 +1,7 @@
 # Revisões do Codex — análise de sistemas e alinhamento
 
-**Data:** 07/11/2026 · **Bases:** revisão inicial 17524a5; complementar a152516d.  
-**Papéis:** Claude Code implementa; Codex analisa e revisa; proprietário decide e homologa.  
+**Data:** 07/11/2026 · **Bases:** revisão inicial 17524a5; complementar a152516d.
+**Papéis:** Claude Code implementa; Codex analisa e revisa; proprietário decide e homologa.
 **Stack preservada:** TypeScript + React/Next.js + Node.js + SQL PostgreSQL/Supabase.
 
 [Análise completa do Codex](../analises/ANALISE_SISTEMAS_2026-11-07.md), incluindo escopo integral, fases, acertos, evidências e limites. Ler também ANALISE_DO_PLANO.md e RASTREABILIDADE.md. A seção 15 da análise do Codex contém a evolução mais recente.
@@ -92,3 +92,41 @@ Inventário completo em [AUDITORIA_FUNCIONAL_E_SUPABASE_2026-11-07.md](../analis
 - 210 testes e 63 E2E passaram; nove E2E pulados por configuração/viewport. Mais dois testes de mostrar/esconder senha passaram com configuração pública fictícia. Os testes extras de #16/#18 reproduziram os defeitos e não foram integrados como testes vermelhos.
 - Advisors: sem aviso de health, três avisos das RPCs SECURITY DEFINER intencionais, 12 índices ainda sem uso. Storage, Edge Functions e Realtime de tabelas do aplicativo ainda não configurados no projeto consultado.
 - O modelo mínimo e o guia já foram incorporados na main. Os registros anteriores mantêm sua base histórica; esta seção é a conferência mais recente.
+
+## Conferência de 08/11/2026 — main 7f5fd41
+
+Esta é a conferência mais recente; os registros anteriores são fotografias históricas. A [auditoria completa](../analises/AUDITORIA_CLAUDE_CODE_2026-11-08.md) e a [matriz dos 172 requisitos](../analises/MATRIZ_DOS_172_REQUISITOS_2026-11-08.md) detalham commits, código, funções, Supabase, testes, requisitos e sequência de implementação.
+
+Foram conferidos 29 commits e 90 arquivos desde 56ec9de, incluindo incorporações de análises anteriores do Codex. CI da main aprovado: [42510057118](https://github.com/oraconect5g-boop/sistema-ora5g/actions/runs/42510057118). Local: 314 testes existentes passaram (4 TODO); navegador: 106 passaram e 10 pulados. Testes adversariais separados reproduziram seis falhas de banco e quatro de navegador (dois cenários em dois tamanhos).
+
+### Achados novos
+
+| ID | Requisito | Arquivo e linha na base revisada | Gravidade | Defeito e correção | Issue |
+|---|---|---|---|---|---|
+| REV-020 | ORA-INV-002, 006 | catalogo_estoque.sql:198 | Bloqueante P1 | IMEI principal pode ser IMEI2 de outro aparelho; garantir unicidade conjunta e concorrente | [#19](https://github.com/oraconect5g-boop/sistema-ora5g/issues/19) |
+| REV-021 | ORA-INV-005, ORA-POS-004 | catalogo_estoque.sql:603 | Bloqueante P1 | Mesma chave aceita quantidade/origem diferentes; conferir conteúdo normalizado da reserva | [#20](https://github.com/oraconect5g-boop/sistema-ora5g/issues/20) |
+| REV-022 | ORA-INV-003, 004 | catalogo_estoque.sql:439 e 410 | Bloqueante P1 | Colisão de chave pode devolver outro IMEI ou criar item sem movimento; validar identidade e garantir atomicidade | [#21](https://github.com/oraconect5g-boop/sistema-ora5g/issues/21) |
+| REV-023 | ORA-INV-002, 003 | catalogo_estoque.sql:324 e 406 | Bloqueante P1 | Outra entrada do mesmo aparelho infla saldo de 2 para 3; validar posição e transição por item sob trava | [#22](https://github.com/oraconect5g-boop/sistema-ora5g/issues/22) |
+| REV-024 | ORA-CONNECT-001, 011 | ChipsConnect.tsx:54 | Importante P2, demonstração | Transfere 5 eSIM quando a origem tem 4 e não a baixa; simular estoque de origem e destino coerentes | [#23](https://github.com/oraconect5g-boop/sistema-ora5g/issues/23) |
+| REV-025 | ORA-CONNECT-003, ORA-PAY-003 | RecargaConnect.tsx:65 | Importante P2, demonstração | LINK confirmado é mostrado como SALDO e dinheiro recebido na loja; manter meio e recebimento distintos | [#24](https://github.com/oraconect5g-boop/sistema-ora5g/issues/24) |
+
+O arquivo SQL é packages/banco/supabase/migrations/20261108150620_catalogo_estoque.sql; os componentes estão em apps/plataforma/src/app/demo/connect/_abas. As reproduções estão em docs/analises/evidencias/2026-11-08. Correção estrutural volta ao Claude por migration nova; não reescrever as aplicadas.
+
+### Correções anteriores confirmadas
+
+- #10 / REV-008: aritmética exata em valores altos; encerrada.
+- #12 / CONFIG-001: CLI, modelos e configuração pública separada; encerrada.
+- #14 / REV-016: versão por commit/configuração e volta automática; fixture local isolada aprovada; encerrada.
+- #16 / REV-017: erro herdado e parâmetros repetidos tratados; encerrada.
+- #17 / REV-018: seis versões, nomes e hashes iguais ao remoto; encerrada.
+- #18 / REV-019: carrinho respeita saldo exato e bloqueia aumento; encerrada.
+- REV-014: teste de /conta com falhas do transporte simulado conferido.
+- #11 / REV-009: continua aberta, sem usuário real para provar renovação da sessão.
+
+### Parecer sobre requisitos e banco
+
+ORA-ORG-005 mantém testado em desenvolvimento. ORA-INV-003 volta a parcial por #21/#22. Totais revisados: **1 testado, 28 parciais, 22 demonstrações, 2 bloqueados, 118 não iniciados, 1 restrição respeitada e 0 homologados**.
+
+Supabase: 20 tabelas com RLS, 33 funções, 167 colunas, 131 constraints comparáveis, 83 índices, 19 gatilhos, 20 policies e 20 grants examinados correspondentes ao banco limpo. Sem usuário/sessão Auth ou perfil; há semente fictícia. Consultas foram somente de leitura, sem .env, chaves, dados pessoais individuais ou mudanças remotas.
+
+Próximos passos: corrigir #19–#22; concluir acesso e renovação real; aceitar ADR-003; integrar catálogo/estoque; importar Rein por arquivo; depois PDV/caixa, piloto, Nogle/fiscal e canais. O plano, os critérios e as dependências estão na auditoria.

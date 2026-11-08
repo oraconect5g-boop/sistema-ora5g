@@ -1,6 +1,4 @@
-import type { PGlite } from "@electric-sql/pglite";
-
-import { cnpj } from "./banco-de-teste";
+import { cnpj, type ExecutorSql } from "./banco-de-teste";
 
 // Dados FICTÍCIOS para os testes. CNPJs gerados, não pertencem a empresas reais.
 export const RAIZ = "11222333";
@@ -29,7 +27,7 @@ export const ids = {
   donoOutraOrg: id(109),
 };
 
-export async function montarCenario(db: PGlite) {
+export async function montarCenario(db: ExecutorSql) {
   const i = ids;
   await db.exec(`
     insert into public.organizacoes (id, nome) values ('${i.organizacao}', 'Ora 5G (teste)'), ('${i.outraOrganizacao}', 'Outra rede (teste)');

@@ -1,12 +1,12 @@
 # 01 — Requisitos rastreáveis da Ora 5G
 
-**Inventário inicial: 172 requisitos**. São hipóteses de implementação a validar, não funcionalidades já existentes.
+**Inventário atual: 173 requisitos** — 172 da base inicial e ORA-CAT-011, fotos obrigatórias, acrescentado por decisão explícita do proprietário em 08/11/2026. A lista representa o planejamento, não funcionalidades já existentes. Detalhes em [Fotos dos produtos](alinhamento/FOTOS_DOS_PRODUTOS_2026-11-08.md).
 
 Legenda: **P0** essencial à fundação/piloto conforme dependências; **P1** funcionalidades importantes para rollout/integração; **P2** expansão. Um requisito P1 pode ser antecipado se houver bloqueio operacional real.
 
 Cada ID deve se tornar issue(s) de GitHub, ligar PR/arquivos alterados, testes executados, evidência, aceite e versão de implantação. O backlog JSON inclui esses campos vazios para preencher — **não** declarar progresso inexistente.
 
-## Matriz de rastreabilidade inicial
+## Matriz de requisitos — base inicial e acréscimos aprovados
 
 ### ORG — Organização, lojas e usuários (etapa-base 1)
 
@@ -37,6 +37,7 @@ Cada ID deve se tornar issue(s) de GitHub, ligar PR/arquivos alterados, testes e
 | ORA-CAT-008 | P1 | Custo de produto/lote/entrada e margem gerencial | Custo histórico de venda não muda retroativamente. |
 | ORA-CAT-009 | P1 | Canais externos usam mapeamento de SKU e IDs próprios | Identificadores externos não substituem PK interna. |
 | ORA-CAT-010 | P2 | Permitir importação assistida em lote de fotos/atributos | Erros não criam duplicatas nem sobrescritas silenciosas. |
+| ORA-CAT-011 | P0 | Exigir foto principal por produto e imagem própria para variantes visualmente diferentes | Todos os produtos do catálogo piloto têm foto correspondente; busca, estoque e PDV exibem foto com nome/SKU e ampliação no celular; ausência de imagem é pendência, não foto genérica aceita. |
 
 ### INV — Estoque, serial/IMEI e suprimentos (etapa-base 3)
 

@@ -183,3 +183,44 @@ test("a aba Integração mostra as 62 funções da documentação oficial e o qu
   }
   await expect(page.getByText("Tipo da chave da Ora (decisão P9).")).toBeVisible();
 });
+
+// Regressões da auditoria do Codex de 08/11 (docs/analises/evidencias/2026-11-08/telas.repro.ts).
+test("REV-024: eSIM não passa do estoque virgem e sai dele ao ser transferido", async ({ page }) => {
+  await usarPerfil(page, "gerente");
+  await page.goto("/demo/connect?aba=chips");
+  await page.getByRole("button", { name: "eSIM", exact: true }).click();
+  await expect(page.getByText("Estoque virgem: 6 físicos · 4 eSIM.")).toBeVisible();
+  await expect(page.getByText("15", { exact: true })).toBeVisible();
+  await page.getByLabel("Quantidade de eSIM").fill("5");
+  await page.getByRole("button", { name: /^Transferir para/ }).click();
+  await expect(page.getByText("Só há 4 eSIM no estoque virgem da Ora. Nada foi transferido.")).toBeVisible();
+  await expect(page.getByText("5 eSIM transferidos para Santa Cândida.")).toHaveCount(0);
+  await expect(page.getByText("15", { exact: true })).toBeVisible();
+
+  await page.getByLabel("Quantidade de eSIM").fill("4");
+  await page.getByRole("button", { name: /^Transferir para/ }).click();
+  await expect(page.getByText("4 eSIM transferidos para Santa Cândida.")).toBeVisible();
+  await expect(page.getByText("19", { exact: true })).toBeVisible();
+  await expect(page.getByText("Estoque virgem: 6 físicos · 0 eSIM.")).toBeVisible();
+  await page.getByLabel("Quantidade de eSIM").fill("1");
+  await page.getByRole("button", { name: /^Transferir para/ }).click();
+  await expect(page.getByText("Não há eSIM no estoque virgem da Ora.")).toBeVisible();
+  await expect(page.getByText("19", { exact: true })).toBeVisible();
+});
+
+test("REV-025: recarga paga pelo LINK continua LINK e não mexe no caixa nem no saldo da Ora", async ({ page }) => {
+  await usarPerfil(page, "vendedor");
+  await page.goto("/demo/connect?aba=recarga");
+  const saldo = page.getByRole("heading", { name: "Saldo da Ora na Contel" }).locator("xpath=ancestor::section[1]").locator("p.numeros");
+  const saldoAntes = await saldo.textContent();
+  await page.getByLabel("Número da linha", { exact: true }).fill("(41) 9 0000-0101");
+  await page.getByLabel("Link de pagamento", { exact: true }).check();
+  await page.getByRole("button", { name: "Solicitar recarga", exact: true }).click();
+  await page.getByRole("dialog", { name: "Conferir a recarga" }).getByRole("button", { name: "Solicitar recarga" }).click();
+  await expect(page.getByText(/aguardando pagamento do link/)).toBeVisible();
+  await page.getByRole("button", { name: "Cliente pagou (simulação)" }).click();
+  await expect(page.getByText(/paga pelo link \(simulação\)/)).toBeVisible();
+  await expect(page.getByText(/feita pelo saldo/)).toHaveCount(0);
+  await expect(page.getByText(/O cliente pagou.*na loja/)).toHaveCount(0);
+  expect(await saldo.textContent()).toBe(saldoAntes);
+});
