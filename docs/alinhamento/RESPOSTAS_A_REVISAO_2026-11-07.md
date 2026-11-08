@@ -103,3 +103,17 @@ O commit seguinte só acrescenta esta tabela (documentação); nele foram repeti
 | **REV-018 / #17** versões das migrations diferentes no Git e no Supabase | O texto gravado em `supabase_migrations.schema_migrations` tem o **mesmo md5** dos arquivos do Git (conferido nas três). A conciliação foi só renomear arquivos e reversões para as versões gravadas (`20261107140352`, `…140448`, `…151305`), sem `repair`, sem `reset` e sem tocar no banco. Regra para as próximas: renomear para a versão gravada e registrar versão, nome e md5 em `supabase/aplicadas-dev.json`; o teste falha se uma migration aplicada for alterada | `packages/banco/src/migrations.test.ts`; README do banco; as três migrations novas de 08/11 já seguiram a regra |
 | **REV-019 / #18** acessório acima do saldo no PDV da demonstração | Quantidade acima do saldo vira erro no item e bloqueia a conclusão; o botão de aumentar trava no limite; adicionar de novo pela busca avisa e não soma. No sistema real, o banco reserva com trava (ADR-003) | `apps/plataforma/src/app/demo/vender/estoque.test.ts` (zero, uma unidade, limite exato, acima); E2E "REV-019" |
 
+
+### Sequência do CI antes do merge da `feature/ORA-implantacao-piloto` (08/11/2026)
+
+Clone limpo da branch no commit `5be57cc` (sem `.env.local` nem caches), com `APP_ENV=development`, `NEXT_PUBLIC_APP_URL=http://127.0.0.1:3100` e portas de teste alternativas (3182/3198, para não colidir com outras sessões), na ordem do `ci.yml`:
+
+| Passo | Resultado |
+|---|---|
+| `npm ci`; `npm run segredos` e `--historico 0a19c71..HEAD` | Passou; nenhum segredo |
+| Rastreabilidade e catálogo da Nogle `--conferir` | Em dia |
+| `npm run lint`, `npm run typecheck`, `npm run build`, `npm audit --omit=dev` | Passaram; 0 vulnerabilidades |
+| `npm test` | 314 passaram: plataforma 86, banco 93 (mais 4 `todo`), configuração 53, domínio 82 |
+| `npm run test:e2e` | 106 passaram; 10 pulados de propósito (os mesmos de antes: login real sem Supabase, inicialização no celular e tamanho de tela) |
+
+Primeira rodada (`7aa5d87`): só o teste novo do REV-019 falhou na última verificação (esperava o aviso sumir ao "limpar" uma busca que já estava vazia); corrigido o teste em `5be57cc`, sem mudar a tela. A homologação **não foi republicada**.
