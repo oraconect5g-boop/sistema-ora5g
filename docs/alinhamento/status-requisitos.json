@@ -9,7 +9,7 @@
     "bloqueado": "depende de decisão do proprietário ou de terceiro",
     "nao_iniciado": "ainda não começou"
   },
-  "atualizado_em": "2026-11-07",
+  "atualizado_em": "2026-11-08",
   "requisitos": {
     "ORA-ORG-001": {
       "status": "parcial",
@@ -102,9 +102,9 @@
       "evidencia": "apps/plataforma/src/app/demo; apps/plataforma/e2e/demonstracao.spec.ts"
     },
     "ORA-CONNECT-004": {
-      "status": "bloqueado",
-      "nota": "Contrato Nogle parcial (só autenticação e consultas). Falta o tipo da chave (P9) e as rotas de ativação/recarga.",
-      "evidencia": "docs/etapa-0/ETAPA_0_DECISOES_2026-11-06.md §3"
+      "status": "parcial",
+      "nota": "Contrato da API NOGLE lido por inteiro (62 funções) e guardado no repositório; catálogo gerado e conferido no CI; normalização das respostas e regras de ICCID, portabilidade e bloqueio testadas. Falta o cliente HTTP no servidor, que depende do tipo de chave (P9) e das credenciais no gerenciador de segredos.",
+      "evidencia": "apps/plataforma/src/integracoes/nogle; docs/integracoes/NOGLE_API_REFERENCIA.md"
     },
     "ORA-FISC-003": {
       "status": "bloqueado",
@@ -185,6 +185,51 @@
       "status": "demonstracao",
       "nota": "Situação por meio de pagamento separando autorizado, pago, liquidado e conciliado na tela de caixa. Só dados fictícios.",
       "evidencia": "apps/plataforma/src/app/demo; apps/plataforma/e2e/demonstracao.spec.ts"
+    },
+    "ORA-CONNECT-001": {
+      "status": "demonstracao",
+      "nota": "Venda do chip no PDV e estoque de chips por loja (físico e eSIM), com transferência do estoque central. Só dados fictícios.",
+      "evidencia": "apps/plataforma/src/app/demo/connect; apps/plataforma/e2e/connect.spec.ts"
+    },
+    "ORA-CONNECT-002": {
+      "status": "demonstracao",
+      "nota": "A venda do chip (PDV) e a ativação na operadora (aba Ativar chip) são passos separados. Só dados fictícios.",
+      "evidencia": "apps/plataforma/src/app/demo/connect; apps/plataforma/e2e/connect.spec.ts"
+    },
+    "ORA-CONNECT-003": {
+      "status": "demonstracao",
+      "nota": "Recarga com estado próprio (aguardando pagamento ou confirmada), avulsa ou programada pelo saldo. Só dados fictícios.",
+      "evidencia": "apps/plataforma/src/app/demo/connect; apps/plataforma/e2e/connect.spec.ts"
+    },
+    "ORA-CONNECT-005": {
+      "status": "demonstracao",
+      "nota": "A linha só aparece como ativa depois da consulta que confirma a ativação na operadora. Simulado; resposta real depende da integração.",
+      "evidencia": "apps/plataforma/src/app/demo/connect; apps/plataforma/e2e/connect.spec.ts"
+    },
+    "ORA-CONNECT-006": {
+      "status": "demonstracao",
+      "nota": "Ativações e recargas atribuídas ao vendedor e à loja da venda nos painéis e na carteira. Só dados fictícios.",
+      "evidencia": "apps/plataforma/src/app/demo/connect; apps/plataforma/e2e/connect.spec.ts"
+    },
+    "ORA-CONNECT-007": {
+      "status": "demonstracao",
+      "nota": "Consulta de linha (detalhes, saldo, consumo de 30 dias, histórico, cobranças, titularidade, apelido) no formato da API. Só dados fictícios.",
+      "evidencia": "apps/plataforma/src/app/demo/connect; apps/plataforma/e2e/connect.spec.ts"
+    },
+    "ORA-CONNECT-008": {
+      "status": "demonstracao",
+      "nota": "Portabilidade (pedido, reenvio do SMS, status) e operadoras doadoras no formato da API. Só dados fictícios.",
+      "evidencia": "apps/plataforma/src/app/demo/connect; apps/plataforma/e2e/connect.spec.ts"
+    },
+    "ORA-CONNECT-010": {
+      "status": "demonstracao",
+      "nota": "Cada operação que cria algo na operadora diz o que consultar antes de reenviar (catálogo e telas). A recuperação real depende do cliente HTTP.",
+      "evidencia": "apps/plataforma/src/app/demo/connect; apps/plataforma/e2e/connect.spec.ts; apps/plataforma/src/integracoes/nogle; docs/integracoes/NOGLE_API_REFERENCIA.md"
+    },
+    "ORA-CONNECT-011": {
+      "status": "demonstracao",
+      "nota": "eSIM na ativação e compra de chip com entrega e rastreio no formato da API. Só dados fictícios.",
+      "evidencia": "apps/plataforma/src/app/demo/connect; apps/plataforma/e2e/connect.spec.ts"
     }
   }
 }

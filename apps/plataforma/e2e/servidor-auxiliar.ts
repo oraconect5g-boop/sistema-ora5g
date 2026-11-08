@@ -1,11 +1,14 @@
 import { spawn } from "node:child_process";
 
+const PORTA = process.env.ORA_PORTA_AUXILIAR ?? "3199";
+const ENDERECO = `http://127.0.0.1:${PORTA}`;
+
 // Sobe um servidor separado (porta 3199, só para testes) com variáveis diferentes.
 // Variáveis vazias de propósito: o Next não sobrescreve variável já definida com o .env.local.
 // O processo roda num grupo próprio (detached): ao parar, encerramos o grupo inteiro, senão o
 // "next start" filho do npx ficava vivo segurando a porta 3199 (achado do Codex, EADDRINUSE).
 export function iniciarServidor(env: Record<string, string>) {
-  const processo = spawn("npx", ["next", "start", "-H", "127.0.0.1", "-p", "3199"], { env: { ...process.env, ...env }, detached: true });
+  const processo = spawn("npx", ["next", "start", "-H", "127.0.0.1", "-p", PORTA], { env: { ...process.env, ...env }, detached: true });
   let saida = "";
   processo.stdout.on("data", (parte: Buffer) => (saida += parte.toString()));
   processo.stderr.on("data", (parte: Buffer) => (saida += parte.toString()));
@@ -20,7 +23,7 @@ export function iniciarServidor(env: Record<string, string>) {
   };
 
   return {
-    url: "http://127.0.0.1:3199",
+    url: ENDERECO,
     saida: () => saida,
     async esperarEncerrar(limiteMs = 30_000) {
       const tempo = new Promise<null>((resolve) => setTimeout(() => resolve(null), limiteMs));
@@ -32,7 +35,7 @@ export function iniciarServidor(env: Record<string, string>) {
       const fim = Date.now() + limiteMs;
       while (Date.now() < fim) {
         try {
-          const r = await fetch("http://127.0.0.1:3199/saude");
+          const r = await fetch(`${ENDERECO}/saude`);
           if (r.ok) return;
         } catch {
           // ainda subindo
@@ -47,7 +50,7 @@ export function iniciarServidor(env: Record<string, string>) {
       // Espera a porta ser liberada de verdade antes do próximo teste.
       for (let i = 0; i < 50; i++) {
         try {
-          await fetch("http://127.0.0.1:3199/saude");
+          await fetch(`${ENDERECO}/saude`);
         } catch {
           return;
         }
