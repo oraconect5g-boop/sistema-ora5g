@@ -1,4 +1,4 @@
--- Reversão de 20261107140000_correcoes_revisao_codex. SOMENTE em banco sem dados reais:
+-- Reversão de 20261107151305_correcoes_revisao_codex. SOMENTE em banco sem dados reais:
 -- remover a coluna organizacao_id apaga a informação de dono dos eventos de auditoria.
 -- Em homologação/produção, corrigir com nova migration (roll-forward).
 drop index if exists public.vinculos_um_aberto;
@@ -13,5 +13,5 @@ alter table public.auditoria drop column if exists organizacao_id;
 drop policy if exists perfis_ler on public.perfis_usuario;
 drop function if exists privado.perfis_que_gero();
 drop function if exists privado.organizacoes_com_permissao(text);
--- As políticas originais estão na migration 20261107120000_fundacao_acesso.sql e precisam
+-- As políticas originais estão na migration 20261107140352_fundacao_acesso.sql e precisam
 -- ser recriadas a partir dela (perfis_ler e auditoria_ler) e validar_vinculo restaurada.

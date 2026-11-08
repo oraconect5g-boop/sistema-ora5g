@@ -1,0 +1,10 @@
+{
+  "projeto": "ora5g-dev (qgnbeuugklzzcevdzrvg)",
+  "regra": "REV-018 / #17: o nome do arquivo usa a versão que o Supabase gravou no histórico (supabase_migrations.schema_migrations). Migration aplicada não muda mais: o teste src/migrations.test.ts compara o md5 do arquivo com o registrado aqui. Correção = migration nova.",
+  "conferido_em": "2026-11-08",
+  "migrations": [
+    { "versao": "20261107140352", "nome": "fundacao_acesso", "md5": "a8f160b848c860269fed9b3dced6aae5", "aplicada_em": "2026-11-07" },
+    { "versao": "20261107140448", "nome": "indices_chaves_estrangeiras", "md5": "04fa57c5f31bc5cb8beb99ebfac7297e", "aplicada_em": "2026-11-07" },
+    { "versao": "20261107151305", "nome": "correcoes_revisao_codex", "md5": "76dc2a6b2c8e5e3e4648044bf3334caa", "aplicada_em": "2026-11-07" }
+  ]
+}

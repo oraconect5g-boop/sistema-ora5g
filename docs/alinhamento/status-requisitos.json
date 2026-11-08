@@ -14,7 +14,7 @@
     "ORA-ORG-001": {
       "status": "parcial",
       "nota": "Tabelas organização/empresa/unidade com CNPJ validado no banco e escolha da unidade na sessão. Falta cadastrar as 14 lojas reais (lista com CNPJs pendente) e a tela de gestão.",
-      "evidencia": "packages/banco/supabase/migrations/20261107120000_fundacao_acesso.sql; packages/banco/src/acesso.test.ts (T10)"
+      "evidencia": "packages/banco/supabase/migrations/20261107140352_fundacao_acesso.sql; packages/banco/src/acesso.test.ts (T10)"
     },
     "ORA-ORG-002": {
       "status": "parcial",
