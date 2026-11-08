@@ -49,3 +49,18 @@ export function cnpj(raiz: string, filial: string): string {
   const d2 = dv([...base, d1], [6, 5, 4, 3, 2, 9, 8, 7, 6, 5, 4, 3, 2]);
   return `${raiz}${filial}${d1}${d2}`;
 }
+
+// Completa o dígito verificador (Luhn) para gerar IMEI/ICCID FICTÍCIOS válidos nos testes.
+export function comDigitoLuhn(base: string): string {
+  for (let d = 0; d <= 9; d++) {
+    const numero = `${base}${d}`;
+    let soma = 0;
+    for (let i = 0; i < numero.length; i++) {
+      let digito = Number(numero[numero.length - 1 - i]);
+      if (i % 2 === 1) digito = digito * 2 > 9 ? digito * 2 - 9 : digito * 2;
+      soma += digito;
+    }
+    if (soma % 10 === 0) return numero;
+  }
+  throw new Error("base inválida");
+}
