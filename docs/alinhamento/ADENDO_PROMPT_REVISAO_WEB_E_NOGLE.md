@@ -6,6 +6,13 @@ Copiar a instrução abaixo para o Claude Code, ou ler diretamente neste reposit
 
 ---
 
+## Rodada adicional de testes por setor
+
+Ler também [TESTES_E_ANALISE_POR_SETOR_2026-11-08.md](../analises/TESTES_E_ANALISE_POR_SETOR_2026-11-08.md) e tratar #34–#39, sem perder as prioridades P1 anteriores. Os achados cobrem equivalência de payload de estoque, unidade por ICCID, autoria de aprovação, período comparável em relatórios, segurança do CSV e saldo insuficiente na ativação.
+
+Preservar os testes permanentes novos de desconto e navegação/exportações. As provas deliberadamente vermelhas ficam em docs/analises/evidencias/2026-11-08-setores até virarem regressões das correções. O núcleo real de vendas, pagamentos e Connect mantém prioridade; a revisão abrange todos os setores sem reabrir linguagem, escopo e decisões já aprovadas.
+
+
 Continue a implementação do núcleo real da Ora 5G. Preserve TypeScript, React/Next.js, Tailwind, Node.js e PostgreSQL/Supabase. Não recomece módulos existentes nem troque linguagem/framework.
 
 Leia AGENTS.md, CLAUDE.md, estado atual, ADRs, decisões, fila e a [revisão independente](../analises/REVISAO_CLAUDE_E_RELATORIO_WEB_2026-11-08.md). A base revisada é 55d10af; antes de alterar, confira os commits posteriores e não sobreponha trabalho em andamento.

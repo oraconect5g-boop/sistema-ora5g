@@ -156,3 +156,16 @@ Supabase consultado somente para metadados/contagens: oito migrations da main co
 
 **Orientação recente do proprietário:** a Nogle/Contel mantém os fatos oficiais telecom; a Ora relaciona venda, loja, vendedor, recorrência e repasse, sem dupla contagem. Ler [NOGLE_REGISTRO_OFICIAL_E_DESEMPENHO.md](NOGLE_REGISTRO_OFICIAL_E_DESEMPENHO.md) e o [adendo ao prompt](ADENDO_PROMPT_REVISAO_WEB_E_NOGLE.md). Renovação de plano é diferente de comissão recorrente; nenhuma taxa ou rota de repasse foi presumida.
 
+## Rodada ampliada de 08/11/2026 — testes em todos os setores
+
+[Análise dos 17 setores](../analises/TESTES_E_ANALISE_POR_SETOR_2026-11-08.md), sobre a mesma base 55d10af. Stack preservada. Executados 88 casos adicionais distintos: 79 passaram e 9 falharam de forma esperada, demonstrando seis causas novas. As reexecuções não entram como cobertura adicional.
+
+Achados P2: REV-032 / #34 (idempotência com variante NULL e condição/série omitidas); REV-033 / #35 (chip q2 com ICCID único); REV-034 / #36 (contrato não exclui o autor da fila de aprovação); REV-035 / #37 (relatório 30 dias compara com um dia); REV-036 / #38 (CSV permite fórmula textual); REV-037 / #39 (ativação simulada deixa carteira negativa). Limites e reproduções estão na análise e na [pasta de evidências](../analises/evidencias/2026-11-08-setores/LEIA-ME.md). As P1 #27–#29 continuam prioritárias.
+
+Adicionados à suíte normal um teste com 1000 entradas de desconto e 21 cenários Playwright em dois tamanhos, cobrindo páginas, negativas de perfil e dez exportações, inclusive filtros e omissão de custo. Casos vermelhos ficam fora do CI normal.
+
+Supabase consultado somente em leitura: 22 tabelas com RLS, zero usuários/sessões/perfis; bucket privado de fotos, tipos/limite e policies presentes no desenvolvimento, sem homologação de upload/URLs. Advisor: sem aviso de health; 17 RPCs SECURITY DEFINER intencionais a revisar por seus guards; uma FK de fotos sem índice geral de cobertura e 44 índices sem uso (não remover automaticamente). Sem acesso ao servidor/.env, banco mutado ou operação externa real.
+
+Nenhum módulo foi marcado como homologado. O inventário permanece 173 requisitos/71 do piloto. Implementação ausente é registrada como pendência, sem usar mockup como prova.
+
+
