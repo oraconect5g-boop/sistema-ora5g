@@ -16,7 +16,8 @@ test("saída forçada mostra só motivo conhecido", async ({ page }) => {
   await expect(page.getByText("Seu turno terminou. Entre de novo para continuar.")).toBeVisible();
   await page.goto("/sair?motivo=__proto__");
   await expect(page).toHaveURL(/\/entrar$/);
-  await expect(page.getByRole("note")).toHaveCount(0);
+  // Nenhum aviso do catálogo de erros (o aviso de "login não configurado" pode existir no CI).
+  await expect(page.getByText(/turno terminou|acesso está bloqueado|link venceu|incorretos/)).toHaveCount(0);
 });
 
 test("link de acesso inválido ou sem configuração volta ao login com aviso", async ({ page }) => {
