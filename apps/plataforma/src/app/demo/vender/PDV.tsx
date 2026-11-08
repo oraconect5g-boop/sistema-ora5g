@@ -14,6 +14,7 @@ import { Dialogo } from "../../../componentes/Dialogo";
 import { Aviso, Botao, Cartao, ListaDados, Selo } from "../../../componentes/ui";
 import { brl, percentualDePontosBase } from "../../../lib/formato";
 import { Comprovante } from "./Comprovante";
+import { avisoDeLimite, conferirQuantidade, podeAumentar } from "./estoque";
 import { assinaturaDoCarrinho, lerSeguro, reaisParaTexto, type Aprovacao, type Cliente, type DadosPdv, type ItemCarrinho, type LinhaPagamento } from "./tipos";
 
 const ICONE_MEIO: Record<MeioPagamento, typeof QrCode> = {
@@ -51,6 +52,7 @@ export function PDV({ dados, itemInicial }: { dados: DadosPdv; itemInicial?: Ata
   const [escolhendoImei, setEscolhendoImei] = useState<string | null>(null);
   const [imeiDigitado, setImeiDigitado] = useState("");
   const [erroImei, setErroImei] = useState("");
+  const [avisoEstoque, setAvisoEstoque] = useState("");
   const [aprovacao, setAprovacao] = useState<Aprovacao | null>(null);
   const [pedido, setPedido] = useState<{ aberto: boolean; motivo: string }>({ aberto: false, motivo: "" });
   const [confirmando, setConfirmando] = useState(false);
@@ -73,6 +75,8 @@ export function PDV({ dados, itemInicial }: { dados: DadosPdv; itemInicial?: Ata
   }, [busca, dados.produtos, dados.unidades]);
 
   // ---------- Análise do carrinho (REV-015: item inválido nunca derruba a tela) ----------
+  // REV-019: acessório por quantidade nunca passa do saldo da loja da sessão.
+  const saldoDe = (sku: string) => (Object.hasOwn(dados.saldos, sku) ? (dados.saldos[sku] ?? 0) : 0);
   const taxaDaVenda = Math.max(0, ...pagamentos.map((p) => dados.taxas[p.meio] ?? 0));
   const analise = itens.map((item) => {
     const produto = porSku.get(item.sku);
@@ -90,6 +94,10 @@ export function PDV({ dados, itemInicial }: { dados: DadosPdv; itemInicial?: Ata
       situacaoTelecom: produto.tipo === "recarga" ? "confirmada" : produto.tipo === "ativacao" || produto.tipo === "portabilidade" ? "pendente" : undefined,
     };
     const erros = desconto === null ? ["Desconto inválido: use só números, como 50,00"] : validarItem(venda);
+    if (produto.tipo === "acessorio") {
+      const erroQuantidade = conferirQuantidade(item.quantidade, saldoDe(produto.sku));
+      if (erroQuantidade) erros.push(erroQuantidade);
+    }
     let avaliacao: AvaliacaoDesconto | null = null;
     if (erros.length === 0 && aceitaDesconto && (desconto ?? 0) > 0) {
       try {
@@ -131,6 +139,7 @@ export function PDV({ dados, itemInicial }: { dados: DadosPdv; itemInicial?: Ata
     const produto = porSku.get(sku);
     if (!produto) return;
     setBusca("");
+    setAvisoEstoque("");
     if (produto.tipo === "aparelho" && !imei) {
       setEscolhendoImei(sku);
       setImeiDigitado("");
@@ -139,8 +148,11 @@ export function PDV({ dados, itemInicial }: { dados: DadosPdv; itemInicial?: Ata
     }
     setEscolhendoImei(null);
     if (produto.tipo === "acessorio") {
+      const saldo = saldoDe(sku);
       const existente = itens.find((i) => i.sku === sku);
+      if (existente && !podeAumentar(existente.quantidade, saldo)) return setAvisoEstoque(avisoDeLimite(produto.nome, saldo));
       if (existente) return setItens(itens.map((i) => (i === existente ? { ...i, quantidade: i.quantidade + 1 } : i)));
+      if (saldo <= 0) return setAvisoEstoque(avisoDeLimite(produto.nome, saldo));
     }
     setItens([...itens, { id: novoId(), sku, quantidade: 1, imei, descontoTexto: "" }]);
   }
@@ -279,14 +291,15 @@ export function PDV({ dados, itemInicial }: { dados: DadosPdv; itemInicial?: Ata
           <div className="relative">
             <Search aria-hidden className="pointer-events-none absolute left-3 top-3 size-5 text-suave" />
             <label className="sr-only" htmlFor="busca-produto">Buscar produto</label>
-            <input id="busca-produto" value={busca} onChange={(e) => setBusca(e.target.value)} placeholder="Ex.: galaxy, iphone, APA-0002, 4702" autoComplete="off" className={`${classeCampo} w-full border-borda pl-10`} />
+            <input id="busca-produto" value={busca} onChange={(e) => { setBusca(e.target.value); setAvisoEstoque(""); }} placeholder="Ex.: galaxy, iphone, APA-0002, 4702" autoComplete="off" className={`${classeCampo} w-full border-borda pl-10`} />
             {busca && <button type="button" aria-label="Limpar busca" onClick={() => setBusca("")} className="absolute right-1 top-1 grid size-9 place-items-center rounded-lg text-suave hover:bg-slate-100"><X aria-hidden className="size-4" /></button>}
           </div>
+          {avisoEstoque && <p role="status" className="mt-2 text-sm font-medium text-aviso">{avisoEstoque}</p>}
           {busca.trim().length >= 2 && resultados.length === 0 && <p className="mt-2 text-sm text-suave">Nada encontrado para “{busca.trim()}”.</p>}
           {resultados.length > 0 && (
             <ul className="mt-2 divide-y divide-borda overflow-hidden rounded-xl border border-borda">
               {resultados.map((p) => {
-                const qtd = p.tipo === "aparelho" ? disponiveis(p.sku).length : (dados.saldos[p.sku] ?? 0);
+                const qtd = p.tipo === "aparelho" ? disponiveis(p.sku).length : saldoDe(p.sku);
                 return (
                   <li key={p.sku}>
                     <button type="button" onClick={() => adicionarProduto(p.sku)} disabled={qtd === 0} aria-label={`Adicionar ${p.nome}`} className="flex w-full items-center justify-between gap-3 px-3 py-2.5 text-left hover:bg-slate-50 disabled:cursor-not-allowed disabled:opacity-50">
@@ -356,7 +369,7 @@ export function PDV({ dados, itemInicial }: { dados: DadosPdv; itemInicial?: Ata
                           {!item.iccid && produto.tipo === "chip" && "Sem chip disponível nesta loja"}
                           {(produto.tipo === "ativacao" || produto.tipo === "portabilidade") && "Fica pendente até a confirmação da operadora (Nogle)"}
                           {produto.tipo === "recarga" && "Valor de face: não é receita da Ora"}
-                          {produto.tipo === "acessorio" && `${brl(produto.preco)} cada`}
+                          {produto.tipo === "acessorio" && `${brl(produto.preco)} cada · ${saldoDe(produto.sku)} em estoque nesta loja`}
                         </p>
                       </div>
                       <span className="numeros shrink-0 text-sm font-semibold">{brl(venda.precoUnitario * venda.quantidade)}</span>
@@ -366,7 +379,7 @@ export function PDV({ dados, itemInicial }: { dados: DadosPdv; itemInicial?: Ata
                         <span className="flex items-center rounded-botao border border-borda">
                           <button type="button" aria-label={`Diminuir quantidade de ${produto.nome}`} onClick={() => atualizar(item.id, { quantidade: Math.max(1, item.quantidade - 1) })} className="grid size-11 place-items-center text-suave hover:text-texto"><Minus aria-hidden className="size-4" /></button>
                           <span className="numeros w-8 text-center text-sm font-semibold" aria-label={`Quantidade de ${produto.nome}`}>{item.quantidade}</span>
-                          <button type="button" aria-label={`Aumentar quantidade de ${produto.nome}`} onClick={() => atualizar(item.id, { quantidade: item.quantidade + 1 })} className="grid size-11 place-items-center text-suave hover:text-texto"><Plus aria-hidden className="size-4" /></button>
+                          <button type="button" aria-label={`Aumentar quantidade de ${produto.nome}`} disabled={!podeAumentar(item.quantidade, saldoDe(produto.sku))} title={podeAumentar(item.quantidade, saldoDe(produto.sku)) ? undefined : "Limite do estoque desta loja"} onClick={() => atualizar(item.id, { quantidade: item.quantidade + 1 })} className="grid size-11 place-items-center text-suave hover:text-texto disabled:cursor-not-allowed disabled:opacity-40"><Plus aria-hidden className="size-4" /></button>
                         </span>
                       )}
                       {produto.tipo === "recarga" && (

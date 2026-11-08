@@ -2,7 +2,7 @@
 
 **Data:** 06/11/2026 · **Autor:** Claude Code · **Revisor esperado:** Codex + proprietário
 **Arquivo modelo:** `.env.example` (raiz do repositório)
-**Status:** proposta. Nomes de variáveis são nossos; os **tipos de credencial** foram conferidos na documentação de cada plataforma na data acima. Itens "a confirmar" serão revalidados no momento da integração.
+**Status:** proposta. **O que falta e como gravar sem passar pelo chat: `docs/PENDENCIAS_DO_PROPRIETARIO.md` (seção 4).** Nomes de variáveis são nossos; os **tipos de credencial** foram conferidos na documentação de cada plataforma na data acima. Itens "a confirmar" serão revalidados no momento da integração.
 
 ---
 
@@ -24,7 +24,7 @@
 | 1 | Aplicação | `APP_ENV`, `NEXT_PUBLIC_APP_URL`, `APP_TIMEZONE`, `APP_DEFAULT_CURRENCY` | Configuração geral | Claude/Codex | Pronto para usar |
 | 1 | Aplicação | `APP_ENCRYPTION_KEY` | Chave aleatória gerada por nós (`openssl rand -base64 32`), uma por ambiente | Administrador, no servidor | Pronto para usar |
 | 1 | Aplicação | `CRON_SECRET` | Senha aleatória das rotinas automáticas | Administrador | Pronto para usar |
-| 2 | Supabase | `NEXT_PUBLIC_SUPABASE_URL`, `NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY`, `SUPABASE_SECRET_KEY`, `DATABASE_URL` | Painel do projeto Supabase → configurações de API e banco. **`DATABASE_URL` deve ser a do pooler compartilhado em modo sessão (porta 5432)**, porque a conexão direta é só IPv6 e o servidor é só IPv4 (ADR-001) | Proprietário cria o projeto; Claude configura | **Aguardando autorização** para criar o projeto |
+| 2 | Supabase | `NEXT_PUBLIC_SUPABASE_URL`, `NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY`, `SUPABASE_SECRET_KEY`, `DATABASE_URL` | Painel do projeto Supabase → configurações de API e banco. **`DATABASE_URL` deve ser a do pooler compartilhado em modo sessão (porta 5432)**, porque a conexão direta é só IPv6 e o servidor é só IPv4 (ADR-001) | Proprietário cria o projeto; Claude configura | Projeto `ora5g-dev` criado em 07/11; endereço e chave pública configurados. Chave secreta e `DATABASE_URL` pendentes: ver `docs/PENDENCIAS_DO_PROPRIETARIO.md` |
 | 3 | E-mail | `EMAIL_FROM`, `SMTP_*` | Servidor de e-mail do domínio `ora5g.com.br` (HostGator) ou serviço de envio transacional | Proprietário | A definir |
 | 4 | Notificação no celular | `NEXT_PUBLIC_WEB_PUSH_PUBLIC_KEY`, `WEB_PUSH_PRIVATE_KEY`, `WEB_PUSH_SUBJECT` | Par de chaves gerado por nós | Claude/Codex | Pronto para usar |
 | 5 | Nogle (Contel) | `NOGLE_API_BASE_URL`, `NOGLE_AUTH_KEY_TYPE`, `NOGLE_ACCESS_KEY` | Documentação oficial: login `POST /auth/token` com chave do tipo **franquia, marca/MVNO ou PDV**; devolve token temporário | Proprietário (chave já existe) | **Falta confirmar o tipo da chave** |

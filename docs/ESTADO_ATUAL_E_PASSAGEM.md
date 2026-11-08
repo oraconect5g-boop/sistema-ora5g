@@ -3,6 +3,8 @@
 **Atualizado em:** 08/11/2026 · **Por:** Claude Code (programador, no servidor)
 **Para:** o Claude Code que programa no servidor (usuário `dev`) e o Codex (revisor)
 
+> **O que depende do proprietário (e-mails, chaves, painéis, decisões): `docs/PENDENCIAS_DO_PROPRIETARIO.md`.** Revisão do planejamento de 08/11: `docs/alinhamento/REVISAO_DO_PLANEJAMENTO_2026-11-08.md`.
+>
 > Leia este arquivo **antes de qualquer tarefa**. Ele resume duas conversas longas com o proprietário (05 e 06/11/2026). Os detalhes estão nos documentos citados; em caso de dúvida, a decisão mais recente do proprietário vale mais que qualquer documento antigo.
 
 ---
@@ -61,6 +63,8 @@ Papéis **fixos** (decisão do proprietário). Detalhes: ADR-001, seção 2.7.
 | `docs/integracoes/VARIAVEIS_DE_AMBIENTE.md` + `.env.example` | Todas as chaves previstas, onde obter, o que fica no banco |
 | `docs/adr/ADR-001-...` | Infraestrutura, IPv4, portas, cPanel, papéis e acesso ao servidor |
 | `docs/adr/ADR-002-...` | Empresa, unidades, perfis, permissões, 10 tabelas da primeira migration, 12 testes negativos |
+| `docs/adr/ADR-003-...` | **Proposto em 08/11:** catálogo, preço e custo com histórico, estoque em livro, IMEI/ICCID, reservas |
+| `docs/PENDENCIAS_DO_PROPRIETARIO.md` | Tudo o que depende do proprietário, e-mails prontos e as 60 chaves (só nomes), com o comando `definir-chave.sh` |
 | `docs/etapa-1/PLANO_DE_INICIO_DA_IMPLEMENTACAO.md` | Semanas 1–4 (ORA-001 a ORA-012), loja online como canal |
 | `docs/operacao/CONECTAR_CLAUDE_CODE_SSH_WINDOWS.md` | Como o proprietário conectou o Claude Code ao servidor |
 
@@ -85,6 +89,8 @@ Papéis **fixos** (decisão do proprietário). Detalhes: ADR-001, seção 2.7.
 | ~~P11~~ | **Respondida 07/11:** autorizado; projeto `ora5g-dev` criado | Plano §6 |
 | ~~P12~~ | **Conferido 07/11:** delegação feita; o DNS responde por `ns1`/`ns2.ora5g.com.br` no próprio servidor | ADR-001 §4A |
 | P13 | Contexto da conversa com o ChatGPT/Codex: o proprietário vai trazer o resumo | Seção 7 |
+| P14 | Teto de desconto e margem mínima por categoria | PENDENCIAS §3 |
+| ADR-003 | Aceite e perguntas Q1 a Q4 (sincronia com a Rein no piloto, preço por loja, seminovos, chip a chip) | ADR-003 |
 
 **Não decidir nada disso sozinho.** Pode preparar opções reversíveis.
 
@@ -96,13 +102,15 @@ Feito em 07/11: deploy key e clone; Node 22; **ORA-002**; **ORA-003**; **ORA-004
 
 **Ora Connect e API Nogle (08/11, pedido do proprietário):** a documentação oficial (https://docs.nogle.tech/) foi lida por inteiro: 62 funções em 16 grupos, cópia guardada e catálogo gerado (`docs/integracoes/NOGLE_API_REFERENCIA.md`). A tela Ora Connect da demonstração ganhou abas com todas as funções (ativar chip físico ou eSIM, consultar linha, recarga, portabilidade, bloqueio, chips e entrega, carteira, integração), simuladas no formato documentado. Para ligar de verdade faltam a **P9** (tipo de chave), credenciais no gerenciador de segredos e as perguntas da seção 3 da referência.
 
+**Back-end iniciado (08/11, pedido do proprietário):** corrigidos o #17 (versões das migrations iguais às do Supabase, sem tocar no banco, com teste que impede alterar migration aplicada) e o #18 (PDV não passa do estoque). Feitos a auditoria automática de acesso (ORA-ORG-005) e o ADR-003 (proposto) com a migration de catálogo, preço, custo, estoque em livro, IMEI/ICCID e reservas, **aplicados no `ora5g-dev`** com md5 conferido (`packages/banco/supabase/aplicadas-dev.json`). Banco de desenvolvimento com semente fictícia (3 unidades, 6 variações, 17 itens). Lista do que depende do proprietário e comando para gravar chaves sem exibir: `docs/PENDENCIAS_DO_PROPRIETARIO.md` e `deploy/homologacao/definir-chave.sh`. Aguardando revisão do Codex: `docs/alinhamento/PEDIDO_DE_REVISAO_CODEX.md` (seção de 08/11).
+
 1. **Fila de revisão com o Codex (atualizada em 08/11):** dos 14 achados de 07/11, o Codex conferiu as correções e encerrou sete issues com evidência (`docs/alinhamento/CONFERENCIA_DAS_CORRECOES_2026-11-07.md`); a **#13 / REV-015** (desconto maior que o item) também foi confirmada e encerrada na auditoria de 07/11 (`docs/analises/AUDITORIA_FUNCIONAL_E_SUPABASE_2026-11-07.md`). Corrigidos em 08/11 na branch `fix/residuos-codex-2026-11-07`, **aguardando revisão do Codex**: resíduo do **REV-008** (#10, aritmética exata em valores altos), teste do **REV-014**, **REV-016** (#14, republicar o mesmo commit com outro ambiente), **CONFIG-001** (#12) e **REV-017** (#16, `/entrar?erro=constructor` dava 500). Respostas: `docs/alinhamento/RESPOSTAS_A_REVISAO_2026-11-07.md`. Continua aberta a **#11 / REV-009**: renovação de sessão sem teste com usuário real, que ainda não existe.
-2. **Auditoria automática** de mudanças em vínculos, perfis e papéis (ORA-ORG-005).
-3. **ADR-003** (operação comercial, tipos de item, ledger de estoque), revisado pelo Codex e aceito pelo proprietário.
-4. **ORA-006** completo: escolha da loja na sessão, sessão por turno, recuperação de senha (depende do SMTP), usuários de teste.
-5. **ORA-007** catálogo, **ORA-009** importador (depende do CSV), **ORA-010** estoque e IMEI com teste de concorrência.
+2. ~~Auditoria automática de mudanças em vínculos, perfis e papéis (ORA-ORG-005).~~ **Feita em 08/11**, aguardando revisão do Codex.
+3. **ADR-003** proposto em 08/11 e já aplicado no desenvolvimento: falta a revisão do Codex e o aceite do proprietário (pendência 1.6).
+4. **ORA-006** completo (próxima entrega): escolha da loja na sessão, sessão por turno, recuperação de senha (depende do SMTP), usuários de teste (script `packages/banco/supabase/semente/vincular-usuarios-de-teste.sql` pronto; falta o proprietário criar os usuários). Junto: tipos do banco gerados no aplicativo e a tela real de estoque.
+5. **ORA-007** catálogo e **ORA-010** estoque/IMEI: banco pronto no desenvolvimento (08/11); faltam as telas reais e a prova com duas conexões simultâneas (precisa `DATABASE_URL`). **ORA-009** importador: depende do arquivo da Rein.
 6. Trocar as telas da demonstração pelas reais, uma a uma, conforme cada módulo fica pronto (reaproveitar `src/componentes` e as regras de `src/demo/consultas.ts` como contrato de quem vê o quê).
-7. Achados novos do Codex na auditoria de 07/11, ainda **não tratados**: **#17 / REV-018** (as versões do histórico de migrations no Supabase diferem das do Git, embora os objetos correspondam; conciliar por procedimento revisado, sem `repair` nem `reset` às cegas) e **#18 / REV-019** (no PDV da demonstração, acessório aceita quantidade acima do saldo e a conclusão continua habilitada).
+7. ~~Achados novos do Codex na auditoria de 07/11~~ **tratados em 08/11**, aguardando conferência do Codex: **#17 / REV-018** (as versões do histórico de migrations no Supabase diferem das do Git, embora os objetos correspondam; conciliar por procedimento revisado, sem `repair` nem `reset` às cegas) e **#18 / REV-019** (no PDV da demonstração, acessório aceita quantidade acima do saldo e a conclusão continua habilitada).
 
 ## 7. Contexto da conversa com o ChatGPT
 

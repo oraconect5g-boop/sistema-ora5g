@@ -1,5 +1,5 @@
 // Regressões dos achados do Codex de 07/11/2026 (docs/alinhamento/REVISOES_CODEX.md).
-// Cada teste reproduz o cenário do achado e prova a correção da migration 20261107140000.
+// Cada teste reproduz o cenário do achado e prova a correção da migration 20261107151305 (correcoes_revisao_codex).
 import type { PGlite } from "@electric-sql/pglite";
 import { beforeEach, describe, expect, it } from "vitest";
 

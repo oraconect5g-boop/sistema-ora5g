@@ -14,7 +14,7 @@
     "ORA-ORG-001": {
       "status": "parcial",
       "nota": "Tabelas organização/empresa/unidade com CNPJ validado no banco e escolha da unidade na sessão. Falta cadastrar as 14 lojas reais (lista com CNPJs pendente) e a tela de gestão.",
-      "evidencia": "packages/banco/supabase/migrations/20261107120000_fundacao_acesso.sql; packages/banco/src/acesso.test.ts (T10)"
+      "evidencia": "packages/banco/supabase/migrations/20261107140352_fundacao_acesso.sql; packages/banco/src/acesso.test.ts (T10)"
     },
     "ORA-ORG-002": {
       "status": "parcial",
@@ -32,9 +32,9 @@
       "evidencia": "packages/banco/src/acesso.test.ts; packages/banco/src/revisao-codex.test.ts"
     },
     "ORA-ORG-005": {
-      "status": "parcial",
-      "nota": "Auditoria imutável com organização dona do evento (REV-002) registra troca de unidade e tentativas negadas. FALTA: mudanças em vínculos, perfis e papéis ainda não geram auditoria automática.",
-      "evidencia": "acesso.test.ts (T9); revisao-codex.test.ts (REV-002)"
+      "status": "testado",
+      "nota": "Auditoria automática (gatilho) em organizações, empresas, unidades, perfis, papéis, permissões, matriz papel × permissão, vínculos e categorias: ator, horário, alvo, antes/depois e motivo, separada por organização (REV-002). Aplicada no ora5g-dev em 08/11. Aguardando revisão do Codex.",
+      "evidencia": "packages/banco/supabase/migrations/20261108150432_auditoria_automatica_acesso.sql; packages/banco/src/auditoria-acesso.test.ts"
     },
     "ORA-ORG-006": {
       "status": "parcial",
@@ -48,8 +48,8 @@
     },
     "ORA-CAT-005": {
       "status": "parcial",
-      "nota": "Tipos de item (aparelho, acessório, chip, ativação, recarga, serviço) e suas exigências modelados nas regras de negócio puras. Falta tabela de catálogo (ADR-003).",
-      "evidencia": "packages/dominio/src/venda.ts"
+      "nota": "Tipos no banco iguais aos de packages/dominio, com exigências: aparelho só com IMEI, chip só com ICCID, acessório por quantidade, serviços sem estoque. Falta a venda real (ADR-004).",
+      "evidencia": "packages/dominio/src/venda.ts; packages/banco/supabase/migrations/20261108150620_catalogo_estoque.sql; packages/banco/src/catalogo-estoque.test.ts"
     },
     "ORA-CAT-006": {
       "status": "parcial",
@@ -58,8 +58,8 @@
     },
     "ORA-INV-002": {
       "status": "parcial",
-      "nota": "IMEI com dígito verificador validado. Falta unicidade e reserva no banco (ADR-003, ORA-010).",
-      "evidencia": "packages/dominio/src/identificadores.test.ts"
+      "nota": "IMEI com dígito verificador e único na organização; reserva com trava de linha e índice único (a segunda tentativa é recusada). Falta: baixa na venda real (ADR-004) e prova com duas conexões simultâneas (precisa DATABASE_URL de desenvolvimento).",
+      "evidencia": "packages/dominio/src/identificadores.test.ts; packages/banco/supabase/migrations/20261108150620_catalogo_estoque.sql; packages/banco/src/catalogo-estoque.test.ts"
     },
     "ORA-POS-005": {
       "status": "parcial",
@@ -128,8 +128,8 @@
     },
     "ORA-QUAL-003": {
       "status": "parcial",
-      "nota": "Auditoria só de inserção, inclusive para o dono do banco. Operações críticas futuras (venda, caixa, aprovação) ainda não existem.",
-      "evidencia": "acesso.test.ts (T9)"
+      "nota": "Auditoria só de inserção, inclusive para o dono do banco. Operações críticas futuras (venda, caixa, aprovação) ainda não existem. Desde 08/11: auditoria automática das mudanças de acesso e configuração (ORA-ORG-005) e livro de estoque imutável (ADR-003).",
+      "evidencia": "acesso.test.ts (T9); packages/banco/src/auditoria-acesso.test.ts; packages/banco/src/catalogo-estoque.test.ts"
     },
     "ORA-QUAL-004": {
       "status": "parcial",
@@ -230,6 +230,56 @@
       "status": "demonstracao",
       "nota": "eSIM na ativação e compra de chip com entrega e rastreio no formato da API. Só dados fictícios.",
       "evidencia": "apps/plataforma/src/app/demo/connect; apps/plataforma/e2e/connect.spec.ts"
+    },
+    "ORA-CAT-001": {
+      "status": "parcial",
+      "nota": "Categorias, marcas, produtos por tipo e variações com SKU e código de barras únicos no banco (ADR-003 proposto, aplicado no ora5g-dev em 08/11). Falta: tela real de cadastro e importação da Rein (ORA-009, depende do arquivo).",
+      "evidencia": "packages/banco/supabase/migrations/20261108150620_catalogo_estoque.sql; packages/banco/src/catalogo-estoque.test.ts"
+    },
+    "ORA-CAT-004": {
+      "status": "parcial",
+      "nota": "Preço com histórico por loja e canal, campanha com período e preço vigente consultável em qualquer momento (preco_vigente), sem apagar o anterior. Falta: alteração pela tela com preco.alterar e a gravação do preço na venda (ADR-004).",
+      "evidencia": "packages/banco/supabase/migrations/20261108150620_catalogo_estoque.sql; packages/banco/src/catalogo-estoque.test.ts"
+    },
+    "ORA-CAT-008": {
+      "status": "parcial",
+      "nota": "Custo com histórico, visível só com custo.ver (vendedor não vê; testado). Falta custo por entrada/lote nas compras (ORA-INV-009).",
+      "evidencia": "packages/banco/supabase/migrations/20261108150620_catalogo_estoque.sql; packages/banco/src/catalogo-estoque.test.ts"
+    },
+    "ORA-INV-001": {
+      "status": "parcial",
+      "nota": "Saldo por loja no banco, isolado por RLS (papel de unidade vê só a loja da sessão) e disponibilidade das outras lojas sem IMEI (disponibilidade_na_rede). Falta: transferência entre lojas (ORA-INV-007) e a tela real.",
+      "evidencia": "packages/banco/supabase/migrations/20261108150620_catalogo_estoque.sql; packages/banco/src/catalogo-estoque.test.ts"
+    },
+    "ORA-INV-003": {
+      "status": "testado",
+      "nota": "Livro de estoque só de inserção (nem o dono do banco altera), saldo mantido pelo livro e conferido contra ele, sem estoque negativo, idempotência por chave. Aplicado no ora5g-dev em 08/11. Aguardando revisão do Codex.",
+      "evidencia": "packages/banco/supabase/migrations/20261108150620_catalogo_estoque.sql; packages/banco/src/catalogo-estoque.test.ts"
+    },
+    "ORA-INV-004": {
+      "status": "parcial",
+      "nota": "Conferência física do IMEI/ICCID pelo celular registrada e auditada (conferir_item). Falta: importação aprovada da Rein e relatório de divergências.",
+      "evidencia": "packages/banco/supabase/migrations/20261108150620_catalogo_estoque.sql; packages/banco/src/catalogo-estoque.test.ts"
+    },
+    "ORA-INV-005": {
+      "status": "parcial",
+      "nota": "Reserva com prazo, liberação, vencimento e idempotência no banco. Falta: ligar ao checkout real e a rotina periódica de vencimento.",
+      "evidencia": "packages/banco/supabase/migrations/20261108150620_catalogo_estoque.sql; packages/banco/src/catalogo-estoque.test.ts"
+    },
+    "ORA-INV-006": {
+      "status": "parcial",
+      "nota": "O banco recusa reservar IMEI/ICCID reservado, vendido ou de outra loja, com códigos próprios (OR002, OR003) e sem mudança parcial. Falta: mensagens na tela real.",
+      "evidencia": "packages/banco/supabase/migrations/20261108150620_catalogo_estoque.sql; packages/banco/src/catalogo-estoque.test.ts"
+    },
+    "ORA-INV-011": {
+      "status": "parcial",
+      "nota": "ICCID com dígito verificador, único e controlado chip a chip (proposta Q4 do ADR-003). Falta: ligar à ativação da Nogle.",
+      "evidencia": "packages/banco/supabase/migrations/20261108150620_catalogo_estoque.sql; packages/banco/src/catalogo-estoque.test.ts"
+    },
+    "ORA-POS-004": {
+      "status": "parcial",
+      "nota": "Reserva do IMEI atômica no banco (trava + índice único); a escolha do IMEI na tela existe na demonstração. Falta a baixa na venda real (ADR-004).",
+      "evidencia": "apps/plataforma/src/app/demo/vender/PDV.tsx; packages/banco/supabase/migrations/20261108150620_catalogo_estoque.sql; packages/banco/src/catalogo-estoque.test.ts"
     }
   }
 }

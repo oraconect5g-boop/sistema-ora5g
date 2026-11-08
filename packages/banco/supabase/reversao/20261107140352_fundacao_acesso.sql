@@ -1,4 +1,4 @@
--- Reversão da migration 20261107120000_fundacao_acesso.
+-- Reversão da migration 20261107140352_fundacao_acesso.
 -- ATENÇÃO: apaga as tabelas de acesso e a auditoria. Usar SOMENTE em banco de
 -- desenvolvimento/teste sem dados reais. Em homologação/produção, corrigir com
 -- uma nova migration (roll-forward), nunca com esta reversão.
