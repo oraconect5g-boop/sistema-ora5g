@@ -2,7 +2,7 @@
 
 **Data:** 08/11/2026 · **Autor:** Claude Code · **Revisor:** Codex · **Aceite:** proprietário
 **Status:** **proposto**. Por pedido do proprietário em 08/11 ("iniciar back-end e migrações quanto antes"), a primeira migration já está aplicada no banco de **desenvolvimento** (`ora5g-dev`, sem dados reais). Até o aceite, ela pode mudar por migration nova; nada vai para produção antes do aceite.
-**Requisitos:** ORA-CAT-001, 004, 005, 006, 008 · ORA-INV-001, 002, 003, 005, 006, 011 · ORA-POS-004 · base de ORA-CAT-002 (importação Rein) e ORA-INV-004.
+**Requisitos:** ORA-CAT-001, 004, 005, 006, 008, 011 · ORA-INV-001, 002, 003, 005, 006, 011 · ORA-POS-004 · base de ORA-CAT-002 (importação Rein) e ORA-INV-004.
 
 ## Resumo para o proprietário (o que você aceita)
 
@@ -88,3 +88,9 @@ O arquivo vira um **lote em prévia** (linhas normalizadas e erros, nada gravado
 ## Testes
 
 `packages/banco/src/catalogo-estoque.test.ts`: SKU e código de barras únicos, IMEI/ICCID inválido ou repetido recusado, livro imutável, saldo = soma do livro, estoque negativo recusado sem efeito parcial, preço com histórico/campanha/loja, custo invisível ao vendedor, estoque isolado por loja e por organização, disponibilidade na rede sem IMEI, reserva (dupla recusada, idempotência, outra loja, acima do saldo, vencimento, liberação) e conferência auditada.
+
+## Complemento de escopo — fotos dos produtos (08/11/2026)
+
+Decisão do proprietário: **ORA-CAT-011, P0** exige foto principal de cada produto e imagem correspondente às variantes visualmente diferentes, com uso no catálogo, busca, estoque e PDV. O detalhe e os critérios estão em [FOTOS_DOS_PRODUTOS_2026-11-08.md](../alinhamento/FOTOS_DOS_PRODUTOS_2026-11-08.md), issue [#26](https://github.com/oraconect5g-boop/sistema-ora5g/issues/26).
+
+A implementação deverá acrescentar metadados de mídia vinculados à organização/produto/variante e armazenamento com autorização, por migration nova. As migrations já aplicadas continuam preservadas. Este complemento registra o requisito aprovado; o desenho técnico do ADR permanece proposto e não representa Storage ou fotos já implementados.
