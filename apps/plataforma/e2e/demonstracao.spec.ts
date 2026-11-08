@@ -211,6 +211,33 @@ test("pagamento misto mostra troco e o que falta", async ({ page }) => {
   await expect(page.getByText("Falta receber R$ 29,00")).toBeVisible();
 });
 
+test("REV-019: acessório não passa do estoque da loja (limite exato e tentativa acima)", async ({ page }) => {
+  await usarPerfil(page, "vendedor");
+  await page.goto("/demo/vender");
+  // Fixture: o Cabo USB-C 1 m tem 3 unidades na Santa Cândida. Zero e uma unidade: estoque.test.ts.
+  await page.getByLabel("Buscar produto").fill("cabo usb");
+  await expect(page.getByText("ACE-0004 · 3 em estoque")).toBeVisible();
+  await page.getByRole("button", { name: "Adicionar Cabo USB-C 1 m" }).click();
+  const aumentar = page.getByRole("button", { name: "Aumentar quantidade de Cabo USB-C 1 m" });
+  const quantidade = page.locator('[aria-label="Quantidade de Cabo USB-C 1 m"]');
+  await aumentar.click();
+  await aumentar.click();
+  await expect(quantidade).toHaveText("3");
+  await expect(aumentar).toBeDisabled();
+  await expect(page.getByText("3 em estoque nesta loja")).toBeVisible();
+
+  // Adicionar de novo pela busca também não passa do limite: avisa e mantém 3.
+  await adicionarProduto(page, "cabo usb", "Cabo USB-C 1 m");
+  await expect(page.getByRole("status").filter({ hasText: "o carrinho já tem todo o estoque desta loja (3 unidades)" })).toBeVisible();
+  await expect(quantidade).toHaveText("3");
+
+  // No limite exato a venda segue normalmente.
+  await botaoExato(page, "Dinheiro").click();
+  await expect(botaoExato(page, "Conferir e concluir venda")).toBeEnabled();
+  await page.getByLabel("Buscar produto").fill("");
+  await expect(page.getByRole("status").filter({ hasText: "todo o estoque" })).toHaveCount(0);
+});
+
 test("atalhos do início do vendedor já montam a venda de chip e de recarga", async ({ page }) => {
   await usarPerfil(page, "vendedor");
   await page.goto("/demo/vender?item=chip");
