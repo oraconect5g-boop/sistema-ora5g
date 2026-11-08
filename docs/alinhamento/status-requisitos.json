@@ -233,7 +233,7 @@
     },
     "ORA-CAT-001": {
       "status": "parcial",
-      "nota": "Categorias, marcas, produtos por tipo e variações com SKU e código de barras únicos no banco (ADR-003 proposto, aplicado no ora5g-dev em 08/11). Falta: tela real de cadastro e importação da Rein (ORA-009, depende do arquivo).",
+      "nota": "Categorias, marcas, produtos por tipo e variações com SKU e código de barras únicos no banco (ADR-003 proposto, aplicado no ora5g-dev em 08/11). Falta: tela real de cadastro e importação da Rein (ORA-009, depende do arquivo). Desde 08/11 (noite): tela real /catalogo lendo pelo RLS, sem custo para quem não tem custo.ver.",
       "evidencia": "packages/banco/supabase/migrations/20261108150620_catalogo_estoque.sql; packages/banco/src/catalogo-estoque.test.ts"
     },
     "ORA-CAT-004": {
@@ -280,6 +280,11 @@
       "status": "parcial",
       "nota": "Reserva do IMEI atômica no banco (trava + índice único, concorrência real provada); a saída por venda exige a reserva consumida antes e muda o item para vendido no mesmo lançamento. Falta a função de venda transacional (ADR-004) e a tela real.",
       "evidencia": "apps/plataforma/src/app/demo/vender/PDV.tsx; packages/banco/supabase/migrations/20261108150620_catalogo_estoque.sql; packages/banco/src/catalogo-estoque.test.ts"
+    },
+    "ORA-CAT-011": {
+      "status": "parcial",
+      "nota": "Implementado em desenvolvimento (08/11): bucket privado no Storage com RLS por organização (vendedor vê, dono e gerente enviam: catalogo.fotos), caminho como identidade estável e URL assinada temporária, registro no banco com tamanho e tipo vindos do Storage, troca que guarda a anterior, ilustração só para item não físico, pendências (produto sem foto e cor sem foto própria) e tela /catalogo com miniatura, ampliação e envio pelo celular (redução no aparelho). FALTA: homologar com fotos reais e usuário real (critérios da #26), fotos no estoque e no PDV reais (com o ADR-004) e limpeza de arquivo enviado sem registro.",
+      "evidencia": "packages/banco/supabase/migrations/20261108204536_fotos_dos_produtos.sql; packages/banco/src/fotos-produto.test.ts; apps/plataforma/src/app/catalogo; apps/plataforma/src/lib/catalogo"
     }
   }
 }
