@@ -234,7 +234,8 @@ test("REV-019: acessório não passa do estoque da loja (limite exato e tentativ
   // No limite exato a venda segue normalmente.
   await botaoExato(page, "Dinheiro").click();
   await expect(botaoExato(page, "Conferir e concluir venda")).toBeEnabled();
-  await page.getByLabel("Buscar produto").fill("");
+  // O aviso some quando a pessoa começa uma nova busca.
+  await page.getByLabel("Buscar produto").fill("capa");
   await expect(page.getByRole("status").filter({ hasText: "todo o estoque" })).toHaveCount(0);
 });
 
