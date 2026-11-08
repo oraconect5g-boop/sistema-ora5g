@@ -9,7 +9,7 @@
 | Domínio | Total | P0 | No piloto | Homologado | Testado | Parcial | Demonstração | Respeitado | Bloqueado | Não iniciado |
 |---|---|---|---|---|---|---|---|---|---|---|
 | ORG | 10 | 6 | 6 | 0 | 1 | 5 | 0 | 0 | 0 | 4 |
-| CAT | 11 | 7 | 7 | 0 | 0 | 5 | 0 | 1 | 0 | 5 |
+| CAT | 11 | 7 | 7 | 0 | 0 | 6 | 0 | 1 | 0 | 4 |
 | INV | 12 | 6 | 7 | 0 | 2 | 5 | 0 | 0 | 0 | 5 |
 | CRM | 10 | 4 | 3 | 0 | 0 | 0 | 0 | 0 | 0 | 10 |
 | POS | 16 | 11 | 11 | 0 | 0 | 3 | 2 | 0 | 0 | 11 |
@@ -25,7 +25,7 @@
 | AI | 7 | 0 | 0 | 0 | 0 | 0 | 0 | 0 | 0 | 7 |
 | REPORT | 8 | 5 | 5 | 0 | 0 | 0 | 7 | 0 | 0 | 1 |
 | QUAL | 14 | 9 | 9 | 0 | 0 | 5 | 0 | 0 | 0 | 9 |
-| **Total** | **173** | **78** | **71** | **0** | **3** | **26** | **22** | **1** | **2** | **119** |
+| **Total** | **173** | **78** | **71** | **0** | **3** | **27** | **22** | **1** | **2** | **118** |
 
 ## ORG — Organização, lojas e usuários
 
@@ -46,7 +46,7 @@
 
 | ID | Prio. | Piloto | Requisito | Aceite | Status | Nota e evidência |
 |---|---|---|---|---|---|---|
-| ORA-CAT-001 | P0 | sim | Cadastrar categorias, marcas, produtos, variantes e SKUs | SKU interno identificado e único no escopo definido. | 🟡 parcial | Categorias, marcas, produtos por tipo e variações com SKU e código de barras únicos no banco (ADR-003 proposto, aplicado no ora5g-dev em 08/11). Falta: tela real de cadastro e importação da Rein (ORA-009, depende do arquivo). Evidência: `packages/banco/supabase/migrations/20261108150620_catalogo_estoque.sql; packages/banco/src/catalogo-estoque.test.ts` |
+| ORA-CAT-001 | P0 | sim | Cadastrar categorias, marcas, produtos, variantes e SKUs | SKU interno identificado e único no escopo definido. | 🟡 parcial | Categorias, marcas, produtos por tipo e variações com SKU e código de barras únicos no banco (ADR-003 proposto, aplicado no ora5g-dev em 08/11). Falta: tela real de cadastro e importação da Rein (ORA-009, depende do arquivo). Desde 08/11 (noite): tela real /catalogo lendo pelo RLS, sem custo para quem não tem custo.ver. Evidência: `packages/banco/supabase/migrations/20261108150620_catalogo_estoque.sql; packages/banco/src/catalogo-estoque.test.ts` |
 | ORA-CAT-002 | P0 | sim | Importar produtos e preços da Rein somente por CSV/XLSX | Prévia, validação, relatório de erro, confirmação e rollback lógico. | ⬜ não iniciado |  |
 | ORA-CAT-003 | P0 | sim | Não consumir API Rein em nenhuma operação diária | Nenhum módulo de runtime depende de rede/credencial Rein. | ✔️ respeitado | Nenhum código usa a API da Rein. Importação só por arquivo (DEC-U04/DEC-U24). Evidência: `busca no repositório` |
 | ORA-CAT-004 | P0 | sim | Cadastrar preços vigentes por loja/canal conforme regra | Preço final tem origem explicável e histórico. | 🟡 parcial | Preço com histórico por loja e canal, campanha com período e preço vigente consultável em qualquer momento (preco_vigente), sem apagar o anterior. Falta: alteração pela tela com preco.alterar e a gravação do preço na venda (ADR-004). Evidência: `packages/banco/supabase/migrations/20261108150620_catalogo_estoque.sql; packages/banco/src/catalogo-estoque.test.ts` |
@@ -56,7 +56,7 @@
 | ORA-CAT-008 | P1 | — | Custo de produto/lote/entrada e margem gerencial | Custo histórico de venda não muda retroativamente. | 🟡 parcial | Custo com histórico, visível só com custo.ver (vendedor não vê; testado). Falta custo por entrada/lote nas compras (ORA-INV-009). Evidência: `packages/banco/supabase/migrations/20261108150620_catalogo_estoque.sql; packages/banco/src/catalogo-estoque.test.ts` |
 | ORA-CAT-009 | P1 | — | Canais externos usam mapeamento de SKU e IDs próprios | Identificadores externos não substituem PK interna. | ⬜ não iniciado |  |
 | ORA-CAT-010 | P2 | — | Permitir importação assistida em lote de fotos/atributos | Erros não criam duplicatas nem sobrescritas silenciosas. | ⬜ não iniciado |  |
-| ORA-CAT-011 | P0 | sim | Exigir foto principal por produto e imagem própria para variantes visualmente diferentes | Todos os produtos do catálogo piloto têm foto correspondente; busca, estoque e PDV exibem foto com nome/SKU e ampliação no celular; ausência de imagem é pendência, não foto genérica aceita. | ⬜ não iniciado |  |
+| ORA-CAT-011 | P0 | sim | Exigir foto principal por produto e imagem própria para variantes visualmente diferentes | Todos os produtos do catálogo piloto têm foto correspondente; busca, estoque e PDV exibem foto com nome/SKU e ampliação no celular; ausência de imagem é pendência, não foto genérica aceita. | 🟡 parcial | Implementado em desenvolvimento (08/11): bucket privado no Storage com RLS por organização (vendedor vê, dono e gerente enviam: catalogo.fotos), caminho como identidade estável e URL assinada temporária, registro no banco com tamanho e tipo vindos do Storage, troca que guarda a anterior, ilustração só para item não físico, pendências (produto sem foto e cor sem foto própria) e tela /catalogo com miniatura, ampliação e envio pelo celular (redução no aparelho). FALTA: homologar com fotos reais e usuário real (critérios da #26), fotos no estoque e no PDV reais (com o ADR-004) e limpeza de arquivo enviado sem registro. Evidência: `packages/banco/supabase/migrations/20261108204536_fotos_dos_produtos.sql; packages/banco/src/fotos-produto.test.ts; apps/plataforma/src/app/catalogo; apps/plataforma/src/lib/catalogo` |
 
 ## INV — Estoque, serial/IMEI e suprimentos
 

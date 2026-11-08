@@ -168,4 +168,15 @@ Supabase consultado somente em leitura: 22 tabelas com RLS, zero usuários/sess�
 
 Nenhum módulo foi marcado como homologado. O inventário permanece 173 requisitos/71 do piloto. Implementação ausente é registrada como pendência, sem usar mockup como prova.
 
+## Revisão da entrega real de catálogo/fotos — aebbdcc
+
+Lote novo após a revisão anterior: sete commits/21 caminhos; agora há código real de fotos na main. [Conferência detalhada](../analises/REVISAO_CATALOGO_FOTOS_AEBBDCC_2026-11-08.md). CI da main [42535268839](https://github.com/oraconect5g-boop/sistema-ora5g/actions/runs/42535268839) aprovado; localmente 407 testes existentes passaram, 4 TODO. Testes específicos adicionais: 17 casos, oito verdes e nove falhas esperadas, fora do CI normal.
+
+Achados: REV-038 / #40 (busca só nos primeiros 200 produtos); REV-039 / #41 (imagem não recupera com URL nova); REV-040 / #42 (retry duplica upload e registro repetido retorna 23505); REV-041 / #43 (descarte retém arquivo no input). Também REV-042 / #44: um advisory de minimatch propaga oito moderados de desenvolvimento; produção sem alerta no audit. Não aplicar downgrade automático do Next. As P1 de acesso anteriores mantêm prioridade.
+
+Conferência do aviso de índice: o índice completo fotos_organizacao, embora tenha ordem inversa à FK, atende ambas as igualdades no EXPLAIN local. O INFO isolado não justifica índice redundante. #26 continua aberta até correções, ligação aos demais pontos previstos e homologação autorizada de Auth/Storage/câmera.
+
+A nova análise complementa as fotografias históricas anteriores; não reclassifica retroativamente a versão antiga. Preservar TypeScript/React/Next.js/Node.js/PostgreSQL/Supabase e migrations aplicadas.
+
+
 

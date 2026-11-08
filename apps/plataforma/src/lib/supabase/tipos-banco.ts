@@ -1,5 +1,5 @@
 // ARQUIVO GERADO pelo Supabase (generate_typescript_types do projeto ora5g-dev) depois da
-// migration 20261108202654_acesso_sessao_e_equipe. Não edite à mão: gere de novo a cada
+// migration 20261108204536_fotos_dos_produtos. Não edite à mão: gere de novo a cada
 // migration aplicada (auditoria do Codex de 08/11, §7.2). O teste tipos-banco.test.ts confere
 // que as funções que a aplicação chama existem aqui.
 export type Json =
@@ -506,6 +506,76 @@ export type Database = {
           },
           {
             foreignKeyName: "estoque_saldos_variante_id_organizacao_id_fkey"
+            columns: ["variante_id", "organizacao_id"]
+            isOneToOne: false
+            referencedRelation: "variantes"
+            referencedColumns: ["id", "organizacao_id"]
+          },
+        ]
+      }
+      fotos_produto: {
+        Row: {
+          altura: number
+          bytes: number
+          caminho: string
+          criado_em: string
+          criado_por: string | null
+          id: string
+          ilustracao: boolean
+          largura: number
+          organizacao_id: string
+          produto_id: string
+          substituida_em: string | null
+          tipo: string
+          variante_id: string | null
+        }
+        Insert: {
+          altura: number
+          bytes: number
+          caminho: string
+          criado_em?: string
+          criado_por?: string | null
+          id?: string
+          ilustracao?: boolean
+          largura: number
+          organizacao_id: string
+          produto_id: string
+          substituida_em?: string | null
+          tipo: string
+          variante_id?: string | null
+        }
+        Update: {
+          altura?: number
+          bytes?: number
+          caminho?: string
+          criado_em?: string
+          criado_por?: string | null
+          id?: string
+          ilustracao?: boolean
+          largura?: number
+          organizacao_id?: string
+          produto_id?: string
+          substituida_em?: string | null
+          tipo?: string
+          variante_id?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "fotos_produto_criado_por_fkey"
+            columns: ["criado_por"]
+            isOneToOne: false
+            referencedRelation: "perfis_usuario"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "fotos_produto_produto_id_organizacao_id_fkey"
+            columns: ["produto_id", "organizacao_id"]
+            isOneToOne: false
+            referencedRelation: "produtos"
+            referencedColumns: ["id", "organizacao_id"]
+          },
+          {
+            foreignKeyName: "fotos_produto_variante_id_organizacao_id_fkey"
             columns: ["variante_id", "organizacao_id"]
             isOneToOne: false
             referencedRelation: "variantes"
@@ -1139,6 +1209,16 @@ export type Database = {
         Returns: string
       }
       liberar_reserva: { Args: { p_reserva: string }; Returns: boolean }
+      pendencias_de_foto: {
+        Args: never
+        Returns: {
+          motivo: string
+          nome: string
+          produto_id: string
+          sku: string
+          variante_id: string
+        }[]
+      }
       preco_vigente: {
         Args: {
           p_canal?: string
@@ -1147,6 +1227,17 @@ export type Database = {
           p_variante: string
         }
         Returns: number
+      }
+      registrar_foto: {
+        Args: {
+          p_altura: number
+          p_caminho: string
+          p_ilustracao?: boolean
+          p_largura: number
+          p_produto: string
+          p_variante: string
+        }
+        Returns: string
       }
       repetir_convite: { Args: { p_convite: string }; Returns: boolean }
       reservar_estoque: {

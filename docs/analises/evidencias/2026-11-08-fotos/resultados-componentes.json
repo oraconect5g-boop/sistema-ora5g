@@ -1,0 +1,80 @@
+[
+  {
+    "largura": 360,
+    "nome": "foto válida amplia",
+    "ok": true,
+    "erros": []
+  },
+  {
+    "largura": 360,
+    "nome": "recupera imagem depois de URL nova",
+    "ok": false,
+    "erro": "expect(locator).toBeVisible() failed\n\nLocator: getByRole('button', { name: 'Ampliar a foto de Imagem de teste', exact: true })\nExpected: visible\nTimeout: 1500ms\nError: element(s) not found\n\nCall log:\n  - Expect \"toBeVisible\" getByRole('button', { name: 'Ampliar a foto de Imagem de teste', exact: true }) with timeout 1500ms\n  - waiting for getByRole('button', { name: 'Ampliar a foto de Imagem de teste', exact: true })\n",
+    "erros": []
+  },
+  {
+    "largura": 360,
+    "nome": "descartar permite selecionar o mesmo arquivo de novo",
+    "ok": false,
+    "erro": "expect(locator).toHaveValue(expected) failed\n\nLocator:  getByLabel('Foto de Produto de teste', { exact: true })\nExpected: \"\"\nReceived: \"C:\\\\fakepath\\\\foto.png\"\nTimeout:  1500ms\n\nCall log:\n  - Expect \"toHaveValue\" getByLabel('Foto de Produto de teste', { exact: true }) with timeout 1500ms\n  - waiting for getByLabel('Foto de Produto de teste', { exact: true })\n    16 × locator resolved to <input type=\"file\" class=\"sr-only\" capture=\"environment\" aria-label=\"Foto de Produto de teste\" accept=\"image/jpeg,image/png,image/webp\"/>\n       - unexpected value \"C:\\fakepath\\foto.png\"\n",
+    "erros": []
+  },
+  {
+    "largura": 360,
+    "nome": "retry de registro não duplica upload já confirmado",
+    "ok": false,
+    "erro": "expect(received).toBe(expected) // Object.is equality\n\nExpected: 1\nReceived: 2",
+    "erros": []
+  },
+  {
+    "largura": 360,
+    "nome": "tipo não permitido é recusado antes do envio",
+    "ok": true,
+    "erros": []
+  },
+  {
+    "largura": 360,
+    "nome": "upload válido registra e atualiza o catálogo",
+    "ok": true,
+    "erros": []
+  },
+  {
+    "largura": 1280,
+    "nome": "foto válida amplia",
+    "ok": true,
+    "erros": []
+  },
+  {
+    "largura": 1280,
+    "nome": "recupera imagem depois de URL nova",
+    "ok": false,
+    "erro": "expect(locator).toBeVisible() failed\n\nLocator: getByRole('button', { name: 'Ampliar a foto de Imagem de teste', exact: true })\nExpected: visible\nTimeout: 1500ms\nError: element(s) not found\n\nCall log:\n  - Expect \"toBeVisible\" getByRole('button', { name: 'Ampliar a foto de Imagem de teste', exact: true }) with timeout 1500ms\n  - waiting for getByRole('button', { name: 'Ampliar a foto de Imagem de teste', exact: true })\n",
+    "erros": []
+  },
+  {
+    "largura": 1280,
+    "nome": "descartar permite selecionar o mesmo arquivo de novo",
+    "ok": false,
+    "erro": "expect(locator).toHaveValue(expected) failed\n\nLocator:  getByLabel('Foto de Produto de teste', { exact: true })\nExpected: \"\"\nReceived: \"C:\\\\fakepath\\\\foto.png\"\nTimeout:  1500ms\n\nCall log:\n  - Expect \"toHaveValue\" getByLabel('Foto de Produto de teste', { exact: true }) with timeout 1500ms\n  - waiting for getByLabel('Foto de Produto de teste', { exact: true })\n    16 × locator resolved to <input type=\"file\" class=\"sr-only\" capture=\"environment\" aria-label=\"Foto de Produto de teste\" accept=\"image/jpeg,image/png,image/webp\"/>\n       - unexpected value \"C:\\fakepath\\foto.png\"\n",
+    "erros": []
+  },
+  {
+    "largura": 1280,
+    "nome": "retry de registro não duplica upload já confirmado",
+    "ok": false,
+    "erro": "expect(received).toBe(expected) // Object.is equality\n\nExpected: 1\nReceived: 2",
+    "erros": []
+  },
+  {
+    "largura": 1280,
+    "nome": "tipo não permitido é recusado antes do envio",
+    "ok": true,
+    "erros": []
+  },
+  {
+    "largura": 1280,
+    "nome": "upload válido registra e atualiza o catálogo",
+    "ok": true,
+    "erros": []
+  }
+]

@@ -6,6 +6,13 @@ Copiar a instrução abaixo para o Claude Code, ou ler diretamente neste reposit
 
 ---
 
+## Entrega posterior: catálogo e fotos reais em aebbdcc
+
+Ler [REVISAO_CATALOGO_FOTOS_AEBBDCC_2026-11-08.md](../analises/REVISAO_CATALOGO_FOTOS_AEBBDCC_2026-11-08.md) e tratar #40–#43 antes do aceite de fotos. Corrigir busca antes do limite/paginação, recuperação de URL de imagem, retry com identidade estável e limpeza da seleção do arquivo. A RPC de foto precisa reconhecer repetição confirmada, por migration nova se necessário.
+
+Não adicionar índice redundante só para apagar o INFO da FK: o índice existente foi confirmado no EXPLAIN. Avaliar #44 pela cadeia de desenvolvimento, sem downgrade automático de Next nem mudança de stack. Integrar as regressões das correções; as provas estão em docs/analises/evidencias/2026-11-08-fotos. #26 continua até o aceite completo, sem declarar o fluxo Storage real homologado pela fixture.
+
+
 ## Rodada adicional de testes por setor
 
 Ler também [TESTES_E_ANALISE_POR_SETOR_2026-11-08.md](../analises/TESTES_E_ANALISE_POR_SETOR_2026-11-08.md) e tratar #34–#39, sem perder as prioridades P1 anteriores. Os achados cobrem equivalência de payload de estoque, unidade por ICCID, autoria de aprovação, período comparável em relatórios, segurança do CSV e saldo insuficiente na ativação.

@@ -86,3 +86,12 @@ Pedidos de conferência:
 2. Aplicativo: `apps/plataforma/src/lib/acesso` (decisão de sessão; falha do serviço não vira "sem acesso"), `/escolher-loja`, `/inicio`, `/equipe` (ações só por funções do banco, motivo obrigatório, mensagens por código de catálogo), `/auth/confirmar`, `/conta/senha`, `/entrar/recuperar`, `/sair`; redirecionamentos relativos por causa do Apache.
 3. `apps/worker` e `deploy/homologacao/{publicar.sh,worker-identidade.sh}`: chave secreta só no worker; teste de publicação isolado (porta 3190, valores fictícios) mostrou o `.env.local` do web sem `SUPABASE_SECRET_KEY`/`DATABASE_URL` e o do worker completo, ambos 600.
 4. Pendências declaradas: confirmação de senha recente (ADR-002 §2.6) e prova com usuário real (#11). Convite real depende de chave, SMTP e modelos de e-mail (proprietário).
+
+## 08/11/2026 (noite, 3) — fotos dos produtos (ORA-CAT-011, #26)
+
+**Branch:** `feature/ORA-CAT-011-fotos`. Contrato seguido: `docs/alinhamento/FOTOS_DOS_PRODUTOS_2026-11-08.md`.
+
+1. Migration `20261108204536_fotos_dos_produtos.sql` (aplicada no `ora5g-dev`): bucket privado `produtos` (5 MB; JPEG, PNG, WebP), políticas de Storage por organização (ler: qualquer vínculo vigente; enviar: `catalogo.fotos`, nova, para dono e gerente), `fotos_produto` com histórico (uma em uso por produto/variante), `registrar_foto` (tamanho e tipo lidos de `storage.objects`, caminho conferido contra organização/produto/variante, ilustração só em item não físico) e `pendencias_de_foto`. Testes: `packages/banco/src/fotos-produto.test.ts`; Storage simulado em `supabase-simulado.sql`.
+2. Tela `/catalogo` e componentes `EnviarFoto`/`FotoAmpliavel`: envio direto do celular ao Storage com a sessão da pessoa; registro por ação do servidor; sem custo no navegador.
+3. Decisão a confirmar com o proprietário: vendedor também poder enviar foto (hoje não; a permissão é de dono e gerente).
+4. Fora desta entrega: limpeza de arquivo enviado sem registro (worker), fotos no estoque e no PDV reais, homologação com fotos reais.
