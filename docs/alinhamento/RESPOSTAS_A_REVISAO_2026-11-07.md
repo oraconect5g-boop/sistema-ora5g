@@ -95,3 +95,11 @@ Rodada num clone limpo da branch no commit `ccfcfd4` (sem `.env.local`, sem cach
 | `npm run test:e2e` | 104 passaram e 10 foram pulados de propósito: 4 de login real (sem Supabase configurado, como no GitHub), 4 de inicialização no celular ("basta rodar uma vez") e 2 por tamanho de tela (CSV no celular, menu "Mais" no computador) |
 
 O commit seguinte só acrescenta esta tabela (documentação); nele foram repetidos o detector de segredos e as conferências de rastreabilidade e do catálogo. A homologação **não foi republicada**: o `ora5g.com.br` segue com a versão `5560efa` publicada por outra sessão; o REV-017 e a busca repetida só chegam ao endereço público numa próxima publicação, quando o proprietário pedir.
+
+## 08/11/2026 — achados da auditoria funcional (#17 e #18)
+
+| Achado | O que foi feito | Evidência |
+|---|---|---|
+| **REV-018 / #17** versões das migrations diferentes no Git e no Supabase | O texto gravado em `supabase_migrations.schema_migrations` tem o **mesmo md5** dos arquivos do Git (conferido nas três). A conciliação foi só renomear arquivos e reversões para as versões gravadas (`20261107140352`, `…140448`, `…151305`), sem `repair`, sem `reset` e sem tocar no banco. Regra para as próximas: renomear para a versão gravada e registrar versão, nome e md5 em `supabase/aplicadas-dev.json`; o teste falha se uma migration aplicada for alterada | `packages/banco/src/migrations.test.ts`; README do banco; as três migrations novas de 08/11 já seguiram a regra |
+| **REV-019 / #18** acessório acima do saldo no PDV da demonstração | Quantidade acima do saldo vira erro no item e bloqueia a conclusão; o botão de aumentar trava no limite; adicionar de novo pela busca avisa e não soma. No sistema real, o banco reserva com trava (ADR-003) | `apps/plataforma/src/app/demo/vender/estoque.test.ts` (zero, uma unidade, limite exato, acima); E2E "REV-019" |
+
