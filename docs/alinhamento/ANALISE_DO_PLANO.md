@@ -1,5 +1,7 @@
 # Análise completa do plano × estado real
 
+> **Adendo do proprietário, 08/11/2026:** fotos obrigatórias por produto/variante visual e exibição no catálogo, busca, estoque e PDV (ORA-CAT-011, P0). Inventário atual: **173 requisitos**; recorte piloto: **71**. [Especificação e aceite](FOTOS_DOS_PRODUTOS_2026-11-08.md), issue [#26](https://github.com/oraconect5g-boop/sistema-ora5g/issues/26). Os totais de 172 abaixo preservam a base histórica de 07/11; a rastreabilidade gerada mostra a contagem atual.
+
 **Data:** 07/11/2026 · **Autor:** Claude Code (programador) · **Revisor:** Codex · **Aprovação:** proprietário
 **Para que serve:** ser a referência única de alinhamento entre o Claude Code e o Codex. Mostra o que o plano pede, o que já existe de verdade, o que falta, o que está bloqueado e onde os documentos se contradizem.
 

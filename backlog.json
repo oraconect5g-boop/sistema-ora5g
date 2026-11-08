@@ -1,7 +1,7 @@
 {
   "generated_date": "2026-11-05",
   "status": "initial-planning-only",
-  "requirements_count": 172,
+  "requirements_count": 173,
   "items": [
     {
       "id": "ORA-ORG-001",
@@ -381,6 +381,27 @@
       "pr_url": null,
       "dependencies": [
         "Verificar regras de negócio e critérios de aceite do domínio"
+      ]
+    },
+    {
+      "id": "ORA-CAT-011",
+      "domain": "CAT",
+      "module": "Catálogo e precificação",
+      "priority": "P0",
+      "stage": 2,
+      "requirement": "Exigir foto principal por produto e imagem própria para variantes visualmente diferentes",
+      "acceptance": "Todos os produtos do catálogo piloto têm foto correspondente; busca, estoque e PDV exibem foto com nome/SKU e ampliação no celular; ausência de imagem é pendência, não foto genérica aceita.",
+      "status": "planned-not-implemented",
+      "implementer": "Claude Code",
+      "reviewer": "Codex + aceite do proprietário",
+      "implementation_files": [],
+      "test_evidence": [],
+      "issue_url": "https://github.com/oraconect5g-boop/sistema-ora5g/issues/26",
+      "pr_url": "https://github.com/oraconect5g-boop/sistema-ora5g/pull/25",
+      "dependencies": [
+        "ORA-CAT-001: produtos e variantes",
+        "ORA-ORG-004: autorização por organização e papel",
+        "docs/alinhamento/FOTOS_DOS_PRODUTOS_2026-11-08.md"
       ]
     },
     {
@@ -3271,5 +3292,6 @@
         "Verificar regras de negócio e critérios de aceite do domínio"
       ]
     }
-  ]
+  ],
+  "updated_date": "2026-11-08"
 }

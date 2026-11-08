@@ -1,4 +1,4 @@
-# Rastreabilidade dos 172 requisitos
+# Rastreabilidade dos 173 requisitos
 
 > Arquivo GERADO por `node scripts/gerar-rastreabilidade.mjs` a partir de `backlog.json` e `docs/alinhamento/status-requisitos.json` (atualizado em 2026-11-08). Não edite à mão.
 
@@ -9,7 +9,7 @@
 | Domínio | Total | P0 | No piloto | Homologado | Testado | Parcial | Demonstração | Respeitado | Bloqueado | Não iniciado |
 |---|---|---|---|---|---|---|---|---|---|---|
 | ORG | 10 | 6 | 6 | 0 | 1 | 5 | 0 | 0 | 0 | 4 |
-| CAT | 10 | 6 | 6 | 0 | 0 | 5 | 0 | 1 | 0 | 4 |
+| CAT | 11 | 7 | 7 | 0 | 0 | 5 | 0 | 1 | 0 | 5 |
 | INV | 12 | 6 | 7 | 0 | 0 | 7 | 0 | 0 | 0 | 5 |
 | CRM | 10 | 4 | 3 | 0 | 0 | 0 | 0 | 0 | 0 | 10 |
 | POS | 16 | 11 | 11 | 0 | 0 | 3 | 2 | 0 | 0 | 11 |
@@ -25,7 +25,7 @@
 | AI | 7 | 0 | 0 | 0 | 0 | 0 | 0 | 0 | 0 | 7 |
 | REPORT | 8 | 5 | 5 | 0 | 0 | 0 | 7 | 0 | 0 | 1 |
 | QUAL | 14 | 9 | 9 | 0 | 0 | 5 | 0 | 0 | 0 | 9 |
-| **Total** | **172** | **77** | **70** | **0** | **1** | **28** | **22** | **1** | **2** | **118** |
+| **Total** | **173** | **78** | **71** | **0** | **1** | **28** | **22** | **1** | **2** | **119** |
 
 ## ORG — Organização, lojas e usuários
 
@@ -56,6 +56,7 @@
 | ORA-CAT-008 | P1 | — | Custo de produto/lote/entrada e margem gerencial | Custo histórico de venda não muda retroativamente. | 🟡 parcial | Custo com histórico, visível só com custo.ver (vendedor não vê; testado). Falta custo por entrada/lote nas compras (ORA-INV-009). Evidência: `packages/banco/supabase/migrations/20261108150620_catalogo_estoque.sql; packages/banco/src/catalogo-estoque.test.ts` |
 | ORA-CAT-009 | P1 | — | Canais externos usam mapeamento de SKU e IDs próprios | Identificadores externos não substituem PK interna. | ⬜ não iniciado |  |
 | ORA-CAT-010 | P2 | — | Permitir importação assistida em lote de fotos/atributos | Erros não criam duplicatas nem sobrescritas silenciosas. | ⬜ não iniciado |  |
+| ORA-CAT-011 | P0 | sim | Exigir foto principal por produto e imagem própria para variantes visualmente diferentes | Todos os produtos do catálogo piloto têm foto correspondente; busca, estoque e PDV exibem foto com nome/SKU e ampliação no celular; ausência de imagem é pendência, não foto genérica aceita. | ⬜ não iniciado |  |
 
 ## INV — Estoque, serial/IMEI e suprimentos
 

@@ -1,4 +1,4 @@
-// Gera docs/alinhamento/RASTREABILIDADE.md a partir do backlog.json (172 requisitos)
+// Gera docs/alinhamento/RASTREABILIDADE.md a partir do backlog.json (total dinâmico)
 // e de docs/alinhamento/status-requisitos.json (status real). Sem dependências.
 // Uso: node scripts/gerar-rastreabilidade.mjs [--conferir]
 import { readFileSync, writeFileSync } from "node:fs";
@@ -16,7 +16,7 @@ const noPiloto = (id) => {
   const [, dominio, numero] = id.split("-");
   const faixa = PILOTO[dominio];
   const n = Number(numero);
-  return Boolean(faixa && n >= faixa[0] && n <= faixa[1]) || id === "ORA-INV-011";
+  return Boolean(faixa && n >= faixa[0] && n <= faixa[1]) || id === "ORA-INV-011" || id === "ORA-CAT-011";
 };
 
 const ids = new Set(backlog.items.map((i) => i.id));
@@ -35,7 +35,7 @@ const dominios = [...new Set(linhas.map((l) => l.domain))];
 const contar = (lista, st) => lista.filter((l) => l.st === st).length;
 const celula = (t) => String(t).replaceAll("|", "\\|").replaceAll("\n", " ");
 
-let md = `# Rastreabilidade dos 172 requisitos\n\n`;
+let md = `# Rastreabilidade dos ${backlog.items.length} requisitos\n\n`;
 md += `> Arquivo GERADO por \`node scripts/gerar-rastreabilidade.mjs\` a partir de \`backlog.json\` e \`docs/alinhamento/status-requisitos.json\` (atualizado em ${status.atualizado_em}). Não edite à mão.\n\n`;
 md += `"Testado" = implementado e testado em desenvolvimento, aguardando revisão do Codex e homologação. "Homologado" = aceito pelo proprietário em homologação (nenhum ainda). "Demonstração" é só tela com dados fictícios.\n\n`;
 md += `## Resumo por domínio\n\n| Domínio | Total | P0 | No piloto | Homologado | Testado | Parcial | Demonstração | Respeitado | Bloqueado | Não iniciado |\n|---|---|---|---|---|---|---|---|---|---|---|\n`;
