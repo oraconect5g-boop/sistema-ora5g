@@ -13,13 +13,13 @@
   "requisitos": {
     "ORA-ORG-001": {
       "status": "parcial",
-      "nota": "Tabelas organização/empresa/unidade com CNPJ validado no banco e escolha da unidade na sessão. Falta cadastrar as 14 lojas reais (lista com CNPJs pendente) e a tela de gestão.",
-      "evidencia": "packages/banco/supabase/migrations/20261107140352_fundacao_acesso.sql; packages/banco/src/acesso.test.ts (T10)"
+      "nota": "Tabelas organização/empresa/unidade com CNPJ validado no banco; escolha real da loja na sessão (/escolher-loja; uma loja só é escolhida sozinha), gravada e auditada pelo banco. Falta cadastrar as 14 lojas reais (lista com CNPJs pendente) e a tela de gestão de lojas.",
+      "evidencia": "packages/banco/supabase/migrations/20261107140352_fundacao_acesso.sql; packages/banco/src/acesso.test.ts (T10); apps/plataforma/src/app/escolher-loja; packages/banco/supabase/migrations/20261108202654_acesso_sessao_e_equipe.sql"
     },
     "ORA-ORG-002": {
       "status": "parcial",
-      "nota": "Vínculos com vigência, um vendedor em várias lojas, bloqueio testado. A tela de usuários existe só na demonstração (troca de loja da sessão, bloquear/desbloquear sem gravar); falta a tela real ligada ao banco.",
-      "evidencia": "acesso.test.ts (T1, T2/T3, T7)"
+      "nota": "Vínculos com vigência e várias lojas por pessoa. Tela real /equipe ligada ao banco: convidar, dar loja ou função, encerrar acesso e bloquear, sempre com motivo e auditoria; mudança vale na sessão aberta (testado). Convite vira pessoa no Auth pelo worker (precisa SUPABASE_SECRET_KEY e SMTP). Falta: homologar com pessoas reais.",
+      "evidencia": "acesso.test.ts (T1, T2/T3, T7); packages/banco/src/acesso-equipe.test.ts; apps/plataforma/src/app/equipe; apps/worker"
     },
     "ORA-ORG-003": {
       "status": "parcial",
@@ -38,8 +38,8 @@
     },
     "ORA-ORG-006": {
       "status": "parcial",
-      "nota": "Login por e-mail e senha no aplicativo (/entrar, mensagem neutra; código de erro do endereço validado, REV-017/#16), /conta lendo pelo RLS e separando falha do serviço de ausência de perfil (REV-014, testado com serviço simulado), sessão renovada no proxy (REV-009) e bloqueio/encerramento de vínculo cortando acesso no banco. FALTA: recuperação de senha (SMTP), escolha da loja na sessão pelo aplicativo, sessão por turno e teste com usuário real.",
-      "evidencia": "apps/plataforma/src/app/entrar; apps/plataforma/src/proxy.ts; apps/plataforma/src/app/conta/page.test.ts; e2e/entrar.spec.ts; acesso.test.ts (T6, T7)"
+      "nota": "Login real com escolha da loja, sessão por turno no banco (sessão viva no Auth, até 12 h e no mesmo dia: sair ou revogar corta o acesso na hora, mesmo com token válido), bloqueio e encerramento de vínculo imediatos, saída forçada com mensagem neutra, convite e recuperação por link com definição de senha. Testado no banco (acesso-equipe.test.ts) e nas regras/E2E do app. FALTA: SMTP e modelos de e-mail no painel (proprietário), prova com usuário real (#11, depende da SUPABASE_SECRET_KEY) e confirmação de senha recente para ações da equipe (ADR-002 §2.6).",
+      "evidencia": "packages/banco/supabase/migrations/20261108202654_acesso_sessao_e_equipe.sql; packages/banco/src/acesso-equipe.test.ts; apps/plataforma/src/lib/acesso; apps/plataforma/e2e/acesso-real.spec.ts"
     },
     "ORA-CAT-003": {
       "status": "respeitado",
@@ -133,7 +133,7 @@
     },
     "ORA-QUAL-004": {
       "status": "parcial",
-      "nota": "Detector de segredos (arquivos, commits do PR e do envio à main), validação de variáveis na inicialização e no login, chave pública conferida (sem secreta nem service_role). REV-003/REV-004 corrigidos em 07/11; grupos do verificar-env alinhados nas instruções e login sem exigir o grupo servidor (CONFIG-001, 08/11); aguardando revisão do Codex.",
+      "nota": "Detector de segredos (arquivos, commits do PR e do envio à main), validação de variáveis na inicialização e no login, chave pública conferida (sem secreta nem service_role). REV-003/REV-004 corrigidos em 07/11; grupos do verificar-env alinhados nas instruções e login sem exigir o grupo servidor (CONFIG-001, 08/11); aguardando revisão do Codex. Desde 08/11 (noite): o aplicativo web não recebe SUPABASE_SECRET_KEY nem DATABASE_URL (publicar.sh separa a cópia do worker, ADR-002 §2.5).",
       "evidencia": "packages/config/src/segredos.ts; packages/config/src/ambiente.ts; packages/config/src/historico-segredos.test.ts; packages/config/src/verificar-env.test.ts"
     },
     "ORA-QUAL-007": {

@@ -4,7 +4,7 @@ import { join } from "node:path";
 
 import { describe, expect, it } from "vitest";
 
-import { migrations } from "./banco-de-teste";
+import { criarBanco, migrations, retratoDoEsquema, reversao } from "./banco-de-teste";
 
 // REV-018 / #17: o histórico do Git e o do Supabase precisam contar a mesma história.
 // - o nome do arquivo usa a versão gravada pelo Supabase ao aplicar;
@@ -41,5 +41,19 @@ describe("controle das migrations (REV-018)", () => {
 
   it("toda migration tem a reversão com o mesmo nome", () => {
     for (const { nome } of arquivos) expect(existsSync(join(PASTA, "reversao", nome)), nome).toBe(true);
+  });
+});
+
+// A partir da integridade do estoque (08/11), toda reversão é provada: aplicar a migration e
+// depois a reversão deixa o esquema igual ao de antes dela.
+const REVERSOES_PROVADAS_DESDE = "20261108195850";
+describe("reversões", () => {
+  it.each(migrations().map((m) => m.nome).filter((nome) => nome >= REVERSOES_PROVADAS_DESDE))("%s volta ao estado anterior", async (nome) => {
+    const anterior = await criarBanco({ antesDe: nome });
+    const revertido = await criarBanco({ ate: nome });
+    await revertido.exec(reversao(nome));
+    expect(await retratoDoEsquema(revertido)).toEqual(await retratoDoEsquema(anterior));
+    await anterior.close();
+    await revertido.close();
   });
 });

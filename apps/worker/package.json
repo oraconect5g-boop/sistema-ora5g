@@ -1,0 +1,24 @@
+{
+  "name": "@ora5g/worker",
+  "version": "0.1.0",
+  "private": true,
+  "type": "module",
+  "description": "Rotinas do servidor que usam a chave secreta do Supabase (ADR-002 §2.5): nunca atendem requisição de usuário.",
+  "scripts": {
+    "lint": "eslint . --max-warnings=0",
+    "typecheck": "tsc --noEmit",
+    "test": "vitest run",
+    "identidade": "node src/executar-identidade.ts"
+  },
+  "dependencies": {
+    "@next/env": "16.4.5",
+    "@supabase/supabase-js": "2.119.0"
+  },
+  "devDependencies": {
+    "@ora5g/config": "0.1.0",
+    "@types/node": "22.20.5",
+    "eslint": "9.39.5",
+    "typescript": "6.0.3",
+    "vitest": "5.1.0"
+  }
+}

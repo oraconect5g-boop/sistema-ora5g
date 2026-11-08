@@ -38,6 +38,7 @@ type Sessao = { usuario: string; sessao: string };
 // A unidade da sessão é gravada antes (como no login), fora da disputa.
 async function sessaoNaLoja(usuario: string, unidade: string): Promise<Sessao> {
   const sessao = { usuario, sessao: `42000000-0000-4000-8000-${String(++sessoes).padStart(12, "0")}` };
+  await admin.query("insert into auth.sessions (id, user_id) values ($1, $2)", [sessao.sessao, usuario]);
   await admin.query("begin");
   await admin.query("select set_config('request.jwt.claims', $1, true)", [JSON.stringify({ sub: usuario, session_id: sessao.sessao, role: "authenticated" })]);
   await admin.query("set local role authenticated");

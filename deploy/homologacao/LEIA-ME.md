@@ -92,3 +92,18 @@ Não é preciso registro AAAA (o servidor é só IPv4). Se o painel criar um, ap
 
 - O processo roda como usuário `dev` com `crontab`, não como serviço `systemd` (exige root). Quando o proprietário puder, o próximo passo é um serviço `systemd` com usuário próprio.
 - A homologação usa por enquanto o projeto Supabase de **desenvolvimento** (`ora5g-dev`). O ADR-001 pede um projeto separado para homologação antes de dados reais.
+
+## Worker de identidade (convites e bloqueios no Auth)
+
+Desde 08/11 (ORA-006): a tela da equipe só grava o convite no banco; o worker, que é o único que
+recebe a `SUPABASE_SECRET_KEY` (o `.env.local` do aplicativo web sai sem ela e sem a
+`DATABASE_URL`, ADR-002 §2.5), cria a pessoa no Auth, manda o e-mail de convite e reflete no
+login os bloqueios feitos no banco. Ligar depois de publicar uma versão que tenha `apps/worker`
+(crontab do usuário `dev`, uma linha):
+
+```
+* * * * * bash $HOME/homologacao/plataforma/deploy/homologacao/worker-identidade.sh
+```
+
+Sem a chave, ele só registra "desligado" no log (`~/homologacao/logs/worker-identidade.log`).
+O log tem só contagens e códigos de erro, nunca e-mail, nome ou chave.

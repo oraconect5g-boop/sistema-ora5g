@@ -18,6 +18,9 @@ const ERROS = {
   credenciais: "E-mail ou senha incorretos.",
   dados: "Preencha e-mail e senha.",
   configuracao: "O login ainda não está configurado neste ambiente.",
+  turno: "Seu turno terminou. Entre de novo para continuar.",
+  bloqueado: "Seu acesso está bloqueado. Fale com o dono ou o administrador.",
+  link: "O link venceu ou já foi usado. Peça um novo.",
 } as const;
 
 const classeCampo = "min-h-12 w-full rounded-botao border border-borda bg-slate-50/60 px-3.5 text-[15px] outline-none transition focus:border-acao focus:bg-white focus:ring-2 focus:ring-acao/20";
@@ -44,10 +47,7 @@ export default async function Entrar({ searchParams }: { searchParams: Promise<{
                 <label htmlFor="senha" className="text-sm font-semibold">Senha</label>
                 <CampoSenha classe={classeCampo} />
               </div>
-              <details className="text-sm">
-                <summary className="cursor-pointer font-semibold text-acao hover:underline">Esqueci minha senha</summary>
-                <p className="mt-2 rounded-xl bg-fundo px-3 py-2 text-suave">A recuperação por e-mail será ligada junto com o e-mail de envio do sistema. Até lá, peça ao administrador para redefinir a sua senha.</p>
-              </details>
+              <p className="text-sm"><Link href="/entrar/recuperar" className="font-semibold text-acao hover:underline">Esqueci minha senha</Link></p>
               <Botao type="submit" tamanho="lg" className="w-full">Entrar na plataforma <ArrowRight aria-hidden className="size-5" /></Botao>
             </form>
           ) : (

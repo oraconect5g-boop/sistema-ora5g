@@ -5,11 +5,9 @@
 import type { PGlite } from "@electric-sql/pglite";
 import { afterAll, afterEach, beforeAll, beforeEach, describe, expect, it } from "vitest";
 
-import { comDigitoLuhn, comoUsuario, criarBanco, migrations, reversao } from "./banco-de-teste";
+import { comDigitoLuhn, comoUsuario, criarBanco } from "./banco-de-teste";
 import { ids, montarCenario } from "./cenario";
 import { cat, itens, montarCatalogo } from "./cenario-catalogo";
-
-const MIGRATION = migrations().find((m) => m.nome.endsWith("_integridade_estoque.sql"))?.nome ?? "";
 
 let db: PGlite;
 beforeAll(async () => {
@@ -237,26 +235,5 @@ describe("liberar reserva de outra pessoa (auditoria §7.4)", () => {
       "select usuario_id, organizacao_id from public.auditoria where acao = 'estoque.reserva_de_outro_liberada' and alvo_id = $1", [reserva]);
     expect(rows).toEqual([{ usuario_id: ids.gerenteB, organizacao_id: ids.organizacao }]);
     expect(await divergencias()).toEqual([]);
-  });
-});
-
-describe("reversão da migration de integridade", () => {
-  it("volta funções, colunas, gatilhos e permissões ao estado anterior", async () => {
-    const retrato = async (banco: PGlite) => (await banco.query<{ item: string }>(`
-      select 'funcao ' || p.oid::regprocedure || ' ' || md5(pg_get_functiondef(p.oid)) || ' ' || coalesce(p.proacl::text, '') as item
-      from pg_proc p where p.pronamespace in ('public'::regnamespace, 'privado'::regnamespace)
-      union all select 'coluna ' || table_schema || '.' || table_name || '.' || column_name || ' ' || data_type
-      from information_schema.columns where table_schema in ('public', 'privado')
-      union all select 'gatilho ' || tgrelid::regclass || '.' || tgname from pg_trigger where not tgisinternal
-      union all select 'restricao ' || conrelid::regclass || '.' || conname from pg_constraint where connamespace in ('public'::regnamespace, 'privado'::regnamespace)
-      union all select 'permissao ' || codigo from public.permissoes
-      union all select 'papel ' || papel || ' ' || permissao from public.papel_permissoes
-      order by 1`)).rows.map((r) => r.item);
-    const anterior = await criarBanco(MIGRATION);
-    const revertido = await criarBanco();
-    await revertido.exec(reversao(MIGRATION));
-    expect(await retrato(revertido)).toEqual(await retrato(anterior));
-    await anterior.close();
-    await revertido.close();
   });
 });

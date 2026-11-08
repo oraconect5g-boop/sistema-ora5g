@@ -157,3 +157,13 @@ A **chave secreta do Supabase** (que ignora RLS) é usada **só** pelo worker e 
 3. **Clientes:** confirma que qualquer vendedor, em qualquer loja, pode **encontrar** um cliente pela busca exata de CPF ou telefone?
 4. **Técnico:** ele vai usar o sistema com login próprio (perfil `tecnico`) ou só receber mensagens?
 5. **Nomes em português** nas tabelas do banco: de acordo?
+
+## 6. Complemento de implementação (08/11/2026, ORA-006 e pedido do proprietário)
+
+Migration `20261108202654_acesso_sessao_e_equipe.sql` (aplicada no `ora5g-dev`). Não muda as decisões acima; registra como elas foram cumpridas:
+
+- **Sessão por turno (§2.6), no banco:** toda permissão passa por `privado.vinculos_vigentes()`, que agora exige a sessão viva em `auth.sessions` (a do token), começada há menos de 12 horas e no mesmo dia em São Paulo (`privado.turno_valido`). Sair ou revogar a sessão no Auth corta o acesso na hora, mesmo com o token ainda válido. O aplicativo lê `public.situacao_da_sessao()` e manda a pessoa entrar de novo.
+- **Bloqueio imediato (§2.6):** `public.alterar_situacao_pessoa` bloqueia em todas as lojas na hora (camada 2) e o worker reflete no login do Auth (`ban_duration`).
+- **Gestão da equipe (§2.2):** só quem tem `usuarios.gerir` na organização (dono e administrador). Dono e administrador só o dono concede, retira ou bloqueia; ninguém mexe no próprio acesso; a organização nunca fica sem dono. Pessoa nova entra por **convite** (`public.convidar_pessoa`), com motivo na auditoria.
+- **Chave secreta (§2.5):** continua só no worker (`apps/worker`), fora das requisições; o `publicar.sh` entrega ao aplicativo web o arquivo de ambiente **sem** `SUPABASE_SECRET_KEY` e `DATABASE_URL`. As funções do worker (`identidade_*`) só executam com `service_role`.
+- **Pendente:** "confirmação de senha recente" para as ações da equipe (§2.6) entra numa migration seguinte; MFA para dono e administrador segue em ORA-ORG-007 (P1).
