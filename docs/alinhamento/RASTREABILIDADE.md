@@ -1,6 +1,6 @@
 # Rastreabilidade dos 172 requisitos
 
-> Arquivo GERADO por `node scripts/gerar-rastreabilidade.mjs` a partir de `backlog.json` e `docs/alinhamento/status-requisitos.json` (atualizado em 2026-11-07). Não edite à mão.
+> Arquivo GERADO por `node scripts/gerar-rastreabilidade.mjs` a partir de `backlog.json` e `docs/alinhamento/status-requisitos.json` (atualizado em 2026-11-08). Não edite à mão.
 
 "Testado" = implementado e testado em desenvolvimento, aguardando revisão do Codex e homologação. "Homologado" = aceito pelo proprietário em homologação (nenhum ainda). "Demonstração" é só tela com dados fictícios.
 
@@ -17,7 +17,7 @@
 | FIN | 10 | 5 | 1 | 0 | 0 | 0 | 2 | 0 | 0 | 8 |
 | PERF | 10 | 5 | 5 | 0 | 0 | 1 | 1 | 0 | 0 | 8 |
 | FISC | 10 | 6 | 6 | 0 | 0 | 0 | 0 | 0 | 2 | 8 |
-| CONNECT | 11 | 6 | 3 | 0 | 0 | 0 | 0 | 0 | 1 | 10 |
+| CONNECT | 11 | 6 | 3 | 0 | 0 | 1 | 9 | 0 | 0 | 1 |
 | ONLINE | 8 | 0 | 0 | 0 | 0 | 0 | 0 | 0 | 0 | 8 |
 | MKTPL | 8 | 0 | 0 | 0 | 0 | 0 | 0 | 0 | 0 | 8 |
 | WHATS | 8 | 0 | 0 | 0 | 0 | 0 | 0 | 0 | 0 | 8 |
@@ -25,7 +25,7 @@
 | AI | 7 | 0 | 0 | 0 | 0 | 0 | 0 | 0 | 0 | 7 |
 | REPORT | 8 | 5 | 5 | 0 | 0 | 0 | 7 | 0 | 0 | 1 |
 | QUAL | 14 | 9 | 9 | 0 | 0 | 5 | 0 | 0 | 0 | 9 |
-| **Total** | **172** | **77** | **70** | **0** | **0** | **18** | **13** | **1** | **3** | **137** |
+| **Total** | **172** | **77** | **70** | **0** | **0** | **19** | **22** | **1** | **2** | **128** |
 
 ## ORG — Organização, lojas e usuários
 
@@ -178,17 +178,17 @@
 
 | ID | Prio. | Piloto | Requisito | Aceite | Status | Nota e evidência |
 |---|---|---|---|---|---|---|
-| ORA-CONNECT-001 | P0 | sim | Cadastrar e vender chip físico ligado ao estoque e vendedor | Unidade/ICCID e venda reconciliáveis. | ⬜ não iniciado |  |
-| ORA-CONNECT-002 | P0 | sim | Separar evento de venda de chip do evento de ativação | Quantidades, status, valor e comissão independentes. | ⬜ não iniciado |  |
-| ORA-CONNECT-003 | P0 | sim | Separar recarga como operação telecom com status próprio | Total pago e valor repassado/receita reconhecida não confundidos. | ⬜ não iniciado |  |
-| ORA-CONNECT-004 | P0 | — | Registrar Nogle como integração externa por adapter | Sem endpoint presumido; contrato deve vir dos docs autenticados. | ⛔ bloqueado | Contrato Nogle parcial (só autenticação e consultas). Falta o tipo da chave (P9) e as rotas de ativação/recarga. Evidência: `docs/etapa-0/ETAPA_0_DECISOES_2026-11-06.md §3` |
-| ORA-CONNECT-005 | P0 | — | Refletir ativação somente após resposta verificada da Nogle | Falhas ficam pendentes/revisão sem gerar sucesso falso. | ⬜ não iniciado |  |
-| ORA-CONNECT-006 | P0 | — | Atribuir performance de ativação/recarga ao vendedor de origem | Evento idempotente e elegibilidade transparente. | ⬜ não iniciado |  |
-| ORA-CONNECT-007 | P1 | — | Consulta/atualização de linha e plano conforme API disponível | Permissão e rate limit respeitados. | ⬜ não iniciado |  |
-| ORA-CONNECT-008 | P1 | — | Portabilidade, contrato e venda de plano conforme contrato | Jornada e documentos homologados. | ⬜ não iniciado |  |
+| ORA-CONNECT-001 | P0 | sim | Cadastrar e vender chip físico ligado ao estoque e vendedor | Unidade/ICCID e venda reconciliáveis. | 🖼️ demonstração | Venda do chip no PDV e estoque de chips por loja (físico e eSIM), com transferência do estoque central. Só dados fictícios. Evidência: `apps/plataforma/src/app/demo/connect; apps/plataforma/e2e/connect.spec.ts` |
+| ORA-CONNECT-002 | P0 | sim | Separar evento de venda de chip do evento de ativação | Quantidades, status, valor e comissão independentes. | 🖼️ demonstração | A venda do chip (PDV) e a ativação na operadora (aba Ativar chip) são passos separados. Só dados fictícios. Evidência: `apps/plataforma/src/app/demo/connect; apps/plataforma/e2e/connect.spec.ts` |
+| ORA-CONNECT-003 | P0 | sim | Separar recarga como operação telecom com status próprio | Total pago e valor repassado/receita reconhecida não confundidos. | 🖼️ demonstração | Recarga com estado próprio (aguardando pagamento ou confirmada), avulsa ou programada pelo saldo. Só dados fictícios. Evidência: `apps/plataforma/src/app/demo/connect; apps/plataforma/e2e/connect.spec.ts` |
+| ORA-CONNECT-004 | P0 | — | Registrar Nogle como integração externa por adapter | Sem endpoint presumido; contrato deve vir dos docs autenticados. | 🟡 parcial | Contrato da API NOGLE lido por inteiro (62 funções) e guardado no repositório; catálogo gerado e conferido no CI; normalização das respostas e regras de ICCID, portabilidade e bloqueio testadas. Falta o cliente HTTP no servidor, que depende do tipo de chave (P9) e das credenciais no gerenciador de segredos. Evidência: `apps/plataforma/src/integracoes/nogle; docs/integracoes/NOGLE_API_REFERENCIA.md` |
+| ORA-CONNECT-005 | P0 | — | Refletir ativação somente após resposta verificada da Nogle | Falhas ficam pendentes/revisão sem gerar sucesso falso. | 🖼️ demonstração | A linha só aparece como ativa depois da consulta que confirma a ativação na operadora. Simulado; resposta real depende da integração. Evidência: `apps/plataforma/src/app/demo/connect; apps/plataforma/e2e/connect.spec.ts` |
+| ORA-CONNECT-006 | P0 | — | Atribuir performance de ativação/recarga ao vendedor de origem | Evento idempotente e elegibilidade transparente. | 🖼️ demonstração | Ativações e recargas atribuídas ao vendedor e à loja da venda nos painéis e na carteira. Só dados fictícios. Evidência: `apps/plataforma/src/app/demo/connect; apps/plataforma/e2e/connect.spec.ts` |
+| ORA-CONNECT-007 | P1 | — | Consulta/atualização de linha e plano conforme API disponível | Permissão e rate limit respeitados. | 🖼️ demonstração | Consulta de linha (detalhes, saldo, consumo de 30 dias, histórico, cobranças, titularidade, apelido) no formato da API. Só dados fictícios. Evidência: `apps/plataforma/src/app/demo/connect; apps/plataforma/e2e/connect.spec.ts` |
+| ORA-CONNECT-008 | P1 | — | Portabilidade, contrato e venda de plano conforme contrato | Jornada e documentos homologados. | 🖼️ demonstração | Portabilidade (pedido, reenvio do SMS, status) e operadoras doadoras no formato da API. Só dados fictícios. Evidência: `apps/plataforma/src/app/demo/connect; apps/plataforma/e2e/connect.spec.ts` |
 | ORA-CONNECT-009 | P1 | — | Reconciliar repasses/bonificações Nogle e operação local | Divergências rastreáveis e reversão segura. | ⬜ não iniciado |  |
-| ORA-CONNECT-010 | P1 | — | Recuperar falha de rede com reconsulta sem reativação duplicada | Idempotência/reconciliação externa aprovadas. | ⬜ não iniciado |  |
-| ORA-CONNECT-011 | P2 | — | eSIM, contratação digital e entrega de chip nacional | Implementar somente se Nogle suportar e acordo permitir. | ⬜ não iniciado |  |
+| ORA-CONNECT-010 | P1 | — | Recuperar falha de rede com reconsulta sem reativação duplicada | Idempotência/reconciliação externa aprovadas. | 🖼️ demonstração | Cada operação que cria algo na operadora diz o que consultar antes de reenviar (catálogo e telas). A recuperação real depende do cliente HTTP. Evidência: `apps/plataforma/src/app/demo/connect; apps/plataforma/e2e/connect.spec.ts; apps/plataforma/src/integracoes/nogle; docs/integracoes/NOGLE_API_REFERENCIA.md` |
+| ORA-CONNECT-011 | P2 | — | eSIM, contratação digital e entrega de chip nacional | Implementar somente se Nogle suportar e acordo permitir. | 🖼️ demonstração | eSIM na ativação e compra de chip com entrega e rastreio no formato da API. Só dados fictícios. Evidência: `apps/plataforma/src/app/demo/connect; apps/plataforma/e2e/connect.spec.ts` |
 
 ## ONLINE — E-commerce e vendas online
 

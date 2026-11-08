@@ -27,6 +27,7 @@ const TELAS: Record<string, readonly Tela[]> = {
   administrador: [
     ["/demo", "Usuários, lojas e integrações"], ["/demo/lojas", "Lojas e usuários"], ["/demo/importacao", "Importar estoque da Rein (prévia)"], ["/demo/auditoria", "Auditoria"],
     ["/demo/relatorios", "Relatórios"], ["/demo/produtos", "Produtos e preços"], ["/demo/vendas", "Vendas de hoje"], ["/demo/estoque", "Estoque e rastreio por IMEI"], ["/demo/canais", "Canais online e campanhas"],
+    ["/demo/connect", "Ora Connect"],
   ],
   tecnico: [["/demo", new RegExp(`${SAUDACAO.source}, Téo!`)], ["/demo/assistencia", "Assistência técnica (ordens de serviço)"]],
 };
@@ -36,7 +37,7 @@ const PROIBIDAS: Record<string, readonly string[]> = {
   vendedor: ["/demo/aprovacoes", "/demo/financeiro", "/demo/relatorios", "/demo/lojas", "/demo/auditoria", "/demo/importacao"],
   gerente: ["/demo/lojas", "/demo/importacao", "/demo/canais"],
   administrador: ["/demo/vender", "/demo/aprovacoes", "/demo/financeiro", "/demo/metas", "/demo/clientes"],
-  tecnico: ["/demo/vender", "/demo/vendas", "/demo/estoque", "/demo/metas"],
+  tecnico: ["/demo/vender", "/demo/vendas", "/demo/estoque", "/demo/metas", "/demo/connect"],
 };
 
 async function usarPerfil(page: Page, perfil: string) {
@@ -242,10 +243,10 @@ test("parâmetros repetidos ou com nome herdado no endereço não derrubam as te
   expect(erros, "erros de JavaScript na página").toEqual([]);
 });
 
-test("REV-010: cookie de perfil adulterado não derruba a demonstração", async ({ page, context }) => {
+test("REV-010: cookie de perfil adulterado não derruba a demonstração", async ({ page, context, baseURL }) => {
   for (const valor of ["constructor", "__proto__", "toString", "inexistente"]) {
     await context.clearCookies();
-    await context.addCookies([{ name: "ora_demo_perfil", value: valor, url: "http://127.0.0.1:3180" }]);
+    await context.addCookies([{ name: "ora_demo_perfil", value: valor, url: baseURL }]);
     const resposta = await page.goto("/demo");
     expect(resposta?.status(), valor).toBe(200);
     await expect(page.getByRole("heading", { name: "Visão geral da rede" })).toBeVisible();
@@ -319,7 +320,7 @@ test("vendedor vê só as próprias vendas e metas; gerente vê todos os vendedo
   await expect(page.getByText("Lucas Pereira").first()).toBeVisible();
 });
 
-test("vendedor com duas lojas troca a loja da sessão; loja sem vínculo é ignorada", async ({ page, context, request }) => {
+test("vendedor com duas lojas troca a loja da sessão; loja sem vínculo é ignorada", async ({ page, context, request, baseURL }) => {
   await usarPerfil(page, "vendedor");
   await page.getByRole("button", { name: /^Loja da sessão: Santa Cândida/ }).click();
   await page.getByRole("link", { name: /^Loja 03/ }).click();
@@ -329,7 +330,7 @@ test("vendedor com duas lojas troca a loja da sessão; loja sem vínculo é igno
   await expect(page.getByText("Loja da sessão · Loja 03")).toBeVisible();
 
   // Loja sem vínculo (cookie forjado ou endereço digitado): volta para a loja padrão.
-  await context.addCookies([{ name: "ora_demo_loja", value: "loja-07", url: "http://127.0.0.1:3180" }]);
+  await context.addCookies([{ name: "ora_demo_loja", value: "loja-07", url: baseURL }]);
   await page.goto("/demo");
   await expect(page.getByRole("button", { name: /^Loja da sessão: Santa Cândida/ })).toBeVisible();
 

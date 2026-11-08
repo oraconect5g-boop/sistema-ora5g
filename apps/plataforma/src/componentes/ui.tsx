@@ -316,7 +316,7 @@ export function ListaDados({ itens, className = "" }: { itens: readonly (readonl
 export function FiltroSegmentado({ opcoes, rotulo }: { opcoes: readonly { href: string; rotulo: string; ativo: boolean; contagem?: number }[]; rotulo: string }) {
   return (
     <nav aria-label={rotulo} className="-mx-1 overflow-x-auto px-1 pb-1">
-      <ul className="flex w-max gap-1 rounded-xl bg-slate-100 p-1">
+      <ul className="flex w-max gap-1 rounded-xl bg-slate-100 p-1 lg:w-fit lg:max-w-full lg:flex-wrap">
         {opcoes.map((o) => (
           <li key={o.href}>
             <Link

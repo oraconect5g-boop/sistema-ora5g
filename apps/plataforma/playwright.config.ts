@@ -10,7 +10,9 @@ try {
 
 // Sempre 127.0.0.1, nunca localhost: o servidor nao tem IPv6 (ADR-001, secao 2.4).
 // Porta 3180: testes do programador. A 3100 fica livre para a homologacao (ADR-001).
-const enderecoBase = "http://127.0.0.1:3180";
+// ORA_PORTA_E2E permite rodar duas suítes ao mesmo tempo no servidor (ex.: duas sessões), sem disputar a porta.
+const porta = process.env.ORA_PORTA_E2E ?? "3180";
+const enderecoBase = `http://127.0.0.1:${porta}`;
 
 export default defineConfig({
   testDir: "./e2e",
@@ -32,7 +34,7 @@ export default defineConfig({
     },
   ],
   webServer: {
-    command: "npx next start -H 127.0.0.1 -p 3180",
+    command: `npx next start -H 127.0.0.1 -p ${porta}`,
     url: `${enderecoBase}/saude`,
     reuseExistingServer: false,
     timeout: 60_000,
