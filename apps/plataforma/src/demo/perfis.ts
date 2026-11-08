@@ -78,7 +78,7 @@ export const ACESSO: Record<Perfil, readonly Pagina[]> = {
   vendedor: ["inicio", "vender", "vendas", "estoque", "connect", "assistencia", "metas", "clientes", "produtos"],
   gerente: ["inicio", "vender", "vendas", "estoque", "connect", "assistencia", "aprovacoes", "metas", "financeiro", "relatorios", "clientes", "produtos", "auditoria"],
   dono: ["inicio", "vender", "vendas", "estoque", "connect", "assistencia", "aprovacoes", "metas", "financeiro", "relatorios", "clientes", "produtos", "canais", "lojas", "importacao", "auditoria"],
-  administrador: ["inicio", "vendas", "estoque", "relatorios", "produtos", "canais", "lojas", "importacao", "auditoria"],
+  administrador: ["inicio", "vendas", "estoque", "connect", "relatorios", "produtos", "canais", "lojas", "importacao", "auditoria"],
   tecnico: ["inicio", "assistencia"],
 };
 
