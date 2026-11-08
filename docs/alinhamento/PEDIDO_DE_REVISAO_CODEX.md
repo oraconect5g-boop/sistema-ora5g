@@ -95,3 +95,12 @@ Pedidos de conferência:
 2. Tela `/catalogo` e componentes `EnviarFoto`/`FotoAmpliavel`: envio direto do celular ao Storage com a sessão da pessoa; registro por ação do servidor; sem custo no navegador.
 3. Decisão a confirmar com o proprietário: vendedor também poder enviar foto (hoje não; a permissão é de dono e gerente).
 4. Fora desta entrega: limpeza de arquivo enviado sem registro (worker), fotos no estoque e no PDV reais, homologação com fotos reais.
+
+## 08/11/2026 (noite, 4) — vendas, pagamentos e caixa reais (ADR-004)
+
+**Branch:** `feature/ORA-ADR-004-vendas`. **ADR:** [ADR-004](../adr/ADR-004-vendas-pagamentos-e-caixa.md) (proposto).
+
+1. Migration `20261108233546_vendas_pagamentos_e_caixa.sql` (aplicada no `ora5g-dev`; md5 igual) e `20261108233711_indices_vendas_e_fotos.sql` (advisor 0001). Conferir: idempotência das chaves (criar venda, item, caixa, movimento, conclusão), ordem das travas (chave → venda → caixa → item → reserva → saldo), regra do pagamento espelhando `packages/dominio/src/pagamento.ts`, limite de desconto espelhando `desconto.ts` (taxa do meio = 0 até haver configuração), custo em tabela própria só com `custo.ver`, estorno no cancelamento.
+2. Testes: `packages/banco/src/vendas.test.ts` (cenários A, B, C, D, E, H, I) e o caso de conclusão repetida simultânea em `concorrencia.test.ts` (PostgreSQL 17 real).
+3. Telas `/vender`, `/caixa`, `/aprovacoes`, `/vendas/[id]`: só chamam funções do banco; nada de custo no navegador; chave de idempotência gerada na tela.
+4. Limites declarados: link de pagamento bloqueado (provedor A3), devolução parcial e troca (POS-012) não feitas, fiscal e comissão ainda não existem, prova com usuário real depende da `SUPABASE_SECRET_KEY`.

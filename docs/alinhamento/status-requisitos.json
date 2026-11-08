@@ -62,19 +62,19 @@
       "evidencia": "packages/banco/supabase/migrations/20261108195850_integridade_estoque.sql; packages/banco/src/integridade-estoque.test.ts; packages/banco/src/concorrencia.test.ts"
     },
     "ORA-POS-005": {
-      "status": "parcial",
-      "nota": "Totais e limite de desconto por margem em regra pura testada, com validação em tempo de execução (REV-007/REV-008 corrigidos) e limite e margem em inteiros exatos também em valores altos (resíduo do REV-008, 08/11). Falta executar no servidor e gravar no banco.",
-      "evidencia": "packages/dominio/src/desconto.ts; packages/dominio/src/revisao-codex.test.ts"
+      "status": "testado",
+      "nota": "Preço lido do banco (preco_vigente) ao pôr no carrinho e conferido de novo na conclusão (preço mudou = OR007); totais, desconto e troco calculados no banco; o navegador só envia o pedido. Aguardando revisão do Codex.",
+      "evidencia": "packages/banco/supabase/migrations/20261108233546_vendas_pagamentos_e_caixa.sql; packages/banco/src/vendas.test.ts; packages/banco/src/concorrencia.test.ts"
     },
     "ORA-POS-006": {
-      "status": "demonstracao",
-      "nota": "Regra que decide quando precisa de aprovação está pronta; pedido com motivo, resposta simulada, cancelamento quando o carrinho muda e fila com aprovar/negar (justificativa obrigatória) existem só na demonstração.",
-      "evidencia": "packages/dominio/src/desconto.ts; apps/plataforma/src/app/demo/aprovacoes; apps/plataforma/src/app/demo/vender"
+      "status": "testado",
+      "nota": "Pedido de aprovação com motivo, limite, validade de 30 min e conteúdo do item; aprova só quem tem desconto.aprovar e nunca quem pediu; mudar o item invalida; auditado. Sem política P14 todo desconto pede aprovação. Aguardando revisão do Codex.",
+      "evidencia": "packages/banco/supabase/migrations/20261108233546_vendas_pagamentos_e_caixa.sql; packages/banco/src/vendas.test.ts; packages/banco/src/concorrencia.test.ts; apps/plataforma/src/app/aprovacoes"
     },
     "ORA-POS-007": {
-      "status": "parcial",
-      "nota": "Pagamento misto, troco e venda financiada em regra pura testada, com entrada e valores validados (REV-008). Falta registro no banco.",
-      "evidencia": "packages/dominio/src/pagamento.ts; revisao-codex.test.ts"
+      "status": "testado",
+      "nota": "Pagamento misto com os 8 meios: soma, troco só do dinheiro, comprovante em cartão e Pix, financiamento com entrada; estorno no cancelamento. Link bloqueado até o provedor. Aguardando revisão do Codex.",
+      "evidencia": "packages/banco/supabase/migrations/20261108233546_vendas_pagamentos_e_caixa.sql; packages/banco/src/vendas.test.ts; packages/banco/src/concorrencia.test.ts"
     },
     "ORA-PAY-002": {
       "status": "parcial",
@@ -177,9 +177,9 @@
       "evidencia": "apps/plataforma/src/app/demo; apps/plataforma/e2e/demonstracao.spec.ts"
     },
     "ORA-POS-008": {
-      "status": "demonstracao",
-      "nota": "Venda da demonstração ligada a vendedor, loja da sessão e cliente (busca exata ou cadastro na hora). Nada é gravado.",
-      "evidencia": "apps/plataforma/src/app/demo; apps/plataforma/e2e/demonstracao.spec.ts"
+      "status": "parcial",
+      "nota": "Venda gravada com loja, vendedor e canal; cliente por nome e e-mail até o CRM existir; RLS: vendedor vê as próprias, gerência a loja. FALTA: cliente do CRM.",
+      "evidencia": "packages/banco/supabase/migrations/20261108233546_vendas_pagamentos_e_caixa.sql; packages/banco/src/vendas.test.ts; packages/banco/src/concorrencia.test.ts"
     },
     "ORA-PAY-003": {
       "status": "demonstracao",
@@ -277,14 +277,74 @@
       "evidencia": "packages/banco/supabase/migrations/20261108150620_catalogo_estoque.sql; packages/banco/src/catalogo-estoque.test.ts"
     },
     "ORA-POS-004": {
-      "status": "parcial",
-      "nota": "Reserva do IMEI atômica no banco (trava + índice único, concorrência real provada); a saída por venda exige a reserva consumida antes e muda o item para vendido no mesmo lançamento. Falta a função de venda transacional (ADR-004) e a tela real.",
-      "evidencia": "apps/plataforma/src/app/demo/vender/PDV.tsx; packages/banco/supabase/migrations/20261108150620_catalogo_estoque.sql; packages/banco/src/catalogo-estoque.test.ts"
+      "status": "testado",
+      "nota": "Reserva do IMEI atômica (trava + índice único) ao pôr no carrinho; a conclusão consome a reserva e lança a saída 'venda' na mesma transação (ADR-004); reserva vencida barra a conclusão. Testado com concorrência real. FALTA: homologação com usuário real.",
+      "evidencia": "packages/banco/supabase/migrations/20261108233546_vendas_pagamentos_e_caixa.sql; packages/banco/src/vendas.test.ts; packages/banco/src/concorrencia.test.ts; packages/banco/supabase/migrations/20261108195850_integridade_estoque.sql"
     },
     "ORA-CAT-011": {
       "status": "parcial",
       "nota": "Implementado em desenvolvimento (08/11): bucket privado no Storage com RLS por organização (vendedor vê, dono e gerente enviam: catalogo.fotos), caminho como identidade estável e URL assinada temporária, registro no banco com tamanho e tipo vindos do Storage, troca que guarda a anterior, ilustração só para item não físico, pendências (produto sem foto e cor sem foto própria) e tela /catalogo com miniatura, ampliação e envio pelo celular (redução no aparelho). FALTA: homologar com fotos reais e usuário real (critérios da #26), fotos no estoque e no PDV reais (com o ADR-004) e limpeza de arquivo enviado sem registro.",
       "evidencia": "packages/banco/supabase/migrations/20261108204536_fotos_dos_produtos.sql; packages/banco/src/fotos-produto.test.ts; apps/plataforma/src/app/catalogo; apps/plataforma/src/lib/catalogo"
+    },
+    "ORA-POS-001": {
+      "status": "parcial",
+      "nota": "PDV real no celular (/vender) ligado ao banco: caixa, busca, carrinho com reserva, desconto com aprovação, pagamento misto, conclusão e comprovante. Regras do banco testadas (13 cenários e concorrência real). FALTA: E2E com usuário real em smartphone da loja piloto (depende da SUPABASE_SECRET_KEY para criar o usuário de teste) e homologação.",
+      "evidencia": "packages/banco/supabase/migrations/20261108233546_vendas_pagamentos_e_caixa.sql; packages/banco/src/vendas.test.ts; packages/banco/src/concorrencia.test.ts; apps/plataforma/src/app/vender; apps/plataforma/src/app/caixa; apps/plataforma/src/app/aprovacoes; apps/plataforma/src/app/vendas"
+    },
+    "ORA-POS-002": {
+      "status": "parcial",
+      "nota": "Busca por nome, SKU e IMEI/ICCID com foto, preço vigente e quantidade livre na loja. FALTA: medir velocidade e validar com vendedor.",
+      "evidencia": "apps/plataforma/src/app/vender; apps/plataforma/src/app/caixa; apps/plataforma/src/app/aprovacoes; apps/plataforma/src/app/vendas"
+    },
+    "ORA-POS-003": {
+      "status": "parcial",
+      "nota": "Itens de aparelho, chip e acessório com estoque e serviço sem estoque mantêm o tipo do produto na venda; sem dupla contagem no livro. FALTA: ativação e recarga ligadas à Ora Connect (fila 11).",
+      "evidencia": "packages/banco/supabase/migrations/20261108233546_vendas_pagamentos_e_caixa.sql; packages/banco/src/vendas.test.ts; packages/banco/src/concorrencia.test.ts"
+    },
+    "ORA-POS-010": {
+      "status": "parcial",
+      "nota": "Cancelamento sem apagar: antes de concluir libera a reserva; depois, gerência com motivo, devolução ao estoque, estorno no caixa e a receber cancelado. FALTA: fiscal e comissão (ainda não existem) e devolução parcial.",
+      "evidencia": "packages/banco/supabase/migrations/20261108233546_vendas_pagamentos_e_caixa.sql; packages/banco/src/vendas.test.ts; packages/banco/src/concorrencia.test.ts"
+    },
+    "ORA-POS-013": {
+      "status": "parcial",
+      "nota": "PayJoy/Aiva: preço, entrada (com o meio) e restante a receber da financeira, sem juros; e-mail obrigatório na PayJoy. FALTA: prazo/taxa do repasse (P8) e termos da financeira.",
+      "evidencia": "packages/banco/supabase/migrations/20261108233546_vendas_pagamentos_e_caixa.sql; packages/banco/src/vendas.test.ts; packages/banco/src/concorrencia.test.ts"
+    },
+    "ORA-PAY-001": {
+      "status": "parcial",
+      "nota": "Dinheiro, Pix direto, Pix e cartão na maquininha PicPay, cartão PagSeguro registrados com comprovante e quem conferiu. FALTA: identificação do terminal (PAY-012).",
+      "evidencia": "packages/banco/supabase/migrations/20261108233546_vendas_pagamentos_e_caixa.sql; packages/banco/src/vendas.test.ts; packages/banco/src/concorrencia.test.ts"
+    },
+    "ORA-PAY-004": {
+      "status": "testado",
+      "nota": "Caixa por pessoa e loja com fundo de troco; um aberto por vez; idempotente. Aguardando revisão do Codex.",
+      "evidencia": "packages/banco/supabase/migrations/20261108233546_vendas_pagamentos_e_caixa.sql; packages/banco/src/vendas.test.ts; packages/banco/src/concorrencia.test.ts; apps/plataforma/src/app/caixa"
+    },
+    "ORA-PAY-005": {
+      "status": "parcial",
+      "nota": "Suprimento e sangria com motivo, autor e efeito no dinheiro da gaveta; sangria não passa do dinheiro; lançamentos só de inserção. FALTA: 'saída autorizada' com aprovação da gerência (D-017).",
+      "evidencia": "packages/banco/supabase/migrations/20261108233546_vendas_pagamentos_e_caixa.sql; packages/banco/src/vendas.test.ts; packages/banco/src/concorrencia.test.ts"
+    },
+    "ORA-PAY-006": {
+      "status": "testado",
+      "nota": "Fechamento com contagem, diferença e explicação obrigatória quando há diferença; conferência por outra pessoa com caixa.conferir. Aguardando revisão do Codex.",
+      "evidencia": "packages/banco/supabase/migrations/20261108233546_vendas_pagamentos_e_caixa.sql; packages/banco/src/vendas.test.ts; packages/banco/src/concorrencia.test.ts"
+    },
+    "ORA-PAY-007": {
+      "status": "parcial",
+      "nota": "Comprovante registrado em cada pagamento de maquininha e Pix (confirmação manual, sem presumir liquidação). FALTA: tela de conciliação com o extrato.",
+      "evidencia": "packages/banco/supabase/migrations/20261108233546_vendas_pagamentos_e_caixa.sql"
+    },
+    "ORA-PAY-008": {
+      "status": "parcial",
+      "nota": "Conclusão da venda idempotente (mesma chave, mesmo resultado; repetição simultânea testada em PostgreSQL real). Webhooks ainda não existem (link bloqueado).",
+      "evidencia": "packages/banco/supabase/migrations/20261108233546_vendas_pagamentos_e_caixa.sql; packages/banco/src/vendas.test.ts; packages/banco/src/concorrencia.test.ts"
+    },
+    "ORA-FIN-003": {
+      "status": "parcial",
+      "nota": "Contas a receber das financeiras ligadas à venda e ao pagamento, abertas até o recebimento; canceladas no estorno. FALTA: vencimento (P8), baixa e aging.",
+      "evidencia": "packages/banco/supabase/migrations/20261108233546_vendas_pagamentos_e_caixa.sql; packages/banco/src/vendas.test.ts; packages/banco/src/concorrencia.test.ts"
     }
   }
 }
