@@ -1,4 +1,4 @@
-import { Images, KeyRound, LogOut, Store, Users } from "lucide-react";
+import { Images, KeyRound, LogOut, ShoppingCart, Store, Users, Wallet } from "lucide-react";
 import type { Metadata } from "next";
 
 import { Marca } from "../../componentes/Marca";
@@ -26,6 +26,8 @@ export default async function Inicio() {
         <p className="flex items-center gap-2 text-sm"><Store aria-hidden className="size-4 text-acao" /> Loja atual: <strong>{situacao.unidade_nome}</strong></p>
         <div className="mt-4 grid gap-2">
           <BotaoLink href="/escolher-loja" variante="secundario"><Store aria-hidden className="size-4" /> Trocar de loja</BotaoLink>
+          <BotaoLink href="/vender"><ShoppingCart aria-hidden className="size-4" /> Vender</BotaoLink>
+          <BotaoLink href="/caixa" variante="secundario"><Wallet aria-hidden className="size-4" /> Caixa</BotaoLink>
           <BotaoLink href="/catalogo" variante="secundario"><Images aria-hidden className="size-4" /> Catálogo e fotos</BotaoLink>
           {gereEquipe.data && <BotaoLink href="/equipe" variante="secundario"><Users aria-hidden className="size-4" /> Equipe e acessos</BotaoLink>}
           <BotaoLink href="/conta/senha" variante="secundario"><KeyRound aria-hidden className="size-4" /> Trocar minha senha</BotaoLink>

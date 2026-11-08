@@ -1,7 +1,7 @@
 // ARQUIVO GERADO pelo Supabase (generate_typescript_types do projeto ora5g-dev) depois da
-// migration 20261108204536_fotos_dos_produtos. Não edite à mão: gere de novo a cada
+// migration 20261108233546_vendas_pagamentos_e_caixa. Não edite à mão: gere de novo a cada
 // migration aplicada (auditoria do Codex de 08/11, §7.2). O teste tipos-banco.test.ts confere
-// que as funções que a aplicação chama existem aqui.
+// que funções e tabelas públicas daqui são as mesmas das migrations.
 export type Json =
   | string
   | number
@@ -18,6 +18,98 @@ export type Database = {
   }
   public: {
     Tables: {
+      aprovacoes_desconto: {
+        Row: {
+          abaixo_do_custo: boolean
+          conteudo: string
+          decidido_em: string | null
+          decidido_por: string | null
+          desconto_centavos: number
+          expira_em: string
+          id: string
+          item_id: string | null
+          maximo_sem_aprovacao_centavos: number
+          motivo: string
+          observacao: string | null
+          organizacao_id: string
+          preco_centavos: number
+          situacao: string
+          solicitado_em: string
+          solicitado_por: string
+          unidade_id: string
+          venda_id: string
+        }
+        Insert: {
+          abaixo_do_custo?: boolean
+          conteudo: string
+          decidido_em?: string | null
+          decidido_por?: string | null
+          desconto_centavos: number
+          expira_em: string
+          id?: string
+          item_id?: string | null
+          maximo_sem_aprovacao_centavos: number
+          motivo: string
+          observacao?: string | null
+          organizacao_id: string
+          preco_centavos: number
+          situacao?: string
+          solicitado_em?: string
+          solicitado_por: string
+          unidade_id: string
+          venda_id: string
+        }
+        Update: {
+          abaixo_do_custo?: boolean
+          conteudo?: string
+          decidido_em?: string | null
+          decidido_por?: string | null
+          desconto_centavos?: number
+          expira_em?: string
+          id?: string
+          item_id?: string | null
+          maximo_sem_aprovacao_centavos?: number
+          motivo?: string
+          observacao?: string | null
+          organizacao_id?: string
+          preco_centavos?: number
+          situacao?: string
+          solicitado_em?: string
+          solicitado_por?: string
+          unidade_id?: string
+          venda_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "aprovacoes_desconto_decidido_por_fkey"
+            columns: ["decidido_por"]
+            isOneToOne: false
+            referencedRelation: "perfis_usuario"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "aprovacoes_desconto_item_id_fkey"
+            columns: ["item_id"]
+            isOneToOne: false
+            referencedRelation: "venda_itens"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "aprovacoes_desconto_solicitado_por_fkey"
+            columns: ["solicitado_por"]
+            isOneToOne: false
+            referencedRelation: "perfis_usuario"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "aprovacoes_desconto_venda_id_fkey"
+            columns: ["venda_id"]
+            isOneToOne: false
+            referencedRelation: "vendas"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       auditoria: {
         Row: {
           acao: string
@@ -71,6 +163,145 @@ export type Database = {
           },
         ]
       }
+      caixa_movimentos: {
+        Row: {
+          caixa_id: string
+          chave_idempotencia: string
+          id: number
+          meio: string
+          motivo: string | null
+          ocorrido_em: string
+          organizacao_id: string
+          pagamento_id: string | null
+          tipo: string
+          usuario_id: string | null
+          valor_centavos: number
+          venda_id: string | null
+        }
+        Insert: {
+          caixa_id: string
+          chave_idempotencia: string
+          id?: never
+          meio: string
+          motivo?: string | null
+          ocorrido_em?: string
+          organizacao_id: string
+          pagamento_id?: string | null
+          tipo: string
+          usuario_id?: string | null
+          valor_centavos: number
+          venda_id?: string | null
+        }
+        Update: {
+          caixa_id?: string
+          chave_idempotencia?: string
+          id?: never
+          meio?: string
+          motivo?: string | null
+          ocorrido_em?: string
+          organizacao_id?: string
+          pagamento_id?: string | null
+          tipo?: string
+          usuario_id?: string | null
+          valor_centavos?: number
+          venda_id?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "caixa_movimentos_caixa_id_fkey"
+            columns: ["caixa_id"]
+            isOneToOne: false
+            referencedRelation: "caixas"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "caixa_movimentos_usuario_id_fkey"
+            columns: ["usuario_id"]
+            isOneToOne: false
+            referencedRelation: "perfis_usuario"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      caixas: {
+        Row: {
+          aberto_em: string
+          chave_abertura: string
+          conferido_em: string | null
+          conferido_por: string | null
+          contado_centavos: number | null
+          diferenca_centavos: number | null
+          esperado_centavos: number | null
+          fechado_em: string | null
+          fundo_centavos: number
+          id: string
+          observacao_conferencia: string | null
+          observacao_fechamento: string | null
+          operador_id: string
+          organizacao_id: string
+          situacao: string
+          unidade_id: string
+        }
+        Insert: {
+          aberto_em?: string
+          chave_abertura: string
+          conferido_em?: string | null
+          conferido_por?: string | null
+          contado_centavos?: number | null
+          diferenca_centavos?: number | null
+          esperado_centavos?: number | null
+          fechado_em?: string | null
+          fundo_centavos: number
+          id?: string
+          observacao_conferencia?: string | null
+          observacao_fechamento?: string | null
+          operador_id: string
+          organizacao_id: string
+          situacao?: string
+          unidade_id: string
+        }
+        Update: {
+          aberto_em?: string
+          chave_abertura?: string
+          conferido_em?: string | null
+          conferido_por?: string | null
+          contado_centavos?: number | null
+          diferenca_centavos?: number | null
+          esperado_centavos?: number | null
+          fechado_em?: string | null
+          fundo_centavos?: number
+          id?: string
+          observacao_conferencia?: string | null
+          observacao_fechamento?: string | null
+          operador_id?: string
+          organizacao_id?: string
+          situacao?: string
+          unidade_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "caixas_conferido_por_fkey"
+            columns: ["conferido_por"]
+            isOneToOne: false
+            referencedRelation: "perfis_usuario"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "caixas_operador_id_fkey"
+            columns: ["operador_id"]
+            isOneToOne: false
+            referencedRelation: "perfis_usuario"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "caixas_unidade_id_organizacao_id_fkey"
+            columns: ["unidade_id", "organizacao_id"]
+            isOneToOne: false
+            referencedRelation: "unidades"
+            referencedColumns: ["id", "organizacao_id"]
+          },
+        ]
+      }
       categorias: {
         Row: {
           ativa: boolean
@@ -105,6 +336,63 @@ export type Database = {
             columns: ["organizacao_id"]
             isOneToOne: false
             referencedRelation: "organizacoes"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      contas_a_receber: {
+        Row: {
+          atualizado_em: string
+          criado_em: string
+          devedor: string
+          id: string
+          organizacao_id: string
+          pagamento_id: string
+          situacao: string
+          unidade_id: string
+          valor_centavos: number
+          vencimento: string | null
+          venda_id: string
+        }
+        Insert: {
+          atualizado_em?: string
+          criado_em?: string
+          devedor: string
+          id?: string
+          organizacao_id: string
+          pagamento_id: string
+          situacao?: string
+          unidade_id: string
+          valor_centavos: number
+          vencimento?: string | null
+          venda_id: string
+        }
+        Update: {
+          atualizado_em?: string
+          criado_em?: string
+          devedor?: string
+          id?: string
+          organizacao_id?: string
+          pagamento_id?: string
+          situacao?: string
+          unidade_id?: string
+          valor_centavos?: number
+          vencimento?: string | null
+          venda_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "contas_a_receber_pagamento_id_fkey"
+            columns: ["pagamento_id"]
+            isOneToOne: false
+            referencedRelation: "venda_pagamentos"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "contas_a_receber_venda_id_fkey"
+            columns: ["venda_id"]
+            isOneToOne: false
+            referencedRelation: "vendas"
             referencedColumns: ["id"]
           },
         ]
@@ -1049,6 +1337,285 @@ export type Database = {
           },
         ]
       }
+      venda_itens: {
+        Row: {
+          chave: string
+          criado_em: string
+          desconto_centavos: number
+          id: string
+          item_serializado_id: string | null
+          organizacao_id: string
+          preco_unitario_centavos: number
+          quantidade: number
+          reserva_id: string | null
+          tipo: string
+          variante_id: string
+          venda_id: string
+        }
+        Insert: {
+          chave: string
+          criado_em?: string
+          desconto_centavos?: number
+          id?: string
+          item_serializado_id?: string | null
+          organizacao_id: string
+          preco_unitario_centavos: number
+          quantidade: number
+          reserva_id?: string | null
+          tipo: string
+          variante_id: string
+          venda_id: string
+        }
+        Update: {
+          chave?: string
+          criado_em?: string
+          desconto_centavos?: number
+          id?: string
+          item_serializado_id?: string | null
+          organizacao_id?: string
+          preco_unitario_centavos?: number
+          quantidade?: number
+          reserva_id?: string | null
+          tipo?: string
+          variante_id?: string
+          venda_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "venda_itens_item_serializado_id_fkey"
+            columns: ["item_serializado_id"]
+            isOneToOne: false
+            referencedRelation: "itens_serializados"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "venda_itens_reserva_id_fkey"
+            columns: ["reserva_id"]
+            isOneToOne: false
+            referencedRelation: "estoque_reservas"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "venda_itens_variante_id_organizacao_id_fkey"
+            columns: ["variante_id", "organizacao_id"]
+            isOneToOne: false
+            referencedRelation: "variantes"
+            referencedColumns: ["id", "organizacao_id"]
+          },
+          {
+            foreignKeyName: "venda_itens_venda_id_fkey"
+            columns: ["venda_id"]
+            isOneToOne: false
+            referencedRelation: "vendas"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      venda_itens_custos: {
+        Row: {
+          custo_unitario_centavos: number
+          item_id: string
+          organizacao_id: string
+          unidade_id: string
+        }
+        Insert: {
+          custo_unitario_centavos: number
+          item_id: string
+          organizacao_id: string
+          unidade_id: string
+        }
+        Update: {
+          custo_unitario_centavos?: number
+          item_id?: string
+          organizacao_id?: string
+          unidade_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "venda_itens_custos_item_id_fkey"
+            columns: ["item_id"]
+            isOneToOne: true
+            referencedRelation: "venda_itens"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      venda_pagamentos: {
+        Row: {
+          comprovante: string | null
+          confirmacao: string
+          confirmado_por: string | null
+          criado_em: string
+          entrada_centavos: number
+          estornado_em: string | null
+          id: string
+          meio: string
+          meio_entrada: string | null
+          ordem: number
+          organizacao_id: string
+          situacao: string
+          valor_centavos: number
+          venda_id: string
+        }
+        Insert: {
+          comprovante?: string | null
+          confirmacao: string
+          confirmado_por?: string | null
+          criado_em?: string
+          entrada_centavos?: number
+          estornado_em?: string | null
+          id?: string
+          meio: string
+          meio_entrada?: string | null
+          ordem: number
+          organizacao_id: string
+          situacao?: string
+          valor_centavos: number
+          venda_id: string
+        }
+        Update: {
+          comprovante?: string | null
+          confirmacao?: string
+          confirmado_por?: string | null
+          criado_em?: string
+          entrada_centavos?: number
+          estornado_em?: string | null
+          id?: string
+          meio?: string
+          meio_entrada?: string | null
+          ordem?: number
+          organizacao_id?: string
+          situacao?: string
+          valor_centavos?: number
+          venda_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "venda_pagamentos_confirmado_por_fkey"
+            columns: ["confirmado_por"]
+            isOneToOne: false
+            referencedRelation: "perfis_usuario"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "venda_pagamentos_venda_id_fkey"
+            columns: ["venda_id"]
+            isOneToOne: false
+            referencedRelation: "vendas"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      vendas: {
+        Row: {
+          a_receber_centavos: number | null
+          caixa_id: string | null
+          canal: string
+          cancelada_em: string | null
+          cancelada_por: string | null
+          chave_conclusao: string | null
+          chave_criacao: string
+          cliente_email: string | null
+          cliente_nome: string | null
+          concluida_em: string | null
+          conteudo_conclusao: string | null
+          criado_em: string
+          desconto_centavos: number | null
+          id: string
+          motivo_cancelamento: string | null
+          numero: number
+          organizacao_id: string
+          recebido_centavos: number | null
+          situacao: string
+          subtotal_centavos: number | null
+          total_centavos: number | null
+          troco_centavos: number | null
+          unidade_id: string
+          vendedor_id: string
+        }
+        Insert: {
+          a_receber_centavos?: number | null
+          caixa_id?: string | null
+          canal?: string
+          cancelada_em?: string | null
+          cancelada_por?: string | null
+          chave_conclusao?: string | null
+          chave_criacao: string
+          cliente_email?: string | null
+          cliente_nome?: string | null
+          concluida_em?: string | null
+          conteudo_conclusao?: string | null
+          criado_em?: string
+          desconto_centavos?: number | null
+          id?: string
+          motivo_cancelamento?: string | null
+          numero?: never
+          organizacao_id: string
+          recebido_centavos?: number | null
+          situacao?: string
+          subtotal_centavos?: number | null
+          total_centavos?: number | null
+          troco_centavos?: number | null
+          unidade_id: string
+          vendedor_id: string
+        }
+        Update: {
+          a_receber_centavos?: number | null
+          caixa_id?: string | null
+          canal?: string
+          cancelada_em?: string | null
+          cancelada_por?: string | null
+          chave_conclusao?: string | null
+          chave_criacao?: string
+          cliente_email?: string | null
+          cliente_nome?: string | null
+          concluida_em?: string | null
+          conteudo_conclusao?: string | null
+          criado_em?: string
+          desconto_centavos?: number | null
+          id?: string
+          motivo_cancelamento?: string | null
+          numero?: never
+          organizacao_id?: string
+          recebido_centavos?: number | null
+          situacao?: string
+          subtotal_centavos?: number | null
+          total_centavos?: number | null
+          troco_centavos?: number | null
+          unidade_id?: string
+          vendedor_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "vendas_caixa_id_fkey"
+            columns: ["caixa_id"]
+            isOneToOne: false
+            referencedRelation: "caixas"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "vendas_cancelada_por_fkey"
+            columns: ["cancelada_por"]
+            isOneToOne: false
+            referencedRelation: "perfis_usuario"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "vendas_unidade_id_organizacao_id_fkey"
+            columns: ["unidade_id", "organizacao_id"]
+            isOneToOne: false
+            referencedRelation: "unidades"
+            referencedColumns: ["id", "organizacao_id"]
+          },
+          {
+            foreignKeyName: "vendas_vendedor_id_fkey"
+            columns: ["vendedor_id"]
+            isOneToOne: false
+            referencedRelation: "perfis_usuario"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       vinculos: {
         Row: {
           criado_em: string
@@ -1132,12 +1699,47 @@ export type Database = {
       [_ in never]: never
     }
     Functions: {
+      abrir_caixa: {
+        Args: { p_chave: string; p_fundo: number }
+        Returns: string
+      }
+      adicionar_item: {
+        Args: {
+          p_chave: string
+          p_item: string
+          p_quantidade: number
+          p_variante: string
+          p_venda: string
+        }
+        Returns: string
+      }
       alterar_situacao_pessoa: {
         Args: { p_motivo: string; p_situacao: string; p_usuario: string }
         Returns: boolean
       }
+      aplicar_desconto: {
+        Args: { p_desconto: number; p_item: string }
+        Returns: string
+      }
       cancelar_convite: {
         Args: { p_convite: string; p_motivo: string }
+        Returns: boolean
+      }
+      cancelar_venda: {
+        Args: { p_motivo: string; p_venda: string }
+        Returns: boolean
+      }
+      concluir_venda: {
+        Args: {
+          p_chave: string
+          p_cliente: Json
+          p_pagamentos: Json
+          p_venda: string
+        }
+        Returns: Json
+      }
+      conferir_caixa: {
+        Args: { p_caixa: string; p_observacao: string }
         Returns: boolean
       }
       conferir_item: { Args: { p_item: string }; Returns: boolean }
@@ -1152,6 +1754,11 @@ export type Database = {
         }
         Returns: string
       }
+      criar_venda: { Args: { p_chave: string }; Returns: string }
+      decidir_aprovacao: {
+        Args: { p_aprovacao: string; p_aprovar: boolean; p_observacao: string }
+        Returns: boolean
+      }
       disponibilidade_na_rede: {
         Args: { p_variante: string }
         Returns: {
@@ -1163,6 +1770,14 @@ export type Database = {
       encerrar_vinculo: {
         Args: { p_motivo: string; p_vinculo: string }
         Returns: boolean
+      }
+      fechar_caixa: {
+        Args: { p_contado: number; p_observacao: string }
+        Returns: {
+          contado: number
+          diferenca: number
+          esperado: number
+        }[]
       }
       identidade_bloqueios_a_aplicar: {
         Args: never
@@ -1209,6 +1824,19 @@ export type Database = {
         Returns: string
       }
       liberar_reserva: { Args: { p_reserva: string }; Returns: boolean }
+      movimentar_caixa: {
+        Args: {
+          p_chave: string
+          p_motivo: string
+          p_tipo: string
+          p_valor: number
+        }
+        Returns: number
+      }
+      pedir_aprovacao: {
+        Args: { p_item: string; p_motivo: string }
+        Returns: string
+      }
       pendencias_de_foto: {
         Args: never
         Returns: {
@@ -1239,6 +1867,7 @@ export type Database = {
         }
         Returns: string
       }
+      remover_item: { Args: { p_item: string }; Returns: boolean }
       repetir_convite: { Args: { p_convite: string }; Returns: boolean }
       reservar_estoque: {
         Args: {
