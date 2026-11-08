@@ -234,6 +234,7 @@ test("parâmetros repetidos ou com nome herdado no endereço não derrubam as te
     ["/demo/estoque?busca=a&busca=b&aba=__proto__&situacao=a&situacao=b", "Estoque e rastreio por IMEI"],
     ["/demo/relatorios?periodo=toString", "Relatórios"],
     ["/demo/auditoria?tipo=valueOf", "Auditoria"],
+    ["/demo/connect?aba=a&aba=b&filtro=__proto__", "Ora Connect"],
   ] as const) {
     const resposta = await page.goto(caminho);
     expect(resposta?.status(), caminho).toBe(200);
