@@ -51,8 +51,15 @@ export function ChipsConnect({ loja, fisicosDaLoja, esimDaLoja, estoqueMinimo, e
       setVirgem(virgem.filter((c) => !lote.includes(c)));
       return setTransf({ ...transf, resultado: `${lote.length} transferidos, 0 não transferidos.` });
     }
+    // REV-024 (#23): o eSIM sai do estoque virgem (cada unidade uma vez só) e nunca passa do que há nele.
     const quantidade = Number(transf.quantidade);
     if (!Number.isInteger(quantidade) || quantidade < 1 || quantidade > 100) return setTransf({ ...transf, resultado: "Quantidade de eSIM entre 1 e 100." });
+    const disponiveis = virgem.filter((c) => c.tipo === "eSIM");
+    if (quantidade > disponiveis.length) {
+      return setTransf({ ...transf, resultado: disponiveis.length === 0 ? "Não há eSIM no estoque virgem da Ora." : `Só há ${disponiveis.length} eSIM no estoque virgem da Ora. Nada foi transferido.` });
+    }
+    const levados = new Set(disponiveis.slice(0, quantidade));
+    setVirgem(virgem.filter((c) => !levados.has(c)));
     setEsim(esim + quantidade);
     setTransf({ ...transf, resultado: `${quantidade} eSIM transferidos para ${loja}.` });
   }
