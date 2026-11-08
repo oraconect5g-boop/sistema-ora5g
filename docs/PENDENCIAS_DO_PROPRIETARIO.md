@@ -1,6 +1,7 @@
 # O que depende do proprietário
 
-**Atualizado em:** 08/11/2026 · **Por:** Claude Code (programador)
+**Atualizado em:** 08/11/2026 (noite) · **Por:** Claude Code (programador)
+**Lista consolidada de APIs, acessos e habilitações (com documentação oficial e nomes das variáveis): [`docs/integracoes/APIS_E_HABILITACOES_NECESSARIAS.md`](integracoes/APIS_E_HABILITACOES_NECESSARIAS.md).** Esta página continua com os detalhes de cada passo.
 **Para:** o proprietário e o Codex. O Codex usa esta lista para dizer ao proprietário o que falta. **Valores de chaves e senhas nunca passam pelo chat (nem do Claude nem do Codex) e nunca vão para o GitHub**: eles são gravados direto no servidor pelo comando da seção 4, ou ficam no painel do próprio fornecedor. O Codex confere só pelos **nomes**.
 
 Tudo o que não está aqui o Claude Code faz sozinho (programação, migrations no banco de desenvolvimento, publicação na homologação depois da sua autorização, chaves geradas por nós).
@@ -11,11 +12,11 @@ Tudo o que não está aqui o Claude Code faz sozinho (programação, migrations 
 
 | # | O quê | Onde e como | Destrava |
 |---|---|---|---|
-| 1.1 | **Criar 2 usuários de teste** | Supabase, projeto `ora5g-dev` → **Authentication → Users → Add user → Create new user**. Use um e-mail seu com `+vendedor` antes do `@` (ex.: `seunome+vendedor@gmail.com`; o Gmail entrega na mesma caixa) e outro com `+dono`. Senha forte, só sua. Marque **Auto Confirm User**. Depois diga ao Claude só "criei os usuários de teste" (**nunca a senha**) | O Claude liga cada um à loja de teste com o papel certo e testa o login real, a troca de loja e a renovação da sessão (#11) |
-| 1.2 | **Gravar a chave secreta do Supabase no servidor** | Supabase → **Project Settings → API Keys → Secret keys** → copie a chave (`sb_secret_…`). No terminal do servidor: `bash ~/homologacao/plataforma/deploy/homologacao/definir-chave.sh SUPABASE_SECRET_KEY` e cole quando pedir (seção 4) | Tela real de gestão de usuários: o sistema cria e convida vendedores sem você entrar no painel |
-| 1.3 | **Enviar o arquivo da Rein** (produtos, preços e estoque da Santa Cândida) | Exporte da Rein em CSV ou Excel e copie para a pasta `~/entrada/rein/` do servidor (WinSCP ou `scp`, usuário `dev`, porta 22022). **Não envie pelo GitHub nem pelo chat.** Não precisa tirar nada: o arquivo de estoque não tem dados de clientes; se tiver, avise | Importador da Rein (ORA-009) e a primeira consulta de estoque real |
+| 1.1 | ~~Criar 2 usuários de teste~~ **não é mais necessário** | Com a chave do item 1.2 gravada, o Claude cria usuários de teste fictícios (e-mails `@example.com`) e você cadastra as pessoas reais pela tela da equipe | — |
+| 1.2 | **Gravar a chave secreta do Supabase no servidor** | Supabase → **Project Settings → API Keys → Secret keys** → copie a chave (`sb_secret_…`). No terminal do servidor: `bash ~/homologacao/plataforma/deploy/homologacao/definir-chave.sh SUPABASE_SECRET_KEY` e cole quando pedir (seção 4) | **Item mais importante agora.** Cadastro de usuários e gestão da equipe pela tela (o sistema cria a pessoa e gera o link de acesso que o gerente manda pelo WhatsApp); usuários de teste fictícios; login real de ponta a ponta (#11) |
+| 1.3 | **Enviar o arquivo da Rein** (produtos, preços e estoque da Santa Cândida) | Exporte da Rein em CSV ou Excel e copie para a pasta `~/entrada/rein/` do servidor (já criada, só você e o sistema leem) (WinSCP ou `scp`, usuário `dev`, porta 22022). **Não envie pelo GitHub nem pelo chat.** Não precisa tirar nada: o arquivo de estoque não tem dados de clientes; se tiver, avise | Importador da Rein (ORA-009) e a primeira consulta de estoque real |
 | 1.4 | **Lista das 14 lojas** | Planilha com nome, endereço, CNPJ de cada filial, telefone e horário, na mesma pasta do servidor (`~/entrada/`) | Cadastro real das lojas (ORA-ORG-001) |
-| 1.5 | **Lista do pessoal da loja piloto** | Nome, e-mail, lojas em que trabalha e função (vendedor, gerente, dono), na pasta do servidor | Usuários reais da homologação |
+| 1.5 | **Pessoal da loja piloto** | Cadastre direto na tela da equipe quando ela for publicada (nome, e-mail, lojas e função); se preferir, deixe a lista em `~/entrada/equipe/` | Usuários reais da homologação |
 | 1.6 | **Aceitar o ADR-003** (catálogo e estoque) | Ler o resumo no início de `docs/adr/ADR-003-catalogo-estoque-e-operacao-comercial.md` e responder "aceito" ou o que mudar. O Codex revisa a parte técnica antes | Libera usar catálogo e estoque com dados reais (no banco de desenvolvimento já começou) |
 
 ## 2. E-mails para enviar (textos prontos)
@@ -69,7 +70,8 @@ Tudo o que não está aqui o Claude Code faz sozinho (programação, migrations 
    ```bash
    bash ~/homologacao/plataforma/deploy/homologacao/definir-chave.sh NOME_DA_CHAVE
    ```
-   Cole o valor quando pedir. **Ele não aparece na tela** e não fica no histórico. O comando recusa nomes fora da lista e valores com aspas, cifrão ou barra invertida.
+   Cole o valor quando pedir. **Ele não aparece na tela** e não fica no histórico. O comando recusa nomes fora da lista. Desde 08/11 aceita cifrão, aspas e barra invertida (testado com o leitor do Next); só recusa aspas simples junto de aspas duplas ou de barra invertida, e valor terminado em barra invertida.
+   **Enquanto a homologação não for publicada de novo**, o comando fica em `~/ora5g-connect/deploy/homologacao/definir-chave.sh` (mesmo uso).
 3. Para ver o que já está gravado (só "preenchida", "vazia" ou "ausente", nunca o valor):
    ```bash
    bash ~/homologacao/plataforma/deploy/homologacao/definir-chave.sh --situacao

@@ -45,13 +45,20 @@ echo
 VALOR="${VALOR//$'\r'/}"
 [[ -n "$VALOR" ]] || { echo "Nada foi colado; nada mudou." >&2; exit 1; }
 
-# Caracteres que mudam o sentido no arquivo .env: aspas, cifrão e barra invertida.
-if [[ "$VALOR" == *[\'\"\`\$\\]* ]]; then
-  echo "O valor tem aspas, cifrão ou barra invertida. Gere outro sem esses caracteres; nada mudou." >&2
+# Como o Next lê o .env.local (@next/env = dotenv + dotenv-expand, conferido no teste
+# apps/plataforma/src/lib/definir-chave.test.ts): entre aspas simples a barra invertida e as
+# aspas duplas valem como estão, mas "$NOME" e "${NOME}" seriam trocados por outra variável;
+# "\$" vira "$". Então todo "$" é gravado como "\$". Valor com aspas simples vai entre aspas
+# duplas (lá só "\n" e "\r" mudam), por isso aspas simples junto de barra invertida ou de
+# aspas duplas é recusada; e barra invertida no fim, que o leitor confundiria com aspas escapadas.
+if [[ "$VALOR" == *\'* && ( "$VALOR" == *\\* || "$VALOR" == *\"* ) ]] || [[ "$VALOR" == *\\ ]]; then
+  echo "O valor tem aspas simples junto de aspas duplas ou barra invertida, ou termina em barra invertida; este comando não grava esse caso sem risco. Peça ao Claude Code outro caminho; nada mudou." >&2
   exit 1
 fi
-# Valor com # ou espaço no meio vai entre aspas simples, para não virar comentário.
-if [[ "$VALOR" =~ ^[A-Za-z0-9_./:@?\&=+%,~-]+$ ]]; then LINHA="$NOME=$VALOR"; else LINHA="$NOME='$VALOR'"; fi
+ESCAPADO="${VALOR//\$/\\\$}"
+if [[ "$VALOR" =~ ^[A-Za-z0-9_./:@?\&=+%,~-]+$ ]]; then LINHA="$NOME=$VALOR"
+elif [[ "$VALOR" == *\'* ]]; then LINHA="$NOME=\"$ESCAPADO\""
+else LINHA="$NOME='$ESCAPADO'"; fi
 
 mkdir -p "$(dirname "$ARQUIVO")"
 [[ -f "$ARQUIVO" ]] || : > "$ARQUIVO"
@@ -62,7 +69,7 @@ printf '%s\n' "$LINHA" >> "$TEMPORARIO"
 chmod 600 "$TEMPORARIO"
 mv "$TEMPORARIO" "$ARQUIVO"
 trap - EXIT
-unset VALOR LINHA
+unset VALOR LINHA ESCAPADO
 
 echo "$NOME gravada em $ARQUIVO (valor não exibido; situação: $(situacao_de "$NOME"))."
 echo "Para valer na homologação, o Claude Code publica de novo (deploy/homologacao/publicar.sh)."
