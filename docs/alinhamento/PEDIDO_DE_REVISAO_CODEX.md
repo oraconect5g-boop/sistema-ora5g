@@ -76,3 +76,13 @@ Pedidos de conferência:
 5. Dependência nova só de desenvolvimento: `embedded-postgres@17.10.0-beta.17` e `pg@8.23.1` em `packages/banco` (`npm audit --omit=dev` sem achados).
 
 Status de requisitos: ORA-INV-002 e ORA-INV-003 voltam a **testado** (aguardando esta conferência); notas de INV-004/005/006, POS-004, QUAL-007 e CONNECT-001/003/011 atualizadas.
+
+## 08/11/2026 (noite, 2) — acesso real, cadastro de usuários e gestão da equipe (ORA-006)
+
+**Branch:** `feature/ORA-006-acesso-equipe`. Pedido do proprietário: cadastro de usuários e gestão da equipe.
+
+Pedidos de conferência:
+1. Migration `20261108202654_acesso_sessao_e_equipe.sql`: sessão por turno lida de `auth.sessions` dentro de `privado.vinculos_vigentes()` (revogação imediata), hierarquia da equipe (só o dono mexe em dono/administrador; ninguém no próprio acesso; nunca sem dono), convites e funções `identidade_*` só para `service_role`. Testes: `packages/banco/src/acesso-equipe.test.ts` e a reversão provada em `migrations.test.ts`.
+2. Aplicativo: `apps/plataforma/src/lib/acesso` (decisão de sessão; falha do serviço não vira "sem acesso"), `/escolher-loja`, `/inicio`, `/equipe` (ações só por funções do banco, motivo obrigatório, mensagens por código de catálogo), `/auth/confirmar`, `/conta/senha`, `/entrar/recuperar`, `/sair`; redirecionamentos relativos por causa do Apache.
+3. `apps/worker` e `deploy/homologacao/{publicar.sh,worker-identidade.sh}`: chave secreta só no worker; teste de publicação isolado (porta 3190, valores fictícios) mostrou o `.env.local` do web sem `SUPABASE_SECRET_KEY`/`DATABASE_URL` e o do worker completo, ambos 600.
+4. Pendências declaradas: confirmação de senha recente (ADR-002 §2.6) e prova com usuário real (#11). Convite real depende de chave, SMTP e modelos de e-mail (proprietário).

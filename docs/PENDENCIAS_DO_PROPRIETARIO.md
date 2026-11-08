@@ -111,8 +111,8 @@ Sem chave por decisão do projeto: Rein (só arquivo), PayJoy e Aiva (lançament
 | # | Onde | O quê | Quando |
 |---|---|---|---|
 | 5.1 | **cPanel** (conta `wwora5`) | Criar a caixa `nao-responda@ora5g.com.br` (remetente dos e-mails do sistema) | Antes da recuperação de senha |
-| 5.2 | **Supabase → Authentication → Emails → SMTP Settings** | Ligar o SMTP próprio com essa caixa (servidor, porta, usuário e senha **digitados por você no painel**) | Antes da recuperação de senha (o Supabase sem SMTP próprio só manda poucos e-mails por hora) |
-| 5.3 | **Supabase → Authentication → URL Configuration** | Endereço do site e endereços de retorno: **o Claude informa os valores exatos** quando a recuperação de senha estiver pronta | Junto com a recuperação de senha |
+| 5.2 | **Supabase → Authentication → Emails → SMTP Settings** | Ligar o SMTP próprio com essa caixa (servidor, porta, usuário e senha **digitados por você no painel**). Na mesma área, nos modelos **Invite user** e **Reset password**, trocar o link pelo texto da seção A1 de `docs/integracoes/APIS_E_HABILITACOES_NECESSARIAS.md` | Antes de convidar pessoas novas e do "esqueci minha senha" (sem SMTP próprio o Supabase só manda e-mail para a equipe do projeto) |
+| 5.3 | **Supabase → Authentication → URL Configuration** | **Site URL** = `https://ora5g.com.br` (a recuperação de senha e o convite já estão prontos) | Junto com o 5.2 |
 | 5.4 | **WHM/DNS** | Subdomínio `hml-app.ora5g.com.br`: registro **A** para `69.6.214.94` (sem AAAA), SSL automático e encaminhamento para `127.0.0.1:3100` (ADR-001 §4A). Depois apagar o `.htaccess` da `public_html` para o domínio principal voltar ao site | Quando quiser tirar a homologação do domínio principal |
 | 5.5 | **GitHub** | Proteger a `main` contra exclusão e push forçado (sem exigir PR, para não travar os merges combinados em 07/11) | Quando puder |
 | 5.6 | **Meta Business** | Iniciar a **verificação da empresa** (WhatsApp oficial e anúncios) | Já: a aprovação demora semanas |
