@@ -250,4 +250,25 @@ describe("duas conexões ao mesmo tempo no PostgreSQL 17", () => {
     expect(rows.map((r) => [r.situacao, Number(r.n)])).toEqual([["ativa", 1], ["expirada", 2]]);
     expect(await divergencias()).toEqual([]);
   });
+
+  it("a mesma conclusão de venda enviada duas vezes ao mesmo tempo: uma venda, um recebimento (ADR-004)", async () => {
+    const ana = await sessaoNaLoja(ids.vendedorA, ids.lojaA);
+    await abrir(a, ana);
+    await a.query("select public.abrir_caixa(0, 'conc:caixa:1')");
+    const venda = await valor<string>(a, "select public.criar_venda('conc:venda:1') as v", []);
+    await a.query("select public.adicionar_item($1, $2, null, 1, 'conc:item:1')", [venda, cat.capa]);
+    await a.query("commit");
+    const concluir = "select public.concluir_venda($1, '[{\"meio\":\"dinheiro\",\"valor\":7900}]'::jsonb, '{}'::jsonb, 'conc:concluir:1') as v";
+    await abrir(a, ana);
+    await abrir(b, ana);
+    let primeira: { numero: number } | undefined;
+    const final = await disputa(
+      async () => { primeira = await valor<{ numero: number }>(a, concluir, [venda]); },
+      () => valor<{ numero: number; repetida: boolean }>(b, concluir, [venda]),
+    );
+    expect(final).toEqual({ ok: expect.objectContaining({ numero: primeira?.numero, repetida: true }) });
+    expect(await contar("select count(*) as n from public.caixa_movimentos where venda_id = $1 and tipo = 'recebimento'", [venda])).toBe(1);
+    expect(await contar("select count(*) as n from public.estoque_movimentos where referencia_id = $1", [venda])).toBe(1);
+    expect(await divergencias()).toEqual([]);
+  });
 });

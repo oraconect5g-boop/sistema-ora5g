@@ -60,3 +60,16 @@ Não alterar produção, emitir cobrança/ativação real nem desligar a Rein co
 
 ---
 
+
+## Rodada adicional: vendas reais 371cef0 — prioridade de correção
+
+Leia [a análise de vendas/caixa](../analises/REVISAO_VENDAS_PAGAMENTOS_CAIXA_371CEF0_2026-11-08.md) e as issues #45–#53 antes de avançar ao próximo módulo. São sete novos bloqueantes e dois importantes, com 20 provas locais (3 verdes, 17 vermelhas agrupadas em nove causas). Os achados anteriores de acesso #27–#29 permanecem.
+
+1. Corrigir revogação/bloqueio no RLS da aprovação própria (#45).
+2. Conferir comprovante da entrada Pix/cartão e saldo para estorno de entrada em dinheiro (#46/#47).
+3. Alinhar financiamento ao preço/entrada/recebível e estorno ao recebido líquido (#48/#49).
+4. Separar pedido e confirmação de estorno externo (#50); separar cancelamento comercial e retorno físico conferido, sem chip usado disponível como virgem (#51). Alinhar ADR-004 ao adendo anterior.
+5. Rejeitar valores monetários inválidos sem convertê-los em zero (#52) e padronizar travas de venda/aprovação, com teste de duas conexões (#53).
+6. Reexecutar provas, transformar os casos corrigidos em regressões permanentes, manter controles de venda/reserva/caixa e homologar fluxo autenticado autorizado. Só então prosseguir com Ora Connect oficial e conciliação; prioridades e stack permanecem.
+
+Não editar migrations aplicadas nem presumir API/credencial. Há SQL real novo e PDV real, mas CI verde não equivale a piloto liberado. A demo anuncia exclusividade do dono abaixo do custo, enquanto o ADR-004 permite gerente/dono; registrar a decisão P14 e alinhar, sem inventar regra de negócio.

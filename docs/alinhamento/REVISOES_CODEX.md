@@ -180,3 +180,25 @@ A nova análise complementa as fotografias históricas anteriores; não reclassi
 
 
 
+
+## Revisão de vendas, pagamentos e caixa reais — 371cef0
+
+Seis commits e 25 caminhos após aebbdcc. [Análise completa](../analises/REVISAO_VENDAS_PAGAMENTOS_CAIXA_371CEF0_2026-11-08.md) e [fontes/resultados](../analises/evidencias/2026-11-08-vendas/LEIA-ME.md). Main local: 428 testes passaram, quatro TODO. Rodada adversarial: 20 casos, três controles passaram e 17 falharam por nove causas; não integram a suíte normal.
+
+| ID / issue | Requisito | Arquivo e linha em 371cef0 | Gravidade | Erro e correção |
+|---|---|---|---|---|
+| REV-043 / #45 | ORA-ORG-006; POS-006 | migration vendas:279 | Bloqueante — acesso | Aprovação própria ignora revogação/bloqueio. Exigir acesso vigente no ramo do solicitante |
+| REV-044 / #46 | ORA-POS-007; PAY-001 | migration:913–927 | Bloqueante — dinheiro | Entrada Pix/cartão de financeira aceita sem comprovante. Validar meio efetivo e evidência |
+| REV-045 / #47 | ORA-PAY-004/005; POS-010 | migration:1056–1062 | Bloqueante — dinheiro | Estorno da entrada deixa caixa em -20000. Validar/travar saldo em toda saída de dinheiro |
+| REV-046 / #48 | ORA-POS-013; PAY-002 | migration:923–943 | Bloqueante — dinheiro | Financiamento acima do preço usa entrada para troco, divergindo do domínio. Alinhar DEC-U38 |
+| REV-047 / #49 | ORA-POS-010; PAY-002 | migration:1053–1062 | Bloqueante — dinheiro | Retido 19900, devolvido 20000 após troco; depende do excesso aceito no #48. Estornar recebido líquido |
+| REV-048 / #50 | ORA-PAY-003/007; POS-010 | migration:1073–1079 | Bloqueante — dinheiro | Pix/cartão viram estornado sem evidência externa. Separar pendência e confirmação |
+| REV-049 / #51 | ORA-INV-003; POS-010; CONNECT-001 | migration:1047–1052 | Bloqueante — integridade | Cancelamento torna aparelho/chip disponível sem retorno físico. Conferir identidade/condição antes de liberar |
+| REV-050 / #52 | ORA-PAY-004; POS-005/006 | vender/acoes.ts:26 e :64 | Importante — validação | Valor inválido vira zero. Rejeitar inválido e distinguir vazio/zero intencional |
+| REV-051 / #53 | ORA-POS-006 | migration:692–702 e :765–788 | Importante — concorrência | Venda→aprovação versus aprovação→venda causa 40P01 em PostgreSQL 17. Unificar ordem das travas |
+
+Migration = packages/banco/supabase/migrations/20261108233546_vendas_pagamentos_e_caixa.sql. A análise detalhada liga as nove issues, delimita cada prova e orienta regressões. A prova concorrente usa locks preparatórios locais e RPCs reais autenticadas; não demonstra corrupção.
+
+Supabase só em leitura: 30 tabelas com RLS, 11 migrations, zero usuários/sessões/vendas/caixas; MD5 das duas novas migrations confere. Advisor agrupa 29 RPCs SECURITY DEFINER intencionais e 74 índices sem uso no ambiente vazio, não números automáticos de vulnerabilidades ou índices a excluir.
+
+CI 42537301660: verde no merge temporário eab4143 (d484b882 + 371cef0), 429 testes +4 TODO e 176 E2E +10 pulados. O log prova que essa execução já incluiu vendas, apesar do metadado de base anterior. Atualização da PR de revisão exige novo CI do novo head. POS-006/007 e PAY-004 voltam a parcial; nenhum requisito homologado.

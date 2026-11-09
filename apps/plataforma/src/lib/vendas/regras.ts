@@ -1,0 +1,76 @@
+// Regras puras das telas de venda e caixa (ADR-004). O banco decide tudo de novo; aqui só se lê
+// o formulário e se escolhe a mensagem. Mensagem só por código de catálogo (o endereço não injeta texto).
+import { lerReais, MEIOS, type MeioPagamento } from "@ora5g/dominio";
+
+export const ERROS_DA_VENDA = {
+  sem_estoque: "Não há quantidade suficiente nesta loja.",
+  indisponivel: "Este aparelho ou chip não está disponível (já reservado, vendido ou com a reserva vencida). Tire e coloque de novo.",
+  outra_loja: "Este IMEI/ICCID é de outra loja.",
+  chave: "Essa ação já foi feita com outro conteúdo. Recarregue a tela.",
+  preco_mudou: "O preço de um item mudou. Tire e coloque o item de novo para ver o preço novo.",
+  sem_caixa: "Abra o seu caixa antes de concluir a venda.",
+  pagamento: "O pagamento não confere: some os valores, informe o comprovante de cartão e Pix e o e-mail na PayJoy.",
+  aprovacao: "Há desconto sem aprovação válida. Peça a aprovação ou tire o desconto.",
+  sem_permissao: "Você não tem permissão para isso.",
+  nao_encontrado: "Não encontrado (talvez já tenha sido alterado).",
+  dados: "Confira os dados digitados.",
+  ja_aberto: "Você já tem um caixa aberto nesta loja.",
+  limite: "O valor passa do que há no caixa ou deixa o estoque negativo.",
+  valor: "Valor em reais inválido. Use, por exemplo, 1.299,90.",
+  motivo: "Informe o motivo (fica na auditoria).",
+  falha: "Não foi possível concluir agora. Tente de novo em instantes.",
+} as const;
+export type ErroDaVenda = keyof typeof ERROS_DA_VENDA;
+
+const DO_BANCO: Record<string, ErroDaVenda> = {
+  OR001: "sem_estoque", OR002: "indisponivel", OR003: "outra_loja", OR004: "chave", OR005: "indisponivel", OR007: "preco_mudou",
+  OR008: "sem_caixa", OR009: "pagamento", OR010: "aprovacao", "42501": "sem_permissao", P0002: "nao_encontrado",
+  "22023": "dados", "23505": "ja_aberto", "23514": "limite",
+};
+export function erroDaVenda(erro: { code?: string } | null | undefined): ErroDaVenda {
+  const codigo = erro?.code;
+  return codigo && Object.hasOwn(DO_BANCO, codigo) ? (DO_BANCO[codigo] as ErroDaVenda) : "falha";
+}
+
+export const ehMeio = (valor: unknown): valor is MeioPagamento => typeof valor === "string" && Object.hasOwn(MEIOS, valor);
+
+export function lerValor(texto: unknown): number | null {
+  if (typeof texto !== "string" || texto.trim() === "") return null;
+  try {
+    return lerReais(texto);
+  } catch {
+    return null;
+  }
+}
+
+export type LinhaDePagamento = { meio: MeioPagamento; valor: number; entrada?: number; meio_entrada?: MeioPagamento; comprovante?: string };
+
+// Lê até N linhas do formulário (pagamento_1_meio, pagamento_1_valor...); linha sem valor é ignorada.
+export function lerPagamentos(dados: { get: (nome: string) => unknown }, linhas = 3): { ok: true; pagamentos: LinhaDePagamento[] } | { ok: false; erro: ErroDaVenda } {
+  const pagamentos: LinhaDePagamento[] = [];
+  for (let i = 1; i <= linhas; i++) {
+    const bruto = dados.get(`pagamento_${i}_valor`);
+    if (typeof bruto !== "string" || bruto.trim() === "") continue;
+    const meio = dados.get(`pagamento_${i}_meio`);
+    const valor = lerValor(bruto);
+    if (!ehMeio(meio) || valor === null || valor <= 0) return { ok: false, erro: valor === null ? "valor" : "pagamento" };
+    const linha: LinhaDePagamento = { meio, valor };
+    const comprovante = dados.get(`pagamento_${i}_comprovante`);
+    if (typeof comprovante === "string" && comprovante.trim()) linha.comprovante = comprovante.trim().slice(0, 60);
+    if (MEIOS[meio].financeira) {
+      const entradaBruta = dados.get(`pagamento_${i}_entrada`);
+      const entrada = typeof entradaBruta === "string" && entradaBruta.trim() ? lerValor(entradaBruta) : 0;
+      if (entrada === null) return { ok: false, erro: "valor" };
+      if (entrada > 0) {
+        linha.entrada = entrada;
+        const meioEntrada = dados.get(`pagamento_${i}_meio_entrada`);
+        linha.meio_entrada = ehMeio(meioEntrada) && !MEIOS[meioEntrada].financeira ? meioEntrada : "dinheiro";
+      }
+    }
+    pagamentos.push(linha);
+  }
+  return pagamentos.length ? { ok: true, pagamentos } : { ok: false, erro: "pagamento" };
+}
+
+// IMEI tem 15 dígitos; ICCID, 19 ou 20. Busca por número leva direto ao item.
+export const pareceIdentificador = (texto: string) => /^\d{14,20}$/.test(texto.replace(/\D/g, "")) && texto.replace(/\D/g, "").length === texto.trim().length;
