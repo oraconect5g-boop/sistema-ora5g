@@ -79,7 +79,7 @@ As correções valem só para a demonstração (`/demo`). As telas reais já seg
 
 | ID | Reprodução atual | Estado | Próximo passo |
 |---|---|---|---|
-| #44 | `npm audit --omit=dev`: 0 vulnerabilidades no CI | a conferir na cadeia de desenvolvimento | Atualizar de forma compatível, sem downgrade automático |
+| #44 | Produção (`npm audit --omit=dev`): 0. Desenvolvimento: 8 moderadas, todas de `minimatch` 10.2.6 (GHSA-g3hv-75wg-m249, faixa ≥7.0.0 <11.0.1) via `typescript-eslint` ← `eslint-config-next`. Conferido em 09/11: a versão mais nova do `@typescript-eslint/typescript-estree` (8.72.2) ainda pede `minimatch ^10.2.2` | **bloqueio externo** (sem atualização compatível) | Não aplicar o "fix" do npm (downgrade de versão maior do `eslint-config-next` para 15.5.29) nem forçar `minimatch` 11 contra a faixa declarada. Risco só no lint dos arquivos do próprio repositório. Reconferir quando o `typescript-eslint` publicar a dependência corrigida |
 | #54 | Três operações (ativação, recarga, portabilidade) no adaptador; cobrança, carteira, recorrência e repasse sem contrato confirmado | **parcial** / bloqueio externo nas partes sem contrato | Partes com contrato documentado primeiro |
 | #60 | Pedido interno e DEFEITOS: **implementados** em desenvolvimento (ADR-007, branch `feature/ORA-transferencias-defeitos-lote5`, migration `20261109193043`), com o painel "onde tem" e a tela de transferências | **parcial**: falta o cadastro real das 11 lojas e do DEFEITOS (linha B2) e a conciliação dos totais da imagem | Homologar com as lojas de origem e destino |
 | #26 | Fotos obrigatórias, busca na fonte e painel da rede prontos | **parcial** | Pendências de foto da importação Rein, quando chegar o arquivo |
@@ -93,9 +93,9 @@ Estão na seção 0 de [`docs/PENDENCIAS_DO_PROPRIETARIO.md`](../PENDENCIAS_DO_P
 
 | Lote | Branch | Situação |
 |---|---|---|
-| 1 | `fix/ORA-acesso-configuracao-lote1` | Corrigido e testado em desenvolvimento, aguardando o Codex. CI e merge registrados em [PEDIDO_DE_REVISAO_CODEX.md](PEDIDO_DE_REVISAO_CODEX.md) |
-| 2 | `fix/ORA-integridade-lote2` | Corrigido e testado em desenvolvimento, aguardando o Codex. Migrations `20261109190240` e `20261109190400` aplicadas no `ora5g-dev` |
-| 3 | `fix/ORA-busca-csv-fotos-lote3` | Corrigido e testado em desenvolvimento, aguardando o Codex. Migration `20261109191416` aplicada no `ora5g-dev` |
-| 4 | `fix/ORA-demo-lote4` | Corrigido na demonstração, aguardando o Codex |
-| 5 | `feature/ORA-transferencias-defeitos-lote5` | #60 (ADR-007): pedido interno de transferência, DEFEITOS e "onde tem", testado em desenvolvimento, aguardando o Codex |
+| 1 | `fix/ORA-acesso-configuracao-lote1` | Integrado na main (`b967870`), aguardando o Codex |
+| 2 | `fix/ORA-integridade-lote2` | Integrado na main (`c071968`), aguardando o Codex. Migrations `20261109190240` e `20261109190400` aplicadas no `ora5g-dev` |
+| 3 | `fix/ORA-busca-csv-fotos-lote3` | Integrado na main (`596b046`), aguardando o Codex. Migration `20261109191416` aplicada no `ora5g-dev` |
+| 4 | `fix/ORA-demo-lote4` | Integrado na main (`11e4e48`), aguardando o Codex |
+| 5 | `feature/ORA-transferencias-defeitos-lote5` | #60 (ADR-007): pedido interno de transferência, DEFEITOS e "onde tem", integrado na main (`1f55af9`), aguardando o Codex |
 | 6 (próximo) | — | #54 nas partes com contrato documentado, #44 e cadastro das 11 lojas quando chegar a linha B2 |
