@@ -121,7 +121,8 @@ export function mixPorCategoria(vendas: readonly VendaDemo[]) {
 /** Aprovações visíveis: gerente da loja; dono da rede (ou loja). Ninguém aprova o próprio pedido. */
 export function aprovacoesVisiveis(escopo: Escopo) {
   if (escopo.perfil !== "gerente" && escopo.perfil !== "dono") return [];
-  return APROVACOES.filter((a) => naLoja(escopo, a.venda.loja));
+  // Quem pediu não entra na própria fila de aprovação (REV-034, #36), como no banco real.
+  return APROVACOES.filter((a) => naLoja(escopo, a.venda.loja) && a.venda.vendedor !== escopo.pessoaId);
 }
 
 export function estoqueVisivel(escopo: Escopo) {

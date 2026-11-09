@@ -37,6 +37,9 @@ export default async function Relatorios({ searchParams }: { searchParams: Promi
   const anteriores = historico.slice(Math.max(0, 30 - (n - 1) - n), 30 - (n - 1));
   const atual = somar(dias);
   const antes = somar(anteriores);
+  // Comparação só com período anterior COMPLETO (REV-035, #37): 30 dias contra 1 dia inventava +2900%.
+  const comparavel = anteriores.length === n;
+  const variacaoDe = (agora: number, antes_: number, referencia: string) => (comparavel ? { fracao: variacaoEntre(agora, antes_), referencia } : undefined);
   const rotulos = dias.map((_, i) => (i === dias.length - 1 ? "Hoje" : diaMes(diasAntes(hoje, dias.length - 1 - i))));
   const metaDia = lojasVisiveis(contexto).reduce((s, l) => s + l.metaDia, 0);
   const cada = n > 14 ? 5 : n > 7 ? 2 : 1;
@@ -65,9 +68,9 @@ export default async function Relatorios({ searchParams }: { searchParams: Promi
       <FiltroSegmentado rotulo="Período" opcoes={(Object.keys(PERIODOS) as Periodo[]).map((p) => ({ href: p === "14" ? "/demo/relatorios" : `/demo/relatorios?periodo=${p}`, rotulo: `Últimos ${PERIODOS[p]}`, ativo: p === periodo }))} />
 
       <div className="mt-4 grid grid-cols-2 gap-3 sm:gap-4 xl:grid-cols-5">
-        <Indicador rotulo="Faturamento" valor={brlCompacto(atual.faturamento)} icone={Coins} variacao={{ fracao: variacaoEntre(atual.faturamento, antes.faturamento), referencia: `vs. ${PERIODOS[periodo]} antes` }} />
-        <Indicador rotulo="Vendas" valor={numero(atual.vendas)} icone={ShoppingBag} variacao={{ fracao: variacaoEntre(atual.vendas, antes.vendas), referencia: "vs. antes" }} />
-        <Indicador rotulo="Ticket médio" valor={brl(atual.vendas > 0 ? atual.faturamento / atual.vendas : 0)} icone={Receipt} variacao={{ fracao: variacaoEntre(atual.vendas > 0 ? atual.faturamento / atual.vendas : 0, antes.vendas > 0 ? antes.faturamento / antes.vendas : 0), referencia: "vs. antes" }} />
+        <Indicador rotulo="Faturamento" valor={brlCompacto(atual.faturamento)} icone={Coins} variacao={variacaoDe(atual.faturamento, antes.faturamento, `vs. ${PERIODOS[periodo]} antes`)} />
+        <Indicador rotulo="Vendas" valor={numero(atual.vendas)} icone={ShoppingBag} variacao={variacaoDe(atual.vendas, antes.vendas, "vs. antes")} />
+        <Indicador rotulo="Ticket médio" valor={brl(atual.vendas > 0 ? atual.faturamento / atual.vendas : 0)} icone={Receipt} variacao={variacaoDe(atual.vendas > 0 ? atual.faturamento / atual.vendas : 0, antes.vendas > 0 ? antes.faturamento / antes.vendas : 0, "vs. antes")} />
         <Indicador rotulo="Margem bruta" valor={percentual(margem(atual))} icone={Percent} detalhe={`Antes: ${percentual(margem(antes))}`} />
         <Indicador rotulo="Descontos" valor={percentual(atual.faturamento > 0 ? atual.descontos / atual.faturamento : 0)} icone={BadgePercent} detalhe={`${brlCompacto(atual.descontos)} do faturamento`} className="col-span-2 xl:col-span-1" />
       </div>
