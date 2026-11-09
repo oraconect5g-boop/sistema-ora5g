@@ -30,23 +30,25 @@ Legenda do estado: **corrigido** (com prova nesta rodada) · **reproduzido** (o 
 
 Migration do lote: `20261109150526_correcoes_acesso_lote1.sql`, aplicada no `ora5g-dev`. A md5 registrada (`0db66893…`) confere com o arquivo, e a reversão foi ensaiada pelo teste de reversão. Os tipos foram gerados de novo.
 
-### Lote 2 — dinheiro, estoque e Ora Connect (reproduzidos agora na main atual)
+### Lote 2 — dinheiro, estoque e Ora Connect (branch `fix/ORA-integridade-lote2`, commit `163c44b`)
 
-| ID | Regra | SHA auditado | Reprodução atual (main d730e9a + Lote 1) | Estado | Correção / aceite |
-|---|---|---|---|---|---|
-| #46 / REV-044 | Entrada Pix/cartão de financiamento exige comprovante | 371cef0 | 4 de 4 meios concluem sem comprovante | **reproduzido** | Exigir o comprovante do meio efetivo da entrada (banco e domínio) |
-| #47 / REV-045 | Estorno de entrada em dinheiro não deixa o caixa negativo | 371cef0 | Saldo do caixa **−R$ 200,00** | **reproduzido** | Travar o caixa e conferir o saldo para toda saída em dinheiro |
-| #48 / REV-046 | Financiamento não gera troco; banco e domínio iguais | 371cef0 | Banco conclui com troco 100; domínio recusa | **reproduzido** | Troco só de linha em dinheiro, também no banco; vetores comuns SQL × TS |
-| #49 / REV-047 | Estorno devolve o recebido líquido | 371cef0 | Devolve 20000, sendo que o retido foi 19900 | **reproduzido** | Distribuir o troco por todo o dinheiro recebido |
-| #50 / REV-048 | Pix/cartão: estorno pedido ≠ estorno confirmado | 371cef0 | Pix e cartão viram `estornado` sem prova | **reproduzido** | Estado `estorno_pendente`, confirmação com comprovante e autor auditados, inclusive na devolução parcial |
-| #51 / REV-049 | Cancelamento comercial não repõe estoque sem conferência física | 371cef0 | Aparelho e chip voltam `disponivel` | **reproduzido** | Retorno físico pendente; recebimento conferido (identidade e condição); chip ativado nunca volta como virgem |
-| #52 / REV-050 | Valor inválido não vira zero | 371cef0 | `abc`, `-1` e desconto ilegível chegam à RPC como 0 | **reproduzido** | Recusar na ação, com mensagem e sem chamar a RPC |
-| #53 / REV-051 | Mesma ordem de travas em venda e aprovação | 371cef0 | **40P01** com duas conexões | **reproduzido** | Venda antes da aprovação em todas as funções; regressão com duas conexões |
-| #34 / REV-032 | Repetição da chave confere o conteúdo inteiro | aebbdcc | Variante nula aceita; condição e série ignoradas | **reproduzido** | Conteúdo completo, com `is distinct from` |
-| #35 / REV-033 | Um ICCID por chip físico | aebbdcc | Domínio aceita chip com quantidade 2 e um ICCID | **reproduzido** | Item serializado com quantidade 1 (domínio e banco) |
-| #57 / REV-054 | LINK não cobra de novo um serviço pago no caixa | 9b1109e | Aceito | **reproduzido** | Recusar LINK para item de venda com pagamento confirmado |
-| #58 / REV-055 | A chave da ativação inclui o titular, com privacidade | 9b1109e | Mesma chave com outro titular devolve a operação antiga | **reproduzido** | Resumo (hash) do titular na conferência, sem guardar o dado aberto |
-| #59 / REV-056 | Uma evidência não confirma duas recargas | 9b1109e | 2 produções de 1 evento oficial | **reproduzido** | Evidência ambígua não confirma; evidência usada fica presa a uma operação |
+Antes da correção, todos se reproduziam na main `d730e9a` mais o Lote 1 (`~/ci/repro-d730e9a-1210.txt`). Depois da correção, as provas da PR #33 foram rodadas de novo no `163c44b` (`~/ci/repro-163c44b-1606.txt`). Nas provas de vendas e da Nogle, os casos que agora dão erro aparecem como 25P02: o savepoint da prova fica fora da troca de papel e o erro real é mascarado. Por isso elas rodaram também com **só o harness adaptado**, com o savepoint dentro da sessão e nenhuma asserção mudada (`~/ci/repro-163c44b-adaptada.txt`).
+
+| ID | Regra | SHA auditado | Antes (d730e9a) | Depois (163c44b) | Estado | Regressão permanente |
+|---|---|---|---|---|---|---|
+| #46 / REV-044 | Entrada Pix/cartão de financiamento exige comprovante | 371cef0 | 4 de 4 concluíam | 4 de 4 dão **OR009** | **corrigido** | `integridade-lote2.test.ts`; `regras.test.ts` (tela) |
+| #47 / REV-045 | Estorno de entrada em dinheiro não deixa o caixa negativo | 371cef0 | saldo −R$ 200,00 | **23514**, saldo 0 | **corrigido** | caixa com 1 centavo a menos recusa e nada muda |
+| #48 / REV-046 | Financiamento não gera troco; banco = domínio | 371cef0 | banco aceitava | banco **OR009** = domínio inválido | **corrigido** | 7 vetores comuns SQL × TypeScript |
+| #49 / REV-047 | Estorno devolve o recebido líquido | 371cef0 | devolvia 20000 de 19900 retidos | o cenário da prova não se monta mais (a venda com financiamento acima do preço é recusada pelo #48) | **corrigido** | cenário válido: troco de linha em dinheiro e entrada em dinheiro; devolve exatamente o retido (29.900) |
+| #50 / REV-048 | Pix/cartão: estorno pedido ≠ confirmado | 371cef0 | `estornado` com data | `estorno_pendente`, sem data | **corrigido** | confirmação só com comprovante, com autor; UPDATE e DELETE diretos recusados; financiada; devolução parcial |
+| #51 / REV-049 | Cancelamento não repõe estoque sem conferência | 371cef0 | aparelho e chip `disponivel` | `vendido`, fora do estoque | **corrigido** | retorno conferido por IMEI/ICCID e condição; "não voltou"; chip com ativação viva (OR013) |
+| #52 / REV-050 | Valor inválido não vira zero | 371cef0 | 3 de 3 chegavam como 0 | prova 4 de 4 verde (nenhuma RPC) | **corrigido** | `valores-invalidos.test.ts` (vazio também é recusado) |
+| #53 / REV-051 | Mesma ordem de travas venda/aprovação | 371cef0 | 40P01 | a prova continua dando 40P01: ela trava a APROVAÇÃO à mão antes de chamar a função, simulando a ordem antiga que a função não usa mais | **corrigido** | `concorrencia.test.ts`: as duas ordens reais (cada função trava primeiro a venda), sem 40P01 |
+| #34 / REV-032 | Repetição confere o conteúdo inteiro | aebbdcc | 3 casos aceitos | prova 9 de 9 verde | **corrigido** | `integridade-lote2.test.ts` |
+| #35 / REV-033 | Um ICCID por chip | aebbdcc | aceito | prova 22 de 22 verde | **corrigido** | `venda.test.ts` |
+| #57 / REV-054 | LINK não cobra serviço pago no caixa | 9b1109e | aceito | **22023** | **corrigido** | `connect-lote2.test.ts`; regra da tela |
+| #58 / REV-055 | Chave confere o titular, com privacidade | 9b1109e | devolvia a operação antiga | **OR004** | **corrigido** | também depois do descarte do pedido; normalização; segredo ilegível |
+| #59 / REV-056 | Uma evidência confirma uma recarga só | 9b1109e | 2 produções | **0** produções (conferência da gerência) | **corrigido** | o controle da prova confirma sem as datas da recarga, o que agora não confirma de propósito; com a evidência completa, como o worker envia, conta uma vez |
 
 ### Demais achados abertos
 
@@ -72,4 +74,5 @@ Estão na seção 0 de [`docs/PENDENCIAS_DO_PROPRIETARIO.md`](../PENDENCIAS_DO_P
 | Lote | Branch | Situação |
 |---|---|---|
 | 1 | `fix/ORA-acesso-configuracao-lote1` | Corrigido e testado em desenvolvimento, aguardando o Codex. CI e merge registrados em [PEDIDO_DE_REVISAO_CODEX.md](PEDIDO_DE_REVISAO_CODEX.md) |
-| 2 | `fix/ORA-integridade-lote2` | Em execução nesta mesma rodada |
+| 2 | `fix/ORA-integridade-lote2` | Corrigido e testado em desenvolvimento, aguardando o Codex. Migrations `20261109190240` e `20261109190400` aplicadas no `ora5g-dev` |
+| 3 (próximo) | — | #38 (CSV com fórmula, componente real), #40/#42 (busca e foto), #31/#32/#36/#37 (demo), depois #26/#60 (estoque visual, transferências, DEFEITOS) e #54 |
