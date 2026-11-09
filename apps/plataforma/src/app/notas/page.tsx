@@ -38,7 +38,7 @@ export default async function Notas({ searchParams }: { searchParams: Promise<{ 
     supabase.rpc("tem_permissao", { p_permissao: "nota.aprovar", p_unidade: unidade }),
     supabase.rpc("tem_permissao", { p_permissao: "unidades.gerir", p_unidade: unidade }),
     supabase.from("fiscal_politicas").select("alerta_minutos, fonte").maybeSingle(),
-    supabase.from("notas_pedidos").select("id, numero, venda_id, situacao, venda_concluida_em, destinatario_nome, destinatario_mascarado, observacao")
+    supabase.from("notas_pedidos").select("id, numero, venda_id, tipo, situacao, venda_concluida_em, destinatario_nome, destinatario_mascarado, observacao")
       .eq("unidade_id", unidade).in("situacao", ["aguardando_aprovacao", "correcao_solicitada", "aprovada"]).order("venda_concluida_em").limit(50),
     supabase.from("notas_pedidos").select("id, numero, venda_id, chave_acesso, modelo, serie, numero_documento, emitida_em")
       .eq("unidade_id", unidade).eq("situacao", "emitida").order("emitida_em", { ascending: false }).limit(20),
@@ -80,7 +80,7 @@ export default async function Notas({ searchParams }: { searchParams: Promise<{ 
             {fila.map((p) => (
               <li key={p.id} className="space-y-2 py-3 text-sm">
                 <div className="flex flex-wrap items-center justify-between gap-2">
-                  <Link href={`/vendas/${p.venda_id}`} className="font-semibold text-acao">Venda nº {p.venda?.numero ?? "—"} · {brl(centavosDoBanco(p.venda?.total_centavos ?? 0))}</Link>
+                  <Link href={`/vendas/${p.venda_id}`} className="font-semibold text-acao">{p.tipo === "devolucao" ? "Nota de devolução · venda" : "Venda"} nº {p.venda?.numero ?? "—"}{p.tipo === "devolucao" ? "" : ` · ${brl(centavosDoBanco(p.venda?.total_centavos ?? 0))}`}</Link>
                   <span className="flex items-center gap-2">
                     <Selo tom={p.atrasada ? "perigo" : "neutro"}>{haQuanto(p.minutos)}</Selo>
                     <Selo tom={p.situacao === "aprovada" ? "sucesso" : p.situacao === "correcao_solicitada" ? "aviso" : "info"} ponto>{ehSituacao(p.situacao) ? SITUACOES_DA_NOTA[p.situacao] : p.situacao}</Selo>

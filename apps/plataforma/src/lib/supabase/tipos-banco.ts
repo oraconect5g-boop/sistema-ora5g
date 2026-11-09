@@ -1,5 +1,5 @@
 // ARQUIVO GERADO pelo Supabase (generate_typescript_types do projeto ora5g-dev) depois da
-// migration 20261109123757_fila_fiscal. Não edite à mão: gere de novo a cada
+// migration 20261109134507_devolucao_e_troca. Não edite à mão: gere de novo a cada
 // migration aplicada (auditoria do Codex de 08/11, §7.2). O teste tipos-banco.test.ts confere
 // que funções e tabelas públicas daqui são as mesmas das migrations.
 export type Json =
@@ -1452,6 +1452,7 @@ export type Database = {
           criado_em: string
           destinatario_mascarado: string | null
           destinatario_nome: string | null
+          devolucao_id: string | null
           emitida_em: string | null
           emitida_por: string | null
           id: string
@@ -1465,6 +1466,7 @@ export type Database = {
           serie: number | null
           situacao: string
           solicitado_por: string
+          tipo: string
           unidade_id: string
           venda_concluida_em: string
           venda_id: string
@@ -1478,6 +1480,7 @@ export type Database = {
           criado_em?: string
           destinatario_mascarado?: string | null
           destinatario_nome?: string | null
+          devolucao_id?: string | null
           emitida_em?: string | null
           emitida_por?: string | null
           id?: string
@@ -1491,6 +1494,7 @@ export type Database = {
           serie?: number | null
           situacao?: string
           solicitado_por: string
+          tipo?: string
           unidade_id: string
           venda_concluida_em: string
           venda_id: string
@@ -1504,6 +1508,7 @@ export type Database = {
           criado_em?: string
           destinatario_mascarado?: string | null
           destinatario_nome?: string | null
+          devolucao_id?: string | null
           emitida_em?: string | null
           emitida_por?: string | null
           id?: string
@@ -1517,6 +1522,7 @@ export type Database = {
           serie?: number | null
           situacao?: string
           solicitado_por?: string
+          tipo?: string
           unidade_id?: string
           venda_concluida_em?: string
           venda_id?: string
@@ -1527,6 +1533,13 @@ export type Database = {
             columns: ["aprovado_por"]
             isOneToOne: false
             referencedRelation: "perfis_usuario"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "notas_pedidos_devolucao_id_fkey"
+            columns: ["devolucao_id"]
+            isOneToOne: false
+            referencedRelation: "venda_devolucoes"
             referencedColumns: ["id"]
           },
           {
@@ -1873,6 +1886,109 @@ export type Database = {
           },
         ]
       }
+      vales_troca: {
+        Row: {
+          cliente_nome: string | null
+          criado_em: string
+          devolucao_id: string
+          id: string
+          numero: number
+          organizacao_id: string
+          saldo_centavos: number
+          unidade_id: string
+          valor_centavos: number
+        }
+        Insert: {
+          cliente_nome?: string | null
+          criado_em?: string
+          devolucao_id: string
+          id?: string
+          numero?: never
+          organizacao_id: string
+          saldo_centavos: number
+          unidade_id: string
+          valor_centavos: number
+        }
+        Update: {
+          cliente_nome?: string | null
+          criado_em?: string
+          devolucao_id?: string
+          id?: string
+          numero?: never
+          organizacao_id?: string
+          saldo_centavos?: number
+          unidade_id?: string
+          valor_centavos?: number
+        }
+        Relationships: [
+          {
+            foreignKeyName: "vales_troca_devolucao_id_fkey"
+            columns: ["devolucao_id"]
+            isOneToOne: true
+            referencedRelation: "venda_devolucoes"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "vales_troca_unidade_id_organizacao_id_fkey"
+            columns: ["unidade_id", "organizacao_id"]
+            isOneToOne: false
+            referencedRelation: "unidades"
+            referencedColumns: ["id", "organizacao_id"]
+          },
+        ]
+      }
+      vales_troca_usos: {
+        Row: {
+          devolvido_em: string | null
+          id: number
+          pagamento_id: string
+          usado_em: string
+          vale_id: string
+          valor_centavos: number
+          venda_id: string
+        }
+        Insert: {
+          devolvido_em?: string | null
+          id?: never
+          pagamento_id: string
+          usado_em?: string
+          vale_id: string
+          valor_centavos: number
+          venda_id: string
+        }
+        Update: {
+          devolvido_em?: string | null
+          id?: never
+          pagamento_id?: string
+          usado_em?: string
+          vale_id?: string
+          valor_centavos?: number
+          venda_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "vales_troca_usos_pagamento_id_fkey"
+            columns: ["pagamento_id"]
+            isOneToOne: true
+            referencedRelation: "venda_pagamentos"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "vales_troca_usos_vale_id_fkey"
+            columns: ["vale_id"]
+            isOneToOne: false
+            referencedRelation: "vales_troca"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "vales_troca_usos_venda_id_fkey"
+            columns: ["venda_id"]
+            isOneToOne: false
+            referencedRelation: "vendas"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       variantes: {
         Row: {
           ativa: boolean
@@ -1920,6 +2036,151 @@ export type Database = {
             isOneToOne: false
             referencedRelation: "produtos"
             referencedColumns: ["id", "organizacao_id"]
+          },
+        ]
+      }
+      venda_devolucao_itens: {
+        Row: {
+          condicao: string | null
+          devolucao_id: string
+          id: number
+          quantidade: number
+          valor_centavos: number
+          venda_item_id: string
+        }
+        Insert: {
+          condicao?: string | null
+          devolucao_id: string
+          id?: never
+          quantidade: number
+          valor_centavos: number
+          venda_item_id: string
+        }
+        Update: {
+          condicao?: string | null
+          devolucao_id?: string
+          id?: never
+          quantidade?: number
+          valor_centavos?: number
+          venda_item_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "venda_devolucao_itens_devolucao_id_fkey"
+            columns: ["devolucao_id"]
+            isOneToOne: false
+            referencedRelation: "venda_devolucoes"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "venda_devolucao_itens_venda_item_id_fkey"
+            columns: ["venda_item_id"]
+            isOneToOne: false
+            referencedRelation: "venda_itens"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      venda_devolucao_reembolsos: {
+        Row: {
+          devolucao_id: string
+          id: number
+          meio: string
+          valor_centavos: number
+        }
+        Insert: {
+          devolucao_id: string
+          id?: never
+          meio: string
+          valor_centavos: number
+        }
+        Update: {
+          devolucao_id?: string
+          id?: never
+          meio?: string
+          valor_centavos?: number
+        }
+        Relationships: [
+          {
+            foreignKeyName: "venda_devolucao_reembolsos_devolucao_id_fkey"
+            columns: ["devolucao_id"]
+            isOneToOne: false
+            referencedRelation: "venda_devolucoes"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      venda_devolucoes: {
+        Row: {
+          caixa_id: string | null
+          chave: string
+          conteudo: string
+          criado_em: string
+          criado_por: string
+          id: string
+          motivo: string
+          numero: number
+          organizacao_id: string
+          unidade_id: string
+          valor_centavos: number
+          venda_id: string
+        }
+        Insert: {
+          caixa_id?: string | null
+          chave: string
+          conteudo: string
+          criado_em?: string
+          criado_por: string
+          id?: string
+          motivo: string
+          numero?: never
+          organizacao_id: string
+          unidade_id: string
+          valor_centavos: number
+          venda_id: string
+        }
+        Update: {
+          caixa_id?: string | null
+          chave?: string
+          conteudo?: string
+          criado_em?: string
+          criado_por?: string
+          id?: string
+          motivo?: string
+          numero?: never
+          organizacao_id?: string
+          unidade_id?: string
+          valor_centavos?: number
+          venda_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "venda_devolucoes_caixa_id_fkey"
+            columns: ["caixa_id"]
+            isOneToOne: false
+            referencedRelation: "caixas"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "venda_devolucoes_criado_por_fkey"
+            columns: ["criado_por"]
+            isOneToOne: false
+            referencedRelation: "perfis_usuario"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "venda_devolucoes_unidade_id_organizacao_id_fkey"
+            columns: ["unidade_id", "organizacao_id"]
+            isOneToOne: false
+            referencedRelation: "unidades"
+            referencedColumns: ["id", "organizacao_id"]
+          },
+          {
+            foreignKeyName: "venda_devolucoes_venda_id_fkey"
+            columns: ["venda_id"]
+            isOneToOne: false
+            referencedRelation: "vendas"
+            referencedColumns: ["id"]
           },
         ]
       }
@@ -2107,6 +2368,7 @@ export type Database = {
           conteudo_conclusao: string | null
           criado_em: string
           desconto_centavos: number | null
+          devolvido_centavos: number
           id: string
           motivo_cancelamento: string | null
           numero: number
@@ -2133,6 +2395,7 @@ export type Database = {
           conteudo_conclusao?: string | null
           criado_em?: string
           desconto_centavos?: number | null
+          devolvido_centavos?: number
           id?: string
           motivo_cancelamento?: string | null
           numero?: never
@@ -2159,6 +2422,7 @@ export type Database = {
           conteudo_conclusao?: string | null
           criado_em?: string
           desconto_centavos?: number | null
+          devolvido_centavos?: number
           id?: string
           motivo_cancelamento?: string | null
           numero?: never
@@ -2404,6 +2668,16 @@ export type Database = {
       decidir_aprovacao: {
         Args: { p_aprovacao: string; p_aprovar: boolean; p_observacao: string }
         Returns: boolean
+      }
+      devolver_itens: {
+        Args: {
+          p_chave: string
+          p_itens: Json
+          p_motivo: string
+          p_reembolsos: Json
+          p_venda: string
+        }
+        Returns: Json
       }
       disponibilidade_na_rede: {
         Args: { p_variante: string }

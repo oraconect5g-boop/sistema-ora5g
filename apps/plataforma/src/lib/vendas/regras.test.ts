@@ -1,6 +1,6 @@
 import { describe, expect, it } from "vitest";
 
-import { erroDaVenda, lerPagamentos, lerValor, pareceIdentificador } from "./regras";
+import { erroDaVenda, lerDevolucao, lerPagamentos, lerValor, pareceIdentificador } from "./regras";
 
 const formulario = (campos: Record<string, string>) => ({ get: (nome: string) => campos[nome] ?? null });
 
@@ -41,5 +41,31 @@ describe("erros e busca", () => {
     expect(lerValor("abc")).toBeNull();
     expect(pareceIdentificador("352099001800010")).toBe(true);
     expect(pareceIdentificador("Galaxy 15")).toBe(false);
+  });
+});
+
+describe("vale-troca e devolução (adendo do ADR-004)", () => {
+  const formulario = (campos: Record<string, string>) => ({ get: (nome: string) => campos[nome] ?? null });
+
+  it("vale-troca: o número do vale vem do comprovante, normalizado; sem número não sai; entrada nunca é vale", () => {
+    expect(lerPagamentos(formulario({ pagamento_1_meio: "vale_troca", pagamento_1_valor: "79,00", pagamento_1_comprovante: "vale 0012" })))
+      .toEqual({ ok: true, pagamentos: [{ meio: "vale_troca", valor: 7_900, comprovante: "VT-12" }] });
+    expect(lerPagamentos(formulario({ pagamento_1_meio: "vale_troca", pagamento_1_valor: "79,00" }))).toEqual({ ok: false, erro: "vale_numero" });
+    const financiado = lerPagamentos(formulario({ pagamento_1_meio: "aiva", pagamento_1_valor: "1000,00", pagamento_1_entrada: "100,00", pagamento_1_meio_entrada: "vale_troca" }));
+    expect(financiado.ok && financiado.pagamentos[0]?.meio_entrada).toBe("dinheiro");
+    expect(erroDaVenda({ code: "OR018" })).toBe("vale");
+    expect(erroDaVenda({ code: "OR017" })).toBe("com_devolucao");
+    expect(erroDaVenda({ code: "OR016" })).toBe("financiada");
+  });
+
+  it("devolução: quantidade até o que resta, condição nos itens físicos, reembolso em até 3 meios (vale incluso)", () => {
+    const itens = [{ id: "a", restante: 1, fisico: true }, { id: "b", restante: 3, fisico: false }];
+    expect(lerDevolucao(formulario({ devolver_a: "1", condicao_a: "seminovo", devolver_b: "2", reembolso_1_meio: "dinheiro", reembolso_1_valor: "10,00", reembolso_2_meio: "vale_troca", reembolso_2_valor: "5,00" }), itens))
+      .toEqual({ ok: true, pedido: { itens: [{ item: "a", quantidade: 1, condicao: "seminovo" }, { item: "b", quantidade: 2 }], reembolsos: [{ meio: "dinheiro", valor: 1_000 }, { meio: "vale_troca", valor: 500 }] } });
+    expect(lerDevolucao(formulario({ devolver_a: "2", condicao_a: "novo", reembolso_1_meio: "dinheiro", reembolso_1_valor: "1,00" }), itens)).toEqual({ ok: false, erro: "dados" });
+    expect(lerDevolucao(formulario({ devolver_a: "1", reembolso_1_meio: "dinheiro", reembolso_1_valor: "1,00" }), itens)).toEqual({ ok: false, erro: "dados" });
+    expect(lerDevolucao(formulario({ reembolso_1_meio: "dinheiro", reembolso_1_valor: "1,00" }), itens)).toEqual({ ok: false, erro: "sem_item" });
+    expect(lerDevolucao(formulario({ devolver_b: "1", reembolso_1_meio: "payjoy", reembolso_1_valor: "1,00" }), itens)).toEqual({ ok: false, erro: "reembolso" });
+    expect(lerDevolucao(formulario({ devolver_b: "1" }), itens)).toEqual({ ok: false, erro: "reembolso" });
   });
 });

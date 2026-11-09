@@ -29,7 +29,7 @@ Legenda: ✅ provado em desenvolvimento · 🟡 feito no código, falta uso real
 | 4 | Caixa diário fechado e divergências tratadas | Todos os caixas do dia fechados e conferidos; diferença com explicação gravada | 🟡 (ADR-004) |
 | 5 | Ora Connect homologada | Cada tipo liberado com a evidência da homologação (auditada); nenhum "resultado desconhecido" sem decisão há mais de 1 dia; produção do vendedor batendo com o relatório da Contel | 🔒 credenciais, P9 e linha de teste (ADR-005 pronto) |
 | 6 | Obrigações fiscais atendidas | Toda venda concluída com pedido de nota; todo pedido emitido com chave do CNPJ da loja, dentro do prazo que o contador orientar; nenhum alerta de atraso aberto | 🟡 fila e registro pela chave (ADR-006); 🔒 contador e emissor |
-| 7 | Cancelamentos e devoluções testados | Cancelamento com estorno, chip e venda protegidos por operação viva, nota emitida segurando o cancelamento: testes de banco | ✅ cancelamento total; 🔴 devolução parcial e troca (POS-012) |
+| 7 | Cancelamentos e devoluções testados | Cancelamento com estorno, chip e venda protegidos por operação viva, nota emitida segurando o cancelamento: testes de banco | ✅ cancelamento total, devolução parcial e troca com vale (em desenvolvimento); 🔒 política de troca (D-026) |
 | 8 | Zero duplicidade de IMEI, venda e pagamento | Disputas reais em PostgreSQL 17 (`concorrencia.test.ts`, 14 casos) | ✅ |
 | 9 | Isolamento por papel, loja e organização | Testes de banco dos cenários I (acesso, estoque, venda, Connect, notas) | ✅ no banco; 🔒 E2E com usuário real (chave secreta) |
 | 10 | Usuários reais completam o PDV no celular | Gravação ou acompanhamento de uma venda completa por vendedor da piloto; gerente aprovando desconto e nota | 🔒 chave secreta e usuários de teste |

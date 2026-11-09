@@ -13,6 +13,8 @@ export const MEIOS = {
   link_pagamento: { nome: "Link de pagamento", aceitaTroco: false, financeira: false },
   payjoy: { nome: "Financiamento PayJoy", aceitaTroco: false, financeira: true },
   aiva: { nome: "Financiamento Aiva (Flexphone)", aceitaTroco: false, financeira: true },
+  // Crédito de uma devolução (troca): o número do vale vai no campo do comprovante (adendo do ADR-004).
+  vale_troca: { nome: "Vale-troca", aceitaTroco: false, financeira: false },
 } as const;
 
 export type MeioPagamento = keyof typeof MEIOS;

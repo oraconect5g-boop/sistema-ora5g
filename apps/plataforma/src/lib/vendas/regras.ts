@@ -20,6 +20,12 @@ export const ERROS_DA_VENDA = {
   motivo: "Informe o motivo (fica na auditoria).",
   connect: "Há operação da Ora Connect em andamento ou feita ligada a esta venda (chip ativado ou serviço pago): a gerência resolve a operação antes de cancelar.",
   nota_emitida: "Esta venda tem nota fiscal emitida: o cancelamento ou a devolução fiscal vem antes (com o contador).",
+  financiada: "Venda financiada (PayJoy/Aiva): a devolução parcial passa pela financeira; use o cancelamento total.",
+  com_devolucao: "Esta venda já tem devolução: devolva os itens que restam em vez de cancelar tudo.",
+  vale: "Vale-troca não encontrado ou sem saldo suficiente: confira o número e o valor.",
+  vale_numero: "Vale-troca: informe o número do vale no campo do comprovante.",
+  reembolso: "O reembolso precisa somar o valor devolvido, só nos meios que a venda usou e até o que cada um pagou.",
+  sem_item: "Escolha a quantidade de pelo menos um item para devolver.",
   falha: "Não foi possível concluir agora. Tente de novo em instantes.",
 } as const;
 export type ErroDaVenda = keyof typeof ERROS_DA_VENDA;
@@ -27,7 +33,7 @@ export type ErroDaVenda = keyof typeof ERROS_DA_VENDA;
 const DO_BANCO: Record<string, ErroDaVenda> = {
   OR001: "sem_estoque", OR002: "indisponivel", OR003: "outra_loja", OR004: "chave", OR005: "indisponivel", OR007: "preco_mudou",
   OR008: "sem_caixa", OR009: "pagamento", OR010: "aprovacao", "42501": "sem_permissao", P0002: "nao_encontrado",
-  "22023": "dados", "23505": "ja_aberto", "23514": "limite", OR013: "connect", OR015: "nota_emitida",
+  "22023": "dados", "23505": "ja_aberto", "23514": "limite", OR013: "connect", OR015: "nota_emitida", OR016: "financiada", OR017: "com_devolucao", OR018: "vale",
 };
 export function erroDaVenda(erro: { code?: string } | null | undefined): ErroDaVenda {
   const codigo = erro?.code;
@@ -59,6 +65,12 @@ export function lerPagamentos(dados: { get: (nome: string) => unknown }, linhas 
     const linha: LinhaDePagamento = { meio, valor };
     const comprovante = dados.get(`pagamento_${i}_comprovante`);
     if (typeof comprovante === "string" && comprovante.trim()) linha.comprovante = comprovante.trim().slice(0, 60);
+    if (meio === "vale_troca") {
+      // O número do vale vai no campo do comprovante; o banco confere o vale e o saldo.
+      const numero = (linha.comprovante ?? "").replace(/\D/g, "");
+      if (!/^\d{1,12}$/.test(numero)) return { ok: false, erro: "vale_numero" };
+      linha.comprovante = `VT-${Number(numero)}`;
+    }
     if (MEIOS[meio].financeira) {
       const entradaBruta = dados.get(`pagamento_${i}_entrada`);
       const entrada = typeof entradaBruta === "string" && entradaBruta.trim() ? lerValor(entradaBruta) : 0;
@@ -66,7 +78,7 @@ export function lerPagamentos(dados: { get: (nome: string) => unknown }, linhas 
       if (entrada > 0) {
         linha.entrada = entrada;
         const meioEntrada = dados.get(`pagamento_${i}_meio_entrada`);
-        linha.meio_entrada = ehMeio(meioEntrada) && !MEIOS[meioEntrada].financeira ? meioEntrada : "dinheiro";
+        linha.meio_entrada = ehMeio(meioEntrada) && !MEIOS[meioEntrada].financeira && meioEntrada !== "vale_troca" ? meioEntrada : "dinheiro";
       }
     }
     pagamentos.push(linha);
@@ -76,3 +88,45 @@ export function lerPagamentos(dados: { get: (nome: string) => unknown }, linhas 
 
 // IMEI tem 15 dígitos; ICCID, 19 ou 20. Busca por número leva direto ao item.
 export const pareceIdentificador = (texto: string) => /^\d{14,20}$/.test(texto.replace(/\D/g, "")) && texto.replace(/\D/g, "").length === texto.trim().length;
+
+export const CONDICOES_DE_RETORNO = { novo: "Novo (lacrado)", seminovo: "Seminovo", avariado: "Avariado" } as const;
+export type CondicaoDeRetorno = keyof typeof CONDICOES_DE_RETORNO;
+export type ItemDevolvivel = { id: string; restante: number; fisico: boolean };
+export type PedidoDeDevolucao = {
+  itens: { item: string; quantidade: number; condicao?: CondicaoDeRetorno }[];
+  reembolsos: { meio: MeioPagamento; valor: number }[];
+};
+
+/**
+ * Formulário de devolução (adendo do ADR-004): devolver_<item> = quantidade (até o que resta),
+ * condicao_<item> nos itens físicos; reembolso_N_meio/_valor em até 3 linhas (vale-troca é um meio).
+ * O banco confere de novo valores, meios e limites.
+ */
+export function lerDevolucao(dados: { get: (nome: string) => unknown }, itens: readonly ItemDevolvivel[], linhas = 3):
+  { ok: true; pedido: PedidoDeDevolucao } | { ok: false; erro: ErroDaVenda } {
+  const pedido: PedidoDeDevolucao = { itens: [], reembolsos: [] };
+  for (const item of itens) {
+    const bruto = dados.get(`devolver_${item.id}`);
+    const texto = typeof bruto === "string" ? bruto.trim() : "";
+    if (texto === "" || texto === "0") continue;
+    if (!/^\d{1,4}$/.test(texto) || Number(texto) > item.restante) return { ok: false, erro: "dados" };
+    const linha: PedidoDeDevolucao["itens"][number] = { item: item.id, quantidade: Number(texto) };
+    if (item.fisico) {
+      const condicao = dados.get(`condicao_${item.id}`);
+      if (typeof condicao !== "string" || !Object.hasOwn(CONDICOES_DE_RETORNO, condicao)) return { ok: false, erro: "dados" };
+      linha.condicao = condicao as CondicaoDeRetorno;
+    }
+    pedido.itens.push(linha);
+  }
+  if (pedido.itens.length === 0) return { ok: false, erro: "sem_item" };
+  for (let i = 1; i <= linhas; i++) {
+    const bruto = dados.get(`reembolso_${i}_valor`);
+    if (typeof bruto !== "string" || bruto.trim() === "") continue;
+    const meio = dados.get(`reembolso_${i}_meio`);
+    const valor = lerValor(bruto);
+    if (valor === null || valor <= 0) return { ok: false, erro: "valor" };
+    if (!ehMeio(meio) || MEIOS[meio].financeira || meio === "link_pagamento") return { ok: false, erro: "reembolso" };
+    pedido.reembolsos.push({ meio, valor });
+  }
+  return pedido.reembolsos.length ? { ok: true, pedido } : { ok: false, erro: "reembolso" };
+}

@@ -1,6 +1,6 @@
 # Rastreabilidade dos 179 requisitos
 
-> Arquivo GERADO por `node scripts/gerar-rastreabilidade.mjs` a partir de `backlog.json` e `docs/alinhamento/status-requisitos.json` (atualizado em 2026-11-08). Não edite à mão.
+> Arquivo GERADO por `node scripts/gerar-rastreabilidade.mjs` a partir de `backlog.json` e `docs/alinhamento/status-requisitos.json` (atualizado em 2026-11-09). Não edite à mão.
 
 "Testado" = implementado e testado em desenvolvimento, aguardando revisão do Codex e homologação. "Homologado" = aceito pelo proprietário em homologação (nenhum ainda). "Demonstração" é só tela com dados fictícios.
 
@@ -12,7 +12,7 @@
 | CAT | 11 | 7 | 7 | 0 | 0 | 6 | 0 | 1 | 0 | 4 |
 | INV | 12 | 6 | 7 | 0 | 2 | 5 | 0 | 0 | 0 | 5 |
 | CRM | 10 | 4 | 3 | 0 | 0 | 0 | 0 | 0 | 0 | 10 |
-| POS | 16 | 11 | 11 | 0 | 4 | 6 | 0 | 0 | 0 | 6 |
+| POS | 16 | 11 | 11 | 0 | 5 | 6 | 0 | 0 | 0 | 5 |
 | PAY | 14 | 8 | 8 | 0 | 2 | 5 | 1 | 0 | 0 | 6 |
 | FIN | 10 | 5 | 1 | 0 | 0 | 1 | 2 | 0 | 0 | 7 |
 | PERF | 10 | 5 | 5 | 0 | 0 | 1 | 1 | 0 | 0 | 8 |
@@ -26,7 +26,7 @@
 | REPORT | 8 | 5 | 5 | 0 | 0 | 0 | 7 | 0 | 0 | 1 |
 | QUAL | 14 | 9 | 9 | 0 | 0 | 5 | 0 | 0 | 0 | 9 |
 | OS | 6 | 0 | 0 | 0 | 0 | 0 | 0 | 0 | 0 | 6 |
-| **Total** | **179** | **78** | **71** | **0** | **17** | **40** | **11** | **1** | **2** | **108** |
+| **Total** | **179** | **78** | **71** | **0** | **18** | **40** | **11** | **1** | **2** | **107** |
 
 ## ORG — Organização, lojas e usuários
 
@@ -104,9 +104,9 @@
 | ORA-POS-007 | P0 | sim | Suportar múltiplos pagamentos na mesma venda | Soma, troco, confirmação e estorno consistentes. | 🧪 testado | Pagamento misto com os 8 meios: soma, troco só do dinheiro, comprovante em cartão e Pix, financiamento com entrada; estorno no cancelamento. Link bloqueado até o provedor. Aguardando revisão do Codex. Evidência: `packages/banco/supabase/migrations/20261108233546_vendas_pagamentos_e_caixa.sql; packages/banco/src/vendas.test.ts; packages/banco/src/concorrencia.test.ts` |
 | ORA-POS-008 | P0 | sim | Vincular venda a vendedor, loja, cliente quando aplicável e canal | Atribuição preservada em todas as consultas. | 🟡 parcial | Venda gravada com loja, vendedor e canal; cliente por nome e e-mail até o CRM existir; RLS: vendedor vê as próprias, gerência a loja. FALTA: cliente do CRM. Evidência: `packages/banco/supabase/migrations/20261108233546_vendas_pagamentos_e_caixa.sql; packages/banco/src/vendas.test.ts; packages/banco/src/concorrencia.test.ts` |
 | ORA-POS-009 | P0 | sim | Consultar status e comprovantes sem concluir pagamento pendente | Vendedor vê pendência e ação de reprocessamento segura. | ⬜ não iniciado |  |
-| ORA-POS-010 | P0 | sim | Cancelar e devolver sem apagar origem | Reversão reflexa em estoque, pagamentos, fiscal e comissões. | 🟡 parcial | Cancelamento sem apagar: antes de concluir libera a reserva; depois, gerência com motivo, devolução ao estoque, estorno no caixa e a receber cancelado. FALTA: fiscal e comissão (ainda não existem) e devolução parcial. Evidência: `packages/banco/supabase/migrations/20261108233546_vendas_pagamentos_e_caixa.sql; packages/banco/src/vendas.test.ts; packages/banco/src/concorrencia.test.ts` |
+| ORA-POS-010 | P0 | sim | Cancelar e devolver sem apagar origem | Reversão reflexa em estoque, pagamentos, fiscal e comissões. | 🟡 parcial | Cancelamento total sem apagar (ADR-004) e devolução parcial (adendo de 09/11): a gerência devolve itens com motivo; estoque volta pelo livro com a condição informada; reembolso só nos meios pagos e até o que cada um pagou (dinheiro do caixa, estorno de maquininha/Pix) ou em vale-troca; nota emitida abre pedido de nota de devolução e nota pendente recebe o aviso; venda com devolução não é cancelada inteira. FALTA: comissão (não existe ainda) e a política comercial de troca (D-026). Evidência: `packages/banco/supabase/migrations/20261109134507_devolucao_e_troca.sql; packages/banco/src/devolucao.test.ts; packages/dominio/src/pagamento.test.ts; apps/plataforma/src/lib/vendas/regras.test.ts; apps/plataforma/src/app/vendas/[id]/page.tsx; apps/plataforma/src/app/vender/acoes.ts; apps/plataforma/src/app/vender/page.tsx` |
 | ORA-POS-011 | P0 | sim | Gerar solicitação fiscal a partir da venda em poucos toques | Vendedor não precisa escolher documento fiscal incorreto. | ⬜ não iniciado |  |
-| ORA-POS-012 | P1 | — | Troca com diferença de preço e meios de pagamento | Histórico e estoque correto na devolução/saída. | ⬜ não iniciado |  |
+| ORA-POS-012 | P1 | — | Troca com diferença de preço e meios de pagamento | Histórico e estoque correto na devolução/saída. | 🧪 testado | Troca: a devolução vira vale-troca (crédito na rede, sem dinheiro) e o vale paga a nova venda até o saldo, com a diferença em qualquer meio; sem troco do vale; vale sem saldo ou inexistente é recusado; o cancelamento da nova venda devolve o saldo. Histórico (devolução, itens, reembolsos, usos do vale) só de inserção. Política comercial (prazo, estado aceito) pendente: D-026. Evidência: `packages/banco/supabase/migrations/20261109134507_devolucao_e_troca.sql; packages/banco/src/devolucao.test.ts; packages/dominio/src/pagamento.test.ts; apps/plataforma/src/lib/vendas/regras.test.ts; apps/plataforma/src/app/vendas/[id]/page.tsx; apps/plataforma/src/app/vender/acoes.ts; apps/plataforma/src/app/vender/page.tsx` |
 | ORA-POS-013 | P1 | — | Venda parcelada/PayJoy/boleto por fluxo homologado | Etapas reais, aprovação e termos exigidos. | 🟡 parcial | PayJoy/Aiva: preço, entrada (com o meio) e restante a receber da financeira, sem juros; e-mail obrigatório na PayJoy. FALTA: prazo/taxa do repasse (P8) e termos da financeira. Evidência: `packages/banco/supabase/migrations/20261108233546_vendas_pagamentos_e_caixa.sql; packages/banco/src/vendas.test.ts; packages/banco/src/concorrencia.test.ts` |
 | ORA-POS-014 | P1 | — | Aplicar campanhas, combos e regras por loja | Persistência da regra aplicada para auditoria. | ⬜ não iniciado |  |
 | ORA-POS-015 | P1 | — | Atalhos para supervisor e estados offline/sem rede | Sem venda presumida como concluída sem confirmação. | ⬜ não iniciado |  |

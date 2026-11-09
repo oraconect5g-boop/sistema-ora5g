@@ -38,3 +38,16 @@ Devolução parcial de um item (a total é o cancelamento), pedido de nota fisca
 | D-017 | Quem pode conferir caixa e fazer sangria? | Conferir: gerente e dono; sangria: o próprio operador, com motivo |
 | D-011 | Pix direto: quem confere que o dinheiro entrou? | Vendedor registra o comprovante; conciliação depois pelo extrato |
 | A3 | Provedor do link de pagamento | Link bloqueado |
+
+## Adendo de 09/11/2026 — Devolução parcial e troca (ORA-POS-010 e ORA-POS-012)
+
+Migration `20261109134507_devolucao_e_troca` (aplicada no `ora5g-dev`, md5 conferido). Testes: `packages/banco/src/devolucao.test.ts` (6 cenários) e as regras da tela.
+
+1. **Quem devolve:** a gerência (`venda.cancelar`), na loja da venda, com motivo. Só venda concluída.
+2. **Valor devolvido** de cada item = preço × quantidade menos a parte do desconto, acumulada (devolver aos poucos não deixa sobra de centavo). O reembolso soma exatamente esse valor.
+3. **Reembolso** só nos meios que a venda usou e até o que cada um pagou (menos o já devolvido): dinheiro sai do caixa de quem devolve; cartão e Pix ficam como estorno a fazer na maquininha ou no banco; ou o valor vira **vale-troca** (crédito na rede, sem dinheiro).
+4. **Troca:** o vale-troca é um meio de pagamento novo (`vale_troca`), informado pelo número do vale no campo do comprovante; paga a nova venda até o saldo, com a diferença em qualquer outro meio; não dá troco; o cancelamento da nova venda devolve o saldo ao vale.
+5. **Estoque:** aparelho, chip e acessório voltam pelo livro (`devolucao`), com a condição informada (novo, seminovo, avariado).
+6. **Proteções:** venda financiada (PayJoy/Aiva) não tem devolução parcial (OR016, use o cancelamento total); venda com devolução não é cancelada inteira (OR017, devolvem-se os itens que restam); serviço com operação da Ora Connect viva não se devolve (OR013); vale inexistente ou sem saldo é recusado (OR018); a mesma chave devolve o mesmo resultado (OR004 com outro conteúdo).
+7. **Fiscal (ADR-006):** venda com nota emitida abre um pedido de **nota de devolução** na fila; nota ainda não emitida recebe o aviso de emitir só o que ficou.
+8. **Pendente (D-026):** a política comercial de troca e devolução (prazo, estado aceito, quem decide). O sistema registra e controla; não decide quem tem direito.
