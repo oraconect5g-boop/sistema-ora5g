@@ -1,4 +1,4 @@
-# Rastreabilidade dos 173 requisitos
+# Rastreabilidade dos 179 requisitos
 
 > Arquivo GERADO por `node scripts/gerar-rastreabilidade.mjs` a partir de `backlog.json` e `docs/alinhamento/status-requisitos.json` (atualizado em 2026-11-08). Não edite à mão.
 
@@ -25,7 +25,8 @@
 | AI | 7 | 0 | 0 | 0 | 0 | 0 | 0 | 0 | 0 | 7 |
 | REPORT | 8 | 5 | 5 | 0 | 0 | 0 | 7 | 0 | 0 | 1 |
 | QUAL | 14 | 9 | 9 | 0 | 0 | 5 | 0 | 0 | 0 | 9 |
-| **Total** | **173** | **78** | **71** | **0** | **17** | **40** | **11** | **1** | **2** | **102** |
+| OS | 6 | 0 | 0 | 0 | 0 | 0 | 0 | 0 | 0 | 6 |
+| **Total** | **179** | **78** | **71** | **0** | **17** | **40** | **11** | **1** | **2** | **108** |
 
 ## ORG — Organização, lojas e usuários
 
@@ -284,4 +285,15 @@
 | ORA-QUAL-012 | P1 | — | Testes de carga, concorrência e disaster recovery | Sem venda/IMEI duplo, serviço retorna ao estado previsto. | ⬜ não iniciado |  |
 | ORA-QUAL-013 | P1 | — | Processo de resposta a incidentes e suporte às lojas | Playbook, contatos e rastreio de incidentes. | ⬜ não iniciado |  |
 | ORA-QUAL-014 | P2 | — | Análise de segurança periódica e monitoramento de dependências | Atualizações e vulnerabilidades triadas. | ⬜ não iniciado |  |
+
+## OS — Assistência técnica e ordens de serviço
+
+| ID | Prio. | Piloto | Requisito | Aceite | Status | Nota e evidência |
+|---|---|---|---|---|---|---|
+| ORA-OS-001 | P1 | — | Abrir OS obrigatória para todo aparelho de cliente que entra (até limpeza), com cliente, IMEI, defeito, estado, fotos e acessórios deixados (custódia) | Nenhum aparelho de cliente fica na loja sem OS numerada; fotos e acessórios registrados; isolamento por loja; auditoria. | ⬜ não iniciado |  |
+| ORA-OS-002 | P1 | — | Registrar saída para o técnico central e retorno à loja (custódia em trânsito) | A posição do aparelho (loja, em trânsito, técnico, de volta) é conhecida a qualquer momento; parado além do prazo vira alerta ao dono. | ⬜ não iniciado |  |
+| ORA-OS-003 | P1 | — | Orçamento do técnico dentro da OS (diagnóstico, peças, valor), com histórico | O orçamento sai do grupo de WhatsApp e fica na OS; técnico só vê e orça as próprias OS (T12 do teste de acesso). | ⬜ não iniciado |  |
+| ORA-OS-004 | P1 | — | Aprovação ou recusa do orçamento pelo cliente, registrada | Nada é executado sem a resposta do cliente registrada (canal e momento); recusa encerra com devolução. | ⬜ não iniciado |  |
+| ORA-OS-005 | P1 | — | Avisos ao cliente e ao técnico (comprovante, orçamento, aparelho pronto, entrega) | Botão que abre o WhatsApp com a mensagem pronta até a API oficial; depois, envio pela API oficial com consentimento; sem automação não oficial. | ⬜ não iniciado |  |
+| ORA-OS-006 | P1 | — | Entrega com cobrança pelo PDV e produção do vendedor; peças só saem do estoque ligadas a uma OS | Serviço cobrado na venda conta uma vez na produção; peça consumida sem OS aparece como divergência; relatórios de OS sem venda, por vendedor, tempo de conserto e peças × serviços. | ⬜ não iniciado |  |
 

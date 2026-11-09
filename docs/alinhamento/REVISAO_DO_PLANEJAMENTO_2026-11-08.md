@@ -14,7 +14,7 @@ Pacote original (`docs/00` a `docs/13`, `backlog.json` com 172 requisitos), deci
 
 | # | Lacuna | Proposta |
 |---|---|---|
-| L1 | Assistência/OS não tem IDs no backlog (o Codex já tinha apontado) | Abrir `ORA-OS-001` a `006` (abrir OS com custódia, orçamento do técnico, aprovação do cliente, devolução, avisos, contar na comissão) quando o proprietário responder a P5 |
+| L1 | Assistência/OS não tem IDs no backlog (o Codex já tinha apontado) | **Feito em 09/11:** `ORA-OS-001` a `006` no backlog e em `01_REQUISITOS.md` (custódia, trânsito, orçamento, aprovação do cliente, avisos, entrega e peças), sem contar como feitos; a implementação espera a P5 |
 | L2 | Política de desconto sem números (DEC-U27/U41) | Pendência P14; campos prontos e vazios nas categorias |
 | L3 | Sincronia de estoque com a Rein durante o piloto paralelo (DEC-U23 × DEC-U24) | Pergunta Q1 do ADR-003; proposta: reimportação com "ajuste de conciliação" no livro |
 | L4 | Prova de concorrência com duas conexões reais | Precisa da `DATABASE_URL` de desenvolvimento (pendência 4.1); as regras já estão provadas em sequência |
