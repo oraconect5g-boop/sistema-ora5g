@@ -29,15 +29,43 @@ export default async function Catalogo({ searchParams }: { searchParams: Promise
   const { supabase, situacao } = await obterSessao({ exigirLoja: true });
   const unidade = situacao.unidade_id as string;
 
-  const [produtos, variantes, fotos, saldos, podeEnviar, pendencias] = await Promise.all([
-    supabase.from("produtos").select("id, nome, tipo, organizacao_id").eq("ativo", true).order("nome").limit(LIMITE),
-    supabase.from("variantes").select("id, produto_id, sku, nome, cor").eq("ativa", true).order("sku"),
-    supabase.from("fotos_produto").select("produto_id, variante_id, caminho, ilustracao").is("substituida_em", null),
-    supabase.from("estoque_saldos").select("variante_id, quantidade, reservado").eq("unidade_id", unidade),
+  // Busca na fonte, ANTES do limite (REV-038, #40): nome do produto, SKU ou nome da variante. O termo
+  // perde os caracteres que o filtro do PostgREST interpreta (%, _, vírgula, parênteses, asterisco).
+  const termo = busca.replace(/[%_,()*\\]/g, " ").replace(/\s+/g, " ").trim();
+  const [podeEnviar, pendencias, achados] = await Promise.all([
     supabase.rpc("tem_permissao", { p_permissao: "catalogo.fotos", p_unidade: unidade }),
     supabase.rpc("pendencias_de_foto"),
+    termo
+      ? Promise.all([
+          supabase.from("produtos").select("id").eq("ativo", true).ilike("nome", `%${termo}%`).limit(LIMITE),
+          supabase.from("variantes").select("produto_id").eq("ativa", true).ilike("sku", `%${termo}%`).limit(LIMITE),
+          supabase.from("variantes").select("produto_id").eq("ativa", true).ilike("nome", `%${termo}%`).limit(LIMITE),
+        ])
+      : Promise.resolve(null),
   ]);
-  if (produtos.error || variantes.error || fotos.error || saldos.error || podeEnviar.error || pendencias.error) throw new FalhaDoServico("catalogo");
+  if (podeEnviar.error || pendencias.error || achados?.some((r) => r.error)) throw new FalhaDoServico("catalogo");
+  const pendentesPorProduto = new Set(pendencias.data.map((p) => p.produto_id));
+  let ids: string[] | null = achados
+    ? [...new Set([...(achados[0].data ?? []).map((p) => p.id), ...(achados[1].data ?? []).map((v) => v.produto_id), ...(achados[2].data ?? []).map((v) => v.produto_id)])]
+    : null;
+  if (soPendentes) ids = (ids ?? [...pendentesPorProduto]).filter((id) => pendentesPorProduto.has(id));
+  const consulta = supabase.from("produtos").select("id, nome, tipo, organizacao_id").eq("ativo", true);
+  const produtos = ids && ids.length === 0
+    ? { data: [] as { id: string; nome: string; tipo: string; organizacao_id: string }[], error: null }
+    : await (ids ? consulta.in("id", ids) : consulta).order("nome").limit(LIMITE);
+  if (produtos.error) throw new FalhaDoServico("catalogo");
+  const produtoIds = produtos.data.map((p) => p.id);
+  const [variantes, fotos] = produtoIds.length
+    ? await Promise.all([
+        supabase.from("variantes").select("id, produto_id, sku, nome, cor").eq("ativa", true).in("produto_id", produtoIds).order("sku"),
+        supabase.from("fotos_produto").select("produto_id, variante_id, caminho, ilustracao").in("produto_id", produtoIds).is("substituida_em", null),
+      ])
+    : [{ data: [], error: null }, { data: [], error: null }];
+  if (variantes.error || fotos.error) throw new FalhaDoServico("catalogo");
+  const saldos = variantes.data.length
+    ? await supabase.from("estoque_saldos").select("variante_id, quantidade, reservado").eq("unidade_id", unidade).in("variante_id", variantes.data.map((v) => v.id))
+    : { data: [], error: null };
+  if (saldos.error) throw new FalhaDoServico("catalogo");
 
   const assinadas = fotos.data.length
     ? await supabase.storage.from("produtos").createSignedUrls(fotos.data.map((f) => f.caminho), 3600)
@@ -49,14 +77,8 @@ export default async function Catalogo({ searchParams }: { searchParams: Promise
     const s = saldos.data.find((x) => x.variante_id === variante);
     return s ? inteiroDoBanco(s.quantidade) - inteiroDoBanco(s.reservado) : 0;
   };
-  const pendentesPorProduto = new Set(pendencias.data.map((p) => p.produto_id));
   const configuracao = podeEnviar.data ? configuracaoSupabase() : null;
-
-  const lista = produtos.data.filter((p) => {
-    if (soPendentes && !pendentesPorProduto.has(p.id)) return false;
-    if (!busca) return true;
-    return p.nome.toLowerCase().includes(busca) || variantes.data.some((v) => v.produto_id === p.id && v.sku.toLowerCase().includes(busca));
-  });
+  const lista = produtos.data;
 
   return (
     <main className="mx-auto max-w-3xl px-4 py-8">
@@ -77,7 +99,7 @@ export default async function Catalogo({ searchParams }: { searchParams: Promise
             <Link href={soPendentes ? "/catalogo" : "/catalogo?pendentes=1"} className="font-semibold text-acao hover:underline">{soPendentes ? "ver tudo" : "ver só os pendentes"}</Link></>
         ) : <Selo tom="sucesso" ponto>todos os produtos com foto</Selo>}
       </p>
-      {produtos.data.length === LIMITE && <Aviso tom="info" className="mt-3">Mostrando os primeiros {LIMITE} produtos; use a busca.</Aviso>}
+      {produtos.data.length === LIMITE && <Aviso tom="info" className="mt-3">Mostrando os primeiros {LIMITE} produtos{busca ? " desta busca; refine o termo" : "; use a busca"}.</Aviso>}
 
       <Cartao className="mt-4" titulo={`${lista.length} ${lista.length === 1 ? "produto" : "produtos"}`} icone={Package}>
         <ul className="divide-y divide-borda">
