@@ -27,6 +27,14 @@ describe("pagamento misto", () => {
     expect(r.valido).toBe(false);
     expect(r.erros).toContain("Pagamento maior que o total sem dinheiro para dar troco");
   });
+
+  it("vale-troca paga parte e a diferença sai em dinheiro; vale não dá troco", () => {
+    expect(conferirPagamentos(149_900, [{ meio: "vale_troca", valor: 7_900 }, { meio: "dinheiro", valor: 142_000 }]))
+      .toMatchObject({ valido: true, troco: 0, falta: 0 });
+    const r = conferirPagamentos(7_900, [{ meio: "vale_troca", valor: 10_000 }]);
+    expect(r.valido).toBe(false);
+    expect(r.erros).toContain("Pagamento maior que o total sem dinheiro para dar troco");
+  });
 });
 
 describe("venda financiada (DEC-U38)", () => {

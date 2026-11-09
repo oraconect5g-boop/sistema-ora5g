@@ -9,7 +9,7 @@
     "bloqueado": "depende de decisão do proprietário ou de terceiro",
     "nao_iniciado": "ainda não começou"
   },
-  "atualizado_em": "2026-11-08",
+  "atualizado_em": "2026-11-09",
   "requisitos": {
     "ORA-ORG-001": {
       "status": "parcial",
@@ -303,8 +303,8 @@
     },
     "ORA-POS-010": {
       "status": "parcial",
-      "nota": "Cancelamento sem apagar: antes de concluir libera a reserva; depois, gerência com motivo, devolução ao estoque, estorno no caixa e a receber cancelado. FALTA: fiscal e comissão (ainda não existem) e devolução parcial.",
-      "evidencia": "packages/banco/supabase/migrations/20261108233546_vendas_pagamentos_e_caixa.sql; packages/banco/src/vendas.test.ts; packages/banco/src/concorrencia.test.ts"
+      "nota": "Cancelamento total sem apagar (ADR-004) e devolução parcial (adendo de 09/11): a gerência devolve itens com motivo; estoque volta pelo livro com a condição informada; reembolso só nos meios pagos e até o que cada um pagou (dinheiro do caixa, estorno de maquininha/Pix) ou em vale-troca; nota emitida abre pedido de nota de devolução e nota pendente recebe o aviso; venda com devolução não é cancelada inteira. FALTA: comissão (não existe ainda) e a política comercial de troca (D-026).",
+      "evidencia": "packages/banco/supabase/migrations/20261109134507_devolucao_e_troca.sql; packages/banco/src/devolucao.test.ts; packages/dominio/src/pagamento.test.ts; apps/plataforma/src/lib/vendas/regras.test.ts; apps/plataforma/src/app/vendas/[id]/page.tsx; apps/plataforma/src/app/vender/acoes.ts; apps/plataforma/src/app/vender/page.tsx"
     },
     "ORA-POS-013": {
       "status": "parcial",
@@ -365,6 +365,11 @@
       "status": "parcial",
       "nota": "Chave repetida recusada; venda cancelada cancela pedido sem nota; venda com nota emitida só cancela depois do tratamento fiscal (OR015). FALTA: reprocesso e contingência no emissor (A4).",
       "evidencia": "packages/banco/supabase/migrations/20261109123757_fila_fiscal.sql; packages/banco/src/notas.test.ts; packages/dominio/src/fiscal.test.ts"
+    },
+    "ORA-POS-012": {
+      "status": "testado",
+      "nota": "Troca: a devolução vira vale-troca (crédito na rede, sem dinheiro) e o vale paga a nova venda até o saldo, com a diferença em qualquer meio; sem troco do vale; vale sem saldo ou inexistente é recusado; o cancelamento da nova venda devolve o saldo. Histórico (devolução, itens, reembolsos, usos do vale) só de inserção. Política comercial (prazo, estado aceito) pendente: D-026.",
+      "evidencia": "packages/banco/supabase/migrations/20261109134507_devolucao_e_troca.sql; packages/banco/src/devolucao.test.ts; packages/dominio/src/pagamento.test.ts; apps/plataforma/src/lib/vendas/regras.test.ts; apps/plataforma/src/app/vendas/[id]/page.tsx; apps/plataforma/src/app/vender/acoes.ts; apps/plataforma/src/app/vender/page.tsx"
     }
   }
 }

@@ -1,6 +1,6 @@
 import { randomUUID } from "node:crypto";
 
-import { CheckCircle2, FileText, Receipt } from "lucide-react";
+import { CheckCircle2, FileText, Receipt, Undo2 } from "lucide-react";
 import type { Metadata } from "next";
 import Link from "next/link";
 import { notFound } from "next/navigation";
@@ -16,30 +16,31 @@ import { centavosDoBanco } from "../../../lib/dinheiro";
 import { brl } from "../../../lib/formato";
 import { ERROS_DAS_NOTAS } from "../../../lib/notas/regras";
 import { chaveDoCatalogo, textoDoParametro, type ValorDeParametro } from "../../../lib/parametros";
-import { ERROS_DA_VENDA } from "../../../lib/vendas/regras";
+import { CONDICOES_DE_RETORNO, ERROS_DA_VENDA } from "../../../lib/vendas/regras";
 import { corrigirNota, pedirNota } from "../../notas/acoes";
-import { cancelarVenda } from "../../vender/acoes";
+import { cancelarVenda, devolverItens } from "../../vender/acoes";
 
 export const metadata: Metadata = { title: "Comprovante da venda" };
 export const dynamic = "force-dynamic";
 
 const nomeDoMeio = (m: string) => (Object.hasOwn(MEIOS, m) ? MEIOS[m as keyof typeof MEIOS].nome : m);
 const campo = "mt-1 min-h-11 w-full rounded-botao border border-borda bg-white px-3 text-sm outline-none focus:border-acao focus:ring-2 focus:ring-acao/20";
+const FISICOS = new Set(["aparelho", "chip", "acessorio"]);
 
 // Comprovante digital (as lojas não têm impressora, DEC-U22). Lido pelo RLS: o vendedor vê as
 // próprias vendas; a gerência vê as da loja. A gerência cancela com estorno (ADR-004).
-export default async function Comprovante({ params, searchParams }: { params: Promise<{ id: string }>; searchParams: Promise<{ concluida?: ValorDeParametro; cancelada?: ValorDeParametro; erro?: ValorDeParametro; nota?: ValorDeParametro; erro_nota?: ValorDeParametro }> }) {
+export default async function Comprovante({ params, searchParams }: { params: Promise<{ id: string }>; searchParams: Promise<{ concluida?: ValorDeParametro; cancelada?: ValorDeParametro; erro?: ValorDeParametro; nota?: ValorDeParametro; erro_nota?: ValorDeParametro; devolvida?: ValorDeParametro; vale?: ValorDeParametro }> }) {
   const { id } = await params;
   if (!ehUuid(id)) notFound();
   const parametros = await searchParams;
   const erro = chaveDoCatalogo(ERROS_DA_VENDA, parametros.erro);
   const erroNota = chaveDoCatalogo(ERROS_DAS_NOTAS, parametros.erro_nota);
   const { supabase, usuario, situacao } = await obterSessao({ exigirLoja: true });
-  const venda = await supabase.from("vendas").select("id, numero, situacao, unidade_id, vendedor_id, cliente_nome, total_centavos, subtotal_centavos, desconto_centavos, troco_centavos, recebido_centavos, a_receber_centavos, concluida_em, cancelada_em, motivo_cancelamento").eq("id", id).maybeSingle();
+  const venda = await supabase.from("vendas").select("id, numero, situacao, unidade_id, vendedor_id, cliente_nome, total_centavos, subtotal_centavos, desconto_centavos, troco_centavos, recebido_centavos, a_receber_centavos, devolvido_centavos, concluida_em, cancelada_em, motivo_cancelamento").eq("id", id).maybeSingle();
   if (venda.error) throw new FalhaDoServico("venda");
   if (!venda.data) notFound();
-  const [itens, pagamentos, loja, vendedor, podeCancelar, podePedirNota, aprovaNota, nota] = await Promise.all([
-    supabase.from("venda_itens").select("id, variante_id, item_serializado_id, quantidade, preco_unitario_centavos, desconto_centavos").eq("venda_id", id).order("criado_em"),
+  const [itens, pagamentos, loja, vendedor, podeCancelar, podePedirNota, aprovaNota, nota, devolucoes, notasDeDevolucao] = await Promise.all([
+    supabase.from("venda_itens").select("id, variante_id, item_serializado_id, tipo, quantidade, preco_unitario_centavos, desconto_centavos").eq("venda_id", id).order("criado_em"),
     supabase.from("venda_pagamentos").select("ordem, meio, valor_centavos, entrada_centavos, comprovante, situacao").eq("venda_id", id).order("ordem"),
     supabase.from("unidades").select("nome, cnpj").eq("id", venda.data.unidade_id).maybeSingle(),
     supabase.from("perfis_usuario").select("nome").eq("id", venda.data.vendedor_id).maybeSingle(),
@@ -47,13 +48,23 @@ export default async function Comprovante({ params, searchParams }: { params: Pr
     supabase.rpc("tem_permissao", { p_permissao: "nota.solicitar", p_unidade: venda.data.unidade_id }),
     supabase.rpc("tem_permissao", { p_permissao: "nota.aprovar", p_unidade: venda.data.unidade_id }),
     supabase.from("notas_pedidos").select("id, situacao, solicitado_por, destinatario_nome, destinatario_mascarado, observacao, chave_acesso, modelo, serie, numero_documento")
-      .eq("venda_id", id).neq("situacao", "cancelada").maybeSingle(),
+      .eq("venda_id", id).eq("tipo", "venda").neq("situacao", "cancelada").maybeSingle(),
+    supabase.from("venda_devolucoes").select("id, numero, valor_centavos, motivo, criado_em, venda_devolucao_itens(venda_item_id, quantidade, valor_centavos, condicao), venda_devolucao_reembolsos(meio, valor_centavos), vales_troca(numero, saldo_centavos)")
+      .eq("venda_id", id).order("criado_em"),
+    supabase.from("notas_pedidos").select("devolucao_id, situacao").eq("venda_id", id).eq("tipo", "devolucao"),
   ]);
-  if (itens.error || pagamentos.error || loja.error || vendedor.error || podeCancelar.error || podePedirNota.error || aprovaNota.error || nota.error) throw new FalhaDoServico("comprovante");
+  if (itens.error || pagamentos.error || loja.error || vendedor.error || podeCancelar.error || podePedirNota.error || aprovaNota.error || nota.error || devolucoes.error || notasDeDevolucao.error) throw new FalhaDoServico("comprovante");
   const variantes = itens.data.length ? await supabase.from("variantes").select("id, sku, nome").in("id", itens.data.map((i) => i.variante_id)) : { data: [], error: null };
   const serializados = itens.data.some((i) => i.item_serializado_id) ? await supabase.from("itens_serializados").select("id, imei, iccid").in("id", itens.data.flatMap((i) => (i.item_serializado_id ? [i.item_serializado_id] : []))) : { data: [], error: null };
   if (variantes.error || serializados.error) throw new FalhaDoServico("comprovante_itens");
   const v = venda.data;
+  // Devolução (adendo do ADR-004): o que resta de cada item e os meios em que dá para reembolsar.
+  const devolvido = new Map<string, number>();
+  for (const d of devolucoes.data) for (const i of d.venda_devolucao_itens) devolvido.set(i.venda_item_id, (devolvido.get(i.venda_item_id) ?? 0) + i.quantidade);
+  const restantes = itens.data.map((i) => ({ ...i, restante: i.quantidade - (devolvido.get(i.id) ?? 0) })).filter((i) => i.restante > 0);
+  const financiada = pagamentos.data.some((p) => p.situacao === "confirmado" && Object.hasOwn(MEIOS, p.meio) && MEIOS[p.meio as keyof typeof MEIOS].financeira);
+  const meiosDeReembolso = [...new Set(pagamentos.data.filter((p) => p.situacao === "confirmado" && p.meio !== "vale_troca").map((p) => p.meio)), "vale_troca"];
+  const nomeDoItem = (itemId: string) => variantes.data.find((x) => x.id === itens.data.find((i) => i.id === itemId)?.variante_id)?.nome ?? "Item";
   const quando = v.concluida_em ? new Intl.DateTimeFormat("pt-BR", { timeZone: "America/Sao_Paulo", dateStyle: "short", timeStyle: "short" }).format(new Date(v.concluida_em)) : null;
   return (
     <main className="mx-auto max-w-lg space-y-4 px-4 py-8">
@@ -62,6 +73,7 @@ export default async function Comprovante({ params, searchParams }: { params: Pr
       {textoDoParametro(parametros.cancelada) === "1" && <Aviso tom="info">Venda cancelada com estorno.</Aviso>}
       {erro && <Aviso tom="perigo">{ERROS_DA_VENDA[erro]}</Aviso>}
       {erroNota && <Aviso tom="perigo">{ERROS_DAS_NOTAS[erroNota]}</Aviso>}
+      {textoDoParametro(parametros.devolvida) && <Aviso tom="sucesso">Devolução nº {textoDoParametro(parametros.devolvida)} registrada: estoque e caixa atualizados.{textoDoParametro(parametros.vale) ? ` Vale-troca nº ${textoDoParametro(parametros.vale)} criado: informe esse número no pagamento da nova venda.` : ""}</Aviso>}
       {textoDoParametro(parametros.nota) === "pedida" && <Aviso tom="sucesso">Nota pedida: aparece na fila do dono e do gerente.</Aviso>}
       {textoDoParametro(parametros.nota) === "corrigida" && <Aviso tom="sucesso">Correção enviada: o pedido voltou para a fila.</Aviso>}
       <Cartao titulo={`Venda nº ${v.numero}`} subtitulo={`${loja.data?.nome ?? situacao.unidade_nome}${quando ? ` · ${quando}` : ""}`} icone={Receipt}>
@@ -87,6 +99,7 @@ export default async function Comprovante({ params, searchParams }: { params: Pr
           <dt className="font-semibold">Total</dt><dd className="text-right font-bold">{brl(centavosDoBanco(v.total_centavos ?? 0))}</dd>
           {centavosDoBanco(v.troco_centavos ?? 0) > 0 && <><dt>Troco</dt><dd className="text-right">{brl(centavosDoBanco(v.troco_centavos ?? 0))}</dd></>}
           {centavosDoBanco(v.a_receber_centavos ?? 0) > 0 && <><dt>A receber da financeira</dt><dd className="text-right">{brl(centavosDoBanco(v.a_receber_centavos ?? 0))}</dd></>}
+          {centavosDoBanco(v.devolvido_centavos) > 0 && <><dt>Devolvido</dt><dd className="text-right">− {brl(centavosDoBanco(v.devolvido_centavos))}</dd></>}
         </dl>
         <ul className="mt-2 space-y-1 text-xs">
           {pagamentos.data.map((p) => (
@@ -126,7 +139,57 @@ export default async function Comprovante({ params, searchParams }: { params: Pr
           )}
         </Cartao>
       )}
-      {v.situacao === "concluida" && podeCancelar.data && (
+      {devolucoes.data.length > 0 && (
+        <Cartao titulo="Devoluções" icone={Undo2}>
+          <ul className="divide-y divide-borda text-sm">
+            {devolucoes.data.map((d) => {
+              const notaDaDevolucao = notasDeDevolucao.data.find((n) => n.devolucao_id === d.id);
+              const vale = d.vales_troca;
+              return (
+                <li key={d.id} className="space-y-1 py-2">
+                  <p className="flex justify-between gap-2 font-semibold"><span>Nº {d.numero} · {d.motivo}</span><span className="numeros">{brl(centavosDoBanco(d.valor_centavos))}</span></p>
+                  <p className="text-xs text-suave">{d.venda_devolucao_itens.map((i) => `${nomeDoItem(i.venda_item_id)} × ${i.quantidade}${i.condicao ? ` (${CONDICOES_DE_RETORNO[i.condicao as keyof typeof CONDICOES_DE_RETORNO] ?? i.condicao})` : ""}`).join(" · ")}</p>
+                  <p className="numeros text-xs">{d.venda_devolucao_reembolsos.map((r) => `${nomeDoMeio(r.meio)} ${brl(centavosDoBanco(r.valor_centavos))}`).join(" · ")}</p>
+                  {vale && <p className="text-xs">Vale-troca nº <strong>{vale.numero}</strong> · saldo {brl(centavosDoBanco(vale.saldo_centavos))}</p>}
+                  {notaDaDevolucao && <p className="text-xs text-suave">Nota de devolução: {Object.hasOwn(SITUACOES_DA_NOTA, notaDaDevolucao.situacao) ? SITUACOES_DA_NOTA[notaDaDevolucao.situacao as SituacaoDaNota] : notaDaDevolucao.situacao}</p>}
+                </li>
+              );
+            })}
+          </ul>
+        </Cartao>
+      )}
+      {v.situacao === "concluida" && podeCancelar.data && restantes.length > 0 && !financiada && (
+        <details className="rounded-cartao border border-borda bg-white p-4 text-sm"><summary className="cursor-pointer font-semibold">Devolver ou trocar itens</summary>
+          <form action={devolverItens} className="mt-3 space-y-3">
+            <input type="hidden" name="venda" value={v.id} /><input type="hidden" name="chave" value={randomUUID()} />
+            <ul className="space-y-2">
+              {restantes.map((i) => (
+                <li key={i.id} className="grid gap-2 sm:grid-cols-3">
+                  <span className="self-center">{nomeDoItem(i.id)}<span className="block text-xs text-suave">resta {i.restante}</span></span>
+                  <label className="text-xs font-medium">Devolver<input name={`devolver_${i.id}`} type="number" min={0} max={i.restante} defaultValue={0} className={campo} /></label>
+                  {FISICOS.has(i.tipo) && (
+                    <label className="text-xs font-medium">Condição<select name={`condicao_${i.id}`} defaultValue="novo" className={campo}>
+                      {Object.entries(CONDICOES_DE_RETORNO).map(([codigo, nome]) => <option key={codigo} value={codigo}>{nome}</option>)}
+                    </select></label>
+                  )}
+                </li>
+              ))}
+            </ul>
+            <p className="text-xs text-suave">O valor devolvido é o preço do item menos a parte do desconto. Reembolse nos meios que a venda usou (até o que cada um pagou) ou em vale-troca para uma nova venda. Dinheiro sai do SEU caixa; cartão e Pix ficam para estorno na maquininha ou no banco.</p>
+            {[1, 2, 3].map((n) => (
+              <div key={n} className="grid grid-cols-2 gap-2">
+                <label className="text-xs font-medium">Reembolso {n}<select name={`reembolso_${n}_meio`} className={campo} defaultValue={n === 1 ? "dinheiro" : "vale_troca"}>
+                  {meiosDeReembolso.map((m) => <option key={m} value={m}>{nomeDoMeio(m)}</option>)}
+                </select></label>
+                <label className="text-xs font-medium">Valor (R$)<input name={`reembolso_${n}_valor`} inputMode="decimal" className={campo} /></label>
+              </div>
+            ))}
+            <label className="block text-xs font-medium">Motivo (fica na auditoria)<input name="motivo" required minLength={3} className={campo} /></label>
+            <Botao type="submit" tamanho="sm" variante="secundario">Registrar devolução</Botao>
+          </form>
+        </details>
+      )}
+      {v.situacao === "concluida" && podeCancelar.data && devolucoes.data.length === 0 && (
         <details className="text-sm"><summary className="cursor-pointer font-semibold text-perigo">Cancelar esta venda (estorno)</summary>
           <form action={cancelarVenda} className="mt-2 space-y-2">
             <input type="hidden" name="venda" value={v.id} /><input type="hidden" name="voltar" value="comprovante" />

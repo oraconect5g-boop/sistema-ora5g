@@ -221,7 +221,7 @@ export default async function Vender({ searchParams }: { searchParams: Promise<{
           </Cartao>
 
           {itens.data.length > 0 && (
-            <Cartao titulo="Pagamento" subtitulo="Cartão e Pix: informe o código do comprovante. Financiamento: valor financiado e a entrada.">
+            <Cartao titulo="Pagamento" subtitulo="Cartão e Pix: informe o código do comprovante. Vale-troca: o número do vale no mesmo campo. Financiamento: valor financiado e a entrada.">
               <form action={concluirVenda} className="space-y-3">
                 <input type="hidden" name="venda" value={venda.data.id} /><input type="hidden" name="chave" value={randomUUID()} />
                 {[1, 2, 3].map((n) => (
@@ -229,9 +229,9 @@ export default async function Vender({ searchParams }: { searchParams: Promise<{
                     <legend className="px-1 text-xs font-semibold">Pagamento {n}{n > 1 ? " (opcional)" : ""}</legend>
                     <label className="text-xs font-medium">Meio<select name={`pagamento_${n}_meio`} className={campo} defaultValue="dinheiro">{MEIOS_DA_LOJA.map((m) => <option key={m} value={m}>{MEIOS[m].nome}</option>)}</select></label>
                     <label className="text-xs font-medium">Valor (R$)<input name={`pagamento_${n}_valor`} inputMode="decimal" defaultValue={n === 1 ? ((subtotal - descontos) / 100).toFixed(2).replace(".", ",") : ""} className={campo} /></label>
-                    <label className="text-xs font-medium">Comprovante<input name={`pagamento_${n}_comprovante`} className={campo} autoComplete="off" /></label>
+                    <label className="text-xs font-medium">Comprovante ou nº do vale<input name={`pagamento_${n}_comprovante`} className={campo} autoComplete="off" /></label>
                     <label className="text-xs font-medium">Entrada (financiamento)<input name={`pagamento_${n}_entrada`} inputMode="decimal" className={campo} /></label>
-                    <label className="text-xs font-medium">Meio da entrada<select name={`pagamento_${n}_meio_entrada`} className={campo} defaultValue="dinheiro">{MEIOS_DA_LOJA.filter((m) => !MEIOS[m].financeira).map((m) => <option key={m} value={m}>{MEIOS[m].nome}</option>)}</select></label>
+                    <label className="text-xs font-medium">Meio da entrada<select name={`pagamento_${n}_meio_entrada`} className={campo} defaultValue="dinheiro">{MEIOS_DA_LOJA.filter((m) => !MEIOS[m].financeira && m !== "vale_troca").map((m) => <option key={m} value={m}>{MEIOS[m].nome}</option>)}</select></label>
                   </fieldset>
                 ))}
                 <div className="grid gap-2 sm:grid-cols-2">

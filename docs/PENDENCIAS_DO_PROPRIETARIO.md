@@ -67,6 +67,7 @@ Tudo o que não está aqui o Claude Code faz sozinho (programação, migrations 
 | P14 | **Margem e desconto por categoria**: até quantos % o vendedor dá sem pedir, e a margem mínima de cada categoria (aparelhos, acessórios, chips…) | Tabela simples; sem ela o desconto real não liga (mês 2) |
 | D-016 | Recarga/ativação paga pela **carteira da Ora (SALDO)** só depois de o cliente pagar o serviço no caixa? (LINK: o cliente paga direto à Contel) | Já está assim no sistema (ADR-005), reversível |
 | D-006 | O gerente aprova **toda** nota ou só exceções? Quem pediu a nota pode aprovar a própria? | Hoje: todas passam pela fila, quem pediu pode aprovar, e a aprovação nunca segura a emissão (ADR-006) |
+| D-026 | **Troca e devolução:** em quantos dias o cliente pode trocar ou devolver? Que estado do aparelho é aceito? Devolve dinheiro ou só vale-troca? | O sistema já registra e controla (reembolso nos meios pagos ou vale-troca); falta a regra comercial |
 | G1 | Piloto em paralelo com a Rein: 2 a 4 semanas? Quanto tempo a Rein fica ativa depois do "go" (para poder voltar)? | [Go/no-go](operacao/GO_NO_GO_PILOTO_E_SAIDA_DA_REIN.md) §5 |
 | G2 | Se a internet da loja cair: a venda espera ou vai para um formulário em papel? Quem atende problemas no horário da loja? | Idem |
 

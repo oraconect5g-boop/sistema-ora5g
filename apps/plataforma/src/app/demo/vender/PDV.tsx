@@ -19,6 +19,7 @@ import { assinaturaDoCarrinho, lerSeguro, reaisParaTexto, type Aprovacao, type C
 
 const ICONE_MEIO: Record<MeioPagamento, typeof QrCode> = {
   pix_picpay: QrCode, pix_direto: QrCode, cartao_picpay: CreditCard, cartao_pagseguro: CreditCard, dinheiro: Banknote, link_pagamento: Link2, payjoy: HandCoins, aiva: HandCoins,
+  vale_troca: Banknote,
 };
 const ORDEM_MEIOS: MeioPagamento[] = ["pix_picpay", "cartao_picpay", "dinheiro", "pix_direto", "cartao_pagseguro", "link_pagamento", "payjoy", "aiva"];
 const emailValido = (texto: string) => /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(texto.trim());

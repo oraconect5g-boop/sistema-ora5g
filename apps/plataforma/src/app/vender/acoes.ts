@@ -6,7 +6,8 @@ import { redirect } from "next/navigation";
 
 import { ehUuid } from "../../lib/acesso/regras";
 import { obterSessao } from "../../lib/acesso/sessao";
-import { erroDaVenda, lerPagamentos, lerValor } from "../../lib/vendas/regras";
+import type { Json } from "../../lib/supabase/tipos-banco";
+import { erroDaVenda, lerDevolucao, lerPagamentos, lerValor } from "../../lib/vendas/regras";
 
 // Cada ação chama UMA função do banco como a pessoa logada (ADR-004). As chaves de idempotência
 // vêm do formulário (geradas quando a tela foi montada): clique duplo ou reenvio repetem a mesma
@@ -103,4 +104,31 @@ export async function cancelarVenda(dados: FormData) {
   const { supabase } = await obterSessao({ exigirLoja: true });
   const { error }: Resultado = await supabase.rpc("cancelar_venda", { p_venda: venda, p_motivo: motivo.trim() });
   voltar(voltarPara === "/vender" ? "/vender?cancelada=1" : `${voltarPara}?cancelada=1`, error);
+}
+
+// Devolução parcial e troca (adendo do ADR-004): o banco confere permissão, quantidades, valores,
+// meios e limites; a tela só lê o formulário. O vale-troca criado aparece no comprovante.
+const FISICOS = new Set(["aparelho", "chip", "acessorio"]);
+export async function devolverItens(dados: FormData) {
+  const venda = dados.get("venda");
+  const motivo = dados.get("motivo");
+  if (!ehUuid(venda)) redirect("/vender?erro=dados");
+  const destino = `/vendas/${venda}`;
+  if (typeof motivo !== "string" || motivo.trim().length < 3) redirect(`${destino}?erro=motivo`);
+  const { supabase } = await obterSessao({ exigirLoja: true });
+  const [itens, devolvidos] = await Promise.all([
+    supabase.from("venda_itens").select("id, tipo, quantidade").eq("venda_id", venda),
+    supabase.from("venda_devolucoes").select("venda_devolucao_itens(venda_item_id, quantidade)").eq("venda_id", venda),
+  ]);
+  if (itens.error || devolvidos.error) redirect(`${destino}?erro=falha`);
+  const jaDevolvido = new Map<string, number>();
+  for (const d of devolvidos.data) for (const i of d.venda_devolucao_itens) jaDevolvido.set(i.venda_item_id, (jaDevolvido.get(i.venda_item_id) ?? 0) + i.quantidade);
+  const lido = lerDevolucao(dados, itens.data.map((i) => ({ id: i.id, restante: i.quantidade - (jaDevolvido.get(i.id) ?? 0), fisico: FISICOS.has(i.tipo) })));
+  if (!lido.ok) redirect(`${destino}?erro=${lido.erro}`);
+  const { data, error } = await supabase.rpc("devolver_itens", {
+    p_venda: venda, p_itens: lido.pedido.itens as Json, p_reembolsos: lido.pedido.reembolsos as Json, p_motivo: motivo.trim(), p_chave: chaveDe(dados),
+  });
+  if (error) redirect(`${destino}?erro=${error.code === "OR009" ? "reembolso" : erroDaVenda(error)}`);
+  const resultado = data as { numero?: number; vale?: number | null } | null;
+  redirect(`${destino}?devolvida=${resultado?.numero ?? ""}${resultado?.vale ? `&vale=${resultado.vale}` : ""}`);
 }

@@ -115,3 +115,13 @@ Pedidos de conferência:
 4. **ADR-006** ([documento](../adr/ADR-006-fila-fiscal-interna.md)): pedido da venda concluída, um vivo por venda, aprovação que nunca segura a emissão, chave de acesso com dígito e CNPJ conferidos e única, venda cancelada × nota emitida (OR015), prazo de alerta só com fonte. Nada é emitido.
 5. Go/no-go: [GO_NO_GO_PILOTO_E_SAIDA_DA_REIN.md](../operacao/GO_NO_GO_PILOTO_E_SAIDA_DA_REIN.md).
 6. Também: T4 e T5 deixaram de ser TODO (viraram testes em `vendas.test.ts`); restam 2 TODO de módulos futuros (CRM e OS).
+
+## 09/11/2026 — Devolução parcial e troca com vale (adendo do ADR-004)
+
+**Branch:** `feature/ORA-POS-012-devolucao-troca`. Migration `20261109134507_devolucao_e_troca` (aplicada no `ora5g-dev`, md5 conferido).
+
+1. `devolver_itens`: permissão (`venda.cancelar` na loja da venda), idempotência (OR004), ordem das travas (chave → venda → caixa → item serializado → saldo), valor com a parte acumulada do desconto, limites de reembolso por meio (dinheiro descontando o troco), caixa obrigatório quando sai dinheiro ou estorno, financiada recusada (OR016), serviço com operação Connect viva (OR013).
+2. Vale-troca por gatilho em `venda_pagamentos` (não reescreve `concluir_venda` nem `cancelar_venda`): baixa o saldo com trava no vale, recusa inexistente ou sem saldo (OR018), devolve o saldo uma vez só no estorno; `entrada_sem_vale` impede pagar entrada de financiamento com vale.
+3. Fila fiscal: `notas_pedidos.tipo` (`venda` | `devolucao`) e `devolucao_id`, índice único por venda só para o tipo `venda`, novo evento `ajustada_por_devolucao`.
+4. Venda com devolução não é cancelada inteira (OR017).
+5. Telas: devolução e lista de devoluções no comprovante; "Comprovante ou nº do vale" no PDV.
