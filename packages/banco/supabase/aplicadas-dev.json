@@ -18,6 +18,8 @@
     { "versao": "20261109123533", "nome": "indices_ora_connect", "md5": "81f5a9a345580fedb43ed7c5951e3d79", "aplicada_em": "2026-11-09" },
     { "versao": "20261109123757", "nome": "fila_fiscal", "md5": "43a75da04d3228214e260201a2ea36af", "aplicada_em": "2026-11-09" },
     { "versao": "20261109134507", "nome": "devolucao_e_troca", "md5": "8027f63a195fdfa06af5c02b0ddc179a", "aplicada_em": "2026-11-09" },
-    { "versao": "20261109150526", "nome": "correcoes_acesso_lote1", "md5": "0db668934f7f4c72b12164e0d96b6057", "aplicada_em": "2026-11-09" }
+    { "versao": "20261109150526", "nome": "correcoes_acesso_lote1", "md5": "0db668934f7f4c72b12164e0d96b6057", "aplicada_em": "2026-11-09" },
+    { "versao": "20261109190240", "nome": "integridade_vendas_lote2", "md5": "4f60a31369f04618b40fc1f88e50ec78", "aplicada_em": "2026-11-09" },
+    { "versao": "20261109190400", "nome": "connect_evidencia_lote2", "md5": "50a92b80cbcd527ab22565a988239100", "aplicada_em": "2026-11-09" }
   ]
 }

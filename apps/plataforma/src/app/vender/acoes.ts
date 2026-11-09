@@ -7,7 +7,7 @@ import { redirect } from "next/navigation";
 import { ehUuid } from "../../lib/acesso/regras";
 import { obterSessao } from "../../lib/acesso/sessao";
 import type { Json } from "../../lib/supabase/tipos-banco";
-import { erroDaVenda, lerDevolucao, lerPagamentos, lerValor } from "../../lib/vendas/regras";
+import { CONDICOES_DE_RETORNO, erroDaVenda, lerDevolucao, lerPagamentos, lerValor } from "../../lib/vendas/regras";
 
 // Cada ação chama UMA função do banco como a pessoa logada (ADR-004). As chaves de idempotência
 // vêm do formulário (geradas quando a tela foi montada): clique duplo ou reenvio repetem a mesma
@@ -22,10 +22,13 @@ const chaveDe = (dados: FormData) => {
 };
 
 export async function abrirCaixa(dados: FormData) {
-  const fundo = lerValor(dados.get("fundo")) ?? 0;
+  const destino = String(dados.get("voltar") ?? "/vender") === "/caixa" ? "/caixa" : "/vender";
+  // Vazio ou ilegível não vira fundo zero (REV-050, #52): sem fundo, digita-se 0,00.
+  const fundo = lerValor(dados.get("fundo"));
+  if (fundo === null) redirect(`${destino}?erro=valor`);
   const { supabase } = await obterSessao({ exigirLoja: true });
   const { error }: Resultado = await supabase.rpc("abrir_caixa", { p_fundo: fundo, p_chave: chaveDe(dados) });
-  voltar(String(dados.get("voltar") ?? "/vender") === "/caixa" ? "/caixa" : "/vender", error);
+  voltar(destino, error);
 }
 
 export async function novaVenda(dados: FormData) {
@@ -61,8 +64,10 @@ export async function removerItem(dados: FormData) {
 
 export async function aplicarDesconto(dados: FormData) {
   const item = dados.get("item");
-  const desconto = lerValor(dados.get("desconto")) ?? 0;
+  // Vazio ou ilegível não apaga o desconto atual com zero (REV-050, #52): tirar o desconto é digitar 0,00.
+  const desconto = lerValor(dados.get("desconto"));
   if (!ehUuid(item)) redirect("/vender?erro=dados");
+  if (desconto === null) redirect("/vender?erro=valor");
   const { supabase } = await obterSessao({ exigirLoja: true });
   const { data, error } = await supabase.rpc("aplicar_desconto", { p_item: item, p_desconto: desconto });
   if (error) voltar("/vender", error);
@@ -117,18 +122,60 @@ export async function devolverItens(dados: FormData) {
   if (typeof motivo !== "string" || motivo.trim().length < 3) redirect(`${destino}?erro=motivo`);
   const { supabase } = await obterSessao({ exigirLoja: true });
   const [itens, devolvidos] = await Promise.all([
-    supabase.from("venda_itens").select("id, tipo, quantidade").eq("venda_id", venda),
+    supabase.from("venda_itens").select("id, tipo, quantidade, item_serializado_id").eq("venda_id", venda),
     supabase.from("venda_devolucoes").select("venda_devolucao_itens(venda_item_id, quantidade)").eq("venda_id", venda),
   ]);
   if (itens.error || devolvidos.error) redirect(`${destino}?erro=falha`);
   const jaDevolvido = new Map<string, number>();
   for (const d of devolvidos.data) for (const i of d.venda_devolucao_itens) jaDevolvido.set(i.venda_item_id, (jaDevolvido.get(i.venda_item_id) ?? 0) + i.quantidade);
-  const lido = lerDevolucao(dados, itens.data.map((i) => ({ id: i.id, restante: i.quantidade - (jaDevolvido.get(i.id) ?? 0), fisico: FISICOS.has(i.tipo) })));
+  const lido = lerDevolucao(dados, itens.data.map((i) => ({
+    id: i.id, restante: i.quantidade - (jaDevolvido.get(i.id) ?? 0), fisico: FISICOS.has(i.tipo), serializado: i.item_serializado_id !== null,
+  })));
   if (!lido.ok) redirect(`${destino}?erro=${lido.erro}`);
   const { data, error } = await supabase.rpc("devolver_itens", {
     p_venda: venda, p_itens: lido.pedido.itens as Json, p_reembolsos: lido.pedido.reembolsos as Json, p_motivo: motivo.trim(), p_chave: chaveDe(dados),
   });
-  if (error) redirect(`${destino}?erro=${error.code === "OR009" ? "reembolso" : erroDaVenda(error)}`);
+  if (error) redirect(`${destino}?erro=${error.code === "OR009" ? "reembolso" : error.code === "22023" ? "conferencia" : erroDaVenda(error)}`);
   const resultado = data as { numero?: number; vale?: number | null } | null;
   redirect(`${destino}?devolvida=${resultado?.numero ?? ""}${resultado?.vale ? `&vale=${resultado.vale}` : ""}`);
+}
+
+// Estorno de Pix, cartão ou financeira (#50): só fica confirmado com o código do comprovante do
+// estorno (maquininha, banco ou protocolo da financeira). O banco registra quem confirmou e quando.
+export async function confirmarEstorno(dados: FormData) {
+  const venda = dados.get("venda");
+  const estorno = dados.get("estorno");
+  if (!ehUuid(venda) || !ehUuid(estorno)) redirect("/vender?erro=dados");
+  const destino = `/vendas/${venda}`;
+  const comprovante = String(dados.get("comprovante") ?? "").trim();
+  const observacao = String(dados.get("observacao") ?? "").trim().slice(0, 500);
+  if (comprovante.length < 4 || comprovante.length > 60) redirect(`${destino}?erro=comprovante`);
+  const { supabase } = await obterSessao({ exigirLoja: true });
+  const { error }: Resultado = await supabase.rpc("confirmar_estorno_externo", {
+    p_estorno: estorno, p_comprovante: comprovante, p_observacao: (observacao || null) as string,
+  });
+  if (error) redirect(`${destino}?erro=${error.code === "22023" ? "comprovante" : erroDaVenda(error)}`);
+  redirect(`${destino}?estorno=confirmado`);
+}
+
+// Retorno físico depois do cancelamento (#51): o item só volta ao estoque conferido pelo IMEI/ICCID
+// e com a condição; item que não voltou fecha o retorno sem estoque, com a explicação.
+export async function conferirRetorno(dados: FormData) {
+  const venda = dados.get("venda");
+  const retorno = dados.get("retorno");
+  const recebido = dados.get("recebido");
+  if (!ehUuid(venda) || !ehUuid(retorno) || (recebido !== "sim" && recebido !== "nao")) redirect("/vender?erro=dados");
+  const destino = `/vendas/${venda}`;
+  const identificador = String(dados.get("identificador") ?? "").replace(/\D/g, "").slice(0, 20);
+  const condicao = dados.get("condicao");
+  const observacao = String(dados.get("observacao") ?? "").trim().slice(0, 500);
+  if (recebido === "sim" && (typeof condicao !== "string" || !Object.hasOwn(CONDICOES_DE_RETORNO, condicao))) redirect(`${destino}?erro=conferencia`);
+  if (recebido === "nao" && observacao.length < 10) redirect(`${destino}?erro=explicacao`);
+  const { supabase } = await obterSessao({ exigirLoja: true });
+  const { error }: Resultado = await supabase.rpc("conferir_retorno", {
+    p_retorno: retorno, p_recebido: recebido === "sim", p_identificador: (identificador || null) as string,
+    p_condicao: (recebido === "sim" ? condicao : null) as string, p_observacao: (observacao || null) as string,
+  });
+  if (error) redirect(`${destino}?erro=${error.code === "22023" ? "conferencia" : erroDaVenda(error)}`);
+  redirect(`${destino}?retorno=${recebido === "sim" ? "recebido" : "nao_recebido"}`);
 }

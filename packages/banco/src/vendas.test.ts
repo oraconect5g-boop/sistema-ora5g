@@ -223,7 +223,7 @@ describe("H — cancelamento e fechamento", () => {
     expect(await item(itens.a2)).toEqual({ situacao: "disponivel", em_estoque: true });
   });
 
-  it("concluída: só a gerência cancela, com estorno no caixa e o aparelho de volta; caixas fecham e conferem", async () => {
+  it("concluída: só a gerência cancela, com estorno no caixa; o aparelho volta só no retorno conferido; caixas fecham e conferem", async () => {
     const ana = await naLoja(ids.vendedorA, ids.lojaA);
     const caixaAna = await abrirCaixa(ana);
     const venda = await novaVenda(ana);
@@ -235,8 +235,13 @@ describe("H — cancelamento e fechamento", () => {
     expect(await errou(dono, "select public.cancelar_venda($1, 'Arrependimento')", [venda])).toBe("OR008");
     const caixaDono = await abrirCaixa(dono, 200_000);
     expect(await valor<boolean>(dono, "select public.cancelar_venda($1, 'Arrependimento do cliente') as v", [venda])).toBe(true);
-    expect(await item(itens.a1)).toEqual({ situacao: "disponivel", em_estoque: true });
+    // Cancelamento comercial não repõe estoque (#51): o aparelho espera o retorno físico conferido.
+    expect(await item(itens.a1)).toEqual({ situacao: "vendido", em_estoque: false });
     expect(await dinheiroNoCaixa(caixaDono)).toBe(200_000 - 149_900);
+    const retorno = (await db.query<{ id: string }>("select id from public.venda_retornos where venda_id = $1 and situacao = 'pendente'", [venda])).rows[0]?.id;
+    const imei = (await db.query<{ imei: string }>("select imei from public.itens_serializados where id = $1", [itens.a1])).rows[0]?.imei;
+    expect(await valor(dono, "select public.conferir_retorno($1, true, $2, 'novo', null) as v", [retorno, imei])).toBe("recebido");
+    expect(await item(itens.a1)).toEqual({ situacao: "disponivel", em_estoque: true });
     expect(await divergencias()).toEqual([]);
 
     const [fechamento] = await linhas<{ esperado: string; contado: string; diferenca: string }>(ana, "select * from public.fechar_caixa($1, null)", [10_000 + 149_900]);

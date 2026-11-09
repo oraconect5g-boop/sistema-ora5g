@@ -40,6 +40,12 @@ describe("exigências por tipo de item", () => {
     expect(validarItem({ tipo: "chip", descricao: "Chip", quantidade: 1, precoUnitario: 1 })).toContain("ICCID inválido");
   });
 
+  it("um ICCID é um chip: quantidade 2 com um ICCID é recusada (#35); controle: quantidade 1", () => {
+    const iccidValido = vendaCombinada.find((i) => i.tipo === "chip")?.iccid;
+    expect(validarItem({ tipo: "chip", descricao: "Chip", quantidade: 2, precoUnitario: 1_000, iccid: iccidValido })).toContain("Chip é vendido um por ICCID");
+    expect(validarItem({ tipo: "chip", descricao: "Chip", quantidade: 1, precoUnitario: 1_000, iccid: iccidValido })).toEqual([]);
+  });
+
   it("desconto não pode passar do valor do item", () => {
     expect(validarItem({ tipo: "acessorio", descricao: "Cabo", quantidade: 1, precoUnitario: 1_000, desconto: 1_001 })).toContain("Desconto maior que o item");
   });

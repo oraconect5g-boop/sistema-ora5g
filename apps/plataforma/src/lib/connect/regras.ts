@@ -15,6 +15,7 @@ export const ERROS_DO_CONNECT = {
   linha: "Linha com DDD: 11 dígitos (ex.: 51 99999-9999).",
   motivo: "Informe o motivo (fica na auditoria).",
   evidencia: "Descreva a evidência com pelo menos 10 caracteres (fica na auditoria).",
+  link_pago: "Este serviço já foi pago no caixa: escolha SALDO. O LINK cobraria o cliente de novo.",
   falha: "Não foi possível concluir agora. Tente de novo em instantes.",
 } as const;
 export type ErroDoConnect = keyof typeof ERROS_DO_CONNECT;
@@ -57,6 +58,8 @@ export function lerPedido(tipo: TipoOperacao, dados: Formulario): { ok: true; pe
   const metodo = texto(dados, "metodo", 5);
   const plano = texto(dados, "plano", 9);
   if ((metodo !== "LINK" && metodo !== "SALDO") || !/^\d{1,9}$/.test(plano)) return { ok: false, erro: "dados" };
+  // Serviço já recebido no caixa não vai pelo LINK (REV-054, #57): o banco recusa também.
+  if (metodo === "LINK" && vendaItem) return { ok: false, erro: "link_pago" };
   if (tipo === "recarga") {
     const linha = digitos(texto(dados, "linha"));
     if (!linhaValida(linha)) return { ok: false, erro: "linha" };

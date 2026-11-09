@@ -334,4 +334,57 @@ describe("duas conexões ao mesmo tempo no PostgreSQL 17", () => {
     expect(await contar(`select count(*) as n from public.vinculos v join public.perfis_usuario p on p.id = v.usuario_id
       where v.organizacao_id = $1 and v.papel = 'dono' and v.fim is null and p.status = 'ativo'`, [ids.organizacao])).toBe(1);
   });
+
+  // #53 (REV-051): a prova do Codex segurava a venda numa conexão (primeira trava de aplicar_desconto)
+  // e chamava decidir_aprovacao na outra, que antes travava a APROVAÇÃO primeiro — e o desconto, ao
+  // invalidar a aprovação, esperava por ela: 40P01. Agora as duas funções travam a venda primeiro.
+  it("desconto e decisão da aprovação da mesma venda ao mesmo tempo, nas duas ordens: sem deadlock (#53)", async () => {
+    const ana = await sessaoNaLoja(ids.vendedorA, ids.lojaA);
+    const dono = await sessaoNaLoja(ids.dono, ids.lojaA);
+    const entrar = async (cliente: pg.Client, sessao: Sessao) => {
+      await cliente.query("select set_config('request.jwt.claims', $1, true)", [JSON.stringify({ sub: sessao.usuario, session_id: sessao.sessao, role: "authenticated" })]);
+      await cliente.query("set local role authenticated");
+    };
+    const DECIDIR = "select public.decidir_aprovacao($1, true, 'Conferido') as v";
+    const DESCONTO = "select public.aplicar_desconto($1, $2) as v";
+    await abrir(admin, ana);
+    const venda = await valor<string>(admin, "select public.criar_venda('conc:aprov:venda') as v", []);
+    const item = await valor<string>(admin, "select public.adicionar_item($1, $2, null, 1, 'conc:aprov:item') as v", [venda, cat.capa]);
+    await admin.query(DESCONTO, [item, 500]);
+    const pedido = await valor<string>(admin, "select public.pedir_aprovacao($1, 'Cliente fictício') as v", [item]);
+    await admin.query("commit");
+
+    // 1) A vendedora segura a venda; o dono decide e espera a VENDA (sem segurar a aprovação); o
+    //    desconto continua sem esperar ninguém; a decisão vê o pedido invalidado pela mudança.
+    await a.query("begin");
+    await a.query("select id from public.vendas where id = $1 for update", [venda]);
+    await entrar(a, ana);
+    await abrir(b, dono);
+    const decisao = valor<boolean>(b, DECIDIR, [pedido]).then((ok) => ({ ok }), (e: { code?: string }) => ({ erro: e.code ?? "sem-codigo" }));
+    await esperarTrava(b);
+    expect(await valor<string>(a, DESCONTO, [item, 600])).toBe("precisa_aprovacao");
+    await a.query("commit");
+    const primeira = await decisao;
+    await b.query("erro" in primeira ? "rollback" : "commit");
+    expect(primeira).toEqual({ ok: false });
+    expect(await valor<string>(admin, "select situacao as v from public.aprovacoes_desconto where id = $1", [pedido])).toBe("invalidada");
+
+    // 2) Ordem inversa: o dono segura a venda e decide; o desconto espera a venda e, depois, invalida
+    //    a aprovação dada para o conteúdo antigo.
+    await abrir(admin, ana);
+    const segundo = await valor<string>(admin, "select public.pedir_aprovacao($1, 'Cliente fictício de novo') as v", [item]);
+    await admin.query("commit");
+    await a.query("begin");
+    await a.query("select id from public.vendas where id = $1 for update", [venda]);
+    await entrar(a, dono);
+    await abrir(b, ana);
+    const edicao = valor<string>(b, DESCONTO, [item, 700]).then((ok) => ({ ok }), (e: { code?: string }) => ({ erro: e.code ?? "sem-codigo" }));
+    await esperarTrava(b);
+    expect(await valor<boolean>(a, DECIDIR, [segundo])).toBe(true);
+    await a.query("commit");
+    const segunda = await edicao;
+    await b.query("erro" in segunda ? "rollback" : "commit");
+    expect(segunda).toEqual({ ok: "precisa_aprovacao" });
+    expect(await valor<string>(admin, "select situacao as v from public.aprovacoes_desconto where id = $1", [segundo])).toBe("invalidada");
+  });
 });

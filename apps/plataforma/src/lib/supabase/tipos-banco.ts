@@ -1,5 +1,5 @@
 // ARQUIVO GERADO pelo Supabase (generate_typescript_types do projeto ora5g-dev) depois da
-// migration 20261109150526_correcoes_acesso_lote1. Não edite à mão: gere de novo a cada
+// migration 20261109190400_connect_evidencia_lote2. Não edite à mão: gere de novo a cada
 // migration aplicada (auditoria do Codex de 08/11, §7.2). O teste tipos-banco.test.ts confere
 // que funções e tabelas públicas daqui são as mesmas das migrations.
 export type Json =
@@ -457,6 +457,7 @@ export type Database = {
           enviando_desde: string | null
           esim: boolean
           evidencia: Json | null
+          evidencia_chave: string | null
           iccid: string | null
           id: string
           id_externo: string | null
@@ -500,6 +501,7 @@ export type Database = {
           enviando_desde?: string | null
           esim?: boolean
           evidencia?: Json | null
+          evidencia_chave?: string | null
           iccid?: string | null
           id?: string
           id_externo?: string | null
@@ -543,6 +545,7 @@ export type Database = {
           enviando_desde?: string | null
           esim?: boolean
           evidencia?: Json | null
+          evidencia_chave?: string | null
           iccid?: string | null
           id?: string
           id_externo?: string | null
@@ -1216,6 +1219,106 @@ export type Database = {
             isOneToOne: false
             referencedRelation: "variantes"
             referencedColumns: ["id", "organizacao_id"]
+          },
+        ]
+      }
+      estornos_externos: {
+        Row: {
+          comprovante: string | null
+          confirmado_em: string | null
+          confirmado_por: string | null
+          devolucao_id: string | null
+          id: string
+          meio: string
+          numero: number
+          observacao: string | null
+          organizacao_id: string
+          pagamento_id: string | null
+          situacao: string
+          solicitado_em: string
+          solicitado_por: string
+          unidade_id: string
+          valor_centavos: number
+          venda_id: string
+        }
+        Insert: {
+          comprovante?: string | null
+          confirmado_em?: string | null
+          confirmado_por?: string | null
+          devolucao_id?: string | null
+          id?: string
+          meio: string
+          numero?: never
+          observacao?: string | null
+          organizacao_id: string
+          pagamento_id?: string | null
+          situacao?: string
+          solicitado_em?: string
+          solicitado_por: string
+          unidade_id: string
+          valor_centavos: number
+          venda_id: string
+        }
+        Update: {
+          comprovante?: string | null
+          confirmado_em?: string | null
+          confirmado_por?: string | null
+          devolucao_id?: string | null
+          id?: string
+          meio?: string
+          numero?: never
+          observacao?: string | null
+          organizacao_id?: string
+          pagamento_id?: string | null
+          situacao?: string
+          solicitado_em?: string
+          solicitado_por?: string
+          unidade_id?: string
+          valor_centavos?: number
+          venda_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "estornos_externos_confirmado_por_fkey"
+            columns: ["confirmado_por"]
+            isOneToOne: false
+            referencedRelation: "perfis_usuario"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "estornos_externos_devolucao_id_fkey"
+            columns: ["devolucao_id"]
+            isOneToOne: false
+            referencedRelation: "venda_devolucoes"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "estornos_externos_pagamento_id_fkey"
+            columns: ["pagamento_id"]
+            isOneToOne: false
+            referencedRelation: "venda_pagamentos"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "estornos_externos_solicitado_por_fkey"
+            columns: ["solicitado_por"]
+            isOneToOne: false
+            referencedRelation: "perfis_usuario"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "estornos_externos_unidade_id_organizacao_id_fkey"
+            columns: ["unidade_id", "organizacao_id"]
+            isOneToOne: false
+            referencedRelation: "unidades"
+            referencedColumns: ["id", "organizacao_id"]
+          },
+          {
+            foreignKeyName: "estornos_externos_venda_id_fkey"
+            columns: ["venda_id"]
+            isOneToOne: false
+            referencedRelation: "vendas"
+            referencedColumns: ["id"]
           },
         ]
       }
@@ -2389,6 +2492,93 @@ export type Database = {
           },
         ]
       }
+      venda_retornos: {
+        Row: {
+          condicao: string | null
+          conferido_em: string | null
+          conferido_por: string | null
+          id: string
+          motivo: string
+          observacao: string | null
+          organizacao_id: string
+          quantidade: number
+          situacao: string
+          solicitado_em: string
+          solicitado_por: string
+          unidade_id: string
+          venda_id: string
+          venda_item_id: string
+        }
+        Insert: {
+          condicao?: string | null
+          conferido_em?: string | null
+          conferido_por?: string | null
+          id?: string
+          motivo: string
+          observacao?: string | null
+          organizacao_id: string
+          quantidade: number
+          situacao?: string
+          solicitado_em?: string
+          solicitado_por: string
+          unidade_id: string
+          venda_id: string
+          venda_item_id: string
+        }
+        Update: {
+          condicao?: string | null
+          conferido_em?: string | null
+          conferido_por?: string | null
+          id?: string
+          motivo?: string
+          observacao?: string | null
+          organizacao_id?: string
+          quantidade?: number
+          situacao?: string
+          solicitado_em?: string
+          solicitado_por?: string
+          unidade_id?: string
+          venda_id?: string
+          venda_item_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "venda_retornos_conferido_por_fkey"
+            columns: ["conferido_por"]
+            isOneToOne: false
+            referencedRelation: "perfis_usuario"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "venda_retornos_solicitado_por_fkey"
+            columns: ["solicitado_por"]
+            isOneToOne: false
+            referencedRelation: "perfis_usuario"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "venda_retornos_unidade_id_organizacao_id_fkey"
+            columns: ["unidade_id", "organizacao_id"]
+            isOneToOne: false
+            referencedRelation: "unidades"
+            referencedColumns: ["id", "organizacao_id"]
+          },
+          {
+            foreignKeyName: "venda_retornos_venda_id_fkey"
+            columns: ["venda_id"]
+            isOneToOne: false
+            referencedRelation: "vendas"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "venda_retornos_venda_item_id_fkey"
+            columns: ["venda_item_id"]
+            isOneToOne: true
+            referencedRelation: "venda_itens"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       vendas: {
         Row: {
           a_receber_centavos: number | null
@@ -2629,6 +2819,20 @@ export type Database = {
         Returns: boolean
       }
       conferir_item: { Args: { p_item: string }; Returns: boolean }
+      conferir_retorno: {
+        Args: {
+          p_condicao: string
+          p_identificador: string
+          p_observacao: string
+          p_recebido: boolean
+          p_retorno: string
+        }
+        Returns: string
+      }
+      confirmar_estorno_externo: {
+        Args: { p_comprovante: string; p_estorno: string; p_observacao: string }
+        Returns: string
+      }
       connect_cancelar: {
         Args: { p_motivo: string; p_operacao: string }
         Returns: boolean

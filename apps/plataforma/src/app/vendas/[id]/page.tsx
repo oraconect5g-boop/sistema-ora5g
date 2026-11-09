@@ -1,6 +1,6 @@
 import { randomUUID } from "node:crypto";
 
-import { CheckCircle2, FileText, Receipt, Undo2 } from "lucide-react";
+import { CheckCircle2, FileText, PackageCheck, Receipt, RotateCcw, Undo2 } from "lucide-react";
 import type { Metadata } from "next";
 import Link from "next/link";
 import { notFound } from "next/navigation";
@@ -18,7 +18,7 @@ import { ERROS_DAS_NOTAS } from "../../../lib/notas/regras";
 import { chaveDoCatalogo, textoDoParametro, type ValorDeParametro } from "../../../lib/parametros";
 import { CONDICOES_DE_RETORNO, ERROS_DA_VENDA } from "../../../lib/vendas/regras";
 import { corrigirNota, pedirNota } from "../../notas/acoes";
-import { cancelarVenda, devolverItens } from "../../vender/acoes";
+import { cancelarVenda, conferirRetorno, confirmarEstorno, devolverItens } from "../../vender/acoes";
 
 export const metadata: Metadata = { title: "Comprovante da venda" };
 export const dynamic = "force-dynamic";
@@ -29,7 +29,7 @@ const FISICOS = new Set(["aparelho", "chip", "acessorio"]);
 
 // Comprovante digital (as lojas não têm impressora, DEC-U22). Lido pelo RLS: o vendedor vê as
 // próprias vendas; a gerência vê as da loja. A gerência cancela com estorno (ADR-004).
-export default async function Comprovante({ params, searchParams }: { params: Promise<{ id: string }>; searchParams: Promise<{ concluida?: ValorDeParametro; cancelada?: ValorDeParametro; erro?: ValorDeParametro; nota?: ValorDeParametro; erro_nota?: ValorDeParametro; devolvida?: ValorDeParametro; vale?: ValorDeParametro }> }) {
+export default async function Comprovante({ params, searchParams }: { params: Promise<{ id: string }>; searchParams: Promise<{ concluida?: ValorDeParametro; cancelada?: ValorDeParametro; erro?: ValorDeParametro; nota?: ValorDeParametro; erro_nota?: ValorDeParametro; devolvida?: ValorDeParametro; vale?: ValorDeParametro; estorno?: ValorDeParametro; retorno?: ValorDeParametro }> }) {
   const { id } = await params;
   if (!ehUuid(id)) notFound();
   const parametros = await searchParams;
@@ -39,7 +39,7 @@ export default async function Comprovante({ params, searchParams }: { params: Pr
   const venda = await supabase.from("vendas").select("id, numero, situacao, unidade_id, vendedor_id, cliente_nome, total_centavos, subtotal_centavos, desconto_centavos, troco_centavos, recebido_centavos, a_receber_centavos, devolvido_centavos, concluida_em, cancelada_em, motivo_cancelamento").eq("id", id).maybeSingle();
   if (venda.error) throw new FalhaDoServico("venda");
   if (!venda.data) notFound();
-  const [itens, pagamentos, loja, vendedor, podeCancelar, podePedirNota, aprovaNota, nota, devolucoes, notasDeDevolucao] = await Promise.all([
+  const [itens, pagamentos, loja, vendedor, podeCancelar, podePedirNota, aprovaNota, nota, devolucoes, notasDeDevolucao, estornos, retornos] = await Promise.all([
     supabase.from("venda_itens").select("id, variante_id, item_serializado_id, tipo, quantidade, preco_unitario_centavos, desconto_centavos").eq("venda_id", id).order("criado_em"),
     supabase.from("venda_pagamentos").select("ordem, meio, valor_centavos, entrada_centavos, comprovante, situacao").eq("venda_id", id).order("ordem"),
     supabase.from("unidades").select("nome, cnpj").eq("id", venda.data.unidade_id).maybeSingle(),
@@ -52,8 +52,11 @@ export default async function Comprovante({ params, searchParams }: { params: Pr
     supabase.from("venda_devolucoes").select("id, numero, valor_centavos, motivo, criado_em, venda_devolucao_itens(venda_item_id, quantidade, valor_centavos, condicao), venda_devolucao_reembolsos(meio, valor_centavos), vales_troca(numero, saldo_centavos)")
       .eq("venda_id", id).order("criado_em"),
     supabase.from("notas_pedidos").select("devolucao_id, situacao").eq("venda_id", id).eq("tipo", "devolucao"),
+    // Estorno de Pix, cartão e financeira a confirmar com o comprovante (#50) e retorno físico a conferir (#51).
+    supabase.from("estornos_externos").select("id, numero, meio, valor_centavos, situacao, devolucao_id, comprovante, confirmado_em").eq("venda_id", id).order("numero"),
+    supabase.from("venda_retornos").select("id, venda_item_id, quantidade, situacao, condicao, observacao").eq("venda_id", id).order("solicitado_em"),
   ]);
-  if (itens.error || pagamentos.error || loja.error || vendedor.error || podeCancelar.error || podePedirNota.error || aprovaNota.error || nota.error || devolucoes.error || notasDeDevolucao.error) throw new FalhaDoServico("comprovante");
+  if (itens.error || pagamentos.error || loja.error || vendedor.error || podeCancelar.error || podePedirNota.error || aprovaNota.error || nota.error || devolucoes.error || notasDeDevolucao.error || estornos.error || retornos.error) throw new FalhaDoServico("comprovante");
   const variantes = itens.data.length ? await supabase.from("variantes").select("id, sku, nome").in("id", itens.data.map((i) => i.variante_id)) : { data: [], error: null };
   const serializados = itens.data.some((i) => i.item_serializado_id) ? await supabase.from("itens_serializados").select("id, imei, iccid").in("id", itens.data.flatMap((i) => (i.item_serializado_id ? [i.item_serializado_id] : []))) : { data: [], error: null };
   if (variantes.error || serializados.error) throw new FalhaDoServico("comprovante_itens");
@@ -70,7 +73,10 @@ export default async function Comprovante({ params, searchParams }: { params: Pr
     <main className="mx-auto max-w-lg space-y-4 px-4 py-8">
       <div className="flex items-center justify-between gap-3"><Marca tamanho="text-2xl" /><nav className="flex gap-3 text-sm font-semibold text-acao"><Link href="/vender">Vender</Link><Link href="/inicio">Início</Link></nav></div>
       {textoDoParametro(parametros.concluida) === "1" && v.situacao === "concluida" && <Aviso tom="sucesso" titulo="Venda concluída"><CheckCircle2 aria-hidden className="inline size-4" /> Estoque baixado e pagamento registrado no seu caixa.</Aviso>}
-      {textoDoParametro(parametros.cancelada) === "1" && <Aviso tom="info">Venda cancelada com estorno.</Aviso>}
+      {textoDoParametro(parametros.cancelada) === "1" && <Aviso tom="info">Venda cancelada. O dinheiro saiu do seu caixa; cartão, Pix e financeira ficam como estorno a confirmar com o comprovante; os itens só voltam ao estoque quando forem recebidos e conferidos.</Aviso>}
+      {textoDoParametro(parametros.estorno) === "confirmado" && <Aviso tom="sucesso">Estorno confirmado com o comprovante.</Aviso>}
+      {textoDoParametro(parametros.retorno) === "recebido" && <Aviso tom="sucesso">Item conferido e de volta ao estoque.</Aviso>}
+      {textoDoParametro(parametros.retorno) === "nao_recebido" && <Aviso tom="info">Retorno fechado sem estoque: o item não voltou.</Aviso>}
       {erro && <Aviso tom="perigo">{ERROS_DA_VENDA[erro]}</Aviso>}
       {erroNota && <Aviso tom="perigo">{ERROS_DAS_NOTAS[erroNota]}</Aviso>}
       {textoDoParametro(parametros.devolvida) && <Aviso tom="sucesso">Devolução nº {textoDoParametro(parametros.devolvida)} registrada: estoque e caixa atualizados.{textoDoParametro(parametros.vale) ? ` Vale-troca nº ${textoDoParametro(parametros.vale)} criado: informe esse número no pagamento da nova venda.` : ""}</Aviso>}
@@ -103,7 +109,7 @@ export default async function Comprovante({ params, searchParams }: { params: Pr
         </dl>
         <ul className="mt-2 space-y-1 text-xs">
           {pagamentos.data.map((p) => (
-            <li key={p.ordem} className="numeros">{nomeDoMeio(p.meio)}: {brl(centavosDoBanco(p.valor_centavos))}{centavosDoBanco(p.entrada_centavos) > 0 ? ` (entrada ${brl(centavosDoBanco(p.entrada_centavos))})` : ""}{p.comprovante ? ` · comprovante ${p.comprovante}` : ""}{p.situacao === "estornado" ? " · estornado" : ""}</li>
+            <li key={p.ordem} className="numeros">{nomeDoMeio(p.meio)}: {brl(centavosDoBanco(p.valor_centavos))}{centavosDoBanco(p.entrada_centavos) > 0 ? ` (entrada ${brl(centavosDoBanco(p.entrada_centavos))})` : ""}{p.comprovante ? ` · comprovante ${p.comprovante}` : ""}{p.situacao === "estornado" ? " · estornado" : p.situacao === "estorno_pendente" ? " · estorno a confirmar" : ""}</li>
           ))}
         </ul>
         <p className="mt-3 text-xs text-suave">Comprovante interno, sem valor fiscal. A nota fiscal é pedida abaixo e segue o fluxo combinado com o contador.</p>
@@ -158,6 +164,58 @@ export default async function Comprovante({ params, searchParams }: { params: Pr
           </ul>
         </Cartao>
       )}
+      {estornos.data.length > 0 && (
+        <Cartao titulo="Estornos de cartão, Pix e financeira" subtitulo="Só ficam confirmados com o código do comprovante do estorno." icone={RotateCcw}>
+          <ul className="divide-y divide-borda text-sm">
+            {estornos.data.map((e) => (
+              <li key={e.id} className="space-y-2 py-2">
+                <p className="flex justify-between gap-2"><span>{nomeDoMeio(e.meio)}{e.devolucao_id ? " · devolução" : " · cancelamento"}</span><span className="numeros font-semibold">{brl(centavosDoBanco(e.valor_centavos))}</span></p>
+                {e.situacao === "confirmado"
+                  ? <p className="text-xs"><Selo tom="sucesso" ponto>confirmado</Selo> comprovante {e.comprovante}</p>
+                  : podeCancelar.data
+                    ? (
+                      <form action={confirmarEstorno} className="grid gap-2 sm:grid-cols-2">
+                        <input type="hidden" name="venda" value={v.id} /><input type="hidden" name="estorno" value={e.id} />
+                        <label className="text-xs font-medium">Comprovante do estorno<input name="comprovante" required minLength={4} maxLength={60} autoComplete="off" className={campo} /></label>
+                        <label className="text-xs font-medium">Observação (opcional)<input name="observacao" maxLength={500} className={campo} /></label>
+                        <div><Botao type="submit" tamanho="sm" variante="secundario">Confirmar estorno</Botao></div>
+                      </form>
+                    )
+                    : <p className="text-xs"><Selo tom="aviso" ponto>a confirmar</Selo></p>}
+              </li>
+            ))}
+          </ul>
+        </Cartao>
+      )}
+      {retornos.data.length > 0 && (
+        <Cartao titulo="Itens a receber de volta" subtitulo="O item só volta ao estoque conferido: IMEI/ICCID e condição." icone={PackageCheck}>
+          <ul className="divide-y divide-borda text-sm">
+            {retornos.data.map((r) => {
+              const itemVendido = itens.data.find((i) => i.id === r.venda_item_id);
+              const serial = serializados.data.find((x) => x.id === itemVendido?.item_serializado_id);
+              return (
+                <li key={r.id} className="space-y-2 py-2">
+                  <p>{nomeDoItem(r.venda_item_id)} × {r.quantidade}{serial ? <span className="numeros block text-xs text-suave">{serial.imei ? "IMEI" : "ICCID"} {serial.imei ?? serial.iccid}</span> : null}</p>
+                  {r.situacao === "recebido" && <p className="text-xs"><Selo tom="sucesso" ponto>recebido</Selo> {CONDICOES_DE_RETORNO[r.condicao as keyof typeof CONDICOES_DE_RETORNO] ?? r.condicao}</p>}
+                  {r.situacao === "nao_recebido" && <p className="text-xs"><Selo tom="perigo" ponto>não voltou</Selo> {r.observacao}</p>}
+                  {r.situacao === "pendente" && (podeCancelar.data ? (
+                    <form action={conferirRetorno} className="grid gap-2 sm:grid-cols-2">
+                      <input type="hidden" name="venda" value={v.id} /><input type="hidden" name="retorno" value={r.id} />
+                      <label className="text-xs font-medium">O item voltou?<select name="recebido" defaultValue="sim" className={campo}><option value="sim">Sim, está na loja</option><option value="nao">Não voltou</option></select></label>
+                      <label className="text-xs font-medium">Condição<select name="condicao" defaultValue="novo" className={campo}>
+                        {Object.entries(CONDICOES_DE_RETORNO).map(([codigo, nome]) => <option key={codigo} value={codigo}>{nome}</option>)}
+                      </select></label>
+                      {serial && <label className="text-xs font-medium sm:col-span-2">IMEI/ICCID conferido no item<input name="identificador" inputMode="numeric" autoComplete="off" className={campo} /></label>}
+                      <label className="text-xs font-medium sm:col-span-2">Observação (obrigatória se não voltou)<input name="observacao" maxLength={500} className={campo} /></label>
+                      <div><Botao type="submit" tamanho="sm" variante="secundario">Registrar conferência</Botao></div>
+                    </form>
+                  ) : <p className="text-xs"><Selo tom="aviso" ponto>aguardando conferência</Selo></p>)}
+                </li>
+              );
+            })}
+          </ul>
+        </Cartao>
+      )}
       {v.situacao === "concluida" && podeCancelar.data && restantes.length > 0 && !financiada && (
         <details className="rounded-cartao border border-borda bg-white p-4 text-sm"><summary className="cursor-pointer font-semibold">Devolver ou trocar itens</summary>
           <form action={devolverItens} className="mt-3 space-y-3">
@@ -172,10 +230,14 @@ export default async function Comprovante({ params, searchParams }: { params: Pr
                       {Object.entries(CONDICOES_DE_RETORNO).map(([codigo, nome]) => <option key={codigo} value={codigo}>{nome}</option>)}
                     </select></label>
                   )}
+                  {i.item_serializado_id && (
+                    <label className="text-xs font-medium sm:col-span-3">IMEI/ICCID do item devolvido (confira no aparelho ou no chip)
+                      <input name={`identificador_${i.id}`} inputMode="numeric" autoComplete="off" className={campo} /></label>
+                  )}
                 </li>
               ))}
             </ul>
-            <p className="text-xs text-suave">O valor devolvido é o preço do item menos a parte do desconto. Reembolse nos meios que a venda usou (até o que cada um pagou) ou em vale-troca para uma nova venda. Dinheiro sai do SEU caixa; cartão e Pix ficam para estorno na maquininha ou no banco.</p>
+            <p className="text-xs text-suave">O valor devolvido é o preço do item menos a parte do desconto. Reembolse nos meios que a venda usou (até o que cada um pagou) ou em vale-troca para uma nova venda. Dinheiro sai do SEU caixa; cartão e Pix ficam como estorno a confirmar com o comprovante.</p>
             {[1, 2, 3].map((n) => (
               <div key={n} className="grid grid-cols-2 gap-2">
                 <label className="text-xs font-medium">Reembolso {n}<select name={`reembolso_${n}_meio`} className={campo} defaultValue={n === 1 ? "dinheiro" : "vale_troca"}>
@@ -194,7 +256,7 @@ export default async function Comprovante({ params, searchParams }: { params: Pr
           <form action={cancelarVenda} className="mt-2 space-y-2">
             <input type="hidden" name="venda" value={v.id} /><input type="hidden" name="voltar" value="comprovante" />
             <label className="block text-xs font-medium">Motivo (fica na auditoria)<input name="motivo" required minLength={3} className={campo} /></label>
-            <p className="text-xs text-suave">O aparelho volta ao estoque; o dinheiro sai do SEU caixa aberto; cartão e Pix ficam marcados para estorno na maquininha ou no banco.</p>
+            <p className="text-xs text-suave">O dinheiro sai do SEU caixa aberto (o recebido, sem o troco). Cartão, Pix e financeira ficam como estorno a confirmar com o comprovante. Aparelho, chip e acessório só voltam ao estoque quando forem recebidos e conferidos aqui.</p>
             <Botao type="submit" tamanho="sm" variante="perigo">Cancelar com estorno</Botao>
           </form>
         </details>

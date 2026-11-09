@@ -17,8 +17,18 @@ describe("formulário de pagamento", () => {
     expect(lerPagamentos(formulario({ pagamento_1_meio: "payjoy", pagamento_1_valor: "1.499,00", pagamento_1_entrada: "300" }))).toEqual({
       ok: true, pagamentos: [{ meio: "payjoy", valor: 149_900, entrada: 30_000, meio_entrada: "dinheiro" }],
     });
+    // Meio inválido na entrada é recusado, não trocado por dinheiro (#52).
     expect(lerPagamentos(formulario({ pagamento_1_meio: "aiva", pagamento_1_valor: "1000", pagamento_1_entrada: "100", pagamento_1_meio_entrada: "payjoy" })))
-      .toMatchObject({ ok: true, pagamentos: [{ meio_entrada: "dinheiro" }] });
+      .toEqual({ ok: false, erro: "pagamento" });
+  });
+
+  it("entrada por Pix ou cartão exige o comprovante da entrada (#46)", () => {
+    const linha = { pagamento_1_meio: "payjoy", pagamento_1_valor: "1.499,00", pagamento_1_entrada: "200,00", pagamento_1_meio_entrada: "pix_direto" };
+    expect(lerPagamentos(formulario(linha))).toEqual({ ok: false, erro: "pagamento" });
+    expect(lerPagamentos(formulario({ ...linha, pagamento_1_comprovante: "12" }))).toEqual({ ok: false, erro: "pagamento" });
+    expect(lerPagamentos(formulario({ ...linha, pagamento_1_comprovante: "PIX-1234" }))).toEqual({
+      ok: true, pagamentos: [{ meio: "payjoy", valor: 149_900, entrada: 20_000, meio_entrada: "pix_direto", comprovante: "PIX-1234" }],
+    });
   });
 
   it("recusa meio desconhecido, valor inválido e formulário sem pagamento", () => {
@@ -51,8 +61,8 @@ describe("vale-troca e devolução (adendo do ADR-004)", () => {
     expect(lerPagamentos(formulario({ pagamento_1_meio: "vale_troca", pagamento_1_valor: "79,00", pagamento_1_comprovante: "vale 0012" })))
       .toEqual({ ok: true, pagamentos: [{ meio: "vale_troca", valor: 7_900, comprovante: "VT-12" }] });
     expect(lerPagamentos(formulario({ pagamento_1_meio: "vale_troca", pagamento_1_valor: "79,00" }))).toEqual({ ok: false, erro: "vale_numero" });
-    const financiado = lerPagamentos(formulario({ pagamento_1_meio: "aiva", pagamento_1_valor: "1000,00", pagamento_1_entrada: "100,00", pagamento_1_meio_entrada: "vale_troca" }));
-    expect(financiado.ok && financiado.pagamentos[0]?.meio_entrada).toBe("dinheiro");
+    expect(lerPagamentos(formulario({ pagamento_1_meio: "aiva", pagamento_1_valor: "1000,00", pagamento_1_entrada: "100,00", pagamento_1_meio_entrada: "vale_troca" })))
+      .toEqual({ ok: false, erro: "pagamento" });
     expect(erroDaVenda({ code: "OR018" })).toBe("vale");
     expect(erroDaVenda({ code: "OR017" })).toBe("com_devolucao");
     expect(erroDaVenda({ code: "OR016" })).toBe("financiada");
@@ -67,5 +77,15 @@ describe("vale-troca e devolução (adendo do ADR-004)", () => {
     expect(lerDevolucao(formulario({ reembolso_1_meio: "dinheiro", reembolso_1_valor: "1,00" }), itens)).toEqual({ ok: false, erro: "sem_item" });
     expect(lerDevolucao(formulario({ devolver_b: "1", reembolso_1_meio: "payjoy", reembolso_1_valor: "1,00" }), itens)).toEqual({ ok: false, erro: "reembolso" });
     expect(lerDevolucao(formulario({ devolver_b: "1" }), itens)).toEqual({ ok: false, erro: "reembolso" });
+  });
+
+  it("aparelho e chip devolvidos levam o IMEI/ICCID conferido no balcão (#51)", () => {
+    const aparelho = [{ id: "c", restante: 1, fisico: true, serializado: true }];
+    const base = { devolver_c: "1", condicao_c: "novo", reembolso_1_meio: "dinheiro", reembolso_1_valor: "1.499,00" };
+    expect(lerDevolucao(formulario(base), aparelho)).toEqual({ ok: false, erro: "conferencia" });
+    expect(lerDevolucao(formulario({ ...base, identificador_c: "1234" }), aparelho)).toEqual({ ok: false, erro: "conferencia" });
+    expect(lerDevolucao(formulario({ ...base, identificador_c: "35-209900-176148-7" }), aparelho)).toEqual({
+      ok: true, pedido: { itens: [{ item: "c", quantidade: 1, condicao: "novo", identificador: "352099001761487" }], reembolsos: [{ meio: "dinheiro", valor: 149_900 }] },
+    });
   });
 });

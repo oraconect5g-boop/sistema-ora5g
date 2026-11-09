@@ -24,6 +24,9 @@ export const ERROS_DA_VENDA = {
   com_devolucao: "Esta venda já tem devolução: devolva os itens que restam em vez de cancelar tudo.",
   vale: "Vale-troca não encontrado ou sem saldo suficiente: confira o número e o valor.",
   vale_numero: "Vale-troca: informe o número do vale no campo do comprovante.",
+  conferencia: "Confira o IMEI/ICCID e a condição do item devolvido: o IMEI/ICCID precisa ser o do item vendido.",
+  comprovante: "Informe o código do comprovante do estorno (de 4 a 60 caracteres): maquininha, banco ou protocolo da financeira.",
+  explicacao: "Explique por que o item não voltou (pelo menos 10 caracteres).",
   reembolso: "O reembolso precisa somar o valor devolvido, só nos meios que a venda usou e até o que cada um pagou.",
   sem_item: "Escolha a quantidade de pelo menos um item para devolver.",
   falha: "Não foi possível concluir agora. Tente de novo em instantes.",
@@ -77,8 +80,14 @@ export function lerPagamentos(dados: { get: (nome: string) => unknown }, linhas 
       if (entrada === null) return { ok: false, erro: "valor" };
       if (entrada > 0) {
         linha.entrada = entrada;
+        // Sem o campo, a entrada é em dinheiro; meio inválido é recusado, nunca trocado por dinheiro (#52).
         const meioEntrada = dados.get(`pagamento_${i}_meio_entrada`);
-        linha.meio_entrada = ehMeio(meioEntrada) && !MEIOS[meioEntrada].financeira && meioEntrada !== "vale_troca" ? meioEntrada : "dinheiro";
+        if (typeof meioEntrada === "string" && meioEntrada !== "" && (!ehMeio(meioEntrada) || MEIOS[meioEntrada].financeira || meioEntrada === "vale_troca" || meioEntrada === "link_pagamento")) {
+          return { ok: false, erro: "pagamento" };
+        }
+        linha.meio_entrada = ehMeio(meioEntrada) ? meioEntrada : "dinheiro";
+        // Entrada por Pix ou cartão: o comprovante da entrada vai no campo do comprovante da linha (#46).
+        if (MEIOS[linha.meio_entrada].comprovante && (linha.comprovante ?? "").length < 4) return { ok: false, erro: "pagamento" };
       }
     }
     pagamentos.push(linha);
@@ -91,16 +100,17 @@ export const pareceIdentificador = (texto: string) => /^\d{14,20}$/.test(texto.r
 
 export const CONDICOES_DE_RETORNO = { novo: "Novo (lacrado)", seminovo: "Seminovo", avariado: "Avariado" } as const;
 export type CondicaoDeRetorno = keyof typeof CONDICOES_DE_RETORNO;
-export type ItemDevolvivel = { id: string; restante: number; fisico: boolean };
+export type ItemDevolvivel = { id: string; restante: number; fisico: boolean; serializado?: boolean };
 export type PedidoDeDevolucao = {
-  itens: { item: string; quantidade: number; condicao?: CondicaoDeRetorno }[];
+  itens: { item: string; quantidade: number; condicao?: CondicaoDeRetorno; identificador?: string }[];
   reembolsos: { meio: MeioPagamento; valor: number }[];
 };
 
 /**
  * Formulário de devolução (adendo do ADR-004): devolver_<item> = quantidade (até o que resta),
- * condicao_<item> nos itens físicos; reembolso_N_meio/_valor em até 3 linhas (vale-troca é um meio).
- * O banco confere de novo valores, meios e limites.
+ * condicao_<item> nos itens físicos, identificador_<item> (IMEI/ICCID conferido no balcão, #51) nos
+ * aparelhos e chips; reembolso_N_meio/_valor em até 3 linhas (vale-troca é um meio).
+ * O banco confere de novo valores, meios, limites e a identidade do item.
  */
 export function lerDevolucao(dados: { get: (nome: string) => unknown }, itens: readonly ItemDevolvivel[], linhas = 3):
   { ok: true; pedido: PedidoDeDevolucao } | { ok: false; erro: ErroDaVenda } {
@@ -115,6 +125,11 @@ export function lerDevolucao(dados: { get: (nome: string) => unknown }, itens: r
       const condicao = dados.get(`condicao_${item.id}`);
       if (typeof condicao !== "string" || !Object.hasOwn(CONDICOES_DE_RETORNO, condicao)) return { ok: false, erro: "dados" };
       linha.condicao = condicao as CondicaoDeRetorno;
+    }
+    if (item.serializado) {
+      const identificador = String(dados.get(`identificador_${item.id}`) ?? "").replace(/\D/g, "");
+      if (!/^\d{14,20}$/.test(identificador)) return { ok: false, erro: "conferencia" };
+      linha.identificador = identificador;
     }
     pedido.itens.push(linha);
   }

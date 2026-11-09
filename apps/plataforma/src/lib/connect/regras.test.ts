@@ -31,6 +31,9 @@ describe("pedido da Ora Connect lido do formulário", () => {
     expect(lerPedido("recarga", formulario({ metodo: "PIX", plano: "99999", linha: "51988887777" }))).toEqual({ ok: false, erro: "dados" });
     expect(lerPedido("recarga", formulario({ metodo: "LINK", plano: "99999", linha: "5198888777" }))).toEqual({ ok: false, erro: "linha" });
     expect(lerPedido("recarga", formulario({ metodo: "LINK", plano: "99999", linha: "51988887777", venda_item: "x" }))).toEqual({ ok: false, erro: "dados" });
+    // Serviço já pago no caixa não vai pelo LINK (#57); controle: o mesmo serviço pelo SALDO, acima.
+    expect(lerPedido("recarga", formulario({ metodo: "LINK", plano: "99999", linha: "51988887777", venda_item: "0b1c2d3e-0000-4000-8000-000000000001" })))
+      .toEqual({ ok: false, erro: "link_pago" });
     expect(lerPedido("portabilidade", formulario({ linha: "51900000001", linha_doadora: "51911112222", operadora: "41" })))
       .toEqual({ ok: true, pedido: { linha: "51900000001", linha_doadora: "51911112222", operadora: 41 } });
   });

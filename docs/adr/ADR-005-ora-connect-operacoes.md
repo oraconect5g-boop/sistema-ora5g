@@ -48,3 +48,12 @@ Compra de chip com entrega (`/compra/solicitar`), bloqueio/desbloqueio, consumo,
 1. **P9:** tipo da chave da Ora (franquia, marca/MVNO ou PDV) e quais funções ela libera.
 2. **D-016 (proposta reversível aplicada):** SALDO só com o serviço já pago no caixa; LINK sem venda na loja. Confirma?
 3. Para a Contel: perguntas 2, 6, 7 e as novas 10 e 11 da [referência](../integracoes/NOGLE_API_REFERENCIA.md#3-perguntas-para-a-contel-antes-de-ligar).
+
+## Adendo de 09/11/2026 — Revisão do Codex 9b1109e (#56–#59)
+
+Migrations `20261109150526_correcoes_acesso_lote1` (#56) e `20261109190400_connect_evidencia_lote2` (#57–#59), aplicadas no `ora5g-dev` com md5 conferida. Regressões em `packages/banco/src/correcoes-acesso.test.ts` e `connect-lote2.test.ts`.
+
+1. **Custo (#56):** o débito da carteira fica em `connect_operacoes_custos`, lido só com `custo.ver`. Não aparece na operação, na evidência nem nos eventos.
+2. **LINK × serviço pago (#57):** serviço já recebido no caixa vai só pelo SALDO. O LINK cobraria o cliente de novo; o banco e a tela recusam.
+3. **Titular na chave (#58):** o conteúdo da chave inclui um resumo do titular (nome, documento, nascimento, contatos e endereço normalizados), calculado com um segredo por organização (`privado.connect_segredos`, que ninguém de fora lê). A mesma chave com outro titular dá OR004, também depois do descarte do pedido enviado. O CPF não fica no resumo.
+4. **Uma evidência, uma recarga (#59):** o histórico da linha não traz o id da recarga (pergunta 10 à Contel), e a data de cadastro sozinha não é chave única garantida. Três situações vão para a **conferência da gerência** (resultado desconhecido, resolvido em `connect_resolver` com a evidência): duas recargas com a mesma data no histórico, outra operação da linha com a mesma data, ou recarga do histórico que já confirmou outra operação (`evidencia_chave`, única por organização). Confirmação sem as datas de cadastro e de realização não confirma.
