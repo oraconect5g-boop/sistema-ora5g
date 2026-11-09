@@ -1,5 +1,7 @@
 # APIs, acessos e habilitações necessárias
 
+> **Decisão corrente,09/11/2026 — Ora Connect:** recursos oficiais Nogle/Contel para telecom, cobrança/gateway e repasses (#54). Adaptador e worker agora existem na9b1109e; gateway completo/repasse/recorrência ainda faltam. A seçãoA3 de link genérico refere-se ao PDV/loja online, não substitui a cobrança telecom. [51 perguntas prontas para a Contel](PERGUNTAS_PARA_CONTEL_NOGLE_2026-11-09.md). Sem chaves no chat/GitHub.
+
 **Atualizado em:** 08/11/2026 · **Por:** Claude Code (programador) · **Revisor:** Codex · **Para:** o proprietário
 **Base:** decisões DEC-U19 a DEC-U49, ADR-001 a ADR-003, `docs/10_DECISOES_PENDENTES.md`, `docs/PENDENCIAS_DO_PROPRIETARIO.md`, `.env.example` e a documentação oficial de cada fornecedor (links abaixo).
 

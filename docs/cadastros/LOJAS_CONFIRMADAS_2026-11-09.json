@@ -1,0 +1,137 @@
+{
+  "fonte": "Imagem e confirmação explícita do proprietário em 09/11/2026",
+  "lojas_comerciais": 11,
+  "local_excecao": "DEFEITOS",
+  "observacao": "DEFEITOS recebe transferências quando há erro/problema; não é 12a loja comercial. Quantidades da imagem são referência histórica, não carga de estoque autorizada.",
+  "produto_imagem": {
+    "codigo": "4149",
+    "nome": "CAPINHA COLORIDA - IMAGEM",
+    "disponivel_cabecalho": 6688,
+    "estoque_cabecalho": 6755,
+    "pendencias_cabecalho": 31
+  },
+  "locais": [
+    {
+      "nome_imagem": "SANTA FELICIDADE",
+      "tipo_confirmado": "loja_comercial",
+      "disponivel_imagem": 777,
+      "quantidade_local_imagem": 777,
+      "pendencias_imagem": 0,
+      "pedidos_imagem": []
+    },
+    {
+      "nome_imagem": "ÁGUA VERDE",
+      "tipo_confirmado": "loja_comercial",
+      "disponivel_imagem": 570,
+      "quantidade_local_imagem": 570,
+      "pendencias_imagem": 0,
+      "pedidos_imagem": []
+    },
+    {
+      "nome_imagem": "COLÔNIA",
+      "tipo_confirmado": "loja_comercial",
+      "disponivel_imagem": 573,
+      "quantidade_local_imagem": 573,
+      "pendencias_imagem": 0,
+      "pedidos_imagem": []
+    },
+    {
+      "nome_imagem": "ALMIRANTE TAMANDARÉ",
+      "tipo_confirmado": "loja_comercial",
+      "disponivel_imagem": 465,
+      "quantidade_local_imagem": 468,
+      "pendencias_imagem": 4,
+      "pedidos_imagem": [
+        "995664",
+        "996369"
+      ]
+    },
+    {
+      "nome_imagem": "DEFEITOS",
+      "tipo_confirmado": "local_excecao",
+      "disponivel_imagem": 1,
+      "quantidade_local_imagem": 1,
+      "pendencias_imagem": 0,
+      "pedidos_imagem": []
+    },
+    {
+      "nome_imagem": "DUBAI",
+      "tipo_confirmado": "loja_comercial",
+      "disponivel_imagem": 587,
+      "quantidade_local_imagem": 596,
+      "pendencias_imagem": 9,
+      "pedidos_imagem": [
+        "995880"
+      ]
+    },
+    {
+      "nome_imagem": "COLOMBO",
+      "tipo_confirmado": "loja_comercial",
+      "disponivel_imagem": 593,
+      "quantidade_local_imagem": 595,
+      "pendencias_imagem": 2,
+      "pedidos_imagem": [
+        "995100",
+        "995214"
+      ]
+    },
+    {
+      "nome_imagem": "MUFFATO SANTA",
+      "tipo_confirmado": "loja_comercial",
+      "disponivel_imagem": 1052,
+      "quantidade_local_imagem": 1064,
+      "pendencias_imagem": 12,
+      "pedidos_imagem": [
+        "995580",
+        "995670",
+        "995763",
+        "995913"
+      ]
+    },
+    {
+      "nome_imagem": "BUTIATUVINHA",
+      "tipo_confirmado": "loja_comercial",
+      "disponivel_imagem": 458,
+      "quantidade_local_imagem": 459,
+      "pendencias_imagem": 1,
+      "pedidos_imagem": [
+        "994362"
+      ]
+    },
+    {
+      "nome_imagem": "VENTANIA",
+      "tipo_confirmado": "loja_comercial",
+      "disponivel_imagem": 691,
+      "quantidade_local_imagem": 691,
+      "pendencias_imagem": 0,
+      "pedidos_imagem": []
+    },
+    {
+      "nome_imagem": "BALNEARIO",
+      "tipo_confirmado": "loja_comercial",
+      "disponivel_imagem": 280,
+      "quantidade_local_imagem": 283,
+      "pendencias_imagem": 3,
+      "pedidos_imagem": [
+        "968732",
+        "980263",
+        "981205"
+      ]
+    },
+    {
+      "nome_imagem": "SANTA CANDIDA",
+      "tipo_confirmado": "loja_comercial",
+      "disponivel_imagem": 678,
+      "quantidade_local_imagem": 678,
+      "pendencias_imagem": 0,
+      "pedidos_imagem": []
+    }
+  ],
+  "conferencia": {
+    "soma_disponivel_linhas": 6725,
+    "soma_fisico_linhas": 6755,
+    "soma_pendencias": 31,
+    "diferenca_disponivel_cabecalho": 37,
+    "diferenca_fisico_disponivel_linhas": 30
+  }
+}

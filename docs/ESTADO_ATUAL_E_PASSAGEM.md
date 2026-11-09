@@ -1,5 +1,7 @@
 # Estado atual do projeto e passagem de contexto
 
+> **Atualização do proprietário, 09/11/2026:** 11 lojas comerciais e local de exceção DEFEITOS; substitui 14 lojas. Referência atual: `docs/alinhamento/BUSCA_ESTOQUE_E_TRANSFERENCIAS_2026-11-09.md`; revisão atual `docs/analises/REVISAO_NOGLE_9B1109_E_CONSOLIDADO_2026-11-09.md`. Nenhuma homologação decorrente desta mudança cadastral.
+
 **Atualizado em:** 08/11/2026 (noite) · **Por:** Claude Code (programador, no servidor)
 **Para:** o Claude Code que programa no servidor (usuário `dev`) e o Codex (revisor)
 
@@ -26,8 +28,8 @@ Papéis **fixos** (decisão do proprietário). Detalhes: ADR-001, seção 2.7.
 
 ## 2. O negócio em 10 linhas
 
-1. Rede **Ora 5G**: 14 lojas de celulares e acessórios + operação de chips **Ora Connect**. Um **CNPJ raiz** com **CNPJ de filial por loja**.
-2. **Piloto:** loja **Santa Cândida**. Depois: 3 → 7 → 14 lojas; loja online e marketplaces.
+1. Rede **Ora 5G**: 11 lojas de celulares e acessórios + operação de chips **Ora Connect**. Um **CNPJ raiz** com **CNPJ de filial por loja**.
+2. **Piloto:** loja **Santa Cândida**. Depois: 3 → 7 → 11 lojas; loja online e marketplaces.
 3. **Vendedores fazem tudo** (vendem, recebem, lançam), usam **celular pessoal e da loja**, entram por **e-mail**, e **circulam entre lojas**. Não há caixa, estoquista nem gerente oficial hoje.
 4. **Rein** (sistema atual) continua rodando em paralelo durante o desenvolvimento e o piloto. Dela vem **só um CSV** com produtos, preços e **estoque**. Nenhuma API da Rein.
 5. **Nota fiscal:** hoje o dono emite manualmente num portal, anexa na Rein e envia ao cliente. Objetivo: **solicitação pelo vendedor → aviso no celular do dono/gerente → aprovar em 1 toque → emissão por API → envio automático por e-mail ou WhatsApp**. Provedor fiscal e contador ainda não definidos.
@@ -35,21 +37,21 @@ Papéis **fixos** (decisão do proprietário). Detalhes: ADR-001, seção 2.7.
 7. **Desconto:** hoje é livre e gera diferenças de caixa. Regra nova: vendedor não edita preço; o limite depende da **margem** do produto (teto da categoria, ex.: até 10% à vista, e margem mínima). Acima disso, pedido de aprovação ao gerente ou dono.
 8. **Assistência técnica:** técnico central, orçamentos hoje no WhatsApp e em papel → **Ordem de Serviço digital** com avisos ao cliente e ao técnico; registrar a assistência conta na comissão do vendedor (combate o serviço feito "por fora").
 9. **Desempenho do vendedor:** turno por loja, vendas por categoria (incluindo chips, ativações, portabilidades e recargas, que hoje não contam), metas e incentivos.
-10. **Prazo pedido:** 6 meses (até início de maio/2027) para o núcleo nas 14 lojas + Ora Connect + link de pagamento + Mercado Livre e TikTok Shop. Shopee, Meta Ads avançado, IA e BI avançado ficam para depois.
+10. **Prazo pedido:** 6 meses (até início de maio/2027) para o núcleo nas 11 lojas + Ora Connect + link de pagamento + Mercado Livre e TikTok Shop. Shopee, Meta Ads avançado, IA e BI avançado ficam para depois.
 
 ## 3. Infraestrutura conferida
 
 | Item | Valor |
 |---|---|
 | Servidor | VPS HostGator com **cPanel/WHM**, família Red Hat 9, 4 vCPUs, 16 GB, 512 GiB |
-| IPv4 | `69.6.214.94` (principal) e `69.6.214.23` (usado pelo `ns2`, **não excluir**). **Sem IPv6** |
+| IPv4 | `[IP privado de operação omitido]` (principal) e `[IP privado de operação omitido]` (usado pelo `ns2`, **não excluir**). **Sem IPv6** |
 | SSH | Porta **22022**, usuário `dev` criado, login só por chave, conexão do Windows do proprietário **testada e funcionando** |
-| Impressão digital ED25519 do servidor | `SHA256:qpqzb3QMPlzqESR9xKmrxkjAR/FNTWzHhCYusI73COA` |
+| Impressão digital ED25519 do servidor | `[fingerprint SSH omitida]` |
 | Domínio | `ora5g.com.br` registrado no Registro.br; DNS delegado ao próprio servidor, `ns1.ora5g.com.br` (.94) e `ns2.ora5g.com.br` (.23), **conferido em 07/11** (P12; antes estava no Hostoo) |
 | Zona DNS no WHM | Conferida: A, MX, SPF, DKIM, DMARC, nenhum AAAA |
 | Domínios do sistema | `app`, `loja`, `hml-app`, `hml-loja` `.ora5g.com.br` (só registros A) — ainda não criados |
 | Portas internas | **30xx produção, 31xx homologação**, sempre em `127.0.0.1` |
-| Banco | **Supabase gerenciado**, pelo **pooler em modo sessão (5432)**, porque a conexão direta é só IPv6. Projeto de dev **`ora5g-dev`** (`qgnbeuugklzzcevdzrvg`, São Paulo, gratuito) criado em 07/11 com as migrations aplicadas. Endereço e chave pública já configurados (bastam para o login). `SUPABASE_SECRET_KEY` e `DATABASE_URL` só serão necessárias para worker, scripts de banco e criação de usuários pelo sistema (o proprietário preenche no servidor) |
+| Banco | **Supabase gerenciado**, pelo **pooler em modo sessão (5432)**, porque a conexão direta é só IPv6. Projeto de dev **`ora5g-dev`** (`[identificador de infraestrutura omitido]`, São Paulo, gratuito) criado em 07/11 com as migrations aplicadas. Endereço e chave pública já configurados (bastam para o login). `SUPABASE_SECRET_KEY` e `DATABASE_URL` só serão necessárias para worker, scripts de banco e criação de usuários pelo sistema (o proprietário preenche no servidor) |
 | Node no servidor | 22.23.4 em `~/.local/opt/node` (pacote oficial com checksum conferido; o nvm foi bloqueado pela política de segurança do ambiente) |
 | Node no servidor | Usar `127.0.0.1` (nunca `localhost`) e `NODE_OPTIONS=--dns-result-order=ipv4first` |
 

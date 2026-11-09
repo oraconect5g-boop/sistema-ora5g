@@ -1,5 +1,7 @@
 # ORA 5G — PACOTE DE TRANSFERÊNCIA PARA CLAUDE CODE E CODEX
 
+> **Decisão vigente do proprietário, 09/11/2026:** rede de **11 lojas comerciais e local de exceção DEFEITOS** (transferências por erro/problema). [Cadastro, busca e transferência interna](docs/alinhamento/BUSCA_ESTOQUE_E_TRANSFERENCIAS_2026-11-09.md). A referência anterior a14 lojas está superada; manter arquivos históricos como histórico.
+
 > **Estado atual (07/11/2026):** o projeto já tem código. Comece por `docs/ESTADO_ATUAL_E_PASSAGEM.md` e `docs/alinhamento/ANALISE_DO_PLANO.md`. Este README descreve o pacote de planejamento original.
 
 **Versão documental:** 2026-11-05 — baseline de planejamento, **não** evidência de software implementado.
@@ -54,7 +56,7 @@
 
 **Exemplos importantes:**
 - Rein = **apenas importação inicial por arquivos** de produtos/preços; não projetar API Rein em operações diárias (P0).
-- 14 lojas existentes, validar uma loja piloto antes de expandir (P0).
+- 11 lojas existentes, validar uma loja piloto antes de expandir (P0).
 - UX vendedor mobile-first; algumas lojas não têm notebook nem scanner (P0).
 - PicPay POS é usado; **não** pressupor API específica do terminal (P0 sobre uso, P2 sobre API).
 - Nogle documentação: `https://docs.nogle.tech/`; credenciais privadas NÃO estão neste pacote; endpoints exigem validação (P0 sobre intenção, P2 sobre contratos).
@@ -64,6 +66,6 @@
 
 ## Limites deste pacote
 
-Este pacote consolida o contexto atual disponível, o texto de conversa inicial e os três relatórios de pesquisa localizados na Biblioteca. **Não há confirmação de que um repositório executável já exista, nem de que endpoints Nogle/PicPay/marketplaces tenham sido homologados, nem de que requisitos fiscais estejam validados por contador.** Falhas, dados faltantes e decisões pendentes são explicitados, em vez de inventados.
+Este pacote consolida o contexto atual disponível, o texto de conversa inicial e os três relatórios de pesquisa localizados na Biblioteca. **Há aplicações, migrations e testes executáveis em desenvolvimento; isso não comprova homologação de endpoints Nogle/PicPay/marketplaces ou validação fiscal pelo contador.** Falhas, dados faltantes e decisões pendentes são explicitados, em vez de inventados.
 
 **Próxima ação:** Claude Code deve realizar a *Etapa 0: descoberta/validação dos requisitos e do ambiente existente*, produzir um relatório de divergências e abrir o backlog antes de criar schemas/migrations ou funcionalidades operacionais.

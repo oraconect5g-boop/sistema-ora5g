@@ -1,5 +1,7 @@
 # Análise completa do plano × estado real
 
+> **Atualização corrente,09/11/2026:**11 lojas comerciais +DEFEITOS;179 requisitos após formalização de assistência. Revisão atual e bloqueantes: [consolidado9b1109e](../analises/REVISAO_NOGLE_9B1109_E_CONSOLIDADO_2026-11-09.md). As tabelas antigas abaixo mantêm o corte histórico indicado.
+
 > **Prioridade atualizada pelo proprietário, 08/11/2026:** concluir as pendências da revisão e priorizar **vendas, pagamentos/caixa e Ora Connect reais**, com catálogo/estoque/acesso íntegros como dependências, para substituir a Rein por transição homologada. Depois, avançar o restante do escopo. Execução e critérios em [PROMPT_CLAUDE_EXECUCAO_PRIORITARIA.md](PROMPT_CLAUDE_EXECUCAO_PRIORITARIA.md). Consolidar APIs/habilitações necessárias para o proprietário, preservando as decisões de negócio e aprovações de produção pendentes.
 
 > **Adendo do proprietário, 08/11/2026:** fotos obrigatórias por produto/variante visual e exibição no catálogo, busca, estoque e PDV (ORA-CAT-011, P0). Inventário atual: **179 requisitos** (173 + ORA-OS-001 a 006, assistência técnica, formalizados em 09/11 sem contar como feitos); recorte piloto: **71**. [Especificação e aceite](FOTOS_DOS_PRODUTOS_2026-11-08.md), issue [#26](https://github.com/oraconect5g-boop/sistema-ora5g/issues/26). Os totais de 172 abaixo preservam a base histórica de 07/11; a rastreabilidade gerada mostra a contagem atual.

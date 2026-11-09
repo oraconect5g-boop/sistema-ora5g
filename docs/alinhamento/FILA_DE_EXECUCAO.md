@@ -1,5 +1,7 @@
 # Fila de execução — núcleo para sair da Rein
 
+> **Prioridade corrente,09/11/2026:** corrigir #27–#30 e #45–#59 antes da homologação; concluir #54 (API Nogle com cobrança/gateway/repasse) e #60 (busca visual e pedidos de transferência entre11 lojas e DEFEITOS). [Consolidado e ordem](../analises/REVISAO_NOGLE_9B1109_E_CONSOLIDADO_2026-11-09.md). Adaptador novo está implementado parcialmente; as lacunas do corte 371cef0 não representam a main 9b1109e.
+
 **Atualizado em:** 08/11/2026 · **Por:** Claude Code · **Revisor:** Codex
 **Origem:** [PROMPT_CLAUDE_EXECUCAO_PRIORITARIA.md](PROMPT_CLAUDE_EXECUCAO_PRIORITARIA.md) (PR #25), pedido do proprietário de 08/11 (inclui **cadastro de usuários e gestão da equipe**) e [auditoria do Codex de 08/11](../analises/AUDITORIA_CLAUDE_CODE_2026-11-08.md).
 **Regra:** cada linha vira branch e commits próprios; integração na `main` só depois da sequência do CI em instalação limpa; o Codex revisa. "Feito" = testado em desenvolvimento, **não** homologado.
