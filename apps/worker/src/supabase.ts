@@ -1,7 +1,7 @@
 import { createClient, type SupabaseClient } from "@supabase/supabase-js";
 
 import type { BancoConnect } from "./connect/processar.ts";
-import { mensagemSegura, type ServicoIdentidade } from "./identidade.ts";
+import { mensagemSegura, type DesfechoDoConvite, type ServicoIdentidade } from "./identidade.ts";
 
 // Bloqueio no Auth: 100 anos (o desbloqueio usa "none"). O banco é a fonte da verdade do acesso.
 const BANIMENTO = "876000h";
@@ -31,7 +31,7 @@ export function servicoSupabase(cliente: SupabaseClient, enderecoApp: string): S
       return data.user ? { usuario: data.user.id } : { erro: "o Auth não devolveu a pessoa criada" };
     },
     usuarioPorEmail: (email) => rpc("identidade_usuario_por_email", { p_email: email }),
-    concluir: (convite, usuario, jaExistia) => rpc("identidade_concluir_convite", { p_convite: convite, p_usuario: usuario, p_ja_existia: jaExistia }),
+    concluir: (convite, usuario, jaExistia) => rpc<DesfechoDoConvite>("identidade_concluir_convite", { p_convite: convite, p_usuario: usuario, p_ja_existia: jaExistia }),
     falhar: (convite, erro) => rpc("identidade_falha_convite", { p_convite: convite, p_erro: erro }),
     async bloqueiosAAplicar() {
       const linhas = await rpc<{ usuario_id: string; bloquear: boolean }[]>("identidade_bloqueios_a_aplicar");

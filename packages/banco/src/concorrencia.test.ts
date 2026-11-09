@@ -315,4 +315,23 @@ describe("duas conexões ao mesmo tempo no PostgreSQL 17", () => {
     expect(final).toEqual({ erro: "OR013" });
     expect(await contar("select count(*) as n from public.connect_operacoes where iccid = $1", [iccid])).toBe(1);
   });
+
+  it("dois donos encerrando o vínculo um do outro ao mesmo tempo: um encerra, o outro recebe 23514 e a rede fica com um dono (#29)", async () => {
+    const segundo = "42000000-0000-4000-8000-0000000009d0";
+    await admin.query("insert into auth.users (id, email) values ($1, 'dono2@teste.invalid')", [segundo]);
+    await admin.query("insert into public.perfis_usuario (id, nome, email) values ($1, 'dono2', 'dono2@teste.invalid')", [segundo]);
+    const vinculoDoSegundo = await valor<string>(admin,
+      "insert into public.vinculos (usuario_id, organizacao_id, papel, escopo, inicio) values ($1, $2, 'dono', 'organizacao', now() - interval '1 day') returning id as v",
+      [segundo, ids.organizacao]);
+    const vinculoDoPrimeiro = await valor<string>(admin, "select id as v from public.vinculos where usuario_id = $1 and papel = 'dono' and fim is null", [ids.dono]);
+    await abrir(a, await sessaoNaLoja(ids.dono, ids.lojaA));
+    await abrir(b, await sessaoNaLoja(segundo, ids.lojaA));
+    const final = await disputa(
+      () => a.query("select public.encerrar_vinculo($1, 'Disputa de donos')", [vinculoDoSegundo]),
+      () => valor(b, "select public.encerrar_vinculo($1, 'Disputa de donos') as v", [vinculoDoPrimeiro]),
+    );
+    expect(final).toEqual({ erro: "23514" });
+    expect(await contar(`select count(*) as n from public.vinculos v join public.perfis_usuario p on p.id = v.usuario_id
+      where v.organizacao_id = $1 and v.papel = 'dono' and v.fim is null and p.status = 'ativo'`, [ids.organizacao])).toBe(1);
+  });
 });

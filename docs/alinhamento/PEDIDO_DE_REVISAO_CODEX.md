@@ -125,3 +125,23 @@ Pedidos de conferência:
 3. Fila fiscal: `notas_pedidos.tipo` (`venda` | `devolucao`) e `devolucao_id`, índice único por venda só para o tipo `venda`, novo evento `ajustada_por_devolucao`.
 4. Venda com devolução não é cancelada inteira (OR017).
 5. Telas: devolução e lista de devoluções no comprovante; "Comprovante ou nº do vale" no PDV.
+
+## 09/11/2026 — Lote 1 do prompt consolidado: acesso e configuração (#55, #27–#30, #45, #56)
+
+**Branch:** `fix/ORA-acesso-configuracao-lote1` (a partir da main `d730e9a`). **Matriz de reconciliação de todos os achados:** [RECONCILIACAO_CODEX_2026-11-09.md](RECONCILIACAO_CODEX_2026-11-09.md). Migration `20261109150526_correcoes_acesso_lote1` aplicada no `ora5g-dev`, com md5 conferida, reversão ensaiada e tipos gerados de novo.
+
+| # | Achado | O que mudou | Prova |
+|---|---|---|---|
+| 1 | #55 / REV-052 | `deploy/homologacao/ambiente-web.sh`: lista de **nomes permitidos** para o web (`APP_ENV`, `APP_TIMEZONE`, `APP_DEFAULT_CURRENCY`, `NEXT_PUBLIC_*`), arquivo 600. O worker continua com o ambiente completo | `packages/config/src/ambiente-web.test.ts` (3). Ensaio de publicação e republicação na porta 3190 com valores fictícios: web sem NOGLE e sem chave secreta, worker com as duas |
+| 2 | #27 / REV-026 | `alterar_situacao_pessoa` exige gerir **todas** as organizações em que a pessoa tem vínculo vigente (42501). Fora disso, encerra-se o vínculo na própria equipe | `correcoes-acesso.test.ts` (#27, com controle positivo) |
+| 3 | #28 / REV-027 | Autoconcessão pela identidade: `convidar_pessoa` confere também o e-mail do Auth do ator. `identidade_concluir_convite` recusa e cancela quando a pessoa do Auth é quem convidou. Agora retorna `enviado`, `vinculado` ou `recusado`, e o worker conta os recusados | `correcoes-acesso.test.ts` (#28, 2 casos); `apps/worker/src/identidade.test.ts` |
+| 4 | #29 / REV-028 | Trava consultiva por organização (`equipe_donos`) em `encerrar_vinculo` e no bloqueio de dono, com a conferência do outro dono ativo depois da espera | `concorrencia.test.ts`: duas conexões reais (PostgreSQL 17); uma encerra, a outra recebe 23514 |
+| 5 | #30 / REV-029 | `privado.pessoa_gere_equipe` (sem depender de sessão). Convite de autor sem autoridade é cancelado antes do e-mail e recusado na conclusão | `correcoes-acesso.test.ts` (#30, com controle: autor válido conclui) |
+| 6 | #45 / REV-043 | Policy `aprovacoes_ler`: o próprio pedido só com `unidade_id in unidades_visiveis()` (perfil, vínculo, sessão e turno vigentes) | `correcoes-acesso.test.ts` (#45); a prova da PR #33 passou |
+| 7 | #56 / REV-053 | Débito da carteira em `connect_operacoes_custos` (RLS `custo.ver`), fora de `connect_operacoes`, da evidência e dos eventos. A tela só consulta com `custo.ver` | `correcoes-acesso.test.ts` (#56); `ponta-a-ponta.test.ts` do worker |
+
+**Provas da PR #33 nesta versão.** As de #45 e #56 passam. As de #27–#30 agora terminam em erro por causa da proteção nova: a prova esperava retorno booleano, ou que a segunda transação não esperasse. As regressões permanentes listadas acima refazem os mesmos cenários pelo contrato novo, sem afrouxar a regra.
+
+**Riscos e retorno.** `identidade_concluir_convite` mudou o retorno (de `void` para `text`). Worker e banco mudam juntos; o worker antigo ignora o retorno. A reversão do lote devolve a coluna de custo, a policy e os textos originais das funções (só em banco sem dados reais).
+
+**Fica de fora.** #11 depende do usuário de teste (linha A1 da lista única em `docs/PENDENCIAS_DO_PROPRIETARIO.md`).

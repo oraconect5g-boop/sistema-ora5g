@@ -33,7 +33,7 @@ try {
   const servico = servicoSupabase(clienteAdministrativo(url, chave), app);
   const convites = await processarConvites(servico);
   const bloqueios = await aplicarBloqueios(servico);
-  console.log(`${agora} convites: ${convites.enviados} enviados, ${convites.vinculados} vinculados, ${convites.falhas} falhas; bloqueios: ${bloqueios.aplicados} aplicados, ${bloqueios.falhas} falhas`);
+  console.log(`${agora} convites: ${convites.enviados} enviados, ${convites.vinculados} vinculados, ${convites.recusados} recusados, ${convites.falhas} falhas; bloqueios: ${bloqueios.aplicados} aplicados, ${bloqueios.falhas} falhas`);
   process.exit(convites.falhas + bloqueios.falhas > 0 ? 1 : 0);
 } catch (erro) {
   console.error(`${agora} worker de identidade falhou: ${mensagemSegura(erro)}`);

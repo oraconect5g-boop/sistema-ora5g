@@ -45,11 +45,11 @@ export ORA_PUBLICANDO=1 ORA_HML_BASE="$BASE" ORA_HML_PORTA="$PORTA"
 # ainda que o arquivo de origem seja editado durante a publicação.
 RETRATO="$BASE/.ambiente-em-publicacao"
 install -m 600 "$ENV_HML" "$RETRATO"
-# ADR-002 §2.5: a chave secreta e a conexão direta ao banco são só do worker (apps/worker); o
-# aplicativo web, que atende as requisições das pessoas, recebe o arquivo sem elas.
+# ADR-002 §2.5 e REV-052 (#55): o aplicativo web, que atende as requisições das pessoas, recebe só
+# as variáveis da lista de permissão de ambiente-web.sh; segredos (Supabase, banco, Nogle e futuros)
+# ficam só na cópia completa do worker (apps/worker).
 RETRATO_WEB="$BASE/.ambiente-web-em-publicacao"
-install -m 600 /dev/null "$RETRATO_WEB"
-grep -vE '^[[:space:]]*(export[[:space:]]+)?(SUPABASE_SECRET_KEY|DATABASE_URL)[[:space:]]*=' "$RETRATO" >"$RETRATO_WEB" || true
+bash "$(dirname "$0")/ambiente-web.sh" "$RETRATO" "$RETRATO_WEB"
 trap 'rm -f "$RETRATO" "$RETRATO_WEB"' EXIT
 CONFIG="$(sha256sum "$RETRATO" | cut -c1-12)"
 
