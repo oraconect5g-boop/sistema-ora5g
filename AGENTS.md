@@ -1,8 +1,10 @@
 # AGENTS.md — Orientação para Codex e quaisquer outros agentes
 
+> **Decisão vigente do proprietário, 09/11/2026:** rede de **11 lojas comerciais e local de exceção DEFEITOS** (transferências por erro/problema). [Cadastro, busca e transferência interna](docs/alinhamento/BUSCA_ESTOQUE_E_TRANSFERENCIAS_2026-11-09.md). A referência anterior a14 lojas está superada; manter arquivos históricos como histórico.
+
 Leia primeiro `docs/ESTADO_ATUAL_E_PASSAGEM.md` e `docs/alinhamento/ANALISE_DO_PLANO.md`; depois `CLAUDE.md`, `README.md` e as especificações de `docs/`. O pedido de revisão em aberto está em `docs/alinhamento/PEDIDO_DE_REVISAO_CODEX.md`. Essas regras são obrigatórias independentemente do agente executor.
 
-**Meta:** desenvolver a plataforma operacional própria da Ora 5G para 14 lojas (piloto 1 loja), móvel e omnichannel, preservando a arquitetura e a integração entre CRM, PDV, estoque, IMEI, telecom, fiscal, financeiro, metas e canais digitais.
+**Meta:** desenvolver a plataforma operacional própria da Ora 5G para 11 lojas (piloto 1 loja), móvel e omnichannel, preservando a arquitetura e a integração entre CRM, PDV, estoque, IMEI, telecom, fiscal, financeiro, metas e canais digitais.
 
 ## Processo de tarefa
 1. Receba uma única issue delimitada, ID de requisito e critérios de aceitação.

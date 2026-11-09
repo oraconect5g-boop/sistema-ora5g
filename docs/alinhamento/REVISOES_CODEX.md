@@ -202,3 +202,33 @@ Migration = packages/banco/supabase/migrations/20261108233546_vendas_pagamentos_
 Supabase só em leitura: 30 tabelas com RLS, 11 migrations, zero usuários/sessões/vendas/caixas; MD5 das duas novas migrations confere. Advisor agrupa 29 RPCs SECURITY DEFINER intencionais e 74 índices sem uso no ambiente vazio, não números automáticos de vulnerabilidades ou índices a excluir.
 
 CI 42537301660: verde no merge temporário eab4143 (d484b882 + 371cef0), 429 testes +4 TODO e 176 E2E +10 pulados. O log prova que essa execução já incluiu vendas, apesar do metadado de base anterior. Atualização da PR de revisão exige novo CI do novo head. POS-006/007 e PAY-004 voltam a parcial; nenhum requisito homologado.
+
+## 09/11/2026 — merges, duplicidades e Nogle financeira
+
+[Análise de merges e versões antigas](../analises/REVISAO_MERGES_E_DUPLICIDADES_2026-11-09.md): main 371cef0, 130 commits, 35 merges e 68 árvores Git. Não foi comprovada reintrodução de código operacional removido; 34 merges têm base única e nenhum caminho removido voltou a ficar presente. Um merge documental tem duas bases e foi examinado separadamente. Conteúdo novo de resolução apareceu só em documentação e um E2E.
+
+Banco local reconstruído: 11 migrations, 94 declarações de função com 11 substituições na mesma identidade e 83 funções atuais, sem sobrecarga antiga; 144 índices sem equivalentes exatos nas propriedades comparadas, 30 triggers e 32 policies. Triggers repetindo a função protegem eventos diferentes (UPDATE/DELETE e TRUNCATE). Índices invertidos de fotos são candidatos a avaliar por plano/carga, sem remoção automática.
+
+Grafo: 118 fontes, 17 entradas reais e nenhum caminho literal de import das entradas reais aos dados demo; arquivo monolítico dados.ts e versão antiga da migration de fotos removidos. Configurações/templates idênticos têm avaliação individual. Divergência TypeScript/SQL de pagamento já comprovada em #48 exige regressão de paridade; não foi atribuída a conflito de merge sem evidência. O inventário local passou; limites e fontes na pasta de evidências. Não houve inspeção da VPS/crontab.
+
+[Prioridade Nogle, gateway e repasses](../analises/PRIORIDADE_NOGLE_GATEWAY_E_REPASSES_2026-11-09.md), [issue #54](https://github.com/oraconect5g-boop/sistema-ora5g/issues/54): orientação explícita reforçada pelo proprietário. Coleção oficial reconferida em 09/11 é idêntica à cópia versionada (62 funções, 16 grupos). Não há transporte Nogle, rota Connect real, persistência/processamento telecom ou cobrança/repasse integrados na base. Não está pronto só esperando chaves. #54 é pendência de implementação, não novo defeito atribuído a merge.
+
+Código/configuração/contratos e testes fictícios podem avançar sem credenciais; chamadas e homologação reais dependem de conta/linha/escopo autorizados e contrato do provedor. Gateway Nogle no módulo Ora Connect; campos de pagamento não provam liquidação ou contrato de repasse bancário. Sem operações reais, secrets ou alteração de linguagem. Nenhum status promovido a homologado.
+
+## Atualização 9b1109e — Nogle real parcial,11 lojas e transferências
+
+O corte novo inclui19 commits/66 caminhos após371cef0. Agora há cliente/worker Nogle, /connect, operações persistentes, /estoque e fila fiscal. [Consolidado atual](../analises/REVISAO_NOGLE_9B1109_E_CONSOLIDADO_2026-11-09.md), [perguntas à Contel](../integracoes/PERGUNTAS_PARA_CONTEL_NOGLE_2026-11-09.md). Não usar a ausência de módulos do corte anterior como estado atual.
+
+| Achado | Requisito | Fonte | Gravidade | Correção solicitada |
+|---|---|---|---|---|
+| REV-052 / #55 | ORA-CONNECT-004; ORG-006 | publicar.sh:52 | Bloqueante — segredos | Filtro antigo conserva segredos Nogle na cópia web. Contrato explícito/allowlist e teste de publicação/rollback |
+| REV-053 / #56 | ORA-CONNECT-003; ORG-004 | migration Connect:245–265; connect/page.tsx:54/199 | Bloqueante — permissão | Custo da carteira exposto ao vendedor. Separar DTO/tabela/eventos e conferir custo.ver |
+| REV-054 / #57 | ORA-CONNECT-003; POS-007 | connect_registrar | Bloqueante — dinheiro | LINK aceita serviço já pago. Impedir dupla cobrança ou compensar por regra aprovada |
+| REV-055 / #58 | ORA-CONNECT-002/010 | digest da operação sem cliente | Bloqueante — identidade | Mesma chave aceita cliente alterado. Digest/HMAC do conteúdo relevante com privacidade |
+| REV-056 / #59 | ORA-CONNECT-003/006/010 | interpretarConsulta; produção por operação | Bloqueante — dupla contagem | Uma evidência de recarga confirma duas operações com data coincidente. Correlação única e bloqueio de ambiguidade |
+
+Seis provas adicionais, um controle passou e cinco falharam por cinco causas, fora do CI normal; [fontes](../analises/evidencias/2026-11-09-nogle-9b1109/LEIA-ME.md). Sem operação real ou chave. Suíte local com o teste de propriedade anterior:486 testes passaram, dois TODO. Supabase só leitura:38 tabelas com RLS,14 migrations e zero usuários/sessões/operações; MD5s novos conferem. Nenhuma sobrecarga antiga no inventário local111 funções.
+
+Histórico total analisado149 commits/43 merges/81 árvores; os oito merges novos não restauraram caminho removido. Resolução de navegação/SSR/E2E preserva estoque,Connect e notas. #55 mostra integração nova usando caminho antigo não atualizado, sem exigir conflito textual no Git. O reexport antigo Nogle aponta a uma implementação canônica no domínio.
+
+Proprietário confirmou11 lojas comerciais e DEFEITOS para erro/problema, substituindo 14 lojas. Referência em docs/cadastros/LOJAS_CONFIRMADAS_2026-11-09.json; fluxo interno #60 e [proposta visual](../prototipos/estoque-por-loja-2026-11-09/LEIA-ME.md). Pedidos simulados no protótipo não alteram estoque. Operação real, repasse e homologação continuam pendentes.

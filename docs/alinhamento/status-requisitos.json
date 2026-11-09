@@ -9,7 +9,7 @@
     "bloqueado": "depende de decisão do proprietário ou de terceiro",
     "nao_iniciado": "ainda não começou"
   },
-  "atualizado_em": "2026-11-08",
+  "atualizado_em": "2026-11-09",
   "requisitos": {
     "ORA-ORG-001": {
       "status": "parcial",
@@ -28,7 +28,7 @@
     },
     "ORA-ORG-004": {
       "status": "parcial",
-      "nota": "RLS e funções do banco testadas; REV-001/REV-002 já conferidos. Telas reais de início, escolha de loja e equipe usam Auth/RLS/RPC. Revisão Codex em 55d10af encontrou bloqueio cruzado entre organizações (#27), autoconcessão por convite (#28) e perda concorrente de donos (#29); corrigir antes do aceite de gestão. Não homologado. Revisão independente ampliada: permanecem #27–#29 de acesso e #45 (REV-043), SELECT de aprovação própria após bloqueio/revogação. Guards e RLS de vendas/custos têm controles positivos, mas RLS habilitado não comprova revogação em toda tabela.",
+      "nota": "RLS e funções do banco testadas; REV-001/REV-002 já conferidos. Telas reais de início, escolha de loja e equipe usam Auth/RLS/RPC. Revisão Codex em 55d10af encontrou bloqueio cruzado entre organizações (#27), autoconcessão por convite (#28) e perda concorrente de donos (#29); corrigir antes do aceite de gestão. Não homologado. Revisão independente ampliada: permanecem #27–#29 de acesso e #45 (REV-043), SELECT de aprovação própria após bloqueio/revogação. Guards e RLS de vendas/custos têm controles positivos, mas RLS habilitado não comprova revogação em toda tabela. Novo bloqueante #56: custo debitado da carteira acessível ao vendedor sem custo.ver.",
       "evidencia": "packages/banco/src/acesso.test.ts; packages/banco/src/revisao-codex.test.ts; docs/analises/REVISAO_VENDAS_PAGAMENTOS_CAIXA_371CEF0_2026-11-08.md"
     },
     "ORA-ORG-005": {
@@ -103,8 +103,8 @@
     },
     "ORA-CONNECT-004": {
       "status": "parcial",
-      "nota": "Contrato da API NOGLE lido por inteiro (62 funções) e guardado no repositório; catálogo gerado e conferido no CI; normalização das respostas e regras de ICCID, portabilidade e bloqueio testadas. Falta o cliente HTTP no servidor, que depende do tipo de chave (P9) e das credenciais no gerenciador de segredos.",
-      "evidencia": "apps/plataforma/src/integracoes/nogle; docs/integracoes/NOGLE_API_REFERENCIA.md"
+      "nota": "Adaptador só no worker do servidor (credenciais fora do web e do navegador); pedido só com campos documentados, provado contra a cópia oficial da coleção; GET com corpo só depois da confirmação da Contel. Testado contra servidor local com os exemplos oficiais; nenhuma chamada real. Revisão 9b1109e: #55–#59 reproduzidos; cliente/worker reais existem, ainda sem homologação oficial. #54 exige completar cobrança/gateway, recorrência e repasse Nogle, com correlação inequívoca e sem dupla contabilização.",
+      "evidencia": "packages/dominio/src/nogle.ts; apps/worker/src/connect; packages/banco/src/connect.test.ts; packages/banco/src/concorrencia.test.ts; packages/dominio/src/nogle.test.ts; apps/worker/src/connect/ponta-a-ponta.test.ts; apps/worker/src/connect/transporte.test.ts; docs/analises/REVISAO_NOGLE_9B1109_E_CONSOLIDADO_2026-11-09.md"
     },
     "ORA-FISC-003": {
       "status": "bloqueado",
@@ -113,8 +113,8 @@
     },
     "ORA-FISC-004": {
       "status": "bloqueado",
-      "nota": "Depende do emissor fiscal contratado e do certificado A1.",
-      "evidencia": "docs/etapa-0/ETAPA_0_DECISOES_2026-11-06.md §2A"
+      "nota": "Contrato do emissor (EmissorFiscal) com implementação bloqueada; emissão real só com emissor escolhido e homologado com o contador (A4).",
+      "evidencia": "packages/dominio/src/fiscal.ts; docs/adr/ADR-006-fila-fiscal-interna.md"
     },
     "ORA-QUAL-001": {
       "status": "parcial",
@@ -187,49 +187,49 @@
       "evidencia": "apps/plataforma/src/app/demo; apps/plataforma/e2e/demonstracao.spec.ts"
     },
     "ORA-CONNECT-001": {
-      "status": "demonstracao",
-      "nota": "Venda do chip no PDV e estoque de chips por loja (físico e eSIM), com transferência do estoque central limitada ao estoque virgem, que é baixado (REV-024/#23 corrigido). Só dados fictícios.",
-      "evidencia": "apps/plataforma/src/app/demo/connect; apps/plataforma/e2e/connect.spec.ts"
+      "status": "testado",
+      "nota": "Chip vendido no PDV com ICCID do estoque (ADR-004); a ativação só aceita chip do estoque depois de vendido (OR011), fica ligada à venda do chip, e o chip ativado não volta ao estoque pelo cancelamento. Sem chamada real à Contel: falta credencial no worker, P9 e linha de teste para homologar. Revisão 9b1109e: #55–#59 reproduzidos; cliente/worker reais existem, ainda sem homologação oficial. #54 exige completar cobrança/gateway, recorrência e repasse Nogle, com correlação inequívoca e sem dupla contabilização.",
+      "evidencia": "packages/banco/supabase/migrations/20261109123402_ora_connect_operacoes.sql; packages/banco/src/connect.test.ts; packages/banco/src/concorrencia.test.ts; packages/dominio/src/nogle.test.ts; apps/worker/src/connect/ponta-a-ponta.test.ts; apps/worker/src/connect/transporte.test.ts; apps/plataforma/src/app/connect; apps/worker/src/connect; docs/adr/ADR-005-ora-connect-operacoes.md; docs/analises/REVISAO_NOGLE_9B1109_E_CONSOLIDADO_2026-11-09.md"
     },
     "ORA-CONNECT-002": {
-      "status": "demonstracao",
-      "nota": "A venda do chip (PDV) e a ativação na operadora (aba Ativar chip) são passos separados. Só dados fictícios.",
-      "evidencia": "apps/plataforma/src/app/demo/connect; apps/plataforma/e2e/connect.spec.ts"
+      "status": "parcial",
+      "nota": "Venda do chip, pedido de ativação, resposta da operadora e produção são registros separados; a produção nasce só da operação confirmada, uma vez (chave única). Sem chamada real à Contel: falta credencial no worker, P9 e linha de teste para homologar. Revisão 9b1109e: #55–#59 reproduzidos; cliente/worker reais existem, ainda sem homologação oficial. #54 exige completar cobrança/gateway, recorrência e repasse Nogle, com correlação inequívoca e sem dupla contabilização.",
+      "evidencia": "packages/banco/supabase/migrations/20261109123402_ora_connect_operacoes.sql; packages/banco/src/connect.test.ts; packages/banco/src/concorrencia.test.ts; packages/dominio/src/nogle.test.ts; apps/worker/src/connect/ponta-a-ponta.test.ts; apps/worker/src/connect/transporte.test.ts; docs/analises/REVISAO_NOGLE_9B1109_E_CONSOLIDADO_2026-11-09.md"
     },
     "ORA-CONNECT-003": {
-      "status": "demonstracao",
-      "nota": "Recarga com estado próprio (aguardando pagamento ou confirmada), avulsa ou programada pelo saldo; o meio escolhido (LINK ou SALDO) vale até a confirmação, sem misturar caixa da loja e carteira da Ora (REV-025/#24 corrigido). Só dados fictícios.",
-      "evidencia": "apps/plataforma/src/app/demo/connect; apps/plataforma/e2e/connect.spec.ts"
+      "status": "parcial",
+      "nota": "Recarga é operação própria com estado; separa valor de face (lista oficial), recebido na loja (venda do serviço, obrigatório no SALDO) e debitado da carteira (histórico da Contel). FALTA: receita da recarga por LINK (repasse, P8/D-009) e homologação. Revisão 9b1109e: #55–#59 reproduzidos; cliente/worker reais existem, ainda sem homologação oficial. #54 exige completar cobrança/gateway, recorrência e repasse Nogle, com correlação inequívoca e sem dupla contabilização.",
+      "evidencia": "packages/banco/supabase/migrations/20261109123402_ora_connect_operacoes.sql; packages/banco/src/connect.test.ts; packages/banco/src/concorrencia.test.ts; packages/dominio/src/nogle.test.ts; apps/worker/src/connect/ponta-a-ponta.test.ts; apps/worker/src/connect/transporte.test.ts; apps/plataforma/src/app/connect; apps/worker/src/connect; docs/adr/ADR-005-ora-connect-operacoes.md; docs/analises/REVISAO_NOGLE_9B1109_E_CONSOLIDADO_2026-11-09.md"
     },
     "ORA-CONNECT-005": {
-      "status": "demonstracao",
-      "nota": "A linha só aparece como ativa depois da consulta que confirma a ativação na operadora. Simulado; resposta real depende da integração.",
-      "evidencia": "apps/plataforma/src/app/demo/connect; apps/plataforma/e2e/connect.spec.ts"
+      "status": "testado",
+      "nota": "Ativação só confirma com a evidência da operadora (ICCID ativo com a linha); resposta ambígua, sem resposta ou worker interrompido viram resultado desconhecido, sem sucesso falso nem reenvio; a gerência decide (não a própria operação). Sem chamada real à Contel: falta credencial no worker, P9 e linha de teste para homologar. Revisão 9b1109e: #55–#59 reproduzidos; cliente/worker reais existem, ainda sem homologação oficial. #54 exige completar cobrança/gateway, recorrência e repasse Nogle, com correlação inequívoca e sem dupla contabilização.",
+      "evidencia": "packages/banco/supabase/migrations/20261109123402_ora_connect_operacoes.sql; packages/banco/src/connect.test.ts; packages/banco/src/concorrencia.test.ts; packages/dominio/src/nogle.test.ts; apps/worker/src/connect/ponta-a-ponta.test.ts; apps/worker/src/connect/transporte.test.ts; docs/analises/REVISAO_NOGLE_9B1109_E_CONSOLIDADO_2026-11-09.md"
     },
     "ORA-CONNECT-006": {
-      "status": "demonstracao",
-      "nota": "Ativações e recargas atribuídas ao vendedor e à loja da venda nos painéis e na carteira. Só dados fictícios.",
-      "evidencia": "apps/plataforma/src/app/demo/connect; apps/plataforma/e2e/connect.spec.ts"
+      "status": "parcial",
+      "nota": "Produção por operação confirmada, do vendedor e da loja de origem, com origem (evidência da operadora ou revisão da gerência) e chave única por operação. Comissão sobre ela ainda não existe (P8). Revisão 9b1109e: #55–#59 reproduzidos; cliente/worker reais existem, ainda sem homologação oficial. #54 exige completar cobrança/gateway, recorrência e repasse Nogle, com correlação inequívoca e sem dupla contabilização.",
+      "evidencia": "packages/banco/supabase/migrations/20261109123402_ora_connect_operacoes.sql; packages/banco/src/connect.test.ts; packages/banco/src/concorrencia.test.ts; packages/dominio/src/nogle.test.ts; apps/worker/src/connect/ponta-a-ponta.test.ts; apps/worker/src/connect/transporte.test.ts; docs/analises/REVISAO_NOGLE_9B1109_E_CONSOLIDADO_2026-11-09.md"
     },
     "ORA-CONNECT-007": {
-      "status": "demonstracao",
-      "nota": "Consulta de linha (detalhes, saldo, consumo de 30 dias, histórico, cobranças, titularidade, apelido) no formato da API. Só dados fictícios.",
-      "evidencia": "apps/plataforma/src/app/demo/connect; apps/plataforma/e2e/connect.spec.ts"
+      "status": "parcial",
+      "nota": "Listas oficiais (planos, DDDs, cidades, operadoras) sincronizadas pelo worker e usadas na tela; consultas de evidência com intervalo crescente. FALTA: telas de consulta de linha, saldo e consumo e limites de chamada (não documentados). Revisão 9b1109e: #55–#59 reproduzidos; cliente/worker reais existem, ainda sem homologação oficial. #54 exige completar cobrança/gateway, recorrência e repasse Nogle, com correlação inequívoca e sem dupla contabilização.",
+      "evidencia": "apps/plataforma/src/app/connect; apps/worker/src/connect; docs/adr/ADR-005-ora-connect-operacoes.md; packages/banco/src/connect.test.ts; packages/banco/src/concorrencia.test.ts; packages/dominio/src/nogle.test.ts; apps/worker/src/connect/ponta-a-ponta.test.ts; apps/worker/src/connect/transporte.test.ts; docs/analises/REVISAO_NOGLE_9B1109_E_CONSOLIDADO_2026-11-09.md"
     },
     "ORA-CONNECT-008": {
-      "status": "demonstracao",
-      "nota": "Portabilidade (pedido, reenvio do SMS, status) e operadoras doadoras no formato da API. Só dados fictícios.",
-      "evidencia": "apps/plataforma/src/app/demo/connect; apps/plataforma/e2e/connect.spec.ts"
+      "status": "parcial",
+      "nota": "Portabilidade registrada, enviada e acompanhada pelo status documentado; o exemplo contraditório da documentação fica como resultado desconhecido (pergunta 7). FALTA: contrato/venda de plano e homologação. Revisão 9b1109e: #55–#59 reproduzidos; cliente/worker reais existem, ainda sem homologação oficial. #54 exige completar cobrança/gateway, recorrência e repasse Nogle, com correlação inequívoca e sem dupla contabilização.",
+      "evidencia": "packages/banco/supabase/migrations/20261109123402_ora_connect_operacoes.sql; packages/banco/src/connect.test.ts; packages/banco/src/concorrencia.test.ts; packages/dominio/src/nogle.test.ts; apps/worker/src/connect/ponta-a-ponta.test.ts; apps/worker/src/connect/transporte.test.ts; apps/plataforma/src/app/connect; apps/worker/src/connect; docs/adr/ADR-005-ora-connect-operacoes.md; docs/analises/REVISAO_NOGLE_9B1109_E_CONSOLIDADO_2026-11-09.md"
     },
     "ORA-CONNECT-010": {
-      "status": "demonstracao",
-      "nota": "Cada operação que cria algo na operadora diz o que consultar antes de reenviar (catálogo e telas). A recuperação real depende do cliente HTTP.",
-      "evidencia": "apps/plataforma/src/app/demo/connect; apps/plataforma/e2e/connect.spec.ts; apps/plataforma/src/integracoes/nogle; docs/integracoes/NOGLE_API_REFERENCIA.md"
+      "status": "parcial",
+      "nota": "Sem conexão volta para a fila; conectou e não respondeu = desconhecido, nunca reenviado; envio interrompido expira para desconhecido; resposta atrasada ainda vale; dois workers não pegam a mesma operação (PostgreSQL 17 real). Revisão 9b1109e: #55–#59 reproduzidos; cliente/worker reais existem, ainda sem homologação oficial. #54 exige completar cobrança/gateway, recorrência e repasse Nogle, com correlação inequívoca e sem dupla contabilização.",
+      "evidencia": "packages/banco/supabase/migrations/20261109123402_ora_connect_operacoes.sql; packages/banco/src/connect.test.ts; packages/banco/src/concorrencia.test.ts; packages/dominio/src/nogle.test.ts; apps/worker/src/connect/ponta-a-ponta.test.ts; apps/worker/src/connect/transporte.test.ts; docs/analises/REVISAO_NOGLE_9B1109_E_CONSOLIDADO_2026-11-09.md"
     },
     "ORA-CONNECT-011": {
-      "status": "demonstracao",
-      "nota": "eSIM na ativação e compra de chip com entrega e rastreio no formato da API; eSIM transferido sai do estoque virgem (REV-024). Só dados fictícios.",
-      "evidencia": "apps/plataforma/src/app/demo/connect; apps/plataforma/e2e/connect.spec.ts"
+      "status": "parcial",
+      "nota": "Ativação de eSIM pelo formato documentado (sem ICCID, \"esim\": \"SIM\"), com o ICCID e o link vindos da resposta. FALTA: confirmar com a Contel (pergunta 11), compra com entrega e contratação digital. Revisão 9b1109e: #55–#59 reproduzidos; cliente/worker reais existem, ainda sem homologação oficial. #54 exige completar cobrança/gateway, recorrência e repasse Nogle, com correlação inequívoca e sem dupla contabilização.",
+      "evidencia": "packages/banco/supabase/migrations/20261109123402_ora_connect_operacoes.sql; packages/dominio/src/nogle.ts; packages/banco/src/connect.test.ts; packages/banco/src/concorrencia.test.ts; packages/dominio/src/nogle.test.ts; apps/worker/src/connect/ponta-a-ponta.test.ts; apps/worker/src/connect/transporte.test.ts; docs/analises/REVISAO_NOGLE_9B1109_E_CONSOLIDADO_2026-11-09.md"
     },
     "ORA-CAT-001": {
       "status": "parcial",
@@ -248,27 +248,27 @@
     },
     "ORA-INV-001": {
       "status": "parcial",
-      "nota": "Saldo por loja no banco, isolado por RLS (papel de unidade vê só a loja da sessão) e disponibilidade das outras lojas sem IMEI (disponibilidade_na_rede). Falta: transferência entre lojas (ORA-INV-007) e a tela real.",
-      "evidencia": "packages/banco/supabase/migrations/20261108150620_catalogo_estoque.sql; packages/banco/src/catalogo-estoque.test.ts"
+      "nota": "Saldo por loja no banco, isolado por RLS, e tela real /estoque: saldo da loja do turno com foto (ampliação no celular) com busca por nome/SKU, alerta abaixo do mínimo, busca por IMEI/ICCID com o histórico do livro e disponibilidade na rede sem IMEI. Falta: transferência entre lojas (ORA-INV-007) e homologação com usuário real.",
+      "evidencia": "packages/banco/supabase/migrations/20261108150620_catalogo_estoque.sql; packages/banco/src/catalogo-estoque.test.ts; apps/plataforma/src/app/estoque; apps/plataforma/src/lib/estoque/regras.test.ts"
     },
     "ORA-INV-003": {
-      "status": "testado",
-      "nota": "Livro só de inserção; saldo = soma do livro e posição de cada aparelho/chip controlada pelo próprio livro, com o item travado (REV-022/#21 e REV-023/#22 corrigidos; saída legítima voltou a funcionar: o upsert antigo recusava toda saída). privado.divergencias_estoque() confere livro × saldo × itens × reservas e a migration só termina sem divergência. Regressões e concorrência real passando. Correção delimitada conferida pelo Codex em 08/11 na base 55d10af: reproduções independentes e concorrência passaram; issues de integridade encerradas. Não é homologação operacional.",
+      "status": "parcial",
+      "nota": "Livro só de inserção; saldo = soma do livro e posição de cada aparelho/chip controlada pelo próprio livro, com o item travado (REV-022/#21 e REV-023/#22 corrigidos; saída legítima voltou a funcionar: o upsert antigo recusava toda saída). privado.divergencias_estoque() confere livro × saldo × itens × reservas e a migration só termina sem divergência. Regressões e concorrência real passando. Correção delimitada conferida pelo Codex em 08/11 na base 55d10af: reproduções independentes e concorrência passaram; issues de integridade encerradas. Não é homologação operacional. Revisão Codex: nova guarda de chip com operação viva é avanço; #34 na identidade do retry e #51 na devolução física continuam pendentes, inclusive para itens sem operação telecom. Não homologado.",
       "evidencia": "packages/banco/supabase/migrations/20261108195850_integridade_estoque.sql; packages/banco/src/integridade-estoque.test.ts; packages/banco/src/concorrencia.test.ts; docs/analises/REVISAO_CLAUDE_E_RELATORIO_WEB_2026-11-08.md"
     },
     "ORA-INV-004": {
       "status": "parcial",
-      "nota": "Conferência física do IMEI/ICCID pelo celular registrada e auditada (conferir_item); relatório de divergências do estoque no banco (privado.divergencias_estoque, 08/11). Falta: importação aprovada da Rein, aprovadores do ajuste e tela.",
-      "evidencia": "packages/banco/supabase/migrations/20261108150620_catalogo_estoque.sql; packages/banco/src/catalogo-estoque.test.ts"
+      "nota": "Conferência física do dia na tela /estoque: progresso, conferir pelo IMEI/ICCID digitado ou item a item, gravada e auditada pelo banco (conferir_item); relatório de divergências no banco. Falta: importação aprovada da Rein (arquivo), aprovadores do ajuste e inventário assinado. Proprietário confirmou11 lojas comerciais e DEFEITOS em09/11. #60 exige painel por produto, pedido, separação, envio, recebimento/divergência e regularização; demo e movimentos isolados não entregam o fluxo.",
+      "evidencia": "packages/banco/supabase/migrations/20261108150620_catalogo_estoque.sql; packages/banco/src/catalogo-estoque.test.ts; apps/plataforma/src/app/estoque"
     },
     "ORA-INV-005": {
       "status": "parcial",
-      "nota": "Reserva com prazo, liberação, vencimento e idempotência no banco; a mesma chave só repete a mesma reserva (REV-021/#20). Concorrência real provada: último item, mesma chave, liberação × nova reserva e vencimento disputado; a rotina de vencimento não espera item em venda. Liberar reserva de outra pessoa exige permissão e fica auditado. Falta: ligar ao checkout real e agendar a rotina.",
+      "nota": "Reserva com prazo, liberação, vencimento e idempotência no banco; a mesma chave só repete a mesma reserva (REV-021/#20). Concorrência real provada: último item, mesma chave, liberação × nova reserva e vencimento disputado; a rotina de vencimento não espera item em venda. Liberar reserva de outra pessoa exige permissão e fica auditado. Falta: ligar ao checkout real e agendar a rotina. Proprietário confirmou11 lojas comerciais e DEFEITOS em09/11. #60 exige painel por produto, pedido, separação, envio, recebimento/divergência e regularização; demo e movimentos isolados não entregam o fluxo.",
       "evidencia": "packages/banco/supabase/migrations/20261108195850_integridade_estoque.sql; packages/banco/src/integridade-estoque.test.ts; packages/banco/src/concorrencia.test.ts; packages/banco/src/catalogo-estoque.test.ts"
     },
     "ORA-INV-006": {
       "status": "parcial",
-      "nota": "O banco recusa reservar ou movimentar IMEI/ICCID reservado, vendido, de outra loja ou já no estoque, com códigos próprios (OR002, OR003, OR005) e sem mudança parcial (item e lançamento juntos ou nenhum). Falta: mensagens na tela real.",
+      "nota": "O banco recusa reservar ou movimentar IMEI/ICCID reservado, vendido, de outra loja ou já no estoque, com códigos próprios (OR002, OR003, OR005) e sem mudança parcial (item e lançamento juntos ou nenhum). Falta: mensagens na tela real. Proprietário confirmou11 lojas comerciais e DEFEITOS em09/11. #60 exige painel por produto, pedido, separação, envio, recebimento/divergência e regularização; demo e movimentos isolados não entregam o fluxo.",
       "evidencia": "packages/banco/supabase/migrations/20261108195850_integridade_estoque.sql; packages/banco/src/integridade-estoque.test.ts; packages/banco/src/concorrencia.test.ts"
     },
     "ORA-INV-011": {
@@ -283,7 +283,7 @@
     },
     "ORA-CAT-011": {
       "status": "parcial",
-      "nota": "Implementado em desenvolvimento (08/11): bucket privado no Storage com RLS por organização (vendedor vê, dono e gerente enviam: catalogo.fotos), caminho como identidade estável e URL assinada temporária, registro no banco com tamanho e tipo vindos do Storage, troca que guarda a anterior, ilustração só para item não físico, pendências (produto sem foto e cor sem foto própria) e tela /catalogo com miniatura, ampliação e envio pelo celular (redução no aparelho). FALTA: homologar com fotos reais e usuário real (critérios da #26), fotos no estoque e no PDV reais (com o ADR-004) e limpeza de arquivo enviado sem registro. Na main 371cef0 a busca do PDV real também exibe foto. Continuam #40–#43, pontos de estoque/identificação e homologação de câmera/galeria/Auth/Storage; #26 não concluída.",
+      "nota": "Fotos reais no catálogo, PDV e novo estoque (/estoque) na main 9b1109e. Permanecem #40–#43, importação/pendências e homologação Auth/Storage/câmera/galeria; #26 não concluída. Busca deve mostrar foto/variante e rede antes de pedido interno #60. Foto fictícia não substitui identificação do produto.",
       "evidencia": "packages/banco/supabase/migrations/20261108204536_fotos_dos_produtos.sql; packages/banco/src/fotos-produto.test.ts; apps/plataforma/src/app/catalogo; apps/plataforma/src/lib/catalogo; docs/analises/REVISAO_VENDAS_PAGAMENTOS_CAIXA_371CEF0_2026-11-08.md"
     },
     "ORA-POS-001": {
@@ -345,6 +345,31 @@
       "status": "parcial",
       "nota": "Contas a receber das financeiras ligadas à venda e ao pagamento, abertas até o recebimento; canceladas no estorno. FALTA: vencimento (P8), baixa e aging.",
       "evidencia": "packages/banco/supabase/migrations/20261108233546_vendas_pagamentos_e_caixa.sql; packages/banco/src/vendas.test.ts; packages/banco/src/concorrencia.test.ts"
+    },
+    "ORA-FISC-001": {
+      "status": "testado",
+      "nota": "Botão \"Pedir nota fiscal\" no comprovante da venda concluída (celular), com nome e CPF/CNPJ opcionais; idempotente; um pedido vivo por venda; isolamento de loja, rede e papel.",
+      "evidencia": "packages/banco/supabase/migrations/20261109123757_fila_fiscal.sql; packages/banco/src/notas.test.ts; packages/dominio/src/fiscal.test.ts; apps/plataforma/src/app/notas; apps/plataforma/src/app/vendas/[id]/page.tsx; docs/adr/ADR-006-fila-fiscal-interna.md"
+    },
+    "ORA-FISC-002": {
+      "status": "testado",
+      "nota": "Fila do dono/gerente por antiguidade da venda, aprovar ou pedir correção; a aprovação nunca segura a emissão (registrar a nota vale como aprovação, com evento); alerta de atraso só com o prazo e a fonte do contador.",
+      "evidencia": "packages/banco/supabase/migrations/20261109123757_fila_fiscal.sql; packages/banco/src/notas.test.ts; packages/dominio/src/fiscal.test.ts; apps/plataforma/src/app/notas; apps/plataforma/src/app/vendas/[id]/page.tsx; docs/adr/ADR-006-fila-fiscal-interna.md"
+    },
+    "ORA-FISC-005": {
+      "status": "parcial",
+      "nota": "Chave de acesso de 44 dígitos registrada com dígito e CNPJ da loja conferidos, única, com modelo, série e número; CPF/CNPJ só até a emissão. FALTA: protocolo, XML/PDF anexos e retenção definida com o contador.",
+      "evidencia": "packages/banco/supabase/migrations/20261109123757_fila_fiscal.sql; packages/banco/src/notas.test.ts; packages/dominio/src/fiscal.test.ts"
+    },
+    "ORA-FISC-006": {
+      "status": "parcial",
+      "nota": "Chave repetida recusada; venda cancelada cancela pedido sem nota; venda com nota emitida só cancela depois do tratamento fiscal (OR015). FALTA: reprocesso e contingência no emissor (A4).",
+      "evidencia": "packages/banco/supabase/migrations/20261109123757_fila_fiscal.sql; packages/banco/src/notas.test.ts; packages/dominio/src/fiscal.test.ts"
+    },
+    "ORA-CONNECT-009": {
+      "status": "nao_iniciado",
+      "nota": "Carteira/extrato e repasses oficiais não implementados no lote ADR-005; a coleção não explicita contrato de liquidação bancária. Prioridade do proprietário #54: obter recursos/contratos, persistir estados/correlação e homologar sem estimativa local apresentada como recebimento.",
+      "evidencia": "docs/analises/PRIORIDADE_NOGLE_GATEWAY_E_REPASSES_2026-11-09.md; docs/integracoes/PERGUNTAS_PARA_CONTEL_NOGLE_2026-11-09.md"
     }
   }
 }

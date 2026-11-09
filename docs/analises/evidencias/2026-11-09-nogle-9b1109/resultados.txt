@@ -1,0 +1,11 @@
+nogle-extra.log
+EVIDENCIA cliente_alterado codigo=null
+EVIDENCIA link_servico_pago codigo=null
+EVIDENCIA custo_vendedor codigo=null linhas=1
+EVIDENCIA recarga_data_igual producoes=2 eventos_oficiais=1
+⎯⎯⎯⎯⎯⎯⎯ Failed Tests 4 ⎯⎯⎯⎯⎯⎯⎯
+      Tests  4 failed | 1 passed (5)
+publicacao-extra.log
+EVIDENCIA segredo_nogle_web=true
+⎯⎯⎯⎯⎯⎯⎯ Failed Tests 1 ⎯⎯⎯⎯⎯⎯⎯
+      Tests  1 failed (1)

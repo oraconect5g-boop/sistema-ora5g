@@ -143,6 +143,17 @@ describe("B — desconto e aprovação", () => {
     expect(aprov).toEqual({ situacao: "aprovada", decidido_por: ids.dono, solicitado_por: ids.vendedorA });
   });
 
+  it("T5 — o dono também não aprova o próprio pedido de desconto", async () => {
+    const dono = await naLoja(ids.dono, ids.lojaA);
+    await abrirCaixa(dono);
+    const venda = await novaVenda(dono);
+    const capa = await adicionar(dono, venda, cat.capa, null, 1);
+    expect(await valor<string>(dono, "select public.aplicar_desconto($1, 500) as v", [capa])).toBe("precisa_aprovacao");
+    const pedido = await valor<string>(dono, "select public.pedir_aprovacao($1, 'Cliente antigo da loja') as v", [capa]);
+    expect(await errou(dono, "select public.decidir_aprovacao($1, true, null)", [pedido])).toBe("42501");
+    expect((await db.query("select situacao from public.aprovacoes_desconto where id = $1", [pedido])).rows).toEqual([{ situacao: "pendente" }]);
+  });
+
   it("aprovação cai se o desconto mudar depois", async () => {
     const ana = await naLoja(ids.vendedorA, ids.lojaA);
     await abrirCaixa(ana);

@@ -1,5 +1,9 @@
 # Nogle: registro oficial, venda, recorrência e desempenho
 
+> **Reforço do proprietário,09/11/2026:** toda a Ora Connect integra-se ao sistema externo Nogle/Contel, incluindo cobrança/gateway e repasse oficiais; rede de 11 lojas +DEFEITOS. [Estado atual, bloqueantes e próximo fluxo vertical](../analises/REVISAO_NOGLE_9B1109_E_CONSOLIDADO_2026-11-09.md), #54. Há adaptador/worker parcial na9b1109e; não há homologação completa.
+
+> **Reforço do proprietário, 09/11/2026:** toda a Ora Connect deve integrar-se oficialmente à Nogle/Contel, incluindo cobranças/gateway e repasses pelos recursos contratados da API. A Nogle é o sistema externo integrado; o backend Ora chama sua API e reconcilia os registros. [Estado real, fonte oficial atual, matriz das 62 funções e ordem de implementação](../analises/PRIORIDADE_NOGLE_GATEWAY_E_REPASSES_2026-11-09.md), issue [#54](https://github.com/oraconect5g-boop/sistema-ora5g/issues/54). Ainda faltam cliente HTTP, persistência/processamento e homologação.
+
 **Data:** 08/11/2026. **Origem:** orientação explícita recente do proprietário, complementar à DEC-U46 e aos requisitos ORA-CONNECT-001 a 011, ORA-PERF e ORA-FIN. **Status:** obrigação de negócio confirmada; contratos técnicos abaixo orientam a implementação e os testes, não declaram integração entregue.
 
 ## 1. Resultado obrigatório

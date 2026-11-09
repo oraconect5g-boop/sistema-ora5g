@@ -32,6 +32,8 @@ describe("erros e busca", () => {
   it("código do banco vira código da tela; desconhecido vira falha", () => {
     expect(erroDaVenda({ code: "OR010" })).toBe("aprovacao");
     expect(erroDaVenda({ code: "OR008" })).toBe("sem_caixa");
+    expect(erroDaVenda({ code: "OR013" })).toBe("connect");
+    expect(erroDaVenda({ code: "OR015" })).toBe("nota_emitida");
     expect(erroDaVenda({ code: "toString" })).toBe("falha");
   });
   it("valor em reais e identificador", () => {

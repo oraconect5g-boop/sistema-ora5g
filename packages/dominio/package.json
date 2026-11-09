@@ -4,7 +4,9 @@
   "private": true,
   "type": "module",
   "exports": {
-    ".": "./src/index.ts"
+    ".": "./src/index.ts",
+    "./nogle": "./src/nogle.ts",
+    "./fiscal": "./src/fiscal.ts"
   },
   "scripts": {
     "lint": "eslint . --max-warnings=0",

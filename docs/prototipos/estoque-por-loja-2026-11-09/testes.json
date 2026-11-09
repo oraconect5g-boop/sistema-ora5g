@@ -1,0 +1,20 @@
+[
+  {
+    "viewport": "desktop",
+    "lojas": 11,
+    "pedidos_detalhados": true,
+    "zero_recusado": true,
+    "solicitacao_simulada": true,
+    "saldo_preservado": true,
+    "erros": 0
+  },
+  {
+    "viewport": "celular",
+    "lojas": 11,
+    "pedidos_detalhados": true,
+    "zero_recusado": true,
+    "solicitacao_simulada": true,
+    "saldo_preservado": true,
+    "erros": 0
+  }
+]

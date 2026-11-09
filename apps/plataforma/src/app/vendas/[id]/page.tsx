@@ -1,9 +1,12 @@
-import { CheckCircle2, Receipt } from "lucide-react";
+import { randomUUID } from "node:crypto";
+
+import { CheckCircle2, FileText, Receipt } from "lucide-react";
 import type { Metadata } from "next";
 import Link from "next/link";
 import { notFound } from "next/navigation";
 
 import { MEIOS } from "@ora5g/dominio";
+import { chaveEmGrupos, MODELOS_DE_NOTA, SITUACOES_DA_NOTA, type SituacaoDaNota } from "@ora5g/dominio/fiscal";
 
 import { Marca } from "../../../componentes/Marca";
 import { Aviso, Botao, Cartao, Selo } from "../../../componentes/ui";
@@ -11,8 +14,10 @@ import { ehUuid } from "../../../lib/acesso/regras";
 import { FalhaDoServico, obterSessao } from "../../../lib/acesso/sessao";
 import { centavosDoBanco } from "../../../lib/dinheiro";
 import { brl } from "../../../lib/formato";
+import { ERROS_DAS_NOTAS } from "../../../lib/notas/regras";
 import { chaveDoCatalogo, textoDoParametro, type ValorDeParametro } from "../../../lib/parametros";
 import { ERROS_DA_VENDA } from "../../../lib/vendas/regras";
+import { corrigirNota, pedirNota } from "../../notas/acoes";
 import { cancelarVenda } from "../../vender/acoes";
 
 export const metadata: Metadata = { title: "Comprovante da venda" };
@@ -23,23 +28,28 @@ const campo = "mt-1 min-h-11 w-full rounded-botao border border-borda bg-white p
 
 // Comprovante digital (as lojas não têm impressora, DEC-U22). Lido pelo RLS: o vendedor vê as
 // próprias vendas; a gerência vê as da loja. A gerência cancela com estorno (ADR-004).
-export default async function Comprovante({ params, searchParams }: { params: Promise<{ id: string }>; searchParams: Promise<{ concluida?: ValorDeParametro; cancelada?: ValorDeParametro; erro?: ValorDeParametro }> }) {
+export default async function Comprovante({ params, searchParams }: { params: Promise<{ id: string }>; searchParams: Promise<{ concluida?: ValorDeParametro; cancelada?: ValorDeParametro; erro?: ValorDeParametro; nota?: ValorDeParametro; erro_nota?: ValorDeParametro }> }) {
   const { id } = await params;
   if (!ehUuid(id)) notFound();
   const parametros = await searchParams;
   const erro = chaveDoCatalogo(ERROS_DA_VENDA, parametros.erro);
-  const { supabase, situacao } = await obterSessao({ exigirLoja: true });
+  const erroNota = chaveDoCatalogo(ERROS_DAS_NOTAS, parametros.erro_nota);
+  const { supabase, usuario, situacao } = await obterSessao({ exigirLoja: true });
   const venda = await supabase.from("vendas").select("id, numero, situacao, unidade_id, vendedor_id, cliente_nome, total_centavos, subtotal_centavos, desconto_centavos, troco_centavos, recebido_centavos, a_receber_centavos, concluida_em, cancelada_em, motivo_cancelamento").eq("id", id).maybeSingle();
   if (venda.error) throw new FalhaDoServico("venda");
   if (!venda.data) notFound();
-  const [itens, pagamentos, loja, vendedor, podeCancelar] = await Promise.all([
+  const [itens, pagamentos, loja, vendedor, podeCancelar, podePedirNota, aprovaNota, nota] = await Promise.all([
     supabase.from("venda_itens").select("id, variante_id, item_serializado_id, quantidade, preco_unitario_centavos, desconto_centavos").eq("venda_id", id).order("criado_em"),
     supabase.from("venda_pagamentos").select("ordem, meio, valor_centavos, entrada_centavos, comprovante, situacao").eq("venda_id", id).order("ordem"),
     supabase.from("unidades").select("nome, cnpj").eq("id", venda.data.unidade_id).maybeSingle(),
     supabase.from("perfis_usuario").select("nome").eq("id", venda.data.vendedor_id).maybeSingle(),
     supabase.rpc("tem_permissao", { p_permissao: "venda.cancelar", p_unidade: venda.data.unidade_id }),
+    supabase.rpc("tem_permissao", { p_permissao: "nota.solicitar", p_unidade: venda.data.unidade_id }),
+    supabase.rpc("tem_permissao", { p_permissao: "nota.aprovar", p_unidade: venda.data.unidade_id }),
+    supabase.from("notas_pedidos").select("id, situacao, solicitado_por, destinatario_nome, destinatario_mascarado, observacao, chave_acesso, modelo, serie, numero_documento")
+      .eq("venda_id", id).neq("situacao", "cancelada").maybeSingle(),
   ]);
-  if (itens.error || pagamentos.error || loja.error || vendedor.error || podeCancelar.error) throw new FalhaDoServico("comprovante");
+  if (itens.error || pagamentos.error || loja.error || vendedor.error || podeCancelar.error || podePedirNota.error || aprovaNota.error || nota.error) throw new FalhaDoServico("comprovante");
   const variantes = itens.data.length ? await supabase.from("variantes").select("id, sku, nome").in("id", itens.data.map((i) => i.variante_id)) : { data: [], error: null };
   const serializados = itens.data.some((i) => i.item_serializado_id) ? await supabase.from("itens_serializados").select("id, imei, iccid").in("id", itens.data.flatMap((i) => (i.item_serializado_id ? [i.item_serializado_id] : []))) : { data: [], error: null };
   if (variantes.error || serializados.error) throw new FalhaDoServico("comprovante_itens");
@@ -51,6 +61,9 @@ export default async function Comprovante({ params, searchParams }: { params: Pr
       {textoDoParametro(parametros.concluida) === "1" && v.situacao === "concluida" && <Aviso tom="sucesso" titulo="Venda concluída"><CheckCircle2 aria-hidden className="inline size-4" /> Estoque baixado e pagamento registrado no seu caixa.</Aviso>}
       {textoDoParametro(parametros.cancelada) === "1" && <Aviso tom="info">Venda cancelada com estorno.</Aviso>}
       {erro && <Aviso tom="perigo">{ERROS_DA_VENDA[erro]}</Aviso>}
+      {erroNota && <Aviso tom="perigo">{ERROS_DAS_NOTAS[erroNota]}</Aviso>}
+      {textoDoParametro(parametros.nota) === "pedida" && <Aviso tom="sucesso">Nota pedida: aparece na fila do dono e do gerente.</Aviso>}
+      {textoDoParametro(parametros.nota) === "corrigida" && <Aviso tom="sucesso">Correção enviada: o pedido voltou para a fila.</Aviso>}
       <Cartao titulo={`Venda nº ${v.numero}`} subtitulo={`${loja.data?.nome ?? situacao.unidade_nome}${quando ? ` · ${quando}` : ""}`} icone={Receipt}>
         <p className="text-sm">Vendedor: {vendedor.data?.nome ?? "—"}{v.cliente_nome ? ` · Cliente: ${v.cliente_nome}` : ""}</p>
         <p className="mt-1">{v.situacao === "concluida" ? <Selo tom="sucesso" ponto>concluída</Selo> : v.situacao === "cancelada" ? <Selo tom="perigo" ponto>cancelada</Selo> : <Selo tom="aviso" ponto>em aberto</Selo>}</p>
@@ -80,8 +93,39 @@ export default async function Comprovante({ params, searchParams }: { params: Pr
             <li key={p.ordem} className="numeros">{nomeDoMeio(p.meio)}: {brl(centavosDoBanco(p.valor_centavos))}{centavosDoBanco(p.entrada_centavos) > 0 ? ` (entrada ${brl(centavosDoBanco(p.entrada_centavos))})` : ""}{p.comprovante ? ` · comprovante ${p.comprovante}` : ""}{p.situacao === "estornado" ? " · estornado" : ""}</li>
           ))}
         </ul>
-        <p className="mt-3 text-xs text-suave">Comprovante interno, sem valor fiscal. A nota fiscal segue o fluxo combinado com o contador.</p>
+        <p className="mt-3 text-xs text-suave">Comprovante interno, sem valor fiscal. A nota fiscal é pedida abaixo e segue o fluxo combinado com o contador.</p>
       </Cartao>
+      {v.situacao === "concluida" && (nota.data || podePedirNota.data) && (
+        <Cartao titulo="Nota fiscal" icone={FileText}>
+          {nota.data ? (
+            <div className="space-y-2 text-sm">
+              <p><Selo tom={nota.data.situacao === "emitida" ? "sucesso" : nota.data.situacao === "correcao_solicitada" ? "aviso" : "info"} ponto>
+                {Object.hasOwn(SITUACOES_DA_NOTA, nota.data.situacao) ? SITUACOES_DA_NOTA[nota.data.situacao as SituacaoDaNota] : nota.data.situacao}</Selo></p>
+              {(nota.data.destinatario_nome || nota.data.destinatario_mascarado) && <p className="text-xs text-suave">Na nota: {[nota.data.destinatario_nome, nota.data.destinatario_mascarado].filter(Boolean).join(" · ")}</p>}
+              {nota.data.observacao && <p className="text-xs">Observação: {nota.data.observacao}</p>}
+              {nota.data.situacao === "emitida" && (
+                <p className="numeros break-all text-xs">{MODELOS_DE_NOTA[nota.data.modelo ?? ""] ?? `Modelo ${nota.data.modelo}`} nº {nota.data.numero_documento} · série {nota.data.serie}<br />{chaveEmGrupos(nota.data.chave_acesso ?? "")}</p>
+              )}
+              {nota.data.situacao === "correcao_solicitada" && (nota.data.solicitado_por === usuario.id || aprovaNota.data) && (
+                <form action={corrigirNota} className="grid gap-2 sm:grid-cols-2">
+                  <input type="hidden" name="pedido" value={nota.data.id} /><input type="hidden" name="venda" value={v.id} />
+                  <label className="text-xs font-medium">Nome na nota (opcional)<input name="nome" maxLength={120} className={campo} /></label>
+                  <label className="text-xs font-medium">CPF ou CNPJ (opcional)<input name="documento" inputMode="numeric" autoComplete="off" className={campo} /></label>
+                  <div><Botao type="submit" tamanho="sm">Enviar correção</Botao></div>
+                </form>
+              )}
+            </div>
+          ) : (
+            <form action={pedirNota} className="grid gap-2 sm:grid-cols-2">
+              <input type="hidden" name="venda" value={v.id} /><input type="hidden" name="chave" value={randomUUID()} />
+              <label className="text-xs font-medium">Nome na nota (opcional)<input name="nome" maxLength={120} className={campo} /></label>
+              <label className="text-xs font-medium">CPF ou CNPJ na nota (opcional)<input name="documento" inputMode="numeric" autoComplete="off" className={campo} /></label>
+              <p className="text-xs text-suave sm:col-span-2">O pedido vai para a fila do dono e do gerente; o CPF fica guardado só até a emissão.</p>
+              <div><Botao type="submit" tamanho="sm">Pedir nota fiscal</Botao></div>
+            </form>
+          )}
+        </Cartao>
+      )}
       {v.situacao === "concluida" && podeCancelar.data && (
         <details className="text-sm"><summary className="cursor-pointer font-semibold text-perigo">Cancelar esta venda (estorno)</summary>
           <form action={cancelarVenda} className="mt-2 space-y-2">

@@ -73,3 +73,17 @@ Leia [a análise de vendas/caixa](../analises/REVISAO_VENDAS_PAGAMENTOS_CAIXA_37
 6. Reexecutar provas, transformar os casos corrigidos em regressões permanentes, manter controles de venda/reserva/caixa e homologar fluxo autenticado autorizado. Só então prosseguir com Ora Connect oficial e conciliação; prioridades e stack permanecem.
 
 Não editar migrations aplicadas nem presumir API/credencial. Há SQL real novo e PDV real, mas CI verde não equivale a piloto liberado. A demo anuncia exclusividade do dono abaixo do custo, enquanto o ADR-004 permite gerente/dono; registrar a decisão P14 e alinhar, sem inventar regra de negócio.
+
+## Reforço de 09/11/2026 — integração oficial e remoção de versões anteriores
+
+Executar #54 conforme [a análise Nogle/gateway/repasse](../analises/PRIORIDADE_NOGLE_GATEWAY_E_REPASSES_2026-11-09.md). O proprietário confirmou que a Ora Connect inteira precisa operar pela API Nogle/Contel, incluindo recursos financeiros contratados. A implementação atual tem catálogo/regras/demo; faltam transporte HTTP, configuração validada, fila persistente, cobrança oficial, reconciliação e homologação. Não tratar Nogle como aplicação a instalar nem declarar prontidão só pelo preenchimento de variáveis. Não usar outro gateway silenciosamente para cobrar operações telecom.
+
+Respeitar o ciclo intenção local → chamada oficial → estado consultado → projeção/produção/repasse idempotentes. Falha entre sistemas fica recuperável; timeout não autoriza nova cobrança. Se contrato de repasse, webhook, sandbox ou idempotência não estiver publicado, listar precisamente o recurso/habilitação que falta à Contel. Não inventar endpoints, taxas, prazo ou confirmação.
+
+Ler também a [revisão dos 35 merges](../analises/REVISAO_MERGES_E_DUPLICIDADES_2026-11-09.md): identificar módulos e assinaturas canônicos, atualizar consumidores e testes antes de retirar obsoletos. Não apagar migrations aplicadas ou rollback em uso. Código duplicado entre TypeScript/SQL exige paridade (caso #48); Git merge e CI verde não provam essa paridade. Conferir jobs/crontab antigos no ambiente autorizado, sem segredos em mensagens.
+
+## Atualização atual 9b1109e e imagem do proprietário
+
+Prioridade atual: [consolidado9b1109e](../analises/REVISAO_NOGLE_9B1109_E_CONSOLIDADO_2026-11-09.md). O adaptador/worker inicial já existe; corrigir #55–#59 antes de homologar. A ligação oficial com cobrança/gateway/repasse da Ora Connect permanece #54, com [51 perguntas prontas à Contel](../integracoes/PERGUNTAS_PARA_CONTEL_NOGLE_2026-11-09.md). Não misturar fonte oficial de evidência com estado local nem tratar um timestamp como ID único sem contrato.
+
+A decisão recente corrige o cadastro para 11 lojas comerciais e o local DEFEITOS. Não usar os nomes fictíciosLoja02…14 como cadastro real. Implementar #60 com [busca/foto/disponibilidade/pedido interno](BUSCA_ESTOQUE_E_TRANSFERENCIAS_2026-11-09.md), preservando livro, concorrência, separação de trânsito/reserva e recebimento conferido. Confrontar as diferenças dos totais da imagem antes da importação. A propostaReact/TypeScript está fora da aplicação; pedido simulado não é entrega de backend.

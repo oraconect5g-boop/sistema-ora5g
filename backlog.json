@@ -1,7 +1,7 @@
 {
   "generated_date": "2026-11-05",
   "status": "initial-planning-only",
-  "requirements_count": 173,
+  "requirements_count": 179,
   "items": [
     {
       "id": "ORA-ORG-001",
@@ -9,7 +9,7 @@
       "module": "Organização, lojas e usuários",
       "priority": "P0",
       "stage": 1,
-      "requirement": "Cadastrar empresa, organização, 14 lojas e loja piloto",
+      "requirement": "Cadastrar empresa, organização, 11 lojas e loja piloto",
       "acceptance": "Usuários autorizados selecionam unidade; IDs e dados fiscais coerentes.",
       "status": "planned-not-implemented",
       "implementer": "Claude Code / Codex (definir por issue)",
@@ -2880,7 +2880,7 @@
       "module": "Gestão, BI e relatórios",
       "priority": "P0",
       "stage": 7,
-      "requirement": "Dashboard diretoria consolidado das 14 lojas",
+      "requirement": "Dashboard diretoria consolidado das 11 lojas",
       "acceptance": "Filtro por período, loja, vendedor, natureza e status.",
       "status": "planned-not-implemented",
       "implementer": "Claude Code / Codex (definir por issue)",
@@ -3291,7 +3291,127 @@
       "dependencies": [
         "Verificar regras de negócio e critérios de aceite do domínio"
       ]
+    },
+    {
+      "id": "ORA-OS-001",
+      "domain": "OS",
+      "module": "Assistência técnica e ordens de serviço",
+      "priority": "P1",
+      "stage": 8,
+      "requirement": "Abrir OS obrigatória para todo aparelho de cliente que entra (até limpeza), com cliente, IMEI, defeito, estado, fotos e acessórios deixados (custódia)",
+      "acceptance": "Nenhum aparelho de cliente fica na loja sem OS numerada; fotos e acessórios registrados; isolamento por loja; auditoria.",
+      "status": "planned-not-implemented",
+      "implementer": "Claude Code",
+      "reviewer": "Codex + aceite do proprietário",
+      "implementation_files": [],
+      "test_evidence": [],
+      "issue_url": null,
+      "pr_url": null,
+      "dependencies": [
+        "P5: o técnico terá login próprio? É funcionário ou terceiro?",
+        "DEC-U44, DEC-U47 e o fluxo digital da OS (docs/etapa-0/ETAPA_0_DECISOES_2026-11-06.md §2C)"
+      ]
+    },
+    {
+      "id": "ORA-OS-002",
+      "domain": "OS",
+      "module": "Assistência técnica e ordens de serviço",
+      "priority": "P1",
+      "stage": 8,
+      "requirement": "Registrar saída para o técnico central e retorno à loja (custódia em trânsito)",
+      "acceptance": "A posição do aparelho (loja, em trânsito, técnico, de volta) é conhecida a qualquer momento; parado além do prazo vira alerta ao dono.",
+      "status": "planned-not-implemented",
+      "implementer": "Claude Code",
+      "reviewer": "Codex + aceite do proprietário",
+      "implementation_files": [],
+      "test_evidence": [],
+      "issue_url": null,
+      "pr_url": null,
+      "dependencies": [
+        "P5: o técnico terá login próprio? É funcionário ou terceiro?",
+        "DEC-U44, DEC-U47 e o fluxo digital da OS (docs/etapa-0/ETAPA_0_DECISOES_2026-11-06.md §2C)"
+      ]
+    },
+    {
+      "id": "ORA-OS-003",
+      "domain": "OS",
+      "module": "Assistência técnica e ordens de serviço",
+      "priority": "P1",
+      "stage": 8,
+      "requirement": "Orçamento do técnico dentro da OS (diagnóstico, peças, valor), com histórico",
+      "acceptance": "O orçamento sai do grupo de WhatsApp e fica na OS; técnico só vê e orça as próprias OS (T12 do teste de acesso).",
+      "status": "planned-not-implemented",
+      "implementer": "Claude Code",
+      "reviewer": "Codex + aceite do proprietário",
+      "implementation_files": [],
+      "test_evidence": [],
+      "issue_url": null,
+      "pr_url": null,
+      "dependencies": [
+        "P5: o técnico terá login próprio? É funcionário ou terceiro?",
+        "DEC-U44, DEC-U47 e o fluxo digital da OS (docs/etapa-0/ETAPA_0_DECISOES_2026-11-06.md §2C)"
+      ]
+    },
+    {
+      "id": "ORA-OS-004",
+      "domain": "OS",
+      "module": "Assistência técnica e ordens de serviço",
+      "priority": "P1",
+      "stage": 8,
+      "requirement": "Aprovação ou recusa do orçamento pelo cliente, registrada",
+      "acceptance": "Nada é executado sem a resposta do cliente registrada (canal e momento); recusa encerra com devolução.",
+      "status": "planned-not-implemented",
+      "implementer": "Claude Code",
+      "reviewer": "Codex + aceite do proprietário",
+      "implementation_files": [],
+      "test_evidence": [],
+      "issue_url": null,
+      "pr_url": null,
+      "dependencies": [
+        "P5: o técnico terá login próprio? É funcionário ou terceiro?",
+        "DEC-U44, DEC-U47 e o fluxo digital da OS (docs/etapa-0/ETAPA_0_DECISOES_2026-11-06.md §2C)"
+      ]
+    },
+    {
+      "id": "ORA-OS-005",
+      "domain": "OS",
+      "module": "Assistência técnica e ordens de serviço",
+      "priority": "P1",
+      "stage": 8,
+      "requirement": "Avisos ao cliente e ao técnico (comprovante, orçamento, aparelho pronto, entrega)",
+      "acceptance": "Botão que abre o WhatsApp com a mensagem pronta até a API oficial; depois, envio pela API oficial com consentimento; sem automação não oficial.",
+      "status": "planned-not-implemented",
+      "implementer": "Claude Code",
+      "reviewer": "Codex + aceite do proprietário",
+      "implementation_files": [],
+      "test_evidence": [],
+      "issue_url": null,
+      "pr_url": null,
+      "dependencies": [
+        "P5: o técnico terá login próprio? É funcionário ou terceiro?",
+        "DEC-U44, DEC-U47 e o fluxo digital da OS (docs/etapa-0/ETAPA_0_DECISOES_2026-11-06.md §2C)"
+      ]
+    },
+    {
+      "id": "ORA-OS-006",
+      "domain": "OS",
+      "module": "Assistência técnica e ordens de serviço",
+      "priority": "P1",
+      "stage": 8,
+      "requirement": "Entrega com cobrança pelo PDV e produção do vendedor; peças só saem do estoque ligadas a uma OS",
+      "acceptance": "Serviço cobrado na venda conta uma vez na produção; peça consumida sem OS aparece como divergência; relatórios de OS sem venda, por vendedor, tempo de conserto e peças × serviços.",
+      "status": "planned-not-implemented",
+      "implementer": "Claude Code",
+      "reviewer": "Codex + aceite do proprietário",
+      "implementation_files": [],
+      "test_evidence": [],
+      "issue_url": null,
+      "pr_url": null,
+      "dependencies": [
+        "P5: o técnico terá login próprio? É funcionário ou terceiro?",
+        "DEC-U44, DEC-U47 e o fluxo digital da OS (docs/etapa-0/ETAPA_0_DECISOES_2026-11-06.md §2C)"
+      ]
     }
   ],
-  "updated_date": "2026-11-08"
+  "updated_date": "2026-11-09"
 }

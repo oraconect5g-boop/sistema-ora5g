@@ -271,4 +271,48 @@ describe("duas conexões ao mesmo tempo no PostgreSQL 17", () => {
     expect(await contar("select count(*) as n from public.estoque_movimentos where referencia_id = $1", [venda])).toBe(1);
     expect(await divergencias()).toEqual([]);
   });
+
+  it("dois workers da Ora Connect ao mesmo tempo: cada operação é enviada por um só (ADR-005)", async () => {
+    await admin.query("insert into public.connect_habilitacoes (organizacao_id, tipo, habilitada, evidencia) values ($1, 'recarga', true, 'Teste de concorrência (fictício)'), ($1, 'ativacao', true, 'Teste de concorrência (fictício)')", [ids.organizacao]);
+    await admin.query("select public.connect_worker_atualizar_referencias($1, 'plano', '[{\"codigo\":\"99999\",\"nome\":\"7 GB\",\"valor_centavos\":4490}]'::jsonb)", [ids.organizacao]);
+    await admin.query("select public.connect_worker_atualizar_referencias($1, 'ddd', '[{\"codigo\":\"51\",\"nome\":\"51\",\"uf\":\"RS\"}]'::jsonb)", [ids.organizacao]);
+    await admin.query("select public.connect_worker_atualizar_referencias($1, 'cidade', '[{\"codigo\":\"7703\",\"nome\":\"Aceguá\",\"uf\":\"RS\"}]'::jsonb)", [ids.organizacao]);
+    const ana = await sessaoNaLoja(ids.vendedorA, ids.lojaA);
+    await abrir(a, ana);
+    for (const [linha, k] of [["51988880001", "conc:rec:1"], ["51988880002", "conc:rec:2"]]) {
+      await a.query("select public.connect_registrar('recarga', $1::jsonb, $2)", [JSON.stringify({ linha, plano: 99999, metodo: "LINK" }), k]);
+    }
+    await a.query("commit");
+    const REIVINDICAR = "select operacao_id from public.connect_worker_reivindicar_envios($1, '{recarga}'::text[], $2)";
+    for (const cliente of [a, b]) {
+      await cliente.query("begin");
+      await cliente.query("set local role service_role");
+    }
+    const primeira = (await a.query<{ operacao_id: string }>(REIVINDICAR, [ids.organizacao, 1])).rows.map((r) => r.operacao_id);
+    // A segunda não espera pela primeira (SKIP LOCKED): pega só o que sobrou.
+    const segunda = (await b.query<{ operacao_id: string }>(REIVINDICAR, [ids.organizacao, 10])).rows.map((r) => r.operacao_id);
+    await a.query("commit");
+    await b.query("commit");
+    expect(primeira).toHaveLength(1);
+    expect(segunda).toHaveLength(1);
+    expect(segunda).not.toEqual(primeira);
+    expect(await contar("select count(*) as n from public.connect_eventos where tipo = 'envio_iniciado'")).toBe(2);
+    expect(await contar("select count(*) as n from public.connect_operacoes where situacao = 'enviando'")).toBe(2);
+  });
+
+  it("duas pessoas ativando o mesmo chip vendido ao mesmo tempo: uma registra, a outra recebe OR013 (ADR-005)", async () => {
+    const iccid = comDigitoLuhn("895510000000000777");
+    const chip = await valor<string>(admin, "select privado.registrar_item_serializado($1, $2, null, null, $3, 'entrada_compra', $4) as v", [ids.lojaA, cat.chip, iccid, "conc:chip:entrada"]);
+    await admin.query("select privado.lancar_movimento($1, $2, -1, 'venda', $3, 'Venda de teste', null, null, 'conc:chip:venda')", [ids.lojaA, cat.chip, chip]);
+    const pedido = (k: string) => [JSON.stringify({
+      metodo: "LINK", iccid, ddd: 51, plano: 99999,
+      cliente: { nome: "Cliente Fictício", cpf: "12345678909", data_nascimento: "1990-01-01", endereco: { rua: "Rua A", numero: "1", bairro: "Centro", cep: "90000000", id_cidade: 7703 } },
+    }), k];
+    const REGISTRAR = "select public.connect_registrar('ativacao', $1::jsonb, $2) as v";
+    await abrir(a, await sessaoNaLoja(ids.vendedorA, ids.lojaA));
+    await abrir(b, await sessaoNaLoja(ids.vendedorAB, ids.lojaA));
+    const final = await disputa(() => a.query(REGISTRAR, pedido("conc:ativ:1")), () => valor(b, REGISTRAR, pedido("conc:ativ:2")));
+    expect(final).toEqual({ erro: "OR013" });
+    expect(await contar("select count(*) as n from public.connect_operacoes where iccid = $1", [iccid])).toBe(1);
+  });
 });

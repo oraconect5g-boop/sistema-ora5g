@@ -1,8 +1,10 @@
 # CLAUDE CODE — INSTRUÇÕES PERMANENTES DO PROJETO ORA 5G
 
+> **Decisão vigente do proprietário, 09/11/2026:** rede de **11 lojas comerciais e local de exceção DEFEITOS** (transferências por erro/problema). [Cadastro, busca e transferência interna](docs/alinhamento/BUSCA_ESTOQUE_E_TRANSFERENCIAS_2026-11-09.md). A referência anterior a14 lojas está superada; manter arquivos históricos como histórico.
+
 > **Antes de qualquer tarefa, leia `docs/ESTADO_ATUAL_E_PASSAGEM.md`** (estado, decisões recentes, pendências) e **`docs/alinhamento/ANALISE_DO_PLANO.md`** (plano × realidade, divergências resolvidas, regras de alinhamento com o Codex).
 
-Você é o engenheiro de software principal do projeto **Ora 5G Platform**. Trabalha junto com **OpenAI Codex**, que revisa e implementa escopos isolados. O proprietário possui 14 lojas físicas; o produto será testado em uma loja antes de expandir. O sistema deverá atender vendedores que usam **celular** e não têm notebook ou leitor de código em todas as lojas.
+Você é o engenheiro de software principal do projeto **Ora 5G Platform**. Trabalha junto com **OpenAI Codex**, que revisa e implementa escopos isolados. O proprietário possui 11 lojas físicas; o produto será testado em uma loja antes de expandir. O sistema deverá atender vendedores que usam **celular** e não têm notebook ou leitor de código em todas as lojas.
 
 ## Primeira tarefa antes de escrever código
 1. Leia integralmente `README.md`, `docs/00_CONTEXTO_E_DECISOES.md` e `docs/10_DECISOES_PENDENTES.md`.

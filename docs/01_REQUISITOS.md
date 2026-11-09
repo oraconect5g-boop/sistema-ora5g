@@ -1,6 +1,8 @@
 # 01 — Requisitos rastreáveis da Ora 5G
 
-**Inventário atual: 173 requisitos** — 172 da base inicial e ORA-CAT-011, fotos obrigatórias, acrescentado por decisão explícita do proprietário em 08/11/2026. A lista representa o planejamento, não funcionalidades já existentes. Detalhes em [Fotos dos produtos](alinhamento/FOTOS_DOS_PRODUTOS_2026-11-08.md).
+> **Escopo corrigido pelo proprietário em 09/11/2026:**11 lojas comerciais +local DEFEITOS; cadastro e transferência interna em `docs/alinhamento/BUSCA_ESTOQUE_E_TRANSFERENCIAS_2026-11-09.md`. O inventário tem179 requisitos; isso não implica179 funcionalidades entregues.
+
+**Inventário atual: 179 requisitos** — 172 da base inicial, ORA-CAT-011 (fotos obrigatórias, decisão do proprietário de 08/11/2026) e ORA-OS-001 a 006 (assistência técnica, DEC-U44/U47, formalizados em 09/11/2026 sem contar como feitos; dependem da P5). A lista representa o planejamento, não funcionalidades já existentes. Detalhes em [Fotos dos produtos](alinhamento/FOTOS_DOS_PRODUTOS_2026-11-08.md).
 
 Legenda: **P0** essencial à fundação/piloto conforme dependências; **P1** funcionalidades importantes para rollout/integração; **P2** expansão. Um requisito P1 pode ser antecipado se houver bloqueio operacional real.
 
@@ -12,7 +14,7 @@ Cada ID deve se tornar issue(s) de GitHub, ligar PR/arquivos alterados, testes e
 
 | ID | Prio. | Requisito | Critério objetivo de aceitação |
 |---|---|---|---|
-| ORA-ORG-001 | P0 | Cadastrar empresa, organização, 14 lojas e loja piloto | Usuários autorizados selecionam unidade; IDs e dados fiscais coerentes. |
+| ORA-ORG-001 | P0 | Cadastrar empresa, organização, 11 lojas e loja piloto | Usuários autorizados selecionam unidade; IDs e dados fiscais coerentes. |
 | ORA-ORG-002 | P0 | Associar usuários a uma ou múltiplas lojas com função e vigência | Bloqueio testado para loja sem vínculo. |
 | ORA-ORG-003 | P0 | Gerir perfis diretoria, regional, gerente, vendedor, financeiro, fiscal, marketing e atendimento | Matriz de autorização versionada e auditada. |
 | ORA-ORG-004 | P0 | Isolar dados por loja na API e PostgreSQL/RLS | Testes de acesso cruzado e negação por ID arbitrário. |
@@ -238,7 +240,7 @@ Cada ID deve se tornar issue(s) de GitHub, ligar PR/arquivos alterados, testes e
 
 | ID | Prio. | Requisito | Critério objetivo de aceitação |
 |---|---|---|---|
-| ORA-REPORT-001 | P0 | Dashboard diretoria consolidado das 14 lojas | Filtro por período, loja, vendedor, natureza e status. |
+| ORA-REPORT-001 | P0 | Dashboard diretoria consolidado das 11 lojas | Filtro por período, loja, vendedor, natureza e status. |
 | ORA-REPORT-002 | P0 | Dashboard gerente de loja: caixa, metas, aprovação de desconto/NF | Só dados autorizados; alertas com link ao fato original. |
 | ORA-REPORT-003 | P0 | Dashboard vendedor mobile: produção do dia, metas e atalhos | Dados apenas do escopo autorizado. |
 | ORA-REPORT-004 | P0 | Relatório de chips vendidos, ativações e recargas separadamente | Produção não implica faturamento tributável idêntico. |
@@ -265,6 +267,17 @@ Cada ID deve se tornar issue(s) de GitHub, ligar PR/arquivos alterados, testes e
 | ORA-QUAL-012 | P1 | Testes de carga, concorrência e disaster recovery | Sem venda/IMEI duplo, serviço retorna ao estado previsto. |
 | ORA-QUAL-013 | P1 | Processo de resposta a incidentes e suporte às lojas | Playbook, contatos e rastreio de incidentes. |
 | ORA-QUAL-014 | P2 | Análise de segurança periódica e monitoramento de dependências | Atualizações e vulnerabilidades triadas. |
+
+### Assistência técnica e ordens de serviço (formalizados em 09/11/2026)
+
+| ID | Prioridade | Requisito | Aceite |
+|---|---|---|---|
+| ORA-OS-001 | P1 | Abrir OS obrigatória para todo aparelho de cliente que entra (até limpeza), com cliente, IMEI, defeito, estado, fotos e acessórios deixados (custódia) | Nenhum aparelho de cliente fica na loja sem OS numerada; fotos e acessórios registrados; isolamento por loja; auditoria. |
+| ORA-OS-002 | P1 | Registrar saída para o técnico central e retorno à loja (custódia em trânsito) | A posição do aparelho (loja, em trânsito, técnico, de volta) é conhecida a qualquer momento; parado além do prazo vira alerta ao dono. |
+| ORA-OS-003 | P1 | Orçamento do técnico dentro da OS (diagnóstico, peças, valor), com histórico | O orçamento sai do grupo de WhatsApp e fica na OS; técnico só vê e orça as próprias OS (T12 do teste de acesso). |
+| ORA-OS-004 | P1 | Aprovação ou recusa do orçamento pelo cliente, registrada | Nada é executado sem a resposta do cliente registrada (canal e momento); recusa encerra com devolução. |
+| ORA-OS-005 | P1 | Avisos ao cliente e ao técnico (comprovante, orçamento, aparelho pronto, entrega) | Botão que abre o WhatsApp com a mensagem pronta até a API oficial; depois, envio pela API oficial com consentimento; sem automação não oficial. |
+| ORA-OS-006 | P1 | Entrega com cobrança pelo PDV e produção do vendedor; peças só saem do estoque ligadas a uma OS | Serviço cobrado na venda conta uma vez na produção; peça consumida sem OS aparece como divergência; relatórios de OS sem venda, por vendedor, tempo de conserto e peças × serviços. |
 
 ## Checklist anti-omissão por requisito
 
