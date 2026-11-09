@@ -38,7 +38,7 @@ export async function enviarPendentes(banco: BancoConnect, nogle: Nogle, tipos: 
   for (const op of await banco.reivindicarEnvios(tipos, limite)) {
     let resultado: ResultadoEnvio;
     if (parar) {
-      // Sem conexão ou sem acesso: as demais voltam para a fila sem chamar a Contel.
+      // Sem conexão ou sem acesso: as demais voltam para a fila sem chamar a Nogle.
       resultado = { resultado: "nao_enviada", mensagem: parar };
     } else {
       let pedido: PedidoNogle | null = null;

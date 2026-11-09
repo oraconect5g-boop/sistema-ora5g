@@ -51,12 +51,12 @@ try {
   const nogle = new ClienteNogle(
     { tipo: tipoDaChave as "franquia" | "marca" | "pdv", chaveAcesso: ler("NOGLE_ACCESS_KEY"), chaveSecundaria: ler("NOGLE_SECONDARY_KEY") || undefined },
     transporteHttp(ler("NOGLE_API_BASE_URL")),
-    // "documentado" só depois de a Contel confirmar que aceita corpo em GET (pergunta 2).
+    // "documentado" só depois de a Nogle confirmar que aceita corpo em GET (pergunta 2).
     { getComCorpo: ler("NOGLE_GET_COM_CORPO") === "documentado" },
   );
   if (listas) {
     const r = await sincronizarReferencias(banco, nogle, ler("CONNECT_UFS").split(",").map((u) => u.trim().toUpperCase()).filter(Boolean));
-    console.log(`${agora} listas da Contel: ${r.listas} atualizadas, ${r.itens} itens, ${r.falhas} falhas`);
+    console.log(`${agora} listas da Nogle: ${r.listas} atualizadas, ${r.itens} itens, ${r.falhas} falhas`);
     process.exit(r.falhas > 0 ? 1 : 0);
   }
   const envio = await enviarPendentes(banco, nogle, tipos);

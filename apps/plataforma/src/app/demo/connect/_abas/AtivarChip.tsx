@@ -75,7 +75,7 @@ export function AtivarChip({ planos, ddds, chipsDaLoja, clientes, saldoCarteira,
     if (!cadastro) return;
     if (cadastro.nome.trim().length < 3) return setCadastro({ ...cadastro, erro: "Informe o nome completo, como no documento." });
     if (!/^\d{4}-\d{2}-\d{2}$/.test(cadastro.nascimento)) return setCadastro({ ...cadastro, erro: "Informe a data de nascimento." });
-    if (soDigitos(cadastro.cep).length !== 8) return setCadastro({ ...cadastro, erro: "CEP com 8 dígitos (a Contel confere o endereço)." });
+    if (soDigitos(cadastro.cep).length !== 8) return setCadastro({ ...cadastro, erro: "CEP com 8 dígitos (a Nogle confere o endereço)." });
     if (cadastro.numero.trim() === "") return setCadastro({ ...cadastro, erro: "Informe o número do endereço." });
     setCliente({ nome: cadastro.nome.trim(), cpf: soDigitos(cpf), novo: true });
     setCadastro(null);
@@ -97,7 +97,7 @@ export function AtivarChip({ planos, ddds, chipsDaLoja, clientes, saldoCarteira,
 
   return (
     <div className="grid gap-4 xl:grid-cols-3">
-      <Cartao className="xl:col-span-2" titulo="Ativar chip na operadora" subtitulo={`${loja} · a venda do chip é feita em Nova venda; aqui é a ativação na Contel`} icone={Signal}>
+      <Cartao className="xl:col-span-2" titulo="Ativar chip na operadora" subtitulo={`${loja} · a venda do chip é feita em Nova venda; aqui é a ativação na Nogle`} icone={Signal}>
         <Etapas etapas={ETAPAS} atual={etapa} rotulo="Etapas da ativação" />
         <p className="mt-2 text-sm font-semibold text-suave">Etapa {etapa + 1} de {ETAPAS.length}: {ETAPAS[etapa]}</p>
 
@@ -151,7 +151,7 @@ export function AtivarChip({ planos, ddds, chipsDaLoja, clientes, saldoCarteira,
             {codigoCpf === "invalido" && <p className="text-sm text-perigo">CPF inválido. Confira os dígitos.</p>}
             {cadastro && (
               <div className="space-y-3 rounded-xl border border-borda p-3">
-                <p className="text-sm font-semibold">Cliente novo na Contel: cadastrar (POST /cliente/criar)</p>
+                <p className="text-sm font-semibold">Cliente novo na Nogle: cadastrar (POST /cliente/criar)</p>
                 <div className="grid gap-3 sm:grid-cols-2">
                   <label className="text-sm font-medium sm:col-span-2">Nome completo<input value={cadastro.nome} onChange={(e) => setCadastro({ ...cadastro, nome: e.target.value, erro: "" })} className={`${classeCampo} mt-1`} /></label>
                   <label className="text-sm font-medium">Data de nascimento<input type="date" value={cadastro.nascimento} onChange={(e) => setCadastro({ ...cadastro, nascimento: e.target.value, erro: "" })} className={`${classeCampo} mt-1`} /></label>
@@ -162,7 +162,7 @@ export function AtivarChip({ planos, ddds, chipsDaLoja, clientes, saldoCarteira,
                 <Botao variante="secundario" onClick={salvarCadastro}>Usar este cadastro</Botao>
               </div>
             )}
-            <p className="text-xs text-suave">A consulta de CPF na Contel devolve nome e nascimento: use só para ativar a linha do próprio cliente (LGPD).</p>
+            <p className="text-xs text-suave">A consulta de CPF na Nogle devolve nome e nascimento: use só para ativar a linha do próprio cliente (LGPD).</p>
             <div className="flex justify-between"><Botao variante="secundario" onClick={() => setEtapa(0)}>Voltar</Botao><Botao onClick={() => setEtapa(2)} disabled={!cliente}>Continuar</Botao></div>
           </div>
         )}
@@ -188,7 +188,7 @@ export function AtivarChip({ planos, ddds, chipsDaLoja, clientes, saldoCarteira,
         {etapa === 3 && planoEscolhido && cliente && (
           <div className="mt-4 space-y-4">
             <div className="grid gap-2 sm:grid-cols-2" role="radiogroup" aria-label="Forma de pagamento da ativação">
-              {([["SALDO", "Saldo da Ora na Contel", "O cliente paga na loja; desconta do saldo pré-pago"], ["LINK", "Link de pagamento", "A Contel manda o link ao cliente; ativa depois do pagamento"]] as const).map(([valor, rotulo, explicacao]) => (
+              {([["SALDO", "Saldo da Ora na Nogle", "O cliente paga na loja; desconta do saldo pré-pago"], ["LINK", "Link de pagamento", "A Nogle manda o link ao cliente; ativa depois do pagamento"]] as const).map(([valor, rotulo, explicacao]) => (
                 <button key={valor} type="button" role="radio" aria-checked={pagamento === valor} onClick={() => setPagamento(valor)} className={`rounded-xl border p-3 text-left text-sm ${pagamento === valor ? "border-acao bg-acao-clara/60" : "border-borda bg-white"}`}>
                   <strong>{rotulo}</strong><span className="block text-xs text-suave">{explicacao}</span>
                 </button>
@@ -204,7 +204,7 @@ export function AtivarChip({ planos, ddds, chipsDaLoja, clientes, saldoCarteira,
         {etapa === 4 && resultado && (
           <div className="mt-4 space-y-3" aria-live="polite">
             {resultado.situacao === "aguardando_pagamento" && (
-              <Aviso tom="aviso" titulo="Aguardando o pagamento do link">A Contel enviou o link ao cliente. A linha só é ativada depois do pagamento.
+              <Aviso tom="aviso" titulo="Aguardando o pagamento do link">A Nogle enviou o link ao cliente. A linha só é ativada depois do pagamento.
                 <Botao tamanho="sm" variante="secundario" className="mt-2" onClick={() => setResultado({ ...resultado, situacao: "solicitada" })}>Cliente pagou (simulação)</Botao>
               </Aviso>
             )}
@@ -229,13 +229,13 @@ export function AtivarChip({ planos, ddds, chipsDaLoja, clientes, saldoCarteira,
         <Cartao titulo="Como a ativação funciona" icone={Hourglass}>
           <ol className="space-y-2 text-sm">
             <li>1. <strong>Validar o ICCID</strong>: só chip virgem (código 88) é ativado.</li>
-            <li>2. <strong>Cliente</strong> buscado ou cadastrado na Contel pelo CPF.</li>
+            <li>2. <strong>Cliente</strong> buscado ou cadastrado na Nogle pelo CPF.</li>
             <li>3. <strong>Plano e DDD</strong> da linha nova.</li>
             <li>4. <strong>Pagamento</strong> por saldo da Ora ou link ao cliente.</li>
             <li>5. A linha só conta como ativa <strong>depois da confirmação</strong> da operadora.</li>
           </ol>
         </Cartao>
-        <Aviso tom="aviso" titulo="Na demonstração nada é enviado à Contel">As respostas são simuladas no formato da documentação oficial. O número gerado é fictício.</Aviso>
+        <Aviso tom="aviso" titulo="Na demonstração nada é enviado à Nogle">As respostas são simuladas no formato da documentação oficial. O número gerado é fictício.</Aviso>
       </div>
 
       <Dialogo
@@ -251,7 +251,7 @@ export function AtivarChip({ planos, ddds, chipsDaLoja, clientes, saldoCarteira,
             ["Titular", cliente.nome],
             ["Plano", `${planoEscolhido.plano} · ${brl(planoEscolhido.valor)}`],
             ["DDD", String(ddd)],
-            ["Pagamento", pagamento === "SALDO" ? "Saldo da Ora na Contel" : "Link de pagamento"],
+            ["Pagamento", pagamento === "SALDO" ? "Saldo da Ora na Nogle" : "Link de pagamento"],
           ]} />
         )}
       </Dialogo>

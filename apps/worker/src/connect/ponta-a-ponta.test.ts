@@ -1,7 +1,7 @@
 // Ora Connect de ponta a ponta SEM credencial real (cenários F e G): banco com todas as migrations
 // (PGlite), a loja registrando como a pessoa logada, o worker de verdade (pedido, transporte HTTP,
 // token, leitura da resposta e da evidência) e um servidor local que responde com os EXEMPLOS DA
-// DOCUMENTAÇÃO OFICIAL da Nogle. Prova o fluxo; não prova a Contel (isso é a homologação).
+// DOCUMENTAÇÃO OFICIAL da Nogle. Prova o fluxo; não prova a Nogle (isso é a homologação).
 import { readFileSync } from "node:fs";
 import { createServer, type Server } from "node:http";
 import type { AddressInfo } from "node:net";
@@ -112,7 +112,7 @@ describe("Ora Connect de ponta a ponta com o formato oficial (sem credencial rea
     for (const tipo of TIPOS) await valor(admin, "select public.connect_habilitar($1, true, 'Homologação simulada com o formato oficial') as v", [tipo]);
     const nogle = new ClienteNogle({ tipo: "marca", chaveAcesso: "chave-ficticia" }, transporteHttp(base, 500), { getComCorpo: false });
 
-    // Listas oficiais pelo worker: o plano e o valor de face vêm da Contel, não da tela.
+    // Listas oficiais pelo worker: o plano e o valor de face vêm da Nogle, não da tela.
     const listas = await sincronizarReferencias(banco, nogle, ["RS"]);
     expect(listas).toMatchObject({ listas: 4, falhas: 0 });
     expect((await db.query("select codigo, nome, valor_centavos from public.connect_referencias where tipo = 'plano'")).rows)
@@ -148,7 +148,7 @@ describe("Ora Connect de ponta a ponta com o formato oficial (sem credencial rea
     expect(await consultarPendentes(banco, nogle, TIPOS)).toEqual({ consultadas: 3, confirmadas: 1, bloqueadas: 2, falhas: 0 });
     expect(await operacao(ativacao)).toMatchObject({ situacao: "confirmada", numero_ativado: "51900000000" });
 
-    // Contel confirma o GET com corpo: a recarga casa no histórico e o débito da carteira aparece;
+    // Nogle confirma o GET com corpo: a recarga casa no histórico e o débito da carteira aparece;
     // a portabilidade desconhecida ganha evidência de "Sucesso", mas continua com a gerência.
     const liberado = new ClienteNogle({ tipo: "marca", chaveAcesso: "chave-ficticia" }, transporteHttp(base, 500), { getComCorpo: true });
     await vencerEspera();
@@ -166,7 +166,7 @@ describe("Ora Connect de ponta a ponta com o formato oficial (sem credencial rea
       { tipo: "ativacao", vendedor_id: ids.vendedorA, origem: "evidencia_da_operadora" },
       { tipo: "recarga", vendedor_id: ids.vendedorA, origem: "evidencia_da_operadora" },
     ]);
-    // Dado pessoal só foi à Contel: nada dele nos eventos, e os dados de envio foram apagados.
+    // Dado pessoal só foi à Nogle: nada dele nos eventos, e os dados de envio foram apagados.
     expect((await db.query("select 1 from public.connect_eventos where coalesce(dados::text, '') || coalesce(mensagem, '') like '%12345678909%'")).rows).toEqual([]);
     expect((await db.query("select 1 from privado.connect_dados_envio")).rows).toEqual([]);
   });

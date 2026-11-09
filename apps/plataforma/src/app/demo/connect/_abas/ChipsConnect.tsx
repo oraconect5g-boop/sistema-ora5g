@@ -5,7 +5,7 @@ import { useState } from "react";
 
 import { Aviso, Botao, Cartao, Etapas, ListaDados, Selo } from "../../../../componentes/ui";
 import type { PlanoConnect } from "../../../../demo/dados/connect";
-import { iccidNoFormatoContel } from "../../../../integracoes/nogle/regras";
+import { iccidNoFormatoNogle } from "../../../../integracoes/nogle/regras";
 import { brl } from "../../../../lib/formato";
 import { classeCampo, soDigitos } from "./util";
 
@@ -37,7 +37,7 @@ export function ChipsConnect({ loja, fisicosDaLoja, esimDaLoja, estoqueMinimo, e
   function transferir() {
     if (modo === "unidade") {
       const chip = virgem.find((c) => c.iccid === soDigitos(transf.iccid) && c.tipo === "físico");
-      if (!chip) return setTransf({ ...transf, resultado: iccidNoFormatoContel(transf.iccid) ? "Esse chip não está no estoque virgem da Ora." : "ICCID inválido: 19 dígitos que começam com 8955." });
+      if (!chip) return setTransf({ ...transf, resultado: iccidNoFormatoNogle(transf.iccid) ? "Esse chip não está no estoque virgem da Ora." : "ICCID inválido: 19 dígitos que começam com 8955." });
       setFisicos([...fisicos, chip.iccid]);
       setVirgem(virgem.filter((c) => c !== chip));
       return setTransf({ ...transf, iccid: "", resultado: `1 chip transferido para ${loja}.` });
@@ -45,7 +45,7 @@ export function ChipsConnect({ loja, fisicosDaLoja, esimDaLoja, estoqueMinimo, e
     if (modo === "lote") {
       const ini = soDigitos(transf.inicial);
       const fim = soDigitos(transf.final);
-      if (!iccidNoFormatoContel(ini) || !iccidNoFormatoContel(fim) || ini > fim) return setTransf({ ...transf, resultado: "Informe o ICCID inicial e o final do lote (do menor para o maior)." });
+      if (!iccidNoFormatoNogle(ini) || !iccidNoFormatoNogle(fim) || ini > fim) return setTransf({ ...transf, resultado: "Informe o ICCID inicial e o final do lote (do menor para o maior)." });
       const lote = virgem.filter((c) => c.tipo === "físico" && c.iccid >= ini && c.iccid <= fim);
       setFisicos([...fisicos, ...lote.map((c) => c.iccid)]);
       setVirgem(virgem.filter((c) => !lote.includes(c)));
@@ -78,7 +78,7 @@ export function ChipsConnect({ loja, fisicosDaLoja, esimDaLoja, estoqueMinimo, e
 
   return (
     <div className="grid gap-4 xl:grid-cols-3">
-      <Cartao titulo={`Chips em ${loja}`} subtitulo="Estoque da loja na Contel (GET /pdv/estoque)" icone={Boxes}>
+      <Cartao titulo={`Chips em ${loja}`} subtitulo="Estoque da loja na Nogle (GET /pdv/estoque)" icone={Boxes}>
         <div className="grid grid-cols-2 gap-3 text-center">
           <div className="rounded-xl bg-fundo p-3"><p className="text-2xl font-bold">{fisicos.length}</p><p className="text-xs text-suave">Chips físicos</p></div>
           <div className="rounded-xl bg-fundo p-3"><p className="text-2xl font-bold">{esim}</p><p className="text-xs text-suave">eSIM</p></div>
@@ -89,7 +89,7 @@ export function ChipsConnect({ loja, fisicosDaLoja, esimDaLoja, estoqueMinimo, e
         </ul>
       </Cartao>
 
-      <Cartao titulo="Levar chips para a loja" subtitulo="Do estoque virgem da Ora na Contel (GET /linhas/estoque)" icone={ArrowRightLeft}>
+      <Cartao titulo="Levar chips para a loja" subtitulo="Do estoque virgem da Ora na Nogle (GET /linhas/estoque)" icone={ArrowRightLeft}>
         {!podeTransferir ? (
           <p className="text-sm text-suave">A transferência de chips entre o estoque central e as lojas é feita pelo gerente ou pelo dono.</p>
         ) : (
@@ -122,7 +122,7 @@ export function ChipsConnect({ loja, fisicosDaLoja, esimDaLoja, estoqueMinimo, e
         )}
       </Cartao>
 
-      <Cartao titulo="Chip com entrega em casa" subtitulo="A Contel entrega pelo correio (POST /compra/solicitar)" icone={Truck}>
+      <Cartao titulo="Chip com entrega em casa" subtitulo="A Nogle entrega pelo correio (POST /compra/solicitar)" icone={Truck}>
         <div className="space-y-3">
           <label className="block text-sm font-medium">Nome do cliente<input value={compra.cliente} onChange={(e) => setCompra({ ...compra, cliente: e.target.value, erro: "" })} className={`${classeCampo} mt-1`} /></label>
           <label className="block text-sm font-medium">Plano<select value={compra.plano} onChange={(e) => setCompra({ ...compra, plano: Number(e.target.value) })} className={`${classeCampo} mt-1`}><option value={0}>Apenas chip</option>{planos.filter((p) => !p.campanha).map((p) => <option key={p.id} value={p.id}>{p.plano} · {brl(p.valor)}</option>)}</select></label>

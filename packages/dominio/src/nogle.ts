@@ -1,12 +1,12 @@
-// Regras e formatos da API NOGLE (Contel Telecom) tirados da documentação oficial (https://docs.nogle.tech/,
-// cópia em docs/integracoes/nogle/). Funções puras, usadas pelo worker que fala com a Contel (ADR-005), pela
+// Regras e formatos da API NOGLE tirados da documentação oficial (https://docs.nogle.tech/,
+// cópia em docs/integracoes/nogle/). Funções puras, usadas pelo worker que fala com a Nogle (ADR-005), pela
 // tela da Ora Connect e pela demonstração. Nada aqui chama a rede nem guarda credencial.
 // Arquivo sem importações: o worker roda com o Node direto (sem empacotador).
 
 /** Formas de pagamento documentadas como padrão nas operações de ativação, recarga e compra. */
 export const METODOS_PAGAMENTO = {
   LINK: "Link de pagamento enviado ao cliente",
-  SALDO: "Desconta do saldo pré-pago da Ora na Contel (o cliente paga na loja)",
+  SALDO: "Desconta do saldo pré-pago da Ora na Nogle (o cliente paga na loja)",
 } as const;
 export type MetodoPagamentoNogle = keyof typeof METODOS_PAGAMENTO;
 
@@ -15,7 +15,7 @@ export const SITUACOES_ICCID = {
   88: { nome: "Chip virgem", podeAtivar: true, orientacao: "Pode ativar." },
   11: { nome: "Chip já ativo", podeAtivar: false, orientacao: "Já tem linha: consulte a linha em vez de ativar de novo." },
   33: { nome: "Ativação em processamento", podeAtivar: false, orientacao: "Aguarde e consulte de novo. Não reenvie a ativação." },
-  22: { nome: "Erro na ativação deste chip", podeAtivar: false, orientacao: "Fale com o suporte da Contel antes de tentar de novo." },
+  22: { nome: "Erro na ativação deste chip", podeAtivar: false, orientacao: "Fale com o suporte da Nogle antes de tentar de novo." },
   99: { nome: "ICCID inválido", podeAtivar: false, orientacao: "Confira os 19 dígitos impressos no chip (começa com 8955)." },
 } as const;
 export type CodigoIccid = keyof typeof SITUACOES_ICCID;
@@ -40,15 +40,15 @@ export const MOTIVOS_CANCELAMENTO = {
   EX: "Expirou: 75 dias sem recarga depois do fim do plano",
   PORTOUT: "Levada para outra operadora",
   "TROCA DE CHIP": "Chip trocado (perda, roubo...): o número segue em outro chip",
-  "PORTABILIDADE ENTRE MARCAS": "Migrou para outra marca da Contel",
+  "PORTABILIDADE ENTRE MARCAS": "Migrou para outra marca da Nogle",
   "SOLICITAÇÃO DO CLIENTE": "Cancelada a pedido do cliente no SAC",
 } as const;
 
 /** Número de linha da API: 11 dígitos (DDD + número), só números. */
 export const linhaValida = (texto: string) => /^[1-9]{2}9\d{8}$/.test(texto.replace(/\D/g, ""));
 
-/** ICCID da Contel: 19 dígitos começando com 8955 (formato da documentação de ativação). */
-export const iccidNoFormatoContel = (texto: string) => /^8955\d{15}$/.test(texto.replace(/\D/g, ""));
+/** ICCID da Nogle: 19 dígitos começando com 8955 (formato da documentação de ativação). */
+export const iccidNoFormatoNogle = (texto: string) => /^8955\d{15}$/.test(texto.replace(/\D/g, ""));
 
 /** Saldo de minutos acima de 999 significa ligações ilimitadas (GET /linhas/saldo). */
 export const minutosIlimitados = (minutos: number) => minutos > 999;
@@ -113,20 +113,20 @@ export const NOMES_DAS_OPERACOES: Record<TipoOperacao, string> = {
 
 /** Situações do banco (connect_operacoes.situacao), em palavras da loja. */
 export const SITUACOES_OPERACAO = {
-  registrada: { nome: "Registrada", explicacao: "Aguardando o envio à Contel pelo servidor.", final: false },
-  enviando: { nome: "Enviando", explicacao: "O servidor está falando com a Contel.", final: false },
-  aguardando_operadora: { nome: "Aceita pela Contel", explicacao: "Pedido aceito; aguardando a confirmação (pagamento do link ou processamento).", final: false },
-  resultado_desconhecido: { nome: "Resultado desconhecido", explicacao: "Sem resposta clara da Contel. Não refaça o pedido: a gerência confere a evidência.", final: false },
-  confirmada: { nome: "Confirmada", explicacao: "A Contel confirmou. Conta na produção do vendedor.", final: true },
-  recusada: { nome: "Recusada", explicacao: "A Contel não aceitou o pedido. Corrija e registre de novo.", final: true },
+  registrada: { nome: "Registrada", explicacao: "Aguardando o envio à Nogle pelo servidor.", final: false },
+  enviando: { nome: "Enviando", explicacao: "O servidor está falando com a Nogle.", final: false },
+  aguardando_operadora: { nome: "Aceita pela Nogle", explicacao: "Pedido aceito; aguardando a confirmação (pagamento do link ou processamento).", final: false },
+  resultado_desconhecido: { nome: "Resultado desconhecido", explicacao: "Sem resposta clara da Nogle. Não refaça o pedido: a gerência confere a evidência.", final: false },
+  confirmada: { nome: "Confirmada", explicacao: "A Nogle confirmou. Conta na produção do vendedor.", final: true },
+  recusada: { nome: "Recusada", explicacao: "A Nogle não aceitou o pedido. Corrija e registre de novo.", final: true },
   negada: { nome: "Negada", explicacao: "A operadora negou (ex.: portabilidade).", final: true },
-  erro_operadora: { nome: "Erro na operadora", explicacao: "A Contel indicou erro neste chip. Fale com o suporte da Contel; a gerência registra o desfecho.", final: false },
-  nao_recebida: { nome: "Não recebida", explicacao: "A gerência confirmou que a Contel não recebeu. Pode registrar de novo.", final: true },
+  erro_operadora: { nome: "Erro na operadora", explicacao: "A Nogle indicou erro neste chip. Fale com o suporte da Nogle; a gerência registra o desfecho.", final: false },
+  nao_recebida: { nome: "Não recebida", explicacao: "A gerência confirmou que a Nogle não recebeu. Pode registrar de novo.", final: true },
   cancelada: { nome: "Cancelada", explicacao: "Cancelada antes do envio.", final: true },
 } as const;
 export type SituacaoOperacao = keyof typeof SITUACOES_OPERACAO;
 
-/** Valor da Contel ("44.90" ou 44.9) em centavos; null se não for um valor de dinheiro válido. */
+/** Valor da Nogle ("44.90" ou 44.9) em centavos; null se não for um valor de dinheiro válido. */
 export function centavosDeValorNogle(valor: unknown): number | null {
   const texto = typeof valor === "number" ? (Number.isFinite(valor) ? String(valor) : "") : typeof valor === "string" ? valor.trim() : "";
   if (!/^\d{1,9}(\.\d{1,2})?$/.test(texto)) return null;
@@ -159,7 +159,7 @@ export const SISTEMA_ORIGEM = "Ora 5G";
  * Corpo do pedido só com os campos da documentação de cada rota:
  * - ativação: POST /ativacao/solicitar (eSIM: sem "iccid" e com "esim": "SIM" no chip);
  * - recarga: POST /recarga/solicitar no formato "numeros: [{numero, id_plano}]" do exemplo, que é o
- *   que a validação da API cobra ("numeros.0.numero" no exemplo de erro) — pergunta 6 à Contel;
+ *   que a validação da API cobra ("numeros.0.numero" no exemplo de erro) — pergunta 6 à Nogle;
  * - portabilidade: POST /portabilidade/solicitar.
  */
 export function montarPedido(op: OperacaoParaEnviar): PedidoNogle {
@@ -207,27 +207,27 @@ export type ResultadoEnvio = {
   link_pagamento?: string;
   link_esim?: string;
   iccid?: string;
-  /** Só identificadores e datas da Contel: nada de dado pessoal ou token. */
+  /** Só identificadores e datas da Nogle: nada de dado pessoal ou token. */
   dados?: Record<string, unknown>;
 };
 
 /**
- * Lê a resposta do envio. Regra da Ora (ADR-005): só "aceita" com o identificador da Contel; recusa
+ * Lê a resposta do envio. Regra da Ora (ADR-005): só "aceita" com o identificador da Nogle; recusa
  * só com recusa explícita; qualquer coisa ambígua é "desconhecida" (não reenvia, consulta e a
  * gerência decide). 429 e 401/403 não processam o pedido: voltam para a fila.
  */
 export function interpretarEnvio(tipo: TipoOperacao, statusHttp: number, corpo: unknown): ResultadoEnvio {
   const base = { status_http: statusHttp };
   if (statusHttp === 429 || statusHttp === 401 || statusHttp === 403) {
-    return { ...base, resultado: "nao_enviada", mensagem: statusHttp === 429 ? "Limite de chamadas da Contel: tenta no próximo ciclo." : "Acesso recusado pela Contel (credencial)." };
+    return { ...base, resultado: "nao_enviada", mensagem: statusHttp === 429 ? "Limite de chamadas da Nogle: tenta no próximo ciclo." : "Acesso recusado pela Nogle (credencial)." };
   }
-  if (statusHttp >= 500 || statusHttp < 200) return { ...base, resultado: "desconhecida", mensagem: "Contel sem resposta válida: consultar antes de qualquer nova tentativa." };
+  if (statusHttp >= 500 || statusHttp < 200) return { ...base, resultado: "desconhecida", mensagem: "Nogle sem resposta válida: consultar antes de qualquer nova tentativa." };
   const normal = normalizarResposta(statusHttp, corpo);
   const c = objeto(corpo) ?? {};
   if (Object.keys(normal.errosDeCampo).length > 0 || typeof c.erro === "string") {
-    return { ...base, resultado: "recusada", mensagem: normal.mensagem || "Dados recusados pela Contel." };
+    return { ...base, resultado: "recusada", mensagem: normal.mensagem || "Dados recusados pela Nogle." };
   }
-  if (statusHttp >= 400) return { ...base, resultado: "recusada", mensagem: normal.mensagem || `Contel recusou o pedido (HTTP ${statusHttp}).` };
+  if (statusHttp >= 400) return { ...base, resultado: "recusada", mensagem: normal.mensagem || `Nogle recusou o pedido (HTTP ${statusHttp}).` };
   const retorno = c.retorno;
 
   if (tipo === "ativacao") {
@@ -263,16 +263,16 @@ export function interpretarEnvio(tipo: TipoOperacao, statusHttp: number, corpo: 
       };
     }
     // O exemplo de sucesso da documentação vem com retorno=false e o id preenchido (pergunta 7):
-    // sem confirmação da Contel, é resultado desconhecido, com o id guardado como evidência.
+    // sem confirmação da Nogle, é resultado desconhecido, com o id guardado como evidência.
     if (id && retorno === false) {
       return {
-        ...base, resultado: "desconhecida", mensagem: "Resposta contraditória da Contel (recusa com id): a gerência confere.", id_externo: id,
+        ...base, resultado: "desconhecida", mensagem: "Resposta contraditória da Nogle (recusa com id): a gerência confere.", id_externo: id,
         dados: limpar({ id, data_agendamento: textoOuNada(portabilidade?.data_agendamento) }),
       };
     }
   }
-  if (retorno === false) return { ...base, resultado: "recusada", mensagem: normal.mensagem || "A Contel recusou o pedido." };
-  return { ...base, resultado: "desconhecida", mensagem: normal.mensagem ? `Resposta sem confirmação: ${normal.mensagem}` : "Resposta sem identificador da Contel." };
+  if (retorno === false) return { ...base, resultado: "recusada", mensagem: normal.mensagem || "A Nogle recusou o pedido." };
+  return { ...base, resultado: "desconhecida", mensagem: normal.mensagem ? `Resposta sem confirmação: ${normal.mensagem}` : "Resposta sem identificador da Nogle." };
 }
 
 /** Operação como o worker recebe para consultar (connect_worker_operacoes_a_consultar). */
@@ -309,7 +309,7 @@ export type Evidencia = {
  * - ativação (POST /ativacao/validaIccid): 11 ativo (com a linha) confirma; 33 em processamento;
  *   88 virgem não prova nada; 22 e 99 são erro na operadora;
  * - recarga (GET /linhas/historico): confirma só a recarga com a MESMA data de cadastro devolvida no
- *   envio e com data de realização (o histórico não traz o id: pergunta 10 à Contel). Duas recargas
+ *   envio e com data de realização (o histórico não traz o id: pergunta 10 à Nogle). Duas recargas
  *   com a mesma data no histórico são ambíguas (#59); o banco também recusa usar a mesma recarga do
  *   histórico em duas operações;
  * - portabilidade (GET /portabilidade/status): "Sucesso" confirma; "Portabilidade negada" nega.
@@ -324,11 +324,11 @@ export function interpretarConsulta(op: OperacaoParaConsultar, statusHttp: numbe
     const dados = limpar({ codigo: situacao.codigo, info: textoOuNada(c.info) });
     if (situacao.codigo === 11) {
       return linha && linhaValida(linha)
-        ? { evidencia: "confirmada", mensagem: "ICCID ativo na Contel (11).", numero: linha, dados }
+        ? { evidencia: "confirmada", mensagem: "ICCID ativo na Nogle (11).", numero: linha, dados }
         : { evidencia: "sem_evidencia", mensagem: "ICCID ativo, mas sem a linha na resposta.", dados };
     }
-    if (situacao.codigo === 33) return { evidencia: "em_andamento", mensagem: "Ativação em processamento na Contel (33).", dados };
-    if (situacao.codigo === 88) return { evidencia: "sem_evidencia", mensagem: "Chip ainda virgem na Contel (88).", dados };
+    if (situacao.codigo === 33) return { evidencia: "em_andamento", mensagem: "Ativação em processamento na Nogle (33).", dados };
+    if (situacao.codigo === 88) return { evidencia: "sem_evidencia", mensagem: "Chip ainda virgem na Nogle (88).", dados };
     if (situacao.codigo === 22 || situacao.codigo === 99) return { evidencia: "erro_operadora", mensagem: `${situacao.nome} (${situacao.codigo}).`, dados };
     return { evidencia: "falha_consulta", mensagem: "Situação do ICCID fora do documentado.", dados };
   }

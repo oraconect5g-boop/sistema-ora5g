@@ -1,6 +1,8 @@
-# API NOGLE (Contel Telecom) — referência completa para a Ora Connect
+# API NOGLE — referência completa para a Ora Connect
 
-**Fonte oficial:** https://docs.nogle.tech/ (coleção Postman publicada pela Contel Telecom, "API NOGLE").
+**Fonte oficial:** https://docs.nogle.tech/ (coleção Postman "API NOGLE").
+
+**Nome (pedido do proprietário, 09/11/2026):** a Ora Connect usa a **API oficial da Nogle**, e não há outro fornecedor. A documentação oficial é publicada em nome da Contel Telecom, por isso o endereço (`api.conteltelecom.com.br`) e o e-mail de suporte trazem esse nome. Nas telas, nas mensagens e nestes documentos, o nome usado é **Nogle**.
 **Lida por inteiro em:** 07/11/2026 · **Cópia guardada:** `docs/integracoes/nogle/colecao-postman-2026-11-07.json` (SHA-256 `002d13dab3099a95c1e018bdc9d0d63dba30adcacfa141efccdd062f29c88ead`).
 **Catálogo no código:** `apps/plataforma/src/integracoes/nogle/catalogo.ts`, gerado por `node scripts/gerar-catalogo-nogle.mjs` e conferido no CI (`--conferir`).
 
@@ -13,7 +15,7 @@ A leitura de 06/11 (`docs/etapa-0/ETAPA_0_DECISOES_2026-11-06.md` §3) tinha vis
 | Endereço | `https://api.conteltelecom.com.br`, sempre HTTPS; REST com JSON |
 | Autenticação | `POST /auth/token` devolve um token temporário (Bearer). Quando expira, pede-se outro. O tempo de validade não é informado |
 | Tipos de chave | **Franquia:** `chave_acesso` + `chave_acesso_franquia`. **Marca/MVNO:** só `chave_acesso`. **PDV:** `chave_acesso` + `chave_acesso_pdv`. A documentação não diz o que cada tipo pode usar (decisão **P9**) |
-| Pagamento | Ativação, recarga e compra aceitam `LINK` (link ao cliente) ou `SALDO` (carteira pré-paga da Ora na Contel; a margem da Ora fica retida). As respostas também trazem campos de Pix, boleto e cartão |
+| Pagamento | Ativação, recarga e compra aceitam `LINK` (link ao cliente) ou `SALDO` (carteira pré-paga da Ora na Nogle; a margem da Ora fica retida). As respostas também trazem campos de Pix, boleto e cartão |
 | Suporte | ti@conteltelecom.com.br, resposta em até 12 horas úteis |
 | Não documentado | ambiente de testes (sandbox), proteção contra pedido repetido (idempotência), avisos automáticos (webhooks), limites de uso, validade do token |
 
@@ -24,7 +26,7 @@ A leitura de 06/11 (`docs/etapa-0/ETAPA_0_DECISOES_2026-11-06.md` §3) tinha vis
 
 ## 2. As 62 funções e onde aparecem na Ora
 
-"Na Ora" e "Quem" são **proposta** (validar com o proprietário e a Contel). "Antes de repetir" é a regra da Ora para falhas: sem idempotência documentada, consultar antes de reenviar (ORA-CONNECT-010).
+"Na Ora" e "Quem" são **proposta** (validar com o proprietário e a Nogle). "Antes de repetir" é a regra da Ora para falhas: sem idempotência documentada, consultar antes de reenviar (ORA-CONNECT-010).
 
 **Token**
 
@@ -168,7 +170,7 @@ A leitura de 06/11 (`docs/etapa-0/ETAPA_0_DECISOES_2026-11-06.md` §3) tinha vis
 | Transferir chip físico - lote | `POST /pdv/transferir-chip-fisico-lote` | Chips e entrega | Gerente e dono | — |
 | Transferir chip eSIM | `POST /pdv/transferir-chip-esim` | Chips e entrega | Gerente e dono | — |
 
-## 3. Perguntas para a Contel antes de ligar
+## 3. Perguntas para a Nogle antes de ligar
 
 1. **Tipo da chave da Ora (P9):** franquia, marca/MVNO ou PDV? Quais das 62 funções cada tipo libera?
 2. **GET com corpo:** 25 consultas mandam os dados no corpo de um GET (`/linhas/detalhes`, `/cliente/buscar`...). A API aceita os mesmos dados como parâmetros no endereço? O `fetch` do Node e os navegadores não enviam corpo em GET.
@@ -183,15 +185,15 @@ A leitura de 06/11 (`docs/etapa-0/ETAPA_0_DECISOES_2026-11-06.md` §3) tinha vis
 11. **eSIM:** a documentação manda não enviar `iccid` e enviar `"esim": "SIM"`. A Ora envia dentro do item de `chips` (onde a resposta também traz `esim`). Está certo? O ICCID do eSIM sempre vem na resposta?
 12. **Erro sem envelope:** o exemplo "Chip já está ativo." vem só com `{mensagem}` e sem o código HTTP. Qual código a API devolve nesse caso?
 
-**Evidência para a pergunta 6:** o exemplo de erro da recarga cita o campo `numeros.0.numero`, o que indica que a validação cobra a lista `numeros`. A Ora usa a lista (ADR-005) até a Contel confirmar.
+**Evidência para a pergunta 6:** o exemplo de erro da recarga cita o campo `numeros.0.numero`, o que indica que a validação cobra a lista `numeros`. A Ora usa a lista (ADR-005) até a Nogle confirmar.
 
 ## 4. O que já está pronto e o que falta
 
 | Pronto (testado, sem chamada real) | Falta |
 |---|---|
 | Catálogo das 62 funções gerado da cópia oficial e conferido no CI | Credenciais no ambiente do worker e resposta da P9 |
-| Regras em `packages/dominio/src/nogle.ts`: normalização, pedido só com campos documentados, leitura da resposta e da evidência, listas oficiais (testadas com os exemplos oficiais) | Respostas da Contel às perguntas 2, 6, 7, 10, 11 e 12 |
-| ADR-005: operações persistentes no banco (ativação, recarga, portabilidade), eventos, produção única, resultado desconhecido com a gerência | Homologação com linha/chip de teste autorizados pela Contel |
+| Regras em `packages/dominio/src/nogle.ts`: normalização, pedido só com campos documentados, leitura da resposta e da evidência, listas oficiais (testadas com os exemplos oficiais) | Respostas da Nogle às perguntas 2, 6, 7, 10, 11 e 12 |
+| ADR-005: operações persistentes no banco (ativação, recarga, portabilidade), eventos, produção única, resultado desconhecido com a gerência | Homologação com linha/chip de teste autorizados pela Nogle |
 | Worker no servidor (`apps/worker/src/connect/`): token, envio, consulta e listas; ponta a ponta contra servidor local com os exemplos oficiais | Compra com entrega, bloqueio, consumo, carteira/extrato e transferência de chips (fora do ADR-005) |
 | Tela Ora Connect da demonstração (18 testes E2E) e tela real `/connect` | Agendar o worker no servidor (só com a autorização do proprietário) |
 

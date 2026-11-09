@@ -1,6 +1,6 @@
-// GERADO por scripts/gerar-catalogo-nogle.mjs a partir da coleção oficial da API NOGLE (Contel Telecom),
+// GERADO por scripts/gerar-catalogo-nogle.mjs a partir da coleção oficial da API NOGLE,
 // publicada em https://docs.nogle.tech/. Cópia lida em 07/11/2026: docs/integracoes/nogle/colecao-postman-2026-11-07.json. Não editar à mão.
-// "aba", "quem" e "reconsultar" são PROPOSTA da Ora (validar com o proprietário e a Contel), não vêm da documentação.
+// "aba", "quem" e "reconsultar" são PROPOSTA da Ora (validar com o proprietário e a Nogle), não vêm da documentação.
 
 export type AbaConnect = "operacoes" | "ativar" | "linha" | "recarga" | "portabilidade" | "atendimento" | "chips" | "carteira" | "integracao";
 export type QuemUsa = "loja" | "gestao" | "administracao" | "sistema";
@@ -14,7 +14,7 @@ export type FuncaoNogle = {
   aba: AbaConnect;
   quem: QuemUsa;
   efeito: "leitura" | "escrita" | "sessao";
-  /** GET que a documentação manda com corpo JSON: navegador e fetch não enviam; confirmar com a Contel. */
+  /** GET que a documentação manda com corpo JSON: navegador e fetch não enviam; confirmar com a Nogle. */
   corpoEmGet: boolean;
   obrigatorios: readonly string[];
   /** Sem proteção contra duplicidade documentada: o que consultar antes de reenviar depois de uma falha. */

@@ -74,7 +74,7 @@ describe("cliente da Nogle", () => {
     expect(recebidos.slice(antes).map((r) => r.caminho)).toEqual(["/auth/token"]);
   });
 
-  it("GET com corpo fica bloqueado até a Contel confirmar (nada sai); GET sem corpo passa", async () => {
+  it("GET com corpo fica bloqueado até a Nogle confirmar (nada sai); GET sem corpo passa", async () => {
     const cliente = new ClienteNogle({ tipo: "marca", chaveAcesso: "ficticia" }, transporteHttp(base), { getComCorpo: false });
     const antes = recebidos.length;
     expect(await cliente.chamar({ metodo: "GET", caminho: "/linhas/historico", corpo: { numero: "51988887777" } })).toMatchObject({ tipo: "bloqueada" });

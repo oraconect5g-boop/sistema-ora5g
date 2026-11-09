@@ -13,8 +13,8 @@ import { classeCampo, formatarLinha, soDigitos } from "./util";
 type Programada = { linha: string; cliente: string; plano: string; valor: number; renovacaoEmDias: number; cadastradaPor: string };
 type Pedido = { id: number; numero: string; plano: PlanoConnect; pagamento: MetodoPagamentoNogle; sms: boolean; situacao: "aguardando_pagamento" | "confirmada"; debitoCarteira: number };
 
-// Parte da Contel descontada do saldo da Ora numa recarga pelo saldo. ILUSTRATIVO: a taxa real
-// vem da Contel (P9/D-009); não usar como valor aprovado.
+// Parte da Nogle descontada do saldo da Ora numa recarga pelo saldo. ILUSTRATIVO: a taxa real
+// vem da Nogle (P9/D-009); não usar como valor aprovado.
 const PARTE_CONTEL_ILUSTRATIVA = 0.8;
 
 /** Recarga avulsa (POST /recarga/solicitar), recarga programada por saldo e bloqueio da próxima renovação. */
@@ -44,7 +44,7 @@ export function RecargaConnect({ planos, linhas, programadas, podeGerir, saldoCa
   const dataRenovacao = (dias: number) => new Intl.DateTimeFormat("pt-BR", { timeZone: "America/Sao_Paulo", day: "2-digit", month: "2-digit" }).format(new Date(agora + dias * 86_400_000));
 
   // REV-025 (#24): o meio escolhido vale até o fim. SALDO: o cliente paga no caixa da loja e a
-  // carteira da Ora na Contel é debitada; LINK: o cliente paga direto à Contel, sem caixa e sem carteira.
+  // carteira da Ora na Nogle é debitada; LINK: o cliente paga direto à Nogle, sem caixa e sem carteira.
   function solicitar() {
     if (!planoEscolhido) return;
     setConferido(null);
@@ -75,12 +75,12 @@ export function RecargaConnect({ planos, linhas, programadas, podeGerir, saldoCa
           {pedido ? (
             <div className="space-y-3" aria-live="polite">
               {pedido.situacao === "confirmada" && pedido.pagamento === "SALDO" ? (
-                <Aviso tom="sucesso" titulo={`Recarga ${pedido.id} feita pelo saldo (simulação)`}>{pedido.plano.plano} para {formatarLinha(pedido.numero)}. O cliente paga {brl(pedido.plano.valor)} no caixa da loja; o saldo da Ora na Contel caiu {brl(pedido.debitoCarteira)} (valor ilustrativo).</Aviso>
+                <Aviso tom="sucesso" titulo={`Recarga ${pedido.id} feita pelo saldo (simulação)`}>{pedido.plano.plano} para {formatarLinha(pedido.numero)}. O cliente paga {brl(pedido.plano.valor)} no caixa da loja; o saldo da Ora na Nogle caiu {brl(pedido.debitoCarteira)} (valor ilustrativo).</Aviso>
               ) : pedido.situacao === "confirmada" ? (
-                <Aviso tom="sucesso" titulo={`Recarga ${pedido.id} paga pelo link (simulação)`}>{pedido.plano.plano} para {formatarLinha(pedido.numero)}. O cliente pagou {brl(pedido.plano.valor)} direto à Contel pelo link: não entra no caixa da loja e não usa o saldo da Ora.</Aviso>
+                <Aviso tom="sucesso" titulo={`Recarga ${pedido.id} paga pelo link (simulação)`}>{pedido.plano.plano} para {formatarLinha(pedido.numero)}. O cliente pagou {brl(pedido.plano.valor)} direto à Nogle pelo link: não entra no caixa da loja e não usa o saldo da Ora.</Aviso>
               ) : (
                 <Aviso tom="aviso" titulo={`Recarga ${pedido.id}: aguardando pagamento do link`}>
-                  {pedido.sms ? "A Contel enviou o link por SMS para a linha." : "Envie o link ao cliente."} <span className="numeros">https://pagamento.exemplo.invalid/r/{pedido.id}</span>
+                  {pedido.sms ? "A Nogle enviou o link por SMS para a linha." : "Envie o link ao cliente."} <span className="numeros">https://pagamento.exemplo.invalid/r/{pedido.id}</span>
                   <Botao tamanho="sm" variante="secundario" className="mt-2" onClick={() => setPedido({ ...pedido, situacao: "confirmada" })}>Cliente pagou (simulação)</Botao>
                 </Aviso>
               )}
@@ -139,17 +139,17 @@ export function RecargaConnect({ planos, linhas, programadas, podeGerir, saldoCa
       </div>
 
       <div className="min-w-0 space-y-4">
-        <Cartao titulo="Saldo da Ora na Contel" icone={Wallet}>
+        <Cartao titulo="Saldo da Ora na Nogle" icone={Wallet}>
           <p className="numeros text-2xl font-bold tracking-tight">{brl(saldo)}</p>
-          <p className="text-xs text-suave">Pagando pelo saldo, a margem da Ora já fica retida e só a parte da Contel é descontada.</p>
+          <p className="text-xs text-suave">Pagando pelo saldo, a margem da Ora já fica retida e só a parte da Nogle é descontada.</p>
         </Cartao>
-        <Aviso tom="info" titulo="Sem pedido duplicado">A Contel não documenta proteção contra pedido repetido. Se a resposta demorar, confira no histórico e nas recargas pedidas antes de pedir outra.</Aviso>
+        <Aviso tom="info" titulo="Sem pedido duplicado">A Nogle não documenta proteção contra pedido repetido. Se a resposta demorar, confira no histórico e nas recargas pedidas antes de pedir outra.</Aviso>
         <Aviso tom="neutro" titulo={<span className="inline-flex items-center gap-1.5"><Link2 aria-hidden className="size-4" /> Link, Pix e boleto</span>}>Os dados do pagamento de uma ativação, recarga ou compra vêm de POST /pagamento.</Aviso>
       </div>
 
       <Dialogo aberto={confirmando} aoFechar={() => { setConfirmando(false); setSemSaldo(false); }} titulo="Conferir a recarga" descricao="A recarga na operadora não se desfaz pelo sistema." rodape={<><Botao variante="secundario" onClick={() => { setConfirmando(false); setSemSaldo(false); }}>Voltar</Botao><Botao onClick={solicitar}>Solicitar recarga</Botao></>}>
-        {planoEscolhido && <ListaDados itens={[["Linha", formatarLinha(soDigitos(numero))], ["Plano", `${planoEscolhido.plano} · ${brl(planoEscolhido.valor)}`], ["Pagamento", pagamento === "SALDO" ? "Saldo da Ora (cliente paga no caixa)" : `Link${sms ? " por SMS" : ""} (cliente paga direto à Contel)`]]} />}
-        {semSaldo && <Aviso tom="perigo" className="mt-3">O saldo da Ora na Contel não cobre esta recarga. Use o link de pagamento ou peça ao dono para recarregar a carteira.</Aviso>}
+        {planoEscolhido && <ListaDados itens={[["Linha", formatarLinha(soDigitos(numero))], ["Plano", `${planoEscolhido.plano} · ${brl(planoEscolhido.valor)}`], ["Pagamento", pagamento === "SALDO" ? "Saldo da Ora (cliente paga no caixa)" : `Link${sms ? " por SMS" : ""} (cliente paga direto à Nogle)`]]} />}
+        {semSaldo && <Aviso tom="perigo" className="mt-3">O saldo da Ora na Nogle não cobre esta recarga. Use o link de pagamento ou peça ao dono para recarregar a carteira.</Aviso>}
       </Dialogo>
 
       <Dialogo aberto={nova !== null} aoFechar={() => setNova(null)} titulo="Programar recarga pelo saldo" descricao="A linha renova todo mês pelo saldo da Ora (POST /recarga/saldo/adicionar)." rodape={<><Botao variante="secundario" onClick={() => setNova(null)}>Cancelar</Botao><Botao onClick={programar}>Programar</Botao></>}>

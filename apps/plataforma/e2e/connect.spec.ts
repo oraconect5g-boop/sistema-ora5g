@@ -1,6 +1,6 @@
 import { expect, test, type Page } from "@playwright/test";
 
-// Ora Connect: funções da API NOGLE (Contel) na demonstração. Tudo simulado no formato da documentação oficial.
+// Ora Connect: funções da API NOGLE (Nogle) na demonstração. Tudo simulado no formato da documentação oficial.
 
 async function usarPerfil(page: Page, perfil: string) {
   await page.goto(`/demo/perfil/usar?p=${perfil}`);
@@ -76,7 +76,7 @@ test("ativação: só chip virgem segue, em processamento não se reenvia e a li
   await expect(page.getByText("Linha ativa (confirmada pela operadora · simulação)")).toBeVisible();
 });
 
-test("ativação com cliente novo exige os dados que a Contel pede", async ({ page }) => {
+test("ativação com cliente novo exige os dados que a Nogle pede", async ({ page }) => {
   await usarPerfil(page, "vendedor");
   await page.goto("/demo/connect?aba=ativar");
   await page.getByRole("radio", { name: "eSIM (chip virtual)" }).click();
@@ -211,7 +211,7 @@ test("REV-024: eSIM não passa do estoque virgem e sai dele ao ser transferido",
 test("REV-025: recarga paga pelo LINK continua LINK e não mexe no caixa nem no saldo da Ora", async ({ page }) => {
   await usarPerfil(page, "vendedor");
   await page.goto("/demo/connect?aba=recarga");
-  const saldo = page.getByRole("heading", { name: "Saldo da Ora na Contel" }).locator("xpath=ancestor::section[1]").locator("p.numeros");
+  const saldo = page.getByRole("heading", { name: "Saldo da Ora na Nogle" }).locator("xpath=ancestor::section[1]").locator("p.numeros");
   const saldoAntes = await saldo.textContent();
   await page.getByLabel("Número da linha", { exact: true }).fill("(41) 9 0000-0101");
   await page.getByLabel("Link de pagamento", { exact: true }).check();

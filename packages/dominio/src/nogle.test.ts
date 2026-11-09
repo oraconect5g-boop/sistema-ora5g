@@ -184,7 +184,7 @@ describe("listas oficiais e dinheiro", () => {
     expect(lerReferencias("plano", null)).toEqual([]);
   });
 
-  it("valor da Contel em centavos sem arredondar", () => {
+  it("valor da Nogle em centavos sem arredondar", () => {
     expect(centavosDeValorNogle(44.9)).toBe(4490);
     expect(centavosDeValorNogle("44.90")).toBe(4490);
     expect(centavosDeValorNogle("39.9")).toBe(3990);

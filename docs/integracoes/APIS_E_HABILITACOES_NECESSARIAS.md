@@ -18,7 +18,7 @@
 |---|---|---|---|
 | 1 | Gravar `SUPABASE_SECRET_KEY` no servidor | Convites da tela da equipe (o worker cria a pessoa no Auth); usuários de teste fictícios criados pelo Claude; login real de ponta a ponta (#11) | Supabase → projeto `ora5g-dev` → Project Settings → API Keys → Secret keys. Gravar com `definir-chave.sh SUPABASE_SECRET_KEY`. **Substitui o item 1.1 antigo** (criar usuários de teste à mão deixa de ser necessário) |
 | 2 | Enviar o **arquivo da Rein** (produtos, preços, estoque da Santa Cândida) | Importador e estoque real do piloto | Exportar da Rein (CSV/Excel) e copiar para `~/entrada/rein/` no servidor (WinSCP, usuário `dev`, porta 22022). A pasta já existe, só você e o sistema a leem |
-| 3 | E-mail à **Contel** (texto pronto em `PENDENCIAS_DO_PROPRIETARIO.md` §2.1) e depois gravar `NOGLE_AUTH_KEY_TYPE`, `NOGLE_ACCESS_KEY`, `NOGLE_SECONDARY_KEY` | Ora Connect real (ativação, recarga, portabilidade) | ti@conteltelecom.com.br. A resposta define o tipo de chave (P9) e as dúvidas da seção A2 |
+| 3 | E-mail ao suporte da **Nogle** (texto pronto em `PENDENCIAS_DO_PROPRIETARIO.md` §2.1) e depois gravar `NOGLE_AUTH_KEY_TYPE`, `NOGLE_ACCESS_KEY`, `NOGLE_SECONDARY_KEY` | Ora Connect real (ativação, recarga, portabilidade) | ti@conteltelecom.com.br. A resposta define o tipo de chave (P9) e as dúvidas da seção A2 |
 | 4 | Escolher o **link de pagamento**: PicPay, PagBank ou os dois | Pagamento online/à distância confirmado pelo provedor | Seção A3. Depois gerar as credenciais no painel do escolhido |
 | 5 | E-mail ao **contador** (texto pronto em `PENDENCIAS_DO_PROPRIETARIO.md` §2.2) e escolha do **emissor fiscal por API** com ele | Nota automática; condição para sair da Rein | Seção A4 |
 | 2b | Caixa `nao-responda@ora5g.com.br` no cPanel, SMTP no painel do Supabase e os **dois modelos de e-mail** da seção A1 | Convite de pessoas novas pela tela da equipe e "esqueci minha senha" | Seção A1. Sem isso, a tela da equipe já dá e tira acessos de quem tem conta, mas o convite de gente nova fica com erro de envio |
@@ -45,20 +45,20 @@
 | Eventos e reconciliação | Não há webhook externo. Bloqueio vale na hora no banco (RLS recusa usuário bloqueado); o Auth também é bloqueado para impedir novo login |
 | Situação | **Funciona (testado em desenvolvimento):** banco, RLS, auditoria, catálogo, estoque com integridade e concorrência, login SSR com o par público, escolha da loja, sessão por turno, bloqueio e encerramento de acesso imediatos, tela da equipe. **Pronto aguardando acesso:** convite que cria a pessoa e manda o e-mail (worker: precisa da secret key, do SMTP e dos dois modelos acima) e o "esqueci minha senha" (SMTP e modelo). **A desenvolver:** bucket de fotos (o Claude cria por migration, sem depender de você) |
 
-### A2. Nogle / Contel — Ora Connect (chips, ativação, recarga, portabilidade)
+### A2. Nogle / Nogle — Ora Connect (chips, ativação, recarga, portabilidade)
 
 | Item | Detalhe |
 |---|---|
 | Prioridade | Núcleo/piloto (mês 3) |
 | Funções e requisitos | Venda de chip físico/eSIM, ativação, consulta de linha/plano/saldo/consumo, recarga, portabilidade, carteira e repasses (ORA-CONNECT-001 a 011) |
-| Fornecedor | Contel Telecom, API NOGLE (contratada; a chave já existe) |
+| Fornecedor | Nogle, API oficial (contratada; a chave já existe). A documentação oficial é publicada em nome da Contel Telecom, e o endereço da API é o dela: não é outro fornecedor |
 | Documentação | 🟡 [docs.nogle.tech](https://docs.nogle.tech/), lida por inteiro em 07/11 (62 funções; cópia com SHA-256 conferido no repositório). Confirmado: endereço `https://api.conteltelecom.com.br`, login `POST /auth/token` com token temporário, pagamento `LINK` ou `SALDO`. **Não documentado:** ambiente de testes, validade do token, limites, idempotência, webhooks; 25 consultas GET levam corpo; exemplo de portabilidade contraditório; formato da recarga ambíguo |
-| Permissões do tipo de conta | Franquia, marca/MVNO ou PDV (P9). A documentação não diz o que cada tipo libera: perguntado no e-mail à Contel |
+| Permissões do tipo de conta | Franquia, marca/MVNO ou PDV (P9). A documentação não diz o que cada tipo libera: perguntado no e-mail à Nogle |
 | Autenticação e variáveis | `NOGLE_API_BASE_URL` (pública, o Claude grava), `NOGLE_AUTH_KEY_TYPE`, `NOGLE_ACCESS_KEY`, `NOGLE_SECONDARY_KEY` (`chave_acesso_franquia` ou `chave_acesso_pdv`; vazia para marca/MVNO). Só no **worker** do servidor (ADR-005); nem o navegador nem o servidor web veem. Controles sem segredo, gravados pelo Claude depois da homologação: `NOGLE_OPERACOES_HABILITADAS`, `NOGLE_GET_COM_CORPO`, `ORA_ORGANIZACAO_ID`, `CONNECT_UFS` |
-| Como obter | Pela Contel (ti@conteltelecom.com.br), pedindo também o canal seguro de entrega. **Hipótese:** a chave atual é de franquia ou PDV; não usar até a Contel confirmar |
-| Teste | Sem sandbox documentado: pedir à Contel um ambiente de teste ou **uma linha e um chip de teste** autorizados. Nenhuma ativação, recarga ou portabilidade real sem essa autorização |
+| Como obter | Pelo suporte técnico da API da Nogle (ti@conteltelecom.com.br, o endereço indicado na documentação oficial), pedindo também o canal seguro de entrega. **Hipótese:** a chave atual é de franquia ou PDV; não usar até a Contel confirmar |
+| Teste | Sem sandbox documentado: pedir à Nogle um ambiente de teste ou **uma linha e um chip de teste** autorizados. Nenhuma ativação, recarga ou portabilidade real sem essa autorização |
 | Webhooks | Nenhum documentado. O sistema usa **reconsulta** periódica do estado (ativação, portabilidade, recarga) e não reenvia operação de resultado desconhecido |
-| Idempotência e reconciliação | Cada operação vira registro persistente com estado (solicitada → enviada → confirmada/recusada/desconhecida) e chave própria; antes de repetir, consulta. Relatórios da Contel (`/relatorios/*`, `/saldo/extrato`) conciliam produção e carteira |
+| Idempotência e reconciliação | Cada operação vira registro persistente com estado (solicitada → enviada → confirmada/recusada/desconhecida) e chave própria; antes de repetir, consulta. Relatórios da Nogle (`/relatorios/*`, `/saldo/extrato`) conciliam produção e carteira |
 | Situação | **Feito em desenvolvimento (ADR-005, sem chamada real):** operações persistentes (ativação, recarga, portabilidade) com estados, evidência, produção única e resultado desconhecido com a gerência; worker com token, envio, consulta e listas oficiais; ponta a ponta contra servidor local com os exemplos oficiais. **Aguardando acesso:** credenciais no worker, P9, respostas às perguntas 2, 6, 7, 10, 11 e 12 e uma linha/chip de teste para homologar |
 
 ### A3. Link de pagamento e Pix online
