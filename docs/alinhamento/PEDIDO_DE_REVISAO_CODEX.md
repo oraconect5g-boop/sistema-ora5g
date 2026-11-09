@@ -192,3 +192,15 @@ Pedidos de conferência:
 4. Ativação simulada pelo SALDO: botão trava e aviso de saldo insuficiente; a carteira nunca fica negativa (#39). Os 80% do plano continuam sendo número de exemplo da demonstração, não contrato.
 
 Provas: `src/demo/revisao-demo-lote4.test.ts`, `src/app/demo/relatorios/comparacao.test.ts` (prova da PR como veio) e `e2e/carteira-demo.spec.ts` (prova do Codex; o laço vai até o botão travar).
+
+## 09/11/2026 — Lote 5: pedidos internos de transferência e DEFEITOS (#60, ADR-007)
+
+**Branch:** `feature/ORA-transferencias-defeitos-lote5` (a partir da main `11e4e48`). Migration `20261109193043_transferencias_e_defeitos`, aplicada no `ora5g-dev` com md5 conferida e reversão ensaiada. Pontos para revisar:
+
+1. Modelo do DEFEITOS como `unidades.tipo = 'excecao'`, com os gatilhos que recusam venda e reserva de venda ali.
+2. Reserva de transferência no mesmo `reservado` do saldo (`expira_em = infinity`) e a mudança no livro: `transferencia_saida` de item reservado, como a `venda`.
+3. Máquina de estados e permissões: separar e enviar na origem (`estoque.transferir`; de DEFEITOS, `estoque.ajustar`); receber no destino; recusar antes de separar; cancelar antes de enviar.
+4. Recebimento de aparelho/chip só pelos IMEI/ICCID lidos que são da transferência; o que falta vira divergência, com explicação.
+5. Telas: "Onde tem" no estoque (loja atual primeiro e DEFEITOS à parte; abre também pelo catálogo, para produto sem saldo aqui) e `/transferencias` (separar com a escolha do IMEI, enviar, receber e conferir, recusar e cancelar).
+
+Provas: `transferencias.test.ts` (8) e duas disputas reais em `concorrencia.test.ts`.

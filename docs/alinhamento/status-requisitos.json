@@ -248,8 +248,8 @@
     },
     "ORA-INV-001": {
       "status": "parcial",
-      "nota": "Saldo por loja no banco, isolado por RLS, e tela real /estoque: saldo da loja do turno com foto (ampliação no celular) com busca por nome/SKU, alerta abaixo do mínimo, busca por IMEI/ICCID com o histórico do livro e disponibilidade na rede sem IMEI. Falta: transferência entre lojas (ORA-INV-007) e homologação com usuário real. 09/11 (lote 3): busca por nome/SKU no banco antes do limite dos saldos (#40).",
-      "evidencia": "packages/banco/supabase/migrations/20261108150620_catalogo_estoque.sql; packages/banco/src/catalogo-estoque.test.ts; apps/plataforma/src/app/estoque; apps/plataforma/src/lib/estoque/regras.test.ts; apps/plataforma/src/app/estoque/page.tsx"
+      "nota": "Saldo por loja no banco, isolado por RLS, e tela real /estoque: saldo da loja do turno com foto (ampliação no celular) com busca por nome/SKU, alerta abaixo do mínimo, busca por IMEI/ICCID com o histórico do livro e disponibilidade na rede sem IMEI. Falta: transferência entre lojas (ORA-INV-007) e homologação com usuário real. 09/11 (lote 3): busca por nome/SKU no banco antes do limite dos saldos (#40). 09/11 (lote 5, ADR-007): painel \"onde tem\" com físico, reservado, disponível e chegando por local, DEFEITOS à parte; pedido interno de transferência (pedir, separar, enviar, receber e conferir, recusar e cancelar).",
+      "evidencia": "packages/banco/supabase/migrations/20261108150620_catalogo_estoque.sql; packages/banco/src/catalogo-estoque.test.ts; apps/plataforma/src/app/estoque; apps/plataforma/src/lib/estoque/regras.test.ts; apps/plataforma/src/app/estoque/page.tsx; packages/banco/src/transferencias.test.ts"
     },
     "ORA-INV-003": {
       "status": "testado",
@@ -370,6 +370,11 @@
       "status": "testado",
       "nota": "Troca: a devolução vira vale-troca (crédito na rede, sem dinheiro) e o vale paga a nova venda até o saldo, com a diferença em qualquer meio; sem troco do vale; vale sem saldo ou inexistente é recusado; o cancelamento da nova venda devolve o saldo. Histórico (devolução, itens, reembolsos, usos do vale) só de inserção. Política comercial (prazo, estado aceito) pendente: D-026.",
       "evidencia": "packages/banco/supabase/migrations/20261109134507_devolucao_e_troca.sql; packages/banco/src/devolucao.test.ts; packages/dominio/src/pagamento.test.ts; apps/plataforma/src/lib/vendas/regras.test.ts; apps/plataforma/src/app/vendas/[id]/page.tsx; apps/plataforma/src/app/vender/acoes.ts; apps/plataforma/src/app/vender/page.tsx"
+    },
+    "ORA-INV-007": {
+      "status": "testado",
+      "nota": "Transferência entre lojas (ADR-007, 09/11): pedir, separar (IMEI/ICCID escolhido e reservado na origem), enviar (sai pelo livro, em trânsito), receber e conferir (só o IMEI/ICCID enviado; falta vira divergência com explicação), recusar e cancelar antes do envio; local DEFEITOS sem venda; painel \"onde tem\" e tela /transferencias. Testado em desenvolvimento; aguardando revisão do Codex. Falta o cadastro real das 11 lojas e do DEFEITOS (lista única, linha B2).",
+      "evidencia": "packages/banco/supabase/migrations/20261109193043_transferencias_e_defeitos.sql; packages/banco/src/transferencias.test.ts; packages/banco/src/concorrencia.test.ts; apps/plataforma/src/app/transferencias"
     }
   }
 }

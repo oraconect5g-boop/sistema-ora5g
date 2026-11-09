@@ -387,4 +387,43 @@ describe("duas conexões ao mesmo tempo no PostgreSQL 17", () => {
     expect(segunda).toEqual({ ok: "precisa_aprovacao" });
     expect(await valor<string>(admin, "select situacao as v from public.aprovacoes_desconto where id = $1", [segundo])).toBe("invalidada");
   });
+
+  // ADR-007 (#60): reserva de venda e separação de transferência não pegam o mesmo aparelho.
+  it("separação de transferência e reserva de venda do mesmo aparelho ao mesmo tempo: uma fica com ele, a outra recebe OR002", async () => {
+    const imei = comDigitoLuhn("35209900172077");
+    const item = await valor<string>(admin, ENTRADA, [ids.lojaA, cat.aparelho, imei, null, "conc:transf:entrada"]);
+    const gerenteB = await sessaoNaLoja(ids.gerenteB, ids.lojaB);
+    await abrir(admin, gerenteB);
+    const t = await valor<string>(admin, "select public.transferencia_solicitar($1, $2, $3, 1, 'Reposição', 'conc:transf:1') as v", [ids.lojaA, ids.lojaB, cat.aparelho]);
+    await admin.query("commit");
+    await abrir(a, await sessaoNaLoja(ids.dono, ids.lojaA));
+    await abrir(b, await sessaoNaLoja(ids.vendedorA, ids.lojaA));
+    const final = await disputa(
+      () => a.query("select public.transferencia_separar($1, $2::uuid[])", [t, [item]]),
+      () => valor(b, RESERVA, [cat.aparelho, 1, item, "conc:transf:venda"]),
+    );
+    expect(final).toEqual({ erro: "OR002" });
+    expect(await contar("select count(*) as n from public.estoque_reservas where item_serializado_id = $1 and situacao = 'ativa'", [item])).toBe(1);
+    expect(await divergencias()).toEqual([]);
+  });
+
+  it("o mesmo envio de transferência em duas conexões: uma saída só no livro", async () => {
+    const gerenteB = await sessaoNaLoja(ids.gerenteB, ids.lojaB);
+    const dono = await sessaoNaLoja(ids.dono, ids.lojaA);
+    await abrir(admin, gerenteB);
+    const t = await valor<string>(admin, "select public.transferencia_solicitar($1, $2, $3, 1, 'Reposição', 'conc:transf:2') as v", [ids.lojaA, ids.lojaB, cat.capa]);
+    await admin.query("commit");
+    await abrir(admin, dono);
+    await admin.query("select public.transferencia_separar($1, '{}'::uuid[])", [t]);
+    await admin.query("commit");
+    await abrir(a, dono);
+    await abrir(b, dono);
+    const final = await disputa(
+      () => a.query("select public.transferencia_enviar($1)", [t]),
+      () => valor<string>(b, "select public.transferencia_enviar($1) as v", [t]),
+    );
+    expect(final).toEqual({ ok: "enviada" });
+    expect(await contar("select count(*) as n from public.estoque_movimentos where referencia_tipo = 'transferencia' and referencia_id = $1", [t])).toBe(1);
+    expect(await divergencias()).toEqual([]);
+  });
 });

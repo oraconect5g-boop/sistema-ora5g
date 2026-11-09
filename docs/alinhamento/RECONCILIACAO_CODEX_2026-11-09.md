@@ -81,7 +81,8 @@ As correções valem só para a demonstração (`/demo`). As telas reais já seg
 |---|---|---|---|
 | #44 | `npm audit --omit=dev`: 0 vulnerabilidades no CI | a conferir na cadeia de desenvolvimento | Atualizar de forma compatível, sem downgrade automático |
 | #54 | Três operações (ativação, recarga, portabilidade) no adaptador; cobrança, carteira, recorrência e repasse sem contrato confirmado | **parcial** / bloqueio externo nas partes sem contrato | Partes com contrato documentado primeiro |
-| #26, #60 | Fotos existem; não há transferência entre lojas nem DEFEITOS | **parcial** / não iniciado | Busca e painel da rede, pedido interno e DEFEITOS |
+| #60 | Pedido interno e DEFEITOS: **implementados** em desenvolvimento (ADR-007, branch `feature/ORA-transferencias-defeitos-lote5`, migration `20261109193043`), com o painel "onde tem" e a tela de transferências | **parcial**: falta o cadastro real das 11 lojas e do DEFEITOS (linha B2) e a conciliação dos totais da imagem | Homologar com as lojas de origem e destino |
+| #26 | Fotos obrigatórias, busca na fonte e painel da rede prontos | **parcial** | Pendências de foto da importação Rein, quando chegar o arquivo |
 | #19–#24 (fechadas) | Prova `2026-11-08/banco.repro.ts`: 6 de 6 verdes | sem regressão | Não reabrir |
 
 ## 3. Dependências externas
@@ -96,4 +97,5 @@ Estão na seção 0 de [`docs/PENDENCIAS_DO_PROPRIETARIO.md`](../PENDENCIAS_DO_P
 | 2 | `fix/ORA-integridade-lote2` | Corrigido e testado em desenvolvimento, aguardando o Codex. Migrations `20261109190240` e `20261109190400` aplicadas no `ora5g-dev` |
 | 3 | `fix/ORA-busca-csv-fotos-lote3` | Corrigido e testado em desenvolvimento, aguardando o Codex. Migration `20261109191416` aplicada no `ora5g-dev` |
 | 4 | `fix/ORA-demo-lote4` | Corrigido na demonstração, aguardando o Codex |
-| 5 (próximo) | — | #60 e #26 (estoque da rede, pedido interno de transferência, local DEFEITOS), depois #54 nas partes com contrato e #44 |
+| 5 | `feature/ORA-transferencias-defeitos-lote5` | #60 (ADR-007): pedido interno de transferência, DEFEITOS e "onde tem", testado em desenvolvimento, aguardando o Codex |
+| 6 (próximo) | — | #54 nas partes com contrato documentado, #44 e cadastro das 11 lojas quando chegar a linha B2 |

@@ -1,4 +1,6 @@
-import { Boxes, CheckCircle2, ClipboardCheck, History, Search } from "lucide-react";
+import { randomUUID } from "node:crypto";
+
+import { ArrowRightLeft, Boxes, CheckCircle2, ClipboardCheck, History, Search } from "lucide-react";
 import type { Metadata } from "next";
 import Link from "next/link";
 
@@ -8,7 +10,9 @@ import { ehUuid } from "../../lib/acesso/regras";
 import { FalhaDoServico, obterSessao } from "../../lib/acesso/sessao";
 import { ERROS_DO_ESTOQUE, identificadorDigitado, inicioDoDiaEmSaoPaulo, nomeDe, NOMES_DAS_SITUACOES, NOMES_DOS_MOVIMENTOS } from "../../lib/estoque/regras";
 import { chaveDoCatalogo, textoDoParametro, type ValorDeParametro } from "../../lib/parametros";
+import { ERROS_DA_TRANSFERENCIA } from "../../lib/transferencias/regras";
 import { FotoAmpliavel } from "../catalogo/FotoAmpliavel";
+import { solicitarTransferencia } from "../transferencias/acoes";
 import { conferirItem, conferirPorIdentificador } from "./acoes";
 
 export const metadata: Metadata = { title: "Estoque" };
@@ -21,7 +25,7 @@ const final = (t: string | null) => (t ? t : "—");
 // Estoque real da loja do turno (ORA-INV-001/004): saldo por produto, busca por IMEI/ICCID com o
 // histórico do livro, disponibilidade na rede e conferência física do dia. Só leitura pelo RLS;
 // a conferência é gravada e auditada pelo banco (conferir_item). Custo não aparece aqui.
-export default async function Estoque({ searchParams }: { searchParams: Promise<{ q?: ValorDeParametro; aba?: ValorDeParametro; variante?: ValorDeParametro; ok?: ValorDeParametro; erro?: ValorDeParametro }> }) {
+export default async function Estoque({ searchParams }: { searchParams: Promise<{ q?: ValorDeParametro; aba?: ValorDeParametro; variante?: ValorDeParametro; ok?: ValorDeParametro; erro?: ValorDeParametro; erro_transferencia?: ValorDeParametro }> }) {
   const parametros = await searchParams;
   const erro = chaveDoCatalogo(ERROS_DO_ESTOQUE, parametros.erro);
   const conferencia = textoDoParametro(parametros.aba) === "conferencia";
@@ -151,9 +155,14 @@ export default async function Estoque({ searchParams }: { searchParams: Promise<
     const f = fotos.data.find((x) => x.variante_id === variante.id) ?? fotos.data.find((x) => x.produto_id === variante.produto_id && x.variante_id === null);
     return { url: f ? (urlDe.get(f.caminho) ?? null) : null, ilustracao: f?.ilustracao ?? false };
   };
-  const rede = ehUuid(varianteNaRede) ? await supabase.rpc("disponibilidade_na_rede", { p_variante: varianteNaRede }) : { data: null, error: null };
-  if (rede.error) throw new FalhaDoServico("estoque_rede");
-  const nomeNaRede = ehUuid(varianteNaRede) ? linhas.find((l) => l.id === varianteNaRede)?.nome : undefined;
+  // "Onde tem este produto?" (ADR-007, #60): físico, reservado (venda e transferência), disponível
+  // e chegando por local; DEFEITOS à parte, sem venda. Abre também para produto sem saldo aqui.
+  const rede = ehUuid(varianteNaRede) ? await supabase.rpc("estoque_na_rede", { p_variante: varianteNaRede }) : { data: null, error: null };
+  const varianteDaRede = ehUuid(varianteNaRede) ? await supabase.from("variantes").select("nome").eq("id", varianteNaRede).maybeSingle() : { data: null, error: null };
+  if (rede.error || varianteDaRede.error) throw new FalhaDoServico("estoque_rede");
+  const nomeNaRede = varianteDaRede.data?.nome;
+  const locaisDaRede = [...(rede.data ?? [])].sort((a, b) => Number(b.unidade_id === unidade) - Number(a.unidade_id === unidade));
+  const erroTransferencia = chaveDoCatalogo(ERROS_DA_TRANSFERENCIA, parametros.erro_transferencia);
 
   return (
     <main className="mx-auto max-w-3xl space-y-4 px-4 py-8">
@@ -187,10 +196,43 @@ export default async function Estoque({ searchParams }: { searchParams: Promise<
         ) : <Aviso tom="aviso">Nenhum IMEI/ICCID com esse número nas lojas que você consulta.</Aviso>
       )}
 
-      {nomeNaRede && rede.data && (
-        <Cartao titulo={`${nomeNaRede} na rede`} subtitulo="Disponível por loja (sem IMEI)">
+      {erroTransferencia && <Aviso tom="perigo">{ERROS_DA_TRANSFERENCIA[erroTransferencia]}</Aviso>}
+      {nomeNaRede && ehUuid(varianteNaRede) && (
+        <Cartao titulo={`Onde tem: ${nomeNaRede}`} subtitulo="Disponível para vender = físico − reservado (venda e transferência). Sem IMEI de outra loja." icone={ArrowRightLeft}
+          acao={<Link href="/transferencias" className="text-xs font-semibold text-acao">pedidos</Link>}>
           <ul className="divide-y divide-borda text-sm">
-            {rede.data.map((r) => <li key={r.unidade_id} className="flex justify-between py-1"><span>{r.unidade}</span><span className="numeros font-semibold">{r.disponivel}</span></li>)}
+            {locaisDaRede.map((r) => {
+              const aqui = r.unidade_id === unidade;
+              const excecao = r.tipo === "excecao";
+              return (
+                <li key={r.unidade_id} className="space-y-2 py-2">
+                  <div className="flex flex-wrap items-center justify-between gap-2">
+                    <span className="font-medium">{r.unidade}{aqui ? " (esta loja)" : ""}{excecao && <Selo tom="aviso" className="ml-2">local de exceção, não vende</Selo>}</span>
+                    <span className="numeros text-right text-xs"><strong className="text-sm">{r.disponivel}</strong> disponível · físico {r.fisico} · reservado {r.reservado}{r.chegando > 0 ? ` · chegando ${r.chegando}` : ""}{r.pedidos_abertos > 0 ? ` · ${r.pedidos_abertos} pedido(s)` : ""}</span>
+                  </div>
+                  {!aqui && !excecao && r.disponivel > 0 && (
+                    <form action={solicitarTransferencia} className="grid grid-cols-2 gap-2 sm:grid-cols-4">
+                      <input type="hidden" name="origem" value={r.unidade_id} /><input type="hidden" name="destino" value={unidade} />
+                      <input type="hidden" name="variante" value={varianteNaRede} /><input type="hidden" name="chave" value={randomUUID()} />
+                      <label className="text-xs font-medium">Quantidade<input name="quantidade" inputMode="numeric" defaultValue="1" required className={campo} /></label>
+                      <label className="text-xs font-medium sm:col-span-2">Motivo<input name="motivo" required minLength={3} className={campo} /></label>
+                      <div className="self-end"><Botao type="submit" tamanho="sm" variante="secundario">Pedir desta loja</Botao></div>
+                    </form>
+                  )}
+                  {aqui && r.disponivel > 0 && locaisDaRede.length > 1 && (
+                    <form action={solicitarTransferencia} className="grid grid-cols-2 gap-2 sm:grid-cols-4">
+                      <input type="hidden" name="origem" value={unidade} /><input type="hidden" name="variante" value={varianteNaRede} /><input type="hidden" name="chave" value={randomUUID()} />
+                      <label className="text-xs font-medium">Mandar para<select name="destino" className={campo}>
+                        {locaisDaRede.filter((x) => x.unidade_id !== unidade).map((x) => <option key={x.unidade_id} value={x.unidade_id}>{x.unidade}</option>)}
+                      </select></label>
+                      <label className="text-xs font-medium">Quantidade<input name="quantidade" inputMode="numeric" defaultValue="1" required className={campo} /></label>
+                      <label className="text-xs font-medium">Motivo<input name="motivo" required minLength={3} className={campo} /></label>
+                      <div className="self-end"><Botao type="submit" tamanho="sm" variante="secundario">Registrar envio</Botao></div>
+                    </form>
+                  )}
+                </li>
+              );
+            })}
           </ul>
         </Cartao>
       )}
