@@ -63,13 +63,22 @@ Antes da correção, todos se reproduziam na main `d730e9a` mais o Lote 1 (`~/ci
 
 Fixture dos componentes (`docs/analises/evidencias/2026-11-08-fotos/fixture` da PR #33, copiada e apagada depois): 12 de 12 verdes; antes eram 6 de 12. Resultado no servidor em `~/ci/fixture-fotos-resultado.txt`.
 
+### Lote 4 — demonstração (branch `fix/ORA-demo-lote4`)
+
+As correções valem só para a demonstração (`/demo`). As telas reais já seguiam estas regras: face da recarga fora da receita, produção só com evidência, autoaprovação recusada no banco e saldo da carteira na Contel.
+
+| ID | Regra | Antes | Depois | Regressão permanente |
+|---|---|---|---|---|
+| #31 / REV-030 | Valor de face da recarga não é receita da Ora | 3000 no faturamento | 0; controle: acessório conta | `src/demo/revisao-demo-lote4.test.ts` |
+| #32 / REV-031 | "Só confirmadas" não conta ativação pendente | 1 | 0; controle: confirmada conta | idem |
+| #36 / REV-034 | Quem pediu não entra na própria fila | aparecia | não aparece; controle: outro gerente vê | idem |
+| #37 / REV-035 | Período comparado com período anterior do mesmo tamanho | 30 dias × 1 dia (+2900%) | sem comparação quando não há período anterior completo; 7 e 14 dias continuam comparando | `relatorios/comparacao.test.ts` (prova da PR) |
+| #39 / REV-037 | Carteira simulada não fica negativa | −R$ 51,28 e botão ativo | botão trava com aviso de saldo insuficiente | `e2e/carteira-demo.spec.ts` (prova do Codex com o laço "até o botão travar") |
+
 ### Demais achados abertos
 
 | ID | Reprodução atual | Estado | Próximo passo |
 |---|---|---|---|
-| #31, #32 (REV-030/031) | Face da recarga como receita (3000) e ativação pendente contada (1) | **demonstração**, reproduzido | Corrigir a demo e o contrato de indicadores |
-| #36, #37 | Autor na própria fila (demo); comparação de 30 dias +2900% | **demonstração**, reproduzidos | Junto de #31/#32 |
-| #39 | Não reexecutado (prova de navegador da demo) | demonstração | Junto de #31/#32 |
 | #44 | `npm audit --omit=dev`: 0 vulnerabilidades no CI | a conferir na cadeia de desenvolvimento | Atualizar de forma compatível, sem downgrade automático |
 | #54 | Três operações (ativação, recarga, portabilidade) no adaptador; cobrança, carteira, recorrência e repasse sem contrato confirmado | **parcial** / bloqueio externo nas partes sem contrato | Partes com contrato documentado primeiro |
 | #26, #60 | Fotos existem; não há transferência entre lojas nem DEFEITOS | **parcial** / não iniciado | Busca e painel da rede, pedido interno e DEFEITOS |
@@ -86,4 +95,5 @@ Estão na seção 0 de [`docs/PENDENCIAS_DO_PROPRIETARIO.md`](../PENDENCIAS_DO_P
 | 1 | `fix/ORA-acesso-configuracao-lote1` | Corrigido e testado em desenvolvimento, aguardando o Codex. CI e merge registrados em [PEDIDO_DE_REVISAO_CODEX.md](PEDIDO_DE_REVISAO_CODEX.md) |
 | 2 | `fix/ORA-integridade-lote2` | Corrigido e testado em desenvolvimento, aguardando o Codex. Migrations `20261109190240` e `20261109190400` aplicadas no `ora5g-dev` |
 | 3 | `fix/ORA-busca-csv-fotos-lote3` | Corrigido e testado em desenvolvimento, aguardando o Codex. Migration `20261109191416` aplicada no `ora5g-dev` |
-| 4 (próximo) | — | Demo (#31/#32/#36/#37/#39), depois #26/#60 (estoque visual, transferências, DEFEITOS) e #54 |
+| 4 | `fix/ORA-demo-lote4` | Corrigido na demonstração, aguardando o Codex |
+| 5 (próximo) | — | #60 e #26 (estoque da rede, pedido interno de transferência, local DEFEITOS), depois #54 nas partes com contrato e #44 |

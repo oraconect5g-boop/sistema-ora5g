@@ -43,6 +43,10 @@ export function AtivarChip({ planos, ddds, chipsDaLoja, clientes, saldoCarteira,
 
   const situacao = codigo === null ? null : situacaoDoIccid(codigo);
   const planoEscolhido = planos.find((p) => p.id === plano);
+  // Débito simulado da carteira (80% do plano é número de exemplo da demonstração, não contrato).
+  // Sem saldo, o SALDO não segue: a carteira nunca fica negativa (REV-037, #39).
+  const custoNoSaldo = planoEscolhido ? Math.round(planoEscolhido.valor * 0.8) : 0;
+  const semSaldo = pagamento === "SALDO" && custoNoSaldo > saldo;
 
   function validarIccid() {
     setCodigo(codigoDoIccid(iccid));
@@ -80,7 +84,8 @@ export function AtivarChip({ planos, ddds, chipsDaLoja, clientes, saldoCarteira,
   function solicitar() {
     setConfirmando(false);
     const numero = `${ddd}9${String(10_000_000 + Math.floor(Math.random() * 89_999_999)).slice(0, 8)}`;
-    if (pagamento === "SALDO" && planoEscolhido) setSaldo((s) => s - Math.round(planoEscolhido.valor * 0.8));
+    if (semSaldo) return;
+    if (pagamento === "SALDO" && planoEscolhido) setSaldo((s) => s - custoNoSaldo);
     setResultado({ id: 90_000 + Math.floor(Math.random() * 9_999), situacao: pagamento === "LINK" ? "aguardando_pagamento" : "solicitada", numero, tipo });
     setEtapa(4);
   }
@@ -191,7 +196,8 @@ export function AtivarChip({ planos, ddds, chipsDaLoja, clientes, saldoCarteira,
             </div>
             <label className="flex items-center gap-2 text-sm"><input type="checkbox" checked={querPortabilidade} onChange={(e) => setQuerPortabilidade(e.target.checked)} className="size-4 accent-acao" /> Cliente quer trazer o número de outra operadora (recebe SMS para a portabilidade)</label>
             {pagamento === "SALDO" && <p className="text-sm text-suave">Saldo da carteira: <strong className="numeros text-texto">{brl(saldo)}</strong></p>}
-            <div className="flex justify-between"><Botao variante="secundario" onClick={() => setEtapa(2)}>Voltar</Botao><Botao onClick={() => setConfirmando(true)}>Conferir e ativar</Botao></div>
+            {semSaldo && <p role="alert" className="text-sm text-perigo">Saldo da carteira insuficiente para este plano: use o link de pagamento ou recarregue a carteira.</p>}
+            <div className="flex justify-between"><Botao variante="secundario" onClick={() => setEtapa(2)}>Voltar</Botao><Botao onClick={() => setConfirmando(true)} disabled={semSaldo}>Conferir e ativar</Botao></div>
           </div>
         )}
 

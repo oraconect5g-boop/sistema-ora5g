@@ -181,3 +181,14 @@ Pedidos de conferência:
 | 4 | #42 / REV-040 | `registrar_foto` idempotente pelo caminho (trava pelo caminho; outro uso do mesmo arquivo dá OR004). `EnviarFoto` guarda o caminho enviado e, numa nova tentativa, só registra | `fotos-lote3.test.ts`; prova de banco da PR verde; fixture |
 | 5 | #43 / REV-041 | Descartar ou concluir limpa a escolha do arquivo | fixture |
 | 6 | índice redundante | `fotos_produto_produto_organizacao` removido; `fotos_organizacao` cobre a chave estrangeira; o aviso 0001 fica aceito | controle de EXPLAIN da PR verde |
+
+## 09/11/2026 — Lote 4 do prompt consolidado: demonstração (#31, #32, #36, #37, #39)
+
+**Branch:** `fix/ORA-demo-lote4` (a partir da main `596b046`). Só a demonstração; nenhuma migration.
+
+1. `resumoDeVendas`: valor de face da recarga fora do faturamento (#31); telecom conta chip vendido e operação **confirmada** (#32).
+2. `aprovacoesVisiveis`: quem pediu não vê o próprio pedido (#36).
+3. Relatórios: a variação só aparece com período anterior completo; 30 dias não compara com 1 dia (#37).
+4. Ativação simulada pelo SALDO: botão trava e aviso de saldo insuficiente; a carteira nunca fica negativa (#39). Os 80% do plano continuam sendo número de exemplo da demonstração, não contrato.
+
+Provas: `src/demo/revisao-demo-lote4.test.ts`, `src/app/demo/relatorios/comparacao.test.ts` (prova da PR como veio) e `e2e/carteira-demo.spec.ts` (prova do Codex; o laço vai até o botão travar).

@@ -226,12 +226,19 @@ export function historicoDaLoja(codigo: string, hoje: Date): ResumoDia[] {
   });
 }
 
+// Valor de face da recarga não é receita da Ora (REV-030, #31; invariante 4 de packages/dominio).
+const faceDeRecarga = (v: VendaDemo) =>
+  v.itens.filter((i) => i.tipo === "recarga").reduce((s, i) => s + i.precoUnitario * i.quantidade - (i.desconto ?? 0), 0);
+// Chip vendido conta; ativação, portabilidade e recarga só quando a operadora confirmou (REV-031, #32).
+const contaComoTelecom = (i: VendaDemo["itens"][number]) =>
+  i.tipo === "chip" || ((i.tipo === "ativacao" || i.tipo === "portabilidade" || i.tipo === "recarga") && i.situacaoTelecom === "confirmada");
+
 export function resumoDeVendas(vendas: readonly VendaDemo[]): ResumoDia {
   const validas = vendas.filter(contaNoFaturamento);
   return {
-    faturamento: validas.reduce((s, v) => s + v.total, 0),
+    faturamento: validas.reduce((s, v) => s + v.total - faceDeRecarga(v), 0),
     vendas: validas.length,
-    telecom: validas.reduce((s, v) => s + v.itens.filter((i) => (i.tipo === "chip" || i.tipo === "ativacao" || i.tipo === "portabilidade" || i.tipo === "recarga") && i.situacaoTelecom !== "falhou").length, 0),
+    telecom: validas.reduce((s, v) => s + v.itens.filter(contaComoTelecom).length, 0),
     custo: validas.reduce((s, v) => s + v.custo, 0),
     descontos: validas.reduce((s, v) => s + v.descontos, 0),
   };
