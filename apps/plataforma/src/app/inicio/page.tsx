@@ -1,4 +1,4 @@
-import { FileText, Images, KeyRound, LogOut, RadioTower, ShoppingCart, Store, Users, Wallet } from "lucide-react";
+import { Boxes, FileText, Images, KeyRound, LogOut, RadioTower, ShoppingCart, Store, Users, Wallet } from "lucide-react";
 import type { Metadata } from "next";
 
 import { Marca } from "../../componentes/Marca";
@@ -31,6 +31,7 @@ export default async function Inicio() {
           <BotaoLink href="/caixa" variante="secundario"><Wallet aria-hidden className="size-4" /> Caixa</BotaoLink>
           <BotaoLink href="/connect" variante="secundario"><RadioTower aria-hidden className="size-4" /> Ora Connect</BotaoLink>
           {aprovaNota.data && <BotaoLink href="/notas" variante="secundario"><FileText aria-hidden className="size-4" /> Notas fiscais</BotaoLink>}
+          <BotaoLink href="/estoque" variante="secundario"><Boxes aria-hidden className="size-4" /> Estoque e conferência</BotaoLink>
           <BotaoLink href="/catalogo" variante="secundario"><Images aria-hidden className="size-4" /> Catálogo e fotos</BotaoLink>
           {gereEquipe.data && <BotaoLink href="/equipe" variante="secundario"><Users aria-hidden className="size-4" /> Equipe e acessos</BotaoLink>}
           <BotaoLink href="/conta/senha" variante="secundario"><KeyRound aria-hidden className="size-4" /> Trocar minha senha</BotaoLink>
