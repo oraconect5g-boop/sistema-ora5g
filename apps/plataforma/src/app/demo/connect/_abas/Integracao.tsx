@@ -16,7 +16,7 @@ const TOM_METODO: Record<string, Tom> = { GET: "info", POST: "sucesso", PUT: "av
 const PENDENCIAS = [
   ["Tipo da chave da Ora (decisão P9)", "Franquia, marca/MVNO ou PDV. Define quais das 62 funções a Ora pode usar; a documentação não diz o que cada tipo libera."],
   ["Credenciais no lugar certo", "chave_acesso (e a da franquia ou do PDV) só no gerenciador de segredos do servidor, nunca no navegador nem no chat."],
-  ["Consultas GET com corpo", "25 consultas mandam os dados no corpo de um GET; navegador e fetch não enviam. Confirmar se a Contel aceita parâmetros no endereço."],
+  ["Consultas GET com corpo", "25 consultas mandam os dados no corpo de um GET; navegador e fetch não enviam. Confirmar se a Nogle aceita parâmetros no endereço."],
   ["Ambiente de testes", "Não há sandbox documentado: combinar com o suporte uma linha e um chip de teste antes de ligar."],
   ["Pedido repetido", "Não há chave contra duplicidade nem aviso automático (webhook): depois de falha ou demora, consultar antes de reenviar."],
   ["Respostas em formatos diferentes", "retorno, status, message/errors ou só mensagem; o adaptador normaliza (testado com os exemplos da documentação)."],
@@ -35,19 +35,19 @@ export function Integracao() {
       <div className="grid grid-cols-2 gap-3 sm:gap-4 xl:grid-cols-4">
         <Indicador rotulo="Funções na documentação" valor={numero(FUNCOES_NOGLE.length)} icone={BookOpen} detalhe={`${grupos.length} grupos · lida em 07/11/2026`} />
         <Indicador rotulo="Funções que alteram algo" valor={numero(escritas)} icone={PlugZap} detalhe="Ativar, recarregar, bloquear, portar..." />
-        <Indicador rotulo="Consultas GET com corpo" valor={numero(corpoEmGet)} icone={ListChecks} detalhe="Confirmar com a Contel" tom="atencao" />
+        <Indicador rotulo="Consultas GET com corpo" valor={numero(corpoEmGet)} icone={ListChecks} detalhe="Confirmar com a Nogle" tom="atencao" />
         <Indicador rotulo="Ligadas de verdade" valor="0" icone={KeyRound} detalhe="Aguardando chave e credenciais (P9)" tom="atencao" />
       </div>
 
       <div className="grid gap-4 xl:grid-cols-3">
-        <Cartao className="xl:col-span-2" titulo="O que falta para ligar a Nogle" subtitulo="Fonte: https://docs.nogle.tech/ (API NOGLE da Contel Telecom)" icone={KeyRound}>
+        <Cartao className="xl:col-span-2" titulo="O que falta para ligar a Nogle" subtitulo="Fonte: https://docs.nogle.tech/ (API NOGLE)" icone={KeyRound}>
           <ul className="space-y-3">
             {PENDENCIAS.map(([titulo, texto]) => (
               <li key={titulo} className="flex gap-3 text-sm"><span aria-hidden className="mt-1.5 size-2 shrink-0 rounded-full bg-amber-500" /><span><strong>{titulo}.</strong> {texto}</span></li>
             ))}
           </ul>
         </Cartao>
-        <Cartao titulo="Lojas da Ora como PDV na Contel" subtitulo="GET /pdv/listar · cadastro por POST /pdv/cadastrar" icone={Store}>
+        <Cartao titulo="Lojas da Ora como PDV na Nogle" subtitulo="GET /pdv/listar · cadastro por POST /pdv/cadastrar" icone={Store}>
           <ul className="divide-y divide-borda text-sm">
             {PDVS_CONTEL.map((p) => (
               <li key={p.idPdv} className="flex items-center justify-between gap-2 py-2"><span>{nomeDaLoja(p.loja)}<span className="block text-xs text-suave">{p.usuarios} usuários · mínimo de {p.estoqueMinimo} chips</span></span><Selo tom="neutro">PDV {p.idPdv}</Selo></li>
@@ -57,7 +57,7 @@ export function Integracao() {
         </Cartao>
       </div>
 
-      <Cartao titulo="Todas as funções da API e onde aparecem na Ora" subtitulo="Proposta de uso e de quem acessa, para validar com o proprietário e a Contel">
+      <Cartao titulo="Todas as funções da API e onde aparecem na Ora" subtitulo="Proposta de uso e de quem acessa, para validar com o proprietário e a Nogle">
         <Tabela colunas={["Função", "Rota", "Na tela", "Quem", "Observação"]} legenda="Funções da API NOGLE e onde aparecem na Ora" minimo="min-w-[52rem]">
           {grupos.map((grupo) => (
             <Fragment key={grupo}>

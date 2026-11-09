@@ -204,3 +204,7 @@ Provas: `src/demo/revisao-demo-lote4.test.ts`, `src/app/demo/relatorios/comparac
 5. Telas: "Onde tem" no estoque (loja atual primeiro e DEFEITOS à parte; abre também pelo catálogo, para produto sem saldo aqui) e `/transferencias` (separar com a escolha do IMEI, enviar, receber e conferir, recusar e cancelar).
 
 Provas: `transferencias.test.ts` (8) e duas disputas reais em `concorrencia.test.ts`.
+
+## 09/11/2026 — Nome da integração: Nogle (pedido do proprietário)
+
+**Branch:** `fix/ORA-nome-nogle`. A Ora Connect usa a **API oficial da Nogle**; não há outro fornecedor. "Contel" aparecia porque a documentação oficial da Nogle é publicada em nome da Contel Telecom, e o endereço da API (`api.conteltelecom.com.br`) e o e-mail de suporte têm esse nome. Agora telas, mensagens, worker, domínio, mensagens do banco (migration `20261109201940_mensagens_nogle`, só texto, md5 conferida) e documentos vivos dizem "Nogle". Ficaram iguais: o endereço da API, o e-mail de suporte, a coleção oficial e o catálogo gerado a partir dela, os relatórios históricos e os textos do Codex. A função `iccidNoFormatoContel` passou a se chamar `iccidNoFormatoNogle`.

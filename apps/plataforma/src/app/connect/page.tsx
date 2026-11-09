@@ -21,7 +21,7 @@ export const dynamic = "force-dynamic";
 const campo = "mt-1 min-h-11 w-full rounded-botao border border-borda bg-white px-3 text-sm outline-none focus:border-acao focus:ring-2 focus:ring-acao/20";
 const rotulo = "block text-sm font-medium";
 const OK = {
-  registrada: "Operação registrada. O servidor envia à Contel e acompanha a resposta; a situação aparece abaixo.",
+  registrada: "Operação registrada. O servidor envia à Nogle e acompanha a resposta; a situação aparece abaixo.",
   cancelada: "Operação cancelada antes do envio.",
   resolvida: "Decisão registrada na operação.",
   habilitacao: "Habilitação registrada (com a evidência na auditoria).",
@@ -35,8 +35,8 @@ const VIVAS = new Set(["registrada", "enviando", "aguardando_operadora", "result
 const ehSituacao = (s: string): s is SituacaoOperacao => Object.hasOwn(SITUACOES_OPERACAO, s);
 const quando = (data: string) => new Intl.DateTimeFormat("pt-BR", { timeZone: "America/Sao_Paulo", dateStyle: "short", timeStyle: "short" }).format(new Date(data));
 
-// Ora Connect real (ADR-005): a loja registra; o worker do servidor fala com a Contel; só a
-// evidência da operadora confirma. Nada aqui chama a Contel nem vê credencial.
+// Ora Connect real (ADR-005): a loja registra; o worker do servidor fala com a Nogle; só a
+// evidência da operadora confirma. Nada aqui chama a Nogle nem vê credencial.
 export default async function Connect({ searchParams }: { searchParams: Promise<{ erro?: ValorDeParametro; ok?: ValorDeParametro }> }) {
   const parametros = await searchParams;
   const erro = chaveDoCatalogo(ERROS_DO_CONNECT, parametros.erro);
@@ -75,8 +75,8 @@ export default async function Connect({ searchParams }: { searchParams: Promise<
   );
   const formaDePagamento = (tipo: TipoOperacao) => (
     <fieldset className="space-y-2">
-      <legend className="text-sm font-medium">Quem paga a Contel</legend>
-      <label className="flex items-center gap-2 text-sm"><input type="radio" name="metodo" value="LINK" defaultChecked /> LINK: o cliente paga pelo link da Contel</label>
+      <legend className="text-sm font-medium">Quem paga a Nogle</legend>
+      <label className="flex items-center gap-2 text-sm"><input type="radio" name="metodo" value="LINK" defaultChecked /> LINK: o cliente paga pelo link da Nogle</label>
       <label className="flex items-center gap-2 text-sm"><input type="radio" name="metodo" value="SALDO" /> SALDO: carteira da Ora (o cliente já pagou no caixa)</label>
       <label className={rotulo}>Serviço pago no caixa (só no SALDO; no LINK deixe em branco)
         <select name="venda_item" className={campo} defaultValue=""><option value="">—</option>{pagosLivres(tipo).map(opcaoDePago)}</select>
@@ -84,7 +84,7 @@ export default async function Connect({ searchParams }: { searchParams: Promise<
     </fieldset>
   );
   const seletorDePlano = (
-    <label className={rotulo}>Plano (lista da Contel)
+    <label className={rotulo}>Plano (lista da Nogle)
       <select name="plano" required className={campo} defaultValue="">
         <option value="" disabled>Escolha</option>
         {planos.map((p) => <option key={p.codigo} value={p.codigo}>{p.nome} · {brl(centavosDoBanco(p.valor_centavos ?? 0))}</option>)}
@@ -108,9 +108,9 @@ export default async function Connect({ searchParams }: { searchParams: Promise<
           {TIPOS_OPERACAO.map((t) => <li key={t}><Selo tom={habilitada.has(t) ? "sucesso" : "aviso"} ponto>{NOMES_DAS_OPERACOES[t]}: {habilitada.has(t) ? "liberada" : "aguardando homologação"}</Selo></li>)}
         </ul>
         {habilitada.size === 0 && (
-          <p className="mt-3 text-sm text-suave">A Contel ainda não foi ligada: faltam as credenciais no servidor, o tipo da chave (P9) e o teste com uma linha autorizada. Até lá nada é enviado e nada aparece como feito.</p>
+          <p className="mt-3 text-sm text-suave">A Nogle ainda não foi ligada: faltam as credenciais no servidor, o tipo da chave (P9) e o teste com uma linha autorizada. Até lá nada é enviado e nada aparece como feito.</p>
         )}
-        {habilitada.size > 0 && semListas && <p className="mt-3 text-sm text-suave">Os planos da Contel ainda não foram carregados pelo servidor.</p>}
+        {habilitada.size > 0 && semListas && <p className="mt-3 text-sm text-suave">Os planos da Nogle ainda não foram carregados pelo servidor.</p>}
       </Cartao>
 
       {!opera.data && <Aviso tom="aviso">Seu papel não registra operações da Ora Connect nesta loja.</Aviso>}
@@ -118,7 +118,7 @@ export default async function Connect({ searchParams }: { searchParams: Promise<
       {opera.data && habilitada.has("ativacao") && !semListas && (
         <details className="rounded-cartao border border-borda bg-white p-4">
           <summary className="cursor-pointer font-semibold"><Smartphone aria-hidden className="mr-1 inline size-4" /> Ativar chip</summary>
-          <p className="mt-2 text-xs text-suave">Chip do estoque: venda o chip no PDV antes. Os dados do cliente vão só para a Contel e saem do sistema depois do envio.</p>
+          <p className="mt-2 text-xs text-suave">Chip do estoque: venda o chip no PDV antes. Os dados do cliente vão só para a Nogle e saem do sistema depois do envio.</p>
           <form action={registrarOperacao} className="mt-3 grid gap-3 sm:grid-cols-2">
             <input type="hidden" name="tipo" value="ativacao" /><input type="hidden" name="chave" value={randomUUID()} />
             <label className={rotulo}>ICCID (19 dígitos do chip)<input name="iccid" inputMode="numeric" autoComplete="off" className={campo} /></label>
@@ -165,7 +165,7 @@ export default async function Connect({ searchParams }: { searchParams: Promise<
           <p className="mt-2 text-xs text-suave">O cliente aceita pelo SMS que chega na linha da outra operadora. A troca leva até 3 dias úteis depois do aceite.</p>
           <form action={registrarOperacao} className="mt-3 grid gap-3 sm:grid-cols-2">
             <input type="hidden" name="tipo" value="portabilidade" /><input type="hidden" name="chave" value={randomUUID()} />
-            <label className={rotulo}>Linha da Contel (com DDD)<input name="linha" required inputMode="tel" autoComplete="off" className={campo} /></label>
+            <label className={rotulo}>Linha da Nogle (com DDD)<input name="linha" required inputMode="tel" autoComplete="off" className={campo} /></label>
             <label className={rotulo}>Linha na outra operadora<input name="linha_doadora" required inputMode="tel" autoComplete="off" className={campo} /></label>
             <label className={rotulo}>Operadora de origem
               <select name="operadora" required className={campo} defaultValue=""><option value="" disabled>Escolha</option>{lista("operadora").map((o) => <option key={o.codigo} value={o.codigo}>{o.nome}</option>)}</select>
@@ -202,13 +202,13 @@ export default async function Connect({ searchParams }: { searchParams: Promise<
                   <p className="text-xs">{SITUACOES_OPERACAO[s].explicacao}</p>
                   {o.tipo === "recarga" && (
                     <p className="numeros text-xs text-suave">Valor de face {brl(centavosDoBanco(o.valor_face_centavos ?? 0))}
-                      {o.recebido_na_loja_centavos !== null ? ` · recebido na loja ${brl(centavosDoBanco(o.recebido_na_loja_centavos))}` : " · pago direto à Contel"}
+                      {o.recebido_na_loja_centavos !== null ? ` · recebido na loja ${brl(centavosDoBanco(o.recebido_na_loja_centavos))}` : " · pago direto à Nogle"}
                       {debitoDe(o.id) !== null ? ` · debitado da carteira ${brl(centavosDoBanco(debitoDe(o.id) ?? 0))}` : ""}</p>
                   )}
                   {o.numero_ativado && <p className="numeros text-xs">Número ativado: {o.numero_ativado}</p>}
                   {o.link_pagamento && s === "aguardando_operadora" && <p className="break-all text-xs">Link para o cliente pagar: <a className="text-acao underline" href={o.link_pagamento} rel="noreferrer noopener" target="_blank">{o.link_pagamento}</a></p>}
                   {o.link_esim && <p className="break-all text-xs">eSIM: <a className="text-acao underline" href={o.link_esim} rel="noreferrer noopener" target="_blank">abrir QR Code</a></p>}
-                  {o.mensagem_operadora && <p className="text-xs text-suave">Contel: {o.mensagem_operadora}</p>}
+                  {o.mensagem_operadora && <p className="text-xs text-suave">Nogle: {o.mensagem_operadora}</p>}
                   {evidencia?.mensagem && <p className="text-xs text-suave">Última consulta{evidencia.consultado_em ? ` (${quando(evidencia.consultado_em)})` : ""}: {evidencia.mensagem}</p>}
                   {o.motivo_resolucao && <p className="text-xs text-suave">Motivo registrado: {o.motivo_resolucao}</p>}
                   {s === "registrada" && (o.vendedor_id === usuario.id || gere.data) && (
@@ -223,9 +223,9 @@ export default async function Connect({ searchParams }: { searchParams: Promise<
                       <input type="hidden" name="operacao" value={o.id} />
                       <label className="text-xs font-medium">Desfecho conferido
                         <select name="resultado" className={campo} defaultValue="nao_recebida">
-                          <option value="confirmada">Feita na Contel (conta na produção)</option>
-                          <option value="nao_recebida">Não chegou à Contel</option>
-                          <option value="recusada">Recusada pela Contel</option>
+                          <option value="confirmada">Feita na Nogle (conta na produção)</option>
+                          <option value="nao_recebida">Não chegou à Nogle</option>
+                          <option value="recusada">Recusada pela Nogle</option>
                         </select>
                       </label>
                       <label className="text-xs font-medium sm:col-span-2">Evidência (suporte, ERP da Nogle, consulta)<input name="motivo" required minLength={10} className={campo} /></label>
@@ -240,7 +240,7 @@ export default async function Connect({ searchParams }: { searchParams: Promise<
       </Cartao>
 
       {integra.data && (
-        <Cartao titulo="Liberar operações (integrações)" subtitulo="Só depois de homologar com a Contel; a evidência fica na auditoria" icone={ShieldCheck}>
+        <Cartao titulo="Liberar operações (integrações)" subtitulo="Só depois de homologar com a Nogle; a evidência fica na auditoria" icone={ShieldCheck}>
           <form action={habilitarOperacao} className="grid gap-3 sm:grid-cols-3">
             <label className={rotulo}>Operação
               <select name="tipo" className={campo}>{TIPOS_OPERACAO.map((t) => <option key={t} value={t}>{NOMES_DAS_OPERACOES[t]}</option>)}</select>

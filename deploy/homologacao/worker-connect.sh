@@ -1,6 +1,6 @@
 #!/usr/bin/env bash
 # Worker da Ora Connect (ADR-005). NÃO está agendado: só entra na rotina depois das credenciais da
-# Nogle no ambiente do worker, da resposta da P9 e da homologação com linha de teste da Contel,
+# Nogle no ambiente do worker, da resposta da P9 e da homologação com linha de teste da Nogle,
 # com a autorização do proprietário. Quando autorizado:
 #   * * * * * bash $HOME/homologacao/plataforma/deploy/homologacao/worker-connect.sh
 #   15 6 * * * bash $HOME/homologacao/plataforma/deploy/homologacao/worker-connect.sh --listas

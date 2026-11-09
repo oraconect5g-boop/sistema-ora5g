@@ -10,7 +10,7 @@ import { dataRelativa, formatarLinha } from "./util";
 
 const TOM: Record<StatusPortabilidade, Tom> = { "Aguardando confirmação": "aviso", "Portabilidade em andamento": "info", Sucesso: "sucesso", "Portabilidade negada": "perigo" };
 
-/** Carteira pré-paga da Ora na Contel (GET /saldo/*) e relatórios (GET /relatorios/*, /portabilidade/listar). */
+/** Carteira pré-paga da Ora na Nogle (GET /saldo/*) e relatórios (GET /relatorios/*, /portabilidade/listar). */
 export function Carteira({ operacoes, agora }: { operacoes: readonly OperacaoConnect[]; agora: Date }) {
   const saidas = CARTEIRA_CONTEL.extrato.filter((e) => e.tipo === "SAÍDA").reduce((s, e) => s + e.valor, 0);
   const entradas = CARTEIRA_CONTEL.extrato.filter((e) => e.tipo === "ENTRADA").reduce((s, e) => s + e.valor, 0);
@@ -21,7 +21,7 @@ export function Carteira({ operacoes, agora }: { operacoes: readonly OperacaoCon
   return (
     <div className="space-y-4">
       <div className="grid grid-cols-2 gap-3 sm:gap-4 xl:grid-cols-4">
-        <Indicador rotulo="Saldo na Contel" valor={brl(CARTEIRA_CONTEL.saldo)} icone={Wallet} detalhe="Pré-pago para ativar e recarregar" />
+        <Indicador rotulo="Saldo na Nogle" valor={brl(CARTEIRA_CONTEL.saldo)} icone={Wallet} detalhe="Pré-pago para ativar e recarregar" />
         <Indicador rotulo="Saídas recentes" valor={brl(saidas)} icone={ArrowUpRight} detalhe="Ativações, recargas e compras" />
         <Indicador rotulo="Entradas recentes" valor={brl(entradas)} icone={ArrowDownLeft} detalhe="Depósitos de saldo" tom="bom" />
         <Indicador rotulo="Recargas programadas" valor={numero(RECARGAS_PROGRAMADAS.length)} icone={CalendarClock} detalhe="Renovam pelo saldo" />
@@ -29,7 +29,7 @@ export function Carteira({ operacoes, agora }: { operacoes: readonly OperacaoCon
 
       <div className="grid gap-4 xl:grid-cols-3">
         <Cartao className="xl:col-span-2" titulo="Extrato da carteira" subtitulo="Valor cobrado da Ora, não o que o cliente pagou (GET /saldo/extrato)" acao={<ExportarCsv nomeArquivo="extrato-contel" colunas={["Data", "Tipo", "Descrição", "Valor (R$)"]} linhas={CARTEIRA_CONTEL.extrato.map((e) => [dataRelativa(agora, e.diasAtras), e.tipo, e.descricao, (e.valor / 100).toFixed(2).replace(".", ",")])} />}>
-          <Tabela colunas={["Data", "Movimento", "Valor"]} legenda="Extrato da carteira na Contel" alinharDireita={[2]} minimo="min-w-[30rem]">
+          <Tabela colunas={["Data", "Movimento", "Valor"]} legenda="Extrato da carteira na Nogle" alinharDireita={[2]} minimo="min-w-[30rem]">
             {CARTEIRA_CONTEL.extrato.map((e, i) => (
               <tr key={i}>
                 <Celula className="numeros text-suave">{dataRelativa(agora, e.diasAtras)}</Celula>

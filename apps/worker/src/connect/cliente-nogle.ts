@@ -1,5 +1,5 @@
 // Cliente da API NOGLE no worker (ADR-005). Token temporário de POST /auth/token, guardado só em
-// memória e pedido de novo uma vez quando a Contel responde 401 (validade não documentada). As
+// memória e pedido de novo uma vez quando a Nogle responde 401 (validade não documentada). As
 // credenciais vêm do ambiente do worker e nunca aparecem em log, evento ou resposta.
 import { normalizarResposta, type PedidoNogle } from "@ora5g/dominio/nogle";
 
@@ -42,7 +42,7 @@ export class ClienteNogle {
     if (r.tipo === "falha") return { tipo: "falha", enviada: false, motivo: `login: ${r.motivo}` };
     const normal = normalizarResposta(r.status, r.corpo);
     if (!normal.ok || typeof normal.dados !== "string" || !normal.dados) {
-      return { tipo: "sem_acesso", motivo: `login recusado pela Contel (HTTP ${r.status})` };
+      return { tipo: "sem_acesso", motivo: `login recusado pela Nogle (HTTP ${r.status})` };
     }
     this.token = normal.dados;
     return null;
@@ -51,7 +51,7 @@ export class ClienteNogle {
   async chamar(pedido: PedidoNogle): Promise<ResultadoChamada> {
     const temCorpo = Object.keys(pedido.corpo).length > 0;
     if (pedido.metodo === "GET" && temCorpo && !this.opcoes.getComCorpo) {
-      return { tipo: "bloqueada", motivo: "consulta GET com corpo aguarda a confirmação da Contel (pergunta 2)" };
+      return { tipo: "bloqueada", motivo: "consulta GET com corpo aguarda a confirmação da Nogle (pergunta 2)" };
     }
     for (let tentativa = 0; tentativa < 2; tentativa++) {
       if (!this.token) {
@@ -66,6 +66,6 @@ export class ClienteNogle {
       }
       return r;
     }
-    return { tipo: "sem_acesso", motivo: "a Contel recusou o token renovado" };
+    return { tipo: "sem_acesso", motivo: "a Nogle recusou o token renovado" };
   }
 }

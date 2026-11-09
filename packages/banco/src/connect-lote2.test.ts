@@ -126,7 +126,7 @@ describe("#59 — uma evidência do histórico confirma uma recarga só", () => 
     expect((await db.query("select tipo, mensagem from public.connect_eventos where operacao_id = $1 and tipo = 'conferencia'", [ops[0]])).rows)
       .toEqual([{ tipo: "conferencia", mensagem: "Outra operação da mesma linha tem a mesma data de cadastro: a evidência não diz de qual é" }]);
     const gerente = await usuario(ids.dono);
-    expect(await valor(gerente, "select public.connect_resolver($1, 'confirmada', 'Conferido no extrato da Contel: recarga das 09:05') as v", [ops[0]])).toBe("confirmada");
+    expect(await valor(gerente, "select public.connect_resolver($1, 'confirmada', 'Conferido no extrato da Nogle: recarga das 09:05') as v", [ops[0]])).toBe("confirmada");
     expect(await producoes()).toBe(1);
   });
 

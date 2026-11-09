@@ -9,7 +9,7 @@
 - **Reprodução, não leitura de issue.** As 16 provas vermelhas das pastas `docs/analises/evidencias/*` da PR #33 foram copiadas para os destinos temporários indicados em cada LEIA-ME e executadas contra a main `d730e9a` com as correções do Lote 1 (abaixo), banco em memória ou PostgreSQL 17 local, dados fictícios. As cópias foram apagadas depois. O resultado bruto fica no servidor em `~/ci/repro-d730e9a-1210.txt`; o resumo está na coluna "Reprodução atual".
 - **Limite de acesso:** deste servidor não há `gh` nem API do GitHub (o conector GitHub também falhou nesta sessão). Por isso, o estado das issues foi lido nos relatórios da PR #33 e não nos comentários das issues. Esta reconciliação fica registrada no GitHub por commit, pelo mecanismo autorizado (deploy key). Nenhum token foi pedido.
 - **Inventário recalculado:** são 179 requisitos no `backlog.json` (P0 78, P1 74, P2 27). Deles, 72 são acompanhados em `status-requisitos.json`: 18 testados em desenvolvimento, 40 parciais, 11 só em demonstração, 2 bloqueados e 1 respeitado. **Nenhum está homologado nem em produção.** Status não sobe por haver tela, migration ou CI verde.
-- **Decisões aplicadas sem perguntar de novo:** a stack Supabase/PostgreSQL continua (nada de Firebase). A rede tem 11 lojas comerciais mais o local DEFEITOS, que não é uma 12ª loja. Rein só por arquivo. Ora Connect pela API oficial Nogle/Contel.
+- **Decisões aplicadas sem perguntar de novo:** a stack Supabase/PostgreSQL continua (nada de Firebase). A rede tem 11 lojas comerciais mais o local DEFEITOS, que não é uma 12ª loja. Rein só por arquivo. Ora Connect pela API oficial Nogle.
 
 ## 2. Matriz
 
@@ -65,7 +65,7 @@ Fixture dos componentes (`docs/analises/evidencias/2026-11-08-fotos/fixture` da 
 
 ### Lote 4 — demonstração (branch `fix/ORA-demo-lote4`)
 
-As correções valem só para a demonstração (`/demo`). As telas reais já seguiam estas regras: face da recarga fora da receita, produção só com evidência, autoaprovação recusada no banco e saldo da carteira na Contel.
+As correções valem só para a demonstração (`/demo`). As telas reais já seguiam estas regras: face da recarga fora da receita, produção só com evidência, autoaprovação recusada no banco e saldo da carteira na Nogle.
 
 | ID | Regra | Antes | Depois | Regressão permanente |
 |---|---|---|---|---|

@@ -57,7 +57,7 @@ export default async function OraConnect({ searchParams }: { searchParams: Promi
       <TituloPagina
         sobretitulo={contexto.loja === REDE ? "Rede inteira" : nomeDaLoja(contexto.loja)}
         titulo="Ora Connect"
-        subtitulo="Chips, ativações, recargas, portabilidade e atendimento da operadora, no formato da API NOGLE (Contel)"
+        subtitulo="Chips, ativações, recargas, portabilidade e atendimento da operadora, no formato da API NOGLE (Nogle)"
         acao={
           <>
             {aba === "operacoes" && <ExportarCsv nomeArquivo="ora-connect" colunas={["Hora", "Loja", "Vendedor", "Operação", "Linha", "Valor (R$)", "Situação"]} linhas={operacoes.map((o) => [o.hora, nomeDaLoja(o.loja), nomeDaPessoa(o.vendedor), o.tipo, o.linha, (o.valor / 100).toFixed(2).replace(".", ","), o.situacao])} />}
@@ -88,7 +88,7 @@ export default async function OraConnect({ searchParams }: { searchParams: Promi
 
       {aba !== "integracao" && (
         <Aviso tom="aviso" className="mt-4" titulo="Integração Nogle ainda não ligada">
-          A documentação oficial inteira foi lida (62 funções) e está no catálogo da aba Integração. Falta a Contel informar o tipo da chave da Ora (decisão P9) e liberar credenciais e uma linha de teste. Até lá, as telas simulam as respostas no formato documentado e nada é enviado à operadora.
+          A documentação oficial inteira foi lida (62 funções) e está no catálogo da aba Integração. Falta a Nogle informar o tipo da chave da Ora (decisão P9) e liberar credenciais e uma linha de teste. Até lá, as telas simulam as respostas no formato documentado e nada é enviado à operadora.
         </Aviso>
       )}
     </>

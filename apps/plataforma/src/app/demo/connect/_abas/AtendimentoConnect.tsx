@@ -10,7 +10,7 @@ import { classeCampo, formatarLinha, soDigitos } from "./util";
 
 type Registro = { numero: string; acao: "Bloqueada" | "Desbloqueada"; motivo?: MotivoBloqueio; hora: string };
 
-/** Bloqueio e desbloqueio de linha (POST /atendimento/bloqueio e /desbloqueio) e FAQ da Contel. */
+/** Bloqueio e desbloqueio de linha (POST /atendimento/bloqueio e /desbloqueio) e FAQ da Nogle. */
 export function AtendimentoConnect({ podeBloquear, faq }: { podeBloquear: boolean; faq: readonly { id: number; descricao: string }[] }) {
   const [numero, setNumero] = useState("");
   const [motivo, setMotivo] = useState<MotivoBloqueio>("PERDA");
@@ -55,13 +55,13 @@ export function AtendimentoConnect({ podeBloquear, faq }: { podeBloquear: boolea
       </Cartao>
 
       <div className="min-w-0 space-y-4">
-        <Cartao titulo="Dúvidas frequentes da Contel" subtitulo="Perguntas e respostas vêm da operadora (GET /faq)" icone={CircleHelp}>
+        <Cartao titulo="Dúvidas frequentes da Nogle" subtitulo="Perguntas e respostas vêm da operadora (GET /faq)" icone={CircleHelp}>
           <ul className="space-y-2 text-sm">
             {faq.map((c) => <li key={c.id} className="flex items-center justify-between rounded-xl bg-fundo px-3 py-2">{c.descricao}<Selo tom="neutro">categoria {c.id}</Selo></li>)}
           </ul>
           <p className="mt-2 text-xs text-suave">Na demonstração não inventamos respostas da operadora: elas aparecem quando a integração for ligada.</p>
         </Cartao>
-        <Aviso tom="info" titulo="Troca de chip">A documentação cita a troca de chip (o número passa para um chip virgem), mas não traz a rota para pedir. Perguntar à Contel.</Aviso>
+        <Aviso tom="info" titulo="Troca de chip">A documentação cita a troca de chip (o número passa para um chip virgem), mas não traz a rota para pedir. Perguntar à Nogle.</Aviso>
       </div>
 
       <Dialogo

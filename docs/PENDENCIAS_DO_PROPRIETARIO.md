@@ -18,8 +18,8 @@ Uma linha por fornecedor ou capacidade. Mostra o que fica bloqueado e o critéri
 | A2 | E-mail do sistema (SMTP próprio no Supabase) | Convite e recuperação de senha por e-mail | P1 | Caixa `nao-responda@ora5g.com.br` (cPanel) e SMTP no painel do Supabase (seção 5) | `ora5g-dev` | No painel do Supabase; `EMAIL_FROM` e `SMTP_*` só quando o sistema mandar e-mail próprio | E-mail de teste chega a uma caixa controlada |
 | B1 | **Arquivo da Rein** (produtos, preços, estoque) | Importador com prévia e aprovação; carga do piloto | P0 | Nenhum (arquivo exportado) | Cópia em `~/entrada/rein/` | — | Arquivo recebido e prévia sem erro bloqueante |
 | B2 | **Dados das 11 lojas e do local DEFEITOS** (nome de origem, código, CNPJ, endereço) | Cadastro real das lojas; transferências e DEFEITOS (#60) | P0 | Decisão já tomada (11 lojas + DEFEITOS). Faltam CNPJ e endereço; nada é inventado | `~/entrada/` | — | Arquivo conciliado com o cadastro confirmado |
-| C1 | **Nogle/Contel: chaves, tipo de chave (P9) e linha/ICCID de teste** | Ativação, recarga e portabilidade reais (#54); homologação da Ora Connect | P0 | Contrato atual e respostas às 51 perguntas (`docs/integracoes/PERGUNTAS_PARA_CONTEL_NOGLE_2026-11-09.md`, na PR #33) | Conta ou linha de teste autorizada | `NOGLE_API_BASE_URL`, `NOGLE_AUTH_KEY_TYPE`, `NOGLE_ACCESS_KEY`, `NOGLE_SECONDARY_KEY`, `NOGLE_OPERACOES_HABILITADAS` (só no worker) | Uma operação de teste confirmada pela evidência oficial |
-| C2 | Nogle: cobrança/gateway, carteira e extrato, recorrência e repasse | Partes 4 a 6 da #54 | P1 | Documentação oficial e habilitação desses recursos | Idem C1 | Idem C1 | Contrato e campos documentados pela Contel |
+| C1 | **Nogle: chaves, tipo de chave (P9) e linha/ICCID de teste** | Ativação, recarga e portabilidade reais (#54); homologação da Ora Connect | P0 | Contrato atual e respostas às 51 perguntas (`docs/integracoes/PERGUNTAS_PARA_CONTEL_NOGLE_2026-11-09.md`, na PR #33) | Conta ou linha de teste autorizada | `NOGLE_API_BASE_URL`, `NOGLE_AUTH_KEY_TYPE`, `NOGLE_ACCESS_KEY`, `NOGLE_SECONDARY_KEY`, `NOGLE_OPERACOES_HABILITADAS` (só no worker) | Uma operação de teste confirmada pela evidência oficial |
+| C2 | Nogle: cobrança/gateway, carteira e extrato, recorrência e repasse | Partes 4 a 6 da #54 | P1 | Documentação oficial e habilitação desses recursos | Idem C1 | Idem C1 | Contrato e campos documentados pela Nogle |
 | D1 | **Contador e emissor fiscal** | Emissão automática; nota de devolução por API | P1 | Contrato com o emissor; modelo, tributos e certificado definidos pelo contador | Homologação do emissor | `FISCAL_PROVIDER`, `FISCAL_API_BASE_URL`, `FISCAL_API_TOKEN`, `FISCAL_ENVIRONMENT` | Nota de teste emitida na homologação do emissor |
 | E1 | Link de pagamento PicPay / PagBank | Meio "link" na venda (hoje recusado) | P2 | Habilitação do link nas contas | Sandbox do fornecedor | `PICPAY_*`, `PAGBANK_*` | Cobrança de teste com retorno conferido |
 | E2 | PayJoy / Aiva: relatório de repasse (P8) | Conciliação automática do valor a receber (hoje manual) | P2 | Relatório ou contrato com prazo e taxa (nada é inventado) | — | — | Relatório recebido e conciliado com uma venda de teste |
@@ -41,11 +41,11 @@ Maquininhas PicPay POS e PagSeguro continuam com conferência manual por comprov
 
 ## 2. E-mails para enviar (textos prontos)
 
-### 2.1 Contel (API da Nogle) — destrava a P9 e as credenciais
+### 2.1 Nogle (API da Nogle) — destrava a P9 e as credenciais
 
 **Para:** ti@conteltelecom.com.br · **Assunto:** Integração API NOGLE: dúvidas antes da homologação (Ora 5G)
 
-> Olá, equipe Contel. Somos a Ora 5G, rede de 14 lojas, e estamos integrando a API NOGLE ao nosso sistema, seguindo a documentação de docs.nogle.tech. Antes de homologar, precisamos confirmar:
+> Olá, equipe Nogle. Somos a Ora 5G, rede de 14 lojas, e estamos integrando a API NOGLE ao nosso sistema, seguindo a documentação de docs.nogle.tech. Antes de homologar, precisamos confirmar:
 > 1. Qual tipo de chave a Ora tem (franquia, marca/MVNO ou PDV) e quais funções cada tipo libera?
 > 2. As consultas GET que levam dados no corpo (ex.: /linhas/detalhes, /cliente/buscar) aceitam esses dados como parâmetros no endereço?
 > 3. Existe ambiente de testes? Se não, podem nos ceder uma linha e um chip de teste?
@@ -81,11 +81,11 @@ Maquininhas PicPay POS e PagSeguro continuam com conferência manual por comprov
 | P5 | O técnico da assistência terá login próprio ou só recebe mensagens? É funcionário ou terceiro? | A demonstração tem o perfil Técnico como opção |
 | P7 | Qual portal emite a nota hoje e qual tipo (NFC-e ou NF-e)? | E-mail 2.2 ao contador |
 | P8 | As financeiras (PayJoy, Aiva) repassam o valor do aparelho menos a entrada, sem taxa? Em quantos dias? | Define o "a receber" do financeiro |
-| P9 | Tipo da chave da Nogle (franquia, marca/MVNO ou PDV) | E-mail 2.1 à Contel |
+| P9 | Tipo da chave da Nogle (franquia, marca/MVNO ou PDV) | E-mail 2.1 à Nogle |
 | P10 | Loja online: com qual CNPJ sai a nota, de onde sai o estoque, qual transportadora, qual domínio | Só para o mês 5 |
 | P13 | Resumo da conversa com o ChatGPT | Salvar sem senhas nem dados de clientes |
 | P14 | **Margem e desconto por categoria**: até quantos % o vendedor dá sem pedir, e a margem mínima de cada categoria (aparelhos, acessórios, chips…) | Tabela simples; sem ela o desconto real não liga (mês 2) |
-| D-016 | Recarga/ativação paga pela **carteira da Ora (SALDO)** só depois de o cliente pagar o serviço no caixa? (LINK: o cliente paga direto à Contel) | Já está assim no sistema (ADR-005), reversível |
+| D-016 | Recarga/ativação paga pela **carteira da Ora (SALDO)** só depois de o cliente pagar o serviço no caixa? (LINK: o cliente paga direto à Nogle) | Já está assim no sistema (ADR-005), reversível |
 | D-006 | O gerente aprova **toda** nota ou só exceções? Quem pediu a nota pode aprovar a própria? | Hoje: todas passam pela fila, quem pediu pode aprovar, e a aprovação nunca segura a emissão (ADR-006) |
 | D-026 | **Troca e devolução:** em quantos dias o cliente pode trocar ou devolver? Que estado do aparelho é aceito? Devolve dinheiro ou só vale-troca? | O sistema já registra e controla (reembolso nos meios pagos ou vale-troca); falta a regra comercial |
 | G1 | Piloto em paralelo com a Rein: 2 a 4 semanas? Quanto tempo a Rein fica ativa depois do "go" (para poder voltar)? | [Go/no-go](operacao/GO_NO_GO_PILOTO_E_SAIDA_DA_REIN.md) §5 |
@@ -121,8 +121,8 @@ Se preferir, peça ao Claude Code: ele abre o comando pronto no terminal do apli
 | Mês 2 | `EMAIL_FROM`, `SMTP_HOST`, `SMTP_PORT`, `SMTP_USER`, `SMTP_PASSWORD` | E-mails do sistema (comprovante, nota, OS) | **Você**: caixa `nao-responda@ora5g.com.br` criada no cPanel (seção 5) | ⬜ |
 | Mês 2 | `PICPAY_CLIENT_ID`, `PICPAY_CLIENT_SECRET`, `PICPAY_WEBHOOK_SECRET` | Link de pagamento PicPay | **Você**: PicPay Empresas → Integrações → Link de Pagamento → Gerar token (o segredo aparece uma vez só) | ⬜ |
 | Mês 2 | `PAGBANK_ENVIRONMENT`, `PAGBANK_API_TOKEN` | Link de pagamento PagBank | **Você**: PagBank → Venda online → Integrações → Gerar token | ⬜ |
-| Mês 3 | `NOGLE_API_BASE_URL` | Endereço da API da Contel | Claude (público, está na documentação) | ⬜ |
-| Mês 3 | `NOGLE_AUTH_KEY_TYPE`, `NOGLE_ACCESS_KEY` | Ora Connect de verdade | **Você**: tipo de chave pela Contel (P9) e a chave que vocês já têm | ⬜ depende da P9 |
+| Mês 3 | `NOGLE_API_BASE_URL` | Endereço da API da Nogle | Claude (público, está na documentação) | ⬜ |
+| Mês 3 | `NOGLE_AUTH_KEY_TYPE`, `NOGLE_ACCESS_KEY` | Ora Connect de verdade | **Você**: tipo de chave pela Nogle (P9) e a chave que vocês já têm | ⬜ depende da P9 |
 | Mês 3 | `WHATSAPP_GRAPH_API_VERSION`, `WHATSAPP_BUSINESS_ACCOUNT_ID`, `WHATSAPP_PHONE_NUMBER_ID`, `WHATSAPP_ACCESS_TOKEN`, `WHATSAPP_APP_SECRET`, `WHATSAPP_WEBHOOK_VERIFY_TOKEN` | WhatsApp oficial (nota, OS, avisos) | **Você**: Meta for Developers, app com WhatsApp e token de Usuário do Sistema; o token de verificação o Claude gera | ⬜ depende da verificação da empresa na Meta |
 | Mês 3–4 | `FISCAL_PROVIDER`, `FISCAL_API_BASE_URL`, `FISCAL_API_TOKEN`, `FISCAL_ENVIRONMENT` | Nota automática | **Você + contador**: emissor escolhido (e-mail 2.2) | 🔒 bloqueado até o contador |
 | Mês 5 | `MERCADOLIVRE_APP_ID`, `MERCADOLIVRE_CLIENT_SECRET`, `MERCADOLIVRE_REDIRECT_URI`, `MERCADOLIVRE_WEBHOOK_PATH` | Mercado Livre | **Você**: app no portal de desenvolvedores do Mercado Livre | ⬜ |

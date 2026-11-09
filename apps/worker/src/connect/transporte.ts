@@ -1,7 +1,7 @@
-// Transporte HTTP do worker da Ora Connect (ADR-005). Fala HTTPS com a Contel (HTTP só em 127.0.0.1,
+// Transporte HTTP do worker da Ora Connect (ADR-005). Fala HTTPS com a Nogle (HTTP só em 127.0.0.1,
 // para os testes). Diferente do fetch, o node:https manda corpo em GET, como a documentação da Nogle
-// pede em 25 consultas; o cliente só usa isso depois da confirmação da Contel (pergunta 2).
-// "enviada" diz se o pedido pode ter chegado à Contel: sem conexão (DNS, recusa, tempo antes de
+// pede em 25 consultas; o cliente só usa isso depois da confirmação da Nogle (pergunta 2).
+// "enviada" diz se o pedido pode ter chegado à Nogle: sem conexão (DNS, recusa, tempo antes de
 // conectar, TLS) nada saiu e o pedido volta para a fila sem risco de duplicar.
 import { request as pedirHttp, type ClientRequest, type IncomingMessage, type RequestOptions } from "node:http";
 import { request as pedirHttps } from "node:https";
@@ -20,7 +20,7 @@ export function transporteHttp(base: string, tempoLimiteMs = 20_000): Transporte
   const url = new URL(base);
   const seguro = url.protocol === "https:";
   if (!seguro && !(url.protocol === "http:" && url.hostname === "127.0.0.1")) {
-    throw new Error("o endereço da Contel precisa ser https");
+    throw new Error("o endereço da Nogle precisa ser https");
   }
   const pedir: (opcoes: RequestOptions, aoResponder: (r: IncomingMessage) => void) => ClientRequest = seguro ? pedirHttps : pedirHttp;
   const prefixo = url.pathname.replace(/\/+$/, "");
@@ -77,8 +77,8 @@ export function transporteHttp(base: string, tempoLimiteMs = 20_000): Transporte
     });
     requisicao.on("timeout", () => requisicao.destroy(new Error("tempo esgotado")));
     requisicao.on("error", (erro: NodeJS.ErrnoException) => fim(conectou
-      ? { tipo: "falha", enviada: true, motivo: "sem resposta da Contel depois do envio" }
-      : { tipo: "falha", enviada: false, motivo: `sem conexão com a Contel (${erro.code ?? "rede"})` }));
+      ? { tipo: "falha", enviada: true, motivo: "sem resposta da Nogle depois do envio" }
+      : { tipo: "falha", enviada: false, motivo: `sem conexão com a Nogle (${erro.code ?? "rede"})` }));
     if (corpo !== undefined) requisicao.write(corpo);
     requisicao.end();
   });

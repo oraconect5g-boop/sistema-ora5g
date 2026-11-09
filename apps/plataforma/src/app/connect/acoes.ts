@@ -12,7 +12,7 @@ import { erroDoConnect, lerPedido } from "../../lib/connect/regras";
 import type { Json } from "../../lib/supabase/tipos-banco";
 
 // Cada ação chama UMA função do banco como a pessoa logada (ADR-005). O servidor web não fala
-// com a Contel: a operação fica registrada e o worker do servidor envia e consulta.
+// com a Nogle: a operação fica registrada e o worker do servidor envia e consulta.
 const chaveDe = (dados: FormData) => {
   const chave = dados.get("chave");
   return typeof chave === "string" && /^[0-9a-f-]{36}$/.test(chave) ? chave : randomUUID();

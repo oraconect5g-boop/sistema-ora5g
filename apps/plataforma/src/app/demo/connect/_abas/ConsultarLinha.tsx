@@ -49,7 +49,7 @@ export function ConsultarLinha({ linhas, agora }: { linhas: readonly LinhaConnec
         </p>
       </Cartao>
 
-      {naoEncontrada && <EstadoVazio titulo="Linha não encontrada" icone={Phone}>A Contel não tem essa linha ou esse ICCID (GET /linhas/verificaExistencia).</EstadoVazio>}
+      {naoEncontrada && <EstadoVazio titulo="Linha não encontrada" icone={Phone}>A Nogle não tem essa linha ou esse ICCID (GET /linhas/verificaExistencia).</EstadoVazio>}
 
       {linha && (
         <>

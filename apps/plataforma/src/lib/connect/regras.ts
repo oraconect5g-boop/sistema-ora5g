@@ -1,15 +1,15 @@
 // Regras puras da tela da Ora Connect (ADR-005): ler o formulário e escolher a mensagem. O banco
-// valida tudo de novo; o servidor web nunca fala com a Contel (só o worker do servidor).
+// valida tudo de novo; o servidor web nunca fala com a Nogle (só o worker do servidor).
 import { cpfValido } from "@ora5g/dominio";
 import { linhaValida, type TipoOperacao } from "@ora5g/dominio/nogle";
 
 export const ERROS_DO_CONNECT = {
-  nao_habilitada: "Esta operação ainda não foi liberada: falta a homologação com a Contel.",
+  nao_habilitada: "Esta operação ainda não foi liberada: falta a homologação com a Nogle.",
   chip_no_estoque: "Este chip ainda está no estoque: venda o chip no PDV antes de ativar.",
   em_andamento: "Já existe operação em andamento (ou feita) para este chip, linha ou serviço pago.",
   chave: "Essa ação já foi feita com outro conteúdo. Recarregue a tela.",
   sem_permissao: "Você não tem permissão para isso (quem registrou não resolve a própria operação).",
-  nao_encontrado: "Não encontrado: plano fora da lista da Contel, serviço não pago nesta loja ou operação já alterada.",
+  nao_encontrado: "Não encontrado: plano fora da lista da Nogle, serviço não pago nesta loja ou operação já alterada.",
   dados: "Confira os dados digitados.",
   documento: "Informe um CPF (11 dígitos) ou CNPJ (14 dígitos) válido.",
   linha: "Linha com DDD: 11 dígitos (ex.: 51 99999-9999).",

@@ -15,7 +15,7 @@ O que é "oficial" conta para venda, estoque, caixa, comissão e fiscal. O outro
 | Estoque e IMEI | Rein | **Rein** (Ora conferida pelo relatório diário) | **Ora**; saldo inicial = inventário assinado | Por loja, na data da migração; sem transferência entre loja migrada e não migrada sem conciliação |
 | Caixa | Rein | **Rein** (caixa da Ora fechado e comparado) | **Ora** | Por loja |
 | Nota fiscal | Portal atual (manual) | Portal atual; a Ora registra a chave de acesso na fila (ADR-006) | Emissor homologado com o contador, ou portal + registro da chave até lá | Igual à Fase 2 |
-| Ora Connect (chips, ativação, recarga, portabilidade) | ERP da Nogle | **ERP da Nogle**; a Ora só com linha/chip de teste autorizados pela Contel | **Ora**, só nos tipos homologados (os demais seguem no ERP da Nogle) | Igual à Fase 2 |
+| Ora Connect (chips, ativação, recarga, portabilidade) | ERP da Nogle | **ERP da Nogle**; a Ora só com linha/chip de teste autorizados pela Nogle | **Ora**, só nos tipos homologados (os demais seguem no ERP da Nogle) | Igual à Fase 2 |
 
 ## 2. Critérios observáveis (o que precisa estar provado)
 
@@ -27,7 +27,7 @@ Legenda: ✅ provado em desenvolvimento · 🟡 feito no código, falta uso real
 | 2 | Usuários, permissões e fotos completos | Equipe da piloto ativa com papéis certos (tela Equipe); fotos pendentes = 0 nos itens da piloto | 🟡 telas prontas; 🔒 chave secreta e SMTP para os convites |
 | 3 | Vendas e pagamentos reconciliáveis | Relatório diário Rein × Ora (contagem e total por meio de pagamento, IMEIs vendidos) sem diferença sem explicação; amostra conferida pelo gerente | 🟡 PDV, pagamento misto e comprovante prontos (ADR-004); 🔴 relatório de comparação (depende do formato da Rein) |
 | 4 | Caixa diário fechado e divergências tratadas | Todos os caixas do dia fechados e conferidos; diferença com explicação gravada | 🟡 (ADR-004) |
-| 5 | Ora Connect homologada | Cada tipo liberado com a evidência da homologação (auditada); nenhum "resultado desconhecido" sem decisão há mais de 1 dia; produção do vendedor batendo com o relatório da Contel | 🔒 credenciais, P9 e linha de teste (ADR-005 pronto) |
+| 5 | Ora Connect homologada | Cada tipo liberado com a evidência da homologação (auditada); nenhum "resultado desconhecido" sem decisão há mais de 1 dia; produção do vendedor batendo com o relatório da Nogle | 🔒 credenciais, P9 e linha de teste (ADR-005 pronto) |
 | 6 | Obrigações fiscais atendidas | Toda venda concluída com pedido de nota; todo pedido emitido com chave do CNPJ da loja, dentro do prazo que o contador orientar; nenhum alerta de atraso aberto | 🟡 fila e registro pela chave (ADR-006); 🔒 contador e emissor |
 | 7 | Cancelamentos e devoluções testados | Cancelamento com estorno, chip e venda protegidos por operação viva, nota emitida segurando o cancelamento: testes de banco | ✅ cancelamento total, devolução parcial e troca com vale (em desenvolvimento); 🔒 política de troca (D-026) |
 | 8 | Zero duplicidade de IMEI, venda e pagamento | Disputas reais em PostgreSQL 17 (`concorrencia.test.ts`, 14 casos) | ✅ |

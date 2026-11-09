@@ -116,7 +116,7 @@ async function venderChip(s: Sessao) {
 }
 
 describe("F — chip vendido, ativação pendente e confirmada, sem dupla produção", () => {
-  it("chip do estoque só ativa depois de vendido; a Contel aceita, a consulta confirma e a produção conta uma vez", async () => {
+  it("chip do estoque só ativa depois de vendido; a Nogle aceita, a consulta confirma e a produção conta uma vez", async () => {
     await prepararConnect();
     const ana = await naLoja(ids.vendedorA, ids.lojaA);
     expect(await errou(ana, REGISTRAR, ["ativacao", JSON.stringify(ativacao()), chave("op")])).toBe("OR011");
@@ -155,7 +155,7 @@ describe("F — chip vendido, ativação pendente e confirmada, sem dupla produ�
     expect(await errou(dono, "select public.cancelar_venda($1, 'Cliente desistiu do chip')", [vendaDoChip])).toBe("OR013");
   });
 
-  it("eSIM: sem ICCID no pedido; o ICCID chega na resposta da Contel; erro da operadora para a consulta e vai à gerência", async () => {
+  it("eSIM: sem ICCID no pedido; o ICCID chega na resposta da Nogle; erro da operadora para a consulta e vai à gerência", async () => {
     await prepararConnect();
     const ana = await naLoja(ids.vendedorA, ids.lojaA);
     expect(await errou(ana, REGISTRAR, ["ativacao", JSON.stringify(ativacao({ esim: true })), chave("op")])).toBe("22023");
@@ -168,7 +168,7 @@ describe("F — chip vendido, ativação pendente e confirmada, sem dupla produ�
     expect(await registrarConsulta(op, { evidencia: "erro_operadora", mensagem: "Erro na ativação deste chip (22)" })).toBe("erro_operadora");
     expect(await aConsultar()).toEqual([]);
     const gerente = await naLoja(ids.dono, ids.lojaA);
-    expect(await valor<string>(gerente, "select public.connect_resolver($1, 'nao_recebida', 'Suporte da Contel: ativação não concluída, chip liberado') as v", [op])).toBe("nao_recebida");
+    expect(await valor<string>(gerente, "select public.connect_resolver($1, 'nao_recebida', 'Suporte da Nogle: ativação não concluída, chip liberado') as v", [op])).toBe("nao_recebida");
     expect(await producao(op)).toEqual([]);
   });
 });
@@ -190,7 +190,7 @@ describe("F — recarga: SALDO só com serviço pago na loja; valor de face da l
     expect(await dadosDeEnvio(op)).toBe(0);
     expect(await errou(ana, REGISTRAR, ["recarga", JSON.stringify({ ...linha, metodo: "LINK" }), chave("op")])).toBe("OR013");
     expect(await errou(ana, REGISTRAR, ["recarga", JSON.stringify({ linha: "51977776666", plano: 99999, metodo: "SALDO", venda_item: servicoPago }), chave("op")])).toBe("OR013");
-    // LINK: o cliente paga direto à Contel; a loja não precisa vender nada.
+    // LINK: o cliente paga direto à Nogle; a loja não precisa vender nada.
     expect(await registrar(ana, "recarga", { linha: "51977776666", plano: 12345, metodo: "LINK" })).toMatch(/^[0-9a-f-]{36}$/);
     // Plano fora da lista oficial não passa (o valor nunca é digitado).
     expect(await errou(ana, REGISTRAR, ["recarga", JSON.stringify({ linha: "51966665555", plano: 11111, metodo: "LINK" }), chave("op")])).toBe("P0002");
@@ -250,7 +250,7 @@ describe("G — falha de rede e worker interrompido", () => {
     const ana = await naLoja(ids.vendedorA, ids.lojaA);
     const op = await registrar(ana, "recarga", { linha: "51988887777", plano: 99999, metodo: "LINK" });
     await reivindicar();
-    expect(await registrarEnvio(op, { resultado: "nao_enviada", mensagem: "Sem conexão com a Contel" })).toBe("registrada");
+    expect(await registrarEnvio(op, { resultado: "nao_enviada", mensagem: "Sem conexão com a Nogle" })).toBe("registrada");
     expect((await reivindicar()).map((o) => o.operacao_id)).toEqual([op]);
 
     await db.query("update public.connect_operacoes set enviando_desde = now() - interval '6 minutes' where id = $1", [op]);

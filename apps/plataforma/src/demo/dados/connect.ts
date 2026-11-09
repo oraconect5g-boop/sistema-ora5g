@@ -1,7 +1,7 @@
 import { gerador, semente } from "./aleatorio";
 import { CHIPS_POR_LOJA, iccidDeTeste } from "./catalogo";
 
-// ⚠️ Ora Connect FICTÍCIA, no formato da documentação oficial da API NOGLE (Contel). Planos, valores, linhas,
+// ⚠️ Ora Connect FICTÍCIA, no formato da documentação oficial da API NOGLE (Nogle). Planos, valores, linhas,
 // clientes, saldos e pedidos são inventados; os reais virão de GET /planos, /linhas/detalhes etc. quando a
 // integração for liberada (tipo de chave P9 + credenciais). Operadoras e motivos seguem os exemplos da documentação.
 
@@ -75,13 +75,13 @@ export function codigoDoIccid(iccid: string): 88 | 11 | 33 | 22 | 99 {
   return 99;
 }
 
-/** Estoque de chips virgens na Contel (GET /linhas/estoque), físicos e eSIM. */
+/** Estoque de chips virgens na Nogle (GET /linhas/estoque), físicos e eSIM. */
 export const ESTOQUE_VIRGEM = [
   ...Array.from({ length: 6 }, (_, i) => ({ id: String(7001 + i), iccid: iccidDeTeste(4001 + i), tipo: "físico" as const })),
   ...Array.from({ length: 4 }, (_, i) => ({ id: String(7101 + i), iccid: iccidDeTeste(4101 + i), tipo: "eSIM" as const })),
 ];
 
-/** Lojas da Ora cadastradas como PDV na Contel (GET /pdv/listar) e estoque de cada uma (GET /pdv/estoque). */
+/** Lojas da Ora cadastradas como PDV na Nogle (GET /pdv/listar) e estoque de cada uma (GET /pdv/estoque). */
 export const PDVS_CONTEL = [
   { idPdv: 3968, loja: "santa-candida", usuarios: 4, estoqueMinimo: 10, esim: 15 },
   { idPdv: 3969, loja: "loja-03", usuarios: 3, estoqueMinimo: 8, esim: 5 },
@@ -94,7 +94,7 @@ export const CARTEIRA_CONTEL = {
     { diasAtras: 0, tipo: "SAÍDA", descricao: "Ativação 7 GB · chip •••• 0011", valor: 3_590 },
     { diasAtras: 0, tipo: "SAÍDA", descricao: "Recarga 7 GB · (41) 9 ••••-0101", valor: 3_590 },
     { diasAtras: 1, tipo: "SAÍDA", descricao: "Recarga 12 GB · (41) 9 ••••-0202", valor: 4_390 },
-    { diasAtras: 2, tipo: "ENTRADA", descricao: "Depósito de saldo na Contel", valor: 150_000 },
+    { diasAtras: 2, tipo: "ENTRADA", descricao: "Depósito de saldo na Nogle", valor: 150_000 },
     { diasAtras: 4, tipo: "SAÍDA", descricao: "Compra de 3 chips com entrega", valor: 3_470 },
   ],
 };
@@ -119,5 +119,5 @@ export const COMPRAS_CHIP = [
 /** Valores de exemplo da documentação (GET /logistica). */
 export const LOGISTICA = { frete: 490, chip: 1_000 };
 
-/** Categorias do exemplo de GET /faq/categorias (as perguntas e respostas vêm da Contel). */
+/** Categorias do exemplo de GET /faq/categorias (as perguntas e respostas vêm da Nogle). */
 export const FAQ_CATEGORIAS = [{ id: 6, descricao: "Atendimento" }, { id: 7, descricao: "Portabilidade" }];

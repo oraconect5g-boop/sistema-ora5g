@@ -1,7 +1,7 @@
 import { describe, expect, it } from "vitest";
 
 import { FUNCOES_NOGLE } from "./catalogo";
-import { iccidNoFormatoContel, linhaValida, minutosIlimitados, normalizarResposta, situacaoDoIccid } from "./regras";
+import { iccidNoFormatoNogle, linhaValida, minutosIlimitados, normalizarResposta, situacaoDoIccid } from "./regras";
 
 // Exemplos copiados da documentação oficial (docs/integracoes/nogle/colecao-postman-2026-11-07.json).
 
@@ -92,8 +92,8 @@ describe("regras de chip e linha da documentação", () => {
   it("linha com 11 dígitos e ICCID de 19 começando com 8955", () => {
     expect(linhaValida("(41) 9 0000-0101")).toBe(true);
     expect(linhaValida("4133334444")).toBe(false);
-    expect(iccidNoFormatoContel("8955100000000000017")).toBe(true);
-    expect(iccidNoFormatoContel("8955")).toBe(false);
+    expect(iccidNoFormatoNogle("8955100000000000017")).toBe(true);
+    expect(iccidNoFormatoNogle("8955")).toBe(false);
   });
 
   it("mais de 999 minutos significa ligações ilimitadas", () => {
