@@ -1,6 +1,6 @@
 import { describe, expect, it } from "vitest";
 
-import { erroDoConnect, lerPedido } from "./regras";
+import { erroDoConnect, inicioDaJanela, lerPedido } from "./regras";
 
 const formulario = (campos: Record<string, string>) => ({ get: (nome: string) => campos[nome] ?? null });
 const ATIVACAO = {
@@ -33,6 +33,10 @@ describe("pedido da Ora Connect lido do formulário", () => {
     expect(lerPedido("recarga", formulario({ metodo: "LINK", plano: "99999", linha: "51988887777", venda_item: "x" }))).toEqual({ ok: false, erro: "dados" });
     expect(lerPedido("portabilidade", formulario({ linha: "51900000001", linha_doadora: "51911112222", operadora: "41" })))
       .toEqual({ ok: true, pedido: { linha: "51900000001", linha_doadora: "51911112222", operadora: 41 } });
+  });
+
+  it("janela de dias para os serviços pagos recentes", () => {
+    expect(inicioDaJanela(7, new Date("2026-11-08T12:00:00Z"))).toBe("2026-11-01T12:00:00.000Z");
   });
 
   it("códigos do banco viram mensagens do catálogo", () => {

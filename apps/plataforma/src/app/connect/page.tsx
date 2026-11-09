@@ -9,7 +9,7 @@ import { NOMES_DAS_OPERACOES, SITUACOES_OPERACAO, TIPOS_OPERACAO, type SituacaoO
 import { Marca } from "../../componentes/Marca";
 import { Aviso, Botao, Cartao, Selo, type Tom } from "../../componentes/ui";
 import { FalhaDoServico, obterSessao } from "../../lib/acesso/sessao";
-import { ERROS_DO_CONNECT } from "../../lib/connect/regras";
+import { ERROS_DO_CONNECT, inicioDaJanela } from "../../lib/connect/regras";
 import { centavosDoBanco } from "../../lib/dinheiro";
 import { brl } from "../../lib/formato";
 import { chaveDoCatalogo, type ValorDeParametro } from "../../lib/parametros";
@@ -43,7 +43,7 @@ export default async function Connect({ searchParams }: { searchParams: Promise<
   const ok = chaveDoCatalogo(OK, parametros.ok);
   const { supabase, usuario, situacao } = await obterSessao({ exigirLoja: true });
   const unidade = situacao.unidade_id as string;
-  const seteDias = new Date(Date.now() - 7 * 24 * 3600 * 1000).toISOString();
+  const seteDias = inicioDaJanela(7);
 
   const [opera, gere, integra, habilitacoes, referencias, operacoes, pagos] = await Promise.all([
     supabase.rpc("tem_permissao", { p_permissao: "connect.operar", p_unidade: unidade }),

@@ -82,3 +82,6 @@ export function lerPedido(tipo: TipoOperacao, dados: Formulario): { ok: true; pe
   };
   return { ok: true, pedido: { metodo, plano: Number(plano), ddd: Number(ddd), ...(esim ? { esim: true } : { iccid }), cliente, ...comItem } };
 }
+
+/** Início de uma janela de N dias até agora (ISO), para filtrar os serviços pagos recentes. */
+export const inicioDaJanela = (dias: number, agora: Date = new Date()) => new Date(agora.getTime() - dias * 86_400_000).toISOString();
