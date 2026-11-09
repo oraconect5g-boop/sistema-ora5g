@@ -173,8 +173,8 @@
     },
     "ORA-FIN-009": {
       "status": "demonstracao",
-      "nota": "Exportação CSV (ponto e vírgula, abre no Excel em português) das telas de vendas, estoque, metas, relatórios, recebimentos, usuários e auditoria. XLSX e PDF ainda não.",
-      "evidencia": "apps/plataforma/src/app/demo; apps/plataforma/e2e/demonstracao.spec.ts"
+      "nota": "Exportação CSV (ponto e vírgula, abre no Excel em português) das telas de vendas, estoque, metas, relatórios, recebimentos, usuários e auditoria. XLSX e PDF ainda não. 09/11 (lote 3): texto que a planilha leria como fórmula sai neutralizado (#38).",
+      "evidencia": "apps/plataforma/src/app/demo; apps/plataforma/e2e/demonstracao.spec.ts; apps/plataforma/src/componentes/ExportarCsv.test.ts"
     },
     "ORA-POS-008": {
       "status": "parcial",
@@ -233,8 +233,8 @@
     },
     "ORA-CAT-001": {
       "status": "parcial",
-      "nota": "Categorias, marcas, produtos por tipo e variações com SKU e código de barras únicos no banco (ADR-003 proposto, aplicado no ora5g-dev em 08/11). Falta: tela real de cadastro e importação da Rein (ORA-009, depende do arquivo). Desde 08/11 (noite): tela real /catalogo lendo pelo RLS, sem custo para quem não tem custo.ver.",
-      "evidencia": "packages/banco/supabase/migrations/20261108150620_catalogo_estoque.sql; packages/banco/src/catalogo-estoque.test.ts"
+      "nota": "Categorias, marcas, produtos por tipo e variações com SKU e código de barras únicos no banco (ADR-003 proposto, aplicado no ora5g-dev em 08/11). Falta: tela real de cadastro e importação da Rein (ORA-009, depende do arquivo). Desde 08/11 (noite): tela real /catalogo lendo pelo RLS, sem custo para quem não tem custo.ver. 09/11 (lote 3): busca por nome, SKU e nome da variante feita no banco antes do limite (#40).",
+      "evidencia": "packages/banco/supabase/migrations/20261108150620_catalogo_estoque.sql; packages/banco/src/catalogo-estoque.test.ts; apps/plataforma/src/app/catalogo/busca.test.ts"
     },
     "ORA-CAT-004": {
       "status": "parcial",
@@ -248,8 +248,8 @@
     },
     "ORA-INV-001": {
       "status": "parcial",
-      "nota": "Saldo por loja no banco, isolado por RLS, e tela real /estoque: saldo da loja do turno com foto (ampliação no celular) com busca por nome/SKU, alerta abaixo do mínimo, busca por IMEI/ICCID com o histórico do livro e disponibilidade na rede sem IMEI. Falta: transferência entre lojas (ORA-INV-007) e homologação com usuário real.",
-      "evidencia": "packages/banco/supabase/migrations/20261108150620_catalogo_estoque.sql; packages/banco/src/catalogo-estoque.test.ts; apps/plataforma/src/app/estoque; apps/plataforma/src/lib/estoque/regras.test.ts"
+      "nota": "Saldo por loja no banco, isolado por RLS, e tela real /estoque: saldo da loja do turno com foto (ampliação no celular) com busca por nome/SKU, alerta abaixo do mínimo, busca por IMEI/ICCID com o histórico do livro e disponibilidade na rede sem IMEI. Falta: transferência entre lojas (ORA-INV-007) e homologação com usuário real. 09/11 (lote 3): busca por nome/SKU no banco antes do limite dos saldos (#40).",
+      "evidencia": "packages/banco/supabase/migrations/20261108150620_catalogo_estoque.sql; packages/banco/src/catalogo-estoque.test.ts; apps/plataforma/src/app/estoque; apps/plataforma/src/lib/estoque/regras.test.ts; apps/plataforma/src/app/estoque/page.tsx"
     },
     "ORA-INV-003": {
       "status": "testado",
@@ -283,8 +283,8 @@
     },
     "ORA-CAT-011": {
       "status": "parcial",
-      "nota": "Implementado em desenvolvimento (08/11): bucket privado no Storage com RLS por organização (vendedor vê, dono e gerente enviam: catalogo.fotos), caminho como identidade estável e URL assinada temporária, registro no banco com tamanho e tipo vindos do Storage, troca que guarda a anterior, ilustração só para item não físico, pendências (produto sem foto e cor sem foto própria) e tela /catalogo com miniatura, ampliação e envio pelo celular (redução no aparelho). FALTA: homologar com fotos reais e usuário real (critérios da #26), fotos no estoque e no PDV reais (com o ADR-004) e limpeza de arquivo enviado sem registro.",
-      "evidencia": "packages/banco/supabase/migrations/20261108204536_fotos_dos_produtos.sql; packages/banco/src/fotos-produto.test.ts; apps/plataforma/src/app/catalogo; apps/plataforma/src/lib/catalogo"
+      "nota": "Implementado em desenvolvimento (08/11): bucket privado no Storage com RLS por organização (vendedor vê, dono e gerente enviam: catalogo.fotos), caminho como identidade estável e URL assinada temporária, registro no banco com tamanho e tipo vindos do Storage, troca que guarda a anterior, ilustração só para item não físico, pendências (produto sem foto e cor sem foto própria) e tela /catalogo com miniatura, ampliação e envio pelo celular (redução no aparelho). FALTA: homologar com fotos reais e usuário real (critérios da #26), fotos no estoque e no PDV reais (com o ADR-004) e limpeza de arquivo enviado sem registro. 09/11 (lote 3): registro da mesma foto idempotente (#42), nova tentativa não reenvia o arquivo, foto quebrada volta com URL nova (#41), descartar libera o arquivo (#43); fixture de componentes do Codex verde.",
+      "evidencia": "packages/banco/supabase/migrations/20261108204536_fotos_dos_produtos.sql; packages/banco/src/fotos-produto.test.ts; apps/plataforma/src/app/catalogo; apps/plataforma/src/lib/catalogo; packages/banco/src/fotos-lote3.test.ts"
     },
     "ORA-POS-001": {
       "status": "parcial",

@@ -38,13 +38,28 @@ export function EnviarFoto({ supabaseUrl, chavePublica, organizacao, produto, va
   const [previa, setPrevia] = useState<Previa | null>(null);
   const [erro, setErro] = useState<ErroDeFoto | null>(null);
   const [enviando, setEnviando] = useState(false);
+  // Caminho já enviado ao Storage para ESTA prévia (REV-040, #42): se o registro falhar, o novo clique
+  // só registra de novo (o banco devolve a mesma foto), sem mandar o arquivo outra vez.
+  const [enviado, setEnviado] = useState<string | null>(null);
+  // Descartar ou concluir limpa a escolha (REV-041, #43): o mesmo arquivo pode ser escolhido de novo.
+  const limpar = (atual: Previa | null) => {
+    if (atual) URL.revokeObjectURL(atual.url);
+    setPrevia(null);
+    setEnviado(null);
+    if (entrada.current) entrada.current.value = "";
+  };
 
   async function escolher(arquivo: File | undefined) {
     setErro(null);
     if (!arquivo) return;
     const resultado = await preparar(arquivo).catch((): ErroDeFoto => "tipo");
-    if (typeof resultado === "string") setErro(resultado);
-    else setPrevia(resultado);
+    if (typeof resultado === "string") {
+      setErro(resultado);
+      if (entrada.current) entrada.current.value = "";
+    } else {
+      setEnviado(null);
+      setPrevia(resultado);
+    }
   }
 
   async function enviar() {
@@ -52,20 +67,24 @@ export function EnviarFoto({ supabaseUrl, chavePublica, organizacao, produto, va
     setEnviando(true);
     setErro(null);
     try {
-      const caminho = caminhoDaFoto(organizacao, produto, variante, crypto.randomUUID(), previa.tipo);
-      const supabase = createBrowserClient<Database>(supabaseUrl, chavePublica);
-      const envio = await supabase.storage.from("produtos").upload(caminho, previa.blob, { contentType: previa.tipo, upsert: false });
-      if (envio.error) {
-        setErro(/row-level security|unauthorized|403/i.test(envio.error.message) ? "permissao" : "envio");
-        return;
+      let caminho = enviado;
+      if (!caminho) {
+        const novo = caminhoDaFoto(organizacao, produto, variante, crypto.randomUUID(), previa.tipo);
+        const supabase = createBrowserClient<Database>(supabaseUrl, chavePublica);
+        const envio = await supabase.storage.from("produtos").upload(novo, previa.blob, { contentType: previa.tipo, upsert: false });
+        if (envio.error) {
+          setErro(/row-level security|unauthorized|403/i.test(envio.error.message) ? "permissao" : "envio");
+          return;
+        }
+        caminho = novo;
+        setEnviado(novo);
       }
       const registro = await registrarFoto({ produto, variante, caminho, largura: previa.largura, altura: previa.altura });
       if (!registro.ok) {
         setErro(registro.erro);
         return;
       }
-      URL.revokeObjectURL(previa.url);
-      setPrevia(null);
+      limpar(previa);
       router.refresh();
     } catch {
       setErro("envio");
@@ -85,7 +104,7 @@ export function EnviarFoto({ supabaseUrl, chavePublica, organizacao, produto, va
           <img src={previa.url} alt={`Prévia da foto de ${rotulo}`} className="max-h-48 w-full rounded-lg object-contain" />
           <div className="flex gap-2">
             <Botao type="button" tamanho="sm" onClick={() => void enviar()} disabled={enviando}>{enviando ? "Enviando…" : "Usar esta foto"}</Botao>
-            <Botao type="button" tamanho="sm" variante="fantasma" onClick={() => { URL.revokeObjectURL(previa.url); setPrevia(null); }} disabled={enviando}>Descartar</Botao>
+            <Botao type="button" tamanho="sm" variante="fantasma" onClick={() => limpar(previa)} disabled={enviando}>Descartar</Botao>
           </div>
         </div>
       )}

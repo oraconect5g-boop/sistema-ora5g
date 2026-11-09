@@ -168,3 +168,16 @@ Pedidos de conferência:
 **Telas reais.** No comprovante da venda: os cartões "Estornos de cartão, Pix e financeira" (confirmar com o comprovante) e "Itens a receber de volta" (conferir com IMEI/ICCID e condição, ou registrar que não voltou). A devolução pede o IMEI/ICCID dos aparelhos e chips. Fundo e desconto passaram a ser obrigatórios, com 0,00 por padrão.
 
 **Riscos e retorno.** A mudança é de comportamento: cancelamento não repõe estoque e cartão/Pix não ficam mais "estornado" na hora. Item avariado devolvido continua na loja com a condição registrada até o #60 (DEFEITOS). A reversão só vale em banco sem dados reais e apaga estornos e retornos registrados.
+
+## 09/11/2026 — Lote 3 do prompt consolidado: CSV, busca e fotos (#38, #40–#43)
+
+**Branch:** `fix/ORA-busca-csv-fotos-lote3` (a partir da main `c071968`). Migration `20261109191416_fotos_idempotentes_lote3`, aplicada no `ora5g-dev` com md5 conferida e reversão ensaiada.
+
+| # | Achado | O que mudou | Prova |
+|---|---|---|---|
+| 1 | #38 / REV-036 | `celulaCsv`: texto que começa com `=`, `+`, `-`, `@`, tabulação ou retorno ganha apóstrofo; número fica igual | `ExportarCsv.test.ts`; prova da PR verde |
+| 2 | #40 / REV-038 | Catálogo: nome, SKU e nome da variante filtram no banco antes do limite; variações, fotos e saldos só dos produtos achados. Estoque: variações filtradas antes do limite dos saldos. `%`, `_`, vírgula e parênteses saem do termo | `catalogo/busca.test.ts` (7) |
+| 3 | #41 / REV-039 | `FotoAmpliavel`: a falha vale só para a URL que falhou | fixture do Codex, 360 e 1280 px |
+| 4 | #42 / REV-040 | `registrar_foto` idempotente pelo caminho (trava pelo caminho; outro uso do mesmo arquivo dá OR004). `EnviarFoto` guarda o caminho enviado e, numa nova tentativa, só registra | `fotos-lote3.test.ts`; prova de banco da PR verde; fixture |
+| 5 | #43 / REV-041 | Descartar ou concluir limpa a escolha do arquivo | fixture |
+| 6 | índice redundante | `fotos_produto_produto_organizacao` removido; `fotos_organizacao` cobre a chave estrangeira; o aviso 0001 fica aceito | controle de EXPLAIN da PR verde |

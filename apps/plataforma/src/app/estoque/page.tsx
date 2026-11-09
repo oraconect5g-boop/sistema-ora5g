@@ -115,16 +115,28 @@ export default async function Estoque({ searchParams }: { searchParams: Promise<
   if (movimentos.error || lojaDoItem.error || varianteDoItem.error) throw new FalhaDoServico("estoque_historico");
 
   // Saldo da loja (com filtro por nome/SKU) e, se pedida, a disponibilidade na rede.
-  const saldos = await supabase.from("estoque_saldos").select("variante_id, quantidade, reservado").eq("unidade_id", unidade).limit(500);
+  // Busca por nome/SKU na fonte, antes do limite (REV-038, #40): primeiro as variações que batem,
+  // depois o saldo delas nesta loja. Sem busca, os primeiros 500 saldos da loja.
+  const termo = busca && !identificador ? busca.replace(/[%_,()*\\]/g, " ").replace(/\s+/g, " ").trim() : "";
+  let candidatas: string[] | null = null;
+  if (termo) {
+    const [porNome, porSku] = await Promise.all([
+      supabase.from("variantes").select("id").ilike("nome", `%${termo}%`).limit(500),
+      supabase.from("variantes").select("id").ilike("sku", `%${termo}%`).limit(500),
+    ]);
+    if (porNome.error || porSku.error) throw new FalhaDoServico("estoque_busca");
+    candidatas = [...new Set([...porNome.data, ...porSku.data].map((v) => v.id))];
+  }
+  const consultaSaldos = supabase.from("estoque_saldos").select("variante_id, quantidade, reservado").eq("unidade_id", unidade);
+  const saldos = candidatas && candidatas.length === 0
+    ? { data: [] as { variante_id: string; quantidade: number; reservado: number }[], error: null }
+    : await (candidatas ? consultaSaldos.in("variante_id", candidatas) : consultaSaldos).limit(500);
   if (saldos.error) throw new FalhaDoServico("estoque_saldos");
   const variantes = saldos.data.length
     ? await supabase.from("variantes").select("id, nome, sku, estoque_minimo, produto_id").in("id", saldos.data.map((s) => s.variante_id))
     : { data: [], error: null };
   if (variantes.error) throw new FalhaDoServico("estoque_variantes");
-  const termo = busca && !identificador ? busca.toLocaleLowerCase("pt-BR") : "";
-  const filtradas = termo
-    ? variantes.data.filter((v) => v.nome.toLocaleLowerCase("pt-BR").includes(termo) || v.sku.toLocaleLowerCase("pt-BR").includes(termo))
-    : variantes.data;
+  const filtradas = variantes.data;
   const linhas = filtradas
     .map((v) => { const s = saldos.data.find((x) => x.variante_id === v.id); return { ...v, quantidade: s?.quantidade ?? 0, reservado: s?.reservado ?? 0 }; })
     .sort((a, b) => a.nome.localeCompare(b.nome, "pt-BR"));

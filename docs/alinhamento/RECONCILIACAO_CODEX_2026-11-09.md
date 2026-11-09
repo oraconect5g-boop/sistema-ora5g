@@ -50,19 +50,29 @@ Antes da correção, todos se reproduziam na main `d730e9a` mais o Lote 1 (`~/ci
 | #58 / REV-055 | Chave confere o titular, com privacidade | 9b1109e | devolvia a operação antiga | **OR004** | **corrigido** | também depois do descarte do pedido; normalização; segredo ilegível |
 | #59 / REV-056 | Uma evidência confirma uma recarga só | 9b1109e | 2 produções | **0** produções (conferência da gerência) | **corrigido** | o controle da prova confirma sem as datas da recarga, o que agora não confirma de propósito; com a evidência completa, como o worker envia, conta uma vez |
 
+### Lote 3 — CSV, busca e fotos (branch `fix/ORA-busca-csv-fotos-lote3`)
+
+| ID | Regra | SHA auditado | Antes | Depois | Estado | Regressão permanente |
+|---|---|---|---|---|---|---|
+| #38 / REV-036 | CSV não exporta fórmula | aebbdcc | `=1+1` saía como célula | prova da PR 1 de 1 verde | **corrigido** | `ExportarCsv.test.ts`: `=`, `+`, `-`, `@`, tabulação e retorno ganham apóstrofo; número e valor em reais negativos ficam iguais |
+| #40 / REV-038 | Busca acha produto além do limite | aebbdcc | 2 de 3 falhavam | a prova da PR dá `TypeError: ilike is not a function`: o simulador dela não aplica filtro, e o filtro agora vai ao banco | **corrigido** | `catalogo/busca.test.ts` (7), com simulador que aplica `ilike`/`in`/`limit` na ordem do PostgREST; nome, SKU e nome da variante; `%` não vira curinga. Estoque com a mesma correção |
+| #41 / REV-039 | Foto quebrada volta com URL nova | aebbdcc | falhava | fixture do Codex verde (360 e 1280 px) | **corrigido** | a falha vale só para a URL que falhou |
+| #42 / REV-040 | Repetir registro não duplica | aebbdcc | 23505; nova tentativa reenviava o arquivo | banco 2 de 2 e fixture verdes | **corrigido** | `fotos-lote3.test.ts`; a tela guarda o caminho enviado e só repete o registro; migration `20261109191416_fotos_idempotentes_lote3` |
+| #43 / REV-041 | Descartar libera o mesmo arquivo | aebbdcc | campo retinha o arquivo | fixture verde | **corrigido** | descartar e concluir limpam a escolha |
+| índice das fotos | Não manter índice redundante só para o aviso 0001 | aebbdcc | controle do Codex falhava (o planejador usava o índice redundante criado em 20261108233711) | controle verde | **corrigido** | o índice redundante saiu; o aviso 0001 do advisor fica aceito, como o Codex pediu |
+
+Fixture dos componentes (`docs/analises/evidencias/2026-11-08-fotos/fixture` da PR #33, copiada e apagada depois): 12 de 12 verdes; antes eram 6 de 12. Resultado no servidor em `~/ci/fixture-fotos-resultado.txt`.
+
 ### Demais achados abertos
 
 | ID | Reprodução atual | Estado | Próximo passo |
 |---|---|---|---|
-| #31, #32 (REV-030/031) | Face da recarga como receita (3000) e ativação pendente contada (1) | **demonstração**, reproduzido | Corrigir a demo e o contrato de indicadores depois do Lote 2 |
-| #36, #37, #38 | Autor na própria fila (demo); comparação de 30 dias +2900%; CSV com fórmula | **reproduzidos** (36/37 na demo; 38 no componente real de exportação) | #38 primeiro, porque afeta a exportação real |
+| #31, #32 (REV-030/031) | Face da recarga como receita (3000) e ativação pendente contada (1) | **demonstração**, reproduzido | Corrigir a demo e o contrato de indicadores |
+| #36, #37 | Autor na própria fila (demo); comparação de 30 dias +2900% | **demonstração**, reproduzidos | Junto de #31/#32 |
 | #39 | Não reexecutado (prova de navegador da demo) | demonstração | Junto de #31/#32 |
-| #40 / REV-038 | Produto além das 200 linhas não aparece na busca | **reproduzido** | Filtrar e paginar na fonte (catálogo e estoque), com #26/#60 |
-| #41, #43 | Não reexecutados (fixture de componente com servidor próprio) | a conferir | Junto das fotos (#26) |
-| #42 / REV-040 | Registro repetido da mesma foto devolve 23505. O controle do índice da FK também falhou no PGlite atual (o planejador não usou `fotos_organizacao`) | **reproduzido**; controle a investigar | Registro idempotente; conferir o índice com EXPLAIN no PostgreSQL real |
 | #44 | `npm audit --omit=dev`: 0 vulnerabilidades no CI | a conferir na cadeia de desenvolvimento | Atualizar de forma compatível, sem downgrade automático |
-| #54 | Três operações (ativação, recarga, portabilidade) no adaptador; cobrança, carteira, recorrência e repasse sem contrato confirmado | **parcial** / bloqueio externo nas partes sem contrato | Depois dos bloqueantes #55–#59 |
-| #26, #60 | Fotos existem; não há transferência entre lojas nem DEFEITOS | **parcial** / não iniciado | Depois do Lote 2: busca, painel da rede e pedido interno |
+| #54 | Três operações (ativação, recarga, portabilidade) no adaptador; cobrança, carteira, recorrência e repasse sem contrato confirmado | **parcial** / bloqueio externo nas partes sem contrato | Partes com contrato documentado primeiro |
+| #26, #60 | Fotos existem; não há transferência entre lojas nem DEFEITOS | **parcial** / não iniciado | Busca e painel da rede, pedido interno e DEFEITOS |
 | #19–#24 (fechadas) | Prova `2026-11-08/banco.repro.ts`: 6 de 6 verdes | sem regressão | Não reabrir |
 
 ## 3. Dependências externas
@@ -75,4 +85,5 @@ Estão na seção 0 de [`docs/PENDENCIAS_DO_PROPRIETARIO.md`](../PENDENCIAS_DO_P
 |---|---|---|
 | 1 | `fix/ORA-acesso-configuracao-lote1` | Corrigido e testado em desenvolvimento, aguardando o Codex. CI e merge registrados em [PEDIDO_DE_REVISAO_CODEX.md](PEDIDO_DE_REVISAO_CODEX.md) |
 | 2 | `fix/ORA-integridade-lote2` | Corrigido e testado em desenvolvimento, aguardando o Codex. Migrations `20261109190240` e `20261109190400` aplicadas no `ora5g-dev` |
-| 3 (próximo) | — | #38 (CSV com fórmula, componente real), #40/#42 (busca e foto), #31/#32/#36/#37 (demo), depois #26/#60 (estoque visual, transferências, DEFEITOS) e #54 |
+| 3 | `fix/ORA-busca-csv-fotos-lote3` | Corrigido e testado em desenvolvimento, aguardando o Codex. Migration `20261109191416` aplicada no `ora5g-dev` |
+| 4 (próximo) | — | Demo (#31/#32/#36/#37/#39), depois #26/#60 (estoque visual, transferências, DEFEITOS) e #54 |
