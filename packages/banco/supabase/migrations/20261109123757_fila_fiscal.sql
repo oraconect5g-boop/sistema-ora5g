@@ -86,6 +86,7 @@ create table public.notas_pedidos (
 );
 create unique index notas_um_pedido_vivo_por_venda on public.notas_pedidos (venda_id) where situacao <> 'cancelada';
 create index notas_pedidos_fila on public.notas_pedidos (unidade_id, situacao, venda_concluida_em);
+create index notas_pedidos_unidade_organizacao on public.notas_pedidos (unidade_id, organizacao_id);
 create index notas_pedidos_solicitado_por on public.notas_pedidos (solicitado_por);
 create index notas_pedidos_aprovado_por on public.notas_pedidos (aprovado_por);
 create index notas_pedidos_emitida_por on public.notas_pedidos (emitida_por);

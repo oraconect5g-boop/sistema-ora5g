@@ -15,6 +15,7 @@
     { "versao": "20261108233546", "nome": "vendas_pagamentos_e_caixa", "md5": "6284f6340341eb65a0be6430d5e9a706", "aplicada_em": "2026-11-08" },
     { "versao": "20261108233711", "nome": "indices_vendas_e_fotos", "md5": "3b67ed6d41fced7092b8ab013ea5c17f", "aplicada_em": "2026-11-08" },
     { "versao": "20261109123402", "nome": "ora_connect_operacoes", "md5": "34fa7602285abc5aafaed8a34c5733b5", "aplicada_em": "2026-11-09" },
-    { "versao": "20261109123533", "nome": "indices_ora_connect", "md5": "81f5a9a345580fedb43ed7c5951e3d79", "aplicada_em": "2026-11-09" }
+    { "versao": "20261109123533", "nome": "indices_ora_connect", "md5": "81f5a9a345580fedb43ed7c5951e3d79", "aplicada_em": "2026-11-09" },
+    { "versao": "20261109123757", "nome": "fila_fiscal", "md5": "43a75da04d3228214e260201a2ea36af", "aplicada_em": "2026-11-09" }
   ]
 }
