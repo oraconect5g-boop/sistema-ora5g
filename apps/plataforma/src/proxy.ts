@@ -33,4 +33,4 @@ async function renovarSessao(requisicao: NextRequest) {
   return resposta;
 }
 
-export const config = { matcher: ["/conta/:path*", "/inicio", "/escolher-loja", "/equipe/:path*", "/catalogo/:path*", "/vender/:path*", "/vendas/:path*", "/caixa/:path*", "/aprovacoes/:path*", "/estoque/:path*", "/connect/:path*"] };
+export const config = { matcher: ["/conta/:path*", "/inicio", "/escolher-loja", "/equipe/:path*", "/catalogo/:path*", "/vender/:path*", "/vendas/:path*", "/caixa/:path*", "/aprovacoes/:path*", "/estoque/:path*", "/connect/:path*", "/notas/:path*"] };

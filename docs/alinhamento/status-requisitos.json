@@ -102,9 +102,9 @@
       "evidencia": "apps/plataforma/src/app/demo; apps/plataforma/e2e/demonstracao.spec.ts"
     },
     "ORA-CONNECT-004": {
-      "status": "parcial",
-      "nota": "Contrato da API NOGLE lido por inteiro (62 funções) e guardado no repositório; catálogo gerado e conferido no CI; normalização das respostas e regras de ICCID, portabilidade e bloqueio testadas. Falta o cliente HTTP no servidor, que depende do tipo de chave (P9) e das credenciais no gerenciador de segredos.",
-      "evidencia": "apps/plataforma/src/integracoes/nogle; docs/integracoes/NOGLE_API_REFERENCIA.md"
+      "status": "testado",
+      "nota": "Adaptador só no worker do servidor (credenciais fora do web e do navegador); pedido só com campos documentados, provado contra a cópia oficial da coleção; GET com corpo só depois da confirmação da Contel. Testado contra servidor local com os exemplos oficiais; nenhuma chamada real.",
+      "evidencia": "packages/dominio/src/nogle.ts; apps/worker/src/connect; packages/banco/src/connect.test.ts; packages/banco/src/concorrencia.test.ts; packages/dominio/src/nogle.test.ts; apps/worker/src/connect/ponta-a-ponta.test.ts; apps/worker/src/connect/transporte.test.ts"
     },
     "ORA-FISC-003": {
       "status": "bloqueado",
@@ -113,8 +113,8 @@
     },
     "ORA-FISC-004": {
       "status": "bloqueado",
-      "nota": "Depende do emissor fiscal contratado e do certificado A1.",
-      "evidencia": "docs/etapa-0/ETAPA_0_DECISOES_2026-11-06.md §2A"
+      "nota": "Contrato do emissor (EmissorFiscal) com implementação bloqueada; emissão real só com emissor escolhido e homologado com o contador (A4).",
+      "evidencia": "packages/dominio/src/fiscal.ts; docs/adr/ADR-006-fila-fiscal-interna.md"
     },
     "ORA-QUAL-001": {
       "status": "parcial",
@@ -187,49 +187,49 @@
       "evidencia": "apps/plataforma/src/app/demo; apps/plataforma/e2e/demonstracao.spec.ts"
     },
     "ORA-CONNECT-001": {
-      "status": "demonstracao",
-      "nota": "Venda do chip no PDV e estoque de chips por loja (físico e eSIM), com transferência do estoque central limitada ao estoque virgem, que é baixado (REV-024/#23 corrigido). Só dados fictícios.",
-      "evidencia": "apps/plataforma/src/app/demo/connect; apps/plataforma/e2e/connect.spec.ts"
+      "status": "testado",
+      "nota": "Chip vendido no PDV com ICCID do estoque (ADR-004); a ativação só aceita chip do estoque depois de vendido (OR011), fica ligada à venda do chip, e o chip ativado não volta ao estoque pelo cancelamento. Sem chamada real à Contel: falta credencial no worker, P9 e linha de teste para homologar.",
+      "evidencia": "packages/banco/supabase/migrations/20261109123402_ora_connect_operacoes.sql; packages/banco/src/connect.test.ts; packages/banco/src/concorrencia.test.ts; packages/dominio/src/nogle.test.ts; apps/worker/src/connect/ponta-a-ponta.test.ts; apps/worker/src/connect/transporte.test.ts; apps/plataforma/src/app/connect; apps/worker/src/connect; docs/adr/ADR-005-ora-connect-operacoes.md"
     },
     "ORA-CONNECT-002": {
-      "status": "demonstracao",
-      "nota": "A venda do chip (PDV) e a ativação na operadora (aba Ativar chip) são passos separados. Só dados fictícios.",
-      "evidencia": "apps/plataforma/src/app/demo/connect; apps/plataforma/e2e/connect.spec.ts"
+      "status": "testado",
+      "nota": "Venda do chip, pedido de ativação, resposta da operadora e produção são registros separados; a produção nasce só da operação confirmada, uma vez (chave única). Sem chamada real à Contel: falta credencial no worker, P9 e linha de teste para homologar.",
+      "evidencia": "packages/banco/supabase/migrations/20261109123402_ora_connect_operacoes.sql; packages/banco/src/connect.test.ts; packages/banco/src/concorrencia.test.ts; packages/dominio/src/nogle.test.ts; apps/worker/src/connect/ponta-a-ponta.test.ts; apps/worker/src/connect/transporte.test.ts"
     },
     "ORA-CONNECT-003": {
-      "status": "demonstracao",
-      "nota": "Recarga com estado próprio (aguardando pagamento ou confirmada), avulsa ou programada pelo saldo; o meio escolhido (LINK ou SALDO) vale até a confirmação, sem misturar caixa da loja e carteira da Ora (REV-025/#24 corrigido). Só dados fictícios.",
-      "evidencia": "apps/plataforma/src/app/demo/connect; apps/plataforma/e2e/connect.spec.ts"
+      "status": "parcial",
+      "nota": "Recarga é operação própria com estado; separa valor de face (lista oficial), recebido na loja (venda do serviço, obrigatório no SALDO) e debitado da carteira (histórico da Contel). FALTA: receita da recarga por LINK (repasse, P8/D-009) e homologação.",
+      "evidencia": "packages/banco/supabase/migrations/20261109123402_ora_connect_operacoes.sql; packages/banco/src/connect.test.ts; packages/banco/src/concorrencia.test.ts; packages/dominio/src/nogle.test.ts; apps/worker/src/connect/ponta-a-ponta.test.ts; apps/worker/src/connect/transporte.test.ts; apps/plataforma/src/app/connect; apps/worker/src/connect; docs/adr/ADR-005-ora-connect-operacoes.md"
     },
     "ORA-CONNECT-005": {
-      "status": "demonstracao",
-      "nota": "A linha só aparece como ativa depois da consulta que confirma a ativação na operadora. Simulado; resposta real depende da integração.",
-      "evidencia": "apps/plataforma/src/app/demo/connect; apps/plataforma/e2e/connect.spec.ts"
+      "status": "testado",
+      "nota": "Ativação só confirma com a evidência da operadora (ICCID ativo com a linha); resposta ambígua, sem resposta ou worker interrompido viram resultado desconhecido, sem sucesso falso nem reenvio; a gerência decide (não a própria operação). Sem chamada real à Contel: falta credencial no worker, P9 e linha de teste para homologar.",
+      "evidencia": "packages/banco/supabase/migrations/20261109123402_ora_connect_operacoes.sql; packages/banco/src/connect.test.ts; packages/banco/src/concorrencia.test.ts; packages/dominio/src/nogle.test.ts; apps/worker/src/connect/ponta-a-ponta.test.ts; apps/worker/src/connect/transporte.test.ts"
     },
     "ORA-CONNECT-006": {
-      "status": "demonstracao",
-      "nota": "Ativações e recargas atribuídas ao vendedor e à loja da venda nos painéis e na carteira. Só dados fictícios.",
-      "evidencia": "apps/plataforma/src/app/demo/connect; apps/plataforma/e2e/connect.spec.ts"
+      "status": "testado",
+      "nota": "Produção por operação confirmada, do vendedor e da loja de origem, com origem (evidência da operadora ou revisão da gerência) e chave única por operação. Comissão sobre ela ainda não existe (P8).",
+      "evidencia": "packages/banco/supabase/migrations/20261109123402_ora_connect_operacoes.sql; packages/banco/src/connect.test.ts; packages/banco/src/concorrencia.test.ts; packages/dominio/src/nogle.test.ts; apps/worker/src/connect/ponta-a-ponta.test.ts; apps/worker/src/connect/transporte.test.ts"
     },
     "ORA-CONNECT-007": {
-      "status": "demonstracao",
-      "nota": "Consulta de linha (detalhes, saldo, consumo de 30 dias, histórico, cobranças, titularidade, apelido) no formato da API. Só dados fictícios.",
-      "evidencia": "apps/plataforma/src/app/demo/connect; apps/plataforma/e2e/connect.spec.ts"
+      "status": "parcial",
+      "nota": "Listas oficiais (planos, DDDs, cidades, operadoras) sincronizadas pelo worker e usadas na tela; consultas de evidência com intervalo crescente. FALTA: telas de consulta de linha, saldo e consumo e limites de chamada (não documentados).",
+      "evidencia": "apps/plataforma/src/app/connect; apps/worker/src/connect; docs/adr/ADR-005-ora-connect-operacoes.md; packages/banco/src/connect.test.ts; packages/banco/src/concorrencia.test.ts; packages/dominio/src/nogle.test.ts; apps/worker/src/connect/ponta-a-ponta.test.ts; apps/worker/src/connect/transporte.test.ts"
     },
     "ORA-CONNECT-008": {
-      "status": "demonstracao",
-      "nota": "Portabilidade (pedido, reenvio do SMS, status) e operadoras doadoras no formato da API. Só dados fictícios.",
-      "evidencia": "apps/plataforma/src/app/demo/connect; apps/plataforma/e2e/connect.spec.ts"
+      "status": "parcial",
+      "nota": "Portabilidade registrada, enviada e acompanhada pelo status documentado; o exemplo contraditório da documentação fica como resultado desconhecido (pergunta 7). FALTA: contrato/venda de plano e homologação.",
+      "evidencia": "packages/banco/supabase/migrations/20261109123402_ora_connect_operacoes.sql; packages/banco/src/connect.test.ts; packages/banco/src/concorrencia.test.ts; packages/dominio/src/nogle.test.ts; apps/worker/src/connect/ponta-a-ponta.test.ts; apps/worker/src/connect/transporte.test.ts; apps/plataforma/src/app/connect; apps/worker/src/connect; docs/adr/ADR-005-ora-connect-operacoes.md"
     },
     "ORA-CONNECT-010": {
-      "status": "demonstracao",
-      "nota": "Cada operação que cria algo na operadora diz o que consultar antes de reenviar (catálogo e telas). A recuperação real depende do cliente HTTP.",
-      "evidencia": "apps/plataforma/src/app/demo/connect; apps/plataforma/e2e/connect.spec.ts; apps/plataforma/src/integracoes/nogle; docs/integracoes/NOGLE_API_REFERENCIA.md"
+      "status": "testado",
+      "nota": "Sem conexão volta para a fila; conectou e não respondeu = desconhecido, nunca reenviado; envio interrompido expira para desconhecido; resposta atrasada ainda vale; dois workers não pegam a mesma operação (PostgreSQL 17 real).",
+      "evidencia": "packages/banco/supabase/migrations/20261109123402_ora_connect_operacoes.sql; packages/banco/src/connect.test.ts; packages/banco/src/concorrencia.test.ts; packages/dominio/src/nogle.test.ts; apps/worker/src/connect/ponta-a-ponta.test.ts; apps/worker/src/connect/transporte.test.ts"
     },
     "ORA-CONNECT-011": {
-      "status": "demonstracao",
-      "nota": "eSIM na ativação e compra de chip com entrega e rastreio no formato da API; eSIM transferido sai do estoque virgem (REV-024). Só dados fictícios.",
-      "evidencia": "apps/plataforma/src/app/demo/connect; apps/plataforma/e2e/connect.spec.ts"
+      "status": "parcial",
+      "nota": "Ativação de eSIM pelo formato documentado (sem ICCID, \"esim\": \"SIM\"), com o ICCID e o link vindos da resposta. FALTA: confirmar com a Contel (pergunta 11), compra com entrega e contratação digital.",
+      "evidencia": "packages/banco/supabase/migrations/20261109123402_ora_connect_operacoes.sql; packages/dominio/src/nogle.ts; packages/banco/src/connect.test.ts; packages/banco/src/concorrencia.test.ts; packages/dominio/src/nogle.test.ts; apps/worker/src/connect/ponta-a-ponta.test.ts; apps/worker/src/connect/transporte.test.ts"
     },
     "ORA-CAT-001": {
       "status": "parcial",
@@ -345,6 +345,26 @@
       "status": "parcial",
       "nota": "Contas a receber das financeiras ligadas à venda e ao pagamento, abertas até o recebimento; canceladas no estorno. FALTA: vencimento (P8), baixa e aging.",
       "evidencia": "packages/banco/supabase/migrations/20261108233546_vendas_pagamentos_e_caixa.sql; packages/banco/src/vendas.test.ts; packages/banco/src/concorrencia.test.ts"
+    },
+    "ORA-FISC-001": {
+      "status": "testado",
+      "nota": "Botão \"Pedir nota fiscal\" no comprovante da venda concluída (celular), com nome e CPF/CNPJ opcionais; idempotente; um pedido vivo por venda; isolamento de loja, rede e papel.",
+      "evidencia": "packages/banco/supabase/migrations/20261109123757_fila_fiscal.sql; packages/banco/src/notas.test.ts; packages/dominio/src/fiscal.test.ts; apps/plataforma/src/app/notas; apps/plataforma/src/app/vendas/[id]/page.tsx; docs/adr/ADR-006-fila-fiscal-interna.md"
+    },
+    "ORA-FISC-002": {
+      "status": "testado",
+      "nota": "Fila do dono/gerente por antiguidade da venda, aprovar ou pedir correção; a aprovação nunca segura a emissão (registrar a nota vale como aprovação, com evento); alerta de atraso só com o prazo e a fonte do contador.",
+      "evidencia": "packages/banco/supabase/migrations/20261109123757_fila_fiscal.sql; packages/banco/src/notas.test.ts; packages/dominio/src/fiscal.test.ts; apps/plataforma/src/app/notas; apps/plataforma/src/app/vendas/[id]/page.tsx; docs/adr/ADR-006-fila-fiscal-interna.md"
+    },
+    "ORA-FISC-005": {
+      "status": "parcial",
+      "nota": "Chave de acesso de 44 dígitos registrada com dígito e CNPJ da loja conferidos, única, com modelo, série e número; CPF/CNPJ só até a emissão. FALTA: protocolo, XML/PDF anexos e retenção definida com o contador.",
+      "evidencia": "packages/banco/supabase/migrations/20261109123757_fila_fiscal.sql; packages/banco/src/notas.test.ts; packages/dominio/src/fiscal.test.ts"
+    },
+    "ORA-FISC-006": {
+      "status": "parcial",
+      "nota": "Chave repetida recusada; venda cancelada cancela pedido sem nota; venda com nota emitida só cancela depois do tratamento fiscal (OR015). FALTA: reprocesso e contingência no emissor (A4).",
+      "evidencia": "packages/banco/supabase/migrations/20261109123757_fila_fiscal.sql; packages/banco/src/notas.test.ts; packages/dominio/src/fiscal.test.ts"
     }
   }
 }

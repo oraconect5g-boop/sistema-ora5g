@@ -1,5 +1,5 @@
 // ARQUIVO GERADO pelo Supabase (generate_typescript_types do projeto ora5g-dev) depois da
-// migration 20261109123402_ora_connect_operacoes. Não edite à mão: gere de novo a cada
+// migration 20261109123757_fila_fiscal. Não edite à mão: gere de novo a cada
 // migration aplicada (auditoria do Codex de 08/11, §7.2). O teste tipos-banco.test.ts confere
 // que funções e tabelas públicas daqui são as mesmas das migrations.
 export type Json =
@@ -1183,6 +1183,48 @@ export type Database = {
           },
         ]
       }
+      fiscal_politicas: {
+        Row: {
+          alerta_minutos: number | null
+          alterado_em: string
+          alterado_por: string | null
+          fonte: string
+          id: string
+          organizacao_id: string
+        }
+        Insert: {
+          alerta_minutos?: number | null
+          alterado_em?: string
+          alterado_por?: string | null
+          fonte: string
+          id?: string
+          organizacao_id: string
+        }
+        Update: {
+          alerta_minutos?: number | null
+          alterado_em?: string
+          alterado_por?: string | null
+          fonte?: string
+          id?: string
+          organizacao_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "fiscal_politicas_alterado_por_fkey"
+            columns: ["alterado_por"]
+            isOneToOne: false
+            referencedRelation: "perfis_usuario"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "fiscal_politicas_organizacao_id_fkey"
+            columns: ["organizacao_id"]
+            isOneToOne: true
+            referencedRelation: "organizacoes"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       fotos_produto: {
         Row: {
           altura: number
@@ -1351,6 +1393,168 @@ export type Database = {
             columns: ["organizacao_id"]
             isOneToOne: false
             referencedRelation: "organizacoes"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      notas_eventos: {
+        Row: {
+          id: number
+          observacao: string | null
+          ocorrido_em: string
+          organizacao_id: string
+          pedido_id: string
+          tipo: string
+          usuario_id: string | null
+        }
+        Insert: {
+          id?: never
+          observacao?: string | null
+          ocorrido_em?: string
+          organizacao_id: string
+          pedido_id: string
+          tipo: string
+          usuario_id?: string | null
+        }
+        Update: {
+          id?: never
+          observacao?: string | null
+          ocorrido_em?: string
+          organizacao_id?: string
+          pedido_id?: string
+          tipo?: string
+          usuario_id?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "notas_eventos_pedido_id_fkey"
+            columns: ["pedido_id"]
+            isOneToOne: false
+            referencedRelation: "notas_pedidos"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "notas_eventos_usuario_id_fkey"
+            columns: ["usuario_id"]
+            isOneToOne: false
+            referencedRelation: "perfis_usuario"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      notas_pedidos: {
+        Row: {
+          aprovado_em: string | null
+          aprovado_por: string | null
+          atualizado_em: string
+          chave: string
+          chave_acesso: string | null
+          criado_em: string
+          destinatario_mascarado: string | null
+          destinatario_nome: string | null
+          emitida_em: string | null
+          emitida_por: string | null
+          id: string
+          modelo: string | null
+          motivo_cancelamento: string | null
+          numero: number
+          numero_documento: number | null
+          observacao: string | null
+          organizacao_id: string
+          origem_emissao: string | null
+          serie: number | null
+          situacao: string
+          solicitado_por: string
+          unidade_id: string
+          venda_concluida_em: string
+          venda_id: string
+        }
+        Insert: {
+          aprovado_em?: string | null
+          aprovado_por?: string | null
+          atualizado_em?: string
+          chave: string
+          chave_acesso?: string | null
+          criado_em?: string
+          destinatario_mascarado?: string | null
+          destinatario_nome?: string | null
+          emitida_em?: string | null
+          emitida_por?: string | null
+          id?: string
+          modelo?: string | null
+          motivo_cancelamento?: string | null
+          numero?: never
+          numero_documento?: number | null
+          observacao?: string | null
+          organizacao_id: string
+          origem_emissao?: string | null
+          serie?: number | null
+          situacao?: string
+          solicitado_por: string
+          unidade_id: string
+          venda_concluida_em: string
+          venda_id: string
+        }
+        Update: {
+          aprovado_em?: string | null
+          aprovado_por?: string | null
+          atualizado_em?: string
+          chave?: string
+          chave_acesso?: string | null
+          criado_em?: string
+          destinatario_mascarado?: string | null
+          destinatario_nome?: string | null
+          emitida_em?: string | null
+          emitida_por?: string | null
+          id?: string
+          modelo?: string | null
+          motivo_cancelamento?: string | null
+          numero?: never
+          numero_documento?: number | null
+          observacao?: string | null
+          organizacao_id?: string
+          origem_emissao?: string | null
+          serie?: number | null
+          situacao?: string
+          solicitado_por?: string
+          unidade_id?: string
+          venda_concluida_em?: string
+          venda_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "notas_pedidos_aprovado_por_fkey"
+            columns: ["aprovado_por"]
+            isOneToOne: false
+            referencedRelation: "perfis_usuario"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "notas_pedidos_emitida_por_fkey"
+            columns: ["emitida_por"]
+            isOneToOne: false
+            referencedRelation: "perfis_usuario"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "notas_pedidos_solicitado_por_fkey"
+            columns: ["solicitado_por"]
+            isOneToOne: false
+            referencedRelation: "perfis_usuario"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "notas_pedidos_unidade_id_organizacao_id_fkey"
+            columns: ["unidade_id", "organizacao_id"]
+            isOneToOne: false
+            referencedRelation: "unidades"
+            referencedColumns: ["id", "organizacao_id"]
+          },
+          {
+            foreignKeyName: "notas_pedidos_venda_id_fkey"
+            columns: ["venda_id"]
+            isOneToOne: false
+            referencedRelation: "vendas"
             referencedColumns: ["id"]
           },
         ]
@@ -2221,6 +2425,10 @@ export type Database = {
           esperado: number
         }[]
       }
+      fiscal_definir_politica: {
+        Args: { p_alerta_minutos: number; p_fonte: string }
+        Returns: boolean
+      }
       identidade_bloqueios_a_aplicar: {
         Args: never
         Returns: {
@@ -2274,6 +2482,26 @@ export type Database = {
           p_valor: number
         }
         Returns: number
+      }
+      notas_cancelar: {
+        Args: { p_motivo: string; p_pedido: string }
+        Returns: boolean
+      }
+      notas_corrigir: {
+        Args: { p_destinatario: Json; p_pedido: string }
+        Returns: boolean
+      }
+      notas_decidir: {
+        Args: { p_aprovar: boolean; p_observacao: string; p_pedido: string }
+        Returns: string
+      }
+      notas_registrar_emissao: {
+        Args: { p_chave_acesso: string; p_observacao: string; p_pedido: string }
+        Returns: string
+      }
+      notas_solicitar: {
+        Args: { p_chave: string; p_destinatario: Json; p_venda: string }
+        Returns: string
       }
       pedir_aprovacao: {
         Args: { p_item: string; p_motivo: string }

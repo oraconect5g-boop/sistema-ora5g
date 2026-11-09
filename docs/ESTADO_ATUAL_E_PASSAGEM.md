@@ -106,7 +106,10 @@ Papéis **fixos** (decisão do proprietário). Detalhes: ADR-001, seção 2.7.
 - Feito na branch `feature/ORA-CAT-011-fotos` (item 7, parte 1): migration `20261108204536_fotos_dos_produtos` (aplicada no `ora5g-dev`), tela `/catalogo` com fotos, envio pelo celular, pendências; tipos regenerados; centavos e contagens só como inteiro seguro.
 - Integrado na `main` em `aebbdcc` (fotos; CI em clone limpo passou).
 - Feito na branch `feature/ORA-ADR-004-vendas` (itens 9 e 10 da fila): ADR-004 (proposto), migrations `20261108233546_vendas_pagamentos_e_caixa` e `20261108233711_indices_vendas_e_fotos` (aplicadas no `ora5g-dev`), telas `/vender`, `/caixa`, `/aprovacoes`, `/vendas/[id]`; 13 cenários de venda e concorrência real da conclusão.
-- **Próximo:** adaptador Nogle no servidor e operações Ora Connect persistentes (item 11), fila fiscal interna (12), tela real de estoque (IMEI e conferência), devolução parcial/troca; e, quando a secret key existir, usuários de teste e E2E real de login e venda.
+- Integrado na `main` em `371cef0` (vendas, pagamentos e caixa; CI em clone limpo passou: 428 testes, 134 E2E).
+- Feito na branch `feature/ORA-CONNECT-adaptador` (item 11, ADR-005) e, empilhada, `feature/ORA-FISC-fila` (item 12, ADR-006, e o go/no-go do item 13). Testado localmente (banco em memória, PostgreSQL 17 real, worker ponta a ponta com servidor local e exemplos oficiais da Nogle).
+- Aplicadas no `ora5g-dev` em 09/11 (md5 conferido): `20261109123402_ora_connect_operacoes`, `20261109123533_indices_ora_connect` e `20261109123757_fila_fiscal`; tipos gerados depois de cada uma. Integração na `main`: Connect e depois a fiscal, cada uma depois da sequência do CI em clone limpo.
+- **Próximo depois disso:** tela real de estoque (IMEI e conferência), devolução parcial/troca, relatório diário Rein × Ora (depende do arquivo da Rein) e, quando a secret key existir, usuários de teste e E2E real de login e venda.
 - Depois: tipos gerados e centavos (6), catálogo/estoque reais com fotos (7), ADR-004 vendas (9), caixa e pagamentos (10), adaptador Nogle (11), fila fiscal (12), go/no-go (13).
 - Pastas para o proprietário enviar arquivos: `~/entrada/{rein,lojas,equipe,fotos}` (700). Nada recebido até 08/11.
 - Homologação continua na versão `0a19c71`; publicar de novo só com autorização do proprietário.

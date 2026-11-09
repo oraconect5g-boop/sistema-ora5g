@@ -104,3 +104,14 @@ Pedidos de conferência:
 2. Testes: `packages/banco/src/vendas.test.ts` (cenários A, B, C, D, E, H, I) e o caso de conclusão repetida simultânea em `concorrencia.test.ts` (PostgreSQL 17 real).
 3. Telas `/vender`, `/caixa`, `/aprovacoes`, `/vendas/[id]`: só chamam funções do banco; nada de custo no navegador; chave de idempotência gerada na tela.
 4. Limites declarados: link de pagamento bloqueado (provedor A3), devolução parcial e troca (POS-012) não feitas, fiscal e comissão ainda não existem, prova com usuário real depende da `SUPABASE_SECRET_KEY`.
+
+## 08/11/2026 (noite, 5) — Ora Connect real (ADR-005), fila fiscal (ADR-006) e go/no-go
+
+**Branches empilhadas:** `feature/ORA-CONNECT-adaptador` → `feature/ORA-FISC-fila`. Migrations aplicadas no `ora5g-dev` em 09/11, nesta ordem e com md5 conferido: `20261109123402_ora_connect_operacoes`, `20261109123533_indices_ora_connect` (advisor 0001) e `20261109123757_fila_fiscal`; tipos do Supabase gerados depois de cada uma. Advisors: só os avisos já esperados (0029 das RPCs por desenho; tabelas privadas `connect_dados_envio` e `notas_destinatarios` com RLS sem política, de propósito: só as funções do banco leem).
+
+1. **ADR-005** ([documento](../adr/ADR-005-ora-connect-operacoes.md)): conferir estados e transições (só `aguardando_operadora` muda sozinha; desconhecido nunca é reenviado nem confirmado sozinho; gerência decide e não a própria), índices únicos (chip, recarga em curso, portabilidade em curso, serviço pago), ordem das travas, gatilhos que protegem chip ativado e venda com operação viva (OR013), dados pessoais só até o envio, `connect_worker_*` só para `service_role`.
+2. Regras puras `packages/dominio/src/nogle.ts`: o teste prova que o pedido só usa campos documentados (tabelas e exemplos da cópia oficial) e lê resposta e evidência com os exemplos oficiais. Conferir as leituras conservadoras: só `{mensagem}` = desconhecido; portabilidade com `retorno=false` e id = desconhecido; recarga casada pela `data_cadastro` (pergunta 10).
+3. Worker `apps/worker/src/connect/`: transporte com "não enviada" × "enviada sem resposta", 401 renova uma vez, 429/login recusado voltam à fila, GET com corpo desligado até a Contel confirmar; teste ponta a ponta com banco real em memória e servidor local respondendo com os exemplos oficiais.
+4. **ADR-006** ([documento](../adr/ADR-006-fila-fiscal-interna.md)): pedido da venda concluída, um vivo por venda, aprovação que nunca segura a emissão, chave de acesso com dígito e CNPJ conferidos e única, venda cancelada × nota emitida (OR015), prazo de alerta só com fonte. Nada é emitido.
+5. Go/no-go: [GO_NO_GO_PILOTO_E_SAIDA_DA_REIN.md](../operacao/GO_NO_GO_PILOTO_E_SAIDA_DA_REIN.md).
+6. Também: T4 e T5 deixaram de ser TODO (viraram testes em `vendas.test.ts`); restam 2 TODO de módulos futuros (CRM e OS).
