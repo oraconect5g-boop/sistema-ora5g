@@ -248,7 +248,7 @@
     },
     "ORA-INV-001": {
       "status": "parcial",
-      "nota": "Saldo por loja no banco, isolado por RLS, e tela real /estoque: saldo da loja do turno com busca por nome/SKU, alerta abaixo do mínimo, busca por IMEI/ICCID com o histórico do livro e disponibilidade na rede sem IMEI. Falta: transferência entre lojas (ORA-INV-007) e homologação com usuário real.",
+      "nota": "Saldo por loja no banco, isolado por RLS, e tela real /estoque: saldo da loja do turno com foto (ampliação no celular) com busca por nome/SKU, alerta abaixo do mínimo, busca por IMEI/ICCID com o histórico do livro e disponibilidade na rede sem IMEI. Falta: transferência entre lojas (ORA-INV-007) e homologação com usuário real.",
       "evidencia": "packages/banco/supabase/migrations/20261108150620_catalogo_estoque.sql; packages/banco/src/catalogo-estoque.test.ts; apps/plataforma/src/app/estoque; apps/plataforma/src/lib/estoque/regras.test.ts"
     },
     "ORA-INV-003": {

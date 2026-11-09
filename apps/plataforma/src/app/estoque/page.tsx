@@ -8,6 +8,7 @@ import { ehUuid } from "../../lib/acesso/regras";
 import { FalhaDoServico, obterSessao } from "../../lib/acesso/sessao";
 import { ERROS_DO_ESTOQUE, identificadorDigitado, inicioDoDiaEmSaoPaulo, nomeDe, NOMES_DAS_SITUACOES, NOMES_DOS_MOVIMENTOS } from "../../lib/estoque/regras";
 import { chaveDoCatalogo, textoDoParametro, type ValorDeParametro } from "../../lib/parametros";
+import { FotoAmpliavel } from "../catalogo/FotoAmpliavel";
 import { conferirItem, conferirPorIdentificador } from "./acoes";
 
 export const metadata: Metadata = { title: "Estoque" };
@@ -108,7 +109,7 @@ export default async function Estoque({ searchParams }: { searchParams: Promise<
     ? await Promise.all([
       supabase.from("estoque_movimentos").select("id, tipo, quantidade, motivo, ocorrido_em, unidade_id").eq("item_serializado_id", item.data.id).order("ocorrido_em", { ascending: false }).limit(10),
       supabase.from("unidades").select("nome").eq("id", item.data.unidade_id).maybeSingle(),
-      supabase.from("variantes").select("nome, sku").eq("id", item.data.variante_id).maybeSingle(),
+      supabase.from("variantes").select("id, nome, sku, produto_id").eq("id", item.data.variante_id).maybeSingle(),
     ])
     : [{ data: [], error: null }, { data: null, error: null }, { data: null, error: null }];
   if (movimentos.error || lojaDoItem.error || varianteDoItem.error) throw new FalhaDoServico("estoque_historico");
@@ -117,7 +118,7 @@ export default async function Estoque({ searchParams }: { searchParams: Promise<
   const saldos = await supabase.from("estoque_saldos").select("variante_id, quantidade, reservado").eq("unidade_id", unidade).limit(500);
   if (saldos.error) throw new FalhaDoServico("estoque_saldos");
   const variantes = saldos.data.length
-    ? await supabase.from("variantes").select("id, nome, sku, estoque_minimo").in("id", saldos.data.map((s) => s.variante_id))
+    ? await supabase.from("variantes").select("id, nome, sku, estoque_minimo, produto_id").in("id", saldos.data.map((s) => s.variante_id))
     : { data: [], error: null };
   if (variantes.error) throw new FalhaDoServico("estoque_variantes");
   const termo = busca && !identificador ? busca.toLocaleLowerCase("pt-BR") : "";
@@ -127,6 +128,17 @@ export default async function Estoque({ searchParams }: { searchParams: Promise<
   const linhas = filtradas
     .map((v) => { const s = saldos.data.find((x) => x.variante_id === v.id); return { ...v, quantidade: s?.quantidade ?? 0, reservado: s?.reservado ?? 0 }; })
     .sort((a, b) => a.nome.localeCompare(b.nome, "pt-BR"));
+  // Fotos (ORA-CAT-011): a da variante ou a principal do produto; URL assinada e temporária.
+  const comFoto = [...linhas.map((l) => ({ id: l.id, produto_id: l.produto_id })), ...(varianteDoItem.data ? [varianteDoItem.data] : [])];
+  const produtoIds = [...new Set(comFoto.map((v) => v.produto_id))];
+  const fotos = produtoIds.length ? await supabase.from("fotos_produto").select("produto_id, variante_id, caminho, ilustracao").in("produto_id", produtoIds).is("substituida_em", null) : { data: [], error: null };
+  if (fotos.error) throw new FalhaDoServico("estoque_fotos");
+  const assinadas = fotos.data.length ? await supabase.storage.from("produtos").createSignedUrls(fotos.data.map((f) => f.caminho), 3600) : { data: [], error: null };
+  const urlDe = new Map((assinadas.data ?? []).map((a) => [a.path, a.error ? null : a.signedUrl]));
+  const fotoDe = (variante: { id: string; produto_id: string }) => {
+    const f = fotos.data.find((x) => x.variante_id === variante.id) ?? fotos.data.find((x) => x.produto_id === variante.produto_id && x.variante_id === null);
+    return { url: f ? (urlDe.get(f.caminho) ?? null) : null, ilustracao: f?.ilustracao ?? false };
+  };
   const rede = ehUuid(varianteNaRede) ? await supabase.rpc("disponibilidade_na_rede", { p_variante: varianteNaRede }) : { data: null, error: null };
   if (rede.error) throw new FalhaDoServico("estoque_rede");
   const nomeNaRede = ehUuid(varianteNaRede) ? linhas.find((l) => l.id === varianteNaRede)?.nome : undefined;
@@ -144,7 +156,10 @@ export default async function Estoque({ searchParams }: { searchParams: Promise<
       {identificador && (
         item.data ? (
           <Cartao titulo={varianteDoItem.data?.nome ?? "Item"} subtitulo={`${varianteDoItem.data?.sku ?? ""} · ${lojaDoItem.data?.nome ?? "outra loja"}`} icone={History}>
-            <p className="numeros text-sm">{item.data.imei ? `IMEI ${item.data.imei}${item.data.imei2 ? ` / ${item.data.imei2}` : ""}` : `ICCID ${final(item.data.iccid)}`}</p>
+            <div className="flex items-center gap-3">
+              {varianteDoItem.data && <FotoAmpliavel {...fotoDe(varianteDoItem.data)} rotulo={`${varianteDoItem.data.nome} (${varianteDoItem.data.sku})`} />}
+              <p className="numeros text-sm">{item.data.imei ? `IMEI ${item.data.imei}${item.data.imei2 ? ` / ${item.data.imei2}` : ""}` : `ICCID ${final(item.data.iccid)}`}</p>
+            </div>
             <p className="mt-1 flex flex-wrap gap-2">
               <Selo tom={item.data.situacao === "disponivel" ? "sucesso" : item.data.situacao === "reservado" ? "aviso" : "neutro"} ponto>{nomeDe(NOMES_DAS_SITUACOES, item.data.situacao)}</Selo>
               <Selo tom={item.data.em_estoque ? "info" : "neutro"}>{item.data.em_estoque ? "no estoque" : "fora do estoque"}</Selo>
@@ -176,7 +191,7 @@ export default async function Estoque({ searchParams }: { searchParams: Promise<
                 const disponivel = l.quantidade - l.reservado;
                 return (
                   <li key={l.id} className="flex flex-wrap items-center justify-between gap-2 py-2">
-                    <span>{l.nome}<span className="numeros block text-xs text-suave">{l.sku}{l.reservado > 0 ? ` · ${l.reservado} em venda` : ""}</span></span>
+                    <span className="flex items-center gap-3"><FotoAmpliavel {...fotoDe(l)} rotulo={`${l.nome} (${l.sku})`} /><span>{l.nome}<span className="numeros block text-xs text-suave">{l.sku}{l.reservado > 0 ? ` · ${l.reservado} em venda` : ""}</span></span></span>
                     <span className="flex items-center gap-2">
                       {disponivel < l.estoque_minimo && <Selo tom="aviso">abaixo do mínimo</Selo>}
                       <span className="numeros text-base font-bold">{disponivel}</span>
