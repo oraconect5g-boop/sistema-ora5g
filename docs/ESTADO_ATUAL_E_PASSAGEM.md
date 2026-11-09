@@ -110,11 +110,11 @@ Papéis **fixos** (decisão do proprietário). Detalhes: ADR-001, seção 2.7.
 - Feito na branch `feature/ORA-CONNECT-adaptador` (item 11, ADR-005) e, empilhada, `feature/ORA-FISC-fila` (item 12, ADR-006, e o go/no-go do item 13). Testado localmente (banco em memória, PostgreSQL 17 real, worker ponta a ponta com servidor local e exemplos oficiais da Nogle).
 - Aplicadas no `ora5g-dev` em 09/11 (md5 conferido): `20261109123402_ora_connect_operacoes`, `20261109123533_indices_ora_connect` e `20261109123757_fila_fiscal`; tipos gerados depois de cada uma.
 - Integrado na `main` em 09/11, cada um depois da sequência do CI em clone limpo: `967023e` (tela real de estoque `/estoque`, com foto, IMEI/ICCID e conferência do dia), `f161912` (Ora Connect, ADR-005) e `9b1109e` (fila fiscal, ADR-006; go/no-go; ORA-OS-001 a 006 no backlog).
-- Feito na branch `feature/ORA-POS-012-devolucao-troca` (09/11): devolução parcial e troca com vale-troca (adendo do ADR-004), migration `20261109134507_devolucao_e_troca` aplicada no `ora5g-dev`.
+- Integrado na `main` em `0fa1546` (09/11, CI em clone limpo): devolução parcial e troca com vale-troca (adendo do ADR-004), migration `20261109134507_devolucao_e_troca` aplicada no `ora5g-dev`.
 - **Próximo:** relatório diário Rein × Ora (depende do arquivo da Rein), ensaio de restauração do banco e das fotos (cenário J) e, quando a secret key existir, usuários de teste e E2E real de login, venda, Connect e notas. Ora Connect real só depois das credenciais no worker, da P9 e da linha de teste (agendar `worker-connect.sh` com autorização).
 - Depois: tipos gerados e centavos (6), catálogo/estoque reais com fotos (7), ADR-004 vendas (9), caixa e pagamentos (10), adaptador Nogle (11), fila fiscal (12), go/no-go (13).
 - Pastas para o proprietário enviar arquivos: `~/entrada/{rein,lojas,equipe,fotos}` (700). Nada recebido até 08/11.
-- **Homologação (ora5g.com.br, porta 3100) na versão `9b1109e` desde 09/11**, publicada com autorização do proprietário (conferido: `/saude` 200, rotas reais protegidas levando ao `/entrar`, aplicativo web sem a chave secreta). O worker da Connect **não** está agendado. Publicar de novo só com autorização do proprietário.
+- **Homologação (ora5g.com.br, porta 3100) na versão `0fa1546` desde 09/11** (antes `9b1109e`), as duas publicadas com autorização do proprietário (conferido: `/saude` 200, rotas reais protegidas levando ao `/entrar`, aplicativo web sem a chave secreta). Inclui a devolução parcial e a troca com vale. O worker da Connect **não** está agendado. Publicar de novo só com autorização do proprietário.
 
 Histórico anterior (07 e 08/11):
 
