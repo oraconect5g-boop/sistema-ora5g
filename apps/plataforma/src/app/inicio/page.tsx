@@ -1,4 +1,4 @@
-import { Images, KeyRound, LogOut, RadioTower, ShoppingCart, Store, Users, Wallet } from "lucide-react";
+import { FileText, Images, KeyRound, LogOut, RadioTower, ShoppingCart, Store, Users, Wallet } from "lucide-react";
 import type { Metadata } from "next";
 
 import { Marca } from "../../componentes/Marca";
@@ -13,11 +13,12 @@ export const dynamic = "force-dynamic";
 // Início do sistema real: loja do turno e atalhos conforme a permissão (o banco confere de novo).
 export default async function Inicio() {
   const { supabase, usuario, situacao } = await obterSessao({ exigirLoja: true });
-  const [perfil, gereEquipe] = await Promise.all([
+  const [perfil, gereEquipe, aprovaNota] = await Promise.all([
     supabase.from("perfis_usuario").select("nome").eq("id", usuario.id).maybeSingle(),
     supabase.rpc("tem_permissao", { p_permissao: "usuarios.gerir" }),
+    supabase.rpc("tem_permissao", { p_permissao: "nota.aprovar", p_unidade: situacao.unidade_id as string }),
   ]);
-  if (perfil.error || gereEquipe.error) throw new FalhaDoServico("inicio");
+  if (perfil.error || gereEquipe.error || aprovaNota.error) throw new FalhaDoServico("inicio");
   const fim = horaDoFimDoTurno(situacao.turno_termina_em);
   return (
     <main className="mx-auto max-w-lg px-4 py-8">
@@ -29,6 +30,7 @@ export default async function Inicio() {
           <BotaoLink href="/vender"><ShoppingCart aria-hidden className="size-4" /> Vender</BotaoLink>
           <BotaoLink href="/caixa" variante="secundario"><Wallet aria-hidden className="size-4" /> Caixa</BotaoLink>
           <BotaoLink href="/connect" variante="secundario"><RadioTower aria-hidden className="size-4" /> Ora Connect</BotaoLink>
+          {aprovaNota.data && <BotaoLink href="/notas" variante="secundario"><FileText aria-hidden className="size-4" /> Notas fiscais</BotaoLink>}
           <BotaoLink href="/catalogo" variante="secundario"><Images aria-hidden className="size-4" /> Catálogo e fotos</BotaoLink>
           {gereEquipe.data && <BotaoLink href="/equipe" variante="secundario"><Users aria-hidden className="size-4" /> Equipe e acessos</BotaoLink>}
           <BotaoLink href="/conta/senha" variante="secundario"><KeyRound aria-hidden className="size-4" /> Trocar minha senha</BotaoLink>
