@@ -179,13 +179,20 @@ A leitura de 06/11 (`docs/etapa-0/ETAPA_0_DECISOES_2026-11-06.md` §3) tinha vis
 7. **Exemplo de portabilidade** com sucesso vem com `retorno: false`: é erro do exemplo?
 8. **Troca de chip:** aparece como motivo de cancelamento, mas não há rota para pedir. Como fazer pela API?
 9. **Pix, boleto e cartão:** as respostas têm esses campos, mas o pagamento documentado é `LINK` ou `SALDO`. Quais formas a Ora pode usar?
+10. **Recarga sem id no histórico:** `GET /linhas/historico` não devolve o id da recarga. A Ora casa pela `data_cadastro` devolvida no envio (mesmo texto, com milissegundos). Esse casamento é seguro? Existe consulta da recarga pelo id (o `POST /pagamento` com `tipo: R` não diz se foi paga)?
+11. **eSIM:** a documentação manda não enviar `iccid` e enviar `"esim": "SIM"`. A Ora envia dentro do item de `chips` (onde a resposta também traz `esim`). Está certo? O ICCID do eSIM sempre vem na resposta?
+12. **Erro sem envelope:** o exemplo "Chip já está ativo." vem só com `{mensagem}` e sem o código HTTP. Qual código a API devolve nesse caso?
+
+**Evidência para a pergunta 6:** o exemplo de erro da recarga cita o campo `numeros.0.numero`, o que indica que a validação cobra a lista `numeros`. A Ora usa a lista (ADR-005) até a Contel confirmar.
 
 ## 4. O que já está pronto e o que falta
 
-| Pronto (testado) | Falta |
+| Pronto (testado, sem chamada real) | Falta |
 |---|---|
-| Catálogo das 62 funções gerado da cópia oficial e conferido no CI | Cliente HTTP no servidor (só depois da P9 e das credenciais no gerenciador de segredos) |
-| Normalização das respostas e regras de ICCID, portabilidade, bloqueio e cancelamento (14 testes) | Tabelas de operação telecom no banco (ADR próprio), com estado, auditoria e reconsulta |
-| Tela Ora Connect da demonstração com todas as funções, simuladas no formato documentado (18 testes E2E) | Homologação com linha de teste da Contel |
+| Catálogo das 62 funções gerado da cópia oficial e conferido no CI | Credenciais no ambiente do worker e resposta da P9 |
+| Regras em `packages/dominio/src/nogle.ts`: normalização, pedido só com campos documentados, leitura da resposta e da evidência, listas oficiais (testadas com os exemplos oficiais) | Respostas da Contel às perguntas 2, 6, 7, 10, 11 e 12 |
+| ADR-005: operações persistentes no banco (ativação, recarga, portabilidade), eventos, produção única, resultado desconhecido com a gerência | Homologação com linha/chip de teste autorizados pela Contel |
+| Worker no servidor (`apps/worker/src/connect/`): token, envio, consulta e listas; ponta a ponta contra servidor local com os exemplos oficiais | Compra com entrega, bloqueio, consumo, carteira/extrato e transferência de chips (fora do ADR-005) |
+| Tela Ora Connect da demonstração (18 testes E2E) e tela real `/connect` | Agendar o worker no servidor (só com a autorização do proprietário) |
 
-**Nunca** colocar chaves no código, no chat ou no navegador: `NOGLE_API_BASE_URL`, `NOGLE_AUTH_KEY_TYPE` e `NOGLE_ACCESS_KEY` já estão no catálogo de variáveis (`docs/integracoes/VARIAVEIS_DE_AMBIENTE.md`) e só serão lidas pelo servidor.
+**Nunca** colocar chaves no código, no chat ou no navegador: `NOGLE_API_BASE_URL`, `NOGLE_AUTH_KEY_TYPE`, `NOGLE_ACCESS_KEY` e `NOGLE_SECONDARY_KEY` estão no catálogo de variáveis (`docs/integracoes/VARIAVEIS_DE_AMBIENTE.md`) e só o worker as lê. As chaves de controle do ADR-005 (`NOGLE_OPERACOES_HABILITADAS`, `NOGLE_GET_COM_CORPO`, `ORA_ORGANIZACAO_ID`, `CONNECT_UFS`) não são segredo.

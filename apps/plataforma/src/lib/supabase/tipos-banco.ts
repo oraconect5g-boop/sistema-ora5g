@@ -1,5 +1,5 @@
 // ARQUIVO GERADO pelo Supabase (generate_typescript_types do projeto ora5g-dev) depois da
-// migration 20261108233546_vendas_pagamentos_e_caixa. Não edite à mão: gere de novo a cada
+// migration 20261109123402_ora_connect_operacoes. Não edite à mão: gere de novo a cada
 // migration aplicada (auditoria do Codex de 08/11, §7.2). O teste tipos-banco.test.ts confere
 // que funções e tabelas públicas daqui são as mesmas das migrations.
 export type Json =
@@ -333,6 +333,388 @@ export type Database = {
         Relationships: [
           {
             foreignKeyName: "categorias_organizacao_id_fkey"
+            columns: ["organizacao_id"]
+            isOneToOne: false
+            referencedRelation: "organizacoes"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      connect_eventos: {
+        Row: {
+          dados: Json | null
+          id: number
+          mensagem: string | null
+          ocorrido_em: string
+          operacao_id: string
+          organizacao_id: string
+          situacao_anterior: string | null
+          situacao_nova: string | null
+          status_http: number | null
+          tipo: string
+          usuario_id: string | null
+        }
+        Insert: {
+          dados?: Json | null
+          id?: never
+          mensagem?: string | null
+          ocorrido_em?: string
+          operacao_id: string
+          organizacao_id: string
+          situacao_anterior?: string | null
+          situacao_nova?: string | null
+          status_http?: number | null
+          tipo: string
+          usuario_id?: string | null
+        }
+        Update: {
+          dados?: Json | null
+          id?: never
+          mensagem?: string | null
+          ocorrido_em?: string
+          operacao_id?: string
+          organizacao_id?: string
+          situacao_anterior?: string | null
+          situacao_nova?: string | null
+          status_http?: number | null
+          tipo?: string
+          usuario_id?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "connect_eventos_operacao_id_fkey"
+            columns: ["operacao_id"]
+            isOneToOne: false
+            referencedRelation: "connect_operacoes"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "connect_eventos_usuario_id_fkey"
+            columns: ["usuario_id"]
+            isOneToOne: false
+            referencedRelation: "perfis_usuario"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      connect_habilitacoes: {
+        Row: {
+          alterado_em: string
+          alterado_por: string | null
+          evidencia: string
+          habilitada: boolean
+          id: string
+          organizacao_id: string
+          tipo: string
+        }
+        Insert: {
+          alterado_em?: string
+          alterado_por?: string | null
+          evidencia: string
+          habilitada: boolean
+          id?: string
+          organizacao_id: string
+          tipo: string
+        }
+        Update: {
+          alterado_em?: string
+          alterado_por?: string | null
+          evidencia?: string
+          habilitada?: boolean
+          id?: string
+          organizacao_id?: string
+          tipo?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "connect_habilitacoes_alterado_por_fkey"
+            columns: ["alterado_por"]
+            isOneToOne: false
+            referencedRelation: "perfis_usuario"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "connect_habilitacoes_organizacao_id_fkey"
+            columns: ["organizacao_id"]
+            isOneToOne: false
+            referencedRelation: "organizacoes"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      connect_operacoes: {
+        Row: {
+          atualizado_em: string
+          chave: string
+          cliente_nome: string | null
+          concluida_em: string | null
+          conteudo: string
+          criado_em: string
+          data_cadastro_externa: string | null
+          ddd: number | null
+          documento_mascarado: string | null
+          enviado_em: string | null
+          enviando_desde: string | null
+          esim: boolean
+          evidencia: Json | null
+          iccid: string | null
+          id: string
+          id_externo: string | null
+          item_serializado_id: string | null
+          linha: string | null
+          linha_doadora: string | null
+          link_esim: string | null
+          link_pagamento: string | null
+          mensagem_operadora: string | null
+          metodo_pagamento: string | null
+          motivo_resolucao: string | null
+          numero: number
+          numero_ativado: string | null
+          operadora_doadora_id: number | null
+          organizacao_id: string
+          plano_id: number | null
+          plano_nome: string | null
+          proxima_consulta_em: string | null
+          recebido_na_loja_centavos: number | null
+          resolvida_por: string | null
+          situacao: string
+          tentativas_consulta: number
+          tipo: string
+          unidade_id: string
+          valor_debitado_centavos: number | null
+          valor_face_centavos: number | null
+          venda_chip_id: string | null
+          venda_item_id: string | null
+          vendedor_id: string
+        }
+        Insert: {
+          atualizado_em?: string
+          chave: string
+          cliente_nome?: string | null
+          concluida_em?: string | null
+          conteudo: string
+          criado_em?: string
+          data_cadastro_externa?: string | null
+          ddd?: number | null
+          documento_mascarado?: string | null
+          enviado_em?: string | null
+          enviando_desde?: string | null
+          esim?: boolean
+          evidencia?: Json | null
+          iccid?: string | null
+          id?: string
+          id_externo?: string | null
+          item_serializado_id?: string | null
+          linha?: string | null
+          linha_doadora?: string | null
+          link_esim?: string | null
+          link_pagamento?: string | null
+          mensagem_operadora?: string | null
+          metodo_pagamento?: string | null
+          motivo_resolucao?: string | null
+          numero?: never
+          numero_ativado?: string | null
+          operadora_doadora_id?: number | null
+          organizacao_id: string
+          plano_id?: number | null
+          plano_nome?: string | null
+          proxima_consulta_em?: string | null
+          recebido_na_loja_centavos?: number | null
+          resolvida_por?: string | null
+          situacao?: string
+          tentativas_consulta?: number
+          tipo: string
+          unidade_id: string
+          valor_debitado_centavos?: number | null
+          valor_face_centavos?: number | null
+          venda_chip_id?: string | null
+          venda_item_id?: string | null
+          vendedor_id: string
+        }
+        Update: {
+          atualizado_em?: string
+          chave?: string
+          cliente_nome?: string | null
+          concluida_em?: string | null
+          conteudo?: string
+          criado_em?: string
+          data_cadastro_externa?: string | null
+          ddd?: number | null
+          documento_mascarado?: string | null
+          enviado_em?: string | null
+          enviando_desde?: string | null
+          esim?: boolean
+          evidencia?: Json | null
+          iccid?: string | null
+          id?: string
+          id_externo?: string | null
+          item_serializado_id?: string | null
+          linha?: string | null
+          linha_doadora?: string | null
+          link_esim?: string | null
+          link_pagamento?: string | null
+          mensagem_operadora?: string | null
+          metodo_pagamento?: string | null
+          motivo_resolucao?: string | null
+          numero?: never
+          numero_ativado?: string | null
+          operadora_doadora_id?: number | null
+          organizacao_id?: string
+          plano_id?: number | null
+          plano_nome?: string | null
+          proxima_consulta_em?: string | null
+          recebido_na_loja_centavos?: number | null
+          resolvida_por?: string | null
+          situacao?: string
+          tentativas_consulta?: number
+          tipo?: string
+          unidade_id?: string
+          valor_debitado_centavos?: number | null
+          valor_face_centavos?: number | null
+          venda_chip_id?: string | null
+          venda_item_id?: string | null
+          vendedor_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "connect_operacoes_item_serializado_id_fkey"
+            columns: ["item_serializado_id"]
+            isOneToOne: false
+            referencedRelation: "itens_serializados"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "connect_operacoes_resolvida_por_fkey"
+            columns: ["resolvida_por"]
+            isOneToOne: false
+            referencedRelation: "perfis_usuario"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "connect_operacoes_unidade_id_organizacao_id_fkey"
+            columns: ["unidade_id", "organizacao_id"]
+            isOneToOne: false
+            referencedRelation: "unidades"
+            referencedColumns: ["id", "organizacao_id"]
+          },
+          {
+            foreignKeyName: "connect_operacoes_venda_chip_id_fkey"
+            columns: ["venda_chip_id"]
+            isOneToOne: false
+            referencedRelation: "vendas"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "connect_operacoes_venda_item_id_fkey"
+            columns: ["venda_item_id"]
+            isOneToOne: false
+            referencedRelation: "venda_itens"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "connect_operacoes_vendedor_id_fkey"
+            columns: ["vendedor_id"]
+            isOneToOne: false
+            referencedRelation: "perfis_usuario"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      connect_producao: {
+        Row: {
+          confirmado_em: string
+          id: number
+          operacao_id: string
+          organizacao_id: string
+          origem: string
+          tipo: string
+          unidade_id: string
+          valor_face_centavos: number | null
+          vendedor_id: string
+        }
+        Insert: {
+          confirmado_em?: string
+          id?: never
+          operacao_id: string
+          organizacao_id: string
+          origem: string
+          tipo: string
+          unidade_id: string
+          valor_face_centavos?: number | null
+          vendedor_id: string
+        }
+        Update: {
+          confirmado_em?: string
+          id?: never
+          operacao_id?: string
+          organizacao_id?: string
+          origem?: string
+          tipo?: string
+          unidade_id?: string
+          valor_face_centavos?: number | null
+          vendedor_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "connect_producao_operacao_id_fkey"
+            columns: ["operacao_id"]
+            isOneToOne: true
+            referencedRelation: "connect_operacoes"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "connect_producao_unidade_id_organizacao_id_fkey"
+            columns: ["unidade_id", "organizacao_id"]
+            isOneToOne: false
+            referencedRelation: "unidades"
+            referencedColumns: ["id", "organizacao_id"]
+          },
+          {
+            foreignKeyName: "connect_producao_vendedor_id_fkey"
+            columns: ["vendedor_id"]
+            isOneToOne: false
+            referencedRelation: "perfis_usuario"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      connect_referencias: {
+        Row: {
+          ativo: boolean
+          atualizado_em: string
+          codigo: string
+          dados: Json
+          nome: string
+          organizacao_id: string
+          tipo: string
+          uf: string | null
+          valor_centavos: number | null
+        }
+        Insert: {
+          ativo?: boolean
+          atualizado_em?: string
+          codigo: string
+          dados?: Json
+          nome: string
+          organizacao_id: string
+          tipo: string
+          uf?: string | null
+          valor_centavos?: number | null
+        }
+        Update: {
+          ativo?: boolean
+          atualizado_em?: string
+          codigo?: string
+          dados?: Json
+          nome?: string
+          organizacao_id?: string
+          tipo?: string
+          uf?: string | null
+          valor_centavos?: number | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "connect_referencias_organizacao_id_fkey"
             columns: ["organizacao_id"]
             isOneToOne: false
             referencedRelation: "organizacoes"
@@ -1743,6 +2125,66 @@ export type Database = {
         Returns: boolean
       }
       conferir_item: { Args: { p_item: string }; Returns: boolean }
+      connect_cancelar: {
+        Args: { p_motivo: string; p_operacao: string }
+        Returns: boolean
+      }
+      connect_habilitar: {
+        Args: { p_evidencia: string; p_habilitar: boolean; p_tipo: string }
+        Returns: boolean
+      }
+      connect_registrar: {
+        Args: { p_chave: string; p_pedido: Json; p_tipo: string }
+        Returns: string
+      }
+      connect_resolver: {
+        Args: { p_motivo: string; p_operacao: string; p_resultado: string }
+        Returns: string
+      }
+      connect_worker_atualizar_referencias: {
+        Args: { p_itens: Json; p_organizacao: string; p_tipo: string }
+        Returns: number
+      }
+      connect_worker_operacoes_a_consultar: {
+        Args: { p_limite: number; p_organizacao: string; p_tipos: string[] }
+        Returns: {
+          data_cadastro_externa: string
+          enviado_em: string
+          iccid: string
+          id_externo: string
+          linha: string
+          linha_doadora: string
+          metodo_pagamento: string
+          operacao_id: string
+          situacao: string
+          tentativas_consulta: number
+          tipo: string
+        }[]
+      }
+      connect_worker_registrar_consulta: {
+        Args: { p_evidencia: Json; p_operacao: string }
+        Returns: string
+      }
+      connect_worker_registrar_envio: {
+        Args: { p_operacao: string; p_resultado: Json }
+        Returns: string
+      }
+      connect_worker_reivindicar_envios: {
+        Args: { p_limite: number; p_organizacao: string; p_tipos: string[] }
+        Returns: {
+          dados: Json
+          ddd: number
+          esim: boolean
+          iccid: string
+          linha: string
+          linha_doadora: string
+          metodo_pagamento: string
+          operacao_id: string
+          operadora_doadora_id: number
+          plano_id: number
+          tipo: string
+        }[]
+      }
       convidar_pessoa: {
         Args: {
           p_email: string

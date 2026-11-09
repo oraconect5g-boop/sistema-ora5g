@@ -54,12 +54,12 @@
 | Fornecedor | Contel Telecom, API NOGLE (contratada; a chave já existe) |
 | Documentação | 🟡 [docs.nogle.tech](https://docs.nogle.tech/), lida por inteiro em 07/11 (62 funções; cópia com SHA-256 conferido no repositório). Confirmado: endereço `https://api.conteltelecom.com.br`, login `POST /auth/token` com token temporário, pagamento `LINK` ou `SALDO`. **Não documentado:** ambiente de testes, validade do token, limites, idempotência, webhooks; 25 consultas GET levam corpo; exemplo de portabilidade contraditório; formato da recarga ambíguo |
 | Permissões do tipo de conta | Franquia, marca/MVNO ou PDV (P9). A documentação não diz o que cada tipo libera: perguntado no e-mail à Contel |
-| Autenticação e variáveis | `NOGLE_API_BASE_URL` (pública, o Claude grava), `NOGLE_AUTH_KEY_TYPE`, `NOGLE_ACCESS_KEY`, `NOGLE_SECONDARY_KEY` (`chave_acesso_franquia` ou `chave_acesso_pdv`; vazia para marca/MVNO). Só no servidor; o navegador nunca vê |
+| Autenticação e variáveis | `NOGLE_API_BASE_URL` (pública, o Claude grava), `NOGLE_AUTH_KEY_TYPE`, `NOGLE_ACCESS_KEY`, `NOGLE_SECONDARY_KEY` (`chave_acesso_franquia` ou `chave_acesso_pdv`; vazia para marca/MVNO). Só no **worker** do servidor (ADR-005); nem o navegador nem o servidor web veem. Controles sem segredo, gravados pelo Claude depois da homologação: `NOGLE_OPERACOES_HABILITADAS`, `NOGLE_GET_COM_CORPO`, `ORA_ORGANIZACAO_ID`, `CONNECT_UFS` |
 | Como obter | Pela Contel (ti@conteltelecom.com.br), pedindo também o canal seguro de entrega. **Hipótese:** a chave atual é de franquia ou PDV; não usar até a Contel confirmar |
 | Teste | Sem sandbox documentado: pedir à Contel um ambiente de teste ou **uma linha e um chip de teste** autorizados. Nenhuma ativação, recarga ou portabilidade real sem essa autorização |
 | Webhooks | Nenhum documentado. O sistema usa **reconsulta** periódica do estado (ativação, portabilidade, recarga) e não reenvia operação de resultado desconhecido |
 | Idempotência e reconciliação | Cada operação vira registro persistente com estado (solicitada → enviada → confirmada/recusada/desconhecida) e chave própria; antes de repetir, consulta. Relatórios da Contel (`/relatorios/*`, `/saldo/extrato`) conciliam produção e carteira |
-| Situação | **Funciona:** catálogo das 62 funções e normalização das respostas (14 testes). **A desenvolver agora (sem credencial):** adaptador no servidor, operações persistentes e testes com fixtures. **Aguardando acesso:** chamadas reais |
+| Situação | **Feito em desenvolvimento (ADR-005, sem chamada real):** operações persistentes (ativação, recarga, portabilidade) com estados, evidência, produção única e resultado desconhecido com a gerência; worker com token, envio, consulta e listas oficiais; ponta a ponta contra servidor local com os exemplos oficiais. **Aguardando acesso:** credenciais no worker, P9, respostas às perguntas 2, 6, 7, 10, 11 e 12 e uma linha/chip de teste para homologar |
 
 ### A3. Link de pagamento e Pix online
 

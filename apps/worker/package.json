@@ -8,13 +8,17 @@
     "lint": "eslint . --max-warnings=0",
     "typecheck": "tsc --noEmit",
     "test": "vitest run",
-    "identidade": "node src/executar-identidade.ts"
+    "identidade": "node src/executar-identidade.ts",
+    "connect": "node src/executar-connect.ts"
   },
   "dependencies": {
     "@next/env": "16.4.5",
+    "@ora5g/dominio": "0.1.0",
     "@supabase/supabase-js": "2.119.0"
   },
   "devDependencies": {
+    "@electric-sql/pglite": "0.5.15",
+    "@ora5g/banco": "0.1.0",
     "@ora5g/config": "0.1.0",
     "@types/node": "22.20.5",
     "eslint": "9.39.5",
