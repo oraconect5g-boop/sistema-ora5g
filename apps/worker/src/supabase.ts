@@ -1,5 +1,6 @@
 import { createClient, type SupabaseClient } from "@supabase/supabase-js";
 
+import type { BancoConnect } from "./connect/processar.ts";
 import { mensagemSegura, type ServicoIdentidade } from "./identidade.ts";
 
 // Bloqueio no Auth: 100 anos (o desbloqueio usa "none"). O banco é a fonte da verdade do acesso.
@@ -40,5 +41,21 @@ export function servicoSupabase(cliente: SupabaseClient, enderecoApp: string): S
       const { error } = await cliente.auth.admin.updateUserById(usuario, { ban_duration: bloquear ? BANIMENTO : "none" });
       return error ? mensagemSegura(error) : null;
     },
+  };
+}
+
+// Funções connect_worker_* (só service_role) da organização dona das credenciais da Nogle.
+export function bancoConnect(cliente: SupabaseClient, organizacao: string): BancoConnect {
+  const rpc = async <T>(nome: string, argumentos: Record<string, unknown>): Promise<T> => {
+    const { data, error } = await cliente.rpc(nome, argumentos);
+    if (error) throw error;
+    return data as T;
+  };
+  return {
+    reivindicarEnvios: (tipos, limite) => rpc("connect_worker_reivindicar_envios", { p_organizacao: organizacao, p_tipos: tipos, p_limite: limite }),
+    registrarEnvio: (operacao, resultado) => rpc("connect_worker_registrar_envio", { p_operacao: operacao, p_resultado: resultado }),
+    operacoesAConsultar: (tipos, limite) => rpc("connect_worker_operacoes_a_consultar", { p_organizacao: organizacao, p_tipos: tipos, p_limite: limite }),
+    registrarConsulta: (operacao, evidencia) => rpc("connect_worker_registrar_consulta", { p_operacao: operacao, p_evidencia: evidencia }),
+    atualizarReferencias: (tipo, itens) => rpc("connect_worker_atualizar_referencias", { p_organizacao: organizacao, p_tipo: tipo, p_itens: itens }),
   };
 }

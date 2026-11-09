@@ -18,6 +18,7 @@ export const ERROS_DA_VENDA = {
   limite: "O valor passa do que há no caixa ou deixa o estoque negativo.",
   valor: "Valor em reais inválido. Use, por exemplo, 1.299,90.",
   motivo: "Informe o motivo (fica na auditoria).",
+  connect: "Há operação da Ora Connect em andamento ou feita ligada a esta venda (chip ativado ou serviço pago): a gerência resolve a operação antes de cancelar.",
   falha: "Não foi possível concluir agora. Tente de novo em instantes.",
 } as const;
 export type ErroDaVenda = keyof typeof ERROS_DA_VENDA;
@@ -25,7 +26,7 @@ export type ErroDaVenda = keyof typeof ERROS_DA_VENDA;
 const DO_BANCO: Record<string, ErroDaVenda> = {
   OR001: "sem_estoque", OR002: "indisponivel", OR003: "outra_loja", OR004: "chave", OR005: "indisponivel", OR007: "preco_mudou",
   OR008: "sem_caixa", OR009: "pagamento", OR010: "aprovacao", "42501": "sem_permissao", P0002: "nao_encontrado",
-  "22023": "dados", "23505": "ja_aberto", "23514": "limite",
+  "22023": "dados", "23505": "ja_aberto", "23514": "limite", OR013: "connect",
 };
 export function erroDaVenda(erro: { code?: string } | null | undefined): ErroDaVenda {
   const codigo = erro?.code;

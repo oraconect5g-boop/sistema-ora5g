@@ -288,9 +288,9 @@ describe("Outras regras do ADR-002", () => {
   });
 });
 
+// T4 (vendedor não aprova o próprio desconto) e T5 (dono não aprova a própria solicitação) viraram
+// testes de verdade em vendas.test.ts, cenário B, junto com o módulo de vendas (ADR-004).
 describe("Testes que dependem de módulos futuros", () => {
-  it.todo("T4 — vendedor não aprova o próprio desconto (tabela de descontos, mês 2)");
-  it.todo("T5 — dono não aprova a própria solicitação (aprovações, mês 2)");
   it.todo("T11 — vendedor só faz busca exata de cliente (CRM)");
   it.todo("T12 — técnico não vê OS de outro técnico (ordem de serviço, mês 3)");
 });

@@ -2,7 +2,7 @@ import { expect, test } from "@playwright/test";
 
 // Sistema real (ORA-006): sem login, nenhuma página real abre; saída forçada só mostra motivos
 // conhecidos. Roda com ou sem a configuração pública do Supabase no ambiente de teste.
-for (const caminho of ["/inicio", "/escolher-loja", "/equipe", "/catalogo", "/vender", "/caixa", "/aprovacoes", "/vendas/00000000-0000-4000-8000-000000000001", "/conta/senha"]) {
+for (const caminho of ["/inicio", "/escolher-loja", "/equipe", "/catalogo", "/vender", "/caixa", "/aprovacoes", "/connect", "/vendas/00000000-0000-4000-8000-000000000001", "/conta/senha"]) {
   test(`${caminho} sem login volta para /entrar`, async ({ page }) => {
     await page.goto(caminho);
     await expect(page).toHaveURL(/\/entrar(\?|$)/);

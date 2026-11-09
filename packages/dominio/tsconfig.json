@@ -1,5 +1,13 @@
 {
   "extends": "@ora5g/config/tsconfig.base.json",
-  "compilerOptions": { "types": ["node"] },
-  "include": ["src/**/*", "*.ts"]
+  "compilerOptions": {
+    "types": [
+      "node"
+    ],
+    "erasableSyntaxOnly": true
+  },
+  "include": [
+    "src/**/*",
+    "*.ts"
+  ]
 }
