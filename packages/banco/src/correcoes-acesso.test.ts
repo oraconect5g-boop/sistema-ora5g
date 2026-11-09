@@ -145,7 +145,10 @@ describe("#56 — débito da carteira Nogle é custo", () => {
       [JSON.stringify({ linha: "51988887777", plano: 99999, metodo: "SALDO", venda_item: servico })]);
     await comoServico(() => db.query("select * from public.connect_worker_reivindicar_envios($1, '{recarga}'::text[], 5)", [ids.organizacao]));
     await comoServico(() => db.query("select public.connect_worker_registrar_envio($1, '{\"resultado\":\"aceita\",\"id_externo\":\"1\",\"data_cadastro\":\"2022-06-15 11:59:34.553\"}'::jsonb)", [op]));
-    await comoServico(() => db.query("select public.connect_worker_registrar_consulta($1, '{\"evidencia\":\"confirmada\",\"valor_debitado_centavos\":3592,\"mensagem\":\"Recarga realizada\"}'::jsonb)", [op]));
+    // Evidência como o worker manda: a recarga identificada no histórico (#59 exige as datas).
+    const evidencia = { evidencia: "confirmada", valor_debitado_centavos: 3592, mensagem: "Recarga realizada",
+      dados: { data_cadastro: "2026-11-09 09:00:00", data_recarga: "2026-11-09 09:05:00", plano: "Plano fictício" } };
+    await comoServico(() => db.query("select public.connect_worker_registrar_consulta($1, $2::jsonb)", [op, JSON.stringify(evidencia)]));
 
     expect(await valor<number>(ana, "select count(*)::int as v from public.connect_operacoes_custos")).toBe(0);
     expect(await errou(ana, "select valor_debitado_centavos from public.connect_operacoes")).toBe("42703");

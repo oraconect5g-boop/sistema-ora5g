@@ -78,7 +78,7 @@ export default async function Connect({ searchParams }: { searchParams: Promise<
       <legend className="text-sm font-medium">Quem paga a Contel</legend>
       <label className="flex items-center gap-2 text-sm"><input type="radio" name="metodo" value="LINK" defaultChecked /> LINK: o cliente paga pelo link da Contel</label>
       <label className="flex items-center gap-2 text-sm"><input type="radio" name="metodo" value="SALDO" /> SALDO: carteira da Ora (o cliente já pagou no caixa)</label>
-      <label className={rotulo}>Serviço pago no caixa (obrigatório no SALDO)
+      <label className={rotulo}>Serviço pago no caixa (só no SALDO; no LINK deixe em branco)
         <select name="venda_item" className={campo} defaultValue=""><option value="">—</option>{pagosLivres(tipo).map(opcaoDePago)}</select>
       </label>
     </fieldset>

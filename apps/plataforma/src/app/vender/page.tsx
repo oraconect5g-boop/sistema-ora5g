@@ -117,7 +117,7 @@ export default async function Vender({ searchParams }: { searchParams: Promise<{
         <Cartao titulo="Abra o seu caixa" subtitulo="Sem caixa aberto, a venda não é concluída." icone={Wallet}>
           <form action={abrirCaixa} className="flex flex-wrap items-end gap-2">
             <input type="hidden" name="chave" value={randomUUID()} />
-            <label className="text-sm font-medium">Fundo de troco (R$)<input name="fundo" inputMode="decimal" defaultValue="0,00" className={campo} /></label>
+            <label className="text-sm font-medium">Fundo de troco (R$)<input name="fundo" inputMode="decimal" required defaultValue="0,00" className={campo} /></label>
             <Botao type="submit">Abrir caixa</Botao>
           </form>
         </Cartao>
@@ -191,7 +191,7 @@ export default async function Vender({ searchParams }: { searchParams: Promise<{
                       <div className="flex flex-wrap items-end gap-2">
                         <form action={aplicarDesconto} className="flex items-end gap-2">
                           <input type="hidden" name="item" value={i.id} />
-                          <label className="text-xs font-medium">Desconto (R$)<input name="desconto" inputMode="decimal" defaultValue={desconto ? (desconto / 100).toFixed(2).replace(".", ",") : ""} className={`${campo} w-28`} /></label>
+                          <label className="text-xs font-medium">Desconto (R$)<input name="desconto" inputMode="decimal" required defaultValue={(desconto / 100).toFixed(2).replace(".", ",")} className={`${campo} w-28`} /></label>
                           <Botao type="submit" tamanho="sm" variante="secundario">Aplicar</Botao>
                         </form>
                         <form action={removerItem}><input type="hidden" name="item" value={i.id} /><Botao type="submit" tamanho="sm" variante="fantasma">Tirar</Botao></form>
@@ -221,7 +221,7 @@ export default async function Vender({ searchParams }: { searchParams: Promise<{
           </Cartao>
 
           {itens.data.length > 0 && (
-            <Cartao titulo="Pagamento" subtitulo="Cartão e Pix: informe o código do comprovante. Vale-troca: o número do vale no mesmo campo. Financiamento: valor financiado e a entrada.">
+            <Cartao titulo="Pagamento" subtitulo="Cartão e Pix: informe o código do comprovante. Vale-troca: o número do vale no mesmo campo. Financiamento: valor financiado e a entrada; entrada por Pix ou cartão leva o comprovante dela no mesmo campo. Troco só sai de pagamento em dinheiro.">
               <form action={concluirVenda} className="space-y-3">
                 <input type="hidden" name="venda" value={venda.data.id} /><input type="hidden" name="chave" value={randomUUID()} />
                 {[1, 2, 3].map((n) => (

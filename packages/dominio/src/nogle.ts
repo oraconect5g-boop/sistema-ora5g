@@ -296,7 +296,8 @@ export function montarConsulta(op: OperacaoParaConsultar): PedidoNogle | null {
 }
 
 export type Evidencia = {
-  evidencia: "confirmada" | "negada" | "em_andamento" | "erro_operadora" | "sem_evidencia" | "consulta_bloqueada" | "falha_consulta";
+  // "ambigua": a resposta não diz qual recarga é desta operação (#59): a gerência confere.
+  evidencia: "confirmada" | "negada" | "em_andamento" | "erro_operadora" | "sem_evidencia" | "consulta_bloqueada" | "falha_consulta" | "ambigua";
   mensagem: string;
   numero?: string;
   valor_debitado_centavos?: number;
@@ -308,7 +309,9 @@ export type Evidencia = {
  * - ativação (POST /ativacao/validaIccid): 11 ativo (com a linha) confirma; 33 em processamento;
  *   88 virgem não prova nada; 22 e 99 são erro na operadora;
  * - recarga (GET /linhas/historico): confirma só a recarga com a MESMA data de cadastro devolvida no
- *   envio e com data de realização (o histórico não traz o id: pergunta 10 à Contel);
+ *   envio e com data de realização (o histórico não traz o id: pergunta 10 à Contel). Duas recargas
+ *   com a mesma data no histórico são ambíguas (#59); o banco também recusa usar a mesma recarga do
+ *   histórico em duas operações;
  * - portabilidade (GET /portabilidade/status): "Sucesso" confirma; "Portabilidade negada" nega.
  */
 export function interpretarConsulta(op: OperacaoParaConsultar, statusHttp: number, corpo: unknown): Evidencia {
@@ -332,8 +335,13 @@ export function interpretarConsulta(op: OperacaoParaConsultar, statusHttp: numbe
   if (op.tipo === "recarga") {
     if (!op.data_cadastro_externa) return { evidencia: "sem_evidencia", mensagem: "Sem a data de cadastro do envio: não há como achar a recarga no histórico." };
     const historico = Array.isArray(c.historico) ? c.historico : [];
-    const achada = historico.map(objeto).find((h) => textoOuNada(h?.data_cadastro) === op.data_cadastro_externa);
+    const achadas = historico.map(objeto).filter((h) => textoOuNada(h?.data_cadastro) === op.data_cadastro_externa);
+    const achada = achadas[0];
     if (!achada) return { evidencia: "sem_evidencia", mensagem: "Recarga ainda não aparece no histórico da linha." };
+    if (achadas.length > 1) {
+      return { evidencia: "ambigua", mensagem: "Mais de uma recarga com a mesma data de cadastro no histórico: a gerência confere.",
+        dados: { data_cadastro: op.data_cadastro_externa, ocorrencias: achadas.length } };
+    }
     const realizada = textoOuNada(achada.data_recarga);
     const debitado = op.metodo_pagamento === "SALDO" ? centavosDeValorNogle(achada.valor_pago) : null;
     const dados = limpar({ data_cadastro: textoOuNada(achada.data_cadastro), data_recarga: realizada, plano: textoOuNada(achada.plano), forma: textoOuNada(achada.formaPagto) });

@@ -150,6 +150,16 @@ describe("consulta como evidência (exemplos oficiais)", () => {
     expect(interpretarConsulta({ ...recarga, data_cadastro_externa: null }, 200, historico).evidencia).toBe("sem_evidencia");
   });
 
+  it("duas recargas com a mesma data de cadastro no histórico são ambíguas e não confirmam (#59)", () => {
+    const historico = exemplo("/linhas/historico") as { historico: Record<string, unknown>[] };
+    const recarga = consulta({ tipo: "recarga", iccid: null, linha: "51988887777", data_cadastro_externa: "2022-06-15 11:59:34.553", metodo_pagamento: "LINK" });
+    const repetida = historico.historico.find((h) => h.data_cadastro === "2022-06-15 11:59:34.553");
+    expect(repetida).toBeDefined();
+    const ambiguo = { ...historico, historico: [...historico.historico, { ...repetida, data_recarga: "2022-06-15 12:30:00" }] };
+    expect(interpretarConsulta(recarga, 200, ambiguo)).toMatchObject({ evidencia: "ambigua", dados: { ocorrencias: 2 } });
+    expect(interpretarConsulta(recarga, 200, historico).evidencia).toBe("confirmada");
+  });
+
   it("portabilidade pelo status: Sucesso confirma, negada nega, as demais esperam", () => {
     // O exemplo oficial do status tem um erro de digitação (faltam dois-pontos em "termo"); corrigido só isso.
     const texto = (rota("/portabilidade/status").response?.[0]?.body ?? "").replace(/"termo" "/g, '"termo": "').replace(/"termo_assinado" "/g, '"termo_assinado": "');

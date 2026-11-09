@@ -145,3 +145,26 @@ Pedidos de conferência:
 **Riscos e retorno.** `identidade_concluir_convite` mudou o retorno (de `void` para `text`). Worker e banco mudam juntos; o worker antigo ignora o retorno. A reversão do lote devolve a coluna de custo, a policy e os textos originais das funções (só em banco sem dados reais).
 
 **Fica de fora.** #11 depende do usuário de teste (linha A1 da lista única em `docs/PENDENCIAS_DO_PROPRIETARIO.md`).
+
+## 09/11/2026 — Lote 2 do prompt consolidado: dinheiro, estoque e Ora Connect (#46–#53, #34, #35, #57–#59)
+
+**Branch:** `fix/ORA-integridade-lote2` (a partir da main `b967870`, que já tem o Lote 1). Migrations `20261109190240_integridade_vendas_lote2` e `20261109190400_connect_evidencia_lote2`, aplicadas no `ora5g-dev` com md5 conferida, reversões ensaiadas e tipos gerados de novo. Os textos da devolução parcial, da troca e do vale-troca (main `0fa1546`) foram preservados. Só mudou o que estes achados exigem: estorno de cartão e Pix a confirmar e IMEI/ICCID conferido.
+
+| # | Achado | O que mudou | Prova permanente |
+|---|---|---|---|
+| 1 | #46 / REV-044 | `concluir_venda`: entrada por Pix ou cartão exige comprovante; vale não paga entrada. Tela (`lerPagamentos`) igual | `integridade-lote2.test.ts` (4 meios + vale), `regras.test.ts` |
+| 2 | #48 / REV-046 | Troco só de linha em dinheiro: banco = `conferirPagamentos` | 7 vetores comuns SQL × TypeScript |
+| 3 | #47, #49 / REV-045, 047 | Cancelamento: dinheiro líquido do troco, saldo conferido sob a trava do caixa, inclusive entrada | caixa com R$ 0,01 a menos recusa e nada muda; com o centavo, devolve exatamente o retido |
+| 4 | #50 / REV-048 | `estornos_externos` + `confirmar_estorno_externo`: pagamento `estorno_pendente` até o comprovante; também na devolução parcial; financeira (contrato e entrada) idem | Pix, cartão e financiada; UPDATE direto e DELETE recusados (42501); outro comprovante dá OR004 |
+| 5 | #51 / REV-049 | `venda_retornos` + `conferir_retorno`: nada volta sozinho; IMEI/ICCID e condição conferidos; "não voltou" com explicação; chip com ativação viva barra o cancelamento | aparelho, chip, não recebido, OR013 |
+| 6 | #52 / REV-050 | Fundo e desconto vazios ou ilegíveis voltam com erro, sem RPC; meio inválido da entrada é recusado, não trocado por dinheiro | `valores-invalidos.test.ts` (ações reais, sessão e RPC simuladas) |
+| 7 | #53 / REV-051 | `decidir_aprovacao` trava venda → aprovação | `concorrencia.test.ts`: duas conexões, nas duas ordens, sem 40P01 |
+| 8 | #34 / REV-032 | `reservar_estoque` recusa produto nulo; `registrar_item_serializado` confere condição e série na repetição | `integridade-lote2.test.ts` |
+| 9 | #35 / REV-033 | `validarItem`: chip é um por ICCID (o banco já exigia) | `venda.test.ts` |
+| 10 | #57 / REV-054 | LINK com serviço pago no caixa é recusado (banco e tela) | `connect-lote2.test.ts`, `regras.test.ts` da Connect |
+| 11 | #58 / REV-055 | Resumo do titular com segredo por organização na chave | outro titular dá OR004, também depois do descarte do pedido; normalização (espaços, maiúsculas, máscara do CPF) devolve a mesma operação; segredo ilegível para `authenticated` e `service_role` |
+| 12 | #59 / REV-056 | Evidência ambígua (domínio) ou reutilizada (`evidencia_chave` única) vai para a conferência da gerência; sem datas não confirma | duas operações da mesma linha e data; recarga já usada; histórico duplicado |
+
+**Telas reais.** No comprovante da venda: os cartões "Estornos de cartão, Pix e financeira" (confirmar com o comprovante) e "Itens a receber de volta" (conferir com IMEI/ICCID e condição, ou registrar que não voltou). A devolução pede o IMEI/ICCID dos aparelhos e chips. Fundo e desconto passaram a ser obrigatórios, com 0,00 por padrão.
+
+**Riscos e retorno.** A mudança é de comportamento: cancelamento não repõe estoque e cartão/Pix não ficam mais "estornado" na hora. Item avariado devolvido continua na loja com a condição registrada até o #60 (DEFEITOS). A reversão só vale em banco sem dados reais e apaga estornos e retornos registrados.

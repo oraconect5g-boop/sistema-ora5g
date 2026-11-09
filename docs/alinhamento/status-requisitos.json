@@ -73,8 +73,8 @@
     },
     "ORA-POS-007": {
       "status": "testado",
-      "nota": "Pagamento misto com os 8 meios: soma, troco só do dinheiro, comprovante em cartão e Pix, financiamento com entrada; estorno no cancelamento. Link bloqueado até o provedor. Aguardando revisão do Codex.",
-      "evidencia": "packages/banco/supabase/migrations/20261108233546_vendas_pagamentos_e_caixa.sql; packages/banco/src/vendas.test.ts; packages/banco/src/concorrencia.test.ts"
+      "nota": "Pagamento misto com os 8 meios: soma, troco só de linha em dinheiro (banco = domínio, #48), comprovante em cartão e Pix também na entrada de financiamento (#46). Estorno no cancelamento: dinheiro líquido do troco com saldo conferido (#47/#49); cartão, Pix e financeira ficam a confirmar com o comprovante (#50). Link bloqueado até o provedor. Aguardando revisão do Codex.",
+      "evidencia": "packages/banco/supabase/migrations/20261108233546_vendas_pagamentos_e_caixa.sql; packages/banco/src/vendas.test.ts; packages/banco/src/concorrencia.test.ts; packages/banco/src/integridade-lote2.test.ts"
     },
     "ORA-PAY-002": {
       "status": "parcial",
@@ -303,8 +303,8 @@
     },
     "ORA-POS-010": {
       "status": "parcial",
-      "nota": "Cancelamento total sem apagar (ADR-004) e devolução parcial (adendo de 09/11): a gerência devolve itens com motivo; estoque volta pelo livro com a condição informada; reembolso só nos meios pagos e até o que cada um pagou (dinheiro do caixa, estorno de maquininha/Pix) ou em vale-troca; nota emitida abre pedido de nota de devolução e nota pendente recebe o aviso; venda com devolução não é cancelada inteira. FALTA: comissão (não existe ainda) e a política comercial de troca (D-026).",
-      "evidencia": "packages/banco/supabase/migrations/20261109134507_devolucao_e_troca.sql; packages/banco/src/devolucao.test.ts; packages/dominio/src/pagamento.test.ts; apps/plataforma/src/lib/vendas/regras.test.ts; apps/plataforma/src/app/vendas/[id]/page.tsx; apps/plataforma/src/app/vender/acoes.ts; apps/plataforma/src/app/vender/page.tsx"
+      "nota": "Cancelamento total sem apagar (ADR-004) e devolução parcial (adendo de 09/11): a gerência devolve itens com motivo; estoque volta pelo livro com a condição informada; reembolso só nos meios pagos e até o que cada um pagou — cancelamento e devolução: o dinheiro sai do caixa; cartão, Pix e financeira ficam como estorno a confirmar com o comprovante (#50); no cancelamento os itens esperam o retorno conferido por IMEI/ICCID e condição (#51), e a devolução também confere o IMEI/ICCID. Item avariado ainda volta à loja com a condição registrada (DEFEITOS é o #60). Política comercial (D-026) pendente.",
+      "evidencia": "packages/banco/supabase/migrations/20261109134507_devolucao_e_troca.sql; packages/banco/src/devolucao.test.ts; packages/dominio/src/pagamento.test.ts; apps/plataforma/src/lib/vendas/regras.test.ts; apps/plataforma/src/app/vendas/[id]/page.tsx; apps/plataforma/src/app/vender/acoes.ts; apps/plataforma/src/app/vender/page.tsx; packages/banco/src/integridade-lote2.test.ts"
     },
     "ORA-POS-013": {
       "status": "parcial",

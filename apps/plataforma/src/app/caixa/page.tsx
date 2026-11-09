@@ -54,7 +54,7 @@ export default async function Caixa({ searchParams }: { searchParams: Promise<{ 
         <Cartao titulo="Abrir caixa" icone={Wallet}>
           <form action={abrirCaixa} className="flex flex-wrap items-end gap-2">
             <input type="hidden" name="chave" value={randomUUID()} /><input type="hidden" name="voltar" value="/caixa" />
-            <label className="text-sm font-medium">Fundo de troco (R$)<input name="fundo" inputMode="decimal" defaultValue="0,00" className={campo} /></label>
+            <label className="text-sm font-medium">Fundo de troco (R$)<input name="fundo" inputMode="decimal" required defaultValue="0,00" className={campo} /></label>
             <Botao type="submit">Abrir caixa</Botao>
           </form>
         </Cartao>

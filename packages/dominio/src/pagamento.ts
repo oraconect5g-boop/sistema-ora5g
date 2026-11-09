@@ -4,17 +4,19 @@ import { exigirCentavos, type Centavos } from "./dinheiro";
 // na PayJoy/Aiva lança-se o preço do aparelho e a entrada; o restante fica "a receber da
 // financeira". Juros da financeira NUNCA entram. E-mail do cliente obrigatório só na PayJoy (DEC-U30).
 
+// comprovante: o meio só se confirma com o código do comprovante (maquininha/Pix) ou o número do
+// vale — inclusive como ENTRADA de financiamento (#46). Mesma regra de privado.meio_com_comprovante.
 export const MEIOS = {
-  dinheiro: { nome: "Dinheiro", aceitaTroco: true, financeira: false },
-  pix_direto: { nome: "Pix direto", aceitaTroco: false, financeira: false },
-  pix_picpay: { nome: "Pix na maquininha PicPay", aceitaTroco: false, financeira: false },
-  cartao_picpay: { nome: "Cartão na maquininha PicPay", aceitaTroco: false, financeira: false },
-  cartao_pagseguro: { nome: "Cartão na maquininha PagSeguro", aceitaTroco: false, financeira: false },
-  link_pagamento: { nome: "Link de pagamento", aceitaTroco: false, financeira: false },
-  payjoy: { nome: "Financiamento PayJoy", aceitaTroco: false, financeira: true },
-  aiva: { nome: "Financiamento Aiva (Flexphone)", aceitaTroco: false, financeira: true },
+  dinheiro: { nome: "Dinheiro", aceitaTroco: true, financeira: false, comprovante: false },
+  pix_direto: { nome: "Pix direto", aceitaTroco: false, financeira: false, comprovante: true },
+  pix_picpay: { nome: "Pix na maquininha PicPay", aceitaTroco: false, financeira: false, comprovante: true },
+  cartao_picpay: { nome: "Cartão na maquininha PicPay", aceitaTroco: false, financeira: false, comprovante: true },
+  cartao_pagseguro: { nome: "Cartão na maquininha PagSeguro", aceitaTroco: false, financeira: false, comprovante: true },
+  link_pagamento: { nome: "Link de pagamento", aceitaTroco: false, financeira: false, comprovante: false },
+  payjoy: { nome: "Financiamento PayJoy", aceitaTroco: false, financeira: true, comprovante: false },
+  aiva: { nome: "Financiamento Aiva (Flexphone)", aceitaTroco: false, financeira: true, comprovante: false },
   // Crédito de uma devolução (troca): o número do vale vai no campo do comprovante (adendo do ADR-004).
-  vale_troca: { nome: "Vale-troca", aceitaTroco: false, financeira: false },
+  vale_troca: { nome: "Vale-troca", aceitaTroco: false, financeira: false, comprovante: true },
 } as const;
 
 export type MeioPagamento = keyof typeof MEIOS;

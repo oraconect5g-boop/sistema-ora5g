@@ -43,7 +43,11 @@ export function validarItem(item: ItemVenda): string[] {
     if (item.quantidade !== 1) erros.push("Aparelho é vendido um por IMEI");
     if (!item.imei || !imeiValido(item.imei)) erros.push("IMEI inválido");
   }
-  if (tipo.exigeIccid && (!item.iccid || !iccidValido(item.iccid))) erros.push("ICCID inválido");
+  if (tipo.exigeIccid) {
+    // Um ICCID é um chip físico (#35): a mesma regra do banco (adicionar_item aceita só 1).
+    if (item.quantidade !== 1) erros.push("Chip é vendido um por ICCID");
+    if (!item.iccid || !iccidValido(item.iccid)) erros.push("ICCID inválido");
+  }
   if ((item.desconto ?? 0) > item.precoUnitario * item.quantidade) erros.push("Desconto maior que o item");
   return erros;
 }

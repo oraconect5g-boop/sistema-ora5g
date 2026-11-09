@@ -110,16 +110,30 @@ describe("devolução parcial (ORA-POS-010)", () => {
 
     const dono = await naLoja(ids.dono, ids.lojaA);
     const caixaDono = await abrirCaixa(dono, 60_000);
-    const item = [{ item: aparelho, condicao: "seminovo" }];
+    const imei = (await db.query<{ imei: string }>("select imei from public.itens_serializados where id = $1", [itens.a1])).rows[0]?.imei ?? "";
+    // Identidade conferida no balcão (#51): sem o IMEI, ou com outro IMEI, a devolução é recusada.
+    const reembolsoCerto = [{ meio: "cartao_picpay", valor: 100_000 }, { meio: "dinheiro", valor: 49_900 }];
+    expect(await errouDevolver(dono, venda, [{ item: aparelho, condicao: "seminovo" }], reembolsoCerto)).toBe("22023");
+    expect(await errouDevolver(dono, venda, [{ item: aparelho, condicao: "seminovo", identificador: "356938035643809" }], reembolsoCerto)).toBe("22023");
+    const item = [{ item: aparelho, condicao: "seminovo", identificador: imei }];
     expect(await errouDevolver(dono, venda, item, [{ meio: "cartao_picpay", valor: 120_000 }, { meio: "dinheiro", valor: 29_900 }])).toBe("OR009");
     expect(await errouDevolver(dono, venda, item, [{ meio: "pix_direto", valor: 149_900 }])).toBe("OR009");
-    expect(await errouDevolver(dono, venda, [{ item: aparelho, condicao: "usado" }], [{ meio: "dinheiro", valor: 49_900 }, { meio: "cartao_picpay", valor: 100_000 }])).toBe("22023");
-    await devolver(dono, venda, item, [{ meio: "cartao_picpay", valor: 100_000 }, { meio: "dinheiro", valor: 49_900 }]);
+    expect(await errouDevolver(dono, venda, [{ item: aparelho, condicao: "usado", identificador: imei }], [{ meio: "dinheiro", valor: 49_900 }, { meio: "cartao_picpay", valor: 100_000 }])).toBe("22023");
+    const feita = await devolver(dono, venda, item, reembolsoCerto);
 
     expect((await db.query("select situacao, em_estoque, condicao from public.itens_serializados where id = $1", [itens.a1])).rows)
       .toEqual([{ situacao: "disponivel", em_estoque: true, condicao: "seminovo" }]);
+    // Só o dinheiro sai do caixa agora; o cartão fica como estorno a confirmar com o comprovante (#50).
     expect((await db.query("select meio, valor_centavos from public.caixa_movimentos where caixa_id = $1 and tipo = 'estorno' order by meio", [caixaDono])).rows)
-      .toEqual([{ meio: "cartao_picpay", valor_centavos: -100_000 }, { meio: "dinheiro", valor_centavos: -49_900 }]);
+      .toEqual([{ meio: "dinheiro", valor_centavos: -49_900 }]);
+    const estornos = await db.query<{ id: string; meio: string; valor_centavos: number; situacao: string }>(
+      "select id, meio, valor_centavos, situacao from public.estornos_externos where devolucao_id = $1", [feita.devolucao]);
+    expect(estornos.rows.map(({ meio, valor_centavos, situacao }) => ({ meio, valor_centavos, situacao })))
+      .toEqual([{ meio: "cartao_picpay", valor_centavos: 100_000, situacao: "pendente" }]);
+    expect(await errou(dono, "select public.confirmar_estorno_externo($1, '12', null)", [estornos.rows[0]?.id])).toBe("22023");
+    expect(await valor(dono, "select public.confirmar_estorno_externo($1, 'EST-778899', 'Estorno na maquininha') as v", [estornos.rows[0]?.id])).toBe("confirmado");
+    expect((await db.query("select situacao, comprovante, confirmado_por from public.estornos_externos where id = $1", [estornos.rows[0]?.id])).rows)
+      .toEqual([{ situacao: "confirmado", comprovante: "EST-778899", confirmado_por: ids.dono }]);
     expect(await divergencias()).toEqual([]);
   });
 });
