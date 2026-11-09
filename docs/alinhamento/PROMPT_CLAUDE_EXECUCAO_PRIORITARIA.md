@@ -1,5 +1,7 @@
 # Claude Code — execução prioritária da plataforma Ora 5G
 
+> **Orientação consolidada vigente, 09/11/2026:** leia e execute primeiro [PROMPT_CLAUDE_CONSOLIDADO_2026-11-09.md](PROMPT_CLAUDE_CONSOLIDADO_2026-11-09.md) e o [índice das revisões Codex](INDICE_RELATORIOS_CODEX_2026-11-09.md), inclusive pela PR #33 se ainda não integrados. Este texto preserva a sequência histórica; decisões recentes prevalecem: 11 lojas comerciais + DEFEITOS, Supabase/PostgreSQL e stack atual, revalidação dos achados contra a main mais recente.
+
 Você é o programador principal do projeto Ora 5G. O Codex atua como revisor e analista de sistemas. Execute o trabalho a seguir no repositório oraconect5g-boop/sistema-ora5g, preservando integralmente a stack, o escopo aprovado e as decisões mais recentes do proprietário.
 
 OBJETIVO DO PROPRIETÁRIO
