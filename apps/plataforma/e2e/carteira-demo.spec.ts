@@ -32,6 +32,7 @@ test("ativação por SALDO não permite carteira negativa (#39)", async ({ page 
   expect(ativacoes).toBeGreaterThan(0);
   expect(ativacoes).toBeLessThan(60);
   await expect(page.getByText(/Saldo da carteira:/)).not.toContainText(/[-−]/);
-  await expect(page.getByRole("alert")).toContainText("Saldo da carteira insuficiente");
+  // O anunciador de rota do Next.js também tem role="alert": filtra pelo texto do aviso.
+  await expect(page.getByRole("alert").filter({ hasText: "Saldo da carteira insuficiente" })).toBeVisible();
   await expect(conferir).toBeDisabled();
 });
