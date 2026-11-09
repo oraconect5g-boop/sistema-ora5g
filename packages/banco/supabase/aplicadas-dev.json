@@ -13,6 +13,8 @@
     { "versao": "20261108202654", "nome": "acesso_sessao_e_equipe", "md5": "358ae9818908896b186681924ddcde04", "aplicada_em": "2026-11-08" },
     { "versao": "20261108204536", "nome": "fotos_dos_produtos", "md5": "2f7900b0015e47668ddb478764aa485c", "aplicada_em": "2026-11-08" },
     { "versao": "20261108233546", "nome": "vendas_pagamentos_e_caixa", "md5": "6284f6340341eb65a0be6430d5e9a706", "aplicada_em": "2026-11-08" },
-    { "versao": "20261108233711", "nome": "indices_vendas_e_fotos", "md5": "3b67ed6d41fced7092b8ab013ea5c17f", "aplicada_em": "2026-11-08" }
+    { "versao": "20261108233711", "nome": "indices_vendas_e_fotos", "md5": "3b67ed6d41fced7092b8ab013ea5c17f", "aplicada_em": "2026-11-08" },
+    { "versao": "20261109123402", "nome": "ora_connect_operacoes", "md5": "34fa7602285abc5aafaed8a34c5733b5", "aplicada_em": "2026-11-09" },
+    { "versao": "20261109123533", "nome": "indices_ora_connect", "md5": "81f5a9a345580fedb43ed7c5951e3d79", "aplicada_em": "2026-11-09" }
   ]
 }
