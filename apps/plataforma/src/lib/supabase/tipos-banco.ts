@@ -1,5 +1,5 @@
 // ARQUIVO GERADO pelo Supabase (generate_typescript_types do projeto ora5g-dev) depois da
-// migration 20261109134507_devolucao_e_troca. Não edite à mão: gere de novo a cada
+// migration 20261109150526_correcoes_acesso_lote1. Não edite à mão: gere de novo a cada
 // migration aplicada (auditoria do Codex de 08/11, §7.2). O teste tipos-banco.test.ts confere
 // que funções e tabelas públicas daqui são as mesmas das migrations.
 export type Json =
@@ -481,7 +481,6 @@ export type Database = {
           tentativas_consulta: number
           tipo: string
           unidade_id: string
-          valor_debitado_centavos: number | null
           valor_face_centavos: number | null
           venda_chip_id: string | null
           venda_item_id: string | null
@@ -525,7 +524,6 @@ export type Database = {
           tentativas_consulta?: number
           tipo: string
           unidade_id: string
-          valor_debitado_centavos?: number | null
           valor_face_centavos?: number | null
           venda_chip_id?: string | null
           venda_item_id?: string | null
@@ -569,7 +567,6 @@ export type Database = {
           tentativas_consulta?: number
           tipo?: string
           unidade_id?: string
-          valor_debitado_centavos?: number | null
           valor_face_centavos?: number | null
           venda_chip_id?: string | null
           venda_item_id?: string | null
@@ -617,6 +614,45 @@ export type Database = {
             isOneToOne: false
             referencedRelation: "perfis_usuario"
             referencedColumns: ["id"]
+          },
+        ]
+      }
+      connect_operacoes_custos: {
+        Row: {
+          atualizado_em: string
+          operacao_id: string
+          organizacao_id: string
+          unidade_id: string
+          valor_debitado_centavos: number
+        }
+        Insert: {
+          atualizado_em?: string
+          operacao_id: string
+          organizacao_id: string
+          unidade_id: string
+          valor_debitado_centavos: number
+        }
+        Update: {
+          atualizado_em?: string
+          operacao_id?: string
+          organizacao_id?: string
+          unidade_id?: string
+          valor_debitado_centavos?: number
+        }
+        Relationships: [
+          {
+            foreignKeyName: "connect_operacoes_custos_operacao_id_fkey"
+            columns: ["operacao_id"]
+            isOneToOne: true
+            referencedRelation: "connect_operacoes"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "connect_operacoes_custos_unidade_id_organizacao_id_fkey"
+            columns: ["unidade_id", "organizacao_id"]
+            isOneToOne: false
+            referencedRelation: "unidades"
+            referencedColumns: ["id", "organizacao_id"]
           },
         ]
       }
@@ -2712,7 +2748,7 @@ export type Database = {
       }
       identidade_concluir_convite: {
         Args: { p_convite: string; p_ja_existia: boolean; p_usuario: string }
-        Returns: undefined
+        Returns: string
       }
       identidade_convites_a_processar: {
         Args: { p_limite?: number }

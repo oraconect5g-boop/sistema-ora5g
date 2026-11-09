@@ -5,20 +5,22 @@
 // Nada de e-mail, nome ou token no log: só contagens e o código do erro.
 
 export type ConviteParaProcessar = { id: string; email: string; nome: string };
+export type DesfechoDoConvite = "enviado" | "vinculado" | "recusado";
 export type ResultadoDoConvite = { usuario: string } | { jaExiste: true } | { erro: string };
 
 export interface ServicoIdentidade {
   convitesAProcessar(limite: number): Promise<ConviteParaProcessar[]>;
   convidarPorEmail(email: string, nome: string): Promise<ResultadoDoConvite>;
   usuarioPorEmail(email: string): Promise<string | null>;
-  concluir(convite: string, usuario: string, jaExistia: boolean): Promise<void>;
+  /** Desfecho do banco: "recusado" quando é autoconcessão ou quem convidou perdeu a autorização (#28, #30). */
+  concluir(convite: string, usuario: string, jaExistia: boolean): Promise<DesfechoDoConvite>;
   falhar(convite: string, erro: string): Promise<void>;
   bloqueiosAAplicar(): Promise<{ usuario: string; bloquear: boolean }[]>;
   aplicarBloqueio(usuario: string, bloquear: boolean): Promise<string | null>;
 }
 
 export async function processarConvites(servico: ServicoIdentidade, limite = 10) {
-  const resumo = { enviados: 0, vinculados: 0, falhas: 0 };
+  const resumo = { enviados: 0, vinculados: 0, recusados: 0, falhas: 0 };
   for (const convite of await servico.convitesAProcessar(limite)) {
     try {
       const resultado = await servico.convidarPorEmail(convite.email, convite.nome);
@@ -34,12 +36,12 @@ export async function processarConvites(servico: ServicoIdentidade, limite = 10)
           resumo.falhas++;
           continue;
         }
-        await servico.concluir(convite.id, usuario, true);
-        resumo.vinculados++;
+        if ((await servico.concluir(convite.id, usuario, true)) === "recusado") resumo.recusados++;
+        else resumo.vinculados++;
         continue;
       }
-      await servico.concluir(convite.id, resultado.usuario, false);
-      resumo.enviados++;
+      if ((await servico.concluir(convite.id, resultado.usuario, false)) === "recusado") resumo.recusados++;
+      else resumo.enviados++;
     } catch (erro) {
       // Falha inesperada (rede, banco): registra e segue; o convite volta à fila se não gravar.
       await servico.falhar(convite.id, mensagemSegura(erro)).catch(() => undefined);

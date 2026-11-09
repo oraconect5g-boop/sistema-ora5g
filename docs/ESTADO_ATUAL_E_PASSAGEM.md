@@ -1,9 +1,11 @@
 # Estado atual do projeto e passagem de contexto
 
-**Atualizado em:** 08/11/2026 (noite) · **Por:** Claude Code (programador, no servidor)
+**Atualizado em:** 09/11/2026 · **Por:** Claude Code (programador, no servidor)
 **Para:** o Claude Code que programa no servidor (usuário `dev`) e o Codex (revisor)
 
-> **Prioridade atual (08/11, PR #25):** núcleo real para sair da Rein — vendas, pagamentos/caixa e Ora Connect sobre acesso, catálogo, fotos e estoque íntegros, mais **cadastro de usuários e gestão da equipe** (pedido do proprietário). Fila com aceite e situação: **`docs/alinhamento/FILA_DE_EXECUCAO.md`**. APIs e habilitações: **`docs/integracoes/APIS_E_HABILITACOES_NECESSARIAS.md`**.
+> **Prioridade atual (09/11, prompt consolidado da PR #33):** corrigir os achados do Codex por lotes, começando pelos bloqueantes ainda reproduzidos. A matriz de cada achado (regra, SHA auditado, código atual, reprodução atual, estado, correção, dependência e evidência) está em **`docs/alinhamento/RECONCILIACAO_CODEX_2026-11-09.md`**. Lote 1 (acesso e configuração: #55, #27–#30, #45, #56) corrigido na branch `fix/ORA-acesso-configuracao-lote1`. Lote 2 (dinheiro, estoque e Connect: #46–#53, #34/#35, #57–#59) em execução. **Rede:** 11 lojas comerciais mais o local DEFEITOS (não é loja). **Stack mantida** (Supabase/PostgreSQL; nada de Firebase). Lista única de dependências externas: seção 0 de `docs/PENDENCIAS_DO_PROPRIETARIO.md`.
+>
+> **Prioridade anterior (08/11, PR #25):** núcleo real para sair da Rein — vendas, pagamentos/caixa e Ora Connect sobre acesso, catálogo, fotos e estoque íntegros, mais **cadastro de usuários e gestão da equipe** (pedido do proprietário). Fila com aceite e situação: **`docs/alinhamento/FILA_DE_EXECUCAO.md`**. APIs e habilitações: **`docs/integracoes/APIS_E_HABILITACOES_NECESSARIAS.md`**.
 >
 > **O que depende do proprietário (e-mails, chaves, painéis, decisões): `docs/PENDENCIAS_DO_PROPRIETARIO.md`.** Revisão do planejamento de 08/11: `docs/alinhamento/REVISAO_DO_PLANEJAMENTO_2026-11-08.md`.
 >
@@ -26,7 +28,7 @@ Papéis **fixos** (decisão do proprietário). Detalhes: ADR-001, seção 2.7.
 
 ## 2. O negócio em 10 linhas
 
-1. Rede **Ora 5G**: 14 lojas de celulares e acessórios + operação de chips **Ora Connect**. Um **CNPJ raiz** com **CNPJ de filial por loja**.
+1. Rede **Ora 5G**: **11 lojas comerciais** de celulares e acessórios (decisão de 09/11; a informação anterior de 14 está superada) mais o local **DEFEITOS**, para itens com problema + operação de chips **Ora Connect**. Um **CNPJ raiz** com **CNPJ de filial por loja**.
 2. **Piloto:** loja **Santa Cândida**. Depois: 3 → 7 → 14 lojas; loja online e marketplaces.
 3. **Vendedores fazem tudo** (vendem, recebem, lançam), usam **celular pessoal e da loja**, entram por **e-mail**, e **circulam entre lojas**. Não há caixa, estoquista nem gerente oficial hoje.
 4. **Rein** (sistema atual) continua rodando em paralelo durante o desenvolvimento e o piloto. Dela vem **só um CSV** com produtos, preços e **estoque**. Nenhuma API da Rein.

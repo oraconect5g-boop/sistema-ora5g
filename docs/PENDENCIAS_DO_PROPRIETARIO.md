@@ -1,12 +1,32 @@
 # O que depende do proprietário
 
-**Atualizado em:** 08/11/2026 (noite) · **Por:** Claude Code (programador)
+**Atualizado em:** 09/11/2026 · **Por:** Claude Code (programador)
 **Lista consolidada de APIs, acessos e habilitações (com documentação oficial e nomes das variáveis): [`docs/integracoes/APIS_E_HABILITACOES_NECESSARIAS.md`](integracoes/APIS_E_HABILITACOES_NECESSARIAS.md).** Esta página continua com os detalhes de cada passo.
 **Para:** o proprietário e o Codex. O Codex usa esta lista para dizer ao proprietário o que falta. **Valores de chaves e senhas nunca passam pelo chat (nem do Claude nem do Codex) e nunca vão para o GitHub**: eles são gravados direto no servidor pelo comando da seção 4, ou ficam no painel do próprio fornecedor. O Codex confere só pelos **nomes**.
 
 Tudo o que não está aqui o Claude Code faz sozinho (programação, migrations no banco de desenvolvimento, publicação na homologação depois da sua autorização, chaves geradas por nós).
 
 ---
+
+## 0. Lista única de dependências externas (09/11/2026)
+
+Uma linha por fornecedor ou capacidade. Mostra o que fica bloqueado e o critério para desbloquear. Variáveis aparecem só pelo **nome**; os valores são gravados pelo comando da seção 4. Desde a correção #55, a publicação entrega ao site só `APP_ENV`, `APP_TIMEZONE`, `APP_DEFAULT_CURRENCY` e `NEXT_PUBLIC_*`. Chave secreta do Supabase e chaves Nogle ficam só no worker. O restante do projeto continua andando sem estas dependências.
+
+| # | Fornecedor / capacidade | Função bloqueada | Prioridade | Contrato / habilitação | Ambiente de teste | Variáveis (nomes) | Critério de desbloqueio |
+|---|---|---|---|---|---|---|---|
+| A1 | Supabase Auth: **usuário de teste fictício** | Prova #11: login, renovação da sessão, saída, revogação e segunda visita. Também o cadastro de pessoas pela tela | P0 | Nenhum contrato. Duas opções: você cria o usuário no painel (Authentication → Users → Add user, e-mail `@example.com`), ou grava a chave secreta e o Claude cria | `ora5g-dev` | `SUPABASE_SECRET_KEY` (só no worker; o login usa a chave pública) | Usuário de teste existe e a prova #11 passa |
+| A2 | E-mail do sistema (SMTP próprio no Supabase) | Convite e recuperação de senha por e-mail | P1 | Caixa `nao-responda@ora5g.com.br` (cPanel) e SMTP no painel do Supabase (seção 5) | `ora5g-dev` | No painel do Supabase; `EMAIL_FROM` e `SMTP_*` só quando o sistema mandar e-mail próprio | E-mail de teste chega a uma caixa controlada |
+| B1 | **Arquivo da Rein** (produtos, preços, estoque) | Importador com prévia e aprovação; carga do piloto | P0 | Nenhum (arquivo exportado) | Cópia em `~/entrada/rein/` | — | Arquivo recebido e prévia sem erro bloqueante |
+| B2 | **Dados das 11 lojas e do local DEFEITOS** (nome de origem, código, CNPJ, endereço) | Cadastro real das lojas; transferências e DEFEITOS (#60) | P0 | Decisão já tomada (11 lojas + DEFEITOS). Faltam CNPJ e endereço; nada é inventado | `~/entrada/` | — | Arquivo conciliado com o cadastro confirmado |
+| C1 | **Nogle/Contel: chaves, tipo de chave (P9) e linha/ICCID de teste** | Ativação, recarga e portabilidade reais (#54); homologação da Ora Connect | P0 | Contrato atual e respostas às 51 perguntas (`docs/integracoes/PERGUNTAS_PARA_CONTEL_NOGLE_2026-11-09.md`, na PR #33) | Conta ou linha de teste autorizada | `NOGLE_API_BASE_URL`, `NOGLE_AUTH_KEY_TYPE`, `NOGLE_ACCESS_KEY`, `NOGLE_SECONDARY_KEY`, `NOGLE_OPERACOES_HABILITADAS` (só no worker) | Uma operação de teste confirmada pela evidência oficial |
+| C2 | Nogle: cobrança/gateway, carteira e extrato, recorrência e repasse | Partes 4 a 6 da #54 | P1 | Documentação oficial e habilitação desses recursos | Idem C1 | Idem C1 | Contrato e campos documentados pela Contel |
+| D1 | **Contador e emissor fiscal** | Emissão automática; nota de devolução por API | P1 | Contrato com o emissor; modelo, tributos e certificado definidos pelo contador | Homologação do emissor | `FISCAL_PROVIDER`, `FISCAL_API_BASE_URL`, `FISCAL_API_TOKEN`, `FISCAL_ENVIRONMENT` | Nota de teste emitida na homologação do emissor |
+| E1 | Link de pagamento PicPay / PagBank | Meio "link" na venda (hoje recusado) | P2 | Habilitação do link nas contas | Sandbox do fornecedor | `PICPAY_*`, `PAGBANK_*` | Cobrança de teste com retorno conferido |
+| E2 | PayJoy / Aiva: relatório de repasse (P8) | Conciliação automática do valor a receber (hoje manual) | P2 | Relatório ou contrato com prazo e taxa (nada é inventado) | — | — | Relatório recebido e conciliado com uma venda de teste |
+| F1 | WhatsApp oficial (Meta) | Avisos de nota, OS e comprovante | P2 | Verificação da empresa no Meta Business | Número de teste da Meta | `WHATSAPP_*` | Mensagem de teste entregue no número de teste |
+| G1 | Decisões comerciais: D-026 (prazo e estado na troca), D-016, D-006, G1, G2, P14 (limites de desconto) | Aplicar a política (hoje o sistema registra e controla, mas não decide quem tem direito) | P1 | — | — | — | Resposta registrada em `docs/10_DECISOES_PENDENTES.md` |
+
+Maquininhas PicPay POS e PagSeguro continuam com conferência manual por comprovante: não há API verificada e não há desbloqueio previsto.
 
 ## 1. Fazer agora (destrava o login real e o mês 1)
 
@@ -15,7 +35,7 @@ Tudo o que não está aqui o Claude Code faz sozinho (programação, migrations 
 | 1.1 | ~~Criar 2 usuários de teste~~ **não é mais necessário** | Com a chave do item 1.2 gravada, o Claude cria usuários de teste fictícios (e-mails `@example.com`) e você cadastra as pessoas reais pela tela da equipe | — |
 | 1.2 | **Gravar a chave secreta do Supabase no servidor** | Supabase → **Project Settings → API Keys → Secret keys** → copie a chave (`sb_secret_…`). No terminal do servidor: `bash ~/homologacao/plataforma/deploy/homologacao/definir-chave.sh SUPABASE_SECRET_KEY` e cole quando pedir (seção 4) | **Item mais importante agora.** Cadastro de usuários e gestão da equipe pela tela (o sistema cria a pessoa e gera o link de acesso que o gerente manda pelo WhatsApp); usuários de teste fictícios; login real de ponta a ponta (#11) |
 | 1.3 | **Enviar o arquivo da Rein** (produtos, preços e estoque da Santa Cândida) | Exporte da Rein em CSV ou Excel e copie para a pasta `~/entrada/rein/` do servidor (já criada, só você e o sistema leem) (WinSCP ou `scp`, usuário `dev`, porta 22022). **Não envie pelo GitHub nem pelo chat.** Não precisa tirar nada: o arquivo de estoque não tem dados de clientes; se tiver, avise | Importador da Rein (ORA-009) e a primeira consulta de estoque real |
-| 1.4 | **Lista das 14 lojas** | Planilha com nome, endereço, CNPJ de cada filial, telefone e horário, na mesma pasta do servidor (`~/entrada/`) | Cadastro real das lojas (ORA-ORG-001) |
+| 1.4 | **Dados das 11 lojas e do local DEFEITOS** (a rede tem 11 lojas comerciais; DEFEITOS é o local de itens com problema, não uma 12ª loja) | Planilha com o nome de origem, endereço, CNPJ, telefone e horário de cada loja, na mesma pasta do servidor (`~/entrada/`) | Cadastro real das lojas (ORA-ORG-001) e transferências (#60) |
 | 1.5 | **Pessoal da loja piloto** | Cadastre direto na tela da equipe quando ela for publicada (nome, e-mail, lojas e função); se preferir, deixe a lista em `~/entrada/equipe/` | Usuários reais da homologação |
 | 1.6 | **Aceitar o ADR-003** (catálogo e estoque) | Ler o resumo no início de `docs/adr/ADR-003-catalogo-estoque-e-operacao-comercial.md` e responder "aceito" ou o que mudar. O Codex revisa a parte técnica antes | Libera usar catálogo e estoque com dados reais (no banco de desenvolvimento já começou) |
 

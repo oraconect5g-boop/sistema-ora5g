@@ -45,18 +45,25 @@ export default async function Connect({ searchParams }: { searchParams: Promise<
   const unidade = situacao.unidade_id as string;
   const seteDias = inicioDaJanela(7);
 
-  const [opera, gere, integra, habilitacoes, referencias, operacoes, pagos] = await Promise.all([
+  const [opera, gere, integra, veCusto, habilitacoes, referencias, operacoes, pagos] = await Promise.all([
     supabase.rpc("tem_permissao", { p_permissao: "connect.operar", p_unidade: unidade }),
     supabase.rpc("tem_permissao", { p_permissao: "connect.gerir", p_unidade: unidade }),
     supabase.rpc("tem_permissao", { p_permissao: "integracoes.gerir", p_unidade: unidade }),
+    supabase.rpc("tem_permissao", { p_permissao: "custo.ver", p_unidade: unidade }),
     supabase.from("connect_habilitacoes").select("tipo, habilitada, evidencia, alterado_em"),
     supabase.from("connect_referencias").select("tipo, codigo, nome, uf, valor_centavos").eq("ativo", true).order("nome").limit(3000),
-    supabase.from("connect_operacoes").select("id, numero, tipo, situacao, vendedor_id, metodo_pagamento, iccid, esim, linha, linha_doadora, plano_nome, valor_face_centavos, recebido_na_loja_centavos, valor_debitado_centavos, venda_item_id, cliente_nome, documento_mascarado, link_pagamento, link_esim, numero_ativado, mensagem_operadora, evidencia, motivo_resolucao, criado_em")
+    supabase.from("connect_operacoes").select("id, numero, tipo, situacao, vendedor_id, metodo_pagamento, iccid, esim, linha, linha_doadora, plano_nome, valor_face_centavos, recebido_na_loja_centavos, venda_item_id, cliente_nome, documento_mascarado, link_pagamento, link_esim, numero_ativado, mensagem_operadora, evidencia, motivo_resolucao, criado_em")
       .eq("unidade_id", unidade).order("criado_em", { ascending: false }).limit(30),
     supabase.from("venda_itens").select("id, tipo, preco_unitario_centavos, quantidade, desconto_centavos, vendas!inner(numero, situacao, unidade_id, concluida_em)")
       .in("tipo", ["ativacao", "recarga", "portabilidade"]).eq("vendas.situacao", "concluida").eq("vendas.unidade_id", unidade).gte("vendas.concluida_em", seteDias).limit(50),
   ]);
-  if (opera.error || gere.error || integra.error || habilitacoes.error || referencias.error || operacoes.error || pagos.error) throw new FalhaDoServico("connect");
+  if (opera.error || gere.error || integra.error || veCusto.error || habilitacoes.error || referencias.error || operacoes.error || pagos.error) throw new FalhaDoServico("connect");
+  // Débito da carteira é custo (#56): só para quem tem custo.ver, lido da tabela própria (o RLS também barra).
+  const custos = veCusto.data && operacoes.data.length
+    ? await supabase.from("connect_operacoes_custos").select("operacao_id, valor_debitado_centavos").in("operacao_id", operacoes.data.map((o) => o.id))
+    : { data: [], error: null };
+  if (custos.error) throw new FalhaDoServico("connect_custos");
+  const debitoDe = (id: string) => custos.data.find((c) => c.operacao_id === id)?.valor_debitado_centavos ?? null;
 
   const habilitada = new Set(habilitacoes.data.filter((h) => h.habilitada).map((h) => h.tipo));
   const lista = (tipo: string) => referencias.data.filter((r) => r.tipo === tipo);
@@ -196,7 +203,7 @@ export default async function Connect({ searchParams }: { searchParams: Promise<
                   {o.tipo === "recarga" && (
                     <p className="numeros text-xs text-suave">Valor de face {brl(centavosDoBanco(o.valor_face_centavos ?? 0))}
                       {o.recebido_na_loja_centavos !== null ? ` · recebido na loja ${brl(centavosDoBanco(o.recebido_na_loja_centavos))}` : " · pago direto à Contel"}
-                      {o.valor_debitado_centavos !== null ? ` · debitado da carteira ${brl(centavosDoBanco(o.valor_debitado_centavos))}` : ""}</p>
+                      {debitoDe(o.id) !== null ? ` · debitado da carteira ${brl(centavosDoBanco(debitoDe(o.id) ?? 0))}` : ""}</p>
                   )}
                   {o.numero_ativado && <p className="numeros text-xs">Número ativado: {o.numero_ativado}</p>}
                   {o.link_pagamento && s === "aguardando_operadora" && <p className="break-all text-xs">Link para o cliente pagar: <a className="text-acao underline" href={o.link_pagamento} rel="noreferrer noopener" target="_blank">{o.link_pagamento}</a></p>}

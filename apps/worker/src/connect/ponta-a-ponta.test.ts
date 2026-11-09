@@ -103,7 +103,8 @@ const valor = async <T>(s: Sessao, sql: string, params: unknown[] = []) =>
   comoUsuario(db, s, async () => (await db.query<{ v: T }>(sql, params)).rows[0]?.v as T);
 const vencerEspera = () => db.query("update public.connect_operacoes set proxima_consulta_em = now() - interval '1 second' where proxima_consulta_em is not null");
 const operacao = async (id: string) => (await db.query<Record<string, unknown>>(
-  "select situacao, id_externo, numero_ativado, valor_debitado_centavos, link_pagamento from public.connect_operacoes where id = $1", [id])).rows[0];
+  `select o.situacao, o.id_externo, o.numero_ativado, c.valor_debitado_centavos, o.link_pagamento
+   from public.connect_operacoes o left join public.connect_operacoes_custos c on c.operacao_id = o.id where o.id = $1`, [id])).rows[0];
 
 describe("Ora Connect de ponta a ponta com o formato oficial (sem credencial real)", () => {
   it("listas, venda do chip, ativação, recarga SALDO e portabilidade: confirma só com evidência, sem reenviar o desconhecido", async () => {
