@@ -1,5 +1,5 @@
 // ARQUIVO GERADO pelo Supabase (generate_typescript_types do projeto ora5g-dev) depois da
-// migration 20261109191416_fotos_idempotentes_lote3. Não edite à mão: gere de novo a cada
+// migration 20261109193043_transferencias_e_defeitos. Não edite à mão: gere de novo a cada
 // migration aplicada (auditoria do Codex de 08/11, §7.2). O teste tipos-banco.test.ts confere
 // que funções e tabelas públicas daqui são as mesmas das migrations.
 export type Json =
@@ -1959,6 +1959,197 @@ export type Database = {
           },
         ]
       }
+      transferencia_itens: {
+        Row: {
+          item_serializado_id: string
+          recebido: boolean | null
+          reserva_id: string
+          transferencia_id: string
+        }
+        Insert: {
+          item_serializado_id: string
+          recebido?: boolean | null
+          reserva_id: string
+          transferencia_id: string
+        }
+        Update: {
+          item_serializado_id?: string
+          recebido?: boolean | null
+          reserva_id?: string
+          transferencia_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "transferencia_itens_item_serializado_id_fkey"
+            columns: ["item_serializado_id"]
+            isOneToOne: false
+            referencedRelation: "itens_serializados"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "transferencia_itens_reserva_id_fkey"
+            columns: ["reserva_id"]
+            isOneToOne: false
+            referencedRelation: "estoque_reservas"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "transferencia_itens_transferencia_id_fkey"
+            columns: ["transferencia_id"]
+            isOneToOne: false
+            referencedRelation: "transferencias"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      transferencias: {
+        Row: {
+          atualizado_em: string
+          chave: string
+          conteudo: string
+          destino_id: string
+          encerrado_em: string | null
+          encerrado_por: string | null
+          enviado_em: string | null
+          enviado_por: string | null
+          id: string
+          motivo: string
+          numero: number
+          observacao: string | null
+          organizacao_id: string
+          origem_id: string
+          quantidade: number
+          quantidade_recebida: number | null
+          recebido_em: string | null
+          recebido_por: string | null
+          reserva_id: string | null
+          separado_em: string | null
+          separado_por: string | null
+          situacao: string
+          solicitado_em: string
+          solicitado_por: string
+          variante_id: string
+        }
+        Insert: {
+          atualizado_em?: string
+          chave: string
+          conteudo: string
+          destino_id: string
+          encerrado_em?: string | null
+          encerrado_por?: string | null
+          enviado_em?: string | null
+          enviado_por?: string | null
+          id?: string
+          motivo: string
+          numero?: never
+          observacao?: string | null
+          organizacao_id: string
+          origem_id: string
+          quantidade: number
+          quantidade_recebida?: number | null
+          recebido_em?: string | null
+          recebido_por?: string | null
+          reserva_id?: string | null
+          separado_em?: string | null
+          separado_por?: string | null
+          situacao?: string
+          solicitado_em?: string
+          solicitado_por: string
+          variante_id: string
+        }
+        Update: {
+          atualizado_em?: string
+          chave?: string
+          conteudo?: string
+          destino_id?: string
+          encerrado_em?: string | null
+          encerrado_por?: string | null
+          enviado_em?: string | null
+          enviado_por?: string | null
+          id?: string
+          motivo?: string
+          numero?: never
+          observacao?: string | null
+          organizacao_id?: string
+          origem_id?: string
+          quantidade?: number
+          quantidade_recebida?: number | null
+          recebido_em?: string | null
+          recebido_por?: string | null
+          reserva_id?: string | null
+          separado_em?: string | null
+          separado_por?: string | null
+          situacao?: string
+          solicitado_em?: string
+          solicitado_por?: string
+          variante_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "transferencias_destino_id_organizacao_id_fkey"
+            columns: ["destino_id", "organizacao_id"]
+            isOneToOne: false
+            referencedRelation: "unidades"
+            referencedColumns: ["id", "organizacao_id"]
+          },
+          {
+            foreignKeyName: "transferencias_encerrado_por_fkey"
+            columns: ["encerrado_por"]
+            isOneToOne: false
+            referencedRelation: "perfis_usuario"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "transferencias_enviado_por_fkey"
+            columns: ["enviado_por"]
+            isOneToOne: false
+            referencedRelation: "perfis_usuario"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "transferencias_origem_id_organizacao_id_fkey"
+            columns: ["origem_id", "organizacao_id"]
+            isOneToOne: false
+            referencedRelation: "unidades"
+            referencedColumns: ["id", "organizacao_id"]
+          },
+          {
+            foreignKeyName: "transferencias_recebido_por_fkey"
+            columns: ["recebido_por"]
+            isOneToOne: false
+            referencedRelation: "perfis_usuario"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "transferencias_reserva_id_fkey"
+            columns: ["reserva_id"]
+            isOneToOne: false
+            referencedRelation: "estoque_reservas"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "transferencias_separado_por_fkey"
+            columns: ["separado_por"]
+            isOneToOne: false
+            referencedRelation: "perfis_usuario"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "transferencias_solicitado_por_fkey"
+            columns: ["solicitado_por"]
+            isOneToOne: false
+            referencedRelation: "perfis_usuario"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "transferencias_variante_id_organizacao_id_fkey"
+            columns: ["variante_id", "organizacao_id"]
+            isOneToOne: false
+            referencedRelation: "variantes"
+            referencedColumns: ["id", "organizacao_id"]
+          },
+        ]
+      }
       unidades: {
         Row: {
           cidade: string | null
@@ -2931,6 +3122,19 @@ export type Database = {
         Args: { p_motivo: string; p_vinculo: string }
         Returns: boolean
       }
+      estoque_na_rede: {
+        Args: { p_variante: string }
+        Returns: {
+          chegando: number
+          disponivel: number
+          fisico: number
+          pedidos_abertos: number
+          reservado: number
+          tipo: string
+          unidade: string
+          unidade_id: string
+        }[]
+      }
       fechar_caixa: {
         Args: { p_contado: number; p_observacao: string }
         Returns: {
@@ -3078,6 +3282,38 @@ export type Database = {
       tem_permissao: {
         Args: { p_permissao: string; p_unidade?: string }
         Returns: boolean
+      }
+      transferencia_encerrar: {
+        Args: { p_motivo: string; p_situacao: string; p_transferencia: string }
+        Returns: string
+      }
+      transferencia_enviar: {
+        Args: { p_transferencia: string }
+        Returns: string
+      }
+      transferencia_receber: {
+        Args: {
+          p_identificadores: string[]
+          p_observacao: string
+          p_quantidade: number
+          p_transferencia: string
+        }
+        Returns: string
+      }
+      transferencia_separar: {
+        Args: { p_itens: string[]; p_transferencia: string }
+        Returns: string
+      }
+      transferencia_solicitar: {
+        Args: {
+          p_chave: string
+          p_destino: string
+          p_motivo: string
+          p_origem: string
+          p_quantidade: number
+          p_variante: string
+        }
+        Returns: string
       }
       unidade_atual: { Args: never; Returns: string }
       vincular_pessoa: {

@@ -118,7 +118,7 @@ export default async function Catalogo({ searchParams }: { searchParams: Promise
                     <p className="text-xs text-suave">{TIPOS[p.tipo] ?? p.tipo}{!foto && " · sem foto do produto"}</p>
                     <ul className="mt-1 space-y-0.5 text-xs">
                       {doProduto.map((v) => (
-                        <li key={v.id} className="numeros">{v.sku} · {v.nome}{["aparelho", "acessorio", "chip"].includes(p.tipo) ? ` · ${disponivel(v.id)} na loja` : ""}</li>
+                        <li key={v.id} className="numeros">{v.sku} · {v.nome}{["aparelho", "acessorio", "chip"].includes(p.tipo) ? ` · ${disponivel(v.id)} na loja` : ""}{["aparelho", "acessorio", "chip"].includes(p.tipo) && <> · <Link href={`/estoque?variante=${v.id}`} className="font-semibold text-acao">onde tem</Link></>}</li>
                       ))}
                     </ul>
                   </div>

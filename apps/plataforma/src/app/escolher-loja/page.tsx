@@ -43,7 +43,7 @@ export default async function EscolherLoja({ searchParams }: { searchParams: Pro
                 <form action={escolherLoja}>
                   <input type="hidden" name="unidade" value={u.id} />
                   <Botao type="submit" variante={u.id === situacao.unidade_id ? "primario" : "secundario"} className="w-full justify-between" tamanho="lg">
-                    <span className="text-left">{u.nome}{u.cidade ? <span className="block text-xs font-normal opacity-80"><MapPin aria-hidden className="mr-1 inline size-3" />{u.cidade}</span> : null}</span>
+                    <span className="text-left">{u.nome}{u.tipo === "excecao" ? <span className="block text-xs font-normal opacity-80">local de exceção (DEFEITOS) · não vende</span> : null}{u.cidade ? <span className="block text-xs font-normal opacity-80"><MapPin aria-hidden className="mr-1 inline size-3" />{u.cidade}</span> : null}</span>
                     {u.id === situacao.unidade_id && <span className="text-xs">atual</span>}
                   </Botao>
                 </form>
