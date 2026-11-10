@@ -1,6 +1,7 @@
 import type { Metadata } from "next";
 
 import { conferirConexaoSupabase } from "../../lib/supabase/configuracao";
+import { textoDaVersao } from "../../lib/versao";
 import { formatarHorario, obterEstadoSaude } from "../../saude/estado";
 
 export const metadata: Metadata = { title: "Saúde do sistema" };
@@ -28,6 +29,8 @@ export default async function PaginaSaude() {
           <dd>{estado.servico}</dd>
           <dt className="font-semibold">Versão</dt>
           <dd className="numeros">{estado.versao}</dd>
+          <dt className="font-semibold">Publicada</dt>
+          <dd className="numeros" data-testid="versao-publicada">{textoDaVersao()}</dd>
           <dt className="font-semibold">Verificado em</dt>
           <dd>
             <time dateTime={estado.verificadoEm}>{formatarHorario(estado.verificadoEm)}</time>

@@ -120,7 +120,7 @@ export function FilaDeAprovacoes({ pedidos, aprovador }: { pedidos: readonly Ped
         }
       >
         <label className="block text-sm font-medium" htmlFor="justificativa">{emAnalise?.acao === "negar" ? "Justificativa (obrigatória, o vendedor vê)" : "Observação (opcional)"}</label>
-        <textarea id="justificativa" value={justificativa} onChange={(e) => setJustificativa(e.target.value)} rows={3} className="mt-1 w-full rounded-botao border border-borda px-3 py-2 text-[15px] outline-none focus:border-acao focus:ring-2 focus:ring-acao/20" />
+        <textarea id="justificativa" value={justificativa} onChange={(e) => setJustificativa(e.target.value)} rows={3} className="mt-1 w-full rounded-campo border border-borda px-3 py-2 text-[15px] outline-none focus:border-acao focus:ring-2 focus:ring-acao/20" />
         <p className="mt-2 flex items-center gap-1.5 text-xs text-suave"><Hourglass aria-hidden className="size-3.5" /> Demonstração: nada é gravado.</p>
       </Dialogo>
     </>

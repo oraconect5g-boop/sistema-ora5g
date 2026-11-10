@@ -23,7 +23,7 @@
 | D-017 | Qual saldo de caixa e quem pode suprir/sangrar/fechar? | Permissões e auditoria | Documentar SOP real; financeiro/gerentes |
 | D-018 | Quais formatos de export de produtos/preços Rein? | Importador | Receber amostras sintéticas/anonimizadas, não credenciais; operações |
 | D-019 | Quais dados antigos além de produtos/preços devem migrar? | Escopo da migração; Rein explicitamente limitada a esses dados | Outros dados somente se nova decisão explícita do usuário |
-| D-020 | Identidade visual oficial, logo, cores, tipografia e telas favoritas | Design system final | Validar screenshots e dez mocks existentes; proprietário/marketing |
+| D-020 | Identidade visual oficial, logo, cores, tipografia e telas favoritas | Design system final | **Parcial em 10/11/2026:** o proprietário escolheu o estilo dos prints de referência que enviou (navegação escura, cartões arredondados, pílulas) com a cor de destaque **azul** (`#2B59E8`) e a fonte Plus Jakarta Sans, já aplicados. Seguem abertos: logo oficial, nome e identidade completa (proprietário/marketing) |
 | D-021 | Quais WhatsApps/números estão habilitados à API oficial e quais consentimentos? | Integração e LGPD | Revisar com fornecedor Meta e jurídico |
 | D-022 | Quais contas Meta Ads e política de atribuição? | Relatórios e ROAS | Tokens/escopos secretos em ambiente; marketing |
 | D-023 | Quais marketplaces abertos e quais permissões API? | Priorização digital | Verificar marketplace e ordem de entrada; comercial |

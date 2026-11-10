@@ -1,23 +1,27 @@
 @import "tailwindcss";
 
-/* Tokens visuais da Ora 5G (docs/08 e referencias_visuais/guia_design.md), aguardando a marca oficial.
-   Ajustes para acessibilidade: "acao" escurecida de #0EAE9F para #0A7D72 (texto branco com contraste AA);
-   avisos em texto usam âmbar escuro (#B45309), porque o laranja #ED9B37 não tem contraste para texto. */
-@theme {
-  --color-fundo: #f3f6f9;
-  --color-superficie: #ffffff;
-  --color-navegacao: #0a1322;
-  --color-navegacao-2: #111d33;
-  --color-navegacao-3: #1a2943;
-  --color-texto: #0f1d33;
-  --color-suave: #55657a;
-  --color-borda: #e2e8f0;
-  --color-borda-forte: #cbd5e1;
+/* Menu lateral aberto: ao passar o mouse, ao navegar pelo teclado ou fixado pelo botão (Trilho.tsx). */
+@custom-variant trilho-aberto (&:where(.trilho:hover *, .trilho:has(:focus-visible) *, .trilho[data-fixo="true"] *));
 
-  --color-acao: #0a7d72;
-  --color-acao-escura: #075f57;
-  --color-acao-clara: #e6f5f3;
-  --color-destaque: #13d9c7;
+/* Tokens visuais da Ora 5G. Cor de destaque azul escolhida pelo proprietário em 10/11/2026 (D-020
+   segue aberta para logo e identidade completa); estilo inspirado nos prints de referência: navegação
+   quase preta, fundo cinza-claro, cartões brancos bem arredondados e pílulas.
+   Contraste: "acao" #2B59E8 com texto branco dá 5,7:1 (AA); avisos em texto usam âmbar escuro (#B45309). */
+@theme {
+  --color-fundo: #eef1f6;
+  --color-superficie: #ffffff;
+  --color-navegacao: #10131a;
+  --color-navegacao-2: #181c25;
+  --color-navegacao-3: #262b36;
+  --color-texto: #12161f;
+  --color-suave: #55657a;
+  --color-borda: #e5e9f0;
+  --color-borda-forte: #cdd4df;
+
+  --color-acao: #2b59e8;
+  --color-acao-escura: #1f45c2;
+  --color-acao-clara: #e8eefe;
+  --color-destaque: #8aa8ff;
   --color-info: #2563d4;
   --color-info-clara: #eaf1fd;
   --color-sucesso: #12805c;
@@ -27,23 +31,33 @@
   --color-perigo: #c03535;
   --color-perigo-clara: #fdecec;
 
+  /* Tons pastel dos cartões por assunto ("Atenção agora"): identidade, nunca situação. */
+  --color-pastel-azul: #e6edff;
+  --color-pastel-pessego: #ffeadb;
+  --color-pastel-amarelo: #fff3d1;
+  --color-pastel-menta: #dcf4e8;
+
   /* Gráficos: paleta categórica validada (daltonismo e contraste) com scripts/validate_palette.js
-     do guia de visualização. Ordem fixa: a cor segue a entidade, nunca a posição no ranking. */
-  --color-serie-1: #0f9f90;
-  --color-serie-2: #2a78d6;
+     do guia de visualização, com o azul da marca na série 1. Ordem fixa: a cor segue a entidade,
+     nunca a posição no ranking. Amarelo e rosa têm contraste baixo: sempre com rótulo ou tabela. */
+  --color-serie-1: #2b59e8;
+  --color-serie-2: #0f9f90;
   --color-serie-3: #eb6834;
-  --color-serie-4: #6250d6;
+  --color-serie-4: #8b5cf6;
   --color-serie-5: #eda100;
   --color-serie-6: #e87ba4;
-  --color-grade: #edf1f5;
-  --color-eixo: #cfd8e3;
+  /* Série de comparação (período anterior): cinza de ênfase, com 3:1 sobre o branco. */
+  --color-serie-comparacao: #8a93a6;
+  --color-grade: #edf0f5;
+  --color-eixo: #d5dbe5;
 
-  --radius-cartao: 16px;
-  --radius-botao: 11px;
-  --font-sans: var(--fonte-inter), system-ui, sans-serif;
+  --radius-cartao: 24px;
+  --radius-botao: 999px;
+  --radius-campo: 14px;
+  --font-sans: var(--fonte-principal), system-ui, sans-serif;
 
-  --shadow-cartao: 0 1px 2px rgb(15 29 51 / 0.04), 0 2px 8px -2px rgb(15 29 51 / 0.06);
-  --shadow-flutuante: 0 12px 32px -8px rgb(15 29 51 / 0.22), 0 2px 6px rgb(15 29 51 / 0.06);
+  --shadow-cartao: 0 1px 2px rgb(16 19 26 / 0.03);
+  --shadow-flutuante: 0 16px 36px -12px rgb(16 19 26 / 0.35), 0 2px 6px rgb(16 19 26 / 0.06);
 
   --animate-surgir: surgir 0.18s ease-out;
   --animate-subir: subir 0.22s ease-out;
@@ -78,8 +92,23 @@ body {
 
 /* Diálogos nativos (<dialog>): fundo escurecido e entrada suave. */
 dialog::backdrop {
-  background: rgb(10 19 34 / 0.55);
+  background: rgb(16 19 26 / 0.55);
   backdrop-filter: blur(2px);
+}
+
+/* Menu lateral fixado aberto (botão do trilho): o conteúdo abre espaço para ele no computador. */
+@media (min-width: 64rem) {
+  html[data-menu="aberto"] .area-com-trilho {
+    padding-left: 17.5rem;
+  }
+}
+
+/* Fileira deslizante do celular (indicadores): sem barra de rolagem aparente. */
+.sem-barra {
+  scrollbar-width: none;
+}
+.sem-barra::-webkit-scrollbar {
+  display: none;
 }
 
 /* Tabelas de números alinham pelos dígitos. */

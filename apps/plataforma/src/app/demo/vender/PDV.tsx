@@ -542,7 +542,7 @@ export function PDV({ dados, itemInicial }: { dados: DadosPdv; itemInicial?: Ata
         rodape={<><Botao variante="secundario" onClick={() => setPedido({ aberto: false, motivo: "" })}>Cancelar</Botao><Botao onClick={enviarPedido} disabled={pedido.motivo.trim().length < 5}>Enviar pedido</Botao></>}
       >
         <label className="block text-sm font-medium" htmlFor="motivo-desconto">Motivo (fica na auditoria)</label>
-        <textarea id="motivo-desconto" value={pedido.motivo} onChange={(e) => setPedido({ ...pedido, motivo: e.target.value })} rows={3} placeholder="Ex.: cliente trouxe orçamento da concorrência" className="mt-1 w-full rounded-botao border border-borda px-3 py-2 text-[15px] outline-none focus:border-acao focus:ring-2 focus:ring-acao/20" />
+        <textarea id="motivo-desconto" value={pedido.motivo} onChange={(e) => setPedido({ ...pedido, motivo: e.target.value })} rows={3} placeholder="Ex.: cliente trouxe orçamento da concorrência" className="mt-1 w-full rounded-campo border border-borda px-3 py-2 text-[15px] outline-none focus:border-acao focus:ring-2 focus:ring-acao/20" />
       </Dialogo>
 
       <Dialogo

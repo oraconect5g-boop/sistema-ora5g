@@ -54,8 +54,10 @@ function texto(v: unknown): string {
   if (typeof v === "string" || typeof v === "number") return String(v);
   if (isValidElement<Record<string, unknown>>(v)) {
     const p = v.props;
-    return [p.titulo, p.subtitulo, p.sobretitulo, p.rotulo, p.valor, p.detalhe, p.children].map(texto).join(" ");
+    return [p.titulo, p.subtitulo, p.sobretitulo, p.rotulo, p.valor, p.detalhe, p.children, p.grupos].map(texto).join(" ");
   }
+  // Itens do menu lateral (Trilho, componente de cliente): chegam como dados, não como elementos.
+  if (v && typeof v === "object") return Object.values(v).map(texto).join(" ");
   return "";
 }
 const telaDeVendas = async (q: Record<string, string> = {}) => texto(await Vendas({ searchParams: Promise.resolve(q) })).replace(/\s+/g, " ");

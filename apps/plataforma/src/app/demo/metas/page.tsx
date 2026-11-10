@@ -29,6 +29,22 @@ export default async function Metas() {
     return (
       <>
         <TituloPagina titulo="Minhas metas" subtitulo="Seus números de hoje em todas as lojas onde você trabalhou. O ranking com colegas aguarda a decisão dos donos (P3)." />
+        {/* Cartão da pessoa (visual de 10/11/2026, prints de referência): três números do dia, sem ranking (P3). */}
+        <section aria-label="Seu resumo de hoje" className="mb-4 flex flex-col items-center gap-4 rounded-cartao border border-borda/80 bg-white p-5 text-center shadow-cartao sm:flex-row sm:text-left">
+          <Avatar nome={eu.nome} tamanho="size-16 text-lg" />
+          <div className="min-w-0 flex-1">
+            <p className="text-lg font-bold tracking-tight">{eu.nome}</p>
+            <p className="text-sm text-suave">Vendas · {eu.lojas.map((l) => nomeDaLoja(l)).join(" + ")}</p>
+          </div>
+          <dl className="grid w-full grid-cols-3 divide-x divide-borda sm:w-auto">
+            {([["Vendido hoje", brlCompacto(d.vendido)], ["Vendas", String(d.vendas)], ["Ticket médio", brlCompacto(d.vendas > 0 ? d.vendido / d.vendas : 0)]] as const).map(([rotulo, valor]) => (
+              <div key={rotulo} className="px-2 text-center sm:px-5">
+                <dt className="text-xs text-suave">{rotulo}</dt>
+                <dd className="numeros whitespace-nowrap text-base font-extrabold tracking-tight sm:text-lg">{valor}</dd>
+              </div>
+            ))}
+          </dl>
+        </section>
         <div className="grid gap-4 lg:grid-cols-3">
           <Cartao titulo="Meta do dia" icone={Target}>
             <div className="flex items-center gap-5">

@@ -1,4 +1,4 @@
-import { ArrowDownRight, ArrowUpRight, CircleCheck, Info, OctagonAlert, TriangleAlert, type LucideIcon } from "lucide-react";
+import { ArrowDownRight, ArrowUpRight, CircleCheck, Info, OctagonAlert, Search, TriangleAlert, type LucideIcon } from "lucide-react";
 import Link from "next/link";
 import type { ComponentProps, ReactNode } from "react";
 
@@ -7,6 +7,8 @@ import { Sparkline } from "./graficos";
 
 // Componentes visuais básicos (docs/08: KpiCard, Badge, EmptyState, NoPermissionState...).
 // Todos funcionam no servidor; os interativos ficam em arquivos com "use client".
+// Visual de 10/11/2026 (prints de referência, azul): cartões bem arredondados, ícones em círculo,
+// pílulas para filtros, variações e ações, botão redondo de busca.
 
 export function Cartao({ titulo, subtitulo, acao, icone: IconeCartao, children, className = "", id, corpo }: {
   titulo?: ReactNode;
@@ -19,19 +21,19 @@ export function Cartao({ titulo, subtitulo, acao, icone: IconeCartao, children, 
   /** Classes do corpo; por padrão, espaçamento interno do cartão. */
   corpo?: string;
 }) {
-  const espaco = corpo ?? (titulo || acao ? "px-4 pb-4 pt-3 sm:px-5 sm:pb-5" : "p-4 sm:p-5");
+  const espaco = corpo ?? (titulo || acao ? "px-4 pb-4 pt-3 sm:px-6 sm:pb-6" : "p-4 sm:p-6");
   return (
-    <section id={id} className={`min-w-0 rounded-cartao border border-borda bg-superficie shadow-cartao ${className}`}>
+    <section id={id} className={`min-w-0 rounded-cartao border border-borda/80 bg-superficie shadow-cartao ${className}`}>
       {(titulo || acao) && (
-        <header className="flex items-start justify-between gap-3 px-4 pt-4 sm:px-5 sm:pt-5">
+        <header className="flex items-start justify-between gap-3 px-4 pt-4 sm:px-6 sm:pt-6">
           <div className="flex min-w-0 items-start gap-3">
             {IconeCartao && (
-              <span className="grid size-9 shrink-0 place-items-center rounded-botao bg-acao-clara text-acao">
+              <span className="grid size-10 shrink-0 place-items-center rounded-full bg-acao-clara text-acao">
                 <IconeCartao aria-hidden className="size-[18px]" />
               </span>
             )}
             <div className="min-w-0">
-              {titulo && <h2 className="text-[15px] font-semibold leading-6 tracking-tight">{titulo}</h2>}
+              {titulo && <h2 className="text-base font-bold leading-6 tracking-tight">{titulo}</h2>}
               {subtitulo && <p className="text-sm text-suave">{subtitulo}</p>}
             </div>
           </div>
@@ -49,7 +51,7 @@ const TONS = {
   sucesso: "bg-sucesso-clara text-emerald-800 ring-emerald-200",
   aviso: "bg-aviso-clara text-amber-900 ring-amber-200",
   perigo: "bg-perigo-clara text-red-800 ring-red-200",
-  marca: "bg-acao-clara text-acao-escura ring-teal-200",
+  marca: "bg-acao-clara text-acao-escura ring-blue-200",
 } as const;
 
 const PONTOS = {
@@ -74,7 +76,7 @@ export function Selo({ tom = "neutro", children, ponto = false, className = "" }
 
 const BOTOES = {
   primario: "bg-acao text-white shadow-sm hover:bg-acao-escura",
-  secundario: "border border-borda bg-white text-texto shadow-sm hover:border-borda-forte hover:bg-slate-50",
+  secundario: "border border-borda bg-white text-texto hover:border-borda-forte hover:bg-slate-50",
   fantasma: "text-acao hover:bg-acao-clara",
   perigo: "border border-red-200 bg-white text-perigo hover:bg-perigo-clara",
   escuro: "bg-navegacao text-white hover:bg-navegacao-3",
@@ -82,9 +84,9 @@ const BOTOES = {
 } as const;
 
 const TAMANHOS = {
-  sm: "min-h-9 px-3 text-[13px]",
-  md: "min-h-11 px-4 text-sm",
-  lg: "min-h-12 px-5 text-base",
+  sm: "min-h-9 px-3.5 text-[13px]",
+  md: "min-h-11 px-5 text-sm",
+  lg: "min-h-12 px-6 text-base",
 } as const;
 
 export type VarianteBotao = keyof typeof BOTOES;
@@ -112,7 +114,7 @@ const ICONES_AVISO: Record<Tom, LucideIcon> = {
 const FUNDOS_AVISO: Record<Tom, string> = {
   neutro: "border-slate-200 bg-slate-50 text-slate-800",
   info: "border-blue-200 bg-info-clara text-blue-950",
-  marca: "border-teal-200 bg-acao-clara text-teal-950",
+  marca: "border-blue-200 bg-acao-clara text-blue-950",
   sucesso: "border-emerald-200 bg-sucesso-clara text-emerald-950",
   aviso: "border-amber-200 bg-aviso-clara text-amber-950",
   perigo: "border-red-200 bg-perigo-clara text-red-950",
@@ -121,7 +123,7 @@ const FUNDOS_AVISO: Record<Tom, string> = {
 export function Aviso({ tom = "info", titulo, children, className = "" }: { tom?: Tom; titulo?: ReactNode; children?: ReactNode; className?: string }) {
   const IconeAviso = ICONES_AVISO[tom];
   return (
-    <div role="note" className={`flex gap-3 rounded-cartao border px-4 py-3 text-sm ${FUNDOS_AVISO[tom]} ${className}`}>
+    <div role="note" className={`flex gap-3 rounded-2xl border px-4 py-3 text-sm ${FUNDOS_AVISO[tom]} ${className}`}>
       <IconeAviso aria-hidden className="mt-0.5 size-[18px] shrink-0 opacity-80" />
       <div className="min-w-0">
         {titulo && <p className="font-semibold">{titulo}</p>}
@@ -152,12 +154,14 @@ export function SeloVariacao({ variacao }: { variacao: Variacao }) {
   const neutro = Math.abs(fracao) < 0.0005;
   const bom = neutro ? null : fracao > 0 === bomQuandoSobe;
   const Seta = fracao >= 0 ? ArrowUpRight : ArrowDownRight;
-  const cor = bom === null ? "text-suave" : bom ? "text-sucesso" : "text-perigo";
+  const cor = bom === null ? "bg-slate-100 text-suave" : bom ? "bg-sucesso-clara text-sucesso" : "bg-perigo-clara text-perigo";
   return (
-    <span className={`inline-flex items-center gap-0.5 text-[13px] font-semibold ${cor}`}>
-      {!neutro && <Seta aria-hidden className="size-4" />}
-      {textoVariacao(fracao)}
-      <span className="font-normal text-suave">&nbsp;{referencia}</span>
+    <span className="inline-flex flex-wrap items-center gap-x-1.5 gap-y-0.5">
+      <span className={`inline-flex items-center gap-0.5 rounded-full px-2 py-0.5 text-xs font-bold ${cor}`}>
+        {!neutro && <Seta aria-hidden className="size-3.5" />}
+        {textoVariacao(fracao)}
+      </span>
+      <span className="text-xs text-suave">{referencia}</span>
     </span>
   );
 }
@@ -169,8 +173,11 @@ const TONS_INDICADOR = {
   ruim: "text-perigo",
 } as const;
 
-/** Bloco de indicador (KPI): rótulo, valor, variação e, se houver, a tendência recente. */
-export function Indicador({ rotulo, valor, detalhe, tom = "neutro", icone: IconeIndicador, variacao, tendencia, className = "" }: {
+/**
+ * Bloco de indicador (KPI): ícone em círculo e, se houver, a ação em pílula no topo; depois rótulo,
+ * valor, variação e a tendência recente.
+ */
+export function Indicador({ rotulo, valor, detalhe, tom = "neutro", icone: IconeIndicador, variacao, tendencia, acao, className = "" }: {
   rotulo: string;
   valor: ReactNode;
   detalhe?: ReactNode;
@@ -178,20 +185,39 @@ export function Indicador({ rotulo, valor, detalhe, tom = "neutro", icone: Icone
   icone?: LucideIcon;
   variacao?: Variacao;
   tendencia?: readonly number[];
+  /** Atalho para a tela do assunto (ex.: "Ver vendas"). */
+  acao?: { href: string; rotulo: string };
   className?: string;
 }) {
   return (
-    <div className={`flex min-w-0 flex-col rounded-cartao border border-borda bg-superficie p-4 shadow-cartao ${className}`}>
-      <div className="flex items-start justify-between gap-2">
-        <p className="text-[13px] font-medium text-suave">{rotulo}</p>
-        {IconeIndicador && (
-          <span className="grid size-8 shrink-0 place-items-center rounded-[10px] bg-acao-clara text-acao">
-            <IconeIndicador aria-hidden className="size-4" />
-          </span>
-        )}
-      </div>
-      <p className="mt-1 break-words text-[22px] font-bold leading-tight tracking-tight sm:text-[26px]">{valor}</p>
-      {variacao && <div className="mt-1"><SeloVariacao variacao={variacao} /></div>}
+    <div className={`flex min-w-0 flex-col rounded-cartao border border-borda/80 bg-superficie p-4 shadow-cartao sm:p-5 ${className}`}>
+      {acao ? (
+        <>
+          <div className="mb-3 flex items-center justify-between gap-2">
+            {IconeIndicador ? (
+              <span className="grid size-10 shrink-0 place-items-center rounded-full bg-acao-clara text-acao">
+                <IconeIndicador aria-hidden className="size-[18px]" />
+              </span>
+            ) : <span />}
+            <Link href={acao.href} className="inline-flex min-h-9 items-center whitespace-nowrap rounded-full border border-borda bg-white px-3.5 text-xs font-semibold text-texto hover:border-borda-forte hover:bg-slate-50">
+              {acao.rotulo}
+            </Link>
+          </div>
+          <p className="text-[13px] font-medium text-suave">{rotulo}</p>
+        </>
+      ) : (
+        // Sem ação: ícone ao lado do rótulo, para o cartão não crescer à toa no celular.
+        <div className="flex items-start gap-2.5">
+          {IconeIndicador && (
+            <span className="grid size-8 shrink-0 place-items-center rounded-full bg-acao-clara text-acao sm:size-9">
+              <IconeIndicador aria-hidden className="size-4" />
+            </span>
+          )}
+          <p className="min-w-0 pt-1.5 text-[13px] font-medium leading-tight text-suave sm:pt-2">{rotulo}</p>
+        </div>
+      )}
+      <p className={`${acao ? "mt-0.5" : "mt-2"} break-words text-xl font-extrabold leading-tight tracking-tight sm:text-[26px]`}>{valor}</p>
+      {variacao && <div className="mt-1.5"><SeloVariacao variacao={variacao} /></div>}
       {detalhe && <p className={`mt-1 text-[13px] font-medium ${TONS_INDICADOR[tom]}`}>{detalhe}</p>}
       {tendencia && tendencia.length > 1 && (
         <div className="mt-auto pt-3">
@@ -216,7 +242,7 @@ export function Progresso({ valor, rotulo, tom = "meta", grossura = "h-2" }: {
         : tom === "neutro" ? "bg-slate-400"
           : valor >= 100 ? "bg-sucesso" : valor >= 80 ? "bg-serie-1" : "bg-amber-500";
   return (
-    <div role="progressbar" aria-label={rotulo} aria-valuenow={Math.round(valor)} aria-valuemin={0} aria-valuemax={100} className={`w-full overflow-hidden rounded-full bg-slate-100 ${grossura}`}>
+    <div role="progressbar" aria-label={rotulo} aria-valuenow={Math.round(valor)} aria-valuemin={0} aria-valuemax={100} className={`w-full overflow-hidden rounded-full bg-grade ${grossura}`}>
       <div className={`h-full rounded-full ${cor}`} style={{ width: `${largura}%` }} />
     </div>
   );
@@ -234,7 +260,7 @@ export function Tabela({ colunas, children, legenda, minimo = "min-w-[34rem]", a
       <table className={`w-full text-left text-sm ${minimo}`}>
         <caption className="sr-only">{legenda}</caption>
         <thead>
-          <tr className="border-y border-borda bg-slate-50/70 text-xs font-semibold uppercase tracking-wide text-suave">
+          <tr className="border-y border-borda bg-fundo/60 text-xs font-semibold text-suave">
             {colunas.map((c, i) => (
               <th key={c} scope="col" className={`px-4 py-2.5 font-semibold sm:px-5 ${alinharDireita.includes(i) ? "text-right" : ""}`}>{c}</th>
             ))}
@@ -247,7 +273,7 @@ export function Tabela({ colunas, children, legenda, minimo = "min-w-[34rem]", a
 }
 
 export function Celula({ children, className = "" }: { children?: ReactNode; className?: string }) {
-  return <td className={`px-4 py-3 align-middle sm:px-5 ${className}`}>{children}</td>;
+  return <td className={`px-4 py-3.5 align-middle sm:px-5 ${className}`}>{children}</td>;
 }
 
 export function EstadoVazio({ titulo, children, icone: IconeVazio = Info, acao }: { titulo: string; children?: ReactNode; icone?: LucideIcon; acao?: ReactNode }) {
@@ -263,7 +289,7 @@ export function EstadoVazio({ titulo, children, icone: IconeVazio = Info, acao }
   );
 }
 
-const CORES_AVATAR = ["bg-teal-100 text-teal-800", "bg-blue-100 text-blue-800", "bg-orange-100 text-orange-800", "bg-violet-100 text-violet-800", "bg-amber-100 text-amber-900", "bg-pink-100 text-pink-800"];
+const CORES_AVATAR = ["bg-blue-100 text-blue-800", "bg-teal-100 text-teal-800", "bg-orange-100 text-orange-800", "bg-violet-100 text-violet-800", "bg-amber-100 text-amber-900", "bg-pink-100 text-pink-800"];
 
 export function Avatar({ nome, tamanho = "size-9 text-sm", className = "" }: { nome: string; tamanho?: string; className?: string }) {
   const indice = [...nome].reduce((s, c) => s + c.charCodeAt(0), 0) % CORES_AVATAR.length;
@@ -315,18 +341,18 @@ export function ListaDados({ itens, className = "" }: { itens: readonly (readonl
 /** Filtro em botões (links): funciona sem JavaScript e o endereço pode ser compartilhado. */
 export function FiltroSegmentado({ opcoes, rotulo }: { opcoes: readonly { href: string; rotulo: string; ativo: boolean; contagem?: number }[]; rotulo: string }) {
   return (
-    <nav aria-label={rotulo} className="-mx-1 overflow-x-auto px-1 pb-1">
-      <ul className="flex w-max gap-1 rounded-xl bg-slate-100 p-1 lg:w-fit lg:max-w-full lg:flex-wrap">
+    <nav aria-label={rotulo} className="sem-barra -mx-1 overflow-x-auto px-1 pb-1">
+      <ul className="flex w-max gap-2 lg:w-fit lg:max-w-full lg:flex-wrap">
         {opcoes.map((o) => (
           <li key={o.href}>
             <Link
               href={o.href}
               scroll={false}
               aria-current={o.ativo ? "true" : undefined}
-              className={`flex min-h-9 items-center gap-1.5 whitespace-nowrap rounded-[9px] px-3 text-[13px] font-semibold transition ${o.ativo ? "bg-white text-texto shadow-sm" : "text-suave hover:text-texto"}`}
+              className={`flex min-h-10 items-center gap-2 whitespace-nowrap rounded-full border px-4 text-[13px] font-semibold transition ${o.ativo ? "border-navegacao bg-navegacao text-white" : "border-borda bg-white text-texto hover:border-borda-forte"}`}
             >
               {o.rotulo}
-              {o.contagem !== undefined && <span className={`numeros rounded-full px-1.5 text-[11px] ${o.ativo ? "bg-acao-clara text-acao-escura" : "bg-white/70"}`}>{o.contagem}</span>}
+              {o.contagem !== undefined && <span className={`numeros rounded-full px-1.5 text-[11px] ${o.ativo ? "bg-white/15 text-white" : "bg-slate-100 text-suave"}`}>{o.contagem}</span>}
             </Link>
           </li>
         ))}
@@ -348,8 +374,10 @@ export function FormBusca({ acao, nome = "busca", valor, rotulo, dica, ocultos =
     <form action={acao} method="get" role="search" className="flex min-w-0 flex-1 gap-2 sm:max-w-md">
       {Object.entries(ocultos).map(([k, v]) => (v ? <input key={k} type="hidden" name={k} value={v} /> : null))}
       <label className="sr-only" htmlFor={`campo-${nome}`}>{rotulo}</label>
-      <input id={`campo-${nome}`} name={nome} defaultValue={valor} placeholder={dica} autoComplete="off" className="min-h-10 min-w-0 flex-1 rounded-botao border border-borda bg-white px-3 text-sm outline-none focus:border-acao focus:ring-2 focus:ring-acao/20" />
-      <button type="submit" className={classeBotao("secundario", "sm", "min-h-10")}>Buscar</button>
+      <input id={`campo-${nome}`} name={nome} defaultValue={valor} placeholder={dica} autoComplete="off" className="min-h-11 min-w-0 flex-1 rounded-full border border-borda bg-white px-4 text-sm outline-none focus:border-acao focus:ring-2 focus:ring-acao/20" />
+      <button type="submit" aria-label="Buscar" title="Buscar" className="grid size-11 shrink-0 place-items-center rounded-full bg-acao text-white transition-colors hover:bg-acao-escura">
+        <Search aria-hidden className="size-5" />
+      </button>
     </form>
   );
 }

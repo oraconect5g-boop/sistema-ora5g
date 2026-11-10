@@ -115,7 +115,7 @@ fi
 ANTERIOR="$(readlink -f "$LINK" 2>/dev/null || true)"
 ln -sfn "$NOVA" "$LINK.novo" && mv -T "$LINK.novo" "$LINK"
 if "$LINK/deploy/homologacao/garantir-no-ar.sh" --reiniciar && no_ar; then
-  touch "$NOVA" # a limpeza abaixo guarda as versões usadas por último
+  touch "$NOVA" # a lista de versões antigas abaixo ordena pelas usadas por último
   echo "Homologação no ar em 127.0.0.1:$PORTA com a versão $CURTO, configuração $CONFIG."
 else
   # 3. Volta para a anterior: código e configuração dela, que ficam na própria pasta.
@@ -128,10 +128,13 @@ else
   exit 1
 fi
 
-# Guarda só as últimas versões (a atual e as anteriores mais recentes).
+# Versões antigas NÃO são apagadas sozinhas (pedido do proprietário em 10/11/2026: nada é apagado do
+# servidor sem perguntar antes). Só lista as que passam das últimas $GUARDAR e diz como apagar uma,
+# depois da autorização. Cada pasta tem ~1,2 GB (código, dependências e build); o disco é conferido à parte.
 ATUAL="$(readlink -f "$LINK")"
-ls -1dt "$VERSOES"/*/ 2>/dev/null | sed 's#/$##' | tail -n +$((GUARDAR + 1)) | while read -r velha; do
-  [ "$velha" = "$ATUAL" ] && continue
-  git -C "$REPO" worktree remove --force "$velha" 2>/dev/null || rm -rf "$velha"
-done
-git -C "$REPO" worktree prune
+ANTIGAS="$(ls -1dt "$VERSOES"/*/ 2>/dev/null | sed 's#/$##' | tail -n +$((GUARDAR + 1)) | grep -v -x -F "$ATUAL" || true)"
+if [ -n "$ANTIGAS" ]; then
+  echo "Versões antigas guardadas (apagar só com autorização do proprietário):"
+  echo "$ANTIGAS" | sed 's#^#  #'
+  echo "Para apagar uma, depois de autorizado: git -C \"$REPO\" worktree remove --force <pasta>"
+fi
