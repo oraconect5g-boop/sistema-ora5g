@@ -74,7 +74,7 @@ export default async function Entrar({ searchParams }: { searchParams: Promise<{
               {BARRAS.map((altura, i) => <div key={i} className="flex-1 rounded-t-md bg-gradient-to-t from-acao to-destaque" style={{ height: `${altura}%`, opacity: 0.55 + i * 0.06 }} />)}
             </div>
             <div className="mt-5 grid grid-cols-3 gap-3 text-sm">
-              <div className="rounded-2xl bg-white/[0.05] p-3"><Store className="size-4 text-destaque" /><p className="mt-2 font-semibold">14 lojas</p></div>
+              <div className="rounded-2xl bg-white/[0.05] p-3"><Store className="size-4 text-destaque" /><p className="mt-2 font-semibold">11 lojas</p></div>
               <div className="rounded-2xl bg-white/[0.05] p-3"><Signal className="size-4 text-destaque" /><p className="mt-2 font-semibold">Ora Connect</p></div>
               <div className="rounded-2xl bg-white/[0.05] p-3"><ShieldCheck className="size-4 text-destaque" /><p className="mt-2 font-semibold">Auditoria</p></div>
             </div>

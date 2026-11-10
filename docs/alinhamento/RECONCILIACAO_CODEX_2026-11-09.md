@@ -1,14 +1,14 @@
 # Reconciliação dos achados do Codex com o código atual — 09/11/2026
 
 **Por:** Claude Code (programador) · **Para:** Codex (revisor) e proprietário
-**Origem:** [prompt consolidado](https://github.com/oraconect5g-boop/sistema-ora5g/blob/290f1111f964710d744c4ded40df48fed6762b1b/docs/alinhamento/PROMPT_CLAUDE_CONSOLIDADO_2026-11-09.md) e [índice dos relatórios](https://github.com/oraconect5g-boop/sistema-ora5g/blob/290f1111f964710d744c4ded40df48fed6762b1b/docs/alinhamento/INDICE_RELATORIOS_CODEX_2026-11-09.md), lidos no HEAD da PR #33 (`290f1111`) sem merge nem cópia sobre a main.
+**Origem:** [prompt consolidado](PROMPT_CLAUDE_CONSOLIDADO_2026-11-09.md) e [índice dos relatórios](INDICE_RELATORIOS_CODEX_2026-11-09.md), lidos no HEAD da PR #33 (`290f1111`) sem merge nem cópia sobre a main; os dois foram trazidos para a main no passo 0 (seção 5).
 **Main conferida:** `d730e9a05e65` (inclui devolução parcial, troca e vale-troca, posteriores ao consolidado `9b1109e`).
 
 ## 1. Como os achados foram conferidos
 
 - **Reprodução, não leitura de issue.** As 16 provas vermelhas das pastas `docs/analises/evidencias/*` da PR #33 foram copiadas para os destinos temporários indicados em cada LEIA-ME e executadas contra a main `d730e9a` com as correções do Lote 1 (abaixo), banco em memória ou PostgreSQL 17 local, dados fictícios. As cópias foram apagadas depois. O resultado bruto fica no servidor em `~/ci/repro-d730e9a-1210.txt`; o resumo está na coluna "Reprodução atual".
 - **Limite de acesso:** deste servidor não há `gh` nem API do GitHub (o conector GitHub também falhou nesta sessão). Por isso, o estado das issues foi lido nos relatórios da PR #33 e não nos comentários das issues. Esta reconciliação fica registrada no GitHub por commit, pelo mecanismo autorizado (deploy key). Nenhum token foi pedido.
-- **Inventário recalculado:** são 179 requisitos no `backlog.json` (P0 78, P1 74, P2 27). Deles, 72 são acompanhados em `status-requisitos.json`: 18 testados em desenvolvimento, 40 parciais, 11 só em demonstração, 2 bloqueados e 1 respeitado. **Nenhum está homologado nem em produção.** Status não sobe por haver tela, migration ou CI verde.
+- **Inventário recalculado:** são 179 requisitos no `backlog.json` (P0 78, P1 74, P2 27). Deles, 72 são acompanhados em `status-requisitos.json`: 18 testados em desenvolvimento, 40 parciais, 11 só em demonstração, 2 bloqueados e 1 respeitado. **Nenhum está homologado nem em produção.** (Atualização de 10/11: com o lote 5, ORA-INV-007 passou a testado: 73 acompanhados e 19 testados; o ORA-CONNECT-009 entrou como não iniciado, vindo da PR #33.) Status não sobe por haver tela, migration ou CI verde.
 - **Decisões aplicadas sem perguntar de novo:** a stack Supabase/PostgreSQL continua (nada de Firebase). A rede tem 11 lojas comerciais mais o local DEFEITOS, que não é uma 12ª loja. Rein só por arquivo. Ora Connect pela API oficial Nogle.
 
 ## 2. Matriz
@@ -99,3 +99,36 @@ Estão na seção 0 de [`docs/PENDENCIAS_DO_PROPRIETARIO.md`](../PENDENCIAS_DO_P
 | 4 | `fix/ORA-demo-lote4` | Integrado na main (`11e4e48`), aguardando o Codex |
 | 5 | `feature/ORA-transferencias-defeitos-lote5` | #60 (ADR-007): pedido interno de transferência, DEFEITOS e "onde tem", integrado na main (`1f55af9`), aguardando o Codex |
 | 6 (próximo) | — | #54 nas partes com contrato documentado, #44 e cadastro das 11 lojas quando chegar a linha B2 |
+| Passo 0 (10/11) | `docs/passo0-reconciliacao-pr33` | Skill da PR #61 e conteúdo da PR #33, seção 5 |
+| Prioridade 1 (10/11, em andamento) | — | Teste das funções do banco chamáveis por usuário logado; teste de navegador com usuários de teste (linha A1) |
+
+## 5. Passo 0 (10/11/2026): skill da PR #61 e conteúdo da PR #33
+
+Autorizado pelo proprietário em 10/11, depois do diagnóstico somente leitura da `main` `9579398` (CI completo em clone limpo: 593 testes, 2 pendentes de propósito, 143 E2E; aviso do Supabase com 48 funções `SECURITY DEFINER` chamáveis por usuário logado).
+
+**PR #61 (skill `engenheiro-senior-ora5g`):** integrada sem alteração em `34f631f`, depois da sequência do CI no head `c643b9a`. São 17 arquivos novos em `.claude/skills/engenheiro-senior-ora5g/` e `docs/skills/engenheiro-senior-ora5g/`. A auditoria dela é uma fotografia da `0292c69` (09/11); depois entraram a migration 22 (consulta pelo uuid, desligada) e a homologação na `8f7a458`.
+
+**PR #33 (Codex, head `290f1111`), trazida pela branch `docs/passo0-reconciliacao-pr33`, sem merge da PR (que estava divergente):**
+
+| O quê | Como entrou |
+|---|---|
+| Relatórios do Codex (`docs/analises/`, 8 arquivos), índice, prompt consolidado, adendo, registro oficial da Nogle, busca e transferências | Iguais aos da PR, só com o link do arquivo de perguntas renomeado |
+| Provas (`docs/analises/evidencias/2026-11-0*`) e protótipo `docs/prototipos/estoque-por-loja-2026-11-09` | Iguais. Ficam fora do CI: as provas falham de propósito na base antiga e a matriz da seção 2 diz onde cada uma virou teste permanente |
+| `REVISOES_CODEX.md` | Versão da PR (a main não tinha mudado o arquivo desde a base comum `9b1109e`) |
+| `docs/cadastros/LOJAS_CONFIRMADAS_2026-11-09.json` | Igual: nomes dos 12 locais (11 lojas + DEFEITOS) e totais da imagem, sem CNPJ nem endereço (linha B2) |
+| Perguntas à Nogle | Renomeado para `docs/integracoes/PERGUNTAS_PARA_NOGLE_2026-11-09.md` (pedido do proprietário: não existe integração "Contel"); links ajustados |
+| `packages/dominio/src/desconto-propriedades.test.ts` e `apps/plataforma/e2e/setores-e-exportacoes.spec.ts` | Entraram na suíte normal, como o Codex pretendia. Antes de entrar: o de desconto (1.000 casos determinísticos) passou, e o de navegador passou nos 42 casos (21 cenários × 2 tamanhos). Junto, a planilha da carteira na demonstração deixou de se chamar "extrato-contel" e passou a "extrato-nogle" (o teste acompanha) |
+| Notas do `status-requisitos.json` | Estados atuais mantidos. Os achados que levaram o Codex a rebaixar POS-006, POS-007, PAY-004, INV-003 e CONNECT-002/004/006/010 foram corrigidos nos lotes 1 e 2; cada nota agora cita o achado e o lote, aguardando a conferência do Codex. Guardada a conferência do Codex de 08/11 (INV-002 e INV-003). ORA-CONNECT-009 entrou como não iniciado. Notas que tinham ficado velhas foram acertadas (ORG-004, INV-002, INV-005, PAY-002, CAT-011) |
+
+**Não trazido, com motivo:**
+
+- **"14" trocado por "11" em todo lugar, inclusive nas ondas (3 → 7 → 11).** A decisão vigente é 11 lojas comerciais + DEFEITOS hoje e **meta de 14**. Assim foram corrigidos `CLAUDE.md`, `AGENTS.md`, `README.md`, `backlog.json` (ORA-ORG-001 e ORA-REPORT-001), `01_REQUISITOS.md`, go/no-go, estado e pendências (inclusive os e-mails prontos). Documentos históricos (`00_CONTEXTO_E_DECISOES.md`, `ANALISE_DO_PLANO.md`, `PARA_COLAR_NO_CLAUDE.md`, ADR-002 e prompts antigos) ganharam só uma faixa ou um adendo.
+- **Versões da PR de `ESTADO_ATUAL_E_PASSAGEM.md`, `status-requisitos.json` e `RASTREABILIDADE.md`:** a main é mais nova (lotes 1 a 5). A rastreabilidade foi gerada de novo.
+- **Omissão do IP, da impressão digital SSH e do identificador do projeto Supabase no estado:** não são segredos. O IP é público pelo DNS, a impressão digital serve para conferir o servidor na primeira conexão e o identificador já vai ao navegador no endereço público. Se o proprietário preferir omitir, a troca é feita em todos os documentos de uma vez.
+- **Faixas de prioridade da PR** em `ANALISE_DO_PLANO`, `FILA_DE_EXECUCAO`, `PROMPT_CLAUDE_EXECUCAO_PRIORITARIA` e `APIS_E_HABILITACOES`: as prioridades de 09/11 já foram cumpridas; entraram faixas novas com o estado de hoje.
+
+**Telas reais:** a página inicial e a de entrada diziam "14 lojas"; agora dizem "11 lojas". A demonstração continua com a rede fictícia de 14 lojas (só dados fictícios); muda só se o proprietário pedir. Nada foi publicado na homologação.
+
+**Para fechar a PR #33** (o Claude não acessa a API do GitHub; quem fecha é o proprietário ou o Codex), comentário sugerido:
+
+> Conteúdo integrado na main pelo merge da branch `docs/passo0-reconciliacao-pr33` (10/11/2026), sem merge desta PR, que estava divergente. O que entrou e o que não entrou, com o motivo: `docs/alinhamento/RECONCILIACAO_CODEX_2026-11-09.md`, seção 5.

@@ -1,5 +1,5 @@
 {
-  "_leia": "Status real de cada requisito do backlog.json. Só entram aqui os que saíram de 'nao_iniciado'. Atualize no mesmo commit da entrega e rode: node scripts/gerar-rastreabilidade.mjs",
+  "_leia": "Status real de cada requisito do backlog.json. Só entram aqui os que saíram de 'nao_iniciado' ou que precisam de nota (ex.: ORA-CONNECT-009, vindo da PR #33). Atualize no mesmo commit da entrega e rode: node scripts/gerar-rastreabilidade.mjs",
   "_status_validos": {
     "homologado": "aceito pelo proprietário em homologação (nenhum ainda)",
     "testado": "implementado e testado em desenvolvimento; aguardando revisão do Codex e homologação",
@@ -9,7 +9,7 @@
     "bloqueado": "depende de decisão do proprietário ou de terceiro",
     "nao_iniciado": "ainda não começou"
   },
-  "atualizado_em": "2026-11-09",
+  "atualizado_em": "2026-11-10",
   "requisitos": {
     "ORA-ORG-001": {
       "status": "parcial",
@@ -18,7 +18,7 @@
     },
     "ORA-ORG-002": {
       "status": "parcial",
-      "nota": "Vínculos com vigência e várias lojas por pessoa. Tela real /equipe ligada ao banco: convidar, dar loja ou função, encerrar acesso e bloquear, sempre com motivo e auditoria; mudança vale na sessão aberta (testado). Convite vira pessoa no Auth pelo worker (precisa SUPABASE_SECRET_KEY e SMTP). Falta: homologar com pessoas reais.",
+      "nota": "Vínculos com vigência e várias lojas por pessoa. Tela real /equipe ligada ao banco: convidar, dar loja ou função, encerrar acesso e bloquear, sempre com motivo e auditoria; mudança vale na sessão aberta (testado). Convite vira pessoa no Auth pelo worker (precisa SUPABASE_SECRET_KEY e SMTP). Falta: homologar com pessoas reais. Revisão do Codex (PR #33, trazida em 10/11): em 55d10af apontou #27 a #30 na gestão da equipe e na conclusão de convites; corrigidos no lote 1 (b967870), aguardando a conferência do Codex.",
       "evidencia": "acesso.test.ts (T1, T2/T3, T7); packages/banco/src/acesso-equipe.test.ts; apps/plataforma/src/app/equipe; apps/worker"
     },
     "ORA-ORG-003": {
@@ -28,7 +28,7 @@
     },
     "ORA-ORG-004": {
       "status": "parcial",
-      "nota": "RLS e funções do banco testadas, inclusive negação por ID arbitrário, troca de unidade e isolamento entre organizações (REV-001/REV-002 corrigidos em 07/11, aguardando revisão do Codex). As telas reais ainda não usam essas funções além de /conta.",
+      "nota": "RLS e funções do banco testadas, inclusive negação por ID arbitrário, troca de unidade e isolamento entre organizações (REV-001/REV-002 corrigidos em 07/11, aguardando revisão do Codex). As telas reais (equipe, catálogo, estoque, venda, caixa, Connect, notas e transferências) usam essas funções e o RLS. Revisão do Codex (PR #33, trazida em 10/11): #27 a #29 (bloqueio entre organizações, autoconvite e perda de donos), #45 (aprovação própria legível após bloqueio) e #56 (custo da carteira legível pelo vendedor); corrigidos no lote 1 (b967870), aguardando a conferência do Codex.",
       "evidencia": "packages/banco/src/acesso.test.ts; packages/banco/src/revisao-codex.test.ts"
     },
     "ORA-ORG-005": {
@@ -38,7 +38,7 @@
     },
     "ORA-ORG-006": {
       "status": "parcial",
-      "nota": "Login real com escolha da loja, sessão por turno no banco (sessão viva no Auth, até 12 h e no mesmo dia: sair ou revogar corta o acesso na hora, mesmo com token válido), bloqueio e encerramento de vínculo imediatos, saída forçada com mensagem neutra, convite e recuperação por link com definição de senha. Testado no banco (acesso-equipe.test.ts) e nas regras/E2E do app. FALTA: SMTP e modelos de e-mail no painel (proprietário), prova com usuário real (#11, depende da SUPABASE_SECRET_KEY) e confirmação de senha recente para ações da equipe (ADR-002 §2.6).",
+      "nota": "Login real com escolha da loja, sessão por turno no banco (sessão viva no Auth, até 12 h e no mesmo dia: sair ou revogar corta o acesso na hora, mesmo com token válido), bloqueio e encerramento de vínculo imediatos, saída forçada com mensagem neutra, convite e recuperação por link com definição de senha. Testado no banco (acesso-equipe.test.ts) e nas regras/E2E do app. FALTA: SMTP e modelos de e-mail no painel (proprietário), prova com usuário real (#11, depende da SUPABASE_SECRET_KEY) e confirmação de senha recente para ações da equipe (ADR-002 §2.6). Revisão do Codex (PR #33, trazida em 10/11): #27 a #30 e #45 (aprovação própria legível com token anterior); corrigidos no lote 1 (b967870), aguardando a conferência do Codex.",
       "evidencia": "packages/banco/supabase/migrations/20261108202654_acesso_sessao_e_equipe.sql; packages/banco/src/acesso-equipe.test.ts; apps/plataforma/src/lib/acesso; apps/plataforma/e2e/acesso-real.spec.ts"
     },
     "ORA-CAT-003": {
@@ -58,27 +58,27 @@
     },
     "ORA-INV-002": {
       "status": "testado",
-      "nota": "IMEI, IMEI2 e ICCID num conjunto único por organização (REV-020/#19 corrigido por migration nova, aplicada no ora5g-dev em 08/11). Provado com duas conexões simultâneas num PostgreSQL 17 real: mesmo IMEI em duas entradas, IMEI de um × IMEI2 de outro e o mesmo aparelho disputado por dois vendedores. Aguardando revisão do Codex. Falta a baixa pela venda real (ADR-004).",
+      "nota": "IMEI, IMEI2 e ICCID num conjunto único por organização (REV-020/#19 corrigido por migration nova, aplicada no ora5g-dev em 08/11). Provado com duas conexões simultâneas num PostgreSQL 17 real: mesmo IMEI em duas entradas, IMEI de um × IMEI2 de outro e o mesmo aparelho disputado por dois vendedores. Correção conferida pelo Codex em 08/11 na base 55d10af (reproduções independentes e concorrência passaram; #19 a #22 encerradas; PR #33). A venda real consome a reserva e lança a saída na mesma transação (ADR-004). Não é homologação operacional.",
       "evidencia": "packages/banco/supabase/migrations/20261108195850_integridade_estoque.sql; packages/banco/src/integridade-estoque.test.ts; packages/banco/src/concorrencia.test.ts"
     },
     "ORA-POS-005": {
       "status": "testado",
-      "nota": "Preço lido do banco (preco_vigente) ao pôr no carrinho e conferido de novo na conclusão (preço mudou = OR007); totais, desconto e troco calculados no banco; o navegador só envia o pedido. Aguardando revisão do Codex.",
+      "nota": "Preço lido do banco (preco_vigente) ao pôr no carrinho e conferido de novo na conclusão (preço mudou = OR007); totais, desconto e troco calculados no banco; o navegador só envia o pedido. Aguardando revisão do Codex. Revisão do Codex (PR #33, trazida em 10/11): #52 (valor ilegível virava zero na tela); corrigido no lote 2 (c071968), aguardando a conferência do Codex.",
       "evidencia": "packages/banco/supabase/migrations/20261108233546_vendas_pagamentos_e_caixa.sql; packages/banco/src/vendas.test.ts; packages/banco/src/concorrencia.test.ts"
     },
     "ORA-POS-006": {
       "status": "testado",
-      "nota": "Pedido de aprovação com motivo, limite, validade de 30 min e conteúdo do item; aprova só quem tem desconto.aprovar e nunca quem pediu; mudar o item invalida; auditado. Sem política P14 todo desconto pede aprovação. Aguardando revisão do Codex.",
+      "nota": "Pedido de aprovação com motivo, limite, validade de 30 min e conteúdo do item; aprova só quem tem desconto.aprovar e nunca quem pediu; mudar o item invalida; auditado. Sem política P14 todo desconto pede aprovação. Revisão do Codex (PR #33, trazida em 10/11): #45 (leitura da aprovação própria após revogação) e #53 (ordem das travas venda × aprovação) corrigidos nos lotes 1 e 2, aguardando a conferência do Codex.",
       "evidencia": "packages/banco/supabase/migrations/20261108233546_vendas_pagamentos_e_caixa.sql; packages/banco/src/vendas.test.ts; packages/banco/src/concorrencia.test.ts; apps/plataforma/src/app/aprovacoes"
     },
     "ORA-POS-007": {
       "status": "testado",
-      "nota": "Pagamento misto com os 8 meios: soma, troco só de linha em dinheiro (banco = domínio, #48), comprovante em cartão e Pix também na entrada de financiamento (#46). Estorno no cancelamento: dinheiro líquido do troco com saldo conferido (#47/#49); cartão, Pix e financeira ficam a confirmar com o comprovante (#50). Link bloqueado até o provedor. Aguardando revisão do Codex.",
+      "nota": "Pagamento misto com os 8 meios: soma, troco só de linha em dinheiro (banco = domínio, #48), comprovante em cartão e Pix também na entrada de financiamento (#46). Estorno no cancelamento: dinheiro líquido do troco com saldo conferido (#47/#49); cartão, Pix e financeira ficam a confirmar com o comprovante (#50). Link bloqueado até o provedor. Aguardando revisão do Codex. Revisão do Codex (PR #33, trazida em 10/11): 371cef0 rebaixou para parcial por #46 a #50; corrigidos no lote 2 (c071968), aguardando a conferência do Codex.",
       "evidencia": "packages/banco/supabase/migrations/20261108233546_vendas_pagamentos_e_caixa.sql; packages/banco/src/vendas.test.ts; packages/banco/src/concorrencia.test.ts; packages/banco/src/integridade-lote2.test.ts"
     },
     "ORA-PAY-002": {
       "status": "parcial",
-      "nota": "Regra da venda financiada PayJoy/Aiva (DEC-U38) e e-mail obrigatório na PayJoy (DEC-U30) testadas. Falta registro e repasse.",
+      "nota": "Regra da venda financiada PayJoy/Aiva (DEC-U38) e e-mail obrigatório na PayJoy (DEC-U30) testadas. Registro real da venda financiada e conta a receber pela ADR-004; #46 a #49 corrigidos no lote 2 (c071968). Falta o repasse (P8, E2) e os termos da financeira.",
       "evidencia": "packages/dominio/src/pagamento.test.ts"
     },
     "ORA-PERF-001": {
@@ -103,7 +103,7 @@
     },
     "ORA-CONNECT-004": {
       "status": "testado",
-      "nota": "Adaptador só no worker do servidor (credenciais fora do web e do navegador); pedido só com campos documentados, provado contra a cópia oficial da coleção; GET com corpo só depois da confirmação da Nogle. Testado contra servidor local com os exemplos oficiais; nenhuma chamada real.",
+      "nota": "Adaptador só no worker do servidor (credenciais fora do web e do navegador); pedido só com campos documentados, provado contra a cópia oficial da coleção; GET com corpo só depois da confirmação da Nogle. Testado contra servidor local com os exemplos oficiais; nenhuma chamada real. Revisão do Codex (PR #33, trazida em 10/11): 9b1109e reproduziu #55 a #59; corrigidos nos lotes 1 e 2, aguardando a conferência do Codex. Cobrança, carteira, recorrência e repasse (#54) ficam no ORA-CONNECT-009.",
       "evidencia": "packages/dominio/src/nogle.ts; apps/worker/src/connect; packages/banco/src/connect.test.ts; packages/banco/src/concorrencia.test.ts; packages/dominio/src/nogle.test.ts; apps/worker/src/connect/ponta-a-ponta.test.ts; apps/worker/src/connect/transporte.test.ts"
     },
     "ORA-FISC-003": {
@@ -188,47 +188,47 @@
     },
     "ORA-CONNECT-001": {
       "status": "testado",
-      "nota": "Chip vendido no PDV com ICCID do estoque (ADR-004); a ativação só aceita chip do estoque depois de vendido (OR011), fica ligada à venda do chip, e o chip ativado não volta ao estoque pelo cancelamento. Sem chamada real à Nogle: falta credencial no worker, P9 e linha de teste para homologar.",
+      "nota": "Chip vendido no PDV com ICCID do estoque (ADR-004); a ativação só aceita chip do estoque depois de vendido (OR011), fica ligada à venda do chip, e o chip ativado não volta ao estoque pelo cancelamento. Sem chamada real à Nogle: falta credencial no worker, P9 e linha de teste para homologar. Revisão do Codex (PR #33, trazida em 10/11): 9b1109e reproduziu #55 a #59; corrigidos nos lotes 1 e 2, aguardando a conferência do Codex. Cobrança, carteira, recorrência e repasse (#54) ficam no ORA-CONNECT-009.",
       "evidencia": "packages/banco/supabase/migrations/20261109123402_ora_connect_operacoes.sql; packages/banco/src/connect.test.ts; packages/banco/src/concorrencia.test.ts; packages/dominio/src/nogle.test.ts; apps/worker/src/connect/ponta-a-ponta.test.ts; apps/worker/src/connect/transporte.test.ts; apps/plataforma/src/app/connect; apps/worker/src/connect; docs/adr/ADR-005-ora-connect-operacoes.md"
     },
     "ORA-CONNECT-002": {
       "status": "testado",
-      "nota": "Venda do chip, pedido de ativação, resposta da operadora e produção são registros separados; a produção nasce só da operação confirmada, uma vez (chave única). Sem chamada real à Nogle: falta credencial no worker, P9 e linha de teste para homologar.",
+      "nota": "Venda do chip, pedido de ativação, resposta da operadora e produção são registros separados; a produção nasce só da operação confirmada, uma vez (chave única). Sem chamada real à Nogle: falta credencial no worker, P9 e linha de teste para homologar. Revisão do Codex (PR #33, trazida em 10/11): 9b1109e reproduziu #55 a #59; corrigidos nos lotes 1 e 2, aguardando a conferência do Codex. Cobrança, carteira, recorrência e repasse (#54) ficam no ORA-CONNECT-009.",
       "evidencia": "packages/banco/supabase/migrations/20261109123402_ora_connect_operacoes.sql; packages/banco/src/connect.test.ts; packages/banco/src/concorrencia.test.ts; packages/dominio/src/nogle.test.ts; apps/worker/src/connect/ponta-a-ponta.test.ts; apps/worker/src/connect/transporte.test.ts"
     },
     "ORA-CONNECT-003": {
       "status": "parcial",
-      "nota": "Recarga é operação própria com estado; separa valor de face (lista oficial), recebido na loja (venda do serviço, obrigatório no SALDO) e debitado da carteira (histórico da Nogle). FALTA: receita da recarga por LINK (repasse, P8/D-009) e homologação.",
+      "nota": "Recarga é operação própria com estado; separa valor de face (lista oficial), recebido na loja (venda do serviço, obrigatório no SALDO) e debitado da carteira (histórico da Nogle). FALTA: receita da recarga por LINK (repasse, P8/D-009) e homologação. Revisão do Codex (PR #33, trazida em 10/11): 9b1109e reproduziu #55 a #59; corrigidos nos lotes 1 e 2, aguardando a conferência do Codex. Cobrança, carteira, recorrência e repasse (#54) ficam no ORA-CONNECT-009.",
       "evidencia": "packages/banco/supabase/migrations/20261109123402_ora_connect_operacoes.sql; packages/banco/src/connect.test.ts; packages/banco/src/concorrencia.test.ts; packages/dominio/src/nogle.test.ts; apps/worker/src/connect/ponta-a-ponta.test.ts; apps/worker/src/connect/transporte.test.ts; apps/plataforma/src/app/connect; apps/worker/src/connect; docs/adr/ADR-005-ora-connect-operacoes.md"
     },
     "ORA-CONNECT-005": {
       "status": "testado",
-      "nota": "Ativação só confirma com a evidência da operadora (ICCID ativo com a linha); resposta ambígua, sem resposta ou worker interrompido viram resultado desconhecido, sem sucesso falso nem reenvio; a gerência decide (não a própria operação). Sem chamada real à Nogle: falta credencial no worker, P9 e linha de teste para homologar.",
+      "nota": "Ativação só confirma com a evidência da operadora (ICCID ativo com a linha); resposta ambígua, sem resposta ou worker interrompido viram resultado desconhecido, sem sucesso falso nem reenvio; a gerência decide (não a própria operação). Sem chamada real à Nogle: falta credencial no worker, P9 e linha de teste para homologar. Revisão do Codex (PR #33, trazida em 10/11): 9b1109e reproduziu #55 a #59; corrigidos nos lotes 1 e 2, aguardando a conferência do Codex. Cobrança, carteira, recorrência e repasse (#54) ficam no ORA-CONNECT-009.",
       "evidencia": "packages/banco/supabase/migrations/20261109123402_ora_connect_operacoes.sql; packages/banco/src/connect.test.ts; packages/banco/src/concorrencia.test.ts; packages/dominio/src/nogle.test.ts; apps/worker/src/connect/ponta-a-ponta.test.ts; apps/worker/src/connect/transporte.test.ts"
     },
     "ORA-CONNECT-006": {
       "status": "testado",
-      "nota": "Produção por operação confirmada, do vendedor e da loja de origem, com origem (evidência da operadora ou revisão da gerência) e chave única por operação. Comissão sobre ela ainda não existe (P8).",
+      "nota": "Produção por operação confirmada, do vendedor e da loja de origem, com origem (evidência da operadora ou revisão da gerência) e chave única por operação. Comissão sobre ela ainda não existe (P8). Revisão do Codex (PR #33, trazida em 10/11): 9b1109e reproduziu #55 a #59; corrigidos nos lotes 1 e 2, aguardando a conferência do Codex. Cobrança, carteira, recorrência e repasse (#54) ficam no ORA-CONNECT-009.",
       "evidencia": "packages/banco/supabase/migrations/20261109123402_ora_connect_operacoes.sql; packages/banco/src/connect.test.ts; packages/banco/src/concorrencia.test.ts; packages/dominio/src/nogle.test.ts; apps/worker/src/connect/ponta-a-ponta.test.ts; apps/worker/src/connect/transporte.test.ts"
     },
     "ORA-CONNECT-007": {
       "status": "parcial",
-      "nota": "Listas oficiais (planos, DDDs, cidades, operadoras) sincronizadas pelo worker e usadas na tela; consultas de evidência com intervalo crescente. FALTA: telas de consulta de linha, saldo e consumo e limites de chamada (não documentados).",
+      "nota": "Listas oficiais (planos, DDDs, cidades, operadoras) sincronizadas pelo worker e usadas na tela; consultas de evidência com intervalo crescente. FALTA: telas de consulta de linha, saldo e consumo e limites de chamada (não documentados). Revisão do Codex (PR #33, trazida em 10/11): 9b1109e reproduziu #55 a #59; corrigidos nos lotes 1 e 2, aguardando a conferência do Codex. Cobrança, carteira, recorrência e repasse (#54) ficam no ORA-CONNECT-009.",
       "evidencia": "apps/plataforma/src/app/connect; apps/worker/src/connect; docs/adr/ADR-005-ora-connect-operacoes.md; packages/banco/src/connect.test.ts; packages/banco/src/concorrencia.test.ts; packages/dominio/src/nogle.test.ts; apps/worker/src/connect/ponta-a-ponta.test.ts; apps/worker/src/connect/transporte.test.ts"
     },
     "ORA-CONNECT-008": {
       "status": "parcial",
-      "nota": "Portabilidade registrada, enviada e acompanhada pelo status documentado; o exemplo contraditório da documentação fica como resultado desconhecido (pergunta 7). FALTA: contrato/venda de plano e homologação.",
+      "nota": "Portabilidade registrada, enviada e acompanhada pelo status documentado; o exemplo contraditório da documentação fica como resultado desconhecido (pergunta 7). FALTA: contrato/venda de plano e homologação. Revisão do Codex (PR #33, trazida em 10/11): 9b1109e reproduziu #55 a #59; corrigidos nos lotes 1 e 2, aguardando a conferência do Codex. Cobrança, carteira, recorrência e repasse (#54) ficam no ORA-CONNECT-009.",
       "evidencia": "packages/banco/supabase/migrations/20261109123402_ora_connect_operacoes.sql; packages/banco/src/connect.test.ts; packages/banco/src/concorrencia.test.ts; packages/dominio/src/nogle.test.ts; apps/worker/src/connect/ponta-a-ponta.test.ts; apps/worker/src/connect/transporte.test.ts; apps/plataforma/src/app/connect; apps/worker/src/connect; docs/adr/ADR-005-ora-connect-operacoes.md"
     },
     "ORA-CONNECT-010": {
       "status": "testado",
-      "nota": "Sem conexão volta para a fila; conectou e não respondeu = desconhecido, nunca reenviado; envio interrompido expira para desconhecido; resposta atrasada ainda vale; dois workers não pegam a mesma operação (PostgreSQL 17 real).",
+      "nota": "Sem conexão volta para a fila; conectou e não respondeu = desconhecido, nunca reenviado; envio interrompido expira para desconhecido; resposta atrasada ainda vale; dois workers não pegam a mesma operação (PostgreSQL 17 real). Revisão do Codex (PR #33, trazida em 10/11): 9b1109e reproduziu #55 a #59; corrigidos nos lotes 1 e 2, aguardando a conferência do Codex. Cobrança, carteira, recorrência e repasse (#54) ficam no ORA-CONNECT-009.",
       "evidencia": "packages/banco/supabase/migrations/20261109123402_ora_connect_operacoes.sql; packages/banco/src/connect.test.ts; packages/banco/src/concorrencia.test.ts; packages/dominio/src/nogle.test.ts; apps/worker/src/connect/ponta-a-ponta.test.ts; apps/worker/src/connect/transporte.test.ts"
     },
     "ORA-CONNECT-011": {
       "status": "parcial",
-      "nota": "Ativação de eSIM pelo formato documentado (sem ICCID, \"esim\": \"SIM\"), com o ICCID e o link vindos da resposta. FALTA: confirmar com a Nogle (pergunta 11), compra com entrega e contratação digital.",
+      "nota": "Ativação de eSIM pelo formato documentado (sem ICCID, \"esim\": \"SIM\"), com o ICCID e o link vindos da resposta. FALTA: confirmar com a Nogle (pergunta 11), compra com entrega e contratação digital. Revisão do Codex (PR #33, trazida em 10/11): 9b1109e reproduziu #55 a #59; corrigidos nos lotes 1 e 2, aguardando a conferência do Codex. Cobrança, carteira, recorrência e repasse (#54) ficam no ORA-CONNECT-009.",
       "evidencia": "packages/banco/supabase/migrations/20261109123402_ora_connect_operacoes.sql; packages/dominio/src/nogle.ts; packages/banco/src/connect.test.ts; packages/banco/src/concorrencia.test.ts; packages/dominio/src/nogle.test.ts; apps/worker/src/connect/ponta-a-ponta.test.ts; apps/worker/src/connect/transporte.test.ts"
     },
     "ORA-CAT-001": {
@@ -253,7 +253,7 @@
     },
     "ORA-INV-003": {
       "status": "testado",
-      "nota": "Livro só de inserção; saldo = soma do livro e posição de cada aparelho/chip controlada pelo próprio livro, com o item travado (REV-022/#21 e REV-023/#22 corrigidos; saída legítima voltou a funcionar: o upsert antigo recusava toda saída). privado.divergencias_estoque() confere livro × saldo × itens × reservas e a migration só termina sem divergência. Regressões e concorrência real passando. Aguardando revisão do Codex.",
+      "nota": "Livro só de inserção; saldo = soma do livro e posição de cada aparelho/chip controlada pelo próprio livro, com o item travado (REV-022/#21 e REV-023/#22 corrigidos; saída legítima voltou a funcionar: o upsert antigo recusava toda saída). privado.divergencias_estoque() confere livro × saldo × itens × reservas e a migration só termina sem divergência. Regressões e concorrência real passando. Correção conferida pelo Codex em 08/11 na base 55d10af (PR #33). Revisão do Codex (PR #33, trazida em 10/11): #34 (repetição com conteúdo diferente) e #51 (cancelamento devolvendo item sem conferência) corrigidos no lote 2 (c071968), aguardando a conferência do Codex.",
       "evidencia": "packages/banco/supabase/migrations/20261108195850_integridade_estoque.sql; packages/banco/src/integridade-estoque.test.ts; packages/banco/src/concorrencia.test.ts"
     },
     "ORA-INV-004": {
@@ -263,7 +263,7 @@
     },
     "ORA-INV-005": {
       "status": "parcial",
-      "nota": "Reserva com prazo, liberação, vencimento e idempotência no banco; a mesma chave só repete a mesma reserva (REV-021/#20). Concorrência real provada: último item, mesma chave, liberação × nova reserva e vencimento disputado; a rotina de vencimento não espera item em venda. Liberar reserva de outra pessoa exige permissão e fica auditado. Falta: ligar ao checkout real e agendar a rotina.",
+      "nota": "Reserva com prazo, liberação, vencimento e idempotência no banco; a mesma chave só repete a mesma reserva (REV-021/#20). Concorrência real provada: último item, mesma chave, liberação × nova reserva e vencimento disputado; a rotina de vencimento não espera item em venda. Liberar reserva de outra pessoa exige permissão e fica auditado. O carrinho real reserva e a conclusão consome a reserva (ADR-004). Falta agendar a rotina de vencimento.",
       "evidencia": "packages/banco/supabase/migrations/20261108195850_integridade_estoque.sql; packages/banco/src/integridade-estoque.test.ts; packages/banco/src/concorrencia.test.ts; packages/banco/src/catalogo-estoque.test.ts"
     },
     "ORA-INV-006": {
@@ -283,12 +283,12 @@
     },
     "ORA-CAT-011": {
       "status": "parcial",
-      "nota": "Implementado em desenvolvimento (08/11): bucket privado no Storage com RLS por organização (vendedor vê, dono e gerente enviam: catalogo.fotos), caminho como identidade estável e URL assinada temporária, registro no banco com tamanho e tipo vindos do Storage, troca que guarda a anterior, ilustração só para item não físico, pendências (produto sem foto e cor sem foto própria) e tela /catalogo com miniatura, ampliação e envio pelo celular (redução no aparelho). FALTA: homologar com fotos reais e usuário real (critérios da #26), fotos no estoque e no PDV reais (com o ADR-004) e limpeza de arquivo enviado sem registro. 09/11 (lote 3): registro da mesma foto idempotente (#42), nova tentativa não reenvia o arquivo, foto quebrada volta com URL nova (#41), descartar libera o arquivo (#43); fixture de componentes do Codex verde.",
+      "nota": "Implementado em desenvolvimento (08/11): bucket privado no Storage com RLS por organização (vendedor vê, dono e gerente enviam: catalogo.fotos), caminho como identidade estável e URL assinada temporária, registro no banco com tamanho e tipo vindos do Storage, troca que guarda a anterior, ilustração só para item não físico, pendências (produto sem foto e cor sem foto própria) e tela /catalogo com miniatura, ampliação e envio pelo celular (redução no aparelho). FALTA: homologar com fotos reais e usuário real (critérios da #26), limpeza de arquivo enviado sem registro. 09/11 (lote 3): registro da mesma foto idempotente (#42), nova tentativa não reenvia o arquivo, foto quebrada volta com URL nova (#41), descartar libera o arquivo (#43); fixture de componentes do Codex verde. Fotos também no estoque real (/estoque) e no PDV real (/vender).",
       "evidencia": "packages/banco/supabase/migrations/20261108204536_fotos_dos_produtos.sql; packages/banco/src/fotos-produto.test.ts; apps/plataforma/src/app/catalogo; apps/plataforma/src/lib/catalogo; packages/banco/src/fotos-lote3.test.ts"
     },
     "ORA-POS-001": {
       "status": "parcial",
-      "nota": "PDV real no celular (/vender) ligado ao banco: caixa, busca, carrinho com reserva, desconto com aprovação, pagamento misto, conclusão e comprovante. Regras do banco testadas (13 cenários e concorrência real). FALTA: E2E com usuário real em smartphone da loja piloto (depende da SUPABASE_SECRET_KEY para criar o usuário de teste) e homologação.",
+      "nota": "PDV real no celular (/vender) ligado ao banco: caixa, busca, carrinho com reserva, desconto com aprovação, pagamento misto, conclusão e comprovante. Regras do banco testadas (13 cenários e concorrência real). FALTA: E2E com usuário real em smartphone da loja piloto (depende da SUPABASE_SECRET_KEY para criar o usuário de teste) e homologação. Revisão do Codex (PR #33, trazida em 10/11): 371cef0 pediu correção de #45 a #53 (feita nos lotes 1 e 2, aguardando a conferência do Codex) e E2E autenticado com pessoa de teste, que segue pendente.",
       "evidencia": "packages/banco/supabase/migrations/20261108233546_vendas_pagamentos_e_caixa.sql; packages/banco/src/vendas.test.ts; packages/banco/src/concorrencia.test.ts; apps/plataforma/src/app/vender; apps/plataforma/src/app/caixa; apps/plataforma/src/app/aprovacoes; apps/plataforma/src/app/vendas"
     },
     "ORA-POS-002": {
@@ -303,22 +303,22 @@
     },
     "ORA-POS-010": {
       "status": "parcial",
-      "nota": "Cancelamento total sem apagar (ADR-004) e devolução parcial (adendo de 09/11): a gerência devolve itens com motivo; estoque volta pelo livro com a condição informada; reembolso só nos meios pagos e até o que cada um pagou — cancelamento e devolução: o dinheiro sai do caixa; cartão, Pix e financeira ficam como estorno a confirmar com o comprovante (#50); no cancelamento os itens esperam o retorno conferido por IMEI/ICCID e condição (#51), e a devolução também confere o IMEI/ICCID. Item avariado ainda volta à loja com a condição registrada (DEFEITOS é o #60). Política comercial (D-026) pendente.",
+      "nota": "Cancelamento total sem apagar (ADR-004) e devolução parcial (adendo de 09/11): a gerência devolve itens com motivo; estoque volta pelo livro com a condição informada; reembolso só nos meios pagos e até o que cada um pagou — cancelamento e devolução: o dinheiro sai do caixa; cartão, Pix e financeira ficam como estorno a confirmar com o comprovante (#50); no cancelamento os itens esperam o retorno conferido por IMEI/ICCID e condição (#51), e a devolução também confere o IMEI/ICCID. Item avariado ainda volta à loja com a condição registrada (DEFEITOS é o #60). Política comercial (D-026) pendente. Revisão do Codex (PR #33, trazida em 10/11): #47, #49, #50 e #51 corrigidos no lote 2 (c071968), aguardando a conferência do Codex.",
       "evidencia": "packages/banco/supabase/migrations/20261109134507_devolucao_e_troca.sql; packages/banco/src/devolucao.test.ts; packages/dominio/src/pagamento.test.ts; apps/plataforma/src/lib/vendas/regras.test.ts; apps/plataforma/src/app/vendas/[id]/page.tsx; apps/plataforma/src/app/vender/acoes.ts; apps/plataforma/src/app/vender/page.tsx; packages/banco/src/integridade-lote2.test.ts"
     },
     "ORA-POS-013": {
       "status": "parcial",
-      "nota": "PayJoy/Aiva: preço, entrada (com o meio) e restante a receber da financeira, sem juros; e-mail obrigatório na PayJoy. FALTA: prazo/taxa do repasse (P8) e termos da financeira.",
+      "nota": "PayJoy/Aiva: preço, entrada (com o meio) e restante a receber da financeira, sem juros; e-mail obrigatório na PayJoy. FALTA: prazo/taxa do repasse (P8) e termos da financeira. Revisão do Codex (PR #33, trazida em 10/11): #46 (entrada sem comprovante) e #48 (financiamento acima do preço) corrigidos no lote 2 (c071968), aguardando a conferência do Codex.",
       "evidencia": "packages/banco/supabase/migrations/20261108233546_vendas_pagamentos_e_caixa.sql; packages/banco/src/vendas.test.ts; packages/banco/src/concorrencia.test.ts"
     },
     "ORA-PAY-001": {
       "status": "parcial",
-      "nota": "Dinheiro, Pix direto, Pix e cartão na maquininha PicPay, cartão PagSeguro registrados com comprovante e quem conferiu. FALTA: identificação do terminal (PAY-012).",
+      "nota": "Dinheiro, Pix direto, Pix e cartão na maquininha PicPay, cartão PagSeguro registrados com comprovante e quem conferiu. FALTA: identificação do terminal (PAY-012). Revisão do Codex (PR #33, trazida em 10/11): #46 (comprovante na entrada de financiamento) corrigido no lote 2 (c071968), aguardando a conferência do Codex.",
       "evidencia": "packages/banco/supabase/migrations/20261108233546_vendas_pagamentos_e_caixa.sql; packages/banco/src/vendas.test.ts; packages/banco/src/concorrencia.test.ts"
     },
     "ORA-PAY-004": {
       "status": "testado",
-      "nota": "Caixa por pessoa e loja com fundo de troco; um aberto por vez; idempotente. Aguardando revisão do Codex.",
+      "nota": "Caixa por pessoa e loja com fundo de troco; um aberto por vez; idempotente. Revisão do Codex (PR #33, trazida em 10/11): #47 (estorno de entrada deixava o caixa negativo) e #52 (fundo inválido virava zero) corrigidos no lote 2 (c071968), aguardando a conferência do Codex.",
       "evidencia": "packages/banco/supabase/migrations/20261108233546_vendas_pagamentos_e_caixa.sql; packages/banco/src/vendas.test.ts; packages/banco/src/concorrencia.test.ts; apps/plataforma/src/app/caixa"
     },
     "ORA-PAY-005": {
@@ -333,7 +333,7 @@
     },
     "ORA-PAY-007": {
       "status": "parcial",
-      "nota": "Comprovante registrado em cada pagamento de maquininha e Pix (confirmação manual, sem presumir liquidação). FALTA: tela de conciliação com o extrato.",
+      "nota": "Comprovante registrado em cada pagamento de maquininha e Pix (confirmação manual, sem presumir liquidação). FALTA: tela de conciliação com o extrato. Revisão do Codex (PR #33, trazida em 10/11): #46 e #50 (estorno sem comprovante) corrigidos no lote 2 (c071968), aguardando a conferência do Codex.",
       "evidencia": "packages/banco/supabase/migrations/20261108233546_vendas_pagamentos_e_caixa.sql"
     },
     "ORA-PAY-008": {
@@ -375,6 +375,10 @@
       "status": "testado",
       "nota": "Transferência entre lojas (ADR-007, 09/11): pedir, separar (IMEI/ICCID escolhido e reservado na origem), enviar (sai pelo livro, em trânsito), receber e conferir (só o IMEI/ICCID enviado; falta vira divergência com explicação), recusar e cancelar antes do envio; local DEFEITOS sem venda; painel \"onde tem\" e tela /transferencias. Testado em desenvolvimento; aguardando revisão do Codex. Falta o cadastro real das 11 lojas e do DEFEITOS (lista única, linha B2).",
       "evidencia": "packages/banco/supabase/migrations/20261109193043_transferencias_e_defeitos.sql; packages/banco/src/transferencias.test.ts; packages/banco/src/concorrencia.test.ts; apps/plataforma/src/app/transferencias"
+    },
+    "ORA-CONNECT-009": {
+      "status": "nao_iniciado",
+      "nota": "Carteira, extrato, cobrança/gateway, recorrência e repasses oficiais não implementados (#54). Respostas da Nogle de 10/11 (NOGLE_API_REFERENCIA.md §3.1): GET /saldo/extrato existe; a API não traz comissões. Persistir estados e correlação e homologar sem apresentar estimativa local como recebimento. Entrada vinda da PR #33 (Codex)."
     }
   }
 }

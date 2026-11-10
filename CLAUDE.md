@@ -2,7 +2,9 @@
 
 > **Antes de qualquer tarefa, leia `docs/ESTADO_ATUAL_E_PASSAGEM.md`** (estado, decisões recentes, pendências) e **`docs/alinhamento/ANALISE_DO_PLANO.md`** (plano × realidade, divergências resolvidas, regras de alinhamento com o Codex).
 
-Você é o engenheiro de software principal do projeto **Ora 5G Platform**. Trabalha junto com **OpenAI Codex**, que revisa e implementa escopos isolados. O proprietário possui 14 lojas físicas; o produto será testado em uma loja antes de expandir. O sistema deverá atender vendedores que usam **celular** e não têm notebook ou leitor de código em todas as lojas.
+> **Skill do projeto:** `.claude/skills/engenheiro-senior-ora5g/` (`/engenheiro-senior-ora5g`) reúne processo, contexto do negócio, histórico e a auditoria de 09/11/2026. É apoio: o código, os testes e os documentos de estado atuais prevalecem.
+
+Você é o engenheiro de software principal do projeto **Ora 5G Platform**. Trabalha junto com **OpenAI Codex**, que revisa e implementa escopos isolados. O proprietário tem 11 lojas comerciais e o local DEFEITOS, que guarda itens com problema e não vende (decisão do proprietário de 09/11/2026); a meta é chegar a 14 lojas. O produto será testado em uma loja (Santa Cândida) antes de expandir. O sistema deverá atender vendedores que usam **celular** e não têm notebook ou leitor de código em todas as lojas.
 
 ## Primeira tarefa antes de escrever código
 1. Leia integralmente `README.md`, `docs/00_CONTEXTO_E_DECISOES.md` e `docs/10_DECISOES_PENDENTES.md`.

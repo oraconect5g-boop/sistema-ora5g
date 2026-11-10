@@ -1,0 +1,153 @@
+{
+  "base": "371cef0c02affad30f6fe2ebd1468cbcec67009f",
+  "commits": 130,
+  "merges": 35,
+  "trees": 68,
+  "mainFirstParentMerges": 25,
+  "multipleBaseMerge": [
+    {
+      "sha": "5f4dec7079b57effa0e555b536ad7f0550ec5e87",
+      "bases": [
+        "5b98ade0e713c2195abf7b17da2895fbe4071da7",
+        "8e1625ddff5d320e26cef44be518884408ef1007"
+      ]
+    }
+  ],
+  "removedPathsRetained": [],
+  "novelResolutionMerges": [
+    {
+      "sha": "f72f52103b617579ade85aaee0dfbd9c2ea4ff26",
+      "title": "Merge origin/main (Ora Connect, 5560efa) na branch dos resíduos do Codex",
+      "paths": [
+        "apps/plataforma/e2e/demonstracao.spec.ts"
+      ]
+    },
+    {
+      "sha": "5f4dec7079b57effa0e555b536ad7f0550ec5e87",
+      "title": "docs(audit): mapear front-end, backend, migrations e Supabase real",
+      "paths": [
+        "docs/alinhamento/REVISOES_CODEX.md",
+        "docs/analises/AUDITORIA_FUNCIONAL_E_SUPABASE_2026-11-07.md"
+      ]
+    },
+    {
+      "sha": "73990bcc676e2efcfbbd596ed9623b6272582f95",
+      "title": "docs(review): analisar ajustes do Claude em Apache e apresentação",
+      "paths": [
+        "docs/alinhamento/REVISOES_CODEX.md",
+        "docs/analises/REVISAO_INCREMENTAL_2026-11-07_8e1625d.md"
+      ]
+    },
+    {
+      "sha": "138248e34ed9f368bde7f513a713be61ae69ae57",
+      "title": "docs: incorporar relato de publicação acrescentado pelo Claude",
+      "paths": [
+        "docs/alinhamento/CONFERENCIA_DAS_CORRECOES_2026-11-07.md",
+        "docs/alinhamento/CONFIGURACAO_E_TRANSICAO_DO_MOCKUP.md"
+      ]
+    },
+    {
+      "sha": "173fd5c18ad45a8d2df950aa348dbbcc2b0ca5c0",
+      "title": "docs: incorporar evolucao da main e registrar achados de dinheiro e acesso",
+      "paths": [
+        "docs/alinhamento/REVISOES_CODEX.md",
+        "docs/analises/ANALISE_SISTEMAS_2026-11-07.md"
+      ]
+    }
+  ],
+  "sourceScan": {
+    "paths": 329,
+    "conflictMarkers": [],
+    "fileAndDirectorySameModule": [],
+    "duplicateMigrationVersions": [],
+    "duplicateMigrationContents": [],
+    "replacedFunctionNames": {
+      "privado.validar_vinculo": [
+        "20261107140352_fundacao_acesso.sql",
+        "20261107151305_correcoes_revisao_codex.sql"
+      ],
+      "privado.vinculos_vigentes": [
+        "20261107140352_fundacao_acesso.sql",
+        "20261108202654_acesso_sessao_e_equipe.sql"
+      ],
+      "public.selecionar_unidade": [
+        "20261107140352_fundacao_acesso.sql",
+        "20261108202654_acesso_sessao_e_equipe.sql"
+      ],
+      "privado.validar_movimento": [
+        "20261108150620_catalogo_estoque.sql",
+        "20261108195850_integridade_estoque.sql"
+      ],
+      "privado.atualizar_saldo": [
+        "20261108150620_catalogo_estoque.sql",
+        "20261108195850_integridade_estoque.sql"
+      ],
+      "privado.lancar_movimento": [
+        "20261108150620_catalogo_estoque.sql",
+        "20261108195850_integridade_estoque.sql"
+      ],
+      "privado.registrar_item_serializado": [
+        "20261108150620_catalogo_estoque.sql",
+        "20261108195850_integridade_estoque.sql"
+      ],
+      "privado.encerrar_reserva": [
+        "20261108150620_catalogo_estoque.sql",
+        "20261108195850_integridade_estoque.sql"
+      ],
+      "privado.expirar_reservas": [
+        "20261108150620_catalogo_estoque.sql",
+        "20261108195850_integridade_estoque.sql"
+      ],
+      "public.reservar_estoque": [
+        "20261108150620_catalogo_estoque.sql",
+        "20261108195850_integridade_estoque.sql"
+      ],
+      "public.liberar_reserva": [
+        "20261108150620_catalogo_estoque.sql",
+        "20261108195850_integridade_estoque.sql"
+      ]
+    },
+    "sqlFunctionDeclarations": 94,
+    "historicalPathsStillPresent": [],
+    "importsOutsideDemoDirectory": [
+      [
+        "apps/plataforma/src/componentes/AppShell.tsx",
+        "../demo/dados"
+      ],
+      [
+        "apps/plataforma/src/componentes/AppShell.tsx",
+        "../demo/perfis"
+      ],
+      [
+        "apps/plataforma/src/componentes/AppShell.tsx",
+        "../demo/sessao"
+      ],
+      [
+        "apps/plataforma/src/componentes/SemPermissao.tsx",
+        "../demo/perfis"
+      ]
+    ]
+  },
+  "sourceGraph": {
+    "sourceFiles": 118,
+    "realEntrypoints": 17,
+    "realToDemoPaths": [],
+    "identicalFunctionBodies": []
+  },
+  "localSchemaCounts": {
+    "indices": 144,
+    "funcoes": 83,
+    "gatilhos": 30,
+    "politicas": 32
+  },
+  "rpcOverloads": 0,
+  "duplicateIndexesExact": 0,
+  "duplicatePoliciesSameTableCommand": 0,
+  "nogleDocsSha256": "002d13dab3099a95c1e018bdc9d0d63dba30adcacfa141efccdd062f29c88ead",
+  "nogleDocsLiveEqual": true,
+  "nogleFunctions": 62,
+  "nogleGroups": 16,
+  "nogleOperationalTransport": false,
+  "nogleTestCalls": 0,
+  "remoteWrites": 0
+}

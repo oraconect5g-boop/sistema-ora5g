@@ -1,6 +1,6 @@
 # O que depende do proprietário
 
-**Atualizado em:** 09/11/2026 · **Por:** Claude Code (programador)
+**Atualizado em:** 10/11/2026 · **Por:** Claude Code (programador)
 **Lista consolidada de APIs, acessos e habilitações (com documentação oficial e nomes das variáveis): [`docs/integracoes/APIS_E_HABILITACOES_NECESSARIAS.md`](integracoes/APIS_E_HABILITACOES_NECESSARIAS.md).** Esta página continua com os detalhes de cada passo.
 **Para:** o proprietário e o Codex. O Codex usa esta lista para dizer ao proprietário o que falta. **Valores de chaves e senhas nunca passam pelo chat (nem do Claude nem do Codex) e nunca vão para o GitHub**: eles são gravados direto no servidor pelo comando da seção 4, ou ficam no painel do próprio fornecedor. O Codex confere só pelos **nomes**.
 
@@ -17,8 +17,8 @@ Uma linha por fornecedor ou capacidade. Mostra o que fica bloqueado e o critéri
 | A1 | Supabase Auth: **usuário de teste fictício** | Prova #11: login, renovação da sessão, saída, revogação e segunda visita. Também o cadastro de pessoas pela tela | P0 | Nenhum contrato. Duas opções: você cria o usuário no painel (Authentication → Users → Add user, e-mail `@example.com`), ou grava a chave secreta e o Claude cria | `ora5g-dev` | `SUPABASE_SECRET_KEY` (só no worker; o login usa a chave pública) | Usuário de teste existe e a prova #11 passa |
 | A2 | E-mail do sistema (SMTP próprio no Supabase) | Convite e recuperação de senha por e-mail | P1 | Caixa `nao-responda@ora5g.com.br` (cPanel) e SMTP no painel do Supabase (seção 5) | `ora5g-dev` | No painel do Supabase; `EMAIL_FROM` e `SMTP_*` só quando o sistema mandar e-mail próprio | E-mail de teste chega a uma caixa controlada |
 | B1 | **Arquivo da Rein** (produtos, preços, estoque) | Importador com prévia e aprovação; carga do piloto | P0 | Nenhum (arquivo exportado) | Cópia em `~/entrada/rein/` | — | Arquivo recebido e prévia sem erro bloqueante |
-| B2 | **Dados das 11 lojas e do local DEFEITOS** (nome de origem, código, CNPJ, endereço) | Cadastro real das lojas; transferências e DEFEITOS (#60) | P0 | Decisão já tomada (11 lojas + DEFEITOS). Faltam CNPJ e endereço; nada é inventado | `~/entrada/` | — | Arquivo conciliado com o cadastro confirmado |
-| C1 | **Nogle: chaves, tipo de chave (P9) e linha/ICCID de teste** | Ativação, recarga e portabilidade reais (#54); homologação da Ora Connect | P0 | Contrato atual e respostas às 51 perguntas (`docs/integracoes/PERGUNTAS_PARA_CONTEL_NOGLE_2026-11-09.md`, na PR #33) | Conta ou linha de teste autorizada | `NOGLE_API_BASE_URL`, `NOGLE_AUTH_KEY_TYPE`, `NOGLE_ACCESS_KEY`, `NOGLE_SECONDARY_KEY`, `NOGLE_OPERACOES_HABILITADAS` (só no worker) | Uma operação de teste confirmada pela evidência oficial |
+| B2 | **Dados das 11 lojas e do local DEFEITOS** (nome de origem, código, CNPJ, endereço) | Cadastro real das lojas; transferências e DEFEITOS (#60) | P0 | Decisão já tomada (11 lojas + DEFEITOS). Os nomes dos 12 locais já estão em `docs/cadastros/LOJAS_CONFIRMADAS_2026-11-09.json`; faltam CNPJ e endereço; nada é inventado | `~/entrada/` | — | Arquivo conciliado com o cadastro confirmado |
+| C1 | **Nogle: chaves, tipo de chave (P9) e linha/ICCID de teste** | Ativação, recarga e portabilidade reais (#54); homologação da Ora Connect | P0 | Contrato atual e respostas às 51 perguntas ([`PERGUNTAS_PARA_NOGLE_2026-11-09.md`](integracoes/PERGUNTAS_PARA_NOGLE_2026-11-09.md); respostas de 10/11 na [referência §3.1](integracoes/NOGLE_API_REFERENCIA.md)) | Conta ou linha de teste autorizada | `NOGLE_API_BASE_URL`, `NOGLE_AUTH_KEY_TYPE`, `NOGLE_ACCESS_KEY`, `NOGLE_SECONDARY_KEY`, `NOGLE_OPERACOES_HABILITADAS` (só no worker) | Uma operação de teste confirmada pela evidência oficial |
 | C2 | Nogle: cobrança/gateway, carteira e extrato, recorrência e repasse | Partes 4 a 6 da #54 | P1 | Documentação oficial e habilitação desses recursos | Idem C1 | Idem C1 | Contrato e campos documentados pela Nogle |
 | D1 | **Contador e emissor fiscal** | Emissão automática; nota de devolução por API | P1 | Contrato com o emissor; modelo, tributos e certificado definidos pelo contador | Homologação do emissor | `FISCAL_PROVIDER`, `FISCAL_API_BASE_URL`, `FISCAL_API_TOKEN`, `FISCAL_ENVIRONMENT` | Nota de teste emitida na homologação do emissor |
 | E1 | Link de pagamento PicPay / PagBank | Meio "link" na venda (hoje recusado) | P2 | Habilitação do link nas contas | Sandbox do fornecedor | `PICPAY_*`, `PAGBANK_*` | Cobrança de teste com retorno conferido |
@@ -45,7 +45,7 @@ Maquininhas PicPay POS e PagSeguro continuam com conferência manual por comprov
 
 **Para:** ti@conteltelecom.com.br · **Assunto:** Integração API NOGLE: dúvidas antes da homologação (Ora 5G)
 
-> Olá, equipe Nogle. Somos a Ora 5G, rede de 14 lojas, e estamos integrando a API NOGLE ao nosso sistema, seguindo a documentação de docs.nogle.tech. Antes de homologar, precisamos confirmar:
+> Olá, equipe Nogle. Somos a Ora 5G, rede de 11 lojas, e estamos integrando a API NOGLE ao nosso sistema, seguindo a documentação de docs.nogle.tech. Antes de homologar, precisamos confirmar:
 > 1. Qual tipo de chave a Ora tem (franquia, marca/MVNO ou PDV) e quais funções cada tipo libera?
 > 2. As consultas GET que levam dados no corpo (ex.: /linhas/detalhes, /cliente/buscar) aceitam esses dados como parâmetros no endereço?
 > 3. Existe ambiente de testes? Se não, podem nos ceder uma linha e um chip de teste?
@@ -65,7 +65,7 @@ Maquininhas PicPay POS e PagSeguro continuam com conferência manual por comprov
 
 **Assunto:** Ora 5G: emissão de notas pelo sistema próprio
 
-> Olá. Estamos implantando um sistema próprio nas 14 lojas da Ora 5G (um CNPJ raiz com uma filial por loja) e queremos que a nota seja emitida pelo sistema, por um emissor com API, depois da aprovação do dono. Precisamos da sua orientação:
+> Olá. Estamos implantando um sistema próprio nas 11 lojas da Ora 5G (um CNPJ raiz com uma filial por loja) e queremos que a nota seja emitida pelo sistema, por um emissor com API, depois da aprovação do dono. Precisamos da sua orientação:
 > 1. Que documento cada operação exige: venda de aparelho e acessório na loja (NFC-e ou NF-e?), venda online, assistência técnica (NFS-e?), venda de chip e recarga de celular?
 > 2. Regime tributário de cada filial e o que precisamos configurar (CFOP, CST/CSOSN, NCM dos produtos).
 > 3. Que emissor por API você recomenda ou já usa, e o certificado digital (A1) de cada filial está em dia?
