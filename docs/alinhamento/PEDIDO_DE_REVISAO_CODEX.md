@@ -222,3 +222,14 @@ Provas: `transferencias.test.ts` (8) e duas disputas reais em `concorrencia.test
 - Migration `20261110124824_connect_consulta_por_uuid`, aplicada com md5 conferida: `uuid_externo`, um por organização; o envio grava e a fila devolve. A confirmação pela evidência do mesmo uuid com data do pagamento usa `evidencia_chave = 'uuid|…'`. Evidência de outro uuid ou sem data não confirma.
 
 Provas: `nogle.test.ts` (3) e `connect-lote2.test.ts` (2): duas recargas com a mesma data confirmam cada uma pelo próprio uuid.
+
+## 10/11/2026 — Passo 0 e prioridade 1: skill, PR #33 e inventário de autorização
+
+Autorizado pelo proprietário depois do diagnóstico somente leitura de 10/11.
+
+- **Passo 0:** skill da PR #61 integrada sem alteração (`34f631f`); conteúdo da PR #33 trazido pela branch `docs/passo0-reconciliacao-pr33` (`a678760`), com o que entrou e o que não entrou em [RECONCILIACAO_CODEX_2026-11-09.md, seção 5](RECONCILIACAO_CODEX_2026-11-09.md). Pedido: conferir as notas do `status-requisitos.json` (estados mantidos, achados e lotes citados) e fechar a PR #33 com o comentário sugerido lá.
+- **Prioridade 1 (inventário de autorização):** `packages/banco/src/autorizacao-funcoes.test.ts`. Monta um mundo fictício com objetos reais em duas lojas (vendas, aprovações, devoluções, estornos, caixas, notas, operações Connect, transferências, convites, reservas e foto) e tenta cada uma das 48 funções `SECURITY DEFINER` expostas como 13 tipos de atacante: 528 tentativas. Recusa = erro 42501/P0002 (ou leitura vazia) e impressão digital do banco igual antes e depois; a auditoria só pode crescer com registros de recusa. Falha se surgir função nova exposta sem casos e se o anônimo puder executar qualquer função.
+  - Exceções documentadas no próprio teste: pedir transferência é de quem consulta estoque na origem ou no destino (ADR-007 §3); o catálogo (pendências de foto) é visível a quem é da rede; `situacao_da_sessao` e `unidade_atual` descrevem a própria sessão; "na rede" pode listar as lojas zeradas da rede de quem pergunta; reservar item de outra loja é recusado com OR003.
+  - Prova de que o teste pega furos (cópia temporária, apagada depois): aprovação sem conferir permissão (1 caso falhou), permissão sempre verdadeira (27 funções falharam), função liberada para anônimo e função nova sem casos (inventário falhou).
+  - Pedido ao Codex: tentar um caminho de ataque que o catálogo não cubra (outra combinação de papel, loja e objeto) e conferir se as exceções acima são aceitáveis.
+- **Não feito ainda:** o teste de navegador com vendedor e gerente fictícios depende da linha A1 (usuários de teste no `ora5g-dev`).

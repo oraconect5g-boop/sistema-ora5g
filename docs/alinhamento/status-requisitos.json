@@ -28,7 +28,7 @@
     },
     "ORA-ORG-004": {
       "status": "parcial",
-      "nota": "RLS e funções do banco testadas, inclusive negação por ID arbitrário, troca de unidade e isolamento entre organizações (REV-001/REV-002 corrigidos em 07/11, aguardando revisão do Codex). As telas reais (equipe, catálogo, estoque, venda, caixa, Connect, notas e transferências) usam essas funções e o RLS. Revisão do Codex (PR #33, trazida em 10/11): #27 a #29 (bloqueio entre organizações, autoconvite e perda de donos), #45 (aprovação própria legível após bloqueio) e #56 (custo da carteira legível pelo vendedor); corrigidos no lote 1 (b967870), aguardando a conferência do Codex.",
+      "nota": "RLS e funções do banco testadas, inclusive negação por ID arbitrário, troca de unidade e isolamento entre organizações (REV-001/REV-002 corrigidos em 07/11, aguardando revisão do Codex). As telas reais (equipe, catálogo, estoque, venda, caixa, Connect, notas e transferências) usam essas funções e o RLS. Revisão do Codex (PR #33, trazida em 10/11): #27 a #29 (bloqueio entre organizações, autoconvite e perda de donos), #45 (aprovação própria legível após bloqueio) e #56 (custo da carteira legível pelo vendedor); corrigidos no lote 1 (b967870), aguardando a conferência do Codex. Inventário de autorização (10/11, autorizacao-funcoes.test.ts): as 48 funções SECURITY DEFINER que um usuário logado pode chamar (aviso 0029 do Supabase) recusam 528 tentativas de 13 tipos de atacante (anônimo, sem login, sem sessão, sessão encerrada, fora do turno, bloqueado, vínculo encerrado, sem vínculo, papel sem permissão, outra rede, outra loja, outro vendedor e permissão faltando), sem mudar o banco; anônimo não executa nenhuma; o teste falha se surgir função nova sem casos (prova: 4 defeitos introduzidos de propósito foram pegos).",
       "evidencia": "packages/banco/src/acesso.test.ts; packages/banco/src/revisao-codex.test.ts"
     },
     "ORA-ORG-005": {
@@ -123,7 +123,7 @@
     },
     "ORA-QUAL-002": {
       "status": "parcial",
-      "nota": "RLS negando por padrão, testada com várias lojas, perfis e duas organizações. Defeitos de isolamento REV-001/REV-002 corrigidos em 07/11 com regressões; aguardando revisão do Codex antes de voltar a 'testado'.",
+      "nota": "RLS negando por padrão, testada com várias lojas, perfis e duas organizações. Defeitos de isolamento REV-001/REV-002 corrigidos em 07/11 com regressões; aguardando revisão do Codex antes de voltar a 'testado'. Inventário de autorização (10/11, autorizacao-funcoes.test.ts): as 48 funções SECURITY DEFINER que um usuário logado pode chamar (aviso 0029 do Supabase) recusam 528 tentativas de 13 tipos de atacante (anônimo, sem login, sem sessão, sessão encerrada, fora do turno, bloqueado, vínculo encerrado, sem vínculo, papel sem permissão, outra rede, outra loja, outro vendedor e permissão faltando), sem mudar o banco; anônimo não executa nenhuma; o teste falha se surgir função nova sem casos (prova: 4 defeitos introduzidos de propósito foram pegos).",
       "evidencia": "packages/banco/src/acesso.test.ts; packages/banco/src/revisao-codex.test.ts"
     },
     "ORA-QUAL-003": {

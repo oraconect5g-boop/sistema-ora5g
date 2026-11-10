@@ -100,7 +100,7 @@ Estão na seção 0 de [`docs/PENDENCIAS_DO_PROPRIETARIO.md`](../PENDENCIAS_DO_P
 | 5 | `feature/ORA-transferencias-defeitos-lote5` | #60 (ADR-007): pedido interno de transferência, DEFEITOS e "onde tem", integrado na main (`1f55af9`), aguardando o Codex |
 | 6 (próximo) | — | #54 nas partes com contrato documentado, #44 e cadastro das 11 lojas quando chegar a linha B2 |
 | Passo 0 (10/11) | `docs/passo0-reconciliacao-pr33` | Skill da PR #61 e conteúdo da PR #33, seção 5 |
-| Prioridade 1 (10/11, em andamento) | — | Teste das funções do banco chamáveis por usuário logado; teste de navegador com usuários de teste (linha A1) |
+| Prioridade 1 (10/11, em andamento) | `test/ORA-QUAL-autorizacao-funcoes` | Inventário de autorização feito (48 funções, 528 tentativas recusadas); falta o teste de navegador com usuários de teste (linha A1) |
 
 ## 5. Passo 0 (10/11/2026): skill da PR #61 e conteúdo da PR #33
 
