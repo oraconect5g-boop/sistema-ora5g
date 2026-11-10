@@ -207,9 +207,23 @@ export type ResultadoEnvio = {
   link_pagamento?: string;
   link_esim?: string;
   iccid?: string;
+  /** uuid da ativação ou recarga, para GET /consultaPagamento (resposta da Nogle de 10/11/2026). */
+  uuid?: string;
   /** Só identificadores e datas da Nogle: nada de dado pessoal ou token. */
   dados?: Record<string, unknown>;
 };
+
+const FORMATO_UUID = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
+/**
+ * uuid devolvido na ativação ou recarga. A Nogle respondeu em 10/11/2026 que toda ativação e
+ * recarga devolve um uuid, mas o campo NÃO está na coleção oficial: o nome e o lugar exatos ficam a
+ * confirmar na primeira resposta real (por isso só se lê "uuid", no topo ou no objeto da operação,
+ * e só no formato de uuid). Sem uuid, a consulta continua pelos caminhos documentados.
+ */
+export function uuidDaResposta(corpo: Record<string, unknown>, operacao: Record<string, unknown> | undefined): string | undefined {
+  const candidato = textoOuNada(corpo.uuid) ?? textoOuNada(operacao?.uuid);
+  return candidato && FORMATO_UUID.test(candidato) ? candidato : undefined;
+}
 
 /**
  * Lê a resposta do envio. Regra da Ora (ADR-005): só "aceita" com o identificador da Nogle; recusa
@@ -235,10 +249,11 @@ export function interpretarEnvio(tipo: TipoOperacao, statusHttp: number, corpo: 
     const id = textoOuNada(info?.id);
     if (retorno === true && id) {
       const chips = Array.isArray(info?.chips) ? info.chips : [];
+      const uuid = uuidDaResposta(c, info);
       return {
         ...base, resultado: "aceita", mensagem: textoOuNada(c.mensagem) ?? "", id_externo: id,
         data_cadastro: textoOuNada(info?.data_cadastro), link_pagamento: textoOuNada(c.link_pagamento), link_esim: textoOuNada(c.link_esim),
-        iccid: textoOuNada(objeto(chips[0])?.iccid),
+        iccid: textoOuNada(objeto(chips[0])?.iccid), ...(uuid ? { uuid } : {}),
         dados: limpar({ id, id_cliente: textoOuNada(info?.id_cliente), data_cadastro: textoOuNada(info?.data_cadastro) }),
       };
     }
@@ -246,9 +261,10 @@ export function interpretarEnvio(tipo: TipoOperacao, statusHttp: number, corpo: 
     const recarga = objeto(c.recarga);
     const id = textoOuNada(recarga?.id);
     if (retorno === true && id) {
+      const uuid = uuidDaResposta(c, recarga);
       return {
         ...base, resultado: "aceita", mensagem: textoOuNada(c.mensagem) ?? "", id_externo: id,
-        data_cadastro: textoOuNada(recarga?.data_cadastro), link_pagamento: textoOuNada(recarga?.link_pagamento),
+        data_cadastro: textoOuNada(recarga?.data_cadastro), link_pagamento: textoOuNada(recarga?.link_pagamento), ...(uuid ? { uuid } : {}),
         dados: limpar({ id, data_cadastro: textoOuNada(recarga?.data_cadastro) }),
       };
     }
@@ -286,10 +302,17 @@ export type OperacaoParaConsultar = {
   id_externo: string | null;
   data_cadastro_externa: string | null;
   metodo_pagamento: MetodoPagamentoNogle | null;
+  /** uuid devolvido no envio (ativação e recarga), quando houver. */
+  uuid_externo?: string | null;
 };
 
 /** Consulta documentada que serve de evidência para cada tipo (null: não há como consultar ainda). */
-export function montarConsulta(op: OperacaoParaConsultar): PedidoNogle | null {
+export function montarConsulta(op: OperacaoParaConsultar, opcoes: { consultaPagamento?: boolean } = {}): PedidoNogle | null {
+  // Com o uuid do envio e a rota liberada para a conta (NOGLE_CONSULTA_PAGAMENTO), a consulta é da
+  // operação exata: não depende da data de cadastro no histórico (pergunta 10, #59).
+  if (opcoes.consultaPagamento && op.uuid_externo && (op.tipo === "ativacao" || op.tipo === "recarga")) {
+    return { metodo: "GET", caminho: "/consultaPagamento", corpo: { tipo: "ATIVREC", uuid: op.uuid_externo } };
+  }
   if (op.tipo === "ativacao") return op.iccid ? { metodo: "POST", caminho: "/ativacao/validaIccid", corpo: { iccid: op.iccid } } : null;
   if (op.tipo === "recarga") return op.linha ? { metodo: "GET", caminho: "/linhas/historico", corpo: { numero: op.linha } } : null;
   return op.linha && op.linha_doadora ? { metodo: "GET", caminho: "/portabilidade/status", corpo: { linha: op.linha, linha_doadora: op.linha_doadora } } : null;
@@ -355,6 +378,26 @@ export function interpretarConsulta(op: OperacaoParaConsultar, statusHttp: numbe
   if (texto === "Portabilidade negada") return { evidencia: "negada", mensagem: "Portabilidade negada.", dados };
   if (texto === "Aguardando confirmação" || texto === "Portabilidade em andamento") return { evidencia: "em_andamento", mensagem: `${texto}.`, dados };
   return { evidencia: "falha_consulta", mensagem: "Status de portabilidade fora do documentado.", dados };
+}
+
+/**
+ * GET /consultaPagamento (resposta da Nogle de 10/11/2026): {status, data_pagamento e, no eSIM,
+ * links e código de instalação}. data_pagamento só vem preenchida se a ativação ou a recarga
+ * deu certo: aí confirma, com o uuid como chave da evidência (uma evidência, uma operação). Sem a
+ * data, ainda não aconteceu. status false ou HTTP de erro não confirmam nada.
+ */
+export function interpretarConsultaPagamento(op: OperacaoParaConsultar, statusHttp: number, corpo: unknown): Evidencia {
+  const c = objeto(corpo);
+  if (statusHttp < 200 || statusHttp >= 300 || !c) return { evidencia: "falha_consulta", mensagem: `Consulta do pagamento sem sucesso (HTTP ${statusHttp}).` };
+  if (c.status !== true) return { evidencia: "sem_evidencia", mensagem: textoOuNada(c.mensagem) ?? "A Nogle não encontrou o pagamento desta operação." };
+  const pago = textoOuNada(c.data_pagamento);
+  if (!pago) return { evidencia: "em_andamento", mensagem: "Ativação ou recarga ainda sem pagamento confirmado na Nogle.", dados: limpar({ uuid: op.uuid_externo }) };
+  return {
+    evidencia: "confirmada",
+    mensagem: op.tipo === "ativacao" ? "Ativação paga e feita (consulta pelo uuid)." : "Recarga paga e feita (consulta pelo uuid).",
+    // QR, código e PDF do eSIM instalam a linha: não entram na evidência (que vai para os eventos).
+    dados: limpar({ uuid: op.uuid_externo, data_pagamento: pago }),
+  };
 }
 
 export type ItemDeReferencia = { codigo: string; nome: string; uf?: string; valor_centavos?: number; dados?: Record<string, unknown> };

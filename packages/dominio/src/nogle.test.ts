@@ -6,7 +6,7 @@ import { fileURLToPath } from "node:url";
 import { describe, expect, it } from "vitest";
 
 import {
-  centavosDeValorNogle, interpretarConsulta, interpretarEnvio, lerReferencias, montarConsulta, montarPedido,
+  centavosDeValorNogle, interpretarConsulta, interpretarConsultaPagamento, interpretarEnvio, lerReferencias, montarConsulta, montarPedido,
   type OperacaoParaConsultar, type OperacaoParaEnviar,
 } from "./nogle";
 
@@ -190,5 +190,34 @@ describe("listas oficiais e dinheiro", () => {
     expect(centavosDeValorNogle("39.9")).toBe(3990);
     expect(centavosDeValorNogle(0)).toBe(0);
     for (const ruim of ["-1", "1e3", "44.905", Number.NaN, "", null, "1.000,00"]) expect(centavosDeValorNogle(ruim)).toBeNull();
+  });
+});
+
+describe("consulta pelo uuid (resposta da Nogle de 10/11/2026)", () => {
+  const uuid = "184d26de-ba03-4abd-870c-231231221231";
+  const recarga = { operacao_id: "op-1", tipo: "recarga" as const, situacao: "aguardando_operadora" as const, iccid: null, linha: "51988887777",
+    linha_doadora: null, id_externo: "12345", data_cadastro_externa: "2022-01-01 14:29:35.057", metodo_pagamento: "LINK" as const, uuid_externo: uuid };
+
+  it("o envio guarda o uuid quando vem no formato de uuid (no topo ou no objeto da operação); fora do formato, ignora", () => {
+    const aceita = { retorno: true, mensagem: "", recarga: { id: 12345, data_cadastro: "2022-01-01 14:29:35.057" } };
+    expect(interpretarEnvio("recarga", 200, { ...aceita, uuid })).toMatchObject({ resultado: "aceita", uuid });
+    expect(interpretarEnvio("recarga", 200, { ...aceita, recarga: { ...aceita.recarga, uuid } })).toMatchObject({ uuid });
+    expect(interpretarEnvio("recarga", 200, { ...aceita, uuid: "abc" })).not.toHaveProperty("uuid");
+    expect(interpretarEnvio("recarga", 200, aceita)).not.toHaveProperty("uuid");
+  });
+
+  it("com a chave ligada e o uuid, consulta /consultaPagamento; sem a chave ou sem uuid, o caminho documentado", () => {
+    expect(montarConsulta(recarga, { consultaPagamento: true })).toEqual({ metodo: "GET", caminho: "/consultaPagamento", corpo: { tipo: "ATIVREC", uuid } });
+    expect(montarConsulta(recarga)).toMatchObject({ caminho: "/linhas/historico" });
+    expect(montarConsulta({ ...recarga, uuid_externo: null }, { consultaPagamento: true })).toMatchObject({ caminho: "/linhas/historico" });
+  });
+
+  it("data_pagamento confirma com o uuid; sem data espera; status false ou HTTP de erro não confirmam; eSIM não vai para a evidência", () => {
+    const pago = interpretarConsultaPagamento(recarga, 200, { status: true, data_pagamento: "2026-10-27", esim: "https://pdf", activation_code_esim: "LPA:1$x", qr_code_esim: "https://qr" });
+    expect(pago).toEqual({ evidencia: "confirmada", mensagem: "Recarga paga e feita (consulta pelo uuid).", dados: { uuid, data_pagamento: "2026-10-27" } });
+    expect(JSON.stringify(pago)).not.toContain("LPA:");
+    expect(interpretarConsultaPagamento(recarga, 200, { status: true, data_pagamento: "" }).evidencia).toBe("em_andamento");
+    expect(interpretarConsultaPagamento(recarga, 200, { status: false }).evidencia).toBe("sem_evidencia");
+    expect(interpretarConsultaPagamento(recarga, 500, null).evidencia).toBe("falha_consulta");
   });
 });

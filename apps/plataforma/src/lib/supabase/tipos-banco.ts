@@ -1,5 +1,5 @@
 // ARQUIVO GERADO pelo Supabase (generate_typescript_types do projeto ora5g-dev) depois da
-// migration 20261109201940_mensagens_nogle. Não edite à mão: gere de novo a cada
+// migration 20261110124824_connect_consulta_por_uuid. Não edite à mão: gere de novo a cada
 // migration aplicada (auditoria do Codex de 08/11, §7.2). O teste tipos-banco.test.ts confere
 // que funções e tabelas públicas daqui são as mesmas das migrations.
 export type Json =
@@ -482,6 +482,7 @@ export type Database = {
           tentativas_consulta: number
           tipo: string
           unidade_id: string
+          uuid_externo: string | null
           valor_face_centavos: number | null
           venda_chip_id: string | null
           venda_item_id: string | null
@@ -526,6 +527,7 @@ export type Database = {
           tentativas_consulta?: number
           tipo: string
           unidade_id: string
+          uuid_externo?: string | null
           valor_face_centavos?: number | null
           venda_chip_id?: string | null
           venda_item_id?: string | null
@@ -570,6 +572,7 @@ export type Database = {
           tentativas_consulta?: number
           tipo?: string
           unidade_id?: string
+          uuid_externo?: string | null
           valor_face_centavos?: number | null
           venda_chip_id?: string | null
           venda_item_id?: string | null
@@ -3058,6 +3061,7 @@ export type Database = {
           situacao: string
           tentativas_consulta: number
           tipo: string
+          uuid_externo: string
         }[]
       }
       connect_worker_registrar_consulta: {

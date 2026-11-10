@@ -208,3 +208,17 @@ Provas: `transferencias.test.ts` (8) e duas disputas reais em `concorrencia.test
 ## 09/11/2026 — Nome da integração: Nogle (pedido do proprietário)
 
 **Branch:** `fix/ORA-nome-nogle`. A Ora Connect usa a **API oficial da Nogle**; não há outro fornecedor. "Contel" aparecia porque a documentação oficial da Nogle é publicada em nome da Contel Telecom, e o endereço da API (`api.conteltelecom.com.br`) e o e-mail de suporte têm esse nome. Agora telas, mensagens, worker, domínio, mensagens do banco (migration `20261109201940_mensagens_nogle`, só texto, md5 conferida) e documentos vivos dizem "Nogle". Ficaram iguais: o endereço da API, o e-mail de suporte, a coleção oficial e o catálogo gerado a partir dela, os relatórios históricos e os textos do Codex. A função `iccidNoFormatoContel` passou a se chamar `iccidNoFormatoNogle`.
+
+## 10/11/2026 — Respostas da Nogle (itens 5 a 7) e confirmação pelo uuid
+
+**Branch:** `feature/ORA-nogle-respostas`. Respostas registradas em `docs/integracoes/NOGLE_API_REFERENCIA.md` §3.1, com a conferência contra a coleção oficial:
+- Estoque de PDV e da MVNO, as três transferências de chip, o extrato do saldo e os relatórios de ativações e recargas existem na coleção. As respostas só explicam o uso, por exemplo: o ICCID do lote vai sem o dígito verificador, e o GET com corpo é confirmado.
+- `/consultaPagamento` e o campo `uuid` **não** estão na coleção.
+
+**Implementado, desligado por padrão:**
+- `uuidDaResposta` só lê `uuid`, no topo ou no objeto da operação, e só no formato de uuid; o lugar exato ainda precisa ser confirmado.
+- `montarConsulta(..., { consultaPagamento })` monta a consulta e `interpretarConsultaPagamento` lê a resposta: `data_pagamento` confirma; QR, código e PDF do eSIM ficam fora da evidência.
+- Worker com `NOGLE_CONSULTA_PAGAMENTO=habilitada`.
+- Migration `20261110124824_connect_consulta_por_uuid`, aplicada com md5 conferida: `uuid_externo`, um por organização; o envio grava e a fila devolve. A confirmação pela evidência do mesmo uuid com data do pagamento usa `evidencia_chave = 'uuid|…'`. Evidência de outro uuid ou sem data não confirma.
+
+Provas: `nogle.test.ts` (3) e `connect-lote2.test.ts` (2): duas recargas com a mesma data confirmam cada uma pelo próprio uuid.

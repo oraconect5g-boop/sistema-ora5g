@@ -51,7 +51,7 @@ export class ClienteNogle {
   async chamar(pedido: PedidoNogle): Promise<ResultadoChamada> {
     const temCorpo = Object.keys(pedido.corpo).length > 0;
     if (pedido.metodo === "GET" && temCorpo && !this.opcoes.getComCorpo) {
-      return { tipo: "bloqueada", motivo: "consulta GET com corpo aguarda a confirmação da Nogle (pergunta 2)" };
+      return { tipo: "bloqueada", motivo: "consulta GET com corpo desligada neste worker (NOGLE_GET_COM_CORPO)" };
     }
     for (let tentativa = 0; tentativa < 2; tentativa++) {
       if (!this.token) {

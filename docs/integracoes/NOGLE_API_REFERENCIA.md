@@ -187,12 +187,29 @@ A leitura de 06/11 (`docs/etapa-0/ETAPA_0_DECISOES_2026-11-06.md` §3) tinha vis
 
 **Evidência para a pergunta 6:** o exemplo de erro da recarga cita o campo `numeros.0.numero`, o que indica que a validação cobra a lista `numeros`. A Ora usa a lista (ADR-005) até a Nogle confirmar.
 
+## 3.1 Respostas da Nogle recebidas em 10/11/2026 (itens 5 a 7, enviadas pelo proprietário)
+
+Chegaram as respostas dos itens 5, 6 e 7 de uma lista enviada pelo proprietário. Os itens 1 a 4 não vieram nesta mensagem; o item 6 cita o item 4 para dizer que **não há comissões na API**. Conferência com a coleção oficial de 07/11:
+
+| Tema | O que a Nogle respondeu | Está na coleção oficial? | Efeito na Ora |
+|---|---|---|---|
+| Estoque do PDV | `GET /pdv/estoque` com `{"id": <id do PDV>}` **no corpo** devolve o estoque virgem do PDV (ICCID e tipo de chip) | Sim | Confirma o GET com corpo (pergunta 2): o worker já envia assim com `NOGLE_GET_COM_CORPO=documentado` |
+| Estoque da MVNO | `GET /linhas/estoque`, com filtro `?tipo=esim` ou `?tipo=físico` | Sim | Conferência do estoque de chips da Ora com o da Nogle |
+| Transferir um chip físico | `POST /pdv/transferir-chip-fisico-unidade` com `{"id": <PDV de destino>, "iccid": "…"}` | Sim | Liga a transferência interna de chips (ADR-007) ao PDV de destino na Nogle |
+| Transferir eSIM | `POST /pdv/transferir-chip-esim` com `{"id": <PDV>, "quantidade": n}`; a Nogle escolhe os eSIMs disponíveis | Sim | Idem, para eSIM (por quantidade) |
+| Transferir lote de chips | `POST /pdv/transferir-chip-fisico-lote` com `{"id", "iccid_inicial", "iccid_final"}` **sem o último dígito** (o verificador) | Sim | Atenção: no lote, o ICCID vai sem o dígito verificador; no envio unitário, completo |
+| Extrato do saldo | `GET /saldo/extrato`: cada uso do saldo (`tipo`, `data`, `valor`, `descricao_cliente`, `linha`, `iccid`, `plano_nome`, `plano_valor`) | Sim | Conciliação do débito da carteira (custo, #56) por linha, data e valor |
+| Comissões | Não há na API | — | Repasse e comissão continuam sem fonte por API (D-016/#54) |
+| Renovações | `GET /relatorios/recargas` e `GET /relatorios/ativacoes`: todas as recargas e ativações, com `id`, `id_externo`, cliente, documento, ICCID, linha, plano, `plano_inicio`, `plano_fim`, `plano_valor`, `vendedor`, `pdv`, `tipo_linha`, `forma_pagto` | Sim | Acompanhar renovações e conciliar a produção; o relatório traz CPF: guardar só o necessário |
+| Resultado e nova tentativa | A resposta de cada chamada diz se deu certo; a Nogle valida duplicidade de pagamentos | — | Responde em parte a pergunta 4 |
+| Consulta por `uuid` | Toda ativação ou recarga devolve um `uuid`; `GET /consultaPagamento` com `{"tipo": "ATIVREC", "uuid": "…"}` devolve `status`, `data_pagamento` (**preenchida só se a ativação ou recarga deu certo**) e, no eSIM, `esim`, `activation_code_esim` e `qr_code_esim`. A Nogle diz que pode **disponibilizar** a rota | **Não**: nem a rota nem o campo `uuid` estão na coleção; os exemplos oficiais de resposta trazem só `id` e `data_cadastro` | Resolve a pergunta 10 (recarga sem id no histórico) e o #59: a confirmação passa a ser pela operação exata. **Falta confirmar** o nome e o lugar do `uuid` na resposta e a liberação da rota para a conta da Ora. Implementado desligado (`NOGLE_CONSULTA_PAGAMENTO`) até a primeira resposta real em homologação |
+
 ## 4. O que já está pronto e o que falta
 
 | Pronto (testado, sem chamada real) | Falta |
 |---|---|
-| Catálogo das 62 funções gerado da cópia oficial e conferido no CI | Credenciais no ambiente do worker e resposta da P9 |
-| Regras em `packages/dominio/src/nogle.ts`: normalização, pedido só com campos documentados, leitura da resposta e da evidência, listas oficiais (testadas com os exemplos oficiais) | Respostas da Nogle às perguntas 2, 6, 7, 10, 11 e 12 |
+| Catálogo das 62 funções gerado da cópia oficial e conferido no CI | Credenciais no ambiente do worker e resposta da P9 (itens 1 a 4 da lista do proprietário não chegaram) |
+| Regras em `packages/dominio/src/nogle.ts`: normalização, pedido só com campos documentados, leitura da resposta e da evidência, listas oficiais (testadas com os exemplos oficiais) | Respostas da Nogle às perguntas 6, 7, 11 e 12; da 10, o nome e o lugar do `uuid` na resposta e a liberação de `/consultaPagamento` |
 | ADR-005: operações persistentes no banco (ativação, recarga, portabilidade), eventos, produção única, resultado desconhecido com a gerência | Homologação com linha/chip de teste autorizados pela Nogle |
 | Worker no servidor (`apps/worker/src/connect/`): token, envio, consulta e listas; ponta a ponta contra servidor local com os exemplos oficiais | Compra com entrega, bloqueio, consumo, carteira/extrato e transferência de chips (fora do ADR-005) |
 | Tela Ora Connect da demonstração (18 testes E2E) e tela real `/connect` | Agendar o worker no servidor (só com a autorização do proprietário) |
