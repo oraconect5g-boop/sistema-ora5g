@@ -3147,6 +3147,15 @@ export type Database = {
           esperado: number
         }[]
       }
+      financeiro_painel: {
+        Args: {
+          p_fim: string
+          p_inicio: string
+          p_por_hora?: boolean
+          p_unidade?: string
+        }
+        Returns: Json
+      }
       fiscal_definir_politica: {
         Args: { p_alerta_minutos: number; p_fonte: string }
         Returns: boolean

@@ -417,13 +417,15 @@ export function Sparkline({ valores, rotulo }: { valores: readonly number[]; rot
 }
 
 /** Entradas para cima e saídas para baixo a partir do zero (fluxo de caixa), na mesma escala. */
-export function ColunasDivergentes({ dados, formatar, formatarEixo = formatar, nomes, altura = 200, cadaRotulo = 1 }: {
+export function ColunasDivergentes({ dados, formatar, formatarEixo = formatar, nomes, altura = 200, cadaRotulo = 1, rotuloSaldo = "Saldo do dia" }: {
   dados: readonly { rotulo: string; entrada: number; saida: number }[];
   formatar: (valor: number) => string;
   formatarEixo?: (valor: number) => string;
   nomes: readonly [string, string];
   altura?: number;
   cadaRotulo?: number;
+  /** Rótulo da diferença na dica (ex.: "Líquido do dia"; "saldo" pode ser lido como saldo de banco). */
+  rotuloSaldo?: string;
 }) {
   const { topo, marcas } = escala(Math.max(0, ...dados.flatMap((d) => [d.entrada, d.saida])), 2);
   const meia = (v: number) => (topo > 0 ? (v / topo) * 50 : 0);
@@ -446,7 +448,7 @@ export function ColunasDivergentes({ dados, formatar, formatarEixo = formatar, n
               <div
                 key={d.rotulo}
                 tabIndex={0}
-                data-dica={`${d.rotulo}\n${nomes[0]}|${formatar(d.entrada)}\n${nomes[1]}|${formatar(d.saida)}\nSaldo do dia|${d.entrada - d.saida < 0 ? "−" : ""}${formatar(Math.abs(d.entrada - d.saida))}`}
+                data-dica={`${d.rotulo}\n${nomes[0]}|${formatar(d.entrada)}\n${nomes[1]}|${formatar(d.saida)}\n${rotuloSaldo}|${d.entrada - d.saida < 0 ? "−" : ""}${formatar(Math.abs(d.entrada - d.saida))}`}
                 aria-label={`${d.rotulo}: ${nomes[0]} ${formatar(d.entrada)}, ${nomes[1]} ${formatar(d.saida)}`}
                 className="group relative h-full min-w-0 flex-1 rounded-sm focus-visible:bg-slate-100"
               >

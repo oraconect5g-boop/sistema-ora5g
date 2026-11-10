@@ -37,6 +37,15 @@ describe("menu único das telas reais", () => {
     expect(admin.visiveis).toEqual(expect.arrayContaining(["vendas", "equipe", "auditoria", "estoque"]));
   });
 
+  it("financeiro (#65): gerente, dono e administrador; vendedor e técnico não (abrir caixa não libera)", () => {
+    expect(menu("gerente").visiveis).toContain("financeiro");
+    expect(menu("dono").visiveis).toContain("financeiro");
+    expect(menu("administrador").visiveis).toContain("financeiro");
+    expect(menu("vendedor").visiveis).not.toContain("financeiro");
+    expect(menu("tecnico").visiveis).not.toContain("financeiro");
+    expect(menu("gerente").grupos.find((g) => g.grupo === "Gestão")?.paginas[0]).toBe("financeiro");
+  });
+
   it("técnico (sem permissões de loja) só vê o início e o catálogo; nunca fica sem menu", () => {
     expect(menu("tecnico").visiveis).toEqual(["inicio", "catalogo"]);
     expect(menu("tecnico").atalhos).toEqual(["inicio", "catalogo"]);
