@@ -2,13 +2,27 @@ import { expect, test } from "@playwright/test";
 
 // Sistema real (ORA-006): sem login, nenhuma página real abre; saída forçada só mostra motivos
 // conhecidos. Roda com ou sem a configuração pública do Supabase no ambiente de teste.
-for (const caminho of ["/inicio", "/escolher-loja", "/equipe", "/catalogo", "/vender", "/caixa", "/aprovacoes", "/estoque", "/transferencias", "/connect", "/notas", "/vendas", "/auditoria", "/financeiro", "/financeiro/exportar", "/vendas/00000000-0000-4000-8000-000000000001", "/conta/senha"]) {
+// Telas reais e exportações: sem login, nenhuma abre (nem o esqueleto de carregamento).
+const PROTEGIDAS = ["/inicio", "/escolher-loja", "/equipe", "/catalogo", "/vender", "/caixa", "/aprovacoes", "/estoque", "/transferencias", "/connect", "/notas", "/vendas", "/auditoria", "/financeiro", "/financeiro/exportar", "/vendas/00000000-0000-4000-8000-000000000001", "/conta/senha"];
+
+for (const caminho of PROTEGIDAS) {
   test(`${caminho} sem login volta para /entrar`, async ({ page }) => {
     await page.goto(caminho);
     await expect(page).toHaveURL(/\/entrar(\?|$)/);
     await expect(page.getByRole("heading", { name: "Bem-vindo à Ora" })).toBeVisible();
   });
 }
+
+// O servidor responde com o redirecionamento (307) antes de qualquer conteúdo. Em 10/11 o /financeiro
+// mandava primeiro o esqueleto de carregamento (200) e só depois o redirecionamento embutido: nenhum
+// número vazava, mas a tela ficava diferente das outras (a sessão passou a ser conferida no layout).
+test("sem login, o servidor redireciona (307) antes de mandar qualquer tela", async ({ request }) => {
+  for (const caminho of PROTEGIDAS) {
+    const resposta = await request.get(caminho, { maxRedirects: 0 });
+    expect(resposta.status(), caminho).toBe(307);
+    expect(resposta.headers()["location"] ?? "", caminho).toMatch(/\/entrar/);
+  }
+});
 
 test("saída forçada mostra só motivo conhecido", async ({ page }) => {
   await page.goto("/sair?motivo=turno");
