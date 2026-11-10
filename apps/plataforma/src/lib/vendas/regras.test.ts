@@ -1,6 +1,7 @@
 import { describe, expect, it } from "vitest";
 
-import { erroDaVenda, lerDevolucao, lerPagamentos, lerValor, pareceIdentificador } from "./regras";
+import { identificadorDigitado } from "../catalogo/termos";
+import { erroDaVenda, lerDevolucao, lerPagamentos, lerValor } from "./regras";
 
 const formulario = (campos: Record<string, string>) => ({ get: (nome: string) => campos[nome] ?? null });
 
@@ -49,8 +50,8 @@ describe("erros e busca", () => {
   it("valor em reais e identificador", () => {
     expect(lerValor("R$ 1.299,90")).toBe(129_990);
     expect(lerValor("abc")).toBeNull();
-    expect(pareceIdentificador("352099001800010")).toBe(true);
-    expect(pareceIdentificador("Galaxy 15")).toBe(false);
+    expect(identificadorDigitado("352099001800010")).toBe("352099001800010");
+    expect(identificadorDigitado("Galaxy 15")).toBeNull();
   });
 });
 

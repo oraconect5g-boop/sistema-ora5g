@@ -2,12 +2,11 @@ import { randomUUID } from "node:crypto";
 
 import { ArrowLeftRight, RadioTower, ShieldCheck, Smartphone, Zap } from "lucide-react";
 import type { Metadata } from "next";
-import Link from "next/link";
 
 import { NOMES_DAS_OPERACOES, SITUACOES_OPERACAO, TIPOS_OPERACAO, type SituacaoOperacao, type TipoOperacao } from "@ora5g/dominio/nogle";
 
-import { Marca } from "../../componentes/Marca";
-import { Aviso, Botao, Cartao, Selo, type Tom } from "../../componentes/ui";
+import { MoldeReal } from "../../componentes/MoldeReal";
+import { Aviso, Botao, Cartao, Selo, TituloPagina, type Tom } from "../../componentes/ui";
 import { FalhaDoServico, obterSessao } from "../../lib/acesso/sessao";
 import { ERROS_DO_CONNECT, inicioDaJanela } from "../../lib/connect/regras";
 import { centavosDoBanco } from "../../lib/dinheiro";
@@ -41,7 +40,8 @@ export default async function Connect({ searchParams }: { searchParams: Promise<
   const parametros = await searchParams;
   const erro = chaveDoCatalogo(ERROS_DO_CONNECT, parametros.erro);
   const ok = chaveDoCatalogo(OK, parametros.ok);
-  const { supabase, usuario, situacao } = await obterSessao({ exigirLoja: true });
+  const sessao = await obterSessao({ exigirLoja: true });
+  const { supabase, usuario, situacao } = sessao;
   const unidade = situacao.unidade_id as string;
   const seteDias = inicioDaJanela(7);
 
@@ -94,12 +94,8 @@ export default async function Connect({ searchParams }: { searchParams: Promise<
   const semListas = planos.length === 0;
 
   return (
-    <main className="mx-auto max-w-3xl space-y-4 px-4 py-8">
-      <div className="flex flex-wrap items-center justify-between gap-3">
-        <Marca tamanho="text-2xl" />
-        <nav className="flex gap-3 text-sm font-semibold text-acao"><Link href="/vender">Vender</Link><Link href="/caixa">Caixa</Link><Link href="/inicio">Início</Link></nav>
-      </div>
-      <h1 className="text-2xl font-bold tracking-tight">Ora Connect · {situacao.unidade_nome}</h1>
+    <MoldeReal sessao={sessao}>
+      <TituloPagina sobretitulo={situacao.unidade_nome} titulo="Ora Connect" />
       {erro && <Aviso tom="perigo">{ERROS_DO_CONNECT[erro]}</Aviso>}
       {ok && <Aviso tom="sucesso">{OK[ok]}</Aviso>}
 
@@ -253,6 +249,6 @@ export default async function Connect({ searchParams }: { searchParams: Promise<
           </form>
         </Cartao>
       )}
-    </main>
+    </MoldeReal>
   );
 }

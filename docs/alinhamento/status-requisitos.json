@@ -53,7 +53,7 @@
     },
     "ORA-CAT-006": {
       "status": "parcial",
-      "nota": "Validação de IMEI (dígito verificador), ICCID e CPF prontas e testadas; busca por nome, marca, SKU, código de barras e final do IMEI na demonstração. Falta a busca no banco.",
+      "nota": "Validação de IMEI (dígito verificador), ICCID e CPF prontas e testadas; busca por nome, marca, SKU, código de barras e final do IMEI na demonstração. Falta a busca no banco. Revisão das telas (10/11): a mesma busca no catálogo, no estoque e no PDV (lib/catalogo/busca.ts): nome do produto, nome da variação, SKU, IMEI, segundo IMEI e ICCID; antes só o catálogo achava pelo nome do produto e o PDV não via o segundo IMEI (busca.test.ts).",
       "evidencia": "packages/dominio/src/identificadores.ts; apps/plataforma/src/app/demo/vender/PDV.tsx"
     },
     "ORA-INV-002": {
@@ -97,8 +97,8 @@
       "evidencia": "apps/plataforma/src/app/demo; apps/plataforma/e2e/demonstracao.spec.ts"
     },
     "ORA-REPORT-003": {
-      "status": "demonstracao",
-      "nota": "Início do vendedor no celular: meta do dia, produção por categoria, vendas por loja (vendedor em duas lojas) e atalhos. Só dados fictícios.",
+      "status": "parcial",
+      "nota": "Início do vendedor no celular: meta do dia, produção por categoria, vendas por loja (vendedor em duas lojas) e atalhos. Só dados fictícios. Revisão das telas (10/11): o início real mostra o que espera a pessoa na loja (aprovações, notas, caixas a conferir, transferências, estornos, retornos e Ora Connect a decidir), cada contagem só para quem tem a permissão, e os atalhos do menu único. FALTA: produção do dia e metas (só na demonstração).",
       "evidencia": "apps/plataforma/src/app/demo; apps/plataforma/e2e/demonstracao.spec.ts"
     },
     "ORA-CONNECT-004": {
@@ -128,7 +128,7 @@
     },
     "ORA-QUAL-003": {
       "status": "parcial",
-      "nota": "Auditoria só de inserção, inclusive para o dono do banco. Operações críticas futuras (venda, caixa, aprovação) ainda não existem. Desde 08/11: auditoria automática das mudanças de acesso e configuração (ORA-ORG-005) e livro de estoque imutável (ADR-003).",
+      "nota": "Auditoria só de inserção, inclusive para o dono do banco. Operações críticas futuras (venda, caixa, aprovação) ainda não existem. Desde 08/11: auditoria automática das mudanças de acesso e configuração (ORA-ORG-005) e livro de estoque imutável (ADR-003). Revisão das telas (10/11): tela real /auditoria (auditoria.ver, pelo RLS): quem fez o quê e quando, na loja e na rede, com destaque para tentativas negadas e bloqueios; o antes/depois não aparece (pode ter dado pessoal).",
       "evidencia": "acesso.test.ts (T9); packages/banco/src/auditoria-acesso.test.ts; packages/banco/src/catalogo-estoque.test.ts"
     },
     "ORA-QUAL-004": {
@@ -178,7 +178,7 @@
     },
     "ORA-POS-008": {
       "status": "parcial",
-      "nota": "Venda gravada com loja, vendedor e canal; cliente por nome e e-mail até o CRM existir; RLS: vendedor vê as próprias, gerência a loja. FALTA: cliente do CRM.",
+      "nota": "Venda gravada com loja, vendedor e canal; cliente por nome e e-mail até o CRM existir; RLS: vendedor vê as próprias, gerência a loja. FALTA: cliente do CRM. Revisão das telas (10/11): lista real /vendas: o vendedor vê as próprias vendas, a gerência a loja inteira com o nome de quem vendeu, a situação da nota e a devolução (vendas.test.ts, banco simulado).",
       "evidencia": "packages/banco/supabase/migrations/20261108233546_vendas_pagamentos_e_caixa.sql; packages/banco/src/vendas.test.ts; packages/banco/src/concorrencia.test.ts"
     },
     "ORA-PAY-003": {
@@ -293,7 +293,7 @@
     },
     "ORA-POS-002": {
       "status": "parcial",
-      "nota": "Busca por nome, SKU e IMEI/ICCID com foto, preço vigente e quantidade livre na loja. FALTA: medir velocidade e validar com vendedor.",
+      "nota": "Busca por nome, SKU e IMEI/ICCID com foto, preço vigente e quantidade livre na loja. FALTA: medir velocidade e validar com vendedor. Revisão das telas (10/11): o PDV usa a busca única: acha pelo nome do produto e pelo segundo IMEI; IMEI de 14 dígitos deixou de ser aceito como identificador.",
       "evidencia": "apps/plataforma/src/app/vender; apps/plataforma/src/app/caixa; apps/plataforma/src/app/aprovacoes; apps/plataforma/src/app/vendas"
     },
     "ORA-POS-003": {
@@ -379,6 +379,10 @@
     "ORA-CONNECT-009": {
       "status": "nao_iniciado",
       "nota": "Carteira, extrato, cobrança/gateway, recorrência e repasses oficiais não implementados (#54). Respostas da Nogle de 10/11 (NOGLE_API_REFERENCIA.md §3.1): GET /saldo/extrato existe; a API não traz comissões. Persistir estados e correlação e homologar sem apresentar estimativa local como recebimento. Entrada vinda da PR #33 (Codex)."
+    },
+    "ORA-POS-009": {
+      "status": "parcial",
+      "nota": "Revisão das telas (10/11): lista real /vendas com período, situação e número, e o comprovante de cada venda; antes não havia como voltar a uma venda concluída. FALTA: pagamento pendente com reprocessamento (link de pagamento, linha E1)."
     }
   }
 }

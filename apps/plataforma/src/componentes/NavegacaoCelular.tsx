@@ -3,7 +3,7 @@
 import { Ellipsis, RefreshCw, X } from "lucide-react";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
-import { useEffect, useRef } from "react";
+import { useEffect, useRef, type ReactNode } from "react";
 
 import { Icone } from "./Icone";
 import { caminhoAtivo, LinkNavegacao } from "./LinkNavegacao";
@@ -13,12 +13,14 @@ import { caminhoAtivo, LinkNavegacao } from "./LinkNavegacao";
 
 export type ItemNavegacao = { href: string; titulo: string; curto: string; icone: string; emblema?: number };
 
-export function NavegacaoCelular({ atalhos, grupos, pessoa, papel, loja }: {
+export function NavegacaoCelular({ atalhos, grupos, pessoa, papel, loja, rodape }: {
   atalhos: readonly ItemNavegacao[];
   grupos: readonly { grupo: string; itens: readonly ItemNavegacao[] }[];
   pessoa: string;
   papel: string;
   loja: string;
+  /** Fim da lista "Mais" (telas reais: trocar de loja, senha e sair). Sem ele, o atalho da demonstração. */
+  rodape?: ReactNode;
 }) {
   const dialogo = useRef<HTMLDialogElement>(null);
   const caminho = usePathname();
@@ -81,9 +83,11 @@ export function NavegacaoCelular({ atalhos, grupos, pessoa, papel, loja }: {
               ))}
             </section>
           ))}
-          <Link href="/demo/perfil" className="flex min-h-12 items-center gap-3 rounded-xl border border-borda px-3 text-[15px] font-medium">
-            <RefreshCw aria-hidden className="size-5 text-suave" /> Trocar o perfil da demonstração
-          </Link>
+          {rodape ?? (
+            <Link href="/demo/perfil" className="flex min-h-12 items-center gap-3 rounded-xl border border-borda px-3 text-[15px] font-medium">
+              <RefreshCw aria-hidden className="size-5 text-suave" /> Trocar o perfil da demonstração
+            </Link>
+          )}
         </div>
       </dialog>
     </>

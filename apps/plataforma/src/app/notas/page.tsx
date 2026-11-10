@@ -4,8 +4,8 @@ import Link from "next/link";
 
 import { chaveEmGrupos, MODELOS_DE_NOTA, SITUACOES_DA_NOTA, tempoNaFila, type SituacaoDaNota } from "@ora5g/dominio/fiscal";
 
-import { Marca } from "../../componentes/Marca";
-import { Aviso, Botao, Cartao, Selo } from "../../componentes/ui";
+import { MoldeReal } from "../../componentes/MoldeReal";
+import { Aviso, Botao, Cartao, Selo, TituloPagina } from "../../componentes/ui";
 import { FalhaDoServico, obterSessao } from "../../lib/acesso/sessao";
 import { centavosDoBanco } from "../../lib/dinheiro";
 import { brl } from "../../lib/formato";
@@ -32,7 +32,8 @@ export default async function Notas({ searchParams }: { searchParams: Promise<{ 
   const parametros = await searchParams;
   const erro = chaveDoCatalogo(ERROS_DAS_NOTAS, parametros.erro);
   const ok = chaveDoCatalogo(OK, parametros.ok);
-  const { supabase, situacao } = await obterSessao({ exigirLoja: true });
+  const sessao = await obterSessao({ exigirLoja: true });
+  const { supabase, situacao } = sessao;
   const unidade = situacao.unidade_id as string;
   const [aprova, gereLojas, politica, abertos, emitidos] = await Promise.all([
     supabase.rpc("tem_permissao", { p_permissao: "nota.aprovar", p_unidade: unidade }),
@@ -44,14 +45,8 @@ export default async function Notas({ searchParams }: { searchParams: Promise<{ 
       .eq("unidade_id", unidade).eq("situacao", "emitida").order("emitida_em", { ascending: false }).limit(20),
   ]);
   if (aprova.error || gereLojas.error || politica.error || abertos.error || emitidos.error) throw new FalhaDoServico("notas");
-  const cabecalho = (
-    <div className="flex flex-wrap items-center justify-between gap-3">
-      <Marca tamanho="text-2xl" />
-      <nav className="flex gap-3 text-sm font-semibold text-acao"><Link href="/vender">Vender</Link><Link href="/inicio">Início</Link></nav>
-    </div>
-  );
   if (!aprova.data) {
-    return <main className="mx-auto max-w-3xl px-4 py-8">{cabecalho}<Aviso tom="aviso" className="mt-6">A fila de notas é do dono e do gerente da loja.</Aviso></main>;
+    return <MoldeReal sessao={sessao}><Aviso tom="aviso" className="mt-6">A fila de notas é do dono e do gerente da loja.</Aviso></MoldeReal>;
   }
   const vendas = abertos.data.length
     ? await supabase.from("vendas").select("id, numero, total_centavos").in("id", abertos.data.map((p) => p.venda_id))
@@ -63,9 +58,8 @@ export default async function Notas({ searchParams }: { searchParams: Promise<{ 
   const atrasadas = fila.filter((p) => p.atrasada).length;
 
   return (
-    <main className="mx-auto max-w-3xl space-y-4 px-4 py-8">
-      {cabecalho}
-      <h1 className="text-2xl font-bold tracking-tight">Notas fiscais · {situacao.unidade_nome}</h1>
+    <MoldeReal sessao={sessao}>
+      <TituloPagina sobretitulo={situacao.unidade_nome} titulo="Notas fiscais" />
       {erro && <Aviso tom="perigo">{ERROS_DAS_NOTAS[erro]}</Aviso>}
       {ok && <Aviso tom="sucesso">{OK[ok]}</Aviso>}
       <Aviso tom="info">O sistema ainda não emite nota (emissor fiscal a contratar com o contador). Emita no portal de sempre e registre a chave de acesso aqui: a aprovação nunca segura a emissão.</Aviso>
@@ -136,6 +130,6 @@ export default async function Notas({ searchParams }: { searchParams: Promise<{ 
           </form>
         </Cartao>
       )}
-    </main>
+    </MoldeReal>
   );
 }

@@ -1,5 +1,5 @@
 import {
-  Building2, ChartColumn, ClipboardCheck, FileUp, Globe, House, MessageCircle, Package, Receipt, ScrollText,
+  ArrowRightLeft, Building2, ChartColumn, ClipboardCheck, FileText, FileUp, Globe, House, MessageCircle, Package, Receipt, ScrollText,
   ShoppingCart, Signal, Tags, Target, Wallet, Wrench, type LucideIcon,
 } from "lucide-react";
 
@@ -20,6 +20,8 @@ const ICONES: Record<string, LucideIcon> = {
   lojas: Building2,
   importacao: FileUp,
   auditoria: ScrollText,
+  notas: FileText,
+  transferencias: ArrowRightLeft,
 };
 
 export function Icone({ nome, className = "size-5" }: { nome: string; className?: string }) {

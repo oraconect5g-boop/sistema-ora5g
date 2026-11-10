@@ -1,9 +1,8 @@
 import { BadgePercent } from "lucide-react";
 import type { Metadata } from "next";
-import Link from "next/link";
 
-import { Marca } from "../../componentes/Marca";
-import { Aviso, Botao, Cartao, Selo } from "../../componentes/ui";
+import { MoldeReal } from "../../componentes/MoldeReal";
+import { Aviso, Botao, Cartao, Selo, TituloPagina } from "../../componentes/ui";
 import { FalhaDoServico, obterSessao } from "../../lib/acesso/sessao";
 import { centavosDoBanco } from "../../lib/dinheiro";
 import { brl } from "../../lib/formato";
@@ -22,7 +21,8 @@ export default async function Aprovacoes({ searchParams }: { searchParams: Promi
   const parametros = await searchParams;
   const erro = chaveDoCatalogo(ERROS_DA_VENDA, parametros.erro);
   const ok = chaveDoCatalogo(OK, parametros.ok);
-  const { supabase, usuario, situacao } = await obterSessao({ exigirLoja: true });
+  const sessao = await obterSessao({ exigirLoja: true });
+  const { supabase, usuario, situacao } = sessao;
   const unidade = situacao.unidade_id as string;
   const pode = await supabase.rpc("tem_permissao", { p_permissao: "desconto.aprovar", p_unidade: unidade });
   if (pode.error) throw new FalhaDoServico("tem_permissao");
@@ -32,9 +32,8 @@ export default async function Aprovacoes({ searchParams }: { searchParams: Promi
     : { data: [], error: null };
   if (pedidos.error) throw new FalhaDoServico("aprovacoes");
   return (
-    <main className="mx-auto max-w-3xl space-y-4 px-4 py-8">
-      <div className="flex items-center justify-between gap-3"><Marca tamanho="text-2xl" /><nav className="flex gap-3 text-sm font-semibold text-acao"><Link href="/vender">Vender</Link><Link href="/inicio">Início</Link></nav></div>
-      <h1 className="text-2xl font-bold tracking-tight">Aprovações de desconto · {situacao.unidade_nome}</h1>
+    <MoldeReal sessao={sessao}>
+      <TituloPagina sobretitulo={situacao.unidade_nome} titulo="Aprovações de desconto" />
       {erro && <Aviso tom="perigo">{ERROS_DA_VENDA[erro]}</Aviso>}
       {ok && <Aviso tom={ok === "vencido" ? "aviso" : "sucesso"}>{OK[ok]}</Aviso>}
       {!pode.data ? <Aviso tom="aviso">Só o gerente ou o dono da loja aprovam desconto.</Aviso> : (
@@ -65,6 +64,6 @@ export default async function Aprovacoes({ searchParams }: { searchParams: Promi
           )}
         </Cartao>
       )}
-    </main>
+    </MoldeReal>
   );
 }

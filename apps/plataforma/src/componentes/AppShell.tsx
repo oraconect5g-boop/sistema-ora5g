@@ -11,7 +11,7 @@ import { Marca } from "./Marca";
 import { LinkNavegacao } from "./LinkNavegacao";
 import { NavegacaoCelular, type ItemNavegacao } from "./NavegacaoCelular";
 
-export const nomeDoEscopo = (loja: string) => (loja === REDE ? "Rede inteira (14 lojas)" : nomeDaLoja(loja));
+export const nomeDoEscopo = (loja: string) => (loja === REDE ? `Rede inteira (${LOJAS.length} lojas)` : nomeDaLoja(loja));
 
 function opcoesDeLoja(contexto: ContextoDemo): OpcaoLoja[] {
   return contexto.lojas.map((codigo) => {
@@ -19,7 +19,7 @@ function opcoesDeLoja(contexto: ContextoDemo): OpcaoLoja[] {
     return {
       codigo,
       nome: codigo === REDE ? "Rede inteira" : nomeDaLoja(codigo),
-      detalhe: codigo === REDE ? "Consolidado das 14 lojas" : loja ? `${loja.bairro}${loja.piloto ? " · piloto" : ""}` : undefined,
+      detalhe: codigo === REDE ? `Consolidado das ${LOJAS.length} lojas` : loja ? `${loja.bairro}${loja.piloto ? " · piloto" : ""}` : undefined,
     };
   });
 }
@@ -70,7 +70,7 @@ export function AppShell({ contexto, avisos, pendencias, children }: {
         </nav>
         <div className="m-3 rounded-2xl bg-white/[0.06] p-3 ring-1 ring-inset ring-white/10">
           <p className="flex items-center gap-2 text-xs font-semibold text-amber-300"><FlaskConical aria-hidden className="size-3.5" /> Ambiente de demonstração</p>
-          <p className="mt-1 text-xs text-slate-400">14 lojas · dados fictícios · nada é gravado</p>
+          <p className="mt-1 text-xs text-slate-400">{LOJAS.length} lojas + DEFEITOS · dados fictícios · nada é gravado</p>
           <Link href="/demo/perfil" className="mt-2 inline-flex items-center gap-1.5 text-xs font-semibold text-destaque hover:underline">
             <RefreshCw aria-hidden className="size-3.5" /> Trocar perfil ({dados.nome})
           </Link>

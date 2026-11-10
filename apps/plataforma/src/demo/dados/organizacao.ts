@@ -1,5 +1,6 @@
-// ⚠️ DADOS FICTÍCIOS DA DEMONSTRAÇÃO. Nomes de pessoas, metas e lojas 02–14 são inventados
-// (a lista oficial das 14 lojas ainda não chegou). Nunca copiar para o banco real.
+// ⚠️ DADOS FICTÍCIOS DA DEMONSTRAÇÃO. Nomes de pessoas, metas e lojas 02–11 são inventados. A rede
+// tem 11 lojas comerciais e o local DEFEITOS, que não vende (decisão do proprietário de 09/11/2026;
+// meta de 14 lojas). Nunca copiar para o banco real.
 
 export type Loja = { codigo: string; nome: string; piloto: boolean; bairro: string; metaDia: number };
 
@@ -7,7 +8,7 @@ const BAIRROS = ["Centro", "Boa Vista", "Portão", "Água Verde", "Batel", "Caju
 
 export const LOJAS: readonly Loja[] = [
   { codigo: "santa-candida", nome: "Santa Cândida", piloto: true, bairro: "Santa Cândida", metaDia: 2_400_000 },
-  ...Array.from({ length: 13 }, (_, i) => {
+  ...Array.from({ length: 10 }, (_, i) => {
     const n = i + 2;
     return {
       codigo: `loja-${String(n).padStart(2, "0")}`,
@@ -22,6 +23,7 @@ export const LOJAS: readonly Loja[] = [
 export const UNIDADES_ESPECIAIS = [
   { codigo: "loja-online", nome: "Loja Online", tipo: "Online", observacao: "CNPJ emissor ainda a definir (decisão P10)" },
   { codigo: "assistencia", nome: "Assistência (técnico central)", tipo: "Assistência", observacao: "Guarda aparelhos de clientes; não é estoque de venda" },
+  { codigo: "defeitos", nome: "DEFEITOS", tipo: "Exceção", observacao: "Recebe por transferência os itens com erro ou problema; não vende (ADR-007)" },
 ] as const;
 
 export const nomeDaLoja = (codigo: string) =>
@@ -64,7 +66,7 @@ const DA_PILOTO: Pessoa[] = [
   vendedor("rafael", "Rafael Alves", ["santa-candida", "loja-07"], 500_000, { "santa-candida": [9 * 60, 15 * 60], "loja-07": [15 * 60, 20 * 60] }),
 ];
 
-// Lojas 02 a 14: 2 ou 3 vendedores cada (31 no total).
+// Lojas 02 a 11: 2 ou 3 vendedores cada (25 no total).
 const DAS_DEMAIS: Pessoa[] = (() => {
   const lista: Pessoa[] = [];
   let k = 0;

@@ -2,10 +2,9 @@ import { randomUUID } from "node:crypto";
 
 import { ArrowRightLeft } from "lucide-react";
 import type { Metadata } from "next";
-import Link from "next/link";
 
-import { Marca } from "../../componentes/Marca";
-import { Aviso, Botao, Cartao, Selo } from "../../componentes/ui";
+import { MoldeReal } from "../../componentes/MoldeReal";
+import { Aviso, Botao, Cartao, Selo, TituloPagina } from "../../componentes/ui";
 import { FalhaDoServico, obterSessao } from "../../lib/acesso/sessao";
 import { chaveDoCatalogo, textoDoParametro, type ValorDeParametro } from "../../lib/parametros";
 import { ERROS_DA_TRANSFERENCIA, nomeDaSituacao } from "../../lib/transferencias/regras";
@@ -28,7 +27,8 @@ export default async function Transferencias({ searchParams }: { searchParams: P
   const parametros = await searchParams;
   const erro = chaveDoCatalogo(ERROS_DA_TRANSFERENCIA, parametros.erro);
   const ok = textoDoParametro(parametros.ok);
-  const { supabase, usuario, situacao } = await obterSessao({ exigirLoja: true });
+  const sessao = await obterSessao({ exigirLoja: true });
+  const { supabase, usuario, situacao } = sessao;
   const unidade = situacao.unidade_id as string;
   const [lista, transfere, ajusta] = await Promise.all([
     supabase.from("transferencias").select("id, numero, origem_id, destino_id, variante_id, quantidade, motivo, situacao, solicitado_por, quantidade_recebida, observacao, solicitado_em")
@@ -59,9 +59,8 @@ export default async function Transferencias({ searchParams }: { searchParams: P
   const final = (n: string | null) => (n ? `…${n.slice(-6)}` : "");
 
   return (
-    <main className="mx-auto max-w-3xl space-y-4 px-4 py-8">
-      <div className="flex items-center justify-between gap-3"><Marca tamanho="text-2xl" /><nav className="flex gap-3 text-sm font-semibold text-acao"><Link href="/estoque">Estoque</Link><Link href="/inicio">Início</Link></nav></div>
-      <h1 className="text-2xl font-bold tracking-tight">Transferências · {situacao.unidade_nome}</h1>
+    <MoldeReal sessao={sessao}>
+      <TituloPagina sobretitulo={situacao.unidade_nome} titulo="Transferências" />
       <p className="text-sm text-suave">Para pedir, abra o produto no estoque e toque em &quot;na rede&quot;. Aqui a loja de origem separa e envia, e a de destino recebe e confere.</p>
       {ok && Object.hasOwn(OK, ok) && <Aviso tom="sucesso">{OK[ok]}</Aviso>}
       {erro && <Aviso tom="perigo">{ERROS_DA_TRANSFERENCIA[erro]}</Aviso>}
@@ -122,6 +121,6 @@ export default async function Transferencias({ searchParams }: { searchParams: P
           </Cartao>
         );
       })}
-    </main>
+    </MoldeReal>
   );
 }

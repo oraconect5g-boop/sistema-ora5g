@@ -2,17 +2,17 @@ import { randomUUID } from "node:crypto";
 
 import { ScanLine, ShoppingCart, Wallet } from "lucide-react";
 import type { Metadata } from "next";
-import Link from "next/link";
 
 import { MEIOS } from "@ora5g/dominio";
 
-import { Marca } from "../../componentes/Marca";
-import { Aviso, Botao, Cartao, Selo } from "../../componentes/ui";
+import { MoldeReal } from "../../componentes/MoldeReal";
+import { Aviso, Botao, Cartao, Selo, TituloPagina } from "../../componentes/ui";
 import { FalhaDoServico, obterSessao } from "../../lib/acesso/sessao";
 import { centavosDoBanco } from "../../lib/dinheiro";
 import { brl } from "../../lib/formato";
 import { chaveDoCatalogo, textoDoParametro, type ValorDeParametro } from "../../lib/parametros";
-import { ERROS_DA_VENDA, pareceIdentificador } from "../../lib/vendas/regras";
+import { buscarNoCatalogo, filtroDoIdentificador, identificadorDigitado, termoDaBusca } from "../../lib/catalogo/busca";
+import { ERROS_DA_VENDA } from "../../lib/vendas/regras";
 import { FotoAmpliavel } from "../catalogo/FotoAmpliavel";
 import { abrirCaixa, adicionarItem, aplicarDesconto, cancelarVenda, concluirVenda, novaVenda, pedirAprovacao, removerItem } from "./acoes";
 
@@ -29,8 +29,9 @@ const MEIOS_DA_LOJA = (Object.keys(MEIOS) as (keyof typeof MEIOS)[]).filter((m) 
 export default async function Vender({ searchParams }: { searchParams: Promise<{ q?: ValorDeParametro; erro?: ValorDeParametro; desconto?: ValorDeParametro; cancelada?: ValorDeParametro }> }) {
   const parametros = await searchParams;
   const erro = chaveDoCatalogo(ERROS_DA_VENDA, parametros.erro);
-  const busca = (textoDoParametro(parametros.q) ?? "").replace(/[^\p{L}\p{N} -]/gu, "").trim().slice(0, 40);
-  const { supabase, usuario, situacao } = await obterSessao({ exigirLoja: true });
+  const busca = termoDaBusca(textoDoParametro(parametros.q)).slice(0, 40);
+  const sessao = await obterSessao({ exigirLoja: true });
+  const { supabase, usuario, situacao } = sessao;
   const unidade = situacao.unidade_id as string;
 
   const [pode, aprova, caixa, venda] = await Promise.all([
@@ -42,18 +43,8 @@ export default async function Vender({ searchParams }: { searchParams: Promise<{
   ]);
   if (pode.error || aprova.error || caixa.error || venda.error) throw new FalhaDoServico("vender");
 
-  const cabecalho = (
-    <div className="flex flex-wrap items-center justify-between gap-3">
-      <Marca tamanho="text-2xl" />
-      <nav className="flex gap-3 text-sm font-semibold text-acao">
-        <Link href="/caixa" className="hover:underline">Caixa</Link>
-        {aprova.data && <Link href="/aprovacoes" className="hover:underline">Aprovações</Link>}
-        <Link href="/inicio" className="hover:underline">Início</Link>
-      </nav>
-    </div>
-  );
   if (!pode.data) {
-    return <main className="mx-auto max-w-3xl px-4 py-8">{cabecalho}<Aviso tom="aviso" className="mt-6">Seu papel não registra vendas nesta loja.</Aviso></main>;
+    return <MoldeReal sessao={sessao}><Aviso tom="aviso" className="mt-6">Seu papel não registra vendas nesta loja.</Aviso></MoldeReal>;
   }
 
   // Carrinho
@@ -61,12 +52,15 @@ export default async function Vender({ searchParams }: { searchParams: Promise<{
     ? await supabase.from("venda_itens").select("id, variante_id, item_serializado_id, tipo, quantidade, preco_unitario_centavos, desconto_centavos").eq("venda_id", venda.data.id).order("criado_em")
     : { data: [], error: null };
   if (itens.error) throw new FalhaDoServico("venda_itens");
-  // Busca: por nome/SKU (variantes) ou direto pelo IMEI/ICCID
-  const porNumero = busca && pareceIdentificador(busca)
-    ? await supabase.from("itens_serializados").select("id, variante_id, imei, iccid, situacao").or(`imei.eq.${busca},iccid.eq.${busca}`).eq("unidade_id", unidade).limit(1)
+  // Busca igual à do catálogo e do estoque (lib/catalogo/busca.ts): pelo nome do produto, nome da
+  // variação ou SKU, ou direto pelo IMEI, segundo IMEI ou ICCID do item desta loja.
+  const numero = busca ? identificadorDigitado(busca) : null;
+  const porNumero = numero
+    ? await supabase.from("itens_serializados").select("id, variante_id, imei, iccid, situacao").or(filtroDoIdentificador(numero)).eq("unidade_id", unidade).limit(1)
     : { data: [], error: null };
-  const porNome = busca && !pareceIdentificador(busca)
-    ? await supabase.from("variantes").select("id, sku, nome, produto_id").eq("ativa", true).or(`nome.ilike.%${busca}%,sku.ilike.%${busca}%`).order("sku").limit(8)
+  const achados = busca && !numero ? await buscarNoCatalogo(supabase, busca, { limite: 40 }) : null;
+  const porNome = achados?.variantes.length
+    ? await supabase.from("variantes").select("id, sku, nome, produto_id").in("id", achados.variantes).order("sku").limit(8)
     : { data: [], error: null };
   if (porNumero.error || porNome.error) throw new FalhaDoServico("busca");
 
@@ -106,9 +100,8 @@ export default async function Vender({ searchParams }: { searchParams: Promise<{
   const statusDoItem = (id: string) => (aprovacoes.data ?? []).find((a) => a.item_id === id)?.situacao;
 
   return (
-    <main className="mx-auto max-w-3xl space-y-4 px-4 py-8">
-      {cabecalho}
-      <h1 className="text-2xl font-bold tracking-tight">Vender · {situacao.unidade_nome}</h1>
+    <MoldeReal sessao={sessao}>
+      <TituloPagina sobretitulo={situacao.unidade_nome} titulo="Vender" />
       {erro && <Aviso tom="perigo">{ERROS_DA_VENDA[erro]}</Aviso>}
       {textoDoParametro(parametros.desconto) === "pedir" && <Aviso tom="aviso">Esse desconto passa do limite: peça a aprovação do gerente ou do dono.</Aviso>}
       {textoDoParametro(parametros.cancelada) === "1" && <Aviso tom="info">Venda cancelada. Os itens voltaram para o estoque da loja.</Aviso>}
@@ -253,6 +246,6 @@ export default async function Vender({ searchParams }: { searchParams: Promise<{
           </details>
         </>
       )}
-    </main>
+    </MoldeReal>
   );
 }
