@@ -1,13 +1,16 @@
-import { ArrowRightLeft, BadgePercent, FileText, RadioTower, RotateCcw, Undo2, Wallet, type LucideIcon } from "lucide-react";
+import { ArrowRightLeft, BadgePercent, ChartColumn, FileText, RadioTower, RotateCcw, Undo2, Wallet, type LucideIcon } from "lucide-react";
 import type { Metadata } from "next";
 import Link from "next/link";
 
 import { Icone } from "../../componentes/Icone";
 import { MoldeReal, permissoesDoMenu } from "../../componentes/MoldeReal";
 import { Aviso, Cartao, TituloPagina } from "../../componentes/ui";
-import { montarMenu, PAGINAS_REAIS } from "../../lib/acesso/menu";
+import { montarMenu, PAGINAS_REAIS, podeVerFinanceiro } from "../../lib/acesso/menu";
 import { horaDoFimDoTurno } from "../../lib/acesso/regras";
 import { FalhaDoServico, obterSessao } from "../../lib/acesso/sessao";
+import { consultarPainel } from "../../lib/financeiro/consulta";
+import { janelasDoPeriodo, resumoDoPainel } from "../../lib/financeiro/painel";
+import { brl, brlCompacto, numero } from "../../lib/formato";
 
 export const metadata: Metadata = { title: "Início" };
 export const dynamic = "force-dynamic";
@@ -50,6 +53,9 @@ export default async function Inicio() {
     estornos && { rotulo: "Estornos a confirmar", detalhe: "cartão, Pix ou financeira", href: "/vendas?situacao=canceladas&periodo=30", icone: RotateCcw, quantidade: quantos(estornos) },
     retornos && { rotulo: "Itens a conferir", detalhe: "voltaram de venda cancelada", href: "/vendas?situacao=canceladas&periodo=30", icone: Undo2, quantidade: quantos(retornos) },
   ].filter((p): p is Pendencia => Boolean(p));
+  // Resumo financeiro de hoje (#65) para quem vê as vendas da loja ou da rede; o mesmo cálculo do /financeiro.
+  const painelDeHoje = podeVerFinanceiro(permissoes) ? await consultarPainel(supabase, janelasDoPeriodo("hoje").atual, unidade, false) : null;
+  const financeiro = painelDeHoje && painelDeHoje !== "indisponivel" ? resumoDoPainel(painelDeHoje) : painelDeHoje;
   const fim = horaDoFimDoTurno(situacao.turno_termina_em);
   const atalhos = montarMenu(permissoes).visiveis.filter((p) => p !== "inicio");
 
@@ -69,6 +75,32 @@ export default async function Inicio() {
             </Link>
           ))}
         </section>
+      )}
+      {financeiro && (
+        <Cartao
+          titulo="Financeiro de hoje"
+          subtitulo="Somado no banco, nesta loja. Pagamento registrado não é dinheiro liquidado"
+          icone={ChartColumn}
+          acao={<Link href="/financeiro" className="text-sm font-semibold text-acao hover:underline">Abrir o financeiro</Link>}
+        >
+          {financeiro === "indisponivel" ? (
+            <p className="text-sm text-suave">Indisponível neste ambiente: o banco ainda não tem a leitura agregada do financeiro.</p>
+          ) : (
+            <dl className="grid grid-cols-3 gap-3">
+              {([
+                ["Vendas concluídas", brlCompacto(financeiro.vendido), `${numero(financeiro.vendas)} venda${financeiro.vendas === 1 ? "" : "s"}`],
+                ["Devoluções e cancelamentos", brl(financeiro.devolvido + financeiro.cancelado), `${numero(financeiro.devolucoes + financeiro.cancelamentos)} registro${financeiro.devolucoes + financeiro.cancelamentos === 1 ? "" : "s"}`],
+                ["Recebido na loja", brlCompacto(financeiro.recebido), "registro, troco descontado"],
+              ] as const).map(([rotulo, valor, detalhe]) => (
+                <div key={rotulo} className="min-w-0">
+                  <dt className="text-[13px] font-medium leading-tight text-suave">{rotulo}</dt>
+                  <dd className="numeros mt-1 break-words text-lg font-extrabold tracking-tight sm:text-xl">{valor}</dd>
+                  <dd className="text-xs text-suave">{detalhe}</dd>
+                </div>
+              ))}
+            </dl>
+          )}
+        </Cartao>
       )}
       <Cartao titulo="Atalhos">
         <div className="grid grid-cols-2 gap-2 sm:grid-cols-3">

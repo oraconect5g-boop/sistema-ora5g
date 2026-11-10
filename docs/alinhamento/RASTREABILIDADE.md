@@ -14,7 +14,7 @@
 | CRM | 10 | 4 | 3 | 0 | 0 | 0 | 0 | 0 | 0 | 10 |
 | POS | 16 | 11 | 11 | 0 | 5 | 7 | 0 | 0 | 0 | 4 |
 | PAY | 14 | 8 | 8 | 0 | 2 | 5 | 1 | 0 | 0 | 6 |
-| FIN | 10 | 5 | 1 | 0 | 0 | 1 | 2 | 0 | 0 | 7 |
+| FIN | 10 | 5 | 1 | 0 | 0 | 4 | 0 | 0 | 0 | 6 |
 | PERF | 10 | 5 | 5 | 0 | 0 | 1 | 1 | 0 | 0 | 8 |
 | FISC | 10 | 6 | 6 | 0 | 2 | 2 | 0 | 0 | 2 | 4 |
 | CONNECT | 11 | 6 | 3 | 0 | 6 | 4 | 0 | 0 | 0 | 1 |
@@ -23,10 +23,10 @@
 | WHATS | 8 | 0 | 0 | 0 | 0 | 0 | 0 | 0 | 0 | 8 |
 | META | 6 | 0 | 0 | 0 | 0 | 0 | 0 | 0 | 0 | 6 |
 | AI | 7 | 0 | 0 | 0 | 0 | 0 | 0 | 0 | 0 | 7 |
-| REPORT | 8 | 5 | 5 | 0 | 0 | 1 | 6 | 0 | 0 | 1 |
+| REPORT | 8 | 5 | 5 | 0 | 0 | 3 | 4 | 0 | 0 | 1 |
 | QUAL | 14 | 9 | 9 | 0 | 0 | 5 | 0 | 0 | 0 | 9 |
 | OS | 6 | 0 | 0 | 0 | 0 | 0 | 0 | 0 | 0 | 6 |
-| **Total** | **179** | **78** | **71** | **0** | **19** | **42** | **10** | **1** | **2** | **105** |
+| **Total** | **179** | **78** | **71** | **0** | **19** | **47** | **6** | **1** | **2** | **104** |
 
 ## ORG — Organização, lojas e usuários
 
@@ -135,15 +135,15 @@
 
 | ID | Prio. | Piloto | Requisito | Aceite | Status | Nota e evidência |
 |---|---|---|---|---|---|---|
-| ORA-FIN-001 | P0 | sim | Resumo diário de vendas x recebimentos x produção comercial | Categorias e status reconciliáveis. | ⬜ não iniciado |  |
+| ORA-FIN-001 | P0 | sim | Resumo diário de vendas x recebimentos x produção comercial | Categorias e status reconciliáveis. | 🟡 parcial | Financeiro real, lote 1 (#65, 10/11): vendas concluídas, devoluções e cancelamentos, e pagamentos registrados (recebido na loja, troco descontado, entradas de financiamento), por dia ou hora, da loja do turno ou da rede, somados no banco (financeiro_painel). Resumo de hoje também no /inicio. FALTA: produção comercial (metas e Ora Connect), liquidação e conciliação. Evidência: `packages/banco/supabase/migrations/20261110224537_financeiro_painel.sql; packages/banco/src/financeiro-painel.test.ts; apps/plataforma/src/lib/financeiro; apps/plataforma/src/app/financeiro` |
 | ORA-FIN-002 | P0 | — | DRE/margem gerencial com custo, taxa e desconto | Números não são apresentados como contabilidade formal auditada. | ⬜ não iniciado |  |
 | ORA-FIN-003 | P0 | — | Contas a receber ligadas a venda, vencimento e meio | Aging e status dependem de confirmação. | 🟡 parcial | Contas a receber das financeiras ligadas à venda e ao pagamento, abertas até o recebimento; canceladas no estorno. FALTA: vencimento (P8), baixa e aging. Evidência: `packages/banco/supabase/migrations/20261108233546_vendas_pagamentos_e_caixa.sql; packages/banco/src/vendas.test.ts; packages/banco/src/concorrencia.test.ts` |
 | ORA-FIN-004 | P0 | — | Contas a pagar ligadas a fornecedor/origem | Vencimentos e responsabilidades autorizadas. | ⬜ não iniciado |  |
 | ORA-FIN-005 | P0 | — | Rastrear recebíveis e repasses por loja/adquirente | Diferenças e pendências visíveis ao financeiro. | ⬜ não iniciado |  |
 | ORA-FIN-006 | P1 | — | Conciliação bancária e contas multiempresa | Imports/matches reproduzíveis com aprovação. | ⬜ não iniciado |  |
 | ORA-FIN-007 | P1 | — | Gestão de inadimplência e cobranças autorizadas | Ações e consentimentos com auditoria. | ⬜ não iniciado |  |
-| ORA-FIN-008 | P1 | — | Relatório financeiro consolidado por loja/região/rede | RBAC respeita visão global vs local. | 🖼️ demonstração | Visão financeira por loja ou da rede (recebimentos, caixas, financeiras, contas e fluxo de caixa de 14 dias). Só dados fictícios. Evidência: `apps/plataforma/src/app/demo; apps/plataforma/e2e/demonstracao.spec.ts` |
-| ORA-FIN-009 | P1 | — | Exportações CSV/XLSX/PDF de relatórios autorizados | Filtros e dados sensíveis protegidos. | 🖼️ demonstração | Exportação CSV (ponto e vírgula, abre no Excel em português) das telas de vendas, estoque, metas, relatórios, recebimentos, usuários e auditoria. XLSX e PDF ainda não. 09/11 (lote 3): texto que a planilha leria como fórmula sai neutralizado (#38). Evidência: `apps/plataforma/src/app/demo; apps/plataforma/e2e/demonstracao.spec.ts; apps/plataforma/src/componentes/ExportarCsv.test.ts` |
+| ORA-FIN-008 | P1 | — | Relatório financeiro consolidado por loja/região/rede | RBAC respeita visão global vs local. | 🟡 parcial | Real em /financeiro (lote 1 da #65): loja do turno e rede inteira (só com venda.ver_todas), com gráficos, tabelas e detalhamento. FALTA: região (não existe no cadastro), contas, conciliação e DRE. A tela da demonstração continua com dados fictícios. Evidência: `packages/banco/supabase/migrations/20261110224537_financeiro_painel.sql; packages/banco/src/financeiro-painel.test.ts; apps/plataforma/src/lib/financeiro; apps/plataforma/src/app/financeiro` |
+| ORA-FIN-009 | P1 | — | Exportações CSV/XLSX/PDF de relatórios autorizados | Filtros e dados sensíveis protegidos. | 🟡 parcial | Real: /financeiro/exportar gera CSV de vendas, pagamentos, devoluções e caixas do período, lote a lote (todas as linhas, até 20 mil), com a mesma permissão e escopo da tela (#65, 10/11). Na demonstração, CSV das telas com dados fictícios. XLSX e PDF ainda não. Texto que a planilha leria como fórmula sai neutralizado (#38). Evidência: `apps/plataforma/src/app/financeiro/exportar/route.ts; apps/plataforma/src/lib/csv.ts; apps/plataforma/src/app/financeiro/financeiro.test.ts` |
 | ORA-FIN-010 | P2 | — | Previsão de fluxo de caixa e simulações | Premissas explicadas e separadas de fatos. | ⬜ não iniciado |  |
 
 ## PERF — Vendedor, metas, comissões e bonificações
@@ -259,10 +259,10 @@
 | ID | Prio. | Piloto | Requisito | Aceite | Status | Nota e evidência |
 |---|---|---|---|---|---|---|
 | ORA-REPORT-001 | P0 | sim | Dashboard diretoria consolidado de todas as lojas (11 hoje; meta de 14) | Filtro por período, loja, vendedor, natureza e status. | 🖼️ demonstração | Painel da rede (ou de uma loja escolhida no topo) com faturamento, meta, ranking das lojas, mix, recebimentos por meio, vendas por hora e alertas. Só dados fictícios. Evidência: `apps/plataforma/src/app/demo; apps/plataforma/e2e/demonstracao.spec.ts` |
-| ORA-REPORT-002 | P0 | sim | Dashboard gerente de loja: caixa, metas, aprovação de desconto/NF | Só dados autorizados; alertas com link ao fato original. | 🖼️ demonstração | Painel do gerente: equipe inteira contra a meta, caixa previsto × contado, aprovações e alertas da loja. Só dados fictícios. Evidência: `apps/plataforma/src/app/demo; apps/plataforma/e2e/demonstracao.spec.ts` |
+| ORA-REPORT-002 | P0 | sim | Dashboard gerente de loja: caixa, metas, aprovação de desconto/NF | Só dados autorizados; alertas com link ao fato original. | 🟡 parcial | Real: /inicio do gerente mostra o que espera a loja (aprovações, notas, caixas, transferências, Connect, estornos e retornos) e o financeiro de hoje; /financeiro tem caixas e fechamentos. FALTA: metas da equipe (módulo de metas não existe). A demonstração continua com o painel completo fictício. Evidência: `apps/plataforma/src/app/inicio/page.tsx; apps/plataforma/src/app/financeiro` |
 | ORA-REPORT-003 | P0 | sim | Dashboard vendedor mobile: produção do dia, metas e atalhos | Dados apenas do escopo autorizado. | 🟡 parcial | Início do vendedor no celular: meta do dia, produção por categoria, vendas por loja (vendedor em duas lojas) e atalhos. Só dados fictícios. Revisão das telas (10/11): o início real mostra o que espera a pessoa na loja (aprovações, notas, caixas a conferir, transferências, estornos, retornos e Ora Connect a decidir), cada contagem só para quem tem a permissão, e os atalhos do menu único. FALTA: produção do dia e metas (só na demonstração). Evidência: `apps/plataforma/src/app/demo; apps/plataforma/e2e/demonstracao.spec.ts` |
 | ORA-REPORT-004 | P0 | sim | Relatório de chips vendidos, ativações e recargas separadamente | Produção não implica faturamento tributável idêntico. | 🖼️ demonstração | Relatório de chips, ativações, portabilidades e recargas por dia e por vendedor, só confirmadas. Só dados fictícios. Evidência: `apps/plataforma/src/app/demo; apps/plataforma/e2e/demonstracao.spec.ts` |
-| ORA-REPORT-005 | P0 | sim | Relatório por método de pagamento e terminal PicPay | Distinção pagamento/pêndencia/liquidação/reconciliação. | 🖼️ demonstração | Recebimentos por meio de pagamento e situação de conciliação (autorizado, liquidado, conciliado). Só dados fictícios. Evidência: `apps/plataforma/src/app/demo; apps/plataforma/e2e/demonstracao.spec.ts` |
+| ORA-REPORT-005 | P0 | sim | Relatório por método de pagamento e terminal PicPay | Distinção pagamento/pêndencia/liquidação/reconciliação. | 🟡 parcial | Real em /financeiro (#65, lote 1): pagamentos confirmados por meio (dinheiro já sem troco, entradas de financiamento no meio pago), parte financiada a receber, vale-troca à parte, pagamentos de vendas canceladas e estornos pendentes × confirmados. FALTA: terminal PicPay e situação de liquidação/conciliação (sem extrato: E3). Evidência: `packages/banco/supabase/migrations/20261110224537_financeiro_painel.sql; packages/banco/src/financeiro-painel.test.ts; apps/plataforma/src/lib/financeiro; apps/plataforma/src/app/financeiro` |
 | ORA-REPORT-006 | P1 | — | Relatórios de margem, vendedor e ranking configurável | Comissão/estorno reconciliáveis. | 🖼️ demonstração | Relatórios de margem, ticket, descontos e ranking de lojas e vendedores por período (7, 14 e 30 dias), com exportação CSV. Ranking para o vendedor aguarda a decisão P3. Evidência: `apps/plataforma/src/app/demo; apps/plataforma/e2e/demonstracao.spec.ts` |
 | ORA-REPORT-007 | P1 | — | Alertas de estoque mínimo/IMEI/caixa divergente/fiscal pendente | Notificação contextual e auditada. | 🖼️ demonstração | Alertas de estoque mínimo, caixa divergente, nota parada, OS parada e ativação com falha, no sino e no painel. Só dados fictícios. Evidência: `apps/plataforma/src/app/demo; apps/plataforma/e2e/demonstracao.spec.ts` |
 | ORA-REPORT-008 | P2 | — | Dashboard expansão nacional por marketplace, ads e canais | Receitas/fees/margens por canal. | ⬜ não iniciado |  |

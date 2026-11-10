@@ -92,9 +92,9 @@
       "evidencia": "apps/plataforma/src/app/demo; apps/plataforma/e2e/demonstracao.spec.ts"
     },
     "ORA-REPORT-002": {
-      "status": "demonstracao",
-      "nota": "Painel do gerente: equipe inteira contra a meta, caixa previsto × contado, aprovações e alertas da loja. Só dados fictícios.",
-      "evidencia": "apps/plataforma/src/app/demo; apps/plataforma/e2e/demonstracao.spec.ts"
+      "status": "parcial",
+      "nota": "Real: /inicio do gerente mostra o que espera a loja (aprovações, notas, caixas, transferências, Connect, estornos e retornos) e o financeiro de hoje; /financeiro tem caixas e fechamentos. FALTA: metas da equipe (módulo de metas não existe). A demonstração continua com o painel completo fictício.",
+      "evidencia": "apps/plataforma/src/app/inicio/page.tsx; apps/plataforma/src/app/financeiro"
     },
     "ORA-REPORT-003": {
       "status": "parcial",
@@ -147,9 +147,9 @@
       "evidencia": "apps/plataforma/src/app/demo; apps/plataforma/e2e/demonstracao.spec.ts"
     },
     "ORA-REPORT-005": {
-      "status": "demonstracao",
-      "nota": "Recebimentos por meio de pagamento e situação de conciliação (autorizado, liquidado, conciliado). Só dados fictícios.",
-      "evidencia": "apps/plataforma/src/app/demo; apps/plataforma/e2e/demonstracao.spec.ts"
+      "status": "parcial",
+      "nota": "Real em /financeiro (#65, lote 1): pagamentos confirmados por meio (dinheiro já sem troco, entradas de financiamento no meio pago), parte financiada a receber, vale-troca à parte, pagamentos de vendas canceladas e estornos pendentes × confirmados. FALTA: terminal PicPay e situação de liquidação/conciliação (sem extrato: E3).",
+      "evidencia": "packages/banco/supabase/migrations/20261110224537_financeiro_painel.sql; packages/banco/src/financeiro-painel.test.ts; apps/plataforma/src/lib/financeiro; apps/plataforma/src/app/financeiro"
     },
     "ORA-REPORT-006": {
       "status": "demonstracao",
@@ -166,15 +166,20 @@
       "nota": "Painel do gestor com metas e produção de todos os vendedores do escopo; o vendedor vê só os próprios números. Só dados fictícios.",
       "evidencia": "apps/plataforma/src/app/demo; apps/plataforma/e2e/demonstracao.spec.ts"
     },
+    "ORA-FIN-001": {
+      "status": "parcial",
+      "nota": "Financeiro real, lote 1 (#65, 10/11): vendas concluídas, devoluções e cancelamentos, e pagamentos registrados (recebido na loja, troco descontado, entradas de financiamento), por dia ou hora, da loja do turno ou da rede, somados no banco (financeiro_painel). Resumo de hoje também no /inicio. FALTA: produção comercial (metas e Ora Connect), liquidação e conciliação.",
+      "evidencia": "packages/banco/supabase/migrations/20261110224537_financeiro_painel.sql; packages/banco/src/financeiro-painel.test.ts; apps/plataforma/src/lib/financeiro; apps/plataforma/src/app/financeiro"
+    },
     "ORA-FIN-008": {
-      "status": "demonstracao",
-      "nota": "Visão financeira por loja ou da rede (recebimentos, caixas, financeiras, contas e fluxo de caixa de 14 dias). Só dados fictícios.",
-      "evidencia": "apps/plataforma/src/app/demo; apps/plataforma/e2e/demonstracao.spec.ts"
+      "status": "parcial",
+      "nota": "Real em /financeiro (lote 1 da #65): loja do turno e rede inteira (só com venda.ver_todas), com gráficos, tabelas e detalhamento. FALTA: região (não existe no cadastro), contas, conciliação e DRE. A tela da demonstração continua com dados fictícios.",
+      "evidencia": "packages/banco/supabase/migrations/20261110224537_financeiro_painel.sql; packages/banco/src/financeiro-painel.test.ts; apps/plataforma/src/lib/financeiro; apps/plataforma/src/app/financeiro"
     },
     "ORA-FIN-009": {
-      "status": "demonstracao",
-      "nota": "Exportação CSV (ponto e vírgula, abre no Excel em português) das telas de vendas, estoque, metas, relatórios, recebimentos, usuários e auditoria. XLSX e PDF ainda não. 09/11 (lote 3): texto que a planilha leria como fórmula sai neutralizado (#38).",
-      "evidencia": "apps/plataforma/src/app/demo; apps/plataforma/e2e/demonstracao.spec.ts; apps/plataforma/src/componentes/ExportarCsv.test.ts"
+      "status": "parcial",
+      "nota": "Real: /financeiro/exportar gera CSV de vendas, pagamentos, devoluções e caixas do período, lote a lote (todas as linhas, até 20 mil), com a mesma permissão e escopo da tela (#65, 10/11). Na demonstração, CSV das telas com dados fictícios. XLSX e PDF ainda não. Texto que a planilha leria como fórmula sai neutralizado (#38).",
+      "evidencia": "apps/plataforma/src/app/financeiro/exportar/route.ts; apps/plataforma/src/lib/csv.ts; apps/plataforma/src/app/financeiro/financeiro.test.ts"
     },
     "ORA-POS-008": {
       "status": "parcial",

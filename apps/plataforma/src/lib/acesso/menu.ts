@@ -13,12 +13,13 @@ export type PermissaoDoMenu = (typeof PERMISSOES_DO_MENU)[number];
 export type PaginaReal =
   | "inicio" | "vender" | "vendas" | "caixa" | "connect"
   | "estoque" | "transferencias" | "catalogo"
-  | "aprovacoes" | "notas" | "auditoria"
+  | "financeiro" | "aprovacoes" | "notas" | "auditoria"
   | "equipe";
 export type GrupoReal = "Operação" | "Estoque e catálogo" | "Gestão" | "Administração";
 export const GRUPOS_REAIS: readonly GrupoReal[] = ["Operação", "Estoque e catálogo", "Gestão", "Administração"];
 
 type Permissoes = ReadonlySet<string>;
+export const podeVerFinanceiro = (p: Permissoes) => p.has("venda.ver_unidade") || p.has("venda.ver_todas");
 export const PAGINAS_REAIS: Record<PaginaReal, { titulo: string; curto: string; caminho: string; icone: string; grupo: GrupoReal; liberada: (p: Permissoes) => boolean }> = {
   inicio: { titulo: "Início", curto: "Início", caminho: "/inicio", icone: "inicio", grupo: "Operação", liberada: () => true },
   vender: { titulo: "Vender", curto: "Vender", caminho: "/vender", icone: "vender", grupo: "Operação", liberada: (p) => p.has("venda.registrar") },
@@ -32,6 +33,9 @@ export const PAGINAS_REAIS: Record<PaginaReal, { titulo: string; curto: string; 
   transferencias: { titulo: "Transferências entre lojas", curto: "Transferir", caminho: "/transferencias", icone: "transferencias", grupo: "Estoque e catálogo", liberada: (p) => p.has("estoque.consultar") },
   // O catálogo (fotos, nomes e SKUs, sem custo) é visível a quem é da rede, como as políticas do banco.
   catalogo: { titulo: "Catálogo e fotos", curto: "Catálogo", caminho: "/catalogo", icone: "produtos", grupo: "Estoque e catálogo", liberada: () => true },
+  // Financeiro real (#65): de quem vê as vendas da loja (gerente) ou da rede (dono, administrador).
+  // Abrir caixa não libera o financeiro. O banco confere de novo cada número (RLS na leitura agregada).
+  financeiro: { titulo: "Financeiro", curto: "Financeiro", caminho: "/financeiro", icone: "relatorios", grupo: "Gestão", liberada: (p) => podeVerFinanceiro(p) },
   aprovacoes: { titulo: "Aprovações de desconto", curto: "Aprovações", caminho: "/aprovacoes", icone: "aprovacoes", grupo: "Gestão", liberada: (p) => p.has("desconto.aprovar") },
   notas: { titulo: "Notas fiscais", curto: "Notas", caminho: "/notas", icone: "notas", grupo: "Gestão", liberada: (p) => p.has("nota.aprovar") },
   auditoria: { titulo: "Auditoria", curto: "Auditoria", caminho: "/auditoria", icone: "auditoria", grupo: "Gestão", liberada: (p) => p.has("auditoria.ver") },
@@ -40,7 +44,7 @@ export const PAGINAS_REAIS: Record<PaginaReal, { titulo: string; curto: string; 
 
 // Barra inferior do celular: até 4 atalhos, na ordem de uso no balcão; o resto fica em "Mais".
 const PRIORIDADE_NO_CELULAR: readonly PaginaReal[] = [
-  "inicio", "vender", "aprovacoes", "vendas", "estoque", "caixa", "connect", "catalogo", "notas", "equipe", "auditoria", "transferencias",
+  "inicio", "vender", "aprovacoes", "vendas", "financeiro", "estoque", "caixa", "connect", "catalogo", "notas", "equipe", "auditoria", "transferencias",
 ];
 
 export function montarMenu(permissoes: Permissoes) {

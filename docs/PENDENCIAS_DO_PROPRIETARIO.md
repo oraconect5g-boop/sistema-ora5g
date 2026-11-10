@@ -23,10 +23,13 @@ Uma linha por fornecedor ou capacidade. Mostra o que fica bloqueado e o critéri
 | D1 | **Contador e emissor fiscal** | Emissão automática; nota de devolução por API | P1 | Contrato com o emissor; modelo, tributos e certificado definidos pelo contador | Homologação do emissor | `FISCAL_PROVIDER`, `FISCAL_API_BASE_URL`, `FISCAL_API_TOKEN`, `FISCAL_ENVIRONMENT` | Nota de teste emitida na homologação do emissor |
 | E1 | Link de pagamento PicPay / PagBank | Meio "link" na venda (hoje recusado) | P2 | Habilitação do link nas contas | Sandbox do fornecedor | `PICPAY_*`, `PAGBANK_*` | Cobrança de teste com retorno conferido |
 | E2 | PayJoy / Aiva: relatório de repasse (P8) | Conciliação automática do valor a receber (hoje manual) | P2 | Relatório ou contrato com prazo e taxa (nada é inventado) | — | — | Relatório recebido e conciliado com uma venda de teste |
+| E3 | **Extratos das maquininhas e do banco** (arquivos) | Conciliação de pagamentos, taxas e repasses (PAY-009/010); "liquidado" no financeiro real | P2 | Exportação dos extratos PicPay, PagBank e banco | Cópia em `~/entrada/extratos/` | — | Arquivo de um dia conciliado com as vendas registradas |
 | F1 | WhatsApp oficial (Meta) | Avisos de nota, OS e comprovante | P2 | Verificação da empresa no Meta Business | Número de teste da Meta | `WHATSAPP_*` | Mensagem de teste entregue no número de teste |
 | G1 | Decisões comerciais: D-026 (prazo e estado na troca), D-016, D-006, G1, G2, P14 (limites de desconto) | Aplicar a política (hoje o sistema registra e controla, mas não decide quem tem direito) | P1 | — | — | — | Resposta registrada em `docs/10_DECISOES_PENDENTES.md` |
 
 Maquininhas PicPay POS e PagSeguro continuam com conferência manual por comprovante: não há API verificada e não há desbloqueio previsto.
+
+Financeiro real (#65): a primeira fatia (vendas, pagamentos registrados e caixas) não depende de fornecedor. Seguem bloqueados: conciliação e "liquidado" (E3), repasses das financeiras (E2) e da Nogle (C2), e margem com custo real (custos chegam com o arquivo da Rein, B1).
 
 ## 1. Fazer agora (destrava o login real e o mês 1)
 

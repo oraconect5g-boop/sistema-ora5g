@@ -2,20 +2,13 @@
 
 import { Download } from "lucide-react";
 
+import { celulaCsv } from "../lib/csv";
 import { classeBotao } from "./ui";
 
 // Exporta a tabela que está na tela (ORA-FIN-009). Ponto e vírgula e BOM para abrir certo no Excel em português.
 // Só exporta o que o perfil já está vendo: o filtro de permissão acontece antes, no servidor.
-
-// Texto que a planilha leria como fórmula (=, +, -, @, tabulação, retorno) ganha um apóstrofo na
-// frente (REV-036, #38: injeção de fórmula em CSV). Número de verdade, inclusive negativo, fica igual.
-const PARECE_FORMULA = /^[=+\-@\t\r]/;
-const NUMERO_COMUM = /^[-+]?\d[\d.,]*$/;
-export function celulaCsv(valor: string | number) {
-  let texto = String(valor);
-  if (typeof valor === "string" && PARECE_FORMULA.test(texto) && !NUMERO_COMUM.test(texto)) texto = `'${texto}`;
-  return /[";\n\r]/.test(texto) ? `"${texto.replaceAll('"', '""')}"` : texto;
-}
+// A formatação de cada célula (com a proteção contra fórmula) fica em lib/csv, também usada no servidor.
+export { celulaCsv };
 
 export function ExportarCsv({ nomeArquivo, colunas, linhas, rotulo = "Exportar CSV" }: {
   nomeArquivo: string;

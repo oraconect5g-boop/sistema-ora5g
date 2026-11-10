@@ -208,7 +208,7 @@ export function PainelGestao({ contexto, periodo = "hoje" }: { contexto: Context
 
       <div className="mt-4 grid gap-4 xl:grid-cols-3">
         <section aria-label="Indicadores de hoje" className="min-w-0 xl:col-span-2">
-          <div className="sem-barra -mx-4 flex snap-x snap-mandatory gap-3 overflow-x-auto px-4 pb-1 sm:mx-0 sm:grid sm:grid-cols-2 sm:gap-4 sm:overflow-visible sm:px-0 lg:grid-cols-3">
+          <div className="sem-barra -mx-4 flex snap-x snap-mandatory scroll-px-4 gap-3 overflow-x-auto px-4 pb-1 sm:mx-0 sm:grid sm:grid-cols-2 sm:gap-4 sm:overflow-visible sm:px-0 lg:grid-cols-3">
             {indicadores.map((i) => <Indicador key={i.rotulo} {...i} className="w-[78%] shrink-0 snap-start sm:w-auto" />)}
           </div>
         </section>
