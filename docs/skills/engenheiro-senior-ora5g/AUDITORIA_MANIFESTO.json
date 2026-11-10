@@ -1,0 +1,50 @@
+{
+  "skill": "engenheiro-senior-ora5g",
+  "created_at": "2026-11-09",
+  "audited_repository": "oraconect5g-boop/sistema-ora5g",
+  "repository_visibility": "private",
+  "baseline_ref": "main",
+  "baseline_sha": "0292c69e4b3a5dffca770f9dc2b84f9cd21449e8",
+  "audit_scope": "GitHub connector read only; selected critical source files inspected; no full local clone/CI/provider authentication",
+  "repository_tree": {
+    "entries": 496,
+    "files": 397,
+    "sql_migrations": 21
+  },
+  "business_now": {
+    "commercial_stores": 11,
+    "exception_location": "DEFEITOS",
+    "pilot_store": "Santa Cândida",
+    "planned_store_target": 14
+  },
+  "requirements": {
+    "total": 179,
+    "P0": 78,
+    "P1": 74,
+    "P2": 27,
+    "tracked_in_status_file": 73,
+    "tested_in_dev": 19,
+    "partial": 40,
+    "demonstration": 11,
+    "blocked": 2,
+    "constraint_respected": 1,
+    "production_homologated": 0
+  },
+  "issues_open_at_audit": 35,
+  "pull_request_33": {
+    "status": "open, unmerged",
+    "head_sha": "290f1111f964710d744c4ded40df48fed6762b1b",
+    "main_unique_commits_at_audit": 24,
+    "pr_unique_commits_at_audit": 6
+  },
+  "default_branch_protected": false,
+  "high_priority_external_dependencies": [
+    "Nogle authorized test credentials and provider contract",
+    "Test Auth account",
+    "Rein exported file and signed stocktake",
+    "11 stores + DEFEITOS registration data",
+    "Fiscal accountant and issuer contract",
+    "Online payment provider contract"
+  ],
+  "status_rule": "Always re-read current source and run tests; prior audit cannot certify today's state, external API behavior, or production suitability"
+}
