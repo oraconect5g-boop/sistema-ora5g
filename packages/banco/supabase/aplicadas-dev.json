@@ -23,6 +23,7 @@
     { "versao": "20261109190400", "nome": "connect_evidencia_lote2", "md5": "50a92b80cbcd527ab22565a988239100", "aplicada_em": "2026-11-09" },
     { "versao": "20261109191416", "nome": "fotos_idempotentes_lote3", "md5": "af993e98aff5d5bc7de704e290264527", "aplicada_em": "2026-11-09" },
     { "versao": "20261109193043", "nome": "transferencias_e_defeitos", "md5": "71ad04f1afc171fa8db9b0bcb2077044", "aplicada_em": "2026-11-09" },
-    { "versao": "20261109201940", "nome": "mensagens_nogle", "md5": "a910ebd1bef0e0ff396f312ae97168bc", "aplicada_em": "2026-11-09" }
+    { "versao": "20261109201940", "nome": "mensagens_nogle", "md5": "a910ebd1bef0e0ff396f312ae97168bc", "aplicada_em": "2026-11-09" },
+    { "versao": "20261110124824", "nome": "connect_consulta_por_uuid", "md5": "35af74537bfa72eaddce36b05c36ebc4", "aplicada_em": "2026-11-10" }
   ]
 }

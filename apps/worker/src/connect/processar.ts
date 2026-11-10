@@ -4,7 +4,7 @@
 // - saiu e não voltou resposta clara → resultado desconhecido: NUNCA reenvia; consulta e a gerência decide;
 // - log só com contagens: nada de CPF, nome, linha, token ou chave.
 import {
-  interpretarConsulta, interpretarEnvio, lerReferencias, montarConsulta, montarPedido,
+  interpretarConsulta, interpretarConsultaPagamento, interpretarEnvio, lerReferencias, montarConsulta, montarPedido,
   type Evidencia, type ItemDeReferencia, type OperacaoParaConsultar, type OperacaoParaEnviar, type PedidoNogle,
   type ResultadoEnvio, type TipoDeReferencia, type TipoOperacao,
 } from "@ora5g/dominio/nogle";
@@ -61,16 +61,18 @@ export async function enviarPendentes(banco: BancoConnect, nogle: Nogle, tipos: 
   return resumo;
 }
 
-export async function consultarPendentes(banco: BancoConnect, nogle: Nogle, tipos: TipoOperacao[], limite = 10) {
+// consultaPagamento: só com NOGLE_CONSULTA_PAGAMENTO=habilitada (rota a liberar pela Nogle para a conta).
+export async function consultarPendentes(banco: BancoConnect, nogle: Nogle, tipos: TipoOperacao[], limite = 10, opcoes: { consultaPagamento?: boolean } = {}) {
   const resumo = { consultadas: 0, confirmadas: 0, bloqueadas: 0, falhas: 0 };
   for (const op of await banco.operacoesAConsultar(tipos, limite)) {
-    const pedido = montarConsulta(op);
+    const pedido = montarConsulta(op, opcoes);
     let evidencia: Evidencia;
     if (!pedido) {
       evidencia = { evidencia: "sem_evidencia", mensagem: "Sem dado para consultar (ex.: eSIM sem ICCID na resposta)." };
     } else {
       const r = await nogle.chamar(pedido);
-      evidencia = r.tipo === "resposta" ? interpretarConsulta(op, r.status, r.corpo)
+      evidencia = r.tipo === "resposta"
+        ? (pedido.caminho === "/consultaPagamento" ? interpretarConsultaPagamento(op, r.status, r.corpo) : interpretarConsulta(op, r.status, r.corpo))
         : r.tipo === "bloqueada" ? { evidencia: "consulta_bloqueada", mensagem: r.motivo }
         : { evidencia: "falha_consulta", mensagem: r.motivo };
     }

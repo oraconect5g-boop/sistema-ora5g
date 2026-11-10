@@ -51,7 +51,8 @@ try {
   const nogle = new ClienteNogle(
     { tipo: tipoDaChave as "franquia" | "marca" | "pdv", chaveAcesso: ler("NOGLE_ACCESS_KEY"), chaveSecundaria: ler("NOGLE_SECONDARY_KEY") || undefined },
     transporteHttp(ler("NOGLE_API_BASE_URL")),
-    // "documentado" só depois de a Nogle confirmar que aceita corpo em GET (pergunta 2).
+    // GET com corpo: a Nogle confirmou em 10/11/2026 (o próprio /pdv/estoque e o /consultaPagamento
+    // levam o corpo). Liga com "documentado" no ambiente do worker.
     { getComCorpo: ler("NOGLE_GET_COM_CORPO") === "documentado" },
   );
   if (listas) {
@@ -60,7 +61,8 @@ try {
     process.exit(r.falhas > 0 ? 1 : 0);
   }
   const envio = await enviarPendentes(banco, nogle, tipos);
-  const consulta = await consultarPendentes(banco, nogle, tipos);
+  // Consulta pelo uuid (GET /consultaPagamento): só depois de ver a primeira resposta real com uuid.
+  const consulta = await consultarPendentes(banco, nogle, tipos, 10, { consultaPagamento: ler("NOGLE_CONSULTA_PAGAMENTO") === "habilitada" });
   console.log(`${agora} envio: ${envio.aceitas} aceitas, ${envio.recusadas} recusadas, ${envio.desconhecidas} desconhecidas, ${envio.devolvidas} de volta à fila; ` +
     `consulta: ${consulta.consultadas} consultadas, ${consulta.confirmadas} confirmadas, ${consulta.bloqueadas} bloqueadas, ${consulta.falhas} falhas`);
   process.exit(envio.devolvidas + envio.desconhecidas + consulta.falhas > 0 ? 1 : 0);

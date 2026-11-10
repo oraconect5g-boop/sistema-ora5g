@@ -159,3 +159,41 @@ describe("#59 — uma evidência do histórico confirma uma recarga só", () => 
     expect(await producoes()).toBe(0);
   });
 });
+
+describe("consulta pelo uuid (resposta da Nogle de 10/11/2026, pergunta 10)", () => {
+  const uuidA = "184d26de-ba03-4abd-870c-231231221231";
+  const uuidB = "284d26de-ba03-4abd-870c-231231221232";
+  async function aceitarComUuid(id: string, externo: string, uuid: string) {
+    await rpcServico("select count(*) as v from public.connect_worker_reivindicar_envios($1, ARRAY['recarga'], 5)", [ids.organizacao]);
+    return rpcServico("select public.connect_worker_registrar_envio($1, $2::jsonb) as v",
+      [id, JSON.stringify({ resultado: "aceita", id_externo: externo, data_cadastro: cadastro, uuid })]);
+  }
+  const fila = () => servico(async () => (await db.query<{ operacao_id: string; uuid_externo: string | null }>(
+    "select operacao_id, uuid_externo from public.connect_worker_operacoes_a_consultar($1, ARRAY['recarga'], 10)", [ids.organizacao])).rows);
+
+  it("duas recargas da mesma linha e mesma data: cada uma confirma pela evidência do próprio uuid, sem ambiguidade", async () => {
+    const s = await usuario();
+    const a = await registrar(s, { metodo: "LINK", linha: "51999990000", plano: 99999 });
+    await aceitarComUuid(a, "ficticio-a", uuidA);
+    const b = await registrar(s, { metodo: "LINK", linha: "51999990000", plano: 99999 });
+    await aceitarComUuid(b, "ficticio-b", uuidB);
+    await db.query("update public.connect_operacoes set proxima_consulta_em = now() - interval '1 second' where id in ($1, $2)", [a, b]);
+    expect((await fila()).map((r) => r.uuid_externo).sort()).toEqual([uuidA, uuidB]);
+    expect(await consultar(a, { evidencia: "confirmada", mensagem: "Recarga paga", dados: { uuid: uuidA, data_pagamento: "2026-11-10" } })).toBe("confirmada");
+    expect(await consultar(b, { evidencia: "confirmada", mensagem: "Recarga paga", dados: { uuid: uuidB, data_pagamento: "2026-11-10" } })).toBe("confirmada");
+    expect(await producoes()).toBe(2);
+    expect((await db.query("select evidencia_chave from public.connect_operacoes where id = $1", [a])).rows).toEqual([{ evidencia_chave: `uuid|${uuidA}` }]);
+  });
+
+  it("evidência de outro uuid ou sem data do pagamento não confirma; uuid repetido em outra operação é ignorado", async () => {
+    const s = await usuario();
+    const a = await registrar(s, { metodo: "LINK", linha: "51999990000", plano: 99999 });
+    await aceitarComUuid(a, "ficticio-a", uuidA);
+    expect(await consultar(a, { evidencia: "confirmada", mensagem: "x", dados: { uuid: uuidB, data_pagamento: "2026-11-10" } })).toBe("aguardando_operadora");
+    expect(await consultar(a, { evidencia: "confirmada", mensagem: "x", dados: { uuid: uuidA } })).toBe("aguardando_operadora");
+    expect(await producoes()).toBe(0);
+    const outra = await registrar(s, { metodo: "LINK", linha: "51977770000", plano: 99999 });
+    await aceitarComUuid(outra, "ficticio-c", uuidA);
+    expect((await db.query("select uuid_externo from public.connect_operacoes where id = $1", [outra])).rows).toEqual([{ uuid_externo: null }]);
+  });
+});
