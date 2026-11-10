@@ -48,7 +48,7 @@ export default async function Lojas({ searchParams }: { searchParams: Promise<{ 
         acao={<ExportarCsv nomeArquivo="usuarios" colunas={["Nome", "Papel", "Lojas", "Situação"]} linhas={pessoas.map((p) => [p.nome, NOMES_PAPEIS[p.papel], p.papel === "dono" || p.papel === "administrador" ? "Rede inteira" : p.lojas.map(nomeDaLoja).join(" + "), p.status === "ativo" ? "Ativo" : "Bloqueado"])} />}
       />
       <div className="grid grid-cols-2 gap-3 sm:gap-4 xl:grid-cols-4">
-        <Indicador rotulo="Unidades" valor={`${LOJAS.length} + ${UNIDADES_ESPECIAIS.length}`} icone={Building2} detalhe="Lojas + online e assistência" />
+        <Indicador rotulo="Unidades" valor={`${LOJAS.length} + ${UNIDADES_ESPECIAIS.length}`} icone={Building2} detalhe="Lojas + online, assistência e DEFEITOS" />
         <Indicador rotulo="Usuários" valor={numero(PESSOAS.length)} icone={Users} detalhe={`${bloqueados} bloqueado${bloqueados === 1 ? "" : "s"}`} />
         <Indicador rotulo="Em mais de uma loja" valor={numero(variasLojas)} icone={UserCheck} detalhe="Escolhem a loja ao entrar" />
         <Indicador rotulo="Papéis" valor="5" icone={ShieldCheck} detalhe="Dono, admin, gerente, vendedor, técnico" />

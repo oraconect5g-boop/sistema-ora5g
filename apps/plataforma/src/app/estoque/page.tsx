@@ -4,11 +4,12 @@ import { ArrowRightLeft, Boxes, CheckCircle2, ClipboardCheck, History, Search } 
 import type { Metadata } from "next";
 import Link from "next/link";
 
-import { Marca } from "../../componentes/Marca";
-import { Aviso, Botao, Cartao, Selo } from "../../componentes/ui";
+import { MoldeReal } from "../../componentes/MoldeReal";
+import { Aviso, Botao, Cartao, Selo, TituloPagina } from "../../componentes/ui";
 import { ehUuid } from "../../lib/acesso/regras";
 import { FalhaDoServico, obterSessao } from "../../lib/acesso/sessao";
-import { ERROS_DO_ESTOQUE, identificadorDigitado, inicioDoDiaEmSaoPaulo, nomeDe, NOMES_DAS_SITUACOES, NOMES_DOS_MOVIMENTOS } from "../../lib/estoque/regras";
+import { buscarNoCatalogo, filtroDoIdentificador, identificadorDigitado, termoDaBusca } from "../../lib/catalogo/busca";
+import { ERROS_DO_ESTOQUE, inicioDoDiaEmSaoPaulo, nomeDe, NOMES_DAS_SITUACOES, NOMES_DOS_MOVIMENTOS } from "../../lib/estoque/regras";
 import { chaveDoCatalogo, textoDoParametro, type ValorDeParametro } from "../../lib/parametros";
 import { ERROS_DA_TRANSFERENCIA } from "../../lib/transferencias/regras";
 import { FotoAmpliavel } from "../catalogo/FotoAmpliavel";
@@ -29,10 +30,11 @@ export default async function Estoque({ searchParams }: { searchParams: Promise<
   const parametros = await searchParams;
   const erro = chaveDoCatalogo(ERROS_DO_ESTOQUE, parametros.erro);
   const conferencia = textoDoParametro(parametros.aba) === "conferencia";
-  const busca = (textoDoParametro(parametros.q) ?? "").replace(/[^\p{L}\p{N} -]/gu, "").trim().slice(0, 40);
+  const busca = termoDaBusca(textoDoParametro(parametros.q)).slice(0, 40);
   const identificador = identificadorDigitado(busca);
   const varianteNaRede = textoDoParametro(parametros.variante);
-  const { supabase, situacao } = await obterSessao({ exigirLoja: true });
+  const sessao = await obterSessao({ exigirLoja: true });
+  const { supabase, situacao } = sessao;
   const unidade = situacao.unidade_id as string;
 
   const [consulta, confere] = await Promise.all([
@@ -40,14 +42,8 @@ export default async function Estoque({ searchParams }: { searchParams: Promise<
     supabase.rpc("tem_permissao", { p_permissao: "estoque.conferir", p_unidade: unidade }),
   ]);
   if (consulta.error || confere.error) throw new FalhaDoServico("estoque");
-  const cabecalho = (
-    <div className="flex flex-wrap items-center justify-between gap-3">
-      <Marca tamanho="text-2xl" />
-      <nav className="flex gap-3 text-sm font-semibold text-acao"><Link href="/vender">Vender</Link><Link href="/catalogo">Catálogo</Link><Link href="/inicio">Início</Link></nav>
-    </div>
-  );
   if (!consulta.data) {
-    return <main className="mx-auto max-w-3xl px-4 py-8">{cabecalho}<Aviso tom="aviso" className="mt-6">Seu papel não consulta estoque nesta loja.</Aviso></main>;
+    return <MoldeReal sessao={sessao}><Aviso tom="aviso" className="mt-6">Seu papel não consulta estoque nesta loja.</Aviso></MoldeReal>;
   }
 
   const abas = (
@@ -67,9 +63,8 @@ export default async function Estoque({ searchParams }: { searchParams: Promise<
     const conferidosHoje = itens.data.filter((i) => i.conferido_em && i.conferido_em >= desde).length;
     const pendentes = itens.data.filter((i) => !(i.conferido_em && i.conferido_em >= desde));
     return (
-      <main className="mx-auto max-w-3xl space-y-4 px-4 py-8">
-        {cabecalho}
-        <h1 className="text-2xl font-bold tracking-tight">Estoque · {situacao.unidade_nome}</h1>
+      <MoldeReal sessao={sessao}>
+        <TituloPagina sobretitulo={situacao.unidade_nome} titulo="Estoque" />
         {abas}
         {erro && <Aviso tom="perigo">{ERROS_DO_ESTOQUE[erro]}</Aviso>}
         {textoDoParametro(parametros.ok) === "conferido" && <Aviso tom="sucesso"><CheckCircle2 aria-hidden className="inline size-4" /> Item conferido (gravado na auditoria).</Aviso>}
@@ -99,14 +94,14 @@ export default async function Estoque({ searchParams }: { searchParams: Promise<
             </ul>
           )}
         </Cartao>
-      </main>
+      </MoldeReal>
     );
   }
 
   // Busca por IMEI/ICCID: o item, onde está e o histórico do livro.
   const item = identificador
     ? await supabase.from("itens_serializados").select("id, variante_id, unidade_id, imei, imei2, iccid, situacao, em_estoque, condicao, conferido_em")
-      .or(`imei.eq.${identificador},imei2.eq.${identificador},iccid.eq.${identificador}`).limit(1).maybeSingle()
+      .or(filtroDoIdentificador(identificador)).limit(1).maybeSingle()
     : { data: null, error: null };
   if (item.error) throw new FalhaDoServico("estoque_item");
   const [movimentos, lojaDoItem, varianteDoItem] = item.data
@@ -121,16 +116,9 @@ export default async function Estoque({ searchParams }: { searchParams: Promise<
   // Saldo da loja (com filtro por nome/SKU) e, se pedida, a disponibilidade na rede.
   // Busca por nome/SKU na fonte, antes do limite (REV-038, #40): primeiro as variações que batem,
   // depois o saldo delas nesta loja. Sem busca, os primeiros 500 saldos da loja.
-  const termo = busca && !identificador ? busca.replace(/[%_,()*\\]/g, " ").replace(/\s+/g, " ").trim() : "";
-  let candidatas: string[] | null = null;
-  if (termo) {
-    const [porNome, porSku] = await Promise.all([
-      supabase.from("variantes").select("id").ilike("nome", `%${termo}%`).limit(500),
-      supabase.from("variantes").select("id").ilike("sku", `%${termo}%`).limit(500),
-    ]);
-    if (porNome.error || porSku.error) throw new FalhaDoServico("estoque_busca");
-    candidatas = [...new Set([...porNome.data, ...porSku.data].map((v) => v.id))];
-  }
+  // A mesma busca do catálogo e do PDV, com variação desativada que ainda tenha saldo.
+  const termo = busca && !identificador ? busca : "";
+  const candidatas: string[] | null = termo ? (await buscarNoCatalogo(supabase, termo, { limite: 500, ativos: false })).variantes : null;
   const consultaSaldos = supabase.from("estoque_saldos").select("variante_id, quantidade, reservado").eq("unidade_id", unidade);
   const saldos = candidatas && candidatas.length === 0
     ? { data: [] as { variante_id: string; quantidade: number; reservado: number }[], error: null }
@@ -165,9 +153,8 @@ export default async function Estoque({ searchParams }: { searchParams: Promise<
   const erroTransferencia = chaveDoCatalogo(ERROS_DA_TRANSFERENCIA, parametros.erro_transferencia);
 
   return (
-    <main className="mx-auto max-w-3xl space-y-4 px-4 py-8">
-      {cabecalho}
-      <h1 className="text-2xl font-bold tracking-tight">Estoque · {situacao.unidade_nome}</h1>
+    <MoldeReal sessao={sessao}>
+      <TituloPagina sobretitulo={situacao.unidade_nome} titulo="Estoque" />
       {abas}
       <form className="flex flex-wrap items-end gap-2" role="search">
         <label className="min-w-0 flex-1 text-sm font-medium">Produto, SKU, IMEI ou ICCID<input name="q" defaultValue={busca} autoComplete="off" className={campo} /></label>
@@ -258,6 +245,6 @@ export default async function Estoque({ searchParams }: { searchParams: Promise<
           )}
         </Cartao>
       )}
-    </main>
+    </MoldeReal>
   );
 }

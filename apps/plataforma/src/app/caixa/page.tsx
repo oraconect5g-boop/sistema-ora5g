@@ -2,13 +2,12 @@ import { randomUUID } from "node:crypto";
 
 import { Wallet } from "lucide-react";
 import type { Metadata } from "next";
-import Link from "next/link";
 import { Fragment } from "react";
 
 import { MEIOS } from "@ora5g/dominio";
 
-import { Marca } from "../../componentes/Marca";
-import { Aviso, Botao, Cartao, Selo } from "../../componentes/ui";
+import { MoldeReal } from "../../componentes/MoldeReal";
+import { Aviso, Botao, Cartao, Selo, TituloPagina } from "../../componentes/ui";
 import { FalhaDoServico, obterSessao } from "../../lib/acesso/sessao";
 import { centavosDoBanco } from "../../lib/dinheiro";
 import { brl } from "../../lib/formato";
@@ -30,7 +29,8 @@ export default async function Caixa({ searchParams }: { searchParams: Promise<{ 
   const parametros = await searchParams;
   const erro = chaveDoCatalogo(ERROS_DA_VENDA, parametros.erro);
   const ok = chaveDoCatalogo(OK, parametros.ok);
-  const { supabase, usuario, situacao } = await obterSessao({ exigirLoja: true });
+  const sessao = await obterSessao({ exigirLoja: true });
+  const { supabase, usuario, situacao } = sessao;
   const unidade = situacao.unidade_id as string;
   const [aberto, confere] = await Promise.all([
     supabase.from("caixas").select("id, aberto_em, fundo_centavos").eq("operador_id", usuario.id).eq("unidade_id", unidade).eq("situacao", "aberto").maybeSingle(),
@@ -44,9 +44,8 @@ export default async function Caixa({ searchParams }: { searchParams: Promise<{ 
   for (const m of movimentos.data) porMeio.set(m.meio, (porMeio.get(m.meio) ?? 0) + centavosDoBanco(m.valor_centavos));
 
   return (
-    <main className="mx-auto max-w-3xl space-y-4 px-4 py-8">
-      <div className="flex items-center justify-between gap-3"><Marca tamanho="text-2xl" /><nav className="flex gap-3 text-sm font-semibold text-acao"><Link href="/vender">Vender</Link><Link href="/inicio">Início</Link></nav></div>
-      <h1 className="text-2xl font-bold tracking-tight">Caixa · {situacao.unidade_nome}</h1>
+    <MoldeReal sessao={sessao}>
+      <TituloPagina sobretitulo={situacao.unidade_nome} titulo="Caixa" />
       {erro && <Aviso tom="perigo">{ERROS_DA_VENDA[erro]}</Aviso>}
       {ok && <Aviso tom="sucesso">{OK[ok]}</Aviso>}
 
@@ -110,6 +109,6 @@ export default async function Caixa({ searchParams }: { searchParams: Promise<{ 
           )}
         </Cartao>
       )}
-    </main>
+    </MoldeReal>
   );
 }

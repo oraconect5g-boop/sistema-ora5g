@@ -233,3 +233,14 @@ Autorizado pelo proprietário depois do diagnóstico somente leitura de 10/11.
   - Prova de que o teste pega furos (cópia temporária, apagada depois): aprovação sem conferir permissão (1 caso falhou), permissão sempre verdadeira (27 funções falharam), função liberada para anônimo e função nova sem casos (inventário falhou).
   - Pedido ao Codex: tentar um caminho de ataque que o catálogo não cubra (outra combinação de papel, loja e objeto) e conferir se as exceções acima são aceitáveis.
 - **Não feito ainda:** o teste de navegador com vendedor e gerente fictícios depende da linha A1 (usuários de teste no `ora5g-dev`).
+
+## 10/11/2026 — Revisão das telas: molde único, busca única, vendas e auditoria reais
+
+Pedido do proprietário: rever todas as telas e funções, ligar cada uma ao banco e ao worker e corrigir o que funcionava diferente entre páginas.
+
+- **Molde e menu únicos** (`componentes/MoldeReal.tsx`, `lib/acesso/menu.ts`): as 11 telas reais com login usam o mesmo cabeçalho, menu lateral e barra inferior; os itens vêm de `tem_permissao` na loja do turno (equipe: na rede). Antes cada tela tinha links próprios (algumas só "Início") e o início não levava às aprovações. Pedido: conferir se algum papel vê item que não deveria (o banco recusa de qualquer jeito) e se falta algum.
+- **Busca única** (`lib/catalogo/termos.ts`, `lib/catalogo/busca.ts`): catálogo, estoque e PDV acham pelo nome do produto, nome da variação, SKU, IMEI, segundo IMEI e ICCID. Antes o estoque e o PDV não achavam pelo nome do produto, o PDV não via o segundo IMEI e aceitava 14 dígitos como identificador.
+- **Telas reais novas:** `/vendas` (o vendedor vê as próprias; a gerência, a loja, com nota e devolução; resumo só das concluídas, devolução abatida; sem custo) e `/auditoria` (`auditoria.ver`, sem antes/depois). O início virou painel de pendências com contagens só para quem tem a permissão.
+- **Demonstração:** 11 lojas e o local DEFEITOS; textos sem "14 lojas" fixo.
+- **Testes:** `menu.test.ts`, `busca.test.ts`, `lista.test.ts`, `auditoria/regras.test.ts` e `vendas/vendas.test.ts` (telas montadas com sessão e banco simulados); `/vendas` e `/auditoria` entram na prova de que sem login volta ao `/entrar`.
+- **Workers:** identidade testado na versão publicada ("desligado" sem a chave); agendamento depende do proprietário. Ora Connect desligado (ADR-005).

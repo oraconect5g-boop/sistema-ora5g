@@ -25,7 +25,7 @@ export function PainelAdministrador({ contexto }: { contexto: ContextoDemo }) {
       <TituloPagina sobretitulo="Administração do sistema" titulo="Usuários, lojas e integrações" subtitulo="O administrador configura e importa; não registra venda nem aprova desconto ou nota." acao={<BotaoLink href="/demo/lojas"><Users aria-hidden className="size-4" /> Gerir usuários</BotaoLink>} />
       <div className="grid grid-cols-2 gap-3 sm:gap-4 xl:grid-cols-4">
         <Indicador rotulo="Usuários" valor={numero(PESSOAS.length)} icone={Users} detalhe={`${ativos} ativos · ${bloqueados} bloqueado${bloqueados === 1 ? "" : "s"}`} />
-        <Indicador rotulo="Unidades" valor={`${LOJAS.length} + ${UNIDADES_ESPECIAIS.length}`} icone={Store} detalhe="Lojas físicas + online e assistência" />
+        <Indicador rotulo="Unidades" valor={`${LOJAS.length} + ${UNIDADES_ESPECIAIS.length}`} icone={Store} detalhe="Lojas físicas + online, assistência e DEFEITOS" />
         <Indicador rotulo="Integrações ligadas" valor={`0 de ${CANAIS.length + 2}`} icone={PlugZap} detalhe="Aguardando contratos e chaves" tom="atencao" />
         <Indicador rotulo="Importação da Rein" valor="Prévia" icone={FileUp} detalhe="Com linhas para corrigir" tom="atencao" />
       </div>

@@ -1,9 +1,8 @@
 import { MailPlus, ShieldAlert, UserCheck, UserX, Users } from "lucide-react";
 import type { Metadata } from "next";
-import Link from "next/link";
 
-import { Marca } from "../../componentes/Marca";
-import { Aviso, Avatar, Botao, Cartao, Selo } from "../../componentes/ui";
+import { MoldeReal } from "../../componentes/MoldeReal";
+import { Aviso, Avatar, Botao, Cartao, Selo, TituloPagina } from "../../componentes/ui";
 import { ERROS_DA_EQUIPE, PAPEIS, papeisQuePodeConceder, type Papel } from "../../lib/acesso/regras";
 import { FalhaDoServico, obterSessao } from "../../lib/acesso/sessao";
 import { chaveDoCatalogo, type ValorDeParametro } from "../../lib/parametros";
@@ -44,19 +43,18 @@ export default async function Equipe({ searchParams }: { searchParams: Promise<{
   const parametros = await searchParams;
   const ok = chaveDoCatalogo(OK, parametros.ok);
   const erro = chaveDoCatalogo(ERROS_DA_EQUIPE, parametros.erro);
-  const { supabase, usuario } = await obterSessao({ exigirLoja: true });
+  const sessao = await obterSessao({ exigirLoja: true });
+  const { supabase, usuario } = sessao;
 
   const permitido = await supabase.rpc("tem_permissao", { p_permissao: "usuarios.gerir" });
   if (permitido.error) throw new FalhaDoServico("tem_permissao");
   if (!permitido.data) {
     return (
-      <main className="mx-auto max-w-lg px-4 py-8">
-        <Marca tamanho="text-2xl" />
-        <Cartao titulo="Sem permissão" icone={ShieldAlert} className="mt-6">
+      <MoldeReal sessao={sessao}>
+        <Cartao titulo="Sem permissão" icone={ShieldAlert}>
           <p className="text-sm text-suave">Só o dono e o administrador cuidam da equipe e dos acessos. O banco também recusa, mesmo que alguém digite o endereço.</p>
-          <Link href="/inicio" className="mt-4 inline-block text-sm font-semibold text-acao hover:underline">Voltar ao início</Link>
         </Cartao>
-      </main>
+      </MoldeReal>
     );
   }
 
@@ -77,10 +75,8 @@ export default async function Equipe({ searchParams }: { searchParams: Promise<{
   const nomeDaLoja = (id: string | null) => (id ? unidades.data.find((u) => u.id === id)?.nome ?? "loja inativa" : "rede inteira");
 
   return (
-    <main className="mx-auto max-w-3xl px-4 py-8">
-      <div className="flex items-center justify-between gap-3"><Marca tamanho="text-2xl" /><Link href="/inicio" className="text-sm font-semibold text-acao hover:underline">Início</Link></div>
-      <h1 className="mt-6 text-2xl font-bold tracking-tight">Equipe e acessos</h1>
-      <p className="text-sm text-suave">Quem entra em cada loja, com qual função. Toda mudança vale na hora e fica na auditoria com o motivo.</p>
+    <MoldeReal sessao={sessao}>
+      <TituloPagina titulo="Equipe e acessos" subtitulo="Quem entra em cada loja, com qual função. Toda mudança vale na hora e fica na auditoria com o motivo." />
       {ok && <Aviso tom="sucesso" className="mt-4">{OK[ok]}</Aviso>}
       {erro && <Aviso tom="perigo" className="mt-4">{ERROS_DA_EQUIPE[erro]}</Aviso>}
 
@@ -187,6 +183,6 @@ export default async function Equipe({ searchParams }: { searchParams: Promise<{
           </section>
         );
       })}
-    </main>
+    </MoldeReal>
   );
 }

@@ -2,9 +2,10 @@ import { ImageOff, Package } from "lucide-react";
 import type { Metadata } from "next";
 import Link from "next/link";
 
-import { Marca } from "../../componentes/Marca";
-import { Aviso, Cartao, Selo } from "../../componentes/ui";
+import { MoldeReal } from "../../componentes/MoldeReal";
+import { Aviso, Cartao, Selo, TituloPagina } from "../../componentes/ui";
 import { FalhaDoServico, obterSessao } from "../../lib/acesso/sessao";
+import { buscarNoCatalogo, termoDaBusca } from "../../lib/catalogo/busca";
 import { inteiroDoBanco } from "../../lib/dinheiro";
 import { textoDoParametro, type ValorDeParametro } from "../../lib/parametros";
 import { configuracaoSupabase } from "../../lib/supabase/configuracao";
@@ -26,28 +27,21 @@ export default async function Catalogo({ searchParams }: { searchParams: Promise
   const parametros = await searchParams;
   const busca = (textoDoParametro(parametros.q) ?? "").trim().toLowerCase().slice(0, 60);
   const soPendentes = textoDoParametro(parametros.pendentes) === "1";
-  const { supabase, situacao } = await obterSessao({ exigirLoja: true });
+  const sessao = await obterSessao({ exigirLoja: true });
+  const { supabase, situacao } = sessao;
   const unidade = situacao.unidade_id as string;
 
-  // Busca na fonte, ANTES do limite (REV-038, #40): nome do produto, SKU ou nome da variante. O termo
-  // perde os caracteres que o filtro do PostgREST interpreta (%, _, vírgula, parênteses, asterisco).
-  const termo = busca.replace(/[%_,()*\\]/g, " ").replace(/\s+/g, " ").trim();
+  // Busca na fonte, ANTES do limite (REV-038, #40): nome do produto, SKU ou nome da variante, a
+  // mesma do estoque e do PDV (lib/catalogo/busca.ts).
+  const termo = termoDaBusca(busca);
   const [podeEnviar, pendencias, achados] = await Promise.all([
     supabase.rpc("tem_permissao", { p_permissao: "catalogo.fotos", p_unidade: unidade }),
     supabase.rpc("pendencias_de_foto"),
-    termo
-      ? Promise.all([
-          supabase.from("produtos").select("id").eq("ativo", true).ilike("nome", `%${termo}%`).limit(LIMITE),
-          supabase.from("variantes").select("produto_id").eq("ativa", true).ilike("sku", `%${termo}%`).limit(LIMITE),
-          supabase.from("variantes").select("produto_id").eq("ativa", true).ilike("nome", `%${termo}%`).limit(LIMITE),
-        ])
-      : Promise.resolve(null),
+    termo ? buscarNoCatalogo(supabase, termo, { limite: LIMITE }) : Promise.resolve(null),
   ]);
-  if (podeEnviar.error || pendencias.error || achados?.some((r) => r.error)) throw new FalhaDoServico("catalogo");
+  if (podeEnviar.error || pendencias.error) throw new FalhaDoServico("catalogo");
   const pendentesPorProduto = new Set(pendencias.data.map((p) => p.produto_id));
-  let ids: string[] | null = achados
-    ? [...new Set([...(achados[0].data ?? []).map((p) => p.id), ...(achados[1].data ?? []).map((v) => v.produto_id), ...(achados[2].data ?? []).map((v) => v.produto_id)])]
-    : null;
+  let ids: string[] | null = achados ? achados.produtos : null;
   if (soPendentes) ids = (ids ?? [...pendentesPorProduto]).filter((id) => pendentesPorProduto.has(id));
   const consulta = supabase.from("produtos").select("id, nome, tipo, organizacao_id").eq("ativo", true);
   const produtos = ids && ids.length === 0
@@ -81,9 +75,8 @@ export default async function Catalogo({ searchParams }: { searchParams: Promise
   const lista = produtos.data;
 
   return (
-    <main className="mx-auto max-w-3xl px-4 py-8">
-      <div className="flex items-center justify-between gap-3"><Marca tamanho="text-2xl" /><Link href="/inicio" className="text-sm font-semibold text-acao hover:underline">Início</Link></div>
-      <h1 className="mt-6 text-2xl font-bold tracking-tight">Catálogo e fotos</h1>
+    <MoldeReal sessao={sessao}>
+      <TituloPagina sobretitulo={situacao.unidade_nome} titulo="Catálogo e fotos" />
       <p className="text-sm text-suave">Loja do turno: <strong>{situacao.unidade_nome}</strong>. Toque na foto para ampliar.</p>
 
       <form className="mt-4 flex flex-wrap gap-2" role="search">
@@ -144,6 +137,6 @@ export default async function Catalogo({ searchParams }: { searchParams: Promise
           {lista.length === 0 && <li className="py-6 text-sm text-suave">Nada encontrado.</li>}
         </ul>
       </Cartao>
-    </main>
+    </MoldeReal>
   );
 }

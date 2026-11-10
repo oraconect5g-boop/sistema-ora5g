@@ -7,7 +7,7 @@ import { Avatar, BotaoLink, Cartao, Indicador, Progresso, Selo, TituloPagina } f
 import {
   alertasDoEscopo, aprovacoesVisiveis, desempenhoDe, historicoDoEscopo, lojasVisiveis, mixPorCategoria, vendasPorHora, vendasVisiveis, vendedoresVisiveis,
 } from "../../../demo/consultas";
-import { caixaDaLoja, nomeDaLoja, primeiroNome, recebimentosPorMeio, resumoDeVendas, VENDAS_HOJE } from "../../../demo/dados";
+import { caixaDaLoja, LOJAS, nomeDaLoja, primeiroNome, recebimentosPorMeio, resumoDeVendas, VENDAS_HOJE } from "../../../demo/dados";
 import { REDE } from "../../../demo/perfis";
 import type { ContextoDemo } from "../../../demo/sessao";
 import { agora, brl, brlCompacto, brlEixo, diaDaSemanaEData, numero, percentual } from "../../../lib/formato";
@@ -57,7 +57,7 @@ export function PainelGestao({ contexto }: { contexto: ContextoDemo }) {
       <TituloPagina
         sobretitulo={`Hoje · ${diaDaSemanaEData(hoje)}`}
         titulo={titulo}
-        subtitulo={rede ? "Consolidado das 14 lojas · troque para uma loja no seletor do topo" : gerente ? "Caixa, equipe, metas e aprovações da sua loja" : "Uma loja da rede · todos os vendedores dela"}
+        subtitulo={rede ? `Consolidado das ${LOJAS.length} lojas · troque para uma loja no seletor do topo` : gerente ? "Caixa, equipe, metas e aprovações da sua loja" : "Uma loja da rede · todos os vendedores dela"}
         acao={
           <>
             {aprovacoes.length > 0 && <BotaoLink href="/demo/aprovacoes" variante="secundario"><ClipboardCheck aria-hidden className="size-4" /> Aprovações ({aprovacoes.length})</BotaoLink>}

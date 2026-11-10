@@ -29,8 +29,5 @@ export function inicioDoDiaEmSaoPaulo(agora: Date = new Date()): string {
   return new Date(`${dia}T00:00:00-03:00`).toISOString();
 }
 
-/** IMEI (15) ou ICCID (19–20), só dígitos; o resto não é identificador. */
-export const identificadorDigitado = (texto: string) => {
-  const digitos = texto.replace(/\D/g, "");
-  return /^\d{15}$|^\d{19,20}$/.test(digitos) ? digitos : null;
-};
+// IMEI/ICCID: a mesma regra do catálogo e do PDV (lib/catalogo/termos.ts).
+export { identificadorDigitado } from "../catalogo/termos";

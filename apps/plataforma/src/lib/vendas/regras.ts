@@ -95,8 +95,6 @@ export function lerPagamentos(dados: { get: (nome: string) => unknown }, linhas 
   return pagamentos.length ? { ok: true, pagamentos } : { ok: false, erro: "pagamento" };
 }
 
-// IMEI tem 15 dígitos; ICCID, 19 ou 20. Busca por número leva direto ao item.
-export const pareceIdentificador = (texto: string) => /^\d{14,20}$/.test(texto.replace(/\D/g, "")) && texto.replace(/\D/g, "").length === texto.trim().length;
 
 export const CONDICOES_DE_RETORNO = { novo: "Novo (lacrado)", seminovo: "Seminovo", avariado: "Avariado" } as const;
 export type CondicaoDeRetorno = keyof typeof CONDICOES_DE_RETORNO;

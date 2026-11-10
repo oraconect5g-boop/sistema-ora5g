@@ -2,13 +2,12 @@ import { randomUUID } from "node:crypto";
 
 import { CheckCircle2, FileText, PackageCheck, Receipt, RotateCcw, Undo2 } from "lucide-react";
 import type { Metadata } from "next";
-import Link from "next/link";
 import { notFound } from "next/navigation";
 
 import { MEIOS } from "@ora5g/dominio";
 import { chaveEmGrupos, MODELOS_DE_NOTA, SITUACOES_DA_NOTA, type SituacaoDaNota } from "@ora5g/dominio/fiscal";
 
-import { Marca } from "../../../componentes/Marca";
+import { MoldeReal } from "../../../componentes/MoldeReal";
 import { Aviso, Botao, Cartao, Selo } from "../../../componentes/ui";
 import { ehUuid } from "../../../lib/acesso/regras";
 import { FalhaDoServico, obterSessao } from "../../../lib/acesso/sessao";
@@ -35,7 +34,8 @@ export default async function Comprovante({ params, searchParams }: { params: Pr
   const parametros = await searchParams;
   const erro = chaveDoCatalogo(ERROS_DA_VENDA, parametros.erro);
   const erroNota = chaveDoCatalogo(ERROS_DAS_NOTAS, parametros.erro_nota);
-  const { supabase, usuario, situacao } = await obterSessao({ exigirLoja: true });
+  const sessao = await obterSessao({ exigirLoja: true });
+  const { supabase, usuario, situacao } = sessao;
   const venda = await supabase.from("vendas").select("id, numero, situacao, unidade_id, vendedor_id, cliente_nome, total_centavos, subtotal_centavos, desconto_centavos, troco_centavos, recebido_centavos, a_receber_centavos, devolvido_centavos, concluida_em, cancelada_em, motivo_cancelamento").eq("id", id).maybeSingle();
   if (venda.error) throw new FalhaDoServico("venda");
   if (!venda.data) notFound();
@@ -70,8 +70,7 @@ export default async function Comprovante({ params, searchParams }: { params: Pr
   const nomeDoItem = (itemId: string) => variantes.data.find((x) => x.id === itens.data.find((i) => i.id === itemId)?.variante_id)?.nome ?? "Item";
   const quando = v.concluida_em ? new Intl.DateTimeFormat("pt-BR", { timeZone: "America/Sao_Paulo", dateStyle: "short", timeStyle: "short" }).format(new Date(v.concluida_em)) : null;
   return (
-    <main className="mx-auto max-w-lg space-y-4 px-4 py-8">
-      <div className="flex items-center justify-between gap-3"><Marca tamanho="text-2xl" /><nav className="flex gap-3 text-sm font-semibold text-acao"><Link href="/vender">Vender</Link><Link href="/inicio">Início</Link></nav></div>
+    <MoldeReal sessao={sessao} largura="max-w-lg">
       {textoDoParametro(parametros.concluida) === "1" && v.situacao === "concluida" && <Aviso tom="sucesso" titulo="Venda concluída"><CheckCircle2 aria-hidden className="inline size-4" /> Estoque baixado e pagamento registrado no seu caixa.</Aviso>}
       {textoDoParametro(parametros.cancelada) === "1" && <Aviso tom="info">Venda cancelada. O dinheiro saiu do seu caixa; cartão, Pix e financeira ficam como estorno a confirmar com o comprovante; os itens só voltam ao estoque quando forem recebidos e conferidos.</Aviso>}
       {textoDoParametro(parametros.estorno) === "confirmado" && <Aviso tom="sucesso">Estorno confirmado com o comprovante.</Aviso>}
@@ -261,6 +260,6 @@ export default async function Comprovante({ params, searchParams }: { params: Pr
           </form>
         </details>
       )}
-    </main>
+    </MoldeReal>
   );
 }
