@@ -15,6 +15,7 @@ const vincular = readFileSync(join(PASTA, "vincular-usuarios-de-teste.sql"), "ut
 const VENDEDOR = "00000000-0000-4000-a000-000000000001";
 const DONO = "00000000-0000-4000-a000-000000000002";
 const OUTRO = "00000000-0000-4000-a000-000000000003";
+const GERENTE = "00000000-0000-4000-a000-000000000004";
 const SANTA = "0a5e0000-0000-4000-8000-000000000020";
 const LOJA2 = "0a5e0000-0000-4000-8000-000000000021";
 
@@ -24,7 +25,7 @@ const contar = async (tabela: string) => (await db.query<{ n: number }>(`select 
 beforeAll(async () => {
   db = await criarBanco();
   await db.exec(semente);
-  await db.query("insert into auth.users (id, email) values ($1, 'pessoa+vendedor@teste.invalid'), ($2, 'pessoa+dono@teste.invalid'), ($3, 'qualquer@teste.invalid')", [VENDEDOR, DONO, OUTRO]);
+  await db.query("insert into auth.users (id, email) values ($1, 'pessoa+vendedor@teste.invalid'), ($2, 'pessoa+dono@teste.invalid'), ($3, 'qualquer@teste.invalid'), ($4, 'pessoa+gerente@teste.invalid')", [VENDEDOR, DONO, OUTRO, GERENTE]);
   await db.exec(vincular);
 });
 
@@ -61,9 +62,9 @@ describe("semente do desenvolvimento", () => {
 });
 
 describe("usuários de teste", () => {
-  it("só os e-mails com +vendedor e +dono ganham perfil", async () => {
+  it("só os e-mails com +vendedor, +gerente e +dono ganham perfil", async () => {
     const { rows } = await db.query<{ id: string }>("select id from public.perfis_usuario order by nome");
-    expect(rows.map((r) => r.id).sort()).toEqual([VENDEDOR, DONO].sort());
+    expect(rows.map((r) => r.id).sort()).toEqual([VENDEDOR, GERENTE, DONO].sort());
   });
 
   it("o vendedor de teste trabalha nas duas lojas e só nelas; o dono vê as três unidades", async () => {
@@ -74,5 +75,21 @@ describe("usuários de teste", () => {
     expect(aceita).toBe(true);
     const dono = await comoUsuario(db, { usuario: DONO, sessao: "40000000-0000-4000-8000-000000000002" }, async () => (await db.query("select id from public.unidades")).rows);
     expect(dono).toHaveLength(3);
+  });
+
+  it("o gerente só vê e aprova na Santa Cândida, sem gerir os usuários da rede", async () => {
+    await comoUsuario(db, { usuario: GERENTE, sessao: "40000000-0000-4000-8000-000000000004" }, async () => {
+      const lojas = await db.query<{ id: string }>("select id from public.unidades");
+      expect(lojas.rows.map((l) => l.id)).toEqual([SANTA]);
+      const selecionada = await db.query<{ ok: boolean }>("select public.selecionar_unidade($1) as ok", [SANTA]);
+      expect(selecionada.rows[0]?.ok).toBe(true);
+      const permissoes = await db.query<{ local: boolean; outra: boolean; equipe: boolean }>(`
+        select public.tem_permissao('desconto.aprovar', $1) as local,
+               public.tem_permissao('desconto.aprovar', $2) as outra,
+               public.tem_permissao('usuarios.gerir') as equipe`, [SANTA, LOJA2]);
+      expect(permissoes.rows[0]).toEqual({ local: true, outra: false, equipe: false });
+      const outra = await db.query<{ ok: boolean }>("select public.selecionar_unidade($1) as ok", [LOJA2]);
+      expect(outra.rows[0]?.ok).toBe(false);
+    });
   });
 });
