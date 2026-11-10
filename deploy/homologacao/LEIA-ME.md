@@ -19,6 +19,11 @@ A plataforma de homologação roda **só em `127.0.0.1:3100`**. O Apache do cPan
 | `~/homologacao/plataforma/deploy/homologacao/garantir-no-ar.sh --reiniciar` | Só reinicia |
 | `~/homologacao/plataforma/deploy/homologacao/garantir-no-ar.sh --parar` | Para (o cron sobe de novo em até 5 minutos; para desligar de vez, remova as linhas do `crontab -e`) |
 | `curl -s 127.0.0.1:3100/saude` | Confere se está no ar |
+| `bash ~/homologacao/plataforma/deploy/homologacao/conferir-publicacao.sh` | Só leitura: mostra o commit no ar, o da `main` no GitHub e a lista do que falta publicar |
+
+**Publicar é manual e depende da autorização do proprietário a cada vez.** Merge na `main` não muda o site: em 10/11/2026 a `main` estava 5 commits à frente do site e isso só foi notado na demonstração. Desde então, cada tela mostra no rodapé a versão no ar (`ora5G · v0.1.0 · <commit> · build <data e hora>`), também em `/saude` e no "Mais" do celular. Para conferir de fora do servidor, abra `https://ora5g.com.br/saude` numa aba anônima e compare o commit com o da `main`.
+
+**Versões antigas não são apagadas sozinhas** (pedido do proprietário em 10/11/2026: nada é apagado do servidor sem perguntar antes). O `publicar.sh` só lista as que passam das 3 mais recentes e mostra o comando para apagar uma depois de autorizado. Cada pasta ocupa cerca de 1,2 GB.
 
 ## Mudar a configuração da homologação (REV-016)
 

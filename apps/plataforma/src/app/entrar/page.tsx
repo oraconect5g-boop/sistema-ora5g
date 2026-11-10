@@ -3,6 +3,7 @@ import type { Metadata } from "next";
 import Link from "next/link";
 
 import { Marca } from "../../componentes/Marca";
+import { RodapeVersao } from "../../componentes/RodapeVersao";
 import { Aviso, Botao } from "../../componentes/ui";
 import { chaveDoCatalogo, type ValorDeParametro } from "../../lib/parametros";
 import { configuracaoSupabase } from "../../lib/supabase/configuracao";
@@ -60,10 +61,11 @@ export default async function Entrar({ searchParams }: { searchParams: Promise<{
             </Link>
           )}
         </div>
+        <RodapeVersao className="mt-0" />
       </section>
 
       <section aria-hidden className="relative hidden overflow-hidden bg-navegacao p-12 text-white lg:flex lg:flex-col lg:justify-center">
-        <div className="pointer-events-none absolute inset-0 bg-[radial-gradient(40rem_30rem_at_70%_20%,rgba(19,217,199,0.22),transparent),radial-gradient(30rem_24rem_at_10%_100%,rgba(42,120,214,0.22),transparent)]" />
+        <div className="pointer-events-none absolute inset-0 bg-[radial-gradient(40rem_30rem_at_70%_20%,rgba(43,89,232,0.32),transparent),radial-gradient(30rem_24rem_at_10%_100%,rgba(42,120,214,0.22),transparent)]" />
         <div className="relative max-w-lg">
           <p className="text-xs font-semibold uppercase tracking-[0.2em] text-destaque">Tecnologia para crescer</p>
           <p className="mt-4 text-4xl font-bold leading-tight tracking-tight">Toda a operação da rede, <span className="text-destaque">em tempo real.</span></p>

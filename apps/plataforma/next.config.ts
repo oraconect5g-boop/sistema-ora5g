@@ -1,7 +1,21 @@
+import { execSync } from "node:child_process";
+
 import type { NextConfig } from "next";
+
+// Versão visível nas telas (lib/versao.ts): o commit e a hora da build ficam gravados na build.
+// Na pasta de cada versão publicada (worktree do Git) e no CI, o commit sai do próprio Git.
+function commitCurto(): string {
+  if (process.env.ORA_COMMIT) return process.env.ORA_COMMIT.slice(0, 7);
+  try {
+    return execSync("git rev-parse --short=7 HEAD", { stdio: ["ignore", "pipe", "ignore"] }).toString().trim();
+  } catch {
+    return "sem-git";
+  }
+}
 
 const configuracao: NextConfig = {
   poweredByHeader: false,
+  env: { NEXT_PUBLIC_ORA_COMMIT: commitCurto(), NEXT_PUBLIC_ORA_BUILD: new Date().toISOString() },
   transpilePackages: ["@ora5g/config", "@ora5g/dominio"],
   // Atrás do Apache do cPanel, o pedido da raiz chega como o arquivo de índice que o Apache
   // procura (index.php, index.html, default.htm...). A reescrita só olha o caminho, então

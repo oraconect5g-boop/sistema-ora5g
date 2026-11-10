@@ -7,11 +7,13 @@ import { montarMenu, PAGINAS_REAIS, PERMISSOES_DO_MENU, type PaginaReal } from "
 import { horaDoFimDoTurno, PAPEIS, type Papel, type SituacaoSessao } from "../lib/acesso/regras";
 import { FalhaDoServico, type obterSessao } from "../lib/acesso/sessao";
 import { iniciais } from "../lib/formato";
-import { Icone } from "./Icone";
-import { LinkNavegacao } from "./LinkNavegacao";
+import { textoDaVersao } from "../lib/versao";
+import { classeDaAcaoDoTrilho } from "./LinkNavegacao";
 import { Marca } from "./Marca";
 import { MenuSuspenso } from "./MenuSuspenso";
 import { NavegacaoCelular, type ItemNavegacao } from "./NavegacaoCelular";
+import { RodapeVersao } from "./RodapeVersao";
+import { Trilho } from "./Trilho";
 
 type Sessao = Awaited<ReturnType<typeof obterSessao>>;
 type Cliente = Sessao["supabase"];
@@ -35,7 +37,8 @@ const classeDoItemDoMenu = "flex min-h-11 w-full items-center gap-3 rounded-xl p
 /**
  * Molde de todas as telas reais com login (revisão de 10/11/2026): menu lateral no computador,
  * barra inferior no celular, loja do turno e turno no topo, troca de loja, senha e saída sempre no
- * mesmo lugar. Os emblemas mostram o que espera a pessoa (aprovações, notas).
+ * mesmo lugar. Os emblemas mostram o que espera a pessoa (aprovações, notas). Visual azul com trilho
+ * e pílula (mesmas peças da demonstração) e a versão no ar no fim da tela.
  */
 export async function MoldeReal({ sessao, children, largura = "max-w-3xl", permissoes: jaConferidas }: {
   sessao: Sessao;
@@ -75,6 +78,14 @@ export async function MoldeReal({ sessao, children, largura = "max-w-3xl", permi
   const gruposDoMais = menu.grupos
     .map((g) => ({ grupo: g.grupo, itens: g.paginas.filter((p) => !menu.atalhos.includes(p)).map(item) }))
     .filter((g) => g.itens.length > 0);
+  const versao = textoDaVersao();
+  const acoesDoTrilho = (
+    <>
+      <Link href="/escolher-loja" className={classeDaAcaoDoTrilho}><Store aria-hidden className="size-4" /> Trocar de loja</Link>
+      <Link href="/conta/senha" className={classeDaAcaoDoTrilho}><KeyRound aria-hidden className="size-4" /> Trocar minha senha</Link>
+      <form action={sair}><button type="submit" className={classeDaAcaoDoTrilho}><LogOut aria-hidden className="size-4" /> Sair</button></form>
+    </>
+  );
   const contaESaida = (
     <div className="space-y-1 border-t border-borda pt-2">
       <Link href="/escolher-loja" className={classeDoItemDoMenu}><Store aria-hidden className="size-4 text-suave" /> Trocar de loja</Link>
@@ -84,34 +95,24 @@ export async function MoldeReal({ sessao, children, largura = "max-w-3xl", permi
   );
 
   return (
-    <div className="min-h-dvh lg:pl-[17rem]">
+    <div className="area-com-trilho min-h-dvh lg:pl-[92px]">
       <a href="#conteudo" className="sr-only focus:not-sr-only focus:fixed focus:left-2 focus:top-2 focus:z-[60] focus:rounded-lg focus:bg-white focus:px-3 focus:py-2 focus:shadow-flutuante">
         Pular para o conteúdo
       </a>
 
-      <aside aria-label="Menu principal" className="nao-imprimir fixed inset-y-0 left-0 z-40 hidden w-[17rem] flex-col bg-gradient-to-b from-navegacao to-navegacao-2 text-white lg:flex">
-        <Link href="/inicio" className="px-6 pb-2 pt-6"><Marca claro tamanho="text-[26px]" /></Link>
-        <p className="px-6 pb-4 text-[11px] font-semibold uppercase tracking-[0.18em] text-slate-500">Gestão integrada</p>
-        <nav className="flex-1 space-y-5 overflow-y-auto px-3 pb-4">
-          {menu.grupos.map((g) => (
-            <div key={g.grupo}>
-              <p className="px-3 pb-1.5 text-[11px] font-semibold uppercase tracking-[0.14em] text-slate-500">{g.grupo}</p>
-              <div className="space-y-0.5">
-                {g.paginas.map((p) => (
-                  <LinkNavegacao key={p} href={PAGINAS_REAIS[p].caminho} variante="lateral" icone={<Icone nome={PAGINAS_REAIS[p].icone} className="size-[18px]" />} emblema={pendencias[p]}>
-                    {PAGINAS_REAIS[p].titulo}
-                  </LinkNavegacao>
-                ))}
-              </div>
-            </div>
-          ))}
-        </nav>
-      </aside>
+      <Trilho
+        inicio="/inicio"
+        grupos={menu.grupos.map((g) => ({ grupo: g.grupo, itens: g.paginas.map(item) }))}
+        pessoa={pessoa}
+        papel={papel}
+        versao={versao}
+        acoes={acoesDoTrilho}
+      />
 
-      <header className="nao-imprimir sticky top-0 z-30 border-b border-borda bg-white/90 backdrop-blur">
-        <div className="mx-auto flex min-h-16 max-w-[1400px] items-center gap-2 px-4 sm:gap-3 sm:px-6 lg:px-8">
-          <Link href="/inicio" aria-label="Início" className="mr-auto shrink-0 lg:hidden"><Marca /></Link>
-          <Link href="/escolher-loja" title="Trocar de loja" className="flex min-h-10 max-w-[13rem] items-center gap-2 rounded-xl border border-borda bg-white px-3 py-1 shadow-sm hover:border-borda-forte">
+      <header className="nao-imprimir sticky top-0 z-30 bg-fundo/90 backdrop-blur">
+        <div className="mx-auto flex min-h-16 max-w-[1400px] items-center gap-2 px-4 py-2 sm:gap-3 sm:px-6 lg:px-8 lg:py-3">
+          <Link href="/inicio" aria-label="Início" className="mr-auto shrink-0 lg:hidden"><Marca tamanho="text-[22px]" /></Link>
+          <Link href="/escolher-loja" title="Trocar de loja" className="flex min-h-11 max-w-[14rem] items-center gap-2 rounded-full border border-borda bg-white px-3.5 py-1 hover:border-borda-forte">
             <MapPin aria-hidden className="size-4 shrink-0 text-acao" />
             <span className="min-w-0 text-left">
               <span className="hidden text-[11px] font-medium leading-3 text-suave sm:block">Loja do turno</span>
@@ -122,10 +123,10 @@ export async function MoldeReal({ sessao, children, largura = "max-w-3xl", permi
           <div className="hidden flex-1 lg:block" />
           <MenuSuspenso
             rotulo={`${pessoa}, ${papel}`}
-            classeBotao="flex min-h-10 items-center gap-2 rounded-xl p-1 pr-2 hover:bg-slate-100"
+            classeBotao="flex min-h-11 items-center gap-2 rounded-full p-1 pr-2 hover:bg-white"
             botao={
               <>
-                <span aria-hidden className="grid size-8 place-items-center rounded-full bg-navegacao text-xs font-bold text-white">{iniciais(pessoa)}</span>
+                <span aria-hidden className="grid size-9 place-items-center rounded-full bg-navegacao text-xs font-bold text-white">{iniciais(pessoa)}</span>
                 <span className="hidden min-w-0 text-left xl:block">
                   <span className="block max-w-52 truncate text-sm font-semibold leading-4">{pessoa}</span>
                   <span className="block text-xs text-suave">{papel}</span>
@@ -143,11 +144,12 @@ export async function MoldeReal({ sessao, children, largura = "max-w-3xl", permi
         </div>
       </header>
 
-      <main id="conteudo" className={`mx-auto ${largura} space-y-4 px-4 pb-28 pt-5 sm:px-6 sm:pt-7 lg:pb-12`}>
+      <main id="conteudo" className={`mx-auto ${largura} space-y-4 px-4 pb-32 pt-3 sm:px-6 sm:pt-5 lg:pb-10`}>
         {children}
+        <RodapeVersao />
       </main>
 
-      <NavegacaoCelular atalhos={menu.atalhos.map(item)} grupos={gruposDoMais} pessoa={pessoa} papel={papel} loja={loja} rodape={contaESaida} />
+      <NavegacaoCelular atalhos={menu.atalhos.map(item)} grupos={gruposDoMais} pessoa={pessoa} papel={papel} loja={loja} rodape={contaESaida} versao={versao} />
     </div>
   );
 }

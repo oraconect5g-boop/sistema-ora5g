@@ -25,7 +25,7 @@ export function SeletorLoja({ atual, opcoes, compacto = false }: { atual: OpcaoL
       </span>
     </>
   );
-  const classe = `flex min-h-10 max-w-[13rem] items-center gap-2 rounded-xl border border-borda bg-white px-3 py-1 shadow-sm ${compacto ? "max-w-[10.5rem]" : ""}`;
+  const classe = `flex min-h-11 max-w-[14rem] items-center gap-2 rounded-full border border-borda bg-white px-3.5 py-1 ${compacto ? "max-w-[10.5rem]" : ""}`;
   if (opcoes.length <= 1) return <div className={classe} title="Você tem vínculo com uma loja só">{conteudo}</div>;
   return (
     <MenuSuspenso
@@ -68,11 +68,11 @@ export function Avisos({ itens }: { itens: readonly ItemAviso[] }) {
     <MenuSuspenso
       rotulo={itens.length > 0 ? `Avisos: ${itens.length}` : "Avisos: nenhum"}
       largura="w-80"
-      classeBotao="relative grid size-10 place-items-center rounded-xl border border-borda bg-white text-texto shadow-sm hover:border-borda-forte"
+      classeBotao="relative grid size-11 place-items-center rounded-full border border-borda bg-white text-texto hover:border-borda-forte"
       botao={
         <>
           <Bell aria-hidden className="size-5" />
-          {itens.length > 0 && <span aria-hidden className="absolute -right-1 -top-1 grid min-w-[18px] place-items-center rounded-full bg-perigo px-1 text-[10px] font-bold leading-[18px] text-white ring-2 ring-white">{itens.length}</span>}
+          {itens.length > 0 && <span aria-hidden className="absolute -right-1 -top-1 grid min-w-[18px] place-items-center rounded-full bg-perigo px-1 text-[10px] font-bold leading-[18px] text-white ring-2 ring-fundo">{itens.length}</span>}
         </>
       }
     >
@@ -102,10 +102,10 @@ export function MenuPerfil({ pessoa, papel, escopo }: { pessoa: string; papel: s
   return (
     <MenuSuspenso
       rotulo={`Perfil: ${pessoa}, ${papel}`}
-      classeBotao="flex min-h-10 items-center gap-2 rounded-xl p-1 pr-2 hover:bg-slate-100"
+      classeBotao="flex min-h-11 items-center gap-2 rounded-full p-1 pr-2 hover:bg-white"
       botao={
         <>
-          <span aria-hidden className="grid size-8 place-items-center rounded-full bg-navegacao text-xs font-bold text-white">{iniciais(pessoa)}</span>
+          <span aria-hidden className="grid size-9 place-items-center rounded-full bg-navegacao text-xs font-bold text-white">{iniciais(pessoa)}</span>
           <span className="hidden min-w-0 text-left xl:block">
             <span className="block max-w-52 truncate text-sm font-semibold leading-4">{pessoa}</span>
             <span className="block text-xs text-suave">{papel}</span>

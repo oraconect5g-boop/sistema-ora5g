@@ -244,3 +244,16 @@ Pedido do proprietário: rever todas as telas e funções, ligar cada uma ao ban
 - **Demonstração:** 11 lojas e o local DEFEITOS; textos sem "14 lojas" fixo.
 - **Testes:** `menu.test.ts`, `busca.test.ts`, `lista.test.ts`, `auditoria/regras.test.ts` e `vendas/vendas.test.ts` (telas montadas com sessão e banco simulados); `/vendas` e `/auditoria` entram na prova de que sem login volta ao `/entrar`.
 - **Workers:** identidade testado na versão publicada ("desligado" sem a chave); agendamento depende do proprietário. Ora Connect desligado (ADR-005).
+
+## 10/11/2026 — Visual azul, versão na tela e publicação sem apagar versões
+
+Pedido do proprietário: descobrir por que a demonstração no ar não era a versão atual, aplicar o visual dos prints de referência (cor azul escolhida por ele) e publicar mostrando a versão.
+
+- **Causa:** a `main` (`eb0a947`) estava 5 commits à frente do site (`8f7a458`). A publicação é manual (`publicar.sh`) e depende de autorização a cada vez; não havia cache (DNS no próprio servidor, Apache sem cache, `no-store`, sem service worker) nem publicação automática (o GitHub Actions só roda o CI).
+- **Base visual** (`app/global.css`, `app/layout.tsx`, `componentes/ui.tsx`, `componentes/graficos.tsx`): tokens azuis, raio 24 nos cartões e pílula nos botões (campos de várias linhas usam `rounded-campo`), Plus Jakarta Sans, paleta categórica revalidada com `validate_palette.js` (azul na série 1; amarelo e rosa com aviso de contraste, sempre com rótulo ou tabela), cinza de comparação para o período anterior.
+- **Navegação** (`componentes/Trilho.tsx`, `NavegacaoCelular.tsx`, `AppShell.tsx`, `MoldeReal.tsx`): trilho de ícones que abre ao passar o mouse ou ao navegar pelo teclado (`:has(:focus-visible)`, variante `trilho-aberto`) e pode ficar fixo (`localStorage` lido com `useSyncExternalStore`; o conteúdo abre espaço por `html[data-menu="aberto"]`); no celular, pílula escura e "Mais" em grade. Nomes acessíveis dos links e o diálogo "Todas as telas" seguem iguais (testes de navegador).
+- **Início da gestão** (`app/demo/_paineis/PainelGestao.tsx`): `serieDoPainel` monta hoje × ontem (ontem repartido por hora com um perfil fixo, dado fictício) e 7 ou 14 dias contra o período anterior; 30 dias não cabem no histórico fictício de 30 dias. Provas: `painel.test.ts`.
+- **Versão na tela** (`lib/versao.ts`, `next.config.ts`, `RodapeVersao.tsx`, `/saude`, `/entrar`): commit (`git rev-parse` na pasta da versão) e hora da build gravados na build. Provas: `versao.test.ts`.
+- **Publicação** (`deploy/homologacao/publicar.sh`, `conferir-publicacao.sh`, `LEIA-ME.md`): versões antigas não são mais apagadas sozinhas (pedido do proprietário: nada é apagado do servidor sem perguntar); o script novo só lê e mostra o que falta publicar.
+- **Pedido ao Codex:** conferir contraste e foco do trilho aberto e da pílula do celular; se a variante `trilho-aberto` cobre teclado sem prender o menu aberto depois do clique; se `next.config.ts` pode gravar o commit em todos os ambientes (worktree, CI, clone sem `.git`, que mostra `sem-git`); e se o perfil fixo de "ontem por hora" na demonstração está claro o bastante como dado fictício.
+

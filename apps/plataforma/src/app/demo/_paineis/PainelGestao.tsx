@@ -1,17 +1,18 @@
 import { MEIOS, type MeioPagamento } from "@ora5g/dominio";
-import { ArrowRight, BadgePercent, ClipboardCheck, Coins, Percent, Receipt, ShoppingBag, Signal, Target, TrendingUp, Wallet } from "lucide-react";
+import { ArrowRight, BadgePercent, ClipboardCheck, Percent, Receipt, ShoppingBag, Signal, TrendingUp, Wallet } from "lucide-react";
 import Link from "next/link";
+import type { ComponentProps } from "react";
 
-import { BarraSegmentada, BarrasHorizontais, Colunas, TabelaDoGrafico, type Parte, type SerieCor } from "../../../componentes/graficos";
-import { Avatar, BotaoLink, Cartao, Indicador, Progresso, Selo, TituloPagina } from "../../../componentes/ui";
+import { BarraSegmentada, BarrasHorizontais, Linhas, Medidor, TabelaDoGrafico, type Parte, type SerieCor } from "../../../componentes/graficos";
+import { Avatar, BotaoLink, Cartao, FiltroSegmentado, Indicador, Progresso, Selo, SeloVariacao, TituloPagina } from "../../../componentes/ui";
 import {
   alertasDoEscopo, aprovacoesVisiveis, desempenhoDe, historicoDoEscopo, lojasVisiveis, mixPorCategoria, vendasPorHora, vendasVisiveis, vendedoresVisiveis,
 } from "../../../demo/consultas";
-import { caixaDaLoja, LOJAS, nomeDaLoja, primeiroNome, recebimentosPorMeio, resumoDeVendas, VENDAS_HOJE } from "../../../demo/dados";
-import { REDE } from "../../../demo/perfis";
+import { caixaDaLoja, LOJAS, nomeDaLoja, primeiroNome, recebimentosPorMeio, resumoDeVendas, VENDAS_HOJE, type ResumoDia } from "../../../demo/dados";
+import { podeAcessar, REDE, type Pagina } from "../../../demo/perfis";
 import type { ContextoDemo } from "../../../demo/sessao";
-import { agora, brl, brlCompacto, brlEixo, diaDaSemanaEData, numero, percentual } from "../../../lib/formato";
-import { CartaoAvisos, GraficoFaturamento, variacaoEntre } from "./comum";
+import { agora, brl, brlCompacto, brlEixo, diaDaSemanaEData, diaMes, diasAntes, numero, percentual } from "../../../lib/formato";
+import { CartaoAvisos, variacaoEntre } from "./comum";
 
 const ORDEM_MEIOS: MeioPagamento[] = ["pix_picpay", "cartao_picpay", "dinheiro", "pix_direto", "cartao_pagseguro", "link_pagamento"];
 
@@ -21,8 +22,55 @@ export function partesPorMeio(mapa: Map<MeioPagamento, number>): Parte[] {
   return [...principais, { nome: "Outros (link e entradas de financiamento)", valor: outros, serie: 6 }];
 }
 
+// Período do gráfico principal (visual de 10/11/2026): hoje por hora contra ontem, ou os últimos 7 ou 14
+// dias contra o mesmo número de dias antes. O histórico fictício tem 30 dias; 14 + 14 cabem nele.
+export const PERIODOS_DO_PAINEL = { hoje: "Hoje", "7": "7 dias", "14": "14 dias" } as const;
+export type PeriodoDoPainel = keyof typeof PERIODOS_DO_PAINEL;
+// Ordem explícita: chaves numéricas ("7", "14") viriam antes de "hoje" em Object.keys.
+const ORDEM_DOS_PERIODOS: readonly PeriodoDoPainel[] = ["hoje", "7", "14"];
+export const periodoDoPainel = (valor: unknown): PeriodoDoPainel => (valor === "7" || valor === "14" ? valor : "hoje");
+
+// Dia típico (09h–19h) para repartir o faturamento de ontem por hora: o histórico fictício só tem o total do dia.
+const PERFIL_DO_DIA = [5, 7, 9, 10, 11, 10, 10, 10, 10, 9, 9].map((p, i) => p * (1 + 0.12 * Math.sin(i * 1.7)));
+
+export type SerieDoPainel = { titulo: string; rotulos: string[]; atual: number[]; anterior: number[]; nomes: readonly [string, string]; referencia: string; cadaRotulo: number };
+
+export function serieDoPainel(periodo: PeriodoDoPainel, dados: {
+  porHora: readonly { hora: string; valor: number }[];
+  historico: readonly ResumoDia[];
+  faturamentoHoje: number;
+  hoje: Date;
+}): SerieDoPainel {
+  const { porHora, historico, faturamentoHoje, hoje } = dados;
+  if (periodo === "hoje") {
+    const ontem = historico[historico.length - 1]?.faturamento ?? 0;
+    const soma = PERFIL_DO_DIA.reduce((s, p) => s + p, 0);
+    return {
+      titulo: "Faturamento por hora",
+      rotulos: porHora.map((h) => h.hora),
+      atual: porHora.map((h) => h.valor),
+      anterior: PERFIL_DO_DIA.slice(0, porHora.length).map((p) => Math.round((ontem * p) / soma)),
+      nomes: ["Hoje", "Ontem"],
+      referencia: "vs. ontem",
+      cadaRotulo: 2,
+    };
+  }
+  const dias = periodo === "7" ? 7 : 14;
+  return {
+    titulo: "Faturamento por dia",
+    rotulos: Array.from({ length: dias }, (_, i) => (i === dias - 1 ? "Hoje" : diaMes(diasAntes(hoje, dias - 1 - i)))),
+    atual: [...historico.slice(-(dias - 1)).map((d) => d.faturamento), faturamentoHoje],
+    anterior: historico.slice(-(2 * dias - 1), -(dias - 1)).map((d) => d.faturamento),
+    nomes: [`Últimos ${dias} dias`, `${dias} dias anteriores`],
+    referencia: `vs. ${dias} dias anteriores`,
+    cadaRotulo: dias === 7 ? 1 : 2,
+  };
+}
+
+const soma = (valores: readonly number[]) => valores.reduce((s, v) => s + v, 0);
+
 /** Painel do dono (rede ou loja) e do gerente (loja): REPORT-001 e REPORT-002. */
-export function PainelGestao({ contexto }: { contexto: ContextoDemo }) {
+export function PainelGestao({ contexto, periodo = "hoje" }: { contexto: ContextoDemo; periodo?: PeriodoDoPainel }) {
   const hoje = agora();
   const rede = contexto.loja === REDE;
   const vendas = vendasVisiveis(contexto);
@@ -37,10 +85,19 @@ export function PainelGestao({ contexto }: { contexto: ContextoDemo }) {
   const margemOntem = ontem.faturamento > 0 ? (ontem.faturamento - ontem.custo) / ontem.faturamento : 0;
   const aprovacoes = aprovacoesVisiveis(contexto);
   const alertas = alertasDoEscopo(contexto);
-  const tendencia = [...historico.slice(-13).map((d) => d.faturamento), resumo.faturamento];
-  const porHora = vendasPorHora(vendas);
   const gerente = contexto.perfil === "gerente";
   const titulo = rede ? "Visão geral da rede" : gerente ? `Gestão da loja · ${nomeDaLoja(contexto.loja)}` : `Visão da loja · ${nomeDaLoja(contexto.loja)}`;
+  const pode = (p: Pagina) => podeAcessar(contexto.perfil, p);
+  const atalho = (p: Pagina, href: string, rotulo: string) => (pode(p) ? { href, rotulo } : undefined);
+
+  const grafico = serieDoPainel(periodo, { porHora: vendasPorHora(vendas), historico, faturamentoHoje: resumo.faturamento, hoje });
+  const totalAtual = soma(grafico.atual);
+  const variacaoDoGrafico = periodo === "hoje" ? variacaoEntre(resumo.faturamento, ontem.faturamento) : variacaoEntre(totalAtual, soma(grafico.anterior));
+
+  const fracaoDaMeta = meta > 0 ? resumo.faturamento / meta : 0;
+  const falta = Math.max(0, meta - resumo.faturamento);
+  const mix = mixPorCategoria(vendas);
+  const totalDoMix = soma(mix.map((p) => p.valor));
 
   const rankingLojas = lojas
     .map((l) => ({ loja: l, vendido: resumoDeVendas(VENDAS_HOJE.filter((v) => v.loja === l.codigo)).faturamento }))
@@ -51,6 +108,26 @@ export function PainelGestao({ contexto }: { contexto: ContextoDemo }) {
     .sort((a, b) => b.vendido - a.vendido);
   const caixa = rede ? null : caixaDaLoja(contexto.loja, VENDAS_HOJE);
   const destaques = (rede ? vendedoresVisiveis(contexto).map((p) => desempenhoDe(p)) : equipe).slice().sort((a, b) => b.vendido - a.vendido).slice(0, 5);
+
+  const indicadores: ComponentProps<typeof Indicador>[] = [
+    { rotulo: "Vendas realizadas", valor: numero(resumo.vendas), icone: ShoppingBag, variacao: { fracao: variacaoEntre(resumo.vendas, ontem.vendas), referencia: "vs. ontem" }, acao: atalho("vendas", "/demo/vendas", "Ver vendas") },
+    { rotulo: "Ticket médio", valor: brl(ticket), icone: Receipt, variacao: { fracao: variacaoEntre(ticket, ticketOntem), referencia: "vs. ontem" }, acao: atalho("relatorios", "/demo/relatorios", "Relatórios") },
+    { rotulo: "Margem bruta", valor: percentual(margem), icone: Percent, detalhe: `${brlCompacto(resumo.faturamento - resumo.custo)} de margem · ontem ${percentual(margemOntem)}`, acao: atalho("relatorios", "/demo/relatorios", "Detalhes") },
+    { rotulo: "Chips, ativações e recargas", valor: numero(resumo.telecom), icone: Signal, detalhe: "Só as confirmadas pela operadora", acao: atalho("connect", "/demo/connect", "Ver Connect") },
+    {
+      rotulo: "Descontos concedidos", valor: brl(resumo.descontos), icone: BadgePercent,
+      variacao: { fracao: variacaoEntre(resumo.descontos, ontem.descontos), referencia: "vs. ontem", bomQuandoSobe: false }, acao: atalho("aprovacoes", "/demo/aprovacoes", "Aprovações"),
+    },
+    caixa
+      ? {
+        rotulo: "Caixa (dinheiro)", valor: brl(caixa.previsto), icone: Wallet, tom: caixa.diferenca === 0 ? "bom" : "ruim",
+        detalhe: caixa.diferenca === 0 ? "Conferido sem diferença" : `Contado ${brl(caixa.contado)} · diferença ${brl(Math.abs(caixa.diferenca))}`, acao: atalho("financeiro", "/demo/financeiro", "Ver caixa"),
+      }
+      : {
+        rotulo: "Aprovações pendentes", valor: numero(aprovacoes.length), icone: ClipboardCheck, tom: aprovacoes.length > 0 ? "atencao" : "bom",
+        detalhe: "Descontos, notas e cancelamentos", acao: atalho("aprovacoes", "/demo/aprovacoes", "Abrir fila"),
+      },
+  ];
 
   return (
     <>
@@ -66,29 +143,76 @@ export function PainelGestao({ contexto }: { contexto: ContextoDemo }) {
         }
       />
 
-      <div className="grid grid-cols-2 gap-3 sm:gap-4 xl:grid-cols-4">
-        <Indicador rotulo="Faturamento de hoje" valor={brlCompacto(resumo.faturamento)} icone={Coins} variacao={{ fracao: variacaoEntre(resumo.faturamento, ontem.faturamento), referencia: "vs. ontem" }} tendencia={tendencia} />
-        <Indicador rotulo="Vendas realizadas" valor={numero(resumo.vendas)} icone={ShoppingBag} variacao={{ fracao: variacaoEntre(resumo.vendas, ontem.vendas), referencia: "vs. ontem" }} tendencia={[...historico.slice(-13).map((d) => d.vendas), resumo.vendas]} />
-        <Indicador rotulo="Ticket médio" valor={brl(ticket)} icone={Receipt} variacao={{ fracao: variacaoEntre(ticket, ticketOntem), referencia: "vs. ontem" }} />
-        <Indicador rotulo="Margem bruta" valor={percentual(margem)} icone={Percent} detalhe={`${brlCompacto(resumo.faturamento - resumo.custo)} de margem · ontem ${percentual(margemOntem)}`} />
-      </div>
-
-      <div className="mt-3 grid grid-cols-2 gap-3 sm:mt-4 sm:gap-4 xl:grid-cols-4">
-        <Indicador rotulo="Meta do dia" valor={percentual(meta > 0 ? resumo.faturamento / meta : 0)} icone={Target} detalhe={`de ${brlCompacto(meta)}`} tom={resumo.faturamento >= meta ? "bom" : "atencao"} />
-        <Indicador rotulo="Chips, ativações e recargas" valor={numero(resumo.telecom)} icone={Signal} detalhe="Só as confirmadas pela operadora" />
-        <Indicador rotulo="Descontos concedidos" valor={brl(resumo.descontos)} icone={BadgePercent} variacao={{ fracao: variacaoEntre(resumo.descontos, ontem.descontos), referencia: "vs. ontem", bomQuandoSobe: false }} />
-        {caixa ? (
-          <Indicador rotulo="Caixa (dinheiro)" valor={brl(caixa.previsto)} icone={Wallet} detalhe={caixa.diferenca === 0 ? "Conferido sem diferença" : `Contado ${brl(caixa.contado)} · diferença ${brl(Math.abs(caixa.diferenca))}`} tom={caixa.diferenca === 0 ? "bom" : "ruim"} />
-        ) : (
-          <Indicador rotulo="Aprovações pendentes" valor={numero(aprovacoes.length)} icone={ClipboardCheck} detalhe="Descontos, notas e cancelamentos" tom={aprovacoes.length > 0 ? "atencao" : "bom"} />
-        )}
+      <div className="grid gap-4 xl:grid-cols-3">
+        <Cartao titulo={grafico.titulo} subtitulo={`${rede ? "Rede inteira" : nomeDaLoja(contexto.loja)} · ${grafico.nomes[0].toLowerCase()} × ${grafico.nomes[1].toLowerCase()}`} className="xl:col-span-2">
+          <div className="flex flex-wrap items-end justify-between gap-3">
+            <div className="min-w-0">
+              <p className="text-[13px] font-medium text-suave">{periodo === "hoje" ? "Faturamento de hoje" : `Faturamento dos ${grafico.nomes[0].toLowerCase()}`}</p>
+              <div className="flex flex-wrap items-center gap-x-3 gap-y-1">
+                <p className="numeros text-[30px] font-extrabold leading-tight tracking-tight">{brlCompacto(totalAtual)}</p>
+                <SeloVariacao variacao={{ fracao: variacaoDoGrafico, referencia: grafico.referencia }} />
+              </div>
+            </div>
+            <FiltroSegmentado
+              rotulo="Período do gráfico"
+              opcoes={ORDEM_DOS_PERIODOS.map((p) => ({ href: p === "hoje" ? "/demo" : `/demo?periodo=${p}`, rotulo: PERIODOS_DO_PAINEL[p], ativo: p === periodo }))}
+            />
+          </div>
+          <Linhas
+            suave
+            altura={250}
+            rotulosX={grafico.rotulos}
+            formatar={brl}
+            formatarEixo={brlEixo}
+            formatarPonto={brlCompacto}
+            cadaRotulo={grafico.cadaRotulo}
+            series={[
+              { nome: grafico.nomes[0], serie: 1, valores: grafico.atual, area: true, ponto: "maximo" },
+              { nome: grafico.nomes[1], serie: "comparacao", valores: grafico.anterior, tracejada: true, ponto: "nenhum" },
+            ]}
+          />
+          <TabelaDoGrafico
+            colunas={[periodo === "hoje" ? "Hora" : "Dia", grafico.nomes[0], grafico.nomes[1]]}
+            linhas={grafico.rotulos.map((r, i) => [r, brl(grafico.atual[i] ?? 0), brl(grafico.anterior[i] ?? 0)])}
+          />
+        </Cartao>
+        <div className="min-w-0 space-y-4">
+          <Cartao titulo="Meta do dia" subtitulo={meta > 0 ? `${brlCompacto(resumo.faturamento)} de ${brlCompacto(meta)}` : "Sem meta cadastrada"}>
+            <div className="flex items-center gap-5">
+              <Medidor percentual={fracaoDaMeta * 100} rotulo="Meta do dia" detalhe="da meta" tamanho={124} />
+              <div className="min-w-0 flex-1 space-y-3">
+                <p className="text-sm text-suave">
+                  {falta > 0 ? <>Faltam <strong className="numeros text-texto">{brlCompacto(falta)}</strong></> : <strong className="text-sucesso">Meta do dia batida</strong>}
+                </p>
+                {mix.map((p) => {
+                  const fracao = totalDoMix > 0 ? p.valor / totalDoMix : 0;
+                  return (
+                    <div key={p.nome}>
+                      <div className="mb-1 flex items-baseline justify-between gap-2 text-xs">
+                        <span className="min-w-0 truncate"><span className="font-semibold">{p.nome.replace(/ \(.*\)$/, "")}</span> <span className="numeros text-suave">· {brlCompacto(p.valor)}</span></span>
+                        <b className="numeros shrink-0 font-bold">{percentual(fracao)}</b>
+                      </div>
+                      <Progresso valor={fracao * 100} rotulo={`Participação de ${p.nome} no vendido hoje`} tom="marca" />
+                    </div>
+                  );
+                })}
+              </div>
+            </div>
+            <p className="mt-4 text-xs text-suave">Participação no vendido hoje, em valor.</p>
+          </Cartao>
+          <Cartao titulo="Recebimentos por meio" subtitulo="O que entrou hoje (financeiras à parte)" acao={<Link href="/demo/financeiro" className="text-sm font-semibold text-acao hover:underline">Caixa</Link>}>
+            <BarraSegmentada partes={partesPorMeio(recebimentosPorMeio(vendas))} formatar={brlCompacto} rotulo="Recebido" />
+          </Cartao>
+        </div>
       </div>
 
       <div className="mt-4 grid gap-4 xl:grid-cols-3">
-        <Cartao titulo="Faturamento dos últimos 14 dias" subtitulo={rede ? "Rede inteira · hoje em destaque" : `${nomeDaLoja(contexto.loja)} · hoje em destaque`} className="xl:col-span-2">
-          <GraficoFaturamento historico={historico} hoje={hoje} valorHoje={resumo.faturamento} />
-        </Cartao>
-        <CartaoAvisos alertas={alertas} limite={5} />
+        <section aria-label="Indicadores de hoje" className="min-w-0 xl:col-span-2">
+          <div className="sem-barra -mx-4 flex snap-x snap-mandatory gap-3 overflow-x-auto px-4 pb-1 sm:mx-0 sm:grid sm:grid-cols-2 sm:gap-4 sm:overflow-visible sm:px-0 lg:grid-cols-3">
+            {indicadores.map((i) => <Indicador key={i.rotulo} {...i} className="w-[78%] shrink-0 snap-start sm:w-auto" />)}
+          </div>
+        </section>
+        <CartaoAvisos alertas={alertas} limite={3} />
       </div>
 
       <div className="mt-4 grid gap-4 xl:grid-cols-3">
@@ -109,21 +233,6 @@ export function PainelGestao({ contexto }: { contexto: ContextoDemo }) {
             <TabelaDoGrafico colunas={["Vendedor", "Vendido", "Meta", "Vendas"]} linhas={equipe.map((d) => [d.pessoa.nome, brl(d.vendido), brl(d.meta), d.vendas])} />
           </Cartao>
         )}
-        <div className="min-w-0 space-y-4">
-          <Cartao titulo="Mix de vendas" subtitulo="Em valor, hoje">
-            <BarraSegmentada partes={mixPorCategoria(vendas)} formatar={brlCompacto} rotulo="Vendido" />
-          </Cartao>
-          <Cartao titulo="Recebimentos por meio" subtitulo="O que entrou hoje (financeiras à parte)" acao={<Link href="/demo/financeiro" className="text-sm font-semibold text-acao hover:underline">Caixa</Link>}>
-            <BarraSegmentada partes={partesPorMeio(recebimentosPorMeio(vendas))} formatar={brlCompacto} rotulo="Recebido" />
-          </Cartao>
-        </div>
-      </div>
-
-      <div className="mt-4 grid gap-4 xl:grid-cols-3">
-        <Cartao titulo="Vendas por hora" subtitulo="Ajuda a escalar a equipe nos horários de pico" className="xl:col-span-2">
-          <Colunas dados={porHora.map((h) => ({ rotulo: h.hora, valor: h.valor }))} formatar={brl} formatarEixo={brlEixo} nomeSerie="Vendido" serie={2} altura={190} />
-          <TabelaDoGrafico colunas={["Hora", "Vendido", "Vendas"]} linhas={porHora.map((h) => [h.hora, brl(h.valor), h.quantidade])} />
-        </Cartao>
         <Cartao titulo="Aprovações aguardando" subtitulo="Ninguém aprova o próprio pedido; tudo fica na auditoria" acao={<Link href="/demo/aprovacoes" className="inline-flex items-center gap-1 text-sm font-semibold text-acao hover:underline">Abrir fila <ArrowRight aria-hidden className="size-4" /></Link>}>
           {aprovacoes.length === 0 ? <p className="text-sm text-suave">Nenhum pedido aguardando.</p> : (
             <ul className="divide-y divide-borda">
@@ -144,19 +253,19 @@ export function PainelGestao({ contexto }: { contexto: ContextoDemo }) {
       <section aria-labelledby="titulo-destaques" className="mt-6">
         <div className="mb-3 flex flex-wrap items-end justify-between gap-2">
           <div>
-            <h2 id="titulo-destaques" className="text-lg font-semibold tracking-tight">{rede ? "Melhores vendedores da rede hoje" : "Melhores vendedores hoje"}</h2>
+            <h2 id="titulo-destaques" className="text-lg font-bold tracking-tight">{rede ? "Melhores vendedores da rede hoje" : "Melhores vendedores hoje"}</h2>
             <p className="text-sm text-suave">Gestores veem todos os vendedores; cada vendedor vê só os próprios números.</p>
           </div>
           <Link href="/demo/metas" className="inline-flex items-center gap-1 text-sm font-semibold text-acao hover:underline">Ver a equipe <ArrowRight aria-hidden className="size-4" /></Link>
         </div>
         <ol className="grid gap-3 sm:grid-cols-2 xl:grid-cols-5">
           {destaques.map((d, i) => (
-            <li key={d.pessoa.id} className="relative rounded-cartao border border-borda bg-white p-4 shadow-cartao">
-              <span className={`absolute right-3 top-3 grid size-7 place-items-center rounded-full text-xs font-bold ${i === 0 ? "bg-amber-100 text-amber-900" : "bg-slate-100 text-suave"}`}>{i + 1}º</span>
-              <Avatar nome={d.pessoa.nome} tamanho="size-11 text-sm" />
+            <li key={d.pessoa.id} className="relative rounded-cartao border border-borda/80 bg-white p-4 shadow-cartao sm:p-5">
+              <span className={`absolute right-4 top-4 grid size-8 place-items-center rounded-full text-xs font-bold ${i === 0 ? "bg-acao text-white" : "bg-slate-100 text-suave"}`}>{i + 1}º</span>
+              <Avatar nome={d.pessoa.nome} tamanho="size-12 text-sm" />
               <p className="mt-3 truncate font-semibold">{d.pessoa.nome}</p>
               <p className="truncate text-xs text-suave">{d.porLoja.map((l) => nomeDaLoja(l.loja)).join(" + ") || nomeDaLoja(d.pessoa.lojas[0] ?? "")} · {d.vendas} vendas</p>
-              <p className="numeros mt-3 text-lg font-bold tracking-tight">{brl(d.vendido)}</p>
+              <p className="numeros mt-3 text-lg font-extrabold tracking-tight">{brl(d.vendido)}</p>
               <div className="mt-2"><Progresso valor={d.meta > 0 ? (d.vendido / d.meta) * 100 : 0} rotulo={`Meta de ${d.pessoa.nome}`} /></div>
               <p className="mt-1 text-xs text-suave">{percentual(d.meta > 0 ? d.vendido / d.meta : 0)} da meta de {brlCompacto(d.meta)}</p>
             </li>
