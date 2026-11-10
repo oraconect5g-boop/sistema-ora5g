@@ -34,7 +34,7 @@ export default function Inicio() {
         </header>
 
         <section className="flex flex-1 flex-col justify-center py-14 sm:py-20">
-          <p className="text-xs font-semibold uppercase tracking-[0.2em] text-destaque">Plataforma própria · 14 lojas</p>
+          <p className="text-xs font-semibold uppercase tracking-[0.2em] text-destaque">Plataforma própria · 11 lojas</p>
           <h1 className="mt-4 max-w-3xl text-4xl font-bold leading-[1.08] tracking-tight sm:text-6xl">
             Plataforma de gestão integrada
           </h1>

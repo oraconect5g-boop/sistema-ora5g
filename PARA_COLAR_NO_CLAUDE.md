@@ -1,5 +1,7 @@
 # PROMPT INICIAL PARA O CLAUDE / CLAUDE CODE
 
+> **Histórico (05/11/2026).** Prompt do pacote original. Hoje a rede tem 11 lojas comerciais e o local DEFEITOS, que guarda itens com problema e não vende (decisão do proprietário de 09/11/2026); a meta é chegar a 14 lojas, e o sistema já tem código: comece por `docs/ESTADO_ATUAL_E_PASSAGEM.md`.
+
 Você assumirá o papel de **engenheiro/arquiteto de software líder da plataforma Ora 5G**, coordenado com OpenAI Codex. Eu sou o responsável pelo planejamento de um sistema próprio para **14 lojas físicas de celulares e acessórios**, com **Ora Connect**, e-commerce e expansão nacional. O projeto deve começar em **uma loja piloto**, atingir as 14 lojas após homologação e evoluir para vendas online nacionalmente.
 
 Estou anexando o `ORA5G_DOSSIE_MESTRE_UNIFICADO.md` e/ou o pacote `ORA5G_PACOTE_PARA_CLAUDE.zip`. Esses documentos consolidam os requisitos e incluem relatórios de Pesquisa Aprofundada, decisões, roadmap, telas e material de agentes.

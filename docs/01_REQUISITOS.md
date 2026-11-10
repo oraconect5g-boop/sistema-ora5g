@@ -1,5 +1,7 @@
 # 01 — Requisitos rastreáveis da Ora 5G
 
+> **Atualização de 10/11/2026:** a rede tem 11 lojas comerciais e o local DEFEITOS, que guarda itens com problema e não vende (decisão do proprietário de 09/11/2026); a meta é chegar a 14 lojas. ORA-ORG-001 e ORA-REPORT-001 foram ajustados; o inventário de 179 requisitos não significa 179 funcionalidades entregues.
+
 **Inventário atual: 179 requisitos** — 172 da base inicial, ORA-CAT-011 (fotos obrigatórias, decisão do proprietário de 08/11/2026) e ORA-OS-001 a 006 (assistência técnica, DEC-U44/U47, formalizados em 09/11/2026 sem contar como feitos; dependem da P5). A lista representa o planejamento, não funcionalidades já existentes. Detalhes em [Fotos dos produtos](alinhamento/FOTOS_DOS_PRODUTOS_2026-11-08.md).
 
 Legenda: **P0** essencial à fundação/piloto conforme dependências; **P1** funcionalidades importantes para rollout/integração; **P2** expansão. Um requisito P1 pode ser antecipado se houver bloqueio operacional real.
@@ -12,7 +14,7 @@ Cada ID deve se tornar issue(s) de GitHub, ligar PR/arquivos alterados, testes e
 
 | ID | Prio. | Requisito | Critério objetivo de aceitação |
 |---|---|---|---|
-| ORA-ORG-001 | P0 | Cadastrar empresa, organização, 14 lojas e loja piloto | Usuários autorizados selecionam unidade; IDs e dados fiscais coerentes. |
+| ORA-ORG-001 | P0 | Cadastrar empresa, organização, 11 lojas comerciais, o local DEFEITOS e a loja piloto (meta de 14 lojas) | Usuários autorizados selecionam unidade; IDs e dados fiscais coerentes. |
 | ORA-ORG-002 | P0 | Associar usuários a uma ou múltiplas lojas com função e vigência | Bloqueio testado para loja sem vínculo. |
 | ORA-ORG-003 | P0 | Gerir perfis diretoria, regional, gerente, vendedor, financeiro, fiscal, marketing e atendimento | Matriz de autorização versionada e auditada. |
 | ORA-ORG-004 | P0 | Isolar dados por loja na API e PostgreSQL/RLS | Testes de acesso cruzado e negação por ID arbitrário. |
@@ -238,7 +240,7 @@ Cada ID deve se tornar issue(s) de GitHub, ligar PR/arquivos alterados, testes e
 
 | ID | Prio. | Requisito | Critério objetivo de aceitação |
 |---|---|---|---|
-| ORA-REPORT-001 | P0 | Dashboard diretoria consolidado das 14 lojas | Filtro por período, loja, vendedor, natureza e status. |
+| ORA-REPORT-001 | P0 | Dashboard diretoria consolidado de todas as lojas (11 hoje; meta de 14) | Filtro por período, loja, vendedor, natureza e status. |
 | ORA-REPORT-002 | P0 | Dashboard gerente de loja: caixa, metas, aprovação de desconto/NF | Só dados autorizados; alertas com link ao fato original. |
 | ORA-REPORT-003 | P0 | Dashboard vendedor mobile: produção do dia, metas e atalhos | Dados apenas do escopo autorizado. |
 | ORA-REPORT-004 | P0 | Relatório de chips vendidos, ativações e recargas separadamente | Produção não implica faturamento tributável idêntico. |

@@ -1,0 +1,20 @@
+{
+  "base": "9b1109e49d9304651d20224563f8e5bdaf950894",
+  "commits": 149,
+  "merges": 43,
+  "trees": 81,
+  "localSchema": {
+    "migrations": 14,
+    "funcoes": 111,
+    "indices": 189,
+    "gatilhos": 41,
+    "politicas": 40,
+    "sobrecargas": 0
+  },
+  "sourceGraph": {
+    "sourceFiles": 127,
+    "realEntrypoints": 20,
+    "realToDemoPaths": [],
+    "identicalFunctionBodies": []
+  }
+}

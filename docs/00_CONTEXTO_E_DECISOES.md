@@ -1,5 +1,7 @@
 # 00 — Contexto, objetivo, escopo e decisões
 
+> **Atualização de 10/11/2026:** a DEC-U02 foi superada. Hoje a rede tem 11 lojas comerciais e o local DEFEITOS, que guarda itens com problema e não vende (decisão do proprietário de 09/11/2026); a meta é chegar a 14 lojas. Decisões posteriores: [ETAPA_0_DECISOES_2026-11-06.md](etapa-0/ETAPA_0_DECISOES_2026-11-06.md) e [ESTADO_ATUAL_E_PASSAGEM.md](ESTADO_ATUAL_E_PASSAGEM.md).
+
 **Baseline de 05/11/2026.** Este documento consolida as decisões verbalizadas pelo proprietário e as propostas técnicas discutidas. Nenhum código ou integração está declarado como implementado.
 
 ## Contexto real do negócio
@@ -26,7 +28,7 @@ Uma plataforma central em que a jornada `lead → cliente → venda → pagament
 | ID | Decisão | Consequência |
 |---|---|---|
 | DEC-U01 | Construir plataforma própria de CRM + operação completa | Planejar CRM, ERP, PDV, telecom, digital e BI juntos |
-| DEC-U02 | São 14 lojas físicas | Multi-loja desde o modelo inicial |
+| DEC-U02 | São 14 lojas físicas (**superada em 09/11/2026:** 11 lojas comerciais + DEFEITOS; meta de 14) | Multi-loja desde o modelo inicial |
 | DEC-U03 | Piloto em uma loja, depois escalar | Impõe gates de homologação e rollout gradual |
 | DEC-U04 | Rein **somente arquivos de produtos/preços** | Não projetar integração de API Rein no runtime |
 | DEC-U05 | Ora Connect deve integrar Nogle, doc em `docs.nogle.tech` | Contrato de API precisa ser verificado antes de implementar |

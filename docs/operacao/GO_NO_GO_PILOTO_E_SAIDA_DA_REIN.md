@@ -1,5 +1,7 @@
 # Go/no-go da loja piloto e critérios para sair da Rein
 
+> **Rede (decisão de 09/11/2026):** 11 lojas comerciais e o local DEFEITOS, que guarda itens com problema e não vende (decisão do proprietário de 09/11/2026); a meta é chegar a 14 lojas. Nenhum critério abaixo muda por isso.
+
 **Data:** 08/11/2026 · **Autor:** Claude Code · **Revisor:** Codex · **Decide:** proprietário (com o contador no fiscal)
 **Base:** bloco 9 do [prompt de execução prioritária](../alinhamento/PROMPT_CLAUDE_EXECUCAO_PRIORITARIA.md), DEC-U23 (Rein oficial durante o desenvolvimento e o piloto), roteiro ([07_ROADMAP.md](../07_ROADMAP.md) §go/no-go) e D-032.
 
@@ -9,7 +11,7 @@
 
 O que é "oficial" conta para venda, estoque, caixa, comissão e fiscal. O outro sistema é **só comparação** e nunca entra em meta, comissão ou relatório oficial. Assim nenhuma venda conta duas vezes e nenhum estoque baixa duas vezes.
 
-| Assunto | Fase 0 — agora (desenvolvimento e homologação) | Fase 1 — piloto em paralelo (2 a 4 semanas) | Fase 2 — Ora oficial na piloto (depois do go/no-go) | Fase 3 — ondas 3 → 7 → 14 lojas |
+| Assunto | Fase 0 — agora (desenvolvimento e homologação) | Fase 1 — piloto em paralelo (2 a 4 semanas) | Fase 2 — Ora oficial na piloto (depois do go/no-go) | Fase 3 — ondas 3 → 7 → 11 lojas (e as novas, até 14) |
 |---|---|---|---|---|
 | Vendas e comissão | Rein | **Rein** (Ora em teste, lançamento duplo) | **Ora**; Rein só consulta | Ora nas lojas migradas; Rein nas demais |
 | Estoque e IMEI | Rein | **Rein** (Ora conferida pelo relatório diário) | **Ora**; saldo inicial = inventário assinado | Por loja, na data da migração; sem transferência entre loja migrada e não migrada sem conciliação |

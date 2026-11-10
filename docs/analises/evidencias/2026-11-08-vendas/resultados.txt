@@ -1,0 +1,27 @@
+adversariais.log
+EVIDENCIA acesso_bloqueio linhas=1
+EVIDENCIA acesso_sessao_revogada linhas=1
+EVIDENCIA entrada_pix_direto codigo=null
+EVIDENCIA entrada_pix_picpay codigo=null
+EVIDENCIA entrada_cartao_picpay codigo=null
+EVIDENCIA entrada_cartao_pagseguro codigo=null
+EVIDENCIA estorno_entrada codigo=null saldo=-20000
+EVIDENCIA financiamento_excedente dominio=false codigo_banco=null
+EVIDENCIA estorno_troco retido=19900 devolvido=20000
+EVIDENCIA estorno_externo_pix_direto situacao=estornado data_registrada=true
+EVIDENCIA estorno_externo_cartao_picpay situacao=estornado data_registrada=true
+EVIDENCIA retorno_aparelho situacao=disponivel em_estoque=true
+EVIDENCIA retorno_chip situacao=disponivel em_estoque=true
+⎯⎯⎯⎯⎯⎯ Failed Tests 13 ⎯⎯⎯⎯⎯⎯⎯
+      Tests  13 failed | 2 passed (15)
+acoes.log
+EVIDENCIA fundo_invalido texto=abc rpc=1 valor=0
+EVIDENCIA fundo_invalido texto=-1 rpc=1 valor=0
+EVIDENCIA desconto_invalido rpc=1 valor=0
+⎯⎯⎯⎯⎯⎯⎯ Failed Tests 3 ⎯⎯⎯⎯⎯⎯⎯
+      Tests  3 failed | 1 passed (4)
+
+concorrencia.log
+EVIDENCIA concorrencia_desconto_aprovacao codigos=["40P01",null]
+⎯⎯⎯⎯⎯⎯⎯ Failed Tests 1 ⎯⎯⎯⎯⎯⎯⎯
+      Tests  1 failed (1)

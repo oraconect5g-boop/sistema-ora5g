@@ -10,7 +10,7 @@
 
 ## 1. Contexto
 
-- Uma empresa com **CNPJ raiz** e **um CNPJ de filial por loja**. 14 lojas físicas; piloto na **Santa Cândida**.
+- Uma empresa com **CNPJ raiz** e **um CNPJ de filial por loja**. 14 lojas físicas; piloto na **Santa Cândida**. (Adendo de 10/11/2026: a rede tem 11 lojas comerciais e o local DEFEITOS, tipo `excecao`, ADR-007; meta de 14.)
 - Haverá também a **Loja Online**, um **técnico central** de assistência e, no futuro, depósito e outras empresas/UF.
 - Pessoas reais hoje: **2 donos**, **1 administrador do sistema** (o proprietário, que atua como desenvolvedor) e **vendedores que fazem tudo** (vendem, recebem, lançam). **Não há gerente oficial**, caixa nem estoquista.
 - Vendedores **circulam entre lojas** (2 ou 3 lojas, às vezes alternando no mesmo dia), entram por **e-mail** e usam **celular pessoal**, celular da loja e às vezes notebook.

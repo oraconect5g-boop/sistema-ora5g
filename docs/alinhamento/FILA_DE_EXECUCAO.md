@@ -1,5 +1,7 @@
 # Fila de execução — núcleo para sair da Rein
 
+> **Atualização de 10/11/2026:** fila de 08/11. Itens 1 a 7 e 9 a 13 feitos em desenvolvimento; o 8 (importador da Rein) espera o arquivo. Os achados do Codex de 08 e 09/11 foram corrigidos nos lotes 1 a 5 ([reconciliação](RECONCILIACAO_CODEX_2026-11-09.md)). Prioridades atuais: [ESTADO_ATUAL_E_PASSAGEM.md](../ESTADO_ATUAL_E_PASSAGEM.md).
+
 **Atualizado em:** 08/11/2026 · **Por:** Claude Code · **Revisor:** Codex
 **Origem:** [PROMPT_CLAUDE_EXECUCAO_PRIORITARIA.md](PROMPT_CLAUDE_EXECUCAO_PRIORITARIA.md) (PR #25), pedido do proprietário de 08/11 (inclui **cadastro de usuários e gestão da equipe**) e [auditoria do Codex de 08/11](../analises/AUDITORIA_CLAUDE_CODE_2026-11-08.md).
 **Regra:** cada linha vira branch e commits próprios; integração na `main` só depois da sequência do CI em instalação limpa; o Codex revisa. "Feito" = testado em desenvolvimento, **não** homologado.

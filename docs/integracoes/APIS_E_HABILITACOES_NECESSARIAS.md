@@ -120,7 +120,7 @@
 | O quê | Para quê | Situação |
 |---|---|---|
 | Arquivo da Rein (produtos, preços, estoque da Santa Cândida) | Importação e conferência do piloto | Não recebido. Pasta `~/entrada/rein/` pronta |
-| Lojas: nome, endereço, CNPJ da filial, telefone, horário | Cadastro real das 14 lojas | Não recebido. Pasta `~/entrada/lojas/` |
+| Lojas: nome, endereço, CNPJ da filial, telefone, horário | Cadastro real das 11 lojas e do DEFEITOS | Não recebido. Pasta `~/entrada/lojas/` |
 | Pessoas autorizadas no piloto (nome, e-mail, loja, função) | Podem ser cadastradas por você ou pelo gerente na **tela da equipe**, assim que a secret key estiver gravada | Tela em desenvolvimento |
 | Fotos dos produtos (ORA-CAT-011) | Foto de cada produto e de cada variante com cor/acabamento diferente | Envio pelo celular dentro do sistema (em desenvolvimento). Se já tiver fotos, `~/entrada/fotos/` com o SKU no nome do arquivo |
 | Política de desconto por categoria (P14) e quem aprova acima do limite | Desconto real no PDV | Pendente |

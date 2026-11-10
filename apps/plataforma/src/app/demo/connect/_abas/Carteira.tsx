@@ -28,7 +28,7 @@ export function Carteira({ operacoes, agora }: { operacoes: readonly OperacaoCon
       </div>
 
       <div className="grid gap-4 xl:grid-cols-3">
-        <Cartao className="xl:col-span-2" titulo="Extrato da carteira" subtitulo="Valor cobrado da Ora, não o que o cliente pagou (GET /saldo/extrato)" acao={<ExportarCsv nomeArquivo="extrato-contel" colunas={["Data", "Tipo", "Descrição", "Valor (R$)"]} linhas={CARTEIRA_CONTEL.extrato.map((e) => [dataRelativa(agora, e.diasAtras), e.tipo, e.descricao, (e.valor / 100).toFixed(2).replace(".", ",")])} />}>
+        <Cartao className="xl:col-span-2" titulo="Extrato da carteira" subtitulo="Valor cobrado da Ora, não o que o cliente pagou (GET /saldo/extrato)" acao={<ExportarCsv nomeArquivo="extrato-nogle" colunas={["Data", "Tipo", "Descrição", "Valor (R$)"]} linhas={CARTEIRA_CONTEL.extrato.map((e) => [dataRelativa(agora, e.diasAtras), e.tipo, e.descricao, (e.valor / 100).toFixed(2).replace(".", ",")])} />}>
           <Tabela colunas={["Data", "Movimento", "Valor"]} legenda="Extrato da carteira na Nogle" alinharDireita={[2]} minimo="min-w-[30rem]">
             {CARTEIRA_CONTEL.extrato.map((e, i) => (
               <tr key={i}>

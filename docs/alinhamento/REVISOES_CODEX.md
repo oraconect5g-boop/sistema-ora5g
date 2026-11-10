@@ -130,3 +130,105 @@ ORA-ORG-005 mantém testado em desenvolvimento. ORA-INV-003 volta a parcial por 
 Supabase: 20 tabelas com RLS, 33 funções, 167 colunas, 131 constraints comparáveis, 83 índices, 19 gatilhos, 20 policies e 20 grants examinados correspondentes ao banco limpo. Sem usuário/sessão Auth ou perfil; há semente fictícia. Consultas foram somente de leitura, sem .env, chaves, dados pessoais individuais ou mudanças remotas.
 
 Próximos passos: corrigir #19–#22; concluir acesso e renovação real; aceitar ADR-003; integrar catálogo/estoque; importar Rein por arquivo; depois PDV/caixa, piloto, Nogle/fiscal e canais. O plano, os critérios e as dependências estão na auditoria.
+
+## Conferência de 08/11/2026 — main 55d10af e relatório do Claude Web
+
+Parecer mais recente: [REVISAO_CLAUDE_E_RELATORIO_WEB_2026-11-08.md](../analises/REVISAO_CLAUDE_E_RELATORIO_WEB_2026-11-08.md). Comparação desde 7f5fd41: 19 commits, 78 arquivos, incluindo documentação anterior do próprio Codex. Relatório enviado pelo proprietário lido integralmente e confrontado com código/decisões; suas recomendações sobre exclusão de itens telecom, importação de estoque e escopo de OS exigem os ajustes registrados.
+
+**#19–#24 / REV-020 a REV-025 encerradas** após prova independente: seis testes originais de banco e quatro execuções originais de navegador passaram. CI da main [42521842775](https://github.com/oraconect5g-boop/sistema-ora5g/actions/runs/42521842775) aprovado. Localmente: instalação limpa, lint, tipos e build aprovados; **397 testes passaram, 4 TODO; 124 E2E passaram, 10 pulados**.
+
+Novos achados reproduzidos separadamente:
+
+| ID / issue | Gravidade | Defeito |
+|---|---|---|
+| REV-026 / [#27](https://github.com/oraconect5g-boop/sistema-ora5g/issues/27) | P1 | Bloqueio global de pessoa compartilhada afeta organização fora da autoridade do gestor |
+| REV-027 / [#28](https://github.com/oraconect5g-boop/sistema-ora5g/issues/28) | P1 | E-mail Auth divergente permite autoconcessão por convite e worker |
+| REV-028 / [#29](https://github.com/oraconect5g-boop/sistema-ora5g/issues/29) | P1 | Duas revogações concorrentes deixam organização sem dono |
+| REV-029 / [#30](https://github.com/oraconect5g-boop/sistema-ora5g/issues/30) | P2 | Worker conclui convite de emissor bloqueado sem revalidar autoridade |
+| REV-030 / [#31](https://github.com/oraconect5g-boop/sistema-ora5g/issues/31) | P2, demo | Face de recarga entra no faturamento e margem fictícia |
+| REV-031 / [#32](https://github.com/oraconect5g-boop/sistema-ora5g/issues/32) | P2, demo | Indicador “só confirmadas” inclui ativação pendente e conta linhas |
+
+[Evidências](../analises/evidencias/2026-11-08-web/LEIA-ME.md): seis assertions deliberadamente falham na base, fora do CI normal. As falhas de indicadores são anteriores ao lote. Corrigir banco por migration nova e preservar stack.
+
+Supabase consultado somente para metadados/contagens: oito migrations da main correspondem ao histórico; há uma nona de fotos em andamento sem código na main no corte, que não foi homologada. Banco sem usuários/sessões Auth/perfis/convites. #11 continua aberta sem renovação real comprovada; #26 continua aguardando entrega/revisão de fotos. Nenhum acesso ao servidor/.env ou alteração remota.
+
+173 requisitos, 71 no piloto; status declarados: 3 testados em desenvolvimento, 26 parciais, 22 demonstrações, 2 bloqueados, 119 não iniciados, 1 restrição respeitada, 0 homologados. As correções de estoque delimitadas foram conferidas; o núcleo comercial/Nogle não está pronto.
+
+**Orientação recente do proprietário:** a Nogle/Contel mantém os fatos oficiais telecom; a Ora relaciona venda, loja, vendedor, recorrência e repasse, sem dupla contagem. Ler [NOGLE_REGISTRO_OFICIAL_E_DESEMPENHO.md](NOGLE_REGISTRO_OFICIAL_E_DESEMPENHO.md) e o [adendo ao prompt](ADENDO_PROMPT_REVISAO_WEB_E_NOGLE.md). Renovação de plano é diferente de comissão recorrente; nenhuma taxa ou rota de repasse foi presumida.
+
+## Rodada ampliada de 08/11/2026 — testes em todos os setores
+
+[Análise dos 17 setores](../analises/TESTES_E_ANALISE_POR_SETOR_2026-11-08.md), sobre a mesma base 55d10af. Stack preservada. Executados 88 casos adicionais distintos: 79 passaram e 9 falharam de forma esperada, demonstrando seis causas novas. As reexecuções não entram como cobertura adicional.
+
+Achados P2: REV-032 / #34 (idempotência com variante NULL e condição/série omitidas); REV-033 / #35 (chip q2 com ICCID único); REV-034 / #36 (contrato não exclui o autor da fila de aprovação); REV-035 / #37 (relatório 30 dias compara com um dia); REV-036 / #38 (CSV permite fórmula textual); REV-037 / #39 (ativação simulada deixa carteira negativa). Limites e reproduções estão na análise e na [pasta de evidências](../analises/evidencias/2026-11-08-setores/LEIA-ME.md). As P1 #27–#29 continuam prioritárias.
+
+Adicionados à suíte normal um teste com 1000 entradas de desconto e 21 cenários Playwright em dois tamanhos, cobrindo páginas, negativas de perfil e dez exportações, inclusive filtros e omissão de custo. Casos vermelhos ficam fora do CI normal.
+
+Supabase consultado somente em leitura: 22 tabelas com RLS, zero usuários/sessões/perfis; bucket privado de fotos, tipos/limite e policies presentes no desenvolvimento, sem homologação de upload/URLs. Advisor: sem aviso de health; 17 RPCs SECURITY DEFINER intencionais a revisar por seus guards; uma FK de fotos sem índice geral de cobertura e 44 índices sem uso (não remover automaticamente). Sem acesso ao servidor/.env, banco mutado ou operação externa real.
+
+Nenhum módulo foi marcado como homologado. O inventário permanece 173 requisitos/71 do piloto. Implementação ausente é registrada como pendência, sem usar mockup como prova.
+
+## Revisão da entrega real de catálogo/fotos — aebbdcc
+
+Lote novo após a revisão anterior: sete commits/21 caminhos; agora há código real de fotos na main. [Conferência detalhada](../analises/REVISAO_CATALOGO_FOTOS_AEBBDCC_2026-11-08.md). CI da main [42535268839](https://github.com/oraconect5g-boop/sistema-ora5g/actions/runs/42535268839) aprovado; localmente 407 testes existentes passaram, 4 TODO. Testes específicos adicionais: 17 casos, oito verdes e nove falhas esperadas, fora do CI normal.
+
+Achados: REV-038 / #40 (busca só nos primeiros 200 produtos); REV-039 / #41 (imagem não recupera com URL nova); REV-040 / #42 (retry duplica upload e registro repetido retorna 23505); REV-041 / #43 (descarte retém arquivo no input). Também REV-042 / #44: um advisory de minimatch propaga oito moderados de desenvolvimento; produção sem alerta no audit. Não aplicar downgrade automático do Next. As P1 de acesso anteriores mantêm prioridade.
+
+Conferência do aviso de índice: o índice completo fotos_organizacao, embora tenha ordem inversa à FK, atende ambas as igualdades no EXPLAIN local. O INFO isolado não justifica índice redundante. #26 continua aberta até correções, ligação aos demais pontos previstos e homologação autorizada de Auth/Storage/câmera.
+
+A nova análise complementa as fotografias históricas anteriores; não reclassifica retroativamente a versão antiga. Preservar TypeScript/React/Next.js/Node.js/PostgreSQL/Supabase e migrations aplicadas.
+
+
+
+
+## Revisão de vendas, pagamentos e caixa reais — 371cef0
+
+Seis commits e 25 caminhos após aebbdcc. [Análise completa](../analises/REVISAO_VENDAS_PAGAMENTOS_CAIXA_371CEF0_2026-11-08.md) e [fontes/resultados](../analises/evidencias/2026-11-08-vendas/LEIA-ME.md). Main local: 428 testes passaram, quatro TODO. Rodada adversarial: 20 casos, três controles passaram e 17 falharam por nove causas; não integram a suíte normal.
+
+| ID / issue | Requisito | Arquivo e linha em 371cef0 | Gravidade | Erro e correção |
+|---|---|---|---|---|
+| REV-043 / #45 | ORA-ORG-006; POS-006 | migration vendas:279 | Bloqueante — acesso | Aprovação própria ignora revogação/bloqueio. Exigir acesso vigente no ramo do solicitante |
+| REV-044 / #46 | ORA-POS-007; PAY-001 | migration:913–927 | Bloqueante — dinheiro | Entrada Pix/cartão de financeira aceita sem comprovante. Validar meio efetivo e evidência |
+| REV-045 / #47 | ORA-PAY-004/005; POS-010 | migration:1056–1062 | Bloqueante — dinheiro | Estorno da entrada deixa caixa em -20000. Validar/travar saldo em toda saída de dinheiro |
+| REV-046 / #48 | ORA-POS-013; PAY-002 | migration:923–943 | Bloqueante — dinheiro | Financiamento acima do preço usa entrada para troco, divergindo do domínio. Alinhar DEC-U38 |
+| REV-047 / #49 | ORA-POS-010; PAY-002 | migration:1053–1062 | Bloqueante — dinheiro | Retido 19900, devolvido 20000 após troco; depende do excesso aceito no #48. Estornar recebido líquido |
+| REV-048 / #50 | ORA-PAY-003/007; POS-010 | migration:1073–1079 | Bloqueante — dinheiro | Pix/cartão viram estornado sem evidência externa. Separar pendência e confirmação |
+| REV-049 / #51 | ORA-INV-003; POS-010; CONNECT-001 | migration:1047–1052 | Bloqueante — integridade | Cancelamento torna aparelho/chip disponível sem retorno físico. Conferir identidade/condição antes de liberar |
+| REV-050 / #52 | ORA-PAY-004; POS-005/006 | vender/acoes.ts:26 e :64 | Importante — validação | Valor inválido vira zero. Rejeitar inválido e distinguir vazio/zero intencional |
+| REV-051 / #53 | ORA-POS-006 | migration:692–702 e :765–788 | Importante — concorrência | Venda→aprovação versus aprovação→venda causa 40P01 em PostgreSQL 17. Unificar ordem das travas |
+
+Migration = packages/banco/supabase/migrations/20261108233546_vendas_pagamentos_e_caixa.sql. A análise detalhada liga as nove issues, delimita cada prova e orienta regressões. A prova concorrente usa locks preparatórios locais e RPCs reais autenticadas; não demonstra corrupção.
+
+Supabase só em leitura: 30 tabelas com RLS, 11 migrations, zero usuários/sessões/vendas/caixas; MD5 das duas novas migrations confere. Advisor agrupa 29 RPCs SECURITY DEFINER intencionais e 74 índices sem uso no ambiente vazio, não números automáticos de vulnerabilidades ou índices a excluir.
+
+CI 42537301660: verde no merge temporário eab4143 (d484b882 + 371cef0), 429 testes +4 TODO e 176 E2E +10 pulados. O log prova que essa execução já incluiu vendas, apesar do metadado de base anterior. Atualização da PR de revisão exige novo CI do novo head. POS-006/007 e PAY-004 voltam a parcial; nenhum requisito homologado.
+
+## 09/11/2026 — merges, duplicidades e Nogle financeira
+
+[Análise de merges e versões antigas](../analises/REVISAO_MERGES_E_DUPLICIDADES_2026-11-09.md): main 371cef0, 130 commits, 35 merges e 68 árvores Git. Não foi comprovada reintrodução de código operacional removido; 34 merges têm base única e nenhum caminho removido voltou a ficar presente. Um merge documental tem duas bases e foi examinado separadamente. Conteúdo novo de resolução apareceu só em documentação e um E2E.
+
+Banco local reconstruído: 11 migrations, 94 declarações de função com 11 substituições na mesma identidade e 83 funções atuais, sem sobrecarga antiga; 144 índices sem equivalentes exatos nas propriedades comparadas, 30 triggers e 32 policies. Triggers repetindo a função protegem eventos diferentes (UPDATE/DELETE e TRUNCATE). Índices invertidos de fotos são candidatos a avaliar por plano/carga, sem remoção automática.
+
+Grafo: 118 fontes, 17 entradas reais e nenhum caminho literal de import das entradas reais aos dados demo; arquivo monolítico dados.ts e versão antiga da migration de fotos removidos. Configurações/templates idênticos têm avaliação individual. Divergência TypeScript/SQL de pagamento já comprovada em #48 exige regressão de paridade; não foi atribuída a conflito de merge sem evidência. O inventário local passou; limites e fontes na pasta de evidências. Não houve inspeção da VPS/crontab.
+
+[Prioridade Nogle, gateway e repasses](../analises/PRIORIDADE_NOGLE_GATEWAY_E_REPASSES_2026-11-09.md), [issue #54](https://github.com/oraconect5g-boop/sistema-ora5g/issues/54): orientação explícita reforçada pelo proprietário. Coleção oficial reconferida em 09/11 é idêntica à cópia versionada (62 funções, 16 grupos). Não há transporte Nogle, rota Connect real, persistência/processamento telecom ou cobrança/repasse integrados na base. Não está pronto só esperando chaves. #54 é pendência de implementação, não novo defeito atribuído a merge.
+
+Código/configuração/contratos e testes fictícios podem avançar sem credenciais; chamadas e homologação reais dependem de conta/linha/escopo autorizados e contrato do provedor. Gateway Nogle no módulo Ora Connect; campos de pagamento não provam liquidação ou contrato de repasse bancário. Sem operações reais, secrets ou alteração de linguagem. Nenhum status promovido a homologado.
+
+## Atualização 9b1109e — Nogle real parcial,11 lojas e transferências
+
+O corte novo inclui19 commits/66 caminhos após371cef0. Agora há cliente/worker Nogle, /connect, operações persistentes, /estoque e fila fiscal. [Consolidado atual](../analises/REVISAO_NOGLE_9B1109_E_CONSOLIDADO_2026-11-09.md), [perguntas à Contel](../integracoes/PERGUNTAS_PARA_NOGLE_2026-11-09.md). Não usar a ausência de módulos do corte anterior como estado atual.
+
+| Achado | Requisito | Fonte | Gravidade | Correção solicitada |
+|---|---|---|---|---|
+| REV-052 / #55 | ORA-CONNECT-004; ORG-006 | publicar.sh:52 | Bloqueante — segredos | Filtro antigo conserva segredos Nogle na cópia web. Contrato explícito/allowlist e teste de publicação/rollback |
+| REV-053 / #56 | ORA-CONNECT-003; ORG-004 | migration Connect:245–265; connect/page.tsx:54/199 | Bloqueante — permissão | Custo da carteira exposto ao vendedor. Separar DTO/tabela/eventos e conferir custo.ver |
+| REV-054 / #57 | ORA-CONNECT-003; POS-007 | connect_registrar | Bloqueante — dinheiro | LINK aceita serviço já pago. Impedir dupla cobrança ou compensar por regra aprovada |
+| REV-055 / #58 | ORA-CONNECT-002/010 | digest da operação sem cliente | Bloqueante — identidade | Mesma chave aceita cliente alterado. Digest/HMAC do conteúdo relevante com privacidade |
+| REV-056 / #59 | ORA-CONNECT-003/006/010 | interpretarConsulta; produção por operação | Bloqueante — dupla contagem | Uma evidência de recarga confirma duas operações com data coincidente. Correlação única e bloqueio de ambiguidade |
+
+Seis provas adicionais, um controle passou e cinco falharam por cinco causas, fora do CI normal; [fontes](../analises/evidencias/2026-11-09-nogle-9b1109/LEIA-ME.md). Sem operação real ou chave. Suíte local com o teste de propriedade anterior:486 testes passaram, dois TODO. Supabase só leitura:38 tabelas com RLS,14 migrations e zero usuários/sessões/operações; MD5s novos conferem. Nenhuma sobrecarga antiga no inventário local111 funções.
+
+Histórico total analisado149 commits/43 merges/81 árvores; os oito merges novos não restauraram caminho removido. Resolução de navegação/SSR/E2E preserva estoque,Connect e notas. #55 mostra integração nova usando caminho antigo não atualizado, sem exigir conflito textual no Git. O reexport antigo Nogle aponta a uma implementação canônica no domínio.
+
+Proprietário confirmou11 lojas comerciais e DEFEITOS para erro/problema, substituindo 14 lojas. Referência em docs/cadastros/LOJAS_CONFIRMADAS_2026-11-09.json; fluxo interno #60 e [proposta visual](../prototipos/estoque-por-loja-2026-11-09/LEIA-ME.md). Pedidos simulados no protótipo não alteram estoque. Operação real, repasse e homologação continuam pendentes.

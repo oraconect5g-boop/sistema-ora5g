@@ -1,8 +1,8 @@
 # AGENTS.md — Orientação para Codex e quaisquer outros agentes
 
-Leia primeiro `docs/ESTADO_ATUAL_E_PASSAGEM.md` e `docs/alinhamento/ANALISE_DO_PLANO.md`; depois `CLAUDE.md`, `README.md` e as especificações de `docs/`. O pedido de revisão em aberto está em `docs/alinhamento/PEDIDO_DE_REVISAO_CODEX.md`. Essas regras são obrigatórias independentemente do agente executor.
+Leia primeiro `docs/ESTADO_ATUAL_E_PASSAGEM.md` e `docs/alinhamento/ANALISE_DO_PLANO.md`; depois `CLAUDE.md`, `README.md` e as especificações de `docs/`. O pedido de revisão em aberto está em `docs/alinhamento/PEDIDO_DE_REVISAO_CODEX.md`. Contexto e roteiro consolidados em 09/11/2026: `.claude/skills/engenheiro-senior-ora5g/` e `docs/skills/engenheiro-senior-ora5g/` (apoio; o código atual prevalece). Essas regras são obrigatórias independentemente do agente executor.
 
-**Meta:** desenvolver a plataforma operacional própria da Ora 5G para 14 lojas (piloto 1 loja), móvel e omnichannel, preservando a arquitetura e a integração entre CRM, PDV, estoque, IMEI, telecom, fiscal, financeiro, metas e canais digitais.
+**Meta:** desenvolver a plataforma operacional própria da Ora 5G para as 11 lojas comerciais e o local DEFEITOS, que não vende (piloto em 1 loja; meta de 14 lojas), móvel e omnichannel, preservando a arquitetura e a integração entre CRM, PDV, estoque, IMEI, telecom, fiscal, financeiro, metas e canais digitais.
 
 ## Processo de tarefa
 1. Receba uma única issue delimitada, ID de requisito e critérios de aceitação.
