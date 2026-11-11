@@ -5,6 +5,8 @@ import type { Metadata } from "next";
 
 import { MEIOS } from "@ora5g/dominio";
 
+import { BotaoConfirmar } from "../../componentes/BotaoConfirmar";
+import { LerCodigo } from "../../componentes/LerCodigo";
 import { MoldeReal } from "../../componentes/MoldeReal";
 import { Aviso, Botao, Cartao, Selo, TituloPagina } from "../../componentes/ui";
 import { FalhaDoServico, obterSessao } from "../../lib/acesso/sessao";
@@ -123,9 +125,10 @@ export default async function Vender({ searchParams }: { searchParams: Promise<{
       ) : (
         <>
           <Cartao titulo={`Venda nº ${venda.data.numero}`} subtitulo={venda.data.situacao === "aguardando_aprovacao" ? "Aguardando aprovação de desconto" : "Em andamento"} icone={ShoppingCart}>
-            <form className="flex gap-2" role="search">
-              <label className="min-w-0 flex-1 text-sm font-medium">Produto, SKU ou IMEI/ICCID<input name="q" defaultValue={busca} className={campo} autoComplete="off" /></label>
-              <button type="submit" className="mt-6 min-h-11 rounded-botao bg-acao px-4 text-sm font-semibold text-white"><ScanLine aria-hidden className="inline size-4" /> Buscar</button>
+            <form className="flex flex-wrap items-end gap-2" role="search">
+              <label className="min-w-0 flex-1 text-sm font-medium">Produto, SKU ou IMEI/ICCID<input id="busca-pdv" name="q" defaultValue={busca} className={campo} autoComplete="off" /></label>
+              <LerCodigo alvo="busca-pdv" />
+              <button type="submit" className="min-h-11 rounded-botao bg-acao px-4 text-sm font-semibold text-white"><ScanLine aria-hidden className="inline size-4" /> Buscar</button>
             </form>
             {busca && resultados.length === 0 && <p className="mt-3 text-sm text-suave">Nada encontrado nesta loja.</p>}
             <ul className="mt-3 space-y-3">
@@ -239,7 +242,7 @@ export default async function Vender({ searchParams }: { searchParams: Promise<{
                   <label className="text-xs font-medium">Nome do cliente (opcional)<input name="cliente_nome" className={campo} /></label>
                   <label className="text-xs font-medium">E-mail do cliente (obrigatório na PayJoy)<input name="cliente_email" type="email" className={campo} /></label>
                 </div>
-                <Botao type="submit" tamanho="lg" className="w-full" disabled={!caixa.data || venda.data.situacao === "aguardando_aprovacao"}>Concluir venda</Botao>
+                <BotaoConfirmar className="w-full" enquanto="Confirmando a venda no sistema…" disabled={!caixa.data || venda.data.situacao === "aguardando_aprovacao"}>Concluir venda</BotaoConfirmar>
                 {!caixa.data && <p className="text-xs text-aviso">Abra o caixa para concluir.</p>}
               </form>
             </Cartao>

@@ -155,6 +155,10 @@ export default async function Comprovante({ params, searchParams }: { params: Pr
           ) : (
             <form action={pedirNota} className="grid gap-2 sm:grid-cols-2">
               <input type="hidden" name="venda" value={v.id} /><input type="hidden" name="chave" value={randomUUID()} />
+              {v.cliente_id && buscaCliente.data && (
+                <label className="flex min-h-10 items-center gap-2 text-sm sm:col-span-2"><input type="hidden" name="cliente" value={v.cliente_id} />
+                  <input type="checkbox" name="usar_cliente" value="sim" defaultChecked className="size-4 accent-acao" /> No nome do cliente da venda (o sistema copia nome e CPF/CNPJ do cadastro)</label>
+              )}
               <label className="text-xs font-medium">Nome na nota (opcional)<input name="nome" maxLength={120} className={campo} /></label>
               <label className="text-xs font-medium">CPF ou CNPJ na nota (opcional)<input name="documento" inputMode="numeric" autoComplete="off" className={campo} /></label>
               <p className="text-xs text-suave sm:col-span-2">O pedido vai para a fila do dono e do gerente; o CPF fica guardado só até a emissão.</p>

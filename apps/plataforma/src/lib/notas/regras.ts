@@ -8,6 +8,7 @@ export const ERROS_DAS_NOTAS = {
   dados: "Confira os dados: CPF/CNPJ válido, chave de acesso com 44 dígitos e do CNPJ desta loja.",
   motivo: "Informe o motivo (fica na auditoria).",
   fonte: "Registre a fonte do prazo (orientação do contador) com pelo menos 10 caracteres.",
+  cliente_sem_documento: "O cliente da venda não tem CPF/CNPJ no cadastro: corrija o cadastro ou informe o documento aqui.",
   falha: "Não foi possível concluir agora. Tente de novo em instantes.",
 } as const;
 export type ErroDasNotas = keyof typeof ERROS_DAS_NOTAS;
@@ -15,8 +16,9 @@ export type ErroDasNotas = keyof typeof ERROS_DAS_NOTAS;
 const DO_BANCO: Record<string, ErroDasNotas> = {
   OR004: "chave", OR014: "ja_pedida", OR015: "nota_emitida", "42501": "sem_permissao", P0002: "nao_encontrado", "22023": "dados",
 };
-export function erroDasNotas(erro: { code?: string } | null | undefined): ErroDasNotas {
+export function erroDasNotas(erro: { code?: string; message?: string } | null | undefined): ErroDasNotas {
   const codigo = erro?.code;
+  if (codigo === "22023" && /não tem cpf\/cnpj no cadastro/i.test(erro?.message ?? "")) return "cliente_sem_documento";
   return codigo && Object.hasOwn(DO_BANCO, codigo) ? (DO_BANCO[codigo] as ErroDasNotas) : "falha";
 }
 

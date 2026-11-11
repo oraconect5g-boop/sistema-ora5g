@@ -9,6 +9,7 @@ import { centavosDoBanco } from "../../lib/dinheiro";
 import { brl, numero } from "../../lib/formato";
 import { chaveDoCatalogo, textoDoParametro, type ValorDeParametro } from "../../lib/parametros";
 import { FILTROS_DA_LISTA, inicioDoPeriodo, NOMES_DA_NOTA, PERIODOS, resumoDasVendas, situacaoDaVenda, type FiltroDaLista, type Periodo } from "../../lib/vendas/lista";
+import { Pendencias } from "./Pendencias";
 
 export const metadata: Metadata = { title: "Vendas" };
 export const dynamic = "force-dynamic";
@@ -77,6 +78,7 @@ export default async function Vendas({ searchParams }: { searchParams: Promise<{
         subtitulo={daLoja.data ? "Todos os vendedores desta loja. Abra a venda para ver o comprovante, pedir nota, devolver ou trocar." : "Só as suas vendas nesta loja. Abra a venda para ver o comprovante, pedir nota ou acompanhar a devolução."}
         acao={<BotaoLink href="/vender" tamanho="sm">Nova venda</BotaoLink>}
       />
+      <Pendencias sessao={sessao} unidade={unidade} />
       <FiltroSegmentado rotulo="Período" opcoes={(Object.keys(PERIODOS) as Periodo[]).map((p) => ({ href: href({ periodo: p === "hoje" ? undefined : p }), rotulo: PERIODOS[p].rotulo, ativo: p === periodo }))} />
       <div className="grid grid-cols-2 gap-3 sm:gap-4 xl:grid-cols-4">
         <Indicador rotulo="Vendido (concluídas)" valor={brl(resumo.vendido)} icone={Coins} />

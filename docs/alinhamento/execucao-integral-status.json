@@ -2,7 +2,7 @@
   "_leia": "Checkpoint do programa de execução integral (PR #67). Carregar ao retomar e seguir para o próximo item executável da fila; não reiniciar o projeto. Estados vêm de status-requisitos.json (fonte da rastreabilidade); este arquivo acrescenta lote, bloqueio externo e revisão.",
   "atualizado_em": "2026-11-11",
   "base": {
-    "main": "aa8fff5",
+    "main": "c08daaa",
     "pacote": {
       "pr": 67,
       "branch": "docs/execucao-integral-20261110",
@@ -26,13 +26,14 @@
       "953b21e (L4a: entrada de mercadoria)",
       "15f3458 (L4b: inventário e condição na devolução)",
       "a12782d (L5a: cliente compartilhado da rede)",
-      "aa8fff5 (L5b: funil de oportunidades e agenda)"
+      "aa8fff5 (L5b: funil de oportunidades e agenda)",
+      "c08daaa (L5c: mesclagem e segmentos)"
     ]
   },
   "contagem_dos_estados": {
-    "parcial": 52,
-    "testado": 30,
-    "nao_iniciado": 88,
+    "parcial": 54,
+    "testado": 31,
+    "nao_iniciado": 85,
     "respeitado": 1,
     "demonstracao": 6,
     "bloqueado": 2
@@ -501,7 +502,7 @@
       "titulo": "Consultar status e comprovantes sem concluir pagamento pendente",
       "prioridade": "P0",
       "estado": "parcial",
-      "lote": "L6 PDV",
+      "lote": "L6a PDV",
       "bloqueio_externo": null,
       "revisado_codex": false,
       "homologado": false
@@ -518,8 +519,8 @@
     "ORA-POS-011": {
       "titulo": "Gerar solicitação fiscal a partir da venda em poucos toques",
       "prioridade": "P0",
-      "estado": "nao_iniciado",
-      "lote": "L6 PDV",
+      "estado": "testado",
+      "lote": "L6a PDV",
       "bloqueio_externo": null,
       "revisado_codex": false,
       "homologado": false
@@ -554,8 +555,8 @@
     "ORA-POS-015": {
       "titulo": "Atalhos para supervisor e estados offline/sem rede",
       "prioridade": "P1",
-      "estado": "nao_iniciado",
-      "lote": "L6 PDV",
+      "estado": "parcial",
+      "lote": "L6a PDV",
       "bloqueio_externo": null,
       "revisado_codex": false,
       "homologado": false
@@ -563,8 +564,8 @@
     "ORA-POS-016": {
       "titulo": "Entrada por leitor USB/Bluetooth ou câmera",
       "prioridade": "P2",
-      "estado": "nao_iniciado",
-      "lote": "L6 PDV",
+      "estado": "parcial",
+      "lote": "L6a PDV",
       "bloqueio_externo": null,
       "revisado_codex": false,
       "homologado": false
