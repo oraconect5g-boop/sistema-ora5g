@@ -8,6 +8,7 @@ import { horaDoFimDoTurno, PAPEIS, type Papel, type SituacaoSessao } from "../li
 import { FalhaDoServico, type obterSessao } from "../lib/acesso/sessao";
 import { iniciais } from "../lib/formato";
 import { textoDaVersao } from "../lib/versao";
+import { AvisoDeRede } from "./AvisoDeRede";
 import { classeDaAcaoDoTrilho } from "./LinkNavegacao";
 import { Marca } from "./Marca";
 import { MenuSuspenso } from "./MenuSuspenso";
@@ -96,6 +97,7 @@ export async function MoldeReal({ sessao, children, largura = "max-w-3xl", permi
 
   return (
     <div className="area-com-trilho min-h-dvh lg:pl-[92px]">
+      <AvisoDeRede />
       <a href="#conteudo" className="sr-only focus:not-sr-only focus:fixed focus:left-2 focus:top-2 focus:z-[60] focus:rounded-lg focus:bg-white focus:px-3 focus:py-2 focus:shadow-flutuante">
         Pular para o conteúdo
       </a>

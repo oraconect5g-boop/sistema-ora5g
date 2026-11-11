@@ -35,6 +35,7 @@
     { "versao": "20261111142726", "nome": "inventario", "md5": "20d9404bad0bce788ce78c41998ab526", "aplicada_em": "2026-11-11" },
     { "versao": "20261111191909", "nome": "clientes_compartilhados", "md5": "f1c9c6563024611ba4fbe77bf39348ee", "aplicada_em": "2026-11-11" },
     { "versao": "20261111193816", "nome": "crm_funil_e_agenda", "md5": "3e247f19ce05b7fdf6b791f104be8b62", "aplicada_em": "2026-11-11" },
-    { "versao": "20261111195120", "nome": "clientes_mesclagem_e_segmentos", "md5": "cbb9c32a5c1e3cab7b122cfb52c4d1fd", "aplicada_em": "2026-11-11" }
+    { "versao": "20261111195120", "nome": "clientes_mesclagem_e_segmentos", "md5": "cbb9c32a5c1e3cab7b122cfb52c4d1fd", "aplicada_em": "2026-11-11" },
+    { "versao": "20261111200054", "nome": "pdv_nota_do_cliente", "md5": "6078f9dd0f64d21dc7e46aa5e4dd9718", "aplicada_em": "2026-11-11" }
   ]
 }

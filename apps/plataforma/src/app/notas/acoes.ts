@@ -23,7 +23,11 @@ const voltarParaFila = (erro: { code?: string } | null, ok: string): never => re
 export async function pedirNota(dados: FormData) {
   const venda = dados.get("venda");
   if (!ehUuid(venda)) redirect("/vender?erro=dados");
-  const destinatario = { ...(texto(dados, "nome", 120) ? { nome: texto(dados, "nome", 120) } : {}), ...(texto(dados, "documento", 20) ? { documento: texto(dados, "documento", 20) } : {}) };
+  // L6a: "no nome do cliente da venda" manda só o cliente; o banco copia nome e documento do cadastro.
+  const cliente = dados.get("cliente");
+  const destinatario = dados.get("usar_cliente") === "sim" && ehUuid(cliente)
+    ? { cliente }
+    : { ...(texto(dados, "nome", 120) ? { nome: texto(dados, "nome", 120) } : {}), ...(texto(dados, "documento", 20) ? { documento: texto(dados, "documento", 20) } : {}) };
   const { supabase } = await obterSessao({ exigirLoja: true });
   const { error } = await supabase.rpc("notas_solicitar", { p_venda: venda, p_destinatario: destinatario, p_chave: chaveDe(dados) });
   redirect(error ? `/vendas/${venda}?erro_nota=${erroDasNotas(error)}` : `/vendas/${venda}?nota=pedida`);
