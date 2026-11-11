@@ -14,7 +14,7 @@
     "ORA-ORG-001": {
       "status": "parcial",
       "nota": "Tabelas organização/empresa/unidade com CNPJ validado no banco; escolha real da loja na sessão (/escolher-loja; uma loja só é escolhida sozinha), gravada e auditada pelo banco. Tela real /lojas (lote L2, 10/11): dono e administrador cadastram (repetição devolve a mesma loja), editam nome/CNPJ/UF/cidade e inativam ou reativam com motivo e auditoria, sem apagar; código e tipo não mudam; loja inativa sai da escolha de loja e não recebe caixa, venda, reserva, estoque, aparelho nem transferência nova (OR019, também por escrita direta), e inativar exige a loja sem pendências (caixa, estoque, aparelhos, reservas, transferências, vendas e notas). Disputa inativar × abrir caixa provada nas duas ordens num PostgreSQL 17 real. Falta: cadastrar as lojas reais (CNPJs e endereços da lista B2), revisão do Codex e homologação.",
-      "evidencia": "packages/banco/supabase/migrations/20261107140352_fundacao_acesso.sql; packages/banco/src/acesso.test.ts (T10); apps/plataforma/src/app/escolher-loja; packages/banco/supabase/migrations/20261108202654_acesso_sessao_e_equipe.sql; packages/banco/supabase/migrations/20261110233000_lojas_cadastro_e_configuracao.sql; packages/banco/src/lojas.test.ts; packages/banco/src/concorrencia.test.ts (L2); apps/plataforma/src/app/lojas; apps/plataforma/src/lib/lojas"
+      "evidencia": "packages/banco/supabase/migrations/20261107140352_fundacao_acesso.sql; packages/banco/src/acesso.test.ts (T10); apps/plataforma/src/app/escolher-loja; packages/banco/supabase/migrations/20261108202654_acesso_sessao_e_equipe.sql; packages/banco/supabase/migrations/20261111132503_lojas_cadastro_e_configuracao.sql; packages/banco/src/lojas.test.ts; packages/banco/src/concorrencia.test.ts (L2); apps/plataforma/src/app/lojas; apps/plataforma/src/lib/lojas"
     },
     "ORA-ORG-002": {
       "status": "parcial",
@@ -44,7 +44,7 @@
     "ORA-ORG-008": {
       "status": "parcial",
       "nota": "Configuração por loja com vigência (lote L2, 10/11): telefone, endereço (CEP, rua, número, complemento, bairro), inscrições estadual e municipal e horário por dia da semana, em versões só de inclusão com 'vale desde' agora ou futuro (nunca retroativo), motivo e auditoria; repetir a mesma vigência ou salvar sem mudar não duplica; histórico de versões na tela /lojas; leitura segue a visibilidade da loja (RLS). Falta: caixas e terminais por loja (lote L7), dados reais (lista B2), revisão do Codex e homologação.",
-      "evidencia": "packages/banco/supabase/migrations/20261110233000_lojas_cadastro_e_configuracao.sql; packages/banco/src/lojas.test.ts; apps/plataforma/src/app/lojas; apps/plataforma/src/lib/lojas/regras.test.ts"
+      "evidencia": "packages/banco/supabase/migrations/20261111132503_lojas_cadastro_e_configuracao.sql; packages/banco/src/lojas.test.ts; apps/plataforma/src/app/lojas; apps/plataforma/src/lib/lojas/regras.test.ts"
     },
     "ORA-CAT-003": {
       "status": "respeitado",
@@ -244,7 +244,7 @@
     "ORA-CAT-001": {
       "status": "testado",
       "nota": "Categorias, marcas, produtos por tipo e variações com SKU e código de barras únicos no banco (ADR-003 proposto, aplicado no ora5g-dev em 08/11). Desde 08/11 (noite): tela real /catalogo lendo pelo RLS, sem custo para quem não tem custo.ver. 09/11 (lote 3): busca por nome, SKU e nome da variante feita no banco antes do limite (#40). Lote L3a (10/11): tela /produtos com cadastro e edição de categorias, marcas, produtos e variações por quem tem catalogo.gerir (dono e administrador), com motivo e auditoria; repetir não duplica (nome sem diferença de maiúsculas, SKU, chave do formulário); SKU fixo depois de usado; inativar exige estoque zerado (OR020). A importação da Rein é o ORA-CAT-002. Aguardando revisão do Codex e homologação.",
-      "evidencia": "packages/banco/supabase/migrations/20261108150620_catalogo_estoque.sql; packages/banco/src/catalogo-estoque.test.ts; apps/plataforma/src/app/catalogo/busca.test.ts; packages/banco/supabase/migrations/20261110235500_catalogo_cadastro.sql; packages/banco/src/catalogo-cadastro.test.ts; apps/plataforma/src/app/produtos; apps/plataforma/src/lib/catalogo/cadastro.test.ts"
+      "evidencia": "packages/banco/supabase/migrations/20261108150620_catalogo_estoque.sql; packages/banco/src/catalogo-estoque.test.ts; apps/plataforma/src/app/catalogo/busca.test.ts; packages/banco/supabase/migrations/20261111132621_catalogo_cadastro.sql; packages/banco/src/catalogo-cadastro.test.ts; apps/plataforma/src/app/produtos; apps/plataforma/src/lib/catalogo/cadastro.test.ts"
     },
     "ORA-CAT-004": {
       "status": "parcial",

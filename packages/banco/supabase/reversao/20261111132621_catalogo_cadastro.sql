@@ -1,4 +1,4 @@
--- Reversão de 20261110235500_catalogo_cadastro (só em banco sem dados reais).
+-- Reversão de 20261111132621_catalogo_cadastro (só em banco sem dados reais).
 -- Os cadastros feitos pelas funções continuam (são dados); saem as funções, os gatilhos, a chave do formulário e a permissão.
 drop function if exists public.catalogo_salvar_variante(uuid, uuid, text, text, text, text, text, int, boolean, text);
 drop function if exists public.catalogo_salvar_produto(uuid, uuid, text, text, uuid, uuid, text, text, boolean, boolean, text, text);

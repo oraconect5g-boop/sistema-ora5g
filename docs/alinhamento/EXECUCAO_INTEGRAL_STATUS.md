@@ -12,8 +12,7 @@
 | `main` | `0ecb2f2` | Financeiro lote 1 (`0b6b45e`), correção do 307 do `/financeiro` (`38fc068`), PR #64 (`2ac6a25`) e **L2 lojas** (`0ecb2f2`, CI completo verde em `9a884ad`) |
 | Homologação (`ora5g.com.br`) | `0b6b45e` | Publicada em 10/11 às 20:45, com autorização; conferida no rodapé e em `/saude` em aba anônima |
 | Falta publicar | `38fc068`, `2ac6a25`, `0ecb2f2` | Correção do 307, semente do gerente de teste (só desenvolvimento) e L2; publicar exige autorização a cada vez e, no caso do L2, a migration aplicada antes |
-| Banco `ora5g-dev` | 24 migrations | `20261110224537_financeiro_painel` aplicada em 10/11 (md5 do arquivo = md5 gravado) |
-| Falta aplicar no `ora5g-dev` | `…_lojas_cadastro_e_configuracao` (L2) | O conector do Supabase ficou fora do ar em 10/11 à noite; aplicar, renomear para a versão gravada e registrar o md5 **antes de qualquer publicação** que leve o L2 |
+| Banco `ora5g-dev` | 25 migrations | Em 11/11: `20261111132503_lojas_cadastro_e_configuracao` (L2) e `20261111132621_catalogo_cadastro` (L3a), md5 do arquivo = md5 gravado; tipos gerados idênticos aos do repositório |
 
 ## 2. Cobertura de leitura (10/11/2026)
 
@@ -46,8 +45,8 @@
 | Lote | Requisitos | Situação | Próximo passo / dependência concreta |
 |---|---|---|---|
 | L1 | ORG-002, QUAL-002 (PR #64) | feito (`2ac6a25`) | Falta criar as três contas fictícias no Auth (A1) e rodar o vínculo no `ora5g-dev` |
-| L2 | ORG-001, ORG-008 (lojas) | **na `main`** (`0ecb2f2`) | Tela `/lojas`, 6 funções, configuração com vigência, inativação com pendências e bloqueio de movimento (OR019). Falta: aplicar no `ora5g-dev` (conector do Supabase fora do ar em 10/11 à noite), revisão do Codex e publicação autorizada. CNPJ/endereço reais chegam por B2. ORG-003 segue a decisão dos cinco papéis do ADR-002 (papéis novos por migration quando houver pessoa na função) |
-| L3a | CAT-001, CAT-005 | **implementado e testado na branch** `feature/ORA-L3-catalogo-cadastro` | Tela `/produtos`: categorias, marcas, produtos e variações com motivo e auditoria; política de desconto da categoria (P14) por quem altera preço. Falta: CI, merge e aplicação no `ora5g-dev` |
+| L2 | ORG-001, ORG-008 (lojas) | **na `main`** (`0ecb2f2`) | Tela `/lojas`, 6 funções, configuração com vigência, inativação com pendências e bloqueio de movimento (OR019). Aplicada no `ora5g-dev` em 11/11. Falta: revisão do Codex e publicação autorizada. CNPJ/endereço reais chegam por B2. ORG-003 segue a decisão dos cinco papéis do ADR-002 (papéis novos por migration quando houver pessoa na função) |
+| L3a | CAT-001, CAT-005 | **implementado e testado** (CI verde em `74715be`; aplicado no `ora5g-dev` em 11/11) | Tela `/produtos`: categorias, marcas, produtos e variações com motivo e auditoria; política de desconto da categoria (P14) por quem altera preço. Falta: merge, revisão do Codex e publicação autorizada |
 | L3b | CAT-004, CAT-007 | próximo | Preço por loja/canal pela tela (`preco.alterar`), mudança agendada e campanha com início e fim, cancelamento sem reescrever o passado |
 | L3c | CAT-002, CAT-010 | depois do L3b | Lote de importação com prévia, validação, aprovação e aplicação idempotente; o formato das colunas da Rein espera o arquivo de exemplo (B1, ADR-003 §3) |
 | L4 | INV-005, 008, 009, 010, 012 | pronto | Inventário cíclico com aprovação, compras/recebimento com custo de entrada, condição de unidade, rotina de vencimento de reservas no worker |

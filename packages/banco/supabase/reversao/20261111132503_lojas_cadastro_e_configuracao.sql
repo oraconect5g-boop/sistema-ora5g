@@ -1,4 +1,4 @@
--- Reversão de 20261110233000_lojas_cadastro_e_configuracao (só em banco sem dados reais).
+-- Reversão de 20261111132503_lojas_cadastro_e_configuracao (só em banco sem dados reais).
 -- As lojas criadas ou editadas pelas funções continuam (são dados); só saem as funções e a tabela de configurações.
 drop function if exists public.loja_definir_configuracao(uuid, jsonb, timestamptz, text);
 drop trigger if exists transferencias_loja_ativa on public.transferencias;
