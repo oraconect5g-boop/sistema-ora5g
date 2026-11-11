@@ -105,3 +105,31 @@ export async function vincularClienteNaVenda(dados: FormData) {
   if (error) redirect(`/vendas/${venda}?erro=${error.code === "P0002" ? "cliente" : error.code === "22023" ? "dados" : "falha"}`);
   redirect(`/vendas/${venda}?cliente=1`);
 }
+
+// Mesclagem (lote L5c, só o dono): o cadastro que fica recebe dados e histórico do outro; nada se apaga.
+export async function mesclarClientes(dados: FormData) {
+  // O formulário manda os dois do par (a, b) e qual fica; o outro é o que sai.
+  const manter = dados.get("manter");
+  const a = dados.get("a");
+  const b = dados.get("b");
+  const absorver = manter === a ? b : manter === b ? a : null;
+  const motivo = typeof dados.get("motivo") === "string" ? (dados.get("motivo") as string).trim().replace(/\s+/g, " ") : "";
+  if (!ehUuid(manter) || !ehUuid(absorver) || manter === absorver) redirect("/clientes/duplicados?erro=dados");
+  if (motivo.length < 3 || motivo.length > 200) redirect("/clientes/duplicados?erro=motivo");
+  const { supabase } = await obterSessao({ exigirLoja: true });
+  const { error } = await supabase.rpc("clientes_mesclar", { p_manter: manter, p_absorver: absorver, p_motivo: motivo });
+  if (error) redirect(`/clientes/duplicados?erro=${erroDoCliente(error)}`);
+  redirect(`/clientes/${manter}?ok=mesclado`);
+}
+
+export async function marcarDiferentes(dados: FormData) {
+  const a = dados.get("a");
+  const b = dados.get("b");
+  const motivo = typeof dados.get("motivo") === "string" ? (dados.get("motivo") as string).trim().replace(/\s+/g, " ") : "";
+  if (!ehUuid(a) || !ehUuid(b) || a === b) redirect("/clientes/duplicados?erro=dados");
+  if (motivo.length < 3 || motivo.length > 200) redirect("/clientes/duplicados?erro=motivo");
+  const { supabase } = await obterSessao({ exigirLoja: true });
+  const { error } = await supabase.rpc("clientes_marcar_diferentes", { p_a: a, p_b: b, p_motivo: motivo });
+  if (error) redirect(`/clientes/duplicados?erro=${erroDoCliente(error)}`);
+  redirect("/clientes/duplicados?ok=diferentes");
+}

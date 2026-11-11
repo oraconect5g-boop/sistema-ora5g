@@ -1,5 +1,5 @@
 // ARQUIVO GERADO pelo Supabase (generate_typescript_types do projeto ora5g-dev) depois da
-// migration 20261111193816_crm_funil_e_agenda. Não edite à mão: gere de novo a cada
+// migration 20261111195120_clientes_mesclagem_e_segmentos. Não edite à mão: gere de novo a cada
 // migration aplicada (auditoria do Codex de 08/11, §7.2). O teste tipos-banco.test.ts confere
 // que funções e tabelas públicas daqui são as mesmas das migrations.
 export type Json =
@@ -504,6 +504,55 @@ export type Database = {
           },
         ]
       }
+      cliente_nao_duplicados: {
+        Row: {
+          cliente_a: string
+          cliente_b: string
+          decidido_em: string
+          decidido_por: string
+          motivo: string
+          organizacao_id: string
+        }
+        Insert: {
+          cliente_a: string
+          cliente_b: string
+          decidido_em?: string
+          decidido_por: string
+          motivo: string
+          organizacao_id: string
+        }
+        Update: {
+          cliente_a?: string
+          cliente_b?: string
+          decidido_em?: string
+          decidido_por?: string
+          motivo?: string
+          organizacao_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "cliente_nao_duplicados_cliente_a_organizacao_id_fkey"
+            columns: ["cliente_a", "organizacao_id"]
+            isOneToOne: false
+            referencedRelation: "clientes"
+            referencedColumns: ["id", "organizacao_id"]
+          },
+          {
+            foreignKeyName: "cliente_nao_duplicados_cliente_b_organizacao_id_fkey"
+            columns: ["cliente_b", "organizacao_id"]
+            isOneToOne: false
+            referencedRelation: "clientes"
+            referencedColumns: ["id", "organizacao_id"]
+          },
+          {
+            foreignKeyName: "cliente_nao_duplicados_decidido_por_fkey"
+            columns: ["decidido_por"]
+            isOneToOne: false
+            referencedRelation: "perfis_usuario"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       clientes: {
         Row: {
           atualizado_em: string | null
@@ -518,6 +567,7 @@ export type Database = {
           endereco_informado: boolean
           finalidades: string[]
           id: string
+          mesclado_em: string | null
           nascimento_informado: boolean
           nome: string
           numero: number
@@ -542,6 +592,7 @@ export type Database = {
           endereco_informado?: boolean
           finalidades?: string[]
           id?: string
+          mesclado_em?: string | null
           nascimento_informado?: boolean
           nome: string
           numero?: never
@@ -566,6 +617,7 @@ export type Database = {
           endereco_informado?: boolean
           finalidades?: string[]
           id?: string
+          mesclado_em?: string | null
           nascimento_informado?: boolean
           nome?: string
           numero?: never
@@ -590,6 +642,13 @@ export type Database = {
             columns: ["criado_por"]
             isOneToOne: false
             referencedRelation: "perfis_usuario"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "clientes_mesclado_em_fkey"
+            columns: ["mesclado_em"]
+            isOneToOne: false
+            referencedRelation: "clientes"
             referencedColumns: ["id"]
           },
           {
@@ -4114,6 +4173,16 @@ export type Database = {
         }
         Returns: Json
       }
+      clientes_duplicados: { Args: never; Returns: Json }
+      clientes_marcar_diferentes: {
+        Args: { p_a: string; p_b: string; p_motivo: string }
+        Returns: boolean
+      }
+      clientes_mesclar: {
+        Args: { p_absorver: string; p_manter: string; p_motivo: string }
+        Returns: Json
+      }
+      clientes_segmentos: { Args: never; Returns: Json }
       concluir_venda: {
         Args: {
           p_chave: string

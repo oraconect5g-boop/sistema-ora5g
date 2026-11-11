@@ -1,8 +1,8 @@
 // Inventário de autorização (prioridade 1 do diagnóstico de 10/11/2026; ORA-ORG-004 e ORA-QUAL-002).
 // O aviso 0029 do Supabase lista as funções SECURITY DEFINER que qualquer usuário logado pode chamar
-// pela API: 90 em 11/11 (48 + 6 do cadastro de lojas, L2, + 5 do cadastro do catálogo, L3a, + 4 dos preços, L3b,
+// pela API: 94 em 11/11 (48 + 6 do cadastro de lojas, L2, + 5 do cadastro do catálogo, L3a, + 4 dos preços, L3b,
 // + 4 da importação do catálogo, L3c, + 3 da entrada de mercadoria, L4a, + 5 do inventário, L4b, + 6 dos clientes, L5a,
-// + 9 do funil e da agenda, L5b). Elas rodam com poder total e cada uma confere sessão, loja e permissão por
+// + 9 do funil e da agenda, L5b, + 4 da mesclagem e dos segmentos, L5c). Elas rodam com poder total e cada uma confere sessão, loja e permissão por
 // conta própria. Este teste monta um "mundo" fictício com objetos reais em duas lojas e tenta cada
 // função como 13 tipos de atacante. Recusa = erro, ou resposta vazia numa leitura, e nada muda no
 // banco. O teste lista as funções no próprio banco e falha se aparecer uma nova sem casos aqui.
@@ -180,7 +180,7 @@ async function montarMundo() {
 }
 
 // ---------------------------------------------------------------------------------------------
-// Catálogo das 90 funções. Cada chamada usa argumentos válidos, para a recusa vir do controle de
+// Catálogo das 94 funções. Cada chamada usa argumentos válidos, para a recusa vir do controle de
 // acesso e não de um parâmetro errado. "A": alvos da loja A (do vendedorAB); "B": da loja B.
 //   identidade: os 9 atacantes sem acesso válido, sempre contra os alvos da loja A;
 //   outraOrganizacao: dono de outra rede, contra a loja A (omitido onde a função só age no
@@ -245,6 +245,14 @@ const CASOS: Record<string, Caso> = {
   },
   // Clientes (L5a): o cliente é da rede, sem "outra loja"; o vendedor tem cliente.buscar e cliente.cadastrar.
   // Quem é de outra rede busca na própria (nada acha; a busca fica registrada) e não abre nem altera este.
+  // Mesclagem e segmentos (L5c): só o dono. O vendedor da loja A é o "sem permissão"; o dono de outra rede
+  // vê a própria lista (vazia) e não alcança os cadastros desta.
+  "clientes_duplicados()": { leitura: true, A: () => ["select public.clientes_duplicados() as v", []], semPermissao: true },
+  "clientes_marcar_diferentes(uuid,uuid,text)": {
+    A: () => ["select public.clientes_marcar_diferentes($1, $2, 'Tentativa')", [alvo.clienteA, alvo.clienteA2]], semPermissao: true,
+  },
+  "clientes_mesclar(uuid,uuid,text)": { A: () => ["select public.clientes_mesclar($1, $2, 'Tentativa')", [alvo.clienteA, alvo.clienteA2]], semPermissao: true },
+  "clientes_segmentos()": { leitura: true, A: () => ["select public.clientes_segmentos() as v", []], semPermissao: true },
   "cliente_buscar(text,text)": { leitura: true, A: () => ["select public.cliente_buscar('documento', $1) as v", [CPF_DO_MUNDO]], auditoriaDaConsulta: /^cliente\.busca$/ },
   "cliente_consentir(uuid,text,text,boolean,text)": { A: () => ["select public.cliente_consentir($1, 'whatsapp', 'ofertas', true, 'loja')", [alvo.clienteA]] },
   "cliente_ficha(uuid)": { A: () => ["select public.cliente_ficha($1) as v", [alvo.clienteA]] },
@@ -507,6 +515,8 @@ const LOJAS_DA_REDE_ATACADA = new Set([ids.lojaA, ids.lojaB, ids.lojaC, ids.onli
 function vazio(funcao: string, linhas: Record<string, unknown>[]) {
   if (linhas.length === 0) return true;
   if (funcao === "situacao_da_sessao()") return linhas.length === 1 && linhas[0]?.unidade_id == null;
+  if (funcao === "clientes_duplicados()") return linhas.length === 1 && Array.isArray(linhas[0]?.v) && (linhas[0]?.v as unknown[]).length === 0;
+  if (funcao === "clientes_segmentos()") return linhas.length === 1 && ((linhas[0]?.v as { segmentos?: unknown[] } | undefined)?.segmentos ?? [1]).length === 0;
   if (funcao === "crm_funil()" || funcao === "crm_agenda()") {
     const v = (linhas[0]?.v ?? {}) as { oportunidades?: unknown[]; atividades?: unknown[] };
     return linhas.length === 1 && (v.oportunidades ?? v.atividades ?? [1]).length === 0;
@@ -545,6 +555,8 @@ beforeAll(async () => {
   // Um cliente da rede A, cadastrado pelo vendedorAB na loja A (dados fictícios).
   alvo.clienteA = (await valor<{ id: string }>(await naLoja(ids.vendedorAB, ids.lojaA), "select public.cliente_salvar(null, $1::jsonb, null, 'mundo:cliente:A') as v",
     [JSON.stringify({ tipo: "pessoa_fisica", nome: "Cliente do Mundo", documento: CPF_DO_MUNDO, telefone: "41987650100" })])).id;
+  alvo.clienteA2 = (await valor<{ id: string }>(await naLoja(ids.vendedorAB, ids.lojaA), "select public.cliente_salvar(null, $1::jsonb, null, 'mundo:cliente:A2') as v",
+    [JSON.stringify({ tipo: "pessoa_fisica", nome: "Cliente do Mundo 2", telefone: "41987650101" })])).id;
   // Uma oportunidade e uma atividade do vendedorAB em cada loja (pelas funções, como na tela).
   for (const [lado, loja] of [["A", ids.lojaA], ["B", ids.lojaB]] as const) {
     const s = await naLoja(ids.vendedorAB, loja);
@@ -604,7 +616,7 @@ describe("inventário: toda função SECURITY DEFINER exposta tem casos de recus
     const expostas = rows.map((r) => r.f);
     expect(expostas.filter((f) => !(f in CASOS)), "função nova exposta sem casos de recusa: acrescente ao CASOS").toEqual([]);
     expect(Object.keys(CASOS).filter((f) => !expostas.includes(f)), "caso de função que não existe mais").toEqual([]);
-    expect(expostas).toHaveLength(90);
+    expect(expostas).toHaveLength(94);
   });
 
   it("visitante anônimo não executa nenhuma função do esquema public; no privado só um gatilho, que não roda sozinho", async () => {

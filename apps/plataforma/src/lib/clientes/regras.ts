@@ -46,6 +46,8 @@ export const ERROS_DO_CLIENTE = {
   permissao: "Sem permissão para esta ação com clientes.",
   nao_encontrado: "Cliente não encontrado.",
   chave: "Este formulário já foi usado com outros dados. Recarregue a tela.",
+  documentos_diferentes: "Os documentos são diferentes: são pessoas diferentes. Marque \"não são a mesma pessoa\".",
+  mesclado: "Este cadastro foi mesclado em outro: use o cliente que ficou.",
   falha: "Não deu para gravar agora. Tente de novo em instantes.",
 } as const;
 export type ErroDoCliente = keyof typeof ERROS_DO_CLIENTE;
@@ -53,11 +55,11 @@ export type ErroDoCliente = keyof typeof ERROS_DO_CLIENTE;
 export function erroDoCliente(erro: { code?: string; message?: string } | null | undefined): ErroDoCliente {
   const codigo = erro?.code ?? "";
   const m = (erro?.message ?? "").toLowerCase();
-  const porCodigo: Record<string, ErroDoCliente> = { "42501": "permissao", P0002: "nao_encontrado", OR004: "chave", OR026: "duplicado", OR027: "telefone_repetido", OR028: "limite" };
+  const porCodigo: Record<string, ErroDoCliente> = { "42501": "permissao", P0002: "nao_encontrado", OR004: "chave", OR026: "duplicado", OR027: "telefone_repetido", OR028: "limite", OR029: "documentos_diferentes" };
   if (Object.hasOwn(porCodigo, codigo)) return porCodigo[codigo] as ErroDoCliente;
   if (codigo !== "22023") return "falha";
   const regras: [string, ErroDoCliente][] = [
-    ["informe o motivo", "motivo"], ["busca nunca é parcial", "busca"], ["informe o nome", "nome"], ["pessoa física ou empresa", "tipo"],
+    ["informe o motivo", "motivo"], ["mesclado em outro", "mesclado"], ["busca nunca é parcial", "busca"], ["informe o nome", "nome"], ["pessoa física ou empresa", "tipo"],
     ["só fica guardad", "minimo"], ["informe o cpf/cnpj ou o telefone", "identificador"], ["cpf (pessoa física)", "documento"],
     ["telefone inválido", "telefone"], ["e-mail inválido", "email"], ["nascimento inválida", "nascimento"], ["endereço incompleto", "endereco"],
     ["cadastre o contato", "consentimento"], [" pede ", "finalidade"], ["é de pessoa física", "finalidade"],
@@ -175,3 +177,15 @@ export function formatarRevelado(campo: CampoRevelavel, valor: unknown): string 
   }
   return String(valor);
 }
+
+// Segmentos (lote L5c: ORA-CRM-010): a mesma regra do banco (privado.cliente_segmento), escrita para quem lê.
+export const SEGMENTOS = {
+  recorrente: { nome: "Recorrente", regra: "2 compras ou mais em 12 meses e a última há até 180 dias", tom: "sucesso" },
+  novo: { nome: "Novo", regra: "primeira e única compra há até 90 dias", tom: "info" },
+  ocasional: { nome: "Ocasional", regra: "uma compra, entre 90 dias e 1 ano atrás", tom: "neutro" },
+  em_risco: { nome: "Em risco", regra: "já comprou 2 vezes ou mais, mas a última foi há mais de 180 dias", tom: "aviso" },
+  inativo: { nome: "Inativo", regra: "a última compra foi há mais de 1 ano", tom: "perigo" },
+  sem_compra: { nome: "Sem compra", regra: "nenhuma compra ligada ao cadastro (lead ou cadastro novo)", tom: "neutro" },
+} as const;
+export type Segmento = keyof typeof SEGMENTOS;
+export const ehSegmento = (v: unknown): v is Segmento => typeof v === "string" && Object.hasOwn(SEGMENTOS, v);
