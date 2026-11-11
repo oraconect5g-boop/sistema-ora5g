@@ -9,17 +9,18 @@
 
 | | Commit | Observação |
 |---|---|---|
-| `main` | `2ac6a25` | Financeiro lote 1 (`0b6b45e`), correção do redirecionamento do `/financeiro` (`38fc068`, 307 sem login) e PR #64 integrada (gerente de teste) |
+| `main` | `0ecb2f2` | Financeiro lote 1 (`0b6b45e`), correção do 307 do `/financeiro` (`38fc068`), PR #64 (`2ac6a25`) e **L2 lojas** (`0ecb2f2`, CI completo verde em `9a884ad`) |
 | Homologação (`ora5g.com.br`) | `0b6b45e` | Publicada em 10/11 às 20:45, com autorização; conferida no rodapé e em `/saude` em aba anônima |
-| Falta publicar | `38fc068`, `2ac6a25` | Correção do 307 e semente do gerente de teste (só desenvolvimento); publicar exige autorização a cada vez |
-| Banco `ora5g-dev` | 24 migrations | `20261110224537_financeiro_painel` aplicada em 10/11 (md5 do arquivo = md5 gravado) |
-| Falta aplicar no `ora5g-dev` | `…_lojas_cadastro_e_configuracao` (L2) | O conector do Supabase ficou fora do ar em 10/11 à noite; aplicar, renomear para a versão gravada e registrar o md5 **antes de qualquer publicação** que leve o L2 |
+| Falta publicar | `38fc068`, `2ac6a25`, `0ecb2f2` | Correção do 307, semente do gerente de teste (só desenvolvimento) e L2; publicar exige autorização a cada vez e, no caso do L2, a migration aplicada antes |
+| Banco `ora5g-dev` | 25 migrations | Em 11/11: `20261111132503_lojas_cadastro_e_configuracao` (L2) e `20261111132621_catalogo_cadastro` (L3a), md5 do arquivo = md5 gravado; tipos gerados idênticos aos do repositório |
 
 ## 2. Cobertura de leitura (10/11/2026)
 
 **Pacote da PR #67, lido inteiro:** LEIA-ME, PROMPT_MESTRE (314 linhas), ESTADO_VERIFICADO (82), RELATORIO_CLAUDE_WEB_RECEBIDO (149). REQUISITOS_179 (1.450): os 179 blocos percorridos por programa e lidos; as notas são idênticas às de `status-requisitos.json` (0 divergências). INDICE_DE_FONTES (475): seções e tabelas percorridas (108 Markdown, 138 variantes, 42 referências, 67 issues/PRs, 71 comentários, fontes fora do alcance).
 
 **MANIFESTO_FONTES.json (7.548 linhas):** percorrido por programa: 507 arquivos da main analisada com o blob de cada um; **comparado com a `main` de hoje: 0 novos, 0 alterados, 0 removidos**. Fontes novas desde então: só `apps/plataforma/src/app/financeiro/layout.tsx` e `e2e/acesso-real.spec.ts` (correção 307, desta sessão).
+
+**Lidos por lote:** L3 — corpos integrais das issues #26, #38, #40, #41, #42 e #43 (catálogo, fotos e CSV) e o ADR-003 inteiro.
 
 **FONTES_GITHUB_01 a 05 (~305 KB):** lidos na íntegra os corpos e comentários de #54, #60, #62, #63, #64, #65, #66 e os comentários de 09–10/11 (inclusive o relatório integral da #65, já lido como `PARIDADE_DEMO_REAL…`). Issues anteriores (#2 a #53, #55 a #59): títulos, estados e a conciliação por achado em `RECONCILIACAO_CODEX_2026-11-09.md`; **o corpo integral de cada uma ainda não foi relido nesta sessão** e será lido junto do lote do domínio correspondente, antes de mexer nele.
 
@@ -44,8 +45,10 @@
 | Lote | Requisitos | Situação | Próximo passo / dependência concreta |
 |---|---|---|---|
 | L1 | ORG-002, QUAL-002 (PR #64) | feito (`2ac6a25`) | Falta criar as três contas fictícias no Auth (A1) e rodar o vínculo no `ora5g-dev` |
-| L2 | ORG-001, ORG-008 (lojas) | **implementado e testado na branch** `feature/ORA-L2-lojas` | Tela `/lojas`, 6 funções, configuração com vigência, inativação com pendências e bloqueio de movimento (OR019). Falta: aplicar no `ora5g-dev` (conector do Supabase fora do ar em 10/11 à noite), CI completo e merge. CNPJ/endereço reais chegam por B2. ORG-003 segue a decisão dos cinco papéis do ADR-002 (papéis novos por migration quando houver pessoa na função) |
-| L3 | CAT-001, 002, 004, 005, 007, 010 | pronto | CRUD real do catálogo e preços (`preco.alterar`), campanhas com vigência, importador com prévia/aprovação/lote idempotente (a carga real espera B1) |
+| L2 | ORG-001, ORG-008 (lojas) | **na `main`** (`0ecb2f2`) | Tela `/lojas`, 6 funções, configuração com vigência, inativação com pendências e bloqueio de movimento (OR019). Aplicada no `ora5g-dev` em 11/11. Falta: revisão do Codex e publicação autorizada. CNPJ/endereço reais chegam por B2. ORG-003 segue a decisão dos cinco papéis do ADR-002 (papéis novos por migration quando houver pessoa na função) |
+| L3a | CAT-001, CAT-005 | **implementado e testado** (CI verde em `74715be`; aplicado no `ora5g-dev` em 11/11) | Tela `/produtos`: categorias, marcas, produtos e variações com motivo e auditoria; política de desconto da categoria (P14) por quem altera preço. Falta: merge, revisão do Codex e publicação autorizada |
+| L3b | CAT-004, CAT-007 | próximo | Preço por loja/canal pela tela (`preco.alterar`), mudança agendada e campanha com início e fim, cancelamento sem reescrever o passado |
+| L3c | CAT-002, CAT-010 | depois do L3b | Lote de importação com prévia, validação, aprovação e aplicação idempotente; o formato das colunas da Rein espera o arquivo de exemplo (B1, ADR-003 §3) |
 | L4 | INV-005, 008, 009, 010, 012 | pronto | Inventário cíclico com aprovação, compras/recebimento com custo de entrada, condição de unidade, rotina de vencimento de reservas no worker |
 | L5 | CRM-001 a 010 | pronto | Cliente compartilhado com finalidade e identificador protegido; ligação a vendas, linhas e OS; funil e atividades; consentimento |
 | L6 | POS-008, 009, 011, 014, 015, 016 | pronto (depois de L5) | Cliente na venda, pendências, POS-011 × FISC-001 (reconciliar, não duplicar), campanhas, contingência, câmera |
