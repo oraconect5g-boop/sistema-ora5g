@@ -1,7 +1,8 @@
 // Inventário de autorização (prioridade 1 do diagnóstico de 10/11/2026; ORA-ORG-004 e ORA-QUAL-002).
 // O aviso 0029 do Supabase lista as funções SECURITY DEFINER que qualquer usuário logado pode chamar
-// pela API: 81 em 11/11 (48 + 6 do cadastro de lojas, L2, + 5 do cadastro do catálogo, L3a, + 4 dos preços, L3b,
-// + 4 da importação do catálogo, L3c, + 3 da entrada de mercadoria, L4a, + 5 do inventário, L4b, + 6 dos clientes, L5a). Elas rodam com poder total e cada uma confere sessão, loja e permissão por
+// pela API: 90 em 11/11 (48 + 6 do cadastro de lojas, L2, + 5 do cadastro do catálogo, L3a, + 4 dos preços, L3b,
+// + 4 da importação do catálogo, L3c, + 3 da entrada de mercadoria, L4a, + 5 do inventário, L4b, + 6 dos clientes, L5a,
+// + 9 do funil e da agenda, L5b). Elas rodam com poder total e cada uma confere sessão, loja e permissão por
 // conta própria. Este teste monta um "mundo" fictício com objetos reais em duas lojas e tenta cada
 // função como 13 tipos de atacante. Recusa = erro, ou resposta vazia numa leitura, e nada muda no
 // banco. O teste lista as funções no próprio banco e falha se aparecer uma nova sem casos aqui.
@@ -179,7 +180,7 @@ async function montarMundo() {
 }
 
 // ---------------------------------------------------------------------------------------------
-// Catálogo das 81 funções. Cada chamada usa argumentos válidos, para a recusa vir do controle de
+// Catálogo das 90 funções. Cada chamada usa argumentos válidos, para a recusa vir do controle de
 // acesso e não de um parâmetro errado. "A": alvos da loja A (do vendedorAB); "B": da loja B.
 //   identidade: os 9 atacantes sem acesso válido, sempre contra os alvos da loja A;
 //   outraOrganizacao: dono de outra rede, contra a loja A (omitido onde a função só age no
@@ -204,6 +205,7 @@ type Caso = {
   auditoriaDaConsulta?: RegExp;
 };
 const CPF_DO_MUNDO = cpf("246813579");
+const AMANHA = new Date(Date.now() + 86_400_000).toISOString();
 const pagamentoDinheiro = JSON.stringify([{ meio: "dinheiro", valor: 7_900 }]);
 const cnpjLojaA = async () => (await db.query<{ cnpj: string }>("select cnpj from public.unidades where id = $1", [ids.lojaA])).rows[0]?.cnpj ?? "";
 let chaveNotaA = "";
@@ -252,6 +254,10 @@ const CASOS: Record<string, Caso> = {
     A: () => ["select public.concluir_venda($1, $2::jsonb, '{}'::jsonb, $3)", [alvo.vendaA, pagamentoDinheiro, chave("ataque")]],
     B: () => ["select public.concluir_venda($1, $2::jsonb, '{}'::jsonb, $3)", [alvo.vendaB, pagamentoDinheiro, chave("ataque")]], outroVendedor: true,
   },
+  // Funil e agenda (L5b): quem atende conduz o que é seu na loja do turno; a gerência, a loja. Ler o próprio
+  // funil ou a própria agenda (vazios) é legítimo para quem é de outra rede.
+  "crm_agenda()": { leitura: true, A: () => ["select public.crm_agenda() as v", []] },
+  "crm_funil()": { leitura: true, A: () => ["select public.crm_funil() as v", []] },
   "conferir_caixa(uuid,text)": {
     A: () => ["select public.conferir_caixa($1, null)", [alvo.caixaA]], B: () => ["select public.conferir_caixa($1, null)", [alvo.caixaB]], semPermissao: true,
   },
@@ -307,6 +313,15 @@ const CASOS: Record<string, Caso> = {
   // Importação do catálogo (L3c): importacao.executar gera a prévia; importacao.aprovar aplica e desfaz.
   "fornecedor_salvar(uuid,uuid,text,text,text,boolean,text)": {
     A: () => ["select public.fornecedor_salvar($1, null, 'Fornecedor intruso', null, null, null, 'Tentativa')", [ids.organizacao]], semPermissao: true,
+  },
+  "atividade_criar(jsonb,text)": {
+    A: () => ["select public.atividade_criar($1::jsonb, $2)", [JSON.stringify({ tipo: "tarefa", descricao: "Tentativa", vence_em: AMANHA, oportunidade: alvo.oportunidadeA }), chave("ataque:atividade")]],
+    B: () => ["select public.atividade_criar($1::jsonb, $2)", [JSON.stringify({ tipo: "tarefa", descricao: "Tentativa", vence_em: AMANHA, oportunidade: alvo.oportunidadeB }), chave("ataque:atividade")]],
+    outroVendedor: true,
+  },
+  "atividade_encerrar(uuid,boolean,text)": {
+    A: () => ["select public.atividade_encerrar($1, true, 'Tentativa')", [alvo.atividadeA]], B: () => ["select public.atividade_encerrar($1, true, 'Tentativa')", [alvo.atividadeB]],
+    outroVendedor: true,
   },
   "importacao_aplicar(uuid,text)": { A: () => ["select public.importacao_aplicar($1, 'Tentativa')", [alvo.importacaoPrevia]], semPermissao: true },
   "importacao_catalogo_previa(uuid,text,text,jsonb,jsonb)": {
@@ -376,6 +391,25 @@ const CASOS: Record<string, Caso> = {
   "notas_solicitar(uuid,jsonb,text)": {
     A: () => ["select public.notas_solicitar($1, '{}'::jsonb, $2)", [alvo.concluidaA, chave("ataque")]],
     B: () => ["select public.notas_solicitar($1, '{}'::jsonb, $2)", [alvo.concluidaB, chave("ataque")]], outroVendedor: true,
+  },
+  "oportunidade_anotar(uuid,text)": {
+    A: () => ["select public.oportunidade_anotar($1, 'Tentativa de anotar')", [alvo.oportunidadeA]], B: () => ["select public.oportunidade_anotar($1, 'Tentativa de anotar')", [alvo.oportunidadeB]],
+    outroVendedor: true,
+  },
+  "oportunidade_atribuir(uuid,uuid,text)": {
+    A: () => ["select public.oportunidade_atribuir($1, $2, 'Tentativa')", [alvo.oportunidadeA, ids.vendedorA]],
+    B: () => ["select public.oportunidade_atribuir($1, $2, 'Tentativa')", [alvo.oportunidadeB, ids.vendedorA]], outroVendedor: true, semPermissao: true,
+  },
+  "oportunidade_detalhe(uuid)": {
+    leitura: true, A: () => ["select public.oportunidade_detalhe($1) as v", [alvo.oportunidadeA]], B: () => ["select public.oportunidade_detalhe($1) as v", [alvo.oportunidadeB]],
+    outroVendedor: true,
+  },
+  "oportunidade_mover(uuid,text,jsonb)": {
+    A: () => ["select public.oportunidade_mover($1, 'contato', '{}'::jsonb)", [alvo.oportunidadeA]], B: () => ["select public.oportunidade_mover($1, 'contato', '{}'::jsonb)", [alvo.oportunidadeB]],
+    outroVendedor: true,
+  },
+  "oportunidade_registrar(uuid,jsonb,text)": {
+    A: () => ["select public.oportunidade_registrar($1, '{\"origem\": \"loja\", \"interesse\": \"Tentativa\"}'::jsonb, $2)", [alvo.clienteA, chave("ataque:oportunidade")]],
   },
   "pedir_aprovacao(uuid,text)": {
     A: () => ["select public.pedir_aprovacao($1, 'Tentativa')", [alvo.itemVendaA]], B: () => ["select public.pedir_aprovacao($1, 'Tentativa')", [alvo.itemVendaB]], outroVendedor: true,
@@ -473,6 +507,10 @@ const LOJAS_DA_REDE_ATACADA = new Set([ids.lojaA, ids.lojaB, ids.lojaC, ids.onli
 function vazio(funcao: string, linhas: Record<string, unknown>[]) {
   if (linhas.length === 0) return true;
   if (funcao === "situacao_da_sessao()") return linhas.length === 1 && linhas[0]?.unidade_id == null;
+  if (funcao === "crm_funil()" || funcao === "crm_agenda()") {
+    const v = (linhas[0]?.v ?? {}) as { oportunidades?: unknown[]; atividades?: unknown[] };
+    return linhas.length === 1 && (v.oportunidades ?? v.atividades ?? [1]).length === 0;
+  }
   if (funcao === "cliente_buscar(text,text)") return linhas.length === 1 && (linhas[0]?.v as { clientes?: unknown[] } | undefined)?.clientes?.length === 0;
   // A lista de lojas pode trazer as da rede de quem pergunta, nunca uma da rede atacada.
   if (funcao === "lojas_da_rede()") return linhas.every((l) => !LOJAS_DA_REDE_ATACADA.has(String(l.id)));
@@ -507,6 +545,14 @@ beforeAll(async () => {
   // Um cliente da rede A, cadastrado pelo vendedorAB na loja A (dados fictícios).
   alvo.clienteA = (await valor<{ id: string }>(await naLoja(ids.vendedorAB, ids.lojaA), "select public.cliente_salvar(null, $1::jsonb, null, 'mundo:cliente:A') as v",
     [JSON.stringify({ tipo: "pessoa_fisica", nome: "Cliente do Mundo", documento: CPF_DO_MUNDO, telefone: "41987650100" })])).id;
+  // Uma oportunidade e uma atividade do vendedorAB em cada loja (pelas funções, como na tela).
+  for (const [lado, loja] of [["A", ids.lojaA], ["B", ids.lojaB]] as const) {
+    const s = await naLoja(ids.vendedorAB, loja);
+    alvo[`oportunidade${lado}`] = (await valor<{ id: string }>(s, "select public.oportunidade_registrar($1, $2::jsonb, $3) as v",
+      [alvo.clienteA, JSON.stringify({ origem: "loja", interesse: `Mundo ${lado}` }), `mundo:oportunidade:${lado}`])).id;
+    alvo[`atividade${lado}`] = (await valor<{ id: string }>(s, "select public.atividade_criar($1::jsonb, $2) as v",
+      [JSON.stringify({ tipo: "ligacao", descricao: `Mundo ${lado}`, vence_em: AMANHA, oportunidade: alvo[`oportunidade${lado}`] }), `mundo:atividade:${lado}`])).id;
+  }
   // Uma entrada de mercadoria em cada loja (gravadas pelo banco: só alvo, sem itens).
   for (const [chaveDoAlvo, loja] of [["entradaA", ids.lojaA], ["entradaB", ids.lojaB]] as const) {
     alvo[chaveDoAlvo] = (await db.query<{ id: string }>(
@@ -558,7 +604,7 @@ describe("inventário: toda função SECURITY DEFINER exposta tem casos de recus
     const expostas = rows.map((r) => r.f);
     expect(expostas.filter((f) => !(f in CASOS)), "função nova exposta sem casos de recusa: acrescente ao CASOS").toEqual([]);
     expect(Object.keys(CASOS).filter((f) => !expostas.includes(f)), "caso de função que não existe mais").toEqual([]);
-    expect(expostas).toHaveLength(81);
+    expect(expostas).toHaveLength(90);
   });
 
   it("visitante anônimo não executa nenhuma função do esquema public; no privado só um gatilho, que não roda sozinho", async () => {
