@@ -30,6 +30,7 @@ export const ERROS_DA_VENDA = {
   reembolso: "O reembolso precisa somar o valor devolvido, só nos meios que a venda usou e até o que cada um pagou.",
   sem_item: "Escolha a quantidade de pelo menos um item para devolver.",
   condicao: "Escolha a condição de cada item devolvido (novo, seminovo ou avariado): nada volta ao estoque como novo sem alguém decidir.",
+  cliente: "Cliente não encontrado nesta rede (ou inativo): busque de novo pelo CPF ou telefone.",
   falha: "Não foi possível concluir agora. Tente de novo em instantes.",
 } as const;
 export type ErroDaVenda = keyof typeof ERROS_DA_VENDA;

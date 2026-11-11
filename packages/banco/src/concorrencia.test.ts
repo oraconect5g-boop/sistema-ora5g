@@ -6,7 +6,7 @@
 import type pg from "pg";
 import { afterAll, beforeAll, describe, expect, it } from "vitest";
 
-import { cnpj, comDigitoLuhn } from "./banco-de-teste";
+import { cnpj, comDigitoLuhn, cpf } from "./banco-de-teste";
 import { ids, montarCenario, RAIZ } from "./cenario";
 import { cat, itens, montarCatalogo } from "./cenario-catalogo";
 import { executor, iniciarPostgresReal, type PostgresReal } from "./postgres-real";
@@ -475,5 +475,22 @@ describe("duas conexões ao mesmo tempo no PostgreSQL 17", () => {
     expect(primeira?.repetida).toBe(false);
     expect(final).toEqual({ ok: { id: primeira?.id, repetida: true } });
     expect(await contar("select count(*) as n from public.precos where variante_id = $1 and canal = 'online' and fim is null and cancelado_em is null", [cat.capa])).toBe(1);
+  });
+
+  it("o mesmo CPF cadastrado em duas lojas ao mesmo tempo: um cliente só, o outro recebe OR026 (L5a)", async () => {
+    const documento = cpf("314159265");
+    const naA = await sessaoNaLoja(ids.vendedorA, ids.lojaA);
+    const naB = await sessaoNaLoja(ids.gerenteB, ids.lojaB);
+    const SALVAR = "select public.cliente_salvar(null, $1::jsonb, null, $2) as v";
+    const dados = (nome: string) => JSON.stringify({ tipo: "pessoa_fisica", nome, documento });
+    await abrir(a, naA);
+    await abrir(b, naB);
+    const final = await disputa(
+      () => a.query(SALVAR, [dados("Cliente na loja A"), "conc:cliente:1"]),
+      () => valor(b, SALVAR, [dados("Cliente na loja B"), "conc:cliente:2"]),
+    );
+    expect(final).toEqual({ erro: "OR026" });
+    expect(await contar("select count(*) as n from public.clientes where nome like 'Cliente na loja %'")).toBe(1);
+    expect(await contar("select count(*) as n from privado.cliente_dados where documento = $1", [documento])).toBe(1);
   });
 });

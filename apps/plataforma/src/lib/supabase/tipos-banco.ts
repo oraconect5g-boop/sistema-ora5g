@@ -1,5 +1,5 @@
 // ARQUIVO GERADO pelo Supabase (generate_typescript_types do projeto ora5g-dev) depois da
-// migration 20261111142726_inventario. Não edite à mão: gere de novo a cada
+// migration 20261111191909_clientes_compartilhados. Não edite à mão: gere de novo a cada
 // migration aplicada (auditoria do Codex de 08/11, §7.2). O teste tipos-banco.test.ts confere
 // que funções e tabelas públicas daqui são as mesmas das migrations.
 export type Json =
@@ -337,6 +337,171 @@ export type Database = {
             isOneToOne: false
             referencedRelation: "organizacoes"
             referencedColumns: ["id"]
+          },
+        ]
+      }
+      cliente_consentimentos: {
+        Row: {
+          canal: string
+          cliente_id: string
+          finalidade: string
+          fonte: string
+          id: number
+          organizacao_id: string
+          registrado_em: string
+          registrado_por: string
+          situacao: string
+          unidade_id: string | null
+        }
+        Insert: {
+          canal: string
+          cliente_id: string
+          finalidade: string
+          fonte: string
+          id?: never
+          organizacao_id: string
+          registrado_em?: string
+          registrado_por: string
+          situacao: string
+          unidade_id?: string | null
+        }
+        Update: {
+          canal?: string
+          cliente_id?: string
+          finalidade?: string
+          fonte?: string
+          id?: never
+          organizacao_id?: string
+          registrado_em?: string
+          registrado_por?: string
+          situacao?: string
+          unidade_id?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "cliente_consentimentos_cliente_id_organizacao_id_fkey"
+            columns: ["cliente_id", "organizacao_id"]
+            isOneToOne: false
+            referencedRelation: "clientes"
+            referencedColumns: ["id", "organizacao_id"]
+          },
+          {
+            foreignKeyName: "cliente_consentimentos_registrado_por_fkey"
+            columns: ["registrado_por"]
+            isOneToOne: false
+            referencedRelation: "perfis_usuario"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "cliente_consentimentos_unidade_id_fkey"
+            columns: ["unidade_id"]
+            isOneToOne: false
+            referencedRelation: "unidades"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      clientes: {
+        Row: {
+          atualizado_em: string | null
+          atualizado_por: string | null
+          chave_criacao: string
+          conteudo_criacao: string
+          criado_em: string
+          criado_por: string
+          documento_mascara: string | null
+          documento_resumo: string | null
+          email_mascara: string | null
+          endereco_informado: boolean
+          finalidades: string[]
+          id: string
+          nascimento_informado: boolean
+          nome: string
+          numero: number
+          organizacao_id: string
+          origem: string
+          situacao: string
+          telefone_mascara: string | null
+          telefone_resumo: string | null
+          tipo: string
+          unidade_origem_id: string | null
+        }
+        Insert: {
+          atualizado_em?: string | null
+          atualizado_por?: string | null
+          chave_criacao: string
+          conteudo_criacao: string
+          criado_em?: string
+          criado_por: string
+          documento_mascara?: string | null
+          documento_resumo?: string | null
+          email_mascara?: string | null
+          endereco_informado?: boolean
+          finalidades?: string[]
+          id?: string
+          nascimento_informado?: boolean
+          nome: string
+          numero?: never
+          organizacao_id: string
+          origem?: string
+          situacao?: string
+          telefone_mascara?: string | null
+          telefone_resumo?: string | null
+          tipo: string
+          unidade_origem_id?: string | null
+        }
+        Update: {
+          atualizado_em?: string | null
+          atualizado_por?: string | null
+          chave_criacao?: string
+          conteudo_criacao?: string
+          criado_em?: string
+          criado_por?: string
+          documento_mascara?: string | null
+          documento_resumo?: string | null
+          email_mascara?: string | null
+          endereco_informado?: boolean
+          finalidades?: string[]
+          id?: string
+          nascimento_informado?: boolean
+          nome?: string
+          numero?: never
+          organizacao_id?: string
+          origem?: string
+          situacao?: string
+          telefone_mascara?: string | null
+          telefone_resumo?: string | null
+          tipo?: string
+          unidade_origem_id?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "clientes_atualizado_por_fkey"
+            columns: ["atualizado_por"]
+            isOneToOne: false
+            referencedRelation: "perfis_usuario"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "clientes_criado_por_fkey"
+            columns: ["criado_por"]
+            isOneToOne: false
+            referencedRelation: "perfis_usuario"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "clientes_organizacao_id_fkey"
+            columns: ["organizacao_id"]
+            isOneToOne: false
+            referencedRelation: "organizacoes"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "clientes_unidade_origem_id_organizacao_id_fkey"
+            columns: ["unidade_origem_id", "organizacao_id"]
+            isOneToOne: false
+            referencedRelation: "unidades"
+            referencedColumns: ["id", "organizacao_id"]
           },
         ]
       }
@@ -3352,6 +3517,7 @@ export type Database = {
           chave_conclusao: string | null
           chave_criacao: string
           cliente_email: string | null
+          cliente_id: string | null
           cliente_nome: string | null
           concluida_em: string | null
           conteudo_conclusao: string | null
@@ -3379,6 +3545,7 @@ export type Database = {
           chave_conclusao?: string | null
           chave_criacao: string
           cliente_email?: string | null
+          cliente_id?: string | null
           cliente_nome?: string | null
           concluida_em?: string | null
           conteudo_conclusao?: string | null
@@ -3406,6 +3573,7 @@ export type Database = {
           chave_conclusao?: string | null
           chave_criacao?: string
           cliente_email?: string | null
+          cliente_id?: string | null
           cliente_nome?: string | null
           concluida_em?: string | null
           conteudo_conclusao?: string | null
@@ -3438,6 +3606,13 @@ export type Database = {
             isOneToOne: false
             referencedRelation: "perfis_usuario"
             referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "vendas_cliente_fk"
+            columns: ["cliente_id", "organizacao_id"]
+            isOneToOne: false
+            referencedRelation: "clientes"
+            referencedColumns: ["id", "organizacao_id"]
           },
           {
             foreignKeyName: "vendas_unidade_id_organizacao_id_fkey"
@@ -3625,6 +3800,34 @@ export type Database = {
           p_nome: string
           p_produto: string
           p_sku: string
+        }
+        Returns: Json
+      }
+      cliente_buscar: {
+        Args: { p_criterio: string; p_valor: string }
+        Returns: Json
+      }
+      cliente_consentir: {
+        Args: {
+          p_canal: string
+          p_cliente: string
+          p_concedido: boolean
+          p_finalidade: string
+          p_fonte: string
+        }
+        Returns: boolean
+      }
+      cliente_ficha: { Args: { p_cliente: string }; Returns: Json }
+      cliente_revelar: {
+        Args: { p_campo: string; p_cliente: string }
+        Returns: Json
+      }
+      cliente_salvar: {
+        Args: {
+          p_chave: string
+          p_cliente: string
+          p_dados: Json
+          p_motivo: string
         }
         Returns: Json
       }
@@ -4165,6 +4368,10 @@ export type Database = {
         Returns: string
       }
       unidade_atual: { Args: never; Returns: string }
+      venda_vincular_cliente: {
+        Args: { p_cliente: string; p_motivo: string; p_venda: string }
+        Returns: boolean
+      }
       vincular_pessoa: {
         Args: {
           p_motivo: string

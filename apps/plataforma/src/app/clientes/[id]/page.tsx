@@ -1,0 +1,160 @@
+import { randomUUID } from "node:crypto";
+
+import { ArrowLeft, Eye, MessageSquareHeart, PencilLine, ShieldCheck, ShoppingBag } from "lucide-react";
+import type { Metadata } from "next";
+import Link from "next/link";
+import { notFound } from "next/navigation";
+
+import { MoldeReal } from "../../../componentes/MoldeReal";
+import { Aviso, Botao, Cartao, ListaDados, Selo, TituloPagina } from "../../../componentes/ui";
+import { ehUuid } from "../../../lib/acesso/regras";
+import { FalhaDoServico, obterSessao } from "../../../lib/acesso/sessao";
+import { CAMPOS_REVELAVEIS, CANAIS, ERROS_DO_CLIENTE, FINALIDADES, FINALIDADES_DE_CONTATO, FONTES, ehFinalidade } from "../../../lib/clientes/regras";
+import { centavosDoBanco } from "../../../lib/dinheiro";
+import { brl } from "../../../lib/formato";
+import { chaveDoCatalogo, type ValorDeParametro } from "../../../lib/parametros";
+import { registrarConsentimento } from "../acoes";
+import { FormularioCliente } from "../FormularioCliente";
+import { Revelar } from "../Revelar";
+
+export const metadata: Metadata = { title: "Cliente" };
+export const dynamic = "force-dynamic";
+
+const OK = {
+  criado: "Cliente cadastrado.",
+  alterado: "Cadastro corrigido. O motivo ficou na auditoria.",
+  sem_mudanca: "Nada mudou no cadastro.",
+  consentimento: "Consentimento registrado.",
+  consentimento_igual: "O consentimento já estava assim.",
+} as const;
+const ACESSOS: Record<string, string> = {
+  "cliente.criado": "cadastrou", "cliente.alterado": "corrigiu", "cliente.busca": "encontrou na busca", "cliente.ficha": "abriu a ficha", "cliente.revelado": "viu",
+};
+const campo = "mt-1 min-h-11 w-full rounded-botao border border-borda bg-white px-3 text-sm outline-none focus:border-acao focus:ring-2 focus:ring-acao/20";
+const quando = (iso: string | null, hora = false) => (iso ? new Intl.DateTimeFormat("pt-BR", { timeZone: "America/Sao_Paulo", dateStyle: "short", ...(hora ? { timeStyle: "short" } : {}) }).format(new Date(iso)).replace(",", "") : "—");
+
+type Ficha = {
+  id: string; numero: number; nome: string; tipo: string; situacao: string; finalidades: string[]; documento: string | null; telefone: string | null;
+  email: string | null; nascimento_informado: boolean; endereco_informado: boolean; origem: string; criado_em: string; loja_de_origem: string | null;
+  consentimentos: { canal: keyof typeof CANAIS; finalidade: keyof typeof FINALIDADES_DE_CONTATO; situacao: string; fonte: keyof typeof FONTES; registrado_em: string }[];
+  compras: { total: number; ultima: string | null };
+};
+
+// Ficha do cliente (lote L5a: ORA-CRM-002, base). Abrir a ficha e mostrar um dado protegido ficam
+// registrados no banco. As compras listadas são as que a pessoa já pode ver (RLS das vendas); o total da
+// rede aparece sem detalhe.
+export default async function FichaDoCliente({ params, searchParams }: { params: Promise<{ id: string }>; searchParams: Promise<{ ok?: ValorDeParametro; erro?: ValorDeParametro }> }) {
+  const { id } = await params;
+  if (!ehUuid(id)) notFound();
+  const parametros = await searchParams;
+  const ok = chaveDoCatalogo(OK, parametros.ok);
+  const erro = chaveDoCatalogo(ERROS_DO_CLIENTE, parametros.erro);
+  const sessao = await obterSessao({ exigirLoja: true });
+  const { supabase, situacao } = sessao;
+  const unidade = situacao.unidade_id as string;
+  const [busca, cadastro, auditoria] = await Promise.all([
+    supabase.rpc("tem_permissao", { p_permissao: "cliente.buscar", p_unidade: unidade }),
+    supabase.rpc("tem_permissao", { p_permissao: "cliente.cadastrar", p_unidade: unidade }),
+    supabase.rpc("tem_permissao", { p_permissao: "auditoria.ver", p_unidade: unidade }),
+  ]);
+  if (busca.error || cadastro.error || auditoria.error) throw new FalhaDoServico("tem_permissao");
+  if (!busca.data) return <MoldeReal sessao={sessao}><Aviso tom="aviso" className="mt-6">Seu papel não consulta clientes.</Aviso></MoldeReal>;
+
+  const ficha = await supabase.rpc("cliente_ficha", { p_cliente: id });
+  if (ficha.error?.code === "P0002") notFound();
+  if (ficha.error) throw new FalhaDoServico("cliente_ficha");
+  const f = ficha.data as unknown as Ficha;
+  const [compras, acessos] = await Promise.all([
+    supabase.from("vendas").select("id, numero, concluida_em, total_centavos, situacao").eq("cliente_id", id).order("concluida_em", { ascending: false }).limit(20),
+    auditoria.data
+      ? supabase.from("auditoria").select("id, ocorrido_em, acao, usuario_id, depois").eq("alvo_tipo", "cliente").eq("alvo_id", id).order("ocorrido_em", { ascending: false }).limit(20)
+      : Promise.resolve(null),
+  ]);
+  if (compras.error || acessos?.error) throw new FalhaDoServico("cliente_historico");
+  const pessoas = acessos?.data?.length
+    ? await supabase.from("perfis_usuario").select("id, nome").in("id", [...new Set(acessos.data.map((a) => a.usuario_id).filter((x): x is string => Boolean(x)))])
+    : null;
+  const nomeDe = (usuario: string | null) => pessoas?.data?.find((p) => p.id === usuario)?.nome ?? "—";
+  const visiveis = compras.data.filter((c) => c.situacao === "concluida").length;
+
+  return (
+    <MoldeReal sessao={sessao}>
+      <Link href="/clientes" className="inline-flex min-h-10 items-center gap-1 text-sm font-semibold text-acao"><ArrowLeft aria-hidden className="size-4" /> Clientes</Link>
+      <TituloPagina titulo={f.nome} subtitulo={<span className="flex flex-wrap items-center gap-2">
+        <span className="numeros">nº {f.numero}</span> · {f.tipo === "pessoa_juridica" ? "empresa" : "pessoa física"} · cliente desde {quando(f.criado_em)}{f.loja_de_origem ? ` (${f.loja_de_origem})` : ""}
+        {f.situacao !== "ativo" && <Selo tom="neutro">inativo</Selo>}</span>} />
+      {ok && <Aviso tom="sucesso" className="mt-4">{OK[ok]}</Aviso>}
+      {erro && <Aviso tom="perigo" className="mt-4">{ERROS_DO_CLIENTE[erro]}</Aviso>}
+
+      <div className="mt-4 grid gap-4 lg:grid-cols-2">
+        <Cartao titulo="Dados" subtitulo="Protegidos: aparecem só quando você pede, e fica registrado quem viu." icone={ShieldCheck}>
+          <ListaDados itens={[
+            [CAMPOS_REVELAVEIS.documento, <Revelar key="d" cliente={f.id} campo="documento" mascara={f.documento} />],
+            [CAMPOS_REVELAVEIS.telefone, <Revelar key="t" cliente={f.id} campo="telefone" mascara={f.telefone} />],
+            [CAMPOS_REVELAVEIS.email, <Revelar key="e" cliente={f.id} campo="email" mascara={f.email} />],
+            ...(f.nascimento_informado ? [[CAMPOS_REVELAVEIS.nascimento, <Revelar key="n" cliente={f.id} campo="nascimento" mascara="informada" />] as const] : []),
+            ...(f.endereco_informado ? [[CAMPOS_REVELAVEIS.endereco, <Revelar key="en" cliente={f.id} campo="endereco" mascara="informado" />] as const] : []),
+          ]} />
+          <p className="mt-3 text-xs text-suave">Usado para: compra, garantia e histórico{f.finalidades.filter(ehFinalidade).map((x) => `; ${FINALIDADES[x].nome.toLowerCase()}`).join("")}.</p>
+        </Cartao>
+
+        <Cartao titulo="Compras" subtitulo={`${f.compras.total} compra(s) concluída(s) na rede${f.compras.ultima ? `, a última em ${quando(f.compras.ultima)}` : ""}. Abaixo, as que você pode ver.`} icone={ShoppingBag}>
+          <ul className="divide-y divide-borda text-sm">
+            {compras.data.map((c) => (
+              <li key={c.id} className="flex flex-wrap items-center justify-between gap-2 py-2">
+                <Link href={`/vendas/${c.id}`} className="font-semibold text-acao">Venda nº {c.numero}</Link>
+                <span className="numeros text-xs text-suave">{quando(c.concluida_em)} · {brl(centavosDoBanco(c.total_centavos))}{c.situacao !== "concluida" ? ` · ${c.situacao}` : ""}</span>
+              </li>
+            ))}
+            {compras.data.length === 0 && <li className="py-2 text-suave">{f.compras.total > 0 ? "As compras deste cliente são de vendas que você não acompanha." : "Nenhuma compra ligada a este cadastro."}</li>}
+          </ul>
+          {visiveis < f.compras.total && compras.data.length > 0 && <p className="mt-2 text-xs text-suave">Outras {f.compras.total - visiveis} são de vendas que você não acompanha.</p>}
+        </Cartao>
+      </div>
+
+      <Cartao className="mt-4" titulo="Contato e consentimento" subtitulo="Ofertas e pós-venda só com consentimento; retirar vale na hora para as mensagens automáticas. Avisos do próprio serviço (nota, assistência) não dependem disto." icone={MessageSquareHeart}>
+        <ul className="divide-y divide-borda text-sm">
+          {f.consentimentos.map((c) => (
+            <li key={`${c.canal}:${c.finalidade}`} className="flex flex-wrap items-center justify-between gap-2 py-2">
+              <span>{FINALIDADES_DE_CONTATO[c.finalidade] ?? c.finalidade} por {CANAIS[c.canal] ?? c.canal}</span>
+              <span className="flex items-center gap-2 text-xs text-suave"><Selo tom={c.situacao === "concedido" ? "sucesso" : "neutro"}>{c.situacao}</Selo>{FONTES[c.fonte]?.toLowerCase()} · {quando(c.registrado_em, true)}</span>
+            </li>
+          ))}
+          {f.consentimentos.length === 0 && <li className="py-2 text-suave">Nenhum consentimento registrado: o cliente não recebe ofertas nem pós-venda.</li>}
+        </ul>
+        {cadastro.data && f.situacao === "ativo" && (
+          <form action={registrarConsentimento} className="mt-3 grid gap-2 sm:grid-cols-5">
+            <input type="hidden" name="cliente" value={f.id} />
+            <label className="text-xs font-medium">Canal<select name="canal" className={campo}>{Object.entries(CANAIS).map(([k, v]) => <option key={k} value={k}>{v}</option>)}</select></label>
+            <label className="text-xs font-medium sm:col-span-2">Para<select name="finalidade_contato" className={campo}>{Object.entries(FINALIDADES_DE_CONTATO).map(([k, v]) => <option key={k} value={k}>{v}</option>)}</select></label>
+            <label className="text-xs font-medium">Como pediu<select name="fonte" className={campo}>{Object.entries(FONTES).map(([k, v]) => <option key={k} value={k}>{v}</option>)}</select></label>
+            <label className="text-xs font-medium">Decisão<select name="decisao" className={campo}><option value="concedido">aceita</option><option value="retirado">não aceita mais</option></select></label>
+            <Botao type="submit" tamanho="sm" variante="secundario" className="sm:col-span-5 sm:justify-self-start">Registrar</Botao>
+          </form>
+        )}
+      </Cartao>
+
+      {cadastro.data && (
+        <details className="mt-4 rounded-xl border border-borda bg-white px-3 py-2">
+          <summary className="flex min-h-10 cursor-pointer items-center gap-2 text-sm font-semibold text-acao"><PencilLine aria-hidden className="size-4" /> Corrigir cadastro</summary>
+          <div className="mt-2">
+            <FormularioCliente chave={`form:${randomUUID()}`} atual={{ id: f.id, tipo: f.tipo, nome: f.nome, finalidades: f.finalidades, documento: f.documento, telefone: f.telefone,
+              email: f.email, nascimento_informado: f.nascimento_informado, endereco_informado: f.endereco_informado }} />
+          </div>
+        </details>
+      )}
+
+      {acessos && (
+        <Cartao className="mt-4" titulo="Quem consultou ou mudou este cadastro" subtitulo="Últimos 20 registros (LGPD)" icone={Eye}>
+          <ul className="divide-y divide-borda text-sm">
+            {acessos.data.map((a) => {
+              const d = (a.depois ?? {}) as { campo?: string; campos?: string[] };
+              const detalhe = d.campo ? ` ${CAMPOS_REVELAVEIS[d.campo as keyof typeof CAMPOS_REVELAVEIS] ?? d.campo}` : d.campos ? ` (${d.campos.join(", ")})` : "";
+              return <li key={a.id} className="flex flex-wrap justify-between gap-2 py-2"><span>{nomeDe(a.usuario_id)} {ACESSOS[a.acao] ?? a.acao}{detalhe}</span><span className="text-xs text-suave">{quando(a.ocorrido_em, true)}</span></li>;
+            })}
+          </ul>
+        </Cartao>
+      )}
+    </MoldeReal>
+  );
+}

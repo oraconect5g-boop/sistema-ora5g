@@ -1,7 +1,7 @@
 // Inventário de autorização (prioridade 1 do diagnóstico de 10/11/2026; ORA-ORG-004 e ORA-QUAL-002).
 // O aviso 0029 do Supabase lista as funções SECURITY DEFINER que qualquer usuário logado pode chamar
-// pela API: 75 em 11/11 (48 + 6 do cadastro de lojas, L2, + 5 do cadastro do catálogo, L3a, + 4 dos preços, L3b,
-// + 4 da importação do catálogo, L3c, + 3 da entrada de mercadoria, L4a, + 5 do inventário, L4b). Elas rodam com poder total e cada uma confere sessão, loja e permissão por
+// pela API: 81 em 11/11 (48 + 6 do cadastro de lojas, L2, + 5 do cadastro do catálogo, L3a, + 4 dos preços, L3b,
+// + 4 da importação do catálogo, L3c, + 3 da entrada de mercadoria, L4a, + 5 do inventário, L4b, + 6 dos clientes, L5a). Elas rodam com poder total e cada uma confere sessão, loja e permissão por
 // conta própria. Este teste monta um "mundo" fictício com objetos reais em duas lojas e tenta cada
 // função como 13 tipos de atacante. Recusa = erro, ou resposta vazia numa leitura, e nada muda no
 // banco. O teste lista as funções no próprio banco e falha se aparecer uma nova sem casos aqui.
@@ -9,7 +9,7 @@ import type { PGlite } from "@electric-sql/pglite";
 import { randomUUID } from "node:crypto";
 import { afterAll, afterEach, beforeAll, beforeEach, describe, expect, it } from "vitest";
 
-import { cnpj, comDigitoLuhn, comoUsuario, criarBanco, type Sessao } from "./banco-de-teste";
+import { cnpj, comDigitoLuhn, comoUsuario, cpf, criarBanco, type Sessao } from "./banco-de-teste";
 import { ids, montarCenario, RAIZ } from "./cenario";
 import { cat, itens, montarCatalogo } from "./cenario-catalogo";
 
@@ -179,7 +179,7 @@ async function montarMundo() {
 }
 
 // ---------------------------------------------------------------------------------------------
-// Catálogo das 75 funções. Cada chamada usa argumentos válidos, para a recusa vir do controle de
+// Catálogo das 81 funções. Cada chamada usa argumentos válidos, para a recusa vir do controle de
 // acesso e não de um parâmetro errado. "A": alvos da loja A (do vendedorAB); "B": da loja B.
 //   identidade: os 9 atacantes sem acesso válido, sempre contra os alvos da loja A;
 //   outraOrganizacao: dono de outra rede, contra a loja A (omitido onde a função só age no
@@ -200,7 +200,10 @@ type Caso = {
   contextoProprio?: NomeAtacante[];
   // Códigos de domínio que também significam "não é seu" (ex.: OR003, item de outra loja).
   outrosCodigosDeRecusa?: string[];
+  // Registro de consulta legítima no próprio contexto (a busca de cliente fica na auditoria mesmo vazia).
+  auditoriaDaConsulta?: RegExp;
 };
+const CPF_DO_MUNDO = cpf("246813579");
 const pagamentoDinheiro = JSON.stringify([{ meio: "dinheiro", valor: 7_900 }]);
 const cnpjLojaA = async () => (await db.query<{ cnpj: string }>("select cnpj from public.unidades where id = $1", [ids.lojaA])).rows[0]?.cnpj ?? "";
 let chaveNotaA = "";
@@ -238,6 +241,13 @@ const CASOS: Record<string, Caso> = {
   "cancelar_venda(uuid,text)": {
     A: () => ["select public.cancelar_venda($1, 'Tentativa')", [alvo.concluidaA]], B: () => ["select public.cancelar_venda($1, 'Tentativa')", [alvo.concluidaB]], semPermissao: true,
   },
+  // Clientes (L5a): o cliente é da rede, sem "outra loja"; o vendedor tem cliente.buscar e cliente.cadastrar.
+  // Quem é de outra rede busca na própria (nada acha; a busca fica registrada) e não abre nem altera este.
+  "cliente_buscar(text,text)": { leitura: true, A: () => ["select public.cliente_buscar('documento', $1) as v", [CPF_DO_MUNDO]], auditoriaDaConsulta: /^cliente\.busca$/ },
+  "cliente_consentir(uuid,text,text,boolean,text)": { A: () => ["select public.cliente_consentir($1, 'whatsapp', 'ofertas', true, 'loja')", [alvo.clienteA]] },
+  "cliente_ficha(uuid)": { A: () => ["select public.cliente_ficha($1) as v", [alvo.clienteA]] },
+  "cliente_revelar(uuid,text)": { A: () => ["select public.cliente_revelar($1, 'documento') as v", [alvo.clienteA]] },
+  "cliente_salvar(uuid,jsonb,text,text)": { A: () => ["select public.cliente_salvar($1, '{\"nome\": \"Tentativa\"}'::jsonb, 'Tentativa', null)", [alvo.clienteA]] },
   "concluir_venda(uuid,jsonb,jsonb,text)": {
     A: () => ["select public.concluir_venda($1, $2::jsonb, '{}'::jsonb, $3)", [alvo.vendaA, pagamentoDinheiro, chave("ataque")]],
     B: () => ["select public.concluir_venda($1, $2::jsonb, '{}'::jsonb, $3)", [alvo.vendaB, pagamentoDinheiro, chave("ataque")]], outroVendedor: true,
@@ -424,6 +434,10 @@ const CASOS: Record<string, Caso> = {
     B: () => ["select public.transferencia_solicitar($1, $2, $3, 1, 'Tentativa', $4)", [ids.lojaB, ids.lojaC, cat.capa, chave("ataque")]],
   },
   "unidade_atual()": { leitura: true, A: () => ["select public.unidade_atual() as v", []], outraOrganizacao: false, contextoProprio: ["tecnico"] },
+  "venda_vincular_cliente(uuid,uuid,text)": {
+    A: () => ["select public.venda_vincular_cliente($1, $2, 'Tentativa')", [alvo.concluidaA, alvo.clienteA]],
+    B: () => ["select public.venda_vincular_cliente($1, $2, 'Tentativa')", [alvo.concluidaB, alvo.clienteA]], outroVendedor: true,
+  },
   "vincular_pessoa(uuid,uuid,text,uuid,text)": {
     A: () => ["select public.vincular_pessoa($1, $2, 'gerente', $3, 'Tentativa de se promover')", [ids.vendedorA, ids.organizacao, ids.lojaA]], semPermissao: true,
   },
@@ -459,6 +473,7 @@ const LOJAS_DA_REDE_ATACADA = new Set([ids.lojaA, ids.lojaB, ids.lojaC, ids.onli
 function vazio(funcao: string, linhas: Record<string, unknown>[]) {
   if (linhas.length === 0) return true;
   if (funcao === "situacao_da_sessao()") return linhas.length === 1 && linhas[0]?.unidade_id == null;
+  if (funcao === "cliente_buscar(text,text)") return linhas.length === 1 && (linhas[0]?.v as { clientes?: unknown[] } | undefined)?.clientes?.length === 0;
   // A lista de lojas pode trazer as da rede de quem pergunta, nunca uma da rede atacada.
   if (funcao === "lojas_da_rede()") return linhas.every((l) => !LOJAS_DA_REDE_ATACADA.has(String(l.id)));
   if (funcao.endsWith("_na_rede(uuid)")) {
@@ -489,6 +504,9 @@ beforeAll(async () => {
       alvo[situacao === "enviado" ? `inventarioEnviado${sufixo}` : `inventario${sufixo}`] = id;
     }
   }
+  // Um cliente da rede A, cadastrado pelo vendedorAB na loja A (dados fictícios).
+  alvo.clienteA = (await valor<{ id: string }>(await naLoja(ids.vendedorAB, ids.lojaA), "select public.cliente_salvar(null, $1::jsonb, null, 'mundo:cliente:A') as v",
+    [JSON.stringify({ tipo: "pessoa_fisica", nome: "Cliente do Mundo", documento: CPF_DO_MUNDO, telefone: "41987650100" })])).id;
   // Uma entrada de mercadoria em cada loja (gravadas pelo banco: só alvo, sem itens).
   for (const [chaveDoAlvo, loja] of [["entradaA", ids.lojaA], ["entradaB", ids.lojaB]] as const) {
     alvo[chaveDoAlvo] = (await db.query<{ id: string }>(
@@ -540,7 +558,7 @@ describe("inventário: toda função SECURITY DEFINER exposta tem casos de recus
     const expostas = rows.map((r) => r.f);
     expect(expostas.filter((f) => !(f in CASOS)), "função nova exposta sem casos de recusa: acrescente ao CASOS").toEqual([]);
     expect(Object.keys(CASOS).filter((f) => !expostas.includes(f)), "caso de função que não existe mais").toEqual([]);
-    expect(expostas).toHaveLength(75);
+    expect(expostas).toHaveLength(81);
   });
 
   it("visitante anônimo não executa nenhuma função do esquema public; no privado só um gatilho, que não roda sozinho", async () => {
@@ -572,7 +590,7 @@ describe("cada função recusa quem não tem acesso", () => {
           continue;
         }
         if (antes !== depois) falhas.push(`${descricao} (o banco mudou)`);
-        if (novasNaAuditoria.some((acao) => !AUDITORIA_DE_RECUSA.test(acao))) falhas.push(`${descricao} (auditoria registrou ${novasNaAuditoria.join(", ")})`);
+        if (novasNaAuditoria.some((acao) => !AUDITORIA_DE_RECUSA.test(acao) && !caso.auditoriaDaConsulta?.test(acao))) falhas.push(`${descricao} (auditoria registrou ${novasNaAuditoria.join(", ")})`);
         if (r.codigo === null) {
           const aceitavel = caso.leitura ? vazio(funcao, r.linhas)
             : funcao === "selecionar_unidade(uuid)" && r.linhas[0]?.v === false && novasNaAuditoria.length > 0;

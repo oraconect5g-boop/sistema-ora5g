@@ -68,6 +68,17 @@ export function cnpj(raiz: string, filial: string): string {
   return `${raiz}${filial}${d1}${d2}`;
 }
 
+// Gera CPF FICTÍCIO válido a partir dos 9 primeiros dígitos (os dois verificadores, módulo 11).
+export function cpf(base: string): string {
+  const digitos = base.split("").map(Number);
+  const dv = (lista: number[]) => {
+    const resto = lista.reduce((soma, d, i) => soma + d * (lista.length + 1 - i), 0) % 11;
+    return resto < 2 ? 0 : 11 - resto;
+  };
+  const d1 = dv(digitos);
+  return `${base}${d1}${dv([...digitos, d1])}`;
+}
+
 // Completa o dígito verificador (Luhn) para gerar IMEI/ICCID FICTÍCIOS válidos nos testes.
 export function comDigitoLuhn(base: string): string {
   for (let d = 0; d <= 9; d++) {
