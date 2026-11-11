@@ -1902,6 +1902,7 @@ export type Database = {
         Row: {
           ativo: boolean
           categoria_id: string
+          chave_criacao: string | null
           criado_em: string
           descricao: string | null
           id: string
@@ -1915,6 +1916,7 @@ export type Database = {
         Insert: {
           ativo?: boolean
           categoria_id: string
+          chave_criacao?: string | null
           criado_em?: string
           descricao?: string | null
           id?: string
@@ -1928,6 +1930,7 @@ export type Database = {
         Update: {
           ativo?: boolean
           categoria_id?: string
+          chave_criacao?: string | null
           criado_em?: string
           descricao?: string | null
           id?: string
@@ -3070,6 +3073,66 @@ export type Database = {
       cancelar_venda: {
         Args: { p_motivo: string; p_venda: string }
         Returns: boolean
+      }
+      catalogo_definir_politica_desconto: {
+        Args: {
+          p_categoria: string
+          p_margem_minima_pb: number
+          p_motivo: string
+          p_teto_pb: number
+        }
+        Returns: boolean
+      }
+      catalogo_salvar_categoria: {
+        Args: {
+          p_ativa: boolean
+          p_id: string
+          p_motivo: string
+          p_nome: string
+          p_organizacao: string
+        }
+        Returns: Json
+      }
+      catalogo_salvar_marca: {
+        Args: {
+          p_id: string
+          p_motivo: string
+          p_nome: string
+          p_organizacao: string
+        }
+        Returns: Json
+      }
+      catalogo_salvar_produto: {
+        Args: {
+          p_ativo: boolean
+          p_categoria: string
+          p_chave: string
+          p_descricao: string
+          p_id: string
+          p_marca: string
+          p_modelo: string
+          p_motivo: string
+          p_nome: string
+          p_organizacao: string
+          p_publicar_online: boolean
+          p_tipo: string
+        }
+        Returns: Json
+      }
+      catalogo_salvar_variante: {
+        Args: {
+          p_ativa: boolean
+          p_capacidade: string
+          p_codigo_barras: string
+          p_cor: string
+          p_estoque_minimo: number
+          p_id: string
+          p_motivo: string
+          p_nome: string
+          p_produto: string
+          p_sku: string
+        }
+        Returns: Json
       }
       concluir_venda: {
         Args: {

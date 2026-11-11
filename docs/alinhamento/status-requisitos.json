@@ -52,9 +52,9 @@
       "evidencia": "busca no repositório"
     },
     "ORA-CAT-005": {
-      "status": "parcial",
-      "nota": "Tipos no banco iguais aos de packages/dominio, com exigências: aparelho só com IMEI, chip só com ICCID, acessório por quantidade, serviços sem estoque. Falta a venda real (ADR-004).",
-      "evidencia": "packages/dominio/src/venda.ts; packages/banco/supabase/migrations/20261108150620_catalogo_estoque.sql; packages/banco/src/catalogo-estoque.test.ts"
+      "status": "testado",
+      "nota": "Tipos no banco iguais aos de packages/dominio, com exigências: aparelho só com IMEI, chip só com ICCID, acessório por quantidade, serviços sem estoque. A venda real (ADR-004, adicionar_item) aplica o tipo: aparelho e chip um a um com o item, acessório por quantidade com reserva, serviço sem estoque. Lote L3a (10/11): o cadastro pela tela escolhe o tipo uma vez (não muda depois) e só pede estoque mínimo para quem tem estoque. Aguardando revisão do Codex e homologação.",
+      "evidencia": "packages/dominio/src/venda.ts; packages/banco/supabase/migrations/20261108150620_catalogo_estoque.sql; packages/banco/src/catalogo-estoque.test.ts; packages/banco/src/vendas.test.ts; packages/banco/src/catalogo-cadastro.test.ts"
     },
     "ORA-CAT-006": {
       "status": "parcial",
@@ -242,9 +242,9 @@
       "evidencia": "packages/banco/supabase/migrations/20261109123402_ora_connect_operacoes.sql; packages/dominio/src/nogle.ts; packages/banco/src/connect.test.ts; packages/banco/src/concorrencia.test.ts; packages/dominio/src/nogle.test.ts; apps/worker/src/connect/ponta-a-ponta.test.ts; apps/worker/src/connect/transporte.test.ts"
     },
     "ORA-CAT-001": {
-      "status": "parcial",
-      "nota": "Categorias, marcas, produtos por tipo e variações com SKU e código de barras únicos no banco (ADR-003 proposto, aplicado no ora5g-dev em 08/11). Falta: tela real de cadastro e importação da Rein (ORA-009, depende do arquivo). Desde 08/11 (noite): tela real /catalogo lendo pelo RLS, sem custo para quem não tem custo.ver. 09/11 (lote 3): busca por nome, SKU e nome da variante feita no banco antes do limite (#40).",
-      "evidencia": "packages/banco/supabase/migrations/20261108150620_catalogo_estoque.sql; packages/banco/src/catalogo-estoque.test.ts; apps/plataforma/src/app/catalogo/busca.test.ts"
+      "status": "testado",
+      "nota": "Categorias, marcas, produtos por tipo e variações com SKU e código de barras únicos no banco (ADR-003 proposto, aplicado no ora5g-dev em 08/11). Desde 08/11 (noite): tela real /catalogo lendo pelo RLS, sem custo para quem não tem custo.ver. 09/11 (lote 3): busca por nome, SKU e nome da variante feita no banco antes do limite (#40). Lote L3a (10/11): tela /produtos com cadastro e edição de categorias, marcas, produtos e variações por quem tem catalogo.gerir (dono e administrador), com motivo e auditoria; repetir não duplica (nome sem diferença de maiúsculas, SKU, chave do formulário); SKU fixo depois de usado; inativar exige estoque zerado (OR020). A importação da Rein é o ORA-CAT-002. Aguardando revisão do Codex e homologação.",
+      "evidencia": "packages/banco/supabase/migrations/20261108150620_catalogo_estoque.sql; packages/banco/src/catalogo-estoque.test.ts; apps/plataforma/src/app/catalogo/busca.test.ts; packages/banco/supabase/migrations/20261110235500_catalogo_cadastro.sql; packages/banco/src/catalogo-cadastro.test.ts; apps/plataforma/src/app/produtos; apps/plataforma/src/lib/catalogo/cadastro.test.ts"
     },
     "ORA-CAT-004": {
       "status": "parcial",

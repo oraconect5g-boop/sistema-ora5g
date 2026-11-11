@@ -6,8 +6,8 @@ import { montarMenu, PAGINAS_REAIS } from "./menu";
 const PAPEL = {
   vendedor: ["venda.registrar", "caixa.abrir", "estoque.consultar", "connect.operar"],
   gerente: ["venda.registrar", "venda.ver_unidade", "caixa.abrir", "caixa.conferir", "estoque.consultar", "connect.operar", "connect.gerir", "desconto.aprovar", "nota.aprovar", "auditoria.ver"],
-  dono: ["venda.registrar", "venda.ver_unidade", "venda.ver_todas", "caixa.abrir", "caixa.conferir", "estoque.consultar", "connect.operar", "connect.gerir", "desconto.aprovar", "nota.aprovar", "auditoria.ver", "usuarios.gerir", "unidades.gerir"],
-  administrador: ["venda.ver_todas", "estoque.consultar", "auditoria.ver", "usuarios.gerir", "unidades.gerir"],
+  dono: ["venda.registrar", "venda.ver_unidade", "venda.ver_todas", "caixa.abrir", "caixa.conferir", "estoque.consultar", "connect.operar", "connect.gerir", "desconto.aprovar", "nota.aprovar", "auditoria.ver", "usuarios.gerir", "unidades.gerir", "catalogo.gerir"],
+  administrador: ["venda.ver_todas", "estoque.consultar", "auditoria.ver", "usuarios.gerir", "unidades.gerir", "catalogo.gerir"],
   tecnico: [],
 } as const;
 const menu = (papel: keyof typeof PAPEL) => montarMenu(new Set(PAPEL[papel]));
@@ -51,6 +51,13 @@ describe("menu único das telas reais", () => {
     expect(menu("administrador").visiveis).toContain("lojas");
     for (const papel of ["gerente", "vendedor", "tecnico"] as const) expect(menu(papel).visiveis).not.toContain("lojas");
     expect(menu("dono").grupos.find((g) => g.grupo === "Administração")?.paginas).toEqual(["equipe", "lojas"]);
+  });
+
+  it("cadastro de produtos (L3a): dono e administrador, em Estoque e catálogo; gerente e vendedor só veem o catálogo", () => {
+    expect(menu("dono").visiveis).toContain("produtos");
+    expect(menu("administrador").visiveis).toContain("produtos");
+    for (const papel of ["gerente", "vendedor", "tecnico"] as const) expect(menu(papel).visiveis).not.toContain("produtos");
+    expect(PAGINAS_REAIS.produtos.grupo).toBe("Estoque e catálogo");
   });
 
   it("técnico (sem permissões de loja) só vê o início e o catálogo; nunca fica sem menu", () => {

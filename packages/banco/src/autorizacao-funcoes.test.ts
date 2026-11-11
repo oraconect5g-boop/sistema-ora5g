@@ -1,6 +1,6 @@
 // Inventário de autorização (prioridade 1 do diagnóstico de 10/11/2026; ORA-ORG-004 e ORA-QUAL-002).
 // O aviso 0029 do Supabase lista as funções SECURITY DEFINER que qualquer usuário logado pode chamar
-// pela API: 54 em 10/11 (48 + as 6 do cadastro de lojas, L2). Elas rodam com poder total e cada uma confere sessão, loja e permissão por
+// pela API: 59 em 10/11 (48 + 6 do cadastro de lojas, L2, + 5 do cadastro do catálogo, L3a). Elas rodam com poder total e cada uma confere sessão, loja e permissão por
 // conta própria. Este teste monta um "mundo" fictício com objetos reais em duas lojas e tenta cada
 // função como 13 tipos de atacante. Recusa = erro, ou resposta vazia numa leitura, e nada muda no
 // banco. O teste lista as funções no próprio banco e falha se aparecer uma nova sem casos aqui.
@@ -178,7 +178,7 @@ async function montarMundo() {
 }
 
 // ---------------------------------------------------------------------------------------------
-// Catálogo das 54 funções. Cada chamada usa argumentos válidos, para a recusa vir do controle de
+// Catálogo das 59 funções. Cada chamada usa argumentos válidos, para a recusa vir do controle de
 // acesso e não de um parâmetro errado. "A": alvos da loja A (do vendedorAB); "B": da loja B.
 //   identidade: os 9 atacantes sem acesso válido, sempre contra os alvos da loja A;
 //   outraOrganizacao: dono de outra rede, contra a loja A (omitido onde a função só age no
@@ -213,6 +213,25 @@ const CASOS: Record<string, Caso> = {
   "alterar_situacao_pessoa(uuid,text,text)": { A: () => ["select public.alterar_situacao_pessoa($1, 'bloqueado', 'Tentativa de bloqueio')", [ids.vendedorAB]], semPermissao: true },
   "aplicar_desconto(uuid,bigint)": {
     A: () => ["select public.aplicar_desconto($1, 100)", [alvo.itemVendaA]], B: () => ["select public.aplicar_desconto($1, 100)", [alvo.itemVendaB]], outroVendedor: true,
+  },
+  // Catálogo pela tela (L3a): catalogo.gerir na rede; política de desconto só com preco.alterar.
+  "catalogo_definir_politica_desconto(uuid,integer,integer,text)": {
+    A: () => ["select public.catalogo_definir_politica_desconto($1, 1000, 500, 'Tentativa')", [cat.celulares]], semPermissao: true,
+  },
+  "catalogo_salvar_categoria(uuid,uuid,text,boolean,text)": {
+    A: () => ["select public.catalogo_salvar_categoria($1, null, 'Categoria intrusa', null, 'Tentativa')", [ids.organizacao]], semPermissao: true,
+  },
+  "catalogo_salvar_marca(uuid,uuid,text,text)": {
+    A: () => ["select public.catalogo_salvar_marca($1, null, 'Marca intrusa', 'Tentativa')", [ids.organizacao]], semPermissao: true,
+  },
+  "catalogo_salvar_produto(uuid,uuid,text,text,uuid,uuid,text,text,boolean,boolean,text,text)": {
+    A: () => ["select public.catalogo_salvar_produto($1, null, 'acessorio', 'Produto intruso', $2, null, null, null, false, null, $3, 'Tentativa')",
+      [ids.organizacao, cat.acessorios, chave("ataque:produto")]],
+    semPermissao: true,
+  },
+  "catalogo_salvar_variante(uuid,uuid,text,text,text,text,text,integer,boolean,text)": {
+    A: () => ["select public.catalogo_salvar_variante($1, null, $2, 'Variação intrusa', null, null, null, 0, null, 'Tentativa')", [cat.produtoCapa, `INV-${++contador}`]],
+    semPermissao: true,
   },
   "cancelar_convite(uuid,text)": { A: () => ["select public.cancelar_convite($1, 'Tentativa')", [alvo.convite]], semPermissao: true },
   "cancelar_venda(uuid,text)": {
@@ -431,7 +450,7 @@ describe("inventário: toda função SECURITY DEFINER exposta tem casos de recus
     const expostas = rows.map((r) => r.f);
     expect(expostas.filter((f) => !(f in CASOS)), "função nova exposta sem casos de recusa: acrescente ao CASOS").toEqual([]);
     expect(Object.keys(CASOS).filter((f) => !expostas.includes(f)), "caso de função que não existe mais").toEqual([]);
-    expect(expostas).toHaveLength(54);
+    expect(expostas).toHaveLength(59);
   });
 
   it("visitante anônimo não executa nenhuma função do esquema public; no privado só um gatilho, que não roda sozinho", async () => {
