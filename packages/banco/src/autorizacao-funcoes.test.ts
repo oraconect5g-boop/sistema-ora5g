@@ -1,7 +1,7 @@
 // Inventário de autorização (prioridade 1 do diagnóstico de 10/11/2026; ORA-ORG-004 e ORA-QUAL-002).
 // O aviso 0029 do Supabase lista as funções SECURITY DEFINER que qualquer usuário logado pode chamar
-// pela API: 67 em 11/11 (48 + 6 do cadastro de lojas, L2, + 5 do cadastro do catálogo, L3a, + 4 dos preços, L3b,
-// + 4 da importação do catálogo, L3c). Elas rodam com poder total e cada uma confere sessão, loja e permissão por
+// pela API: 70 em 11/11 (48 + 6 do cadastro de lojas, L2, + 5 do cadastro do catálogo, L3a, + 4 dos preços, L3b,
+// + 4 da importação do catálogo, L3c, + 3 da entrada de mercadoria, L4a). Elas rodam com poder total e cada uma confere sessão, loja e permissão por
 // conta própria. Este teste monta um "mundo" fictício com objetos reais em duas lojas e tenta cada
 // função como 13 tipos de atacante. Recusa = erro, ou resposta vazia numa leitura, e nada muda no
 // banco. O teste lista as funções no próprio banco e falha se aparecer uma nova sem casos aqui.
@@ -179,7 +179,7 @@ async function montarMundo() {
 }
 
 // ---------------------------------------------------------------------------------------------
-// Catálogo das 67 funções. Cada chamada usa argumentos válidos, para a recusa vir do controle de
+// Catálogo das 70 funções. Cada chamada usa argumentos válidos, para a recusa vir do controle de
 // acesso e não de um parâmetro errado. "A": alvos da loja A (do vendedorAB); "B": da loja B.
 //   identidade: os 9 atacantes sem acesso válido, sempre contra os alvos da loja A;
 //   outraOrganizacao: dono de outra rede, contra a loja A (omitido onde a função só age no
@@ -279,10 +279,25 @@ const CASOS: Record<string, Caso> = {
   },
   "disponibilidade_na_rede(uuid)": { leitura: true, A: () => ["select * from public.disponibilidade_na_rede($1)", [cat.aparelho]] },
   "encerrar_vinculo(uuid,text)": { A: () => ["select public.encerrar_vinculo($1, 'Tentativa')", [alvo.vinculoAB]], semPermissao: true },
+  // Entrada de mercadoria (L4a): estoque.receber na loja (dono e gerente; o gerente na loja do turno).
+  "estoque_estornar_entrada(uuid,text)": {
+    A: () => ["select public.estoque_estornar_entrada($1, 'Tentativa')", [alvo.entradaA]], B: () => ["select public.estoque_estornar_entrada($1, 'Tentativa')", [alvo.entradaB]],
+    semPermissao: true,
+  },
   "estoque_na_rede(uuid)": { leitura: true, A: () => ["select * from public.estoque_na_rede($1)", [cat.aparelho]] },
+  "estoque_registrar_entrada(uuid,text,uuid,text,jsonb,text,text)": {
+    A: () => ["select public.estoque_registrar_entrada($1, 'carga_inicial', null, null, $2::jsonb, $3, 'Tentativa')",
+      [ids.lojaA, JSON.stringify([{ variante: cat.capa, quantidade: 1 }]), chave("ataque:entrada")]],
+    B: () => ["select public.estoque_registrar_entrada($1, 'carga_inicial', null, null, $2::jsonb, $3, 'Tentativa')",
+      [ids.lojaB, JSON.stringify([{ variante: cat.capa, quantidade: 1 }]), chave("ataque:entrada")]],
+    semPermissao: true,
+  },
   "fechar_caixa(bigint,text)": { A: () => ["select * from public.fechar_caixa(0, 'Tentativa')", []], outraOrganizacao: false },
   "fiscal_definir_politica(integer,text)": { A: () => ["select public.fiscal_definir_politica(30, 'Tentativa')", []], outraOrganizacao: false, semPermissao: true },
   // Importação do catálogo (L3c): importacao.executar gera a prévia; importacao.aprovar aplica e desfaz.
+  "fornecedor_salvar(uuid,uuid,text,text,text,boolean,text)": {
+    A: () => ["select public.fornecedor_salvar($1, null, 'Fornecedor intruso', null, null, null, 'Tentativa')", [ids.organizacao]], semPermissao: true,
+  },
   "importacao_aplicar(uuid,text)": { A: () => ["select public.importacao_aplicar($1, 'Tentativa')", [alvo.importacaoPrevia]], semPermissao: true },
   "importacao_catalogo_previa(uuid,text,text,jsonb,jsonb)": {
     A: () => ["select public.importacao_catalogo_previa($1, 'ataque.csv', $2, '{}'::jsonb, $3::jsonb)",
@@ -443,6 +458,12 @@ beforeAll(async () => {
   await montarCenario(db);
   await montarCatalogo(db);
   await montarMundo();
+  // Uma entrada de mercadoria em cada loja (gravadas pelo banco: só alvo, sem itens).
+  for (const [chaveDoAlvo, loja] of [["entradaA", ids.lojaA], ["entradaB", ids.lojaB]] as const) {
+    alvo[chaveDoAlvo] = (await db.query<{ id: string }>(
+      "insert into public.entradas_estoque (organizacao_id, unidade_id, tipo, chave, conteudo, total_unidades, criado_por) values ($1, $2, 'carga_inicial', $3, 'mundo', 1, $4) returning id",
+      [ids.organizacao, loja, `mundo:entrada:${chaveDoAlvo}`, ids.dono])).rows[0]?.id ?? "";
+  }
   // Uma prévia e uma importação aplicada da rede A (gravadas pelo banco: só alvo, sem linhas).
   for (const [chave, situacao] of [["importacaoPrevia", "previa"], ["importacaoAplicada", "aplicada"]] as const) {
     alvo[chave] = (await db.query<{ id: string }>(
@@ -488,7 +509,7 @@ describe("inventário: toda função SECURITY DEFINER exposta tem casos de recus
     const expostas = rows.map((r) => r.f);
     expect(expostas.filter((f) => !(f in CASOS)), "função nova exposta sem casos de recusa: acrescente ao CASOS").toEqual([]);
     expect(Object.keys(CASOS).filter((f) => !expostas.includes(f)), "caso de função que não existe mais").toEqual([]);
-    expect(expostas).toHaveLength(67);
+    expect(expostas).toHaveLength(70);
   });
 
   it("visitante anônimo não executa nenhuma função do esquema public; no privado só um gatilho, que não roda sozinho", async () => {

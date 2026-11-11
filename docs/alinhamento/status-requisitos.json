@@ -268,8 +268,8 @@
     },
     "ORA-CAT-008": {
       "status": "parcial",
-      "nota": "Custo com histórico, visível só com custo.ver (vendedor não vê; testado). Falta custo por entrada/lote nas compras (ORA-INV-009).",
-      "evidencia": "packages/banco/supabase/migrations/20261108150620_catalogo_estoque.sql; packages/banco/src/catalogo-estoque.test.ts"
+      "nota": "Custo com histórico, visível só com custo.ver (vendedor não vê; testado). A venda guarda o custo do momento (venda_itens_custos): custo novo não muda venda passada. Lote L4a (11/11): custo por entrada (compra ou carga inicial) vira o custo atual da variação, com a referência da entrada; a importação também grava custo (L3c). Falta: relatório de margem gerencial (lote L8).",
+      "evidencia": "packages/banco/supabase/migrations/20261108150620_catalogo_estoque.sql; packages/banco/src/catalogo-estoque.test.ts; packages/banco/supabase/migrations/20261111141337_entrada_estoque.sql; packages/banco/src/entrada-estoque.test.ts"
     },
     "ORA-INV-001": {
       "status": "parcial",
@@ -283,8 +283,13 @@
     },
     "ORA-INV-004": {
       "status": "parcial",
-      "nota": "Conferência física do dia na tela /estoque: progresso, conferir pelo IMEI/ICCID digitado ou item a item, gravada e auditada pelo banco (conferir_item); relatório de divergências no banco. Falta: importação aprovada da Rein (arquivo), aprovadores do ajuste e inventário assinado.",
-      "evidencia": "packages/banco/supabase/migrations/20261108150620_catalogo_estoque.sql; packages/banco/src/catalogo-estoque.test.ts; apps/plataforma/src/app/estoque"
+      "nota": "Conferência física do dia na tela /estoque: progresso, conferir pelo IMEI/ICCID digitado ou item a item, gravada e auditada pelo banco (conferir_item); relatório de divergências no banco. Lote L4a (11/11): carga inicial pela tela /estoque/entrada (aparelho e chip pelo IMEI/ICCID validado e único, acessório por quantidade, condição e custo), por quem tem estoque.receber, com motivo, auditoria e estorno pelo livro. Falta: carga inicial pelo arquivo da Rein (B1), aprovadores do ajuste e inventário assinado (lote L4b).",
+      "evidencia": "packages/banco/supabase/migrations/20261108150620_catalogo_estoque.sql; packages/banco/src/catalogo-estoque.test.ts; apps/plataforma/src/app/estoque; packages/banco/supabase/migrations/20261111141337_entrada_estoque.sql; packages/banco/src/entrada-estoque.test.ts"
+    },
+    "ORA-INV-009": {
+      "status": "parcial",
+      "nota": "Lote L4a (11/11): recebimento de compras na tela /estoque/entrada por quem tem estoque.receber (dono e gerente, permissão nova; o gerente na loja do turno): fornecedor (cadastro com CNPJ opcional e validado), documento (nota ou pedido), aparelho e chip pelo IMEI/ICCID, acessório por quantidade, custo de entrada por linha, tudo numa transação com a chave do formulário (sem duplicar; OR004) e estorno pelo livro enquanto os itens estiverem livres (OR001/OR002). Aplicada no ora5g-dev. Falta: pedido de compra antes do recebimento e conferência da nota com o fornecedor; revisão do Codex e homologação.",
+      "evidencia": "packages/banco/supabase/migrations/20261111141337_entrada_estoque.sql; packages/banco/src/entrada-estoque.test.ts; apps/plataforma/src/app/estoque/entrada; apps/plataforma/src/lib/estoque/entrada.test.ts"
     },
     "ORA-INV-005": {
       "status": "parcial",
