@@ -4,9 +4,9 @@ import { montarMenu, PAGINAS_REAIS } from "./menu";
 
 // Permissões de cada papel no banco (matriz do ADR-002, papel_permissoes), só as que o menu usa.
 const PAPEL = {
-  vendedor: ["venda.registrar", "caixa.abrir", "estoque.consultar", "connect.operar", "cliente.buscar"],
-  gerente: ["venda.registrar", "venda.ver_unidade", "caixa.abrir", "caixa.conferir", "estoque.consultar", "connect.operar", "connect.gerir", "desconto.aprovar", "nota.aprovar", "auditoria.ver", "cliente.buscar"],
-  dono: ["venda.registrar", "venda.ver_unidade", "venda.ver_todas", "caixa.abrir", "caixa.conferir", "estoque.consultar", "connect.operar", "connect.gerir", "desconto.aprovar", "nota.aprovar", "auditoria.ver", "usuarios.gerir", "unidades.gerir", "catalogo.gerir", "cliente.buscar"],
+  vendedor: ["venda.registrar", "caixa.abrir", "estoque.consultar", "connect.operar", "cliente.buscar", "crm.atender"],
+  gerente: ["venda.registrar", "venda.ver_unidade", "caixa.abrir", "caixa.conferir", "estoque.consultar", "connect.operar", "connect.gerir", "desconto.aprovar", "nota.aprovar", "auditoria.ver", "cliente.buscar", "crm.atender"],
+  dono: ["venda.registrar", "venda.ver_unidade", "venda.ver_todas", "caixa.abrir", "caixa.conferir", "estoque.consultar", "connect.operar", "connect.gerir", "desconto.aprovar", "nota.aprovar", "auditoria.ver", "usuarios.gerir", "unidades.gerir", "catalogo.gerir", "cliente.buscar", "crm.atender"],
   administrador: ["venda.ver_todas", "estoque.consultar", "auditoria.ver", "usuarios.gerir", "unidades.gerir", "catalogo.gerir"],
   tecnico: [],
 } as const;
@@ -15,9 +15,9 @@ const menu = (papel: keyof typeof PAPEL) => montarMenu(new Set(PAPEL[papel]));
 describe("menu único das telas reais", () => {
   it("vendedor: vende, vê as próprias vendas, caixa, Connect, estoque e catálogo; nada de gestão", () => {
     const m = menu("vendedor");
-    expect(m.visiveis).toEqual(["inicio", "vender", "vendas", "clientes", "caixa", "connect", "estoque", "transferencias", "catalogo"]);
+    expect(m.visiveis).toEqual(["inicio", "vender", "vendas", "clientes", "funil", "agenda", "caixa", "connect", "estoque", "transferencias", "catalogo"]);
     expect(m.atalhos).toEqual(["inicio", "vender", "vendas", "estoque"]);
-    expect(m.grupos.map((g) => g.grupo)).toEqual(["Operação", "Estoque e catálogo"]);
+    expect(m.grupos.map((g) => g.grupo)).toEqual(["Operação", "Clientes", "Estoque e catálogo"]);
   });
 
   it("gerente: ganha aprovações, notas e auditoria; aprovações vira atalho no celular; equipe continua com o dono", () => {
@@ -76,6 +76,8 @@ describe("menu único das telas reais", () => {
   it("clientes (L5a): quem atende (dono, gerente e vendedor) busca e abre a ficha; administrador e técnico não", () => {
     for (const papel of ["dono", "gerente", "vendedor"] as const) expect(menu(papel).visiveis).toContain("clientes");
     for (const papel of ["administrador", "tecnico"] as const) expect(menu(papel).visiveis).not.toContain("clientes");
-    expect(PAGINAS_REAIS.clientes.grupo).toBe("Operação");
+    expect(PAGINAS_REAIS.clientes.grupo).toBe("Clientes");
+    for (const papel of ["dono", "gerente", "vendedor"] as const) expect(menu(papel).visiveis).toEqual(expect.arrayContaining(["funil", "agenda"]));
+    for (const papel of ["administrador", "tecnico"] as const) expect(menu(papel).visiveis).not.toContain("funil");
   });
 });

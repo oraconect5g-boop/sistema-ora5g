@@ -1,5 +1,5 @@
 // ARQUIVO GERADO pelo Supabase (generate_typescript_types do projeto ora5g-dev) depois da
-// migration 20261111191909_clientes_compartilhados. Não edite à mão: gere de novo a cada
+// migration 20261111193816_crm_funil_e_agenda. Não edite à mão: gere de novo a cada
 // migration aplicada (auditoria do Codex de 08/11, §7.2). O teste tipos-banco.test.ts confere
 // que funções e tabelas públicas daqui são as mesmas das migrations.
 export type Json =
@@ -107,6 +107,109 @@ export type Database = {
             isOneToOne: false
             referencedRelation: "vendas"
             referencedColumns: ["id"]
+          },
+        ]
+      }
+      atividades: {
+        Row: {
+          chave: string
+          cliente_id: string | null
+          conteudo: string
+          criado_em: string
+          criado_por: string
+          descricao: string
+          encerrada_em: string | null
+          encerrada_por: string | null
+          id: string
+          oportunidade_id: string | null
+          organizacao_id: string
+          responsavel_id: string
+          resultado: string | null
+          situacao: string
+          tipo: string
+          unidade_id: string
+          vence_em: string
+        }
+        Insert: {
+          chave: string
+          cliente_id?: string | null
+          conteudo: string
+          criado_em?: string
+          criado_por: string
+          descricao: string
+          encerrada_em?: string | null
+          encerrada_por?: string | null
+          id?: string
+          oportunidade_id?: string | null
+          organizacao_id: string
+          responsavel_id: string
+          resultado?: string | null
+          situacao?: string
+          tipo: string
+          unidade_id: string
+          vence_em: string
+        }
+        Update: {
+          chave?: string
+          cliente_id?: string | null
+          conteudo?: string
+          criado_em?: string
+          criado_por?: string
+          descricao?: string
+          encerrada_em?: string | null
+          encerrada_por?: string | null
+          id?: string
+          oportunidade_id?: string | null
+          organizacao_id?: string
+          responsavel_id?: string
+          resultado?: string | null
+          situacao?: string
+          tipo?: string
+          unidade_id?: string
+          vence_em?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "atividades_cliente_id_organizacao_id_fkey"
+            columns: ["cliente_id", "organizacao_id"]
+            isOneToOne: false
+            referencedRelation: "clientes"
+            referencedColumns: ["id", "organizacao_id"]
+          },
+          {
+            foreignKeyName: "atividades_criado_por_fkey"
+            columns: ["criado_por"]
+            isOneToOne: false
+            referencedRelation: "perfis_usuario"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "atividades_encerrada_por_fkey"
+            columns: ["encerrada_por"]
+            isOneToOne: false
+            referencedRelation: "perfis_usuario"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "atividades_oportunidade_id_fkey"
+            columns: ["oportunidade_id"]
+            isOneToOne: false
+            referencedRelation: "oportunidades"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "atividades_responsavel_id_fkey"
+            columns: ["responsavel_id"]
+            isOneToOne: false
+            referencedRelation: "perfis_usuario"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "atividades_unidade_id_organizacao_id_fkey"
+            columns: ["unidade_id", "organizacao_id"]
+            isOneToOne: false
+            referencedRelation: "unidades"
+            referencedColumns: ["id", "organizacao_id"]
           },
         ]
       }
@@ -2357,6 +2460,178 @@ export type Database = {
           },
         ]
       }
+      oportunidade_eventos: {
+        Row: {
+          de: string | null
+          em: string
+          id: number
+          oportunidade_id: string
+          organizacao_id: string
+          para: string | null
+          texto: string | null
+          tipo: string
+          usuario_id: string
+        }
+        Insert: {
+          de?: string | null
+          em?: string
+          id?: never
+          oportunidade_id: string
+          organizacao_id: string
+          para?: string | null
+          texto?: string | null
+          tipo: string
+          usuario_id: string
+        }
+        Update: {
+          de?: string | null
+          em?: string
+          id?: never
+          oportunidade_id?: string
+          organizacao_id?: string
+          para?: string | null
+          texto?: string | null
+          tipo?: string
+          usuario_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "oportunidade_eventos_oportunidade_id_fkey"
+            columns: ["oportunidade_id"]
+            isOneToOne: false
+            referencedRelation: "oportunidades"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "oportunidade_eventos_usuario_id_fkey"
+            columns: ["usuario_id"]
+            isOneToOne: false
+            referencedRelation: "perfis_usuario"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      oportunidades: {
+        Row: {
+          atendente_id: string
+          atualizado_em: string
+          campanha: string | null
+          chave: string
+          cliente_id: string
+          conteudo: string
+          criado_em: string
+          criado_por: string
+          encerrado_em: string | null
+          etapa: string
+          id: string
+          interesse: string
+          motivo_perda: string | null
+          numero: number
+          observacao_encerramento: string | null
+          organizacao_id: string
+          origem: string
+          proximo_passo: string | null
+          proximo_passo_em: string | null
+          responsavel_id: string
+          unidade_id: string
+          valor_estimado_centavos: number | null
+          venda_id: string | null
+        }
+        Insert: {
+          atendente_id: string
+          atualizado_em?: string
+          campanha?: string | null
+          chave: string
+          cliente_id: string
+          conteudo: string
+          criado_em?: string
+          criado_por: string
+          encerrado_em?: string | null
+          etapa?: string
+          id?: string
+          interesse: string
+          motivo_perda?: string | null
+          numero?: never
+          observacao_encerramento?: string | null
+          organizacao_id: string
+          origem: string
+          proximo_passo?: string | null
+          proximo_passo_em?: string | null
+          responsavel_id: string
+          unidade_id: string
+          valor_estimado_centavos?: number | null
+          venda_id?: string | null
+        }
+        Update: {
+          atendente_id?: string
+          atualizado_em?: string
+          campanha?: string | null
+          chave?: string
+          cliente_id?: string
+          conteudo?: string
+          criado_em?: string
+          criado_por?: string
+          encerrado_em?: string | null
+          etapa?: string
+          id?: string
+          interesse?: string
+          motivo_perda?: string | null
+          numero?: never
+          observacao_encerramento?: string | null
+          organizacao_id?: string
+          origem?: string
+          proximo_passo?: string | null
+          proximo_passo_em?: string | null
+          responsavel_id?: string
+          unidade_id?: string
+          valor_estimado_centavos?: number | null
+          venda_id?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "oportunidades_atendente_id_fkey"
+            columns: ["atendente_id"]
+            isOneToOne: false
+            referencedRelation: "perfis_usuario"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "oportunidades_cliente_id_organizacao_id_fkey"
+            columns: ["cliente_id", "organizacao_id"]
+            isOneToOne: false
+            referencedRelation: "clientes"
+            referencedColumns: ["id", "organizacao_id"]
+          },
+          {
+            foreignKeyName: "oportunidades_criado_por_fkey"
+            columns: ["criado_por"]
+            isOneToOne: false
+            referencedRelation: "perfis_usuario"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "oportunidades_responsavel_id_fkey"
+            columns: ["responsavel_id"]
+            isOneToOne: false
+            referencedRelation: "perfis_usuario"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "oportunidades_unidade_id_organizacao_id_fkey"
+            columns: ["unidade_id", "organizacao_id"]
+            isOneToOne: false
+            referencedRelation: "unidades"
+            referencedColumns: ["id", "organizacao_id"]
+          },
+          {
+            foreignKeyName: "oportunidades_venda_id_fkey"
+            columns: ["venda_id"]
+            isOneToOne: false
+            referencedRelation: "vendas"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       organizacoes: {
         Row: {
           criado_em: string
@@ -3735,6 +4010,14 @@ export type Database = {
         Args: { p_desconto: number; p_item: string }
         Returns: string
       }
+      atividade_criar: {
+        Args: { p_chave: string; p_dados: Json }
+        Returns: Json
+      }
+      atividade_encerrar: {
+        Args: { p_atividade: string; p_feita: boolean; p_resultado: string }
+        Returns: boolean
+      }
       cancelar_convite: {
         Args: { p_convite: string; p_motivo: string }
         Returns: boolean
@@ -3932,6 +4215,8 @@ export type Database = {
         Returns: string
       }
       criar_venda: { Args: { p_chave: string }; Returns: string }
+      crm_agenda: { Args: never; Returns: Json }
+      crm_funil: { Args: never; Returns: Json }
       decidir_aprovacao: {
         Args: { p_aprovacao: string; p_aprovar: boolean; p_observacao: string }
         Returns: boolean
@@ -4233,6 +4518,27 @@ export type Database = {
       notas_solicitar: {
         Args: { p_chave: string; p_destinatario: Json; p_venda: string }
         Returns: string
+      }
+      oportunidade_anotar: {
+        Args: { p_oportunidade: string; p_texto: string }
+        Returns: boolean
+      }
+      oportunidade_atribuir: {
+        Args: {
+          p_motivo: string
+          p_oportunidade: string
+          p_responsavel: string
+        }
+        Returns: boolean
+      }
+      oportunidade_detalhe: { Args: { p_oportunidade: string }; Returns: Json }
+      oportunidade_mover: {
+        Args: { p_dados: Json; p_etapa: string; p_oportunidade: string }
+        Returns: boolean
+      }
+      oportunidade_registrar: {
+        Args: { p_chave: string; p_cliente: string; p_dados: Json }
+        Returns: Json
       }
       pedir_aprovacao: {
         Args: { p_item: string; p_motivo: string }
