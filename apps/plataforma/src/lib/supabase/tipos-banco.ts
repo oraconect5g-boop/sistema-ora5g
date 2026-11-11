@@ -1,5 +1,5 @@
 // ARQUIVO GERADO pelo Supabase (generate_typescript_types do projeto ora5g-dev) depois da
-// migration 20261111133804_precos_e_campanhas. Não edite à mão: gere de novo a cada
+// migration 20261111135906_importacao_catalogo. Não edite à mão: gere de novo a cada
 // migration aplicada (auditoria do Codex de 08/11, §7.2). O teste tipos-banco.test.ts confere
 // que funções e tabelas públicas daqui são as mesmas das migrations.
 export type Json =
@@ -1434,6 +1434,143 @@ export type Database = {
             isOneToOne: false
             referencedRelation: "variantes"
             referencedColumns: ["id", "organizacao_id"]
+          },
+        ]
+      }
+      importacao_linhas: {
+        Row: {
+          acao: string
+          antes: Json | null
+          dados: Json
+          depois: Json | null
+          diferencas: Json
+          erros: string[]
+          importacao_id: string
+          numero: number
+          variante_id: string | null
+        }
+        Insert: {
+          acao: string
+          antes?: Json | null
+          dados: Json
+          depois?: Json | null
+          diferencas?: Json
+          erros?: string[]
+          importacao_id: string
+          numero: number
+          variante_id?: string | null
+        }
+        Update: {
+          acao?: string
+          antes?: Json | null
+          dados?: Json
+          depois?: Json | null
+          diferencas?: Json
+          erros?: string[]
+          importacao_id?: string
+          numero?: number
+          variante_id?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "importacao_linhas_importacao_id_fkey"
+            columns: ["importacao_id"]
+            isOneToOne: false
+            referencedRelation: "importacoes"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "importacao_linhas_variante_id_fkey"
+            columns: ["variante_id"]
+            isOneToOne: false
+            referencedRelation: "variantes"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      importacoes: {
+        Row: {
+          aplicado_em: string | null
+          aplicado_por: string | null
+          arquivo_nome: string
+          arquivo_sha256: string
+          criado_em: string
+          criado_por: string
+          encerrado_em: string | null
+          encerrado_por: string | null
+          id: string
+          mapeamento: Json
+          motivo: string | null
+          numero: number
+          organizacao_id: string
+          situacao: string
+          tipo: string
+          totais: Json
+        }
+        Insert: {
+          aplicado_em?: string | null
+          aplicado_por?: string | null
+          arquivo_nome: string
+          arquivo_sha256: string
+          criado_em?: string
+          criado_por: string
+          encerrado_em?: string | null
+          encerrado_por?: string | null
+          id?: string
+          mapeamento: Json
+          motivo?: string | null
+          numero?: never
+          organizacao_id: string
+          situacao?: string
+          tipo?: string
+          totais?: Json
+        }
+        Update: {
+          aplicado_em?: string | null
+          aplicado_por?: string | null
+          arquivo_nome?: string
+          arquivo_sha256?: string
+          criado_em?: string
+          criado_por?: string
+          encerrado_em?: string | null
+          encerrado_por?: string | null
+          id?: string
+          mapeamento?: Json
+          motivo?: string | null
+          numero?: never
+          organizacao_id?: string
+          situacao?: string
+          tipo?: string
+          totais?: Json
+        }
+        Relationships: [
+          {
+            foreignKeyName: "importacoes_aplicado_por_fkey"
+            columns: ["aplicado_por"]
+            isOneToOne: false
+            referencedRelation: "perfis_usuario"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "importacoes_criado_por_fkey"
+            columns: ["criado_por"]
+            isOneToOne: false
+            referencedRelation: "perfis_usuario"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "importacoes_encerrado_por_fkey"
+            columns: ["encerrado_por"]
+            isOneToOne: false
+            referencedRelation: "perfis_usuario"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "importacoes_organizacao_id_fkey"
+            columns: ["organizacao_id"]
+            isOneToOne: false
+            referencedRelation: "organizacoes"
+            referencedColumns: ["id"]
           },
         ]
       }
@@ -3354,6 +3491,28 @@ export type Database = {
       identidade_usuario_por_email: {
         Args: { p_email: string }
         Returns: string
+      }
+      importacao_aplicar: {
+        Args: { p_importacao: string; p_motivo: string }
+        Returns: Json
+      }
+      importacao_catalogo_previa: {
+        Args: {
+          p_arquivo_nome: string
+          p_linhas: Json
+          p_mapeamento: Json
+          p_organizacao: string
+          p_sha256: string
+        }
+        Returns: Json
+      }
+      importacao_descartar: {
+        Args: { p_importacao: string; p_motivo: string }
+        Returns: boolean
+      }
+      importacao_desfazer: {
+        Args: { p_importacao: string; p_motivo: string }
+        Returns: Json
       }
       liberar_reserva: { Args: { p_reserva: string }; Returns: boolean }
       loja_atualizar: {
