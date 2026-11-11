@@ -37,19 +37,21 @@ export default async function Estoque({ searchParams }: { searchParams: Promise<
   const { supabase, situacao } = sessao;
   const unidade = situacao.unidade_id as string;
 
-  const [consulta, confere] = await Promise.all([
+  const [consulta, confere, recebe] = await Promise.all([
     supabase.rpc("tem_permissao", { p_permissao: "estoque.consultar", p_unidade: unidade }),
     supabase.rpc("tem_permissao", { p_permissao: "estoque.conferir", p_unidade: unidade }),
+    supabase.rpc("tem_permissao", { p_permissao: "estoque.receber", p_unidade: unidade }),
   ]);
-  if (consulta.error || confere.error) throw new FalhaDoServico("estoque");
+  if (consulta.error || confere.error || recebe.error) throw new FalhaDoServico("estoque");
   if (!consulta.data) {
     return <MoldeReal sessao={sessao}><Aviso tom="aviso" className="mt-6">Seu papel não consulta estoque nesta loja.</Aviso></MoldeReal>;
   }
 
   const abas = (
-    <nav aria-label="Seções do estoque" className="flex gap-2 text-sm">
+    <nav aria-label="Seções do estoque" className="flex flex-wrap gap-2 text-sm">
       <Link href="/estoque" aria-current={!conferencia ? "page" : undefined} className={`rounded-botao px-3 py-2 font-semibold ${!conferencia ? "bg-acao text-white" : "bg-white text-acao ring-1 ring-borda"}`}>Saldo e busca</Link>
       <Link href="/estoque?aba=conferencia" aria-current={conferencia ? "page" : undefined} className={`rounded-botao px-3 py-2 font-semibold ${conferencia ? "bg-acao text-white" : "bg-white text-acao ring-1 ring-borda"}`}>Conferência do dia</Link>
+      {recebe.data && <Link href="/estoque/entrada" className="rounded-botao bg-white px-3 py-2 font-semibold text-acao ring-1 ring-borda">Entrada de mercadoria</Link>}
     </nav>
   );
 

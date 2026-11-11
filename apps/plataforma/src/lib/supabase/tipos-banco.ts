@@ -1,5 +1,5 @@
 // ARQUIVO GERADO pelo Supabase (generate_typescript_types do projeto ora5g-dev) depois da
-// migration 20261111135906_importacao_catalogo. Não edite à mão: gere de novo a cada
+// migration 20261111141337_entrada_estoque. Não edite à mão: gere de novo a cada
 // migration aplicada (auditoria do Codex de 08/11, §7.2). O teste tipos-banco.test.ts confere
 // que funções e tabelas públicas daqui são as mesmas das migrations.
 export type Json =
@@ -1029,6 +1029,143 @@ export type Database = {
           },
         ]
       }
+      entrada_itens: {
+        Row: {
+          condicao: string
+          custo_unitario_centavos: number | null
+          entrada_id: string
+          itens: string[]
+          linha: number
+          organizacao_id: string
+          quantidade: number
+          variante_id: string
+        }
+        Insert: {
+          condicao: string
+          custo_unitario_centavos?: number | null
+          entrada_id: string
+          itens?: string[]
+          linha: number
+          organizacao_id: string
+          quantidade: number
+          variante_id: string
+        }
+        Update: {
+          condicao?: string
+          custo_unitario_centavos?: number | null
+          entrada_id?: string
+          itens?: string[]
+          linha?: number
+          organizacao_id?: string
+          quantidade?: number
+          variante_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "entrada_itens_entrada_id_fkey"
+            columns: ["entrada_id"]
+            isOneToOne: false
+            referencedRelation: "entradas_estoque"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "entrada_itens_variante_id_organizacao_id_fkey"
+            columns: ["variante_id", "organizacao_id"]
+            isOneToOne: false
+            referencedRelation: "variantes"
+            referencedColumns: ["id", "organizacao_id"]
+          },
+        ]
+      }
+      entradas_estoque: {
+        Row: {
+          chave: string
+          conteudo: string
+          criado_em: string
+          criado_por: string
+          documento: string | null
+          estornado_em: string | null
+          estornado_por: string | null
+          fornecedor_id: string | null
+          id: string
+          motivo_estorno: string | null
+          numero: number
+          organizacao_id: string
+          situacao: string
+          tipo: string
+          total_custo_centavos: number | null
+          total_unidades: number
+          unidade_id: string
+        }
+        Insert: {
+          chave: string
+          conteudo: string
+          criado_em?: string
+          criado_por: string
+          documento?: string | null
+          estornado_em?: string | null
+          estornado_por?: string | null
+          fornecedor_id?: string | null
+          id?: string
+          motivo_estorno?: string | null
+          numero?: never
+          organizacao_id: string
+          situacao?: string
+          tipo: string
+          total_custo_centavos?: number | null
+          total_unidades: number
+          unidade_id: string
+        }
+        Update: {
+          chave?: string
+          conteudo?: string
+          criado_em?: string
+          criado_por?: string
+          documento?: string | null
+          estornado_em?: string | null
+          estornado_por?: string | null
+          fornecedor_id?: string | null
+          id?: string
+          motivo_estorno?: string | null
+          numero?: never
+          organizacao_id?: string
+          situacao?: string
+          tipo?: string
+          total_custo_centavos?: number | null
+          total_unidades?: number
+          unidade_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "entradas_estoque_criado_por_fkey"
+            columns: ["criado_por"]
+            isOneToOne: false
+            referencedRelation: "perfis_usuario"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "entradas_estoque_estornado_por_fkey"
+            columns: ["estornado_por"]
+            isOneToOne: false
+            referencedRelation: "perfis_usuario"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "entradas_estoque_fornecedor_id_organizacao_id_fkey"
+            columns: ["fornecedor_id", "organizacao_id"]
+            isOneToOne: false
+            referencedRelation: "fornecedores"
+            referencedColumns: ["id", "organizacao_id"]
+          },
+          {
+            foreignKeyName: "entradas_estoque_unidade_id_organizacao_id_fkey"
+            columns: ["unidade_id", "organizacao_id"]
+            isOneToOne: false
+            referencedRelation: "unidades"
+            referencedColumns: ["id", "organizacao_id"]
+          },
+        ]
+      }
       estoque_movimentos: {
         Row: {
           chave_idempotencia: string | null
@@ -1362,6 +1499,54 @@ export type Database = {
             foreignKeyName: "fiscal_politicas_organizacao_id_fkey"
             columns: ["organizacao_id"]
             isOneToOne: true
+            referencedRelation: "organizacoes"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      fornecedores: {
+        Row: {
+          ativo: boolean
+          cnpj: string | null
+          contato: string | null
+          criado_em: string
+          criado_por: string
+          id: string
+          nome: string
+          organizacao_id: string
+        }
+        Insert: {
+          ativo?: boolean
+          cnpj?: string | null
+          contato?: string | null
+          criado_em?: string
+          criado_por: string
+          id?: string
+          nome: string
+          organizacao_id: string
+        }
+        Update: {
+          ativo?: boolean
+          cnpj?: string | null
+          contato?: string | null
+          criado_em?: string
+          criado_por?: string
+          id?: string
+          nome?: string
+          organizacao_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "fornecedores_criado_por_fkey"
+            columns: ["criado_por"]
+            isOneToOne: false
+            referencedRelation: "perfis_usuario"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "fornecedores_organizacao_id_fkey"
+            columns: ["organizacao_id"]
+            isOneToOne: false
             referencedRelation: "organizacoes"
             referencedColumns: ["id"]
           },
@@ -3414,6 +3599,10 @@ export type Database = {
         Args: { p_motivo: string; p_vinculo: string }
         Returns: boolean
       }
+      estoque_estornar_entrada: {
+        Args: { p_entrada: string; p_motivo: string }
+        Returns: string
+      }
       estoque_na_rede: {
         Args: { p_variante: string }
         Returns: {
@@ -3426,6 +3615,18 @@ export type Database = {
           unidade: string
           unidade_id: string
         }[]
+      }
+      estoque_registrar_entrada: {
+        Args: {
+          p_chave: string
+          p_documento: string
+          p_fornecedor: string
+          p_itens: Json
+          p_motivo: string
+          p_tipo: string
+          p_unidade: string
+        }
+        Returns: Json
       }
       fechar_caixa: {
         Args: { p_contado: number; p_observacao: string }
@@ -3447,6 +3648,18 @@ export type Database = {
       fiscal_definir_politica: {
         Args: { p_alerta_minutos: number; p_fonte: string }
         Returns: boolean
+      }
+      fornecedor_salvar: {
+        Args: {
+          p_ativo: boolean
+          p_cnpj: string
+          p_contato: string
+          p_id: string
+          p_motivo: string
+          p_nome: string
+          p_organizacao: string
+        }
+        Returns: Json
       }
       identidade_bloqueios_a_aplicar: {
         Args: never
