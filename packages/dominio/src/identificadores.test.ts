@@ -1,6 +1,6 @@
 import { describe, expect, it } from "vitest";
 
-import { completarComDigitoVerificador, cpfValido, iccidValido, imeiValido, mascararIdentificador, normalizarTelefone } from "./identificadores";
+import { cnpjValido, completarComDigitoVerificador, cpfValido, formatarCnpj, iccidValido, imeiValido, mascararIdentificador, normalizarTelefone } from "./identificadores";
 
 // Identificadores FICTÍCIOS gerados com dígito verificador válido.
 const imei = completarComDigitoVerificador("35209900176148");
@@ -62,5 +62,26 @@ describe("telefone", () => {
     expect(normalizarTelefone("0001")).toBeNull();
     expect(normalizarTelefone("90000-0001")).toBeNull();
     expect(normalizarTelefone("(01) 9 0000-0001")).toBeNull();
+  });
+});
+
+describe("CNPJ", () => {
+  // CNPJs FICTÍCIOS gerados (raiz 11.222.333, a mesma dos testes do banco).
+  it("aceita CNPJ com dígitos verificadores corretos, com ou sem pontuação", () => {
+    expect(cnpjValido("11222333000181")).toBe(true);
+    expect(cnpjValido("11.222.333/0001-81")).toBe(true);
+    expect(cnpjValido("11.444.777/0001-61")).toBe(true);
+  });
+
+  it("recusa dígito trocado, tamanho errado e números repetidos", () => {
+    expect(cnpjValido("11222333000182")).toBe(false);
+    expect(cnpjValido("1122233300018")).toBe(false);
+    expect(cnpjValido("11111111111111")).toBe(false);
+    expect(cnpjValido("")).toBe(false);
+  });
+
+  it("formata para exibir e deixa como está o que não tem 14 dígitos", () => {
+    expect(formatarCnpj("11222333000181")).toBe("11.222.333/0001-81");
+    expect(formatarCnpj("123")).toBe("123");
   });
 });

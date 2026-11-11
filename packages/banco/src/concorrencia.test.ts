@@ -6,8 +6,8 @@
 import type pg from "pg";
 import { afterAll, beforeAll, describe, expect, it } from "vitest";
 
-import { comDigitoLuhn } from "./banco-de-teste";
-import { ids, montarCenario } from "./cenario";
+import { cnpj, comDigitoLuhn } from "./banco-de-teste";
+import { ids, montarCenario, RAIZ } from "./cenario";
 import { cat, itens, montarCatalogo } from "./cenario-catalogo";
 import { executor, iniciarPostgresReal, type PostgresReal } from "./postgres-real";
 
@@ -425,5 +425,40 @@ describe("duas conexões ao mesmo tempo no PostgreSQL 17", () => {
     expect(final).toEqual({ ok: "enviada" });
     expect(await contar("select count(*) as n from public.estoque_movimentos where referencia_tipo = 'transferencia' and referencia_id = $1", [t])).toBe(1);
     expect(await divergencias()).toEqual([]);
+  });
+
+  it("inativar a loja e abrir caixa nela ao mesmo tempo, nas duas ordens: nunca sobra caixa aberto em loja inativa (L2)", async () => {
+    // Duas lojas novas e vazias, só deste teste.
+    const lojaD = "00000000-0000-4000-8000-000000000026";
+    const lojaE = "00000000-0000-4000-8000-000000000027";
+    await admin.query(`insert into public.unidades (id, organizacao_id, empresa_id, codigo, nome, tipo, cnpj) values
+      ($1, $3, $4, 'conc-loja-d', 'Loja D', 'loja_fisica', $5), ($2, $3, $4, 'conc-loja-e', 'Loja E', 'loja_fisica', $6)`,
+    [lojaD, lojaE, ids.organizacao, ids.empresa, cnpj(RAIZ, "0004"), cnpj(RAIZ, "0005")]);
+    const gestor = await sessaoNaLoja(ids.administrador, ids.lojaA);
+    const INATIVAR = "select public.loja_definir_situacao($1, 'inativa', 'Fechamento da loja') as v";
+
+    // A inativação chega primeiro e segura a loja; o caixa espera e, depois, encontra a loja inativa.
+    const naD = await sessaoNaLoja(ids.dono, lojaD);
+    await abrir(a, gestor);
+    await abrir(b, naD);
+    const inativouPrimeiro = await disputa(
+      () => a.query(INATIVAR, [lojaD]),
+      () => valor(b, "select public.abrir_caixa(0, 'conc:lojas:1') as v", []),
+    );
+    expect(inativouPrimeiro).toEqual({ erro: "OR019" });
+    expect(await contar("select count(*) as n from public.caixas where unidade_id = $1", [lojaD])).toBe(0);
+    expect(await contar("select count(*) as n from public.unidades where id = $1 and status = 'inativa'", [lojaD])).toBe(1);
+
+    // O caixa abre primeiro e segura a loja; a inativação espera e, depois, encontra o caixa aberto.
+    const naE = await sessaoNaLoja(ids.dono, lojaE);
+    await abrir(a, naE);
+    await abrir(b, gestor);
+    const abriuPrimeiro = await disputa(
+      () => a.query("select public.abrir_caixa(0, 'conc:lojas:2')"),
+      () => valor(b, INATIVAR, [lojaE]),
+    );
+    expect(abriuPrimeiro).toEqual({ erro: "OR019" });
+    expect(await contar("select count(*) as n from public.caixas where unidade_id = $1 and situacao = 'aberto'", [lojaE])).toBe(1);
+    expect(await contar("select count(*) as n from public.unidades where id = $1 and status = 'ativa'", [lojaE])).toBe(1);
   });
 });

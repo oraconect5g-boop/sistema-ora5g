@@ -2153,6 +2153,78 @@ export type Database = {
           },
         ]
       }
+      unidade_configuracoes: {
+        Row: {
+          bairro: string | null
+          cep: string | null
+          complemento: string | null
+          criado_em: string
+          criado_por: string
+          horarios: Json
+          id: number
+          inscricao_estadual: string | null
+          inscricao_municipal: string | null
+          logradouro: string | null
+          motivo: string
+          numero: string | null
+          organizacao_id: string
+          telefone: string | null
+          unidade_id: string
+          vigente_desde: string
+        }
+        Insert: {
+          bairro?: string | null
+          cep?: string | null
+          complemento?: string | null
+          criado_em?: string
+          criado_por: string
+          horarios?: Json
+          id?: never
+          inscricao_estadual?: string | null
+          inscricao_municipal?: string | null
+          logradouro?: string | null
+          motivo: string
+          numero?: string | null
+          organizacao_id: string
+          telefone?: string | null
+          unidade_id: string
+          vigente_desde: string
+        }
+        Update: {
+          bairro?: string | null
+          cep?: string | null
+          complemento?: string | null
+          criado_em?: string
+          criado_por?: string
+          horarios?: Json
+          id?: never
+          inscricao_estadual?: string | null
+          inscricao_municipal?: string | null
+          logradouro?: string | null
+          motivo?: string
+          numero?: string | null
+          organizacao_id?: string
+          telefone?: string | null
+          unidade_id?: string
+          vigente_desde?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "unidade_configuracoes_criado_por_fkey"
+            columns: ["criado_por"]
+            isOneToOne: false
+            referencedRelation: "perfis_usuario"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "unidade_configuracoes_unidade_id_organizacao_id_fkey"
+            columns: ["unidade_id", "organizacao_id"]
+            isOneToOne: false
+            referencedRelation: "unidades"
+            referencedColumns: ["id", "organizacao_id"]
+          },
+        ]
+      }
       unidades: {
         Row: {
           cidade: string | null
@@ -3205,6 +3277,94 @@ export type Database = {
         Returns: string
       }
       liberar_reserva: { Args: { p_reserva: string }; Returns: boolean }
+      loja_atualizar: {
+        Args: {
+          p_cidade: string
+          p_cnpj: string
+          p_motivo: string
+          p_nome: string
+          p_uf: string
+          p_unidade: string
+        }
+        Returns: boolean
+      }
+      loja_criar: {
+        Args: {
+          p_cidade: string
+          p_cnpj: string
+          p_codigo: string
+          p_emissora: string
+          p_empresa: string
+          p_motivo: string
+          p_nome: string
+          p_tipo: string
+          p_uf: string
+        }
+        Returns: Json
+      }
+      loja_definir_configuracao: {
+        Args: {
+          p_dados: Json
+          p_motivo: string
+          p_unidade: string
+          p_vigente_desde: string
+        }
+        Returns: Json
+      }
+      loja_definir_situacao: {
+        Args: { p_motivo: string; p_situacao: string; p_unidade: string }
+        Returns: boolean
+      }
+      loja_historico: {
+        Args: { p_unidade: string }
+        Returns: {
+          bairro: string
+          cep: string
+          complemento: string
+          criado_em: string
+          criado_por: string
+          criado_por_nome: string
+          horarios: Json
+          id: number
+          inscricao_estadual: string
+          inscricao_municipal: string
+          logradouro: string
+          motivo: string
+          numero: string
+          telefone: string
+          vigente_desde: string
+        }[]
+      }
+      lojas_da_rede: {
+        Args: never
+        Returns: {
+          bairro: string
+          cep: string
+          cidade: string
+          cnpj: string
+          codigo: string
+          complemento: string
+          configuracao_id: number
+          criado_em: string
+          empresa_id: string
+          horarios: Json
+          id: string
+          inscricao_estadual: string
+          inscricao_municipal: string
+          logradouro: string
+          nome: string
+          numero: string
+          organizacao_id: string
+          proxima_versao: string
+          status: string
+          telefone: string
+          tipo: string
+          uf: string
+          unidade_emissora_id: string
+          versoes: number
+          vigente_desde: string
+        }[]
+      }
       movimentar_caixa: {
         Args: {
           p_chave: string

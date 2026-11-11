@@ -58,3 +58,22 @@ export function normalizarTelefone(texto: string): string | null {
   const digitos = texto.replace(/\D/g, "").replace(/^55(?=\d{10,11}$)/, "");
   return /^[1-9]{2}9?\d{8}$/.test(digitos) ? digitos : null;
 }
+
+// CNPJ (14 dígitos) com os dois dígitos verificadores (módulo 11), a mesma regra de
+// privado.cnpj_valido no banco. Aceita pontuação; recusa números repetidos.
+export function cnpjValido(texto: string): boolean {
+  const cnpj = texto.replace(/[\s./-]/g, "");
+  if (!/^\d{14}$/.test(cnpj) || /^(\d)\1{13}$/.test(cnpj)) return false;
+  const digito = (quantos: number) => {
+    const pesos = quantos === 12 ? [5, 4, 3, 2, 9, 8, 7, 6, 5, 4, 3, 2] : [6, 5, 4, 3, 2, 9, 8, 7, 6, 5, 4, 3, 2];
+    const resto = pesos.reduce((soma, peso, i) => soma + Number(cnpj[i]) * peso, 0) % 11;
+    return resto < 2 ? 0 : 11 - resto;
+  };
+  return digito(12) === Number(cnpj[12]) && digito(13) === Number(cnpj[13]);
+}
+
+// 11.222.333/0001-81 (só para exibir; o banco guarda os 14 dígitos).
+export function formatarCnpj(texto: string): string {
+  const d = texto.replace(/\D/g, "");
+  return d.length === 14 ? `${d.slice(0, 2)}.${d.slice(2, 5)}.${d.slice(5, 8)}/${d.slice(8, 12)}-${d.slice(12)}` : texto;
+}

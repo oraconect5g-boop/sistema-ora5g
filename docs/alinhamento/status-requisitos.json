@@ -13,8 +13,8 @@
   "requisitos": {
     "ORA-ORG-001": {
       "status": "parcial",
-      "nota": "Tabelas organização/empresa/unidade com CNPJ validado no banco; escolha real da loja na sessão (/escolher-loja; uma loja só é escolhida sozinha), gravada e auditada pelo banco. Falta cadastrar as 14 lojas reais (lista com CNPJs pendente) e a tela de gestão de lojas.",
-      "evidencia": "packages/banco/supabase/migrations/20261107140352_fundacao_acesso.sql; packages/banco/src/acesso.test.ts (T10); apps/plataforma/src/app/escolher-loja; packages/banco/supabase/migrations/20261108202654_acesso_sessao_e_equipe.sql"
+      "nota": "Tabelas organização/empresa/unidade com CNPJ validado no banco; escolha real da loja na sessão (/escolher-loja; uma loja só é escolhida sozinha), gravada e auditada pelo banco. Tela real /lojas (lote L2, 10/11): dono e administrador cadastram (repetição devolve a mesma loja), editam nome/CNPJ/UF/cidade e inativam ou reativam com motivo e auditoria, sem apagar; código e tipo não mudam; loja inativa sai da escolha de loja e não recebe caixa, venda, reserva, estoque, aparelho nem transferência nova (OR019, também por escrita direta), e inativar exige a loja sem pendências (caixa, estoque, aparelhos, reservas, transferências, vendas e notas). Disputa inativar × abrir caixa provada nas duas ordens num PostgreSQL 17 real. Falta: cadastrar as lojas reais (CNPJs e endereços da lista B2), revisão do Codex e homologação.",
+      "evidencia": "packages/banco/supabase/migrations/20261107140352_fundacao_acesso.sql; packages/banco/src/acesso.test.ts (T10); apps/plataforma/src/app/escolher-loja; packages/banco/supabase/migrations/20261108202654_acesso_sessao_e_equipe.sql; packages/banco/supabase/migrations/20261110233000_lojas_cadastro_e_configuracao.sql; packages/banco/src/lojas.test.ts; packages/banco/src/concorrencia.test.ts (L2); apps/plataforma/src/app/lojas; apps/plataforma/src/lib/lojas"
     },
     "ORA-ORG-002": {
       "status": "parcial",
@@ -40,6 +40,11 @@
       "status": "parcial",
       "nota": "Login real com escolha da loja, sessão por turno no banco (sessão viva no Auth, até 12 h e no mesmo dia: sair ou revogar corta o acesso na hora, mesmo com token válido), bloqueio e encerramento de vínculo imediatos, saída forçada com mensagem neutra, convite e recuperação por link com definição de senha. Testado no banco (acesso-equipe.test.ts) e nas regras/E2E do app. FALTA: SMTP e modelos de e-mail no painel (proprietário), prova com usuário real (#11, depende da SUPABASE_SECRET_KEY) e confirmação de senha recente para ações da equipe (ADR-002 §2.6). Revisão do Codex (PR #33, trazida em 10/11): #27 a #30 e #45 (aprovação própria legível com token anterior); corrigidos no lote 1 (b967870), aguardando a conferência do Codex.",
       "evidencia": "packages/banco/supabase/migrations/20261108202654_acesso_sessao_e_equipe.sql; packages/banco/src/acesso-equipe.test.ts; apps/plataforma/src/lib/acesso; apps/plataforma/e2e/acesso-real.spec.ts"
+    },
+    "ORA-ORG-008": {
+      "status": "parcial",
+      "nota": "Configuração por loja com vigência (lote L2, 10/11): telefone, endereço (CEP, rua, número, complemento, bairro), inscrições estadual e municipal e horário por dia da semana, em versões só de inclusão com 'vale desde' agora ou futuro (nunca retroativo), motivo e auditoria; repetir a mesma vigência ou salvar sem mudar não duplica; histórico de versões na tela /lojas; leitura segue a visibilidade da loja (RLS). Falta: caixas e terminais por loja (lote L7), dados reais (lista B2), revisão do Codex e homologação.",
+      "evidencia": "packages/banco/supabase/migrations/20261110233000_lojas_cadastro_e_configuracao.sql; packages/banco/src/lojas.test.ts; apps/plataforma/src/app/lojas; apps/plataforma/src/lib/lojas/regras.test.ts"
     },
     "ORA-CAT-003": {
       "status": "respeitado",
