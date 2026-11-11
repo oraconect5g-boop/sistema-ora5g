@@ -1,6 +1,6 @@
 // Inventário de autorização (prioridade 1 do diagnóstico de 10/11/2026; ORA-ORG-004 e ORA-QUAL-002).
 // O aviso 0029 do Supabase lista as funções SECURITY DEFINER que qualquer usuário logado pode chamar
-// pela API: 48 em 10/11. Elas rodam com poder total e cada uma confere sessão, loja e permissão por
+// pela API: 54 em 10/11 (48 + as 6 do cadastro de lojas, L2). Elas rodam com poder total e cada uma confere sessão, loja e permissão por
 // conta própria. Este teste monta um "mundo" fictício com objetos reais em duas lojas e tenta cada
 // função como 13 tipos de atacante. Recusa = erro, ou resposta vazia numa leitura, e nada muda no
 // banco. O teste lista as funções no próprio banco e falha se aparecer uma nova sem casos aqui.
@@ -8,8 +8,8 @@ import type { PGlite } from "@electric-sql/pglite";
 import { randomUUID } from "node:crypto";
 import { afterAll, afterEach, beforeAll, beforeEach, describe, expect, it } from "vitest";
 
-import { comDigitoLuhn, comoUsuario, criarBanco, type Sessao } from "./banco-de-teste";
-import { ids, montarCenario } from "./cenario";
+import { cnpj, comDigitoLuhn, comoUsuario, criarBanco, type Sessao } from "./banco-de-teste";
+import { ids, montarCenario, RAIZ } from "./cenario";
 import { cat, itens, montarCatalogo } from "./cenario-catalogo";
 
 let db: PGlite;
@@ -178,7 +178,7 @@ async function montarMundo() {
 }
 
 // ---------------------------------------------------------------------------------------------
-// Catálogo das 48 funções. Cada chamada usa argumentos válidos, para a recusa vir do controle de
+// Catálogo das 54 funções. Cada chamada usa argumentos válidos, para a recusa vir do controle de
 // acesso e não de um parâmetro errado. "A": alvos da loja A (do vendedorAB); "B": da loja B.
 //   identidade: os 9 atacantes sem acesso válido, sempre contra os alvos da loja A;
 //   outraOrganizacao: dono de outra rede, contra a loja A (omitido onde a função só age no
@@ -265,6 +265,26 @@ const CASOS: Record<string, Caso> = {
   "liberar_reserva(uuid)": {
     A: () => ["select public.liberar_reserva($1)", [alvo.reservaA]], B: () => ["select public.liberar_reserva($1)", [alvo.reservaB]], outroVendedor: true,
   },
+  // Lojas (L2): só quem tem unidades.gerir num vínculo de organização (dono e administrador).
+  "loja_atualizar(uuid,text,text,text,text,text)": {
+    A: () => ["select public.loja_atualizar($1, 'Loja A tomada', $2, 'PR', null, 'Tentativa')", [ids.lojaA, cnpj(RAIZ, "0001")]],
+    B: () => ["select public.loja_atualizar($1, 'Loja B tomada', $2, 'PR', null, 'Tentativa')", [ids.lojaB, cnpj(RAIZ, "0002")]], semPermissao: true,
+  },
+  "loja_criar(uuid,text,text,text,text,text,text,uuid,text)": {
+    A: () => ["select public.loja_criar($1, 'loja-intrusa', 'Loja intrusa', 'deposito', null, 'PR', null, null, 'Tentativa')", [ids.empresa]], semPermissao: true,
+  },
+  "loja_definir_configuracao(uuid,jsonb,timestamp with time zone,text)": {
+    A: () => ["select public.loja_definir_configuracao($1, '{\"telefone\": \"4133339999\"}'::jsonb, null, 'Tentativa')", [ids.lojaA]],
+    B: () => ["select public.loja_definir_configuracao($1, '{\"telefone\": \"4133339999\"}'::jsonb, null, 'Tentativa')", [ids.lojaB]], semPermissao: true,
+  },
+  "loja_definir_situacao(uuid,text,text)": {
+    A: () => ["select public.loja_definir_situacao($1, 'inativa', 'Tentativa')", [ids.lojaA]],
+    B: () => ["select public.loja_definir_situacao($1, 'inativa', 'Tentativa')", [ids.lojaB]], semPermissao: true,
+  },
+  "loja_historico(uuid)": {
+    leitura: true, A: () => ["select * from public.loja_historico($1)", [ids.lojaA]], B: () => ["select * from public.loja_historico($1)", [ids.lojaB]], semPermissao: true,
+  },
+  "lojas_da_rede()": { leitura: true, A: () => ["select * from public.lojas_da_rede()", []], semPermissao: true },
   "movimentar_caixa(text,bigint,text,text)": { A: () => ["select public.movimentar_caixa('sangria', 100, 'Tentativa', $1)", [chave("ataque")]], outraOrganizacao: false },
   "notas_cancelar(uuid,text)": {
     A: () => ["select public.notas_cancelar($1, 'Tentativa')", [alvo.notaA]], B: () => ["select public.notas_cancelar($1, 'Tentativa')", [alvo.notaB]], semPermissao: true,
@@ -360,6 +380,8 @@ const LOJAS_DA_REDE_ATACADA = new Set([ids.lojaA, ids.lojaB, ids.lojaC, ids.onli
 function vazio(funcao: string, linhas: Record<string, unknown>[]) {
   if (linhas.length === 0) return true;
   if (funcao === "situacao_da_sessao()") return linhas.length === 1 && linhas[0]?.unidade_id == null;
+  // A lista de lojas pode trazer as da rede de quem pergunta, nunca uma da rede atacada.
+  if (funcao === "lojas_da_rede()") return linhas.every((l) => !LOJAS_DA_REDE_ATACADA.has(String(l.id)));
   if (funcao.endsWith("_na_rede(uuid)")) {
     return linhas.every((l) => !LOJAS_DA_REDE_ATACADA.has(String(l.unidade_id))
       && Object.values(l).every((v) => typeof v !== "number" || v === 0));
@@ -376,6 +398,9 @@ beforeAll(async () => {
   await montarCenario(db);
   await montarCatalogo(db);
   await montarMundo();
+  await db.query(`insert into public.unidade_configuracoes (organizacao_id, unidade_id, vigente_desde, telefone, motivo, criado_por)
+    values ($1, $2, now() - interval '1 day', '4133330001', 'Mundo do teste', $4), ($1, $3, now() - interval '1 day', '4133330002', 'Mundo do teste', $4)`,
+  [ids.organizacao, ids.lojaA, ids.lojaB, ids.dono]);
   chaveNotaA = chaveDeAcesso(await cnpjLojaA(), 4242);
   await db.exec(`
     create schema teste;
@@ -406,7 +431,7 @@ describe("inventário: toda função SECURITY DEFINER exposta tem casos de recus
     const expostas = rows.map((r) => r.f);
     expect(expostas.filter((f) => !(f in CASOS)), "função nova exposta sem casos de recusa: acrescente ao CASOS").toEqual([]);
     expect(Object.keys(CASOS).filter((f) => !expostas.includes(f)), "caso de função que não existe mais").toEqual([]);
-    expect(expostas).toHaveLength(48);
+    expect(expostas).toHaveLength(54);
   });
 
   it("visitante anônimo não executa nenhuma função do esquema public; no privado só um gatilho, que não roda sozinho", async () => {

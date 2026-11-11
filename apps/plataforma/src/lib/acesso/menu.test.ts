@@ -6,8 +6,8 @@ import { montarMenu, PAGINAS_REAIS } from "./menu";
 const PAPEL = {
   vendedor: ["venda.registrar", "caixa.abrir", "estoque.consultar", "connect.operar"],
   gerente: ["venda.registrar", "venda.ver_unidade", "caixa.abrir", "caixa.conferir", "estoque.consultar", "connect.operar", "connect.gerir", "desconto.aprovar", "nota.aprovar", "auditoria.ver"],
-  dono: ["venda.registrar", "venda.ver_unidade", "venda.ver_todas", "caixa.abrir", "caixa.conferir", "estoque.consultar", "connect.operar", "connect.gerir", "desconto.aprovar", "nota.aprovar", "auditoria.ver", "usuarios.gerir"],
-  administrador: ["venda.ver_todas", "estoque.consultar", "auditoria.ver", "usuarios.gerir"],
+  dono: ["venda.registrar", "venda.ver_unidade", "venda.ver_todas", "caixa.abrir", "caixa.conferir", "estoque.consultar", "connect.operar", "connect.gerir", "desconto.aprovar", "nota.aprovar", "auditoria.ver", "usuarios.gerir", "unidades.gerir"],
+  administrador: ["venda.ver_todas", "estoque.consultar", "auditoria.ver", "usuarios.gerir", "unidades.gerir"],
   tecnico: [],
 } as const;
 const menu = (papel: keyof typeof PAPEL) => montarMenu(new Set(PAPEL[papel]));
@@ -44,6 +44,13 @@ describe("menu único das telas reais", () => {
     expect(menu("vendedor").visiveis).not.toContain("financeiro");
     expect(menu("tecnico").visiveis).not.toContain("financeiro");
     expect(menu("gerente").grupos.find((g) => g.grupo === "Gestão")?.paginas[0]).toBe("financeiro");
+  });
+
+  it("lojas da rede (L2): dono e administrador, no grupo Administração; gerente, vendedor e técnico não", () => {
+    expect(menu("dono").visiveis).toContain("lojas");
+    expect(menu("administrador").visiveis).toContain("lojas");
+    for (const papel of ["gerente", "vendedor", "tecnico"] as const) expect(menu(papel).visiveis).not.toContain("lojas");
+    expect(menu("dono").grupos.find((g) => g.grupo === "Administração")?.paginas).toEqual(["equipe", "lojas"]);
   });
 
   it("técnico (sem permissões de loja) só vê o início e o catálogo; nunca fica sem menu", () => {

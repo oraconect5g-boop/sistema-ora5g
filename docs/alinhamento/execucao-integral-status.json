@@ -1,0 +1,1645 @@
+{
+  "_leia": "Checkpoint do programa de execução integral (PR #67). Carregar ao retomar e seguir para o próximo item executável da fila; não reiniciar o projeto. Estados vêm de status-requisitos.json (fonte da rastreabilidade); este arquivo acrescenta lote, bloqueio externo e revisão.",
+  "atualizado_em": "2026-11-10",
+  "base": {
+    "main": "2ac6a25",
+    "pacote": {
+      "pr": 67,
+      "branch": "docs/execucao-integral-20261110",
+      "commit": "d8c1bc6",
+      "main_analisada": "0b6b45e"
+    }
+  },
+  "publicado": {
+    "homologacao": {
+      "commit": "0b6b45e",
+      "quando": "2026-11-10T20:45-03:00",
+      "conferido": "rodapé e /saude em aba anônima"
+    },
+    "falta_publicar": [
+      "38fc068 (/financeiro sem login responde 307)",
+      "2ac6a25 (PR #64: semente do gerente de teste, só desenvolvimento)"
+    ]
+  },
+  "contagem_dos_estados": {
+    "parcial": 48,
+    "testado": 19,
+    "nao_iniciado": 103,
+    "respeitado": 1,
+    "demonstracao": 6,
+    "bloqueado": 2
+  },
+  "requisitos": {
+    "ORA-ORG-001": {
+      "titulo": "Cadastrar empresa, organização, 11 lojas comerciais, o local DEFEITOS e a loja piloto (meta de 14 lojas)",
+      "prioridade": "P0",
+      "estado": "parcial",
+      "lote": "L2 cadastros",
+      "bloqueio_externo": "B2: CNPJs e endereços reais das lojas (cadastro pela tela /lojas)",
+      "revisado_codex": false,
+      "homologado": false
+    },
+    "ORA-ORG-002": {
+      "titulo": "Associar usuários a uma ou múltiplas lojas com função e vigência",
+      "prioridade": "P0",
+      "estado": "parcial",
+      "lote": "L2 cadastros",
+      "bloqueio_externo": null,
+      "revisado_codex": false,
+      "homologado": false
+    },
+    "ORA-ORG-003": {
+      "titulo": "Gerir perfis diretoria, regional, gerente, vendedor, financeiro, fiscal, marketing e atendimento",
+      "prioridade": "P0",
+      "estado": "parcial",
+      "lote": "L2 cadastros",
+      "bloqueio_externo": "Decisão em vigor: cinco papéis do ADR-002; papéis novos entram por migration quando houver pessoa na função (10_DECISOES_PENDENTES)",
+      "revisado_codex": false,
+      "homologado": false
+    },
+    "ORA-ORG-004": {
+      "titulo": "Isolar dados por loja na API e PostgreSQL/RLS",
+      "prioridade": "P0",
+      "estado": "parcial",
+      "lote": "L2 cadastros",
+      "bloqueio_externo": null,
+      "revisado_codex": false,
+      "homologado": false
+    },
+    "ORA-ORG-005": {
+      "titulo": "Histórico de alterações de papéis, políticas e configurações",
+      "prioridade": "P0",
+      "estado": "testado",
+      "lote": "L2 cadastros",
+      "bloqueio_externo": null,
+      "revisado_codex": false,
+      "homologado": false
+    },
+    "ORA-ORG-006": {
+      "titulo": "Login, recuperação de conta e revogação de sessão",
+      "prioridade": "P0",
+      "estado": "parcial",
+      "lote": "L2 cadastros",
+      "bloqueio_externo": null,
+      "revisado_codex": false,
+      "homologado": false
+    },
+    "ORA-ORG-007": {
+      "titulo": "Autenticação reforçada para perfis privilegiados",
+      "prioridade": "P1",
+      "estado": "nao_iniciado",
+      "lote": "L2 cadastros",
+      "bloqueio_externo": null,
+      "revisado_codex": false,
+      "homologado": false
+    },
+    "ORA-ORG-008": {
+      "titulo": "Configurar horários, endereços, caixas e dados fiscais por loja",
+      "prioridade": "P1",
+      "estado": "parcial",
+      "lote": "L2 cadastros",
+      "bloqueio_externo": null,
+      "revisado_codex": false,
+      "homologado": false
+    },
+    "ORA-ORG-009": {
+      "titulo": "Gerir unidades regionais, grupos e metas agregadas",
+      "prioridade": "P1",
+      "estado": "nao_iniciado",
+      "lote": "L2 cadastros",
+      "bloqueio_externo": null,
+      "revisado_codex": false,
+      "homologado": false
+    },
+    "ORA-ORG-010": {
+      "titulo": "Preparar multi-CNPJ/UF para expansão física nacional",
+      "prioridade": "P2",
+      "estado": "nao_iniciado",
+      "lote": "L2 cadastros",
+      "bloqueio_externo": null,
+      "revisado_codex": false,
+      "homologado": false
+    },
+    "ORA-CAT-001": {
+      "titulo": "Cadastrar categorias, marcas, produtos, variantes e SKUs",
+      "prioridade": "P0",
+      "estado": "parcial",
+      "lote": "L3 catálogo/importador",
+      "bloqueio_externo": null,
+      "revisado_codex": false,
+      "homologado": false
+    },
+    "ORA-CAT-002": {
+      "titulo": "Importar produtos e preços da Rein somente por CSV/XLSX",
+      "prioridade": "P0",
+      "estado": "nao_iniciado",
+      "lote": "L3 catálogo/importador",
+      "bloqueio_externo": "B1 (arquivo da Rein) só para a carga; o importador não depende",
+      "revisado_codex": false,
+      "homologado": false
+    },
+    "ORA-CAT-003": {
+      "titulo": "Não consumir API Rein em nenhuma operação diária",
+      "prioridade": "P0",
+      "estado": "respeitado",
+      "lote": "L3 catálogo/importador",
+      "bloqueio_externo": null,
+      "revisado_codex": false,
+      "homologado": false
+    },
+    "ORA-CAT-004": {
+      "titulo": "Cadastrar preços vigentes por loja/canal conforme regra",
+      "prioridade": "P0",
+      "estado": "parcial",
+      "lote": "L3 catálogo/importador",
+      "bloqueio_externo": null,
+      "revisado_codex": false,
+      "homologado": false
+    },
+    "ORA-CAT-005": {
+      "titulo": "Diferenciar smartphone, acessório, chip e serviço comercial",
+      "prioridade": "P0",
+      "estado": "parcial",
+      "lote": "L3 catálogo/importador",
+      "bloqueio_externo": null,
+      "revisado_codex": false,
+      "homologado": false
+    },
+    "ORA-CAT-006": {
+      "titulo": "Pesquisar por nome, SKU e, quando aplicável, IMEI/ICCID",
+      "prioridade": "P0",
+      "estado": "parcial",
+      "lote": "L3 catálogo/importador",
+      "bloqueio_externo": null,
+      "revisado_codex": false,
+      "homologado": false
+    },
+    "ORA-CAT-007": {
+      "titulo": "Programar vigência de promoções e campanhas comerciais",
+      "prioridade": "P1",
+      "estado": "nao_iniciado",
+      "lote": "L3 catálogo/importador",
+      "bloqueio_externo": null,
+      "revisado_codex": false,
+      "homologado": false
+    },
+    "ORA-CAT-008": {
+      "titulo": "Custo de produto/lote/entrada e margem gerencial",
+      "prioridade": "P1",
+      "estado": "parcial",
+      "lote": "L3 catálogo/importador",
+      "bloqueio_externo": null,
+      "revisado_codex": false,
+      "homologado": false
+    },
+    "ORA-CAT-009": {
+      "titulo": "Canais externos usam mapeamento de SKU e IDs próprios",
+      "prioridade": "P1",
+      "estado": "nao_iniciado",
+      "lote": "L3 catálogo/importador",
+      "bloqueio_externo": null,
+      "revisado_codex": false,
+      "homologado": false
+    },
+    "ORA-CAT-010": {
+      "titulo": "Permitir importação assistida em lote de fotos/atributos",
+      "prioridade": "P2",
+      "estado": "nao_iniciado",
+      "lote": "L3 catálogo/importador",
+      "bloqueio_externo": null,
+      "revisado_codex": false,
+      "homologado": false
+    },
+    "ORA-CAT-011": {
+      "titulo": "Exigir foto principal por produto e imagem própria para variantes visualmente diferentes",
+      "prioridade": "P0",
+      "estado": "parcial",
+      "lote": "L3 catálogo/importador",
+      "bloqueio_externo": null,
+      "revisado_codex": false,
+      "homologado": false
+    },
+    "ORA-INV-001": {
+      "titulo": "Manter disponibilidade por loja e localização física",
+      "prioridade": "P0",
+      "estado": "parcial",
+      "lote": "L4 estoque/compras",
+      "bloqueio_externo": null,
+      "revisado_codex": false,
+      "homologado": false
+    },
+    "ORA-INV-002": {
+      "titulo": "Identificar aparelho por IMEI/serial e impedir venda duplicada",
+      "prioridade": "P0",
+      "estado": "testado",
+      "lote": "L4 estoque/compras",
+      "bloqueio_externo": null,
+      "revisado_codex": false,
+      "homologado": false
+    },
+    "ORA-INV-003": {
+      "titulo": "Registrar cada entrada/saída em livro auditável de estoque",
+      "prioridade": "P0",
+      "estado": "testado",
+      "lote": "L4 estoque/compras",
+      "bloqueio_externo": null,
+      "revisado_codex": false,
+      "homologado": false
+    },
+    "ORA-INV-004": {
+      "titulo": "Receber estoque inicial validado por contagem real",
+      "prioridade": "P0",
+      "estado": "parcial",
+      "lote": "L4 estoque/compras",
+      "bloqueio_externo": null,
+      "revisado_codex": false,
+      "homologado": false
+    },
+    "ORA-INV-005": {
+      "titulo": "Reservar estoque durante checkout e liberar em expiração/cancelamento",
+      "prioridade": "P0",
+      "estado": "parcial",
+      "lote": "L4 estoque/compras",
+      "bloqueio_externo": null,
+      "revisado_codex": false,
+      "homologado": false
+    },
+    "ORA-INV-006": {
+      "titulo": "Bloquear venda de IMEI indisponível/transferido/reservado",
+      "prioridade": "P0",
+      "estado": "parcial",
+      "lote": "L4 estoque/compras",
+      "bloqueio_externo": null,
+      "revisado_codex": false,
+      "homologado": false
+    },
+    "ORA-INV-007": {
+      "titulo": "Transferência entre lojas com trânsito/recebimento",
+      "prioridade": "P1",
+      "estado": "testado",
+      "lote": "L4 estoque/compras",
+      "bloqueio_externo": null,
+      "revisado_codex": false,
+      "homologado": false
+    },
+    "ORA-INV-008": {
+      "titulo": "Inventário cíclico e ajuste com aprovação",
+      "prioridade": "P1",
+      "estado": "nao_iniciado",
+      "lote": "L4 estoque/compras",
+      "bloqueio_externo": null,
+      "revisado_codex": false,
+      "homologado": false
+    },
+    "ORA-INV-009": {
+      "titulo": "Compras e recebimento de fornecedores",
+      "prioridade": "P1",
+      "estado": "nao_iniciado",
+      "lote": "L4 estoque/compras",
+      "bloqueio_externo": null,
+      "revisado_codex": false,
+      "homologado": false
+    },
+    "ORA-INV-010": {
+      "titulo": "Histórico de reparo/devolução e condição de unidade",
+      "prioridade": "P1",
+      "estado": "nao_iniciado",
+      "lote": "L4 estoque/compras",
+      "bloqueio_externo": null,
+      "revisado_codex": false,
+      "homologado": false
+    },
+    "ORA-INV-011": {
+      "titulo": "Controle de ICCID de chip físico quando exigido",
+      "prioridade": "P1",
+      "estado": "parcial",
+      "lote": "L4 estoque/compras",
+      "bloqueio_externo": null,
+      "revisado_codex": false,
+      "homologado": false
+    },
+    "ORA-INV-012": {
+      "titulo": "Transferência para CD e alocação futura a canais nacionais",
+      "prioridade": "P2",
+      "estado": "nao_iniciado",
+      "lote": "L4 estoque/compras",
+      "bloqueio_externo": null,
+      "revisado_codex": false,
+      "homologado": false
+    },
+    "ORA-CRM-001": {
+      "titulo": "Cadastro de cliente com dados mínimos e finalidade",
+      "prioridade": "P0",
+      "estado": "nao_iniciado",
+      "lote": "L5 cliente compartilhado",
+      "bloqueio_externo": null,
+      "revisado_codex": false,
+      "homologado": false
+    },
+    "ORA-CRM-002": {
+      "titulo": "Relacionar cliente às compras/IMEIs/chips/linhas e atendimentos",
+      "prioridade": "P0",
+      "estado": "nao_iniciado",
+      "lote": "L5 cliente compartilhado",
+      "bloqueio_externo": null,
+      "revisado_codex": false,
+      "homologado": false
+    },
+    "ORA-CRM-003": {
+      "titulo": "Pesquisar cliente por identificadores protegidos",
+      "prioridade": "P0",
+      "estado": "nao_iniciado",
+      "lote": "L5 cliente compartilhado",
+      "bloqueio_externo": null,
+      "revisado_codex": false,
+      "homologado": false
+    },
+    "ORA-CRM-004": {
+      "titulo": "Registrar lead, origem, atendente, vendedor responsável e etapa",
+      "prioridade": "P0",
+      "estado": "nao_iniciado",
+      "lote": "L5 cliente compartilhado",
+      "bloqueio_externo": null,
+      "revisado_codex": false,
+      "homologado": false
+    },
+    "ORA-CRM-005": {
+      "titulo": "Atividades, lembretes, follow-up e motivos de perda",
+      "prioridade": "P1",
+      "estado": "nao_iniciado",
+      "lote": "L5 cliente compartilhado",
+      "bloqueio_externo": null,
+      "revisado_codex": false,
+      "homologado": false
+    },
+    "ORA-CRM-006": {
+      "titulo": "Detecção e mesclagem controlada de cadastros duplicados",
+      "prioridade": "P1",
+      "estado": "nao_iniciado",
+      "lote": "L5 cliente compartilhado",
+      "bloqueio_externo": null,
+      "revisado_codex": false,
+      "homologado": false
+    },
+    "ORA-CRM-007": {
+      "titulo": "Registros de consentimento/preferência de comunicação",
+      "prioridade": "P1",
+      "estado": "nao_iniciado",
+      "lote": "L5 cliente compartilhado",
+      "bloqueio_externo": null,
+      "revisado_codex": false,
+      "homologado": false
+    },
+    "ORA-CRM-008": {
+      "titulo": "Contratos/anexos de venda, garantia, financiamento e telecom",
+      "prioridade": "P1",
+      "estado": "nao_iniciado",
+      "lote": "L5 cliente compartilhado",
+      "bloqueio_externo": null,
+      "revisado_codex": false,
+      "homologado": false
+    },
+    "ORA-CRM-009": {
+      "titulo": "Histórico omnichannel de compras físicas/online",
+      "prioridade": "P1",
+      "estado": "nao_iniciado",
+      "lote": "L5 cliente compartilhado",
+      "bloqueio_externo": null,
+      "revisado_codex": false,
+      "homologado": false
+    },
+    "ORA-CRM-010": {
+      "titulo": "Segmentação comercial e valor de vida do cliente",
+      "prioridade": "P2",
+      "estado": "nao_iniciado",
+      "lote": "L5 cliente compartilhado",
+      "bloqueio_externo": null,
+      "revisado_codex": false,
+      "homologado": false
+    },
+    "ORA-POS-001": {
+      "titulo": "Efetuar venda completa em celular sem notebook",
+      "prioridade": "P0",
+      "estado": "parcial",
+      "lote": "L6 PDV",
+      "bloqueio_externo": null,
+      "revisado_codex": false,
+      "homologado": false
+    },
+    "ORA-POS-002": {
+      "titulo": "Busca rápida por nome/SKU/IMEI e carrinho responsivo",
+      "prioridade": "P0",
+      "estado": "parcial",
+      "lote": "L6 PDV",
+      "bloqueio_externo": null,
+      "revisado_codex": false,
+      "homologado": false
+    },
+    "ORA-POS-003": {
+      "titulo": "Itens mistos em venda: aparelho, acessório, chip, ativação, recarga",
+      "prioridade": "P0",
+      "estado": "parcial",
+      "lote": "L6 PDV",
+      "bloqueio_externo": null,
+      "revisado_codex": false,
+      "homologado": false
+    },
+    "ORA-POS-004": {
+      "titulo": "Selecionar IMEI físico disponível antes de concluir",
+      "prioridade": "P0",
+      "estado": "testado",
+      "lote": "L6 PDV",
+      "bloqueio_externo": null,
+      "revisado_codex": false,
+      "homologado": false
+    },
+    "ORA-POS-005": {
+      "titulo": "Calcular preço/desconto e totais server-side",
+      "prioridade": "P0",
+      "estado": "testado",
+      "lote": "L6 PDV",
+      "bloqueio_externo": null,
+      "revisado_codex": false,
+      "homologado": false
+    },
+    "ORA-POS-006": {
+      "titulo": "Solicitar aprovação do gerente para desconto acima do limite",
+      "prioridade": "P0",
+      "estado": "testado",
+      "lote": "L6 PDV",
+      "bloqueio_externo": null,
+      "revisado_codex": false,
+      "homologado": false
+    },
+    "ORA-POS-007": {
+      "titulo": "Suportar múltiplos pagamentos na mesma venda",
+      "prioridade": "P0",
+      "estado": "testado",
+      "lote": "L6 PDV",
+      "bloqueio_externo": null,
+      "revisado_codex": false,
+      "homologado": false
+    },
+    "ORA-POS-008": {
+      "titulo": "Vincular venda a vendedor, loja, cliente quando aplicável e canal",
+      "prioridade": "P0",
+      "estado": "parcial",
+      "lote": "L6 PDV",
+      "bloqueio_externo": null,
+      "revisado_codex": false,
+      "homologado": false
+    },
+    "ORA-POS-009": {
+      "titulo": "Consultar status e comprovantes sem concluir pagamento pendente",
+      "prioridade": "P0",
+      "estado": "parcial",
+      "lote": "L6 PDV",
+      "bloqueio_externo": null,
+      "revisado_codex": false,
+      "homologado": false
+    },
+    "ORA-POS-010": {
+      "titulo": "Cancelar e devolver sem apagar origem",
+      "prioridade": "P0",
+      "estado": "parcial",
+      "lote": "L6 PDV",
+      "bloqueio_externo": null,
+      "revisado_codex": false,
+      "homologado": false
+    },
+    "ORA-POS-011": {
+      "titulo": "Gerar solicitação fiscal a partir da venda em poucos toques",
+      "prioridade": "P0",
+      "estado": "nao_iniciado",
+      "lote": "L6 PDV",
+      "bloqueio_externo": null,
+      "revisado_codex": false,
+      "homologado": false
+    },
+    "ORA-POS-012": {
+      "titulo": "Troca com diferença de preço e meios de pagamento",
+      "prioridade": "P1",
+      "estado": "testado",
+      "lote": "L6 PDV",
+      "bloqueio_externo": null,
+      "revisado_codex": false,
+      "homologado": false
+    },
+    "ORA-POS-013": {
+      "titulo": "Venda parcelada/PayJoy/boleto por fluxo homologado",
+      "prioridade": "P1",
+      "estado": "parcial",
+      "lote": "L6 PDV",
+      "bloqueio_externo": null,
+      "revisado_codex": false,
+      "homologado": false
+    },
+    "ORA-POS-014": {
+      "titulo": "Aplicar campanhas, combos e regras por loja",
+      "prioridade": "P1",
+      "estado": "nao_iniciado",
+      "lote": "L6 PDV",
+      "bloqueio_externo": null,
+      "revisado_codex": false,
+      "homologado": false
+    },
+    "ORA-POS-015": {
+      "titulo": "Atalhos para supervisor e estados offline/sem rede",
+      "prioridade": "P1",
+      "estado": "nao_iniciado",
+      "lote": "L6 PDV",
+      "bloqueio_externo": null,
+      "revisado_codex": false,
+      "homologado": false
+    },
+    "ORA-POS-016": {
+      "titulo": "Entrada por leitor USB/Bluetooth ou câmera",
+      "prioridade": "P2",
+      "estado": "nao_iniciado",
+      "lote": "L6 PDV",
+      "bloqueio_externo": null,
+      "revisado_codex": false,
+      "homologado": false
+    },
+    "ORA-PAY-001": {
+      "titulo": "Registrar dinheiro, Pix direto, Pix PicPay POS e cartões",
+      "prioridade": "P0",
+      "estado": "parcial",
+      "lote": "L7 pagamentos/caixa",
+      "bloqueio_externo": null,
+      "revisado_codex": false,
+      "homologado": false
+    },
+    "ORA-PAY-002": {
+      "titulo": "Suportar financiamento, boleto, parcelamento e pagamentos online",
+      "prioridade": "P0",
+      "estado": "parcial",
+      "lote": "L7 pagamentos/caixa",
+      "bloqueio_externo": null,
+      "revisado_codex": false,
+      "homologado": false
+    },
+    "ORA-PAY-003": {
+      "titulo": "Diferenciar autorizado, pago, liquidado, estornado e conciliado",
+      "prioridade": "P0",
+      "estado": "demonstracao",
+      "lote": "L7 pagamentos/caixa",
+      "bloqueio_externo": null,
+      "revisado_codex": false,
+      "homologado": false
+    },
+    "ORA-PAY-004": {
+      "titulo": "Abrir caixa com saldo inicial e responsável",
+      "prioridade": "P0",
+      "estado": "testado",
+      "lote": "L7 pagamentos/caixa",
+      "bloqueio_externo": null,
+      "revisado_codex": false,
+      "homologado": false
+    },
+    "ORA-PAY-005": {
+      "titulo": "Registrar sangria, suprimento, reforço, devolução e saída autorizada",
+      "prioridade": "P0",
+      "estado": "parcial",
+      "lote": "L7 pagamentos/caixa",
+      "bloqueio_externo": null,
+      "revisado_codex": false,
+      "homologado": false
+    },
+    "ORA-PAY-006": {
+      "titulo": "Fechar caixa com valor contado e diferença",
+      "prioridade": "P0",
+      "estado": "testado",
+      "lote": "L7 pagamentos/caixa",
+      "bloqueio_externo": null,
+      "revisado_codex": false,
+      "homologado": false
+    },
+    "ORA-PAY-007": {
+      "titulo": "Conciliação manual PicPay POS usando referência/comprovante",
+      "prioridade": "P0",
+      "estado": "parcial",
+      "lote": "L7 pagamentos/caixa",
+      "bloqueio_externo": null,
+      "revisado_codex": false,
+      "homologado": false
+    },
+    "ORA-PAY-008": {
+      "titulo": "Evitar confirmação duplicada via webhook/retry",
+      "prioridade": "P0",
+      "estado": "parcial",
+      "lote": "L7 pagamentos/caixa",
+      "bloqueio_externo": null,
+      "revisado_codex": false,
+      "homologado": false
+    },
+    "ORA-PAY-009": {
+      "titulo": "Importar extratos de adquirente/banco por arquivo validado",
+      "prioridade": "P1",
+      "estado": "nao_iniciado",
+      "lote": "L7 pagamentos/caixa",
+      "bloqueio_externo": "E3 (extratos)",
+      "revisado_codex": false,
+      "homologado": false
+    },
+    "ORA-PAY-010": {
+      "titulo": "Reconciliar taxas, parcelas e datas de repasse",
+      "prioridade": "P1",
+      "estado": "nao_iniciado",
+      "lote": "L7 pagamentos/caixa",
+      "bloqueio_externo": "E3 + E2 (taxas/repasses)",
+      "revisado_codex": false,
+      "homologado": false
+    },
+    "ORA-PAY-011": {
+      "titulo": "Gerir chargebacks, estornos, antecipação e ajustes",
+      "prioridade": "P1",
+      "estado": "nao_iniciado",
+      "lote": "L7 pagamentos/caixa",
+      "bloqueio_externo": null,
+      "revisado_codex": false,
+      "homologado": false
+    },
+    "ORA-PAY-012": {
+      "titulo": "Permitir múltiplas maquininhas/provedores por loja",
+      "prioridade": "P1",
+      "estado": "nao_iniciado",
+      "lote": "L7 pagamentos/caixa",
+      "bloqueio_externo": null,
+      "revisado_codex": false,
+      "homologado": false
+    },
+    "ORA-PAY-013": {
+      "titulo": "Integração automática com PicPay POS se API contratual confirmada",
+      "prioridade": "P2",
+      "estado": "nao_iniciado",
+      "lote": "L7 pagamentos/caixa",
+      "bloqueio_externo": "API PicPay POS não verificada",
+      "revisado_codex": false,
+      "homologado": false
+    },
+    "ORA-PAY-014": {
+      "titulo": "Pix/checkout web e links por provedores validados",
+      "prioridade": "P2",
+      "estado": "nao_iniciado",
+      "lote": "L7 pagamentos/caixa",
+      "bloqueio_externo": "E1 (link/checkout)",
+      "revisado_codex": false,
+      "homologado": false
+    },
+    "ORA-FIN-001": {
+      "titulo": "Resumo diário de vendas x recebimentos x produção comercial",
+      "prioridade": "P0",
+      "estado": "parcial",
+      "lote": "L8 financeiro",
+      "bloqueio_externo": null,
+      "revisado_codex": false,
+      "homologado": false
+    },
+    "ORA-FIN-002": {
+      "titulo": "DRE/margem gerencial com custo, taxa e desconto",
+      "prioridade": "P0",
+      "estado": "nao_iniciado",
+      "lote": "L8 financeiro",
+      "bloqueio_externo": null,
+      "revisado_codex": false,
+      "homologado": false
+    },
+    "ORA-FIN-003": {
+      "titulo": "Contas a receber ligadas a venda, vencimento e meio",
+      "prioridade": "P0",
+      "estado": "parcial",
+      "lote": "L8 financeiro",
+      "bloqueio_externo": null,
+      "revisado_codex": false,
+      "homologado": false
+    },
+    "ORA-FIN-004": {
+      "titulo": "Contas a pagar ligadas a fornecedor/origem",
+      "prioridade": "P0",
+      "estado": "nao_iniciado",
+      "lote": "L8 financeiro",
+      "bloqueio_externo": null,
+      "revisado_codex": false,
+      "homologado": false
+    },
+    "ORA-FIN-005": {
+      "titulo": "Rastrear recebíveis e repasses por loja/adquirente",
+      "prioridade": "P0",
+      "estado": "nao_iniciado",
+      "lote": "L8 financeiro",
+      "bloqueio_externo": null,
+      "revisado_codex": false,
+      "homologado": false
+    },
+    "ORA-FIN-006": {
+      "titulo": "Conciliação bancária e contas multiempresa",
+      "prioridade": "P1",
+      "estado": "nao_iniciado",
+      "lote": "L8 financeiro",
+      "bloqueio_externo": "E3 (extratos bancários)",
+      "revisado_codex": false,
+      "homologado": false
+    },
+    "ORA-FIN-007": {
+      "titulo": "Gestão de inadimplência e cobranças autorizadas",
+      "prioridade": "P1",
+      "estado": "nao_iniciado",
+      "lote": "L8 financeiro",
+      "bloqueio_externo": null,
+      "revisado_codex": false,
+      "homologado": false
+    },
+    "ORA-FIN-008": {
+      "titulo": "Relatório financeiro consolidado por loja/região/rede",
+      "prioridade": "P1",
+      "estado": "parcial",
+      "lote": "L8 financeiro",
+      "bloqueio_externo": null,
+      "revisado_codex": false,
+      "homologado": false
+    },
+    "ORA-FIN-009": {
+      "titulo": "Exportações CSV/XLSX/PDF de relatórios autorizados",
+      "prioridade": "P1",
+      "estado": "parcial",
+      "lote": "L8 financeiro",
+      "bloqueio_externo": null,
+      "revisado_codex": false,
+      "homologado": false
+    },
+    "ORA-FIN-010": {
+      "titulo": "Previsão de fluxo de caixa e simulações",
+      "prioridade": "P2",
+      "estado": "nao_iniciado",
+      "lote": "L8 financeiro",
+      "bloqueio_externo": null,
+      "revisado_codex": false,
+      "homologado": false
+    },
+    "ORA-PERF-001": {
+      "titulo": "Contar individualmente aparelhos, acessórios, chips, ativações e recargas",
+      "prioridade": "P0",
+      "estado": "parcial",
+      "lote": "L9 metas/comissões",
+      "bloqueio_externo": null,
+      "revisado_codex": false,
+      "homologado": false
+    },
+    "ORA-PERF-002": {
+      "titulo": "Registrar performance_event único por origem/ação confirmada",
+      "prioridade": "P0",
+      "estado": "nao_iniciado",
+      "lote": "L9 metas/comissões",
+      "bloqueio_externo": null,
+      "revisado_codex": false,
+      "homologado": false
+    },
+    "ORA-PERF-003": {
+      "titulo": "Distinguir quantidade, valor bruto, margem, receita elegível e comissão",
+      "prioridade": "P0",
+      "estado": "nao_iniciado",
+      "lote": "L9 metas/comissões",
+      "bloqueio_externo": null,
+      "revisado_codex": false,
+      "homologado": false
+    },
+    "ORA-PERF-004": {
+      "titulo": "Definir meta por vendedor, loja, categoria e período",
+      "prioridade": "P0",
+      "estado": "nao_iniciado",
+      "lote": "L9 metas/comissões",
+      "bloqueio_externo": null,
+      "revisado_codex": false,
+      "homologado": false
+    },
+    "ORA-PERF-005": {
+      "titulo": "Painel do gestor mostra metas e resultados da equipe",
+      "prioridade": "P0",
+      "estado": "demonstracao",
+      "lote": "L9 metas/comissões",
+      "bloqueio_externo": null,
+      "revisado_codex": false,
+      "homologado": false
+    },
+    "ORA-PERF-006": {
+      "titulo": "Regras de bonificação por categoria/campanha/margem/escala",
+      "prioridade": "P1",
+      "estado": "nao_iniciado",
+      "lote": "L9 metas/comissões",
+      "bloqueio_externo": null,
+      "revisado_codex": false,
+      "homologado": false
+    },
+    "ORA-PERF-007": {
+      "titulo": "Ajustar comissão por cancelamento/devolução conforme regra",
+      "prioridade": "P1",
+      "estado": "nao_iniciado",
+      "lote": "L9 metas/comissões",
+      "bloqueio_externo": null,
+      "revisado_codex": false,
+      "homologado": false
+    },
+    "ORA-PERF-008": {
+      "titulo": "Apurar e aprovar fechamento de bonificação",
+      "prioridade": "P1",
+      "estado": "nao_iniciado",
+      "lote": "L9 metas/comissões",
+      "bloqueio_externo": null,
+      "revisado_codex": false,
+      "homologado": false
+    },
+    "ORA-PERF-009": {
+      "titulo": "Metas coletivas/regional e rankings configuráveis",
+      "prioridade": "P1",
+      "estado": "nao_iniciado",
+      "lote": "L9 metas/comissões",
+      "bloqueio_externo": null,
+      "revisado_codex": false,
+      "homologado": false
+    },
+    "ORA-PERF-010": {
+      "titulo": "IA recomenda campanhas/metas com aprovação humana",
+      "prioridade": "P2",
+      "estado": "nao_iniciado",
+      "lote": "L9 metas/comissões",
+      "bloqueio_externo": null,
+      "revisado_codex": false,
+      "homologado": false
+    },
+    "ORA-FISC-001": {
+      "titulo": "Solicitar nota diretamente da venda no celular",
+      "prioridade": "P0",
+      "estado": "testado",
+      "lote": "L10 fiscal",
+      "bloqueio_externo": null,
+      "revisado_codex": false,
+      "homologado": false
+    },
+    "ORA-FISC-002": {
+      "titulo": "Fluxo interno de aprovação de solicitações pelo gestor conforme política",
+      "prioridade": "P0",
+      "estado": "testado",
+      "lote": "L10 fiscal",
+      "bloqueio_externo": null,
+      "revisado_codex": false,
+      "homologado": false
+    },
+    "ORA-FISC-003": {
+      "titulo": "Identificar perfil fiscal por produto/serviço/UF/CNPJ",
+      "prioridade": "P0",
+      "estado": "bloqueado",
+      "lote": "L10 fiscal",
+      "bloqueio_externo": "D1 (contador)",
+      "revisado_codex": false,
+      "homologado": false
+    },
+    "ORA-FISC-004": {
+      "titulo": "Integrar provedor fiscal homologado para documento correto",
+      "prioridade": "P0",
+      "estado": "bloqueado",
+      "lote": "L10 fiscal",
+      "bloqueio_externo": "D1 (emissor fiscal)",
+      "revisado_codex": false,
+      "homologado": false
+    },
+    "ORA-FISC-005": {
+      "titulo": "Guardar chave, protocolo, referência e evidências legais com segurança",
+      "prioridade": "P0",
+      "estado": "parcial",
+      "lote": "L10 fiscal",
+      "bloqueio_externo": null,
+      "revisado_codex": false,
+      "homologado": false
+    },
+    "ORA-FISC-006": {
+      "titulo": "Tratar falha fiscal, reprocesso, contingência e cancelamento",
+      "prioridade": "P0",
+      "estado": "parcial",
+      "lote": "L10 fiscal",
+      "bloqueio_externo": null,
+      "revisado_codex": false,
+      "homologado": false
+    },
+    "ORA-FISC-007": {
+      "titulo": "Mapear cenários NF-e/NFC-e/NFS-e/NFCom conforme natureza",
+      "prioridade": "P1",
+      "estado": "nao_iniciado",
+      "lote": "L10 fiscal",
+      "bloqueio_externo": "D1 (matriz validada pelo contador)",
+      "revisado_codex": false,
+      "homologado": false
+    },
+    "ORA-FISC-008": {
+      "titulo": "Conciliação fiscal de vendas, tributos e documentos",
+      "prioridade": "P1",
+      "estado": "nao_iniciado",
+      "lote": "L10 fiscal",
+      "bloqueio_externo": null,
+      "revisado_codex": false,
+      "homologado": false
+    },
+    "ORA-FISC-009": {
+      "titulo": "Devolução, troca, cancelamento e correção fiscal",
+      "prioridade": "P1",
+      "estado": "nao_iniciado",
+      "lote": "L10 fiscal",
+      "bloqueio_externo": null,
+      "revisado_codex": false,
+      "homologado": false
+    },
+    "ORA-FISC-010": {
+      "titulo": "Multi-UF/multi-CNPJ e reforma tributária preparada",
+      "prioridade": "P2",
+      "estado": "nao_iniciado",
+      "lote": "L10 fiscal",
+      "bloqueio_externo": null,
+      "revisado_codex": false,
+      "homologado": false
+    },
+    "ORA-CONNECT-001": {
+      "titulo": "Cadastrar e vender chip físico ligado ao estoque e vendedor",
+      "prioridade": "P0",
+      "estado": "testado",
+      "lote": "L11 Ora Connect",
+      "bloqueio_externo": null,
+      "revisado_codex": false,
+      "homologado": false
+    },
+    "ORA-CONNECT-002": {
+      "titulo": "Separar evento de venda de chip do evento de ativação",
+      "prioridade": "P0",
+      "estado": "testado",
+      "lote": "L11 Ora Connect",
+      "bloqueio_externo": null,
+      "revisado_codex": false,
+      "homologado": false
+    },
+    "ORA-CONNECT-003": {
+      "titulo": "Separar recarga como operação telecom com status próprio",
+      "prioridade": "P0",
+      "estado": "parcial",
+      "lote": "L11 Ora Connect",
+      "bloqueio_externo": null,
+      "revisado_codex": false,
+      "homologado": false
+    },
+    "ORA-CONNECT-004": {
+      "titulo": "Registrar Nogle como integração externa por adapter",
+      "prioridade": "P0",
+      "estado": "testado",
+      "lote": "L11 Ora Connect",
+      "bloqueio_externo": null,
+      "revisado_codex": false,
+      "homologado": false
+    },
+    "ORA-CONNECT-005": {
+      "titulo": "Refletir ativação somente após resposta verificada da Nogle",
+      "prioridade": "P0",
+      "estado": "testado",
+      "lote": "L11 Ora Connect",
+      "bloqueio_externo": null,
+      "revisado_codex": false,
+      "homologado": false
+    },
+    "ORA-CONNECT-006": {
+      "titulo": "Atribuir performance de ativação/recarga ao vendedor de origem",
+      "prioridade": "P0",
+      "estado": "testado",
+      "lote": "L11 Ora Connect",
+      "bloqueio_externo": null,
+      "revisado_codex": false,
+      "homologado": false
+    },
+    "ORA-CONNECT-007": {
+      "titulo": "Consulta/atualização de linha e plano conforme API disponível",
+      "prioridade": "P1",
+      "estado": "parcial",
+      "lote": "L11 Ora Connect",
+      "bloqueio_externo": "C1/C2 (Nogle)",
+      "revisado_codex": false,
+      "homologado": false
+    },
+    "ORA-CONNECT-008": {
+      "titulo": "Portabilidade, contrato e venda de plano conforme contrato",
+      "prioridade": "P1",
+      "estado": "parcial",
+      "lote": "L11 Ora Connect",
+      "bloqueio_externo": "C1/C2 (Nogle)",
+      "revisado_codex": false,
+      "homologado": false
+    },
+    "ORA-CONNECT-009": {
+      "titulo": "Reconciliar repasses/bonificações Nogle e operação local",
+      "prioridade": "P1",
+      "estado": "nao_iniciado",
+      "lote": "L11 Ora Connect",
+      "bloqueio_externo": "C2 (repasses Nogle)",
+      "revisado_codex": false,
+      "homologado": false
+    },
+    "ORA-CONNECT-010": {
+      "titulo": "Recuperar falha de rede com reconsulta sem reativação duplicada",
+      "prioridade": "P1",
+      "estado": "testado",
+      "lote": "L11 Ora Connect",
+      "bloqueio_externo": null,
+      "revisado_codex": false,
+      "homologado": false
+    },
+    "ORA-CONNECT-011": {
+      "titulo": "eSIM, contratação digital e entrega de chip nacional",
+      "prioridade": "P2",
+      "estado": "parcial",
+      "lote": "L11 Ora Connect",
+      "bloqueio_externo": "C1/C2 (eSIM, se a Nogle suportar)",
+      "revisado_codex": false,
+      "homologado": false
+    },
+    "ORA-ONLINE-001": {
+      "titulo": "Site de aparelhos, acessórios e planos Ora Connect",
+      "prioridade": "P1",
+      "estado": "nao_iniciado",
+      "lote": "L13 loja online",
+      "bloqueio_externo": null,
+      "revisado_codex": false,
+      "homologado": false
+    },
+    "ORA-ONLINE-002": {
+      "titulo": "Carrinho/checkout online e pedido com status",
+      "prioridade": "P1",
+      "estado": "nao_iniciado",
+      "lote": "L13 loja online",
+      "bloqueio_externo": null,
+      "revisado_codex": false,
+      "homologado": false
+    },
+    "ORA-ONLINE-003": {
+      "titulo": "Atribuir origem online, campanhas e vendedor quando aplicável",
+      "prioridade": "P1",
+      "estado": "nao_iniciado",
+      "lote": "L13 loja online",
+      "bloqueio_externo": null,
+      "revisado_codex": false,
+      "homologado": false
+    },
+    "ORA-ONLINE-004": {
+      "titulo": "Frete, CEP, retirada em loja e entrega com rastreio",
+      "prioridade": "P1",
+      "estado": "nao_iniciado",
+      "lote": "L13 loja online",
+      "bloqueio_externo": null,
+      "revisado_codex": false,
+      "homologado": false
+    },
+    "ORA-ONLINE-005": {
+      "titulo": "Devolução, arrependimento e reembolso de venda online",
+      "prioridade": "P1",
+      "estado": "nao_iniciado",
+      "lote": "L13 loja online",
+      "bloqueio_externo": null,
+      "revisado_codex": false,
+      "homologado": false
+    },
+    "ORA-ONLINE-006": {
+      "titulo": "Reserva de IMEI por pedido/canal anti-overselling",
+      "prioridade": "P1",
+      "estado": "nao_iniciado",
+      "lote": "L13 loja online",
+      "bloqueio_externo": null,
+      "revisado_codex": false,
+      "homologado": false
+    },
+    "ORA-ONLINE-007": {
+      "titulo": "Contratação online de planos/chips/eSIM se habilitado",
+      "prioridade": "P2",
+      "estado": "nao_iniciado",
+      "lote": "L13 loja online",
+      "bloqueio_externo": null,
+      "revisado_codex": false,
+      "homologado": false
+    },
+    "ORA-ONLINE-008": {
+      "titulo": "Expansão interestadual com parâmetros fiscais e logísticos",
+      "prioridade": "P2",
+      "estado": "nao_iniciado",
+      "lote": "L13 loja online",
+      "bloqueio_externo": null,
+      "revisado_codex": false,
+      "homologado": false
+    },
+    "ORA-MKTPL-001": {
+      "titulo": "Preparar adaptadores separados Mercado Livre/Shopee/TikTok Shop",
+      "prioridade": "P1",
+      "estado": "nao_iniciado",
+      "lote": "L14 marketplaces",
+      "bloqueio_externo": "contas e contratos dos marketplaces",
+      "revisado_codex": false,
+      "homologado": false
+    },
+    "ORA-MKTPL-002": {
+      "titulo": "Sincronizar SKU/preço/estoque/anúncio conforme recursos",
+      "prioridade": "P1",
+      "estado": "nao_iniciado",
+      "lote": "L14 marketplaces",
+      "bloqueio_externo": null,
+      "revisado_codex": false,
+      "homologado": false
+    },
+    "ORA-MKTPL-003": {
+      "titulo": "Importar pedido marketplace com ID externo e dedupe",
+      "prioridade": "P1",
+      "estado": "nao_iniciado",
+      "lote": "L14 marketplaces",
+      "bloqueio_externo": null,
+      "revisado_codex": false,
+      "homologado": false
+    },
+    "ORA-MKTPL-004": {
+      "titulo": "Tratar entrega/frete/etiquetas/rastreio por canal",
+      "prioridade": "P1",
+      "estado": "nao_iniciado",
+      "lote": "L14 marketplaces",
+      "bloqueio_externo": null,
+      "revisado_codex": false,
+      "homologado": false
+    },
+    "ORA-MKTPL-005": {
+      "titulo": "Conciliação de tarifas, comissões e repasses por marketplace",
+      "prioridade": "P1",
+      "estado": "nao_iniciado",
+      "lote": "L14 marketplaces",
+      "bloqueio_externo": null,
+      "revisado_codex": false,
+      "homologado": false
+    },
+    "ORA-MKTPL-006": {
+      "titulo": "Cancelamentos, devoluções e reembolsos por canal",
+      "prioridade": "P1",
+      "estado": "nao_iniciado",
+      "lote": "L14 marketplaces",
+      "bloqueio_externo": null,
+      "revisado_codex": false,
+      "homologado": false
+    },
+    "ORA-MKTPL-007": {
+      "titulo": "Sincronização near-real-time por webhooks/adapters",
+      "prioridade": "P2",
+      "estado": "nao_iniciado",
+      "lote": "L14 marketplaces",
+      "bloqueio_externo": null,
+      "revisado_codex": false,
+      "homologado": false
+    },
+    "ORA-MKTPL-008": {
+      "titulo": "Métricas por anúncio/canal/produto e margem",
+      "prioridade": "P2",
+      "estado": "nao_iniciado",
+      "lote": "L14 marketplaces",
+      "bloqueio_externo": null,
+      "revisado_codex": false,
+      "homologado": false
+    },
+    "ORA-WHATS-001": {
+      "titulo": "WhatsApp Business Platform oficial conectado ao CRM",
+      "prioridade": "P1",
+      "estado": "nao_iniciado",
+      "lote": "L15 WhatsApp",
+      "bloqueio_externo": "F1 (WhatsApp oficial)",
+      "revisado_codex": false,
+      "homologado": false
+    },
+    "ORA-WHATS-002": {
+      "titulo": "Caixa de entrada multiatendente com atribuição à loja/vendedor",
+      "prioridade": "P1",
+      "estado": "nao_iniciado",
+      "lote": "L15 WhatsApp",
+      "bloqueio_externo": null,
+      "revisado_codex": false,
+      "homologado": false
+    },
+    "ORA-WHATS-003": {
+      "titulo": "Leads orgânicos e pagos identificados por origem consentida",
+      "prioridade": "P1",
+      "estado": "nao_iniciado",
+      "lote": "L15 WhatsApp",
+      "bloqueio_externo": null,
+      "revisado_codex": false,
+      "homologado": false
+    },
+    "ORA-WHATS-004": {
+      "titulo": "Histórico 360 de conversas/negócios por cliente",
+      "prioridade": "P1",
+      "estado": "nao_iniciado",
+      "lote": "L15 WhatsApp",
+      "bloqueio_externo": null,
+      "revisado_codex": false,
+      "homologado": false
+    },
+    "ORA-WHATS-005": {
+      "titulo": "Respostas rápidas, etiquetas, SLA e repasse para humano",
+      "prioridade": "P1",
+      "estado": "nao_iniciado",
+      "lote": "L15 WhatsApp",
+      "bloqueio_externo": null,
+      "revisado_codex": false,
+      "homologado": false
+    },
+    "ORA-WHATS-006": {
+      "titulo": "Templates e mensagens proativas em conformidade Meta",
+      "prioridade": "P1",
+      "estado": "nao_iniciado",
+      "lote": "L15 WhatsApp",
+      "bloqueio_externo": "F1",
+      "revisado_codex": false,
+      "homologado": false
+    },
+    "ORA-WHATS-007": {
+      "titulo": "IA supervisionada para qualificação e sugestão de respostas",
+      "prioridade": "P2",
+      "estado": "nao_iniciado",
+      "lote": "L15 WhatsApp",
+      "bloqueio_externo": null,
+      "revisado_codex": false,
+      "homologado": false
+    },
+    "ORA-WHATS-008": {
+      "titulo": "Recuperação de carrinho e pós-venda sob consentimento",
+      "prioridade": "P2",
+      "estado": "nao_iniciado",
+      "lote": "L15 WhatsApp",
+      "bloqueio_externo": null,
+      "revisado_codex": false,
+      "homologado": false
+    },
+    "ORA-META-001": {
+      "titulo": "Importar insights autorizados de Meta Ads por conta/campanha",
+      "prioridade": "P1",
+      "estado": "nao_iniciado",
+      "lote": "L16 Meta Ads",
+      "bloqueio_externo": "conta Meta Ads (OAuth)",
+      "revisado_codex": false,
+      "homologado": false
+    },
+    "ORA-META-002": {
+      "titulo": "Capturar UTM e origem de leads de site/WhatsApp",
+      "prioridade": "P1",
+      "estado": "nao_iniciado",
+      "lote": "L16 Meta Ads",
+      "bloqueio_externo": null,
+      "revisado_codex": false,
+      "homologado": false
+    },
+    "ORA-META-003": {
+      "titulo": "Mostrar gasto, CTR, CPC, CPL, CPA e ROAS quando calculáveis",
+      "prioridade": "P1",
+      "estado": "nao_iniciado",
+      "lote": "L16 Meta Ads",
+      "bloqueio_externo": null,
+      "revisado_codex": false,
+      "homologado": false
+    },
+    "ORA-META-004": {
+      "titulo": "Funil por vendedor/loja/campanha e atribuição",
+      "prioridade": "P1",
+      "estado": "nao_iniciado",
+      "lote": "L16 Meta Ads",
+      "bloqueio_externo": null,
+      "revisado_codex": false,
+      "homologado": false
+    },
+    "ORA-META-005": {
+      "titulo": "Conversions API/eventos com consentimento e dedupe",
+      "prioridade": "P2",
+      "estado": "nao_iniciado",
+      "lote": "L16 Meta Ads",
+      "bloqueio_externo": "Meta CAPI + consentimento",
+      "revisado_codex": false,
+      "homologado": false
+    },
+    "ORA-META-006": {
+      "titulo": "Analisar margem e CAC por campanha",
+      "prioridade": "P2",
+      "estado": "nao_iniciado",
+      "lote": "L16 Meta Ads",
+      "bloqueio_externo": null,
+      "revisado_codex": false,
+      "homologado": false
+    },
+    "ORA-AI-001": {
+      "titulo": "Painéis básicos e alertas desde o MVP",
+      "prioridade": "P1",
+      "estado": "nao_iniciado",
+      "lote": "L17 IA assistiva",
+      "bloqueio_externo": null,
+      "revisado_codex": false,
+      "homologado": false
+    },
+    "ORA-AI-002": {
+      "titulo": "IA auxilia atendimento e qualificação de leads",
+      "prioridade": "P2",
+      "estado": "nao_iniciado",
+      "lote": "L17 IA assistiva",
+      "bloqueio_externo": null,
+      "revisado_codex": false,
+      "homologado": false
+    },
+    "ORA-AI-003": {
+      "titulo": "IA sugere produtos, respostas e roteamento de cliente",
+      "prioridade": "P2",
+      "estado": "nao_iniciado",
+      "lote": "L17 IA assistiva",
+      "bloqueio_externo": null,
+      "revisado_codex": false,
+      "homologado": false
+    },
+    "ORA-AI-004": {
+      "titulo": "IA resume campanhas, metas e falhas operacionais",
+      "prioridade": "P2",
+      "estado": "nao_iniciado",
+      "lote": "L17 IA assistiva",
+      "bloqueio_externo": null,
+      "revisado_codex": false,
+      "homologado": false
+    },
+    "ORA-AI-005": {
+      "titulo": "Autorização humana obrigatória para operações financeiras/fiscais",
+      "prioridade": "P2",
+      "estado": "nao_iniciado",
+      "lote": "L17 IA assistiva",
+      "bloqueio_externo": null,
+      "revisado_codex": false,
+      "homologado": false
+    },
+    "ORA-AI-006": {
+      "titulo": "Controle de custo por chamada de modelo e retenção",
+      "prioridade": "P2",
+      "estado": "nao_iniciado",
+      "lote": "L17 IA assistiva",
+      "bloqueio_externo": null,
+      "revisado_codex": false,
+      "homologado": false
+    },
+    "ORA-AI-007": {
+      "titulo": "Avaliação de qualidade e red-team de agentes",
+      "prioridade": "P2",
+      "estado": "nao_iniciado",
+      "lote": "L17 IA assistiva",
+      "bloqueio_externo": null,
+      "revisado_codex": false,
+      "homologado": false
+    },
+    "ORA-REPORT-001": {
+      "titulo": "Dashboard diretoria consolidado de todas as lojas (11 hoje; meta de 14)",
+      "prioridade": "P0",
+      "estado": "demonstracao",
+      "lote": "L8 financeiro/relatórios",
+      "bloqueio_externo": null,
+      "revisado_codex": false,
+      "homologado": false
+    },
+    "ORA-REPORT-002": {
+      "titulo": "Dashboard gerente de loja: caixa, metas, aprovação de desconto/NF",
+      "prioridade": "P0",
+      "estado": "parcial",
+      "lote": "L8 financeiro/relatórios",
+      "bloqueio_externo": null,
+      "revisado_codex": false,
+      "homologado": false
+    },
+    "ORA-REPORT-003": {
+      "titulo": "Dashboard vendedor mobile: produção do dia, metas e atalhos",
+      "prioridade": "P0",
+      "estado": "parcial",
+      "lote": "L8 financeiro/relatórios",
+      "bloqueio_externo": null,
+      "revisado_codex": false,
+      "homologado": false
+    },
+    "ORA-REPORT-004": {
+      "titulo": "Relatório de chips vendidos, ativações e recargas separadamente",
+      "prioridade": "P0",
+      "estado": "demonstracao",
+      "lote": "L8 financeiro/relatórios",
+      "bloqueio_externo": null,
+      "revisado_codex": false,
+      "homologado": false
+    },
+    "ORA-REPORT-005": {
+      "titulo": "Relatório por método de pagamento e terminal PicPay",
+      "prioridade": "P0",
+      "estado": "parcial",
+      "lote": "L8 financeiro/relatórios",
+      "bloqueio_externo": null,
+      "revisado_codex": false,
+      "homologado": false
+    },
+    "ORA-REPORT-006": {
+      "titulo": "Relatórios de margem, vendedor e ranking configurável",
+      "prioridade": "P1",
+      "estado": "demonstracao",
+      "lote": "L8 financeiro/relatórios",
+      "bloqueio_externo": null,
+      "revisado_codex": false,
+      "homologado": false
+    },
+    "ORA-REPORT-007": {
+      "titulo": "Alertas de estoque mínimo/IMEI/caixa divergente/fiscal pendente",
+      "prioridade": "P1",
+      "estado": "demonstracao",
+      "lote": "L8 financeiro/relatórios",
+      "bloqueio_externo": null,
+      "revisado_codex": false,
+      "homologado": false
+    },
+    "ORA-REPORT-008": {
+      "titulo": "Dashboard expansão nacional por marketplace, ads e canais",
+      "prioridade": "P2",
+      "estado": "nao_iniciado",
+      "lote": "L8 financeiro/relatórios",
+      "bloqueio_externo": null,
+      "revisado_codex": false,
+      "homologado": false
+    },
+    "ORA-QUAL-001": {
+      "titulo": "CI, lint, typecheck, testes e code review obrigatórios",
+      "prioridade": "P0",
+      "estado": "parcial",
+      "lote": "transversal",
+      "bloqueio_externo": null,
+      "revisado_codex": false,
+      "homologado": false
+    },
+    "ORA-QUAL-002": {
+      "titulo": "RLS e autorização negada por padrão, testadas por loja",
+      "prioridade": "P0",
+      "estado": "parcial",
+      "lote": "transversal",
+      "bloqueio_externo": null,
+      "revisado_codex": false,
+      "homologado": false
+    },
+    "ORA-QUAL-003": {
+      "titulo": "Auditoria imutável de operações e aprovações críticas",
+      "prioridade": "P0",
+      "estado": "parcial",
+      "lote": "transversal",
+      "bloqueio_externo": null,
+      "revisado_codex": false,
+      "homologado": false
+    },
+    "ORA-QUAL-004": {
+      "titulo": "Segredos em ambientes seguros sem exposição no Git/cliente",
+      "prioridade": "P0",
+      "estado": "parcial",
+      "lote": "transversal",
+      "bloqueio_externo": null,
+      "revisado_codex": false,
+      "homologado": false
+    },
+    "ORA-QUAL-005": {
+      "titulo": "Backups e ensaio de restauração de banco e anexos",
+      "prioridade": "P0",
+      "estado": "nao_iniciado",
+      "lote": "transversal",
+      "bloqueio_externo": null,
+      "revisado_codex": false,
+      "homologado": false
+    },
+    "ORA-QUAL-006": {
+      "titulo": "Observabilidade de erros, latência, filas e conciliação",
+      "prioridade": "P0",
+      "estado": "nao_iniciado",
+      "lote": "transversal",
+      "bloqueio_externo": null,
+      "revisado_codex": false,
+      "homologado": false
+    },
+    "ORA-QUAL-007": {
+      "titulo": "Migrations versionadas, não destrutivas, testadas",
+      "prioridade": "P0",
+      "estado": "parcial",
+      "lote": "transversal",
+      "bloqueio_externo": null,
+      "revisado_codex": false,
+      "homologado": false
+    },
+    "ORA-QUAL-008": {
+      "titulo": "Plano de contingência para internet, pagamentos e fiscal",
+      "prioridade": "P0",
+      "estado": "nao_iniciado",
+      "lote": "transversal",
+      "bloqueio_externo": null,
+      "revisado_codex": false,
+      "homologado": false
+    },
+    "ORA-QUAL-009": {
+      "titulo": "Piloto com testes de usuário, caixa e fechamento diário",
+      "prioridade": "P0",
+      "estado": "nao_iniciado",
+      "lote": "transversal",
+      "bloqueio_externo": null,
+      "revisado_codex": false,
+      "homologado": false
+    },
+    "ORA-QUAL-010": {
+      "titulo": "Performance mobile e testes em dispositivos/internet reais",
+      "prioridade": "P1",
+      "estado": "nao_iniciado",
+      "lote": "transversal",
+      "bloqueio_externo": null,
+      "revisado_codex": false,
+      "homologado": false
+    },
+    "ORA-QUAL-011": {
+      "titulo": "LGPD: bases legais, retenção, direitos do titular e minimização",
+      "prioridade": "P1",
+      "estado": "nao_iniciado",
+      "lote": "transversal",
+      "bloqueio_externo": "encarregado/jurídico (LGPD)",
+      "revisado_codex": false,
+      "homologado": false
+    },
+    "ORA-QUAL-012": {
+      "titulo": "Testes de carga, concorrência e disaster recovery",
+      "prioridade": "P1",
+      "estado": "nao_iniciado",
+      "lote": "transversal",
+      "bloqueio_externo": null,
+      "revisado_codex": false,
+      "homologado": false
+    },
+    "ORA-QUAL-013": {
+      "titulo": "Processo de resposta a incidentes e suporte às lojas",
+      "prioridade": "P1",
+      "estado": "nao_iniciado",
+      "lote": "transversal",
+      "bloqueio_externo": null,
+      "revisado_codex": false,
+      "homologado": false
+    },
+    "ORA-QUAL-014": {
+      "titulo": "Análise de segurança periódica e monitoramento de dependências",
+      "prioridade": "P2",
+      "estado": "nao_iniciado",
+      "lote": "transversal",
+      "bloqueio_externo": null,
+      "revisado_codex": false,
+      "homologado": false
+    },
+    "ORA-OS-001": {
+      "titulo": "Abrir OS obrigatória para todo aparelho de cliente que entra (até limpeza), com cliente, IMEI, defeito, estado, fotos e acessórios deixados (custódia)",
+      "prioridade": "P1",
+      "estado": "nao_iniciado",
+      "lote": "L12 assistência",
+      "bloqueio_externo": "P5 (técnico tem login? funcionário ou terceiro)",
+      "revisado_codex": false,
+      "homologado": false
+    },
+    "ORA-OS-002": {
+      "titulo": "Registrar saída para o técnico central e retorno à loja (custódia em trânsito)",
+      "prioridade": "P1",
+      "estado": "nao_iniciado",
+      "lote": "L12 assistência",
+      "bloqueio_externo": null,
+      "revisado_codex": false,
+      "homologado": false
+    },
+    "ORA-OS-003": {
+      "titulo": "Orçamento do técnico dentro da OS (diagnóstico, peças, valor), com histórico",
+      "prioridade": "P1",
+      "estado": "nao_iniciado",
+      "lote": "L12 assistência",
+      "bloqueio_externo": null,
+      "revisado_codex": false,
+      "homologado": false
+    },
+    "ORA-OS-004": {
+      "titulo": "Aprovação ou recusa do orçamento pelo cliente, registrada",
+      "prioridade": "P1",
+      "estado": "nao_iniciado",
+      "lote": "L12 assistência",
+      "bloqueio_externo": null,
+      "revisado_codex": false,
+      "homologado": false
+    },
+    "ORA-OS-005": {
+      "titulo": "Avisos ao cliente e ao técnico (comprovante, orçamento, aparelho pronto, entrega)",
+      "prioridade": "P1",
+      "estado": "nao_iniciado",
+      "lote": "L12 assistência",
+      "bloqueio_externo": null,
+      "revisado_codex": false,
+      "homologado": false
+    },
+    "ORA-OS-006": {
+      "titulo": "Entrega com cobrança pelo PDV e produção do vendedor; peças só saem do estoque ligadas a uma OS",
+      "prioridade": "P1",
+      "estado": "nao_iniciado",
+      "lote": "L12 assistência",
+      "bloqueio_externo": null,
+      "revisado_codex": false,
+      "homologado": false
+    }
+  }
+}

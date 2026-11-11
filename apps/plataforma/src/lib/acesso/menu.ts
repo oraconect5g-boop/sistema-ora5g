@@ -3,18 +3,20 @@
 // pela permissão real na loja do turno. Esconder um item é só experiência de uso: o banco confere a
 // permissão de novo em cada consulta e em cada ação (RLS e funções).
 
-/** Permissões que decidem o menu. usuarios.gerir vale para a rede (sem loja); as demais, na loja do turno. */
+/** Permissões que decidem o menu. As da rede (equipe e lojas) valem sem loja; as demais, na loja do turno. */
 export const PERMISSOES_DO_MENU = [
   "venda.registrar", "venda.ver_unidade", "venda.ver_todas", "caixa.abrir", "caixa.conferir", "estoque.consultar",
-  "connect.operar", "connect.gerir", "desconto.aprovar", "nota.aprovar", "auditoria.ver", "usuarios.gerir",
+  "connect.operar", "connect.gerir", "desconto.aprovar", "nota.aprovar", "auditoria.ver", "usuarios.gerir", "unidades.gerir",
 ] as const;
 export type PermissaoDoMenu = (typeof PERMISSOES_DO_MENU)[number];
+/** Conferidas para a rede inteira (sem loja): só papéis de organização as têm (dono e administrador). */
+export const PERMISSOES_DA_REDE: ReadonlySet<PermissaoDoMenu> = new Set(["usuarios.gerir", "unidades.gerir"]);
 
 export type PaginaReal =
   | "inicio" | "vender" | "vendas" | "caixa" | "connect"
   | "estoque" | "transferencias" | "catalogo"
   | "financeiro" | "aprovacoes" | "notas" | "auditoria"
-  | "equipe";
+  | "equipe" | "lojas";
 export type GrupoReal = "Operação" | "Estoque e catálogo" | "Gestão" | "Administração";
 export const GRUPOS_REAIS: readonly GrupoReal[] = ["Operação", "Estoque e catálogo", "Gestão", "Administração"];
 
@@ -39,12 +41,14 @@ export const PAGINAS_REAIS: Record<PaginaReal, { titulo: string; curto: string; 
   aprovacoes: { titulo: "Aprovações de desconto", curto: "Aprovações", caminho: "/aprovacoes", icone: "aprovacoes", grupo: "Gestão", liberada: (p) => p.has("desconto.aprovar") },
   notas: { titulo: "Notas fiscais", curto: "Notas", caminho: "/notas", icone: "notas", grupo: "Gestão", liberada: (p) => p.has("nota.aprovar") },
   auditoria: { titulo: "Auditoria", curto: "Auditoria", caminho: "/auditoria", icone: "auditoria", grupo: "Gestão", liberada: (p) => p.has("auditoria.ver") },
-  equipe: { titulo: "Equipe e acessos", curto: "Equipe", caminho: "/equipe", icone: "lojas", grupo: "Administração", liberada: (p) => p.has("usuarios.gerir") },
+  equipe: { titulo: "Equipe e acessos", curto: "Equipe", caminho: "/equipe", icone: "equipe", grupo: "Administração", liberada: (p) => p.has("usuarios.gerir") },
+  // Lojas da rede (L2): cadastro, situação e configuração com vigência; dono e administrador.
+  lojas: { titulo: "Lojas da rede", curto: "Lojas", caminho: "/lojas", icone: "lojas", grupo: "Administração", liberada: (p) => p.has("unidades.gerir") },
 };
 
 // Barra inferior do celular: até 4 atalhos, na ordem de uso no balcão; o resto fica em "Mais".
 const PRIORIDADE_NO_CELULAR: readonly PaginaReal[] = [
-  "inicio", "vender", "aprovacoes", "vendas", "financeiro", "estoque", "caixa", "connect", "catalogo", "notas", "equipe", "auditoria", "transferencias",
+  "inicio", "vender", "aprovacoes", "vendas", "financeiro", "estoque", "caixa", "connect", "catalogo", "notas", "equipe", "lojas", "auditoria", "transferencias",
 ];
 
 export function montarMenu(permissoes: Permissoes) {

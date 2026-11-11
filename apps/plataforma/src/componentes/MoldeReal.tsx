@@ -3,7 +3,7 @@ import Link from "next/link";
 import type { ReactNode } from "react";
 
 import { sair } from "../app/entrar/acoes";
-import { montarMenu, PAGINAS_REAIS, PERMISSOES_DO_MENU, type PaginaReal } from "../lib/acesso/menu";
+import { montarMenu, PAGINAS_REAIS, PERMISSOES_DA_REDE, PERMISSOES_DO_MENU, type PaginaReal } from "../lib/acesso/menu";
 import { horaDoFimDoTurno, PAPEIS, type Papel, type SituacaoSessao } from "../lib/acesso/regras";
 import { FalhaDoServico, type obterSessao } from "../lib/acesso/sessao";
 import { iniciais } from "../lib/formato";
@@ -18,10 +18,10 @@ import { Trilho } from "./Trilho";
 type Sessao = Awaited<ReturnType<typeof obterSessao>>;
 type Cliente = Sessao["supabase"];
 
-// Permissões que montam o menu, conferidas no banco na loja do turno (equipe vale para a rede).
+// Permissões que montam o menu, conferidas no banco na loja do turno (equipe e lojas valem para a rede).
 export async function permissoesDoMenu(supabase: Cliente, unidade: string): Promise<Set<string>> {
   const respostas = await Promise.all(PERMISSOES_DO_MENU.map((p) =>
-    supabase.rpc("tem_permissao", p === "usuarios.gerir" ? { p_permissao: p } : { p_permissao: p, p_unidade: unidade })));
+    supabase.rpc("tem_permissao", PERMISSOES_DA_REDE.has(p) ? { p_permissao: p } : { p_permissao: p, p_unidade: unidade })));
   if (respostas.some((r) => r.error)) throw new FalhaDoServico("menu");
   return new Set(PERMISSOES_DO_MENU.filter((_, i) => respostas[i]?.data === true));
 }
