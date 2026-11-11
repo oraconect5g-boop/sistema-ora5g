@@ -92,7 +92,7 @@ export default async function PrecosDaVariante({ searchParams }: {
     return (
       <MoldeReal sessao={sessao}>
         <Cartao titulo="Escolha uma variação" icone={Tag}>
-          <p className="text-sm text-suave">Abra os preços pelo <Link href="/produtos" className="font-semibold text-acao">Cadastro de produtos</Link>, no botão "Preços" de cada variação.</p>
+          <p className="text-sm text-suave">Abra os preços pelo <Link href="/produtos" className="font-semibold text-acao">Cadastro de produtos</Link>, no botão Preços de cada variação.</p>
         </Cartao>
       </MoldeReal>
     );
