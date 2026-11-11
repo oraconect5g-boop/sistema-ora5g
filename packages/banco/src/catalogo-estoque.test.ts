@@ -160,8 +160,12 @@ describe("preço com histórico", () => {
       "insert into public.precos (organizacao_id, variante_id, valor_centavos, origem) values ($1, $2, 144900, 'manual')", [ids.organizacao, cat.aparelho],
     ));
     expect(duplicado.code).toBe("23505");
+    // Fabrica o histórico "o preço mudou ontem": o passado é protegido (precos_protegidos, L3b), então
+    // só o próprio teste, sem gatilhos e numa transação, consegue fechar um preço com data de ontem.
     await db.exec(`
+      set local session_replication_role = replica;
       update public.precos set fim = now() - interval '1 day' where variante_id = '${cat.aparelho}' and unidade_id is null and fim is null;
+      set local session_replication_role = origin;
       insert into public.precos (organizacao_id, variante_id, valor_centavos, inicio, origem) values ('${ids.organizacao}', '${cat.aparelho}', 144900, now() - interval '1 day', 'manual');
     `);
     const dono = novaSessao(ids.dono);

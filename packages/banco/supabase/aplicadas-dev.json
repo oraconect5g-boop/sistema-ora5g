@@ -27,6 +27,7 @@
     { "versao": "20261110124824", "nome": "connect_consulta_por_uuid", "md5": "35af74537bfa72eaddce36b05c36ebc4", "aplicada_em": "2026-11-10" },
     { "versao": "20261110224537", "nome": "financeiro_painel", "md5": "0c0432e2c12bb35139c4ab2729b4f0c0", "aplicada_em": "2026-11-10" },
     { "versao": "20261111132503", "nome": "lojas_cadastro_e_configuracao", "md5": "288c2402100e782a7d3ed98a82faf3f0", "aplicada_em": "2026-11-11" },
-    { "versao": "20261111132621", "nome": "catalogo_cadastro", "md5": "7a9a5b9cb9ebdfb3095b8309a3f30cad", "aplicada_em": "2026-11-11" }
+    { "versao": "20261111132621", "nome": "catalogo_cadastro", "md5": "7a9a5b9cb9ebdfb3095b8309a3f30cad", "aplicada_em": "2026-11-11" },
+    { "versao": "20261111133804", "nome": "precos_e_campanhas", "md5": "54e45cffda3f09a7765311e63696a7ac", "aplicada_em": "2026-11-11" }
   ]
 }
