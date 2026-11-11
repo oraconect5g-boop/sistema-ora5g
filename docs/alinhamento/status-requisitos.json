@@ -9,7 +9,7 @@
     "bloqueado": "depende de decisão do proprietário ou de terceiro",
     "nao_iniciado": "ainda não começou"
   },
-  "atualizado_em": "2026-11-10",
+  "atualizado_em": "2026-11-11",
   "requisitos": {
     "ORA-ORG-001": {
       "status": "parcial",
@@ -293,7 +293,7 @@
     },
     "ORA-INV-005": {
       "status": "parcial",
-      "nota": "Reserva com prazo, liberação, vencimento e idempotência no banco; a mesma chave só repete a mesma reserva (REV-021/#20). Concorrência real provada: último item, mesma chave, liberação × nova reserva e vencimento disputado; a rotina de vencimento não espera item em venda. Liberar reserva de outra pessoa exige permissão e fica auditado. O carrinho real reserva e a conclusão consome a reserva (ADR-004). Falta agendar a rotina de vencimento.",
+      "nota": "Reserva com prazo, liberação, vencimento e idempotência no banco; a mesma chave só repete a mesma reserva (REV-021/#20). Concorrência real provada: último item, mesma chave, liberação × nova reserva e vencimento disputado; a rotina de vencimento não espera item em venda. Liberar reserva de outra pessoa exige permissão e fica auditado. O carrinho real reserva e a conclusão consome a reserva (ADR-004). Falta agendar a rotina de vencimento. L4b (11/11): sem agendamento, a reserva vencida é tratada quando alguém tenta reservar o mesmo item; a rotina periódica depende da autorização do proprietário para agendar (cron do servidor ou pg_cron).",
       "evidencia": "packages/banco/supabase/migrations/20261108195850_integridade_estoque.sql; packages/banco/src/integridade-estoque.test.ts; packages/banco/src/concorrencia.test.ts; packages/banco/src/catalogo-estoque.test.ts"
     },
     "ORA-INV-006": {
@@ -413,6 +413,16 @@
     "ORA-POS-009": {
       "status": "parcial",
       "nota": "Revisão das telas (10/11): lista real /vendas com período, situação e número, e o comprovante de cada venda; antes não havia como voltar a uma venda concluída. FALTA: pagamento pendente com reprocessamento (link de pagamento, linha E1)."
+    },
+    "ORA-INV-008": {
+      "status": "testado",
+      "nota": "Lote L4b (11/11): inventário cíclico em /estoque/inventario. Quem tem estoque.conferir (gerente, vendedor e dono) abre o inventário de 1 a 300 itens da loja do turno e conta às cegas (a tela só mostra o que o sistema tem depois do envio): acessório por quantidade, aparelho e chip pelo IMEI/ICCID lido. O banco guarda o que o sistema tinha na hora de cada contagem, para a diferença não mudar com as vendas seguintes. Quem tem estoque.solicitar_ajuste envia com motivo; quem tem estoque.ajustar (dono) e não abriu nem enviou aprova ou recusa (OR025). Aprovado: acessório ajusta pela diferença (a mais: ajuste; a menos: perda), aparelho ou chip não encontrado e ainda livre sai como perda, o vendido/reservado/transferido depois fica como está e o lido sem cadastro na loja só é apontado. Ajuste que não cabe mais no saldo é barrado (OR001). Tudo com motivo, auditoria e chave de idempotência por item; nada se apaga. Aplicada no ora5g-dev. Falta: leitura pela câmera (vem com ORA-POS-016), revisão do Codex e homologação.",
+      "evidencia": "packages/banco/supabase/migrations/20261111142726_inventario.sql; packages/banco/src/inventario.test.ts; packages/banco/src/autorizacao-funcoes.test.ts; apps/plataforma/src/app/estoque/inventario; apps/plataforma/src/app/estoque/inventario/inventario.test.ts"
+    },
+    "ORA-INV-010": {
+      "status": "parcial",
+      "nota": "Lote L4b (11/11): a condição do item físico devolvido (novo, seminovo ou avariado) passa a ser obrigatória no banco (devolver_itens recusa sem ela; antes voltava \"novo\" por omissão) e na tela da venda (sem opção pré-escolhida). A condição de entrada já vinha do lote L4a e cada mudança fica no livro do estoque com motivo. Falta: histórico de reparo pela ordem de serviço (lote L12), revisão do Codex e homologação.",
+      "evidencia": "packages/banco/supabase/migrations/20261111142627_condicao_obrigatoria_na_devolucao.sql; packages/banco/src/devolucao.test.ts; apps/plataforma/src/app/vendas/[id]/page.tsx; apps/plataforma/src/lib/vendas/regras.test.ts"
     }
   }
 }

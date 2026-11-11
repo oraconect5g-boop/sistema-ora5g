@@ -74,7 +74,9 @@ describe("vale-troca e devolução (adendo do ADR-004)", () => {
     expect(lerDevolucao(formulario({ devolver_a: "1", condicao_a: "seminovo", devolver_b: "2", reembolso_1_meio: "dinheiro", reembolso_1_valor: "10,00", reembolso_2_meio: "vale_troca", reembolso_2_valor: "5,00" }), itens))
       .toEqual({ ok: true, pedido: { itens: [{ item: "a", quantidade: 1, condicao: "seminovo" }, { item: "b", quantidade: 2 }], reembolsos: [{ meio: "dinheiro", valor: 1_000 }, { meio: "vale_troca", valor: 500 }] } });
     expect(lerDevolucao(formulario({ devolver_a: "2", condicao_a: "novo", reembolso_1_meio: "dinheiro", reembolso_1_valor: "1,00" }), itens)).toEqual({ ok: false, erro: "dados" });
-    expect(lerDevolucao(formulario({ devolver_a: "1", reembolso_1_meio: "dinheiro", reembolso_1_valor: "1,00" }), itens)).toEqual({ ok: false, erro: "dados" });
+    // Sem condição o item físico não volta (ORA-INV-010): a tela não sugere "novo".
+    expect(lerDevolucao(formulario({ devolver_a: "1", reembolso_1_meio: "dinheiro", reembolso_1_valor: "1,00" }), itens)).toEqual({ ok: false, erro: "condicao" });
+    expect(lerDevolucao(formulario({ devolver_a: "1", condicao_a: "", reembolso_1_meio: "dinheiro", reembolso_1_valor: "1,00" }), itens)).toEqual({ ok: false, erro: "condicao" });
     expect(lerDevolucao(formulario({ reembolso_1_meio: "dinheiro", reembolso_1_valor: "1,00" }), itens)).toEqual({ ok: false, erro: "sem_item" });
     expect(lerDevolucao(formulario({ devolver_b: "1", reembolso_1_meio: "payjoy", reembolso_1_valor: "1,00" }), itens)).toEqual({ ok: false, erro: "reembolso" });
     expect(lerDevolucao(formulario({ devolver_b: "1" }), itens)).toEqual({ ok: false, erro: "reembolso" });

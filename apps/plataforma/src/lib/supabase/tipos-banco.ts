@@ -1,5 +1,5 @@
 // ARQUIVO GERADO pelo Supabase (generate_typescript_types do projeto ora5g-dev) depois da
-// migration 20261111141337_entrada_estoque. Não edite à mão: gere de novo a cada
+// migration 20261111142726_inventario. Não edite à mão: gere de novo a cada
 // migration aplicada (auditoria do Codex de 08/11, §7.2). O teste tipos-banco.test.ts confere
 // que funções e tabelas públicas daqui são as mesmas das migrations.
 export type Json =
@@ -1756,6 +1756,162 @@ export type Database = {
             isOneToOne: false
             referencedRelation: "organizacoes"
             referencedColumns: ["id"]
+          },
+        ]
+      }
+      inventario_itens: {
+        Row: {
+          ajuste_quantidade: number | null
+          contado_em: string | null
+          contado_por: string | null
+          contado_quantidade: number | null
+          contados: string[] | null
+          encontrados_fora: string[] | null
+          inventario_id: string
+          itens_baixados: string[] | null
+          nao_baixados: string[] | null
+          organizacao_id: string
+          sistema_itens: string[] | null
+          sistema_quantidade: number | null
+          tipo: string
+          variante_id: string
+        }
+        Insert: {
+          ajuste_quantidade?: number | null
+          contado_em?: string | null
+          contado_por?: string | null
+          contado_quantidade?: number | null
+          contados?: string[] | null
+          encontrados_fora?: string[] | null
+          inventario_id: string
+          itens_baixados?: string[] | null
+          nao_baixados?: string[] | null
+          organizacao_id: string
+          sistema_itens?: string[] | null
+          sistema_quantidade?: number | null
+          tipo: string
+          variante_id: string
+        }
+        Update: {
+          ajuste_quantidade?: number | null
+          contado_em?: string | null
+          contado_por?: string | null
+          contado_quantidade?: number | null
+          contados?: string[] | null
+          encontrados_fora?: string[] | null
+          inventario_id?: string
+          itens_baixados?: string[] | null
+          nao_baixados?: string[] | null
+          organizacao_id?: string
+          sistema_itens?: string[] | null
+          sistema_quantidade?: number | null
+          tipo?: string
+          variante_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "inventario_itens_contado_por_fkey"
+            columns: ["contado_por"]
+            isOneToOne: false
+            referencedRelation: "perfis_usuario"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "inventario_itens_inventario_id_fkey"
+            columns: ["inventario_id"]
+            isOneToOne: false
+            referencedRelation: "inventarios"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "inventario_itens_variante_id_organizacao_id_fkey"
+            columns: ["variante_id", "organizacao_id"]
+            isOneToOne: false
+            referencedRelation: "variantes"
+            referencedColumns: ["id", "organizacao_id"]
+          },
+        ]
+      }
+      inventarios: {
+        Row: {
+          chave: string
+          criado_em: string
+          criado_por: string
+          decidido_em: string | null
+          decidido_por: string | null
+          descricao: string
+          enviado_em: string | null
+          enviado_por: string | null
+          id: string
+          motivo_decisao: string | null
+          motivo_envio: string | null
+          numero: number
+          organizacao_id: string
+          situacao: string
+          unidade_id: string
+        }
+        Insert: {
+          chave: string
+          criado_em?: string
+          criado_por: string
+          decidido_em?: string | null
+          decidido_por?: string | null
+          descricao: string
+          enviado_em?: string | null
+          enviado_por?: string | null
+          id?: string
+          motivo_decisao?: string | null
+          motivo_envio?: string | null
+          numero?: never
+          organizacao_id: string
+          situacao?: string
+          unidade_id: string
+        }
+        Update: {
+          chave?: string
+          criado_em?: string
+          criado_por?: string
+          decidido_em?: string | null
+          decidido_por?: string | null
+          descricao?: string
+          enviado_em?: string | null
+          enviado_por?: string | null
+          id?: string
+          motivo_decisao?: string | null
+          motivo_envio?: string | null
+          numero?: never
+          organizacao_id?: string
+          situacao?: string
+          unidade_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "inventarios_criado_por_fkey"
+            columns: ["criado_por"]
+            isOneToOne: false
+            referencedRelation: "perfis_usuario"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "inventarios_decidido_por_fkey"
+            columns: ["decidido_por"]
+            isOneToOne: false
+            referencedRelation: "perfis_usuario"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "inventarios_enviado_por_fkey"
+            columns: ["enviado_por"]
+            isOneToOne: false
+            referencedRelation: "perfis_usuario"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "inventarios_unidade_id_organizacao_id_fkey"
+            columns: ["unidade_id", "organizacao_id"]
+            isOneToOne: false
+            referencedRelation: "unidades"
+            referencedColumns: ["id", "organizacao_id"]
           },
         ]
       }
@@ -3726,6 +3882,36 @@ export type Database = {
       importacao_desfazer: {
         Args: { p_importacao: string; p_motivo: string }
         Returns: Json
+      }
+      inventario_abrir: {
+        Args: {
+          p_chave: string
+          p_descricao: string
+          p_unidade: string
+          p_variantes: string[]
+        }
+        Returns: Json
+      }
+      inventario_cancelar: {
+        Args: { p_inventario: string; p_motivo: string }
+        Returns: boolean
+      }
+      inventario_contar: {
+        Args: {
+          p_identificadores: string[]
+          p_inventario: string
+          p_quantidade: number
+          p_variante: string
+        }
+        Returns: Json
+      }
+      inventario_decidir: {
+        Args: { p_aprovar: boolean; p_inventario: string; p_motivo: string }
+        Returns: Json
+      }
+      inventario_enviar: {
+        Args: { p_inventario: string; p_motivo: string }
+        Returns: boolean
       }
       liberar_reserva: { Args: { p_reserva: string }; Returns: boolean }
       loja_atualizar: {

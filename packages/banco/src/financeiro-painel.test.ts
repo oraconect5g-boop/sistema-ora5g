@@ -100,7 +100,7 @@ async function diaDaLojaA() {
   // Devolução parcial da V2: uma capa, reembolso em dinheiro (sai da gaveta do dono).
   const dono = await naLoja(ids.dono, ids.lojaA);
   await abrirCaixa(dono, 10_000);
-  await devolver(dono, v2, [{ item: itemV2, quantidade: 1 }], [{ meio: "dinheiro", valor: 7_900 }]);
+  await devolver(dono, v2, [{ item: itemV2, quantidade: 1, condicao: "novo" }], [{ meio: "dinheiro", valor: 7_900 }]);
   return { ana, dono, v1, v2, v3 };
 }
 
