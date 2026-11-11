@@ -91,10 +91,14 @@ export async function concluirVenda(dados: FormData) {
   if (!pagamentos.ok) redirect(`/vender?erro=${pagamentos.erro}`);
   const nome = String(dados.get("cliente_nome") ?? "").trim().slice(0, 120);
   const email = String(dados.get("cliente_email") ?? "").trim().toLowerCase().slice(0, 200);
+  // Cliente da rede escolhido pela busca exata (L5a); o nome e o e-mail digitados seguem como origem.
+  const cliente = dados.get("cliente_id");
   const { supabase } = await obterSessao({ exigirLoja: true });
   const { data, error } = await supabase.rpc("concluir_venda", {
-    p_venda: venda, p_pagamentos: pagamentos.pagamentos, p_cliente: { ...(nome ? { nome } : {}), ...(email ? { email } : {}) }, p_chave: chaveDe(dados),
+    p_venda: venda, p_pagamentos: pagamentos.pagamentos, p_chave: chaveDe(dados),
+    p_cliente: { ...(ehUuid(cliente) ? { id: cliente } : {}), ...(nome ? { nome } : {}), ...(email ? { email } : {}) },
   });
+  if (error?.code === "22023" && /cliente/i.test((error as { message?: string }).message ?? "")) redirect("/vender?erro=cliente");
   if (error) voltar("/vender", error);
   const resultado = data as { venda?: string } | null;
   redirect(`/vendas/${resultado?.venda ?? venda}?concluida=1`);

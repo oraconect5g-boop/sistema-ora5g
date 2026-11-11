@@ -7,14 +7,14 @@
 export const PERMISSOES_DO_MENU = [
   "venda.registrar", "venda.ver_unidade", "venda.ver_todas", "caixa.abrir", "caixa.conferir", "estoque.consultar",
   "connect.operar", "connect.gerir", "desconto.aprovar", "nota.aprovar", "auditoria.ver", "usuarios.gerir", "unidades.gerir",
-  "catalogo.gerir",
+  "catalogo.gerir", "cliente.buscar",
 ] as const;
 export type PermissaoDoMenu = (typeof PERMISSOES_DO_MENU)[number];
 /** Conferidas para a rede inteira (sem loja): só papéis de organização as têm (dono e administrador). */
 export const PERMISSOES_DA_REDE: ReadonlySet<PermissaoDoMenu> = new Set(["usuarios.gerir", "unidades.gerir", "catalogo.gerir"]);
 
 export type PaginaReal =
-  | "inicio" | "vender" | "vendas" | "caixa" | "connect"
+  | "inicio" | "vender" | "vendas" | "clientes" | "caixa" | "connect"
   | "estoque" | "transferencias" | "catalogo" | "produtos"
   | "financeiro" | "aprovacoes" | "notas" | "auditoria"
   | "equipe" | "lojas";
@@ -30,6 +30,8 @@ export const PAGINAS_REAIS: Record<PaginaReal, { titulo: string; curto: string; 
     titulo: "Vendas", curto: "Vendas", caminho: "/vendas", icone: "vendas", grupo: "Operação",
     liberada: (p) => p.has("venda.registrar") || p.has("venda.ver_unidade") || p.has("venda.ver_todas"),
   },
+  // Clientes da rede (L5a): busca exata e ficha para quem atende (dono, gerente e vendedor); o administrador não.
+  clientes: { titulo: "Clientes", curto: "Clientes", caminho: "/clientes", icone: "contatos", grupo: "Operação", liberada: (p) => p.has("cliente.buscar") },
   caixa: { titulo: "Caixa", curto: "Caixa", caminho: "/caixa", icone: "financeiro", grupo: "Operação", liberada: (p) => p.has("caixa.abrir") || p.has("caixa.conferir") },
   connect: { titulo: "Ora Connect", curto: "Connect", caminho: "/connect", icone: "connect", grupo: "Operação", liberada: (p) => p.has("connect.operar") || p.has("connect.gerir") },
   estoque: { titulo: "Estoque e conferência", curto: "Estoque", caminho: "/estoque", icone: "estoque", grupo: "Estoque e catálogo", liberada: (p) => p.has("estoque.consultar") },
@@ -51,7 +53,7 @@ export const PAGINAS_REAIS: Record<PaginaReal, { titulo: string; curto: string; 
 
 // Barra inferior do celular: até 4 atalhos, na ordem de uso no balcão; o resto fica em "Mais".
 const PRIORIDADE_NO_CELULAR: readonly PaginaReal[] = [
-  "inicio", "vender", "aprovacoes", "vendas", "financeiro", "estoque", "caixa", "connect", "catalogo", "produtos", "notas", "equipe", "lojas", "auditoria", "transferencias",
+  "inicio", "vender", "aprovacoes", "vendas", "financeiro", "estoque", "clientes", "caixa", "connect", "catalogo", "produtos", "notas", "equipe", "lojas", "auditoria", "transferencias",
 ];
 
 export function montarMenu(permissoes: Permissoes) {

@@ -2,7 +2,7 @@
   "_leia": "Checkpoint do programa de execução integral (PR #67). Carregar ao retomar e seguir para o próximo item executável da fila; não reiniciar o projeto. Estados vêm de status-requisitos.json (fonte da rastreabilidade); este arquivo acrescenta lote, bloqueio externo e revisão.",
   "atualizado_em": "2026-11-11",
   "base": {
-    "main": "953b21e",
+    "main": "15f3458",
     "pacote": {
       "pr": 67,
       "branch": "docs/execucao-integral-20261110",
@@ -23,13 +23,14 @@
       "ed4a468 (L3a: cadastro do catálogo)",
       "0271a96 (L3b: preços e campanhas)",
       "5476869 (L3c: importação por planilha)",
-      "953b21e (L4a: entrada de mercadoria)"
+      "953b21e (L4a: entrada de mercadoria)",
+      "15f3458 (L4b: inventário e condição na devolução)"
     ]
   },
   "contagem_dos_estados": {
-    "parcial": 49,
-    "testado": 24,
-    "nao_iniciado": 97,
+    "parcial": 51,
+    "testado": 26,
+    "nao_iniciado": 93,
     "respeitado": 1,
     "demonstracao": 6,
     "bloqueado": 2
@@ -335,8 +336,8 @@
     "ORA-CRM-001": {
       "titulo": "Cadastro de cliente com dados mínimos e finalidade",
       "prioridade": "P0",
-      "estado": "nao_iniciado",
-      "lote": "L5 cliente compartilhado",
+      "estado": "testado",
+      "lote": "L5a clientes",
       "bloqueio_externo": null,
       "revisado_codex": false,
       "homologado": false
@@ -344,8 +345,8 @@
     "ORA-CRM-002": {
       "titulo": "Relacionar cliente às compras/IMEIs/chips/linhas e atendimentos",
       "prioridade": "P0",
-      "estado": "nao_iniciado",
-      "lote": "L5 cliente compartilhado",
+      "estado": "parcial",
+      "lote": "L5a clientes",
       "bloqueio_externo": null,
       "revisado_codex": false,
       "homologado": false
@@ -353,8 +354,8 @@
     "ORA-CRM-003": {
       "titulo": "Pesquisar cliente por identificadores protegidos",
       "prioridade": "P0",
-      "estado": "nao_iniciado",
-      "lote": "L5 cliente compartilhado",
+      "estado": "testado",
+      "lote": "L5a clientes",
       "bloqueio_externo": null,
       "revisado_codex": false,
       "homologado": false
@@ -389,8 +390,8 @@
     "ORA-CRM-007": {
       "titulo": "Registros de consentimento/preferência de comunicação",
       "prioridade": "P1",
-      "estado": "nao_iniciado",
-      "lote": "L5 cliente compartilhado",
+      "estado": "parcial",
+      "lote": "L5a clientes",
       "bloqueio_externo": null,
       "revisado_codex": false,
       "homologado": false

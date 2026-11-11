@@ -14,6 +14,7 @@ import { chaveDoCatalogo, textoDoParametro, type ValorDeParametro } from "../../
 import { buscarNoCatalogo, filtroDoIdentificador, identificadorDigitado, termoDaBusca } from "../../lib/catalogo/busca";
 import { ERROS_DA_VENDA } from "../../lib/vendas/regras";
 import { FotoAmpliavel } from "../catalogo/FotoAmpliavel";
+import { BuscaDeCliente } from "../clientes/BuscaDeCliente";
 import { abrirCaixa, adicionarItem, aplicarDesconto, cancelarVenda, concluirVenda, novaVenda, pedirAprovacao, removerItem } from "./acoes";
 
 export const metadata: Metadata = { title: "Vender" };
@@ -34,14 +35,15 @@ export default async function Vender({ searchParams }: { searchParams: Promise<{
   const { supabase, usuario, situacao } = sessao;
   const unidade = situacao.unidade_id as string;
 
-  const [pode, aprova, caixa, venda] = await Promise.all([
+  const [pode, aprova, caixa, venda, buscaCliente] = await Promise.all([
     supabase.rpc("tem_permissao", { p_permissao: "venda.registrar", p_unidade: unidade }),
     supabase.rpc("tem_permissao", { p_permissao: "desconto.aprovar", p_unidade: unidade }),
     supabase.from("caixas").select("id, aberto_em").eq("operador_id", usuario.id).eq("unidade_id", unidade).eq("situacao", "aberto").maybeSingle(),
     supabase.from("vendas").select("id, numero, situacao").eq("vendedor_id", usuario.id).eq("unidade_id", unidade)
       .in("situacao", ["rascunho", "aguardando_aprovacao"]).order("criado_em", { ascending: false }).limit(1).maybeSingle(),
+    supabase.rpc("tem_permissao", { p_permissao: "cliente.buscar", p_unidade: unidade }),
   ]);
-  if (pode.error || aprova.error || caixa.error || venda.error) throw new FalhaDoServico("vender");
+  if (pode.error || aprova.error || caixa.error || venda.error || buscaCliente.error) throw new FalhaDoServico("vender");
 
   if (!pode.data) {
     return <MoldeReal sessao={sessao}><Aviso tom="aviso" className="mt-6">Seu papel não registra vendas nesta loja.</Aviso></MoldeReal>;
@@ -227,6 +229,12 @@ export default async function Vender({ searchParams }: { searchParams: Promise<{
                     <label className="text-xs font-medium">Meio da entrada<select name={`pagamento_${n}_meio_entrada`} className={campo} defaultValue="dinheiro">{MEIOS_DA_LOJA.filter((m) => !MEIOS[m].financeira && m !== "vale_troca").map((m) => <option key={m} value={m}>{MEIOS[m].nome}</option>)}</select></label>
                   </fieldset>
                 ))}
+                {buscaCliente.data && (
+                  <div className="space-y-1 rounded-xl border border-borda p-2">
+                    <p className="px-1 text-xs font-semibold">Cliente da rede (opcional): CPF ou telefone completos</p>
+                    <BuscaDeCliente modo="escolher" />
+                  </div>
+                )}
                 <div className="grid gap-2 sm:grid-cols-2">
                   <label className="text-xs font-medium">Nome do cliente (opcional)<input name="cliente_nome" className={campo} /></label>
                   <label className="text-xs font-medium">E-mail do cliente (obrigatório na PayJoy)<input name="cliente_email" type="email" className={campo} /></label>

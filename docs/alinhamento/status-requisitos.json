@@ -128,7 +128,7 @@
     },
     "ORA-QUAL-002": {
       "status": "parcial",
-      "nota": "RLS negando por padrão, testada com várias lojas, perfis e duas organizações. Defeitos de isolamento REV-001/REV-002 corrigidos em 07/11 com regressões; aguardando revisão do Codex antes de voltar a 'testado'. Inventário de autorização (10/11, autorizacao-funcoes.test.ts): as 48 funções SECURITY DEFINER que um usuário logado pode chamar (aviso 0029 do Supabase) recusam 528 tentativas de 13 tipos de atacante (anônimo, sem login, sem sessão, sessão encerrada, fora do turno, bloqueado, vínculo encerrado, sem vínculo, papel sem permissão, outra rede, outra loja, outro vendedor e permissão faltando), sem mudar o banco; anônimo não executa nenhuma; o teste falha se surgir função nova sem casos (prova: 4 defeitos introduzidos de propósito foram pegos).",
+      "nota": "RLS negando por padrão, testada com várias lojas, perfis e duas organizações. Defeitos de isolamento REV-001/REV-002 corrigidos em 07/11 com regressões; aguardando revisão do Codex antes de voltar a 'testado'. Inventário de autorização (10/11, autorizacao-funcoes.test.ts): as 48 funções SECURITY DEFINER que um usuário logado pode chamar (aviso 0029 do Supabase) recusam 528 tentativas de 13 tipos de atacante (anônimo, sem login, sem sessão, sessão encerrada, fora do turno, bloqueado, vínculo encerrado, sem vínculo, papel sem permissão, outra rede, outra loja, outro vendedor e permissão faltando), sem mudar o banco; anônimo não executa nenhuma; o teste falha se surgir função nova sem casos (prova: 4 defeitos introduzidos de propósito foram pegos). 11/11: inventário com 81 funções (L2 a L5a); a busca de cliente feita por outra rede não acha nada e fica registrada. T11 (vendedor só busca exata) virou teste no L5a.",
       "evidencia": "packages/banco/src/acesso.test.ts; packages/banco/src/revisao-codex.test.ts"
     },
     "ORA-QUAL-003": {
@@ -188,7 +188,7 @@
     },
     "ORA-POS-008": {
       "status": "parcial",
-      "nota": "Venda gravada com loja, vendedor e canal; cliente por nome e e-mail até o CRM existir; RLS: vendedor vê as próprias, gerência a loja. FALTA: cliente do CRM. Revisão das telas (10/11): lista real /vendas: o vendedor vê as próprias vendas, a gerência a loja inteira com o nome de quem vendeu, a situação da nota e a devolução (vendas.test.ts, banco simulado).",
+      "nota": "Venda gravada com loja, vendedor e canal; cliente por nome e e-mail até o CRM existir; RLS: vendedor vê as próprias, gerência a loja. FALTA: cliente do CRM. Revisão das telas (10/11): lista real /vendas: o vendedor vê as próprias vendas, a gerência a loja inteira com o nome de quem vendeu, a situação da nota e a devolução (vendas.test.ts, banco simulado). L5a (11/11): o PDV liga a venda ao cliente da rede pela busca exata (CPF ou telefone) na conclusão; o nome e o e-mail digitados seguem como origem; a venda concluída pode ser ligada depois, com motivo.",
       "evidencia": "packages/banco/supabase/migrations/20261108233546_vendas_pagamentos_e_caixa.sql; packages/banco/src/vendas.test.ts; packages/banco/src/concorrencia.test.ts"
     },
     "ORA-PAY-003": {
@@ -423,6 +423,26 @@
       "status": "parcial",
       "nota": "Lote L4b (11/11): a condição do item físico devolvido (novo, seminovo ou avariado) passa a ser obrigatória no banco (devolver_itens recusa sem ela; antes voltava \"novo\" por omissão) e na tela da venda (sem opção pré-escolhida). A condição de entrada já vinha do lote L4a e cada mudança fica no livro do estoque com motivo. Falta: histórico de reparo pela ordem de serviço (lote L12), revisão do Codex e homologação.",
       "evidencia": "packages/banco/supabase/migrations/20261111142627_condicao_obrigatoria_na_devolucao.sql; packages/banco/src/devolucao.test.ts; apps/plataforma/src/app/vendas/[id]/page.tsx; apps/plataforma/src/lib/vendas/regras.test.ts"
+    },
+    "ORA-CRM-001": {
+      "status": "testado",
+      "nota": "Lote L5a (11/11, ADR-008): cadastro único da rede em /clientes/novo por quem tem cliente.cadastrar (dono, gerente, vendedor). Dados mínimos: nome e CPF/CNPJ ou telefone; cada finalidade marcada pede o que precisa (nota: documento; Ora Connect: documento, telefone e nascimento de pessoa física; financiamento: CPF, telefone, e-mail e nascimento; assistência: telefone; entrega: endereço) e nascimento/endereço sem finalidade que os justifique são recusados. CPF/CNPJ, telefone, e-mail, nascimento e endereço ficam em privado.cliente_dados (fora da API); a tabela pública guarda máscaras e um resumo com segredo da rede. O mesmo CPF não entra duas vezes (OR026, também com duas conexões ao mesmo tempo); telefone de outra pessoa pede confirmação (OR027). Correção com motivo; a auditoria guarda só o nome dos campos. Aplicada no ora5g-dev. Falta: política de retenção e direitos do titular com o jurídico (ORA-QUAL-011), revisão do Codex e homologação.",
+      "evidencia": "packages/banco/supabase/migrations/20261111191909_clientes_compartilhados.sql; packages/banco/src/clientes.test.ts; packages/banco/src/concorrencia.test.ts; apps/plataforma/src/app/clientes; apps/plataforma/src/lib/clientes/regras.test.ts; docs/adr/ADR-008-cliente-compartilhado-e-dados-pessoais.md"
+    },
+    "ORA-CRM-003": {
+      "status": "testado",
+      "nota": "Lote L5a (11/11): busca só exata (CPF/CNPJ ou telefone completos) para quem tem cliente.buscar; o dono (cliente.exportar) também por código e nome e lista os clientes. O vendedor e o gerente não leem a tabela (teste T11 do ADR-002). A busca e a ficha devolvem só máscaras; o dado inteiro aparece só quando pedido (cliente_revelar). Cada busca, ficha e revelação fica na auditoria sem o valor procurado; mais de 30 buscas ou revelações em 10 minutos pela mesma pessoa são barradas (OR028). O valor buscado vai no corpo da requisição, nunca no endereço. Falta: revisão do Codex e homologação.",
+      "evidencia": "packages/banco/supabase/migrations/20261111191909_clientes_compartilhados.sql; packages/banco/src/clientes.test.ts; packages/banco/src/acesso.test.ts; packages/banco/src/autorizacao-funcoes.test.ts; apps/plataforma/src/app/clientes; apps/plataforma/src/lib/clientes/regras.test.ts; docs/adr/ADR-008-cliente-compartilhado-e-dados-pessoais.md"
+    },
+    "ORA-CRM-007": {
+      "status": "parcial",
+      "nota": "Lote L5a (11/11): consentimento por canal (WhatsApp, SMS, e-mail, ligação) e finalidade (ofertas, pós-venda) num histórico que só cresce, com origem, loja e quem registrou; repetir não duplica; canal sem contato cadastrado é recusado; retirar vale na hora em privado.cliente_pode_contatar, que as automações devem consultar. Falta: as automações (WhatsApp e campanhas, L15/L16) usarem a regra, com teste ponta a ponta; revisão do Codex e homologação.",
+      "evidencia": "packages/banco/supabase/migrations/20261111191909_clientes_compartilhados.sql; packages/banco/src/clientes.test.ts; apps/plataforma/src/app/clientes/[id]/page.tsx"
+    },
+    "ORA-CRM-002": {
+      "status": "parcial",
+      "nota": "Lote L5a (11/11): a venda guarda o cliente da rede (vendas.cliente_id) escolhido pela busca exata no PDV, sem apagar o nome e o e-mail digitados (origem); corrigir depois exige motivo (venda_vincular_cliente, por quem vendeu ou vê as vendas da loja). A ficha mostra o total de compras da rede e só as vendas que a pessoa já pode ver (RLS). Falta: linhas e chips da Ora Connect (L11), OS (L12) e atendimentos (L5b) na ficha; revisão do Codex e homologação.",
+      "evidencia": "packages/banco/supabase/migrations/20261111191909_clientes_compartilhados.sql; packages/banco/src/clientes.test.ts; apps/plataforma/src/app/vender/acoes.ts; apps/plataforma/src/app/vendas/[id]/page.tsx; apps/plataforma/src/app/clientes/clientes.test.ts"
     }
   }
 }

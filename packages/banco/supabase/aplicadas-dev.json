@@ -32,6 +32,7 @@
     { "versao": "20261111135906", "nome": "importacao_catalogo", "md5": "faa52950a5b728b6166cdc65474f064e", "aplicada_em": "2026-11-11" },
     { "versao": "20261111141337", "nome": "entrada_estoque", "md5": "663f442cb03a7311e2c66acb3de0609d", "aplicada_em": "2026-11-11" },
     { "versao": "20261111142627", "nome": "condicao_obrigatoria_na_devolucao", "md5": "976ebbec1236ca5b6dce1fe09fcc7794", "aplicada_em": "2026-11-11" },
-    { "versao": "20261111142726", "nome": "inventario", "md5": "20d9404bad0bce788ce78c41998ab526", "aplicada_em": "2026-11-11" }
+    { "versao": "20261111142726", "nome": "inventario", "md5": "20d9404bad0bce788ce78c41998ab526", "aplicada_em": "2026-11-11" },
+    { "versao": "20261111191909", "nome": "clientes_compartilhados", "md5": "f1c9c6563024611ba4fbe77bf39348ee", "aplicada_em": "2026-11-11" }
   ]
 }

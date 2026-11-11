@@ -3,7 +3,7 @@
 import type { PGlite } from "@electric-sql/pglite";
 import { beforeAll, describe, expect, it } from "vitest";
 
-import { cnpj, comoUsuario, criarBanco, type Sessao } from "./banco-de-teste";
+import { cnpj, comoUsuario, cpf, criarBanco, type Sessao } from "./banco-de-teste";
 import { ids, montarCenario, RAIZ } from "./cenario";
 
 let db: PGlite;
@@ -290,7 +290,19 @@ describe("Outras regras do ADR-002", () => {
 
 // T4 (vendedor não aprova o próprio desconto) e T5 (dono não aprova a própria solicitação) viraram
 // testes de verdade em vendas.test.ts, cenário B, junto com o módulo de vendas (ADR-004).
+describe("T11 — vendedor só faz busca exata de cliente (lote L5a)", () => {
+  it("a lista de clientes vem vazia para o vendedor; CPF completo acha; busca por nome é recusada", async () => {
+    const s = novaSessao(ids.vendedorA);
+    expect(await selecionar(s, ids.lojaA)).toBe(true);
+    const documento = cpf("390533447");
+    await valor(s, "select public.cliente_salvar(null, $1::jsonb, null, 'form:t11:0001') as v",
+      [JSON.stringify({ tipo: "pessoa_fisica", nome: "Cliente T11", documento })]);
+    expect(await linhas(s, "select * from public.clientes")).toEqual([]);
+    expect((await valor<{ clientes: unknown[] }>(s, "select public.cliente_buscar('documento', $1) as v", [documento])).clientes).toHaveLength(1);
+    expect((await falha(valor(s, "select public.cliente_buscar('nome', 'Cliente') as v"))).code).toBe("42501");
+  });
+});
+
 describe("Testes que dependem de módulos futuros", () => {
-  it.todo("T11 — vendedor só faz busca exata de cliente (CRM)");
   it.todo("T12 — técnico não vê OS de outro técnico (ordem de serviço, mês 3)");
 });
