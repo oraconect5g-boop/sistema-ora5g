@@ -1,7 +1,7 @@
 // Inventário de autorização (prioridade 1 do diagnóstico de 10/11/2026; ORA-ORG-004 e ORA-QUAL-002).
 // O aviso 0029 do Supabase lista as funções SECURITY DEFINER que qualquer usuário logado pode chamar
-// pela API: 70 em 11/11 (48 + 6 do cadastro de lojas, L2, + 5 do cadastro do catálogo, L3a, + 4 dos preços, L3b,
-// + 4 da importação do catálogo, L3c, + 3 da entrada de mercadoria, L4a). Elas rodam com poder total e cada uma confere sessão, loja e permissão por
+// pela API: 75 em 11/11 (48 + 6 do cadastro de lojas, L2, + 5 do cadastro do catálogo, L3a, + 4 dos preços, L3b,
+// + 4 da importação do catálogo, L3c, + 3 da entrada de mercadoria, L4a, + 5 do inventário, L4b). Elas rodam com poder total e cada uma confere sessão, loja e permissão por
 // conta própria. Este teste monta um "mundo" fictício com objetos reais em duas lojas e tenta cada
 // função como 13 tipos de atacante. Recusa = erro, ou resposta vazia numa leitura, e nada muda no
 // banco. O teste lista as funções no próprio banco e falha se aparecer uma nova sem casos aqui.
@@ -179,7 +179,7 @@ async function montarMundo() {
 }
 
 // ---------------------------------------------------------------------------------------------
-// Catálogo das 70 funções. Cada chamada usa argumentos válidos, para a recusa vir do controle de
+// Catálogo das 75 funções. Cada chamada usa argumentos válidos, para a recusa vir do controle de
 // acesso e não de um parâmetro errado. "A": alvos da loja A (do vendedorAB); "B": da loja B.
 //   identidade: os 9 atacantes sem acesso válido, sempre contra os alvos da loja A;
 //   outraOrganizacao: dono de outra rede, contra a loja A (omitido onde a função só age no
@@ -306,6 +306,25 @@ const CASOS: Record<string, Caso> = {
   },
   "importacao_descartar(uuid,text)": { A: () => ["select public.importacao_descartar($1, 'Tentativa')", [alvo.importacaoPrevia]], semPermissao: true },
   "importacao_desfazer(uuid,text)": { A: () => ["select public.importacao_desfazer($1, 'Tentativa')", [alvo.importacaoAplicada]], semPermissao: true },
+  // Inventário (L4b): conta e pede ajuste quem confere o estoque da loja (o vendedor também, na loja dele);
+  // decide quem tem estoque.ajustar. Contra a loja B, o vendedor da loja A é recusado.
+  "inventario_abrir(uuid,uuid[],text,text)": {
+    A: () => ["select public.inventario_abrir($1, $2::uuid[], 'Tentativa', $3)", [ids.lojaA, [cat.capa], chave("ataque:inventario")]],
+    B: () => ["select public.inventario_abrir($1, $2::uuid[], 'Tentativa', $3)", [ids.lojaB, [cat.capa], chave("ataque:inventario")]],
+  },
+  "inventario_cancelar(uuid,text)": {
+    A: () => ["select public.inventario_cancelar($1, 'Tentativa')", [alvo.inventarioA]], B: () => ["select public.inventario_cancelar($1, 'Tentativa')", [alvo.inventarioB]],
+  },
+  "inventario_contar(uuid,uuid,integer,text[])": {
+    A: () => ["select public.inventario_contar($1, $2, 1, null)", [alvo.inventarioA, cat.capa]], B: () => ["select public.inventario_contar($1, $2, 1, null)", [alvo.inventarioB, cat.capa]],
+  },
+  "inventario_decidir(uuid,boolean,text)": {
+    A: () => ["select public.inventario_decidir($1, true, 'Tentativa')", [alvo.inventarioEnviadoA]], B: () => ["select public.inventario_decidir($1, true, 'Tentativa')", [alvo.inventarioEnviadoB]],
+    semPermissao: true,
+  },
+  "inventario_enviar(uuid,text)": {
+    A: () => ["select public.inventario_enviar($1, 'Tentativa')", [alvo.inventarioA]], B: () => ["select public.inventario_enviar($1, 'Tentativa')", [alvo.inventarioB]],
+  },
   "liberar_reserva(uuid)": {
     A: () => ["select public.liberar_reserva($1)", [alvo.reservaA]], B: () => ["select public.liberar_reserva($1)", [alvo.reservaB]], outroVendedor: true,
   },
@@ -458,6 +477,18 @@ beforeAll(async () => {
   await montarCenario(db);
   await montarCatalogo(db);
   await montarMundo();
+  // Um inventário em contagem e um enviado em cada loja (gravados pelo banco), com a capa como item.
+  for (const [loja, sufixo] of [[ids.lojaA, "A"], [ids.lojaB, "B"]] as const) {
+    for (const situacao of ["em_contagem", "enviado"] as const) {
+      const id = (await db.query<{ id: string }>(
+        `insert into public.inventarios (organizacao_id, unidade_id, descricao, chave, situacao, criado_por${situacao === "enviado" ? ", enviado_por, enviado_em, motivo_envio" : ""})
+         values ($1, $2, 'Mundo do teste', $3, $4, $5${situacao === "enviado" ? ", $5, now(), 'Mundo'" : ""}) returning id`,
+        [ids.organizacao, loja, `mundo:inventario:${sufixo}:${situacao}`, situacao, ids.gerenteB])).rows[0]?.id ?? "";
+      await db.query("insert into public.inventario_itens (inventario_id, organizacao_id, variante_id, tipo, sistema_quantidade, contado_quantidade, contado_em) values ($1, $2, $3, 'acessorio', 1, 1, now())",
+        [id, ids.organizacao, cat.capa]);
+      alvo[situacao === "enviado" ? `inventarioEnviado${sufixo}` : `inventario${sufixo}`] = id;
+    }
+  }
   // Uma entrada de mercadoria em cada loja (gravadas pelo banco: só alvo, sem itens).
   for (const [chaveDoAlvo, loja] of [["entradaA", ids.lojaA], ["entradaB", ids.lojaB]] as const) {
     alvo[chaveDoAlvo] = (await db.query<{ id: string }>(
@@ -509,7 +540,7 @@ describe("inventário: toda função SECURITY DEFINER exposta tem casos de recus
     const expostas = rows.map((r) => r.f);
     expect(expostas.filter((f) => !(f in CASOS)), "função nova exposta sem casos de recusa: acrescente ao CASOS").toEqual([]);
     expect(Object.keys(CASOS).filter((f) => !expostas.includes(f)), "caso de função que não existe mais").toEqual([]);
-    expect(expostas).toHaveLength(70);
+    expect(expostas).toHaveLength(75);
   });
 
   it("visitante anônimo não executa nenhuma função do esquema public; no privado só um gatilho, que não roda sozinho", async () => {

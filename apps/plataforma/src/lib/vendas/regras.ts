@@ -29,6 +29,7 @@ export const ERROS_DA_VENDA = {
   explicacao: "Explique por que o item não voltou (pelo menos 10 caracteres).",
   reembolso: "O reembolso precisa somar o valor devolvido, só nos meios que a venda usou e até o que cada um pagou.",
   sem_item: "Escolha a quantidade de pelo menos um item para devolver.",
+  condicao: "Escolha a condição de cada item devolvido (novo, seminovo ou avariado): nada volta ao estoque como novo sem alguém decidir.",
   falha: "Não foi possível concluir agora. Tente de novo em instantes.",
 } as const;
 export type ErroDaVenda = keyof typeof ERROS_DA_VENDA;
@@ -120,8 +121,9 @@ export function lerDevolucao(dados: { get: (nome: string) => unknown }, itens: r
     if (!/^\d{1,4}$/.test(texto) || Number(texto) > item.restante) return { ok: false, erro: "dados" };
     const linha: PedidoDeDevolucao["itens"][number] = { item: item.id, quantidade: Number(texto) };
     if (item.fisico) {
+      // A condição é escolhida por quem recebe (ORA-INV-010): sem ela, nada volta ao estoque como novo.
       const condicao = dados.get(`condicao_${item.id}`);
-      if (typeof condicao !== "string" || !Object.hasOwn(CONDICOES_DE_RETORNO, condicao)) return { ok: false, erro: "dados" };
+      if (typeof condicao !== "string" || !Object.hasOwn(CONDICOES_DE_RETORNO, condicao)) return { ok: false, erro: "condicao" };
       linha.condicao = condicao as CondicaoDeRetorno;
     }
     if (item.serializado) {

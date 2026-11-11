@@ -88,11 +88,11 @@ describe("devolução parcial (ORA-POS-010)", () => {
 
     const dono = await naLoja(ids.dono, ids.lojaA);
     const caixaDono = await abrirCaixa(dono, 50_000);
-    expect(await errouDevolver(dono, venda, [{ item: capa, quantidade: 1 }], [{ meio: "dinheiro", valor: 7_900 }])).toBe("OR009");
-    expect(await devolver(dono, venda, [{ item: capa, quantidade: 1 }], [{ meio: "dinheiro", valor: 7_867 }])).toMatchObject({ valor: 7_867, vale: null });
-    expect(await errouDevolver(dono, venda, [{ item: capa, quantidade: 3 }], [{ meio: "dinheiro", valor: 23_600 }])).toBe("22023");
-    expect(await devolver(dono, venda, [{ item: capa, quantidade: 2 }], [{ meio: "dinheiro", valor: 15_733 }])).toMatchObject({ valor: 15_733 });
-    expect(await errouDevolver(dono, venda, [{ item: capa, quantidade: 1 }], [{ meio: "dinheiro", valor: 1 }])).toBe("22023");
+    expect(await errouDevolver(dono, venda, [{ item: capa, quantidade: 1, condicao: "novo" }], [{ meio: "dinheiro", valor: 7_900 }])).toBe("OR009");
+    expect(await devolver(dono, venda, [{ item: capa, quantidade: 1, condicao: "novo" }], [{ meio: "dinheiro", valor: 7_867 }])).toMatchObject({ valor: 7_867, vale: null });
+    expect(await errouDevolver(dono, venda, [{ item: capa, quantidade: 3, condicao: "novo" }], [{ meio: "dinheiro", valor: 23_600 }])).toBe("22023");
+    expect(await devolver(dono, venda, [{ item: capa, quantidade: 2, condicao: "novo" }], [{ meio: "dinheiro", valor: 15_733 }])).toMatchObject({ valor: 15_733 });
+    expect(await errouDevolver(dono, venda, [{ item: capa, quantidade: 1, condicao: "novo" }], [{ meio: "dinheiro", valor: 1 }])).toBe("22023");
 
     expect(await saldo(ids.lojaA, cat.capa)).toBe((antes ?? 0) + 3);
     expect(await dinheiroNoCaixa(caixaDono)).toBe(50_000 - 23_600);
@@ -147,7 +147,7 @@ describe("troca com vale (ORA-POS-012)", () => {
     await concluir(ana, primeira, [{ meio: "dinheiro", valor: 7_900 }], { nome: "Cliente Fictício" });
 
     const dono = await naLoja(ids.dono, ids.lojaA);
-    const troca = await devolver(dono, primeira, [{ item: capa }], [{ meio: "vale_troca", valor: 7_900 }], chave("dev"), "Troca por aparelho");
+    const troca = await devolver(dono, primeira, [{ item: capa, condicao: "novo" }], [{ meio: "vale_troca", valor: 7_900 }], chave("dev"), "Troca por aparelho");
     expect(troca.vale).toEqual(expect.any(Number));
     expect(await saldoDoVale(Number(troca.vale))).toBe(7_900);
     expect((await db.query("select cliente_nome from public.vales_troca where numero = $1", [troca.vale])).rows).toEqual([{ cliente_nome: "Cliente Fictício" }]);
@@ -172,22 +172,36 @@ describe("troca com vale (ORA-POS-012)", () => {
 });
 
 describe("proteções", () => {
+  it("item físico devolvido sem condição é recusado: nada volta ao estoque como novo por omissão (ORA-INV-010)", async () => {
+    const ana = await naLoja(ids.vendedorA, ids.lojaA);
+    await abrirCaixa(ana);
+    const venda = await novaVenda(ana);
+    const capa = await adicionar(ana, venda, cat.capa, null, 1);
+    await concluir(ana, venda, [{ meio: "dinheiro", valor: 7_900 }]);
+    const dono = await naLoja(ids.dono, ids.lojaA);
+    await abrirCaixa(dono, 50_000);
+    expect(await errouDevolver(dono, venda, [{ item: capa, quantidade: 1 }], [{ meio: "dinheiro", valor: 7_900 }])).toBe("22023");
+    expect(await errouDevolver(dono, venda, [{ item: capa, quantidade: 1, condicao: "" }], [{ meio: "dinheiro", valor: 7_900 }])).toBe("22023");
+    expect(await devolver(dono, venda, [{ item: capa, quantidade: 1, condicao: "avariado" }], [{ meio: "dinheiro", valor: 7_900 }])).toMatchObject({ valor: 7_900 });
+  });
+
+
   it("só a gerência da loja devolve; financiada não; a mesma chave devolve o mesmo e outro conteúdo é OR004", async () => {
     const ana = await naLoja(ids.vendedorA, ids.lojaA);
     await abrirCaixa(ana);
     const venda = await novaVenda(ana);
     const capa = await adicionar(ana, venda, cat.capa, null, 2);
     await concluir(ana, venda, [{ meio: "dinheiro", valor: 15_800 }]);
-    expect(await errouDevolver(ana, venda, [{ item: capa }], [{ meio: "dinheiro", valor: 7_900 }])).toBe("P0002");
-    expect(await errouDevolver(await naLoja(ids.gerenteB, ids.lojaB), venda, [{ item: capa }], [{ meio: "dinheiro", valor: 7_900 }])).toBe("P0002");
+    expect(await errouDevolver(ana, venda, [{ item: capa, condicao: "novo" }], [{ meio: "dinheiro", valor: 7_900 }])).toBe("P0002");
+    expect(await errouDevolver(await naLoja(ids.gerenteB, ids.lojaB), venda, [{ item: capa, condicao: "novo" }], [{ meio: "dinheiro", valor: 7_900 }])).toBe("P0002");
 
     const dono = await naLoja(ids.dono, ids.lojaA);
     await abrirCaixa(dono, 50_000);
     const k = chave("dev");
-    const r = await devolver(dono, venda, [{ item: capa }], [{ meio: "dinheiro", valor: 7_900 }], k);
-    expect(await devolver(dono, venda, [{ item: capa }], [{ meio: "dinheiro", valor: 7_900 }], k)).toEqual({ ...r, repetida: true });
-    expect(await errouDevolver(dono, venda, [{ item: capa, quantidade: 1 }], [{ meio: "vale_troca", valor: 7_900 }], k)).toBe("OR004");
-    expect(await errouDevolver(dono, venda, [{ item: capa }, { item: capa }], [{ meio: "dinheiro", valor: 15_800 }])).toBe("22023");
+    const r = await devolver(dono, venda, [{ item: capa, condicao: "novo" }], [{ meio: "dinheiro", valor: 7_900 }], k);
+    expect(await devolver(dono, venda, [{ item: capa, condicao: "novo" }], [{ meio: "dinheiro", valor: 7_900 }], k)).toEqual({ ...r, repetida: true });
+    expect(await errouDevolver(dono, venda, [{ item: capa, quantidade: 1, condicao: "novo" }], [{ meio: "vale_troca", valor: 7_900 }], k)).toBe("OR004");
+    expect(await errouDevolver(dono, venda, [{ item: capa, condicao: "novo" }, { item: capa, condicao: "novo" }], [{ meio: "dinheiro", valor: 15_800 }])).toBe("22023");
 
     const financiada = await novaVenda(ana);
     const aparelho = await adicionar(ana, financiada, cat.aparelho, itens.a1);
@@ -208,7 +222,7 @@ describe("proteções", () => {
     await concluir(ana, emitida, [{ meio: "dinheiro", valor: 7_900 }]);
     const pedido1 = await valor<string>(ana, "select public.notas_solicitar($1, '{}'::jsonb, $2) as v", [emitida, chave("nota")]);
     await valor(dono, "select public.notas_registrar_emissao($1, $2, null) as v", [pedido1, chaveDeAcesso(cnpjA, 10)]);
-    const r1 = await devolver(dono, emitida, [{ item: capa1 }], [{ meio: "dinheiro", valor: 7_900 }]);
+    const r1 = await devolver(dono, emitida, [{ item: capa1, condicao: "novo" }], [{ meio: "dinheiro", valor: 7_900 }]);
     const [devolucaoFiscal] = (await db.query<{ id: string; situacao: string; tipo: string }>(
       "select id, situacao, tipo from public.notas_pedidos where devolucao_id = $1", [r1.devolucao])).rows;
     expect(devolucaoFiscal).toMatchObject({ situacao: "aguardando_aprovacao", tipo: "devolucao" });
@@ -218,7 +232,7 @@ describe("proteções", () => {
     const capa2 = await adicionar(ana, pendente, cat.capa, null, 2);
     await concluir(ana, pendente, [{ meio: "dinheiro", valor: 15_800 }]);
     const pedido2 = await valor<string>(ana, "select public.notas_solicitar($1, '{}'::jsonb, $2) as v", [pendente, chave("nota")]);
-    await devolver(dono, pendente, [{ item: capa2, quantidade: 1 }], [{ meio: "dinheiro", valor: 7_900 }]);
+    await devolver(dono, pendente, [{ item: capa2, quantidade: 1, condicao: "novo" }], [{ meio: "dinheiro", valor: 7_900 }]);
     const [aviso] = (await db.query<{ observacao: string }>("select observacao from public.notas_pedidos where id = $1", [pedido2])).rows;
     expect(aviso?.observacao).toContain("antes da emissão");
     expect((await db.query<{ tipo: string }>("select tipo from public.notas_eventos where pedido_id = $1 order by id", [pedido2])).rows.map((e) => e.tipo))

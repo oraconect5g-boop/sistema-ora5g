@@ -201,7 +201,8 @@ export default async function Comprovante({ params, searchParams }: { params: Pr
                     <form action={conferirRetorno} className="grid gap-2 sm:grid-cols-2">
                       <input type="hidden" name="venda" value={v.id} /><input type="hidden" name="retorno" value={r.id} />
                       <label className="text-xs font-medium">O item voltou?<select name="recebido" defaultValue="sim" className={campo}><option value="sim">Sim, está na loja</option><option value="nao">Não voltou</option></select></label>
-                      <label className="text-xs font-medium">Condição<select name="condicao" defaultValue="novo" className={campo}>
+                      <label className="text-xs font-medium">Condição<select name="condicao" defaultValue="" className={campo}>
+                        <option value="" disabled>escolha a condição</option>
                         {Object.entries(CONDICOES_DE_RETORNO).map(([codigo, nome]) => <option key={codigo} value={codigo}>{nome}</option>)}
                       </select></label>
                       {serial && <label className="text-xs font-medium sm:col-span-2">IMEI/ICCID conferido no item<input name="identificador" inputMode="numeric" autoComplete="off" className={campo} /></label>}
@@ -225,7 +226,8 @@ export default async function Comprovante({ params, searchParams }: { params: Pr
                   <span className="self-center">{nomeDoItem(i.id)}<span className="block text-xs text-suave">resta {i.restante}</span></span>
                   <label className="text-xs font-medium">Devolver<input name={`devolver_${i.id}`} type="number" min={0} max={i.restante} defaultValue={0} className={campo} /></label>
                   {FISICOS.has(i.tipo) && (
-                    <label className="text-xs font-medium">Condição<select name={`condicao_${i.id}`} defaultValue="novo" className={campo}>
+                    <label className="text-xs font-medium">Condição (obrigatória)<select name={`condicao_${i.id}`} defaultValue="" className={campo}>
+                      <option value="" disabled>escolha a condição</option>
                       {Object.entries(CONDICOES_DE_RETORNO).map(([codigo, nome]) => <option key={codigo} value={codigo}>{nome}</option>)}
                     </select></label>
                   )}
