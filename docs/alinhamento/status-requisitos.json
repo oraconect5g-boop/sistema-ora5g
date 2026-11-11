@@ -256,6 +256,16 @@
       "nota": "Lote L3b (11/11): campanha com início e fim por loja ou rede e por canal, gravada por quem tem preco.alterar, com motivo e auditoria; vale acima do preço da loja e do geral só no período; campanhas do mesmo alcance não se sobrepõem (OR021); dura no máximo um ano; a que não começou é cancelada e a em curso é encerrada agora, sem reescrever o passado. Aplicada no ora5g-dev. Aguardando revisão do Codex e homologação.",
       "evidencia": "packages/banco/supabase/migrations/20261111133804_precos_e_campanhas.sql; packages/banco/src/precos.test.ts; apps/plataforma/src/app/produtos/precos"
     },
+    "ORA-CAT-002": {
+      "status": "parcial",
+      "nota": "Lote L3c (11/11): importação por planilha CSV em /produtos/importar, sem supor o formato da Rein (a pessoa diz qual coluna é cada campo; o servidor relê o arquivo, em UTF-8 ou Windows-1252, e calcula a impressão digital). Prévia no banco sem mexer no catálogo (criar, atualizar, igual ou erro, com o relatório de erros por linha e as diferenças), aprovação por outra pessoa (administrador gera, dono aplica; OR024), aplicação tudo-ou-nada com antes e depois por linha, o mesmo arquivo não se aplica duas vezes (OR023) e desfazer lógico (volta o que ainda está como a importação deixou, sem apagar nada). Até 2.000 linhas por arquivo (3.000 linhas medidas em 3 s num PostgreSQL 17; o limite da API é 8 s). Aplicada no ora5g-dev. Falta: testar com o arquivo real da Rein (pendência B1), estoque inicial por arquivo (lote L4) e XLSX direto (hoje: salvar a planilha como CSV); revisão do Codex e homologação.",
+      "evidencia": "packages/banco/supabase/migrations/20261111135906_importacao_catalogo.sql; packages/banco/src/importacao.test.ts; apps/plataforma/src/lib/importacao; apps/plataforma/src/app/produtos/importar"
+    },
+    "ORA-CAT-010": {
+      "status": "parcial",
+      "nota": "Lote L3c (11/11): atributos em lote (nome, cor, capacidade, código de barras, preço e custo) pela importação por planilha, com prévia que mostra cada mudança, SKU e código de barras únicos (sem duplicar) e campo vazio que não apaga o valor atual (sem sobrescrita silenciosa). Falta: fotos em lote.",
+      "evidencia": "packages/banco/supabase/migrations/20261111135906_importacao_catalogo.sql; packages/banco/src/importacao.test.ts"
+    },
     "ORA-CAT-008": {
       "status": "parcial",
       "nota": "Custo com histórico, visível só com custo.ver (vendedor não vê; testado). Falta custo por entrada/lote nas compras (ORA-INV-009).",

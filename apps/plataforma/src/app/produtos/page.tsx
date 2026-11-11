@@ -1,6 +1,6 @@
 import { randomUUID } from "node:crypto";
 
-import { Boxes, CircleDollarSign, PackagePlus, Pencil, Plus, ShieldAlert, Tag, Tags } from "lucide-react";
+import { Boxes, CircleDollarSign, FileUp, PackagePlus, Pencil, Plus, ShieldAlert, Tag, Tags } from "lucide-react";
 import type { Metadata } from "next";
 import Link from "next/link";
 
@@ -110,7 +110,8 @@ export default async function Produtos({ searchParams }: {
 
   return (
     <MoldeReal sessao={sessao}>
-      <TituloPagina titulo="Cadastro de produtos" subtitulo="Categorias, marcas, produtos e variações (SKU). Toda mudança pede motivo e fica na auditoria; nada é apagado." />
+      <TituloPagina titulo="Cadastro de produtos" subtitulo="Categorias, marcas, produtos e variações (SKU). Toda mudança pede motivo e fica na auditoria; nada é apagado."
+        acao={<Link href="/produtos/importar" className="inline-flex min-h-11 items-center gap-2 rounded-botao border border-borda bg-white px-4 text-sm font-semibold text-acao hover:bg-acao-clara"><FileUp aria-hidden className="size-4" /> Importar planilha</Link>} />
       {ok && <Aviso tom="sucesso" className="mt-4">{OK[ok]}</Aviso>}
       {erro && <Aviso tom="perigo" className="mt-4">{ERROS_DO_CADASTRO[erro]}</Aviso>}
 
