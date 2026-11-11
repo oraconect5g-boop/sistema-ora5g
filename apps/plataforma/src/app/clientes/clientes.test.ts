@@ -52,9 +52,11 @@ vi.mock("../../lib/acesso/sessao", () => ({ FalhaDoServico: class extends Error 
 
 import { concluirVenda } from "../vender/acoes";
 import FichaDoCliente from "./[id]/page";
-import { buscarClientes, registrarConsentimento, revelarDado, salvarCliente, vincularClienteNaVenda } from "./acoes";
+import { buscarClientes, marcarDiferentes, mesclarClientes, registrarConsentimento, revelarDado, salvarCliente, vincularClienteNaVenda } from "./acoes";
+import Duplicados from "./duplicados/page";
 import NovoCliente from "./novo/page";
 import Clientes from "./page";
+import Segmentos from "./segmentos/page";
 
 function texto(v: unknown): string {
   if (Array.isArray(v)) return v.map(texto).join(" ");
@@ -215,5 +217,63 @@ describe("ações de clientes", () => {
     expect(cenario.chamadas[0]?.argumentos).toMatchObject({ p_cliente: { id: CLIENTE, nome: "Maria (digitado)" } });
     cenario.respostas.concluir_venda = { data: null, error: { code: "22023", message: "Cliente não encontrado nesta rede" } };
     expect(await destinoDe(concluirVenda(formulario({ venda: VENDA, pagamento_1_meio: "dinheiro", pagamento_1_valor: "79,00", cliente_id: CLIENTE })))).toBe("/vender?erro=cliente");
+  });
+});
+
+describe("mesclagem e segmentos (L5c)", () => {
+  const OUTRO = "00000000-0000-4000-9000-000000000099";
+  const lado = (id: string, nome: string, numero: number) => ({ id, numero, nome, documento: null, telefone: "(41) •••••-0001", compras: 1, criado_em: "2026-11-01T13:00:00Z" });
+
+  it("ficha: segmento com a explicação; cadastro mesclado aponta para o que ficou e não se corrige", async () => {
+    cenario.permissoes = new Set(["cliente.buscar", "cliente.cadastrar"]);
+    cenario.respostas.cliente_ficha = { data: ficha({ segmento: { codigo: "recorrente", explicacao: "2 compra(s) em 12 meses, 2 no total; última há 3 dia(s)" } }), error: null };
+    const t = limpar(await FichaDoCliente({ params: Promise.resolve({ id: CLIENTE }), searchParams: Promise.resolve({}) }) as ReactElement);
+    expect(t).toContain("Recorrente");
+    expect(t).toContain("Segmento recorrente: 2 compra(s) em 12 meses, 2 no total; última há 3 dia(s).");
+    cenario.respostas.cliente_ficha = { data: ficha({ situacao: "mesclado", mesclado_em: { id: OUTRO, numero: 7, nome: "Maria Teste" } }), error: null };
+    const m = limpar(await FichaDoCliente({ params: Promise.resolve({ id: CLIENTE }), searchParams: Promise.resolve({}) }) as ReactElement);
+    expect(m).toContain("Este cadastro foi mesclado no cliente");
+    expect(m).toContain("(nº 7)");
+    expect(m).not.toContain("Corrigir cadastro");
+    expect(m).not.toContain("Registrar");
+  });
+
+  it("lista de clientes mostra os atalhos do dono; duplicados e segmentos só para quem pode", async () => {
+    cenario.permissoes = new Set(["cliente.buscar", "cliente.exportar", "cliente.mesclar"]);
+    const t = limpar(await Clientes() as ReactElement);
+    expect(t).toContain("Segmentos");
+    expect(t).toContain("Duplicados");
+    cenario.permissoes = new Set(["cliente.buscar"]);
+    expect(limpar(await Duplicados({ searchParams: Promise.resolve({}) }) as ReactElement)).toContain("Mesclar cadastros é do dono");
+    expect(limpar(await Segmentos() as ReactElement)).toContain("Os segmentos da rede são do dono");
+  });
+
+  it("duplicados: cada par com o motivo, mesclar escolhendo quem fica e marcar como diferentes", async () => {
+    cenario.permissoes = new Set(["cliente.mesclar"]);
+    cenario.respostas.clientes_duplicados = { data: [{ motivo: "mesmo telefone", a: lado(CLIENTE, "Maria Teste", 42), b: lado(OUTRO, "Maria T.", 43) }], error: null };
+    const t = limpar(await Duplicados({ searchParams: Promise.resolve({ ok: "diferentes" }) }) as ReactElement);
+    for (const trecho of ["Maria Teste × Maria T.", "mesmo telefone", "nº 42", "1 compra(s)", "Qual cadastro fica?", "Mesclar", "Marcar como diferentes", "sai da lista"]) expect(t).toContain(trecho);
+  });
+
+  it("segmentos: totais, alto valor, ofertas por canal e a regra de cada segmento", async () => {
+    cenario.permissoes = new Set(["cliente.exportar"]);
+    cenario.respostas.clientes_segmentos = { data: { corte_alto_valor: 15_800, segmentos: [
+      { segmento: "recorrente", clientes: 3, alto_valor: 1, liquido_12m: 47_400, aceitam_ofertas: { whatsapp: 2, sms: 0, email: 1, ligacao: 0 } },
+      { segmento: "sem_compra", clientes: 5, alto_valor: 0, liquido_12m: 0, aceitam_ofertas: { whatsapp: 0, sms: 0, email: 0, ligacao: 0 } },
+    ] }, error: null };
+    const t = limpar(await Segmentos() as ReactElement);
+    for (const trecho of ["8 cliente(s) ativo(s)", "R$ 158,00", "Recorrente", "R$ 474,00", "Sem compra", "a última compra foi há mais de 1 ano"]) expect(t).toContain(trecho);
+  });
+
+  it("ações: mesclar descobre quem sai pelo par; motivo obrigatório; OR029 vira mensagem; marcar diferentes", async () => {
+    expect(await destinoDe(mesclarClientes(formulario({ manter: CLIENTE, a: CLIENTE, b: OUTRO, motivo: "x" })))).toBe("/clientes/duplicados?erro=motivo");
+    expect(await destinoDe(mesclarClientes(formulario({ manter: VENDA, a: CLIENTE, b: OUTRO, motivo: "Mesma pessoa" })))).toBe("/clientes/duplicados?erro=dados");
+    expect(cenario.chamadas).toEqual([]);
+    expect(await destinoDe(mesclarClientes(formulario({ manter: OUTRO, a: CLIENTE, b: OUTRO, motivo: "Mesma pessoa" })))).toBe(`/clientes/${OUTRO}?ok=mesclado`);
+    expect(cenario.chamadas[0]).toEqual({ nome: "clientes_mesclar", argumentos: { p_manter: OUTRO, p_absorver: CLIENTE, p_motivo: "Mesma pessoa" } });
+    cenario.respostas.clientes_mesclar = { data: null, error: { code: "OR029" } };
+    expect(await destinoDe(mesclarClientes(formulario({ manter: CLIENTE, a: CLIENTE, b: OUTRO, motivo: "Mesma pessoa" })))).toBe("/clientes/duplicados?erro=documentos_diferentes");
+    expect(await destinoDe(marcarDiferentes(formulario({ a: CLIENTE, b: OUTRO, motivo: "Mãe e filha" })))).toBe("/clientes/duplicados?ok=diferentes");
+    expect(cenario.chamadas.at(-1)).toEqual({ nome: "clientes_marcar_diferentes", argumentos: { p_a: CLIENTE, p_b: OUTRO, p_motivo: "Mãe e filha" } });
   });
 });

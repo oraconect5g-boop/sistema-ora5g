@@ -128,7 +128,7 @@
     },
     "ORA-QUAL-002": {
       "status": "parcial",
-      "nota": "RLS negando por padrão, testada com várias lojas, perfis e duas organizações. Defeitos de isolamento REV-001/REV-002 corrigidos em 07/11 com regressões; aguardando revisão do Codex antes de voltar a 'testado'. Inventário de autorização (10/11, autorizacao-funcoes.test.ts): as 48 funções SECURITY DEFINER que um usuário logado pode chamar (aviso 0029 do Supabase) recusam 528 tentativas de 13 tipos de atacante (anônimo, sem login, sem sessão, sessão encerrada, fora do turno, bloqueado, vínculo encerrado, sem vínculo, papel sem permissão, outra rede, outra loja, outro vendedor e permissão faltando), sem mudar o banco; anônimo não executa nenhuma; o teste falha se surgir função nova sem casos (prova: 4 defeitos introduzidos de propósito foram pegos). 11/11: inventário com 81 funções (L2 a L5a); a busca de cliente feita por outra rede não acha nada e fica registrada. T11 (vendedor só busca exata) virou teste no L5a. L5b (11/11): 90 funções no inventário (funil e agenda: outra loja, outro vendedor e sem crm.gerir recusados).",
+      "nota": "RLS negando por padrão, testada com várias lojas, perfis e duas organizações. Defeitos de isolamento REV-001/REV-002 corrigidos em 07/11 com regressões; aguardando revisão do Codex antes de voltar a 'testado'. Inventário de autorização (10/11, autorizacao-funcoes.test.ts): as 48 funções SECURITY DEFINER que um usuário logado pode chamar (aviso 0029 do Supabase) recusam 528 tentativas de 13 tipos de atacante (anônimo, sem login, sem sessão, sessão encerrada, fora do turno, bloqueado, vínculo encerrado, sem vínculo, papel sem permissão, outra rede, outra loja, outro vendedor e permissão faltando), sem mudar o banco; anônimo não executa nenhuma; o teste falha se surgir função nova sem casos (prova: 4 defeitos introduzidos de propósito foram pegos). 11/11: inventário com 81 funções (L2 a L5a); a busca de cliente feita por outra rede não acha nada e fica registrada. T11 (vendedor só busca exata) virou teste no L5a. L5b (11/11): 90 funções no inventário (funil e agenda: outra loja, outro vendedor e sem crm.gerir recusados). L5c (11/11): 94 funções (mesclagem e segmentos só do dono).",
       "evidencia": "packages/banco/src/acesso.test.ts; packages/banco/src/revisao-codex.test.ts"
     },
     "ORA-QUAL-003": {
@@ -453,6 +453,21 @@
       "status": "testado",
       "nota": "Lote L5b (11/11): agenda em /crm/agenda e na oportunidade. Atividades (ligação, mensagem, visita, tarefa) com descrição, vencimento e responsável, ligadas a uma oportunidade, só ao cliente ou da rotina; a gerência agenda para quem atende na loja. Concluir ou cancelar pede o resultado; a oportunidade guarda o que foi agendado e feito no histórico. Motivos de perda no catálogo. Atrasadas destacadas. Falta: avisos/lembretes ativos (notificação no celular ou WhatsApp, L15), revisão do Codex e homologação.",
       "evidencia": "packages/banco/supabase/migrations/20261111193816_crm_funil_e_agenda.sql; packages/banco/src/crm.test.ts; packages/banco/src/autorizacao-funcoes.test.ts; apps/plataforma/src/app/crm; apps/plataforma/src/lib/crm/regras.test.ts"
+    },
+    "ORA-CRM-006": {
+      "status": "testado",
+      "nota": "Lote L5c (11/11): /clientes/duplicados, só para o dono (cliente.mesclar). Candidatos por mesmo telefone ou mesmo nome e nascimento (sem comparar todos com todos). Mesclar: o cadastro que fica recebe os dados que faltavam e todo o histórico (vendas, oportunidades, atividades, consentimentos); o outro vira \"mesclado\", aponta para o que ficou, perde os identificadores e não muda mais (gatilho). Documentos diferentes não se mesclam (OR029). \"Não são a mesma pessoa\" tira o par da lista. Motivo e auditoria em tudo; as vendas guardam o nome digitado na hora. Aplicada no ora5g-dev. Falta: revisão do Codex e homologação.",
+      "evidencia": "packages/banco/supabase/migrations/20261111195120_clientes_mesclagem_e_segmentos.sql; packages/banco/src/clientes-mesclagem.test.ts; packages/banco/src/autorizacao-funcoes.test.ts; apps/plataforma/src/app/clientes/duplicados; apps/plataforma/src/app/clientes/clientes.test.ts"
+    },
+    "ORA-CRM-010": {
+      "status": "testado",
+      "nota": "Lote L5c (11/11): segmentos explicáveis sem dado novo (recalculados a cada consulta pelas compras concluídas, menos devoluções): recorrente, novo, ocasional, em risco, inativo e sem compra, com \"alto valor\" para o décimo de maior gasto líquido em 12 meses. A ficha mostra o segmento com a explicação (sem valores); o dono vê em /clientes/segmentos os totais, o alto valor, o líquido e quantos aceitam ofertas por canal (público possível de campanha). Falta: usar o público nas campanhas (L15/L16), revisão do Codex e homologação.",
+      "evidencia": "packages/banco/supabase/migrations/20261111195120_clientes_mesclagem_e_segmentos.sql; packages/banco/src/clientes-mesclagem.test.ts; packages/banco/src/autorizacao-funcoes.test.ts; apps/plataforma/src/app/clientes/segmentos; apps/plataforma/src/lib/clientes/regras.ts"
+    },
+    "ORA-CRM-009": {
+      "status": "parcial",
+      "nota": "L5c (11/11): a ficha do cliente mostra as compras da loja física e da loja online (canal da venda) no mesmo histórico, sem mudar a origem de cada uma. Falta: pedido externo (loja online própria e marketplaces, L13/L14) ligado à venda sem sobrescrever a origem.",
+      "evidencia": "apps/plataforma/src/app/clientes/[id]/page.tsx; packages/banco/supabase/migrations/20261111191909_clientes_compartilhados.sql"
     }
   }
 }

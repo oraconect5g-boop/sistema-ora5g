@@ -1,4 +1,4 @@
-import { ContactRound, ListChecks, UserPlus } from "lucide-react";
+import { Combine, ContactRound, ListChecks, PieChart, UserPlus } from "lucide-react";
 import type { Metadata } from "next";
 import Link from "next/link";
 
@@ -18,12 +18,13 @@ export default async function Clientes() {
   const sessao = await obterSessao({ exigirLoja: true });
   const { supabase, situacao } = sessao;
   const unidade = situacao.unidade_id as string;
-  const [busca, cadastro, lista] = await Promise.all([
+  const [busca, cadastro, lista, mescla] = await Promise.all([
     supabase.rpc("tem_permissao", { p_permissao: "cliente.buscar", p_unidade: unidade }),
     supabase.rpc("tem_permissao", { p_permissao: "cliente.cadastrar", p_unidade: unidade }),
     supabase.rpc("tem_permissao", { p_permissao: "cliente.exportar", p_unidade: unidade }),
+    supabase.rpc("tem_permissao", { p_permissao: "cliente.mesclar", p_unidade: unidade }),
   ]);
-  if (busca.error || cadastro.error || lista.error) throw new FalhaDoServico("tem_permissao");
+  if (busca.error || cadastro.error || lista.error || mescla.error) throw new FalhaDoServico("tem_permissao");
   if (!busca.data) {
     return <MoldeReal sessao={sessao}><Aviso tom="aviso" className="mt-6">Seu papel não consulta clientes.</Aviso></MoldeReal>;
   }
@@ -37,6 +38,12 @@ export default async function Clientes() {
     <MoldeReal sessao={sessao}>
       <TituloPagina sobretitulo={situacao.unidade_nome} titulo="Clientes" subtitulo="O cliente é da rede, não da loja: encontre pelo CPF/CNPJ ou pelo telefone completos. Cada consulta fica registrada (LGPD)."
         acao={cadastro.data ? <BotaoLink href="/clientes/novo" tamanho="sm"><UserPlus aria-hidden className="size-4" /> Novo cliente</BotaoLink> : undefined} />
+      {(lista.data || mescla.data) && (
+        <div className="mt-4 flex flex-wrap gap-2">
+          {lista.data && <BotaoLink href="/clientes/segmentos" tamanho="sm" variante="secundario"><PieChart aria-hidden className="size-4" /> Segmentos</BotaoLink>}
+          {mescla.data && <BotaoLink href="/clientes/duplicados" tamanho="sm" variante="secundario"><Combine aria-hidden className="size-4" /> Duplicados</BotaoLink>}
+        </div>
+      )}
       <Cartao className="mt-4" titulo="Buscar cliente" icone={ContactRound}>
         <BuscaDeCliente modo="ficha" completa={Boolean(lista.data)} />
       </Cartao>

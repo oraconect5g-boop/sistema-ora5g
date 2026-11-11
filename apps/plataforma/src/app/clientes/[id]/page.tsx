@@ -9,7 +9,7 @@ import { MoldeReal } from "../../../componentes/MoldeReal";
 import { Aviso, Botao, Cartao, ListaDados, Selo, TituloPagina } from "../../../componentes/ui";
 import { ehUuid } from "../../../lib/acesso/regras";
 import { FalhaDoServico, obterSessao } from "../../../lib/acesso/sessao";
-import { CAMPOS_REVELAVEIS, CANAIS, ERROS_DO_CLIENTE, FINALIDADES, FINALIDADES_DE_CONTATO, FONTES, ehFinalidade } from "../../../lib/clientes/regras";
+import { CAMPOS_REVELAVEIS, CANAIS, ERROS_DO_CLIENTE, FINALIDADES, FINALIDADES_DE_CONTATO, FONTES, SEGMENTOS, ehFinalidade, ehSegmento } from "../../../lib/clientes/regras";
 import { centavosDoBanco } from "../../../lib/dinheiro";
 import { brl } from "../../../lib/formato";
 import { chaveDoCatalogo, type ValorDeParametro } from "../../../lib/parametros";
@@ -26,6 +26,7 @@ const OK = {
   sem_mudanca: "Nada mudou no cadastro.",
   consentimento: "Consentimento registrado.",
   consentimento_igual: "O consentimento já estava assim.",
+  mesclado: "Cadastros mesclados: este ficou com os dados e o histórico do outro.",
 } as const;
 const ACESSOS: Record<string, string> = {
   "cliente.criado": "cadastrou", "cliente.alterado": "corrigiu", "cliente.busca": "encontrou na busca", "cliente.ficha": "abriu a ficha", "cliente.revelado": "viu",
@@ -38,6 +39,8 @@ type Ficha = {
   email: string | null; nascimento_informado: boolean; endereco_informado: boolean; origem: string; criado_em: string; loja_de_origem: string | null;
   consentimentos: { canal: keyof typeof CANAIS; finalidade: keyof typeof FINALIDADES_DE_CONTATO; situacao: string; fonte: keyof typeof FONTES; registrado_em: string }[];
   compras: { total: number; ultima: string | null };
+  mesclado_em: { id: string; numero: number; nome: string } | null;
+  segmento: { codigo: string; explicacao: string };
 };
 
 // Ficha do cliente (lote L5a: ORA-CRM-002, base). Abrir a ficha e mostrar um dado protegido ficam
@@ -65,7 +68,7 @@ export default async function FichaDoCliente({ params, searchParams }: { params:
   if (ficha.error) throw new FalhaDoServico("cliente_ficha");
   const f = ficha.data as unknown as Ficha;
   const [compras, acessos] = await Promise.all([
-    supabase.from("vendas").select("id, numero, concluida_em, total_centavos, situacao").eq("cliente_id", id).order("concluida_em", { ascending: false }).limit(20),
+    supabase.from("vendas").select("id, numero, concluida_em, total_centavos, situacao, canal").eq("cliente_id", id).order("concluida_em", { ascending: false }).limit(20),
     auditoria.data
       ? supabase.from("auditoria").select("id, ocorrido_em, acao, usuario_id, depois").eq("alvo_tipo", "cliente").eq("alvo_id", id).order("ocorrido_em", { ascending: false }).limit(20)
       : Promise.resolve(null),
@@ -76,13 +79,18 @@ export default async function FichaDoCliente({ params, searchParams }: { params:
     : null;
   const nomeDe = (usuario: string | null) => pessoas?.data?.find((p) => p.id === usuario)?.nome ?? "—";
   const visiveis = compras.data.filter((c) => c.situacao === "concluida").length;
+  const ativo = f.situacao === "ativo";
+  const segmento = ehSegmento(f.segmento?.codigo) ? SEGMENTOS[f.segmento.codigo] : null;
 
   return (
     <MoldeReal sessao={sessao}>
       <Link href="/clientes" className="inline-flex min-h-10 items-center gap-1 text-sm font-semibold text-acao"><ArrowLeft aria-hidden className="size-4" /> Clientes</Link>
       <TituloPagina titulo={f.nome} subtitulo={<span className="flex flex-wrap items-center gap-2">
         <span className="numeros">nº {f.numero}</span> · {f.tipo === "pessoa_juridica" ? "empresa" : "pessoa física"} · cliente desde {quando(f.criado_em)}{f.loja_de_origem ? ` (${f.loja_de_origem})` : ""}
-        {f.situacao !== "ativo" && <Selo tom="neutro">inativo</Selo>}</span>} />
+        {f.situacao !== "ativo" && <Selo tom="neutro">{f.situacao}</Selo>}
+        {segmento && <Selo tom={segmento.tom}>{segmento.nome}</Selo>}</span>} />
+      {f.mesclado_em && <Aviso tom="aviso" className="mt-4">Este cadastro foi mesclado no cliente <Link href={`/clientes/${f.mesclado_em.id}`} className="font-semibold underline">{`${f.mesclado_em.nome} (nº ${f.mesclado_em.numero})`}</Link>: os dados e o histórico estão lá.</Aviso>}
+      {segmento && <p className="mt-2 text-sm text-suave">{`Segmento ${segmento.nome.toLowerCase()}: ${f.segmento.explicacao}.`}</p>}
       {ok && <Aviso tom="sucesso" className="mt-4">{OK[ok]}</Aviso>}
       {erro && <Aviso tom="perigo" className="mt-4">{ERROS_DO_CLIENTE[erro]}</Aviso>}
 
@@ -103,7 +111,7 @@ export default async function FichaDoCliente({ params, searchParams }: { params:
             {compras.data.map((c) => (
               <li key={c.id} className="flex flex-wrap items-center justify-between gap-2 py-2">
                 <Link href={`/vendas/${c.id}`} className="font-semibold text-acao">Venda nº {c.numero}</Link>
-                <span className="numeros text-xs text-suave">{quando(c.concluida_em)} · {brl(centavosDoBanco(c.total_centavos))}{c.situacao !== "concluida" ? ` · ${c.situacao}` : ""}</span>
+                <span className="numeros text-xs text-suave">{quando(c.concluida_em)} · {brl(centavosDoBanco(c.total_centavos))}{c.canal === "online" ? " · loja online" : ""}{c.situacao !== "concluida" ? ` · ${c.situacao}` : ""}</span>
               </li>
             ))}
             {compras.data.length === 0 && <li className="py-2 text-suave">{f.compras.total > 0 ? "As compras deste cliente são de vendas que você não acompanha." : "Nenhuma compra ligada a este cadastro."}</li>}
@@ -122,7 +130,7 @@ export default async function FichaDoCliente({ params, searchParams }: { params:
           ))}
           {f.consentimentos.length === 0 && <li className="py-2 text-suave">Nenhum consentimento registrado: o cliente não recebe ofertas nem pós-venda.</li>}
         </ul>
-        {cadastro.data && f.situacao === "ativo" && (
+        {cadastro.data && ativo && (
           <form action={registrarConsentimento} className="mt-3 grid gap-2 sm:grid-cols-5">
             <input type="hidden" name="cliente" value={f.id} />
             <label className="text-xs font-medium">Canal<select name="canal" className={campo}>{Object.entries(CANAIS).map(([k, v]) => <option key={k} value={k}>{v}</option>)}</select></label>
@@ -134,7 +142,7 @@ export default async function FichaDoCliente({ params, searchParams }: { params:
         )}
       </Cartao>
 
-      {cadastro.data && (
+      {cadastro.data && ativo && (
         <details className="mt-4 rounded-xl border border-borda bg-white px-3 py-2">
           <summary className="flex min-h-10 cursor-pointer items-center gap-2 text-sm font-semibold text-acao"><PencilLine aria-hidden className="size-4" /> Corrigir cadastro</summary>
           <div className="mt-2">
