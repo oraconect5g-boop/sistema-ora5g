@@ -50,7 +50,7 @@ const codigo = async (s: Sessao | null, sql: string, params: unknown[] = []) => 
   const r = await tentar(s, sql, params);
   return "codigo" in r ? r.codigo : null;
 };
-const linhas = (s: Sessao, sql: string, params: unknown[] = []) => comoUsuario(db, s, async () => (await db.query(sql, params)).rows);
+const linhas = (s: Sessao, sql: string, params: unknown[] = []) => comoUsuario(db, s, async () => (await db.query<Record<string, unknown>>(sql, params)).rows);
 
 const SALVAR = "select public.cliente_salvar($1, $2::jsonb, $3, $4) as v";
 const BUSCAR = "select public.cliente_buscar($1, $2) as v";
@@ -142,7 +142,7 @@ describe("cadastro com dados mínimos por finalidade (ORA-CRM-001)", () => {
     const alteracoes = (await acessos(ids.vendedorA)).filter((a) => a.acao === "cliente.alterado").map((a) => a.depois.campos);
     expect(alteracoes).toEqual([["telefone"], ["email"]]);
     expect(await auditoriaCom("41987650009")).toBe(0);
-    expect((await db.query("select motivo from public.auditoria where acao = 'cliente.alterado' order by id")).rows.map((r) => r.motivo))
+    expect((await db.query<{ motivo: string }>("select motivo from public.auditoria where acao = 'cliente.alterado' order by id")).rows.map((r) => r.motivo))
       .toEqual(["Cliente trocou de número", "Cliente pediu para tirar o e-mail"]);
   });
 });
@@ -287,7 +287,7 @@ describe("cliente na venda (base de ORA-CRM-002)", () => {
     expect(await codigo(dono, VINCULAR, [venda, daOutraRede.id, "Tentativa"])).toBe("P0002");
     expect(await valor(dono, VINCULAR, [venda, null, "Cliente pediu para não ligar a compra ao cadastro"])).toBe(true);
     expect((await db.query("select cliente_id, cliente_nome from public.vendas where id = $1", [venda])).rows[0]).toEqual({ cliente_id: null, cliente_nome: "Maria (digitado)" });
-    expect((await db.query("select motivo from public.auditoria where acao = 'vendas.alterado' and alvo_id = $1 and motivo like 'Cliente da venda:%' order by id", [venda])).rows.map((x) => x.motivo))
+    expect((await db.query<{ motivo: string }>("select motivo from public.auditoria where acao = 'vendas.alterado' and alvo_id = $1 and motivo like 'Cliente da venda:%' order by id", [venda])).rows.map((x) => x.motivo))
       .toEqual(["Cliente da venda: Era o marido dela", "Cliente da venda: Cliente pediu para não ligar a compra ao cadastro"]);
 
     const rascunho = await valor<string>(ana, "select public.criar_venda($1) as v", [chave("venda")]);
