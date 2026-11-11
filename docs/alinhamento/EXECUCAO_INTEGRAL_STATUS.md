@@ -1,6 +1,6 @@
 # Execução integral — checkpoint do programa
 
-**Atualizado em:** 10/11/2026, Claude Code. **Pedido:** concluir funcionalmente todas as áreas (PR #67, `docs/execucao-integral-20261110`, commit `d8c1bc6`); o refinamento visual fica para o fim.
+**Atualizado em:** 11/11/2026, Claude Code. **Pedido:** concluir funcionalmente todas as áreas (PR #67, `docs/execucao-integral-20261110`, commit `d8c1bc6`); o refinamento visual fica para o fim.
 **Complemento legível por programa:** [`execucao-integral-status.json`](execucao-integral-status.json) (179 IDs com estado, lote, bloqueio externo e revisão).
 
 > **Ao retomar** (nova sessão ou contexto resumido): ler este arquivo e o JSON, conferir `git log origin/main` e o rodapé/`/saude` do site, e seguir para o **próximo item executável da fila** (seção 5). Não reiniciar o projeto, não refazer o financeiro lote 1, não reabrir as decisões da seção 3.
@@ -9,10 +9,10 @@
 
 | | Commit | Observação |
 |---|---|---|
-| `main` | `0ecb2f2` | Financeiro lote 1 (`0b6b45e`), correção do 307 do `/financeiro` (`38fc068`), PR #64 (`2ac6a25`) e **L2 lojas** (`0ecb2f2`, CI completo verde em `9a884ad`) |
+| `main` | `ed4a468` | Financeiro lote 1 (`0b6b45e`), correção do 307 do `/financeiro` (`38fc068`), PR #64 (`2ac6a25`), **L2 lojas** (`0ecb2f2`) e **L3a cadastro do catálogo** (`ed4a468`, CI verde em `da56f5f`) |
 | Homologação (`ora5g.com.br`) | `0b6b45e` | Publicada em 10/11 às 20:45, com autorização; conferida no rodapé e em `/saude` em aba anônima |
-| Falta publicar | `38fc068`, `2ac6a25`, `0ecb2f2` | Correção do 307, semente do gerente de teste (só desenvolvimento) e L2; publicar exige autorização a cada vez e, no caso do L2, a migration aplicada antes |
-| Banco `ora5g-dev` | 25 migrations | Em 11/11: `20261111132503_lojas_cadastro_e_configuracao` (L2) e `20261111132621_catalogo_cadastro` (L3a), md5 do arquivo = md5 gravado; tipos gerados idênticos aos do repositório |
+| Falta publicar | `38fc068` em diante (até `ed4a468`) | Correção do 307, semente do gerente de teste (só desenvolvimento), L2 e L3a; publicar exige autorização a cada vez (as migrations já estão no `ora5g-dev`) |
+| Banco `ora5g-dev` | 26 migrations | Em 11/11: `20261111132503_lojas_cadastro_e_configuracao` (L2), `20261111132621_catalogo_cadastro` (L3a) e `20261111133804_precos_e_campanhas` (L3b), md5 do arquivo = md5 gravado; tipos gerados pelo Supabase no repositório. Verificador: aviso 0001 de `unidade_configuracoes` aceito (a chave composta já é coberta pelo índice único `(unidade_id, vigente_desde)`, mesma decisão do Codex para as fotos no lote 3) |
 
 ## 2. Cobertura de leitura (10/11/2026)
 
@@ -46,8 +46,8 @@
 |---|---|---|---|
 | L1 | ORG-002, QUAL-002 (PR #64) | feito (`2ac6a25`) | Falta criar as três contas fictícias no Auth (A1) e rodar o vínculo no `ora5g-dev` |
 | L2 | ORG-001, ORG-008 (lojas) | **na `main`** (`0ecb2f2`) | Tela `/lojas`, 6 funções, configuração com vigência, inativação com pendências e bloqueio de movimento (OR019). Aplicada no `ora5g-dev` em 11/11. Falta: revisão do Codex e publicação autorizada. CNPJ/endereço reais chegam por B2. ORG-003 segue a decisão dos cinco papéis do ADR-002 (papéis novos por migration quando houver pessoa na função) |
-| L3a | CAT-001, CAT-005 | **implementado e testado** (CI verde em `74715be`; aplicado no `ora5g-dev` em 11/11) | Tela `/produtos`: categorias, marcas, produtos e variações com motivo e auditoria; política de desconto da categoria (P14) por quem altera preço. Falta: merge, revisão do Codex e publicação autorizada |
-| L3b | CAT-004, CAT-007 | próximo | Preço por loja/canal pela tela (`preco.alterar`), mudança agendada e campanha com início e fim, cancelamento sem reescrever o passado |
+| L3a | CAT-001, CAT-005 | **na `main`** (`ed4a468`; aplicado no `ora5g-dev`) | Tela `/produtos`: categorias, marcas, produtos e variações com motivo e auditoria; política de desconto da categoria (P14) por quem altera preço. Falta: revisão do Codex e publicação autorizada |
+| L3b | CAT-004, CAT-007 | **implementado e testado na branch** `feature/ORA-L3b-precos` (aplicado no `ora5g-dev`) | Tela `/produtos/precos`: o que vale em cada loja e por quê, preço novo agora ou agendado, campanha com início e fim, cancelar/encerrar sem reescrever o passado. Falta: CI e merge |
 | L3c | CAT-002, CAT-010 | depois do L3b | Lote de importação com prévia, validação, aprovação e aplicação idempotente; o formato das colunas da Rein espera o arquivo de exemplo (B1, ADR-003 §3) |
 | L4 | INV-005, 008, 009, 010, 012 | pronto | Inventário cíclico com aprovação, compras/recebimento com custo de entrada, condição de unidade, rotina de vencimento de reservas no worker |
 | L5 | CRM-001 a 010 | pronto | Cliente compartilhado com finalidade e identificador protegido; ligação a vendas, linhas e OS; funil e atividades; consentimento |

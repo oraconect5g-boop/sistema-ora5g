@@ -1,5 +1,5 @@
 // ARQUIVO GERADO pelo Supabase (generate_typescript_types do projeto ora5g-dev) depois da
-// migration 20261111132621_catalogo_cadastro. Não edite à mão: gere de novo a cada
+// migration 20261111133804_precos_e_campanhas. Não edite à mão: gere de novo a cada
 // migration aplicada (auditoria do Codex de 08/11, §7.2). O teste tipos-banco.test.ts confere
 // que funções e tabelas públicas daqui são as mesmas das migrations.
 export type Json =
@@ -1834,12 +1834,15 @@ export type Database = {
       precos: {
         Row: {
           canal: string
+          cancelado_em: string | null
+          cancelado_por: string | null
           criado_em: string
           criado_por: string | null
           fim: string | null
           id: string
           inicio: string
           motivo: string | null
+          motivo_cancelamento: string | null
           organizacao_id: string
           origem: string
           unidade_id: string | null
@@ -1848,12 +1851,15 @@ export type Database = {
         }
         Insert: {
           canal?: string
+          cancelado_em?: string | null
+          cancelado_por?: string | null
           criado_em?: string
           criado_por?: string | null
           fim?: string | null
           id?: string
           inicio?: string
           motivo?: string | null
+          motivo_cancelamento?: string | null
           organizacao_id: string
           origem: string
           unidade_id?: string | null
@@ -1862,12 +1868,15 @@ export type Database = {
         }
         Update: {
           canal?: string
+          cancelado_em?: string | null
+          cancelado_por?: string | null
           criado_em?: string
           criado_por?: string | null
           fim?: string | null
           id?: string
           inicio?: string
           motivo?: string | null
+          motivo_cancelamento?: string | null
           organizacao_id?: string
           origem?: string
           unidade_id?: string | null
@@ -1875,6 +1884,13 @@ export type Database = {
           variante_id?: string
         }
         Relationships: [
+          {
+            foreignKeyName: "precos_cancelado_por_fkey"
+            columns: ["cancelado_por"]
+            isOneToOne: false
+            referencedRelation: "perfis_usuario"
+            referencedColumns: ["id"]
+          },
           {
             foreignKeyName: "precos_criado_por_fkey"
             columns: ["criado_por"]
@@ -3471,6 +3487,33 @@ export type Database = {
           variante_id: string
         }[]
       }
+      preco_campanha: {
+        Args: {
+          p_canal: string
+          p_fim: string
+          p_inicio: string
+          p_motivo: string
+          p_unidade: string
+          p_valor: number
+          p_variante: string
+        }
+        Returns: Json
+      }
+      preco_cancelar: {
+        Args: { p_motivo: string; p_preco: string }
+        Returns: string
+      }
+      preco_definir: {
+        Args: {
+          p_canal: string
+          p_inicio: string
+          p_motivo: string
+          p_unidade: string
+          p_valor: number
+          p_variante: string
+        }
+        Returns: Json
+      }
       preco_vigente: {
         Args: {
           p_canal?: string
@@ -3479,6 +3522,18 @@ export type Database = {
           p_variante: string
         }
         Returns: number
+      }
+      precos_por_loja: {
+        Args: { p_canal?: string; p_variante: string }
+        Returns: {
+          de_loja: boolean
+          fim: string
+          origem: string
+          preco_id: string
+          unidade: string
+          unidade_id: string
+          valor_centavos: number
+        }[]
       }
       registrar_foto: {
         Args: {

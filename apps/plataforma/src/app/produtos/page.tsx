@@ -1,6 +1,6 @@
 import { randomUUID } from "node:crypto";
 
-import { Boxes, PackagePlus, Pencil, Plus, ShieldAlert, Tag, Tags } from "lucide-react";
+import { Boxes, CircleDollarSign, PackagePlus, Pencil, Plus, ShieldAlert, Tag, Tags } from "lucide-react";
 import type { Metadata } from "next";
 import Link from "next/link";
 
@@ -163,7 +163,9 @@ export default async function Produtos({ searchParams }: {
                 <ul className="divide-y divide-borda rounded-xl border border-borda">
                   {dele.map((v) => (
                     <li key={v.id} className="px-3 py-2 text-sm">
-                      <p className="flex flex-wrap items-center gap-2"><span className="numeros font-semibold">{v.sku}</span> {v.nome}{!v.ativa && <Selo tom="neutro">inativa</Selo>}</p>
+                      <p className="flex flex-wrap items-center gap-2"><span className="numeros font-semibold">{v.sku}</span> {v.nome}{!v.ativa && <Selo tom="neutro">inativa</Selo>}
+                        <Link href={`/produtos/precos?variante=${v.id}`} className="ml-auto inline-flex min-h-10 items-center gap-1 text-sm font-semibold text-acao"><CircleDollarSign aria-hidden className="size-4" /> Preços</Link>
+                      </p>
                       <p className="text-xs text-suave">{[v.cor, v.capacidade, v.codigo_barras && `código de barras ${v.codigo_barras}`, TEM_ESTOQUE.has(p.tipo) ? `mínimo ${v.estoque_minimo}` : null].filter(Boolean).join(" · ") || "sem detalhes"}</p>
                       <details className="mt-1">
                         <summary className={resumo}><Pencil aria-hidden className="size-4" /> Editar variação</summary>

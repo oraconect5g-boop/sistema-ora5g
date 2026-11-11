@@ -461,4 +461,19 @@ describe("duas conexões ao mesmo tempo no PostgreSQL 17", () => {
     expect(await contar("select count(*) as n from public.caixas where unidade_id = $1 and situacao = 'aberto'", [lojaE])).toBe(1);
     expect(await contar("select count(*) as n from public.unidades where id = $1 and status = 'ativa'", [lojaE])).toBe(1);
   });
+
+  it("a mesma mudança de preço enviada duas vezes ao mesmo tempo: um preço novo só, o anterior fechado uma vez (L3b)", async () => {
+    const dono = await sessaoNaLoja(ids.dono, ids.lojaA);
+    const DEFINIR = "select public.preco_definir($1, null, 'online', 6900, null, 'Promoção do site') as v";
+    await abrir(a, dono);
+    await abrir(b, dono);
+    let primeira: { id: string; repetida: boolean } | undefined;
+    const final = await disputa(
+      async () => { primeira = await valor(a, DEFINIR, [cat.capa]); },
+      () => valor<{ id: string; repetida: boolean }>(b, DEFINIR, [cat.capa]),
+    );
+    expect(primeira?.repetida).toBe(false);
+    expect(final).toEqual({ ok: { id: primeira?.id, repetida: true } });
+    expect(await contar("select count(*) as n from public.precos where variante_id = $1 and canal = 'online' and fim is null and cancelado_em is null", [cat.capa])).toBe(1);
+  });
 });

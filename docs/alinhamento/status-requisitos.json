@@ -247,9 +247,14 @@
       "evidencia": "packages/banco/supabase/migrations/20261108150620_catalogo_estoque.sql; packages/banco/src/catalogo-estoque.test.ts; apps/plataforma/src/app/catalogo/busca.test.ts; packages/banco/supabase/migrations/20261111132621_catalogo_cadastro.sql; packages/banco/src/catalogo-cadastro.test.ts; apps/plataforma/src/app/produtos; apps/plataforma/src/lib/catalogo/cadastro.test.ts"
     },
     "ORA-CAT-004": {
-      "status": "parcial",
-      "nota": "Preço com histórico por loja e canal, campanha com período e preço vigente consultável em qualquer momento (preco_vigente), sem apagar o anterior. Falta: alteração pela tela com preco.alterar e a gravação do preço na venda (ADR-004).",
-      "evidencia": "packages/banco/supabase/migrations/20261108150620_catalogo_estoque.sql; packages/banco/src/catalogo-estoque.test.ts"
+      "status": "testado",
+      "nota": "Preço com histórico por loja e canal, campanha com período e preço vigente consultável em qualquer momento (preco_vigente), sem apagar o anterior. A venda guarda o preço do momento e recusa concluir se ele mudou (OR007, ADR-004). Lote L3b (11/11): tela /produtos/precos por quem tem preco.alterar, com o que vale em cada loja e por quê (campanha, preço da loja ou da rede), preço novo agora ou agendado (um agendamento por alcance, OR022), cancelamento do que não começou e o passado protegido no banco (precos_protegidos: valor, início e o que já valeu não mudam, nem pelo dono do banco). Aplicada no ora5g-dev. Aguardando revisão do Codex e homologação.",
+      "evidencia": "packages/banco/supabase/migrations/20261108150620_catalogo_estoque.sql; packages/banco/src/catalogo-estoque.test.ts; packages/banco/supabase/migrations/20261111133804_precos_e_campanhas.sql; packages/banco/src/precos.test.ts; packages/banco/src/concorrencia.test.ts (L3b); apps/plataforma/src/app/produtos/precos; apps/plataforma/src/lib/catalogo/precos.test.ts"
+    },
+    "ORA-CAT-007": {
+      "status": "testado",
+      "nota": "Lote L3b (11/11): campanha com início e fim por loja ou rede e por canal, gravada por quem tem preco.alterar, com motivo e auditoria; vale acima do preço da loja e do geral só no período; campanhas do mesmo alcance não se sobrepõem (OR021); dura no máximo um ano; a que não começou é cancelada e a em curso é encerrada agora, sem reescrever o passado. Aplicada no ora5g-dev. Aguardando revisão do Codex e homologação.",
+      "evidencia": "packages/banco/supabase/migrations/20261111133804_precos_e_campanhas.sql; packages/banco/src/precos.test.ts; apps/plataforma/src/app/produtos/precos"
     },
     "ORA-CAT-008": {
       "status": "parcial",
