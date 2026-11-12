@@ -1,9 +1,12 @@
-// Entrada de mercadoria (L4a) com a sessão e o Supabase SIMULADOS: nenhuma credencial, nenhuma rede.
-// Confere permissão, a lista de entradas, o que as ações mandam ao banco e a busca de itens. As regras do
-// banco estão provadas em packages/banco/src/entrada-estoque.test.ts.
+// Entrada de mercadoria (L4a e R1) com a sessão e o Supabase SIMULADOS: nenhuma credencial, nenhuma rede.
+// Confere a permissão, o histórico e a entrada aberta lidos pelas funções do banco (nunca pelas tabelas),
+// o custo protegido, a paginação, a volta à entrada depois de uma recusa, o que as ações mandam ao banco
+// e a busca de itens. As regras do banco estão provadas em packages/banco/src/entrada-estoque.test.ts.
 import { completarComDigitoVerificador } from "@ora5g/dominio";
 import { isValidElement, type ReactElement } from "react";
 import { beforeEach, describe, expect, it, vi } from "vitest";
+
+import { ERROS_DA_ENTRADA } from "../../../lib/estoque/entrada";
 
 const LOJA = "00000000-0000-4000-8000-0000000000cc";
 const ORG = "00000000-0000-4000-8000-0000000000ff";
@@ -12,23 +15,38 @@ const FORN = "00000000-0000-4000-9000-000000000060";
 const ENTRADA = "00000000-0000-4000-9000-000000000070";
 const APARELHO = "00000000-0000-4000-9000-000000000030";
 const CAPA = "00000000-0000-4000-9000-000000000031";
+const INATIVO = "00000000-0000-4000-9000-000000000039";
+// IMEIs FICTÍCIOS com dígito verificador válido.
 const IMEI = completarComDigitoVerificador("35209900180009");
+const IMEI_2 = completarComDigitoVerificador("35209900180010");
 
+type Resposta = { data: unknown; error: null | { code: string; message?: string } };
 const cenario = vi.hoisted(() => ({
   permissoes: new Set<string>(),
   chamadas: [] as { nome: string; argumentos: Record<string, unknown> }[],
   respostas: {} as Record<string, { data: unknown; error: null | { code: string; message?: string } }>,
   tabelas: {} as Record<string, Record<string, unknown>[]>,
+  /** Tabelas lidas direto (sem função do banco) e os filtros de igualdade pedidos, na ordem. */
+  lidas: [] as string[],
+  filtros: [] as [tabela: string, coluna: string, valor: unknown][],
 }));
 
 vi.mock("next/headers", () => ({ cookies: async () => ({ getAll: () => [], set: () => undefined }) }));
 vi.mock("next/navigation", () => ({ redirect: (destino: string) => { throw new Error(`redirecionou para ${destino}`); } }));
 
+/** Coluna da própria linha ou de um recurso embutido ("produtos.ativo"), como no filtro do PostgREST. */
+const valorDe = (linha: Record<string, unknown>, coluna: string) =>
+  coluna.split(".").reduce<unknown>((v, parte) => (v !== null && typeof v === "object" ? (v as Record<string, unknown>)[parte] : undefined), linha);
+
 class Consulta {
   linhas: Record<string, unknown>[];
-  constructor(nome: string) { this.linhas = [...(cenario.tabelas[nome] ?? [])]; }
+  constructor(readonly nome: string) { cenario.lidas.push(nome); this.linhas = [...(cenario.tabelas[nome] ?? [])]; }
   select() { return this; }
-  eq(coluna: string, valor: unknown) { this.linhas = this.linhas.filter((l) => l[coluna] === undefined || l[coluna] === valor); return this; }
+  eq(coluna: string, valor: unknown) {
+    cenario.filtros.push([this.nome, coluna, valor]);
+    this.linhas = this.linhas.filter((l) => { const v = valorDe(l, coluna); return v === undefined || v === valor; });
+    return this;
+  }
   in(coluna: string, valores: unknown[]) { this.linhas = this.linhas.filter((l) => l[coluna] === undefined || valores.includes(l[coluna])); return this; }
   ilike() { return this; }
   order() { return this; }
@@ -55,6 +73,8 @@ vi.mock("../../../lib/acesso/sessao", () => ({ FalhaDoServico: class extends Err
 import { buscarItensParaEntrada, estornarEntrada, registrarEntrada, salvarFornecedor } from "./acoes";
 import EntradaDeMercadoria from "./page";
 
+// O texto da tela: tudo o que a página montou, na ordem (inclusive endereços e classes). Componentes não
+// são executados; por isso a página monta as partes dela com funções comuns.
 function texto(v: unknown): string {
   if (Array.isArray(v)) return v.map(texto).join(" ");
   if (typeof v === "string" || typeof v === "number") return String(v);
@@ -62,80 +82,413 @@ function texto(v: unknown): string {
   if (v && typeof v === "object") return Object.values(v).map(texto).join(" ");
   return "";
 }
-const tela = async () => texto(await EntradaDeMercadoria({ searchParams: Promise.resolve({}) }) as ReactElement).replace(/\s+/g, " ");
+const tela = async (parametros: Record<string, string | string[]> = {}) =>
+  texto(await EntradaDeMercadoria({ searchParams: Promise.resolve(parametros) }) as ReactElement).replace(/\s+/g, " ");
 const destinoDe = async (acao: Promise<unknown>) => {
   try { await acao; } catch (e) { return (e as Error).message.replace("redirecionou para ", ""); }
   throw new Error("a ação não redirecionou");
 };
+/** Os parâmetros do endereço para onde a ação mandou, como o Next os entrega à página. */
+const parametrosDe = (destino: string) => Object.fromEntries(new URL(destino, "https://teste.invalid").searchParams);
 const formulario = (campos: Record<string, string>) => {
   const f = new FormData();
   for (const [k, v] of Object.entries(campos)) f.set(k, v);
   return f;
 };
 
+// Respostas das funções do banco no formato da migration 20261112033713 (estoque_entradas, estoque_entrada).
+const linha = (extra: Record<string, unknown> = {}) => ({
+  linha: 1, sku: "APA-0001", nome: "Galaxy A15", quantidade: 1, condicao: "seminovo", custo_unitario: 105000, reentradas: 0, saldo_livre: null, identificadores: null, ...extra,
+});
+const capa = (extra: Record<string, unknown> = {}) => linha({ linha: 2, sku: "ACE-0001", nome: "Capa", quantidade: 20, condicao: "novo", custo_unitario: 1700, ...extra });
+const entrada = (extra: Record<string, unknown> = {}) => ({
+  id: ENTRADA, numero: 12, tipo: "compra", documento: "NF 1234", situacao: "registrada", total_unidades: 21, total_custo: "139000",
+  criado_em: "2026-11-11T13:00:00+00:00", criado_por: "Gerente Teste", estornado_em: null, estornado_por: null, motivo_estorno: null, fornecedor: "Distribuidora Teste",
+  itens: [linha(), capa()], ...extra,
+});
+const historico = (entradas: unknown[], extra: Record<string, unknown> = {}): Resposta =>
+  ({ data: { ve_custo: true, total: entradas.length, entradas, proxima: null, ...extra }, error: null });
+/** Entradas com número decrescente a partir de "maior" (a numeração é da rede: a de uma loja pula). */
+const varias = (quantas: number, maior: number) => Array.from({ length: quantas }, (_, i) =>
+  entrada({ id: `00000000-0000-4000-9000-0000000${10_000 + maior - i}`, numero: maior - i }));
+/** A entrada aberta: o aparelho vendido (não livre), o que voltou por reentrada e a capa com saldo livre menor. */
+const aberta = (extra: Record<string, unknown> = {}): Resposta => ({
+  data: entrada({
+    ve_custo: true, total_unidades: 22, total_custo: 244000,
+    itens: [
+      linha({ quantidade: 2, reentradas: 1, identificadores: [
+        { identificador: IMEI, situacao: "vendido", livre: false, reentrada: false },
+        { identificador: IMEI_2, situacao: "disponivel", livre: true, reentrada: true },
+      ] }),
+      capa({ saldo_livre: 15, identificadores: [] }),
+    ],
+    ...extra,
+  }),
+  error: null,
+});
+const recusa = (code: string, message: string): Resposta => ({ data: null, error: { code, message } });
+
 beforeEach(() => {
-  cenario.permissoes = new Set();
+  cenario.permissoes = new Set(["estoque.receber"]);
   cenario.chamadas = [];
-  cenario.respostas = {};
+  cenario.lidas = [];
+  cenario.filtros = [];
+  cenario.respostas = { estoque_entradas: historico([entrada()]) };
   cenario.tabelas = {
     unidades: [{ id: LOJA, organizacao_id: ORG }],
     fornecedores: [{ id: FORN, nome: "Distribuidora Teste", ativo: true }],
-    entradas_estoque: [{
-      id: ENTRADA, numero: 12, tipo: "compra", documento: "NF 1234", situacao: "registrada", total_unidades: 21, total_custo_centavos: "139000",
-      criado_em: "2026-11-11T13:00:00Z", motivo_estorno: null, unidade_id: LOJA, fornecedores: { nome: "Distribuidora Teste" },
-      entrada_itens: [{ linha: 2, quantidade: 20, custo_unitario_centavos: 1700, condicao: "novo", variantes: { sku: "ACE-0001", nome: "Capa" } },
-        { linha: 1, quantidade: 1, custo_unitario_centavos: 105000, condicao: "seminovo", variantes: { sku: "APA-0001", nome: "Galaxy" } }],
-    }],
-    variantes: [{ id: APARELHO, sku: "APA-0001", nome: "Galaxy A15", produtos: { tipo: "aparelho" } }, { id: CAPA, sku: "ACE-0001", nome: "Capa", produtos: { tipo: "acessorio" } }],
+    variantes: [
+      { id: APARELHO, sku: "APA-0001", nome: "Galaxy A15", ativa: true, produtos: { tipo: "aparelho", ativo: true } },
+      { id: CAPA, sku: "ACE-0001", nome: "Capa", ativa: true, produtos: { tipo: "acessorio", ativo: true } },
+    ],
     produtos: [{ id: "p1" }],
   };
 });
 
-describe("/estoque/entrada", () => {
-  it("sem estoque.receber (vendedor): aviso e nada mais", async () => {
-    cenario.permissoes = new Set(["estoque.consultar"]);
-    expect(await tela()).toContain("Receber mercadoria é da gerência da loja");
+describe("/estoque/entrada: permissão e histórico", () => {
+  it("sem estoque.receber (vendedor): aviso e nada mais, nem consulta ao histórico", async () => {
+    cenario.permissoes = new Set(["estoque.consultar", "estoque.conferir"]);
+    const t = await tela({ entrada: ENTRADA });
+    expect(t).toContain("Receber mercadoria é da gerência da loja");
+    for (const ausente of ["Nova entrada", "Entradas desta loja", "Entrada nº 12"]) expect(t).not.toContain(ausente);
+    expect(cenario.chamadas).toEqual([]);
+    expect(cenario.lidas).toEqual([]);
   });
 
-  it("gerente: formulário, fornecedores e as últimas entradas com o que entrou", async () => {
-    cenario.permissoes = new Set(["estoque.receber"]);
+  it("gerente: formulário, fornecedores e o histórico lido pela função do banco, nunca pelas tabelas", async () => {
     const t = await tela();
-    for (const trecho of ["Entrada nº 12", "Compra de fornecedor", "Distribuidora Teste", "NF 1234", "21 unidade(s)", "R$ 1.390,00", "APA-0001 × 1 (Seminovo), ACE-0001 × 20", "Estornar esta entrada", "Cadastrar fornecedor"]) {
-      expect(t).toContain(trecho);
+    for (const trecho of [
+      "Nova entrada", "Cadastrar fornecedor", "Distribuidora Teste", "Entradas desta loja", "1 entrada(s) no total", "Abrir pelo número", "Entrada nº 12",
+      "Compra de fornecedor · Distribuidora Teste · NF 1234 · 11/11/2026 10:00 · Gerente Teste",
+      "21 unidade(s) · custo R$ 1.390,00: APA-0001 × 1 (Seminovo), ACE-0001 × 20",
+      `/estoque/entrada?entrada=${ENTRADA}#entrada`, "Mostrando 1 de 1",
+    ]) expect(t).toContain(trecho);
+    // Sem entrada aberta não há estorno na tela; com uma página só, não há paginação.
+    for (const ausente of ["Estornar esta entrada", "Ver anteriores", "Voltar às mais recentes", "custo oculto", "aberta acima"]) expect(t).not.toContain(ausente);
+    expect(cenario.chamadas).toEqual([{ nome: "estoque_entradas", argumentos: { p_unidade: LOJA, p_limite: 20 } }]);
+    expect(cenario.lidas).toEqual(["fornecedores"]);
+  });
+
+  it("loja sem entradas: a consulta deu certo e a tela diz que não há nenhuma", async () => {
+    cenario.respostas.estoque_entradas = historico([]);
+    const t = await tela();
+    expect(t).toContain("0 entrada(s) no total");
+    expect(t).toContain("Nenhuma entrada ainda nesta loja.");
+    expect(t).toContain("Mostrando 0 de 0");
+  });
+
+  it("entrada estornada no histórico mostra a situação e o motivo; resumo longo diz quantas linhas faltam", async () => {
+    const muitasLinhas = Array.from({ length: 8 }, (_, i) => capa({ linha: i + 1, sku: `ACE-000${i + 1}`, quantidade: 1 }));
+    cenario.respostas.estoque_entradas = historico([
+      entrada({ situacao: "estornada", estornado_em: "2026-11-11T15:30:00+00:00", estornado_por: "Gerente Teste", motivo_estorno: "Lançada na loja errada" }),
+      entrada({ id: "00000000-0000-4000-9000-000000000071", numero: 9, tipo: "carga_inicial", fornecedor: null, documento: null, total_unidades: 8, total_custo: null, itens: muitasLinhas }),
+    ]);
+    const t = await tela();
+    expect(t).toContain("Estornada: Lançada na loja errada");
+    expect(t).toContain("Carga inicial (estoque que já está na loja) · 11/11/2026 10:00 · Gerente Teste");
+    expect(t).toContain("8 unidade(s) · sem custo informado: ACE-0001 × 1, ACE-0002 × 1, ACE-0003 × 1, ACE-0004 × 1, ACE-0005 × 1, ACE-0006 × 1 e mais 2 linha(s)");
+    expect(t).not.toContain("R$ 0,00");
+  });
+
+  it("perfil sem custo.ver: o banco não manda custo e a tela diz que está oculto, sem valor e sem zero", async () => {
+    const semCusto = { total_custo: null, itens: [linha({ custo_unitario: null }), capa({ custo_unitario: null })] };
+    cenario.respostas.estoque_entradas = historico([entrada(semCusto)], { ve_custo: false });
+    cenario.respostas.estoque_entrada = aberta({
+      ...semCusto, ve_custo: false, total_unidades: 21,
+      itens: [linha({ custo_unitario: null, identificadores: [{ identificador: IMEI, situacao: "disponivel", livre: true, reentrada: false }] }), capa({ custo_unitario: null, saldo_livre: 20, identificadores: [] })],
+    });
+    const t = await tela({ entrada: ENTRADA });
+    expect(t).toContain("1 entrada(s) no total · custo oculto para o seu perfil");
+    expect(t).toContain("21 unidade(s): APA-0001 × 1 (Seminovo), ACE-0001 × 20");
+    expect(t).toContain("Gerente Teste · 21 unidade(s) · custo oculto para o seu perfil");
+    expect(t).toContain("SKU APA-0001 · 1 unidade(s) · Seminovo");
+    expect(t).toContain("O estorno não desfaz o custo: se esta entrada informou custo, ele continua valendo");
+    for (const ausente of ["R$", "custo unitário", "sem custo informado", "Hoje o banco recusaria"]) expect(t).not.toContain(ausente);
+  });
+
+  it("quem vê custo e a entrada não informou: diz que não foi informado, nunca R$ 0,00", async () => {
+    const semCusto = { total_custo: null, itens: [linha({ custo_unitario: null, identificadores: [{ identificador: IMEI, situacao: "disponivel", livre: true, reentrada: false }] })] };
+    cenario.respostas.estoque_entradas = historico([entrada({ total_custo: null, itens: [linha({ custo_unitario: null })] })]);
+    cenario.respostas.estoque_entrada = aberta({ ...semCusto, total_unidades: 1 });
+    const t = await tela({ entrada: ENTRADA });
+    expect(t).toContain("1 unidade(s) · sem custo informado: APA-0001 × 1 (Seminovo)");
+    expect(t).toContain("SKU APA-0001 · 1 unidade(s) · Seminovo · sem custo informado");
+    for (const ausente of ["R$", "custo oculto", "O estorno não desfaz o custo"]) expect(t).not.toContain(ausente);
+  });
+
+  it("histórico completo, paginado pelo número: a primeira página aponta a continuação (REV-NOV-009)", async () => {
+    cenario.respostas.estoque_entradas = historico(varias(20, 60), { total: 37, proxima: 41 });
+    const t = await tela();
+    expect(t).toContain("37 entrada(s) no total");
+    expect(t).toContain("Mostrando 20 de 37");
+    expect(t).toContain("Entrada nº 60");
+    expect(t).toContain("Entrada nº 41");
+    expect(t).toContain("/estoque/entrada?antes=41#historico");
+    expect(t).toContain("Ver anteriores");
+    expect(t).not.toContain("Voltar às mais recentes");
+  });
+
+  it("página seguinte: pede as anteriores ao número, os links preservam a página e o fim não oferece mais", async () => {
+    cenario.respostas.estoque_entradas = historico(varias(17, 30), { total: 37 });
+    const t = await tela({ antes: "41" });
+    expect(cenario.chamadas).toEqual([{ nome: "estoque_entradas", argumentos: { p_unidade: LOJA, p_limite: 20, p_antes: 41 } }]);
+    expect(t).toContain("Mostrando 17 de 37 · anteriores à nº 41");
+    expect(t).toContain("/estoque/entrada?entrada=00000000-0000-4000-9000-000000010030&antes=41#entrada");
+    expect(t).toContain("/estoque/entrada#historico");
+    expect(t).toContain("Voltar às mais recentes");
+    expect(t).not.toContain("Ver anteriores");
+  });
+
+  it("página inválida no endereço é ignorada; página além do fim diz que não há anteriores", async () => {
+    await tela({ antes: "41; drop" });
+    await tela({ antes: ["41", "42"] });
+    await tela({ antes: "0" });
+    expect(cenario.chamadas.map((c) => c.argumentos)).toEqual([{ p_unidade: LOJA, p_limite: 20 }, { p_unidade: LOJA, p_limite: 20 }, { p_unidade: LOJA, p_limite: 20 }]);
+    cenario.respostas.estoque_entradas = historico([], { total: 37 });
+    expect(await tela({ antes: "3" })).toContain("Nenhuma entrada anterior à nº 3.");
+  });
+
+  it("sem estoque.consultar: o histórico vira um estado explicado e o formulário continua", async () => {
+    cenario.respostas.estoque_entradas = recusa("42501", "Sem permissão para ver as entradas desta loja");
+    cenario.respostas.estoque_entrada = recusa("42501", "Sem permissão para ver as entradas desta loja");
+    const t = await tela({ entrada: ENTRADA });
+    expect(t).toContain("Histórico indisponível para o seu perfil");
+    expect(t).toContain("Nova entrada");
+    for (const ausente of ["Abrir pelo número", "Mostrando", "Nenhuma entrada", "Entrada nº 12"]) expect(t).not.toContain(ausente);
+  });
+
+  it("falha de consulta ou resposta fora do formato é falha: nunca vira lista vazia", async () => {
+    for (const ruim of [{ data: null, error: null }, { data: { entradas: [] }, error: null }, recusa("57014", "canceling statement due to statement timeout"), recusa("P0002", "sumiu")]) {
+      cenario.respostas.estoque_entradas = ruim;
+      await expect(tela()).rejects.toThrow(/^estoque_entradas$/);
     }
+    cenario.respostas.estoque_entradas = historico([entrada()]);
+    for (const ruim of [{ data: null, error: null }, { data: entrada(), error: null }, { data: { id: ENTRADA }, error: null }, recusa("22023", "Informe a entrada ou o número dela"), recusa("57014", "timeout")]) {
+      cenario.respostas.estoque_entrada = ruim;
+      await expect(tela({ entrada: ENTRADA })).rejects.toThrow(/^estoque_entrada$/);
+    }
+  });
+});
+
+describe("/estoque/entrada: a entrada aberta", () => {
+  it("abre pelo endereço: linhas, IMEI/ICCID com a posição de hoje, reentrada, saldo livre e o estorno", async () => {
+    cenario.respostas.estoque_entrada = aberta();
+    const t = await tela({ entrada: ENTRADA });
+    expect(cenario.chamadas).toEqual([
+      { nome: "estoque_entradas", argumentos: { p_unidade: LOJA, p_limite: 20 } },
+      { nome: "estoque_entrada", argumentos: { p_unidade: LOJA, p_entrada: ENTRADA, p_numero: null } },
+    ]);
+    for (const trecho of [
+      "Compra de fornecedor · Distribuidora Teste · NF 1234",
+      "Registrada em 11/11/2026 10:00 por Gerente Teste · 22 unidade(s) · custo R$ 2.440,00",
+      "1. Galaxy A15", "SKU APA-0001 · 2 unidade(s) · Seminovo · custo unitário R$ 1.050,00 · 1 reentrada(s)",
+      "2 IMEI/ICCID · hoje: 1 no estoque, 1 vendido",
+      "2. Capa", "SKU ACE-0001 · 20 unidade(s) · Novo · custo unitário R$ 17,00",
+      "Saldo livre desta variação hoje, nesta loja: 15",
+      "Estornar esta entrada", "Hoje o banco recusaria este estorno",
+      `1 IMEI/ICCID fora do estoque livre desta loja: ${IMEI} (vendido).`,
+      "SKU ACE-0001: entraram 20, livres hoje 15.",
+      "Quem decide é o banco, que confere de novo na hora do estorno.",
+      "O estorno não desfaz o custo: o custo informado nesta entrada continua sendo o custo atual da variação",
+      `hidden entrada ${ENTRADA}`, "Motivo do estorno", "Fechar esta entrada", "aberta acima",
+    ]) expect(t).toContain(trecho);
+    expect(t).toMatch(new RegExp(`${IMEI}[^0-9]*aviso vendido`));
+    expect(t).toMatch(new RegExp(`${IMEI_2}[^0-9]*sucesso no estoque[^0-9]*info reentrada`));
+    expect(t).not.toMatch(new RegExp(`${IMEI}[^0-9]*reentrada`));
+    expect(t).not.toContain("recusado");
+  });
+
+  it("abre pelo número digitado (zero à esquerda sai); com endereço e número, vale o endereço", async () => {
+    cenario.respostas.estoque_entrada = aberta();
+    expect(await tela({ numero: "12" })).toContain("Estornar esta entrada");
+    await tela({ numero: " 007 " });
+    await tela({ entrada: ENTRADA, numero: "99" });
+    expect(cenario.chamadas.filter((c) => c.nome === "estoque_entrada").map((c) => c.argumentos)).toEqual([
+      { p_unidade: LOJA, p_entrada: null, p_numero: 12 },
+      { p_unidade: LOJA, p_entrada: null, p_numero: 7 },
+      { p_unidade: LOJA, p_entrada: ENTRADA, p_numero: null },
+    ]);
+  });
+
+  it("tudo livre: sem aviso de recusa, o formulário de estorno continua disponível", async () => {
+    cenario.respostas.estoque_entrada = aberta({
+      itens: [linha({ identificadores: [{ identificador: IMEI, situacao: "disponivel", livre: true, reentrada: false }] }), capa({ saldo_livre: 20, identificadores: [] })],
+    });
+    const t = await tela({ entrada: ENTRADA });
+    expect(t).toContain("Estornar esta entrada");
+    expect(t).toContain(`hidden entrada ${ENTRADA}`);
+    expect(t).not.toContain("Hoje o banco recusaria");
+  });
+
+  it("entrada estornada: quem, quando e por quê; posições de hoje sem destaque e sem novo estorno", async () => {
+    cenario.respostas.estoque_entrada = aberta({
+      situacao: "estornada", estornado_em: "2026-11-11T15:30:00+00:00", estornado_por: "Gerente Teste", motivo_estorno: "Lançada na loja errada",
+      itens: [linha({ identificadores: [{ identificador: IMEI, situacao: "baixado", livre: false, reentrada: false }] })],
+    });
+    const t = await tela({ entrada: ENTRADA, ok: "estornada" });
+    expect(t).toContain("Entrada estornada: os itens saíram do estoque pelo livro, com o motivo.");
+    expect(t).toContain("Estornada em 11/11/2026 12:30 por Gerente Teste");
+    expect(t).toContain("Motivo: Lançada na loja errada. As posições abaixo são as de hoje");
+    expect(t).toMatch(new RegExp(`${IMEI}[^0-9]*neutro fora do estoque \\(baixado\\)`));
+    for (const ausente of ["Estornar esta entrada", "hidden entrada", "Hoje o banco recusaria", "O estorno não desfaz o custo"]) expect(t).not.toContain(ausente);
+  });
+
+  it("entrada que não é desta loja: aviso com o número pedido, formulário e histórico continuam", async () => {
+    cenario.respostas.estoque_entrada = recusa("P0002", "Entrada não encontrada nesta loja");
+    const peloNumero = await tela({ numero: "99" });
+    expect(peloNumero).toContain("Entrada nº 99 não encontrada nesta loja");
+    expect(peloNumero).toContain("A numeração das entradas é da rede inteira");
+    for (const trecho of ["Nova entrada", "Entradas desta loja", "Entrada nº 12"]) expect(peloNumero).toContain(trecho);
+    expect(peloNumero).not.toContain("Estornar esta entrada");
+    expect(await tela({ entrada: "00000000-0000-4000-9000-0000000000aa" })).toContain("Entrada não encontrada nesta loja");
+  });
+
+  it("número inválido não consulta o banco; endereço de entrada que não é identificador é ignorado", async () => {
+    for (const numero of ["12a", "0", "-3", "1234567890123"]) {
+      expect(await tela({ numero })).toContain("Número de entrada inválido: use só os dígitos (ex.: 12).");
+    }
+    const t = await tela({ entrada: "12" });
+    expect(t).not.toContain("Número de entrada inválido");
+    expect(t).not.toContain("não encontrada");
+    expect(cenario.chamadas.every((c) => c.nome === "estoque_entradas")).toBe(true);
+  });
+
+  it("entrada recém-registrada abre no topo e diz quantos aparelhos voltaram por reentrada", async () => {
+    cenario.respostas.estoque_registrar_entrada = { data: { id: ENTRADA, numero: 12, repetida: false, reentradas: 1 }, error: null };
+    const destino = await destinoDe(registrarEntrada(formulario({
+      unidade: LOJA, tipo: "carga_inicial", chave: "form:abc12345", motivo: "Volta do aparelho", itens: JSON.stringify([{ variante: APARELHO, tipo: "aparelho", identificadores: IMEI_2 }]),
+    })));
+    expect(destino).toBe(`/estoque/entrada?ok=registrada&entrada=${ENTRADA}`);
+    cenario.respostas.estoque_entrada = aberta();
+    const t = await tela(parametrosDe(destino));
+    expect(t).toContain("Entrada registrada: o estoque e o custo já estão atualizados. 1 aparelho(s) ou chip(s) voltaram ao estoque com a mesma identidade (reentrada): o histórico anterior foi preservado.");
+    cenario.respostas.estoque_entrada = aberta({ itens: [capa({ saldo_livre: 20, identificadores: [] })] });
+    const semReentrada = await tela(parametrosDe(destino));
+    expect(semReentrada).toContain("Entrada registrada: o estoque e o custo já estão atualizados.");
+    expect(semReentrada).not.toContain("voltaram ao estoque");
+  });
+});
+
+describe("/estoque/entrada: recusas apontam onde corrigir", () => {
+  it("estorno recusado volta à MESMA entrada, mesmo fora da primeira página, com o IMEI recusado em destaque (REV-NOV-009)", async () => {
+    cenario.respostas.estoque_estornar_entrada = recusa("OR002", `O IMEI/ICCID ${IMEI} não está livre nesta loja (vendido, reservado ou transferido): o estorno não é possível`);
+    const destino = await destinoDe(estornarEntrada(formulario({ entrada: ENTRADA, motivo: "Loja errada" })));
+    expect(destino).toBe(`/estoque/entrada?erro=em_uso&entrada=${ENTRADA}&id=${IMEI}`);
+    expect(cenario.chamadas).toEqual([{ nome: "estoque_estornar_entrada", argumentos: { p_entrada: ENTRADA, p_motivo: "Loja errada" } }]);
+
+    // A loja tem 37 entradas e a nº 12 não está entre as 20 mais recentes: abre pelo endereço assim mesmo.
+    cenario.respostas.estoque_entradas = historico(varias(20, 60), { total: 37, proxima: 41 });
+    cenario.respostas.estoque_entrada = aberta();
+    const t = await tela(parametrosDe(destino));
+    expect(t).not.toContain(`/estoque/entrada?entrada=${ENTRADA}#entrada`);
+    expect(t).toContain(ERROS_DA_ENTRADA.em_uso);
+    expect(t).toContain(`Onde: IMEI/ICCID ${IMEI}.`);
+    expect(t).toContain("Registrada em 11/11/2026 10:00 por Gerente Teste");
+    expect(t).toMatch(new RegExp(`${IMEI}[^0-9]*perigo recusado`));
+    expect(t).not.toMatch(new RegExp(`${IMEI_2}[^0-9]*recusado`));
+    expect(t).toContain(`hidden entrada ${ENTRADA}`);
+  });
+
+  it("estorno sem quantidade livre volta à entrada com a linha; motivo curto também volta à entrada", async () => {
+    cenario.respostas.estoque_estornar_entrada = recusa("OR001", "Não há quantidade livre para estornar a linha 2 (já vendida, reservada ou transferida)");
+    const destino = await destinoDe(estornarEntrada(formulario({ entrada: ENTRADA, motivo: "Loja errada" })));
+    expect(destino).toBe(`/estoque/entrada?erro=sem_saldo&entrada=${ENTRADA}&linha=2`);
+    cenario.respostas.estoque_entrada = aberta();
+    const t = await tela(parametrosDe(destino));
+    expect(t).toContain(ERROS_DA_ENTRADA.sem_saldo);
+    expect(t).toContain("Onde: linha 2 da entrada.");
+    expect(await destinoDe(estornarEntrada(formulario({ entrada: ENTRADA, motivo: "x" })))).toBe(`/estoque/entrada?erro=motivo&entrada=${ENTRADA}`);
+    expect(await destinoDe(estornarEntrada(formulario({ entrada: "12", motivo: "Loja errada" })))).toBe("/estoque/entrada?erro=dados");
+    expect(cenario.chamadas.filter((c) => c.nome === "estoque_estornar_entrada")).toHaveLength(1);
+  });
+
+  it("entrada recusada diz o motivo certo e aponta a linha, o SKU e o IMEI/ICCID (REV-NOV-004, REV-NOV-005)", async () => {
+    const registrar = (erro: { code: string; message: string }) => {
+      cenario.respostas.estoque_registrar_entrada = { data: null, error: erro };
+      return destinoDe(registrarEntrada(formulario({
+        unidade: LOJA, tipo: "carga_inicial", chave: "form:abc12345", motivo: "Contagem", itens: JSON.stringify([{ variante: APARELHO, tipo: "aparelho", identificadores: IMEI }]),
+      })));
+    };
+    const vendido = await registrar({ code: "23505", message: `IMEI/ICCID ${IMEI} já foi vendido: a volta ao estoque é pela devolução da venda` });
+    expect(vendido).toBe(`/estoque/entrada?erro=vendido&id=${IMEI}`);
+    const telaDoVendido = await tela(parametrosDe(vendido));
+    expect(telaDoVendido).toContain(ERROS_DA_ENTRADA.vendido);
+    expect(telaDoVendido).toContain(`Onde: IMEI/ICCID ${IMEI}.`);
+
+    const inativo = await registrar({ code: "22023", message: "Linha 2 (APA-0001): o produto está inativo no catálogo: reative antes de receber" });
+    expect(inativo).toBe("/estoque/entrada?erro=produto_inativo&linha=2&sku=APA-0001");
+    const telaDoInativo = await tela(parametrosDe(inativo));
+    expect(telaDoInativo).toContain(ERROS_DA_ENTRADA.produto_inativo);
+    expect(telaDoInativo).toContain("Onde: linha 2 do formulário · SKU APA-0001.");
+
+    const outraVariacao = await registrar({ code: "23505", message: `IMEI/ICCID ${IMEI} já tem histórico (ou está em contagem aberta) em outra variação: receba na variação original (SKU CAPA AZUL 500)` });
+    expect(parametrosDe(outraVariacao)).toEqual({ erro: "outra_variacao", id: IMEI, sku: "CAPA AZUL 500" });
+    expect(await tela(parametrosDe(outraVariacao))).toContain(`Onde: variação original: SKU CAPA AZUL 500 · IMEI/ICCID ${IMEI}.`);
+
+    expect(await registrar({ code: "23505", message: `IMEI/ICCID ${IMEI} foi baixado por ajuste ou perda: a entrada não desfaz essa baixa` })).toBe(`/estoque/entrada?erro=baixado&id=${IMEI}`);
+    expect(await registrar({ code: "40P01", message: "deadlock detected" })).toBe("/estoque/entrada?erro=concorrencia");
+    expect(await tela({ erro: "concorrencia" })).toContain(ERROS_DA_ENTRADA.concorrencia);
+  });
+
+  it("o que vem no endereço só aparece no formato esperado; erro desconhecido não vira aviso", async () => {
+    const t = await tela({ erro: "vendido", id: "<script>", linha: "9999", sku: "a  b" });
+    expect(t).toContain(ERROS_DA_ENTRADA.vendido);
+    for (const ausente of ["Onde:", "<script>", "9999"]) expect(t).not.toContain(ausente);
+    const semErro = await tela({ erro: "constructor", id: IMEI });
+    expect(semErro).not.toContain("Onde:");
+    expect(semErro).not.toContain(IMEI);
+    // Sem erro, o endereço não põe destaque em nenhum IMEI/ICCID da entrada aberta.
+    cenario.respostas.estoque_entrada = aberta();
+    expect(await tela({ entrada: ENTRADA, id: IMEI })).not.toContain("recusado");
   });
 });
 
 describe("ações da entrada", () => {
   it("registrar: linhas do formulário viram o JSON do banco (IMEI só dígitos, custo em centavos)", async () => {
-    cenario.respostas.estoque_registrar_entrada = { data: { id: ENTRADA, repetida: false }, error: null };
+    cenario.respostas.estoque_registrar_entrada = { data: { id: ENTRADA, numero: 12, repetida: false, reentradas: 0 }, error: null };
     const itens = JSON.stringify([
       { variante: APARELHO, tipo: "aparelho", identificadores: `${IMEI.slice(0, 5)} ${IMEI.slice(5)}`.replace(" ", "-"), custo: "1.050,00", condicao: "seminovo" },
       { variante: CAPA, tipo: "acessorio", quantidade: "20", custo: "17,00" },
     ]);
-    const destino = await destinoDe(registrarEntrada(formulario({ unidade: LOJA, tipo: "compra", fornecedor: FORN, documento: "NF 1234", chave: "form:abc12345", motivo: "Pedido da semana", itens })));
-    expect(destino).toBe(`/estoque/entrada?ok=registrada&entrada=${ENTRADA}`);
+    const campos = { unidade: LOJA, tipo: "compra", fornecedor: FORN, documento: "NF 1234", chave: "form:abc12345", motivo: "Pedido da semana", itens };
+    expect(await destinoDe(registrarEntrada(formulario(campos)))).toBe(`/estoque/entrada?ok=registrada&entrada=${ENTRADA}`);
     expect(cenario.chamadas[0]?.argumentos).toEqual({
       p_unidade: LOJA, p_tipo: "compra", p_fornecedor: FORN, p_documento: "NF 1234", p_chave: "form:abc12345", p_motivo: "Pedido da semana",
       p_itens: [{ variante: APARELHO, identificadores: [IMEI], condicao: "seminovo", custo: 105_000 }, { variante: CAPA, quantidade: 20, condicao: "novo", custo: 1_700 }],
     });
+    // O mesmo formulário enviado de novo: o banco devolve a entrada que já existe e a tela avisa.
+    cenario.respostas.estoque_registrar_entrada = { data: { id: ENTRADA, numero: 12, repetida: true, reentradas: 0 }, error: null };
+    expect(await destinoDe(registrarEntrada(formulario(campos)))).toBe(`/estoque/entrada?ok=repetida&entrada=${ENTRADA}`);
   });
 
-  it("erros do formulário não chamam o banco; erros do banco voltam pelo catálogo", async () => {
+  it("erros do formulário não chamam o banco; estorno repetido não é erro", async () => {
     expect(await destinoDe(registrarEntrada(formulario({ unidade: LOJA, tipo: "carga_inicial", chave: "form:abc12345", motivo: "Contagem", itens: JSON.stringify([{ variante: APARELHO, tipo: "aparelho", identificadores: "123" }]) }))))
       .toBe("/estoque/entrada?erro=identificador");
     expect(cenario.chamadas).toEqual([]);
-    cenario.respostas.estoque_estornar_entrada = { data: null, error: { code: "OR002", message: "O IMEI/ICCID ... não está livre" } };
-    expect(await destinoDe(estornarEntrada(formulario({ entrada: ENTRADA, motivo: "Loja errada" })))).toBe(`/estoque/entrada?erro=em_uso&entrada=${ENTRADA}`);
+    cenario.respostas.estoque_estornar_entrada = { data: "estornada", error: null };
+    expect(await destinoDe(estornarEntrada(formulario({ entrada: ENTRADA, motivo: "Loja errada" })))).toBe(`/estoque/entrada?ok=estornada&entrada=${ENTRADA}`);
+    cenario.respostas.estoque_estornar_entrada = { data: "ja_estornada", error: null };
+    expect(await destinoDe(estornarEntrada(formulario({ entrada: ENTRADA, motivo: "Loja errada" })))).toBe(`/estoque/entrada?ok=ja_estornada&entrada=${ENTRADA}`);
   });
 
-  it("fornecedor novo vai para a rede da loja do turno; a busca devolve só itens com estoque", async () => {
+  it("fornecedor novo vai para a rede da loja do turno", async () => {
     cenario.respostas.fornecedor_salvar = { data: { id: FORN, repetida: false }, error: null };
     expect(await destinoDe(salvarFornecedor(formulario({ nome: "Atacado Teste", cnpj: "", contato: "", motivo: "Fornecedor novo" })))).toBe("/estoque/entrada?ok=fornecedor");
     expect(cenario.chamadas[0]?.argumentos).toMatchObject({ p_organizacao: ORG, p_id: null, p_nome: "Atacado Teste", p_cnpj: null });
-    cenario.tabelas.variantes = [...(cenario.tabelas.variantes ?? []), { id: "rec", sku: "REC-1", nome: "Recarga", produtos: { tipo: "recarga" } }];
+    cenario.respostas.fornecedor_salvar = recusa("23505", "Já existe outro fornecedor com este nome");
+    expect(await destinoDe(salvarFornecedor(formulario({ nome: "Atacado Teste", cnpj: "", contato: "", motivo: "Fornecedor novo" })))).toBe("/estoque/entrada?erro=nome_repetido&form=fornecedor");
+  });
+
+  it("a busca devolve só itens com estoque, de produto e variação ativos (REV-NOV-005)", async () => {
+    cenario.tabelas.variantes = [
+      ...(cenario.tabelas.variantes ?? []),
+      { id: "rec", sku: "REC-1", nome: "Recarga", ativa: true, produtos: { tipo: "recarga", ativo: true } },
+      { id: INATIVO, sku: "APA-0009", nome: "Galaxy antigo", ativa: true, produtos: { tipo: "aparelho", ativo: false } },
+    ];
     const achados = await buscarItensParaEntrada("galaxy");
+    expect(achados.map((a) => a.id).sort()).toEqual([APARELHO, CAPA]);
     expect(achados.map((a) => a.tipo).sort()).toEqual(["acessorio", "aparelho"]);
+    expect(cenario.filtros).toContainEqual(["variantes", "produtos.ativo", true]);
     expect(await buscarItensParaEntrada("g")).toEqual([]);
   });
 });

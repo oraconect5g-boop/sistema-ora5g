@@ -11,6 +11,7 @@ const ASSUNTOS: Record<string, string> = {
   produtos: "Produto", variantes: "Variação do produto", precos: "Preço", custos: "Custo", categorias: "Categoria", marcas: "Marca",
   organizacoes: "Rede", empresas: "Empresa", unidades: "Loja", perfis_usuario: "Pessoa", vinculos: "Acesso", convites: "Convite",
   papeis: "Papel", permissoes: "Permissão", papel_permissoes: "Permissões do papel", fiscal_politicas: "Política fiscal",
+  entradas_estoque: "Entrada de mercadoria", fornecedores: "Fornecedor",
 };
 const OPERACOES: Record<string, string> = {
   criado: "criado", alterado: "alterado", removido: "removido", encerrado: "encerrado", bloqueado: "bloqueado", desbloqueado: "desbloqueado",
@@ -21,6 +22,7 @@ const ESPECIAIS: Record<string, string> = {
   "sessao.fora_do_turno": "Tentou usar uma sessão fora do turno",
   "sessao.de_outro_usuario": "Tentou usar a sessão de outra pessoa",
   "estoque.item_conferido": "Conferiu um aparelho ou chip",
+  "estoque.item_reentrada": "Aparelho ou chip voltou ao estoque por reentrada",
   "estoque.reserva_de_outro_liberada": "Liberou a reserva de outra pessoa",
 };
 

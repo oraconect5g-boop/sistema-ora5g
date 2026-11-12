@@ -1,8 +1,8 @@
 {
   "_leia": "Checkpoint do programa de execução integral (PR #67). Carregar ao retomar e seguir para o próximo item executável da fila; não reiniciar o projeto. Estados vêm de status-requisitos.json (fonte da rastreabilidade); este arquivo acrescenta lote, bloqueio externo e revisão.",
-  "atualizado_em": "2026-11-11",
+  "atualizado_em": "2026-11-12",
   "base": {
-    "main": "a6f6d22",
+    "main": "65eb3a7",
     "pacote": {
       "pr": 67,
       "branch": "docs/execucao-integral-20261110",
@@ -28,7 +28,8 @@
       "a12782d (L5a: cliente compartilhado da rede)",
       "aa8fff5 (L5b: funil de oportunidades e agenda)",
       "c08daaa (L5c: mesclagem e segmentos)",
-      "a6f6d22 (L6a: nota no nome do cliente, pendências, aviso sem internet e câmera)"
+      "a6f6d22 (L6a: nota no nome do cliente, pendências, aviso sem internet e câmera)",
+      "65eb3a7 (L7a: maquininhas por loja e conciliação manual)"
     ]
   },
   "contagem_dos_estados": {
@@ -197,7 +198,7 @@
       "titulo": "Custo de produto/lote/entrada e margem gerencial",
       "prioridade": "P1",
       "estado": "parcial",
-      "lote": "L4a entrada de mercadoria",
+      "lote": "L4a entrada de mercadoria; R1 correções do recebimento",
       "bloqueio_externo": null,
       "revisado_codex": false,
       "homologado": false
@@ -260,7 +261,7 @@
       "titulo": "Receber estoque inicial validado por contagem real",
       "prioridade": "P0",
       "estado": "parcial",
-      "lote": "L4a entrada de mercadoria",
+      "lote": "L4a entrada de mercadoria; R1 correções do recebimento",
       "bloqueio_externo": null,
       "revisado_codex": false,
       "homologado": false
@@ -305,7 +306,7 @@
       "titulo": "Compras e recebimento de fornecedores",
       "prioridade": "P1",
       "estado": "parcial",
-      "lote": "L4a entrada de mercadoria",
+      "lote": "L4a entrada de mercadoria; R1 correções do recebimento",
       "bloqueio_externo": null,
       "revisado_codex": false,
       "homologado": false

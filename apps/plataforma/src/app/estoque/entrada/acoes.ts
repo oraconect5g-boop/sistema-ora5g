@@ -5,12 +5,15 @@ import { redirect } from "next/navigation";
 import { ehUuid } from "../../../lib/acesso/regras";
 import { obterSessao } from "../../../lib/acesso/sessao";
 import { buscarNoCatalogo, termoDaBusca } from "../../../lib/catalogo/busca";
-import { erroDaEntrada, validarEntrada } from "../../../lib/estoque/entrada";
+import { detalheDoErro, erroDaEntrada, validarEntrada } from "../../../lib/estoque/entrada";
 import type { Json } from "../../../lib/supabase/tipos-banco";
 
 // Entrada de mercadoria (lote L4a). Cada ação chama UMA função do banco como a pessoa logada: o banco
 // confere estoque.receber na loja do turno, valida cada IMEI/ICCID, lança o livro e o custo numa
 // transação e grava a auditoria com o motivo.
+// Lote R1: a recusa do banco volta com a linha, o SKU e o IMEI/ICCID recusados (REV-NOV-004); o estorno
+// volta sempre para a entrada aberta (REV-NOV-009); a busca não oferece produto inativo (REV-NOV-005: o
+// banco recusa de qualquer jeito, a busca só evita o caminho sem saída).
 
 function voltar(parametros: Record<string, string | null | undefined>): never {
   const busca = new URLSearchParams();
@@ -29,7 +32,7 @@ export async function registrarEntrada(dados: FormData) {
     p_unidade: d.unidade, p_tipo: d.tipo, p_fornecedor: ouNulo(d.fornecedor), p_documento: ouNulo(d.documento),
     p_itens: d.itens as unknown as Json, p_chave: d.chave, p_motivo: d.motivo,
   });
-  if (error) voltar({ erro: erroDaEntrada(error) });
+  if (error) voltar({ erro: erroDaEntrada(error), ...detalheDoErro(error) });
   const resposta = data as { id?: unknown; repetida?: unknown } | null;
   voltar({ ok: resposta?.repetida === true ? "repetida" : "registrada", entrada: typeof resposta?.id === "string" ? resposta.id : null });
 }
@@ -41,7 +44,7 @@ export async function estornarEntrada(dados: FormData) {
   if (motivo.length < 3 || motivo.length > 200) voltar({ erro: "motivo", entrada });
   const { supabase } = await obterSessao({ exigirLoja: true });
   const { data, error } = await supabase.rpc("estoque_estornar_entrada", { p_entrada: entrada, p_motivo: motivo });
-  if (error) voltar({ erro: erroDaEntrada(error), entrada });
+  if (error) voltar({ erro: erroDaEntrada(error), entrada, ...detalheDoErro(error) });
   voltar({ ok: data === "ja_estornada" ? "ja_estornada" : "estornada", entrada });
 }
 
@@ -66,14 +69,14 @@ export async function salvarFornecedor(dados: FormData) {
 
 export type ItemParaEntrada = { id: string; sku: string; nome: string; tipo: "aparelho" | "chip" | "acessorio" };
 
-/** Busca da tela (nome, SKU ou nome da variação, no banco antes do limite): só itens com estoque. */
+/** Busca da tela (nome, SKU ou nome da variação, no banco antes do limite): só itens com estoque, de produto e variação ativos. */
 export async function buscarItensParaEntrada(termo: string): Promise<ItemParaEntrada[]> {
   const t = termoDaBusca(String(termo ?? "").toLowerCase().slice(0, 40));
   if (t.length < 2) return [];
   const { supabase } = await obterSessao({ exigirLoja: true });
   const achados = await buscarNoCatalogo(supabase, t, { limite: 30 });
   if (achados.variantes.length === 0) return [];
-  const { data, error } = await supabase.from("variantes").select("id, sku, nome, produtos!inner(tipo)").in("id", achados.variantes).eq("ativa", true).limit(30);
+  const { data, error } = await supabase.from("variantes").select("id, sku, nome, produtos!inner(tipo)").in("id", achados.variantes).eq("ativa", true).eq("produtos.ativo", true).limit(30);
   if (error || !data) return [];
   return (data as unknown as { id: string; sku: string; nome: string; produtos: { tipo: string } }[])
     .filter((v) => ["aparelho", "chip", "acessorio"].includes(v.produtos.tipo))
