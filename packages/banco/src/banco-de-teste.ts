@@ -94,8 +94,8 @@ export function comDigitoLuhn(base: string): string {
   throw new Error("base inválida");
 }
 
-// Retrato do esquema (funções com corpo e permissões, colunas, gatilhos, restrições, permissões
-// e matriz de papéis) para comparar o banco depois de uma reversão com o banco de antes.
+// Retrato do esquema (funções com corpo e permissões, colunas, gatilhos, restrições, políticas, índices
+// com a definição, permissões e matriz de papéis) para comparar o banco depois de uma reversão com o de antes.
 export async function retratoDoEsquema(db: PGlite): Promise<string[]> {
   const { rows } = await db.query<{ item: string }>(`
     select 'funcao ' || p.oid::regprocedure || ' ' || md5(pg_get_functiondef(p.oid)) || ' ' || coalesce(p.proacl::text, '') as item
@@ -105,6 +105,7 @@ export async function retratoDoEsquema(db: PGlite): Promise<string[]> {
     union all select 'gatilho ' || tgrelid::regclass || '.' || tgname from pg_trigger where not tgisinternal
     union all select 'restricao ' || conrelid::regclass || '.' || conname from pg_constraint where connamespace in ('public'::regnamespace, 'privado'::regnamespace)
     union all select 'politica ' || schemaname || '.' || tablename || '.' || policyname from pg_policies where schemaname in ('public', 'privado')
+    union all select 'indice ' || schemaname || '.' || indexname || ' ' || md5(indexdef) from pg_indexes where schemaname in ('public', 'privado')
     union all select 'permissao ' || codigo from public.permissoes
     union all select 'papel ' || papel || ' ' || permissao from public.papel_permissoes
     order by 1`);

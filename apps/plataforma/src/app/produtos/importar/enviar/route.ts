@@ -57,7 +57,11 @@ export async function POST(requisicao: NextRequest) {
     p_linhas: linhas,
   });
   if (error) return voltar({ erro: erroDoBancoNaImportacao(error) });
-  const resposta = data as { id?: unknown; repetida?: unknown } | null;
-  const id = typeof resposta?.id === "string" ? resposta.id : "";
-  return voltar({ importacao: id, ok: resposta?.repetida === true ? "previa_repetida" : "previa" });
+  const resposta = data as { id?: unknown; repetida?: unknown; atualizada?: unknown } | null;
+  // Sem o número da prévia na resposta não há o que mostrar: nada de dizer "prévia gravada" no escuro.
+  if (typeof resposta?.id !== "string") return voltar({ erro: "falha" });
+  // Arquivo já enviado antes (R2): a prévia é a mesma, comparada de novo com o cadastro de agora; se algo
+  // mudou desde a última comparação, a tela avisa para conferir outra vez.
+  const ok = resposta.repetida !== true ? "previa" : resposta.atualizada === true ? "previa_atualizada" : "previa_repetida";
+  return voltar({ importacao: resposta.id, ok });
 }

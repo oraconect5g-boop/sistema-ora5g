@@ -1,5 +1,5 @@
 // ARQUIVO GERADO pelo Supabase (generate_typescript_types do projeto ora5g-dev) depois da
-// migration 20261112033713_recebimento_correcoes. Não edite à mão: gere de novo a cada
+// migration 20261112163333_importador_correcoes. Não edite à mão: gere de novo a cada
 // migration aplicada (auditoria do Codex de 08/11, §7.2). O teste tipos-banco.test.ts confere
 // que funções e tabelas públicas daqui são as mesmas das migrations.
 export type Json =
@@ -1956,42 +1956,74 @@ export type Database = {
         Row: {
           acao: string
           antes: Json | null
+          auditoria_id: number | null
+          base: Json | null
+          custo_id: string | null
           dados: Json
           depois: Json | null
+          desfeito: Json | null
           diferencas: Json
           erros: string[]
+          erros_arquivo: string[]
           importacao_id: string
           numero: number
+          preco_id: string | null
           variante_id: string | null
         }
         Insert: {
           acao: string
           antes?: Json | null
+          auditoria_id?: number | null
+          base?: Json | null
+          custo_id?: string | null
           dados: Json
           depois?: Json | null
+          desfeito?: Json | null
           diferencas?: Json
           erros?: string[]
+          erros_arquivo?: string[]
           importacao_id: string
           numero: number
+          preco_id?: string | null
           variante_id?: string | null
         }
         Update: {
           acao?: string
           antes?: Json | null
+          auditoria_id?: number | null
+          base?: Json | null
+          custo_id?: string | null
           dados?: Json
           depois?: Json | null
+          desfeito?: Json | null
           diferencas?: Json
           erros?: string[]
+          erros_arquivo?: string[]
           importacao_id?: string
           numero?: number
+          preco_id?: string | null
           variante_id?: string | null
         }
         Relationships: [
+          {
+            foreignKeyName: "importacao_linhas_custo_id_fkey"
+            columns: ["custo_id"]
+            isOneToOne: false
+            referencedRelation: "custos"
+            referencedColumns: ["id"]
+          },
           {
             foreignKeyName: "importacao_linhas_importacao_id_fkey"
             columns: ["importacao_id"]
             isOneToOne: false
             referencedRelation: "importacoes"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "importacao_linhas_preco_id_fkey"
+            columns: ["preco_id"]
+            isOneToOne: false
+            referencedRelation: "precos"
             referencedColumns: ["id"]
           },
           {
@@ -2009,8 +2041,11 @@ export type Database = {
           aplicado_por: string | null
           arquivo_nome: string
           arquivo_sha256: string
+          comparacao: number
+          comparado_em: string | null
           criado_em: string
           criado_por: string
+          desfazer: Json | null
           encerrado_em: string | null
           encerrado_por: string | null
           id: string
@@ -2027,8 +2062,11 @@ export type Database = {
           aplicado_por?: string | null
           arquivo_nome: string
           arquivo_sha256: string
+          comparacao?: number
+          comparado_em?: string | null
           criado_em?: string
           criado_por: string
+          desfazer?: Json | null
           encerrado_em?: string | null
           encerrado_por?: string | null
           id?: string
@@ -2045,8 +2083,11 @@ export type Database = {
           aplicado_por?: string | null
           arquivo_nome?: string
           arquivo_sha256?: string
+          comparacao?: number
+          comparado_em?: string | null
           criado_em?: string
           criado_por?: string
+          desfazer?: Json | null
           encerrado_em?: string | null
           encerrado_por?: string | null
           id?: string
@@ -4513,7 +4554,7 @@ export type Database = {
         Returns: string
       }
       importacao_aplicar: {
-        Args: { p_importacao: string; p_motivo: string }
+        Args: { p_comparacao: number; p_importacao: string; p_motivo: string }
         Returns: Json
       }
       importacao_catalogo_previa: {

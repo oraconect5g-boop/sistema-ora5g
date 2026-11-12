@@ -40,7 +40,10 @@ export async function iniciarPostgresReal(): Promise<PostgresReal> {
     port: porta,
     ...ACESSO_LOCAL,
     persistent: false,
-    postgresFlags: ["-c", "listen_addresses=127.0.0.1", "-c", "unix_socket_directories="],
+    // A tabela de travas tem o tamanho da do ora5g-dev (64 x 75 processos = 4.800 objetos, medido em 12/11/2026):
+    // o que cabe aqui em travas consultivas cabe lá.
+    postgresFlags: ["-c", "listen_addresses=127.0.0.1", "-c", "unix_socket_directories=",
+      "-c", "max_connections=60", "-c", "max_worker_processes=6", "-c", "max_wal_senders=5"],
     onLog: () => {},
     onError: () => {},
   });
