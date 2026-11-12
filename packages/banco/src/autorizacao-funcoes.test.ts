@@ -1,8 +1,9 @@
 // Inventário de autorização (prioridade 1 do diagnóstico de 10/11/2026; ORA-ORG-004 e ORA-QUAL-002).
 // O aviso 0029 do Supabase lista as funções SECURITY DEFINER que qualquer usuário logado pode chamar
-// pela API: 98 em 11/11 (48 + 6 do cadastro de lojas, L2, + 5 do cadastro do catálogo, L3a, + 4 dos preços, L3b,
+// pela API: 100 em 12/11 (48 + 6 do cadastro de lojas, L2, + 5 do cadastro do catálogo, L3a, + 4 dos preços, L3b,
 // + 4 da importação do catálogo, L3c, + 3 da entrada de mercadoria, L4a, + 5 do inventário, L4b, + 6 dos clientes, L5a,
-// + 9 do funil e da agenda, L5b, + 4 da mesclagem e dos segmentos, L5c, + 4 das maquininhas e da conciliação, L7a). Elas rodam com poder total e cada uma confere sessão, loja e permissão por
+// + 9 do funil e da agenda, L5b, + 4 da mesclagem e dos segmentos, L5c, + 4 das maquininhas e da conciliação, L7a,
+// + 2 da leitura das entradas, R1). Elas rodam com poder total e cada uma confere sessão, loja e permissão por
 // conta própria. Este teste monta um "mundo" fictício com objetos reais em duas lojas e tenta cada
 // função como 13 tipos de atacante. Recusa = erro, ou resposta vazia numa leitura, e nada muda no
 // banco. O teste lista as funções no próprio banco e falha se aparecer uma nova sem casos aqui.
@@ -180,7 +181,7 @@ async function montarMundo() {
 }
 
 // ---------------------------------------------------------------------------------------------
-// Catálogo das 98 funções. Cada chamada usa argumentos válidos, para a recusa vir do controle de
+// Catálogo das 100 funções. Cada chamada usa argumentos válidos, para a recusa vir do controle de
 // acesso e não de um parâmetro errado. "A": alvos da loja A (do vendedorAB); "B": da loja B.
 //   identidade: os 9 atacantes sem acesso válido, sempre contra os alvos da loja A;
 //   outraOrganizacao: dono de outra rede, contra a loja A (omitido onde a função só age no
@@ -307,6 +308,14 @@ const CASOS: Record<string, Caso> = {
   "estoque_estornar_entrada(uuid,text)": {
     A: () => ["select public.estoque_estornar_entrada($1, 'Tentativa')", [alvo.entradaA]], B: () => ["select public.estoque_estornar_entrada($1, 'Tentativa')", [alvo.entradaB]],
     semPermissao: true,
+  },
+  // Leitura das entradas (R1): estoque.consultar na loja pedida (o vendedor lê as da própria loja, sem custo;
+  // o custo só sai com custo.ver, provado em entrada-estoque.test.ts). Recusa por erro, nunca por lista vazia.
+  "estoque_entrada(uuid,uuid,bigint)": {
+    leitura: true, A: () => ["select public.estoque_entrada($1, $2, null) as v", [ids.lojaA, alvo.entradaA]], B: () => ["select public.estoque_entrada($1, $2, null) as v", [ids.lojaB, alvo.entradaB]],
+  },
+  "estoque_entradas(uuid,bigint,integer)": {
+    leitura: true, A: () => ["select public.estoque_entradas($1, null, null) as v", [ids.lojaA]], B: () => ["select public.estoque_entradas($1, null, null) as v", [ids.lojaB]],
   },
   "estoque_na_rede(uuid)": { leitura: true, A: () => ["select * from public.estoque_na_rede($1)", [cat.aparelho]] },
   "estoque_registrar_entrada(uuid,text,uuid,text,jsonb,text,text)": {
@@ -643,7 +652,7 @@ describe("inventário: toda função SECURITY DEFINER exposta tem casos de recus
     const expostas = rows.map((r) => r.f);
     expect(expostas.filter((f) => !(f in CASOS)), "função nova exposta sem casos de recusa: acrescente ao CASOS").toEqual([]);
     expect(Object.keys(CASOS).filter((f) => !expostas.includes(f)), "caso de função que não existe mais").toEqual([]);
-    expect(expostas).toHaveLength(98);
+    expect(expostas).toHaveLength(100);
   });
 
   it("visitante anônimo não executa nenhuma função do esquema public; no privado só um gatilho, que não roda sozinho", async () => {

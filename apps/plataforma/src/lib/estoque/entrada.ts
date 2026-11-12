@@ -1,6 +1,9 @@
 // Entrada de mercadoria (lote L4a: ORA-INV-009, ORA-INV-004, ORA-CAT-008). Confere o formulário antes de
 // chamar o banco, que confere tudo de novo (permissão na loja, IMEI/ICCID válido e único, tipo do item)
 // e grava a entrada, o livro e o custo numa transação.
+// Lote R1 (REV-NOV-004, REV-NOV-005): cada recusa do banco tem a própria mensagem (o IMEI/ICCID já está
+// nesta loja, em outra, vendido, em transferência, baixado, é de outra variação; produto ou variação
+// inativos) e a tela aponta a linha e o identificador recusados.
 import { iccidValido, imeiValido, lerReais } from "@ora5g/dominio";
 
 import { ehUuid } from "../acesso/regras";
@@ -21,7 +24,17 @@ export const ERROS_DA_ENTRADA = {
   quantidade: "Quantidade inválida (de 1 a 10.000).",
   custo: "Custo inválido: use reais com vírgula (ex.: 1.050,00).",
   muitos: "Até 500 aparelhos e chips por entrada: divida em mais de uma.",
-  ja_cadastrado: "Algum IMEI/ICCID já está cadastrado: use a transferência, a devolução ou o ajuste.",
+  ja_cadastrado: "Este IMEI/ICCID já está cadastrado e não está livre para entrar de novo: use a transferência, a devolução ou o ajuste.",
+  segundo_imei: "Este número é o segundo IMEI de um aparelho já cadastrado: informe o IMEI principal do aparelho.",
+  no_estoque: "Este IMEI/ICCID já está no estoque desta loja: não precisa de entrada nova.",
+  em_outra_loja: "Este IMEI/ICCID já está no estoque de outra loja: use a transferência, não uma entrada nova.",
+  vendido: "Este IMEI/ICCID já foi vendido: a volta ao estoque é pela devolução da venda.",
+  em_transferencia: "Este IMEI/ICCID está em transferência: conclua o recebimento da transferência.",
+  baixado: "Este IMEI/ICCID foi baixado por ajuste ou perda: a entrada não desfaz essa baixa.",
+  outra_variacao: "Este IMEI/ICCID já tem histórico (ou está numa contagem aberta) em outra variação: receba na variação original.",
+  produto_inativo: "O produto desta linha está inativo no catálogo: reative o produto antes de receber.",
+  variacao_inativa: "A variação desta linha está inativa (ou é de outra rede): reative a variação no catálogo ou escolha outra.",
+  concorrencia: "O catálogo ou o estoque estava sendo alterado ao mesmo tempo. Nada foi gravado: envie de novo.",
   repetida: "Este formulário já foi enviado com outros dados. Recarregue a tela e tente de novo.",
   loja: "Entrada só em loja física ou depósito ativos.",
   em_uso: "Algum item já foi vendido, reservado ou transferido: o estorno não é possível.",
@@ -41,16 +54,56 @@ export function erroDaEntrada(erro: { code?: string; message?: string } | null |
   if (codigo === "OR004") return "repetida";
   if (codigo === "OR002") return "em_uso";
   if (codigo === "OR001") return "sem_saldo";
-  if (codigo === "23505") return m.includes("cnpj") ? "cnpj" : m.includes("fornecedor") ? "nome_repetido" : "ja_cadastrado";
-  if (codigo === "22023") {
-    const regras: [string, ErroDaEntrada][] = [
-      ["informe o motivo", "motivo"], ["imei", "identificador"], ["iccid", "identificador"], ["fornecedor", "fornecedor"],
-      ["tipo de entrada", "tipo"], ["documento", "documento"], ["500", "muitos"], ["quantidade", "quantidade"], ["custo", "custo"],
-      ["loja física", "loja"], ["linhas", "linhas"], ["cnpj", "cnpj"], ["nome do fornecedor", "nome"],
+  // Deadlock ou conflito de serialização: outra operação (catálogo, importação) mexia nos mesmos itens.
+  if (codigo === "40P01" || codigo === "40001") return "concorrencia";
+  if (codigo === "23505") {
+    // O banco diz onde a identidade está; a ordem importa ("segundo imei" antes das demais). O SKU da
+    // variação original vem no fim do texto ("(SKU CNPJ-01)") e não pode escolher a regra: sai antes.
+    const semSku = m.replace(/\(sku [^()]{1,60}\)/, "");
+    const posicoes: [string, ErroDaEntrada][] = [
+      ["cnpj", "cnpj"], ["segundo imei", "segundo_imei"], ["no estoque desta loja", "no_estoque"], ["no estoque de outra loja", "em_outra_loja"],
+      ["já foi vendido", "vendido"], ["está em transferência", "em_transferencia"], ["foi baixado", "baixado"], ["outra variação", "outra_variacao"],
+      ["já cadastrado", "ja_cadastrado"], ["fornecedor", "nome_repetido"],
     ];
-    return regras.find(([t]) => m.includes(t))?.[1] ?? "dados";
+    return posicoes.find(([t]) => semSku.includes(t))?.[1] ?? "ja_cadastrado";
+  }
+  if (codigo === "22023") {
+    // O SKU da linha vem no texto ("Linha 2 (IMEI-500): ...") e não pode escolher a regra: sai antes de procurar.
+    const semSku = m.replace(/^linha (\d{1,3}) \([^()]{1,60}\):/, "linha $1:");
+    // A ordem importa: as recusas do cadastro de fornecedor (nome, CNPJ, contato) antes de "fornecedor",
+    // que é a recusa da entrada (compra sem fornecedor ativo, carga inicial com fornecedor).
+    const regras: [string, ErroDaEntrada][] = [
+      ["informe o motivo", "motivo"], ["produto está inativo", "produto_inativo"], ["variação inativa", "variacao_inativa"],
+      ["imei", "identificador"], ["iccid", "identificador"],
+      ["nome do fornecedor", "nome"], ["cnpj", "cnpj"], ["contato do fornecedor", "dados"], ["fornecedor", "fornecedor"],
+      ["tipo de entrada", "tipo"], ["documento", "documento"], ["500", "muitos"], ["quantidade", "quantidade"], ["custo", "custo"],
+      ["loja física", "loja"], ["linhas", "linhas"],
+    ];
+    return regras.find(([t]) => semSku.includes(t))?.[1] ?? "dados";
   }
   return "falha";
+}
+
+/**
+ * O que o banco disse de específico na recusa: a linha do formulário, o IMEI/ICCID e o SKU (da linha ou,
+ * quando a identidade é de outra variação, o da variação original). Vai no endereço para a tela apontar
+ * onde corrigir; a tela confere o formato de novo antes de mostrar.
+ */
+export function detalheDoErro(erro: { message?: string } | null | undefined): { linha?: string; id?: string; sku?: string } {
+  const m = erro?.message ?? "";
+  const linha = /\blinha (\d{1,3})\b/i.exec(m)?.[1];
+  const id = /(?:IMEI\/ICCID|IMEI|ICCID)(?: inválido:)? (\d{1,22})(?!\d)/.exec(m)?.[1];
+  const sku = (/\(SKU ([^()]{1,60})\)/.exec(m) ?? /\blinha \d{1,3} \(([^()]{1,60})\):/i.exec(m))?.[1];
+  return { ...(linha ? { linha } : {}), ...(id ? { id } : {}), ...(sku ? { sku } : {}) };
+}
+
+/** Os mesmos três campos, vindos do endereço: só passam no formato esperado (o resto some, sem erro). */
+export function detalheDoEndereco(valores: { linha?: string | undefined; id?: string | undefined; sku?: string | undefined }) {
+  return {
+    linha: valores.linha && /^[1-9]\d{0,2}$/.test(valores.linha) ? valores.linha : null,
+    id: valores.id && /^\d{1,22}$/.test(valores.id) ? valores.id : null,
+    sku: valores.sku && valores.sku.length <= 60 && /^[\p{L}\p{N}._/+#-]+(?: [\p{L}\p{N}._/+#-]+)*$/u.test(valores.sku) ? valores.sku : null,
+  };
 }
 
 export type LinhaDoFormulario = { variante: string; tipo: string; quantidade?: string; identificadores?: string; custo?: string; condicao?: string };

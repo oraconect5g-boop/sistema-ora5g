@@ -1,5 +1,5 @@
 // ARQUIVO GERADO pelo Supabase (generate_typescript_types do projeto ora5g-dev) depois da
-// migration 20261111201342_pagamentos_maquininhas_e_conciliacao. Não edite à mão: gere de novo a cada
+// migration 20261112033713_recebimento_correcoes. Não edite à mão: gere de novo a cada
 // migration aplicada (auditoria do Codex de 08/11, §7.2). O teste tipos-banco.test.ts confere
 // que funções e tabelas públicas daqui são as mesmas das migrations.
 export type Json =
@@ -1365,6 +1365,7 @@ export type Database = {
           linha: number
           organizacao_id: string
           quantidade: number
+          reentradas: string[]
           variante_id: string
         }
         Insert: {
@@ -1375,6 +1376,7 @@ export type Database = {
           linha: number
           organizacao_id: string
           quantidade: number
+          reentradas?: string[]
           variante_id: string
         }
         Update: {
@@ -1385,6 +1387,7 @@ export type Database = {
           linha?: number
           organizacao_id?: string
           quantidade?: number
+          reentradas?: string[]
           variante_id?: string
         }
         Relationships: [
@@ -4394,6 +4397,14 @@ export type Database = {
       encerrar_vinculo: {
         Args: { p_motivo: string; p_vinculo: string }
         Returns: boolean
+      }
+      estoque_entrada: {
+        Args: { p_entrada: string; p_numero: number; p_unidade: string }
+        Returns: Json
+      }
+      estoque_entradas: {
+        Args: { p_antes?: number; p_limite?: number; p_unidade: string }
+        Returns: Json
       }
       estoque_estornar_entrada: {
         Args: { p_entrada: string; p_motivo: string }

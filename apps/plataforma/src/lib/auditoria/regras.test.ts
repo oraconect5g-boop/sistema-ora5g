@@ -14,6 +14,13 @@ describe("auditoria real: nomes legíveis", () => {
     expect(nomeDaAcao("estoque.item_conferido")).toBe("Conferiu um aparelho ou chip");
   });
 
+  it("entrada de mercadoria, fornecedor e a reentrada de um aparelho ou chip (lote R1)", () => {
+    expect(nomeDaAcao("entradas_estoque.criado")).toBe("Entrada de mercadoria: criado");
+    expect(nomeDaAcao("entradas_estoque.alterado")).toBe("Entrada de mercadoria: alterado");
+    expect(nomeDaAcao("fornecedores.alterado")).toBe("Fornecedor: alterado");
+    expect(nomeDaAcao("estoque.item_reentrada")).toBe("Aparelho ou chip voltou ao estoque por reentrada");
+  });
+
   it("código desconhecido aparece como veio; nome herdado de objeto não vira texto", () => {
     expect(nomeDaAcao("algo.novo")).toBe("algo.novo");
     expect(nomeDaAcao("constructor.criado")).toBe("constructor.criado");

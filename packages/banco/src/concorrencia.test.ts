@@ -493,4 +493,96 @@ describe("duas conexões ao mesmo tempo no PostgreSQL 17", () => {
     expect(await contar("select count(*) as n from public.clientes where nome like 'Cliente na loja %'")).toBe(1);
     expect(await contar("select count(*) as n from privado.cliente_dados where documento = $1", [documento])).toBe(1);
   });
+
+  it("entrada de mercadoria e inativação no catálogo ao mesmo tempo, nas duas ordens: nunca sobra estoque em produto ou variação inativos (R1)", async () => {
+    // Quatro produtos novos e sem estoque, com uma variação cada, só deste teste (um por disputa).
+    const produto = (n: number) => `00000000-0000-4000-9000-0000000000${40 + n}`;
+    const variante = (n: number) => `00000000-0000-4000-9000-0000000000${50 + n}`;
+    for (const n of [1, 2, 3, 4]) {
+      await admin.query("insert into public.produtos (id, organizacao_id, tipo, nome, categoria_id) values ($1, $2, 'acessorio', $3, $4)",
+        [produto(n), ids.organizacao, `Película da disputa ${n}`, cat.acessorios]);
+      await admin.query("insert into public.variantes (id, organizacao_id, produto_id, sku, nome) values ($1, $2, $3, $4, $5)",
+        [variante(n), ids.organizacao, produto(n), `CONC-PEL-${n}`, `Película da disputa ${n}`]);
+    }
+    const dono = await sessaoNaLoja(ids.dono, ids.lojaA);
+    const RECEBER = "select public.estoque_registrar_entrada($1, 'carga_inicial', null, null, $2::jsonb, $3, 'Contagem') as v";
+    const INATIVAR_PRODUTO = "select public.catalogo_salvar_produto($1, $2, null, $3, $4, null, null, null, null, false, null, 'Fim de linha') as v";
+    const INATIVAR_VARIACAO = "select public.catalogo_salvar_variante($1, $2, $3, $4, null, null, null, 0, false, 'Fim de linha') as v";
+    const receber = (cliente: pg.Client, n: number) => valor(cliente, RECEBER, [ids.lojaA, JSON.stringify([{ variante: variante(n), quantidade: 2 }]), `conc:r1:entrada:${n}`]);
+    const inativarProduto = (cliente: pg.Client, n: number) => valor(cliente, INATIVAR_PRODUTO, [ids.organizacao, produto(n), `Película da disputa ${n}`, cat.acessorios]);
+    const inativarVariacao = (cliente: pg.Client, n: number) => valor(cliente, INATIVAR_VARIACAO, [produto(n), variante(n), `CONC-PEL-${n}`, `Película da disputa ${n}`]);
+    const ativos = async (n: number) => (await admin.query<{ produto: boolean; variacao: boolean }>(
+      "select p.ativo as produto, v.ativa as variacao from public.variantes v join public.produtos p on p.id = v.produto_id where v.id = $1", [variante(n)])).rows[0];
+    let mensagem = "";
+    const guardar = (e: Error) => { mensagem = e.message; throw e; };
+
+    // 1. A entrada chega primeiro e segura o produto; a inativação espera e, depois, encontra o estoque que entrou.
+    await abrir(a, dono);
+    await abrir(b, dono);
+    expect(await disputa(() => receber(a, 1), () => inativarProduto(b, 1))).toEqual({ erro: "OR020" });
+    expect(await ativos(1)).toEqual({ produto: true, variacao: true });
+    expect((await saldo(ids.lojaA, variante(1)))?.quantidade).toBe(2);
+
+    // 2. A inativação do produto chega primeiro; a entrada espera, relê o produto e é recusada. Nada entra.
+    await abrir(a, dono);
+    await abrir(b, dono);
+    expect(await disputa(() => inativarProduto(a, 2), () => receber(b, 2).catch(guardar))).toEqual({ erro: "22023" });
+    expect(mensagem).toContain("o produto está inativo no catálogo");
+    expect(await ativos(2)).toEqual({ produto: false, variacao: true });
+    expect(await saldo(ids.lojaA, variante(2))).toBeUndefined();
+    expect(await contar("select count(*) as n from public.entradas_estoque where chave = 'conc:r1:entrada:2'")).toBe(0);
+
+    // 3. A entrada chega primeiro e segura a variação; a inativação da variação espera e encontra o estoque.
+    await abrir(a, dono);
+    await abrir(b, dono);
+    expect(await disputa(() => receber(a, 3), () => inativarVariacao(b, 3))).toEqual({ erro: "OR020" });
+    expect(await ativos(3)).toEqual({ produto: true, variacao: true });
+    expect((await saldo(ids.lojaA, variante(3)))?.quantidade).toBe(2);
+
+    // 4. A inativação da variação chega primeiro; a entrada espera, relê a variação e é recusada.
+    await abrir(a, dono);
+    await abrir(b, dono);
+    mensagem = "";
+    expect(await disputa(() => inativarVariacao(a, 4), () => receber(b, 4).catch(guardar))).toEqual({ erro: "22023" });
+    expect(mensagem).toContain("variação inativa");
+    expect(await ativos(4)).toEqual({ produto: true, variacao: false });
+    expect(await saldo(ids.lojaA, variante(4))).toBeUndefined();
+
+    // Em nenhuma das ordens ficou estoque em produto ou variação inativos.
+    expect(await contar(`select count(*) as n from public.estoque_saldos s join public.variantes v on v.id = s.variante_id
+      join public.produtos p on p.id = v.produto_id where s.quantidade > 0 and (not v.ativa or not p.ativo)`)).toBe(0);
+    expect(await divergencias()).toEqual([]);
+  });
+
+  it("duas entradas recebendo de volta o mesmo IMEI estornado: uma reentra, a outra é recusada porque ele já voltou (R1)", async () => {
+    const dono = await sessaoNaLoja(ids.dono, ids.lojaA);
+    const imei = comDigitoLuhn("35209900172050");
+    const RECEBER = "select public.estoque_registrar_entrada($1, 'carga_inicial', null, null, $2::jsonb, $3, 'Contagem') as v";
+    const aparelho = JSON.stringify([{ variante: cat.aparelho, identificadores: [imei] }]);
+    // Entrada e estorno confirmados antes da disputa: a identidade existe e está baixada.
+    await abrir(admin, dono);
+    const primeira = await valor<{ id: string }>(admin, RECEBER, [ids.lojaA, aparelho, "conc:r1:reentrada:0"]);
+    await admin.query("select public.estoque_estornar_entrada($1, 'Lançada por engano')", [primeira?.id]);
+    await admin.query("commit");
+    const item = await valor<string>(admin, "select id as v from public.itens_serializados where imei = $1 and situacao = 'baixado'", [imei]);
+    expect(item).toBeTruthy();
+
+    await abrir(a, dono);
+    await abrir(b, dono);
+    let mensagem = "";
+    let reentrou: { reentradas: number } | undefined;
+    const final = await disputa(
+      async () => { reentrou = await valor(a, RECEBER, [ids.lojaA, aparelho, "conc:r1:reentrada:1"]); },
+      () => valor(b, RECEBER, [ids.lojaA, aparelho, "conc:r1:reentrada:2"]).catch((e: Error) => { mensagem = e.message; throw e; }),
+    );
+    expect(reentrou?.reentradas).toBe(1);
+    expect(final).toEqual({ erro: "23505" });
+    expect(mensagem).toContain("já está no estoque desta loja");
+    // Uma identidade, de volta uma vez: três lançamentos (entrada, estorno, reentrada) e um registro de reentrada.
+    expect(await contar("select count(*) as n from public.itens_serializados where imei = $1 and em_estoque and situacao = 'disponivel'", [imei])).toBe(1);
+    expect(await contar("select count(*) as n from public.estoque_movimentos where item_serializado_id = $1", [item])).toBe(3);
+    expect(await contar("select count(*) as n from public.auditoria where acao = 'estoque.item_reentrada' and alvo_id = $1", [item])).toBe(1);
+    expect(await contar("select count(*) as n from public.entradas_estoque where chave = 'conc:r1:reentrada:2'")).toBe(0);
+    expect(await divergencias()).toEqual([]);
+  });
 });

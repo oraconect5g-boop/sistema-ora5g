@@ -1,12 +1,14 @@
 // Entrada de mercadoria (lote L4a: ORA-INV-009, ORA-INV-004, ORA-CAT-008): compra com fornecedor e carga
 // inicial, aparelho e chip pelo IMEI/ICCID, acessório por quantidade, custo de entrada e estorno pelo
-// livro. Banco em memória com todas as migrations; dados FICTÍCIOS. Cada teste numa transação desfeita.
+// livro. Correções do recebimento (lote R1, revisão integral de 11/11/2026): custo só com custo.ver, histórico
+// completo, reentrada da identidade estornada e produto inativo. Banco em memória com todas as migrations;
+// dados FICTÍCIOS. Cada teste numa transação desfeita.
 import type { PGlite } from "@electric-sql/pglite";
 import { afterAll, afterEach, beforeAll, beforeEach, describe, expect, it } from "vitest";
 
 import { comDigitoLuhn, comoUsuario, criarBanco, type Sessao } from "./banco-de-teste";
 import { ids, montarCenario } from "./cenario";
-import { cat, montarCatalogo } from "./cenario-catalogo";
+import { cat, itens as itensDoCenario, montarCatalogo } from "./cenario-catalogo";
 
 let db: PGlite;
 beforeAll(async () => {
@@ -64,6 +66,50 @@ const divergencias = async () => (await db.query("select * from privado.divergen
 async function fornecedor(s: Sessao, nome = "Distribuidora Fictícia") {
   return (await valor<Registro>(s, FORNECEDOR, [ids.organizacao, null, nome, null, null, null, "Fornecedor novo"])).id;
 }
+
+// --- Apoio das correções do recebimento (R1) ---
+type Entrada = Registro & { reentradas: number };
+type Identificador = { identificador: string; situacao: string; livre: boolean; reentrada: boolean };
+type Linha = { linha: number; sku: string; nome: string; quantidade: number; condicao: string; custo_unitario: number | null; reentradas: number; saldo_livre: number | null; identificadores: Identificador[] | null };
+type Lida = { id: string; numero: number; tipo: string; documento: string | null; situacao: string; total_unidades: number; total_custo: number | null; criado_por: string | null; estornado_por: string | null; motivo_estorno: string | null; fornecedor: string | null; itens: Linha[] };
+type Historico = { ve_custo: boolean; total: number; entradas: Lida[]; proxima: number | null };
+type Detalhe = Lida & { ve_custo: boolean };
+const ENTRADAS = "select public.estoque_entradas($1, $2, $3) as v";
+const DETALHE = "select public.estoque_entrada($1, $2, $3) as v";
+const OUTRA_VARIANTE = "00000000-0000-4000-9000-000000000034";
+// Leitura direta como o usuário (tabela ou visão): se falhar, o erro original aparece e a transação do teste segue.
+async function lerComo<T>(s: Sessao | null, sql: string, params: unknown[] = []): Promise<T[]> {
+  return comoUsuario(db, s, async () => {
+    await db.exec("savepoint leitura");
+    try {
+      const linhas = (await db.query<T>(sql, params)).rows;
+      await db.exec("release savepoint leitura");
+      return linhas;
+    } catch (e) {
+      await db.exec("rollback to savepoint leitura");
+      throw e;
+    }
+  });
+}
+const falha = async (s: Sessao | null, sql: string, params: unknown[] = []): Promise<Falha | null> => {
+  const r = await tentar(s, sql, params);
+  return "codigo" in r ? r : null;
+};
+type Item = { id: string; variante_id: string; unidade_id: string; situacao: string; em_estoque: boolean; condicao: string };
+const itemDe = async (identificador: string) =>
+  (await db.query<Item>("select id, variante_id, unidade_id, situacao, em_estoque, condicao from public.itens_serializados where $1 in (imei, iccid)", [identificador])).rows[0] as Item;
+const livroDe = async (item: string) =>
+  (await db.query<{ quantidade: number; tipo: string; referencia_tipo: string | null; unidade_id: string; variante_id: string }>(
+    "select quantidade, tipo, referencia_tipo, unidade_id, variante_id from public.estoque_movimentos where item_serializado_id = $1 order by id", [item])).rows;
+const reentradasAuditadas = async () =>
+  (await db.query<{ usuario_id: string; unidade_id: string; alvo_tipo: string; alvo_id: string; antes: Record<string, unknown>; depois: Record<string, unknown>; motivo: string; origem: string }>(
+    "select usuario_id, unidade_id, alvo_tipo, alvo_id, antes, depois, motivo, origem from public.auditoria where acao = 'estoque.item_reentrada' order by id")).rows;
+const numerosEm = (v: unknown): number[] =>
+  typeof v === "number" ? [v] : v && typeof v === "object" ? Object.values(v).flatMap(numerosEm) : [];
+const aparelhos = (identificadores: string[], variante = cat.aparelho, extra: Record<string, unknown> = {}) =>
+  JSON.stringify([{ variante, identificadores, ...extra }]);
+const cargaInicial = (s: Sessao, unidade: string, itens: string, chave: string, motivo = "Contagem") =>
+  valor<Entrada>(s, ENTRADA, [unidade, "carga_inicial", null, null, itens, chave, motivo]);
 
 describe("entrada de mercadoria (L4a)", () => {
   it("compra: aparelhos pelo IMEI, chips pelo ICCID e capas por quantidade, com custo e o livro em dia", async () => {
@@ -169,5 +215,297 @@ describe("entrada de mercadoria (L4a)", () => {
     expect(await codigo(dono, FORNECEDOR, [ids.organizacao, null, "Outro", "11.222.333/0001-82", null, null, "CNPJ errado"])).toBe("22023");
     expect((await valor<Registro>(dono, FORNECEDOR, [ids.organizacao, id, "Atacado Teste Ltda", "11.444.777/0001-61", "(41) 3000-0000", false, "Dados completos"])).repetida).toBe(false);
     expect(await codigo(dono, ENTRADA, [ids.lojaA, "compra", id, null, JSON.stringify([{ variante: cat.capa, quantidade: 1 }]), "form:entrada:0009", "Fornecedor inativo"])).toBe("22023");
+  });
+});
+
+describe("correções do recebimento (R1)", () => {
+  it("custo só com custo.ver: colunas fechadas na tabela, custo pelas funções e auditoria do cabeçalho (REV-NOV-001)", async () => {
+    const gerente = await naLoja(ids.gerenteB, ids.lojaB);
+    const vendedor = await naLoja(ids.vendedorAB, ids.lojaB);
+    const vendedorDeFora = await naLoja(ids.vendedorA, ids.lojaA);
+    const dono = await naLoja(ids.dono, ids.lojaA);
+    const e = await valor<Entrada>(gerente, ENTRADA, [ids.lojaB, "carga_inicial", null, "Lote 7", JSON.stringify([{ variante: cat.capa, quantidade: 2, custo: 1_234 }]), "form:r1:custo:0001", "Contagem"]);
+
+    // Leitura direta: nenhuma coluna de custo, nem o resumo do conteúdo, nem em filtro, ordem ou soma. Vale para todos.
+    for (const sql of [
+      "select total_custo_centavos from public.entradas_estoque",
+      "select * from public.entradas_estoque",
+      "select conteudo from public.entradas_estoque",
+      "select chave from public.entradas_estoque",
+      "select id from public.entradas_estoque where total_custo_centavos > 0",
+      "select id from public.entradas_estoque order by total_custo_centavos",
+      "select custo_unitario_centavos from public.entrada_itens",
+      "select * from public.entrada_itens",
+      "select sum(custo_unitario_centavos * quantidade) from public.entrada_itens",
+      "select linha from public.entrada_itens where custo_unitario_centavos = 1234",
+    ]) {
+      for (const quem of [vendedor, gerente, dono]) expect([sql, await codigo(quem, sql)]).toEqual([sql, "42501"]);
+    }
+    // O que não é custo continua legível pela loja, com as mesmas políticas.
+    expect(await lerComo(vendedor, "select numero, documento, total_unidades, situacao from public.entradas_estoque"))
+      .toEqual([{ numero: e.numero, documento: "Lote 7", total_unidades: 2, situacao: "registrada" }]);
+    expect(await lerComo(vendedor, "select linha, quantidade, condicao, itens, reentradas from public.entrada_itens"))
+      .toEqual([{ linha: 1, quantidade: 2, condicao: "novo", itens: [], reentradas: [] }]);
+    expect(await lerComo(vendedorDeFora, "select entrada_id from public.entrada_itens")).toEqual([]);
+    expect(await lerComo(vendedorDeFora, "select id from public.entradas_estoque")).toEqual([]);
+
+    // Pelas funções: o gerente e o dono veem 1.234 e 2.468; o vendedor da mesma loja recebe nulo (não zero).
+    for (const quem of [gerente, dono]) {
+      const lido = await valor<Historico>(quem, ENTRADAS, [ids.lojaB, null, null]);
+      expect(lido).toMatchObject({ ve_custo: true, total: 1, proxima: null });
+      expect(lido.entradas[0]).toMatchObject({ id: e.id, numero: e.numero, total_unidades: 2, total_custo: 2_468, criado_por: expect.any(String), itens: [{ linha: 1, sku: "ACE-0001", quantidade: 2, custo_unitario: 1_234 }] });
+      expect(await valor<Detalhe>(quem, DETALHE, [ids.lojaB, e.id, null])).toMatchObject({ ve_custo: true, total_custo: 2_468, itens: [{ custo_unitario: 1_234 }] });
+    }
+    for (const lido of [await valor<Historico>(vendedor, ENTRADAS, [ids.lojaB, null, null]), await valor<Detalhe>(vendedor, DETALHE, [ids.lojaB, null, e.numero])]) {
+      expect(lido.ve_custo).toBe(false);
+      expect(numerosEm(lido)).not.toContain(1_234);
+      expect(numerosEm(lido)).not.toContain(2_468);
+    }
+    const semCusto = await valor<Historico>(vendedor, ENTRADAS, [ids.lojaB, null, null]);
+    expect(semCusto.entradas[0]).toMatchObject({ id: e.id, total_unidades: 2, total_custo: null, itens: [{ linha: 1, quantidade: 2, custo_unitario: null }] });
+    // Outra loja, outra rede e sem sessão: recusa.
+    for (const quem of [vendedorDeFora, await naLoja(ids.donoOutraOrg, ids.lojaOutraOrg), null]) {
+      expect(await codigo(quem, ENTRADAS, [ids.lojaB, null, null])).toBe("42501");
+      expect(await codigo(quem, DETALHE, [ids.lojaB, e.id, null])).toBe("42501");
+    }
+
+    // Auditoria: a imagem do cabeçalho (custo total e resumo do conteúdo) segue a mesma regra.
+    const auditoriaDe = async (quem: Sessao) =>
+      (await lerComo<{ alvo_tipo: string }>(quem, "select alvo_tipo from public.auditoria where unidade_id = $1 order by id", [ids.lojaB])).map((l) => l.alvo_tipo);
+    const antes = await auditoriaDe(gerente);
+    expect(antes).toContain("entradas_estoque");
+    // Permissão retirada: o gerente passa a ler a entrada sem custo e deixa de ver a imagem na auditoria; o resto continua.
+    await db.query("delete from public.papel_permissoes where papel = 'gerente' and permissao = 'custo.ver'");
+    const depois = await valor<Historico>(gerente, ENTRADAS, [ids.lojaB, null, null]);
+    expect(depois).toMatchObject({ ve_custo: false });
+    expect(depois.entradas[0]).toMatchObject({ total_custo: null, itens: [{ custo_unitario: null }] });
+    const semImagem = await auditoriaDe(gerente);
+    expect(semImagem).not.toContain("entradas_estoque");
+    expect(semImagem).toEqual(antes.filter((a) => a !== "entradas_estoque"));
+    expect(semImagem.length).toBeGreaterThan(0);
+    expect(await auditoriaDe(dono)).toContain("entradas_estoque");
+  });
+
+  it("histórico completo: 23 entradas paginadas, sem repetir nem pular, e o detalhe pelo id ou pelo número (REV-NOV-009)", async () => {
+    const dono = await naLoja(ids.dono, ids.lojaC);
+    const numeros: number[] = [];
+    for (let n = 1; n <= 23; n += 1) {
+      numeros.push((await valor<Entrada>(dono, ENTRADA, [ids.lojaC, "carga_inicial", null, `Lote ${n}`, JSON.stringify([{ variante: cat.capa, quantidade: 1 }]), `form:r1:hist:${String(n).padStart(4, "0")}`, "Contagem"])).numero);
+    }
+    const p1 = await valor<Historico>(dono, ENTRADAS, [ids.lojaC, null, null]);
+    expect(p1.total).toBe(23);
+    expect(p1.entradas).toHaveLength(20);
+    expect(p1.proxima).toBe(p1.entradas[19]?.numero);
+    const p2 = await valor<Historico>(dono, ENTRADAS, [ids.lojaC, p1.proxima, null]);
+    expect(p2.entradas).toHaveLength(3);
+    expect(p2.proxima).toBeNull();
+    expect([...p1.entradas, ...p2.entradas].map((x) => x.numero)).toEqual([...numeros].reverse());
+    // Na lista não vão os IMEI/ICCID nem o saldo: só no detalhe.
+    expect(p1.entradas[0]).toMatchObject({ documento: "Lote 23", itens: [{ linha: 1, sku: "ACE-0001", identificadores: null, saldo_livre: null }] });
+    // O limite fica entre 1 e 50; página inválida é recusada; a outra loja não tem entradas.
+    expect((await valor<Historico>(dono, ENTRADAS, [ids.lojaC, null, 500])).entradas).toHaveLength(23);
+    expect(await valor<Historico>(dono, ENTRADAS, [ids.lojaC, null, 0])).toMatchObject({ entradas: [{ numero: numeros[22] }], proxima: numeros[22] });
+    expect(await codigo(dono, ENTRADAS, [ids.lojaC, 0, null])).toBe("22023");
+    expect(await valor<Historico>(dono, ENTRADAS, [ids.lojaA, null, null])).toMatchObject({ total: 0, entradas: [], proxima: null });
+
+    // A primeira entrada (fora das 20 mais novas) abre pelo número e pelo id, com o mesmo conteúdo.
+    const porNumero = await valor<Detalhe>(dono, DETALHE, [ids.lojaC, null, numeros[0]]);
+    expect(porNumero).toMatchObject({ numero: numeros[0], documento: "Lote 1", situacao: "registrada", total_unidades: 1, ve_custo: true,
+      itens: [{ linha: 1, sku: "ACE-0001", quantidade: 1, identificadores: [], saldo_livre: 23 }] });
+    expect(await valor<Detalhe>(dono, DETALHE, [ids.lojaC, porNumero.id, null])).toEqual(porNumero);
+    // Só na loja dela; um dos dois (id ou número), nunca os dois nem nenhum.
+    expect(await codigo(dono, DETALHE, [ids.lojaA, porNumero.id, null])).toBe("P0002");
+    expect(await codigo(dono, DETALHE, [ids.lojaA, null, numeros[0]])).toBe("P0002");
+    expect(await codigo(dono, DETALHE, [ids.lojaC, null, null])).toBe("22023");
+    expect(await codigo(dono, DETALHE, [ids.lojaC, porNumero.id, numeros[0]])).toBe("22023");
+  });
+
+  it("detalhe explica o estorno recusado: mostra a posição de hoje de cada IMEI e o saldo livre do acessório", async () => {
+    const dono = await naLoja(ids.dono, ids.lojaA);
+    const itens = [{ variante: cat.aparelho, identificadores: [imei(8), imei(9)] }, { variante: cat.capa, quantidade: 4 }];
+    const e = await valor<Entrada>(dono, ENTRADA, [ids.lojaA, "carga_inicial", null, null, JSON.stringify(itens), "form:r1:det:0001", "Contagem"]);
+    await valor(dono, "select public.reservar_estoque($1, 1, $2, 'lojas:reserva:r1') as v", [cat.aparelho, (await itemDe(imei(8))).id]);
+    expect(await codigo(dono, ESTORNO, [e.id, "Tentativa"])).toBe("OR002");
+    const d = await valor<Detalhe>(dono, DETALHE, [ids.lojaA, e.id, null]);
+    expect(d).toMatchObject({ situacao: "registrada", total_unidades: 6, estornado_por: null });
+    expect(d.itens).toMatchObject([
+      { linha: 1, sku: "APA-0001", quantidade: 2, reentradas: 0, saldo_livre: null, identificadores: [
+        { identificador: imei(8), situacao: "reservado", livre: false, reentrada: false },
+        { identificador: imei(9), situacao: "disponivel", livre: true, reentrada: false },
+      ] },
+      { linha: 2, sku: "ACE-0001", quantidade: 4, saldo_livre: 14, identificadores: [] },
+    ]);
+  });
+
+  it("reentrada: a identidade estornada volta pela entrada sem duplicar nem reescrever o livro, e repete sem dobrar (REV-NOV-004)", async () => {
+    const dono = await naLoja(ids.dono, ids.lojaA);
+    const e1 = await cargaInicial(dono, ids.lojaA, aparelhos([imei(10)]), "form:r1:re:0001");
+    expect(e1.reentradas).toBe(0);
+    const original = await itemDe(imei(10));
+    await valor(dono, ESTORNO, [e1.id, "Lançada por engano"]);
+    expect(await itemDe(imei(10))).toMatchObject({ id: original.id, situacao: "baixado", em_estoque: false });
+
+    const e2 = await cargaInicial(dono, ids.lojaA, aparelhos([imei(10)]), "form:r1:re:0002", "Agora certo");
+    expect(e2).toMatchObject({ repetida: false, reentradas: 1 });
+    expect(await itemDe(imei(10))).toEqual(original); // mesma identidade, de volta e disponível
+    expect((await db.query("select count(*)::int as n from public.itens_serializados where imei = $1", [imei(10)])).rows[0]).toEqual({ n: 1 });
+    expect(await livroDe(original.id)).toEqual([
+      { quantidade: 1, tipo: "entrada_importacao", referencia_tipo: null, unidade_id: ids.lojaA, variante_id: cat.aparelho },
+      { quantidade: -1, tipo: "ajuste", referencia_tipo: "estorno_entrada", unidade_id: ids.lojaA, variante_id: cat.aparelho },
+      { quantidade: 1, tipo: "entrada_importacao", referencia_tipo: "reentrada", unidade_id: ids.lojaA, variante_id: cat.aparelho },
+    ]);
+    expect((await db.query("select itens, reentradas from public.entrada_itens where entrada_id = $1", [e2.id])).rows[0]).toEqual({ itens: [original.id], reentradas: [original.id] });
+    expect(await reentradasAuditadas()).toEqual([{
+      usuario_id: ids.dono, unidade_id: ids.lojaA, alvo_tipo: "itens_serializados", alvo_id: original.id, motivo: "Agora certo", origem: "aplicacao",
+      antes: { variante_id: cat.aparelho, unidade_id: ids.lojaA, condicao: "novo", situacao: "baixado" },
+      depois: { variante_id: cat.aparelho, unidade_id: ids.lojaA, condicao: "novo", situacao: "disponivel", entrada_id: e2.id, entrada_numero: e2.numero },
+    }]);
+
+    // Repetir o mesmo envio devolve a mesma resposta e não lança de novo.
+    expect(await cargaInicial(dono, ids.lojaA, aparelhos([imei(10)]), "form:r1:re:0002", "Agora certo")).toEqual({ ...e2, repetida: true });
+    expect(await livroDe(original.id)).toHaveLength(3);
+    expect(await reentradasAuditadas()).toHaveLength(1);
+    // De volta ao estoque, outra entrada do mesmo IMEI é recusada com o motivo certo.
+    const recusa = await falha(dono, ENTRADA, [ids.lojaA, "carga_inicial", null, null, aparelhos([imei(10)]), "form:r1:re:0003", "De novo"]);
+    expect(recusa).toMatchObject({ codigo: "23505" });
+    expect(recusa?.mensagem).toContain("já está no estoque desta loja");
+
+    // O ciclo se repete: estornar a nova entrada e receber outra vez.
+    await valor(dono, ESTORNO, [e2.id, "Teste do ciclo"]);
+    const e3 = await cargaInicial(dono, ids.lojaA, aparelhos([imei(10)]), "form:r1:re:0004", "Volta");
+    expect(e3.reentradas).toBe(1);
+    expect(await livroDe(original.id)).toHaveLength(5);
+    expect(await saldo(ids.lojaA, cat.aparelho)).toMatchObject({ quantidade: 3, reservado: 0 }); // 2 do cenário + este
+    expect(await divergencias()).toEqual([]);
+    expect((await valor<Detalhe>(dono, DETALHE, [ids.lojaA, e3.id, null])).itens[0]).toMatchObject({
+      reentradas: 1, identificadores: [{ identificador: imei(10), situacao: "disponivel", livre: true, reentrada: true }] });
+
+    // Chip pelo ICCID segue o mesmo caminho.
+    const chip = JSON.stringify([{ variante: cat.chip, identificadores: [iccid(2)] }]);
+    const c1 = await cargaInicial(dono, ids.lojaA, chip, "form:r1:re:0005");
+    await valor(dono, ESTORNO, [c1.id, "Chip lançado por engano"]);
+    expect(await cargaInicial(dono, ids.lojaA, chip, "form:r1:re:0006")).toMatchObject({ reentradas: 1 });
+    expect(await itemDe(iccid(2))).toMatchObject({ situacao: "disponivel", em_estoque: true });
+    expect(await divergencias()).toEqual([]);
+  });
+
+  it("reentrada corrige a loja e a variação; identidade com outra história não muda de variação (REV-NOV-004)", async () => {
+    const dono = await naLoja(ids.dono, ids.lojaA);
+    const gerente = await naLoja(ids.gerenteB, ids.lojaB);
+    await db.query("insert into public.variantes (id, organizacao_id, produto_id, sku, nome) values ($1, $2, $3, 'APA-0002', 'Galaxy A15 256 GB Preto')", [OUTRA_VARIANTE, ids.organizacao, cat.produtoAparelho]);
+
+    // Loja errada: estorna na A e recebe na B. A identidade muda de loja pelo livro; o estorno fica registrado.
+    const e1 = await cargaInicial(dono, ids.lojaA, aparelhos([imei(11)]), "form:r1:loja:0001");
+    const id11 = (await itemDe(imei(11))).id;
+    await valor(dono, ESTORNO, [e1.id, "Era da loja B"]);
+    expect(await cargaInicial(gerente, ids.lojaB, aparelhos([imei(11)]), "form:r1:loja:0002", "Loja certa")).toMatchObject({ reentradas: 1 });
+    expect(await itemDe(imei(11))).toMatchObject({ id: id11, unidade_id: ids.lojaB, situacao: "disponivel", em_estoque: true });
+    expect(await saldo(ids.lojaA, cat.aparelho)).toMatchObject({ quantidade: 2 });
+    expect(await saldo(ids.lojaB, cat.aparelho)).toMatchObject({ quantidade: 2 }); // 1 do cenário + este
+    expect((await reentradasAuditadas()).at(-1)).toMatchObject({ usuario_id: ids.gerenteB, unidade_id: ids.lojaB, alvo_id: id11, antes: { unidade_id: ids.lojaA }, depois: { unidade_id: ids.lojaB } });
+    // A entrada estornada da loja A mostra que o aparelho hoje está em outra loja (sem dizer qual).
+    expect((await valor<Detalhe>(dono, DETALHE, [ids.lojaA, e1.id, null])).itens[0]?.identificadores).toEqual([{ identificador: imei(11), situacao: "outra_loja", livre: false, reentrada: false }]);
+
+    // Variação errada: estorna e recebe na variação certa, como seminovo.
+    const e2 = await cargaInicial(dono, ids.lojaA, aparelhos([imei(12)]), "form:r1:var:0001");
+    const id12 = (await itemDe(imei(12))).id;
+    await valor(dono, ESTORNO, [e2.id, "Era o de 256 GB"]);
+    expect(await cargaInicial(dono, ids.lojaA, aparelhos([imei(12)], OUTRA_VARIANTE, { condicao: "seminovo" }), "form:r1:var:0002", "Variação certa")).toMatchObject({ reentradas: 1 });
+    expect(await itemDe(imei(12))).toEqual({ id: id12, variante_id: OUTRA_VARIANTE, unidade_id: ids.lojaA, situacao: "disponivel", em_estoque: true, condicao: "seminovo" });
+    expect(await saldo(ids.lojaA, cat.aparelho)).toMatchObject({ quantidade: 2 });
+    expect(await saldo(ids.lojaA, OUTRA_VARIANTE)).toMatchObject({ quantidade: 1 });
+    expect((await livroDe(id12)).map((m) => m.variante_id)).toEqual([cat.aparelho, cat.aparelho, OUTRA_VARIANTE]);
+    expect((await reentradasAuditadas()).at(-1)).toMatchObject({ alvo_id: id12, antes: { variante_id: cat.aparelho, condicao: "novo" }, depois: { variante_id: OUTRA_VARIANTE, condicao: "seminovo" } });
+    expect(await divergencias()).toEqual([]);
+
+    // Com outra história (uma reserva, mesmo já liberada), a variação não muda; a loja ainda pode ser corrigida.
+    const e3 = await cargaInicial(dono, ids.lojaA, aparelhos([imei(13)]), "form:r1:var:0003");
+    const id13 = (await itemDe(imei(13))).id;
+    const reserva = await valor<string>(dono, "select public.reservar_estoque($1, 1, $2, 'lojas:reserva:r1b') as v", [cat.aparelho, id13]);
+    await valor(dono, "select public.liberar_reserva($1) as v", [reserva]);
+    await valor(dono, ESTORNO, [e3.id, "Lançada por engano"]);
+    const recusa = await falha(dono, ENTRADA, [ids.lojaA, "carga_inicial", null, null, aparelhos([imei(13)], OUTRA_VARIANTE), "form:r1:var:0004", "Tentativa"]);
+    expect(recusa).toMatchObject({ codigo: "23505" });
+    expect(recusa?.mensagem).toContain("em outra variação: receba na variação original (SKU APA-0001)");
+    expect(await itemDe(imei(13))).toMatchObject({ variante_id: cat.aparelho, situacao: "baixado", em_estoque: false });
+    expect(await cargaInicial(gerente, ids.lojaB, aparelhos([imei(13)]), "form:r1:var:0005", "Loja certa")).toMatchObject({ reentradas: 1 });
+    expect(await itemDe(imei(13))).toMatchObject({ id: id13, unidade_id: ids.lojaB, variante_id: cat.aparelho, situacao: "disponivel" });
+    expect(await divergencias()).toEqual([]);
+  });
+
+  it("reentrada recusa o que não saiu por estorno: no estoque, vendido, em transferência, baixado por perda ou ajuste e segundo IMEI", async () => {
+    const dono = await naLoja(ids.dono, ids.lojaB);
+    let chave = 0;
+    const tentativa = async (identificador: string) =>
+      falha(dono, ENTRADA, [ids.lojaB, "carga_inicial", null, null, aparelhos([identificador]), `form:r1:rec:${String(++chave).padStart(4, "0")}`, "Tentativa"]);
+    const recusada = async (identificador: string, trecho: string) => {
+      const f = await tentativa(identificador);
+      expect([identificador, f?.codigo]).toEqual([identificador, "23505"]);
+      expect(f?.mensagem).toContain(trecho);
+    };
+    await recusada(cat.imei3, "já está no estoque desta loja"); // b1 está na loja B
+    await recusada(cat.imei1, "já está no estoque de outra loja: use a transferência"); // a1 está na loja A
+
+    // Posições fabricadas (só o estado; as jornadas reais de venda e transferência têm testes próprios).
+    await db.exec("set session_replication_role = replica");
+    await db.query("update public.itens_serializados set situacao = 'vendido', em_estoque = false where id = $1", [itensDoCenario.a1]);
+    await db.query("update public.itens_serializados set situacao = 'em_transito', em_estoque = false where id = $1", [itensDoCenario.a2]);
+    await db.exec("set session_replication_role = origin");
+    await recusada(cat.imei1, "já foi vendido: a volta ao estoque é pela devolução da venda");
+    await recusada(cat.imei2, "está em transferência: conclua o recebimento da transferência");
+
+    // Baixado por perda (ou por ajuste que não é estorno de entrada): a entrada não desfaz a baixa.
+    await db.query("select privado.lancar_movimento($1, $2, -1, 'perda', $3, 'Quebra no balcão', null, null, 'teste:r1:perda', $4)", [ids.lojaB, cat.aparelho, itensDoCenario.b1, ids.dono]);
+    await recusada(cat.imei3, "foi baixado por ajuste ou perda: a entrada não desfaz essa baixa");
+    const e = await cargaInicial(dono, ids.lojaB, aparelhos([imei(15)]), "form:r1:rec:ajuste");
+    await db.query("select privado.lancar_movimento($1, $2, -1, 'ajuste', $3, 'Contagem', 'inventario', $4, 'teste:r1:ajuste', $5)", [ids.lojaB, cat.aparelho, (await itemDe(imei(15))).id, e.id, ids.dono]);
+    await recusada(imei(15), "foi baixado por ajuste ou perda");
+
+    // Segundo IMEI de um aparelho já cadastrado: pede o principal, em qualquer posição.
+    const e2 = await cargaInicial(dono, ids.lojaB, aparelhos([imei(16)]), "form:r1:rec:segundo");
+    await db.query("update public.itens_serializados set imei2 = $1 where imei = $2", [imei(17), imei(16)]);
+    await recusada(imei(17), "é o segundo IMEI de um aparelho já cadastrado");
+    await valor(dono, ESTORNO, [e2.id, "Lançada por engano"]);
+    await recusada(imei(17), "é o segundo IMEI de um aparelho já cadastrado");
+    expect(await cargaInicial(dono, ids.lojaB, aparelhos([imei(16)]), "form:r1:rec:principal")).toMatchObject({ reentradas: 1 });
+    expect(await reentradasAuditadas()).toHaveLength(1);
+  });
+
+  it("repetir depois do erro: nada fica pela metade e a mesma chave serve para o envio corrigido", async () => {
+    const dono = await naLoja(ids.dono, ids.lojaA);
+    const e1 = await cargaInicial(dono, ids.lojaA, aparelhos([imei(14)]), "form:r1:erro:0001");
+    const id14 = (await itemDe(imei(14))).id;
+    await valor(dono, ESTORNO, [e1.id, "Lançada por engano"]);
+    // A primeira linha é uma reentrada válida; a segunda tem um IMEI inválido: a entrada inteira é desfeita.
+    const ruim = JSON.stringify([{ variante: cat.aparelho, identificadores: [imei(14)] }, { variante: cat.aparelho, identificadores: ["123"] }]);
+    expect(await codigo(dono, ENTRADA, [ids.lojaA, "carga_inicial", null, null, ruim, "form:r1:erro:0002", "Volta"])).toBe("22023");
+    expect(await itemDe(imei(14))).toMatchObject({ id: id14, situacao: "baixado", em_estoque: false });
+    expect(await livroDe(id14)).toHaveLength(2);
+    expect(await reentradasAuditadas()).toEqual([]);
+    expect((await db.query("select count(*)::int as n from public.entradas_estoque where chave = 'form:r1:erro:0002'")).rows[0]).toEqual({ n: 0 });
+    // O envio corrigido passa com a mesma chave do formulário.
+    expect(await cargaInicial(dono, ids.lojaA, aparelhos([imei(14)]), "form:r1:erro:0002", "Volta")).toMatchObject({ repetida: false, reentradas: 1 });
+    expect(await itemDe(imei(14))).toMatchObject({ id: id14, situacao: "disponivel", em_estoque: true });
+    expect(await divergencias()).toEqual([]);
+  });
+
+  it("produto ou variação inativos não recebem; reativar libera (REV-NOV-005)", async () => {
+    const dono = await naLoja(ids.dono, ids.lojaC);
+    const capa = JSON.stringify([{ variante: cat.capa, quantidade: 1 }]);
+    const tentar1 = (chave: string) => falha(dono, ENTRADA, [ids.lojaC, "carga_inicial", null, null, capa, chave, "Tentativa"]);
+    // Produto inativo com a variação ainda ativa (o caso do achado).
+    await db.query("update public.produtos set ativo = false where id = $1", [cat.produtoCapa]);
+    const semProduto = await tentar1("form:r1:inativo:0001");
+    expect(semProduto).toMatchObject({ codigo: "22023" });
+    expect(semProduto?.mensagem).toContain("Linha 1 (ACE-0001): o produto está inativo no catálogo: reative antes de receber");
+    await db.query("update public.produtos set ativo = true where id = $1", [cat.produtoCapa]);
+    await db.query("update public.variantes set ativa = false where id = $1", [cat.capa]);
+    const semVariante = await tentar1("form:r1:inativo:0002");
+    expect(semVariante).toMatchObject({ codigo: "22023" });
+    expect(semVariante?.mensagem).toContain("variação inativa");
+    expect(await saldo(ids.lojaC, cat.capa)).toMatchObject({ quantidade: 0 });
+    await db.query("update public.variantes set ativa = true where id = $1", [cat.capa]);
+    expect(await cargaInicial(dono, ids.lojaC, capa, "form:r1:inativo:0003")).toMatchObject({ repetida: false, reentradas: 0 });
+    expect(await saldo(ids.lojaC, cat.capa)).toMatchObject({ quantidade: 1 });
   });
 });
