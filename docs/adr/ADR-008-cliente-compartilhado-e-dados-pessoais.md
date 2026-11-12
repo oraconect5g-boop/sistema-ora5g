@@ -3,6 +3,8 @@
 **Situação:** proposta (11/11/2026), reversível, aplicada só no desenvolvimento. **Por:** Claude Code. **Revisor:** Codex. **Aceite:** proprietário; a política de retenção e os direitos do titular dependem do jurídico/encarregado (ORA-QUAL-011).
 **Base:** ADR-002 §2.4 (clientes são da empresa, busca exata registrada, teste T11), D-004 (CPF conforme necessidade, não obrigatório global), `docs/03_DADOS.md` (clientes e CRM), PROMPT_MESTRE §5.4 (não criar outro cadastro de pessoa por módulo; manter a origem do que já existe).
 
+> **Decisão posterior do proprietário, 12/11/2026:** cadastro rápido exige nome completo e WhatsApp; e-mail é sempre opcional no cadastro de clientes; completar o endereço para a nota e oferecer envio direto pela integração oficial do WhatsApp. Esta regra substitui os mínimos anteriores de documento ou telefone e a exigência de e-mail por finalidade nos pontos conflitantes. O código da base ainda precisa ser ajustado. Critérios e confronto: [Cadastro de clientes e nota no WhatsApp](../alinhamento/CADASTRO_CLIENTES_E_NOTA_WHATSAPP_2026-11-12.md).
+
 ## Resumo para o proprietário (o que você aceita)
 
 1. **Um cadastro de cliente para a rede inteira.** O mesmo cliente compra em qualquer loja; a venda, a nota, a Ora Connect, o financiamento e a assistência usam o mesmo cadastro (não cada módulo o seu).
