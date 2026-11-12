@@ -2,7 +2,7 @@
   "_leia": "Checkpoint do programa de execução integral (PR #67). Carregar ao retomar e seguir para o próximo item executável da fila; não reiniciar o projeto. Estados vêm de status-requisitos.json (fonte da rastreabilidade); este arquivo acrescenta lote, bloqueio externo e revisão.",
   "atualizado_em": "2026-11-11",
   "base": {
-    "main": "c08daaa",
+    "main": "a6f6d22",
     "pacote": {
       "pr": 67,
       "branch": "docs/execucao-integral-20261110",
@@ -27,15 +27,16 @@
       "15f3458 (L4b: inventário e condição na devolução)",
       "a12782d (L5a: cliente compartilhado da rede)",
       "aa8fff5 (L5b: funil de oportunidades e agenda)",
-      "c08daaa (L5c: mesclagem e segmentos)"
+      "c08daaa (L5c: mesclagem e segmentos)",
+      "a6f6d22 (L6a: nota no nome do cliente, pendências, aviso sem internet e câmera)"
     ]
   },
   "contagem_dos_estados": {
-    "parcial": 54,
-    "testado": 31,
-    "nao_iniciado": 85,
+    "parcial": 55,
+    "testado": 32,
+    "nao_iniciado": 84,
     "respeitado": 1,
-    "demonstracao": 6,
+    "demonstracao": 5,
     "bloqueado": 2
   },
   "requisitos": {
@@ -574,7 +575,7 @@
       "titulo": "Registrar dinheiro, Pix direto, Pix PicPay POS e cartões",
       "prioridade": "P0",
       "estado": "parcial",
-      "lote": "L7 pagamentos/caixa",
+      "lote": "L7a pagamentos",
       "bloqueio_externo": null,
       "revisado_codex": false,
       "homologado": false
@@ -591,8 +592,8 @@
     "ORA-PAY-003": {
       "titulo": "Diferenciar autorizado, pago, liquidado, estornado e conciliado",
       "prioridade": "P0",
-      "estado": "demonstracao",
-      "lote": "L7 pagamentos/caixa",
+      "estado": "parcial",
+      "lote": "L7a pagamentos",
       "bloqueio_externo": null,
       "revisado_codex": false,
       "homologado": false
@@ -628,7 +629,7 @@
       "titulo": "Conciliação manual PicPay POS usando referência/comprovante",
       "prioridade": "P0",
       "estado": "parcial",
-      "lote": "L7 pagamentos/caixa",
+      "lote": "L7a pagamentos",
       "bloqueio_externo": null,
       "revisado_codex": false,
       "homologado": false
@@ -672,8 +673,8 @@
     "ORA-PAY-012": {
       "titulo": "Permitir múltiplas maquininhas/provedores por loja",
       "prioridade": "P1",
-      "estado": "nao_iniciado",
-      "lote": "L7 pagamentos/caixa",
+      "estado": "testado",
+      "lote": "L7a pagamentos",
       "bloqueio_externo": null,
       "revisado_codex": false,
       "homologado": false

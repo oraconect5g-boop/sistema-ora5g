@@ -5,8 +5,8 @@ import { montarMenu, PAGINAS_REAIS } from "./menu";
 // Permissões de cada papel no banco (matriz do ADR-002, papel_permissoes), só as que o menu usa.
 const PAPEL = {
   vendedor: ["venda.registrar", "caixa.abrir", "estoque.consultar", "connect.operar", "cliente.buscar", "crm.atender"],
-  gerente: ["venda.registrar", "venda.ver_unidade", "caixa.abrir", "caixa.conferir", "estoque.consultar", "connect.operar", "connect.gerir", "desconto.aprovar", "nota.aprovar", "auditoria.ver", "cliente.buscar", "crm.atender"],
-  dono: ["venda.registrar", "venda.ver_unidade", "venda.ver_todas", "caixa.abrir", "caixa.conferir", "estoque.consultar", "connect.operar", "connect.gerir", "desconto.aprovar", "nota.aprovar", "auditoria.ver", "usuarios.gerir", "unidades.gerir", "catalogo.gerir", "cliente.buscar", "crm.atender"],
+  gerente: ["venda.registrar", "venda.ver_unidade", "caixa.abrir", "caixa.conferir", "estoque.consultar", "connect.operar", "connect.gerir", "desconto.aprovar", "nota.aprovar", "auditoria.ver", "cliente.buscar", "crm.atender", "pagamento.conciliar", "terminal.gerir"],
+  dono: ["venda.registrar", "venda.ver_unidade", "venda.ver_todas", "caixa.abrir", "caixa.conferir", "estoque.consultar", "connect.operar", "connect.gerir", "desconto.aprovar", "nota.aprovar", "auditoria.ver", "usuarios.gerir", "unidades.gerir", "catalogo.gerir", "cliente.buscar", "crm.atender", "pagamento.conciliar", "terminal.gerir"],
   administrador: ["venda.ver_todas", "estoque.consultar", "auditoria.ver", "usuarios.gerir", "unidades.gerir", "catalogo.gerir"],
   tecnico: [],
 } as const;
@@ -79,5 +79,11 @@ describe("menu único das telas reais", () => {
     expect(PAGINAS_REAIS.clientes.grupo).toBe("Clientes");
     for (const papel of ["dono", "gerente", "vendedor"] as const) expect(menu(papel).visiveis).toEqual(expect.arrayContaining(["funil", "agenda"]));
     for (const papel of ["administrador", "tecnico"] as const) expect(menu(papel).visiveis).not.toContain("funil");
+  });
+
+  it("conciliação e maquininhas (L7a): gerência da loja (dono e gerente) em Gestão; vendedor, administrador e técnico não", () => {
+    for (const papel of ["dono", "gerente"] as const) expect(menu(papel).visiveis).toEqual(expect.arrayContaining(["conciliacao", "maquininhas"]));
+    for (const papel of ["vendedor", "administrador", "tecnico"] as const) expect(menu(papel).visiveis).not.toContain("conciliacao");
+    expect(PAGINAS_REAIS.conciliacao.grupo).toBe("Gestão");
   });
 });

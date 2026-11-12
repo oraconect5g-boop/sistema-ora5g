@@ -37,15 +37,17 @@ export default async function Vender({ searchParams }: { searchParams: Promise<{
   const { supabase, usuario, situacao } = sessao;
   const unidade = situacao.unidade_id as string;
 
-  const [pode, aprova, caixa, venda, buscaCliente] = await Promise.all([
+  const [pode, aprova, caixa, venda, buscaCliente, maquininhas] = await Promise.all([
     supabase.rpc("tem_permissao", { p_permissao: "venda.registrar", p_unidade: unidade }),
     supabase.rpc("tem_permissao", { p_permissao: "desconto.aprovar", p_unidade: unidade }),
     supabase.from("caixas").select("id, aberto_em").eq("operador_id", usuario.id).eq("unidade_id", unidade).eq("situacao", "aberto").maybeSingle(),
     supabase.from("vendas").select("id, numero, situacao").eq("vendedor_id", usuario.id).eq("unidade_id", unidade)
       .in("situacao", ["rascunho", "aguardando_aprovacao"]).order("criado_em", { ascending: false }).limit(1).maybeSingle(),
     supabase.rpc("tem_permissao", { p_permissao: "cliente.buscar", p_unidade: unidade }),
+    // Maquininhas ativas da loja (L7a): quem paga por maquininha escolhe qual foi usada.
+    supabase.from("terminais").select("id, provedor, apelido, identificador").eq("unidade_id", unidade).eq("ativo", true).order("apelido"),
   ]);
-  if (pode.error || aprova.error || caixa.error || venda.error || buscaCliente.error) throw new FalhaDoServico("vender");
+  if (pode.error || aprova.error || caixa.error || venda.error || buscaCliente.error || maquininhas.error) throw new FalhaDoServico("vender");
 
   if (!pode.data) {
     return <MoldeReal sessao={sessao}><Aviso tom="aviso" className="mt-6">Seu papel não registra vendas nesta loja.</Aviso></MoldeReal>;
@@ -228,6 +230,12 @@ export default async function Vender({ searchParams }: { searchParams: Promise<{
                     <label className="text-xs font-medium">Meio<select name={`pagamento_${n}_meio`} className={campo} defaultValue="dinheiro">{MEIOS_DA_LOJA.map((m) => <option key={m} value={m}>{MEIOS[m].nome}</option>)}</select></label>
                     <label className="text-xs font-medium">Valor (R$)<input name={`pagamento_${n}_valor`} inputMode="decimal" defaultValue={n === 1 ? ((subtotal - descontos) / 100).toFixed(2).replace(".", ",") : ""} className={campo} /></label>
                     <label className="text-xs font-medium">Comprovante ou nº do vale<input name={`pagamento_${n}_comprovante`} className={campo} autoComplete="off" /></label>
+                    {maquininhas.data.length > 0 && (
+                      <label className="text-xs font-medium">Maquininha (cartão e Pix na maquininha)<select name={`pagamento_${n}_terminal`} defaultValue="" className={campo}>
+                        <option value="">nenhuma</option>
+                        {maquininhas.data.map((m) => <option key={m.id} value={m.id}>{m.apelido} · {m.provedor === "picpay" ? "PicPay" : "PagBank"} {m.identificador}</option>)}
+                      </select></label>
+                    )}
                     <label className="text-xs font-medium">Entrada (financiamento)<input name={`pagamento_${n}_entrada`} inputMode="decimal" className={campo} /></label>
                     <label className="text-xs font-medium">Meio da entrada<select name={`pagamento_${n}_meio_entrada`} className={campo} defaultValue="dinheiro">{MEIOS_DA_LOJA.filter((m) => !MEIOS[m].financeira && m !== "vale_troca").map((m) => <option key={m} value={m}>{MEIOS[m].nome}</option>)}</select></label>
                   </fieldset>

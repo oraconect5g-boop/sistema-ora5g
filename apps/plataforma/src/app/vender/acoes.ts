@@ -99,6 +99,7 @@ export async function concluirVenda(dados: FormData) {
     p_cliente: { ...(ehUuid(cliente) ? { id: cliente } : {}), ...(nome ? { nome } : {}), ...(email ? { email } : {}) },
   });
   if (error?.code === "22023" && /cliente/i.test((error as { message?: string }).message ?? "")) redirect("/vender?erro=cliente");
+  if (error?.code === "OR009" && /maquininha/i.test((error as { message?: string }).message ?? "")) redirect("/vender?erro=maquininha");
   if (error) voltar("/vender", error);
   const resultado = data as { venda?: string } | null;
   redirect(`/vendas/${resultado?.venda ?? venda}?concluida=1`);

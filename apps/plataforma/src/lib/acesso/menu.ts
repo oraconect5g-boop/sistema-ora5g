@@ -7,7 +7,7 @@
 export const PERMISSOES_DO_MENU = [
   "venda.registrar", "venda.ver_unidade", "venda.ver_todas", "caixa.abrir", "caixa.conferir", "estoque.consultar",
   "connect.operar", "connect.gerir", "desconto.aprovar", "nota.aprovar", "auditoria.ver", "usuarios.gerir", "unidades.gerir",
-  "catalogo.gerir", "cliente.buscar", "crm.atender",
+  "catalogo.gerir", "cliente.buscar", "crm.atender", "pagamento.conciliar", "terminal.gerir",
 ] as const;
 export type PermissaoDoMenu = (typeof PERMISSOES_DO_MENU)[number];
 /** Conferidas para a rede inteira (sem loja): só papéis de organização as têm (dono e administrador). */
@@ -16,7 +16,7 @@ export const PERMISSOES_DA_REDE: ReadonlySet<PermissaoDoMenu> = new Set(["usuari
 export type PaginaReal =
   | "inicio" | "vender" | "vendas" | "clientes" | "funil" | "agenda" | "caixa" | "connect"
   | "estoque" | "transferencias" | "catalogo" | "produtos"
-  | "financeiro" | "aprovacoes" | "notas" | "auditoria"
+  | "financeiro" | "conciliacao" | "maquininhas" | "aprovacoes" | "notas" | "auditoria"
   | "equipe" | "lojas";
 export type GrupoReal = "Operação" | "Clientes" | "Estoque e catálogo" | "Gestão" | "Administração";
 export const GRUPOS_REAIS: readonly GrupoReal[] = ["Operação", "Clientes", "Estoque e catálogo", "Gestão", "Administração"];
@@ -46,6 +46,9 @@ export const PAGINAS_REAIS: Record<PaginaReal, { titulo: string; curto: string; 
   // Financeiro real (#65): de quem vê as vendas da loja (gerente) ou da rede (dono, administrador).
   // Abrir caixa não libera o financeiro. O banco confere de novo cada número (RLS na leitura agregada).
   financeiro: { titulo: "Financeiro", curto: "Financeiro", caminho: "/financeiro", icone: "relatorios", grupo: "Gestão", liberada: (p) => podeVerFinanceiro(p) },
+  // Conciliação e maquininhas (L7a): gerência da loja (dono e gerente).
+  conciliacao: { titulo: "Conciliação de pagamentos", curto: "Conciliação", caminho: "/pagamentos/conciliacao", icone: "conciliacao", grupo: "Gestão", liberada: (p) => p.has("pagamento.conciliar") },
+  maquininhas: { titulo: "Maquininhas", curto: "Maquininhas", caminho: "/pagamentos/maquininhas", icone: "maquininhas", grupo: "Gestão", liberada: (p) => p.has("terminal.gerir") },
   aprovacoes: { titulo: "Aprovações de desconto", curto: "Aprovações", caminho: "/aprovacoes", icone: "aprovacoes", grupo: "Gestão", liberada: (p) => p.has("desconto.aprovar") },
   notas: { titulo: "Notas fiscais", curto: "Notas", caminho: "/notas", icone: "notas", grupo: "Gestão", liberada: (p) => p.has("nota.aprovar") },
   auditoria: { titulo: "Auditoria", curto: "Auditoria", caminho: "/auditoria", icone: "auditoria", grupo: "Gestão", liberada: (p) => p.has("auditoria.ver") },
@@ -56,7 +59,7 @@ export const PAGINAS_REAIS: Record<PaginaReal, { titulo: string; curto: string; 
 
 // Barra inferior do celular: até 4 atalhos, na ordem de uso no balcão; o resto fica em "Mais".
 const PRIORIDADE_NO_CELULAR: readonly PaginaReal[] = [
-  "inicio", "vender", "aprovacoes", "vendas", "financeiro", "estoque", "clientes", "agenda", "funil", "caixa", "connect", "catalogo", "produtos", "notas", "equipe", "lojas", "auditoria", "transferencias",
+  "inicio", "vender", "aprovacoes", "vendas", "financeiro", "estoque", "clientes", "agenda", "funil", "caixa", "connect", "catalogo", "produtos", "notas", "conciliacao", "maquininhas", "equipe", "lojas", "auditoria", "transferencias",
 ];
 
 export function montarMenu(permissoes: Permissoes) {

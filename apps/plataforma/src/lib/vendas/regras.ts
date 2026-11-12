@@ -30,6 +30,7 @@ export const ERROS_DA_VENDA = {
   reembolso: "O reembolso precisa somar o valor devolvido, só nos meios que a venda usou e até o que cada um pagou.",
   sem_item: "Escolha a quantidade de pelo menos um item para devolver.",
   condicao: "Escolha a condição de cada item devolvido (novo, seminovo ou avariado): nada volta ao estoque como novo sem alguém decidir.",
+  maquininha: "Escolha a maquininha usada (da loja e do mesmo provedor do pagamento).",
   cliente: "Cliente não encontrado nesta rede (ou inativo): busque de novo pelo CPF ou telefone.",
   falha: "Não foi possível concluir agora. Tente de novo em instantes.",
 } as const;
@@ -56,7 +57,9 @@ export function lerValor(texto: unknown): number | null {
   }
 }
 
-export type LinhaDePagamento = { meio: MeioPagamento; valor: number; entrada?: number; meio_entrada?: MeioPagamento; comprovante?: string };
+export type LinhaDePagamento = { meio: MeioPagamento; valor: number; entrada?: number; meio_entrada?: MeioPagamento; comprovante?: string; terminal?: string };
+/** Meios que passam por maquininha (o provedor decide quais maquininhas servem: L7a). */
+export const PROVEDOR_DO_MEIO: Partial<Record<MeioPagamento, "picpay" | "pagbank">> = { pix_picpay: "picpay", cartao_picpay: "picpay", cartao_pagseguro: "pagbank" };
 
 // Lê até N linhas do formulário (pagamento_1_meio, pagamento_1_valor...); linha sem valor é ignorada.
 export function lerPagamentos(dados: { get: (nome: string) => unknown }, linhas = 3): { ok: true; pagamentos: LinhaDePagamento[] } | { ok: false; erro: ErroDaVenda } {
@@ -70,6 +73,9 @@ export function lerPagamentos(dados: { get: (nome: string) => unknown }, linhas 
     const linha: LinhaDePagamento = { meio, valor };
     const comprovante = dados.get(`pagamento_${i}_comprovante`);
     if (typeof comprovante === "string" && comprovante.trim()) linha.comprovante = comprovante.trim().slice(0, 60);
+    // Maquininha usada (L7a): só nos meios de maquininha; o banco confere se é da loja, ativa e do mesmo provedor.
+    const terminal = dados.get(`pagamento_${i}_terminal`);
+    if (PROVEDOR_DO_MEIO[meio] && typeof terminal === "string" && /^[0-9a-f-]{36}$/.test(terminal)) linha.terminal = terminal;
     if (meio === "vale_troca") {
       // O número do vale vai no campo do comprovante; o banco confere o vale e o saldo.
       const numero = (linha.comprovante ?? "").replace(/\D/g, "");

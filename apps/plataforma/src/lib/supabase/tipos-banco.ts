@@ -1,5 +1,5 @@
 // ARQUIVO GERADO pelo Supabase (generate_typescript_types do projeto ora5g-dev) depois da
-// migration 20261111200054_pdv_nota_do_cliente. Não edite à mão: gere de novo a cada
+// migration 20261111201342_pagamentos_maquininhas_e_conciliacao. Não edite à mão: gere de novo a cada
 // migration aplicada (auditoria do Codex de 08/11, §7.2). O teste tipos-banco.test.ts confere
 // que funções e tabelas públicas daqui são as mesmas das migrations.
 export type Json =
@@ -2958,6 +2958,57 @@ export type Database = {
           },
         ]
       }
+      terminais: {
+        Row: {
+          apelido: string
+          ativo: boolean
+          criado_em: string
+          criado_por: string
+          id: string
+          identificador: string
+          organizacao_id: string
+          provedor: string
+          unidade_id: string
+        }
+        Insert: {
+          apelido: string
+          ativo?: boolean
+          criado_em?: string
+          criado_por: string
+          id?: string
+          identificador: string
+          organizacao_id: string
+          provedor: string
+          unidade_id: string
+        }
+        Update: {
+          apelido?: string
+          ativo?: boolean
+          criado_em?: string
+          criado_por?: string
+          id?: string
+          identificador?: string
+          organizacao_id?: string
+          provedor?: string
+          unidade_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "terminais_criado_por_fkey"
+            columns: ["criado_por"]
+            isOneToOne: false
+            referencedRelation: "perfis_usuario"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "terminais_unidade_id_organizacao_id_fkey"
+            columns: ["unidade_id", "organizacao_id"]
+            isOneToOne: false
+            referencedRelation: "unidades"
+            referencedColumns: ["id", "organizacao_id"]
+          },
+        ]
+      }
       transferencia_itens: {
         Row: {
           item_serializado_id: string
@@ -3691,58 +3742,90 @@ export type Database = {
       venda_pagamentos: {
         Row: {
           comprovante: string | null
+          conciliado_em: string | null
+          conciliado_por: string | null
           confirmacao: string
           confirmado_por: string | null
           criado_em: string
           entrada_centavos: number
           estornado_em: string | null
           id: string
+          liquidado_em: string | null
           meio: string
           meio_entrada: string | null
           ordem: number
           organizacao_id: string
+          referencia_conciliacao: string | null
           situacao: string
+          terminal_id: string | null
           valor_centavos: number
+          valor_liquido_centavos: number | null
           venda_id: string
         }
         Insert: {
           comprovante?: string | null
+          conciliado_em?: string | null
+          conciliado_por?: string | null
           confirmacao: string
           confirmado_por?: string | null
           criado_em?: string
           entrada_centavos?: number
           estornado_em?: string | null
           id?: string
+          liquidado_em?: string | null
           meio: string
           meio_entrada?: string | null
           ordem: number
           organizacao_id: string
+          referencia_conciliacao?: string | null
           situacao?: string
+          terminal_id?: string | null
           valor_centavos: number
+          valor_liquido_centavos?: number | null
           venda_id: string
         }
         Update: {
           comprovante?: string | null
+          conciliado_em?: string | null
+          conciliado_por?: string | null
           confirmacao?: string
           confirmado_por?: string | null
           criado_em?: string
           entrada_centavos?: number
           estornado_em?: string | null
           id?: string
+          liquidado_em?: string | null
           meio?: string
           meio_entrada?: string | null
           ordem?: number
           organizacao_id?: string
+          referencia_conciliacao?: string | null
           situacao?: string
+          terminal_id?: string | null
           valor_centavos?: number
+          valor_liquido_centavos?: number | null
           venda_id?: string
         }
         Relationships: [
+          {
+            foreignKeyName: "venda_pagamentos_conciliado_por_fkey"
+            columns: ["conciliado_por"]
+            isOneToOne: false
+            referencedRelation: "perfis_usuario"
+            referencedColumns: ["id"]
+          },
           {
             foreignKeyName: "venda_pagamentos_confirmado_por_fkey"
             columns: ["confirmado_por"]
             isOneToOne: false
             referencedRelation: "perfis_usuario"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "venda_pagamentos_terminal_id_fkey"
+            columns: ["terminal_id"]
+            isOneToOne: false
+            referencedRelation: "terminais"
             referencedColumns: ["id"]
           },
           {
@@ -4609,6 +4692,23 @@ export type Database = {
         Args: { p_chave: string; p_cliente: string; p_dados: Json }
         Returns: Json
       }
+      pagamento_conciliar: {
+        Args: {
+          p_liquidado_em: string
+          p_pagamento: string
+          p_referencia: string
+          p_valor_liquido: number
+        }
+        Returns: boolean
+      }
+      pagamento_desconciliar: {
+        Args: { p_motivo: string; p_pagamento: string }
+        Returns: boolean
+      }
+      pagamentos_do_periodo: {
+        Args: { p_fim: string; p_inicio: string }
+        Returns: Json
+      }
       pedir_aprovacao: {
         Args: { p_item: string; p_motivo: string }
         Returns: string
@@ -4709,6 +4809,18 @@ export type Database = {
       tem_permissao: {
         Args: { p_permissao: string; p_unidade?: string }
         Returns: boolean
+      }
+      terminal_salvar: {
+        Args: {
+          p_apelido: string
+          p_ativo: boolean
+          p_id: string
+          p_identificador: string
+          p_motivo: string
+          p_provedor: string
+          p_unidade: string
+        }
+        Returns: string
       }
       transferencia_encerrar: {
         Args: { p_motivo: string; p_situacao: string; p_transferencia: string }

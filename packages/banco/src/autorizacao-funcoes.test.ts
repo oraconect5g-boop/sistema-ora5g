@@ -1,8 +1,8 @@
 // Inventário de autorização (prioridade 1 do diagnóstico de 10/11/2026; ORA-ORG-004 e ORA-QUAL-002).
 // O aviso 0029 do Supabase lista as funções SECURITY DEFINER que qualquer usuário logado pode chamar
-// pela API: 94 em 11/11 (48 + 6 do cadastro de lojas, L2, + 5 do cadastro do catálogo, L3a, + 4 dos preços, L3b,
+// pela API: 98 em 11/11 (48 + 6 do cadastro de lojas, L2, + 5 do cadastro do catálogo, L3a, + 4 dos preços, L3b,
 // + 4 da importação do catálogo, L3c, + 3 da entrada de mercadoria, L4a, + 5 do inventário, L4b, + 6 dos clientes, L5a,
-// + 9 do funil e da agenda, L5b, + 4 da mesclagem e dos segmentos, L5c). Elas rodam com poder total e cada uma confere sessão, loja e permissão por
+// + 9 do funil e da agenda, L5b, + 4 da mesclagem e dos segmentos, L5c, + 4 das maquininhas e da conciliação, L7a). Elas rodam com poder total e cada uma confere sessão, loja e permissão por
 // conta própria. Este teste monta um "mundo" fictício com objetos reais em duas lojas e tenta cada
 // função como 13 tipos de atacante. Recusa = erro, ou resposta vazia numa leitura, e nada muda no
 // banco. O teste lista as funções no próprio banco e falha se aparecer uma nova sem casos aqui.
@@ -180,7 +180,7 @@ async function montarMundo() {
 }
 
 // ---------------------------------------------------------------------------------------------
-// Catálogo das 94 funções. Cada chamada usa argumentos válidos, para a recusa vir do controle de
+// Catálogo das 98 funções. Cada chamada usa argumentos válidos, para a recusa vir do controle de
 // acesso e não de um parâmetro errado. "A": alvos da loja A (do vendedorAB); "B": da loja B.
 //   identidade: os 9 atacantes sem acesso válido, sempre contra os alvos da loja A;
 //   outraOrganizacao: dono de outra rede, contra a loja A (omitido onde a função só age no
@@ -419,6 +419,16 @@ const CASOS: Record<string, Caso> = {
   "oportunidade_registrar(uuid,jsonb,text)": {
     A: () => ["select public.oportunidade_registrar($1, '{\"origem\": \"loja\", \"interesse\": \"Tentativa\"}'::jsonb, $2)", [alvo.clienteA, chave("ataque:oportunidade")]],
   },
+  // Maquininhas e conciliação (L7a): da gerência da loja (terminal.gerir, pagamento.conciliar); o vendedor não.
+  "pagamento_conciliar(uuid,text,bigint,date)": {
+    A: () => ["select public.pagamento_conciliar($1, 'ATAQUE', 100, current_date)", [alvo.pagamentoA]],
+    B: () => ["select public.pagamento_conciliar($1, 'ATAQUE', 100, current_date)", [alvo.pagamentoB]], semPermissao: true,
+  },
+  "pagamento_desconciliar(uuid,text)": {
+    A: () => ["select public.pagamento_desconciliar($1, 'Tentativa')", [alvo.pagamentoA]], B: () => ["select public.pagamento_desconciliar($1, 'Tentativa')", [alvo.pagamentoB]],
+    semPermissao: true,
+  },
+  "pagamentos_do_periodo(date,date)": { leitura: true, A: () => ["select public.pagamentos_do_periodo(current_date, current_date) as v", []], semPermissao: true },
   "pedir_aprovacao(uuid,text)": {
     A: () => ["select public.pedir_aprovacao($1, 'Tentativa')", [alvo.itemVendaA]], B: () => ["select public.pedir_aprovacao($1, 'Tentativa')", [alvo.itemVendaB]], outroVendedor: true,
   },
@@ -454,6 +464,10 @@ const CASOS: Record<string, Caso> = {
   "situacao_da_sessao()": { leitura: true, A: () => ["select * from public.situacao_da_sessao()", []], outraOrganizacao: false, contextoProprio: ["tecnico"] },
   "tem_permissao(text,uuid)": {
     leitura: true, A: () => ["select public.tem_permissao('venda.registrar', $1) as v", [ids.lojaA]], B: () => ["select public.tem_permissao('venda.registrar', $1) as v", [ids.lojaB]],
+  },
+  "terminal_salvar(uuid,uuid,text,text,text,boolean,text)": {
+    A: () => ["select public.terminal_salvar($1, null, null, null, 'Tentativa', false, 'Tentativa')", [alvo.terminalA]],
+    B: () => ["select public.terminal_salvar($1, null, null, null, 'Tentativa', false, 'Tentativa')", [alvo.terminalB]], semPermissao: true,
   },
   "transferencia_encerrar(uuid,text,text)": {
     A: () => ["select public.transferencia_encerrar($1, 'cancelada', 'Tentativa')", [alvo.transfSolicitadaA]],
@@ -515,6 +529,10 @@ const LOJAS_DA_REDE_ATACADA = new Set([ids.lojaA, ids.lojaB, ids.lojaC, ids.onli
 function vazio(funcao: string, linhas: Record<string, unknown>[]) {
   if (linhas.length === 0) return true;
   if (funcao === "situacao_da_sessao()") return linhas.length === 1 && linhas[0]?.unidade_id == null;
+  if (funcao === "pagamentos_do_periodo(date,date)") {
+    const v = (linhas[0]?.v ?? {}) as { totais?: object; pagamentos?: unknown[] };
+    return linhas.length === 1 && Object.keys(v.totais ?? { x: 1 }).length === 0 && (v.pagamentos ?? [1]).length === 0;
+  }
   if (funcao === "clientes_duplicados()") return linhas.length === 1 && Array.isArray(linhas[0]?.v) && (linhas[0]?.v as unknown[]).length === 0;
   if (funcao === "clientes_segmentos()") return linhas.length === 1 && ((linhas[0]?.v as { segmentos?: unknown[] } | undefined)?.segmentos ?? [1]).length === 0;
   if (funcao === "crm_funil()" || funcao === "crm_agenda()") {
@@ -564,6 +582,15 @@ beforeAll(async () => {
       [alvo.clienteA, JSON.stringify({ origem: "loja", interesse: `Mundo ${lado}` }), `mundo:oportunidade:${lado}`])).id;
     alvo[`atividade${lado}`] = (await valor<{ id: string }>(s, "select public.atividade_criar($1::jsonb, $2) as v",
       [JSON.stringify({ tipo: "ligacao", descricao: `Mundo ${lado}`, vence_em: AMANHA, oportunidade: alvo[`oportunidade${lado}`] }), `mundo:atividade:${lado}`])).id;
+  }
+  // Uma maquininha e um pagamento por Pix em cada loja (gravados pelo banco: só alvo).
+  for (const [lado, loja] of [["A", ids.lojaA], ["B", ids.lojaB]] as const) {
+    alvo[`terminal${lado}`] = (await db.query<{ id: string }>(
+      "insert into public.terminais (organizacao_id, unidade_id, provedor, identificador, apelido, criado_por) values ($1, $2, 'pagbank', $3, 'Mundo', $4) returning id",
+      [ids.organizacao, loja, `MUNDO-${lado}`, ids.dono])).rows[0]?.id ?? "";
+    alvo[`pagamento${lado}`] = (await db.query<{ id: string }>(
+      "insert into public.venda_pagamentos (organizacao_id, venda_id, ordem, meio, valor_centavos, comprovante, confirmacao) values ($1, $2, 9, 'pix_direto', 100, 'MUNDO-PIX', 'manual') returning id",
+      [ids.organizacao, alvo[`concluida${lado}`]])).rows[0]?.id ?? "";
   }
   // Uma entrada de mercadoria em cada loja (gravadas pelo banco: só alvo, sem itens).
   for (const [chaveDoAlvo, loja] of [["entradaA", ids.lojaA], ["entradaB", ids.lojaB]] as const) {
@@ -616,7 +643,7 @@ describe("inventário: toda função SECURITY DEFINER exposta tem casos de recus
     const expostas = rows.map((r) => r.f);
     expect(expostas.filter((f) => !(f in CASOS)), "função nova exposta sem casos de recusa: acrescente ao CASOS").toEqual([]);
     expect(Object.keys(CASOS).filter((f) => !expostas.includes(f)), "caso de função que não existe mais").toEqual([]);
-    expect(expostas).toHaveLength(94);
+    expect(expostas).toHaveLength(98);
   });
 
   it("visitante anônimo não executa nenhuma função do esquema public; no privado só um gatilho, que não roda sozinho", async () => {
