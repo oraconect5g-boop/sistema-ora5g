@@ -340,7 +340,7 @@ const CASOS: Record<string, Caso> = {
     A: () => ["select public.atividade_encerrar($1, true, 'Tentativa')", [alvo.atividadeA]], B: () => ["select public.atividade_encerrar($1, true, 'Tentativa')", [alvo.atividadeB]],
     outroVendedor: true,
   },
-  "importacao_aplicar(uuid,text)": { A: () => ["select public.importacao_aplicar($1, 'Tentativa')", [alvo.importacaoPrevia]], semPermissao: true },
+  "importacao_aplicar(uuid,text,integer)": { A: () => ["select public.importacao_aplicar($1, 'Tentativa', 1)", [alvo.importacaoPrevia]], semPermissao: true },
   "importacao_catalogo_previa(uuid,text,text,jsonb,jsonb)": {
     A: () => ["select public.importacao_catalogo_previa($1, 'ataque.csv', $2, '{}'::jsonb, $3::jsonb)",
       [ids.organizacao, "a".repeat(64), JSON.stringify([{ numero: 2, sku: "ATQ-1", nome: "Ataque", tipo: "acessorio", categoria: "Ataque", erros: [] }])]],

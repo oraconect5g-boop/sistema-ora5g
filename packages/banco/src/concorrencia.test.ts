@@ -586,3 +586,444 @@ describe("duas conexões ao mesmo tempo no PostgreSQL 17", () => {
     expect(await divergencias()).toEqual([]);
   });
 });
+
+// -----------------------------------------------------------------------------
+// Lote R2: o importador do catálogo e o cadastro manual ao mesmo tempo
+// -----------------------------------------------------------------------------
+// As prévias são geradas e confirmadas antes de cada disputa (administrador); quem aplica e desfaz é o dono.
+// Os nomes que diferem só por maiúsculas usam letras sem acento: é o que qualquer configuração do banco iguala.
+type LinhaR2 = Record<string, unknown>;
+type PreviaR2 = { id: string; numero: number; totais: Record<string, number> };
+type AplicadaR2 = { repetida: boolean; atualizada: boolean; comparacao: number; totais: Record<string, number> };
+type DesfeitaR2 = { repetida: boolean; desfeitas: number; parciais: number; mantidas: number };
+type Salvo = { id: string; repetida: boolean };
+const linhaR2 = (numero: number, sku: string, extra: LinhaR2 = {}): LinhaR2 => ({
+  numero, sku, nome: `Item ${sku}`, produto: null, tipo: "acessorio", categoria: "Acessórios", marca: null, codigo_barras: null,
+  cor: null, capacidade: null, preco: null, custo: null, erros: [], ...extra,
+});
+const PREVIA_R2 = "select public.importacao_catalogo_previa($1, $2, $3, $4::jsonb, $5::jsonb) as v";
+const APLICAR_R2 = "select public.importacao_aplicar($1, $2, $3) as v";
+const DESFAZER_R2 = "select public.importacao_desfazer($1, $2) as v";
+const CATEGORIA_R2 = "select public.catalogo_salvar_categoria($1, $2, $3, null, 'Organização do catálogo') as v";
+const MARCA_R2 = "select public.catalogo_salvar_marca($1, $2, $3, 'Organização do catálogo') as v";
+const PRECO_R2 = "select public.preco_definir($1, null, 'loja', $2, null, 'Reajuste') as v";
+let arquivosR2 = 0;
+
+// Uma chamada confirmada, como na API: abre, executa como o usuário e confirma (ou desfaz, se falhar).
+async function confirmada<T>(sessao: Sessao, sql: string, params: unknown[]): Promise<T> {
+  await abrir(admin, sessao);
+  try {
+    const v = await valor<T>(admin, sql, params);
+    await admin.query("commit");
+    return v as T;
+  } catch (e) {
+    await admin.query("rollback");
+    throw e;
+  }
+}
+const previaR2 = (adm: Sessao, linhas: LinhaR2[]) => {
+  const n = ++arquivosR2;
+  return confirmada<PreviaR2>(adm, PREVIA_R2, [ids.organizacao, `disputa-r2-${n}.csv`, (0x52_0000 + n).toString(16).padStart(64, "0"),
+    JSON.stringify({ sku: 0, nome: 1, preco: 2 }), JSON.stringify(linhas)]);
+};
+const quantas = (tabela: "categorias" | "marcas", nome: string) =>
+  contar(`select count(*) as n from public.${tabela} where organizacao_id = $1 and lower(nome) = lower($2)`, [ids.organizacao, nome]);
+const texto = async (sql: string, params: unknown[]) => valor<string | null>(admin, sql, params);
+const doProduto = (campo: "categoria_id" | "marca_id", sku: string) =>
+  texto(`select p.${campo} as v from public.variantes v join public.produtos p on p.id = v.produto_id where v.sku = $1`, [sku]);
+
+describe("importador do catálogo e cadastro manual ao mesmo tempo no PostgreSQL 17 (R2)", () => {
+  let adm: Sessao;
+  let dono: Sessao;
+  beforeAll(async () => {
+    adm = await sessaoNaLoja(ids.administrador, ids.lojaA);
+    dono = await sessaoNaLoja(ids.dono, ids.lojaA);
+  });
+
+  it("categoria de mesmo nome (só as maiúsculas mudam) pelo cadastro e pela importação, nas duas ordens: fica uma só (REV-NOV-006)", async () => {
+    // 1. O cadastro chega primeiro e segura o nome. A importação espera e, ao continuar, encontra uma categoria
+    //    que não existia na conferência: não aplica nada e devolve a prévia para ser conferida de novo.
+    const p1 = await previaR2(adm, [linhaR2(2, "CONC-R2-0001", { categoria: "Peliculas R2", preco: 1_500 })]);
+    await abrir(a, dono);
+    await abrir(b, dono);
+    let criada: Salvo | undefined;
+    const primeira = await disputa(
+      async () => { criada = await valor<Salvo>(a, CATEGORIA_R2, [ids.organizacao, null, "PELICULAS R2"]); },
+      () => valor<AplicadaR2>(b, APLICAR_R2, [p1.id, "Conferido", 1]),
+    );
+    expect(criada?.repetida).toBe(false);
+    expect(primeira).toMatchObject({ ok: { repetida: false, atualizada: true, comparacao: 2, totais: { criar: 1, erro: 0 } } });
+    expect(await quantas("categorias", "peliculas r2")).toBe(1);
+    expect(await contar("select count(*) as n from public.variantes where sku = 'CONC-R2-0001'")).toBe(0);
+    // Conferida de novo, a variação entra na categoria que o cadastro criou.
+    expect(await confirmada<AplicadaR2>(dono, APLICAR_R2, [p1.id, "Conferido", 2])).toMatchObject({ repetida: false, atualizada: false });
+    expect(await quantas("categorias", "peliculas r2")).toBe(1);
+    expect(await doProduto("categoria_id", "CONC-R2-0001")).toBe(criada?.id);
+
+    // 2. A importação chega primeiro e cria a categoria. O cadastro espera e recebe a que já existe.
+    const p2 = await previaR2(adm, [linhaR2(2, "CONC-R2-0002", { categoria: "capinhas r2" })]);
+    await abrir(a, dono);
+    await abrir(b, dono);
+    const segunda = await disputa(
+      () => a.query(APLICAR_R2, [p2.id, "Conferido", 1]),
+      () => valor<Salvo>(b, CATEGORIA_R2, [ids.organizacao, null, "CAPINHAS R2"]),
+    );
+    const daImportacao = await doProduto("categoria_id", "CONC-R2-0002");
+    expect(daImportacao).toBeTruthy();
+    expect(segunda).toEqual({ ok: { id: daImportacao, repetida: true } });
+    expect(await quantas("categorias", "capinhas r2")).toBe(1);
+
+    // 3. A importação chega primeiro; o cadastro tenta RENOMEAR outra categoria para o mesmo nome: recusado.
+    const antiga = await confirmada<Salvo>(dono, CATEGORIA_R2, [ids.organizacao, null, "Suportes antigos R2"]);
+    const p3 = await previaR2(adm, [linhaR2(2, "CONC-R2-0003", { categoria: "Suportes R2" })]);
+    await abrir(a, dono);
+    await abrir(b, dono);
+    let mensagem = "";
+    const terceira = await disputa(
+      () => a.query(APLICAR_R2, [p3.id, "Conferido", 1]),
+      () => valor<Salvo>(b, CATEGORIA_R2, [ids.organizacao, antiga.id, "SUPORTES R2"]).catch((e: Error) => { mensagem = e.message; throw e; }),
+    );
+    expect(terceira).toEqual({ erro: "23505" });
+    expect(mensagem).toContain("Já existe outra categoria com este nome");
+    expect(await quantas("categorias", "suportes r2")).toBe(1);
+    expect(await quantas("categorias", "suportes antigos r2")).toBe(1);
+
+    // 4. O cadastro renomeia primeiro; a importação que ia criar o mesmo nome espera e volta para a conferência.
+    const p4 = await previaR2(adm, [linhaR2(2, "CONC-R2-0004", { categoria: "grips r2" })]);
+    await abrir(a, dono);
+    await abrir(b, dono);
+    const quarta = await disputa(
+      () => a.query(CATEGORIA_R2, [ids.organizacao, antiga.id, "GRIPS R2"]),
+      () => valor<AplicadaR2>(b, APLICAR_R2, [p4.id, "Conferido", 1]),
+    );
+    expect(quarta).toMatchObject({ ok: { repetida: false, atualizada: true, comparacao: 2 } });
+    expect(await confirmada<AplicadaR2>(dono, APLICAR_R2, [p4.id, "Conferido", 2])).toMatchObject({ repetida: false, atualizada: false });
+    expect(await quantas("categorias", "grips r2")).toBe(1);
+    expect(await doProduto("categoria_id", "CONC-R2-0004")).toBe(antiga.id);
+
+    // O índice único do banco é a última barreira: nem escrevendo direto na tabela nasce a segunda.
+    await expect(admin.query("insert into public.categorias (organizacao_id, nome) values ($1, 'Grips R2')", [ids.organizacao])).rejects.toMatchObject({ code: "23505" });
+  });
+
+  it("marca de mesmo nome (só as maiúsculas mudam) pelo cadastro e pela importação, nas duas ordens: fica uma só (REV-NOV-006)", async () => {
+    // 1. O cadastro chega primeiro: a importação espera a marca e volta para a conferência sem aplicar nada.
+    const p1 = await previaR2(adm, [linhaR2(2, "CONC-R2-0010", { marca: "Marca Alfa R2" })]);
+    await abrir(a, dono);
+    await abrir(b, dono);
+    let criada: Salvo | undefined;
+    const primeira = await disputa(
+      async () => { criada = await valor<Salvo>(a, MARCA_R2, [ids.organizacao, null, "MARCA ALFA R2"]); },
+      () => valor<AplicadaR2>(b, APLICAR_R2, [p1.id, "Conferido", 1]),
+    );
+    expect(criada?.repetida).toBe(false);
+    expect(primeira).toMatchObject({ ok: { repetida: false, atualizada: true, comparacao: 2 } });
+    expect(await contar("select count(*) as n from public.variantes where sku = 'CONC-R2-0010'")).toBe(0);
+    expect(await confirmada<AplicadaR2>(dono, APLICAR_R2, [p1.id, "Conferido", 2])).toMatchObject({ repetida: false, atualizada: false });
+    expect(await quantas("marcas", "marca alfa r2")).toBe(1);
+    expect(await doProduto("marca_id", "CONC-R2-0010")).toBe(criada?.id);
+
+    // 2. A importação chega primeiro e cria a marca: o cadastro espera e recebe a que já existe.
+    const p2 = await previaR2(adm, [linhaR2(2, "CONC-R2-0011", { marca: "marca beta r2" })]);
+    await abrir(a, dono);
+    await abrir(b, dono);
+    const segunda = await disputa(
+      () => a.query(APLICAR_R2, [p2.id, "Conferido", 1]),
+      () => valor<Salvo>(b, MARCA_R2, [ids.organizacao, null, "MARCA BETA R2"]),
+    );
+    const daImportacao = await doProduto("marca_id", "CONC-R2-0011");
+    expect(daImportacao).toBeTruthy();
+    expect(segunda).toEqual({ ok: { id: daImportacao, repetida: true } });
+    expect(await quantas("marcas", "marca beta r2")).toBe(1);
+    await expect(admin.query("insert into public.marcas (organizacao_id, nome) values ($1, 'Marca Beta R2')", [ids.organizacao])).rejects.toMatchObject({ code: "23505" });
+  });
+
+  it("duas importações da mesma rede ao mesmo tempo: uma de cada vez, e a segunda confere de novo o que a primeira mudou (REV-NOV-002 e 006)", async () => {
+    // 1. A mesma prévia aprovada duas vezes no mesmo instante: aplicada uma vez só.
+    const unica = await previaR2(adm, [linhaR2(2, "CONC-R2-0020", { preco: 1_000 })]);
+    await abrir(a, dono);
+    await abrir(b, dono);
+    const dupla = await disputa(
+      () => a.query(APLICAR_R2, [unica.id, "Conferido", 1]),
+      () => valor<AplicadaR2>(b, APLICAR_R2, [unica.id, "Conferido", 1]),
+    );
+    expect(dupla).toMatchObject({ ok: { repetida: true, atualizada: false } });
+    expect(await contar("select count(*) as n from public.variantes where sku = 'CONC-R2-0020'")).toBe(1);
+    expect(await contar("select count(*) as n from public.precos p join public.variantes v on v.id = p.variante_id where v.sku = 'CONC-R2-0020'")).toBe(1);
+
+    // 2. Dois arquivos com o mesmo SKU novo e a mesma categoria nova em caixas diferentes. O segundo espera o
+    //    primeiro e volta para a conferência: o SKU agora existe (vira atualização) e a categoria também.
+    const um = await previaR2(adm, [linhaR2(2, "CONC-R2-0021", { categoria: "Cabos R2", preco: 1_000 })]);
+    const dois = await previaR2(adm, [
+      linhaR2(2, "CONC-R2-0021", { categoria: "CABOS R2", preco: 1_200 }),
+      linhaR2(3, "CONC-R2-0022", { categoria: "CABOS R2", preco: 900 }),
+    ]);
+    expect(dois.totais).toMatchObject({ criar: 2, atualizar: 0 });
+    await abrir(a, dono);
+    await abrir(b, dono);
+    const cruzada = await disputa(
+      () => a.query(APLICAR_R2, [um.id, "Conferido", 1]),
+      () => valor<AplicadaR2>(b, APLICAR_R2, [dois.id, "Conferido", 1]),
+    );
+    expect(cruzada).toMatchObject({ ok: { repetida: false, atualizada: true, comparacao: 2, totais: { criar: 1, atualizar: 1, erro: 0 } } });
+    expect(await contar("select count(*) as n from public.variantes where sku in ('CONC-R2-0021', 'CONC-R2-0022')")).toBe(1);
+    expect(await confirmada<AplicadaR2>(dono, APLICAR_R2, [dois.id, "Conferido", 2])).toMatchObject({ repetida: false, atualizada: false });
+    expect(await quantas("categorias", "cabos r2")).toBe(1);
+    expect(await doProduto("categoria_id", "CONC-R2-0022")).toBe(await doProduto("categoria_id", "CONC-R2-0021"));
+    expect(await contar(`select p.valor_centavos as n from public.precos p join public.variantes v on v.id = p.variante_id
+      where v.sku = 'CONC-R2-0021' and p.unidade_id is null and p.fim is null and p.cancelado_em is null`)).toBe(1_200);
+  });
+
+  it("aplicar e desfazer na mesma rede ao mesmo tempo, nas duas ordens: um espera o outro e o que veio depois é respeitado (REV-NOV-002 e 007)", async () => {
+    const nomeDe = (sku: string) => texto("select nome as v from public.variantes where sku = $1", [sku]);
+    const corDe = (sku: string) => texto("select cor as v from public.variantes where sku = $1", [sku]);
+    const base = await previaR2(adm, [linhaR2(2, "CONC-R2-0030", { nome: "Suporte A", preco: 2_000 }), linhaR2(3, "CONC-R2-0031", { nome: "Suporte B", preco: 2_000 })]);
+    await confirmada(dono, APLICAR_R2, [base.id, "Carga", 1]);
+
+    // 1. O desfazer chega primeiro. A importação que conferiu o nome trocado espera e, ao continuar, vê o nome
+    //    de volta: a diferença mudou, então nada é aplicado e a prévia volta para a conferência.
+    const renomeia = await previaR2(adm, [linhaR2(2, "CONC-R2-0030", { nome: "Suporte A v2" })]);
+    await confirmada(dono, APLICAR_R2, [renomeia.id, "Nome novo", 1]);
+    const reajusta = await previaR2(adm, [linhaR2(2, "CONC-R2-0030", { nome: "Suporte A v2", preco: 2_500 })]);
+    expect(reajusta.totais).toMatchObject({ atualizar: 1 });
+    await abrir(a, dono);
+    await abrir(b, dono);
+    const primeira = await disputa(
+      () => a.query(DESFAZER_R2, [renomeia.id, "Nome errado"]),
+      () => valor<AplicadaR2>(b, APLICAR_R2, [reajusta.id, "Conferido", 1]),
+    );
+    expect(primeira).toMatchObject({ ok: { repetida: false, atualizada: true, comparacao: 2 } });
+    expect(await nomeDe("CONC-R2-0030")).toBe("Suporte A");
+    expect(await texto("select diferencas::text as v from public.importacao_linhas where importacao_id = $1", [reajusta.id])).toContain("nome");
+
+    // 2. A importação chega primeiro e muda a cor e o preço. O desfazer do lote que tinha trocado o nome espera
+    //    e volta só o nome: a cor e o preço, que vieram depois, ficam.
+    const outroNome = await previaR2(adm, [linhaR2(2, "CONC-R2-0031", { nome: "Suporte B v2" })]);
+    await confirmada(dono, APLICAR_R2, [outroNome.id, "Nome novo", 1]);
+    const corEPreco = await previaR2(adm, [linhaR2(2, "CONC-R2-0031", { nome: "Suporte B v2", cor: "Preto", preco: 2_700 })]);
+    await abrir(a, dono);
+    await abrir(b, dono);
+    const segunda = await disputa(
+      () => a.query(APLICAR_R2, [corEPreco.id, "Conferido", 1]),
+      () => valor<DesfeitaR2>(b, DESFAZER_R2, [outroNome.id, "Nome errado"]),
+    );
+    expect(segunda).toEqual({ ok: { repetida: false, desfeitas: 1, parciais: 0, mantidas: 0 } });
+    expect(await nomeDe("CONC-R2-0031")).toBe("Suporte B");
+    expect(await corDe("CONC-R2-0031")).toBe("Preto");
+    expect(await contar(`select p.valor_centavos as n from public.precos p join public.variantes v on v.id = p.variante_id
+      where v.sku = 'CONC-R2-0031' and p.unidade_id is null and p.fim is null and p.cancelado_em is null`)).toBe(2_700);
+  });
+
+  it("preço manual e importação na mesma variação ao mesmo tempo: o preço que alguém decidiu não é atropelado nem desfeito (REV-NOV-002 e 007)", async () => {
+    const idDe = async (sku: string) => (await texto("select id as v from public.variantes where sku = $1", [sku])) ?? "";
+    const precos = async (sku: string) => (await admin.query<{ valor: string; aberto: boolean; origem: string }>(
+      `select p.valor_centavos as valor, p.fim is null as aberto, p.origem from public.precos p join public.variantes v on v.id = p.variante_id
+       where v.sku = $1 and p.unidade_id is null and p.cancelado_em is null order by p.inicio`, [sku])).rows.map((p) => [Number(p.valor), p.aberto, p.origem]);
+    const base = await previaR2(adm, [40, 41, 42, 43].map((n, i) => linhaR2(i + 2, `CONC-R2-00${n}`, { preco: 5_000 })));
+    await confirmada(dono, APLICAR_R2, [base.id, "Carga", 1]);
+
+    // 1. O dono muda o preço primeiro. A importação, conferida contra o preço antigo, espera e volta para a
+    //    conferência: o preço manual fica, e só entra o do arquivo depois de conferido contra ele.
+    const p1 = await previaR2(adm, [linhaR2(2, "CONC-R2-0040", { preco: 5_500 })]);
+    await abrir(a, dono);
+    await abrir(b, dono);
+    const primeira = await disputa(
+      async () => a.query(PRECO_R2, [await idDe("CONC-R2-0040"), 6_000]),
+      () => valor<AplicadaR2>(b, APLICAR_R2, [p1.id, "Conferido", 1]),
+    );
+    expect(primeira).toMatchObject({ ok: { repetida: false, atualizada: true, comparacao: 2, totais: { atualizar: 1 } } });
+    expect(await precos("CONC-R2-0040")).toEqual([[5_000, false, "importacao"], [6_000, true, "manual"]]);
+    expect(await confirmada<AplicadaR2>(dono, APLICAR_R2, [p1.id, "Conferido", 2])).toMatchObject({ repetida: false, atualizada: false });
+    expect(await precos("CONC-R2-0040")).toEqual([[5_000, false, "importacao"], [6_000, false, "manual"], [5_500, true, "importacao"]]);
+
+    // 2. A importação muda o preço primeiro; o preço manual, que tinha começado antes, espera. Ao continuar,
+    //    o preço vigente já é o do lote, mais novo que o pedido: o banco pede para tentar de novo, e na nova
+    //    tentativa o preço manual entra por cima do preço do lote.
+    const p2 = await previaR2(adm, [linhaR2(2, "CONC-R2-0041", { preco: 5_500 })]);
+    await abrir(a, dono);
+    await abrir(b, dono);
+    let mensagem = "";
+    const segunda = await disputa(
+      () => a.query(APLICAR_R2, [p2.id, "Conferido", 1]),
+      async () => valor<Salvo>(b, PRECO_R2, [await idDe("CONC-R2-0041"), 6_000]).catch((e: Error) => { mensagem = e.message; throw e; }),
+    );
+    expect({ segunda, mensagem }).toEqual({ segunda: { erro: "40001" }, mensagem: "Outro preço começou neste mesmo instante: tente de novo" });
+    expect(await precos("CONC-R2-0041")).toEqual([[5_000, false, "importacao"], [5_500, true, "importacao"]]);
+    expect(await confirmada<Salvo>(dono, PRECO_R2, [await idDe("CONC-R2-0041"), 6_000])).toMatchObject({ repetida: false });
+    expect(await precos("CONC-R2-0041")).toEqual([[5_000, false, "importacao"], [5_500, false, "importacao"], [6_000, true, "manual"]]);
+
+    // 3. O mesmo, com o preço manual começando depois de a importação ter gravado: espera e entra direto.
+    const p3 = await previaR2(adm, [linhaR2(2, "CONC-R2-0042", { preco: 5_500 })]);
+    await abrir(a, dono);
+    const terceira = await disputa(
+      async () => { await a.query(APLICAR_R2, [p3.id, "Conferido", 1]); await abrir(b, dono); },
+      async () => valor<Salvo>(b, PRECO_R2, [await idDe("CONC-R2-0042"), 6_000]),
+    );
+    expect(terceira).toMatchObject({ ok: { repetida: false } });
+    expect(await precos("CONC-R2-0042")).toEqual([[5_000, false, "importacao"], [5_500, false, "importacao"], [6_000, true, "manual"]]);
+
+    // 4. O dono muda o preço e, no mesmo instante, alguém desfaz o lote que tinha posto o preço anterior: o
+    //    desfazer espera e mantém o preço manual, que é posterior ao lote.
+    const p4 = await previaR2(adm, [linhaR2(2, "CONC-R2-0043", { preco: 5_500 })]);
+    await confirmada(dono, APLICAR_R2, [p4.id, "Conferido", 1]);
+    await abrir(a, dono);
+    await abrir(b, dono);
+    const quarta = await disputa(
+      async () => a.query(PRECO_R2, [await idDe("CONC-R2-0043"), 6_000]),
+      () => valor<DesfeitaR2>(b, DESFAZER_R2, [p4.id, "Lote errado"]),
+    );
+    expect(quarta).toEqual({ ok: { repetida: false, desfeitas: 0, parciais: 0, mantidas: 1 } });
+    expect(await texto("select desfeito -> 'mantidos' ->> 'preco' as v from public.importacao_linhas where importacao_id = $1", [p4.id])).toBe("alterado_depois");
+    expect(await precos("CONC-R2-0043")).toEqual([[5_000, false, "importacao"], [5_500, false, "importacao"], [6_000, true, "manual"]]);
+  });
+
+  it("dois preços manuais na mesma variação, o que começou antes chega depois: recebe \"tente de novo\" (ou o próprio preço, se o valor é o mesmo), nunca \"mudança agendada\" (R2)", async () => {
+    const base = await previaR2(adm, [linhaR2(2, "CONC-R2-0050", { preco: 5_000 }), linhaR2(3, "CONC-R2-0051", { preco: 5_000 })]);
+    await confirmada(dono, APLICAR_R2, [base.id, "Carga", 1]);
+    const idDe = async (sku: string) => (await texto("select id as v from public.variantes where sku = $1", [sku])) ?? "";
+    const abertos = async (sku: string) => (await admin.query<{ valor: string }>(
+      `select p.valor_centavos as valor from public.precos p join public.variantes v on v.id = p.variante_id
+       where v.sku = $1 and p.unidade_id is null and p.fim is null and p.cancelado_em is null`, [sku])).rows.map((p) => Number(p.valor));
+
+    // A transação de "b" começa antes da de "a", mas "a" grava primeiro. Para "b", o preço de "a" começa depois
+    // do seu "agora": não é mudança agendada, é outra decisão que chegou no mesmo instante.
+    await abrir(b, dono);
+    await abrir(a, dono);
+    let mensagem = "";
+    const outroValor = await disputa(
+      async () => a.query(PRECO_R2, [await idDe("CONC-R2-0050"), 6_000]),
+      async () => valor<Salvo>(b, PRECO_R2, [await idDe("CONC-R2-0050"), 7_000]).catch((e: Error) => { mensagem = e.message; throw e; }),
+    );
+    expect({ outroValor, mensagem }).toEqual({ outroValor: { erro: "40001" }, mensagem: "Outro preço começou neste mesmo instante: tente de novo" });
+    expect(await abertos("CONC-R2-0050")).toEqual([6_000]);
+
+    await abrir(b, dono);
+    await abrir(a, dono);
+    let primeiro: Salvo | undefined;
+    const mesmoValor = await disputa(
+      async () => { primeiro = await valor<Salvo>(a, PRECO_R2, [await idDe("CONC-R2-0051"), 6_000]); },
+      async () => valor<Salvo>(b, PRECO_R2, [await idDe("CONC-R2-0051"), 6_000]),
+    );
+    expect(primeiro?.repetida).toBe(false);
+    expect(mesmoValor).toEqual({ ok: { id: primeiro?.id, repetida: true } });
+    expect(await abertos("CONC-R2-0051")).toEqual([6_000]);
+  });
+});
+
+// -----------------------------------------------------------------------------
+// Lote R2: o arquivo no limite (2.000 linhas) contra o limite de 8 s por chamada da API
+// -----------------------------------------------------------------------------
+// O papel authenticated do Supabase tem statement_timeout de 8 s. Cada chamada é medida do começo à
+// confirmação num PostgreSQL 17 local: é a medida que sustenta o limite de 2.000 linhas por arquivo.
+// Para ver os tempos: ORA5G_TEMPOS=1 npm --workspace @ora5g/banco exec -- vitest run src/concorrencia.test.ts -t "2.000 linhas" --silent=false
+describe("arquivo no limite de 2.000 linhas no PostgreSQL 17 (R2)", () => {
+  it("prévia, comparação refeita, aplicação e desfazer de 2.000 linhas cabem, cada chamada, em 8 s", async () => {
+    const adm = await sessaoNaLoja(ids.administrador, ids.lojaA);
+    const dono = await sessaoNaLoja(ids.dono, ids.lojaA);
+    const LINHAS = 2_000;
+    const LIMITE_MS = 8_000;
+    const tempos: [string, number][] = [];
+    const medir = async <T>(nome: string, chamada: () => Promise<T>) => {
+      const inicio = performance.now();
+      const resultado = await chamada();
+      tempos.push([nome, Math.round(performance.now() - inicio)]);
+      return resultado;
+    };
+    const arquivo = (prefixo: string, extra: (i: number) => LinhaR2) =>
+      Array.from({ length: LINHAS }, (_, i) => linhaR2(i + 2, `${prefixo}-${String(i).padStart(4, "0")}`, extra(i)));
+    const enviar = (n: number, linhas: LinhaR2[]) => confirmada<PreviaR2 & { repetida: boolean; atualizada: boolean }>(adm, PREVIA_R2, [
+      ids.organizacao, `limite-r2-${n}.csv`, (0x52_9000 + n).toString(16).padStart(64, "0"), JSON.stringify({ sku: 0, nome: 1, preco: 2 }), JSON.stringify(linhas)]);
+    const aplicar = (id: string) => confirmada<AplicadaR2>(dono, APLICAR_R2, [id, "Carga do catálogo", 1]);
+    const desfazer = (id: string) => confirmada<DesfeitaR2>(dono, DESFAZER_R2, [id, "Planilha errada"]);
+    const doLote = (prefixo: string, condicao: string) =>
+      contar(`select count(*) as n from public.variantes v where v.organizacao_id = $1 and v.sku like $2 and ${condicao}`, [ids.organizacao, `${prefixo}-%`]);
+    const PRECO_ABERTO = "(select p.valor_centavos from public.precos p where p.variante_id = v.id and p.unidade_id is null and p.fim is null and p.cancelado_em is null)";
+
+    // 1. Tudo novo: 2.000 modelos, 20 categorias e 25 marcas que não existiam, código de barras, preço e custo.
+    const novas = arquivo("LIMITE-R2-A", (i) => ({
+      nome: `Capa modelo ${i}`, categoria: `Limite R2 categoria ${i % 20}`, marca: `Limite R2 marca ${i % 25}`,
+      codigo_barras: String(7_890_100_000_000 + i), cor: "Preto", preco: 2_000 + i, custo: 800 + i,
+    }));
+    const previaNovas = await medir("prévia de 2.000 linhas a criar", () => enviar(1, novas));
+    expect(previaNovas.totais).toMatchObject({ criar: LINHAS, atualizar: 0, erro: 0 });
+    expect(await medir("aplicação de 2.000 linhas a criar", () => aplicar(previaNovas.id))).toMatchObject({ repetida: false, atualizada: false });
+    expect(await doLote("LIMITE-R2-A", `v.ativa and ${PRECO_ABERTO} between 2000 and 3999`)).toBe(LINHAS);
+    expect(await contar("select count(*) as n from public.categorias where organizacao_id = $1 and nome like 'Limite R2 categoria %'", [ids.organizacao])).toBe(20);
+    expect(await contar("select count(*) as n from public.marcas where organizacao_id = $1 and nome like 'Limite R2 marca %'", [ids.organizacao])).toBe(25);
+
+    // 2. Tudo muda: nome, cor, código de barras, preço e custo das 2.000 (2.000 travas de preço na aplicação e no desfazer).
+    const mudadas = arquivo("LIMITE-R2-A", (i) => ({
+      nome: `Capa modelo ${i} reforçada`, categoria: `Limite R2 categoria ${i % 20}`, marca: `Limite R2 marca ${i % 25}`,
+      codigo_barras: String(7_890_200_000_000 + i), cor: "Azul", preco: 2_500 + i, custo: 900 + i,
+    }));
+    const previaMudadas = await medir("prévia de 2.000 linhas a atualizar", () => enviar(2, mudadas));
+    expect(previaMudadas.totais).toMatchObject({ criar: 0, atualizar: LINHAS, erro: 0 });
+    // O mesmo arquivo enviado de novo: as 2.000 linhas são comparadas outra vez com o cadastro e nada mudou.
+    expect(await medir("comparação refeita de 2.000 linhas", () => enviar(2, mudadas))).toMatchObject({ id: previaMudadas.id, repetida: true, atualizada: false });
+    expect(await medir("aplicação de 2.000 linhas a atualizar", () => aplicar(previaMudadas.id))).toMatchObject({ repetida: false, atualizada: false });
+    expect(await doLote("LIMITE-R2-A", `v.cor = 'Azul' and v.nome like '% reforçada' and ${PRECO_ABERTO} between 2500 and 4499`)).toBe(LINHAS);
+    expect(await medir("desfazer de 2.000 linhas atualizadas", () => desfazer(previaMudadas.id))).toEqual({ repetida: false, desfeitas: LINHAS, parciais: 0, mantidas: 0 });
+    expect(await doLote("LIMITE-R2-A", `v.cor = 'Preto' and v.nome not like '% reforçada' and ${PRECO_ABERTO} between 2000 and 3999`)).toBe(LINHAS);
+
+    // 3. Criar e tirar de circulação: outras 2.000, em categoria que já existe, criadas e desfeitas sem uso.
+    const outras = arquivo("LIMITE-R2-C", (i) => ({ nome: `Película modelo ${i}`, preco: 1_000 + i, custo: 300 + i }));
+    const previaOutras = await medir("prévia de outras 2.000 a criar", () => enviar(3, outras));
+    expect(previaOutras.totais).toMatchObject({ criar: LINHAS, erro: 0 });
+    expect(await medir("aplicação de outras 2.000 a criar", () => aplicar(previaOutras.id))).toMatchObject({ repetida: false, atualizada: false });
+    expect(await medir("desfazer de 2.000 linhas criadas", () => desfazer(previaOutras.id))).toEqual({ repetida: false, desfeitas: LINHAS, parciais: 0, mantidas: 0 });
+    expect(await doLote("LIMITE-R2-C", `not v.ativa and ${PRECO_ABERTO} is null`)).toBe(LINHAS);
+
+    if (process.env.ORA5G_TEMPOS === "1") console.info("R2, 2.000 linhas, ms por chamada:", JSON.stringify(Object.fromEntries(tempos)));
+    expect(tempos.filter(([, ms]) => ms >= LIMITE_MS)).toEqual([]);
+    expect(await divergencias()).toEqual([]);
+  }, 180_000);
+
+  // O teto de travas consultivas de uma aplicação (privado.importacao_conferir_travas): 2.500 além da trava da rede.
+  // O servidor do teste tem a tabela de travas do tamanho da do ora5g-dev (ver postgres-real.ts).
+  it("o arquivo que pediria mais de 2.500 travas é recusado na prévia e na aplicação; no teto, passa", async () => {
+    const adm = await sessaoNaLoja(ids.administrador, ids.lojaA);
+    const dono = await sessaoNaLoja(ids.dono, ids.lojaA);
+    const TETO = 2_500;
+    expect(await valor<number>(admin, `select current_setting('max_locks_per_transaction')::int * (current_setting('max_connections')::int
+      + current_setting('autovacuum_max_workers')::int + 1 + current_setting('max_worker_processes')::int
+      + current_setting('max_wal_senders')::int + current_setting('max_prepared_transactions')::int) as v`, [])).toBe(4_800);
+    const enviar = (n: number, linhas: LinhaR2[]) => confirmada<PreviaR2 & { repetida: boolean; atualizada: boolean }>(adm, PREVIA_R2, [
+      ids.organizacao, `teto-r2-${n}.csv`, (0x52_a000 + n).toString(16).padStart(64, "0"), JSON.stringify({ sku: 0, nome: 1, preco: 2 }), JSON.stringify(linhas)]);
+    const aplicar = (id: string, comparacao: number) => confirmada<AplicadaR2>(dono, APLICAR_R2, [id, "Carga do catálogo", comparacao]);
+    // Cada linha a criar com a sua categoria e a sua marca: duas travas por linha.
+    const proprias = (prefixo: string, linhas: number) => Array.from({ length: linhas }, (_, i) => linhaR2(i + 2, `${prefixo}-${String(i).padStart(4, "0")}`,
+      { categoria: `Teto R2 categoria ${prefixo} ${i}`, marca: `Teto R2 marca ${prefixo} ${i}`, preco: 1_000 + i }));
+    const criadas = async (prefixo: string) => [
+      await contar("select count(*) as n from public.categorias where organizacao_id = $1 and nome like $2", [ids.organizacao, `Teto R2 categoria ${prefixo} %`]),
+      await contar("select count(*) as n from public.marcas where organizacao_id = $1 and nome like $2", [ids.organizacao, `Teto R2 marca ${prefixo} %`]),
+    ];
+    const recusada = { code: "22023", message: expect.stringContaining("divida a planilha") };
+
+    // 1. Uma trava a mais que o teto (1.251 categorias e 1.250 marcas): a prévia recusa e não grava nada.
+    const aMais = [...proprias("TETO-R2-A", TETO / 2), linhaR2(TETO / 2 + 2, "TETO-R2-A-MAIS", { categoria: "Teto R2 categoria TETO-R2-A a mais" })];
+    await expect(enviar(1, aMais)).rejects.toMatchObject(recusada);
+    expect(await contar("select count(*) as n from public.importacoes where arquivo_nome = 'teto-r2-1.csv'", [])).toBe(0);
+
+    // 2. No teto exato (1.250 categorias e 1.250 marcas): a prévia passa, a aplicação pega as 2.500 travas e cria tudo.
+    const noTeto = await enviar(2, proprias("TETO-R2-B", TETO / 2));
+    expect(noTeto.totais).toMatchObject({ criar: TETO / 2, erro: 0 });
+    expect(await aplicar(noTeto.id, 1)).toMatchObject({ repetida: false, atualizada: false });
+    expect(await criadas("TETO-R2-B")).toEqual([TETO / 2, TETO / 2]);
+
+    // 3. A comparação cresce depois da prévia. O arquivo fica no teto e traz uma variação que já existe, sem mudança;
+    //    o dono muda o preço dela antes da aplicação. A primeira tentativa volta para a conferência (a comparação
+    //    nova pede a trava desse preço, a 2.501ª); a segunda, já com a comparação nova, é recusada antes de travar.
+    const umaSo = await enviar(3, [linhaR2(2, "TETO-R2-P", { preco: 1_000 })]);
+    await aplicar(umaSo.id, 1);
+    const cheio = [...proprias("TETO-R2-C", TETO / 2), linhaR2(TETO / 2 + 2, "TETO-R2-P", { preco: 1_000 })];
+    const previa = await enviar(4, cheio);
+    expect(previa.totais).toMatchObject({ criar: TETO / 2, atualizar: 0, sem_mudanca: 1, erro: 0 });
+    await confirmada<Salvo>(dono, PRECO_R2, [await texto("select id as v from public.variantes where sku = 'TETO-R2-P'", []), 1_100]);
+    expect(await aplicar(previa.id, 1)).toMatchObject({ repetida: false, atualizada: true, comparacao: 2 });
+    await expect(aplicar(previa.id, 2)).rejects.toMatchObject(recusada);
+    // O mesmo arquivo enviado de novo é comparado outra vez e recusado pelo mesmo motivo; a prévia continua guardada.
+    await expect(enviar(4, cheio)).rejects.toMatchObject(recusada);
+    expect(await criadas("TETO-R2-C")).toEqual([0, 0]);
+    expect(await contar("select count(*) as n from public.importacoes where id = $1 and situacao = 'previa' and comparacao = 2", [previa.id])).toBe(1);
+    expect(await divergencias()).toEqual([]);
+  }, 120_000);
+});

@@ -1,5 +1,6 @@
-// Regras da tela de importação (lote L3c: ORA-CAT-002): mensagens, leitura do formulário de envio e
-// erro do banco → chave do catálogo (a tela nunca repete o texto do banco).
+// Regras da tela de importação (lotes L3c e R2: ORA-CAT-002, ORA-CAT-010): mensagens, leitura do
+// formulário de envio, filtro e página da conferência e erro do banco → chave do catálogo (a tela nunca repete
+// o texto do banco).
 import { CAMPOS_DO_CATALOGO, NOMES_DOS_CAMPOS, TIPOS_ACEITOS, lerMapeamento, type Mapeamento, type TipoAceito } from "./catalogo";
 import type { FalhaDoCsv } from "./csv";
 
@@ -17,10 +18,13 @@ export const ERROS_DA_IMPORTACAO = {
   ja_aplicado: "Este arquivo já foi aplicado antes. Para mudar algo, gere um arquivo novo.",
   mesma_pessoa: "Quem gerou a prévia não aprova: outra pessoa (com permissão de aprovar) confere e aplica.",
   com_erro: "A prévia tem linhas com erro: corrija a planilha e gere outra prévia.",
-  agendado: "Uma das variações tem mudança de preço agendada: cancele o agendamento antes de importar.",
+  agendado: "Uma das variações tem mudança de preço agendada: cancele o agendamento e tente de novo.",
   encerrada: "Esta importação já foi encerrada.",
-  sku_novo: "Um SKU do arquivo foi cadastrado depois da prévia: gere outra prévia.",
-  instante: "Outro preço mudou no mesmo instante: tente de novo.",
+  situacao: "Esta importação mudou de situação e a ação não vale mais. Veja abaixo como ela está agora.",
+  instante: "O cadastro mudou no mesmo instante: tente de novo. A prévia é comparada outra vez antes de qualquer mudança.",
+  desatualizada: "O cadastro mudou depois da conferência e nada foi aplicado. A prévia abaixo já está comparada de novo: confira e aplique outra vez.",
+  conferencia: "Não deu para saber qual comparação foi conferida e nada foi aplicado. Confira a prévia abaixo e aplique outra vez.",
+  nomes: "A planilha traz categorias e marcas diferentes demais para uma importação só. Divida a planilha em partes e gere uma prévia para cada uma.",
   motivo: "Informe o motivo (de 3 a 200 letras); ele fica na auditoria.",
   permissao: "Sem permissão para esta importação.",
   dados: "Dados inválidos: gere a prévia de novo.",
@@ -34,13 +38,19 @@ export function erroDoBancoNaImportacao(erro: { code?: string; message?: string 
   if (codigo === "OR023") return "ja_aplicado";
   if (codigo === "OR024") return "mesma_pessoa";
   if (codigo === "OR022") return "agendado";
-  if (codigo === "40001") return "instante";
-  if (codigo === "23505") return "sku_novo";
+  // O cadastro mudou enquanto a chamada rodava: preço ou linha conferida que mudou (40001), impasse entre duas
+  // gravações (40P01) ou SKU, nome ou código de barras que nasceu no meio (23505). Nada foi gravado; a nova
+  // tentativa compara a prévia outra vez e devolve para a conferência o que tiver mudado.
+  if (codigo === "40001" || codigo === "40P01" || codigo === "23505") return "instante";
   if (codigo === "42501" || codigo === "P0002") return "permissao";
   if (codigo === "22023") {
     if (m.includes("informe o motivo")) return "motivo";
     if (m.includes("linhas com erro")) return "com_erro";
-    if (m.includes("encerrada") || m.includes("só se")) return "encerrada";
+    if (m.includes("comparação conferida")) return "conferencia";
+    if (m.includes("encerrada")) return "encerrada";
+    // "Só se desfaz importação aplicada" e "Só se descarta prévia": outra pessoa agiu antes; a tela recarregada mostra.
+    if (m.includes("só se")) return "situacao";
+    if (m.includes("divida a planilha")) return "nomes";
     if (m.includes("2.000")) return "linhas";
     return "dados";
   }
@@ -69,3 +79,61 @@ export function mapeamentoParaGravar(cabecalho: readonly string[], mapa: Mapeame
 }
 
 export const ROTULO_DOS_CAMPOS = Object.fromEntries(NOMES_DOS_CAMPOS.map((c) => [c, CAMPOS_DO_CATALOGO[c].rotulo])) as Record<keyof typeof CAMPOS_DO_CATALOGO, string>;
+// Object.hasOwn: nome que só existe por herança do objeto ("constructor", "toString") não vira rótulo nem motivo.
+const proprio = (mapa: Record<string, string>, chave: string) => (Object.hasOwn(mapa, chave) ? mapa[chave] : undefined);
+/** Rótulo do campo para a tela; nome desconhecido aparece como veio do banco. */
+export const rotuloDoCampo = (campo: string): string => proprio(ROTULO_DOS_CAMPOS, campo) ?? campo;
+
+// Conferência da prévia (R2: REV-NOV-008, ORA-CAT-002). A tela lê as linhas por página, com filtro por ação: o arquivo
+// inteiro pode ser conferido, e não só as primeiras linhas.
+export const LINHAS_POR_PAGINA = 100;
+export const FILTROS_DA_CONFERENCIA = {
+  mudancas: "Com mudança ou erro",
+  criar: "Novos",
+  atualizar: "Mudam",
+  sem_mudanca: "Iguais",
+  erro: "Com erro",
+  todas: "Todas",
+} as const;
+export type FiltroDaConferencia = keyof typeof FILTROS_DA_CONFERENCIA;
+
+/** Quantas linhas o filtro mostra, pelos totais gravados junto com a comparação. */
+export function linhasDoFiltro(totais: Record<string, unknown> | null | undefined, filtro: FiltroDaConferencia): number {
+  const n = (chave: string) => {
+    const v = Number(totais?.[chave] ?? 0);
+    return Number.isFinite(v) && v > 0 ? Math.floor(v) : 0;
+  };
+  if (filtro === "todas") return n("linhas");
+  if (filtro === "mudancas") return n("criar") + n("atualizar") + n("erro");
+  return n(filtro);
+}
+
+/** A página pedida no endereço, presa ao que existe: da primeira à última do filtro. */
+export function paginaDaConferencia(pedida: unknown, linhas: number): { pagina: number; paginas: number; de: number } {
+  const paginas = Math.max(1, Math.ceil(linhas / LINHAS_POR_PAGINA));
+  const n = typeof pedida === "string" && /^\d{1,6}$/.test(pedida) ? Number(pedida) : 1;
+  const pagina = Math.min(Math.max(n, 1), paginas);
+  return { pagina, paginas, de: (pagina - 1) * LINHAS_POR_PAGINA };
+}
+
+// O que o desfazer deixou como estava, e por quê (o banco grava o motivo por campo em importacao_linhas.desfeito).
+const MOTIVOS_DO_QUE_FICOU: Record<string, string> = {
+  em_uso: "já foi usada (estoque, reserva, venda ou IMEI)",
+  alterada_depois: "foi alterada depois da importação",
+  alterado_depois: "mudou depois da importação",
+  codigo_em_uso: "o código de antes já está em outra variação",
+  sem_custo_anterior: "não havia custo antes da importação",
+  sem_identidade: "importação antiga, sem registro do que ela gravou",
+};
+export type Desfeito = { situacao?: unknown; revertidos?: unknown; mantidos?: unknown };
+/** Resultado do desfazer de uma linha, em texto: o que voltou e o que ficou, com o motivo. */
+export function resumoDoDesfeito(desfeito: Desfeito | null | undefined): { situacao: "desfeita" | "parcial" | "mantida"; voltou: string[]; ficou: string[] } | null {
+  if (!desfeito || typeof desfeito !== "object") return null;
+  const situacao = desfeito.situacao === "desfeita" || desfeito.situacao === "parcial" || desfeito.situacao === "mantida" ? desfeito.situacao : null;
+  if (!situacao) return null;
+  const rotulo = (c: string) => (c === "variacao" ? "a variação" : rotuloDoCampo(c));
+  const voltou = Array.isArray(desfeito.revertidos) ? desfeito.revertidos.filter((c): c is string => typeof c === "string").map((c) => (c === "variacao" ? "a variação saiu de circulação" : rotulo(c))) : [];
+  const mantidos = desfeito.mantidos && typeof desfeito.mantidos === "object" && !Array.isArray(desfeito.mantidos) ? Object.entries(desfeito.mantidos as Record<string, unknown>) : [];
+  const ficou = mantidos.map(([c, motivo]) => `${rotulo(c)}: ${proprio(MOTIVOS_DO_QUE_FICOU, String(motivo)) ?? "foi mantido"}`);
+  return { situacao, voltou, ficou };
+}

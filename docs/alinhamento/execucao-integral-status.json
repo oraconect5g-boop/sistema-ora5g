@@ -2,7 +2,7 @@
   "_leia": "Checkpoint do programa de execução integral (PR #67). Carregar ao retomar e seguir para o próximo item executável da fila; não reiniciar o projeto. Estados vêm de status-requisitos.json (fonte da rastreabilidade); este arquivo acrescenta lote, bloqueio externo e revisão.",
   "atualizado_em": "2026-11-12",
   "base": {
-    "main": "65eb3a7",
+    "main": "8af4b34",
     "pacote": {
       "pr": 67,
       "branch": "docs/execucao-integral-20261110",
@@ -29,7 +29,8 @@
       "aa8fff5 (L5b: funil de oportunidades e agenda)",
       "c08daaa (L5c: mesclagem e segmentos)",
       "a6f6d22 (L6a: nota no nome do cliente, pendências, aviso sem internet e câmera)",
-      "65eb3a7 (L7a: maquininhas por loja e conciliação manual)"
+      "65eb3a7 (L7a: maquininhas por loja e conciliação manual)",
+      "8af4b34 (R1: correções do recebimento)"
     ]
   },
   "contagem_dos_estados": {
@@ -144,7 +145,7 @@
       "titulo": "Importar produtos e preços da Rein somente por CSV/XLSX",
       "prioridade": "P0",
       "estado": "parcial",
-      "lote": "L3c importação",
+      "lote": "L3c importação; R2 correções do importador",
       "bloqueio_externo": "B1: arquivo real da Rein para testar o mapeamento (o importador não supõe o formato)",
       "revisado_codex": false,
       "homologado": false
@@ -216,7 +217,7 @@
       "titulo": "Permitir importação assistida em lote de fotos/atributos",
       "prioridade": "P2",
       "estado": "parcial",
-      "lote": "L3c importação",
+      "lote": "L3c importação; R2 correções do importador",
       "bloqueio_externo": null,
       "revisado_codex": false,
       "homologado": false
