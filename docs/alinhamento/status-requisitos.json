@@ -93,7 +93,7 @@
     },
     "ORA-REPORT-001": {
       "status": "demonstracao",
-      "nota": "Painel da rede (ou de uma loja escolhida no topo) com faturamento, meta, ranking das lojas, mix, recebimentos por meio, vendas por hora e alertas. Só dados fictícios.",
+      "nota": "Painel da rede (ou de uma loja escolhida no topo) com faturamento, meta, ranking das lojas, mix, recebimentos por meio, vendas por hora e alertas. Só dados fictícios. Destino real, fonte e contrato de cada número: MATRIZ_DEMO_REAL.md (P0, 12/11), linhas 1 a 5, 8 e 11.",
       "evidencia": "apps/plataforma/src/app/demo; apps/plataforma/e2e/demonstracao.spec.ts"
     },
     "ORA-REPORT-002": {
@@ -148,7 +148,7 @@
     },
     "ORA-REPORT-004": {
       "status": "demonstracao",
-      "nota": "Relatório de chips, ativações, portabilidades e recargas por dia e por vendedor, só confirmadas. Só dados fictícios.",
+      "nota": "Relatório de chips, ativações, portabilidades e recargas por dia e por vendedor, só confirmadas. Só dados fictícios. Destino real, fonte e contrato: MATRIZ_DEMO_REAL.md (P0, 12/11), linhas 15, 23 e 24 (chip vendido separado de operação confirmada).",
       "evidencia": "apps/plataforma/src/app/demo; apps/plataforma/e2e/demonstracao.spec.ts"
     },
     "ORA-REPORT-005": {
@@ -158,17 +158,17 @@
     },
     "ORA-REPORT-006": {
       "status": "demonstracao",
-      "nota": "Relatórios de margem, ticket, descontos e ranking de lojas e vendedores por período (7, 14 e 30 dias), com exportação CSV. Ranking para o vendedor aguarda a decisão P3.",
+      "nota": "Relatórios de margem, ticket, descontos e ranking de lojas e vendedores por período (7, 14 e 30 dias), com exportação CSV. Ranking para o vendedor aguarda a decisão P3. Destino real, fonte e contrato: MATRIZ_DEMO_REAL.md (P0, 12/11), linhas 11 a 14 (margem só com custo.ver e custo gravado no item).",
       "evidencia": "apps/plataforma/src/app/demo; apps/plataforma/e2e/demonstracao.spec.ts"
     },
     "ORA-REPORT-007": {
       "status": "demonstracao",
-      "nota": "Alertas de estoque mínimo, caixa divergente, nota parada, OS parada e ativação com falha, no sino e no painel. Só dados fictícios.",
+      "nota": "Alertas de estoque mínimo, caixa divergente, nota parada, OS parada e ativação com falha, no sino e no painel. Só dados fictícios. Estoque mínimo, parado e pendências: destino real, fonte e contrato em MATRIZ_DEMO_REAL.md (P0, 12/11), linha 21 e números E1 a E8.",
       "evidencia": "apps/plataforma/src/app/demo; apps/plataforma/e2e/demonstracao.spec.ts"
     },
     "ORA-PERF-005": {
       "status": "demonstracao",
-      "nota": "Painel do gestor com metas e produção de todos os vendedores do escopo; o vendedor vê só os próprios números. Só dados fictícios.",
+      "nota": "Painel do gestor com metas e produção de todos os vendedores do escopo; o vendedor vê só os próprios números. Só dados fictícios. Destino real, fonte e contrato: MATRIZ_DEMO_REAL.md (P0, 12/11), linhas 18 a 20 (meta versionada; sem meta, a tela diz que não há meta definida).",
       "evidencia": "apps/plataforma/src/app/demo; apps/plataforma/e2e/demonstracao.spec.ts"
     },
     "ORA-FIN-001": {
