@@ -3755,6 +3755,7 @@ export type Database = {
           id: string
           item_serializado_id: string | null
           organizacao_id: string
+          preco_id: string | null
           preco_unitario_centavos: number
           quantidade: number
           reserva_id: string | null
@@ -3769,6 +3770,7 @@ export type Database = {
           id?: string
           item_serializado_id?: string | null
           organizacao_id: string
+          preco_id?: string | null
           preco_unitario_centavos: number
           quantidade: number
           reserva_id?: string | null
@@ -3783,6 +3785,7 @@ export type Database = {
           id?: string
           item_serializado_id?: string | null
           organizacao_id?: string
+          preco_id?: string | null
           preco_unitario_centavos?: number
           quantidade?: number
           reserva_id?: string | null
@@ -3791,6 +3794,13 @@ export type Database = {
           venda_id?: string
         }
         Relationships: [
+          {
+            foreignKeyName: "venda_itens_preco_id_fkey"
+            columns: ["preco_id"]
+            isOneToOne: false
+            referencedRelation: "precos"
+            referencedColumns: ["id"]
+          },
           {
             foreignKeyName: "venda_itens_item_serializado_id_fkey"
             columns: ["item_serializado_id"]

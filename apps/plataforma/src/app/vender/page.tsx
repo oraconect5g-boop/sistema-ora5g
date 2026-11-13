@@ -18,6 +18,7 @@ import { ERROS_DA_VENDA } from "../../lib/vendas/regras";
 import { FotoAmpliavel } from "../catalogo/FotoAmpliavel";
 import { BuscaDeCliente } from "../clientes/BuscaDeCliente";
 import { abrirCaixa, adicionarItem, aplicarDesconto, cancelarVenda, concluirVenda, novaVenda, pedirAprovacao, removerItem } from "./acoes";
+import { regraNaTela, regrasDosItens } from "../../lib/vendas/regra-de-preco";
 
 export const metadata: Metadata = { title: "Vender" };
 export const dynamic = "force-dynamic";
@@ -58,6 +59,9 @@ export default async function Vender({ searchParams }: { searchParams: Promise<{
     ? await supabase.from("venda_itens").select("id, variante_id, item_serializado_id, tipo, quantidade, preco_unitario_centavos, desconto_centavos").eq("venda_id", venda.data.id).order("criado_em")
     : { data: [], error: null };
   if (itens.error) throw new FalhaDoServico("venda_itens");
+  // A regra de preço de cada item (L6b), lida à parte: no carrinho só aparece quando é campanha. Banco sem
+  // a migration ou falha de leitura não atrapalham a venda.
+  const regras = venda.data && itens.data.length > 0 ? await regrasDosItens(supabase, venda.data.id) : ({ estado: "indisponivel" } as const);
   // Busca igual à do catálogo e do estoque (lib/catalogo/busca.ts): pelo nome do produto, nome da
   // variação ou SKU, ou direto pelo IMEI, segundo IMEI ou ICCID do item desta loja.
   const numero = busca ? identificadorDigitado(busca) : null;
@@ -182,10 +186,12 @@ export default async function Vender({ searchParams }: { searchParams: Promise<{
                   const linha = centavosDoBanco(i.preco_unitario_centavos) * i.quantidade;
                   const desconto = centavosDoBanco(i.desconto_centavos);
                   const aprovacao = statusDoItem(i.id);
+                  const regra = regraNaTela(regras, i.id);
                   return (
                     <li key={i.id} className="space-y-2 py-3 text-sm">
                       <div className="flex justify-between gap-2">
-                        <span><strong>{v?.nome ?? "Item"}</strong><span className="numeros block text-xs text-suave">{v?.sku} {serial ? `· ${final(serial.imei ?? serial.iccid)}` : ""} · {i.quantidade} × {brl(centavosDoBanco(i.preco_unitario_centavos))}</span></span>
+                        <span><strong>{v?.nome ?? "Item"}</strong><span className="numeros block text-xs text-suave">{v?.sku} {serial ? `· ${final(serial.imei ?? serial.iccid)}` : ""} · {i.quantidade} × {brl(centavosDoBanco(i.preco_unitario_centavos))}</span>
+                          {regra?.campanha && <span className="block text-xs font-semibold text-acao">{regra.texto}</span>}</span>
                         <span className="numeros text-right font-semibold">{brl(linha - desconto)}{desconto > 0 && <span className="block text-xs font-normal text-suave">desconto {brl(desconto)}</span>}</span>
                       </div>
                       <div className="flex flex-wrap items-end gap-2">

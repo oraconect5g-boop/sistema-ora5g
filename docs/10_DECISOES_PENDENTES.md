@@ -38,6 +38,7 @@
 | D-032 | Condições objetivas para retirar legado e expandir ondas | Risco operacional | Definir go/no-go assinado; gerente/financeiro/fiscal |
 | D-033 | Relatório de Pesquisa Aprofundada representa fonte atual para preços/leis? | Dados publicados podem mudar | Verificar documentos oficiais antes de implementar; especialista |
 | D-034 | Quando implantar telecom, WhatsApp e e-commerce diante do piloto? | Dependências e escopo | Ajustar roadmap com receita/risco, sem adiar fundação |
+| D-035 | Quais combos e regras comerciais por loja o PDV deve aplicar (por exemplo: aparelho com capa por preço especial, leve dois e pague menos, desconto máximo próprio de uma loja)? Quem cria, se acumulam com a campanha e com o desconto pedido no balcão | Campanhas, combos e regras por loja no PDV (ORA-POS-014) | Desde o L6b (13/11/2026) o item da venda guarda a regra de preço aplicada (campanha da loja ou da rede, preço da loja ou da rede). Combos e regras de desconto por loja esperam esta decisão do proprietário |
 
 ## Primeiras 8 decisões a buscar na Etapa 0
 D-001, D-002, D-003, D-005, D-006, D-007, D-008, D-010 são as mais estruturantes. A confirmação de cada uma deverá ser registrada em ADR/decisão de negócio com responsável/data. As demais seguem abertas até suas fases, mas o schema deve evitar acoplamentos que as tornem difíceis.

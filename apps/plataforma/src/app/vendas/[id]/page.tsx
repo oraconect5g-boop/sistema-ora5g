@@ -21,6 +21,7 @@ import { vincularClienteNaVenda } from "../../clientes/acoes";
 import { BuscaDeCliente } from "../../clientes/BuscaDeCliente";
 import { corrigirNota, pedirNota } from "../../notas/acoes";
 import { cancelarVenda, conferirRetorno, confirmarEstorno, devolverItens } from "../../vender/acoes";
+import { regraNaTela, regrasDosItens } from "../../../lib/vendas/regra-de-preco";
 
 export const metadata: Metadata = { title: "Comprovante da venda" };
 export const dynamic = "force-dynamic";
@@ -65,6 +66,9 @@ export default async function Comprovante({ params, searchParams }: { params: Pr
   const variantes = itens.data.length ? await supabase.from("variantes").select("id, sku, nome").in("id", itens.data.map((i) => i.variante_id)) : { data: [], error: null };
   const serializados = itens.data.some((i) => i.item_serializado_id) ? await supabase.from("itens_serializados").select("id, imei, iccid").in("id", itens.data.flatMap((i) => (i.item_serializado_id ? [i.item_serializado_id] : []))) : { data: [], error: null };
   if (variantes.error || serializados.error) throw new FalhaDoServico("comprovante_itens");
+  // A regra de preço de cada item (L6b): campanha, preço da loja ou da rede, lida à parte. Banco sem a
+  // migration ou falha de leitura não derrubam a venda.
+  const regras = await regrasDosItens(supabase, id);
   const v = venda.data;
   // Devolução (adendo do ADR-004): o que resta de cada item e os meios em que dá para reembolsar.
   const devolvido = new Map<string, number>();
@@ -96,9 +100,11 @@ export default async function Comprovante({ params, searchParams }: { params: Pr
             const variante = variantes.data.find((x) => x.id === i.variante_id);
             const serial = serializados.data.find((s) => s.id === i.item_serializado_id);
             const linha = centavosDoBanco(i.preco_unitario_centavos) * i.quantidade - centavosDoBanco(i.desconto_centavos);
+            const regra = regraNaTela(regras, i.id);
             return (
               <li key={i.id} className="flex justify-between gap-2 py-2">
-                <span>{variante?.nome}<span className="numeros block text-xs text-suave">{variante?.sku}{serial ? ` · ${serial.imei ? "IMEI" : "ICCID"} ${serial.imei ?? serial.iccid}` : ""} · {i.quantidade} un.</span></span>
+                <span>{variante?.nome}<span className="numeros block text-xs text-suave">{variante?.sku}{serial ? ` · ${serial.imei ? "IMEI" : "ICCID"} ${serial.imei ?? serial.iccid}` : ""} · {i.quantidade} un.</span>
+                  {regra && <span className={`block text-xs ${regra.campanha ? "font-semibold text-acao" : "text-suave"}`}>{regra.texto}</span>}</span>
                 <span className="numeros font-semibold">{brl(linha)}</span>
               </li>
             );
