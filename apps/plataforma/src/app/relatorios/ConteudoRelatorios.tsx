@@ -4,7 +4,7 @@ import Link from "next/link";
 import { BarraSegmentada, Colunas, Linhas, TabelaDoGrafico } from "../../componentes/graficos";
 import {
   cadaRotulo, EstadoDoPainel, foraDaMargem, indicadorDaMargem, indicadorDoRecebido, Indicadores, indicadoresDeVendas, LIGACAO, NOTA, NUMERO_PRINCIPAL,
-  PainelDasLojas, PainelDeRecebimentos, PainelDeVendas, PainelDoMix, plural,
+  PainelDasLojas, PainelDeRecebimentos, PainelDeVendas, PainelDoMix, plural, type MetaDoGrafico,
 } from "../../componentes/paineis-de-vendas";
 import { PainelDaProducaoPorDia } from "../../componentes/paineis-do-connect";
 import { Aviso, BotaoLink, Cartao, Celula, EstadoVazio, ListaDados, Selo, Tabela } from "../../componentes/ui";
@@ -14,6 +14,7 @@ import { PERIODOS_FINANCEIROS, type Janela } from "../../lib/financeiro/painel";
 import { POR_PAGINA } from "../../lib/financeiro/registros";
 import { brl, brlCompacto, brlCompactoComSinal, brlComSinal, brlEixo, brlEixoComSinal, numero, percentual, percentualComSinal } from "../../lib/formato";
 import { enderecoDoFinanceiro, numerosDasVendas, type Leitura, type VendasDoBanco } from "../../lib/inicio/painel";
+import { metaDoDiaPorMes } from "../../lib/metas/painel";
 import { numerosDaMargem, situacaoDaMargem, type ItensDaMargem, type MargemDoBanco } from "../../lib/margem/painel";
 import type { Relatorios } from "../../lib/relatorios/consulta";
 import { diasDeMargem, diasDeVendas, enderecoDaExportacao, enderecoDosRelatorios, PERIODO_NO_FINANCEIRO, textosDoRelatorio } from "../../lib/relatorios/painel";
@@ -310,7 +311,9 @@ function PainelDosItens({ itens, margem, pagina, comLoja, aqui, enderecoDaPagina
 // A tela inteira, no recorte de quem pede
 // ---------------------------------------------------------------------------------------------
 export function ConteudoRelatorios({ relatorios, turno }: { relatorios: Relatorios; turno: LojaDoFiltro }) {
-  const { periodo, escopo, daRede, janelas, cadastro, vendas, anterior, financeiro, margem, itens, pagina, producao } = relatorios;
+  const { periodo, escopo, daRede, janelas, cadastro, vendas, anterior, financeiro, margem, itens, pagina, producao, metas } = relatorios;
+  // A meta do dia (G4c): a meta do mês do vendido líquido ÷ dias do mês, de cada mês do período.
+  const meta: MetaDoGrafico | null = metas === null ? null : metas.estado === "ok" ? { estado: "ok", ...metaDoDiaPorMes(metas.dados) } : { estado: metas.estado };
   const redeInteira = daRede && escopo.unidade === null;
   // Só quem vê a rede leva a loja no endereço; os demais ficam na loja do turno.
   const lojaDoEndereco = daRede ? escopo.unidade : null;
@@ -325,7 +328,7 @@ export function ConteudoRelatorios({ relatorios, turno }: { relatorios: Relatori
       <Indicadores itens={[...indicadoresDeVendas({ vendas, anterior, textos }), indicadorDaMargem(margem), indicadorDoRecebido(financeiro)]} />
 
       <div className="grid gap-4 xl:grid-cols-3">
-        <PainelDeVendas vendas={vendas} anterior={anterior} janelas={janelas} textos={textos} aqui={aqui} acao={<Link href={enderecoDoFinanceiro(noFinanceiro, escopo, turno.id, daRede)} className={LIGACAO}>Conferir no financeiro{recorte}</Link>} />
+        <PainelDeVendas vendas={vendas} anterior={anterior} janelas={janelas} textos={textos} aqui={aqui} meta={meta} acao={<Link href={enderecoDoFinanceiro(noFinanceiro, escopo, turno.id, daRede)} className={LIGACAO}>Conferir no financeiro{recorte}</Link>} />
         <PainelDeRecebimentos financeiro={financeiro} aqui={aqui} acao={<Link href={enderecoDoFinanceiro(noFinanceiro, escopo, turno.id, daRede, "pagamentos")} className={LIGACAO}>Ver pagamentos{recorte}</Link>} />
       </div>
 

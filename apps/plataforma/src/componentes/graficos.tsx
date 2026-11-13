@@ -14,26 +14,27 @@ export type SerieCor = 1 | 2 | 3 | 4 | 5 | 6;
 /**
  * Cor de uma marca: uma série da paleta ou o cinza neutro "comparacao", que não é identidade de
  * série: serve ao período anterior (ênfase no atual) e à parte de um todo que ficou fora da conta.
+ * "meta" é a linha de referência da meta (tinta escura, tracejada), como o traço da meta nas barras.
  */
-export type CorDaLinha = SerieCor | "comparacao";
+export type CorDaLinha = SerieCor | "comparacao" | "meta";
 
 const FUNDO: Record<CorDaLinha, string> = {
-  1: "bg-serie-1", 2: "bg-serie-2", 3: "bg-serie-3", 4: "bg-serie-4", 5: "bg-serie-5", 6: "bg-serie-6", comparacao: "bg-serie-comparacao",
+  1: "bg-serie-1", 2: "bg-serie-2", 3: "bg-serie-3", 4: "bg-serie-4", 5: "bg-serie-5", 6: "bg-serie-6", comparacao: "bg-serie-comparacao", meta: "bg-texto/70",
 };
 const COR_CSS: Record<CorDaLinha, string> = {
   1: "var(--color-serie-1)", 2: "var(--color-serie-2)", 3: "var(--color-serie-3)", 4: "var(--color-serie-4)", 5: "var(--color-serie-5)", 6: "var(--color-serie-6)",
-  comparacao: "var(--color-serie-comparacao)",
+  comparacao: "var(--color-serie-comparacao)", meta: "var(--color-texto)",
 };
 const FUNDO_SUAVE: Record<SerieCor, string> = {
   1: "bg-serie-1/40", 2: "bg-serie-2/40", 3: "bg-serie-3/40", 4: "bg-serie-4/40", 5: "bg-serie-5/40", 6: "bg-serie-6/40",
 };
 const TRACO: Record<CorDaLinha, string> = {
-  1: "stroke-serie-1", 2: "stroke-serie-2", 3: "stroke-serie-3", 4: "stroke-serie-4", 5: "stroke-serie-5", 6: "stroke-serie-6", comparacao: "stroke-serie-comparacao",
+  1: "stroke-serie-1", 2: "stroke-serie-2", 3: "stroke-serie-3", 4: "stroke-serie-4", 5: "stroke-serie-5", 6: "stroke-serie-6", comparacao: "stroke-serie-comparacao", meta: "stroke-texto/70",
 };
 // Texto dentro de um bloco colorido: branco, ou quase preto nos tons claros (amarelo, rosa e o cinza
 // neutro, em que o branco só chega a 3:1).
 const TEXTO_SOBRE: Record<CorDaLinha, string> = {
-  1: "text-white", 2: "text-white", 3: "text-white", 4: "text-white", 5: "text-texto", 6: "text-texto", comparacao: "text-texto",
+  1: "text-white", 2: "text-white", 3: "text-white", 4: "text-white", 5: "text-texto", 6: "text-texto", comparacao: "text-texto", meta: "text-white",
 };
 
 const pct = (valor: number, topo: number) => (topo > 0 ? Math.max(0, Math.min(100, (valor / topo) * 100)) : 0);
@@ -279,7 +280,9 @@ export function Linhas({ series, rotulosX, formatar, formatarEixo = formatar, fo
                     // Ponto sem vizinho não forma linha: ele é desenhado adiante, como ponto.
                     if (!primeiro || !ultimo || trecho.length < 2) return null;
                     const pontos = trecho.map((p): Coordenada => [x(p.indice), y(p.valor)]);
-                    const linha = suave ? caminhoSuave(pontos) : `M${pontos.map(([a, b]) => `${a},${b}`).join(" L")}`;
+                    // A meta é referência, não medida: reta e com traço longo, para se distinguir do período anterior além da cor.
+                    const reta = s.serie === "meta";
+                    const linha = suave && !reta ? caminhoSuave(pontos) : `M${pontos.map(([a, b]) => `${a},${b}`).join(" L")}`;
                     return (
                       <g key={primeiro.indice}>
                         {s.area && <path d={`${linha} L${x(ultimo.indice)},${zero} L${x(primeiro.indice)},${zero} Z`} fill={`url(#${degrade}-${indiceDaArea})`} />}
@@ -287,7 +290,7 @@ export function Linhas({ series, rotulosX, formatar, formatarEixo = formatar, fo
                           d={linha}
                           fill="none"
                           strokeWidth={s.tracejada ? 2 : 2.75}
-                          strokeDasharray={s.tracejada ? "5 5" : undefined}
+                          strokeDasharray={s.tracejada ? (reta ? "10 5" : "5 5") : undefined}
                           strokeLinejoin="round"
                           strokeLinecap="round"
                           vectorEffect="non-scaling-stroke"

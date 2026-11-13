@@ -18,6 +18,12 @@ import { Aviso, Cartao, EstadoVazio, Indicador, ListaDados, SeloVariacao, type V
 // aqui), sem histórico comparável, fonte indisponível, falha de consulta (nunca zero) e sem permissão.
 
 export const LIGACAO = "text-sm font-semibold text-acao hover:underline";
+
+/**
+ * A meta do dia na linha das vendas (Relatórios, G4c): o valor de cada dia (nulo no dia sem meta) e o
+ * aviso do que ficou de fora; ou o estado da leitura das metas, que nunca vira zero.
+ */
+export type MetaDoGrafico = { estado: "ok"; porDia: (chave: string) => number | null; aviso: string | null } | { estado: "indisponivel" | "falha" };
 const INDICADOR = "w-[78%] shrink-0 snap-start sm:w-auto";
 const CARROSSEL = "sem-barra -mx-4 flex snap-x snap-mandatory scroll-px-4 gap-3 overflow-x-auto px-4 pb-1 sm:mx-0 sm:grid sm:grid-cols-2 sm:gap-4 sm:overflow-visible sm:px-0";
 export const NUMERO_PRINCIPAL = "numeros text-[28px] font-bold leading-tight";
@@ -151,7 +157,7 @@ export function Indicadores({ itens }: { itens: readonly ItemDoResumo[] }) {
 // ---------------------------------------------------------------------------------------------
 // Vendas no tempo, com o período anterior equivalente
 // ---------------------------------------------------------------------------------------------
-export function PainelDeVendas({ vendas, anterior, janelas, textos, aqui, acao, doVendedor = false }: {
+export function PainelDeVendas({ vendas, anterior, janelas, textos, aqui, acao, doVendedor = false, meta = null }: {
   vendas: Leitura<VendasDoBanco>; anterior: Leitura<VendasDoBanco>;
   janelas: { atual: Janela; anterior: Janela; porHora: boolean };
   textos: TextosDoRecorte;
@@ -159,6 +165,8 @@ export function PainelDeVendas({ vendas, anterior, janelas, textos, aqui, acao, 
   aqui: string;
   acao: ReactNode;
   doVendedor?: boolean;
+  /** A meta do dia (só nos Relatórios, dia a dia); null: a tela não mostra meta. */
+  meta?: MetaDoGrafico | null;
 }) {
   const cartao = {
     titulo: doVendedor ? "Minhas vendas" : "Vendas",
@@ -189,19 +197,33 @@ export function PainelDeVendas({ vendas, anterior, janelas, textos, aqui, acao, 
 
   const fracao = na ? variacaoFinanceira(n.vendido, na.vendido) : null;
   const serie = serieDeVendas(vendas.dados, antes, janelas);
+  // A meta do dia (G4c): dia sem meta fica sem valor, e a linha se interrompe ali.
+  const metas = meta?.estado === "ok" && !janelas.porHora ? serie.map((p) => meta.porDia(p.chave)) : null;
+  const comMeta = (metas ?? []).filter((v): v is number => v !== null);
   const series: SerieLinha[] = [
     { nome: textos.series.atual, serie: 1, area: true, ponto: "maximo", valores: serie.map((p) => p.vendido) },
     // O período anterior só entra no gráfico quando há o que comparar (tracejado, ponto a ponto).
     ...(antes ? [{ nome: textos.series.anterior, serie: "comparacao" as const, tracejada: true, ponto: "nenhum" as const, valores: serie.map((p) => p.vendidoAntes) }] : []),
+    ...(metas && comMeta.length > 0 ? [{ nome: "Meta do dia", serie: "meta" as const, tracejada: true, ponto: "nenhum" as const, valores: metas }] : []),
   ];
+  const somaDaMeta = comMeta.reduce((soma, v) => soma + v, 0);
+  const aviso = meta?.estado === "ok" && meta.aviso ? ` ${meta.aviso}` : "";
+  const sobreAMeta = !meta || janelas.porHora ? null
+    : meta.estado === "indisponivel" ? "A meta do dia está indisponível neste ambiente: falta a leitura das metas no banco."
+    : meta.estado === "falha" ? "A meta do dia não pôde ser lida agora: o gráfico segue sem ela."
+    : comMeta.length === 0 ? `Sem meta do vendido líquido nestes dias.${aviso}`
+    : comMeta.length < serie.length ? `Meta do dia: a meta do mês do vendido líquido dividida pelos dias do mês. Parte do período está sem meta.${aviso}`
+    : `Meta do dia: a meta do mês do vendido líquido dividida pelos dias do mês. No período, ela soma ${brl(somaDaMeta)}, e o vendido líquido está em ${percentual(n.liquido / somaDaMeta)} dela.${aviso}`;
   const unidade = janelas.porHora ? "Hora" : "Dia";
   const colunas = !antes ? [unidade, "Vendas", "Vendido"]
     : janelas.porHora ? ["Hora", "Vendas hoje", "Vendido hoje", "Vendas ontem", "Vendido ontem"]
     : ["Dia", "Vendas", "Vendido", "Dia anterior equivalente", "Vendas no dia anterior", "Vendido no dia anterior"];
-  const linhas = serie.map((p) => {
+  const comColunaDaMeta = metas !== null && comMeta.length > 0;
+  const linhas = serie.map((p, i) => {
     const atual = [p.rotulo, numero(p.vendas), brl(p.vendido)];
-    if (!antes) return atual;
-    return janelas.porHora ? [...atual, numero(p.vendasAntes), brl(p.vendidoAntes)] : [...atual, p.rotuloAnterior ?? "—", numero(p.vendasAntes), brl(p.vendidoAntes)];
+    const daMeta = comColunaDaMeta ? [metas[i] === null || metas[i] === undefined ? "—" : brl(metas[i])] : [];
+    if (!antes) return [...atual, ...daMeta];
+    return janelas.porHora ? [...atual, numero(p.vendasAntes), brl(p.vendidoAntes)] : [...atual, p.rotuloAnterior ?? "—", numero(p.vendasAntes), brl(p.vendidoAntes), ...daMeta];
   });
 
   return (
@@ -217,7 +239,8 @@ export function PainelDeVendas({ vendas, anterior, janelas, textos, aqui, acao, 
       <div className="mt-4">
         <Linhas suave series={series} rotulosX={serie.map((p) => p.rotulo)} formatar={brl} formatarEixo={brlEixo} formatarPonto={brlCompacto} cadaRotulo={cadaRotulo(serie.length)} />
       </div>
-      <TabelaDoGrafico colunas={colunas} linhas={linhas} />
+      {sobreAMeta && <p className={`mt-3 ${NOTA}`}>{sobreAMeta}</p>}
+      <TabelaDoGrafico colunas={comColunaDaMeta ? [...colunas, "Meta do dia"] : colunas} linhas={linhas} />
     </Cartao>
   );
 }

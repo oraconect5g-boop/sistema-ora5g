@@ -214,4 +214,41 @@ describe("metas: realizado do mês pela regra de contagem 1 (G4b)", () => {
     expect(await codigo(dono, "select public.metas_painel(null, $1) as v", [ids.lojaA])).toBe("22023");
     expect(await codigo(dono, "select public.metas_painel($1::date, null) as v", [esteMes()])).toBe("22023");
   });
+
+  // G4c: a meta da loja inteira e o realizado de cada loja do mês, para o Início e os Relatórios.
+  type DasLojas = { mes: string; dias_no_mes: number; dias_decorridos: number; regra_contagem: number; lojas: { unidade_id: string; metas: Record<string, number>; realizado: Medidas }[] };
+  const dasLojas = async (s: Sessao, unidade: string | null = null) =>
+    inteiros(await valor<DasLojas>(s, "select public.metas_lojas($1::date, $2) as v", [esteMes(), unidade]));
+  const ZERO = { vendido_liquido: 0, aparelhos: 0, connect: 0, acessorios: 0 };
+
+  it("metas_lojas (G4c): cada loja da rede com a meta da loja inteira e o realizado, o mesmo do painel da loja; sem meta, vazio", async () => {
+    const dono = await produzir();
+    await valor(dono, DEFINIR, [ids.lojaA, null, esteMes(), metas({ vendido_liquido: 5_000_000, connect: 40 }), null]);
+    await valor(dono, DEFINIR, [ids.lojaB, null, esteMes(), metas({ aparelhos: 10 }), null]);
+    // A meta de um vendedor não é a da loja: fica fora.
+    await valor(dono, DEFINIR, [ids.lojaA, ids.vendedorA, esteMes(), metas({ aparelhos: 20 }), null]);
+    const r = await dasLojas(dono);
+    expect(r).toMatchObject({ mes: esteMes(), regra_contagem: 1 });
+    const porLoja = new Map(r.lojas.map((l) => [l.unidade_id, l] as const));
+    expect([...porLoja.keys()].sort()).toEqual([ids.lojaA, ids.lojaB, ids.lojaC, ids.online].sort());
+    expect(porLoja.get(ids.lojaA)).toEqual({ unidade_id: ids.lojaA, metas: { vendido_liquido: 5_000_000, connect: 40 }, realizado: REALIZADO });
+    expect(porLoja.get(ids.lojaB)).toEqual({ unidade_id: ids.lojaB, metas: { aparelhos: 10 }, realizado: ZERO });
+    expect(porLoja.get(ids.lojaC)).toEqual({ unidade_id: ids.lojaC, metas: {}, realizado: ZERO });
+    // A mesma regra de contagem do painel da loja (G4b): os dois nunca podem divergir.
+    expect((await painel(dono, ids.lojaA)).loja?.realizado).toEqual(porLoja.get(ids.lojaA)?.realizado);
+    expect((await dasLojas(dono, ids.lojaA)).lojas.map((l) => l.unidade_id)).toEqual([ids.lojaA]);
+  });
+
+  it("metas_lojas (G4c): só as lojas em que quem chama lê as vendas e acompanha as metas", async () => {
+    const dono = await produzir();
+    await valor(dono, DEFINIR, [ids.lojaA, null, esteMes(), metas({ vendido_liquido: 5_000_000 }), null]);
+    const gerente = await naLoja(ids.gerenteB, ids.lojaB);
+    expect((await dasLojas(gerente)).lojas.map((l) => l.unidade_id)).toEqual([ids.lojaB]);
+    expect((await dasLojas(gerente, ids.lojaA)).lojas).toEqual([]);
+    expect((await dasLojas(await naLoja(ids.vendedorA, ids.lojaA))).lojas).toEqual([]);
+    // O administrador vê as vendas da rede, mas não acompanha metas: não recebe loja nenhuma.
+    expect((await dasLojas(await naLoja(ids.administrador, ids.lojaA))).lojas).toEqual([]);
+    expect((await dasLojas(await naLoja(ids.donoOutraOrg, ids.lojaOutraOrg))).lojas).toEqual([{ unidade_id: ids.lojaOutraOrg, metas: {}, realizado: ZERO }]);
+    expect(await codigo(dono, "select public.metas_lojas(null) as v")).toBe("22023");
+  });
 });

@@ -1,10 +1,11 @@
 import { Headphones, Pencil, Signal, Smartphone, Store, Target, TrendingUp, type LucideIcon } from "lucide-react";
 
 import { BarrasHorizontais, Medidor, TabelaDoGrafico } from "../../componentes/graficos";
+import { BarrasDoRitmo, compacto, TOM_DO_MEDIDOR } from "../../componentes/paineis-de-metas";
 import { EstadoDoPainel, NOTA, NUMERO_PRINCIPAL, PainelDasLojas } from "../../componentes/paineis-de-vendas";
 import { Aviso, Avatar, Cartao, Celula, classeBotao, EstadoVazio, FiltroSegmentado, Indicador, ListaDados, Selo, Tabela } from "../../componentes/ui";
 import type { LojaDoFiltro } from "../../lib/financeiro/escopo";
-import { brlCompacto, numero, percentual } from "../../lib/formato";
+import { percentual } from "../../lib/formato";
 import type { VendasDoBanco } from "../../lib/inicio/painel";
 import type { Leitura } from "../../lib/leitura-do-banco";
 import {
@@ -19,13 +20,9 @@ import { definirMetas } from "./acoes";
 
 const ICONES: Record<Medida, LucideIcon> = { vendido_liquido: TrendingUp, aparelhos: Smartphone, acessorios: Headphones, connect: Signal };
 const TOM_DO_INDICADOR = { sem_meta: "neutro", nao_comecou: "neutro", batida: "bom", no_ritmo: "bom", abaixo: "atencao", nao_batida: "ruim" } as const;
-// O medidor segue a situação do ritmo, não um corte fixo de percentual.
-const TOM_DO_MEDIDOR = { sem_meta: "neutro", nao_comecou: "neutro", batida: "sucesso", no_ritmo: "marca", abaixo: "aviso", nao_batida: "aviso" } as const;
 const campo = "mt-1 min-h-11 w-full rounded-botao border border-borda bg-white px-3 text-sm outline-none focus:border-acao focus:ring-2 focus:ring-acao/20";
 const rotulo = "block text-sm font-medium";
 
-/** Valor curto para indicador e gráfico estreito: "R$ 85,2 mil", "47". O valor cheio fica nas tabelas. */
-const compacto = (medida: Medida, valor: number) => (MEDIDAS[medida].dinheiro ? brlCompacto(valor) : numero(valor));
 /** "42% de R$ 50 mil · No ritmo", ou "Meta não definida". */
 function resumoDoProgresso(p: Progresso): string {
   if (p.meta === null) return SITUACOES.sem_meta.rotulo;
@@ -114,24 +111,7 @@ function ResumoDaLoja({ dados, fase }: { dados: MetasDoBanco; fase: FaseDoMes })
         ) : fase === "futuro" ? (
           <ListaDados itens={comMeta.map((p) => [MEDIDAS[p.medida].nome, formatarMedida(p.medida, p.meta ?? 0)] as const)} />
         ) : (
-          <>
-            <BarrasHorizontais
-              nomeSerie="Atingido" nomeMeta={fase === "atual" ? "Ritmo esperado hoje" : "Meta"} formatar={(v) => percentual(v / 100)}
-              maximo={Math.max(100, ...comMeta.map((p) => (p.atingido ?? 0) * 100))}
-              dados={comMeta.map((p) => ({
-                rotulo: MEDIDAS[p.medida].curto, valor: (p.atingido ?? 0) * 100, meta: ((p.esperado ?? 0) / (p.meta ?? 1)) * 100,
-                // No celular o detalhe some (os indicadores acima e a tabela têm os valores); o rótulo não corta.
-                detalhe: <span className="hidden sm:inline">{`${compacto(p.medida, p.realizado)} de ${compacto(p.medida, p.meta ?? 0)}`}</span>,
-              }))}
-            />
-            <TabelaDoGrafico
-              colunas={["Medida", "Realizado", "Meta", "Atingido", fase === "atual" ? "Esperado até hoje" : "Esperado", "Situação"]}
-              linhas={comMeta.map((p) => [
-                MEDIDAS[p.medida].nome, formatarMedida(p.medida, p.realizado), formatarMedida(p.medida, p.meta ?? 0), percentual(p.atingido ?? 0),
-                formatarMedida(p.medida, p.esperado ?? 0), SITUACOES[p.situacao].rotulo,
-              ])}
-            />
-          </>
+          <BarrasDoRitmo lista={comMeta} fase={fase} />
         )}
       </Cartao>
     </>

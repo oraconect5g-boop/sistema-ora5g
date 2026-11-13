@@ -12,6 +12,9 @@ import { POR_PAGINA } from "../financeiro/registros";
 import { consultarFinanceiro, consultarVendas, lojasQueVendem } from "../inicio/consulta";
 import { escopoDoInicio, lojasDoFiltro, type Leitura, type VendasDoBanco } from "../inicio/painel";
 import { consultarItensDaMargem, consultarMargem } from "../margem/consulta";
+import { consultarMetasDasLojas } from "../metas/consulta";
+import { mesesDaJanela, type MetasDasLojas } from "../metas/painel";
+import type { Janela } from "../financeiro/painel";
 import type { ItensDaMargem, MargemDoBanco } from "../margem/painel";
 import { janelasDoRelatorio, type PeriodoDoRelatorio } from "./painel";
 
@@ -57,6 +60,8 @@ export type Relatorios = {
   itens: Leitura<ItensDaMargem> | "sem_permissao";
   /** Chips vendidos e operações do Ora Connect confirmadas (lote G4a). */
   producao: Leitura<ProducaoDoBanco>;
+  /** As metas das lojas em cada mês que o período toca (G4c), para a meta do dia. null: quem pede não acompanha metas. */
+  metas: Leitura<MetasDasLojas[]> | null;
   pagina: number;
 };
 
@@ -69,6 +74,8 @@ export type PedidoDosRelatorios = {
   daRede: boolean;
   /** Tem custo.ver na loja do turno. */
   custo: boolean;
+  /** Acompanha as metas (metas.gerir ou metas.ver_unidade): a meta do dia aparece na linha das vendas. */
+  metas: boolean;
   /** Página do detalhe da margem. */
   pagina: number;
   agora?: Date;
@@ -84,18 +91,27 @@ export async function lerRelatorios(supabase: Cliente, pedido: PedidoDosRelatori
     // Sem a lista de lojas não dá para conferir a loja pedida no endereço: nenhum número é mostrado.
     return {
       periodo, daRede, janelas, pagina, escopo: escopoDoInicio(pedido.loja, [], turno, daRede), filtroDeLojas: [], cadastro: [],
-      vendas: FALHA, anterior: FALHA, financeiro: FALHA, margem: margemSemPedir, itens: margemSemPedir, producao: FALHA,
+      vendas: FALHA, anterior: FALHA, financeiro: FALHA, margem: margemSemPedir, itens: margemSemPedir, producao: FALHA, metas: pedido.metas ? FALHA : null,
     };
   }
   const { escopo, cadastro } = lido;
   const filtro = { unidade: escopo.unidade, vendedor: null };
-  const [vendas, anterior, financeiro, margem, itens, producao] = await Promise.all([
+  const [vendas, anterior, financeiro, margem, itens, producao, metas] = await Promise.all([
     consultarVendas(supabase, janelas.atual, filtro, false),
     consultarVendas(supabase, janelas.anterior, filtro, false),
     consultarFinanceiro(supabase, janelas.atual, escopo.unidade),
     pedido.custo ? consultarMargem(supabase, janelas.atual, escopo.unidade) : "sem_permissao" as const,
     pedido.custo ? consultarItensDaMargem(supabase, janelas.atual, escopo.unidade, { limite: POR_PAGINA, apos: (pagina - 1) * POR_PAGINA }) : "sem_permissao" as const,
     consultarProducao(supabase, janelas.atual, filtro),
+    pedido.metas ? metasDoPeriodo(supabase, janelas.atual, escopo.unidade) : null,
   ]);
-  return { periodo, daRede, janelas, pagina, escopo, cadastro, filtroDeLojas: daRede ? lojasDoFiltro(cadastro, turno) : [], vendas, anterior, financeiro, margem, itens, producao };
+  return { periodo, daRede, janelas, pagina, escopo, cadastro, filtroDeLojas: daRede ? lojasDoFiltro(cadastro, turno) : [], vendas, anterior, financeiro, margem, itens, producao, metas };
+}
+
+/** As metas de cada mês que a janela toca (um ou dois): todas lidas, ou o pior estado (falha antes de indisponível). */
+async function metasDoPeriodo(supabase: Cliente, janela: Janela, unidade: string | null): Promise<Leitura<MetasDasLojas[]>> {
+  const lidas = await Promise.all(mesesDaJanela(janela).map((mes) => consultarMetasDasLojas(supabase, mes, unidade)));
+  if (lidas.some((l) => l.estado === "falha")) return FALHA;
+  if (lidas.some((l) => l.estado === "indisponivel")) return { estado: "indisponivel" };
+  return { estado: "ok", dados: lidas.flatMap((l) => (l.estado === "ok" ? [l.dados] : [])) };
 }

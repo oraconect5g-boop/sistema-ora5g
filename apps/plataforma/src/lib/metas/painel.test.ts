@@ -4,8 +4,8 @@ import { describe, expect, it } from "vitest";
 
 import { RespostaInesperada } from "../financeiro/painel";
 import {
-  erroDasMetas, faseDoMes, janelaDoMes, lerEquipe, lerMetas, linhasDaEquipe, mesDeHoje, mesDoEndereco, nomeDoMes, opcoesDeMes, ordemNoGrafico, progresso,
-  resumoDasMetas, somarMeses, validarDefinicao, valorDigitado, valorNoCampo, type MetasDoBanco,
+  erroDasMetas, faseDoMes, janelaDoMes, lerEquipe, lerMetas, lerMetasDasLojas, linhasDaEquipe, mesDeHoje, mesDoEndereco, mesesDaJanela, metaDoDiaPorMes, nomeDoMes,
+  opcoesDeMes, ordemNoGrafico, progresso, progressoDasLojas, resumoDasMetas, somaDasLojas, somarMeses, validarDefinicao, valorDigitado, valorNoCampo, type MetasDoBanco,
 } from "./painel";
 
 const ANA = "00000000-0000-4000-8000-00000000a001";
@@ -186,5 +186,62 @@ describe("a equipe na tela da gestão", () => {
   it("o resumo das metas vigentes de um alvo", () => {
     expect(resumoDasMetas({ vendido_liquido: 5_000_000, connect: 10 })).toBe("Vendido líquido: R$ 50.000,00 · Ora Connect: 10");
     expect(resumoDasMetas({})).toBe("Sem metas definidas");
+  });
+});
+
+describe("as lojas no mês: Início e Relatórios (G4c)", () => {
+  const OUTRA = "00000000-0000-4000-8000-0000000000dd";
+  const TERCEIRA = "00000000-0000-4000-8000-0000000000ee";
+  const R = (vendido_liquido: number, aparelhos: number) => ({ vendido_liquido, aparelhos, acessorios: 0, connect: 0 });
+  const LOJAS = {
+    mes: "2026-11-01", dias_no_mes: 30, dias_decorridos: 10, regra_contagem: 1,
+    lojas: [
+      { unidade_id: LOJA, metas: { vendido_liquido: "3000000", aparelhos: 30 }, realizado: R(1_200_000, 8) },
+      { unidade_id: OUTRA, metas: { vendido_liquido: 2_000_000 }, realizado: R(500_000, 3) },
+      { unidade_id: TERCEIRA, metas: {}, realizado: R(90_000, 1) },
+    ],
+  };
+
+  it("lê a resposta de metas_lojas com a mesma régua do painel; loja repetida ou sem id é falha", () => {
+    const d = lerMetasDasLojas(LOJAS);
+    expect(d).toMatchObject({ mes: "2026-11-01", diasNoMes: 30, diasDecorridos: 10 });
+    expect(d.lojas.map((l) => [l.unidadeId, l.metas])).toEqual([[LOJA, { vendido_liquido: 3_000_000, aparelhos: 30 }], [OUTRA, { vendido_liquido: 2_000_000 }], [TERCEIRA, {}]]);
+    expect(lerMetasDasLojas({ ...LOJAS, lojas: [] }).lojas).toEqual([]);
+    for (const ruim of [null, { ...LOJAS, regra_contagem: 2 }, { ...LOJAS, lojas: [LOJAS.lojas[0], LOJAS.lojas[0]] }, { ...LOJAS, lojas: [{ ...LOJAS.lojas[0], unidade_id: "loja" }] }, { ...LOJAS, lojas: undefined }]) {
+      expect(() => lerMetasDasLojas(ruim)).toThrow();
+    }
+  });
+
+  it("a rede soma só as lojas com meta, e o realizado só delas; sem meta nenhuma, o realizado de todas e nenhum atingimento", () => {
+    const d = lerMetasDasLojas(LOJAS);
+    expect(somaDasLojas(d, "vendido_liquido")).toEqual({ meta: 5_000_000, realizado: 1_700_000, comMeta: 2, total: 3 });
+    expect(somaDasLojas(d, "aparelhos")).toEqual({ meta: 30, realizado: 8, comMeta: 1, total: 3 });
+    expect(somaDasLojas(d, "connect")).toEqual({ meta: undefined, realizado: 0, comMeta: 0, total: 3 });
+    const lista = progressoDasLojas(d, "atual");
+    expect(lista.map((p) => [p.medida, p.realizado, p.meta, p.atingido, p.situacao, p.comMeta])).toEqual([
+      ["vendido_liquido", 1_700_000, 5_000_000, 0.34, "no_ritmo", 2], ["aparelhos", 8, 30, 8 / 30, "abaixo", 1],
+      ["acessorios", 0, null, null, "sem_meta", 0], ["connect", 0, null, null, "sem_meta", 0],
+    ]);
+    // Sem meta, o realizado é o de todas as lojas (o que aconteceu), sem comparação.
+    expect(progressoDasLojas({ ...d, lojas: d.lojas.map((l) => ({ ...l, metas: {} })) }, "atual")[0]).toMatchObject({ realizado: 1_790_000, meta: null, situacao: "sem_meta" });
+  });
+
+  it("a meta do dia: a do mês ÷ dias do mês; na rede, só no mês em que todas as lojas têm meta, com o aviso de quantas têm", () => {
+    const outubro = lerMetasDasLojas({ ...LOJAS, mes: "2026-10-01", dias_no_mes: 31, dias_decorridos: 31, lojas: [{ ...LOJAS.lojas[0], metas: { vendido_liquido: 3_100_000 } }, { ...LOJAS.lojas[1], metas: { vendido_liquido: 1_550_000 } }] });
+    const novembro = lerMetasDasLojas(LOJAS);
+    const m = metaDoDiaPorMes([outubro, novembro]);
+    expect([m.porDia("2026-10-31"), m.porDia("2026-11-01"), m.porDia("2026-12-01")]).toEqual([150_000, null, null]);
+    expect(m.aviso).toBe("A meta da rede só aparece quando todas as lojas têm meta do vendido líquido no mês: em novembro de 2026, 2 de 3 lojas têm.");
+    const daLoja = metaDoDiaPorMes([lerMetasDasLojas({ ...LOJAS, lojas: [LOJAS.lojas[0]] })]);
+    expect([daLoja.porDia("2026-11-10"), daLoja.aviso]).toEqual([100_000, null]);
+    // Loja sem meta (uma só) ou mês sem loja lida: sem meta, sem aviso de rede.
+    expect(metaDoDiaPorMes([lerMetasDasLojas({ ...LOJAS, lojas: [LOJAS.lojas[2]] })])).toMatchObject({ aviso: null });
+    expect(metaDoDiaPorMes([lerMetasDasLojas({ ...LOJAS, lojas: [] })]).porDia("2026-11-10")).toBeNull();
+  });
+
+  it("os meses que uma janela toca, em São Paulo", () => {
+    expect(mesesDaJanela({ inicio: new Date("2026-10-28T03:00:00Z"), fim: new Date("2026-11-10T18:30:00Z") })).toEqual(["2026-10-01", "2026-11-01"]);
+    expect(mesesDaJanela({ inicio: new Date("2026-11-04T03:00:00Z"), fim: new Date("2026-11-10T18:30:00Z") })).toEqual(["2026-11-01"]);
+    expect(mesesDaJanela({ inicio: new Date("2026-12-20T03:00:00Z"), fim: new Date("2027-01-02T02:00:00Z") })).toEqual(["2026-12-01", "2027-01-01"]);
   });
 });

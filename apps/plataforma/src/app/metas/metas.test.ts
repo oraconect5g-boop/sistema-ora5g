@@ -55,7 +55,7 @@ import { definirMetas } from "./acoes";
 import Metas from "./page";
 
 // Só os componentes de apresentação das metas são executados; os compartilhados ficam como elementos.
-const APRESENTACAO = new Set(["MetasDaGestao", "MinhasMetas", "ResumoDaLoja", "PorVendedor", "EquipeNoMes", "DefinirMetas", "ComoConta", "MinhaMeta", "EstadoDoPainel"]);
+const APRESENTACAO = new Set(["MetasDaGestao", "MinhasMetas", "ResumoDaLoja", "PorVendedor", "EquipeNoMes", "DefinirMetas", "ComoConta", "MinhaMeta", "EstadoDoPainel", "BarrasDoRitmo"]);
 type Elemento = { tipo: string; props: Linha };
 function percorrer(v: unknown, elemento: (e: Elemento) => void, folha: (t: string) => void): void {
   if (Array.isArray(v)) for (const x of v) percorrer(x, elemento, folha);

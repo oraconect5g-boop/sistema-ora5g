@@ -47,6 +47,9 @@ const cenario = vi.hoisted(() => ({
   erroDosItens: null as null | { code: string },
   producao: null as unknown,
   erroDaProducao: null as null | { code: string },
+  /** Resposta de metas_lojas por mês (G4c). */
+  metasPorMes: {} as Record<string, unknown>,
+  erroDasMetas: null as null | { code: string },
   /** Resposta de margem_itens lote a lote (a exportação pede o detalhe em lotes de 1.000). */
   loteDosItens: null as null | ((argumentos: Record<string, unknown>) => { data: unknown; error: { code: string } | null }),
   /** Argumentos de cada chamada de função do banco, por nome. */
@@ -98,6 +101,7 @@ const supabase = {
     if (nome === "margem_painel") return responder(cenario.erroDaMargem, cenario.margem);
     if (nome === "margem_itens") return cenario.loteDosItens ? cenario.loteDosItens(argumentos) : responder(cenario.erroDosItens, cenario.itens);
     if (nome === "connect_painel") return responder(cenario.erroDaProducao, cenario.producao);
+    if (nome === "metas_lojas") return responder(cenario.erroDasMetas, cenario.metasPorMes[String(argumentos.p_mes)] ?? null);
     return responder({ code: "PGRST202" }, null);
   },
 };
@@ -350,7 +354,7 @@ beforeEach(() => {
     usuario: GESTOR, permissoes: new Set<string>(), erroDaPermissao: null,
     vendas: VENDAS, anterior: ANTES, erroDeVendas: null, erroDoAnterior: null,
     financeiro: FINANCEIRO, erroDoFinanceiro: null, margem: MARGEM, erroDaMargem: null,
-    itens: ITENS, erroDosItens: null, loteDosItens: null, producao: PRODUCAO, erroDaProducao: null,
+    itens: ITENS, erroDosItens: null, loteDosItens: null, producao: PRODUCAO, erroDaProducao: null, metasPorMes: {}, erroDasMetas: null,
     chamadas: {}, errosDasTabelas: {}, lidas: [], sessoes: [],
     tabelas: {
       unidades: [
@@ -1200,5 +1204,76 @@ describe("Relatórios: produção do Ora Connect por dia (G4a)", () => {
     cenario.erroDaProducao = { code: "57014" };
     expect((await pagina()).cartao(CONNECT).doTipo("Aviso")).toMatchObject([{ tom: "perigo", titulo: "Não foi possível ler agora" }]);
     expect(errosRegistrados()).toEqual([["connect: falha ao consultar connect_painel", { codigo: "57014" }]]);
+  });
+});
+
+// A meta do dia (G4c): a meta do mês do vendido líquido ÷ os dias do mês. Os 14 dias vão de 28/10 a
+// 10/11: outubro (31 dias) e novembro (30 dias), uma pergunta por mês.
+describe("Relatórios: a meta do dia na linha das vendas (G4c)", () => {
+  const acompanhar = (...extras: string[]) => { for (const p of extras) cenario.permissoes.add(p); };
+  const ZERO = { vendido_liquido: 0, aparelhos: 0, acessorios: 0, connect: 0 };
+  const mes = (chave: string, dias: number, lojas: { id: string; meta?: number }[]) => ({
+    mes: chave, dias_no_mes: dias, dias_decorridos: chave === "2026-11-01" ? 10 : dias, regra_contagem: 1,
+    lojas: lojas.map((l) => ({ unidade_id: l.id, metas: l.meta === undefined ? {} : { vendido_liquido: l.meta }, realizado: ZERO })),
+  });
+  type Serie = { nome: string; serie: unknown; tracejada?: boolean; valores: (number | null)[] };
+  const linhaDaMeta = (c: { doTipo: (tipo: string) => Linha[] }) => (c.doTipo("Linhas")[0] as { series: Serie[] }).series.find((x) => x.nome === "Meta do dia");
+
+  it("gerente que acompanha as metas: uma pergunta por mês do período; a meta do mês ÷ dias, dia a dia, e o líquido do período em % da meta", async () => {
+    entrar("gerente");
+    acompanhar("metas.ver_unidade");
+    cenario.metasPorMes = { "2026-10-01": mes("2026-10-01", 31, [{ id: LOJA, meta: 3_100_000 }]), "2026-11-01": mes("2026-11-01", 30, [{ id: LOJA, meta: 3_000_000 }]) };
+    const c = (await pagina()).cartao("Vendas");
+    expect(cenario.chamadas.metas_lojas).toStrictEqual([{ p_mes: "2026-10-01", p_unidade: LOJA }, { p_mes: "2026-11-01", p_unidade: LOJA }]);
+    expect(linhaDaMeta(c)).toMatchObject({ serie: "meta", tracejada: true, valores: Array(14).fill(100_000) });
+    // R$ 4.500,00 vendidos menos R$ 300,00 devolvidos: R$ 4.200,00 de R$ 14.000,00.
+    expect(c.texto).toContain("No período, ela soma R$ 14.000,00, e o vendido líquido está em 30% dela.");
+    const tabela = c.doTipo("TabelaDoGrafico")[0] as { colunas: string[]; linhas: string[][] };
+    expect(tabela.colunas.at(-1)).toBe("Meta do dia");
+    expect(tabela.linhas.map((l) => l.at(-1))).toEqual(Array(14).fill("R$ 1.000,00"));
+  });
+
+  it("mês sem meta: a linha se interrompe nos dias dele, e a nota diz que parte do período está sem meta", async () => {
+    entrar("gerente");
+    acompanhar("metas.gerir");
+    cenario.metasPorMes = { "2026-10-01": mes("2026-10-01", 31, [{ id: LOJA }]), "2026-11-01": mes("2026-11-01", 30, [{ id: LOJA, meta: 3_000_000 }]) };
+    const c = (await pagina()).cartao("Vendas");
+    expect(linhaDaMeta(c)?.valores).toEqual([...Array(4).fill(null), ...Array(10).fill(100_000)]);
+    expect(c.texto).toContain("Parte do período está sem meta.");
+  });
+
+  it("rede inteira: a meta só aparece no mês em que todas as lojas têm meta; o aviso diz quantas têm", async () => {
+    entrar("dono");
+    acompanhar("metas.ver_unidade", "metas.gerir");
+    cenario.metasPorMes = {
+      "2026-10-01": mes("2026-10-01", 31, [{ id: LOJA, meta: 3_100_000 }, { id: OUTRA, meta: 1_550_000 }]),
+      "2026-11-01": mes("2026-11-01", 30, [{ id: LOJA, meta: 3_000_000 }, { id: OUTRA }]),
+    };
+    const c = (await pagina()).cartao("Vendas");
+    expect(cenario.chamadas.metas_lojas).toStrictEqual([{ p_mes: "2026-10-01" }, { p_mes: "2026-11-01" }]);
+    expect(linhaDaMeta(c)?.valores).toEqual([...Array(4).fill(150_000), ...Array(10).fill(null)]);
+    expect(c.texto).toContain("A meta da rede só aparece quando todas as lojas têm meta do vendido líquido no mês: em novembro de 2026, 1 de 2 lojas têm.");
+  });
+
+  it("quem não acompanha metas: nada é perguntado e não há linha de meta", async () => {
+    entrar("gerente");
+    const c = (await pagina()).cartao("Vendas");
+    expect(cenario.chamadas.metas_lojas).toBeUndefined();
+    expect(linhaDaMeta(c)).toBeUndefined();
+    expect(c.texto).not.toContain("Meta do dia");
+  });
+
+  it("indisponível ou em falha: a nota diz por quê, e o gráfico segue sem a meta", async () => {
+    entrar("gerente");
+    acompanhar("metas.ver_unidade");
+    cenario.erroDasMetas = { code: "PGRST202" };
+    let c = (await pagina()).cartao("Vendas");
+    expect(linhaDaMeta(c)).toBeUndefined();
+    expect(c.texto).toContain("A meta do dia está indisponível neste ambiente");
+    cenario.erroDasMetas = { code: "57014" };
+    c = (await pagina()).cartao("Vendas");
+    expect(linhaDaMeta(c)).toBeUndefined();
+    expect(c.texto).toContain("A meta do dia não pôde ser lida agora");
+    expect(errosRegistrados()).toContainEqual(["metas: falha ao consultar metas_lojas", { codigo: "57014" }]);
   });
 });

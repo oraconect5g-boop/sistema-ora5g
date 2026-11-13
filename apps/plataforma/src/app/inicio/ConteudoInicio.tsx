@@ -7,6 +7,7 @@ import {
   PainelDasLojas, PainelDeRecebimentos, PainelDeVendas, PainelDoMix, plural, SEM_LEITURA, temFatos, type ItemDoResumo,
 } from "../../componentes/paineis-de-vendas";
 import { indicadorDoConnect } from "../../componentes/paineis-do-connect";
+import { PainelDaMetaDoMes, PainelDaMinhaMeta } from "../../componentes/paineis-de-metas";
 import { Cartao, EstadoVazio, FiltroSegmentado } from "../../componentes/ui";
 import type { LojaDoFiltro } from "../../lib/financeiro/escopo";
 import { ORDEM_DOS_PERIODOS, PERIODOS_FINANCEIROS, type ResumoFinanceiro } from "../../lib/financeiro/painel";
@@ -100,6 +101,15 @@ export function ConteudoInicio({ paineis, usuario, turno, conferenteDeCaixa }: {
       </header>
 
       <Indicadores itens={[...indicadoresDeVendas({ vendas, anterior, textos, doVendedor }), ...(margem ? [indicadorDaMargem(margem)] : []), ...(financeiro ? indicadoresDoFinanceiro(financeiro, conferenteDeCaixa) : []), ...(paineis.producao ? [indicadorDoConnect(paineis.producao)] : [])]} />
+
+      {/* A meta do mês (G4c): sempre o mês de hoje, qualquer que seja o período escolhido acima. */}
+      {paineis.metaDaGestao && (
+        <PainelDaMetaDoMes
+          metas={paineis.metaDaGestao} rede={redeInteira} lojas={cadastro.length > 0 ? cadastro : [turno]} aqui={aqui}
+          enderecoDasMetas={escopo.unidade && escopo.unidade !== turno.id ? `/metas?loja=${escopo.unidade}` : "/metas"}
+        />
+      )}
+      {paineis.minhaMeta && <PainelDaMinhaMeta metas={paineis.minhaMeta} eu={usuario} aqui={aqui} />}
 
       {doVendedor ? (
         <>
