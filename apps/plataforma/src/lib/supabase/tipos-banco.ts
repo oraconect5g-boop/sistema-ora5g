@@ -2388,6 +2388,73 @@ export type Database = {
           },
         ]
       }
+      metas: {
+        Row: {
+          definida_em: string
+          definida_por: string
+          id: string
+          medida: string
+          mes: string
+          motivo: string | null
+          organizacao_id: string
+          regra_contagem: number
+          unidade_id: string
+          valor: number | null
+          vendedor_id: string | null
+          versao: number
+        }
+        Insert: {
+          definida_em?: string
+          definida_por: string
+          id?: string
+          medida: string
+          mes: string
+          motivo?: string | null
+          organizacao_id: string
+          regra_contagem?: number
+          unidade_id: string
+          valor?: number | null
+          vendedor_id?: string | null
+          versao?: never
+        }
+        Update: {
+          definida_em?: string
+          definida_por?: string
+          id?: string
+          medida?: string
+          mes?: string
+          motivo?: string | null
+          organizacao_id?: string
+          regra_contagem?: number
+          unidade_id?: string
+          valor?: number | null
+          vendedor_id?: string | null
+          versao?: never
+        }
+        Relationships: [
+          {
+            foreignKeyName: "metas_definida_por_fkey"
+            columns: ["definida_por"]
+            isOneToOne: false
+            referencedRelation: "perfis_usuario"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "metas_unidade_id_organizacao_id_fkey"
+            columns: ["unidade_id", "organizacao_id"]
+            isOneToOne: false
+            referencedRelation: "unidades"
+            referencedColumns: ["id", "organizacao_id"]
+          },
+          {
+            foreignKeyName: "metas_vendedor_id_fkey"
+            columns: ["vendedor_id"]
+            isOneToOne: false
+            referencedRelation: "perfis_usuario"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       notas_eventos: {
         Row: {
           id: number
@@ -4716,6 +4783,18 @@ export type Database = {
         Args: { p_fim: string; p_inicio: string; p_unidade?: string }
         Returns: Json
       }
+      metas_definir: {
+        Args: {
+          p_mes: string
+          p_motivo: string
+          p_unidade: string
+          p_valores: Json
+          p_vendedor: string
+        }
+        Returns: number
+      }
+      metas_equipe: { Args: { p_mes: string; p_unidade: string }; Returns: Json }
+      metas_painel: { Args: { p_mes: string; p_unidade: string }; Returns: Json }
       movimentar_caixa: {
         Args: {
           p_chave: string

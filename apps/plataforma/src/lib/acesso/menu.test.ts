@@ -4,20 +4,28 @@ import { montarMenu, PAGINAS_REAIS } from "./menu";
 
 // Permissões de cada papel no banco (matriz do ADR-002, papel_permissoes), só as que o menu usa.
 const PAPEL = {
-  vendedor: ["venda.registrar", "caixa.abrir", "estoque.consultar", "connect.operar", "cliente.buscar", "crm.atender"],
-  gerente: ["venda.registrar", "venda.ver_unidade", "caixa.abrir", "caixa.conferir", "estoque.consultar", "connect.operar", "connect.gerir", "desconto.aprovar", "nota.aprovar", "auditoria.ver", "cliente.buscar", "crm.atender", "pagamento.conciliar", "terminal.gerir"],
-  dono: ["venda.registrar", "venda.ver_unidade", "venda.ver_todas", "caixa.abrir", "caixa.conferir", "estoque.consultar", "connect.operar", "connect.gerir", "desconto.aprovar", "nota.aprovar", "auditoria.ver", "usuarios.gerir", "unidades.gerir", "catalogo.gerir", "cliente.buscar", "crm.atender", "pagamento.conciliar", "terminal.gerir"],
+  vendedor: ["venda.registrar", "caixa.abrir", "estoque.consultar", "connect.operar", "cliente.buscar", "crm.atender", "metas.ver_propria"],
+  gerente: ["venda.registrar", "venda.ver_unidade", "caixa.abrir", "caixa.conferir", "estoque.consultar", "connect.operar", "connect.gerir", "desconto.aprovar", "nota.aprovar", "auditoria.ver", "cliente.buscar", "crm.atender", "pagamento.conciliar", "terminal.gerir", "metas.gerir", "metas.ver_unidade"],
+  dono: ["venda.registrar", "venda.ver_unidade", "venda.ver_todas", "caixa.abrir", "caixa.conferir", "estoque.consultar", "connect.operar", "connect.gerir", "desconto.aprovar", "nota.aprovar", "auditoria.ver", "usuarios.gerir", "unidades.gerir", "catalogo.gerir", "cliente.buscar", "crm.atender", "pagamento.conciliar", "terminal.gerir", "metas.gerir", "metas.ver_unidade", "metas.ver_propria"],
   administrador: ["venda.ver_todas", "estoque.consultar", "auditoria.ver", "usuarios.gerir", "unidades.gerir", "catalogo.gerir"],
   tecnico: [],
 } as const;
 const menu = (papel: keyof typeof PAPEL) => montarMenu(new Set(PAPEL[papel]));
 
 describe("menu único das telas reais", () => {
-  it("vendedor: vende, vê as próprias vendas, caixa, Connect, estoque e catálogo; nada de gestão", () => {
+  it("vendedor: vende, vê as próprias vendas, caixa, Connect, estoque e catálogo; da gestão, só as próprias metas", () => {
     const m = menu("vendedor");
-    expect(m.visiveis).toEqual(["inicio", "vender", "vendas", "clientes", "funil", "agenda", "caixa", "connect", "estoque", "transferencias", "catalogo"]);
+    expect(m.visiveis).toEqual(["inicio", "vender", "vendas", "clientes", "funil", "agenda", "caixa", "connect", "estoque", "transferencias", "catalogo", "metas"]);
     expect(m.atalhos).toEqual(["inicio", "vender", "vendas", "estoque"]);
-    expect(m.grupos.map((g) => g.grupo)).toEqual(["Operação", "Clientes", "Estoque e catálogo"]);
+    expect(m.grupos.map((g) => g.grupo)).toEqual(["Operação", "Clientes", "Estoque e catálogo", "Gestão"]);
+    expect(m.grupos.find((g) => g.grupo === "Gestão")?.paginas).toEqual(["metas"]);
+  });
+
+  it("metas (G4b): dono e gerente (a loja e a equipe) e vendedor (as próprias), no grupo Gestão; administrador e técnico não", () => {
+    for (const papel of ["dono", "gerente", "vendedor"] as const) expect(menu(papel).visiveis).toContain("metas");
+    for (const papel of ["administrador", "tecnico"] as const) expect(menu(papel).visiveis).not.toContain("metas");
+    expect(PAGINAS_REAIS.metas).toMatchObject({ caminho: "/metas", grupo: "Gestão", icone: "metas" });
+    expect(menu("gerente").grupos.find((g) => g.grupo === "Gestão")?.paginas.slice(0, 3)).toEqual(["financeiro", "relatorios", "metas"]);
   });
 
   it("gerente: ganha aprovações, notas e auditoria; aprovações vira atalho no celular; equipe continua com o dono", () => {

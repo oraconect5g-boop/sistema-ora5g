@@ -3,7 +3,7 @@ import { expect, test } from "@playwright/test";
 // Sistema real (ORA-006): sem login, nenhuma página real abre; saída forçada só mostra motivos
 // conhecidos. Roda com ou sem a configuração pública do Supabase no ambiente de teste.
 // Telas reais e exportações: sem login, nenhuma abre (nem o esqueleto de carregamento).
-const PROTEGIDAS = ["/inicio", "/escolher-loja", "/equipe", "/catalogo", "/vender", "/caixa", "/aprovacoes", "/estoque", "/transferencias", "/connect", "/notas", "/vendas", "/auditoria", "/financeiro", "/financeiro/exportar", "/relatorios", "/relatorios/exportar", "/lojas", "/produtos", "/produtos/precos", "/produtos/importar", "/estoque/entrada", "/estoque/inventario", "/clientes", "/clientes/novo", "/clientes/00000000-0000-4000-8000-000000000001", "/crm", "/crm/agenda", "/crm/00000000-0000-4000-8000-000000000001", "/pagamentos/conciliacao", "/pagamentos/maquininhas", "/vendas/00000000-0000-4000-8000-000000000001", "/conta/senha"];
+const PROTEGIDAS = ["/inicio", "/escolher-loja", "/equipe", "/catalogo", "/vender", "/caixa", "/aprovacoes", "/estoque", "/transferencias", "/connect", "/notas", "/vendas", "/auditoria", "/financeiro", "/financeiro/exportar", "/relatorios", "/relatorios/exportar", "/metas", "/lojas", "/produtos", "/produtos/precos", "/produtos/importar", "/estoque/entrada", "/estoque/inventario", "/clientes", "/clientes/novo", "/clientes/00000000-0000-4000-8000-000000000001", "/crm", "/crm/agenda", "/crm/00000000-0000-4000-8000-000000000001", "/pagamentos/conciliacao", "/pagamentos/maquininhas", "/vendas/00000000-0000-4000-8000-000000000001", "/conta/senha"];
 
 for (const caminho of PROTEGIDAS) {
   test(`${caminho} sem login volta para /entrar`, async ({ page }) => {

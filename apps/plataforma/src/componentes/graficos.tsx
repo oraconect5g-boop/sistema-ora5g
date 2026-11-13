@@ -444,13 +444,25 @@ export function BarraSegmentada({ partes, formatar, rotulo }: { partes: readonly
   );
 }
 
-/** Medidor circular de meta (% atingido). A cor indica a situação; o número fica no centro. */
-export function Medidor({ percentual, rotulo, detalhe, tamanho = 120 }: { percentual: number; rotulo: string; detalhe?: string; tamanho?: number }) {
+const CORES_DO_MEDIDOR = {
+  sucesso: { cor: "stroke-sucesso", trilho: "stroke-sucesso-clara" },
+  marca: { cor: "stroke-serie-1", trilho: "stroke-acao-clara" },
+  aviso: { cor: "stroke-amber-500", trilho: "stroke-aviso-clara" },
+  neutro: { cor: "stroke-slate-400", trilho: "stroke-grade" },
+} as const;
+
+/**
+ * Medidor circular de meta (% atingido); o número fica no centro. A cor indica a situação: sem `tom`,
+ * pelo percentual (100% ou mais, 80% ou mais, abaixo); com `tom`, pela situação que a tela calculou
+ * (a meta do mês segue o ritmo do dia: 55% no dia 13 de 30 está adiantado, não em atenção).
+ */
+export function Medidor({ percentual, rotulo, detalhe, tamanho = 120, tom }: {
+  percentual: number; rotulo: string; detalhe?: string; tamanho?: number; tom?: keyof typeof CORES_DO_MEDIDOR;
+}) {
   const raio = 50;
   const circunferencia = 2 * Math.PI * raio;
   const preenchido = Math.max(0, Math.min(1, percentual / 100));
-  const cor = percentual >= 100 ? "stroke-sucesso" : percentual >= 80 ? "stroke-serie-1" : "stroke-amber-500";
-  const trilho = percentual >= 100 ? "stroke-sucesso-clara" : percentual >= 80 ? "stroke-acao-clara" : "stroke-aviso-clara";
+  const { cor, trilho } = CORES_DO_MEDIDOR[tom ?? (percentual >= 100 ? "sucesso" : percentual >= 80 ? "marca" : "aviso")];
   // Ponta arredondada encosta no começo do anel perto de 100%: ali a ponta fica reta.
   const ponta = preenchido > 0.9 && preenchido < 1 ? "butt" : "round";
   return (

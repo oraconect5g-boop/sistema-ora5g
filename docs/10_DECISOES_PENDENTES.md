@@ -17,7 +17,7 @@
 | D-011 | Recebimento Pix direto por qual banco, conta e CNPJ? | Regras de conciliação | Adapter genérico e confirmação comprovada; financeiro |
 | D-012 | PayJoy: fluxo real, repasse, quem financia, integração web autorizada? | Financeiro, crédito, LGPD | Registrar manualmente assistido até homologação; comercial/PayJoy |
 | D-013 | Vendas no boleto próprio vs parceiro de crédito, regras de inadimplência | Responsabilidade financeira | Não assumir análise de crédito por IA; jurídico/financeiro |
-| D-014 | Quais metas e bonificações vigentes por função/categoria/período? | Performance e pagamento | Motor versionado; diretoria/RH/financeiro |
+| D-014 | Quais metas e bonificações vigentes por função/categoria/período? | Performance e pagamento | Motor versionado; diretoria/RH/financeiro. **Parcial em 13/11/2026:** o proprietário decidiu as metas: **mensais, com o ritmo esperado do dia**; contam o **valor vendido líquido**, os **aparelhos**, os **acessórios (R$)** e o **Ora Connect confirmado**; têm meta **a loja e cada vendedor**; **o dono define todas e o gerente, as da própria loja**, com toda mudança registrada (motivo e histórico). Implementado no lote G4b (`/metas`). Seguem abertas: **bonificação e comissão** (junto com P8) e o ranking com o nome dos colegas (P3) |
 | D-015 | Quem recebe a comissão em venda compartilhada e reatribuição de lead? | Evitar duplicidade | Configurar regra; comercial |
 | D-016 | Ativação/recarga pode ocorrer antes/depois de venda quitada? | Estado, reembolso, risco | Mapear casos reais com Nogle e gestores |
 | D-017 | Qual saldo de caixa e quem pode suprir/sangrar/fechar? | Permissões e auditoria | Documentar SOP real; financeiro/gerentes |
