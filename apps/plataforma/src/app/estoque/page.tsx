@@ -5,16 +5,19 @@ import type { Metadata } from "next";
 import Link from "next/link";
 
 import { MoldeReal } from "../../componentes/MoldeReal";
-import { Aviso, Botao, Cartao, Selo, TituloPagina } from "../../componentes/ui";
+import { Aviso, Botao, Cartao, FiltroSegmentado, Selo, TituloPagina } from "../../componentes/ui";
 import { ehUuid } from "../../lib/acesso/regras";
 import { FalhaDoServico, obterSessao } from "../../lib/acesso/sessao";
 import { buscarNoCatalogo, filtroDoIdentificador, identificadorDigitado, termoDaBusca } from "../../lib/catalogo/busca";
+import { consultarEstoque } from "../../lib/estoque/consulta-painel";
+import { escopoDoEstoque } from "../../lib/estoque/painel";
 import { ERROS_DO_ESTOQUE, inicioDoDiaEmSaoPaulo, nomeDe, NOMES_DAS_SITUACOES, NOMES_DOS_MOVIMENTOS } from "../../lib/estoque/regras";
 import { chaveDoCatalogo, textoDoParametro, type ValorDeParametro } from "../../lib/parametros";
 import { ERROS_DA_TRANSFERENCIA } from "../../lib/transferencias/regras";
 import { FotoAmpliavel } from "../catalogo/FotoAmpliavel";
 import { solicitarTransferencia } from "../transferencias/acoes";
 import { conferirItem, conferirPorIdentificador } from "./acoes";
+import { PainelDoEstoque } from "./PainelDoEstoque";
 
 export const metadata: Metadata = { title: "Estoque" };
 export const dynamic = "force-dynamic";
@@ -26,10 +29,13 @@ const final = (t: string | null) => (t ? t : "—");
 // Estoque real da loja do turno (ORA-INV-001/004): saldo por produto, busca por IMEI/ICCID com o
 // histórico do livro, disponibilidade na rede e conferência física do dia. Só leitura pelo RLS;
 // a conferência é gravada e auditada pelo banco (conferir_item). Custo não aparece aqui.
-export default async function Estoque({ searchParams }: { searchParams: Promise<{ q?: ValorDeParametro; aba?: ValorDeParametro; variante?: ValorDeParametro; ok?: ValorDeParametro; erro?: ValorDeParametro; erro_transferencia?: ValorDeParametro }> }) {
+// Lote G3: a aba "Painel" mostra a posição de agora somada no banco (public.estoque_painel), por modelo,
+// categoria e local, com mínimo, trânsito, parado há mais de 60 dias e pendências.
+export default async function Estoque({ searchParams }: { searchParams: Promise<{ q?: ValorDeParametro; aba?: ValorDeParametro; loja?: ValorDeParametro; variante?: ValorDeParametro; ok?: ValorDeParametro; erro?: ValorDeParametro; erro_transferencia?: ValorDeParametro }> }) {
   const parametros = await searchParams;
   const erro = chaveDoCatalogo(ERROS_DO_ESTOQUE, parametros.erro);
   const conferencia = textoDoParametro(parametros.aba) === "conferencia";
+  const painel = textoDoParametro(parametros.aba) === "painel";
   const busca = termoDaBusca(textoDoParametro(parametros.q)).slice(0, 40);
   const identificador = identificadorDigitado(busca);
   const varianteNaRede = textoDoParametro(parametros.variante);
@@ -49,12 +55,42 @@ export default async function Estoque({ searchParams }: { searchParams: Promise<
 
   const abas = (
     <nav aria-label="Seções do estoque" className="flex flex-wrap gap-2 text-sm">
-      <Link href="/estoque" aria-current={!conferencia ? "page" : undefined} className={`rounded-botao px-3 py-2 font-semibold ${!conferencia ? "bg-acao text-white" : "bg-white text-acao ring-1 ring-borda"}`}>Saldo e busca</Link>
+      <Link href="/estoque" aria-current={!conferencia && !painel ? "page" : undefined} className={`rounded-botao px-3 py-2 font-semibold ${!conferencia && !painel ? "bg-acao text-white" : "bg-white text-acao ring-1 ring-borda"}`}>Saldo e busca</Link>
+      <Link href="/estoque?aba=painel" aria-current={painel ? "page" : undefined} className={`rounded-botao px-3 py-2 font-semibold ${painel ? "bg-acao text-white" : "bg-white text-acao ring-1 ring-borda"}`}>Painel</Link>
       <Link href="/estoque?aba=conferencia" aria-current={conferencia ? "page" : undefined} className={`rounded-botao px-3 py-2 font-semibold ${conferencia ? "bg-acao text-white" : "bg-white text-acao ring-1 ring-borda"}`}>Conferência do dia</Link>
       {recebe.data && <Link href="/estoque/entrada" className="rounded-botao bg-white px-3 py-2 font-semibold text-acao ring-1 ring-borda">Entrada de mercadoria</Link>}
       {confere.data && <Link href="/estoque/inventario" className="rounded-botao bg-white px-3 py-2 font-semibold text-acao ring-1 ring-borda">Inventário</Link>}
     </nav>
   );
+
+  if (painel) {
+    // Primeiro a posição de todos os locais que a pessoa consulta; quem consulta mais de um escolhe o
+    // recorte (o padrão é a loja do turno) e o banco soma de novo só aquele local.
+    const todos = await consultarEstoque(supabase, null);
+    const locais = todos.estado === "ok" ? todos.dados.locais : [];
+    const escopo = escopoDoEstoque(textoDoParametro(parametros.loja), locais, unidade);
+    const estoque = todos.estado === "ok" && locais.length > 1 && escopo.unidade ? await consultarEstoque(supabase, escopo.unidade) : todos;
+    const enderecoDoLocal = (loja: string) => (loja === unidade ? "/estoque?aba=painel" : `/estoque?aba=painel&loja=${loja}`);
+    const redeInteira = locais.length > 1 && escopo.unidade === null;
+    return (
+      <MoldeReal sessao={sessao} largura="max-w-6xl">
+        <TituloPagina
+          sobretitulo={redeInteira ? "Rede inteira" : (locais.find((l) => l.unidadeId === escopo.unidade)?.nome ?? situacao.unidade_nome)} titulo="Estoque"
+          subtitulo="Posição de agora, somada no banco, nos locais que você consulta. Disponível para vender é o físico menos o reservado."
+        />
+        <div className="mb-4 flex flex-col gap-3">
+          {abas}
+          {locais.length > 1 && (
+            <FiltroSegmentado
+              rotulo="Local"
+              opcoes={[{ href: enderecoDoLocal("rede"), rotulo: "Rede inteira", ativo: redeInteira }, ...locais.map((l) => ({ href: enderecoDoLocal(l.unidadeId), rotulo: l.nome, ativo: l.unidadeId === escopo.chave }))]}
+            />
+          )}
+        </div>
+        <PainelDoEstoque estoque={estoque} redeInteira={redeInteira} aqui={enderecoDoLocal(escopo.chave)} enderecoDoLocal={enderecoDoLocal} />
+      </MoldeReal>
+    );
+  }
 
   if (conferencia) {
     const desde = inicioDoDiaEmSaoPaulo();

@@ -371,7 +371,7 @@ export function Linhas({ series, rotulosX, formatar, formatarEixo = formatar, fo
 export type Barra = { rotulo: string; valor: number; meta?: number; detalhe?: ReactNode; destaque?: boolean };
 
 /** Ranking em barras horizontais, com marca opcional da meta (ex.: lojas, vendedores, produtos). */
-export function BarrasHorizontais({ dados, formatar, nomeSerie, serie = 1, maximo, duasColunas = false }: {
+export function BarrasHorizontais({ dados, formatar, nomeSerie, serie = 1, maximo, duasColunas = false, nomeMeta = "Meta" }: {
   dados: readonly Barra[];
   formatar: (valor: number) => string;
   nomeSerie: string;
@@ -379,6 +379,8 @@ export function BarrasHorizontais({ dados, formatar, nomeSerie, serie = 1, maxim
   maximo?: number;
   /** Em telas largas, divide a lista em duas colunas (rankings longos). */
   duasColunas?: boolean;
+  /** O que o traço marca (a meta, ou o mínimo do estoque). */
+  nomeMeta?: string;
 }) {
   const topo = maximo ?? Math.max(1, ...dados.map((d) => Math.max(d.valor, d.meta ?? 0)));
   const temDestaque = dados.some((d) => d.destaque);
@@ -386,7 +388,7 @@ export function BarrasHorizontais({ dados, formatar, nomeSerie, serie = 1, maxim
     <CamadaDicas>
       <ul className={duasColunas ? "grid gap-x-10 gap-y-3 xl:grid-cols-2" : "space-y-3"}>
         {dados.map((d) => {
-          const dica = [d.rotulo, `${nomeSerie}|${formatar(d.valor)}`, ...(d.meta !== undefined ? [`Meta|${formatar(d.meta)}`] : [])].join("\n");
+          const dica = [d.rotulo, `${nomeSerie}|${formatar(d.valor)}`, ...(d.meta !== undefined ? [`${nomeMeta}|${formatar(d.meta)}`] : [])].join("\n");
           return (
             <li key={d.rotulo} tabIndex={0} data-dica={dica} className="rounded-md outline-offset-4">
               <div className="mb-1 flex items-baseline justify-between gap-3 text-sm">
@@ -396,7 +398,7 @@ export function BarrasHorizontais({ dados, formatar, nomeSerie, serie = 1, maxim
               <div className="relative h-2.5 rounded-[3px] bg-grade">
                 <div className={`h-full rounded-r-[4px] ${temDestaque && !d.destaque ? FUNDO_SUAVE[serie] : FUNDO[serie]}`} style={{ width: `${pct(d.valor, topo)}%` }} />
                 {d.meta !== undefined && (
-                  <span aria-hidden title="Meta" className="absolute -top-1 h-[18px] w-0.5 rounded-full bg-texto/70" style={{ left: `calc(${pct(d.meta, topo)}% - 1px)` }} />
+                  <span aria-hidden title={nomeMeta} className="absolute -top-1 h-[18px] w-0.5 rounded-full bg-texto/70" style={{ left: `calc(${pct(d.meta, topo)}% - 1px)` }} />
                 )}
               </div>
             </li>
