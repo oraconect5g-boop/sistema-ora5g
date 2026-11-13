@@ -1,9 +1,9 @@
 // Inventário de autorização (prioridade 1 do diagnóstico de 10/11/2026; ORA-ORG-004 e ORA-QUAL-002).
 // O aviso 0029 do Supabase lista as funções SECURITY DEFINER que qualquer usuário logado pode chamar
-// pela API: 109 em 13/11 (48 + 6 do cadastro de lojas, L2, + 5 do cadastro do catálogo, L3a, + 4 dos preços, L3b,
+// pela API: 115 em 13/11 (48 + 6 do cadastro de lojas, L2, + 5 do cadastro do catálogo, L3a, + 4 dos preços, L3b,
 // + 4 da importação do catálogo, L3c, + 3 da entrada de mercadoria, L4a, + 5 do inventário, L4b, + 6 dos clientes, L5a,
 // + 9 do funil e da agenda, L5b, + 4 da mesclagem e dos segmentos, L5c, + 4 das maquininhas e da conciliação, L7a,
-// + 2 da leitura das entradas, R1, + 1 do nome no ranking, G1, + 2 das metas, G4b, + 3 das financeiras, L7b, + 3 da saída autorizada do caixa, L7c). Elas rodam com poder total e cada uma confere sessão, loja e permissão por
+// + 2 da leitura das entradas, R1, + 1 do nome no ranking, G1, + 2 das metas, G4b, + 3 das financeiras, L7b, + 3 da saída autorizada do caixa, L7c, + 6 das contas a pagar, L8a). Elas rodam com poder total e cada uma confere sessão, loja e permissão por
 // conta própria. Este teste monta um "mundo" fictício com objetos reais em duas lojas e tenta cada
 // função como 13 tipos de atacante. Recusa = erro, ou resposta vazia numa leitura, e nada muda no
 // banco. O teste lista as funções no próprio banco e falha se aparecer uma nova sem casos aqui.
@@ -207,6 +207,11 @@ type Caso = {
 };
 const CPF_DO_MUNDO = cpf("246813579");
 const AMANHA = new Date(Date.now() + 86_400_000).toISOString();
+// Conta a pagar que o atacante tenta lançar (L8a), com vencimento em 10 dias.
+const contaIntrusa = (unidade: string) => JSON.stringify({
+  unidade, categoria: alvo.categoriaPagar, descricao: "Conta intrusa", valor: 100, forma: "unica",
+  vencimento: new Date(Date.now() + 10 * 86_400_000).toISOString().slice(0, 10),
+});
 const pagamentoDinheiro = JSON.stringify([{ meio: "dinheiro", valor: 7_900 }]);
 const cnpjLojaA = async () => (await db.query<{ cnpj: string }>("select cnpj from public.unidades where id = $1", [ids.lojaA])).rows[0]?.cnpj ?? "";
 let chaveNotaA = "";
@@ -408,6 +413,31 @@ const CASOS: Record<string, Caso> = {
   },
   "caixa_cancelar_saida(uuid)": {
     A: () => ["select public.caixa_cancelar_saida($1)", [alvo.saidaA]], B: () => ["select public.caixa_cancelar_saida($1)", [alvo.saidaB]], outroVendedor: true,
+  },
+  // Contas a pagar (L8a): o dono na rede e em todas as lojas, o gerente na loja dele (conta_pagar.gerir);
+  // o vendedor da loja A é o "sem permissão". As categorias, só o dono.
+  "conta_pagar_lancar(jsonb,text)": {
+    A: () => ["select public.conta_pagar_lancar($1::jsonb, $2)", [contaIntrusa(ids.lojaA), chave("ataque")]],
+    B: () => ["select public.conta_pagar_lancar($1::jsonb, $2)", [contaIntrusa(ids.lojaB), chave("ataque")]], semPermissao: true,
+  },
+  "conta_pagar_corrigir(uuid,jsonb,text)": {
+    A: () => ["select public.conta_pagar_corrigir($1, '{\"valor\": 1}'::jsonb, 'Tentativa')", [alvo.contaPagarA]],
+    B: () => ["select public.conta_pagar_corrigir($1, '{\"valor\": 1}'::jsonb, 'Tentativa')", [alvo.contaPagarB]], semPermissao: true,
+  },
+  "conta_pagar_pagar(uuid,date,bigint,text)": {
+    A: () => ["select public.conta_pagar_pagar($1, current_date, 100, 'ATAQUE')", [alvo.contaPagarA]],
+    B: () => ["select public.conta_pagar_pagar($1, current_date, 100, 'ATAQUE')", [alvo.contaPagarB]], semPermissao: true,
+  },
+  "conta_pagar_desfazer_pagamento(uuid,text)": {
+    A: () => ["select public.conta_pagar_desfazer_pagamento($1, 'Tentativa')", [alvo.contaPagarA]],
+    B: () => ["select public.conta_pagar_desfazer_pagamento($1, 'Tentativa')", [alvo.contaPagarB]], semPermissao: true,
+  },
+  "conta_pagar_cancelar(uuid,text,boolean)": {
+    A: () => ["select public.conta_pagar_cancelar($1, 'Tentativa', true)", [alvo.contaPagarA]],
+    B: () => ["select public.conta_pagar_cancelar($1, 'Tentativa', true)", [alvo.contaPagarB]], semPermissao: true,
+  },
+  "conta_pagar_categoria_salvar(uuid,text,boolean)": {
+    A: () => ["select public.conta_pagar_categoria_salvar($1, 'Intrusa', null)", [alvo.categoriaPagar]], semPermissao: true,
   },
   "movimentar_caixa(text,bigint,text,text)": { A: () => ["select public.movimentar_caixa('sangria', 100, 'Tentativa', $1)", [chave("ataque")]], outraOrganizacao: false },
   "notas_cancelar(uuid,text)": {
@@ -644,6 +674,14 @@ beforeAll(async () => {
       "insert into public.contas_a_receber (organizacao_id, unidade_id, venda_id, pagamento_id, devedor, valor_centavos) values ($1, $2, $3, $4, 'payjoy', 100) returning id",
       [ids.organizacao, loja, alvo[`concluida${lado}`], alvo[`pagamento${lado}`]])).rows[0]?.id ?? "";
   }
+  // Uma conta a pagar aberta em cada loja (L8a), na categoria "Outras" da lista inicial (gravadas pelo banco: só alvo).
+  alvo.categoriaPagar = (await db.query<{ id: string }>("select id from public.contas_pagar_categorias where organizacao_id = $1 and nome = 'Outras'", [ids.organizacao])).rows[0]?.id ?? "";
+  for (const [lado, loja] of [["A", ids.lojaA], ["B", ids.lojaB]] as const) {
+    alvo[`contaPagar${lado}`] = (await db.query<{ id: string }>(
+      `insert into public.contas_a_pagar (organizacao_id, unidade_id, categoria_id, descricao, valor_centavos, vencimento, grupo_id, forma, chave, criada_por)
+       values ($1, $2, $3, 'Conta do mundo', 100, current_date + 10, gen_random_uuid(), 'unica', $4, $5) returning id`,
+      [ids.organizacao, loja, alvo.categoriaPagar, `mundo:contapagar:${lado}`, ids.dono])).rows[0]?.id ?? "";
+  }
   // Uma entrada de mercadoria em cada loja (gravadas pelo banco: só alvo, sem itens).
   for (const [chaveDoAlvo, loja] of [["entradaA", ids.lojaA], ["entradaB", ids.lojaB]] as const) {
     alvo[chaveDoAlvo] = (await db.query<{ id: string }>(
@@ -695,7 +733,7 @@ describe("inventário: toda função SECURITY DEFINER exposta tem casos de recus
     const expostas = rows.map((r) => r.f);
     expect(expostas.filter((f) => !(f in CASOS)), "função nova exposta sem casos de recusa: acrescente ao CASOS").toEqual([]);
     expect(Object.keys(CASOS).filter((f) => !expostas.includes(f)), "caso de função que não existe mais").toEqual([]);
-    expect(expostas).toHaveLength(109);
+    expect(expostas).toHaveLength(115);
   });
 
   it("visitante anônimo não executa nenhuma função do esquema public; no privado só um gatilho, que não roda sozinho", async () => {

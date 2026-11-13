@@ -2,7 +2,7 @@
   "_leia": "Checkpoint do programa de execução integral (PR #67). Carregar ao retomar e seguir para o próximo item executável da fila; não reiniciar o projeto. Estados vêm de status-requisitos.json (fonte da rastreabilidade); este arquivo acrescenta lote, bloqueio externo e revisão.",
   "atualizado_em": "2026-11-13",
   "base": {
-    "main": "7700211",
+    "main": "8334dda",
     "pacote": {
       "pr": 67,
       "branch": "docs/execucao-integral-20261110",
@@ -12,18 +12,18 @@
   },
   "publicado": {
     "homologacao": {
-      "commit": "7700211",
+      "commit": "8334dda",
       "quando": "2026-11-13",
-      "conferido": "rodapé da tela de entrada, /saude e /vender, /vendas, /inicio e /pagamentos/financeiras respondendo 307 para o login"
+      "conferido": "rodapé da tela de entrada, /saude e /inicio, /caixa, /financeiro, /pagamentos/financeiras e /vender respondendo 307 para o login"
     },
     "falta_publicar": [
-      "o merge do L7c (publicado ao fim do lote, por pedido do proprietário de 13/11)"
+      "o merge do L8a (publicado ao fim do lote, por pedido do proprietário de 13/11)"
     ]
   },
   "contagem_dos_estados": {
-    "parcial": 63,
+    "parcial": 64,
     "testado": 33,
-    "nao_iniciado": 80,
+    "nao_iniciado": 79,
     "respeitado": 1,
     "bloqueado": 2
   },
@@ -715,8 +715,8 @@
     "ORA-FIN-004": {
       "titulo": "Contas a pagar ligadas a fornecedor/origem",
       "prioridade": "P0",
-      "estado": "nao_iniciado",
-      "lote": "L8 financeiro",
+      "estado": "parcial",
+      "lote": "L8 financeiro (L8a em 13/11: contas a pagar pela decisão D-036 do proprietário)",
       "bloqueio_externo": null,
       "revisado_codex": false,
       "homologado": false

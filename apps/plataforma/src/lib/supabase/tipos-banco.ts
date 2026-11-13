@@ -1178,6 +1178,140 @@ export type Database = {
           },
         ]
       }
+      contas_a_pagar: {
+        Row: {
+          atualizada_em: string
+          cancelada_em: string | null
+          cancelada_por: string | null
+          categoria_id: string
+          chave: string
+          criada_em: string
+          criada_por: string
+          descricao: string
+          documento: string | null
+          forma: string
+          fornecedor_id: string | null
+          grupo_id: string
+          id: string
+          motivo_cancelamento: string | null
+          organizacao_id: string
+          paga_em: string | null
+          paga_por: string | null
+          parcela: number
+          parcelas: number
+          referencia_pagamento: string | null
+          situacao: string
+          unidade_id: string | null
+          valor_centavos: number
+          valor_pago_centavos: number | null
+          vencimento: string
+        }
+        Insert: {
+          atualizada_em?: string
+          cancelada_em?: string | null
+          cancelada_por?: string | null
+          categoria_id: string
+          chave: string
+          criada_em?: string
+          criada_por: string
+          descricao: string
+          documento?: string | null
+          forma: string
+          fornecedor_id?: string | null
+          grupo_id: string
+          id?: string
+          motivo_cancelamento?: string | null
+          organizacao_id: string
+          paga_em?: string | null
+          paga_por?: string | null
+          parcela?: number
+          parcelas?: number
+          referencia_pagamento?: string | null
+          situacao?: string
+          unidade_id?: string | null
+          valor_centavos: number
+          valor_pago_centavos?: number | null
+          vencimento: string
+        }
+        Update: {
+          atualizada_em?: string
+          cancelada_em?: string | null
+          cancelada_por?: string | null
+          categoria_id?: string
+          chave?: string
+          criada_em?: string
+          criada_por?: string
+          descricao?: string
+          documento?: string | null
+          forma?: string
+          fornecedor_id?: string | null
+          grupo_id?: string
+          id?: string
+          motivo_cancelamento?: string | null
+          organizacao_id?: string
+          paga_em?: string | null
+          paga_por?: string | null
+          parcela?: number
+          parcelas?: number
+          referencia_pagamento?: string | null
+          situacao?: string
+          unidade_id?: string | null
+          valor_centavos?: number
+          valor_pago_centavos?: number | null
+          vencimento?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "contas_a_pagar_cancelada_por_fkey"
+            columns: ["cancelada_por"]
+            isOneToOne: false
+            referencedRelation: "perfis_usuario"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "contas_a_pagar_categoria_id_organizacao_id_fkey"
+            columns: ["categoria_id", "organizacao_id"]
+            isOneToOne: false
+            referencedRelation: "contas_pagar_categorias"
+            referencedColumns: ["id", "organizacao_id"]
+          },
+          {
+            foreignKeyName: "contas_a_pagar_criada_por_fkey"
+            columns: ["criada_por"]
+            isOneToOne: false
+            referencedRelation: "perfis_usuario"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "contas_a_pagar_fornecedor_id_organizacao_id_fkey"
+            columns: ["fornecedor_id", "organizacao_id"]
+            isOneToOne: false
+            referencedRelation: "fornecedores"
+            referencedColumns: ["id", "organizacao_id"]
+          },
+          {
+            foreignKeyName: "contas_a_pagar_organizacao_id_fkey"
+            columns: ["organizacao_id"]
+            isOneToOne: false
+            referencedRelation: "organizacoes"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "contas_a_pagar_paga_por_fkey"
+            columns: ["paga_por"]
+            isOneToOne: false
+            referencedRelation: "perfis_usuario"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "contas_a_pagar_unidade_id_organizacao_id_fkey"
+            columns: ["unidade_id", "organizacao_id"]
+            isOneToOne: false
+            referencedRelation: "unidades"
+            referencedColumns: ["id", "organizacao_id"]
+          },
+        ]
+      }
       contas_a_receber: {
         Row: {
           atualizado_em: string
@@ -1250,6 +1384,51 @@ export type Database = {
             columns: ["venda_id"]
             isOneToOne: false
             referencedRelation: "vendas"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      contas_pagar_categorias: {
+        Row: {
+          ativa: boolean
+          criada_em: string
+          criada_por: string | null
+          id: string
+          nome: string
+          ordem: number
+          organizacao_id: string
+        }
+        Insert: {
+          ativa?: boolean
+          criada_em?: string
+          criada_por?: string | null
+          id?: string
+          nome: string
+          ordem?: number
+          organizacao_id: string
+        }
+        Update: {
+          ativa?: boolean
+          criada_em?: string
+          criada_por?: string | null
+          id?: string
+          nome?: string
+          ordem?: number
+          organizacao_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "contas_pagar_categorias_criada_por_fkey"
+            columns: ["criada_por"]
+            isOneToOne: false
+            referencedRelation: "perfis_usuario"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "contas_pagar_categorias_organizacao_id_fkey"
+            columns: ["organizacao_id"]
+            isOneToOne: false
+            referencedRelation: "organizacoes"
             referencedColumns: ["id"]
           },
         ]
@@ -4594,6 +4773,39 @@ export type Database = {
           plano_id: number
           tipo: string
         }[]
+      }
+      conta_pagar_cancelar: {
+        Args: { p_conta: string; p_e_seguintes: boolean; p_motivo: string }
+        Returns: number
+      }
+      conta_pagar_categoria_salvar: {
+        Args: { p_ativa: boolean; p_categoria: string; p_nome: string }
+        Returns: string
+      }
+      conta_pagar_corrigir: {
+        Args: { p_conta: string; p_dados: Json; p_motivo: string }
+        Returns: boolean
+      }
+      conta_pagar_desfazer_pagamento: {
+        Args: { p_conta: string; p_motivo: string }
+        Returns: boolean
+      }
+      conta_pagar_lancar: {
+        Args: { p_chave: string; p_dados: Json }
+        Returns: string
+      }
+      conta_pagar_pagar: {
+        Args: {
+          p_conta: string
+          p_pago_em: string
+          p_referencia: string
+          p_valor_pago: number
+        }
+        Returns: boolean
+      }
+      contas_a_pagar_resumo: {
+        Args: { p_rede?: boolean; p_unidade?: string }
+        Returns: Json
       }
       convidar_pessoa: {
         Args: {

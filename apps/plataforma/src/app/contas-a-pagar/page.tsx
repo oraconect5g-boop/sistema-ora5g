@@ -1,0 +1,62 @@
+import type { Metadata } from "next";
+
+import { MoldeReal } from "../../componentes/MoldeReal";
+import { Aviso, TituloPagina } from "../../componentes/ui";
+import { FalhaDoServico, obterSessao } from "../../lib/acesso/sessao";
+import { consultarCategorias, consultarContas, consultarFornecedores, consultarResumo, type ResumoDasContas } from "../../lib/contas-a-pagar/consulta";
+import { ERROS_DAS_CONTAS, filtroDasContas, hojeEmSaoPaulo, OK_DAS_CONTAS, visaoDasContas, type FiltroDasContas } from "../../lib/contas-a-pagar/regras";
+import type { Leitura } from "../../lib/leitura-do-banco";
+import { chaveDoCatalogo, textoDoParametro, type ValorDeParametro } from "../../lib/parametros";
+import { ConteudoContas } from "./ConteudoContas";
+
+export const metadata: Metadata = { title: "Contas a pagar" };
+export const dynamic = "force-dynamic";
+
+type Parametros = { ver?: ValorDeParametro; loja?: ValorDeParametro; ok?: ValorDeParametro; erro?: ValorDeParametro };
+
+// Contas a pagar da empresa (lote L8a: ORA-FIN-004), pelas decisões do proprietário de 13/11/2026: o dono
+// lança e paga as contas da rede e de todas as lojas; o gerente, as da loja dele (conta_pagar.gerir).
+// Categorias com a lista inicial que o dono ajusta; conta parcelada e conta que se repete todo mês. O
+// sistema registra a conta e o pagamento feito no banco; não paga nada sozinho. Tudo passa pelas funções
+// do banco, e os números são somados lá, com as regras de leitura de quem pede.
+export default async function ContasAPagar({ searchParams }: { searchParams: Promise<Parametros> }) {
+  const parametros = await searchParams;
+  const ok = chaveDoCatalogo(OK_DAS_CONTAS, parametros.ok);
+  const erro = chaveDoCatalogo(ERROS_DAS_CONTAS, parametros.erro);
+  const visao = visaoDasContas(textoDoParametro(parametros.ver));
+  const hoje = hojeEmSaoPaulo();
+  const sessao = await obterSessao({ exigirLoja: true });
+  const { supabase, situacao } = sessao;
+  const lojaDoTurno = { id: situacao.unidade_id as string, nome: situacao.unidade_nome ?? "Loja do turno" };
+  const pode = await supabase.rpc("tem_permissao", { p_permissao: "conta_pagar.gerir", p_unidade: lojaDoTurno.id });
+  if (pode.error) throw new FalhaDoServico("tem_permissao");
+  if (!pode.data) return <MoldeReal sessao={sessao}><Aviso tom="aviso" className="mt-6">As contas a pagar são do dono e da gerência da loja.</Aviso></MoldeReal>;
+
+  // O filtro do endereço vale se o banco aceitar (a loja está no escopo de quem pede); senão, tudo o que a pessoa lê.
+  let filtro: FiltroDasContas = filtroDasContas(textoDoParametro(parametros.loja));
+  let primeiro = await consultarResumo(supabase, filtro);
+  if (primeiro.estado === "recusado") {
+    filtro = { tipo: "todas" };
+    primeiro = await consultarResumo(supabase, filtro);
+  }
+  const resumo: Leitura<ResumoDasContas> = primeiro.estado === "recusado" ? { estado: "falha" } : primeiro;
+  const [lista, categorias, fornecedores] = await Promise.all([
+    consultarContas(supabase, visao, filtro, hoje), consultarCategorias(supabase), consultarFornecedores(supabase),
+  ]);
+  const escopo = resumo.estado === "ok" ? resumo.dados.escopo : null;
+  const onde = filtro.tipo === "rede" ? "Rede (central)" : filtro.tipo === "loja" ? (escopo?.lojas.find((l) => l.id === filtro.id)?.nome ?? lojaDoTurno.nome)
+    : escopo?.rede ? "Rede e todas as lojas" : lojaDoTurno.nome;
+
+  return (
+    <MoldeReal sessao={sessao} largura="max-w-6xl">
+      <TituloPagina
+        sobretitulo={onde}
+        titulo="Contas a pagar"
+        subtitulo="O que a empresa tem a pagar, pelo vencimento: aluguel, luz, fornecedores. O sistema registra a conta e o pagamento feito no banco; não paga nada sozinho."
+      />
+      {ok && <Aviso tom="sucesso" className="mt-4">{OK_DAS_CONTAS[ok]}</Aviso>}
+      {erro && <Aviso tom="perigo" className="mt-4">{ERROS_DAS_CONTAS[erro]}</Aviso>}
+      <ConteudoContas resumo={resumo} lista={lista} categorias={categorias} fornecedores={fornecedores} visao={visao} filtro={filtro} hoje={hoje} lojaDoTurno={lojaDoTurno} />
+    </MoldeReal>
+  );
+}
