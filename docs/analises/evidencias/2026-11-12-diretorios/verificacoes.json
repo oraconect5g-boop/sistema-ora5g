@@ -1,0 +1,76 @@
+{
+  "base": "51fc428c80c5399bdc332d98ce1e1b6fe164a67f",
+  "ci_remoto": {
+    "run": 43287637302,
+    "job": 131425131876,
+    "conclusao": "success"
+  },
+  "checks_locais": [
+    {
+      "check": "instalacao",
+      "exit_code": 0,
+      "segundos": 15.55
+    },
+    {
+      "check": "lint",
+      "exit_code": 0,
+      "segundos": 31.22
+    },
+    {
+      "check": "tipos",
+      "exit_code": 0,
+      "segundos": 28.91
+    },
+    {
+      "check": "testes",
+      "exit_code": 0,
+      "segundos": 375.9
+    },
+    {
+      "check": "build",
+      "exit_code": 0,
+      "segundos": 38.88
+    },
+    {
+      "check": "audit",
+      "exit_code": 0,
+      "segundos": 0.88
+    },
+    {
+      "check": "rastreabilidade",
+      "exit_code": 0,
+      "segundos": 0.05
+    },
+    {
+      "check": "catalogo-nogle",
+      "exit_code": 0,
+      "segundos": 0.06
+    },
+    {
+      "check": "e2e",
+      "exit_code": 0,
+      "segundos": 178.41
+    }
+  ],
+  "testes": {
+    "passaram": 1118,
+    "todo": 1,
+    "arquivos": 102
+  },
+  "e2e": {
+    "passaram": 223,
+    "ignorados": 11,
+    "total": 234
+  },
+  "provas_independentes": {
+    "passaram": 7,
+    "correcoes_seguras": 4,
+    "bugs_observados": 3
+  },
+  "audit_producao_vulnerabilidades": 0,
+  "segredos": {
+    "textos_snapshot": 608,
+    "achados": [],
+    "limite": "Textos da árvore materializada e entrega; história remota conferida pelo CI, sem git local."
+  }
+}

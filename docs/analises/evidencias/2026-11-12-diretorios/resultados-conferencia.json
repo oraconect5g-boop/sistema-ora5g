@@ -1,0 +1,13 @@
+[
+  {
+    "itens_reais_ficticios": 501,
+    "conferidos": 500,
+    "pendentes_reais": 1,
+    "limites": [
+      500
+    ],
+    "anuncia_500_de_500": true,
+    "anuncia_tudo_conferido": true,
+    "anuncia_nenhum_pendente": true
+  }
+]

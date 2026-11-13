@@ -1,0 +1,13 @@
+{
+  "total": 179,
+  "contagem_declarada": {
+    "parcial": 55,
+    "testado": 32,
+    "nao_iniciado": 84,
+    "respeitado": 1,
+    "demonstracao": 5,
+    "bloqueado": 2
+  },
+  "homologados": 0,
+  "nota": "Estado declarado pelo implementador; não é percentual de sistema concluído ou aceite do revisor."
+}
