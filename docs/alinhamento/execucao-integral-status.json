@@ -1,8 +1,8 @@
 {
   "_leia": "Checkpoint do programa de execução integral (PR #67). Carregar ao retomar e seguir para o próximo item executável da fila; não reiniciar o projeto. Estados vêm de status-requisitos.json (fonte da rastreabilidade); este arquivo acrescenta lote, bloqueio externo e revisão.",
-  "atualizado_em": "2026-11-12",
+  "atualizado_em": "2026-11-13",
   "base": {
-    "main": "b352573",
+    "main": "51fc428",
     "pacote": {
       "pr": 67,
       "branch": "docs/execucao-integral-20261110",
@@ -31,16 +31,17 @@
       "a6f6d22 (L6a: nota no nome do cliente, pendências, aviso sem internet e câmera)",
       "65eb3a7 (L7a: maquininhas por loja e conciliação manual)",
       "8af4b34 (R1: correções do recebimento)",
-      "b352573 (R2: correções do importador; migration e aplicação juntas)"
+      "b352573 (R2: correções do importador; migration e aplicação juntas)",
+      "51fc428 (P0: matriz demo × real e contrato dos números; só documentos)"
     ]
   },
   "contagem_dos_estados": {
-    "parcial": 55,
+    "parcial": 58,
     "testado": 32,
     "nao_iniciado": 84,
     "respeitado": 1,
-    "demonstracao": 5,
-    "bloqueado": 2
+    "bloqueado": 2,
+    "demonstracao": 2
   },
   "requisitos": {
     "ORA-ORG-001": {
@@ -829,7 +830,7 @@
     "ORA-PERF-005": {
       "titulo": "Painel do gestor mostra metas e resultados da equipe",
       "prioridade": "P0",
-      "estado": "demonstracao",
+      "estado": "parcial",
       "lote": "L9 metas/comissões; G4 metas e Ora Connect",
       "bloqueio_externo": null,
       "revisado_codex": false,
@@ -1405,7 +1406,7 @@
     "ORA-REPORT-001": {
       "titulo": "Dashboard diretoria consolidado de todas as lojas (11 hoje; meta de 14)",
       "prioridade": "P0",
-      "estado": "demonstracao",
+      "estado": "parcial",
       "lote": "L8 financeiro/relatórios; G1 Início e G2 relatórios",
       "bloqueio_externo": null,
       "revisado_codex": false,
@@ -1450,7 +1451,7 @@
     "ORA-REPORT-006": {
       "titulo": "Relatórios de margem, vendedor e ranking configurável",
       "prioridade": "P1",
-      "estado": "demonstracao",
+      "estado": "parcial",
       "lote": "L8 financeiro/relatórios; G2 financeiro e relatórios",
       "bloqueio_externo": null,
       "revisado_codex": false,

@@ -1,9 +1,9 @@
 // Inventário de autorização (prioridade 1 do diagnóstico de 10/11/2026; ORA-ORG-004 e ORA-QUAL-002).
 // O aviso 0029 do Supabase lista as funções SECURITY DEFINER que qualquer usuário logado pode chamar
-// pela API: 100 em 12/11 (48 + 6 do cadastro de lojas, L2, + 5 do cadastro do catálogo, L3a, + 4 dos preços, L3b,
+// pela API: 101 em 12/11 (48 + 6 do cadastro de lojas, L2, + 5 do cadastro do catálogo, L3a, + 4 dos preços, L3b,
 // + 4 da importação do catálogo, L3c, + 3 da entrada de mercadoria, L4a, + 5 do inventário, L4b, + 6 dos clientes, L5a,
 // + 9 do funil e da agenda, L5b, + 4 da mesclagem e dos segmentos, L5c, + 4 das maquininhas e da conciliação, L7a,
-// + 2 da leitura das entradas, R1). Elas rodam com poder total e cada uma confere sessão, loja e permissão por
+// + 2 da leitura das entradas, R1, + 1 do nome no ranking, G1). Elas rodam com poder total e cada uma confere sessão, loja e permissão por
 // conta própria. Este teste monta um "mundo" fictício com objetos reais em duas lojas e tenta cada
 // função como 13 tipos de atacante. Recusa = erro, ou resposta vazia numa leitura, e nada muda no
 // banco. O teste lista as funções no próprio banco e falha se aparecer uma nova sem casos aqui.
@@ -181,7 +181,7 @@ async function montarMundo() {
 }
 
 // ---------------------------------------------------------------------------------------------
-// Catálogo das 100 funções. Cada chamada usa argumentos válidos, para a recusa vir do controle de
+// Catálogo das 101 funções. Cada chamada usa argumentos válidos, para a recusa vir do controle de
 // acesso e não de um parâmetro errado. "A": alvos da loja A (do vendedorAB); "B": da loja B.
 //   identidade: os 9 atacantes sem acesso válido, sempre contra os alvos da loja A;
 //   outraOrganizacao: dono de outra rede, contra a loja A (omitido onde a função só age no
@@ -460,6 +460,8 @@ const CASOS: Record<string, Caso> = {
   },
   "preco_vigente(uuid,uuid,text,timestamp with time zone)": { leitura: true, A: () => ["select public.preco_vigente($1, $2, 'loja', now()) as v", [cat.aparelho, ids.lojaA]] },
   "precos_por_loja(uuid,text)": { leitura: true, A: () => ["select * from public.precos_por_loja($1, 'loja')", [cat.capa]] },
+  // O nome de quem aparece no ranking (G1): só recebe alguma linha quem tem ranking.ver na loja da venda.
+  "ranking_nomes(uuid[])": { leitura: true, A: () => ["select * from public.ranking_nomes($1::uuid[])", [[ids.vendedorAB]]], semPermissao: true },
   "registrar_foto(uuid,uuid,text,integer,integer,boolean)": {
     A: () => ["select public.registrar_foto($1, null, $2, 1200, 1200, false)", [cat.produtoCapa, CAMINHO_FOTO]], semPermissao: true,
   },
@@ -652,7 +654,7 @@ describe("inventário: toda função SECURITY DEFINER exposta tem casos de recus
     const expostas = rows.map((r) => r.f);
     expect(expostas.filter((f) => !(f in CASOS)), "função nova exposta sem casos de recusa: acrescente ao CASOS").toEqual([]);
     expect(Object.keys(CASOS).filter((f) => !expostas.includes(f)), "caso de função que não existe mais").toEqual([]);
-    expect(expostas).toHaveLength(100);
+    expect(expostas).toHaveLength(101);
   });
 
   it("visitante anônimo não executa nenhuma função do esquema public; no privado só um gatilho, que não roda sozinho", async () => {

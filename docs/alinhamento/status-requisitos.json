@@ -9,7 +9,7 @@
     "bloqueado": "depende de decisão do proprietário ou de terceiro",
     "nao_iniciado": "ainda não começou"
   },
-  "atualizado_em": "2026-11-12",
+  "atualizado_em": "2026-11-13",
   "requisitos": {
     "ORA-ORG-001": {
       "status": "parcial",
@@ -28,8 +28,8 @@
     },
     "ORA-ORG-004": {
       "status": "parcial",
-      "nota": "RLS e funções do banco testadas, inclusive negação por ID arbitrário, troca de unidade e isolamento entre organizações (REV-001/REV-002 corrigidos em 07/11, aguardando revisão do Codex). As telas reais (equipe, catálogo, estoque, venda, caixa, Connect, notas e transferências) usam essas funções e o RLS. Revisão do Codex (PR #33, trazida em 10/11): #27 a #29 (bloqueio entre organizações, autoconvite e perda de donos), #45 (aprovação própria legível após bloqueio) e #56 (custo da carteira legível pelo vendedor); corrigidos no lote 1 (b967870), aguardando a conferência do Codex. Inventário de autorização (10/11, autorizacao-funcoes.test.ts): as 48 funções SECURITY DEFINER que um usuário logado pode chamar (aviso 0029 do Supabase) recusam 528 tentativas de 13 tipos de atacante (anônimo, sem login, sem sessão, sessão encerrada, fora do turno, bloqueado, vínculo encerrado, sem vínculo, papel sem permissão, outra rede, outra loja, outro vendedor e permissão faltando), sem mudar o banco; anônimo não executa nenhuma; o teste falha se surgir função nova sem casos (prova: 4 defeitos introduzidos de propósito foram pegos).",
-      "evidencia": "packages/banco/src/acesso.test.ts; packages/banco/src/revisao-codex.test.ts"
+      "nota": "RLS e funções do banco testadas, inclusive negação por ID arbitrário, troca de unidade e isolamento entre organizações (REV-001/REV-002 corrigidos em 07/11, aguardando revisão do Codex). As telas reais (equipe, catálogo, estoque, venda, caixa, Connect, notas e transferências) usam essas funções e o RLS. Revisão do Codex (PR #33, trazida em 10/11): #27 a #29 (bloqueio entre organizações, autoconvite e perda de donos), #45 (aprovação própria legível após bloqueio) e #56 (custo da carteira legível pelo vendedor); corrigidos no lote 1 (b967870), aguardando a conferência do Codex. Inventário de autorização (10/11, autorizacao-funcoes.test.ts): as 48 funções SECURITY DEFINER que um usuário logado pode chamar (aviso 0029 do Supabase) recusam 528 tentativas de 13 tipos de atacante (anônimo, sem login, sem sessão, sessão encerrada, fora do turno, bloqueado, vínculo encerrado, sem vínculo, papel sem permissão, outra rede, outra loja, outro vendedor e permissão faltando), sem mudar o banco; anônimo não executa nenhuma; o teste falha se surgir função nova sem casos (prova: 4 defeitos introduzidos de propósito foram pegos). G1 (13/11): vendas_painel roda com as permissões de quem chama (security invoker): o RLS das vendas decide o recorte (vendedor só as próprias, gerente a loja, dono e admin a rede; outra rede, técnico e pessoa sem vínculo recebem zero; visitante não executa), provado em vendas-painel.test.ts. ranking_nomes é a 101ª função SECURITY DEFINER do inventário: só devolve nome a quem tem ranking.ver na loja da venda, com casos de recusa em autorizacao-funcoes.test.ts. Aguardando a revisão do Codex.",
+      "evidencia": "packages/banco/src/acesso.test.ts; packages/banco/src/revisao-codex.test.ts; packages/banco/src/autorizacao-funcoes.test.ts; packages/banco/src/vendas-painel.test.ts"
     },
     "ORA-ORG-005": {
       "status": "testado",
@@ -92,19 +92,19 @@
       "evidencia": "packages/dominio/src/venda.test.ts"
     },
     "ORA-REPORT-001": {
-      "status": "demonstracao",
-      "nota": "Painel da rede (ou de uma loja escolhida no topo) com faturamento, meta, ranking das lojas, mix, recebimentos por meio, vendas por hora e alertas. Só dados fictícios. Destino real, fonte e contrato de cada número: MATRIZ_DEMO_REAL.md (P0, 12/11), linhas 1 a 5, 8 e 11.",
-      "evidencia": "apps/plataforma/src/app/demo; apps/plataforma/e2e/demonstracao.spec.ts"
+      "status": "parcial",
+      "nota": "Real desde o G1 (13/11): o /inicio de quem tem venda.ver_todas mostra a rede inteira, ou uma loja escolhida no topo, em hoje, 7 ou 30 dias: vendas, ticket, descontos, devoluções e cancelamentos, recebido na loja e gaveta (esta só com caixa.conferir); a linha de vendas com o período anterior; recebimentos por meio; mix por grupo e por categoria; desempenho das lojas; e melhores vendedores (só com ranking.ver). Tudo somado no banco (vendas_painel, que roda com as permissões de quem chama; financeiro_painel; nomes por ranking_nomes), cada gráfico com a tabela equivalente e com os estados sem movimento, sem histórico comparável, fonte indisponível, falha e sem permissão; falha nunca vira zero. FALTA: metas (G4), margem (G2), os alertas da demonstração (sem linha na matriz e sem lote), a jornada com login (J1, depende do item A1) e a publicação. A demonstração continua com o painel completo fictício. Contrato de cada número: MATRIZ_DEMO_REAL.md, linhas 1 a 5, 8 e 11.",
+      "evidencia": "packages/banco/supabase/migrations/20261112195200_vendas_painel.sql; packages/banco/src/vendas-painel.test.ts; apps/plataforma/src/lib/inicio; apps/plataforma/src/app/inicio; apps/plataforma/src/app/demo; apps/plataforma/e2e/demonstracao.spec.ts"
     },
     "ORA-REPORT-002": {
       "status": "parcial",
-      "nota": "Real: /inicio do gerente mostra o que espera a loja (aprovações, notas, caixas, transferências, Connect, estornos e retornos) e o financeiro de hoje; /financeiro tem caixas e fechamentos. FALTA: metas da equipe (módulo de metas não existe). A demonstração continua com o painel completo fictício.",
-      "evidencia": "apps/plataforma/src/app/inicio/page.tsx; apps/plataforma/src/app/financeiro"
+      "nota": "Real: o /inicio do gerente mostra o que espera a loja (aprovações, notas, caixas, transferências, Connect, estornos e retornos); /financeiro tem caixas e fechamentos. G1 (13/11): o /inicio ganhou os painéis de vendas da loja do turno em hoje, 7 ou 30 dias: indicadores (vendas, ticket, descontos, devoluções e cancelamentos, recebido na loja e gaveta), vendas com o período anterior, recebimentos por meio, mix por grupo e por categoria e a equipe por vendedor de origem (só com ranking.ver), somados no banco por vendas_painel. O gerente soma só a loja dele (teste no banco). FALTA: metas da equipe (G4; o módulo de metas não existe) e a jornada com login (J1). A demonstração continua com o painel completo fictício.",
+      "evidencia": "apps/plataforma/src/app/inicio; apps/plataforma/src/lib/inicio; packages/banco/src/vendas-painel.test.ts; apps/plataforma/src/app/financeiro"
     },
     "ORA-REPORT-003": {
       "status": "parcial",
-      "nota": "Início do vendedor no celular: meta do dia, produção por categoria, vendas por loja (vendedor em duas lojas) e atalhos. Só dados fictícios. Revisão das telas (10/11): o início real mostra o que espera a pessoa na loja (aprovações, notas, caixas a conferir, transferências, estornos, retornos e Ora Connect a decidir), cada contagem só para quem tem a permissão, e os atalhos do menu único. FALTA: produção do dia e metas (só na demonstração).",
-      "evidencia": "apps/plataforma/src/app/demo; apps/plataforma/e2e/demonstracao.spec.ts"
+      "nota": "Demonstração: início do vendedor no celular com meta do dia, produção por categoria, vendas por loja (vendedor em duas lojas) e atalhos, com dados fictícios. Real: o /inicio mostra o que espera a pessoa na loja (aprovações, notas, caixas a conferir, transferências, estornos, retornos e Ora Connect a decidir), cada contagem só para quem tem a permissão, e os atalhos do menu único (revisão das telas, 10/11). G1 (13/11): \"Meus resultados\" com as vendas de quem consulta em hoje, 7 ou 30 dias (vendas, ticket, descontos, devoluções e cancelamentos), a linha \"Minhas vendas\" com o período anterior, \"Minha produção\" (itens vendidos por grupo) e \"Onde vendi\" (para quem vendeu em mais de uma loja); sem recebimentos, gaveta nem nome de colega, e o banco confere de novo (pedir as vendas de um colega não devolve nada). FALTA: meta e produção de telecom confirmada (G4), resumo da loja e ranking com colegas (decisão P3) e a jornada com login no celular (J1, depende do item A1).",
+      "evidencia": "apps/plataforma/src/app/inicio; apps/plataforma/src/lib/inicio; packages/banco/src/vendas-painel.test.ts; apps/plataforma/src/app/demo; apps/plataforma/e2e/demonstracao.spec.ts"
     },
     "ORA-CONNECT-004": {
       "status": "testado",
@@ -157,9 +157,9 @@
       "evidencia": "packages/banco/supabase/migrations/20261110224537_financeiro_painel.sql; packages/banco/src/financeiro-painel.test.ts; apps/plataforma/src/lib/financeiro; apps/plataforma/src/app/financeiro"
     },
     "ORA-REPORT-006": {
-      "status": "demonstracao",
-      "nota": "Relatórios de margem, ticket, descontos e ranking de lojas e vendedores por período (7, 14 e 30 dias), com exportação CSV. Ranking para o vendedor aguarda a decisão P3. Destino real, fonte e contrato: MATRIZ_DEMO_REAL.md (P0, 12/11), linhas 11 a 14 (margem só com custo.ver e custo gravado no item).",
-      "evidencia": "apps/plataforma/src/app/demo; apps/plataforma/e2e/demonstracao.spec.ts"
+      "status": "parcial",
+      "nota": "Demonstração: relatórios de margem, ticket, descontos e ranking de lojas e vendedores por período (7, 14 e 30 dias), com exportação CSV, com dados fictícios. Real desde o G1 (13/11), no /inicio: desempenho das lojas e ranking de vendedores por vendido (vendedor de origem; não é comissão) em hoje, 7 ou 30 dias, com tabela, e ticket e descontos do período como indicadores. O ranking só aparece para quem tem ranking.ver na loja da venda. FALTA (G2): a rota /relatorios, margem (só com custo.ver e custo gravado no item), ticket e descontos por dia, o período de 14 dias, exportação e a configuração do ranking; o ranking para o vendedor aguarda a decisão P3. Contrato: MATRIZ_DEMO_REAL.md, linhas 11 a 14.",
+      "evidencia": "packages/banco/supabase/migrations/20261112195200_vendas_painel.sql; packages/banco/src/vendas-painel.test.ts; apps/plataforma/src/lib/inicio; apps/plataforma/src/app/inicio; apps/plataforma/src/app/demo; apps/plataforma/e2e/demonstracao.spec.ts"
     },
     "ORA-REPORT-007": {
       "status": "demonstracao",
@@ -167,14 +167,14 @@
       "evidencia": "apps/plataforma/src/app/demo; apps/plataforma/e2e/demonstracao.spec.ts"
     },
     "ORA-PERF-005": {
-      "status": "demonstracao",
-      "nota": "Painel do gestor com metas e produção de todos os vendedores do escopo; o vendedor vê só os próprios números. Só dados fictícios. Destino real, fonte e contrato: MATRIZ_DEMO_REAL.md (P0, 12/11), linhas 18 a 20 (meta versionada; sem meta, a tela diz que não há meta definida).",
-      "evidencia": "apps/plataforma/src/app/demo; apps/plataforma/e2e/demonstracao.spec.ts"
+      "status": "parcial",
+      "nota": "Demonstração: painel do gestor com metas e produção de todos os vendedores do escopo; o vendedor vê só os próprios números (dados fictícios). Real desde o G1 (13/11): os resultados da equipe por vendedor de origem (vendas, vendido, devolvido e cancelado, líquido e ticket) no /inicio do gerente e do dono, em hoje, 7 ou 30 dias, só para quem tem ranking.ver na loja da venda; o vendedor vê só os próprios números. FALTA (G4): metas (modelo versionado, com valores definidos pelo proprietário), atingimento e produção de telecom confirmada; o Início real ainda não tem medidor de meta. Contrato: MATRIZ_DEMO_REAL.md, linhas 5 e 18 a 20.",
+      "evidencia": "packages/banco/supabase/migrations/20261112195200_vendas_painel.sql; packages/banco/src/vendas-painel.test.ts; apps/plataforma/src/lib/inicio; apps/plataforma/src/app/inicio; apps/plataforma/src/app/demo; apps/plataforma/e2e/demonstracao.spec.ts"
     },
     "ORA-FIN-001": {
       "status": "parcial",
-      "nota": "Financeiro real, lote 1 (#65, 10/11): vendas concluídas, devoluções e cancelamentos, e pagamentos registrados (recebido na loja, troco descontado, entradas de financiamento), por dia ou hora, da loja do turno ou da rede, somados no banco (financeiro_painel). Resumo de hoje também no /inicio. FALTA: produção comercial (metas e Ora Connect), liquidação e conciliação.",
-      "evidencia": "packages/banco/supabase/migrations/20261110224537_financeiro_painel.sql; packages/banco/src/financeiro-painel.test.ts; apps/plataforma/src/lib/financeiro; apps/plataforma/src/app/financeiro"
+      "nota": "Financeiro real, lote 1 (#65, 10/11): vendas concluídas, devoluções e cancelamentos, e pagamentos registrados (recebido na loja, troco descontado, entradas de financiamento), por dia ou hora, da loja do turno ou da rede, somados no banco (financeiro_painel). G1 (13/11): o /inicio mostra, em hoje, 7 ou 30 dias, as vendas ao lado dos recebimentos por meio e a produção em itens por grupo (aparelhos, acessórios, Ora Connect e serviços), somadas por vendas_painel; os períodos de vendas_painel fecham com os de financeiro_painel (teste no banco). FALTA: produção comercial confirmada (metas e operações do Ora Connect, G4), liquidação e conciliação.",
+      "evidencia": "packages/banco/supabase/migrations/20261110224537_financeiro_painel.sql; packages/banco/src/financeiro-painel.test.ts; apps/plataforma/src/lib/financeiro; apps/plataforma/src/app/financeiro; packages/banco/supabase/migrations/20261112195200_vendas_painel.sql; packages/banco/src/vendas-painel.test.ts; apps/plataforma/src/app/inicio"
     },
     "ORA-FIN-008": {
       "status": "parcial",

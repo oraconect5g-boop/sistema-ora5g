@@ -1,7 +1,7 @@
 import type { ReactNode } from "react";
 
 import { CamadaDicas } from "./DicasGrafico";
-import { escala, mostrarRotulo } from "./escala";
+import { escala, larguraMinimaDosRotulos, mostrarRotulo, type EncaixeDosRotulos } from "./escala";
 
 export { escala, mostrarRotulo };
 
@@ -94,6 +94,49 @@ function Grade({ marcas, topo }: { marcas: number[]; topo: number }) {
   );
 }
 
+// Largura do gráfico a partir da qual um rótulo do eixo X aparece. As classes ficam por extenso para
+// o Tailwind gerá-las; a largura pedida sobe até o degrau seguinte.
+const DEGRAUS_DO_ROTULO: readonly (readonly [number, string])[] = [
+  [120, "hidden @min-[120px]:block"], [140, "hidden @min-[140px]:block"], [160, "hidden @min-[160px]:block"], [180, "hidden @min-[180px]:block"],
+  [200, "hidden @min-[200px]:block"], [220, "hidden @min-[220px]:block"], [240, "hidden @min-[240px]:block"], [260, "hidden @min-[260px]:block"],
+  [280, "hidden @min-[280px]:block"], [300, "hidden @min-[300px]:block"], [320, "hidden @min-[320px]:block"], [340, "hidden @min-[340px]:block"],
+  [360, "hidden @min-[360px]:block"], [380, "hidden @min-[380px]:block"], [400, "hidden @min-[400px]:block"], [440, "hidden @min-[440px]:block"],
+  [480, "hidden @min-[480px]:block"], [520, "hidden @min-[520px]:block"], [560, "hidden @min-[560px]:block"], [600, "hidden @min-[600px]:block"],
+  [640, "hidden @min-[640px]:block"], [680, "hidden @min-[680px]:block"], [720, "hidden @min-[720px]:block"], [760, "hidden @min-[760px]:block"],
+  [800, "hidden @min-[800px]:block"], [900, "hidden @min-[900px]:block"], [1000, "hidden @min-[1000px]:block"], [1100, "hidden @min-[1100px]:block"],
+  [1200, "hidden @min-[1200px]:block"], [1400, "hidden @min-[1400px]:block"], [1600, "hidden @min-[1600px]:block"],
+];
+/** Abaixo disto nenhum gráfico é desenhado: o rótulo fica sempre à vista. */
+const SEMPRE_A_VISTA = 100;
+const classeDoRotulo = (minimo: number) => (minimo <= SEMPRE_A_VISTA ? "" : (DEGRAUS_DO_ROTULO.find(([largura]) => largura >= minimo)?.[1] ?? "hidden"));
+
+/**
+ * Rótulos do eixo X. Cada um só aparece quando o gráfico tem largura para ele não encostar no vizinho:
+ * no celular ficam menos datas, no computador as de sempre. A conta é de `larguraMinimaDosRotulos`; quem
+ * esconde e mostra é o CSS (consulta de contêiner), sem JavaScript. Navegador sem esse recurso mostra só
+ * os rótulos que cabem em qualquer largura.
+ */
+function RotulosX({ rotulos, cada, encaixe }: { rotulos: readonly string[]; cada: number; encaixe: EncaixeDosRotulos }) {
+  const total = rotulos.length;
+  const minimos = larguraMinimaDosRotulos(rotulos, cada, encaixe);
+  const nasBordas = encaixe === "pontos" && total > 1;
+  return (
+    <div aria-hidden className="@container relative ml-14 mt-1.5 h-4 text-[11px] text-suave">
+      {rotulos.map((rotulo, i) => {
+        const minimo = minimos[i] ?? null;
+        if (minimo === null) return null;
+        const esquerda = encaixe === "colunas" ? ((i + 0.5) / total) * 100 : total <= 1 ? 50 : (i / (total - 1)) * 100;
+        const transform = nasBordas && i === 0 ? "none" : nasBordas && i === total - 1 ? "translateX(-100%)" : "translateX(-50%)";
+        return (
+          <span key={rotulo} className={`absolute whitespace-nowrap ${classeDoRotulo(minimo)}`} style={{ left: `${esquerda}%`, transform }}>
+            {rotulo}
+          </span>
+        );
+      })}
+    </div>
+  );
+}
+
 export type Ponto = { rotulo: string; valor: number; destaque?: boolean };
 
 /** Colunas verticais de uma série (ex.: faturamento por dia). `destaque` realça uma coluna. */
@@ -132,13 +175,7 @@ export function Colunas({ dados, formatar, formatarEixo = formatar, nomeSerie, a
           </div>
         </div>
       </div>
-      <div aria-hidden className="mt-1.5 flex pl-14 text-[11px] text-suave">
-        {dados.map((d, i) => (
-          <span key={d.rotulo} className="min-w-0 flex-1 overflow-visible whitespace-nowrap text-center">
-            {mostrarRotulo(i, dados.length, cadaRotulo) ? d.rotulo : ""}
-          </span>
-        ))}
-      </div>
+      <RotulosX rotulos={dados.map((d) => d.rotulo)} cada={cadaRotulo} encaixe="colunas" />
     </CamadaDicas>
   );
 }
@@ -284,19 +321,7 @@ export function Linhas({ series, rotulosX, formatar, formatarEixo = formatar, fo
           })}
         </div>
       </div>
-      <div aria-hidden className="relative ml-14 mt-1.5 h-4 text-[11px] text-suave">
-        {rotulosX.map((rotulo, i) =>
-          mostrarRotulo(i, n, cadaRotulo) ? (
-            <span
-              key={rotulo}
-              className="absolute whitespace-nowrap"
-              style={{ left: `${x(i)}%`, transform: i === 0 ? "none" : i === n - 1 ? "translateX(-100%)" : "translateX(-50%)" }}
-            >
-              {rotulo}
-            </span>
-          ) : null,
-        )}
-      </div>
+      <RotulosX rotulos={rotulosX} cada={cadaRotulo} encaixe="pontos" />
     </CamadaDicas>
   );
 }
@@ -463,11 +488,7 @@ export function ColunasDivergentes({ dados, formatar, formatarEixo = formatar, n
           </div>
         </div>
       </div>
-      <div aria-hidden className="mt-1.5 flex pl-14 text-[11px] text-suave">
-        {dados.map((d, i) => (
-          <span key={d.rotulo} className="min-w-0 flex-1 whitespace-nowrap text-center">{mostrarRotulo(i, dados.length, cadaRotulo) ? d.rotulo : ""}</span>
-        ))}
-      </div>
+      <RotulosX rotulos={dados.map((d) => d.rotulo)} cada={cadaRotulo} encaixe="colunas" />
     </CamadaDicas>
   );
 }

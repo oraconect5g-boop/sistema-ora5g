@@ -1027,3 +1027,65 @@ describe("arquivo no limite de 2.000 linhas no PostgreSQL 17 (R2)", () => {
     expect(await divergencias()).toEqual([]);
   }, 120_000);
 });
+
+// ---------------------------------------------------------------------------------------------
+// Painéis do Início (G1): quem lê o painel não espera a venda dos outros nem vê venda pela metade.
+type GraoDoPainel = Record<string, string | number | null>;
+type PainelDeVendas = {
+  totais: Record<string, number>; periodos: GraoDoPainel[]; tipos: GraoDoPainel[]; categorias: GraoDoPainel[]; lojas: GraoDoPainel[]; vendedores: GraoDoPainel[];
+};
+
+describe("painel de vendas lido enquanto uma venda é concluída no PostgreSQL 17 (G1)", () => {
+  it("a venda que outra conexão ainda não confirmou não aparece em nenhum grão, a leitura não espera por ela e, confirmada, aparece inteira", async () => {
+    // Loja nova, só deste teste, com dez capas no estoque.
+    const lojaF = "00000000-0000-4000-8000-000000000028";
+    await admin.query("insert into public.unidades (id, organizacao_id, empresa_id, codigo, nome, tipo, cnpj) values ($1, $2, $3, 'conc-loja-f', 'Loja F', 'loja_fisica', $4)",
+      [lojaF, ids.organizacao, ids.empresa, cnpj(RAIZ, "0006")]);
+    await admin.query("select privado.lancar_movimento($1, $2, 10, 'entrada_compra', null, null, null, null, 'conc:painel:entrada')", [lojaF, cat.capa]);
+    const dono = await sessaoNaLoja(ids.dono, lojaF);
+    const ler = async () => {
+      await abrir(b, dono);
+      const painel = await valor<PainelDeVendas>(b, "select public.vendas_painel(now() - interval '1 day', now() + interval '1 day', $1) as v", [lojaF]);
+      await b.query("commit");
+      if (!painel) throw new Error("o painel não respondeu");
+      return painel;
+    };
+    const somar = (grao: GraoDoPainel[], campo: string) => grao.reduce((s, l) => s + Number(l[campo] ?? 0), 0);
+    const fecha = (painel: PainelDeVendas) => {
+      for (const grao of [painel.periodos, painel.tipos, painel.categorias, painel.lojas, painel.vendedores]) expect(somar(grao, "vendido")).toBe(painel.totais.vendido);
+    };
+
+    // Uma venda confirmada: duas capas, dois pagamentos (R$ 158,00).
+    await abrir(a, dono);
+    await a.query("select public.abrir_caixa(0, 'conc:painel:caixa')");
+    const primeira = await valor<string>(a, "select public.criar_venda('conc:painel:venda:1') as v", []);
+    await a.query("select public.adicionar_item($1, $2, null, 2, 'conc:painel:item:1')", [primeira, cat.capa]);
+    await a.query(
+      `select public.concluir_venda($1, '[{"meio":"dinheiro","valor":10000},{"meio":"pix_direto","valor":5800,"comprovante":"E2E-FICTICIO-1"}]'::jsonb, '{}'::jsonb, 'conc:painel:concluir:1')`,
+      [primeira],
+    );
+    await a.query("commit");
+    const antes = await ler();
+    expect(antes.totais).toMatchObject({ vendas: 1, vendido: 15_800 });
+    fecha(antes);
+
+    // A segunda venda é concluída e a conexão segura a transação aberta, com a venda, o estoque e o
+    // caixa travados. O painel responde assim mesmo (se esperasse a trava, o teste pararia aqui) e
+    // não traz nenhum pedaço da venda que ainda não foi confirmada.
+    await abrir(a, dono);
+    const segunda = await valor<string>(a, "select public.criar_venda('conc:painel:venda:2') as v", []);
+    await a.query("select public.adicionar_item($1, $2, null, 1, 'conc:painel:item:2')", [segunda, cat.capa]);
+    await a.query(`select public.concluir_venda($1, '[{"meio":"dinheiro","valor":7900}]'::jsonb, '{}'::jsonb, 'conc:painel:concluir:2')`, [segunda]);
+    expect(await ler()).toEqual(antes);
+    await a.query("commit");
+
+    // Confirmada, entra de uma vez em todos os grãos.
+    const depois = await ler();
+    expect(depois.totais).toMatchObject({ vendas: 2, vendido: 23_700, subtotal: 23_700, descontos: 0 });
+    expect(depois.tipos).toEqual([expect.objectContaining({ tipo: "acessorio", itens: 3, vendido: 23_700 })]);
+    expect(depois.lojas).toEqual([expect.objectContaining({ unidade_id: lojaF, nome: "Loja F", vendas: 2, vendido: 23_700 })]);
+    expect(depois.vendedores).toEqual([expect.objectContaining({ vendedor_id: ids.dono, vendas: 2, vendido: 23_700 })]);
+    fecha(depois);
+    expect(await divergencias()).toEqual([]);
+  });
+});
