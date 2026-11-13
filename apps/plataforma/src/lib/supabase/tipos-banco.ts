@@ -1099,9 +1099,13 @@ export type Database = {
           id: string
           organizacao_id: string
           pagamento_id: string
+          recebido_em: string | null
+          referencia_recebimento: string | null
+          registrado_por: string | null
           situacao: string
           unidade_id: string
           valor_centavos: number
+          valor_recebido_centavos: number | null
           vencimento: string | null
           venda_id: string
         }
@@ -1112,9 +1116,13 @@ export type Database = {
           id?: string
           organizacao_id: string
           pagamento_id: string
+          recebido_em?: string | null
+          referencia_recebimento?: string | null
+          registrado_por?: string | null
           situacao?: string
           unidade_id: string
           valor_centavos: number
+          valor_recebido_centavos?: number | null
           vencimento?: string | null
           venda_id: string
         }
@@ -1125,13 +1133,24 @@ export type Database = {
           id?: string
           organizacao_id?: string
           pagamento_id?: string
+          recebido_em?: string | null
+          referencia_recebimento?: string | null
+          registrado_por?: string | null
           situacao?: string
           unidade_id?: string
           valor_centavos?: number
+          valor_recebido_centavos?: number | null
           vencimento?: string | null
           venda_id?: string
         }
         Relationships: [
+          {
+            foreignKeyName: "contas_a_receber_registrado_por_fkey"
+            columns: ["registrado_por"]
+            isOneToOne: false
+            referencedRelation: "perfis_usuario"
+            referencedColumns: ["id"]
+          },
           {
             foreignKeyName: "contas_a_receber_pagamento_id_fkey"
             columns: ["pagamento_id"]
@@ -4546,6 +4565,20 @@ export type Database = {
         }[]
       }
       equipe_por_papel: { Args: { p_organizacao: string }; Returns: Json }
+      financeira_desfazer_recebimento: {
+        Args: { p_conta: string; p_motivo: string }
+        Returns: boolean
+      }
+      financeira_receber: {
+        Args: {
+          p_conta: string
+          p_recebido_em: string
+          p_referencia: string
+          p_valor_recebido: number
+        }
+        Returns: boolean
+      }
+      financeiras_a_receber: { Args: never; Returns: Json }
       estoque_painel: {
         Args: { p_unidade?: string }
         Returns: Json

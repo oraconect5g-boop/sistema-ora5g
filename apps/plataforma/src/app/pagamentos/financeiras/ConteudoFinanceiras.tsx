@@ -1,0 +1,89 @@
+import { HandCoins, Landmark } from "lucide-react";
+import Link from "next/link";
+
+import { EstadoDoPainel, NOTA } from "../../../componentes/paineis-de-vendas";
+import { Botao, Cartao, EstadoVazio, Selo } from "../../../componentes/ui";
+import { brl, numero } from "../../../lib/formato";
+import type { Leitura } from "../../../lib/leitura-do-banco";
+import { FINANCEIRAS, idadeDaConta, type FinanceirasAReceber } from "../../../lib/pagamentos/financeiras";
+import { desfazerRecebimento, receberDaFinanceira } from "../acoes";
+
+// Valores a receber das financeiras (lote L7b). Só apresentação: a lista chega lida por
+// lib/pagamentos/financeiras, com o estado da leitura (falha nunca vira zero). Os formulários chamam
+// as ações, que chamam as funções do banco como a pessoa logada.
+
+const campo = "mt-1 min-h-11 w-full rounded-botao border border-borda bg-white px-3 text-sm outline-none focus:border-acao focus:ring-2 focus:ring-acao/20";
+const quando = (iso: string) => new Intl.DateTimeFormat("pt-BR", { timeZone: "America/Sao_Paulo", dateStyle: "short" }).format(new Date(iso));
+const dataCurta = (d: string) => `${d.slice(8, 10)}/${d.slice(5, 7)}/${d.slice(0, 4)}`;
+
+export function ConteudoFinanceiras({ leitura, hoje }: { leitura: Leitura<FinanceirasAReceber>; hoje: string }) {
+  return (
+    <>
+      {leitura.estado !== "ok" ? (
+        <Cartao className="mt-4" titulo="Por financeira" icone={HandCoins}>
+          <EstadoDoPainel estado={leitura.estado} fonte="financeiras" tentarDeNovo="/pagamentos/financeiras" />
+        </Cartao>
+      ) : leitura.dados.contas.length === 0 ? (
+        <Cartao className="mt-4" titulo="Por financeira" icone={HandCoins}>
+          <EstadoVazio titulo="Nada a receber das financeiras" icone={HandCoins}>
+            A leitura está funcionando; nenhuma venda financiada em aberto nesta loja e nenhum repasse registrado nos últimos 60 dias.
+          </EstadoVazio>
+        </Cartao>
+      ) : (
+        <>
+          <Cartao className="mt-4" titulo="Por financeira" subtitulo="Em aberto agora; recebido e taxa observada nos últimos 60 dias" icone={HandCoins}>
+            <ul className="grid gap-3 sm:grid-cols-2">
+              {leitura.dados.porDevedor.map((d) => (
+                <li key={d.devedor} className="rounded-xl border border-borda px-4 py-3 text-sm">
+                  <p className="font-semibold">{FINANCEIRAS[d.devedor]}</p>
+                  <p className="numeros mt-1 text-xl font-bold tracking-tight">{brl(d.valorAberto)}</p>
+                  <p className={NOTA}>
+                    {d.abertas === 0 ? "nada em aberto" : `${numero(d.abertas)} ${d.abertas === 1 ? "venda em aberto" : "vendas em aberto"} · a mais antiga ${idadeDaConta(d.maisAntigaDias ?? 0).rotulo}`}
+                  </p>
+                  {d.recebidas > 0 && (
+                    <p className={`mt-1 ${NOTA}`}>{`Recebido em 60 dias: ${brl(d.valorRecebido)} (${numero(d.recebidas)} ${d.recebidas === 1 ? "venda" : "vendas"}) · taxa observada ${brl(d.taxaObservada)}`}</p>
+                  )}
+                </li>
+              ))}
+            </ul>
+          </Cartao>
+
+          <Cartao className="mt-4" titulo="Contas" subtitulo="Todas as abertas e as recebidas nos últimos 60 dias, da mais antiga para a mais nova" icone={Landmark}>
+            <ul className="divide-y divide-borda text-sm">
+              {leitura.dados.contas.map((c) => {
+                const idade = idadeDaConta(c.dias);
+                return (
+                  <li key={c.id} className="space-y-2 py-3">
+                    <p className="flex flex-wrap items-center gap-2">
+                      <Link href={`/vendas/${c.vendaId}`} className="font-semibold text-acao">Venda nº {c.vendaNumero}</Link>
+                      <span className="numeros text-xs text-suave">{`${quando(c.concluidaEm)} · ${FINANCEIRAS[c.devedor]} · a receber ${brl(c.valor)}`}</span>
+                      {c.situacao === "aberta" ? <Selo tom={idade.tom}>{idade.rotulo}</Selo> : <Selo tom="sucesso" ponto>recebida</Selo>}
+                    </p>
+                    {c.situacao === "recebida" ? (
+                      <div className="flex flex-wrap items-end justify-between gap-2">
+                        <p className="numeros text-xs text-suave">{`Caiu em ${c.recebidoEm ? dataCurta(c.recebidoEm) : "—"} · recebido ${brl(c.valorRecebido ?? 0)} · taxa ${brl(c.valor - (c.valorRecebido ?? 0))} · ${c.referencia ?? ""}`}</p>
+                        <form action={desfazerRecebimento} className="flex flex-wrap items-end gap-2">
+                          <input type="hidden" name="conta" value={c.id} />
+                          <label className="text-xs font-medium">Motivo para desfazer<input name="motivo" required minLength={3} maxLength={200} className={campo} /></label>
+                          <Botao type="submit" tamanho="sm" variante="fantasma">Desfazer</Botao>
+                        </form>
+                      </div>
+                    ) : (
+                      <form action={receberDaFinanceira} className="grid gap-2 sm:grid-cols-4">
+                        <input type="hidden" name="conta" value={c.id} />
+                        <label className="text-xs font-medium">Referência do repasse<input name="referencia" required minLength={3} maxLength={80} placeholder="Código ou lote" className={campo} /></label>
+                        <label className="text-xs font-medium">Valor que caiu (R$)<input name="recebido" required inputMode="decimal" placeholder={(c.valor / 100).toFixed(2).replace(".", ",")} className={campo} /></label>
+                        <label className="text-xs font-medium">Caiu em<input name="data" type="date" required max={hoje} className={campo} /></label>
+                        <Botao type="submit" tamanho="sm" className="self-end">Registrar repasse</Botao>
+                      </form>
+                    )}
+                  </li>
+                );
+              })}
+            </ul>
+          </Cartao>
+    </>
+  )}
+    </>
+  );
+}

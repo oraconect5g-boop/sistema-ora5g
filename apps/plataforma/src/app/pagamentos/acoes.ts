@@ -4,6 +4,7 @@ import { redirect } from "next/navigation";
 
 import { ehUuid } from "../../lib/acesso/regras";
 import { obterSessao } from "../../lib/acesso/sessao";
+import { erroDasFinanceiras, lerRepasse } from "../../lib/pagamentos/financeiras";
 import { erroDosPagamentos, lerConciliacao, lerMaquininha, type ErroDosPagamentos } from "../../lib/pagamentos/regras";
 
 // Maquininhas e conciliação manual (lote L7a). Cada ação chama UMA função do banco como a pessoa logada: o
@@ -77,4 +78,25 @@ export async function desconciliarPagamento(dados: FormData) {
   const { error } = await supabase.rpc("pagamento_desconciliar", { p_pagamento: pagamento, p_motivo: motivo });
   if (error) erro("/pagamentos/conciliacao", erroDosPagamentos(error), volta);
   voltar("/pagamentos/conciliacao", { ...volta, ok: "desfeito" });
+}
+
+// Valores a receber das financeiras (L7b): o repasse da PayJoy e da Aiva, conferido no extrato, e o desfazer.
+export async function receberDaFinanceira(dados: FormData) {
+  const lido = lerRepasse(dados);
+  if (!lido.ok) voltar("/pagamentos/financeiras", { erro: lido.erro });
+  const { supabase } = await obterSessao({ exigirLoja: true });
+  const { data, error } = await supabase.rpc("financeira_receber", { p_conta: lido.conta, p_referencia: lido.referencia, p_valor_recebido: lido.recebido, p_recebido_em: lido.data });
+  if (error) voltar("/pagamentos/financeiras", { erro: erroDasFinanceiras(error) });
+  voltar("/pagamentos/financeiras", { ok: data === false ? "sem_mudanca" : "recebido" });
+}
+
+export async function desfazerRecebimento(dados: FormData) {
+  const conta = dados.get("conta");
+  const motivo = texto(dados.get("motivo"));
+  if (!ehUuid(conta)) voltar("/pagamentos/financeiras", { erro: "dados" });
+  if (motivo.length < 3 || motivo.length > 200) voltar("/pagamentos/financeiras", { erro: "motivo" });
+  const { supabase } = await obterSessao({ exigirLoja: true });
+  const { data, error } = await supabase.rpc("financeira_desfazer_recebimento", { p_conta: conta, p_motivo: motivo });
+  if (error) voltar("/pagamentos/financeiras", { erro: erroDasFinanceiras(error) });
+  voltar("/pagamentos/financeiras", { ok: data === false ? "sem_mudanca" : "desfeito" });
 }
