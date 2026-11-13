@@ -2,7 +2,7 @@
   "_leia": "Checkpoint do programa de execução integral (PR #67). Carregar ao retomar e seguir para o próximo item executável da fila; não reiniciar o projeto. Estados vêm de status-requisitos.json (fonte da rastreabilidade); este arquivo acrescenta lote, bloqueio externo e revisão.",
   "atualizado_em": "2026-11-13",
   "base": {
-    "main": "571465d",
+    "main": "818bc20",
     "pacote": {
       "pr": 67,
       "branch": "docs/execucao-integral-20261110",
@@ -12,33 +12,18 @@
   },
   "publicado": {
     "homologacao": {
-      "commit": "571465d",
+      "commit": "818bc20",
       "quando": "2026-11-13",
-      "conferido": "rodapé da tela de entrada, /saude, /inicio e /estoque respondendo 307 para o login"
+      "conferido": "rodapé da tela de entrada, /saude e as rotas protegidas respondendo 307 para o login"
     },
     "falta_publicar": [
-      "38fc068 (/financeiro sem login responde 307)",
-      "2ac6a25 (PR #64: semente do gerente de teste, só desenvolvimento)",
-      "0ecb2f2 (L2: lojas da rede)",
-      "ed4a468 (L3a: cadastro do catálogo)",
-      "0271a96 (L3b: preços e campanhas)",
-      "5476869 (L3c: importação por planilha)",
-      "953b21e (L4a: entrada de mercadoria)",
-      "15f3458 (L4b: inventário e condição na devolução)",
-      "a12782d (L5a: cliente compartilhado da rede)",
-      "aa8fff5 (L5b: funil de oportunidades e agenda)",
-      "c08daaa (L5c: mesclagem e segmentos)",
-      "a6f6d22 (L6a: nota no nome do cliente, pendências, aviso sem internet e câmera)",
-      "65eb3a7 (L7a: maquininhas por loja e conciliação manual)",
-      "8af4b34 (R1: correções do recebimento)",
-      "b352573 (R2: correções do importador; migration e aplicação juntas)",
-      "51fc428 (P0: matriz demo × real e contrato dos números; só documentos)"
+      "o merge do G4b (publicado ao fim do lote, por pedido do proprietário de 13/11)"
     ]
   },
   "contagem_dos_estados": {
-    "parcial": 61,
+    "parcial": 62,
     "testado": 32,
-    "nao_iniciado": 83,
+    "nao_iniciado": 82,
     "respeitado": 1,
     "bloqueado": 2
   },
@@ -794,7 +779,7 @@
       "titulo": "Contar individualmente aparelhos, acessórios, chips, ativações e recargas",
       "prioridade": "P0",
       "estado": "parcial",
-      "lote": "L9 metas/comissões; G4 metas e Ora Connect",
+      "lote": "L9 metas/comissões; G4 metas e Ora Connect (G4b: realizado das metas por vendedor)",
       "bloqueio_externo": null,
       "revisado_codex": false,
       "homologado": false
@@ -820,8 +805,8 @@
     "ORA-PERF-004": {
       "titulo": "Definir meta por vendedor, loja, categoria e período",
       "prioridade": "P0",
-      "estado": "nao_iniciado",
-      "lote": "L9 metas/comissões; G4 metas e Ora Connect",
+      "estado": "parcial",
+      "lote": "L9 metas/comissões; G4 metas e Ora Connect (G4b entregue em 13/11: metas mensais da loja e de cada vendedor)",
       "bloqueio_externo": null,
       "revisado_codex": false,
       "homologado": false
@@ -830,7 +815,7 @@
       "titulo": "Painel do gestor mostra metas e resultados da equipe",
       "prioridade": "P0",
       "estado": "parcial",
-      "lote": "L9 metas/comissões; G4 metas e Ora Connect (G4a: produção no Início; metas no G4b)",
+      "lote": "L9 metas/comissões; G4 metas e Ora Connect (G4a: produção no Início; metas no G4b); G4b: metas e resultados da equipe no /metas",
       "bloqueio_externo": null,
       "revisado_codex": false,
       "homologado": false

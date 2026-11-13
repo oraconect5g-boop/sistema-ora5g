@@ -1,9 +1,9 @@
 // Inventário de autorização (prioridade 1 do diagnóstico de 10/11/2026; ORA-ORG-004 e ORA-QUAL-002).
 // O aviso 0029 do Supabase lista as funções SECURITY DEFINER que qualquer usuário logado pode chamar
-// pela API: 101 em 12/11 (48 + 6 do cadastro de lojas, L2, + 5 do cadastro do catálogo, L3a, + 4 dos preços, L3b,
+// pela API: 103 em 13/11 (48 + 6 do cadastro de lojas, L2, + 5 do cadastro do catálogo, L3a, + 4 dos preços, L3b,
 // + 4 da importação do catálogo, L3c, + 3 da entrada de mercadoria, L4a, + 5 do inventário, L4b, + 6 dos clientes, L5a,
 // + 9 do funil e da agenda, L5b, + 4 da mesclagem e dos segmentos, L5c, + 4 das maquininhas e da conciliação, L7a,
-// + 2 da leitura das entradas, R1, + 1 do nome no ranking, G1). Elas rodam com poder total e cada uma confere sessão, loja e permissão por
+// + 2 da leitura das entradas, R1, + 1 do nome no ranking, G1, + 2 das metas, G4b). Elas rodam com poder total e cada uma confere sessão, loja e permissão por
 // conta própria. Este teste monta um "mundo" fictício com objetos reais em duas lojas e tenta cada
 // função como 13 tipos de atacante. Recusa = erro, ou resposta vazia numa leitura, e nada muda no
 // banco. O teste lista as funções no próprio banco e falha se aparecer uma nova sem casos aqui.
@@ -181,7 +181,7 @@ async function montarMundo() {
 }
 
 // ---------------------------------------------------------------------------------------------
-// Catálogo das 101 funções. Cada chamada usa argumentos válidos, para a recusa vir do controle de
+// Catálogo das 103 funções. Cada chamada usa argumentos válidos, para a recusa vir do controle de
 // acesso e não de um parâmetro errado. "A": alvos da loja A (do vendedorAB); "B": da loja B.
 //   identidade: os 9 atacantes sem acesso válido, sempre contra os alvos da loja A;
 //   outraOrganizacao: dono de outra rede, contra a loja A (omitido onde a função só age no
@@ -390,6 +390,16 @@ const CASOS: Record<string, Caso> = {
     leitura: true, A: () => ["select * from public.loja_historico($1)", [ids.lojaA]], B: () => ["select * from public.loja_historico($1)", [ids.lojaB]], semPermissao: true,
   },
   "lojas_da_rede()": { leitura: true, A: () => ["select * from public.lojas_da_rede()", []], semPermissao: true },
+  // Metas (G4b): definir exige metas.gerir na loja (dono e gerente); a equipe da loja só para quem vê ou
+  // define as metas dela. O vendedor da loja A é o "sem permissão" nas duas.
+  "metas_definir(uuid,uuid,date,jsonb,text)": {
+    A: () => ["select public.metas_definir($1, null, date_trunc('month', now())::date, '{\"connect\": 10}'::jsonb, null)", [ids.lojaA]],
+    B: () => ["select public.metas_definir($1, null, date_trunc('month', now())::date, '{\"connect\": 10}'::jsonb, null)", [ids.lojaB]], semPermissao: true,
+  },
+  "metas_equipe(uuid,date)": {
+    leitura: true, A: () => ["select public.metas_equipe($1, date_trunc('month', now())::date) as v", [ids.lojaA]],
+    B: () => ["select public.metas_equipe($1, date_trunc('month', now())::date) as v", [ids.lojaB]], semPermissao: true,
+  },
   "movimentar_caixa(text,bigint,text,text)": { A: () => ["select public.movimentar_caixa('sangria', 100, 'Tentativa', $1)", [chave("ataque")]], outraOrganizacao: false },
   "notas_cancelar(uuid,text)": {
     A: () => ["select public.notas_cancelar($1, 'Tentativa')", [alvo.notaA]], B: () => ["select public.notas_cancelar($1, 'Tentativa')", [alvo.notaB]], semPermissao: true,
@@ -544,7 +554,7 @@ function vazio(funcao: string, linhas: Record<string, unknown>[]) {
     const v = (linhas[0]?.v ?? {}) as { totais?: object; pagamentos?: unknown[] };
     return linhas.length === 1 && Object.keys(v.totais ?? { x: 1 }).length === 0 && (v.pagamentos ?? [1]).length === 0;
   }
-  if (funcao === "clientes_duplicados()") return linhas.length === 1 && Array.isArray(linhas[0]?.v) && (linhas[0]?.v as unknown[]).length === 0;
+  if (funcao === "clientes_duplicados()" || funcao === "metas_equipe(uuid,date)") return linhas.length === 1 && Array.isArray(linhas[0]?.v) && (linhas[0]?.v as unknown[]).length === 0;
   if (funcao === "clientes_segmentos()") return linhas.length === 1 && ((linhas[0]?.v as { segmentos?: unknown[] } | undefined)?.segmentos ?? [1]).length === 0;
   if (funcao === "crm_funil()" || funcao === "crm_agenda()") {
     const v = (linhas[0]?.v ?? {}) as { oportunidades?: unknown[]; atividades?: unknown[] };
@@ -654,7 +664,7 @@ describe("inventário: toda função SECURITY DEFINER exposta tem casos de recus
     const expostas = rows.map((r) => r.f);
     expect(expostas.filter((f) => !(f in CASOS)), "função nova exposta sem casos de recusa: acrescente ao CASOS").toEqual([]);
     expect(Object.keys(CASOS).filter((f) => !expostas.includes(f)), "caso de função que não existe mais").toEqual([]);
-    expect(expostas).toHaveLength(101);
+    expect(expostas).toHaveLength(103);
   });
 
   it("visitante anônimo não executa nenhuma função do esquema public; no privado só um gatilho, que não roda sozinho", async () => {
