@@ -2,7 +2,7 @@
   "_leia": "Checkpoint do programa de execução integral (PR #67). Carregar ao retomar e seguir para o próximo item executável da fila; não reiniciar o projeto. Estados vêm de status-requisitos.json (fonte da rastreabilidade); este arquivo acrescenta lote, bloqueio externo e revisão.",
   "atualizado_em": "2026-11-13",
   "base": {
-    "main": "3ada10c",
+    "main": "440993e",
     "pacote": {
       "pr": 67,
       "branch": "docs/execucao-integral-20261110",
@@ -12,9 +12,9 @@
   },
   "publicado": {
     "homologacao": {
-      "commit": "0b6b45e",
-      "quando": "2026-11-10T20:45-03:00",
-      "conferido": "rodapé e /saude em aba anônima"
+      "commit": "440993e",
+      "quando": "2026-11-13",
+      "conferido": "rodapé da tela de entrada, /saude e /inicio respondendo 307 para o login"
     },
     "falta_publicar": [
       "38fc068 (/financeiro sem login responde 307)",
@@ -36,12 +36,12 @@
     ]
   },
   "contagem_dos_estados": {
-    "parcial": 59,
+    "parcial": 60,
     "testado": 32,
     "nao_iniciado": 83,
     "respeitado": 1,
     "bloqueado": 2,
-    "demonstracao": 2
+    "demonstracao": 1
   },
   "requisitos": {
     "ORA-ORG-001": {
@@ -237,7 +237,7 @@
       "titulo": "Manter disponibilidade por loja e localização física",
       "prioridade": "P0",
       "estado": "parcial",
-      "lote": "L4 estoque/compras",
+      "lote": "L4 estoque/compras; G3 painéis do estoque (entregue em 13/11)",
       "bloqueio_externo": null,
       "revisado_codex": false,
       "homologado": false
@@ -1460,8 +1460,8 @@
     "ORA-REPORT-007": {
       "titulo": "Alertas de estoque mínimo/IMEI/caixa divergente/fiscal pendente",
       "prioridade": "P1",
-      "estado": "demonstracao",
-      "lote": "L8 financeiro/relatórios; G3 estoque",
+      "estado": "parcial",
+      "lote": "L8 financeiro/relatórios; G3 estoque (G3 entregue em 13/11)",
       "bloqueio_externo": null,
       "revisado_codex": false,
       "homologado": false

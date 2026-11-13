@@ -4464,6 +4464,10 @@ export type Database = {
           unidade_id: string
         }[]
       }
+      estoque_painel: {
+        Args: { p_unidade?: string }
+        Returns: Json
+      }
       estoque_registrar_entrada: {
         Args: {
           p_chave: string

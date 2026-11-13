@@ -35,6 +35,7 @@ const FONTE = {
   financeiro: "a leitura agregada do financeiro (migration financeiro_painel)",
   nomes: "a leitura dos nomes do ranking (migration vendas_painel)",
   margem: "a leitura da margem bruta (migration margem_painel)",
+  estoque: "a leitura agregada do estoque (migration estoque_painel)",
 } as const;
 
 /** O conteúdo de um painel que não tem número para mostrar: o motivo aparece, zero nunca. */
