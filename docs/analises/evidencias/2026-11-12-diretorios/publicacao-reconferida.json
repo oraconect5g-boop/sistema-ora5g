@@ -1,0 +1,57 @@
+{
+  "quando_utc": "2026-11-13T01:02:03.568264+00:00",
+  "respostas": [
+    {
+      "path": "/saude",
+      "status": 200,
+      "location": null,
+      "sha_esperado_encontrado": true,
+      "build_esperada_encontrada": true
+    },
+    {
+      "path": "/demo",
+      "status": 200,
+      "location": null
+    },
+    {
+      "path": "/inicio",
+      "status": 307,
+      "location": "/entrar"
+    },
+    {
+      "path": "/financeiro",
+      "status": 200,
+      "location": null
+    },
+    {
+      "path": "/produtos",
+      "status": 404,
+      "location": null
+    },
+    {
+      "path": "/estoque/entrada",
+      "status": 404,
+      "location": null
+    },
+    {
+      "path": "/estoque/inventario",
+      "status": 404,
+      "location": null
+    },
+    {
+      "path": "/clientes",
+      "status": 404,
+      "location": null
+    },
+    {
+      "path": "/crm",
+      "status": 404,
+      "location": null
+    },
+    {
+      "path": "/pagamentos/conciliacao",
+      "status": 404,
+      "location": null
+    }
+  ]
+}

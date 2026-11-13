@@ -1,0 +1,53 @@
+[
+  {
+    "path": "/saude",
+    "status": 200,
+    "location": null,
+    "texto": " class=\"mx-auto max-w-xl px-4 py-10\">         Em funcionamento  Sistema no ar   Serviço  plataforma  Versão  0.1.0  Publicada  v0.1.0 · 0b6b45e · build 10/11/2026 20:45  Verificado em   12/11/2026, 21:44:31   Login (Supabase)  conectado   Confere o aplicativo e se o serviço de login responde. Não lê dados do banco.  "
+  },
+  {
+    "path": "/demo",
+    "status": 200,
+    "location": null
+  },
+  {
+    "path": "/inicio",
+    "status": 307,
+    "location": "/entrar"
+  },
+  {
+    "path": "/financeiro",
+    "status": 200,
+    "location": null
+  },
+  {
+    "path": "/produtos",
+    "status": 404,
+    "location": null
+  },
+  {
+    "path": "/estoque/entrada",
+    "status": 404,
+    "location": null
+  },
+  {
+    "path": "/estoque/inventario",
+    "status": 404,
+    "location": null
+  },
+  {
+    "path": "/clientes",
+    "status": 404,
+    "location": null
+  },
+  {
+    "path": "/crm",
+    "status": 404,
+    "location": null
+  },
+  {
+    "path": "/pagamentos/conciliacao",
+    "status": 404,
+    "location": null
+  }
+]
