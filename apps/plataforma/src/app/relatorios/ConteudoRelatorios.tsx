@@ -6,6 +6,7 @@ import {
   cadaRotulo, EstadoDoPainel, foraDaMargem, indicadorDaMargem, indicadorDoRecebido, Indicadores, indicadoresDeVendas, LIGACAO, NOTA, NUMERO_PRINCIPAL,
   PainelDasLojas, PainelDeRecebimentos, PainelDeVendas, PainelDoMix, plural,
 } from "../../componentes/paineis-de-vendas";
+import { PainelDaProducaoPorDia } from "../../componentes/paineis-do-connect";
 import { Aviso, BotaoLink, Cartao, Celula, EstadoVazio, ListaDados, Selo, Tabela } from "../../componentes/ui";
 import { nomeCurtoDoTipo } from "../../lib/catalogo/cadastro";
 import type { LojaDoFiltro } from "../../lib/financeiro/escopo";
@@ -309,7 +310,7 @@ function PainelDosItens({ itens, margem, pagina, comLoja, aqui, enderecoDaPagina
 // A tela inteira, no recorte de quem pede
 // ---------------------------------------------------------------------------------------------
 export function ConteudoRelatorios({ relatorios, turno }: { relatorios: Relatorios; turno: LojaDoFiltro }) {
-  const { periodo, escopo, daRede, janelas, cadastro, vendas, anterior, financeiro, margem, itens, pagina } = relatorios;
+  const { periodo, escopo, daRede, janelas, cadastro, vendas, anterior, financeiro, margem, itens, pagina, producao } = relatorios;
   const redeInteira = daRede && escopo.unidade === null;
   // Só quem vê a rede leva a loja no endereço; os demais ficam na loja do turno.
   const lojaDoEndereco = daRede ? escopo.unidade : null;
@@ -352,6 +353,8 @@ export function ConteudoRelatorios({ relatorios, turno }: { relatorios: Relatori
       ) : (
         <PainelDoMix vendas={vendas} aqui={aqui} className="" />
       )}
+
+      <PainelDaProducaoPorDia producao={producao} janela={janelas.atual} aqui={aqui} />
 
       {margem !== "sem_permissao" && itens !== "sem_permissao" && (
         <PainelDosItens

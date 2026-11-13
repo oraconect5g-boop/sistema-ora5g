@@ -2,7 +2,7 @@
   "_leia": "Checkpoint do programa de execução integral (PR #67). Carregar ao retomar e seguir para o próximo item executável da fila; não reiniciar o projeto. Estados vêm de status-requisitos.json (fonte da rastreabilidade); este arquivo acrescenta lote, bloqueio externo e revisão.",
   "atualizado_em": "2026-11-13",
   "base": {
-    "main": "440993e",
+    "main": "571465d",
     "pacote": {
       "pr": 67,
       "branch": "docs/execucao-integral-20261110",
@@ -12,9 +12,9 @@
   },
   "publicado": {
     "homologacao": {
-      "commit": "440993e",
+      "commit": "571465d",
       "quando": "2026-11-13",
-      "conferido": "rodapé da tela de entrada, /saude e /inicio respondendo 307 para o login"
+      "conferido": "rodapé da tela de entrada, /saude, /inicio e /estoque respondendo 307 para o login"
     },
     "falta_publicar": [
       "38fc068 (/financeiro sem login responde 307)",
@@ -36,12 +36,11 @@
     ]
   },
   "contagem_dos_estados": {
-    "parcial": 60,
+    "parcial": 61,
     "testado": 32,
     "nao_iniciado": 83,
     "respeitado": 1,
-    "bloqueado": 2,
-    "demonstracao": 1
+    "bloqueado": 2
   },
   "requisitos": {
     "ORA-ORG-001": {
@@ -831,7 +830,7 @@
       "titulo": "Painel do gestor mostra metas e resultados da equipe",
       "prioridade": "P0",
       "estado": "parcial",
-      "lote": "L9 metas/comissões; G4 metas e Ora Connect",
+      "lote": "L9 metas/comissões; G4 metas e Ora Connect (G4a: produção no Início; metas no G4b)",
       "bloqueio_externo": null,
       "revisado_codex": false,
       "homologado": false
@@ -1433,8 +1432,8 @@
     "ORA-REPORT-004": {
       "titulo": "Relatório de chips vendidos, ativações e recargas separadamente",
       "prioridade": "P0",
-      "estado": "demonstracao",
-      "lote": "L8 financeiro/relatórios; G4 metas e Ora Connect",
+      "estado": "parcial",
+      "lote": "L8 financeiro/relatórios; G4 metas e Ora Connect (G4a entregue em 13/11)",
       "bloqueio_externo": null,
       "revisado_codex": false,
       "homologado": false

@@ -45,6 +45,8 @@ const cenario = vi.hoisted(() => ({
   erroDaMargem: null as null | { code: string },
   itens: null as unknown,
   erroDosItens: null as null | { code: string },
+  producao: null as unknown,
+  erroDaProducao: null as null | { code: string },
   /** Resposta de margem_itens lote a lote (a exportação pede o detalhe em lotes de 1.000). */
   loteDosItens: null as null | ((argumentos: Record<string, unknown>) => { data: unknown; error: { code: string } | null }),
   /** Argumentos de cada chamada de função do banco, por nome. */
@@ -95,6 +97,7 @@ const supabase = {
     if (nome === "financeiro_painel") return responder(cenario.erroDoFinanceiro, cenario.financeiro);
     if (nome === "margem_painel") return responder(cenario.erroDaMargem, cenario.margem);
     if (nome === "margem_itens") return cenario.loteDosItens ? cenario.loteDosItens(argumentos) : responder(cenario.erroDosItens, cenario.itens);
+    if (nome === "connect_painel") return responder(cenario.erroDaProducao, cenario.producao);
     return responder({ code: "PGRST202" }, null);
   },
 };
@@ -124,7 +127,7 @@ import Relatorios from "./page";
 // Linhas, Colunas, BarraSegmentada, Tabela...) ficam como elementos, para o teste conferir o que recebem.
 const APRESENTACAO = new Set([
   "ConteudoRelatorios", "EstadoDoPainel", "Indicadores", "PainelDeVendas", "PainelDeRecebimentos", "PainelDoMix", "PainelDasLojas",
-  "PainelDaMargem", "PainelDaCobertura", "PainelDoTicket", "PainelDosDescontos", "PainelDosItens",
+  "PainelDaMargem", "PainelDaCobertura", "PainelDoTicket", "PainelDosDescontos", "PainelDosItens", "PainelDaProducaoPorDia",
 ]);
 type Elemento = { tipo: string; props: Linha };
 const nomeDoTipo = (tipo: unknown) => (typeof tipo === "string" ? tipo : typeof tipo === "function" ? tipo.name : "");
@@ -322,9 +325,15 @@ function entrar(perfil: keyof typeof PERFIS, usuario = GESTOR) {
 }
 
 const INDICADORES = ["Vendas realizadas", "Ticket médio", "Descontos concedidos", "Devoluções e cancelamentos", "Margem bruta", "Recebido na loja (registro)"];
-const PAINEIS_DA_LOJA = ["Vendas", "Recebimentos por meio", "Margem bruta por dia", "Cobertura do custo", "Ticket médio por dia", "Descontos concedidos por dia", "Mix de vendas", "Margem por item"];
-const PAINEIS_DA_REDE = [...PAINEIS_DA_LOJA.slice(0, 7), "Desempenho das lojas", "Margem por item"];
-const PAINEIS_SEM_CUSTO = ["Vendas", "Recebimentos por meio", "Margem bruta", "Ticket médio por dia", "Descontos concedidos por dia", "Mix de vendas"];
+const CONNECT = "Chips, ativações e recargas por dia";
+const PAINEIS_DA_LOJA = ["Vendas", "Recebimentos por meio", "Margem bruta por dia", "Cobertura do custo", "Ticket médio por dia", "Descontos concedidos por dia", "Mix de vendas", CONNECT, "Margem por item"];
+const PAINEIS_DA_REDE = [...PAINEIS_DA_LOJA.slice(0, 7), "Desempenho das lojas", CONNECT, "Margem por item"];
+const PAINEIS_SEM_CUSTO = ["Vendas", "Recebimentos por meio", "Margem bruta", "Ticket médio por dia", "Descontos concedidos por dia", "Mix de vendas", CONNECT];
+// Ora Connect (G4a): em 08/11, 1 chip vendido e 2 ativações; em 10/11, 1 recarga; 1 operação ainda sem confirmação.
+const PRODUCAO = {
+  totais: { chips: 1, ativacoes: 2, portabilidades: 0, recargas: 1, por_evidencia: 2, por_revisao: 1, valor_face_recargas: 2_000, em_andamento: 1, sem_resultado: 0, debito: 3_300, lojas_sem_custo: 0 },
+  periodos: [{ periodo: "2026-11-08", chips: 1, ativacoes: 2, portabilidades: 0, recargas: 0 }, { periodo: "2026-11-10", chips: 0, ativacoes: 0, portabilidades: 0, recargas: 1 }],
+};
 // Os 14 dias da janela padrão, como o eixo e as tabelas os mostram.
 const DIAS = ["28/10", "29/10", "30/10", "31/10", "01/11", "02/11", "03/11", "04/11", "05/11", "06/11", "07/11", "08/11", "09/11", "10/11"];
 /** Um valor por dia dos 14: os dias citados com o valor dado; os demais, com `resto`. */
@@ -341,7 +350,7 @@ beforeEach(() => {
     usuario: GESTOR, permissoes: new Set<string>(), erroDaPermissao: null,
     vendas: VENDAS, anterior: ANTES, erroDeVendas: null, erroDoAnterior: null,
     financeiro: FINANCEIRO, erroDoFinanceiro: null, margem: MARGEM, erroDaMargem: null,
-    itens: ITENS, erroDosItens: null, loteDosItens: null,
+    itens: ITENS, erroDosItens: null, loteDosItens: null, producao: PRODUCAO, erroDaProducao: null,
     chamadas: {}, errosDasTabelas: {}, lidas: [], sessoes: [],
     tabelas: {
       unidades: [
@@ -1162,5 +1171,34 @@ describe("/relatorios/exportar", () => {
     await expect(exportar(new Request(`http://teste/relatorios/exportar?loja=${OUTRA}`))).rejects.toBeInstanceOf(FalhaDoServico);
     expect(cenario.chamadas.vendas_painel).toBeUndefined();
     expect(errosRegistrados()).toEqual([["relatorios: falha ao consultar as lojas", { codigo: "57014" }]]);
+  });
+});
+
+// ---------------------------------------------------------------------------------------------
+describe("Relatórios: produção do Ora Connect por dia (G4a)", () => {
+  beforeEach(() => entrar("gerente"));
+
+  it("chips vendidos e operações confirmadas por dia, na mesma janela e no mesmo recorte das vendas", async () => {
+    const p = await pagina();
+    expect(cenario.chamadas.connect_painel).toStrictEqual([{ p_inicio: DESDE["14"], p_fim: FIM, p_unidade: LOJA }]);
+    const cartao = p.cartao(CONNECT);
+    expect(cartao.texto).toContain("3 operações confirmadas · 1 chip vendido · 1 ainda sem confirmação (fora da conta)");
+    expect(primeiro(cartao.doTipo("Linhas")).series).toMatchObject([
+      { nome: "Chips vendidos", serie: 1, valores: porDia({ "08/11": 1 }, 0) },
+      { nome: "Ativações", serie: 2, valores: porDia({ "08/11": 2 }, 0) },
+      { nome: "Portabilidades", serie: 3, valores: porDia({}, 0) },
+      { nome: "Recargas", serie: 4, valores: porDia({ "10/11": 1 }, 0) },
+    ]);
+    expect((primeiro(cartao.doTipo("TabelaDoGrafico")).linhas as string[][])[11]).toEqual(["08/11", "1", "2", "0", "0"]);
+  });
+
+  it("sem produção, a falta é explicada; leitura indisponível ou em falha não vira zero", async () => {
+    cenario.producao = { ...PRODUCAO, totais: { ...PRODUCAO.totais, chips: 0, ativacoes: 0, recargas: 0, por_evidencia: 0, por_revisao: 0 }, periodos: [] };
+    expect((await pagina()).cartao(CONNECT).texto).toContain("Nenhum chip vendido nem operação confirmada no período");
+    cenario.erroDaProducao = { code: "PGRST202" };
+    expect((await pagina()).cartao(CONNECT).doTipo("Aviso")).toMatchObject([{ tom: "aviso", titulo: "Indisponível neste ambiente" }]);
+    cenario.erroDaProducao = { code: "57014" };
+    expect((await pagina()).cartao(CONNECT).doTipo("Aviso")).toMatchObject([{ tom: "perigo", titulo: "Não foi possível ler agora" }]);
+    expect(errosRegistrados()).toEqual([["connect: falha ao consultar connect_painel", { codigo: "57014" }]]);
   });
 });

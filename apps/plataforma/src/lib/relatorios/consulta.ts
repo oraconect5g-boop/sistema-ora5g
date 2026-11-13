@@ -4,6 +4,8 @@
 // "indisponivel" ou "falha"); falha nunca vira zero e não derruba a página. O que cada pessoa lê é
 // decidido no banco (RLS e tem_permissao); aqui só se escolhe quais perguntas fazer.
 import { FalhaDoServico, type obterSessao } from "../acesso/sessao";
+import { consultarProducao } from "../connect/consulta-producao";
+import type { ProducaoDoBanco } from "../connect/producao";
 import type { Escopo, LojaDoFiltro } from "../financeiro/escopo";
 import type { ResumoFinanceiro } from "../financeiro/painel";
 import { POR_PAGINA } from "../financeiro/registros";
@@ -53,6 +55,8 @@ export type Relatorios = {
   margem: Leitura<MargemDoBanco> | "sem_permissao";
   /** Uma página do detalhe da margem, por item. */
   itens: Leitura<ItensDaMargem> | "sem_permissao";
+  /** Chips vendidos e operações do Ora Connect confirmadas (lote G4a). */
+  producao: Leitura<ProducaoDoBanco>;
   pagina: number;
 };
 
@@ -80,17 +84,18 @@ export async function lerRelatorios(supabase: Cliente, pedido: PedidoDosRelatori
     // Sem a lista de lojas não dá para conferir a loja pedida no endereço: nenhum número é mostrado.
     return {
       periodo, daRede, janelas, pagina, escopo: escopoDoInicio(pedido.loja, [], turno, daRede), filtroDeLojas: [], cadastro: [],
-      vendas: FALHA, anterior: FALHA, financeiro: FALHA, margem: margemSemPedir, itens: margemSemPedir,
+      vendas: FALHA, anterior: FALHA, financeiro: FALHA, margem: margemSemPedir, itens: margemSemPedir, producao: FALHA,
     };
   }
   const { escopo, cadastro } = lido;
   const filtro = { unidade: escopo.unidade, vendedor: null };
-  const [vendas, anterior, financeiro, margem, itens] = await Promise.all([
+  const [vendas, anterior, financeiro, margem, itens, producao] = await Promise.all([
     consultarVendas(supabase, janelas.atual, filtro, false),
     consultarVendas(supabase, janelas.anterior, filtro, false),
     consultarFinanceiro(supabase, janelas.atual, escopo.unidade),
     pedido.custo ? consultarMargem(supabase, janelas.atual, escopo.unidade) : "sem_permissao" as const,
     pedido.custo ? consultarItensDaMargem(supabase, janelas.atual, escopo.unidade, { limite: POR_PAGINA, apos: (pagina - 1) * POR_PAGINA }) : "sem_permissao" as const,
+    consultarProducao(supabase, janelas.atual, filtro),
   ]);
-  return { periodo, daRede, janelas, pagina, escopo, cadastro, filtroDeLojas: daRede ? lojasDoFiltro(cadastro, turno) : [], vendas, anterior, financeiro, margem, itens };
+  return { periodo, daRede, janelas, pagina, escopo, cadastro, filtroDeLojas: daRede ? lojasDoFiltro(cadastro, turno) : [], vendas, anterior, financeiro, margem, itens, producao };
 }

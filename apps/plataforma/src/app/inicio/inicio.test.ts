@@ -40,6 +40,8 @@ const cenario = vi.hoisted(() => ({
   erroDoFinanceiro: null as null | { code: string },
   margem: null as unknown,
   erroDaMargem: null as null | { code: string },
+  producao: null as unknown,
+  erroDaProducao: null as null | { code: string },
   nomes: null as unknown,
   erroDosNomes: null as null | { code: string },
   /** Argumentos de cada chamada de função do banco, por nome. */
@@ -98,6 +100,7 @@ const supabase = {
     if (nome === "vendas_painel") return argumentos.p_fim === AGORA.toISOString() ? responder(cenario.erroDeVendas, cenario.vendas) : responder(cenario.erroDoAnterior, cenario.anterior);
     if (nome === "financeiro_painel") return responder(cenario.erroDoFinanceiro, cenario.financeiro);
     if (nome === "margem_painel") return responder(cenario.erroDaMargem, cenario.margem);
+    if (nome === "connect_painel") return responder(cenario.erroDaProducao, cenario.producao);
     if (nome === "ranking_nomes") return responder(cenario.erroDosNomes, cenario.nomes);
     return responder({ code: "PGRST202" }, null);
   },
@@ -311,7 +314,12 @@ const PAINEIS_DA_LOJA = ["Vendas", "Recebimentos por meio", "Mix de vendas", "Eq
 const INDICADORES_DE_VENDAS = ["Vendas realizadas", "Ticket médio", "Descontos concedidos", "Devoluções e cancelamentos"];
 const INDICADORES_DO_FINANCEIRO = ["Recebido na loja (registro)", "Movimentação dos caixas (dinheiro)"];
 // Loja ou rede: os quatro de vendas, a margem bruta e os dois do financeiro, nesta ordem.
-const INDICADORES_DA_LOJA = [...INDICADORES_DE_VENDAS, "Margem bruta", ...INDICADORES_DO_FINANCEIRO];
+const INDICADORES_DA_LOJA = [...INDICADORES_DE_VENDAS, "Margem bruta", ...INDICADORES_DO_FINANCEIRO, "Ora Connect confirmado"];
+// Ora Connect (G4a): hoje, 2 ativações e 1 recarga confirmadas e 1 chip vendido; 1 operação ainda sem confirmação.
+const PRODUCAO = {
+  totais: { chips: 1, ativacoes: 2, portabilidades: 0, recargas: 1, por_evidencia: 3, por_revisao: 0, valor_face_recargas: 2_000, em_andamento: 1, sem_resultado: 0, debito: 0, lojas_sem_custo: 0 },
+  periodos: [{ periodo: "2026-11-10", chips: 1, ativacoes: 2, portabilidades: 0, recargas: 1 }],
+};
 const errosRegistrados = () => vi.mocked(console.error).mock.calls;
 
 beforeEach(() => {
@@ -321,7 +329,7 @@ beforeEach(() => {
   Object.assign(cenario, {
     usuario: GESTOR, permissoes: new Set<string>(), erroDaPermissao: null,
     vendas: HOJE, anterior: ONTEM, erroDeVendas: null, erroDoAnterior: null,
-    financeiro: FINANCEIRO, erroDoFinanceiro: null, margem: MARGEM, erroDaMargem: null, nomes: NOMES, erroDosNomes: null,
+    financeiro: FINANCEIRO, erroDoFinanceiro: null, margem: MARGEM, erroDaMargem: null, producao: PRODUCAO, erroDaProducao: null, nomes: NOMES, erroDosNomes: null,
     chamadas: {}, errosDasTabelas: {}, lidas: [], sessoes: [],
     tabelas: {
       perfis_usuario: [{ id: GESTOR, nome: "Gestor Teste" }, { id: ANA, nome: "Ana Teste" }, { id: BETO, nome: "Beto Teste" }],
@@ -1090,5 +1098,33 @@ describe("Início: sessão e carregamento", () => {
     const { elementos } = ler(esqueleto);
     expect(elementos.length).toBeGreaterThan(10);
     expect(elementos.filter((e) => typeof e.props.children === "string" || typeof e.props.children === "number")).toEqual([]);
+  });
+});
+
+// ---------------------------------------------------------------------------------------------
+describe("Início: produção do Ora Connect (G4a)", () => {
+  it("gerente: as operações confirmadas e os chips vendidos de hoje, na loja do turno", async () => {
+    entrar("gerente");
+    const p = await pagina();
+    expect(cenario.chamadas.connect_painel).toStrictEqual([{ p_inicio: HOJE_DESDE, p_fim: AGORA.toISOString(), p_unidade: LOJA }]);
+    expect(p.indicador("Ora Connect confirmado")).toMatchObject({ valor: "3", detalhe: "2 ativações · 1 recarga · 1 chip vendido · 1 ainda sem confirmação" });
+  });
+
+  it("a visão da vendedora não pergunta a produção aqui (ela fica no Ora Connect)", async () => {
+    entrar("vendedor", ANA);
+    await pagina();
+    expect(cenario.chamadas.connect_painel).toBeUndefined();
+  });
+
+  it("leitura indisponível ou em falha: o indicador fica sem número, e o resto continua", async () => {
+    entrar("gerente");
+    cenario.erroDaProducao = { code: "PGRST202" };
+    let p = await pagina();
+    expect(p.indicador("Ora Connect confirmado")).toMatchObject({ valor: "—", detalhe: "Indisponível neste ambiente", tom: "atencao" });
+    expect(p.indicador("Vendas realizadas")).toMatchObject({ valor: "3" });
+    cenario.erroDaProducao = { code: "57014" };
+    p = await pagina();
+    expect(p.indicador("Ora Connect confirmado")).toMatchObject({ valor: "—", detalhe: "Não foi possível ler agora" });
+    expect(errosRegistrados()).toEqual([["connect: falha ao consultar connect_painel", { codigo: "57014" }]]);
   });
 });

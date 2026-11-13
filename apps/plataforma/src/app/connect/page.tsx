@@ -6,12 +6,15 @@ import type { Metadata } from "next";
 import { NOMES_DAS_OPERACOES, SITUACOES_OPERACAO, TIPOS_OPERACAO, type SituacaoOperacao, type TipoOperacao } from "@ora5g/dominio/nogle";
 
 import { MoldeReal } from "../../componentes/MoldeReal";
-import { Aviso, Botao, Cartao, Selo, TituloPagina, type Tom } from "../../componentes/ui";
+import { PainelDaProducao } from "../../componentes/paineis-do-connect";
+import { Aviso, Botao, Cartao, FiltroSegmentado, Selo, TituloPagina, type Tom } from "../../componentes/ui";
 import { FalhaDoServico, obterSessao } from "../../lib/acesso/sessao";
+import { consultarProducao } from "../../lib/connect/consulta-producao";
 import { ERROS_DO_CONNECT, inicioDaJanela } from "../../lib/connect/regras";
 import { centavosDoBanco } from "../../lib/dinheiro";
+import { janelasDoPeriodo, ORDEM_DOS_PERIODOS, PERIODOS_FINANCEIROS, periodoFinanceiro } from "../../lib/financeiro/painel";
 import { brl } from "../../lib/formato";
-import { chaveDoCatalogo, type ValorDeParametro } from "../../lib/parametros";
+import { chaveDoCatalogo, textoDoParametro, type ValorDeParametro } from "../../lib/parametros";
 import { cancelarOperacao, habilitarOperacao, registrarOperacao, resolverOperacao } from "./acoes";
 
 export const metadata: Metadata = { title: "Ora Connect" };
@@ -36,7 +39,7 @@ const quando = (data: string) => new Intl.DateTimeFormat("pt-BR", { timeZone: "A
 
 // Ora Connect real (ADR-005): a loja registra; o worker do servidor fala com a Nogle; só a
 // evidência da operadora confirma. Nada aqui chama a Nogle nem vê credencial.
-export default async function Connect({ searchParams }: { searchParams: Promise<{ erro?: ValorDeParametro; ok?: ValorDeParametro }> }) {
+export default async function Connect({ searchParams }: { searchParams: Promise<{ erro?: ValorDeParametro; ok?: ValorDeParametro; periodo?: ValorDeParametro }> }) {
   const parametros = await searchParams;
   const erro = chaveDoCatalogo(ERROS_DO_CONNECT, parametros.erro);
   const ok = chaveDoCatalogo(OK, parametros.ok);
@@ -63,6 +66,12 @@ export default async function Connect({ searchParams }: { searchParams: Promise<
     ? await supabase.from("connect_operacoes_custos").select("operacao_id, valor_debitado_centavos").in("operacao_id", operacoes.data.map((o) => o.id))
     : { data: [], error: null };
   if (custos.error) throw new FalhaDoServico("connect_custos");
+  // Produção do período (lote G4a), somada no banco: a loja para quem gere; só a própria para quem opera.
+  const periodo = periodoFinanceiro(textoDoParametro(parametros.periodo));
+  const producao = opera.data || gere.data
+    ? await consultarProducao(supabase, janelasDoPeriodo(periodo).atual, { unidade, vendedor: gere.data ? null : usuario.id })
+    : null;
+  const enderecoDoPeriodo = (p: string) => (p === "hoje" ? "/connect" : `/connect?periodo=${p}`);
   const debitoDe = (id: string) => custos.data.find((c) => c.operacao_id === id)?.valor_debitado_centavos ?? null;
 
   const habilitada = new Set(habilitacoes.data.filter((h) => h.habilitada).map((h) => h.tipo));
@@ -98,6 +107,12 @@ export default async function Connect({ searchParams }: { searchParams: Promise<
       <TituloPagina sobretitulo={situacao.unidade_nome} titulo="Ora Connect" />
       {erro && <Aviso tom="perigo">{ERROS_DO_CONNECT[erro]}</Aviso>}
       {ok && <Aviso tom="sucesso">{OK[ok]}</Aviso>}
+      {producao && (
+        <PainelDaProducao
+          producao={producao} veCusto={veCusto.data === true} aqui={enderecoDoPeriodo(periodo)}
+          filtro={<FiltroSegmentado rotulo="Período" opcoes={ORDEM_DOS_PERIODOS.map((p) => ({ href: enderecoDoPeriodo(p), rotulo: PERIODOS_FINANCEIROS[p].rotulo, ativo: p === periodo }))} />}
+        />
+      )}
 
       <Cartao titulo="Situação da integração" icone={RadioTower}>
         <ul className="flex flex-wrap gap-2">
