@@ -1,5 +1,5 @@
 // ARQUIVO GERADO pelo Supabase (generate_typescript_types do projeto ora5g-dev) depois da
-// migration 20261112163333_importador_correcoes. Não edite à mão: gere de novo a cada
+// migration 20261112195200_vendas_painel. Não edite à mão: gere de novo a cada
 // migration aplicada (auditoria do Codex de 08/11, §7.2). O teste tipos-banco.test.ts confere
 // que funções e tabelas públicas daqui são as mesmas das migrations.
 export type Json =
@@ -4823,6 +4823,13 @@ export type Database = {
           valor_centavos: number
         }[]
       }
+      ranking_nomes: {
+        Args: { p_vendedores: string[] }
+        Returns: {
+          id: string
+          nome: string
+        }[]
+      }
       registrar_foto: {
         Args: {
           p_altura: number
@@ -4910,6 +4917,16 @@ export type Database = {
       venda_vincular_cliente: {
         Args: { p_cliente: string; p_motivo: string; p_venda: string }
         Returns: boolean
+      }
+      vendas_painel: {
+        Args: {
+          p_fim: string
+          p_inicio: string
+          p_por_hora?: boolean
+          p_unidade?: string
+          p_vendedor?: string
+        }
+        Returns: Json
       }
       vincular_pessoa: {
         Args: {
