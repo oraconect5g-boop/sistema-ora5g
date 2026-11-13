@@ -86,6 +86,10 @@ class Consulta {
     this.linhas = this.linhas.filter((l) => l[coluna] === undefined || l[coluna] !== valor);
     return this;
   }
+  lte(coluna: string, valor: string) {
+    this.linhas = this.linhas.filter((l) => l[coluna] === undefined || String(l[coluna]) <= valor);
+    return this;
+  }
   or() { return this; }
   order() { return this; }
   maybeSingle() {
@@ -317,9 +321,9 @@ const MARGEM_SEM_CUSTO = { totais: SO_SEM_CUSTO, periodos: [{ periodo: "2026-11-
 // Permissões de cada perfil, como na matriz de papéis do banco (só as que o Início e o menu perguntam).
 // As de metas (metas.gerir, metas.ver_unidade e metas.ver_propria) entram só nos testes da meta do mês (G4c).
 const PERFIS = {
-  dono: ["venda.registrar", "venda.ver_propria", "venda.ver_unidade", "venda.ver_todas", "ranking.ver", "custo.ver", "desconto.aprovar", "nota.aprovar", "caixa.abrir", "caixa.conferir", "estoque.consultar", "connect.operar", "connect.gerir", "cliente.buscar", "auditoria.ver", "usuarios.gerir", "unidades.gerir"],
+  dono: ["venda.registrar", "venda.ver_propria", "venda.ver_unidade", "venda.ver_todas", "ranking.ver", "custo.ver", "desconto.aprovar", "nota.aprovar", "caixa.abrir", "caixa.conferir", "estoque.consultar", "connect.operar", "connect.gerir", "cliente.buscar", "auditoria.ver", "usuarios.gerir", "unidades.gerir", "conta_pagar.gerir"],
   administrador: ["venda.ver_todas", "ranking.ver", "custo.ver", "estoque.consultar", "usuarios.gerir", "unidades.gerir", "auditoria.ver"],
-  gerente: ["venda.registrar", "venda.ver_unidade", "ranking.ver", "custo.ver", "desconto.aprovar", "nota.aprovar", "caixa.abrir", "caixa.conferir", "estoque.consultar", "cliente.buscar", "auditoria.ver"],
+  gerente: ["venda.registrar", "venda.ver_unidade", "ranking.ver", "custo.ver", "desconto.aprovar", "nota.aprovar", "caixa.abrir", "caixa.conferir", "estoque.consultar", "cliente.buscar", "auditoria.ver", "conta_pagar.gerir"],
   vendedor: ["venda.registrar", "venda.ver_propria", "caixa.abrir", "estoque.consultar", "cliente.buscar"],
   tecnico: [],
 } as const;
@@ -383,6 +387,11 @@ beforeEach(() => {
       caixa_saidas: [
         { unidade_id: LOJA, situacao: "pendente", pedida_por: ANA }, { unidade_id: LOJA, situacao: "pendente", pedida_por: GESTOR },
         { unidade_id: LOJA, situacao: "autorizada", pedida_por: BETO }, { unidade_id: OUTRA, situacao: "pendente", pedida_por: CAIO },
+      ],
+      // Contas a pagar (L8a): contam as em aberto vencidas ou para hoje (10/11); o RLS decide de quais lojas.
+      contas_a_pagar: [
+        { situacao: "aberta", vencimento: "2026-11-09" }, { situacao: "aberta", vencimento: "2026-11-10" },
+        { situacao: "aberta", vencimento: "2026-11-12" }, { situacao: "paga", vencimento: "2026-11-01" },
       ],
     },
   });
@@ -585,13 +594,13 @@ describe("Início: o gerente acompanha a loja do turno", () => {
 
   it("as pendências continuam no topo, contadas só na loja do turno e só para quem tem a permissão", async () => {
     const p = await pagina();
-    expect(p.pendencias).toEqual({ "Descontos para aprovar": 2, "Notas na fila": 0, "Saídas do caixa": 1, "Caixas para conferir": 1, "Transferências": 0, "Estornos a confirmar": 1, "Itens a conferir": 0 });
+    expect(p.pendencias).toEqual({ "Descontos para aprovar": 2, "Notas na fila": 0, "Saídas do caixa": 1, "Contas a pagar": 2, "Caixas para conferir": 1, "Transferências": 0, "Estornos a confirmar": 1, "Itens a conferir": 0 });
     expect(cenario.lidas).not.toContain("connect_operacoes");
   });
 
   it("saídas do caixa (L7c): a pendência leva ao quadro de autorizar; banco ainda sem a tabela, ela some e o resto continua", async () => {
     expect((await pagina()).enderecos).toContain("/caixa#saidas");
-    const semSaidas = { "Descontos para aprovar": 2, "Notas na fila": 0, "Caixas para conferir": 1, "Transferências": 0, "Estornos a confirmar": 1, "Itens a conferir": 0 };
+    const semSaidas = { "Descontos para aprovar": 2, "Notas na fila": 0, "Contas a pagar": 2, "Caixas para conferir": 1, "Transferências": 0, "Estornos a confirmar": 1, "Itens a conferir": 0 };
     cenario.errosDasTabelas.caixa_saidas = { code: "PGRST205" };
     expect((await pagina()).pendencias).toEqual(semSaidas);
     // Como chega de verdade: a contagem só de cabeçalho numa tabela ausente volta sem erro e sem número.
@@ -599,6 +608,22 @@ describe("Início: o gerente acompanha a loja do turno", () => {
     cenario.errosDasTabelas = {};
     cenario.semContagem = ["caixa_saidas"];
     expect((await pagina()).pendencias).toEqual(semSaidas);
+  });
+
+  it("contas a pagar (L8a): as em aberto vencidas ou para hoje levam à tela; banco ainda sem a tabela, a pendência some", async () => {
+    const p = await pagina();
+    expect(p.pendencias["Contas a pagar"]).toBe(2);
+    expect(p.enderecos).toContain("/contas-a-pagar");
+    const semContas = { "Descontos para aprovar": 2, "Notas na fila": 0, "Saídas do caixa": 1, "Caixas para conferir": 1, "Transferências": 0, "Estornos a confirmar": 1, "Itens a conferir": 0 };
+    cenario.errosDasTabelas.contas_a_pagar = { code: "PGRST205" };
+    expect((await pagina()).pendencias).toEqual(semContas);
+    cenario.errosDasTabelas = {};
+    cenario.semContagem = ["contas_a_pagar"];
+    expect((await pagina()).pendencias).toEqual(semContas);
+    // Erro de outra natureza para a página: zero pendência inventado não.
+    cenario.semContagem = [];
+    cenario.errosDasTabelas.contas_a_pagar = { code: "57014" };
+    await expect(pagina()).rejects.toBeInstanceOf(FalhaDoServico);
   });
 });
 
@@ -655,8 +680,9 @@ describe("Início: o vendedor acompanha só as próprias vendas", () => {
     expect(p.enderecos).toContain("/vendas");
     expect(p.enderecos.filter((e) => e.startsWith("/financeiro") || e.includes("loja="))).toEqual([]);
     expect(p.pendencias).toEqual({ "Transferências": 0 });
-    // Quem não confere caixa nem pergunta pelas saídas a autorizar.
+    // Quem não confere caixa nem pergunta pelas saídas a autorizar; quem não gere contas, pelas contas a pagar.
     expect(cenario.lidas).not.toContain("caixa_saidas");
+    expect(cenario.lidas).not.toContain("contas_a_pagar");
   });
 
   it("minha produção: itens vendidos por grupo, sem valor da loja", async () => {
@@ -743,7 +769,7 @@ describe("Início: quem vê a rede começa pela rede inteira e pode escolher uma
     expect(p.indicadores).toEqual(INDICADORES_DA_LOJA);
     expect(p.indicador("Vendas realizadas")).toMatchObject({ valor: "5", detalhe: "R$ 7.000,00 vendidos" });
     expect(p.enderecos).toEqual(expect.arrayContaining(["/financeiro?loja=rede", "/financeiro?loja=rede&ver=pagamentos"]));
-    expect(p.pendencias).toEqual({ "Descontos para aprovar": 2, "Notas na fila": 0, "Saídas do caixa": 1, "Caixas para conferir": 1, "Transferências": 0, "Ora Connect a decidir": 1, "Estornos a confirmar": 1, "Itens a conferir": 0 });
+    expect(p.pendencias).toEqual({ "Descontos para aprovar": 2, "Notas na fila": 0, "Saídas do caixa": 1, "Contas a pagar": 2, "Caixas para conferir": 1, "Transferências": 0, "Ora Connect a decidir": 1, "Estornos a confirmar": 1, "Itens a conferir": 0 });
   });
 
   it("desempenho das lojas: a venda fica na loja em que foi feita, e loja sem venda aparece com zero", async () => {

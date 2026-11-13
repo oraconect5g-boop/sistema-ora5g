@@ -5,8 +5,8 @@ import { montarMenu, PAGINAS_REAIS } from "./menu";
 // Permissões de cada papel no banco (matriz do ADR-002, papel_permissoes), só as que o menu usa.
 const PAPEL = {
   vendedor: ["venda.registrar", "caixa.abrir", "estoque.consultar", "connect.operar", "cliente.buscar", "crm.atender", "metas.ver_propria"],
-  gerente: ["venda.registrar", "venda.ver_unidade", "caixa.abrir", "caixa.conferir", "estoque.consultar", "connect.operar", "connect.gerir", "desconto.aprovar", "nota.aprovar", "auditoria.ver", "cliente.buscar", "crm.atender", "pagamento.conciliar", "terminal.gerir", "metas.gerir", "metas.ver_unidade"],
-  dono: ["venda.registrar", "venda.ver_unidade", "venda.ver_todas", "caixa.abrir", "caixa.conferir", "estoque.consultar", "connect.operar", "connect.gerir", "desconto.aprovar", "nota.aprovar", "auditoria.ver", "usuarios.gerir", "unidades.gerir", "catalogo.gerir", "cliente.buscar", "crm.atender", "pagamento.conciliar", "terminal.gerir", "metas.gerir", "metas.ver_unidade", "metas.ver_propria"],
+  gerente: ["venda.registrar", "venda.ver_unidade", "caixa.abrir", "caixa.conferir", "estoque.consultar", "connect.operar", "connect.gerir", "desconto.aprovar", "nota.aprovar", "auditoria.ver", "cliente.buscar", "crm.atender", "pagamento.conciliar", "terminal.gerir", "metas.gerir", "metas.ver_unidade", "conta_pagar.gerir"],
+  dono: ["venda.registrar", "venda.ver_unidade", "venda.ver_todas", "caixa.abrir", "caixa.conferir", "estoque.consultar", "connect.operar", "connect.gerir", "desconto.aprovar", "nota.aprovar", "auditoria.ver", "usuarios.gerir", "unidades.gerir", "catalogo.gerir", "cliente.buscar", "crm.atender", "pagamento.conciliar", "terminal.gerir", "metas.gerir", "metas.ver_unidade", "metas.ver_propria", "conta_pagar.gerir"],
   administrador: ["venda.ver_todas", "estoque.consultar", "auditoria.ver", "usuarios.gerir", "unidades.gerir", "catalogo.gerir"],
   tecnico: [],
 } as const;
@@ -26,6 +26,13 @@ describe("menu único das telas reais", () => {
     for (const papel of ["administrador", "tecnico"] as const) expect(menu(papel).visiveis).not.toContain("metas");
     expect(PAGINAS_REAIS.metas).toMatchObject({ caminho: "/metas", grupo: "Gestão", icone: "metas" });
     expect(menu("gerente").grupos.find((g) => g.grupo === "Gestão")?.paginas.slice(0, 3)).toEqual(["financeiro", "relatorios", "metas"]);
+  });
+
+  it("contas a pagar (L8a): dono e gerente, no grupo Gestão, depois das metas; vendedor, administrador e técnico não", () => {
+    for (const papel of ["dono", "gerente"] as const) expect(menu(papel).visiveis).toContain("contas_pagar");
+    for (const papel of ["vendedor", "administrador", "tecnico"] as const) expect(menu(papel).visiveis).not.toContain("contas_pagar");
+    expect(PAGINAS_REAIS.contas_pagar).toMatchObject({ caminho: "/contas-a-pagar", grupo: "Gestão", icone: "contas" });
+    expect(menu("gerente").grupos.find((g) => g.grupo === "Gestão")?.paginas.slice(0, 4)).toEqual(["financeiro", "relatorios", "metas", "contas_pagar"]);
   });
 
   it("gerente: ganha aprovações, notas e auditoria; aprovações vira atalho no celular; equipe continua com o dono", () => {

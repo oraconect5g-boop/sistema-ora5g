@@ -509,6 +509,11 @@
       "status": "parcial",
       "nota": "L7b (13/11): o repasse das financeiras (PayJoy, Aiva) é registrado à mão em /pagamentos/financeiras, conferindo o extrato: referência, valor que caiu e data; a diferença para o valor a receber fica como a taxa observada; desfazer pede motivo; tudo auditado; só quem concilia na loja da venda (pagamento.conciliar). Os estornos de cartão, Pix e financeira já são confirmados com o comprovante desde os lotes de integridade (#50). A migration ainda não foi aplicada no ora5g-dev (o conector do Supabase não estava na sessão). FALTA: chargebacks e antecipação (dependem dos extratos das maquininhas, E3), o relatório de repasse das financeiras (E2), revisão do Codex e homologação.",
       "evidencia": "packages/banco/supabase/migrations/20261113191951_financeiras_a_receber.sql; packages/banco/src/financeiras-a-receber.test.ts; apps/plataforma/src/lib/pagamentos/financeiras.ts; apps/plataforma/src/app/pagamentos/financeiras"
+    },
+    "ORA-FIN-004": {
+      "status": "parcial",
+      "nota": "L8a (13/11), pelas decisões do proprietário do mesmo dia (D-036): contas a pagar da rede (central) e de cada loja, com categoria (lista inicial que o dono ajusta), fornecedor opcional (o cadastro do L4a), documento, valor e vencimento; conta única, parcelada (o total dividido, os centavos na primeira) ou repetida todo mês; o pagamento feito no banco é registrado com a data, o valor pago (juros ou desconto) e a referência, e se desfaz com motivo; corrigir valor e vencimento e cancelar (uma ou as seguintes) pedem motivo; tudo auditado. Responsabilidade autorizada: conta_pagar.gerir, o dono na rede e em todas as lojas, o gerente na loja dele (banco e RLS). Tela /contas-a-pagar com o vencido, o que vence hoje e nos próximos dias, o pago no mês, as próximas 8 semanas, o aberto por categoria e por loja, e pendência no Início. A migration ainda não foi aplicada no ora5g-dev (o conector do Supabase não estava na sessão). FALTA: ligar a conta à entrada de mercadoria de origem, anexar o boleto ou a nota (módulo de documentos), revisão do Codex e homologação.",
+      "evidencia": "packages/banco/supabase/migrations/20261113212437_contas_a_pagar.sql; packages/banco/src/contas-a-pagar.test.ts; apps/plataforma/src/lib/contas-a-pagar; apps/plataforma/src/app/contas-a-pagar"
     }
   }
 }
