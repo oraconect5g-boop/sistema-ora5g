@@ -193,8 +193,8 @@
     },
     "ORA-PAY-003": {
       "status": "parcial",
-      "nota": "Lote L7a (11/11): situação real do dinheiro de cada pagamento, calculada no banco (situacao_do_dinheiro) e mostrada em /pagamentos/conciliacao: no caixa (dinheiro), a liquidar (cartão e Pix confirmados na loja), conciliado com o extrato (referência, valor líquido e data), a receber da financeira, pago com vale-troca, estorno a confirmar e estornado. Venda não é dinheiro recebido: nada vira liquidado sozinho. Aplicada no ora5g-dev. Falta: autorização e liquidação informadas pelo provedor (dependem de API contratada: PAY-013) e a importação de extratos (PAY-009, pendência E3).",
-      "evidencia": "packages/banco/supabase/migrations/20261111201342_pagamentos_maquininhas_e_conciliacao.sql; packages/banco/src/pagamentos-conciliacao.test.ts; apps/plataforma/src/app/pagamentos/conciliacao/page.tsx"
+      "nota": "Lote L7a (11/11): situação real do dinheiro de cada pagamento, calculada no banco (situacao_do_dinheiro) e mostrada em /pagamentos/conciliacao: no caixa (dinheiro), a liquidar (cartão e Pix confirmados na loja), conciliado com o extrato (referência, valor líquido e data), a receber da financeira, pago com vale-troca, estorno a confirmar e estornado. Venda não é dinheiro recebido: nada vira liquidado sozinho. Aplicada no ora5g-dev. Falta: autorização e liquidação informadas pelo provedor (dependem de API contratada: PAY-013) e a importação de extratos (PAY-009, pendência E3). L7b (13/11): o valor a receber da financeira passa a ter o registro do repasse (recebido, data e referência), na mesma linha da conciliação de cartão e Pix.",
+      "evidencia": "packages/banco/supabase/migrations/20261111201342_pagamentos_maquininhas_e_conciliacao.sql; packages/banco/src/pagamentos-conciliacao.test.ts; apps/plataforma/src/app/pagamentos/conciliacao/page.tsx; packages/banco/supabase/migrations/20261113191951_financeiras_a_receber.sql; packages/banco/src/financeiras-a-receber.test.ts; apps/plataforma/src/lib/pagamentos/financeiras.ts; apps/plataforma/src/app/pagamentos/financeiras"
     },
     "ORA-CONNECT-001": {
       "status": "testado",
@@ -504,6 +504,11 @@
       "status": "parcial",
       "nota": "L6b (13/11): cada item da venda grava em venda_itens.preco_id qual linha de public.precos deu o valor (a campanha da loja ou da rede, ou o preço da loja ou da rede), pela mesma escolha de preco_vigente (privado.preco_vigente_linha, uma regra só); encerrar a campanha depois não muda o item já vendido. A venda (/vendas/[id]) mostra a regra em cada item e o carrinho do PDV destaca o item com preço de campanha; a regra é lida à parte, e um banco ainda sem a migration não afeta a venda. A migration ainda não foi aplicada no ora5g-dev (o conector do Supabase não estava na sessão). FALTA: combos e regras de desconto por loja (decisão D-035), revisão do Codex e homologação.",
       "evidencia": "packages/banco/supabase/migrations/20261113185806_venda_item_regra_de_preco.sql; packages/banco/src/venda-regra-de-preco.test.ts; apps/plataforma/src/lib/vendas/regra-de-preco.ts; apps/plataforma/src/app/vendas/regra-de-preco.test.ts"
+    },
+    "ORA-PAY-011": {
+      "status": "parcial",
+      "nota": "L7b (13/11): o repasse das financeiras (PayJoy, Aiva) é registrado à mão em /pagamentos/financeiras, conferindo o extrato: referência, valor que caiu e data; a diferença para o valor a receber fica como a taxa observada; desfazer pede motivo; tudo auditado; só quem concilia na loja da venda (pagamento.conciliar). Os estornos de cartão, Pix e financeira já são confirmados com o comprovante desde os lotes de integridade (#50). A migration ainda não foi aplicada no ora5g-dev (o conector do Supabase não estava na sessão). FALTA: chargebacks e antecipação (dependem dos extratos das maquininhas, E3), o relatório de repasse das financeiras (E2), revisão do Codex e homologação.",
+      "evidencia": "packages/banco/supabase/migrations/20261113191951_financeiras_a_receber.sql; packages/banco/src/financeiras-a-receber.test.ts; apps/plataforma/src/lib/pagamentos/financeiras.ts; apps/plataforma/src/app/pagamentos/financeiras"
     }
   }
 }
