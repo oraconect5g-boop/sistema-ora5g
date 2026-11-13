@@ -1,16 +1,58 @@
 // Funções puras dos eixos dos gráficos (testáveis sem navegador).
 
+/** O passo "redondo" (1, 2, 2,5, 5 ou 10 vezes uma potência de dez) igual ou logo acima do pedido. */
+function passoRedondo(bruto: number): number {
+  const potencia = 10 ** Math.floor(Math.log10(bruto));
+  const fracao = bruto / potencia;
+  return (fracao <= 1 ? 1 : fracao <= 2 ? 2 : fracao <= 2.5 ? 2.5 : fracao <= 5 ? 5 : 10) * potencia;
+}
+
 /** Escala "redonda" para os eixos: 0, 5 mil, 10 mil... */
 export function escala(maximo: number, divisoes = 4) {
   if (!(maximo > 0)) return { topo: 1, marcas: [0, 1] };
-  const bruto = maximo / divisoes;
-  const potencia = 10 ** Math.floor(Math.log10(bruto));
-  const fracao = bruto / potencia;
-  const passo = (fracao <= 1 ? 1 : fracao <= 2 ? 2 : fracao <= 2.5 ? 2.5 : fracao <= 5 ? 5 : 10) * potencia;
+  const passo = passoRedondo(maximo / divisoes);
   const topo = Math.ceil(maximo / passo) * passo;
   const marcas: number[] = [];
   for (let i = 0; i * passo <= topo + passo / 2; i++) marcas.push(i * passo);
   return { topo, marcas };
+}
+
+/**
+ * Escala para a série que pode ficar abaixo de zero (a margem de um dia em que a devolução pesou mais
+ * que a venda). Sem valor negativo é a mesma de `escala`, com o piso em zero. Com valor negativo, o
+ * passo sai da distância inteira entre o menor e o maior, o zero é sempre uma das marcas e o piso desce
+ * até a primeira marca que cobre o menor valor.
+ */
+export function escalaComPiso(minimo: number, maximo: number, divisoes = 4) {
+  if (!(minimo < 0)) return { piso: 0, ...escala(maximo, divisoes) };
+  const acima = Math.max(0, maximo);
+  const passo = passoRedondo((acima - minimo) / divisoes);
+  const abaixo = Math.ceil(-minimo / passo);
+  const topo = Math.ceil(acima / passo) * passo;
+  const marcas: number[] = [];
+  for (let i = -abaixo; i * passo <= topo + passo / 2; i++) marcas.push(i === 0 ? 0 : i * passo);
+  return { piso: -abaixo * passo, topo, marcas };
+}
+
+/**
+ * Trechos seguidos de uma série em que há valor, cada ponto com o índice dele no eixo. Onde falta valor
+ * (`null`: dia sem venda no ticket médio) a linha se interrompe, em vez de descer a zero.
+ */
+export function trechosComValor(valores: readonly (number | null | undefined)[]): { indice: number; valor: number }[][] {
+  const trechos: { indice: number; valor: number }[][] = [];
+  let aberto: { indice: number; valor: number }[] | null = null;
+  for (const [indice, valor] of valores.entries()) {
+    if (valor === null || valor === undefined) {
+      aberto = null;
+      continue;
+    }
+    if (!aberto) {
+      aberto = [];
+      trechos.push(aberto);
+    }
+    aberto.push({ indice, valor });
+  }
+  return trechos;
 }
 
 /** Mostra 1 rótulo a cada `cada`, sempre o último, e esconde o vizinho do último para não encostarem. */

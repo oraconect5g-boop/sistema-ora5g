@@ -8,6 +8,8 @@ import { ValorForaDoLimite } from "../dinheiro";
 import { consultarPainel } from "../financeiro/consulta";
 import type { Escopo, LojaDoFiltro } from "../financeiro/escopo";
 import { janelasDoPeriodo, RespostaInesperada, resumoDoPainel, type Janela, type PeriodoFinanceiro, type ResumoFinanceiro } from "../financeiro/painel";
+import { consultarMargem } from "../margem/consulta";
+import type { MargemDoBanco } from "../margem/painel";
 import { escopoDoInicio, lerVendas, lojasDoFiltro, type Leitura, type VendasDoBanco, type Visao } from "./painel";
 
 type Cliente = Awaited<ReturnType<typeof obterSessao>>["supabase"];
@@ -16,16 +18,18 @@ const FALHA = { estado: "falha" } as const;
 const INDISPONIVEL = { estado: "indisponivel" } as const;
 
 /**
- * As duas permissões que só o Início pergunta (não fazem parte do menu): ver o ranking de vendedores
- * e ver as próprias vendas. Sem resposta do banco não há como decidir a visão: a página para.
+ * As três permissões que só o Início pergunta (não fazem parte do menu): ver o ranking de vendedores,
+ * ver as próprias vendas e ver o custo dos produtos (a margem). Sem resposta do banco não há como
+ * decidir a visão: a página para.
  */
-export async function permissoesDoInicio(supabase: Cliente, unidade: string): Promise<{ ranking: boolean; propria: boolean }> {
-  const [ranking, propria] = await Promise.all([
+export async function permissoesDoInicio(supabase: Cliente, unidade: string): Promise<{ ranking: boolean; propria: boolean; custo: boolean }> {
+  const [ranking, propria, custo] = await Promise.all([
     supabase.rpc("tem_permissao", { p_permissao: "ranking.ver", p_unidade: unidade }),
     supabase.rpc("tem_permissao", { p_permissao: "venda.ver_propria", p_unidade: unidade }),
+    supabase.rpc("tem_permissao", { p_permissao: "custo.ver", p_unidade: unidade }),
   ]);
-  if (ranking.error || propria.error) throw new FalhaDoServico("inicio_permissoes");
-  return { ranking: ranking.data === true, propria: propria.data === true };
+  if (ranking.error || propria.error || custo.error) throw new FalhaDoServico("inicio_permissoes");
+  return { ranking: ranking.data === true, propria: propria.data === true, custo: custo.data === true };
 }
 
 /** Vendas do período inteiro, somadas no banco (public.vendas_painel, com o RLS de quem pede). */
@@ -83,6 +87,19 @@ export async function nomesDoRanking(supabase: Cliente, vendedores: readonly str
   return { estado: "ok", dados: nomes };
 }
 
+/**
+ * As lojas que vendem (físicas e online) e que a pessoa lê, em ordem alfabética; null quando a
+ * leitura falha. Quem vê a rede escolhe a loja por esta lista, no Início e nos Relatórios.
+ */
+export async function lojasQueVendem(supabase: Cliente, origem: string): Promise<LojaDoFiltro[] | null> {
+  const r = await supabase.from("unidades").select("id, nome, tipo").in("tipo", ["loja_fisica", "online"]).order("nome");
+  if (r.error) {
+    console.error(`${origem}: falha ao consultar as lojas`, { codigo: r.error.code || null });
+    return null;
+  }
+  return r.data.map((l) => ({ id: l.id, nome: l.nome }));
+}
+
 export type PaineisComDados = {
   visao: Exclude<Visao, "nenhuma">;
   periodo: PeriodoFinanceiro;
@@ -99,6 +116,11 @@ export type PaineisComDados = {
   financeiro: Leitura<ResumoFinanceiro> | null;
   /** null: não se aplica (visão do vendedor, ou as vendas não foram lidas). */
   nomes: Leitura<Map<string, string>> | "sem_permissao" | null;
+  /**
+   * Margem bruta do período (lote G2a). "sem_permissao": quem pede não tem custo.ver, e o banco não
+   * foi perguntado. null: a visão do vendedor não lê a margem.
+   */
+  margem: Leitura<MargemDoBanco> | "sem_permissao" | null;
 };
 export type PaineisDoInicio = { visao: "nenhuma" } | PaineisComDados;
 
@@ -111,14 +133,16 @@ export type PedidoDosPaineis = {
   usuario: string;
   /** Tem ranking.ver na loja do turno. */
   ranking: boolean;
+  /** Tem custo.ver na loja do turno. */
+  custo: boolean;
   agora?: Date;
 };
 
 /**
  * Lê tudo o que os painéis do Início mostram, na visão de quem pede:
- *   rede      vendas da rede (ou da loja escolhida), recebimentos e ranking;
+ *   rede      vendas da rede (ou da loja escolhida), recebimentos, ranking e, com custo.ver, a margem;
  *   loja      o mesmo, só da loja do turno;
- *   vendedor  só as próprias vendas (p_vendedor), sem recebimentos, gaveta nem colegas;
+ *   vendedor  só as próprias vendas (p_vendedor), sem recebimentos, gaveta, margem nem colegas;
  *   nenhuma   não pergunta nada ao banco.
  */
 export async function lerPaineisDoInicio(supabase: Cliente, pedido: PedidoDosPaineis): Promise<PaineisDoInicio> {
@@ -127,27 +151,21 @@ export async function lerPaineisDoInicio(supabase: Cliente, pedido: PedidoDosPai
   const janelas = janelasDoPeriodo(periodo, pedido.agora);
   const daRede = visao === "rede";
 
-  let cadastro: LojaDoFiltro[] = [];
-  let cadastroLido = true;
-  if (daRede) {
-    const r = await supabase.from("unidades").select("id, nome, tipo").in("tipo", ["loja_fisica", "online"]).order("nome");
-    if (r.error) {
-      console.error("inicio: falha ao consultar as lojas", { codigo: r.error.code || null });
-      cadastroLido = false;
-    } else {
-      cadastro = r.data.map((l) => ({ id: l.id, nome: l.nome }));
-    }
-  }
+  const lido = daRede ? await lojasQueVendem(supabase, "inicio") : [];
+  const cadastroLido = lido !== null;
+  const cadastro = lido ?? [];
   const escopo = escopoDoInicio(pedido.loja, cadastro, turno, daRede);
   const base = { visao, periodo, escopo, janelas, cadastro, filtroDeLojas: daRede && cadastroLido ? lojasDoFiltro(cadastro, turno) : [] };
   // Sem a lista de lojas não dá para conferir a loja pedida no endereço: nenhum número é mostrado.
-  if (!cadastroLido) return { ...base, vendas: FALHA, anterior: FALHA, financeiro: FALHA, nomes: null };
+  if (!cadastroLido) return { ...base, vendas: FALHA, anterior: FALHA, financeiro: FALHA, nomes: null, margem: pedido.custo ? FALHA : "sem_permissao" };
 
   const filtro = visao === "vendedor" ? { unidade: null, vendedor: pedido.usuario } : { unidade: escopo.unidade, vendedor: null };
-  const [vendas, anterior, financeiro] = await Promise.all([
+  // A margem só é pedida para quem tem custo.ver: sem a permissão, o banco nem é perguntado.
+  const [vendas, anterior, financeiro, margem] = await Promise.all([
     consultarVendas(supabase, janelas.atual, filtro, janelas.porHora),
     consultarVendas(supabase, janelas.anterior, filtro, janelas.porHora),
     visao === "vendedor" ? null : consultarFinanceiro(supabase, janelas.atual, escopo.unidade),
+    visao === "vendedor" ? null : pedido.custo ? consultarMargem(supabase, janelas.atual, escopo.unidade) : "sem_permissao" as const,
   ]);
   // A permissão vem antes do estado da leitura: quem não tem ranking.ver lê "sem permissão" mesmo
   // quando as vendas falharam, e o banco nem é perguntado pelos nomes.
@@ -155,5 +173,5 @@ export async function lerPaineisDoInicio(supabase: Cliente, pedido: PedidoDosPai
     : !pedido.ranking ? "sem_permissao"
     : vendas.estado !== "ok" ? null
     : await nomesDoRanking(supabase, vendas.dados.vendedores.map((v) => v.vendedorId));
-  return { ...base, vendas, anterior, financeiro, nomes };
+  return { ...base, vendas, anterior, financeiro, nomes, margem };
 }

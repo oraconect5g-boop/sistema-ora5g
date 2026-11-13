@@ -174,7 +174,6 @@ export function ConteudoFinanceiro({ resumo: r, anterior: ra, series, porHora, p
     <Cartao titulo="Ainda não está no financeiro real" subtitulo="Mostrado como indisponível, sem número inventado">
       <ul className="grid gap-2 text-sm sm:grid-cols-2">
         {[
-          ["Margem bruta", "custo histórico só para quem tem custo.ver; próxima fatia"],
           ["Conciliação com extratos", "depende dos arquivos das maquininhas e do banco (PAY-009/010)"],
           ["Contas a pagar e DRE", "modelos ainda não existem (FIN-002/004)"],
           ["Repasses das financeiras e da Nogle", "prazo, taxa e contrato ainda não confirmados"],
@@ -185,6 +184,9 @@ export function ConteudoFinanceiro({ resumo: r, anterior: ra, series, porHora, p
           </li>
         ))}
       </ul>
+      <p className="mt-3 text-xs text-suave">
+        A margem bruta, com o custo gravado em cada venda, fica em <Link href="/relatorios" className="font-semibold text-acao hover:underline">Relatórios</Link>, para quem vê o custo dos produtos.
+      </p>
     </Cartao>
     </>
   );

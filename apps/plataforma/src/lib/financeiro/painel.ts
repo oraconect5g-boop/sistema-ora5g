@@ -32,18 +32,21 @@ export const periodoFinanceiro = (valor: unknown): PeriodoFinanceiro => (valor =
 export type Janela = { inicio: Date; fim: Date };
 
 /**
- * Período atual (do começo do primeiro dia, em São Paulo, até agora) e o anterior equivalente: a
- * mesma janela deslocada em dias inteiros, para comparar a mesma hora do dia.
+ * Os últimos `dias` dias (do começo do primeiro, em São Paulo, até agora) e o período anterior
+ * equivalente: a mesma janela deslocada em dias inteiros, para comparar a mesma hora do dia.
  */
-export function janelasDoPeriodo(periodo: PeriodoFinanceiro, agora: Date = new Date()) {
-  const dias = PERIODOS_FINANCEIROS[periodo].dias;
+export function janelasDeDias(dias: number, agora: Date = new Date()): { atual: Janela; anterior: Janela } {
   const inicio = new Date(new Date(inicioDoDiaEmSaoPaulo(agora)).getTime() - (dias - 1) * DIA);
   const deslocamento = dias * DIA;
   return {
     atual: { inicio, fim: agora },
     anterior: { inicio: new Date(inicio.getTime() - deslocamento), fim: new Date(agora.getTime() - deslocamento) },
-    porHora: periodo === "hoje",
   };
+}
+
+/** As janelas de um período do financeiro; só "hoje" é lido hora a hora. */
+export function janelasDoPeriodo(periodo: PeriodoFinanceiro, agora: Date = new Date()) {
+  return { ...janelasDeDias(PERIODOS_FINANCEIROS[periodo].dias, agora), porHora: periodo === "hoje" };
 }
 
 // ---------------------------------------------------------------------------------------------

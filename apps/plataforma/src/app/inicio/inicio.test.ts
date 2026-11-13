@@ -3,6 +3,8 @@
 // sem movimentação, sem histórico comparável, fonte indisponível, falha de consulta e sem permissão.
 // Dados fictícios. A soma no banco está provada em packages/banco/src/vendas-painel.test.ts e as
 // regras puras em src/lib/inicio/painel.test.ts. A jornada no navegador, com login, fica no lote J1.
+// Lote G2a: o indicador da margem bruta, pedido só para quem tem custo.ver e nunca na visão do
+// vendedor (a soma da margem está provada em packages/banco/src/margem-painel.test.ts).
 import { isValidElement, type ReactElement } from "react";
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 
@@ -36,6 +38,8 @@ const cenario = vi.hoisted(() => ({
   erroDoAnterior: null as null | { code: string },
   financeiro: null as unknown,
   erroDoFinanceiro: null as null | { code: string },
+  margem: null as unknown,
+  erroDaMargem: null as null | { code: string },
   nomes: null as unknown,
   erroDosNomes: null as null | { code: string },
   /** Argumentos de cada chamada de função do banco, por nome. */
@@ -93,6 +97,7 @@ const supabase = {
     // A janela atual termina "agora"; qualquer outra é a do período anterior.
     if (nome === "vendas_painel") return argumentos.p_fim === AGORA.toISOString() ? responder(cenario.erroDeVendas, cenario.vendas) : responder(cenario.erroDoAnterior, cenario.anterior);
     if (nome === "financeiro_painel") return responder(cenario.erroDoFinanceiro, cenario.financeiro);
+    if (nome === "margem_painel") return responder(cenario.erroDaMargem, cenario.margem);
     if (nome === "ranking_nomes") return responder(cenario.erroDosNomes, cenario.nomes);
     return responder({ code: "PGRST202" }, null);
   },
@@ -272,11 +277,29 @@ const FINANCEIRO = {
 const FINANCEIRO_VAZIO = { ...FINANCEIRO, periodos: [], pagamentos: [], reembolsos: [], movimentos: [], caixas: { ...FINANCEIRO.caixas, abertos_agora: 0 } };
 const NOMES = [{ id: ANA, nome: "Ana Teste" }, { id: BETO, nome: "Beto Teste" }];
 
+// Margem bruta da loja, hoje (o que public.margem_painel devolve). Das 8 unidades vendidas, 7 tinham
+// custo gravado (a recarga não tem): R$ 4.400,00 vendidos com custo de R$ 3.000,00. A devolução tira
+// R$ 300,00 de venda e devolve R$ 120,00 de custo: 1.400,00 − 180,00 = R$ 1.220,00 de margem.
+const MARGEM_ZERADA = {
+  itens: 0, vendido: 0, itens_com_custo: 0, vendido_com_custo: 0, custo: 0, itens_sem_custo: 0, vendido_sem_custo: 0,
+  itens_devolvidos_com_custo: 0, devolvido_com_custo: 0, custo_devolvido: 0,
+  itens_cancelados_com_custo: 0, cancelado_com_custo: 0, custo_cancelado: 0, margem: 0,
+};
+const MARGEM_DO_DIA = {
+  ...MARGEM_ZERADA, itens: 8, vendido: 450_000, itens_com_custo: 7, vendido_com_custo: 440_000, custo: 300_000, itens_sem_custo: 1, vendido_sem_custo: 10_000,
+  itens_devolvidos_com_custo: 1, devolvido_com_custo: 30_000, custo_devolvido: 12_000, margem: 122_000,
+};
+const MARGEM = { totais: MARGEM_DO_DIA, periodos: [{ periodo: "2026-11-10", ...MARGEM_DO_DIA }], lojas_com_custo: 1, lojas_fora: 0 };
+const MARGEM_SEM_FATOS = { totais: MARGEM_ZERADA, periodos: [], lojas_com_custo: 0, lojas_fora: 0 };
+// Os mesmos itens, nenhum com custo gravado: a margem é desconhecida.
+const SO_SEM_CUSTO = { ...MARGEM_ZERADA, itens: 8, vendido: 450_000, itens_sem_custo: 8, vendido_sem_custo: 450_000 };
+const MARGEM_SEM_CUSTO = { totais: SO_SEM_CUSTO, periodos: [{ periodo: "2026-11-10", ...SO_SEM_CUSTO }], lojas_com_custo: 1, lojas_fora: 0 };
+
 // Permissões de cada perfil, como na matriz de papéis do banco (só as que o Início e o menu perguntam).
 const PERFIS = {
-  dono: ["venda.registrar", "venda.ver_propria", "venda.ver_unidade", "venda.ver_todas", "ranking.ver", "desconto.aprovar", "nota.aprovar", "caixa.abrir", "caixa.conferir", "estoque.consultar", "connect.operar", "connect.gerir", "cliente.buscar", "auditoria.ver", "usuarios.gerir", "unidades.gerir"],
-  administrador: ["venda.ver_todas", "ranking.ver", "estoque.consultar", "usuarios.gerir", "unidades.gerir", "auditoria.ver"],
-  gerente: ["venda.registrar", "venda.ver_unidade", "ranking.ver", "desconto.aprovar", "nota.aprovar", "caixa.abrir", "caixa.conferir", "estoque.consultar", "cliente.buscar", "auditoria.ver"],
+  dono: ["venda.registrar", "venda.ver_propria", "venda.ver_unidade", "venda.ver_todas", "ranking.ver", "custo.ver", "desconto.aprovar", "nota.aprovar", "caixa.abrir", "caixa.conferir", "estoque.consultar", "connect.operar", "connect.gerir", "cliente.buscar", "auditoria.ver", "usuarios.gerir", "unidades.gerir"],
+  administrador: ["venda.ver_todas", "ranking.ver", "custo.ver", "estoque.consultar", "usuarios.gerir", "unidades.gerir", "auditoria.ver"],
+  gerente: ["venda.registrar", "venda.ver_unidade", "ranking.ver", "custo.ver", "desconto.aprovar", "nota.aprovar", "caixa.abrir", "caixa.conferir", "estoque.consultar", "cliente.buscar", "auditoria.ver"],
   vendedor: ["venda.registrar", "venda.ver_propria", "caixa.abrir", "estoque.consultar", "cliente.buscar"],
   tecnico: [],
 } as const;
@@ -287,6 +310,8 @@ function entrar(perfil: keyof typeof PERFIS, usuario = GESTOR) {
 const PAINEIS_DA_LOJA = ["Vendas", "Recebimentos por meio", "Mix de vendas", "Equipe", "Atalhos"];
 const INDICADORES_DE_VENDAS = ["Vendas realizadas", "Ticket médio", "Descontos concedidos", "Devoluções e cancelamentos"];
 const INDICADORES_DO_FINANCEIRO = ["Recebido na loja (registro)", "Movimentação dos caixas (dinheiro)"];
+// Loja ou rede: os quatro de vendas, a margem bruta e os dois do financeiro, nesta ordem.
+const INDICADORES_DA_LOJA = [...INDICADORES_DE_VENDAS, "Margem bruta", ...INDICADORES_DO_FINANCEIRO];
 const errosRegistrados = () => vi.mocked(console.error).mock.calls;
 
 beforeEach(() => {
@@ -296,7 +321,7 @@ beforeEach(() => {
   Object.assign(cenario, {
     usuario: GESTOR, permissoes: new Set<string>(), erroDaPermissao: null,
     vendas: HOJE, anterior: ONTEM, erroDeVendas: null, erroDoAnterior: null,
-    financeiro: FINANCEIRO, erroDoFinanceiro: null, nomes: NOMES, erroDosNomes: null,
+    financeiro: FINANCEIRO, erroDoFinanceiro: null, margem: MARGEM, erroDaMargem: null, nomes: NOMES, erroDosNomes: null,
     chamadas: {}, errosDasTabelas: {}, lidas: [], sessoes: [],
     tabelas: {
       perfis_usuario: [{ id: GESTOR, nome: "Gestor Teste" }, { id: ANA, nome: "Ana Teste" }, { id: BETO, nome: "Beto Teste" }],
@@ -337,6 +362,8 @@ describe("Início: o gerente acompanha a loja do turno", () => {
       { p_inicio: ONTEM_DESDE, p_fim: ONTEM_ATE, p_por_hora: true, p_unidade: LOJA },
     ]);
     expect(cenario.chamadas.financeiro_painel).toStrictEqual([{ p_inicio: HOJE_DESDE, p_fim: AGORA.toISOString(), p_por_hora: false, p_unidade: LOJA }]);
+    // A margem é pedida uma vez, só para o período atual (não há comparação com o anterior).
+    expect(cenario.chamadas.margem_painel).toStrictEqual([{ p_inicio: HOJE_DESDE, p_fim: AGORA.toISOString(), p_unidade: LOJA }]);
     expect(cenario.chamadas.ranking_nomes).toStrictEqual([{ p_vendedores: [ANA, BETO] }]);
     // Não lê o cadastro de lojas nem oferece troca de loja.
     expect(cenario.lidas).not.toContain("unidades");
@@ -352,12 +379,13 @@ describe("Início: o gerente acompanha a loja do turno", () => {
     await pagina({ loja: OUTRA });
     expect(cenario.chamadas.vendas_painel?.map((c) => c.p_unidade)).toEqual([LOJA, LOJA]);
     expect(cenario.chamadas.financeiro_painel?.map((c) => c.p_unidade)).toEqual([LOJA]);
+    expect(cenario.chamadas.margem_painel?.map((c) => c.p_unidade)).toEqual([LOJA]);
   });
 
   it("mostra os números conhecidos do período e a comparação com ontem até a mesma hora", async () => {
     const p = await pagina();
     expect(p.cartoes).toEqual(PAINEIS_DA_LOJA);
-    expect(p.indicadores).toEqual([...INDICADORES_DE_VENDAS, ...INDICADORES_DO_FINANCEIRO]);
+    expect(p.indicadores).toEqual(INDICADORES_DA_LOJA);
     expect(p.indicador("Vendas realizadas")).toMatchObject({ valor: "3", detalhe: "R$ 4.500,00 vendidos", variacao: { fracao: 0.5, referencia: "vs. ontem até esta hora", bomQuandoSobe: true } });
     expect(p.indicador("Ticket médio")).toMatchObject({ valor: "R$ 1.500,00", detalhe: "Vendido ÷ vendas concluídas", variacao: { fracao: 0.5 } });
     // Ontem não houve desconto nem devolução: sem base, não há percentual.
@@ -413,6 +441,31 @@ describe("Início: o gerente acompanha a loja do turno", () => {
   it("período desconhecido no endereço cai em hoje", async () => {
     await pagina({ periodo: "365" });
     expect(cenario.chamadas.vendas_painel?.[0]).toStrictEqual({ p_inicio: HOJE_DESDE, p_fim: AGORA.toISOString(), p_por_hora: true, p_unidade: LOJA });
+  });
+
+  it("margem bruta: o valor do período, o percentual sobre o vendido com custo e o que ficou fora da conta", async () => {
+    let margem = (await pagina()).indicador("Margem bruta");
+    // 1.220,00 ÷ (4.400,00 − 300,00 devolvidos) = 29,8%. O item sem custo gravado não entra como custo zero: é avisado.
+    expect(margem).toMatchObject({ valor: "R$ 1.220,00", detalhe: "29,8% do vendido com custo · 1 item sem custo fora da conta", tom: "atencao" });
+    // Não há comparação com o período anterior: o custo de ontem não é a base de hoje.
+    expect(margem.variacao).toBeUndefined();
+
+    // Todos os itens com custo gravado: nada a avisar.
+    const tudo = { ...MARGEM_DO_DIA, itens_com_custo: 8, vendido_com_custo: 450_000, custo: 305_000, itens_sem_custo: 0, vendido_sem_custo: 0, margem: 127_000 };
+    cenario.margem = { ...MARGEM, totais: tudo, periodos: [{ periodo: "2026-11-10", ...tudo }] };
+    margem = (await pagina()).indicador("Margem bruta");
+    expect(margem).toMatchObject({ valor: "R$ 1.270,00", detalhe: "30,2% do vendido com custo", tom: "neutro" });
+
+    // Período só com a devolução de uma venda anterior: a margem fica abaixo de zero e não há base para percentual.
+    const soDevolucao = { ...MARGEM_ZERADA, itens_devolvidos_com_custo: 1, devolvido_com_custo: 30_000, custo_devolvido: 12_000, margem: -18_000 };
+    cenario.margem = { ...MARGEM, totais: soDevolucao, periodos: [{ periodo: "2026-11-10", ...soDevolucao }] };
+    margem = (await pagina()).indicador("Margem bruta");
+    expect(margem).toMatchObject({ valor: "−R$ 180,00", detalhe: "Sem base para percentual", tom: "neutro" });
+  });
+
+  it("margem bruta em 7 dias: a mesma janela das vendas, pedida uma vez", async () => {
+    await pagina({ periodo: "7" });
+    expect(cenario.chamadas.margem_painel).toStrictEqual([{ p_inicio: "2026-11-04T03:00:00.000Z", p_fim: AGORA.toISOString(), p_unidade: LOJA }]);
   });
 
   it("recebimentos por meio: troco descontado, entrada de financiamento no meio em que foi paga e o total do financeiro", async () => {
@@ -505,10 +558,19 @@ describe("Início: o vendedor acompanha só as próprias vendas", () => {
       { p_inicio: ONTEM_DESDE, p_fim: ONTEM_ATE, p_por_hora: true, p_vendedor: ANA },
     ]);
     expect(cenario.chamadas.financeiro_painel).toBeUndefined();
+    expect(cenario.chamadas.margem_painel).toBeUndefined();
     expect(cenario.chamadas.ranking_nomes).toBeUndefined();
     expect(cenario.lidas).not.toContain("unidades");
     expect(p.filtro("Loja")).toBeUndefined();
     expect((p.filtro("Período")?.opcoes as { href: string }[]).map((o) => o.href)).toEqual(["/inicio", "/inicio?periodo=7", "/inicio?periodo=30"]);
+  });
+
+  it("a visão do vendedor nunca pede a margem, nem para quem tem a permissão de ver o custo", async () => {
+    cenario.permissoes.add("custo.ver");
+    const p = await pagina();
+    expect(cenario.chamadas.margem_painel).toBeUndefined();
+    expect(p.indicadores).toEqual(["Minhas vendas", "Ticket médio", "Descontos concedidos", "Devoluções e cancelamentos"]);
+    expect(p.texto).not.toMatch(/[Mm]argem/);
   });
 
   it("mostra os próprios números e nada da loja nem dos colegas", async () => {
@@ -530,6 +592,7 @@ describe("Início: o vendedor acompanha só as próprias vendas", () => {
     expect(p.texto).not.toContain("Beto Teste");
     expect(p.texto).not.toContain("Recebido na loja");
     expect(p.texto).not.toContain("Movimentação dos caixas");
+    expect(p.texto).not.toContain("Margem bruta");
     // Nenhuma ligação leva ao financeiro nem a outra loja.
     expect(p.enderecos).toContain("/vendas");
     expect(p.enderecos.filter((e) => e.startsWith("/financeiro") || e.includes("loja="))).toEqual([]);
@@ -603,6 +666,8 @@ describe("Início: quem vê a rede começa pela rede inteira e pode escolher uma
       { p_inicio: ONTEM_DESDE, p_fim: ONTEM_ATE, p_por_hora: true },
     ]);
     expect(cenario.chamadas.financeiro_painel).toStrictEqual([{ p_inicio: HOJE_DESDE, p_fim: AGORA.toISOString(), p_por_hora: false }]);
+    // A margem da rede também vai sem loja: o banco soma só as lojas em que quem pede vê o custo.
+    expect(cenario.chamadas.margem_painel).toStrictEqual([{ p_inicio: HOJE_DESDE, p_fim: AGORA.toISOString() }]);
     expect(cenario.chamadas.ranking_nomes).toStrictEqual([{ p_vendedores: [ANA, BETO, CAIO] }]);
     expect(cenario.lidas).toContain("unidades");
     // A rede primeiro, depois a loja do turno e as demais em ordem alfabética; o local DEFEITOS não vende.
@@ -615,6 +680,7 @@ describe("Início: quem vê a rede começa pela rede inteira e pode escolher uma
     expect(p.texto).toContain("Rede inteira · Hoje");
     expect(p.texto).not.toContain("DEFEITOS");
     expect(p.cartoes).toEqual(["Vendas", "Recebimentos por meio", "Mix de vendas", "Desempenho das lojas", "Melhores vendedores", "Atalhos"]);
+    expect(p.indicadores).toEqual(INDICADORES_DA_LOJA);
     expect(p.indicador("Vendas realizadas")).toMatchObject({ valor: "5", detalhe: "R$ 7.000,00 vendidos" });
     expect(p.enderecos).toEqual(expect.arrayContaining(["/financeiro?loja=rede", "/financeiro?loja=rede&ver=pagamentos"]));
     expect(p.pendencias).toEqual({ "Descontos para aprovar": 2, "Notas na fila": 0, "Caixas para conferir": 1, "Transferências": 0, "Ora Connect a decidir": 1, "Estornos a confirmar": 1, "Itens a conferir": 0 });
@@ -647,6 +713,17 @@ describe("Início: quem vê a rede começa pela rede inteira e pode escolher uma
     ] });
   });
 
+  it("margem da rede: loja em que quem pede não vê o custo fica fora da soma e é avisada, sem dizer qual", async () => {
+    cenario.margem = { ...MARGEM, lojas_fora: 1 };
+    let margem = (await pagina()).indicador("Margem bruta");
+    expect(margem).toMatchObject({ valor: "R$ 1.220,00", detalhe: "29,8% do vendido com custo · 1 item sem custo fora da conta · 1 loja fora (custo não visível para você)", tom: "atencao" });
+
+    // Movimento só em lojas fora: não há margem a mostrar, e isso não é margem zero.
+    cenario.margem = { ...MARGEM_SEM_FATOS, lojas_fora: 2 };
+    margem = (await pagina()).indicador("Margem bruta");
+    expect(margem).toMatchObject({ valor: "—", detalhe: "O movimento do período foi só em loja em que você não vê o custo" });
+  });
+
   it("escolhendo uma loja: todas as perguntas levam a loja, e os atalhos de conferência também", async () => {
     cenario.vendas = SEMANA;
     cenario.anterior = SEMANA_ANTERIOR;
@@ -656,6 +733,7 @@ describe("Início: quem vê a rede começa pela rede inteira e pode escolher uma
       { p_inicio: "2026-10-28T03:00:00.000Z", p_fim: "2026-11-03T18:30:00.000Z", p_por_hora: false, p_unidade: OUTRA },
     ]);
     expect(cenario.chamadas.financeiro_painel).toStrictEqual([{ p_inicio: "2026-11-04T03:00:00.000Z", p_fim: AGORA.toISOString(), p_por_hora: false, p_unidade: OUTRA }]);
+    expect(cenario.chamadas.margem_painel).toStrictEqual([{ p_inicio: "2026-11-04T03:00:00.000Z", p_fim: AGORA.toISOString(), p_unidade: OUTRA }]);
     expect(p.texto).toContain("Loja 02 (teste) · 7 dias");
     expect(p.cartoes).toEqual(["Vendas", "Recebimentos por meio", "Mix de vendas", "Equipe", "Atalhos"]);
     expect((p.filtro("Loja")?.opcoes as { rotulo: string; ativo: boolean }[]).filter((o) => o.ativo).map((o) => o.rotulo)).toEqual(["Loja 02 (teste)"]);
@@ -703,13 +781,18 @@ describe("Início: cada estado tem a sua mensagem, e falha nunca vira zero", () 
   it("sem movimentação: zero só aqui, com a leitura funcionando, e os painéis continuam no lugar", async () => {
     cenario.vendas = SEM_VENDAS;
     cenario.financeiro = FINANCEIRO_VAZIO;
+    cenario.margem = MARGEM_SEM_FATOS;
     const p = await pagina();
     expect(p.cartoes).toEqual(PAINEIS_DA_LOJA);
+    expect(p.indicadores).toEqual(INDICADORES_DA_LOJA);
     expect(p.indicador("Vendas realizadas")).toMatchObject({ valor: "0", detalhe: "Nenhuma venda concluída no período" });
     expect(p.indicador("Ticket médio")).toMatchObject({ valor: "Sem vendas" });
     expect(p.indicador("Ticket médio").variacao).toBeUndefined();
     expect(p.indicador("Descontos concedidos")).toMatchObject({ valor: "R$ 0,00", detalhe: "Sem vendas no período" });
     expect(p.indicador("Devoluções e cancelamentos")).toMatchObject({ valor: "R$ 0,00", detalhe: "0 devoluções · 0 cancelamentos" });
+    // Margem zero só aqui: a leitura respondeu e não houve venda, devolução nem cancelamento.
+    expect(p.indicador("Margem bruta")).toMatchObject({ valor: "R$ 0,00", detalhe: "Nenhuma venda, devolução ou cancelamento no período" });
+    expect(p.indicador("Margem bruta").tom).toBeUndefined();
     expect(p.indicador("Recebido na loja (registro)")).toMatchObject({ valor: "R$ 0,00" });
     expect(p.indicador("Movimentação dos caixas (dinheiro)")).toMatchObject({ valor: "R$ 0,00", detalhe: "Entradas menos saídas das gavetas no período · 0 caixas abertos agora" });
     const vendas = p.cartao("Vendas");
@@ -828,6 +911,46 @@ describe("Início: cada estado tem a sua mensagem, e falha nunca vira zero", () 
     expect(p.indicador("Recebido na loja (registro)")).toMatchObject({ valor: "—", detalhe: "Não foi possível ler agora" });
     expect(errosRegistrados()).toEqual([["inicio: falha ao ler financeiro_painel", { motivo: "resposta" }]]);
   });
+
+  it("margem sem custo gravado: desconhecida, com aviso, e nunca zero", async () => {
+    cenario.margem = MARGEM_SEM_CUSTO;
+    const margem = (await pagina()).indicador("Margem bruta");
+    expect(margem).toMatchObject({ valor: "Sem custo", detalhe: "Nenhum item do período tinha custo gravado: a margem é desconhecida, não zero", tom: "atencao" });
+    expect(margem.valor).not.toMatch(/R\$/);
+  });
+
+  it("margem indisponível ou em falha: só o indicador dela fica sem número, e o resto da loja continua", async () => {
+    cenario.erroDaMargem = { code: "PGRST202" };
+    let p = await pagina();
+    expect(p.indicadores).toEqual(INDICADORES_DA_LOJA);
+    expect(p.indicador("Margem bruta")).toMatchObject({ valor: "—", detalhe: "Indisponível neste ambiente", tom: "atencao" });
+    expect(p.indicador("Vendas realizadas")).toMatchObject({ valor: "3" });
+    expect(p.indicador("Recebido na loja (registro)")).toMatchObject({ valor: "R$ 3.000,00" });
+    expect(p.cartoes).toEqual(PAINEIS_DA_LOJA);
+    // Ambiente sem a função não é erro a investigar: nada no registro.
+    expect(errosRegistrados()).toEqual([]);
+
+    cenario.erroDaMargem = { code: "57014" };
+    p = await pagina();
+    expect(p.indicador("Margem bruta")).toMatchObject({ valor: "—", detalhe: "Não foi possível ler agora", tom: "atencao" });
+    expect(p.indicador("Vendas realizadas")).toMatchObject({ valor: "3" });
+    expect(p.indicador("Recebido na loja (registro)")).toMatchObject({ valor: "R$ 3.000,00" });
+    expect(errosRegistrados()).toEqual([["margem: falha ao consultar margem_painel", { codigo: "57014" }]]);
+  });
+
+  it("margem em forma inesperada, ou com a conta que não fecha, é falha: nenhum número é mostrado", async () => {
+    // A soma devolvida não bate com as parcelas (deveria ser 122_000): não dá para confiar no número.
+    cenario.margem = { ...MARGEM, totais: { ...MARGEM_DO_DIA, margem: 122_001 } };
+    let p = await pagina();
+    expect(p.indicador("Margem bruta")).toMatchObject({ valor: "—", detalhe: "Não foi possível ler agora", tom: "atencao" });
+    expect(errosRegistrados()).toEqual([["margem: resposta inesperada de margem_painel"]]);
+
+    // Campo ausente não é zero lojas.
+    cenario.margem = { ...MARGEM, lojas_fora: undefined };
+    p = await pagina();
+    expect(p.indicador("Margem bruta")).toMatchObject({ valor: "—", detalhe: "Não foi possível ler agora", tom: "atencao" });
+    expect(errosRegistrados()).toHaveLength(2);
+  });
 });
 
 // ---------------------------------------------------------------------------------------------
@@ -844,6 +967,22 @@ describe("Início: sem permissão não há número nem pergunta ao banco", () =>
     expect(cenario.chamadas.ranking_nomes).toBeUndefined();
     // O resto da loja continua: a permissão do ranking não é a das vendas.
     expect(p.indicador("Vendas realizadas")).toMatchObject({ valor: "3" });
+  });
+
+  it("sem custo.ver: a margem fica sem número e o banco nem é perguntado, com o resto da loja no lugar", async () => {
+    entrar("gerente");
+    cenario.permissoes.delete("custo.ver");
+    const p = await pagina();
+    expect(cenario.chamadas.tem_permissao).toEqual(expect.arrayContaining([{ p_permissao: "custo.ver", p_unidade: LOJA }]));
+    expect(cenario.chamadas.margem_painel).toBeUndefined();
+    // O indicador continua no lugar, dizendo o motivo, sem tom de alerta: não é problema a resolver.
+    expect(p.indicadores).toEqual(INDICADORES_DA_LOJA);
+    const margem = p.indicador("Margem bruta");
+    expect(margem).toMatchObject({ valor: "—", detalhe: "Só quem vê o custo dos produtos acompanha a margem" });
+    expect(margem.tom).toBeUndefined();
+    expect(p.cartoes).toEqual(PAINEIS_DA_LOJA);
+    expect(p.indicador("Vendas realizadas")).toMatchObject({ valor: "3" });
+    expect(p.indicador("Recebido na loja (registro)")).toMatchObject({ valor: "R$ 3.000,00" });
   });
 
   it("sem ranking.ver, a permissão vem antes da falha: continua 'sem permissão' com as vendas fora do ar", async () => {
@@ -884,6 +1023,7 @@ describe("Início: sem permissão não há número nem pergunta ao banco", () =>
     expect(p.doTipo("FiltroSegmentado")).toEqual([]);
     expect(cenario.chamadas.vendas_painel).toBeUndefined();
     expect(cenario.chamadas.financeiro_painel).toBeUndefined();
+    expect(cenario.chamadas.margem_painel).toBeUndefined();
     expect(cenario.chamadas.ranking_nomes).toBeUndefined();
     expect(cenario.lidas).not.toContain("unidades");
     expect(p.pendencias).toEqual({});
@@ -895,9 +1035,10 @@ describe("Início: sem permissão não há número nem pergunta ao banco", () =>
     const p = await pagina({ loja: OUTRA });
     expect(cenario.chamadas.vendas_painel).toBeUndefined();
     expect(cenario.chamadas.financeiro_painel).toBeUndefined();
+    expect(cenario.chamadas.margem_painel).toBeUndefined();
     expect(cenario.chamadas.ranking_nomes).toBeUndefined();
     expect(p.filtro("Loja")).toBeUndefined();
-    for (const rotulo of [...INDICADORES_DE_VENDAS, ...INDICADORES_DO_FINANCEIRO]) expect(p.indicador(rotulo)).toMatchObject({ valor: "—", detalhe: "Não foi possível ler agora" });
+    for (const rotulo of INDICADORES_DA_LOJA) expect(p.indicador(rotulo)).toMatchObject({ valor: "—", detalhe: "Não foi possível ler agora" });
     expect(p.cartao("Vendas").texto).toContain("falha de leitura não vira zero");
     expect(errosRegistrados()).toEqual([["inicio: falha ao consultar as lojas", { codigo: "57014" }]]);
     // As pendências da loja do turno não dependem dos painéis.
@@ -910,11 +1051,12 @@ describe("Início: o que para a página inteira", () => {
   beforeEach(() => entrar("gerente"));
 
   it("sem resposta sobre uma permissão não há como decidir a visão", async () => {
-    for (const permissao of ["ranking.ver", "venda.ver_propria"]) {
+    for (const permissao of ["ranking.ver", "venda.ver_propria", "custo.ver"]) {
       cenario.erroDaPermissao = permissao;
       cenario.chamadas = {};
       await expect(pagina()).rejects.toBeInstanceOf(FalhaDoServico);
       expect(cenario.chamadas.vendas_painel).toBeUndefined();
+      expect(cenario.chamadas.margem_painel).toBeUndefined();
     }
   });
 

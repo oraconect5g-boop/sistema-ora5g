@@ -1,5 +1,5 @@
 // ARQUIVO GERADO pelo Supabase (generate_typescript_types do projeto ora5g-dev) depois da
-// migration 20261112195200_vendas_painel. Não edite à mão: gere de novo a cada
+// migration 20261113065706_margem_painel. Não edite à mão: gere de novo a cada
 // migration aplicada (auditoria do Codex de 08/11, §7.2). O teste tipos-banco.test.ts confere
 // que funções e tabelas públicas daqui são as mesmas das migrations.
 export type Json =
@@ -4693,6 +4693,20 @@ export type Database = {
           versoes: number
           vigente_desde: string
         }[]
+      }
+      margem_itens: {
+        Args: {
+          p_apos?: number
+          p_fim: string
+          p_inicio: string
+          p_limite?: number
+          p_unidade?: string
+        }
+        Returns: Json
+      }
+      margem_painel: {
+        Args: { p_fim: string; p_inicio: string; p_unidade?: string }
+        Returns: Json
       }
       movimentar_caixa: {
         Args: {

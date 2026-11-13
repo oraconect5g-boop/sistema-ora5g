@@ -2,36 +2,16 @@
 // Contrato dos números: docs/alinhamento/MATRIZ_DEMO_REAL.md, seção 3. Aqui não há acesso a dados
 // (as consultas ficam em ./consulta); a soma no banco está provada em
 // packages/banco/src/vendas-painel.test.ts. Nada de custo nem margem neste arquivo.
-import { centavosDoBanco } from "../dinheiro";
 import type { Escopo, LojaDoFiltro } from "../financeiro/escopo";
-import { chavesDaJanela, RespostaInesperada, rotuloDaChave, type Janela, type MeioRecebido, type PeriodoFinanceiro } from "../financeiro/painel";
+import { chavesDaJanela, PERIODOS_FINANCEIROS, RespostaInesperada, rotuloDaChave, type Janela, type MeioRecebido, type PeriodoFinanceiro } from "../financeiro/painel";
+import { ehObjeto, inteiro as n, lista, objeto, texto as t, textoOuNulo as tOuNulo, type Leitura, type Linha } from "../leitura-do-banco";
 
-/** Resultado de uma leitura. Falha e fonte ausente têm estado próprio: nunca viram zero. */
-export type Leitura<T> = { estado: "ok"; dados: T } | { estado: "indisponivel" } | { estado: "falha" };
+export type { Leitura };
 
 // ---------------------------------------------------------------------------------------------
-// Leitura da resposta do banco
+// Leitura da resposta do banco (os leitores estritos ficam em ../leitura-do-banco: número ausente é
+// erro, não zero)
 // ---------------------------------------------------------------------------------------------
-type Linha = Record<string, unknown>;
-const ehObjeto = (v: unknown): v is Linha => typeof v === "object" && v !== null && !Array.isArray(v);
-const lista = (dado: Linha, campo: string): Linha[] => {
-  const v = dado[campo];
-  if (!Array.isArray(v) || !v.every(ehObjeto)) throw new RespostaInesperada(campo);
-  return v;
-};
-// Número ausente é erro, não zero: centavosDoBanco recusa undefined, nulo e fração.
-const n = (l: Linha, campo: string) => centavosDoBanco(l[campo]);
-const t = (l: Linha, campo: string) => {
-  const v = l[campo];
-  if (typeof v !== "string" || v === "") throw new RespostaInesperada(campo);
-  return v;
-};
-const tOuNulo = (l: Linha, campo: string) => {
-  const v = l[campo];
-  if (v === null) return null;
-  if (typeof v !== "string") throw new RespostaInesperada(campo);
-  return v;
-};
 const desfeitos = (l: Linha) => ({ cancelamentos: n(l, "cancelamentos"), cancelado: n(l, "cancelado"), devolucoes: n(l, "devolucoes"), devolvido: n(l, "devolvido") });
 const porItem = (l: Linha) => ({
   itens: n(l, "itens"), vendido: n(l, "vendido"),
@@ -53,8 +33,7 @@ export type VendasDoBanco = {
 /** Converte a resposta de public.vendas_painel. Forma inesperada é erro (a tela mostra falha, não zero). */
 export function lerVendas(dado: unknown): VendasDoBanco {
   if (!ehObjeto(dado)) throw new RespostaInesperada("vendas_painel");
-  const totais = dado.totais;
-  if (!ehObjeto(totais)) throw new RespostaInesperada("totais");
+  const totais = objeto(dado, "totais");
   return {
     totais: { vendas: n(totais, "vendas"), vendido: n(totais, "vendido"), subtotal: n(totais, "subtotal"), descontos: n(totais, "descontos"), vendasComDesconto: n(totais, "vendas_com_desconto"), ...desfeitos(totais) },
     periodos: lista(dado, "periodos").map((l) => ({ periodo: t(l, "periodo"), vendas: n(l, "vendas"), vendido: n(l, "vendido"), subtotal: n(l, "subtotal"), descontos: n(l, "descontos"), ...desfeitos(l) })),
@@ -90,7 +69,8 @@ export function lojasDoFiltro(lojas: readonly LojaDoFiltro[], turno: LojaDoFiltr
   return [{ id: "rede", nome: "Rede inteira" }, turno, ...outras];
 }
 
-const endereco = (caminho: string, valores: Record<string, string | null | undefined>) => {
+/** Endereço com os filtros: valor vazio (o padrão de cada tela) fica fora. */
+export const endereco = (caminho: string, valores: Record<string, string | null | undefined>) => {
   const q = new URLSearchParams();
   for (const [k, v] of Object.entries(valores)) if (v) q.set(k, v);
   const texto = q.toString();
@@ -137,6 +117,25 @@ export const NOMES_DAS_SERIES: Record<PeriodoFinanceiro, { atual: string; anteri
   "7": { atual: "Estes 7 dias", anterior: "7 dias anteriores" },
   "30": { atual: "Estes 30 dias", anterior: "30 dias anteriores" },
 };
+
+/**
+ * Os textos que mudam com o recorte de tempo. Os painéis de vendas são os mesmos no Início e nos
+ * Relatórios (componentes/paineis-de-vendas); cada tela diz o seu recorte por aqui.
+ */
+export type TextosDoRecorte = {
+  /** Nome das duas séries do gráfico de vendas. */
+  series: { atual: string; anterior: string };
+  /** Completa "Nenhuma venda …" e abre a frase do período anterior: "nos 7 dias anteriores". */
+  antes: string;
+  /** Completa "vs. …" no selo de variação: "os 7 dias anteriores". */
+  comparacao: string;
+  /** Completa "só não houve venda concluída …": "hoje" ou "no período". */
+  quando: string;
+};
+const ANTES: Record<PeriodoFinanceiro, string> = { hoje: "ontem até esta hora", "7": "nos 7 dias anteriores", "30": "nos 30 dias anteriores" };
+export const textosDoPeriodo = (periodo: PeriodoFinanceiro): TextosDoRecorte => ({
+  series: NOMES_DAS_SERIES[periodo], antes: ANTES[periodo], comparacao: PERIODOS_FINANCEIROS[periodo].comparacao, quando: periodo === "hoje" ? "hoje" : "no período",
+});
 
 // ---------------------------------------------------------------------------------------------
 // Série do gráfico: o período atual e o anterior, ponto a ponto

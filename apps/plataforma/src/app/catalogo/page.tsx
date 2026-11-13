@@ -6,6 +6,7 @@ import { MoldeReal } from "../../componentes/MoldeReal";
 import { Aviso, Cartao, Selo, TituloPagina } from "../../componentes/ui";
 import { FalhaDoServico, obterSessao } from "../../lib/acesso/sessao";
 import { buscarNoCatalogo, termoDaBusca } from "../../lib/catalogo/busca";
+import { nomeCurtoDoTipo } from "../../lib/catalogo/cadastro";
 import { inteiroDoBanco } from "../../lib/dinheiro";
 import { textoDoParametro, type ValorDeParametro } from "../../lib/parametros";
 import { configuracaoSupabase } from "../../lib/supabase/configuracao";
@@ -15,9 +16,6 @@ import { FotoAmpliavel } from "./FotoAmpliavel";
 export const metadata: Metadata = { title: "Catálogo e fotos" };
 export const dynamic = "force-dynamic";
 
-const TIPOS: Record<string, string> = {
-  aparelho: "Aparelho", acessorio: "Acessório", chip: "Chip", ativacao: "Ativação", portabilidade: "Portabilidade", recarga: "Recarga", servico: "Serviço",
-};
 const LIMITE = 200;
 
 // Catálogo real (ORA-CAT-001, ORA-CAT-011): foto, nome, SKU e quanto há na loja do turno.
@@ -108,7 +106,7 @@ export default async function Catalogo({ searchParams }: { searchParams: Promise
                   <FotoAmpliavel url={foto ? (urlDe.get(foto.caminho) ?? null) : null} rotulo={rotulo} ilustracao={foto?.ilustracao ?? false} />
                   <div className="min-w-0 flex-1">
                     <p className="font-semibold">{p.nome}</p>
-                    <p className="text-xs text-suave">{TIPOS[p.tipo] ?? p.tipo}{!foto && " · sem foto do produto"}</p>
+                    <p className="text-xs text-suave">{nomeCurtoDoTipo(p.tipo)}{!foto && " · sem foto do produto"}</p>
                     <ul className="mt-1 space-y-0.5 text-xs">
                       {doProduto.map((v) => (
                         <li key={v.id} className="numeros">{v.sku} · {v.nome}{["aparelho", "acessorio", "chip"].includes(p.tipo) ? ` · ${disponivel(v.id)} na loja` : ""}{["aparelho", "acessorio", "chip"].includes(p.tipo) && <> · <Link href={`/estoque?variante=${v.id}`} className="font-semibold text-acao">onde tem</Link></>}</li>

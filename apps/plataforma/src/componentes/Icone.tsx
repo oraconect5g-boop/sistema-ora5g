@@ -1,5 +1,5 @@
 import {
-  ArrowRightLeft, Building2, CalendarClock, ChartColumn, ClipboardCheck, ContactRound, CreditCard, FileText, Filter, FileUp, Globe, House, MessageCircle, Package, PackagePlus, Receipt, Scale, ScrollText,
+  ArrowRightLeft, Building2, CalendarClock, ChartColumn, ChartLine, ClipboardCheck, ContactRound, CreditCard, FileText, Filter, FileUp, Globe, House, MessageCircle, Package, PackagePlus, Receipt, Scale, ScrollText,
   ShoppingCart, Signal, Tags, Target, Users, Wallet, Wrench, type LucideIcon,
 } from "lucide-react";
 
@@ -14,6 +14,7 @@ const ICONES: Record<string, LucideIcon> = {
   metas: Target,
   financeiro: Wallet,
   relatorios: ChartColumn,
+  tendencias: ChartLine,
   clientes: MessageCircle,
   contatos: ContactRound,
   funil: Filter,

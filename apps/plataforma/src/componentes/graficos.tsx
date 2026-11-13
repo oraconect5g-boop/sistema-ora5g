@@ -1,7 +1,7 @@
 import type { ReactNode } from "react";
 
 import { CamadaDicas } from "./DicasGrafico";
-import { escala, larguraMinimaDosRotulos, mostrarRotulo, type EncaixeDosRotulos } from "./escala";
+import { escala, escalaComPiso, larguraMinimaDosRotulos, mostrarRotulo, trechosComValor, type EncaixeDosRotulos } from "./escala";
 
 export { escala, mostrarRotulo };
 
@@ -11,7 +11,10 @@ export { escala, mostrarRotulo };
 // gráfico tem a "tabela" equivalente (TabelaDoGrafico) para quem não enxerga as cores.
 
 export type SerieCor = 1 | 2 | 3 | 4 | 5 | 6;
-/** Cor de uma linha: uma série da paleta ou o cinza de comparação (período anterior, ênfase). */
+/**
+ * Cor de uma marca: uma série da paleta ou o cinza neutro "comparacao", que não é identidade de
+ * série: serve ao período anterior (ênfase no atual) e à parte de um todo que ficou fora da conta.
+ */
 export type CorDaLinha = SerieCor | "comparacao";
 
 const FUNDO: Record<CorDaLinha, string> = {
@@ -27,12 +30,15 @@ const FUNDO_SUAVE: Record<SerieCor, string> = {
 const TRACO: Record<CorDaLinha, string> = {
   1: "stroke-serie-1", 2: "stroke-serie-2", 3: "stroke-serie-3", 4: "stroke-serie-4", 5: "stroke-serie-5", 6: "stroke-serie-6", comparacao: "stroke-serie-comparacao",
 };
-// Texto dentro de um bloco colorido: branco, ou quase preto nos tons claros (amarelo e rosa).
+// Texto dentro de um bloco colorido: branco, ou quase preto nos tons claros (amarelo, rosa e o cinza
+// neutro, em que o branco só chega a 3:1).
 const TEXTO_SOBRE: Record<CorDaLinha, string> = {
-  1: "text-white", 2: "text-white", 3: "text-white", 4: "text-white", 5: "text-texto", 6: "text-texto", comparacao: "text-white",
+  1: "text-white", 2: "text-white", 3: "text-white", 4: "text-white", 5: "text-texto", 6: "text-texto", comparacao: "text-texto",
 };
 
 const pct = (valor: number, topo: number) => (topo > 0 ? Math.max(0, Math.min(100, (valor / topo) * 100)) : 0);
+/** Altura (%) de um valor no eixo que vai de `piso` a `topo`. O piso é zero, salvo na série com valor negativo. */
+const posicao = (valor: number, piso: number, topo: number) => (topo > piso ? Math.max(0, Math.min(100, ((valor - piso) / (topo - piso)) * 100)) : 0);
 
 export function Legenda({ itens, className = "" }: { itens: readonly { nome: string; serie: CorDaLinha; forma?: "bloco" | "linha" | "tracejada" }[]; className?: string }) {
   return (
@@ -74,21 +80,21 @@ export function TabelaDoGrafico({ colunas, linhas, titulo = "Ver dados em tabela
   );
 }
 
-function EixoY({ marcas, topo, formatar, largura = "w-14" }: { marcas: number[]; topo: number; formatar: (v: number) => string; largura?: string }) {
+function EixoY({ marcas, topo, piso = 0, formatar, largura = "w-14" }: { marcas: number[]; topo: number; piso?: number; formatar: (v: number) => string; largura?: string }) {
   return (
     <div aria-hidden className={`numeros relative shrink-0 text-[11px] text-suave ${largura}`}>
       {marcas.map((m) => (
-        <span key={m} className="absolute right-2 translate-y-1/2 whitespace-nowrap" style={{ bottom: `${pct(m, topo)}%` }}>{formatar(m)}</span>
+        <span key={m} className="absolute right-2 translate-y-1/2 whitespace-nowrap" style={{ bottom: `${posicao(m, piso, topo)}%` }}>{formatar(m)}</span>
       ))}
     </div>
   );
 }
 
-function Grade({ marcas, topo }: { marcas: number[]; topo: number }) {
+function Grade({ marcas, topo, piso = 0 }: { marcas: number[]; topo: number; piso?: number }) {
   return (
     <>
       {marcas.map((m) => (
-        <div key={m} aria-hidden className={`absolute inset-x-0 h-px ${m === 0 ? "bg-eixo" : "bg-grade"}`} style={{ bottom: `${pct(m, topo)}%` }} />
+        <div key={m} aria-hidden className={`absolute inset-x-0 h-px ${m === 0 ? "bg-eixo" : "bg-grade"}`} style={{ bottom: `${posicao(m, piso, topo)}%` }} />
       ))}
     </>
   );
@@ -183,12 +189,13 @@ export function Colunas({ dados, formatar, formatarEixo = formatar, nomeSerie, a
 /**
  * Série de uma linha. `tracejada` e a cor "comparacao" servem ao período anterior (ênfase: o atual na
  * cor da marca, o anterior em cinza). `ponto`: marca o último valor (padrão), o maior (com o valor numa
- * pílula, como nos prints de referência) ou nenhum.
+ * pílula, como nos prints de referência) ou nenhum. Um valor `null` é ponto sem valor (dia sem venda no
+ * ticket médio): a linha se interrompe ali, em vez de descer a zero. Valor negativo desce abaixo do zero.
  */
 export type SerieLinha = {
   nome: string;
   serie: CorDaLinha;
-  valores: readonly number[];
+  valores: readonly (number | null)[];
   area?: boolean;
   tracejada?: boolean;
   ponto?: "ultimo" | "maximo" | "nenhum";
@@ -218,8 +225,11 @@ export function caminhoSuave(pontos: readonly Coordenada[]): string {
 const idDoDegrade = (series: readonly SerieLinha[]) =>
   `area-${[...series.map((s) => `${s.nome}${s.valores.join(",")}`).join("|")].reduce((h, c) => (h * 31 + c.charCodeAt(0)) >>> 0, 7).toString(36)}`;
 
-/** Linhas no tempo (1 a 3 séries, mesma unidade, um só eixo). `suave` desenha curvas. */
-export function Linhas({ series, rotulosX, formatar, formatarEixo = formatar, formatarPonto = formatar, altura = 200, cadaRotulo = 1, suave = false }: {
+/**
+ * Linhas no tempo (1 a 3 séries, mesma unidade, um só eixo). `suave` desenha curvas. O eixo começa no
+ * zero; só desce abaixo dele quando alguma série tem valor negativo, e a área vai sempre até a linha do zero.
+ */
+export function Linhas({ series, rotulosX, formatar, formatarEixo = formatar, formatarPonto = formatar, altura = 200, cadaRotulo = 1, suave = false, semValor = "—" }: {
   series: readonly SerieLinha[];
   rotulosX: readonly string[];
   formatar: (valor: number) => string;
@@ -229,11 +239,16 @@ export function Linhas({ series, rotulosX, formatar, formatarEixo = formatar, fo
   altura?: number;
   cadaRotulo?: number;
   suave?: boolean;
+  /** O que a dica e o leitor de tela dizem no ponto sem valor (ex.: "sem venda"). */
+  semValor?: string;
 }) {
   const n = rotulosX.length;
-  const { topo, marcas } = escala(Math.max(0, ...series.flatMap((s) => s.valores)));
+  const comValor = series.flatMap((s) => s.valores.filter((v): v is number => v !== null));
+  const { piso, topo, marcas } = escalaComPiso(Math.min(0, ...comValor), Math.max(0, ...comValor));
   const x = (i: number) => (n <= 1 ? 50 : (i / (n - 1)) * 100);
-  const y = (v: number) => 100 - pct(v, topo);
+  const y = (v: number) => 100 - posicao(v, piso, topo);
+  const zero = y(0);
+  const texto = (v: number | null | undefined) => (v === null ? semValor : formatar(v ?? 0));
   const degrade = idDoDegrade(series);
   const comPilula = series.some((s) => s.ponto === "maximo");
   return (
@@ -242,9 +257,9 @@ export function Linhas({ series, rotulosX, formatar, formatarEixo = formatar, fo
         <Legenda className={comPilula ? "-mt-7 mb-9" : "mb-3"} itens={series.map((s) => ({ nome: s.nome, serie: s.serie, forma: s.tracejada ? ("tracejada" as const) : ("linha" as const) }))} />
       )}
       <div className="flex" style={{ height: altura }}>
-        <EixoY marcas={marcas} topo={topo} formatar={formatarEixo} />
+        <EixoY marcas={marcas} topo={topo} piso={piso} formatar={formatarEixo} />
         <div className="relative min-w-0 flex-1">
-          <Grade marcas={marcas} topo={topo} />
+          <Grade marcas={marcas} topo={topo} piso={piso} />
           <svg aria-hidden viewBox="0 0 100 100" preserveAspectRatio="none" className="absolute inset-0 h-full w-full overflow-visible">
             <defs>
               {series.filter((s) => s.area).map((s, i) => (
@@ -255,37 +270,63 @@ export function Linhas({ series, rotulosX, formatar, formatarEixo = formatar, fo
               ))}
             </defs>
             {series.map((s) => {
-              const pontos = s.valores.map((v, i): Coordenada => [x(i), y(v)]);
-              const linha = suave ? caminhoSuave(pontos) : `M${pontos.map(([a, b]) => `${a},${b}`).join(" L")}`;
               const indiceDaArea = series.filter((o) => o.area).indexOf(s);
               return (
                 <g key={s.nome}>
-                  {s.area && <path d={`${linha} L${x(s.valores.length - 1)},100 L${x(0)},100 Z`} fill={`url(#${degrade}-${indiceDaArea})`} />}
-                  <path
-                    d={linha}
-                    fill="none"
-                    strokeWidth={s.tracejada ? 2 : 2.75}
-                    strokeDasharray={s.tracejada ? "5 5" : undefined}
-                    strokeLinejoin="round"
-                    strokeLinecap="round"
-                    vectorEffect="non-scaling-stroke"
-                    className={TRACO[s.serie]}
-                  />
+                  {trechosComValor(s.valores).map((trecho) => {
+                    const [primeiro, ultimo] = [trecho[0], trecho.at(-1)];
+                    // Ponto sem vizinho não forma linha: ele é desenhado adiante, como ponto.
+                    if (!primeiro || !ultimo || trecho.length < 2) return null;
+                    const pontos = trecho.map((p): Coordenada => [x(p.indice), y(p.valor)]);
+                    const linha = suave ? caminhoSuave(pontos) : `M${pontos.map(([a, b]) => `${a},${b}`).join(" L")}`;
+                    return (
+                      <g key={primeiro.indice}>
+                        {s.area && <path d={`${linha} L${x(ultimo.indice)},${zero} L${x(primeiro.indice)},${zero} Z`} fill={`url(#${degrade}-${indiceDaArea})`} />}
+                        <path
+                          d={linha}
+                          fill="none"
+                          strokeWidth={s.tracejada ? 2 : 2.75}
+                          strokeDasharray={s.tracejada ? "5 5" : undefined}
+                          strokeLinejoin="round"
+                          strokeLinecap="round"
+                          vectorEffect="non-scaling-stroke"
+                          className={TRACO[s.serie]}
+                        />
+                      </g>
+                    );
+                  })}
                 </g>
               );
             })}
           </svg>
+          {series.flatMap((s) =>
+            trechosComValor(s.valores).map((trecho) => {
+              const [sozinho] = trecho;
+              if (!sozinho || trecho.length > 1) return null;
+              return (
+                <span
+                  key={`${s.nome}-${sozinho.indice}`}
+                  aria-hidden
+                  className={`absolute size-2 -translate-x-1/2 -translate-y-1/2 rounded-full ${FUNDO[s.serie]}`}
+                  style={{ left: `${x(sozinho.indice)}%`, top: `${y(sozinho.valor)}%` }}
+                />
+              );
+            }),
+          )}
           {series.map((s) => {
             const modo = s.ponto ?? "ultimo";
-            if (modo === "nenhum" || s.valores.length === 0) return null;
-            const indice = modo === "maximo" ? s.valores.indexOf(Math.max(...s.valores)) : s.valores.length - 1;
-            const valor = s.valores[indice] ?? 0;
+            const pontos = trechosComValor(s.valores).flat();
+            // O maior é o primeiro que chega ao pico (em empate, o dia mais antigo), como antes.
+            const maior = pontos.reduce<(typeof pontos)[number] | undefined>((m, p) => (!m || p.valor > m.valor ? p : m), undefined);
+            const escolhido = modo === "nenhum" ? undefined : modo === "maximo" ? maior : pontos.at(-1);
+            if (!escolhido) return null;
+            const { indice, valor } = escolhido;
             const deslocamento = indice === 0 ? "0%" : indice === s.valores.length - 1 ? "-100%" : "-50%";
             return (
               <span key={s.nome} aria-hidden>
                 {modo === "maximo" && (
                   <>
-                    <span className="absolute bottom-0 border-l border-dashed" style={{ left: `${x(indice)}%`, top: `${y(valor)}%`, borderColor: COR_CSS[s.serie] }} />
+                    <span className="absolute border-l border-dashed" style={{ left: `${x(indice)}%`, top: `${y(valor)}%`, bottom: `${100 - zero}%`, borderColor: COR_CSS[s.serie] }} />
                     <span
                       className={`numeros absolute whitespace-nowrap rounded-full px-2.5 py-1 text-xs font-bold shadow-sm ${FUNDO[s.serie]} ${TEXTO_SOBRE[s.serie]}`}
                       style={{ left: `${x(indice)}%`, top: `${y(valor)}%`, transform: `translate(${deslocamento}, calc(-100% - 10px))` }}
@@ -305,13 +346,13 @@ export function Linhas({ series, rotulosX, formatar, formatarEixo = formatar, fo
             const esquerda = i === 0 ? 0 : (x(i - 1) + x(i)) / 2;
             const direita = i === n - 1 ? 100 : (x(i) + x(i + 1)) / 2;
             const largura = Math.max(0.0001, direita - esquerda);
-            const dica = [rotulo, ...series.map((s) => `${s.nome}|${formatar(s.valores[i] ?? 0)}`)].join("\n");
+            const dica = [rotulo, ...series.map((s) => `${s.nome}|${texto(s.valores[i])}`)].join("\n");
             return (
               <div
                 key={rotulo}
                 tabIndex={0}
                 data-dica={dica}
-                aria-label={`${rotulo}: ${series.map((s) => `${s.nome} ${formatar(s.valores[i] ?? 0)}`).join(", ")}`}
+                aria-label={`${rotulo}: ${series.map((s) => `${s.nome} ${texto(s.valores[i])}`).join(", ")}`}
                 className="group absolute inset-y-0 focus-visible:outline-none"
                 style={{ left: `${esquerda}%`, width: `${largura}%` }}
               >
@@ -365,7 +406,8 @@ export function BarrasHorizontais({ dados, formatar, nomeSerie, serie = 1, maxim
   );
 }
 
-export type Parte = { nome: string; valor: number; serie: SerieCor };
+/** `serie: "comparacao"` (cinza neutro) é para a parte que ficou fora da conta, como o vendido sem custo gravado. */
+export type Parte = { nome: string; valor: number; serie: CorDaLinha };
 
 /** Partes de um todo (mix de vendas, meios de pagamento). Barra alta segmentada + lista com os valores. */
 export function BarraSegmentada({ partes, formatar, rotulo }: { partes: readonly Parte[]; formatar: (valor: number) => string; rotulo: string }) {

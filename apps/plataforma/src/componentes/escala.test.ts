@@ -1,6 +1,6 @@
 import { describe, expect, it } from "vitest";
 
-import { FOLGA_DOS_ROTULOS, formaDosRotulos, larguraDoRotulo, larguraMinimaDosRotulos, mostrarRotulo, rotulosVisiveis, type EncaixeDosRotulos } from "./escala";
+import { escala, escalaComPiso, FOLGA_DOS_ROTULOS, formaDosRotulos, larguraDoRotulo, larguraMinimaDosRotulos, mostrarRotulo, rotulosVisiveis, trechosComValor, type EncaixeDosRotulos } from "./escala";
 
 const dias = (dia: number, mes: number, quantos: number) =>
   Array.from({ length: quantos }, (_, i) => {
@@ -94,5 +94,54 @@ describe("rótulos do eixo X conforme a largura do gráfico", () => {
   it("eixo vazio não quebra e passo inválido vale 1", () => {
     expect(larguraMinimaDosRotulos([], 3)).toEqual([]);
     expect(larguraMinimaDosRotulos(["a", "b", "c"], 0).every((minimo) => minimo !== null)).toBe(true);
+  });
+});
+
+describe("escala com valores abaixo de zero", () => {
+  it("sem valor negativo é a escala de sempre, com o piso em zero", () => {
+    for (const maximo of [0, 1, 7, 29_000, 450_000, 12_345_678]) expect(escalaComPiso(0, maximo)).toEqual({ piso: 0, ...escala(maximo) });
+    expect(escalaComPiso(120, 29_000)).toEqual({ piso: 0, topo: 30_000, marcas: [0, 10_000, 20_000, 30_000] });
+    expect(escalaComPiso(Number.NaN, 29_000)).toEqual({ piso: 0, ...escala(29_000) });
+  });
+
+  it("com valor negativo o zero é uma das marcas e o piso cobre o menor valor", () => {
+    expect(escalaComPiso(-6_050, 42_000)).toEqual({ piso: -20_000, topo: 60_000, marcas: [-20_000, 0, 20_000, 40_000, 60_000] });
+    expect(escalaComPiso(-30_000, -5_000)).toEqual({ piso: -30_000, topo: 0, marcas: [-30_000, -20_000, -10_000, 0] });
+    expect(escalaComPiso(-100, 1_000_000)).toEqual({ piso: -500_000, topo: 1_000_000, marcas: [-500_000, 0, 500_000, 1_000_000] });
+    expect(escalaComPiso(-1, 0)).toEqual({ piso: -1, topo: 0, marcas: [-1, -0.75, -0.5, -0.25, 0] });
+  });
+
+  it("em qualquer par de valores: cobre os dois extremos, passo igual e poucas marcas", () => {
+    for (const minimo of [-1, -37, -999, -6_050, -250_000, -9_999_999]) {
+      for (const maximo of [-1, 0, 3, 480, 42_000, 1_234_567, 88_000_000]) {
+        const { piso, topo, marcas } = escalaComPiso(minimo, maximo);
+        expect(piso, `${minimo}..${maximo}`).toBeLessThanOrEqual(minimo);
+        expect(topo, `${minimo}..${maximo}`).toBeGreaterThanOrEqual(Math.max(0, maximo));
+        expect(marcas[0]).toBe(piso);
+        expect(marcas.at(-1)).toBeCloseTo(topo, 6);
+        expect(marcas.filter((marca) => Object.is(marca, 0))).toHaveLength(1);
+        expect(marcas.length).toBeGreaterThanOrEqual(2);
+        expect(marcas.length).toBeLessThanOrEqual(7);
+        const passos = marcas.slice(1).map((marca, i) => marca - (marcas[i] ?? 0));
+        for (const passo of passos) expect(passo).toBeCloseTo(passos[0] ?? 0, 6);
+      }
+    }
+  });
+});
+
+describe("trechos de uma linha com pontos sem valor", () => {
+  it("a linha se interrompe onde falta valor e cada ponto guarda o lugar dele no eixo", () => {
+    expect(trechosComValor([10, 20, null, 30, null, null, 40, 50])).toEqual([
+      [{ indice: 0, valor: 10 }, { indice: 1, valor: 20 }],
+      [{ indice: 3, valor: 30 }],
+      [{ indice: 6, valor: 40 }, { indice: 7, valor: 50 }],
+    ]);
+  });
+
+  it("zero é valor (não interrompe); série inteira, vazia ou só com faltas", () => {
+    expect(trechosComValor([0, -5, 0])).toEqual([[{ indice: 0, valor: 0 }, { indice: 1, valor: -5 }, { indice: 2, valor: 0 }]]);
+    expect(trechosComValor([])).toEqual([]);
+    expect(trechosComValor([null, undefined, null])).toEqual([]);
+    expect(trechosComValor([null, 7])).toEqual([[{ indice: 1, valor: 7 }]]);
   });
 });
