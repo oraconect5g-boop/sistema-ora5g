@@ -66,8 +66,9 @@ async function financiada(s: Sessao, aparelho: string, meio: "payjoy" | "aiva", 
   const conta = (await db.query<{ id: string; valor: string }>("select id, valor_centavos::text as valor from public.contas_a_receber where venda_id = $1", [venda])).rows[0];
   return { venda, conta: conta?.id ?? "", valor: Number(conta?.valor) };
 }
+type Conta = { situacao: string; recebido_em: string | null; recebido: string | null; referencia: string | null; registrado_por: string | null };
 const conta = async (id: string) =>
-  (await db.query("select situacao, recebido_em::text, valor_recebido_centavos::text as recebido, referencia_recebimento as referencia, registrado_por from public.contas_a_receber where id = $1", [id])).rows[0];
+  (await db.query<Conta>("select situacao, recebido_em::text, valor_recebido_centavos::text as recebido, referencia_recebimento as referencia, registrado_por from public.contas_a_receber where id = $1", [id])).rows[0];
 
 describe("financeiras: registrar o repasse do que foi financiado (L7b)", () => {
   it("o dono registra o repasse (a diferença é a taxa); repetir não muda; mudar exige desfazer, com motivo; tudo na auditoria", async () => {
