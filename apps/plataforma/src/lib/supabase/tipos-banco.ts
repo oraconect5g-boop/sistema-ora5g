@@ -4346,6 +4346,10 @@ export type Database = {
         Args: { p_evidencia: string; p_habilitar: boolean; p_tipo: string }
         Returns: boolean
       }
+      connect_painel: {
+        Args: { p_fim: string; p_inicio: string; p_unidade?: string; p_vendedor?: string }
+        Returns: Json
+      }
       connect_registrar: {
         Args: { p_chave: string; p_pedido: Json; p_tipo: string }
         Returns: string

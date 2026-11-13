@@ -147,9 +147,9 @@
       "evidencia": "packages/banco/supabase"
     },
     "ORA-REPORT-004": {
-      "status": "demonstracao",
-      "nota": "Relatório de chips, ativações, portabilidades e recargas por dia e por vendedor, só confirmadas. Só dados fictícios. Destino real, fonte e contrato: MATRIZ_DEMO_REAL.md (P0, 12/11), linhas 15, 23 e 24 (chip vendido separado de operação confirmada).",
-      "evidencia": "apps/plataforma/src/app/demo; apps/plataforma/e2e/demonstracao.spec.ts"
+      "status": "parcial",
+      "nota": "Relatório de chips, ativações, portabilidades e recargas por dia e por vendedor, só confirmadas. Só dados fictícios. Destino real, fonte e contrato: MATRIZ_DEMO_REAL.md (P0, 12/11), linhas 15, 23 e 24 (chip vendido separado de operação confirmada). G4a (13/11): real nos Relatórios (por dia, 7, 14 ou 30 dias), no indicador do Início da gestão e no cartão \"Produção do período\" do /connect: chips vendidos separados das operações confirmadas (uma por operação), por tipo e por origem, somados no banco (connect_painel); em andamento e sem resultado à parte, fora da conta. A migration ainda não foi aplicada no ora5g-dev (o conector do Supabase não estava na sessão). FALTA: o recorte por vendedor (G4b).",
+      "evidencia": "apps/plataforma/src/app/demo; apps/plataforma/e2e/demonstracao.spec.ts; packages/banco/supabase/migrations/20261113162509_connect_painel.sql; packages/banco/src/connect-painel.test.ts; apps/plataforma/src/lib/connect/producao.ts; apps/plataforma/src/componentes/paineis-do-connect.tsx"
     },
     "ORA-REPORT-005": {
       "status": "parcial",
@@ -168,8 +168,8 @@
     },
     "ORA-PERF-005": {
       "status": "parcial",
-      "nota": "Demonstração: painel do gestor com metas e produção de todos os vendedores do escopo; o vendedor vê só os próprios números (dados fictícios). Real desde o G1 (13/11): os resultados da equipe por vendedor de origem (vendas, vendido, devolvido e cancelado, líquido e ticket) no /inicio do gerente e do dono, em hoje, 7 ou 30 dias, só para quem tem ranking.ver na loja da venda; o vendedor vê só os próprios números. FALTA (G4): metas (modelo versionado, com valores definidos pelo proprietário), atingimento e produção de telecom confirmada; o Início real ainda não tem medidor de meta. Contrato: MATRIZ_DEMO_REAL.md, linhas 5 e 18 a 20.",
-      "evidencia": "packages/banco/supabase/migrations/20261112195200_vendas_painel.sql; packages/banco/src/vendas-painel.test.ts; apps/plataforma/src/lib/inicio; apps/plataforma/src/app/inicio; apps/plataforma/src/app/demo; apps/plataforma/e2e/demonstracao.spec.ts"
+      "nota": "Demonstração: painel do gestor com metas e produção de todos os vendedores do escopo; o vendedor vê só os próprios números (dados fictícios). Real desde o G1 (13/11): os resultados da equipe por vendedor de origem (vendas, vendido, devolvido e cancelado, líquido e ticket) no /inicio do gerente e do dono, em hoje, 7 ou 30 dias, só para quem tem ranking.ver na loja da venda; o vendedor vê só os próprios números. FALTA (G4): metas (modelo versionado, com valores definidos pelo proprietário), atingimento e produção de telecom confirmada; o Início real ainda não tem medidor de meta. Contrato: MATRIZ_DEMO_REAL.md, linhas 5 e 18 a 20. G4a (13/11): a produção do Ora Connect confirmada entra no Início da gestão (indicador do período). Metas e produção por vendedor continuam no G4b.",
+      "evidencia": "packages/banco/supabase/migrations/20261112195200_vendas_painel.sql; packages/banco/src/vendas-painel.test.ts; apps/plataforma/src/lib/inicio; apps/plataforma/src/app/inicio; apps/plataforma/src/app/demo; apps/plataforma/e2e/demonstracao.spec.ts; packages/banco/supabase/migrations/20261113162509_connect_painel.sql; packages/banco/src/connect-painel.test.ts; apps/plataforma/src/lib/connect/producao.ts; apps/plataforma/src/componentes/paineis-do-connect.tsx"
     },
     "ORA-FIN-001": {
       "status": "parcial",
@@ -218,8 +218,8 @@
     },
     "ORA-CONNECT-006": {
       "status": "testado",
-      "nota": "Produção por operação confirmada, do vendedor e da loja de origem, com origem (evidência da operadora ou revisão da gerência) e chave única por operação. Comissão sobre ela ainda não existe (P8). Revisão do Codex (PR #33, trazida em 10/11): 9b1109e reproduziu #55 a #59; corrigidos nos lotes 1 e 2, aguardando a conferência do Codex. Cobrança, carteira, recorrência e repasse (#54) ficam no ORA-CONNECT-009.",
-      "evidencia": "packages/banco/supabase/migrations/20261109123402_ora_connect_operacoes.sql; packages/banco/src/connect.test.ts; packages/banco/src/concorrencia.test.ts; packages/dominio/src/nogle.test.ts; apps/worker/src/connect/ponta-a-ponta.test.ts; apps/worker/src/connect/transporte.test.ts"
+      "nota": "Produção por operação confirmada, do vendedor e da loja de origem, com origem (evidência da operadora ou revisão da gerência) e chave única por operação. Comissão sobre ela ainda não existe (P8). Revisão do Codex (PR #33, trazida em 10/11): 9b1109e reproduziu #55 a #59; corrigidos nos lotes 1 e 2, aguardando a conferência do Codex. Cobrança, carteira, recorrência e repasse (#54) ficam no ORA-CONNECT-009. G4a (13/11): a produção confirmada aparece somada no /connect, no Início e nos Relatórios, sempre pelo vendedor e pela loja de origem.",
+      "evidencia": "packages/banco/supabase/migrations/20261109123402_ora_connect_operacoes.sql; packages/banco/src/connect.test.ts; packages/banco/src/concorrencia.test.ts; packages/dominio/src/nogle.test.ts; apps/worker/src/connect/ponta-a-ponta.test.ts; apps/worker/src/connect/transporte.test.ts; packages/banco/supabase/migrations/20261113162509_connect_painel.sql; packages/banco/src/connect-painel.test.ts; apps/plataforma/src/lib/connect/producao.ts; apps/plataforma/src/componentes/paineis-do-connect.tsx"
     },
     "ORA-CONNECT-007": {
       "status": "parcial",

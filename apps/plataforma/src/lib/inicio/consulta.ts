@@ -4,6 +4,8 @@
 // do Início continuam. O que cada perfil lê é decidido no banco (RLS e tem_permissao); a visão daqui
 // só escolhe quais perguntas fazer. Os registros de erro levam só o código, nunca valor nem nome.
 import { FalhaDoServico, type obterSessao } from "../acesso/sessao";
+import { consultarProducao } from "../connect/consulta-producao";
+import type { ProducaoDoBanco } from "../connect/producao";
 import { ValorForaDoLimite } from "../dinheiro";
 import { consultarPainel } from "../financeiro/consulta";
 import type { Escopo, LojaDoFiltro } from "../financeiro/escopo";
@@ -121,6 +123,8 @@ export type PaineisComDados = {
    * foi perguntado. null: a visão do vendedor não lê a margem.
    */
   margem: Leitura<MargemDoBanco> | "sem_permissao" | null;
+  /** Chips vendidos e operações do Ora Connect confirmadas (lote G4a). null: a visão do vendedor não lê aqui. */
+  producao: Leitura<ProducaoDoBanco> | null;
 };
 export type PaineisDoInicio = { visao: "nenhuma" } | PaineisComDados;
 
@@ -157,15 +161,16 @@ export async function lerPaineisDoInicio(supabase: Cliente, pedido: PedidoDosPai
   const escopo = escopoDoInicio(pedido.loja, cadastro, turno, daRede);
   const base = { visao, periodo, escopo, janelas, cadastro, filtroDeLojas: daRede && cadastroLido ? lojasDoFiltro(cadastro, turno) : [] };
   // Sem a lista de lojas não dá para conferir a loja pedida no endereço: nenhum número é mostrado.
-  if (!cadastroLido) return { ...base, vendas: FALHA, anterior: FALHA, financeiro: FALHA, nomes: null, margem: pedido.custo ? FALHA : "sem_permissao" };
+  if (!cadastroLido) return { ...base, vendas: FALHA, anterior: FALHA, financeiro: FALHA, nomes: null, margem: pedido.custo ? FALHA : "sem_permissao", producao: FALHA };
 
   const filtro = visao === "vendedor" ? { unidade: null, vendedor: pedido.usuario } : { unidade: escopo.unidade, vendedor: null };
   // A margem só é pedida para quem tem custo.ver: sem a permissão, o banco nem é perguntado.
-  const [vendas, anterior, financeiro, margem] = await Promise.all([
+  const [vendas, anterior, financeiro, margem, producao] = await Promise.all([
     consultarVendas(supabase, janelas.atual, filtro, janelas.porHora),
     consultarVendas(supabase, janelas.anterior, filtro, janelas.porHora),
     visao === "vendedor" ? null : consultarFinanceiro(supabase, janelas.atual, escopo.unidade),
     visao === "vendedor" ? null : pedido.custo ? consultarMargem(supabase, janelas.atual, escopo.unidade) : "sem_permissao" as const,
+    visao === "vendedor" ? null : consultarProducao(supabase, janelas.atual, { unidade: escopo.unidade, vendedor: null }),
   ]);
   // A permissão vem antes do estado da leitura: quem não tem ranking.ver lê "sem permissão" mesmo
   // quando as vendas falharam, e o banco nem é perguntado pelos nomes.
@@ -173,5 +178,5 @@ export async function lerPaineisDoInicio(supabase: Cliente, pedido: PedidoDosPai
     : !pedido.ranking ? "sem_permissao"
     : vendas.estado !== "ok" ? null
     : await nomesDoRanking(supabase, vendas.dados.vendedores.map((v) => v.vendedorId));
-  return { ...base, vendas, anterior, financeiro, nomes, margem };
+  return { ...base, vendas, anterior, financeiro, nomes, margem, producao };
 }

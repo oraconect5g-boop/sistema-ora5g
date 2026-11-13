@@ -6,6 +6,7 @@ import {
   CABECAS, COLUNAS_DO_DESEMPENHO, desempenho, EstadoDoPainel, indicadorDaMargem, indicadorDoRecebido, Indicadores, indicadoresDeVendas, LIGACAO, NOTA,
   PainelDasLojas, PainelDeRecebimentos, PainelDeVendas, PainelDoMix, plural, SEM_LEITURA, temFatos, type ItemDoResumo,
 } from "../../componentes/paineis-de-vendas";
+import { indicadorDoConnect } from "../../componentes/paineis-do-connect";
 import { Cartao, EstadoVazio, FiltroSegmentado } from "../../componentes/ui";
 import type { LojaDoFiltro } from "../../lib/financeiro/escopo";
 import { ORDEM_DOS_PERIODOS, PERIODOS_FINANCEIROS, type ResumoFinanceiro } from "../../lib/financeiro/painel";
@@ -98,7 +99,7 @@ export function ConteudoInicio({ paineis, usuario, turno, conferenteDeCaixa }: {
         )}
       </header>
 
-      <Indicadores itens={[...indicadoresDeVendas({ vendas, anterior, textos, doVendedor }), ...(margem ? [indicadorDaMargem(margem)] : []), ...(financeiro ? indicadoresDoFinanceiro(financeiro, conferenteDeCaixa) : [])]} />
+      <Indicadores itens={[...indicadoresDeVendas({ vendas, anterior, textos, doVendedor }), ...(margem ? [indicadorDaMargem(margem)] : []), ...(financeiro ? indicadoresDoFinanceiro(financeiro, conferenteDeCaixa) : []), ...(paineis.producao ? [indicadorDoConnect(paineis.producao)] : [])]} />
 
       {doVendedor ? (
         <>
