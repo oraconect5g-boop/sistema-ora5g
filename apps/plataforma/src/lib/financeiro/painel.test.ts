@@ -3,7 +3,7 @@
 // três vendas, devolução parcial em dinheiro, pagamento misto, PayJoy com entrada e um Pix cancelado.
 import { describe, expect, it } from "vitest";
 
-import { chavesDaJanela, janelasDoPeriodo, lerPainel, RespostaInesperada, resumoDoPainel, seriesDoPainel, variacaoFinanceira } from "./painel";
+import { chavesDaJanela, conciliacaoDoPainel, janelasDoPeriodo, lerPainel, MEIOS_CONCILIAVEIS, RespostaInesperada, resumoDoPainel, seriesDoPainel, variacaoFinanceira } from "./painel";
 
 const RESPOSTA = {
   periodos: [
@@ -32,7 +32,8 @@ const RESPOSTA = {
 describe("leitura da resposta do banco", () => {
   it("converte cada fato; forma inesperada é erro, não zero", () => {
     const p = lerPainel(RESPOSTA);
-    expect(p.pagamentos[1]).toEqual({ meio: "payjoy", situacao: "confirmado", meioEntrada: "dinheiro", quantidade: 1, valor: 149_900, entrada: 20_000, troco: 0 });
+    // Resposta sem os números da conciliação (banco sem a migration do G2b): a conciliação fica nula.
+    expect(p.pagamentos[1]).toEqual({ meio: "payjoy", situacao: "confirmado", meioEntrada: "dinheiro", quantidade: 1, valor: 149_900, entrada: 20_000, troco: 0, conciliacao: null });
     expect(p.caixas.diferencaAbsoluta).toBe(500);
     expect(() => lerPainel(null)).toThrow(RespostaInesperada);
     expect(() => lerPainel({ ...RESPOSTA, pagamentos: "x" })).toThrow(RespostaInesperada);
@@ -118,5 +119,65 @@ describe("comparação e janelas no horário de São Paulo", () => {
     expect(s.vendas.at(-1)).toEqual({ chave: "2026-11-10", rotulo: "10/11", vendido: 181_500, desfeito: 15_800, vendas: 4 });
     expect(s.vendas[0]).toEqual({ chave: "2026-11-04", rotulo: "04/11", vendido: 0, desfeito: 0, vendas: 0 });
     expect(s.gaveta.at(-1)).toEqual({ chave: "2026-11-10", rotulo: "10/11", entrada: 60_000, saida: 10_000 });
+  });
+});
+
+// ---------------------------------------------------------------------------------------------
+// Lote G2b: situação da conciliação por meio (P5). Os mesmos pagamentos, agora com os três números da
+// conciliação manual que public.financeiro_painel devolve desde a migration financeiro_conciliacao.
+// ---------------------------------------------------------------------------------------------
+describe("conciliação de cartão e Pix (G2b, P5)", () => {
+  const SEM = { conciliados: 0, conciliado: 0, liquido: 0 };
+  // Dois cartões PicPay (um conciliado: caiu R$ 76,50 pelos R$ 79,00), o Pix PicPay a conciliar, a PayJoy
+  // com R$ 200,00 de entrada no Pix PicPay e o Pix direto de uma venda cancelada (fora: não está confirmado).
+  const COM_CONCILIACAO = {
+    ...RESPOSTA,
+    pagamentos: [
+      { meio: "cartao_picpay", situacao: "confirmado", meio_entrada: null, quantidade: 2, valor: 15_800, entrada: 0, troco: 0, conciliados: 1, conciliado: 7_900, liquido: 7_650 },
+      { meio: "dinheiro", situacao: "confirmado", meio_entrada: null, quantidade: 2, valor: 20_000, entrada: 0, troco: 2_100, ...SEM },
+      { meio: "payjoy", situacao: "confirmado", meio_entrada: "pix_picpay", quantidade: 1, valor: 149_900, entrada: 20_000, troco: 0, ...SEM },
+      { meio: "pix_direto", situacao: "estorno_pendente", meio_entrada: null, quantidade: 1, valor: 7_900, entrada: 0, troco: 0, conciliados: 1, conciliado: 7_900, liquido: 7_900 },
+      { meio: "pix_picpay", situacao: "confirmado", meio_entrada: null, quantidade: 1, valor: 5_800, entrada: 0, troco: 0, ...SEM },
+    ],
+  };
+
+  it("por meio: conciliado, a conciliar, líquido e a diferença observada; o total soma os meios", () => {
+    const c = conciliacaoDoPainel(lerPainel(COM_CONCILIACAO));
+    expect(c?.meios).toEqual([
+      { meio: "cartao_picpay", nome: "Cartão na maquininha PicPay", quantidade: 2, valor: 15_800, conciliados: 1, conciliado: 7_900, liquido: 7_650, aConciliar: 7_900, pagamentosAConciliar: 1, diferenca: 250 },
+      { meio: "pix_picpay", nome: "Pix na maquininha PicPay", quantidade: 1, valor: 5_800, conciliados: 0, conciliado: 0, liquido: 0, aConciliar: 5_800, pagamentosAConciliar: 1, diferenca: 0 },
+    ]);
+    expect(c?.total).toEqual({ quantidade: 3, valor: 21_600, conciliados: 1, conciliado: 7_900, liquido: 7_650, aConciliar: 13_700, pagamentosAConciliar: 2, diferenca: 250 });
+    // A entrada da PayJoy paga no Pix PicPay está no recebido do Pix, mas não se concilia: a tela diz quanto é.
+    expect(c?.entradasForaDaConciliacao).toBe(20_000);
+    expect(resumoDoPainel(lerPainel(COM_CONCILIACAO)).meios.find((m) => m.meio === "pix_picpay")?.valor).toBe(25_800);
+  });
+
+  it("dinheiro, financeira e vale não entram, nem pagamento desfeito; sem cartão nem Pix, a lista fica vazia", () => {
+    const c = conciliacaoDoPainel(lerPainel(COM_CONCILIACAO));
+    expect(c?.meios.map((m) => m.meio)).not.toContain("pix_direto");
+    const soDinheiro = { ...COM_CONCILIACAO, pagamentos: [COM_CONCILIACAO.pagamentos[1]] };
+    expect(conciliacaoDoPainel(lerPainel(soDinheiro))).toEqual({ meios: [], total: { quantidade: 0, valor: 0, conciliados: 0, conciliado: 0, liquido: 0, aConciliar: 0, pagamentosAConciliar: 0, diferenca: 0 }, entradasForaDaConciliacao: 0 });
+  });
+
+  it("banco sem a migration do G2b: a conciliação é nula (indisponível), e o resto do resumo continua", () => {
+    const r = resumoDoPainel(lerPainel(RESPOSTA));
+    expect(r.conciliacao).toBeNull();
+    expect(r.recebido).toBe(resumoDoPainel(lerPainel({ ...RESPOSTA, pagamentos: RESPOSTA.pagamentos.map((x) => ({ ...x, ...SEM })) })).recebido);
+  });
+
+  it("número da conciliação pela metade ou que não fecha é falha, não zero", () => {
+    const com = (mudanca: Record<string, unknown>) => ({ ...COM_CONCILIACAO, pagamentos: [{ ...COM_CONCILIACAO.pagamentos[0], ...mudanca }] });
+    const semLiquido: Record<string, unknown> = { ...COM_CONCILIACAO.pagamentos[0] };
+    delete semLiquido.liquido;
+    expect(() => lerPainel({ ...COM_CONCILIACAO, pagamentos: [semLiquido] })).toThrow(RespostaInesperada);
+    expect(() => lerPainel(com({ liquido: 8_000 }))).toThrow(RespostaInesperada);
+    expect(() => lerPainel(com({ conciliado: 16_000, liquido: 0 }))).toThrow(RespostaInesperada);
+    expect(() => lerPainel(com({ conciliados: 3 }))).toThrow(RespostaInesperada);
+    expect(lerPainel(com({})).pagamentos[0]?.conciliacao).toEqual({ conciliados: 1, conciliado: 7_900, liquido: 7_650 });
+  });
+
+  it("os meios que se conciliam são os mesmos do banco (privado.meio_liquidavel)", () => {
+    expect([...MEIOS_CONCILIAVEIS].sort()).toEqual(["cartao_pagseguro", "cartao_picpay", "pix_direto", "pix_picpay"]);
   });
 });

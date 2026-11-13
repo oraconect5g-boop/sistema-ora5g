@@ -70,7 +70,7 @@ export default async function Financeiro({ searchParams }: { searchParams: Promi
       <TituloPagina
         sobretitulo={escopo.nome}
         titulo="Financeiro"
-        subtitulo="Vendas, pagamentos registrados e movimentação dos caixas, somados no banco. Pagamento registrado não é dinheiro liquidado: a conciliação com extratos ainda não existe."
+        subtitulo="Vendas, pagamentos registrados e movimentação dos caixas, somados no banco. Pagamento registrado não é dinheiro liquidado: só o conciliado com o extrato foi visto cair na conta."
         acao={<a href={href({ pagina: undefined }, "/financeiro/exportar")} download className={classeBotao("secundario")}><Download aria-hidden className="size-4" /> Exportar {VISOES[visao].rotulo.toLowerCase()}</a>}
       />
       <div className="mb-4 flex flex-col gap-3">
@@ -113,6 +113,7 @@ export default async function Financeiro({ searchParams }: { searchParams: Promi
         porHora={janelas.porHora}
         periodo={periodo}
         conferenteDeCaixa={permissoes.has("caixa.conferir")}
+        podeConciliar={permissoes.has("pagamento.conciliar")}
         visao={visao}
         filtroSituacao={filtroSituacao}
         pagina={pagina}

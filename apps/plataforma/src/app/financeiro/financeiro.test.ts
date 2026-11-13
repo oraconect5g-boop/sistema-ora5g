@@ -29,7 +29,8 @@ class Consulta {
   in(coluna: string, valores: unknown[]) { this.linhas = this.linhas.filter((l) => l[coluna] === undefined || valores.includes(l[coluna])); return this; }
   gte() { return this; }
   lt() { return this; }
-  not() { return this; }
+  is(coluna: string, valor: unknown) { this.linhas = this.linhas.filter((l) => l[coluna] === undefined || l[coluna] === valor); return this; }
+  not(coluna: string, operador: string, valor: unknown) { if (operador === "is") this.linhas = this.linhas.filter((l) => l[coluna] !== valor); return this; }
   or() { return this; }
   order() { return this; }
   range(de: number, ate: number) { this.linhas = this.linhas.slice(de, ate + 1); return this; }
@@ -60,7 +61,7 @@ import { GET as exportar } from "./exportar/route";
 
 // Texto de toda a árvore de elementos (todas as props). Executa só os componentes de apresentação
 // desta tela (síncronos, sem estado); os de cliente e o molde ficam como elementos.
-const APRESENTACAO = new Set(["ConteudoFinanceiro", "TabelaDosRegistros"]);
+const APRESENTACAO = new Set(["ConteudoFinanceiro", "TabelaDosRegistros", "PainelDaConciliacao"]);
 function texto(v: unknown): string {
   if (Array.isArray(v)) return v.map(texto).join(" ");
   if (typeof v === "string" || typeof v === "number") return String(v);
@@ -175,5 +176,97 @@ describe("/financeiro/exportar", () => {
     cenario.permissoes = new Set(["venda.registrar"]);
     const resposta = await exportar(new Request("http://teste/financeiro/exportar"));
     expect(resposta.status).toBe(403);
+  });
+});
+
+// ---------------------------------------------------------------------------------------------
+// Lote G2b: situação da conciliação de cartão e Pix (P5) e os registros que a explicam
+// ---------------------------------------------------------------------------------------------
+const SEM_CONCILIACAO = { conciliados: 0, conciliado: 0, liquido: 0 };
+// O Pix de R$ 158,00 já foi conciliado (caíram R$ 154,00); os dois cartões de R$ 79,00 estão a conciliar.
+const COM_CONCILIACAO = {
+  ...PAINEL,
+  pagamentos: [
+    { meio: "cartao_picpay", situacao: "confirmado", meio_entrada: null, quantidade: 2, valor: 15_800, entrada: 0, troco: 0, ...SEM_CONCILIACAO },
+    { meio: "dinheiro", situacao: "confirmado", meio_entrada: null, quantidade: 1, valor: 10_000, entrada: 0, troco: 2_100, ...SEM_CONCILIACAO },
+    { meio: "pix_picpay", situacao: "confirmado", meio_entrada: null, quantidade: 1, valor: 15_800, entrada: 0, troco: 0, conciliados: 1, conciliado: 15_800, liquido: 15_400 },
+  ],
+};
+const PAGAMENTOS = [
+  { id: "p1", meio: "pix_picpay", situacao: "confirmado", valor_centavos: 15_800, entrada_centavos: 0, meio_entrada: null, criado_em: "2026-11-10T17:00:00Z",
+    conciliado_em: "2026-11-10T20:00:00Z", liquidado_em: "2026-11-10", valor_liquido_centavos: 15_400, referencia_conciliacao: "EXTRATO-1", vendas: { id: "v1", numero: 101, unidade_id: LOJA } },
+  { id: "p2", meio: "cartao_picpay", situacao: "confirmado", valor_centavos: 7_900, entrada_centavos: 0, meio_entrada: null, criado_em: "2026-11-10T16:00:00Z",
+    conciliado_em: null, liquidado_em: null, valor_liquido_centavos: null, referencia_conciliacao: null, vendas: { id: "v2", numero: 102, unidade_id: LOJA } },
+  { id: "p3", meio: "dinheiro", situacao: "confirmado", valor_centavos: 10_000, entrada_centavos: 0, meio_entrada: null, criado_em: "2026-11-10T15:00:00Z",
+    conciliado_em: null, liquidado_em: null, valor_liquido_centavos: null, referencia_conciliacao: null, vendas: { id: "v3", numero: 103, unidade_id: LOJA } },
+];
+
+describe("/financeiro: conciliação de cartão e Pix (G2b)", () => {
+  beforeEach(() => {
+    cenario.painel = COM_CONCILIACAO;
+    cenario.tabelas.venda_pagamentos = PAGAMENTOS;
+  });
+
+  it("a conciliar, conciliado e o que caiu na conta, com a diferença observada; conciliar só para quem pode", async () => {
+    cenario.permissoes = new Set(["venda.ver_unidade", "pagamento.conciliar"]);
+    let t = await tela();
+    for (const trecho of [
+      "Conciliação de cartão e Pix", "A conciliar", "R$ 158,00", "2 pagamentos sem conferência com o extrato", "Conciliado", "1 pagamento · 50% do cartão e Pix",
+      "Caiu na conta (líquido)", "R$ 154,00", "Diferença observada: R$ 4,00 (2,5% do conciliado)", "Conciliar pagamentos", "/pagamentos/conciliacao",
+      "Ver os pagamentos a conciliar", "/financeiro?ver=pagamentos&situacao=a_conciliar#registros", "não a taxa do contrato",
+    ]) expect(t).toContain(trecho);
+    // O dinheiro não entra na conciliação.
+    expect(t).not.toMatch(/Dinheiro\s+1\s+R\$ 100,00\s+R\$ 0,00/);
+
+    cenario.permissoes = new Set(["venda.ver_unidade"]);
+    t = await tela();
+    expect(t).toContain("Conciliação de cartão e Pix");
+    expect(t).not.toContain("Conciliar pagamentos");
+  });
+
+  it("banco sem a migration do G2b: só a conciliação fica indisponível; o resto do financeiro continua", async () => {
+    cenario.permissoes = new Set(["venda.ver_unidade"]);
+    cenario.painel = PAINEL;
+    const t = await tela();
+    expect(t).toContain("Indisponível neste ambiente");
+    expect(t).toMatch(/migration\s+financeiro_conciliacao/);
+    expect(t).toContain("Pagamentos registrados por meio");
+    expect(t).not.toContain("Ver os pagamentos a conciliar");
+  });
+
+  it("sem cartão nem Pix no período: o vazio é explicado", async () => {
+    cenario.permissoes = new Set(["venda.ver_unidade"]);
+    cenario.painel = { ...COM_CONCILIACAO, pagamentos: [COM_CONCILIACAO.pagamentos[1]] };
+    expect(await tela()).toContain("Nenhum pagamento de cartão ou Pix no período");
+  });
+
+  it("os registros explicam o número: a conciliar e conciliados como filtro, e a situação de cada pagamento", async () => {
+    cenario.permissoes = new Set(["venda.ver_unidade"]);
+    let t = await tela({ ver: "pagamentos", situacao: "a_conciliar" });
+    expect(t).toMatch(/Venda\s+102/);
+    expect(t).not.toMatch(/Venda\s+101/);
+    expect(t).not.toMatch(/Venda\s+103/);
+    expect(t).toContain("a conciliar");
+
+    t = await tela({ ver: "pagamentos", situacao: "conciliado" });
+    expect(t).toMatch(/Venda\s+101/);
+    expect(t).not.toMatch(/Venda\s+102/);
+    expect(t).toMatch(/R\$ 154,00\s+em\s+10\/11/);
+
+    t = await tela({ ver: "pagamentos" });
+    for (const venda of [101, 102, 103]) expect(t).toMatch(new RegExp(`Venda\\s+${venda}`));
+  });
+
+  it("a exportação dos pagamentos leva a conciliação de cada um", async () => {
+    cenario.permissoes = new Set(["venda.ver_unidade"]);
+    const resposta = await exportar(new Request("http://teste/financeiro/exportar?ver=pagamentos"));
+    const linhas = new TextDecoder().decode(new Uint8Array(await resposta.arrayBuffer())).split("\r\n");
+    expect(linhas[0]).toBe("Venda;Quando;Loja;Meio;Valor (R$);Entrada (R$);Meio da entrada;Situação;Conciliação;Dinheiro caiu em;Valor líquido (R$);Referência do extrato");
+    expect(linhas[1]).toMatch(/^101;.*;Pix na maquininha PicPay;158,00;0,00;;confirmado;conciliado;10\/11\/2026;154,00;EXTRATO-1$/);
+    expect(linhas[2]).toMatch(/^102;.*;Cartão na maquininha PicPay;79,00;0,00;;confirmado;a conciliar;;;$/);
+    expect(linhas[3]).toMatch(/^103;.*;Dinheiro;100,00;0,00;;confirmado;;;;$/);
+    // Só os a conciliar, se pedido.
+    const filtrado = await exportar(new Request("http://teste/financeiro/exportar?ver=pagamentos&situacao=a_conciliar"));
+    expect(new TextDecoder().decode(new Uint8Array(await filtrado.arrayBuffer())).split("\r\n").slice(1).map((l) => l.split(";")[0])).toEqual(["102"]);
   });
 });

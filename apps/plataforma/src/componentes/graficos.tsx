@@ -71,7 +71,8 @@ export function TabelaDoGrafico({ colunas, linhas, titulo = "Ver dados em tabela
           </thead>
           <tbody className="divide-y divide-borda">
             {linhas.map((linha, i) => (
-              <tr key={i}>{linha.map((celula, j) => <td key={j} className="px-3 py-1.5">{celula}</td>)}</tr>
+              // Só a primeira coluna (o rótulo) quebra linha: valor em dinheiro não se parte entre "R$" e o número.
+              <tr key={i}>{linha.map((celula, j) => <td key={j} className={j === 0 ? "px-3 py-1.5" : "whitespace-nowrap px-3 py-1.5"}>{celula}</td>)}</tr>
             ))}
           </tbody>
         </table>

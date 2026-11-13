@@ -5,13 +5,14 @@ import { MEIOS, type MeioPagamento } from "@ora5g/dominio";
 
 import { FalhaDoServico, type obterSessao } from "../acesso/sessao";
 import { centavosDoBanco } from "../dinheiro";
-import type { Janela } from "./painel";
+import { MEIOS_CONCILIAVEIS, type Janela } from "./painel";
 
 type Cliente = Awaited<ReturnType<typeof obterSessao>>["supabase"];
 
 export const VISOES = {
   vendas: { rotulo: "Vendas", situacoes: { concluida: "Concluídas", cancelada: "Canceladas" } },
-  pagamentos: { rotulo: "Pagamentos", situacoes: { confirmado: "Confirmados", estorno_pendente: "Estorno pendente", estornado: "Estornados" } },
+  // "A conciliar" e "Conciliados" (G2b): cartão e Pix confirmados, pela conciliação manual com o extrato.
+  pagamentos: { rotulo: "Pagamentos", situacoes: { confirmado: "Confirmados", a_conciliar: "A conciliar", conciliado: "Conciliados", estorno_pendente: "Estorno pendente", estornado: "Estornados" } },
   devolucoes: { rotulo: "Devoluções", situacoes: {} },
   caixas: { rotulo: "Caixas", situacoes: { aberto: "Abertos", fechado: "Fechados", conferido: "Conferidos" } },
 } as const satisfies Record<string, { rotulo: string; situacoes: Record<string, string> }>;
@@ -28,7 +29,13 @@ export const LIMITE_DA_EXPORTACAO = 20_000;
 export const nomeDoMeio = (meio: string | null) => (meio && Object.hasOwn(MEIOS, meio) ? MEIOS[meio as MeioPagamento].nome : meio ?? "");
 
 export type RegistroVenda = { id: string; numero: number; unidadeId: string; pessoaId: string; quando: string; situacao: string; total: number; devolvido: number };
-export type RegistroPagamento = { vendaId: string; vendaNumero: number; unidadeId: string; quando: string; meio: string; situacao: string; valor: number; entrada: number; meioEntrada: string | null };
+export type RegistroPagamento = {
+  vendaId: string; vendaNumero: number; unidadeId: string; quando: string; meio: string; situacao: string; valor: number; entrada: number; meioEntrada: string | null;
+  /** G2b: cartão ou Pix (se concilia com o extrato). */
+  conciliavel: boolean;
+  /** Conciliação manual registrada: dia em que o dinheiro caiu, valor líquido e referência do extrato. */
+  conciliacao: { liquidadoEm: string; liquido: number; referencia: string } | null;
+};
 export type RegistroDevolucao = { numero: number; vendaId: string; vendaNumero: number; unidadeId: string; quando: string; valor: number; motivo: string };
 export type RegistroCaixa = {
   unidadeId: string; pessoaId: string; situacao: string; abertoEm: string; fechadoEm: string | null;
@@ -58,9 +65,12 @@ function consulta(supabase: Cliente, visao: Visao, janela: Janela, unidade: stri
   }
   if (visao === "pagamentos") {
     let q = supabase.from("venda_pagamentos")
-      .select("id, meio, situacao, valor_centavos, entrada_centavos, meio_entrada, criado_em, vendas!inner(id, numero, unidade_id)", { count: "exact" })
+      .select("id, meio, situacao, valor_centavos, entrada_centavos, meio_entrada, criado_em, conciliado_em, liquidado_em, valor_liquido_centavos, referencia_conciliacao, vendas!inner(id, numero, unidade_id)", { count: "exact" })
       .gte("criado_em", inicio).lt("criado_em", fim).order("criado_em", { ascending: false });
-    if (situacao) q = q.eq("situacao", situacao);
+    // Os mesmos pagamentos do painel da conciliação: cartão e Pix que continuam confirmados.
+    if (situacao === "a_conciliar") q = q.eq("situacao", "confirmado").in("meio", [...MEIOS_CONCILIAVEIS]).is("conciliado_em", null);
+    else if (situacao === "conciliado") q = q.eq("situacao", "confirmado").not("conciliado_em", "is", null);
+    else if (situacao) q = q.eq("situacao", situacao);
     return unidade ? q.eq("vendas.unidade_id", unidade) : q;
   }
   if (visao === "devolucoes") {
@@ -98,6 +108,10 @@ function converter(visao: Visao, linhas: Record<string, unknown>[]): Registros {
           vendaId: String(venda?.id ?? ""), vendaNumero: Number(venda?.numero ?? 0), unidadeId: String(venda?.unidade_id ?? ""), quando: String(l.criado_em),
           meio: String(l.meio), situacao: String(l.situacao), valor: centavosDoBanco(l.valor_centavos), entrada: centavosDoBanco(l.entrada_centavos ?? 0),
           meioEntrada: typeof l.meio_entrada === "string" ? l.meio_entrada : null,
+          conciliavel: MEIOS_CONCILIAVEIS.has(String(l.meio)),
+          conciliacao: typeof l.conciliado_em === "string" && typeof l.liquidado_em === "string"
+            ? { liquidadoEm: l.liquidado_em, liquido: centavosDoBanco(l.valor_liquido_centavos ?? 0), referencia: String(l.referencia_conciliacao ?? "") }
+            : null,
         };
       }),
     };
