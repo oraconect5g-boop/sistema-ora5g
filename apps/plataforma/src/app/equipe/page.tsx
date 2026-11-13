@@ -5,8 +5,10 @@ import { MoldeReal } from "../../componentes/MoldeReal";
 import { Aviso, Avatar, Botao, Cartao, Selo, TituloPagina } from "../../componentes/ui";
 import { ERROS_DA_EQUIPE, PAPEIS, papeisQuePodeConceder, type Papel } from "../../lib/acesso/regras";
 import { FalhaDoServico, obterSessao } from "../../lib/acesso/sessao";
+import { consultarEquipePorPapel } from "../../lib/equipe/consulta";
 import { chaveDoCatalogo, type ValorDeParametro } from "../../lib/parametros";
 import { alterarSituacao, cancelarConvite, convidar, encerrarVinculo, repetirConvite, vincular } from "./acoes";
+import { PessoasPorPapel } from "./PessoasPorPapel";
 
 export const metadata: Metadata = { title: "Equipe e acessos" };
 export const dynamic = "force-dynamic";
@@ -63,13 +65,15 @@ export default async function Equipe({ searchParams }: { searchParams: Promise<{
   const organizacoes = [...new Set(meus.data.filter((v) => v.papel === "dono" || v.papel === "administrador").map((v) => v.organizacao_id))];
   const souDono = (org: string) => meus.data.some((v) => v.organizacao_id === org && v.papel === "dono");
 
-  const [orgs, unidades, vinculos, perfis, convites] = await Promise.all([
+  const [orgs, unidades, vinculos, perfis, convites, porPapel] = await Promise.all([
     supabase.from("organizacoes").select("id, nome").in("id", organizacoes),
     supabase.from("unidades").select("id, nome, tipo, organizacao_id").in("organizacao_id", organizacoes).eq("status", "ativa").order("nome"),
     supabase.from("vinculos").select("id, usuario_id, organizacao_id, papel, unidade_id").in("organizacao_id", organizacoes).is("fim", null),
     supabase.from("perfis_usuario").select("id, nome, email, status, ultimo_acesso_em").order("nome"),
     supabase.from("convites").select("id, organizacao_id, nome, email, papel, unidades, situacao, erro").in("organizacao_id", organizacoes)
       .in("situacao", ["pendente", "processando", "enviado", "erro"]).order("criado_em", { ascending: false }).limit(50),
+    // Pessoas por papel (G5): somadas no banco; uma leitura por rede, cada uma com o próprio estado.
+    Promise.all(organizacoes.map(async (org) => [org, await consultarEquipePorPapel(supabase, org)] as const)).then((pares) => new Map(pares)),
   ]);
   if (orgs.error || unidades.error || vinculos.error || perfis.error || convites.error) throw new FalhaDoServico("equipe");
   const nomeDaLoja = (id: string | null) => (id ? unidades.data.find((u) => u.id === id)?.nome ?? "loja inativa" : "rede inteira");
@@ -89,6 +93,8 @@ export default async function Equipe({ searchParams }: { searchParams: Promise<{
         return (
           <section key={org.id} className="mt-6 space-y-4">
             {orgs.data.length > 1 && <h2 className="text-lg font-semibold">{org.nome}</h2>}
+
+            <PessoasPorPapel equipe={porPapel.get(org.id) ?? { estado: "falha" }} aqui="/equipe" />
 
             <Cartao titulo="Convidar pessoa" subtitulo="A pessoa recebe um e-mail e cria a própria senha. Ninguém mais vê a senha." icone={MailPlus}>
               <form action={convidar} className="grid gap-3 sm:grid-cols-2">

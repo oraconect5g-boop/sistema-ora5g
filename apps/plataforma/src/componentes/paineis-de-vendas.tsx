@@ -44,6 +44,7 @@ const FONTE = {
   estoque: "a leitura agregada do estoque (migration estoque_painel)",
   connect: "a leitura da produção do Ora Connect (migration connect_painel)",
   metas: "a leitura das metas (migration metas)",
+  equipe: "a contagem da equipe (migration equipe_por_papel)",
 } as const;
 
 /** O conteúdo de um painel que não tem número para mostrar: o motivo aparece, zero nunca. */
