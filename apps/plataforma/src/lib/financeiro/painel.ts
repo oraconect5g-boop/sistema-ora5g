@@ -65,13 +65,31 @@ const t = (l: Linha, campo: string) => (typeof l[campo] === "string" ? (l[campo]
 
 export type PainelDoBanco = {
   periodos: { periodo: string; vendas: number; vendido: number; cancelamentos: number; cancelado: number; devolucoes: number; devolvido: number }[];
-  pagamentos: { meio: string; situacao: string; meioEntrada: string | null; quantidade: number; valor: number; entrada: number; troco: number }[];
+  pagamentos: {
+    meio: string; situacao: string; meioEntrada: string | null; quantidade: number; valor: number; entrada: number; troco: number;
+    /** G2b: conciliação manual do grupo; null quando o banco ainda não tem a migration do G2b. */
+    conciliacao: ConciliacaoDoGrupo | null;
+  }[];
   reembolsos: { meio: string; quantidade: number; valor: number }[];
   estornos: { situacao: string; quantidade: number; valor: number }[];
   aReceber: { devedor: string; situacao: string; quantidade: number; valor: number }[];
   movimentos: { periodo: string; tipo: string; meio: string; quantidade: number; valor: number }[];
   caixas: { abertosAgora: number; fechados: number; conferidos: number; comDiferenca: number; diferenca: number; diferencaAbsoluta: number };
 };
+
+/** Quantos pagamentos do grupo já foram conciliados com o extrato, o valor deles e o líquido que caiu na conta. */
+export type ConciliacaoDoGrupo = { conciliados: number; conciliado: number; liquido: number };
+const CAMPOS_DA_CONCILIACAO = ["conciliados", "conciliado", "liquido"] as const;
+function conciliacaoDoGrupo(l: Linha): ConciliacaoDoGrupo | null {
+  const presentes = CAMPOS_DA_CONCILIACAO.filter((c) => Object.hasOwn(l, c));
+  // Banco sem a migration do G2b: a conciliação fica indisponível, e o resto do financeiro continua.
+  if (presentes.length === 0) return null;
+  if (presentes.length < CAMPOS_DA_CONCILIACAO.length) throw new RespostaInesperada("conciliacao");
+  const c = { conciliados: n(l, "conciliados"), conciliado: n(l, "conciliado"), liquido: n(l, "liquido") };
+  // O líquido nunca passa do valor conciliado, nem o conciliado do total do grupo: conta que não fecha é falha.
+  if (c.conciliados > n(l, "quantidade") || c.conciliado > n(l, "valor") || c.liquido > c.conciliado) throw new RespostaInesperada("conciliacao");
+  return c;
+}
 
 export function lerPainel(dado: unknown): PainelDoBanco {
   const caixas = (dado as Linha | null)?.caixas;
@@ -84,7 +102,7 @@ export function lerPainel(dado: unknown): PainelDoBanco {
     })),
     pagamentos: lista(dado, "pagamentos").map((l) => ({
       meio: t(l, "meio") ?? "", situacao: t(l, "situacao") ?? "", meioEntrada: t(l, "meio_entrada"),
-      quantidade: n(l, "quantidade"), valor: n(l, "valor"), entrada: n(l, "entrada"), troco: n(l, "troco"),
+      quantidade: n(l, "quantidade"), valor: n(l, "valor"), entrada: n(l, "entrada"), troco: n(l, "troco"), conciliacao: conciliacaoDoGrupo(l),
     })),
     reembolsos: lista(dado, "reembolsos").map((l) => ({ meio: t(l, "meio") ?? "", quantidade: n(l, "quantidade"), valor: n(l, "valor") })),
     estornos: lista(dado, "estornos").map((l) => ({ situacao: t(l, "situacao") ?? "", quantidade: n(l, "quantidade"), valor: n(l, "valor") })),
@@ -110,6 +128,41 @@ export const NOMES_DOS_MOVIMENTOS: Record<string, string> = {
 };
 
 export type MeioRecebido = { meio: string; nome: string; valor: number; quantidade: number; entradas: number };
+
+/** Os meios que se conciliam com o extrato: os mesmos de privado.meio_liquidavel (lote L7a), que pagamento_conciliar confere. */
+export const MEIOS_CONCILIAVEIS: ReadonlySet<string> = new Set(["pix_direto", "pix_picpay", "cartao_picpay", "cartao_pagseguro"]);
+type Conciliacao = { quantidade: number; valor: number; conciliados: number; conciliado: number; liquido: number };
+export type MeioConciliado = Conciliacao & { meio: string; nome: string; aConciliar: number; pagamentosAConciliar: number; diferenca: number };
+const completar = <T extends Conciliacao>(c: T) => ({ ...c, aConciliar: c.valor - c.conciliado, pagamentosAConciliar: c.quantidade - c.conciliados, diferenca: c.conciliado - c.liquido });
+
+/**
+ * P5 (G2b): a conciliação manual dos pagamentos de cartão e Pix que continuam confirmados (os mesmos do
+ * recebido na loja). null: o banco ainda não tem a leitura (migration do G2b). A diferença entre o
+ * conciliado e o líquido é a observada no extrato, não a taxa do contrato.
+ */
+export function conciliacaoDoPainel(p: PainelDoBanco) {
+  if (p.pagamentos.some((x) => x.conciliacao === null)) return null;
+  const confirmados = p.pagamentos.filter((x) => x.situacao === "confirmado");
+  const porMeio = new Map<string, Conciliacao & { meio: string; nome: string }>();
+  for (const x of confirmados) {
+    if (!MEIOS_CONCILIAVEIS.has(x.meio) || !x.conciliacao) continue;
+    const a = porMeio.get(x.meio) ?? { meio: x.meio, nome: nomeDoMeio(x.meio), quantidade: 0, valor: 0, conciliados: 0, conciliado: 0, liquido: 0 };
+    porMeio.set(x.meio, {
+      ...a, quantidade: a.quantidade + x.quantidade, valor: a.valor + x.valor,
+      conciliados: a.conciliados + x.conciliacao.conciliados, conciliado: a.conciliado + x.conciliacao.conciliado, liquido: a.liquido + x.conciliacao.liquido,
+    });
+  }
+  const meios: MeioConciliado[] = [...porMeio.values()].map(completar).sort((a, b) => b.valor - a.valor || a.nome.localeCompare(b.nome, "pt-BR"));
+  const total = completar({
+    quantidade: somar(meios, (m) => m.quantidade), valor: somar(meios, (m) => m.valor),
+    conciliados: somar(meios, (m) => m.conciliados), conciliado: somar(meios, (m) => m.conciliado), liquido: somar(meios, (m) => m.liquido),
+  });
+  // Entrada de financiamento paga em cartão ou Pix: está no recebido daquele meio, mas não se concilia
+  // (fica dentro do pagamento da financeira). A tela diz quanto é, para os números baterem.
+  const entradasForaDaConciliacao = somar(confirmados.filter((x) => FINANCEIRAS.has(x.meio) && MEIOS_CONCILIAVEIS.has(x.meioEntrada ?? "")), (x) => x.entrada);
+  return { meios, total, entradasForaDaConciliacao };
+}
+export type ConciliacaoDoPeriodo = NonNullable<ReturnType<typeof conciliacaoDoPainel>>;
 
 export function resumoDoPainel(p: PainelDoBanco) {
   const vendas = somar(p.periodos, (x) => x.vendas);
@@ -163,6 +216,7 @@ export function resumoDoPainel(p: PainelDoBanco) {
     gaveta: movimentosPorTipo,
     saldoDaGaveta: somar(movimentosPorTipo, (m) => m.valor),
     caixas: p.caixas,
+    conciliacao: conciliacaoDoPainel(p),
   };
 }
 export type ResumoFinanceiro = ReturnType<typeof resumoDoPainel>;

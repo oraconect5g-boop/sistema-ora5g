@@ -1,11 +1,12 @@
-import { BadgeDollarSign, CircleSlash, HandCoins, Landmark, ReceiptText, RotateCcw, ShoppingBag, Undo2, Wallet } from "lucide-react";
+import { BadgeDollarSign, CircleSlash, CreditCard, HandCoins, Landmark, ReceiptText, RotateCcw, ShoppingBag, Undo2, Wallet } from "lucide-react";
 import Link from "next/link";
 
-import { BarrasHorizontais, ColunasDivergentes, TabelaDoGrafico } from "../../componentes/graficos";
+import { BarraSegmentada, BarrasHorizontais, ColunasDivergentes, TabelaDoGrafico } from "../../componentes/graficos";
+import { plural } from "../../componentes/paineis-de-vendas";
 import { Aviso, BotaoLink, Cartao, Celula, EstadoVazio, FiltroSegmentado, Indicador, ListaDados, Selo, Tabela, type Tom } from "../../componentes/ui";
-import { PERIODOS_FINANCEIROS, variacaoFinanceira, type PeriodoFinanceiro, type ResumoFinanceiro, type seriesDoPainel } from "../../lib/financeiro/painel";
+import { PERIODOS_FINANCEIROS, variacaoFinanceira, type ConciliacaoDoPeriodo, type PeriodoFinanceiro, type ResumoFinanceiro, type seriesDoPainel } from "../../lib/financeiro/painel";
 import { nomeDoMeio, ORDEM_DAS_VISOES, POR_PAGINA, VISOES, type Registros, type Visao } from "../../lib/financeiro/registros";
-import { brl, brlCompacto, brlEixo, numero } from "../../lib/formato";
+import { brl, brlCompacto, brlEixo, numero, percentual } from "../../lib/formato";
 
 // Apresentação do financeiro real (#65), separada da leitura: recebe os números já somados no banco
 // e os registros da página. Sem acesso a dados aqui (a página confere sessão, permissão e escopo).
@@ -20,17 +21,21 @@ const situacao = (codigo: string) => SITUACAO[codigo] ?? { nome: codigo, tom: "n
 
 // Nome curto no gráfico (a tabela e o CSV levam o nome inteiro).
 const nomeCurto = (nome: string) => nome.replace(" na maquininha", "");
+// "2026-11-10" (dia sem hora, como o dia em que o dinheiro caiu) → "10/11", sem passar por fuso.
+const diaDaData = (dia: string) => `${dia.slice(8, 10)}/${dia.slice(5, 7)}`;
 
 export type Nomes = { pessoa: (id: string) => string; loja: (id: string) => string };
 export type Ligacao = (mudanca: Partial<Record<"periodo" | "loja" | "ver" | "situacao" | "pagina", string | undefined>>) => string;
 
-export function ConteudoFinanceiro({ resumo: r, anterior: ra, series, porHora, periodo, conferenteDeCaixa, visao, filtroSituacao, pagina, lista, nomes, daRede, href }: {
+export function ConteudoFinanceiro({ resumo: r, anterior: ra, series, porHora, periodo, conferenteDeCaixa, podeConciliar, visao, filtroSituacao, pagina, lista, nomes, daRede, href }: {
   resumo: ResumoFinanceiro;
   anterior: ResumoFinanceiro;
   series: ReturnType<typeof seriesDoPainel>;
   porHora: boolean;
   periodo: PeriodoFinanceiro;
   conferenteDeCaixa: boolean;
+  /** Tem pagamento.conciliar na loja do turno: a ligação para conciliar aparece. */
+  podeConciliar: boolean;
   visao: Visao;
   filtroSituacao: string | null;
   pagina: number;
@@ -106,6 +111,8 @@ export function ConteudoFinanceiro({ resumo: r, anterior: ra, series, porHora, p
       </Cartao>
     </div>
 
+    <PainelDaConciliacao conciliacao={r.conciliacao} podeConciliar={podeConciliar} aConciliar={`${href({ ver: "pagamentos", situacao: "a_conciliar", pagina: undefined })}#registros`} />
+
     <div className="grid gap-4 xl:grid-cols-3">
       <Cartao titulo="Movimentação dos caixas" subtitulo="Só dinheiro, na gaveta. Fundo e suprimento não são receita; sangria não é despesa" className="xl:col-span-2">
         {r.gaveta.length === 0 ? (
@@ -140,7 +147,7 @@ export function ConteudoFinanceiro({ resumo: r, anterior: ra, series, porHora, p
       </Cartao>
     </div>
 
-    <Cartao titulo="Registros do período" subtitulo="O que explica cada número; a exportação leva todos os registros da visão">
+    <Cartao id="registros" titulo="Registros do período" subtitulo="O que explica cada número; a exportação leva todos os registros da visão">
       <div className="flex flex-col gap-3">
         <FiltroSegmentado rotulo="Registros" opcoes={ORDEM_DAS_VISOES.map((v: Visao) => ({ href: href({ ver: v === "vendas" ? undefined : v, situacao: undefined, pagina: undefined }), rotulo: VISOES[v].rotulo, ativo: v === visao }))} />
         {Object.keys(VISOES[visao].situacoes).length > 0 && (
@@ -174,7 +181,7 @@ export function ConteudoFinanceiro({ resumo: r, anterior: ra, series, porHora, p
     <Cartao titulo="Ainda não está no financeiro real" subtitulo="Mostrado como indisponível, sem número inventado">
       <ul className="grid gap-2 text-sm sm:grid-cols-2">
         {[
-          ["Conciliação com extratos", "depende dos arquivos das maquininhas e do banco (PAY-009/010)"],
+          ["Conciliação automática com extratos", "hoje a conciliação é manual, em Pagamentos › Conciliação; a automática depende dos arquivos das maquininhas e do banco (PAY-009/010)"],
           ["Contas a pagar e DRE", "modelos ainda não existem (FIN-002/004)"],
           ["Repasses das financeiras e da Nogle", "prazo, taxa e contrato ainda não confirmados"],
         ].map(([titulo, motivo]) => (
@@ -213,7 +220,7 @@ export function TabelaDosRegistros({ registros, nomes, daRede }: { registros: Re
   }
   if (registros.visao === "pagamentos") {
     return (
-      <Tabela legenda="Pagamentos do período" colunas={["Venda", "Quando", ...(daRede ? ["Loja"] : []), "Meio", "Valor", "Entrada", "Situação"]} alinharDireita={daRede ? [4, 5] : [3, 4]}>
+      <Tabela legenda="Pagamentos do período" colunas={["Venda", "Quando", ...(daRede ? ["Loja"] : []), "Meio", "Valor", "Entrada", "Situação", "Conciliação"]} alinharDireita={daRede ? [4, 5] : [3, 4]} minimo="min-w-[46rem]">
         {registros.linhas.map((l, i) => (
           <tr key={`${l.vendaId}-${i}`}>
             <Celula>{linkDaVenda(l.vendaId, l.vendaNumero)}</Celula>
@@ -223,6 +230,18 @@ export function TabelaDosRegistros({ registros, nomes, daRede }: { registros: Re
             <Celula className="numeros whitespace-nowrap text-right font-semibold">{brl(l.valor)}</Celula>
             <Celula className="numeros whitespace-nowrap text-right text-suave">{l.entrada > 0 ? `${brl(l.entrada)} (${nomeDoMeio(l.meioEntrada)})` : "—"}</Celula>
             <Celula><Selo tom={situacao(l.situacao).tom} ponto>{situacao(l.situacao).nome}</Selo></Celula>
+            <Celula>
+              {l.conciliacao ? (
+                <>
+                  <Selo tom="sucesso" ponto>conciliado</Selo>
+                  <span className="numeros mt-1 block whitespace-nowrap text-xs text-suave">{brl(l.conciliacao.liquido)} em {diaDaData(l.conciliacao.liquidadoEm)}</span>
+                </>
+              ) : l.conciliavel && l.situacao === "confirmado" ? (
+                <Selo tom="aviso" ponto>a conciliar</Selo>
+              ) : (
+                <span className="text-suave">—</span>
+              )}
+            </Celula>
           </tr>
         ))}
       </Tabela>
@@ -260,5 +279,78 @@ export function TabelaDosRegistros({ registros, nomes, daRede }: { registros: Re
         </tr>
       ))}
     </Tabela>
+  );
+}
+
+// ---------------------------------------------------------------------------------------------
+// Conciliação de cartão e Pix (G2b, P5): a situação de hoje dos pagamentos registrados no período
+// ---------------------------------------------------------------------------------------------
+function Medida({ rotulo, valor, detalhe }: { rotulo: string; valor: string; detalhe: string }) {
+  return (
+    <div className="min-w-0">
+      <p className="text-sm text-suave">{rotulo}</p>
+      <p className="numeros text-2xl font-bold leading-tight">{valor}</p>
+      <p className="mt-0.5 text-xs text-suave">{detalhe}</p>
+    </div>
+  );
+}
+
+export function PainelDaConciliacao({ conciliacao: c, podeConciliar, aConciliar }: {
+  /** null: o banco ainda não tem a leitura da conciliação (migration financeiro_conciliacao). */
+  conciliacao: ConciliacaoDoPeriodo | null;
+  podeConciliar: boolean;
+  /** Os registros do período, filtrados nos pagamentos a conciliar. */
+  aConciliar: string;
+}) {
+  const cartao = {
+    titulo: "Conciliação de cartão e Pix",
+    subtitulo: "Pagamentos registrados no período e conferidos à mão com o extrato. Só o conciliado foi visto cair na conta",
+    acao: podeConciliar ? <Link href="/pagamentos/conciliacao" className="text-sm font-semibold text-acao hover:underline">Conciliar pagamentos</Link> : undefined,
+  };
+  if (c === null) {
+    return (
+      <Cartao {...cartao}>
+        <Aviso tom="aviso" titulo="Indisponível neste ambiente">
+          O banco deste ambiente ainda não tem a leitura da conciliação por meio (migration <code>financeiro_conciliacao</code>). Os outros números do financeiro continuam valendo.
+        </Aviso>
+      </Cartao>
+    );
+  }
+  if (c.meios.length === 0) {
+    return (
+      <Cartao {...cartao}>
+        <EstadoVazio titulo="Nenhum pagamento de cartão ou Pix no período" icone={CreditCard}>
+          Só cartão e Pix se conciliam com o extrato: o dinheiro fica no caixa, e o financiamento, com a financeira.
+        </EstadoVazio>
+      </Cartao>
+    );
+  }
+  const t = c.total;
+  return (
+    <Cartao {...cartao}>
+      <div className="grid gap-4 sm:grid-cols-3">
+        <Medida rotulo="A conciliar" valor={brl(t.aConciliar)} detalhe={`${plural(t.pagamentosAConciliar, "pagamento", "pagamentos")} sem conferência com o extrato`} />
+        <Medida rotulo="Conciliado" valor={brl(t.conciliado)} detalhe={`${plural(t.conciliados, "pagamento", "pagamentos")} · ${percentual(t.conciliado / t.valor)} do cartão e Pix`} />
+        <Medida
+          rotulo="Caiu na conta (líquido)" valor={brl(t.liquido)}
+          detalhe={t.conciliados > 0 ? `Diferença observada: ${brl(t.diferenca)} (${percentual(t.diferenca / t.conciliado)} do conciliado)` : "Nada conciliado ainda"}
+        />
+      </div>
+      <div className="mt-4">
+        <BarraSegmentada rotulo="Cartão e Pix" formatar={brl} partes={[{ nome: "Conciliado", valor: t.conciliado, serie: 1 }, { nome: "A conciliar", valor: t.aConciliar, serie: "comparacao" }]} />
+      </div>
+      <TabelaDoGrafico
+        titulo="Ver por meio"
+        colunas={["Meio", "Pagamentos", "Valor", "Conciliado", "A conciliar", "Caiu na conta", "Diferença observada"]}
+        linhas={c.meios.map((m) => [m.nome, numero(m.quantidade), brl(m.valor), brl(m.conciliado), brl(m.aConciliar), brl(m.liquido), m.conciliados > 0 ? brl(m.diferenca) : "—"])}
+      />
+      {t.pagamentosAConciliar > 0 && (
+        <p className="mt-3 text-sm"><Link href={aConciliar} className="font-semibold text-acao hover:underline">Ver os pagamentos a conciliar</Link></p>
+      )}
+      <p className="mt-3 text-xs text-suave">
+        A diferença é a que se observou no extrato (taxa, antecipação e o que mais foi descontado), não a taxa do contrato.
+        {c.entradasForaDaConciliacao > 0 && ` Entradas de financiamento pagas em cartão ou Pix (${brl(c.entradasForaDaConciliacao)}) estão no recebido, mas não se conciliam aqui: ficam no pagamento da financeira.`}
+      </p>
+    </Cartao>
   );
 }

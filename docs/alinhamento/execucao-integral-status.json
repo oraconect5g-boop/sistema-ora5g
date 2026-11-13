@@ -2,7 +2,7 @@
   "_leia": "Checkpoint do programa de execução integral (PR #67). Carregar ao retomar e seguir para o próximo item executável da fila; não reiniciar o projeto. Estados vêm de status-requisitos.json (fonte da rastreabilidade); este arquivo acrescenta lote, bloqueio externo e revisão.",
   "atualizado_em": "2026-11-13",
   "base": {
-    "main": "e75f51a",
+    "main": "3ada10c",
     "pacote": {
       "pr": 67,
       "branch": "docs/execucao-integral-20261110",
@@ -633,7 +633,7 @@
       "titulo": "Conciliação manual PicPay POS usando referência/comprovante",
       "prioridade": "P0",
       "estado": "parcial",
-      "lote": "L7a pagamentos",
+      "lote": "L7a pagamentos; G2b (resultado no /financeiro)",
       "bloqueio_externo": null,
       "revisado_codex": false,
       "homologado": false
@@ -1443,7 +1443,7 @@
       "titulo": "Relatório por método de pagamento e terminal PicPay",
       "prioridade": "P0",
       "estado": "parcial",
-      "lote": "L8 financeiro/relatórios; G2 financeiro e relatórios",
+      "lote": "L8 financeiro/relatórios; G2 financeiro e relatórios; G2b conciliação por meio (entregue em 13/11)",
       "bloqueio_externo": null,
       "revisado_codex": false,
       "homologado": false
