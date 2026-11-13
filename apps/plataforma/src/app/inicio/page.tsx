@@ -60,7 +60,9 @@ export default async function Inicio({ searchParams }: { searchParams: Promise<P
       metas: { gestao: permissoes.has("metas.gerir") || permissoes.has("metas.ver_unidade"), propria: permissoes.has("metas.ver_propria") } }),
   ]);
   // Banco ainda sem a migration do L7c (tabela ausente): a pendência das saídas some e o resto do Início segue.
-  const saidas = saidasDoBanco && tabelaAusente(saidasDoBanco.error) ? null : saidasDoBanco;
+  // A contagem só de cabeçalho (HEAD) numa tabela ausente volta 404 sem corpo, que o cliente do Supabase
+  // entrega SEM erro e sem número: contagem sem número também tira a pendência, em vez de mostrar zero.
+  const saidas = saidasDoBanco && (tabelaAusente(saidasDoBanco.error) || (!saidasDoBanco.error && saidasDoBanco.count === null)) ? null : saidasDoBanco;
   const respostas = [aprovacoes, notas, caixas, saidas, transferencias, connect, estornos, retornos];
   if (respostas.some((r) => r?.error)) throw new FalhaDoServico("inicio_pendencias");
   const quantos = (r: (typeof respostas)[number]) => r?.count ?? 0;

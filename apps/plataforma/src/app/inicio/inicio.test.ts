@@ -52,6 +52,8 @@ const cenario = vi.hoisted(() => ({
   chamadas: {} as Record<string, Record<string, unknown>[]>,
   tabelas: {} as Record<string, Record<string, unknown>[]>,
   errosDasTabelas: {} as Record<string, { code: string }>,
+  /** Tabelas cuja contagem volta sem erro e sem número (HEAD numa tabela ausente: 404 sem corpo). */
+  semContagem: [] as string[],
   /** Tabelas lidas, na ordem. */
   lidas: [] as string[],
   /** Opções de cada chamada de obterSessao. */
@@ -66,7 +68,7 @@ vi.mock("next/navigation", () => ({ redirect: (destino: string) => { throw new E
 class Consulta {
   linhas: Linha[];
   erro: Erro | null;
-  constructor(nome: string) {
+  constructor(readonly nome: string) {
     cenario.lidas.push(nome);
     this.linhas = [...(cenario.tabelas[nome] ?? [])];
     this.erro = cenario.errosDasTabelas[nome] ?? null;
@@ -90,7 +92,8 @@ class Consulta {
     return Promise.resolve(this.erro ? { data: null, error: this.erro } : { data: this.linhas[0] ?? null, error: null });
   }
   then(resolver: (r: { data: Linha[] | null; count: number | null; error: Erro | null }) => unknown) {
-    const resposta = this.erro ? { data: null, count: null, error: this.erro } : { data: this.linhas, count: this.linhas.length, error: null };
+    const resposta = this.erro ? { data: null, count: null, error: this.erro }
+      : { data: this.linhas, count: cenario.semContagem.includes(this.nome) ? null : this.linhas.length, error: null };
     return Promise.resolve(resposta).then(resolver);
   }
 }
@@ -360,7 +363,7 @@ beforeEach(() => {
     vendas: HOJE, anterior: ONTEM, erroDeVendas: null, erroDoAnterior: null,
     financeiro: FINANCEIRO, erroDoFinanceiro: null, margem: MARGEM, erroDaMargem: null, producao: PRODUCAO, erroDaProducao: null, nomes: NOMES, erroDosNomes: null,
     metasDasLojas: METAS_DA_LOJA, minhaMeta: MINHA_META, erroDasMetas: null,
-    chamadas: {}, errosDasTabelas: {}, lidas: [], sessoes: [],
+    chamadas: {}, errosDasTabelas: {}, semContagem: [], lidas: [], sessoes: [],
     tabelas: {
       perfis_usuario: [{ id: GESTOR, nome: "Gestor Teste" }, { id: ANA, nome: "Ana Teste" }, { id: BETO, nome: "Beto Teste" }],
       unidades: [
@@ -588,9 +591,14 @@ describe("Início: o gerente acompanha a loja do turno", () => {
 
   it("saídas do caixa (L7c): a pendência leva ao quadro de autorizar; banco ainda sem a tabela, ela some e o resto continua", async () => {
     expect((await pagina()).enderecos).toContain("/caixa#saidas");
+    const semSaidas = { "Descontos para aprovar": 2, "Notas na fila": 0, "Caixas para conferir": 1, "Transferências": 0, "Estornos a confirmar": 1, "Itens a conferir": 0 };
     cenario.errosDasTabelas.caixa_saidas = { code: "PGRST205" };
-    const p = await pagina();
-    expect(p.pendencias).toEqual({ "Descontos para aprovar": 2, "Notas na fila": 0, "Caixas para conferir": 1, "Transferências": 0, "Estornos a confirmar": 1, "Itens a conferir": 0 });
+    expect((await pagina()).pendencias).toEqual(semSaidas);
+    // Como chega de verdade: a contagem só de cabeçalho numa tabela ausente volta sem erro e sem número.
+    // Sem número não é zero: a pendência some.
+    cenario.errosDasTabelas = {};
+    cenario.semContagem = ["caixa_saidas"];
+    expect((await pagina()).pendencias).toEqual(semSaidas);
   });
 });
 
