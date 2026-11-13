@@ -53,7 +53,7 @@ export default async function Inicio({ searchParams }: { searchParams: Promise<P
     gestao ? supabase.from("estornos_externos").select("id", CABECA).eq("unidade_id", unidade).eq("situacao", "pendente") : null,
     gestao ? supabase.from("venda_retornos").select("id", CABECA).eq("unidade_id", unidade).eq("situacao", "pendente") : null,
     // Os painéis não derrubam a página: cada leitura volta com o próprio estado (ok, indisponível ou falha).
-    lerPaineisDoInicio(supabase, { visao, periodo: periodoFinanceiro(textoDoParametro(parametros.periodo)), loja: textoDoParametro(parametros.loja), turno, usuario: usuario.id, ranking: inicio.ranking }),
+    lerPaineisDoInicio(supabase, { visao, periodo: periodoFinanceiro(textoDoParametro(parametros.periodo)), loja: textoDoParametro(parametros.loja), turno, usuario: usuario.id, ranking: inicio.ranking, custo: inicio.custo }),
   ]);
   const respostas = [aprovacoes, notas, caixas, transferencias, connect, estornos, retornos];
   if (respostas.some((r) => r?.error)) throw new FalhaDoServico("inicio_pendencias");

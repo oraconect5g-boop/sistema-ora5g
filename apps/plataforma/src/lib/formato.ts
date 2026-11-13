@@ -32,6 +32,13 @@ const porcentagem = new Intl.NumberFormat("pt-BR", { style: "percent", maximumFr
 /** Fração → "12,8%" (0,128 → 12,8%). */
 export const percentual = (fracao: number) => espacoComum(porcentagem.format(fracao));
 
+/** Fração que pode ficar abaixo de zero (a margem sobre o vendido) → "32,4%" ou "−4,2%", com o "−" tipográfico. */
+export function percentualComSinal(fracao: number): string {
+  const texto = percentual(Math.abs(fracao));
+  // Perto de zero o arredondamento dá "0%": sem sinal, para não aparecer "−0%".
+  return fracao < 0 && texto !== "0%" ? `−${texto}` : texto;
+}
+
 /** Pontos-base (1000 = 10%) → "10%". */
 export const percentualDePontosBase = (pontos: number) => percentual(pontos / 10_000);
 
@@ -120,3 +127,14 @@ export function brlEixo(centavos: number): string {
   if (Math.abs(reais) >= 1_000) return `R$ ${(reais / 1_000).toLocaleString("pt-BR", { maximumFractionDigits: 1 })} mil`;
   return `R$ ${reais.toLocaleString("pt-BR", { maximumFractionDigits: 0 })}`;
 }
+
+// Dinheiro que pode ficar abaixo de zero (a margem de um dia): o sinal é o "−" tipográfico, antes do
+// "R$", como em `variacao`. O valor positivo sai igual ao do formatador sem sinal.
+const comSinal = (formatar: (centavos: number) => string) => (centavos: number) => (centavos < 0 ? `−${formatar(-centavos)}` : formatar(centavos));
+
+/** "R$ 1.234,56" ou "−R$ 60,50". */
+export const brlComSinal = comSinal(brl);
+/** "R$ 128,4 mil" ou "−R$ 12 mil". */
+export const brlCompactoComSinal = comSinal(brlCompacto);
+/** Eixo: "R$ 5 mil", "R$ 0" ou "−R$ 5 mil". */
+export const brlEixoComSinal = comSinal(brlEixo);

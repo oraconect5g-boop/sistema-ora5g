@@ -16,7 +16,7 @@ export const PERMISSOES_DA_REDE: ReadonlySet<PermissaoDoMenu> = new Set(["usuari
 export type PaginaReal =
   | "inicio" | "vender" | "vendas" | "clientes" | "funil" | "agenda" | "caixa" | "connect"
   | "estoque" | "transferencias" | "catalogo" | "produtos"
-  | "financeiro" | "conciliacao" | "maquininhas" | "aprovacoes" | "notas" | "auditoria"
+  | "financeiro" | "relatorios" | "conciliacao" | "maquininhas" | "aprovacoes" | "notas" | "auditoria"
   | "equipe" | "lojas";
 export type GrupoReal = "Operação" | "Clientes" | "Estoque e catálogo" | "Gestão" | "Administração";
 export const GRUPOS_REAIS: readonly GrupoReal[] = ["Operação", "Clientes", "Estoque e catálogo", "Gestão", "Administração"];
@@ -46,6 +46,9 @@ export const PAGINAS_REAIS: Record<PaginaReal, { titulo: string; curto: string; 
   // Financeiro real (#65): de quem vê as vendas da loja (gerente) ou da rede (dono, administrador).
   // Abrir caixa não libera o financeiro. O banco confere de novo cada número (RLS na leitura agregada).
   financeiro: { titulo: "Financeiro", curto: "Financeiro", caminho: "/financeiro", icone: "relatorios", grupo: "Gestão", liberada: (p) => podeVerFinanceiro(p) },
+  // Relatórios reais (G2a): os mesmos números do financeiro vistos em 7, 14 ou 30 dias, com a margem
+  // bruta para quem vê o custo (a tela pergunta essa permissão à parte; o menu não a carrega).
+  relatorios: { titulo: "Relatórios", curto: "Relatórios", caminho: "/relatorios", icone: "tendencias", grupo: "Gestão", liberada: (p) => podeVerFinanceiro(p) },
   // Conciliação e maquininhas (L7a): gerência da loja (dono e gerente).
   conciliacao: { titulo: "Conciliação de pagamentos", curto: "Conciliação", caminho: "/pagamentos/conciliacao", icone: "conciliacao", grupo: "Gestão", liberada: (p) => p.has("pagamento.conciliar") },
   maquininhas: { titulo: "Maquininhas", curto: "Maquininhas", caminho: "/pagamentos/maquininhas", icone: "maquininhas", grupo: "Gestão", liberada: (p) => p.has("terminal.gerir") },
@@ -59,7 +62,7 @@ export const PAGINAS_REAIS: Record<PaginaReal, { titulo: string; curto: string; 
 
 // Barra inferior do celular: até 4 atalhos, na ordem de uso no balcão; o resto fica em "Mais".
 const PRIORIDADE_NO_CELULAR: readonly PaginaReal[] = [
-  "inicio", "vender", "aprovacoes", "vendas", "financeiro", "estoque", "clientes", "agenda", "funil", "caixa", "connect", "catalogo", "produtos", "notas", "conciliacao", "maquininhas", "equipe", "lojas", "auditoria", "transferencias",
+  "inicio", "vender", "aprovacoes", "vendas", "financeiro", "estoque", "clientes", "agenda", "funil", "caixa", "connect", "catalogo", "produtos", "relatorios", "notas", "conciliacao", "maquininhas", "equipe", "lojas", "auditoria", "transferencias",
 ];
 
 export function montarMenu(permissoes: Permissoes) {

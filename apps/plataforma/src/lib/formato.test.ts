@@ -1,13 +1,20 @@
 import { describe, expect, it } from "vitest";
 
 import { escala, mostrarRotulo } from "../componentes/escala";
-import { brl, brlCompacto, brlEixo, dataCurta, iniciais, minutosEmSaoPaulo, percentual, percentualDePontosBase, saudacao, variacao } from "./formato";
+import { brl, brlCompacto, brlCompactoComSinal, brlComSinal, brlEixo, brlEixoComSinal, dataCurta, iniciais, minutosEmSaoPaulo, percentual, percentualComSinal, percentualDePontosBase, saudacao, variacao } from "./formato";
 
 describe("formatos brasileiros na tela", () => {
   it("percentual usa vírgula decimal (antes aparecia 18.5%)", () => {
     expect(percentual(0.185)).toBe("18,5%");
     expect(percentualDePontosBase(1_850)).toBe("18,5%");
     expect(percentualDePontosBase(-10)).toBe("-0,1%");
+  });
+
+  it("percentual que pode ficar abaixo de zero leva o \"−\" tipográfico; o positivo não muda", () => {
+    expect(percentualComSinal(-0.042)).toBe("−4,2%");
+    expect(percentualComSinal(0.324)).toBe(percentual(0.324));
+    expect(percentualComSinal(0)).toBe("0%");
+    expect(percentualComSinal(-0.0001)).toBe("0%");
   });
 
   it("dinheiro cheio, compacto e de eixo", () => {
@@ -17,6 +24,17 @@ describe("formatos brasileiros na tela", () => {
     expect(brlCompacto(27_000_000)).toBe("R$ 270 mil");
     expect(brlEixo(0)).toBe("R$ 0");
     expect(brlEixo(2_000_000)).toBe("R$ 20 mil");
+  });
+
+  it("dinheiro abaixo de zero leva o sinal antes do \"R$\"; o positivo não muda", () => {
+    expect(brlComSinal(-6_050)).toBe("−R$ 60,50");
+    expect(brlComSinal(6_050)).toBe(brl(6_050));
+    expect(brlComSinal(0)).toBe("R$ 0,00");
+    expect(brlCompactoComSinal(-12_840_000)).toBe("−R$ 128,4 mil");
+    expect(brlCompactoComSinal(-99_999)).toBe("−R$ 999,99");
+    expect(brlEixoComSinal(-500_000)).toBe("−R$ 5 mil");
+    expect(brlEixoComSinal(0)).toBe("R$ 0");
+    expect(brlEixoComSinal(2_000_000)).toBe("R$ 20 mil");
   });
 
   it("variação com sinal e sem ruído perto de zero", () => {

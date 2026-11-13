@@ -25,8 +25,10 @@ export function Cartao({ titulo, subtitulo, acao, icone: IconeCartao, children, 
   return (
     <section id={id} className={`min-w-0 rounded-cartao border border-borda/80 bg-superficie shadow-cartao ${className}`}>
       {(titulo || acao) && (
-        <header className="flex items-start justify-between gap-3 px-4 pt-4 sm:px-6 sm:pt-6">
-          <div className="flex min-w-0 items-start gap-3">
+        // Ação comprida em cartão estreito (celular, coluna lateral) desce para baixo do título, em vez
+        // de espremer o subtítulo numa coluna de uma palavra por linha.
+        <header className="flex flex-wrap items-start justify-between gap-x-3 gap-y-2 px-4 pt-4 sm:px-6 sm:pt-6">
+          <div className="flex min-w-0 flex-[1_1_15rem] items-start gap-3">
             {IconeCartao && (
               <span className="grid size-10 shrink-0 place-items-center rounded-full bg-acao-clara text-acao">
                 <IconeCartao aria-hidden className="size-[18px]" />

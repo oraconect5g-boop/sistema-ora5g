@@ -12,6 +12,12 @@ export const TIPOS_DE_PRODUTO = {
   servico: "Outro serviço",
 } as const;
 export type TipoDeProduto = keyof typeof TIPOS_DE_PRODUTO;
+/** Nome curto de cada tipo, para lista, tabela e arquivo exportado (o de cima é o do formulário de cadastro). */
+export const NOMES_CURTOS_DOS_TIPOS: Record<TipoDeProduto, string> = {
+  aparelho: "Aparelho", acessorio: "Acessório", chip: "Chip", ativacao: "Ativação", portabilidade: "Portabilidade", recarga: "Recarga", servico: "Serviço",
+};
+/** O nome curto do tipo; código que a tela não conhece aparece como veio. */
+export const nomeCurtoDoTipo = (tipo: string): string => (Object.hasOwn(NOMES_CURTOS_DOS_TIPOS, tipo) ? NOMES_CURTOS_DOS_TIPOS[tipo as TipoDeProduto] : tipo);
 export const ehTipoDeProduto = (v: unknown): v is TipoDeProduto => typeof v === "string" && Object.hasOwn(TIPOS_DE_PRODUTO, v);
 /** Tipos com estoque físico (os serviços não têm). */
 export const TEM_ESTOQUE: ReadonlySet<string> = new Set(["aparelho", "acessorio", "chip"]);

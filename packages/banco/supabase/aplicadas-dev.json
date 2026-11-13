@@ -40,6 +40,7 @@
     { "versao": "20261111201342", "nome": "pagamentos_maquininhas_e_conciliacao", "md5": "b83e29bfd4d7f095173e2845aa9e0a19", "aplicada_em": "2026-11-11" },
     { "versao": "20261112033713", "nome": "recebimento_correcoes", "md5": "8f985fcbb4766e5b3a5ec676aae67201", "aplicada_em": "2026-11-12" },
     { "versao": "20261112163333", "nome": "importador_correcoes", "md5": "d4003b4a7642b74117a4442113bfe385", "aplicada_em": "2026-11-12" },
-    { "versao": "20261112195200", "nome": "vendas_painel", "md5": "a477b00219c4eff93cc94ebb3066484a", "aplicada_em": "2026-11-12" }
+    { "versao": "20261112195200", "nome": "vendas_painel", "md5": "a477b00219c4eff93cc94ebb3066484a", "aplicada_em": "2026-11-12" },
+    { "versao": "20261113065706", "nome": "margem_painel", "md5": "7af84d1c116430125d3c769abe29a21e", "aplicada_em": "2026-11-13" }
   ]
 }
