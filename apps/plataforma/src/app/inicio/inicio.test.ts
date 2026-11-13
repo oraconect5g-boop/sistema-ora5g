@@ -52,6 +52,8 @@ const cenario = vi.hoisted(() => ({
   chamadas: {} as Record<string, Record<string, unknown>[]>,
   tabelas: {} as Record<string, Record<string, unknown>[]>,
   errosDasTabelas: {} as Record<string, { code: string }>,
+  /** Tabelas cuja contagem volta sem erro e sem número (HEAD numa tabela ausente: 404 sem corpo). */
+  semContagem: [] as string[],
   /** Tabelas lidas, na ordem. */
   lidas: [] as string[],
   /** Opções de cada chamada de obterSessao. */
@@ -66,7 +68,7 @@ vi.mock("next/navigation", () => ({ redirect: (destino: string) => { throw new E
 class Consulta {
   linhas: Linha[];
   erro: Erro | null;
-  constructor(nome: string) {
+  constructor(readonly nome: string) {
     cenario.lidas.push(nome);
     this.linhas = [...(cenario.tabelas[nome] ?? [])];
     this.erro = cenario.errosDasTabelas[nome] ?? null;
@@ -80,13 +82,18 @@ class Consulta {
     this.linhas = this.linhas.filter((l) => l[coluna] === undefined || valores.includes(l[coluna]));
     return this;
   }
+  neq(coluna: string, valor: unknown) {
+    this.linhas = this.linhas.filter((l) => l[coluna] === undefined || l[coluna] !== valor);
+    return this;
+  }
   or() { return this; }
   order() { return this; }
   maybeSingle() {
     return Promise.resolve(this.erro ? { data: null, error: this.erro } : { data: this.linhas[0] ?? null, error: null });
   }
   then(resolver: (r: { data: Linha[] | null; count: number | null; error: Erro | null }) => unknown) {
-    const resposta = this.erro ? { data: null, count: null, error: this.erro } : { data: this.linhas, count: this.linhas.length, error: null };
+    const resposta = this.erro ? { data: null, count: null, error: this.erro }
+      : { data: this.linhas, count: cenario.semContagem.includes(this.nome) ? null : this.linhas.length, error: null };
     return Promise.resolve(resposta).then(resolver);
   }
 }
@@ -356,7 +363,7 @@ beforeEach(() => {
     vendas: HOJE, anterior: ONTEM, erroDeVendas: null, erroDoAnterior: null,
     financeiro: FINANCEIRO, erroDoFinanceiro: null, margem: MARGEM, erroDaMargem: null, producao: PRODUCAO, erroDaProducao: null, nomes: NOMES, erroDosNomes: null,
     metasDasLojas: METAS_DA_LOJA, minhaMeta: MINHA_META, erroDasMetas: null,
-    chamadas: {}, errosDasTabelas: {}, lidas: [], sessoes: [],
+    chamadas: {}, errosDasTabelas: {}, semContagem: [], lidas: [], sessoes: [],
     tabelas: {
       perfis_usuario: [{ id: GESTOR, nome: "Gestor Teste" }, { id: ANA, nome: "Ana Teste" }, { id: BETO, nome: "Beto Teste" }],
       unidades: [
@@ -372,6 +379,11 @@ beforeEach(() => {
       caixas: [{ unidade_id: LOJA, situacao: "fechado" }, { unidade_id: LOJA, situacao: "aberto" }, { unidade_id: OUTRA, situacao: "fechado" }],
       estornos_externos: [{ unidade_id: LOJA, situacao: "pendente" }, { unidade_id: OUTRA, situacao: "pendente" }],
       connect_operacoes: [{ unidade_id: LOJA, situacao: "resultado_desconhecido" }, { unidade_id: LOJA, situacao: "confirmada" }],
+      // Saídas do caixa (L7c): conta só a pendente da loja que outra pessoa pediu.
+      caixa_saidas: [
+        { unidade_id: LOJA, situacao: "pendente", pedida_por: ANA }, { unidade_id: LOJA, situacao: "pendente", pedida_por: GESTOR },
+        { unidade_id: LOJA, situacao: "autorizada", pedida_por: BETO }, { unidade_id: OUTRA, situacao: "pendente", pedida_por: CAIO },
+      ],
     },
   });
 });
@@ -573,8 +585,20 @@ describe("Início: o gerente acompanha a loja do turno", () => {
 
   it("as pendências continuam no topo, contadas só na loja do turno e só para quem tem a permissão", async () => {
     const p = await pagina();
-    expect(p.pendencias).toEqual({ "Descontos para aprovar": 2, "Notas na fila": 0, "Caixas para conferir": 1, "Transferências": 0, "Estornos a confirmar": 1, "Itens a conferir": 0 });
+    expect(p.pendencias).toEqual({ "Descontos para aprovar": 2, "Notas na fila": 0, "Saídas do caixa": 1, "Caixas para conferir": 1, "Transferências": 0, "Estornos a confirmar": 1, "Itens a conferir": 0 });
     expect(cenario.lidas).not.toContain("connect_operacoes");
+  });
+
+  it("saídas do caixa (L7c): a pendência leva ao quadro de autorizar; banco ainda sem a tabela, ela some e o resto continua", async () => {
+    expect((await pagina()).enderecos).toContain("/caixa#saidas");
+    const semSaidas = { "Descontos para aprovar": 2, "Notas na fila": 0, "Caixas para conferir": 1, "Transferências": 0, "Estornos a confirmar": 1, "Itens a conferir": 0 };
+    cenario.errosDasTabelas.caixa_saidas = { code: "PGRST205" };
+    expect((await pagina()).pendencias).toEqual(semSaidas);
+    // Como chega de verdade: a contagem só de cabeçalho numa tabela ausente volta sem erro e sem número.
+    // Sem número não é zero: a pendência some.
+    cenario.errosDasTabelas = {};
+    cenario.semContagem = ["caixa_saidas"];
+    expect((await pagina()).pendencias).toEqual(semSaidas);
   });
 });
 
@@ -631,6 +655,8 @@ describe("Início: o vendedor acompanha só as próprias vendas", () => {
     expect(p.enderecos).toContain("/vendas");
     expect(p.enderecos.filter((e) => e.startsWith("/financeiro") || e.includes("loja="))).toEqual([]);
     expect(p.pendencias).toEqual({ "Transferências": 0 });
+    // Quem não confere caixa nem pergunta pelas saídas a autorizar.
+    expect(cenario.lidas).not.toContain("caixa_saidas");
   });
 
   it("minha produção: itens vendidos por grupo, sem valor da loja", async () => {
@@ -717,7 +743,7 @@ describe("Início: quem vê a rede começa pela rede inteira e pode escolher uma
     expect(p.indicadores).toEqual(INDICADORES_DA_LOJA);
     expect(p.indicador("Vendas realizadas")).toMatchObject({ valor: "5", detalhe: "R$ 7.000,00 vendidos" });
     expect(p.enderecos).toEqual(expect.arrayContaining(["/financeiro?loja=rede", "/financeiro?loja=rede&ver=pagamentos"]));
-    expect(p.pendencias).toEqual({ "Descontos para aprovar": 2, "Notas na fila": 0, "Caixas para conferir": 1, "Transferências": 0, "Ora Connect a decidir": 1, "Estornos a confirmar": 1, "Itens a conferir": 0 });
+    expect(p.pendencias).toEqual({ "Descontos para aprovar": 2, "Notas na fila": 0, "Saídas do caixa": 1, "Caixas para conferir": 1, "Transferências": 0, "Ora Connect a decidir": 1, "Estornos a confirmar": 1, "Itens a conferir": 0 });
   });
 
   it("desempenho das lojas: a venda fica na loja em que foi feita, e loja sem venda aparece com zero", async () => {
@@ -1096,6 +1122,9 @@ describe("Início: o que para a página inteira", () => {
 
   it("contagem de pendência com erro não vira zero pendências", async () => {
     cenario.errosDasTabelas.caixas = { code: "57014" };
+    await expect(pagina()).rejects.toBeInstanceOf(FalhaDoServico);
+    // Nas saídas do caixa também: só a tabela ausente (migration não aplicada) tira a pendência.
+    cenario.errosDasTabelas = { caixa_saidas: { code: "57014" } };
     await expect(pagina()).rejects.toBeInstanceOf(FalhaDoServico);
   });
 

@@ -352,9 +352,9 @@
       "evidencia": "packages/banco/supabase/migrations/20261108233546_vendas_pagamentos_e_caixa.sql; packages/banco/src/vendas.test.ts; packages/banco/src/concorrencia.test.ts; apps/plataforma/src/app/caixa"
     },
     "ORA-PAY-005": {
-      "status": "parcial",
-      "nota": "Suprimento e sangria com motivo, autor e efeito no dinheiro da gaveta; sangria não passa do dinheiro; lançamentos só de inserção. FALTA: 'saída autorizada' com aprovação da gerência (D-017).",
-      "evidencia": "packages/banco/supabase/migrations/20261108233546_vendas_pagamentos_e_caixa.sql; packages/banco/src/vendas.test.ts; packages/banco/src/concorrencia.test.ts"
+      "status": "testado",
+      "nota": "Suprimento e sangria com motivo, autor e efeito no dinheiro da gaveta; sangria não passa do dinheiro; lançamentos só de inserção; estorno e reembolso em dinheiro como movimento próprio. L7c (13/11), pela decisão do proprietário do mesmo dia (D-017 em parte: autoriza o gerente ou o dono): quem está com o caixa aberto pede a saída de dinheiro (valor até o dinheiro da gaveta, motivo de 3 a 200 letras, idempotente); outra pessoa com caixa.conferir na loja autoriza ou nega (negar pede motivo); quem pediu nunca autoriza a própria; ao autorizar, o banco lança 'saida_autorizada' (negativa, em dinheiro) no caixa de quem pediu, com a mesma trava do fechamento, e o fechamento já desconta; quem pediu cancela enquanto pende; tudo auditado. Telas: quadros 'Saída de dinheiro' e 'Saídas para autorizar' no /caixa, pendência no Início e a saída na movimentação dos caixas do /financeiro. A migration ainda não foi aplicada no ora5g-dev (o conector do Supabase não estava na sessão). FALTA: revisão do Codex e homologação.",
+      "evidencia": "packages/banco/supabase/migrations/20261108233546_vendas_pagamentos_e_caixa.sql; packages/banco/src/vendas.test.ts; packages/banco/src/concorrencia.test.ts; packages/banco/supabase/migrations/20261113200029_caixa_saida_autorizada.sql; packages/banco/src/caixa-saida.test.ts; apps/plataforma/src/lib/caixa/saidas.ts; apps/plataforma/src/app/caixa; apps/plataforma/src/app/caixa/caixa.test.ts"
     },
     "ORA-PAY-006": {
       "status": "testado",

@@ -1,4 +1,4 @@
-import { ArrowRightLeft, BadgePercent, FileText, RadioTower, RotateCcw, Undo2, Wallet, type LucideIcon } from "lucide-react";
+import { ArrowRightLeft, BadgePercent, Banknote, FileText, RadioTower, RotateCcw, Undo2, Wallet, type LucideIcon } from "lucide-react";
 import type { Metadata } from "next";
 import Link from "next/link";
 
@@ -8,6 +8,7 @@ import { Aviso, Cartao, TituloPagina } from "../../componentes/ui";
 import { montarMenu, PAGINAS_REAIS } from "../../lib/acesso/menu";
 import { horaDoFimDoTurno } from "../../lib/acesso/regras";
 import { FalhaDoServico, obterSessao } from "../../lib/acesso/sessao";
+import { tabelaAusente } from "../../lib/caixa/saidas";
 import type { LojaDoFiltro } from "../../lib/financeiro/escopo";
 import { periodoFinanceiro } from "../../lib/financeiro/painel";
 import { lerPaineisDoInicio, permissoesDoInicio } from "../../lib/inicio/consulta";
@@ -42,10 +43,12 @@ export default async function Inicio({ searchParams }: { searchParams: Promise<P
   if (perfil.error) throw new FalhaDoServico("inicio");
   const gestao = permissoes.has("venda.ver_unidade");
   const visao = visaoDoInicio({ verTodas: permissoes.has("venda.ver_todas"), verUnidade: gestao, verPropria: inicio.propria });
-  const [aprovacoes, notas, caixas, transferencias, connect, estornos, retornos, paineis] = await Promise.all([
+  const [aprovacoes, notas, caixas, saidasDoBanco, transferencias, connect, estornos, retornos, paineis] = await Promise.all([
     permissoes.has("desconto.aprovar") ? supabase.from("aprovacoes_desconto").select("id", CABECA).eq("unidade_id", unidade).eq("situacao", "pendente") : null,
     permissoes.has("nota.aprovar") ? supabase.from("notas_pedidos").select("id", CABECA).eq("unidade_id", unidade).in("situacao", ["aguardando_aprovacao", "aprovada"]) : null,
     permissoes.has("caixa.conferir") ? supabase.from("caixas").select("id", CABECA).eq("unidade_id", unidade).eq("situacao", "fechado") : null,
+    // Saídas do caixa (L7c) que outra pessoa pediu: quem pediu não autoriza a própria.
+    permissoes.has("caixa.conferir") ? supabase.from("caixa_saidas").select("id", CABECA).eq("unidade_id", unidade).eq("situacao", "pendente").neq("pedida_por", usuario.id) : null,
     permissoes.has("estoque.consultar")
       ? supabase.from("transferencias").select("id", CABECA).or(`and(origem_id.eq.${unidade},situacao.in.(solicitada,separada)),and(destino_id.eq.${unidade},situacao.eq.enviada)`)
       : null,
@@ -56,12 +59,17 @@ export default async function Inicio({ searchParams }: { searchParams: Promise<P
     lerPaineisDoInicio(supabase, { visao, periodo: periodoFinanceiro(textoDoParametro(parametros.periodo)), loja: textoDoParametro(parametros.loja), turno, usuario: usuario.id, ranking: inicio.ranking, custo: inicio.custo,
       metas: { gestao: permissoes.has("metas.gerir") || permissoes.has("metas.ver_unidade"), propria: permissoes.has("metas.ver_propria") } }),
   ]);
-  const respostas = [aprovacoes, notas, caixas, transferencias, connect, estornos, retornos];
+  // Banco ainda sem a migration do L7c (tabela ausente): a pendência das saídas some e o resto do Início segue.
+  // A contagem só de cabeçalho (HEAD) numa tabela ausente volta 404 sem corpo, que o cliente do Supabase
+  // entrega SEM erro e sem número: contagem sem número também tira a pendência, em vez de mostrar zero.
+  const saidas = saidasDoBanco && (tabelaAusente(saidasDoBanco.error) || (!saidasDoBanco.error && saidasDoBanco.count === null)) ? null : saidasDoBanco;
+  const respostas = [aprovacoes, notas, caixas, saidas, transferencias, connect, estornos, retornos];
   if (respostas.some((r) => r?.error)) throw new FalhaDoServico("inicio_pendencias");
   const quantos = (r: (typeof respostas)[number]) => r?.count ?? 0;
   const pendencias: Pendencia[] = [
     aprovacoes && { rotulo: "Descontos para aprovar", detalhe: "pedidos dos vendedores", href: "/aprovacoes", icone: BadgePercent, quantidade: quantos(aprovacoes) },
     notas && { rotulo: "Notas na fila", detalhe: "aprovar ou registrar a chave", href: "/notas", icone: FileText, quantidade: quantos(notas) },
+    saidas && { rotulo: "Saídas do caixa", detalhe: "dinheiro da gaveta a autorizar", href: "/caixa#saidas", icone: Banknote, quantidade: quantos(saidas) },
     caixas && { rotulo: "Caixas para conferir", detalhe: "fechados, à espera de outra pessoa", href: "/caixa", icone: Wallet, quantidade: quantos(caixas) },
     transferencias && { rotulo: "Transferências", detalhe: "separar, enviar ou receber", href: "/transferencias", icone: ArrowRightLeft, quantidade: quantos(transferencias) },
     connect && { rotulo: "Ora Connect a decidir", detalhe: "resultado desconhecido da operadora", href: "/connect", icone: RadioTower, quantidade: quantos(connect) },

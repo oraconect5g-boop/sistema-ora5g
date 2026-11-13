@@ -2,7 +2,7 @@
   "_leia": "Checkpoint do programa de execução integral (PR #67). Carregar ao retomar e seguir para o próximo item executável da fila; não reiniciar o projeto. Estados vêm de status-requisitos.json (fonte da rastreabilidade); este arquivo acrescenta lote, bloqueio externo e revisão.",
   "atualizado_em": "2026-11-13",
   "base": {
-    "main": "3e48808",
+    "main": "7700211",
     "pacote": {
       "pr": 67,
       "branch": "docs/execucao-integral-20261110",
@@ -12,17 +12,17 @@
   },
   "publicado": {
     "homologacao": {
-      "commit": "3e48808",
+      "commit": "7700211",
       "quando": "2026-11-13",
-      "conferido": "rodapé da tela de entrada, /saude e /vender, /vendas e /inicio respondendo 307 para o login"
+      "conferido": "rodapé da tela de entrada, /saude e /vender, /vendas, /inicio e /pagamentos/financeiras respondendo 307 para o login"
     },
     "falta_publicar": [
-      "o merge do L7b (publicado ao fim do lote, por pedido do proprietário de 13/11)"
+      "o merge do L7c (publicado ao fim do lote, por pedido do proprietário de 13/11)"
     ]
   },
   "contagem_dos_estados": {
-    "parcial": 64,
-    "testado": 32,
+    "parcial": 63,
+    "testado": 33,
     "nao_iniciado": 80,
     "respeitado": 1,
     "bloqueado": 2
@@ -598,8 +598,8 @@
     "ORA-PAY-005": {
       "titulo": "Registrar sangria, suprimento, reforço, devolução e saída autorizada",
       "prioridade": "P0",
-      "estado": "parcial",
-      "lote": "L7 pagamentos/caixa (saída autorizada espera D-017)",
+      "estado": "testado",
+      "lote": "L7 pagamentos/caixa (L7c em 13/11: saída autorizada pela decisão D-017 do proprietário, gerente ou dono)",
       "bloqueio_externo": null,
       "revisado_codex": false,
       "homologado": false
