@@ -90,9 +90,8 @@ function realizadoDoAlvo(l: Linha): Realizado {
   return realizado;
 }
 
-/** Converte a resposta de public.metas_painel. */
-export function lerMetas(dado: unknown): MetasDoBanco {
-  if (!ehObjeto(dado)) throw new RespostaInesperada("metas_painel");
+/** O cabeçalho comum das respostas de metas: o mês, os dias e a regra de contagem. */
+function cabecalho(dado: Linha) {
   // Outra regra de contagem seria um número que a tela não sabe explicar: falha, não número.
   if (dado.regra_contagem !== 1) throw new RespostaInesperada("regra_contagem");
   const mes = t(dado, "mes");
@@ -100,6 +99,13 @@ export function lerMetas(dado: unknown): MetasDoBanco {
   const diasNoMes = n(dado, "dias_no_mes");
   const diasDecorridos = n(dado, "dias_decorridos");
   if (diasNoMes < 28 || diasNoMes > 31 || diasDecorridos < 0 || diasDecorridos > diasNoMes) throw new RespostaInesperada("dias");
+  return { mes, diasNoMes, diasDecorridos };
+}
+
+/** Converte a resposta de public.metas_painel. */
+export function lerMetas(dado: unknown): MetasDoBanco {
+  if (!ehObjeto(dado)) throw new RespostaInesperada("metas_painel");
+  const { mes, diasNoMes, diasDecorridos } = cabecalho(dado);
   let loja: MetasDoBanco["loja"] = null;
   if (dado.loja !== null) {
     const l = objeto(dado, "loja");
@@ -111,6 +117,25 @@ export function lerMetas(dado: unknown): MetasDoBanco {
     return { vendedorId, metas: metasDoAlvo(l), realizado: realizadoDoAlvo(l) };
   });
   return { mes, diasNoMes, diasDecorridos, loja, vendedores };
+}
+
+export type MetasDasLojas = {
+  mes: string;
+  diasNoMes: number;
+  diasDecorridos: number;
+  /** Cada loja em que quem pede lê as vendas e acompanha as metas; sem meta, `metas` vazio. */
+  lojas: { unidadeId: string; metas: MetasDoAlvo; realizado: Realizado }[];
+};
+/** Converte a resposta de public.metas_lojas (G4c). */
+export function lerMetasDasLojas(dado: unknown): MetasDasLojas {
+  if (!ehObjeto(dado)) throw new RespostaInesperada("metas_lojas");
+  const lojas = lista(dado, "lojas").map((l) => {
+    const unidadeId = t(l, "unidade_id");
+    if (!ehUuid(unidadeId)) throw new RespostaInesperada("unidade_id");
+    return { unidadeId, metas: metasDoAlvo(l), realizado: realizadoDoAlvo(l) };
+  });
+  if (new Set(lojas.map((l) => l.unidadeId)).size !== lojas.length) throw new RespostaInesperada("loja repetida");
+  return { ...cabecalho(dado), lojas };
 }
 
 export type PessoaDasMetas = { id: string; nome: string; naEquipe: boolean };
@@ -160,6 +185,15 @@ export function opcoesDeMes(escolhido: string, agora: Date = new Date()): { mes:
     mes,
     rotulo: mes === hoje ? "Este mês" : `${maiuscula(NOMES_DOS_MESES[Number(mes.slice(5, 7)) - 1] ?? "")}${mes.slice(0, 4) === hoje.slice(0, 4) ? "" : ` de ${mes.slice(0, 4)}`}`,
   }));
+}
+/** Os meses (de São Paulo) que uma janela toca: um ou dois nos períodos dos relatórios. */
+export function mesesDaJanela(janela: Janela): string[] {
+  const meses = [mesDeHoje(janela.inicio)];
+  for (let mes = meses[0] ?? ""; mes < mesDeHoje(janela.fim); ) {
+    mes = somarMeses(mes, 1);
+    meses.push(mes);
+  }
+  return meses;
 }
 /** As vendas do mês: do primeiro dia até agora, ou até o fim do mês que já terminou; o mês que não começou não tem janela. */
 export function janelaDoMes(mes: string, agora: Date = new Date()): Janela | null {
@@ -330,4 +364,55 @@ export function ordemNoGrafico(linhas: readonly LinhaDaEquipe[], medida: Medida)
 export function resumoDasMetas(metas: MetasDoAlvo): string {
   const partes = ORDEM_DAS_MEDIDAS.filter((m) => metas[m] !== undefined).map((m) => `${MEDIDAS[m].curto}: ${formatarMedida(m, metas[m] as number)}`);
   return partes.length > 0 ? partes.join(" · ") : "Sem metas definidas";
+}
+
+// ---------------------------------------------------------------------------------------------
+// As lojas no Início e nos Relatórios (G4c)
+// ---------------------------------------------------------------------------------------------
+export type SomaDasLojas = {
+  /** Soma das metas das lojas que têm meta nesta medida; ausente quando nenhuma tem. */
+  meta: number | undefined;
+  /** Realizado só dessas lojas: a loja sem meta fica fora da conta, para a comparação ser justa. */
+  realizado: number;
+  comMeta: number;
+  total: number;
+};
+export function somaDasLojas(d: MetasDasLojas, medida: Medida): SomaDasLojas {
+  const comMeta = d.lojas.filter((l) => l.metas[medida] !== undefined);
+  return {
+    meta: comMeta.length > 0 ? comMeta.reduce((soma, l) => soma + (l.metas[medida] ?? 0), 0) : undefined,
+    realizado: comMeta.reduce((soma, l) => soma + l.realizado[medida], 0),
+    comMeta: comMeta.length,
+    total: d.lojas.length,
+  };
+}
+/** As quatro medidas de uma loja, ou da soma das lojas com meta (a rede), com o ritmo do mês. */
+export function progressoDasLojas(d: MetasDasLojas, fase: FaseDoMes) {
+  return ORDEM_DAS_MEDIDAS.map((m) => {
+    const soma = somaDasLojas(d, m);
+    // Sem meta, o realizado é o de todas as lojas (é só o que aconteceu); com meta, só o das lojas com meta.
+    const realizado = soma.meta === undefined ? d.lojas.reduce((total, l) => total + l.realizado[m], 0) : soma.realizado;
+    return { ...progresso(m, realizado, soma.meta, d, fase), comMeta: soma.comMeta, total: soma.total };
+  });
+}
+
+/**
+ * A meta do dia do valor vendido líquido, para a linha dos Relatórios: a meta do mês (de uma loja,
+ * ou a soma das lojas da rede) dividida pelos dias do mês. Na rede, só quando todas as lojas lidas têm
+ * meta no mês: faltando uma, a linha compararia a venda de todas com a meta de algumas. Dia de mês
+ * sem meta (ou não lido) fica sem valor, e a linha se interrompe ali.
+ */
+export function metaDoDiaPorMes(meses: readonly MetasDasLojas[]): { porDia: (chave: string) => number | null; aviso: string | null } {
+  const porMes = new Map<string, number | null>();
+  const faltas: string[] = [];
+  for (const d of meses) {
+    const comMeta = d.lojas.filter((l) => l.metas.vendido_liquido !== undefined);
+    const todas = d.lojas.length > 0 && comMeta.length === d.lojas.length;
+    if (!todas && comMeta.length > 0) faltas.push(`em ${nomeDoMes(d.mes)}, ${comMeta.length} de ${d.lojas.length} lojas têm`);
+    porMes.set(d.mes, todas ? Math.round(comMeta.reduce((soma, l) => soma + (l.metas.vendido_liquido ?? 0), 0) / d.diasNoMes) : null);
+  }
+  return {
+    porDia: (chave) => porMes.get(`${chave.slice(0, 7)}-01`) ?? null,
+    aviso: faltas.length > 0 ? `A meta da rede só aparece quando todas as lojas têm meta do vendido líquido no mês: ${faltas.join("; ")}.` : null,
+  };
 }

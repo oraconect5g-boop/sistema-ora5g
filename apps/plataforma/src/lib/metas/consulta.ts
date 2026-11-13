@@ -7,12 +7,12 @@ import type { obterSessao } from "../acesso/sessao";
 import { ValorForaDoLimite } from "../dinheiro";
 import { RespostaInesperada } from "../financeiro/painel";
 import type { Leitura } from "../leitura-do-banco";
-import { lerEquipe, lerMetas, type MetasDoBanco, type PessoaDasMetas } from "./painel";
+import { lerEquipe, lerMetas, lerMetasDasLojas, type MetasDasLojas, type MetasDoBanco, type PessoaDasMetas } from "./painel";
 
 type Cliente = Awaited<ReturnType<typeof obterSessao>>["supabase"];
 const FUNCAO_AUSENTE = new Set(["PGRST202", "42883"]);
 
-async function ler<T>(nome: "metas_painel" | "metas_equipe", consulta: PromiseLike<{ data: unknown; error: { code: string } | null }>, conversor: (dado: unknown) => T): Promise<Leitura<T>> {
+async function ler<T>(nome: "metas_painel" | "metas_equipe" | "metas_lojas", consulta: PromiseLike<{ data: unknown; error: { code: string } | null }>, conversor: (dado: unknown) => T): Promise<Leitura<T>> {
   const r = await consulta;
   if (r.error) {
     if (FUNCAO_AUSENTE.has(r.error.code)) return { estado: "indisponivel" };
@@ -35,3 +35,7 @@ export const consultarMetas = (supabase: Cliente, mes: string, unidade: string):
 /** Quem aparece nas metas da loja no mês, com o nome (a equipe atual e quem tem meta ou fato no mês). */
 export const consultarEquipe = (supabase: Cliente, mes: string, unidade: string): Promise<Leitura<PessoaDasMetas[]>> =>
   ler("metas_equipe", supabase.rpc("metas_equipe", { p_mes: mes, p_unidade: unidade }), lerEquipe);
+
+/** A meta da loja inteira e o realizado de cada loja no mês (G4c): uma loja, ou todas as que a pessoa acompanha (`unidade` nula). */
+export const consultarMetasDasLojas = (supabase: Cliente, mes: string, unidade: string | null): Promise<Leitura<MetasDasLojas>> =>
+  ler("metas_lojas", supabase.rpc("metas_lojas", { p_mes: mes, ...(unidade ? { p_unidade: unidade } : {}) }), lerMetasDasLojas);

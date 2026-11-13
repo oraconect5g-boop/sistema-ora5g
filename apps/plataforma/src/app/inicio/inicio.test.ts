@@ -44,6 +44,10 @@ const cenario = vi.hoisted(() => ({
   erroDaProducao: null as null | { code: string },
   nomes: null as unknown,
   erroDosNomes: null as null | { code: string },
+  /** Metas do mês (G4c): metas_lojas (gestão) e metas_painel (a própria, do vendedor). */
+  metasDasLojas: null as unknown,
+  minhaMeta: null as unknown,
+  erroDasMetas: null as null | { code: string },
   /** Argumentos de cada chamada de função do banco, por nome. */
   chamadas: {} as Record<string, Record<string, unknown>[]>,
   tabelas: {} as Record<string, Record<string, unknown>[]>,
@@ -102,6 +106,8 @@ const supabase = {
     if (nome === "margem_painel") return responder(cenario.erroDaMargem, cenario.margem);
     if (nome === "connect_painel") return responder(cenario.erroDaProducao, cenario.producao);
     if (nome === "ranking_nomes") return responder(cenario.erroDosNomes, cenario.nomes);
+    if (nome === "metas_lojas") return responder(cenario.erroDasMetas, cenario.metasDasLojas);
+    if (nome === "metas_painel") return responder(cenario.erroDasMetas, cenario.minhaMeta);
     return responder({ code: "PGRST202" }, null);
   },
 };
@@ -128,7 +134,10 @@ import Inicio from "./page";
 // ---------------------------------------------------------------------------------------------
 // Só os componentes de apresentação do Início são executados; os compartilhados (Cartao, Indicador,
 // Linhas, BarrasHorizontais...) ficam como elementos, para o teste conferir as propriedades que recebem.
-const APRESENTACAO = new Set(["ConteudoInicio", "EstadoDoPainel", "Indicadores", "PainelDeVendas", "PainelDeRecebimentos", "PainelDoMix", "PainelDasLojas", "PainelDeVendedores"]);
+const APRESENTACAO = new Set([
+  "ConteudoInicio", "EstadoDoPainel", "Indicadores", "PainelDeVendas", "PainelDeRecebimentos", "PainelDoMix", "PainelDasLojas", "PainelDeVendedores",
+  "PainelDaMetaDoMes", "PainelDaMinhaMeta", "ResumoDaMeta", "MedidaPrincipal", "PorLoja", "BarrasDoRitmo",
+]);
 type Elemento = { tipo: string; props: Linha };
 const nomeDoTipo = (tipo: unknown) => (typeof tipo === "string" ? tipo : typeof tipo === "function" ? tipo.name : "");
 
@@ -299,6 +308,7 @@ const SO_SEM_CUSTO = { ...MARGEM_ZERADA, itens: 8, vendido: 450_000, itens_sem_c
 const MARGEM_SEM_CUSTO = { totais: SO_SEM_CUSTO, periodos: [{ periodo: "2026-11-10", ...SO_SEM_CUSTO }], lojas_com_custo: 1, lojas_fora: 0 };
 
 // Permissões de cada perfil, como na matriz de papéis do banco (só as que o Início e o menu perguntam).
+// As de metas (metas.gerir, metas.ver_unidade e metas.ver_propria) entram só nos testes da meta do mês (G4c).
 const PERFIS = {
   dono: ["venda.registrar", "venda.ver_propria", "venda.ver_unidade", "venda.ver_todas", "ranking.ver", "custo.ver", "desconto.aprovar", "nota.aprovar", "caixa.abrir", "caixa.conferir", "estoque.consultar", "connect.operar", "connect.gerir", "cliente.buscar", "auditoria.ver", "usuarios.gerir", "unidades.gerir"],
   administrador: ["venda.ver_todas", "ranking.ver", "custo.ver", "estoque.consultar", "usuarios.gerir", "unidades.gerir", "auditoria.ver"],
@@ -320,6 +330,21 @@ const PRODUCAO = {
   totais: { chips: 1, ativacoes: 2, portabilidades: 0, recargas: 1, por_evidencia: 3, por_revisao: 0, valor_face_recargas: 2_000, em_andamento: 1, sem_resultado: 0, debito: 0, lojas_sem_custo: 0 },
   periodos: [{ periodo: "2026-11-10", chips: 1, ativacoes: 2, portabilidades: 0, recargas: 1 }],
 };
+// Metas de novembro (G4c), no dia 10 de 30: o ritmo pede 1/3 da meta até hoje.
+const R = (vendido_liquido: number, aparelhos: number, acessorios: number, connect: number) => ({ vendido_liquido, aparelhos, acessorios, connect });
+const METAS_DA_LOJA = {
+  mes: "2026-11-01", dias_no_mes: 30, dias_decorridos: 10, regra_contagem: 1,
+  lojas: [{ unidade_id: LOJA, metas: { vendido_liquido: "3000000", aparelhos: 30 }, realizado: R(1_200_000, 8, 50_000, 4) }],
+};
+const METAS_DA_REDE = {
+  ...METAS_DA_LOJA,
+  lojas: [
+    ...METAS_DA_LOJA.lojas,
+    { unidade_id: OUTRA, metas: { vendido_liquido: 2_000_000 }, realizado: R(500_000, 3, 0, 1) },
+    { unidade_id: SEM_VENDA, metas: {}, realizado: R(90_000, 1, 0, 0) },
+  ],
+};
+const MINHA_META = { mes: "2026-11-01", dias_no_mes: 30, dias_decorridos: 10, regra_contagem: 1, loja: null, vendedores: [{ vendedor_id: ANA, metas: { vendido_liquido: 800_000 }, realizado: R(300_000, 2, 0, 1) }] };
 const errosRegistrados = () => vi.mocked(console.error).mock.calls;
 
 beforeEach(() => {
@@ -330,6 +355,7 @@ beforeEach(() => {
     usuario: GESTOR, permissoes: new Set<string>(), erroDaPermissao: null,
     vendas: HOJE, anterior: ONTEM, erroDeVendas: null, erroDoAnterior: null,
     financeiro: FINANCEIRO, erroDoFinanceiro: null, margem: MARGEM, erroDaMargem: null, producao: PRODUCAO, erroDaProducao: null, nomes: NOMES, erroDosNomes: null,
+    metasDasLojas: METAS_DA_LOJA, minhaMeta: MINHA_META, erroDasMetas: null,
     chamadas: {}, errosDasTabelas: {}, lidas: [], sessoes: [],
     tabelas: {
       perfis_usuario: [{ id: GESTOR, nome: "Gestor Teste" }, { id: ANA, nome: "Ana Teste" }, { id: BETO, nome: "Beto Teste" }],
@@ -1126,5 +1152,98 @@ describe("Início: produção do Ora Connect (G4a)", () => {
     p = await pagina();
     expect(p.indicador("Ora Connect confirmado")).toMatchObject({ valor: "—", detalhe: "Não foi possível ler agora" });
     expect(errosRegistrados()).toEqual([["connect: falha ao consultar connect_painel", { codigo: "57014" }]]);
+  });
+});
+
+describe("Início: a meta do mês (G4c)", () => {
+  const acompanhar = (...extras: string[]) => { for (const p of extras) cenario.permissoes.add(p); };
+  const enderecosDe = (c: ReturnType<typeof ler>) => c.elementos.flatMap((e) => (typeof e.props.href === "string" ? [e.props.href] : []));
+  const barras = (c: ReturnType<typeof ler>, i = 0) =>
+    (c.doTipo("BarrasHorizontais")[i] as { dados: { rotulo: string; valor: number; meta: number }[] }).dados.map((d) => [d.rotulo, Math.round(d.valor * 10) / 10, Math.round(d.meta * 10) / 10]);
+
+  it("gerente que acompanha as metas: a meta da loja no mês de hoje, com o medidor do vendido líquido e o ritmo; o período escolhido não muda o mês", async () => {
+    entrar("gerente");
+    acompanhar("metas.ver_unidade", "metas.gerir");
+    const p = await pagina({ periodo: "7" });
+    expect(cenario.chamadas.metas_lojas).toStrictEqual([{ p_mes: "2026-11-01", p_unidade: LOJA }]);
+    expect(cenario.chamadas.metas_painel).toBeUndefined();
+    expect(p.cartoes).toEqual(["Meta da loja em novembro de 2026", ...PAINEIS_DA_LOJA]);
+    const c = p.cartao("Meta da loja em novembro de 2026");
+    // R$ 12 mil de R$ 30 mil (40%) contra 33,3% esperados: no ritmo. 8 de 30 aparelhos (26,7%): abaixo.
+    expect(c.doTipo("Medidor")[0]).toMatchObject({ percentual: 40, tom: "marca", rotulo: "Valor vendido líquido" });
+    expect(barras(c)).toEqual([["Vendido líquido", 40, 33.3], ["Aparelhos", 26.7, 33.3]]);
+    expect(c.texto).toContain("Até hoje (10 de 30 dias)");
+    expect(enderecosDe(c)).toContain("/metas");
+  });
+
+  it("rede inteira: a soma só das lojas com meta (e quantas são) e o vendido líquido de cada loja; o dono escolhe uma loja", async () => {
+    entrar("dono");
+    acompanhar("metas.ver_unidade", "metas.gerir", "metas.ver_propria");
+    cenario.metasDasLojas = METAS_DA_REDE;
+    let p = await pagina();
+    expect(cenario.chamadas.metas_lojas).toStrictEqual([{ p_mes: "2026-11-01" }]);
+    const c = p.cartao("Meta da rede em novembro de 2026");
+    // R$ 17 mil (12 + 5, a loja sem meta fica fora) de R$ 50 mil: 34%.
+    expect(c.doTipo("Medidor")[0]).toMatchObject({ percentual: 34 });
+    expect(c.texto).toContain("Vendido líquido: soma de 2 de 3 lojas · Aparelhos: soma de 1 de 3 lojas. As lojas sem meta ficam fora da comparação.");
+    expect(barras(c, 1)).toEqual([["Santa Cândida (teste)", 40, 33.3], ["Loja 02 (teste)", 25, 33.3]]);
+    expect(c.texto).toContain("Sem meta do vendido líquido neste mês: Loja 03 (teste).");
+
+    cenario.metasDasLojas = { ...METAS_DA_LOJA, lojas: [METAS_DA_REDE.lojas[1]] };
+    p = await pagina({ loja: OUTRA });
+    expect(cenario.chamadas.metas_lojas?.at(-1)).toStrictEqual({ p_mes: "2026-11-01", p_unidade: OUTRA });
+    const daLoja = p.cartao("Meta da loja em novembro de 2026");
+    expect(enderecosDe(daLoja)).toContain(`/metas?loja=${OUTRA}`);
+    expect(daLoja.doTipo("BarrasHorizontais")).toHaveLength(1);
+  });
+
+  it("sem meta da loja no mês: o quadro diz \"nenhuma meta\", nunca 0%", async () => {
+    entrar("gerente");
+    acompanhar("metas.ver_unidade");
+    cenario.metasDasLojas = { ...METAS_DA_LOJA, lojas: [{ ...METAS_DA_LOJA.lojas[0], metas: {} }] };
+    const c = (await pagina()).cartao("Meta da loja em novembro de 2026");
+    expect(c.doTipo("EstadoVazio")[0]).toMatchObject({ titulo: "Nenhuma meta da loja definida para este mês" });
+    expect(c.doTipo("Medidor")).toEqual([]);
+  });
+
+  it("quem não acompanha metas (o administrador) não pergunta ao banco nem vê o quadro", async () => {
+    entrar("administrador");
+    const p = await pagina();
+    expect(cenario.chamadas.metas_lojas).toBeUndefined();
+    expect(p.cartoes.filter((c) => c.startsWith("Meta"))).toEqual([]);
+  });
+
+  it("vendedora: a própria meta do mês na loja do turno, sem nada da loja; sem meta, o aviso", async () => {
+    entrar("vendedor", ANA);
+    acompanhar("metas.ver_propria");
+    let p = await pagina();
+    expect(cenario.chamadas.metas_painel).toStrictEqual([{ p_mes: "2026-11-01", p_unidade: LOJA }]);
+    expect(cenario.chamadas.metas_lojas).toBeUndefined();
+    expect(p.cartoes).toEqual(["Minha meta em novembro de 2026", "Minhas vendas", "Minha produção", "Resumo da loja e ranking", "Atalhos"]);
+    // R$ 3 mil de R$ 8 mil (37,5%) contra 33,3% esperados: no ritmo.
+    const c = p.cartao("Minha meta em novembro de 2026");
+    expect(c.doTipo("Medidor")[0]).toMatchObject({ percentual: 37.5, tom: "marca" });
+    expect(enderecosDe(c)).toContain("/metas");
+
+    cenario.minhaMeta = { ...MINHA_META, vendedores: [] };
+    p = await pagina();
+    expect(p.cartao("Minha meta em novembro de 2026").doTipo("EstadoVazio")[0]).toMatchObject({ titulo: "Nenhuma meta sua definida para este mês" });
+  });
+
+  it("indisponível ou em falha: o quadro diz por quê, sem número, e o resto do Início continua", async () => {
+    entrar("gerente");
+    acompanhar("metas.ver_unidade");
+    cenario.erroDasMetas = { code: "PGRST202" };
+    let p = await pagina();
+    let c = p.cartao("Meta do mês");
+    expect(c.texto).toContain("Indisponível neste ambiente");
+    expect(c.texto).toContain("a leitura das metas (migration metas)");
+    expect(c.doTipo("Medidor")).toEqual([]);
+    expect(p.indicador("Vendas realizadas")).toMatchObject({ valor: "3" });
+    cenario.erroDasMetas = { code: "57014" };
+    p = await pagina();
+    c = p.cartao("Meta do mês");
+    expect(c.texto).toContain("Não foi possível ler agora");
+    expect(errosRegistrados()).toEqual([["metas: falha ao consultar metas_lojas", { codigo: "57014" }]]);
   });
 });

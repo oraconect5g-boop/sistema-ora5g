@@ -45,6 +45,7 @@ export default async function Relatorios({ searchParams }: { searchParams: Promi
     turno,
     daRede,
     custo,
+    metas: permissoes.has("metas.gerir") || permissoes.has("metas.ver_unidade"),
     pagina: paginaDoRelatorio(textoDoParametro(parametros.pagina)),
   });
   const { periodo, escopo, filtroDeLojas } = relatorios;

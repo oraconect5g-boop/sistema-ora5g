@@ -4794,6 +4794,7 @@ export type Database = {
         Returns: number
       }
       metas_equipe: { Args: { p_mes: string; p_unidade: string }; Returns: Json }
+      metas_lojas: { Args: { p_mes: string; p_unidade?: string }; Returns: Json }
       metas_painel: { Args: { p_mes: string; p_unidade: string }; Returns: Json }
       movimentar_caixa: {
         Args: {
