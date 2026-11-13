@@ -12,7 +12,8 @@
 //                extrato ainda. Vale-troca é crédito, não dinheiro: fica à parte;
 //   a receber    parte financiada (PayJoy/Aiva) registrada no período, até a financeira pagar;
 //   gaveta       movimentos em dinheiro do livro dos caixas. Fundo e suprimento não são receita;
-//                sangria não é despesa. Não é fluxo de caixa da empresa.
+//                sangria não é despesa; a saída autorizada (L7c) é despesa da loja paga com o
+//                dinheiro da gaveta. Não é fluxo de caixa da empresa.
 import { MEIOS, type MeioPagamento } from "@ora5g/dominio";
 
 import { centavosDoBanco } from "../dinheiro";
@@ -125,6 +126,7 @@ const somar = <T>(itens: readonly T[], valor: (i: T) => number) => itens.reduce(
 export const NOMES_DOS_MOVIMENTOS: Record<string, string> = {
   fundo: "Fundo de abertura", suprimento: "Suprimento", recebimento: "Recebimentos em dinheiro",
   troco: "Troco", sangria: "Sangria", estorno: "Estornos e reembolsos",
+  saida_autorizada: "Saídas autorizadas (despesas da loja)",
 };
 
 export type MeioRecebido = { meio: string; nome: string; valor: number; quantidade: number; entradas: number };

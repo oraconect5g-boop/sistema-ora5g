@@ -77,6 +77,16 @@ describe("resumo: cada fato separado, nada contado duas vezes", () => {
     expect(r.reembolsos[0]?.nome).toBe("Dinheiro (sai da gaveta)");
   });
 
+  it("gaveta: a saída autorizada (L7c) entra na lista com nome próprio, e a lista bate com o gráfico", () => {
+    const comSaida = { ...RESPOSTA, movimentos: [...RESPOSTA.movimentos, { periodo: "2026-11-10", tipo: "saida_autorizada", meio: "dinheiro", quantidade: 1, valor: -3_000 }] };
+    const painel = lerPainel(comSaida);
+    const resumo = resumoDoPainel(painel);
+    expect(resumo.gaveta.at(-1)).toEqual({ tipo: "saida_autorizada", nome: "Saídas autorizadas (despesas da loja)", valor: -3_000 });
+    expect(resumo.saldoDaGaveta).toBe(47_000);
+    const [dia] = seriesDoPainel(painel, { inicio: new Date("2026-11-10T03:00:00Z"), fim: new Date("2026-11-10T20:00:00Z") }, false).gaveta;
+    expect((dia?.entrada ?? 0) - (dia?.saida ?? 0)).toBe(resumo.saldoDaGaveta);
+  });
+
   it("sem fatos: tudo zero e listas vazias", () => {
     const vazio = resumoDoPainel(lerPainel({ ...RESPOSTA, periodos: [], pagamentos: [], reembolsos: [], estornos: [], a_receber: [], movimentos: [] }));
     expect([vazio.vendido, vazio.recebido, vazio.meios.length, vazio.gaveta.length]).toEqual([0, 0, 0, 0]);

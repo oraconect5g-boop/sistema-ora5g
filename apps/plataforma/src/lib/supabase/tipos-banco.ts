@@ -326,6 +326,93 @@ export type Database = {
           },
         ]
       }
+      caixa_saidas: {
+        Row: {
+          caixa_id: string
+          chave: string
+          decidida_em: string | null
+          decidida_por: string | null
+          id: string
+          motivo: string
+          motivo_decisao: string | null
+          movimento_id: number | null
+          organizacao_id: string
+          pedida_em: string
+          pedida_por: string
+          situacao: string
+          unidade_id: string
+          valor_centavos: number
+        }
+        Insert: {
+          caixa_id: string
+          chave: string
+          decidida_em?: string | null
+          decidida_por?: string | null
+          id?: string
+          motivo: string
+          motivo_decisao?: string | null
+          movimento_id?: number | null
+          organizacao_id: string
+          pedida_em?: string
+          pedida_por: string
+          situacao?: string
+          unidade_id: string
+          valor_centavos: number
+        }
+        Update: {
+          caixa_id?: string
+          chave?: string
+          decidida_em?: string | null
+          decidida_por?: string | null
+          id?: string
+          motivo?: string
+          motivo_decisao?: string | null
+          movimento_id?: number | null
+          organizacao_id?: string
+          pedida_em?: string
+          pedida_por?: string
+          situacao?: string
+          unidade_id?: string
+          valor_centavos?: number
+        }
+        Relationships: [
+          {
+            foreignKeyName: "caixa_saidas_caixa_id_fkey"
+            columns: ["caixa_id"]
+            isOneToOne: false
+            referencedRelation: "caixas"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "caixa_saidas_decidida_por_fkey"
+            columns: ["decidida_por"]
+            isOneToOne: false
+            referencedRelation: "perfis_usuario"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "caixa_saidas_movimento_id_fkey"
+            columns: ["movimento_id"]
+            isOneToOne: false
+            referencedRelation: "caixa_movimentos"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "caixa_saidas_pedida_por_fkey"
+            columns: ["pedida_por"]
+            isOneToOne: false
+            referencedRelation: "perfis_usuario"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "caixa_saidas_unidade_id_organizacao_id_fkey"
+            columns: ["unidade_id", "organizacao_id"]
+            isOneToOne: false
+            referencedRelation: "unidades"
+            referencedColumns: ["id", "organizacao_id"]
+          },
+        ]
+      }
       caixas: {
         Row: {
           aberto_em: string
@@ -4299,6 +4386,15 @@ export type Database = {
       atividade_encerrar: {
         Args: { p_atividade: string; p_feita: boolean; p_resultado: string }
         Returns: boolean
+      }
+      caixa_cancelar_saida: { Args: { p_saida: string }; Returns: boolean }
+      caixa_decidir_saida: {
+        Args: { p_autorizar: boolean; p_motivo: string; p_saida: string }
+        Returns: string
+      }
+      caixa_pedir_saida: {
+        Args: { p_chave: string; p_motivo: string; p_valor: number }
+        Returns: string
       }
       cancelar_convite: {
         Args: { p_convite: string; p_motivo: string }
