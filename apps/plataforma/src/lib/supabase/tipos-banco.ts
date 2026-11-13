@@ -4535,6 +4535,7 @@ export type Database = {
           unidade_id: string
         }[]
       }
+      equipe_por_papel: { Args: { p_organizacao: string }; Returns: Json }
       estoque_painel: {
         Args: { p_unidade?: string }
         Returns: Json

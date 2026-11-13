@@ -18,13 +18,13 @@
     },
     "ORA-ORG-002": {
       "status": "parcial",
-      "nota": "Vínculos com vigência e várias lojas por pessoa. Tela real /equipe ligada ao banco: convidar, dar loja ou função, encerrar acesso e bloquear, sempre com motivo e auditoria; mudança vale na sessão aberta (testado). Convite vira pessoa no Auth pelo worker (precisa SUPABASE_SECRET_KEY e SMTP). Falta: homologar com pessoas reais. Revisão do Codex (PR #33, trazida em 10/11): em 55d10af apontou #27 a #30 na gestão da equipe e na conclusão de convites; corrigidos no lote 1 (b967870), aguardando a conferência do Codex.",
-      "evidencia": "acesso.test.ts (T1, T2/T3, T7); packages/banco/src/acesso-equipe.test.ts; apps/plataforma/src/app/equipe; apps/worker"
+      "nota": "Vínculos com vigência e várias lojas por pessoa. Tela real /equipe ligada ao banco: convidar, dar loja ou função, encerrar acesso e bloquear, sempre com motivo e auditoria; mudança vale na sessão aberta (testado). Convite vira pessoa no Auth pelo worker (precisa SUPABASE_SECRET_KEY e SMTP). Falta: homologar com pessoas reais. Revisão do Codex (PR #33, trazida em 10/11): em 55d10af apontou #27 a #30 na gestão da equipe e na conclusão de convites; corrigidos no lote 1 (b967870), aguardando a conferência do Codex. G5 (13/11): o /equipe mostra no topo quantas pessoas têm acesso vigente na rede, por papel (quem tem dois papéis conta nos dois) e quantas estão bloqueadas, somadas no banco (equipe_por_papel) só para dono e administrador.",
+      "evidencia": "acesso.test.ts (T1, T2/T3, T7); packages/banco/src/acesso-equipe.test.ts; apps/plataforma/src/app/equipe; apps/worker; packages/banco/supabase/migrations/20261113184205_equipe_por_papel.sql; packages/banco/src/equipe-por-papel.test.ts; apps/plataforma/src/app/equipe/PessoasPorPapel.tsx"
     },
     "ORA-ORG-003": {
       "status": "parcial",
-      "nota": "5 papéis do ADR-002 (dono, administrador, gerente, vendedor, técnico) com matriz versionada por migration. Regional, financeiro, fiscal, marketing e atendimento entram depois por migration.",
-      "evidencia": "migration fundacao_acesso (catálogo de papéis e permissões)"
+      "nota": "5 papéis do ADR-002 (dono, administrador, gerente, vendedor, técnico) com matriz versionada por migration. Regional, financeiro, fiscal, marketing e atendimento entram depois por migration. G5 (13/11): contagem de pessoas por papel no /equipe, com os cinco papéis conhecidos sempre listados (zero também) e papel novo do banco mostrado pelo código.",
+      "evidencia": "migration fundacao_acesso (catálogo de papéis e permissões); packages/banco/supabase/migrations/20261113184205_equipe_por_papel.sql; packages/banco/src/equipe-por-papel.test.ts; apps/plataforma/src/app/equipe/PessoasPorPapel.tsx"
     },
     "ORA-ORG-004": {
       "status": "parcial",
