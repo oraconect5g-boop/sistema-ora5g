@@ -7,7 +7,7 @@ const mocks = vi.hoisted(() => ({ rpc: vi.fn() }));
 vi.mock("../../lib/acesso/sessao", () => ({ obterSessao: async () => ({ supabase: { rpc: mocks.rpc } }) }));
 vi.mock("next/navigation", () => ({ redirect: (url: string) => { throw new Error(`redirect:${url}`); } }));
 
-import { abrirCaixa, aplicarDesconto } from "./acoes";
+import { abrirCaixa, adicionarItem, aplicarDesconto } from "./acoes";
 
 beforeEach(() => {
   mocks.rpc.mockReset();
@@ -45,5 +45,19 @@ describe("desconto", () => {
   it.each(["abc", "", "-2"])("%j não apaga o desconto atual: volta com erro, sem chamar o banco", async (texto) => {
     await expect(aplicarDesconto(formulario({ item, desconto: texto }))).rejects.toThrow("redirect:/vender?erro=valor");
     expect(mocks.rpc).not.toHaveBeenCalled();
+  });
+});
+
+// L12c/L12d: o conserto da OS e a peça da assistência só saem pela ordem de serviço; o PDV diz isso com a mensagem própria.
+describe("item que só sai pela ordem de serviço", () => {
+  const venda = "82000000-0000-4000-8000-000000000002";
+  const variante = "82000000-0000-4000-8000-000000000003";
+  it("a recusa do banco vira a mensagem própria; outro 22023 continua genérico", async () => {
+    mocks.rpc.mockResolvedValue({ data: null, error: { code: "22023", message: "Peça da assistência não se vende: ela só sai do estoque pela ordem de serviço" } });
+    await expect(adicionarItem(formulario({ venda, variante, quantidade: "1" }))).rejects.toThrow("redirect:/vender?erro=so_pela_os");
+    mocks.rpc.mockResolvedValue({ data: null, error: { code: "22023", message: "O conserto só entra na venda pela ordem de serviço" } });
+    await expect(adicionarItem(formulario({ venda, variante, quantidade: "1" }))).rejects.toThrow("redirect:/vender?erro=so_pela_os");
+    mocks.rpc.mockResolvedValue({ data: null, error: { code: "22023", message: "Quantidade inválida" } });
+    await expect(adicionarItem(formulario({ venda, variante, quantidade: "1" }))).rejects.toThrow("redirect:/vender?erro=dados");
   });
 });

@@ -8,8 +8,8 @@ import { redirect } from "next/navigation";
 import { ehUuid } from "../../lib/acesso/regras";
 import { obterSessao } from "../../lib/acesso/sessao";
 import {
-  ehCanal, erroDaOs, ehPasso, lerAbertura, lerOrcamento, linkDoWhatsApp, mensagemDoAviso, tipoDaImagem, type AvisoDaOs, type EntregaDoAviso, type ErroDaOs,
-  type OrcamentoDoAviso,
+  ehCanal, erroDaOs, ehPasso, lerAbertura, lerOrcamento, lerPeca, linkDoWhatsApp, mensagemDoAviso, skuExato, tipoDaImagem, type AvisoDaOs, type EntregaDoAviso,
+  type ErroDaOs, type OrcamentoDoAviso,
 } from "../../lib/assistencia/regras";
 
 // Ações da assistência (lote L12a). Cada uma chama a função do banco como a pessoa logada; o banco confere a loja do
@@ -186,4 +186,40 @@ export async function entregarOrdem(dados: FormData) {
   if (error) redirect(`/assistencia/${os}?erro=${erroDaOs(error)}`);
   revalidatePath("/assistencia");
   redirect(`/assistencia/${os}?ok=${data ? "entregue" : "sem_mudanca"}`);
+}
+
+// ---------------------------------------------------------------------------------------------
+// Peças (L12d): o técnico (ou a gerência em nome dele) registra a peça usada pelo SKU; a que sobrou volta ao estoque
+// ---------------------------------------------------------------------------------------------
+export async function usarPeca(dados: FormData) {
+  const os = dados.get("os");
+  if (!ehUuid(os)) redirect("/assistencia");
+  const lido = lerPeca(dados);
+  if (!lido.ok) redirect(`/assistencia/${os}?erro=${lido.erro}`);
+  const { sku, quantidade, observacao, chave } = lido as Extract<typeof lido, { ok: true }>;
+  const { supabase } = await obterSessao({ exigirLoja: true });
+  // O SKU é único na rede sem diferença de maiúsculas (índice do catálogo); o catálogo é lido por quem é da rede.
+  const variantes = await supabase.from("variantes").select("id").ilike("sku", skuExato(sku)).limit(2);
+  if (variantes.error) redirect(`/assistencia/${os}?erro=falha`);
+  if (variantes.data?.length !== 1) redirect(`/assistencia/${os}?erro=peca_nao_encontrada`);
+  const { error } = await supabase.rpc("os_usar_peca", {
+    p_os: os, p_variante: variantes.data![0]!.id, p_quantidade: quantidade, p_observacao: (observacao ?? null) as string, p_chave: chave,
+  });
+  if (error) redirect(`/assistencia/${os}?erro=${erroDaOs(error)}`);
+  revalidatePath(`/assistencia/${os}`);
+  redirect(`/assistencia/${os}?ok=peca_usada`);
+}
+
+export async function devolverPeca(dados: FormData) {
+  const os = dados.get("os");
+  const peca = dados.get("peca");
+  if (!ehUuid(os)) redirect("/assistencia");
+  if (!ehUuid(peca)) redirect(`/assistencia/${os}?erro=dados`);
+  const motivo = textoDo(dados.get("motivo"));
+  if (motivo.length < 3 || motivo.length > 200) redirect(`/assistencia/${os}?erro=motivo`);
+  const { supabase } = await obterSessao({ exigirLoja: true });
+  const { data, error } = await supabase.rpc("os_devolver_peca", { p_peca: peca as string, p_motivo: motivo });
+  if (error) redirect(`/assistencia/${os}?erro=${erroDaOs(error)}`);
+  revalidatePath(`/assistencia/${os}`);
+  redirect(`/assistencia/${os}?ok=${data ? "peca_devolvida" : "sem_mudanca"}`);
 }

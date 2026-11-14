@@ -53,7 +53,7 @@ const sessaoFicticia = {
 };
 vi.mock("../../lib/acesso/sessao", () => ({ FalhaDoServico: class extends Error {}, obterSessao: async () => sessaoFicticia }));
 
-import { definirPolitica, salvarCategoria, salvarProduto, salvarVariante } from "./acoes";
+import { definirPecaDeAssistencia, definirPolitica, salvarCategoria, salvarProduto, salvarVariante } from "./acoes";
 import Produtos from "./page";
 
 function texto(v: unknown): string {
@@ -85,8 +85,8 @@ beforeEach(() => {
   cenario.tabelas = {
     unidades: [{ id: LOJA, organizacao_id: ORG }],
     categorias: [
-      { id: CATEGORIA, nome: "Celulares (teste)", ativa: true, desconto_teto_pb: 1000, margem_minima_pb: 750 },
-      { id: INATIVA, nome: "Antiga (teste)", ativa: false, desconto_teto_pb: null, margem_minima_pb: null },
+      { id: CATEGORIA, nome: "Celulares (teste)", ativa: true, desconto_teto_pb: 1000, margem_minima_pb: 750, peca_de_assistencia: false },
+      { id: INATIVA, nome: "Antiga (teste)", ativa: false, desconto_teto_pb: null, margem_minima_pb: null, peca_de_assistencia: true },
     ],
     marcas: [{ id: MARCA, nome: "Marca Teste" }],
     produtos: [{ id: PRODUTO, nome: "Galaxy Teste", tipo: "aparelho", categoria_id: CATEGORIA, marca_id: MARCA, modelo: "SM-T", descricao: null, publicar_online: false, ativo: true }],
@@ -143,5 +143,29 @@ describe("ações do cadastro", () => {
     cenario.respostas.catalogo_definir_politica_desconto = { data: true, error: null };
     expect(await destinoDe(definirPolitica(formulario({ categoria: CATEGORIA, teto: "12,5", margem: "8", motivo: "Política do dono" })))).toBe("/produtos?ok=politica_alterada#categorias");
     expect(cenario.chamadas[1]?.argumentos).toEqual({ p_categoria: CATEGORIA, p_teto_pb: 1250, p_margem_minima_pb: 800, p_motivo: "Política do dono" });
+  });
+});
+
+describe("peças da assistência no catálogo (L12d)", () => {
+  it("a categoria de peças aparece marcada, com o botão para desmarcar; as outras, com o botão para marcar", async () => {
+    cenario.permissoes = new Set(["catalogo.gerir"]);
+    const t = await tela();
+    expect(t).toContain("peças da assistência");
+    expect(t).toContain("Deixar de ser peça da assistência");
+    expect(t).toContain("Marcar como peça da assistência");
+  });
+
+  it("a ação manda a organização, a categoria, sim ou não e o motivo; o erro do banco vira a mensagem do cadastro", async () => {
+    cenario.respostas.catalogo_definir_peca_de_assistencia = { data: true, error: null };
+    expect(await destinoDe(definirPecaDeAssistencia(formulario({ categoria: CATEGORIA, peca: "sim", motivo: "Peças usadas pelo técnico" })))).toBe("/produtos?ok=peca_alterada#categorias");
+    expect(cenario.chamadas.at(-1)).toEqual({ nome: "catalogo_definir_peca_de_assistencia", argumentos: { p_organizacao: ORG, p_categoria: CATEGORIA, p_peca: true, p_motivo: "Peças usadas pelo técnico" } });
+    cenario.chamadas = [];
+    expect(await destinoDe(definirPecaDeAssistencia(formulario({ categoria: CATEGORIA, peca: "talvez", motivo: "Motivo" })))).toBe("/produtos?erro=dados#categorias");
+    expect(await destinoDe(definirPecaDeAssistencia(formulario({ categoria: CATEGORIA, peca: "nao", motivo: "x" })))).toBe("/produtos?erro=motivo#categorias");
+    expect(cenario.chamadas).toEqual([]);
+    cenario.respostas.catalogo_definir_peca_de_assistencia = { data: null, error: { code: "22023", message: "Peça da assistência é controlada por quantidade: a categoria tem aparelho, chip ou serviço ativo" } };
+    expect(await destinoDe(definirPecaDeAssistencia(formulario({ categoria: CATEGORIA, peca: "sim", motivo: "Peças" })))).toBe("/produtos?erro=peca_categoria#categorias");
+    cenario.respostas.catalogo_definir_peca_de_assistencia = { data: false, error: null };
+    expect(await destinoDe(definirPecaDeAssistencia(formulario({ categoria: CATEGORIA, peca: "nao", motivo: "Peças" })))).toBe("/produtos?ok=sem_mudanca#categorias");
   });
 });

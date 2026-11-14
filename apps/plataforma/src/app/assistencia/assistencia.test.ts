@@ -43,6 +43,11 @@ class Consulta {
   order() { return this; }
   range() { return this; }
   limit() { return this; }
+  ilike(coluna: string, padrao: string) {
+    const exato = padrao.replace(/\\(.)/g, "$1").toLowerCase();
+    this.linhas = this.linhas.filter((l) => String(l[coluna] ?? "").toLowerCase() === exato);
+    return this;
+  }
   maybeSingle() { return Promise.resolve(this.erro ? { data: null, error: this.erro } : { data: this.linhas[0] ?? null, error: null }); }
   then(resolver: (r: { data: Linha[] | null; error: { code: string } | null; count: number | null }) => unknown) {
     return Promise.resolve(this.erro ? { data: null, error: this.erro, count: null } : { data: this.linhas, error: null, count: this.linhas.length }).then(resolver);
@@ -72,12 +77,14 @@ vi.mock("../../lib/acesso/sessao", () => ({
 }));
 vi.mock("../../lib/supabase/configuracao", () => ({ configuracaoSupabase: () => ({ url: "https://projeto.supabase.co", chavePublica: "sb_publishable_teste" }) }));
 
-import { abrirOrdem, avisarPeloWhatsApp, cobrarNoPdv, concluirServico, entregarOrdem, orcarOrdem, passoDaOrdem, registrarFotoDaOs, responderOrcamento } from "./acoes";
+import {
+  abrirOrdem, avisarPeloWhatsApp, cobrarNoPdv, concluirServico, devolverPeca, entregarOrdem, orcarOrdem, passoDaOrdem, registrarFotoDaOs, responderOrcamento, usarPeca,
+} from "./acoes";
 import Detalhe from "./[id]/page";
 import NovaOrdem from "./nova/page";
 import Lista from "./page";
 
-const EXECUTAR = new Set(["EstadoDoPainel", "ProximosPassos", "FormularioDoPasso", "FiltroSegmentado", "ListaDados", "CartaoDoOrcamento", "CartaoDaCobranca"]);
+const EXECUTAR = new Set(["EstadoDoPainel", "ProximosPassos", "FormularioDoPasso", "FiltroSegmentado", "ListaDados", "CartaoDoOrcamento", "CartaoDaCobranca", "CartaoDasPecas"]);
 function texto(v: unknown): string {
   const pedacos: string[] = [];
   const andar = (x: unknown): void => {
@@ -429,5 +436,78 @@ describe("cobrança no PDV e entrega (L12c)", () => {
     expect(mensagem).toContain("da ordem de serviço nº 42, foi entregue em 14/11/2026 na loja Santa Cândida (teste).");
     expect(mensagem).toContain("Conserto pago na venda nº 77.");
     expect(cenario.chamadas.at(-1)).toEqual({ nome: "os_contato_whatsapp", argumentos: { p_os: OS, p_aviso: "entrega" } });
+  });
+});
+
+describe("peças da assistência na OS (L12d)", () => {
+  const TELA = "00000000-0000-4000-8000-00000000e401";
+  const PECA = "00000000-0000-4000-8000-00000000e402";
+  const CHAVE = "00000000-0000-4000-8000-00000000f401";
+  const tela = async () => texto(await Detalhe({ params: Promise.resolve({ id: OS }), searchParams: Promise.resolve({}) }) as ReactElement);
+  const peca = (extra: Linha = {}) => ({
+    id: PECA, os_id: OS, variante_id: TELA, quantidade: 1, em_nome_do_tecnico: false, observacao: null, registrado_por: EU, registrado_em: "2026-11-14T15:30:00Z",
+    devolvida_em: null, devolvida_por: null, motivo_devolucao: null, ...extra,
+  });
+  const comOTecnico = () => {
+    cenario.tabelas.ordens_servico = [os({ local: "com_tecnico", assistencia_id: ASSISTENCIA, servico: "aprovado" })];
+    cenario.tabelas.os_pecas = [peca()];
+    cenario.tabelas.variantes = [{ id: TELA, sku: "PEC-TELA-A15", nome: "Tela A15 original" }];
+  };
+
+  it("o técnico registra e devolve a peça; a gerência em nome dele; a loja só vê; banco sem as peças, o cartão some", async () => {
+    comOTecnico();
+    cenario.unidade = ASSISTENCIA;
+    cenario.permissoes = new Set(["os.orcar"]);
+    let t = await tela();
+    for (const trecho of ["Peças do estoque", "1 × Tela A15 original", "PEC-TELA-A15", "Registrar peça usada", "Registrar a peça", "Devolver ao estoque (não foi usada)"]) {
+      expect(t, trecho).toContain(trecho);
+    }
+    expect(t).not.toContain("em nome do técnico");
+    cenario.unidade = LOJA;
+    cenario.permissoes = new Set(["os.abrir", "os.gerir"]);
+    t = await tela();
+    expect(t).toContain("Registrar a peça (em nome do técnico)");
+    expect(t).toContain("Como o técnico passou");
+    cenario.permissoes = new Set(["os.abrir"]);
+    t = await tela();
+    expect(t).toContain("1 × Tela A15 original");
+    expect(t).not.toContain("Registrar peça usada");
+    expect(t).not.toContain("Devolver ao estoque");
+    // Devolvida: aparece marcada, sem o botão.
+    cenario.tabelas.os_pecas = [peca({ devolvida_em: "2026-11-14T16:00:00Z", devolvida_por: EU, motivo_devolucao: "Não precisou" })];
+    cenario.permissoes = new Set(["os.abrir", "os.gerir"]);
+    t = await tela();
+    expect(t).toContain("devolvida ao estoque");
+    expect(t).toContain("Não precisou");
+    expect(t).not.toContain("Devolver ao estoque (não foi usada)");
+    cenario.erros = { os_pecas: { code: "PGRST205" } };
+    t = await tela();
+    expect(t).toContain("OS nº 42");
+    expect(t).not.toContain("Peças do estoque");
+  });
+
+  it("as ações: a peça pelo SKU (sem diferença de maiúsculas), a quantidade e os erros do banco; a devolução com o motivo", async () => {
+    cenario.tabelas.variantes = [{ id: TELA, sku: "PEC-TELA-A15" }];
+    cenario.respostas.os_usar_peca = { data: { id: PECA, repetida: false }, error: null };
+    expect(await destinoDe(usarPeca(formulario({ os: OS, chave: CHAVE, sku: " pec-tela-a15 ", quantidade: "2", observacao: "" })))).toBe(`/assistencia/${OS}?ok=peca_usada`);
+    expect(cenario.chamadas.at(-1)).toEqual({ nome: "os_usar_peca", argumentos: { p_os: OS, p_variante: TELA, p_quantidade: 2, p_observacao: null, p_chave: CHAVE } });
+    cenario.chamadas = [];
+    expect(await destinoDe(usarPeca(formulario({ os: OS, chave: CHAVE, sku: "OUTRA" })))).toBe(`/assistencia/${OS}?erro=peca_nao_encontrada`);
+    expect(await destinoDe(usarPeca(formulario({ os: OS, chave: CHAVE, sku: "PEC-TELA-A15", quantidade: "21" })))).toBe(`/assistencia/${OS}?erro=peca_quantidade`);
+    expect(await destinoDe(usarPeca(formulario({ os: OS, chave: "x", sku: "PEC-TELA-A15" })))).toBe(`/assistencia/${OS}?erro=dados`);
+    expect(cenario.chamadas).toEqual([]);
+    cenario.respostas.os_usar_peca = { data: null, error: { code: "OR001", message: "Sem saldo desta peça no estoque da assistência" } };
+    expect(await destinoDe(usarPeca(formulario({ os: OS, chave: CHAVE, sku: "PEC-TELA-A15" })))).toBe(`/assistencia/${OS}?erro=peca_sem_saldo`);
+    cenario.respostas.os_usar_peca = { data: null, error: { code: "42501", message: "A peça é registrada pelo técnico (ou pela gerência da loja, em nome dele)" } };
+    expect(await destinoDe(usarPeca(formulario({ os: OS, chave: CHAVE, sku: "PEC-TELA-A15" })))).toBe(`/assistencia/${OS}?erro=sem_permissao`);
+
+    cenario.respostas.os_devolver_peca = { data: true, error: null };
+    expect(await destinoDe(devolverPeca(formulario({ os: OS, peca: PECA, motivo: "Não precisou trocar" })))).toBe(`/assistencia/${OS}?ok=peca_devolvida`);
+    expect(cenario.chamadas.at(-1)).toEqual({ nome: "os_devolver_peca", argumentos: { p_peca: PECA, p_motivo: "Não precisou trocar" } });
+    cenario.respostas.os_devolver_peca = { data: false, error: null };
+    expect(await destinoDe(devolverPeca(formulario({ os: OS, peca: PECA, motivo: "Não precisou trocar" })))).toBe(`/assistencia/${OS}?ok=sem_mudanca`);
+    expect(await destinoDe(devolverPeca(formulario({ os: OS, peca: PECA, motivo: "x" })))).toBe(`/assistencia/${OS}?erro=motivo`);
+    cenario.respostas.os_devolver_peca = { data: null, error: { code: "22023", message: "A ordem de serviço já foi encerrada: a peça volta pelo inventário" } };
+    expect(await destinoDe(devolverPeca(formulario({ os: OS, peca: PECA, motivo: "Sobrou" })))).toBe(`/assistencia/${OS}?erro=encerrada`);
   });
 });

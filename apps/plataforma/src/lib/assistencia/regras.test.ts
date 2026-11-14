@@ -3,7 +3,7 @@
 import { describe, expect, it } from "vitest";
 
 import {
-  atrasada, caminhoDaFotoDaOs, diasEntre, erroDaOs, finalDoImei, lerAbertura, lerOrcamento, linkDoWhatsApp, mensagemDoAviso, somarDias, tipoDaImagem,
+  atrasada, caminhoDaFotoDaOs, diasEntre, erroDaOs, finalDoImei, lerAbertura, lerOrcamento, lerPeca, linkDoWhatsApp, mensagemDoAviso, skuExato, somarDias, tipoDaImagem,
 } from "./regras";
 
 const CLIENTE = "00000000-0000-4000-8000-0000000000c1";
@@ -150,5 +150,34 @@ describe("cobrança no PDV e entrega (L12c)", () => {
     expect(m).toBe("Olá, Carla! Seu aparelho Galaxy A15 (IMEI final 1481), da ordem de serviço nº 42, foi entregue em 14/11/2026 na loja Santa Cândida.\n"
       + "Conserto pago na venda nº 77.\nGuarde esta mensagem como comprovante da entrega. Ora 5G.");
     expect(mensagemDoAviso("entrega", os, "Santa Cândida")).not.toContain("venda nº");
+  });
+});
+
+describe("peças da OS (L12d)", () => {
+  it("lê o SKU (sem espaços), a quantidade (1 por padrão, até 20) e a observação; recusa o que não confere", () => {
+    expect(lerPeca(formulario({ chave: CHAVE, sku: " PEC TELA ", quantidade: "", observacao: "  Técnico  mandou foto " })))
+      .toEqual({ ok: true, chave: CHAVE, sku: "PECTELA", quantidade: 1, observacao: "Técnico mandou foto" });
+    expect(lerPeca(formulario({ chave: CHAVE, sku: "PEC", quantidade: "21" }))).toEqual({ ok: false, erro: "peca_quantidade" });
+    expect(lerPeca(formulario({ chave: CHAVE, sku: "PEC", quantidade: "1,5" }))).toEqual({ ok: false, erro: "peca_quantidade" });
+    expect(lerPeca(formulario({ chave: CHAVE, sku: "" }))).toEqual({ ok: false, erro: "peca_nao_encontrada" });
+    expect(lerPeca(formulario({ chave: "x", sku: "PEC" }))).toEqual({ ok: false, erro: "dados" });
+    expect(lerPeca(formulario({ chave: CHAVE, sku: "PEC", observacao: "x" }))).toEqual({ ok: false, erro: "dados" });
+  });
+  it("o SKU vira padrão exato do ilike: % e _ não são curingas", () => {
+    expect(skuExato("PEC_10%")).toBe("PEC\\_10\\%");
+    expect(skuExato("PEC-TELA")).toBe("PEC-TELA");
+  });
+  it("os erros do banco das peças viram a mensagem da tela (antes das regras do orçamento)", () => {
+    expect(erroDaOs({ code: "OR001", message: "Sem saldo desta peça no estoque da assistência" })).toBe("peca_sem_saldo");
+    expect(erroDaOs({ code: "P0002", message: "Peça não encontrada no catálogo" })).toBe("peca_nao_encontrada");
+    expect(erroDaOs({ code: "P0002", message: "Ordem de serviço não encontrada" })).toBe("nao_encontrada");
+    for (const [mensagem, chave] of [
+      ["Só peça controlada por quantidade sai pela OS (aparelho e chip saem pelo IMEI/ICCID)", "peca_tipo"], ["Quantidade da peça: de 1 a 20", "peca_quantidade"],
+      ["A peça é usada depois da aprovação do cliente registrada", "peca_aprovacao"], ["A peça é registrada com o aparelho com o técnico", "peca_local"],
+      ["Em nome do técnico, diga como ele passou a peça usada (mensagem, ligação)", "em_nome"],
+      ["A ordem de serviço já foi encerrada: a peça volta pelo inventário", "encerrada"], ["Peça inválida: descrição, quantidade e valor de cada uma", "peca"],
+    ] as const) {
+      expect(erroDaOs({ code: "22023", message: mensagem }), mensagem).toBe(chave);
+    }
   });
 });

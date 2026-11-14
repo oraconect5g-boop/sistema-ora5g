@@ -587,3 +587,123 @@ describe("cobrança no PDV e entrega (L12c, ORA-OS-006 e ORA-OS-005)", () => {
     expect(await codigo(ana, "update public.ordens_servico set venda_id = $2 where id = $1", [id, venda])).toBe("42501");
   });
 });
+
+// -------------------------------------------------------------------------------------------------
+// Lote L12d (ORA-OS-006 em parte): peças do estoque da assistência ligadas à OS
+// -------------------------------------------------------------------------------------------------
+const USAR = "select public.os_usar_peca($1, $2, $3, $4, $5) as v";
+const DEVOLVER_PECA = "select public.os_devolver_peca($1, $2) as v";
+const PECA_DA_CATEGORIA = "select public.catalogo_definir_peca_de_assistencia($1, $2, $3, $4) as v";
+const saldo = async (unidade: string, variante: string) =>
+  Number((await db.query<{ q: number }>("select coalesce(sum(quantidade), 0)::int as q from public.estoque_saldos where unidade_id = $1 and variante_id = $2", [unidade, variante])).rows[0]?.q ?? 0);
+// Uma categoria de peças com a tela do A15 (5 no estoque da assistência e com preço na loja A, para provar que o PDV recusa
+// a peça pela categoria, não pela falta de preço).
+async function pecaNaAssistencia() {
+  const categoria = randomUUID(), produto = randomUUID(), tela = randomUUID();
+  await db.query("insert into public.categorias (id, organizacao_id, nome) values ($1, $2, 'Peças de reposição')", [categoria, ids.organizacao]);
+  await db.query("insert into public.produtos (id, organizacao_id, tipo, nome, categoria_id) values ($1, $2, 'acessorio', 'Tela A15', $3)", [produto, ids.organizacao, categoria]);
+  await db.query("insert into public.variantes (id, organizacao_id, produto_id, sku, nome) values ($1, $2, $3, 'PEC-TELA-A15', 'Tela A15 original')", [tela, ids.organizacao, produto]);
+  await db.query("select privado.lancar_movimento($1, $2, 5, 'entrada_compra', null, null, null, null, $3)", [ids.assistencia, tela, chave("entrada")]);
+  await db.query("insert into public.precos (organizacao_id, variante_id, valor_centavos, origem) values ($1, $2, 20_000, 'manual')", [ids.organizacao, tela]);
+  return { categoria, tela };
+}
+// A OS com o conserto aprovado e o aparelho com o técnico.
+async function aprovadaComOTecnico(ana: Sessao, telefone?: string) {
+  const { id, tecnico } = await comOTecnico(ana, telefone);
+  const o = await valor<{ id: string }>(tecnico, ORCAR, [id, JSON.stringify(orcamento()), chave()]);
+  await valor(ana, RESPONDER, [o.id, "aprovado", "loja", null]);
+  return { id, tecnico };
+}
+
+describe("peças da assistência ligadas à OS (L12d, ORA-OS-006)", () => {
+  it("o técnico usa a peça: sai do estoque da assistência com a OS como referência; a mesma chave não baixa duas vezes; a devolução volta uma vez", async () => {
+    const { tela } = await pecaNaAssistencia();
+    const ana = await naLoja(ids.vendedorA, ids.lojaA);
+    const { id, tecnico } = await aprovadaComOTecnico(ana);
+    const k = chave("peca");
+    const usada = await valor<{ id: string; repetida: boolean }>(tecnico, USAR, [id, tela, 2, null, k]);
+    expect(usada.repetida).toBe(false);
+    expect(await valor(tecnico, USAR, [id, tela, 2, null, k])).toEqual({ ...usada, repetida: true });
+    expect(await codigo(tecnico, USAR, [id, tela, 3, null, k])).toBe("OR004");
+    expect(await saldo(ids.assistencia, tela)).toBe(3);
+    expect((await db.query("select tipo, quantidade, referencia_tipo, referencia_id from public.estoque_movimentos where variante_id = $1 and unidade_id = $2 order by id", [tela, ids.assistencia])).rows)
+      .toEqual([{ tipo: "entrada_compra", quantidade: 5, referencia_tipo: null, referencia_id: null }, { tipo: "consumo_os", quantidade: -2, referencia_tipo: "os", referencia_id: id }]);
+    expect((await eventos(id)).at(-1)).toMatchObject({ tipo: "peca_usada", em_nome: false, observacao: "2 × Tela A15 original" });
+    // Sem saldo: recusada, nada sai.
+    expect(await codigo(tecnico, USAR, [id, tela, 4, null, chave("peca")])).toBe("OR001");
+    expect(await saldo(ids.assistencia, tela)).toBe(3);
+    // A gerência da loja registra em nome do técnico, dizendo como ele passou.
+    const dono = await naLoja(ids.dono, ids.lojaA);
+    expect(await codigo(dono, USAR, [id, tela, 1, null, chave("peca")])).toBe("22023");
+    const emNome = await valor<{ id: string }>(dono, USAR, [id, tela, 1, "Técnico mandou foto da peça", chave("peca")]);
+    expect(await saldo(ids.assistencia, tela)).toBe(2);
+    // A peça que não foi usada volta, uma vez, com o motivo; a trilha guarda.
+    expect(await codigo(tecnico, DEVOLVER_PECA, [emNome.id, null])).toBe("22023");
+    expect(await valor(tecnico, DEVOLVER_PECA, [emNome.id, "Não precisou trocar"])).toBe(true);
+    expect(await valor(tecnico, DEVOLVER_PECA, [emNome.id, "Não precisou trocar"])).toBe(false);
+    expect(await saldo(ids.assistencia, tela)).toBe(3);
+    expect((await db.query("select devolvida_em is not null as d, motivo_devolucao from public.os_pecas where id = $1", [emNome.id])).rows[0]).toEqual({ d: true, motivo_devolucao: "Não precisou trocar" });
+    expect((await eventos(id)).at(-1)).toMatchObject({ tipo: "peca_devolvida", observacao: "1 × Tela A15 original: Não precisou trocar" });
+    // Depois do conserto concluído e do aparelho de volta na loja, peça nova não entra; a usada não volta pela OS encerrada.
+    await valor(tecnico, CONCLUIR, [id, "Tela trocada"]);
+    await valor(tecnico, PASSO, [id, "tecnico_devolveu", null, null]);
+    expect(await codigo(tecnico, USAR, [id, tela, 1, null, chave("peca")])).toBe("22023");
+    await valor(ana, PASSO, [id, "loja_recebeu", null, null]);
+    await valor(await naLoja(ids.dono, ids.lojaA), PASSO, [id, "devolver_ao_cliente", null, "Garantia de outro conserto"]);
+    expect(await codigo(tecnico, DEVOLVER_PECA, [usada.id, "Sobrou"])).toBe("22023");
+  });
+
+  it("recusas: o vendedor e a outra loja não registram peça; sem aprovação; quantidade; aparelho ou serviço não saem como peça", async () => {
+    const { tela } = await pecaNaAssistencia();
+    const ana = await naLoja(ids.vendedorA, ids.lojaA);
+    const { id: semAprovacao, tecnico } = await comOTecnico(ana);
+    expect(await codigo(tecnico, USAR, [semAprovacao, tela, 1, null, chave("peca")])).toBe("22023");
+    const { id } = await aprovadaComOTecnico(ana, "41987650021");
+    expect(await codigo(ana, USAR, [id, tela, 1, null, chave("peca")])).toBe("42501");
+    expect(await codigo(await naLoja(ids.vendedorAB, ids.lojaB), USAR, [id, tela, 1, null, chave("peca")])).toBe("P0002");
+    for (const quantidade of [0, 21]) expect(await codigo(tecnico, USAR, [id, tela, quantidade, null, chave("peca")]), String(quantidade)).toBe("22023");
+    expect(await codigo(tecnico, USAR, [id, cat.aparelho, 1, null, chave("peca")])).toBe("22023");
+    expect(await codigo(tecnico, USAR, [id, cat.recarga, 1, null, chave("peca")])).toBe("22023");
+    expect(await codigo(tecnico, USAR, [id, randomUUID(), 1, null, chave("peca")])).toBe("P0002");
+    expect(await codigo(tecnico, USAR, [id, tela, 1, null, "curta"])).toBe("22023");
+    const usada = await valor<{ id: string }>(tecnico, USAR, [id, tela, 1, null, chave("peca")]);
+    expect(await codigo(ana, DEVOLVER_PECA, [usada.id, "Tentativa"])).toBe("42501");
+    expect(await codigo(tecnico, DEVOLVER_PECA, [randomUUID(), "Tentativa"])).toBe("P0002");
+    // O registro não muda nem se apaga direto, nem pelo dono do banco; o livro de estoque também não.
+    const direto = async (sql: string, params: unknown[]) => {
+      await db.exec("savepoint direto");
+      try { await db.query(sql, params); return null; } catch (e) { return (e as { code?: string }).code ?? "erro"; } finally { await db.exec("rollback to savepoint direto"); }
+    };
+    expect(await direto("update public.os_pecas set quantidade = 5 where id = $1", [usada.id])).toBe("42501");
+    expect(await direto("delete from public.os_pecas where id = $1", [usada.id])).not.toBeNull();
+    expect(await codigo(tecnico, "update public.os_pecas set quantidade = 5 where id = $1", [usada.id])).toBe("42501");
+    // O movimento da OS precisa da OS como referência.
+    expect(await direto("select privado.lancar_movimento($1, $2, -1, 'consumo_os', null, null, null, null, 'sem:referencia')", [ids.assistencia, tela])).toBe("23514");
+  });
+
+  it("a categoria de peças: marcada por quem cadastra o catálogo; a peça não entra no carrinho; categoria com aparelho não vira peça; quem vê", async () => {
+    const { categoria, tela } = await pecaNaAssistencia();
+    await db.query("select privado.lancar_movimento($1, $2, 2, 'entrada_compra', null, null, null, null, $3)", [ids.lojaA, tela, chave("entrada")]);
+    const dono = await naLoja(ids.dono, ids.lojaA);
+    const ana = await comCaixa(await naLoja(ids.vendedorA, ids.lojaA));
+    expect(await codigo(ana, PECA_DA_CATEGORIA, [ids.organizacao, categoria, true, "Peças de reposição"])).toBe("42501");
+    expect(await codigo(dono, PECA_DA_CATEGORIA, [ids.organizacao, categoria, true, null])).toBe("22023");
+    expect(await codigo(dono, PECA_DA_CATEGORIA, [ids.organizacao, categoria, null, "Motivo"])).toBe("22023");
+    expect(await codigo(dono, PECA_DA_CATEGORIA, [ids.organizacao, randomUUID(), true, "Motivo"])).toBe("P0002");
+    expect(await codigo(dono, PECA_DA_CATEGORIA, [ids.organizacao, cat.celulares, true, "Celular não é peça"])).toBe("22023");
+    // Antes de marcar, a tela entra no carrinho como qualquer acessório com preço.
+    const venda = await valor<string>(ana, NOVA_VENDA, [chave("venda")]);
+    expect(await codigo(ana, "select public.adicionar_item($1, $2, null, 1, $3) as v", [venda, tela, chave("item")])).toBeNull();
+    expect(await valor(dono, PECA_DA_CATEGORIA, [ids.organizacao, categoria, true, "Peças de reposição da assistência"])).toBe(true);
+    expect(await valor(dono, PECA_DA_CATEGORIA, [ids.organizacao, categoria, true, "Peças de reposição da assistência"])).toBe(false);
+    const recusa = await tentar(ana, "select public.adicionar_item($1, $2, null, 1, $3) as v", [venda, tela, chave("item")]);
+    expect(recusa).toMatchObject({ codigo: "22023" });
+    expect("mensagem" in recusa ? recusa.mensagem : "").toContain("pela ordem de serviço");
+    // Quem vê as peças usadas: quem lê a OS (a loja, o técnico); a outra loja não.
+    const { id, tecnico } = await aprovadaComOTecnico(ana, "41987650031");
+    const usada = await valor<{ id: string }>(tecnico, USAR, [id, tela, 1, null, chave("peca")]);
+    expect((await comoLinhas(ana, "select id from public.os_pecas")).map((l) => l.id)).toEqual([usada.id]);
+    expect((await comoLinhas(tecnico, "select id from public.os_pecas")).map((l) => l.id)).toEqual([usada.id]);
+    expect(await comoLinhas(await naLoja(ids.vendedorAB, ids.lojaB), "select id from public.os_pecas")).toEqual([]);
+  });
+});

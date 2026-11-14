@@ -11,7 +11,7 @@ import { termoDaBusca, buscarNoCatalogo } from "../../lib/catalogo/busca";
 import { ERROS_DO_CADASTRO, TEM_ESTOQUE, TIPOS_DE_PRODUTO, ehTipoDeProduto, percentualDosPontosBase } from "../../lib/catalogo/cadastro";
 import { lerPorIds } from "../../lib/leitura-completa";
 import { chaveDoCatalogo, textoDoParametro, type ValorDeParametro } from "../../lib/parametros";
-import { definirPolitica, salvarCategoria, salvarMarca, salvarProduto, salvarVariante } from "./acoes";
+import { definirPecaDeAssistencia, definirPolitica, salvarCategoria, salvarMarca, salvarProduto, salvarVariante } from "./acoes";
 
 export const metadata: Metadata = { title: "Cadastro de produtos" };
 export const dynamic = "force-dynamic";
@@ -22,6 +22,7 @@ const OK = {
   marca_criada: "Marca cadastrada.",
   marca_alterada: "Marca atualizada.",
   politica_alterada: "Política de desconto da categoria gravada. Vale nas próximas vendas.",
+  peca_alterada: "Categoria atualizada: peça da assistência não entra em venda e só sai do estoque pela ordem de serviço.",
   produto_criado: "Produto cadastrado. Agora cadastre a primeira variação (SKU) dele.",
   produto_repetido: "Este produto já tinha sido cadastrado por este formulário: nada foi duplicado.",
   produto_alterado: "Produto atualizado.",
@@ -97,6 +98,9 @@ export default async function Produtos({ searchParams }: {
       : (achados ? filtrada.in("id", achados.produtos).order("nome") : filtrada.order("criado_em", { ascending: false })).limit(LIMITE),
   ]);
   if (categorias.error || marcas.error || produtos.error) throw new FalhaDoServico("produtos");
+  // L12d: as categorias de peças da assistência, lidas à parte (num banco sem a migration, o bloco não aparece).
+  const marcadas = await supabase.from("categorias").select("id, peca_de_assistencia");
+  const pecas = marcadas.error ? null : new Set((marcadas.data as { id: string; peca_de_assistencia: boolean }[]).filter((c) => c.peca_de_assistencia).map((c) => c.id));
   const lista = produtos.data as Produto[];
   // B5 (REV-PLAN-003): as variações dos produtos da página vêm completas, lote a lote e página a página.
   const lidas = await lerPorIds(lista.map((p) => p.id), (lote, de, ate) => supabase.from("variantes")
@@ -243,7 +247,7 @@ export default async function Produtos({ searchParams }: {
           <ul className="divide-y divide-borda">
             {cats.map((c) => (
               <li key={c.id} className="space-y-1 py-2 text-sm">
-                <p className="flex flex-wrap items-center gap-2"><strong>{c.nome}</strong>{!c.ativa && <Selo tom="neutro">inativa</Selo>}
+                <p className="flex flex-wrap items-center gap-2"><strong>{c.nome}</strong>{!c.ativa && <Selo tom="neutro">inativa</Selo>}{pecas?.has(c.id) && <Selo tom="info">peças da assistência</Selo>}
                   <span className="text-xs text-suave">{c.desconto_teto_pb === null ? "desconto desligado (sem política)" : `desconto até ${percentualDosPontosBase(c.desconto_teto_pb)}%, margem mínima ${percentualDosPontosBase(c.margem_minima_pb)}%`}</span>
                 </p>
                 <details>
@@ -262,6 +266,17 @@ export default async function Produtos({ searchParams }: {
                       <label className={rotulo}>Margem mínima (%)<input name="margem" inputMode="decimal" defaultValue={percentualDosPontosBase(c.margem_minima_pb)} placeholder="vazio = desligado" className={campo} /></label>
                       <div className="sm:col-span-2"><Motivo exemplo="Política de desconto definida" /></div>
                       <Botao type="submit" tamanho="sm" variante="secundario" className="sm:col-span-2">Gravar política de desconto</Botao>
+                    </form>
+                  )}
+                  {pecas && (
+                    <form action={definirPecaDeAssistencia} className="mt-3 grid gap-2 rounded-xl bg-fundo p-3 sm:grid-cols-2">
+                      <input type="hidden" name="categoria" value={c.id} />{ocultoBusca}
+                      <input type="hidden" name="peca" value={pecas.has(c.id) ? "nao" : "sim"} />
+                      <p className="text-xs text-suave sm:col-span-2">{pecas.has(c.id)
+                        ? "Peças da assistência: não se vendem no PDV e só saem do estoque pela ordem de serviço."
+                        : "Categoria de peças da assistência (telas, baterias, conectores)? Marcada, ela deixa de entrar em venda e só sai do estoque pela ordem de serviço."}</p>
+                      <div className="sm:col-span-2"><Motivo exemplo="Peças usadas pelo técnico" /></div>
+                      <Botao type="submit" tamanho="sm" variante="secundario" className="sm:col-span-2">{pecas.has(c.id) ? "Deixar de ser peça da assistência" : "Marcar como peça da assistência"}</Botao>
                     </form>
                   )}
                 </details>

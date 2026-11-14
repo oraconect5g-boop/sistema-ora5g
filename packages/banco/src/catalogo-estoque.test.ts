@@ -128,7 +128,10 @@ describe("livro de estoque e saldo", () => {
   it("o livro só aceita inserção, nem o dono do banco altera", async () => {
     expect((await falha(db.query("update public.estoque_movimentos set quantidade = 99"))).message).toMatch(/só aceita inserção/);
     expect((await falha(db.query("delete from public.estoque_movimentos"))).message).toMatch(/só aceita inserção/);
-    expect((await falha(db.query("truncate public.estoque_movimentos"))).message).toMatch(/só aceita inserção/);
+    // Desde o L12d, as peças da OS apontam para o livro: o truncate simples para na chave estrangeira e o em cascata,
+    // no gatilho (do livro e das peças). Nos dois casos, nada sai.
+    expect((await falha(db.query("truncate public.estoque_movimentos"))).message).toMatch(/só aceita inserção|referenced in a foreign key constraint/);
+    expect((await falha(db.query("truncate public.estoque_movimentos cascade"))).message).toMatch(/só aceita inserção/);
   });
 
   it("lançamento repetido com a mesma chave conta uma vez só", async () => {

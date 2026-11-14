@@ -78,6 +78,11 @@ export type OrcamentoDaOs = {
   prazo_dias: number | null; situacao: "aguardando_cliente" | "aprovado" | "recusado" | "substituido"; em_nome_do_tecnico: boolean; observacao: string | null;
   registrado_por: string; registrado_em: string; resposta_canal: string | null; resposta_observacao: string | null; respondido_por: string | null; respondido_em: string | null;
 };
+/** Peça do estoque usada na OS (L12d), com o nome e o SKU da variação. */
+export type PecaDaOs = {
+  id: string; variante_id: string; nome: string; sku: string; quantidade: number; em_nome_do_tecnico: boolean; observacao: string | null;
+  registrado_por: string; registrado_em: string; devolvida_em: string | null; devolvida_por: string | null; motivo_devolucao: string | null;
+};
 /** A venda que cobrou o conserto (L12c). O número vem da venda, quando quem vê pode lê-la, ou da trilha da OS. */
 export type CobrancaDaOs = { vendaId: string | null; cobradaEm: string | null; vendaNumero: number | null; vendaVisivel: boolean };
 export type LeituraDaOs =
@@ -85,7 +90,9 @@ export type LeituraDaOs =
       /** L12b: nulo quando o banco ainda não tem o orçamento (migration orcamento_da_os): a tela esconde o cartão, sem inventar. */
       servico: ServicoDaOs | null; orcamentos: OrcamentoDaOs[] | null;
       /** L12c: nulo quando o banco ainda não tem a cobrança (migration entrega_da_os): a tela esconde o cartão, sem inventar. */
-      cobranca: CobrancaDaOs | null }
+      cobranca: CobrancaDaOs | null;
+      /** L12d: nulo quando o banco ainda não tem as peças (migration pecas_da_os): a tela esconde o cartão. */
+      pecas: PecaDaOs[] | null }
   | { estado: "nao_encontrada" } | { estado: "indisponivel" } | { estado: "falha" };
 
 const COLUNAS_DA_OS = "id, numero, organizacao_id, unidade_id, cliente_id, cliente_nome, contato_mascarado, aparelho, imei, numero_serie, defeito, estado_entrada, "
@@ -101,7 +108,7 @@ export async function lerOrdem(supabase: Cliente, id: string): Promise<LeituraDa
   if (!os.data) return { estado: "nao_encontrada" };
   const linha = os.data as unknown as OrdemDeServico;
   if (!ehLocal(linha.local) || !ehSituacao(linha.situacao)) return { estado: "falha" };
-  const [eventos, fotos, servico, orcamentos, cobranca] = await Promise.all([
+  const [eventos, fotos, servico, orcamentos, cobranca, pecas] = await Promise.all([
     supabase.from("os_eventos").select("id, tipo, local_de, local_para, observacao, em_nome_do_tecnico, usuario_id, ocorrido_em").eq("os_id", id).order("id"),
     supabase.from("os_fotos").select("id, caminho, enviada_em").eq("os_id", id).order("enviada_em").order("id"),
     // L12b, lidos à parte: num banco sem o orçamento, a coluna e a tabela faltam e a OS continua aparecendo.
@@ -110,6 +117,9 @@ export async function lerOrdem(supabase: Cliente, id: string): Promise<LeituraDa
       + "observacao, registrado_por, registrado_em, resposta_canal, resposta_observacao, respondido_por, respondido_em").eq("os_id", id).order("numero", { ascending: false }),
     // L12c, lida à parte do mesmo jeito: num banco sem a cobrança, a OS continua aparecendo.
     supabase.from("ordens_servico").select("venda_id, cobrada_em").eq("id", id).maybeSingle(),
+    // L12d, lida à parte do mesmo jeito.
+    supabase.from("os_pecas").select("id, variante_id, quantidade, em_nome_do_tecnico, observacao, registrado_por, registrado_em, devolvida_em, devolvida_por, motivo_devolucao")
+      .eq("os_id", id).order("registrado_em"),
   ]);
   if (eventos.error || fotos.error) {
     console.error("assistência: falha ao ler a trilha ou as fotos", { codigo: eventos.error?.code ?? fotos.error?.code ?? null });
@@ -128,6 +138,19 @@ export async function lerOrdem(supabase: Cliente, id: string): Promise<LeituraDa
     console.error("assistência: falha ao ler a cobrança", { codigo: cobranca.error.code || null });
     return { estado: "falha" };
   }
+  if (pecas.error && !SEM_TABELA.has(pecas.error.code)) {
+    console.error("assistência: falha ao ler as peças", { codigo: pecas.error.code || null });
+    return { estado: "falha" };
+  }
+  type LinhaDaPeca = Omit<PecaDaOs, "nome" | "sku">;
+  const linhasDasPecas = pecas.error ? null : (pecas.data as unknown as LinhaDaPeca[]);
+  let listaDePecas: PecaDaOs[] | null = null;
+  if (linhasDasPecas) {
+    const idsDasVariantes = [...new Set(linhasDasPecas.map((p) => p.variante_id))];
+    const variantes = idsDasVariantes.length ? await supabase.from("variantes").select("id, sku, nome").in("id", idsDasVariantes) : { data: [], error: null };
+    const daVariante = (v: string) => (variantes.error ? undefined : variantes.data?.find((x) => x.id === v));
+    listaDePecas = linhasDasPecas.map((p) => ({ ...p, nome: daVariante(p.variante_id)?.nome ?? "Peça", sku: daVariante(p.variante_id)?.sku ?? "" }));
+  }
   const daCobranca = cobranca.error ? null : (cobranca.data as { venda_id: string | null; cobrada_em: string | null } | null);
   let vendaNumero: number | null = null;
   let vendaVisivel = false;
@@ -143,7 +166,8 @@ export async function lerOrdem(supabase: Cliente, id: string): Promise<LeituraDa
       vendaNumero = numero ? Number(numero) : null;
     }
   }
-  const pessoas = [...new Set([linha.aberta_por, ...eventos.data.map((e) => e.usuario_id), ...(listaDeOrcamentos ?? []).flatMap((o) => [o.registrado_por, o.respondido_por]).filter((x): x is string => Boolean(x))])];
+  const pessoas = [...new Set([linha.aberta_por, ...eventos.data.map((e) => e.usuario_id), ...(listaDeOrcamentos ?? []).flatMap((o) => [o.registrado_por, o.respondido_por]).filter((x): x is string => Boolean(x)),
+    ...(listaDePecas ?? []).flatMap((p) => [p.registrado_por, p.devolvida_por]).filter((x): x is string => Boolean(x))])];
   const perfis = await supabase.from("perfis_usuario").select("id, nome").in("id", pessoas);
   const nomes: Record<string, string> = {};
   for (const p of perfis.data ?? []) nomes[p.id] = p.nome;
@@ -152,6 +176,7 @@ export async function lerOrdem(supabase: Cliente, id: string): Promise<LeituraDa
     fotos: fotos.data.map((f) => ({ id: f.id, caminho: f.caminho, url: urlDe(f.caminho), enviada_em: f.enviada_em })), nomes,
     servico: ehServico(daServico) ? daServico : null, orcamentos: listaDeOrcamentos,
     cobranca: daCobranca ? { vendaId: daCobranca.venda_id, cobradaEm: daCobranca.cobrada_em, vendaNumero, vendaVisivel } : null,
+    pecas: listaDePecas,
   };
 }
 

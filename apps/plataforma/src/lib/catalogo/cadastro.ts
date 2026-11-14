@@ -29,6 +29,7 @@ export const ERROS_DO_CADASTRO = {
   tipo: "Escolha o tipo do produto.",
   tipo_fixo: "O tipo do produto não muda depois de criado: cadastre outro produto.",
   categoria: "Escolha uma categoria ativa.",
+  peca_categoria: "Peça da assistência é controlada por quantidade: a categoria tem aparelho, chip ou serviço ativo.",
   marca: "Marca inválida.",
   sku: "SKU inválido: letras, números, ponto, hífen, barra ou sublinhado, até 60, sem espaço.",
   sku_repetido: "Este SKU já está em outra variação.",
@@ -56,7 +57,7 @@ export function erroDoCadastro(erro: { code?: string; message?: string } | null 
   if (codigo === "23505") return m.includes("sku") ? "sku_repetido" : m.includes("código de barras") ? "codigo_barras_repetido" : "nome_repetido";
   if (codigo === "22023") {
     const regras: [string, ErroDoCadastro][] = [
-      ["informe o motivo", "motivo"], ["tipo do produto não muda", "tipo_fixo"], ["tipo de produto", "tipo"], ["categoria", "categoria"],
+      ["informe o motivo", "motivo"], ["peça da assistência é controlada", "peca_categoria"], ["tipo do produto não muda", "tipo_fixo"], ["tipo de produto", "tipo"], ["categoria", "categoria"],
       ["marca", "marca"], ["sku", "sku"], ["código de barras", "codigo_barras"], ["estoque mínimo", "estoque_minimo"],
       ["produto inativo", "produto_inativo"], ["teto", "politica"], ["demais", "texto_longo"], ["nome", "nome"],
     ];
