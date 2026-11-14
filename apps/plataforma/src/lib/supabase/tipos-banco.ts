@@ -3483,6 +3483,119 @@ export type Database = {
           },
         ]
       }
+      ordens_servico: {
+        Row: {
+          aberta_em: string
+          aberta_por: string
+          acessorios: string[]
+          acessorios_obs: string | null
+          aparelho: string
+          assistencia_id: string | null
+          atualizada_em: string
+          chave: string
+          cliente_id: string
+          cliente_nome: string
+          contato_mascarado: string
+          conteudo: string
+          defeito: string
+          encerrada_em: string | null
+          estado_entrada: string
+          id: string
+          imei: string | null
+          local: string
+          motivo_encerramento: string | null
+          numero: number
+          numero_serie: string | null
+          organizacao_id: string
+          prazo: string | null
+          situacao: string
+          unidade_id: string
+        }
+        Insert: {
+          aberta_em?: string
+          aberta_por: string
+          acessorios?: string[]
+          acessorios_obs?: string | null
+          aparelho: string
+          assistencia_id?: string | null
+          atualizada_em?: string
+          chave: string
+          cliente_id: string
+          cliente_nome: string
+          contato_mascarado: string
+          conteudo: string
+          defeito: string
+          encerrada_em?: string | null
+          estado_entrada: string
+          id?: string
+          imei?: string | null
+          local?: string
+          motivo_encerramento?: string | null
+          numero?: never
+          numero_serie?: string | null
+          organizacao_id: string
+          prazo?: string | null
+          situacao?: string
+          unidade_id: string
+        }
+        Update: {
+          aberta_em?: string
+          aberta_por?: string
+          acessorios?: string[]
+          acessorios_obs?: string | null
+          aparelho?: string
+          assistencia_id?: string | null
+          atualizada_em?: string
+          chave?: string
+          cliente_id?: string
+          cliente_nome?: string
+          contato_mascarado?: string
+          conteudo?: string
+          defeito?: string
+          encerrada_em?: string | null
+          estado_entrada?: string
+          id?: string
+          imei?: string | null
+          local?: string
+          motivo_encerramento?: string | null
+          numero?: never
+          numero_serie?: string | null
+          organizacao_id?: string
+          prazo?: string | null
+          situacao?: string
+          unidade_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "ordens_servico_aberta_por_fkey"
+            columns: ["aberta_por"]
+            isOneToOne: false
+            referencedRelation: "perfis_usuario"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "ordens_servico_assistencia_id_fkey"
+            columns: ["assistencia_id"]
+            isOneToOne: false
+            referencedRelation: "unidades"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "ordens_servico_cliente_id_fkey"
+            columns: ["cliente_id"]
+            isOneToOne: false
+            referencedRelation: "clientes"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "ordens_servico_unidade_id_organizacao_id_fkey"
+            columns: ["unidade_id", "organizacao_id"]
+            isOneToOne: false
+            referencedRelation: "unidades"
+            referencedColumns: ["id", "organizacao_id"]
+          },
+        ]
+      }
       organizacoes: {
         Row: {
           criado_em: string
@@ -3524,6 +3637,121 @@ export type Database = {
           nome?: string
         }
         Relationships: []
+      }
+      os_eventos: {
+        Row: {
+          em_nome_do_tecnico: boolean
+          id: number
+          local_de: string | null
+          local_para: string | null
+          observacao: string | null
+          ocorrido_em: string
+          organizacao_id: string
+          os_id: string
+          tipo: string
+          unidade_id: string
+          usuario_id: string
+        }
+        Insert: {
+          em_nome_do_tecnico?: boolean
+          id?: never
+          local_de?: string | null
+          local_para?: string | null
+          observacao?: string | null
+          ocorrido_em?: string
+          organizacao_id: string
+          os_id: string
+          tipo: string
+          unidade_id: string
+          usuario_id: string
+        }
+        Update: {
+          em_nome_do_tecnico?: boolean
+          id?: never
+          local_de?: string | null
+          local_para?: string | null
+          observacao?: string | null
+          ocorrido_em?: string
+          organizacao_id?: string
+          os_id?: string
+          tipo?: string
+          unidade_id?: string
+          usuario_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "os_eventos_os_id_fkey"
+            columns: ["os_id"]
+            isOneToOne: false
+            referencedRelation: "ordens_servico"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "os_eventos_unidade_id_fkey"
+            columns: ["unidade_id"]
+            isOneToOne: false
+            referencedRelation: "unidades"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "os_eventos_usuario_id_fkey"
+            columns: ["usuario_id"]
+            isOneToOne: false
+            referencedRelation: "perfis_usuario"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      os_fotos: {
+        Row: {
+          bytes: number
+          caminho: string
+          enviada_em: string
+          enviada_por: string
+          id: string
+          organizacao_id: string
+          os_id: string
+          sha256: string
+          tipo: string
+        }
+        Insert: {
+          bytes: number
+          caminho: string
+          enviada_em?: string
+          enviada_por: string
+          id?: string
+          organizacao_id: string
+          os_id: string
+          sha256: string
+          tipo: string
+        }
+        Update: {
+          bytes?: number
+          caminho?: string
+          enviada_em?: string
+          enviada_por?: string
+          id?: string
+          organizacao_id?: string
+          os_id?: string
+          sha256?: string
+          tipo?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "os_fotos_enviada_por_fkey"
+            columns: ["enviada_por"]
+            isOneToOne: false
+            referencedRelation: "perfis_usuario"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "os_fotos_os_id_fkey"
+            columns: ["os_id"]
+            isOneToOne: false
+            referencedRelation: "ordens_servico"
+            referencedColumns: ["id"]
+          },
+        ]
       }
       papel_permissoes: {
         Row: {
@@ -5823,6 +6051,25 @@ export type Database = {
       oportunidade_registrar: {
         Args: { p_chave: string; p_cliente: string; p_dados: Json }
         Returns: Json
+      }
+      os_abrir: { Args: { p_chave: string; p_dados: Json }; Returns: Json }
+      os_anexar_foto: {
+        Args: { p_caminho: string; p_os: string; p_sha256: string }
+        Returns: string
+      }
+      os_assistencias: { Args: never; Returns: Json }
+      os_contato_whatsapp: {
+        Args: { p_aviso: string; p_os: string }
+        Returns: string
+      }
+      os_custodia: {
+        Args: {
+          p_assistencia: string
+          p_observacao: string
+          p_os: string
+          p_passo: string
+        }
+        Returns: boolean
       }
       pagamento_conciliar: {
         Args: {

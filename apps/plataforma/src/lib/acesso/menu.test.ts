@@ -4,18 +4,18 @@ import { montarMenu, PAGINAS_REAIS } from "./menu";
 
 // Permissões de cada papel no banco (matriz do ADR-002, papel_permissoes), só as que o menu usa.
 const PAPEL = {
-  vendedor: ["venda.registrar", "caixa.abrir", "estoque.consultar", "connect.operar", "cliente.buscar", "crm.atender", "metas.ver_propria"],
-  gerente: ["venda.registrar", "venda.ver_unidade", "caixa.abrir", "caixa.conferir", "estoque.consultar", "connect.operar", "connect.gerir", "desconto.aprovar", "nota.aprovar", "auditoria.ver", "cliente.buscar", "crm.atender", "pagamento.conciliar", "terminal.gerir", "metas.gerir", "metas.ver_unidade", "conta_pagar.gerir"],
-  dono: ["venda.registrar", "venda.ver_unidade", "venda.ver_todas", "caixa.abrir", "caixa.conferir", "estoque.consultar", "connect.operar", "connect.gerir", "desconto.aprovar", "nota.aprovar", "auditoria.ver", "usuarios.gerir", "unidades.gerir", "catalogo.gerir", "cliente.buscar", "crm.atender", "pagamento.conciliar", "terminal.gerir", "metas.gerir", "metas.ver_unidade", "metas.ver_propria", "conta_pagar.gerir", "resultado.ver", "previsao.ver"],
+  vendedor: ["venda.registrar", "caixa.abrir", "estoque.consultar", "connect.operar", "cliente.buscar", "crm.atender", "metas.ver_propria", "os.abrir"],
+  gerente: ["venda.registrar", "venda.ver_unidade", "caixa.abrir", "caixa.conferir", "estoque.consultar", "connect.operar", "connect.gerir", "desconto.aprovar", "nota.aprovar", "auditoria.ver", "cliente.buscar", "crm.atender", "pagamento.conciliar", "terminal.gerir", "metas.gerir", "metas.ver_unidade", "conta_pagar.gerir", "os.abrir", "os.gerir"],
+  dono: ["venda.registrar", "venda.ver_unidade", "venda.ver_todas", "caixa.abrir", "caixa.conferir", "estoque.consultar", "connect.operar", "connect.gerir", "desconto.aprovar", "nota.aprovar", "auditoria.ver", "usuarios.gerir", "unidades.gerir", "catalogo.gerir", "cliente.buscar", "crm.atender", "pagamento.conciliar", "terminal.gerir", "metas.gerir", "metas.ver_unidade", "metas.ver_propria", "conta_pagar.gerir", "resultado.ver", "previsao.ver", "os.abrir", "os.gerir"],
   administrador: ["venda.ver_todas", "estoque.consultar", "auditoria.ver", "usuarios.gerir", "unidades.gerir", "catalogo.gerir"],
-  tecnico: [],
+  tecnico: ["os.orcar"],
 } as const;
 const menu = (papel: keyof typeof PAPEL) => montarMenu(new Set(PAPEL[papel]));
 
 describe("menu único das telas reais", () => {
   it("vendedor: vende, vê as próprias vendas, caixa, Connect, estoque e catálogo; da gestão, só as próprias metas", () => {
     const m = menu("vendedor");
-    expect(m.visiveis).toEqual(["inicio", "vender", "vendas", "clientes", "funil", "agenda", "caixa", "connect", "estoque", "transferencias", "catalogo", "metas"]);
+    expect(m.visiveis).toEqual(["inicio", "vender", "vendas", "clientes", "funil", "agenda", "caixa", "connect", "assistencia", "estoque", "transferencias", "catalogo", "metas"]);
     expect(m.atalhos).toEqual(["inicio", "vender", "vendas", "estoque"]);
     expect(m.grupos.map((g) => g.grupo)).toEqual(["Operação", "Clientes", "Estoque e catálogo", "Gestão"]);
     expect(m.grupos.find((g) => g.grupo === "Gestão")?.paginas).toEqual(["metas"]);
@@ -89,9 +89,9 @@ describe("menu único das telas reais", () => {
     expect(PAGINAS_REAIS.produtos.grupo).toBe("Estoque e catálogo");
   });
 
-  it("técnico (sem permissões de loja) só vê o início e o catálogo; nunca fica sem menu", () => {
-    expect(menu("tecnico").visiveis).toEqual(["inicio", "catalogo"]);
-    expect(menu("tecnico").atalhos).toEqual(["inicio", "catalogo"]);
+  it("técnico: o início, a assistência (L12a) e o catálogo; nunca fica sem menu", () => {
+    expect(menu("tecnico").visiveis).toEqual(["inicio", "assistencia", "catalogo"]);
+    expect(menu("tecnico").atalhos).toEqual(["inicio", "assistencia", "catalogo"]);
   });
 
   it("no máximo 4 atalhos e cada página em um grupo só", () => {
@@ -114,6 +114,13 @@ describe("menu único das telas reais", () => {
     for (const papel of ["dono", "gerente"] as const) expect(menu(papel).visiveis).toEqual(expect.arrayContaining(["conciliacao", "maquininhas"]));
     for (const papel of ["vendedor", "administrador", "tecnico"] as const) expect(menu(papel).visiveis).not.toContain("conciliacao");
     expect(PAGINAS_REAIS.conciliacao.grupo).toBe("Gestão");
+  });
+
+  it("assistência (L12a): quem recebe aparelho (dono, gerente, vendedor) e o técnico, em Operação; administrador não", () => {
+    for (const papel of ["dono", "gerente", "vendedor", "tecnico"] as const) expect(menu(papel).visiveis).toContain("assistencia");
+    expect(menu("administrador").visiveis).not.toContain("assistencia");
+    expect(menu("tecnico").visiveis).toEqual(["inicio", "assistencia", "catalogo"]);
+    expect(PAGINAS_REAIS.assistencia).toMatchObject({ grupo: "Operação", caminho: "/assistencia", icone: "assistencia" });
   });
 
   it("recebíveis (L8e): quem concilia (dono e gerente) em Gestão; vendedor, administrador e técnico não", () => {

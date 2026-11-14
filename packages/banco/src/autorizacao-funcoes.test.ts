@@ -1,9 +1,9 @@
 // Inventário de autorização (prioridade 1 do diagnóstico de 10/11/2026; ORA-ORG-004 e ORA-QUAL-002).
 // O aviso 0029 do Supabase lista as funções SECURITY DEFINER que qualquer usuário logado pode chamar
-// pela API: 124 em 14/11 (48 + 6 do cadastro de lojas, L2, + 5 do cadastro do catálogo, L3a, + 4 dos preços, L3b,
+// pela API: 129 em 14/11 (48 + 6 do cadastro de lojas, L2, + 5 do cadastro do catálogo, L3a, + 4 dos preços, L3b,
 // + 4 da importação do catálogo, L3c, + 3 da entrada de mercadoria, L4a, + 5 do inventário, L4b, + 6 dos clientes, L5a,
 // + 9 do funil e da agenda, L5b, + 4 da mesclagem e dos segmentos, L5c, + 4 das maquininhas e da conciliação, L7a,
-// + 2 da leitura das entradas, R1, + 1 do nome no ranking, G1, + 2 das metas, G4b, + 3 das financeiras, L7b, + 3 da saída autorizada do caixa, L7c, + 6 das contas a pagar, L8a, + 1 das regras do bônus por meta, L9a, + 2 do fechamento do bônus, L9b, + 1 da correção do repasse das financeiras, B4, + 1 dos dados para emitir a nota, K1b, + 1 dos documentos da nota emitida, L10a, + 2 do envio da nota pelo WhatsApp, K1c, + 1 dos recebíveis por loja e adquirente, L8e; no L8b, a das categorias ganhou o parâmetro "entra no resultado"). Elas rodam com poder total e cada uma confere sessão, loja e permissão por
+// + 2 da leitura das entradas, R1, + 1 do nome no ranking, G1, + 2 das metas, G4b, + 3 das financeiras, L7b, + 3 da saída autorizada do caixa, L7c, + 6 das contas a pagar, L8a, + 1 das regras do bônus por meta, L9a, + 2 do fechamento do bônus, L9b, + 1 da correção do repasse das financeiras, B4, + 1 dos dados para emitir a nota, K1b, + 1 dos documentos da nota emitida, L10a, + 2 do envio da nota pelo WhatsApp, K1c, + 1 dos recebíveis por loja e adquirente, L8e, + 5 da ordem de serviço, L12a; no L8b, a das categorias ganhou o parâmetro "entra no resultado"). Elas rodam com poder total e cada uma confere sessão, loja e permissão por
 // conta própria. Este teste monta um "mundo" fictício com objetos reais em duas lojas e tenta cada
 // função como 13 tipos de atacante. Recusa = erro, ou resposta vazia numa leitura, e nada muda no
 // banco. O teste lista as funções no próprio banco e falha se aparecer uma nova sem casos aqui.
@@ -206,6 +206,7 @@ type Caso = {
   auditoriaDaConsulta?: RegExp;
 };
 const CPF_DO_MUNDO = cpf("246813579");
+const IMEI_INTRUSO = comDigitoLuhn("35209900700001");
 const AMANHA = new Date(Date.now() + 86_400_000).toISOString();
 // Conta a pagar que o atacante tenta lançar (L8a), com vencimento em 10 dias.
 const contaIntrusa = (unidade: string) => JSON.stringify({
@@ -539,6 +540,22 @@ const CASOS: Record<string, Caso> = {
   "recebiveis_painel(uuid,integer)": {
     leitura: true, A: () => ["select public.recebiveis_painel($1, 30) as v", [ids.lojaA]], B: () => ["select public.recebiveis_painel($1, 30) as v", [ids.lojaB]], semPermissao: true,
   },
+  // Ordem de serviço (L12a): abrir é na loja do turno (sem "outra loja"); custódia, foto e contato só na loja da OS ou
+  // na assistência para onde ela foi. O vendedor da loja A é o dono legítimo das OS da loja A: sem o caso "sem permissão".
+  "os_abrir(jsonb,text)": {
+    A: () => ["select public.os_abrir($1::jsonb, 'ataque:os:0001')", [JSON.stringify({ cliente: alvo.clienteA, aparelho: "Aparelho intruso", imei: IMEI_INTRUSO, defeito: "Defeito intruso", estado: "Estado intruso" })]],
+  },
+  "os_custodia(uuid,text,uuid,text)": {
+    A: () => ["select public.os_custodia($1, 'enviar_ao_tecnico', $2, null)", [alvo.osA, ids.assistencia]], B: () => ["select public.os_custodia($1, 'enviar_ao_tecnico', $2, null)", [alvo.osB, ids.assistencia]],
+  },
+  "os_anexar_foto(uuid,text,text)": {
+    A: () => ["select public.os_anexar_foto($1, $2, $3)", [alvo.osA, `${ids.organizacao}/${ids.lojaA}/${alvo.osA}/00000000-0000-4000-a000-000000000011.jpg`, "a".repeat(64)]],
+    B: () => ["select public.os_anexar_foto($1, $2, $3)", [alvo.osB, `${ids.organizacao}/${ids.lojaB}/${alvo.osB}/00000000-0000-4000-a000-000000000012.jpg`, "a".repeat(64)]],
+  },
+  "os_assistencias()": { leitura: true, A: () => ["select public.os_assistencias() as v", []] },
+  "os_contato_whatsapp(uuid,text)": {
+    A: () => ["select public.os_contato_whatsapp($1, 'comprovante')", [alvo.osA]], B: () => ["select public.os_contato_whatsapp($1, 'comprovante')", [alvo.osB]],
+  },
   "pedir_aprovacao(uuid,text)": {
     A: () => ["select public.pedir_aprovacao($1, 'Tentativa')", [alvo.itemVendaA]], B: () => ["select public.pedir_aprovacao($1, 'Tentativa')", [alvo.itemVendaB]], outroVendedor: true,
   },
@@ -649,7 +666,7 @@ function vazio(funcao: string, linhas: Record<string, unknown>[]) {
     const v = (linhas[0]?.v ?? {}) as { totais?: object; pagamentos?: unknown[] };
     return linhas.length === 1 && Object.keys(v.totais ?? { x: 1 }).length === 0 && (v.pagamentos ?? [1]).length === 0;
   }
-  if (funcao === "clientes_duplicados()" || funcao === "metas_equipe(uuid,date)") return linhas.length === 1 && Array.isArray(linhas[0]?.v) && (linhas[0]?.v as unknown[]).length === 0;
+  if (funcao === "clientes_duplicados()" || funcao === "metas_equipe(uuid,date)" || funcao === "os_assistencias()") return linhas.length === 1 && Array.isArray(linhas[0]?.v) && (linhas[0]?.v as unknown[]).length === 0;
   if (funcao === "clientes_segmentos()") return linhas.length === 1 && ((linhas[0]?.v as { segmentos?: unknown[] } | undefined)?.segmentos ?? [1]).length === 0;
   if (funcao === "crm_funil()" || funcao === "crm_agenda()") {
     const v = (linhas[0]?.v ?? {}) as { oportunidades?: unknown[]; atividades?: unknown[] };
@@ -691,6 +708,13 @@ beforeAll(async () => {
     [JSON.stringify({ tipo: "pessoa_fisica", nome: "Cliente do Mundo", documento: CPF_DO_MUNDO, telefone: "41987650100" })])).id;
   alvo.clienteA2 = (await valor<{ id: string }>(await naLoja(ids.vendedorAB, ids.lojaA), "select public.cliente_salvar(null, $1::jsonb, null, 'mundo:cliente:A2') as v",
     [JSON.stringify({ tipo: "pessoa_fisica", nome: "Cliente do Mundo 2", telefone: "41987650101" })])).id;
+  // Uma ordem de serviço aberta em cada loja (L12a; gravadas pelo banco: só alvo), do cliente do mundo.
+  for (const [lado, loja] of [["A", ids.lojaA], ["B", ids.lojaB]] as const) {
+    alvo[`os${lado}`] = (await db.query<{ id: string }>(
+      `insert into public.ordens_servico (organizacao_id, unidade_id, cliente_id, cliente_nome, contato_mascarado, aparelho, imei, defeito, estado_entrada, chave, conteudo, aberta_por)
+       values ($1, $2, $3, 'Cliente do Mundo', '(41) •••••-0100', 'Aparelho do mundo', $4, 'Defeito do mundo', 'Estado do mundo', $5, 'mundo', $6) returning id`,
+      [ids.organizacao, loja, alvo.clienteA, comDigitoLuhn(`35209900${lado === "A" ? "9" : "8"}00001`), `mundo:os:${lado}`, ids.dono])).rows[0]?.id ?? "";
+  }
   // Uma oportunidade e uma atividade do vendedorAB em cada loja (pelas funções, como na tela).
   for (const [lado, loja] of [["A", ids.lojaA], ["B", ids.lojaB]] as const) {
     const s = await naLoja(ids.vendedorAB, loja);
@@ -782,7 +806,7 @@ describe("inventário: toda função SECURITY DEFINER exposta tem casos de recus
     const expostas = rows.map((r) => r.f);
     expect(expostas.filter((f) => !(f in CASOS)), "função nova exposta sem casos de recusa: acrescente ao CASOS").toEqual([]);
     expect(Object.keys(CASOS).filter((f) => !expostas.includes(f)), "caso de função que não existe mais").toEqual([]);
-    expect(expostas).toHaveLength(124);
+    expect(expostas).toHaveLength(129);
   });
 
   it("visitante anônimo não executa nenhuma função do esquema public; no privado só um gatilho, que não roda sozinho", async () => {
