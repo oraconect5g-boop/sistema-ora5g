@@ -81,10 +81,11 @@ import {
   abrirOrdem, avisarPeloWhatsApp, cobrarNoPdv, concluirServico, devolverPeca, entregarOrdem, orcarOrdem, passoDaOrdem, registrarFotoDaOs, responderOrcamento, usarPeca,
 } from "./acoes";
 import Detalhe from "./[id]/page";
+import Relatorios from "./relatorios/page";
 import NovaOrdem from "./nova/page";
 import Lista from "./page";
 
-const EXECUTAR = new Set(["EstadoDoPainel", "ProximosPassos", "FormularioDoPasso", "FiltroSegmentado", "ListaDados", "CartaoDoOrcamento", "CartaoDaCobranca", "CartaoDasPecas"]);
+const EXECUTAR = new Set(["EstadoDoPainel", "ProximosPassos", "FormularioDoPasso", "FiltroSegmentado", "ListaDados", "CartaoDoOrcamento", "CartaoDaCobranca", "CartaoDasPecas", "ConteudoDoRelatorio", "TabelaDoGrafico"]);
 function texto(v: unknown): string {
   const pedacos: string[] = [];
   const andar = (x: unknown): void => {
@@ -509,5 +510,65 @@ describe("peças da assistência na OS (L12d)", () => {
     expect(await destinoDe(devolverPeca(formulario({ os: OS, peca: PECA, motivo: "x" })))).toBe(`/assistencia/${OS}?erro=motivo`);
     cenario.respostas.os_devolver_peca = { data: null, error: { code: "22023", message: "A ordem de serviço já foi encerrada: a peça volta pelo inventário" } };
     expect(await destinoDe(devolverPeca(formulario({ os: OS, peca: PECA, motivo: "Sobrou" })))).toBe(`/assistencia/${OS}?erro=encerrada`);
+  });
+});
+
+describe("relatórios da assistência (L12e)", () => {
+  const OUTRA = "00000000-0000-4000-8000-00000000e601";
+  const hoje = new Intl.DateTimeFormat("en-CA", { timeZone: "America/Sao_Paulo" }).format(new Date());
+  const relatorio = async (p: Record<string, string> = {}) => texto(await Relatorios({ searchParams: Promise.resolve(p) }) as ReactElement);
+  const resposta = () => ({
+    inicio: `${hoje.slice(0, 7)}-01`, fim: hoje, unidade: null, lojas: [{ id: LOJA, nome: "Santa Cândida (teste)" }, { id: OUTRA, nome: "Centro (teste)" }],
+    resumo: { abertas: 6, entregues: 2, devolvidas_sem_conserto: 1, devolvidas_sem_cobrar: 1, canceladas: 1, prontas_paradas: 1, consertos_cobrados: 1, valor_cobrado: 33_000, pecas_usadas: 3 },
+    por_loja: [{ unidade: LOJA, nome: "Santa Cândida (teste)", abertas: 6, entregues: 2, devolvidas_sem_conserto: 1, devolvidas_sem_cobrar: 1, canceladas: 1, prontas_paradas: 1,
+      consertos_cobrados: 1, valor_cobrado: 33_000, pecas_usadas: 3, os_com_peca: 2, os_com_peca_sem_cobranca: 1 }],
+    sem_venda: [
+      { id: OS, numero: 43, loja: "Santa Cândida (teste)", aparelho: "Galaxy A15", cliente_nome: "Carla Cliente Teste", tipo: "devolvida_sem_cobrar", quando: "2026-11-14T15:00:00Z", motivo: "Garantia do conserto anterior", venda: null, dias: null },
+      { id: OS, numero: 44, loja: "Santa Cândida (teste)", aparelho: "Moto G", cliente_nome: "Davi Cliente Teste", tipo: "pronta_parada", quando: "2026-11-12T15:00:00Z", motivo: null, venda: null, dias: 2 },
+      { id: OS, numero: 47, loja: "Santa Cândida (teste)", aparelho: "iPhone 11", cliente_nome: "Eva Cliente Teste", tipo: "venda_cancelada", quando: "2026-11-14T16:00:00Z", motivo: null, venda: 77, dias: null },
+    ],
+    por_pessoa: [{ pessoa: EU, nome: "Vendedora Teste", abertas: 6, cobrados: 1, valor: 33_000 }],
+    tempo: { consertos: 4, media_dias_conserto: 2.5, maior_dias_conserto: 4, entregas: 2, media_dias_ate_entrega: 3 },
+  });
+
+  it("a gerência vê os números, as OS sem venda com o caminho para a OS, por pessoa, o tempo e peças × serviços; o período e a loja vão ao banco", async () => {
+    cenario.respostas.os_relatorio = { data: resposta(), error: null };
+    const t = await relatorio();
+    for (const trecho of ["Relatórios da assistência", "OS abertas", "R$ 330,00", "1 conserto cobrado no PDV", "Prontas sem cobrança", "Devolvidas sem cobrar",
+      "OS nº 43", "Devolvida sem cobrar", "Garantia do conserto anterior", "OS nº 44", "parada há 2 dias", "OS nº 47", "venda nº 77",
+      "Vendedora Teste", "Média até o conserto", "2,5 dias", "O mais demorado", "4 dias", "Santa Cândida (teste)", "Todas as lojas", "Centro (teste)"]) {
+      expect(t, trecho).toContain(trecho);
+    }
+    expect(cenario.chamadas.find((c) => c.nome === "os_relatorio")?.argumentos).toEqual({ p_inicio: `${hoje.slice(0, 7)}-01`, p_fim: hoje, p_unidade: null });
+    cenario.chamadas = [];
+    await relatorio({ periodo: "noventa_dias", loja: LOJA });
+    const ate = new Date(new Date(`${hoje}T12:00:00Z`).getTime() - 89 * 86_400_000).toISOString().slice(0, 10);
+    expect(cenario.chamadas.find((c) => c.nome === "os_relatorio")?.argumentos).toEqual({ p_inicio: ate, p_fim: hoje, p_unidade: LOJA });
+    // Período desconhecido vira "este mês"; loja que não é uuid, "todas".
+    cenario.chamadas = [];
+    await relatorio({ periodo: "ano", loja: "x" });
+    expect(cenario.chamadas.find((c) => c.nome === "os_relatorio")?.argumentos).toEqual({ p_inicio: `${hoje.slice(0, 7)}-01`, p_fim: hoje, p_unidade: null });
+  });
+
+  it("sem permissão: o aviso; sem a função no banco: indisponível; resposta que não fecha: falha, sem número", async () => {
+    cenario.respostas.os_relatorio = { data: null, error: { code: "42501" } };
+    expect(await relatorio()).toContain("Os relatórios da assistência são da gerência e do dono");
+    cenario.respostas.os_relatorio = { data: null, error: { code: "PGRST202" } };
+    let t = await relatorio();
+    expect(t).toContain("o relatório da assistência (migration relatorio_da_assistencia)");
+    expect(t).not.toContain("R$");
+    const torta = resposta();
+    torta.resumo.abertas = 99;
+    cenario.respostas.os_relatorio = { data: torta, error: null };
+    t = await relatorio();
+    expect(t).not.toContain("R$ 330,00");
+    expect(t).not.toContain("OS nº 43");
+  });
+
+  it("a lista da assistência leva aos relatórios só quem gere", async () => {
+    const lista = async () => texto(await Lista({ searchParams: Promise.resolve({}) }) as ReactElement);
+    expect(await lista()).not.toContain("Relatórios da assistência");
+    cenario.permissoes = new Set(["os.abrir", "os.gerir"]);
+    expect(await lista()).toContain("Relatórios da assistência");
   });
 });
