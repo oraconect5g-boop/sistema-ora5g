@@ -67,6 +67,21 @@ export async function definirPolitica(dados: FormData) {
   voltar({ ok: data === true ? "politica_alterada" : "sem_mudanca", q: busca(dados) }, "categorias");
 }
 
+// L12d: a categoria de peças da assistência (o item não entra em venda e só sai do estoque pela OS).
+export async function definirPecaDeAssistencia(dados: FormData) {
+  const categoria = dados.get("categoria");
+  const peca = dados.get("peca");
+  const motivo = typeof dados.get("motivo") === "string" ? (dados.get("motivo") as string).trim().replace(/\s+/g, " ") : "";
+  if (!ehUuid(categoria) || (peca !== "sim" && peca !== "nao")) voltar({ erro: "dados", q: busca(dados) }, "categorias");
+  if (motivo.length < 3 || motivo.length > 200) voltar({ erro: "motivo", q: busca(dados) }, "categorias");
+  const { supabase, organizacao } = await organizacaoDaSessao();
+  const { data, error } = await supabase.rpc("catalogo_definir_peca_de_assistencia", {
+    p_organizacao: organizacao, p_categoria: categoria as string, p_peca: peca === "sim", p_motivo: motivo,
+  });
+  if (error) voltar({ erro: erroDoCadastro(error), q: busca(dados) }, "categorias");
+  voltar({ ok: data === true ? "peca_alterada" : "sem_mudanca", q: busca(dados) }, "categorias");
+}
+
 export async function salvarProduto(dados: FormData) {
   const r = validarProduto(campos(dados));
   const alvo = ehUuid(dados.get("id")) ? `produto-${dados.get("id") as string}` : "novo-produto";

@@ -3,7 +3,7 @@
 export const NOMES_DOS_MOVIMENTOS: Record<string, string> = {
   entrada_importacao: "Entrada (importação)", entrada_compra: "Entrada (compra)", ajuste_conciliacao: "Ajuste de conciliação",
   ajuste: "Ajuste", perda: "Perda", venda: "Venda", devolucao: "Devolução", transferencia_saida: "Transferência (saída)",
-  transferencia_entrada: "Transferência (entrada)",
+  transferencia_entrada: "Transferência (entrada)", consumo_os: "Peça usada em OS", consumo_os_estorno: "Peça devolvida da OS",
 };
 export const NOMES_DAS_SITUACOES: Record<string, string> = {
   disponivel: "Disponível", reservado: "Reservado (numa venda)", vendido: "Vendido", em_transito: "Em trânsito",

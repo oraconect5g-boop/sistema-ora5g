@@ -754,6 +754,7 @@ export type Database = {
           margem_minima_pb: number | null
           nome: string
           organizacao_id: string
+          peca_de_assistencia: boolean
         }
         Insert: {
           ativa?: boolean
@@ -763,6 +764,7 @@ export type Database = {
           margem_minima_pb?: number | null
           nome: string
           organizacao_id: string
+          peca_de_assistencia?: boolean
         }
         Update: {
           ativa?: boolean
@@ -772,6 +774,7 @@ export type Database = {
           margem_minima_pb?: number | null
           nome?: string
           organizacao_id?: string
+          peca_de_assistencia?: boolean
         }
         Relationships: [
           {
@@ -3863,6 +3866,113 @@ export type Database = {
         }
         Relationships: []
       }
+      os_pecas: {
+        Row: {
+          chave: string
+          devolvida_em: string | null
+          devolvida_por: string | null
+          em_nome_do_tecnico: boolean
+          estorno_movimento_id: number | null
+          id: string
+          motivo_devolucao: string | null
+          movimento_id: number
+          observacao: string | null
+          organizacao_id: string
+          os_id: string
+          quantidade: number
+          registrado_em: string
+          registrado_por: string
+          unidade_id: string
+          variante_id: string
+        }
+        Insert: {
+          chave: string
+          devolvida_em?: string | null
+          devolvida_por?: string | null
+          em_nome_do_tecnico?: boolean
+          estorno_movimento_id?: number | null
+          id?: string
+          motivo_devolucao?: string | null
+          movimento_id: number
+          observacao?: string | null
+          organizacao_id: string
+          os_id: string
+          quantidade: number
+          registrado_em?: string
+          registrado_por: string
+          unidade_id: string
+          variante_id: string
+        }
+        Update: {
+          chave?: string
+          devolvida_em?: string | null
+          devolvida_por?: string | null
+          em_nome_do_tecnico?: boolean
+          estorno_movimento_id?: number | null
+          id?: string
+          motivo_devolucao?: string | null
+          movimento_id?: number
+          observacao?: string | null
+          organizacao_id?: string
+          os_id?: string
+          quantidade?: number
+          registrado_em?: string
+          registrado_por?: string
+          unidade_id?: string
+          variante_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "os_pecas_devolvida_por_fkey"
+            columns: ["devolvida_por"]
+            isOneToOne: false
+            referencedRelation: "perfis_usuario"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "os_pecas_estorno_movimento_id_fkey"
+            columns: ["estorno_movimento_id"]
+            isOneToOne: false
+            referencedRelation: "estoque_movimentos"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "os_pecas_movimento_id_fkey"
+            columns: ["movimento_id"]
+            isOneToOne: false
+            referencedRelation: "estoque_movimentos"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "os_pecas_os_id_fkey"
+            columns: ["os_id"]
+            isOneToOne: false
+            referencedRelation: "ordens_servico"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "os_pecas_registrado_por_fkey"
+            columns: ["registrado_por"]
+            isOneToOne: false
+            referencedRelation: "perfis_usuario"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "os_pecas_unidade_id_fkey"
+            columns: ["unidade_id"]
+            isOneToOne: false
+            referencedRelation: "unidades"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "os_pecas_variante_id_organizacao_id_fkey"
+            columns: ["variante_id", "organizacao_id"]
+            isOneToOne: false
+            referencedRelation: "variantes"
+            referencedColumns: ["id", "organizacao_id"]
+          },
+        ]
+      }
       papel_permissoes: {
         Row: {
           papel: string
@@ -5515,6 +5625,15 @@ export type Database = {
         Args: { p_motivo: string; p_venda: string }
         Returns: boolean
       }
+      catalogo_definir_peca_de_assistencia: {
+        Args: {
+          p_categoria: string
+          p_motivo: string
+          p_organizacao: string
+          p_peca: boolean
+        }
+        Returns: boolean
+      }
       catalogo_definir_politica_desconto: {
         Args: {
           p_categoria: string
@@ -6202,6 +6321,10 @@ export type Database = {
         }
         Returns: boolean
       }
+      os_devolver_peca: {
+        Args: { p_motivo: string; p_peca: string }
+        Returns: boolean
+      }
       os_entregar: {
         Args: { p_observacao: string; p_os: string }
         Returns: boolean
@@ -6218,6 +6341,16 @@ export type Database = {
           p_resposta: string
         }
         Returns: boolean
+      }
+      os_usar_peca: {
+        Args: {
+          p_chave: string
+          p_observacao: string
+          p_os: string
+          p_quantidade: number
+          p_variante: string
+        }
+        Returns: Json
       }
       pagamento_conciliar: {
         Args: {

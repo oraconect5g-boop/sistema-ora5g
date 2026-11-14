@@ -2,7 +2,7 @@
   "_leia": "Checkpoint do programa de execução integral (PR #67). Carregar ao retomar e seguir para o próximo item executável da fila; não reiniciar o projeto. Estados vêm de status-requisitos.json (fonte da rastreabilidade); este arquivo acrescenta lote, bloqueio externo e revisão.",
   "atualizado_em": "2026-11-14",
   "base": {
-    "main": "f55856e",
+    "main": "b547bcb",
     "pacote": {
       "pr": 67,
       "branch": "docs/execucao-integral-20261110",
@@ -18,13 +18,13 @@
   },
   "publicado": {
     "homologacao": {
-      "commit": "f55856e",
+      "commit": "b547bcb",
       "quando": "2026-11-14",
-      "conferido": "rodapé da tela de entrada (f55856e · build 14/11/2026 13:35), /saude 200 e as rotas reais respondendo 307 para o login"
+      "conferido": "rodapé da tela de entrada (b547bcb · build 14/11/2026 16:42), /saude 200 e as rotas reais respondendo 307 para o login"
     },
     "falta_publicar": [
-      "L12c, entrega da OS com cobrança pelo PDV (OS-006 e OS-005 em parte), publicado ao fim do lote",
-      "migration 20261114173000_entrega_da_os (L12c): aplicar no ora5g-dev pede o sim do proprietário"
+      "L12d, peças do estoque ligadas à OS (OS-006 em parte), publicado ao fim do lote",
+      "migrations 20261114173000_entrega_da_os (L12c) e 20261114183000_pecas_da_os (L12d): aplicar no ora5g-dev pede o sim do proprietário"
     ]
   },
   "contagem_dos_estados": {
@@ -1641,7 +1641,7 @@
       "titulo": "Entrega com cobrança pelo PDV e produção do vendedor; peças só saem do estoque ligadas a uma OS",
       "prioridade": "P1",
       "estado": "parcial",
-      "lote": "L12c entrega da OS com cobrança pelo PDV (14/11); peças e relatórios no L12d",
+      "lote": "L12c entrega e L12d peças (14/11); relatórios no L12e",
       "bloqueio_externo": null,
       "revisado_codex": false,
       "homologado": false

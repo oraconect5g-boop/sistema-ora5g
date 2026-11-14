@@ -41,6 +41,7 @@ export const EVENTOS = {
   cancelada: "Cancelada", foto: "Foto guardada", aviso_whatsapp: "Aviso pelo WhatsApp",
   orcamento: "Orçamento registrado", resposta_do_cliente: "Resposta do cliente ao orçamento", servico_concluido: "Conserto concluído",
   cobrada: "Conserto cobrado no PDV", cobranca_desfeita: "Cobrança desfeita: a venda foi cancelada", entregue_ao_cliente: "Entregue ao cliente",
+  peca_usada: "Peça usada do estoque", peca_devolvida: "Peça devolvida ao estoque",
 } as const;
 
 /** O andamento do serviço (L12b), à parte da custódia. */
@@ -101,6 +102,12 @@ export const ERROS_DA_OS = {
   conserto_feito: "O conserto foi feito: cobre no PDV e registre a entrega. Devolver sem cobrar é da gerência, com o motivo.",
   aviso_entrega: "O comprovante da entrega é depois de registrar a entrega.",
   venda: "Não deu para abrir a venda no PDV agora: confira se você está no turno desta loja e tente de novo.",
+  peca_sem_saldo: "Sem saldo desta peça no estoque da assistência: dê entrada (ou transfira) antes de usar.",
+  peca_nao_encontrada: "Peça não encontrada no catálogo: confira o SKU.",
+  peca_tipo: "Só peça controlada por quantidade sai pela OS (aparelho e chip saem pelo IMEI/ICCID; serviço não tem estoque).",
+  peca_quantidade: "Quantidade da peça: de 1 a 20.",
+  peca_aprovacao: "A peça é usada depois da aprovação do cliente registrada.",
+  peca_local: "A peça é registrada com o aparelho com o técnico.",
   falha: "Não deu para gravar agora. Tente de novo em instantes.",
 } as const;
 export type ErroDaOs = keyof typeof ERROS_DA_OS;
@@ -109,12 +116,16 @@ export type ErroDaOs = keyof typeof ERROS_DA_OS;
 export function erroDaOs(erro: { code?: string; message?: string } | null | undefined): ErroDaOs {
   const codigo = erro?.code ?? "";
   const m = (erro?.message ?? "").toLowerCase();
-  if (codigo === "P0002") return m.includes("cliente") ? "cliente" : "nao_encontrada";
+  if (codigo === "P0002") return m.includes("cliente") ? "cliente" : m.includes("peça") ? "peca_nao_encontrada" : "nao_encontrada";
+  if (codigo === "OR001") return "peca_sem_saldo";
   if (codigo === "42501") return m.includes("cobre no pdv") ? "conserto_feito" : "sem_permissao";
   if (codigo === "OR031") return "duplicada";
   if (codigo === "OR032") return "ja_cobrada";
   if (codigo !== "22023") return "falha";
   const regras: [string, ErroDaOs][] = [
+    // L12d: peças da OS (antes das regras do orçamento, que também falam de "peça" e de "aprovação").
+    ["só peça controlada por quantidade", "peca_tipo"], ["quantidade da peça", "peca_quantidade"], ["peça é usada depois da aprovação", "peca_aprovacao"],
+    ["peça é registrada com o aparelho", "peca_local"], ["como ele passou a peça", "em_nome"], ["a peça volta pelo inventário", "encerrada"],
     // L12c: cobrança e entrega.
     ["cobre o conserto no pdv antes", "cobrar_antes"], ["já foi cobrado", "ja_cobrada"], ["só o conserto concluído", "nao_pronta"],
     ["cobrado com o aparelho de volta", "nao_pronta"], ["orçamento aprovado", "sem_orcamento_aprovado"], ["comprovante da entrega", "aviso_entrega"],
@@ -301,3 +312,22 @@ export function tipoDaImagem(bytes: Uint8Array): TipoDaFoto | null {
 export function caminhoDaFotoDaOs(organizacao: string, unidade: string, os: string, id: string, tipo: TipoDaFoto): string {
   return `${organizacao}/${unidade}/${os}/${id}.${EXTENSOES[tipo]}`;
 }
+
+// ---------------------------------------------------------------------------------------------
+// Peças da OS (L12d): o SKU digitado pelo técnico (ou pela gerência em nome dele) e a quantidade
+// ---------------------------------------------------------------------------------------------
+/** Lê o formulário da peça usada; o banco confere a OS, a peça, o saldo e quem registra. */
+export function lerPeca(dados: Formulario): { ok: true; sku: string; quantidade: number; observacao: string | null; chave: string } | { ok: false; erro: ErroDaOs } {
+  const chave = dados.get("chave");
+  if (!ehUuid(chave)) return { ok: false, erro: "dados" };
+  const sku = textoDo(dados.get("sku")).replace(/\s/g, "");
+  if (sku.length < 1 || sku.length > 60) return { ok: false, erro: "peca_nao_encontrada" };
+  const quantidade = Number(textoDo(dados.get("quantidade")) || "1");
+  if (!Number.isInteger(quantidade) || quantidade < 1 || quantidade > 20) return { ok: false, erro: "peca_quantidade" };
+  const observacao = textoDo(dados.get("observacao")) || null;
+  if (observacao !== null && (observacao.length < 2 || observacao.length > 300)) return { ok: false, erro: "dados" };
+  return { ok: true, sku, quantidade, observacao, chave };
+}
+
+/** O SKU como padrão exato do ilike (sem diferença de maiúsculas, como o índice do catálogo): % e _ viram literais. */
+export const skuExato = (sku: string) => sku.replace(/[\\%_]/g, (c) => `\\${c}`);

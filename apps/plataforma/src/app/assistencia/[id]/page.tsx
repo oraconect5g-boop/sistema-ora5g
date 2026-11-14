@@ -1,6 +1,6 @@
 import { randomUUID } from "node:crypto";
 
-import { ArrowLeft, Camera, ClipboardList, HandCoins, History, MessageCircle, Route, Smartphone } from "lucide-react";
+import { ArrowLeft, Boxes, Camera, ClipboardList, HandCoins, History, MessageCircle, Route, Smartphone } from "lucide-react";
 import type { Metadata } from "next";
 import Link from "next/link";
 import { notFound } from "next/navigation";
@@ -12,14 +12,14 @@ import { EstadoDoPainel } from "../../../componentes/paineis-de-vendas";
 import { Aviso, Cartao, ListaDados, Selo, TituloPagina } from "../../../componentes/ui";
 import { ehUuid } from "../../../lib/acesso/regras";
 import { FalhaDoServico, obterSessao } from "../../../lib/acesso/sessao";
-import { assistenciasDaRede, lerOrdem, type CobrancaDaOs, type OrcamentoDaOs, type OrdemDeServico } from "../../../lib/assistencia/consulta";
+import { assistenciasDaRede, lerOrdem, type CobrancaDaOs, type OrcamentoDaOs, type OrdemDeServico, type PecaDaOs } from "../../../lib/assistencia/consulta";
 import {
   ACESSORIOS, atrasada, CANAIS_DE_RESPOSTA, ERROS_DA_OS, EVENTOS, LINHAS_DE_PECAS, LOCAIS, PASSOS, SERVICOS, SITUACOES, SITUACOES_DO_ORCAMENTO, type Passo, type ServicoDaOs,
 } from "../../../lib/assistencia/regras";
 import { brl } from "../../../lib/formato";
 import { chaveDoCatalogo, type ValorDeParametro } from "../../../lib/parametros";
 import { configuracaoSupabase } from "../../../lib/supabase/configuracao";
-import { avisarPeloWhatsApp, cobrarNoPdv, concluirServico, entregarOrdem, orcarOrdem, passoDaOrdem, responderOrcamento } from "../acoes";
+import { avisarPeloWhatsApp, cobrarNoPdv, concluirServico, devolverPeca, entregarOrdem, orcarOrdem, passoDaOrdem, responderOrcamento, usarPeca } from "../acoes";
 import { EnviarFotoDaOs } from "./EnviarFotoDaOs";
 
 export const metadata: Metadata = { title: "Ordem de serviço" };
@@ -36,6 +36,7 @@ const OK = {
   orcamento: "Orçamento registrado. A loja manda ao cliente e registra a resposta.", orcamento_aprovado: "Aprovação do cliente registrada: o técnico pode consertar.",
   orcamento_recusado: "Recusa do cliente registrada: o aparelho volta para ser devolvido (ou o técnico faz outro orçamento).", concluido: "Conserto concluído registrado.",
   entregue: "Entrega registrada: a OS foi encerrada. Mande o comprovante da entrega pelo WhatsApp do cliente.",
+  peca_usada: "Peça registrada: saiu do estoque da assistência ligada a esta OS.", peca_devolvida: "Peça devolvida ao estoque da assistência.",
 } as const;
 
 // A ordem de serviço (lote L12a: ORA-OS-001, ORA-OS-002 e ORA-OS-005 em parte): os dados do aparelho, a custódia passo a
@@ -58,7 +59,7 @@ export default async function Ordem({ params, searchParams }: { params: Promise<
   if (leitura.estado !== "ok") {
     return <MoldeReal sessao={sessao}><Cartao className="mt-6" titulo="Ordem de serviço"><EstadoDoPainel estado={leitura.estado} fonte="assistencia" tentarDeNovo={`/assistencia/${id}`} /></Cartao></MoldeReal>;
   }
-  const { os, eventos, fotos, nomes, servico, orcamentos, cobranca } = leitura;
+  const { os, eventos, fotos, nomes, servico, orcamentos, cobranca, pecas } = leitura;
   const daLoja = os.unidade_id === unidade;
   const pela = { loja: daLoja && Boolean(abrir?.data), gerencia: daLoja && Boolean(gerir?.data), tecnico: os.assistencia_id === unidade && Boolean(orcar?.data) };
   const aberta = os.situacao === "aberta";
@@ -102,6 +103,8 @@ export default async function Ordem({ params, searchParams }: { params: Promise<
       )}
 
       {orcamentos && <CartaoDoOrcamento os={os} aberta={aberta} servico={servico} orcamentos={orcamentos} pela={pela} nomes={nomes} />}
+
+      {pecas && <CartaoDasPecas os={os} aberta={aberta} servico={servico} pecas={pecas} pela={pela} nomes={nomes} />}
 
       {cobranca && (pronta || cobrada || os.situacao === "entregue") && <CartaoDaCobranca os={os} cobranca={cobranca} pronta={pronta} aprovado={aprovado} pelaLoja={pela.loja} />}
 
@@ -331,6 +334,58 @@ function CartaoDaCobranca({ os, cobranca, pronta, aprovado, pelaLoja }: {
           ) : <p className="mt-2 text-xs text-suave">A cobrança é feita pela loja da OS.</p>}
         </>
       ) : <p className="text-sm text-suave">Sem orçamento aprovado para cobrar.</p>}
+    </Cartao>
+  );
+}
+
+// L12d (ORA-OS-006): a peça sai do estoque da assistência só ligada à OS, registrada pelo técnico (ou pela gerência em
+// nome dele) com o aparelho com ele e o conserto aprovado; a que não foi usada volta, uma vez, com o motivo.
+function CartaoDasPecas({ os, aberta, servico, pecas, pela, nomes }: {
+  os: OrdemDeServico; aberta: boolean; servico: ServicoDaOs | null; pecas: PecaDaOs[];
+  pela: { loja: boolean; gerencia: boolean; tecnico: boolean }; nomes: Record<string, string>;
+}) {
+  const podeUsar = aberta && os.local === "com_tecnico" && (servico === "aprovado" || servico === "concluido") && (pela.tecnico || pela.gerencia);
+  const podeDevolver = aberta && (pela.tecnico || pela.gerencia);
+  const emNome = !pela.tecnico;
+  if (pecas.length === 0 && !podeUsar) return null;
+  return (
+    <Cartao className="mt-4" titulo="Peças do estoque" icone={Boxes}
+      subtitulo="A peça sai do estoque da assistência só ligada a esta OS; a que faltar na contagem sem OS aparece como divergência">
+      {pecas.length === 0 && <p className="text-sm text-suave">Nenhuma peça usada ainda.</p>}
+      <ul className="space-y-2 text-sm">
+        {pecas.map((p) => (
+          <li key={p.id} className="rounded-xl border border-borda px-4 py-3">
+            <p className="flex flex-wrap items-center gap-2 font-semibold">
+              {`${p.quantidade} × ${p.nome}`}<span className="numeros text-xs font-normal text-suave">{p.sku}</span>
+              {p.devolvida_em && <Selo tom="neutro">devolvida ao estoque</Selo>}
+            </p>
+            <p className="mt-1 text-xs text-suave">{`Registrada em ${quando(p.registrado_em)} por ${nomes[p.registrado_por] ?? "—"}${p.em_nome_do_tecnico ? " (em nome do técnico)" : ""}${p.observacao ? `: ${p.observacao}` : ""}`}</p>
+            {p.devolvida_em && <p className="mt-1 text-xs text-suave">{`Devolvida em ${quando(p.devolvida_em)} por ${nomes[p.devolvida_por ?? ""] ?? "—"}: ${p.motivo_devolucao ?? ""}`}</p>}
+            {podeDevolver && !p.devolvida_em && (
+              <details className="mt-2">
+                <summary className="cursor-pointer text-xs font-semibold text-acao">Devolver ao estoque (não foi usada)</summary>
+                <form action={devolverPeca} className="mt-2 flex flex-wrap items-end gap-2">
+                  <input type="hidden" name="os" value={os.id} />
+                  <input type="hidden" name="peca" value={p.id} />
+                  <label className="min-w-0 flex-1 text-xs font-medium">Motivo<input name="motivo" required minLength={3} maxLength={200} className={campo} /></label>
+                  <BotaoConfirmar variante="secundario" tamanho="sm">Devolver</BotaoConfirmar>
+                </form>
+              </details>
+            )}
+          </li>
+        ))}
+      </ul>
+      {podeUsar && (
+        <form action={usarPeca} className="mt-3 grid gap-2 rounded-xl border border-borda p-3 sm:grid-cols-6">
+          <input type="hidden" name="os" value={os.id} />
+          <input type="hidden" name="chave" value={randomUUID()} />
+          <p className="text-sm font-semibold sm:col-span-6">Registrar peça usada</p>
+          <label className="text-sm font-medium sm:col-span-3">SKU da peça<input name="sku" required maxLength={60} autoComplete="off" className={campo} /></label>
+          <label className="text-sm font-medium">Qtd.<input name="quantidade" inputMode="numeric" defaultValue="1" maxLength={2} className={campo} /></label>
+          <label className="text-sm font-medium sm:col-span-2">{emNome ? "Como o técnico passou" : "Observação (opcional)"}<input name="observacao" required={emNome} minLength={emNome ? 2 : undefined} maxLength={300} className={campo} /></label>
+          <div className="sm:col-span-6"><BotaoConfirmar variante="secundario" tamanho="md">{emNome ? "Registrar a peça (em nome do técnico)" : "Registrar a peça"}</BotaoConfirmar></div>
+        </form>
+      )}
     </Cartao>
   );
 }

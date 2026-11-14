@@ -33,6 +33,7 @@ export const ERROS_DA_VENDA = {
   maquininha: "Escolha a maquininha usada (da loja e do mesmo provedor do pagamento).",
   cliente: "Cliente não encontrado nesta rede (ou inativo): busque de novo pelo CPF ou telefone.",
   os_cobrada: "Esta ordem de serviço já foi cobrada em outra venda: tire o conserto do carrinho.",
+  so_pela_os: "Este item só sai pela ordem de serviço: o conserto entra pela OS e a peça da assistência não se vende no PDV.",
   falha: "Não foi possível concluir agora. Tente de novo em instantes.",
 } as const;
 export type ErroDaVenda = keyof typeof ERROS_DA_VENDA;

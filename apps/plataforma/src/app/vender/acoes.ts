@@ -51,6 +51,8 @@ export async function adicionarItem(dados: FormData) {
     // Acessório e serviço vão sem IMEI/ICCID (null); o tipo gerado não marca o parâmetro como opcional.
     p_item: (ehUuid(item) ? item : null) as string, p_quantidade: quantidade, p_chave: chaveDe(dados),
   });
+  // L12c/L12d: o conserto e a peça da assistência só saem pela ordem de serviço.
+  if (error?.code === "22023" && /ordem de serviço/i.test((error as { message?: string }).message ?? "")) redirect("/vender?erro=so_pela_os");
   voltar("/vender", error);
 }
 
