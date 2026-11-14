@@ -1,4 +1,4 @@
-// Lote L10c (14/11/2026, ORA-FISC-009 e ORA-FISC-006 em parte; migration 20261114233000_cancelamento_da_nota): o
+// Lote L10c (14/11/2026, ORA-FISC-009 e ORA-FISC-006 em parte; migration 20261114215128_cancelamento_da_nota): o
 // cancelamento da nota feito no portal do fisco, registrado com o protocolo e a justificativa (depois dele a venda pode
 // ser cancelada ou pedir outra nota), e a correção da chave registrada errada. Dados FICTÍCIOS; nada é emitido.
 import type { PGlite } from "@electric-sql/pglite";

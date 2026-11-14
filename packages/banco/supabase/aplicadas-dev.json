@@ -69,6 +69,8 @@
     { "versao": "20261114202336", "nome": "entrega_da_os", "md5": "a7a8f418bdfb86b4051944364a64fdb7", "aplicada_em": "2026-11-14" },
     { "versao": "20261114202444", "nome": "pecas_da_os", "md5": "d8d8a679d126b2baef377c6608d7b804", "aplicada_em": "2026-11-14" },
     { "versao": "20261114202535", "nome": "relatorio_da_assistencia", "md5": "833089c3f606ea5082713c121f42c46b", "aplicada_em": "2026-11-14" },
-    { "versao": "20261114205327", "nome": "anexos_da_venda", "md5": "b6e8730659085d32320f1b871502b710", "aplicada_em": "2026-11-14" }
+    { "versao": "20261114205327", "nome": "anexos_da_venda", "md5": "b6e8730659085d32320f1b871502b710", "aplicada_em": "2026-11-14" },
+    { "versao": "20261114215050", "nome": "conciliacao_fiscal", "md5": "b7af9635e943db7adac220b1ecee8699", "aplicada_em": "2026-11-14" },
+    { "versao": "20261114215128", "nome": "cancelamento_da_nota", "md5": "8bca9bb2d31eea3fbc66a76dbd7dfb55", "aplicada_em": "2026-11-14" }
   ]
 }
