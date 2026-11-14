@@ -63,7 +63,7 @@ function Painel({ p, onde }: { p: Previsao; onde: string }) {
     <>
       <Simulador
         semanas={p.semanas} vencidas={p.vencidas} estimativa={est} onde={onde} hoje={p.hoje}
-        fatos={{ financeiras: p.financeiras, aConciliar: p.aConciliar, gavetas: p.gavetas }}
+        fatos={{ estornosAConfirmar: p.estornosAConfirmar, financeiras: p.financeiras, aConciliar: p.aConciliar, gavetas: p.gavetas }}
       />
       <div className="grid gap-4 xl:grid-cols-2 xl:items-start">
         <Fatos p={p} naRede={naRede} />
@@ -88,12 +88,15 @@ function Fatos({ p, naRede }: { p: Previsao; naRede: boolean }) {
       <ul className="divide-y divide-borda">
         {linha("Contas a pagar no período", brl(contas), `${plural(quantidade, "conta em aberto", "contas em aberto")}, pelo vencimento${naRede ? " (lojas e rede)" : " (só as da loja)"}`)}
         {linha("Contas já vencidas", brl(p.vencidas.valor), p.vencidas.quantidade === 0 ? "Nenhuma em aberto" : `${plural(p.vencidas.quantidade, "conta", "contas")} ainda em aberto: entram na primeira semana`)}
+        {p.estornosAConfirmar && linha("Estornos de Pix e cartão a confirmar", brl(p.estornosAConfirmar.valor), p.estornosAConfirmar.quantidade === 0
+          ? "Nenhum pedido de estorno aberto"
+          : `${plural(p.estornosAConfirmar.quantidade, "pedido", "pedidos")} de estorno ainda sem comprovante: devem sair do banco, mas ainda não saíram`)}
         {linha("A receber das financeiras", brl(p.financeiras.valor), p.financeiras.quantidade === 0 ? "Nada em aberto" : `${plural(p.financeiras.quantidade, "venda", "vendas")}, sem data: falta o prazo da PayJoy e da Aiva`)}
         {linha("Cartão e Pix a conciliar", brl(p.aConciliar.valor), p.aConciliar.quantidade === 0 ? "Nada dos últimos 60 dias" : `${plural(p.aConciliar.quantidade, "pagamento", "pagamentos")} dos últimos 60 dias: parte pode já estar no banco`)}
         {linha("Dinheiro nas gavetas agora", brl(p.gavetas.valor), p.gavetas.caixas === 0 ? "Nenhum caixa aberto" : plural(p.gavetas.caixas, "caixa aberto", "caixas abertos"))}
       </ul>
       <p className="mt-3 text-xs text-suave">
-        Os três últimos não entram na previsão: some ao saldo de hoje o que você quiser contar.{" "}
+        {p.estornosAConfirmar ? "Os quatro últimos" : "Os três últimos"} não entram na previsão: some ou tire do saldo de hoje o que você quiser contar.{" "}
         <Link href="/contas-a-pagar" className="font-semibold text-acao hover:underline">Ver as contas a pagar</Link>
       </p>
     </Cartao>
@@ -137,7 +140,8 @@ function Premissas({ est, naRede }: { est: ReturnType<typeof estimativa>; naRede
         <li>Simulação: muda só a estimativa das vendas, de 30% a menos a 30% a mais. As contas não mudam.</li>
         <li>{`Contas (fato): as contas a pagar em aberto, pelo vencimento${naRede ? ", das lojas e da rede" : ", só as da loja (as da rede aparecem na rede inteira)"}; as já vencidas entram na primeira semana.`}</li>
         <li>Saldo de partida: o que você digitar, só no seu navegador. O sistema não sabe o saldo do banco.</li>
-        <li>Não entram: o que as financeiras devem (sem data), o cartão e Pix a conciliar (pode já estar no banco) e o dinheiro das gavetas.</li>
+        <li>Devoluções pagas: o dinheiro devolvido entra no dia em que saiu do caixa; o estorno de Pix e de cartão só quando confirmado com o comprovante, no dia da confirmação. Venda cancelada depois continua recebida na semana em que o dinheiro entrou.</li>
+        <li>Não entram: os estornos de Pix e cartão ainda a confirmar (saem quando confirmados), o que as financeiras devem (sem data), o cartão e Pix a conciliar (pode já estar no banco) e o dinheiro das gavetas.</li>
       </ul>
     </Cartao>
   );

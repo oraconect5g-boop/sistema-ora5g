@@ -19,6 +19,8 @@ export type Previsao = {
   vencidas: Contagem;
   /** As 8 semanas antes de hoje, da mais antiga para a mais nova. */
   base: SemanaBase[];
+  /** Pedidos de estorno de Pix e cartão sem comprovante (correção #82): devem sair, ainda não saíram. Nulo: banco sem a correção. */
+  estornosAConfirmar: Contagem | null;
   financeiras: Contagem;
   aConciliar: Contagem;
   gavetas: { valor: number; caixas: number };
@@ -49,6 +51,7 @@ export function lerPrevisao(dado: unknown, pedido: { semanas: number; unidade: s
     semanas: lista(dado, "semanas").map((s) => ({ inicio: dia(s, "inicio"), fim: dia(s, "fim"), contas: n(s, "contas"), quantidade: n(s, "quantidade") })),
     vencidas: contagem(dado, "vencidas"),
     base: lista(dado, "base").map((b) => ({ inicio: dia(b, "inicio"), fim: dia(b, "fim"), recebido: n(b, "recebido"), devolvido: n(b, "devolvido"), saidasCaixa: n(b, "saidas_caixa") })),
+    estornosAConfirmar: "estornos_a_confirmar" in dado ? contagem(dado, "estornos_a_confirmar") : null,
     financeiras: contagem(dado, "financeiras"),
     aConciliar: contagem(dado, "a_conciliar"),
     gavetas: { valor: n(gavetas, "valor"), caixas: n(gavetas, "caixas") },
