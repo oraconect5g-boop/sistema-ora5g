@@ -2,7 +2,7 @@
   "_leia": "Checkpoint do programa de execução integral (PR #67). Carregar ao retomar e seguir para o próximo item executável da fila; não reiniciar o projeto. Estados vêm de status-requisitos.json (fonte da rastreabilidade); este arquivo acrescenta lote, bloqueio externo e revisão.",
   "atualizado_em": "2026-11-14",
   "base": {
-    "main": "28b3edb",
+    "main": "3390f44",
     "pacote": {
       "pr": 67,
       "branch": "docs/execucao-integral-20261110",
@@ -18,12 +18,12 @@
   },
   "publicado": {
     "homologacao": {
-      "commit": "28b3edb",
+      "commit": "3390f44",
       "quando": "2026-11-14",
-      "conferido": "rodapé da tela de entrada (28b3edb · build 14/11/2026 16:56), /saude 200 e as rotas reais respondendo 307 para o login"
+      "conferido": "rodapé da tela de entrada (3390f44 · build 14/11/2026 17:06), /saude 200 e as rotas reais respondendo 307 para o login"
     },
     "falta_publicar": [
-      "L12e, relatórios da assistência (OS-006, o resto), publicado ao fim do lote",
+      "L12f, alertas no Início: da assistência e da loja (OS-002 e REPORT-007 em parte), sem migration, publicado ao fim do lote",
       "migrations 20261114173000_entrega_da_os (L12c), 20261114183000_pecas_da_os (L12d) e 20261114193000_relatorio_da_assistencia (L12e): aplicar no ora5g-dev pede o sim do proprietário"
     ]
   },
