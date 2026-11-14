@@ -1,10 +1,7 @@
 // ARQUIVO GERADO pelo Supabase (generate_typescript_types do projeto ora5g-dev) depois da
-// migration 20261114092832_bonus_por_meta. Não edite à mão: gere de novo a cada
-// migration aplicada (auditoria do Codex de 08/11, §7.2). As entradas de bonus_fechamentos,
-// bonus_fechamento_linhas, bonus_contestacoes, bonus_fechamento_enviar, bonus_fechamento_aprovar e
-// bonus_fechamento_do_mes (20261114095656_bonus_fechamento, L9b) estão escritas no formato do gerador até
-// a migration ser aplicada no ora5g-dev. O teste tipos-banco.test.ts confere que funções e tabelas
-// públicas daqui são as mesmas das migrations.
+// migration 20261114104004_bonus_fechamento. Não edite à mão: gere de novo a cada
+// migration aplicada (auditoria do Codex de 08/11, §7.2). O teste tipos-banco.test.ts confere
+// que funções e tabelas públicas daqui são as mesmas das migrations.
 export type Json =
   | string
   | number
@@ -406,9 +403,9 @@ export type Database = {
       }
       bonus_fechamentos: {
         Row: {
-          apuracao: Json
           aprovado_em: string | null
           aprovado_por: string | null
+          apuracao: Json
           enviado_em: string
           enviado_por: string
           id: string
@@ -420,9 +417,9 @@ export type Database = {
           unidade_id: string
         }
         Insert: {
-          apuracao: Json
           aprovado_em?: string | null
           aprovado_por?: string | null
+          apuracao: Json
           enviado_em?: string
           enviado_por: string
           id?: string
@@ -434,9 +431,9 @@ export type Database = {
           unidade_id: string
         }
         Update: {
-          apuracao?: Json
           aprovado_em?: string | null
           aprovado_por?: string | null
+          apuracao?: Json
           enviado_em?: string
           enviado_por?: string
           id?: string

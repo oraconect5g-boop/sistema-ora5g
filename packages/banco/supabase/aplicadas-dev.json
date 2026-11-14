@@ -54,6 +54,7 @@
     { "versao": "20261114012952", "nome": "contas_a_pagar", "md5": "71168df92036d4d537827385711b517c", "aplicada_em": "2026-11-13" },
     { "versao": "20261114013120", "nome": "resultado_do_mes", "md5": "05f10b59896103ccf88b5c88fc1a82bf", "aplicada_em": "2026-11-13" },
     { "versao": "20261114013159", "nome": "previsao_de_caixa", "md5": "7292b5793b0b7f748c53e867d92505fe", "aplicada_em": "2026-11-13" },
-    { "versao": "20261114092832", "nome": "bonus_por_meta", "md5": "dd58eee5bde26398e6666ff830b707fd", "aplicada_em": "2026-11-14" }
+    { "versao": "20261114092832", "nome": "bonus_por_meta", "md5": "dd58eee5bde26398e6666ff830b707fd", "aplicada_em": "2026-11-14" },
+    { "versao": "20261114104004", "nome": "bonus_fechamento", "md5": "c3f94fa247705d3c678dd74e33190d4b", "aplicada_em": "2026-11-14" }
   ]
 }
