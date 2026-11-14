@@ -3,7 +3,7 @@
 import { describe, expect, it } from "vitest";
 
 import {
-  atrasada, caminhoDaFotoDaOs, diasEntre, erroDaOs, finalDoImei, lerAbertura, linkDoWhatsApp, mensagemDoAviso, somarDias, tipoDaImagem,
+  atrasada, caminhoDaFotoDaOs, diasEntre, erroDaOs, finalDoImei, lerAbertura, lerOrcamento, linkDoWhatsApp, mensagemDoAviso, somarDias, tipoDaImagem,
 } from "./regras";
 
 const CLIENTE = "00000000-0000-4000-8000-0000000000c1";
@@ -88,5 +88,44 @@ describe("foto e prazos", () => {
     expect(diasEntre("2026-11-01", HOJE)).toBe(13);
     expect(finalDoImei(IMEI)).toBe("IMEI final 1481");
     expect(finalDoImei(null)).toBeNull();
+  });
+});
+
+describe("orçamento (L12b)", () => {
+  const CHAVE_ORC = "00000000-0000-4000-8000-0000000000d1";
+  const base = { chave: CHAVE_ORC, diagnostico: "Tela quebrada", mao_de_obra: "80,00", peca_descricao_1: "Tela", peca_quantidade_1: "1", peca_valor_1: "250,00", prazo_dias: "3" };
+  it("lê o formulário em reais, só as linhas de peça preenchidas, e recusa o que não confere", () => {
+    expect(lerOrcamento(formulario(base))).toEqual({
+      ok: true, chave: CHAVE_ORC, dados: { diagnostico: "Tela quebrada", mao_de_obra: 8_000, pecas: [{ descricao: "Tela", quantidade: 1, valor: 25_000 }], prazo_dias: 3, observacao: null },
+    });
+    expect(lerOrcamento(formulario({ ...base, peca_descricao_1: "", peca_valor_1: "", mao_de_obra: "50" }))).toMatchObject({ ok: true, dados: { pecas: [], mao_de_obra: 5_000 } });
+    for (const [extra, erro] of [
+      [{ chave: "x" }, "dados"], [{ diagnostico: "ab" }, "diagnostico"], [{ mao_de_obra: "-1" }, "mao_de_obra"], [{ mao_de_obra: "abc" }, "mao_de_obra"],
+      [{ peca_quantidade_1: "0" }, "peca"], [{ peca_descricao_1: "T" }, "peca"], [{ peca_valor_1: "x" }, "peca"],
+      [{ mao_de_obra: "", peca_descricao_1: "", peca_valor_1: "" }, "total"], [{ prazo_dias: "61" }, "prazo_dias"], [{ observacao: "x" }, "dados"],
+    ] as const) {
+      expect(lerOrcamento(formulario({ ...base, ...extra } as Record<string, string>)), JSON.stringify(extra)).toEqual({ ok: false, erro });
+    }
+  });
+  it("as mensagens do banco do orçamento viram a mensagem da tela", () => {
+    for (const [mensagem, chave] of [
+      ["O orçamento é feito com o aparelho com o técnico", "orcamento_local"], ["Descreva o diagnóstico (de 3 a 1.000 letras)", "diagnostico"],
+      ["Valor da mão de obra inválido", "mao_de_obra"], ["No máximo 10 peças por orçamento", "pecas_demais"], ["Peça inválida: descrição, quantidade e valor de cada uma", "peca"],
+      ["O total do orçamento vai de R$ 0,01 a R$ 100.000,00", "total"], ["Prazo do conserto: de 1 a 60 dias", "prazo_dias"],
+      ["Em nome do técnico, diga como ele passou o orçamento (mensagem, ligação)", "em_nome"], ["O conserto já foi concluído: o orçamento não muda", "ja_concluido"],
+      ["O conserto só é feito depois da aprovação do cliente registrada", "sem_aprovacao"], ["Este orçamento já foi respondido ou substituído por outro", "orcamento_respondido"],
+      ["Por onde o cliente respondeu: na loja, pelo WhatsApp ou por telefone", "canal"], ["Resposta do cliente: aprovado ou recusado", "resposta"],
+      ["O aviso do orçamento é enquanto ele espera a resposta do cliente", "aviso_orcamento"],
+    ] as const) {
+      expect(erroDaOs({ code: "22023", message: mensagem }), mensagem).toBe(chave);
+    }
+  });
+  it("o aviso do orçamento: diagnóstico, peças, mão de obra, total, prazo e como responder", () => {
+    const os = { numero: 42, aparelho: "Galaxy A15", imei: IMEI, numero_serie: null, defeito: "Tela não liga", acessorios: [], prazo: null, cliente_nome: "Carla Cliente Teste" };
+    const m = mensagemDoAviso("orcamento", os, "Santa Cândida", { numero: 3, diagnostico: "Tela quebrada", pecas: [{ descricao: "Tela", quantidade: 1, valor: 25_000 }], mao_de_obra_centavos: 8_000, total_centavos: 33_000, prazo_dias: 3 });
+    for (const trecho of ["O orçamento da ordem de serviço nº 42 (Galaxy A15, IMEI final 1481) ficou pronto.", "Diagnóstico: Tela quebrada.", "Peça: Tela: R$ 250,00.",
+      "Mão de obra: R$ 80,00.", "Total: R$ 330,00, pronto em até 3 dias depois da aprovação.", "Responda APROVO"]) {
+      expect(m, trecho).toContain(trecho);
+    }
   });
 });

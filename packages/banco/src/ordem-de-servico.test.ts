@@ -307,3 +307,111 @@ describe("quem vê e quem mexe (L12a)", () => {
     expect(await codigo(dono, ABRIR, [JSON.stringify(dados(c)), chave()])).not.toBeNull();
   });
 });
+
+// -------------------------------------------------------------------------------------------------
+// Lote L12b (ORA-OS-003 e ORA-OS-004): orçamento do técnico com histórico e a resposta do cliente
+// -------------------------------------------------------------------------------------------------
+const ORCAR = "select public.os_orcar($1, $2::jsonb, $3) as v";
+const RESPONDER = "select public.os_responder_orcamento($1, $2, $3, $4) as v";
+const CONCLUIR = "select public.os_concluir_servico($1, $2) as v";
+const orcamento = (extra: Record<string, unknown> = {}) => ({
+  diagnostico: "Tela quebrada e conector oxidado", mao_de_obra: 8_000, pecas: [{ descricao: "Tela", quantidade: 1, valor: 25_000 }], prazo_dias: 3, ...extra,
+});
+async function comOTecnico(ana: Sessao) {
+  const { id } = await abrir(ana, await cliente(ana));
+  await valor(ana, PASSO, [id, "enviar_ao_tecnico", null, null]);
+  const tecnico = await naLoja(ids.tecnico, ids.assistencia);
+  await valor(tecnico, PASSO, [id, "tecnico_recebeu", null, null]);
+  return { id, tecnico };
+}
+const servico = async (id: string) => (await db.query<{ s: string }>("select servico as s from public.ordens_servico where id = $1", [id])).rows[0]?.s;
+const orcamentos = async (id: string) =>
+  (await db.query<{ numero: string; situacao: string; total: string; pecas: string; em_nome: boolean; canal: string | null }>(
+    "select numero::text, situacao, total_centavos::text as total, pecas_centavos::text as pecas, em_nome_do_tecnico as em_nome, resposta_canal as canal from public.os_orcamentos where os_id = $1 order by numero", [id])).rows;
+
+describe("orçamento e resposta do cliente (L12b, ORA-OS-003 e ORA-OS-004)", () => {
+  it("o técnico orça com o aparelho com ele; o novo substitui o que esperava; a loja registra a resposta; conserto só depois da aprovação", async () => {
+    const ana = await naLoja(ids.vendedorA, ids.lojaA);
+    const { id, tecnico } = await comOTecnico(ana);
+    expect(await servico(id)).toBe("aguardando_orcamento");
+    expect(await codigo(ana, ORCAR, [id, JSON.stringify(orcamento()), chave()])).toBe("42501"); // o vendedor não orça
+    expect(await codigo(tecnico, CONCLUIR, [id, null])).toBe("22023"); // sem aprovação, nada de conserto
+    const k = chave();
+    const primeiro = await valor<{ id: string; numero: number; repetida: boolean }>(tecnico, ORCAR, [id, JSON.stringify(orcamento()), k]);
+    expect(await valor(tecnico, ORCAR, [id, JSON.stringify(orcamento()), k])).toEqual({ ...primeiro, repetida: true });
+    expect(await codigo(tecnico, ORCAR, [id, JSON.stringify(orcamento({ mao_de_obra: 9_000 })), k])).toBe("OR004");
+    expect(await servico(id)).toBe("aguardando_cliente");
+    for (const [extra, nome] of [
+      [{ diagnostico: "ab" }, "diagnóstico"], [{ mao_de_obra: -1 }, "mão de obra negativa"], [{ mao_de_obra: "oito" }, "mão de obra em texto"],
+      [{ pecas: Array.from({ length: 11 }, () => ({ descricao: "Peça", quantidade: 1, valor: 100 })) }, "11 peças"],
+      [{ pecas: [{ descricao: "Tela", quantidade: 0, valor: 100 }] }, "quantidade zero"], [{ pecas: [{ descricao: "T", quantidade: 1, valor: 100 }] }, "descrição curta"],
+      [{ mao_de_obra: 0, pecas: [] }, "total zero"], [{ prazo_dias: 61 }, "prazo longo"], [{ pecas: "tela" }, "peças fora de lista"],
+    ] as const) {
+      expect(await codigo(tecnico, ORCAR, [id, JSON.stringify(orcamento(extra as Record<string, unknown>)), chave()]), nome).toBe("22023");
+    }
+    // A gerência, em nome do técnico, precisa dizer como ele passou; o novo substitui o que esperava o cliente.
+    const dono = await naLoja(ids.dono, ids.lojaA);
+    expect(await codigo(dono, ORCAR, [id, JSON.stringify(orcamento({ mao_de_obra: 6_000 })), chave()])).toBe("22023");
+    const segundo = await valor<{ id: string }>(dono, ORCAR, [id, JSON.stringify(orcamento({ mao_de_obra: 6_000, observacao: "Técnico mandou por mensagem" })), chave()]);
+    expect((await orcamentos(id)).map((o) => [o.situacao, o.total, o.pecas, o.em_nome])).toEqual([
+      ["substituido", "33000", "25000", false], ["aguardando_cliente", "31000", "25000", true],
+    ]);
+    // A resposta: só a loja da OS, pelo canal; o substituído não se responde; a mesma resposta repetida não muda nada.
+    expect(await codigo(tecnico, RESPONDER, [segundo.id, "aprovado", "whatsapp", null])).toBe("P0002");
+    expect(await codigo(ana, RESPONDER, [segundo.id, "aprovado", "email", null])).toBe("22023");
+    expect(await codigo(ana, RESPONDER, [segundo.id, "talvez", "loja", null])).toBe("22023");
+    expect(await codigo(ana, RESPONDER, [primeiro.id, "aprovado", "loja", null])).toBe("22023");
+    expect(await valor(ana, RESPONDER, [segundo.id, "aprovado", "whatsapp", "Cliente respondeu ok"])).toBe(true);
+    expect(await valor(ana, RESPONDER, [segundo.id, "aprovado", "whatsapp", "Cliente respondeu ok"])).toBe(false);
+    expect(await codigo(ana, RESPONDER, [segundo.id, "recusado", "loja", null])).toBe("22023");
+    expect(await servico(id)).toBe("aprovado");
+    expect((await orcamentos(id)).at(-1)).toMatchObject({ situacao: "aprovado", canal: "whatsapp" });
+    // O conserto: o técnico conclui; o vendedor não; repetido não muda; concluído, o orçamento não muda mais.
+    expect(await codigo(ana, CONCLUIR, [id, null])).toBe("42501");
+    expect(await valor(tecnico, CONCLUIR, [id, "Tela trocada"])).toBe(true);
+    expect(await valor(tecnico, CONCLUIR, [id, "Tela trocada"])).toBe(false);
+    expect(await servico(id)).toBe("concluido");
+    expect(await codigo(tecnico, ORCAR, [id, JSON.stringify(orcamento()), chave()])).toBe("22023");
+    expect((await eventos(id)).filter((e) => ["orcamento", "resposta_do_cliente", "servico_concluido"].includes(e.tipo)).map((e) => [e.tipo, e.em_nome, e.observacao])).toEqual([
+      ["orcamento", false, `Orçamento nº ${primeiro.numero}`], ["orcamento", true, "Técnico mandou por mensagem"],
+      ["resposta_do_cliente", false, "Aprovado pelo cliente (WhatsApp): Cliente respondeu ok"], ["servico_concluido", false, "Tela trocada"],
+    ]);
+  });
+
+  it("recusa: fica registrada; outro orçamento pode vir depois; ou o aparelho volta e é devolvido; o orçamento só com o aparelho no técnico", async () => {
+    const ana = await naLoja(ids.vendedorA, ids.lojaA);
+    const { id, tecnico } = await comOTecnico(ana);
+    const o1 = await valor<{ id: string }>(tecnico, ORCAR, [id, JSON.stringify(orcamento()), chave()]);
+    expect(await valor(ana, RESPONDER, [o1.id, "recusado", "telefone", "Achou caro"])).toBe(true);
+    expect(await servico(id)).toBe("recusado");
+    expect(await codigo(tecnico, CONCLUIR, [id, null])).toBe("22023");
+    await valor(tecnico, ORCAR, [id, JSON.stringify(orcamento({ mao_de_obra: 4_000, pecas: [] })), chave()]);
+    expect(await servico(id)).toBe("aguardando_cliente");
+    await valor(tecnico, PASSO, [id, "tecnico_devolveu", null, null]);
+    expect(await codigo(tecnico, ORCAR, [id, JSON.stringify(orcamento()), chave()])).toBe("22023"); // o aparelho já saiu do técnico
+    await valor(ana, PASSO, [id, "loja_recebeu", null, null]);
+    expect(await valor(ana, PASSO, [id, "devolver_ao_cliente", null, "Cliente recusou o orçamento"])).toBe(true);
+    expect((await orcamentos(id)).map((o) => o.situacao)).toEqual(["recusado", "aguardando_cliente"]);
+  });
+
+  it("quem vê o orçamento; a tabela não muda nem se apaga direto; o aviso do orçamento só enquanto espera o cliente", async () => {
+    const ana = await naLoja(ids.vendedorA, ids.lojaA);
+    const { id, tecnico } = await comOTecnico(ana);
+    expect(await codigo(ana, CONTATO, [id, "orcamento"])).toBe("22023");
+    const o = await valor<{ id: string }>(tecnico, ORCAR, [id, JSON.stringify(orcamento()), chave()]);
+    expect(await valor(ana, CONTATO, [id, "orcamento"])).toBe("41987650001");
+    expect((await comoLinhas(ana, "select id from public.os_orcamentos")).map((l) => l.id)).toEqual([o.id]);
+    expect((await comoLinhas(tecnico, "select id from public.os_orcamentos")).map((l) => l.id)).toEqual([o.id]);
+    expect(await comoLinhas(await naLoja(ids.vendedorAB, ids.lojaB), "select id from public.os_orcamentos")).toEqual([]);
+    expect(await codigo(ana, "update public.os_orcamentos set total_centavos = 1")).toBe("42501");
+    // Nem o dono do banco muda ou apaga um orçamento (os gatilhos recusam).
+    const direto = async (sql: string) => {
+      await db.exec("savepoint direto");
+      try { await db.query(sql, [o.id]); return null; } catch (e) { return (e as { code?: string }).code ?? "erro"; } finally { await db.exec("rollback to savepoint direto"); }
+    };
+    expect(await direto("update public.os_orcamentos set diagnostico = 'Outro' where id = $1")).toBe("42501");
+    expect(await direto("delete from public.os_orcamentos where id = $1")).not.toBeNull();
+    await valor(ana, RESPONDER, [o.id, "aprovado", "loja", null]);
+    expect(await codigo(ana, CONTATO, [id, "orcamento"])).toBe("22023");
+  });
+});

@@ -1,4 +1,6 @@
-import { ArrowLeft, Camera, History, MessageCircle, Route, Smartphone } from "lucide-react";
+import { randomUUID } from "node:crypto";
+
+import { ArrowLeft, Camera, ClipboardList, History, MessageCircle, Route, Smartphone } from "lucide-react";
 import type { Metadata } from "next";
 import Link from "next/link";
 import { notFound } from "next/navigation";
@@ -10,11 +12,14 @@ import { EstadoDoPainel } from "../../../componentes/paineis-de-vendas";
 import { Aviso, Cartao, ListaDados, Selo, TituloPagina } from "../../../componentes/ui";
 import { ehUuid } from "../../../lib/acesso/regras";
 import { FalhaDoServico, obterSessao } from "../../../lib/acesso/sessao";
-import { assistenciasDaRede, lerOrdem, type OrdemDeServico } from "../../../lib/assistencia/consulta";
-import { ACESSORIOS, atrasada, ERROS_DA_OS, EVENTOS, LOCAIS, PASSOS, SITUACOES, type Passo } from "../../../lib/assistencia/regras";
+import { assistenciasDaRede, lerOrdem, type OrcamentoDaOs, type OrdemDeServico } from "../../../lib/assistencia/consulta";
+import {
+  ACESSORIOS, atrasada, CANAIS_DE_RESPOSTA, ERROS_DA_OS, EVENTOS, LINHAS_DE_PECAS, LOCAIS, PASSOS, SERVICOS, SITUACOES, SITUACOES_DO_ORCAMENTO, type Passo, type ServicoDaOs,
+} from "../../../lib/assistencia/regras";
+import { brl } from "../../../lib/formato";
 import { chaveDoCatalogo, type ValorDeParametro } from "../../../lib/parametros";
 import { configuracaoSupabase } from "../../../lib/supabase/configuracao";
-import { avisarPeloWhatsApp, passoDaOrdem } from "../acoes";
+import { avisarPeloWhatsApp, concluirServico, orcarOrdem, passoDaOrdem, responderOrcamento } from "../acoes";
 import { EnviarFotoDaOs } from "./EnviarFotoDaOs";
 
 export const metadata: Metadata = { title: "Ordem de serviço" };
@@ -28,6 +33,8 @@ const OK = {
   enviar_ao_tecnico: "Saída para o técnico registrada.", tecnico_recebeu: "Recebimento pelo técnico registrado.", tecnico_devolveu: "Devolução pelo técnico registrada.",
   loja_recebeu: "Chegada na loja registrada. Avise o cliente pelo WhatsApp.", devolver_ao_cliente: "Aparelho devolvido ao cliente; a OS foi encerrada.",
   cancelar: "Ordem de serviço cancelada; o motivo ficou registrado.", sem_mudanca: "Nada mudou: este passo já estava registrado.",
+  orcamento: "Orçamento registrado. A loja manda ao cliente e registra a resposta.", orcamento_aprovado: "Aprovação do cliente registrada: o técnico pode consertar.",
+  orcamento_recusado: "Recusa do cliente registrada: o aparelho volta para ser devolvido (ou o técnico faz outro orçamento).", concluido: "Conserto concluído registrado.",
 } as const;
 
 // A ordem de serviço (lote L12a: ORA-OS-001, ORA-OS-002 e ORA-OS-005 em parte): os dados do aparelho, a custódia passo a
@@ -50,7 +57,7 @@ export default async function Ordem({ params, searchParams }: { params: Promise<
   if (leitura.estado !== "ok") {
     return <MoldeReal sessao={sessao}><Cartao className="mt-6" titulo="Ordem de serviço"><EstadoDoPainel estado={leitura.estado} fonte="assistencia" tentarDeNovo={`/assistencia/${id}`} /></Cartao></MoldeReal>;
   }
-  const { os, eventos, fotos, nomes } = leitura;
+  const { os, eventos, fotos, nomes, servico, orcamentos } = leitura;
   const daLoja = os.unidade_id === unidade;
   const pela = { loja: daLoja && Boolean(abrir?.data), gerencia: daLoja && Boolean(gerir?.data), tecnico: os.assistencia_id === unidade && Boolean(orcar?.data) };
   const aberta = os.situacao === "aberta";
@@ -64,6 +71,7 @@ export default async function Ordem({ params, searchParams }: { params: Promise<
       <Link href="/assistencia" className="inline-flex min-h-10 items-center gap-1 text-sm font-semibold text-acao"><ArrowLeft aria-hidden className="size-4" /> Assistência</Link>
       <TituloPagina titulo={`OS nº ${os.numero}`} subtitulo={<span className="flex flex-wrap items-center gap-2">
         {aberta ? <Selo tom="info">{LOCAIS[os.local]}</Selo> : <Selo tom="neutro">{SITUACOES[os.situacao]}</Selo>}
+        {aberta && servico && <Selo tom={servico === "aprovado" || servico === "concluido" ? "sucesso" : servico === "recusado" ? "aviso" : "neutro"}>{SERVICOS[servico]}</Selo>}
         {atrasada(os, hoje) && <Selo tom="perigo">{`atrasada · prazo ${dataBr(os.prazo as string)}`}</Selo>}
         <span>{`aberta em ${quando(os.aberta_em)} por ${nomes[os.aberta_por] ?? "—"}`}</span></span>} />
       {ok && <Aviso tom="sucesso" className="mt-4">{OK[ok]}</Aviso>}
@@ -88,12 +96,18 @@ export default async function Ordem({ params, searchParams }: { params: Promise<
         </Cartao>
       )}
 
+      {orcamentos && <CartaoDoOrcamento os={os} aberta={aberta} servico={servico} orcamentos={orcamentos} pela={pela} nomes={nomes} />}
+
       {aberta && pela.loja && (
         <Cartao className="mt-4" titulo="Aviso ao cliente pelo WhatsApp" icone={MessageCircle}
           subtitulo="Abre a conversa no WhatsApp da loja com a mensagem pronta; quem envia é você (sem envio automático até a integração oficial).">
           <div className="flex flex-wrap gap-2">
             <form action={avisarPeloWhatsApp}><input type="hidden" name="os" value={os.id} /><input type="hidden" name="aviso" value="comprovante" />
               <BotaoConfirmar variante="secundario" tamanho="md" enquanto="Abrindo o WhatsApp…">Mandar o comprovante</BotaoConfirmar></form>
+            {servico === "aguardando_cliente" && (
+              <form action={avisarPeloWhatsApp}><input type="hidden" name="os" value={os.id} /><input type="hidden" name="aviso" value="orcamento" />
+                <BotaoConfirmar variante="secundario" tamanho="md" enquanto="Abrindo o WhatsApp…">Mandar o orçamento</BotaoConfirmar></form>
+            )}
             {os.local === "loja" && voltouDoTecnico && (
               <form action={avisarPeloWhatsApp}><input type="hidden" name="os" value={os.id} /><input type="hidden" name="aviso" value="na_loja" />
                 <BotaoConfirmar variante="secundario" tamanho="md" enquanto="Abrindo o WhatsApp…">Avisar que o aparelho chegou</BotaoConfirmar></form>
@@ -173,4 +187,81 @@ function ProximosPassos({ os, pela, foiAoTecnico, assistencias }: {
   if (os.local === "a_caminho_da_loja" && pela.loja) passos.push(<FormularioDoPasso key="chegou" os={os.id} passo="loja_recebeu">{PASSOS.loja_recebeu.rotulo}</FormularioDoPasso>);
   if (passos.length === 0) return <p className="text-sm text-suave">{`Nenhum passo seu agora: aguarde ${os.local === "com_tecnico" || os.local === "a_caminho_do_tecnico" ? "o técnico" : "a loja"}.`}</p>;
   return <div className="grid gap-3 sm:grid-cols-2">{passos}</div>;
+}
+
+function CartaoDoOrcamento({ os, aberta, servico, orcamentos, pela, nomes }: {
+  os: OrdemDeServico; aberta: boolean; servico: ServicoDaOs | null; orcamentos: OrcamentoDaOs[];
+  pela: { loja: boolean; gerencia: boolean; tecnico: boolean }; nomes: Record<string, string>;
+}) {
+  const vigente = orcamentos.find((o) => o.situacao === "aguardando_cliente");
+  const comOTecnico = aberta && os.local === "com_tecnico";
+  const podeOrcar = comOTecnico && servico !== "concluido" && (pela.tecnico || pela.gerencia);
+  const podeConcluir = comOTecnico && servico === "aprovado" && (pela.tecnico || pela.gerencia);
+  const emNome = !pela.tecnico;
+  return (
+    <Cartao className="mt-4" titulo="Orçamento" icone={ClipboardList}
+      subtitulo={servico ? `${SERVICOS[servico]}: nada é consertado sem a resposta do cliente registrada` : "Nada é consertado sem a resposta do cliente registrada"}>
+      {orcamentos.length === 0 && <p className="text-sm text-suave">{`Nenhum orçamento ainda.${aberta && os.local !== "com_tecnico" ? " O orçamento é feito com o aparelho com o técnico." : ""}`}</p>}
+      <ul className="space-y-3">
+        {orcamentos.map((o) => (
+          <li key={o.id} className="rounded-xl border border-borda px-4 py-3 text-sm">
+            <p className="flex flex-wrap items-center gap-2 font-semibold">
+              {`Orçamento nº ${o.numero} · ${brl(o.total_centavos)}`}
+              <Selo tom={o.situacao === "aprovado" ? "sucesso" : o.situacao === "recusado" ? "aviso" : o.situacao === "substituido" ? "neutro" : "info"}>{SITUACOES_DO_ORCAMENTO[o.situacao]}</Selo>
+            </p>
+            <p className="mt-1">{o.diagnostico}</p>
+            <ul className="mt-1 text-xs text-suave">
+              {o.pecas.map((p, i) => <li key={i}>{`${p.descricao}${p.quantidade > 1 ? ` × ${p.quantidade}` : ""}: ${brl(p.quantidade * p.valor)}`}</li>)}
+              {o.mao_de_obra_centavos > 0 && <li>{`Mão de obra: ${brl(o.mao_de_obra_centavos)}`}</li>}
+              {o.prazo_dias && <li>{`Prazo do conserto: ${o.prazo_dias} ${o.prazo_dias === 1 ? "dia" : "dias"} depois da aprovação`}</li>}
+            </ul>
+            <p className="mt-1 text-xs text-suave">{`Registrado em ${quando(o.registrado_em)} por ${nomes[o.registrado_por] ?? "—"}${o.em_nome_do_tecnico ? " (em nome do técnico)" : ""}${o.observacao ? `: ${o.observacao}` : ""}`}</p>
+            {o.respondido_em && (
+              <p className="mt-1 text-xs text-suave">{`${o.situacao === "aprovado" ? "Aprovado" : "Recusado"} pelo cliente ${CANAIS_DE_RESPOSTA[o.resposta_canal as keyof typeof CANAIS_DE_RESPOSTA]?.toLowerCase() ?? ""} em ${quando(o.respondido_em)}, registrado por ${nomes[o.respondido_por ?? ""] ?? "—"}${o.resposta_observacao ? `: ${o.resposta_observacao}` : ""}`}</p>
+            )}
+          </li>
+        ))}
+      </ul>
+
+      {aberta && pela.loja && vigente && (
+        <form action={responderOrcamento} className="mt-3 grid gap-2 rounded-xl border border-borda p-3 sm:grid-cols-4">
+          <input type="hidden" name="os" value={os.id} />
+          <input type="hidden" name="orcamento" value={vigente.id} />
+          <p className="text-sm font-semibold sm:col-span-4">{`Resposta do cliente ao orçamento nº ${vigente.numero}`}</p>
+          <label className="text-sm font-medium">Resposta<select name="resposta" required className={campo}><option value="aprovado">Aprovou</option><option value="recusado">Recusou</option></select></label>
+          <label className="text-sm font-medium">Por onde<select name="canal" required className={campo}>{Object.entries(CANAIS_DE_RESPOSTA).map(([k, v]) => <option key={k} value={k}>{v}</option>)}</select></label>
+          <label className="text-sm font-medium sm:col-span-2">Observação <span className="font-normal text-suave">(opcional)</span><input name="observacao" maxLength={300} className={campo} /></label>
+          <div className="sm:col-span-4"><BotaoConfirmar variante="secundario" tamanho="md">Registrar a resposta</BotaoConfirmar></div>
+        </form>
+      )}
+
+      {podeOrcar && (
+        <form action={orcarOrdem} className="mt-3 grid gap-2 rounded-xl border border-borda p-3 sm:grid-cols-6">
+          <input type="hidden" name="os" value={os.id} />
+          <input type="hidden" name="chave" value={randomUUID()} />
+          <p className="text-sm font-semibold sm:col-span-6">{vigente ? "Novo orçamento (substitui o que espera o cliente)" : servico === "aprovado" ? "Novo orçamento (o cliente precisa aprovar de novo)" : "Registrar o orçamento"}</p>
+          <label className="text-sm font-medium sm:col-span-6">Diagnóstico<textarea name="diagnostico" required minLength={3} maxLength={1000} rows={2} className={`${campo} py-2`} /></label>
+          {Array.from({ length: LINHAS_DE_PECAS }, (_, i) => i + 1).map((i) => (
+            <div key={i} className="grid gap-2 sm:col-span-6 sm:grid-cols-6">
+              <label className="text-sm font-medium sm:col-span-3">{`Peça ${i}`} <span className="font-normal text-suave">(opcional)</span><input name={`peca_descricao_${i}`} maxLength={120} className={campo} /></label>
+              <label className="text-sm font-medium">Qtd.<input name={`peca_quantidade_${i}`} inputMode="numeric" defaultValue="1" maxLength={2} className={campo} /></label>
+              <label className="text-sm font-medium sm:col-span-2">Valor (R$)<input name={`peca_valor_${i}`} inputMode="decimal" className={campo} /></label>
+            </div>
+          ))}
+          <label className="text-sm font-medium sm:col-span-2">Mão de obra (R$)<input name="mao_de_obra" inputMode="decimal" className={campo} /></label>
+          <label className="text-sm font-medium sm:col-span-2">Prazo do conserto (dias) <span className="font-normal text-suave">(opcional)</span><input name="prazo_dias" inputMode="numeric" maxLength={2} className={campo} /></label>
+          <label className="text-sm font-medium sm:col-span-2">{emNome ? "Como o técnico passou o orçamento" : "Observação (opcional)"}<input name="observacao" required={emNome} minLength={emNome ? 2 : undefined} maxLength={300} className={campo} /></label>
+          <div className="sm:col-span-6"><BotaoConfirmar variante="secundario" tamanho="md">{emNome ? "Registrar o orçamento (em nome do técnico)" : "Registrar o orçamento"}</BotaoConfirmar></div>
+        </form>
+      )}
+
+      {podeConcluir && (
+        <form action={concluirServico} className="mt-3 space-y-2 rounded-xl border border-borda p-3">
+          <input type="hidden" name="os" value={os.id} />
+          <label className="block text-sm font-medium">{emNome ? "Como o técnico confirmou o conserto" : "Observação (opcional)"}<input name="observacao" required={emNome} minLength={emNome ? 2 : undefined} maxLength={300} className={campo} /></label>
+          <BotaoConfirmar variante="secundario" tamanho="md">{emNome ? "Conserto concluído (em nome do técnico)" : "Conserto concluído"}</BotaoConfirmar>
+        </form>
+      )}
+    </Cartao>
+  );
 }
