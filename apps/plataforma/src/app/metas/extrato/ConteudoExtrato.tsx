@@ -1,8 +1,9 @@
 import { CircleSlash, Gift, ReceiptText, ShoppingBag, Signal, Undo2, type LucideIcon } from "lucide-react";
 
 import { EstadoDoPainel } from "../../../componentes/paineis-de-vendas";
-import { Cartao, EstadoVazio } from "../../../componentes/ui";
+import { Aviso, Cartao, EstadoVazio } from "../../../componentes/ui";
 import type { LeituraDoBonus } from "../../../lib/bonus/consulta";
+import { dataEHora, linhaDoVendedor, type FechamentoDoMes } from "../../../lib/bonus/fechamento";
 import { contaDaMedida, type BonusDoMes, type Efeito, type Extrato, type FatoDoExtrato, type ServicoDoConnect, type TipoDoFato } from "../../../lib/bonus/regras";
 import { centavosCsv } from "../../../lib/csv";
 import { brl, brlComSinal, numero } from "../../../lib/formato";
@@ -54,8 +55,15 @@ export function planilhaDoExtrato(e: Extrato): { colunas: string[]; linhas: (str
   };
 }
 
-export function ResumoDoBonus({ bonus, vendedor, mes, fase, aqui }: { bonus: LeituraDoBonus<BonusDoMes>; vendedor: string; mes: string; fase: FaseDoMes; aqui: string }) {
-  const cartao = { titulo: `Bônus de ${nomeDoMes(mes)}`, icone: Gift, subtitulo: "Provisório até o fechamento do mês. Vale a maior faixa alcançada em cada medida." };
+export function ResumoDoBonus({ bonus, vendedor, mes, fase, aqui, fechamento = null }: {
+  bonus: LeituraDoBonus<BonusDoMes>; vendedor: string; mes: string; fase: FaseDoMes; aqui: string;
+  /** Mês que terminou (L9b): o fechamento da loja (a gestão) ou a própria linha (o vendedor). */
+  fechamento?: LeituraDoBonus<FechamentoDoMes> | null;
+}) {
+  const fechada = linhaDoVendedor(fechamento?.estado === "ok" ? fechamento.dados : null, vendedor);
+  const aprovado = fechada?.totalAprovado ?? null;
+  const situacao = aprovado !== null && fechada?.aprovadoEm ? `Aprovado pelo dono em ${dataEHora(fechada.aprovadoEm)}` : fechada ? "Em aprovação pelo dono" : "Provisório até o fechamento do mês";
+  const cartao = { titulo: `Bônus de ${nomeDoMes(mes)}`, icone: Gift, subtitulo: `${situacao}. Vale a maior faixa alcançada em cada medida.` };
   if (bonus.estado !== "ok") {
     return (
       <Cartao {...cartao}>
@@ -72,7 +80,13 @@ export function ResumoDoBonus({ bonus, vendedor, mes, fase, aqui }: { bonus: Lei
   }
   const linha = b.vendedores.find((v) => v.vendedorId === vendedor);
   return (
-    <Cartao {...cartao} acao={<span className="numeros text-xl font-bold">{brl(linha?.total ?? 0)}</span>}>
+    <Cartao {...cartao} acao={<span className="numeros text-xl font-bold">{brl(aprovado ?? linha?.total ?? 0)}</span>}>
+      {fechada?.ajusteMotivo && (
+        <Aviso tom="info" titulo="O dono aprovou outro valor" className="mb-4">{semQuebra(`${fechada.ajusteMotivo} (calculado: ${brl(fechada.totalCalculado)}).`)}</Aviso>
+      )}
+      {fechamento?.estado === "falha" && (
+        <Aviso tom="aviso" titulo="Não deu para ler o fechamento agora" className="mb-4">O valor acima é o calculado; o aprovado pelo dono pode ser outro. Tente de novo em instantes.</Aviso>
+      )}
       <ul className="grid gap-4 md:grid-cols-2">
         {medidas.map((m) => (
           <MedidaDoBonus key={m} medida={m} conta={linha?.medidas[m] ?? contaDaMedida(null, 0, [])} faixas={b.regras[m]?.faixas ?? []} terminou={fase === "passado"} />

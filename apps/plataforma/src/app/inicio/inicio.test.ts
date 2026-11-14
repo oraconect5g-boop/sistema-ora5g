@@ -628,6 +628,28 @@ describe("Início: o gerente acompanha a loja do turno", () => {
 });
 
 // ---------------------------------------------------------------------------------------------
+describe("Início: fechamentos do bônus à espera do dono (L9b)", () => {
+  it("o dono vê quantos aguardam a aprovação dele e chega à tela; banco sem a tabela, a pendência some; o gerente nem pergunta", async () => {
+    entrar("dono");
+    cenario.permissoes.add("bonus.aprovar");
+    cenario.tabelas.bonus_fechamentos = [{ situacao: "enviado" }, { situacao: "enviado" }, { situacao: "aprovado" }];
+    let p = await pagina();
+    expect(p.pendencias["Bônus para aprovar"]).toBe(2);
+    expect(p.enderecos).toContain("/metas/fechamento");
+    cenario.semContagem = ["bonus_fechamentos"];
+    expect((await pagina()).pendencias["Bônus para aprovar"]).toBeUndefined();
+    cenario.semContagem = [];
+    cenario.errosDasTabelas.bonus_fechamentos = { code: "PGRST205" };
+    expect((await pagina()).pendencias["Bônus para aprovar"]).toBeUndefined();
+    entrar("gerente");
+    cenario.lidas = [];
+    p = await pagina();
+    expect(cenario.lidas).not.toContain("bonus_fechamentos");
+    expect(p.pendencias["Bônus para aprovar"]).toBeUndefined();
+  });
+});
+
+// ---------------------------------------------------------------------------------------------
 describe("Início: o vendedor acompanha só as próprias vendas", () => {
   beforeEach(() => {
     entrar("vendedor", ANA);

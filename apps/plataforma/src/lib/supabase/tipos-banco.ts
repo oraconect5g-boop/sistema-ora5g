@@ -1,7 +1,10 @@
 // ARQUIVO GERADO pelo Supabase (generate_typescript_types do projeto ora5g-dev) depois da
 // migration 20261114092832_bonus_por_meta. Não edite à mão: gere de novo a cada
-// migration aplicada (auditoria do Codex de 08/11, §7.2). O teste tipos-banco.test.ts confere
-// que funções e tabelas públicas daqui são as mesmas das migrations.
+// migration aplicada (auditoria do Codex de 08/11, §7.2). As entradas de bonus_fechamentos,
+// bonus_fechamento_linhas, bonus_contestacoes, bonus_fechamento_enviar, bonus_fechamento_aprovar e
+// bonus_fechamento_do_mes (20261114095656_bonus_fechamento, L9b) estão escritas no formato do gerador até
+// a migration ser aplicada no ora5g-dev. O teste tipos-banco.test.ts confere que funções e tabelas
+// públicas daqui são as mesmas das migrations.
 export type Json =
   | string
   | number
@@ -263,6 +266,208 @@ export type Database = {
             isOneToOne: false
             referencedRelation: "organizacoes"
             referencedColumns: ["id"]
+          },
+        ]
+      }
+      bonus_contestacoes: {
+        Row: {
+          contestada_em: string
+          contestada_por: string
+          decidida_em: string | null
+          decidida_por: string | null
+          decisao: string | null
+          fechamento_id: string
+          id: string
+          motivo: string
+          organizacao_id: string
+          resposta: string | null
+          unidade_id: string
+          vendedor_id: string
+        }
+        Insert: {
+          contestada_em?: string
+          contestada_por: string
+          decidida_em?: string | null
+          decidida_por?: string | null
+          decisao?: string | null
+          fechamento_id: string
+          id?: string
+          motivo: string
+          organizacao_id: string
+          resposta?: string | null
+          unidade_id: string
+          vendedor_id: string
+        }
+        Update: {
+          contestada_em?: string
+          contestada_por?: string
+          decidida_em?: string | null
+          decidida_por?: string | null
+          decisao?: string | null
+          fechamento_id?: string
+          id?: string
+          motivo?: string
+          organizacao_id?: string
+          resposta?: string | null
+          unidade_id?: string
+          vendedor_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "bonus_contestacoes_contestada_por_fkey"
+            columns: ["contestada_por"]
+            isOneToOne: false
+            referencedRelation: "perfis_usuario"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "bonus_contestacoes_decidida_por_fkey"
+            columns: ["decidida_por"]
+            isOneToOne: false
+            referencedRelation: "perfis_usuario"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "bonus_contestacoes_fechamento_id_vendedor_id_fkey"
+            columns: ["fechamento_id", "vendedor_id"]
+            isOneToOne: true
+            referencedRelation: "bonus_fechamento_linhas"
+            referencedColumns: ["fechamento_id", "vendedor_id"]
+          },
+          {
+            foreignKeyName: "bonus_contestacoes_unidade_id_organizacao_id_fkey"
+            columns: ["unidade_id", "organizacao_id"]
+            isOneToOne: false
+            referencedRelation: "unidades"
+            referencedColumns: ["id", "organizacao_id"]
+          },
+        ]
+      }
+      bonus_fechamento_linhas: {
+        Row: {
+          ajuste_motivo: string | null
+          aprovado_em: string | null
+          fechamento_id: string
+          id: string
+          mes: string
+          organizacao_id: string
+          total_aprovado: number | null
+          total_calculado: number
+          unidade_id: string
+          vendedor_id: string
+        }
+        Insert: {
+          ajuste_motivo?: string | null
+          aprovado_em?: string | null
+          fechamento_id: string
+          id?: string
+          mes: string
+          organizacao_id: string
+          total_aprovado?: number | null
+          total_calculado: number
+          unidade_id: string
+          vendedor_id: string
+        }
+        Update: {
+          ajuste_motivo?: string | null
+          aprovado_em?: string | null
+          fechamento_id?: string
+          id?: string
+          mes?: string
+          organizacao_id?: string
+          total_aprovado?: number | null
+          total_calculado?: number
+          unidade_id?: string
+          vendedor_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "bonus_fechamento_linhas_fechamento_id_fkey"
+            columns: ["fechamento_id"]
+            isOneToOne: false
+            referencedRelation: "bonus_fechamentos"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "bonus_fechamento_linhas_unidade_id_organizacao_id_fkey"
+            columns: ["unidade_id", "organizacao_id"]
+            isOneToOne: false
+            referencedRelation: "unidades"
+            referencedColumns: ["id", "organizacao_id"]
+          },
+          {
+            foreignKeyName: "bonus_fechamento_linhas_vendedor_id_fkey"
+            columns: ["vendedor_id"]
+            isOneToOne: false
+            referencedRelation: "perfis_usuario"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      bonus_fechamentos: {
+        Row: {
+          apuracao: Json
+          aprovado_em: string | null
+          aprovado_por: string | null
+          enviado_em: string
+          enviado_por: string
+          id: string
+          mes: string
+          organizacao_id: string
+          situacao: string
+          total_aprovado: number | null
+          total_calculado: number
+          unidade_id: string
+        }
+        Insert: {
+          apuracao: Json
+          aprovado_em?: string | null
+          aprovado_por?: string | null
+          enviado_em?: string
+          enviado_por: string
+          id?: string
+          mes: string
+          organizacao_id: string
+          situacao?: string
+          total_aprovado?: number | null
+          total_calculado: number
+          unidade_id: string
+        }
+        Update: {
+          apuracao?: Json
+          aprovado_em?: string | null
+          aprovado_por?: string | null
+          enviado_em?: string
+          enviado_por?: string
+          id?: string
+          mes?: string
+          organizacao_id?: string
+          situacao?: string
+          total_aprovado?: number | null
+          total_calculado?: number
+          unidade_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "bonus_fechamentos_aprovado_por_fkey"
+            columns: ["aprovado_por"]
+            isOneToOne: false
+            referencedRelation: "perfis_usuario"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "bonus_fechamentos_enviado_por_fkey"
+            columns: ["enviado_por"]
+            isOneToOne: false
+            referencedRelation: "perfis_usuario"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "bonus_fechamentos_unidade_id_organizacao_id_fkey"
+            columns: ["unidade_id", "organizacao_id"]
+            isOneToOne: false
+            referencedRelation: "unidades"
+            referencedColumns: ["id", "organizacao_id"]
           },
         ]
       }
@@ -4627,6 +4832,23 @@ export type Database = {
       bonus_do_mes: {
         Args: { p_mes: string; p_unidade: string }
         Returns: Json
+      }
+      bonus_fechamento_aprovar: {
+        Args: { p_decisoes: Json; p_fechamento: string }
+        Returns: number
+      }
+      bonus_fechamento_do_mes: {
+        Args: { p_mes: string; p_unidade: string }
+        Returns: Json
+      }
+      bonus_fechamento_enviar: {
+        Args: {
+          p_contestacoes: Json
+          p_mes: string
+          p_totais: Json
+          p_unidade: string
+        }
+        Returns: string
       }
       caixa_cancelar_saida: { Args: { p_saida: string }; Returns: boolean }
       caixa_decidir_saida: {

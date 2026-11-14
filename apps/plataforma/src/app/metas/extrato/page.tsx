@@ -9,7 +9,7 @@ import { Aviso, classeBotao, FiltroSegmentado, TituloPagina } from "../../../com
 import { podeVerMetas } from "../../../lib/acesso/menu";
 import { ehUuid } from "../../../lib/acesso/regras";
 import { obterSessao } from "../../../lib/acesso/sessao";
-import { consultarBonus, consultarExtrato } from "../../../lib/bonus/consulta";
+import { consultarBonus, consultarExtrato, consultarFechamento } from "../../../lib/bonus/consulta";
 import { geradoEm, parteDoNome } from "../../../lib/csv";
 import type { LojaDoFiltro } from "../../../lib/financeiro/escopo";
 import { lojasQueVendem } from "../../../lib/inicio/consulta";
@@ -62,10 +62,12 @@ export default async function ExtratoDoBonus({ searchParams }: { searchParams: P
   });
   const aqui = enderecoDe({});
 
-  const [extrato, bonus, equipe] = await Promise.all([
+  const [extrato, bonus, equipe, fechamento] = await Promise.all([
     consultarExtrato(supabase, mes, loja.id, vendedor),
     consultarBonus(supabase, mes, loja.id),
     gestao ? consultarEquipe(supabase, mes, loja.id) : Promise.resolve(null),
+    // O fechamento (L9b), no mês que terminou: o valor aprovado de quem está no extrato.
+    fase === "passado" ? consultarFechamento(supabase, mes, loja.id, gestao ? undefined : usuario.id) : Promise.resolve(null),
   ]);
   const pessoas = equipe?.estado === "ok" ? equipe.dados : [];
   const nome = proprio ? null : (pessoas.find((p) => p.id === vendedor)?.nome ?? "Vendedor");
@@ -76,7 +78,7 @@ export default async function ExtratoDoBonus({ searchParams }: { searchParams: P
       <TituloPagina
         sobretitulo={loja.nome}
         titulo={nome === null ? "Meu extrato do bônus" : `Extrato de ${nome}`}
-        subtitulo={`${nomeDoMes(mes)}: cada venda, cancelamento, devolução e operação do Ora Connect que conta para as metas. Provisório até o fechamento do mês.`}
+        subtitulo={`${nomeDoMes(mes)}: cada venda, cancelamento, devolução e operação do Ora Connect que conta para as metas. O bônus é provisório até o dono aprovar o fechamento do mês.`}
         acao={(
           <div className="nao-imprimir flex flex-wrap gap-2">
             <Link href={endereco("/metas", { mes: mesNoEndereco, loja: lojaNoEndereco })} className={classeBotao("secundario", "md")}><ArrowLeft aria-hidden className="size-4" /> Metas</Link>
@@ -100,7 +102,7 @@ export default async function ExtratoDoBonus({ searchParams }: { searchParams: P
           />
         )}
       </div>
-      <ResumoDoBonus bonus={bonus} vendedor={vendedor} mes={mes} fase={fase} aqui={aqui} />
+      <ResumoDoBonus bonus={bonus} vendedor={vendedor} mes={mes} fase={fase} aqui={aqui} fechamento={fechamento} />
       <FatosDoMes extrato={extrato} mes={mes} aqui={aqui} />
     </MoldeReal>
   );

@@ -8,7 +8,7 @@ export const PERMISSOES_DO_MENU = [
   "venda.registrar", "venda.ver_unidade", "venda.ver_todas", "caixa.abrir", "caixa.conferir", "estoque.consultar",
   "connect.operar", "connect.gerir", "desconto.aprovar", "nota.aprovar", "auditoria.ver", "usuarios.gerir", "unidades.gerir",
   "catalogo.gerir", "cliente.buscar", "crm.atender", "pagamento.conciliar", "terminal.gerir",
-  "metas.gerir", "metas.ver_unidade", "metas.ver_propria", "conta_pagar.gerir", "resultado.ver", "previsao.ver", "bonus.definir",
+  "metas.gerir", "metas.ver_unidade", "metas.ver_propria", "conta_pagar.gerir", "resultado.ver", "previsao.ver", "bonus.definir", "bonus.conferir", "bonus.aprovar",
 ] as const;
 export type PermissaoDoMenu = (typeof PERMISSOES_DO_MENU)[number];
 /** Conferidas para a rede inteira (sem loja): só papéis de organização as têm (dono e administrador). */
@@ -26,6 +26,8 @@ type Permissoes = ReadonlySet<string>;
 export const podeVerFinanceiro = (p: Permissoes) => p.has("venda.ver_unidade") || p.has("venda.ver_todas");
 /** Metas (G4b): a gestão vê a loja e a equipe; o vendedor, só as próprias. */
 export const podeVerMetas = (p: Permissoes) => p.has("metas.gerir") || p.has("metas.ver_unidade") || p.has("metas.ver_propria");
+/** Fechamento do bônus (L9b): a gestão da loja (quem confere, aprova ou acompanha as metas dela). */
+export const podeVerFechamento = (p: Permissoes) => p.has("bonus.conferir") || p.has("bonus.aprovar") || p.has("metas.gerir") || p.has("metas.ver_unidade");
 export const PAGINAS_REAIS: Record<PaginaReal, { titulo: string; curto: string; caminho: string; icone: string; grupo: GrupoReal; liberada: (p: Permissoes) => boolean }> = {
   inicio: { titulo: "Início", curto: "Início", caminho: "/inicio", icone: "inicio", grupo: "Operação", liberada: () => true },
   vender: { titulo: "Vender", curto: "Vender", caminho: "/vender", icone: "vender", grupo: "Operação", liberada: (p) => p.has("venda.registrar") },
