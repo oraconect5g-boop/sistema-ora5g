@@ -8,7 +8,7 @@ export const PERMISSOES_DO_MENU = [
   "venda.registrar", "venda.ver_unidade", "venda.ver_todas", "caixa.abrir", "caixa.conferir", "estoque.consultar",
   "connect.operar", "connect.gerir", "desconto.aprovar", "nota.aprovar", "auditoria.ver", "usuarios.gerir", "unidades.gerir",
   "catalogo.gerir", "cliente.buscar", "crm.atender", "pagamento.conciliar", "terminal.gerir",
-  "metas.gerir", "metas.ver_unidade", "metas.ver_propria", "conta_pagar.gerir", "resultado.ver",
+  "metas.gerir", "metas.ver_unidade", "metas.ver_propria", "conta_pagar.gerir", "resultado.ver", "previsao.ver",
 ] as const;
 export type PermissaoDoMenu = (typeof PERMISSOES_DO_MENU)[number];
 /** Conferidas para a rede inteira (sem loja): só papéis de organização as têm (dono e administrador). */
@@ -17,7 +17,7 @@ export const PERMISSOES_DA_REDE: ReadonlySet<PermissaoDoMenu> = new Set(["usuari
 export type PaginaReal =
   | "inicio" | "vender" | "vendas" | "clientes" | "funil" | "agenda" | "caixa" | "connect"
   | "estoque" | "transferencias" | "catalogo" | "produtos"
-  | "financeiro" | "relatorios" | "metas" | "contas_pagar" | "resultado" | "conciliacao" | "financeiras" | "maquininhas" | "aprovacoes" | "notas" | "auditoria"
+  | "financeiro" | "relatorios" | "metas" | "contas_pagar" | "resultado" | "previsao" | "conciliacao" | "financeiras" | "maquininhas" | "aprovacoes" | "notas" | "auditoria"
   | "equipe" | "lojas";
 export type GrupoReal = "Operação" | "Clientes" | "Estoque e catálogo" | "Gestão" | "Administração";
 export const GRUPOS_REAIS: readonly GrupoReal[] = ["Operação", "Clientes", "Estoque e catálogo", "Gestão", "Administração"];
@@ -58,6 +58,8 @@ export const PAGINAS_REAIS: Record<PaginaReal, { titulo: string; curto: string; 
   contas_pagar: { titulo: "Contas a pagar", curto: "A pagar", caminho: "/contas-a-pagar", icone: "contas", grupo: "Gestão", liberada: (p) => p.has("conta_pagar.gerir") },
   // Resultado do mês (L8b): só o dono (resultado.ver; decisão do proprietário de 13/11/2026).
   resultado: { titulo: "Resultado do mês", curto: "Resultado", caminho: "/resultado", icone: "resultado", grupo: "Gestão", liberada: (p) => p.has("resultado.ver") },
+  // Previsão de caixa (L8c): só o dono (previsao.ver; decisão do proprietário de 13/11/2026).
+  previsao: { titulo: "Previsão de caixa", curto: "Previsão", caminho: "/previsao", icone: "previsao", grupo: "Gestão", liberada: (p) => p.has("previsao.ver") },
   // Conciliação e maquininhas (L7a): gerência da loja (dono e gerente).
   conciliacao: { titulo: "Conciliação de pagamentos", curto: "Conciliação", caminho: "/pagamentos/conciliacao", icone: "conciliacao", grupo: "Gestão", liberada: (p) => p.has("pagamento.conciliar") },
   // Valores a receber das financeiras (L7b): o repasse da PayJoy e da Aiva, registrado pela gerência da loja.
@@ -73,7 +75,7 @@ export const PAGINAS_REAIS: Record<PaginaReal, { titulo: string; curto: string; 
 
 // Barra inferior do celular: até 4 atalhos, na ordem de uso no balcão; o resto fica em "Mais".
 const PRIORIDADE_NO_CELULAR: readonly PaginaReal[] = [
-  "inicio", "vender", "aprovacoes", "vendas", "financeiro", "estoque", "metas", "clientes", "agenda", "funil", "caixa", "connect", "catalogo", "produtos", "relatorios", "notas", "contas_pagar", "resultado", "conciliacao", "financeiras", "maquininhas", "equipe", "lojas", "auditoria", "transferencias",
+  "inicio", "vender", "aprovacoes", "vendas", "financeiro", "estoque", "metas", "clientes", "agenda", "funil", "caixa", "connect", "catalogo", "produtos", "relatorios", "notas", "contas_pagar", "resultado", "previsao", "conciliacao", "financeiras", "maquininhas", "equipe", "lojas", "auditoria", "transferencias",
 ];
 
 export function montarMenu(permissoes: Permissoes) {

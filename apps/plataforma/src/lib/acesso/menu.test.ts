@@ -6,7 +6,7 @@ import { montarMenu, PAGINAS_REAIS } from "./menu";
 const PAPEL = {
   vendedor: ["venda.registrar", "caixa.abrir", "estoque.consultar", "connect.operar", "cliente.buscar", "crm.atender", "metas.ver_propria"],
   gerente: ["venda.registrar", "venda.ver_unidade", "caixa.abrir", "caixa.conferir", "estoque.consultar", "connect.operar", "connect.gerir", "desconto.aprovar", "nota.aprovar", "auditoria.ver", "cliente.buscar", "crm.atender", "pagamento.conciliar", "terminal.gerir", "metas.gerir", "metas.ver_unidade", "conta_pagar.gerir"],
-  dono: ["venda.registrar", "venda.ver_unidade", "venda.ver_todas", "caixa.abrir", "caixa.conferir", "estoque.consultar", "connect.operar", "connect.gerir", "desconto.aprovar", "nota.aprovar", "auditoria.ver", "usuarios.gerir", "unidades.gerir", "catalogo.gerir", "cliente.buscar", "crm.atender", "pagamento.conciliar", "terminal.gerir", "metas.gerir", "metas.ver_unidade", "metas.ver_propria", "conta_pagar.gerir", "resultado.ver"],
+  dono: ["venda.registrar", "venda.ver_unidade", "venda.ver_todas", "caixa.abrir", "caixa.conferir", "estoque.consultar", "connect.operar", "connect.gerir", "desconto.aprovar", "nota.aprovar", "auditoria.ver", "usuarios.gerir", "unidades.gerir", "catalogo.gerir", "cliente.buscar", "crm.atender", "pagamento.conciliar", "terminal.gerir", "metas.gerir", "metas.ver_unidade", "metas.ver_propria", "conta_pagar.gerir", "resultado.ver", "previsao.ver"],
   administrador: ["venda.ver_todas", "estoque.consultar", "auditoria.ver", "usuarios.gerir", "unidades.gerir", "catalogo.gerir"],
   tecnico: [],
 } as const;
@@ -40,6 +40,13 @@ describe("menu único das telas reais", () => {
     for (const papel of ["gerente", "vendedor", "administrador", "tecnico"] as const) expect(menu(papel).visiveis).not.toContain("resultado");
     expect(PAGINAS_REAIS.resultado).toMatchObject({ caminho: "/resultado", grupo: "Gestão", icone: "resultado" });
     expect(menu("dono").grupos.find((g) => g.grupo === "Gestão")?.paginas.slice(0, 5)).toEqual(["financeiro", "relatorios", "metas", "contas_pagar", "resultado"]);
+  });
+
+  it("previsão de caixa (L8c): só o dono, no grupo Gestão, depois do resultado do mês; gerente, vendedor, administrador e técnico não", () => {
+    expect(menu("dono").visiveis).toContain("previsao");
+    for (const papel of ["gerente", "vendedor", "administrador", "tecnico"] as const) expect(menu(papel).visiveis).not.toContain("previsao");
+    expect(PAGINAS_REAIS.previsao).toMatchObject({ caminho: "/previsao", grupo: "Gestão", icone: "previsao" });
+    expect(menu("dono").grupos.find((g) => g.grupo === "Gestão")?.paginas.slice(0, 6)).toEqual(["financeiro", "relatorios", "metas", "contas_pagar", "resultado", "previsao"]);
   });
 
   it("gerente: ganha aprovações, notas e auditoria; aprovações vira atalho no celular; equipe continua com o dono", () => {

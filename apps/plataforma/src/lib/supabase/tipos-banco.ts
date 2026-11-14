@@ -5285,6 +5285,10 @@ export type Database = {
           valor_centavos: number
         }[]
       }
+      previsao_de_caixa: {
+        Args: { p_semanas?: number; p_unidade?: string }
+        Returns: Json
+      }
       ranking_nomes: {
         Args: { p_vendedores: string[] }
         Returns: {
