@@ -107,7 +107,9 @@ describe("cadastro com dados mínimos por finalidade (ORA-CRM-001)", () => {
     expect(await codigo(ana, SALVAR, [null, JSON.stringify({ ...jose, finalidades: ["recado"] }), null, chave()])).toBe("22023");
     expect(await codigo(ana, SALVAR, [null, JSON.stringify({ ...jose, documento: "111.444.777-00" }), null, chave()])).toBe("22023");
     expect(await codigo(ana, SALVAR, [null, JSON.stringify({ ...jose, tipo: "pessoa_juridica", documento: CPF_JOSE }), null, chave()])).toBe("22023");
-    const connect = await cadastrar(ana, { ...jose, documento: CPF_JOSE, nascimento: "1990-05-10", finalidades: ["ora_connect", "nota_fiscal"] });
+    // Desde 14/11 (#76) a nota no nome do cliente pede também o endereço completo.
+    expect(await codigo(ana, SALVAR, [null, JSON.stringify({ ...jose, documento: CPF_JOSE, nascimento: "1990-05-10", finalidades: ["ora_connect", "nota_fiscal"] }), null, chave()])).toBe("22023");
+    const connect = await cadastrar(ana, { ...jose, documento: CPF_JOSE, nascimento: "1990-05-10", finalidades: ["ora_connect", "nota_fiscal"], endereco: { cep: "80000-000", logradouro: "Rua das Flores", numero: "10", bairro: "Centro", cidade: "Curitiba", uf: "PR" } });
     expect((await db.query("select finalidades, nascimento_informado from public.clientes where id = $1", [connect.id])).rows[0])
       .toEqual({ finalidades: ["nota_fiscal", "ora_connect"], nascimento_informado: true });
     const entrega = await cadastrar(ana, { tipo: "pessoa_fisica", nome: "Entrega Teste", telefone: "41987650003", finalidades: ["entrega"],
@@ -120,7 +122,7 @@ describe("cadastro com dados mínimos por finalidade (ORA-CRM-001)", () => {
     const ana = await naLoja(ids.vendedorA, ids.lojaA);
     await cadastrar(ana, maria);
     const gerente = await naLoja(ids.gerenteB, ids.lojaB);
-    expect(await codigo(gerente, SALVAR, [null, JSON.stringify({ tipo: "pessoa_fisica", nome: "Maria de Novo", documento: CPF_MARIA }), null, chave()])).toBe("OR026");
+    expect(await codigo(gerente, SALVAR, [null, JSON.stringify({ tipo: "pessoa_fisica", nome: "Maria de Novo", documento: CPF_MARIA, telefone: "41987650010" }), null, chave()])).toBe("OR026");
     expect(await codigo(gerente, SALVAR, [null, JSON.stringify({ tipo: "pessoa_fisica", nome: "Filha da Maria", telefone: TEL_MARIA }), null, chave()])).toBe("OR027");
     expect(await cadastrar(gerente, { tipo: "pessoa_fisica", nome: "Filha da Maria", telefone: TEL_MARIA, telefone_compartilhado: true })).toMatchObject({ alterado: true });
     // Outra rede tem o próprio cadastro: o mesmo CPF lá é outro cliente.
@@ -130,7 +132,7 @@ describe("cadastro com dados mínimos por finalidade (ORA-CRM-001)", () => {
 
   it("correção exige motivo; só o nome dos campos vai para a auditoria; o que uma finalidade exige não sai", async () => {
     const ana = await naLoja(ids.vendedorA, ids.lojaA);
-    const salvo = await cadastrar(ana, { ...maria, finalidades: ["nota_fiscal"] });
+    const salvo = await cadastrar(ana, { ...maria, finalidades: ["nota_fiscal"], endereco: { cep: "80000-000", logradouro: "Rua das Flores", numero: "10", bairro: "Centro", cidade: "Curitiba", uf: "PR" } });
     expect(await codigo(ana, SALVAR, [salvo.id, JSON.stringify({ telefone: "41987650009" }), "", null])).toBe("22023");
     expect(await valor<Salvo>(ana, SALVAR, [salvo.id, JSON.stringify({ telefone: "41 98765-0009" }), "Cliente trocou de número", null])).toMatchObject({ alterado: true });
     expect(await valor<Salvo>(ana, SALVAR, [salvo.id, JSON.stringify({ telefone: "41987650009" }), "Sem mudança", null])).toMatchObject({ alterado: false });
@@ -144,6 +146,54 @@ describe("cadastro com dados mínimos por finalidade (ORA-CRM-001)", () => {
     expect(await auditoriaCom("41987650009")).toBe(0);
     expect((await db.query<{ motivo: string }>("select motivo from public.auditoria where acao = 'cliente.alterado' order by id")).rows.map((r) => r.motivo))
       .toEqual(["Cliente trocou de número", "Cliente pediu para tirar o e-mail"]);
+  });
+});
+
+// Decisão do proprietário de 12/11/2026 (#76; migration 20261114135430_clientes_nome_e_whatsapp): o cadastro rápido é
+// nome completo + WhatsApp; e-mail sempre opcional, inclusive no financiamento; a nota pede documento e endereço.
+describe("cadastro rápido com nome completo e WhatsApp; e-mail opcional (#76)", () => {
+  const ENDERECO = { cep: "80000-000", logradouro: "Rua das Flores", numero: "10", bairro: "Centro", cidade: "Curitiba", uf: "PR" };
+  it("o rápido salva só com nome completo e WhatsApp; sem WhatsApp ou com um nome só, não", async () => {
+    const ana = await naLoja(ids.vendedorA, ids.lojaA);
+    const rapido = await cadastrar(ana, { tipo: "pessoa_fisica", nome: "Ana Rápida", telefone: "(41) 98765-0101" });
+    expect(rapido).toMatchObject({ repetida: false, alterado: true });
+    expect((await db.query("select documento, telefone, email, endereco from privado.cliente_dados where cliente_id = $1", [rapido.id])).rows[0])
+      .toEqual({ documento: null, telefone: "41987650101", email: null, endereco: null });
+    const recusa = async (dados: object) => { const r = await tentar(ana, SALVAR, [null, JSON.stringify(dados), null, chave()]); return "codigo" in r ? `${r.codigo} ${r.mensagem}` : "aceito"; };
+    expect(await recusa({ tipo: "pessoa_fisica", nome: "Sem Whats", documento: CPF_JOSE })).toBe("22023 Informe o WhatsApp do cliente com DDD: é por ele que a loja fala com o cliente e envia a nota");
+    expect(await recusa({ tipo: "pessoa_fisica", nome: "Ana", telefone: "41987650102" })).toBe("22023 Informe o nome completo (nome e sobrenome)");
+    expect(await recusa({ tipo: "pessoa_fisica", nome: "Ana Lima", telefone: "41987650103", email: "sem-arroba" })).toBe("22023 E-mail inválido");
+    // Empresa: a razão social basta (não precisa de duas palavras); o WhatsApp também é exigido.
+    expect(await cadastrar(ana, { tipo: "pessoa_juridica", nome: "Ltda", telefone: "41987650104" })).toMatchObject({ alterado: true });
+  });
+
+  it("financiamento sem e-mail; a nota pede documento e endereço; o WhatsApp não se apaga, troca-se", async () => {
+    const ana = await naLoja(ids.vendedorA, ids.lojaA);
+    const financiado = await cadastrar(ana, { tipo: "pessoa_fisica", nome: "Carlos Financiado", documento: CPF_JOSE, telefone: "41987650105", nascimento: "1990-05-10", finalidades: ["financiamento"] });
+    expect(financiado).toMatchObject({ alterado: true });
+    const comNota = await cadastrar(ana, { tipo: "pessoa_fisica", nome: "Nota Completa", documento: CPF_MARIA, telefone: "41987650106", finalidades: ["nota_fiscal"], endereco: ENDERECO });
+    expect((await db.query("select finalidades, endereco_informado from public.clientes where id = $1", [comNota.id])).rows[0]).toEqual({ finalidades: ["nota_fiscal"], endereco_informado: true });
+    // O rápido evolui para a nota no MESMO cadastro: sem endereço é recusado, com endereço passa.
+    const rapido = await cadastrar(ana, { tipo: "pessoa_fisica", nome: "Bia Rápida", telefone: "41987650107" });
+    expect(await codigo(ana, SALVAR, [rapido.id, JSON.stringify({ documento: cpf("246813579"), finalidades: ["nota_fiscal"] }), "Vai levar nota", null])).toBe("22023");
+    expect(await valor<Salvo>(ana, SALVAR, [rapido.id, JSON.stringify({ documento: cpf("246813579"), finalidades: ["nota_fiscal"], endereco: ENDERECO }), "Vai levar nota", null]))
+      .toMatchObject({ id: rapido.id, alterado: true });
+    expect(await codigo(ana, SALVAR, [rapido.id, JSON.stringify({ remover: ["telefone"] }), "Tirar o WhatsApp", null])).toBe("22023");
+    expect(await valor<Salvo>(ana, SALVAR, [rapido.id, JSON.stringify({ telefone: "41987650108" }), "Cliente trocou de número", null])).toMatchObject({ alterado: true });
+  });
+
+  it("cadastro antigo sem WhatsApp continua valendo e pode ser corrigido sem inventar número; ganha o WhatsApp quando informado", async () => {
+    const ana = await naLoja(ids.vendedorA, ids.lojaA);
+    // Um cadastro como o L5a permitia (documento, sem telefone): criado hoje e com o telefone tirado à força.
+    const antigo = (await cadastrar(ana, { tipo: "pessoa_fisica", nome: "Cliente Antigo", documento: cpf("390533447"), telefone: "41987650110" })).id;
+    await db.exec("set session_replication_role = replica");
+    await db.query("update privado.cliente_dados set telefone = null where cliente_id = $1", [antigo]);
+    await db.query("update public.clientes set telefone_resumo = null, telefone_mascara = null where id = $1", [antigo]);
+    await db.exec("set session_replication_role = origin");
+    expect(await valor<Salvo>(ana, SALVAR, [antigo, JSON.stringify({ email: "antigo@exemplo.com" }), "Cliente passou o e-mail", null])).toMatchObject({ alterado: true });
+    expect((await db.query("select telefone from privado.cliente_dados where cliente_id = $1", [antigo])).rows[0]).toEqual({ telefone: null });
+    expect(await valor<Salvo>(ana, SALVAR, [antigo, JSON.stringify({ telefone: "41987650109" }), "Regularizar o WhatsApp", null])).toMatchObject({ alterado: true });
+    expect((await db.query("select telefone_mascara from public.clientes where id = $1", [antigo])).rows[0]).toEqual({ telefone_mascara: "(41) •••••-0109" });
   });
 });
 

@@ -296,7 +296,7 @@ describe("T11 — vendedor só faz busca exata de cliente (lote L5a)", () => {
     expect(await selecionar(s, ids.lojaA)).toBe(true);
     const documento = cpf("390533447");
     await valor(s, "select public.cliente_salvar(null, $1::jsonb, null, 'form:t11:0001') as v",
-      [JSON.stringify({ tipo: "pessoa_fisica", nome: "Cliente T11", documento })]);
+      [JSON.stringify({ tipo: "pessoa_fisica", nome: "Cliente T11", documento, telefone: "41987650311" })]);
     expect(await linhas(s, "select * from public.clientes")).toEqual([]);
     expect((await valor<{ clientes: unknown[] }>(s, "select public.cliente_buscar('documento', $1) as v", [documento])).clientes).toHaveLength(1);
     expect((await falha(valor(s, "select public.cliente_buscar('nome', 'Cliente') as v"))).code).toBe("42501");

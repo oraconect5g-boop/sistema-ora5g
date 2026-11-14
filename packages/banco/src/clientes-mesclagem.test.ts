@@ -137,11 +137,11 @@ describe("mesclagem (ORA-CRM-006)", () => {
 
   it("documentos diferentes não se mesclam (OR029); o documento do que sai passa para o que fica", async () => {
     const ana = await naLoja(ids.vendedorA, ids.lojaA);
-    const c = await cadastrar(ana, { tipo: "pessoa_fisica", nome: "José Silva", documento: cpf("111444777") });
-    const d = await cadastrar(ana, { tipo: "pessoa_fisica", nome: "José da Silva", documento: cpf("390533447") });
+    const c = await cadastrar(ana, { tipo: "pessoa_fisica", nome: "José Silva", documento: cpf("111444777"), telefone: "41987650007" });
+    const d = await cadastrar(ana, { tipo: "pessoa_fisica", nome: "José da Silva", documento: cpf("390533447"), telefone: "41987650008" });
     const dono = await naLoja(ids.dono, ids.lojaA);
     expect(await codigo(dono, MESCLAR, [c.id, d.id, "Parece o mesmo"])).toBe("OR029");
-    const semDocumento = await cadastrar(ana, { tipo: "pessoa_fisica", nome: "Joana", telefone: "41987650005" });
+    const semDocumento = await cadastrar(ana, { tipo: "pessoa_fisica", nome: "Joana Lima", telefone: "41987650005" });
     const comDocumento = await cadastrar(ana, { tipo: "pessoa_fisica", nome: "Joana Souza", documento: cpf("246813579"), telefone: "41987650006" });
     expect(await valor(dono, MESCLAR, [semDocumento.id, comDocumento.id, "Cadastro antigo sem CPF"])).toMatchObject({ campos: ["documento"] });
     expect((await valor<{ clientes: { id: string }[] }>(ana, "select public.cliente_buscar('documento', $1) as v", [cpf("246813579")])).clientes.map((x) => x.id))
@@ -154,7 +154,8 @@ describe("segmentos explicáveis (ORA-CRM-010)", () => {
   it("cada cliente cai num segmento pela regra das compras; a ficha explica; o dono vê os totais, o alto valor e quem aceita ofertas", async () => {
     const ana = await naLoja(ids.vendedorA, ids.lojaA);
     await valor(ana, "select public.abrir_caixa(10000, $1) as v", [chave("caixa")]);
-    const cliente = async (nome: string, telefone: string) => (await cadastrar(ana, { tipo: "pessoa_fisica", nome, telefone })).id;
+    // Nome completo desde 14/11 (#76): o sobrenome "Teste" em todos.
+    const cliente = async (nome: string, telefone: string) => (await cadastrar(ana, { tipo: "pessoa_fisica", nome: `${nome} Teste`, telefone })).id;
     const recorrente = await cliente("Recorrente", "41987650011");
     const novo = await cliente("Novo", "41987650012");
     const ocasional = await cliente("Ocasional", "41987650013");

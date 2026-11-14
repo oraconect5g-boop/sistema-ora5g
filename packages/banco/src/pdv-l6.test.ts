@@ -64,7 +64,7 @@ describe("nota no nome do cliente da venda (ORA-POS-011)", () => {
     const ana = await naLoja(ids.vendedorA, ids.lojaA);
     await valor(ana, "select public.abrir_caixa(10000, $1) as v", [chave("caixa")]);
     const maria = (await valor<{ id: string }>(ana, "select public.cliente_salvar(null, $1::jsonb, null, $2) as v",
-      [JSON.stringify({ tipo: "pessoa_fisica", nome: "Maria Teste", documento: CPF_MARIA }), chave("form:cli")])).id;
+      [JSON.stringify({ tipo: "pessoa_fisica", nome: "Maria Teste", documento: CPF_MARIA, telefone: "41987650020" }), chave("form:cli")])).id;
     const semDocumento = (await valor<{ id: string }>(ana, "select public.cliente_salvar(null, $1::jsonb, null, $2) as v",
       [JSON.stringify({ tipo: "pessoa_fisica", nome: "Sem CPF", telefone: "41987650021" }), chave("form:cli")])).id;
 

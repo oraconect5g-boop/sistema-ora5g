@@ -173,17 +173,18 @@ describe("ações de clientes", () => {
 
   it("cadastro: erro devolve o que foi digitado; sucesso vai para a ficha; correção exige motivo", async () => {
     const vazio = { erro: null, valores: {} };
-    const semIdentificador = await salvarCliente(vazio, formulario({ tipo: "pessoa_fisica", nome: "Maria", chave: "form:00000000-0000-4000-8000-000000000001" }));
-    expect(semIdentificador).toEqual({ erro: "identificador", valores: { tipo: "pessoa_fisica", nome: "Maria" } });
+    // #76: sem WhatsApp não vai ao banco, e o que foi digitado volta.
+    const semWhatsApp = await salvarCliente(vazio, formulario({ tipo: "pessoa_fisica", nome: "Maria Teste", chave: "form:00000000-0000-4000-8000-000000000001" }));
+    expect(semWhatsApp).toEqual({ erro: "whatsapp", valores: { tipo: "pessoa_fisica", nome: "Maria Teste" } });
     expect(cenario.chamadas).toEqual([]);
     cenario.respostas.cliente_salvar = { data: null, error: { code: "OR026" } };
-    const duplicado = await salvarCliente(vazio, formulario({ tipo: "pessoa_fisica", nome: "Maria", documento: "529.982.247-25", finalidade: "nota_fiscal" }));
-    expect(duplicado).toEqual({ erro: "duplicado", valores: { tipo: "pessoa_fisica", nome: "Maria", documento: "529.982.247-25", finalidade: ["nota_fiscal"] } });
-    expect(cenario.chamadas[0]?.argumentos).toMatchObject({ p_cliente: null, p_motivo: null, p_dados: { tipo: "pessoa_fisica", nome: "Maria", documento: CPF, finalidades: ["nota_fiscal"] } });
+    const duplicado = await salvarCliente(vazio, formulario({ tipo: "pessoa_fisica", nome: "Maria Teste", documento: "529.982.247-25", telefone: "41987650001" }));
+    expect(duplicado).toEqual({ erro: "duplicado", valores: { tipo: "pessoa_fisica", nome: "Maria Teste", documento: "529.982.247-25", telefone: "41987650001" } });
+    expect(cenario.chamadas[0]?.argumentos).toMatchObject({ p_cliente: null, p_motivo: null, p_dados: { tipo: "pessoa_fisica", nome: "Maria Teste", documento: CPF, telefone: "41987650001", finalidades: [] } });
     expect(String(cenario.chamadas[0]?.argumentos.p_chave)).toMatch(/^form:[0-9a-f-]{36}$/);
 
     cenario.respostas.cliente_salvar = { data: { id: CLIENTE, numero: 42, alterado: true }, error: null };
-    expect(await destinoDe(salvarCliente(vazio, formulario({ tipo: "pessoa_fisica", nome: "Maria", telefone: "41987650001" })))).toBe(`/clientes/${CLIENTE}?ok=criado`);
+    expect(await destinoDe(salvarCliente(vazio, formulario({ tipo: "pessoa_fisica", nome: "Maria Teste", telefone: "41987650001" })))).toBe(`/clientes/${CLIENTE}?ok=criado`);
     expect(await salvarCliente(vazio, formulario({ cliente: CLIENTE, telefone: "41987650009", motivo: "x" }))).toMatchObject({ erro: "motivo" });
     expect(await destinoDe(salvarCliente(vazio, formulario({ cliente: CLIENTE, telefone: "41987650009", motivo: "Cliente trocou de número" })))).toBe(`/clientes/${CLIENTE}?ok=alterado`);
     expect(cenario.chamadas.at(-1)?.argumentos).toEqual({ p_cliente: CLIENTE, p_dados: { telefone: "41987650009" }, p_motivo: "Cliente trocou de número", p_chave: null });

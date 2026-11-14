@@ -2,7 +2,7 @@
   "_leia": "Checkpoint do programa de execução integral (PR #67). Carregar ao retomar e seguir para o próximo item executável da fila; não reiniciar o projeto. Estados vêm de status-requisitos.json (fonte da rastreabilidade); este arquivo acrescenta lote, bloqueio externo e revisão.",
   "atualizado_em": "2026-11-14",
   "base": {
-    "main": "452f4a0",
+    "main": "2c6c164",
     "pacote": {
       "pr": 67,
       "branch": "docs/execucao-integral-20261110",
@@ -18,12 +18,12 @@
   },
   "publicado": {
     "homologacao": {
-      "commit": "452f4a0",
+      "commit": "2c6c164",
       "quando": "2026-11-14",
-      "conferido": "rodapé da tela de entrada (452f4a0 · build 14/11/2026 10:43), /saude e /pagamentos/financeiras e /estoque respondendo 307 para o login"
+      "conferido": "rodapé da tela de entrada (2c6c164 · build 14/11/2026 10:53), /saude e /estoque, /catalogo e /contas-a-pagar respondendo 307 para o login"
     },
     "falta_publicar": [
-      "B5, leituras completas abaixo do teto da API, publicado ao fim do lote (sem migration); as migrations do B1, do B3 e do B4 pedem o sim do proprietário para o ora5g-dev"
+      "K1a, cadastro do cliente com nome completo e WhatsApp, publicado ao fim do lote; as migrations do B1, do B3, do B4 e do K1a (20261114135430_clientes_nome_e_whatsapp) pedem o sim do proprietário para o ora5g-dev"
     ]
   },
   "contagem_dos_estados": {
@@ -335,7 +335,7 @@
       "titulo": "Cadastro de cliente com dados mínimos e finalidade",
       "prioridade": "P0",
       "estado": "testado",
-      "lote": "L5a clientes",
+      "lote": "L5a clientes; K1a cadastro rápido com WhatsApp (14/11)",
       "bloqueio_externo": null,
       "revisado_codex": false,
       "homologado": false

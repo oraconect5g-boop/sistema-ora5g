@@ -42,17 +42,17 @@ export function FormularioCliente({ chave, atual = null }: { chave: string; atua
           </label>
         ))}
       </fieldset>
-      <label className="block text-sm font-medium">Nome{atual ? "" : " completo"}
-        <input name="nome" required={!atual} minLength={2} maxLength={120} defaultValue={v("nome")} placeholder={atual ? `atual: ${atual.nome}` : undefined} className={campo} autoComplete="off" />
+      <label className="block text-sm font-medium">{tipo === "pessoa_juridica" ? "Razão social" : `Nome${atual ? "" : " completo"}`}
+        <input name="nome" required={!atual} minLength={2} maxLength={120} defaultValue={v("nome")} placeholder={atual ? `atual: ${atual.nome}` : tipo === "pessoa_juridica" ? undefined : "Nome e sobrenome"} className={campo} autoComplete="off" />
       </label>
       <div className="grid gap-3 sm:grid-cols-2">
         <label className="block text-sm font-medium">{tipo === "pessoa_juridica" ? "CNPJ" : "CPF"}
           <input name="documento" inputMode="numeric" maxLength={18} defaultValue={v("documento")} placeholder={atualDe(atual?.documento)} className={campo} autoComplete="off" />
         </label>
-        <label className="block text-sm font-medium">Telefone com DDD
-          <input name="telefone" inputMode="tel" maxLength={20} defaultValue={v("telefone")} placeholder={atualDe(atual?.telefone) ?? "(41) 9 0000-0000"} className={campo} autoComplete="off" />
+        <label className="block text-sm font-medium">WhatsApp com DDD{atual ? "" : " (obrigatório)"}
+          <input name="telefone" inputMode="tel" required={!atual} maxLength={20} defaultValue={v("telefone")} placeholder={atualDe(atual?.telefone) ?? "(41) 9 0000-0000"} className={campo} autoComplete="off" />
         </label>
-        <label className="block text-sm font-medium sm:col-span-2">E-mail (opcional)
+        <label className="block text-sm font-medium sm:col-span-2">E-mail (opcional, também no financiamento)
           <input name="email" type="email" maxLength={200} defaultValue={v("email")} placeholder={atualDe(atual?.email)} className={campo} autoComplete="off" />
         </label>
       </div>
@@ -93,7 +93,8 @@ export function FormularioCliente({ chave, atual = null }: { chave: string; atua
         <>
           <fieldset className="flex flex-wrap gap-3 text-sm">
             <legend className="mb-1 text-sm font-medium">Apagar do cadastro (se nenhuma finalidade marcada pedir)</legend>
-            {([["documento", "CPF/CNPJ"], ["telefone", "Telefone"], ["email", "E-mail"], ["nascimento", "Nascimento"], ["endereco", "Endereço"]] as const).map(([c, rotulo]) => (
+            {/* O WhatsApp não se apaga (#76): troca-se pelo número novo no campo acima. */}
+            {([["documento", "CPF/CNPJ"], ["email", "E-mail"], ["nascimento", "Nascimento"], ["endereco", "Endereço"]] as const).map(([c, rotulo]) => (
               <label key={c} className="flex min-h-10 items-center gap-2"><input type="checkbox" name="remover" value={c} className="size-4 accent-acao" /> {rotulo}</label>
             ))}
           </fieldset>
