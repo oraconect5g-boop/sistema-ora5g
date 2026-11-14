@@ -654,6 +654,16 @@
       "status": "parcial",
       "nota": "ORG-009 (14/11): a meta por região no Início da rede, como a soma das metas das lojas da região (só as lojas com meta), com o atingimento e o ritmo esperado. FALTA: o ranking configurável e os nomes dos colegas (decisão P3) e uma meta própria da região, se o proprietário quiser uma diferente da soma das lojas.",
       "evidencia": "apps/plataforma/src/componentes/paineis-de-metas.tsx; apps/plataforma/src/app/inicio/inicio.test.ts; apps/plataforma/src/lib/lojas/regioes.test.ts"
+    },
+    "ORA-QUAL-014": {
+      "status": "parcial",
+      "nota": "Lote Q3 (14/11): verificação semanal automática no GitHub (segredos em todo o histórico; vulnerabilidade alta ou crítica nas dependências da produção e crítica em qualquer uma fazem a verificação falhar e o GitHub avisar; relatório completo do npm audit e do npm outdated), o Dependabot abrindo PR das atualizações (semanal das dependências, mensal das ações do GitHub; tudo passa pelo CI e pela revisão) e o roteiro de triagem por gravidade, com a revisão mensal e a linha de base de 14/11 (produção sem vulnerabilidade; 8 moderadas só de desenvolvimento, da cadeia do minimatch no lint, com o risco aceito proposto). FALTA: o proprietário ligar os alertas e as atualizações de segurança do Dependabot no GitHub, dizer quem recebe o aviso e a primeira revisão mensal com o Codex.",
+      "evidencia": ".github/workflows/seguranca-semanal.yml; .github/dependabot.yml; docs/operacao/SEGURANCA_PERIODICA.md; .github/workflows/ci.yml"
+    },
+    "ORA-QUAL-005": {
+      "status": "parcial",
+      "nota": "Lote Q3 (14/11): proposta de backup e restauração em docs/operacao/BACKUP_E_RESTAURACAO.md, com os fatos conferidos na documentação do Supabase e no próprio projeto: o ora5g-dev está no plano gratuito, sem backup automático (só dados de teste); o plano Pro faz backup diário (7 dias) e o PITR, adicional pago, perde no máximo 2 minutos; o backup do banco não inclui os arquivos do Storage (fotos, notas, anexos, OS), que precisam de cópia própria. Proposta (decisão D-044): na Fase 1 perder até 1 dia e voltar em 1 dia útil; na Fase 2 até 5 minutos e 4 horas no horário da loja; ensaio de restauração antes da Fase 2 e a cada trimestre, com o registro. O esquema já é reconstruído do zero pelas migrations em cada teste. FALTA: a decisão D-044, a infraestrutura de produção (D-027) e o ensaio de restauração (cenário J), que precisa do ambiente e da senha do banco guardada no servidor.",
+      "evidencia": "docs/operacao/BACKUP_E_RESTAURACAO.md; docs/10_DECISOES_PENDENTES.md; docs/operacao/GO_NO_GO_PILOTO_E_SAIDA_DA_REIN.md; packages/banco/src/migrations.test.ts"
     }
   }
 }
