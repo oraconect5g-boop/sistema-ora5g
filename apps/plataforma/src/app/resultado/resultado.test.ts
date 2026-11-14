@@ -28,8 +28,10 @@ const supabase = {
     if (nome !== "resultado_do_mes") return { data: null, error: { code: "PGRST202" } };
     cenario.chamadas.push(argumentos);
     if (cenario.erro) return { data: null, error: cenario.erro };
-    if (argumentos.p_unidade) return cenario.recusarLoja ? { data: null, error: { code: "42501" } } : { data: cenario.lojaA, error: null };
-    return { data: cenario.rede, error: null };
+    // A série tem o tamanho pedido (a exportação pede só o mês: p_meses = 1).
+    const corte = (dado: unknown) => (dado && typeof dado === "object" ? { ...dado, meses: (dado as { meses: unknown[] }).meses.slice(-Number(argumentos.p_meses ?? 6)) } : dado);
+    if (argumentos.p_unidade) return cenario.recusarLoja ? { data: null, error: { code: "42501" } } : { data: corte(cenario.lojaA), error: null };
+    return { data: corte(cenario.rede), error: null };
   },
 };
 vi.mock("../../lib/acesso/sessao", () => ({
@@ -45,6 +47,7 @@ import { geometriaDaCascata } from "../../componentes/graficos";
 import { lerResultadoDoMes } from "../../lib/resultado/consulta";
 import { daReceita, filtroDoResultado, mesCurto, mesDoResultado } from "../../lib/resultado/regras";
 import { enderecoDoResultado } from "./ConteudoResultado";
+import { GET as exportar } from "./exportar/route";
 import Resultado from "./page";
 
 // ---------------------------------------------------------------------------------------------
@@ -342,5 +345,57 @@ describe("regras da tela do resultado (L8b)", () => {
       barras: [{ de: 0, ate: 100 }, { de: 100, ate: 70 }, { de: 0, ate: 70 }, { de: 70, ate: -10 }, { de: -10, ate: -5 }, { de: 0, ate: -5 }],
     });
     expect(geometriaDaCascata([])).toEqual({ piso: 0, topo: 0, barras: [] });
+  });
+});
+
+describe("planilha e impressão do resultado (L8d)", () => {
+  const baixar = (consulta: string) => exportar(new Request(`http://localhost/resultado/exportar?${consulta}`));
+  it("a tela oferece a planilha do mesmo mês e da mesma loja, e o botão de imprimir", async () => {
+    const tela = await pagina({ mes: "2026-11", loja: LOJA_A });
+    expect(enderecos(tela)).toContain(`/resultado/exportar?mes=2026-11&loja=${LOJA_A}`);
+    expect(doTipo(tela, "BotaoImprimir")).toHaveLength(1);
+    expect(doTipo(tela, "CarimboDaImpressao")[0]?.texto).toBe("Ora 5G · resultado do mês · Loja A (teste) · impresso em 13/11/2026 12:00");
+    cenario.erro = { code: "PGRST202" };
+    const semLeitura = await pagina();
+    expect(doTipo(semLeitura, "BotaoImprimir")).toEqual([]);
+    expect(enderecos(semLeitura).filter((e) => e.includes("exportar"))).toEqual([]);
+  });
+
+  it("a rede: o demonstrativo com uma coluna por loja, as categorias, o que ficou fora e as observações", async () => {
+    const resposta = await baixar("mes=2026-11");
+    expect(resposta.status).toBe(200);
+    expect(resposta.headers.get("content-disposition")).toBe('attachment; filename="ora5g-resultado-2026-11-rede-inteira.csv"');
+    expect(cenario.chamadas.at(-1)).toEqual({ p_mes: "2026-11-01", p_unidade: null, p_meses: 1 });
+    // O BOM (para o Excel ler os acentos) está nos bytes; o text() do teste o remove ao decodificar.
+    expect([...new Uint8Array(await resposta.clone().arrayBuffer()).slice(0, 3)]).toEqual([0xef, 0xbb, 0xbf]);
+    const csv = await resposta.text();
+    expect(csv.startsWith("Resultado do mês;Novembro de 2026 (até 13/11/2026);Rede inteira\r\nGerado em;13/11/2026 12:00;")).toBe(true);
+    for (const linha of [
+      "Linha;Rede inteira;Loja A (teste);Loja B (teste)",
+      "Vendas concluídas (desconto já abatido);4791,00;;",
+      "Devoluções e cancelamentos;157,50;;",
+      "Receita líquida;4633,50;3234,50;1399,00",
+      "Custo das mercadorias;3354,00;2254,00;1100,00",
+      "Contas da rede (nas lojas, a parte de cada uma);1000,00;698,07;301,93",
+      "Resultado do mês;-3055,50;-2952,57;-102,93",
+      "Contas por categoria (pelo vencimento);Valor;Em aberto\r\nAluguel e condomínio;3000,00;3000,00",
+      "Fora do resultado (compra de mercadoria e outras);Valor\r\nMercadoria (fornecedor);1000,00",
+      "Cartão e Pix ainda sem conciliação: a taxa deles não entra;635,00;2 pagamentos",
+    ]) expect(csv, linha).toContain(linha);
+  });
+
+  it("uma loja: valor e parte da rede; quem não é o dono, banco sem a leitura e falha", async () => {
+    const loja = await (await baixar(`mes=2026-11&loja=${LOJA_A}`)).text();
+    expect(loja).toContain("Linha;Valor\r\n");
+    expect(loja).toContain("Parte das contas da rede;698,07");
+    expect(loja).toContain("Parte da loja na receita líquida da rede (divide as contas da rede);69,8%");
+    cenario.recusarLoja = true;
+    expect((await baixar(`mes=2026-11&loja=${LOJA_A}`)).status).toBe(403);
+    cenario.erro = { code: "42501" };
+    expect((await baixar("mes=2026-11")).status).toBe(403);
+    cenario.erro = { code: "PGRST202" };
+    expect((await baixar("mes=2026-11")).status).toBe(503);
+    cenario.erro = { code: "57014" };
+    await expect(baixar("mes=2026-11")).rejects.toThrow();
   });
 });

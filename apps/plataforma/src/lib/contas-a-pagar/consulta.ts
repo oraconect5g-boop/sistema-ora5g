@@ -113,6 +113,8 @@ export type ContaAPagar = {
 };
 const COLUNAS = "id, unidade_id, categoria_id, fornecedor_id, descricao, documento, valor_centavos, vencimento, forma, parcela, parcelas, situacao, paga_em, valor_pago_centavos, referencia_pagamento, cancelada_em, motivo_cancelamento";
 export const LIMITE_DA_LISTA = 200;
+/** A exportação (L8d) leva mais contas que a tela; passou disso, o arquivo avisa na última linha. */
+export const LIMITE_DA_EXPORTACAO_DAS_CONTAS = 5_000;
 
 function converterConta(l: Linha): ContaAPagar {
   const forma = l.forma;
@@ -140,16 +142,18 @@ function converterConta(l: Linha): ContaAPagar {
  * A lista da visão pedida: as em aberto por vencimento; as pagas e as canceladas dos últimos 60 dias, das mais
  * novas. No máximo LIMITE_DA_LISTA linhas; "mais" diz se ficou alguma de fora.
  */
-export async function consultarContas(supabase: Cliente, visao: VisaoDasContas, filtro: FiltroDasContas, hoje: string): Promise<Leitura<{ contas: ContaAPagar[]; mais: boolean }>> {
+export async function consultarContas(
+  supabase: Cliente, visao: VisaoDasContas, filtro: FiltroDasContas, hoje: string, limite: number = LIMITE_DA_LISTA,
+): Promise<Leitura<{ contas: ContaAPagar[]; mais: boolean }>> {
   const inicio = new Date(Date.parse(`${hoje}T12:00:00Z`) - 60 * 86_400_000).toISOString().slice(0, 10);
   let consulta = supabase.from("contas_a_pagar").select(COLUNAS);
   if (filtro.tipo === "rede") consulta = consulta.is("unidade_id", null);
   if (filtro.tipo === "loja") consulta = consulta.eq("unidade_id", filtro.id);
   const r = visao === "abertas"
-    ? await consulta.eq("situacao", "aberta").order("vencimento").order("descricao").order("parcela").limit(LIMITE_DA_LISTA + 1)
+    ? await consulta.eq("situacao", "aberta").order("vencimento").order("descricao").order("parcela").limit(limite + 1)
     : visao === "pagas"
-      ? await consulta.eq("situacao", "paga").gte("paga_em", inicio).order("paga_em", { ascending: false }).order("descricao").limit(LIMITE_DA_LISTA + 1)
-      : await consulta.eq("situacao", "cancelada").gte("cancelada_em", `${inicio}T03:00:00Z`).order("cancelada_em", { ascending: false }).limit(LIMITE_DA_LISTA + 1);
+      ? await consulta.eq("situacao", "paga").gte("paga_em", inicio).order("paga_em", { ascending: false }).order("descricao").limit(limite + 1)
+      : await consulta.eq("situacao", "cancelada").gte("cancelada_em", `${inicio}T03:00:00Z`).order("cancelada_em", { ascending: false }).limit(limite + 1);
   if (r.error) {
     if (TABELA_AUSENTE.has(r.error.code)) return { estado: "indisponivel" };
     console.error("contas a pagar: falha ao ler a lista", { codigo: r.error.code || null });
@@ -157,7 +161,7 @@ export async function consultarContas(supabase: Cliente, visao: VisaoDasContas, 
   }
   try {
     const contas = (r.data as Linha[]).map(converterConta);
-    return { estado: "ok", dados: { contas: contas.slice(0, LIMITE_DA_LISTA), mais: contas.length > LIMITE_DA_LISTA } };
+    return { estado: "ok", dados: { contas: contas.slice(0, limite), mais: contas.length > limite } };
   } catch (erro) {
     if (!(erro instanceof RespostaInesperada) && !(erro instanceof ValorForaDoLimite)) throw erro;
     console.error("contas a pagar: conta em forma inesperada");
@@ -196,4 +200,17 @@ export async function consultarFornecedores(supabase: Cliente): Promise<{ id: st
     return null;
   }
   return r.data.map((f) => ({ id: f.id, nome: f.nome }));
+}
+
+/**
+ * Todos os fornecedores da rede (ativos ou não), para a planilha dar o nome de cada conta (L8d). Falha
+ * volta null: a exportação para, em vez de sair com o nome em branco.
+ */
+export async function nomesDosFornecedores(supabase: Cliente): Promise<Map<string, string> | null> {
+  const r = await supabase.from("fornecedores").select("id, nome").order("nome").limit(5_000);
+  if (r.error) {
+    console.error("contas a pagar: falha ao ler os nomes dos fornecedores", { codigo: r.error.code || null });
+    return null;
+  }
+  return new Map(r.data.map((f) => [f.id, f.nome]));
 }

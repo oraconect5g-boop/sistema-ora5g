@@ -10,8 +10,10 @@ import { classeBotao } from "./ui";
 // A formatação de cada célula (com a proteção contra fórmula) fica em lib/csv, também usada no servidor.
 export { celulaCsv };
 
-export function ExportarCsv({ nomeArquivo, colunas, linhas, rotulo = "Exportar CSV" }: {
+export function ExportarCsv({ nomeArquivo, colunas, linhas, rotulo = "Exportar CSV", prefixo = "ora5g-demonstracao" }: {
   nomeArquivo: string;
+  /** Começo do nome do arquivo: as telas reais passam "ora5g" (L8d); as da demonstração ficam com o padrão. */
+  prefixo?: string;
   colunas: readonly string[];
   linhas: readonly (readonly (string | number)[])[];
   rotulo?: string;
@@ -22,14 +24,14 @@ export function ExportarCsv({ nomeArquivo, colunas, linhas, rotulo = "Exportar C
     const endereco = URL.createObjectURL(arquivo);
     const link = document.createElement("a");
     link.href = endereco;
-    link.download = `ora5g-demonstracao-${nomeArquivo}.csv`;
+    link.download = `${prefixo}-${nomeArquivo}.csv`;
     document.body.append(link);
     link.click();
     link.remove();
     URL.revokeObjectURL(endereco);
   }
   return (
-    <button type="button" onClick={baixar} disabled={linhas.length === 0} className={classeBotao("secundario", "md")}>
+    <button type="button" onClick={baixar} disabled={linhas.length === 0} className={classeBotao("secundario", "md", "nao-imprimir")}>
       <Download aria-hidden className="size-4" /> {rotulo}
     </button>
   );

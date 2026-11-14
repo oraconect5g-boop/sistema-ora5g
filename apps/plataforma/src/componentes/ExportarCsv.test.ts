@@ -18,6 +18,15 @@ describe("exportação CSV", () => {
     expect(csv).toContain("\r\n'=1+1\r\n'+1+1\r\n'@SUM(1)\r\n'-2+3\r\n'\tx");
   });
 
+  it("o nome do arquivo: a demonstração com o prefixo dela; as telas reais com \"ora5g\" (L8d)", () => {
+    const nomes: string[] = [];
+    vi.stubGlobal("URL", { createObjectURL: () => "blob:teste", revokeObjectURL: () => {} });
+    vi.stubGlobal("document", { createElement: () => { const link = { click: () => {}, remove: () => {}, href: "", download: "" }; nomes.push(""); return new Proxy(link, { set: (alvo, chave, valor) => { if (chave === "download") nomes[nomes.length - 1] = String(valor); return Reflect.set(alvo, chave, valor); } }); }, body: { append: () => {} } });
+    ExportarCsv({ nomeArquivo: "usuarios", colunas: ["Nome"], linhas: [["Ana"]] }).props.onClick();
+    ExportarCsv({ nomeArquivo: "previsao-rede-inteira-2026-11-13", colunas: ["Semana"], linhas: [[1]], prefixo: "ora5g" }).props.onClick();
+    expect(nomes).toEqual(["ora5g-demonstracao-usuarios.csv", "ora5g-previsao-rede-inteira-2026-11-13.csv"]);
+  });
+
   it("controle: número, número negativo, valor em reais e texto comum não mudam; aspas e ponto e vírgula continuam protegidos", () => {
     expect(celulaCsv(-12)).toBe("-12");
     expect(celulaCsv("-12,50")).toBe("-12,50");

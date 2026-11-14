@@ -30,7 +30,7 @@ export function ConteudoPrevisao({ leitura, semanas, filtro }: Props) {
   const lojas = leitura.estado === "ok" ? leitura.dados.lojas : [];
   return (
     <>
-      <div className="space-y-2">
+      <div className="nao-imprimir space-y-2">
         <FiltroSegmentado
           rotulo="Horizonte"
           opcoes={HORIZONTES.map((h) => ({ href: enderecoDaPrevisao(h, filtro), rotulo: `${h} semanas`, ativo: h === semanas }))}
@@ -50,18 +50,21 @@ export function ConteudoPrevisao({ leitura, semanas, filtro }: Props) {
           <EstadoDoPainel estado={leitura.estado} fonte="previsao" tentarDeNovo={enderecoDaPrevisao(semanas, filtro)} />
         </Cartao>
       ) : (
-        <Painel p={leitura.dados} />
+        <Painel p={leitura.dados} onde={filtro.tipo === "rede" ? "Rede inteira" : (lojas.find((l) => l.id === filtro.id)?.nome ?? "Loja")} />
       )}
     </>
   );
 }
 
-function Painel({ p }: { p: Previsao }) {
+function Painel({ p, onde }: { p: Previsao; onde: string }) {
   const est = estimativa(p.base);
   const naRede = p.unidade === null;
   return (
     <>
-      <Simulador semanas={p.semanas} vencidas={p.vencidas} estimativa={est} />
+      <Simulador
+        semanas={p.semanas} vencidas={p.vencidas} estimativa={est} onde={onde} hoje={p.hoje}
+        fatos={{ financeiras: p.financeiras, aConciliar: p.aConciliar, gavetas: p.gavetas }}
+      />
       <div className="grid gap-4 xl:grid-cols-2 xl:items-start">
         <Fatos p={p} naRede={naRede} />
         <Base p={p} />

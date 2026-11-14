@@ -20,3 +20,24 @@ export const centavosCsv = (centavos: number) => {
   const absoluto = Math.abs(centavos);
   return `${sinal}${Math.trunc(absoluto / 100)},${String(absoluto % 100).padStart(2, "0")}`;
 };
+
+/**
+ * Um arquivo com várias partes (o demonstrativo, as contas por categoria...), separadas por uma linha em
+ * branco, cada uma com o próprio cabeçalho. As células passam pela mesma proteção de `celulaCsv`.
+ */
+export type SecaoCsv = { colunas?: readonly string[]; linhas: readonly (readonly (string | number)[])[] };
+export const gerarCsvEmSecoes = (secoes: readonly SecaoCsv[]) =>
+  `﻿${secoes
+    .map((s) => [...(s.colunas ? [s.colunas] : []), ...s.linhas].map((linha) => linha.map(celulaCsv).join(";")).join("\r\n"))
+    .join("\r\n\r\n")}`;
+
+/** Instante de geração do arquivo, em São Paulo: "13/11/2026 22:10". */
+export const geradoEm = (agora: Date = new Date()) =>
+  new Intl.DateTimeFormat("pt-BR", { timeZone: "America/Sao_Paulo", day: "2-digit", month: "2-digit", year: "numeric", hour: "2-digit", minute: "2-digit" }).format(agora).replace(",", "");
+
+/** Parte de nome de arquivo: "São José dos Pinhais" → "sao-jose-dos-pinhais". */
+export const parteDoNome = (texto: string) =>
+  texto.normalize("NFD").replace(/[̀-ͯ]/g, "").toLowerCase().replace(/[^a-z0-9]+/g, "-").replace(/^-+|-+$/g, "").slice(0, 40) || "arquivo";
+
+/** "2026-11-13" → "13/11/2026". */
+export const diaCsv = (dia: string) => `${dia.slice(8, 10)}/${dia.slice(5, 7)}/${dia.slice(0, 4)}`;

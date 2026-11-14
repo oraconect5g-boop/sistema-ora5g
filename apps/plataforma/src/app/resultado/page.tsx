@@ -1,8 +1,12 @@
 import type { Metadata } from "next";
 
+import { Download } from "lucide-react";
+
+import { BotaoImprimir, CarimboDaImpressao } from "../../componentes/BotaoImprimir";
 import { MoldeReal } from "../../componentes/MoldeReal";
-import { Aviso, TituloPagina } from "../../componentes/ui";
+import { Aviso, classeBotao, TituloPagina } from "../../componentes/ui";
 import { obterSessao } from "../../lib/acesso/sessao";
+import { geradoEm } from "../../lib/csv";
 import { mesDeHoje } from "../../lib/metas/painel";
 import { textoDoParametro, type ValorDeParametro } from "../../lib/parametros";
 import { consultarResultado } from "../../lib/resultado/consulta";
@@ -41,6 +45,7 @@ export default async function Resultado({ searchParams }: { searchParams: Promis
   }
   const lojas = leitura.estado === "ok" ? leitura.dados.lojas : [];
   const onde = filtro.tipo === "rede" ? "Rede inteira" : (lojas.find((l) => l.id === filtro.id)?.nome ?? "Loja");
+  const planilha = `/resultado/exportar?${new URLSearchParams({ mes: mes.slice(0, 7), ...(filtro.tipo === "loja" ? { loja: filtro.id } : {}) })}`;
 
   return (
     <MoldeReal sessao={sessao} largura="max-w-6xl">
@@ -48,7 +53,14 @@ export default async function Resultado({ searchParams }: { searchParams: Promis
         sobretitulo={onde}
         titulo="Resultado do mês"
         subtitulo="Quanto sobrou: as vendas menos devoluções, custo das mercadorias, taxas e contas. É o resultado gerencial com o que está lançado no sistema, não a contabilidade."
+        acao={leitura.estado === "ok" ? (
+          <div className="nao-imprimir flex flex-wrap gap-2">
+            <a href={planilha} download className={classeBotao("secundario", "md")}><Download aria-hidden className="size-4" /> Baixar planilha</a>
+            <BotaoImprimir />
+          </div>
+        ) : undefined}
       />
+      <CarimboDaImpressao texto={`Ora 5G · resultado do mês · ${onde} · impresso em ${geradoEm()}`} />
       <ConteudoResultado leitura={leitura} mes={mes} mesAtual={mesAtual} filtro={filtro} />
     </MoldeReal>
   );

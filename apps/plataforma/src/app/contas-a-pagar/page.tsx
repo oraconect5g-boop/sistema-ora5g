@@ -1,10 +1,16 @@
 import type { Metadata } from "next";
 
+import { Download } from "lucide-react";
+
+import { BotaoImprimir, CarimboDaImpressao } from "../../componentes/BotaoImprimir";
 import { MoldeReal } from "../../componentes/MoldeReal";
-import { Aviso, TituloPagina } from "../../componentes/ui";
+import { Aviso, classeBotao, TituloPagina } from "../../componentes/ui";
 import { FalhaDoServico, obterSessao } from "../../lib/acesso/sessao";
 import { consultarCategorias, consultarContas, consultarFornecedores, consultarResumo, type ResumoDasContas } from "../../lib/contas-a-pagar/consulta";
-import { ERROS_DAS_CONTAS, filtroDasContas, hojeEmSaoPaulo, OK_DAS_CONTAS, visaoDasContas, type FiltroDasContas } from "../../lib/contas-a-pagar/regras";
+import {
+  ERROS_DAS_CONTAS, filtroDasContas, filtroNoEndereco, hojeEmSaoPaulo, OK_DAS_CONTAS, VISOES_DAS_CONTAS, visaoDasContas, type FiltroDasContas,
+} from "../../lib/contas-a-pagar/regras";
+import { geradoEm } from "../../lib/csv";
 import type { Leitura } from "../../lib/leitura-do-banco";
 import { chaveDoCatalogo, textoDoParametro, type ValorDeParametro } from "../../lib/parametros";
 import { ConteudoContas } from "./ConteudoContas";
@@ -46,6 +52,8 @@ export default async function ContasAPagar({ searchParams }: { searchParams: Pro
   const escopo = resumo.estado === "ok" ? resumo.dados.escopo : null;
   const onde = filtro.tipo === "rede" ? "Rede (central)" : filtro.tipo === "loja" ? (escopo?.lojas.find((l) => l.id === filtro.id)?.nome ?? lojaDoTurno.nome)
     : escopo?.rede ? "Rede e todas as lojas" : lojaDoTurno.nome;
+  const loja = filtroNoEndereco(filtro);
+  const planilha = `/contas-a-pagar/exportar?${new URLSearchParams({ ver: visao, ...(loja ? { loja } : {}) })}`;
 
   return (
     <MoldeReal sessao={sessao} largura="max-w-6xl">
@@ -53,7 +61,14 @@ export default async function ContasAPagar({ searchParams }: { searchParams: Pro
         sobretitulo={onde}
         titulo="Contas a pagar"
         subtitulo="O que a empresa tem a pagar, pelo vencimento: aluguel, luz, fornecedores. O sistema registra a conta e o pagamento feito no banco; não paga nada sozinho."
+        acao={resumo.estado === "ok" ? (
+          <div className="nao-imprimir flex flex-wrap gap-2">
+            <a href={planilha} download className={classeBotao("secundario", "md")}><Download aria-hidden className="size-4" /> Baixar planilha</a>
+            <BotaoImprimir />
+          </div>
+        ) : undefined}
       />
+      <CarimboDaImpressao texto={`Ora 5G · contas a pagar (${VISOES_DAS_CONTAS[visao].toLowerCase()}) · ${onde} · impresso em ${geradoEm()}`} />
       {ok && <Aviso tom="sucesso" className="mt-4">{OK_DAS_CONTAS[ok]}</Aviso>}
       {erro && <Aviso tom="perigo" className="mt-4">{ERROS_DAS_CONTAS[erro]}</Aviso>}
       <ConteudoContas resumo={resumo} lista={lista} categorias={categorias} fornecedores={fornecedores} visao={visao} filtro={filtro} hoje={hoje} lojaDoTurno={lojaDoTurno} />

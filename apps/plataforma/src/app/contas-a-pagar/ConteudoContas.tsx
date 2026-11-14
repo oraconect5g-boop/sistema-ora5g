@@ -65,7 +65,7 @@ export function ConteudoContas({ resumo, lista, categorias, fornecedores, visao,
 
   return (
     <>
-      <div className="mt-4 space-y-2">
+      <div className="nao-imprimir mt-4 space-y-2">
         {varias && escopo && (
           <FiltroSegmentado
             rotulo="Onde"
@@ -171,7 +171,7 @@ function Lancamento({ lojas, rede, categorias, fornecedores, filtro, visao, hoje
   const onde = filtro.tipo === "rede" && rede ? "rede" : filtro.tipo === "loja" && lojas.some((l) => l.id === filtro.id) ? filtro.id
     : lojas.some((l) => l.id === lojaDoTurno.id) ? lojaDoTurno.id : (lojas[0]?.id ?? "rede");
   return (
-    <Cartao className="mt-4" titulo="Lançar conta" icone={ReceiptText} subtitulo="A conta fica registrada para pagar; o pagamento é feito no banco e registrado aqui depois.">
+    <Cartao className="nao-imprimir mt-4" titulo="Lançar conta" icone={ReceiptText} subtitulo="A conta fica registrada para pagar; o pagamento é feito no banco e registrado aqui depois.">
       {categorias.estado !== "ok" ? <EstadoDoPainel estado={categorias.estado} fonte="contas_a_pagar" /> : (
         <details open={abrir} className="group">
           <summary className={`${pilula} border-acao text-acao`}>
@@ -281,7 +281,7 @@ function LinhaDaConta({ c, visao, filtro, hoje, mostrarLoja, nomes }: { c: Conta
       {c.situacao === "cancelada" && <p className="mt-1 text-xs text-suave">{`Motivo: ${c.motivoCancelamento ?? ""}`}</p>}
 
       {visao === "abertas" && c.situacao === "aberta" && (
-        <div className="mt-2 flex flex-wrap gap-2">
+        <div className="nao-imprimir mt-2 flex flex-wrap gap-2">
           <details className="group open:w-full">
             <summary className={pilula}>Marcar paga</summary>
             <form action={pagarConta} className="mt-2 grid gap-2 rounded-xl border border-borda p-3 sm:grid-cols-4">
@@ -316,7 +316,7 @@ function LinhaDaConta({ c, visao, filtro, hoje, mostrarLoja, nomes }: { c: Conta
         </div>
       )}
       {visao === "pagas" && c.situacao === "paga" && (
-        <details className="group mt-2 open:w-full">
+        <details className="nao-imprimir group mt-2 open:w-full">
           <summary className={pilula}>Desfazer pagamento</summary>
           <form action={desfazerPagamento} className="mt-2 flex flex-wrap items-end gap-2 rounded-xl border border-borda p-3">
             <input type="hidden" name="conta" value={c.id} /><Volta visao={visao} filtro={filtro} />
@@ -331,7 +331,7 @@ function LinhaDaConta({ c, visao, filtro, hoje, mostrarLoja, nomes }: { c: Conta
 
 function Categorias({ categorias, visao, filtro }: { categorias: CategoriaDaConta[]; visao: VisaoDasContas; filtro: FiltroDasContas }) {
   return (
-    <Cartao className="mt-4" titulo="Categorias das despesas" icone={Tags} subtitulo="Só o dono ajusta. Desativar tira a categoria do lançamento; as contas antigas continuam com ela. Compra de mercadoria fica fora do resultado do mês: vira estoque, e o custo entra quando o item é vendido.">
+    <Cartao className="nao-imprimir mt-4" titulo="Categorias das despesas" icone={Tags} subtitulo="Só o dono ajusta. Desativar tira a categoria do lançamento; as contas antigas continuam com ela. Compra de mercadoria fica fora do resultado do mês: vira estoque, e o custo entra quando o item é vendido.">
       <details className="group">
         <summary className={pilula}>{`Ver e ajustar as ${numero(categorias.length)} categorias`}</summary>
         <ul className="mt-2 divide-y divide-borda text-sm">
