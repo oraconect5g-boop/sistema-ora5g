@@ -23,7 +23,7 @@
       "conferido": "rodapé da tela de entrada (dd31e91 · build 14/11/2026 07:50), /saude e /inicio, /metas, /metas/fechamento, /metas/extrato e /resultado respondendo 307 para o login"
     },
     "falta_publicar": [
-      "B1, correções do inventário (#78 e #79), publicado ao fim do lote; a migration 20261114130247_inventario_correcoes pede o sim do proprietário para o ora5g-dev"
+      "B1 e B2, correções do inventário (#78 e #79) e da conferência do dia (#80), publicados ao fim do lote; a migration 20261114130247_inventario_correcoes (B1) pede o sim do proprietário para o ora5g-dev; o B2 não tem migration"
     ]
   },
   "contagem_dos_estados": {
@@ -254,7 +254,7 @@
       "titulo": "Receber estoque inicial validado por contagem real",
       "prioridade": "P0",
       "estado": "parcial",
-      "lote": "L4a entrada de mercadoria; R1 correções do recebimento",
+      "lote": "L4a entrada de mercadoria; R1 correções do recebimento; B2 correção #80 (14/11)",
       "bloqueio_externo": null,
       "revisado_codex": false,
       "homologado": false

@@ -10,6 +10,7 @@ import { ehUuid } from "../../lib/acesso/regras";
 import { FalhaDoServico, obterSessao } from "../../lib/acesso/sessao";
 import { buscarNoCatalogo, filtroDoIdentificador, identificadorDigitado, termoDaBusca } from "../../lib/catalogo/busca";
 import { consultarEstoque } from "../../lib/estoque/consulta-painel";
+import { filtroDosPendentes, numerosDaConferencia, paginaDoEndereco, paginasDaConferencia, POR_PAGINA_DA_CONFERENCIA, resumoDosPendentes } from "../../lib/estoque/conferencia";
 import { escopoDoEstoque } from "../../lib/estoque/painel";
 import { ERROS_DO_ESTOQUE, inicioDoDiaEmSaoPaulo, nomeDe, NOMES_DAS_SITUACOES, NOMES_DOS_MOVIMENTOS } from "../../lib/estoque/regras";
 import { chaveDoCatalogo, textoDoParametro, type ValorDeParametro } from "../../lib/parametros";
@@ -31,7 +32,7 @@ const final = (t: string | null) => (t ? t : "—");
 // a conferência é gravada e auditada pelo banco (conferir_item). Custo não aparece aqui.
 // Lote G3: a aba "Painel" mostra a posição de agora somada no banco (public.estoque_painel), por modelo,
 // categoria e local, com mínimo, trânsito, parado há mais de 60 dias e pendências.
-export default async function Estoque({ searchParams }: { searchParams: Promise<{ q?: ValorDeParametro; aba?: ValorDeParametro; loja?: ValorDeParametro; variante?: ValorDeParametro; ok?: ValorDeParametro; erro?: ValorDeParametro; erro_transferencia?: ValorDeParametro }> }) {
+export default async function Estoque({ searchParams }: { searchParams: Promise<{ q?: ValorDeParametro; aba?: ValorDeParametro; pagina?: ValorDeParametro; loja?: ValorDeParametro; variante?: ValorDeParametro; ok?: ValorDeParametro; erro?: ValorDeParametro; erro_transferencia?: ValorDeParametro }> }) {
   const parametros = await searchParams;
   const erro = chaveDoCatalogo(ERROS_DO_ESTOQUE, parametros.erro);
   const conferencia = textoDoParametro(parametros.aba) === "conferencia";
@@ -94,23 +95,38 @@ export default async function Estoque({ searchParams }: { searchParams: Promise<
 
   if (conferencia) {
     const desde = inicioDoDiaEmSaoPaulo();
-    const itens = await supabase.from("itens_serializados").select("id, variante_id, imei, iccid, situacao, conferido_em")
-      .eq("unidade_id", unidade).eq("em_estoque", true).order("variante_id").limit(500);
-    if (itens.error) throw new FalhaDoServico("estoque_conferencia");
-    const variantes = itens.data.length ? await supabase.from("variantes").select("id, nome, sku").in("id", [...new Set(itens.data.map((i) => i.variante_id))]) : { data: [], error: null };
+    // #80 (REV-DIR-003): total, conferidos e pendentes são contagens no banco sobre TODOS os aparelhos e chips da
+    // loja que a pessoa vê (o RLS vale em cada uma); só a lista dos pendentes vem por página, em ordem estável.
+    const doEstoque = () => supabase.from("itens_serializados").select("id", { count: "exact", head: true }).eq("unidade_id", unidade).eq("em_estoque", true);
+    const [total, conferidos, pendentes] = await Promise.all([
+      doEstoque(), doEstoque().gte("conferido_em", desde), doEstoque().or(filtroDosPendentes(desde)),
+    ]);
+    if (total.error || conferidos.error || pendentes.error) throw new FalhaDoServico("estoque_conferencia");
+    const numeros = numerosDaConferencia(total.count, conferidos.count, pendentes.count);
+    const paginas = numeros ? paginasDaConferencia(numeros.pendentes) : 1;
+    const pagina = Math.min(paginaDoEndereco(textoDoParametro(parametros.pagina)), paginas);
+    const lista = numeros && numeros.pendentes > 0
+      ? await supabase.from("itens_serializados").select("id, variante_id, imei, iccid, situacao, conferido_em")
+        .eq("unidade_id", unidade).eq("em_estoque", true).or(filtroDosPendentes(desde))
+        .order("variante_id").order("id").range((pagina - 1) * POR_PAGINA_DA_CONFERENCIA, pagina * POR_PAGINA_DA_CONFERENCIA - 1)
+      : { data: [], error: null };
+    if (lista.error) throw new FalhaDoServico("estoque_conferencia");
+    const variantes = lista.data.length ? await supabase.from("variantes").select("id, nome, sku").in("id", [...new Set(lista.data.map((i) => i.variante_id))]) : { data: [], error: null };
     if (variantes.error) throw new FalhaDoServico("estoque_variantes");
-    const conferidosHoje = itens.data.filter((i) => i.conferido_em && i.conferido_em >= desde).length;
-    const pendentes = itens.data.filter((i) => !(i.conferido_em && i.conferido_em >= desde));
+    const enderecoDaPagina = (n: number) => (n === 1 ? "/estoque?aba=conferencia" : `/estoque?aba=conferencia&pagina=${n}`);
     return (
       <MoldeReal sessao={sessao}>
         <TituloPagina sobretitulo={situacao.unidade_nome} titulo="Estoque" />
         {abas}
         {erro && <Aviso tom="perigo">{ERROS_DO_ESTOQUE[erro]}</Aviso>}
         {textoDoParametro(parametros.ok) === "conferido" && <Aviso tom="sucesso"><CheckCircle2 aria-hidden className="inline size-4" /> Item conferido (gravado na auditoria).</Aviso>}
-        <Cartao titulo="Conferência física de hoje" subtitulo={`${conferidosHoje} de ${itens.data.length} aparelhos e chips conferidos`} icone={ClipboardCheck}>
-          <div className="h-2 overflow-hidden rounded-full bg-slate-100" role="progressbar" aria-valuemin={0} aria-valuemax={itens.data.length} aria-valuenow={conferidosHoje} aria-label="Conferidos hoje">
-            <div className="h-full bg-acao" style={{ width: `${itens.data.length ? Math.round((conferidosHoje / itens.data.length) * 100) : 0}%` }} />
-          </div>
+        {!numeros && <Aviso tom="aviso">Não deu para contar os aparelhos e chips agora: os números não aparecem, para a conferência não parecer terminada sem estar. Tente de novo em instantes.</Aviso>}
+        <Cartao titulo="Conferência física de hoje" subtitulo={numeros ? `${numeros.conferidos} de ${numeros.total} aparelhos e chips conferidos` : "Não deu para contar agora"} icone={ClipboardCheck}>
+          {numeros && (
+            <div className="h-2 overflow-hidden rounded-full bg-slate-100" role="progressbar" aria-valuemin={0} aria-valuemax={numeros.total} aria-valuenow={numeros.conferidos} aria-label="Conferidos hoje">
+              <div className="h-full bg-acao" style={{ width: `${numeros.total ? Math.floor((numeros.conferidos / numeros.total) * 100) : 0}%` }} />
+            </div>
+          )}
           {confere.data ? (
             <form action={conferirPorIdentificador} className="mt-3 flex flex-wrap items-end gap-2">
               <label className="min-w-0 flex-1 text-sm font-medium">IMEI ou ICCID do item na mão<input name="identificador" inputMode="numeric" autoComplete="off" required className={campo} /></label>
@@ -118,20 +134,31 @@ export default async function Estoque({ searchParams }: { searchParams: Promise<
             </form>
           ) : <p className="mt-3 text-sm text-suave">Seu papel consulta, mas não confere.</p>}
         </Cartao>
-        <Cartao titulo="Ainda não conferidos hoje" subtitulo={pendentes.length ? `${pendentes.length} item(ns)` : "Tudo conferido"}>
-          {pendentes.length === 0 ? <p className="text-sm text-suave">Nenhum pendente.</p> : (
-            <ul className="divide-y divide-borda text-sm">
-              {pendentes.map((i) => {
-                const v = variantes.data.find((x) => x.id === i.variante_id);
-                return (
-                  <li key={i.id} className="flex flex-wrap items-center justify-between gap-2 py-2">
-                    <span>{v?.nome ?? "—"}<span className="numeros block text-xs text-suave">{v?.sku} · {i.imei ? `IMEI ${i.imei}` : `ICCID ${final(i.iccid)}`}{i.situacao === "reservado" ? " · numa venda" : ""}</span></span>
-                    {confere.data && <form action={conferirItem}><input type="hidden" name="item" value={i.id} /><Botao type="submit" tamanho="sm" variante="secundario">Conferido</Botao></form>}
-                  </li>
-                );
-              })}
-            </ul>
-          )}
+        <Cartao titulo="Ainda não conferidos hoje" subtitulo={resumoDosPendentes(numeros, pagina)}>
+          {!numeros ? <p className="text-sm text-suave">A lista volta quando o banco responder.</p>
+            : numeros.total === 0 ? <p className="text-sm text-suave">Nada para conferir hoje.</p>
+            : numeros.pendentes === 0 ? <p className="text-sm text-suave">Nenhum pendente.</p> : (
+              <>
+                <ul className="divide-y divide-borda text-sm">
+                  {lista.data.map((i) => {
+                    const v = variantes.data.find((x) => x.id === i.variante_id);
+                    return (
+                      <li key={i.id} className="flex flex-wrap items-center justify-between gap-2 py-2">
+                        <span>{v?.nome ?? "—"}<span className="numeros block text-xs text-suave">{v?.sku} · {i.imei ? `IMEI ${i.imei}` : `ICCID ${final(i.iccid)}`}{i.situacao === "reservado" ? " · numa venda" : ""}</span></span>
+                        {confere.data && <form action={conferirItem}><input type="hidden" name="item" value={i.id} /><Botao type="submit" tamanho="sm" variante="secundario">Conferido</Botao></form>}
+                      </li>
+                    );
+                  })}
+                </ul>
+                {paginas > 1 && (
+                  <nav aria-label="Páginas dos pendentes" className="mt-3 flex flex-wrap items-center justify-between gap-2 text-sm">
+                    {pagina > 1 ? <Link href={enderecoDaPagina(pagina - 1)} className="rounded-botao px-3 py-2 font-semibold text-acao ring-1 ring-borda">Anteriores</Link> : <span />}
+                    <span className="text-suave">{`Página ${pagina} de ${paginas}`}</span>
+                    {pagina < paginas ? <Link href={enderecoDaPagina(pagina + 1)} className="rounded-botao px-3 py-2 font-semibold text-acao ring-1 ring-borda">Próximos</Link> : <span />}
+                  </nav>
+                )}
+              </>
+            )}
         </Cartao>
       </MoldeReal>
     );
