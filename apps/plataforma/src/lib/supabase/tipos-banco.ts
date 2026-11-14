@@ -1,5 +1,5 @@
 // ARQUIVO GERADO pelo Supabase (generate_typescript_types do projeto ora5g-dev) depois da
-// migration 20261114162305_orcamento_da_os. Não edite à mão: gere de novo a cada
+// migration 20261114202535_relatorio_da_assistencia. Não edite à mão: gere de novo a cada
 // migration aplicada (auditoria do Codex de 08/11, §7.2). O teste tipos-banco.test.ts confere
 // que funções e tabelas públicas daqui são as mesmas das migrations.
 export type Json =
@@ -3579,13 +3579,6 @@ export type Database = {
         }
         Relationships: [
           {
-            foreignKeyName: "ordens_servico_venda_id_fkey"
-            columns: ["venda_id"]
-            isOneToOne: false
-            referencedRelation: "vendas"
-            referencedColumns: ["id"]
-          },
-          {
             foreignKeyName: "ordens_servico_aberta_por_fkey"
             columns: ["aberta_por"]
             isOneToOne: false
@@ -3612,6 +3605,13 @@ export type Database = {
             isOneToOne: false
             referencedRelation: "unidades"
             referencedColumns: ["id", "organizacao_id"]
+          },
+          {
+            foreignKeyName: "ordens_servico_venda_id_fkey"
+            columns: ["venda_id"]
+            isOneToOne: false
+            referencedRelation: "vendas"
+            referencedColumns: ["id"]
           },
         ]
       }
@@ -3845,27 +3845,6 @@ export type Database = {
           },
         ]
       }
-      papeis: {
-        Row: {
-          ativo: boolean
-          codigo: string
-          escopo_padrao: string
-          nome: string
-        }
-        Insert: {
-          ativo?: boolean
-          codigo: string
-          escopo_padrao: string
-          nome: string
-        }
-        Update: {
-          ativo?: boolean
-          codigo?: string
-          escopo_padrao?: string
-          nome?: string
-        }
-        Relationships: []
-      }
       os_pecas: {
         Row: {
           chave: string
@@ -3972,6 +3951,27 @@ export type Database = {
             referencedColumns: ["id", "organizacao_id"]
           },
         ]
+      }
+      papeis: {
+        Row: {
+          ativo: boolean
+          codigo: string
+          escopo_padrao: string
+          nome: string
+        }
+        Insert: {
+          ativo?: boolean
+          codigo: string
+          escopo_padrao: string
+          nome: string
+        }
+        Update: {
+          ativo?: boolean
+          codigo?: string
+          escopo_padrao?: string
+          nome?: string
+        }
+        Relationships: []
       }
       papel_permissoes: {
         Row: {
@@ -4930,17 +4930,17 @@ export type Database = {
         }
         Relationships: [
           {
-            foreignKeyName: "venda_itens_os_id_fkey"
-            columns: ["os_id"]
-            isOneToOne: false
-            referencedRelation: "ordens_servico"
-            referencedColumns: ["id"]
-          },
-          {
             foreignKeyName: "venda_itens_item_serializado_id_fkey"
             columns: ["item_serializado_id"]
             isOneToOne: false
             referencedRelation: "itens_serializados"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "venda_itens_os_id_fkey"
+            columns: ["os_id"]
+            isOneToOne: false
+            referencedRelation: "ordens_servico"
             referencedColumns: ["id"]
           },
           {
