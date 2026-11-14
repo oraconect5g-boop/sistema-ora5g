@@ -1,0 +1,39 @@
+# Verificação semanal de segurança (lote Q3, ORA-QUAL-014): roda sozinha toda segunda-feira e pode ser
+# disparada à mão. Falha (e o GitHub avisa por e-mail) quando aparece vulnerabilidade alta ou crítica nas
+# dependências que vão para a produção, crítica em qualquer dependência, ou segredo em qualquer commit.
+# Só lê: nenhuma credencial, nenhuma escrita. Roteiro de triagem: docs/operacao/SEGURANCA_PERIODICA.md.
+name: Segurança semanal
+
+on:
+  schedule:
+    - cron: "0 11 * * 1"
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  verificar:
+    name: Dependências e segredos
+    runs-on: ubuntu-24.04
+    timeout-minutes: 15
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          persist-credentials: false
+          fetch-depth: 0
+      - uses: actions/setup-node@949feb2413d6458794dcd2491c4babbbce0c15c1 # v7.1.0
+        with:
+          node-version-file: .nvmrc
+          cache: npm
+      - run: npm ci
+      - name: Segredos em todo o histórico
+        run: npm run segredos -- --historico HEAD
+      - name: Produção sem vulnerabilidade alta ou crítica
+        run: npm audit --omit=dev --audit-level=high
+      - name: Todas as dependências sem vulnerabilidade crítica
+        run: npm audit --audit-level=critical
+      - name: Relatório completo (não falha)
+        run: |
+          npm audit || true
+          npm outdated || true

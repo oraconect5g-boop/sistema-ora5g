@@ -2,7 +2,7 @@
   "_leia": "Checkpoint do programa de execução integral (PR #67). Carregar ao retomar e seguir para o próximo item executável da fila; não reiniciar o projeto. Estados vêm de status-requisitos.json (fonte da rastreabilidade); este arquivo acrescenta lote, bloqueio externo e revisão.",
   "atualizado_em": "2026-11-14",
   "base": {
-    "main": "ed37080",
+    "main": "070dbb2",
     "pacote": {
       "pr": 67,
       "branch": "docs/execucao-integral-20261110",
@@ -18,20 +18,20 @@
   },
   "publicado": {
     "homologacao": {
-      "commit": "ed37080",
+      "commit": "070dbb2",
       "quando": "2026-11-14",
-      "conferido": "rodapé da tela de entrada (ed37080 · build 14/11/2026 20:19), /saude 200 e as rotas reais respondendo 307 para o login"
+      "conferido": "rodapé da tela de entrada (070dbb2 · build 14/11/2026 20:37), /saude 200 e as rotas reais respondendo 307 para o login"
     },
     "falta_publicar": [
-      "ORG-009, regiões da rede, publicado ao fim do lote",
+      "Q3, revisão periódica de segurança e proposta de backup (configuração do GitHub e documentos), publicado ao fim do lote",
       "migration 20261114235000_estoque_valor_em_custo (G3b): aplicar no ora5g-dev pede o sim do proprietário",
       "migration 20261115001000_codigos_de_outros_canais (CAT-009): aplicar no ora5g-dev pede o sim do proprietário",
       "migration 20261115003000_regioes (ORG-009): aplicar no ora5g-dev pede o sim do proprietário"
     ]
   },
   "contagem_dos_estados": {
-    "nao_iniciado": 51,
-    "parcial": 76,
+    "nao_iniciado": 49,
+    "parcial": 78,
     "testado": 47,
     "bloqueado": 3,
     "respeitado": 2
@@ -1507,8 +1507,8 @@
     "ORA-QUAL-005": {
       "titulo": "Backups e ensaio de restauração de banco e anexos",
       "prioridade": "P0",
-      "estado": "nao_iniciado",
-      "lote": "transversal",
+      "estado": "parcial",
+      "lote": "transversal; Q3 (14/11): proposta de RPO, RTO e ensaio (D-044); o ensaio depende da produção (D-027)",
       "bloqueio_externo": null,
       "revisado_codex": false,
       "homologado": false
@@ -1588,8 +1588,8 @@
     "ORA-QUAL-014": {
       "titulo": "Análise de segurança periódica e monitoramento de dependências",
       "prioridade": "P2",
-      "estado": "nao_iniciado",
-      "lote": "transversal",
+      "estado": "parcial",
+      "lote": "transversal; Q3 (14/11): verificação semanal, Dependabot e roteiro de triagem",
       "bloqueio_externo": null,
       "revisado_codex": false,
       "homologado": false

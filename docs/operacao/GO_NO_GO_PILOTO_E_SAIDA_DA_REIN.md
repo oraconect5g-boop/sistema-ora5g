@@ -35,7 +35,7 @@ Legenda: ✅ provado em desenvolvimento · 🟡 feito no código, falta uso real
 | 8 | Zero duplicidade de IMEI, venda e pagamento | Disputas reais em PostgreSQL 17 (`concorrencia.test.ts`, 14 casos) | ✅ |
 | 9 | Isolamento por papel, loja e organização | Testes de banco dos cenários I (acesso, estoque, venda, Connect, notas) | ✅ no banco; 🔒 E2E com usuário real (chave secreta) |
 | 10 | Usuários reais completam o PDV no celular | Gravação ou acompanhamento de uma venda completa por vendedor da piloto; gerente aprovando desconto e nota | 🔒 chave secreta e usuários de teste |
-| 11 | Backup e restauração comprovados | Ensaio de restauração do banco e das fotos em homologação, com o tempo gasto; volta de versão defeituosa | 🟡 volta de versão automática (REV-016); 🔴 ensaio de restauração (cenário J) |
+| 11 | Backup e restauração comprovados | Ensaio de restauração do banco e das fotos em homologação, com o tempo gasto; volta de versão defeituosa | 🟡 volta de versão automática (REV-016) e proposta de RPO, RTO e ensaio em [backup e restauração](BACKUP_E_RESTAURACAO.md) (D-044, 14/11); 🔴 ensaio de restauração (cenário J), que depende da produção (D-027) |
 | 12 | Contingência e suporte | Procedimento para internet ou sistema fora (sem venda "offline" no sistema, D-029), contatos e escalonamento | 🟡 proposta escrita em [contingência e incidentes](CONTINGENCIA_E_INCIDENTES.md) (14/11); falta a decisão do proprietário (D-041 e D-042) e o treino da equipe da piloto |
 | 13 | Monitoramento e responsáveis | Alerta de erro e de worker parado; quem atende em cada horário | 🟡 as filas paradas na saúde da operação (Q1) e as pendências da loja no sino (G6), 14/11; 🔴 alerta de erro do servidor e de worker parado; quem atende (D-042) |
 
