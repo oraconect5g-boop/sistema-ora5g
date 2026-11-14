@@ -1,4 +1,4 @@
-// Lote L10b (14/11/2026, ORA-FISC-008 em parte; migration 20261114230000_conciliacao_fiscal): a conciliação das vendas
+// Lote L10b (14/11/2026, ORA-FISC-008 em parte; migration 20261114215050_conciliacao_fiscal): a conciliação das vendas
 // com as notas (os quatro grupos de venda, o que falta guardar, a nota de devolução, o prazo de alerta) e as divergências
 // que não dependem de regra do contador, com a conferência de quem aprova nota. Dados FICTÍCIOS; nada é emitido.
 import type { PGlite } from "@electric-sql/pglite";

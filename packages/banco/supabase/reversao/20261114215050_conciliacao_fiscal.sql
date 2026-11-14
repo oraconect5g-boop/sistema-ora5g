@@ -1,4 +1,4 @@
--- Reversão de 20261114230000_conciliacao_fiscal: as duas funções e a tabela das conferências (as conferências
+-- Reversão de 20261114215050_conciliacao_fiscal: as duas funções e a tabela das conferências (as conferências
 -- registradas se perdem: só em banco sem dados reais).
 drop function if exists public.notas_conferir_divergencia(uuid, text, text);
 drop function if exists public.notas_conciliacao(date, date, uuid);
