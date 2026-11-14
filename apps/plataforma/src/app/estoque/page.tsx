@@ -8,6 +8,8 @@ import { MoldeReal } from "../../componentes/MoldeReal";
 import { Aviso, Botao, Cartao, FiltroSegmentado, Selo, TituloPagina } from "../../componentes/ui";
 import { ehUuid } from "../../lib/acesso/regras";
 import { FalhaDoServico, obterSessao } from "../../lib/acesso/sessao";
+import { SERVICOS, SITUACOES as SITUACOES_DA_OS, ehServico } from "../../lib/assistencia/regras";
+import { tabelaAusente } from "../../lib/caixa/saidas";
 import { buscarNoCatalogo, filtroDoIdentificador, identificadorDigitado, termoDaBusca } from "../../lib/catalogo/busca";
 import { consultarEstoque } from "../../lib/estoque/consulta-painel";
 import { filtroDosPendentes, numerosDaConferencia, paginaDoEndereco, paginasDaConferencia, POR_PAGINA_DA_CONFERENCIA, resumoDosPendentes } from "../../lib/estoque/conferencia";
@@ -180,6 +182,14 @@ export default async function Estoque({ searchParams }: { searchParams: Promise<
     ])
     : [{ data: [], error: null }, { data: null, error: null }, { data: null, error: null }];
   if (movimentos.error || lojaDoItem.error || varianteDoItem.error) throw new FalhaDoServico("estoque_historico");
+  // L5e (INV-010): os consertos deste aparelho, pelas OS abertas com o IMEI (o primeiro ou o segundo), lidos à parte e
+  // pelo RLS (quem não acompanha a assistência não vê nada). Banco sem a OS: a parte some; outra falha: diz que não leu.
+  const imeisDoItem = item.data ? [item.data.imei, item.data.imei2].filter((x): x is string => Boolean(x)) : [];
+  const consertosDoBanco = imeisDoItem.length
+    ? await supabase.from("ordens_servico").select("id, numero, situacao, servico, defeito, aberta_em").in("imei", imeisDoItem).order("aberta_em", { ascending: false }).limit(10)
+    : null;
+  const consertos = !consertosDoBanco || tabelaAusente(consertosDoBanco.error) ? null : consertosDoBanco.error ? "falha" as const : consertosDoBanco.data;
+  if (consertos === "falha") console.error("estoque: falha ao ler os consertos do aparelho", { codigo: consertosDoBanco?.error?.code ?? null });
 
   // Saldo da loja (com filtro por nome/SKU) e, se pedida, a disponibilidade na rede.
   // B5 (REV-PLAN-003): antes vinham os 500 primeiros saldos e o subtítulo dizia "500 produto(s)" mesmo havendo mais.
@@ -277,6 +287,21 @@ export default async function Estoque({ searchParams }: { searchParams: Promise<
                 <li key={m.id} className="flex justify-between gap-2 py-1"><span>{nomeDe(NOMES_DOS_MOVIMENTOS, m.tipo)}{m.motivo ? ` · ${m.motivo}` : ""}</span><span className="numeros text-suave">{quando(m.ocorrido_em)}</span></li>
               ))}
             </ul>
+            {consertos === "falha" && <p className="mt-3 text-xs text-suave">Não deu para ler os consertos deste aparelho agora.</p>}
+            {Array.isArray(consertos) && consertos.length > 0 && (
+              <>
+                <h2 className="mt-3 text-sm font-semibold">Consertos (assistência)</h2>
+                <ul className="mt-1 divide-y divide-borda text-xs">
+                  {consertos.map((o) => (
+                    <li key={o.id} className="flex justify-between gap-2 py-1">
+                      <span className="min-w-0"><Link href={`/assistencia/${o.id}`} className="font-semibold text-acao">OS nº {o.numero}</Link>{` · ${o.defeito} · `}
+                        {o.situacao === "aberta" && ehServico(o.servico) ? SERVICOS[o.servico] : SITUACOES_DA_OS[o.situacao as keyof typeof SITUACOES_DA_OS] ?? o.situacao}</span>
+                      <span className="numeros shrink-0 text-suave">{quando(o.aberta_em)}</span>
+                    </li>
+                  ))}
+                </ul>
+              </>
+            )}
           </Cartao>
         ) : <Aviso tom="aviso">Nenhum IMEI/ICCID com esse número nas lojas que você consulta.</Aviso>
       )}

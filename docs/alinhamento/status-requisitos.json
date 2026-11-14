@@ -446,9 +446,9 @@
       "evidencia": "packages/banco/supabase/migrations/20261111142726_inventario.sql; packages/banco/src/inventario.test.ts; packages/banco/src/autorizacao-funcoes.test.ts; apps/plataforma/src/app/estoque/inventario; apps/plataforma/src/app/estoque/inventario/inventario.test.ts; packages/banco/supabase/migrations/20261114145334_inventario_correcoes.sql; apps/plataforma/src/app/estoque/inventario/inventario.test.ts"
     },
     "ORA-INV-010": {
-      "status": "parcial",
-      "nota": "Lote L4b (11/11): a condição do item físico devolvido (novo, seminovo ou avariado) passa a ser obrigatória no banco (devolver_itens recusa sem ela; antes voltava \"novo\" por omissão) e na tela da venda (sem opção pré-escolhida). A condição de entrada já vinha do lote L4a e cada mudança fica no livro do estoque com motivo. Falta: histórico de reparo pela ordem de serviço (lote L12), revisão do Codex e homologação.",
-      "evidencia": "packages/banco/supabase/migrations/20261111142627_condicao_obrigatoria_na_devolucao.sql; packages/banco/src/devolucao.test.ts; apps/plataforma/src/app/vendas/[id]/page.tsx; apps/plataforma/src/lib/vendas/regras.test.ts"
+      "status": "testado",
+      "nota": "Lote L4b (11/11): a condição do item físico devolvido (novo, seminovo ou avariado) passa a ser obrigatória no banco (devolver_itens recusa sem ela; antes voltava \"novo\" por omissão) e na tela da venda (sem opção pré-escolhida). A condição de entrada já vinha do lote L4a e cada mudança fica no livro do estoque com motivo. L5e (14/11, sem migration): a busca por IMEI do estoque mostra, depois do livro do estoque, os consertos do aparelho (as OS da assistência pelos dois IMEIs, com o defeito, a situação e o caminho para a OS), pelo RLS de quem consulta. Falta: revisão do Codex e homologação.",
+      "evidencia": "packages/banco/supabase/migrations/20261111142627_condicao_obrigatoria_na_devolucao.sql; packages/banco/src/devolucao.test.ts; apps/plataforma/src/app/vendas/[id]/page.tsx; apps/plataforma/src/lib/vendas/regras.test.ts; apps/plataforma/src/app/estoque/historico-do-aparelho.test.ts"
     },
     "ORA-CRM-001": {
       "status": "testado",
@@ -467,8 +467,8 @@
     },
     "ORA-CRM-002": {
       "status": "parcial",
-      "nota": "Lote L5a (11/11): a venda guarda o cliente da rede (vendas.cliente_id) escolhido pela busca exata no PDV, sem apagar o nome e o e-mail digitados (origem); corrigir depois exige motivo (venda_vincular_cliente, por quem vendeu ou vê as vendas da loja). A ficha mostra o total de compras da rede e só as vendas que a pessoa já pode ver (RLS). Falta: linhas e chips da Ora Connect (L11), OS (L12) e atendimentos (L5b) na ficha; revisão do Codex e homologação.",
-      "evidencia": "packages/banco/supabase/migrations/20261111191909_clientes_compartilhados.sql; packages/banco/src/clientes.test.ts; apps/plataforma/src/app/vender/acoes.ts; apps/plataforma/src/app/vendas/[id]/page.tsx; apps/plataforma/src/app/clientes/clientes.test.ts"
+      "nota": "Lote L5a (11/11): a venda guarda o cliente da rede (vendas.cliente_id) escolhido pela busca exata no PDV, sem apagar o nome e o e-mail digitados (origem); corrigir depois exige motivo (venda_vincular_cliente, por quem vendeu ou vê as vendas da loja). A ficha mostra o total de compras da rede e só as vendas que a pessoa já pode ver (RLS). L5e (14/11, sem migration): a ficha mostra as OS do cliente (L12), as negociações com a etapa e o próximo passo e os contatos agendados (L5b) e as operações do Ora Connect das compras dele (ativação, portabilidade e recarga, com a linha só com o DDD e os quatro últimos dígitos), cada bloco pelo RLS de quem abre e lido à parte (falha aparece como falha; banco sem a tabela, o bloco some). Falta: as linhas e os chips como cadastro próprio da Ora Connect (L11, sem venda ligada), revisão do Codex e homologação.",
+      "evidencia": "packages/banco/supabase/migrations/20261111191909_clientes_compartilhados.sql; packages/banco/src/clientes.test.ts; apps/plataforma/src/app/vender/acoes.ts; apps/plataforma/src/app/vendas/[id]/page.tsx; apps/plataforma/src/app/clientes/clientes.test.ts; apps/plataforma/src/lib/clientes/historico.ts; apps/plataforma/src/app/clientes/clientes.test.ts"
     },
     "ORA-CRM-004": {
       "status": "testado",
