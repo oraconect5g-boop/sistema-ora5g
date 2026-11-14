@@ -4755,6 +4755,70 @@ export type Database = {
           },
         ]
       }
+      variante_codigos_externos: {
+        Row: {
+          canal: string
+          codigo: string
+          desligado_em: string | null
+          desligado_por: string | null
+          id: string
+          ligado_em: string
+          ligado_por: string
+          motivo_desligamento: string | null
+          organizacao_id: string
+          sku_no_canal: string | null
+          variante_id: string
+        }
+        Insert: {
+          canal: string
+          codigo: string
+          desligado_em?: string | null
+          desligado_por?: string | null
+          id?: string
+          ligado_em?: string
+          ligado_por: string
+          motivo_desligamento?: string | null
+          organizacao_id: string
+          sku_no_canal?: string | null
+          variante_id: string
+        }
+        Update: {
+          canal?: string
+          codigo?: string
+          desligado_em?: string | null
+          desligado_por?: string | null
+          id?: string
+          ligado_em?: string
+          ligado_por?: string
+          motivo_desligamento?: string | null
+          organizacao_id?: string
+          sku_no_canal?: string | null
+          variante_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "variante_codigos_externos_desligado_por_fkey"
+            columns: ["desligado_por"]
+            isOneToOne: false
+            referencedRelation: "perfis_usuario"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "variante_codigos_externos_ligado_por_fkey"
+            columns: ["ligado_por"]
+            isOneToOne: false
+            referencedRelation: "perfis_usuario"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "variante_codigos_externos_variante_id_organizacao_id_fkey"
+            columns: ["variante_id", "organizacao_id"]
+            isOneToOne: false
+            referencedRelation: "variantes"
+            referencedColumns: ["id", "organizacao_id"]
+          },
+        ]
+      }
       variantes: {
         Row: {
           ativa: boolean
@@ -5797,6 +5861,20 @@ export type Database = {
         }
         Returns: boolean
       }
+      catalogo_desligar_codigo: {
+        Args: { p_motivo: string; p_vinculo: string }
+        Returns: boolean
+      }
+      catalogo_ligar_codigo: {
+        Args: {
+          p_canal: string
+          p_codigo: string
+          p_motivo: string
+          p_sku_no_canal: string
+          p_variante: string
+        }
+        Returns: Json
+      }
       catalogo_salvar_categoria: {
         Args: {
           p_ativa: boolean
@@ -5847,6 +5925,10 @@ export type Database = {
           p_sku: string
         }
         Returns: Json
+      }
+      catalogo_variante_por_codigo: {
+        Args: { p_canal: string; p_codigo: string }
+        Returns: string
       }
       cliente_buscar: {
         Args: { p_criterio: string; p_valor: string }

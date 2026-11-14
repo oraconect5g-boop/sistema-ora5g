@@ -19,17 +19,29 @@ const tabelas: Record<string, Record<string, unknown>[]> = {
     { id: "v4", produto_id: "p2", sku: "ACE-0001", nome: "Capa Galaxy A15 transparente", ativa: true },
     { id: "v5", produto_id: "p3", sku: "APA-0009", nome: "Antigo 32 GB", ativa: false },
   ],
+  // CAT-009: códigos em outros canais (o desligado não acha; o da variação inativa só na busca do estoque).
+  variante_codigos_externos: [
+    { variante_id: "v2", codigo: "REIN-778", desligado_em: null },
+    { variante_id: "v4", codigo: "REIN-779", desligado_em: "2026-11-14T10:00:00Z" },
+    { variante_id: "v3", codigo: "REIN-780", desligado_em: null },
+  ],
 };
+const erros: Record<string, { code: string }> = {};
 const minusculo = (v: unknown) => String(v ?? "").toLocaleLowerCase("pt-BR");
 class Consulta {
   linhas: Record<string, unknown>[];
-  constructor(nome: string) { this.linhas = [...(tabelas[nome] ?? [])]; }
+  nome: string;
+  constructor(nome: string) { this.nome = nome; this.linhas = [...(tabelas[nome] ?? [])]; }
   select() { return this; }
   eq(coluna: string, valor: unknown) { this.linhas = this.linhas.filter((l) => l[coluna] === valor); return this; }
   in(coluna: string, valores: unknown[]) { this.linhas = this.linhas.filter((l) => valores.includes(l[coluna])); return this; }
+  is(coluna: string, valor: unknown) { this.linhas = this.linhas.filter((l) => l[coluna] === valor); return this; }
   ilike(coluna: string, padrao: string) { const t = minusculo(padrao.replaceAll("%", "")); this.linhas = this.linhas.filter((l) => minusculo(l[coluna]).includes(t)); return this; }
   limit(n: number) { this.linhas = this.linhas.slice(0, n); return this; }
-  then(resolver: (r: { data: Record<string, unknown>[]; error: null }) => unknown) { return Promise.resolve({ data: this.linhas, error: null }).then(resolver); }
+  then(resolver: (r: { data: Record<string, unknown>[] | null; error: null | { code: string } }) => unknown) {
+    const erro = erros[this.nome];
+    return Promise.resolve(erro ? { data: null, error: erro } : { data: this.linhas, error: null }).then(resolver);
+  }
 }
 const supabase = { from: (nome: string) => new Consulta(nome) } as unknown as Parameters<typeof buscarNoCatalogo>[0];
 
@@ -69,6 +81,25 @@ describe("buscarNoCatalogo", () => {
     expect((await buscarNoCatalogo(supabase, "verde")).variantes).toEqual([]);
     expect((await buscarNoCatalogo(supabase, "verde", { ativos: false })).variantes).toEqual(["v3"]);
     expect((await buscarNoCatalogo(supabase, "galaxy antigo", { ativos: false })).variantes).toEqual(["v5"]);
+  });
+
+  it("pelo código ativo de outro canal (CAT-009): o desligado não acha; o da variação inativa só no estoque", async () => {
+    expect(await buscarNoCatalogo(supabase, "rein-778")).toEqual({ produtos: ["p1"], variantes: ["v2"], cortada: false });
+    expect((await buscarNoCatalogo(supabase, "REIN-779")).variantes).toEqual([]);
+    expect((await buscarNoCatalogo(supabase, "REIN-780")).variantes).toEqual([]);
+    expect((await buscarNoCatalogo(supabase, "REIN-780", { ativos: false })).variantes).toEqual(["v3"]);
+  });
+
+  it("num banco sem a tabela dos códigos a busca segue pelo resto; outra falha nos códigos é falha da busca", async () => {
+    erros.variante_codigos_externos = { code: "PGRST205" };
+    try {
+      expect((await buscarNoCatalogo(supabase, "256 gb")).variantes).toEqual(["v2"]);
+      expect((await buscarNoCatalogo(supabase, "rein-778")).variantes).toEqual([]);
+      erros.variante_codigos_externos = { code: "57014" };
+      await expect(buscarNoCatalogo(supabase, "256 gb")).rejects.toThrow();
+    } finally {
+      delete erros.variante_codigos_externos;
+    }
   });
 
   it("termo vazio não consulta nada", async () => {

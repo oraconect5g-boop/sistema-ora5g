@@ -42,6 +42,11 @@ export const ERROS_DO_CADASTRO = {
   em_uso: "Ainda há estoque, reserva ou produto ativo ligado a este cadastro: resolva antes.",
   produto_inativo: "O produto está inativo: reative o produto antes.",
   politica: "Política de desconto inválida: informe teto e margem mínima juntos, de 0% a 100% (ou os dois vazios para desligar).",
+  canal: "Escolha um dos canais da lista (Rein, Site, Mercado Livre, Shopee ou TikTok Shop).",
+  codigo_canal: "Código do canal inválido: de 1 a 80 letras e números, sem espaço.",
+  sku_no_canal: "SKU no canal longo demais (até 80).",
+  codigo_canal_repetido: "Este código do canal já está em outra variação: desligue lá antes de ligar aqui.",
+  codigo_canal_outro_jeito: "Este código já está nesta variação com outro SKU no canal: desligue e ligue de novo.",
   permissao: "Sem permissão para este cadastro.",
   repetido: "Este formulário já foi enviado com outros dados. Recarregue a tela e tente de novo.",
   falha: "Não deu para gravar agora. Tente de novo em instantes.",
@@ -54,9 +59,14 @@ export function erroDoCadastro(erro: { code?: string; message?: string } | null 
   if (codigo === "42501" || codigo === "P0002") return "permissao";
   if (codigo === "OR004") return "repetido";
   if (codigo === "OR020") return m.includes("sku") ? "sku_fixo" : "em_uso";
-  if (codigo === "23505") return m.includes("sku") ? "sku_repetido" : m.includes("código de barras") ? "codigo_barras_repetido" : "nome_repetido";
+  if (codigo === "23505") {
+    if (m.includes("de outro jeito")) return "codigo_canal_outro_jeito";
+    if (m.includes("código do canal")) return "codigo_canal_repetido";
+    return m.includes("sku") ? "sku_repetido" : m.includes("código de barras") ? "codigo_barras_repetido" : "nome_repetido";
+  }
   if (codigo === "22023") {
     const regras: [string, ErroDoCadastro][] = [
+      ["canal desconhecido", "canal"], ["código do canal", "codigo_canal"], ["sku no canal", "sku_no_canal"],
       ["informe o motivo", "motivo"], ["peça da assistência é controlada", "peca_categoria"], ["tipo do produto não muda", "tipo_fixo"], ["tipo de produto", "tipo"], ["categoria", "categoria"],
       ["marca", "marca"], ["sku", "sku"], ["código de barras", "codigo_barras"], ["estoque mínimo", "estoque_minimo"],
       ["produto inativo", "produto_inativo"], ["teto", "politica"], ["demais", "texto_longo"], ["nome", "nome"],
