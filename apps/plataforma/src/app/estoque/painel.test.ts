@@ -16,6 +16,9 @@ const cenario = vi.hoisted(() => ({
   respostas: {} as Record<string, unknown>,
   erro: null as null | { code: string },
   chamadas: [] as Record<string, unknown>[],
+  /** G3b: a resposta de estoque_valor_em_custo (o padrão é a função ausente). */
+  valor: null as unknown,
+  erroDoValor: { code: "PGRST202" } as null | { code: string },
 }));
 
 vi.mock("next/headers", () => ({ cookies: async () => ({ getAll: () => [], set: () => undefined }) }));
@@ -29,6 +32,7 @@ const supabase = {
       if (cenario.erro) return { data: null, error: cenario.erro };
       return { data: cenario.respostas[String(argumentos.p_unidade ?? "rede")] ?? null, error: null };
     }
+    if (nome === "estoque_valor_em_custo") return cenario.erroDoValor ? { data: null, error: cenario.erroDoValor } : { data: cenario.valor, error: null };
     return { data: null, error: { code: "PGRST202" } };
   },
 };
@@ -44,7 +48,7 @@ vi.mock("../../lib/acesso/sessao", () => ({
 import Estoque from "./page";
 
 // Só os componentes de apresentação do painel são executados; os compartilhados ficam como elementos.
-const APRESENTACAO = new Set(["PainelDoEstoque", "EstadoDoPainel", "Indicadores"]);
+const APRESENTACAO = new Set(["PainelDoEstoque", "EstadoDoPainel", "Indicadores", "CartaoDoValorDoEstoque"]);
 type Elemento = { tipo: string; props: Linha };
 function percorrer(v: unknown, elemento: (e: Elemento) => void, folha: (t: string) => void): void {
   if (Array.isArray(v)) for (const x of v) percorrer(x, elemento, folha);
@@ -110,7 +114,7 @@ const errosRegistrados = () => vi.mocked(console.error).mock.calls;
 
 beforeEach(() => {
   vi.spyOn(console, "error").mockImplementation(() => undefined);
-  Object.assign(cenario, { permissoes: new Set(["estoque.consultar"]), respostas: { rede: DA_LOJA }, erro: null, chamadas: [] });
+  Object.assign(cenario, { permissoes: new Set(["estoque.consultar"]), respostas: { rede: DA_LOJA }, erro: null, chamadas: [], valor: null, erroDoValor: { code: "PGRST202" } });
 });
 afterEach(() => { vi.restoreAllMocks(); });
 
@@ -196,6 +200,49 @@ describe("/estoque, aba Painel (G3)", () => {
     const p = await pagina();
     expect(p.texto).toContain("Seu papel não consulta estoque nesta loja.");
     expect(cenario.chamadas).toEqual([]);
+  });
+
+  it("valor a custo (G3b): quem vê o custo vê o bloco e o que ficou fora; sem permissão ou sem a função, some; falha aparece sem número", async () => {
+    cenario.erroDoValor = null;
+    cenario.valor = {
+      unidade: null,
+      resumo: { valor: 353_400, itens_com_custo: 16, itens_sem_custo: 1, variacoes_sem_custo: 1, valor_chegando: 6_000, chegando_sem_custo: 2, valor_fora_da_venda: 3_600,
+        itens_fora_da_venda_sem_custo: 0 },
+      por_local: [
+        { unidade: LOJA, nome: "Santa Cândida (teste)", vende: true, valor: 353_400, itens_com_custo: 16, itens_sem_custo: 1, valor_chegando: 6_000, chegando_sem_custo: 2 },
+        { unidade: "00000000-0000-4000-8000-0000000000ee", nome: "DEFEITOS (teste)", vende: false, valor: 3_600, itens_com_custo: 2, itens_sem_custo: 0, valor_chegando: 0,
+          chegando_sem_custo: 0 },
+      ],
+    };
+    const indicadores = (q: Awaited<ReturnType<typeof pagina>>) => q.cartao("Valor do estoque a custo").doTipo("Indicador")
+      .map((i) => [i.rotulo, String(i.valor).replace(/\s+/g, " "), i.detalhe, i.tom]);
+    let p = await pagina();
+    expect(p.cartoes).toContain("Valor do estoque a custo");
+    // O sem custo é contado no estoque, no que está chegando e no que está fora da venda (nunca vira zero calado).
+    expect(indicadores(p)).toEqual([
+      ["No estoque", "R$ 3.534,00", "1 item de 1 variação sem custo ficou fora", "atencao"],
+      ["Chegando", "R$ 60,00", "2 itens sem custo ficaram fora", "atencao"],
+      ["Fora da venda", "R$ 36,00", "DEFEITOS (teste)", "neutro"],
+    ]);
+    // Só a loja (o gerente): sem o indicador do que está fora da venda, que ele não vê.
+    cenario.valor = {
+      unidade: LOJA,
+      resumo: { valor: 353_400, itens_com_custo: 16, itens_sem_custo: 0, variacoes_sem_custo: 0, valor_chegando: 0, chegando_sem_custo: 0, valor_fora_da_venda: 0,
+        itens_fora_da_venda_sem_custo: 0 },
+      por_local: [{ unidade: LOJA, nome: "Santa Cândida (teste)", vende: true, valor: 353_400, itens_com_custo: 16, itens_sem_custo: 0, valor_chegando: 0, chegando_sem_custo: 0 }],
+    };
+    expect(indicadores(await pagina())).toEqual([
+      ["No estoque", "R$ 3.534,00", "16 itens, todos com custo", "neutro"],
+      ["Chegando", "R$ 0,00", "em transferências enviadas e ainda não recebidas", "neutro"],
+    ]);
+    cenario.erroDoValor = { code: "42501" };
+    expect((await pagina()).cartoes).not.toContain("Valor do estoque a custo");
+    cenario.erroDoValor = { code: "PGRST202" };
+    expect((await pagina()).cartoes).not.toContain("Valor do estoque a custo");
+    cenario.erroDoValor = { code: "57014" };
+    p = await pagina();
+    expect(p.cartoes).toContain("Valor do estoque a custo");
+    expect(p.cartao("Valor do estoque a custo").texto).not.toContain("R$");
   });
 
   it("a aba Painel aparece entre as abas do estoque e marca a atual", async () => {

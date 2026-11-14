@@ -12,6 +12,7 @@ import { SERVICOS, SITUACOES as SITUACOES_DA_OS, ehServico } from "../../lib/ass
 import { tabelaAusente } from "../../lib/caixa/saidas";
 import { buscarNoCatalogo, filtroDoIdentificador, identificadorDigitado, termoDaBusca } from "../../lib/catalogo/busca";
 import { consultarEstoque } from "../../lib/estoque/consulta-painel";
+import { lerValorDoEstoque } from "../../lib/estoque/valor";
 import { filtroDosPendentes, numerosDaConferencia, paginaDoEndereco, paginasDaConferencia, POR_PAGINA_DA_CONFERENCIA, resumoDosPendentes } from "../../lib/estoque/conferencia";
 import { lerPorIds } from "../../lib/leitura-completa";
 import { escopoDoEstoque } from "../../lib/estoque/painel";
@@ -21,6 +22,7 @@ import { ERROS_DA_TRANSFERENCIA } from "../../lib/transferencias/regras";
 import { FotoAmpliavel } from "../catalogo/FotoAmpliavel";
 import { solicitarTransferencia } from "../transferencias/acoes";
 import { conferirItem, conferirPorIdentificador } from "./acoes";
+import { CartaoDoValorDoEstoque } from "./CartaoDoValorDoEstoque";
 import { PainelDoEstoque } from "./PainelDoEstoque";
 
 export const metadata: Metadata = { title: "Estoque" };
@@ -74,7 +76,11 @@ export default async function Estoque({ searchParams }: { searchParams: Promise<
     const todos = await consultarEstoque(supabase, null);
     const locais = todos.estado === "ok" ? todos.dados.locais : [];
     const escopo = escopoDoEstoque(textoDoParametro(parametros.loja), locais, unidade);
-    const estoque = todos.estado === "ok" && locais.length > 1 && escopo.unidade ? await consultarEstoque(supabase, escopo.unidade) : todos;
+    // G3b (E8): o valor a custo do mesmo recorte, só para quem vê o custo (sem permissão ou sem a função: o bloco some).
+    const [estoque, valor] = await Promise.all([
+      todos.estado === "ok" && locais.length > 1 && escopo.unidade ? consultarEstoque(supabase, escopo.unidade) : Promise.resolve(todos),
+      lerValorDoEstoque(supabase, escopo.unidade),
+    ]);
     const enderecoDoLocal = (loja: string) => (loja === unidade ? "/estoque?aba=painel" : `/estoque?aba=painel&loja=${loja}`);
     const redeInteira = locais.length > 1 && escopo.unidade === null;
     return (
@@ -93,6 +99,7 @@ export default async function Estoque({ searchParams }: { searchParams: Promise<
           )}
         </div>
         <PainelDoEstoque estoque={estoque} redeInteira={redeInteira} aqui={enderecoDoLocal(escopo.chave)} enderecoDoLocal={enderecoDoLocal} />
+        {valor && <CartaoDoValorDoEstoque leitura={valor} aqui={enderecoDoLocal(escopo.chave)} />}
       </MoldeReal>
     );
   }
