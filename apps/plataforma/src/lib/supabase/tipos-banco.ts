@@ -4927,6 +4927,166 @@ export type Database = {
           },
         ]
       }
+      whatsapp_envio_eventos: {
+        Row: {
+          detalhe: string | null
+          envio_id: string
+          id: number
+          ocorrido_em: string
+          organizacao_id: string
+          origem: string
+          situacao: string
+          usuario_id: string | null
+        }
+        Insert: {
+          detalhe?: string | null
+          envio_id: string
+          id?: never
+          ocorrido_em?: string
+          organizacao_id: string
+          origem: string
+          situacao: string
+          usuario_id?: string | null
+        }
+        Update: {
+          detalhe?: string | null
+          envio_id?: string
+          id?: never
+          ocorrido_em?: string
+          organizacao_id?: string
+          origem?: string
+          situacao?: string
+          usuario_id?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "whatsapp_envio_eventos_envio_id_fkey"
+            columns: ["envio_id"]
+            isOneToOne: false
+            referencedRelation: "whatsapp_envios"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "whatsapp_envio_eventos_usuario_id_fkey"
+            columns: ["usuario_id"]
+            isOneToOne: false
+            referencedRelation: "perfis_usuario"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      whatsapp_envios: {
+        Row: {
+          atualizado_em: string
+          chave: string
+          cliente_id: string
+          destino_mascarado: string
+          documento_id: string
+          enviando_desde: string | null
+          erro: string | null
+          finalidade: string
+          id: string
+          motivo: string | null
+          numero: number
+          organizacao_id: string
+          pedido_em: string
+          pedido_id: string
+          pedido_por: string
+          provedor_id: string | null
+          situacao: string
+          tentativas: number
+          unidade_id: string
+          venda_id: string
+        }
+        Insert: {
+          atualizado_em?: string
+          chave: string
+          cliente_id: string
+          destino_mascarado: string
+          documento_id: string
+          enviando_desde?: string | null
+          erro?: string | null
+          finalidade?: string
+          id?: string
+          motivo?: string | null
+          numero?: never
+          organizacao_id: string
+          pedido_em?: string
+          pedido_id: string
+          pedido_por: string
+          provedor_id?: string | null
+          situacao?: string
+          tentativas?: number
+          unidade_id: string
+          venda_id: string
+        }
+        Update: {
+          atualizado_em?: string
+          chave?: string
+          cliente_id?: string
+          destino_mascarado?: string
+          documento_id?: string
+          enviando_desde?: string | null
+          erro?: string | null
+          finalidade?: string
+          id?: string
+          motivo?: string | null
+          numero?: never
+          organizacao_id?: string
+          pedido_em?: string
+          pedido_id?: string
+          pedido_por?: string
+          provedor_id?: string | null
+          situacao?: string
+          tentativas?: number
+          unidade_id?: string
+          venda_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "whatsapp_envios_cliente_id_fkey"
+            columns: ["cliente_id"]
+            isOneToOne: false
+            referencedRelation: "clientes"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "whatsapp_envios_documento_id_fkey"
+            columns: ["documento_id"]
+            isOneToOne: false
+            referencedRelation: "notas_documentos"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "whatsapp_envios_pedido_id_fkey"
+            columns: ["pedido_id"]
+            isOneToOne: false
+            referencedRelation: "notas_pedidos"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "whatsapp_envios_pedido_por_fkey"
+            columns: ["pedido_por"]
+            isOneToOne: false
+            referencedRelation: "perfis_usuario"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "whatsapp_envios_venda_id_fkey"
+            columns: ["venda_id"]
+            isOneToOne: false
+            referencedRelation: "vendas"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "whatsapp_envios_unidade_id_organizacao_id_fkey"
+            columns: ["unidade_id", "organizacao_id"]
+            isOneToOne: false
+            referencedRelation: "unidades"
+            referencedColumns: ["id", "organizacao_id"]
+          },
+        ]
+      }
     }
     Views: {
       [_ in never]: never
@@ -5612,6 +5772,10 @@ export type Database = {
         Args: { p_caminho: string; p_pedido: string; p_protocolo: string; p_sha256: string; p_tipo: string }
         Returns: string
       }
+      nota_enviar_whatsapp: {
+        Args: { p_chave: string; p_motivo: string; p_pedido: string }
+        Returns: string
+      }
       notas_cancelar: {
         Args: { p_motivo: string; p_pedido: string }
         Returns: boolean
@@ -5854,6 +6018,28 @@ export type Database = {
           p_unidade: string
           p_usuario: string
         }
+        Returns: string
+      }
+      whatsapp_aviso_de_status: {
+        Args: { p_detalhe: string; p_provedor_id: string; p_status: string }
+        Returns: boolean
+      }
+      whatsapp_envio_resolver: { Args: { p_envio: string; p_motivo: string }; Returns: boolean }
+      whatsapp_worker_reivindicar: {
+        Args: { p_limite: number }
+        Returns: {
+          chave_acesso: string
+          cliente_nome: string
+          documento_caminho: string
+          envio_id: string
+          nota_numero: number
+          nota_serie: number
+          organizacao_id: string
+          telefone: string
+        }[]
+      }
+      whatsapp_worker_resultado: {
+        Args: { p_envio: string; p_resultado: Json }
         Returns: string
       }
     }

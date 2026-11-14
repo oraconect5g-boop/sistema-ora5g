@@ -16,6 +16,12 @@ export const ERROS_DAS_NOTAS = {
   documento_outra_nota: "Este XML não é desta nota: a chave de acesso dentro dele é outra.",
   protocolo: "Protocolo de autorização inválido: são 15 dígitos.",
   protocolo_outro: "O protocolo digitado é diferente do que está no XML (ou do já registrado nesta nota): confira.",
+  whatsapp_nao_emitida: "Só a nota emitida vai ao cliente pelo WhatsApp.",
+  whatsapp_sem_pdf: "Guarde o PDF da nota antes de enviar pelo WhatsApp.",
+  whatsapp_sem_cliente: "Ligue a venda ao cliente da rede antes de enviar a nota pelo WhatsApp.",
+  whatsapp_sem_numero: "O cliente da venda não tem WhatsApp no cadastro: complete o cadastro dele.",
+  whatsapp_desconhecido: "O último envio ficou com resultado desconhecido: a gerência confere antes de reenviar.",
+  whatsapp_motivo: "Para reenviar a nota, informe o motivo (de 3 a 200 letras): ele fica no histórico.",
   falha: "Não foi possível concluir agora. Tente de novo em instantes.",
 } as const;
 export type ErroDasNotas = keyof typeof ERROS_DAS_NOTAS;
@@ -30,8 +36,24 @@ export function erroDasNotas(erro: { code?: string; message?: string } | null | 
   if (codigo === "22023" && /só aparecem enquanto a nota espera/i.test(erro?.message ?? "")) return "ja_emitida";
   if (codigo === "22023" && /já tem outro protocolo/i.test(erro?.message ?? "")) return "protocolo_outro";
   if (codigo === "22023" && /protocolo de autorização inválido/i.test(erro?.message ?? "")) return "protocolo";
+  // K1c (#76): o envio da nota pelo WhatsApp.
+  const doWhatsApp: [RegExp, ErroDasNotas][] = [
+    [/só a nota emitida vai ao cliente/i, "whatsapp_nao_emitida"], [/guarde o pdf da nota/i, "whatsapp_sem_pdf"],
+    [/ligue a venda ao cliente/i, "whatsapp_sem_cliente"], [/não tem whatsapp no cadastro/i, "whatsapp_sem_numero"],
+    [/resultado desconhecido/i, "whatsapp_desconhecido"], [/para reenviar a nota/i, "whatsapp_motivo"],
+  ];
+  const doEnvio = codigo === "22023" ? doWhatsApp.find(([padrao]) => padrao.test(erro?.message ?? "")) : undefined;
+  if (doEnvio) return doEnvio[1];
   return codigo && Object.hasOwn(DO_BANCO, codigo) ? (DO_BANCO[codigo] as ErroDasNotas) : "falha";
 }
+
+// K1c (#76): os estados do envio da nota pelo WhatsApp, como a tela os diz. Só a resposta do WhatsApp muda o estado.
+export const SITUACOES_DO_ENVIO: Record<string, string> = {
+  na_fila: "na fila", enviando: "enviando", aceito: "aceito pelo WhatsApp", entregue: "entregue", lido: "lido",
+  falhou: "não chegou", desconhecido: "resultado desconhecido",
+};
+export const dataEHoraDoEnvio = (iso: string) =>
+  new Intl.DateTimeFormat("pt-BR", { timeZone: "America/Sao_Paulo", dateStyle: "short", timeStyle: "short" }).format(new Date(iso));
 
 /** "há 5 min", "há 2 h 10 min", "há 3 d". */
 export function haQuanto(minutos: number): string {

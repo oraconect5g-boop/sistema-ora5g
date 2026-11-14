@@ -33,6 +33,30 @@ export async function pedirNota(dados: FormData) {
   redirect(error ? `/vendas/${venda}?erro_nota=${erroDasNotas(error)}` : `/vendas/${venda}?nota=pedida`);
 }
 
+// K1c (#76): pedir o envio da nota emitida ao WhatsApp do cliente. O banco confere tudo (nota emitida, PDF guardado,
+// cliente com WhatsApp, quem pede) e só põe na fila: quem envia é o worker, pela integração oficial.
+export async function enviarNotaPeloWhatsApp(dados: FormData) {
+  const pedido = dados.get("pedido");
+  const venda = dados.get("venda");
+  if (!ehUuid(pedido) || !ehUuid(venda)) redirect("/vendas?erro=dados");
+  const motivo = texto(dados, "motivo");
+  const { supabase } = await obterSessao({ exigirLoja: true });
+  const { error } = await supabase.rpc("nota_enviar_whatsapp", { p_pedido: pedido, p_chave: chaveDe(dados), p_motivo: motivo || (null as unknown as string) });
+  redirect(error ? `/vendas/${venda}?erro_nota=${erroDasNotas(error)}` : `/vendas/${venda}?nota=whatsapp`);
+}
+
+// Resultado desconhecido conferido por quem aprova a nota: "não chegou", com motivo, libera o reenvio.
+export async function conferirEnvioDesconhecido(dados: FormData) {
+  const envio = dados.get("envio");
+  const venda = dados.get("venda");
+  if (!ehUuid(envio) || !ehUuid(venda)) redirect("/vendas?erro=dados");
+  const motivo = texto(dados, "motivo");
+  if (motivo.length < 3) redirect(`/vendas/${venda}?erro_nota=motivo`);
+  const { supabase } = await obterSessao({ exigirLoja: true });
+  const { error } = await supabase.rpc("whatsapp_envio_resolver", { p_envio: envio, p_motivo: motivo });
+  redirect(error ? `/vendas/${venda}?erro_nota=${erroDasNotas(error)}` : `/vendas/${venda}?nota=whatsapp_conferido`);
+}
+
 export async function decidirNota(dados: FormData) {
   const pedido = dados.get("pedido");
   const decisao = dados.get("decisao");

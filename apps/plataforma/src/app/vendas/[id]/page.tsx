@@ -14,12 +14,12 @@ import { ehUuid } from "../../../lib/acesso/regras";
 import { FalhaDoServico, obterSessao } from "../../../lib/acesso/sessao";
 import { centavosDoBanco } from "../../../lib/dinheiro";
 import { brl } from "../../../lib/formato";
-import { ERROS_DAS_NOTAS } from "../../../lib/notas/regras";
+import { dataEHoraDoEnvio, ERROS_DAS_NOTAS, SITUACOES_DO_ENVIO } from "../../../lib/notas/regras";
 import { chaveDoCatalogo, textoDoParametro, type ValorDeParametro } from "../../../lib/parametros";
 import { CONDICOES_DE_RETORNO, ERROS_DA_VENDA } from "../../../lib/vendas/regras";
 import { vincularClienteNaVenda } from "../../clientes/acoes";
 import { BuscaDeCliente } from "../../clientes/BuscaDeCliente";
-import { corrigirNota, pedirNota } from "../../notas/acoes";
+import { conferirEnvioDesconhecido, corrigirNota, enviarNotaPeloWhatsApp, pedirNota } from "../../notas/acoes";
 import { cancelarVenda, conferirRetorno, confirmarEstorno, devolverItens } from "../../vender/acoes";
 import { regraNaTela, regrasDosItens } from "../../../lib/vendas/regra-de-preco";
 
@@ -81,6 +81,14 @@ export default async function Comprovante({ params, searchParams }: { params: Pr
     : { data: [], error: null };
   const linkDe = new Map((linksDosDocumentos.data ?? []).map((l) => [l.path, l.error ? null : l.signedUrl]));
   const protocolo = protocoloDaNota && !protocoloDaNota.error ? (protocoloDaNota.data as { protocolo?: string | null } | null)?.protocolo ?? null : null;
+  // K1c (#76): os envios da nota pelo WhatsApp, lidos à parte (banco sem a migration: o bloco do envio não aparece).
+  const enviosDaNota = notaEmitida
+    ? await supabase.from("whatsapp_envios").select("id, numero, situacao, destino_mascarado, motivo, erro, pedido_em, atualizado_em")
+      .eq("pedido_id", notaEmitida.id).order("pedido_em", { ascending: false }).limit(10)
+    : null;
+  const envios = enviosDaNota && !enviosDaNota.error ? enviosDaNota.data : null;
+  const ultimoEnvio = envios?.[0] ?? null;
+  const temPdf = Boolean(documentosLidos?.some((d) => d.tipo === "pdf"));
   // A regra de preço de cada item (L6b): campanha, preço da loja ou da rede, lida à parte. Banco sem a
   // migration ou falha de leitura não derrubam a venda.
   const regras = await regrasDosItens(supabase, id);
@@ -114,6 +122,8 @@ export default async function Comprovante({ params, searchParams }: { params: Pr
       {textoDoParametro(parametros.nota) === "pedida" && <Aviso tom="sucesso">Nota pedida: aparece na fila do dono e do gerente.</Aviso>}
       {textoDoParametro(parametros.nota) === "corrigida" && <Aviso tom="sucesso">Correção enviada: o pedido voltou para a fila.</Aviso>}
       {textoDoParametro(parametros.nota)?.startsWith("documento_") && <Aviso tom="sucesso">Documento da nota guardado em privado; ele fica disponível para a loja e para o envio ao cliente.</Aviso>}
+      {textoDoParametro(parametros.nota) === "whatsapp" && <Aviso tom="sucesso">Envio pedido: a nota está na fila do WhatsApp oficial. O estado abaixo muda só com a resposta do WhatsApp.</Aviso>}
+      {textoDoParametro(parametros.nota) === "whatsapp_conferido" && <Aviso tom="sucesso">Conferência registrada: o envio ficou como &quot;não chegou&quot; e a nota pode ser reenviada.</Aviso>}
       <Cartao titulo={`Venda nº ${v.numero}`} subtitulo={`${loja.data?.nome ?? situacao.unidade_nome}${quando ? ` · ${quando}` : ""}`} icone={Receipt}>
         <p className="text-sm">Vendedor: {vendedor.data?.nome ?? "—"}{v.cliente_nome ? ` · Cliente: ${v.cliente_nome}` : ""}
           {v.cliente_id && buscaCliente.data && <> · <Link href={`/clientes/${v.cliente_id}`} className="font-semibold text-acao">ficha do cliente</Link></>}</p>
@@ -185,6 +195,38 @@ export default async function Comprovante({ params, searchParams }: { params: Pr
                           {` · ${Math.max(1, Math.round(d.bytes / 1024))} KB`}</li>
                       ))}
                     </ul>
+                  )}
+                  {envios && (
+                    <div className="space-y-2 border-t border-borda pt-2">
+                      <p className="text-xs font-semibold">Envio ao cliente pelo WhatsApp</p>
+                      <p className="text-xs text-suave">A mensagem sai pelo WhatsApp oficial da loja quando ele estiver ligado (ainda não está: falta a habilitação na Meta). Até lá o pedido fica na fila e nada aparece como enviado.</p>
+                      {envios.length > 0 && (
+                        <ul className="space-y-1 text-xs">
+                          {envios.map((e) => (
+                            <li key={e.id} className="flex flex-wrap items-center gap-2">
+                              <Selo tom={e.situacao === "entregue" || e.situacao === "lido" ? "sucesso" : e.situacao === "falhou" || e.situacao === "desconhecido" ? "aviso" : "info"} ponto>{SITUACOES_DO_ENVIO[e.situacao] ?? e.situacao}</Selo>
+                              <span className="numeros text-suave">{`${e.destino_mascarado} · pedido em ${dataEHoraDoEnvio(e.pedido_em)}${e.motivo ? ` · reenvio: ${e.motivo}` : ""}${e.erro ? ` · ${e.erro}` : ""}`}</span>
+                            </li>
+                          ))}
+                        </ul>
+                      )}
+                      {ultimoEnvio?.situacao === "desconhecido" && aprovaNota.data && (
+                        <form action={conferirEnvioDesconhecido} className="flex flex-wrap items-end gap-2">
+                          <input type="hidden" name="envio" value={ultimoEnvio.id} /><input type="hidden" name="venda" value={v.id} />
+                          <label className="text-xs font-medium">Conferido com o cliente: não chegou (motivo)<input name="motivo" required minLength={3} maxLength={200} className={campo} /></label>
+                          <Botao type="submit" tamanho="sm" variante="secundario">Registrar a conferência</Botao>
+                        </form>
+                      )}
+                      {v.cliente_id && temPdf && (!ultimoEnvio || !["na_fila", "enviando", "desconhecido"].includes(ultimoEnvio.situacao)) && (
+                        <form action={enviarNotaPeloWhatsApp} className="flex flex-wrap items-end gap-2">
+                          <input type="hidden" name="pedido" value={notaEmitida.id} /><input type="hidden" name="venda" value={v.id} /><input type="hidden" name="chave" value={randomUUID()} />
+                          {ultimoEnvio && <label className="text-xs font-medium">Motivo do reenvio<input name="motivo" required minLength={3} maxLength={200} className={campo} /></label>}
+                          <Botao type="submit" tamanho="sm">{ultimoEnvio ? "Reenviar pelo WhatsApp" : "Enviar a nota pelo WhatsApp"}</Botao>
+                        </form>
+                      )}
+                      {!v.cliente_id && <p className="text-xs text-suave">Para enviar pelo WhatsApp, ligue a venda ao cliente da rede.</p>}
+                      {v.cliente_id && !temPdf && <p className="text-xs text-suave">Para enviar pelo WhatsApp, guarde antes o PDF da nota.</p>}
+                    </div>
                   )}
                   {aprovaNota.data && (
                     <form action={`/notas/${notaEmitida.id}/documentos`} method="post" encType="multipart/form-data" className="grid gap-2 sm:grid-cols-3">
