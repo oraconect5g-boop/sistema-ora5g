@@ -62,6 +62,9 @@ grant select on public.notas_divergencias_conferidas to authenticated;
 create policy notas_divergencias_conferidas_ler on public.notas_divergencias_conferidas for select to authenticated
   using (pedido_id in (select p.id from public.notas_pedidos p));
 
+-- O número de cada nota emitida, para a busca do número repetido não percorrer todas as notas da rede.
+create index notas_pedidos_numero_emitida on public.notas_pedidos (numero_documento) where situacao = 'emitida';
+
 -- -----------------------------------------------------------------------------
 -- A leitura da conciliação
 -- -----------------------------------------------------------------------------
@@ -127,12 +130,14 @@ begin
     from public.notas_pedidos p
     where p.unidade_id = any (v_lojas) and p.venda_concluida_em >= v_de and p.venda_concluida_em < v_ate
   ),
-  -- O número de cada nota emitida nas lojas que a pessoa vê, para achar o repetido.
+  -- Para achar o número repetido: as notas emitidas das lojas que a pessoa vê com o mesmo número de alguma nota do
+  -- período (pelo índice notas_pedidos_numero_emitida), contadas por CNPJ, modelo, série e número.
   repetidos as (
     select o.id, substr(o.chave_acesso, 7, 14) as cnpj, o.modelo, o.serie, o.numero_documento, v.numero as venda_numero,
       count(*) over (partition by substr(o.chave_acesso, 7, 14), o.modelo, o.serie, o.numero_documento) as quantos
     from public.notas_pedidos o join public.vendas v on v.id = o.venda_id
     where o.situacao = 'emitida' and o.unidade_id = any (v_permitidas)
+      and o.numero_documento in (select p.numero_documento from pedidos_do_periodo p where p.situacao = 'emitida')
   ),
   divergentes as (
     select p.id as pedido, p.unidade_id, p.venda_id, p.tipo as pedido_tipo, 'chave_fora_do_mes'::text as tipo, p.emitida_em as quando,

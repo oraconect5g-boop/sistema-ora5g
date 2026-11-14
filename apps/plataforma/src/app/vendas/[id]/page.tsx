@@ -21,7 +21,7 @@ import { osDosItens, type OsDoItem } from "../../../lib/vendas/os-dos-itens";
 import { CONDICOES_DE_RETORNO, ERROS_DA_VENDA } from "../../../lib/vendas/regras";
 import { vincularClienteNaVenda } from "../../clientes/acoes";
 import { BuscaDeCliente } from "../../clientes/BuscaDeCliente";
-import { conferirEnvioDesconhecido, corrigirNota, enviarNotaPeloWhatsApp, pedirNota } from "../../notas/acoes";
+import { conferirEnvioDesconhecido, corrigirChaveDaNota, corrigirNota, enviarNotaPeloWhatsApp, pedirNota, registrarCancelamentoNoFisco } from "../../notas/acoes";
 import { cancelarVenda, conferirRetorno, confirmarEstorno, devolverItens, retirarAnexo } from "../../vender/acoes";
 import { regraNaTela, regrasDosItens } from "../../../lib/vendas/regra-de-preco";
 
@@ -98,6 +98,16 @@ export default async function Comprovante({ params, searchParams }: { params: Pr
   // O conserto da OS cobrado nesta venda (L12c), lido à parte do mesmo jeito.
   const daOs = itens.data.some((i) => i.tipo === "servico") ? await osDosItens(supabase, id) : new Map<string, OsDoItem>();
   const osAEntregar = [...daOs.values()].filter((o) => o.situacao === "aberta");
+  // L10c (FISC-009): as notas desta venda canceladas no fisco, lidas à parte. Banco sem a migration (sem as colunas):
+  // o histórico e os formulários do cancelamento e da correção da chave não aparecem; a venda segue.
+  const canceladasDoBanco = venda.data.situacao === "concluida" || venda.data.situacao === "cancelada"
+    ? await supabase.from("notas_pedidos").select("id, modelo, serie, numero_documento, cancelada_no_fisco_em, protocolo_cancelamento")
+      .eq("venda_id", id).eq("tipo", "venda").eq("situacao", "cancelada")
+    : null;
+  const comCancelamentoNoFisco = Boolean(canceladasDoBanco && !canceladasDoBanco.error);
+  const canceladasNoFisco = (canceladasDoBanco && !canceladasDoBanco.error ? canceladasDoBanco.data : [])
+    .flatMap((c) => (c.cancelada_no_fisco_em ? [{ ...c, cancelada_no_fisco_em: c.cancelada_no_fisco_em }] : []))
+    .sort((a, b) => a.cancelada_no_fisco_em.localeCompare(b.cancelada_no_fisco_em));
   // Documentos da venda (L5d), lidos à parte: num banco sem a migration (sem a tabela), o bloco não aparece.
   const anexosLidos = venda.data.situacao === "concluida" || venda.data.situacao === "cancelada"
     ? await supabase.from("venda_anexos").select("id, tipo, descricao, caminho, formato, bytes, enviado_em, retirado_em, motivo_retirada").eq("venda_id", id).order("enviado_em")
@@ -117,6 +127,15 @@ export default async function Comprovante({ params, searchParams }: { params: Pr
   const meiosDeReembolso = [...new Set(pagamentos.data.filter((p) => p.situacao === "confirmado" && p.meio !== "vale_troca").map((p) => p.meio)), "vale_troca"];
   const nomeDoItem = (itemId: string) => variantes.data.find((x) => x.id === itens.data.find((i) => i.id === itemId)?.variante_id)?.nome ?? "Item";
   const quando = v.concluida_em ? new Intl.DateTimeFormat("pt-BR", { timeZone: "America/Sao_Paulo", dateStyle: "short", timeStyle: "short" }).format(new Date(v.concluida_em)) : null;
+  // L10c: o histórico das notas desta venda canceladas no fisco (no bloco da nota e, na venda cancelada, sozinho).
+  const historicoDoFisco = canceladasNoFisco.length > 0 ? (
+    <ul className="space-y-1 text-xs text-suave">
+      {canceladasNoFisco.map((c) => (
+        <li key={c.id} className="flex flex-wrap items-center gap-x-2 gap-y-1"><Selo tom="neutro">Cancelada no fisco</Selo>
+          <span className="numeros">{MODELOS_DE_NOTA[c.modelo ?? ""] ?? `Modelo ${c.modelo}`} nº {c.numero_documento} · série {c.serie} · em {dataEHoraDoEnvio(c.cancelada_no_fisco_em)} · protocolo {c.protocolo_cancelamento}</span></li>
+      ))}
+    </ul>
+  ) : null;
   return (
     <MoldeReal sessao={sessao} largura="max-w-lg">
       {textoDoParametro(parametros.concluida) === "1" && v.situacao === "concluida" && <Aviso tom="sucesso" titulo="Venda concluída"><CheckCircle2 aria-hidden className="inline size-4" /> Estoque baixado e pagamento registrado no seu caixa.</Aviso>}
@@ -149,6 +168,8 @@ export default async function Comprovante({ params, searchParams }: { params: Pr
       {textoDoParametro(parametros.anexo) === "retirado" && <Aviso tom="sucesso">Documento retirado; o registro e o motivo ficaram.</Aviso>}
       {textoDoParametro(parametros.anexo) === "sem_mudanca" && <Aviso tom="info">Nada mudou: o documento já tinha sido retirado.</Aviso>}
       {textoDoParametro(parametros.nota) === "whatsapp_conferido" && <Aviso tom="sucesso">Conferência registrada: o envio ficou como &quot;não chegou&quot; e a nota pode ser reenviada.</Aviso>}
+      {textoDoParametro(parametros.nota) === "cancelada_no_fisco" && <Aviso tom="sucesso">Cancelamento da nota registrado: agora a venda pode ser cancelada ou pedir outra nota.</Aviso>}
+      {textoDoParametro(parametros.nota) === "chave_corrigida" && <Aviso tom="sucesso">Chave da nota corrigida; a anterior ficou no histórico da nota.</Aviso>}
       <Cartao titulo={`Venda nº ${v.numero}`} subtitulo={`${loja.data?.nome ?? situacao.unidade_nome}${quando ? ` · ${quando}` : ""}`} icone={Receipt}>
         <p className="text-sm">Vendedor: {vendedor.data?.nome ?? "—"}{v.cliente_nome ? ` · Cliente: ${v.cliente_nome}` : ""}
           {v.cliente_id && buscaCliente.data && <> · <Link href={`/clientes/${v.cliente_id}`} className="font-semibold text-acao">ficha do cliente</Link></>}</p>
@@ -198,8 +219,9 @@ export default async function Comprovante({ params, searchParams }: { params: Pr
           </form>
         </details>
       )}
-      {v.situacao === "concluida" && (nota.data || podePedirNota.data) && (
+      {v.situacao === "concluida" && (nota.data || podePedirNota.data || historicoDoFisco) && (
         <Cartao titulo="Nota fiscal" icone={FileText}>
+          {historicoDoFisco && <div className="mb-3">{historicoDoFisco}</div>}
           {nota.data ? (
             <div className="space-y-2 text-sm">
               <p><Selo tom={nota.data.situacao === "emitida" ? "sucesso" : nota.data.situacao === "correcao_solicitada" ? "aviso" : "info"} ponto>
@@ -263,6 +285,32 @@ export default async function Comprovante({ params, searchParams }: { params: Pr
                   )}
                 </div>
               )}
+              {notaEmitida && aprovaNota.data && comCancelamentoNoFisco && (
+                <div className="space-y-2">
+                  <details className="rounded-lg border border-borda p-2 text-xs">
+                    <summary className="cursor-pointer font-semibold text-acao">Cancelou a nota no portal do fisco? Registre o cancelamento</summary>
+                    <form action={registrarCancelamentoNoFisco} className="mt-2 grid gap-2 sm:grid-cols-3">
+                      <input type="hidden" name="pedido" value={notaEmitida.id} /><input type="hidden" name="venda" value={v.id} />
+                      <label className="font-medium">Protocolo do cancelamento (15 dígitos)<input name="protocolo" required inputMode="numeric" autoComplete="off" maxLength={20} className={campo} /></label>
+                      <label className="font-medium sm:col-span-2">Justificativa, a mesma do evento (de 15 a 255 letras)<input name="justificativa" required minLength={15} maxLength={255} className={campo} /></label>
+                      <p className="text-suave sm:col-span-3">O prazo para cancelar é do fisco (depende do modelo da nota e do estado). Depois do registro, a venda pode ser cancelada ou pedir outra nota.</p>
+                      <div><Botao type="submit" tamanho="sm" variante="secundario">Registrar o cancelamento</Botao></div>
+                    </form>
+                  </details>
+                  {documentosLidos && !documentosLidos.some((d) => d.tipo === "xml") && (
+                    <details className="rounded-lg border border-borda p-2 text-xs">
+                      <summary className="cursor-pointer font-semibold text-acao">A chave registrada está errada? Corrija</summary>
+                      <form action={corrigirChaveDaNota} className="mt-2 grid gap-2 sm:grid-cols-3">
+                        <input type="hidden" name="pedido" value={notaEmitida.id} /><input type="hidden" name="venda" value={v.id} />
+                        <label className="font-medium sm:col-span-2">Chave de acesso certa (44 dígitos)<input name="chave_acesso" required inputMode="numeric" autoComplete="off" className={campo} /></label>
+                        <label className="font-medium">Motivo (de 10 a 300 letras)<input name="motivo" required minLength={10} maxLength={300} className={campo} /></label>
+                        <p className="text-suave sm:col-span-3">Só enquanto o XML da nota não foi guardado (com ele, a chave é a do XML). A chave anterior fica no histórico e o protocolo entra de novo com o XML.</p>
+                        <div><Botao type="submit" tamanho="sm" variante="secundario">Corrigir a chave</Botao></div>
+                      </form>
+                    </details>
+                  )}
+                </div>
+              )}
               {nota.data.situacao === "correcao_solicitada" && (nota.data.solicitado_por === usuario.id || aprovaNota.data) && (
                 <form action={corrigirNota} className="grid gap-2 sm:grid-cols-2">
                   <input type="hidden" name="pedido" value={nota.data.id} /><input type="hidden" name="venda" value={v.id} />
@@ -272,7 +320,7 @@ export default async function Comprovante({ params, searchParams }: { params: Pr
                 </form>
               )}
             </div>
-          ) : (
+          ) : podePedirNota.data ? (
             <form action={pedirNota} className="grid gap-2 sm:grid-cols-2">
               <input type="hidden" name="venda" value={v.id} /><input type="hidden" name="chave" value={randomUUID()} />
               {v.cliente_id && buscaCliente.data && (
@@ -284,9 +332,10 @@ export default async function Comprovante({ params, searchParams }: { params: Pr
               <p className="text-xs text-suave sm:col-span-2">O pedido vai para a fila do dono e do gerente; o CPF e o endereço ficam guardados só até a emissão.</p>
               <div><Botao type="submit" tamanho="sm">Pedir nota fiscal</Botao></div>
             </form>
-          )}
+          ) : null}
         </Cartao>
       )}
+      {v.situacao === "cancelada" && historicoDoFisco && <Cartao titulo="Nota fiscal" icone={FileText}>{historicoDoFisco}</Cartao>}
       {anexos && (
         <Cartao titulo="Documentos da venda" icone={Paperclip}
           subtitulo="Contrato do financiamento, termo de garantia, contrato da linha e comprovantes, guardados em privado; nada se apaga">

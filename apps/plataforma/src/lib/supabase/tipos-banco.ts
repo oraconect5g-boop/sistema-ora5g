@@ -3241,6 +3241,8 @@ export type Database = {
           aprovado_em: string | null
           aprovado_por: string | null
           atualizado_em: string
+          cancelada_no_fisco_em: string | null
+          cancelada_no_fisco_por: string | null
           chave: string
           chave_acesso: string | null
           criado_em: string
@@ -3258,6 +3260,7 @@ export type Database = {
           organizacao_id: string
           origem_emissao: string | null
           protocolo: string | null
+          protocolo_cancelamento: string | null
           serie: number | null
           situacao: string
           solicitado_por: string
@@ -3270,6 +3273,8 @@ export type Database = {
           aprovado_em?: string | null
           aprovado_por?: string | null
           atualizado_em?: string
+          cancelada_no_fisco_em?: string | null
+          cancelada_no_fisco_por?: string | null
           chave: string
           chave_acesso?: string | null
           criado_em?: string
@@ -3287,6 +3292,7 @@ export type Database = {
           organizacao_id: string
           origem_emissao?: string | null
           protocolo?: string | null
+          protocolo_cancelamento?: string | null
           serie?: number | null
           situacao?: string
           solicitado_por: string
@@ -3299,6 +3305,8 @@ export type Database = {
           aprovado_em?: string | null
           aprovado_por?: string | null
           atualizado_em?: string
+          cancelada_no_fisco_em?: string | null
+          cancelada_no_fisco_por?: string | null
           chave?: string
           chave_acesso?: string | null
           criado_em?: string
@@ -3316,6 +3324,7 @@ export type Database = {
           organizacao_id?: string
           origem_emissao?: string | null
           protocolo?: string | null
+          protocolo_cancelamento?: string | null
           serie?: number | null
           situacao?: string
           solicitado_por?: string
@@ -3328,6 +3337,13 @@ export type Database = {
           {
             foreignKeyName: "notas_pedidos_aprovado_por_fkey"
             columns: ["aprovado_por"]
+            isOneToOne: false
+            referencedRelation: "perfis_usuario"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "notas_pedidos_cancelada_no_fisco_por_fkey"
+            columns: ["cancelada_no_fisco_por"]
             isOneToOne: false
             referencedRelation: "perfis_usuario"
             referencedColumns: ["id"]
@@ -6406,10 +6422,18 @@ export type Database = {
         Args: { p_destinatario: Json; p_pedido: string }
         Returns: boolean
       }
+      notas_corrigir_chave: {
+        Args: { p_chave_acesso: string; p_motivo: string; p_pedido: string }
+        Returns: boolean
+      }
       notas_dados_para_emitir: { Args: { p_pedido: string }; Returns: Json }
       notas_decidir: {
         Args: { p_aprovar: boolean; p_observacao: string; p_pedido: string }
         Returns: string
+      }
+      notas_registrar_cancelamento: {
+        Args: { p_justificativa: string; p_pedido: string; p_protocolo: string }
+        Returns: boolean
       }
       notas_registrar_emissao: {
         Args: { p_chave_acesso: string; p_observacao: string; p_pedido: string }

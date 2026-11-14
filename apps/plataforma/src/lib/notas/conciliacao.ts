@@ -23,8 +23,8 @@ export const ehTipoDeDivergencia = (v: unknown): v is TipoDeDivergencia => typeo
 
 /** O que explica cada divergência para quem confere (sem regra do contador: só o que não pode estar certo). */
 export const EXPLICACAO_DAS_DIVERGENCIAS: Record<TipoDeDivergencia, string> = {
-  chave_fora_do_mes: "O mês gravado na chave de acesso é de antes da venda ou de depois do registro: confira no portal se a chave é desta venda.",
-  numero_repetido: "O mesmo número de nota (CNPJ, modelo, série e número) está registrado em outra venda: uma das duas chaves está errada.",
+  chave_fora_do_mes: "O mês gravado na chave de acesso é de antes da venda ou de depois do registro: confira no portal se a chave é desta venda; se não for, corrija a chave no comprovante da venda.",
+  numero_repetido: "O mesmo número de nota (CNPJ, modelo, série e número) está registrado em outra venda: uma das duas chaves está errada e se corrige no comprovante da venda certa.",
   devolucao_sem_nota: "A venda tinha nota emitida, foi devolvida e o pedido da nota de devolução foi cancelado.",
 };
 

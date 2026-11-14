@@ -1,7 +1,7 @@
 // Mensagens da fila fiscal (ADR-006). O banco decide tudo; aqui só se escolhe o texto pelo código.
 export const ERROS_DAS_NOTAS = {
   ja_pedida: "Esta venda já tem pedido de nota em aberto ou nota emitida.",
-  nota_emitida: "Nota já emitida: o cancelamento é fiscal, no emissor, com o contador. A venda só é cancelada depois.",
+  nota_emitida: "Nota já emitida: cancele a nota no portal do fisco e registre o cancelamento no bloco “Nota fiscal” da venda; depois a venda pode ser cancelada (ou faça a devolução).",
   chave: "Essa ação já foi feita com outro conteúdo. Recarregue a tela.",
   sem_permissao: "Você não tem permissão para isso.",
   nao_encontrado: "Pedido ou venda não encontrado (talvez já tenha sido alterado).",
@@ -22,6 +22,15 @@ export const ERROS_DAS_NOTAS = {
   whatsapp_sem_numero: "O cliente da venda não tem WhatsApp no cadastro: complete o cadastro dele.",
   whatsapp_desconhecido: "O último envio ficou com resultado desconhecido: a gerência confere antes de reenviar.",
   whatsapp_motivo: "Para reenviar a nota, informe o motivo (de 3 a 200 letras): ele fica no histórico.",
+  // L10c (FISC-009): o cancelamento no fisco registrado e a chave corrigida.
+  chave_repetida: "Esta chave de acesso já está registrada em outro pedido: confira se é a nota certa.",
+  nao_emitida: "Esta nota não está emitida (talvez o pedido já tenha mudado): recarregue a venda.",
+  cancelamento_protocolo: "Protocolo do cancelamento inválido: são os 15 dígitos do evento de cancelamento no fisco.",
+  cancelamento_justificativa: "A justificativa do cancelamento tem de 15 a 255 letras, como a do evento no fisco.",
+  cancelamento_outro: "O cancelamento desta nota já foi registrado com outro protocolo: confira no portal.",
+  cancelamento_devolucao: "Esta venda tem nota de devolução: o cancelamento da nota de origem é tratado com o contador.",
+  chave_xml: "O XML guardado confirma a chave registrada: se a nota é outra, cancele esta no fisco e registre a certa.",
+  chave_motivo: "Informe o motivo da correção (de 10 a 300 letras): fica no histórico da nota.",
   falha: "Não foi possível concluir agora. Tente de novo em instantes.",
 } as const;
 export type ErroDasNotas = keyof typeof ERROS_DAS_NOTAS;
@@ -44,6 +53,15 @@ export function erroDasNotas(erro: { code?: string; message?: string } | null | 
   ];
   const doEnvio = codigo === "22023" ? doWhatsApp.find(([padrao]) => padrao.test(erro?.message ?? "")) : undefined;
   if (doEnvio) return doEnvio[1];
+  // L10c (FISC-009): o cancelamento no fisco e a correção da chave.
+  const doCancelamento: [RegExp, ErroDasNotas][] = [
+    [/já está registrada em outro pedido/i, "chave_repetida"], [/protocolo do cancelamento inválido/i, "cancelamento_protocolo"],
+    [/justificativa do cancelamento/i, "cancelamento_justificativa"], [/já foi registrado com outro protocolo/i, "cancelamento_outro"],
+    [/tem nota de devolução/i, "cancelamento_devolucao"], [/xml guardado confirma a chave/i, "chave_xml"],
+    [/motivo da correção/i, "chave_motivo"], [/só a nota emitida tem cancelamento|só a chave da nota emitida/i, "nao_emitida"],
+  ];
+  const doFisco = codigo === "22023" ? doCancelamento.find(([padrao]) => padrao.test(erro?.message ?? "")) : undefined;
+  if (doFisco) return doFisco[1];
   return codigo && Object.hasOwn(DO_BANCO, codigo) ? (DO_BANCO[codigo] as ErroDasNotas) : "falha";
 }
 
