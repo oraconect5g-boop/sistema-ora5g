@@ -17,7 +17,7 @@ export const PERMISSOES_DA_REDE: ReadonlySet<PermissaoDoMenu> = new Set(["usuari
 export type PaginaReal =
   | "inicio" | "vender" | "vendas" | "clientes" | "funil" | "agenda" | "caixa" | "connect"
   | "estoque" | "transferencias" | "catalogo" | "produtos"
-  | "financeiro" | "relatorios" | "metas" | "contas_pagar" | "resultado" | "previsao" | "conciliacao" | "financeiras" | "maquininhas" | "aprovacoes" | "notas" | "auditoria"
+  | "financeiro" | "relatorios" | "metas" | "contas_pagar" | "resultado" | "previsao" | "conciliacao" | "recebiveis" | "financeiras" | "maquininhas" | "aprovacoes" | "notas" | "auditoria"
   | "equipe" | "lojas";
 export type GrupoReal = "Operação" | "Clientes" | "Estoque e catálogo" | "Gestão" | "Administração";
 export const GRUPOS_REAIS: readonly GrupoReal[] = ["Operação", "Clientes", "Estoque e catálogo", "Gestão", "Administração"];
@@ -64,6 +64,8 @@ export const PAGINAS_REAIS: Record<PaginaReal, { titulo: string; curto: string; 
   previsao: { titulo: "Previsão de caixa", curto: "Previsão", caminho: "/previsao", icone: "previsao", grupo: "Gestão", liberada: (p) => p.has("previsao.ver") },
   // Conciliação e maquininhas (L7a): gerência da loja (dono e gerente).
   conciliacao: { titulo: "Conciliação de pagamentos", curto: "Conciliação", caminho: "/pagamentos/conciliacao", icone: "conciliacao", grupo: "Gestão", liberada: (p) => p.has("pagamento.conciliar") },
+  // Recebíveis por loja e adquirente (L8e, FIN-005): o que maquininhas, Pix e financeiras devem; o dono vê a rede.
+  recebiveis: { titulo: "Recebíveis", curto: "Recebíveis", caminho: "/pagamentos/recebiveis", icone: "recebiveis", grupo: "Gestão", liberada: (p) => p.has("pagamento.conciliar") },
   // Valores a receber das financeiras (L7b): o repasse da PayJoy e da Aiva, registrado pela gerência da loja.
   financeiras: { titulo: "A receber das financeiras", curto: "Financeiras", caminho: "/pagamentos/financeiras", icone: "financeiras", grupo: "Gestão", liberada: (p) => p.has("pagamento.conciliar") },
   maquininhas: { titulo: "Maquininhas", curto: "Maquininhas", caminho: "/pagamentos/maquininhas", icone: "maquininhas", grupo: "Gestão", liberada: (p) => p.has("terminal.gerir") },
@@ -77,7 +79,7 @@ export const PAGINAS_REAIS: Record<PaginaReal, { titulo: string; curto: string; 
 
 // Barra inferior do celular: até 4 atalhos, na ordem de uso no balcão; o resto fica em "Mais".
 const PRIORIDADE_NO_CELULAR: readonly PaginaReal[] = [
-  "inicio", "vender", "aprovacoes", "vendas", "financeiro", "estoque", "metas", "clientes", "agenda", "funil", "caixa", "connect", "catalogo", "produtos", "relatorios", "notas", "contas_pagar", "resultado", "previsao", "conciliacao", "financeiras", "maquininhas", "equipe", "lojas", "auditoria", "transferencias",
+  "inicio", "vender", "aprovacoes", "vendas", "financeiro", "estoque", "metas", "clientes", "agenda", "funil", "caixa", "connect", "catalogo", "produtos", "relatorios", "notas", "contas_pagar", "resultado", "previsao", "conciliacao", "recebiveis", "financeiras", "maquininhas", "equipe", "lojas", "auditoria", "transferencias",
 ];
 
 export function montarMenu(permissoes: Permissoes) {

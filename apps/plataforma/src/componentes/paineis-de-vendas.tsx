@@ -46,6 +46,7 @@ const FONTE = {
   metas: "a leitura das metas (migration metas)",
   equipe: "a contagem da equipe (migration equipe_por_papel)",
   financeiras: "a lista do que as financeiras devem (migration financeiras_a_receber)",
+  recebiveis: "a leitura dos recebíveis por loja e adquirente (migration recebiveis_painel)",
   contas_a_pagar: "as contas a pagar (migration contas_a_pagar)",
   resultado: "a leitura do resultado do mês (migration resultado_do_mes)",
   previsao: "a leitura da previsão de caixa (migration previsao_de_caixa)",

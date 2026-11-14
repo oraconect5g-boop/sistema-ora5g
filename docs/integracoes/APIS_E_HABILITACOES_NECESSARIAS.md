@@ -125,7 +125,7 @@
 | Pessoas autorizadas no piloto (nome, e-mail, loja, função) | Podem ser cadastradas por você ou pelo gerente na **tela da equipe**, assim que a secret key estiver gravada | Tela em desenvolvimento |
 | Fotos dos produtos (ORA-CAT-011) | Foto de cada produto e de cada variante com cor/acabamento diferente | Envio pelo celular dentro do sistema (em desenvolvimento). Se já tiver fotos, `~/entrada/fotos/` com o SKU no nome do arquivo |
 | Política de desconto por categoria (P14) e quem aprova acima do limite | Desconto real no PDV | Pendente |
-| Repasses PayJoy/Aiva: valor e prazo (P8) | Contas a receber da financeira | Pendente; nada de taxa ou prazo inventado |
+| Repasses PayJoy/Aiva: valor e prazo (P8) | Contas a receber da financeira e a data prevista nos recebíveis (`/pagamentos/recebiveis`, ORA-FIN-005: hoje só a idade desde a venda e a diferença que o extrato mostrou) | Pendente; nada de taxa ou prazo inventado |
 | Definições fiscais e certificado (P7, contador) | Nota automática | Pendente |
 | Aceite do ADR-003 (catálogo e estoque) e das Q1–Q4 | Usar catálogo e estoque com dados reais | Pendente |
 | Projeto Supabase de **produção** (plano com backup diário e restauração testada) | Operação real | Decidir antes do go-live do piloto (D-027); o Claude prepara o procedimento |

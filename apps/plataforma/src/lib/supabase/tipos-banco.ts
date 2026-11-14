@@ -5914,6 +5914,10 @@ export type Database = {
           nome: string
         }[]
       }
+      recebiveis_painel: {
+        Args: { p_dias?: number; p_unidade?: string }
+        Returns: Json
+      }
       registrar_foto: {
         Args: {
           p_altura: number
