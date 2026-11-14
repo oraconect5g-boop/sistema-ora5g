@@ -4,6 +4,7 @@ import { MoldeReal, permissoesDoMenu } from "../../componentes/MoldeReal";
 import { Aviso, FiltroSegmentado, TituloPagina } from "../../componentes/ui";
 import { podeVerMetas } from "../../lib/acesso/menu";
 import { obterSessao } from "../../lib/acesso/sessao";
+import { consultarBonus } from "../../lib/bonus/consulta";
 import type { LojaDoFiltro } from "../../lib/financeiro/escopo";
 import { consultarVendas, lojasQueVendem } from "../../lib/inicio/consulta";
 import { endereco } from "../../lib/inicio/painel";
@@ -12,6 +13,7 @@ import {
   ehMedida, ERROS_DAS_METAS, faseDoMes, janelaDoMes, mesDeHoje, mesDoEndereco, nomeDoMes, OK_DAS_METAS, opcoesDeMes, ORDEM_DAS_MEDIDAS, type Medida,
 } from "../../lib/metas/painel";
 import { chaveDoCatalogo, textoDoParametro, type ValorDeParametro } from "../../lib/parametros";
+import { BonusDaEquipe, MeuBonus } from "./ConteudoBonus";
 import { MetasDaGestao, MinhasMetas } from "./ConteudoMetas";
 
 export const metadata: Metadata = { title: "Metas e desempenho" };
@@ -23,7 +25,9 @@ type Parametros = { mes?: ValorDeParametro; loja?: ValorDeParametro; medida?: Va
 // esperado do dia; contam o valor vendido líquido, os aparelhos, os acessórios e o Ora Connect
 // confirmado; têm meta a loja e cada vendedor. O dono define em todas as lojas e o gerente, na dele
 // (metas.gerir); o gerente acompanha a loja (metas.ver_unidade) e o vendedor, as próprias
-// (metas.ver_propria). Tudo somado no banco, com as regras de leitura de quem pede.
+// (metas.ver_propria). Tudo somado no banco, com as regras de leitura de quem pede. Desde o L9a, o
+// bônus por meta (decisão do proprietário de 13/11/2026, D-014): as faixas do dono e o bônus
+// provisório de cada vendedor (a gestão) ou o próprio (o vendedor), com o extrato venda a venda.
 export default async function Metas({ searchParams }: { searchParams: Promise<Parametros> }) {
   const parametros = await searchParams;
   const sessao = await obterSessao({ exigirLoja: true });
@@ -66,11 +70,14 @@ export default async function Metas({ searchParams }: { searchParams: Promise<Pa
   const aqui = enderecoDe({});
 
   const janela = gestao ? null : janelaDoMes(mes, agora);
-  const [metas, equipe, ondeVendi] = await Promise.all([
+  const [metas, equipe, ondeVendi, bonus] = await Promise.all([
     consultarMetas(supabase, mes, loja.id),
     gestao ? consultarEquipe(supabase, mes, loja.id) : Promise.resolve(null),
     janela ? consultarVendas(supabase, janela, { unidade: null, vendedor: usuario.id }, false) : Promise.resolve(null),
+    consultarBonus(supabase, mes, loja.id),
   ]);
+  // O extrato do vendedor (L9a): o mês e a loja escolhidos vão junto; o próprio vendedor não precisa dizer quem é.
+  const enderecoDoExtrato = (vendedor: string | null) => endereco("/metas/extrato", { mes: mesNoEndereco, loja: lojaNoEndereco, vendedor });
   const ok = chaveDoCatalogo(OK_DAS_METAS, parametros.ok);
   const erro = chaveDoCatalogo(ERROS_DAS_METAS, parametros.erro);
   const alvo = textoDoParametro(parametros.alvo) ?? null;
@@ -101,9 +108,18 @@ export default async function Metas({ searchParams }: { searchParams: Promise<Pa
           metas={metas} equipe={equipe} mes={mes} fase={fase} loja={loja} aqui={aqui} medida={medida}
           enderecoDaMedida={Object.fromEntries(ORDEM_DAS_MEDIDAS.map((m) => [m, `${enderecoDe({ medida: m })}#por-vendedor`])) as Record<Medida, string>}
           podeDefinir={permissoes.has("metas.gerir")} lojaNoEndereco={lojaNoEndereco} alvoEmFoco={erro ? alvo : null}
+          bonus={(
+            <BonusDaEquipe
+              bonus={bonus} pessoas={equipe.estado === "ok" ? equipe.dados : []} mes={mes} fase={fase} aqui={aqui}
+              enderecoDoExtrato={enderecoDoExtrato} podeDefinir={permissoes.has("bonus.definir")}
+            />
+          )}
         />
       ) : (
-        <MinhasMetas metas={metas} mes={mes} fase={fase} loja={loja} aqui={aqui} eu={usuario.id} ondeVendi={ondeVendi} />
+        <MinhasMetas
+          metas={metas} mes={mes} fase={fase} loja={loja} aqui={aqui} eu={usuario.id} ondeVendi={ondeVendi}
+          bonus={<MeuBonus bonus={bonus} eu={usuario.id} mes={mes} fase={fase} aqui={aqui} enderecoDoExtrato={enderecoDoExtrato(null)} />}
+        />
       )}
     </MoldeReal>
   );

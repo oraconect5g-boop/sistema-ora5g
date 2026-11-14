@@ -55,7 +55,11 @@ import { definirMetas } from "./acoes";
 import Metas from "./page";
 
 // Só os componentes de apresentação das metas são executados; os compartilhados ficam como elementos.
-const APRESENTACAO = new Set(["MetasDaGestao", "MinhasMetas", "ResumoDaLoja", "PorVendedor", "EquipeNoMes", "DefinirMetas", "ComoConta", "MinhaMeta", "EstadoDoPainel", "BarrasDoRitmo"]);
+const APRESENTACAO = new Set([
+  "MetasDaGestao", "MinhasMetas", "ResumoDaLoja", "PorVendedor", "EquipeNoMes", "DefinirMetas", "ComoConta", "MinhaMeta", "EstadoDoPainel", "BarrasDoRitmo",
+  // Bônus por meta (L9a).
+  "BonusDaEquipe", "MeuBonus", "MedidaDoBonus", "RegrasDoMes", "SemRegra", "CelulaDaMedida", "EstadoDoBonus", "ComoOBonusConta",
+]);
 type Elemento = { tipo: string; props: Linha };
 function percorrer(v: unknown, elemento: (e: Elemento) => void, folha: (t: string) => void): void {
   if (Array.isArray(v)) for (const x of v) percorrer(x, elemento, folha);
@@ -361,5 +365,114 @@ describe("ação: definir as metas de um alvo (G4b)", () => {
     cenario.respostas.metas_definir = { data: null, error: { code: "42501", message: "Sem permissão para definir metas nesta loja" } };
     expect(await destinoDe(definirMetas(formulario({})))).toBe("/metas?mes=2026-11&erro=permissao&alvo=loja");
     expect(await destinoDe(definirMetas(formulario({ alvo: "<script>", mes: "x" })))).toBe("/metas?erro=dados");
+  });
+});
+
+// ---------------------------------------------------------------------------------------------
+// Bônus por meta (L9a; decisão do proprietário de 13/11/2026, D-014)
+// ---------------------------------------------------------------------------------------------
+const fb = (a_partir_de: number, valor: number) => ({ a_partir_de, valor });
+const BONUS = {
+  mes: "2026-11-01", regra_contagem: 1,
+  regras: {
+    vendido_liquido: { vigente_desde: "2026-10-01", versao: 3, faixas: [fb(100, 30_000), fb(120, 50_000)] },
+    connect: { vigente_desde: "2026-11-01", versao: 5, faixas: [fb(50, 5_000)] },
+  },
+  vendedores: [
+    { vendedor_id: BETO, total: 0, medidas: {
+      vendido_liquido: { meta: null, realizado: 1_400_000, faixa: null, bonus: 0, proxima: null },
+      connect: { meta: null, realizado: 3, faixa: null, bonus: 0, proxima: null },
+    } },
+    { vendedor_id: ANA, total: 5_000, medidas: {
+      vendido_liquido: { meta: 2_000_000, realizado: 1_200_000, faixa: null, bonus: 0, proxima: { faixa: 1, a_partir_de: 100, valor: 30_000, falta: 800_000 } },
+      connect: { meta: 10, realizado: 6, faixa: 1, bonus: 5_000, proxima: null },
+    } },
+  ],
+};
+const links = (l: { elementos: Elemento[] }) => l.elementos.filter((e) => typeof e.props.href === "string").map((e) => e.props.href as string);
+
+describe("/metas, bônus por meta (L9a)", () => {
+  beforeEach(() => { cenario.respostas.bonus_do_mes = { data: BONUS, error: null }; });
+
+  it("a gestão: o bônus de cada vendedor, do maior para o menor, com as faixas que valem e o link do extrato", async () => {
+    const p = await pagina();
+    expect(p.chamadas("bonus_do_mes")).toEqual([{ p_mes: "2026-11-01", p_unidade: LOJA }]);
+    const c = p.cartao("Bônus de novembro de 2026");
+    expect(String(c.props.subtitulo)).toContain("Provisório até o fechamento do mês");
+    expect(p.indicador("Bônus até agora")).toMatchObject({ valor: "R$ 50,00" });
+    expect(p.indicador("Com bônus")).toMatchObject({ valor: "1 de 2", detalhe: "vendedores" });
+    expect(c.visivel).toContain("Valor vendido líquido 100%: R$ 300,00 · 120%: R$ 500,00 (desde outubro de 2026) Aparelhos sem bônus Acessórios sem bônus Ora Connect confirmado 50%: R$ 50,00");
+    expect(c.visivel).toContain("Ana (teste) nenhuma faixa 60% da meta · faltam R$ 8.000,00 R$ 50,00 · faixa 1 60% da meta R$ 50,00 Extrato");
+    expect(c.visivel).toContain("Beto (teste) sem meta sem meta R$ 0,00 Extrato");
+    expect(c.doTipo("Tabela")[0]).toMatchObject({ colunas: ["Vendedor", "Vendido líquido", "Ora Connect", "Bônus", ""] });
+    // No celular, a lista; do sm em diante, a tabela: os dois com o extrato de cada um.
+    expect(links(c)).toEqual([`/metas/extrato?vendedor=${ANA}`, `/metas/extrato?vendedor=${BETO}`, `/metas/extrato?vendedor=${ANA}`, `/metas/extrato?vendedor=${BETO}`]);
+    expect(c.visivel).toContain("Ana (teste) R$ 50,00 Vendido líquido: nenhuma faixa · 60% da meta · faltam R$ 8.000,00 Ora Connect: R$ 50,00 (faixa 1) · 60% da meta Ver o extrato");
+    // O gerente não define as regras: sem o botão.
+    expect(links(c)).not.toContain("/metas/bonus");
+  });
+
+  it("o dono escolhe a loja: o bônus da loja escolhida, o botão das regras e o extrato com a loja no endereço", async () => {
+    cenario.permissoes = new Set([...DONO, "bonus.definir"]);
+    const p = await pagina({ loja: OUTRA, mes: "2026-10" });
+    expect(p.chamadas("bonus_do_mes")).toEqual([{ p_mes: "2026-10-01", p_unidade: OUTRA }]);
+    // A resposta é de novembro: mês diferente do pedido vira falha, nunca bônus.
+    expect(p.cartao("Bônus de outubro de 2026").texto).toContain("Não foi possível ler agora");
+    // Em outubro, a regra do Ora Connect (que só vale de novembro em diante) ainda não existe.
+    cenario.respostas.bonus_do_mes = { data: {
+      ...BONUS, mes: "2026-10-01", regras: { vendido_liquido: BONUS.regras.vendido_liquido },
+      vendedores: BONUS.vendedores.map((v) => ({ ...v, total: 0, medidas: { vendido_liquido: v.medidas.vendido_liquido } })),
+    }, error: null };
+    cenario.respostas.metas_painel = { data: { ...PAINEL, mes: "2026-10-01", dias_no_mes: 31, dias_decorridos: 31 }, error: null };
+    const c = (await pagina({ loja: OUTRA, mes: "2026-10" })).cartao("Bônus de outubro de 2026");
+    const extratos = [`/metas/extrato?mes=2026-10&loja=${OUTRA}&vendedor=${ANA}`, `/metas/extrato?mes=2026-10&loja=${OUTRA}&vendedor=${BETO}`];
+    expect(links(c)).toEqual(["/metas/bonus", ...extratos, ...extratos]);
+    expect(c.doTipo("Indicador")[0]).toMatchObject({ rotulo: "Bônus do mês", valor: "R$ 0,00" });
+    expect(c.visivel).toContain("Ana (teste) nenhuma faixa 60% da meta · faltaram R$ 8.000,00");
+  });
+
+  it("sem regra no mês: o convite para o dono definir; para a gerência, o aviso", async () => {
+    cenario.respostas.bonus_do_mes = { data: { ...BONUS, regras: {}, vendedores: BONUS.vendedores.map((v) => ({ ...v, total: 0, medidas: {} })) }, error: null };
+    let c = (await pagina()).cartao("Bônus de novembro de 2026");
+    expect(c.visivel).toContain("Nenhuma regra de bônus vale em novembro de 2026");
+    expect(c.visivel).toContain("Quando o dono definir as faixas");
+    cenario.permissoes = new Set([...DONO, "bonus.definir"]);
+    c = (await pagina()).cartao("Bônus de novembro de 2026");
+    expect(c.visivel).toContain("Defina as faixas");
+    expect(links(c)).toEqual(["/metas/bonus", "/metas/bonus"]);
+  });
+
+  it("o vendedor: o próprio bônus, com a régua de cada medida, a faixa alcançada e o que falta", async () => {
+    cenario.permissoes = new Set(["metas.ver_propria", "venda.registrar"]);
+    cenario.respostas.metas_painel = { data: { ...PAINEL, loja: null, vendedores: [PAINEL.vendedores[0]] }, error: null };
+    cenario.respostas.bonus_do_mes = { data: { ...BONUS, vendedores: [BONUS.vendedores[1]] }, error: null };
+    const p = await pagina();
+    const c = p.cartao("Meu bônus em novembro de 2026");
+    expect(links(c)).toEqual(["/metas/extrato"]);
+    expect(c.visivel).toContain("Bônus até agora R$ 50,00");
+    expect(c.visivel).toContain("Valor vendido líquido R$ 0,00 Faltam R$ 8.000,00 para 100% da meta (R$ 300,00). R$ 12.000,00 de R$ 20.000,00 · 60% da meta 1 100% da meta: R$ 300,00 2 120% da meta: R$ 500,00");
+    expect(c.visivel).toContain("Ora Connect confirmado R$ 50,00 Faixa 1 de 1: R$ 50,00. Maior faixa alcançada. 6 de 10 operações · 60% da meta 50% da meta: R$ 50,00 (alcançada)");
+    expect(c.doTipo("ReguaDoBonus").map((r) => [r.rotulo, r.atingido, r.alcancada])).toEqual([["Valor vendido líquido", 60, null], ["Ora Connect confirmado", 60, 1]]);
+    // Sem linha própria (nem meta nem fato no mês): zeros, sem meta em nenhuma medida.
+    cenario.respostas.bonus_do_mes = { data: { ...BONUS, vendedores: [] }, error: null };
+    expect((await pagina()).cartao("Meu bônus em novembro de 2026").visivel).toContain("Bônus até agora R$ 0,00");
+  });
+
+  it("falha e fonte ausente nunca viram bônus; o resto da tela continua", async () => {
+    cenario.respostas.bonus_do_mes = { data: null, error: { code: "PGRST202" } };
+    let p = await pagina();
+    expect(p.cartao("Bônus de novembro de 2026").texto).toContain("a leitura do bônus por meta (migration bonus_por_meta)");
+    expect(p.cartoes).toContain("Equipe no mês");
+    cenario.respostas.bonus_do_mes = { data: null, error: { code: "42501" } };
+    expect((await pagina()).cartao("Bônus de novembro de 2026").texto).toContain("O banco recusou a leitura do bônus desta loja para o seu perfil.");
+    // A conta que não fecha (bônus numa faixa não alcançada) é falha, com o registro só do nome da leitura.
+    const errado = JSON.parse(JSON.stringify(BONUS)) as typeof BONUS;
+    errado.vendedores[1]!.medidas.vendido_liquido.bonus = 30_000;
+    errado.vendedores[1]!.total = 35_000;
+    cenario.respostas.bonus_do_mes = { data: errado, error: null };
+    p = await pagina();
+    expect(p.cartao("Bônus de novembro de 2026").texto).toContain("Não foi possível ler agora");
+    expect(errosRegistrados()).toContainEqual(["bonus: resposta inesperada de bonus_do_mes"]);
+    expect(p.doTipo("Indicador").map((i) => i.rotulo)).not.toContain("Bônus até agora");
   });
 });

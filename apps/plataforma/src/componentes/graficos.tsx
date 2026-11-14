@@ -721,3 +721,38 @@ export function BarrasComSinal({ dados, formatar, nomeSerie, nomes }: {
     </CamadaDicas>
   );
 }
+
+/**
+ * Régua do bônus por meta (L9a): o atingido de uma medida (barra, em % da meta) e as faixas do bônus
+ * (traços numerados na porcentagem de cada uma). O eixo vai até 15% além da última faixa; atingido
+ * maior que isso enche a barra. Os números de cada faixa ficam embaixo; o texto ao lado explica.
+ */
+export function ReguaDoBonus({ atingido, faixas, alcancada, rotulo }: {
+  /** Atingido em % da meta (100 = bateu a meta); pode ser negativo (devolução de outro mês). */
+  atingido: number;
+  faixas: readonly { aPartirDe: number }[];
+  /** A faixa alcançada (1, 2...) ou nula. */
+  alcancada: number | null;
+  rotulo: string;
+}) {
+  const ultima = faixas[faixas.length - 1]?.aPartirDe ?? 100;
+  const topo = Math.max(100, ultima * 1.15);
+  const texto = `${rotulo}: ${atingido.toLocaleString("pt-BR", { maximumFractionDigits: 1 })}% da meta; faixas em ${faixas.map((f) => `${f.aPartirDe}%`).join(", ")}`;
+  return (
+    <div role="img" aria-label={texto}>
+      <div className="relative h-2.5 rounded-[3px] bg-grade">
+        <div className="h-full rounded-r-[4px] bg-serie-1" style={{ width: `${pct(atingido, topo)}%` }} />
+        {faixas.map((f) => (
+          <span key={f.aPartirDe} aria-hidden className="absolute -top-1 h-[18px] w-0.5 rounded-full bg-texto/70" style={{ left: `calc(${pct(f.aPartirDe, topo)}% - 1px)` }} />
+        ))}
+      </div>
+      <div aria-hidden className="relative mt-1.5 h-4 text-[11px] font-semibold">
+        {faixas.map((f, i) => (
+          <span key={f.aPartirDe} className={`numeros absolute -translate-x-1/2 ${alcancada !== null && i < alcancada ? "text-texto" : "text-suave"}`} style={{ left: `${pct(f.aPartirDe, topo)}%` }}>
+            {i + 1}
+          </span>
+        ))}
+      </div>
+    </div>
+  );
+}

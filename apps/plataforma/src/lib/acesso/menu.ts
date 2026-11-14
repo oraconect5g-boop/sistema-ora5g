@@ -8,7 +8,7 @@ export const PERMISSOES_DO_MENU = [
   "venda.registrar", "venda.ver_unidade", "venda.ver_todas", "caixa.abrir", "caixa.conferir", "estoque.consultar",
   "connect.operar", "connect.gerir", "desconto.aprovar", "nota.aprovar", "auditoria.ver", "usuarios.gerir", "unidades.gerir",
   "catalogo.gerir", "cliente.buscar", "crm.atender", "pagamento.conciliar", "terminal.gerir",
-  "metas.gerir", "metas.ver_unidade", "metas.ver_propria", "conta_pagar.gerir", "resultado.ver", "previsao.ver",
+  "metas.gerir", "metas.ver_unidade", "metas.ver_propria", "conta_pagar.gerir", "resultado.ver", "previsao.ver", "bonus.definir",
 ] as const;
 export type PermissaoDoMenu = (typeof PERMISSOES_DO_MENU)[number];
 /** Conferidas para a rede inteira (sem loja): só papéis de organização as têm (dono e administrador). */

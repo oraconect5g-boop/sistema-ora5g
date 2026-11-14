@@ -49,6 +49,7 @@ const FONTE = {
   contas_a_pagar: "as contas a pagar (migration contas_a_pagar)",
   resultado: "a leitura do resultado do mês (migration resultado_do_mes)",
   previsao: "a leitura da previsão de caixa (migration previsao_de_caixa)",
+  bonus: "a leitura do bônus por meta (migration bonus_por_meta)",
 } as const;
 
 /** O conteúdo de um painel que não tem número para mostrar: o motivo aparece, zero nunca. */
