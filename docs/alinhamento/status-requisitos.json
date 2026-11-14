@@ -413,8 +413,8 @@
     },
     "ORA-FISC-005": {
       "status": "parcial",
-      "nota": "Chave de acesso de 44 dígitos registrada com dígito e CNPJ da loja conferidos, única, com modelo, série e número; CPF/CNPJ só até a emissão. FALTA: protocolo, XML/PDF anexos e retenção definida com o contador.",
-      "evidencia": "packages/banco/supabase/migrations/20261109123757_fila_fiscal.sql; packages/banco/src/notas.test.ts; packages/dominio/src/fiscal.test.ts"
+      "nota": "Chave de acesso de 44 dígitos registrada com dígito e CNPJ da loja conferidos, única, com modelo, série e número; CPF/CNPJ só até a emissão. FALTA: protocolo, XML/PDF anexos e retenção definida com o contador. Lote L10a (14/11): o PDF (DANFE) e o XML da nota emitida ficam num bucket privado (\"notas\"), enviados por quem aprova a nota na loja e lidos por quem pode ler o pedido (quem pediu, quem vê a venda, quem aprova), sempre por link assinado de 10 minutos; o servidor confere antes de guardar que o PDF é PDF e que o XML é desta nota (a chave de acesso dentro dele) e calcula o SHA-256; o protocolo de autorização (15 dígitos) entra digitado ou lido do XML, uma vez; trocar o arquivo guarda o anterior como substituído, nada se apaga; tudo na auditoria. Migration 20261114141704_notas_documentos (ainda não aplicada no ora5g-dev). FALTA: prazo de guarda com o contador (sem regra de descarte por ora) e a integração com o emissor (A4).",
+      "evidencia": "packages/banco/supabase/migrations/20261109123757_fila_fiscal.sql; packages/banco/src/notas.test.ts; packages/dominio/src/fiscal.test.ts; packages/banco/supabase/migrations/20261114141704_notas_documentos.sql; packages/banco/src/notas.test.ts; apps/plataforma/src/lib/notas/documento.test.ts; apps/plataforma/src/app/notas/[id]/documentos/documentos.test.ts"
     },
     "ORA-FISC-006": {
       "status": "parcial",

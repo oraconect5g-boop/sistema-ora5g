@@ -168,3 +168,89 @@ describe("ligação com a venda", () => {
     expect((await db.query("select acao from public.auditoria where alvo_tipo = 'fiscal_politicas'")).rows).toEqual([{ acao: "fiscal_politicas.criado" }]);
   });
 });
+
+// Lote L10a (14/11/2026, ORA-FISC-005; migration 20261114141704_notas_documentos): o PDF e o XML da nota emitida
+// num bucket privado, o protocolo de autorização e quem lê. O "envio" grava em storage.objects como o usuário
+// logado, como nas fotos dos produtos; o conteúdo (o XML com a chave desta nota) é conferido pelo servidor antes.
+describe("documentos da nota emitida (L10a)", () => {
+  const ENVIAR = "insert into storage.objects (bucket_id, name, metadata) values ('notas', $1, $2)";
+  const ANEXAR = "select public.notas_anexar_documento($1, $2, $3, $4, $5) as v";
+  const SHA = "a".repeat(64);
+  const caminho = (pedidoId: string, tipo: "pdf" | "xml", loja = ids.lojaA) => `${ids.organizacao}/${loja}/${pedidoId}/${randomUUIDv4()}.${tipo}`;
+  const meta = (tipo: string, bytes = 80_000) => JSON.stringify({ size: bytes, mimetype: tipo });
+  let contador = 0;
+  function randomUUIDv4() { return `00000000-0000-4000-a000-${String(++contador).padStart(12, "0")}`; }
+  const como = (s: Sessao, sql: string, params: unknown[] = []) => comoUsuario(db, s, async () => (await db.query(sql, params)).rows);
+  async function emitida(dono: Sessao, ana: Sessao, numero: number) {
+    const venda = await vendaConcluida(ana);
+    const id = await valor<string>(ana, SOLICITAR, [venda, "{}", chave("nota")]);
+    await valor(dono, "select public.notas_registrar_emissao($1, $2, null) as v", [id, chaveDeAcesso(cnpjA, numero)]);
+    return { venda, id };
+  }
+
+  it("quem aprova envia o PDF e o XML da nota emitida; o protocolo fica uma vez; trocar guarda o anterior; tudo na auditoria", async () => {
+    const ana = await naLoja(ids.vendedorA, ids.lojaA);
+    const dono = await naLoja(ids.dono, ids.lojaA);
+    const nota = await emitida(dono, ana, 701);
+    const pdf = caminho(nota.id, "pdf");
+    await como(dono, ENVIAR, [pdf, meta("application/pdf")]);
+    const doc = await valor<string>(dono, ANEXAR, [nota.id, "pdf", pdf, SHA, "141260000123456"]);
+    expect((await db.query("select tipo, bytes, sha256, enviado_por from public.notas_documentos where id = $1", [doc])).rows[0])
+      .toEqual({ tipo: "pdf", bytes: 80_000, sha256: SHA, enviado_por: ids.dono });
+    expect((await db.query("select protocolo from public.notas_pedidos where id = $1", [nota.id])).rows[0]).toEqual({ protocolo: "141260000123456" });
+    // Repetir o mesmo arquivo devolve o mesmo registro; outro protocolo é recusado.
+    expect(await valor<string>(dono, ANEXAR, [nota.id, "pdf", pdf, SHA, null])).toBe(doc);
+    const xml = caminho(nota.id, "xml");
+    await como(dono, ENVIAR, [xml, meta("application/xml", 20_000)]);
+    expect(await errou(dono, ANEXAR, [nota.id, "xml", xml, SHA, "141260000999999"])).toBe("22023");
+    expect(await valor<string>(dono, ANEXAR, [nota.id, "xml", xml, SHA, "141260000123456"])).toMatch(/^[0-9a-f-]{36}$/);
+    // Trocar o PDF: o novo fica vigente e o anterior, substituído (nada se apaga).
+    const outroPdf = caminho(nota.id, "pdf");
+    await como(dono, ENVIAR, [outroPdf, meta("application/pdf", 90_000)]);
+    await valor(dono, ANEXAR, [nota.id, "pdf", outroPdf, "b".repeat(64), null]);
+    expect((await db.query("select caminho, substituido_em is not null as substituido from public.notas_documentos where pedido_id = $1 and tipo = 'pdf' order by enviado_em, caminho", [nota.id])).rows)
+      .toEqual(expect.arrayContaining([{ caminho: pdf, substituido: true }, { caminho: outroPdf, substituido: false }]));
+    expect(await errou(dono, "delete from public.notas_documentos where id = $1", [doc])).toBe("42501");
+    expect((await db.query("select count(*)::int as n from public.auditoria where acao = 'notas_documentos.criado' and alvo_id in (select id::text from public.notas_documentos where pedido_id = $1)", [nota.id])).rows[0]).toEqual({ n: 3 });
+  });
+
+  it("nota não emitida, caminho de outra nota, tipo trocado e arquivo que não chegou são recusados", async () => {
+    const ana = await naLoja(ids.vendedorA, ids.lojaA);
+    const dono = await naLoja(ids.dono, ids.lojaA);
+    const venda = await vendaConcluida(ana);
+    const pendente = await valor<string>(ana, SOLICITAR, [venda, "{}", chave("nota")]);
+    const naoEmitida = caminho(pendente, "pdf");
+    await como(dono, ENVIAR, [naoEmitida, meta("application/pdf")]);
+    expect(await errou(dono, ANEXAR, [pendente, "pdf", naoEmitida, SHA, null])).toBe("22023");
+    const nota = await emitida(dono, ana, 702);
+    const outra = await emitida(dono, ana, 703);
+    const daOutra = caminho(outra.id, "pdf");
+    await como(dono, ENVIAR, [daOutra, meta("application/pdf")]);
+    expect(await errou(dono, ANEXAR, [nota.id, "pdf", daOutra, SHA, null])).toBe("22023");
+    const trocado = caminho(nota.id, "pdf");
+    await como(dono, ENVIAR, [trocado, meta("application/xml")]);
+    expect(await errou(dono, ANEXAR, [nota.id, "pdf", trocado, SHA, null])).toBe("22023");
+    expect(await errou(dono, ANEXAR, [nota.id, "pdf", caminho(nota.id, "pdf"), SHA, null])).toBe("P0002");
+    expect(await errou(dono, ANEXAR, [nota.id, "pdf", trocado.replace(".pdf", ".exe"), SHA, null])).toBe("22023");
+  });
+
+  it("vendedor não envia; quem pode ler o pedido lê o documento; outra loja e outra rede não", async () => {
+    const ana = await naLoja(ids.vendedorA, ids.lojaA);
+    const dono = await naLoja(ids.dono, ids.lojaA);
+    const nota = await emitida(dono, ana, 704);
+    const pdf = caminho(nota.id, "pdf");
+    expect(await errou(ana, ENVIAR, [pdf, meta("application/pdf")])).toBe("42501"); // o vendedor não envia
+    await como(dono, ENVIAR, [pdf, meta("application/pdf")]);
+    await valor(dono, ANEXAR, [nota.id, "pdf", pdf, SHA, null]);
+    expect(await errou(ana, ANEXAR, [nota.id, "pdf", pdf, SHA, null])).toBe("P0002");
+    // A vendedora lê o documento da nota da venda dela (o mesmo RLS do pedido).
+    expect(await como(ana, "select name from storage.objects where bucket_id = 'notas'")).toEqual([{ name: pdf }]);
+    expect((await como(ana, "select caminho from public.notas_documentos where pedido_id = $1", [nota.id])).length).toBe(1);
+    const gerenteB = await naLoja(ids.gerenteB, ids.lojaB);
+    expect(await como(gerenteB, "select name from storage.objects where bucket_id = 'notas'")).toEqual([]);
+    expect(await como(gerenteB, "select id from public.notas_documentos")).toEqual([]);
+    expect(await errou(gerenteB, ENVIAR, [caminho(nota.id, "pdf"), meta("application/pdf")])).toBe("42501");
+    const outraRede = await naLoja(ids.donoOutraOrg, ids.lojaOutraOrg);
+    expect(await como(outraRede, "select name from storage.objects where bucket_id = 'notas'")).toEqual([]);
+  });
+});

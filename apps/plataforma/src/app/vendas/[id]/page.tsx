@@ -66,6 +66,21 @@ export default async function Comprovante({ params, searchParams }: { params: Pr
   const variantes = itens.data.length ? await supabase.from("variantes").select("id, sku, nome").in("id", itens.data.map((i) => i.variante_id)) : { data: [], error: null };
   const serializados = itens.data.some((i) => i.item_serializado_id) ? await supabase.from("itens_serializados").select("id, imei, iccid").in("id", itens.data.flatMap((i) => (i.item_serializado_id ? [i.item_serializado_id] : []))) : { data: [], error: null };
   if (variantes.error || serializados.error) throw new FalhaDoServico("comprovante_itens");
+  // L10a (FISC-005): o PDF e o XML da nota emitida e o protocolo, lidos à parte. Banco sem a migration (sem a
+  // tabela ou a coluna) ou falha de leitura não derrubam a venda: o bloco só não aparece.
+  const notaEmitida = nota.data?.situacao === "emitida" ? nota.data : null;
+  const [documentosDaNota, protocoloDaNota] = notaEmitida
+    ? await Promise.all([
+      supabase.from("notas_documentos").select("id, tipo, caminho, bytes, enviado_em").eq("pedido_id", notaEmitida.id).is("substituido_em", null).order("tipo"),
+      supabase.from("notas_pedidos").select("protocolo").eq("id", notaEmitida.id).maybeSingle(),
+    ])
+    : [null, null];
+  const documentosLidos = documentosDaNota && !documentosDaNota.error ? documentosDaNota.data : null;
+  const linksDosDocumentos = documentosLidos && documentosLidos.length
+    ? await supabase.storage.from("notas").createSignedUrls(documentosLidos.map((d) => d.caminho), 600)
+    : { data: [], error: null };
+  const linkDe = new Map((linksDosDocumentos.data ?? []).map((l) => [l.path, l.error ? null : l.signedUrl]));
+  const protocolo = protocoloDaNota && !protocoloDaNota.error ? (protocoloDaNota.data as { protocolo?: string | null } | null)?.protocolo ?? null : null;
   // A regra de preço de cada item (L6b): campanha, preço da loja ou da rede, lida à parte. Banco sem a
   // migration ou falha de leitura não derrubam a venda.
   const regras = await regrasDosItens(supabase, id);
@@ -98,6 +113,7 @@ export default async function Comprovante({ params, searchParams }: { params: Pr
       {textoDoParametro(parametros.devolvida) && <Aviso tom="sucesso">Devolução nº {textoDoParametro(parametros.devolvida)} registrada: estoque e caixa atualizados.{textoDoParametro(parametros.vale) ? ` Vale-troca nº ${textoDoParametro(parametros.vale)} criado: informe esse número no pagamento da nova venda.` : ""}</Aviso>}
       {textoDoParametro(parametros.nota) === "pedida" && <Aviso tom="sucesso">Nota pedida: aparece na fila do dono e do gerente.</Aviso>}
       {textoDoParametro(parametros.nota) === "corrigida" && <Aviso tom="sucesso">Correção enviada: o pedido voltou para a fila.</Aviso>}
+      {textoDoParametro(parametros.nota)?.startsWith("documento_") && <Aviso tom="sucesso">Documento da nota guardado em privado; ele fica disponível para a loja e para o envio ao cliente.</Aviso>}
       <Cartao titulo={`Venda nº ${v.numero}`} subtitulo={`${loja.data?.nome ?? situacao.unidade_nome}${quando ? ` · ${quando}` : ""}`} icone={Receipt}>
         <p className="text-sm">Vendedor: {vendedor.data?.nome ?? "—"}{v.cliente_nome ? ` · Cliente: ${v.cliente_nome}` : ""}
           {v.cliente_id && buscaCliente.data && <> · <Link href={`/clientes/${v.cliente_id}`} className="font-semibold text-acao">ficha do cliente</Link></>}</p>
@@ -155,7 +171,29 @@ export default async function Comprovante({ params, searchParams }: { params: Pr
               {(nota.data.destinatario_nome || nota.data.destinatario_mascarado) && <p className="text-xs text-suave">Na nota: {[nota.data.destinatario_nome, nota.data.destinatario_mascarado].filter(Boolean).join(" · ")}</p>}
               {nota.data.observacao && <p className="text-xs">Observação: {nota.data.observacao}</p>}
               {nota.data.situacao === "emitida" && (
-                <p className="numeros break-all text-xs">{MODELOS_DE_NOTA[nota.data.modelo ?? ""] ?? `Modelo ${nota.data.modelo}`} nº {nota.data.numero_documento} · série {nota.data.serie}<br />{chaveEmGrupos(nota.data.chave_acesso ?? "")}</p>
+                <p className="numeros break-all text-xs">{MODELOS_DE_NOTA[nota.data.modelo ?? ""] ?? `Modelo ${nota.data.modelo}`} nº {nota.data.numero_documento} · série {nota.data.serie}<br />{chaveEmGrupos(nota.data.chave_acesso ?? "")}{protocolo ? ` · protocolo ${protocolo}` : ""}</p>
+              )}
+              {notaEmitida && documentosLidos && (
+                <div className="space-y-2 rounded-lg border border-borda p-2">
+                  <p className="text-xs font-semibold">Documentos da nota</p>
+                  {documentosLidos.length === 0 ? <p className="text-xs text-suave">Nenhum documento guardado ainda: o PDF (DANFE) e o XML ficam aqui, em privado, para a loja e para o envio ao cliente.</p> : (
+                    <ul className="space-y-1 text-xs">
+                      {documentosLidos.map((d) => (
+                        <li key={d.id}>{linkDe.get(d.caminho)
+                          ? <a href={linkDe.get(d.caminho) ?? undefined} className="font-semibold text-acao" target="_blank" rel="noreferrer">{d.tipo === "pdf" ? "PDF (DANFE)" : "XML"}</a>
+                          : <span>{d.tipo === "pdf" ? "PDF (DANFE)" : "XML"}</span>}
+                          {` · ${Math.max(1, Math.round(d.bytes / 1024))} KB`}</li>
+                      ))}
+                    </ul>
+                  )}
+                  {aprovaNota.data && (
+                    <form action={`/notas/${notaEmitida.id}/documentos`} method="post" encType="multipart/form-data" className="grid gap-2 sm:grid-cols-3">
+                      <label className="text-xs font-medium sm:col-span-2">PDF ou XML da nota (até 5 MB)<input name="arquivo" type="file" required accept=".pdf,.xml,application/pdf,application/xml,text/xml" className={`${campo} py-2`} /></label>
+                      <label className="text-xs font-medium">Protocolo (opcional, 15 dígitos)<input name="protocolo" inputMode="numeric" maxLength={20} defaultValue={protocolo ?? ""} className={campo} /></label>
+                      <div><Botao type="submit" tamanho="sm" variante="secundario">Guardar documento</Botao></div>
+                    </form>
+                  )}
+                </div>
               )}
               {nota.data.situacao === "correcao_solicitada" && (nota.data.solicitado_por === usuario.id || aprovaNota.data) && (
                 <form action={corrigirNota} className="grid gap-2 sm:grid-cols-2">
