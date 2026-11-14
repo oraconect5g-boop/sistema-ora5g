@@ -14,6 +14,7 @@ import { Marca } from "./Marca";
 import { MenuSuspenso } from "./MenuSuspenso";
 import { NavegacaoCelular, type ItemNavegacao } from "./NavegacaoCelular";
 import { RodapeVersao } from "./RodapeVersao";
+import { SinoDePendencias } from "./SinoDePendencias";
 import { Trilho } from "./Trilho";
 
 type Sessao = Awaited<ReturnType<typeof obterSessao>>;
@@ -123,6 +124,8 @@ export async function MoldeReal({ sessao, children, largura = "max-w-3xl", permi
           </Link>
           {fim && <span className="hidden items-center gap-1 text-xs text-suave sm:flex"><Clock aria-hidden className="size-3.5" /> turno até {fim}</span>}
           <div className="hidden flex-1 lg:block" />
+          {/* G6 (REPORT-007): o que espera a pessoa nesta loja, lido depois que a tela abre. */}
+          <SinoDePendencias unidade={unidade} />
           <MenuSuspenso
             rotulo={`${pessoa}, ${papel}`}
             classeBotao="flex min-h-11 items-center gap-2 rounded-full p-1 pr-2 hover:bg-white"
