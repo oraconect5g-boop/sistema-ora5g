@@ -2,7 +2,7 @@
   "_leia": "Checkpoint do programa de execução integral (PR #67). Carregar ao retomar e seguir para o próximo item executável da fila; não reiniciar o projeto. Estados vêm de status-requisitos.json (fonte da rastreabilidade); este arquivo acrescenta lote, bloqueio externo e revisão.",
   "atualizado_em": "2026-11-13",
   "base": {
-    "main": "8334dda",
+    "main": "e7d255a",
     "pacote": {
       "pr": 67,
       "branch": "docs/execucao-integral-20261110",
@@ -12,12 +12,12 @@
   },
   "publicado": {
     "homologacao": {
-      "commit": "8334dda",
+      "commit": "e7d255a",
       "quando": "2026-11-13",
-      "conferido": "rodapé da tela de entrada, /saude e /inicio, /caixa, /financeiro, /pagamentos/financeiras e /vender respondendo 307 para o login"
+      "conferido": "rodapé da tela de entrada, /saude e /inicio, /caixa, /financeiro, /pagamentos/financeiras e /contas-a-pagar respondendo 307 para o login"
     },
     "falta_publicar": [
-      "o merge do L8a (publicado ao fim do lote, por pedido do proprietário de 13/11)"
+      "o merge do L8b (publicado ao fim do lote, por pedido do proprietário de 13/11)"
     ]
   },
   "contagem_dos_estados": {
@@ -698,7 +698,7 @@
       "titulo": "DRE/margem gerencial com custo, taxa e desconto",
       "prioridade": "P0",
       "estado": "parcial",
-      "lote": "L8 financeiro; G2 financeiro e relatórios (margem bruta) (G2a entregue em 13/11)",
+      "lote": "L8 financeiro; G2 financeiro e relatórios (margem bruta) (G2a entregue em 13/11); L8b em 13/11: resultado do mês pela decisão D-037 do proprietário",
       "bloqueio_externo": null,
       "revisado_codex": false,
       "homologado": false
@@ -752,7 +752,7 @@
       "titulo": "Relatório financeiro consolidado por loja/região/rede",
       "prioridade": "P1",
       "estado": "parcial",
-      "lote": "L8 financeiro; G2 financeiro e relatórios (G2a entregue em 13/11)",
+      "lote": "L8 financeiro; G2 financeiro e relatórios (G2a entregue em 13/11); L8b em 13/11: resultado do mês da rede e de cada loja",
       "bloqueio_externo": null,
       "revisado_codex": false,
       "homologado": false

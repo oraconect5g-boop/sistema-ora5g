@@ -552,3 +552,171 @@ export function ColunasDivergentes({ dados, formatar, formatarEixo = formatar, n
     </CamadaDicas>
   );
 }
+
+// ---------------------------------------------------------------------------------------------
+// Resultado do mês (L8b): a cascata do vendido ao resultado e as colunas que descem abaixo do zero
+// ---------------------------------------------------------------------------------------------
+
+/**
+ * Um degrau da cascata. `total`: subtotal (receita líquida, margem bruta, resultado), barra desde o zero;
+ * os outros somam (positivo) ou tiram (negativo) do acumulado, e a barra flutua entre o antes e o depois.
+ */
+export type Degrau = { rotulo: string; valor: number; total?: boolean; detalhe?: ReactNode; dica?: readonly string[] };
+
+/** Começo e fim de cada barra e o eixo (do menor ao maior acumulado, sempre com o zero). */
+export function geometriaDaCascata(degraus: readonly Degrau[]): { piso: number; topo: number; barras: { de: number; ate: number }[] } {
+  let acumulado = 0;
+  const barras = degraus.map((d) => {
+    if (d.total) {
+      acumulado = d.valor;
+      return { de: 0, ate: d.valor };
+    }
+    const de = acumulado;
+    acumulado += d.valor;
+    return { de, ate: acumulado };
+  });
+  const valores = barras.flatMap((b) => [b.de, b.ate]);
+  return { piso: Math.min(0, ...valores), topo: Math.max(0, ...valores), barras };
+}
+
+/**
+ * Demonstrativo em cascata (DRE): cada linha com o valor e uma barra no mesmo eixo. Subtotais na cor 1
+ * desde o zero (na cor 3 quando ficam abaixo dele); o que tira do acumulado na cor 3, o que soma na cor 2.
+ * O sinal está sempre no texto ("−R$ 7.850,00"), então a cor nunca é a única pista. `formatar` recebe
+ * valores com sinal.
+ */
+export function Cascata({ degraus, formatar, rotulo }: { degraus: readonly Degrau[]; formatar: (valor: number) => string; rotulo: string }) {
+  const { piso, topo, barras } = geometriaDaCascata(degraus);
+  const largura = topo - piso;
+  const pos = (v: number) => (largura > 0 ? ((v - piso) / largura) * 100 : 0);
+  const zero = pos(0);
+  const texto = (d: Degrau) => (d.total || d.valor === 0 ? formatar(d.valor) : `${d.valor < 0 ? "−" : "+"}${formatar(Math.abs(d.valor))}`);
+  return (
+    <CamadaDicas>
+      <ol aria-label={rotulo} className="space-y-3">
+        {degraus.map((d, i) => {
+          const b = barras[i] ?? { de: 0, ate: 0 };
+          const esquerda = pos(Math.min(b.de, b.ate));
+          const tamanho = pos(Math.max(b.de, b.ate)) - esquerda;
+          // Subtotal abaixo do zero (prejuízo) na cor 3, como o prejuízo nos outros gráficos da tela.
+          const cor = d.total ? (d.valor < 0 ? FUNDO[3] : FUNDO[1]) : d.valor < 0 ? FUNDO[3] : FUNDO[2];
+          return (
+            <li
+              key={d.rotulo}
+              tabIndex={0}
+              data-dica={[d.rotulo, `Valor|${texto(d)}`, ...(d.dica ?? [])].join("\n")}
+              className={`rounded-md outline-offset-4 ${d.total && i > 0 ? "border-t border-borda pt-3" : ""}`}
+            >
+              <div className="flex items-baseline justify-between gap-3 text-sm">
+                <span className={`min-w-0 ${d.total ? "font-semibold" : ""}`}>{d.rotulo}</span>
+                <span className={`numeros shrink-0 ${d.total ? "font-bold" : "font-medium"}`}>{texto(d)}</span>
+              </div>
+              {d.detalhe && <p className="mt-0.5 text-xs text-suave">{d.detalhe}</p>}
+              <div className="relative mt-1.5 h-2.5 rounded-[3px] bg-grade">
+                {piso < 0 && <span aria-hidden className="absolute -inset-y-1 w-0.5 rounded-full bg-eixo" style={{ left: `calc(${zero}% - 1px)` }} />}
+                {tamanho > 0 && <div className={`absolute inset-y-0 rounded-[3px] ${cor}`} style={{ left: `${esquerda}%`, width: `max(2px, ${tamanho}%)` }} />}
+              </div>
+            </li>
+          );
+        })}
+      </ol>
+    </CamadaDicas>
+  );
+}
+
+/**
+ * Colunas de um valor que pode ficar abaixo do zero (o resultado de cada mês), numa escala só: acima do
+ * zero na cor 1, abaixo na cor 3, com legenda quando há os dois. O sinal também está na dica e na tabela.
+ */
+export function ColunasComSinal({ dados, formatar, formatarEixo = formatar, nomeSerie, nomes, altura = 180, cadaRotulo = 1 }: {
+  dados: readonly Ponto[];
+  formatar: (valor: number) => string;
+  formatarEixo?: (valor: number) => string;
+  nomeSerie: string;
+  /** Nomes do lado positivo e do negativo (ex.: lucro e prejuízo), para a legenda. */
+  nomes: readonly [string, string];
+  altura?: number;
+  cadaRotulo?: number;
+}) {
+  const valores = dados.map((d) => d.valor);
+  const { piso, topo, marcas } = escalaComPiso(Math.min(0, ...valores), Math.max(0, ...valores));
+  const zero = posicao(0, piso, topo);
+  const temNegativo = valores.some((v) => v < 0);
+  return (
+    <CamadaDicas className="pt-2">
+      {temNegativo && valores.some((v) => v > 0) && <Legenda className="mb-3" itens={[{ nome: nomes[0], serie: 1 }, { nome: nomes[1], serie: 3 }]} />}
+      <div className="flex" style={{ height: altura }}>
+        <EixoY marcas={marcas} topo={topo} piso={piso} formatar={formatarEixo} />
+        <div className="relative min-w-0 flex-1">
+          <Grade marcas={marcas} topo={topo} piso={piso} />
+          <div className="absolute inset-0 flex gap-[2px]">
+            {dados.map((d) => {
+              const ponta = posicao(d.valor, piso, topo);
+              return (
+                <div
+                  key={d.rotulo}
+                  tabIndex={0}
+                  data-dica={`${d.rotulo}\n${nomeSerie}|${formatar(d.valor)}`}
+                  aria-label={`${d.rotulo}: ${formatar(d.valor)}`}
+                  className="group relative h-full min-w-0 flex-1 rounded-sm focus-visible:bg-slate-100"
+                >
+                  {d.valor > 0 && (
+                    <div className="absolute inset-x-0 flex justify-center" style={{ bottom: `${zero}%`, height: `max(2px, ${ponta - zero}%)` }}>
+                      <div className="h-full w-full max-w-8 rounded-t-[4px] bg-serie-1 group-hover:opacity-70" />
+                    </div>
+                  )}
+                  {d.valor < 0 && (
+                    <div className="absolute inset-x-0 flex justify-center" style={{ top: `${100 - zero}%`, height: `max(2px, ${zero - ponta}%)` }}>
+                      <div className="h-full w-full max-w-8 rounded-b-[4px] bg-serie-3 group-hover:opacity-70" />
+                    </div>
+                  )}
+                </div>
+              );
+            })}
+          </div>
+        </div>
+      </div>
+      <RotulosX rotulos={dados.map((d) => d.rotulo)} cada={cadaRotulo} encaixe="colunas" />
+    </CamadaDicas>
+  );
+}
+
+/** Barras horizontais de um valor com sinal (o resultado de cada loja): a partir do zero, para a direita ou para a esquerda. */
+export function BarrasComSinal({ dados, formatar, nomeSerie, nomes }: {
+  dados: readonly { rotulo: string; valor: number; detalhe?: ReactNode }[];
+  formatar: (valor: number) => string;
+  nomeSerie: string;
+  nomes: readonly [string, string];
+}) {
+  const piso = Math.min(0, ...dados.map((d) => d.valor));
+  const topo = Math.max(0, ...dados.map((d) => d.valor));
+  const largura = topo - piso;
+  const pos = (v: number) => (largura > 0 ? ((v - piso) / largura) * 100 : 0);
+  const zero = pos(0);
+  const temNegativo = piso < 0;
+  return (
+    <CamadaDicas>
+      {temNegativo && topo > 0 && <Legenda className="mb-3" itens={[{ nome: nomes[0], serie: 1 }, { nome: nomes[1], serie: 3 }]} />}
+      <ul className="space-y-3">
+        {dados.map((d) => (
+          <li key={d.rotulo} tabIndex={0} data-dica={`${d.rotulo}\n${nomeSerie}|${formatar(d.valor)}`} className="rounded-md outline-offset-4">
+            <div className="mb-1 flex items-baseline justify-between gap-3 text-sm">
+              <span className="min-w-0 truncate">{d.rotulo}</span>
+              <span className="numeros shrink-0 font-semibold">{formatar(d.valor)}</span>
+            </div>
+            {d.detalhe && <p className="-mt-0.5 mb-1 text-xs text-suave">{d.detalhe}</p>}
+            <div className="relative h-2.5 rounded-[3px] bg-grade">
+              {temNegativo && <span aria-hidden className="absolute -inset-y-1 w-0.5 rounded-full bg-eixo" style={{ left: `calc(${zero}% - 1px)` }} />}
+              {d.valor !== 0 && (
+                <div
+                  className={`absolute inset-y-0 ${d.valor < 0 ? "rounded-l-[4px] bg-serie-3" : "rounded-r-[4px] bg-serie-1"}`}
+                  style={{ left: `${pos(Math.min(0, d.valor))}%`, width: `max(2px, ${pos(Math.max(0, d.valor)) - pos(Math.min(0, d.valor))}%)` }}
+                />
+              )}
+            </div>
+          </li>
+        ))}
+      </ul>
+    </CamadaDicas>
+  );
+}

@@ -15,8 +15,8 @@ const compacto = new Intl.NumberFormat("pt-BR", {
   maximumFractionDigits: 1,
 });
 
-/** Valor em centavos → "R$ 1.234,56". */
-export const brl = (centavos: number) => formatarBRL(Math.round(centavos));
+/** Valor em centavos → "R$ 1.234,56". O zero negativo do JavaScript (−0, de uma conta como "−saídas") sai "R$ 0,00", nunca "-R$ 0,00". */
+export const brl = (centavos: number) => formatarBRL(Math.round(centavos) + 0);
 
 /** Valor em centavos → "R$ 128,4 mil" (a partir de R$ 10 mil); abaixo disso, o valor cheio. */
 export function brlCompacto(centavos: number): string {

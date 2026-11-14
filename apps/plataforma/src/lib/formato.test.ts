@@ -30,6 +30,10 @@ describe("formatos brasileiros na tela", () => {
     expect(brlComSinal(-6_050)).toBe("−R$ 60,50");
     expect(brlComSinal(6_050)).toBe(brl(6_050));
     expect(brlComSinal(0)).toBe("R$ 0,00");
+    // Zero negativo do JavaScript (−0, de uma conta como "−saídas" com saídas zero; L8b) não ganha sinal.
+    expect(brl(-0)).toBe("R$ 0,00");
+    expect(brlComSinal(-0)).toBe("R$ 0,00");
+    expect(brl(-0.4)).toBe("R$ 0,00");
     expect(brlCompactoComSinal(-12_840_000)).toBe("−R$ 128,4 mil");
     expect(brlCompactoComSinal(-99_999)).toBe("−R$ 999,99");
     expect(brlEixoComSinal(-500_000)).toBe("−R$ 5 mil");

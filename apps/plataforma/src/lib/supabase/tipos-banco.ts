@@ -1393,6 +1393,7 @@ export type Database = {
           ativa: boolean
           criada_em: string
           criada_por: string | null
+          entra_no_resultado: boolean
           id: string
           nome: string
           ordem: number
@@ -1402,6 +1403,7 @@ export type Database = {
           ativa?: boolean
           criada_em?: string
           criada_por?: string | null
+          entra_no_resultado?: boolean
           id?: string
           nome: string
           ordem?: number
@@ -1411,6 +1413,7 @@ export type Database = {
           ativa?: boolean
           criada_em?: string
           criada_por?: string | null
+          entra_no_resultado?: boolean
           id?: string
           nome?: string
           ordem?: number
@@ -4779,7 +4782,12 @@ export type Database = {
         Returns: number
       }
       conta_pagar_categoria_salvar: {
-        Args: { p_ativa: boolean; p_categoria: string; p_nome: string }
+        Args: {
+          p_ativa: boolean
+          p_categoria: string
+          p_entra_no_resultado?: boolean
+          p_nome: string
+        }
         Returns: string
       }
       conta_pagar_corrigir: {
@@ -5307,6 +5315,10 @@ export type Database = {
           p_variante: string
         }
         Returns: string
+      }
+      resultado_do_mes: {
+        Args: { p_mes: string; p_meses?: number; p_unidade?: string }
+        Returns: Json
       }
       selecionar_unidade: { Args: { p_unidade: string }; Returns: boolean }
       situacao_da_sessao: {

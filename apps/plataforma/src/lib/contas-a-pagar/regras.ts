@@ -197,13 +197,19 @@ export function lerCorrecao(dados: Formulario): Resultado<{ conta: string; valor
 }
 
 /** Categoria nova (sem id) ou ajuste de uma existente: o nome e, se veio, se fica ativa. */
-export function lerCategoria(dados: Formulario): Resultado<{ categoria: string | null; nome: string; ativa: boolean | null }> {
+/** "entra" (L8b): "sim" põe a categoria no resultado do mês, "nao" a deixa fora (compra de mercadoria); sem o campo, mantém. */
+export function lerCategoria(dados: Formulario): Resultado<{ categoria: string | null; nome: string; ativa: boolean | null; entra: boolean | null }> {
   const id = textoDo(dados.get("categoria"));
   if (id !== "" && !ehUuid(id)) return { ok: false, erro: "dados" };
   const nome = textoDo(dados.get("nome"));
   if (nome.length < 2 || nome.length > 60) return { ok: false, erro: "categoria_nome" };
   const ativa = dados.get("ativa");
-  return { ok: true, categoria: id || null, nome, ativa: ativa === "sim" ? true : ativa === "nao" ? false : null };
+  const entra = dados.get("entra");
+  return {
+    ok: true, categoria: id || null, nome,
+    ativa: ativa === "sim" ? true : ativa === "nao" ? false : null,
+    entra: entra === "sim" ? true : entra === "nao" ? false : null,
+  };
 }
 
 // ---------------------------------------------------------------------------------------------

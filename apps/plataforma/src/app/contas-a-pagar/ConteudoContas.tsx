@@ -188,7 +188,7 @@ function Lancamento({ lojas, rede, categorias, fornecedores, filtro, visao, hoje
             </label>
             <label className={rotulo}>Categoria
               <select name="categoria" required className={campo}>
-                {ativas.map((c) => <option key={c.id} value={c.id}>{c.nome}</option>)}
+                {ativas.map((c) => <option key={c.id} value={c.id}>{c.entraNoResultado === false ? `${c.nome} (fora do resultado)` : c.nome}</option>)}
               </select>
             </label>
             <label className={`${rotulo} sm:col-span-2`}>Descrição<input name="descricao" required minLength={3} maxLength={120} placeholder="Ex.: aluguel de novembro" className={campo} /></label>
@@ -331,7 +331,7 @@ function LinhaDaConta({ c, visao, filtro, hoje, mostrarLoja, nomes }: { c: Conta
 
 function Categorias({ categorias, visao, filtro }: { categorias: CategoriaDaConta[]; visao: VisaoDasContas; filtro: FiltroDasContas }) {
   return (
-    <Cartao className="mt-4" titulo="Categorias das despesas" icone={Tags} subtitulo="Só o dono ajusta. Desativar tira a categoria do lançamento; as contas antigas continuam com ela.">
+    <Cartao className="mt-4" titulo="Categorias das despesas" icone={Tags} subtitulo="Só o dono ajusta. Desativar tira a categoria do lançamento; as contas antigas continuam com ela. Compra de mercadoria fica fora do resultado do mês: vira estoque, e o custo entra quando o item é vendido.">
       <details className="group">
         <summary className={pilula}>{`Ver e ajustar as ${numero(categorias.length)} categorias`}</summary>
         <ul className="mt-2 divide-y divide-borda text-sm">
@@ -341,8 +341,16 @@ function Categorias({ categorias, visao, filtro }: { categorias: CategoriaDaCont
                 <input type="hidden" name="categoria" value={c.id} /><Volta visao={visao} filtro={filtro} />
                 <input name="nome" aria-label="Nome da categoria" required minLength={2} maxLength={60} defaultValue={c.nome} className={`${campoEmLinha} min-w-0 flex-1`} />
                 {!c.ativa && <Selo tom="neutro">desativada</Selo>}
+                {c.entraNoResultado === false && <Selo tom="neutro">fora do resultado</Selo>}
                 <Botao type="submit" tamanho="sm" variante="secundario">Renomear</Botao>
               </form>
+              {c.entraNoResultado !== null && (
+                <form action={salvarCategoria}>
+                  <input type="hidden" name="categoria" value={c.id} /><input type="hidden" name="nome" value={c.nome} />
+                  <input type="hidden" name="entra" value={c.entraNoResultado ? "nao" : "sim"} /><Volta visao={visao} filtro={filtro} />
+                  <Botao type="submit" tamanho="sm" variante="fantasma">{c.entraNoResultado ? "Tirar do resultado" : "Pôr no resultado"}</Botao>
+                </form>
+              )}
               <form action={salvarCategoria}>
                 <input type="hidden" name="categoria" value={c.id} /><input type="hidden" name="nome" value={c.nome} />
                 <input type="hidden" name="ativa" value={c.ativa ? "nao" : "sim"} /><Volta visao={visao} filtro={filtro} />
@@ -355,6 +363,12 @@ function Categorias({ categorias, visao, filtro }: { categorias: CategoriaDaCont
           <Volta visao={visao} filtro={filtro} />
           <label className={`${rotulo} min-w-0 flex-1`}>Nova categoria<input name="nome" required minLength={2} maxLength={60} placeholder="Ex.: Frete e entregas" className={campo} /></label>
           <Botao type="submit" tamanho="sm">Criar categoria</Botao>
+          {categorias.some((c) => c.entraNoResultado !== null) && (
+            <label className="flex w-full items-center gap-2 text-sm">
+              <input type="checkbox" name="entra" value="nao" className="size-4 accent-acao" />
+              Fica fora do resultado do mês (compra de mercadoria, empréstimo)
+            </label>
+          )}
         </form>
       </details>
     </Cartao>

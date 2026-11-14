@@ -76,8 +76,11 @@ describe("formulários", () => {
     expect(lerMotivo(form({ conta: CONTA, motivo: "ok" }))).toEqual({ ok: false, erro: "motivo" });
     expect(lerCorrecao(form({ conta: CONTA, valor: "7.000,00", vencimento: "2026-11-15", motivo: "Reajuste" }))).toEqual({ ok: true, conta: CONTA, valor: 700_000, vencimento: "2026-11-15", motivo: "Reajuste" });
     expect(lerCorrecao(form({ conta: CONTA, valor: "7.000,00", vencimento: "2026-11-15", motivo: "" }))).toEqual({ ok: false, erro: "motivo" });
-    expect(lerCategoria(form({ nome: " Frete " }))).toEqual({ ok: true, categoria: null, nome: "Frete", ativa: null });
-    expect(lerCategoria(form({ categoria: CATEGORIA, nome: "Frete", ativa: "nao" }))).toEqual({ ok: true, categoria: CATEGORIA, nome: "Frete", ativa: false });
+    expect(lerCategoria(form({ nome: " Frete " }))).toEqual({ ok: true, categoria: null, nome: "Frete", ativa: null, entra: null });
+    expect(lerCategoria(form({ categoria: CATEGORIA, nome: "Frete", ativa: "nao" }))).toEqual({ ok: true, categoria: CATEGORIA, nome: "Frete", ativa: false, entra: null });
+    expect(lerCategoria(form({ categoria: CATEGORIA, nome: "Frete", entra: "nao" }))).toEqual({ ok: true, categoria: CATEGORIA, nome: "Frete", ativa: null, entra: false });
+    expect(lerCategoria(form({ nome: "Frete", entra: "sim" }))).toEqual({ ok: true, categoria: null, nome: "Frete", ativa: null, entra: true });
+    expect(lerCategoria(form({ nome: "Frete", entra: "talvez" }))).toEqual({ ok: true, categoria: null, nome: "Frete", ativa: null, entra: null });
     expect(lerCategoria(form({ nome: "x" }))).toEqual({ ok: false, erro: "categoria_nome" });
   });
 
