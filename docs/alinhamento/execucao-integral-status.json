@@ -2,7 +2,7 @@
   "_leia": "Checkpoint do programa de execução integral (PR #67). Carregar ao retomar e seguir para o próximo item executável da fila; não reiniciar o projeto. Estados vêm de status-requisitos.json (fonte da rastreabilidade); este arquivo acrescenta lote, bloqueio externo e revisão.",
   "atualizado_em": "2026-11-14",
   "base": {
-    "main": "687d04e",
+    "main": "fdaaee0",
     "pacote": {
       "pr": 67,
       "branch": "docs/execucao-integral-20261110",
@@ -18,12 +18,12 @@
   },
   "publicado": {
     "homologacao": {
-      "commit": "687d04e",
+      "commit": "fdaaee0",
       "quando": "2026-11-14",
-      "conferido": "rodapé da tela de entrada (687d04e · build 14/11/2026 18:46), /saude 200 e as rotas reais respondendo 307 para o login"
+      "conferido": "rodapé da tela de entrada (fdaaee0 · build 14/11/2026 19:06), /saude 200 e as rotas reais respondendo 307 para o login"
     },
     "falta_publicar": [
-      "registro das migrations do L10b e do L10c aplicadas no ora5g-dev em 14/11 (nomes, tipos gerados e documentos), publicado ao fim do lote; nenhuma tela muda"
+      "G6, sino de alertas no topo de todas as telas (REPORT-007 em parte), sem migration, publicado ao fim do lote"
     ]
   },
   "contagem_dos_estados": {
