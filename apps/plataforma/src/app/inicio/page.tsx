@@ -15,6 +15,7 @@ import { tabelaAusente } from "../../lib/caixa/saidas";
 import { hojeEmSaoPaulo } from "../../lib/contas-a-pagar/regras";
 import type { LojaDoFiltro } from "../../lib/financeiro/escopo";
 import { periodoFinanceiro } from "../../lib/financeiro/painel";
+import { janelasDosAlertas } from "../../lib/inicio/alertas";
 import { lerPaineisDoInicio, permissoesDoInicio } from "../../lib/inicio/consulta";
 import { visaoDoInicio } from "../../lib/inicio/painel";
 import { textoDoParametro, type ValorDeParametro } from "../../lib/parametros";
@@ -49,9 +50,7 @@ export default async function Inicio({ searchParams }: { searchParams: Promise<P
   const visao = visaoDoInicio({ verTodas: permissoes.has("venda.ver_todas"), verUnidade: gestao, verPropria: inicio.propria });
   const recebeAparelho = permissoes.has("os.abrir") || permissoes.has("os.gerir");
   // Alertas (REPORT-007, L12f): janelas fixas, contadas a partir de agora.
-  const agora = Date.now();
-  const haSeteDias = new Date(agora - 7 * 86_400_000).toISOString();
-  const haUmDia = new Date(agora - 86_400_000).toISOString();
+  const { haSeteDias, haUmDia } = janelasDosAlertas();
   const [aprovacoes, notas, caixas, saidasDoBanco, contasDoBanco, fechamentosDoBanco, transferencias, connect, estornos, retornos, atrasadasDoBanco, prontasDoBanco, doTecnicoDoBanco,
     caixasComDiferenca, notasParadas, ativacoesComFalha, paineis] = await Promise.all([
     permissoes.has("desconto.aprovar") ? supabase.from("aprovacoes_desconto").select("id", CABECA).eq("unidade_id", unidade).eq("situacao", "pendente") : null,
