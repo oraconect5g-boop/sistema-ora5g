@@ -1089,3 +1089,72 @@ describe("painel de vendas lido enquanto uma venda é concluída no PostgreSQL 1
     expect(await divergencias()).toEqual([]);
   });
 });
+
+// Correção de 14/11/2026 (#83, REV-PLAN-002): o repasse da financeira e o cancelamento da venda ao mesmo tempo.
+// O registro e o desfazer do repasse travam a venda antes da conta, como o cancelamento: um espera o outro e
+// a conta nunca fica aberta (crédito exigível) numa venda cancelada.
+describe("repasse da financeira e cancelamento da venda ao mesmo tempo no PostgreSQL 17 (#83)", () => {
+  const RECEBER = "select public.financeira_receber($1, $2, $3, $4::date) as v";
+  const DESFAZER = "select public.financeira_desfazer_recebimento($1, $2) as v";
+  const CANCELAR = "select public.cancelar_venda($1, 'Cliente desistiu') as v";
+  const hoje = new Intl.DateTimeFormat("en-CA", { timeZone: "America/Sao_Paulo" }).format(new Date());
+  let ana: Sessao;
+  let dono: Sessao;
+  let n = 0;
+  beforeAll(async () => {
+    ana = await sessaoNaLoja(ids.vendedorA, ids.lojaA);
+    dono = await sessaoNaLoja(ids.dono, ids.lojaA);
+    for (const s of [ana, dono]) await confirmada(s, "select public.abrir_caixa(50000, $1) as v", [`conc:83:caixa:${s.usuario}`]).catch(() => undefined);
+  });
+  // Uma venda de aparelho financiada pela PayJoy, com a entrada em Pix (o cancelamento não precisa de dinheiro no caixa).
+  async function financiada() {
+    const k = ++n;
+    const item = await valor<string>(admin, ENTRADA, [ids.lojaA, cat.aparelho, comDigitoLuhn(`35209900183${String(k).padStart(3, "0")}`), null, `conc:83:entrada:${k}`]);
+    const venda = await confirmada<string>(ana, "select public.criar_venda($1) as v", [`conc:83:venda:${k}`]);
+    await confirmada(ana, "select public.adicionar_item($1, $2, $3, 1, $4) as v", [venda, cat.aparelho, item, `conc:83:item:${k}`]);
+    await confirmada(ana, "select public.concluir_venda($1, $2::jsonb, $3::jsonb, $4) as v", [venda,
+      JSON.stringify([{ meio: "payjoy", valor: 149_900, entrada: 20_000, meio_entrada: "pix_direto", comprovante: `E2E-FICTICIO-83-${k}` }]),
+      JSON.stringify({ nome: "Cliente Teste", email: "cliente@teste.invalid" }), `conc:83:concluir:${k}`]);
+    const conta = await valor<string>(admin, "select id as v from public.contas_a_receber where venda_id = $1", [venda]);
+    return { venda, conta: conta as string };
+  }
+  const situacao = (conta: string) => valor<string>(admin, "select situacao as v from public.contas_a_receber where id = $1", [conta]);
+  const comoDono = async (cliente: pg.Client) => abrir(cliente, dono);
+
+  it("desfazer o repasse e cancelar a venda ao mesmo tempo, nas duas ordens: a conta termina cancelada e não recebe outro repasse", async () => {
+    // 1) O cancelamento segura a venda; o desfazer espera, vê a venda cancelada e deixa a conta cancelada.
+    const f1 = await financiada();
+    await confirmada(dono, RECEBER, [f1.conta, "REPASSE-83-1", 125_000, hoje]);
+    await comoDono(a);
+    const r1 = await disputa(() => valor(a, CANCELAR, [f1.venda]), async () => { await comoDono(b); return valor<boolean>(b, DESFAZER, [f1.conta, "Referência errada"]); });
+    expect(r1).toEqual({ ok: true });
+    expect(await situacao(f1.conta)).toBe("cancelada");
+    // 2) O desfazer segura; o cancelamento espera e cancela a conta que tinha voltado a ficar aberta.
+    const f2 = await financiada();
+    await confirmada(dono, RECEBER, [f2.conta, "REPASSE-83-2", 125_000, hoje]);
+    await comoDono(a);
+    const r2 = await disputa(() => valor(a, DESFAZER, [f2.conta, "Referência errada"]), async () => { await comoDono(b); return valor<boolean>(b, CANCELAR, [f2.venda]); });
+    expect(r2).toEqual({ ok: true });
+    expect(await situacao(f2.conta)).toBe("cancelada");
+    for (const f of [f1, f2]) {
+      await expect(confirmada(dono, RECEBER, [f.conta, "REPASSE-83-NOVO", 124_000, hoje])).rejects.toMatchObject({ code: "22023" });
+    }
+  });
+
+  it("registrar o repasse e cancelar a venda ao mesmo tempo, nas duas ordens: depois do cancelamento é recusado; antes, fica recebido e o desfazer cancela", async () => {
+    const f1 = await financiada();
+    await comoDono(a);
+    const r1 = await disputa(() => valor(a, CANCELAR, [f1.venda]), async () => { await comoDono(b); return valor<boolean>(b, RECEBER, [f1.conta, "REPASSE-83-3", 125_000, hoje]); });
+    expect(r1).toEqual({ erro: "22023" });
+    expect(await situacao(f1.conta)).toBe("cancelada");
+    const f2 = await financiada();
+    await comoDono(a);
+    const r2 = await disputa(() => valor(a, RECEBER, [f2.conta, "REPASSE-83-4", 125_000, hoje]), async () => { await comoDono(b); return valor<boolean>(b, CANCELAR, [f2.venda]); });
+    expect(r2).toEqual({ ok: true });
+    // A financeira pagou antes do cancelamento: a conta continua recebida (o acerto do contrato fica no estorno a confirmar).
+    expect(await situacao(f2.conta)).toBe("recebida");
+    expect(await confirmada(dono, DESFAZER, [f2.conta, "Repasse lançado na venda errada"])).toBe(true);
+    expect(await situacao(f2.conta)).toBe("cancelada");
+    expect(await divergencias()).toEqual([]);
+  });
+});

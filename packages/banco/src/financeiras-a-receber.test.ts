@@ -138,3 +138,75 @@ describe("financeiras: registrar o repasse do que foi financiado (L7b)", () => {
     expect(await codigo(ana, "select public.financeiras_a_receber() as v")).toBe("42501");
   });
 });
+
+// Correção de 14/11/2026 (#83, REV-PLAN-002, migration 20261114132646_financeiras_correcoes): desfazer o repasse
+// de venda cancelada não reabre crédito. Aqui o resultado seguro, não a reprodução do defeito; a disputa
+// real das duas transações está em concorrencia.test.ts.
+describe("financeiras: venda cancelada não volta a dever (#83)", () => {
+  const CORRIGIR = "select public.financeira_corrigir_recebimento($1, $2, $3, $4::date, $5) as v";
+  const cancelar = async (dono: Sessao, venda: string) => {
+    await valor(dono, "select public.abrir_caixa(50000, $1) as v", [chave("caixa")]).catch(() => undefined);
+    expect(await valor(dono, "select public.cancelar_venda($1, 'Cliente desistiu') as v", [venda])).toBe(true);
+  };
+  const daLista = async (s: Sessao, id: string) =>
+    (await valor<{ contas: { id: string; situacao: string; venda_cancelada: boolean; referencia: string | null }[] }>(s, "select public.financeiras_a_receber() as v")).contas.find((c) => c.id === id);
+
+  it("repasse registrado, venda cancelada e repasse desfeito: a conta fica cancelada e não recebe de novo; a correção mantém o recebido", async () => {
+    const ana = await naLoja(ids.vendedorA, ids.lojaA);
+    const f = await financiada(ana, itens.a1, "payjoy", 149_900);
+    const dono = await naLoja(ids.dono, ids.lojaA);
+    expect(await valor(dono, RECEBER, [f.conta, "PJ-REPASSE-1", 125_000, hoje()])).toBe(true);
+    await cancelar(dono, f.venda);
+    // A financeira pagou antes do cancelamento: a conta continua recebida e a lista diz que a venda foi cancelada.
+    expect((await conta(f.conta))?.situacao).toBe("recebida");
+    expect(await daLista(dono, f.conta)).toMatchObject({ situacao: "recebida", venda_cancelada: true, referencia: "PJ-REPASSE-1" });
+    // O dinheiro caiu, só a referência estava errada: corrige sem passar por "aberta".
+    expect(await codigo(dono, CORRIGIR, [f.conta, "PJ-REPASSE-1-CORRETO", 125_000, hoje(), "ok"])).toBe("22023");
+    expect(await valor(dono, CORRIGIR, [f.conta, "PJ-REPASSE-1-CORRETO", 125_000, hoje(), "Referência digitada errada"])).toBe(true);
+    expect(await conta(f.conta)).toEqual({ situacao: "recebida", recebido_em: hoje(), recebido: "125000", referencia: "PJ-REPASSE-1-CORRETO", registrado_por: ids.dono });
+    expect(await valor(dono, CORRIGIR, [f.conta, "PJ-REPASSE-1-CORRETO", 125_000, hoje(), "De novo"])).toBe(false);
+    for (const [referencia, recebido, dia] of [["PJ-2", 129_901, hoje()], ["PJ-2", 100_000, somarDias(hoje(), 1)], ["ab", 100_000, hoje()]] as const) {
+      expect(await codigo(dono, CORRIGIR, [f.conta, referencia, recebido, dia, "Corrigindo"]), `${referencia} ${recebido} ${dia}`).toBe("22023");
+    }
+    // Desfazer: o repasse não existiu. A conta fica cancelada (nunca "aberta" numa venda cancelada) e não recebe outro.
+    expect(await valor(dono, DESFAZER, [f.conta, "Repasse lançado na venda errada"])).toBe(true);
+    expect(await conta(f.conta)).toEqual({ situacao: "cancelada", recebido_em: null, recebido: null, referencia: null, registrado_por: null });
+    expect(await codigo(dono, RECEBER, [f.conta, "PJ-REPASSE-2", 124_000, hoje()])).toBe("22023");
+    expect(await codigo(dono, CORRIGIR, [f.conta, "PJ-REPASSE-2", 124_000, hoje(), "Corrigindo"])).toBe("22023");
+    expect(await valor(dono, DESFAZER, [f.conta, "De novo"])).toBe(false);
+    expect(await daLista(dono, f.conta)).toBeUndefined(); // cancelada sai da lista do que se tem a receber
+    const motivos = (await db.query<{ motivo: string }>("select motivo from public.auditoria where alvo_id = $1 order by id", [f.conta])).rows.map((r) => r.motivo);
+    expect(motivos).toEqual(expect.arrayContaining([
+      "Repasse da financeira: PJ-REPASSE-1", "Recebimento da financeira corrigido: Referência digitada errada",
+      "Recebimento da financeira desfeito: Repasse lançado na venda errada (venda cancelada: a conta fica cancelada)",
+    ]));
+  });
+
+  it("venda não cancelada: desfazer volta para aberta, como antes; conta aberta de venda cancelada (estado antigo) não recebe", async () => {
+    const ana = await naLoja(ids.vendedorA, ids.lojaA);
+    const dono = await naLoja(ids.dono, ids.lojaA);
+    const f = await financiada(ana, itens.a1, "payjoy", 149_900);
+    expect(await valor(dono, RECEBER, [f.conta, "PJ-3", 125_000, hoje()])).toBe(true);
+    expect(await valor(dono, DESFAZER, [f.conta, "Valor digitado errado"])).toBe(true);
+    expect((await conta(f.conta))?.situacao).toBe("aberta");
+    expect(await codigo(dono, CORRIGIR, [f.conta, "PJ-3", 125_000, hoje(), "Corrigindo"])).toBe("22023"); // só se corrige o registrado
+    // O estado que o desfazer antigo deixava: venda cancelada e conta aberta. O repasse é recusado pelo estado da venda.
+    const outra = await financiada(ana, itens.a2, "aiva", 149_900);
+    await cancelar(dono, outra.venda);
+    await db.query("select set_config('ora.motivo', 'Estado deixado pelo desfazer antigo (teste)', true)");
+    await db.query("update public.contas_a_receber set situacao = 'aberta' where id = $1", [outra.conta]);
+    expect(await codigo(dono, RECEBER, [outra.conta, "AV-REPASSE", 100_000, hoje()])).toBe("22023");
+    expect((await conta(outra.conta))?.situacao).toBe("aberta");
+  });
+
+  it("quem não concilia na loja da venda não corrige o repasse", async () => {
+    const ana = await naLoja(ids.vendedorA, ids.lojaA);
+    const f = await financiada(ana, itens.a1, "payjoy", 149_900);
+    const dono = await naLoja(ids.dono, ids.lojaA);
+    expect(await valor(dono, RECEBER, [f.conta, "PJ-4", 125_000, hoje()])).toBe(true);
+    for (const s of [ana, await naLoja(ids.gerenteB, ids.lojaB)]) {
+      expect(await codigo(s, CORRIGIR, [f.conta, "PJ-4-X", 125_000, hoje(), "Tentativa"])).toBe("P0002");
+    }
+    expect((await conta(f.conta))?.referencia).toBe("PJ-4");
+  });
+});
