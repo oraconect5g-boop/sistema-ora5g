@@ -75,9 +75,11 @@ class Consulta {
   constructor(readonly nome: string) {
     cenario.lidas.push(nome);
     this.linhas = [...(cenario.tabelas[nome] ?? [])];
-    this.erro = cenario.errosDasTabelas[nome] ?? null;
+    // ORG-009: sem regiões no cenário, o banco "ainda não tem" a tabela (como a homologação antes da migration).
+    this.erro = cenario.errosDasTabelas[nome] ?? (nome === "regioes" && !cenario.tabelas.regioes ? { code: "PGRST205" } : null);
   }
   select() { return this; }
+  range(de: number, ate: number) { this.linhas = this.linhas.slice(de, ate + 1); return this; }
   eq(coluna: string, valor: unknown) {
     // Coluna que o banco "ainda não tem" (migration não aplicada): a leitura responde 42703.
     if (cenario.semColunas.includes(coluna)) this.erro = { code: "42703" };
@@ -163,7 +165,7 @@ import Inicio from "./page";
 // Linhas, BarrasHorizontais...) ficam como elementos, para o teste conferir as propriedades que recebem.
 const APRESENTACAO = new Set([
   "ConteudoInicio", "EstadoDoPainel", "Indicadores", "PainelDeVendas", "PainelDeRecebimentos", "PainelDoMix", "PainelDasLojas", "PainelDeVendedores",
-  "PainelDaMetaDoMes", "PainelDaMinhaMeta", "ResumoDaMeta", "MedidaPrincipal", "PorLoja", "BarrasDoRitmo",
+  "PainelDaMetaDoMes", "PainelDaMinhaMeta", "ResumoDaMeta", "MedidaPrincipal", "PorLoja", "PorRegiao", "BarrasDoRitmo",
 ]);
 type Elemento = { tipo: string; props: Linha };
 const nomeDoTipo = (tipo: unknown) => (typeof tipo === "string" ? tipo : typeof tipo === "function" ? tipo.name : "");
@@ -1288,6 +1290,26 @@ describe("Início: a meta do mês (G4c)", () => {
     const daLoja = p.cartao("Meta da loja em novembro de 2026");
     expect(enderecosDe(daLoja)).toContain(`/metas?loja=${OUTRA}`);
     expect(daLoja.doTipo("BarrasHorizontais")).toHaveLength(1);
+  });
+
+  it("ORG-009: na rede inteira, com lojas em regiões, a meta e as vendas somam por região (a região não dá acesso)", async () => {
+    entrar("dono");
+    acompanhar("metas.ver_unidade", "metas.gerir", "metas.ver_propria");
+    cenario.metasDasLojas = METAS_DA_REDE;
+    const NORTE = "00000000-0000-4000-8000-0000000000e1";
+    cenario.tabelas.regioes = [{ id: NORTE, nome: "Curitiba Norte (teste)", ativa: true }];
+    cenario.tabelas.unidades = (cenario.tabelas.unidades ?? []).map((u) => ({ ...u, regiao_id: u.id === LOJA || u.id === OUTRA ? NORTE : null }));
+    const p = await pagina();
+    // A meta da região é a soma das lojas com meta dela: R$ 17 mil de R$ 50 mil.
+    const meta = p.cartao("Meta da rede em novembro de 2026");
+    const daMeta = meta.doTipo("TabelaDoGrafico").find((t) => t.titulo === "Ver as regiões em tabela");
+    expect((daMeta?.linhas as string[][]).map((l) => l.slice(0, 4).map((c) => String(c).replace(/\s/g, " ")))).toEqual([["Curitiba Norte (teste)", "2", "R$ 17.000,00", "R$ 50.000,00"]]);
+    expect(meta.texto).toContain("A meta da região é a soma das metas das lojas dela");
+    // As vendas: a região soma as lojas dela; a loja sem região fica em "Sem região", no fim.
+    const lojas = p.cartao("Desempenho das lojas");
+    const dasVendas = lojas.doTipo("TabelaDoGrafico").find((t) => t.titulo === "Ver as regiões em tabela");
+    expect((dasVendas?.linhas as string[][]).map((l) => [l[0], l[1]])).toEqual([["Curitiba Norte (teste)", "2"], ["Sem região", "1"]]);
+    expect(errosRegistrados()).toEqual([]);
   });
 
   it("sem meta da loja no mês: o quadro diz \"nenhuma meta\", nunca 0%", async () => {

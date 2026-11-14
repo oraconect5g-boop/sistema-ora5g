@@ -14,6 +14,7 @@ import { PERIODOS_FINANCEIROS, type Janela } from "../../lib/financeiro/painel";
 import { POR_PAGINA } from "../../lib/financeiro/registros";
 import { brl, brlCompacto, brlCompactoComSinal, brlComSinal, brlEixo, brlEixoComSinal, numero, percentual, percentualComSinal } from "../../lib/formato";
 import { enderecoDoFinanceiro, numerosDasVendas, type Leitura, type VendasDoBanco } from "../../lib/inicio/painel";
+import type { RegioesDoPainel } from "../../lib/lojas/regioes";
 import { metaDoDiaPorMes } from "../../lib/metas/painel";
 import { numerosDaMargem, situacaoDaMargem, type ItensDaMargem, type MargemDoBanco } from "../../lib/margem/painel";
 import type { Relatorios } from "../../lib/relatorios/consulta";
@@ -310,7 +311,11 @@ function PainelDosItens({ itens, margem, pagina, comLoja, aqui, enderecoDaPagina
 // ---------------------------------------------------------------------------------------------
 // A tela inteira, no recorte de quem pede
 // ---------------------------------------------------------------------------------------------
-export function ConteudoRelatorios({ relatorios, turno }: { relatorios: Relatorios; turno: LojaDoFiltro }) {
+export function ConteudoRelatorios({ relatorios, turno, regioes = null }: {
+  relatorios: Relatorios; turno: LojaDoFiltro;
+  /** ORG-009: as regiões da rede (só para quem vê a rede); a soma por região aparece na rede inteira. */
+  regioes?: RegioesDoPainel;
+}) {
   const { periodo, escopo, daRede, janelas, cadastro, vendas, anterior, financeiro, margem, itens, pagina, producao, metas } = relatorios;
   // A meta do dia (G4c): a meta do mês do vendido líquido ÷ dias do mês, de cada mês do período.
   const meta: MetaDoGrafico | null = metas === null ? null : metas.estado === "ok" ? { estado: "ok", ...metaDoDiaPorMes(metas.dados) } : { estado: metas.estado };
@@ -351,7 +356,7 @@ export function ConteudoRelatorios({ relatorios, turno }: { relatorios: Relatori
       {redeInteira ? (
         <div className="grid gap-4 xl:grid-cols-3">
           <PainelDoMix vendas={vendas} aqui={aqui} />
-          <PainelDasLojas vendas={vendas} cadastro={cadastro} turno={turno} aqui={aqui} enderecoDaLoja={(loja) => enderecoDosRelatorios(periodo, loja)} />
+          <PainelDasLojas vendas={vendas} cadastro={cadastro} turno={turno} aqui={aqui} enderecoDaLoja={(loja) => enderecoDosRelatorios(periodo, loja)} regioes={redeInteira ? regioes : null} />
         </div>
       ) : (
         <PainelDoMix vendas={vendas} aqui={aqui} className="" />

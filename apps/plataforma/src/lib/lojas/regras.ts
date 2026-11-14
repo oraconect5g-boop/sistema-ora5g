@@ -44,6 +44,10 @@ export const ERROS_DE_LOJAS = {
   vigencia_repetida: "Já existe outra versão começando nesse mesmo horário: escolha outro.",
   pendencias: "A loja ainda tem movimento em aberto e continua ativa.",
   inativa: "Loja inativa: reative a loja antes de registrar movimento nela.",
+  regiao_nome: "Informe o nome da região (de 2 a 60 letras).",
+  regiao_repetida: "Já existe outra região com este nome.",
+  regiao_com_loja: "A região ainda tem loja ativa: mude a região das lojas antes de inativar.",
+  regiao_inativa: "Região inativa: reative a região antes de pôr loja nela.",
   permissao: "Sem permissão para esta loja.",
   falha: "Não deu para gravar agora. Tente de novo em instantes.",
 } as const;
@@ -74,11 +78,13 @@ export function erroDeLojas(erro: { code?: string; message?: string } | null | u
   const m = (erro?.message ?? "").toLowerCase();
   if (codigo === "OR019") return m.includes("reative") ? "inativa" : "pendencias";
   if (codigo === "42501" || codigo === "P0002") return "permissao";
-  if (codigo === "23505") return m.includes("cnpj") ? "cnpj_repetido" : m.includes("vigência") ? "vigencia_repetida" : "codigo_repetido";
+  if (codigo === "OR020") return "regiao_com_loja";
+  if (codigo === "23505") return m.includes("região") ? "regiao_repetida" : m.includes("cnpj") ? "cnpj_repetido" : m.includes("vigência") ? "vigencia_repetida" : "codigo_repetido";
   if (codigo === "23514") return m.includes("emissora") ? "emissora" : m.includes("cnpj") ? "cnpj_raiz" : "dados";
   if (codigo === "22023") {
     const regras: [string, ErroDeLojas][] = [
-      ["informe o motivo", "motivo"], ["código inválido", "codigo"], ["nome da loja", "nome"], ["tipo de loja", "tipo"],
+      ["informe o motivo", "motivo"], ["nome da região", "regiao_nome"], ["região inativa", "regiao_inativa"],
+      ["código inválido", "codigo"], ["nome da loja", "nome"], ["tipo de loja", "tipo"],
       ["uf inválida", "uf"], ["cidade", "cidade"], ["cnpj da filial", "cnpj_obrigatorio"], ["loja online", "emissora"],
       ["cnpj", "cnpj"], ["telefone", "telefone"], ["cep", "cep"], ["endereço", "endereco"],
       ["inscrição estadual", "inscricao_estadual"], ["inscrição municipal", "inscricao_municipal"], ["horários", "horarios"],
@@ -276,4 +282,18 @@ export function lacunasDaLoja(l: { tipo: string; status: string; telefone: strin
   if (l.tipo !== "online" && !l.logradouro) faltas.push("endereço");
   if (!Array.isArray(l.horarios) || l.horarios.length === 0) faltas.push("horário");
   return faltas;
+}
+
+// ORG-009: o formulário da região (o banco confere de novo a permissão, o nome repetido e a loja ativa nela).
+export type DadosDaRegiao = { id: string | null; nome: string; ativa: boolean | null; motivo: string };
+export function validarRegiao(c: Record<string, unknown>): Resultado<DadosDaRegiao> {
+  const id = c.id === undefined || c.id === null || c.id === "" ? null : c.id;
+  if (id !== null && !ehUuid(id)) return falha("dados");
+  const nome = texto(c.nome).replace(/\s+/g, " ");
+  if (nome.length < 2 || nome.length > 60) return falha("regiao_nome");
+  const motivo = motivoDeLojas(c.motivo);
+  if (!motivo) return falha("motivo");
+  // Caixa "ativa": marcada → true; desmarcada → false; sem o campo (região nova) → null (o banco mantém).
+  const ativa = c.tem_ativa === "1" ? c.ativa === "on" : null;
+  return { ok: true, dados: { id: id as string | null, nome, ativa, motivo } };
 }

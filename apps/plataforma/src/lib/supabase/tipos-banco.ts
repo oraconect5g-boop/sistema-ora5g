@@ -4272,6 +4272,48 @@ export type Database = {
           },
         ]
       }
+      regioes: {
+        Row: {
+          ativa: boolean
+          criado_em: string
+          criado_por: string
+          id: string
+          nome: string
+          organizacao_id: string
+        }
+        Insert: {
+          ativa?: boolean
+          criado_em?: string
+          criado_por: string
+          id?: string
+          nome: string
+          organizacao_id: string
+        }
+        Update: {
+          ativa?: boolean
+          criado_em?: string
+          criado_por?: string
+          id?: string
+          nome?: string
+          organizacao_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "regioes_criado_por_fkey"
+            columns: ["criado_por"]
+            isOneToOne: false
+            referencedRelation: "perfis_usuario"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "regioes_organizacao_id_fkey"
+            columns: ["organizacao_id"]
+            isOneToOne: false
+            referencedRelation: "organizacoes"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       terminais: {
         Row: {
           apelido: string
@@ -4598,6 +4640,7 @@ export type Database = {
           id: string
           nome: string
           organizacao_id: string
+          regiao_id: string | null
           status: string
           tipo: string
           uf: string | null
@@ -4614,6 +4657,7 @@ export type Database = {
           id?: string
           nome: string
           organizacao_id: string
+          regiao_id?: string | null
           status?: string
           tipo: string
           uf?: string | null
@@ -4630,6 +4674,7 @@ export type Database = {
           id?: string
           nome?: string
           organizacao_id?: string
+          regiao_id?: string | null
           status?: string
           tipo?: string
           uf?: string | null
@@ -4641,6 +4686,13 @@ export type Database = {
             columns: ["empresa_id", "organizacao_id"]
             isOneToOne: false
             referencedRelation: "empresas"
+            referencedColumns: ["id", "organizacao_id"]
+          },
+          {
+            foreignKeyName: "unidades_regiao_fkey"
+            columns: ["regiao_id", "organizacao_id"]
+            isOneToOne: false
+            referencedRelation: "regioes"
             referencedColumns: ["id", "organizacao_id"]
           },
           {
@@ -6376,6 +6428,10 @@ export type Database = {
         }
         Returns: Json
       }
+      loja_definir_regiao: {
+        Args: { p_motivo: string; p_regiao: string; p_unidade: string }
+        Returns: boolean
+      }
       loja_definir_situacao: {
         Args: { p_motivo: string; p_situacao: string; p_unidade: string }
         Returns: boolean
@@ -6701,6 +6757,16 @@ export type Database = {
       }
       recebiveis_painel: {
         Args: { p_dias?: number; p_unidade?: string }
+        Returns: Json
+      }
+      regiao_salvar: {
+        Args: {
+          p_ativa: boolean
+          p_id: string
+          p_motivo: string
+          p_nome: string
+          p_organizacao: string
+        }
         Returns: Json
       }
       registrar_foto: {
