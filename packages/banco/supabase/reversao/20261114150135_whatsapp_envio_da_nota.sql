@@ -1,4 +1,4 @@
--- Reversão de 20261114142817_whatsapp_envio_da_nota (só em banco sem dados reais).
+-- Reversão de 20261114150135_whatsapp_envio_da_nota (só em banco sem dados reais).
 -- Saem a fila de envio da nota pelo WhatsApp, os destinos, o histórico e as funções (os pedidos de envio se perdem).
 drop function if exists public.whatsapp_aviso_de_status(text, text, text);
 drop function if exists public.whatsapp_worker_resultado(uuid, jsonb);

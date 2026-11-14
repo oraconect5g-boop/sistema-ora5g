@@ -271,7 +271,7 @@ describe("previsão de caixa: os fatos (L8c)", () => {
   });
 });
 
-// Correção de 14/11/2026 (#82, REV-PLAN-001, migration 20261114131916_previsao_correcoes): o devolvido da base é só
+// Correção de 14/11/2026 (#82, REV-PLAN-001, migration 20261114145418_previsao_correcoes): o devolvido da base é só
 // o dinheiro que saiu, na data em que saiu. Aqui o resultado seguro, não a reprodução do defeito.
 describe("previsão de caixa: devolvido só quando o dinheiro sai (#82)", () => {
   const semana = (deslocamento: number) => Math.floor((deslocamento + 56) / 7); // índice da semana da base

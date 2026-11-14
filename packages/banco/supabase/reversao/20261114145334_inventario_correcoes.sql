@@ -1,4 +1,4 @@
--- Reversão de 20261114130247_inventario_correcoes (só em banco sem dados reais).
+-- Reversão de 20261114145334_inventario_correcoes (só em banco sem dados reais).
 -- Voltam os textos de inventario_contar e inventario_decidir de 20261111142726_inventario (a contagem volta a ser o
 -- número de códigos lidos e quem contou volta a poder decidir) e sai a trilha das contagens, com o que foi gravado nela.
 create or replace function public.inventario_contar(p_inventario uuid, p_variante uuid, p_quantidade int, p_identificadores text[])

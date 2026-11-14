@@ -1,5 +1,5 @@
 // ARQUIVO GERADO pelo Supabase (generate_typescript_types do projeto ora5g-dev) depois da
-// migration 20261114104004_bonus_fechamento. Não edite à mão: gere de novo a cada
+// migration 20261114150135_whatsapp_envio_da_nota. Não edite à mão: gere de novo a cada
 // migration aplicada (auditoria do Codex de 08/11, §7.2). O teste tipos-banco.test.ts confere
 // que funções e tabelas públicas daqui são as mesmas das migrations.
 export type Json =
@@ -5072,18 +5072,18 @@ export type Database = {
             referencedColumns: ["id"]
           },
           {
-            foreignKeyName: "whatsapp_envios_venda_id_fkey"
-            columns: ["venda_id"]
-            isOneToOne: false
-            referencedRelation: "vendas"
-            referencedColumns: ["id"]
-          },
-          {
             foreignKeyName: "whatsapp_envios_unidade_id_organizacao_id_fkey"
             columns: ["unidade_id", "organizacao_id"]
             isOneToOne: false
             referencedRelation: "unidades"
             referencedColumns: ["id", "organizacao_id"]
+          },
+          {
+            foreignKeyName: "whatsapp_envios_venda_id_fkey"
+            columns: ["venda_id"]
+            isOneToOne: false
+            referencedRelation: "vendas"
+            referencedColumns: ["id"]
           },
         ]
       }
@@ -5768,12 +5768,18 @@ export type Database = {
         }
         Returns: number
       }
-      notas_anexar_documento: {
-        Args: { p_caminho: string; p_pedido: string; p_protocolo: string; p_sha256: string; p_tipo: string }
-        Returns: string
-      }
       nota_enviar_whatsapp: {
         Args: { p_chave: string; p_motivo: string; p_pedido: string }
+        Returns: string
+      }
+      notas_anexar_documento: {
+        Args: {
+          p_caminho: string
+          p_pedido: string
+          p_protocolo: string
+          p_sha256: string
+          p_tipo: string
+        }
         Returns: string
       }
       notas_cancelar: {
@@ -6024,7 +6030,10 @@ export type Database = {
         Args: { p_detalhe: string; p_provedor_id: string; p_status: string }
         Returns: boolean
       }
-      whatsapp_envio_resolver: { Args: { p_envio: string; p_motivo: string }; Returns: boolean }
+      whatsapp_envio_resolver: {
+        Args: { p_envio: string; p_motivo: string }
+        Returns: boolean
+      }
       whatsapp_worker_reivindicar: {
         Args: { p_limite: number }
         Returns: {

@@ -169,7 +169,7 @@ describe("ligação com a venda", () => {
   });
 });
 
-// Lote L10a (14/11/2026, ORA-FISC-005; migration 20261114141704_notas_documentos): o PDF e o XML da nota emitida
+// Lote L10a (14/11/2026, ORA-FISC-005; migration 20261114150027_notas_documentos): o PDF e o XML da nota emitida
 // num bucket privado, o protocolo de autorização e quem lê. O "envio" grava em storage.objects como o usuário
 // logado, como nas fotos dos produtos; o conteúdo (o XML com a chave desta nota) é conferido pelo servidor antes.
 describe("documentos da nota emitida (L10a)", () => {

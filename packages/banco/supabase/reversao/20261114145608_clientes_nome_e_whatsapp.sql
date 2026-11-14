@@ -1,4 +1,4 @@
--- Reversão de 20261114135430_clientes_nome_e_whatsapp (só em banco sem dados reais).
+-- Reversão de 20261114145608_clientes_nome_e_whatsapp (só em banco sem dados reais).
 -- Volta o texto de cliente_salvar do L5a (20261111191909_clientes_compartilhados): documento ou telefone,
 -- e-mail no financiamento e só o documento na nota.
 create or replace function public.cliente_salvar(p_cliente uuid, p_dados jsonb, p_motivo text, p_chave text)

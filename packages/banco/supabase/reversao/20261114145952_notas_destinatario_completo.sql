@@ -1,4 +1,4 @@
--- Reversão de 20261114140614_notas_destinatario_completo (só em banco sem dados reais).
+-- Reversão de 20261114145952_notas_destinatario_completo (só em banco sem dados reais).
 -- Sai a leitura dos dados para emitir; volta o texto de notas_solicitar do L6a (20261111200054_pdv_nota_do_cliente);
 -- saem as colunas novas do destinatário (o endereço guardado nos pedidos abertos se perde).
 drop function if exists public.notas_dados_para_emitir(uuid);

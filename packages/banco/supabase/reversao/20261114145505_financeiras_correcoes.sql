@@ -1,4 +1,4 @@
--- Reversão de 20261114132646_financeiras_correcoes (só em banco sem dados reais).
+-- Reversão de 20261114145505_financeiras_correcoes (só em banco sem dados reais).
 -- Voltam os textos de financeira_receber, financeira_desfazer_recebimento e financeiras_a_receber do L7b
 -- (20261114012722_financeiras_a_receber) e sai a correção do recebimento.
 drop function if exists public.financeira_corrigir_recebimento(uuid, text, bigint, date, text);
