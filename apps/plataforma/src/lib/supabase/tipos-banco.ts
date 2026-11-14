@@ -4734,6 +4734,89 @@ export type Database = {
           },
         ]
       }
+      venda_anexos: {
+        Row: {
+          bytes: number
+          caminho: string
+          descricao: string | null
+          enviado_em: string
+          enviado_por: string
+          formato: string
+          id: string
+          motivo_retirada: string | null
+          organizacao_id: string
+          retirado_em: string | null
+          retirado_por: string | null
+          sha256: string
+          tipo: string
+          unidade_id: string
+          venda_id: string
+        }
+        Insert: {
+          bytes: number
+          caminho: string
+          descricao?: string | null
+          enviado_em?: string
+          enviado_por: string
+          formato: string
+          id?: string
+          motivo_retirada?: string | null
+          organizacao_id: string
+          retirado_em?: string | null
+          retirado_por?: string | null
+          sha256: string
+          tipo: string
+          unidade_id: string
+          venda_id: string
+        }
+        Update: {
+          bytes?: number
+          caminho?: string
+          descricao?: string | null
+          enviado_em?: string
+          enviado_por?: string
+          formato?: string
+          id?: string
+          motivo_retirada?: string | null
+          organizacao_id?: string
+          retirado_em?: string | null
+          retirado_por?: string | null
+          sha256?: string
+          tipo?: string
+          unidade_id?: string
+          venda_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "venda_anexos_enviado_por_fkey"
+            columns: ["enviado_por"]
+            isOneToOne: false
+            referencedRelation: "perfis_usuario"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "venda_anexos_retirado_por_fkey"
+            columns: ["retirado_por"]
+            isOneToOne: false
+            referencedRelation: "perfis_usuario"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "venda_anexos_unidade_id_organizacao_id_fkey"
+            columns: ["unidade_id", "organizacao_id"]
+            isOneToOne: false
+            referencedRelation: "unidades"
+            referencedColumns: ["id", "organizacao_id"]
+          },
+          {
+            foreignKeyName: "venda_anexos_venda_id_fkey"
+            columns: ["venda_id"]
+            isOneToOne: false
+            referencedRelation: "vendas"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       venda_devolucao_itens: {
         Row: {
           condicao: string | null
@@ -6538,6 +6621,20 @@ export type Database = {
         Returns: string
       }
       unidade_atual: { Args: never; Returns: string }
+      venda_anexar_documento: {
+        Args: {
+          p_caminho: string
+          p_descricao: string
+          p_sha256: string
+          p_tipo: string
+          p_venda: string
+        }
+        Returns: Json
+      }
+      venda_retirar_anexo: {
+        Args: { p_anexo: string; p_motivo: string }
+        Returns: boolean
+      }
       venda_vincular_cliente: {
         Args: { p_cliente: string; p_motivo: string; p_venda: string }
         Returns: boolean
