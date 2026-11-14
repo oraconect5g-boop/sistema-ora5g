@@ -11,6 +11,7 @@ import { FalhaDoServico, obterSessao } from "../../lib/acesso/sessao";
 import { buscarNoCatalogo, filtroDoIdentificador, identificadorDigitado, termoDaBusca } from "../../lib/catalogo/busca";
 import { consultarEstoque } from "../../lib/estoque/consulta-painel";
 import { filtroDosPendentes, numerosDaConferencia, paginaDoEndereco, paginasDaConferencia, POR_PAGINA_DA_CONFERENCIA, resumoDosPendentes } from "../../lib/estoque/conferencia";
+import { lerPorIds } from "../../lib/leitura-completa";
 import { escopoDoEstoque } from "../../lib/estoque/painel";
 import { ERROS_DO_ESTOQUE, inicioDoDiaEmSaoPaulo, nomeDe, NOMES_DAS_SITUACOES, NOMES_DOS_MOVIMENTOS } from "../../lib/estoque/regras";
 import { chaveDoCatalogo, textoDoParametro, type ValorDeParametro } from "../../lib/parametros";
@@ -26,6 +27,7 @@ export const dynamic = "force-dynamic";
 const campo = "mt-1 min-h-11 w-full rounded-botao border border-borda bg-white px-3 text-sm outline-none focus:border-acao focus:ring-2 focus:ring-acao/20";
 const quando = (data: string) => new Intl.DateTimeFormat("pt-BR", { timeZone: "America/Sao_Paulo", dateStyle: "short", timeStyle: "short" }).format(new Date(data));
 const final = (t: string | null) => (t ? t : "—");
+const POR_PAGINA_DO_SALDO = 100;
 
 // Estoque real da loja do turno (ORA-INV-001/004): saldo por produto, busca por IMEI/ICCID com o
 // histórico do livro, disponibilidade na rede e conferência física do dia. Só leitura pelo RLS;
@@ -180,29 +182,59 @@ export default async function Estoque({ searchParams }: { searchParams: Promise<
   if (movimentos.error || lojaDoItem.error || varianteDoItem.error) throw new FalhaDoServico("estoque_historico");
 
   // Saldo da loja (com filtro por nome/SKU) e, se pedida, a disponibilidade na rede.
-  // Busca por nome/SKU na fonte, antes do limite (REV-038, #40): primeiro as variações que batem,
-  // depois o saldo delas nesta loja. Sem busca, os primeiros 500 saldos da loja.
-  // A mesma busca do catálogo e do PDV, com variação desativada que ainda tenha saldo.
+  // B5 (REV-PLAN-003): antes vinham os 500 primeiros saldos e o subtítulo dizia "500 produto(s)" mesmo havendo mais.
+  // Sem busca, a página vem do banco já ordenada pelo nome, com o total contado lá. Com busca (a mesma do
+  // catálogo e do PDV, na fonte e antes do limite, #40, com variação desativada que ainda tenha saldo), os saldos
+  // das variações achadas vêm completos, em lotes, e a tela avisa quando a busca chegou ao limite.
   const termo = busca && !identificador ? busca : "";
-  const candidatas: string[] | null = termo ? (await buscarNoCatalogo(supabase, termo, { limite: 500, ativos: false })).variantes : null;
-  const consultaSaldos = supabase.from("estoque_saldos").select("variante_id, quantidade, reservado").eq("unidade_id", unidade);
-  const saldos = candidatas && candidatas.length === 0
-    ? { data: [] as { variante_id: string; quantidade: number; reservado: number }[], error: null }
-    : await (candidatas ? consultaSaldos.in("variante_id", candidatas) : consultaSaldos).limit(500);
-  if (saldos.error) throw new FalhaDoServico("estoque_saldos");
-  const variantes = saldos.data.length
-    ? await supabase.from("variantes").select("id, nome, sku, estoque_minimo, produto_id").in("id", saldos.data.map((s) => s.variante_id))
-    : { data: [], error: null };
-  if (variantes.error) throw new FalhaDoServico("estoque_variantes");
-  const filtradas = variantes.data;
-  const linhas = filtradas
-    .map((v) => { const s = saldos.data.find((x) => x.variante_id === v.id); return { ...v, quantidade: s?.quantidade ?? 0, reservado: s?.reservado ?? 0 }; })
-    .sort((a, b) => a.nome.localeCompare(b.nome, "pt-BR"));
+  type LinhaDoSaldo = { id: string; nome: string; sku: string; estoque_minimo: number; produto_id: string; quantidade: number; reservado: number };
+  const paginaPedida = paginaDoEndereco(textoDoParametro(parametros.pagina));
+  let linhas: LinhaDoSaldo[] = [];
+  let totalDoSaldo = 0;
+  let buscaCortada = false;
+  let paginaDoSaldo = 1;
+  if (termo) {
+    const achados = await buscarNoCatalogo(supabase, termo, { limite: 100, ativos: false });
+    buscaCortada = achados.cortada;
+    const saldos = await lerPorIds(achados.variantes, (lote, de, ate) => supabase.from("estoque_saldos").select("variante_id, quantidade, reservado")
+      .eq("unidade_id", unidade).in("variante_id", lote).order("variante_id").range(de, ate));
+    if (!saldos.ok || saldos.mais) throw new FalhaDoServico("estoque_saldos");
+    const variantes = await lerPorIds(saldos.linhas.map((s) => s.variante_id), (lote, de, ate) => supabase.from("variantes")
+      .select("id, nome, sku, estoque_minimo, produto_id").in("id", lote).order("id").range(de, ate));
+    if (!variantes.ok || variantes.mais) throw new FalhaDoServico("estoque_variantes");
+    const todas = variantes.linhas
+      .map((v) => { const s = saldos.linhas.find((x) => x.variante_id === v.id); return { ...v, quantidade: s?.quantidade ?? 0, reservado: s?.reservado ?? 0 }; })
+      .sort((a, b) => a.nome.localeCompare(b.nome, "pt-BR") || a.id.localeCompare(b.id));
+    totalDoSaldo = todas.length;
+    paginaDoSaldo = Math.min(paginaPedida, Math.max(1, Math.ceil(totalDoSaldo / POR_PAGINA_DO_SALDO)));
+    linhas = todas.slice((paginaDoSaldo - 1) * POR_PAGINA_DO_SALDO, paginaDoSaldo * POR_PAGINA_DO_SALDO);
+  } else {
+    const total = await supabase.from("variantes").select("id, estoque_saldos!inner(variante_id)", { count: "exact", head: true }).eq("estoque_saldos.unidade_id", unidade);
+    if (total.error || total.count === null) throw new FalhaDoServico("estoque_saldos");
+    totalDoSaldo = total.count;
+    paginaDoSaldo = Math.min(paginaPedida, Math.max(1, Math.ceil(totalDoSaldo / POR_PAGINA_DO_SALDO)));
+    if (totalDoSaldo > 0) {
+      const de = (paginaDoSaldo - 1) * POR_PAGINA_DO_SALDO;
+      const pagina = await supabase.from("variantes").select("id, nome, sku, estoque_minimo, produto_id, estoque_saldos!inner(quantidade, reservado)")
+        .eq("estoque_saldos.unidade_id", unidade).order("nome").order("id").range(de, de + POR_PAGINA_DO_SALDO - 1);
+      if (pagina.error) throw new FalhaDoServico("estoque_saldos");
+      linhas = pagina.data.map(({ estoque_saldos: saldo, ...v }) => ({ ...v, quantidade: saldo[0]?.quantidade ?? 0, reservado: saldo[0]?.reservado ?? 0 }));
+    }
+  }
+  const paginasDoSaldo = Math.max(1, Math.ceil(totalDoSaldo / POR_PAGINA_DO_SALDO));
+  const enderecoDoSaldo = (n: number) => {
+    const busca2 = new URLSearchParams();
+    if (busca) busca2.set("q", busca);
+    if (n > 1) busca2.set("pagina", String(n));
+    return busca2.size ? `/estoque?${busca2}` : "/estoque";
+  };
   // Fotos (ORA-CAT-011): a da variante ou a principal do produto; URL assinada e temporária.
   const comFoto = [...linhas.map((l) => ({ id: l.id, produto_id: l.produto_id })), ...(varianteDoItem.data ? [varianteDoItem.data] : [])];
   const produtoIds = [...new Set(comFoto.map((v) => v.produto_id))];
-  const fotos = produtoIds.length ? await supabase.from("fotos_produto").select("produto_id, variante_id, caminho, ilustracao").in("produto_id", produtoIds).is("substituida_em", null) : { data: [], error: null };
-  if (fotos.error) throw new FalhaDoServico("estoque_fotos");
+  const lidas = await lerPorIds(produtoIds, (lote, de, ate) => supabase.from("fotos_produto").select("id, produto_id, variante_id, caminho, ilustracao")
+    .in("produto_id", lote).is("substituida_em", null).order("id").range(de, ate));
+  if (!lidas.ok || lidas.mais) throw new FalhaDoServico("estoque_fotos");
+  const fotos = { data: lidas.linhas };
   const assinadas = fotos.data.length ? await supabase.storage.from("produtos").createSignedUrls(fotos.data.map((f) => f.caminho), 3600) : { data: [], error: null };
   const urlDe = new Map((assinadas.data ?? []).map((a) => [a.path, a.error ? null : a.signedUrl]));
   const fotoDe = (variante: { id: string; produto_id: string }) => {
@@ -291,7 +323,8 @@ export default async function Estoque({ searchParams }: { searchParams: Promise<
       )}
 
       {!identificador && (
-        <Cartao titulo="Saldo da loja" subtitulo={`${linhas.length} produto(s)${busca ? ` com "${busca}"` : ""}`} icone={Boxes}>
+        <Cartao titulo="Saldo da loja" subtitulo={`${totalDoSaldo} produto(s)${busca ? ` com "${busca}"` : ""}${paginasDoSaldo > 1 ? ` · mostrando ${(paginaDoSaldo - 1) * POR_PAGINA_DO_SALDO + 1} a ${Math.min(paginaDoSaldo * POR_PAGINA_DO_SALDO, totalDoSaldo)}` : ""}`} icone={Boxes}>
+          {buscaCortada && <p className="mb-2 text-xs text-aviso">A busca achou muitos produtos e parou no limite: escreva mais do nome ou o SKU para ver os outros.</p>}
           {linhas.length === 0 ? <p className="text-sm text-suave">Nenhum produto com saldo nesta loja{busca ? " para essa busca" : ""}.</p> : (
             <ul className="divide-y divide-borda text-sm">
               {linhas.map((l) => {
@@ -308,6 +341,13 @@ export default async function Estoque({ searchParams }: { searchParams: Promise<
                 );
               })}
             </ul>
+          )}
+          {paginasDoSaldo > 1 && (
+            <nav aria-label="Páginas do saldo" className="mt-3 flex flex-wrap items-center justify-between gap-2 text-sm">
+              {paginaDoSaldo > 1 ? <Link href={enderecoDoSaldo(paginaDoSaldo - 1)} className="rounded-botao px-3 py-2 font-semibold text-acao ring-1 ring-borda">Anteriores</Link> : <span />}
+              <span className="text-suave">{`Página ${paginaDoSaldo} de ${paginasDoSaldo}`}</span>
+              {paginaDoSaldo < paginasDoSaldo ? <Link href={enderecoDoSaldo(paginaDoSaldo + 1)} className="rounded-botao px-3 py-2 font-semibold text-acao ring-1 ring-borda">Próximos</Link> : <span />}
+            </nav>
           )}
         </Cartao>
       )}
