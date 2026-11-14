@@ -16,7 +16,7 @@ export const ERROS_DO_INVENTARIO = {
   quantidade: "Informe a quantidade contada (0 a 100.000) ou os IMEI/ICCID lidos.",
   nao_contado: "Conte todos os itens antes de enviar.",
   encerrado: "Este inventário não está mais em contagem.",
-  mesma_pessoa: "Quem abriu ou enviou o inventário não aprova: outra pessoa decide.",
+  mesma_pessoa: "Quem abriu, contou ou enviou o inventário não decide: outra pessoa com permissão de ajuste decide.",
   mudou: "O estoque de algum item mudou desde a contagem e não comporta o ajuste: abra outro inventário e conte de novo.",
   loja_inativa: "Loja inativa.",
   permissao: "Sem permissão para esta etapa do inventário.",

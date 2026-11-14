@@ -26,9 +26,34 @@ const campo = "mt-1 min-h-11 w-full rounded-botao border border-borda bg-white p
 
 type Item = {
   variante_id: string; tipo: string; sistema_quantidade: number | null; contado_quantidade: number | null; contados: string[] | null;
-  contado_em: string | null; ajuste_quantidade: number | null; nao_baixados: string[] | null; encontrados_fora: string[] | null;
+  contado_por: string | null; contado_em: string | null; ajuste_quantidade: number | null; nao_baixados: string[] | null; encontrados_fora: string[] | null;
   variantes: { sku: string; nome: string } | null;
 };
+// Trilha das contagens (correção de 14/11/2026, #78 e #79): cada contagem, com quem contou e os alertas da leitura.
+type Contagem = {
+  numero: number; variante_id: string; contado_por: string; desconhecidos: string[] | null; fora_da_loja: string[] | null; outra_variacao: string[] | null;
+};
+const ALERTAS_DA_LEITURA = [
+  ["desconhecidos", "sem cadastro na rede (confira se foi digitado certo)"],
+  ["fora_da_loja", "cadastrado(s) em outra loja ou fora do estoque (vendido, em trânsito ou baixado)"],
+  ["outra_variacao", "desta loja, mas de outra variação"],
+] as const;
+function alertasDaLeitura(contagem: Contagem | undefined) {
+  if (!contagem) return null;
+  const alertas = ALERTAS_DA_LEITURA.map(([campo, texto]) => ({ codigos: contagem[campo] ?? [], texto })).filter((a) => a.codigos.length > 0);
+  if (alertas.length === 0) return null;
+  return (
+    <ul className="space-y-1 rounded-lg bg-aviso/10 px-3 py-2 text-xs text-aviso">
+      {alertas.map((a) => (
+        <li key={a.texto}>
+          <strong>{`${a.codigos.length} lido(s) ${a.texto}:`}</strong>{" "}
+          <span className="numeros break-all">{`${a.codigos.slice(0, 5).join(", ")}${a.codigos.length > 5 ? ` e mais ${a.codigos.length - 5}` : ""}`}</span>
+        </li>
+      ))}
+      <li>Esses não contam como unidade desta variação nem mudam o saldo: o que é desta loja entra por entrada, transferência ou devolução.</li>
+    </ul>
+  );
+}
 function Motivo({ exemplo }: { exemplo: string }) {
   return <label className="block text-sm font-medium">Motivo (fica na auditoria)<input name="motivo" required minLength={3} maxLength={200} placeholder={exemplo} className={campo} /></label>;
 }
@@ -44,11 +69,16 @@ export default async function Inventario({ params, searchParams }: { params: Pro
   const sessao = await obterSessao({ exigirLoja: true });
   const { supabase, usuario } = sessao;
 
-  const [inventario, itens] = await Promise.all([
+  const [inventario, itens, contagens] = await Promise.all([
     supabase.from("inventarios").select("id, numero, descricao, situacao, unidade_id, criado_por, enviado_por, criado_em, motivo_envio, motivo_decisao").eq("id", id).maybeSingle(),
-    supabase.from("inventario_itens").select("variante_id, tipo, sistema_quantidade, contado_quantidade, contados, contado_em, ajuste_quantidade, nao_baixados, encontrados_fora, variantes(sku, nome)").eq("inventario_id", id),
+    supabase.from("inventario_itens").select("variante_id, tipo, sistema_quantidade, contado_quantidade, contados, contado_por, contado_em, ajuste_quantidade, nao_baixados, encontrados_fora, variantes(sku, nome)").eq("inventario_id", id),
+    // Sem a migration da trilha (20261114130247), a leitura falha e a tela segue sem os alertas: o banco decide igual.
+    supabase.from("inventario_contagens").select("numero, variante_id, contado_por, desconhecidos, fora_da_loja, outra_variacao").eq("inventario_id", id).order("numero").limit(5000),
   ]);
   if (inventario.error || itens.error) throw new FalhaDoServico("inventario");
+  const trilha = contagens.error ? [] : (contagens.data as unknown as Contagem[]);
+  const ultimaContagem = new Map(trilha.map((c) => [c.variante_id, c]));
+  const vezesContado = (variante: string) => trilha.filter((c) => c.variante_id === variante).length;
   if (!inventario.data) notFound();
   const inv = inventario.data;
   const lista = (itens.data as unknown as Item[]).sort((a, b) => (a.variantes?.sku ?? "").localeCompare(b.variantes?.sku ?? ""));
@@ -61,7 +91,9 @@ export default async function Inventario({ params, searchParams }: { params: Pro
   const emContagem = inv.situacao === "em_contagem";
   const mostraSistema = !emContagem;
   const faltam = lista.filter((i) => !i.contado_em).length;
-  const souParte = usuario.id === inv.criado_por || usuario.id === inv.enviado_por;
+  // Quem abriu, contou (em qualquer contagem, mesmo refeita por outra pessoa) ou enviou não decide (#78). O banco confere de novo.
+  const souParte = usuario.id === inv.criado_por || usuario.id === inv.enviado_por
+    || lista.some((i) => i.contado_por === usuario.id) || trilha.some((c) => c.contado_por === usuario.id);
   const s = SITUACOES_DO_INVENTARIO[inv.situacao as keyof typeof SITUACOES_DO_INVENTARIO];
 
   return (
@@ -79,14 +111,16 @@ export default async function Inventario({ params, searchParams }: { params: Pro
             return (
               <li key={i.variante_id} className="space-y-2 py-3">
                 <p className="flex flex-wrap items-center gap-2"><span className="numeros font-semibold">{i.variantes?.sku}</span> {i.variantes?.nome}
-                  {i.contado_em ? <Selo tom="sucesso">contado</Selo> : <Selo tom="aviso">falta contar</Selo>}</p>
+                  {i.contado_em ? <Selo tom="sucesso">contado</Selo> : <Selo tom="aviso">falta contar</Selo>}
+                  {vezesContado(i.variante_id) > 1 && <span className="text-xs text-suave">contado {vezesContado(i.variante_id)} vezes (vale a última)</span>}</p>
+                {i.tipo !== "acessorio" && alertasDaLeitura(ultimaContagem.get(i.variante_id))}
                 {mostraSistema && (
                   <p className="text-xs text-suave">
                     Sistema: {i.sistema_quantidade ?? "—"} · Contado: {i.contado_quantidade ?? "—"}
                     {diferenca !== null && diferenca !== 0 && <strong className={diferenca < 0 ? " text-perigo" : " text-aviso"}> · diferença {diferenca > 0 ? `+${diferenca}` : diferenca}</strong>}
                     {i.ajuste_quantidade !== null && ` · ajuste aplicado ${i.ajuste_quantidade}`}
                     {i.nao_baixados && i.nao_baixados.length > 0 && ` · ${i.nao_baixados.length} não baixado(s) (vendido, reservado ou transferido depois)`}
-                    {i.encontrados_fora && i.encontrados_fora.length > 0 && ` · ${i.encontrados_fora.length} lido(s) sem cadastro nesta loja: registrar por entrada, transferência ou devolução`}
+                    {i.encontrados_fora && i.encontrados_fora.length > 0 && ` · ${i.encontrados_fora.length} lido(s) fora do estoque desta variação nesta loja: registrar por entrada, transferência ou devolução`}
                   </p>
                 )}
                 {emContagem && confere.data && (
@@ -121,7 +155,7 @@ export default async function Inventario({ params, searchParams }: { params: Pro
           </details>
         )}
         {inv.situacao === "enviado" && ajusta.data && (souParte
-          ? <Aviso tom="info">Você abriu ou enviou este inventário: outra pessoa com permissão de ajuste decide.</Aviso>
+          ? <Aviso tom="info">Você abriu, contou ou enviou este inventário: outra pessoa com permissão de ajuste decide.</Aviso>
           : (
             <details className="rounded-xl border border-borda bg-white px-3 py-2" open>
               <summary className="flex min-h-10 cursor-pointer items-center gap-2 text-sm font-semibold text-acao"><ShieldCheck aria-hidden className="size-4" /> Decidir</summary>

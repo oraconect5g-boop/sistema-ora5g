@@ -157,9 +157,50 @@ describe("/estoque/inventario/[id]", () => {
     ];
     cenario.permissoes = new Set(["estoque.ajustar"]);
     const t = await detalhe({ ok: "aprovado" });
-    for (const trecho of ["os ajustes entraram no livro do estoque", "ajuste aplicado -1", "1 não baixado(s)", "1 lido(s) sem cadastro nesta loja", "Decisão: Conferido"]) {
+    for (const trecho of ["os ajustes entraram no livro do estoque", "ajuste aplicado -1", "1 não baixado(s)", "1 lido(s) fora do estoque desta variação nesta loja", "Decisão: Conferido"]) {
       expect(t).toContain(trecho);
     }
+  });
+
+  // Correção de 14/11/2026 (#78): quem contou (mesmo numa contagem refeita depois por outra pessoa) não decide.
+  it("#78: quem contou não vê a decisão, nem pelo item nem pela trilha das contagens", async () => {
+    cenario.usuario = DONO;
+    cenario.tabelas.inventarios = [inventario({ situacao: "enviado", enviado_por: GERENTE })];
+    cenario.permissoes = new Set(["estoque.ajustar"]);
+    cenario.tabelas.inventario_itens = [{ ...cenario.tabelas.inventario_itens![0], contado_por: DONO }];
+    let t = await detalhe();
+    expect(t).toContain("Você abriu, contou ou enviou este inventário: outra pessoa com permissão de ajuste decide.");
+    expect(t).not.toContain("Registrar decisão");
+    // O gerente recontou depois (o item diz gerente), mas a trilha guarda a contagem do dono.
+    cenario.tabelas.inventario_itens = [{ ...cenario.tabelas.inventario_itens[0], contado_por: GERENTE }];
+    cenario.tabelas.inventario_contagens = [
+      { inventario_id: INV, numero: 1, variante_id: CAPA, contado_por: DONO, desconhecidos: null, fora_da_loja: null, outra_variacao: null },
+      { inventario_id: INV, numero: 2, variante_id: CAPA, contado_por: GERENTE, desconhecidos: null, fora_da_loja: null, outra_variacao: null },
+    ];
+    t = await detalhe();
+    expect(t).toContain("Você abriu, contou ou enviou este inventário");
+    expect(t).toContain("contado 2 vezes (vale a última)");
+    expect(t).not.toContain("Registrar decisão");
+    expect(await destinoDe(decidirInventario(formulario({ inventario: INV, aprovar: "sim", motivo: "Conferido" })))).toBe(`/estoque/inventario/${INV}?ok=aprovado`);
+  });
+
+  // Correção de 14/11/2026 (#79): os códigos lidos que não são unidades desta variação nesta loja viram alerta.
+  it("#79: alertas da última leitura do aparelho, mesmo durante a contagem às cegas", async () => {
+    cenario.permissoes = new Set(["estoque.conferir"]);
+    const lidos = ["352099001999711", "352099001999712", "352099001999713", "352099001999714", "352099001999715", "352099001999716"];
+    cenario.tabelas.inventario_contagens = [
+      { inventario_id: INV, numero: 1, variante_id: APARELHO, contado_por: GERENTE, desconhecidos: ["111"], fora_da_loja: null, outra_variacao: null },
+      { inventario_id: INV, numero: 2, variante_id: APARELHO, contado_por: GERENTE, desconhecidos: lidos, fora_da_loja: ["352099001700010"], outra_variacao: ["8955100000000000771"] },
+    ];
+    const t = await detalhe();
+    for (const trecho of [
+      "6 lido(s) sem cadastro na rede (confira se foi digitado certo):", "352099001999711, 352099001999712, 352099001999713, 352099001999714, 352099001999715 e mais 1",
+      "1 lido(s) cadastrado(s) em outra loja ou fora do estoque (vendido, em trânsito ou baixado):", "352099001700010",
+      "1 lido(s) desta loja, mas de outra variação:", "8955100000000000771",
+      "Esses não contam como unidade desta variação nem mudam o saldo",
+    ]) expect(t).toContain(trecho);
+    expect(t).not.toContain("111");
+    expect(t).not.toContain("Sistema:");
   });
 
   it("identificador inválido ou inventário fora do alcance: 404", async () => {
@@ -211,7 +252,7 @@ describe("ações do inventário", () => {
     expect(await destinoDe(decidirInventario(formulario({ inventario: INV, aprovar: "sim", motivo: "Conferido" })))).toBe(`/estoque/inventario/${INV}?ok=aprovado`);
     expect(cenario.chamadas[0]?.argumentos).toEqual({ p_inventario: INV, p_aprovar: true, p_motivo: "Conferido" });
     expect(await destinoDe(decidirInventario(formulario({ inventario: INV, aprovar: "nao", motivo: "Recontar" })))).toBe(`/estoque/inventario/${INV}?ok=recusado`);
-    cenario.respostas.inventario_decidir = { data: null, error: { code: "OR025", message: "Quem abriu ou enviou o inventário não aprova" } };
+    cenario.respostas.inventario_decidir = { data: null, error: { code: "OR025", message: "Quem abriu, contou ou enviou o inventário não decide: outra pessoa decide" } };
     expect(await destinoDe(decidirInventario(formulario({ inventario: INV, aprovar: "sim", motivo: "Conferido" })))).toBe(`/estoque/inventario/${INV}?erro=mesma_pessoa`);
     cenario.respostas.inventario_decidir = { data: null, error: { code: "OR001", message: "O estoque deste item mudou" } };
     expect(await destinoDe(decidirInventario(formulario({ inventario: INV, aprovar: "sim", motivo: "Conferido" })))).toBe(`/estoque/inventario/${INV}?erro=mudou`);
