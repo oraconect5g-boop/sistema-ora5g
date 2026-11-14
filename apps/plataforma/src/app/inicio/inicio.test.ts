@@ -48,6 +48,9 @@ const cenario = vi.hoisted(() => ({
   metasDasLojas: null as unknown,
   minhaMeta: null as unknown,
   erroDasMetas: null as null | { code: string },
+  /** Conciliação das notas (L10b): a resposta de notas_conciliacao; o padrão é a função ausente. */
+  conciliacao: null as unknown,
+  erroDaConciliacao: null as null | { code: string },
   /** Argumentos de cada chamada de função do banco, por nome. */
   chamadas: {} as Record<string, Record<string, unknown>[]>,
   tabelas: {} as Record<string, Record<string, unknown>[]>,
@@ -131,6 +134,7 @@ const supabase = {
     if (nome === "ranking_nomes") return responder(cenario.erroDosNomes, cenario.nomes);
     if (nome === "metas_lojas") return responder(cenario.erroDasMetas, cenario.metasDasLojas);
     if (nome === "metas_painel") return responder(cenario.erroDasMetas, cenario.minhaMeta);
+    if (nome === "notas_conciliacao") return responder(cenario.erroDaConciliacao, cenario.conciliacao);
     return responder({ code: "PGRST202" }, null);
   },
 };
@@ -378,7 +382,7 @@ beforeEach(() => {
     usuario: GESTOR, permissoes: new Set<string>(), erroDaPermissao: null,
     vendas: HOJE, anterior: ONTEM, erroDeVendas: null, erroDoAnterior: null,
     financeiro: FINANCEIRO, erroDoFinanceiro: null, margem: MARGEM, erroDaMargem: null, producao: PRODUCAO, erroDaProducao: null, nomes: NOMES, erroDosNomes: null,
-    metasDasLojas: METAS_DA_LOJA, minhaMeta: MINHA_META, erroDasMetas: null,
+    metasDasLojas: METAS_DA_LOJA, minhaMeta: MINHA_META, erroDasMetas: null, conciliacao: null, erroDaConciliacao: { code: "PGRST202" },
     chamadas: {}, errosDasTabelas: {}, semContagem: [], semColunas: [], lidas: [], sessoes: [],
     tabelas: {
       perfis_usuario: [{ id: GESTOR, nome: "Gestor Teste" }, { id: ANA, nome: "Ana Teste" }, { id: BETO, nome: "Beto Teste" }],
@@ -1427,5 +1431,27 @@ describe("Início: alertas da loja do turno (REPORT-007, L12f)", () => {
     cenario.lidas = [];
     await pagina();
     expect(cenario.lidas.filter((nome) => ["caixas", "notas_pedidos", "connect_operacoes"].includes(nome))).toEqual([]);
+  });
+
+  it("notas com divergência (L10b): as não conferidas da loja do turno em 90 dias levam à conciliação; sem a função, somem; falha derruba", async () => {
+    entrar("dono");
+    Object.assign(cenario, { erroDaConciliacao: null, conciliacao: { resumo: { divergencias_abertas: 2 } } });
+    const p = await pagina();
+    expect(p.pendencias["Notas com divergência"]).toBe(2);
+    expect(p.enderecos).toContain(`/notas/conciliacao?periodo=noventa_dias&loja=${LOJA}`);
+    expect(cenario.chamadas.notas_conciliacao).toEqual([{ p_inicio: "2026-08-13", p_fim: "2026-11-10", p_unidade: LOJA }]);
+    // Nenhuma aberta: o alerta não aparece; banco sem a função (migration ainda não aplicada): também não.
+    cenario.conciliacao = { resumo: { divergencias_abertas: 0 } };
+    expect((await pagina()).pendencias["Notas com divergência"]).toBeUndefined();
+    cenario.erroDaConciliacao = { code: "PGRST202" };
+    expect((await pagina()).pendencias["Notas com divergência"]).toBeUndefined();
+    // Outra falha derruba a página, como nas outras pendências (zero inventado não).
+    cenario.erroDaConciliacao = { code: "57014" };
+    await expect(pagina()).rejects.toBeInstanceOf(FalhaDoServico);
+    // Quem não aprova nota nem pergunta.
+    entrar("vendedor");
+    Object.assign(cenario, { erroDaConciliacao: null, chamadas: {} });
+    await pagina();
+    expect(cenario.chamadas.notas_conciliacao).toBeUndefined();
   });
 });
