@@ -149,7 +149,7 @@ describe("cadastro com dados mínimos por finalidade (ORA-CRM-001)", () => {
   });
 });
 
-// Decisão do proprietário de 12/11/2026 (#76; migration 20261114135430_clientes_nome_e_whatsapp): o cadastro rápido é
+// Decisão do proprietário de 12/11/2026 (#76; migration 20261114145608_clientes_nome_e_whatsapp): o cadastro rápido é
 // nome completo + WhatsApp; e-mail sempre opcional, inclusive no financiamento; a nota pede documento e endereço.
 describe("cadastro rápido com nome completo e WhatsApp; e-mail opcional (#76)", () => {
   const ENDERECO = { cep: "80000-000", logradouro: "Rua das Flores", numero: "10", bairro: "Centro", cidade: "Curitiba", uf: "PR" };

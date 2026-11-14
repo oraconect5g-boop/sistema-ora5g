@@ -55,6 +55,13 @@
     { "versao": "20261114013120", "nome": "resultado_do_mes", "md5": "05f10b59896103ccf88b5c88fc1a82bf", "aplicada_em": "2026-11-13" },
     { "versao": "20261114013159", "nome": "previsao_de_caixa", "md5": "7292b5793b0b7f748c53e867d92505fe", "aplicada_em": "2026-11-13" },
     { "versao": "20261114092832", "nome": "bonus_por_meta", "md5": "dd58eee5bde26398e6666ff830b707fd", "aplicada_em": "2026-11-14" },
-    { "versao": "20261114104004", "nome": "bonus_fechamento", "md5": "c3f94fa247705d3c678dd74e33190d4b", "aplicada_em": "2026-11-14" }
+    { "versao": "20261114104004", "nome": "bonus_fechamento", "md5": "c3f94fa247705d3c678dd74e33190d4b", "aplicada_em": "2026-11-14" },
+    { "versao": "20261114145334", "nome": "inventario_correcoes", "md5": "4d6d7b29b4d3e47dfe5629dc5d15c165", "aplicada_em": "2026-11-14" },
+    { "versao": "20261114145418", "nome": "previsao_correcoes", "md5": "cab7d9b21702dd6c4a94d624a6843ad1", "aplicada_em": "2026-11-14" },
+    { "versao": "20261114145505", "nome": "financeiras_correcoes", "md5": "db9d48c1fe8f354e7e28dfb26b5d29cd", "aplicada_em": "2026-11-14" },
+    { "versao": "20261114145608", "nome": "clientes_nome_e_whatsapp", "md5": "375be4d8ceacefefb248c05b530db470", "aplicada_em": "2026-11-14" },
+    { "versao": "20261114145952", "nome": "notas_destinatario_completo", "md5": "5674626260a14e59724692440ba9f851", "aplicada_em": "2026-11-14" },
+    { "versao": "20261114150027", "nome": "notas_documentos", "md5": "82b836daafd53de60f8db55ff3520c30", "aplicada_em": "2026-11-14" },
+    { "versao": "20261114150135", "nome": "whatsapp_envio_da_nota", "md5": "cccfb12dfbf315e0187888c702929d31", "aplicada_em": "2026-11-14" }
   ]
 }

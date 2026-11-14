@@ -72,7 +72,7 @@ export default async function Inventario({ params, searchParams }: { params: Pro
   const [inventario, itens, contagens] = await Promise.all([
     supabase.from("inventarios").select("id, numero, descricao, situacao, unidade_id, criado_por, enviado_por, criado_em, motivo_envio, motivo_decisao").eq("id", id).maybeSingle(),
     supabase.from("inventario_itens").select("variante_id, tipo, sistema_quantidade, contado_quantidade, contados, contado_por, contado_em, ajuste_quantidade, nao_baixados, encontrados_fora, variantes(sku, nome)").eq("inventario_id", id),
-    // Sem a migration da trilha (20261114130247), a leitura falha e a tela segue sem os alertas: o banco decide igual.
+    // Sem a migration da trilha (20261114145334), a leitura falha e a tela segue sem os alertas: o banco decide igual.
     supabase.from("inventario_contagens").select("numero, variante_id, contado_por, desconhecidos, fora_da_loja, outra_variacao").eq("inventario_id", id).order("numero").limit(5000),
   ]);
   if (inventario.error || itens.error) throw new FalhaDoServico("inventario");

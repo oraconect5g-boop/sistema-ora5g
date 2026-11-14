@@ -139,7 +139,7 @@ describe("financeiras: registrar o repasse do que foi financiado (L7b)", () => {
   });
 });
 
-// Correção de 14/11/2026 (#83, REV-PLAN-002, migration 20261114132646_financeiras_correcoes): desfazer o repasse
+// Correção de 14/11/2026 (#83, REV-PLAN-002, migration 20261114145505_financeiras_correcoes): desfazer o repasse
 // de venda cancelada não reabre crédito. Aqui o resultado seguro, não a reprodução do defeito; a disputa
 // real das duas transações está em concorrencia.test.ts.
 describe("financeiras: venda cancelada não volta a dever (#83)", () => {

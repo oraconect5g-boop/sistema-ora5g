@@ -153,7 +153,7 @@ describe("inventário (L4b)", () => {
   });
 });
 
-// Correções de 14/11/2026 (migration 20261114130247_inventario_correcoes), a partir das provas do Codex
+// Correções de 14/11/2026 (migration 20261114145334_inventario_correcoes), a partir das provas do Codex
 // REV-DIR-001 (#78) e REV-DIR-002 (#79): aqui o resultado seguro, não a reprodução do defeito.
 describe("inventário: quem contou não decide (#78) e cada aparelho conta uma vez (#79)", () => {
   // Um segundo dono, independente da contagem: a pessoa autorizada que pode decidir.

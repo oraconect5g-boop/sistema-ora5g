@@ -1,4 +1,4 @@
--- Reversão de 20261114141704_notas_documentos (só em banco sem dados reais).
+-- Reversão de 20261114150027_notas_documentos (só em banco sem dados reais).
 -- Saem o registro dos documentos (com os arquivos registrados: guarde uma cópia antes, se houver), a função de
 -- anexar, o protocolo da nota e as regras do bucket "notas" (o bucket fica, vazio, se tiver arquivos).
 drop function if exists public.notas_anexar_documento(uuid, text, text, text, text);

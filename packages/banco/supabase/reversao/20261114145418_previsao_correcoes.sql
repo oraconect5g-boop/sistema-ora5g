@@ -1,4 +1,4 @@
--- Reversão de 20261114131916_previsao_correcoes (só em banco sem dados reais).
+-- Reversão de 20261114145418_previsao_correcoes (só em banco sem dados reais).
 -- Volta o texto de previsao_de_caixa do L8c (20261114013159_previsao_de_caixa): devolvido de novo pela data da devolução,
 -- com o estorno ainda pendente, e sem estornos_a_confirmar.
 create or replace function public.previsao_de_caixa(p_semanas integer default 8, p_unidade uuid default null)

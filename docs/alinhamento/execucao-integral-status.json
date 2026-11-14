@@ -2,7 +2,7 @@
   "_leia": "Checkpoint do programa de execução integral (PR #67). Carregar ao retomar e seguir para o próximo item executável da fila; não reiniciar o projeto. Estados vêm de status-requisitos.json (fonte da rastreabilidade); este arquivo acrescenta lote, bloqueio externo e revisão.",
   "atualizado_em": "2026-11-14",
   "base": {
-    "main": "b1c60ba",
+    "main": "47ff2cf",
     "pacote": {
       "pr": 67,
       "branch": "docs/execucao-integral-20261110",
@@ -18,12 +18,12 @@
   },
   "publicado": {
     "homologacao": {
-      "commit": "b1c60ba",
+      "commit": "47ff2cf",
       "quando": "2026-11-14",
-      "conferido": "rodapé da tela de entrada (b1c60ba · build 14/11/2026 11:37), /saude 200 e as rotas reais respondendo 307 para o login"
+      "conferido": "rodapé da tela de entrada (47ff2cf · build 14/11/2026 11:47), /saude 200 e as rotas reais respondendo 307 para o login"
     },
     "falta_publicar": [
-      "K1c, envio da nota pelo WhatsApp (fila), publicado ao fim do lote; as migrations do B1, do B3, do B4, do K1a, do K1b, do L10a e do K1c (20261114142817_whatsapp_envio_da_nota) pedem o sim do proprietário para o ora5g-dev"
+      "registro das 7 migrations aplicadas no ora5g-dev em 14/11 (B1, B3, B4, K1a, K1b, L10a e K1c: nomes, tipos gerados e documentos), publicado ao fim do lote; nenhuma tela muda"
     ]
   },
   "contagem_dos_estados": {

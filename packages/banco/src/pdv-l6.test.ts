@@ -102,7 +102,7 @@ function chaveDeAcesso(cnpj: string, numero = 1, modelo = "65") {
   return base + String(resto < 2 ? 0 : 11 - resto);
 }
 
-// K1b (14/11/2026, #76; migration 20261114140614_notas_destinatario_completo): o destinatário completo guardado no
+// K1b (14/11/2026, #76; migration 20261114145952_notas_destinatario_completo): o destinatário completo guardado no
 // pedido e os dados para quem emite, registrados na auditoria.
 describe("nota no nome do cliente: endereço guardado e dados para emitir (K1b)", () => {
   const DADOS = "select public.notas_dados_para_emitir($1) as v";
