@@ -93,12 +93,16 @@ export default async function FichaDoCliente({ params, searchParams }: { params:
       {segmento && <p className="mt-2 text-sm text-suave">{`Segmento ${segmento.nome.toLowerCase()}: ${f.segmento.explicacao}.`}</p>}
       {ok && <Aviso tom="sucesso" className="mt-4">{OK[ok]}</Aviso>}
       {erro && <Aviso tom="perigo" className="mt-4">{ERROS_DO_CLIENTE[erro]}</Aviso>}
+      {/* #76: cadastro antigo sem WhatsApp continua valendo; a regularização é explícita, sem inventar número. */}
+      {f.situacao === "ativo" && !f.mesclado_em && !f.telefone && (
+        <Aviso tom="aviso" className="mt-4">Falta o WhatsApp deste cliente: peça o número e corrija o cadastro (em &quot;Corrigir cadastro&quot;). Sem ele, a nota não pode ser enviada pelo WhatsApp.</Aviso>
+      )}
 
       <div className="mt-4 grid gap-4 lg:grid-cols-2">
         <Cartao titulo="Dados" subtitulo="Protegidos: aparecem só quando você pede, e fica registrado quem viu." icone={ShieldCheck}>
           <ListaDados itens={[
             [CAMPOS_REVELAVEIS.documento, <Revelar key="d" cliente={f.id} campo="documento" mascara={f.documento} />],
-            [CAMPOS_REVELAVEIS.telefone, <Revelar key="t" cliente={f.id} campo="telefone" mascara={f.telefone} />],
+            ["WhatsApp", <Revelar key="t" cliente={f.id} campo="telefone" mascara={f.telefone} />],
             [CAMPOS_REVELAVEIS.email, <Revelar key="e" cliente={f.id} campo="email" mascara={f.email} />],
             ...(f.nascimento_informado ? [[CAMPOS_REVELAVEIS.nascimento, <Revelar key="n" cliente={f.id} campo="nascimento" mascara="informada" />] as const] : []),
             ...(f.endereco_informado ? [[CAMPOS_REVELAVEIS.endereco, <Revelar key="en" cliente={f.id} campo="endereco" mascara="informado" />] as const] : []),

@@ -69,7 +69,7 @@ const amanha = () => new Date(Date.now() + 86_400_000).toISOString();
 const ontem = () => new Date(Date.now() - 3_600_000).toISOString();
 async function clienteDe(s: Sessao, nome: string, base: string) {
   return (await valor<{ id: string }>(s, "select public.cliente_salvar(null, $1::jsonb, null, $2) as v",
-    [JSON.stringify({ tipo: "pessoa_fisica", nome, documento: cpf(base) }), chave("form:cli")])).id;
+    [JSON.stringify({ tipo: "pessoa_fisica", nome, documento: cpf(base), telefone: `419${base.slice(0, 8)}` }), chave("form:cli")])).id;
 }
 const lead = (extra: object = {}) => JSON.stringify({ origem: "whatsapp", campanha: "Black Friday", interesse: "Galaxy A15 e chip", valor_estimado: 149_900,
   proximo_passo: "Ligar para mostrar o aparelho", proximo_passo_em: amanha(), ...extra });

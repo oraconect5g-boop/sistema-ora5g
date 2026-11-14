@@ -482,7 +482,8 @@ describe("duas conexões ao mesmo tempo no PostgreSQL 17", () => {
     const naA = await sessaoNaLoja(ids.vendedorA, ids.lojaA);
     const naB = await sessaoNaLoja(ids.gerenteB, ids.lojaB);
     const SALVAR = "select public.cliente_salvar(null, $1::jsonb, null, $2) as v";
-    const dados = (nome: string) => JSON.stringify({ tipo: "pessoa_fisica", nome, documento });
+    // Desde 14/11 (#76) o cadastro novo pede o WhatsApp: um número diferente em cada loja, para a disputa ser só do CPF.
+    const dados = (nome: string) => JSON.stringify({ tipo: "pessoa_fisica", nome, documento, telefone: nome.endsWith("A") ? "41987650301" : "41987650302" });
     await abrir(a, naA);
     await abrir(b, naB);
     const final = await disputa(

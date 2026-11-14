@@ -1,12 +1,14 @@
 // Cliente compartilhado da rede (lote L5a: ORA-CRM-001, ORA-CRM-003, ORA-CRM-007). Finalidades e o que
 // cada uma pede, leitura do formulário e mensagens. O banco (cliente_salvar) decide tudo de novo; aqui só
 // se evita ir ao banco com o que já se sabe errado. Mensagem só por código de catálogo.
+// Decisão do proprietário de 12/11/2026 (#76, lote K1a): o cadastro rápido é nome completo + WhatsApp; e-mail é
+// sempre opcional (inclusive no financiamento); a nota no nome do cliente pede o CPF/CNPJ e o endereço completo.
 import { cnpjValido, cpfValido, normalizarTelefone } from "@ora5g/dominio";
 
 export const FINALIDADES = {
-  nota_fiscal: { nome: "Nota fiscal no nome do cliente", pede: "CPF ou CNPJ" },
+  nota_fiscal: { nome: "Nota fiscal no nome do cliente", pede: "CPF ou CNPJ e o endereço completo" },
   ora_connect: { nome: "Ora Connect (chip e linha)", pede: "documento, telefone e, para pessoa física, a data de nascimento" },
-  financiamento: { nome: "Financiamento (PayJoy e outros)", pede: "CPF, telefone, e-mail e data de nascimento" },
+  financiamento: { nome: "Financiamento (PayJoy e outros)", pede: "CPF, telefone e data de nascimento (e-mail opcional)" },
   assistencia: { nome: "Assistência técnica", pede: "telefone para avisar o cliente" },
   entrega: { nome: "Entrega no endereço", pede: "endereço completo" },
 } as const;
@@ -28,6 +30,9 @@ const UFS = new Set(["AC", "AL", "AP", "AM", "BA", "CE", "DF", "ES", "GO", "MA",
 export const ERROS_DO_CLIENTE = {
   dados: "Confira os dados digitados.",
   nome: "Informe o nome (de 2 a 120 letras).",
+  nome_completo: "Informe o nome completo (nome e sobrenome).",
+  whatsapp: "Informe o WhatsApp do cliente com DDD: é por ele que a loja fala com o cliente e envia a nota.",
+  whatsapp_fixo: "O WhatsApp não se apaga do cadastro: troque pelo número novo.",
   tipo: "Escolha pessoa física ou empresa.",
   documento: "CPF (pessoa física) ou CNPJ (empresa) inválido.",
   telefone: "Telefone inválido: use o DDD e o número completo.",
@@ -59,6 +64,7 @@ export function erroDoCliente(erro: { code?: string; message?: string } | null |
   if (Object.hasOwn(porCodigo, codigo)) return porCodigo[codigo] as ErroDoCliente;
   if (codigo !== "22023") return "falha";
   const regras: [string, ErroDoCliente][] = [
+    ["informe o whatsapp", "whatsapp"], ["nome completo", "nome_completo"], ["não se apaga", "whatsapp_fixo"],
     ["informe o motivo", "motivo"], ["mesclado em outro", "mesclado"], ["busca nunca é parcial", "busca"], ["informe o nome", "nome"], ["pessoa física ou empresa", "tipo"],
     ["só fica guardad", "minimo"], ["informe o cpf/cnpj ou o telefone", "identificador"], ["cpf (pessoa física)", "documento"],
     ["telefone inválido", "telefone"], ["e-mail inválido", "email"], ["nascimento inválida", "nascimento"], ["endereço incompleto", "endereco"],
@@ -88,6 +94,8 @@ export function lerCliente(dados: Formulario, edicao: boolean): { ok: true; dado
   const nome = texto(dados.get("nome"));
   if (nome !== "") {
     if (nome.length < 2 || nome.length > 120) return { ok: false, erro: "nome" };
+    // Pessoa física: nome e sobrenome (a mesma regra do banco; empresa usa a razão social).
+    if (saida.tipo === "pessoa_fisica" && !nome.includes(" ")) return { ok: false, erro: "nome_completo" };
     saida.nome = nome;
   } else if (!edicao) return { ok: false, erro: "nome" };
   const documento = texto(dados.get("documento")).replace(/\D/g, "");
@@ -130,16 +138,17 @@ export function lerCliente(dados: Formulario, edicao: boolean): { ok: true; dado
   if (dados.get("telefone_compartilhado") === "sim") saida.telefone_compartilhado = true;
   if (edicao) {
     const remover = [...new Set(dados.getAll("remover").filter((v): v is string => typeof v === "string" && Object.hasOwn(CAMPOS_REVELAVEIS, v)))];
+    if (remover.includes("telefone")) return { ok: false, erro: "whatsapp_fixo" };
     if (remover.length > 0) saida.remover = remover;
     return { ok: true, dados: saida };
   }
-  // Cadastro: dados mínimos por finalidade, a mesma regra do banco.
-  if (!saida.documento && !saida.telefone) return { ok: false, erro: "identificador" };
+  // Cadastro: o WhatsApp é obrigatório (#76) e cada finalidade pede o que precisa, a mesma regra do banco.
+  if (!saida.telefone) return { ok: false, erro: "whatsapp" };
   const tem = (f: Finalidade) => finalidades.includes(f);
   const pf = saida.tipo === "pessoa_fisica";
-  if ((tem("nota_fiscal") && !saida.documento)
+  if ((tem("nota_fiscal") && (!saida.documento || !saida.endereco))
       || (tem("ora_connect") && (!saida.documento || !saida.telefone || (pf && !saida.nascimento)))
-      || (tem("financiamento") && (!pf || !saida.documento || !saida.telefone || !saida.email || !saida.nascimento))
+      || (tem("financiamento") && (!pf || !saida.documento || !saida.telefone || !saida.nascimento))
       || (tem("assistencia") && !saida.telefone) || (tem("entrega") && !saida.endereco)) return { ok: false, erro: "finalidade" };
   if ((saida.nascimento && !GUARDAM_NASCIMENTO.some(tem)) || (saida.endereco && !GUARDAM_ENDERECO.some(tem))) return { ok: false, erro: "minimo" };
   return { ok: true, dados: saida };

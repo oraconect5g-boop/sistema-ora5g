@@ -20,11 +20,11 @@ describe("lerCliente (cadastro)", () => {
         finalidades: ["entrega", "nota_fiscal"], endereco: { cep: "80000000", logradouro: "Rua A", numero: "10", bairro: "Centro", cidade: "Curitiba", uf: "PR" } } });
   });
 
-  it("recusa sem tipo, sem nome, sem identificador, documento do tipo errado, telefone e data inválidos", () => {
-    const base = { tipo: "pessoa_fisica", nome: "José", telefone: "41987650002" };
+  it("recusa sem tipo, sem nome, sem WhatsApp, documento do tipo errado, telefone e data inválidos", () => {
+    const base = { tipo: "pessoa_fisica", nome: "José Teste", telefone: "41987650002" };
     expect(lerCliente(form({ ...base, tipo: "" }), false)).toEqual({ ok: false, erro: "tipo" });
     expect(lerCliente(form({ ...base, nome: "J" }), false)).toEqual({ ok: false, erro: "nome" });
-    expect(lerCliente(form({ tipo: "pessoa_fisica", nome: "José" }), false)).toEqual({ ok: false, erro: "identificador" });
+    expect(lerCliente(form({ tipo: "pessoa_fisica", nome: "José Teste", documento: CPF }), false)).toEqual({ ok: false, erro: "whatsapp" });
     expect(lerCliente(form({ ...base, documento: CNPJ }), false)).toEqual({ ok: false, erro: "documento" });
     expect(lerCliente(form({ ...base, tipo: "pessoa_juridica", documento: CNPJ }), false)).toMatchObject({ ok: true });
     expect(lerCliente(form({ ...base, telefone: "98765" }), false)).toEqual({ ok: false, erro: "telefone" });
@@ -34,14 +34,34 @@ describe("lerCliente (cadastro)", () => {
   });
 
   it("cada finalidade pede o que precisa; nascimento e endereço sem finalidade que justifique são recusados", () => {
-    const base = { tipo: "pessoa_fisica", nome: "José", telefone: "41987650002" };
+    const base = { tipo: "pessoa_fisica", nome: "José Teste", telefone: "41987650002" };
     expect(lerCliente(form({ ...base, finalidade: "nota_fiscal" }), false)).toEqual({ ok: false, erro: "finalidade" });
+    expect(lerCliente(form({ ...base, documento: CPF, finalidade: "nota_fiscal" }), false)).toEqual({ ok: false, erro: "finalidade" }); // sem endereço (#76)
     expect(lerCliente(form({ ...base, documento: CPF, finalidade: "ora_connect" }), false)).toEqual({ ok: false, erro: "finalidade" });
     expect(lerCliente(form({ ...base, documento: CPF, nascimento: "1990-05-10", finalidade: "ora_connect" }), false)).toMatchObject({ ok: true });
-    expect(lerCliente(form({ ...base, documento: CPF, nascimento: "1990-05-10", finalidade: "financiamento" }), false)).toEqual({ ok: false, erro: "finalidade" });
+    // #76: financiamento sem e-mail passa (CPF, WhatsApp e nascimento bastam).
+    expect(lerCliente(form({ ...base, documento: CPF, nascimento: "1990-05-10", finalidade: "financiamento" }), false)).toMatchObject({ ok: true });
+    expect(lerCliente(form({ ...base, nascimento: "1990-05-10", finalidade: "financiamento" }), false)).toEqual({ ok: false, erro: "finalidade" });
     expect(lerCliente(form({ ...base, nascimento: "1990-05-10" }), false)).toEqual({ ok: false, erro: "minimo" });
     expect(lerCliente(form({ ...base, endereco_cep: "80000000", endereco_logradouro: "Rua A", endereco_numero: "1", endereco_bairro: "Centro",
       endereco_cidade: "Curitiba", endereco_uf: "PR" }), false)).toEqual({ ok: false, erro: "minimo" });
+  });
+});
+
+describe("cadastro rápido (#76)", () => {
+  it("nome completo + WhatsApp bastam; nome de uma palavra só em pessoa física é recusado; empresa usa a razão social", () => {
+    expect(lerCliente(form({ tipo: "pessoa_fisica", nome: "Ana Rápida", telefone: "(41) 98765-0101" }), false))
+      .toEqual({ ok: true, dados: { tipo: "pessoa_fisica", nome: "Ana Rápida", telefone: "41987650101", finalidades: [] } });
+    expect(lerCliente(form({ tipo: "pessoa_fisica", nome: "Ana", telefone: "41987650101" }), false)).toEqual({ ok: false, erro: "nome_completo" });
+    expect(lerCliente(form({ tipo: "pessoa_juridica", nome: "Ltda", telefone: "41987650101" }), false)).toMatchObject({ ok: true });
+    expect(lerCliente(form({ tipo: "pessoa_fisica", nome: "Ana Rápida", telefone: "41987650101", email: "" }), false)).toMatchObject({ ok: true });
+  });
+  it("na correção o WhatsApp não se apaga; as mensagens novas do banco têm chave", () => {
+    expect(lerCliente(form({ remover: ["telefone"] }), true)).toEqual({ ok: false, erro: "whatsapp_fixo" });
+    expect(erroDoCliente({ code: "22023", message: "Informe o WhatsApp do cliente com DDD: é por ele que a loja fala com o cliente e envia a nota" })).toBe("whatsapp");
+    expect(erroDoCliente({ code: "22023", message: "Informe o nome completo (nome e sobrenome)" })).toBe("nome_completo");
+    expect(erroDoCliente({ code: "22023", message: "O WhatsApp não se apaga: troque pelo número novo" })).toBe("whatsapp_fixo");
+    expect(erroDoCliente({ code: "22023", message: "Nota fiscal no nome do cliente pede o CPF ou o CNPJ e o endereço completo" })).toBe("finalidade");
   });
 });
 
