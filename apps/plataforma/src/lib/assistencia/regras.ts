@@ -18,7 +18,8 @@ export const LOCAIS = {
 export type Local = keyof typeof LOCAIS;
 export const ehLocal = (v: unknown): v is Local => typeof v === "string" && Object.hasOwn(LOCAIS, v);
 
-export const SITUACOES = { aberta: "Aberta", devolvida: "Devolvida ao cliente", cancelada: "Cancelada" } as const;
+// L12c: "entregue" é a saída normal do conserto feito, depois da cobrança no PDV; "devolvida" é a saída sem cobrança.
+export const SITUACOES = { aberta: "Aberta", devolvida: "Devolvida ao cliente", cancelada: "Cancelada", entregue: "Entregue e cobrada" } as const;
 export type SituacaoDaOs = keyof typeof SITUACOES;
 export const ehSituacao = (v: unknown): v is SituacaoDaOs => typeof v === "string" && Object.hasOwn(SITUACOES, v);
 
@@ -39,6 +40,7 @@ export const EVENTOS = {
   devolvida_pelo_tecnico: "O técnico mandou de volta", recebida_na_loja: "Chegou de volta na loja", devolvida_ao_cliente: "Devolvida ao cliente sem conserto",
   cancelada: "Cancelada", foto: "Foto guardada", aviso_whatsapp: "Aviso pelo WhatsApp",
   orcamento: "Orçamento registrado", resposta_do_cliente: "Resposta do cliente ao orçamento", servico_concluido: "Conserto concluído",
+  cobrada: "Conserto cobrado no PDV", cobranca_desfeita: "Cobrança desfeita: a venda foi cancelada", entregue_ao_cliente: "Entregue ao cliente",
 } as const;
 
 /** O andamento do serviço (L12b), à parte da custódia. */
@@ -92,6 +94,13 @@ export const ERROS_DA_OS = {
   canal: "Diga por onde o cliente respondeu: na loja, pelo WhatsApp ou por telefone.",
   resposta: "Escolha a resposta do cliente: aprovado ou recusado.",
   aviso_orcamento: "O aviso do orçamento é enquanto ele espera a resposta do cliente.",
+  ja_cobrada: "Esta OS já foi cobrada numa venda: registre a entrega.",
+  cobrar_antes: "Cobre o conserto no PDV antes de registrar a entrega.",
+  nao_pronta: "Só o conserto concluído, com o aparelho de volta na loja, é cobrado.",
+  sem_orcamento_aprovado: "A OS não tem orçamento aprovado para cobrar.",
+  conserto_feito: "O conserto foi feito: cobre no PDV e registre a entrega. Devolver sem cobrar é da gerência, com o motivo.",
+  aviso_entrega: "O comprovante da entrega é depois de registrar a entrega.",
+  venda: "Não deu para abrir a venda no PDV agora: confira se você está no turno desta loja e tente de novo.",
   falha: "Não deu para gravar agora. Tente de novo em instantes.",
 } as const;
 export type ErroDaOs = keyof typeof ERROS_DA_OS;
@@ -101,10 +110,14 @@ export function erroDaOs(erro: { code?: string; message?: string } | null | unde
   const codigo = erro?.code ?? "";
   const m = (erro?.message ?? "").toLowerCase();
   if (codigo === "P0002") return m.includes("cliente") ? "cliente" : "nao_encontrada";
-  if (codigo === "42501") return "sem_permissao";
+  if (codigo === "42501") return m.includes("cobre no pdv") ? "conserto_feito" : "sem_permissao";
   if (codigo === "OR031") return "duplicada";
+  if (codigo === "OR032") return "ja_cobrada";
   if (codigo !== "22023") return "falha";
   const regras: [string, ErroDaOs][] = [
+    // L12c: cobrança e entrega.
+    ["cobre o conserto no pdv antes", "cobrar_antes"], ["já foi cobrado", "ja_cobrada"], ["só o conserto concluído", "nao_pronta"],
+    ["cobrado com o aparelho de volta", "nao_pronta"], ["orçamento aprovado", "sem_orcamento_aprovado"], ["comprovante da entrega", "aviso_entrega"],
     ["com o aparelho com o técnico", "orcamento_local"], ["diagnóstico", "diagnostico"], ["mão de obra", "mao_de_obra"], ["no máximo 10 peças", "pecas_demais"],
     ["peça", "peca"], ["total do orçamento", "total"], ["prazo do conserto", "prazo_dias"], ["como ele passou o orçamento", "em_nome"],
     ["como ele confirmou o conserto", "em_nome"], ["já foi concluído", "ja_concluido"], ["depois da aprovação", "sem_aprovacao"],
@@ -218,15 +231,24 @@ export function lerOrcamento(dados: Formulario): { ok: true; dados: DadosDoOrcam
 // ---------------------------------------------------------------------------------------------
 // Aviso pelo WhatsApp: clique para conversar com a mensagem pronta (sem automação não oficial)
 // ---------------------------------------------------------------------------------------------
-export type AvisoDaOs = "comprovante" | "na_loja" | "orcamento";
+export type AvisoDaOs = "comprovante" | "na_loja" | "orcamento" | "entrega";
+/** L12c: a entrega registrada (o dia, em São Paulo) e o número da venda que cobrou o conserto. */
+export type EntregaDoAviso = { dia: string; vendaNumero: number | null };
 export type OrcamentoDoAviso = { numero: number; diagnostico: string; pecas: readonly PecaDoOrcamento[]; mao_de_obra_centavos: number; total_centavos: number; prazo_dias: number | null };
 const reais = (centavos: number) => (centavos / 100).toLocaleString("pt-BR", { style: "currency", currency: "BRL" }).replace(/\u00a0/g, " ");
 export type OsDoAviso = { numero: number; aparelho: string; imei: string | null; numero_serie: string | null; defeito: string; acessorios: readonly string[]; prazo: string | null; cliente_nome: string };
 const dataBr = (dia: string) => `${dia.slice(8, 10)}/${dia.slice(5, 7)}/${dia.slice(0, 4)}`;
 const primeiroNome = (nome: string) => nome.split(" ")[0] ?? nome;
 
-export function mensagemDoAviso(aviso: AvisoDaOs, os: OsDoAviso, loja: string, orcamento?: OrcamentoDoAviso): string {
+export function mensagemDoAviso(aviso: AvisoDaOs, os: OsDoAviso, loja: string, orcamento?: OrcamentoDoAviso, entrega?: EntregaDoAviso): string {
   const identificacao = os.imei ? `IMEI final ${os.imei.slice(-4)}` : `série ${os.numero_serie ?? ""}`;
+  if (aviso === "entrega") {
+    return [
+      `Olá, ${primeiroNome(os.cliente_nome)}! Seu aparelho ${os.aparelho} (${identificacao}), da ordem de serviço nº ${os.numero}, foi entregue${entrega ? ` em ${dataBr(entrega.dia)}` : ""} na loja ${loja}.`,
+      entrega?.vendaNumero ? `Conserto pago na venda nº ${entrega.vendaNumero}.` : null,
+      "Guarde esta mensagem como comprovante da entrega. Ora 5G.",
+    ].filter(Boolean).join("\n");
+  }
   if (aviso === "orcamento" && orcamento) {
     return [
       `Olá, ${primeiroNome(os.cliente_nome)}! O orçamento da ordem de serviço nº ${os.numero} (${os.aparelho}, ${identificacao}) ficou pronto.`,

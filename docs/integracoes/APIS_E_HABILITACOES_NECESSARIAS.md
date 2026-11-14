@@ -86,7 +86,7 @@
 | Fornecedor | **Escolha necessária, com o contador.** Hoje o dono emite manualmente num portal (P7). Não há emissor contratado |
 | O que já funciona sem emissor (14/11) | Fila com aprovação que não segura a emissão; registro da nota pela chave de acesso (dígito e CNPJ conferidos); destinatário completo no pedido e "Dados para emitir" para quem digita no portal (K1b); PDF e XML da nota emitida guardados em privado, com a chave do XML conferida, SHA-256 e o protocolo (L10a). Com o emissor, a emissão, o XML e o protocolo passam a vir dele, pelo mesmo registro |
 | Documentação | 🔒 Depende do emissor escolhido. Nada é implementado contra API de fornecedor não escolhido |
-| O que o contador define | Documento de cada operação (NFC-e, NF-e, NFS-e; chip e recarga), regime de cada filial, CFOP/CST/CSOSN/NCM, prazo entre venda e emissão |
+| O que o contador define | Documento de cada operação (NFC-e, NF-e, NFS-e; chip, recarga e o conserto da OS cobrado no PDV, L12c), regime de cada filial, CFOP/CST/CSOSN/NCM, prazo entre venda e emissão |
 | Autenticação e variáveis | `FISCAL_PROVIDER`, `FISCAL_API_BASE_URL`, `FISCAL_API_TOKEN`, `FISCAL_ENVIRONMENT`. **Certificado A1** (e-CNPJ) fica com o emissor ou no cofre de segredos, nunca em arquivo do projeto. **Hipótese a confirmar com o contador:** o certificado da matriz atende às filiais |
 | Teste | Ambiente de homologação da SEFAZ pelo emissor |
 | Webhooks | Conforme o emissor: aviso de autorização/rejeição com conferência de origem e reconsulta |

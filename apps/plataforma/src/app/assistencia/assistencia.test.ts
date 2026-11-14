@@ -19,6 +19,8 @@ const cenario = vi.hoisted(() => ({
   chamadas: [] as { nome: string; argumentos: Record<string, unknown> }[],
   respostas: {} as Record<string, { data: unknown; error: null | { code: string; message?: string } }>,
   arquivo: null as Uint8Array | null,
+  // Colunas que o banco "ainda não tem" (migration não aplicada): a leitura que as pede responde 42703.
+  semColunas: new Set<string>(),
 }));
 vi.mock("next/headers", () => ({ cookies: async () => ({ getAll: () => [], set: () => undefined }) }));
 vi.mock("next/navigation", () => ({
@@ -30,13 +32,17 @@ class Consulta {
   linhas: Linha[];
   erro: { code: string } | null;
   constructor(nome: string) { this.linhas = [...(cenario.tabelas[nome] ?? [])]; this.erro = cenario.erros[nome] ?? null; }
-  select() { return this; }
+  select(colunas?: string) {
+    if (typeof colunas === "string" && colunas.split(",").some((c) => cenario.semColunas.has(c.trim()))) this.erro = { code: "42703" };
+    return this;
+  }
   eq(coluna: string, valor: unknown) { this.linhas = this.linhas.filter((l) => l[coluna] === undefined || l[coluna] === valor); return this; }
   neq(coluna: string, valor: unknown) { this.linhas = this.linhas.filter((l) => l[coluna] !== valor); return this; }
   in(coluna: string, valores: unknown[]) { this.linhas = this.linhas.filter((l) => l[coluna] === undefined || valores.includes(l[coluna])); return this; }
   lt(coluna: string, valor: string) { this.linhas = this.linhas.filter((l) => typeof l[coluna] === "string" && (l[coluna] as string) < valor); return this; }
   order() { return this; }
   range() { return this; }
+  limit() { return this; }
   maybeSingle() { return Promise.resolve(this.erro ? { data: null, error: this.erro } : { data: this.linhas[0] ?? null, error: null }); }
   then(resolver: (r: { data: Linha[] | null; error: { code: string } | null; count: number | null }) => unknown) {
     return Promise.resolve(this.erro ? { data: null, error: this.erro, count: null } : { data: this.linhas, error: null, count: this.linhas.length }).then(resolver);
@@ -66,12 +72,12 @@ vi.mock("../../lib/acesso/sessao", () => ({
 }));
 vi.mock("../../lib/supabase/configuracao", () => ({ configuracaoSupabase: () => ({ url: "https://projeto.supabase.co", chavePublica: "sb_publishable_teste" }) }));
 
-import { abrirOrdem, avisarPeloWhatsApp, concluirServico, orcarOrdem, passoDaOrdem, registrarFotoDaOs, responderOrcamento } from "./acoes";
+import { abrirOrdem, avisarPeloWhatsApp, cobrarNoPdv, concluirServico, entregarOrdem, orcarOrdem, passoDaOrdem, registrarFotoDaOs, responderOrcamento } from "./acoes";
 import Detalhe from "./[id]/page";
 import NovaOrdem from "./nova/page";
 import Lista from "./page";
 
-const EXECUTAR = new Set(["EstadoDoPainel", "ProximosPassos", "FormularioDoPasso", "FiltroSegmentado", "ListaDados", "CartaoDoOrcamento"]);
+const EXECUTAR = new Set(["EstadoDoPainel", "ProximosPassos", "FormularioDoPasso", "FiltroSegmentado", "ListaDados", "CartaoDoOrcamento", "CartaoDaCobranca"]);
 function texto(v: unknown): string {
   const pedacos: string[] = [];
   const andar = (x: unknown): void => {
@@ -113,6 +119,7 @@ beforeEach(() => {
   cenario.chamadas = [];
   cenario.respostas = { os_assistencias: { data: [{ id: ASSISTENCIA, nome: "Assistência central" }], error: null } };
   cenario.arquivo = null;
+  cenario.semColunas = new Set();
   cenario.tabelas = {
     ordens_servico: [os()],
     os_eventos: [evento("aberta", { local_para: "loja" })],
@@ -316,5 +323,111 @@ describe("orçamento na OS (L12b)", () => {
     expect(decodeURIComponent(link.split("text=")[1] ?? "")).toContain("Total: R$ 330,00");
     cenario.tabelas.os_orcamentos = [];
     expect(await destinoDe(avisarPeloWhatsApp(formulario({ os: OS, aviso: "orcamento" })))).toBe(`/assistencia/${OS}?erro=aviso_orcamento`);
+  });
+});
+
+describe("cobrança no PDV e entrega (L12c)", () => {
+  const ORC = "00000000-0000-4000-8000-00000000e301";
+  const VENDA = "00000000-0000-4000-8000-00000000e302";
+  const NOVA = "00000000-0000-4000-8000-00000000e303";
+  const CHAVE_VENDA = "00000000-0000-4000-8000-00000000f301";
+  const CHAVE_ITEM = "00000000-0000-4000-8000-00000000f302";
+  const tela = async () => texto(await Detalhe({ params: Promise.resolve({ id: OS }), searchParams: Promise.resolve({}) }) as ReactElement);
+  const aprovado = {
+    id: ORC, os_id: OS, numero: 3, diagnostico: "Tela quebrada", pecas: [{ descricao: "Tela", quantidade: 1, valor: 25_000 }], mao_de_obra_centavos: 8_000, pecas_centavos: 25_000,
+    total_centavos: 33_000, prazo_dias: 3, situacao: "aprovado", em_nome_do_tecnico: false, observacao: null, registrado_por: EU, registrado_em: "2026-11-14T15:00:00Z",
+    resposta_canal: "loja", resposta_observacao: null, respondido_por: EU, respondido_em: "2026-11-14T16:00:00Z",
+  };
+  const pronta = (extra: Linha = {}) => os({ local: "loja", assistencia_id: ASSISTENCIA, servico: "concluido", venda_id: null, cobrada_em: null, ...extra });
+
+  it("pronta na loja: o vendedor cobra no PDV pelo valor aprovado; não devolve sem cobrar; a gerência devolve sem cobrar, com o motivo", async () => {
+    cenario.tabelas.ordens_servico = [pronta()];
+    cenario.tabelas.os_orcamentos = [aprovado];
+    cenario.tabelas.os_eventos = [evento("aberta", { local_para: "loja" }), evento("enviada_ao_tecnico"), evento("servico_concluido"), evento("recebida_na_loja")];
+    let t = await tela();
+    for (const trecho of ["Cobrança e entrega", "Conserto pronto e o aparelho na loja: R$ 330,00, do orçamento nº 3 aprovado pelo cliente.", "Cobrar no PDV",
+      "Conserto pronto: cobre no PDV e registre a entrega"]) {
+      expect(t, trecho).toContain(trecho);
+    }
+    for (const trecho of ["Devolver ao cliente sem conserto", "Enviar ao técnico", "Devolver sem cobrar"]) expect(t, trecho).not.toContain(trecho);
+    cenario.permissoes = new Set(["os.abrir", "os.gerir"]);
+    t = await tela();
+    expect(t).toContain("Devolver sem cobrar (gerência)");
+    expect(t).toContain("Motivo da devolução sem cobrar (garantia, cortesia)");
+    // Banco sem a cobrança (sem a coluna): o cartão some e a OS continua.
+    cenario.semColunas = new Set(["venda_id"]);
+    t = await tela();
+    expect(t).toContain("OS nº 42");
+    expect(t).toContain("Conserto pronto");
+    expect(t).not.toContain("Cobrança e entrega");
+    // ... e os passos são os de antes: o banco sem a migration ainda aceita a devolução pela loja.
+    expect(t).toContain("Devolver ao cliente sem conserto");
+    expect(t).not.toContain("Devolver sem cobrar");
+  });
+
+  it("cobrada: o próximo passo é a entrega; entregue: o comprovante da entrega; o número da venda vem da venda ou da trilha", async () => {
+    cenario.tabelas.ordens_servico = [pronta({ venda_id: VENDA, cobrada_em: "2026-11-14T17:00:00Z" })];
+    cenario.tabelas.os_orcamentos = [aprovado];
+    cenario.tabelas.vendas = [{ id: VENDA, numero: 77 }];
+    let t = await tela();
+    expect(t).toContain("Cobrado na venda nº 77");
+    expect(t).toContain("Registrar a entrega ao cliente");
+    expect(t).toContain("Conserto cobrado: o próximo passo é a entrega ao cliente");
+    expect(t).not.toContain("Cobrar no PDV");
+    // Quem não lê a venda vê o número pela trilha.
+    cenario.tabelas.vendas = [];
+    cenario.tabelas.os_eventos = [evento("aberta", { local_para: "loja" }), evento("cobrada", { observacao: "Venda nº 77" })];
+    t = await tela();
+    expect(t).toContain("Cobrado na venda nº 77");
+    expect(t).toContain("Conserto cobrado no PDV");
+    cenario.tabelas.ordens_servico = [pronta({ venda_id: VENDA, cobrada_em: "2026-11-14T17:00:00Z", situacao: "entregue", local: "com_cliente",
+      encerrada_em: "2026-11-14T17:30:00Z", motivo_encerramento: "Entregue ao cliente, cobrada na venda nº 77" })];
+    t = await tela();
+    expect(t).toContain("Entregue e cobrada");
+    expect(t).toContain("conserto cobrado na venda nº 77");
+    expect(t).toContain("Mandar o comprovante da entrega");
+    expect(t).not.toContain("Onde está e o próximo passo");
+    expect(t).not.toContain("Registrar a entrega ao cliente");
+  });
+
+  it("as ações: cobrar usa a venda aberta (ou abre uma) e leva ao PDV; entregar; o comprovante da entrega pelo WhatsApp", async () => {
+    // Com a venda aberta de quem cobra, nesta loja.
+    cenario.tabelas.vendas = [{ id: VENDA, vendedor_id: EU, unidade_id: LOJA, situacao: "rascunho" }];
+    cenario.respostas.os_cobrar = { data: "item-1", error: null };
+    expect(await destinoDe(cobrarNoPdv(formulario({ os: OS, chave_venda: CHAVE_VENDA, chave_item: CHAVE_ITEM })))).toBe("/vender?os=no_carrinho");
+    expect(cenario.chamadas).toEqual([{ nome: "os_cobrar", argumentos: { p_venda: VENDA, p_os: OS, p_chave: CHAVE_ITEM } }]);
+    // Sem venda aberta: abre uma com a chave do formulário.
+    cenario.tabelas.vendas = [];
+    cenario.chamadas = [];
+    cenario.respostas.criar_venda = { data: NOVA, error: null };
+    expect(await destinoDe(cobrarNoPdv(formulario({ os: OS, chave_venda: CHAVE_VENDA, chave_item: CHAVE_ITEM })))).toBe("/vender?os=no_carrinho");
+    expect(cenario.chamadas).toEqual([
+      { nome: "criar_venda", argumentos: { p_chave: CHAVE_VENDA } }, { nome: "os_cobrar", argumentos: { p_venda: NOVA, p_os: OS, p_chave: CHAVE_ITEM } },
+    ]);
+    cenario.respostas.os_cobrar = { data: null, error: { code: "OR032", message: "Esta ordem de serviço já foi cobrada (venda nº 77)" } };
+    expect(await destinoDe(cobrarNoPdv(formulario({ os: OS, chave_venda: CHAVE_VENDA, chave_item: CHAVE_ITEM })))).toBe(`/assistencia/${OS}?erro=ja_cobrada`);
+    cenario.respostas.os_cobrar = { data: null, error: { code: "22023", message: "Só o conserto concluído é cobrado" } };
+    expect(await destinoDe(cobrarNoPdv(formulario({ os: OS, chave_venda: CHAVE_VENDA, chave_item: CHAVE_ITEM })))).toBe(`/assistencia/${OS}?erro=nao_pronta`);
+    expect(await destinoDe(cobrarNoPdv(formulario({ os: OS, chave_venda: "x", chave_item: CHAVE_ITEM })))).toBe(`/assistencia/${OS}?erro=dados`);
+    cenario.respostas.criar_venda = { data: null, error: { code: "42501", message: "Sem permissão para vender nesta loja" } };
+    expect(await destinoDe(cobrarNoPdv(formulario({ os: OS, chave_venda: CHAVE_VENDA, chave_item: CHAVE_ITEM })))).toBe(`/assistencia/${OS}?erro=sem_permissao`);
+
+    cenario.respostas.os_entregar = { data: true, error: null };
+    expect(await destinoDe(entregarOrdem(formulario({ os: OS, observacao: "" })))).toBe(`/assistencia/${OS}?ok=entregue`);
+    expect(cenario.chamadas.at(-1)).toEqual({ nome: "os_entregar", argumentos: { p_os: OS, p_observacao: null } });
+    cenario.respostas.os_entregar = { data: false, error: null };
+    expect(await destinoDe(entregarOrdem(formulario({ os: OS, observacao: "Cliente conferiu" })))).toBe(`/assistencia/${OS}?ok=sem_mudanca`);
+    cenario.respostas.os_entregar = { data: null, error: { code: "22023", message: "Cobre o conserto no PDV antes de entregar" } };
+    expect(await destinoDe(entregarOrdem(formulario({ os: OS })))).toBe(`/assistencia/${OS}?erro=cobrar_antes`);
+
+    // O comprovante da entrega leva o dia da entrega e a venda da trilha.
+    cenario.tabelas.ordens_servico = [pronta({ situacao: "entregue", local: "com_cliente", encerrada_em: "2026-11-14T17:30:00Z" })];
+    cenario.tabelas.os_eventos = [evento("cobrada", { observacao: "Venda nº 77" })];
+    cenario.respostas.os_contato_whatsapp = { data: "41987650001", error: null };
+    const link = await destinoDe(avisarPeloWhatsApp(formulario({ os: OS, aviso: "entrega" })));
+    const mensagem = decodeURIComponent(link.split("text=")[1] ?? "");
+    expect(mensagem).toContain("da ordem de serviço nº 42, foi entregue em 14/11/2026 na loja Santa Cândida (teste).");
+    expect(mensagem).toContain("Conserto pago na venda nº 77.");
+    expect(cenario.chamadas.at(-1)).toEqual({ nome: "os_contato_whatsapp", argumentos: { p_os: OS, p_aviso: "entrega" } });
   });
 });

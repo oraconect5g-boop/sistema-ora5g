@@ -8,7 +8,7 @@ import { afterAll, afterEach, beforeAll, beforeEach, describe, expect, it } from
 
 import { comDigitoLuhn, comoUsuario, cpf, criarBanco, type Sessao } from "./banco-de-teste";
 import { ids, montarCenario } from "./cenario";
-import { montarCatalogo } from "./cenario-catalogo";
+import { cat, montarCatalogo } from "./cenario-catalogo";
 
 let db: PGlite;
 beforeAll(async () => {
@@ -317,8 +317,8 @@ const CONCLUIR = "select public.os_concluir_servico($1, $2) as v";
 const orcamento = (extra: Record<string, unknown> = {}) => ({
   diagnostico: "Tela quebrada e conector oxidado", mao_de_obra: 8_000, pecas: [{ descricao: "Tela", quantidade: 1, valor: 25_000 }], prazo_dias: 3, ...extra,
 });
-async function comOTecnico(ana: Sessao) {
-  const { id } = await abrir(ana, await cliente(ana));
+async function comOTecnico(ana: Sessao, telefone?: string) {
+  const { id } = await abrir(ana, await cliente(ana, telefone));
   await valor(ana, PASSO, [id, "enviar_ao_tecnico", null, null]);
   const tecnico = await naLoja(ids.tecnico, ids.assistencia);
   await valor(tecnico, PASSO, [id, "tecnico_recebeu", null, null]);
@@ -413,5 +413,163 @@ describe("orçamento e resposta do cliente (L12b, ORA-OS-003 e ORA-OS-004)", () 
     expect(await direto("delete from public.os_orcamentos where id = $1")).not.toBeNull();
     await valor(ana, RESPONDER, [o.id, "aprovado", "loja", null]);
     expect(await codigo(ana, CONTATO, [id, "orcamento"])).toBe("22023");
+  });
+});
+
+// -------------------------------------------------------------------------------------------------
+// Lote L12c (ORA-OS-006 e ORA-OS-005 em parte): o conserto cobrado no PDV e a entrega ao cliente
+// -------------------------------------------------------------------------------------------------
+const COBRAR = "select public.os_cobrar($1, $2, $3) as v";
+const ENTREGAR = "select public.os_entregar($1, $2) as v";
+const NOVA_VENDA = "select public.criar_venda($1) as v";
+const FECHAR = "select public.concluir_venda($1, $2::jsonb, '{}'::jsonb, $3) as v";
+const CANCELAR = "select public.cancelar_venda($1, $2) as v";
+const dinheiro = (v: number) => JSON.stringify([{ meio: "dinheiro", valor: v }]);
+const esteMes = () => `${hoje().slice(0, 7)}-01`;
+const TOTAL = 33_000; // orcamento(): mão de obra R$ 80,00 + tela R$ 250,00
+
+// O conserto pronto e de volta na loja: orçamento aprovado, conserto concluído, aparelho recebido na loja.
+async function prontaNaLoja(ana: Sessao, telefone?: string) {
+  const { id, tecnico } = await comOTecnico(ana, telefone);
+  const o = await valor<{ id: string }>(tecnico, ORCAR, [id, JSON.stringify(orcamento()), chave()]);
+  await valor(ana, RESPONDER, [o.id, "aprovado", "loja", null]);
+  await valor(tecnico, CONCLUIR, [id, "Tela trocada"]);
+  await valor(tecnico, PASSO, [id, "tecnico_devolveu", null, null]);
+  await valor(ana, PASSO, [id, "loja_recebeu", null, null]);
+  return { id, tecnico };
+}
+async function comCaixa(s: Sessao, fundo = 10_000) {
+  await valor(s, "select public.abrir_caixa($1, $2) as v", [fundo, chave("caixa")]);
+  return s;
+}
+const cobranca = async (id: string) =>
+  (await db.query<{ venda_id: string | null; cobrada: boolean; situacao: string; local: string }>(
+    "select venda_id, cobrada_em is not null as cobrada, situacao, local from public.ordens_servico where id = $1", [id])).rows[0];
+const vendidoLiquido = async (s: Sessao, vendedor: string) => {
+  const p = await valor<{ vendedores: { vendedor_id: string; realizado: { vendido_liquido: number } }[] }>(s, "select public.metas_painel($1::date, $2) as v", [esteMes(), ids.lojaA]);
+  return Number(p.vendedores.find((v) => v.vendedor_id === vendedor)?.realizado.vendido_liquido ?? 0);
+};
+
+describe("cobrança no PDV e entrega (L12c, ORA-OS-006 e ORA-OS-005)", () => {
+  it("o conserto entra no carrinho pelo orçamento aprovado; a venda concluída cobra a OS; a entrega encerra; conta uma vez na produção", async () => {
+    const ana = await comCaixa(await naLoja(ids.vendedorA, ids.lojaA));
+    const { id } = await prontaNaLoja(ana);
+    // Antes de cobrar: não entrega, e a loja não devolve "sem conserto" o conserto feito.
+    expect(await codigo(ana, ENTREGAR, [id, null])).toBe("22023");
+    expect(await codigo(ana, PASSO, [id, "devolver_ao_cliente", null, "Cliente levou"])).toBe("42501");
+    expect(await codigo(ana, CONTATO, [id, "entrega"])).toBe("22023");
+    const venda = await valor<string>(ana, NOVA_VENDA, [chave("venda")]);
+    const k = chave("item");
+    const item = await valor<string>(ana, COBRAR, [venda, id, k]);
+    expect(await valor(ana, COBRAR, [venda, id, k])).toBe(item);
+    expect(await valor(ana, COBRAR, [venda, id, chave("item")])).toBe(item); // a mesma OS na mesma venda: o mesmo item
+    expect((await db.query("select tipo, quantidade, preco_unitario_centavos::int as preco, os_id, preco_id from public.venda_itens where id = $1", [item])).rows[0])
+      .toEqual({ tipo: "servico", quantidade: 1, preco: TOTAL, os_id: id, preco_id: null });
+    expect((await db.query(
+      `select p.nome, p.tipo, p.reservado_para, v.sku, c.nome as categoria, (select count(*)::int from public.precos x where x.variante_id = v.id) as precos
+       from public.venda_itens i join public.variantes v on v.id = i.variante_id join public.produtos p on p.id = v.produto_id
+       join public.categorias c on c.id = p.categoria_id where i.id = $1`, [item])).rows[0])
+      .toEqual({ nome: "Conserto (ordem de serviço)", tipo: "servico", reservado_para: "ordem_de_servico", sku: "OS-CONSERTO", categoria: "Assistência técnica", precos: 0 });
+    expect(await cobranca(id)).toMatchObject({ venda_id: null, cobrada: false }); // no carrinho ainda não é cobrança
+    const antes = await vendidoLiquido(ana, ids.vendedorA);
+    const r = await valor<{ venda: string; numero: number; total: number }>(ana, FECHAR, [venda, dinheiro(TOTAL), chave("concluir")]);
+    expect(Number(r.total)).toBe(TOTAL);
+    expect(await cobranca(id)).toEqual({ venda_id: venda, cobrada: true, situacao: "aberta", local: "loja" });
+    expect(await vendidoLiquido(ana, ids.vendedorA)).toBe(antes + TOTAL);
+    // Cobrada, só sai pela entrega: nem a gerência devolve "sem conserto".
+    expect(await codigo(await naLoja(ids.dono, ids.lojaA), PASSO, [id, "devolver_ao_cliente", null, "Teste de devolução"])).toBe("22023");
+    expect(await valor(ana, ENTREGAR, [id, null])).toBe(true);
+    expect(await valor(ana, ENTREGAR, [id, null])).toBe(false);
+    expect(await os(id)).toMatchObject({ situacao: "entregue", local: "com_cliente", encerrada: true, motivo_encerramento: `Entregue ao cliente, cobrada na venda nº ${r.numero}` });
+    expect((await eventos(id)).slice(-2).map((e) => [e.tipo, e.de, e.para, e.observacao])).toEqual([
+      ["cobrada", null, null, `Venda nº ${r.numero}`], ["entregue_ao_cliente", "loja", "com_cliente", null],
+    ]);
+    // O comprovante da entrega pelo WhatsApp é depois dela; os outros avisos não valem mais.
+    expect(await valor(ana, CONTATO, [id, "entrega"])).toBe("41987650001");
+    expect(await codigo(ana, CONTATO, [id, "na_loja"])).toBe("22023");
+    // Entregue, a OS não volta a ser cobrada nem entra em outro carrinho; a produção não muda.
+    const outra = await valor<string>(ana, NOVA_VENDA, [chave("venda")]);
+    expect(await codigo(ana, COBRAR, [outra, id, chave("item")])).toBe("OR032");
+    expect(await vendidoLiquido(ana, ids.vendedorA)).toBe(antes + TOTAL);
+  });
+
+  it("a mesma OS em dois carrinhos: só uma venda conclui (OR032); cancelada antes da entrega, a cobrança se desfaz; depois da entrega, não", async () => {
+    const ana = await comCaixa(await naLoja(ids.vendedorA, ids.lojaA));
+    const { id } = await prontaNaLoja(ana);
+    const venda1 = await valor<string>(ana, NOVA_VENDA, [chave("venda")]);
+    await valor(ana, COBRAR, [venda1, id, chave("item")]);
+    const dono = await comCaixa(await naLoja(ids.dono, ids.lojaA), 50_000);
+    const venda2 = await valor<string>(dono, NOVA_VENDA, [chave("venda")]);
+    const itemDono = await valor<string>(dono, COBRAR, [venda2, id, chave("item")]);
+    const r1 = await valor<{ numero: number }>(ana, FECHAR, [venda1, dinheiro(TOTAL), chave("concluir")]);
+    const segunda = await tentar(dono, FECHAR, [venda2, dinheiro(TOTAL), chave("concluir")]);
+    expect(segunda).toMatchObject({ codigo: "OR032" });
+    expect("mensagem" in segunda ? segunda.mensagem : "").toContain(`venda nº ${r1.numero}`);
+    await valor(dono, "select public.remover_item($1) as v", [itemDono]);
+    expect(await codigo(dono, COBRAR, [venda2, id, chave("item")])).toBe("OR032");
+    // A venda é cancelada antes da entrega: a OS volta a "não cobrada", com o evento, e é cobrada de novo.
+    expect(await valor(dono, CANCELAR, [venda1, "Pagamento lançado errado"])).toBe(true);
+    expect(await cobranca(id)).toMatchObject({ venda_id: null, cobrada: false, situacao: "aberta", local: "loja" });
+    expect((await eventos(id)).at(-1)).toMatchObject({ tipo: "cobranca_desfeita", observacao: `Venda nº ${r1.numero} cancelada` });
+    await valor(dono, COBRAR, [venda2, id, chave("item")]);
+    await valor(dono, FECHAR, [venda2, dinheiro(TOTAL), chave("concluir")]);
+    expect(await cobranca(id)).toMatchObject({ venda_id: venda2, cobrada: true });
+    expect(await valor(dono, ENTREGAR, [id, "Cliente conferiu o aparelho"])).toBe(true);
+    // Entregue, o cancelamento da venda não reabre a OS (fica para o relatório de OS sem venda válida).
+    expect(await valor(dono, CANCELAR, [venda2, "Cliente reclamou do conserto"])).toBe(true);
+    expect(await cobranca(id)).toEqual({ venda_id: venda2, cobrada: true, situacao: "entregue", local: "com_cliente" });
+  });
+
+  it("recusas: conserto não concluído, OS de outra loja, quem não vende; o produto do conserto fora da OS; desconto pede aprovação; a gerência devolve sem cobrar com motivo", async () => {
+    const ana = await comCaixa(await naLoja(ids.vendedorA, ids.lojaA));
+    const venda = await valor<string>(ana, NOVA_VENDA, [chave("venda")]);
+    const { id: comTecnico } = await comOTecnico(ana);
+    expect(await codigo(ana, COBRAR, [venda, comTecnico, chave("item")])).toBe("22023"); // sem conserto concluído
+    expect(await codigo(ana, COBRAR, [venda, randomUUID(), chave("item")])).toBe("P0002");
+    expect(await codigo(ana, COBRAR, [venda, comTecnico, " "])).toBe("22023");
+    const { id, tecnico } = await prontaNaLoja(ana, "41987650011");
+    // A loja B não cobra a OS da loja A; o técnico não mexe na venda de ninguém.
+    const bia = await naLoja(ids.vendedorAB, ids.lojaB);
+    const vendaB = await valor<string>(bia, NOVA_VENDA, [chave("venda")]);
+    expect(await codigo(bia, COBRAR, [vendaB, id, chave("item")])).toBe("P0002");
+    expect(await codigo(tecnico, COBRAR, [venda, id, chave("item")])).toBe("P0002");
+    // Chave já usada para a outra OS.
+    const k = chave("item");
+    const item = await valor<string>(ana, COBRAR, [venda, id, k]);
+    expect(await codigo(ana, COBRAR, [venda, comTecnico, k])).toBe("OR004");
+    // O produto do conserto não entra no carrinho sozinho, nem com um preço cadastrado para ele.
+    const variante = (await db.query<{ v: string }>("select variante_id as v from public.venda_itens where id = $1", [item])).rows[0]?.v;
+    expect(await codigo(ana, "select public.adicionar_item($1, $2, null, 1, $3) as v", [venda, variante, chave("item")])).toBe("P0002");
+    await db.query("insert into public.precos (organizacao_id, variante_id, valor_centavos, origem) select organizacao_id, id, 5_000, 'manual' from public.variantes where id = $1", [variante]);
+    const sozinho = await tentar(ana, "select public.adicionar_item($1, $2, null, 1, $3) as v", [venda, variante, chave("item")]);
+    expect(sozinho).toMatchObject({ codigo: "22023" });
+    expect("mensagem" in sozinho ? sozinho.mensagem : "").toContain("pela ordem de serviço");
+    // Nem o dono do banco muda o tipo do produto do sistema.
+    const direto = async (sql: string, params: unknown[]) => {
+      await db.exec("savepoint direto");
+      try { await db.query(sql, params); return null; } catch (e) { return (e as { code?: string }).code ?? "erro"; } finally { await db.exec("rollback to savepoint direto"); }
+    };
+    expect(await direto("update public.produtos set tipo = 'acessorio' where id = (select produto_id from public.variantes where id = $1)", [variante])).toBe("42501");
+    expect(await direto("update public.produtos set reservado_para = 'ordem_de_servico' where id = (select produto_id from public.variantes where id = $1)", [cat.capa])).toBe("42501");
+    // Desconto no conserto: como em qualquer item sem política, pede a aprovação da gerência.
+    expect(await valor(ana, "select public.aplicar_desconto($1, 3_000) as v", [item])).toBe("precisa_aprovacao");
+    // Um segundo conserto pronto: a gerência devolve sem cobrar, com o motivo; a loja não.
+    const { id: garantia } = await prontaNaLoja(ana, "41987650012");
+    expect(await codigo(ana, PASSO, [garantia, "devolver_ao_cliente", null, "Garantia do conserto anterior"])).toBe("42501");
+    const gerente = await naLoja(ids.dono, ids.lojaA);
+    expect(await valor(gerente, PASSO, [garantia, "devolver_ao_cliente", null, "Garantia do conserto anterior"])).toBe(true);
+    expect(await os(garantia)).toMatchObject({ situacao: "devolvida", motivo_encerramento: "Garantia do conserto anterior" });
+    expect(await codigo(ana, CONTATO, [garantia, "entrega"])).toBe("22023");
+  });
+
+  it("quem vê: a ligação da venda com a OS segue o RLS de cada tabela; ninguém escreve direto", async () => {
+    const ana = await comCaixa(await naLoja(ids.vendedorA, ids.lojaA));
+    const { id } = await prontaNaLoja(ana);
+    const venda = await valor<string>(ana, NOVA_VENDA, [chave("venda")]);
+    const item = await valor<string>(ana, COBRAR, [venda, id, chave("item")]);
+    expect((await comoLinhas(ana, "select os_id from public.venda_itens where id = $1", [item]))[0]?.os_id).toBe(id);
+    expect(await comoLinhas(await naLoja(ids.vendedorAB, ids.lojaB), "select os_id from public.venda_itens where id = $1", [item])).toEqual([]);
+    expect(await codigo(ana, "update public.venda_itens set os_id = null where id = $1", [item])).toBe("42501");
+    expect(await codigo(ana, "update public.ordens_servico set venda_id = $2 where id = $1", [id, venda])).toBe("42501");
   });
 });
