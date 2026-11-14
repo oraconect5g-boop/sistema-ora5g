@@ -86,7 +86,15 @@ export default async function Comprovante({ params, searchParams }: { params: Pr
       {textoDoParametro(parametros.retorno) === "recebido" && <Aviso tom="sucesso">Item conferido e de volta ao estoque.</Aviso>}
       {textoDoParametro(parametros.retorno) === "nao_recebido" && <Aviso tom="info">Retorno fechado sem estoque: o item não voltou.</Aviso>}
       {erro && <Aviso tom="perigo">{ERROS_DA_VENDA[erro]}</Aviso>}
-      {erroNota && <Aviso tom="perigo">{ERROS_DAS_NOTAS[erroNota]}</Aviso>}
+      {erroNota && (
+        <Aviso tom="perigo">
+          {ERROS_DAS_NOTAS[erroNota]}
+          {/* K1b (#76): completa-se o MESMO cadastro do cliente e pede-se a nota de novo. */}
+          {(erroNota === "cliente_sem_endereco" || erroNota === "cliente_sem_documento") && v.cliente_id && (
+            <> <Link href={`/clientes/${v.cliente_id}`} className="font-semibold underline">Completar o cadastro do cliente</Link></>
+          )}
+        </Aviso>
+      )}
       {textoDoParametro(parametros.devolvida) && <Aviso tom="sucesso">Devolução nº {textoDoParametro(parametros.devolvida)} registrada: estoque e caixa atualizados.{textoDoParametro(parametros.vale) ? ` Vale-troca nº ${textoDoParametro(parametros.vale)} criado: informe esse número no pagamento da nova venda.` : ""}</Aviso>}
       {textoDoParametro(parametros.nota) === "pedida" && <Aviso tom="sucesso">Nota pedida: aparece na fila do dono e do gerente.</Aviso>}
       {textoDoParametro(parametros.nota) === "corrigida" && <Aviso tom="sucesso">Correção enviada: o pedido voltou para a fila.</Aviso>}
@@ -163,11 +171,11 @@ export default async function Comprovante({ params, searchParams }: { params: Pr
               <input type="hidden" name="venda" value={v.id} /><input type="hidden" name="chave" value={randomUUID()} />
               {v.cliente_id && buscaCliente.data && (
                 <label className="flex min-h-10 items-center gap-2 text-sm sm:col-span-2"><input type="hidden" name="cliente" value={v.cliente_id} />
-                  <input type="checkbox" name="usar_cliente" value="sim" defaultChecked className="size-4 accent-acao" /> No nome do cliente da venda (o sistema copia nome e CPF/CNPJ do cadastro)</label>
+                  <input type="checkbox" name="usar_cliente" value="sim" defaultChecked className="size-4 accent-acao" /> No nome do cliente da venda (o sistema copia nome, CPF/CNPJ e endereço do cadastro)</label>
               )}
               <label className="text-xs font-medium">Nome na nota (opcional)<input name="nome" maxLength={120} className={campo} /></label>
               <label className="text-xs font-medium">CPF ou CNPJ na nota (opcional)<input name="documento" inputMode="numeric" autoComplete="off" className={campo} /></label>
-              <p className="text-xs text-suave sm:col-span-2">O pedido vai para a fila do dono e do gerente; o CPF fica guardado só até a emissão.</p>
+              <p className="text-xs text-suave sm:col-span-2">O pedido vai para a fila do dono e do gerente; o CPF e o endereço ficam guardados só até a emissão.</p>
               <div><Botao type="submit" tamanho="sm">Pedir nota fiscal</Botao></div>
             </form>
           )}

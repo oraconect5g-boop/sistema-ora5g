@@ -5549,6 +5549,7 @@ export type Database = {
         Args: { p_destinatario: Json; p_pedido: string }
         Returns: boolean
       }
+      notas_dados_para_emitir: { Args: { p_pedido: string }; Returns: Json }
       notas_decidir: {
         Args: { p_aprovar: boolean; p_observacao: string; p_pedido: string }
         Returns: string

@@ -2,7 +2,7 @@
   "_leia": "Checkpoint do programa de execução integral (PR #67). Carregar ao retomar e seguir para o próximo item executável da fila; não reiniciar o projeto. Estados vêm de status-requisitos.json (fonte da rastreabilidade); este arquivo acrescenta lote, bloqueio externo e revisão.",
   "atualizado_em": "2026-11-14",
   "base": {
-    "main": "2c6c164",
+    "main": "a5c039b",
     "pacote": {
       "pr": 67,
       "branch": "docs/execucao-integral-20261110",
@@ -18,12 +18,12 @@
   },
   "publicado": {
     "homologacao": {
-      "commit": "2c6c164",
+      "commit": "a5c039b",
       "quando": "2026-11-14",
-      "conferido": "rodapé da tela de entrada (2c6c164 · build 14/11/2026 10:53), /saude e /estoque, /catalogo e /contas-a-pagar respondendo 307 para o login"
+      "conferido": "rodapé da tela de entrada (a5c039b · build 14/11/2026 11:11), /saude e /clientes e /clientes/novo respondendo 307 para o login"
     },
     "falta_publicar": [
-      "K1a, cadastro do cliente com nome completo e WhatsApp, publicado ao fim do lote; as migrations do B1, do B3, do B4 e do K1a (20261114135430_clientes_nome_e_whatsapp) pedem o sim do proprietário para o ora5g-dev"
+      "K1b, destinatário completo da nota e dados para emitir, publicado ao fim do lote; as migrations do B1, do B3, do B4, do K1a e do K1b (20261114140614_notas_destinatario_completo) pedem o sim do proprietário para o ora5g-dev"
     ]
   },
   "contagem_dos_estados": {
@@ -515,7 +515,7 @@
       "titulo": "Gerar solicitação fiscal a partir da venda em poucos toques",
       "prioridade": "P0",
       "estado": "testado",
-      "lote": "L6a PDV",
+      "lote": "L6a PDV; K1b destinatário completo (14/11)",
       "bloqueio_externo": null,
       "revisado_codex": false,
       "homologado": false
