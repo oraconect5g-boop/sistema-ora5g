@@ -1,4 +1,4 @@
--- Reversão de 20261114021654_bonus_por_meta. Apaga as leituras do bônus e do extrato, a definição das
+-- Reversão de 20261114092832_bonus_por_meta. Apaga as leituras do bônus e do extrato, a definição das
 -- regras, a tabela das versões (com as regras gravadas: guarde uma cópia antes, se houver) e a
 -- permissão bonus.definir.
 drop function if exists public.extrato_do_vendedor(date, uuid, uuid);

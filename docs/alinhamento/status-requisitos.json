@@ -9,7 +9,7 @@
     "bloqueado": "depende de decisão do proprietário ou de terceiro",
     "nao_iniciado": "ainda não começou"
   },
-  "atualizado_em": "2026-11-13",
+  "atualizado_em": "2026-11-14",
   "requisitos": {
     "ORA-ORG-001": {
       "status": "parcial",
@@ -89,12 +89,12 @@
     "ORA-PERF-001": {
       "status": "parcial",
       "nota": "Contagem de produção por categoria (aparelho, acessório, chip, ativação só confirmada, recarga) em regra pura testada. Falta ledger de performance no banco. G4b (13/11): o realizado das metas conta, por vendedor e por loja, no banco, os aparelhos (unidades), os acessórios (valor) e o Ora Connect confirmado, com devolução e cancelamento no mês em que acontecem. L9a (13/11): o extrato do vendedor (extrato_do_vendedor) mostra, fato a fato, cada venda concluída, cancelamento, devolução e operação do Ora Connect confirmada que soma o realizado do mês, com o efeito em cada medida; os totais são os de metas_painel (provado no banco). Chips e recargas por unidade ainda não são medida própria.",
-      "evidencia": "packages/dominio/src/venda.test.ts; packages/banco/supabase/migrations/20261114012538_metas.sql; packages/banco/src/metas.test.ts; apps/plataforma/src/lib/metas/painel.ts; apps/plataforma/src/app/metas; packages/banco/supabase/migrations/20261114021654_bonus_por_meta.sql; packages/banco/src/bonus.test.ts; apps/plataforma/src/app/metas/extrato"
+      "evidencia": "packages/dominio/src/venda.test.ts; packages/banco/supabase/migrations/20261114012538_metas.sql; packages/banco/src/metas.test.ts; apps/plataforma/src/lib/metas/painel.ts; apps/plataforma/src/app/metas; packages/banco/supabase/migrations/20261114092832_bonus_por_meta.sql; packages/banco/src/bonus.test.ts; apps/plataforma/src/app/metas/extrato"
     },
     "ORA-PERF-002": {
       "status": "parcial",
       "nota": "L9a (13/11): o bônus é calculado sobre fatos que o banco já guarda uma vez só (venda concluída, devolução e operação do Ora Connect confirmada, cada uma com chave única), pela regra de contagem 1 das metas; ler de novo não muda nada e não existe bônus gravado por evento. Falta: o fechamento do mês com o bônus gravado uma vez por vendedor, loja e mês (L9b), que impede pagar duas vezes.",
-      "evidencia": "packages/banco/supabase/migrations/20261114021654_bonus_por_meta.sql; packages/banco/src/bonus.test.ts"
+      "evidencia": "packages/banco/supabase/migrations/20261114092832_bonus_por_meta.sql; packages/banco/src/bonus.test.ts"
     },
     "ORA-PERF-003": {
       "status": "parcial",
@@ -183,8 +183,8 @@
     },
     "ORA-PERF-006": {
       "status": "testado",
-      "nota": "L9a (13/11), pela decisão do proprietário (D-014): regras do bônus por meta, só do dono (bonus.definir), da rede inteira, por medida (vendido líquido, aparelhos, acessórios e Ora Connect): de 1 a 5 faixas \"a partir de X% da meta, R$ Y\" (escala), vale a maior alcançada. Versões só de inserção em bonus_regras, com o mês em que passam a valer (deste mês até 12 à frente; o mês que terminou não muda), motivo para mudar ou retirar e auditoria; tudo ou nada nas quatro medidas. Tela /metas/bonus com o formulário e o histórico. Campanha e margem ficam fora por decisão do proprietário (bônus só por meta). A migration ainda não foi aplicada no ora5g-dev.",
-      "evidencia": "packages/banco/supabase/migrations/20261114021654_bonus_por_meta.sql; packages/banco/src/bonus.test.ts; packages/banco/src/autorizacao-funcoes.test.ts; apps/plataforma/src/app/metas/bonus"
+      "nota": "L9a (13/11), pela decisão do proprietário (D-014): regras do bônus por meta, só do dono (bonus.definir), da rede inteira, por medida (vendido líquido, aparelhos, acessórios e Ora Connect): de 1 a 5 faixas \"a partir de X% da meta, R$ Y\" (escala), vale a maior alcançada. Versões só de inserção em bonus_regras, com o mês em que passam a valer (deste mês até 12 à frente; o mês que terminou não muda), motivo para mudar ou retirar e auditoria; tudo ou nada nas quatro medidas. Tela /metas/bonus com o formulário e o histórico. Campanha e margem ficam fora por decisão do proprietário (bônus só por meta). A migration foi aplicada no ora5g-dev em 14/11, com o sim do proprietário (md5 conferido).",
+      "evidencia": "packages/banco/supabase/migrations/20261114092832_bonus_por_meta.sql; packages/banco/src/bonus.test.ts; packages/banco/src/autorizacao-funcoes.test.ts; apps/plataforma/src/app/metas/bonus"
     },
     "ORA-PERF-007": {
       "status": "parcial",
@@ -518,7 +518,7 @@
     "ORA-PERF-004": {
       "status": "parcial",
       "nota": "G4b (13/11), pela decisão do proprietário do mesmo dia (D-014 em parte): meta mensal da loja e de cada vendedor, em quatro medidas (valor vendido líquido, aparelhos, acessórios e Ora Connect confirmado), com versões só de inserção, motivo para mudar ou retirar e auditoria; o mês que terminou não muda; o dono define em todas as lojas e o gerente na dele (metas.gerir); meta nova só para quem vende na loja e não está bloqueado; tudo ou nada por pessoa. Tela /metas com o formulário. A migration foi aplicada no ora5g-dev em 13/11 (md5 conferido). FALTA: meta por categoria do catálogo (se o proprietário quiser), comissão e bônus (D-014, P8), revisão do Codex e homologação. L9a (13/11): o bônus usa só a meta individual de cada vendedor; a meta da loja inteira não paga bônus (D-014).",
-      "evidencia": "packages/banco/supabase/migrations/20261114012538_metas.sql; packages/banco/src/metas.test.ts; apps/plataforma/src/lib/metas/painel.ts; apps/plataforma/src/app/metas; packages/banco/supabase/migrations/20261114021654_bonus_por_meta.sql; packages/banco/src/bonus.test.ts"
+      "evidencia": "packages/banco/supabase/migrations/20261114012538_metas.sql; packages/banco/src/metas.test.ts; apps/plataforma/src/lib/metas/painel.ts; apps/plataforma/src/app/metas; packages/banco/supabase/migrations/20261114092832_bonus_por_meta.sql; packages/banco/src/bonus.test.ts"
     },
     "ORA-POS-014": {
       "status": "parcial",
