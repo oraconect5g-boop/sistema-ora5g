@@ -1,4 +1,4 @@
--- Reversão de 20261113191951_financeiras_a_receber. ATENÇÃO: apaga os registros de repasse (referência,
+-- Reversão de 20261114012722_financeiras_a_receber. ATENÇÃO: apaga os registros de repasse (referência,
 -- valor e data). Contas "recebidas" voltam a "abertas" antes de as colunas saírem, para a regra antiga valer.
 drop function if exists public.financeiras_a_receber();
 drop function if exists public.financeira_desfazer_recebimento(uuid, text);

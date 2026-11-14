@@ -1,6 +1,6 @@
--- Reversão de 20261113235217_resultado_do_mes. Apaga a leitura do resultado do mês, a marcação das
+-- Reversão de 20261114013120_resultado_do_mes. Apaga a leitura do resultado do mês, a marcação das
 -- categorias que entram no resultado e a permissão resultado.ver; volta as funções das categorias ao
--- texto do lote L8a (20261113212437_contas_a_pagar).
+-- texto do lote L8a (20261114012952_contas_a_pagar).
 drop function if exists public.resultado_do_mes(date, uuid, integer);
 drop index if exists public.caixa_saidas_autorizadas;
 drop index if exists public.contas_a_pagar_vencimento;

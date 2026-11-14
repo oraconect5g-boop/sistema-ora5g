@@ -1,4 +1,4 @@
--- Reversão de 20261114003953_previsao_de_caixa. Apaga a leitura da previsão de caixa e a permissão
+-- Reversão de 20261114013159_previsao_de_caixa. Apaga a leitura da previsão de caixa e a permissão
 -- previsao.ver (não há dado gravado: a previsão só lê).
 drop function if exists public.previsao_de_caixa(integer, uuid);
 do $$

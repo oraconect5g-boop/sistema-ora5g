@@ -1,4 +1,4 @@
--- Reversão de 20261113152157_financeiro_conciliacao: recria public.financeiro_painel com o texto aplicado em
+-- Reversão de 20261114012326_financeiro_conciliacao: recria public.financeiro_painel com o texto aplicado em
 -- 20261110224537_financeiro_painel (sem os números da conciliação). A função só lê: desfazer não perde
 -- nenhum registro.
 create or replace function public.financeiro_painel(

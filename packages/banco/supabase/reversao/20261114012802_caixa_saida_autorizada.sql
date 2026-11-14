@@ -1,4 +1,4 @@
--- Reversão de 20261113200029_caixa_saida_autorizada. ATENÇÃO: só em banco sem saída autorizada lançada.
+-- Reversão de 20261114012802_caixa_saida_autorizada. ATENÇÃO: só em banco sem saída autorizada lançada.
 -- Os movimentos "saida_autorizada" são só de inserção e entram no dinheiro esperado dos caixas: se houver
 -- algum, a volta da restrição antiga falha de propósito (o livro do caixa não se reescreve).
 drop function if exists public.caixa_cancelar_saida(uuid);

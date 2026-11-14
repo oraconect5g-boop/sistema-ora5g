@@ -1,7 +1,7 @@
 {
   "projeto": "ora5g-dev (qgnbeuugklzzcevdzrvg)",
   "regra": "REV-018 / #17: o nome do arquivo usa a versão que o Supabase gravou no histórico (supabase_migrations.schema_migrations). Migration aplicada não muda mais: o teste src/migrations.test.ts compara o md5 do arquivo com o registrado aqui. Correção = migration nova.",
-  "conferido_em": "2026-11-08",
+  "conferido_em": "2026-11-13",
   "migrations": [
     { "versao": "20261107140352", "nome": "fundacao_acesso", "md5": "a8f160b848c860269fed9b3dced6aae5", "aplicada_em": "2026-11-07" },
     { "versao": "20261107140448", "nome": "indices_chaves_estrangeiras", "md5": "04fa57c5f31bc5cb8beb99ebfac7297e", "aplicada_em": "2026-11-07" },
@@ -41,6 +41,18 @@
     { "versao": "20261112033713", "nome": "recebimento_correcoes", "md5": "8f985fcbb4766e5b3a5ec676aae67201", "aplicada_em": "2026-11-12" },
     { "versao": "20261112163333", "nome": "importador_correcoes", "md5": "d4003b4a7642b74117a4442113bfe385", "aplicada_em": "2026-11-12" },
     { "versao": "20261112195200", "nome": "vendas_painel", "md5": "a477b00219c4eff93cc94ebb3066484a", "aplicada_em": "2026-11-12" },
-    { "versao": "20261113065706", "nome": "margem_painel", "md5": "7af84d1c116430125d3c769abe29a21e", "aplicada_em": "2026-11-13" }
+    { "versao": "20261113065706", "nome": "margem_painel", "md5": "7af84d1c116430125d3c769abe29a21e", "aplicada_em": "2026-11-13" },
+    { "versao": "20261114012326", "nome": "financeiro_conciliacao", "md5": "d9b2f491d11b795ae5923b4eac4ae290", "aplicada_em": "2026-11-13" },
+    { "versao": "20261114012407", "nome": "estoque_painel", "md5": "ce11207894796265a90b602e6f7133e2", "aplicada_em": "2026-11-13" },
+    { "versao": "20261114012431", "nome": "connect_painel", "md5": "a3f5cc7e1759ac6ffcf18d901c3a11ad", "aplicada_em": "2026-11-13" },
+    { "versao": "20261114012538", "nome": "metas", "md5": "a7ea23bdfac126f02262f4ce815b387e", "aplicada_em": "2026-11-13" },
+    { "versao": "20261114012604", "nome": "metas_lojas", "md5": "1ac0be9bf479d3f486984f1625630b11", "aplicada_em": "2026-11-13" },
+    { "versao": "20261114012623", "nome": "equipe_por_papel", "md5": "c8cde2890516fcea7192cf5f607647ec", "aplicada_em": "2026-11-13" },
+    { "versao": "20261114012647", "nome": "venda_item_regra_de_preco", "md5": "285ab270a635fe29c54ebaf8791b0bb3", "aplicada_em": "2026-11-13" },
+    { "versao": "20261114012722", "nome": "financeiras_a_receber", "md5": "37314903a1f24a5181ac099a6d56fedd", "aplicada_em": "2026-11-13" },
+    { "versao": "20261114012802", "nome": "caixa_saida_autorizada", "md5": "a33eb3d2e66b257a7774d02ed78be4e9", "aplicada_em": "2026-11-13" },
+    { "versao": "20261114012952", "nome": "contas_a_pagar", "md5": "71168df92036d4d537827385711b517c", "aplicada_em": "2026-11-13" },
+    { "versao": "20261114013120", "nome": "resultado_do_mes", "md5": "05f10b59896103ccf88b5c88fc1a82bf", "aplicada_em": "2026-11-13" },
+    { "versao": "20261114013159", "nome": "previsao_de_caixa", "md5": "7292b5793b0b7f748c53e867d92505fe", "aplicada_em": "2026-11-13" }
   ]
 }

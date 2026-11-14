@@ -1,4 +1,4 @@
--- Reversão de 20261113185806_venda_item_regra_de_preco. ATENÇÃO: apaga a regra de preço gravada nos
+-- Reversão de 20261114012647_venda_item_regra_de_preco. ATENÇÃO: apaga a regra de preço gravada nos
 -- itens das vendas feitas depois deste lote (a coluna preco_id). As funções voltam às do L3b e do PDV.
 create or replace function public.preco_vigente(
   p_variante uuid, p_unidade uuid, p_canal text default 'loja', p_momento timestamptz default now()

@@ -1,4 +1,4 @@
--- Reversão de 20261113212437_contas_a_pagar. ATENÇÃO: apaga as contas a pagar lançadas e as categorias
+-- Reversão de 20261114012952_contas_a_pagar. ATENÇÃO: apaga as contas a pagar lançadas e as categorias
 -- (com os pagamentos registrados nelas). A auditoria guarda o histórico de cada mudança.
 drop function if exists public.contas_a_pagar_resumo(uuid, boolean);
 drop function if exists public.conta_pagar_categoria_salvar(uuid, text, boolean);
