@@ -92,7 +92,8 @@ describe("códigos de outros canais (CAT-009)", () => {
     const novo = await ligar(dono, cat.capa, "rein", "12345");
     expect(novo.id).not.toBe(antigo.id);
     expect(await valor(dono, POR_CODIGO, ["rein", "12345"])).toBe(cat.capa);
-    expect((await db.query("select variante_id, desligado_por, motivo_desligamento from public.variante_codigos_externos where codigo = '12345' order by ligado_em, id")).rows)
+    // Na mesma transação os dois vínculos têm o mesmo ligado_em (now()): a ordem vem do desligamento (o desligado primeiro).
+    expect((await db.query("select variante_id, desligado_por, motivo_desligamento from public.variante_codigos_externos where codigo = '12345' order by desligado_em nulls last")).rows)
       .toEqual([
         { variante_id: cat.aparelho, desligado_por: ids.dono, motivo_desligamento: "Código era da capa" },
         { variante_id: cat.capa, desligado_por: null, motivo_desligamento: null },
