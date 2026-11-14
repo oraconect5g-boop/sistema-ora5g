@@ -1,9 +1,9 @@
 // Inventário de autorização (prioridade 1 do diagnóstico de 10/11/2026; ORA-ORG-004 e ORA-QUAL-002).
 // O aviso 0029 do Supabase lista as funções SECURITY DEFINER que qualquer usuário logado pode chamar
-// pela API: 116 em 13/11 (48 + 6 do cadastro de lojas, L2, + 5 do cadastro do catálogo, L3a, + 4 dos preços, L3b,
+// pela API: 118 em 14/11 (48 + 6 do cadastro de lojas, L2, + 5 do cadastro do catálogo, L3a, + 4 dos preços, L3b,
 // + 4 da importação do catálogo, L3c, + 3 da entrada de mercadoria, L4a, + 5 do inventário, L4b, + 6 dos clientes, L5a,
 // + 9 do funil e da agenda, L5b, + 4 da mesclagem e dos segmentos, L5c, + 4 das maquininhas e da conciliação, L7a,
-// + 2 da leitura das entradas, R1, + 1 do nome no ranking, G1, + 2 das metas, G4b, + 3 das financeiras, L7b, + 3 da saída autorizada do caixa, L7c, + 6 das contas a pagar, L8a, + 1 das regras do bônus por meta, L9a; no L8b, a das categorias ganhou o parâmetro "entra no resultado"). Elas rodam com poder total e cada uma confere sessão, loja e permissão por
+// + 2 da leitura das entradas, R1, + 1 do nome no ranking, G1, + 2 das metas, G4b, + 3 das financeiras, L7b, + 3 da saída autorizada do caixa, L7c, + 6 das contas a pagar, L8a, + 1 das regras do bônus por meta, L9a, + 2 do fechamento do bônus, L9b; no L8b, a das categorias ganhou o parâmetro "entra no resultado"). Elas rodam com poder total e cada uma confere sessão, loja e permissão por
 // conta própria. Este teste monta um "mundo" fictício com objetos reais em duas lojas e tenta cada
 // função como 13 tipos de atacante. Recusa = erro, ou resposta vazia numa leitura, e nada muda no
 // banco. O teste lista as funções no próprio banco e falha se aparecer uma nova sem casos aqui.
@@ -445,6 +445,16 @@ const CASOS: Record<string, Caso> = {
     A: () => ["select public.bonus_definir(date_trunc('month', now())::date, '{\"connect\": [{\"a_partir_de\": 100, \"valor\": 1000}]}'::jsonb, null)", []],
     outraOrganizacao: false, semPermissao: true,
   },
+  // Fechamento do bônus (L9b): envia quem confere a loja (bonus.conferir: o gerente, na dele, e o dono);
+  // aprova só o dono (bonus.aprovar). O vendedor da loja A é o "sem permissão".
+  "bonus_fechamento_aprovar(uuid,jsonb)": {
+    A: () => ["select public.bonus_fechamento_aprovar($1, '{}'::jsonb)", [alvo.fechamentoA]],
+    B: () => ["select public.bonus_fechamento_aprovar($1, '{}'::jsonb)", [alvo.fechamentoB]], semPermissao: true,
+  },
+  "bonus_fechamento_enviar(date,uuid,jsonb,jsonb)": {
+    A: () => ["select public.bonus_fechamento_enviar((date_trunc('month', now()) - interval '1 month')::date, $1, '{}'::jsonb, null)", [ids.lojaA]],
+    B: () => ["select public.bonus_fechamento_enviar((date_trunc('month', now()) - interval '1 month')::date, $1, '{}'::jsonb, null)", [ids.lojaB]], semPermissao: true,
+  },
   "movimentar_caixa(text,bigint,text,text)": { A: () => ["select public.movimentar_caixa('sangria', 100, 'Tentativa', $1)", [chave("ataque")]], outraOrganizacao: false },
   "notas_cancelar(uuid,text)": {
     A: () => ["select public.notas_cancelar($1, 'Tentativa')", [alvo.notaA]], B: () => ["select public.notas_cancelar($1, 'Tentativa')", [alvo.notaB]], semPermissao: true,
@@ -688,6 +698,13 @@ beforeAll(async () => {
        values ($1, $2, $3, 'Conta do mundo', 100, current_date + 10, gen_random_uuid(), 'unica', $4, $5) returning id`,
       [ids.organizacao, loja, alvo.categoriaPagar, `mundo:contapagar:${lado}`, ids.dono])).rows[0]?.id ?? "";
   }
+  // Um fechamento do bônus do mês passado enviado em cada loja (L9b), à espera do dono (gravados pelo banco: só alvo).
+  for (const [lado, loja, quem] of [["A", ids.lojaA, ids.dono], ["B", ids.lojaB, ids.gerenteB]] as const) {
+    alvo[`fechamento${lado}`] = (await db.query<{ id: string }>(
+      `insert into public.bonus_fechamentos (organizacao_id, unidade_id, mes, apuracao, total_calculado, enviado_por)
+       values ($1, $2, (date_trunc('month', now() at time zone 'America/Sao_Paulo') - interval '1 month')::date, '{}'::jsonb, 0, $3) returning id`,
+      [ids.organizacao, loja, quem])).rows[0]?.id ?? "";
+  }
   // Uma entrada de mercadoria em cada loja (gravadas pelo banco: só alvo, sem itens).
   for (const [chaveDoAlvo, loja] of [["entradaA", ids.lojaA], ["entradaB", ids.lojaB]] as const) {
     alvo[chaveDoAlvo] = (await db.query<{ id: string }>(
@@ -739,7 +756,7 @@ describe("inventário: toda função SECURITY DEFINER exposta tem casos de recus
     const expostas = rows.map((r) => r.f);
     expect(expostas.filter((f) => !(f in CASOS)), "função nova exposta sem casos de recusa: acrescente ao CASOS").toEqual([]);
     expect(Object.keys(CASOS).filter((f) => !expostas.includes(f)), "caso de função que não existe mais").toEqual([]);
-    expect(expostas).toHaveLength(116);
+    expect(expostas).toHaveLength(118);
   });
 
   it("visitante anônimo não executa nenhuma função do esquema public; no privado só um gatilho, que não roda sozinho", async () => {

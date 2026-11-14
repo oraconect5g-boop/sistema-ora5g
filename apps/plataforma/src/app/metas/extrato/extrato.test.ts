@@ -204,4 +204,23 @@ describe("/metas/extrato (L9a)", () => {
     expect(p.visivel).toContain("Sem permissão");
     expect(cenario.chamadas).toEqual([]);
   });
+
+  it("no mês fechado, o valor aprovado de quem está no extrato, com o motivo do ajuste (L9b)", async () => {
+    cenario.respostas.bonus_do_mes = { data: { ...BONUS, mes: "2026-10-01", regras: { connect: { ...BONUS.regras.connect, vigente_desde: "2026-10-01" } } }, error: null };
+    cenario.respostas.extrato_do_vendedor = { data: extrato(ANA, "2026-10-01"), error: null };
+    cenario.respostas.bonus_fechamento_do_mes = { data: { mes: "2026-10-01", unidade_id: LOJA, fechamento: null, linhas: [
+      { vendedor_id: ANA, total_calculado: 5_000, total_aprovado: 8_000, ajuste_motivo: "Ativação do dia 31", aprovado_em: "2026-11-03T12:00:00+00:00", contestacao: null },
+    ] }, error: null };
+    let p = await pagina({ mes: "2026-10" });
+    expect(p.chamadas("bonus_fechamento_do_mes")).toEqual([{ p_mes: "2026-10-01", p_unidade: LOJA }]);
+    expect(p.visivel).toContain("Bônus de outubro de 2026 Aprovado pelo dono em 03/11/2026, 09:00. Vale a maior faixa alcançada em cada medida. R$ 80,00 O dono aprovou outro valor Ativação do dia 31 (calculado: R$ 50,00).");
+    // Antes do envio: provisório; no mês corrente, nem se pergunta.
+    cenario.respostas.bonus_fechamento_do_mes = { data: { mes: "2026-10-01", unidade_id: LOJA, fechamento: null, linhas: [] }, error: null };
+    expect((await pagina({ mes: "2026-10" })).visivel).toContain("Bônus de outubro de 2026 Provisório até o fechamento do mês.");
+    cenario.chamadas = [];
+    cenario.respostas.bonus_do_mes = { data: BONUS, error: null };
+    cenario.respostas.extrato_do_vendedor = { data: extrato(ANA), error: null };
+    p = await pagina();
+    expect(p.chamadas("bonus_fechamento_do_mes")).toEqual([]);
+  });
 });

@@ -59,6 +59,8 @@ const APRESENTACAO = new Set([
   "MetasDaGestao", "MinhasMetas", "ResumoDaLoja", "PorVendedor", "EquipeNoMes", "DefinirMetas", "ComoConta", "MinhaMeta", "EstadoDoPainel", "BarrasDoRitmo",
   // Bônus por meta (L9a).
   "BonusDaEquipe", "MeuBonus", "MedidaDoBonus", "RegrasDoMes", "SemRegra", "CelulaDaMedida", "EstadoDoBonus", "ComoOBonusConta",
+  // Fechamento do bônus (L9b).
+  "SituacaoDoFechamento",
 ]);
 type Elemento = { tipo: string; props: Linha };
 function percorrer(v: unknown, elemento: (e: Elemento) => void, folha: (t: string) => void): void {
@@ -399,7 +401,7 @@ describe("/metas, bônus por meta (L9a)", () => {
     expect(p.chamadas("bonus_do_mes")).toEqual([{ p_mes: "2026-11-01", p_unidade: LOJA }]);
     const c = p.cartao("Bônus de novembro de 2026");
     expect(String(c.props.subtitulo)).toContain("Provisório até o fechamento do mês");
-    expect(p.indicador("Bônus até agora")).toMatchObject({ valor: "R$ 50,00" });
+    expect(p.indicador("Bônus até agora")).toMatchObject({ valor: "R$\u00a050,00" });
     expect(p.indicador("Com bônus")).toMatchObject({ valor: "1 de 2", detalhe: "vendedores" });
     expect(c.visivel).toContain("Valor vendido líquido 100%: R$ 300,00 · 120%: R$ 500,00 (desde outubro de 2026) Aparelhos sem bônus Acessórios sem bônus Ora Connect confirmado 50%: R$ 50,00");
     expect(c.visivel).toContain("Ana (teste) nenhuma faixa 60% da meta · faltam R$ 8.000,00 R$ 50,00 · faixa 1 60% da meta R$ 50,00 Extrato");
@@ -427,7 +429,7 @@ describe("/metas, bônus por meta (L9a)", () => {
     const c = (await pagina({ loja: OUTRA, mes: "2026-10" })).cartao("Bônus de outubro de 2026");
     const extratos = [`/metas/extrato?mes=2026-10&loja=${OUTRA}&vendedor=${ANA}`, `/metas/extrato?mes=2026-10&loja=${OUTRA}&vendedor=${BETO}`];
     expect(links(c)).toEqual(["/metas/bonus", ...extratos, ...extratos]);
-    expect(c.doTipo("Indicador")[0]).toMatchObject({ rotulo: "Bônus do mês", valor: "R$ 0,00" });
+    expect(c.doTipo("Indicador")[0]).toMatchObject({ rotulo: "Bônus do mês", valor: "R$\u00a00,00" });
     expect(c.visivel).toContain("Ana (teste) nenhuma faixa 60% da meta · faltaram R$ 8.000,00");
   });
 
@@ -474,5 +476,89 @@ describe("/metas, bônus por meta (L9a)", () => {
     expect(p.cartao("Bônus de novembro de 2026").texto).toContain("Não foi possível ler agora");
     expect(errosRegistrados()).toContainEqual(["bonus: resposta inesperada de bonus_do_mes"]);
     expect(p.doTipo("Indicador").map((i) => i.rotulo)).not.toContain("Bônus até agora");
+  });
+});
+
+describe("/metas, fechamento do bônus (L9b)", () => {
+  const OUTUBRO = {
+    ...BONUS, mes: "2026-10-01", regras: { vendido_liquido: BONUS.regras.vendido_liquido },
+    vendedores: BONUS.vendedores.map((v) => ({ ...v, total: 0, medidas: { vendido_liquido: v.medidas.vendido_liquido } })),
+  };
+  const APROVADO_EM = "2026-11-03T12:00:00+00:00";
+  const linhaDe = (vendedor: string, extra: Linha = {}) =>
+    ({ vendedor_id: vendedor, total_calculado: 0, total_aprovado: null, ajuste_motivo: null, aprovado_em: null, contestacao: null, ...extra });
+  const cabeca = (extra: Linha = {}) => ({
+    id: "00000000-0000-4000-8000-0000000000f1", situacao: "enviado", apuracao: OUTUBRO, total_calculado: 0, total_aprovado: null,
+    enviado_por: CAIO, enviado_em: "2026-11-02T13:00:00+00:00", aprovado_por: null, aprovado_em: null, ...extra,
+  });
+  const fechamento = (f: Linha | null, linhas: Linha[]) => ({ data: { mes: "2026-10-01", unidade_id: LOJA, fechamento: f, linhas }, error: null });
+  beforeEach(() => {
+    cenario.respostas.bonus_do_mes = { data: OUTUBRO, error: null };
+    cenario.respostas.metas_painel = { data: { ...PAINEL, mes: "2026-10-01", dias_no_mes: 31, dias_decorridos: 31 }, error: null };
+  });
+
+  it("a gestão, no mês que terminou: onde está o fechamento, com o caminho para ele; no mês corrente, nada se pergunta", async () => {
+    cenario.permissoes = new Set([...GERENTE, "bonus.conferir"]);
+    cenario.respostas.bonus_fechamento_do_mes = fechamento(null, []);
+    let p = await pagina({ mes: "2026-10" });
+    expect(p.chamadas("bonus_fechamento_do_mes")).toEqual([{ p_mes: "2026-10-01", p_unidade: LOJA }]);
+    let c = p.cartao("Bônus de outubro de 2026");
+    expect(c.visivel).toContain("O mês terminou Confira o bônus de cada vendedor e envie o fechamento ao dono. Conferir e enviar");
+    // O botão do cartão e o aviso levam ao fechamento do mês escolhido.
+    expect(links(c).filter((l) => l.startsWith("/metas/fechamento"))).toEqual(["/metas/fechamento?mes=2026-10", "/metas/fechamento?mes=2026-10"]);
+    // Enviado: com o dono.
+    cenario.respostas.bonus_fechamento_do_mes = fechamento(cabeca(), [linhaDe(BETO), linhaDe(ANA)]);
+    c = (await pagina({ mes: "2026-10" })).cartao("Bônus de outubro de 2026");
+    expect(c.visivel).toContain("Fechamento com o dono Enviado em 02/11/2026, 10:00. Ver o fechamento");
+    // Aprovado com ajuste: o total aprovado, o calculado e o caminho.
+    cenario.respostas.bonus_fechamento_do_mes = fechamento(cabeca({ situacao: "aprovado", total_aprovado: 10_000, aprovado_por: CAIO, aprovado_em: APROVADO_EM }),
+      [linhaDe(BETO, { total_aprovado: 0, aprovado_em: APROVADO_EM }), linhaDe(ANA, { total_aprovado: 10_000, ajuste_motivo: "Venda do dia 31", aprovado_em: APROVADO_EM })]);
+    c = (await pagina({ mes: "2026-10" })).cartao("Bônus de outubro de 2026");
+    expect(String(c.props.subtitulo)).toContain("Fechado e aprovado pelo dono");
+    expect(c.visivel).toContain("Bônus aprovado O dono aprovou R$ 100,00 em 03/11/2026, 09:00 (calculado: R$ 0,00).");
+    // O dono, com o fechamento à espera: o caminho para decidir.
+    cenario.permissoes = new Set([...DONO, "bonus.conferir", "bonus.aprovar"]);
+    cenario.respostas.bonus_fechamento_do_mes = fechamento(cabeca(), [linhaDe(BETO), linhaDe(ANA)]);
+    c = (await pagina({ mes: "2026-10" })).cartao("Bônus de outubro de 2026");
+    expect(c.visivel).toContain("Fechamento à espera da sua aprovação Enviado em 02/11/2026, 10:00. Decidir e aprovar");
+    // Banco sem o fechamento: o cartão segue sem aviso (a tela do fechamento explica); leitura com falha avisa.
+    cenario.respostas.bonus_fechamento_do_mes = { data: null, error: { code: "XX000" } };
+    c = (await pagina({ mes: "2026-10" })).cartao("Bônus de outubro de 2026");
+    expect(c.visivel).toContain("Não deu para ler o fechamento agora Os valores abaixo são os calculados; o aprovado pode ser outro. Abrir o fechamento");
+    cenario.respostas.bonus_fechamento_do_mes = { data: null, error: { code: "PGRST202" } };
+    c = (await pagina({ mes: "2026-10" })).cartao("Bônus de outubro de 2026");
+    expect(c.visivel).not.toContain("O mês terminou");
+    expect(c.visivel).not.toContain("Não deu para ler o fechamento");
+    expect(c.doTipo("Indicador")[0]).toMatchObject({ rotulo: "Bônus do mês", valor: "R$\u00a00,00" });
+    // No mês corrente, não há fechamento a perguntar.
+    cenario.chamadas = [];
+    cenario.respostas.bonus_do_mes = { data: BONUS, error: null };
+    cenario.respostas.metas_painel = { data: PAINEL, error: null };
+    p = await pagina();
+    expect(p.chamadas("bonus_fechamento_do_mes")).toEqual([]);
+    // O botão do cartão leva ao fechamento do mês passado (o padrão da tela).
+    expect(links(p.cartao("Bônus de novembro de 2026"))).toContain("/metas/fechamento");
+  });
+
+  it("o vendedor, no mês fechado: o valor aprovado, com o motivo do ajuste; antes disso, em aprovação", async () => {
+    cenario.permissoes = new Set(["metas.ver_propria", "venda.registrar"]);
+    cenario.respostas.metas_painel = { data: { ...PAINEL, mes: "2026-10-01", dias_no_mes: 31, dias_decorridos: 31, loja: null, vendedores: [PAINEL.vendedores[0]] }, error: null };
+    cenario.respostas.bonus_do_mes = { data: { ...OUTUBRO, vendedores: [OUTUBRO.vendedores[1]] }, error: null };
+    cenario.respostas.bonus_fechamento_do_mes = fechamento(null, [linhaDe(ANA, { total_aprovado: 10_000, ajuste_motivo: "Venda do dia 31", aprovado_em: APROVADO_EM })]);
+    const p = await pagina({ mes: "2026-10" });
+    expect(p.chamadas("bonus_fechamento_do_mes")).toEqual([{ p_mes: "2026-10-01", p_unidade: LOJA }]);
+    let c = p.cartao("Meu bônus em outubro de 2026");
+    expect(String(c.props.subtitulo)).toContain("Aprovado pelo dono");
+    expect(c.visivel).toContain("Bônus aprovado R$ 100,00 Aprovado em 03/11/2026, 09:00");
+    expect(c.visivel).toContain("O dono aprovou outro valor Venda do dia 31 (calculado: R$ 0,00).");
+    cenario.respostas.bonus_fechamento_do_mes = fechamento(null, [linhaDe(ANA)]);
+    c = (await pagina({ mes: "2026-10" })).cartao("Meu bônus em outubro de 2026");
+    expect(c.visivel).toContain("Bônus do mês R$ 0,00 O fechamento está com o dono para aprovação");
+    // A linha de outra pessoa na resposta é falha: o cartão segue com o provisório, sem valor aprovado.
+    cenario.respostas.bonus_fechamento_do_mes = fechamento(null, [linhaDe(BETO)]);
+    c = (await pagina({ mes: "2026-10" })).cartao("Meu bônus em outubro de 2026");
+    expect(String(c.props.subtitulo)).toContain("Provisório até o fechamento do mês");
+    expect(c.visivel).toContain("Não deu para ler o fechamento agora O valor acima é o calculado; o aprovado pelo dono pode ser outro.");
+    expect(errosRegistrados()).toContainEqual(["bonus: resposta inesperada de bonus_fechamento_do_mes"]);
   });
 });

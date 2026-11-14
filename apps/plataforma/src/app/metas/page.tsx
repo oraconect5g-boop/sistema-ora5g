@@ -4,7 +4,7 @@ import { MoldeReal, permissoesDoMenu } from "../../componentes/MoldeReal";
 import { Aviso, FiltroSegmentado, TituloPagina } from "../../componentes/ui";
 import { podeVerMetas } from "../../lib/acesso/menu";
 import { obterSessao } from "../../lib/acesso/sessao";
-import { consultarBonus } from "../../lib/bonus/consulta";
+import { consultarBonus, consultarFechamento } from "../../lib/bonus/consulta";
 import type { LojaDoFiltro } from "../../lib/financeiro/escopo";
 import { consultarVendas, lojasQueVendem } from "../../lib/inicio/consulta";
 import { endereco } from "../../lib/inicio/painel";
@@ -70,14 +70,19 @@ export default async function Metas({ searchParams }: { searchParams: Promise<Pa
   const aqui = enderecoDe({});
 
   const janela = gestao ? null : janelaDoMes(mes, agora);
-  const [metas, equipe, ondeVendi, bonus] = await Promise.all([
+  const [metas, equipe, ondeVendi, bonus, fechamento] = await Promise.all([
     consultarMetas(supabase, mes, loja.id),
     gestao ? consultarEquipe(supabase, mes, loja.id) : Promise.resolve(null),
     janela ? consultarVendas(supabase, janela, { unidade: null, vendedor: usuario.id }, false) : Promise.resolve(null),
     consultarBonus(supabase, mes, loja.id),
+    // O fechamento (L9b) só existe para o mês que terminou: a gestão lê o da loja; o vendedor, a própria linha.
+    fase === "passado" ? consultarFechamento(supabase, mes, loja.id, gestao ? undefined : usuario.id) : Promise.resolve(null),
   ]);
   // O extrato do vendedor (L9a): o mês e a loja escolhidos vão junto; o próprio vendedor não precisa dizer quem é.
   const enderecoDoExtrato = (vendedor: string | null) => endereco("/metas/extrato", { mes: mesNoEndereco, loja: lojaNoEndereco, vendedor });
+  // O fechamento (L9b) é de quem confere ou aprova: no mês que terminou, o dele; nos outros, o do mês passado.
+  const enderecoDoFechamento = permissoes.has("bonus.conferir") || permissoes.has("bonus.aprovar")
+    ? endereco("/metas/fechamento", { mes: fase === "passado" ? mes.slice(0, 7) : null, loja: lojaNoEndereco }) : null;
   const ok = chaveDoCatalogo(OK_DAS_METAS, parametros.ok);
   const erro = chaveDoCatalogo(ERROS_DAS_METAS, parametros.erro);
   const alvo = textoDoParametro(parametros.alvo) ?? null;
@@ -112,13 +117,18 @@ export default async function Metas({ searchParams }: { searchParams: Promise<Pa
             <BonusDaEquipe
               bonus={bonus} pessoas={equipe.estado === "ok" ? equipe.dados : []} mes={mes} fase={fase} aqui={aqui}
               enderecoDoExtrato={enderecoDoExtrato} podeDefinir={permissoes.has("bonus.definir")}
+              enderecoDoFechamento={enderecoDoFechamento}
+              fechamento={fechamento && {
+                leitura: fechamento, endereco: endereco("/metas/fechamento", { mes: mes.slice(0, 7), loja: lojaNoEndereco }),
+                podeConferir: permissoes.has("bonus.conferir"), podeAprovar: permissoes.has("bonus.aprovar"),
+              }}
             />
           )}
         />
       ) : (
         <MinhasMetas
           metas={metas} mes={mes} fase={fase} loja={loja} aqui={aqui} eu={usuario.id} ondeVendi={ondeVendi}
-          bonus={<MeuBonus bonus={bonus} eu={usuario.id} mes={mes} fase={fase} aqui={aqui} enderecoDoExtrato={enderecoDoExtrato(null)} />}
+          bonus={<MeuBonus bonus={bonus} eu={usuario.id} mes={mes} fase={fase} aqui={aqui} enderecoDoExtrato={enderecoDoExtrato(null)} fechamento={fechamento} />}
         />
       )}
     </MoldeReal>
