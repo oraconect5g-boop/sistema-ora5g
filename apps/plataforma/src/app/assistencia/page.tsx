@@ -1,4 +1,4 @@
-import { AlarmClock, PackageCheck, Store, Truck, Wrench } from "lucide-react";
+import { AlarmClock, ChartNoAxesColumn, PackageCheck, Store, Truck, Wrench } from "lucide-react";
 import type { Metadata } from "next";
 import Link from "next/link";
 
@@ -41,6 +41,11 @@ export default async function Assistencia({ searchParams }: { searchParams: Prom
         titulo="Assistência"
         subtitulo="Todo aparelho de cliente que entra para assistência, até limpeza, tem ordem de serviço: o número é o comprovante do cliente e a posição do aparelho fica registrada da loja ao técnico e de volta."
       />
+      {gerir?.data && (
+        <Link href="/assistencia/relatorios" className="mt-3 inline-flex min-h-10 items-center gap-1 text-sm font-semibold text-acao">
+          <ChartNoAxesColumn aria-hidden className="size-4" /> Relatórios da assistência
+        </Link>
+      )}
       {abrir?.data && (
         <Aviso tom="info" className="mt-4" titulo="Abrir uma OS">
           Busque o cliente (ou cadastre com nome completo e WhatsApp) em <Link href="/clientes" className="font-semibold underline">Clientes</Link> e toque em &quot;Abrir ordem de serviço&quot; na ficha dele.

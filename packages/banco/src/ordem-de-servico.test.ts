@@ -707,3 +707,85 @@ describe("peças da assistência ligadas à OS (L12d, ORA-OS-006)", () => {
     expect(await comoLinhas(await naLoja(ids.vendedorAB, ids.lojaB), "select id from public.os_pecas")).toEqual([]);
   });
 });
+
+// -------------------------------------------------------------------------------------------------
+// Lote L12e (ORA-OS-006, o resto): relatórios da assistência
+// -------------------------------------------------------------------------------------------------
+const RELATORIO = "select public.os_relatorio($1::date, $2::date, $3) as v";
+type Relatorio = {
+  resumo: Record<string, number>; por_loja: Record<string, unknown>[];
+  sem_venda: { id: string; numero: number; tipo: string; motivo: string | null; venda: number | null; dias: number | null }[];
+  por_pessoa: { pessoa: string; abertas: number; cobrados: number; valor: number }[];
+  tempo: Record<string, number | null>; lojas: { id: string; nome: string }[];
+};
+
+describe("relatórios da assistência (L12e, ORA-OS-006)", () => {
+  it("resumo, OS sem venda, por pessoa, tempo de conserto e peças × serviços da loja, com as regras de quem vê", async () => {
+    const { tela } = await pecaNaAssistencia();
+    const ana = await comCaixa(await naLoja(ids.vendedorA, ids.lojaA));
+    // A OS com o conserto pronto na loja, com peças usadas antes de concluir.
+    async function pronta(telefone: string, pecas = 0) {
+      const { id, tecnico } = await aprovadaComOTecnico(ana, telefone);
+      if (pecas) await valor(tecnico, USAR, [id, tela, pecas, null, chave("peca")]);
+      await valor(tecnico, CONCLUIR, [id, "Pronto"]);
+      await valor(tecnico, PASSO, [id, "tecnico_devolveu", null, null]);
+      await valor(ana, PASSO, [id, "loja_recebeu", null, null]);
+      return id;
+    }
+    const dono = await comCaixa(await naLoja(ids.dono, ids.lojaA), 50_000);
+    // 1: cobrada pela Ana e entregue (2 peças).
+    const os1 = await pronta("41987650041", 2);
+    const venda1 = await valor<string>(ana, NOVA_VENDA, [chave("venda")]);
+    await valor(ana, COBRAR, [venda1, os1, chave("item")]);
+    await valor(ana, FECHAR, [venda1, dinheiro(TOTAL), chave("concluir")]);
+    await valor(ana, ENTREGAR, [os1, null]);
+    // 2: devolvida sem cobrar pela gerência (1 peça usada).
+    const os2 = await pronta("41987650042", 1);
+    await valor(dono, PASSO, [os2, "devolver_ao_cliente", null, "Garantia do conserto anterior"]);
+    // 3: pronta, parada na loja.
+    const os3 = await pronta("41987650043");
+    // 4: devolvida sem conserto; 5: cancelada (aberta por engano).
+    const { id: os4 } = await abrir(ana, await cliente(ana, "41987650044"));
+    await valor(ana, PASSO, [os4, "devolver_ao_cliente", null, "Cliente desistiu"]);
+    const { id: os5 } = await abrir(ana, await cliente(ana, "41987650045"));
+    await valor(dono, PASSO, [os5, "cancelar", null, "Aberta por engano"]);
+    // 6: cobrada pelo dono, entregue e a venda cancelada depois.
+    const os6 = await pronta("41987650046");
+    const venda6 = await valor<string>(dono, NOVA_VENDA, [chave("venda")]);
+    await valor(dono, COBRAR, [venda6, os6, chave("item")]);
+    const r6 = await valor<{ numero: number }>(dono, FECHAR, [venda6, dinheiro(TOTAL), chave("concluir")]);
+    await valor(dono, ENTREGAR, [os6, null]);
+    await valor(dono, CANCELAR, [venda6, "Cliente reclamou do conserto"]);
+
+    const r = await valor<Relatorio>(dono, RELATORIO, [esteMes(), hoje(), ids.lojaA]);
+    expect(r.resumo).toEqual({
+      abertas: 6, entregues: 2, devolvidas_sem_conserto: 1, devolvidas_sem_cobrar: 1, canceladas: 1, prontas_paradas: 1,
+      consertos_cobrados: 1, valor_cobrado: TOTAL, pecas_usadas: 3,
+    });
+    expect(r.por_loja).toEqual([expect.objectContaining({ unidade: ids.lojaA, abertas: 6, consertos_cobrados: 1, valor_cobrado: TOTAL, pecas_usadas: 3, os_com_peca: 2, os_com_peca_sem_cobranca: 1 })]);
+    expect(r.sem_venda.map((s) => [s.id, s.tipo]).sort()).toEqual([[os2, "devolvida_sem_cobrar"], [os3, "pronta_parada"], [os6, "venda_cancelada"]].sort());
+    expect(r.sem_venda.find((s) => s.id === os2)?.motivo).toBe("Garantia do conserto anterior");
+    expect(r.sem_venda.find((s) => s.id === os6)?.venda).toBe(r6.numero);
+    expect(r.sem_venda.find((s) => s.id === os3)?.dias).toBe(0);
+    expect(r.por_pessoa).toEqual([{ pessoa: ids.vendedorA, nome: expect.any(String), abertas: 6, cobrados: 1, valor: TOTAL }]);
+    expect(r.tempo).toEqual({ consertos: 4, media_dias_conserto: 0, maior_dias_conserto: 0, entregas: 2, media_dias_ate_entrega: 0 });
+    // A rede inteira (sem loja escolhida) dá o mesmo para o dono, que só tem OS na loja A.
+    expect((await valor<Relatorio>(dono, RELATORIO, [esteMes(), hoje(), null])).resumo).toEqual(r.resumo);
+    // Quem vê: a vendedora e o técnico não; o gerente da loja B não vê a loja A e, na dele, não há OS.
+    expect(await codigo(ana, RELATORIO, [esteMes(), hoje(), ids.lojaA])).toBe("42501");
+    expect(await codigo(await naLoja(ids.tecnico, ids.assistencia), RELATORIO, [esteMes(), hoje(), null])).toBe("42501");
+    const gerenteB = await naLoja(ids.gerenteB, ids.lojaB);
+    expect(await codigo(gerenteB, RELATORIO, [esteMes(), hoje(), ids.lojaA])).toBe("42501");
+    const daB = await valor<Relatorio>(gerenteB, RELATORIO, [esteMes(), hoje(), null]);
+    expect(daB.resumo.abertas).toBe(0);
+    expect(daB.sem_venda).toEqual([]);
+    expect(daB.lojas.map((l) => l.id)).not.toContain(ids.lojaA);
+    // O período: de um dia a um ano.
+    expect(await codigo(dono, RELATORIO, [hoje(), somarDias(hoje(), -1), null])).toBe("22023");
+    expect(await codigo(dono, RELATORIO, [somarDias(hoje(), -400), hoje(), null])).toBe("22023");
+    // Fora do período (o mês que vem), nada conta, mas a pronta parada continua (é o estado de agora).
+    const futuro = await valor<Relatorio>(dono, RELATORIO, [somarDias(hoje(), 40), somarDias(hoje(), 45), ids.lojaA]);
+    expect(futuro.resumo).toMatchObject({ abertas: 0, entregues: 0, consertos_cobrados: 0, valor_cobrado: 0, prontas_paradas: 1 });
+    expect(futuro.sem_venda.map((s) => s.tipo)).toEqual(["pronta_parada"]);
+  });
+});

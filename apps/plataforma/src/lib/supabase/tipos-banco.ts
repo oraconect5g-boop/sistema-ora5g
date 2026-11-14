@@ -6333,6 +6333,10 @@ export type Database = {
         Args: { p_chave: string; p_dados: Json; p_os: string }
         Returns: Json
       }
+      os_relatorio: {
+        Args: { p_fim: string; p_inicio: string; p_unidade?: string }
+        Returns: Json
+      }
       os_responder_orcamento: {
         Args: {
           p_canal: string
