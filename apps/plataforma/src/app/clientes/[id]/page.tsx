@@ -1,12 +1,12 @@
 import { randomUUID } from "node:crypto";
 
-import { ArrowLeft, Eye, MessageSquareHeart, PencilLine, ShieldCheck, ShoppingBag } from "lucide-react";
+import { ArrowLeft, Eye, MessageSquareHeart, PencilLine, ShieldCheck, ShoppingBag, Wrench } from "lucide-react";
 import type { Metadata } from "next";
 import Link from "next/link";
 import { notFound } from "next/navigation";
 
 import { MoldeReal } from "../../../componentes/MoldeReal";
-import { Aviso, Botao, Cartao, ListaDados, Selo, TituloPagina } from "../../../componentes/ui";
+import { Aviso, Botao, BotaoLink, Cartao, ListaDados, Selo, TituloPagina } from "../../../componentes/ui";
 import { ehUuid } from "../../../lib/acesso/regras";
 import { FalhaDoServico, obterSessao } from "../../../lib/acesso/sessao";
 import { CAMPOS_REVELAVEIS, CANAIS, ERROS_DO_CLIENTE, FINALIDADES, FINALIDADES_DE_CONTATO, FONTES, SEGMENTOS, ehFinalidade, ehSegmento } from "../../../lib/clientes/regras";
@@ -55,10 +55,11 @@ export default async function FichaDoCliente({ params, searchParams }: { params:
   const sessao = await obterSessao({ exigirLoja: true });
   const { supabase, situacao } = sessao;
   const unidade = situacao.unidade_id as string;
-  const [busca, cadastro, auditoria] = await Promise.all([
+  const [busca, cadastro, auditoria, abreOs] = await Promise.all([
     supabase.rpc("tem_permissao", { p_permissao: "cliente.buscar", p_unidade: unidade }),
     supabase.rpc("tem_permissao", { p_permissao: "cliente.cadastrar", p_unidade: unidade }),
     supabase.rpc("tem_permissao", { p_permissao: "auditoria.ver", p_unidade: unidade }),
+    supabase.rpc("tem_permissao", { p_permissao: "os.abrir", p_unidade: unidade }),
   ]);
   if (busca.error || cadastro.error || auditoria.error) throw new FalhaDoServico("tem_permissao");
   if (!busca.data) return <MoldeReal sessao={sessao}><Aviso tom="aviso" className="mt-6">Seu papel não consulta clientes.</Aviso></MoldeReal>;
@@ -85,7 +86,9 @@ export default async function FichaDoCliente({ params, searchParams }: { params:
   return (
     <MoldeReal sessao={sessao}>
       <Link href="/clientes" className="inline-flex min-h-10 items-center gap-1 text-sm font-semibold text-acao"><ArrowLeft aria-hidden className="size-4" /> Clientes</Link>
-      <TituloPagina titulo={f.nome} subtitulo={<span className="flex flex-wrap items-center gap-2">
+      <TituloPagina titulo={f.nome} acao={abreOs.data && f.situacao === "ativo" && !f.mesclado_em
+        ? <BotaoLink href={`/assistencia/nova?cliente=${f.id}`} variante="secundario"><Wrench aria-hidden className="size-4" /> Abrir ordem de serviço</BotaoLink> : undefined}
+        subtitulo={<span className="flex flex-wrap items-center gap-2">
         <span className="numeros">nº {f.numero}</span> · {f.tipo === "pessoa_juridica" ? "empresa" : "pessoa física"} · cliente desde {quando(f.criado_em)}{f.loja_de_origem ? ` (${f.loja_de_origem})` : ""}
         {f.situacao !== "ativo" && <Selo tom="neutro">{f.situacao}</Selo>}
         {segmento && <Selo tom={segmento.tom}>{segmento.nome}</Selo>}</span>} />

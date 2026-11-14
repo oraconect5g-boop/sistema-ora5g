@@ -2,7 +2,7 @@
   "_leia": "Checkpoint do programa de execução integral (PR #67). Carregar ao retomar e seguir para o próximo item executável da fila; não reiniciar o projeto. Estados vêm de status-requisitos.json (fonte da rastreabilidade); este arquivo acrescenta lote, bloqueio externo e revisão.",
   "atualizado_em": "2026-11-14",
   "base": {
-    "main": "90612ac",
+    "main": "fdd19b1",
     "pacote": {
       "pr": 67,
       "branch": "docs/execucao-integral-20261110",
@@ -18,18 +18,19 @@
   },
   "publicado": {
     "homologacao": {
-      "commit": "90612ac",
+      "commit": "fdd19b1",
       "quando": "2026-11-14",
-      "conferido": "rodapé da tela de entrada (90612ac · build 14/11/2026 12:17), /saude 200 e as rotas reais respondendo 307 para o login"
+      "conferido": "rodapé da tela de entrada (fdd19b1 · build 14/11/2026 12:39), /saude 200 e as rotas reais respondendo 307 para o login"
     },
     "falta_publicar": [
-      "L8e, recebíveis por loja e adquirente (FIN-005), publicado ao fim do lote; a migration 20261114153000_recebiveis_painel pede o sim do proprietário para o ora5g-dev"
+      "L12a, ordem de serviço da assistência (OS-001, OS-002 e OS-005 em parte), publicado ao fim do lote",
+      "migrations 20261114153000_recebiveis_painel (L8e) e 20261114160000_ordem_de_servico (L12a): aplicar no ora5g-dev pede o sim do proprietário"
     ]
   },
   "contagem_dos_estados": {
-    "nao_iniciado": 70,
-    "parcial": 66,
-    "testado": 39,
+    "nao_iniciado": 67,
+    "parcial": 68,
+    "testado": 40,
     "bloqueado": 3,
     "respeitado": 1
   },
@@ -1594,17 +1595,17 @@
     "ORA-OS-001": {
       "titulo": "Abrir OS obrigatória para todo aparelho de cliente que entra (até limpeza), com cliente, IMEI, defeito, estado, fotos e acessórios deixados (custódia)",
       "prioridade": "P1",
-      "estado": "nao_iniciado",
-      "lote": "L12 assistência",
-      "bloqueio_externo": "P5 (técnico tem login? funcionário ou terceiro)",
+      "estado": "testado",
+      "lote": "L12a ordem de serviço da assistência (14/11)",
+      "bloqueio_externo": "P5 só para o acesso do técnico (login próprio ou registro pela gerência)",
       "revisado_codex": false,
       "homologado": false
     },
     "ORA-OS-002": {
       "titulo": "Registrar saída para o técnico central e retorno à loja (custódia em trânsito)",
       "prioridade": "P1",
-      "estado": "nao_iniciado",
-      "lote": "L12 assistência",
+      "estado": "parcial",
+      "lote": "L12a ordem de serviço da assistência (14/11)",
       "bloqueio_externo": null,
       "revisado_codex": false,
       "homologado": false
@@ -1630,9 +1631,9 @@
     "ORA-OS-005": {
       "titulo": "Avisos ao cliente e ao técnico (comprovante, orçamento, aparelho pronto, entrega)",
       "prioridade": "P1",
-      "estado": "nao_iniciado",
-      "lote": "L12 assistência",
-      "bloqueio_externo": null,
+      "estado": "parcial",
+      "lote": "L12a ordem de serviço da assistência (14/11)",
+      "bloqueio_externo": "F1 (WhatsApp oficial) para o envio automático; o clique para conversar já funciona",
       "revisado_codex": false,
       "homologado": false
     },
