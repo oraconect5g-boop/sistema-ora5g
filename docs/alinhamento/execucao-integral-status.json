@@ -2,7 +2,7 @@
   "_leia": "Checkpoint do programa de execução integral (PR #67). Carregar ao retomar e seguir para o próximo item executável da fila; não reiniciar o projeto. Estados vêm de status-requisitos.json (fonte da rastreabilidade); este arquivo acrescenta lote, bloqueio externo e revisão.",
   "atualizado_em": "2026-11-14",
   "base": {
-    "main": "50fa702",
+    "main": "27bd799",
     "pacote": {
       "pr": 67,
       "branch": "docs/execucao-integral-20261110",
@@ -18,21 +18,21 @@
   },
   "publicado": {
     "homologacao": {
-      "commit": "50fa702",
+      "commit": "27bd799",
       "quando": "2026-11-14",
-      "conferido": "rodapé da tela de entrada (50fa702 · build 14/11/2026 19:44), /saude 200 e as rotas reais respondendo 307 para o login"
+      "conferido": "rodapé da tela de entrada (27bd799 · build 14/11/2026 19:55), /saude 200 e as rotas reais respondendo 307 para o login"
     },
     "falta_publicar": [
-      "G3b, valor do estoque a custo (REPORT-007, o resto), publicado ao fim do lote",
+      "R3, reconciliação dos estados (documentos, um teste e a conferência da rastreabilidade), publicado ao fim do lote",
       "migration 20261114235000_estoque_valor_em_custo (G3b): aplicar no ora5g-dev pede o sim do proprietário"
     ]
   },
   "contagem_dos_estados": {
-    "nao_iniciado": 63,
-    "parcial": 69,
-    "testado": 43,
+    "nao_iniciado": 54,
+    "parcial": 75,
+    "testado": 45,
     "bloqueado": 3,
-    "respeitado": 1
+    "respeitado": 2
   },
   "requisitos": {
     "ORA-ORG-001": {
@@ -119,8 +119,8 @@
     "ORA-ORG-010": {
       "titulo": "Preparar multi-CNPJ/UF para expansão física nacional",
       "prioridade": "P2",
-      "estado": "nao_iniciado",
-      "lote": "L2 cadastros",
+      "estado": "parcial",
+      "lote": "L2 cadastros; R3 (14/11): conferido no código (falta o fuso horário por loja)",
       "bloqueio_externo": null,
       "revisado_codex": false,
       "homologado": false
@@ -308,7 +308,7 @@
     "ORA-INV-010": {
       "titulo": "Histórico de reparo/devolução e condição de unidade",
       "prioridade": "P1",
-      "estado": "parcial",
+      "estado": "testado",
       "lote": "L4b inventário",
       "bloqueio_externo": null,
       "revisado_codex": false,
@@ -326,8 +326,8 @@
     "ORA-INV-012": {
       "titulo": "Transferência para CD e alocação futura a canais nacionais",
       "prioridade": "P2",
-      "estado": "nao_iniciado",
-      "lote": "L4 estoque/compras",
+      "estado": "parcial",
+      "lote": "L4 estoque/compras; R3 (14/11): o depósito como centro de distribuição, provado (falta a D-043 e os canais nacionais)",
       "bloqueio_externo": null,
       "revisado_codex": false,
       "homologado": false
@@ -938,7 +938,7 @@
     "ORA-FISC-008": {
       "titulo": "Conciliação fiscal de vendas, tributos e documentos",
       "prioridade": "P1",
-      "estado": "nao_iniciado",
+      "estado": "parcial",
       "lote": "L10 fiscal",
       "bloqueio_externo": null,
       "revisado_codex": false,
@@ -947,7 +947,7 @@
     "ORA-FISC-009": {
       "titulo": "Devolução, troca, cancelamento e correção fiscal",
       "prioridade": "P1",
-      "estado": "nao_iniciado",
+      "estado": "parcial",
       "lote": "L10 fiscal",
       "bloqueio_externo": null,
       "revisado_codex": false,
@@ -1334,8 +1334,8 @@
     "ORA-AI-001": {
       "titulo": "Painéis básicos e alertas desde o MVP",
       "prioridade": "P1",
-      "estado": "nao_iniciado",
-      "lote": "L17 IA assistiva",
+      "estado": "testado",
+      "lote": "L17 IA assistiva; R3 (14/11): painéis e alertas já entregues (G1 a G6, L10b, L12e, L12f e Q1)",
       "bloqueio_externo": null,
       "revisado_codex": false,
       "homologado": false
@@ -1370,8 +1370,8 @@
     "ORA-AI-005": {
       "titulo": "Autorização humana obrigatória para operações financeiras/fiscais",
       "prioridade": "P2",
-      "estado": "nao_iniciado",
-      "lote": "L17 IA assistiva",
+      "estado": "respeitado",
+      "lote": "L17 IA assistiva; R3 (14/11): respeitado (não há IA; toda operação financeira e fiscal é de uma pessoa autenticada)",
       "bloqueio_externo": null,
       "revisado_codex": false,
       "homologado": false
@@ -1514,7 +1514,7 @@
     "ORA-QUAL-006": {
       "titulo": "Observabilidade de erros, latência, filas e conciliação",
       "prioridade": "P0",
-      "estado": "nao_iniciado",
+      "estado": "parcial",
       "lote": "transversal",
       "bloqueio_externo": null,
       "revisado_codex": false,
@@ -1532,7 +1532,7 @@
     "ORA-QUAL-008": {
       "titulo": "Plano de contingência para internet, pagamentos e fiscal",
       "prioridade": "P0",
-      "estado": "nao_iniciado",
+      "estado": "parcial",
       "lote": "transversal",
       "bloqueio_externo": null,
       "revisado_codex": false,
@@ -1577,7 +1577,7 @@
     "ORA-QUAL-013": {
       "titulo": "Processo de resposta a incidentes e suporte às lojas",
       "prioridade": "P1",
-      "estado": "nao_iniciado",
+      "estado": "parcial",
       "lote": "transversal",
       "bloqueio_externo": null,
       "revisado_codex": false,

@@ -191,6 +191,42 @@ describe("DEFEITOS (local de exceção)", () => {
   });
 });
 
+describe("centro de distribuição (o depósito; INV-012)", () => {
+  it("a mercadoria entra no depósito, vai para a loja e volta pelo mesmo pedido, com cada passo no livro do estoque", async () => {
+    const cd = "4e000000-0000-4000-8000-0000000000c1";
+    await db.query("insert into public.unidades (id, organizacao_id, empresa_id, codigo, nome, tipo) values ($1, $2, $3, 'cd', 'Centro de distribuição', 'deposito')",
+      [cd, ids.organizacao, ids.empresa]);
+    await db.query("select privado.lancar_movimento($1, $2, 5, 'entrada_importacao', null, null, null, null, 'teste:capa-cd')", [cd, cat.capa]);
+    const noCd = await naLoja(ids.dono, cd);
+    const lojaB = await naLoja(ids.gerenteB, ids.lojaB);
+    const antesB = await saldo(ids.lojaB, cat.capa);
+
+    const ida = await solicitar(lojaB, cd, ids.lojaB, cat.capa, 3);
+    expect(await separar(noCd, ida)).toBe("separada");
+    expect(await enviar(noCd, ida)).toBe("enviada");
+    expect(await saldo(cd, cat.capa)).toEqual({ quantidade: 2, reservado: 0 });
+    expect(await receber(lojaB, ida, [], 3)).toBe("recebida");
+    expect(await saldo(ids.lojaB, cat.capa)).toEqual({ quantidade: antesB.quantidade + 3, reservado: antesB.reservado });
+
+    const volta = await solicitar(lojaB, ids.lojaB, cd, cat.capa, 1);
+    expect(await separar(lojaB, volta)).toBe("separada");
+    expect(await enviar(lojaB, volta)).toBe("enviada");
+    expect(await receber(noCd, volta, [], 1)).toBe("recebida");
+    expect(await saldo(cd, cat.capa)).toEqual({ quantidade: 3, reservado: 0 });
+
+    const livro = (await db.query<{ local: string; tipo: string; quantidade: number; por: string | null }>(
+      `select u.codigo as local, m.tipo, m.quantidade, m.usuario_id::text as por from public.estoque_movimentos m join public.unidades u on u.id = m.unidade_id
+       where m.referencia_id in ($1, $2) order by m.id`, [ida, volta])).rows;
+    expect(livro).toEqual([
+      { local: "cd", tipo: "transferencia_saida", quantidade: -3, por: ids.dono },
+      { local: "loja-b", tipo: "transferencia_entrada", quantidade: 3, por: ids.gerenteB },
+      { local: "loja-b", tipo: "transferencia_saida", quantidade: -1, por: ids.gerenteB },
+      { local: "cd", tipo: "transferencia_entrada", quantidade: 1, por: ids.dono },
+    ]);
+    expect(await divergencias()).toEqual([]);
+  });
+});
+
 describe("leitura dos pedidos", () => {
   it("as lojas envolvidas leem; outra rede não", async () => {
     const t = await solicitar(await naLoja(ids.gerenteB, ids.lojaB), ids.lojaA, ids.lojaB, cat.capa, 1);
