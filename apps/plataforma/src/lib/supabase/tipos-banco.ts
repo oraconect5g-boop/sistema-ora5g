@@ -3069,6 +3069,70 @@ export type Database = {
           },
         ]
       }
+      notas_documentos: {
+        Row: {
+          bytes: number
+          caminho: string
+          enviado_em: string
+          enviado_por: string
+          id: string
+          organizacao_id: string
+          pedido_id: string
+          sha256: string
+          substituido_em: string | null
+          tipo: string
+          unidade_id: string
+        }
+        Insert: {
+          bytes: number
+          caminho: string
+          enviado_em?: string
+          enviado_por: string
+          id?: string
+          organizacao_id: string
+          pedido_id: string
+          sha256: string
+          substituido_em?: string | null
+          tipo: string
+          unidade_id: string
+        }
+        Update: {
+          bytes?: number
+          caminho?: string
+          enviado_em?: string
+          enviado_por?: string
+          id?: string
+          organizacao_id?: string
+          pedido_id?: string
+          sha256?: string
+          substituido_em?: string | null
+          tipo?: string
+          unidade_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "notas_documentos_enviado_por_fkey"
+            columns: ["enviado_por"]
+            isOneToOne: false
+            referencedRelation: "perfis_usuario"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "notas_documentos_pedido_id_fkey"
+            columns: ["pedido_id"]
+            isOneToOne: false
+            referencedRelation: "notas_pedidos"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "notas_documentos_unidade_id_organizacao_id_fkey"
+            columns: ["unidade_id", "organizacao_id"]
+            isOneToOne: false
+            referencedRelation: "unidades"
+            referencedColumns: ["id", "organizacao_id"]
+          },
+        ]
+      }
       notas_eventos: {
         Row: {
           id: number
@@ -3135,6 +3199,7 @@ export type Database = {
           observacao: string | null
           organizacao_id: string
           origem_emissao: string | null
+          protocolo: string | null
           serie: number | null
           situacao: string
           solicitado_por: string
@@ -3163,6 +3228,7 @@ export type Database = {
           observacao?: string | null
           organizacao_id: string
           origem_emissao?: string | null
+          protocolo?: string | null
           serie?: number | null
           situacao?: string
           solicitado_por: string
@@ -3191,6 +3257,7 @@ export type Database = {
           observacao?: string | null
           organizacao_id?: string
           origem_emissao?: string | null
+          protocolo?: string | null
           serie?: number | null
           situacao?: string
           solicitado_por?: string
@@ -5540,6 +5607,10 @@ export type Database = {
           p_valor: number
         }
         Returns: number
+      }
+      notas_anexar_documento: {
+        Args: { p_caminho: string; p_pedido: string; p_protocolo: string; p_sha256: string; p_tipo: string }
+        Returns: string
       }
       notas_cancelar: {
         Args: { p_motivo: string; p_pedido: string }

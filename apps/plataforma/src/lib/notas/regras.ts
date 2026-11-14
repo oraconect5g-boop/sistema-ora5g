@@ -11,6 +11,11 @@ export const ERROS_DAS_NOTAS = {
   cliente_sem_documento: "O cliente da venda não tem CPF/CNPJ no cadastro: corrija o cadastro ou informe o documento aqui.",
   cliente_sem_endereco: "O cliente da venda não tem o endereço completo no cadastro (CEP, rua, número, bairro, cidade e UF): complete o cadastro dele e peça a nota de novo.",
   ja_emitida: "Esta nota já foi emitida (ou o pedido foi cancelado): os dados do destinatário saem do sistema depois da emissão.",
+  documento_tipo: "Envie o PDF (DANFE) ou o XML da nota, do jeito que o emissor entregou.",
+  documento_grande: "Arquivo maior que 5 MB: envie o PDF ou o XML da nota, sem outros arquivos junto.",
+  documento_outra_nota: "Este XML não é desta nota: a chave de acesso dentro dele é outra.",
+  protocolo: "Protocolo de autorização inválido: são 15 dígitos.",
+  protocolo_outro: "O protocolo digitado é diferente do que está no XML (ou do já registrado nesta nota): confira.",
   falha: "Não foi possível concluir agora. Tente de novo em instantes.",
 } as const;
 export type ErroDasNotas = keyof typeof ERROS_DAS_NOTAS;
@@ -23,6 +28,8 @@ export function erroDasNotas(erro: { code?: string; message?: string } | null | 
   if (codigo === "22023" && /não tem cpf\/cnpj no cadastro/i.test(erro?.message ?? "")) return "cliente_sem_documento";
   if (codigo === "22023" && /não tem o endereço completo no cadastro/i.test(erro?.message ?? "")) return "cliente_sem_endereco";
   if (codigo === "22023" && /só aparecem enquanto a nota espera/i.test(erro?.message ?? "")) return "ja_emitida";
+  if (codigo === "22023" && /já tem outro protocolo/i.test(erro?.message ?? "")) return "protocolo_outro";
+  if (codigo === "22023" && /protocolo de autorização inválido/i.test(erro?.message ?? "")) return "protocolo";
   return codigo && Object.hasOwn(DO_BANCO, codigo) ? (DO_BANCO[codigo] as ErroDasNotas) : "falha";
 }
 
