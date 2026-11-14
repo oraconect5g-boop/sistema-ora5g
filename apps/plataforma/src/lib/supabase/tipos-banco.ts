@@ -1,6 +1,8 @@
 // ARQUIVO GERADO pelo Supabase (generate_typescript_types do projeto ora5g-dev) depois da
 // migration 20261114013159_previsao_de_caixa. Não edite à mão: gere de novo a cada
-// migration aplicada (auditoria do Codex de 08/11, §7.2). O teste tipos-banco.test.ts confere
+// migration aplicada (auditoria do Codex de 08/11, §7.2). As entradas de bonus_regras,
+// bonus_definir, bonus_do_mes e extrato_do_vendedor (20261114021654_bonus_por_meta, L9a) estão
+// escritas no formato do gerador até a migration ser aplicada no ora5g-dev. O teste tipos-banco.test.ts confere
 // que funções e tabelas públicas daqui são as mesmas das migrations.
 export type Json =
   | string
@@ -259,6 +261,57 @@ export type Database = {
         Relationships: [
           {
             foreignKeyName: "auditoria_organizacao_id_fkey"
+            columns: ["organizacao_id"]
+            isOneToOne: false
+            referencedRelation: "organizacoes"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      bonus_regras: {
+        Row: {
+          definida_em: string
+          definida_por: string
+          faixas: Json | null
+          id: string
+          medida: string
+          motivo: string | null
+          organizacao_id: string
+          versao: number
+          vigente_desde: string
+        }
+        Insert: {
+          definida_em?: string
+          definida_por: string
+          faixas?: Json | null
+          id?: string
+          medida: string
+          motivo?: string | null
+          organizacao_id: string
+          versao?: never
+          vigente_desde: string
+        }
+        Update: {
+          definida_em?: string
+          definida_por?: string
+          faixas?: Json | null
+          id?: string
+          medida?: string
+          motivo?: string | null
+          organizacao_id?: string
+          versao?: never
+          vigente_desde?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "bonus_regras_definida_por_fkey"
+            columns: ["definida_por"]
+            isOneToOne: false
+            referencedRelation: "perfis_usuario"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "bonus_regras_organizacao_id_fkey"
             columns: ["organizacao_id"]
             isOneToOne: false
             referencedRelation: "organizacoes"
@@ -4569,6 +4622,11 @@ export type Database = {
         Args: { p_atividade: string; p_feita: boolean; p_resultado: string }
         Returns: boolean
       }
+      bonus_definir: {
+        Args: { p_faixas: Json; p_motivo: string; p_vigente_desde: string }
+        Returns: number
+      }
+      bonus_do_mes: { Args: { p_mes: string; p_unidade: string }; Returns: Json }
       caixa_cancelar_saida: { Args: { p_saida: string }; Returns: boolean }
       caixa_decidir_saida: {
         Args: { p_autorizar: boolean; p_motivo: string; p_saida: string }
@@ -4897,6 +4955,10 @@ export type Database = {
           p_tipo: string
           p_unidade: string
         }
+        Returns: Json
+      }
+      extrato_do_vendedor: {
+        Args: { p_mes: string; p_unidade: string; p_vendedor: string }
         Returns: Json
       }
       fechar_caixa: {

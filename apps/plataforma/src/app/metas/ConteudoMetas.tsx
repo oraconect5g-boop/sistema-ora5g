@@ -1,4 +1,5 @@
 import { Headphones, Pencil, Signal, Smartphone, Store, Target, TrendingUp, type LucideIcon } from "lucide-react";
+import type { ReactNode } from "react";
 
 import { BarrasHorizontais, Medidor, TabelaDoGrafico } from "../../componentes/graficos";
 import { BarrasDoRitmo, compacto, TOM_DO_MEDIDOR } from "../../componentes/paineis-de-metas";
@@ -13,6 +14,7 @@ import {
   SITUACOES, valorNoCampo, type FaseDoMes, type LinhaDaEquipe, type Medida, type MetasDoAlvo, type MetasDoBanco, type PessoaDasMetas, type Progresso,
 } from "../../lib/metas/painel";
 import { definirMetas } from "./acoes";
+import { ComoOBonusConta } from "./ConteudoBonus";
 
 // Metas mensais (lote G4b). Só apresentação: os números chegam lidos por lib/metas/consulta, com o
 // estado da leitura (falha nunca vira zero). A gestão vê a loja e cada vendedor e, com metas.gerir,
@@ -49,8 +51,10 @@ type Comum = {
 // ---------------------------------------------------------------------------------------------
 // Gestão: a loja, cada vendedor e o formulário
 // ---------------------------------------------------------------------------------------------
-export function MetasDaGestao({ metas, equipe, mes, fase, loja, aqui, medida, enderecoDaMedida, podeDefinir, lojaNoEndereco, alvoEmFoco }: Comum & {
+export function MetasDaGestao({ metas, equipe, mes, fase, loja, aqui, medida, enderecoDaMedida, podeDefinir, lojaNoEndereco, alvoEmFoco, bonus }: Comum & {
   equipe: Leitura<PessoaDasMetas[]>;
+  /** O cartão do bônus da equipe (L9a), depois da tabela da equipe. */
+  bonus?: ReactNode;
   medida: Medida;
   enderecoDaMedida: Record<Medida, string>;
   podeDefinir: boolean;
@@ -73,10 +77,11 @@ export function MetasDaGestao({ metas, equipe, mes, fase, loja, aqui, medida, en
         <>
           <PorVendedor linhas={linhas} medida={medida} enderecoDaMedida={enderecoDaMedida} mes={mes} />
           <EquipeNoMes linhas={linhas} mes={mes} />
-          {podeDefinir && (
-            <DefinirMetas dados={dados} linhas={linhas} mes={mes} fase={fase} loja={loja} lojaNoEndereco={lojaNoEndereco} alvoEmFoco={alvoEmFoco} />
-          )}
         </>
+      )}
+      {bonus}
+      {linhas !== null && podeDefinir && (
+        <DefinirMetas dados={dados} linhas={linhas} mes={mes} fase={fase} loja={loja} lojaNoEndereco={lojaNoEndereco} alvoEmFoco={alvoEmFoco} />
       )}
       <ComoConta />
     </>
@@ -246,9 +251,7 @@ function ComoConta() {
           ))}
         </ul>
       </Cartao>
-      <Aviso titulo="Comissão e bônus em definição">
-        As regras de comissão e de bonificação ainda serão decididas pelos donos (decisão pendente D-014). Até lá, a meta mostra o ritmo e o atingimento, sem valor a receber.
-      </Aviso>
+      <ComoOBonusConta />
     </div>
   );
 }
@@ -256,8 +259,10 @@ function ComoConta() {
 // ---------------------------------------------------------------------------------------------
 // Vendedor: as próprias metas e onde vendeu
 // ---------------------------------------------------------------------------------------------
-export function MinhasMetas({ metas, mes, fase, loja, aqui, eu, ondeVendi }: Comum & {
+export function MinhasMetas({ metas, mes, fase, loja, aqui, eu, ondeVendi, bonus }: Comum & {
   eu: string;
+  /** O cartão do próprio bônus (L9a), logo depois das metas. */
+  bonus?: ReactNode;
   /** As próprias vendas do mês, por loja; nula no mês que ainda não começou. */
   ondeVendi: Leitura<VendasDoBanco> | null;
 }) {
@@ -272,6 +277,7 @@ export function MinhasMetas({ metas, mes, fase, loja, aqui, eu, ondeVendi }: Com
           ))}
         </div>
       )}
+      {bonus}
       <div className="mt-4">
         {ondeVendi === null ? (
           <Cartao titulo="Onde vendi" subtitulo="As suas vendas, por loja em que foram feitas">

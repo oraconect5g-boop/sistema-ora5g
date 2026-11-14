@@ -2,7 +2,7 @@
   "_leia": "Checkpoint do programa de execução integral (PR #67). Carregar ao retomar e seguir para o próximo item executável da fila; não reiniciar o projeto. Estados vêm de status-requisitos.json (fonte da rastreabilidade); este arquivo acrescenta lote, bloqueio externo e revisão.",
   "atualizado_em": "2026-11-13",
   "base": {
-    "main": "2b604d3",
+    "main": "51417a8",
     "pacote": {
       "pr": 67,
       "branch": "docs/execucao-integral-20261110",
@@ -12,18 +12,19 @@
   },
   "publicado": {
     "homologacao": {
-      "commit": "2b604d3",
+      "commit": "51417a8",
       "quando": "2026-11-13",
-      "conferido": "rodapé da tela de entrada, /saude e /inicio, /contas-a-pagar, /resultado e /previsao respondendo 307 para o login"
+      "conferido": "rodapé da tela de entrada (51417a8 · build 13/11/2026 22:43), /saude e /inicio, /resultado, /previsao, /contas-a-pagar e as exportações respondendo 307 para o login"
     },
     "falta_publicar": [
-      "o merge do L8d (publicado ao fim do lote, por pedido do proprietário de 13/11)"
+      "o merge do L9a (publicado ao fim do lote, por pedido do proprietário de 13/11)",
+      "a migration 20261114021654_bonus_por_meta no ora5g-dev (aplicar pede o sim do proprietário)"
     ]
   },
   "contagem_dos_estados": {
-    "parcial": 64,
-    "testado": 34,
-    "nao_iniciado": 78,
+    "parcial": 67,
+    "testado": 35,
+    "nao_iniciado": 74,
     "respeitado": 1,
     "bloqueado": 2
   },
@@ -779,7 +780,7 @@
       "titulo": "Contar individualmente aparelhos, acessórios, chips, ativações e recargas",
       "prioridade": "P0",
       "estado": "parcial",
-      "lote": "L9 metas/comissões; G4 metas e Ora Connect (G4b: realizado das metas por vendedor)",
+      "lote": "L9 metas/comissões; G4 metas e Ora Connect (G4b: realizado das metas por vendedor); L9a em 13/11: o extrato do vendedor, fato a fato",
       "bloqueio_externo": null,
       "revisado_codex": false,
       "homologado": false
@@ -787,8 +788,8 @@
     "ORA-PERF-002": {
       "titulo": "Registrar performance_event único por origem/ação confirmada",
       "prioridade": "P0",
-      "estado": "nao_iniciado",
-      "lote": "L9 metas/comissões; G4 metas e Ora Connect",
+      "estado": "parcial",
+      "lote": "L9 metas/comissões; G4 metas e Ora Connect; L9a em 13/11: bônus sobre fatos que o banco guarda uma vez só (o bônus gravado por mês é o L9b)",
       "bloqueio_externo": null,
       "revisado_codex": false,
       "homologado": false
@@ -796,8 +797,8 @@
     "ORA-PERF-003": {
       "titulo": "Distinguir quantidade, valor bruto, margem, receita elegível e comissão",
       "prioridade": "P0",
-      "estado": "nao_iniciado",
-      "lote": "L9 metas/comissões; G4 metas e Ora Connect",
+      "estado": "parcial",
+      "lote": "L9 metas/comissões; G4 metas e Ora Connect; L9a em 13/11: o extrato e a conta do bônus por medida (D-014)",
       "bloqueio_externo": null,
       "revisado_codex": false,
       "homologado": false
@@ -806,7 +807,7 @@
       "titulo": "Definir meta por vendedor, loja, categoria e período",
       "prioridade": "P0",
       "estado": "parcial",
-      "lote": "L9 metas/comissões; G4 metas e Ora Connect (G4b entregue em 13/11: metas mensais da loja e de cada vendedor)",
+      "lote": "L9 metas/comissões; G4 metas e Ora Connect (G4b entregue em 13/11: metas mensais da loja e de cada vendedor); L9a: o bônus usa a meta individual",
       "bloqueio_externo": null,
       "revisado_codex": false,
       "homologado": false
@@ -815,7 +816,7 @@
       "titulo": "Painel do gestor mostra metas e resultados da equipe",
       "prioridade": "P0",
       "estado": "parcial",
-      "lote": "L9 metas/comissões; G4 metas e Ora Connect (G4a: produção no Início; metas no G4b); G4b: metas e resultados da equipe no /metas; G4c: a meta no Início",
+      "lote": "L9 metas/comissões; G4 metas e Ora Connect (G4a: produção no Início; metas no G4b); G4b: metas e resultados da equipe no /metas; G4c: a meta no Início; L9a: o bônus de cada vendedor no /metas",
       "bloqueio_externo": null,
       "revisado_codex": false,
       "homologado": false
@@ -823,8 +824,8 @@
     "ORA-PERF-006": {
       "titulo": "Regras de bonificação por categoria/campanha/margem/escala",
       "prioridade": "P1",
-      "estado": "nao_iniciado",
-      "lote": "L9 metas/comissões",
+      "estado": "testado",
+      "lote": "L9 metas/comissões; L9a em 13/11: faixas do bônus por meta, versionadas e com vigência (D-014)",
       "bloqueio_externo": null,
       "revisado_codex": false,
       "homologado": false
@@ -832,8 +833,8 @@
     "ORA-PERF-007": {
       "titulo": "Ajustar comissão por cancelamento/devolução conforme regra",
       "prioridade": "P1",
-      "estado": "nao_iniciado",
-      "lote": "L9 metas/comissões",
+      "estado": "parcial",
+      "lote": "L9 metas/comissões; L9a em 13/11: devolução e cancelamento no mês em que acontecem, no extrato (o fechamento é o L9b)",
       "bloqueio_externo": null,
       "revisado_codex": false,
       "homologado": false
@@ -842,7 +843,7 @@
       "titulo": "Apurar e aprovar fechamento de bonificação",
       "prioridade": "P1",
       "estado": "nao_iniciado",
-      "lote": "L9 metas/comissões",
+      "lote": "L9 metas/comissões (L9b: fechamento do mês; o gerente confere e contesta, o dono aprova, D-014)",
       "bloqueio_externo": null,
       "revisado_codex": false,
       "homologado": false
