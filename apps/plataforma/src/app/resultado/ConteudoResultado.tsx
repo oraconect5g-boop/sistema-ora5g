@@ -7,6 +7,7 @@ import { EstadoDoPainel, NOTA, plural } from "../../componentes/paineis-de-venda
 import { Aviso, Cartao, FiltroSegmentado, Indicador, Selo } from "../../componentes/ui";
 import { brl, brlComSinal, brlCompacto, brlCompactoComSinal, brlEixoComSinal, percentual, percentualComSinal } from "../../lib/formato";
 import type { Leitura } from "../../lib/leitura-do-banco";
+import { resultadoPorRegiao, type RegioesDoPainel } from "../../lib/lojas/regioes";
 import { nomeDoMes, somarMeses } from "../../lib/metas/painel";
 import type { ResultadoDoMes } from "../../lib/resultado/consulta";
 import { daReceita, mesCurto, MESES_DE_HISTORICO, type FiltroDoResultado } from "../../lib/resultado/regras";
@@ -25,9 +26,13 @@ export function enderecoDoResultado(mes: string, mesAtual: string, filtro: Filtr
   return texto ? `/resultado?${texto}` : "/resultado";
 }
 
-type Props = { leitura: Leitura<ResultadoDoMes>; mes: string; mesAtual: string; filtro: FiltroDoResultado };
+type Props = {
+  leitura: Leitura<ResultadoDoMes>; mes: string; mesAtual: string; filtro: FiltroDoResultado;
+  /** ORG-009b: as regiões da rede, só na rede inteira; com alguma loja em região, o resultado por região. */
+  regioes?: RegioesDoPainel;
+};
 
-export function ConteudoResultado({ leitura, mes, mesAtual, filtro }: Props) {
+export function ConteudoResultado({ leitura, mes, mesAtual, filtro, regioes = null }: Props) {
   const lojas = leitura.estado === "ok" ? leitura.dados.lojas : [];
   return (
     <>
@@ -48,7 +53,7 @@ export function ConteudoResultado({ leitura, mes, mesAtual, filtro }: Props) {
           <EstadoDoPainel estado={leitura.estado} fonte="resultado" tentarDeNovo={enderecoDoResultado(mes, mesAtual, filtro)} />
         </Cartao>
       ) : (
-        <Painel r={leitura.dados} mesAtual={mesAtual} />
+        <Painel r={leitura.dados} mesAtual={mesAtual} regioes={regioes} />
       )}
       <ComoLer />
     </>
@@ -78,7 +83,7 @@ function PassoDoMes({ mes, mesAtual, filtro }: { mes: string; mesAtual: string; 
   );
 }
 
-function Painel({ r, mesAtual }: { r: ResultadoDoMes; mesAtual: string }) {
+function Painel({ r, mesAtual, regioes }: { r: ResultadoDoMes; mesAtual: string; regioes: RegioesDoPainel }) {
   const l = r.linhas;
   const naRede = r.unidade === null;
   const daReceitaTexto = (valor: number) => {
@@ -199,7 +204,7 @@ function Painel({ r, mesAtual }: { r: ResultadoDoMes; mesAtual: string }) {
         </div>
       </div>
 
-      {naRede && <PorLoja r={r} mesAtual={mesAtual} />}
+      {naRede && <PorLoja r={r} mesAtual={mesAtual} regioes={regioes} />}
     </>
   );
 }
@@ -232,7 +237,7 @@ function Despesas({ r }: { r: ResultadoDoMes }) {
   );
 }
 
-function PorLoja({ r, mesAtual }: { r: ResultadoDoMes; mesAtual: string }) {
+function PorLoja({ r, mesAtual, regioes }: { r: ResultadoDoMes; mesAtual: string; regioes: RegioesDoPainel }) {
   const nome = (l: { nome: string | null }) => l.nome ?? "Loja desativada";
   return (
     <Cartao
@@ -261,9 +266,36 @@ function PorLoja({ r, mesAtual }: { r: ResultadoDoMes; mesAtual: string }) {
               brlComSinal(l.receitaLiquida), brlComSinal(l.margemBruta), brl(l.taxas), brl(l.despesas), brl(l.saidasCaixa), brl(l.rede), brlComSinal(l.resultado),
             ])}
           />
+          <PorRegiao r={r} regioes={regioes} />
         </>
       )}
     </Cartao>
+  );
+}
+
+/** ORG-009b: o resultado das lojas de cada região somado (a parte da rede já vem dividida em cada loja). */
+function PorRegiao({ r, regioes }: { r: ResultadoDoMes; regioes: RegioesDoPainel }) {
+  if (regioes === "falha") return <p className={`mt-3 ${NOTA}`}>Não deu para ler as regiões agora; o resultado por loja acima está certo.</p>;
+  const porRegiao = resultadoPorRegiao(r.porLoja, regioes);
+  if (!porRegiao) return null;
+  return (
+    <div className="mt-5 border-t border-borda pt-4">
+      <h3 className="mb-3 text-sm font-semibold">Por região</h3>
+      {porRegiao.length > 1 && (
+        <BarrasComSinal
+          nomeSerie="Resultado" nomes={["Lucro", "Prejuízo"]} formatar={brlComSinal}
+          dados={porRegiao.map((g) => ({ rotulo: g.nome, valor: g.resultado, detalhe: `${plural(g.lojas, "loja", "lojas")} · receita ${brlCompactoComSinal(g.receitaLiquida)}` }))}
+        />
+      )}
+      <TabelaDoGrafico
+        titulo="Ver as regiões em tabela"
+        colunas={["Região", "Lojas", "Receita líquida", "Margem bruta", "Taxas", "Contas", "Caixa", "Parte da rede", "Resultado"]}
+        linhas={porRegiao.map((g) => [
+          g.nome, String(g.lojas), brlComSinal(g.receitaLiquida), brlComSinal(g.margemBruta), brl(g.taxas), brl(g.despesas), brl(g.saidasCaixa), brl(g.rede), brlComSinal(g.resultado),
+        ])}
+      />
+      <p className={`mt-2 ${NOTA}`}>A região soma o resultado das lojas dela, cada uma já com a sua parte das contas da rede.</p>
+    </div>
   );
 }
 

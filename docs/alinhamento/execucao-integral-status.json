@@ -2,7 +2,7 @@
   "_leia": "Checkpoint do programa de execução integral (PR #67). Carregar ao retomar e seguir para o próximo item executável da fila; não reiniciar o projeto. Estados vêm de status-requisitos.json (fonte da rastreabilidade); este arquivo acrescenta lote, bloqueio externo e revisão.",
   "atualizado_em": "2026-11-14",
   "base": {
-    "main": "070dbb2",
+    "main": "572e3a0",
     "pacote": {
       "pr": 67,
       "branch": "docs/execucao-integral-20261110",
@@ -18,15 +18,15 @@
   },
   "publicado": {
     "homologacao": {
-      "commit": "070dbb2",
+      "commit": "572e3a0",
       "quando": "2026-11-14",
-      "conferido": "rodapé da tela de entrada (070dbb2 · build 14/11/2026 20:37), /saude 200 e as rotas reais respondendo 307 para o login"
+      "conferido": "rodapé da tela de entrada (572e3a0 · build 14/11/2026 20:52), /saude 200 e as rotas reais respondendo 307 para o login"
     },
     "falta_publicar": [
-      "Q3, revisão periódica de segurança e proposta de backup (configuração do GitHub e documentos), publicado ao fim do lote",
+      "ORG-009b, resultado do mês por região, publicado ao fim do lote",
       "migration 20261114235000_estoque_valor_em_custo (G3b): aplicar no ora5g-dev pede o sim do proprietário",
       "migration 20261115001000_codigos_de_outros_canais (CAT-009): aplicar no ora5g-dev pede o sim do proprietário",
-      "migration 20261115003000_regioes (ORG-009): aplicar no ora5g-dev pede o sim do proprietário"
+      "migration 20261115003000_regioes (ORG-009 e ORG-009b): aplicar no ora5g-dev pede o sim do proprietário"
     ]
   },
   "contagem_dos_estados": {
@@ -761,7 +761,7 @@
       "titulo": "Relatório financeiro consolidado por loja/região/rede",
       "prioridade": "P1",
       "estado": "parcial",
-      "lote": "L8 financeiro; G2 financeiro e relatórios (G2a entregue em 13/11); L8b em 13/11: resultado do mês da rede e de cada loja; ORG-009 em 14/11: a região no cadastro e as vendas por região",
+      "lote": "L8 financeiro; G2 financeiro e relatórios (G2a entregue em 13/11); L8b em 13/11: resultado do mês da rede e de cada loja; ORG-009 em 14/11: a região no cadastro e as vendas por região; ORG-009b em 14/11: o resultado do mês por região",
       "bloqueio_externo": null,
       "revisado_codex": false,
       "homologado": false

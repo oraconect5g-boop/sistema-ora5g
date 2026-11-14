@@ -7,6 +7,7 @@ import { MoldeReal } from "../../componentes/MoldeReal";
 import { Aviso, classeBotao, TituloPagina } from "../../componentes/ui";
 import { obterSessao } from "../../lib/acesso/sessao";
 import { geradoEm } from "../../lib/csv";
+import { lerRegioesDoPainel } from "../../lib/lojas/regioes";
 import { mesDeHoje } from "../../lib/metas/painel";
 import { textoDoParametro, type ValorDeParametro } from "../../lib/parametros";
 import { consultarResultado } from "../../lib/resultado/consulta";
@@ -44,6 +45,8 @@ export default async function Resultado({ searchParams }: { searchParams: Promis
     );
   }
   const lojas = leitura.estado === "ok" ? leitura.dados.lojas : [];
+  // ORG-009b: as regiões só na rede inteira (o resultado por região soma as lojas).
+  const regioes = filtro.tipo === "rede" && leitura.estado === "ok" ? await lerRegioesDoPainel(sessao.supabase) : null;
   const onde = filtro.tipo === "rede" ? "Rede inteira" : (lojas.find((l) => l.id === filtro.id)?.nome ?? "Loja");
   const planilha = `/resultado/exportar?${new URLSearchParams({ mes: mes.slice(0, 7), ...(filtro.tipo === "loja" ? { loja: filtro.id } : {}) })}`;
 
@@ -61,7 +64,7 @@ export default async function Resultado({ searchParams }: { searchParams: Promis
         ) : undefined}
       />
       <CarimboDaImpressao texto={`Ora 5G · resultado do mês · ${onde} · impresso em ${geradoEm()}`} />
-      <ConteudoResultado leitura={leitura} mes={mes} mesAtual={mesAtual} filtro={filtro} />
+      <ConteudoResultado leitura={leitura} mes={mes} mesAtual={mesAtual} filtro={filtro} regioes={regioes} />
     </MoldeReal>
   );
 }

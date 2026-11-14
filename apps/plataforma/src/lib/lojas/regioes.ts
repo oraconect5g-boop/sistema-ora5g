@@ -6,6 +6,7 @@ import { ehUuid } from "../acesso/regras";
 import type { obterSessao } from "../acesso/sessao";
 import { ticketMedio } from "../inicio/painel";
 import { lerEmPaginas } from "../leitura-completa";
+import type { LojaDoResultado } from "../resultado/consulta";
 
 type Cliente = Awaited<ReturnType<typeof obterSessao>>["supabase"];
 
@@ -86,6 +87,23 @@ export function desempenhoPorRegiao(
     const soma = g.itens.reduce((s, l) => ({ vendas: s.vendas + l.vendas, vendido: s.vendido + l.vendido, desfeito: s.desfeito + l.desfeito, liquido: s.liquido + l.liquido }),
       { vendas: 0, vendido: 0, desfeito: 0, liquido: 0 });
     return { id: g.id, nome: g.nome, lojas: g.itens.length, ...soma, ticket: ticketMedio(soma.vendido, soma.vendas) };
+  });
+}
+
+type ContasDoResultado = Pick<LojaDoResultado, "receitaLiquida" | "cmv" | "margemBruta" | "taxas" | "despesas" | "saidasCaixa" | "rede" | "resultado">;
+export type ResultadoDaRegiao = { id: string | null; nome: string; lojas: number } & ContasDoResultado;
+const CONTAS_DO_RESULTADO = ["receitaLiquida", "cmv", "margemBruta", "taxas", "despesas", "saidasCaixa", "rede", "resultado"] as const;
+
+/**
+ * ORG-009b: o resultado do mês (L8b) somado por região, a partir do resultado de cada loja (que já traz a parte
+ * das contas da rede dividida pela receita). A soma das regiões é a soma das lojas; nada é recalculado.
+ */
+export function resultadoPorRegiao(lojas: readonly LojaDoResultado[], mapa: MapaDeRegioes | null): ResultadoDaRegiao[] | null {
+  const grupos = agruparPorRegiao(lojas, (l) => l.unidade, mapa);
+  if (!grupos) return null;
+  return grupos.map((g) => {
+    const soma = Object.fromEntries(CONTAS_DO_RESULTADO.map((c) => [c, g.itens.reduce((s, l) => s + l[c], 0)])) as ContasDoResultado;
+    return { id: g.id, nome: g.nome, lojas: g.itens.length, ...soma };
   });
 }
 
