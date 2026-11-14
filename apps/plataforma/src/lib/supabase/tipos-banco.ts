@@ -1,5 +1,5 @@
 // ARQUIVO GERADO pelo Supabase (generate_typescript_types do projeto ora5g-dev) depois da
-// migration 20261113065706_margem_painel. Não edite à mão: gere de novo a cada
+// migration 20261114013159_previsao_de_caixa. Não edite à mão: gere de novo a cada
 // migration aplicada (auditoria do Codex de 08/11, §7.2). O teste tipos-banco.test.ts confere
 // que funções e tabelas públicas daqui são as mesmas das migrations.
 export type Json =
@@ -1366,17 +1366,17 @@ export type Database = {
         }
         Relationships: [
           {
-            foreignKeyName: "contas_a_receber_registrado_por_fkey"
-            columns: ["registrado_por"]
-            isOneToOne: false
-            referencedRelation: "perfis_usuario"
-            referencedColumns: ["id"]
-          },
-          {
             foreignKeyName: "contas_a_receber_pagamento_id_fkey"
             columns: ["pagamento_id"]
             isOneToOne: false
             referencedRelation: "venda_pagamentos"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "contas_a_receber_registrado_por_fkey"
+            columns: ["registrado_por"]
+            isOneToOne: false
+            referencedRelation: "perfis_usuario"
             referencedColumns: ["id"]
           },
           {
@@ -4083,17 +4083,17 @@ export type Database = {
         }
         Relationships: [
           {
-            foreignKeyName: "venda_itens_preco_id_fkey"
-            columns: ["preco_id"]
-            isOneToOne: false
-            referencedRelation: "precos"
-            referencedColumns: ["id"]
-          },
-          {
             foreignKeyName: "venda_itens_item_serializado_id_fkey"
             columns: ["item_serializado_id"]
             isOneToOne: false
             referencedRelation: "itens_serializados"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "venda_itens_preco_id_fkey"
+            columns: ["preco_id"]
+            isOneToOne: false
+            referencedRelation: "precos"
             referencedColumns: ["id"]
           },
           {
@@ -4721,7 +4721,12 @@ export type Database = {
         Returns: boolean
       }
       connect_painel: {
-        Args: { p_fim: string; p_inicio: string; p_unidade?: string; p_vendedor?: string }
+        Args: {
+          p_fim: string
+          p_inicio: string
+          p_unidade?: string
+          p_vendedor?: string
+        }
         Returns: Json
       }
       connect_registrar: {
@@ -4855,6 +4860,7 @@ export type Database = {
         Args: { p_motivo: string; p_vinculo: string }
         Returns: boolean
       }
+      equipe_por_papel: { Args: { p_organizacao: string }; Returns: Json }
       estoque_entrada: {
         Args: { p_entrada: string; p_numero: number; p_unidade: string }
         Returns: Json
@@ -4880,25 +4886,7 @@ export type Database = {
           unidade_id: string
         }[]
       }
-      equipe_por_papel: { Args: { p_organizacao: string }; Returns: Json }
-      financeira_desfazer_recebimento: {
-        Args: { p_conta: string; p_motivo: string }
-        Returns: boolean
-      }
-      financeira_receber: {
-        Args: {
-          p_conta: string
-          p_recebido_em: string
-          p_referencia: string
-          p_valor_recebido: number
-        }
-        Returns: boolean
-      }
-      financeiras_a_receber: { Args: never; Returns: Json }
-      estoque_painel: {
-        Args: { p_unidade?: string }
-        Returns: Json
-      }
+      estoque_painel: { Args: { p_unidade?: string }; Returns: Json }
       estoque_registrar_entrada: {
         Args: {
           p_chave: string
@@ -4919,6 +4907,20 @@ export type Database = {
           esperado: number
         }[]
       }
+      financeira_desfazer_recebimento: {
+        Args: { p_conta: string; p_motivo: string }
+        Returns: boolean
+      }
+      financeira_receber: {
+        Args: {
+          p_conta: string
+          p_recebido_em: string
+          p_referencia: string
+          p_valor_recebido: number
+        }
+        Returns: boolean
+      }
+      financeiras_a_receber: { Args: never; Returns: Json }
       financeiro_painel: {
         Args: {
           p_fim: string
@@ -5153,9 +5155,18 @@ export type Database = {
         }
         Returns: number
       }
-      metas_equipe: { Args: { p_mes: string; p_unidade: string }; Returns: Json }
-      metas_lojas: { Args: { p_mes: string; p_unidade?: string }; Returns: Json }
-      metas_painel: { Args: { p_mes: string; p_unidade: string }; Returns: Json }
+      metas_equipe: {
+        Args: { p_mes: string; p_unidade: string }
+        Returns: Json
+      }
+      metas_lojas: {
+        Args: { p_mes: string; p_unidade?: string }
+        Returns: Json
+      }
+      metas_painel: {
+        Args: { p_mes: string; p_unidade: string }
+        Returns: Json
+      }
       movimentar_caixa: {
         Args: {
           p_chave: string
