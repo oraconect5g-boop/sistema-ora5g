@@ -7,6 +7,7 @@ import { redirect } from "next/navigation";
 import { ehUuid } from "../../lib/acesso/regras";
 import { obterSessao } from "../../lib/acesso/sessao";
 import type { Json } from "../../lib/supabase/tipos-banco";
+import { erroDosAnexos } from "../../lib/vendas/anexos";
 import { CONDICOES_DE_RETORNO, erroDaVenda, lerDevolucao, lerPagamentos, lerValor } from "../../lib/vendas/regras";
 
 // Cada ação chama UMA função do banco como a pessoa logada (ADR-004). As chaves de idempotência
@@ -185,4 +186,19 @@ export async function conferirRetorno(dados: FormData) {
   });
   if (error) redirect(`${destino}?erro=${error.code === "22023" ? "conferencia" : erroDaVenda(error)}`);
   redirect(`${destino}?retorno=${recebido === "sim" ? "recebido" : "nao_recebido"}`);
+}
+
+// Documento da venda (L5d, ORA-CRM-008): a gerência retira o documento errado, com o motivo; o registro e o arquivo
+// continuam (nada se apaga). O envio é pela rota /vendas/[id]/anexos (o arquivo pode passar de 1 MB).
+export async function retirarAnexo(dados: FormData) {
+  const venda = dados.get("venda");
+  const anexo = dados.get("anexo");
+  if (!ehUuid(venda) || !ehUuid(anexo)) redirect("/vender?erro=dados");
+  const destino = `/vendas/${venda}`;
+  const motivo = String(dados.get("motivo") ?? "").trim().replace(/\s+/g, " ");
+  if (motivo.length < 3 || motivo.length > 200) redirect(`${destino}?erro_anexo=anexo_motivo`);
+  const { supabase } = await obterSessao({ exigirLoja: true });
+  const { data, error } = await supabase.rpc("venda_retirar_anexo", { p_anexo: anexo as string, p_motivo: motivo });
+  if (error) redirect(`${destino}?erro_anexo=${erroDosAnexos(error)}`);
+  redirect(`${destino}?anexo=${data ? "retirado" : "sem_mudanca"}`);
 }

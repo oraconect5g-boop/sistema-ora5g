@@ -112,6 +112,7 @@
 | **IA (atendimento e análises)** | Depois do núcleo estável | Fornecedor e orçamento a decidir (D-030). Nunca autoriza pagamento, desconto, crédito, nota ou ativação sozinha |
 | **Monitoramento de erros** | Opcional | `SENTRY_DSN` ou equivalente; decidir antes da produção |
 | **Pix automático pelo banco** | Condicional (D-011) | API Pix do banco com certificado, ou intermediário; até lá, conferência pelo extrato |
+| **Assinatura digital de contratos** | Condicional | Fornecedor a escolher (com validade jurídica e custo por assinatura); até lá, o contrato e o termo assinados em papel são fotografados e guardados na própria venda, em privado (L5d, ORA-CRM-008) |
 | **Maquininhas e financeiras por API** | Condicional | PicPay POS, PagSeguro, PayJoy, Aiva: só com contrato oficial de integração; hoje registro e conferência manual |
 
 ---

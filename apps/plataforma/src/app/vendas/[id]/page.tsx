@@ -1,6 +1,6 @@
 import { randomUUID } from "node:crypto";
 
-import { CheckCircle2, FileText, PackageCheck, Receipt, RotateCcw, Undo2, UserRound } from "lucide-react";
+import { CheckCircle2, FileText, PackageCheck, Paperclip, Receipt, RotateCcw, Undo2, UserRound } from "lucide-react";
 import type { Metadata } from "next";
 import Link from "next/link";
 import { notFound } from "next/navigation";
@@ -16,12 +16,13 @@ import { centavosDoBanco } from "../../../lib/dinheiro";
 import { brl } from "../../../lib/formato";
 import { dataEHoraDoEnvio, ERROS_DAS_NOTAS, SITUACOES_DO_ENVIO } from "../../../lib/notas/regras";
 import { chaveDoCatalogo, textoDoParametro, type ValorDeParametro } from "../../../lib/parametros";
+import { ERROS_DOS_ANEXOS, tamanhoDoAnexo, TIPOS_DE_ANEXO } from "../../../lib/vendas/anexos";
 import { osDosItens, type OsDoItem } from "../../../lib/vendas/os-dos-itens";
 import { CONDICOES_DE_RETORNO, ERROS_DA_VENDA } from "../../../lib/vendas/regras";
 import { vincularClienteNaVenda } from "../../clientes/acoes";
 import { BuscaDeCliente } from "../../clientes/BuscaDeCliente";
 import { conferirEnvioDesconhecido, corrigirNota, enviarNotaPeloWhatsApp, pedirNota } from "../../notas/acoes";
-import { cancelarVenda, conferirRetorno, confirmarEstorno, devolverItens } from "../../vender/acoes";
+import { cancelarVenda, conferirRetorno, confirmarEstorno, devolverItens, retirarAnexo } from "../../vender/acoes";
 import { regraNaTela, regrasDosItens } from "../../../lib/vendas/regra-de-preco";
 
 export const metadata: Metadata = { title: "Comprovante da venda" };
@@ -33,12 +34,13 @@ const FISICOS = new Set(["aparelho", "chip", "acessorio"]);
 
 // Comprovante digital (as lojas não têm impressora, DEC-U22). Lido pelo RLS: o vendedor vê as
 // próprias vendas; a gerência vê as da loja. A gerência cancela com estorno (ADR-004).
-export default async function Comprovante({ params, searchParams }: { params: Promise<{ id: string }>; searchParams: Promise<{ concluida?: ValorDeParametro; cancelada?: ValorDeParametro; erro?: ValorDeParametro; nota?: ValorDeParametro; erro_nota?: ValorDeParametro; devolvida?: ValorDeParametro; vale?: ValorDeParametro; estorno?: ValorDeParametro; retorno?: ValorDeParametro; cliente?: ValorDeParametro }> }) {
+export default async function Comprovante({ params, searchParams }: { params: Promise<{ id: string }>; searchParams: Promise<{ concluida?: ValorDeParametro; cancelada?: ValorDeParametro; erro?: ValorDeParametro; nota?: ValorDeParametro; erro_nota?: ValorDeParametro; devolvida?: ValorDeParametro; vale?: ValorDeParametro; estorno?: ValorDeParametro; retorno?: ValorDeParametro; cliente?: ValorDeParametro; anexo?: ValorDeParametro; erro_anexo?: ValorDeParametro }> }) {
   const { id } = await params;
   if (!ehUuid(id)) notFound();
   const parametros = await searchParams;
   const erro = chaveDoCatalogo(ERROS_DA_VENDA, parametros.erro);
   const erroNota = chaveDoCatalogo(ERROS_DAS_NOTAS, parametros.erro_nota);
+  const erroAnexo = chaveDoCatalogo(ERROS_DOS_ANEXOS, parametros.erro_anexo);
   const sessao = await obterSessao({ exigirLoja: true });
   const { supabase, usuario, situacao } = sessao;
   const venda = await supabase.from("vendas").select("id, numero, situacao, unidade_id, vendedor_id, cliente_nome, cliente_id, total_centavos, subtotal_centavos, desconto_centavos, troco_centavos, recebido_centavos, a_receber_centavos, devolvido_centavos, concluida_em, cancelada_em, motivo_cancelamento").eq("id", id).maybeSingle();
@@ -96,6 +98,16 @@ export default async function Comprovante({ params, searchParams }: { params: Pr
   // O conserto da OS cobrado nesta venda (L12c), lido à parte do mesmo jeito.
   const daOs = itens.data.some((i) => i.tipo === "servico") ? await osDosItens(supabase, id) : new Map<string, OsDoItem>();
   const osAEntregar = [...daOs.values()].filter((o) => o.situacao === "aberta");
+  // Documentos da venda (L5d), lidos à parte: num banco sem a migration (sem a tabela), o bloco não aparece.
+  const anexosLidos = venda.data.situacao === "concluida" || venda.data.situacao === "cancelada"
+    ? await supabase.from("venda_anexos").select("id, tipo, descricao, caminho, formato, bytes, enviado_em, retirado_em, motivo_retirada").eq("venda_id", id).order("enviado_em")
+    : null;
+  const anexos = anexosLidos && !anexosLidos.error ? anexosLidos.data : null;
+  const linksDosAnexos = anexos && anexos.some((a) => !a.retirado_em)
+    ? await supabase.storage.from("anexos").createSignedUrls(anexos.filter((a) => !a.retirado_em).map((a) => a.caminho), 600)
+    : { data: [], error: null };
+  const linkDoAnexo = (caminho: string) => (linksDosAnexos.error ? null : linksDosAnexos.data?.find((l) => l.path === caminho && !l.error)?.signedUrl ?? null);
+  const dataHora = (iso: string) => new Intl.DateTimeFormat("pt-BR", { timeZone: "America/Sao_Paulo", dateStyle: "short", timeStyle: "short" }).format(new Date(iso));
   const v = venda.data;
   // Devolução (adendo do ADR-004): o que resta de cada item e os meios em que dá para reembolsar.
   const devolvido = new Map<string, number>();
@@ -132,6 +144,10 @@ export default async function Comprovante({ params, searchParams }: { params: Pr
       {textoDoParametro(parametros.nota) === "corrigida" && <Aviso tom="sucesso">Correção enviada: o pedido voltou para a fila.</Aviso>}
       {textoDoParametro(parametros.nota)?.startsWith("documento_") && <Aviso tom="sucesso">Documento da nota guardado em privado; ele fica disponível para a loja e para o envio ao cliente.</Aviso>}
       {textoDoParametro(parametros.nota) === "whatsapp" && <Aviso tom="sucesso">Envio pedido: a nota está na fila do WhatsApp oficial. O estado abaixo muda só com a resposta do WhatsApp.</Aviso>}
+      {erroAnexo && <Aviso tom="perigo">{ERROS_DOS_ANEXOS[erroAnexo]}</Aviso>}
+      {textoDoParametro(parametros.anexo) === "guardado" && <Aviso tom="sucesso">Documento guardado em privado: quem lê esta venda abre pelo link.</Aviso>}
+      {textoDoParametro(parametros.anexo) === "retirado" && <Aviso tom="sucesso">Documento retirado; o registro e o motivo ficaram.</Aviso>}
+      {textoDoParametro(parametros.anexo) === "sem_mudanca" && <Aviso tom="info">Nada mudou: o documento já tinha sido retirado.</Aviso>}
       {textoDoParametro(parametros.nota) === "whatsapp_conferido" && <Aviso tom="sucesso">Conferência registrada: o envio ficou como &quot;não chegou&quot; e a nota pode ser reenviada.</Aviso>}
       <Cartao titulo={`Venda nº ${v.numero}`} subtitulo={`${loja.data?.nome ?? situacao.unidade_nome}${quando ? ` · ${quando}` : ""}`} icone={Receipt}>
         <p className="text-sm">Vendedor: {vendedor.data?.nome ?? "—"}{v.cliente_nome ? ` · Cliente: ${v.cliente_nome}` : ""}
@@ -269,6 +285,55 @@ export default async function Comprovante({ params, searchParams }: { params: Pr
               <div><Botao type="submit" tamanho="sm">Pedir nota fiscal</Botao></div>
             </form>
           )}
+        </Cartao>
+      )}
+      {anexos && (
+        <Cartao titulo="Documentos da venda" icone={Paperclip}
+          subtitulo="Contrato do financiamento, termo de garantia, contrato da linha e comprovantes, guardados em privado; nada se apaga">
+          {anexos.length === 0 && <p className="text-sm text-suave">Nenhum documento guardado.</p>}
+          {anexos.length > 0 && (
+            <ul className="divide-y divide-borda text-sm">
+              {anexos.map((a) => {
+                const nome = TIPOS_DE_ANEXO[a.tipo as keyof typeof TIPOS_DE_ANEXO] ?? a.tipo;
+                const link = a.retirado_em ? null : linkDoAnexo(a.caminho);
+                return (
+                  <li key={a.id} className="space-y-1 py-2">
+                    <p className="flex flex-wrap items-center gap-2">
+                      {link ? <a href={link} target="_blank" rel="noreferrer" className="font-semibold text-acao">{nome}</a>
+                        : <span className={a.retirado_em ? "text-suave line-through" : "font-semibold"}>{nome}</span>}
+                      <span className="numeros text-xs text-suave">{`${a.formato.toUpperCase()} · ${tamanhoDoAnexo(a.bytes)} · ${dataHora(a.enviado_em)}`}</span>
+                      {a.retirado_em && <Selo tom="neutro">retirado</Selo>}
+                    </p>
+                    {a.descricao && <p className="text-xs text-suave">{a.descricao}</p>}
+                    {a.retirado_em && <p className="text-xs text-suave">{`Retirado em ${dataHora(a.retirado_em)}: ${a.motivo_retirada ?? ""}`}</p>}
+                    {podeCancelar.data && !a.retirado_em && (
+                      <details>
+                        <summary className="cursor-pointer text-xs font-semibold text-acao">Retirar (documento errado)</summary>
+                        <form action={retirarAnexo} className="mt-2 flex flex-wrap items-end gap-2">
+                          <input type="hidden" name="venda" value={v.id} />
+                          <input type="hidden" name="anexo" value={a.id} />
+                          <label className="min-w-0 flex-1 text-xs font-medium">Motivo<input name="motivo" required minLength={3} maxLength={200} className={campo} /></label>
+                          <Botao type="submit" tamanho="sm" variante="secundario">Retirar</Botao>
+                        </form>
+                      </details>
+                    )}
+                  </li>
+                );
+              })}
+            </ul>
+          )}
+          <form action={`/vendas/${v.id}/anexos`} method="post" encType="multipart/form-data" className="mt-3 grid gap-2 sm:grid-cols-2">
+            <label className="text-xs font-medium">Tipo do documento
+              <select name="tipo" required className={campo}>
+                {Object.entries(TIPOS_DE_ANEXO).map(([valor, rotulo]) => <option key={valor} value={valor}>{rotulo}</option>)}
+              </select>
+            </label>
+            <label className="text-xs font-medium">Descrição <span className="font-normal text-suave">(obrigatória em &quot;Outro documento&quot;)</span><input name="descricao" maxLength={120} className={campo} /></label>
+            <label className="text-xs font-medium sm:col-span-2">Arquivo: PDF ou foto, até 5 MB
+              <input type="file" name="arquivo" required accept="application/pdf,image/jpeg,image/png,image/webp" className={`${campo} py-2`} />
+            </label>
+            <div><Botao type="submit" tamanho="sm">Guardar o documento</Botao></div>
+          </form>
         </Cartao>
       )}
       {devolucoes.data.length > 0 && (
