@@ -31,7 +31,7 @@ export function ConteudoResultado({ leitura, mes, mesAtual, filtro }: Props) {
   const lojas = leitura.estado === "ok" ? leitura.dados.lojas : [];
   return (
     <>
-      <div className="space-y-2">
+      <div className="nao-imprimir space-y-2">
         <PassoDoMes mes={mes} mesAtual={mesAtual} filtro={filtro} />
         {lojas.length > 0 && (
           <FiltroSegmentado
@@ -270,7 +270,7 @@ function PorLoja({ r, mesAtual }: { r: ResultadoDoMes; mesAtual: string }) {
 function ComoLer() {
   return (
     <Cartao titulo="Como ler este resultado" icone={Info}>
-      <details className="group">
+      <details data-imprimir="" className="group">
         <summary className="inline-flex min-h-9 cursor-pointer list-none items-center rounded-full border border-borda bg-white px-3 text-[13px] font-semibold hover:border-borda-forte [&::-webkit-details-marker]:hidden">
           Ver as regras de cada linha
         </summary>

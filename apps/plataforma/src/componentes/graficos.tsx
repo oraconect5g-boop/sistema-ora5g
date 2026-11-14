@@ -61,7 +61,8 @@ export function Legenda({ itens, className = "" }: { itens: readonly { nome: str
 /** Versão em tabela de qualquer gráfico (acessibilidade e conferência dos números). */
 export function TabelaDoGrafico({ colunas, linhas, titulo = "Ver dados em tabela" }: { colunas: readonly string[]; linhas: readonly (readonly ReactNode[])[]; titulo?: string }) {
   return (
-    <details className="group mt-3">
+    // data-imprimir: o botão "Imprimir ou salvar em PDF" abre a tabela antes de imprimir (L8d).
+    <details data-imprimir="" className="group mt-3">
       <summary className="inline-flex cursor-pointer list-none items-center gap-1 rounded text-xs font-semibold text-acao hover:underline">
         <span aria-hidden className="transition-transform group-open:rotate-90">›</span> {titulo}
       </summary>

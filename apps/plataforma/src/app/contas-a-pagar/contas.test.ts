@@ -91,6 +91,7 @@ vi.mock("../../lib/acesso/sessao", () => ({
 }));
 
 import { cancelarConta, corrigirConta, desfazerPagamento, lancarConta, pagarConta, salvarCategoria } from "./acoes";
+import { GET as exportar } from "./exportar/route";
 import ContasAPagar from "./page";
 
 // ---------------------------------------------------------------------------------------------
@@ -417,5 +418,46 @@ describe("ações das contas a pagar (L8a)", () => {
     expect(cenario.chamadas.at(-1)?.argumentos).toEqual({ p_categoria: null, p_nome: "Empréstimo", p_ativa: null, p_entra_no_resultado: false });
     cenario.respostas.conta_pagar_categoria_salvar = { data: null, error: { code: "42501", message: "Só o dono ajusta as categorias das contas a pagar" } };
     expect(await destinoDe(salvarCategoria(formulario({ nome: "Do gerente" })))).toBe("/contas-a-pagar?erro=so_dono");
+  });
+});
+
+describe("/contas-a-pagar: planilha e impressão (L8d)", () => {
+  const baixar = (consulta = "") => exportar(new Request(`http://localhost/contas-a-pagar/exportar${consulta ? `?${consulta}` : ""}`));
+  it("a tela oferece a planilha com a mesma lista e o mesmo filtro, e o botão de imprimir; os formulários não saem no papel", async () => {
+    const tela = await pagina({ ver: "pagas", loja: LOJA_B });
+    const links = elementos(tela).map((e) => e.props.href).filter((h): h is string => typeof h === "string" && h.includes("exportar"));
+    expect(links).toEqual([`/contas-a-pagar/exportar?ver=pagas&loja=${LOJA_B}`]);
+    expect(doTipo(tela, "BotaoImprimir")).toHaveLength(1);
+    expect(String(doTipo(tela, "CarimboDaImpressao")[0]?.texto)).toMatch(/^Ora 5G · contas a pagar \(pagas \(60 dias\)\) · Loja B \(teste\) · impresso em /);
+    const cartoes = doTipo(await pagina(), "Cartao").filter((c) => c.titulo === "Lançar conta" || c.titulo === "Categorias das despesas");
+    expect(cartoes.map((c) => String(c.className))).toEqual([expect.stringContaining("nao-imprimir"), expect.stringContaining("nao-imprimir")]);
+  });
+
+  it("as contas em aberto de todas as lojas, com todas as colunas; as pagas com o pagamento", async () => {
+    const resposta = await baixar();
+    expect(resposta.status).toBe(200);
+    expect(resposta.headers.get("content-disposition")).toBe('attachment; filename="ora5g-contas-a-pagar-abertas-rede-e-todas-as-lojas.csv"');
+    expect([...new Uint8Array(await resposta.clone().arrayBuffer()).slice(0, 3)]).toEqual([0xef, 0xbb, 0xbf]);
+    const csv = await resposta.text();
+    expect(csv.startsWith("Contas a pagar;Em aberto;Rede e todas as lojas\r\nGerado em;13/11/2026 12:00;3 contas")).toBe(true);
+    expect(csv).toContain("Descrição;Categoria;Onde;Fornecedor;Documento;Valor;Vencimento;Forma;Parcela;Situação;Pago em;Valor pago;Referência do pagamento;Cancelada em;Motivo do cancelamento");
+    expect(csv).toContain("Aluguel do escritório;Aluguel e condomínio;Rede (central);;;1000,00;10/11/2026;Uma vez;;em aberto;;;;;");
+    expect(csv).toContain("Boleto de aparelhos;Água, luz e internet;Loja A (teste);Distribuidora Teste;NF 77;333,33;13/11/2026;Parcelada;2 de 3;em aberto;;;;;");
+    expect(csv).toContain("Aluguel da loja;Aluguel e condomínio;Loja B (teste);;;6500,00;20/11/2026;Repete todo mês;12 de 12;em aberto;;;;;");
+    const pagas = await (await baixar("ver=pagas")).text();
+    expect(pagas).toContain("Conta de luz;Água, luz e internet;Loja A (teste);;;100,00;20/11/2026;Uma vez;;paga;12/11/2026;105,00;PIX 123;;");
+    const canceladas = await (await baixar("ver=canceladas")).text();
+    expect(canceladas).toContain("Lançada em dobro;Aluguel e condomínio;Loja A (teste);;;100,00;20/11/2026;Uma vez;;cancelada;;;;12/11/2026;Lançada em dobro");
+  });
+
+  it("sem permissão, loja recusada, banco sem as contas e falha ao ler os nomes", async () => {
+    cenario.pode = false;
+    expect((await baixar()).status).toBe(403);
+    Object.assign(cenario, { pode: true, recusarFiltro: true });
+    expect((await baixar(`loja=${LOJA_B}`)).status).toBe(403);
+    Object.assign(cenario, { recusarFiltro: false, erroDoResumo: { code: "PGRST202" } });
+    expect((await baixar()).status).toBe(503);
+    Object.assign(cenario, { erroDoResumo: null, errosDasTabelas: { fornecedores: { code: "57014" } } });
+    await expect(baixar()).rejects.toThrow();
   });
 });

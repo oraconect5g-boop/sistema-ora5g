@@ -4,9 +4,12 @@ import { useId, useState } from "react";
 
 import { CalendarRange, Scale, TrendingUp, Wallet } from "lucide-react";
 
+import { ExportarCsv } from "../../componentes/ExportarCsv";
 import { ColunasDivergentes, Linhas, TabelaDoGrafico } from "../../componentes/graficos";
 import { Aviso, Cartao, Indicador } from "../../componentes/ui";
 import { brl, brlCompacto, brlCompactoComSinal, brlComSinal, brlEixo, brlEixoComSinal, numero } from "../../lib/formato";
+import { geradoEm, parteDoNome } from "../../lib/csv";
+import { planilhaDaPrevisao, type FatosDaPlanilha } from "../../lib/previsao/planilha";
 import { AJUSTES, diaCurto, lerSaldo, projetar, type Estimativa, type SemanaFutura } from "../../lib/previsao/regras";
 
 // Previsão de caixa (lote L8c): a parte que roda no navegador. O saldo de partida digitado aqui fica só
@@ -19,9 +22,13 @@ export type PropsDoSimulador = {
   semanas: SemanaFutura[];
   vencidas: { valor: number; quantidade: number };
   estimativa: Estimativa | null;
+  /** Para a planilha (L8d): de onde é a previsão, de que dia e os fatos que ficam fora da conta. */
+  onde: string;
+  hoje: string;
+  fatos: FatosDaPlanilha;
 };
 
-export function Simulador({ semanas, vencidas, estimativa }: PropsDoSimulador) {
+export function Simulador({ semanas, vencidas, estimativa, onde, hoje, fatos }: PropsDoSimulador) {
   const [texto, setTexto] = useState("");
   const [ajuste, setAjuste] = useState(0);
   const campo = useId();
@@ -34,10 +41,17 @@ export function Simulador({ semanas, vencidas, estimativa }: PropsDoSimulador) {
   const negativa = linhas.find((l) => l.saldo !== null && l.saldo < 0);
   const apertada = linhas.find((l) => l.diferenca < 0);
   const comSaldo = typeof saldo === "number";
+  // A planilha sai do navegador com a simulação e o saldo da tela; nada vai ao servidor.
+  const planilha = planilhaDaPrevisao({ onde, linhas, estimativa, ajuste, comSaldo, fatos, gerado: geradoEm() });
 
   return (
     <>
-      <Cartao titulo="Simular" icone={Scale} subtitulo="O saldo que você digitar fica só neste navegador: não é enviado ao servidor nem gravado.">
+      <Cartao
+        titulo="Simular"
+        icone={Scale}
+        subtitulo="O saldo que você digitar fica só neste navegador: não é enviado ao servidor nem gravado."
+        acao={<ExportarCsv prefixo="ora5g" nomeArquivo={`previsao-${parteDoNome(onde)}-${hoje}`} rotulo="Baixar planilha" colunas={planilha.colunas} linhas={planilha.linhas} />}
+      >
         <div className="grid grid-cols-1 gap-4 sm:grid-cols-[minmax(0,18rem)_minmax(0,1fr)] sm:items-end">
           <div className="min-w-0">
             <label htmlFor={campo} className="text-xs font-medium">Saldo no banco hoje (opcional)</label>

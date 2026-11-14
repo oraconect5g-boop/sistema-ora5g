@@ -40,6 +40,8 @@ import { lerPrevisao } from "../../lib/previsao/consulta";
 import { estimativa, horizonteDoEndereco, lerSaldo, projetar, somarDias, type SemanaBase } from "../../lib/previsao/regras";
 import { enderecoDaPrevisao } from "./ConteudoPrevisao";
 import Previsao from "./page";
+import { planilhaDaPrevisao } from "../../lib/previsao/planilha";
+import { BotaoImprimir } from "../../componentes/BotaoImprimir";
 import { Simulador } from "./Simulador";
 
 // ---------------------------------------------------------------------------------------------
@@ -124,6 +126,8 @@ describe("/previsao: o dono vê a rede e cada loja (L8c)", () => {
     ]);
     const [simulador] = doTipo(tela, "Simulador");
     expect(simulador?.vencidas).toEqual({ valor: 120_000, quantidade: 2 });
+    expect(simulador).toMatchObject({ onde: "Rede inteira", hoje: HOJE, fatos: { financeiras: { valor: 2_598_000, quantidade: 2 }, aConciliar: { valor: 754_000, quantidade: 12 }, gavetas: { valor: 183_400, caixas: 3 } } });
+    expect(doTipo(tela, "BotaoImprimir")).toHaveLength(1);
     expect((simulador?.semanas as { contas: number }[]).map((s) => s.contas)).toEqual([800_000, 300_000, 1_500_000, 0, 400_000, 0, 200_000, 0]);
     // A média começa na primeira semana com movimento: 6 semanas, (6.000.000 − 50.000) ÷ 6.
     expect(simulador?.estimativa).toEqual({ media: 991_667, semanas: 6, de: "2026-10-02", ate: "2026-11-12" });
@@ -239,6 +243,8 @@ describe("estimativa, simulação e saldo previsto (L8c)", () => {
       semanas: [{ inicio: HOJE, fim: somarDias(HOJE, 6), contas: 50_000, quantidade: 1 }, { inicio: somarDias(HOJE, 7), fim: somarDias(HOJE, 13), contas: 300_000, quantidade: 1 }],
       vencidas: { valor: 20_000, quantidade: 1 },
       estimativa: { media: 100_000, semanas: 8, de: somarDias(HOJE, -56), ate: somarDias(HOJE, -1) },
+      onde: "Rede inteira", hoje: HOJE,
+      fatos: { financeiras: { valor: 0, quantidade: 0 }, aConciliar: { valor: 0, quantidade: 0 }, gavetas: { valor: 0, caixas: 0 } },
     }));
     const t = texto(html);
     expect(t).toContain("Saldo no banco hoje (opcional)");
@@ -249,5 +255,35 @@ describe("estimativa, simulação e saldo previsto (L8c)", () => {
     expect(t).toContain("Na semana de 20/11 a 26/11, as contas passam a entrada estimada em R$ 2.000,00.");
     expect(html).toContain('aria-pressed="true"');
     expect(t).not.toContain("Saldo previsto R$");
+    expect(t).toContain("Baixar planilha");
+  });
+
+  it("a planilha da previsão (L8d): semana a semana com a simulação e o saldo da tela, os fatos fora da conta e as premissas", () => {
+    const semanas = [
+      { inicio: HOJE, fim: somarDias(HOJE, 6), contas: 50_000, quantidade: 1 },
+      { inicio: somarDias(HOJE, 7), fim: somarDias(HOJE, 13), contas: 300_000, quantidade: 1 },
+    ];
+    const linhas = projetar(semanas, 20_000, 100_000, -0.2, 150_000);
+    const fatos = { financeiras: { valor: 2_598_000, quantidade: 2 }, aConciliar: { valor: 754_000, quantidade: 12 }, gavetas: { valor: 183_400, caixas: 3 } };
+    const estimativaDaTela = { media: 100_000, semanas: 8, de: somarDias(HOJE, -56), ate: somarDias(HOJE, -1) };
+    const p = planilhaDaPrevisao({ onde: "Rede inteira", linhas, estimativa: estimativaDaTela, ajuste: -0.2, comSaldo: true, fatos, gerado: "13/11/2026 12:00" });
+    expect(p.colunas).toEqual(["Semana", "De", "Até", "Entrada estimada", "Contas (fato)", "Vencidas incluídas", "Diferença", "Saldo previsto"]);
+    expect(p.linhas.slice(0, 2)).toEqual([
+      [1, "13/11/2026", "19/11/2026", "800,00", "700,00", "200,00", "100,00", "1600,00"],
+      [2, "20/11/2026", "26/11/2026", "800,00", "3000,00", "0,00", "-2200,00", "-600,00"],
+    ]);
+    expect(p.linhas).toContainEqual(["A receber das financeiras (sem data)", "25980,00", "2 vendas"]);
+    expect(p.linhas).toContainEqual(["Simulação", "menos 20% sobre a média"]);
+    expect(p.linhas).toContainEqual(["Saldo de partida", "digitado na tela (não fica gravado no sistema)"]);
+    expect(p.linhas.at(-1)).toEqual(["Previsão de caixa", "Rede inteira", "gerada em 13/11/2026 12:00"]);
+    const semSaldo = planilhaDaPrevisao({ onde: "Loja A (teste)", linhas: projetar(semanas, 0, null, 0, null), estimativa: null, ajuste: 0, comSaldo: false, fatos, gerado: "x" });
+    expect(semSaldo.linhas[0]?.[7]).toBe("");
+    expect(semSaldo.linhas).toContainEqual(["Entrada estimada", "sem estimativa: sem recebimento nas 8 semanas anteriores"]);
+  });
+
+  it("o botão de imprimir não sai no papel", () => {
+    const html = renderToStaticMarkup(createElement(BotaoImprimir));
+    expect(texto(html)).toContain("Imprimir ou salvar em PDF");
+    expect(html).toContain("nao-imprimir");
   });
 });

@@ -126,12 +126,30 @@ dialog::backdrop {
   }
 }
 
-/* Impressão do comprovante: só o conteúdo, sem menus. */
+/* Impressão (o comprovante e, desde o L8d, "Imprimir ou salvar em PDF" do resultado, da previsão e das
+   contas a pagar): só o conteúdo, sem menus, filtros e formulários; cores dos gráficos como na tela;
+   cartões sem sombra e, quando cabem, sem quebra no meio. */
 @media print {
   .nao-imprimir {
     display: none !important;
   }
   body {
     background: #fff;
+  }
+  * {
+    -webkit-print-color-adjust: exact;
+    print-color-adjust: exact;
+  }
+  main {
+    max-width: none !important;
+    padding-bottom: 0 !important;
+  }
+  section {
+    box-shadow: none !important;
+    break-inside: avoid;
+  }
+  li,
+  tr {
+    break-inside: avoid;
   }
 }

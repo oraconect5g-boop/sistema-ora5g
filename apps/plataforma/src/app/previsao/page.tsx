@@ -1,8 +1,10 @@
 import type { Metadata } from "next";
 
+import { BotaoImprimir, CarimboDaImpressao } from "../../componentes/BotaoImprimir";
 import { MoldeReal } from "../../componentes/MoldeReal";
 import { Aviso, TituloPagina } from "../../componentes/ui";
 import { obterSessao } from "../../lib/acesso/sessao";
+import { geradoEm } from "../../lib/csv";
 import { textoDoParametro, type ValorDeParametro } from "../../lib/parametros";
 import { consultarPrevisao } from "../../lib/previsao/consulta";
 import { horizonteDoEndereco } from "../../lib/previsao/regras";
@@ -46,7 +48,9 @@ export default async function Previsao({ searchParams }: { searchParams: Promise
         sobretitulo={onde}
         titulo="Previsão de caixa"
         subtitulo="O que vence e o que deve entrar nas próximas semanas. As contas são fatos; a entrada é uma estimativa, que você simula para mais ou para menos."
+        acao={leitura.estado === "ok" ? <BotaoImprimir /> : undefined}
       />
+      <CarimboDaImpressao texto={`Ora 5G · previsão de caixa · ${onde} · impressa em ${geradoEm()}`} />
       <ConteudoPrevisao leitura={leitura} semanas={semanas} filtro={filtro} />
     </MoldeReal>
   );
