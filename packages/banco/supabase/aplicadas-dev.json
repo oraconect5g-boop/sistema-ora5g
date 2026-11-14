@@ -65,6 +65,9 @@
     { "versao": "20261114150135", "nome": "whatsapp_envio_da_nota", "md5": "cccfb12dfbf315e0187888c702929d31", "aplicada_em": "2026-11-14" },
     { "versao": "20261114161903", "nome": "recebiveis_painel", "md5": "e64b6c8bbe0e2943b27739ee93219b0d", "aplicada_em": "2026-11-14" },
     { "versao": "20261114162103", "nome": "ordem_de_servico", "md5": "d33be729a3b9587e72685f6ac70f9423", "aplicada_em": "2026-11-14" },
-    { "versao": "20261114162305", "nome": "orcamento_da_os", "md5": "c64ccbbb49b2144f79ba0dad34043599", "aplicada_em": "2026-11-14" }
+    { "versao": "20261114162305", "nome": "orcamento_da_os", "md5": "c64ccbbb49b2144f79ba0dad34043599", "aplicada_em": "2026-11-14" },
+    { "versao": "20261114202336", "nome": "entrega_da_os", "md5": "a7a8f418bdfb86b4051944364a64fdb7", "aplicada_em": "2026-11-14" },
+    { "versao": "20261114202444", "nome": "pecas_da_os", "md5": "d8d8a679d126b2baef377c6608d7b804", "aplicada_em": "2026-11-14" },
+    { "versao": "20261114202535", "nome": "relatorio_da_assistencia", "md5": "833089c3f606ea5082713c121f42c46b", "aplicada_em": "2026-11-14" }
   ]
 }

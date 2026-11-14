@@ -1,6 +1,6 @@
--- Reversão de 20261114183000_pecas_da_os (só em banco sem dados reais). Com peça usada em OS (movimento "consumo_os" no
+-- Reversão de 20261114202444_pecas_da_os (só em banco sem dados reais). Com peça usada em OS (movimento "consumo_os" no
 -- livro, que é só de inserção) ou com evento de peça na trilha, as restrições antigas não voltam e a reversão para, de
--- propósito. privado.venda_item_reservado volta ao texto do L12c (20261114173000_entrega_da_os).
+-- propósito. privado.venda_item_reservado volta ao texto do L12c (20261114202336_entrega_da_os).
 create or replace function privado.venda_item_reservado()
 returns trigger
 language plpgsql

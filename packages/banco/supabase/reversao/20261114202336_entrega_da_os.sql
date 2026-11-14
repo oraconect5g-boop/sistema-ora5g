@@ -1,4 +1,4 @@
--- Reversão de 20261114173000_entrega_da_os (só em banco sem dados reais). Tira a ligação das vendas com as OS; com OS entregue ou com
+-- Reversão de 20261114202336_entrega_da_os (só em banco sem dados reais). Tira a ligação das vendas com as OS; com OS entregue ou com
 -- evento de cobrança ou de entrega na trilha, as restrições antigas não voltam e a reversão para, de propósito. O produto
 -- do conserto, se já foi criado, fica como um serviço comum, sem preço.
 -- public.concluir_venda volta ao texto do L7a (20261111201342_pagamentos_maquininhas_e_conciliacao), public.os_custodia
