@@ -1,4 +1,4 @@
-import { ArrowRightLeft, Building2, CalendarClock, ChartColumn, ChartLine, ClipboardCheck, ContactRound, CreditCard, FileText, FileUp, Filter, Globe, HandCoins, House, MessageCircle, Package, PackagePlus, Receipt, ReceiptText, Scale, ScrollText, ShoppingCart, Signal, Tags, Target, Users, Wallet, Wrench, type LucideIcon } from "lucide-react";
+import { ArrowRightLeft, Building2, CalendarClock, ChartColumn, ChartLine, ClipboardCheck, ContactRound, CreditCard, FileText, FileUp, Filter, Globe, HandCoins, House, MessageCircle, Package, PackagePlus, PiggyBank, Receipt, ReceiptText, Scale, ScrollText, ShoppingCart, Signal, Tags, Target, Users, Wallet, Wrench, type LucideIcon } from "lucide-react";
 
 const ICONES: Record<string, LucideIcon> = {
   inicio: House,
@@ -20,6 +20,7 @@ const ICONES: Record<string, LucideIcon> = {
   maquininhas: CreditCard,
   financeiras: HandCoins,
   contas: ReceiptText,
+  resultado: PiggyBank,
   produtos: Tags,
   canais: Globe,
   lojas: Building2,

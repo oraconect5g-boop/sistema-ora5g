@@ -81,7 +81,9 @@ export async function salvarCategoria(dados: FormData) {
   const lido = lerCategoria(dados);
   if (!lido.ok) voltar(dados, { erro: lido.erro });
   const { supabase } = await obterSessao({ exigirLoja: true });
-  const { error } = await supabase.rpc("conta_pagar_categoria_salvar", { p_categoria: lido.categoria as string, p_nome: lido.nome, p_ativa: lido.ativa as boolean });
+  const { error } = await supabase.rpc("conta_pagar_categoria_salvar", {
+    p_categoria: lido.categoria as string, p_nome: lido.nome, p_ativa: lido.ativa as boolean, p_entra_no_resultado: lido.entra as boolean,
+  });
   if (error) falhou(dados, error);
   voltar(dados, { ok: "categoria" });
 }

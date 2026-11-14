@@ -3,7 +3,7 @@
 // pela API: 115 em 13/11 (48 + 6 do cadastro de lojas, L2, + 5 do cadastro do catálogo, L3a, + 4 dos preços, L3b,
 // + 4 da importação do catálogo, L3c, + 3 da entrada de mercadoria, L4a, + 5 do inventário, L4b, + 6 dos clientes, L5a,
 // + 9 do funil e da agenda, L5b, + 4 da mesclagem e dos segmentos, L5c, + 4 das maquininhas e da conciliação, L7a,
-// + 2 da leitura das entradas, R1, + 1 do nome no ranking, G1, + 2 das metas, G4b, + 3 das financeiras, L7b, + 3 da saída autorizada do caixa, L7c, + 6 das contas a pagar, L8a). Elas rodam com poder total e cada uma confere sessão, loja e permissão por
+// + 2 da leitura das entradas, R1, + 1 do nome no ranking, G1, + 2 das metas, G4b, + 3 das financeiras, L7b, + 3 da saída autorizada do caixa, L7c, + 6 das contas a pagar, L8a; no L8b, a das categorias ganhou o parâmetro "entra no resultado"). Elas rodam com poder total e cada uma confere sessão, loja e permissão por
 // conta própria. Este teste monta um "mundo" fictício com objetos reais em duas lojas e tenta cada
 // função como 13 tipos de atacante. Recusa = erro, ou resposta vazia numa leitura, e nada muda no
 // banco. O teste lista as funções no próprio banco e falha se aparecer uma nova sem casos aqui.
@@ -436,8 +436,8 @@ const CASOS: Record<string, Caso> = {
     A: () => ["select public.conta_pagar_cancelar($1, 'Tentativa', true)", [alvo.contaPagarA]],
     B: () => ["select public.conta_pagar_cancelar($1, 'Tentativa', true)", [alvo.contaPagarB]], semPermissao: true,
   },
-  "conta_pagar_categoria_salvar(uuid,text,boolean)": {
-    A: () => ["select public.conta_pagar_categoria_salvar($1, 'Intrusa', null)", [alvo.categoriaPagar]], semPermissao: true,
+  "conta_pagar_categoria_salvar(uuid,text,boolean,boolean)": {
+    A: () => ["select public.conta_pagar_categoria_salvar($1, 'Intrusa', null, false)", [alvo.categoriaPagar]], semPermissao: true,
   },
   "movimentar_caixa(text,bigint,text,text)": { A: () => ["select public.movimentar_caixa('sangria', 100, 'Tentativa', $1)", [chave("ataque")]], outraOrganizacao: false },
   "notas_cancelar(uuid,text)": {

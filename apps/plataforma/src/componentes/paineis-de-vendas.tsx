@@ -47,6 +47,7 @@ const FONTE = {
   equipe: "a contagem da equipe (migration equipe_por_papel)",
   financeiras: "a lista do que as financeiras devem (migration financeiras_a_receber)",
   contas_a_pagar: "as contas a pagar (migration contas_a_pagar)",
+  resultado: "a leitura do resultado do mês (migration resultado_do_mes)",
 } as const;
 
 /** O conteúdo de um painel que não tem número para mostrar: o motivo aparece, zero nunca. */

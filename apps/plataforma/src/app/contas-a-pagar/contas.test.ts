@@ -10,6 +10,7 @@ const LOJA_B = "00000000-0000-4000-8000-0000000000bb";
 const CAT_ALUGUEL = "00000000-0000-4000-9000-0000000000c1";
 const CAT_LUZ = "00000000-0000-4000-9000-0000000000c2";
 const CAT_VELHA = "00000000-0000-4000-9000-0000000000c3";
+const CAT_MERCADORIA = "00000000-0000-4000-9000-0000000000c4";
 const FORN = "00000000-0000-4000-9000-0000000000f1";
 const C1 = "00000000-0000-4000-9000-0000000000e1";
 const C2 = "00000000-0000-4000-9000-0000000000e2";
@@ -25,6 +26,8 @@ const cenario = vi.hoisted(() => ({
   erroDoResumo: null as null | { code: string },
   /** O banco recusa (42501) o resumo filtrado: loja fora do escopo de quem pede. */
   recusarFiltro: false,
+  /** O banco ainda não tem a coluna entra_no_resultado (migration do L8b): o select com ela dá 42703. */
+  semColunaDoResultado: false,
   tabelas: {} as Record<string, Record<string, unknown>[]>,
   errosDasTabelas: {} as Record<string, { code: string }>,
   filtros: [] as string[],
@@ -41,7 +44,10 @@ class Consulta {
     this.linhas = [...(cenario.tabelas[tabela] ?? [])];
     this.erro = cenario.errosDasTabelas[tabela] ?? null;
   }
-  select() { return this; }
+  select(colunas = "") {
+    if (cenario.semColunaDoResultado && colunas.includes("entra_no_resultado")) this.erro = { code: "42703" };
+    return this;
+  }
   eq(coluna: string, valor: unknown) {
     cenario.filtros.push(`${this.tabela} ${coluna}=${String(valor)}`);
     this.linhas = this.linhas.filter((l) => l[coluna] === valor);
@@ -169,7 +175,7 @@ beforeEach(() => {
   vi.setSystemTime(new Date("2026-11-13T15:00:00Z"));
   vi.spyOn(console, "error").mockImplementation(() => undefined);
   Object.assign(cenario, {
-    pode: true, resumo: RESUMO, erroDoResumo: null, recusarFiltro: false, errosDasTabelas: {}, filtros: [], chamadas: [], respostas: {},
+    pode: true, resumo: RESUMO, erroDoResumo: null, recusarFiltro: false, semColunaDoResultado: false, errosDasTabelas: {}, filtros: [], chamadas: [], respostas: {},
     tabelas: {
       contas_a_pagar: [
         conta(C1, { unidade_id: null, descricao: "Aluguel do escritório", valor_centavos: 100_000, vencimento: "2026-11-10" }),
@@ -179,7 +185,8 @@ beforeEach(() => {
         conta(C5, { descricao: "Lançada em dobro", situacao: "cancelada", cancelada_em: "2026-11-12T14:00:00Z", motivo_cancelamento: "Lançada em dobro" }),
       ],
       contas_pagar_categorias: [
-        { id: CAT_ALUGUEL, nome: "Aluguel e condomínio", ativa: true }, { id: CAT_LUZ, nome: "Água, luz e internet", ativa: true }, { id: CAT_VELHA, nome: "Antiga", ativa: false },
+        { id: CAT_ALUGUEL, nome: "Aluguel e condomínio", ativa: true, entra_no_resultado: true }, { id: CAT_LUZ, nome: "Água, luz e internet", ativa: true, entra_no_resultado: true },
+        { id: CAT_VELHA, nome: "Antiga", ativa: false, entra_no_resultado: true }, { id: CAT_MERCADORIA, nome: "Mercadoria (fornecedor)", ativa: true, entra_no_resultado: false },
       ],
       fornecedores: [{ id: FORN, nome: "Distribuidora Teste", ativo: true }],
     },
@@ -224,15 +231,25 @@ describe("/contas-a-pagar: o dono vê a rede e todas as lojas (L8a)", () => {
     expect(forms.map((f) => f.acao)).toEqual([
       "lancarConta",
       "pagarConta", "corrigirConta", "cancelarConta", "pagarConta", "corrigirConta", "cancelarConta", "pagarConta", "corrigirConta", "cancelarConta",
-      "salvarCategoria", "salvarCategoria", "salvarCategoria", "salvarCategoria", "salvarCategoria", "salvarCategoria", "salvarCategoria",
+      ...Array<string>(13).fill("salvarCategoria"),
     ]);
     // Lançar: a rede e as duas lojas; só as categorias ativas; o fornecedor opcional.
-    expect(forms[0]?.selecoes).toEqual({ unidade: ["rede", LOJA_A, LOJA_B], categoria: [CAT_ALUGUEL, CAT_LUZ], forma: ["unica", "parcelada", "mensal"], fornecedor: ["", FORN] });
+    expect(forms[0]?.selecoes).toEqual({ unidade: ["rede", LOJA_A, LOJA_B], categoria: [CAT_ALUGUEL, CAT_LUZ, CAT_MERCADORIA], forma: ["unica", "parcelada", "mensal"], fornecedor: ["", FORN] });
+    expect(t).toContain("Mercadoria (fornecedor) (fora do resultado)");
+    // Categorias (L8b): renomear, pôr ou tirar do resultado e desativar cada uma; a nova pode nascer fora do resultado.
+    const daCategoria = forms.filter((f) => f.acao === "salvarCategoria");
+    expect(daCategoria.filter((f) => "entra" in f.campos).map((f) => [f.campos.categoria, f.campos.entra])).toEqual([
+      [CAT_ALUGUEL, "nao"], [CAT_LUZ, "nao"], [CAT_VELHA, "nao"], [CAT_MERCADORIA, "sim"],
+    ]);
+    expect(daCategoria.at(-1)?.caixas).toEqual(["entra"]);
+    expect(t).toContain("Tirar do resultado");
+    expect(t).toContain("Pôr no resultado");
+    expect(t).toContain("fora do resultado");
     // Cancelar a parcela 2 de 3 oferece "e as seguintes"; a última do lançamento, não.
     const cancelamentos = forms.filter((f) => f.acao === "cancelarConta");
     expect(cancelamentos.map((f) => [f.campos.conta, f.caixas])).toEqual([[C1, []], [C2, ["seguintes"]], [C3, []]]);
     expect(t).toContain("Categorias das despesas");
-    expect(t).toContain("Ver e ajustar as 3 categorias");
+    expect(t).toContain("Ver e ajustar as 4 categorias");
     expect(t).toContain("desativada");
   });
 
@@ -287,6 +304,19 @@ describe("/contas-a-pagar: o gerente e os estados (L8a)", () => {
     expect(t).toContain("as contas a pagar (migration contas_a_pagar)");
     expect(formularios(tela)).toEqual([]);
     expect(doTipo(tela, "Indicador")).toEqual([]);
+    expect(vi.mocked(console.error)).not.toHaveBeenCalled();
+  });
+
+  it("banco com as contas a pagar e ainda sem o resultado do mês (L8b): as categorias aparecem sem a marcação, e nada falha", async () => {
+    cenario.semColunaDoResultado = true;
+    const tela = await pagina();
+    const t = visivel(tela);
+    expect(t).toContain("Ver e ajustar as 4 categorias");
+    expect(t).not.toContain("Tirar do resultado");
+    expect(t).not.toContain("(fora do resultado)");
+    const daCategoria = formularios(tela).filter((f) => f.acao === "salvarCategoria");
+    expect(daCategoria).toHaveLength(9);
+    expect(daCategoria.at(-1)?.caixas).toEqual([]);
     expect(vi.mocked(console.error)).not.toHaveBeenCalled();
   });
 
@@ -377,9 +407,14 @@ describe("ações das contas a pagar (L8a)", () => {
   it("categorias: criar sem id, renomear, desativar; só o dono", async () => {
     cenario.respostas.conta_pagar_categoria_salvar = { data: CAT_VELHA, error: null };
     expect(await destinoDe(salvarCategoria(formulario({ nome: "Frete" })))).toBe("/contas-a-pagar?ok=categoria");
-    expect(cenario.chamadas.at(-1)).toEqual({ nome: "conta_pagar_categoria_salvar", argumentos: { p_categoria: null, p_nome: "Frete", p_ativa: null } });
+    expect(cenario.chamadas.at(-1)).toEqual({ nome: "conta_pagar_categoria_salvar", argumentos: { p_categoria: null, p_nome: "Frete", p_ativa: null, p_entra_no_resultado: null } });
     expect(await destinoDe(salvarCategoria(formulario({ categoria: CAT_VELHA, nome: "Antiga", ativa: "sim" })))).toBe("/contas-a-pagar?ok=categoria");
-    expect(cenario.chamadas.at(-1)?.argumentos).toEqual({ p_categoria: CAT_VELHA, p_nome: "Antiga", p_ativa: true });
+    expect(cenario.chamadas.at(-1)?.argumentos).toEqual({ p_categoria: CAT_VELHA, p_nome: "Antiga", p_ativa: true, p_entra_no_resultado: null });
+    // L8b: tirar do resultado (ou criar já fora dele).
+    expect(await destinoDe(salvarCategoria(formulario({ categoria: CAT_VELHA, nome: "Antiga", entra: "nao" })))).toBe("/contas-a-pagar?ok=categoria");
+    expect(cenario.chamadas.at(-1)?.argumentos).toEqual({ p_categoria: CAT_VELHA, p_nome: "Antiga", p_ativa: null, p_entra_no_resultado: false });
+    expect(await destinoDe(salvarCategoria(formulario({ nome: "Empréstimo", entra: "nao" })))).toBe("/contas-a-pagar?ok=categoria");
+    expect(cenario.chamadas.at(-1)?.argumentos).toEqual({ p_categoria: null, p_nome: "Empréstimo", p_ativa: null, p_entra_no_resultado: false });
     cenario.respostas.conta_pagar_categoria_salvar = { data: null, error: { code: "42501", message: "Só o dono ajusta as categorias das contas a pagar" } };
     expect(await destinoDe(salvarCategoria(formulario({ nome: "Do gerente" })))).toBe("/contas-a-pagar?erro=so_dono");
   });

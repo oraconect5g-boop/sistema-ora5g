@@ -165,19 +165,27 @@ export async function consultarContas(supabase: Cliente, visao: VisaoDasContas, 
   }
 }
 
-export type CategoriaDaConta = { id: string; nome: string; ativa: boolean };
+/** entraNoResultado (L8b): nulo quando o banco ainda não tem a coluna (a tela então não mostra a marcação). */
+export type CategoriaDaConta = { id: string; nome: string; ativa: boolean; entraNoResultado: boolean | null };
+const COLUNA_AUSENTE = "42703";
 export async function consultarCategorias(supabase: Cliente): Promise<Leitura<CategoriaDaConta[]>> {
-  const r = await supabase.from("contas_pagar_categorias").select("id, nome, ativa").order("ordem").order("nome");
-  if (r.error) {
-    if (TABELA_AUSENTE.has(r.error.code)) return { estado: "indisponivel" };
-    console.error("contas a pagar: falha ao ler as categorias", { codigo: r.error.code || null });
+  const tabela = () => supabase.from("contas_pagar_categorias");
+  const r = await tabela().select("id, nome, ativa, entra_no_resultado").order("ordem").order("nome");
+  const lidas: Linha[] | null = r.error?.code === COLUNA_AUSENTE ? null : (r.data as Linha[] | null);
+  const antigas = r.error?.code === COLUNA_AUSENTE ? await tabela().select("id, nome, ativa").order("ordem").order("nome") : null;
+  const erro = antigas ? antigas.error : r.error;
+  if (erro) {
+    if (TABELA_AUSENTE.has(erro.code)) return { estado: "indisponivel" };
+    console.error("contas a pagar: falha ao ler as categorias", { codigo: erro.code || null });
     return { estado: "falha" };
   }
-  if (!r.data.every((c) => ehUuid(c.id) && typeof c.nome === "string" && typeof c.ativa === "boolean")) {
+  const linhas = (lidas ?? antigas?.data ?? []) as Linha[];
+  const entra = (c: Linha) => (lidas === null ? null : c.entra_no_resultado);
+  if (!linhas.every((c) => ehUuid(c.id) && typeof c.nome === "string" && typeof c.ativa === "boolean" && (lidas === null || typeof entra(c) === "boolean"))) {
     console.error("contas a pagar: categoria em forma inesperada");
     return { estado: "falha" };
   }
-  return { estado: "ok", dados: r.data.map((c) => ({ id: c.id, nome: c.nome, ativa: c.ativa })) };
+  return { estado: "ok", dados: linhas.map((c) => ({ id: c.id as string, nome: c.nome as string, ativa: c.ativa as boolean, entraNoResultado: entra(c) as boolean | null })) };
 }
 
 /** Fornecedores ativos para o formulário (opcional): sem a lista, o formulário segue sem o campo. */
