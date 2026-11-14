@@ -9,9 +9,12 @@ import { Aviso, Botao, Cartao, Selo, TituloPagina } from "../../componentes/ui";
 import { FalhaDoServico, obterSessao } from "../../lib/acesso/sessao";
 import { termoDaBusca, buscarNoCatalogo } from "../../lib/catalogo/busca";
 import { ERROS_DO_CADASTRO, TEM_ESTOQUE, TIPOS_DE_PRODUTO, ehTipoDeProduto, percentualDosPontosBase } from "../../lib/catalogo/cadastro";
+import { CodigoInesperado, lerCodigosDasVariantes, type CodigoDoCanal } from "../../lib/catalogo/codigos";
 import { lerPorIds } from "../../lib/leitura-completa";
 import { chaveDoCatalogo, textoDoParametro, type ValorDeParametro } from "../../lib/parametros";
 import { definirPecaDeAssistencia, definirPolitica, salvarCategoria, salvarMarca, salvarProduto, salvarVariante } from "./acoes";
+import { CodigosDaVariante } from "./CodigosDaVariante";
+import { campo, Motivo, resumo, rotulo } from "./formulario";
 
 export const metadata: Metadata = { title: "Cadastro de produtos" };
 export const dynamic = "force-dynamic";
@@ -28,21 +31,13 @@ const OK = {
   produto_alterado: "Produto atualizado.",
   variante_criada: "Variação cadastrada. O preço e o estoque entram pelas telas próprias.",
   variante_alterada: "Variação atualizada.",
+  codigo_ligado: "Código do outro canal ligado à variação. A busca já acha a variação por ele.",
+  codigo_desligado: "Código desligado. Ele fica no histórico e pode ser ligado a outra variação.",
   sem_mudanca: "Nada mudou: os dados já eram esses.",
 } as const;
 const LIMITE = 40;
 
-const campo = "mt-1 min-h-11 w-full rounded-botao border border-borda bg-white px-3 text-sm outline-none focus:border-acao focus:ring-2 focus:ring-acao/20";
-const rotulo = "block text-sm font-medium";
-const resumo = "flex min-h-10 cursor-pointer items-center gap-2 text-sm font-semibold text-acao";
 
-function Motivo({ exemplo }: { exemplo: string }) {
-  return (
-    <label className={rotulo}>Motivo (fica na auditoria)
-      <input name="motivo" required minLength={3} maxLength={200} placeholder={exemplo} className={campo} />
-    </label>
-  );
-}
 function Situacao({ ativo, rotuloAtivo = "Ativo" }: { ativo: boolean; rotuloAtivo?: string }) {
   return (
     <label className="flex min-h-10 items-center gap-2 text-sm">
@@ -56,6 +51,7 @@ type Categoria = { id: string; nome: string; ativa: boolean; desconto_teto_pb: n
 type Marca = { id: string; nome: string };
 type Produto = { id: string; nome: string; tipo: string; categoria_id: string; marca_id: string | null; modelo: string | null; descricao: string | null; publicar_online: boolean; ativo: boolean };
 type Variante = { id: string; produto_id: string; sku: string; nome: string; cor: string | null; capacidade: string | null; codigo_barras: string | null; estoque_minimo: number; ativa: boolean };
+
 
 // Cadastro do catálogo (lote L3a: ORA-CAT-001, ORA-CAT-005). Dono e administrador cadastram e editam
 // categorias, marcas, produtos e variações; a política de desconto da categoria é de quem altera preço.
@@ -107,6 +103,14 @@ export default async function Produtos({ searchParams }: {
     .select("id, produto_id, sku, nome, cor, capacidade, codigo_barras, estoque_minimo, ativa").in("produto_id", lote).order("sku").order("id").range(de, ate));
   if (!lidas.ok || lidas.mais) throw new FalhaDoServico("variantes");
   const variantes = { data: [...lidas.linhas].sort((a, b) => a.sku.localeCompare(b.sku) || a.id.localeCompare(b.id)) as Variante[] };
+  // CAT-009: os códigos em outros canais. Num banco sem a tabela o bloco não aparece; falha de leitura avisa (nunca "sem código").
+  let codigos: Map<string, CodigoDoCanal[]> | null | "falha";
+  try {
+    codigos = await lerCodigosDasVariantes(supabase, variantes.data.map((v) => v.id));
+  } catch (e) {
+    console.error("produtos: falha ao ler os códigos de outros canais", { motivo: e instanceof CodigoInesperado ? e.message : null });
+    codigos = "falha";
+  }
   const cats = categorias.data as Categoria[];
   const ativas = cats.filter((c) => c.ativa);
   const nomeDaCategoria = (id: string) => cats.find((c) => c.id === id)?.nome ?? "—";
@@ -120,9 +124,10 @@ export default async function Produtos({ searchParams }: {
         acao={<Link href="/produtos/importar" className="inline-flex min-h-11 items-center gap-2 rounded-botao border border-borda bg-white px-4 text-sm font-semibold text-acao hover:bg-acao-clara"><FileUp aria-hidden className="size-4" /> Importar planilha</Link>} />
       {ok && <Aviso tom="sucesso" className="mt-4">{OK[ok]}</Aviso>}
       {erro && <Aviso tom="perigo" className="mt-4">{ERROS_DO_CADASTRO[erro]}</Aviso>}
+      {codigos === "falha" && <Aviso tom="perigo" className="mt-4">Não deu para ler os códigos de outros canais agora; o resto do cadastro está certo. Tente de novo em instantes.</Aviso>}
 
       <form className="mt-4 flex flex-wrap items-end gap-2" role="search">
-        <label className="min-w-0 flex-1 text-sm font-medium">Buscar por nome ou SKU
+        <label className="min-w-0 flex-1 text-sm font-medium">{codigos === null ? "Buscar por nome ou SKU" : "Buscar por nome, SKU ou código de outro canal (Rein, anúncio)"}
           <input name="q" defaultValue={busca} className={campo} />
         </label>
         <label className="flex min-h-11 items-center gap-2 text-sm"><input type="checkbox" name="inativos" value="1" defaultChecked={comInativos} className="size-4 accent-acao" /> incluir inativos</label>
@@ -189,6 +194,7 @@ export default async function Produtos({ searchParams }: {
                           <Botao type="submit" tamanho="sm" className="sm:col-span-2">Salvar variação</Botao>
                         </form>
                       </details>
+                      {codigos instanceof Map && <CodigosDaVariante variante={v} produto={p.id} codigos={codigos.get(v.id) ?? []} oculto={ocultoBusca} />}
                     </li>
                   ))}
                   {dele.length === 0 && <li className="px-3 py-2 text-sm text-aviso">Sem variação: cadastre ao menos uma (é ela que tem SKU, preço e estoque).</li>}

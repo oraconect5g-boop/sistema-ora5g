@@ -49,6 +49,7 @@ class Consulta {
   }
   in(coluna: string, valores: unknown[]) { this.linhas = this.linhas.filter((l) => l[coluna] === undefined || valores.includes(l[coluna])); return this; }
   ilike() { return this; }
+  is() { return this; }
   order() { return this; }
   limit() { return this; }
   maybeSingle() { return Promise.resolve({ data: this.linhas[0] ?? null, error: null }); }

@@ -18,6 +18,8 @@ const cenario = vi.hoisted(() => ({
   chamadas: [] as { nome: string; argumentos: Record<string, unknown> }[],
   respostas: {} as Record<string, { data: unknown; error: null | { code: string; message?: string } }>,
   tabelas: {} as Record<string, Record<string, unknown>[]>,
+  /** Erro de leitura por tabela (CAT-009: a tabela dos códigos ausente ou com falha). */
+  erros: {} as Record<string, { code: string }>,
 }));
 
 vi.mock("next/headers", () => ({ cookies: async () => ({ getAll: () => [], set: () => undefined }) }));
@@ -25,7 +27,8 @@ vi.mock("next/navigation", () => ({ redirect: (destino: string) => { throw new E
 
 class Consulta {
   linhas: Record<string, unknown>[];
-  constructor(nome: string) { this.linhas = [...(cenario.tabelas[nome] ?? [])]; }
+  nome: string;
+  constructor(nome: string) { this.nome = nome; this.linhas = [...(cenario.tabelas[nome] ?? [])]; }
   select() { return this; }
   eq(coluna: string, valor: unknown) { this.linhas = this.linhas.filter((l) => l[coluna] === undefined || l[coluna] === valor); return this; }
   in(coluna: string, valores: unknown[]) { this.linhas = this.linhas.filter((l) => l[coluna] === undefined || valores.includes(l[coluna])); return this; }
@@ -35,8 +38,9 @@ class Consulta {
   limit() { return this; }
   range(de: number, ate: number) { this.linhas = this.linhas.slice(de, ate + 1); return this; }
   maybeSingle() { return Promise.resolve({ data: this.linhas[0] ?? null, error: null }); }
-  then(resolver: (r: { data: Record<string, unknown>[]; error: null }) => unknown) {
-    return Promise.resolve({ data: this.linhas, error: null }).then(resolver);
+  then(resolver: (r: { data: Record<string, unknown>[] | null; error: null | { code: string } }) => unknown) {
+    const erro = cenario.erros[this.nome];
+    return Promise.resolve(erro ? { data: null, error: erro } : { data: this.linhas, error: null }).then(resolver);
   }
 }
 const sessaoFicticia = {
@@ -53,7 +57,7 @@ const sessaoFicticia = {
 };
 vi.mock("../../lib/acesso/sessao", () => ({ FalhaDoServico: class extends Error {}, obterSessao: async () => sessaoFicticia }));
 
-import { definirPecaDeAssistencia, definirPolitica, salvarCategoria, salvarProduto, salvarVariante } from "./acoes";
+import { definirPecaDeAssistencia, definirPolitica, desligarCodigo, ligarCodigo, salvarCategoria, salvarProduto, salvarVariante } from "./acoes";
 import Produtos from "./page";
 
 function texto(v: unknown): string {
@@ -61,7 +65,7 @@ function texto(v: unknown): string {
   if (typeof v === "string" || typeof v === "number") return String(v);
   if (isValidElement<Record<string, unknown>>(v)) {
     // Componentes locais da tela (Motivo, Situacao) são simples: renderiza para ver os campos.
-    if (typeof v.type === "function" && ["Motivo", "Situacao"].includes(v.type.name)) return texto((v.type as (p: unknown) => unknown)(v.props));
+    if (typeof v.type === "function" && ["Motivo", "Situacao", "CodigosDaVariante"].includes(v.type.name)) return texto((v.type as (p: unknown) => unknown)(v.props));
     return Object.values(v.props).map(texto).join(" ");
   }
   if (v && typeof v === "object") return Object.values(v).map(texto).join(" ");
@@ -82,6 +86,7 @@ beforeEach(() => {
   cenario.permissoes = new Set();
   cenario.chamadas = [];
   cenario.respostas = {};
+  cenario.erros = {};
   cenario.tabelas = {
     unidades: [{ id: LOJA, organizacao_id: ORG }],
     categorias: [
@@ -167,5 +172,79 @@ describe("peças da assistência no catálogo (L12d)", () => {
     expect(await destinoDe(definirPecaDeAssistencia(formulario({ categoria: CATEGORIA, peca: "sim", motivo: "Peças" })))).toBe("/produtos?erro=peca_categoria#categorias");
     cenario.respostas.catalogo_definir_peca_de_assistencia = { data: false, error: null };
     expect(await destinoDe(definirPecaDeAssistencia(formulario({ categoria: CATEGORIA, peca: "nao", motivo: "Peças" })))).toBe("/produtos?ok=sem_mudanca#categorias");
+  });
+});
+
+describe("códigos de outros canais (CAT-009)", () => {
+  const CODIGO = "00000000-0000-4000-9000-000000000040";
+  const OUTRO = "00000000-0000-4000-9000-000000000041";
+
+  it("cada variação mostra os códigos ativos e os formulários para ligar e desligar; a busca diz que acha pelo código", async () => {
+    cenario.permissoes = new Set(["catalogo.gerir"]);
+    cenario.tabelas.variante_codigos_externos = [
+      { id: OUTRO, variante_id: VARIANTE, canal: "mercado_livre", codigo: "MLB111", sku_no_canal: "GALAXY-A15" },
+      { id: CODIGO, variante_id: VARIANTE, canal: "rein", codigo: "12345", sku_no_canal: null },
+    ];
+    const t = (await tela()).replace(/\s+/g, " ");
+    for (const trecho of ["Rein 12345", "Mercado Livre MLB111 (SKU GALAXY-A15)", "Códigos em outros canais (2)", "Ligar código", "Desligar",
+      "Buscar por nome, SKU ou código de outro canal (Rein, anúncio)", "continuam pelo SKU APA-TESTE"]) expect(t, trecho).toContain(trecho);
+    // A Rein vem antes do Mercado Livre (a ordem dos canais), seja qual for a ordem do banco.
+    expect(t.indexOf("Rein 12345")).toBeLessThan(t.indexOf("Mercado Livre MLB111"));
+  });
+
+  it("num banco sem a tabela o bloco não aparece; falha de leitura avisa, sem esconder o cadastro; linha estranha é falha", async () => {
+    cenario.permissoes = new Set(["catalogo.gerir"]);
+    vi.spyOn(console, "error").mockImplementation(() => undefined);
+    cenario.erros.variante_codigos_externos = { code: "PGRST205" };
+    let t = await tela();
+    expect(t).not.toContain("Códigos em outros canais");
+    expect(t).toContain("Buscar por nome ou SKU");
+    expect(t).toContain("APA-TESTE");
+    cenario.erros.variante_codigos_externos = { code: "57014" };
+    t = await tela();
+    expect(t).toContain("Não deu para ler os códigos de outros canais agora");
+    expect(t).not.toContain("Ligar código");
+    expect(t).toContain("APA-TESTE");
+    cenario.erros = {};
+    cenario.tabelas.variante_codigos_externos = [{ id: CODIGO, variante_id: VARIANTE, canal: "amazon", codigo: "B01", sku_no_canal: null }];
+    expect(await tela()).toContain("Não deu para ler os códigos de outros canais agora");
+  });
+
+  it("ligar e desligar mandam ao banco o que a pessoa escreveu; inválido volta antes; erro do banco vira a mensagem do cadastro", async () => {
+    const naVariacao = `#produto-${PRODUTO}`;
+    const ligar = (campos: Record<string, string>) => destinoDe(ligarCodigo(formulario({ variante: VARIANTE, produto: PRODUTO, canal: "rein", codigo: "12345", motivo: "Código da Rein", ...campos })));
+    cenario.respostas.catalogo_ligar_codigo = { data: { id: CODIGO, repetido: false }, error: null };
+    expect(await ligar({ codigo: " 12345 ", sku_no_canal: "  ", q: "galaxy" })).toBe(`/produtos?ok=codigo_ligado&q=galaxy${naVariacao}`);
+    expect(cenario.chamadas.at(-1)).toEqual({
+      nome: "catalogo_ligar_codigo", argumentos: { p_variante: VARIANTE, p_canal: "rein", p_codigo: "12345", p_sku_no_canal: null, p_motivo: "Código da Rein" },
+    });
+    cenario.respostas.catalogo_ligar_codigo = { data: { id: CODIGO, repetido: true }, error: null };
+    expect(await ligar({})).toBe(`/produtos?ok=sem_mudanca${naVariacao}`);
+    cenario.respostas.catalogo_ligar_codigo = { data: null, error: { code: "23505", message: "Este código do canal já está em outra variação" } };
+    expect(await ligar({})).toBe(`/produtos?erro=codigo_canal_repetido${naVariacao}`);
+    cenario.respostas.catalogo_ligar_codigo = { data: null, error: { code: "23505", message: "Este código já está ligado a esta variação de outro jeito: desligue e ligue de novo" } };
+    expect(await ligar({})).toBe(`/produtos?erro=codigo_canal_outro_jeito${naVariacao}`);
+
+    cenario.chamadas = [];
+    expect(await ligar({ canal: "amazon" })).toBe(`/produtos?erro=canal${naVariacao}`);
+    expect(await ligar({ codigo: "12 345" })).toBe(`/produtos?erro=codigo_canal${naVariacao}`);
+    expect(await ligar({ codigo: "" })).toBe(`/produtos?erro=codigo_canal${naVariacao}`);
+    expect(await ligar({ canal: "shopee", sku_no_canal: "s".repeat(81) })).toBe(`/produtos?erro=sku_no_canal${naVariacao}`);
+    expect(await ligar({ motivo: "x" })).toBe(`/produtos?erro=motivo${naVariacao}`);
+    expect(await ligar({ variante: "nao-e-uuid" })).toBe(`/produtos?erro=dados${naVariacao}`);
+    expect(cenario.chamadas).toEqual([]);
+
+    const desligar = (campos: Record<string, string>) => destinoDe(desligarCodigo(formulario({ vinculo: CODIGO, produto: PRODUTO, motivo: "Anúncio encerrado", ...campos })));
+    cenario.respostas.catalogo_desligar_codigo = { data: true, error: null };
+    expect(await desligar({})).toBe(`/produtos?ok=codigo_desligado${naVariacao}`);
+    expect(cenario.chamadas.at(-1)).toEqual({ nome: "catalogo_desligar_codigo", argumentos: { p_vinculo: CODIGO, p_motivo: "Anúncio encerrado" } });
+    cenario.respostas.catalogo_desligar_codigo = { data: false, error: null };
+    expect(await desligar({})).toBe(`/produtos?ok=sem_mudanca${naVariacao}`);
+    cenario.respostas.catalogo_desligar_codigo = { data: null, error: { code: "P0002", message: "Código não encontrado para você" } };
+    expect(await desligar({})).toBe(`/produtos?erro=permissao${naVariacao}`);
+    cenario.chamadas = [];
+    expect(await desligar({ motivo: "" })).toBe(`/produtos?erro=motivo${naVariacao}`);
+    expect(await desligar({ vinculo: "x" })).toBe(`/produtos?erro=dados${naVariacao}`);
+    expect(cenario.chamadas).toEqual([]);
   });
 });

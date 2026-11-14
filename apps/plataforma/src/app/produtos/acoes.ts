@@ -4,7 +4,8 @@ import { redirect } from "next/navigation";
 
 import { ehUuid } from "../../lib/acesso/regras";
 import { obterSessao } from "../../lib/acesso/sessao";
-import { erroDoCadastro, validarNome, validarPolitica, validarProduto, validarVariante } from "../../lib/catalogo/cadastro";
+import { erroDoCadastro, motivoDoCadastro, validarNome, validarPolitica, validarProduto, validarVariante } from "../../lib/catalogo/cadastro";
+import { validarCodigoDoCanal } from "../../lib/catalogo/codigos";
 
 // Cada ação chama UMA função do banco como a pessoa logada (sem chave secreta, ADR-002 §2.5).
 // O banco confere a permissão (catalogo.gerir na rede; política de desconto com preco.alterar), a
@@ -111,4 +112,31 @@ export async function salvarVariante(dados: FormData) {
   });
   if (error) voltar({ erro: erroDoCadastro(error), q: busca(dados) }, `produto-${d.produto}`);
   voltar({ ok: repetida(data) ? "sem_mudanca" : d.id ? "variante_alterada" : "variante_criada", q: busca(dados) }, `produto-${d.produto}`);
+}
+
+// CAT-009: os códigos da variação em outros canais (Rein, site, marketplaces). Só apontam para a variação.
+const doProduto = (dados: FormData) => (ehUuid(dados.get("produto")) ? `produto-${dados.get("produto") as string}` : null);
+
+export async function ligarCodigo(dados: FormData) {
+  const r = validarCodigoDoCanal(campos(dados));
+  if (!r.ok) voltar({ erro: r.erro, q: busca(dados) }, doProduto(dados));
+  const { supabase } = await obterSessao({ exigirLoja: true });
+  const d = r.dados;
+  const { data, error } = await supabase.rpc("catalogo_ligar_codigo", {
+    p_variante: d.variante, p_canal: d.canal, p_codigo: d.codigo, p_sku_no_canal: ouNulo(d.skuNoCanal), p_motivo: d.motivo,
+  });
+  if (error) voltar({ erro: erroDoCadastro(error), q: busca(dados) }, doProduto(dados));
+  const repetido = (data as { repetido?: unknown } | null)?.repetido === true;
+  voltar({ ok: repetido ? "sem_mudanca" : "codigo_ligado", q: busca(dados) }, doProduto(dados));
+}
+
+export async function desligarCodigo(dados: FormData) {
+  const vinculo = dados.get("vinculo");
+  const motivo = motivoDoCadastro(dados.get("motivo"));
+  if (!ehUuid(vinculo)) voltar({ erro: "dados", q: busca(dados) }, doProduto(dados));
+  if (!motivo) voltar({ erro: "motivo", q: busca(dados) }, doProduto(dados));
+  const { supabase } = await obterSessao({ exigirLoja: true });
+  const { data, error } = await supabase.rpc("catalogo_desligar_codigo", { p_vinculo: vinculo as string, p_motivo: motivo });
+  if (error) voltar({ erro: erroDoCadastro(error), q: busca(dados) }, doProduto(dados));
+  voltar({ ok: data === true ? "codigo_desligado" : "sem_mudanca", q: busca(dados) }, doProduto(dados));
 }
