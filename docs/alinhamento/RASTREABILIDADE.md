@@ -20,13 +20,13 @@
 | CONNECT | 11 | 6 | 3 | 0 | 6 | 4 | 0 | 0 | 0 | 1 |
 | ONLINE | 8 | 0 | 0 | 0 | 0 | 0 | 0 | 0 | 0 | 8 |
 | MKTPL | 8 | 0 | 0 | 0 | 0 | 0 | 0 | 0 | 0 | 8 |
-| WHATS | 8 | 0 | 0 | 0 | 0 | 0 | 0 | 0 | 0 | 8 |
+| WHATS | 8 | 0 | 0 | 0 | 0 | 1 | 0 | 0 | 1 | 6 |
 | META | 6 | 0 | 0 | 0 | 0 | 0 | 0 | 0 | 0 | 6 |
 | AI | 7 | 0 | 0 | 0 | 0 | 0 | 0 | 0 | 0 | 7 |
 | REPORT | 8 | 5 | 5 | 0 | 0 | 7 | 0 | 0 | 0 | 1 |
 | QUAL | 14 | 9 | 9 | 0 | 0 | 5 | 0 | 0 | 0 | 9 |
 | OS | 6 | 0 | 0 | 0 | 0 | 0 | 0 | 0 | 0 | 6 |
-| **Total** | **179** | **78** | **71** | **0** | **38** | **65** | **0** | **1** | **2** | **73** |
+| **Total** | **179** | **78** | **71** | **0** | **38** | **66** | **0** | **1** | **3** | **71** |
 
 ## ORG — Organização, lojas e usuários
 
@@ -222,12 +222,12 @@
 
 | ID | Prio. | Piloto | Requisito | Aceite | Status | Nota e evidência |
 |---|---|---|---|---|---|---|
-| ORA-WHATS-001 | P1 | — | WhatsApp Business Platform oficial conectado ao CRM | Conta/números/escopos homologados; templates válidos. | ⬜ não iniciado |  |
+| ORA-WHATS-001 | P1 | — | WhatsApp Business Platform oficial conectado ao CRM | Conta/números/escopos homologados; templates válidos. | ⛔ bloqueado | Depende da Meta (verificação da empresa, número habilitado, token permanente de Usuário do Sistema, segredo do app e modelo de utilidade aprovado; lista única de integrações, linha WhatsApp). O que não depende dela já está pronto: a fila do envio da nota (K1c, ORA-WHATS-006) e a rotina do worker com o canal como interface. O adaptador real só é escrito contra a documentação oficial vigente, quando houver a conta para testar. Evidência: `docs/integracoes/APIS_E_HABILITACOES_NECESSARIAS.md; apps/worker/src/whatsapp/processar.ts` |
 | ORA-WHATS-002 | P1 | — | Caixa de entrada multiatendente com atribuição à loja/vendedor | Mensagens e transferência auditadas. | ⬜ não iniciado |  |
 | ORA-WHATS-003 | P1 | — | Leads orgânicos e pagos identificados por origem consentida | Campanha e UTM preservados quando disponíveis. | ⬜ não iniciado |  |
 | ORA-WHATS-004 | P1 | — | Histórico 360 de conversas/negócios por cliente | Política de retenção/consentimento aplicada. | ⬜ não iniciado |  |
 | ORA-WHATS-005 | P1 | — | Respostas rápidas, etiquetas, SLA e repasse para humano | Handoff sempre acessível. | ⬜ não iniciado |  |
-| ORA-WHATS-006 | P1 | — | Templates e mensagens proativas em conformidade Meta | Sem spam nem envio sem permissão/consentimento apropriado. | ⬜ não iniciado |  |
+| ORA-WHATS-006 | P1 | — | Templates e mensagens proativas em conformidade Meta | Sem spam nem envio sem permissão/consentimento apropriado. | 🟡 parcial | Lote K1c (14/11, #76, decisão do proprietário de 12/11): envio da nota emitida ao cliente pelo WhatsApp oficial, com finalidade de documento fiscal (não depende de aceite de ofertas). A loja pede o envio (vendedor da venda ou quem aprova a nota): só nota emitida com o PDF guardado (L10a) e cliente ligado com WhatsApp; a mesma chave e o clique repetido com o envio na fila não duplicam; reenviar pede motivo; resultado desconhecido espera a conferência da gerência, que só pode concluir "não chegou". O worker pega a fila, gera o link temporário do PDF e registra a resposta (aceito com o id da mensagem, falhou, desconhecido ou de volta à fila se nada saiu) e os avisos de entrega e leitura, uma vez cada e sem voltar estado. O número completo fica só para o worker; a tela mostra mascarado. Migration 20261114142817_whatsapp_envio_da_nota (ainda não aplicada no ora5g-dev). FALTA (ORA-WHATS-001): o adaptador da Meta com o contrato verificado, o número habilitado, o token, o modelo (template) de utilidade aprovado e o receptor dos avisos com a assinatura conferida; sem isso nada sai da fila e nada aparece como enviado. Evidência: `packages/banco/supabase/migrations/20261114142817_whatsapp_envio_da_nota.sql; packages/banco/src/whatsapp-nota.test.ts; apps/worker/src/whatsapp/processar.ts; apps/worker/src/whatsapp/processar.test.ts; apps/plataforma/src/app/vendas/nota-whatsapp.test.ts` |
 | ORA-WHATS-007 | P2 | — | IA supervisionada para qualificação e sugestão de respostas | Ações sensíveis exigem revisão e logs. | ⬜ não iniciado |  |
 | ORA-WHATS-008 | P2 | — | Recuperação de carrinho e pós-venda sob consentimento | Taxa de resposta/conversão mensurada. | ⬜ não iniciado |  |
 

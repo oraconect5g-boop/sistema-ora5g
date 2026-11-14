@@ -1,9 +1,9 @@
 // Inventário de autorização (prioridade 1 do diagnóstico de 10/11/2026; ORA-ORG-004 e ORA-QUAL-002).
 // O aviso 0029 do Supabase lista as funções SECURITY DEFINER que qualquer usuário logado pode chamar
-// pela API: 121 em 14/11 (48 + 6 do cadastro de lojas, L2, + 5 do cadastro do catálogo, L3a, + 4 dos preços, L3b,
+// pela API: 123 em 14/11 (48 + 6 do cadastro de lojas, L2, + 5 do cadastro do catálogo, L3a, + 4 dos preços, L3b,
 // + 4 da importação do catálogo, L3c, + 3 da entrada de mercadoria, L4a, + 5 do inventário, L4b, + 6 dos clientes, L5a,
 // + 9 do funil e da agenda, L5b, + 4 da mesclagem e dos segmentos, L5c, + 4 das maquininhas e da conciliação, L7a,
-// + 2 da leitura das entradas, R1, + 1 do nome no ranking, G1, + 2 das metas, G4b, + 3 das financeiras, L7b, + 3 da saída autorizada do caixa, L7c, + 6 das contas a pagar, L8a, + 1 das regras do bônus por meta, L9a, + 2 do fechamento do bônus, L9b, + 1 da correção do repasse das financeiras, B4, + 1 dos dados para emitir a nota, K1b, + 1 dos documentos da nota emitida, L10a; no L8b, a das categorias ganhou o parâmetro "entra no resultado"). Elas rodam com poder total e cada uma confere sessão, loja e permissão por
+// + 2 da leitura das entradas, R1, + 1 do nome no ranking, G1, + 2 das metas, G4b, + 3 das financeiras, L7b, + 3 da saída autorizada do caixa, L7c, + 6 das contas a pagar, L8a, + 1 das regras do bônus por meta, L9a, + 2 do fechamento do bônus, L9b, + 1 da correção do repasse das financeiras, B4, + 1 dos dados para emitir a nota, K1b, + 1 dos documentos da nota emitida, L10a, + 2 do envio da nota pelo WhatsApp, K1c; no L8b, a das categorias ganhou o parâmetro "entra no resultado"). Elas rodam com poder total e cada uma confere sessão, loja e permissão por
 // conta própria. Este teste monta um "mundo" fictício com objetos reais em duas lojas e tenta cada
 // função como 13 tipos de atacante. Recusa = erro, ou resposta vazia numa leitura, e nada muda no
 // banco. O teste lista as funções no próprio banco e falha se aparecer uma nova sem casos aqui.
@@ -461,6 +461,14 @@ const CASOS: Record<string, Caso> = {
     A: () => ["select public.notas_anexar_documento($1, 'pdf', $2, $3, null)", [alvo.notaA, `${ids.organizacao}/${ids.lojaA}/${alvo.notaA}/00000000-0000-4000-a000-000000000001.pdf`, "a".repeat(64)]],
     B: () => ["select public.notas_anexar_documento($1, 'pdf', $2, $3, null)", [alvo.notaB, `${ids.organizacao}/${ids.lojaB}/${alvo.notaB}/00000000-0000-4000-a000-000000000002.pdf`, "a".repeat(64)]], semPermissao: true,
   },
+  // K1c (#76): pedir o envio da nota pelo WhatsApp (vendedor da venda ou quem aprova) e conferir o desconhecido (quem aprova).
+  "nota_enviar_whatsapp(uuid,text,text)": {
+    A: () => ["select public.nota_enviar_whatsapp($1, $2, null)", [alvo.notaA, chave("ataque")]],
+    B: () => ["select public.nota_enviar_whatsapp($1, $2, null)", [alvo.notaB, chave("ataque")]], outroVendedor: true,
+  },
+  "whatsapp_envio_resolver(uuid,text)": {
+    A: () => ["select public.whatsapp_envio_resolver($1, 'Tentativa')", [randomUUID()]], semPermissao: true, outraOrganizacao: false,
+  },
   "notas_cancelar(uuid,text)": {
     A: () => ["select public.notas_cancelar($1, 'Tentativa')", [alvo.notaA]], B: () => ["select public.notas_cancelar($1, 'Tentativa')", [alvo.notaB]], semPermissao: true,
   },
@@ -770,7 +778,7 @@ describe("inventário: toda função SECURITY DEFINER exposta tem casos de recus
     const expostas = rows.map((r) => r.f);
     expect(expostas.filter((f) => !(f in CASOS)), "função nova exposta sem casos de recusa: acrescente ao CASOS").toEqual([]);
     expect(Object.keys(CASOS).filter((f) => !expostas.includes(f)), "caso de função que não existe mais").toEqual([]);
-    expect(expostas).toHaveLength(121);
+    expect(expostas).toHaveLength(123);
   });
 
   it("visitante anônimo não executa nenhuma função do esquema public; no privado só um gatilho, que não roda sozinho", async () => {
