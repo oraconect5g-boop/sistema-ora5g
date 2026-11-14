@@ -9,6 +9,8 @@ export const ERROS_DAS_NOTAS = {
   motivo: "Informe o motivo (fica na auditoria).",
   fonte: "Registre a fonte do prazo (orientação do contador) com pelo menos 10 caracteres.",
   cliente_sem_documento: "O cliente da venda não tem CPF/CNPJ no cadastro: corrija o cadastro ou informe o documento aqui.",
+  cliente_sem_endereco: "O cliente da venda não tem o endereço completo no cadastro (CEP, rua, número, bairro, cidade e UF): complete o cadastro dele e peça a nota de novo.",
+  ja_emitida: "Esta nota já foi emitida (ou o pedido foi cancelado): os dados do destinatário saem do sistema depois da emissão.",
   falha: "Não foi possível concluir agora. Tente de novo em instantes.",
 } as const;
 export type ErroDasNotas = keyof typeof ERROS_DAS_NOTAS;
@@ -19,6 +21,8 @@ const DO_BANCO: Record<string, ErroDasNotas> = {
 export function erroDasNotas(erro: { code?: string; message?: string } | null | undefined): ErroDasNotas {
   const codigo = erro?.code;
   if (codigo === "22023" && /não tem cpf\/cnpj no cadastro/i.test(erro?.message ?? "")) return "cliente_sem_documento";
+  if (codigo === "22023" && /não tem o endereço completo no cadastro/i.test(erro?.message ?? "")) return "cliente_sem_endereco";
+  if (codigo === "22023" && /só aparecem enquanto a nota espera/i.test(erro?.message ?? "")) return "ja_emitida";
   return codigo && Object.hasOwn(DO_BANCO, codigo) ? (DO_BANCO[codigo] as ErroDasNotas) : "falha";
 }
 

@@ -80,7 +80,11 @@ export default async function Notas({ searchParams }: { searchParams: Promise<{ 
                     <Selo tom={p.situacao === "aprovada" ? "sucesso" : p.situacao === "correcao_solicitada" ? "aviso" : "info"} ponto>{ehSituacao(p.situacao) ? SITUACOES_DA_NOTA[p.situacao] : p.situacao}</Selo>
                   </span>
                 </div>
-                {(p.destinatario_nome || p.destinatario_mascarado) && <p className="text-xs text-suave">Na nota: {[p.destinatario_nome, p.destinatario_mascarado].filter(Boolean).join(" · ")}</p>}
+                {(p.destinatario_nome || p.destinatario_mascarado) && (
+                  <p className="text-xs text-suave">Na nota: {[p.destinatario_nome, p.destinatario_mascarado].filter(Boolean).join(" · ")}
+                    {/* K1b (#76): os dados completos para digitar no emissor, com registro na auditoria. */}
+                    {p.destinatario_mascarado && <> · <Link href={`/notas/${p.id}/emitir`} className="font-semibold text-acao">dados para emitir</Link></>}</p>
+                )}
                 {p.observacao && <p className="text-xs text-suave">Observação: {p.observacao}</p>}
                 {p.situacao === "aguardando_aprovacao" && (
                   <form action={decidirNota} className="flex flex-wrap items-end gap-2">
