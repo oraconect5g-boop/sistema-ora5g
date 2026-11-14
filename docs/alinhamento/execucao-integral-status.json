@@ -23,7 +23,7 @@
       "conferido": "rodapé da tela de entrada (dd31e91 · build 14/11/2026 07:50), /saude e /inicio, /metas, /metas/fechamento, /metas/extrato e /resultado respondendo 307 para o login"
     },
     "falta_publicar": [
-      "B1 e B2, correções do inventário (#78 e #79) e da conferência do dia (#80), publicados ao fim do lote; a migration 20261114130247_inventario_correcoes (B1) pede o sim do proprietário para o ora5g-dev; o B2 não tem migration"
+      "B1, B2 e B3: correções do inventário (#78 e #79), da conferência do dia (#80) e da previsão de caixa (#82), publicados ao fim de cada lote; as migrations 20261114130247_inventario_correcoes (B1) e 20261114131916_previsao_correcoes (B3) pedem o sim do proprietário para o ora5g-dev; o B2 não tem migration"
     ]
   },
   "contagem_dos_estados": {
@@ -776,7 +776,7 @@
       "titulo": "Previsão de fluxo de caixa e simulações",
       "prioridade": "P2",
       "estado": "testado",
-      "lote": "L8 financeiro (L8c em 13/11: previsão de caixa pela decisão D-038 do proprietário)",
+      "lote": "L8 financeiro (L8c em 13/11: previsão de caixa pela decisão D-038 do proprietário); B3 correção #82 (14/11)",
       "bloqueio_externo": null,
       "revisado_codex": false,
       "homologado": false

@@ -58,7 +58,7 @@ type Semana = { inicio: string; fim: string; contas: number; quantidade: number 
 type Base = { inicio: string; fim: string; recebido: number; devolvido: number; saidas_caixa: number };
 type Previsao = {
   hoje: string; unidade: string | null; semanas: Semana[]; vencidas: Soma; base: Base[];
-  financeiras: Soma; a_conciliar: Soma; gavetas: { valor: number; caixas: number }; lojas: { id: string; nome: string }[];
+  estornos_a_confirmar: Soma; financeiras: Soma; a_conciliar: Soma; gavetas: { valor: number; caixas: number }; lojas: { id: string; nome: string }[];
 };
 const previsao = (s: Sessao, semanas = 8, unidade: string | null = null) => valor<Previsao>(s, PREVISAO, [semanas, unidade]);
 const n = (x: Record<string, unknown>) => Object.fromEntries(Object.entries(x).map(([k, v]) => [k, typeof v === "number" || typeof v === "string" && /^-?\d+$/.test(v) ? Number(v) : v]));
@@ -69,11 +69,28 @@ const AO_DIA = "((((now() at time zone 'America/Sao_Paulo')::date + $2::int) + t
 const pagamentosNoDia = (venda: string, dias: number) => db.query(`update public.venda_pagamentos set criado_em = ${AO_DIA} where venda_id = $1`, [venda, dias]);
 // A devolução só aceita inserção: a data é fabricada com as travas desligadas só neste comando (como em
 // margem-painel.test.ts); o fato em si é real.
+// Desde a correção #82 o dinheiro devolvido sai pelo estorno lançado no caixa: ele vai junto para o mesmo dia.
 async function devolucaoNoDia(venda: string, dias: number) {
   await db.exec("set session_replication_role = replica");
   await db.query(`update public.venda_devolucoes set criado_em = ${AO_DIA} where venda_id = $1`, [venda, dias]);
+  await db.query(`update public.caixa_movimentos set ocorrido_em = ${AO_DIA} where venda_id = $1 and tipo = 'estorno'`, [venda, dias]);
   await db.exec("set session_replication_role = origin");
 }
+async function cancelamentoNoDia(venda: string, dias: number) {
+  await db.exec("set session_replication_role = replica");
+  await db.query(`update public.vendas set cancelada_em = ${AO_DIA} where id = $1`, [venda, dias]);
+  await db.query(`update public.caixa_movimentos set ocorrido_em = ${AO_DIA} where venda_id = $1 and tipo = 'estorno'`, [venda, dias]);
+  await db.exec("set session_replication_role = origin");
+}
+/** A confirmação do estorno externo com a data fabricada (a tabela só muda pela confirmação). */
+async function confirmarEstornoNoDia(dono: Sessao, estorno: string, comprovante: string, dias: number) {
+  expect(await valor(dono, "select public.confirmar_estorno_externo($1, $2, null) as v", [estorno, comprovante])).toBe("confirmado");
+  await db.exec("set session_replication_role = replica");
+  await db.query(`update public.estornos_externos set confirmado_em = ${AO_DIA} where id = $1`, [estorno, dias]);
+  await db.exec("set session_replication_role = origin");
+}
+const estornoDa = async (venda: string, meio: string) =>
+  (await db.query<{ id: string }>("select id from public.estornos_externos where venda_id = $1 and meio = $2", [venda, meio])).rows[0]?.id ?? "";
 const saidaNoDia = (saida: string, dias: number) => db.query(`update public.caixa_saidas set decidida_em = ${AO_DIA} where id = $1`, [saida, dias]);
 
 const abrirCaixa = (s: Sessao, fundo = 10_000) => valor<string>(s, "select public.abrir_caixa($1, $2) as v", [fundo, chave("caixa")]);
@@ -243,9 +260,93 @@ describe("previsão de caixa: os fatos (L8c)", () => {
 
   it("as listas de meios da função são as do banco (financeiras e conciliáveis)", async () => {
     const texto = (await db.query<{ v: string }>("select pg_get_functiondef('public.previsao_de_caixa(integer,uuid)'::regprocedure) as v")).rows[0]?.v ?? "";
-    const listas = [...texto.matchAll(/p\.meio in \(([^)]*)\)/g)].map((m) => (m[1] ?? "").split(",").map((x) => x.trim().replace(/'/g, "")).sort());
+    const lista = (m: RegExpMatchArray) => (m[1] ?? "").split(",").map((x) => x.trim().replace(/'/g, "")).sort();
+    const listas = [...texto.matchAll(/p\.meio in \(([^)]*)\)/g)].map(lista);
+    // Correção #82: os estornos da financeira ficam fora do devolvido e dos estornos a confirmar.
+    const foraDoEstorno = [...texto.matchAll(/e\.meio not in \(([^)]*)\)/g)].map(lista);
     const todos = ["dinheiro", "pix_direto", "pix_picpay", "cartao_picpay", "cartao_pagseguro", "link_pagamento", "payjoy", "aiva", "vale_troca"];
     const comRegra = async (regra: string) => (await db.query<{ m: string }>(`select m from unnest($1::text[]) as m where privado.${regra}(m) order by m`, [todos])).rows.map((r) => r.m);
     expect(listas).toEqual([await comRegra("meio_financeira"), await comRegra("meio_liquidavel")]);
+    expect(foraDoEstorno).toEqual([await comRegra("meio_financeira"), await comRegra("meio_financeira")]);
+  });
+});
+
+// Correção de 14/11/2026 (#82, REV-PLAN-001, migration 20261114131916_previsao_correcoes): o devolvido da base é só
+// o dinheiro que saiu, na data em que saiu. Aqui o resultado seguro, não a reprodução do defeito.
+describe("previsão de caixa: devolvido só quando o dinheiro sai (#82)", () => {
+  const semana = (deslocamento: number) => Math.floor((deslocamento + 56) / 7); // índice da semana da base
+  const devolvidos = (p: Previsao) => p.base.map((b) => Number(b.devolvido));
+  const recebidos = (p: Previsao) => p.base.map((b) => Number(b.recebido));
+  const soma = (xs: number[]) => xs.reduce((s, x) => s + x, 0);
+
+  it("Pix devolvido: pendente não sai; confirmado em outra semana sai nela, uma vez, mesmo confirmando de novo", async () => {
+    const ana = await naLoja(ids.vendedorA, ids.lojaA);
+    await abrirCaixa(ana);
+    const venda = await vendaDeCapa(ana, [{ meio: "pix_direto", valor: 7_900, comprovante: "E2E-FICTICIO-B3-1" }]);
+    const dono = await naLoja(ids.dono, ids.lojaA);
+    await abrirCaixa(dono);
+    await devolver(dono, venda.venda, [{ item: venda.item, quantidade: 1, condicao: "novo" }], [{ meio: "pix_direto", valor: 7_900 }]);
+    await pagamentosNoDia(venda.venda, -20);
+    await devolucaoNoDia(venda.venda, -16);
+    let p = await previsao(dono);
+    expect(recebidos(p)[semana(-20)]).toBe(7_900);
+    expect(soma(devolvidos(p))).toBe(0); // o pedido de estorno não é dinheiro que saiu
+    expect(n(p.estornos_a_confirmar)).toEqual({ valor: 7_900, quantidade: 1 });
+    const estorno = await estornoDa(venda.venda, "pix_direto");
+    await confirmarEstornoNoDia(dono, estorno, "COMPROVANTE-PIX-B3", -2);
+    p = await previsao(dono);
+    expect(devolvidos(p)[semana(-2)]).toBe(7_900);
+    expect(soma(devolvidos(p))).toBe(7_900);
+    expect(n(p.estornos_a_confirmar)).toEqual({ valor: 0, quantidade: 0 });
+    // Reprocessar a confirmação (mesmo comprovante) não muda nada; outro comprovante é recusado.
+    expect(await valor(dono, "select public.confirmar_estorno_externo($1, $2, null) as v", [estorno, "COMPROVANTE-PIX-B3"])).toBe("confirmado");
+    expect(await codigo(dono, "select public.confirmar_estorno_externo($1, $2, null) as v", [estorno, "OUTRO-COMPROVANTE"])).toBe("OR004");
+    expect(soma(devolvidos(await previsao(dono)))).toBe(7_900);
+  });
+
+  it("reembolso misto, cancelamentos em cartão e em dinheiro e financeira: cada dinheiro na semana em que saiu", async () => {
+    const ana = await naLoja(ids.vendedorA, ids.lojaA);
+    await abrirCaixa(ana);
+    const mista = await vendaDeCapa(ana, [{ meio: "dinheiro", valor: 3_000 }, { meio: "pix_direto", valor: 4_900, comprovante: "E2E-FICTICIO-B3-2" }]);
+    const cartao = await vendaDeCapa(ana, [{ meio: "cartao_pagseguro", valor: 7_900, comprovante: "333333" }]);
+    const dinheiro = await vendaDeCapa(ana, [{ meio: "dinheiro", valor: 7_900 }]);
+    const financiada = await novaVenda(ana);
+    await adicionar(ana, financiada, cat.aparelho, itens.a1);
+    await concluir(ana, financiada, [{ meio: "payjoy", valor: 149_900, entrada: 20_000, meio_entrada: "pix_direto", comprovante: "E2E-FICTICIO-B3-3" }],
+      { nome: "Cliente Teste", email: "cliente@teste.invalid" });
+    const dono = await naLoja(ids.dono, ids.lojaA);
+    await abrirCaixa(dono, 50_000);
+    await devolver(dono, mista.venda, [{ item: mista.item, quantidade: 1, condicao: "novo" }], [{ meio: "dinheiro", valor: 3_000 }, { meio: "pix_direto", valor: 4_900 }]);
+    for (const v of [cartao.venda, dinheiro.venda, financiada]) expect(await valor(dono, "select public.cancelar_venda($1, $2) as v", [v, "Cliente desistiu"])).toBe(true);
+    await pagamentosNoDia(mista.venda, -30);
+    for (const v of [cartao.venda, dinheiro.venda, financiada]) await pagamentosNoDia(v, -12);
+    await devolucaoNoDia(mista.venda, -9);
+    await cancelamentoNoDia(dinheiro.venda, -5);
+    await cancelamentoNoDia(cartao.venda, -5);
+    await cancelamentoNoDia(financiada, -5);
+
+    let p = await previsao(dono, 8, ids.lojaA);
+    // Recebido: venda cancelada depois continua na semana em que o dinheiro entrou (a financiada, só a entrada).
+    expect(recebidos(p)[semana(-30)]).toBe(7_900);
+    expect(recebidos(p)[semana(-12)]).toBe(7_900 + 7_900 + 20_000);
+    // Devolvido: só o dinheiro (3.000 da devolução mista e 7.900 do cancelamento em dinheiro), cada um no seu dia.
+    expect(devolvidos(p)[semana(-9)]).toBe(3_000);
+    expect(devolvidos(p)[semana(-5)]).toBe(7_900);
+    expect(soma(devolvidos(p))).toBe(10_900);
+    // A confirmar: o Pix da devolução mista, o cartão cancelado e a entrada em Pix da financiada; o contrato da PayJoy não.
+    expect(n(p.estornos_a_confirmar)).toEqual({ valor: 4_900 + 7_900 + 20_000, quantidade: 3 });
+
+    await confirmarEstornoNoDia(dono, await estornoDa(cartao.venda, "cartao_pagseguro"), "COMPROVANTE-CARTAO-B3", -1);
+    await confirmarEstornoNoDia(dono, await estornoDa(financiada, "payjoy"), "PROTOCOLO-PAYJOY-B3", -1);
+    p = await previsao(dono, 8, ids.lojaA);
+    // Na semana de -7 a -1: o dinheiro do cancelamento (-5) e o cartão confirmado (-1); o contrato na financeira não é dinheiro da loja.
+    expect(devolvidos(p)[semana(-1)]).toBe(7_900 + 7_900);
+    expect(soma(devolvidos(p))).toBe(18_800);
+    expect(n(p.estornos_a_confirmar)).toEqual({ valor: 4_900 + 20_000, quantidade: 2 });
+    // A loja B não vê nada disso; a rede vê igual à loja A.
+    const b = await previsao(dono, 8, ids.lojaB);
+    expect(soma(devolvidos(b))).toBe(0);
+    expect(n(b.estornos_a_confirmar)).toEqual({ valor: 0, quantidade: 0 });
+    expect(soma(devolvidos(await previsao(dono)))).toBe(18_800);
   });
 });

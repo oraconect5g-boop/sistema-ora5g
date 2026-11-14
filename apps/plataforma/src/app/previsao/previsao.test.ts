@@ -136,9 +136,28 @@ describe("/previsao: o dono vê a rede e cada loja (L8c)", () => {
     expect(t).toContain("A receber das financeiras 2 vendas, sem data: falta o prazo da PayJoy e da Aiva R$ 25.980,00");
     expect(t).toContain("Cartão e Pix a conciliar 12 pagamentos dos últimos 60 dias: parte pode já estar no banco R$ 7.540,00");
     expect(t).toContain("Dinheiro nas gavetas agora 3 caixas abertos R$ 1.834,00");
+    // Banco sem a correção #82: sem a linha dos estornos a confirmar (não vira zero).
+    expect(t).not.toContain("Estornos de Pix e cartão a confirmar");
+    expect(t).toContain("Os três últimos não entram na previsão");
     expect((doTipo(tela, "ColunasComSinal")[0]?.dados as { valor: number }[]).map((d) => d.valor)).toEqual([0, 0, 900_000, 1_000_000, 1_100_000, 1_000_000, 950_000, 1_000_000]);
     expect(t).toContain("a média de 6 semanas (de 02/10 a 12/11)");
     expect(t).toContain("das lojas e da rede");
+  });
+
+  it("#82: os estornos de Pix e cartão a confirmar aparecem à parte, fora da conta, e vão para a planilha", async () => {
+    (cenario.rede as Record<string, unknown>).estornos_a_confirmar = { valor: 12_900, quantidade: 2 };
+    const tela = await pagina();
+    const t = visivel(tela);
+    expect(t).toContain("Estornos de Pix e cartão a confirmar 2 pedidos de estorno ainda sem comprovante: devem sair do banco, mas ainda não saíram R$ 129,00");
+    expect(t).toContain("Os quatro últimos não entram na previsão");
+    expect(t).toContain("o estorno de Pix e de cartão só quando confirmado com o comprovante, no dia da confirmação");
+    expect(doTipo(tela, "Simulador")[0]).toMatchObject({ fatos: { estornosAConfirmar: { valor: 12_900, quantidade: 2 } } });
+    (cenario.rede as Record<string, unknown>).estornos_a_confirmar = { valor: 0, quantidade: 0 };
+    expect(visivel(await pagina())).toContain("Estornos de Pix e cartão a confirmar Nenhum pedido de estorno aberto R$ 0,00");
+    for (const quebrado of [{ valor: -1, quantidade: 1 }, { valor: 100, quantidade: 0 }, null]) {
+      const r = { ...copia(REDE), estornos_a_confirmar: quebrado };
+      expect(() => lerPrevisao(r, { semanas: 8, unidade: null }), JSON.stringify(quebrado)).toThrow();
+    }
   });
 
   it("uma loja e outro horizonte: a pergunta leva os dois; loja recusada cai na rede; quem não é o dono vê o aviso", async () => {
@@ -244,7 +263,7 @@ describe("estimativa, simulação e saldo previsto (L8c)", () => {
       vencidas: { valor: 20_000, quantidade: 1 },
       estimativa: { media: 100_000, semanas: 8, de: somarDias(HOJE, -56), ate: somarDias(HOJE, -1) },
       onde: "Rede inteira", hoje: HOJE,
-      fatos: { financeiras: { valor: 0, quantidade: 0 }, aConciliar: { valor: 0, quantidade: 0 }, gavetas: { valor: 0, caixas: 0 } },
+      fatos: { estornosAConfirmar: null, financeiras: { valor: 0, quantidade: 0 }, aConciliar: { valor: 0, quantidade: 0 }, gavetas: { valor: 0, caixas: 0 } },
     }));
     const t = texto(html);
     expect(t).toContain("Saldo no banco hoje (opcional)");
@@ -264,7 +283,7 @@ describe("estimativa, simulação e saldo previsto (L8c)", () => {
       { inicio: somarDias(HOJE, 7), fim: somarDias(HOJE, 13), contas: 300_000, quantidade: 1 },
     ];
     const linhas = projetar(semanas, 20_000, 100_000, -0.2, 150_000);
-    const fatos = { financeiras: { valor: 2_598_000, quantidade: 2 }, aConciliar: { valor: 754_000, quantidade: 12 }, gavetas: { valor: 183_400, caixas: 3 } };
+    const fatos = { estornosAConfirmar: { valor: 12_900, quantidade: 2 }, financeiras: { valor: 2_598_000, quantidade: 2 }, aConciliar: { valor: 754_000, quantidade: 12 }, gavetas: { valor: 183_400, caixas: 3 } };
     const estimativaDaTela = { media: 100_000, semanas: 8, de: somarDias(HOJE, -56), ate: somarDias(HOJE, -1) };
     const p = planilhaDaPrevisao({ onde: "Rede inteira", linhas, estimativa: estimativaDaTela, ajuste: -0.2, comSaldo: true, fatos, gerado: "13/11/2026 12:00" });
     expect(p.colunas).toEqual(["Semana", "De", "Até", "Entrada estimada", "Contas (fato)", "Vencidas incluídas", "Diferença", "Saldo previsto"]);
@@ -273,6 +292,11 @@ describe("estimativa, simulação e saldo previsto (L8c)", () => {
       [2, "20/11/2026", "26/11/2026", "800,00", "3000,00", "0,00", "-2200,00", "-600,00"],
     ]);
     expect(p.linhas).toContainEqual(["A receber das financeiras (sem data)", "25980,00", "2 vendas"]);
+    // Correção #82: os estornos a confirmar ficam fora da conta, e a premissa diz quando a devolução sai.
+    expect(p.linhas).toContainEqual(["Estornos de Pix e cartão a confirmar (ainda não saíram)", "129,00", "2 pedidos"]);
+    expect(p.linhas).toContainEqual(["Devoluções pagas", "o dinheiro devolvido no dia em que saiu do caixa; Pix e cartão só quando o estorno é confirmado, no dia da confirmação"]);
+    expect(planilhaDaPrevisao({ onde: "x", linhas, estimativa: null, ajuste: 0, comSaldo: false, fatos: { ...fatos, estornosAConfirmar: null }, gerado: "x" }).linhas
+      .some((l) => String(l[0]).startsWith("Estornos"))).toBe(false);
     expect(p.linhas).toContainEqual(["Simulação", "menos 20% sobre a média"]);
     expect(p.linhas).toContainEqual(["Saldo de partida", "digitado na tela (não fica gravado no sistema)"]);
     expect(p.linhas.at(-1)).toEqual(["Previsão de caixa", "Rede inteira", "gerada em 13/11/2026 12:00"]);
