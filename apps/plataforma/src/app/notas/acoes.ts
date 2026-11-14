@@ -108,6 +108,32 @@ export async function definirPrazo(dados: FormData) {
   voltarParaFila(error, "prazo");
 }
 
+// L10c (ORA-FISC-009): o cancelamento da nota feito no portal do fisco, registrado com o protocolo do evento e a
+// justificativa. Depois dele a venda pode ser cancelada ou pedir outra nota; o banco confere quem e a nota.
+export async function registrarCancelamentoNoFisco(dados: FormData) {
+  const pedido = dados.get("pedido");
+  const venda = dados.get("venda");
+  if (!ehUuid(pedido) || !ehUuid(venda)) redirect("/vendas?erro=dados");
+  const { supabase } = await obterSessao({ exigirLoja: true });
+  const { error } = await supabase.rpc("notas_registrar_cancelamento", {
+    p_pedido: pedido, p_protocolo: texto(dados, "protocolo", 30), p_justificativa: texto(dados, "justificativa", 255),
+  });
+  redirect(error ? `/vendas/${venda}?erro_nota=${erroDasNotas(error)}` : `/vendas/${venda}?nota=cancelada_no_fisco`);
+}
+
+// L10c: a chave registrada errada (digitada errado ou de outra nota) trocada pela certa, com o motivo; a anterior fica no
+// histórico da nota. Com o XML guardado, o banco recusa (a chave é a do XML).
+export async function corrigirChaveDaNota(dados: FormData) {
+  const pedido = dados.get("pedido");
+  const venda = dados.get("venda");
+  if (!ehUuid(pedido) || !ehUuid(venda)) redirect("/vendas?erro=dados");
+  const motivo = texto(dados, "motivo", 300);
+  if (motivo.length < 10) redirect(`/vendas/${venda}?erro_nota=chave_motivo`);
+  const { supabase } = await obterSessao({ exigirLoja: true });
+  const { error } = await supabase.rpc("notas_corrigir_chave", { p_pedido: pedido, p_chave_acesso: texto(dados, "chave_acesso", 80), p_motivo: motivo });
+  redirect(error ? `/vendas/${venda}?erro_nota=${erroDasNotas(error)}` : `/vendas/${venda}?nota=chave_corrigida`);
+}
+
 // L10b (ORA-FISC-008): quem aprova nota registra que conferiu uma divergência da conciliação (o que viu e o que fez). O
 // banco confere a permissão na loja do pedido e se a divergência ainda existe; a conferência fica na auditoria.
 export async function conferirDivergencia(dados: FormData) {

@@ -19,7 +19,7 @@ export const ERROS_DA_VENDA = {
   valor: "Valor em reais inválido. Use, por exemplo, 1.299,90.",
   motivo: "Informe o motivo (fica na auditoria).",
   connect: "Há operação da Ora Connect em andamento ou feita ligada a esta venda (chip ativado ou serviço pago): a gerência resolve a operação antes de cancelar.",
-  nota_emitida: "Esta venda tem nota fiscal emitida: o cancelamento ou a devolução fiscal vem antes (com o contador).",
+  nota_emitida: "Esta venda tem nota fiscal emitida: cancele a nota no portal do fisco e registre o cancelamento no bloco “Nota fiscal” desta venda (ou faça a devolução); depois a venda pode ser cancelada.",
   financiada: "Venda financiada (PayJoy/Aiva): a devolução parcial passa pela financeira; use o cancelamento total.",
   com_devolucao: "Esta venda já tem devolução: devolva os itens que restam em vez de cancelar tudo.",
   vale: "Vale-troca não encontrado ou sem saldo suficiente: confira o número e o valor.",
