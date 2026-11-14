@@ -1,5 +1,5 @@
 // ARQUIVO GERADO pelo Supabase (generate_typescript_types do projeto ora5g-dev) depois da
-// migration 20261114150135_whatsapp_envio_da_nota. Não edite à mão: gere de novo a cada
+// migration 20261114162305_orcamento_da_os. Não edite à mão: gere de novo a cada
 // migration aplicada (auditoria do Codex de 08/11, §7.2). O teste tipos-banco.test.ts confere
 // que funções e tabelas públicas daqui são as mesmas das migrations.
 export type Json =
@@ -3620,27 +3620,6 @@ export type Database = {
         }
         Relationships: []
       }
-      papeis: {
-        Row: {
-          ativo: boolean
-          codigo: string
-          escopo_padrao: string
-          nome: string
-        }
-        Insert: {
-          ativo?: boolean
-          codigo: string
-          escopo_padrao: string
-          nome: string
-        }
-        Update: {
-          ativo?: boolean
-          codigo?: string
-          escopo_padrao?: string
-          nome?: string
-        }
-        Relationships: []
-      }
       os_eventos: {
         Row: {
           em_nome_do_tecnico: boolean
@@ -3849,6 +3828,27 @@ export type Database = {
             referencedColumns: ["id"]
           },
         ]
+      }
+      papeis: {
+        Row: {
+          ativo: boolean
+          codigo: string
+          escopo_padrao: string
+          nome: string
+        }
+        Insert: {
+          ativo?: boolean
+          codigo: string
+          escopo_padrao: string
+          nome: string
+        }
+        Update: {
+          ativo?: boolean
+          codigo?: string
+          escopo_padrao?: string
+          nome?: string
+        }
+        Relationships: []
       }
       papel_permissoes: {
         Row: {

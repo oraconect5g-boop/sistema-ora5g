@@ -1,4 +1,4 @@
--- Reversão de 20261114160000_ordem_de_servico (só em banco sem dados reais: apaga as ordens de serviço, os eventos e
+-- Reversão de 20261114162103_ordem_de_servico (só em banco sem dados reais: apaga as ordens de serviço, os eventos e
 -- as fotos registradas; os arquivos do bucket "os" precisam ser apagados pelo painel do Storage antes).
 -- public.loja_definir_situacao volta ao texto do L2 (20261111132503_lojas_cadastro_e_configuracao).
 create or replace function public.loja_definir_situacao(p_unidade uuid, p_situacao text, p_motivo text)

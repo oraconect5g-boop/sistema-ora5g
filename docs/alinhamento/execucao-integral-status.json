@@ -2,7 +2,7 @@
   "_leia": "Checkpoint do programa de execução integral (PR #67). Carregar ao retomar e seguir para o próximo item executável da fila; não reiniciar o projeto. Estados vêm de status-requisitos.json (fonte da rastreabilidade); este arquivo acrescenta lote, bloqueio externo e revisão.",
   "atualizado_em": "2026-11-14",
   "base": {
-    "main": "54efc74",
+    "main": "d6265c7",
     "pacote": {
       "pr": 67,
       "branch": "docs/execucao-integral-20261110",
@@ -18,13 +18,12 @@
   },
   "publicado": {
     "homologacao": {
-      "commit": "54efc74",
+      "commit": "d6265c7",
       "quando": "2026-11-14",
-      "conferido": "rodapé da tela de entrada (54efc74 · build 14/11/2026 13:09), /saude 200 e as rotas reais respondendo 307 para o login"
+      "conferido": "rodapé da tela de entrada (d6265c7 · build 14/11/2026 13:18), /saude 200 e as rotas reais respondendo 307 para o login"
     },
     "falta_publicar": [
-      "L12b, orçamento do técnico e resposta do cliente na OS (OS-003 e OS-004), publicado ao fim do lote",
-      "migrations 20261114153000_recebiveis_painel (L8e), 20261114160000_ordem_de_servico (L12a) e 20261114163000_orcamento_da_os (L12b): aplicar no ora5g-dev pede o sim do proprietário"
+      "registro das migrations do L8e, do L12a e do L12b aplicadas no ora5g-dev em 14/11 (nomes, tipos gerados e documentos), publicado ao fim do lote; nenhuma tela muda"
     ]
   },
   "contagem_dos_estados": {

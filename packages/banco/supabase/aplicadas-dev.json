@@ -62,6 +62,9 @@
     { "versao": "20261114145608", "nome": "clientes_nome_e_whatsapp", "md5": "375be4d8ceacefefb248c05b530db470", "aplicada_em": "2026-11-14" },
     { "versao": "20261114145952", "nome": "notas_destinatario_completo", "md5": "5674626260a14e59724692440ba9f851", "aplicada_em": "2026-11-14" },
     { "versao": "20261114150027", "nome": "notas_documentos", "md5": "82b836daafd53de60f8db55ff3520c30", "aplicada_em": "2026-11-14" },
-    { "versao": "20261114150135", "nome": "whatsapp_envio_da_nota", "md5": "cccfb12dfbf315e0187888c702929d31", "aplicada_em": "2026-11-14" }
+    { "versao": "20261114150135", "nome": "whatsapp_envio_da_nota", "md5": "cccfb12dfbf315e0187888c702929d31", "aplicada_em": "2026-11-14" },
+    { "versao": "20261114161903", "nome": "recebiveis_painel", "md5": "e64b6c8bbe0e2943b27739ee93219b0d", "aplicada_em": "2026-11-14" },
+    { "versao": "20261114162103", "nome": "ordem_de_servico", "md5": "d33be729a3b9587e72685f6ac70f9423", "aplicada_em": "2026-11-14" },
+    { "versao": "20261114162305", "nome": "orcamento_da_os", "md5": "c64ccbbb49b2144f79ba0dad34043599", "aplicada_em": "2026-11-14" }
   ]
 }
