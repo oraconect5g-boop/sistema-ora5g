@@ -1,4 +1,4 @@
--- Reversão de 20261114095656_bonus_fechamento. Apaga a leitura, o envio e a aprovação do fechamento,
+-- Reversão de 20261114104004_bonus_fechamento. Apaga a leitura, o envio e a aprovação do fechamento,
 -- as tabelas (com os fechamentos gravados: guarde uma cópia antes, se houver) e as permissões
 -- bonus.conferir e bonus.aprovar.
 drop function if exists public.bonus_fechamento_do_mes(date, uuid);
