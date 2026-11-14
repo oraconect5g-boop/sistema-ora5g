@@ -6,6 +6,7 @@ import { Aviso, classeBotao, FiltroSegmentado, TituloPagina } from "../../compon
 import { podeVerFinanceiro } from "../../lib/acesso/menu";
 import { obterSessao } from "../../lib/acesso/sessao";
 import type { LojaDoFiltro } from "../../lib/financeiro/escopo";
+import { lerRegioesDoPainel } from "../../lib/lojas/regioes";
 import { textoDoParametro, type ValorDeParametro } from "../../lib/parametros";
 import { lerRelatorios, podeVerCusto } from "../../lib/relatorios/consulta";
 import { enderecoDaExportacao, enderecoDosRelatorios, ORDEM_DOS_RELATORIOS, paginaDoRelatorio, PERIODOS_DOS_RELATORIOS, periodoDoRelatorio } from "../../lib/relatorios/painel";
@@ -39,7 +40,8 @@ export default async function Relatorios({ searchParams }: { searchParams: Promi
 
   const daRede = permissoes.has("venda.ver_todas");
   const custo = await podeVerCusto(supabase, turno.id);
-  const relatorios = await lerRelatorios(supabase, {
+  // ORG-009: as regiões só servem a quem vê a rede (a soma por região na rede inteira).
+  const [relatorios, regioes] = await Promise.all([lerRelatorios(supabase, {
     periodo: periodoDoRelatorio(textoDoParametro(parametros.periodo)),
     loja: textoDoParametro(parametros.loja),
     turno,
@@ -47,7 +49,7 @@ export default async function Relatorios({ searchParams }: { searchParams: Promi
     custo,
     metas: permissoes.has("metas.gerir") || permissoes.has("metas.ver_unidade"),
     pagina: paginaDoRelatorio(textoDoParametro(parametros.pagina)),
-  });
+  }), daRede ? lerRegioesDoPainel(supabase) : Promise.resolve(null)]);
   const { periodo, escopo, filtroDeLojas } = relatorios;
   // Só quem vê a rede leva a loja no endereço; os demais ficam na loja do turno.
   const lojaDoEndereco = daRede ? escopo.unidade : null;
@@ -70,7 +72,7 @@ export default async function Relatorios({ searchParams }: { searchParams: Promi
         )}
       </div>
 
-      <ConteudoRelatorios relatorios={relatorios} turno={turno} />
+      <ConteudoRelatorios relatorios={relatorios} turno={turno} regioes={regioes} />
     </MoldeReal>
   );
 }

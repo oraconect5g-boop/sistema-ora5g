@@ -5,7 +5,8 @@ import type { ReactNode } from "react";
 import type { LojaDoFiltro } from "../lib/financeiro/escopo";
 import { variacaoFinanceira, type Janela, type ResumoFinanceiro } from "../lib/financeiro/painel";
 import { brl, brlCompacto, brlComSinal, brlEixo, numero, percentual, percentualComSinal } from "../lib/formato";
-import { categoriasDoMix, comparacaoDasVendas, lojasDoPainel, mixPorGrupo, numerosDasVendas, partesRecebidas, serieDeVendas, type Leitura, type TextosDoRecorte, type VendasDoBanco } from "../lib/inicio/painel";
+import { categoriasDoMix, comparacaoDasVendas, lojasDoPainel, mixPorGrupo, numerosDasVendas, partesRecebidas, serieDeVendas, type Leitura, type LojaDoPainel, type TextosDoRecorte, type VendasDoBanco } from "../lib/inicio/painel";
+import { desempenhoPorRegiao, type RegioesDoPainel } from "../lib/lojas/regioes";
 import { numerosDaMargem, situacaoDaMargem, type MargemDoBanco } from "../lib/margem/painel";
 import { BarraSegmentada, BarrasHorizontais, Linhas, TabelaDoGrafico, type SerieLinha } from "./graficos";
 import { Aviso, Cartao, EstadoVazio, Indicador, ListaDados, SeloVariacao, type Variacao } from "./ui";
@@ -348,11 +349,13 @@ type Desempenho = { vendas: number; vendido: number; desfeito: number; liquido: 
 export const desempenho = (d: Desempenho) => [numero(d.vendas), brl(d.vendido), brl(d.desfeito), brl(d.liquido), semTicket(d.ticket)];
 export const temFatos = (d: Desempenho) => d.vendas > 0 || d.vendido > 0 || d.desfeito > 0;
 
-export function PainelDasLojas({ vendas, cadastro, turno, aqui, enderecoDaLoja, doVendedor = false }: {
+export function PainelDasLojas({ vendas, cadastro, turno, aqui, enderecoDaLoja, doVendedor = false, regioes = null }: {
   vendas: Leitura<VendasDoBanco>; cadastro: readonly LojaDoFiltro[]; turno: LojaDoFiltro; aqui: string;
   /** O endereço desta mesma tela no recorte de uma loja (só quem vê a rede chega a usar). */
   enderecoDaLoja: (loja: string) => string;
   doVendedor?: boolean;
+  /** ORG-009: as regiões, só na rede inteira. Com alguma loja em região, a soma das lojas por região. */
+  regioes?: RegioesDoPainel;
 }) {
   const cartao = doVendedor
     ? { titulo: "Onde vendi", subtitulo: "As suas vendas, por loja em que foram feitas" }
@@ -376,6 +379,25 @@ export function PainelDasLojas({ vendas, cadastro, turno, aqui, enderecoDaLoja, 
           linhas={lojas.map((l) => [comLigacao.has(l.id) ? <Link key={l.id} href={enderecoDaLoja(l.id)} className="font-semibold text-acao hover:underline">{l.nome}</Link> : l.nome, ...desempenho(l)])}
         />
       )}
+      {!doVendedor && <PorRegiao lojas={lojas} regioes={regioes} />}
     </Cartao>
+  );
+}
+
+/** ORG-009: a soma das lojas de cada região (só as lojas que a pessoa já vê; a região não dá acesso). */
+function PorRegiao({ lojas, regioes }: { lojas: readonly LojaDoPainel[]; regioes: RegioesDoPainel }) {
+  if (regioes === "falha") return <p className={`mt-3 ${NOTA}`}>Não deu para ler as regiões agora; os números por loja acima estão certos.</p>;
+  const porRegiao = desempenhoPorRegiao(lojas, regioes);
+  if (!porRegiao || !porRegiao.some(temFatos)) return null;
+  const comVenda = porRegiao.filter((r) => r.vendido > 0);
+  return (
+    <div className="mt-5 border-t border-borda pt-4">
+      <h3 className="mb-3 text-sm font-semibold">Por região</h3>
+      {comVenda.length > 1 && (
+        <BarrasHorizontais nomeSerie="Vendido" formatar={brl} dados={comVenda.map((r) => ({ rotulo: r.nome, valor: r.vendido, detalhe: plural(r.lojas, "loja", "lojas") }))} />
+      )}
+      <TabelaDoGrafico titulo="Ver as regiões em tabela" colunas={["Região", "Lojas", ...COLUNAS_DO_DESEMPENHO]} linhas={porRegiao.map((r) => [r.nome, numero(r.lojas), ...desempenho(r)])} />
+      <p className={`mt-2 ${NOTA}`}>A região soma as lojas dela; o ticket médio é o da soma.</p>
+    </div>
   );
 }

@@ -13,6 +13,7 @@ import { lerPaineisDoInicio, permissoesDoInicio } from "../../lib/inicio/consult
 import { ICONES_DAS_PENDENCIAS } from "../../lib/inicio/icones-das-pendencias";
 import { visaoDoInicio } from "../../lib/inicio/painel";
 import { lerPendencias } from "../../lib/inicio/pendencias";
+import { lerRegioesDoPainel } from "../../lib/lojas/regioes";
 import { textoDoParametro, type ValorDeParametro } from "../../lib/parametros";
 import { ConteudoInicio } from "./ConteudoInicio";
 
@@ -43,10 +44,12 @@ export default async function Inicio({ searchParams }: { searchParams: Promise<P
   const visao = visaoDoInicio({ verTodas: permissoes.has("venda.ver_todas"), verUnidade: gestao, verPropria: inicio.propria });
   // O que espera a pessoa (lib/inicio/pendencias.ts: a mesma leitura do sino do topo, G6) e os painéis, em paralelo.
   // Erro nas pendências derruba a página; os painéis não: cada leitura volta com o próprio estado (ok, indisponível ou falha).
-  const [pendencias, paineis] = await Promise.all([
+  // ORG-009: as regiões só servem a quem vê a rede (a soma por região na rede inteira).
+  const [pendencias, paineis, regioes] = await Promise.all([
     lerPendencias(supabase, { usuario: usuario.id, unidade, permissoes }),
     lerPaineisDoInicio(supabase, { visao, periodo: periodoFinanceiro(textoDoParametro(parametros.periodo)), loja: textoDoParametro(parametros.loja), turno, usuario: usuario.id, ranking: inicio.ranking, custo: inicio.custo,
-      metas: { gestao: permissoes.has("metas.gerir") || permissoes.has("metas.ver_unidade"), propria: permissoes.has("metas.ver_propria") } })
+      metas: { gestao: permissoes.has("metas.gerir") || permissoes.has("metas.ver_unidade"), propria: permissoes.has("metas.ver_propria") } }),
+    visao === "rede" ? lerRegioesDoPainel(supabase) : Promise.resolve(null),
   ]);
   const fim = horaDoFimDoTurno(situacao.turno_termina_em);
   const atalhos = montarMenu(permissoes).visiveis.filter((p) => p !== "inicio");
@@ -71,7 +74,7 @@ export default async function Inicio({ searchParams }: { searchParams: Promise<P
           })}
         </section>
       )}
-      <ConteudoInicio paineis={paineis} usuario={usuario.id} turno={turno} conferenteDeCaixa={permissoes.has("caixa.conferir")} />
+      <ConteudoInicio paineis={paineis} usuario={usuario.id} turno={turno} conferenteDeCaixa={permissoes.has("caixa.conferir")} regioes={regioes} />
       <Cartao titulo="Atalhos">
         <div className="grid grid-cols-2 gap-2 sm:grid-cols-3 lg:grid-cols-4">
           {atalhos.map((p) => (

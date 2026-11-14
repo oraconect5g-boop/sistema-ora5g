@@ -4,6 +4,7 @@ import Link from "next/link";
 import type { LojaDoFiltro } from "../lib/financeiro/escopo";
 import { brlCompacto, numero, percentual } from "../lib/formato";
 import type { Leitura } from "../lib/leitura-do-banco";
+import { agruparPorRegiao, type RegioesDoPainel } from "../lib/lojas/regioes";
 import {
   formatarMedida, MEDIDAS, nomeDoMes, progresso, progressoDasLojas, progressoDoAlvo, REALIZADO_ZERO, SITUACOES,
   type FaseDoMes, type Medida, type MetasDasLojas, type MetasDoBanco, type Progresso,
@@ -82,13 +83,15 @@ const subtituloDoMes = (d: { diasDecorridos: number; diasNoMes: number }) =>
  * meta (o realizado das lojas sem meta fica fora da comparação, e a tela diz quantas são), com o
  * atingimento do vendido líquido de cada loja.
  */
-export function PainelDaMetaDoMes({ metas, rede, lojas, aqui, enderecoDasMetas }: {
+export function PainelDaMetaDoMes({ metas, rede, lojas, aqui, enderecoDasMetas, regioes = null }: {
   metas: Leitura<MetasDasLojas>;
   rede: boolean;
   /** Nomes das lojas do cadastro, para o atingimento por loja. */
   lojas: readonly LojaDoFiltro[];
   aqui: string;
   enderecoDasMetas: string;
+  /** ORG-009: as regiões, só na rede inteira; com alguma loja com meta numa região, a soma por região. */
+  regioes?: RegioesDoPainel;
 }) {
   const acao = <Link href={enderecoDasMetas} className={LIGACAO}>Ver metas</Link>;
   if (metas.estado !== "ok") return <Cartao titulo="Meta do mês" icone={Target} acao={acao}><EstadoDoPainel estado={metas.estado} fonte="metas" tentarDeNovo={aqui} /></Cartao>;
@@ -114,7 +117,42 @@ export function PainelDaMetaDoMes({ metas, rede, lojas, aqui, enderecoDasMetas }
         </p>
       )}
       {rede && <PorLoja d={d} lojas={lojas} />}
+      {rede && <PorRegiao d={d} regioes={regioes} />}
     </Cartao>
+  );
+}
+
+/** ORG-009: a meta da região é a soma das metas das lojas dela (só as com meta, como na rede). */
+function PorRegiao({ d, regioes }: { d: MetasDasLojas; regioes: RegioesDoPainel }) {
+  if (regioes === "falha") return <p className={`mt-3 ${NOTA}`}>Não deu para ler as regiões agora; a meta por loja acima está certa.</p>;
+  const grupos = agruparPorRegiao(d.lojas.filter((l) => l.metas.vendido_liquido !== undefined), (l) => l.unidadeId, regioes);
+  if (!grupos) return null;
+  const linhas = grupos.map((g) => {
+    const realizado = g.itens.reduce((s, l) => s + l.realizado.vendido_liquido, 0);
+    const meta = g.itens.reduce((s, l) => s + (l.metas.vendido_liquido ?? 0), 0);
+    return { nome: g.nome, lojas: g.itens.length, p: progresso("vendido_liquido", realizado, meta, d, "atual") };
+  });
+  return (
+    <div className="mt-5 border-t border-borda pt-4">
+      <h3 className="mb-3 text-sm font-semibold">Vendido líquido por região</h3>
+      <BarrasHorizontais
+        nomeSerie="Atingido" nomeMeta="Ritmo esperado hoje" formatar={(v) => percentual(v / 100)} duasColunas
+        maximo={Math.max(100, ...linhas.map((x) => (x.p.atingido ?? 0) * 100))}
+        dados={linhas.map((x) => ({
+          rotulo: x.nome, valor: (x.p.atingido ?? 0) * 100, meta: ((x.p.esperado ?? 0) / (x.p.meta ?? 1)) * 100,
+          detalhe: <span className="hidden sm:inline">{`${compacto("vendido_liquido", x.p.realizado)} de ${compacto("vendido_liquido", x.p.meta ?? 0)}`}</span>,
+        }))}
+      />
+      <TabelaDoGrafico
+        titulo="Ver as regiões em tabela"
+        colunas={["Região", "Lojas com meta", "Vendido líquido", "Meta", "Atingido", "Esperado até hoje", "Situação"]}
+        linhas={linhas.map((x) => [
+          x.nome, String(x.lojas), formatarMedida("vendido_liquido", x.p.realizado), formatarMedida("vendido_liquido", x.p.meta ?? 0), percentual(x.p.atingido ?? 0),
+          formatarMedida("vendido_liquido", x.p.esperado ?? 0), SITUACOES[x.p.situacao].rotulo,
+        ])}
+      />
+      <p className={`mt-2 ${NOTA}`}>A meta da região é a soma das metas das lojas dela; as lojas sem meta ficam fora.</p>
+    </div>
   );
 }
 

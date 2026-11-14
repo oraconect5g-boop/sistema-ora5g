@@ -11,8 +11,11 @@ import {
   DIAS_DA_SEMANA, ERROS_DE_LOJAS, PENDENCIAS, TIPOS_DE_LOJA, ehPendencia, ehTipoDeLoja, formatarCnpj, formatarTelefone,
   isoParaHoraDeSaoPaulo, lacunasDaLoja, textoDoEndereco, textoDosHorarios, type Horario,
 } from "../../lib/lojas/regras";
+import { lerRegioesDoPainel } from "../../lib/lojas/regioes";
 import { chaveDoCatalogo, textoDoParametro, type ValorDeParametro } from "../../lib/parametros";
 import { atualizarLoja, criarLoja, definirConfiguracao, definirSituacao } from "./acoes";
+import { campo, Motivo, rotulo } from "./formulario";
+import { CartaoDasRegioes, RegiaoDaLoja } from "./Regioes";
 
 export const metadata: Metadata = { title: "Lojas da rede" };
 export const dynamic = "force-dynamic";
@@ -27,10 +30,12 @@ const OK = {
   configuracao_igual: "A configuração já era essa: nenhuma versão nova foi criada.",
   inativada: "Loja inativada. Ela sai da escolha de loja; o histórico continua guardado.",
   reativada: "Loja reativada. A equipe já pode escolhê-la ao entrar.",
+  regiao_criada: "Região cadastrada. Agora escolha a região de cada loja (no cartão da loja).",
+  regiao_repetida: "Esta região já existia: nada foi duplicado.",
+  regiao_alterada: "Região atualizada.",
+  regiao_da_loja: "Região da loja gravada. O Início e os Relatórios já somam as lojas por região.",
 } as const;
 
-const campo = "mt-1 min-h-11 w-full rounded-botao border border-borda bg-white px-3 text-sm outline-none focus:border-acao focus:ring-2 focus:ring-acao/20";
-const rotulo = "block text-sm font-medium";
 const quando = (iso: string | null | undefined) =>
   iso ? new Intl.DateTimeFormat("pt-BR", { timeZone: "America/Sao_Paulo", dateStyle: "short", timeStyle: "short" }).format(new Date(iso)).replace(",", "") : "—";
 
@@ -54,13 +59,6 @@ function horariosDe(valor: unknown): Horario[] {
     typeof h === "object" && h !== null && typeof (h as Horario).dia === "number" && typeof (h as Horario).abre === "string" && typeof (h as Horario).fecha === "string");
 }
 
-function Motivo({ exemplo }: { exemplo: string }) {
-  return (
-    <label className={rotulo}>Motivo (fica na auditoria)
-      <input name="motivo" required minLength={3} maxLength={200} placeholder={exemplo} className={campo} />
-    </label>
-  );
-}
 
 // Lojas da rede (lote L2: ORA-ORG-001, ORA-ORG-008). Dono e administrador cadastram, editam,
 // configuram com vigência e inativam sem apagar. Tudo passa pelas funções do banco.
@@ -88,10 +86,12 @@ export default async function Lojas({ searchParams }: {
     );
   }
 
-  const [resposta, empresasResposta, historicoResposta] = await Promise.all([
+  // ORG-009: as regiões (num banco sem a migration, nulo: os blocos das regiões não aparecem).
+  const [resposta, empresasResposta, historicoResposta, regioes] = await Promise.all([
     supabase.rpc("lojas_da_rede"),
     supabase.from("empresas").select("id, organizacao_id, razao_social, nome_fantasia, cnpj_raiz").eq("status", "ativa").order("razao_social"),
     historicoDe ? supabase.rpc("loja_historico", { p_unidade: historicoDe }) : Promise.resolve({ data: [], error: null }),
+    lerRegioesDoPainel(supabase),
   ]);
   if (resposta.error || empresasResposta.error || historicoResposta.error) throw new FalhaDoServico("lojas");
   const lojas = (resposta.data ?? []) as unknown as LojaDaRede[];
@@ -199,6 +199,7 @@ export default async function Lojas({ searchParams }: {
                 ]} />
 
                 <div className="mt-4 flex flex-col gap-2">
+                  {regioes !== null && regioes !== "falha" && <RegiaoDaLoja loja={l.id} regioes={regioes} aberta={emFoco && erro === "regiao_inativa"} />}
                   <details className="rounded-xl border border-borda px-3 py-2" open={emFoco && (erro === "dados" || erro === "nome" || erro === "cnpj" || erro === "cnpj_obrigatorio" || erro === "cnpj_raiz" || erro === "cnpj_repetido" || erro === "uf" || erro === "cidade")}>
                     <summary className="flex min-h-10 cursor-pointer items-center gap-2 text-sm font-semibold text-acao"><Pencil aria-hidden className="size-4" /> Editar nome, CNPJ e cidade</summary>
                     <form action={atualizarLoja} className="mt-2 grid gap-3 sm:grid-cols-2">
@@ -299,6 +300,7 @@ export default async function Lojas({ searchParams }: {
         })}
       </ul>
       {lojas.length === 0 && <p className="mt-4 text-sm text-suave">Nenhuma loja nesta rede ainda.</p>}
+      <CartaoDasRegioes regioes={regioes} lojas={lojas} aberta={!lojaEmFoco && (erro === "regiao_nome" || erro === "regiao_repetida" || erro === "regiao_com_loja")} />
     </MoldeReal>
   );
 }

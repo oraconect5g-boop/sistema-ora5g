@@ -73,9 +73,11 @@ class Consulta {
   constructor(nome: string) {
     cenario.lidas.push(nome);
     this.linhas = [...(cenario.tabelas[nome] ?? [])];
-    this.erro = cenario.errosDasTabelas[nome] ?? null;
+    // ORG-009: sem regiões no cenário, o banco "ainda não tem" a tabela (como a homologação antes da migration).
+    this.erro = cenario.errosDasTabelas[nome] ?? (nome === "regioes" && !cenario.tabelas.regioes ? { code: "PGRST205" } : null);
   }
   select() { return this; }
+  range(de: number, ate: number) { this.linhas = this.linhas.slice(de, ate + 1); return this; }
   in(coluna: string, valores: unknown[]) {
     this.linhas = this.linhas.filter((l) => l[coluna] === undefined || valores.includes(l[coluna]));
     return this;
@@ -130,7 +132,7 @@ import Relatorios from "./page";
 // Só os componentes de apresentação dos Relatórios são executados; os compartilhados (Cartao, Indicador,
 // Linhas, Colunas, BarraSegmentada, Tabela...) ficam como elementos, para o teste conferir o que recebem.
 const APRESENTACAO = new Set([
-  "ConteudoRelatorios", "EstadoDoPainel", "Indicadores", "PainelDeVendas", "PainelDeRecebimentos", "PainelDoMix", "PainelDasLojas",
+  "ConteudoRelatorios", "EstadoDoPainel", "Indicadores", "PainelDeVendas", "PainelDeRecebimentos", "PainelDoMix", "PainelDasLojas", "PorRegiao",
   "PainelDaMargem", "PainelDaCobertura", "PainelDoTicket", "PainelDosDescontos", "PainelDosItens", "PainelDaProducaoPorDia",
 ]);
 type Elemento = { tipo: string; props: Linha };
@@ -722,7 +724,8 @@ describe("Relatórios: quem vê a rede escolhe a loja", () => {
     expect(cenario.chamadas.financeiro_painel).toStrictEqual([{ ...atual, p_por_hora: false }]);
     expect(cenario.chamadas.margem_painel).toStrictEqual([atual]);
     expect(cenario.chamadas.margem_itens).toStrictEqual([{ ...atual, p_limite: 50, p_apos: 0 }]);
-    expect(cenario.lidas).toEqual(["unidades"]);
+    // A lista de lojas e, para a soma por região (ORG-009), as regiões e a região de cada loja.
+    expect(new Set(cenario.lidas)).toEqual(new Set(["unidades", "regioes"]));
     expect(p.titulo.sobretitulo).toBe("Rede inteira");
     expect(p.cartoes).toEqual(PAINEIS_DA_REDE);
     expect(p.filtro("Loja")).toMatchObject({ opcoes: [
@@ -739,6 +742,23 @@ describe("Relatórios: quem vê a rede escolhe a loja", () => {
     ]);
     expect(lojas.enderecos).toEqual([`/relatorios?loja=${LOJA}`, `/relatorios?loja=${OUTRA}`, `/relatorios?loja=${SEM_VENDA}`]);
     expect(p.enderecos).toEqual(expect.arrayContaining(["/relatorios/exportar", "/relatorios/exportar?ver=itens", "/financeiro?periodo=30&loja=rede", "/financeiro?periodo=30&loja=rede&ver=pagamentos"]));
+  });
+
+  it("ORG-009: com lojas em regiões, o desempenho soma por região; região que não fecha é falha, sem esconder as lojas", async () => {
+    const NORTE = "00000000-0000-4000-8000-0000000000e1";
+    cenario.tabelas.regioes = [{ id: NORTE, nome: "Curitiba Norte (teste)", ativa: true }];
+    cenario.tabelas.unidades = (cenario.tabelas.unidades ?? []).map((u) => ({ ...u, regiao_id: u.id === LOJA || u.id === OUTRA ? NORTE : null }));
+    let lojas = (await pagina()).cartao("Desempenho das lojas");
+    const tabela = lojas.doTipo("TabelaDoGrafico").find((t) => t.titulo === "Ver as regiões em tabela");
+    expect((tabela?.linhas as string[][]).map((l) => [l[0], l[1], String(l[3]).replace(/\s/g, " ")])).toEqual([
+      ["Curitiba Norte (teste)", "2", "R$ 7.000,00"], ["Sem região", "1", "R$ 0,00"],
+    ]);
+    expect(lojas.texto).toContain("A região soma as lojas dela; o ticket médio é o da soma.");
+    // Loja apontando para uma região que não veio: falha das regiões (a tabela por loja continua).
+    cenario.tabelas.regioes = [];
+    lojas = (await pagina()).cartao("Desempenho das lojas");
+    expect(lojas.texto).toContain("Não deu para ler as regiões agora; os números por loja acima estão certos.");
+    expect(primeiro(lojas.doTipo("BarrasHorizontais")).dados).toHaveLength(3);
   });
 
   it("na rede inteira, cada linha do detalhe diz a loja da venda", async () => {

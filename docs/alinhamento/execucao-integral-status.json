@@ -2,7 +2,7 @@
   "_leia": "Checkpoint do programa de execução integral (PR #67). Carregar ao retomar e seguir para o próximo item executável da fila; não reiniciar o projeto. Estados vêm de status-requisitos.json (fonte da rastreabilidade); este arquivo acrescenta lote, bloqueio externo e revisão.",
   "atualizado_em": "2026-11-14",
   "base": {
-    "main": "abfa5e8",
+    "main": "ed37080",
     "pacote": {
       "pr": 67,
       "branch": "docs/execucao-integral-20261110",
@@ -18,20 +18,21 @@
   },
   "publicado": {
     "homologacao": {
-      "commit": "abfa5e8",
+      "commit": "ed37080",
       "quando": "2026-11-14",
-      "conferido": "rodapé da tela de entrada (abfa5e8 · build 14/11/2026 20:05), /saude 200 e as rotas reais respondendo 307 para o login"
+      "conferido": "rodapé da tela de entrada (ed37080 · build 14/11/2026 20:19), /saude 200 e as rotas reais respondendo 307 para o login"
     },
     "falta_publicar": [
-      "CAT-009, códigos de outros canais por variação, publicado ao fim do lote",
+      "ORG-009, regiões da rede, publicado ao fim do lote",
       "migration 20261114235000_estoque_valor_em_custo (G3b): aplicar no ora5g-dev pede o sim do proprietário",
-      "migration 20261115001000_codigos_de_outros_canais (CAT-009): aplicar no ora5g-dev pede o sim do proprietário"
+      "migration 20261115001000_codigos_de_outros_canais (CAT-009): aplicar no ora5g-dev pede o sim do proprietário",
+      "migration 20261115003000_regioes (ORG-009): aplicar no ora5g-dev pede o sim do proprietário"
     ]
   },
   "contagem_dos_estados": {
-    "nao_iniciado": 53,
-    "parcial": 75,
-    "testado": 46,
+    "nao_iniciado": 51,
+    "parcial": 76,
+    "testado": 47,
     "bloqueado": 3,
     "respeitado": 2
   },
@@ -111,8 +112,8 @@
     "ORA-ORG-009": {
       "titulo": "Gerir unidades regionais, grupos e metas agregadas",
       "prioridade": "P1",
-      "estado": "nao_iniciado",
-      "lote": "L2 cadastros",
+      "estado": "testado",
+      "lote": "L2 cadastros; ORG-009 (14/11): regiões da rede e as somas por região",
       "bloqueio_externo": null,
       "revisado_codex": false,
       "homologado": false
@@ -760,7 +761,7 @@
       "titulo": "Relatório financeiro consolidado por loja/região/rede",
       "prioridade": "P1",
       "estado": "parcial",
-      "lote": "L8 financeiro; G2 financeiro e relatórios (G2a entregue em 13/11); L8b em 13/11: resultado do mês da rede e de cada loja",
+      "lote": "L8 financeiro; G2 financeiro e relatórios (G2a entregue em 13/11); L8b em 13/11: resultado do mês da rede e de cada loja; ORG-009 em 14/11: a região no cadastro e as vendas por região",
       "bloqueio_externo": null,
       "revisado_codex": false,
       "homologado": false
@@ -858,8 +859,8 @@
     "ORA-PERF-009": {
       "titulo": "Metas coletivas/regional e rankings configuráveis",
       "prioridade": "P1",
-      "estado": "nao_iniciado",
-      "lote": "L9 metas/comissões",
+      "estado": "parcial",
+      "lote": "L9 metas/comissões; ORG-009 (14/11): a meta por região (soma das lojas); ranking espera a P3",
       "bloqueio_externo": null,
       "revisado_codex": false,
       "homologado": false

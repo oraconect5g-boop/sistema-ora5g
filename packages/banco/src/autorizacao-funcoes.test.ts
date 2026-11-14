@@ -1,9 +1,9 @@
 // Inventário de autorização (prioridade 1 do diagnóstico de 10/11/2026; ORA-ORG-004 e ORA-QUAL-002).
 // O aviso 0029 do Supabase lista as funções SECURITY DEFINER que qualquer usuário logado pode chamar
-// pela API: 147 em 14/11 (48 + 6 do cadastro de lojas, L2, + 5 do cadastro do catálogo, L3a, + 4 dos preços, L3b,
+// pela API: 149 em 14/11 (48 + 6 do cadastro de lojas, L2, + 5 do cadastro do catálogo, L3a, + 4 dos preços, L3b,
 // + 4 da importação do catálogo, L3c, + 3 da entrada de mercadoria, L4a, + 5 do inventário, L4b, + 6 dos clientes, L5a,
 // + 9 do funil e da agenda, L5b, + 4 da mesclagem e dos segmentos, L5c, + 4 das maquininhas e da conciliação, L7a,
-// + 2 da leitura das entradas, R1, + 1 do nome no ranking, G1, + 2 das metas, G4b, + 3 das financeiras, L7b, + 3 da saída autorizada do caixa, L7c, + 6 das contas a pagar, L8a, + 1 das regras do bônus por meta, L9a, + 2 do fechamento do bônus, L9b, + 1 da correção do repasse das financeiras, B4, + 1 dos dados para emitir a nota, K1b, + 1 dos documentos da nota emitida, L10a, + 2 do envio da nota pelo WhatsApp, K1c, + 1 dos recebíveis por loja e adquirente, L8e, + 5 da ordem de serviço, L12a, + 3 do orçamento da OS, L12b, + 2 da cobrança e da entrega da OS, L12c, + 3 das peças da OS, L12d, + 1 dos relatórios da assistência, L12e, + 2 dos documentos da venda, L5d, + 2 da conciliação fiscal, L10b, + 2 do cancelamento e da correção da nota, L10c, + 1 do valor do estoque a custo, G3b, + 2 dos códigos de outros canais, CAT-009; no L8b, a das categorias ganhou o parâmetro "entra no resultado"). Elas rodam com poder total e cada uma confere sessão, loja e permissão por
+// + 2 da leitura das entradas, R1, + 1 do nome no ranking, G1, + 2 das metas, G4b, + 3 das financeiras, L7b, + 3 da saída autorizada do caixa, L7c, + 6 das contas a pagar, L8a, + 1 das regras do bônus por meta, L9a, + 2 do fechamento do bônus, L9b, + 1 da correção do repasse das financeiras, B4, + 1 dos dados para emitir a nota, K1b, + 1 dos documentos da nota emitida, L10a, + 2 do envio da nota pelo WhatsApp, K1c, + 1 dos recebíveis por loja e adquirente, L8e, + 5 da ordem de serviço, L12a, + 3 do orçamento da OS, L12b, + 2 da cobrança e da entrega da OS, L12c, + 3 das peças da OS, L12d, + 1 dos relatórios da assistência, L12e, + 2 dos documentos da venda, L5d, + 2 da conciliação fiscal, L10b, + 2 do cancelamento e da correção da nota, L10c, + 1 do valor do estoque a custo, G3b, + 2 dos códigos de outros canais, CAT-009, + 2 das regiões, ORG-009; no L8b, a das categorias ganhou o parâmetro "entra no resultado"). Elas rodam com poder total e cada uma confere sessão, loja e permissão por
 // conta própria. Este teste monta um "mundo" fictício com objetos reais em duas lojas e tenta cada
 // função como 13 tipos de atacante. Recusa = erro, ou resposta vazia numa leitura, e nada muda no
 // banco. O teste lista as funções no próprio banco e falha se aparecer uma nova sem casos aqui.
@@ -252,6 +252,14 @@ const CASOS: Record<string, Caso> = {
   },
   "catalogo_desligar_codigo(uuid,text)": { A: () => ["select public.catalogo_desligar_codigo($1, 'Tentativa')", [alvo.codigoCanal]], semPermissao: true },
   "cancelar_convite(uuid,text)": { A: () => ["select public.cancelar_convite($1, 'Tentativa')", [alvo.convite]], semPermissao: true },
+  // Regiões (ORG-009): de quem gere as lojas da rede (unidades.gerir); o vendedor da loja A é recusado.
+  "regiao_salvar(uuid,uuid,text,boolean,text)": {
+    A: () => ["select public.regiao_salvar($1, null, $2, null, 'Tentativa')", [ids.organizacao, `Intrusa ${++contador}`]], semPermissao: true,
+  },
+  "loja_definir_regiao(uuid,uuid,text)": {
+    A: () => ["select public.loja_definir_regiao($1, $2, 'Tentativa')", [ids.lojaA, alvo.regiao]],
+    B: () => ["select public.loja_definir_regiao($1, $2, 'Tentativa')", [ids.lojaB, alvo.regiao]], semPermissao: true,
+  },
   "cancelar_venda(uuid,text)": {
     A: () => ["select public.cancelar_venda($1, 'Tentativa')", [alvo.concluidaA]], B: () => ["select public.cancelar_venda($1, 'Tentativa')", [alvo.concluidaB]], semPermissao: true,
   },
@@ -808,6 +816,9 @@ beforeAll(async () => {
        values ($1, $2, $3, 'comprovante_assinado', $4, 'pdf', 1000, $5, $6) returning id`,
       [ids.organizacao, loja, alvo[`concluida${lado}`], `${ids.organizacao}/${loja}/${alvo[`concluida${lado}`]}/00000000-0000-4000-a000-00000000003${lado === "A" ? 1 : 2}.pdf`, "a".repeat(64), ids.vendedorAB])).rows[0]?.id ?? "";
   }
+  // Uma região (ORG-009), da rede, gravada pelo banco: só alvo.
+  alvo.regiao = (await db.query<{ id: string }>("insert into public.regioes (organizacao_id, nome, criado_por) values ($1, 'Região do mundo', $2) returning id",
+    [ids.organizacao, ids.dono])).rows[0]?.id ?? "";
   // Um código de outro canal (CAT-009), da rede, gravado pelo banco: só alvo.
   alvo.codigoCanal = (await db.query<{ id: string }>(
     "insert into public.variante_codigos_externos (organizacao_id, variante_id, canal, codigo, ligado_por) values ($1, $2, 'rein', 'MUNDO-1', $3) returning id",
@@ -903,7 +914,7 @@ describe("inventário: toda função SECURITY DEFINER exposta tem casos de recus
     const expostas = rows.map((r) => r.f);
     expect(expostas.filter((f) => !(f in CASOS)), "função nova exposta sem casos de recusa: acrescente ao CASOS").toEqual([]);
     expect(Object.keys(CASOS).filter((f) => !expostas.includes(f)), "caso de função que não existe mais").toEqual([]);
-    expect(expostas).toHaveLength(147);
+    expect(expostas).toHaveLength(149);
   });
 
   it("visitante anônimo não executa nenhuma função do esquema public; no privado só um gatilho, que não roda sozinho", async () => {

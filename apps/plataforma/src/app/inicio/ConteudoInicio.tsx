@@ -14,6 +14,7 @@ import { ORDEM_DOS_PERIODOS, PERIODOS_FINANCEIROS, type ResumoFinanceiro } from 
 import { brl, numero } from "../../lib/formato";
 import type { PaineisComDados, PaineisDoInicio } from "../../lib/inicio/consulta";
 import { enderecoDoFinanceiro, enderecoDoInicio, textosDoPeriodo, vendedoresDoPainel, type Leitura } from "../../lib/inicio/painel";
+import type { RegioesDoPainel } from "../../lib/lojas/regioes";
 
 // Apresentação dos painéis do Início (G1), separada da leitura: recebe o que lib/inicio/consulta leu,
 // já com o estado de cada fonte. Sem acesso a dados aqui. Os painéis de vendas, recebimentos, mix e
@@ -64,7 +65,11 @@ function PainelDeVendedores({ paineis, usuario, aqui }: { paineis: PaineisComDad
 // ---------------------------------------------------------------------------------------------
 // A seção inteira, na visão de quem pede
 // ---------------------------------------------------------------------------------------------
-export function ConteudoInicio({ paineis, usuario, turno, conferenteDeCaixa }: { paineis: PaineisDoInicio; usuario: string; turno: LojaDoFiltro; conferenteDeCaixa: boolean }) {
+export function ConteudoInicio({ paineis, usuario, turno, conferenteDeCaixa, regioes = null }: {
+  paineis: PaineisDoInicio; usuario: string; turno: LojaDoFiltro; conferenteDeCaixa: boolean;
+  /** ORG-009: as regiões da rede (só para quem vê a rede); a soma por região aparece na rede inteira. */
+  regioes?: RegioesDoPainel;
+}) {
   if (paineis.visao === "nenhuma") {
     return (
       <Cartao titulo="Vendas">
@@ -82,7 +87,7 @@ export function ConteudoInicio({ paineis, usuario, turno, conferenteDeCaixa }: {
   const recorte = PERIODOS_FINANCEIROS[periodo].rotulo;
   const textos = textosDoPeriodo(periodo);
   const dasVendas = { vendas, anterior, janelas, textos, aqui, doVendedor };
-  const lojas = <PainelDasLojas vendas={vendas} cadastro={cadastro} turno={turno} aqui={aqui} doVendedor={doVendedor} enderecoDaLoja={(loja) => enderecoDoInicio(periodo, loja)} />;
+  const lojas = <PainelDasLojas vendas={vendas} cadastro={cadastro} turno={turno} aqui={aqui} doVendedor={doVendedor} enderecoDaLoja={(loja) => enderecoDoInicio(periodo, loja)} regioes={redeInteira ? regioes : null} />;
   const mix = <PainelDoMix vendas={vendas} aqui={aqui} doVendedor={doVendedor} />;
 
   return (
@@ -106,7 +111,7 @@ export function ConteudoInicio({ paineis, usuario, turno, conferenteDeCaixa }: {
       {paineis.metaDaGestao && (
         <PainelDaMetaDoMes
           metas={paineis.metaDaGestao} rede={redeInteira} lojas={cadastro.length > 0 ? cadastro : [turno]} aqui={aqui}
-          enderecoDasMetas={escopo.unidade && escopo.unidade !== turno.id ? `/metas?loja=${escopo.unidade}` : "/metas"}
+          enderecoDasMetas={escopo.unidade && escopo.unidade !== turno.id ? `/metas?loja=${escopo.unidade}` : "/metas"} regioes={redeInteira ? regioes : null}
         />
       )}
       {paineis.minhaMeta && <PainelDaMinhaMeta metas={paineis.minhaMeta} eu={usuario} aqui={aqui} />}

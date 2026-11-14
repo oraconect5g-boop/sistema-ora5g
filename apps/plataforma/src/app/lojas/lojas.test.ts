@@ -15,6 +15,8 @@ const cenario = vi.hoisted(() => ({
   chamadas: [] as { nome: string; argumentos: Record<string, unknown> }[],
   respostas: {} as Record<string, { data: unknown; error: null | { code: string; message?: string } }>,
   tabelas: {} as Record<string, Record<string, unknown>[]>,
+  /** Erro de leitura por tabela (ORG-009: sem regiões no cenário, o banco "ainda não tem" a tabela). */
+  erros: {} as Record<string, { code: string }>,
 }));
 
 vi.mock("next/headers", () => ({ cookies: async () => ({ getAll: () => [], set: () => undefined }) }));
@@ -22,16 +24,21 @@ vi.mock("next/navigation", () => ({ redirect: (destino: string) => { throw new E
 
 class Consulta {
   linhas: Record<string, unknown>[];
-  constructor(nome: string) { this.linhas = [...(cenario.tabelas[nome] ?? [])]; }
+  erro: { code: string } | null;
+  constructor(nome: string) {
+    this.linhas = [...(cenario.tabelas[nome] ?? [])];
+    this.erro = cenario.erros[nome] ?? (nome === "regioes" && !cenario.tabelas.regioes ? { code: "PGRST205" } : null);
+  }
   select() { return this; }
+  range(de: number, ate: number) { this.linhas = this.linhas.slice(de, ate + 1); return this; }
   eq(coluna: string, valor: unknown) { this.linhas = this.linhas.filter((l) => l[coluna] === undefined || l[coluna] === valor); return this; }
   in() { return this; }
   is() { return this; }
   order() { return this; }
   limit() { return this; }
   maybeSingle() { return Promise.resolve({ data: this.linhas[0] ?? null, error: null }); }
-  then(resolver: (r: { data: Record<string, unknown>[]; error: null }) => unknown) {
-    return Promise.resolve({ data: this.linhas, error: null }).then(resolver);
+  then(resolver: (r: { data: Record<string, unknown>[] | null; error: { code: string } | null }) => unknown) {
+    return Promise.resolve(this.erro ? { data: null, error: this.erro } : { data: this.linhas, error: null }).then(resolver);
   }
 }
 const sessaoFicticia = {
@@ -48,13 +55,17 @@ const sessaoFicticia = {
 };
 vi.mock("../../lib/acesso/sessao", () => ({ FalhaDoServico: class extends Error {}, obterSessao: async () => sessaoFicticia }));
 
-import { atualizarLoja, criarLoja, definirConfiguracao, definirSituacao } from "./acoes";
+import { atualizarLoja, criarLoja, definirConfiguracao, definirRegiaoDaLoja, definirSituacao, salvarRegiao } from "./acoes";
 import Lojas from "./page";
 
 function texto(v: unknown): string {
   if (Array.isArray(v)) return v.map(texto).join(" ");
   if (typeof v === "string" || typeof v === "number") return String(v);
-  if (isValidElement<Record<string, unknown>>(v)) return Object.values(v.props).map(texto).join(" ");
+  if (isValidElement<Record<string, unknown>>(v)) {
+    // Os componentes das regiões (ORG-009) e o motivo são simples: renderiza para ver o texto e os campos.
+    if (typeof v.type === "function" && ["CartaoDasRegioes", "RegiaoDaLoja", "Motivo"].includes(v.type.name)) return texto((v.type as (p: unknown) => unknown)(v.props));
+    return Object.values(v.props).map(texto).join(" ");
+  }
   if (v && typeof v === "object") return Object.values(v).map(texto).join(" ");
   return "";
 }
@@ -85,6 +96,7 @@ beforeEach(() => {
   cenario.permissoes = new Set();
   cenario.chamadas = [];
   cenario.respostas = { lojas_da_rede: { data: [SANTA, FECHADA], error: null } };
+  cenario.erros = {};
   cenario.tabelas = { empresas: [{ id: EMPRESA, organizacao_id: ORG, razao_social: "Empresa Teste Ltda", nome_fantasia: "Ora 5G (teste)", cnpj_raiz: "11222333", status: "ativa" }] };
 });
 
@@ -182,5 +194,67 @@ describe("ações das lojas", () => {
     expect(await destinoDe(atualizarLoja(formulario(campos)))).toContain("ok=sem_mudanca");
     cenario.respostas.loja_atualizar = { data: null, error: { code: "P0002", message: "Loja não encontrada para você" } };
     expect(await destinoDe(atualizarLoja(formulario(campos)))).toBe(`/lojas?erro=permissao&loja=${LOJA}#loja-${LOJA}`);
+  });
+});
+
+describe("regiões (ORG-009)", () => {
+  const NORTE = "00000000-0000-4000-8000-0000000000e1";
+  const LITORAL = "00000000-0000-4000-8000-0000000000e2";
+  const comRegioes = () => {
+    cenario.permissoes = new Set(["unidades.gerir"]);
+    cenario.tabelas.regioes = [{ id: NORTE, nome: "Curitiba Norte (teste)", ativa: true }, { id: LITORAL, nome: "Litoral (teste)", ativa: false }];
+    cenario.tabelas.unidades = [{ id: LOJA, regiao_id: NORTE }, { id: OUTRA, regiao_id: null }];
+  };
+
+  it("o cartão das regiões lista cada uma com as lojas; cada loja mostra a dela e pode mudar (só para as ativas)", async () => {
+    comRegioes();
+    const t = (await tela()).replace(/\s+/g, " ");
+    for (const trecho of ["Regiões", "Não dão acesso", "Curitiba Norte (teste)", "Litoral (teste) neutro inativa", "sem loja", "Nova região", "Editar região",
+      "Região: Curitiba Norte (teste)", "Região: sem região", "Salvar região da loja"]) expect(t, trecho).toContain(trecho);
+  });
+
+  it("num banco sem a tabela, nada de região aparece; falha de leitura avisa sem esconder as lojas", async () => {
+    cenario.permissoes = new Set(["unidades.gerir"]);
+    let t = await tela();
+    expect(t).not.toContain("Nova região");
+    expect(t).not.toContain("Região:");
+    expect(t).toContain("Santa Cândida (teste)");
+    vi.spyOn(console, "error").mockImplementation(() => undefined);
+    cenario.tabelas.regioes = [];
+    cenario.erros.regioes = { code: "57014" };
+    t = await tela();
+    expect(t).toContain("Não deu para ler as regiões agora");
+    expect(t).toContain("Santa Cândida (teste)");
+    vi.restoreAllMocks();
+  });
+
+  it("salvar a região manda a organização da loja do turno; mudar a região da loja; inválido volta antes; erros do banco viram mensagens", async () => {
+    cenario.tabelas.unidades = [{ id: LOJA, organizacao_id: ORG }];
+    cenario.respostas.regiao_salvar = { data: { id: NORTE, repetida: false }, error: null };
+    expect(await destinoDe(salvarRegiao(formulario({ nome: "  Curitiba   Norte ", motivo: "Organização" })))).toBe("/lojas?ok=regiao_criada#regioes");
+    expect(cenario.chamadas.at(-1)).toEqual({ nome: "regiao_salvar", argumentos: { p_organizacao: ORG, p_id: null, p_nome: "Curitiba Norte", p_ativa: null, p_motivo: "Organização" } });
+    expect(await destinoDe(salvarRegiao(formulario({ id: NORTE, nome: "Curitiba Norte", tem_ativa: "1", motivo: "Fim da região" })))).toBe("/lojas?ok=regiao_alterada#regioes");
+    expect(cenario.chamadas.at(-1)?.argumentos).toMatchObject({ p_id: NORTE, p_ativa: false });
+    cenario.respostas.regiao_salvar = { data: null, error: { code: "OR020", message: "A região ainda tem loja ativa: mude a região das lojas antes de inativar" } };
+    expect(await destinoDe(salvarRegiao(formulario({ id: NORTE, nome: "Curitiba Norte", tem_ativa: "1", motivo: "Fim" })))).toBe("/lojas?erro=regiao_com_loja#regioes");
+    cenario.respostas.regiao_salvar = { data: null, error: { code: "23505", message: "Já existe outra região com este nome" } };
+    expect(await destinoDe(salvarRegiao(formulario({ id: LITORAL, nome: "Curitiba Norte", motivo: "Renomear" })))).toBe("/lojas?erro=regiao_repetida#regioes");
+
+    cenario.chamadas = [];
+    expect(await destinoDe(salvarRegiao(formulario({ nome: "N", motivo: "Organização" })))).toBe("/lojas?erro=regiao_nome#regioes");
+    expect(await destinoDe(salvarRegiao(formulario({ nome: "Norte", motivo: "x" })))).toBe("/lojas?erro=motivo#regioes");
+    expect(await destinoDe(salvarRegiao(formulario({ id: "nao-e-uuid", nome: "Norte", motivo: "Organização" })))).toBe("/lojas?erro=dados#regioes");
+    expect(await destinoDe(definirRegiaoDaLoja(formulario({ unidade: LOJA, regiao: "talvez", motivo: "Região" })))).toBe(`/lojas?erro=dados&loja=${LOJA}#loja-${LOJA}`);
+    expect(await destinoDe(definirRegiaoDaLoja(formulario({ unidade: LOJA, regiao: NORTE, motivo: "" })))).toBe(`/lojas?erro=motivo&loja=${LOJA}#loja-${LOJA}`);
+    expect(cenario.chamadas).toEqual([]);
+
+    cenario.respostas.loja_definir_regiao = { data: true, error: null };
+    expect(await destinoDe(definirRegiaoDaLoja(formulario({ unidade: LOJA, regiao: NORTE, motivo: "Loja da região" })))).toBe(`/lojas?ok=regiao_da_loja&loja=${LOJA}#loja-${LOJA}`);
+    expect(cenario.chamadas.at(-1)).toEqual({ nome: "loja_definir_regiao", argumentos: { p_unidade: LOJA, p_regiao: NORTE, p_motivo: "Loja da região" } });
+    cenario.respostas.loja_definir_regiao = { data: false, error: null };
+    expect(await destinoDe(definirRegiaoDaLoja(formulario({ unidade: LOJA, regiao: "nenhuma", motivo: "Sem região" })))).toBe(`/lojas?ok=sem_mudanca&loja=${LOJA}#loja-${LOJA}`);
+    expect(cenario.chamadas.at(-1)?.argumentos).toMatchObject({ p_regiao: null });
+    cenario.respostas.loja_definir_regiao = { data: null, error: { code: "22023", message: "Região inativa: reative antes de pôr loja nela" } };
+    expect(await destinoDe(definirRegiaoDaLoja(formulario({ unidade: LOJA, regiao: LITORAL, motivo: "Região" })))).toBe(`/lojas?erro=regiao_inativa&loja=${LOJA}#loja-${LOJA}`);
   });
 });
