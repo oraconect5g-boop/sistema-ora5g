@@ -1159,3 +1159,46 @@ describe("repasse da financeira e cancelamento da venda ao mesmo tempo no Postgr
     expect(await divergencias()).toEqual([]);
   });
 });
+
+describe("ordem de serviço cobrada no PDV ao mesmo tempo no PostgreSQL 17 (L12c)", () => {
+  it("a mesma OS em duas vendas concluídas ao mesmo tempo: uma cobra, a outra recebe OR032; a OS conta uma vez", async () => {
+    const ana = await sessaoNaLoja(ids.vendedorA, ids.lojaA);
+    const dono = await sessaoNaLoja(ids.dono, ids.lojaA);
+    await abrir(a, ana);
+    const cliente = (await valor<{ id: string }>(a, "select public.cliente_salvar(null, $1::jsonb, null, 'conc:cliente:os') as v",
+      [JSON.stringify({ tipo: "pessoa_fisica", nome: "Cliente da OS disputada", documento: cpf("135792468"), telefone: "41987659901" })]))?.id;
+    await a.query("commit");
+    // A OS pronta na loja, com o orçamento aprovado (gravados direto: o caminho até aqui tem os próprios testes).
+    const os = (await admin.query<{ id: string }>(
+      `insert into public.ordens_servico (organizacao_id, unidade_id, cliente_id, cliente_nome, contato_mascarado, aparelho, imei, defeito, estado_entrada,
+         chave, conteudo, aberta_por, servico, local)
+       values ($1, $2, $3, 'Cliente da OS disputada', '(41) •••••-9901', 'Aparelho disputado', $4, 'Tela', 'Riscado', 'conc:os:1', 'conc', $5, 'concluido', 'loja') returning id`,
+      [ids.organizacao, ids.lojaA, cliente, comDigitoLuhn("35209900600001"), ids.vendedorA])).rows[0]?.id;
+    await admin.query(
+      `insert into public.os_orcamentos (organizacao_id, os_id, diagnostico, mao_de_obra_centavos, pecas_centavos, total_centavos, chave, conteudo, registrado_por,
+         situacao, resposta_canal, respondido_por, respondido_em)
+       values ($1, $2, 'Troca de tela', 8000, 25000, 33000, 'conc:orcamento:1', 'conc', $3, 'aprovado', 'loja', $3, now())`, [ids.organizacao, os, ids.dono]);
+    const vendas: string[] = [];
+    for (const [cliente_, sessao, n] of [[a, ana, 1], [b, dono, 2]] as const) {
+      // Os testes anteriores deste arquivo podem ter deixado o caixa da pessoa aberto nesta loja.
+      const temCaixa = await contar("select count(*) as n from public.caixas where operador_id = $1 and unidade_id = $2 and situacao = 'aberto'", [sessao.usuario, ids.lojaA]);
+      await abrir(cliente_, sessao);
+      if (!temCaixa) await cliente_.query("select public.abrir_caixa(0, $1)", [`conc:caixa:os:${n}`]);
+      const venda = await valor<string>(cliente_, "select public.criar_venda($1) as v", [`conc:venda:os:${n}`]);
+      await cliente_.query("select public.os_cobrar($1, $2, $3)", [venda, os, `conc:item:os:${n}`]);
+      await cliente_.query("commit");
+      vendas.push(venda as string);
+    }
+    const concluir = (n: number) => `select public.concluir_venda($1, '[{"meio":"dinheiro","valor":33000}]'::jsonb, '{}'::jsonb, 'conc:concluir:os:${n}') as v`;
+    await abrir(a, ana);
+    await abrir(b, dono);
+    const final = await disputa(
+      () => valor(a, concluir(1), [vendas[0]]),
+      () => valor(b, concluir(2), [vendas[1]]),
+    );
+    expect(final).toEqual({ erro: "OR032" });
+    expect((await admin.query<{ venda_id: string }>("select venda_id from public.ordens_servico where id = $1", [os])).rows[0]?.venda_id).toBe(vendas[0]);
+    expect(await contar("select count(*) as n from public.vendas where id = any($1::uuid[]) and situacao = 'concluida'", [vendas])).toBe(1);
+    expect(await contar("select count(*) as n from public.os_eventos where os_id = $1 and tipo = 'cobrada'", [os])).toBe(1);
+  });
+});

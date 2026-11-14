@@ -1,4 +1,4 @@
-import { AlarmClock, Store, Truck, Wrench } from "lucide-react";
+import { AlarmClock, PackageCheck, Store, Truck, Wrench } from "lucide-react";
 import type { Metadata } from "next";
 import Link from "next/link";
 
@@ -47,8 +47,11 @@ export default async function Assistencia({ searchParams }: { searchParams: Prom
         </Aviso>
       )}
 
-      <div className="mt-4 grid grid-cols-1 gap-3 sm:grid-cols-3">
+      <div className="mt-4 grid grid-cols-1 gap-3 sm:grid-cols-2 lg:grid-cols-4">
         <Indicador rotulo="Na loja" icone={Store} valor={contagens ? numero(contagens.naLoja) : "—"} detalhe={contagens ? "aparelhos de cliente aguardando" : "Sem número do banco agora"} />
+        {/* L12c: conserto pronto na loja, esperando a cobrança no PDV e a entrega. */}
+        <Indicador rotulo="Prontas para entregar" icone={PackageCheck} valor={contagens?.prontas != null ? numero(contagens.prontas) : "—"}
+          tom={contagens?.prontas ? "atencao" : "neutro"} detalhe={contagens?.prontas != null ? "consertadas: cobrar no PDV e entregar" : "Sem número do banco agora"} />
         <Indicador rotulo="Com o técnico" icone={Truck} valor={contagens ? numero(contagens.fora) : "—"} detalhe={contagens ? "indo, com ele ou voltando" : "Sem número do banco agora"} />
         <Indicador rotulo="Atrasadas" icone={AlarmClock} valor={contagens ? numero(contagens.atrasadas) : "—"} tom={contagens && contagens.atrasadas > 0 ? "atencao" : "neutro"}
           detalhe={contagens ? "passaram do prazo combinado com o cliente" : "Sem número do banco agora"} />

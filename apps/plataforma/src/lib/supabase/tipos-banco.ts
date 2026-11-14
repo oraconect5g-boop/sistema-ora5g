@@ -3495,6 +3495,7 @@ export type Database = {
           chave: string
           cliente_id: string
           cliente_nome: string
+          cobrada_em: string | null
           contato_mascarado: string
           conteudo: string
           defeito: string
@@ -3511,6 +3512,7 @@ export type Database = {
           servico: string
           situacao: string
           unidade_id: string
+          venda_id: string | null
         }
         Insert: {
           aberta_em?: string
@@ -3523,6 +3525,7 @@ export type Database = {
           chave: string
           cliente_id: string
           cliente_nome: string
+          cobrada_em?: string | null
           contato_mascarado: string
           conteudo: string
           defeito: string
@@ -3539,6 +3542,7 @@ export type Database = {
           servico?: string
           situacao?: string
           unidade_id: string
+          venda_id?: string | null
         }
         Update: {
           aberta_em?: string
@@ -3551,6 +3555,7 @@ export type Database = {
           chave?: string
           cliente_id?: string
           cliente_nome?: string
+          cobrada_em?: string | null
           contato_mascarado?: string
           conteudo?: string
           defeito?: string
@@ -3567,8 +3572,16 @@ export type Database = {
           servico?: string
           situacao?: string
           unidade_id?: string
+          venda_id?: string | null
         }
         Relationships: [
+          {
+            foreignKeyName: "ordens_servico_venda_id_fkey"
+            columns: ["venda_id"]
+            isOneToOne: false
+            referencedRelation: "vendas"
+            referencedColumns: ["id"]
+          },
           {
             foreignKeyName: "ordens_servico_aberta_por_fkey"
             columns: ["aberta_por"]
@@ -4021,6 +4034,7 @@ export type Database = {
           nome: string
           organizacao_id: string
           publicar_online: boolean
+          reservado_para: string | null
           tipo: string
         }
         Insert: {
@@ -4035,6 +4049,7 @@ export type Database = {
           nome: string
           organizacao_id: string
           publicar_online?: boolean
+          reservado_para?: string | null
           tipo: string
         }
         Update: {
@@ -4049,6 +4064,7 @@ export type Database = {
           nome?: string
           organizacao_id?: string
           publicar_online?: boolean
+          reservado_para?: string | null
           tipo?: string
         }
         Relationships: [
@@ -4761,6 +4777,7 @@ export type Database = {
           id: string
           item_serializado_id: string | null
           organizacao_id: string
+          os_id: string | null
           preco_id: string | null
           preco_unitario_centavos: number
           quantidade: number
@@ -4776,6 +4793,7 @@ export type Database = {
           id?: string
           item_serializado_id?: string | null
           organizacao_id: string
+          os_id?: string | null
           preco_id?: string | null
           preco_unitario_centavos: number
           quantidade: number
@@ -4791,6 +4809,7 @@ export type Database = {
           id?: string
           item_serializado_id?: string | null
           organizacao_id?: string
+          os_id?: string | null
           preco_id?: string | null
           preco_unitario_centavos?: number
           quantidade?: number
@@ -4800,6 +4819,13 @@ export type Database = {
           venda_id?: string
         }
         Relationships: [
+          {
+            foreignKeyName: "venda_itens_os_id_fkey"
+            columns: ["os_id"]
+            isOneToOne: false
+            referencedRelation: "ordens_servico"
+            referencedColumns: ["id"]
+          },
           {
             foreignKeyName: "venda_itens_item_serializado_id_fkey"
             columns: ["item_serializado_id"]
@@ -6155,6 +6181,10 @@ export type Database = {
         Returns: string
       }
       os_assistencias: { Args: never; Returns: Json }
+      os_cobrar: {
+        Args: { p_chave: string; p_os: string; p_venda: string }
+        Returns: string
+      }
       os_concluir_servico: {
         Args: { p_observacao: string; p_os: string }
         Returns: boolean
@@ -6170,6 +6200,10 @@ export type Database = {
           p_os: string
           p_passo: string
         }
+        Returns: boolean
+      }
+      os_entregar: {
+        Args: { p_observacao: string; p_os: string }
         Returns: boolean
       }
       os_orcar: {

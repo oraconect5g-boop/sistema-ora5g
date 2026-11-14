@@ -1,6 +1,6 @@
 import { randomUUID } from "node:crypto";
 
-import { ArrowLeft, Camera, ClipboardList, History, MessageCircle, Route, Smartphone } from "lucide-react";
+import { ArrowLeft, Camera, ClipboardList, HandCoins, History, MessageCircle, Route, Smartphone } from "lucide-react";
 import type { Metadata } from "next";
 import Link from "next/link";
 import { notFound } from "next/navigation";
@@ -12,14 +12,14 @@ import { EstadoDoPainel } from "../../../componentes/paineis-de-vendas";
 import { Aviso, Cartao, ListaDados, Selo, TituloPagina } from "../../../componentes/ui";
 import { ehUuid } from "../../../lib/acesso/regras";
 import { FalhaDoServico, obterSessao } from "../../../lib/acesso/sessao";
-import { assistenciasDaRede, lerOrdem, type OrcamentoDaOs, type OrdemDeServico } from "../../../lib/assistencia/consulta";
+import { assistenciasDaRede, lerOrdem, type CobrancaDaOs, type OrcamentoDaOs, type OrdemDeServico } from "../../../lib/assistencia/consulta";
 import {
   ACESSORIOS, atrasada, CANAIS_DE_RESPOSTA, ERROS_DA_OS, EVENTOS, LINHAS_DE_PECAS, LOCAIS, PASSOS, SERVICOS, SITUACOES, SITUACOES_DO_ORCAMENTO, type Passo, type ServicoDaOs,
 } from "../../../lib/assistencia/regras";
 import { brl } from "../../../lib/formato";
 import { chaveDoCatalogo, type ValorDeParametro } from "../../../lib/parametros";
 import { configuracaoSupabase } from "../../../lib/supabase/configuracao";
-import { avisarPeloWhatsApp, concluirServico, orcarOrdem, passoDaOrdem, responderOrcamento } from "../acoes";
+import { avisarPeloWhatsApp, cobrarNoPdv, concluirServico, entregarOrdem, orcarOrdem, passoDaOrdem, responderOrcamento } from "../acoes";
 import { EnviarFotoDaOs } from "./EnviarFotoDaOs";
 
 export const metadata: Metadata = { title: "Ordem de serviço" };
@@ -35,6 +35,7 @@ const OK = {
   cancelar: "Ordem de serviço cancelada; o motivo ficou registrado.", sem_mudanca: "Nada mudou: este passo já estava registrado.",
   orcamento: "Orçamento registrado. A loja manda ao cliente e registra a resposta.", orcamento_aprovado: "Aprovação do cliente registrada: o técnico pode consertar.",
   orcamento_recusado: "Recusa do cliente registrada: o aparelho volta para ser devolvido (ou o técnico faz outro orçamento).", concluido: "Conserto concluído registrado.",
+  entregue: "Entrega registrada: a OS foi encerrada. Mande o comprovante da entrega pelo WhatsApp do cliente.",
 } as const;
 
 // A ordem de serviço (lote L12a: ORA-OS-001, ORA-OS-002 e ORA-OS-005 em parte): os dados do aparelho, a custódia passo a
@@ -57,12 +58,16 @@ export default async function Ordem({ params, searchParams }: { params: Promise<
   if (leitura.estado !== "ok") {
     return <MoldeReal sessao={sessao}><Cartao className="mt-6" titulo="Ordem de serviço"><EstadoDoPainel estado={leitura.estado} fonte="assistencia" tentarDeNovo={`/assistencia/${id}`} /></Cartao></MoldeReal>;
   }
-  const { os, eventos, fotos, nomes, servico, orcamentos } = leitura;
+  const { os, eventos, fotos, nomes, servico, orcamentos, cobranca } = leitura;
   const daLoja = os.unidade_id === unidade;
   const pela = { loja: daLoja && Boolean(abrir?.data), gerencia: daLoja && Boolean(gerir?.data), tecnico: os.assistencia_id === unidade && Boolean(orcar?.data) };
   const aberta = os.situacao === "aberta";
   const voltouDoTecnico = eventos.some((e) => e.tipo === "recebida_na_loja");
   const foiAoTecnico = eventos.some((e) => e.tipo === "enviada_ao_tecnico");
+  // L12c: o conserto pronto na loja é cobrado no PDV e só depois entregue; a OS cobrada só sai pela entrega.
+  const cobrada = Boolean(cobranca?.vendaId);
+  const pronta = aberta && os.local === "loja" && servico === "concluido";
+  const aprovado = orcamentos?.find((o) => o.situacao === "aprovado") ?? null;
   const assistencias = aberta && os.local === "loja" && pela.loja ? await assistenciasDaRede(supabase) : null;
   const configuracao = aberta && pela.loja && fotos.length < 8 ? configuracaoSupabase() : null;
 
@@ -92,11 +97,13 @@ export default async function Ordem({ params, searchParams }: { params: Promise<
 
       {aberta && (pela.loja || pela.gerencia || pela.tecnico) && (
         <Cartao className="mt-4" titulo="Onde está e o próximo passo" icone={Route} subtitulo={`Agora: ${LOCAIS[os.local].toLowerCase()}`}>
-          <ProximosPassos os={os} pela={pela} foiAoTecnico={foiAoTecnico} assistencias={assistencias} />
+          <ProximosPassos os={os} pela={pela} foiAoTecnico={foiAoTecnico} assistencias={assistencias} servico={servico} cobrada={cobrada} comCobranca={cobranca !== null} />
         </Cartao>
       )}
 
       {orcamentos && <CartaoDoOrcamento os={os} aberta={aberta} servico={servico} orcamentos={orcamentos} pela={pela} nomes={nomes} />}
+
+      {cobranca && (pronta || cobrada || os.situacao === "entregue") && <CartaoDaCobranca os={os} cobranca={cobranca} pronta={pronta} aprovado={aprovado} pelaLoja={pela.loja} />}
 
       {aberta && pela.loja && (
         <Cartao className="mt-4" titulo="Aviso ao cliente pelo WhatsApp" icone={MessageCircle}
@@ -167,11 +174,20 @@ function FormularioDoPasso({ os, passo, children, observacao, assistencias }: {
   );
 }
 
-function ProximosPassos({ os, pela, foiAoTecnico, assistencias }: {
+function ProximosPassos({ os, pela, foiAoTecnico, assistencias, servico, cobrada, comCobranca }: {
   os: OrdemDeServico; pela: { loja: boolean; gerencia: boolean; tecnico: boolean }; foiAoTecnico: boolean; assistencias: { id: string; nome: string }[] | null;
+  servico: ServicoDaOs | null; cobrada: boolean; comCobranca: boolean;
 }) {
   const passos: ReactNode[] = [];
-  if (os.local === "loja" && pela.loja) {
+  // L12c: o conserto feito sai pela cobrança no PDV e pela entrega (cartão "Cobrança e entrega"); sem cobrar, só a
+  // gerência devolve, com o motivo. Cobrada, a OS só sai pela entrega. Num banco ainda sem a cobrança (sem a
+  // migration), os passos são os de antes: o banco ainda aceita a devolução pela loja.
+  const consertoFeito = servico === "concluido" && comCobranca;
+  if (os.local === "loja" && cobrada) return <p className="text-sm text-suave">Conserto cobrado: o próximo passo é a entrega ao cliente, no cartão Cobrança e entrega.</p>;
+  if (os.local === "loja" && consertoFeito && pela.gerencia) {
+    passos.push(<FormularioDoPasso key="devolver" os={os.id} passo="devolver_ao_cliente" observacao={{ rotulo: "Motivo da devolução sem cobrar (garantia, cortesia)", obrigatoria: true }}>Devolver sem cobrar (gerência)</FormularioDoPasso>);
+  }
+  if (os.local === "loja" && pela.loja && !consertoFeito) {
     if (assistencias && assistencias.length === 0) passos.push(<Aviso key="sem" tom="aviso">{ERROS_DA_OS.sem_assistencia}</Aviso>);
     else passos.push(<FormularioDoPasso key="enviar" os={os.id} passo="enviar_ao_tecnico" assistencias={assistencias} observacao={{ rotulo: "Observação (opcional)", obrigatoria: false }}>{PASSOS.enviar_ao_tecnico.rotulo}</FormularioDoPasso>);
     passos.push(<FormularioDoPasso key="devolver" os={os.id} passo="devolver_ao_cliente" observacao={{ rotulo: "Motivo da devolução sem conserto", obrigatoria: true }}>{PASSOS.devolver_ao_cliente.rotulo}</FormularioDoPasso>);
@@ -185,7 +201,11 @@ function ProximosPassos({ os, pela, foiAoTecnico, assistencias }: {
     else if (pela.gerencia) passos.push(<FormularioDoPasso key={passo} os={os.id} passo={passo} observacao={{ rotulo: "Como o técnico confirmou", obrigatoria: true }}>{`${PASSOS[passo].rotulo} (em nome dele)`}</FormularioDoPasso>);
   }
   if (os.local === "a_caminho_da_loja" && pela.loja) passos.push(<FormularioDoPasso key="chegou" os={os.id} passo="loja_recebeu">{PASSOS.loja_recebeu.rotulo}</FormularioDoPasso>);
-  if (passos.length === 0) return <p className="text-sm text-suave">{`Nenhum passo seu agora: aguarde ${os.local === "com_tecnico" || os.local === "a_caminho_do_tecnico" ? "o técnico" : "a loja"}.`}</p>;
+  if (passos.length === 0) {
+    return <p className="text-sm text-suave">{os.local === "loja" && consertoFeito && pela.loja
+      ? "Conserto pronto: cobre no PDV e registre a entrega, no cartão Cobrança e entrega."
+      : `Nenhum passo seu agora: aguarde ${os.local === "com_tecnico" || os.local === "a_caminho_do_tecnico" ? "o técnico" : "a loja"}.`}</p>;
+  }
   return <div className="grid gap-3 sm:grid-cols-2">{passos}</div>;
 }
 
@@ -262,6 +282,55 @@ function CartaoDoOrcamento({ os, aberta, servico, orcamentos, pela, nomes }: {
           <BotaoConfirmar variante="secundario" tamanho="md">{emNome ? "Conserto concluído (em nome do técnico)" : "Conserto concluído"}</BotaoConfirmar>
         </form>
       )}
+    </Cartao>
+  );
+}
+
+// L12c (ORA-OS-006): o conserto pronto na loja vai ao carrinho do PDV pelo valor aprovado; a venda concluída marca a
+// OS como cobrada (e conta na produção de quem cobrou); depois a loja registra a entrega e manda o comprovante.
+function CartaoDaCobranca({ os, cobranca, pronta, aprovado, pelaLoja }: {
+  os: OrdemDeServico; cobranca: CobrancaDaOs; pronta: boolean; aprovado: OrcamentoDaOs | null; pelaLoja: boolean;
+}) {
+  const nomeDaVenda = cobranca.vendaNumero ? `venda nº ${cobranca.vendaNumero}` : "venda";
+  const venda = cobranca.vendaVisivel && cobranca.vendaId
+    ? <Link href={`/vendas/${cobranca.vendaId}`} className="font-semibold text-acao">{nomeDaVenda}</Link>
+    : <span className="font-semibold">{nomeDaVenda}</span>;
+  return (
+    <Cartao className="mt-4" titulo="Cobrança e entrega" icone={HandCoins}
+      subtitulo="O conserto feito é cobrado no PDV (conta na produção de quem cobra) e só depois é entregue ao cliente">
+      {os.situacao === "entregue" ? (
+        <>
+          <p className="text-sm">Entregue ao cliente{os.encerrada_em ? ` em ${quando(os.encerrada_em)}` : ""}; conserto cobrado na {venda}.</p>
+          {pelaLoja && (
+            <form action={avisarPeloWhatsApp} className="mt-3"><input type="hidden" name="os" value={os.id} /><input type="hidden" name="aviso" value="entrega" />
+              <BotaoConfirmar variante="secundario" tamanho="md" enquanto="Abrindo o WhatsApp…">Mandar o comprovante da entrega</BotaoConfirmar></form>
+          )}
+        </>
+      ) : cobranca.vendaId ? (
+        <>
+          <p className="text-sm">Cobrado na {venda}{cobranca.cobradaEm ? ` em ${quando(cobranca.cobradaEm)}` : ""}.</p>
+          {pelaLoja && (
+            <form action={entregarOrdem} className="mt-3 space-y-2 rounded-xl border border-borda p-3">
+              <input type="hidden" name="os" value={os.id} />
+              <label className="block text-sm font-medium">Observação <span className="font-normal text-suave">(opcional)</span><input name="observacao" maxLength={300} className={campo} /></label>
+              <BotaoConfirmar tamanho="md">Registrar a entrega ao cliente</BotaoConfirmar>
+            </form>
+          )}
+        </>
+      ) : pronta && aprovado ? (
+        <>
+          <p className="text-sm">{`Conserto pronto e o aparelho na loja: ${brl(aprovado.total_centavos)}, do orçamento nº ${aprovado.numero} aprovado pelo cliente.`}</p>
+          {pelaLoja ? (
+            <form action={cobrarNoPdv} className="mt-3">
+              <input type="hidden" name="os" value={os.id} />
+              <input type="hidden" name="chave_venda" value={randomUUID()} />
+              <input type="hidden" name="chave_item" value={randomUUID()} />
+              <BotaoConfirmar tamanho="md" enquanto="Levando ao PDV…">Cobrar no PDV</BotaoConfirmar>
+              <p className="mt-2 text-xs text-suave">O conserto entra no carrinho pelo valor aprovado. Conclua a venda e volte aqui para registrar a entrega.</p>
+            </form>
+          ) : <p className="mt-2 text-xs text-suave">A cobrança é feita pela loja da OS.</p>}
+        </>
+      ) : <p className="text-sm text-suave">Sem orçamento aprovado para cobrar.</p>}
     </Cartao>
   );
 }

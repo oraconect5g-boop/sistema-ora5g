@@ -2,7 +2,7 @@
   "_leia": "Checkpoint do programa de execução integral (PR #67). Carregar ao retomar e seguir para o próximo item executável da fila; não reiniciar o projeto. Estados vêm de status-requisitos.json (fonte da rastreabilidade); este arquivo acrescenta lote, bloqueio externo e revisão.",
   "atualizado_em": "2026-11-14",
   "base": {
-    "main": "d6265c7",
+    "main": "f55856e",
     "pacote": {
       "pr": 67,
       "branch": "docs/execucao-integral-20261110",
@@ -18,17 +18,18 @@
   },
   "publicado": {
     "homologacao": {
-      "commit": "d6265c7",
+      "commit": "f55856e",
       "quando": "2026-11-14",
-      "conferido": "rodapé da tela de entrada (d6265c7 · build 14/11/2026 13:18), /saude 200 e as rotas reais respondendo 307 para o login"
+      "conferido": "rodapé da tela de entrada (f55856e · build 14/11/2026 13:35), /saude 200 e as rotas reais respondendo 307 para o login"
     },
     "falta_publicar": [
-      "registro das migrations do L8e, do L12a e do L12b aplicadas no ora5g-dev em 14/11 (nomes, tipos gerados e documentos), publicado ao fim do lote; nenhuma tela muda"
+      "L12c, entrega da OS com cobrança pelo PDV (OS-006 e OS-005 em parte), publicado ao fim do lote",
+      "migration 20261114173000_entrega_da_os (L12c): aplicar no ora5g-dev pede o sim do proprietário"
     ]
   },
   "contagem_dos_estados": {
-    "nao_iniciado": 65,
-    "parcial": 68,
+    "nao_iniciado": 64,
+    "parcial": 69,
     "testado": 42,
     "bloqueado": 3,
     "respeitado": 1
@@ -1631,7 +1632,7 @@
       "titulo": "Avisos ao cliente e ao técnico (comprovante, orçamento, aparelho pronto, entrega)",
       "prioridade": "P1",
       "estado": "parcial",
-      "lote": "L12a ordem de serviço da assistência (14/11)",
+      "lote": "L12a, L12b e L12c (14/11)",
       "bloqueio_externo": "F1 (WhatsApp oficial) para o envio automático; o clique para conversar já funciona",
       "revisado_codex": false,
       "homologado": false
@@ -1639,8 +1640,8 @@
     "ORA-OS-006": {
       "titulo": "Entrega com cobrança pelo PDV e produção do vendedor; peças só saem do estoque ligadas a uma OS",
       "prioridade": "P1",
-      "estado": "nao_iniciado",
-      "lote": "L12 assistência",
+      "estado": "parcial",
+      "lote": "L12c entrega da OS com cobrança pelo PDV (14/11); peças e relatórios no L12d",
       "bloqueio_externo": null,
       "revisado_codex": false,
       "homologado": false

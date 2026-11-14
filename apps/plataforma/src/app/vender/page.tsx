@@ -2,6 +2,7 @@ import { randomUUID } from "node:crypto";
 
 import { ScanLine, ShoppingCart, Wallet } from "lucide-react";
 import type { Metadata } from "next";
+import Link from "next/link";
 
 import { MEIOS } from "@ora5g/dominio";
 
@@ -14,6 +15,7 @@ import { centavosDoBanco } from "../../lib/dinheiro";
 import { brl } from "../../lib/formato";
 import { chaveDoCatalogo, textoDoParametro, type ValorDeParametro } from "../../lib/parametros";
 import { buscarNoCatalogo, filtroDoIdentificador, identificadorDigitado, termoDaBusca } from "../../lib/catalogo/busca";
+import { osDosItens, type OsDoItem } from "../../lib/vendas/os-dos-itens";
 import { ERROS_DA_VENDA } from "../../lib/vendas/regras";
 import { FotoAmpliavel } from "../catalogo/FotoAmpliavel";
 import { BuscaDeCliente } from "../clientes/BuscaDeCliente";
@@ -30,7 +32,7 @@ const MEIOS_DA_LOJA = (Object.keys(MEIOS) as (keyof typeof MEIOS)[]).filter((m) 
 
 // PDV real (ADR-004): loja do turno, caixa aberto, carrinho com reserva, desconto com aprovação,
 // pagamento misto e conclusão no banco. O navegador nunca recebe custo nem calcula o total final.
-export default async function Vender({ searchParams }: { searchParams: Promise<{ q?: ValorDeParametro; erro?: ValorDeParametro; desconto?: ValorDeParametro; cancelada?: ValorDeParametro }> }) {
+export default async function Vender({ searchParams }: { searchParams: Promise<{ q?: ValorDeParametro; erro?: ValorDeParametro; desconto?: ValorDeParametro; cancelada?: ValorDeParametro; os?: ValorDeParametro }> }) {
   const parametros = await searchParams;
   const erro = chaveDoCatalogo(ERROS_DA_VENDA, parametros.erro);
   const busca = termoDaBusca(textoDoParametro(parametros.q)).slice(0, 40);
@@ -62,6 +64,8 @@ export default async function Vender({ searchParams }: { searchParams: Promise<{
   // A regra de preço de cada item (L6b), lida à parte: no carrinho só aparece quando é campanha. Banco sem
   // a migration ou falha de leitura não atrapalham a venda.
   const regras = venda.data && itens.data.length > 0 ? await regrasDosItens(supabase, venda.data.id) : ({ estado: "indisponivel" } as const);
+  // O conserto da OS no carrinho (L12c): o número da OS, lido à parte (sem a migration, o item aparece pelo nome).
+  const daOs = venda.data && itens.data.some((i) => i.tipo === "servico") ? await osDosItens(supabase, venda.data.id) : new Map<string, OsDoItem>();
   // Busca igual à do catálogo e do estoque (lib/catalogo/busca.ts): pelo nome do produto, nome da
   // variação ou SKU, ou direto pelo IMEI, segundo IMEI ou ICCID do item desta loja.
   const numero = busca ? identificadorDigitado(busca) : null;
@@ -115,6 +119,7 @@ export default async function Vender({ searchParams }: { searchParams: Promise<{
       {erro && <Aviso tom="perigo">{ERROS_DA_VENDA[erro]}</Aviso>}
       {textoDoParametro(parametros.desconto) === "pedir" && <Aviso tom="aviso">Esse desconto passa do limite: peça a aprovação do gerente ou do dono.</Aviso>}
       {textoDoParametro(parametros.cancelada) === "1" && <Aviso tom="info">Venda cancelada. Os itens voltaram para o estoque da loja.</Aviso>}
+      {textoDoParametro(parametros.os) === "no_carrinho" && <Aviso tom="sucesso">O conserto da OS entrou no carrinho pelo valor do orçamento aprovado. Conclua a venda; depois registre a entrega na OS.</Aviso>}
 
       {!caixa.data && (
         <Cartao titulo="Abra o seu caixa" subtitulo="Sem caixa aberto, a venda não é concluída." icone={Wallet}>
@@ -187,10 +192,12 @@ export default async function Vender({ searchParams }: { searchParams: Promise<{
                   const desconto = centavosDoBanco(i.desconto_centavos);
                   const aprovacao = statusDoItem(i.id);
                   const regra = regraNaTela(regras, i.id);
+                  const os = daOs.get(i.id);
                   return (
                     <li key={i.id} className="space-y-2 py-3 text-sm">
                       <div className="flex justify-between gap-2">
-                        <span><strong>{v?.nome ?? "Item"}</strong><span className="numeros block text-xs text-suave">{v?.sku} {serial ? `· ${final(serial.imei ?? serial.iccid)}` : ""} · {i.quantidade} × {brl(centavosDoBanco(i.preco_unitario_centavos))}</span>
+                        <span><strong>{os ? `Conserto da OS nº ${os.numero ?? "—"}` : (v?.nome ?? "Item")}</strong>
+                          {os && <span className="block text-xs text-suave">valor do orçamento aprovado · <Link href={`/assistencia/${os.os}`} className="font-semibold text-acao">ver a OS</Link></span>}<span className="numeros block text-xs text-suave">{v?.sku} {serial ? `· ${final(serial.imei ?? serial.iccid)}` : ""} · {i.quantidade} × {brl(centavosDoBanco(i.preco_unitario_centavos))}</span>
                           {regra?.campanha && <span className="block text-xs font-semibold text-acao">{regra.texto}</span>}</span>
                         <span className="numeros text-right font-semibold">{brl(linha - desconto)}{desconto > 0 && <span className="block text-xs font-normal text-suave">desconto {brl(desconto)}</span>}</span>
                       </div>

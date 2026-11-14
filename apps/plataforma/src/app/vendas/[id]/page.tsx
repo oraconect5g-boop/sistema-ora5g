@@ -16,6 +16,7 @@ import { centavosDoBanco } from "../../../lib/dinheiro";
 import { brl } from "../../../lib/formato";
 import { dataEHoraDoEnvio, ERROS_DAS_NOTAS, SITUACOES_DO_ENVIO } from "../../../lib/notas/regras";
 import { chaveDoCatalogo, textoDoParametro, type ValorDeParametro } from "../../../lib/parametros";
+import { osDosItens, type OsDoItem } from "../../../lib/vendas/os-dos-itens";
 import { CONDICOES_DE_RETORNO, ERROS_DA_VENDA } from "../../../lib/vendas/regras";
 import { vincularClienteNaVenda } from "../../clientes/acoes";
 import { BuscaDeCliente } from "../../clientes/BuscaDeCliente";
@@ -92,6 +93,9 @@ export default async function Comprovante({ params, searchParams }: { params: Pr
   // A regra de preço de cada item (L6b): campanha, preço da loja ou da rede, lida à parte. Banco sem a
   // migration ou falha de leitura não derrubam a venda.
   const regras = await regrasDosItens(supabase, id);
+  // O conserto da OS cobrado nesta venda (L12c), lido à parte do mesmo jeito.
+  const daOs = itens.data.some((i) => i.tipo === "servico") ? await osDosItens(supabase, id) : new Map<string, OsDoItem>();
+  const osAEntregar = [...daOs.values()].filter((o) => o.situacao === "aberta");
   const v = venda.data;
   // Devolução (adendo do ADR-004): o que resta de cada item e os meios em que dá para reembolsar.
   const devolvido = new Map<string, number>();
@@ -109,6 +113,11 @@ export default async function Comprovante({ params, searchParams }: { params: Pr
       {textoDoParametro(parametros.retorno) === "recebido" && <Aviso tom="sucesso">Item conferido e de volta ao estoque.</Aviso>}
       {textoDoParametro(parametros.retorno) === "nao_recebido" && <Aviso tom="info">Retorno fechado sem estoque: o item não voltou.</Aviso>}
       {erro && <Aviso tom="perigo">{ERROS_DA_VENDA[erro]}</Aviso>}
+      {v.situacao === "concluida" && osAEntregar.map((o) => (
+        <Aviso key={o.os} tom="info" titulo={`Conserto da OS nº ${o.numero ?? "—"} cobrado`}>
+          Falta registrar a entrega ao cliente: <Link href={`/assistencia/${o.os}`} className="font-semibold underline">abrir a OS</Link>.
+        </Aviso>
+      ))}
       {erroNota && (
         <Aviso tom="perigo">
           {ERROS_DAS_NOTAS[erroNota]}
@@ -135,9 +144,10 @@ export default async function Comprovante({ params, searchParams }: { params: Pr
             const serial = serializados.data.find((s) => s.id === i.item_serializado_id);
             const linha = centavosDoBanco(i.preco_unitario_centavos) * i.quantidade - centavosDoBanco(i.desconto_centavos);
             const regra = regraNaTela(regras, i.id);
+            const os = daOs.get(i.id);
             return (
               <li key={i.id} className="flex justify-between gap-2 py-2">
-                <span>{variante?.nome}<span className="numeros block text-xs text-suave">{variante?.sku}{serial ? ` · ${serial.imei ? "IMEI" : "ICCID"} ${serial.imei ?? serial.iccid}` : ""} · {i.quantidade} un.</span>
+                <span>{os ? <Link href={`/assistencia/${os.os}`} className="font-semibold text-acao">{`Conserto da OS nº ${os.numero ?? "—"}`}</Link> : variante?.nome}<span className="numeros block text-xs text-suave">{variante?.sku}{serial ? ` · ${serial.imei ? "IMEI" : "ICCID"} ${serial.imei ?? serial.iccid}` : ""} · {i.quantidade} un.</span>
                   {regra && <span className={`block text-xs ${regra.campanha ? "font-semibold text-acao" : "text-suave"}`}>{regra.texto}</span>}</span>
                 <span className="numeros font-semibold">{brl(linha)}</span>
               </li>

@@ -129,3 +129,26 @@ describe("orçamento (L12b)", () => {
     }
   });
 });
+
+describe("cobrança no PDV e entrega (L12c)", () => {
+  it("os erros do banco da cobrança e da entrega viram a mensagem da tela", () => {
+    expect(erroDaOs({ code: "OR032", message: "Esta ordem de serviço já foi cobrada (venda nº 77)" })).toBe("ja_cobrada");
+    expect(erroDaOs({ code: "42501", message: "O conserto foi feito: cobre no PDV e registre a entrega (sem cobrar, só a gerência, com o motivo)" })).toBe("conserto_feito");
+    expect(erroDaOs({ code: "42501", message: "Este passo é da loja da ordem de serviço" })).toBe("sem_permissao");
+    for (const [mensagem, chave] of [
+      ["Cobre o conserto no PDV antes de entregar", "cobrar_antes"], ["O conserto já foi cobrado: registre a entrega", "ja_cobrada"],
+      ["Só o conserto concluído é cobrado", "nao_pronta"], ["O conserto é cobrado com o aparelho de volta na loja", "nao_pronta"],
+      ["A ordem de serviço não tem orçamento aprovado", "sem_orcamento_aprovado"], ["O comprovante da entrega é depois de registrar a entrega", "aviso_entrega"],
+      ["A ordem de serviço já foi encerrada", "encerrada"],
+    ] as const) {
+      expect(erroDaOs({ code: "22023", message: mensagem }), mensagem).toBe(chave);
+    }
+  });
+  it("o comprovante da entrega: OS, aparelho com o final do IMEI, dia, loja e a venda que cobrou", () => {
+    const os = { numero: 42, aparelho: "Galaxy A15", imei: IMEI, numero_serie: null, defeito: "Tela não liga", acessorios: [], prazo: null, cliente_nome: "Carla Cliente Teste" };
+    const m = mensagemDoAviso("entrega", os, "Santa Cândida", undefined, { dia: "2026-11-14", vendaNumero: 77 });
+    expect(m).toBe("Olá, Carla! Seu aparelho Galaxy A15 (IMEI final 1481), da ordem de serviço nº 42, foi entregue em 14/11/2026 na loja Santa Cândida.\n"
+      + "Conserto pago na venda nº 77.\nGuarde esta mensagem como comprovante da entrega. Ora 5G.");
+    expect(mensagemDoAviso("entrega", os, "Santa Cândida")).not.toContain("venda nº");
+  });
+});
