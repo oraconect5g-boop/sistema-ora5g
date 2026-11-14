@@ -54,6 +54,7 @@ const cenario = vi.hoisted(() => ({
   errosDasTabelas: {} as Record<string, { code: string }>,
   /** Tabelas cuja contagem volta sem erro e sem número (HEAD numa tabela ausente: 404 sem corpo). */
   semContagem: [] as string[],
+  semColunas: [] as string[],
   /** Tabelas lidas, na ordem. */
   lidas: [] as string[],
   /** Opções de cada chamada de obterSessao. */
@@ -75,6 +76,8 @@ class Consulta {
   }
   select() { return this; }
   eq(coluna: string, valor: unknown) {
+    // Coluna que o banco "ainda não tem" (migration não aplicada): a leitura responde 42703.
+    if (cenario.semColunas.includes(coluna)) this.erro = { code: "42703" };
     this.linhas = this.linhas.filter((l) => l[coluna] === undefined || l[coluna] === valor);
     return this;
   }
@@ -88,6 +91,15 @@ class Consulta {
   }
   lte(coluna: string, valor: string) {
     this.linhas = this.linhas.filter((l) => l[coluna] === undefined || String(l[coluna]) <= valor);
+    return this;
+  }
+  gte(coluna: string, valor: string) {
+    this.linhas = this.linhas.filter((l) => typeof l[coluna] === "string" && (l[coluna] as string) >= valor);
+    return this;
+  }
+  lt(coluna: string, valor: string) {
+    if (cenario.semColunas.includes(coluna)) this.erro = { code: "42703" };
+    this.linhas = this.linhas.filter((l) => typeof l[coluna] === "string" && (l[coluna] as string) < valor);
     return this;
   }
   or() { return this; }
@@ -367,7 +379,7 @@ beforeEach(() => {
     vendas: HOJE, anterior: ONTEM, erroDeVendas: null, erroDoAnterior: null,
     financeiro: FINANCEIRO, erroDoFinanceiro: null, margem: MARGEM, erroDaMargem: null, producao: PRODUCAO, erroDaProducao: null, nomes: NOMES, erroDosNomes: null,
     metasDasLojas: METAS_DA_LOJA, minhaMeta: MINHA_META, erroDasMetas: null,
-    chamadas: {}, errosDasTabelas: {}, semContagem: [], lidas: [], sessoes: [],
+    chamadas: {}, errosDasTabelas: {}, semContagem: [], semColunas: [], lidas: [], sessoes: [],
     tabelas: {
       perfis_usuario: [{ id: GESTOR, nome: "Gestor Teste" }, { id: ANA, nome: "Ana Teste" }, { id: BETO, nome: "Beto Teste" }],
       unidades: [
@@ -1322,5 +1334,98 @@ describe("Início: a meta do mês (G4c)", () => {
     c = p.cartao("Meta do mês");
     expect(c.texto).toContain("Não foi possível ler agora");
     expect(errosRegistrados()).toEqual([["metas: falha ao consultar metas_lojas", { codigo: "57014" }]]);
+  });
+});
+
+// ---------------------------------------------------------------------------------------------
+describe("Início: alertas da assistência (L12f)", () => {
+  const OS_DO_CENARIO = [
+    { situacao: "aberta", prazo: "2026-11-09", local: "loja", servico: "aguardando_orcamento" },
+    { situacao: "aberta", prazo: "2026-11-12", local: "loja", servico: "concluido" },
+    { situacao: "aberta", prazo: null, local: "loja", servico: "concluido" },
+    { situacao: "devolvida", prazo: "2026-11-01", local: "com_cliente", servico: "concluido" },
+    { situacao: "aberta", prazo: "2026-11-11", local: "com_tecnico", servico: "aprovado" },
+    { situacao: "aberta", prazo: null, local: "com_tecnico", servico: "aguardando_cliente" },
+  ];
+
+  it("quem recebe aparelho vê as OS atrasadas e as prontas para entregar, com o caminho; o técnico, as que esperam por ele", async () => {
+    entrar("gerente");
+    cenario.permissoes.add("os.abrir");
+    cenario.permissoes.add("os.gerir");
+    cenario.tabelas.ordens_servico = OS_DO_CENARIO;
+    let p = await pagina();
+    expect(p.pendencias["OS atrasadas"]).toBe(1);
+    expect(p.pendencias["OS prontas"]).toBe(2);
+    expect(p.pendencias["OS para orçar ou consertar"]).toBeUndefined();
+    expect(p.enderecos).toContain("/assistencia?ver=prontas");
+    entrar("tecnico");
+    cenario.permissoes.add("os.orcar");
+    p = await pagina();
+    expect(p.pendencias["OS para orçar ou consertar"]).toBe(1);
+    expect(p.pendencias["OS atrasadas"]).toBeUndefined();
+    expect(p.enderecos).toContain("/assistencia?ver=fora");
+  });
+
+  it("banco sem o andamento do serviço: some só a das prontas; sem a OS: somem as duas; outro erro derruba a página, sem zero inventado", async () => {
+    entrar("vendedor");
+    cenario.permissoes.add("os.abrir");
+    cenario.tabelas.ordens_servico = OS_DO_CENARIO;
+    cenario.semColunas = ["servico"];
+    let p = await pagina();
+    expect(p.pendencias["OS atrasadas"]).toBe(1);
+    expect(p.pendencias["OS prontas"]).toBeUndefined();
+    cenario.semColunas = [];
+    cenario.errosDasTabelas.ordens_servico = { code: "PGRST205" };
+    p = await pagina();
+    expect(p.pendencias["OS atrasadas"]).toBeUndefined();
+    expect(p.pendencias["OS prontas"]).toBeUndefined();
+    cenario.errosDasTabelas.ordens_servico = { code: "57014" };
+    await expect(pagina()).rejects.toBeInstanceOf(FalhaDoServico);
+  });
+});
+
+// ---------------------------------------------------------------------------------------------
+describe("Início: alertas da loja do turno (REPORT-007, L12f)", () => {
+  it("caixa com diferença em 7 dias, nota parada há mais de um dia e ativação com falha em 7 dias: só quando há, para quem decide, na loja do turno", async () => {
+    entrar("dono");
+    cenario.tabelas.caixas = [
+      { unidade_id: LOJA, situacao: "conferido", diferenca_centavos: -500, fechado_em: "2026-11-09T22:00:00Z" },
+      { unidade_id: LOJA, situacao: "fechado", diferenca_centavos: 0, fechado_em: "2026-11-10T12:00:00Z" },
+      { unidade_id: LOJA, situacao: "conferido", diferenca_centavos: 1_000, fechado_em: "2026-10-30T22:00:00Z" },
+      { unidade_id: OUTRA, situacao: "fechado", diferenca_centavos: 300, fechado_em: "2026-11-10T12:00:00Z" },
+    ];
+    cenario.tabelas.notas_pedidos = [
+      { unidade_id: LOJA, situacao: "aguardando_aprovacao", criado_em: "2026-11-08T12:00:00Z" },
+      { unidade_id: LOJA, situacao: "aprovada", criado_em: "2026-11-10T15:00:00Z" },
+      { unidade_id: LOJA, situacao: "emitida", criado_em: "2026-11-01T12:00:00Z" },
+      { unidade_id: OUTRA, situacao: "aprovada", criado_em: "2026-11-01T12:00:00Z" },
+    ];
+    cenario.tabelas.connect_operacoes = [
+      { unidade_id: LOJA, tipo: "ativacao", situacao: "recusada", atualizado_em: "2026-11-09T12:00:00Z" },
+      { unidade_id: LOJA, tipo: "recarga", situacao: "recusada", atualizado_em: "2026-11-09T12:00:00Z" },
+      { unidade_id: LOJA, tipo: "portabilidade", situacao: "erro_operadora", atualizado_em: "2026-10-01T12:00:00Z" },
+      { unidade_id: LOJA, tipo: "ativacao", situacao: "resultado_desconhecido", atualizado_em: "2026-11-10T12:00:00Z" },
+    ];
+    const p = await pagina();
+    expect(p.pendencias["Caixas com diferença"]).toBe(1);
+    expect(p.pendencias["Notas paradas"]).toBe(1);
+    expect(p.pendencias["Ativações com falha"]).toBe(1);
+    expect(p.pendencias["Ora Connect a decidir"]).toBe(1);
+    expect(p.enderecos).toEqual(expect.arrayContaining(["/caixa", "/notas", "/connect"]));
+    // Sem o que ver, o alerta não aparece (zero não é pendência de ninguém).
+    cenario.tabelas.caixas = [];
+    cenario.tabelas.notas_pedidos = [];
+    cenario.tabelas.connect_operacoes = [];
+    const vazio = await pagina();
+    for (const rotulo of ["Caixas com diferença", "Notas paradas", "Ativações com falha"]) expect(vazio.pendencias[rotulo], rotulo).toBeUndefined();
+    // O gerente (sem connect.gerir) não pergunta pelas ativações; o vendedor, por nenhum alerta.
+    entrar("gerente");
+    cenario.lidas = [];
+    await pagina();
+    expect(cenario.lidas.filter((nome) => nome === "connect_operacoes")).toEqual([]);
+    entrar("vendedor");
+    cenario.lidas = [];
+    await pagina();
+    expect(cenario.lidas.filter((nome) => ["caixas", "notas_pedidos", "connect_operacoes"].includes(nome))).toEqual([]);
   });
 });
