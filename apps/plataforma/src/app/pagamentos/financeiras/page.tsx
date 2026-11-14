@@ -13,6 +13,8 @@ export const dynamic = "force-dynamic";
 const OK = {
   recebido: "Repasse registrado. A diferença para o valor a receber fica como a taxa da financeira.",
   desfeito: "Registro desfeito; o motivo ficou na auditoria.",
+  desfeito_cancelada: "Registro desfeito. A venda foi cancelada, então a conta ficou cancelada: não volta a ser cobrada da financeira. O motivo ficou na auditoria.",
+  corrigido: "Repasse corrigido; ele continua registrado e o motivo ficou na auditoria.",
   sem_mudanca: "Nada mudou: os dados já eram esses.",
 } as const;
 

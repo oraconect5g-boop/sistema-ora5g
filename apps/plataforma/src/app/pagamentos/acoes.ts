@@ -98,5 +98,21 @@ export async function desfazerRecebimento(dados: FormData) {
   const { supabase } = await obterSessao({ exigirLoja: true });
   const { data, error } = await supabase.rpc("financeira_desfazer_recebimento", { p_conta: conta, p_motivo: motivo });
   if (error) voltar("/pagamentos/financeiras", { erro: erroDasFinanceiras(error) });
-  voltar("/pagamentos/financeiras", { ok: data === false ? "sem_mudanca" : "desfeito" });
+  // Na venda cancelada (#83) o banco deixa a conta cancelada, não aberta: a mensagem diz isso (o banco decide igual).
+  voltar("/pagamentos/financeiras", { ok: data === false ? "sem_mudanca" : dados.get("cancelada") === "sim" ? "desfeito_cancelada" : "desfeito" });
+}
+
+// Correção de 14/11/2026 (#83): corrige referência, valor e data do repasse registrado, com motivo, sem
+// passar por "aberta" (vale também na venda cancelada depois do repasse).
+export async function corrigirRecebimento(dados: FormData) {
+  const lido = lerRepasse(dados);
+  if (!lido.ok) voltar("/pagamentos/financeiras", { erro: lido.erro });
+  const motivo = texto(dados.get("motivo"));
+  if (motivo.length < 3 || motivo.length > 200) voltar("/pagamentos/financeiras", { erro: "motivo" });
+  const { supabase } = await obterSessao({ exigirLoja: true });
+  const { data, error } = await supabase.rpc("financeira_corrigir_recebimento", {
+    p_conta: lido.conta, p_referencia: lido.referencia, p_valor_recebido: lido.recebido, p_recebido_em: lido.data, p_motivo: motivo,
+  });
+  if (error) voltar("/pagamentos/financeiras", { erro: erroDasFinanceiras(error) });
+  voltar("/pagamentos/financeiras", { ok: data === false ? "sem_mudanca" : "corrigido" });
 }

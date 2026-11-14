@@ -16,6 +16,8 @@ const ehFinanceira = (v: unknown): v is Financeira => typeof v === "string" && O
 export type ContaDaFinanceira = {
   id: string; vendaId: string; vendaNumero: number; concluidaEm: string; devedor: Financeira; valor: number;
   situacao: "aberta" | "recebida"; dias: number; recebidoEm: string | null; valorRecebido: number | null; referencia: string | null;
+  /** A venda foi cancelada (correção #83). Nulo: banco sem a correção, que não diz. */
+  vendaCancelada: boolean | null;
 };
 export type ResumoDaFinanceira = { devedor: Financeira; abertas: number; valorAberto: number; maisAntigaDias: number | null; recebidas: number; valorRecebido: number; taxaObservada: number };
 export type FinanceirasAReceber = { porDevedor: ResumoDaFinanceira[]; contas: ContaDaFinanceira[] };
@@ -56,7 +58,12 @@ export function lerFinanceirasAReceber(dado: unknown): FinanceirasAReceber {
     if ((situacao === "recebida" ? !completos : !vazios) || (recebidoEm !== null && !DIA.test(recebidoEm)) || (valorRecebido !== null && (valorRecebido < 0 || valorRecebido > valor))) {
       throw new RespostaInesperada("recebimento");
     }
-    return { id, vendaId, vendaNumero: n(l, "venda_numero"), concluidaEm: t(l, "concluida_em"), devedor: devedor(l), valor, situacao, dias: n(l, "dias"), recebidoEm, valorRecebido, referencia };
+    let vendaCancelada: boolean | null = null;
+    if ("venda_cancelada" in l) {
+      if (typeof l.venda_cancelada !== "boolean") throw new RespostaInesperada("venda_cancelada");
+      vendaCancelada = l.venda_cancelada;
+    }
+    return { id, vendaId, vendaNumero: n(l, "venda_numero"), concluidaEm: t(l, "concluida_em"), devedor: devedor(l), valor, situacao, dias: n(l, "dias"), recebidoEm, valorRecebido, referencia, vendaCancelada };
   });
   return { porDevedor, contas };
 }
@@ -75,6 +82,8 @@ export const ERROS_DAS_FINANCEIRAS = {
   data: "A data do repasse vai do dia da venda até hoje.",
   ja_recebido: "Recebimento já registrado: desfaça antes de mudar.",
   cancelada: "Conta cancelada com a venda: não há o que receber.",
+  venda_cancelada: "Venda cancelada: não há o que receber da financeira.",
+  so_registrado: "Só se corrige um repasse já registrado.",
   motivo: "Informe o motivo (de 3 a 200 letras); ele fica na auditoria.",
   nao_encontrada: "Conta não encontrada (ou não é desta loja).",
   falha: "Não deu para gravar agora. Tente de novo em instantes.",
@@ -88,7 +97,8 @@ export function erroDasFinanceiras(erro: { code?: string; message?: string } | n
   if (codigo === "OR030") return "ja_recebido";
   if (codigo !== "22023") return "falha";
   const regras: [string, ErroDasFinanceiras][] = [
-    ["referência", "referencia"], ["valor recebido", "recebido"], ["data do repasse", "data"], ["cancelada", "cancelada"], ["motivo", "motivo"],
+    ["referência", "referencia"], ["valor recebido", "recebido"], ["data do repasse", "data"], ["venda cancelada", "venda_cancelada"],
+    ["cancelada", "cancelada"], ["só se corrige", "so_registrado"], ["motivo", "motivo"],
   ];
   return regras.find(([trecho]) => m.includes(trecho))?.[1] ?? "dados";
 }

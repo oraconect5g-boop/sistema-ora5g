@@ -18,12 +18,12 @@
   },
   "publicado": {
     "homologacao": {
-      "commit": "dd31e91",
+      "commit": "0c6ffd9",
       "quando": "2026-11-14",
-      "conferido": "rodapé da tela de entrada (dd31e91 · build 14/11/2026 07:50), /saude e /inicio, /metas, /metas/fechamento, /metas/extrato e /resultado respondendo 307 para o login"
+      "conferido": "rodapé da tela de entrada (0c6ffd9 · build 14/11/2026 10:35), /saude e /inicio, /estoque, /estoque/inventario, /previsao e /pagamentos/financeiras respondendo 307 para o login"
     },
     "falta_publicar": [
-      "B1, B2 e B3: correções do inventário (#78 e #79), da conferência do dia (#80) e da previsão de caixa (#82), publicados ao fim de cada lote; as migrations 20261114130247_inventario_correcoes (B1) e 20261114131916_previsao_correcoes (B3) pedem o sim do proprietário para o ora5g-dev; o B2 não tem migration"
+      "B4: correção do repasse das financeiras (#83), publicada ao fim do lote; as migrations 20261114130247_inventario_correcoes (B1, já publicado), 20261114131916_previsao_correcoes (B3) e 20261114132646_financeiras_correcoes (B4) pedem o sim do proprietário para o ora5g-dev"
     ]
   },
   "contagem_dos_estados": {
@@ -659,7 +659,7 @@
       "titulo": "Gerir chargebacks, estornos, antecipação e ajustes",
       "prioridade": "P1",
       "estado": "parcial",
-      "lote": "L7 pagamentos/caixa (L7b em 13/11: repasse das financeiras registrado à mão)",
+      "lote": "L7 pagamentos/caixa (L7b em 13/11: repasse das financeiras registrado à mão); B4 correção #83 (14/11)",
       "bloqueio_externo": null,
       "revisado_codex": false,
       "homologado": false

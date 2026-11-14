@@ -6,7 +6,7 @@ import { Botao, Cartao, EstadoVazio, Selo } from "../../../componentes/ui";
 import { brl, numero } from "../../../lib/formato";
 import type { Leitura } from "../../../lib/leitura-do-banco";
 import { FINANCEIRAS, idadeDaConta, type FinanceirasAReceber } from "../../../lib/pagamentos/financeiras";
-import { desfazerRecebimento, receberDaFinanceira } from "../acoes";
+import { corrigirRecebimento, desfazerRecebimento, receberDaFinanceira } from "../acoes";
 
 // Valores a receber das financeiras (lote L7b). Só apresentação: a lista chega lida por
 // lib/pagamentos/financeiras, com o estado da leitura (falha nunca vira zero). Os formulários chamam
@@ -58,15 +58,35 @@ export function ConteudoFinanceiras({ leitura, hoje }: { leitura: Leitura<Financ
                       <Link href={`/vendas/${c.vendaId}`} className="font-semibold text-acao">Venda nº {c.vendaNumero}</Link>
                       <span className="numeros text-xs text-suave">{`${quando(c.concluidaEm)} · ${FINANCEIRAS[c.devedor]} · a receber ${brl(c.valor)}`}</span>
                       {c.situacao === "aberta" ? <Selo tom={idade.tom}>{idade.rotulo}</Selo> : <Selo tom="sucesso" ponto>recebida</Selo>}
+                      {c.vendaCancelada && <Selo tom="aviso">venda cancelada</Selo>}
                     </p>
                     {c.situacao === "recebida" ? (
-                      <div className="flex flex-wrap items-end justify-between gap-2">
+                      <div className="space-y-2">
                         <p className="numeros text-xs text-suave">{`Caiu em ${c.recebidoEm ? dataCurta(c.recebidoEm) : "—"} · recebido ${brl(c.valorRecebido ?? 0)} · taxa ${brl(c.valor - (c.valorRecebido ?? 0))} · ${c.referencia ?? ""}`}</p>
-                        <form action={desfazerRecebimento} className="flex flex-wrap items-end gap-2">
-                          <input type="hidden" name="conta" value={c.id} />
-                          <label className="text-xs font-medium">Motivo para desfazer<input name="motivo" required minLength={3} maxLength={200} className={campo} /></label>
-                          <Botao type="submit" tamanho="sm" variante="fantasma">Desfazer</Botao>
-                        </form>
+                        {c.vendaCancelada && (
+                          <p className="rounded-lg bg-aviso/10 px-3 py-2 text-xs text-aviso">
+                            A venda foi cancelada depois do repasse: combine com a {FINANCEIRAS[c.devedor]} a devolução ou o desconto desse valor (o protocolo do cancelamento do contrato fica no estorno a confirmar da venda). Desfaça só se o repasse não caiu de verdade: a conta fica cancelada e não volta a ser cobrada.
+                          </p>
+                        )}
+                        <div className="flex flex-wrap items-end justify-between gap-2">
+                          <details className="min-w-0 flex-1">
+                            <summary className="cursor-pointer text-xs font-semibold text-acao">Corrigir o repasse (referência, valor ou data)</summary>
+                            <form action={corrigirRecebimento} className="mt-2 grid gap-2 sm:grid-cols-5">
+                              <input type="hidden" name="conta" value={c.id} />
+                              <label className="text-xs font-medium">Referência<input name="referencia" required minLength={3} maxLength={80} defaultValue={c.referencia ?? ""} className={campo} /></label>
+                              <label className="text-xs font-medium">Valor que caiu (R$)<input name="recebido" required inputMode="decimal" defaultValue={((c.valorRecebido ?? 0) / 100).toFixed(2).replace(".", ",")} className={campo} /></label>
+                              <label className="text-xs font-medium">Caiu em<input name="data" type="date" required max={hoje} defaultValue={c.recebidoEm ?? ""} className={campo} /></label>
+                              <label className="text-xs font-medium">Motivo<input name="motivo" required minLength={3} maxLength={200} className={campo} /></label>
+                              <Botao type="submit" tamanho="sm" variante="secundario" className="self-end">Corrigir</Botao>
+                            </form>
+                          </details>
+                          <form action={desfazerRecebimento} className="flex flex-wrap items-end gap-2">
+                            <input type="hidden" name="conta" value={c.id} />
+                            {c.vendaCancelada && <input type="hidden" name="cancelada" value="sim" />}
+                            <label className="text-xs font-medium">{c.vendaCancelada ? "Motivo (o repasse não caiu)" : "Motivo para desfazer"}<input name="motivo" required minLength={3} maxLength={200} className={campo} /></label>
+                            <Botao type="submit" tamanho="sm" variante="fantasma">Desfazer</Botao>
+                          </form>
+                        </div>
                       </div>
                     ) : (
                       <form action={receberDaFinanceira} className="grid gap-2 sm:grid-cols-4">

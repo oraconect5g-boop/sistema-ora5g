@@ -5262,6 +5262,16 @@ export type Database = {
           esperado: number
         }[]
       }
+      financeira_corrigir_recebimento: {
+        Args: {
+          p_conta: string
+          p_motivo: string
+          p_recebido_em: string
+          p_referencia: string
+          p_valor_recebido: number
+        }
+        Returns: boolean
+      }
       financeira_desfazer_recebimento: {
         Args: { p_conta: string; p_motivo: string }
         Returns: boolean

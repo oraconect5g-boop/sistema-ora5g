@@ -27,7 +27,7 @@ const sessaoFicticia = {
 };
 vi.mock("../../lib/acesso/sessao", () => ({ FalhaDoServico: class extends Error {}, obterSessao: async () => sessaoFicticia }));
 
-import { desfazerRecebimento, receberDaFinanceira } from "./acoes";
+import { corrigirRecebimento, desfazerRecebimento, receberDaFinanceira } from "./acoes";
 import Financeiras from "./financeiras/page";
 
 type Linha = Record<string, unknown>;
@@ -97,7 +97,8 @@ describe("/pagamentos/financeiras (L7b)", () => {
     expect(t).toContain("há 35 dias");
     expect(t).toContain("Caiu em 12/11/2026 · recebido R$ 1.250,00 · taxa R$ 49,00 · PJ-1");
     const forms = formularios(tela);
-    expect(forms.map((f) => (f.action as { name: string }).name)).toEqual(["receberDaFinanceira", "desfazerRecebimento"]);
+    expect(forms.map((f) => (f.action as { name: string }).name)).toEqual(["receberDaFinanceira", "corrigirRecebimento", "desfazerRecebimento"]);
+    expect(t).not.toContain("venda cancelada"); // banco sem a correção #83: não diz, e a tela não inventa
   });
 
   it("sem a função no banco, em falha ou sem nada: o cartão diz por quê, sem número inventado", async () => {
@@ -134,5 +135,45 @@ describe("/pagamentos/financeiras (L7b)", () => {
     cenario.respostas.financeira_desfazer_recebimento = { data: true, error: null };
     expect(await destinoDe(desfazerRecebimento(formulario({ conta: CONTA, motivo: "Valor digitado errado" })))).toBe("/pagamentos/financeiras?ok=desfeito");
     expect(cenario.chamadas.at(-1)).toEqual({ nome: "financeira_desfazer_recebimento", argumentos: { p_conta: CONTA, p_motivo: "Valor digitado errado" } });
+  });
+});
+
+// Correção de 14/11/2026 (#83): a venda cancelada depois do repasse aparece marcada; corrigir o repasse sem
+// passar por "aberta"; desfazer na venda cancelada diz que a conta ficou cancelada.
+describe("/pagamentos/financeiras: venda cancelada e correção do repasse (#83)", () => {
+  const comCancelada = () => ({ ...LISTA, contas: [LISTA.contas[0], { ...LISTA.contas[1], venda_cancelada: true }].map((c, i) => (i === 0 ? { ...c, venda_cancelada: false } : c)) });
+
+  it("a conta recebida de venda cancelada tem o selo, o aviso do acerto com a financeira e o desfazer que diz o que acontece", async () => {
+    cenario.respostas.financeiras_a_receber = { data: comCancelada(), error: null };
+    const tela = await pagina();
+    const t = visivel(tela);
+    expect(t).toContain("venda cancelada");
+    expect(t).toContain("A venda foi cancelada depois do repasse: combine com a PayJoy a devolução ou o desconto desse valor");
+    expect(t).toContain("Motivo (o repasse não caiu)");
+    expect(t).toContain("Corrigir o repasse (referência, valor ou data)");
+    cenario.respostas.financeiras_a_receber = { data: { ...LISTA, contas: [{ ...LISTA.contas[1], venda_cancelada: "sim" }] }, error: null };
+    expect(visivel(await pagina())).toContain("Não foi possível ler agora");
+  });
+
+  it("as ações: corrigir manda os dados e o motivo; desfazer na venda cancelada volta com a mensagem certa; os erros novos têm mensagem", async () => {
+    cenario.respostas.financeira_corrigir_recebimento = { data: true, error: null };
+    const campos = { conta: CONTA, referencia: "PJ lote 9", recebido: "1.250,00", data: "2026-11-12" };
+    expect(await destinoDe(corrigirRecebimento(formulario({ ...campos, motivo: "Referência digitada errada" })))).toBe("/pagamentos/financeiras?ok=corrigido");
+    expect(cenario.chamadas.at(-1)).toEqual({ nome: "financeira_corrigir_recebimento", argumentos: {
+      p_conta: CONTA, p_referencia: "PJ lote 9", p_valor_recebido: 125_000, p_recebido_em: "2026-11-12", p_motivo: "Referência digitada errada",
+    } });
+    const antes = cenario.chamadas.length;
+    expect(await destinoDe(corrigirRecebimento(formulario({ ...campos, motivo: "ok" })))).toBe("/pagamentos/financeiras?erro=motivo");
+    expect(await destinoDe(corrigirRecebimento(formulario({ ...campos, referencia: "x", motivo: "Corrigindo" })))).toBe("/pagamentos/financeiras?erro=referencia");
+    expect(cenario.chamadas).toHaveLength(antes);
+    cenario.respostas.financeira_corrigir_recebimento = { data: null, error: { code: "22023", message: "Só se corrige um repasse já registrado" } };
+    expect(await destinoDe(corrigirRecebimento(formulario({ ...campos, motivo: "Corrigindo" })))).toBe("/pagamentos/financeiras?erro=so_registrado");
+    cenario.respostas.financeira_desfazer_recebimento = { data: true, error: null };
+    expect(await destinoDe(desfazerRecebimento(formulario({ conta: CONTA, motivo: "O repasse não caiu", cancelada: "sim" })))).toBe("/pagamentos/financeiras?ok=desfeito_cancelada");
+    cenario.respostas.financeira_receber = { data: null, error: { code: "22023", message: "Venda cancelada: não há o que receber da financeira" } };
+    expect(await destinoDe(receberDaFinanceira(formulario(campos)))).toBe("/pagamentos/financeiras?erro=venda_cancelada");
+    const t = visivel(await pagina({ erro: "venda_cancelada", ok: "desfeito_cancelada" }));
+    expect(t).toContain("Venda cancelada: não há o que receber da financeira.");
+    expect(t).toContain("a conta ficou cancelada: não volta a ser cobrada da financeira");
   });
 });
