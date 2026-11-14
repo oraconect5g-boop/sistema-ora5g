@@ -1,0 +1,83 @@
+// Saúde da operação (lote Q1): quem vê cada fila, a contagem e a data da mais antiga, a fila que some num banco sem a
+// tabela e a falha que aparece como falha. Supabase SIMULADO; dados fictícios.
+import { describe, expect, it, vi } from "vitest";
+
+import { diasDesde, FILAS, lerFilas } from "./filas";
+
+type Resposta = { data: unknown; count: number | null; error: { code: string } | null };
+function supabaseSimulado(respostas: Record<string, Resposta>) {
+  const pedidos: { tabela: string; filtros: unknown[] }[] = [];
+  const cliente = {
+    from(tabela: string) {
+      const filtros: unknown[] = [];
+      pedidos.push({ tabela, filtros });
+      const consulta = {
+        select: (coluna: string, opcoes: unknown) => { filtros.push(["select", coluna, opcoes]); return consulta; },
+        eq: (c: string, v: unknown) => { filtros.push(["eq", c, v]); return consulta; },
+        in: (c: string, v: unknown) => { filtros.push(["in", c, v]); return consulta; },
+        is: (c: string, v: unknown) => { filtros.push(["is", c, v]); return consulta; },
+        lt: (c: string, v: unknown) => { filtros.push(["lt", c, v]); return consulta; },
+        order: (c: string) => { filtros.push(["order", c]); return consulta; },
+        limit: (n: number) => { filtros.push(["limit", n]); return consulta; },
+        then: (resolver: (r: Resposta) => unknown) => Promise.resolve(respostas[tabela] ?? { data: [], count: 0, error: null }).then(resolver),
+      };
+      return consulta;
+    },
+  };
+  return { cliente: cliente as unknown as Parameters<typeof lerFilas>[0], pedidos };
+}
+
+describe("filas da operação", () => {
+  it("lê só as filas que a pessoa decide, com a contagem exata e a data da mais antiga", async () => {
+    const { cliente, pedidos } = supabaseSimulado({
+      notas_pedidos: { data: [{ venda_concluida_em: "2026-11-10T14:00:00Z" }], count: 4, error: null },
+      whatsapp_envios: { data: [], count: 0, error: null },
+    });
+    const filas = await lerFilas(cliente, new Set(["nota.aprovar"]), "2026-11-14");
+    expect(pedidos.map((p) => p.tabela)).toEqual(["notas_pedidos", "whatsapp_envios"]);
+    expect(filas).toEqual([
+      expect.objectContaining({ estado: "ok", chave: "notas", quantidade: 4, desde: "2026-11-10T14:00:00Z", href: "/notas" }),
+      expect.objectContaining({ estado: "ok", chave: "whatsapp", quantidade: 0, desde: null }),
+    ]);
+    // A contagem é exata e a data é a mais antiga (ordem crescente, uma linha).
+    expect(pedidos[0]?.filtros).toEqual([
+      ["select", "venda_concluida_em", { count: "exact" }], ["in", "situacao", ["aguardando_aprovacao", "correcao_solicitada", "aprovada"]],
+      ["order", "venda_concluida_em"], ["limit", 1],
+    ]);
+  });
+
+  it("o vendedor não lê nenhuma fila; a gerência lê as dela; vencimento e prazo contam até ontem", async () => {
+    const vendedor = supabaseSimulado({});
+    expect(await lerFilas(vendedor.cliente, new Set(["venda.registrar"]), "2026-11-14")).toEqual([]);
+    expect(vendedor.pedidos).toEqual([]);
+    const gerente = supabaseSimulado({});
+    await lerFilas(gerente.cliente, new Set(["venda.ver_unidade", "conta_pagar.gerir", "os.gerir", "estoque.consultar"]), "2026-11-14");
+    expect(gerente.pedidos.map((p) => p.tabela)).toEqual(["estornos_externos", "venda_retornos", "transferencias", "ordens_servico", "ordens_servico", "contas_a_pagar"]);
+    expect(gerente.pedidos.find((p) => p.tabela === "contas_a_pagar")?.filtros).toContainEqual(["lt", "vencimento", "2026-11-14"]);
+  });
+
+  it("fila que o banco ainda não tem some; outra falha aparece como falha (nunca zero); contagem sem número some", async () => {
+    vi.spyOn(console, "error").mockImplementation(() => undefined);
+    const { cliente } = supabaseSimulado({
+      notas_pedidos: { data: null, count: null, error: { code: "57014" } },
+      whatsapp_envios: { data: null, count: null, error: { code: "PGRST205" } },
+      connect_operacoes: { data: [], count: null, error: null },
+    });
+    const filas = await lerFilas(cliente, new Set(["nota.aprovar", "connect.gerir"]), "2026-11-14");
+    expect(filas).toEqual([{ estado: "falha", chave: "notas", rotulo: "Notas na fila", href: "/notas", icone: "nota" }]);
+    expect(console.error).toHaveBeenCalledWith("operação: falha ao ler a fila", { fila: "notas", codigo: "57014" });
+  });
+
+  it("cada fila tem uma chave só e leva a uma tela do sistema", () => {
+    expect(new Set(FILAS.map((f) => f.chave)).size).toBe(FILAS.length);
+    for (const f of FILAS) expect(f.href, f.chave).toMatch(/^\/[a-z]/);
+  });
+
+  it("há quantos dias: data pura e data e hora no dia de São Paulo; hoje é zero", () => {
+    expect(diasDesde("2026-11-14", "2026-11-14")).toBe(0);
+    expect(diasDesde("2026-11-10", "2026-11-14")).toBe(4);
+    expect(diasDesde("2026-11-14T01:00:00Z", "2026-11-14")).toBe(1);
+    expect(diasDesde("2026-11-14T15:00:00Z", "2026-11-14")).toBe(0);
+    expect(diasDesde("2026-11-20", "2026-11-14")).toBe(0);
+  });
+});
