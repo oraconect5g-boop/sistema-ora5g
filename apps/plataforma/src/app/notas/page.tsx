@@ -1,11 +1,11 @@
-import { AlarmClock, FileCheck2, FileText } from "lucide-react";
+import { AlarmClock, FileCheck2, FileText, Scale } from "lucide-react";
 import type { Metadata } from "next";
 import Link from "next/link";
 
 import { chaveEmGrupos, MODELOS_DE_NOTA, SITUACOES_DA_NOTA, tempoNaFila, type SituacaoDaNota } from "@ora5g/dominio/fiscal";
 
 import { MoldeReal } from "../../componentes/MoldeReal";
-import { Aviso, Botao, Cartao, Selo, TituloPagina } from "../../componentes/ui";
+import { Aviso, Botao, BotaoLink, Cartao, Selo, TituloPagina } from "../../componentes/ui";
 import { FalhaDoServico, obterSessao } from "../../lib/acesso/sessao";
 import { centavosDoBanco } from "../../lib/dinheiro";
 import { brl } from "../../lib/formato";
@@ -59,7 +59,8 @@ export default async function Notas({ searchParams }: { searchParams: Promise<{ 
 
   return (
     <MoldeReal sessao={sessao}>
-      <TituloPagina sobretitulo={situacao.unidade_nome} titulo="Notas fiscais" />
+      <TituloPagina sobretitulo={situacao.unidade_nome} titulo="Notas fiscais"
+        acao={<BotaoLink href="/notas/conciliacao" variante="secundario"><Scale aria-hidden className="size-4" /> Conciliação</BotaoLink>} />
       {erro && <Aviso tom="perigo">{ERROS_DAS_NOTAS[erro]}</Aviso>}
       {ok && <Aviso tom="sucesso">{OK[ok]}</Aviso>}
       <Aviso tom="info">O sistema ainda não emite nota (emissor fiscal a contratar com o contador). Emita no portal de sempre e registre a chave de acesso aqui: a aprovação nunca segura a emissão.</Aviso>

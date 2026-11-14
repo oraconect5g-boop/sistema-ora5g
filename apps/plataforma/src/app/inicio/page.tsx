@@ -1,5 +1,6 @@
 import {
-  AlarmClock, ArrowRightLeft, BadgePercent, Banknote, FileClock, FileText, Gift, PackageCheck, RadioTower, ReceiptText, RotateCcw, Scale, SignalZero, Undo2, Wallet, Wrench,
+  AlarmClock, ArrowRightLeft, BadgePercent, Banknote, FileClock, FileText, Gift, PackageCheck, RadioTower, ReceiptText, RotateCcw, Scale, ShieldAlert, SignalZero, Undo2,
+  Wallet, Wrench,
   type LucideIcon,
 } from "lucide-react";
 import type { Metadata } from "next";
@@ -18,6 +19,7 @@ import { periodoFinanceiro } from "../../lib/financeiro/painel";
 import { janelasDosAlertas } from "../../lib/inicio/alertas";
 import { lerPaineisDoInicio, permissoesDoInicio } from "../../lib/inicio/consulta";
 import { visaoDoInicio } from "../../lib/inicio/painel";
+import { divergenciasAbertas, enderecoDaConciliacao, intervaloDoPeriodo } from "../../lib/notas/conciliacao";
 import { textoDoParametro, type ValorDeParametro } from "../../lib/parametros";
 import { ConteudoInicio } from "./ConteudoInicio";
 
@@ -51,8 +53,10 @@ export default async function Inicio({ searchParams }: { searchParams: Promise<P
   const recebeAparelho = permissoes.has("os.abrir") || permissoes.has("os.gerir");
   // Alertas (REPORT-007, L12f): janelas fixas, contadas a partir de agora.
   const { haSeteDias, haUmDia } = janelasDosAlertas();
+  // Divergências das notas (L10b) ainda não conferidas, da loja do turno, nos últimos 90 dias.
+  const noventaDias = intervaloDoPeriodo("noventa_dias", hojeEmSaoPaulo());
   const [aprovacoes, notas, caixas, saidasDoBanco, contasDoBanco, fechamentosDoBanco, transferencias, connect, estornos, retornos, atrasadasDoBanco, prontasDoBanco, doTecnicoDoBanco,
-    caixasComDiferenca, notasParadas, ativacoesComFalha, paineis] = await Promise.all([
+    caixasComDiferenca, notasParadas, ativacoesComFalha, divergenciasDasNotas, paineis] = await Promise.all([
     permissoes.has("desconto.aprovar") ? supabase.from("aprovacoes_desconto").select("id", CABECA).eq("unidade_id", unidade).eq("situacao", "pendente") : null,
     permissoes.has("nota.aprovar") ? supabase.from("notas_pedidos").select("id", CABECA).eq("unidade_id", unidade).in("situacao", ["aguardando_aprovacao", "aprovada"]) : null,
     permissoes.has("caixa.conferir") ? supabase.from("caixas").select("id", CABECA).eq("unidade_id", unidade).eq("situacao", "fechado") : null,
@@ -84,6 +88,10 @@ export default async function Inicio({ searchParams }: { searchParams: Promise<P
     permissoes.has("connect.gerir")
       ? supabase.from("connect_operacoes").select("id", CABECA).eq("unidade_id", unidade).in("tipo", ["ativacao", "portabilidade"])
         .in("situacao", ["recusada", "negada", "erro_operadora"]).gte("atualizado_em", haSeteDias)
+      : null,
+    // Sem a função no banco (migration do L10b ainda não aplicada), o alerta some; outro erro derruba a página.
+    permissoes.has("nota.aprovar")
+      ? divergenciasAbertas(supabase, unidade, noventaDias.inicio, noventaDias.fim).catch(() => { throw new FalhaDoServico("inicio_divergencias"); })
       : null,
     // Os painéis não derrubam a página: cada leitura volta com o próprio estado (ok, indisponível ou falha).
     lerPaineisDoInicio(supabase, { visao, periodo: periodoFinanceiro(textoDoParametro(parametros.periodo)), loja: textoDoParametro(parametros.loja), turno, usuario: usuario.id, ranking: inicio.ranking, custo: inicio.custo,
@@ -124,6 +132,9 @@ export default async function Inicio({ searchParams }: { searchParams: Promise<P
     caixasComDiferenca && quantos(caixasComDiferenca) > 0 && { rotulo: "Caixas com diferença", detalhe: "fechados nos últimos 7 dias", href: "/caixa", icone: Scale, quantidade: quantos(caixasComDiferenca) },
     notasParadas && quantos(notasParadas) > 0 && { rotulo: "Notas paradas", detalhe: "na fila há mais de um dia", href: "/notas", icone: FileClock, quantidade: quantos(notasParadas) },
     ativacoesComFalha && quantos(ativacoesComFalha) > 0 && { rotulo: "Ativações com falha", detalhe: "recusadas ou com erro, em 7 dias", href: "/connect", icone: SignalZero, quantidade: quantos(ativacoesComFalha) },
+    divergenciasDasNotas !== null && divergenciasDasNotas > 0 && {
+      rotulo: "Notas com divergência", detalhe: "a conferir, em 90 dias", href: enderecoDaConciliacao("noventa_dias", unidade), icone: ShieldAlert, quantidade: divergenciasDasNotas,
+    },
   ].filter((p): p is Pendencia => Boolean(p));
   const fim = horaDoFimDoTurno(situacao.turno_termina_em);
   const atalhos = montarMenu(permissoes).visiveis.filter((p) => p !== "inicio");

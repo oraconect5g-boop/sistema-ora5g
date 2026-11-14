@@ -49,6 +49,7 @@ const FONTE = {
   recebiveis: "a leitura dos recebíveis por loja e adquirente (migration recebiveis_painel)",
   assistencia: "as ordens de serviço da assistência (migration ordem_de_servico)",
   relatorio_assistencia: "o relatório da assistência (migration relatorio_da_assistencia)",
+  conciliacao_fiscal: "a conciliação das notas (migration conciliacao_fiscal)",
   contas_a_pagar: "as contas a pagar (migration contas_a_pagar)",
   resultado: "a leitura do resultado do mês (migration resultado_do_mes)",
   previsao: "a leitura da previsão de caixa (migration previsao_de_caixa)",

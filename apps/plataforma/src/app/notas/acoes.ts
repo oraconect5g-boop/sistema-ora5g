@@ -6,6 +6,7 @@ import { redirect } from "next/navigation";
 
 import { ehUuid } from "../../lib/acesso/regras";
 import { obterSessao } from "../../lib/acesso/sessao";
+import { ehPeriodo, ehTipoDeDivergencia, enderecoDaConciliacao, erroDaConciliacao } from "../../lib/notas/conciliacao";
 import { erroDasNotas } from "../../lib/notas/regras";
 
 // Fila fiscal (ADR-006): cada ação chama UMA função do banco como a pessoa logada. Nada é emitido
@@ -105,4 +106,20 @@ export async function definirPrazo(dados: FormData) {
   // Sem minutos = sem prazo de alerta (aguardando o contador). O tipo gerado não marca o parâmetro como opcional.
   const { error } = await supabase.rpc("fiscal_definir_politica", { p_alerta_minutos: (minutos ? Number(minutos) : null) as number, p_fonte: fonte });
   voltarParaFila(error, "prazo");
+}
+
+// L10b (ORA-FISC-008): quem aprova nota registra que conferiu uma divergência da conciliação (o que viu e o que fez). O
+// banco confere a permissão na loja do pedido e se a divergência ainda existe; a conferência fica na auditoria.
+export async function conferirDivergencia(dados: FormData) {
+  const periodo = dados.get("periodo");
+  const loja = dados.get("loja");
+  const volta = enderecoDaConciliacao(ehPeriodo(periodo) ? periodo : "mes", ehUuid(loja) ? loja : null);
+  const pedido = dados.get("pedido");
+  const tipo = dados.get("tipo");
+  if (!ehUuid(pedido) || !ehTipoDeDivergencia(tipo)) redirect(`${volta}&erro=dados`);
+  const observacao = texto(dados, "observacao", 500);
+  if (observacao.length < 10) redirect(`${volta}&erro=observacao`);
+  const { supabase } = await obterSessao({ exigirLoja: true });
+  const { error } = await supabase.rpc("notas_conferir_divergencia", { p_pedido: pedido, p_tipo: tipo, p_observacao: observacao });
+  redirect(error ? `${volta}&erro=${erroDaConciliacao(error)}` : `${volta}&ok=conferida`);
 }

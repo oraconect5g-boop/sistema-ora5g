@@ -3072,6 +3072,61 @@ export type Database = {
           },
         ]
       }
+      notas_divergencias_conferidas: {
+        Row: {
+          conferida_em: string
+          conferida_por: string
+          id: string
+          observacao: string
+          organizacao_id: string
+          pedido_id: string
+          tipo: string
+          unidade_id: string
+        }
+        Insert: {
+          conferida_em?: string
+          conferida_por: string
+          id?: string
+          observacao: string
+          organizacao_id: string
+          pedido_id: string
+          tipo: string
+          unidade_id: string
+        }
+        Update: {
+          conferida_em?: string
+          conferida_por?: string
+          id?: string
+          observacao?: string
+          organizacao_id?: string
+          pedido_id?: string
+          tipo?: string
+          unidade_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "notas_divergencias_conferidas_conferida_por_fkey"
+            columns: ["conferida_por"]
+            isOneToOne: false
+            referencedRelation: "perfis_usuario"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "notas_divergencias_conferidas_pedido_id_fkey"
+            columns: ["pedido_id"]
+            isOneToOne: false
+            referencedRelation: "notas_pedidos"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "notas_divergencias_conferidas_unidade_id_organizacao_id_fkey"
+            columns: ["unidade_id", "organizacao_id"]
+            isOneToOne: false
+            referencedRelation: "unidades"
+            referencedColumns: ["id", "organizacao_id"]
+          },
+        ]
+      }
       notas_documentos: {
         Row: {
           bytes: number
@@ -6337,6 +6392,14 @@ export type Database = {
       }
       notas_cancelar: {
         Args: { p_motivo: string; p_pedido: string }
+        Returns: boolean
+      }
+      notas_conciliacao: {
+        Args: { p_fim: string; p_inicio: string; p_unidade?: string }
+        Returns: Json
+      }
+      notas_conferir_divergencia: {
+        Args: { p_observacao: string; p_pedido: string; p_tipo: string }
         Returns: boolean
       }
       notas_corrigir: {
