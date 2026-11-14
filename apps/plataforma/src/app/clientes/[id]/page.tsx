@@ -1,15 +1,20 @@
 import { randomUUID } from "node:crypto";
 
-import { ArrowLeft, Eye, MessageSquareHeart, PencilLine, ShieldCheck, ShoppingBag, Wrench } from "lucide-react";
+import { ArrowLeft, CalendarClock, Eye, MessageSquareHeart, PencilLine, RadioTower, ShieldCheck, ShoppingBag, Wrench } from "lucide-react";
 import type { Metadata } from "next";
 import Link from "next/link";
 import { notFound } from "next/navigation";
+
+import { NOMES_DAS_OPERACOES, SITUACOES_OPERACAO, ehTipoOperacao, type SituacaoOperacao } from "@ora5g/dominio/nogle";
 
 import { MoldeReal } from "../../../componentes/MoldeReal";
 import { Aviso, Botao, BotaoLink, Cartao, ListaDados, Selo, TituloPagina } from "../../../componentes/ui";
 import { ehUuid } from "../../../lib/acesso/regras";
 import { FalhaDoServico, obterSessao } from "../../../lib/acesso/sessao";
+import { SERVICOS, SITUACOES as SITUACOES_DA_OS, ehServico } from "../../../lib/assistencia/regras";
+import { lerHistoricoDoCliente, type Bloco } from "../../../lib/clientes/historico";
 import { CAMPOS_REVELAVEIS, CANAIS, ERROS_DO_CLIENTE, FINALIDADES, FINALIDADES_DE_CONTATO, FONTES, SEGMENTOS, ehFinalidade, ehSegmento } from "../../../lib/clientes/regras";
+import { ETAPAS, ETAPAS_ABERTAS, ehEtapa, TIPOS_DE_ATIVIDADE } from "../../../lib/crm/regras";
 import { centavosDoBanco } from "../../../lib/dinheiro";
 import { brl } from "../../../lib/formato";
 import { chaveDoCatalogo, type ValorDeParametro } from "../../../lib/parametros";
@@ -75,6 +80,8 @@ export default async function FichaDoCliente({ params, searchParams }: { params:
       : Promise.resolve(null),
   ]);
   if (compras.error || acessos?.error) throw new FalhaDoServico("cliente_historico");
+  // L5e (CRM-002): as OS, o funil e a agenda e o Ora Connect das compras que a pessoa vê, cada um à parte.
+  const historico = await lerHistoricoDoCliente(supabase, id, compras.data.map((c) => c.id));
   const pessoas = acessos?.data?.length
     ? await supabase.from("perfis_usuario").select("id, nome").in("id", [...new Set(acessos.data.map((a) => a.usuario_id).filter((x): x is string => Boolean(x)))])
     : null;
@@ -127,6 +134,8 @@ export default async function FichaDoCliente({ params, searchParams }: { params:
         </Cartao>
       </div>
 
+      <HistoricoDaFicha historico={historico} podeAbrirOs={Boolean(abreOs.data) && ativo && !f.mesclado_em} cliente={f.id} />
+
       <Cartao className="mt-4" titulo="Contato e consentimento" subtitulo="Ofertas e pós-venda só com consentimento; retirar vale na hora para as mensagens automáticas. Avisos do próprio serviço (nota, assistência) não dependem disto." icone={MessageSquareHeart}>
         <ul className="divide-y divide-borda text-sm">
           {f.consentimentos.map((c) => (
@@ -171,5 +180,90 @@ export default async function FichaDoCliente({ params, searchParams }: { params:
         </Cartao>
       )}
     </MoldeReal>
+  );
+}
+
+// ---------------------------------------------------------------------------------------------
+// L5e (CRM-002): o que o cliente tem na assistência, no funil e na agenda e no Ora Connect. Cada bloco aparece quando
+// há o que mostrar (a OS também para quem abre OS); falha de leitura aparece como falha, nunca como "nenhum".
+// ---------------------------------------------------------------------------------------------
+const naoLeu = (nome: string) => <p className="text-sm text-suave">{`Não deu para ler ${nome} agora. Recarregue a ficha em instantes.`}</p>;
+const SITUACAO_DA_ATIVIDADE: Record<string, string> = { aberta: "a fazer", feita: "feita", cancelada: "cancelada" };
+const ehSituacaoDoConnect = (s: string): s is SituacaoOperacao => Object.hasOwn(SITUACOES_OPERACAO, s);
+
+function HistoricoDaFicha({ historico, podeAbrirOs, cliente }: { historico: Awaited<ReturnType<typeof lerHistoricoDoCliente>>; podeAbrirOs: boolean; cliente: string }) {
+  const { os, oportunidades, atividades, connect } = historico;
+  const temItens = <T,>(b: Bloco<T>) => b.estado === "falha" || (b.estado === "ok" && b.itens.length > 0);
+  const mostraOs = os.estado === "falha" || (os.estado === "ok" && (os.itens.length > 0 || podeAbrirOs));
+  const mostraCrm = temItens(oportunidades) || temItens(atividades);
+  if (!mostraOs && !mostraCrm && !temItens(connect)) return null;
+  return (
+    <div className="mt-4 grid gap-4 lg:grid-cols-2">
+      {mostraOs && (
+        <Cartao titulo="Assistência" subtitulo="Ordens de serviço deste cliente que você acompanha" icone={Wrench}>
+          {os.estado === "falha" ? naoLeu("as ordens de serviço") : os.estado === "ok" && os.itens.length === 0 ? (
+            <p className="text-sm text-suave">Nenhuma ordem de serviço deste cliente.</p>
+          ) : os.estado === "ok" && (
+            <ul className="divide-y divide-borda text-sm">
+              {os.itens.map((o) => (
+                <li key={o.id} className="flex flex-wrap items-center justify-between gap-2 py-2">
+                  <span className="min-w-0"><Link href={`/assistencia/${o.id}`} className="font-semibold text-acao">OS nº {o.numero}</Link><span className="text-suave"> · {o.aparelho}</span></span>
+                  <span className="flex flex-wrap items-center gap-2 text-xs text-suave">
+                    <Selo tom={o.situacao === "aberta" ? "info" : "neutro"}>{o.situacao === "aberta" && ehServico(o.servico) ? SERVICOS[o.servico] : SITUACOES_DA_OS[o.situacao as keyof typeof SITUACOES_DA_OS] ?? o.situacao}</Selo>
+                    {quando(o.aberta_em)}
+                  </span>
+                </li>
+              ))}
+            </ul>
+          )}
+          {podeAbrirOs && os.estado === "ok" && os.itens.length === 0 && <p className="mt-2 text-xs"><Link href={`/assistencia/nova?cliente=${cliente}`} className="font-semibold text-acao">Abrir ordem de serviço</Link></p>}
+        </Cartao>
+      )}
+      {mostraCrm && (
+        <Cartao titulo="Funil e agenda" subtitulo="Negociações e próximos contatos deste cliente que você acompanha" icone={CalendarClock}>
+          {oportunidades.estado === "falha" && naoLeu("o funil")}
+          {oportunidades.estado === "ok" && oportunidades.itens.length > 0 && (
+            <ul className="divide-y divide-borda text-sm">
+              {oportunidades.itens.map((o) => (
+                <li key={o.id} className="py-2">
+                  <div className="flex flex-wrap items-center justify-between gap-2">
+                    <Link href={`/crm/${o.id}`} className="font-semibold text-acao">{o.interesse}</Link>
+                    {ehEtapa(o.etapa) && <Selo tom={ETAPAS[o.etapa].tom}>{ETAPAS[o.etapa].nome}</Selo>}
+                  </div>
+                  {ehEtapa(o.etapa) && ETAPAS_ABERTAS.includes(o.etapa) && o.proximo_passo && (
+                    <p className="text-xs text-suave">Próximo passo: {o.proximo_passo}{o.proximo_passo_em ? ` (${quando(o.proximo_passo_em)})` : ""}</p>
+                  )}
+                </li>
+              ))}
+            </ul>
+          )}
+          {atividades.estado === "falha" && naoLeu("a agenda")}
+          {atividades.estado === "ok" && atividades.itens.length > 0 && (
+            <ul className="mt-2 divide-y divide-borda border-t border-borda text-sm">
+              {atividades.itens.map((a) => (
+                <li key={a.id} className="flex flex-wrap items-center justify-between gap-2 py-2">
+                  <span className="min-w-0">{TIPOS_DE_ATIVIDADE[a.tipo as keyof typeof TIPOS_DE_ATIVIDADE] ?? a.tipo}<span className="text-suave"> · {a.descricao}</span></span>
+                  <span className="flex items-center gap-2 text-xs text-suave"><Selo tom={a.situacao === "aberta" ? "aviso" : "neutro"}>{SITUACAO_DA_ATIVIDADE[a.situacao] ?? a.situacao}</Selo>{quando(a.vence_em)}</span>
+                </li>
+              ))}
+            </ul>
+          )}
+        </Cartao>
+      )}
+      {temItens(connect) && (
+        <Cartao titulo="Ora Connect" subtitulo="Ativações, portabilidades e recargas das compras deste cliente que você acompanha" icone={RadioTower}>
+          {connect.estado === "falha" ? naoLeu("as operações do Ora Connect") : connect.estado === "ok" && (
+            <ul className="divide-y divide-borda text-sm">
+              {connect.itens.map((o) => (
+                <li key={o.id} className="flex flex-wrap items-center justify-between gap-2 py-2">
+                  <span className="min-w-0">{ehTipoOperacao(o.tipo) ? NOMES_DAS_OPERACOES[o.tipo] : o.tipo}<span className="numeros text-suave">{` nº ${o.numero}`}{o.linha ? ` · linha ${o.linha}` : ""}{o.plano ? ` · ${o.plano}` : ""}</span></span>
+                  <span className="flex items-center gap-2 text-xs text-suave"><Selo tom={o.situacao === "confirmada" ? "sucesso" : ["recusada", "negada", "erro_operadora", "resultado_desconhecido"].includes(o.situacao) ? "aviso" : "neutro"}>{ehSituacaoDoConnect(o.situacao) ? SITUACOES_OPERACAO[o.situacao].nome : o.situacao}</Selo>{quando(o.criado_em)}</span>
+                </li>
+              ))}
+            </ul>
+          )}
+        </Cartao>
+      )}
+    </div>
   );
 }

@@ -15,6 +15,8 @@ const cenario = vi.hoisted(() => ({
   chamadas: [] as { nome: string; argumentos: Record<string, unknown> }[],
   respostas: {} as Record<string, { data: unknown; error: null | { code: string; message?: string } }>,
   tabelas: {} as Record<string, Record<string, unknown>[]>,
+  /** Erro de leitura por tabela (L5e: falha e tabela ausente nos blocos da ficha). */
+  erros: {} as Record<string, { code: string }>,
 }));
 
 vi.mock("next/headers", () => ({ cookies: async () => ({ getAll: () => [], set: () => undefined }) }));
@@ -25,15 +27,17 @@ vi.mock("next/navigation", () => ({
 
 class Consulta {
   linhas: Record<string, unknown>[];
-  constructor(nome: string) { this.linhas = [...(cenario.tabelas[nome] ?? [])]; }
+  erro: { code: string } | null;
+  constructor(nome: string) { this.linhas = [...(cenario.tabelas[nome] ?? [])]; this.erro = cenario.erros[nome] ?? null; }
   select() { return this; }
   eq(coluna: string, valor: unknown) { this.linhas = this.linhas.filter((l) => l[coluna] === undefined || l[coluna] === valor); return this; }
   in() { return this; }
+  or() { return this; }
   order() { return this; }
   limit() { return this; }
-  maybeSingle() { return Promise.resolve({ data: this.linhas[0] ?? null, error: null }); }
-  then(resolver: (r: { data: Record<string, unknown>[]; error: null }) => unknown) {
-    return Promise.resolve({ data: this.linhas, error: null }).then(resolver);
+  maybeSingle() { return Promise.resolve(this.erro ? { data: null, error: this.erro } : { data: this.linhas[0] ?? null, error: null }); }
+  then(resolver: (r: { data: Record<string, unknown>[] | null; error: { code: string } | null }) => unknown) {
+    return Promise.resolve(this.erro ? { data: null, error: this.erro } : { data: this.linhas, error: null }).then(resolver);
   }
 }
 const sessaoFicticia = {
@@ -61,6 +65,10 @@ import Segmentos from "./segmentos/page";
 function texto(v: unknown): string {
   if (Array.isArray(v)) return v.map(texto).join(" ");
   if (typeof v === "string" || typeof v === "number") return String(v);
+  // L5e: os blocos do histórico da ficha são montados à parte; o teste os executa para ler o que a tela mostra.
+  if (isValidElement<Record<string, unknown>>(v) && typeof v.type === "function" && v.type.name === "HistoricoDaFicha") {
+    return texto((v.type as (p: unknown) => unknown)(v.props));
+  }
   if (isValidElement<Record<string, unknown>>(v)) return Object.values(v.props).map(texto).join(" ");
   if (v && typeof v === "object") return Object.values(v).map(texto).join(" ");
   return "";
@@ -86,6 +94,7 @@ beforeEach(() => {
   cenario.permissoes = new Set();
   cenario.chamadas = [];
   cenario.respostas = {};
+  cenario.erros = {};
   cenario.tabelas = {
     clientes: [{ id: CLIENTE, numero: 42, nome: "Maria Teste", documento_mascara: "•••.•••.247-25", telefone_mascara: "(41) •••••-0001", situacao: "ativo", criado_em: "2026-11-01T13:00:00Z" }],
     vendas: [{ id: VENDA, numero: 77, concluida_em: "2026-11-10T15:00:00Z", total_centavos: "7900", situacao: "concluida", cliente_id: CLIENTE }],
@@ -145,6 +154,43 @@ describe("/clientes/[id]", () => {
     cenario.respostas.cliente_ficha = { data: null, error: { code: "P0002" } };
     await expect(abrir()).rejects.toThrow("não encontrado");
     await expect(FichaDoCliente({ params: Promise.resolve({ id: "abc" }), searchParams: Promise.resolve({}) })).rejects.toThrow("não encontrado");
+  });
+
+  // L5e (CRM-002): a ficha 360, lida pelo RLS de quem abre (aqui, o que o banco simulado devolve).
+  it("mostra as OS, o funil e a agenda e o Ora Connect das compras; a linha só com o DDD e os quatro últimos dígitos", async () => {
+    cenario.permissoes = new Set(["cliente.buscar"]);
+    cenario.respostas.cliente_ficha = { data: ficha(), error: null };
+    Object.assign(cenario.tabelas, {
+      ordens_servico: [{ id: "00000000-0000-4000-9000-0000000000a1", numero: 12, aparelho: "Galaxy A15", situacao: "aberta", servico: "aguardando_orcamento", aberta_em: "2026-11-12T13:00:00Z", encerrada_em: null, prazo: null, cliente_id: CLIENTE },
+        { id: "00000000-0000-4000-9000-0000000000a2", numero: 9, aparelho: "Moto G", situacao: "entregue", servico: "concluido", aberta_em: "2026-11-02T13:00:00Z", encerrada_em: "2026-11-05T13:00:00Z", prazo: null, cliente_id: CLIENTE }],
+      oportunidades: [{ id: "00000000-0000-4000-9000-0000000000b1", numero: 3, etapa: "proposta", interesse: "iPhone 15", proximo_passo: "Ligar com a proposta", proximo_passo_em: "2026-11-16T15:00:00Z", encerrado_em: null, criado_em: "2026-11-10T13:00:00Z", cliente_id: CLIENTE }],
+      atividades: [{ id: "00000000-0000-4000-9000-0000000000c1", tipo: "ligacao", descricao: "Retornar sobre o iPhone", situacao: "aberta", vence_em: "2026-11-16T15:00:00Z", encerrada_em: null, cliente_id: CLIENTE }],
+      venda_itens: [{ id: "00000000-0000-4000-9000-0000000000d1", venda_id: VENDA }],
+      connect_operacoes: [{ id: "00000000-0000-4000-9000-0000000000e1", numero: 5, tipo: "ativacao", situacao: "confirmada", criado_em: "2026-11-10T15:10:00Z", linha: null, numero_ativado: "41999991234", plano_nome: "Ora 20GB" }],
+    });
+    const t = limpar(await abrir() as ReactElement);
+    for (const trecho of ["Assistência", "OS nº 12", "Galaxy A15", "Aguardando orçamento", "OS nº 9", "Entregue e cobrada", "Funil e agenda", "iPhone 15", "Proposta",
+      "Próximo passo: Ligar com a proposta", "Ligação", "Retornar sobre o iPhone", "a fazer", "Ora Connect", "Ativação de chip", "nº 5", "linha (41) •••••-1234", "Ora 20GB", "Confirmada"]) {
+      expect(t, trecho).toContain(trecho);
+    }
+    expect(t).not.toContain("41999991234");
+  });
+
+  it("falha de leitura aparece como falha; tabela que o banco não tem esconde o bloco; sem nada, só a assistência para quem abre OS", async () => {
+    cenario.respostas.cliente_ficha = { data: ficha(), error: null };
+    cenario.permissoes = new Set(["cliente.buscar"]);
+    let t = limpar(await abrir() as ReactElement);
+    for (const bloco of ["Assistência", "Funil e agenda", "Ora Connect"]) expect(t, bloco).not.toContain(bloco);
+    cenario.permissoes = new Set(["cliente.buscar", "os.abrir"]);
+    t = limpar(await abrir() as ReactElement);
+    expect(t).toContain("Nenhuma ordem de serviço deste cliente.");
+    cenario.erros = { ordens_servico: { code: "57014" }, oportunidades: { code: "PGRST205" }, atividades: { code: "PGRST205" }, connect_operacoes: { code: "57014" } };
+    cenario.tabelas.venda_itens = [{ id: "00000000-0000-4000-9000-0000000000d1", venda_id: VENDA }];
+    t = limpar(await abrir() as ReactElement);
+    expect(t).toContain("Não deu para ler as ordens de serviço agora");
+    expect(t).not.toContain("Funil e agenda");
+    expect(t).toContain("Não deu para ler as operações do Ora Connect agora");
+    expect(t).not.toContain("Nenhuma ordem de serviço");
   });
 });
 
