@@ -1,5 +1,7 @@
 // Gera docs/alinhamento/RASTREABILIDADE.md a partir do backlog.json (total dinâmico)
 // e de docs/alinhamento/status-requisitos.json (status real). Sem dependências.
+// Também mantém o estado de cada requisito em docs/alinhamento/execucao-integral-status.json igual ao de
+// status-requisitos.json (a fonte; quem não está lá é "nao_iniciado"), com a contagem dos estados (lote R3, 14/11).
 // Uso: node scripts/gerar-rastreabilidade.mjs [--conferir]
 import { readFileSync, writeFileSync } from "node:fs";
 
@@ -55,14 +57,46 @@ for (const d of dominios) {
   md += "\n";
 }
 
+// O checkpoint da execução integral repete o estado de cada requisito: tem de ser o mesmo da fonte.
+const caminhoExecucao = "docs/alinhamento/execucao-integral-status.json";
+const textoExecucao = readFileSync(caminhoExecucao, "utf8");
+const execucao = JSON.parse(textoExecucao);
+const naExecucao = new Set(Object.keys(execucao.requisitos));
+const faltando = [...ids].filter((id) => !naExecucao.has(id));
+const sobrando = [...naExecucao].filter((id) => !ids.has(id));
+if (faltando.length || sobrando.length) {
+  throw new Error(`${caminhoExecucao}: requisitos fora do backlog.json (${sobrando.join(", ") || "nenhum"}) ou faltando (${faltando.join(", ") || "nenhum"})`);
+}
+const divergentes = [];
+for (const [id, r] of Object.entries(execucao.requisitos)) {
+  const fonte = status.requisitos[id]?.status ?? "nao_iniciado";
+  if (r.estado !== fonte) {
+    divergentes.push(`${id} (${r.estado} → ${fonte})`);
+    r.estado = fonte;
+  }
+}
+const contagem = {};
+for (const estado of Object.keys(execucao.contagem_dos_estados)) contagem[estado] = 0;
+for (const r of Object.values(execucao.requisitos)) contagem[r.estado] = (contagem[r.estado] ?? 0) + 1;
+execucao.contagem_dos_estados = contagem;
+const textoExecucaoNovo = `${JSON.stringify(execucao, null, 2)}\n`;
+
 const destino = "docs/alinhamento/RASTREABILIDADE.md";
 if (process.argv.includes("--conferir")) {
   if (readFileSync(destino, "utf8") !== md) {
     console.error(`${destino} está desatualizado. Rode: node scripts/gerar-rastreabilidade.mjs`);
     process.exit(1);
   }
+  if (textoExecucao !== textoExecucaoNovo) {
+    console.error(`${caminhoExecucao} diverge de status-requisitos.json${divergentes.length ? `: ${divergentes.join("; ")}` : " (contagem dos estados)"}. Rode: node scripts/gerar-rastreabilidade.mjs`);
+    process.exit(1);
+  }
   console.log("Rastreabilidade em dia.");
 } else {
   writeFileSync(destino, md);
   console.log(`Gerado ${destino}: ${linhas.length} requisitos, ${linhas.filter((x) => x.piloto).length} no piloto.`);
+  if (textoExecucao !== textoExecucaoNovo) {
+    writeFileSync(caminhoExecucao, textoExecucaoNovo);
+    console.log(`Atualizado ${caminhoExecucao}: ${divergentes.length ? divergentes.join("; ") : "contagem dos estados"}.`);
+  }
 }
