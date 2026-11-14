@@ -123,16 +123,23 @@ begin
       return v_variante;
     end if;
   else
-    select c.id into v_categoria from public.categorias c where c.organizacao_id = p_organizacao and c.nome = 'Assistência técnica';
+    -- A categoria (e o SKU) seguem os índices únicos sem diferença de maiúsculas (R2): "assistência técnica" já
+    -- cadastrada é a mesma categoria.
+    select c.id into v_categoria from public.categorias c where c.organizacao_id = p_organizacao and lower(c.nome) = lower('Assistência técnica');
     if v_categoria is null then
-      insert into public.categorias (organizacao_id, nome) values (p_organizacao, 'Assistência técnica') returning id into v_categoria;
+      insert into public.categorias (organizacao_id, nome) values (p_organizacao, 'Assistência técnica')
+      on conflict (organizacao_id, (lower(nome))) do nothing
+      returning id into v_categoria;
+      if v_categoria is null then
+        select c.id into v_categoria from public.categorias c where c.organizacao_id = p_organizacao and lower(c.nome) = lower('Assistência técnica');
+      end if;
     end if;
     insert into public.produtos (organizacao_id, tipo, nome, categoria_id, descricao, reservado_para)
     values (p_organizacao, 'servico', 'Conserto (ordem de serviço)', v_categoria,
             'Produto do sistema: entra na venda só pela ordem de serviço, com o valor do orçamento aprovado.', 'ordem_de_servico')
     returning id into v_produto;
   end if;
-  if exists (select 1 from public.variantes v where v.organizacao_id = p_organizacao and v.sku = v_sku) then
+  if exists (select 1 from public.variantes v where v.organizacao_id = p_organizacao and lower(v.sku) = lower(v_sku)) then
     v_sku := 'OS-CONSERTO-' || upper(left(replace(v_produto::text, '-', ''), 8));
   end if;
   insert into public.variantes (organizacao_id, produto_id, sku, nome)

@@ -562,6 +562,20 @@ describe("cobrança no PDV e entrega (L12c, ORA-OS-006 e ORA-OS-005)", () => {
     expect(await codigo(ana, CONTATO, [garantia, "entrega"])).toBe("22023");
   });
 
+  it("a rede já tem \"assistência técnica\" (outras maiúsculas) e um SKU \"os-conserto\": o produto do sistema usa a categoria e outro SKU", async () => {
+    await db.query("insert into public.categorias (organizacao_id, nome) values ($1, 'assistência técnica')", [ids.organizacao]);
+    await db.query("insert into public.variantes (organizacao_id, produto_id, sku, nome) select organizacao_id, produto_id, 'os-conserto', 'Outra coisa' from public.variantes where id = $1", [cat.capa]);
+    const ana = await comCaixa(await naLoja(ids.vendedorA, ids.lojaA));
+    const { id } = await prontaNaLoja(ana);
+    const venda = await valor<string>(ana, NOVA_VENDA, [chave("venda")]);
+    const item = await valor<string>(ana, COBRAR, [venda, id, chave("item")]);
+    const produto = (await db.query<{ categoria: string; sku: string }>(
+      `select c.nome as categoria, v.sku from public.venda_itens i join public.variantes v on v.id = i.variante_id
+       join public.produtos p on p.id = v.produto_id join public.categorias c on c.id = p.categoria_id where i.id = $1`, [item])).rows[0];
+    expect(produto?.categoria).toBe("assistência técnica");
+    expect(produto?.sku).toMatch(/^OS-CONSERTO-[0-9A-F]{8}$/);
+  });
+
   it("quem vê: a ligação da venda com a OS segue o RLS de cada tabela; ninguém escreve direto", async () => {
     const ana = await comCaixa(await naLoja(ids.vendedorA, ids.lojaA));
     const { id } = await prontaNaLoja(ana);
