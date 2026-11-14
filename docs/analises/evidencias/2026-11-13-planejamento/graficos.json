@@ -1,0 +1,356 @@
+[
+  {
+    "arquivo": "apps/plataforma/src/app/contas-a-pagar/ConteudoContas.tsx",
+    "linha": 138,
+    "componente": "Colunas",
+    "demo": false
+  },
+  {
+    "arquivo": "apps/plataforma/src/app/contas-a-pagar/ConteudoContas.tsx",
+    "linha": 143,
+    "componente": "BarrasHorizontais",
+    "demo": false
+  },
+  {
+    "arquivo": "apps/plataforma/src/app/contas-a-pagar/ConteudoContas.tsx",
+    "linha": 153,
+    "componente": "BarrasHorizontais",
+    "demo": false
+  },
+  {
+    "arquivo": "apps/plataforma/src/app/demo/_paineis/InicioVendedor.tsx",
+    "linha": 53,
+    "componente": "Medidor",
+    "demo": true
+  },
+  {
+    "arquivo": "apps/plataforma/src/app/demo/_paineis/OutrosPaineis.tsx",
+    "linha": 34,
+    "componente": "BarraSegmentada",
+    "demo": true
+  },
+  {
+    "arquivo": "apps/plataforma/src/app/demo/_paineis/PainelGestao.tsx",
+    "linha": 161,
+    "componente": "Linhas",
+    "demo": true
+  },
+  {
+    "arquivo": "apps/plataforma/src/app/demo/_paineis/PainelGestao.tsx",
+    "linha": 182,
+    "componente": "Medidor",
+    "demo": true
+  },
+  {
+    "arquivo": "apps/plataforma/src/app/demo/_paineis/PainelGestao.tsx",
+    "linha": 204,
+    "componente": "BarraSegmentada",
+    "demo": true
+  },
+  {
+    "arquivo": "apps/plataforma/src/app/demo/_paineis/PainelGestao.tsx",
+    "linha": 221,
+    "componente": "BarrasHorizontais",
+    "demo": true
+  },
+  {
+    "arquivo": "apps/plataforma/src/app/demo/_paineis/PainelGestao.tsx",
+    "linha": 231,
+    "componente": "BarrasHorizontais",
+    "demo": true
+  },
+  {
+    "arquivo": "apps/plataforma/src/app/demo/connect/_abas/Carteira.tsx",
+    "linha": 43,
+    "componente": "BarraSegmentada",
+    "demo": true
+  },
+  {
+    "arquivo": "apps/plataforma/src/app/demo/connect/_abas/ConsultarLinha.tsx",
+    "linha": 96,
+    "componente": "Colunas",
+    "demo": true
+  },
+  {
+    "arquivo": "apps/plataforma/src/app/demo/connect/_abas/Operacoes.tsx",
+    "linha": 67,
+    "componente": "BarraSegmentada",
+    "demo": true
+  },
+  {
+    "arquivo": "apps/plataforma/src/app/demo/connect/_abas/Operacoes.tsx",
+    "linha": 76,
+    "componente": "BarrasHorizontais",
+    "demo": true
+  },
+  {
+    "arquivo": "apps/plataforma/src/app/demo/estoque/page.tsx",
+    "linha": 113,
+    "componente": "BarrasHorizontais",
+    "demo": true
+  },
+  {
+    "arquivo": "apps/plataforma/src/app/demo/financeiro/page.tsx",
+    "linha": 58,
+    "componente": "BarraSegmentada",
+    "demo": true
+  },
+  {
+    "arquivo": "apps/plataforma/src/app/demo/financeiro/page.tsx",
+    "linha": 95,
+    "componente": "ColunasDivergentes",
+    "demo": true
+  },
+  {
+    "arquivo": "apps/plataforma/src/app/demo/metas/page.tsx",
+    "linha": 51,
+    "componente": "Medidor",
+    "demo": true
+  },
+  {
+    "arquivo": "apps/plataforma/src/app/demo/metas/page.tsx",
+    "linha": 60,
+    "componente": "BarrasHorizontais",
+    "demo": true
+  },
+  {
+    "arquivo": "apps/plataforma/src/app/demo/metas/page.tsx",
+    "linha": 100,
+    "componente": "BarrasHorizontais",
+    "demo": true
+  },
+  {
+    "arquivo": "apps/plataforma/src/app/demo/relatorios/page.tsx",
+    "linha": 80,
+    "componente": "Linhas",
+    "demo": true
+  },
+  {
+    "arquivo": "apps/plataforma/src/app/demo/relatorios/page.tsx",
+    "linha": 85,
+    "componente": "BarraSegmentada",
+    "demo": true
+  },
+  {
+    "arquivo": "apps/plataforma/src/app/demo/relatorios/page.tsx",
+    "linha": 88,
+    "componente": "BarraSegmentada",
+    "demo": true
+  },
+  {
+    "arquivo": "apps/plataforma/src/app/demo/relatorios/page.tsx",
+    "linha": 94,
+    "componente": "BarrasHorizontais",
+    "demo": true
+  },
+  {
+    "arquivo": "apps/plataforma/src/app/demo/relatorios/page.tsx",
+    "linha": 100,
+    "componente": "Linhas",
+    "demo": true
+  },
+  {
+    "arquivo": "apps/plataforma/src/app/demo/relatorios/page.tsx",
+    "linha": 103,
+    "componente": "Linhas",
+    "demo": true
+  },
+  {
+    "arquivo": "apps/plataforma/src/app/demo/relatorios/page.tsx",
+    "linha": 106,
+    "componente": "Colunas",
+    "demo": true
+  },
+  {
+    "arquivo": "apps/plataforma/src/app/demo/relatorios/page.tsx",
+    "linha": 112,
+    "componente": "Colunas",
+    "demo": true
+  },
+  {
+    "arquivo": "apps/plataforma/src/app/equipe/PessoasPorPapel.tsx",
+    "linha": 29,
+    "componente": "BarrasHorizontais",
+    "demo": false
+  },
+  {
+    "arquivo": "apps/plataforma/src/app/estoque/PainelDoEstoque.tsx",
+    "linha": 60,
+    "componente": "BarrasHorizontais",
+    "demo": false
+  },
+  {
+    "arquivo": "apps/plataforma/src/app/estoque/PainelDoEstoque.tsx",
+    "linha": 85,
+    "componente": "BarraSegmentada",
+    "demo": false
+  },
+  {
+    "arquivo": "apps/plataforma/src/app/estoque/PainelDoEstoque.tsx",
+    "linha": 100,
+    "componente": "BarrasHorizontais",
+    "demo": false
+  },
+  {
+    "arquivo": "apps/plataforma/src/app/financeiro/ConteudoFinanceiro.tsx",
+    "linha": 72,
+    "componente": "ColunasDivergentes",
+    "demo": false
+  },
+  {
+    "arquivo": "apps/plataforma/src/app/financeiro/ConteudoFinanceiro.tsx",
+    "linha": 93,
+    "componente": "BarrasHorizontais",
+    "demo": false
+  },
+  {
+    "arquivo": "apps/plataforma/src/app/financeiro/ConteudoFinanceiro.tsx",
+    "linha": 122,
+    "componente": "ColunasDivergentes",
+    "demo": false
+  },
+  {
+    "arquivo": "apps/plataforma/src/app/financeiro/ConteudoFinanceiro.tsx",
+    "linha": 340,
+    "componente": "BarraSegmentada",
+    "demo": false
+  },
+  {
+    "arquivo": "apps/plataforma/src/app/inicio/ConteudoInicio.tsx",
+    "linha": 53,
+    "componente": "BarrasHorizontais",
+    "demo": false
+  },
+  {
+    "arquivo": "apps/plataforma/src/app/metas/ConteudoMetas.tsx",
+    "linha": 131,
+    "componente": "BarrasHorizontais",
+    "demo": false
+  },
+  {
+    "arquivo": "apps/plataforma/src/app/metas/ConteudoMetas.tsx",
+    "linha": 304,
+    "componente": "Medidor",
+    "demo": false
+  },
+  {
+    "arquivo": "apps/plataforma/src/app/previsao/Simulador.tsx",
+    "linha": 129,
+    "componente": "ColunasDivergentes",
+    "demo": false
+  },
+  {
+    "arquivo": "apps/plataforma/src/app/previsao/Simulador.tsx",
+    "linha": 140,
+    "componente": "Linhas",
+    "demo": false
+  },
+  {
+    "arquivo": "apps/plataforma/src/app/relatorios/ConteudoRelatorios.tsx",
+    "linha": 79,
+    "componente": "Linhas",
+    "demo": false
+  },
+  {
+    "arquivo": "apps/plataforma/src/app/relatorios/ConteudoRelatorios.tsx",
+    "linha": 123,
+    "componente": "BarraSegmentada",
+    "demo": false
+  },
+  {
+    "arquivo": "apps/plataforma/src/app/relatorios/ConteudoRelatorios.tsx",
+    "linha": 167,
+    "componente": "Linhas",
+    "demo": false
+  },
+  {
+    "arquivo": "apps/plataforma/src/app/relatorios/ConteudoRelatorios.tsx",
+    "linha": 208,
+    "componente": "Colunas",
+    "demo": false
+  },
+  {
+    "arquivo": "apps/plataforma/src/app/resultado/ConteudoResultado.tsx",
+    "linha": 179,
+    "componente": "Cascata",
+    "demo": false
+  },
+  {
+    "arquivo": "apps/plataforma/src/app/resultado/ConteudoResultado.tsx",
+    "linha": 218,
+    "componente": "BarrasHorizontais",
+    "demo": false
+  },
+  {
+    "arquivo": "apps/plataforma/src/componentes/paineis-de-metas.tsx",
+    "linha": 29,
+    "componente": "BarrasHorizontais",
+    "demo": false
+  },
+  {
+    "arquivo": "apps/plataforma/src/componentes/paineis-de-metas.tsx",
+    "linha": 54,
+    "componente": "Medidor",
+    "demo": false
+  },
+  {
+    "arquivo": "apps/plataforma/src/componentes/paineis-de-metas.tsx",
+    "linha": 134,
+    "componente": "BarrasHorizontais",
+    "demo": false
+  },
+  {
+    "arquivo": "apps/plataforma/src/componentes/paineis-de-vendas.tsx",
+    "linha": 245,
+    "componente": "Linhas",
+    "demo": false
+  },
+  {
+    "arquivo": "apps/plataforma/src/componentes/paineis-de-vendas.tsx",
+    "linha": 275,
+    "componente": "BarraSegmentada",
+    "demo": false
+  },
+  {
+    "arquivo": "apps/plataforma/src/componentes/paineis-de-vendas.tsx",
+    "linha": 312,
+    "componente": "BarraSegmentada",
+    "demo": false
+  },
+  {
+    "arquivo": "apps/plataforma/src/componentes/paineis-de-vendas.tsx",
+    "linha": 315,
+    "componente": "BarraSegmentada",
+    "demo": false
+  },
+  {
+    "arquivo": "apps/plataforma/src/componentes/paineis-de-vendas.tsx",
+    "linha": 324,
+    "componente": "BarrasHorizontais",
+    "demo": false
+  },
+  {
+    "arquivo": "apps/plataforma/src/componentes/paineis-de-vendas.tsx",
+    "linha": 363,
+    "componente": "BarrasHorizontais",
+    "demo": false
+  },
+  {
+    "arquivo": "apps/plataforma/src/componentes/paineis-do-connect.tsx",
+    "linha": 56,
+    "componente": "Linhas",
+    "demo": false
+  },
+  {
+    "arquivo": "apps/plataforma/src/componentes/paineis-do-connect.tsx",
+    "linha": 97,
+    "componente": "BarraSegmentada",
+    "demo": false
+  },
+  {
+    "arquivo": "apps/plataforma/src/componentes/ui.tsx",
+    "linha": 226,
+    "componente": "Sparkline",
+    "demo": false
+  }
+]
