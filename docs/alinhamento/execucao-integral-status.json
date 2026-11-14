@@ -2,7 +2,7 @@
   "_leia": "Checkpoint do programa de execução integral (PR #67). Carregar ao retomar e seguir para o próximo item executável da fila; não reiniciar o projeto. Estados vêm de status-requisitos.json (fonte da rastreabilidade); este arquivo acrescenta lote, bloqueio externo e revisão.",
   "atualizado_em": "2026-11-14",
   "base": {
-    "main": "d5c9fa5",
+    "main": "7015083",
     "pacote": {
       "pr": 67,
       "branch": "docs/execucao-integral-20261110",
@@ -18,13 +18,12 @@
   },
   "publicado": {
     "homologacao": {
-      "commit": "d5c9fa5",
+      "commit": "7015083",
       "quando": "2026-11-14",
-      "conferido": "rodapé da tela de entrada (d5c9fa5 · build 14/11/2026 17:38), /saude 200 e as rotas reais respondendo 307 para o login"
+      "conferido": "rodapé da tela de entrada (7015083 · build 14/11/2026 17:48), /saude 200 e as rotas reais respondendo 307 para o login"
     },
     "falta_publicar": [
-      "L5d, documentos da venda (CRM-008 em parte), publicado ao fim do lote",
-      "migration 20261114220000_anexos_da_venda (L5d): aplicar no ora5g-dev pede o sim do proprietário"
+      "registro da migration do L5d aplicada no ora5g-dev em 14/11 (nome, tipos gerados e documentos), publicado ao fim do lote; nenhuma tela muda"
     ]
   },
   "contagem_dos_estados": {
