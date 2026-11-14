@@ -5,6 +5,7 @@ import { MEIOS, type MeioPagamento } from "@ora5g/dominio";
 
 import { FalhaDoServico, type obterSessao } from "../acesso/sessao";
 import { centavosDoBanco } from "../dinheiro";
+import { lerEmPaginas, type Resposta } from "../leitura-completa";
 import { MEIOS_CONCILIAVEIS, type Janela } from "./painel";
 
 type Cliente = Awaited<ReturnType<typeof obterSessao>>["supabase"];
@@ -23,7 +24,6 @@ export const situacaoDoParametro = (visao: Visao, valor: unknown): string | null
   typeof valor === "string" && Object.hasOwn(VISOES[visao].situacoes, valor) ? valor : null;
 
 export const POR_PAGINA = 50;
-const LOTE = 1000; // linhas por pedido à API (o limite do PostgREST); a exportação pede lote a lote
 export const LIMITE_DA_EXPORTACAO = 20_000;
 
 export const nomeDoMeio = (meio: string | null) => (meio && Object.hasOwn(MEIOS, meio) ? MEIOS[meio as MeioPagamento].nome : meio ?? "");
@@ -58,15 +58,15 @@ function consulta(supabase: Cliente, visao: Visao, janela: Janela, unidade: stri
     let q = supabase.from("vendas")
       .select("id, numero, unidade_id, vendedor_id, situacao, total_centavos, devolvido_centavos, concluida_em, cancelada_em", { count: "exact" });
     q = situacao === "cancelada"
-      ? q.eq("situacao", "cancelada").not("concluida_em", "is", null).gte("cancelada_em", inicio).lt("cancelada_em", fim).order("cancelada_em", { ascending: false })
-      : q.gte("concluida_em", inicio).lt("concluida_em", fim).order("concluida_em", { ascending: false });
+      ? q.eq("situacao", "cancelada").not("concluida_em", "is", null).gte("cancelada_em", inicio).lt("cancelada_em", fim).order("cancelada_em", { ascending: false }).order("id")
+      : q.gte("concluida_em", inicio).lt("concluida_em", fim).order("concluida_em", { ascending: false }).order("id");
     if (situacao === "concluida") q = q.eq("situacao", "concluida");
     return unidade ? q.eq("unidade_id", unidade) : q;
   }
   if (visao === "pagamentos") {
     let q = supabase.from("venda_pagamentos")
       .select("id, meio, situacao, valor_centavos, entrada_centavos, meio_entrada, criado_em, conciliado_em, liquidado_em, valor_liquido_centavos, referencia_conciliacao, vendas!inner(id, numero, unidade_id)", { count: "exact" })
-      .gte("criado_em", inicio).lt("criado_em", fim).order("criado_em", { ascending: false });
+      .gte("criado_em", inicio).lt("criado_em", fim).order("criado_em", { ascending: false }).order("id");
     // Os mesmos pagamentos do painel da conciliação: cartão e Pix que continuam confirmados.
     if (situacao === "a_conciliar") q = q.eq("situacao", "confirmado").in("meio", [...MEIOS_CONCILIAVEIS]).is("conciliado_em", null);
     else if (situacao === "conciliado") q = q.eq("situacao", "confirmado").not("conciliado_em", "is", null);
@@ -76,7 +76,7 @@ function consulta(supabase: Cliente, visao: Visao, janela: Janela, unidade: stri
   if (visao === "devolucoes") {
     const q = supabase.from("venda_devolucoes")
       .select("numero, valor_centavos, motivo, criado_em, vendas!inner(id, numero, unidade_id)", { count: "exact" })
-      .gte("criado_em", inicio).lt("criado_em", fim).order("criado_em", { ascending: false });
+      .gte("criado_em", inicio).lt("criado_em", fim).order("criado_em", { ascending: false }).order("numero");
     return unidade ? q.eq("vendas.unidade_id", unidade) : q;
   }
   let q = supabase.from("caixas")
@@ -86,7 +86,7 @@ function consulta(supabase: Cliente, visao: Visao, janela: Janela, unidade: stri
     : situacao
       ? q.eq("situacao", situacao).gte("fechado_em", inicio).lt("fechado_em", fim)
       : q.or(`situacao.eq.aberto,and(fechado_em.gte.${inicio},fechado_em.lt.${fim})`);
-  q = q.order("aberto_em", { ascending: false });
+  q = q.order("aberto_em", { ascending: false }).order("id");
   return unidade ? q.eq("unidade_id", unidade) : q;
 }
 
@@ -144,17 +144,17 @@ export async function paginaDeRegistros(supabase: Cliente, visao: Visao, janela:
   return { registros: converter(visao, (r.data ?? []) as Record<string, unknown>[]), total: r.count ?? 0 };
 }
 
-/** Todos os registros da visão no período (exportação), lote a lote; para no limite e avisa. */
+/**
+ * Todos os registros da visão no período (exportação), página a página abaixo do teto de linhas da API; para
+ * no limite e avisa. B5 (REV-PLAN-003): antes o fim era "página com menos de 1.000 linhas", o que cortaria em
+ * silêncio se o teto do projeto fosse menor que 1.000; agora avança pelo que veio, até a página vazia.
+ */
 export async function todosOsRegistros(supabase: Cliente, visao: Visao, janela: Janela, unidade: string | null, situacao: string | null) {
-  const linhas: Record<string, unknown>[] = [];
-  for (let de = 0; de < LIMITE_DA_EXPORTACAO; de += LOTE) {
-    const r = await consulta(supabase, visao, janela, unidade, situacao).range(de, Math.min(de + LOTE, LIMITE_DA_EXPORTACAO) - 1);
-    if (r.error) throw new FalhaDoServico(`financeiro_exportar_${visao}`);
-    const lote = (r.data ?? []) as Record<string, unknown>[];
-    linhas.push(...lote);
-    if (lote.length < LOTE) return { registros: converter(visao, linhas), cortado: false };
-  }
-  return { registros: converter(visao, linhas), cortado: true };
+  // As quatro visões têm linhas de forma diferente; a conversão abaixo é que confere cada uma.
+  const pagina = (de: number, ate: number) => consulta(supabase, visao, janela, unidade, situacao).range(de, ate) as unknown as PromiseLike<Resposta<Record<string, unknown>>>;
+  const r = await lerEmPaginas(pagina, LIMITE_DA_EXPORTACAO);
+  if (!r.ok) throw new FalhaDoServico(`financeiro_exportar_${visao}`);
+  return { registros: converter(visao, r.linhas as Record<string, unknown>[]), cortado: r.mais };
 }
 
 /** Ids de pessoas e lojas para buscar os nomes (uma consulta para cada, sem repetir). */

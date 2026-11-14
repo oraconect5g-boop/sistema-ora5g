@@ -9,6 +9,7 @@ import { Aviso, Botao, Cartao, Selo, TituloPagina } from "../../componentes/ui";
 import { FalhaDoServico, obterSessao } from "../../lib/acesso/sessao";
 import { termoDaBusca, buscarNoCatalogo } from "../../lib/catalogo/busca";
 import { ERROS_DO_CADASTRO, TEM_ESTOQUE, TIPOS_DE_PRODUTO, ehTipoDeProduto, percentualDosPontosBase } from "../../lib/catalogo/cadastro";
+import { lerPorIds } from "../../lib/leitura-completa";
 import { chaveDoCatalogo, textoDoParametro, type ValorDeParametro } from "../../lib/parametros";
 import { definirPolitica, salvarCategoria, salvarMarca, salvarProduto, salvarVariante } from "./acoes";
 
@@ -97,10 +98,11 @@ export default async function Produtos({ searchParams }: {
   ]);
   if (categorias.error || marcas.error || produtos.error) throw new FalhaDoServico("produtos");
   const lista = produtos.data as Produto[];
-  const variantes = lista.length
-    ? await supabase.from("variantes").select("id, produto_id, sku, nome, cor, capacidade, codigo_barras, estoque_minimo, ativa").in("produto_id", lista.map((p) => p.id)).order("sku")
-    : { data: [] as Variante[], error: null };
-  if (variantes.error) throw new FalhaDoServico("variantes");
+  // B5 (REV-PLAN-003): as variações dos produtos da página vêm completas, lote a lote e página a página.
+  const lidas = await lerPorIds(lista.map((p) => p.id), (lote, de, ate) => supabase.from("variantes")
+    .select("id, produto_id, sku, nome, cor, capacidade, codigo_barras, estoque_minimo, ativa").in("produto_id", lote).order("sku").order("id").range(de, ate));
+  if (!lidas.ok || lidas.mais) throw new FalhaDoServico("variantes");
+  const variantes = { data: [...lidas.linhas].sort((a, b) => a.sku.localeCompare(b.sku) || a.id.localeCompare(b.id)) as Variante[] };
   const cats = categorias.data as Categoria[];
   const ativas = cats.filter((c) => c.ativa);
   const nomeDaCategoria = (id: string) => cats.find((c) => c.id === id)?.nome ?? "—";

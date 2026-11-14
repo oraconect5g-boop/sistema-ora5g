@@ -18,7 +18,7 @@ const unicos = (lista: readonly string[]) => [...new Set(lista)];
 export async function buscarNoCatalogo(supabase: Cliente, termo: string, opcoes: { limite?: number; ativos?: boolean } = {}) {
   const limite = opcoes.limite ?? 200;
   const ativos = opcoes.ativos ?? true;
-  if (!termo) return { produtos: [] as string[], variantes: [] as string[] };
+  if (!termo) return { produtos: [] as string[], variantes: [] as string[], cortada: false };
   const padrao = `%${termo}%`;
   const produtos = supabase.from("produtos").select("id");
   const porSku = supabase.from("variantes").select("id, produto_id");
@@ -39,5 +39,8 @@ export async function buscarNoCatalogo(supabase: Cliente, termo: string, opcoes:
   return {
     produtos: unicos([...produtosPeloNome, ...variantes.map((v) => v.produto_id)]),
     variantes: unicos(variantes.map((v) => v.id)),
+    // B5: alguma das buscas chegou ao limite, então pode haver mais resultados do que os devolvidos: a tela pede
+    // para refinar, em vez de apresentar a lista como completa.
+    cortada: [pelosProdutos.data, pelosSkus.data, pelosNomes.data, dosProdutos.data].some((l) => l.length >= limite),
   };
 }

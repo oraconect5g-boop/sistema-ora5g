@@ -5,6 +5,7 @@ import { ehUuid } from "../acesso/regras";
 import type { obterSessao } from "../acesso/sessao";
 import { centavosDoBanco, ValorForaDoLimite } from "../dinheiro";
 import { RespostaInesperada } from "../financeiro/painel";
+import { lerEmPaginas } from "../leitura-completa";
 import { ehObjeto, inteiro as n, lista, objeto, texto as t, type Leitura, type Linha } from "../leitura-do-banco";
 import { ehDia, ehForma, ehSituacaoDaConta, type FiltroDasContas, type Forma, type SituacaoDaConta, type VisaoDasContas } from "./regras";
 
@@ -115,6 +116,8 @@ const COLUNAS = "id, unidade_id, categoria_id, fornecedor_id, descricao, documen
 export const LIMITE_DA_LISTA = 200;
 /** A exportação (L8d) leva mais contas que a tela; passou disso, o arquivo avisa na última linha. */
 export const LIMITE_DA_EXPORTACAO_DAS_CONTAS = 5_000;
+/** Os nomes de todos os fornecedores da rede, para a planilha; acima disso a exportação para em vez de sair sem nome. */
+const MAXIMO_DE_FORNECEDORES = 20_000;
 
 function converterConta(l: Linha): ContaAPagar {
   const forma = l.forma;
@@ -146,22 +149,28 @@ export async function consultarContas(
   supabase: Cliente, visao: VisaoDasContas, filtro: FiltroDasContas, hoje: string, limite: number = LIMITE_DA_LISTA,
 ): Promise<Leitura<{ contas: ContaAPagar[]; mais: boolean }>> {
   const inicio = new Date(Date.parse(`${hoje}T12:00:00Z`) - 60 * 86_400_000).toISOString().slice(0, 10);
-  let consulta = supabase.from("contas_a_pagar").select(COLUNAS);
-  if (filtro.tipo === "rede") consulta = consulta.is("unidade_id", null);
-  if (filtro.tipo === "loja") consulta = consulta.eq("unidade_id", filtro.id);
-  const r = visao === "abertas"
-    ? await consulta.eq("situacao", "aberta").order("vencimento").order("descricao").order("parcela").limit(limite + 1)
-    : visao === "pagas"
-      ? await consulta.eq("situacao", "paga").gte("paga_em", inicio).order("paga_em", { ascending: false }).order("descricao").limit(limite + 1)
-      : await consulta.eq("situacao", "cancelada").gte("cancelada_em", `${inicio}T03:00:00Z`).order("cancelada_em", { ascending: false }).limit(limite + 1);
-  if (r.error) {
-    if (TABELA_AUSENTE.has(r.error.code)) return { estado: "indisponivel" };
-    console.error("contas a pagar: falha ao ler a lista", { codigo: r.error.code || null });
+  // B5 (REV-PLAN-003): em páginas abaixo do teto de linhas da API, com o id no fim da ordem. Antes ia um pedido
+  // só de até 5.001 linhas: com o teto padrão de 1.000, 1.001 contas saíam como 1.000, sem o aviso de "há mais".
+  const pagina = (de: number, ate: number) => {
+    let consulta = supabase.from("contas_a_pagar").select(COLUNAS);
+    if (filtro.tipo === "rede") consulta = consulta.is("unidade_id", null);
+    if (filtro.tipo === "loja") consulta = consulta.eq("unidade_id", filtro.id);
+    const ordenada = visao === "abertas"
+      ? consulta.eq("situacao", "aberta").order("vencimento").order("descricao").order("parcela")
+      : visao === "pagas"
+        ? consulta.eq("situacao", "paga").gte("paga_em", inicio).order("paga_em", { ascending: false }).order("descricao")
+        : consulta.eq("situacao", "cancelada").gte("cancelada_em", `${inicio}T03:00:00Z`).order("cancelada_em", { ascending: false });
+    return ordenada.order("id").range(de, ate);
+  };
+  const r = await lerEmPaginas(pagina, limite);
+  if (!r.ok) {
+    if (TABELA_AUSENTE.has(r.erro.code ?? "")) return { estado: "indisponivel" };
+    console.error("contas a pagar: falha ao ler a lista", { codigo: r.erro.code || null });
     return { estado: "falha" };
   }
   try {
-    const contas = (r.data as Linha[]).map(converterConta);
-    return { estado: "ok", dados: { contas: contas.slice(0, limite), mais: contas.length > limite } };
+    const contas = (r.linhas as Linha[]).map(converterConta);
+    return { estado: "ok", dados: { contas, mais: r.mais } };
   } catch (erro) {
     if (!(erro instanceof RespostaInesperada) && !(erro instanceof ValorForaDoLimite)) throw erro;
     console.error("contas a pagar: conta em forma inesperada");
@@ -207,10 +216,11 @@ export async function consultarFornecedores(supabase: Cliente): Promise<{ id: st
  * volta null: a exportação para, em vez de sair com o nome em branco.
  */
 export async function nomesDosFornecedores(supabase: Cliente): Promise<Map<string, string> | null> {
-  const r = await supabase.from("fornecedores").select("id, nome").order("nome").limit(5_000);
-  if (r.error) {
-    console.error("contas a pagar: falha ao ler os nomes dos fornecedores", { codigo: r.error.code || null });
+  // B5: em páginas (antes, um pedido de 5.000 cortado em silêncio pelo teto da API); mais que o máximo é falha.
+  const r = await lerEmPaginas((de, ate) => supabase.from("fornecedores").select("id, nome").order("nome").order("id").range(de, ate), MAXIMO_DE_FORNECEDORES);
+  if (!r.ok || r.mais) {
+    console.error("contas a pagar: falha ao ler os nomes dos fornecedores", { codigo: r.ok ? "mais_que_o_maximo" : r.erro.code || null });
     return null;
   }
-  return new Map(r.data.map((f) => [f.id, f.nome]));
+  return new Map(r.linhas.map((f) => [f.id, f.nome]));
 }

@@ -57,7 +57,7 @@ describe("termo e identificador iguais nas três telas", () => {
 
 describe("buscarNoCatalogo", () => {
   it("pelo nome do produto traz todas as variações ativas dele (o estoque e o PDV antigos não achavam)", async () => {
-    expect(await buscarNoCatalogo(supabase, "galaxy a15")).toEqual({ produtos: ["p1", "p2"], variantes: ["v4", "v1", "v2"] });
+    expect(await buscarNoCatalogo(supabase, "galaxy a15")).toEqual({ produtos: ["p1", "p2"], variantes: ["v4", "v1", "v2"], cortada: false });
   });
 
   it("pelo SKU e pelo nome da variação", async () => {
@@ -72,6 +72,6 @@ describe("buscarNoCatalogo", () => {
   });
 
   it("termo vazio não consulta nada", async () => {
-    expect(await buscarNoCatalogo(supabase, "")).toEqual({ produtos: [], variantes: [] });
+    expect(await buscarNoCatalogo(supabase, "")).toEqual({ produtos: [], variantes: [], cortada: false });
   });
 });

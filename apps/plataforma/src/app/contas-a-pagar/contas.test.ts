@@ -65,6 +65,8 @@ class Consulta {
   }
   order() { return this; }
   limit() { return this; }
+  // B5: a lista vem em páginas (range); a simulação devolve a fatia pedida.
+  range(de: number, ate: number) { this.linhas = this.linhas.slice(de, ate + 1); return this; }
   then(resolver: (r: { data: Linha[] | null; error: Erro | null }) => unknown) {
     return Promise.resolve(this.erro ? { data: null, error: this.erro } : { data: this.linhas, error: null }).then(resolver);
   }
@@ -203,7 +205,8 @@ describe("/contas-a-pagar: o dono vê a rede e todas as lojas (L8a)", () => {
     const tela = await pagina();
     const t = visivel(tela);
     expect(cenario.chamadas).toEqual([{ nome: "contas_a_pagar_resumo", argumentos: { p_unidade: null, p_rede: false } }]);
-    expect(cenario.filtros.filter((f) => f.startsWith("contas_a_pagar "))).toEqual(["contas_a_pagar situacao=aberta"]);
+    // A lista vem em páginas (B5): o mesmo filtro em cada pedido, até a página vazia.
+    expect([...new Set(cenario.filtros.filter((f) => f.startsWith("contas_a_pagar ")))]).toEqual(["contas_a_pagar situacao=aberta"]);
     expect(t).toContain("Rede e todas as lojas Contas a pagar");
     expect(doTipo(tela, "FiltroSegmentado").map((f) => (f.opcoes as { rotulo: string }[]).map((o) => o.rotulo))).toEqual([
       ["Todas", "Rede (central)", "Loja A (teste)", "Loja B (teste)"], ["Em aberto", "Pagas (60 dias)", "Canceladas (60 dias)"],

@@ -33,6 +33,7 @@ class Consulta {
   is() { return this; }
   order() { return this; }
   limit() { return this; }
+  range(de: number, ate: number) { this.linhas = this.linhas.slice(de, ate + 1); return this; }
   maybeSingle() { return Promise.resolve({ data: this.linhas[0] ?? null, error: null }); }
   then(resolver: (r: { data: Record<string, unknown>[]; error: null }) => unknown) {
     return Promise.resolve({ data: this.linhas, error: null }).then(resolver);
