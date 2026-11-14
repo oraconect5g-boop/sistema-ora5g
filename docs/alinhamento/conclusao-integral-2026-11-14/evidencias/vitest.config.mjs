@@ -1,0 +1,1 @@
+export default {root:new URL('../../../../',import.meta.url).pathname,oxc:{jsx:{runtime:'automatic'}},test:{include:['docs/alinhamento/conclusao-integral-2026-11-14/evidencias/*.test.ts'],maxWorkers:1,hookTimeout:120000,testTimeout:30000}};

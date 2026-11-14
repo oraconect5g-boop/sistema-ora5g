@@ -1,0 +1,177 @@
+[
+  {
+    "arquivo": "resultados-exportacao.jsonl",
+    "resultado": {
+      "existentes": 1001,
+      "cap_servidor_simulado": 1000,
+      "pedidos": [
+        5001
+      ],
+      "chamadas": 1,
+      "estado": "ok",
+      "exportadas": 1000,
+      "mais": false
+    }
+  },
+  {
+    "arquivo": "resultados-financeiro.jsonl",
+    "resultado": {
+      "id": "REV-PLAN-001",
+      "prova": {
+        "externo": [
+          {
+            "situacao": "pendente",
+            "confirmado_em": null,
+            "valor_centavos": 7900
+          }
+        ],
+        "devolvido_na_base": 7900
+      }
+    }
+  },
+  {
+    "arquivo": "resultados-financeiro.jsonl",
+    "resultado": {
+      "id": "REV-PLAN-002",
+      "prova": {
+        "desfazer": true,
+        "estado": {
+          "venda": "cancelada",
+          "conta": "aberta",
+          "valor_centavos": 129900
+        },
+        "novo_recebimento": true
+      }
+    }
+  },
+  {
+    "arquivo": "resultados-financeiro.jsonl",
+    "resultado": {
+      "id": "CFG-001",
+      "prova": {
+        "migrations": 39,
+        "estado": {
+          "painel": "vendas_painel(timestamp with time zone,timestamp with time zone,uuid,boolean,uuid)",
+          "previsao": null,
+          "contas": null
+        },
+        "codigo": "42883"
+      }
+    }
+  },
+  {
+    "arquivo": "resultados.jsonl",
+    "resultado": {
+      "id": "REV-NOV-001",
+      "prova": {
+        "perm": false,
+        "codigo": "42501"
+      }
+    }
+  },
+  {
+    "arquivo": "resultados.jsonl",
+    "resultado": {
+      "id": "REV-NOV-002",
+      "prova": {
+        "resultado": {
+          "totais": {
+            "erro": 0,
+            "criar": 0,
+            "linhas": 1,
+            "atualizar": 1,
+            "sem_mudanca": 0,
+            "marcas_novas": 0,
+            "categorias_novas": 0
+          },
+          "repetida": false,
+          "atualizada": true,
+          "comparacao": 2
+        },
+        "precos": [
+          {
+            "valor_centavos": 12000
+          }
+        ]
+      }
+    }
+  },
+  {
+    "arquivo": "resultados.jsonl",
+    "resultado": {
+      "id": "REV-NOV-004",
+      "prova": {
+        "resultado": {
+          "id": "c39b8188-c719-41cd-af39-7109d2c59168",
+          "numero": 3,
+          "repetida": false,
+          "reentradas": 1
+        },
+        "itens": [
+          {
+            "situacao": "disponivel",
+            "em_estoque": true,
+            "unidade_id": "00000000-0000-4000-8000-000000000021"
+          }
+        ]
+      }
+    }
+  },
+  {
+    "arquivo": "resultados.jsonl",
+    "resultado": {
+      "id": "REV-NOV-005",
+      "prova": {
+        "codigo": "22023"
+      }
+    }
+  },
+  {
+    "arquivo": "resultados.jsonl",
+    "resultado": {
+      "id": "REV-DIR-001",
+      "prova": {
+        "resultado": {
+          "ajustes": 1,
+          "repetida": false,
+          "situacao": "aprovado"
+        },
+        "trilha": {
+          "criado_por": "00000000-0000-4000-8000-000000000106",
+          "enviado_por": "00000000-0000-4000-8000-000000000106",
+          "decidido_por": "00000000-0000-4000-8000-000000000100",
+          "contado_por": "00000000-0000-4000-8000-000000000100",
+          "ajuste_quantidade": -1
+        }
+      }
+    }
+  },
+  {
+    "arquivo": "resultados.jsonl",
+    "resultado": {
+      "id": "REV-DIR-002",
+      "prova": {
+        "resultado": {
+          "contado": 3,
+          "sistema": 2
+        },
+        "aparelhos": 2,
+        "identificadores": 3
+      }
+    }
+  },
+  {
+    "arquivo": "resultados-conferencia.jsonl",
+    "resultado": {
+      "itens_reais_ficticios": 501,
+      "conferidos": 500,
+      "pendentes_reais": 1,
+      "limites": [
+        500
+      ],
+      "anuncia_500_de_500": true,
+      "anuncia_tudo_conferido": true,
+      "anuncia_nenhum_pendente": true
+    }
+  }
+]
