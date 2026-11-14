@@ -572,8 +572,18 @@
     },
     "ORA-OS-005": {
       "status": "parcial",
-      "nota": "Lote L12a (14/11): aviso ao cliente pelo WhatsApp por clique para conversar (oficial), com a mensagem pronta: o comprovante da OS (número, aparelho com o final do IMEI, defeito, acessórios e prazo) e a chegada do aparelho de volta na loja. O banco entrega o número só para a loja da OS e registra o aviso na trilha e na auditoria, sem o número; quem envia é a pessoa, pelo WhatsApp da loja, sem automação não oficial. FALTA: o envio automático pela API oficial com modelo aprovado (ORA-WHATS-001), os avisos de orçamento e entrega (L12b e L12c) e o aviso ao técnico (P5).",
+      "nota": "Lote L12a (14/11): aviso ao cliente pelo WhatsApp por clique para conversar (oficial), com a mensagem pronta: o comprovante da OS (número, aparelho com o final do IMEI, defeito, acessórios e prazo) e a chegada do aparelho de volta na loja. O banco entrega o número só para a loja da OS e registra o aviso na trilha e na auditoria, sem o número; quem envia é a pessoa, pelo WhatsApp da loja, sem automação não oficial. L12b (14/11): o aviso do orçamento (diagnóstico, peças, mão de obra, total, prazo e como responder), enquanto ele espera o cliente. FALTA: o envio automático pela API oficial com modelo aprovado (ORA-WHATS-001), o aviso da entrega (L12c) e o aviso ao técnico (P5).",
       "evidencia": "packages/banco/supabase/migrations/20261114160000_ordem_de_servico.sql; packages/banco/src/ordem-de-servico.test.ts; packages/banco/src/autorizacao-funcoes.test.ts; apps/plataforma/src/lib/assistencia/regras.ts; apps/plataforma/src/lib/assistencia/regras.test.ts; apps/plataforma/src/app/assistencia/assistencia.test.ts"
+    },
+    "ORA-OS-003": {
+      "status": "testado",
+      "nota": "Lote L12b (14/11, DEC-U47): o orçamento sai do grupo de WhatsApp e fica na OS, com histórico: cada versão com o diagnóstico, até 10 peças descritas (quantidade e valor), a mão de obra, o total e o prazo do conserto; o novo substitui o que esperava o cliente, e nada se apaga (só a resposta é gravada, uma vez). Orça o técnico da assistência para onde a OS foi (os.orcar), com o aparelho com ele, e só as OS que foram para a assistência dele; o vendedor não orça (42501); a gerência da loja pode registrar em nome do técnico, dizendo como ele passou o orçamento. A mesma chave devolve o mesmo orçamento. Migration 20261114163000_orcamento_da_os (ainda não aplicada no ora5g-dev). FALTA: o técnico orçar no próprio celular depende da P5 (login próprio).",
+      "evidencia": "packages/banco/supabase/migrations/20261114163000_orcamento_da_os.sql; packages/banco/src/ordem-de-servico.test.ts; packages/banco/src/autorizacao-funcoes.test.ts; apps/plataforma/src/lib/assistencia/regras.ts; apps/plataforma/src/lib/assistencia/regras.test.ts; apps/plataforma/src/app/assistencia/assistencia.test.ts"
+    },
+    "ORA-OS-004": {
+      "status": "testado",
+      "nota": "Lote L12b (14/11): a loja da OS registra a resposta do cliente ao orçamento que espera (aprovado ou recusado; na loja, pelo WhatsApp ou por telefone; quem registrou e quando), uma vez: a mesma resposta repetida não muda nada, e o orçamento substituído ou já respondido não aceita resposta. O conserto só é marcado pronto depois da aprovação registrada e com o aparelho no técnico. Recusado: o técnico pode fazer outro orçamento ou mandar o aparelho de volta, e a loja devolve ao cliente com o motivo (a OS se encerra). Migration 20261114163000_orcamento_da_os (ainda não aplicada no ora5g-dev).",
+      "evidencia": "packages/banco/supabase/migrations/20261114163000_orcamento_da_os.sql; packages/banco/src/ordem-de-servico.test.ts; packages/banco/src/autorizacao-funcoes.test.ts; apps/plataforma/src/lib/assistencia/regras.ts; apps/plataforma/src/lib/assistencia/regras.test.ts; apps/plataforma/src/app/assistencia/assistencia.test.ts"
     }
   }
 }

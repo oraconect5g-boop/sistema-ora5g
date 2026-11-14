@@ -3508,6 +3508,7 @@ export type Database = {
           numero_serie: string | null
           organizacao_id: string
           prazo: string | null
+          servico: string
           situacao: string
           unidade_id: string
         }
@@ -3535,6 +3536,7 @@ export type Database = {
           numero_serie?: string | null
           organizacao_id: string
           prazo?: string | null
+          servico?: string
           situacao?: string
           unidade_id: string
         }
@@ -3562,6 +3564,7 @@ export type Database = {
           numero_serie?: string | null
           organizacao_id?: string
           prazo?: string | null
+          servico?: string
           situacao?: string
           unidade_id?: string
         }
@@ -3749,6 +3752,100 @@ export type Database = {
             columns: ["os_id"]
             isOneToOne: false
             referencedRelation: "ordens_servico"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      os_orcamentos: {
+        Row: {
+          chave: string
+          conteudo: string
+          diagnostico: string
+          em_nome_do_tecnico: boolean
+          id: string
+          mao_de_obra_centavos: number
+          numero: number
+          observacao: string | null
+          organizacao_id: string
+          os_id: string
+          pecas: Json
+          pecas_centavos: number
+          prazo_dias: number | null
+          registrado_em: string
+          registrado_por: string
+          respondido_em: string | null
+          respondido_por: string | null
+          resposta_canal: string | null
+          resposta_observacao: string | null
+          situacao: string
+          total_centavos: number
+        }
+        Insert: {
+          chave: string
+          conteudo: string
+          diagnostico: string
+          em_nome_do_tecnico?: boolean
+          id?: string
+          mao_de_obra_centavos: number
+          numero?: never
+          observacao?: string | null
+          organizacao_id: string
+          os_id: string
+          pecas?: Json
+          pecas_centavos: number
+          prazo_dias?: number | null
+          registrado_em?: string
+          registrado_por: string
+          respondido_em?: string | null
+          respondido_por?: string | null
+          resposta_canal?: string | null
+          resposta_observacao?: string | null
+          situacao?: string
+          total_centavos: number
+        }
+        Update: {
+          chave?: string
+          conteudo?: string
+          diagnostico?: string
+          em_nome_do_tecnico?: boolean
+          id?: string
+          mao_de_obra_centavos?: number
+          numero?: never
+          observacao?: string | null
+          organizacao_id?: string
+          os_id?: string
+          pecas?: Json
+          pecas_centavos?: number
+          prazo_dias?: number | null
+          registrado_em?: string
+          registrado_por?: string
+          respondido_em?: string | null
+          respondido_por?: string | null
+          resposta_canal?: string | null
+          resposta_observacao?: string | null
+          situacao?: string
+          total_centavos?: number
+        }
+        Relationships: [
+          {
+            foreignKeyName: "os_orcamentos_os_id_fkey"
+            columns: ["os_id"]
+            isOneToOne: false
+            referencedRelation: "ordens_servico"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "os_orcamentos_registrado_por_fkey"
+            columns: ["registrado_por"]
+            isOneToOne: false
+            referencedRelation: "perfis_usuario"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "os_orcamentos_respondido_por_fkey"
+            columns: ["respondido_por"]
+            isOneToOne: false
+            referencedRelation: "perfis_usuario"
             referencedColumns: ["id"]
           },
         ]
@@ -6058,6 +6155,10 @@ export type Database = {
         Returns: string
       }
       os_assistencias: { Args: never; Returns: Json }
+      os_concluir_servico: {
+        Args: { p_observacao: string; p_os: string }
+        Returns: boolean
+      }
       os_contato_whatsapp: {
         Args: { p_aviso: string; p_os: string }
         Returns: string
@@ -6068,6 +6169,19 @@ export type Database = {
           p_observacao: string
           p_os: string
           p_passo: string
+        }
+        Returns: boolean
+      }
+      os_orcar: {
+        Args: { p_chave: string; p_dados: Json; p_os: string }
+        Returns: Json
+      }
+      os_responder_orcamento: {
+        Args: {
+          p_canal: string
+          p_observacao: string
+          p_orcamento: string
+          p_resposta: string
         }
         Returns: boolean
       }

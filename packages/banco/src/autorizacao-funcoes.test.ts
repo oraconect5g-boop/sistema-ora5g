@@ -1,9 +1,9 @@
 // Inventário de autorização (prioridade 1 do diagnóstico de 10/11/2026; ORA-ORG-004 e ORA-QUAL-002).
 // O aviso 0029 do Supabase lista as funções SECURITY DEFINER que qualquer usuário logado pode chamar
-// pela API: 129 em 14/11 (48 + 6 do cadastro de lojas, L2, + 5 do cadastro do catálogo, L3a, + 4 dos preços, L3b,
+// pela API: 132 em 14/11 (48 + 6 do cadastro de lojas, L2, + 5 do cadastro do catálogo, L3a, + 4 dos preços, L3b,
 // + 4 da importação do catálogo, L3c, + 3 da entrada de mercadoria, L4a, + 5 do inventário, L4b, + 6 dos clientes, L5a,
 // + 9 do funil e da agenda, L5b, + 4 da mesclagem e dos segmentos, L5c, + 4 das maquininhas e da conciliação, L7a,
-// + 2 da leitura das entradas, R1, + 1 do nome no ranking, G1, + 2 das metas, G4b, + 3 das financeiras, L7b, + 3 da saída autorizada do caixa, L7c, + 6 das contas a pagar, L8a, + 1 das regras do bônus por meta, L9a, + 2 do fechamento do bônus, L9b, + 1 da correção do repasse das financeiras, B4, + 1 dos dados para emitir a nota, K1b, + 1 dos documentos da nota emitida, L10a, + 2 do envio da nota pelo WhatsApp, K1c, + 1 dos recebíveis por loja e adquirente, L8e, + 5 da ordem de serviço, L12a; no L8b, a das categorias ganhou o parâmetro "entra no resultado"). Elas rodam com poder total e cada uma confere sessão, loja e permissão por
+// + 2 da leitura das entradas, R1, + 1 do nome no ranking, G1, + 2 das metas, G4b, + 3 das financeiras, L7b, + 3 da saída autorizada do caixa, L7c, + 6 das contas a pagar, L8a, + 1 das regras do bônus por meta, L9a, + 2 do fechamento do bônus, L9b, + 1 da correção do repasse das financeiras, B4, + 1 dos dados para emitir a nota, K1b, + 1 dos documentos da nota emitida, L10a, + 2 do envio da nota pelo WhatsApp, K1c, + 1 dos recebíveis por loja e adquirente, L8e, + 5 da ordem de serviço, L12a, + 3 do orçamento da OS, L12b; no L8b, a das categorias ganhou o parâmetro "entra no resultado"). Elas rodam com poder total e cada uma confere sessão, loja e permissão por
 // conta própria. Este teste monta um "mundo" fictício com objetos reais em duas lojas e tenta cada
 // função como 13 tipos de atacante. Recusa = erro, ou resposta vazia numa leitura, e nada muda no
 // banco. O teste lista as funções no próprio banco e falha se aparecer uma nova sem casos aqui.
@@ -553,6 +553,18 @@ const CASOS: Record<string, Caso> = {
     B: () => ["select public.os_anexar_foto($1, $2, $3)", [alvo.osB, `${ids.organizacao}/${ids.lojaB}/${alvo.osB}/00000000-0000-4000-a000-000000000012.jpg`, "a".repeat(64)]],
   },
   "os_assistencias()": { leitura: true, A: () => ["select public.os_assistencias() as v", []] },
+  // Orçamento da OS (L12b): orçar e concluir são do técnico ou da gerência (o vendedor da loja A é recusado: "sem permissão");
+  // registrar a resposta do cliente é da loja da OS (o vendedor da loja A é legítimo: sem o caso "sem permissão").
+  "os_orcar(uuid,jsonb,text)": {
+    A: () => ["select public.os_orcar($1, $2::jsonb, 'ataque:orcamento:0001')", [alvo.osA, JSON.stringify({ diagnostico: "Intruso", mao_de_obra: 100 })]],
+    B: () => ["select public.os_orcar($1, $2::jsonb, 'ataque:orcamento:0002')", [alvo.osB, JSON.stringify({ diagnostico: "Intruso", mao_de_obra: 100 })]], semPermissao: true,
+  },
+  "os_responder_orcamento(uuid,text,text,text)": {
+    A: () => ["select public.os_responder_orcamento($1, 'aprovado', 'loja', null)", [alvo.orcamentoA]], B: () => ["select public.os_responder_orcamento($1, 'aprovado', 'loja', null)", [alvo.orcamentoB]],
+  },
+  "os_concluir_servico(uuid,text)": {
+    A: () => ["select public.os_concluir_servico($1, 'Intruso')", [alvo.osA]], B: () => ["select public.os_concluir_servico($1, 'Intruso')", [alvo.osB]], semPermissao: true,
+  },
   "os_contato_whatsapp(uuid,text)": {
     A: () => ["select public.os_contato_whatsapp($1, 'comprovante')", [alvo.osA]], B: () => ["select public.os_contato_whatsapp($1, 'comprovante')", [alvo.osB]],
   },
@@ -714,6 +726,10 @@ beforeAll(async () => {
       `insert into public.ordens_servico (organizacao_id, unidade_id, cliente_id, cliente_nome, contato_mascarado, aparelho, imei, defeito, estado_entrada, chave, conteudo, aberta_por)
        values ($1, $2, $3, 'Cliente do Mundo', '(41) •••••-0100', 'Aparelho do mundo', $4, 'Defeito do mundo', 'Estado do mundo', $5, 'mundo', $6) returning id`,
       [ids.organizacao, loja, alvo.clienteA, comDigitoLuhn(`35209900${lado === "A" ? "9" : "8"}00001`), `mundo:os:${lado}`, ids.dono])).rows[0]?.id ?? "";
+    // Um orçamento esperando o cliente (L12b), também gravado pelo banco.
+    alvo[`orcamento${lado}`] = (await db.query<{ id: string }>(
+      `insert into public.os_orcamentos (organizacao_id, os_id, diagnostico, mao_de_obra_centavos, pecas_centavos, total_centavos, chave, conteudo, registrado_por)
+       values ($1, $2, 'Diagnóstico do mundo', 100, 0, 100, $3, 'mundo', $4) returning id`, [ids.organizacao, alvo[`os${lado}`], `mundo:orcamento:${lado}`, ids.dono])).rows[0]?.id ?? "";
   }
   // Uma oportunidade e uma atividade do vendedorAB em cada loja (pelas funções, como na tela).
   for (const [lado, loja] of [["A", ids.lojaA], ["B", ids.lojaB]] as const) {
@@ -806,7 +822,7 @@ describe("inventário: toda função SECURITY DEFINER exposta tem casos de recus
     const expostas = rows.map((r) => r.f);
     expect(expostas.filter((f) => !(f in CASOS)), "função nova exposta sem casos de recusa: acrescente ao CASOS").toEqual([]);
     expect(Object.keys(CASOS).filter((f) => !expostas.includes(f)), "caso de função que não existe mais").toEqual([]);
-    expect(expostas).toHaveLength(129);
+    expect(expostas).toHaveLength(132);
   });
 
   it("visitante anônimo não executa nenhuma função do esquema public; no privado só um gatilho, que não roda sozinho", async () => {

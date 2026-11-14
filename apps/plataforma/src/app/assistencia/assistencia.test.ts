@@ -66,12 +66,12 @@ vi.mock("../../lib/acesso/sessao", () => ({
 }));
 vi.mock("../../lib/supabase/configuracao", () => ({ configuracaoSupabase: () => ({ url: "https://projeto.supabase.co", chavePublica: "sb_publishable_teste" }) }));
 
-import { abrirOrdem, avisarPeloWhatsApp, passoDaOrdem, registrarFotoDaOs } from "./acoes";
+import { abrirOrdem, avisarPeloWhatsApp, concluirServico, orcarOrdem, passoDaOrdem, registrarFotoDaOs, responderOrcamento } from "./acoes";
 import Detalhe from "./[id]/page";
 import NovaOrdem from "./nova/page";
 import Lista from "./page";
 
-const EXECUTAR = new Set(["EstadoDoPainel", "ProximosPassos", "FormularioDoPasso", "FiltroSegmentado", "ListaDados"]);
+const EXECUTAR = new Set(["EstadoDoPainel", "ProximosPassos", "FormularioDoPasso", "FiltroSegmentado", "ListaDados", "CartaoDoOrcamento"]);
 function texto(v: unknown): string {
   const pedacos: string[] = [];
   const andar = (x: unknown): void => {
@@ -232,5 +232,89 @@ describe("a OS: passos de cada papel, fotos, aviso e trilha (L12a)", () => {
     const anexar = cenario.chamadas.at(-1);
     expect(anexar?.nome).toBe("os_anexar_foto");
     expect(anexar?.argumentos.p_sha256).toMatch(/^[0-9a-f]{64}$/);
+  });
+});
+
+describe("orçamento na OS (L12b)", () => {
+  const ORC = "00000000-0000-4000-8000-00000000e201";
+  const tela = async () => texto(await Detalhe({ params: Promise.resolve({ id: OS }), searchParams: Promise.resolve({}) }) as ReactElement);
+  const orcamento = (extra: Linha = {}) => ({
+    id: ORC, os_id: OS, numero: 3, diagnostico: "Tela quebrada", pecas: [{ descricao: "Tela", quantidade: 1, valor: 25_000 }], mao_de_obra_centavos: 8_000, pecas_centavos: 25_000,
+    total_centavos: 33_000, prazo_dias: 3, situacao: "aguardando_cliente", em_nome_do_tecnico: false, observacao: null, registrado_por: EU, registrado_em: "2026-11-14T15:00:00Z",
+    resposta_canal: null, resposta_observacao: null, respondido_por: null, respondido_em: null, ...extra,
+  });
+
+  it("com o técnico: ele registra o orçamento; a gerência em nome dele; com o orçamento esperando, a loja registra a resposta e manda pelo WhatsApp", async () => {
+    cenario.tabelas.ordens_servico = [os({ local: "com_tecnico", assistencia_id: ASSISTENCIA, servico: "aguardando_orcamento" })];
+    cenario.unidade = ASSISTENCIA;
+    cenario.permissoes = new Set(["os.orcar"]);
+    let t = await tela();
+    expect(t).toContain("Aguardando orçamento");
+    expect(t).toContain("Nenhum orçamento ainda.");
+    expect(t).toContain("Registrar o orçamento");
+    expect(t).not.toContain("em nome do técnico");
+    cenario.unidade = LOJA;
+    cenario.permissoes = new Set(["os.abrir", "os.gerir"]);
+    expect(await tela()).toContain("Registrar o orçamento (em nome do técnico)");
+    cenario.tabelas.ordens_servico = [os({ local: "com_tecnico", assistencia_id: ASSISTENCIA, servico: "aguardando_cliente" })];
+    cenario.tabelas.os_orcamentos = [orcamento()];
+    cenario.permissoes = new Set(["os.abrir"]);
+    t = await tela();
+    for (const trecho of ["Orçamento com o cliente", "Orçamento nº 3 · R$ 330,00", "Esperando o cliente", "Tela quebrada", "Tela: R$ 250,00", "Mão de obra: R$ 80,00",
+      "Prazo do conserto: 3 dias depois da aprovação", "Resposta do cliente ao orçamento nº 3", "Registrar a resposta", "Mandar o orçamento"]) {
+      expect(t, trecho).toContain(trecho);
+    }
+    expect(t).not.toContain("Registrar o orçamento"); // o vendedor não orça
+  });
+
+  it("aprovado: o técnico conclui; a resposta registrada aparece com o canal; banco sem o orçamento, o cartão some e a OS continua", async () => {
+    cenario.tabelas.ordens_servico = [os({ local: "com_tecnico", assistencia_id: ASSISTENCIA, servico: "aprovado" })];
+    cenario.tabelas.os_orcamentos = [orcamento({ situacao: "aprovado", resposta_canal: "whatsapp", respondido_por: EU, respondido_em: "2026-11-14T16:00:00Z", resposta_observacao: "Pode fazer" })];
+    cenario.unidade = ASSISTENCIA;
+    cenario.permissoes = new Set(["os.orcar"]);
+    const t = await tela();
+    expect(t).toContain("Aprovado pelo cliente pelo whatsapp");
+    expect(t).toContain("Pode fazer");
+    expect(t).toContain("Conserto concluído");
+    cenario.unidade = LOJA;
+    cenario.permissoes = new Set(["os.abrir"]);
+    cenario.erros = { os_orcamentos: { code: "PGRST205" } };
+    const semTabela = await tela();
+    expect(semTabela).toContain("OS nº 42");
+    expect(semTabela).not.toContain("Orçamento nº");
+  });
+
+  it("as ações do orçamento mandam ao banco o que foi lido e voltam com a mensagem certa", async () => {
+    const chave = "00000000-0000-4000-8000-00000000f101";
+    cenario.respostas.os_orcar = { data: { id: ORC, numero: 3, repetida: false }, error: null };
+    expect(await destinoDe(orcarOrdem(formulario({ os: OS, chave, diagnostico: "Tela quebrada", mao_de_obra: "80,00", peca_descricao_1: "Tela", peca_quantidade_1: "1", peca_valor_1: "250,00" }))))
+      .toBe(`/assistencia/${OS}?ok=orcamento`);
+    expect(cenario.chamadas.at(-1)).toEqual({ nome: "os_orcar", argumentos: { p_os: OS, p_chave: chave, p_dados: {
+      diagnostico: "Tela quebrada", mao_de_obra: 8_000, pecas: [{ descricao: "Tela", quantidade: 1, valor: 25_000 }], prazo_dias: null, observacao: null,
+    } } });
+    expect(await destinoDe(orcarOrdem(formulario({ os: OS, chave, diagnostico: "x" })))).toBe(`/assistencia/${OS}?erro=diagnostico`);
+    cenario.respostas.os_orcar = { data: null, error: { code: "22023", message: "O orçamento é feito com o aparelho com o técnico" } };
+    expect(await destinoDe(orcarOrdem(formulario({ os: OS, chave, diagnostico: "Tela quebrada", mao_de_obra: "80" })))).toBe(`/assistencia/${OS}?erro=orcamento_local`);
+
+    cenario.respostas.os_responder_orcamento = { data: true, error: null };
+    expect(await destinoDe(responderOrcamento(formulario({ os: OS, orcamento: ORC, resposta: "aprovado", canal: "whatsapp", observacao: "" })))).toBe(`/assistencia/${OS}?ok=orcamento_aprovado`);
+    expect(cenario.chamadas.at(-1)).toEqual({ nome: "os_responder_orcamento", argumentos: { p_orcamento: ORC, p_resposta: "aprovado", p_canal: "whatsapp", p_observacao: null } });
+    expect(await destinoDe(responderOrcamento(formulario({ os: OS, orcamento: ORC, resposta: "talvez", canal: "loja" })))).toBe(`/assistencia/${OS}?erro=resposta`);
+    expect(await destinoDe(responderOrcamento(formulario({ os: OS, orcamento: ORC, resposta: "recusado", canal: "email" })))).toBe(`/assistencia/${OS}?erro=canal`);
+    cenario.respostas.os_responder_orcamento = { data: false, error: null };
+    expect(await destinoDe(responderOrcamento(formulario({ os: OS, orcamento: ORC, resposta: "aprovado", canal: "loja" })))).toBe(`/assistencia/${OS}?ok=sem_mudanca`);
+
+    cenario.respostas.os_concluir_servico = { data: true, error: null };
+    expect(await destinoDe(concluirServico(formulario({ os: OS, observacao: "Tela trocada" })))).toBe(`/assistencia/${OS}?ok=concluido`);
+    cenario.respostas.os_concluir_servico = { data: null, error: { code: "22023", message: "O conserto só é feito depois da aprovação do cliente registrada" } };
+    expect(await destinoDe(concluirServico(formulario({ os: OS })))).toBe(`/assistencia/${OS}?erro=sem_aprovacao`);
+
+    // O aviso do orçamento leva o que espera o cliente.
+    cenario.tabelas.os_orcamentos = [orcamento()];
+    cenario.respostas.os_contato_whatsapp = { data: "41987650001", error: null };
+    const link = await destinoDe(avisarPeloWhatsApp(formulario({ os: OS, aviso: "orcamento" })));
+    expect(decodeURIComponent(link.split("text=")[1] ?? "")).toContain("Total: R$ 330,00");
+    cenario.tabelas.os_orcamentos = [];
+    expect(await destinoDe(avisarPeloWhatsApp(formulario({ os: OS, aviso: "orcamento" })))).toBe(`/assistencia/${OS}?erro=aviso_orcamento`);
   });
 });

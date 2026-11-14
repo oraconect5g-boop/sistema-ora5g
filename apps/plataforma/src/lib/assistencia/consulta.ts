@@ -2,10 +2,11 @@
 // OS com a trilha e as fotos. Falha de leitura nunca vira zero nem lista vazia: cada leitura devolve o próprio estado.
 import type { obterSessao } from "../acesso/sessao";
 import type { Leitura } from "../leitura-do-banco";
-import { ehLocal, ehSituacao, type Local, type SituacaoDaOs } from "./regras";
+import { ehLocal, ehServico, ehSituacao, type Local, type PecaDoOrcamento, type ServicoDaOs, type SituacaoDaOs } from "./regras";
 
 type Cliente = Awaited<ReturnType<typeof obterSessao>>["supabase"];
 const SEM_TABELA = new Set(["PGRST205", "42P01", "PGRST202", "42883"]);
+const SEM_COLUNA = new Set(["42703", "PGRST204"]);
 export const POR_PAGINA = 50;
 
 export const VISOES = { abertas: "Abertas", na_loja: "Na loja", fora: "Com o técnico", encerradas: "Encerradas" } as const;
@@ -67,8 +68,15 @@ export type OrdemDeServico = {
 };
 export type EventoDaOs = { id: number; tipo: string; local_de: string | null; local_para: string | null; observacao: string | null; em_nome_do_tecnico: boolean; usuario_id: string; ocorrido_em: string };
 export type FotoDaOs = { id: string; caminho: string; url: string | null; enviada_em: string };
+export type OrcamentoDaOs = {
+  id: string; numero: number; diagnostico: string; pecas: PecaDoOrcamento[]; mao_de_obra_centavos: number; pecas_centavos: number; total_centavos: number;
+  prazo_dias: number | null; situacao: "aguardando_cliente" | "aprovado" | "recusado" | "substituido"; em_nome_do_tecnico: boolean; observacao: string | null;
+  registrado_por: string; registrado_em: string; resposta_canal: string | null; resposta_observacao: string | null; respondido_por: string | null; respondido_em: string | null;
+};
 export type LeituraDaOs =
-  | { estado: "ok"; os: OrdemDeServico; eventos: EventoDaOs[]; fotos: FotoDaOs[]; nomes: Record<string, string> }
+  | { estado: "ok"; os: OrdemDeServico; eventos: EventoDaOs[]; fotos: FotoDaOs[]; nomes: Record<string, string>;
+      /** L12b: nulo quando o banco ainda não tem o orçamento (migration orcamento_da_os): a tela esconde o cartão, sem inventar. */
+      servico: ServicoDaOs | null; orcamentos: OrcamentoDaOs[] | null }
   | { estado: "nao_encontrada" } | { estado: "indisponivel" } | { estado: "falha" };
 
 const COLUNAS_DA_OS = "id, numero, organizacao_id, unidade_id, cliente_id, cliente_nome, contato_mascarado, aparelho, imei, numero_serie, defeito, estado_entrada, "
@@ -84,9 +92,13 @@ export async function lerOrdem(supabase: Cliente, id: string): Promise<LeituraDa
   if (!os.data) return { estado: "nao_encontrada" };
   const linha = os.data as unknown as OrdemDeServico;
   if (!ehLocal(linha.local) || !ehSituacao(linha.situacao)) return { estado: "falha" };
-  const [eventos, fotos] = await Promise.all([
+  const [eventos, fotos, servico, orcamentos] = await Promise.all([
     supabase.from("os_eventos").select("id, tipo, local_de, local_para, observacao, em_nome_do_tecnico, usuario_id, ocorrido_em").eq("os_id", id).order("id"),
     supabase.from("os_fotos").select("id, caminho, enviada_em").eq("os_id", id).order("enviada_em").order("id"),
+    // L12b, lidos à parte: num banco sem o orçamento, a coluna e a tabela faltam e a OS continua aparecendo.
+    supabase.from("ordens_servico").select("servico").eq("id", id).maybeSingle(),
+    supabase.from("os_orcamentos").select("id, numero, diagnostico, pecas, mao_de_obra_centavos, pecas_centavos, total_centavos, prazo_dias, situacao, em_nome_do_tecnico, "
+      + "observacao, registrado_por, registrado_em, resposta_canal, resposta_observacao, respondido_por, respondido_em").eq("os_id", id).order("numero", { ascending: false }),
   ]);
   if (eventos.error || fotos.error) {
     console.error("assistência: falha ao ler a trilha ou as fotos", { codigo: eventos.error?.code ?? fotos.error?.code ?? null });
@@ -95,13 +107,20 @@ export async function lerOrdem(supabase: Cliente, id: string): Promise<LeituraDa
   const caminhos = fotos.data.map((f) => f.caminho);
   const assinadas = caminhos.length ? await supabase.storage.from("os").createSignedUrls(caminhos, 600) : { data: [], error: null };
   const urlDe = (caminho: string) => (assinadas.error ? null : assinadas.data?.find((a) => a.path === caminho && !a.error)?.signedUrl ?? null);
-  const pessoas = [...new Set([linha.aberta_por, ...eventos.data.map((e) => e.usuario_id)])];
+  const daServico = servico.error ? null : (servico.data as { servico?: unknown } | null)?.servico;
+  const listaDeOrcamentos = orcamentos.error ? null : (orcamentos.data as unknown as OrcamentoDaOs[]);
+  if ((servico.error && !SEM_COLUNA.has(servico.error.code)) || (orcamentos.error && !SEM_TABELA.has(orcamentos.error.code))) {
+    console.error("assistência: falha ao ler o orçamento", { codigo: servico.error?.code ?? orcamentos.error?.code ?? null });
+    return { estado: "falha" };
+  }
+  const pessoas = [...new Set([linha.aberta_por, ...eventos.data.map((e) => e.usuario_id), ...(listaDeOrcamentos ?? []).flatMap((o) => [o.registrado_por, o.respondido_por]).filter((x): x is string => Boolean(x))])];
   const perfis = await supabase.from("perfis_usuario").select("id, nome").in("id", pessoas);
   const nomes: Record<string, string> = {};
   for (const p of perfis.data ?? []) nomes[p.id] = p.nome;
   return {
     estado: "ok", os: linha, eventos: eventos.data as EventoDaOs[],
     fotos: fotos.data.map((f) => ({ id: f.id, caminho: f.caminho, url: urlDe(f.caminho), enviada_em: f.enviada_em })), nomes,
+    servico: ehServico(daServico) ? daServico : null, orcamentos: listaDeOrcamentos,
   };
 }
 
