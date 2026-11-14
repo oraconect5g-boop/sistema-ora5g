@@ -2,22 +2,28 @@
   "_leia": "Checkpoint do programa de execução integral (PR #67). Carregar ao retomar e seguir para o próximo item executável da fila; não reiniciar o projeto. Estados vêm de status-requisitos.json (fonte da rastreabilidade); este arquivo acrescenta lote, bloqueio externo e revisão.",
   "atualizado_em": "2026-11-14",
   "base": {
-    "main": "f22ca11",
+    "main": "dd31e91",
     "pacote": {
       "pr": 67,
       "branch": "docs/execucao-integral-20261110",
       "commit": "d8c1bc6",
       "main_analisada": "0b6b45e"
+    },
+    "pacote_conclusao": {
+      "branch": "docs/prompt-conclusao-total-20261114",
+      "commit": "568ad2d",
+      "main_analisada": "dd31e91",
+      "lido": "ESTADO_VERIFICADO, FILA_INTEGRAL_179, FONTES_OBRIGATORIAS, evidencias/LEIA-ME e as provas, pelo Git, sem merge"
     }
   },
   "publicado": {
     "homologacao": {
-      "commit": "f22ca11",
+      "commit": "dd31e91",
       "quando": "2026-11-14",
-      "conferido": "rodapé da tela de entrada (f22ca11 · build 14/11/2026 07:34), /saude e /inicio, /metas, /metas/bonus, /metas/extrato, /metas/fechamento e /resultado respondendo 307 para o login"
+      "conferido": "rodapé da tela de entrada (dd31e91 · build 14/11/2026 07:50), /saude e /inicio, /metas, /metas/fechamento, /metas/extrato e /resultado respondendo 307 para o login"
     },
     "falta_publicar": [
-      "o registro da migration do L9b, aplicada no ora5g-dev em 14/11 (publicado ao fim do lote, por pedido do proprietário de 13/11)"
+      "B1, correções do inventário (#78 e #79), publicado ao fim do lote; a migration 20261114130247_inventario_correcoes pede o sim do proprietário para o ora5g-dev"
     ]
   },
   "contagem_dos_estados": {
@@ -284,7 +290,7 @@
       "titulo": "Inventário cíclico e ajuste com aprovação",
       "prioridade": "P1",
       "estado": "testado",
-      "lote": "L4b inventário",
+      "lote": "L4b inventário; B1 correções #78 e #79 (14/11)",
       "bloqueio_externo": null,
       "revisado_codex": false,
       "homologado": false

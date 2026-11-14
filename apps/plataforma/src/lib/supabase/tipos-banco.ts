@@ -2671,6 +2671,79 @@ export type Database = {
           },
         ]
       }
+      inventario_contagens: {
+        Row: {
+          contado_em: string
+          contado_por: string
+          contado_quantidade: number
+          desconhecidos: string[] | null
+          fora_da_loja: string[] | null
+          id: string
+          inventario_id: string
+          lidos: string[] | null
+          numero: number
+          organizacao_id: string
+          outra_variacao: string[] | null
+          sistema_quantidade: number
+          unidade_id: string
+          variante_id: string
+        }
+        Insert: {
+          contado_em?: string
+          contado_por: string
+          contado_quantidade: number
+          desconhecidos?: string[] | null
+          fora_da_loja?: string[] | null
+          id?: string
+          inventario_id: string
+          lidos?: string[] | null
+          numero?: never
+          organizacao_id: string
+          outra_variacao?: string[] | null
+          sistema_quantidade: number
+          unidade_id: string
+          variante_id: string
+        }
+        Update: {
+          contado_em?: string
+          contado_por?: string
+          contado_quantidade?: number
+          desconhecidos?: string[] | null
+          fora_da_loja?: string[] | null
+          id?: string
+          inventario_id?: string
+          lidos?: string[] | null
+          numero?: never
+          organizacao_id?: string
+          outra_variacao?: string[] | null
+          sistema_quantidade?: number
+          unidade_id?: string
+          variante_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "inventario_contagens_contado_por_fkey"
+            columns: ["contado_por"]
+            isOneToOne: false
+            referencedRelation: "perfis_usuario"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "inventario_contagens_inventario_id_variante_id_fkey"
+            columns: ["inventario_id", "variante_id"]
+            isOneToOne: false
+            referencedRelation: "inventario_itens"
+            referencedColumns: ["inventario_id", "variante_id"]
+          },
+          {
+            foreignKeyName: "inventario_contagens_unidade_id_organizacao_id_fkey"
+            columns: ["unidade_id", "organizacao_id"]
+            isOneToOne: false
+            referencedRelation: "unidades"
+            referencedColumns: ["id", "organizacao_id"]
+          },
+        ]
+      }
       inventario_itens: {
         Row: {
           ajuste_quantidade: number | null
