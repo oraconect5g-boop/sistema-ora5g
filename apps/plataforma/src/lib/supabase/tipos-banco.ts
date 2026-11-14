@@ -6089,6 +6089,7 @@ export type Database = {
         }[]
       }
       estoque_painel: { Args: { p_unidade?: string }; Returns: Json }
+      estoque_valor_em_custo: { Args: { p_unidade?: string }; Returns: Json }
       estoque_registrar_entrada: {
         Args: {
           p_chave: string
