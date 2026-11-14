@@ -1,0 +1,4792 @@
+{
+  "repositorio": "oraconect5g-boop/sistema-ora5g",
+  "base": "51417a8af70e1277328c78962fee2397a4d2a171",
+  "comparada_com": "51fc428c80c5399bdc332d98ce1e1b6fe164a67f",
+  "data": "2026-11-13",
+  "fuso": "America/Sao_Paulo",
+  "resumo": {
+    "diretorios": 165,
+    "arquivos": 752,
+    "textos_com_hash_validado": 740,
+    "markdown": 111,
+    "binarios_somente_inventariados": 12,
+    "migrations": 51,
+    "commits_desde_auditoria": 38,
+    "arquivos_alterados": 177
+  },
+  "arquivos": [
+    {
+      "path": ".claude/skills/engenheiro-senior-ora5g/SKILL.md",
+      "sha": "fdc7c34a05627d9b724a8d9533e0e623b72f01ce",
+      "texto_hash_conferido": true
+    },
+    {
+      "path": ".claude/skills/engenheiro-senior-ora5g/references/auditoria/github-2026-11-09.md",
+      "sha": "b16b976d9c6f73a3b8f1d3e4074d906dc548f1cf",
+      "texto_hash_conferido": true
+    },
+    {
+      "path": ".claude/skills/engenheiro-senior-ora5g/references/contexto-atual.md",
+      "sha": "828cb652d304b68ea5126d1e8f4a882c3debb417",
+      "texto_hash_conferido": true
+    },
+    {
+      "path": ".claude/skills/engenheiro-senior-ora5g/references/fluxos-e-dominio.md",
+      "sha": "2fb174821573f92f8be48906f201fa5430bb9252",
+      "texto_hash_conferido": true
+    },
+    {
+      "path": ".claude/skills/engenheiro-senior-ora5g/references/historico/conversas-e-decisoes.md",
+      "sha": "7c53f4d2187dd2b38a36b2c5fa9519466cbfa810",
+      "texto_hash_conferido": true
+    },
+    {
+      "path": ".claude/skills/engenheiro-senior-ora5g/references/historico/dossie-mestre-legado.md",
+      "sha": "3eb0816a0f77e80aefd62ff45c7b1ac95deb1d68",
+      "texto_hash_conferido": true
+    },
+    {
+      "path": ".claude/skills/engenheiro-senior-ora5g/references/historico/originais/conversa_inicial_colada.md",
+      "sha": "1b04717d75de8cf36caf6d699ad826646efedd84",
+      "texto_hash_conferido": true
+    },
+    {
+      "path": ".claude/skills/engenheiro-senior-ora5g/references/historico/originais/pesquisa_1_plano_mestre.md",
+      "sha": "07b2646ee84790cc8b12d4af0b59284e0891b36d",
+      "texto_hash_conferido": true
+    },
+    {
+      "path": ".claude/skills/engenheiro-senior-ora5g/references/historico/originais/pesquisa_2_plano_mestre.md",
+      "sha": "f5b7c5a1f431f8cded54bbf4744bc3079f3fa60d",
+      "texto_hash_conferido": true
+    },
+    {
+      "path": ".claude/skills/engenheiro-senior-ora5g/references/historico/originais/pesquisa_3_plano_mestre.md",
+      "sha": "f5e727478da543af5db5cdfeafc3d29e3138f40e",
+      "texto_hash_conferido": true
+    },
+    {
+      "path": ".claude/skills/engenheiro-senior-ora5g/references/roteiro-engenharia.md",
+      "sha": "77b453df91ba042a3e15eb598ee64b3c8a8c28c0",
+      "texto_hash_conferido": true
+    },
+    {
+      "path": ".env.example",
+      "sha": "802e369be6889595a5786dde068c325ec91d88bc",
+      "texto_hash_conferido": true
+    },
+    {
+      "path": ".github/ISSUE_TEMPLATE.md",
+      "sha": "f3e44400f4156f9ec9ab2a6600b5c98e7f658829",
+      "texto_hash_conferido": true
+    },
+    {
+      "path": ".github/PULL_REQUEST_TEMPLATE.md",
+      "sha": "f69e6bd21959dadfcc2847bdd06a11af73b2a0de",
+      "texto_hash_conferido": true
+    },
+    {
+      "path": ".github/workflows/ci.yml",
+      "sha": "3ee7ab82c500c40dc1d43fec6f4d19d8667d32a4",
+      "texto_hash_conferido": true
+    },
+    {
+      "path": ".gitignore",
+      "sha": "f63e1418b22d0157ed406f3afa6ea3a15af10529",
+      "texto_hash_conferido": true
+    },
+    {
+      "path": ".npmrc",
+      "sha": "780e4566859e973014efbb6f4a71af4cdbc554d8",
+      "texto_hash_conferido": true
+    },
+    {
+      "path": ".nvmrc",
+      "sha": "b8b23ca93cf13aad9d4ab163745cd25968571918",
+      "texto_hash_conferido": true
+    },
+    {
+      "path": "AGENTS.md",
+      "sha": "05846eeb088368ed9abdee9de40eab1f93483277",
+      "texto_hash_conferido": true
+    },
+    {
+      "path": "CLAUDE.md",
+      "sha": "2fd164e6bcda15c66354ab61d9eaa380dba21bf1",
+      "texto_hash_conferido": true
+    },
+    {
+      "path": "PARA_COLAR_NO_CLAUDE.md",
+      "sha": "5498a65577e7268ed4e2a6b248107b21fdbdbbc5",
+      "texto_hash_conferido": true
+    },
+    {
+      "path": "README.md",
+      "sha": "0a11b93d0c885ed7723a9003d89dedf24db158be",
+      "texto_hash_conferido": true
+    },
+    {
+      "path": "apps/plataforma/.env.example",
+      "sha": "d539e2866744e558a37597a0444be17616b26cde",
+      "texto_hash_conferido": true
+    },
+    {
+      "path": "apps/plataforma/AGENTS.md",
+      "sha": "af3b7c84114bafeee578bf1adff2ef74af2cc6a2",
+      "texto_hash_conferido": true
+    },
+    {
+      "path": "apps/plataforma/README.md",
+      "sha": "0fb88011378dc67ca0c1adc7c19b049ab3077388",
+      "texto_hash_conferido": true
+    },
+    {
+      "path": "apps/plataforma/e2e/acesso-real.spec.ts",
+      "sha": "6827399066ababf7c1e9af443270316f8f1c3533",
+      "texto_hash_conferido": true
+    },
+    {
+      "path": "apps/plataforma/e2e/carteira-demo.spec.ts",
+      "sha": "6597f30712cac6124c06766babe49642f473423b",
+      "texto_hash_conferido": true
+    },
+    {
+      "path": "apps/plataforma/e2e/connect.spec.ts",
+      "sha": "ee01814bc38f540d119087d234d12428d3991fe8",
+      "texto_hash_conferido": true
+    },
+    {
+      "path": "apps/plataforma/e2e/demonstracao.spec.ts",
+      "sha": "0eefa65183fa0e723cb9bd16fbaf50e5ec4f6d12",
+      "texto_hash_conferido": true
+    },
+    {
+      "path": "apps/plataforma/e2e/entrar.spec.ts",
+      "sha": "953890bc8492e1bc2541beb4540bb6c58500923a",
+      "texto_hash_conferido": true
+    },
+    {
+      "path": "apps/plataforma/e2e/inicializacao.spec.ts",
+      "sha": "2386d71b8e599d2e2a54899d766d7d1ba2a5193a",
+      "texto_hash_conferido": true
+    },
+    {
+      "path": "apps/plataforma/e2e/saude.spec.ts",
+      "sha": "c0ddcd52f2f5f8a3a18a5c506a4ce68861e6c0f0",
+      "texto_hash_conferido": true
+    },
+    {
+      "path": "apps/plataforma/e2e/servidor-auxiliar.ts",
+      "sha": "a89d42dd5bef7619f01f06d95ad228c8b465cc40",
+      "texto_hash_conferido": true
+    },
+    {
+      "path": "apps/plataforma/e2e/setores-e-exportacoes.spec.ts",
+      "sha": "0e6affa586803e0b1be97d49134f981952937df5",
+      "texto_hash_conferido": true
+    },
+    {
+      "path": "apps/plataforma/eslint.config.mjs",
+      "sha": "e80f113e0cd94a488a17fbd7b81627550155dccc",
+      "texto_hash_conferido": true
+    },
+    {
+      "path": "apps/plataforma/next.config.ts",
+      "sha": "ac0974144a5eab28e91b61d05b8173c217c1f540",
+      "texto_hash_conferido": true
+    },
+    {
+      "path": "apps/plataforma/package.json",
+      "sha": "01d471225e8cd37e7da73ce9126ab983c5893471",
+      "texto_hash_conferido": true
+    },
+    {
+      "path": "apps/plataforma/playwright.config.ts",
+      "sha": "7be56f1cd7ba28d1efa843878c3b96e0bb9121c5",
+      "texto_hash_conferido": true
+    },
+    {
+      "path": "apps/plataforma/postcss.config.mjs",
+      "sha": "1787bf1252c01c586046b161e2d99a188441c1cc",
+      "texto_hash_conferido": true
+    },
+    {
+      "path": "apps/plataforma/src/app/aprovacoes/page.tsx",
+      "sha": "353d824f9b4d153dc18a22833d8be709e8569d6a",
+      "texto_hash_conferido": true
+    },
+    {
+      "path": "apps/plataforma/src/app/auditoria/page.tsx",
+      "sha": "3e298890ea74089e8803308f85d28ccb9626e307",
+      "texto_hash_conferido": true
+    },
+    {
+      "path": "apps/plataforma/src/app/auth/confirmar/route.ts",
+      "sha": "af206d37ede018c02fb9317869649858c7c62bec",
+      "texto_hash_conferido": true
+    },
+    {
+      "path": "apps/plataforma/src/app/caixa/QuadrosDaSaida.tsx",
+      "sha": "4d25330757bd43c43797101fd43121e514a72d6f",
+      "texto_hash_conferido": true
+    },
+    {
+      "path": "apps/plataforma/src/app/caixa/acoes.ts",
+      "sha": "c7c0b19d131069825d1b50e6d4ad0e8c2fd44846",
+      "texto_hash_conferido": true
+    },
+    {
+      "path": "apps/plataforma/src/app/caixa/caixa.test.ts",
+      "sha": "9c62b65f5121e8b2955a10e47879da1603f02801",
+      "texto_hash_conferido": true
+    },
+    {
+      "path": "apps/plataforma/src/app/caixa/page.tsx",
+      "sha": "6f11004843f5ad2b73e852704a279d8a82f4d556",
+      "texto_hash_conferido": true
+    },
+    {
+      "path": "apps/plataforma/src/app/catalogo/EnviarFoto.tsx",
+      "sha": "014c6616dcd1eeb57b5378c4d9f0716c7ea10f13",
+      "texto_hash_conferido": true
+    },
+    {
+      "path": "apps/plataforma/src/app/catalogo/FotoAmpliavel.tsx",
+      "sha": "1a2229bd1a2528ab9622e9a04d678beca61cec67",
+      "texto_hash_conferido": true
+    },
+    {
+      "path": "apps/plataforma/src/app/catalogo/acoes.ts",
+      "sha": "9dda728996620eeed9c9038e7fff213dcff13dd1",
+      "texto_hash_conferido": true
+    },
+    {
+      "path": "apps/plataforma/src/app/catalogo/busca.test.ts",
+      "sha": "f7957e54544b792a5bc048db62ece88617140bea",
+      "texto_hash_conferido": true
+    },
+    {
+      "path": "apps/plataforma/src/app/catalogo/page.tsx",
+      "sha": "8cb08e7116a246fb1d983cf9846a79142aa87f31",
+      "texto_hash_conferido": true
+    },
+    {
+      "path": "apps/plataforma/src/app/clientes/BuscaDeCliente.tsx",
+      "sha": "65c9c2f37a6a7cb0587a8e13ca63f85320002273",
+      "texto_hash_conferido": true
+    },
+    {
+      "path": "apps/plataforma/src/app/clientes/FormularioCliente.tsx",
+      "sha": "f6e0dc686a8c95ec4547f347c1d3ca6f52bb5982",
+      "texto_hash_conferido": true
+    },
+    {
+      "path": "apps/plataforma/src/app/clientes/Revelar.tsx",
+      "sha": "8844facb9990514331d32043dfa6f75a84462aff",
+      "texto_hash_conferido": true
+    },
+    {
+      "path": "apps/plataforma/src/app/clientes/[id]/page.tsx",
+      "sha": "7fd568164b5018e8d695d4bd0fbd30a54933b3e7",
+      "texto_hash_conferido": true
+    },
+    {
+      "path": "apps/plataforma/src/app/clientes/acoes.ts",
+      "sha": "930195e7fb238ab80c0495918f10dbc0983178bc",
+      "texto_hash_conferido": true
+    },
+    {
+      "path": "apps/plataforma/src/app/clientes/clientes.test.ts",
+      "sha": "adb1ccd2f1ae5e682bd4ec1ef87adeab4d0fd691",
+      "texto_hash_conferido": true
+    },
+    {
+      "path": "apps/plataforma/src/app/clientes/duplicados/page.tsx",
+      "sha": "8a0a73e8658c7e7611bb8de2366dd86d8397142d",
+      "texto_hash_conferido": true
+    },
+    {
+      "path": "apps/plataforma/src/app/clientes/novo/page.tsx",
+      "sha": "dbb60840a0a832a0f8c5573658c82c274300a7c2",
+      "texto_hash_conferido": true
+    },
+    {
+      "path": "apps/plataforma/src/app/clientes/page.tsx",
+      "sha": "96692038573ae40ed6d503a5634b85bf2d1865a1",
+      "texto_hash_conferido": true
+    },
+    {
+      "path": "apps/plataforma/src/app/clientes/segmentos/page.tsx",
+      "sha": "1d5a6d17ca6569c813412f913166aa479506ece7",
+      "texto_hash_conferido": true
+    },
+    {
+      "path": "apps/plataforma/src/app/connect/acoes.ts",
+      "sha": "1fb21b3ddd3456ae77da7ae3d726754c0293ecd8",
+      "texto_hash_conferido": true
+    },
+    {
+      "path": "apps/plataforma/src/app/connect/page.tsx",
+      "sha": "69217ebc665bc3052b5ae276e72a48951ecb19fa",
+      "texto_hash_conferido": true
+    },
+    {
+      "path": "apps/plataforma/src/app/conta/page.test.ts",
+      "sha": "0ff8a68d62ddd81aaa20a9deeb6c0391a89b6a06",
+      "texto_hash_conferido": true
+    },
+    {
+      "path": "apps/plataforma/src/app/conta/page.tsx",
+      "sha": "4b8ff80e4acd122aa78fe4718b5e8d0161092d53",
+      "texto_hash_conferido": true
+    },
+    {
+      "path": "apps/plataforma/src/app/conta/senha/acoes.ts",
+      "sha": "cc9ee466577b9574b59636c011f48cd335bfe9b2",
+      "texto_hash_conferido": true
+    },
+    {
+      "path": "apps/plataforma/src/app/conta/senha/page.tsx",
+      "sha": "206b0db1534f977c2522f488af81971d4271b858",
+      "texto_hash_conferido": true
+    },
+    {
+      "path": "apps/plataforma/src/app/contas-a-pagar/ConteudoContas.tsx",
+      "sha": "a8a69b627495603e904a65551157b5ce3feed644",
+      "texto_hash_conferido": true
+    },
+    {
+      "path": "apps/plataforma/src/app/contas-a-pagar/acoes.ts",
+      "sha": "e7067ee914076e6518f8e7955202f9b8b2bec5ce",
+      "texto_hash_conferido": true
+    },
+    {
+      "path": "apps/plataforma/src/app/contas-a-pagar/contas.test.ts",
+      "sha": "3babfe10c092efa4e26f5702a9acdea303be510d",
+      "texto_hash_conferido": true
+    },
+    {
+      "path": "apps/plataforma/src/app/contas-a-pagar/exportar/route.ts",
+      "sha": "cd58f964c7a699147fb1b08cb02dd3e827eae669",
+      "texto_hash_conferido": true
+    },
+    {
+      "path": "apps/plataforma/src/app/contas-a-pagar/layout.tsx",
+      "sha": "740e000e222e1318f37ede73d11c8fd2e4ff2def",
+      "texto_hash_conferido": true
+    },
+    {
+      "path": "apps/plataforma/src/app/contas-a-pagar/loading.tsx",
+      "sha": "6921574af05ad4c08effaecccc34527108ed3cf5",
+      "texto_hash_conferido": true
+    },
+    {
+      "path": "apps/plataforma/src/app/contas-a-pagar/page.tsx",
+      "sha": "ce666dd0d6c15b338d9269eaac5c6566f40c96c3",
+      "texto_hash_conferido": true
+    },
+    {
+      "path": "apps/plataforma/src/app/crm/[id]/page.tsx",
+      "sha": "c2b530c0c89daca2ebdaab52e7368bd4c162894e",
+      "texto_hash_conferido": true
+    },
+    {
+      "path": "apps/plataforma/src/app/crm/acoes.ts",
+      "sha": "0c6136ae3c19218f00befc355c2ba6de7150c163",
+      "texto_hash_conferido": true
+    },
+    {
+      "path": "apps/plataforma/src/app/crm/agenda/page.tsx",
+      "sha": "2d48d44b5440884417a04da6f9ae4d0581d510d1",
+      "texto_hash_conferido": true
+    },
+    {
+      "path": "apps/plataforma/src/app/crm/crm.test.ts",
+      "sha": "a6fd5c3372aa444591247f88978b386ec536cb87",
+      "texto_hash_conferido": true
+    },
+    {
+      "path": "apps/plataforma/src/app/crm/page.tsx",
+      "sha": "021545d188b1dc30fb121109655cc225a5d0b18a",
+      "texto_hash_conferido": true
+    },
+    {
+      "path": "apps/plataforma/src/app/demo/_paineis/InicioVendedor.tsx",
+      "sha": "6289750e1f167b3d20b9d6209775e1420918c151",
+      "texto_hash_conferido": true
+    },
+    {
+      "path": "apps/plataforma/src/app/demo/_paineis/OutrosPaineis.tsx",
+      "sha": "7673ca0e6de530cb706518d866e80f59548eb825",
+      "texto_hash_conferido": true
+    },
+    {
+      "path": "apps/plataforma/src/app/demo/_paineis/PainelGestao.tsx",
+      "sha": "9178ca2660618dc447ea6cc1e6c06d28cbcdeb9b",
+      "texto_hash_conferido": true
+    },
+    {
+      "path": "apps/plataforma/src/app/demo/_paineis/comum.tsx",
+      "sha": "05a04f8712090ecc16478c0edca2727fdb233756",
+      "texto_hash_conferido": true
+    },
+    {
+      "path": "apps/plataforma/src/app/demo/_paineis/painel.test.ts",
+      "sha": "43604a130f392e99afcf31bc004872175b30a19d",
+      "texto_hash_conferido": true
+    },
+    {
+      "path": "apps/plataforma/src/app/demo/aprovacoes/Fila.tsx",
+      "sha": "1b64cf55e78b840b3aa2953a1b0af94f3884362b",
+      "texto_hash_conferido": true
+    },
+    {
+      "path": "apps/plataforma/src/app/demo/aprovacoes/page.tsx",
+      "sha": "a694ad303b2f1ca032658dd714bfa12e30efb201",
+      "texto_hash_conferido": true
+    },
+    {
+      "path": "apps/plataforma/src/app/demo/assistencia/Ordens.tsx",
+      "sha": "6f194aea15eeec65969401e7e9adb9a136bbbb00",
+      "texto_hash_conferido": true
+    },
+    {
+      "path": "apps/plataforma/src/app/demo/assistencia/page.tsx",
+      "sha": "13b9998dc6202328282cdecf8c5c1068f1f0bf29",
+      "texto_hash_conferido": true
+    },
+    {
+      "path": "apps/plataforma/src/app/demo/auditoria/page.tsx",
+      "sha": "8d1bdc400ac003cf5c4b668e1734397e5cad4ff7",
+      "texto_hash_conferido": true
+    },
+    {
+      "path": "apps/plataforma/src/app/demo/canais/page.tsx",
+      "sha": "87faf36e1812803280005b85957fb85a9c719462",
+      "texto_hash_conferido": true
+    },
+    {
+      "path": "apps/plataforma/src/app/demo/clientes/Conversas.tsx",
+      "sha": "33bbe5619b31147269e059ec06d35d9f2a6ab136",
+      "texto_hash_conferido": true
+    },
+    {
+      "path": "apps/plataforma/src/app/demo/clientes/page.tsx",
+      "sha": "f5a542688086db0ee5e80746431376d704af262c",
+      "texto_hash_conferido": true
+    },
+    {
+      "path": "apps/plataforma/src/app/demo/connect/_abas/AtendimentoConnect.tsx",
+      "sha": "211125114945fb88fecb9d50a2d7cc0468fc728e",
+      "texto_hash_conferido": true
+    },
+    {
+      "path": "apps/plataforma/src/app/demo/connect/_abas/AtivarChip.tsx",
+      "sha": "d03dccd1a4868b86cfeba90850e7c9da8c96def3",
+      "texto_hash_conferido": true
+    },
+    {
+      "path": "apps/plataforma/src/app/demo/connect/_abas/Carteira.tsx",
+      "sha": "8a99322853b2c1b195c75c81945d7a56a07aebb8",
+      "texto_hash_conferido": true
+    },
+    {
+      "path": "apps/plataforma/src/app/demo/connect/_abas/ChipsConnect.tsx",
+      "sha": "9a100cbd657aea66c2dc85cc06478cab3b108264",
+      "texto_hash_conferido": true
+    },
+    {
+      "path": "apps/plataforma/src/app/demo/connect/_abas/ConsultarLinha.tsx",
+      "sha": "e9d40a1ab71c2411a42cdbbdcb4ced1e06ae62e4",
+      "texto_hash_conferido": true
+    },
+    {
+      "path": "apps/plataforma/src/app/demo/connect/_abas/Integracao.tsx",
+      "sha": "90862d99704dfe8653824db0c780705f0476f0e0",
+      "texto_hash_conferido": true
+    },
+    {
+      "path": "apps/plataforma/src/app/demo/connect/_abas/Operacoes.tsx",
+      "sha": "fabb85877ccf6b16bba0d3b3f65e5bdda5e33091",
+      "texto_hash_conferido": true
+    },
+    {
+      "path": "apps/plataforma/src/app/demo/connect/_abas/PortabilidadeConnect.tsx",
+      "sha": "92e356be452068943bc789ecafddb83d13e8a320",
+      "texto_hash_conferido": true
+    },
+    {
+      "path": "apps/plataforma/src/app/demo/connect/_abas/RecargaConnect.tsx",
+      "sha": "0cf3baf4b087c83e180efb106e5a4b771f1febbb",
+      "texto_hash_conferido": true
+    },
+    {
+      "path": "apps/plataforma/src/app/demo/connect/_abas/util.ts",
+      "sha": "4e9624e0a2676bcdaa1a29462142c7843b997bb8",
+      "texto_hash_conferido": true
+    },
+    {
+      "path": "apps/plataforma/src/app/demo/connect/page.tsx",
+      "sha": "0acd6c97bd4f7a65b76f671261336c9a067611be",
+      "texto_hash_conferido": true
+    },
+    {
+      "path": "apps/plataforma/src/app/demo/error.tsx",
+      "sha": "28913b38d8d5507be6045e5d5b86aab7cf5c1cc6",
+      "texto_hash_conferido": true
+    },
+    {
+      "path": "apps/plataforma/src/app/demo/estoque/page.tsx",
+      "sha": "617458edf54f3af3476e9e68abadeb9112deadb7",
+      "texto_hash_conferido": true
+    },
+    {
+      "path": "apps/plataforma/src/app/demo/financeiro/page.tsx",
+      "sha": "b22f3c387b70e30353bbc0ccdff63a503892140f",
+      "texto_hash_conferido": true
+    },
+    {
+      "path": "apps/plataforma/src/app/demo/importacao/Aprovar.tsx",
+      "sha": "f4c524b2b2b77c2f8326b762a7f9604c624d8ab2",
+      "texto_hash_conferido": true
+    },
+    {
+      "path": "apps/plataforma/src/app/demo/importacao/page.tsx",
+      "sha": "239f3206edfb581848690cca909693f2021650d5",
+      "texto_hash_conferido": true
+    },
+    {
+      "path": "apps/plataforma/src/app/demo/layout.tsx",
+      "sha": "37c4d5169b044ed3debd0b226725d16221a4e4f6",
+      "texto_hash_conferido": true
+    },
+    {
+      "path": "apps/plataforma/src/app/demo/loading.tsx",
+      "sha": "538e7b1cdddeb276edde9e81d8bc45ebcf140ed4",
+      "texto_hash_conferido": true
+    },
+    {
+      "path": "apps/plataforma/src/app/demo/loja/usar/route.ts",
+      "sha": "519dd93619bb577ee5ed13fc2b617482500fe1aa",
+      "texto_hash_conferido": true
+    },
+    {
+      "path": "apps/plataforma/src/app/demo/lojas/AcaoUsuario.tsx",
+      "sha": "ed79b24153aaa4e5dd671331708a04fcc5fe37f9",
+      "texto_hash_conferido": true
+    },
+    {
+      "path": "apps/plataforma/src/app/demo/lojas/page.tsx",
+      "sha": "8ad5e3aff74204b863e9c6ab4ec2e0b9ca46d3e1",
+      "texto_hash_conferido": true
+    },
+    {
+      "path": "apps/plataforma/src/app/demo/metas/page.tsx",
+      "sha": "877bb9fe8ebd48744e59f37daf18d041976a4ba2",
+      "texto_hash_conferido": true
+    },
+    {
+      "path": "apps/plataforma/src/app/demo/page.tsx",
+      "sha": "4e81bbe59e298818ddfad44c24c52a676dd44f3b",
+      "texto_hash_conferido": true
+    },
+    {
+      "path": "apps/plataforma/src/app/demo/perfil/page.tsx",
+      "sha": "ff8dc8a2370b12400a8047f88cb1ff1b2f04bc12",
+      "texto_hash_conferido": true
+    },
+    {
+      "path": "apps/plataforma/src/app/demo/perfil/usar/route.ts",
+      "sha": "7a549e72868b4284b7ac283a315da35c658153f6",
+      "texto_hash_conferido": true
+    },
+    {
+      "path": "apps/plataforma/src/app/demo/produtos/PrecoEditavel.tsx",
+      "sha": "9e00ef3c72aaae7b2155e4652e91d76ce021e88a",
+      "texto_hash_conferido": true
+    },
+    {
+      "path": "apps/plataforma/src/app/demo/produtos/page.tsx",
+      "sha": "b8c076e60c32823b9dfea15b405d0933d34abcc8",
+      "texto_hash_conferido": true
+    },
+    {
+      "path": "apps/plataforma/src/app/demo/relatorios/comparacao.test.ts",
+      "sha": "987ab88afed5a37c25c45f4aba29901b9bad286b",
+      "texto_hash_conferido": true
+    },
+    {
+      "path": "apps/plataforma/src/app/demo/relatorios/page.tsx",
+      "sha": "737af75022cdc791939f81a5ec0547d834a13dc2",
+      "texto_hash_conferido": true
+    },
+    {
+      "path": "apps/plataforma/src/app/demo/vendas/page.tsx",
+      "sha": "4ae63ea9d185e747664ab7586833f9e9a82b3393",
+      "texto_hash_conferido": true
+    },
+    {
+      "path": "apps/plataforma/src/app/demo/vender/Comprovante.tsx",
+      "sha": "b9ed81ab2da45670127d30446b92d9b00deb0e86",
+      "texto_hash_conferido": true
+    },
+    {
+      "path": "apps/plataforma/src/app/demo/vender/PDV.tsx",
+      "sha": "d541c521bc9bbf3ae8bb92de95ede2093284986a",
+      "texto_hash_conferido": true
+    },
+    {
+      "path": "apps/plataforma/src/app/demo/vender/estoque.test.ts",
+      "sha": "c744a6127e83a581fa70d0e0c84f131502fc4b0f",
+      "texto_hash_conferido": true
+    },
+    {
+      "path": "apps/plataforma/src/app/demo/vender/estoque.ts",
+      "sha": "f18c15264771403f6c00c7391529403db4d9029a",
+      "texto_hash_conferido": true
+    },
+    {
+      "path": "apps/plataforma/src/app/demo/vender/page.tsx",
+      "sha": "54f7c5ce505cbe0df9ba6afe78e291c5ad10e2d7",
+      "texto_hash_conferido": true
+    },
+    {
+      "path": "apps/plataforma/src/app/demo/vender/tipos.ts",
+      "sha": "5aa58729b94571f60d5be0e9a4f2a01687181ab5",
+      "texto_hash_conferido": true
+    },
+    {
+      "path": "apps/plataforma/src/app/entrar/CampoSenha.tsx",
+      "sha": "e54bcd4b628291c8c1bddc8910773b6125ba9cff",
+      "texto_hash_conferido": true
+    },
+    {
+      "path": "apps/plataforma/src/app/entrar/acoes.ts",
+      "sha": "b4b52771cc2ac25ca42ccc6bdb07c670bb4bb054",
+      "texto_hash_conferido": true
+    },
+    {
+      "path": "apps/plataforma/src/app/entrar/page.tsx",
+      "sha": "6e0a2d0027dcfe85d28fc31f11b7e554f0ac301d",
+      "texto_hash_conferido": true
+    },
+    {
+      "path": "apps/plataforma/src/app/entrar/recuperar/acoes.ts",
+      "sha": "8565388416acc00bc699a4abd59c6ccbcfd32825",
+      "texto_hash_conferido": true
+    },
+    {
+      "path": "apps/plataforma/src/app/entrar/recuperar/page.tsx",
+      "sha": "34d4786e1cb6f3f39b55bb6baaaba346f1e8ab4c",
+      "texto_hash_conferido": true
+    },
+    {
+      "path": "apps/plataforma/src/app/equipe/PessoasPorPapel.tsx",
+      "sha": "76e4363f5381c2fd9b4771cc130fb2f3217244a8",
+      "texto_hash_conferido": true
+    },
+    {
+      "path": "apps/plataforma/src/app/equipe/acoes.ts",
+      "sha": "0189f0dcb51c98c9dd4da4c0c4a88e8676e58a6d",
+      "texto_hash_conferido": true
+    },
+    {
+      "path": "apps/plataforma/src/app/equipe/equipe.test.ts",
+      "sha": "0184ab56ab75240c49d086f491f02afd1c72beb8",
+      "texto_hash_conferido": true
+    },
+    {
+      "path": "apps/plataforma/src/app/equipe/page.tsx",
+      "sha": "1b057c112ece4ba4da3bda7e5b95cfa1cc97a894",
+      "texto_hash_conferido": true
+    },
+    {
+      "path": "apps/plataforma/src/app/error.tsx",
+      "sha": "dbefcd80539a7d3bb585e1ca28605550fd4a9662",
+      "texto_hash_conferido": true
+    },
+    {
+      "path": "apps/plataforma/src/app/escolher-loja/acoes.ts",
+      "sha": "47b35643d899216841b9e0cf58db90be248e7893",
+      "texto_hash_conferido": true
+    },
+    {
+      "path": "apps/plataforma/src/app/escolher-loja/page.tsx",
+      "sha": "f2634fc3108337fbd6dd3d5f025bb6df1977db8a",
+      "texto_hash_conferido": true
+    },
+    {
+      "path": "apps/plataforma/src/app/estoque/PainelDoEstoque.tsx",
+      "sha": "9a297b37668e21250129889be46e74ab20a284e5",
+      "texto_hash_conferido": true
+    },
+    {
+      "path": "apps/plataforma/src/app/estoque/acoes.ts",
+      "sha": "572e5c210b7d523b5ecfbdc4d80fefc5b84e6439",
+      "texto_hash_conferido": true
+    },
+    {
+      "path": "apps/plataforma/src/app/estoque/entrada/FormularioEntrada.tsx",
+      "sha": "0c6958b4745fffd4dd84f0551cfb5f6f610e7f8b",
+      "texto_hash_conferido": true
+    },
+    {
+      "path": "apps/plataforma/src/app/estoque/entrada/acoes.ts",
+      "sha": "289a67a221d258d1331d39a80b02958a50668ce3",
+      "texto_hash_conferido": true
+    },
+    {
+      "path": "apps/plataforma/src/app/estoque/entrada/entrada.test.ts",
+      "sha": "525a14453561016f664c6b505157b6583951ffe0",
+      "texto_hash_conferido": true
+    },
+    {
+      "path": "apps/plataforma/src/app/estoque/entrada/page.tsx",
+      "sha": "972e45c1e2e0f4f0e0508ea557cc0469f4c1d6f7",
+      "texto_hash_conferido": true
+    },
+    {
+      "path": "apps/plataforma/src/app/estoque/inventario/EscolherItens.tsx",
+      "sha": "a7a62e349fe8b182bbf6cad1cb0afabc73a32e65",
+      "texto_hash_conferido": true
+    },
+    {
+      "path": "apps/plataforma/src/app/estoque/inventario/[id]/page.tsx",
+      "sha": "7b674ed2b365c47bcf8c814a5c9d980f7aa1e717",
+      "texto_hash_conferido": true
+    },
+    {
+      "path": "apps/plataforma/src/app/estoque/inventario/acoes.ts",
+      "sha": "ed58a0b034cb3680931055d8086491ff80ee9ecb",
+      "texto_hash_conferido": true
+    },
+    {
+      "path": "apps/plataforma/src/app/estoque/inventario/inventario.test.ts",
+      "sha": "dcac1987348b61ebd4bc9ba1b815fb5b0e0aefa1",
+      "texto_hash_conferido": true
+    },
+    {
+      "path": "apps/plataforma/src/app/estoque/inventario/page.tsx",
+      "sha": "6c66f488a32390c1f35f6dd1af42fe1a859ff91a",
+      "texto_hash_conferido": true
+    },
+    {
+      "path": "apps/plataforma/src/app/estoque/page.tsx",
+      "sha": "7f6905779c361f14313820d124bc4a9ca6ce9ec4",
+      "texto_hash_conferido": true
+    },
+    {
+      "path": "apps/plataforma/src/app/estoque/painel.test.ts",
+      "sha": "18b0e54d9fda603c772bf00e314c560d7d69125b",
+      "texto_hash_conferido": true
+    },
+    {
+      "path": "apps/plataforma/src/app/financeiro/ConteudoFinanceiro.tsx",
+      "sha": "937ca9a21e7766253b21058847d0438244482c22",
+      "texto_hash_conferido": true
+    },
+    {
+      "path": "apps/plataforma/src/app/financeiro/exportar/route.ts",
+      "sha": "18ec3b58c90ebf79ce61aed97230d90f311036c7",
+      "texto_hash_conferido": true
+    },
+    {
+      "path": "apps/plataforma/src/app/financeiro/financeiro.test.ts",
+      "sha": "05694fdd8aa6892467233ce58ab4740cdfb243f6",
+      "texto_hash_conferido": true
+    },
+    {
+      "path": "apps/plataforma/src/app/financeiro/layout.tsx",
+      "sha": "48f5400793d92efb35405e8732abbc0a759b7e92",
+      "texto_hash_conferido": true
+    },
+    {
+      "path": "apps/plataforma/src/app/financeiro/loading.tsx",
+      "sha": "c5e09cc95dea742a4b8c9ce84fd69b16014052ce",
+      "texto_hash_conferido": true
+    },
+    {
+      "path": "apps/plataforma/src/app/financeiro/page.tsx",
+      "sha": "f9bcb724df12ccc69fab9bc80fa4105b335b40eb",
+      "texto_hash_conferido": true
+    },
+    {
+      "path": "apps/plataforma/src/app/global.css",
+      "sha": "caed7bbcf347a980e872631be03baeb11942f386",
+      "texto_hash_conferido": true
+    },
+    {
+      "path": "apps/plataforma/src/app/icon.svg",
+      "sha": "1caa83775d70c805fbf398be3952c26f3df0368a",
+      "texto_hash_conferido": true
+    },
+    {
+      "path": "apps/plataforma/src/app/inicio/ConteudoInicio.tsx",
+      "sha": "68ea827beaac777717ae38c2adf7c48702116ffd",
+      "texto_hash_conferido": true
+    },
+    {
+      "path": "apps/plataforma/src/app/inicio/inicio.test.ts",
+      "sha": "3e21ded43a6ecca366c2ffb230b311668aeb67d1",
+      "texto_hash_conferido": true
+    },
+    {
+      "path": "apps/plataforma/src/app/inicio/layout.tsx",
+      "sha": "1756f63b6c42fcb8198e278bddf38678dec4c448",
+      "texto_hash_conferido": true
+    },
+    {
+      "path": "apps/plataforma/src/app/inicio/loading.tsx",
+      "sha": "87d043bae5ce12b5275b48f32d198d9516682fb9",
+      "texto_hash_conferido": true
+    },
+    {
+      "path": "apps/plataforma/src/app/inicio/page.tsx",
+      "sha": "0cbcfaf84b97be89a8dbb52a072c5f907a7a06f7",
+      "texto_hash_conferido": true
+    },
+    {
+      "path": "apps/plataforma/src/app/layout.tsx",
+      "sha": "be06bbe90cdfef62b3f6465338407785d94412ec",
+      "texto_hash_conferido": true
+    },
+    {
+      "path": "apps/plataforma/src/app/lojas/acoes.ts",
+      "sha": "ed4ebc1baf49874b19874d5f3e748bedd3e823b4",
+      "texto_hash_conferido": true
+    },
+    {
+      "path": "apps/plataforma/src/app/lojas/lojas.test.ts",
+      "sha": "8be616b6452a7aaec22258e13d992adf3c75b7af",
+      "texto_hash_conferido": true
+    },
+    {
+      "path": "apps/plataforma/src/app/lojas/page.tsx",
+      "sha": "a483098d6af9b2f7d1ab992ace617db62eda634f",
+      "texto_hash_conferido": true
+    },
+    {
+      "path": "apps/plataforma/src/app/metas/ConteudoMetas.tsx",
+      "sha": "f0590acb12c89a948a07512f30c6175d37467077",
+      "texto_hash_conferido": true
+    },
+    {
+      "path": "apps/plataforma/src/app/metas/acoes.ts",
+      "sha": "f9f397a51c14d774b3ad495f8d7a1158ece0c564",
+      "texto_hash_conferido": true
+    },
+    {
+      "path": "apps/plataforma/src/app/metas/layout.tsx",
+      "sha": "3c1a9e918c0c04a24d7059158eab854d5ad77b91",
+      "texto_hash_conferido": true
+    },
+    {
+      "path": "apps/plataforma/src/app/metas/loading.tsx",
+      "sha": "bf7cb75812b169851c29c5e440420ecb62026bb6",
+      "texto_hash_conferido": true
+    },
+    {
+      "path": "apps/plataforma/src/app/metas/metas.test.ts",
+      "sha": "a769a66072ba93bf1cd3bdcf55ef764b3e03c535",
+      "texto_hash_conferido": true
+    },
+    {
+      "path": "apps/plataforma/src/app/metas/page.tsx",
+      "sha": "f988226ced8a8e8e9f4d26d2f950a6b645d28172",
+      "texto_hash_conferido": true
+    },
+    {
+      "path": "apps/plataforma/src/app/not-found.tsx",
+      "sha": "659158fd0bf3f4564219f2846f6cf636cbff34c0",
+      "texto_hash_conferido": true
+    },
+    {
+      "path": "apps/plataforma/src/app/notas/acoes.ts",
+      "sha": "6824ebe9c64e6d56244798609efba60c6654f1f8",
+      "texto_hash_conferido": true
+    },
+    {
+      "path": "apps/plataforma/src/app/notas/page.tsx",
+      "sha": "8fb50bd9edfce2e93e3bdf730d0a454610592b6d",
+      "texto_hash_conferido": true
+    },
+    {
+      "path": "apps/plataforma/src/app/pagamentos/acoes.ts",
+      "sha": "7a813ddc32e6bf59c2f50d43a73c3d84dd3600ec",
+      "texto_hash_conferido": true
+    },
+    {
+      "path": "apps/plataforma/src/app/pagamentos/conciliacao/page.tsx",
+      "sha": "0d9fc31e760e13cd82feab70d22f50aed33c86d8",
+      "texto_hash_conferido": true
+    },
+    {
+      "path": "apps/plataforma/src/app/pagamentos/financeiras.test.ts",
+      "sha": "bd0992e23c15209f66be1059a8a9cb79e2b83fa2",
+      "texto_hash_conferido": true
+    },
+    {
+      "path": "apps/plataforma/src/app/pagamentos/financeiras/ConteudoFinanceiras.tsx",
+      "sha": "ea5a2ddfd47eac99f2acca1efcbb3d46e210d948",
+      "texto_hash_conferido": true
+    },
+    {
+      "path": "apps/plataforma/src/app/pagamentos/financeiras/page.tsx",
+      "sha": "c6e9a88670962958f687f2a3664245a5baa614f3",
+      "texto_hash_conferido": true
+    },
+    {
+      "path": "apps/plataforma/src/app/pagamentos/maquininhas/page.tsx",
+      "sha": "381839aa68401e34ec5f7eacdc8fe05867d06a3a",
+      "texto_hash_conferido": true
+    },
+    {
+      "path": "apps/plataforma/src/app/pagamentos/pagamentos.test.ts",
+      "sha": "aea2e532778410da95a22db9555a8fdf39a4a8ad",
+      "texto_hash_conferido": true
+    },
+    {
+      "path": "apps/plataforma/src/app/page.tsx",
+      "sha": "2611747e5dbe66a3d5317f7c3029e4d1fe71ef05",
+      "texto_hash_conferido": true
+    },
+    {
+      "path": "apps/plataforma/src/app/previsao/ConteudoPrevisao.tsx",
+      "sha": "5c45651069d8449faff1dea49fb476c4e592c122",
+      "texto_hash_conferido": true
+    },
+    {
+      "path": "apps/plataforma/src/app/previsao/Simulador.tsx",
+      "sha": "2a221e5bbb82c873d5be0414ff87f47a29e9bf4c",
+      "texto_hash_conferido": true
+    },
+    {
+      "path": "apps/plataforma/src/app/previsao/layout.tsx",
+      "sha": "d783e63d0469ffc5b2f2bc26d031fb1adbb6200d",
+      "texto_hash_conferido": true
+    },
+    {
+      "path": "apps/plataforma/src/app/previsao/loading.tsx",
+      "sha": "6d33f3518a04d419ac00b8518f56d27f5e036cad",
+      "texto_hash_conferido": true
+    },
+    {
+      "path": "apps/plataforma/src/app/previsao/page.tsx",
+      "sha": "d1cd6329359285cb018fd5b3e9016a8ecb1b8ea7",
+      "texto_hash_conferido": true
+    },
+    {
+      "path": "apps/plataforma/src/app/previsao/previsao.test.ts",
+      "sha": "c6850ab5b3fc79f43e95fc25a1ecb9edd07a8843",
+      "texto_hash_conferido": true
+    },
+    {
+      "path": "apps/plataforma/src/app/produtos/acoes.ts",
+      "sha": "f6df0c5b2df7936c8845476ef2db4a5b5914fd59",
+      "texto_hash_conferido": true
+    },
+    {
+      "path": "apps/plataforma/src/app/produtos/importar/EscolherColunas.tsx",
+      "sha": "c9bc050abe4ab6ea369b5aa8c68105ba20664ddd",
+      "texto_hash_conferido": true
+    },
+    {
+      "path": "apps/plataforma/src/app/produtos/importar/acoes.ts",
+      "sha": "600a9853703ae5152b96e27ebba80edd61aa6176",
+      "texto_hash_conferido": true
+    },
+    {
+      "path": "apps/plataforma/src/app/produtos/importar/enviar/route.ts",
+      "sha": "5ec4ba801931bf8be87b424fee7d79c908f61388",
+      "texto_hash_conferido": true
+    },
+    {
+      "path": "apps/plataforma/src/app/produtos/importar/importar.test.ts",
+      "sha": "f0597b045dd235f6451d8aee58cf6e78e6e55763",
+      "texto_hash_conferido": true
+    },
+    {
+      "path": "apps/plataforma/src/app/produtos/importar/page.tsx",
+      "sha": "16732f020b75f38268590836faf98b48d167a68b",
+      "texto_hash_conferido": true
+    },
+    {
+      "path": "apps/plataforma/src/app/produtos/page.tsx",
+      "sha": "ceee6fd972f007358d4a658df254555d0191a30a",
+      "texto_hash_conferido": true
+    },
+    {
+      "path": "apps/plataforma/src/app/produtos/precos/acoes.ts",
+      "sha": "fa73c5ab3d4dc48aa75da18af1d55c9cbf9e091c",
+      "texto_hash_conferido": true
+    },
+    {
+      "path": "apps/plataforma/src/app/produtos/precos/page.tsx",
+      "sha": "1aba90ba12cea635989a9f8494a3a39183e57ef0",
+      "texto_hash_conferido": true
+    },
+    {
+      "path": "apps/plataforma/src/app/produtos/precos/precos.test.ts",
+      "sha": "107f9344cba63d6effc8c75991ae17621033de89",
+      "texto_hash_conferido": true
+    },
+    {
+      "path": "apps/plataforma/src/app/produtos/produtos.test.ts",
+      "sha": "54dc31163bc567748253be378e266183f489d217",
+      "texto_hash_conferido": true
+    },
+    {
+      "path": "apps/plataforma/src/app/relatorios/ConteudoRelatorios.tsx",
+      "sha": "2787008f4828dabf0e491a16073735b33f75d291",
+      "texto_hash_conferido": true
+    },
+    {
+      "path": "apps/plataforma/src/app/relatorios/exportar/route.ts",
+      "sha": "11324be13d9dc0b7008373f2a25867371b17b656",
+      "texto_hash_conferido": true
+    },
+    {
+      "path": "apps/plataforma/src/app/relatorios/layout.tsx",
+      "sha": "068d465ed8c465303f38c691f833a2268513a3e3",
+      "texto_hash_conferido": true
+    },
+    {
+      "path": "apps/plataforma/src/app/relatorios/loading.tsx",
+      "sha": "d281e560cc133cb79366770e07c798fb9ab52dd9",
+      "texto_hash_conferido": true
+    },
+    {
+      "path": "apps/plataforma/src/app/relatorios/page.tsx",
+      "sha": "a8df8b6f507ba2d98e6692322262e4551a4459b7",
+      "texto_hash_conferido": true
+    },
+    {
+      "path": "apps/plataforma/src/app/relatorios/relatorios.test.ts",
+      "sha": "47bd4975ad9e1a74f1ab5f614709a6520886e1ae",
+      "texto_hash_conferido": true
+    },
+    {
+      "path": "apps/plataforma/src/app/resultado/ConteudoResultado.tsx",
+      "sha": "374714e06c7f8877f687fee7da3b78090e3e21ac",
+      "texto_hash_conferido": true
+    },
+    {
+      "path": "apps/plataforma/src/app/resultado/exportar/route.ts",
+      "sha": "e91e3f8504ae4413603d65bb41c30ed27e0dd962",
+      "texto_hash_conferido": true
+    },
+    {
+      "path": "apps/plataforma/src/app/resultado/layout.tsx",
+      "sha": "887eb7824f1f98ad8f611fb254fdee5d0ba1a01c",
+      "texto_hash_conferido": true
+    },
+    {
+      "path": "apps/plataforma/src/app/resultado/loading.tsx",
+      "sha": "8448374a8b65a97e3ab797c6db39d4925996926a",
+      "texto_hash_conferido": true
+    },
+    {
+      "path": "apps/plataforma/src/app/resultado/page.tsx",
+      "sha": "780e392ac9eb8cb7b0146e1cb8ccd7207e81b650",
+      "texto_hash_conferido": true
+    },
+    {
+      "path": "apps/plataforma/src/app/resultado/resultado.test.ts",
+      "sha": "8632f8ab51a4b7cdf5592113db0e7d25ed8b4de7",
+      "texto_hash_conferido": true
+    },
+    {
+      "path": "apps/plataforma/src/app/sair/route.ts",
+      "sha": "ecd9ac852ae4bf30904171da1183bf246794479f",
+      "texto_hash_conferido": true
+    },
+    {
+      "path": "apps/plataforma/src/app/saude/page.tsx",
+      "sha": "ece8612c75ec70ee02d2fa088d6b1f8af46c47c2",
+      "texto_hash_conferido": true
+    },
+    {
+      "path": "apps/plataforma/src/app/transferencias/acoes.ts",
+      "sha": "3a091fdc4d6b74ccfdd0c5e0299cb16de55cda02",
+      "texto_hash_conferido": true
+    },
+    {
+      "path": "apps/plataforma/src/app/transferencias/page.tsx",
+      "sha": "ba2e69609eed6d164ee28096b529e89823a4818b",
+      "texto_hash_conferido": true
+    },
+    {
+      "path": "apps/plataforma/src/app/vendas/Pendencias.tsx",
+      "sha": "2d07fd5ce73ffe80f0e7d00b184165f7e2e5819b",
+      "texto_hash_conferido": true
+    },
+    {
+      "path": "apps/plataforma/src/app/vendas/[id]/page.tsx",
+      "sha": "96553f19948d3f8d9e26e7bcb0a3e67946359dc2",
+      "texto_hash_conferido": true
+    },
+    {
+      "path": "apps/plataforma/src/app/vendas/page.tsx",
+      "sha": "39db67ab2db075b4789c4f2ab7dcc5a553911816",
+      "texto_hash_conferido": true
+    },
+    {
+      "path": "apps/plataforma/src/app/vendas/pendencias.test.ts",
+      "sha": "6375ef04e27f7fb79fb1d3dddf53866a954a7099",
+      "texto_hash_conferido": true
+    },
+    {
+      "path": "apps/plataforma/src/app/vendas/regra-de-preco.test.ts",
+      "sha": "4ac553e4ee317e3c739f58a442da83ac79c5b15a",
+      "texto_hash_conferido": true
+    },
+    {
+      "path": "apps/plataforma/src/app/vendas/vendas.test.ts",
+      "sha": "3b7ffad18f87a848dc91c3c90ad4954f43dfd128",
+      "texto_hash_conferido": true
+    },
+    {
+      "path": "apps/plataforma/src/app/vender/acoes.ts",
+      "sha": "e2bb6b1c8581f23672e0115c4e8838f247751aeb",
+      "texto_hash_conferido": true
+    },
+    {
+      "path": "apps/plataforma/src/app/vender/page.tsx",
+      "sha": "7cbb81db2e1b82b0cd0955e4b526b04dbf861c4f",
+      "texto_hash_conferido": true
+    },
+    {
+      "path": "apps/plataforma/src/app/vender/valores-invalidos.test.ts",
+      "sha": "aa7be95c9caa67e4e6a223137b6ab7f673377f9a",
+      "texto_hash_conferido": true
+    },
+    {
+      "path": "apps/plataforma/src/componentes/AppShell.tsx",
+      "sha": "7f6a466cb63e336c267ea7940ad7b0506ace94bf",
+      "texto_hash_conferido": true
+    },
+    {
+      "path": "apps/plataforma/src/componentes/AvisoDeRede.tsx",
+      "sha": "ef0e18d4d6e748850aae2a867508b1783b88fb84",
+      "texto_hash_conferido": true
+    },
+    {
+      "path": "apps/plataforma/src/componentes/BarraSuperior.tsx",
+      "sha": "6a5eb958bfca480e955481dbe24366efc93fd8a7",
+      "texto_hash_conferido": true
+    },
+    {
+      "path": "apps/plataforma/src/componentes/BotaoConfirmar.tsx",
+      "sha": "c4484d7939eb8cbb871e2156c8ccf4502e504597",
+      "texto_hash_conferido": true
+    },
+    {
+      "path": "apps/plataforma/src/componentes/BotaoImprimir.tsx",
+      "sha": "d8410140826b4a423cce7562a05495ee5bfdab04",
+      "texto_hash_conferido": true
+    },
+    {
+      "path": "apps/plataforma/src/componentes/Dialogo.tsx",
+      "sha": "b314345e9eac04a30b14154659debc25c2248781",
+      "texto_hash_conferido": true
+    },
+    {
+      "path": "apps/plataforma/src/componentes/DicasGrafico.tsx",
+      "sha": "602df440d6dc84cccfb5f01a2e9914bda45b491e",
+      "texto_hash_conferido": true
+    },
+    {
+      "path": "apps/plataforma/src/componentes/ExportarCsv.test.ts",
+      "sha": "3384b2d3c3a81c8293903fe5f4107ed95ada48b8",
+      "texto_hash_conferido": true
+    },
+    {
+      "path": "apps/plataforma/src/componentes/ExportarCsv.tsx",
+      "sha": "bce585897f13faac25592220d50f9afecaa32c79",
+      "texto_hash_conferido": true
+    },
+    {
+      "path": "apps/plataforma/src/componentes/Icone.tsx",
+      "sha": "aa41695175fcdad647b4f74f91a6dde1b3188e2d",
+      "texto_hash_conferido": true
+    },
+    {
+      "path": "apps/plataforma/src/componentes/LerCodigo.tsx",
+      "sha": "178403008e9971cdd1779bbed6809481d5d23e2d",
+      "texto_hash_conferido": true
+    },
+    {
+      "path": "apps/plataforma/src/componentes/LinkNavegacao.tsx",
+      "sha": "7c2b0062d854563fcbbe7709adf20388ebe50d8b",
+      "texto_hash_conferido": true
+    },
+    {
+      "path": "apps/plataforma/src/componentes/Marca.tsx",
+      "sha": "fb14ea4f87b2e639ee175623d97d157859e3e669",
+      "texto_hash_conferido": true
+    },
+    {
+      "path": "apps/plataforma/src/componentes/MenuSuspenso.tsx",
+      "sha": "8f47200a24767cf98fb0fc2fc1fdcc3f2683c6c1",
+      "texto_hash_conferido": true
+    },
+    {
+      "path": "apps/plataforma/src/componentes/MoldeReal.tsx",
+      "sha": "2bda8abd3f075f15e169ab9a4834e06f7389e2f3",
+      "texto_hash_conferido": true
+    },
+    {
+      "path": "apps/plataforma/src/componentes/NavegacaoCelular.tsx",
+      "sha": "18e858f858327e4315bcea07dc00fa10a6ef2f91",
+      "texto_hash_conferido": true
+    },
+    {
+      "path": "apps/plataforma/src/componentes/RodapeVersao.tsx",
+      "sha": "24f1bbc5989fe60f0c2999ae1a4b1dc68e2f7d8f",
+      "texto_hash_conferido": true
+    },
+    {
+      "path": "apps/plataforma/src/componentes/SemPermissao.tsx",
+      "sha": "480820c0d817df5106f17b50ce4067ef4cc7be91",
+      "texto_hash_conferido": true
+    },
+    {
+      "path": "apps/plataforma/src/componentes/Trilho.tsx",
+      "sha": "b6c17e57742b302ea90bbd5b735b22dfcc281877",
+      "texto_hash_conferido": true
+    },
+    {
+      "path": "apps/plataforma/src/componentes/escala.test.ts",
+      "sha": "356673200cfb0566cdb4dbb0e45a08dcde4a8dd0",
+      "texto_hash_conferido": true
+    },
+    {
+      "path": "apps/plataforma/src/componentes/escala.ts",
+      "sha": "eb257e0dccc94856389c81a27a0c38e39e4c7d37",
+      "texto_hash_conferido": true
+    },
+    {
+      "path": "apps/plataforma/src/componentes/graficos.tsx",
+      "sha": "7b5c07b53d5cf04e2851b4a3f6a1fd2b657c4791",
+      "texto_hash_conferido": true
+    },
+    {
+      "path": "apps/plataforma/src/componentes/paineis-de-metas.tsx",
+      "sha": "fa161562d894946cc788e989b5c4422a11563a60",
+      "texto_hash_conferido": true
+    },
+    {
+      "path": "apps/plataforma/src/componentes/paineis-de-vendas.tsx",
+      "sha": "54a088693480fe16767800a7acd57e48dd319276",
+      "texto_hash_conferido": true
+    },
+    {
+      "path": "apps/plataforma/src/componentes/paineis-do-connect.test.ts",
+      "sha": "29dd49118382093208bd959440ea714ea44f5693",
+      "texto_hash_conferido": true
+    },
+    {
+      "path": "apps/plataforma/src/componentes/paineis-do-connect.tsx",
+      "sha": "3e43b94329574629c0bd9a340acdef6adcc9182c",
+      "texto_hash_conferido": true
+    },
+    {
+      "path": "apps/plataforma/src/componentes/ui.tsx",
+      "sha": "3c7beab2ade83347592ecc077d6474b6a74a7246",
+      "texto_hash_conferido": true
+    },
+    {
+      "path": "apps/plataforma/src/demo/consultas.test.ts",
+      "sha": "b870a75d1041dd58844759b714c85d915dbbe69b",
+      "texto_hash_conferido": true
+    },
+    {
+      "path": "apps/plataforma/src/demo/consultas.ts",
+      "sha": "05f47852bcbe3ec902b939a27e9c17ca2b2cc043",
+      "texto_hash_conferido": true
+    },
+    {
+      "path": "apps/plataforma/src/demo/dados/aleatorio.ts",
+      "sha": "3a03a0a0e94d7fca5feecea2d354d9dde8247d0c",
+      "texto_hash_conferido": true
+    },
+    {
+      "path": "apps/plataforma/src/demo/dados/catalogo.ts",
+      "sha": "8ba67143cf612d7bafaf25450859eb2234837861",
+      "texto_hash_conferido": true
+    },
+    {
+      "path": "apps/plataforma/src/demo/dados/connect.ts",
+      "sha": "51b68e1a62ec07da6ceb52e2e152d1548667f510",
+      "texto_hash_conferido": true
+    },
+    {
+      "path": "apps/plataforma/src/demo/dados/dados.test.ts",
+      "sha": "8896f2b0d7db3fefddf0dfc6cbe9db408898ee77",
+      "texto_hash_conferido": true
+    },
+    {
+      "path": "apps/plataforma/src/demo/dados/estoque.ts",
+      "sha": "c4955ff4e7386024d1d86ad0ccfd9e19ba447fb8",
+      "texto_hash_conferido": true
+    },
+    {
+      "path": "apps/plataforma/src/demo/dados/index.ts",
+      "sha": "2bc4ef787c36f880141a3ba980c3a4137b1c8606",
+      "texto_hash_conferido": true
+    },
+    {
+      "path": "apps/plataforma/src/demo/dados/operacao.ts",
+      "sha": "43ae6e5b4056daeb24d53e1e41027468559d5b1a",
+      "texto_hash_conferido": true
+    },
+    {
+      "path": "apps/plataforma/src/demo/dados/organizacao.ts",
+      "sha": "0d08e586cfe5293b24f61194be295968e411076a",
+      "texto_hash_conferido": true
+    },
+    {
+      "path": "apps/plataforma/src/demo/dados/vendas.ts",
+      "sha": "9d6a92f47a2b5241edcdfbedd6d6c0b9adca788e",
+      "texto_hash_conferido": true
+    },
+    {
+      "path": "apps/plataforma/src/demo/perfis.test.ts",
+      "sha": "a288d061fd7bbbe89a5d8f135a5e7c83b5418805",
+      "texto_hash_conferido": true
+    },
+    {
+      "path": "apps/plataforma/src/demo/perfis.ts",
+      "sha": "9ef46f24d273f97c3a7c1b2d8786dc956bfe3942",
+      "texto_hash_conferido": true
+    },
+    {
+      "path": "apps/plataforma/src/demo/revisao-demo-lote4.test.ts",
+      "sha": "5c12a51773cf652f921f9c2531e79740f9d21803",
+      "texto_hash_conferido": true
+    },
+    {
+      "path": "apps/plataforma/src/demo/sessao.ts",
+      "sha": "d7d574a046da1d39002c0cd9c219fbe6e4668aa2",
+      "texto_hash_conferido": true
+    },
+    {
+      "path": "apps/plataforma/src/instrumentacao-node.ts",
+      "sha": "b29f56b6ec9b067866184692cfe8f31cb88a2623",
+      "texto_hash_conferido": true
+    },
+    {
+      "path": "apps/plataforma/src/instrumentation.ts",
+      "sha": "6aa70c584716955fc8706b831873bf1211cba2f3",
+      "texto_hash_conferido": true
+    },
+    {
+      "path": "apps/plataforma/src/integracoes/nogle/catalogo.ts",
+      "sha": "a56b69e3d47af3adae41ff4f8442734b848560b2",
+      "texto_hash_conferido": true
+    },
+    {
+      "path": "apps/plataforma/src/integracoes/nogle/nogle.test.ts",
+      "sha": "c84cc575b59e311f257965d5bf45fabd104aa9a2",
+      "texto_hash_conferido": true
+    },
+    {
+      "path": "apps/plataforma/src/integracoes/nogle/regras.ts",
+      "sha": "abe702b30c4dfb42e391c1041ee2d5538fa3a882",
+      "texto_hash_conferido": true
+    },
+    {
+      "path": "apps/plataforma/src/lib/acesso/menu.test.ts",
+      "sha": "f7bce01843f7c08939ce58aa53d58c7d3749b9c5",
+      "texto_hash_conferido": true
+    },
+    {
+      "path": "apps/plataforma/src/lib/acesso/menu.ts",
+      "sha": "04c82b7076f6c3af6f26cf53a980e61a0684cc3e",
+      "texto_hash_conferido": true
+    },
+    {
+      "path": "apps/plataforma/src/lib/acesso/redirecionar.ts",
+      "sha": "c7ae67f1fe4b8bf18ecc3a6a60019a6b4c6ddfda",
+      "texto_hash_conferido": true
+    },
+    {
+      "path": "apps/plataforma/src/lib/acesso/regras.test.ts",
+      "sha": "68a9f7da9d76b5b70b20e26cf90e5abd4d404d6b",
+      "texto_hash_conferido": true
+    },
+    {
+      "path": "apps/plataforma/src/lib/acesso/regras.ts",
+      "sha": "b705b23a2637adef65b2516f31d68fd7eb913310",
+      "texto_hash_conferido": true
+    },
+    {
+      "path": "apps/plataforma/src/lib/acesso/sessao.ts",
+      "sha": "cc818d6f1dc9d53a04a7d4ae4258b9bed76eaac9",
+      "texto_hash_conferido": true
+    },
+    {
+      "path": "apps/plataforma/src/lib/auditoria/regras.test.ts",
+      "sha": "232ed08327b5451fb7fe3f63ef4215b8efd4b1f0",
+      "texto_hash_conferido": true
+    },
+    {
+      "path": "apps/plataforma/src/lib/auditoria/regras.ts",
+      "sha": "0473d8e7c56078b2af2d4fb3b5b6a28f61099932",
+      "texto_hash_conferido": true
+    },
+    {
+      "path": "apps/plataforma/src/lib/caixa/saidas.ts",
+      "sha": "89a0babdda0d4b2b92701af17da068ee41a20c00",
+      "texto_hash_conferido": true
+    },
+    {
+      "path": "apps/plataforma/src/lib/catalogo/busca.test.ts",
+      "sha": "76f43b0ff04d691f49ad40a0123e4d4e9aa5f79e",
+      "texto_hash_conferido": true
+    },
+    {
+      "path": "apps/plataforma/src/lib/catalogo/busca.ts",
+      "sha": "4007ff65369298ed66f6904fccb9de49e1f6c744",
+      "texto_hash_conferido": true
+    },
+    {
+      "path": "apps/plataforma/src/lib/catalogo/cadastro.test.ts",
+      "sha": "ade9297e11c6c41559e9dd57404d7ec28e09a0bc",
+      "texto_hash_conferido": true
+    },
+    {
+      "path": "apps/plataforma/src/lib/catalogo/cadastro.ts",
+      "sha": "ff989974d9595b4bddc1fccaab97089dc6372c55",
+      "texto_hash_conferido": true
+    },
+    {
+      "path": "apps/plataforma/src/lib/catalogo/fotos.test.ts",
+      "sha": "85a8be4a027633cfefc1c9f42c422dd5f914d3b1",
+      "texto_hash_conferido": true
+    },
+    {
+      "path": "apps/plataforma/src/lib/catalogo/fotos.ts",
+      "sha": "ade013a7a11384c737e8563380c99a3eb027aa6a",
+      "texto_hash_conferido": true
+    },
+    {
+      "path": "apps/plataforma/src/lib/catalogo/precos.test.ts",
+      "sha": "33e5815e9fd51b9f6c1a4e229dbe503b2474718f",
+      "texto_hash_conferido": true
+    },
+    {
+      "path": "apps/plataforma/src/lib/catalogo/precos.ts",
+      "sha": "5121ff2f6c417ccf5b676384e125d4b83d8173ed",
+      "texto_hash_conferido": true
+    },
+    {
+      "path": "apps/plataforma/src/lib/catalogo/termos.ts",
+      "sha": "cc84f2751435a199a53383b8da76d0c54ecfcf3b",
+      "texto_hash_conferido": true
+    },
+    {
+      "path": "apps/plataforma/src/lib/clientes/regras.test.ts",
+      "sha": "40a231da5853d262929eeb2c917c1ad82cc5f087",
+      "texto_hash_conferido": true
+    },
+    {
+      "path": "apps/plataforma/src/lib/clientes/regras.ts",
+      "sha": "954cec1d314c2111dabf5ed4b0936b9635edb839",
+      "texto_hash_conferido": true
+    },
+    {
+      "path": "apps/plataforma/src/lib/connect/consulta-producao.ts",
+      "sha": "83106534a9210dbb16c92573e3c37a96e059f6ff",
+      "texto_hash_conferido": true
+    },
+    {
+      "path": "apps/plataforma/src/lib/connect/producao.test.ts",
+      "sha": "1d9fe200a01d30607586b39862c25f41dbdcc1de",
+      "texto_hash_conferido": true
+    },
+    {
+      "path": "apps/plataforma/src/lib/connect/producao.ts",
+      "sha": "c7ebc09787294150150f9292476ae62c1d8e5b67",
+      "texto_hash_conferido": true
+    },
+    {
+      "path": "apps/plataforma/src/lib/connect/regras.test.ts",
+      "sha": "654f4172cc42a30141c5b0d6611481d5ad1626a3",
+      "texto_hash_conferido": true
+    },
+    {
+      "path": "apps/plataforma/src/lib/connect/regras.ts",
+      "sha": "13c25fc0dea072e6c8e313addfbfddf1b7544d55",
+      "texto_hash_conferido": true
+    },
+    {
+      "path": "apps/plataforma/src/lib/contas-a-pagar/consulta.ts",
+      "sha": "413b3d3f3fdcf61d222fac68ba1c82f9a9d46072",
+      "texto_hash_conferido": true
+    },
+    {
+      "path": "apps/plataforma/src/lib/contas-a-pagar/planilha.ts",
+      "sha": "02e2c15d59b95f155aa947b0916fcd35e0810722",
+      "texto_hash_conferido": true
+    },
+    {
+      "path": "apps/plataforma/src/lib/contas-a-pagar/regras.test.ts",
+      "sha": "566f53c7ce6e4d867f2755929b7e4ee93774d34c",
+      "texto_hash_conferido": true
+    },
+    {
+      "path": "apps/plataforma/src/lib/contas-a-pagar/regras.ts",
+      "sha": "6fa73336f621e81a56788b1c2e8f0fc838f68609",
+      "texto_hash_conferido": true
+    },
+    {
+      "path": "apps/plataforma/src/lib/crm/regras.test.ts",
+      "sha": "42c21ce36951b87297cdb622a21e64ae60462187",
+      "texto_hash_conferido": true
+    },
+    {
+      "path": "apps/plataforma/src/lib/crm/regras.ts",
+      "sha": "9e843e5e1a76ee0d0e955ad1bd4f7d088392e47f",
+      "texto_hash_conferido": true
+    },
+    {
+      "path": "apps/plataforma/src/lib/csv.test.ts",
+      "sha": "f9a4a7683cce8cce3f08f2c5f3358758e9c29e6f",
+      "texto_hash_conferido": true
+    },
+    {
+      "path": "apps/plataforma/src/lib/csv.ts",
+      "sha": "e5b4ecc5f5109600764df96012e7925e7b1e5046",
+      "texto_hash_conferido": true
+    },
+    {
+      "path": "apps/plataforma/src/lib/definir-chave.test.ts",
+      "sha": "8717a749acdd9bee967664a4ade04f0df9e88e66",
+      "texto_hash_conferido": true
+    },
+    {
+      "path": "apps/plataforma/src/lib/dinheiro.ts",
+      "sha": "52b0e1366a3fad6cc76c8c56f161be779ef29b82",
+      "texto_hash_conferido": true
+    },
+    {
+      "path": "apps/plataforma/src/lib/equipe/consulta.ts",
+      "sha": "796153b585ec3330a8235a3e58c0b72e6b266a6e",
+      "texto_hash_conferido": true
+    },
+    {
+      "path": "apps/plataforma/src/lib/equipe/painel.test.ts",
+      "sha": "f4405dd529fd88da3c32f8713c135141659cbcd0",
+      "texto_hash_conferido": true
+    },
+    {
+      "path": "apps/plataforma/src/lib/equipe/painel.ts",
+      "sha": "5a0658ef260f883210fd16dccbd4e3f97a40a154",
+      "texto_hash_conferido": true
+    },
+    {
+      "path": "apps/plataforma/src/lib/estoque/consulta-painel.ts",
+      "sha": "13eb8dd878ede66db317db367ace11c884d043f9",
+      "texto_hash_conferido": true
+    },
+    {
+      "path": "apps/plataforma/src/lib/estoque/entrada.test.ts",
+      "sha": "a96b00a1d6610f494783671e656e9261094e35e7",
+      "texto_hash_conferido": true
+    },
+    {
+      "path": "apps/plataforma/src/lib/estoque/entrada.ts",
+      "sha": "9cdaf7399e18eb872acc6149ed718687e553d124",
+      "texto_hash_conferido": true
+    },
+    {
+      "path": "apps/plataforma/src/lib/estoque/historico-entradas.test.ts",
+      "sha": "3d8aa073ba0f2ed0baf767b91fadf43e1ad98f40",
+      "texto_hash_conferido": true
+    },
+    {
+      "path": "apps/plataforma/src/lib/estoque/historico-entradas.ts",
+      "sha": "25f6dc2714eebd406896745e13a8eb70b1eb20b7",
+      "texto_hash_conferido": true
+    },
+    {
+      "path": "apps/plataforma/src/lib/estoque/inventario.ts",
+      "sha": "63cdc4e3dbbbcfc623ec6a35edca9f6d5c3d8c93",
+      "texto_hash_conferido": true
+    },
+    {
+      "path": "apps/plataforma/src/lib/estoque/painel.test.ts",
+      "sha": "e86b73e1c394d665c523401b3bd5371a9fd7807b",
+      "texto_hash_conferido": true
+    },
+    {
+      "path": "apps/plataforma/src/lib/estoque/painel.ts",
+      "sha": "8b32e4b66d13f226b10cb0418bf0b60dd8c27bf9",
+      "texto_hash_conferido": true
+    },
+    {
+      "path": "apps/plataforma/src/lib/estoque/regras.test.ts",
+      "sha": "d652536150e48630582112aec329263e1c194b26",
+      "texto_hash_conferido": true
+    },
+    {
+      "path": "apps/plataforma/src/lib/estoque/regras.ts",
+      "sha": "52e5f7af2c0b88363ad07a6b0d49a2ff7e337aa8",
+      "texto_hash_conferido": true
+    },
+    {
+      "path": "apps/plataforma/src/lib/financeiro/consulta.ts",
+      "sha": "ad5a0b7af805e8eddf04627ba5777ff33e5f3f01",
+      "texto_hash_conferido": true
+    },
+    {
+      "path": "apps/plataforma/src/lib/financeiro/escopo.ts",
+      "sha": "2eca49bf0fdcbf7212ec27339ddb2dd578497bef",
+      "texto_hash_conferido": true
+    },
+    {
+      "path": "apps/plataforma/src/lib/financeiro/exportacao.ts",
+      "sha": "dedf49552bfe387e0d401f4414cacdb9b7e5615a",
+      "texto_hash_conferido": true
+    },
+    {
+      "path": "apps/plataforma/src/lib/financeiro/painel.test.ts",
+      "sha": "49ecf9fbc01171420c1f83392842f5d1dc9c95c4",
+      "texto_hash_conferido": true
+    },
+    {
+      "path": "apps/plataforma/src/lib/financeiro/painel.ts",
+      "sha": "ccbc596087b367a6f0f52a38e00e02dc3a67ba09",
+      "texto_hash_conferido": true
+    },
+    {
+      "path": "apps/plataforma/src/lib/financeiro/registros.ts",
+      "sha": "6c32da802b047099e964e3f1b9f56e6f3cbb9a42",
+      "texto_hash_conferido": true
+    },
+    {
+      "path": "apps/plataforma/src/lib/formato.test.ts",
+      "sha": "d4e2adbc0c1634d4c2c34d6b3facce9579d8d521",
+      "texto_hash_conferido": true
+    },
+    {
+      "path": "apps/plataforma/src/lib/formato.ts",
+      "sha": "e4c41aebf7760b5c3d88e4e643bd5b8be30e18df",
+      "texto_hash_conferido": true
+    },
+    {
+      "path": "apps/plataforma/src/lib/importacao/catalogo.test.ts",
+      "sha": "e5ba4520b754f40e5306393b0ed9f17ecc1d95a2",
+      "texto_hash_conferido": true
+    },
+    {
+      "path": "apps/plataforma/src/lib/importacao/catalogo.ts",
+      "sha": "e1bb28fa125072f05715d2754d7abedc49ba2aba",
+      "texto_hash_conferido": true
+    },
+    {
+      "path": "apps/plataforma/src/lib/importacao/csv.test.ts",
+      "sha": "2656bc3a845d88b7e452b95e2a7f152c903f758e",
+      "texto_hash_conferido": true
+    },
+    {
+      "path": "apps/plataforma/src/lib/importacao/csv.ts",
+      "sha": "90d3a59b11d9f75133d60979b8f4bc6d4e64ca76",
+      "texto_hash_conferido": true
+    },
+    {
+      "path": "apps/plataforma/src/lib/importacao/regras.test.ts",
+      "sha": "e3f349ea0a55789a7458d5d6afb18cd56f784879",
+      "texto_hash_conferido": true
+    },
+    {
+      "path": "apps/plataforma/src/lib/importacao/regras.ts",
+      "sha": "4a53257e0e6a8ce5adc2ef8861be2055e7b202b0",
+      "texto_hash_conferido": true
+    },
+    {
+      "path": "apps/plataforma/src/lib/inicio/consulta.ts",
+      "sha": "e797c28e008f0483ec66557b36f3aaa30fffa5ac",
+      "texto_hash_conferido": true
+    },
+    {
+      "path": "apps/plataforma/src/lib/inicio/painel.test.ts",
+      "sha": "8bc33743c37bc279fe50d65fbf8af6659bcdbd53",
+      "texto_hash_conferido": true
+    },
+    {
+      "path": "apps/plataforma/src/lib/inicio/painel.ts",
+      "sha": "2562feb9e509b9dc99f287ac43cc726a29d625b1",
+      "texto_hash_conferido": true
+    },
+    {
+      "path": "apps/plataforma/src/lib/leitura-do-banco.ts",
+      "sha": "edd969d792c16a18c6cdc1628c6933f0c295ad34",
+      "texto_hash_conferido": true
+    },
+    {
+      "path": "apps/plataforma/src/lib/lojas/regras.test.ts",
+      "sha": "67885a4ed28ae9fc47c89bcdf22dff2bde68f865",
+      "texto_hash_conferido": true
+    },
+    {
+      "path": "apps/plataforma/src/lib/lojas/regras.ts",
+      "sha": "35b13e4dbba29378151d23d43d1834c05c66ae90",
+      "texto_hash_conferido": true
+    },
+    {
+      "path": "apps/plataforma/src/lib/margem/consulta.ts",
+      "sha": "4b0ba4ecc34cb54eb0efc10c95a6b90cf6d2168a",
+      "texto_hash_conferido": true
+    },
+    {
+      "path": "apps/plataforma/src/lib/margem/painel.test.ts",
+      "sha": "e9f07215d4f83586e9100fdfae316ce1b2294525",
+      "texto_hash_conferido": true
+    },
+    {
+      "path": "apps/plataforma/src/lib/margem/painel.ts",
+      "sha": "52b217e1035f639f2cdf607cfbe597408e99c3c3",
+      "texto_hash_conferido": true
+    },
+    {
+      "path": "apps/plataforma/src/lib/metas/consulta.ts",
+      "sha": "79c830d2749205b4a7ce3041d566bee6e2f26993",
+      "texto_hash_conferido": true
+    },
+    {
+      "path": "apps/plataforma/src/lib/metas/painel.test.ts",
+      "sha": "e9aec156072ad13cc3adc378e4b9ec2819d98742",
+      "texto_hash_conferido": true
+    },
+    {
+      "path": "apps/plataforma/src/lib/metas/painel.ts",
+      "sha": "e5523fe093968f77492541351aae943a63e67e76",
+      "texto_hash_conferido": true
+    },
+    {
+      "path": "apps/plataforma/src/lib/notas/regras.test.ts",
+      "sha": "6153b78ac4a63729775b61d04034b2426ad699d3",
+      "texto_hash_conferido": true
+    },
+    {
+      "path": "apps/plataforma/src/lib/notas/regras.ts",
+      "sha": "23ce725779d0fa26e9c43ad7ec75c1b61b75434c",
+      "texto_hash_conferido": true
+    },
+    {
+      "path": "apps/plataforma/src/lib/pagamentos/financeiras.test.ts",
+      "sha": "52d4d54c7bb832c98b9986e0c2938c3033b0c0e1",
+      "texto_hash_conferido": true
+    },
+    {
+      "path": "apps/plataforma/src/lib/pagamentos/financeiras.ts",
+      "sha": "1684e8cfd4630bca408c7fd9449b0c5352eb07d5",
+      "texto_hash_conferido": true
+    },
+    {
+      "path": "apps/plataforma/src/lib/pagamentos/regras.ts",
+      "sha": "00499fe46b50383aa96a31af431f06cc38a9bc7e",
+      "texto_hash_conferido": true
+    },
+    {
+      "path": "apps/plataforma/src/lib/parametros.test.ts",
+      "sha": "beb641f458fde0929330225855cc35fd11ae5b2c",
+      "texto_hash_conferido": true
+    },
+    {
+      "path": "apps/plataforma/src/lib/parametros.ts",
+      "sha": "2230f1508ea864a9dfee0334a04649547e978f1f",
+      "texto_hash_conferido": true
+    },
+    {
+      "path": "apps/plataforma/src/lib/previsao/consulta.ts",
+      "sha": "cba38d4688f7911799830bad7efc42588000fc8b",
+      "texto_hash_conferido": true
+    },
+    {
+      "path": "apps/plataforma/src/lib/previsao/planilha.ts",
+      "sha": "a7afe8fa9266963b15209af85c33ce252b4aeaa1",
+      "texto_hash_conferido": true
+    },
+    {
+      "path": "apps/plataforma/src/lib/previsao/regras.ts",
+      "sha": "c3aded78733cfd0709c6ad6501a889d008d17e65",
+      "texto_hash_conferido": true
+    },
+    {
+      "path": "apps/plataforma/src/lib/relatorios/consulta.ts",
+      "sha": "97235454015ce168d0057c0cdc25fe3f2529ef7b",
+      "texto_hash_conferido": true
+    },
+    {
+      "path": "apps/plataforma/src/lib/relatorios/painel.test.ts",
+      "sha": "7ee9768a909da8f6762880a3e5510c210396e6ae",
+      "texto_hash_conferido": true
+    },
+    {
+      "path": "apps/plataforma/src/lib/relatorios/painel.ts",
+      "sha": "7b0e49ae9887bc83afdaf095cc08f3df9281e760",
+      "texto_hash_conferido": true
+    },
+    {
+      "path": "apps/plataforma/src/lib/resultado/consulta.ts",
+      "sha": "3cf7da66f5e6542077eb12d37305b82e4920e4e1",
+      "texto_hash_conferido": true
+    },
+    {
+      "path": "apps/plataforma/src/lib/resultado/planilha.ts",
+      "sha": "a8d1956dc62fc908391ad51acd66b60e95d59e64",
+      "texto_hash_conferido": true
+    },
+    {
+      "path": "apps/plataforma/src/lib/resultado/regras.ts",
+      "sha": "ddc9abe6979e79829fe6d38bef0ea3713e850f03",
+      "texto_hash_conferido": true
+    },
+    {
+      "path": "apps/plataforma/src/lib/supabase/configuracao.ts",
+      "sha": "8f92f2444ec0423a2e5e1761e261cb7d2e994d5f",
+      "texto_hash_conferido": true
+    },
+    {
+      "path": "apps/plataforma/src/lib/supabase/servidor.ts",
+      "sha": "073fbf844be4dafb87c8332a89c37d0c32c04488",
+      "texto_hash_conferido": true
+    },
+    {
+      "path": "apps/plataforma/src/lib/supabase/tipos-banco.test.ts",
+      "sha": "bbf26baa60b78cafed99755abd84fffe47940391",
+      "texto_hash_conferido": true
+    },
+    {
+      "path": "apps/plataforma/src/lib/supabase/tipos-banco.ts",
+      "sha": "c7a1429fdeadbf4021295a604976b0f68b60f58d",
+      "texto_hash_conferido": true
+    },
+    {
+      "path": "apps/plataforma/src/lib/transferencias/regras.test.ts",
+      "sha": "1e8b8d6dc957f6b2920e5729d89891d0967d2c35",
+      "texto_hash_conferido": true
+    },
+    {
+      "path": "apps/plataforma/src/lib/transferencias/regras.ts",
+      "sha": "4a1d0490780d868361076c8bf77b5bb88adefaa5",
+      "texto_hash_conferido": true
+    },
+    {
+      "path": "apps/plataforma/src/lib/vendas/lista.test.ts",
+      "sha": "3b777fb3d14d1d2cbb33fd4cecb3c6236a85d884",
+      "texto_hash_conferido": true
+    },
+    {
+      "path": "apps/plataforma/src/lib/vendas/lista.ts",
+      "sha": "6bbdcf6da306efeede3c90a7910f1270c5b8fd3a",
+      "texto_hash_conferido": true
+    },
+    {
+      "path": "apps/plataforma/src/lib/vendas/regra-de-preco.test.ts",
+      "sha": "9e72eb5d492d61b0d8dc012e022436e48e3f013f",
+      "texto_hash_conferido": true
+    },
+    {
+      "path": "apps/plataforma/src/lib/vendas/regra-de-preco.ts",
+      "sha": "43460d16c2abed5908c1a4a4e98ccfeb14818a03",
+      "texto_hash_conferido": true
+    },
+    {
+      "path": "apps/plataforma/src/lib/vendas/regras.test.ts",
+      "sha": "b583ad903ec6b930074eaadf67b1a9a10b620bf1",
+      "texto_hash_conferido": true
+    },
+    {
+      "path": "apps/plataforma/src/lib/vendas/regras.ts",
+      "sha": "bd039a4ac69813a433a38d9dca07267b1ec3a186",
+      "texto_hash_conferido": true
+    },
+    {
+      "path": "apps/plataforma/src/lib/versao.test.ts",
+      "sha": "db50a1fb8bac286693a30c73d362dab370ea8776",
+      "texto_hash_conferido": true
+    },
+    {
+      "path": "apps/plataforma/src/lib/versao.ts",
+      "sha": "146f50e8877f900a63aeef0169c7d60613287d68",
+      "texto_hash_conferido": true
+    },
+    {
+      "path": "apps/plataforma/src/proxy.test.ts",
+      "sha": "4e23fb0b5908c56c038d603eb1d2f3599dafcb4c",
+      "texto_hash_conferido": true
+    },
+    {
+      "path": "apps/plataforma/src/proxy.ts",
+      "sha": "501166da126e65f8aa0ba6d423ed0e6aeee251d1",
+      "texto_hash_conferido": true
+    },
+    {
+      "path": "apps/plataforma/src/saude/estado.test.ts",
+      "sha": "de7968a99ff6810fb037141c67c920d5d974d4c4",
+      "texto_hash_conferido": true
+    },
+    {
+      "path": "apps/plataforma/src/saude/estado.ts",
+      "sha": "d3695b7e7f44d7a29c133c312f2848806d74d1c5",
+      "texto_hash_conferido": true
+    },
+    {
+      "path": "apps/plataforma/tsconfig.json",
+      "sha": "01c78de8eaa354c52ec67222bdac64be1e410d5a",
+      "texto_hash_conferido": true
+    },
+    {
+      "path": "apps/plataforma/vitest.config.ts",
+      "sha": "0dbff11c6a0ab3e74a10bb270e74530fae9c4e01",
+      "texto_hash_conferido": true
+    },
+    {
+      "path": "apps/worker/eslint.config.mjs",
+      "sha": "e80f113e0cd94a488a17fbd7b81627550155dccc",
+      "texto_hash_conferido": true
+    },
+    {
+      "path": "apps/worker/package.json",
+      "sha": "ef3b7cd0b64bc3b9d3db52d82c8ef0d5afa2268d",
+      "texto_hash_conferido": true
+    },
+    {
+      "path": "apps/worker/src/connect/cliente-nogle.ts",
+      "sha": "42b9093a715a30e1c9f7a9508048cdd1732a3a07",
+      "texto_hash_conferido": true
+    },
+    {
+      "path": "apps/worker/src/connect/ponta-a-ponta.test.ts",
+      "sha": "aa7458acab9ed7674195974f12cddb6fbb72bc5b",
+      "texto_hash_conferido": true
+    },
+    {
+      "path": "apps/worker/src/connect/processar.ts",
+      "sha": "393fbefe2afbe683e3e2b50c3c9370506db45ab5",
+      "texto_hash_conferido": true
+    },
+    {
+      "path": "apps/worker/src/connect/transporte.test.ts",
+      "sha": "8386892d2faee44a4d78e8194304fbb0c531a580",
+      "texto_hash_conferido": true
+    },
+    {
+      "path": "apps/worker/src/connect/transporte.ts",
+      "sha": "0aff6e446a7cf43357f7962322f87f065f90806e",
+      "texto_hash_conferido": true
+    },
+    {
+      "path": "apps/worker/src/executar-connect.ts",
+      "sha": "3a7fc518b0bd4819509bbabddd8f74630ffd07dd",
+      "texto_hash_conferido": true
+    },
+    {
+      "path": "apps/worker/src/executar-identidade.ts",
+      "sha": "50f2b5220253790f5b6068c9f89f35bb2a358b01",
+      "texto_hash_conferido": true
+    },
+    {
+      "path": "apps/worker/src/identidade.test.ts",
+      "sha": "80881d5cf183e425849386344ae84bb80f592052",
+      "texto_hash_conferido": true
+    },
+    {
+      "path": "apps/worker/src/identidade.ts",
+      "sha": "801b62c21d5935f735c6ddd88d40bcfe90189e02",
+      "texto_hash_conferido": true
+    },
+    {
+      "path": "apps/worker/src/supabase.ts",
+      "sha": "a01bd366c98946bd6e5535f04486af79a5676d64",
+      "texto_hash_conferido": true
+    },
+    {
+      "path": "apps/worker/tsconfig.json",
+      "sha": "086500627e60572af8b91593b7839b785290ed3b",
+      "texto_hash_conferido": true
+    },
+    {
+      "path": "apps/worker/vitest.config.ts",
+      "sha": "d8c54dd41b55d81586ebe539388c9921b091e163",
+      "texto_hash_conferido": true
+    },
+    {
+      "path": "backlog.json",
+      "sha": "28cc7c3102a0bac98d30df23f64bc957204b79be",
+      "texto_hash_conferido": true
+    },
+    {
+      "path": "deploy/homologacao/LEIA-ME.md",
+      "sha": "0ad0a4680158447c74f0ad351ecea1eac6b7024b",
+      "texto_hash_conferido": true
+    },
+    {
+      "path": "deploy/homologacao/ambiente-web.sh",
+      "sha": "94695c3869b044ea75b1243dc1f8c2031b793886",
+      "texto_hash_conferido": true
+    },
+    {
+      "path": "deploy/homologacao/conferir-publicacao.sh",
+      "sha": "2d378734cbfb16723332f8c9a12897fb6e0534f9",
+      "texto_hash_conferido": true
+    },
+    {
+      "path": "deploy/homologacao/definir-chave.sh",
+      "sha": "8bf560955552dea9f589365201d1dd2603584273",
+      "texto_hash_conferido": true
+    },
+    {
+      "path": "deploy/homologacao/garantir-no-ar.sh",
+      "sha": "bb8a3fdb9faa2b80e874baffcd739715bb59f0a1",
+      "texto_hash_conferido": true
+    },
+    {
+      "path": "deploy/homologacao/htaccess-dominio-principal.txt",
+      "sha": "36b0ddce087794526a8c255c0d6acda4e315307a",
+      "texto_hash_conferido": true
+    },
+    {
+      "path": "deploy/homologacao/htaccess-hml-app.txt",
+      "sha": "bb5b556745b40f59c6f9fa5bc7949b45e21acf11",
+      "texto_hash_conferido": true
+    },
+    {
+      "path": "deploy/homologacao/publicar.sh",
+      "sha": "117454c7a1fd044ea83c4476873b393a16acf817",
+      "texto_hash_conferido": true
+    },
+    {
+      "path": "deploy/homologacao/worker-connect.sh",
+      "sha": "16639271d30f635a04aef3750a40d1c24ae5f5c8",
+      "texto_hash_conferido": true
+    },
+    {
+      "path": "deploy/homologacao/worker-identidade.sh",
+      "sha": "c5bf08aab2da3568071380482d32167fb04cb030",
+      "texto_hash_conferido": true
+    },
+    {
+      "path": "docs/00_CONTEXTO_E_DECISOES.md",
+      "sha": "95eabb66ce9cbdddafc0d109d19d4332fab9c16d",
+      "texto_hash_conferido": true
+    },
+    {
+      "path": "docs/01_REQUISITOS.md",
+      "sha": "8d2cf132642889b1dc21b48bda1814ac755d5fec",
+      "texto_hash_conferido": true
+    },
+    {
+      "path": "docs/02_ARQUITETURA.md",
+      "sha": "42a5545bb0a071b500b00d3c6254711ef3eec3c6",
+      "texto_hash_conferido": true
+    },
+    {
+      "path": "docs/03_DADOS.md",
+      "sha": "dd3f7d24ee7a780ec911c269d61c6aa06547d5ec",
+      "texto_hash_conferido": true
+    },
+    {
+      "path": "docs/04_FLUXOS.md",
+      "sha": "d5b267f58d8dbe3a6f0569e5f91aad05d528e87f",
+      "texto_hash_conferido": true
+    },
+    {
+      "path": "docs/05_PERMISSOES.md",
+      "sha": "2754575e01737ef5d03cc928e458b63857700694",
+      "texto_hash_conferido": true
+    },
+    {
+      "path": "docs/06_INTEGRACOES.md",
+      "sha": "412f1b22045af7c718cff43d760011c4475aae62",
+      "texto_hash_conferido": true
+    },
+    {
+      "path": "docs/07_ROADMAP.md",
+      "sha": "bc7bd50b0b4662f91bd1d6a3769727c329ef5b10",
+      "texto_hash_conferido": true
+    },
+    {
+      "path": "docs/08_DESIGN_E_TELAS.md",
+      "sha": "5e0e8d992961ac61bc57b38cda28f8dfb6942c06",
+      "texto_hash_conferido": true
+    },
+    {
+      "path": "docs/09_TESTES_E_ACEITE.md",
+      "sha": "61b7d1c144f1db0a8891e07b6ccacf64710d6e7e",
+      "texto_hash_conferido": true
+    },
+    {
+      "path": "docs/10_DECISOES_PENDENTES.md",
+      "sha": "d26a9b2b7c11986791fab66d6c9c249867f141b3",
+      "texto_hash_conferido": true
+    },
+    {
+      "path": "docs/11_OPERACAO_DOS_AGENTES.md",
+      "sha": "b0fe6eff9bac2511d36bc1212fa51c54ba71338b",
+      "texto_hash_conferido": true
+    },
+    {
+      "path": "docs/12_HISTORICO_E_PROVENIENCIA.md",
+      "sha": "695508e998a360a455acd97df51863480824d859",
+      "texto_hash_conferido": true
+    },
+    {
+      "path": "docs/13_PROMPTS_POR_FASE.md",
+      "sha": "980adbd80bc040955dcb6ad16f14f4ec92bfe28d",
+      "texto_hash_conferido": true
+    },
+    {
+      "path": "docs/ESTADO_ATUAL_E_PASSAGEM.md",
+      "sha": "e94596dec7e2ea20f458e55ae5f23db2927acb5e",
+      "texto_hash_conferido": true
+    },
+    {
+      "path": "docs/PENDENCIAS_DO_PROPRIETARIO.md",
+      "sha": "c8cd87aeb1aca044d8e03fbefd551e355c24a830",
+      "texto_hash_conferido": true
+    },
+    {
+      "path": "docs/adr/ADR-001-infraestrutura-ipv4-portas-e-ambientes.md",
+      "sha": "f454c6532d8ab33579e5236e1ee2ac1326ab7bb3",
+      "texto_hash_conferido": true
+    },
+    {
+      "path": "docs/adr/ADR-002-empresa-unidades-perfis-e-permissoes.md",
+      "sha": "2aec42fd20d57bf0b02313928104c7d9d16e40bc",
+      "texto_hash_conferido": true
+    },
+    {
+      "path": "docs/adr/ADR-003-catalogo-estoque-e-operacao-comercial.md",
+      "sha": "afc1c1ecc8d6dd05a14e13fbbc935376b2b24d19",
+      "texto_hash_conferido": true
+    },
+    {
+      "path": "docs/adr/ADR-004-vendas-pagamentos-e-caixa.md",
+      "sha": "7a53083f5f763ac7a80d41a3fb22e7826f81b751",
+      "texto_hash_conferido": true
+    },
+    {
+      "path": "docs/adr/ADR-005-ora-connect-operacoes.md",
+      "sha": "5345d1b2255a89641bddc9ccb7b57f0e487b2fa4",
+      "texto_hash_conferido": true
+    },
+    {
+      "path": "docs/adr/ADR-006-fila-fiscal-interna.md",
+      "sha": "5bb3ee12533bbaa3b1b47e85fd10ab47c97478cb",
+      "texto_hash_conferido": true
+    },
+    {
+      "path": "docs/adr/ADR-007-transferencias-e-defeitos.md",
+      "sha": "40021bc1fa0e0a086e2f530d49248f11da428eb5",
+      "texto_hash_conferido": true
+    },
+    {
+      "path": "docs/adr/ADR-008-cliente-compartilhado-e-dados-pessoais.md",
+      "sha": "77996a6dcb2a65f6f4290ff7b2bdcf0eb6371772",
+      "texto_hash_conferido": true
+    },
+    {
+      "path": "docs/alinhamento/ADENDO_PROMPT_REVISAO_WEB_E_NOGLE.md",
+      "sha": "6bf27ed611ffa7a57554194c4e01af5312efb084",
+      "texto_hash_conferido": true
+    },
+    {
+      "path": "docs/alinhamento/ANALISE_DO_PLANO.md",
+      "sha": "2a1c5a62266d85952bdc078ec72a2b8409146e17",
+      "texto_hash_conferido": true
+    },
+    {
+      "path": "docs/alinhamento/BUSCA_ESTOQUE_E_TRANSFERENCIAS_2026-11-09.md",
+      "sha": "b47c449aabee7794460cbd317745237a2f95f62f",
+      "texto_hash_conferido": true
+    },
+    {
+      "path": "docs/alinhamento/CONFERENCIA_DAS_CORRECOES_2026-11-07.md",
+      "sha": "3e69592f85c03e381890200d06fbcb9a209f3d33",
+      "texto_hash_conferido": true
+    },
+    {
+      "path": "docs/alinhamento/CONFIGURACAO_E_TRANSICAO_DO_MOCKUP.md",
+      "sha": "1f1c4f79fe16dd443e6fc93c6572387efacd2fe4",
+      "texto_hash_conferido": true
+    },
+    {
+      "path": "docs/alinhamento/EXECUCAO_INTEGRAL_STATUS.md",
+      "sha": "3bf853bf1a3f89b400874d1e920b5ab221c374dd",
+      "texto_hash_conferido": true
+    },
+    {
+      "path": "docs/alinhamento/FILA_DE_EXECUCAO.md",
+      "sha": "b33bd54173d355d11abb1111a91c94c1663729b5",
+      "texto_hash_conferido": true
+    },
+    {
+      "path": "docs/alinhamento/FOTOS_DOS_PRODUTOS_2026-11-08.md",
+      "sha": "f049ab1d7bf608b24877105101c23b24c2e5cc71",
+      "texto_hash_conferido": true
+    },
+    {
+      "path": "docs/alinhamento/INDICE_RELATORIOS_CODEX_2026-11-09.md",
+      "sha": "9ae994f29df4d8f4c68047fcfed314c983f9c633",
+      "texto_hash_conferido": true
+    },
+    {
+      "path": "docs/alinhamento/MATRIZ_DEMO_REAL.md",
+      "sha": "c9666428c99e1ea5d920a386c757350c8c1d978a",
+      "texto_hash_conferido": true
+    },
+    {
+      "path": "docs/alinhamento/NOGLE_REGISTRO_OFICIAL_E_DESEMPENHO.md",
+      "sha": "5ff45132b1acd40d4a341676b32f5ba34a5f66ff",
+      "texto_hash_conferido": true
+    },
+    {
+      "path": "docs/alinhamento/PEDIDO_DE_REVISAO_CODEX.md",
+      "sha": "4c94b186b8edb6dbd00b0098b8abb93b111013f9",
+      "texto_hash_conferido": true
+    },
+    {
+      "path": "docs/alinhamento/PROMPT_CLAUDE_CONSOLIDADO_2026-11-09.md",
+      "sha": "a0038e79f96dc9009caa282229dd11ad012ae9d4",
+      "texto_hash_conferido": true
+    },
+    {
+      "path": "docs/alinhamento/PROMPT_CLAUDE_EXECUCAO_PRIORITARIA.md",
+      "sha": "bf41cda3dd389492b1ac7a6ae5bf005dbe3b2c52",
+      "texto_hash_conferido": true
+    },
+    {
+      "path": "docs/alinhamento/RASTREABILIDADE.md",
+      "sha": "0fc06b3aa7ed76505e18c3209ff20f403aaf714a",
+      "texto_hash_conferido": true
+    },
+    {
+      "path": "docs/alinhamento/RECONCILIACAO_CODEX_2026-11-09.md",
+      "sha": "5c1b771aa3831a224557f2ecf063ad458a89282e",
+      "texto_hash_conferido": true
+    },
+    {
+      "path": "docs/alinhamento/RESPOSTAS_A_REVISAO_2026-11-07.md",
+      "sha": "b5654d3bba3bf58f01c566cbe8e80ec2efc62bf6",
+      "texto_hash_conferido": true
+    },
+    {
+      "path": "docs/alinhamento/RESPOSTAS_A_REVISAO_2026-11-08.md",
+      "sha": "02d51b114c5e689827679231c9cbe9a3b327d21a",
+      "texto_hash_conferido": true
+    },
+    {
+      "path": "docs/alinhamento/REVISAO_DO_PLANEJAMENTO_2026-11-08.md",
+      "sha": "6196c3175916b54850ad53741fd434e174f75de5",
+      "texto_hash_conferido": true
+    },
+    {
+      "path": "docs/alinhamento/REVISAO_FRONTEND_2026-11-07.md",
+      "sha": "7428a09c6506db047a18369ed718e2ee1acf6aad",
+      "texto_hash_conferido": true
+    },
+    {
+      "path": "docs/alinhamento/REVISOES_CODEX.md",
+      "sha": "5202ebbbaa8383e5dc2fa60b730634e43a8f6da7",
+      "texto_hash_conferido": true
+    },
+    {
+      "path": "docs/alinhamento/execucao-integral-status.json",
+      "sha": "8bc3f1ef7bf42115524f020c30cae36e8bdeb79c",
+      "texto_hash_conferido": true
+    },
+    {
+      "path": "docs/alinhamento/status-requisitos.json",
+      "sha": "700736801a412d98ecea3d054955fbd91894cc1b",
+      "texto_hash_conferido": true
+    },
+    {
+      "path": "docs/analises/ANALISE_SISTEMAS_2026-11-07.md",
+      "sha": "817171ae773dd4d93121d789373dbb360f85bfa1",
+      "texto_hash_conferido": true
+    },
+    {
+      "path": "docs/analises/ARQUIVOS_DO_LOTE_55D10AF_2026-11-08.md",
+      "sha": "f9ba5ef1ea3cc9191a9b4c7710da96e7644a1e5a",
+      "texto_hash_conferido": true
+    },
+    {
+      "path": "docs/analises/AUDITORIA_CLAUDE_CODE_2026-11-08.md",
+      "sha": "22cbcee0d2e3287fafc663fb1cd43fb29a4dd284",
+      "texto_hash_conferido": true
+    },
+    {
+      "path": "docs/analises/AUDITORIA_FUNCIONAL_E_SUPABASE_2026-11-07.md",
+      "sha": "5d467d6be114f95350c76554a6c989e8a00838e0",
+      "texto_hash_conferido": true
+    },
+    {
+      "path": "docs/analises/MATRIZ_DOS_172_REQUISITOS_2026-11-08.md",
+      "sha": "e833419b2bfdd6bc71673c4377c29e9fb478b382",
+      "texto_hash_conferido": true
+    },
+    {
+      "path": "docs/analises/PRIORIDADE_NOGLE_GATEWAY_E_REPASSES_2026-11-09.md",
+      "sha": "88d0224cb0ee2016832ce5e5726b3fe3226915f8",
+      "texto_hash_conferido": true
+    },
+    {
+      "path": "docs/analises/REVISAO_CATALOGO_FOTOS_AEBBDCC_2026-11-08.md",
+      "sha": "8288deaf1a19162f31ca06b3348aa29ab6b1a1fa",
+      "texto_hash_conferido": true
+    },
+    {
+      "path": "docs/analises/REVISAO_CLAUDE_E_RELATORIO_WEB_2026-11-08.md",
+      "sha": "db452e648de90b7cb32f5b203072706427eb375c",
+      "texto_hash_conferido": true
+    },
+    {
+      "path": "docs/analises/REVISAO_INCREMENTAL_2026-11-07_8e1625d.md",
+      "sha": "cc7ca63ff496dc89528aeb8add9ab303899a6ed1",
+      "texto_hash_conferido": true
+    },
+    {
+      "path": "docs/analises/REVISAO_MERGES_E_DUPLICIDADES_2026-11-09.md",
+      "sha": "d9afc86a8c634b7ef3710fce2cea0db0fefc4093",
+      "texto_hash_conferido": true
+    },
+    {
+      "path": "docs/analises/REVISAO_NOGLE_9B1109_E_CONSOLIDADO_2026-11-09.md",
+      "sha": "7ced5de59fb2d67513c05e42d9d2003616ca7951",
+      "texto_hash_conferido": true
+    },
+    {
+      "path": "docs/analises/REVISAO_VENDAS_PAGAMENTOS_CAIXA_371CEF0_2026-11-08.md",
+      "sha": "f6c4f1af7b8174e23c2556630b6ad6411841fea8",
+      "texto_hash_conferido": true
+    },
+    {
+      "path": "docs/analises/TESTES_E_ANALISE_POR_SETOR_2026-11-08.md",
+      "sha": "a469aec33d7d02b6eae81709c21ae0666dd946ee",
+      "texto_hash_conferido": true
+    },
+    {
+      "path": "docs/analises/evidencias/2026-11-08-fotos/LEIA-ME.md",
+      "sha": "9e2967146dd0374fa39728aea7244d31c0be1083",
+      "texto_hash_conferido": true
+    },
+    {
+      "path": "docs/analises/evidencias/2026-11-08-fotos/banco.repro.ts",
+      "sha": "b94f9efb8fc15d4a7fce245ffb54eba34ac0b4ff",
+      "texto_hash_conferido": true
+    },
+    {
+      "path": "docs/analises/evidencias/2026-11-08-fotos/busca.repro.ts",
+      "sha": "1995ae2b10e8a31d08a4d40ade0f591a0b401d11",
+      "texto_hash_conferido": true
+    },
+    {
+      "path": "docs/analises/evidencias/2026-11-08-fotos/fixture/index.html",
+      "sha": "6cab30f19d193e5597bbcf25d2d3a8b0fa596810",
+      "texto_hash_conferido": true
+    },
+    {
+      "path": "docs/analises/evidencias/2026-11-08-fotos/fixture/main.tsx",
+      "sha": "ce9f191f751d38a838ec81cfea298aa21f1edca1",
+      "texto_hash_conferido": true
+    },
+    {
+      "path": "docs/analises/evidencias/2026-11-08-fotos/fixture/servidor.mjs",
+      "sha": "5703b5c903bd01103e811aac9b2b8f316f0a33ec",
+      "texto_hash_conferido": true
+    },
+    {
+      "path": "docs/analises/evidencias/2026-11-08-fotos/fixture/testar.mjs",
+      "sha": "2394a93c5059e2042bfa4870fb0b8835b9d9e90c",
+      "texto_hash_conferido": true
+    },
+    {
+      "path": "docs/analises/evidencias/2026-11-08-fotos/resultados-componentes.json",
+      "sha": "b4ebb484b5301b104b9991a10d0a396ef98acce1",
+      "texto_hash_conferido": true
+    },
+    {
+      "path": "docs/analises/evidencias/2026-11-08-setores/LEIA-ME.md",
+      "sha": "6d0f7b6623148834b3cb97d1992498bcee049034",
+      "texto_hash_conferido": true
+    },
+    {
+      "path": "docs/analises/evidencias/2026-11-08-setores/aprovacoes-e-nogle.repro.ts",
+      "sha": "3a4a7808afca28e3c1bdf3ffff571d0cd37c70b5",
+      "texto_hash_conferido": true
+    },
+    {
+      "path": "docs/analises/evidencias/2026-11-08-setores/banco.repro.ts",
+      "sha": "7d5a258d74dea53841cabb4be2f7e3c8af526448",
+      "texto_hash_conferido": true
+    },
+    {
+      "path": "docs/analises/evidencias/2026-11-08-setores/csv.repro.ts",
+      "sha": "f9d6cd58a984f04808f1197643a46994df51dc9c",
+      "texto_hash_conferido": true
+    },
+    {
+      "path": "docs/analises/evidencias/2026-11-08-setores/dominio.repro.ts",
+      "sha": "fe1e5886125a61dbbdf037e8f317b7ad54a46aff",
+      "texto_hash_conferido": true
+    },
+    {
+      "path": "docs/analises/evidencias/2026-11-08-setores/navegador.repro.ts",
+      "sha": "c9b6a5d75650ab05b3f12d004df2fdff66022e53",
+      "texto_hash_conferido": true
+    },
+    {
+      "path": "docs/analises/evidencias/2026-11-08-setores/relatorios.repro.ts",
+      "sha": "8a9eaa5783bf5e95921b1ee124a9b43472c5893a",
+      "texto_hash_conferido": true
+    },
+    {
+      "path": "docs/analises/evidencias/2026-11-08-vendas/LEIA-ME.md",
+      "sha": "22a1cba338d49eb686e3fcceb7e86bc317699a27",
+      "texto_hash_conferido": true
+    },
+    {
+      "path": "docs/analises/evidencias/2026-11-08-vendas/acoes.repro.ts",
+      "sha": "327866ab53664a089ba59dbf5a38f48cdcba50a5",
+      "texto_hash_conferido": true
+    },
+    {
+      "path": "docs/analises/evidencias/2026-11-08-vendas/banco.repro.ts",
+      "sha": "01376b099fa2ff2cea9ba69c9e7f276ec6155648",
+      "texto_hash_conferido": true
+    },
+    {
+      "path": "docs/analises/evidencias/2026-11-08-vendas/concorrencia.repro.ts",
+      "sha": "5d8235730d786471a95f055d299945acf234a322",
+      "texto_hash_conferido": true
+    },
+    {
+      "path": "docs/analises/evidencias/2026-11-08-vendas/resultados.txt",
+      "sha": "cd46cf414aa0d6566e9ec396467ecd1f2b1474b9",
+      "texto_hash_conferido": true
+    },
+    {
+      "path": "docs/analises/evidencias/2026-11-08-web/LEIA-ME.md",
+      "sha": "c9dc86279ea79fec8377ca657503e8b922b35300",
+      "texto_hash_conferido": true
+    },
+    {
+      "path": "docs/analises/evidencias/2026-11-08-web/donos.repro.ts",
+      "sha": "fd8010c5991fc1cd5b7565e2fcc0d35e14da437e",
+      "texto_hash_conferido": true
+    },
+    {
+      "path": "docs/analises/evidencias/2026-11-08-web/equipe.repro.ts",
+      "sha": "5f68336f7926f3175ec42b56427c2c4d7bd7d404",
+      "texto_hash_conferido": true
+    },
+    {
+      "path": "docs/analises/evidencias/2026-11-08-web/indicadores.repro.ts",
+      "sha": "b52cc8b6c6a94e6e93c1b2d89b773691dc90d95f",
+      "texto_hash_conferido": true
+    },
+    {
+      "path": "docs/analises/evidencias/2026-11-08/LEIA-ME.md",
+      "sha": "00c2f4b5f07c25e167fde1ff9e1a58b035b6bce8",
+      "texto_hash_conferido": true
+    },
+    {
+      "path": "docs/analises/evidencias/2026-11-08/banco.repro.ts",
+      "sha": "5f499d372611ca311250f717cdc6301f21635f71",
+      "texto_hash_conferido": true
+    },
+    {
+      "path": "docs/analises/evidencias/2026-11-08/telas.repro.ts",
+      "sha": "ee696a0dfb744bf66b4dc7795aac01f8b8d33e2e",
+      "texto_hash_conferido": true
+    },
+    {
+      "path": "docs/analises/evidencias/2026-11-09-merges-e-nogle/LEIA-ME.md",
+      "sha": "412c76e28f9cc7e1000f31fac15daba0dba7ff5a",
+      "texto_hash_conferido": true
+    },
+    {
+      "path": "docs/analises/evidencias/2026-11-09-merges-e-nogle/grafo-fontes.repro.mjs",
+      "sha": "69cd9dd18a6e8799eaab60e02c9e79a7bc55f9b0",
+      "texto_hash_conferido": true
+    },
+    {
+      "path": "docs/analises/evidencias/2026-11-09-merges-e-nogle/inventario-banco.repro.ts",
+      "sha": "dc47f48e2fc65a61d301b14a1b7fb2deeff5df23",
+      "texto_hash_conferido": true
+    },
+    {
+      "path": "docs/analises/evidencias/2026-11-09-merges-e-nogle/resultados.json",
+      "sha": "1ee16fc72a189255b0dae4ef4821801bc6871f14",
+      "texto_hash_conferido": true
+    },
+    {
+      "path": "docs/analises/evidencias/2026-11-09-nogle-9b1109/LEIA-ME.md",
+      "sha": "d7672ce0dd4cc721359b954864f6a9ed2fa359a6",
+      "texto_hash_conferido": true
+    },
+    {
+      "path": "docs/analises/evidencias/2026-11-09-nogle-9b1109/banco.repro.ts",
+      "sha": "43f5ca246b10fcec4091a4a51c0166e0608e2944",
+      "texto_hash_conferido": true
+    },
+    {
+      "path": "docs/analises/evidencias/2026-11-09-nogle-9b1109/inventario-9b1109.json",
+      "sha": "c89dfa44afd6b7551f7d1eadc2c59ecfdc1d64f0",
+      "texto_hash_conferido": true
+    },
+    {
+      "path": "docs/analises/evidencias/2026-11-09-nogle-9b1109/publicacao.repro.ts",
+      "sha": "8caa3a080292abde20d28ce80e52a1316f5f5f94",
+      "texto_hash_conferido": true
+    },
+    {
+      "path": "docs/analises/evidencias/2026-11-09-nogle-9b1109/resultados.txt",
+      "sha": "d9fdf25179da83554f32331582127b734ea375ca",
+      "texto_hash_conferido": true
+    },
+    {
+      "path": "docs/cadastros/LOJAS_CONFIRMADAS_2026-11-09.json",
+      "sha": "984a53a89c927f52f2bef6511f05998fcb4b0b20",
+      "texto_hash_conferido": true
+    },
+    {
+      "path": "docs/etapa-0/ETAPA_0_BASE_CONSOLIDADA.md",
+      "sha": "b12647145aa1ac97d95cf10df4ebf694ed409626",
+      "texto_hash_conferido": true
+    },
+    {
+      "path": "docs/etapa-0/ETAPA_0_DECISOES_2026-11-06.md",
+      "sha": "803014d1a28701034a8d3a90b70ddecf961c9745",
+      "texto_hash_conferido": true
+    },
+    {
+      "path": "docs/etapa-0/ETAPA_0_ENTENDIMENTO_E_PROPOSTA.md",
+      "sha": "a33f807d76d423789c512f613db94b3df18dae9a",
+      "texto_hash_conferido": true
+    },
+    {
+      "path": "docs/etapa-1/PLANO_DE_INICIO_DA_IMPLEMENTACAO.md",
+      "sha": "ef3490772adbf3591a241f8162ec0f5d487d9d78",
+      "texto_hash_conferido": true
+    },
+    {
+      "path": "docs/integracoes/APIS_E_HABILITACOES_NECESSARIAS.md",
+      "sha": "18944dbe55e2ec7a7f2c999a41e1e94ff98afef5",
+      "texto_hash_conferido": true
+    },
+    {
+      "path": "docs/integracoes/NOGLE_API_REFERENCIA.md",
+      "sha": "5279fc7cd86b52282570f34b6137653f486fd393",
+      "texto_hash_conferido": true
+    },
+    {
+      "path": "docs/integracoes/PERGUNTAS_PARA_NOGLE_2026-11-09.md",
+      "sha": "291b9d1f8dc2bf2c03131c6ab488c6e480108993",
+      "texto_hash_conferido": true
+    },
+    {
+      "path": "docs/integracoes/VARIAVEIS_DE_AMBIENTE.md",
+      "sha": "233162ef3cbf99825e25d8931375ef1f0f0c4a0a",
+      "texto_hash_conferido": true
+    },
+    {
+      "path": "docs/integracoes/nogle/colecao-postman-2026-11-07.json",
+      "sha": "e71565ab960373c9e7f24612e8381ca3869582bc",
+      "texto_hash_conferido": true
+    },
+    {
+      "path": "docs/operacao/CONECTAR_CLAUDE_CODE_SSH_WINDOWS.md",
+      "sha": "ef4eb922a213500a52f6a5a9096c844b3664efac",
+      "texto_hash_conferido": true
+    },
+    {
+      "path": "docs/operacao/GO_NO_GO_PILOTO_E_SAIDA_DA_REIN.md",
+      "sha": "094208049f1c0fe6fe2b19ee204649c51bb377d6",
+      "texto_hash_conferido": true
+    },
+    {
+      "path": "docs/prototipos/estoque-por-loja-2026-11-09/LEIA-ME.md",
+      "sha": "b6eab3fafeac8001aef781da086470f4593f9e3c",
+      "texto_hash_conferido": true
+    },
+    {
+      "path": "docs/prototipos/estoque-por-loja-2026-11-09/index.html",
+      "sha": "da1fcd287bfc25cf80ee91b10e79b2f0b0e31155",
+      "texto_hash_conferido": true
+    },
+    {
+      "path": "docs/prototipos/estoque-por-loja-2026-11-09/main.tsx",
+      "sha": "fb96479716b6104b037756233830d3c5a524e969",
+      "texto_hash_conferido": true
+    },
+    {
+      "path": "docs/prototipos/estoque-por-loja-2026-11-09/style.css",
+      "sha": "266eb6341e4ce21e4dc8b50b22440ddbae4d362f",
+      "texto_hash_conferido": true
+    },
+    {
+      "path": "docs/prototipos/estoque-por-loja-2026-11-09/testes.json",
+      "sha": "b75d16da5685fb814bfff7830720dca73ac5cc9e",
+      "texto_hash_conferido": true
+    },
+    {
+      "path": "docs/skills/engenheiro-senior-ora5g/AUDITORIA_GITHUB_2026-11-09.md",
+      "sha": "b16b976d9c6f73a3b8f1d3e4074d906dc548f1cf",
+      "texto_hash_conferido": true
+    },
+    {
+      "path": "docs/skills/engenheiro-senior-ora5g/AUDITORIA_MANIFESTO.json",
+      "sha": "4b9596a21462d4bd57689d52b4bfab8b6e5db3d3",
+      "texto_hash_conferido": true
+    },
+    {
+      "path": "docs/skills/engenheiro-senior-ora5g/MANIFESTO.md",
+      "sha": "5e9aec2e07d7db36be64fe161c47554a8a67ac9a",
+      "texto_hash_conferido": true
+    },
+    {
+      "path": "docs/skills/engenheiro-senior-ora5g/PROMPT_LEITURA_E_RECONCILIACAO_2026-11-10.md",
+      "sha": "f9f4e9440ee226e106ff787e1387250670031651",
+      "texto_hash_conferido": true
+    },
+    {
+      "path": "docs/skills/engenheiro-senior-ora5g/PROMPT_PARA_CLAUDE.md",
+      "sha": "774d3a5281e18a62253487176506743df4feefd0",
+      "texto_hash_conferido": true
+    },
+    {
+      "path": "docs/skills/engenheiro-senior-ora5g/README_INSTALACAO.md",
+      "sha": "1f16452bdc63a283115c2052ecf14d1ec58282f6",
+      "texto_hash_conferido": true
+    },
+    {
+      "path": "originais/historico/conversa_inicial_colada.md",
+      "sha": "1b04717d75de8cf36caf6d699ad826646efedd84",
+      "texto_hash_conferido": true
+    },
+    {
+      "path": "originais/research/pesquisa_1_plano_mestre.md",
+      "sha": "07b2646ee84790cc8b12d4af0b59284e0891b36d",
+      "texto_hash_conferido": true
+    },
+    {
+      "path": "originais/research/pesquisa_2_plano_mestre.md",
+      "sha": "f5b7c5a1f431f8cded54bbf4744bc3079f3fa60d",
+      "texto_hash_conferido": true
+    },
+    {
+      "path": "originais/research/pesquisa_3_plano_mestre.md",
+      "sha": "f5e727478da543af5db5cdfeafc3d29e3138f40e",
+      "texto_hash_conferido": true
+    },
+    {
+      "path": "package-lock.json",
+      "sha": "1f857a43678be96dec20bd3d120f5fd60440e4c8",
+      "texto_hash_conferido": true
+    },
+    {
+      "path": "package.json",
+      "sha": "95cb50b9a1bca07e3d85af0347bd025eb27ac604",
+      "texto_hash_conferido": true
+    },
+    {
+      "path": "packages/banco/README.md",
+      "sha": "3a84f6ea753f180ae2970a4619fa81b90d4805ba",
+      "texto_hash_conferido": true
+    },
+    {
+      "path": "packages/banco/eslint.config.mjs",
+      "sha": "e80f113e0cd94a488a17fbd7b81627550155dccc",
+      "texto_hash_conferido": true
+    },
+    {
+      "path": "packages/banco/package.json",
+      "sha": "d4d41dcb584e62109bbc5f66fd0eb8efe9610e63",
+      "texto_hash_conferido": true
+    },
+    {
+      "path": "packages/banco/src/acesso-equipe.test.ts",
+      "sha": "8843d1c0f7bca23ab996673ba3b28232ab0b2319",
+      "texto_hash_conferido": true
+    },
+    {
+      "path": "packages/banco/src/acesso.test.ts",
+      "sha": "152de1e2cfd0e134380769b20b6b89f662b0b460",
+      "texto_hash_conferido": true
+    },
+    {
+      "path": "packages/banco/src/auditoria-acesso.test.ts",
+      "sha": "c3629e9335a9c5bb8cba22f2f2980562a6130414",
+      "texto_hash_conferido": true
+    },
+    {
+      "path": "packages/banco/src/autorizacao-funcoes.test.ts",
+      "sha": "a6b05e66e656b016f432a8df7ed20792c1f80626",
+      "texto_hash_conferido": true
+    },
+    {
+      "path": "packages/banco/src/banco-de-teste.ts",
+      "sha": "4ece1c99f98e0a42d282ca418af956d0be975a9c",
+      "texto_hash_conferido": true
+    },
+    {
+      "path": "packages/banco/src/caixa-saida.test.ts",
+      "sha": "429308ad104da62eedb02204e399787740bf325a",
+      "texto_hash_conferido": true
+    },
+    {
+      "path": "packages/banco/src/catalogo-cadastro.test.ts",
+      "sha": "b15cf508b1a60d42ae218c48f02ac9b8d37f0884",
+      "texto_hash_conferido": true
+    },
+    {
+      "path": "packages/banco/src/catalogo-estoque.test.ts",
+      "sha": "077f3e20c5f66f463dfefcbbdfd55db3c49968f2",
+      "texto_hash_conferido": true
+    },
+    {
+      "path": "packages/banco/src/cenario-catalogo.ts",
+      "sha": "0b3ddb8d16e30295b84856b1880c5b1096a713a9",
+      "texto_hash_conferido": true
+    },
+    {
+      "path": "packages/banco/src/cenario.ts",
+      "sha": "bd4cce8c9f5d2c03dce4b145404ec1d680d52177",
+      "texto_hash_conferido": true
+    },
+    {
+      "path": "packages/banco/src/clientes-mesclagem.test.ts",
+      "sha": "f2a41f6e9ec9ffe7429e3e463185694d11464072",
+      "texto_hash_conferido": true
+    },
+    {
+      "path": "packages/banco/src/clientes.test.ts",
+      "sha": "9f6b2bb1eb8f674ddaafa2a628e7960ae1c26e88",
+      "texto_hash_conferido": true
+    },
+    {
+      "path": "packages/banco/src/concorrencia.test.ts",
+      "sha": "7e593ce4dd823a2d12659a2fbfa654e309b7d61a",
+      "texto_hash_conferido": true
+    },
+    {
+      "path": "packages/banco/src/connect-lote2.test.ts",
+      "sha": "cec38606f23ca352cf6ed33f386df179c92f0e00",
+      "texto_hash_conferido": true
+    },
+    {
+      "path": "packages/banco/src/connect-painel.test.ts",
+      "sha": "d98cfa0854f0c162d0e91211f9482cef2e6b869b",
+      "texto_hash_conferido": true
+    },
+    {
+      "path": "packages/banco/src/connect.test.ts",
+      "sha": "0050af701517390e3ea707a3b68390c4022d113b",
+      "texto_hash_conferido": true
+    },
+    {
+      "path": "packages/banco/src/contas-a-pagar.test.ts",
+      "sha": "cd0ce34a58f95f0bc0bbf84294949cc41bacef33",
+      "texto_hash_conferido": true
+    },
+    {
+      "path": "packages/banco/src/correcoes-acesso.test.ts",
+      "sha": "840c928f6774be1c9abdf0ec0f30e8255c7d5dfc",
+      "texto_hash_conferido": true
+    },
+    {
+      "path": "packages/banco/src/crm.test.ts",
+      "sha": "a91907828c2f14dd647308eebf4b00a44632a603",
+      "texto_hash_conferido": true
+    },
+    {
+      "path": "packages/banco/src/devolucao.test.ts",
+      "sha": "fa58dd4b686c0ea821f41ded7d3bab4a2ded1d13",
+      "texto_hash_conferido": true
+    },
+    {
+      "path": "packages/banco/src/entrada-estoque.test.ts",
+      "sha": "41a3b4f11dc9ad99009c7d3d6c1d91ec58555c32",
+      "texto_hash_conferido": true
+    },
+    {
+      "path": "packages/banco/src/equipe-por-papel.test.ts",
+      "sha": "51c0678a03187a567f2e7305b45a1515b700d766",
+      "texto_hash_conferido": true
+    },
+    {
+      "path": "packages/banco/src/estoque-painel.test.ts",
+      "sha": "8030612e8b67e5c623ca18e169e621dd08fe5c37",
+      "texto_hash_conferido": true
+    },
+    {
+      "path": "packages/banco/src/financeiras-a-receber.test.ts",
+      "sha": "3a12fbda39ba5bbdf6dad685c3dd47a950fcc236",
+      "texto_hash_conferido": true
+    },
+    {
+      "path": "packages/banco/src/financeiro-conciliacao.test.ts",
+      "sha": "7f7f00d0bde420ab6fafd57efc4490ce10f713fd",
+      "texto_hash_conferido": true
+    },
+    {
+      "path": "packages/banco/src/financeiro-painel.test.ts",
+      "sha": "e3f04183648d32bbfb4375128453583d963ff59a",
+      "texto_hash_conferido": true
+    },
+    {
+      "path": "packages/banco/src/fotos-lote3.test.ts",
+      "sha": "ebb0a2c26bdb2df8673473d40a817d3fcaddcc28",
+      "texto_hash_conferido": true
+    },
+    {
+      "path": "packages/banco/src/fotos-produto.test.ts",
+      "sha": "da09359f7218002742f12f5a7038ed9541f3fd9a",
+      "texto_hash_conferido": true
+    },
+    {
+      "path": "packages/banco/src/importacao-correcoes.test.ts",
+      "sha": "889c0c61ad97327d88723963438eef94623b51f3",
+      "texto_hash_conferido": true
+    },
+    {
+      "path": "packages/banco/src/importacao.test.ts",
+      "sha": "f10cb21253ceea02c3c3d02cbbae9a98f05924af",
+      "texto_hash_conferido": true
+    },
+    {
+      "path": "packages/banco/src/integridade-estoque.test.ts",
+      "sha": "0617f42640483faa55c336b9e88345c7cf1fbf8a",
+      "texto_hash_conferido": true
+    },
+    {
+      "path": "packages/banco/src/integridade-lote2.test.ts",
+      "sha": "132f1217b51ed30eb0f63fbb097425013fa56405",
+      "texto_hash_conferido": true
+    },
+    {
+      "path": "packages/banco/src/inventario.test.ts",
+      "sha": "6f2bf4d3ac10fdd1638d12bb9a9adaf97cc8beb9",
+      "texto_hash_conferido": true
+    },
+    {
+      "path": "packages/banco/src/lojas.test.ts",
+      "sha": "542a1395e8f3ebced915bc5f90d12f0db9a6095c",
+      "texto_hash_conferido": true
+    },
+    {
+      "path": "packages/banco/src/margem-painel.test.ts",
+      "sha": "40344d1202a56e0c3b7eb8a90a45118ea25b54bf",
+      "texto_hash_conferido": true
+    },
+    {
+      "path": "packages/banco/src/metas.test.ts",
+      "sha": "cb5cba39abb61331340b3fe85d549d45516a4830",
+      "texto_hash_conferido": true
+    },
+    {
+      "path": "packages/banco/src/migrations.test.ts",
+      "sha": "03ce8785a9971e081fcd37e42c380cd5b3000eee",
+      "texto_hash_conferido": true
+    },
+    {
+      "path": "packages/banco/src/notas.test.ts",
+      "sha": "17a368e3775b990fdcf0cb0ee8bf3b5d1ddd2439",
+      "texto_hash_conferido": true
+    },
+    {
+      "path": "packages/banco/src/pagamentos-conciliacao.test.ts",
+      "sha": "303f2c0f99caa4f84238f113e3dba10b7ff456c5",
+      "texto_hash_conferido": true
+    },
+    {
+      "path": "packages/banco/src/pdv-l6.test.ts",
+      "sha": "40558f7b86703870063674266ac13a0be61d32c0",
+      "texto_hash_conferido": true
+    },
+    {
+      "path": "packages/banco/src/postgres-real.ts",
+      "sha": "7815678c4b4e8393356ebcc89e08b07ccfab8d21",
+      "texto_hash_conferido": true
+    },
+    {
+      "path": "packages/banco/src/precos.test.ts",
+      "sha": "2ff47d49eff611dbd51d6527d7ba2a3a01c40c20",
+      "texto_hash_conferido": true
+    },
+    {
+      "path": "packages/banco/src/previsao-de-caixa.test.ts",
+      "sha": "1214884da8d725f27aea72e97ba4b602163ea4c0",
+      "texto_hash_conferido": true
+    },
+    {
+      "path": "packages/banco/src/resultado-do-mes.test.ts",
+      "sha": "c58ef60100a21c2178619c2cf00a1986c96c971a",
+      "texto_hash_conferido": true
+    },
+    {
+      "path": "packages/banco/src/revisao-codex.test.ts",
+      "sha": "5fc657868bdc48a584a0c578fe5e0f20ceea5f4a",
+      "texto_hash_conferido": true
+    },
+    {
+      "path": "packages/banco/src/semente.test.ts",
+      "sha": "58827c641a87d82b61da22dd34723612e77af8ac",
+      "texto_hash_conferido": true
+    },
+    {
+      "path": "packages/banco/src/supabase-simulado.sql",
+      "sha": "4685ed1bb91691673b993dbf8195d198ee6c0951",
+      "texto_hash_conferido": true
+    },
+    {
+      "path": "packages/banco/src/transferencias.test.ts",
+      "sha": "799029c9bb45b454a2daea1a53dcea4959a2bffe",
+      "texto_hash_conferido": true
+    },
+    {
+      "path": "packages/banco/src/venda-regra-de-preco.test.ts",
+      "sha": "837172d1e146acea5e02024b7efcc3cdcb6b7f45",
+      "texto_hash_conferido": true
+    },
+    {
+      "path": "packages/banco/src/vendas-painel.test.ts",
+      "sha": "e8fead6c3a6f6eb74ec884a208625158e4545591",
+      "texto_hash_conferido": true
+    },
+    {
+      "path": "packages/banco/src/vendas.test.ts",
+      "sha": "60e424620f695edf664d1ad9a95384c4786b0158",
+      "texto_hash_conferido": true
+    },
+    {
+      "path": "packages/banco/supabase/aplicadas-dev.json",
+      "sha": "32f3a1a9ba808d98c680d3a7a9753508d3425025",
+      "texto_hash_conferido": true
+    },
+    {
+      "path": "packages/banco/supabase/migrations/20261107140352_fundacao_acesso.sql",
+      "sha": "1157767922f140e8bb7499204806c963387cfbe2",
+      "texto_hash_conferido": true
+    },
+    {
+      "path": "packages/banco/supabase/migrations/20261107140448_indices_chaves_estrangeiras.sql",
+      "sha": "c2643d112ecf3923027c3df05c63cdd163faa849",
+      "texto_hash_conferido": true
+    },
+    {
+      "path": "packages/banco/supabase/migrations/20261107151305_correcoes_revisao_codex.sql",
+      "sha": "0b985c90b188ab9a05e8f06279144a11408911e2",
+      "texto_hash_conferido": true
+    },
+    {
+      "path": "packages/banco/supabase/migrations/20261108150432_auditoria_automatica_acesso.sql",
+      "sha": "d274402535648d9b8bac496c99ef34f96e9415aa",
+      "texto_hash_conferido": true
+    },
+    {
+      "path": "packages/banco/supabase/migrations/20261108150620_catalogo_estoque.sql",
+      "sha": "2e75384bd237cc567192dada84528e30e28af569",
+      "texto_hash_conferido": true
+    },
+    {
+      "path": "packages/banco/supabase/migrations/20261108151325_indices_catalogo_estoque.sql",
+      "sha": "424b9a0fbd61858f9cab7529d465d96ca54a1e42",
+      "texto_hash_conferido": true
+    },
+    {
+      "path": "packages/banco/supabase/migrations/20261108195850_integridade_estoque.sql",
+      "sha": "e5395f5031a1428d2bac097b388fae28ae023a0b",
+      "texto_hash_conferido": true
+    },
+    {
+      "path": "packages/banco/supabase/migrations/20261108202654_acesso_sessao_e_equipe.sql",
+      "sha": "4bd1a7ea5db89a3978ac2d0d2ff527edb3a43e6b",
+      "texto_hash_conferido": true
+    },
+    {
+      "path": "packages/banco/supabase/migrations/20261108204536_fotos_dos_produtos.sql",
+      "sha": "a23b29ed6dfef812332442311bc626fcf6798ce9",
+      "texto_hash_conferido": true
+    },
+    {
+      "path": "packages/banco/supabase/migrations/20261108233546_vendas_pagamentos_e_caixa.sql",
+      "sha": "0fc7b674f64f69d1bb0b992d38dd4e43665fa161",
+      "texto_hash_conferido": true
+    },
+    {
+      "path": "packages/banco/supabase/migrations/20261108233711_indices_vendas_e_fotos.sql",
+      "sha": "4117f50cbfa426a5d51b0b598e87e6896f9c4bfc",
+      "texto_hash_conferido": true
+    },
+    {
+      "path": "packages/banco/supabase/migrations/20261109123402_ora_connect_operacoes.sql",
+      "sha": "5aab247c7d70b714bf49dbd5ef9ea1d896534130",
+      "texto_hash_conferido": true
+    },
+    {
+      "path": "packages/banco/supabase/migrations/20261109123533_indices_ora_connect.sql",
+      "sha": "4d2ec3d1e7a9a845c073a7564e5569368a1d401e",
+      "texto_hash_conferido": true
+    },
+    {
+      "path": "packages/banco/supabase/migrations/20261109123757_fila_fiscal.sql",
+      "sha": "3c6d1c0266729bf6f5849529d2cd539efd7b116d",
+      "texto_hash_conferido": true
+    },
+    {
+      "path": "packages/banco/supabase/migrations/20261109134507_devolucao_e_troca.sql",
+      "sha": "0bc0b2f17a52e14036e1e26c6a52e8389f5dfe24",
+      "texto_hash_conferido": true
+    },
+    {
+      "path": "packages/banco/supabase/migrations/20261109150526_correcoes_acesso_lote1.sql",
+      "sha": "2b1351d7f5522e881a072db7016f0e7bd5318e6f",
+      "texto_hash_conferido": true
+    },
+    {
+      "path": "packages/banco/supabase/migrations/20261109190240_integridade_vendas_lote2.sql",
+      "sha": "8de1ae7283e6507e982ede4a9286899ab181717c",
+      "texto_hash_conferido": true
+    },
+    {
+      "path": "packages/banco/supabase/migrations/20261109190400_connect_evidencia_lote2.sql",
+      "sha": "3619faeb941ccaba55ad9850e72cc9cf651a2dee",
+      "texto_hash_conferido": true
+    },
+    {
+      "path": "packages/banco/supabase/migrations/20261109191416_fotos_idempotentes_lote3.sql",
+      "sha": "e607fe474e9c996f869bcdfc9155769695b0f155",
+      "texto_hash_conferido": true
+    },
+    {
+      "path": "packages/banco/supabase/migrations/20261109193043_transferencias_e_defeitos.sql",
+      "sha": "92c457ca3acfa455846c308a276f20305353512b",
+      "texto_hash_conferido": true
+    },
+    {
+      "path": "packages/banco/supabase/migrations/20261109201940_mensagens_nogle.sql",
+      "sha": "6135ec1790b1cd6a2ae2f517a117a850cbd39efd",
+      "texto_hash_conferido": true
+    },
+    {
+      "path": "packages/banco/supabase/migrations/20261110124824_connect_consulta_por_uuid.sql",
+      "sha": "0522b50a902046ce2b11a165e3a6961acc26d1a2",
+      "texto_hash_conferido": true
+    },
+    {
+      "path": "packages/banco/supabase/migrations/20261110224537_financeiro_painel.sql",
+      "sha": "c90470a2d88986219f28db39b0a249b29a264d85",
+      "texto_hash_conferido": true
+    },
+    {
+      "path": "packages/banco/supabase/migrations/20261111132503_lojas_cadastro_e_configuracao.sql",
+      "sha": "6e8cd93bcd8412ad28586306aef43edab2f258e4",
+      "texto_hash_conferido": true
+    },
+    {
+      "path": "packages/banco/supabase/migrations/20261111132621_catalogo_cadastro.sql",
+      "sha": "2673a5218b4c55c9e097dbe95db026c611d66b42",
+      "texto_hash_conferido": true
+    },
+    {
+      "path": "packages/banco/supabase/migrations/20261111133804_precos_e_campanhas.sql",
+      "sha": "5d41e412e2dde847a0afc0258c2330ddd7690214",
+      "texto_hash_conferido": true
+    },
+    {
+      "path": "packages/banco/supabase/migrations/20261111135906_importacao_catalogo.sql",
+      "sha": "226e35005e42427139ee385e44c0853a28ed0b9e",
+      "texto_hash_conferido": true
+    },
+    {
+      "path": "packages/banco/supabase/migrations/20261111141337_entrada_estoque.sql",
+      "sha": "bbf5500617a4d4703fe0ebe807e2cbd3a7fcfbfa",
+      "texto_hash_conferido": true
+    },
+    {
+      "path": "packages/banco/supabase/migrations/20261111142627_condicao_obrigatoria_na_devolucao.sql",
+      "sha": "c80bbc73fee37e0e6e5ff23d6dc2af9a12970d80",
+      "texto_hash_conferido": true
+    },
+    {
+      "path": "packages/banco/supabase/migrations/20261111142726_inventario.sql",
+      "sha": "b19a7295d47eef8ab3a2927890ce88333af59254",
+      "texto_hash_conferido": true
+    },
+    {
+      "path": "packages/banco/supabase/migrations/20261111191909_clientes_compartilhados.sql",
+      "sha": "15daace5f95a97a49fbfa3aaedd0556807aa735f",
+      "texto_hash_conferido": true
+    },
+    {
+      "path": "packages/banco/supabase/migrations/20261111193816_crm_funil_e_agenda.sql",
+      "sha": "bebce2048abf0fed5bad3a2b7913d7e98202d52d",
+      "texto_hash_conferido": true
+    },
+    {
+      "path": "packages/banco/supabase/migrations/20261111195120_clientes_mesclagem_e_segmentos.sql",
+      "sha": "a41bd2a7edbfb748b93759d0197fb099ebac0ce2",
+      "texto_hash_conferido": true
+    },
+    {
+      "path": "packages/banco/supabase/migrations/20261111200054_pdv_nota_do_cliente.sql",
+      "sha": "7b0d925e9b4634231cff6c03ffa3b0e0a3fd03a2",
+      "texto_hash_conferido": true
+    },
+    {
+      "path": "packages/banco/supabase/migrations/20261111201342_pagamentos_maquininhas_e_conciliacao.sql",
+      "sha": "6d7b219609ab6d6a119373f45bb2f1f5b2bbcf6c",
+      "texto_hash_conferido": true
+    },
+    {
+      "path": "packages/banco/supabase/migrations/20261112033713_recebimento_correcoes.sql",
+      "sha": "965ed3a16394835ad51e3baca8f264c39b613aa1",
+      "texto_hash_conferido": true
+    },
+    {
+      "path": "packages/banco/supabase/migrations/20261112163333_importador_correcoes.sql",
+      "sha": "776d72c78f53a7543854a584d9c9bffa1717710e",
+      "texto_hash_conferido": true
+    },
+    {
+      "path": "packages/banco/supabase/migrations/20261112195200_vendas_painel.sql",
+      "sha": "38225cee4b037ecff587a541440dee8b6a5ad21c",
+      "texto_hash_conferido": true
+    },
+    {
+      "path": "packages/banco/supabase/migrations/20261113065706_margem_painel.sql",
+      "sha": "8e809078f22fb18578987bacb1b499ec495ff6dc",
+      "texto_hash_conferido": true
+    },
+    {
+      "path": "packages/banco/supabase/migrations/20261114012326_financeiro_conciliacao.sql",
+      "sha": "8080e55d4563bbb32d6e65c09432451323a98f39",
+      "texto_hash_conferido": true
+    },
+    {
+      "path": "packages/banco/supabase/migrations/20261114012407_estoque_painel.sql",
+      "sha": "6295222e306c5bda6e3a501af4ac8e76654a77f4",
+      "texto_hash_conferido": true
+    },
+    {
+      "path": "packages/banco/supabase/migrations/20261114012431_connect_painel.sql",
+      "sha": "cd99e57679d72004c06ff05ca96a8d3c1028b848",
+      "texto_hash_conferido": true
+    },
+    {
+      "path": "packages/banco/supabase/migrations/20261114012538_metas.sql",
+      "sha": "796de44a780fa125020421f185582b71e0d85ce7",
+      "texto_hash_conferido": true
+    },
+    {
+      "path": "packages/banco/supabase/migrations/20261114012604_metas_lojas.sql",
+      "sha": "4c0292b21b0a46bbb71e4249a94f6146c810bb75",
+      "texto_hash_conferido": true
+    },
+    {
+      "path": "packages/banco/supabase/migrations/20261114012623_equipe_por_papel.sql",
+      "sha": "ea24a9d87986bd22b16d740156ecda56f83347f8",
+      "texto_hash_conferido": true
+    },
+    {
+      "path": "packages/banco/supabase/migrations/20261114012647_venda_item_regra_de_preco.sql",
+      "sha": "dc64e7278de837be507169a641b08342bac19d34",
+      "texto_hash_conferido": true
+    },
+    {
+      "path": "packages/banco/supabase/migrations/20261114012722_financeiras_a_receber.sql",
+      "sha": "d723a0a283dd0d7ad8e8d7bbb8e9d372307fd473",
+      "texto_hash_conferido": true
+    },
+    {
+      "path": "packages/banco/supabase/migrations/20261114012802_caixa_saida_autorizada.sql",
+      "sha": "ef4d01e49ae25362cfae85662559df50d9272d89",
+      "texto_hash_conferido": true
+    },
+    {
+      "path": "packages/banco/supabase/migrations/20261114012952_contas_a_pagar.sql",
+      "sha": "f09050c863cf8391cd25119391fef7ef878712d3",
+      "texto_hash_conferido": true
+    },
+    {
+      "path": "packages/banco/supabase/migrations/20261114013120_resultado_do_mes.sql",
+      "sha": "17157365e9caca359c68fb507bb2e9e4dc570de1",
+      "texto_hash_conferido": true
+    },
+    {
+      "path": "packages/banco/supabase/migrations/20261114013159_previsao_de_caixa.sql",
+      "sha": "f8e3baedd218783c68ae03709e9ef891ee6cf1c5",
+      "texto_hash_conferido": true
+    },
+    {
+      "path": "packages/banco/supabase/reversao/20261107140352_fundacao_acesso.sql",
+      "sha": "f8d9d1b4cc8252c409be2d6ed78a4f5e0f91de00",
+      "texto_hash_conferido": true
+    },
+    {
+      "path": "packages/banco/supabase/reversao/20261107140448_indices_chaves_estrangeiras.sql",
+      "sha": "f3e59eb530c5c17491d350333d5245dd794338dd",
+      "texto_hash_conferido": true
+    },
+    {
+      "path": "packages/banco/supabase/reversao/20261107151305_correcoes_revisao_codex.sql",
+      "sha": "3bb0abe885b3cf63a680a33752c4047b32f830ef",
+      "texto_hash_conferido": true
+    },
+    {
+      "path": "packages/banco/supabase/reversao/20261108150432_auditoria_automatica_acesso.sql",
+      "sha": "625be231db8581550b257d5e4ae2ab5077a83e6e",
+      "texto_hash_conferido": true
+    },
+    {
+      "path": "packages/banco/supabase/reversao/20261108150620_catalogo_estoque.sql",
+      "sha": "52d50c2c8ea90b396e2a51d7e5c0eacbc5df683d",
+      "texto_hash_conferido": true
+    },
+    {
+      "path": "packages/banco/supabase/reversao/20261108151325_indices_catalogo_estoque.sql",
+      "sha": "c5e1f501d46df0cca768098a19a33845a08650b5",
+      "texto_hash_conferido": true
+    },
+    {
+      "path": "packages/banco/supabase/reversao/20261108195850_integridade_estoque.sql",
+      "sha": "15068e2d080f13876767745fcafaeeef2811950e",
+      "texto_hash_conferido": true
+    },
+    {
+      "path": "packages/banco/supabase/reversao/20261108202654_acesso_sessao_e_equipe.sql",
+      "sha": "3de76cfccf5b1889c8d744aa2933b53a19784d75",
+      "texto_hash_conferido": true
+    },
+    {
+      "path": "packages/banco/supabase/reversao/20261108204536_fotos_dos_produtos.sql",
+      "sha": "ccdf5c0d65bea5daa02838c30273764bc6e158ee",
+      "texto_hash_conferido": true
+    },
+    {
+      "path": "packages/banco/supabase/reversao/20261108233546_vendas_pagamentos_e_caixa.sql",
+      "sha": "72c18b77cb9ad4c6aad9b741b4d78fa6e12e239b",
+      "texto_hash_conferido": true
+    },
+    {
+      "path": "packages/banco/supabase/reversao/20261108233711_indices_vendas_e_fotos.sql",
+      "sha": "56f6549d31c3ea32a7aa2072eda3d95d2df0a3b6",
+      "texto_hash_conferido": true
+    },
+    {
+      "path": "packages/banco/supabase/reversao/20261109123402_ora_connect_operacoes.sql",
+      "sha": "7634a7855ef84114b8305931b40b3223bacb2306",
+      "texto_hash_conferido": true
+    },
+    {
+      "path": "packages/banco/supabase/reversao/20261109123533_indices_ora_connect.sql",
+      "sha": "5ff82d7767fc1a492ffe1cc78ebb8f06c17d4183",
+      "texto_hash_conferido": true
+    },
+    {
+      "path": "packages/banco/supabase/reversao/20261109123757_fila_fiscal.sql",
+      "sha": "90d026e6d45bd39ef4535ff58f907d9ef0258629",
+      "texto_hash_conferido": true
+    },
+    {
+      "path": "packages/banco/supabase/reversao/20261109134507_devolucao_e_troca.sql",
+      "sha": "9cc86126bf4f03bf536cb0951f39248006c00a94",
+      "texto_hash_conferido": true
+    },
+    {
+      "path": "packages/banco/supabase/reversao/20261109150526_correcoes_acesso_lote1.sql",
+      "sha": "d7166494e3e9f8e89dd72cdcc66f80aa6593643e",
+      "texto_hash_conferido": true
+    },
+    {
+      "path": "packages/banco/supabase/reversao/20261109190240_integridade_vendas_lote2.sql",
+      "sha": "84233036d8ce69d086cdfc6e47abb49f91477afa",
+      "texto_hash_conferido": true
+    },
+    {
+      "path": "packages/banco/supabase/reversao/20261109190400_connect_evidencia_lote2.sql",
+      "sha": "c92b716ff81ed1814894c52fa34890b6bdf3d0fa",
+      "texto_hash_conferido": true
+    },
+    {
+      "path": "packages/banco/supabase/reversao/20261109191416_fotos_idempotentes_lote3.sql",
+      "sha": "f777df69fcc393d96da351896a2c3e0db591d181",
+      "texto_hash_conferido": true
+    },
+    {
+      "path": "packages/banco/supabase/reversao/20261109193043_transferencias_e_defeitos.sql",
+      "sha": "9feee323b1bd21e847fe7016f40505e4e4a61068",
+      "texto_hash_conferido": true
+    },
+    {
+      "path": "packages/banco/supabase/reversao/20261109201940_mensagens_nogle.sql",
+      "sha": "f33afbd6a6ed9c64621dc44410a6db25c87bc00a",
+      "texto_hash_conferido": true
+    },
+    {
+      "path": "packages/banco/supabase/reversao/20261110124824_connect_consulta_por_uuid.sql",
+      "sha": "8e0f7a3d2569f39ee808e3749b0a729457e30c58",
+      "texto_hash_conferido": true
+    },
+    {
+      "path": "packages/banco/supabase/reversao/20261110224537_financeiro_painel.sql",
+      "sha": "66ef51e8527c631826d5ee013a956cecb34616b7",
+      "texto_hash_conferido": true
+    },
+    {
+      "path": "packages/banco/supabase/reversao/20261111132503_lojas_cadastro_e_configuracao.sql",
+      "sha": "aaec15248a50e5a7a6484805d78f99666a8beca6",
+      "texto_hash_conferido": true
+    },
+    {
+      "path": "packages/banco/supabase/reversao/20261111132621_catalogo_cadastro.sql",
+      "sha": "8587ac3cf84e4ed66298c9fcaedfd3effc2e2150",
+      "texto_hash_conferido": true
+    },
+    {
+      "path": "packages/banco/supabase/reversao/20261111133804_precos_e_campanhas.sql",
+      "sha": "0b8c1070da3127eb62be33cc6af77926f6d6b85a",
+      "texto_hash_conferido": true
+    },
+    {
+      "path": "packages/banco/supabase/reversao/20261111135906_importacao_catalogo.sql",
+      "sha": "4d43882ed264797d69775df493349d9dfa10ee5d",
+      "texto_hash_conferido": true
+    },
+    {
+      "path": "packages/banco/supabase/reversao/20261111141337_entrada_estoque.sql",
+      "sha": "0cd5eda42a4eac7b0e4ea510c54e448bcaa0c0ff",
+      "texto_hash_conferido": true
+    },
+    {
+      "path": "packages/banco/supabase/reversao/20261111142627_condicao_obrigatoria_na_devolucao.sql",
+      "sha": "537e32a10213b56a7203906ac6571e180bb77f4a",
+      "texto_hash_conferido": true
+    },
+    {
+      "path": "packages/banco/supabase/reversao/20261111142726_inventario.sql",
+      "sha": "ab101e42da47f930b1d52d445db31698b40fe0fc",
+      "texto_hash_conferido": true
+    },
+    {
+      "path": "packages/banco/supabase/reversao/20261111191909_clientes_compartilhados.sql",
+      "sha": "093778ea7a72e5ada9d692f45579ef087fed4624",
+      "texto_hash_conferido": true
+    },
+    {
+      "path": "packages/banco/supabase/reversao/20261111193816_crm_funil_e_agenda.sql",
+      "sha": "2976f52b4730227801f79fb783fa0fceb18de655",
+      "texto_hash_conferido": true
+    },
+    {
+      "path": "packages/banco/supabase/reversao/20261111195120_clientes_mesclagem_e_segmentos.sql",
+      "sha": "3b30ee745ff2d465979d47bb58f16f158c08a8e0",
+      "texto_hash_conferido": true
+    },
+    {
+      "path": "packages/banco/supabase/reversao/20261111200054_pdv_nota_do_cliente.sql",
+      "sha": "89a54ae5c15f7ddf82ce0d542dc448dc2445c9e1",
+      "texto_hash_conferido": true
+    },
+    {
+      "path": "packages/banco/supabase/reversao/20261111201342_pagamentos_maquininhas_e_conciliacao.sql",
+      "sha": "4ff4cfd290ac9818440e6677015b71bcfc2d1712",
+      "texto_hash_conferido": true
+    },
+    {
+      "path": "packages/banco/supabase/reversao/20261112033713_recebimento_correcoes.sql",
+      "sha": "f9467227aeb2cc747eabbc3970d576314ab53942",
+      "texto_hash_conferido": true
+    },
+    {
+      "path": "packages/banco/supabase/reversao/20261112163333_importador_correcoes.sql",
+      "sha": "d0824370443dbc0692d458995bf230424d4044f7",
+      "texto_hash_conferido": true
+    },
+    {
+      "path": "packages/banco/supabase/reversao/20261112195200_vendas_painel.sql",
+      "sha": "a17e0b42eb00ffe46f75997a57a36754a7a883cf",
+      "texto_hash_conferido": true
+    },
+    {
+      "path": "packages/banco/supabase/reversao/20261113065706_margem_painel.sql",
+      "sha": "5959a5ec25c26b25e5db99c9b55003a678257b85",
+      "texto_hash_conferido": true
+    },
+    {
+      "path": "packages/banco/supabase/reversao/20261114012326_financeiro_conciliacao.sql",
+      "sha": "ff4d4f497fffb0d519e1f2634190b30e48bb6eb5",
+      "texto_hash_conferido": true
+    },
+    {
+      "path": "packages/banco/supabase/reversao/20261114012407_estoque_painel.sql",
+      "sha": "907cd722095818a798cb495a0e2166eafa41a37d",
+      "texto_hash_conferido": true
+    },
+    {
+      "path": "packages/banco/supabase/reversao/20261114012431_connect_painel.sql",
+      "sha": "2fa7c91994dad922bc8c148ff0dd57cc5fe4d712",
+      "texto_hash_conferido": true
+    },
+    {
+      "path": "packages/banco/supabase/reversao/20261114012538_metas.sql",
+      "sha": "0dcc0ba3fb3a2dbf1ba96338ecc2c004e374a959",
+      "texto_hash_conferido": true
+    },
+    {
+      "path": "packages/banco/supabase/reversao/20261114012604_metas_lojas.sql",
+      "sha": "d3c80463c47fb9324a14cb700483b6cb58d54310",
+      "texto_hash_conferido": true
+    },
+    {
+      "path": "packages/banco/supabase/reversao/20261114012623_equipe_por_papel.sql",
+      "sha": "b71335b70b00bcdf8f6a70dd2e93444f00b52867",
+      "texto_hash_conferido": true
+    },
+    {
+      "path": "packages/banco/supabase/reversao/20261114012647_venda_item_regra_de_preco.sql",
+      "sha": "21882f5289ce98836753ab4bdc68c239f6ad57d7",
+      "texto_hash_conferido": true
+    },
+    {
+      "path": "packages/banco/supabase/reversao/20261114012722_financeiras_a_receber.sql",
+      "sha": "793e8ba1fb9c320b5a48e4a2e26b731628de3968",
+      "texto_hash_conferido": true
+    },
+    {
+      "path": "packages/banco/supabase/reversao/20261114012802_caixa_saida_autorizada.sql",
+      "sha": "f4051edd97fead9974e539280540b79318664acd",
+      "texto_hash_conferido": true
+    },
+    {
+      "path": "packages/banco/supabase/reversao/20261114012952_contas_a_pagar.sql",
+      "sha": "8b96fbed7ae7def08ea35ed02f66b29366ea86f2",
+      "texto_hash_conferido": true
+    },
+    {
+      "path": "packages/banco/supabase/reversao/20261114013120_resultado_do_mes.sql",
+      "sha": "7a79fed093e9e8a24c74dd8fc926d63277bc8c54",
+      "texto_hash_conferido": true
+    },
+    {
+      "path": "packages/banco/supabase/reversao/20261114013159_previsao_de_caixa.sql",
+      "sha": "b5098605a85cf46cc40432a9ccc60189ff11d5f4",
+      "texto_hash_conferido": true
+    },
+    {
+      "path": "packages/banco/supabase/semente/LEIA-ME.md",
+      "sha": "55cfe62b1496b2db65618138dd437ed2bd2ea8d0",
+      "texto_hash_conferido": true
+    },
+    {
+      "path": "packages/banco/supabase/semente/desenvolvimento.sql",
+      "sha": "edfacf045a3986701ea354a077d66c75ca00c232",
+      "texto_hash_conferido": true
+    },
+    {
+      "path": "packages/banco/supabase/semente/vincular-usuarios-de-teste.sql",
+      "sha": "e1c9d045b91b3a8b89ac5513d94fdf38fb3a55a0",
+      "texto_hash_conferido": true
+    },
+    {
+      "path": "packages/banco/tsconfig.json",
+      "sha": "77ae810cfcd61ea09248ccc5860964e21ff99a7b",
+      "texto_hash_conferido": true
+    },
+    {
+      "path": "packages/banco/vitest.config.ts",
+      "sha": "dddb1eb9d9d76f78d4e1c8dd1cc4afbc7b319d36",
+      "texto_hash_conferido": true
+    },
+    {
+      "path": "packages/config/eslint.config.mjs",
+      "sha": "1679dcbcc250e50a0a017b4f381ad3107fecaa3b",
+      "texto_hash_conferido": true
+    },
+    {
+      "path": "packages/config/package.json",
+      "sha": "d38f2f328acb92e571e13780dcac9bb80db9e54b",
+      "texto_hash_conferido": true
+    },
+    {
+      "path": "packages/config/scripts/procurar-segredos.ts",
+      "sha": "dd60911eeb173c0d6bf6a2701084c9f4222d2ada",
+      "texto_hash_conferido": true
+    },
+    {
+      "path": "packages/config/scripts/verificar-env.ts",
+      "sha": "ed2c1b86e5a6850afc7df512902932a76aee57cf",
+      "texto_hash_conferido": true
+    },
+    {
+      "path": "packages/config/src/ambiente-web.test.ts",
+      "sha": "3236404040d098c454fa99a8ba40bdbd709a7066",
+      "texto_hash_conferido": true
+    },
+    {
+      "path": "packages/config/src/ambiente.test.ts",
+      "sha": "a72327507bbbf3cc8e1a83e7df59fcda11d42c1b",
+      "texto_hash_conferido": true
+    },
+    {
+      "path": "packages/config/src/ambiente.ts",
+      "sha": "b007361ee1f953543563020b8e64b733682277c1",
+      "texto_hash_conferido": true
+    },
+    {
+      "path": "packages/config/src/historico-segredos.test.ts",
+      "sha": "15207425228b075f36c1c3eab9513ccf4dbe2677",
+      "texto_hash_conferido": true
+    },
+    {
+      "path": "packages/config/src/segredos.test.ts",
+      "sha": "6e23a7a044b8a034aac2e615a11b9b9b2e76f60e",
+      "texto_hash_conferido": true
+    },
+    {
+      "path": "packages/config/src/segredos.ts",
+      "sha": "c8b7450c374b60578246c80b43f1fe0c5e8d90fb",
+      "texto_hash_conferido": true
+    },
+    {
+      "path": "packages/config/src/verificar-env.test.ts",
+      "sha": "ee54714234896beecb0168486713e63fac27aab2",
+      "texto_hash_conferido": true
+    },
+    {
+      "path": "packages/config/tsconfig.base.json",
+      "sha": "84078e433fc75e0b2a5b758ae883a34d493d1d49",
+      "texto_hash_conferido": true
+    },
+    {
+      "path": "packages/config/tsconfig.json",
+      "sha": "31290bfe42c4aeb3b84727e1ced6b0b222647165",
+      "texto_hash_conferido": true
+    },
+    {
+      "path": "packages/config/vitest.config.ts",
+      "sha": "d8c54dd41b55d81586ebe539388c9921b091e163",
+      "texto_hash_conferido": true
+    },
+    {
+      "path": "packages/dominio/README.md",
+      "sha": "44478102e0f08c3629a26012445dcebe07785569",
+      "texto_hash_conferido": true
+    },
+    {
+      "path": "packages/dominio/eslint.config.mjs",
+      "sha": "e80f113e0cd94a488a17fbd7b81627550155dccc",
+      "texto_hash_conferido": true
+    },
+    {
+      "path": "packages/dominio/package.json",
+      "sha": "23493751c3e80486fa50b5372b34efac464bb9d3",
+      "texto_hash_conferido": true
+    },
+    {
+      "path": "packages/dominio/src/desconto-propriedades.test.ts",
+      "sha": "70313de5c4f2816160b0803ba7e0ee4b8dbf931a",
+      "texto_hash_conferido": true
+    },
+    {
+      "path": "packages/dominio/src/desconto.test.ts",
+      "sha": "e77b995164d3ef427a35fcc88181923856ff26ab",
+      "texto_hash_conferido": true
+    },
+    {
+      "path": "packages/dominio/src/desconto.ts",
+      "sha": "e42c9c5a0eeba3595dc1aef4eae21c3022e05c2f",
+      "texto_hash_conferido": true
+    },
+    {
+      "path": "packages/dominio/src/dinheiro.test.ts",
+      "sha": "3f47e54d8833b1c620c92a31f347a0c9bed94a99",
+      "texto_hash_conferido": true
+    },
+    {
+      "path": "packages/dominio/src/dinheiro.ts",
+      "sha": "9269039aff694b965a2822e577dc87f7c945f666",
+      "texto_hash_conferido": true
+    },
+    {
+      "path": "packages/dominio/src/fiscal.test.ts",
+      "sha": "9c895e827265562a2134e8b841e95f7448de8554",
+      "texto_hash_conferido": true
+    },
+    {
+      "path": "packages/dominio/src/fiscal.ts",
+      "sha": "c2f24bbbd73cf247492fc9f9db306f02f7a5e9e3",
+      "texto_hash_conferido": true
+    },
+    {
+      "path": "packages/dominio/src/identificadores.test.ts",
+      "sha": "3c8f2ab5992e55602fe8c9a35b14d691c463e03a",
+      "texto_hash_conferido": true
+    },
+    {
+      "path": "packages/dominio/src/identificadores.ts",
+      "sha": "4d94ac21316298397c582e7ad46844e8a582ec7f",
+      "texto_hash_conferido": true
+    },
+    {
+      "path": "packages/dominio/src/index.ts",
+      "sha": "7797726f8b793ed415d183af9184cd75a79ca06d",
+      "texto_hash_conferido": true
+    },
+    {
+      "path": "packages/dominio/src/nogle.test.ts",
+      "sha": "c8024e85741fbebe9df2531784d67759ec6da6d5",
+      "texto_hash_conferido": true
+    },
+    {
+      "path": "packages/dominio/src/nogle.ts",
+      "sha": "6a3cd8e101c6ac727eae088aef2150ee55a31be1",
+      "texto_hash_conferido": true
+    },
+    {
+      "path": "packages/dominio/src/pagamento.test.ts",
+      "sha": "f9e132ed69bb4ac8ec1a9868145cabb07c4a22ec",
+      "texto_hash_conferido": true
+    },
+    {
+      "path": "packages/dominio/src/pagamento.ts",
+      "sha": "c0d574d95035bd1b35b7ec0df992372678a8c11f",
+      "texto_hash_conferido": true
+    },
+    {
+      "path": "packages/dominio/src/revisao-codex.test.ts",
+      "sha": "e87c09e8b664fcc82d3614267afd86b67a853599",
+      "texto_hash_conferido": true
+    },
+    {
+      "path": "packages/dominio/src/venda.test.ts",
+      "sha": "91c907e9f3faa4e8cd23f1202cba8a597e9f527a",
+      "texto_hash_conferido": true
+    },
+    {
+      "path": "packages/dominio/src/venda.ts",
+      "sha": "10e59e35be7742c1a79560445ab2d28c00b290eb",
+      "texto_hash_conferido": true
+    },
+    {
+      "path": "packages/dominio/tsconfig.json",
+      "sha": "7c3574e18304c07a11f8019c6fbd4329b783bc5f",
+      "texto_hash_conferido": true
+    },
+    {
+      "path": "packages/dominio/vitest.config.ts",
+      "sha": "d8c54dd41b55d81586ebe539388c9921b091e163",
+      "texto_hash_conferido": true
+    },
+    {
+      "path": "referencias_visuais/guia_design.md",
+      "sha": "8a63363d14198b06578317677d5d04c8c7a11655",
+      "texto_hash_conferido": true
+    },
+    {
+      "path": "referencias_visuais/ora5g_previa_telas.mp4",
+      "sha": "7446aa75bf796a59efd31f4784cf47ce2a5658aa",
+      "texto_hash_conferido": false
+    },
+    {
+      "path": "referencias_visuais/ora5g_visao_geral_telas.png",
+      "sha": "5d175ee4976afee4bfc4891c40d31d22284825ce",
+      "texto_hash_conferido": false
+    },
+    {
+      "path": "referencias_visuais/prototipo.html",
+      "sha": "a5b6b5854aa008f57295319d38491add77603659",
+      "texto_hash_conferido": true
+    },
+    {
+      "path": "referencias_visuais/tela_01.png",
+      "sha": "70e31096cfcaf5d349e612fa0a93e1963e7f2a4b",
+      "texto_hash_conferido": false
+    },
+    {
+      "path": "referencias_visuais/tela_02.png",
+      "sha": "b4615e2e2ba29b8769cab179a72d110739081808",
+      "texto_hash_conferido": false
+    },
+    {
+      "path": "referencias_visuais/tela_03.png",
+      "sha": "0f62115e647615cc906758e13d674386939c62a6",
+      "texto_hash_conferido": false
+    },
+    {
+      "path": "referencias_visuais/tela_04.png",
+      "sha": "4d19e61b50fcaa3fd8063cd504941acb6d39e74a",
+      "texto_hash_conferido": false
+    },
+    {
+      "path": "referencias_visuais/tela_05.png",
+      "sha": "bca446bd441fb0064b50b1a10c7cd99813db75ee",
+      "texto_hash_conferido": false
+    },
+    {
+      "path": "referencias_visuais/tela_06.png",
+      "sha": "5caedd1160e37fc751bc8e5e500cb119374af58e",
+      "texto_hash_conferido": false
+    },
+    {
+      "path": "referencias_visuais/tela_07.png",
+      "sha": "4f16806eb53ced619d419431caf1d274f99bbcf6",
+      "texto_hash_conferido": false
+    },
+    {
+      "path": "referencias_visuais/tela_08.png",
+      "sha": "145aa75c95f33a37ad56c2329ebaa4c1818057c0",
+      "texto_hash_conferido": false
+    },
+    {
+      "path": "referencias_visuais/tela_09.png",
+      "sha": "bc27f2463f0b5b89cb7524357eafb20120c88dfc",
+      "texto_hash_conferido": false
+    },
+    {
+      "path": "referencias_visuais/tela_10.png",
+      "sha": "e8dc42c5aa77dd94cbf9f8dd84e0e7be3c32de7c",
+      "texto_hash_conferido": false
+    },
+    {
+      "path": "scripts/gerar-catalogo-nogle.mjs",
+      "sha": "821dfe03da6bfbd83490708ee22c888e38e23764",
+      "texto_hash_conferido": true
+    },
+    {
+      "path": "scripts/gerar-rastreabilidade.mjs",
+      "sha": "05def39c272d672c084c83a4e676d3fa75e6b4bf",
+      "texto_hash_conferido": true
+    },
+    {
+      "path": "templates/ISSUE_TEMPLATE.md",
+      "sha": "f3e44400f4156f9ec9ab2a6600b5c98e7f658829",
+      "texto_hash_conferido": true
+    },
+    {
+      "path": "templates/PULL_REQUEST_TEMPLATE.md",
+      "sha": "f69e6bd21959dadfcc2847bdd06a11af73b2a0de",
+      "texto_hash_conferido": true
+    }
+  ],
+  "diretorios": [
+    ".claude",
+    ".claude/skills",
+    ".claude/skills/engenheiro-senior-ora5g",
+    ".claude/skills/engenheiro-senior-ora5g/references",
+    ".claude/skills/engenheiro-senior-ora5g/references/auditoria",
+    ".claude/skills/engenheiro-senior-ora5g/references/historico",
+    ".claude/skills/engenheiro-senior-ora5g/references/historico/originais",
+    ".github",
+    ".github/workflows",
+    "apps",
+    "apps/plataforma",
+    "apps/plataforma/e2e",
+    "apps/plataforma/src",
+    "apps/plataforma/src/app",
+    "apps/plataforma/src/app/aprovacoes",
+    "apps/plataforma/src/app/auditoria",
+    "apps/plataforma/src/app/auth",
+    "apps/plataforma/src/app/auth/confirmar",
+    "apps/plataforma/src/app/caixa",
+    "apps/plataforma/src/app/catalogo",
+    "apps/plataforma/src/app/clientes",
+    "apps/plataforma/src/app/clientes/[id]",
+    "apps/plataforma/src/app/clientes/duplicados",
+    "apps/plataforma/src/app/clientes/novo",
+    "apps/plataforma/src/app/clientes/segmentos",
+    "apps/plataforma/src/app/connect",
+    "apps/plataforma/src/app/conta",
+    "apps/plataforma/src/app/conta/senha",
+    "apps/plataforma/src/app/contas-a-pagar",
+    "apps/plataforma/src/app/contas-a-pagar/exportar",
+    "apps/plataforma/src/app/crm",
+    "apps/plataforma/src/app/crm/[id]",
+    "apps/plataforma/src/app/crm/agenda",
+    "apps/plataforma/src/app/demo",
+    "apps/plataforma/src/app/demo/_paineis",
+    "apps/plataforma/src/app/demo/aprovacoes",
+    "apps/plataforma/src/app/demo/assistencia",
+    "apps/plataforma/src/app/demo/auditoria",
+    "apps/plataforma/src/app/demo/canais",
+    "apps/plataforma/src/app/demo/clientes",
+    "apps/plataforma/src/app/demo/connect",
+    "apps/plataforma/src/app/demo/connect/_abas",
+    "apps/plataforma/src/app/demo/estoque",
+    "apps/plataforma/src/app/demo/financeiro",
+    "apps/plataforma/src/app/demo/importacao",
+    "apps/plataforma/src/app/demo/loja",
+    "apps/plataforma/src/app/demo/loja/usar",
+    "apps/plataforma/src/app/demo/lojas",
+    "apps/plataforma/src/app/demo/metas",
+    "apps/plataforma/src/app/demo/perfil",
+    "apps/plataforma/src/app/demo/perfil/usar",
+    "apps/plataforma/src/app/demo/produtos",
+    "apps/plataforma/src/app/demo/relatorios",
+    "apps/plataforma/src/app/demo/vendas",
+    "apps/plataforma/src/app/demo/vender",
+    "apps/plataforma/src/app/entrar",
+    "apps/plataforma/src/app/entrar/recuperar",
+    "apps/plataforma/src/app/equipe",
+    "apps/plataforma/src/app/escolher-loja",
+    "apps/plataforma/src/app/estoque",
+    "apps/plataforma/src/app/estoque/entrada",
+    "apps/plataforma/src/app/estoque/inventario",
+    "apps/plataforma/src/app/estoque/inventario/[id]",
+    "apps/plataforma/src/app/financeiro",
+    "apps/plataforma/src/app/financeiro/exportar",
+    "apps/plataforma/src/app/inicio",
+    "apps/plataforma/src/app/lojas",
+    "apps/plataforma/src/app/metas",
+    "apps/plataforma/src/app/notas",
+    "apps/plataforma/src/app/pagamentos",
+    "apps/plataforma/src/app/pagamentos/conciliacao",
+    "apps/plataforma/src/app/pagamentos/financeiras",
+    "apps/plataforma/src/app/pagamentos/maquininhas",
+    "apps/plataforma/src/app/previsao",
+    "apps/plataforma/src/app/produtos",
+    "apps/plataforma/src/app/produtos/importar",
+    "apps/plataforma/src/app/produtos/importar/enviar",
+    "apps/plataforma/src/app/produtos/precos",
+    "apps/plataforma/src/app/relatorios",
+    "apps/plataforma/src/app/relatorios/exportar",
+    "apps/plataforma/src/app/resultado",
+    "apps/plataforma/src/app/resultado/exportar",
+    "apps/plataforma/src/app/sair",
+    "apps/plataforma/src/app/saude",
+    "apps/plataforma/src/app/transferencias",
+    "apps/plataforma/src/app/vendas",
+    "apps/plataforma/src/app/vendas/[id]",
+    "apps/plataforma/src/app/vender",
+    "apps/plataforma/src/componentes",
+    "apps/plataforma/src/demo",
+    "apps/plataforma/src/demo/dados",
+    "apps/plataforma/src/integracoes",
+    "apps/plataforma/src/integracoes/nogle",
+    "apps/plataforma/src/lib",
+    "apps/plataforma/src/lib/acesso",
+    "apps/plataforma/src/lib/auditoria",
+    "apps/plataforma/src/lib/caixa",
+    "apps/plataforma/src/lib/catalogo",
+    "apps/plataforma/src/lib/clientes",
+    "apps/plataforma/src/lib/connect",
+    "apps/plataforma/src/lib/contas-a-pagar",
+    "apps/plataforma/src/lib/crm",
+    "apps/plataforma/src/lib/equipe",
+    "apps/plataforma/src/lib/estoque",
+    "apps/plataforma/src/lib/financeiro",
+    "apps/plataforma/src/lib/importacao",
+    "apps/plataforma/src/lib/inicio",
+    "apps/plataforma/src/lib/lojas",
+    "apps/plataforma/src/lib/margem",
+    "apps/plataforma/src/lib/metas",
+    "apps/plataforma/src/lib/notas",
+    "apps/plataforma/src/lib/pagamentos",
+    "apps/plataforma/src/lib/previsao",
+    "apps/plataforma/src/lib/relatorios",
+    "apps/plataforma/src/lib/resultado",
+    "apps/plataforma/src/lib/supabase",
+    "apps/plataforma/src/lib/transferencias",
+    "apps/plataforma/src/lib/vendas",
+    "apps/plataforma/src/saude",
+    "apps/worker",
+    "apps/worker/src",
+    "apps/worker/src/connect",
+    "deploy",
+    "deploy/homologacao",
+    "docs",
+    "docs/adr",
+    "docs/alinhamento",
+    "docs/analises",
+    "docs/analises/evidencias",
+    "docs/analises/evidencias/2026-11-08-fotos",
+    "docs/analises/evidencias/2026-11-08-fotos/fixture",
+    "docs/analises/evidencias/2026-11-08-setores",
+    "docs/analises/evidencias/2026-11-08-vendas",
+    "docs/analises/evidencias/2026-11-08-web",
+    "docs/analises/evidencias/2026-11-08",
+    "docs/analises/evidencias/2026-11-09-merges-e-nogle",
+    "docs/analises/evidencias/2026-11-09-nogle-9b1109",
+    "docs/cadastros",
+    "docs/etapa-0",
+    "docs/etapa-1",
+    "docs/integracoes",
+    "docs/integracoes/nogle",
+    "docs/operacao",
+    "docs/prototipos",
+    "docs/prototipos/estoque-por-loja-2026-11-09",
+    "docs/skills",
+    "docs/skills/engenheiro-senior-ora5g",
+    "originais",
+    "originais/historico",
+    "originais/research",
+    "packages",
+    "packages/banco",
+    "packages/banco/src",
+    "packages/banco/supabase",
+    "packages/banco/supabase/migrations",
+    "packages/banco/supabase/reversao",
+    "packages/banco/supabase/semente",
+    "packages/config",
+    "packages/config/scripts",
+    "packages/config/src",
+    "packages/dominio",
+    "packages/dominio/src",
+    "referencias_visuais",
+    "scripts",
+    "templates"
+  ],
+  "rotas": [
+    {
+      "rota": "/",
+      "tipo": "pagina",
+      "demo": false,
+      "arquivo": "apps/plataforma/src/app/page.tsx"
+    },
+    {
+      "rota": "/aprovacoes",
+      "tipo": "pagina",
+      "demo": false,
+      "arquivo": "apps/plataforma/src/app/aprovacoes/page.tsx"
+    },
+    {
+      "rota": "/auditoria",
+      "tipo": "pagina",
+      "demo": false,
+      "arquivo": "apps/plataforma/src/app/auditoria/page.tsx"
+    },
+    {
+      "rota": "/auth/confirmar",
+      "tipo": "endpoint",
+      "demo": false,
+      "arquivo": "apps/plataforma/src/app/auth/confirmar/route.ts"
+    },
+    {
+      "rota": "/caixa",
+      "tipo": "pagina",
+      "demo": false,
+      "arquivo": "apps/plataforma/src/app/caixa/page.tsx"
+    },
+    {
+      "rota": "/catalogo",
+      "tipo": "pagina",
+      "demo": false,
+      "arquivo": "apps/plataforma/src/app/catalogo/page.tsx"
+    },
+    {
+      "rota": "/clientes",
+      "tipo": "pagina",
+      "demo": false,
+      "arquivo": "apps/plataforma/src/app/clientes/page.tsx"
+    },
+    {
+      "rota": "/clientes/[id]",
+      "tipo": "pagina",
+      "demo": false,
+      "arquivo": "apps/plataforma/src/app/clientes/[id]/page.tsx"
+    },
+    {
+      "rota": "/clientes/duplicados",
+      "tipo": "pagina",
+      "demo": false,
+      "arquivo": "apps/plataforma/src/app/clientes/duplicados/page.tsx"
+    },
+    {
+      "rota": "/clientes/novo",
+      "tipo": "pagina",
+      "demo": false,
+      "arquivo": "apps/plataforma/src/app/clientes/novo/page.tsx"
+    },
+    {
+      "rota": "/clientes/segmentos",
+      "tipo": "pagina",
+      "demo": false,
+      "arquivo": "apps/plataforma/src/app/clientes/segmentos/page.tsx"
+    },
+    {
+      "rota": "/connect",
+      "tipo": "pagina",
+      "demo": false,
+      "arquivo": "apps/plataforma/src/app/connect/page.tsx"
+    },
+    {
+      "rota": "/conta",
+      "tipo": "pagina",
+      "demo": false,
+      "arquivo": "apps/plataforma/src/app/conta/page.tsx"
+    },
+    {
+      "rota": "/conta/senha",
+      "tipo": "pagina",
+      "demo": false,
+      "arquivo": "apps/plataforma/src/app/conta/senha/page.tsx"
+    },
+    {
+      "rota": "/contas-a-pagar",
+      "tipo": "pagina",
+      "demo": false,
+      "arquivo": "apps/plataforma/src/app/contas-a-pagar/page.tsx"
+    },
+    {
+      "rota": "/contas-a-pagar/exportar",
+      "tipo": "endpoint",
+      "demo": false,
+      "arquivo": "apps/plataforma/src/app/contas-a-pagar/exportar/route.ts"
+    },
+    {
+      "rota": "/crm",
+      "tipo": "pagina",
+      "demo": false,
+      "arquivo": "apps/plataforma/src/app/crm/page.tsx"
+    },
+    {
+      "rota": "/crm/[id]",
+      "tipo": "pagina",
+      "demo": false,
+      "arquivo": "apps/plataforma/src/app/crm/[id]/page.tsx"
+    },
+    {
+      "rota": "/crm/agenda",
+      "tipo": "pagina",
+      "demo": false,
+      "arquivo": "apps/plataforma/src/app/crm/agenda/page.tsx"
+    },
+    {
+      "rota": "/demo",
+      "tipo": "pagina",
+      "demo": true,
+      "arquivo": "apps/plataforma/src/app/demo/page.tsx"
+    },
+    {
+      "rota": "/demo/aprovacoes",
+      "tipo": "pagina",
+      "demo": true,
+      "arquivo": "apps/plataforma/src/app/demo/aprovacoes/page.tsx"
+    },
+    {
+      "rota": "/demo/assistencia",
+      "tipo": "pagina",
+      "demo": true,
+      "arquivo": "apps/plataforma/src/app/demo/assistencia/page.tsx"
+    },
+    {
+      "rota": "/demo/auditoria",
+      "tipo": "pagina",
+      "demo": true,
+      "arquivo": "apps/plataforma/src/app/demo/auditoria/page.tsx"
+    },
+    {
+      "rota": "/demo/canais",
+      "tipo": "pagina",
+      "demo": true,
+      "arquivo": "apps/plataforma/src/app/demo/canais/page.tsx"
+    },
+    {
+      "rota": "/demo/clientes",
+      "tipo": "pagina",
+      "demo": true,
+      "arquivo": "apps/plataforma/src/app/demo/clientes/page.tsx"
+    },
+    {
+      "rota": "/demo/connect",
+      "tipo": "pagina",
+      "demo": true,
+      "arquivo": "apps/plataforma/src/app/demo/connect/page.tsx"
+    },
+    {
+      "rota": "/demo/estoque",
+      "tipo": "pagina",
+      "demo": true,
+      "arquivo": "apps/plataforma/src/app/demo/estoque/page.tsx"
+    },
+    {
+      "rota": "/demo/financeiro",
+      "tipo": "pagina",
+      "demo": true,
+      "arquivo": "apps/plataforma/src/app/demo/financeiro/page.tsx"
+    },
+    {
+      "rota": "/demo/importacao",
+      "tipo": "pagina",
+      "demo": true,
+      "arquivo": "apps/plataforma/src/app/demo/importacao/page.tsx"
+    },
+    {
+      "rota": "/demo/loja/usar",
+      "tipo": "endpoint",
+      "demo": true,
+      "arquivo": "apps/plataforma/src/app/demo/loja/usar/route.ts"
+    },
+    {
+      "rota": "/demo/lojas",
+      "tipo": "pagina",
+      "demo": true,
+      "arquivo": "apps/plataforma/src/app/demo/lojas/page.tsx"
+    },
+    {
+      "rota": "/demo/metas",
+      "tipo": "pagina",
+      "demo": true,
+      "arquivo": "apps/plataforma/src/app/demo/metas/page.tsx"
+    },
+    {
+      "rota": "/demo/perfil",
+      "tipo": "pagina",
+      "demo": true,
+      "arquivo": "apps/plataforma/src/app/demo/perfil/page.tsx"
+    },
+    {
+      "rota": "/demo/perfil/usar",
+      "tipo": "endpoint",
+      "demo": true,
+      "arquivo": "apps/plataforma/src/app/demo/perfil/usar/route.ts"
+    },
+    {
+      "rota": "/demo/produtos",
+      "tipo": "pagina",
+      "demo": true,
+      "arquivo": "apps/plataforma/src/app/demo/produtos/page.tsx"
+    },
+    {
+      "rota": "/demo/relatorios",
+      "tipo": "pagina",
+      "demo": true,
+      "arquivo": "apps/plataforma/src/app/demo/relatorios/page.tsx"
+    },
+    {
+      "rota": "/demo/vendas",
+      "tipo": "pagina",
+      "demo": true,
+      "arquivo": "apps/plataforma/src/app/demo/vendas/page.tsx"
+    },
+    {
+      "rota": "/demo/vender",
+      "tipo": "pagina",
+      "demo": true,
+      "arquivo": "apps/plataforma/src/app/demo/vender/page.tsx"
+    },
+    {
+      "rota": "/entrar",
+      "tipo": "pagina",
+      "demo": false,
+      "arquivo": "apps/plataforma/src/app/entrar/page.tsx"
+    },
+    {
+      "rota": "/entrar/recuperar",
+      "tipo": "pagina",
+      "demo": false,
+      "arquivo": "apps/plataforma/src/app/entrar/recuperar/page.tsx"
+    },
+    {
+      "rota": "/equipe",
+      "tipo": "pagina",
+      "demo": false,
+      "arquivo": "apps/plataforma/src/app/equipe/page.tsx"
+    },
+    {
+      "rota": "/escolher-loja",
+      "tipo": "pagina",
+      "demo": false,
+      "arquivo": "apps/plataforma/src/app/escolher-loja/page.tsx"
+    },
+    {
+      "rota": "/estoque",
+      "tipo": "pagina",
+      "demo": false,
+      "arquivo": "apps/plataforma/src/app/estoque/page.tsx"
+    },
+    {
+      "rota": "/estoque/entrada",
+      "tipo": "pagina",
+      "demo": false,
+      "arquivo": "apps/plataforma/src/app/estoque/entrada/page.tsx"
+    },
+    {
+      "rota": "/estoque/inventario",
+      "tipo": "pagina",
+      "demo": false,
+      "arquivo": "apps/plataforma/src/app/estoque/inventario/page.tsx"
+    },
+    {
+      "rota": "/estoque/inventario/[id]",
+      "tipo": "pagina",
+      "demo": false,
+      "arquivo": "apps/plataforma/src/app/estoque/inventario/[id]/page.tsx"
+    },
+    {
+      "rota": "/financeiro",
+      "tipo": "pagina",
+      "demo": false,
+      "arquivo": "apps/plataforma/src/app/financeiro/page.tsx"
+    },
+    {
+      "rota": "/financeiro/exportar",
+      "tipo": "endpoint",
+      "demo": false,
+      "arquivo": "apps/plataforma/src/app/financeiro/exportar/route.ts"
+    },
+    {
+      "rota": "/inicio",
+      "tipo": "pagina",
+      "demo": false,
+      "arquivo": "apps/plataforma/src/app/inicio/page.tsx"
+    },
+    {
+      "rota": "/lojas",
+      "tipo": "pagina",
+      "demo": false,
+      "arquivo": "apps/plataforma/src/app/lojas/page.tsx"
+    },
+    {
+      "rota": "/metas",
+      "tipo": "pagina",
+      "demo": false,
+      "arquivo": "apps/plataforma/src/app/metas/page.tsx"
+    },
+    {
+      "rota": "/notas",
+      "tipo": "pagina",
+      "demo": false,
+      "arquivo": "apps/plataforma/src/app/notas/page.tsx"
+    },
+    {
+      "rota": "/pagamentos/conciliacao",
+      "tipo": "pagina",
+      "demo": false,
+      "arquivo": "apps/plataforma/src/app/pagamentos/conciliacao/page.tsx"
+    },
+    {
+      "rota": "/pagamentos/financeiras",
+      "tipo": "pagina",
+      "demo": false,
+      "arquivo": "apps/plataforma/src/app/pagamentos/financeiras/page.tsx"
+    },
+    {
+      "rota": "/pagamentos/maquininhas",
+      "tipo": "pagina",
+      "demo": false,
+      "arquivo": "apps/plataforma/src/app/pagamentos/maquininhas/page.tsx"
+    },
+    {
+      "rota": "/previsao",
+      "tipo": "pagina",
+      "demo": false,
+      "arquivo": "apps/plataforma/src/app/previsao/page.tsx"
+    },
+    {
+      "rota": "/produtos",
+      "tipo": "pagina",
+      "demo": false,
+      "arquivo": "apps/plataforma/src/app/produtos/page.tsx"
+    },
+    {
+      "rota": "/produtos/importar",
+      "tipo": "pagina",
+      "demo": false,
+      "arquivo": "apps/plataforma/src/app/produtos/importar/page.tsx"
+    },
+    {
+      "rota": "/produtos/importar/enviar",
+      "tipo": "endpoint",
+      "demo": false,
+      "arquivo": "apps/plataforma/src/app/produtos/importar/enviar/route.ts"
+    },
+    {
+      "rota": "/produtos/precos",
+      "tipo": "pagina",
+      "demo": false,
+      "arquivo": "apps/plataforma/src/app/produtos/precos/page.tsx"
+    },
+    {
+      "rota": "/relatorios",
+      "tipo": "pagina",
+      "demo": false,
+      "arquivo": "apps/plataforma/src/app/relatorios/page.tsx"
+    },
+    {
+      "rota": "/relatorios/exportar",
+      "tipo": "endpoint",
+      "demo": false,
+      "arquivo": "apps/plataforma/src/app/relatorios/exportar/route.ts"
+    },
+    {
+      "rota": "/resultado",
+      "tipo": "pagina",
+      "demo": false,
+      "arquivo": "apps/plataforma/src/app/resultado/page.tsx"
+    },
+    {
+      "rota": "/resultado/exportar",
+      "tipo": "endpoint",
+      "demo": false,
+      "arquivo": "apps/plataforma/src/app/resultado/exportar/route.ts"
+    },
+    {
+      "rota": "/sair",
+      "tipo": "endpoint",
+      "demo": false,
+      "arquivo": "apps/plataforma/src/app/sair/route.ts"
+    },
+    {
+      "rota": "/saude",
+      "tipo": "pagina",
+      "demo": false,
+      "arquivo": "apps/plataforma/src/app/saude/page.tsx"
+    },
+    {
+      "rota": "/transferencias",
+      "tipo": "pagina",
+      "demo": false,
+      "arquivo": "apps/plataforma/src/app/transferencias/page.tsx"
+    },
+    {
+      "rota": "/vendas",
+      "tipo": "pagina",
+      "demo": false,
+      "arquivo": "apps/plataforma/src/app/vendas/page.tsx"
+    },
+    {
+      "rota": "/vendas/[id]",
+      "tipo": "pagina",
+      "demo": false,
+      "arquivo": "apps/plataforma/src/app/vendas/[id]/page.tsx"
+    },
+    {
+      "rota": "/vender",
+      "tipo": "pagina",
+      "demo": false,
+      "arquivo": "apps/plataforma/src/app/vender/page.tsx"
+    }
+  ],
+  "duplicados_exatos": [
+    [
+      ".claude/skills/engenheiro-senior-ora5g/references/auditoria/github-2026-11-09.md",
+      "docs/skills/engenheiro-senior-ora5g/AUDITORIA_GITHUB_2026-11-09.md"
+    ],
+    [
+      ".claude/skills/engenheiro-senior-ora5g/references/historico/originais/conversa_inicial_colada.md",
+      "originais/historico/conversa_inicial_colada.md"
+    ],
+    [
+      ".claude/skills/engenheiro-senior-ora5g/references/historico/originais/pesquisa_1_plano_mestre.md",
+      "originais/research/pesquisa_1_plano_mestre.md"
+    ],
+    [
+      ".claude/skills/engenheiro-senior-ora5g/references/historico/originais/pesquisa_2_plano_mestre.md",
+      "originais/research/pesquisa_2_plano_mestre.md"
+    ],
+    [
+      ".claude/skills/engenheiro-senior-ora5g/references/historico/originais/pesquisa_3_plano_mestre.md",
+      "originais/research/pesquisa_3_plano_mestre.md"
+    ],
+    [
+      ".github/ISSUE_TEMPLATE.md",
+      "templates/ISSUE_TEMPLATE.md"
+    ],
+    [
+      ".github/PULL_REQUEST_TEMPLATE.md",
+      "templates/PULL_REQUEST_TEMPLATE.md"
+    ],
+    [
+      "apps/plataforma/eslint.config.mjs",
+      "apps/worker/eslint.config.mjs",
+      "packages/banco/eslint.config.mjs",
+      "packages/dominio/eslint.config.mjs"
+    ],
+    [
+      "apps/worker/vitest.config.ts",
+      "packages/config/vitest.config.ts",
+      "packages/dominio/vitest.config.ts"
+    ]
+  ],
+  "marcadores_conflito": [],
+  "migrations_antigas_modificadas": [],
+  "migrations_sem_reversao": [],
+  "migrations_antes_pendentes_agora_registradas_aplicadas": [
+    "packages/banco/supabase/migrations/20261114012326_financeiro_conciliacao.sql",
+    "packages/banco/supabase/migrations/20261114012407_estoque_painel.sql",
+    "packages/banco/supabase/migrations/20261114012431_connect_painel.sql",
+    "packages/banco/supabase/migrations/20261114012538_metas.sql",
+    "packages/banco/supabase/migrations/20261114012604_metas_lojas.sql",
+    "packages/banco/supabase/migrations/20261114012623_equipe_por_papel.sql",
+    "packages/banco/supabase/migrations/20261114012647_venda_item_regra_de_preco.sql",
+    "packages/banco/supabase/migrations/20261114012722_financeiras_a_receber.sql",
+    "packages/banco/supabase/migrations/20261114012802_caixa_saida_autorizada.sql",
+    "packages/banco/supabase/migrations/20261114012952_contas_a_pagar.sql",
+    "packages/banco/supabase/migrations/20261114013120_resultado_do_mes.sql",
+    "packages/banco/supabase/migrations/20261114013159_previsao_de_caixa.sql"
+  ],
+  "registro_de_aplicacao_verificado": {
+    "base": "51417a8",
+    "fonte": "packages/banco/supabase/aplicadas-dev.json",
+    "limite": "Confere o registro versionado do programador; sem leitura direta do remoto pelo revisor. Não reaplicar migrations só por texto antigo.",
+    "total": 51,
+    "todos_md5_coincidem": true,
+    "migrations": [
+      {
+        "versao": "20261107140352",
+        "nome": "fundacao_acesso",
+        "md5_git": "a8f160b848c860269fed9b3dced6aae5",
+        "md5_registrado": "a8f160b848c860269fed9b3dced6aae5",
+        "coincide": true
+      },
+      {
+        "versao": "20261107140448",
+        "nome": "indices_chaves_estrangeiras",
+        "md5_git": "04fa57c5f31bc5cb8beb99ebfac7297e",
+        "md5_registrado": "04fa57c5f31bc5cb8beb99ebfac7297e",
+        "coincide": true
+      },
+      {
+        "versao": "20261107151305",
+        "nome": "correcoes_revisao_codex",
+        "md5_git": "76dc2a6b2c8e5e3e4648044bf3334caa",
+        "md5_registrado": "76dc2a6b2c8e5e3e4648044bf3334caa",
+        "coincide": true
+      },
+      {
+        "versao": "20261108150432",
+        "nome": "auditoria_automatica_acesso",
+        "md5_git": "7b8296f808c4db3ee8a9d910952ec21b",
+        "md5_registrado": "7b8296f808c4db3ee8a9d910952ec21b",
+        "coincide": true
+      },
+      {
+        "versao": "20261108150620",
+        "nome": "catalogo_estoque",
+        "md5_git": "b5d498c865a0bae257061bbe48fcfbf3",
+        "md5_registrado": "b5d498c865a0bae257061bbe48fcfbf3",
+        "coincide": true
+      },
+      {
+        "versao": "20261108151325",
+        "nome": "indices_catalogo_estoque",
+        "md5_git": "78cf93f4b911d5d631a1ae83f4565ed8",
+        "md5_registrado": "78cf93f4b911d5d631a1ae83f4565ed8",
+        "coincide": true
+      },
+      {
+        "versao": "20261108195850",
+        "nome": "integridade_estoque",
+        "md5_git": "9795cbcaed323e380191c70659415dbc",
+        "md5_registrado": "9795cbcaed323e380191c70659415dbc",
+        "coincide": true
+      },
+      {
+        "versao": "20261108202654",
+        "nome": "acesso_sessao_e_equipe",
+        "md5_git": "358ae9818908896b186681924ddcde04",
+        "md5_registrado": "358ae9818908896b186681924ddcde04",
+        "coincide": true
+      },
+      {
+        "versao": "20261108204536",
+        "nome": "fotos_dos_produtos",
+        "md5_git": "2f7900b0015e47668ddb478764aa485c",
+        "md5_registrado": "2f7900b0015e47668ddb478764aa485c",
+        "coincide": true
+      },
+      {
+        "versao": "20261108233546",
+        "nome": "vendas_pagamentos_e_caixa",
+        "md5_git": "6284f6340341eb65a0be6430d5e9a706",
+        "md5_registrado": "6284f6340341eb65a0be6430d5e9a706",
+        "coincide": true
+      },
+      {
+        "versao": "20261108233711",
+        "nome": "indices_vendas_e_fotos",
+        "md5_git": "3b67ed6d41fced7092b8ab013ea5c17f",
+        "md5_registrado": "3b67ed6d41fced7092b8ab013ea5c17f",
+        "coincide": true
+      },
+      {
+        "versao": "20261109123402",
+        "nome": "ora_connect_operacoes",
+        "md5_git": "34fa7602285abc5aafaed8a34c5733b5",
+        "md5_registrado": "34fa7602285abc5aafaed8a34c5733b5",
+        "coincide": true
+      },
+      {
+        "versao": "20261109123533",
+        "nome": "indices_ora_connect",
+        "md5_git": "81f5a9a345580fedb43ed7c5951e3d79",
+        "md5_registrado": "81f5a9a345580fedb43ed7c5951e3d79",
+        "coincide": true
+      },
+      {
+        "versao": "20261109123757",
+        "nome": "fila_fiscal",
+        "md5_git": "43a75da04d3228214e260201a2ea36af",
+        "md5_registrado": "43a75da04d3228214e260201a2ea36af",
+        "coincide": true
+      },
+      {
+        "versao": "20261109134507",
+        "nome": "devolucao_e_troca",
+        "md5_git": "8027f63a195fdfa06af5c02b0ddc179a",
+        "md5_registrado": "8027f63a195fdfa06af5c02b0ddc179a",
+        "coincide": true
+      },
+      {
+        "versao": "20261109150526",
+        "nome": "correcoes_acesso_lote1",
+        "md5_git": "0db668934f7f4c72b12164e0d96b6057",
+        "md5_registrado": "0db668934f7f4c72b12164e0d96b6057",
+        "coincide": true
+      },
+      {
+        "versao": "20261109190240",
+        "nome": "integridade_vendas_lote2",
+        "md5_git": "4f60a31369f04618b40fc1f88e50ec78",
+        "md5_registrado": "4f60a31369f04618b40fc1f88e50ec78",
+        "coincide": true
+      },
+      {
+        "versao": "20261109190400",
+        "nome": "connect_evidencia_lote2",
+        "md5_git": "50a92b80cbcd527ab22565a988239100",
+        "md5_registrado": "50a92b80cbcd527ab22565a988239100",
+        "coincide": true
+      },
+      {
+        "versao": "20261109191416",
+        "nome": "fotos_idempotentes_lote3",
+        "md5_git": "af993e98aff5d5bc7de704e290264527",
+        "md5_registrado": "af993e98aff5d5bc7de704e290264527",
+        "coincide": true
+      },
+      {
+        "versao": "20261109193043",
+        "nome": "transferencias_e_defeitos",
+        "md5_git": "71ad04f1afc171fa8db9b0bcb2077044",
+        "md5_registrado": "71ad04f1afc171fa8db9b0bcb2077044",
+        "coincide": true
+      },
+      {
+        "versao": "20261109201940",
+        "nome": "mensagens_nogle",
+        "md5_git": "a910ebd1bef0e0ff396f312ae97168bc",
+        "md5_registrado": "a910ebd1bef0e0ff396f312ae97168bc",
+        "coincide": true
+      },
+      {
+        "versao": "20261110124824",
+        "nome": "connect_consulta_por_uuid",
+        "md5_git": "35af74537bfa72eaddce36b05c36ebc4",
+        "md5_registrado": "35af74537bfa72eaddce36b05c36ebc4",
+        "coincide": true
+      },
+      {
+        "versao": "20261110224537",
+        "nome": "financeiro_painel",
+        "md5_git": "0c0432e2c12bb35139c4ab2729b4f0c0",
+        "md5_registrado": "0c0432e2c12bb35139c4ab2729b4f0c0",
+        "coincide": true
+      },
+      {
+        "versao": "20261111132503",
+        "nome": "lojas_cadastro_e_configuracao",
+        "md5_git": "288c2402100e782a7d3ed98a82faf3f0",
+        "md5_registrado": "288c2402100e782a7d3ed98a82faf3f0",
+        "coincide": true
+      },
+      {
+        "versao": "20261111132621",
+        "nome": "catalogo_cadastro",
+        "md5_git": "7a9a5b9cb9ebdfb3095b8309a3f30cad",
+        "md5_registrado": "7a9a5b9cb9ebdfb3095b8309a3f30cad",
+        "coincide": true
+      },
+      {
+        "versao": "20261111133804",
+        "nome": "precos_e_campanhas",
+        "md5_git": "54e45cffda3f09a7765311e63696a7ac",
+        "md5_registrado": "54e45cffda3f09a7765311e63696a7ac",
+        "coincide": true
+      },
+      {
+        "versao": "20261111135906",
+        "nome": "importacao_catalogo",
+        "md5_git": "faa52950a5b728b6166cdc65474f064e",
+        "md5_registrado": "faa52950a5b728b6166cdc65474f064e",
+        "coincide": true
+      },
+      {
+        "versao": "20261111141337",
+        "nome": "entrada_estoque",
+        "md5_git": "663f442cb03a7311e2c66acb3de0609d",
+        "md5_registrado": "663f442cb03a7311e2c66acb3de0609d",
+        "coincide": true
+      },
+      {
+        "versao": "20261111142627",
+        "nome": "condicao_obrigatoria_na_devolucao",
+        "md5_git": "976ebbec1236ca5b6dce1fe09fcc7794",
+        "md5_registrado": "976ebbec1236ca5b6dce1fe09fcc7794",
+        "coincide": true
+      },
+      {
+        "versao": "20261111142726",
+        "nome": "inventario",
+        "md5_git": "20d9404bad0bce788ce78c41998ab526",
+        "md5_registrado": "20d9404bad0bce788ce78c41998ab526",
+        "coincide": true
+      },
+      {
+        "versao": "20261111191909",
+        "nome": "clientes_compartilhados",
+        "md5_git": "f1c9c6563024611ba4fbe77bf39348ee",
+        "md5_registrado": "f1c9c6563024611ba4fbe77bf39348ee",
+        "coincide": true
+      },
+      {
+        "versao": "20261111193816",
+        "nome": "crm_funil_e_agenda",
+        "md5_git": "3e247f19ce05b7fdf6b791f104be8b62",
+        "md5_registrado": "3e247f19ce05b7fdf6b791f104be8b62",
+        "coincide": true
+      },
+      {
+        "versao": "20261111195120",
+        "nome": "clientes_mesclagem_e_segmentos",
+        "md5_git": "cbb9c32a5c1e3cab7b122cfb52c4d1fd",
+        "md5_registrado": "cbb9c32a5c1e3cab7b122cfb52c4d1fd",
+        "coincide": true
+      },
+      {
+        "versao": "20261111200054",
+        "nome": "pdv_nota_do_cliente",
+        "md5_git": "6078f9dd0f64d21dc7e46aa5e4dd9718",
+        "md5_registrado": "6078f9dd0f64d21dc7e46aa5e4dd9718",
+        "coincide": true
+      },
+      {
+        "versao": "20261111201342",
+        "nome": "pagamentos_maquininhas_e_conciliacao",
+        "md5_git": "b83e29bfd4d7f095173e2845aa9e0a19",
+        "md5_registrado": "b83e29bfd4d7f095173e2845aa9e0a19",
+        "coincide": true
+      },
+      {
+        "versao": "20261112033713",
+        "nome": "recebimento_correcoes",
+        "md5_git": "8f985fcbb4766e5b3a5ec676aae67201",
+        "md5_registrado": "8f985fcbb4766e5b3a5ec676aae67201",
+        "coincide": true
+      },
+      {
+        "versao": "20261112163333",
+        "nome": "importador_correcoes",
+        "md5_git": "d4003b4a7642b74117a4442113bfe385",
+        "md5_registrado": "d4003b4a7642b74117a4442113bfe385",
+        "coincide": true
+      },
+      {
+        "versao": "20261112195200",
+        "nome": "vendas_painel",
+        "md5_git": "a477b00219c4eff93cc94ebb3066484a",
+        "md5_registrado": "a477b00219c4eff93cc94ebb3066484a",
+        "coincide": true
+      },
+      {
+        "versao": "20261113065706",
+        "nome": "margem_painel",
+        "md5_git": "7af84d1c116430125d3c769abe29a21e",
+        "md5_registrado": "7af84d1c116430125d3c769abe29a21e",
+        "coincide": true
+      },
+      {
+        "versao": "20261114012326",
+        "nome": "financeiro_conciliacao",
+        "md5_git": "d9b2f491d11b795ae5923b4eac4ae290",
+        "md5_registrado": "d9b2f491d11b795ae5923b4eac4ae290",
+        "coincide": true
+      },
+      {
+        "versao": "20261114012407",
+        "nome": "estoque_painel",
+        "md5_git": "ce11207894796265a90b602e6f7133e2",
+        "md5_registrado": "ce11207894796265a90b602e6f7133e2",
+        "coincide": true
+      },
+      {
+        "versao": "20261114012431",
+        "nome": "connect_painel",
+        "md5_git": "a3f5cc7e1759ac6ffcf18d901c3a11ad",
+        "md5_registrado": "a3f5cc7e1759ac6ffcf18d901c3a11ad",
+        "coincide": true
+      },
+      {
+        "versao": "20261114012538",
+        "nome": "metas",
+        "md5_git": "a7ea23bdfac126f02262f4ce815b387e",
+        "md5_registrado": "a7ea23bdfac126f02262f4ce815b387e",
+        "coincide": true
+      },
+      {
+        "versao": "20261114012604",
+        "nome": "metas_lojas",
+        "md5_git": "1ac0be9bf479d3f486984f1625630b11",
+        "md5_registrado": "1ac0be9bf479d3f486984f1625630b11",
+        "coincide": true
+      },
+      {
+        "versao": "20261114012623",
+        "nome": "equipe_por_papel",
+        "md5_git": "c8cde2890516fcea7192cf5f607647ec",
+        "md5_registrado": "c8cde2890516fcea7192cf5f607647ec",
+        "coincide": true
+      },
+      {
+        "versao": "20261114012647",
+        "nome": "venda_item_regra_de_preco",
+        "md5_git": "285ab270a635fe29c54ebaf8791b0bb3",
+        "md5_registrado": "285ab270a635fe29c54ebaf8791b0bb3",
+        "coincide": true
+      },
+      {
+        "versao": "20261114012722",
+        "nome": "financeiras_a_receber",
+        "md5_git": "37314903a1f24a5181ac099a6d56fedd",
+        "md5_registrado": "37314903a1f24a5181ac099a6d56fedd",
+        "coincide": true
+      },
+      {
+        "versao": "20261114012802",
+        "nome": "caixa_saida_autorizada",
+        "md5_git": "a33eb3d2e66b257a7774d02ed78be4e9",
+        "md5_registrado": "a33eb3d2e66b257a7774d02ed78be4e9",
+        "coincide": true
+      },
+      {
+        "versao": "20261114012952",
+        "nome": "contas_a_pagar",
+        "md5_git": "71168df92036d4d537827385711b517c",
+        "md5_registrado": "71168df92036d4d537827385711b517c",
+        "coincide": true
+      },
+      {
+        "versao": "20261114013120",
+        "nome": "resultado_do_mes",
+        "md5_git": "05f10b59896103ccf88b5c88fc1a82bf",
+        "md5_registrado": "05f10b59896103ccf88b5c88fc1a82bf",
+        "coincide": true
+      },
+      {
+        "versao": "20261114013159",
+        "nome": "previsao_de_caixa",
+        "md5_git": "7292b5793b0b7f748c53e867d92505fe",
+        "md5_registrado": "7292b5793b0b7f748c53e867d92505fe",
+        "coincide": true
+      }
+    ]
+  }
+}

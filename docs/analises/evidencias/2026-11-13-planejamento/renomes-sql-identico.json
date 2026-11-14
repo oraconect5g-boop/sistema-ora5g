@@ -1,0 +1,62 @@
+[
+  {
+    "antes": "packages/banco/supabase/migrations/20261113152157_financeiro_conciliacao.sql",
+    "depois": "packages/banco/supabase/migrations/20261114012326_financeiro_conciliacao.sql",
+    "sha": "8080e55d4563bbb32d6e65c09432451323a98f39"
+  },
+  {
+    "antes": "packages/banco/supabase/migrations/20261113155426_estoque_painel.sql",
+    "depois": "packages/banco/supabase/migrations/20261114012407_estoque_painel.sql",
+    "sha": "6295222e306c5bda6e3a501af4ac8e76654a77f4"
+  },
+  {
+    "antes": "packages/banco/supabase/migrations/20261113162509_connect_painel.sql",
+    "depois": "packages/banco/supabase/migrations/20261114012431_connect_painel.sql",
+    "sha": "cd99e57679d72004c06ff05ca96a8d3c1028b848"
+  },
+  {
+    "antes": "packages/banco/supabase/migrations/20261113165651_metas.sql",
+    "depois": "packages/banco/supabase/migrations/20261114012538_metas.sql",
+    "sha": "796de44a780fa125020421f185582b71e0d85ce7"
+  },
+  {
+    "antes": "packages/banco/supabase/migrations/20261113181647_metas_lojas.sql",
+    "depois": "packages/banco/supabase/migrations/20261114012604_metas_lojas.sql",
+    "sha": "4c0292b21b0a46bbb71e4249a94f6146c810bb75"
+  },
+  {
+    "antes": "packages/banco/supabase/migrations/20261113184205_equipe_por_papel.sql",
+    "depois": "packages/banco/supabase/migrations/20261114012623_equipe_por_papel.sql",
+    "sha": "ea24a9d87986bd22b16d740156ecda56f83347f8"
+  },
+  {
+    "antes": "packages/banco/supabase/migrations/20261113185806_venda_item_regra_de_preco.sql",
+    "depois": "packages/banco/supabase/migrations/20261114012647_venda_item_regra_de_preco.sql",
+    "sha": "dc64e7278de837be507169a641b08342bac19d34"
+  },
+  {
+    "antes": "packages/banco/supabase/migrations/20261113191951_financeiras_a_receber.sql",
+    "depois": "packages/banco/supabase/migrations/20261114012722_financeiras_a_receber.sql",
+    "sha": "d723a0a283dd0d7ad8e8d7bbb8e9d372307fd473"
+  },
+  {
+    "antes": "packages/banco/supabase/migrations/20261113200029_caixa_saida_autorizada.sql",
+    "depois": "packages/banco/supabase/migrations/20261114012802_caixa_saida_autorizada.sql",
+    "sha": "ef4d01e49ae25362cfae85662559df50d9272d89"
+  },
+  {
+    "antes": "packages/banco/supabase/migrations/20261113212437_contas_a_pagar.sql",
+    "depois": "packages/banco/supabase/migrations/20261114012952_contas_a_pagar.sql",
+    "sha": "f09050c863cf8391cd25119391fef7ef878712d3"
+  },
+  {
+    "antes": "packages/banco/supabase/migrations/20261113235217_resultado_do_mes.sql",
+    "depois": "packages/banco/supabase/migrations/20261114013120_resultado_do_mes.sql",
+    "sha": "17157365e9caca359c68fb507bb2e9e4dc570de1"
+  },
+  {
+    "antes": "packages/banco/supabase/migrations/20261114003953_previsao_de_caixa.sql",
+    "depois": "packages/banco/supabase/migrations/20261114013159_previsao_de_caixa.sql",
+    "sha": "f8e3baedd218783c68ae03709e9ef891ee6cf1c5"
+  }
+]

@@ -1,0 +1,2552 @@
+{
+  "base": "51417a8",
+  "migrations": 51,
+  "ambiente": "PGlite descartável, não é o Supabase remoto",
+  "funcoes": [
+    {
+      "esquema": "privado",
+      "nome": "abaixo_do_custo",
+      "assinatura": "privado.abaixo_do_custo(venda_itens)",
+      "security_definer": true,
+      "authenticated": false,
+      "anon": false
+    },
+    {
+      "esquema": "privado",
+      "nome": "atualizar_espera_de_aprovacao",
+      "assinatura": "privado.atualizar_espera_de_aprovacao(uuid)",
+      "security_definer": true,
+      "authenticated": false,
+      "anon": false
+    },
+    {
+      "esquema": "privado",
+      "nome": "atualizar_saldo",
+      "assinatura": "privado.atualizar_saldo()",
+      "security_definer": true,
+      "authenticated": false,
+      "anon": false
+    },
+    {
+      "esquema": "privado",
+      "nome": "auditar_mudanca",
+      "assinatura": "privado.auditar_mudanca()",
+      "security_definer": true,
+      "authenticated": false,
+      "anon": false
+    },
+    {
+      "esquema": "privado",
+      "nome": "auditoria_completar_organizacao",
+      "assinatura": "privado.auditoria_completar_organizacao()",
+      "security_definer": false,
+      "authenticated": true,
+      "anon": true
+    },
+    {
+      "esquema": "privado",
+      "nome": "auditoria_imutavel",
+      "assinatura": "privado.auditoria_imutavel()",
+      "security_definer": false,
+      "authenticated": true,
+      "anon": false
+    },
+    {
+      "esquema": "privado",
+      "nome": "chave_de_acesso_valida",
+      "assinatura": "privado.chave_de_acesso_valida(text)",
+      "security_definer": false,
+      "authenticated": false,
+      "anon": false
+    },
+    {
+      "esquema": "privado",
+      "nome": "cliente_compras",
+      "assinatura": "privado.cliente_compras(uuid)",
+      "security_definer": true,
+      "authenticated": false,
+      "anon": false
+    },
+    {
+      "esquema": "privado",
+      "nome": "cliente_consultas_recentes",
+      "assinatura": "privado.cliente_consultas_recentes()",
+      "security_definer": true,
+      "authenticated": false,
+      "anon": false
+    },
+    {
+      "esquema": "privado",
+      "nome": "cliente_contexto",
+      "assinatura": "privado.cliente_contexto(text)",
+      "security_definer": true,
+      "authenticated": false,
+      "anon": false
+    },
+    {
+      "esquema": "privado",
+      "nome": "cliente_explicacao",
+      "assinatura": "privado.cliente_explicacao(integer,integer,timestamp with time zone)",
+      "security_definer": false,
+      "authenticated": false,
+      "anon": false
+    },
+    {
+      "esquema": "privado",
+      "nome": "cliente_mesclado_fixo",
+      "assinatura": "privado.cliente_mesclado_fixo()",
+      "security_definer": false,
+      "authenticated": false,
+      "anon": false
+    },
+    {
+      "esquema": "privado",
+      "nome": "cliente_pode_contatar",
+      "assinatura": "privado.cliente_pode_contatar(uuid,text,text)",
+      "security_definer": true,
+      "authenticated": false,
+      "anon": false
+    },
+    {
+      "esquema": "privado",
+      "nome": "cliente_registrar_acesso",
+      "assinatura": "privado.cliente_registrar_acesso(text,uuid,uuid,uuid,jsonb)",
+      "security_definer": true,
+      "authenticated": false,
+      "anon": false
+    },
+    {
+      "esquema": "privado",
+      "nome": "cliente_resumo",
+      "assinatura": "privado.cliente_resumo(uuid,text,text)",
+      "security_definer": true,
+      "authenticated": false,
+      "anon": false
+    },
+    {
+      "esquema": "privado",
+      "nome": "cliente_segmento",
+      "assinatura": "privado.cliente_segmento(integer,integer,timestamp with time zone,timestamp with time zone)",
+      "security_definer": false,
+      "authenticated": false,
+      "anon": false
+    },
+    {
+      "esquema": "privado",
+      "nome": "cnpj_valido",
+      "assinatura": "privado.cnpj_valido(text)",
+      "security_definer": false,
+      "authenticated": true,
+      "anon": false
+    },
+    {
+      "esquema": "privado",
+      "nome": "configuracao_vigente",
+      "assinatura": "privado.configuracao_vigente(uuid)",
+      "security_definer": true,
+      "authenticated": false,
+      "anon": false
+    },
+    {
+      "esquema": "privado",
+      "nome": "connect_evento",
+      "assinatura": "privado.connect_evento(connect_operacoes,text,text,text,integer,text,jsonb)",
+      "security_definer": true,
+      "authenticated": false,
+      "anon": false
+    },
+    {
+      "esquema": "privado",
+      "nome": "connect_operacao_travada",
+      "assinatura": "privado.connect_operacao_travada(uuid)",
+      "security_definer": true,
+      "authenticated": false,
+      "anon": false
+    },
+    {
+      "esquema": "privado",
+      "nome": "connect_resumo_titular",
+      "assinatura": "privado.connect_resumo_titular(uuid,jsonb)",
+      "security_definer": true,
+      "authenticated": false,
+      "anon": false
+    },
+    {
+      "esquema": "privado",
+      "nome": "connect_texto",
+      "assinatura": "privado.connect_texto(jsonb,text,text,integer,boolean)",
+      "security_definer": false,
+      "authenticated": false,
+      "anon": false
+    },
+    {
+      "esquema": "privado",
+      "nome": "contas_pagar_categorias_da_organizacao",
+      "assinatura": "privado.contas_pagar_categorias_da_organizacao()",
+      "security_definer": true,
+      "authenticated": false,
+      "anon": false
+    },
+    {
+      "esquema": "privado",
+      "nome": "contas_pagar_semear_categorias",
+      "assinatura": "privado.contas_pagar_semear_categorias(uuid)",
+      "security_definer": true,
+      "authenticated": false,
+      "anon": false
+    },
+    {
+      "esquema": "privado",
+      "nome": "conteudo_do_item",
+      "assinatura": "privado.conteudo_do_item(venda_itens)",
+      "security_definer": false,
+      "authenticated": false,
+      "anon": false
+    },
+    {
+      "esquema": "privado",
+      "nome": "cpf_valido",
+      "assinatura": "privado.cpf_valido(text)",
+      "security_definer": false,
+      "authenticated": false,
+      "anon": false
+    },
+    {
+      "esquema": "privado",
+      "nome": "crm_atende_na_loja",
+      "assinatura": "privado.crm_atende_na_loja(uuid,uuid)",
+      "security_definer": true,
+      "authenticated": false,
+      "anon": false
+    },
+    {
+      "esquema": "privado",
+      "nome": "crm_criar_segredo",
+      "assinatura": "privado.crm_criar_segredo()",
+      "security_definer": true,
+      "authenticated": false,
+      "anon": false
+    },
+    {
+      "esquema": "privado",
+      "nome": "crm_evento",
+      "assinatura": "privado.crm_evento(uuid,uuid,text,text,text,text)",
+      "security_definer": true,
+      "authenticated": false,
+      "anon": false
+    },
+    {
+      "esquema": "privado",
+      "nome": "crm_pode_conduzir",
+      "assinatura": "privado.crm_pode_conduzir(uuid,uuid)",
+      "security_definer": true,
+      "authenticated": false,
+      "anon": false
+    },
+    {
+      "esquema": "privado",
+      "nome": "crm_proximo_passo",
+      "assinatura": "privado.crm_proximo_passo(jsonb,timestamp with time zone)",
+      "security_definer": false,
+      "authenticated": false,
+      "anon": false
+    },
+    {
+      "esquema": "privado",
+      "nome": "custo_atual",
+      "assinatura": "privado.custo_atual(uuid)",
+      "security_definer": true,
+      "authenticated": false,
+      "anon": false
+    },
+    {
+      "esquema": "privado",
+      "nome": "custo_vigente",
+      "assinatura": "privado.custo_vigente(uuid)",
+      "security_definer": true,
+      "authenticated": false,
+      "anon": false
+    },
+    {
+      "esquema": "privado",
+      "nome": "dinheiro_no_caixa",
+      "assinatura": "privado.dinheiro_no_caixa(uuid)",
+      "security_definer": true,
+      "authenticated": false,
+      "anon": false
+    },
+    {
+      "esquema": "privado",
+      "nome": "divergencias_estoque",
+      "assinatura": "privado.divergencias_estoque(uuid)",
+      "security_definer": true,
+      "authenticated": false,
+      "anon": false
+    },
+    {
+      "esquema": "privado",
+      "nome": "dono_da_organizacao",
+      "assinatura": "privado.dono_da_organizacao(uuid)",
+      "security_definer": true,
+      "authenticated": false,
+      "anon": false
+    },
+    {
+      "esquema": "privado",
+      "nome": "encerrar_reserva",
+      "assinatura": "privado.encerrar_reserva(uuid,text,boolean)",
+      "security_definer": true,
+      "authenticated": false,
+      "anon": false
+    },
+    {
+      "esquema": "privado",
+      "nome": "entrada_em_json",
+      "assinatura": "privado.entrada_em_json(uuid,boolean,boolean)",
+      "security_definer": true,
+      "authenticated": false,
+      "anon": false
+    },
+    {
+      "esquema": "privado",
+      "nome": "exigir_motivo",
+      "assinatura": "privado.exigir_motivo(text)",
+      "security_definer": false,
+      "authenticated": false,
+      "anon": false
+    },
+    {
+      "esquema": "privado",
+      "nome": "expirar_reservas",
+      "assinatura": "privado.expirar_reservas(uuid,uuid)",
+      "security_definer": true,
+      "authenticated": false,
+      "anon": false
+    },
+    {
+      "esquema": "privado",
+      "nome": "fim_do_turno",
+      "assinatura": "privado.fim_do_turno(timestamp with time zone)",
+      "security_definer": false,
+      "authenticated": false,
+      "anon": false
+    },
+    {
+      "esquema": "privado",
+      "nome": "gere_catalogo",
+      "assinatura": "privado.gere_catalogo(uuid)",
+      "security_definer": true,
+      "authenticated": false,
+      "anon": false
+    },
+    {
+      "esquema": "privado",
+      "nome": "gere_lojas_da_organizacao",
+      "assinatura": "privado.gere_lojas_da_organizacao(uuid)",
+      "security_definer": true,
+      "authenticated": false,
+      "anon": false
+    },
+    {
+      "esquema": "privado",
+      "nome": "gere_organizacao",
+      "assinatura": "privado.gere_organizacao(uuid)",
+      "security_definer": true,
+      "authenticated": false,
+      "anon": false
+    },
+    {
+      "esquema": "privado",
+      "nome": "horarios_validos",
+      "assinatura": "privado.horarios_validos(jsonb)",
+      "security_definer": false,
+      "authenticated": false,
+      "anon": false
+    },
+    {
+      "esquema": "privado",
+      "nome": "iccid_valido",
+      "assinatura": "privado.iccid_valido(text)",
+      "security_definer": false,
+      "authenticated": false,
+      "anon": false
+    },
+    {
+      "esquema": "privado",
+      "nome": "imei_valido",
+      "assinatura": "privado.imei_valido(text)",
+      "security_definer": false,
+      "authenticated": false,
+      "anon": false
+    },
+    {
+      "esquema": "privado",
+      "nome": "importacao_comparar",
+      "assinatura": "privado.importacao_comparar(uuid,jsonb)",
+      "security_definer": true,
+      "authenticated": false,
+      "anon": false
+    },
+    {
+      "esquema": "privado",
+      "nome": "importacao_conferir_travas",
+      "assinatura": "privado.importacao_conferir_travas(uuid,text)",
+      "security_definer": true,
+      "authenticated": false,
+      "anon": false
+    },
+    {
+      "esquema": "privado",
+      "nome": "importacao_recomparar",
+      "assinatura": "privado.importacao_recomparar(uuid)",
+      "security_definer": true,
+      "authenticated": false,
+      "anon": false
+    },
+    {
+      "esquema": "privado",
+      "nome": "importacao_totais",
+      "assinatura": "privado.importacao_totais(uuid)",
+      "security_definer": true,
+      "authenticated": false,
+      "anon": false
+    },
+    {
+      "esquema": "privado",
+      "nome": "item_saiu_por_estorno_de_entrada",
+      "assinatura": "privado.item_saiu_por_estorno_de_entrada(uuid)",
+      "security_definer": true,
+      "authenticated": false,
+      "anon": false
+    },
+    {
+      "esquema": "privado",
+      "nome": "item_so_teve_recebimentos",
+      "assinatura": "privado.item_so_teve_recebimentos(uuid)",
+      "security_definer": true,
+      "authenticated": false,
+      "anon": false
+    },
+    {
+      "esquema": "privado",
+      "nome": "lancar_movimento",
+      "assinatura": "privado.lancar_movimento(uuid,uuid,integer,text,uuid,text,text,text,text,uuid)",
+      "security_definer": true,
+      "authenticated": false,
+      "anon": false
+    },
+    {
+      "esquema": "privado",
+      "nome": "linha_valida",
+      "assinatura": "privado.linha_valida(text)",
+      "security_definer": false,
+      "authenticated": false,
+      "anon": false
+    },
+    {
+      "esquema": "privado",
+      "nome": "livro_imutavel",
+      "assinatura": "privado.livro_imutavel()",
+      "security_definer": false,
+      "authenticated": false,
+      "anon": false
+    },
+    {
+      "esquema": "privado",
+      "nome": "local_de_excecao_nao_vende",
+      "assinatura": "privado.local_de_excecao_nao_vende()",
+      "security_definer": true,
+      "authenticated": false,
+      "anon": false
+    },
+    {
+      "esquema": "privado",
+      "nome": "loja_ativa_para_movimento",
+      "assinatura": "privado.loja_ativa_para_movimento()",
+      "security_definer": false,
+      "authenticated": false,
+      "anon": false
+    },
+    {
+      "esquema": "privado",
+      "nome": "luhn_valido",
+      "assinatura": "privado.luhn_valido(text)",
+      "security_definer": false,
+      "authenticated": false,
+      "anon": false
+    },
+    {
+      "esquema": "privado",
+      "nome": "mascara_documento",
+      "assinatura": "privado.mascara_documento(text)",
+      "security_definer": false,
+      "authenticated": false,
+      "anon": false
+    },
+    {
+      "esquema": "privado",
+      "nome": "mascara_email",
+      "assinatura": "privado.mascara_email(text)",
+      "security_definer": false,
+      "authenticated": false,
+      "anon": false
+    },
+    {
+      "esquema": "privado",
+      "nome": "mascara_telefone",
+      "assinatura": "privado.mascara_telefone(text)",
+      "security_definer": false,
+      "authenticated": false,
+      "anon": false
+    },
+    {
+      "esquema": "privado",
+      "nome": "mascarar_documento",
+      "assinatura": "privado.mascarar_documento(text)",
+      "security_definer": false,
+      "authenticated": false,
+      "anon": false
+    },
+    {
+      "esquema": "privado",
+      "nome": "maximo_sem_aprovacao",
+      "assinatura": "privado.maximo_sem_aprovacao(venda_itens)",
+      "security_definer": true,
+      "authenticated": false,
+      "anon": false
+    },
+    {
+      "esquema": "privado",
+      "nome": "meio_com_comprovante",
+      "assinatura": "privado.meio_com_comprovante(text)",
+      "security_definer": false,
+      "authenticated": false,
+      "anon": false
+    },
+    {
+      "esquema": "privado",
+      "nome": "meio_financeira",
+      "assinatura": "privado.meio_financeira(text)",
+      "security_definer": false,
+      "authenticated": false,
+      "anon": false
+    },
+    {
+      "esquema": "privado",
+      "nome": "meio_liquidavel",
+      "assinatura": "privado.meio_liquidavel(text)",
+      "security_definer": false,
+      "authenticated": false,
+      "anon": false
+    },
+    {
+      "esquema": "privado",
+      "nome": "meio_provedor",
+      "assinatura": "privado.meio_provedor(text)",
+      "security_definer": false,
+      "authenticated": false,
+      "anon": false
+    },
+    {
+      "esquema": "privado",
+      "nome": "meio_valido",
+      "assinatura": "privado.meio_valido(text)",
+      "security_definer": false,
+      "authenticated": false,
+      "anon": false
+    },
+    {
+      "esquema": "privado",
+      "nome": "meu_caixa_aberto",
+      "assinatura": "privado.meu_caixa_aberto()",
+      "security_definer": true,
+      "authenticated": false,
+      "anon": false
+    },
+    {
+      "esquema": "privado",
+      "nome": "minha_venda_aberta",
+      "assinatura": "privado.minha_venda_aberta(uuid)",
+      "security_definer": true,
+      "authenticated": false,
+      "anon": false
+    },
+    {
+      "esquema": "privado",
+      "nome": "nota_documento",
+      "assinatura": "privado.nota_documento(jsonb)",
+      "security_definer": false,
+      "authenticated": false,
+      "anon": false
+    },
+    {
+      "esquema": "privado",
+      "nome": "nota_evento",
+      "assinatura": "privado.nota_evento(notas_pedidos,text,text)",
+      "security_definer": true,
+      "authenticated": false,
+      "anon": false
+    },
+    {
+      "esquema": "privado",
+      "nome": "nota_para_aprovar",
+      "assinatura": "privado.nota_para_aprovar(uuid)",
+      "security_definer": true,
+      "authenticated": false,
+      "anon": false
+    },
+    {
+      "esquema": "privado",
+      "nome": "notas_da_venda_cancelada",
+      "assinatura": "privado.notas_da_venda_cancelada()",
+      "security_definer": true,
+      "authenticated": false,
+      "anon": false
+    },
+    {
+      "esquema": "privado",
+      "nome": "organizacoes_com_permissao",
+      "assinatura": "privado.organizacoes_com_permissao(text)",
+      "security_definer": true,
+      "authenticated": true,
+      "anon": false
+    },
+    {
+      "esquema": "privado",
+      "nome": "organizacoes_do_catalogo",
+      "assinatura": "privado.organizacoes_do_catalogo()",
+      "security_definer": true,
+      "authenticated": true,
+      "anon": false
+    },
+    {
+      "esquema": "privado",
+      "nome": "organizacoes_que_enviam_fotos",
+      "assinatura": "privado.organizacoes_que_enviam_fotos()",
+      "security_definer": true,
+      "authenticated": true,
+      "anon": false
+    },
+    {
+      "esquema": "privado",
+      "nome": "papel_de_direcao",
+      "assinatura": "privado.papel_de_direcao(text)",
+      "security_definer": false,
+      "authenticated": false,
+      "anon": false
+    },
+    {
+      "esquema": "privado",
+      "nome": "perfis_que_gero",
+      "assinatura": "privado.perfis_que_gero()",
+      "security_definer": true,
+      "authenticated": true,
+      "anon": false
+    },
+    {
+      "esquema": "privado",
+      "nome": "pessoa_gere_equipe",
+      "assinatura": "privado.pessoa_gere_equipe(uuid,uuid,text)",
+      "security_definer": true,
+      "authenticated": false,
+      "anon": false
+    },
+    {
+      "esquema": "privado",
+      "nome": "pode_alterar_preco",
+      "assinatura": "privado.pode_alterar_preco(uuid,uuid)",
+      "security_definer": true,
+      "authenticated": false,
+      "anon": false
+    },
+    {
+      "esquema": "privado",
+      "nome": "pode_gerir_conta_pagar",
+      "assinatura": "privado.pode_gerir_conta_pagar(uuid,uuid)",
+      "security_definer": true,
+      "authenticated": true,
+      "anon": false
+    },
+    {
+      "esquema": "privado",
+      "nome": "preco_geral_aberto",
+      "assinatura": "privado.preco_geral_aberto(uuid)",
+      "security_definer": true,
+      "authenticated": false,
+      "anon": false
+    },
+    {
+      "esquema": "privado",
+      "nome": "preco_vigente_linha",
+      "assinatura": "privado.preco_vigente_linha(uuid,uuid,text,timestamp with time zone)",
+      "security_definer": true,
+      "authenticated": false,
+      "anon": false
+    },
+    {
+      "esquema": "privado",
+      "nome": "precos_protegidos",
+      "assinatura": "privado.precos_protegidos()",
+      "security_definer": false,
+      "authenticated": false,
+      "anon": false
+    },
+    {
+      "esquema": "privado",
+      "nome": "proteger_chip_com_ativacao",
+      "assinatura": "privado.proteger_chip_com_ativacao()",
+      "security_definer": true,
+      "authenticated": false,
+      "anon": false
+    },
+    {
+      "esquema": "privado",
+      "nome": "proteger_posicao_item",
+      "assinatura": "privado.proteger_posicao_item()",
+      "security_definer": false,
+      "authenticated": false,
+      "anon": false
+    },
+    {
+      "esquema": "privado",
+      "nome": "proteger_venda_com_connect",
+      "assinatura": "privado.proteger_venda_com_connect()",
+      "security_definer": true,
+      "authenticated": false,
+      "anon": false
+    },
+    {
+      "esquema": "privado",
+      "nome": "proteger_venda_com_devolucao",
+      "assinatura": "privado.proteger_venda_com_devolucao()",
+      "security_definer": true,
+      "authenticated": false,
+      "anon": false
+    },
+    {
+      "esquema": "privado",
+      "nome": "reconciliar_identidades_do_catalogo",
+      "assinatura": "privado.reconciliar_identidades_do_catalogo()",
+      "security_definer": true,
+      "authenticated": false,
+      "anon": false
+    },
+    {
+      "esquema": "privado",
+      "nome": "registrar_identificadores",
+      "assinatura": "privado.registrar_identificadores()",
+      "security_definer": true,
+      "authenticated": false,
+      "anon": false
+    },
+    {
+      "esquema": "privado",
+      "nome": "registrar_item_serializado",
+      "assinatura": "privado.registrar_item_serializado(uuid,uuid,text,text,text,text,text,uuid,text,text)",
+      "security_definer": true,
+      "authenticated": false,
+      "anon": false
+    },
+    {
+      "esquema": "privado",
+      "nome": "sessao_atual",
+      "assinatura": "privado.sessao_atual()",
+      "security_definer": false,
+      "authenticated": true,
+      "anon": false
+    },
+    {
+      "esquema": "privado",
+      "nome": "sessao_no_turno",
+      "assinatura": "privado.sessao_no_turno()",
+      "security_definer": true,
+      "authenticated": false,
+      "anon": false
+    },
+    {
+      "esquema": "privado",
+      "nome": "situacao_do_dinheiro",
+      "assinatura": "privado.situacao_do_dinheiro(venda_pagamentos)",
+      "security_definer": false,
+      "authenticated": false,
+      "anon": false
+    },
+    {
+      "esquema": "privado",
+      "nome": "so_desfecho_do_pendente",
+      "assinatura": "privado.so_desfecho_do_pendente()",
+      "security_definer": false,
+      "authenticated": false,
+      "anon": false
+    },
+    {
+      "esquema": "privado",
+      "nome": "so_insercao",
+      "assinatura": "privado.so_insercao()",
+      "security_definer": false,
+      "authenticated": false,
+      "anon": false
+    },
+    {
+      "esquema": "privado",
+      "nome": "telefone_normalizado",
+      "assinatura": "privado.telefone_normalizado(text)",
+      "security_definer": false,
+      "authenticated": false,
+      "anon": false
+    },
+    {
+      "esquema": "privado",
+      "nome": "terminal_do_pagamento",
+      "assinatura": "privado.terminal_do_pagamento(uuid,text,text)",
+      "security_definer": true,
+      "authenticated": false,
+      "anon": false
+    },
+    {
+      "esquema": "privado",
+      "nome": "tipo_da_variante",
+      "assinatura": "privado.tipo_da_variante(uuid)",
+      "security_definer": true,
+      "authenticated": false,
+      "anon": false
+    },
+    {
+      "esquema": "privado",
+      "nome": "transferencia_travada",
+      "assinatura": "privado.transferencia_travada(uuid)",
+      "security_definer": true,
+      "authenticated": false,
+      "anon": false
+    },
+    {
+      "esquema": "privado",
+      "nome": "trava_da_chave",
+      "assinatura": "privado.trava_da_chave(text,uuid,text)",
+      "security_definer": false,
+      "authenticated": false,
+      "anon": false
+    },
+    {
+      "esquema": "privado",
+      "nome": "travar_preco",
+      "assinatura": "privado.travar_preco(uuid,uuid,uuid,text)",
+      "security_definer": false,
+      "authenticated": false,
+      "anon": false
+    },
+    {
+      "esquema": "privado",
+      "nome": "trocar_preco_geral",
+      "assinatura": "privado.trocar_preco_geral(uuid,uuid,bigint,text)",
+      "security_definer": true,
+      "authenticated": false,
+      "anon": false
+    },
+    {
+      "esquema": "privado",
+      "nome": "turno_valido",
+      "assinatura": "privado.turno_valido(timestamp with time zone,timestamp with time zone)",
+      "security_definer": false,
+      "authenticated": false,
+      "anon": false
+    },
+    {
+      "esquema": "privado",
+      "nome": "unidades_com_permissao",
+      "assinatura": "privado.unidades_com_permissao(text)",
+      "security_definer": true,
+      "authenticated": true,
+      "anon": false
+    },
+    {
+      "esquema": "privado",
+      "nome": "unidades_visiveis",
+      "assinatura": "privado.unidades_visiveis()",
+      "security_definer": true,
+      "authenticated": true,
+      "anon": false
+    },
+    {
+      "esquema": "privado",
+      "nome": "usuario_ativo",
+      "assinatura": "privado.usuario_ativo()",
+      "security_definer": true,
+      "authenticated": true,
+      "anon": false
+    },
+    {
+      "esquema": "privado",
+      "nome": "vale_no_pagamento",
+      "assinatura": "privado.vale_no_pagamento()",
+      "security_definer": true,
+      "authenticated": false,
+      "anon": false
+    },
+    {
+      "esquema": "privado",
+      "nome": "validar_item_serializado",
+      "assinatura": "privado.validar_item_serializado()",
+      "security_definer": false,
+      "authenticated": false,
+      "anon": false
+    },
+    {
+      "esquema": "privado",
+      "nome": "validar_movimento",
+      "assinatura": "privado.validar_movimento()",
+      "security_definer": true,
+      "authenticated": false,
+      "anon": false
+    },
+    {
+      "esquema": "privado",
+      "nome": "validar_unidade",
+      "assinatura": "privado.validar_unidade()",
+      "security_definer": false,
+      "authenticated": true,
+      "anon": false
+    },
+    {
+      "esquema": "privado",
+      "nome": "validar_vinculo",
+      "assinatura": "privado.validar_vinculo()",
+      "security_definer": false,
+      "authenticated": true,
+      "anon": false
+    },
+    {
+      "esquema": "privado",
+      "nome": "variante_com_estoque",
+      "assinatura": "privado.variante_com_estoque(uuid)",
+      "security_definer": true,
+      "authenticated": false,
+      "anon": false
+    },
+    {
+      "esquema": "privado",
+      "nome": "variante_usada",
+      "assinatura": "privado.variante_usada(uuid)",
+      "security_definer": true,
+      "authenticated": false,
+      "anon": false
+    },
+    {
+      "esquema": "privado",
+      "nome": "vinculos_vigentes",
+      "assinatura": "privado.vinculos_vigentes()",
+      "security_definer": true,
+      "authenticated": true,
+      "anon": false
+    },
+    {
+      "esquema": "public",
+      "nome": "abrir_caixa",
+      "assinatura": "abrir_caixa(bigint,text)",
+      "security_definer": true,
+      "authenticated": true,
+      "anon": false
+    },
+    {
+      "esquema": "public",
+      "nome": "adicionar_item",
+      "assinatura": "adicionar_item(uuid,uuid,uuid,integer,text)",
+      "security_definer": true,
+      "authenticated": true,
+      "anon": false
+    },
+    {
+      "esquema": "public",
+      "nome": "alterar_situacao_pessoa",
+      "assinatura": "alterar_situacao_pessoa(uuid,text,text)",
+      "security_definer": true,
+      "authenticated": true,
+      "anon": false
+    },
+    {
+      "esquema": "public",
+      "nome": "aplicar_desconto",
+      "assinatura": "aplicar_desconto(uuid,bigint)",
+      "security_definer": true,
+      "authenticated": true,
+      "anon": false
+    },
+    {
+      "esquema": "public",
+      "nome": "atividade_criar",
+      "assinatura": "atividade_criar(jsonb,text)",
+      "security_definer": true,
+      "authenticated": true,
+      "anon": false
+    },
+    {
+      "esquema": "public",
+      "nome": "atividade_encerrar",
+      "assinatura": "atividade_encerrar(uuid,boolean,text)",
+      "security_definer": true,
+      "authenticated": true,
+      "anon": false
+    },
+    {
+      "esquema": "public",
+      "nome": "caixa_cancelar_saida",
+      "assinatura": "caixa_cancelar_saida(uuid)",
+      "security_definer": true,
+      "authenticated": true,
+      "anon": false
+    },
+    {
+      "esquema": "public",
+      "nome": "caixa_decidir_saida",
+      "assinatura": "caixa_decidir_saida(uuid,boolean,text)",
+      "security_definer": true,
+      "authenticated": true,
+      "anon": false
+    },
+    {
+      "esquema": "public",
+      "nome": "caixa_pedir_saida",
+      "assinatura": "caixa_pedir_saida(bigint,text,text)",
+      "security_definer": true,
+      "authenticated": true,
+      "anon": false
+    },
+    {
+      "esquema": "public",
+      "nome": "cancelar_convite",
+      "assinatura": "cancelar_convite(uuid,text)",
+      "security_definer": true,
+      "authenticated": true,
+      "anon": false
+    },
+    {
+      "esquema": "public",
+      "nome": "cancelar_venda",
+      "assinatura": "cancelar_venda(uuid,text)",
+      "security_definer": true,
+      "authenticated": true,
+      "anon": false
+    },
+    {
+      "esquema": "public",
+      "nome": "catalogo_definir_politica_desconto",
+      "assinatura": "catalogo_definir_politica_desconto(uuid,integer,integer,text)",
+      "security_definer": true,
+      "authenticated": true,
+      "anon": false
+    },
+    {
+      "esquema": "public",
+      "nome": "catalogo_salvar_categoria",
+      "assinatura": "catalogo_salvar_categoria(uuid,uuid,text,boolean,text)",
+      "security_definer": true,
+      "authenticated": true,
+      "anon": false
+    },
+    {
+      "esquema": "public",
+      "nome": "catalogo_salvar_marca",
+      "assinatura": "catalogo_salvar_marca(uuid,uuid,text,text)",
+      "security_definer": true,
+      "authenticated": true,
+      "anon": false
+    },
+    {
+      "esquema": "public",
+      "nome": "catalogo_salvar_produto",
+      "assinatura": "catalogo_salvar_produto(uuid,uuid,text,text,uuid,uuid,text,text,boolean,boolean,text,text)",
+      "security_definer": true,
+      "authenticated": true,
+      "anon": false
+    },
+    {
+      "esquema": "public",
+      "nome": "catalogo_salvar_variante",
+      "assinatura": "catalogo_salvar_variante(uuid,uuid,text,text,text,text,text,integer,boolean,text)",
+      "security_definer": true,
+      "authenticated": true,
+      "anon": false
+    },
+    {
+      "esquema": "public",
+      "nome": "cliente_buscar",
+      "assinatura": "cliente_buscar(text,text)",
+      "security_definer": true,
+      "authenticated": true,
+      "anon": false
+    },
+    {
+      "esquema": "public",
+      "nome": "cliente_consentir",
+      "assinatura": "cliente_consentir(uuid,text,text,boolean,text)",
+      "security_definer": true,
+      "authenticated": true,
+      "anon": false
+    },
+    {
+      "esquema": "public",
+      "nome": "cliente_ficha",
+      "assinatura": "cliente_ficha(uuid)",
+      "security_definer": true,
+      "authenticated": true,
+      "anon": false
+    },
+    {
+      "esquema": "public",
+      "nome": "cliente_revelar",
+      "assinatura": "cliente_revelar(uuid,text)",
+      "security_definer": true,
+      "authenticated": true,
+      "anon": false
+    },
+    {
+      "esquema": "public",
+      "nome": "cliente_salvar",
+      "assinatura": "cliente_salvar(uuid,jsonb,text,text)",
+      "security_definer": true,
+      "authenticated": true,
+      "anon": false
+    },
+    {
+      "esquema": "public",
+      "nome": "clientes_duplicados",
+      "assinatura": "clientes_duplicados()",
+      "security_definer": true,
+      "authenticated": true,
+      "anon": false
+    },
+    {
+      "esquema": "public",
+      "nome": "clientes_marcar_diferentes",
+      "assinatura": "clientes_marcar_diferentes(uuid,uuid,text)",
+      "security_definer": true,
+      "authenticated": true,
+      "anon": false
+    },
+    {
+      "esquema": "public",
+      "nome": "clientes_mesclar",
+      "assinatura": "clientes_mesclar(uuid,uuid,text)",
+      "security_definer": true,
+      "authenticated": true,
+      "anon": false
+    },
+    {
+      "esquema": "public",
+      "nome": "clientes_segmentos",
+      "assinatura": "clientes_segmentos()",
+      "security_definer": true,
+      "authenticated": true,
+      "anon": false
+    },
+    {
+      "esquema": "public",
+      "nome": "concluir_venda",
+      "assinatura": "concluir_venda(uuid,jsonb,jsonb,text)",
+      "security_definer": true,
+      "authenticated": true,
+      "anon": false
+    },
+    {
+      "esquema": "public",
+      "nome": "conferir_caixa",
+      "assinatura": "conferir_caixa(uuid,text)",
+      "security_definer": true,
+      "authenticated": true,
+      "anon": false
+    },
+    {
+      "esquema": "public",
+      "nome": "conferir_item",
+      "assinatura": "conferir_item(uuid)",
+      "security_definer": true,
+      "authenticated": true,
+      "anon": false
+    },
+    {
+      "esquema": "public",
+      "nome": "conferir_retorno",
+      "assinatura": "conferir_retorno(uuid,boolean,text,text,text)",
+      "security_definer": true,
+      "authenticated": true,
+      "anon": false
+    },
+    {
+      "esquema": "public",
+      "nome": "confirmar_estorno_externo",
+      "assinatura": "confirmar_estorno_externo(uuid,text,text)",
+      "security_definer": true,
+      "authenticated": true,
+      "anon": false
+    },
+    {
+      "esquema": "public",
+      "nome": "connect_cancelar",
+      "assinatura": "connect_cancelar(uuid,text)",
+      "security_definer": true,
+      "authenticated": true,
+      "anon": false
+    },
+    {
+      "esquema": "public",
+      "nome": "connect_habilitar",
+      "assinatura": "connect_habilitar(text,boolean,text)",
+      "security_definer": true,
+      "authenticated": true,
+      "anon": false
+    },
+    {
+      "esquema": "public",
+      "nome": "connect_painel",
+      "assinatura": "connect_painel(timestamp with time zone,timestamp with time zone,uuid,uuid)",
+      "security_definer": false,
+      "authenticated": true,
+      "anon": false
+    },
+    {
+      "esquema": "public",
+      "nome": "connect_registrar",
+      "assinatura": "connect_registrar(text,jsonb,text)",
+      "security_definer": true,
+      "authenticated": true,
+      "anon": false
+    },
+    {
+      "esquema": "public",
+      "nome": "connect_resolver",
+      "assinatura": "connect_resolver(uuid,text,text)",
+      "security_definer": true,
+      "authenticated": true,
+      "anon": false
+    },
+    {
+      "esquema": "public",
+      "nome": "connect_worker_atualizar_referencias",
+      "assinatura": "connect_worker_atualizar_referencias(uuid,text,jsonb)",
+      "security_definer": true,
+      "authenticated": false,
+      "anon": false
+    },
+    {
+      "esquema": "public",
+      "nome": "connect_worker_operacoes_a_consultar",
+      "assinatura": "connect_worker_operacoes_a_consultar(uuid,text[],integer)",
+      "security_definer": true,
+      "authenticated": false,
+      "anon": false
+    },
+    {
+      "esquema": "public",
+      "nome": "connect_worker_registrar_consulta",
+      "assinatura": "connect_worker_registrar_consulta(uuid,jsonb)",
+      "security_definer": true,
+      "authenticated": false,
+      "anon": false
+    },
+    {
+      "esquema": "public",
+      "nome": "connect_worker_registrar_envio",
+      "assinatura": "connect_worker_registrar_envio(uuid,jsonb)",
+      "security_definer": true,
+      "authenticated": false,
+      "anon": false
+    },
+    {
+      "esquema": "public",
+      "nome": "connect_worker_reivindicar_envios",
+      "assinatura": "connect_worker_reivindicar_envios(uuid,text[],integer)",
+      "security_definer": true,
+      "authenticated": false,
+      "anon": false
+    },
+    {
+      "esquema": "public",
+      "nome": "conta_pagar_cancelar",
+      "assinatura": "conta_pagar_cancelar(uuid,text,boolean)",
+      "security_definer": true,
+      "authenticated": true,
+      "anon": false
+    },
+    {
+      "esquema": "public",
+      "nome": "conta_pagar_categoria_salvar",
+      "assinatura": "conta_pagar_categoria_salvar(uuid,text,boolean,boolean)",
+      "security_definer": true,
+      "authenticated": true,
+      "anon": false
+    },
+    {
+      "esquema": "public",
+      "nome": "conta_pagar_corrigir",
+      "assinatura": "conta_pagar_corrigir(uuid,jsonb,text)",
+      "security_definer": true,
+      "authenticated": true,
+      "anon": false
+    },
+    {
+      "esquema": "public",
+      "nome": "conta_pagar_desfazer_pagamento",
+      "assinatura": "conta_pagar_desfazer_pagamento(uuid,text)",
+      "security_definer": true,
+      "authenticated": true,
+      "anon": false
+    },
+    {
+      "esquema": "public",
+      "nome": "conta_pagar_lancar",
+      "assinatura": "conta_pagar_lancar(jsonb,text)",
+      "security_definer": true,
+      "authenticated": true,
+      "anon": false
+    },
+    {
+      "esquema": "public",
+      "nome": "conta_pagar_pagar",
+      "assinatura": "conta_pagar_pagar(uuid,date,bigint,text)",
+      "security_definer": true,
+      "authenticated": true,
+      "anon": false
+    },
+    {
+      "esquema": "public",
+      "nome": "contas_a_pagar_resumo",
+      "assinatura": "contas_a_pagar_resumo(uuid,boolean)",
+      "security_definer": false,
+      "authenticated": true,
+      "anon": false
+    },
+    {
+      "esquema": "public",
+      "nome": "convidar_pessoa",
+      "assinatura": "convidar_pessoa(uuid,text,text,text,uuid[],text)",
+      "security_definer": true,
+      "authenticated": true,
+      "anon": false
+    },
+    {
+      "esquema": "public",
+      "nome": "criar_venda",
+      "assinatura": "criar_venda(text)",
+      "security_definer": true,
+      "authenticated": true,
+      "anon": false
+    },
+    {
+      "esquema": "public",
+      "nome": "crm_agenda",
+      "assinatura": "crm_agenda()",
+      "security_definer": true,
+      "authenticated": true,
+      "anon": false
+    },
+    {
+      "esquema": "public",
+      "nome": "crm_funil",
+      "assinatura": "crm_funil()",
+      "security_definer": true,
+      "authenticated": true,
+      "anon": false
+    },
+    {
+      "esquema": "public",
+      "nome": "decidir_aprovacao",
+      "assinatura": "decidir_aprovacao(uuid,boolean,text)",
+      "security_definer": true,
+      "authenticated": true,
+      "anon": false
+    },
+    {
+      "esquema": "public",
+      "nome": "devolver_itens",
+      "assinatura": "devolver_itens(uuid,jsonb,jsonb,text,text)",
+      "security_definer": true,
+      "authenticated": true,
+      "anon": false
+    },
+    {
+      "esquema": "public",
+      "nome": "disponibilidade_na_rede",
+      "assinatura": "disponibilidade_na_rede(uuid)",
+      "security_definer": true,
+      "authenticated": true,
+      "anon": false
+    },
+    {
+      "esquema": "public",
+      "nome": "encerrar_vinculo",
+      "assinatura": "encerrar_vinculo(uuid,text)",
+      "security_definer": true,
+      "authenticated": true,
+      "anon": false
+    },
+    {
+      "esquema": "public",
+      "nome": "equipe_por_papel",
+      "assinatura": "equipe_por_papel(uuid)",
+      "security_definer": false,
+      "authenticated": true,
+      "anon": false
+    },
+    {
+      "esquema": "public",
+      "nome": "estoque_entrada",
+      "assinatura": "estoque_entrada(uuid,uuid,bigint)",
+      "security_definer": true,
+      "authenticated": true,
+      "anon": false
+    },
+    {
+      "esquema": "public",
+      "nome": "estoque_entradas",
+      "assinatura": "estoque_entradas(uuid,bigint,integer)",
+      "security_definer": true,
+      "authenticated": true,
+      "anon": false
+    },
+    {
+      "esquema": "public",
+      "nome": "estoque_estornar_entrada",
+      "assinatura": "estoque_estornar_entrada(uuid,text)",
+      "security_definer": true,
+      "authenticated": true,
+      "anon": false
+    },
+    {
+      "esquema": "public",
+      "nome": "estoque_na_rede",
+      "assinatura": "estoque_na_rede(uuid)",
+      "security_definer": true,
+      "authenticated": true,
+      "anon": false
+    },
+    {
+      "esquema": "public",
+      "nome": "estoque_painel",
+      "assinatura": "estoque_painel(uuid)",
+      "security_definer": false,
+      "authenticated": true,
+      "anon": false
+    },
+    {
+      "esquema": "public",
+      "nome": "estoque_registrar_entrada",
+      "assinatura": "estoque_registrar_entrada(uuid,text,uuid,text,jsonb,text,text)",
+      "security_definer": true,
+      "authenticated": true,
+      "anon": false
+    },
+    {
+      "esquema": "public",
+      "nome": "fechar_caixa",
+      "assinatura": "fechar_caixa(bigint,text)",
+      "security_definer": true,
+      "authenticated": true,
+      "anon": false
+    },
+    {
+      "esquema": "public",
+      "nome": "financeira_desfazer_recebimento",
+      "assinatura": "financeira_desfazer_recebimento(uuid,text)",
+      "security_definer": true,
+      "authenticated": true,
+      "anon": false
+    },
+    {
+      "esquema": "public",
+      "nome": "financeira_receber",
+      "assinatura": "financeira_receber(uuid,text,bigint,date)",
+      "security_definer": true,
+      "authenticated": true,
+      "anon": false
+    },
+    {
+      "esquema": "public",
+      "nome": "financeiras_a_receber",
+      "assinatura": "financeiras_a_receber()",
+      "security_definer": true,
+      "authenticated": true,
+      "anon": false
+    },
+    {
+      "esquema": "public",
+      "nome": "financeiro_painel",
+      "assinatura": "financeiro_painel(timestamp with time zone,timestamp with time zone,uuid,boolean)",
+      "security_definer": false,
+      "authenticated": true,
+      "anon": false
+    },
+    {
+      "esquema": "public",
+      "nome": "fiscal_definir_politica",
+      "assinatura": "fiscal_definir_politica(integer,text)",
+      "security_definer": true,
+      "authenticated": true,
+      "anon": false
+    },
+    {
+      "esquema": "public",
+      "nome": "fornecedor_salvar",
+      "assinatura": "fornecedor_salvar(uuid,uuid,text,text,text,boolean,text)",
+      "security_definer": true,
+      "authenticated": true,
+      "anon": false
+    },
+    {
+      "esquema": "public",
+      "nome": "identidade_bloqueios_a_aplicar",
+      "assinatura": "identidade_bloqueios_a_aplicar()",
+      "security_definer": true,
+      "authenticated": false,
+      "anon": false
+    },
+    {
+      "esquema": "public",
+      "nome": "identidade_concluir_convite",
+      "assinatura": "identidade_concluir_convite(uuid,uuid,boolean)",
+      "security_definer": true,
+      "authenticated": false,
+      "anon": false
+    },
+    {
+      "esquema": "public",
+      "nome": "identidade_convites_a_processar",
+      "assinatura": "identidade_convites_a_processar(integer)",
+      "security_definer": true,
+      "authenticated": false,
+      "anon": false
+    },
+    {
+      "esquema": "public",
+      "nome": "identidade_falha_convite",
+      "assinatura": "identidade_falha_convite(uuid,text)",
+      "security_definer": true,
+      "authenticated": false,
+      "anon": false
+    },
+    {
+      "esquema": "public",
+      "nome": "identidade_usuario_por_email",
+      "assinatura": "identidade_usuario_por_email(text)",
+      "security_definer": true,
+      "authenticated": false,
+      "anon": false
+    },
+    {
+      "esquema": "public",
+      "nome": "importacao_aplicar",
+      "assinatura": "importacao_aplicar(uuid,text,integer)",
+      "security_definer": true,
+      "authenticated": true,
+      "anon": false
+    },
+    {
+      "esquema": "public",
+      "nome": "importacao_catalogo_previa",
+      "assinatura": "importacao_catalogo_previa(uuid,text,text,jsonb,jsonb)",
+      "security_definer": true,
+      "authenticated": true,
+      "anon": false
+    },
+    {
+      "esquema": "public",
+      "nome": "importacao_descartar",
+      "assinatura": "importacao_descartar(uuid,text)",
+      "security_definer": true,
+      "authenticated": true,
+      "anon": false
+    },
+    {
+      "esquema": "public",
+      "nome": "importacao_desfazer",
+      "assinatura": "importacao_desfazer(uuid,text)",
+      "security_definer": true,
+      "authenticated": true,
+      "anon": false
+    },
+    {
+      "esquema": "public",
+      "nome": "inventario_abrir",
+      "assinatura": "inventario_abrir(uuid,uuid[],text,text)",
+      "security_definer": true,
+      "authenticated": true,
+      "anon": false
+    },
+    {
+      "esquema": "public",
+      "nome": "inventario_cancelar",
+      "assinatura": "inventario_cancelar(uuid,text)",
+      "security_definer": true,
+      "authenticated": true,
+      "anon": false
+    },
+    {
+      "esquema": "public",
+      "nome": "inventario_contar",
+      "assinatura": "inventario_contar(uuid,uuid,integer,text[])",
+      "security_definer": true,
+      "authenticated": true,
+      "anon": false
+    },
+    {
+      "esquema": "public",
+      "nome": "inventario_decidir",
+      "assinatura": "inventario_decidir(uuid,boolean,text)",
+      "security_definer": true,
+      "authenticated": true,
+      "anon": false
+    },
+    {
+      "esquema": "public",
+      "nome": "inventario_enviar",
+      "assinatura": "inventario_enviar(uuid,text)",
+      "security_definer": true,
+      "authenticated": true,
+      "anon": false
+    },
+    {
+      "esquema": "public",
+      "nome": "liberar_reserva",
+      "assinatura": "liberar_reserva(uuid)",
+      "security_definer": true,
+      "authenticated": true,
+      "anon": false
+    },
+    {
+      "esquema": "public",
+      "nome": "loja_atualizar",
+      "assinatura": "loja_atualizar(uuid,text,text,text,text,text)",
+      "security_definer": true,
+      "authenticated": true,
+      "anon": false
+    },
+    {
+      "esquema": "public",
+      "nome": "loja_criar",
+      "assinatura": "loja_criar(uuid,text,text,text,text,text,text,uuid,text)",
+      "security_definer": true,
+      "authenticated": true,
+      "anon": false
+    },
+    {
+      "esquema": "public",
+      "nome": "loja_definir_configuracao",
+      "assinatura": "loja_definir_configuracao(uuid,jsonb,timestamp with time zone,text)",
+      "security_definer": true,
+      "authenticated": true,
+      "anon": false
+    },
+    {
+      "esquema": "public",
+      "nome": "loja_definir_situacao",
+      "assinatura": "loja_definir_situacao(uuid,text,text)",
+      "security_definer": true,
+      "authenticated": true,
+      "anon": false
+    },
+    {
+      "esquema": "public",
+      "nome": "loja_historico",
+      "assinatura": "loja_historico(uuid)",
+      "security_definer": true,
+      "authenticated": true,
+      "anon": false
+    },
+    {
+      "esquema": "public",
+      "nome": "lojas_da_rede",
+      "assinatura": "lojas_da_rede()",
+      "security_definer": true,
+      "authenticated": true,
+      "anon": false
+    },
+    {
+      "esquema": "public",
+      "nome": "margem_itens",
+      "assinatura": "margem_itens(timestamp with time zone,timestamp with time zone,uuid,integer,integer)",
+      "security_definer": false,
+      "authenticated": true,
+      "anon": false
+    },
+    {
+      "esquema": "public",
+      "nome": "margem_painel",
+      "assinatura": "margem_painel(timestamp with time zone,timestamp with time zone,uuid)",
+      "security_definer": false,
+      "authenticated": true,
+      "anon": false
+    },
+    {
+      "esquema": "public",
+      "nome": "metas_definir",
+      "assinatura": "metas_definir(uuid,uuid,date,jsonb,text)",
+      "security_definer": true,
+      "authenticated": true,
+      "anon": false
+    },
+    {
+      "esquema": "public",
+      "nome": "metas_equipe",
+      "assinatura": "metas_equipe(uuid,date)",
+      "security_definer": true,
+      "authenticated": true,
+      "anon": false
+    },
+    {
+      "esquema": "public",
+      "nome": "metas_lojas",
+      "assinatura": "metas_lojas(date,uuid)",
+      "security_definer": false,
+      "authenticated": true,
+      "anon": false
+    },
+    {
+      "esquema": "public",
+      "nome": "metas_painel",
+      "assinatura": "metas_painel(date,uuid)",
+      "security_definer": false,
+      "authenticated": true,
+      "anon": false
+    },
+    {
+      "esquema": "public",
+      "nome": "movimentar_caixa",
+      "assinatura": "movimentar_caixa(text,bigint,text,text)",
+      "security_definer": true,
+      "authenticated": true,
+      "anon": false
+    },
+    {
+      "esquema": "public",
+      "nome": "notas_cancelar",
+      "assinatura": "notas_cancelar(uuid,text)",
+      "security_definer": true,
+      "authenticated": true,
+      "anon": false
+    },
+    {
+      "esquema": "public",
+      "nome": "notas_corrigir",
+      "assinatura": "notas_corrigir(uuid,jsonb)",
+      "security_definer": true,
+      "authenticated": true,
+      "anon": false
+    },
+    {
+      "esquema": "public",
+      "nome": "notas_decidir",
+      "assinatura": "notas_decidir(uuid,boolean,text)",
+      "security_definer": true,
+      "authenticated": true,
+      "anon": false
+    },
+    {
+      "esquema": "public",
+      "nome": "notas_registrar_emissao",
+      "assinatura": "notas_registrar_emissao(uuid,text,text)",
+      "security_definer": true,
+      "authenticated": true,
+      "anon": false
+    },
+    {
+      "esquema": "public",
+      "nome": "notas_solicitar",
+      "assinatura": "notas_solicitar(uuid,jsonb,text)",
+      "security_definer": true,
+      "authenticated": true,
+      "anon": false
+    },
+    {
+      "esquema": "public",
+      "nome": "oportunidade_anotar",
+      "assinatura": "oportunidade_anotar(uuid,text)",
+      "security_definer": true,
+      "authenticated": true,
+      "anon": false
+    },
+    {
+      "esquema": "public",
+      "nome": "oportunidade_atribuir",
+      "assinatura": "oportunidade_atribuir(uuid,uuid,text)",
+      "security_definer": true,
+      "authenticated": true,
+      "anon": false
+    },
+    {
+      "esquema": "public",
+      "nome": "oportunidade_detalhe",
+      "assinatura": "oportunidade_detalhe(uuid)",
+      "security_definer": true,
+      "authenticated": true,
+      "anon": false
+    },
+    {
+      "esquema": "public",
+      "nome": "oportunidade_mover",
+      "assinatura": "oportunidade_mover(uuid,text,jsonb)",
+      "security_definer": true,
+      "authenticated": true,
+      "anon": false
+    },
+    {
+      "esquema": "public",
+      "nome": "oportunidade_registrar",
+      "assinatura": "oportunidade_registrar(uuid,jsonb,text)",
+      "security_definer": true,
+      "authenticated": true,
+      "anon": false
+    },
+    {
+      "esquema": "public",
+      "nome": "pagamento_conciliar",
+      "assinatura": "pagamento_conciliar(uuid,text,bigint,date)",
+      "security_definer": true,
+      "authenticated": true,
+      "anon": false
+    },
+    {
+      "esquema": "public",
+      "nome": "pagamento_desconciliar",
+      "assinatura": "pagamento_desconciliar(uuid,text)",
+      "security_definer": true,
+      "authenticated": true,
+      "anon": false
+    },
+    {
+      "esquema": "public",
+      "nome": "pagamentos_do_periodo",
+      "assinatura": "pagamentos_do_periodo(date,date)",
+      "security_definer": true,
+      "authenticated": true,
+      "anon": false
+    },
+    {
+      "esquema": "public",
+      "nome": "pedir_aprovacao",
+      "assinatura": "pedir_aprovacao(uuid,text)",
+      "security_definer": true,
+      "authenticated": true,
+      "anon": false
+    },
+    {
+      "esquema": "public",
+      "nome": "pendencias_de_foto",
+      "assinatura": "pendencias_de_foto()",
+      "security_definer": true,
+      "authenticated": true,
+      "anon": false
+    },
+    {
+      "esquema": "public",
+      "nome": "preco_campanha",
+      "assinatura": "preco_campanha(uuid,uuid,text,bigint,timestamp with time zone,timestamp with time zone,text)",
+      "security_definer": true,
+      "authenticated": true,
+      "anon": false
+    },
+    {
+      "esquema": "public",
+      "nome": "preco_cancelar",
+      "assinatura": "preco_cancelar(uuid,text)",
+      "security_definer": true,
+      "authenticated": true,
+      "anon": false
+    },
+    {
+      "esquema": "public",
+      "nome": "preco_definir",
+      "assinatura": "preco_definir(uuid,uuid,text,bigint,timestamp with time zone,text)",
+      "security_definer": true,
+      "authenticated": true,
+      "anon": false
+    },
+    {
+      "esquema": "public",
+      "nome": "preco_vigente",
+      "assinatura": "preco_vigente(uuid,uuid,text,timestamp with time zone)",
+      "security_definer": true,
+      "authenticated": true,
+      "anon": false
+    },
+    {
+      "esquema": "public",
+      "nome": "precos_por_loja",
+      "assinatura": "precos_por_loja(uuid,text)",
+      "security_definer": true,
+      "authenticated": true,
+      "anon": false
+    },
+    {
+      "esquema": "public",
+      "nome": "previsao_de_caixa",
+      "assinatura": "previsao_de_caixa(integer,uuid)",
+      "security_definer": false,
+      "authenticated": true,
+      "anon": false
+    },
+    {
+      "esquema": "public",
+      "nome": "ranking_nomes",
+      "assinatura": "ranking_nomes(uuid[])",
+      "security_definer": true,
+      "authenticated": true,
+      "anon": false
+    },
+    {
+      "esquema": "public",
+      "nome": "registrar_foto",
+      "assinatura": "registrar_foto(uuid,uuid,text,integer,integer,boolean)",
+      "security_definer": true,
+      "authenticated": true,
+      "anon": false
+    },
+    {
+      "esquema": "public",
+      "nome": "remover_item",
+      "assinatura": "remover_item(uuid)",
+      "security_definer": true,
+      "authenticated": true,
+      "anon": false
+    },
+    {
+      "esquema": "public",
+      "nome": "repetir_convite",
+      "assinatura": "repetir_convite(uuid)",
+      "security_definer": true,
+      "authenticated": true,
+      "anon": false
+    },
+    {
+      "esquema": "public",
+      "nome": "reservar_estoque",
+      "assinatura": "reservar_estoque(uuid,integer,uuid,text,text,integer)",
+      "security_definer": true,
+      "authenticated": true,
+      "anon": false
+    },
+    {
+      "esquema": "public",
+      "nome": "resultado_do_mes",
+      "assinatura": "resultado_do_mes(date,uuid,integer)",
+      "security_definer": false,
+      "authenticated": true,
+      "anon": false
+    },
+    {
+      "esquema": "public",
+      "nome": "selecionar_unidade",
+      "assinatura": "selecionar_unidade(uuid)",
+      "security_definer": true,
+      "authenticated": true,
+      "anon": false
+    },
+    {
+      "esquema": "public",
+      "nome": "situacao_da_sessao",
+      "assinatura": "situacao_da_sessao()",
+      "security_definer": true,
+      "authenticated": true,
+      "anon": false
+    },
+    {
+      "esquema": "public",
+      "nome": "tem_permissao",
+      "assinatura": "tem_permissao(text,uuid)",
+      "security_definer": true,
+      "authenticated": true,
+      "anon": false
+    },
+    {
+      "esquema": "public",
+      "nome": "terminal_salvar",
+      "assinatura": "terminal_salvar(uuid,uuid,text,text,text,boolean,text)",
+      "security_definer": true,
+      "authenticated": true,
+      "anon": false
+    },
+    {
+      "esquema": "public",
+      "nome": "transferencia_encerrar",
+      "assinatura": "transferencia_encerrar(uuid,text,text)",
+      "security_definer": true,
+      "authenticated": true,
+      "anon": false
+    },
+    {
+      "esquema": "public",
+      "nome": "transferencia_enviar",
+      "assinatura": "transferencia_enviar(uuid)",
+      "security_definer": true,
+      "authenticated": true,
+      "anon": false
+    },
+    {
+      "esquema": "public",
+      "nome": "transferencia_receber",
+      "assinatura": "transferencia_receber(uuid,text[],integer,text)",
+      "security_definer": true,
+      "authenticated": true,
+      "anon": false
+    },
+    {
+      "esquema": "public",
+      "nome": "transferencia_separar",
+      "assinatura": "transferencia_separar(uuid,uuid[])",
+      "security_definer": true,
+      "authenticated": true,
+      "anon": false
+    },
+    {
+      "esquema": "public",
+      "nome": "transferencia_solicitar",
+      "assinatura": "transferencia_solicitar(uuid,uuid,uuid,integer,text,text)",
+      "security_definer": true,
+      "authenticated": true,
+      "anon": false
+    },
+    {
+      "esquema": "public",
+      "nome": "unidade_atual",
+      "assinatura": "unidade_atual()",
+      "security_definer": true,
+      "authenticated": true,
+      "anon": false
+    },
+    {
+      "esquema": "public",
+      "nome": "venda_vincular_cliente",
+      "assinatura": "venda_vincular_cliente(uuid,uuid,text)",
+      "security_definer": true,
+      "authenticated": true,
+      "anon": false
+    },
+    {
+      "esquema": "public",
+      "nome": "vendas_painel",
+      "assinatura": "vendas_painel(timestamp with time zone,timestamp with time zone,uuid,boolean,uuid)",
+      "security_definer": false,
+      "authenticated": true,
+      "anon": false
+    },
+    {
+      "esquema": "public",
+      "nome": "vincular_pessoa",
+      "assinatura": "vincular_pessoa(uuid,uuid,text,uuid,text)",
+      "security_definer": true,
+      "authenticated": true,
+      "anon": false
+    }
+  ],
+  "tabelas": [
+    {
+      "esquema": "privado",
+      "nome": "cliente_dados",
+      "rls": true,
+      "authenticated_select": false,
+      "anon_select": false
+    },
+    {
+      "esquema": "privado",
+      "nome": "connect_dados_envio",
+      "rls": true,
+      "authenticated_select": false,
+      "anon_select": false
+    },
+    {
+      "esquema": "privado",
+      "nome": "connect_segredos",
+      "rls": true,
+      "authenticated_select": false,
+      "anon_select": false
+    },
+    {
+      "esquema": "privado",
+      "nome": "crm_segredos",
+      "rls": true,
+      "authenticated_select": false,
+      "anon_select": false
+    },
+    {
+      "esquema": "privado",
+      "nome": "identificadores_itens",
+      "rls": false,
+      "authenticated_select": false,
+      "anon_select": false
+    },
+    {
+      "esquema": "privado",
+      "nome": "notas_destinatarios",
+      "rls": true,
+      "authenticated_select": false,
+      "anon_select": false
+    },
+    {
+      "esquema": "public",
+      "nome": "aprovacoes_desconto",
+      "rls": true,
+      "authenticated_select": true,
+      "anon_select": false
+    },
+    {
+      "esquema": "public",
+      "nome": "atividades",
+      "rls": true,
+      "authenticated_select": true,
+      "anon_select": false
+    },
+    {
+      "esquema": "public",
+      "nome": "auditoria",
+      "rls": true,
+      "authenticated_select": true,
+      "anon_select": false
+    },
+    {
+      "esquema": "public",
+      "nome": "caixa_movimentos",
+      "rls": true,
+      "authenticated_select": true,
+      "anon_select": false
+    },
+    {
+      "esquema": "public",
+      "nome": "caixa_saidas",
+      "rls": true,
+      "authenticated_select": true,
+      "anon_select": false
+    },
+    {
+      "esquema": "public",
+      "nome": "caixas",
+      "rls": true,
+      "authenticated_select": true,
+      "anon_select": false
+    },
+    {
+      "esquema": "public",
+      "nome": "categorias",
+      "rls": true,
+      "authenticated_select": true,
+      "anon_select": false
+    },
+    {
+      "esquema": "public",
+      "nome": "cliente_consentimentos",
+      "rls": true,
+      "authenticated_select": true,
+      "anon_select": false
+    },
+    {
+      "esquema": "public",
+      "nome": "cliente_nao_duplicados",
+      "rls": true,
+      "authenticated_select": true,
+      "anon_select": false
+    },
+    {
+      "esquema": "public",
+      "nome": "clientes",
+      "rls": true,
+      "authenticated_select": true,
+      "anon_select": false
+    },
+    {
+      "esquema": "public",
+      "nome": "connect_eventos",
+      "rls": true,
+      "authenticated_select": true,
+      "anon_select": false
+    },
+    {
+      "esquema": "public",
+      "nome": "connect_habilitacoes",
+      "rls": true,
+      "authenticated_select": true,
+      "anon_select": false
+    },
+    {
+      "esquema": "public",
+      "nome": "connect_operacoes",
+      "rls": true,
+      "authenticated_select": true,
+      "anon_select": false
+    },
+    {
+      "esquema": "public",
+      "nome": "connect_operacoes_custos",
+      "rls": true,
+      "authenticated_select": true,
+      "anon_select": false
+    },
+    {
+      "esquema": "public",
+      "nome": "connect_producao",
+      "rls": true,
+      "authenticated_select": true,
+      "anon_select": false
+    },
+    {
+      "esquema": "public",
+      "nome": "connect_referencias",
+      "rls": true,
+      "authenticated_select": true,
+      "anon_select": false
+    },
+    {
+      "esquema": "public",
+      "nome": "contas_a_pagar",
+      "rls": true,
+      "authenticated_select": true,
+      "anon_select": false
+    },
+    {
+      "esquema": "public",
+      "nome": "contas_a_receber",
+      "rls": true,
+      "authenticated_select": true,
+      "anon_select": false
+    },
+    {
+      "esquema": "public",
+      "nome": "contas_pagar_categorias",
+      "rls": true,
+      "authenticated_select": true,
+      "anon_select": false
+    },
+    {
+      "esquema": "public",
+      "nome": "contexto_sessao",
+      "rls": true,
+      "authenticated_select": true,
+      "anon_select": false
+    },
+    {
+      "esquema": "public",
+      "nome": "convites",
+      "rls": true,
+      "authenticated_select": true,
+      "anon_select": false
+    },
+    {
+      "esquema": "public",
+      "nome": "custos",
+      "rls": true,
+      "authenticated_select": true,
+      "anon_select": false
+    },
+    {
+      "esquema": "public",
+      "nome": "empresas",
+      "rls": true,
+      "authenticated_select": true,
+      "anon_select": false
+    },
+    {
+      "esquema": "public",
+      "nome": "entrada_itens",
+      "rls": true,
+      "authenticated_select": false,
+      "anon_select": false
+    },
+    {
+      "esquema": "public",
+      "nome": "entradas_estoque",
+      "rls": true,
+      "authenticated_select": false,
+      "anon_select": false
+    },
+    {
+      "esquema": "public",
+      "nome": "estoque_movimentos",
+      "rls": true,
+      "authenticated_select": true,
+      "anon_select": false
+    },
+    {
+      "esquema": "public",
+      "nome": "estoque_reservas",
+      "rls": true,
+      "authenticated_select": true,
+      "anon_select": false
+    },
+    {
+      "esquema": "public",
+      "nome": "estoque_saldos",
+      "rls": true,
+      "authenticated_select": true,
+      "anon_select": false
+    },
+    {
+      "esquema": "public",
+      "nome": "estornos_externos",
+      "rls": true,
+      "authenticated_select": true,
+      "anon_select": false
+    },
+    {
+      "esquema": "public",
+      "nome": "fiscal_politicas",
+      "rls": true,
+      "authenticated_select": true,
+      "anon_select": false
+    },
+    {
+      "esquema": "public",
+      "nome": "fornecedores",
+      "rls": true,
+      "authenticated_select": true,
+      "anon_select": false
+    },
+    {
+      "esquema": "public",
+      "nome": "fotos_produto",
+      "rls": true,
+      "authenticated_select": true,
+      "anon_select": false
+    },
+    {
+      "esquema": "public",
+      "nome": "importacao_linhas",
+      "rls": true,
+      "authenticated_select": true,
+      "anon_select": false
+    },
+    {
+      "esquema": "public",
+      "nome": "importacoes",
+      "rls": true,
+      "authenticated_select": true,
+      "anon_select": false
+    },
+    {
+      "esquema": "public",
+      "nome": "inventario_itens",
+      "rls": true,
+      "authenticated_select": true,
+      "anon_select": false
+    },
+    {
+      "esquema": "public",
+      "nome": "inventarios",
+      "rls": true,
+      "authenticated_select": true,
+      "anon_select": false
+    },
+    {
+      "esquema": "public",
+      "nome": "itens_serializados",
+      "rls": true,
+      "authenticated_select": true,
+      "anon_select": false
+    },
+    {
+      "esquema": "public",
+      "nome": "marcas",
+      "rls": true,
+      "authenticated_select": true,
+      "anon_select": false
+    },
+    {
+      "esquema": "public",
+      "nome": "metas",
+      "rls": true,
+      "authenticated_select": true,
+      "anon_select": false
+    },
+    {
+      "esquema": "public",
+      "nome": "notas_eventos",
+      "rls": true,
+      "authenticated_select": true,
+      "anon_select": false
+    },
+    {
+      "esquema": "public",
+      "nome": "notas_pedidos",
+      "rls": true,
+      "authenticated_select": true,
+      "anon_select": false
+    },
+    {
+      "esquema": "public",
+      "nome": "oportunidade_eventos",
+      "rls": true,
+      "authenticated_select": true,
+      "anon_select": false
+    },
+    {
+      "esquema": "public",
+      "nome": "oportunidades",
+      "rls": true,
+      "authenticated_select": true,
+      "anon_select": false
+    },
+    {
+      "esquema": "public",
+      "nome": "organizacoes",
+      "rls": true,
+      "authenticated_select": true,
+      "anon_select": false
+    },
+    {
+      "esquema": "public",
+      "nome": "papeis",
+      "rls": true,
+      "authenticated_select": true,
+      "anon_select": false
+    },
+    {
+      "esquema": "public",
+      "nome": "papel_permissoes",
+      "rls": true,
+      "authenticated_select": true,
+      "anon_select": false
+    },
+    {
+      "esquema": "public",
+      "nome": "perfis_usuario",
+      "rls": true,
+      "authenticated_select": true,
+      "anon_select": false
+    },
+    {
+      "esquema": "public",
+      "nome": "permissoes",
+      "rls": true,
+      "authenticated_select": true,
+      "anon_select": false
+    },
+    {
+      "esquema": "public",
+      "nome": "precos",
+      "rls": true,
+      "authenticated_select": true,
+      "anon_select": false
+    },
+    {
+      "esquema": "public",
+      "nome": "produtos",
+      "rls": true,
+      "authenticated_select": true,
+      "anon_select": false
+    },
+    {
+      "esquema": "public",
+      "nome": "terminais",
+      "rls": true,
+      "authenticated_select": true,
+      "anon_select": false
+    },
+    {
+      "esquema": "public",
+      "nome": "transferencia_itens",
+      "rls": true,
+      "authenticated_select": true,
+      "anon_select": false
+    },
+    {
+      "esquema": "public",
+      "nome": "transferencias",
+      "rls": true,
+      "authenticated_select": true,
+      "anon_select": false
+    },
+    {
+      "esquema": "public",
+      "nome": "unidade_configuracoes",
+      "rls": true,
+      "authenticated_select": true,
+      "anon_select": false
+    },
+    {
+      "esquema": "public",
+      "nome": "unidades",
+      "rls": true,
+      "authenticated_select": true,
+      "anon_select": false
+    },
+    {
+      "esquema": "public",
+      "nome": "vales_troca",
+      "rls": true,
+      "authenticated_select": true,
+      "anon_select": false
+    },
+    {
+      "esquema": "public",
+      "nome": "vales_troca_usos",
+      "rls": true,
+      "authenticated_select": true,
+      "anon_select": false
+    },
+    {
+      "esquema": "public",
+      "nome": "variantes",
+      "rls": true,
+      "authenticated_select": true,
+      "anon_select": false
+    },
+    {
+      "esquema": "public",
+      "nome": "venda_devolucao_itens",
+      "rls": true,
+      "authenticated_select": true,
+      "anon_select": false
+    },
+    {
+      "esquema": "public",
+      "nome": "venda_devolucao_reembolsos",
+      "rls": true,
+      "authenticated_select": true,
+      "anon_select": false
+    },
+    {
+      "esquema": "public",
+      "nome": "venda_devolucoes",
+      "rls": true,
+      "authenticated_select": true,
+      "anon_select": false
+    },
+    {
+      "esquema": "public",
+      "nome": "venda_itens",
+      "rls": true,
+      "authenticated_select": true,
+      "anon_select": false
+    },
+    {
+      "esquema": "public",
+      "nome": "venda_itens_custos",
+      "rls": true,
+      "authenticated_select": true,
+      "anon_select": false
+    },
+    {
+      "esquema": "public",
+      "nome": "venda_pagamentos",
+      "rls": true,
+      "authenticated_select": true,
+      "anon_select": false
+    },
+    {
+      "esquema": "public",
+      "nome": "venda_retornos",
+      "rls": true,
+      "authenticated_select": true,
+      "anon_select": false
+    },
+    {
+      "esquema": "public",
+      "nome": "vendas",
+      "rls": true,
+      "authenticated_select": true,
+      "anon_select": false
+    },
+    {
+      "esquema": "public",
+      "nome": "vinculos",
+      "rls": true,
+      "authenticated_select": true,
+      "anon_select": false
+    }
+  ]
+}

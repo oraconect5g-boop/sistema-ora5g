@@ -1,0 +1,542 @@
+[
+  {
+    "branch": "chore/migrations-aplicadas-dev",
+    "sha": "14cf89a7bc38e163982fdbd1cac28d6f36aec07c",
+    "estado": "ancestral/main",
+    "prova": "head presente nos 100 commits da main"
+  },
+  {
+    "branch": "docs/ORA-P0-matriz-graficos",
+    "sha": "6e0f7a8fe1f4846439b365ccd7769225848d8cce",
+    "estado": "ancestral/main",
+    "prova": "head presente nos 100 commits da main"
+  },
+  {
+    "branch": "docs/adr-002-acesso",
+    "sha": "21f4f7c620831ffabbf9fb32ea16143a8e626206",
+    "estado": "ancestral",
+    "prova": "prova anterior com base 51fc428, ancestral da base atual"
+  },
+  {
+    "branch": "docs/analise-sistemas-2026-11-07",
+    "sha": "173fd5c18ad45a8d2df950aa348dbbcc2b0ca5c0",
+    "estado": "ancestral",
+    "prova": "prova anterior com base 51fc428, ancestral da base atual"
+  },
+  {
+    "branch": "docs/auditoria-claude-code-2026-11-08",
+    "sha": "f472635b8536fb60f2eb9bd37777d0985dffc629",
+    "estado": "ancestral",
+    "prova": "prova anterior com base 51fc428, ancestral da base atual"
+  },
+  {
+    "branch": "docs/auditoria-diretorios-real-20261112",
+    "sha": "fe2b8bb99e7db974b13c971bc7d96244179fdf33",
+    "estado": "diverged",
+    "prova": "comparação 46638ee × head, preservada no delta documental 51417a8"
+  },
+  {
+    "branch": "docs/clientes-nota-whatsapp-20261112",
+    "sha": "6b71bb0a927993ade46da50f276f5b013b552190",
+    "estado": "diverged",
+    "prova": "comparação 46638ee × head, preservada no delta documental 51417a8"
+  },
+  {
+    "branch": "docs/configuracao-e-transicao-2026-11-07",
+    "sha": "5f4dec7079b57effa0e555b536ad7f0550ec5e87",
+    "estado": "ancestral",
+    "prova": "prova anterior com base 51fc428, ancestral da base atual"
+  },
+  {
+    "branch": "docs/crontab-ligado",
+    "sha": "3c950eda73a12ad0800198a857573fa4f701a596",
+    "estado": "ancestral",
+    "prova": "prova anterior com base 51fc428, ancestral da base atual"
+  },
+  {
+    "branch": "docs/dominio-principal-no-ar",
+    "sha": "bb14add66439e218eff7d2428e53abd976e89306",
+    "estado": "ancestral",
+    "prova": "prova anterior com base 51fc428, ancestral da base atual"
+  },
+  {
+    "branch": "docs/dominio-principal-temporario",
+    "sha": "6fc3102c253f50af997b857f24eab73add2ea484",
+    "estado": "ancestral",
+    "prova": "prova anterior com base 51fc428, ancestral da base atual"
+  },
+  {
+    "branch": "docs/estado-pos-publicacao",
+    "sha": "b8ae443ce6557dfb7f526e651e5b60e00ce3a2c0",
+    "estado": "ancestral",
+    "prova": "prova anterior com base 51fc428, ancestral da base atual"
+  },
+  {
+    "branch": "docs/execucao-integral-20261110",
+    "sha": "d8c1bc6c80646df2153290ea567237a17df20885",
+    "estado": "diverged",
+    "prova": "comparação 46638ee × head, preservada no delta documental 51417a8"
+  },
+  {
+    "branch": "docs/homologacao-0fa1546",
+    "sha": "a74cb6efc5fd307b4c587a4947b3ee6eff2d9796",
+    "estado": "ancestral",
+    "prova": "prova anterior com base 51fc428, ancestral da base atual"
+  },
+  {
+    "branch": "docs/homologacao-8f7a458",
+    "sha": "3a404173b2acb9f27a6d9379d61d1b850f2977e8",
+    "estado": "ancestral/main",
+    "prova": "head presente nos 100 commits da main"
+  },
+  {
+    "branch": "docs/homologacao-3157e70",
+    "sha": "b2fea558fa1fadfb9b54d5b78cd364b27836aa6a",
+    "estado": "ancestral/main",
+    "prova": "head presente nos 100 commits da main"
+  },
+  {
+    "branch": "docs/passo0-reconciliacao-pr33",
+    "sha": "0146f4ddc045c42a9cb055654658a397df29aa24",
+    "estado": "ancestral/main",
+    "prova": "head presente nos 100 commits da main"
+  },
+  {
+    "branch": "docs/plano-inicio-implementacao",
+    "sha": "29e9e6103ebfe0fe696a6cc03d00ce66cbfb920f",
+    "estado": "ancestral",
+    "prova": "prova anterior com base 51fc428, ancestral da base atual"
+  },
+  {
+    "branch": "docs/prompt-financeiro-real-20261110",
+    "sha": "9216f9247c376c1dbe6b26a409c0daf131d93a33",
+    "estado": "diverged",
+    "prova": "comparação 46638ee × head, preservada no delta documental 51417a8"
+  },
+  {
+    "branch": "docs/reconciliacao-lotes-1-a-5",
+    "sha": "2b92423d4473be8fcfa7713316cd05717173e0a1",
+    "estado": "ancestral/main",
+    "prova": "head presente nos 100 commits da main"
+  },
+  {
+    "branch": "docs/resultado-publicacao",
+    "sha": "0bdb47fdf864e271febddfe79fd29c48c6ec5771",
+    "estado": "ancestral",
+    "prova": "prova anterior com base 51fc428, ancestral da base atual"
+  },
+  {
+    "branch": "docs/revisao-integral-claude-20261111",
+    "sha": "df4eba7da36faac6a8d0062d20baef83fad0dcdd",
+    "estado": "diverged",
+    "prova": "comparação 46638ee × head, preservada no delta documental 51417a8"
+  },
+  {
+    "branch": "docs/revisao-web-nogle-2026-11-08",
+    "sha": "290f1111f964710d744c4ded40df48fed6762b1b",
+    "estado": "diverged",
+    "prova": "comparação 46638ee × head, preservada no delta documental 51417a8"
+  },
+  {
+    "branch": "docs/skill-engenheiro-senior-ora5g-2026-11-10",
+    "sha": "c643b9ab1c0812a37e68023f7fadb4ad0744550d",
+    "estado": "ancestral/main",
+    "prova": "head presente nos 100 commits da main"
+  },
+  {
+    "branch": "docs/variaveis-de-ambiente",
+    "sha": "a28a4930fcedc416a6ad374d4cf5240c5531cedb",
+    "estado": "ancestral",
+    "prova": "prova anterior com base 51fc428, ancestral da base atual"
+  },
+  {
+    "branch": "feat/l8b-resultado-do-mes",
+    "sha": "9bb285fbf7438e34e9bc196ce5443dc2a1012837",
+    "estado": "ancestral/main",
+    "prova": "head presente nos 100 commits da main"
+  },
+  {
+    "branch": "feat/l8c-previsao-de-caixa",
+    "sha": "ea3c3ce45bd9eae2e476f74d23ad71c9ecfa2691",
+    "estado": "ancestral/main",
+    "prova": "head presente nos 100 commits da main"
+  },
+  {
+    "branch": "feat/l8d-exportacao-financeira",
+    "sha": "c42aca726c39789d72c79d3bccd4ef54344f731e",
+    "estado": "ancestral/main",
+    "prova": "head presente nos 100 commits da main"
+  },
+  {
+    "branch": "feature/ORA-002-esqueleto-monorepo",
+    "sha": "e4d386fffb0ffb9195e28524dce3c7a05c35a86b",
+    "estado": "ancestral",
+    "prova": "prova anterior com base 51fc428, ancestral da base atual"
+  },
+  {
+    "branch": "feature/ORA-003-ambiente-e-segredos",
+    "sha": "85adb92293263a4b21ecee8c0ed60343a8094267",
+    "estado": "ancestral",
+    "prova": "prova anterior com base 51fc428, ancestral da base atual"
+  },
+  {
+    "branch": "feature/ORA-004-005-banco-acesso",
+    "sha": "eb3710d9ab1eac38dd1f4276b21504b44a1fdd45",
+    "estado": "ancestral",
+    "prova": "prova anterior com base 51fc428, ancestral da base atual"
+  },
+  {
+    "branch": "feature/ORA-006-acesso-equipe",
+    "sha": "ee2de080af1ed6adf35842ad1b5623508846cfad",
+    "estado": "ancestral",
+    "prova": "prova anterior com base 51fc428, ancestral da base atual"
+  },
+  {
+    "branch": "feature/ORA-008-frontend-moderno",
+    "sha": "78fcccef15769c17fcd6274cef762cdf8a4326bc",
+    "estado": "ancestral",
+    "prova": "prova anterior com base 51fc428, ancestral da base atual"
+  },
+  {
+    "branch": "feature/ORA-65-financeiro-real",
+    "sha": "dc775b0dd3130629c9b581167faaf73d6bb5db28",
+    "estado": "ancestral/main",
+    "prova": "head presente nos 100 commits da main"
+  },
+  {
+    "branch": "feature/ORA-ADR-004-vendas",
+    "sha": "a5092a8338a503c5c40344adfae9837b0af21ede",
+    "estado": "ancestral",
+    "prova": "prova anterior com base 51fc428, ancestral da base atual"
+  },
+  {
+    "branch": "feature/ORA-CAT-011-fotos",
+    "sha": "ce7b446bf61a3010f1ad2573bbfcea9edb505257",
+    "estado": "ancestral",
+    "prova": "prova anterior com base 51fc428, ancestral da base atual"
+  },
+  {
+    "branch": "feature/ORA-CONNECT-adaptador",
+    "sha": "8253c65a2d82a9118abb6a28f22d8482997eb5ed",
+    "estado": "ancestral",
+    "prova": "prova anterior com base 51fc428, ancestral da base atual"
+  },
+  {
+    "branch": "feature/ORA-FISC-fila",
+    "sha": "f12580529bc8861565752d4f350431cc59bd71c0",
+    "estado": "ancestral",
+    "prova": "prova anterior com base 51fc428, ancestral da base atual"
+  },
+  {
+    "branch": "feature/ORA-G1-inicio-paineis",
+    "sha": "bfd7de9dc659771657b1cf9886672d9b980dfd38",
+    "estado": "ancestral/main",
+    "prova": "head presente nos 100 commits da main"
+  },
+  {
+    "branch": "feature/ORA-G2-relatorios",
+    "sha": "78382adf05f72c0c23f8cd95784082dd12e4227e",
+    "estado": "ancestral/main",
+    "prova": "head presente nos 100 commits da main"
+  },
+  {
+    "branch": "feature/ORA-G2b-conciliacao",
+    "sha": "cc3ab645bed1269c67d10f774a954c77e26ff7e2",
+    "estado": "ancestral/main",
+    "prova": "head presente nos 100 commits da main"
+  },
+  {
+    "branch": "feature/ORA-G3-estoque",
+    "sha": "b859700c944d0fcaf6428b949e306bb13721c00a",
+    "estado": "ancestral/main",
+    "prova": "head presente nos 100 commits da main"
+  },
+  {
+    "branch": "feature/ORA-G4-producao-connect",
+    "sha": "c9834860fa80ac6c92ada769a7189bb8803f91d9",
+    "estado": "ancestral/main",
+    "prova": "head presente nos 100 commits da main"
+  },
+  {
+    "branch": "feature/ORA-G4b-metas",
+    "sha": "9258b07d7eb4856caa4b57a332c3124ef2f69297",
+    "estado": "ancestral/main",
+    "prova": "head presente nos 100 commits da main"
+  },
+  {
+    "branch": "feature/ORA-G4c-meta-inicio-relatorios",
+    "sha": "be70f694b693086fda39983bf09ec07fb680e7f9",
+    "estado": "ancestral/main",
+    "prova": "head presente nos 100 commits da main"
+  },
+  {
+    "branch": "feature/ORA-G5-equipe-por-papel",
+    "sha": "444256577bb1fbd46462ac13fa432c9a68571809",
+    "estado": "ancestral/main",
+    "prova": "head presente nos 100 commits da main"
+  },
+  {
+    "branch": "feature/ORA-INV-tela-estoque",
+    "sha": "1d479e60b383ad5aef69e036bc96ceb7d07473ed",
+    "estado": "ancestral",
+    "prova": "prova anterior com base 51fc428, ancestral da base atual"
+  },
+  {
+    "branch": "feature/ORA-L2-lojas",
+    "sha": "9a884ad8e7a8cbb61582789aa862b0fa14ca1183",
+    "estado": "ancestral/main",
+    "prova": "head presente nos 100 commits da main"
+  },
+  {
+    "branch": "feature/ORA-L3-catalogo-cadastro",
+    "sha": "da56f5f555f22ce7280a8c66d650b72709b41d48",
+    "estado": "ancestral/main",
+    "prova": "head presente nos 100 commits da main"
+  },
+  {
+    "branch": "feature/ORA-L3b-precos",
+    "sha": "3ce8d532b68d1b287e878b5fdf5cff5fbd327070",
+    "estado": "ancestral/main",
+    "prova": "head presente nos 100 commits da main"
+  },
+  {
+    "branch": "feature/ORA-L3c-importador",
+    "sha": "bcd2dd839527c395b5bed54f940f5891f07deebc",
+    "estado": "ancestral/main",
+    "prova": "head presente nos 100 commits da main"
+  },
+  {
+    "branch": "feature/ORA-L4a-entrada-estoque",
+    "sha": "e2265816302618fe24b6a1ad9ea2431aa6c4e07b",
+    "estado": "ancestral/main",
+    "prova": "head presente nos 100 commits da main"
+  },
+  {
+    "branch": "feature/ORA-L4b-inventario",
+    "sha": "1c89d9be43f62c42aeaa32a63aedcdc87df62903",
+    "estado": "ancestral/main",
+    "prova": "head presente nos 100 commits da main"
+  },
+  {
+    "branch": "feature/ORA-L5a-clientes",
+    "sha": "baf17210d62f1522f32f69af4ea82968848ce824",
+    "estado": "ancestral/main",
+    "prova": "head presente nos 100 commits da main"
+  },
+  {
+    "branch": "feature/ORA-L5b-funil",
+    "sha": "035df34ac5814ae0befe5e2141e0751c3ab3f6a5",
+    "estado": "ancestral/main",
+    "prova": "head presente nos 100 commits da main"
+  },
+  {
+    "branch": "feature/ORA-L5c-crm",
+    "sha": "2c65b31f0fcb6048245789f9fe5fc147e558cd0a",
+    "estado": "ancestral/main",
+    "prova": "head presente nos 100 commits da main"
+  },
+  {
+    "branch": "feature/ORA-L6a-pdv",
+    "sha": "7fb840c3bdbec9b4ab9b3760a0d27ea2e87a7ded",
+    "estado": "ancestral/main",
+    "prova": "head presente nos 100 commits da main"
+  },
+  {
+    "branch": "feature/ORA-L6b-regra-de-preco-na-venda",
+    "sha": "e95d91c093650363e6d73e65ee2836ef404ff102",
+    "estado": "ancestral/main",
+    "prova": "head presente nos 100 commits da main"
+  },
+  {
+    "branch": "feature/ORA-L7a-pagamentos",
+    "sha": "fb6aa27e2d3f3185258520c738a60aa08020891d",
+    "estado": "ancestral/main",
+    "prova": "head presente nos 100 commits da main"
+  },
+  {
+    "branch": "feature/ORA-L7b-financeiras-a-receber",
+    "sha": "4236e267641991be2f68197b2abd795505463802",
+    "estado": "ancestral/main",
+    "prova": "head presente nos 100 commits da main"
+  },
+  {
+    "branch": "feature/ORA-L7c-saida-autorizada-do-caixa",
+    "sha": "c996ba6a4ae94d9482f23f4ae9e95ea0ee4f8702",
+    "estado": "ancestral/main",
+    "prova": "head presente nos 100 commits da main"
+  },
+  {
+    "branch": "feature/ORA-L8a-contas-a-pagar",
+    "sha": "84a4ec96cc0c9a64aeace8e79e94ed08d81b7ffc",
+    "estado": "ancestral/main",
+    "prova": "head presente nos 100 commits da main"
+  },
+  {
+    "branch": "feature/ORA-POS-012-devolucao-troca",
+    "sha": "2e6097ca29f522dcc846601d372a460b198cc13c",
+    "estado": "ancestral",
+    "prova": "prova anterior com base 51fc428, ancestral da base atual"
+  },
+  {
+    "branch": "feature/ORA-connect-nogle",
+    "sha": "ff67f14ee8b9d97b5291c897298e131781a42570",
+    "estado": "ancestral",
+    "prova": "prova anterior com base 51fc428, ancestral da base atual"
+  },
+  {
+    "branch": "feature/ORA-implantacao-piloto",
+    "sha": "cb7bfe9fc408722acb765957a0dee63fdbae485e",
+    "estado": "ancestral",
+    "prova": "prova anterior com base 51fc428, ancestral da base atual"
+  },
+  {
+    "branch": "feature/ORA-nogle-respostas",
+    "sha": "ba9587c0cadce2a0bd8d4f602aab65cbc001911d",
+    "estado": "ancestral/main",
+    "prova": "head presente nos 100 commits da main"
+  },
+  {
+    "branch": "feature/ORA-telas-reais-consistentes",
+    "sha": "14b0f8ab8d617c79a9521e4f85f63d4d5ad99833",
+    "estado": "ancestral/main",
+    "prova": "head presente nos 100 commits da main"
+  },
+  {
+    "branch": "feature/ORA-transferencias-defeitos-lote5",
+    "sha": "7a8a47c5fbabcadabbae650a93aecef19eb852ce",
+    "estado": "ancestral/main",
+    "prova": "head presente nos 100 commits da main"
+  },
+  {
+    "branch": "feature/ORA-visual-azul",
+    "sha": "de7d6fbba45b055dc4c02dc7861d397f8c6e7c45",
+    "estado": "ancestral/main",
+    "prova": "head presente nos 100 commits da main"
+  },
+  {
+    "branch": "feature/demonstracao-e-alinhamento",
+    "sha": "d0616c8e53196a0a8d73617ab1c594bcb9ef388e",
+    "estado": "ancestral",
+    "prova": "prova anterior com base 51fc428, ancestral da base atual"
+  },
+  {
+    "branch": "fix/ORA-65-redirecionamento-financeiro",
+    "sha": "4ce6997d6c81065b6d0679c5533f65adb1c3250d",
+    "estado": "ancestral/main",
+    "prova": "head presente nos 100 commits da main"
+  },
+  {
+    "branch": "fix/ORA-R1-recebimento",
+    "sha": "5a556428340e692d0609ee58397e152855e63ba4",
+    "estado": "ancestral/main",
+    "prova": "head presente nos 100 commits da main"
+  },
+  {
+    "branch": "fix/ORA-R2-importador",
+    "sha": "912835903e5a57ac743e8ca23ce6c2cd3f40b228",
+    "estado": "ancestral/main",
+    "prova": "head presente nos 100 commits da main"
+  },
+  {
+    "branch": "fix/ORA-acesso-configuracao-lote1",
+    "sha": "bf450d976adc56f27c2449371acb2ecaab8c4ce9",
+    "estado": "ancestral",
+    "prova": "prova anterior com base 51fc428, ancestral da base atual"
+  },
+  {
+    "branch": "fix/ORA-busca-csv-fotos-lote3",
+    "sha": "77de9e9b491b2e1d144e88159801fdc4fabfb9e1",
+    "estado": "ancestral",
+    "prova": "prova anterior com base 51fc428, ancestral da base atual"
+  },
+  {
+    "branch": "fix/ORA-demo-lote4",
+    "sha": "0a695d55e3802f067b4ff9d5c4badba25c7f880b",
+    "estado": "ancestral/main",
+    "prova": "head presente nos 100 commits da main"
+  },
+  {
+    "branch": "fix/ORA-integridade-estoque",
+    "sha": "283532cdf69631ea0885c0d543aa86f2c94e63d8",
+    "estado": "ancestral",
+    "prova": "prova anterior com base 51fc428, ancestral da base atual"
+  },
+  {
+    "branch": "fix/ORA-integridade-lote2",
+    "sha": "82e1d884a1c4b19d9fca2a79d692371c38198890",
+    "estado": "ancestral",
+    "prova": "prova anterior com base 51fc428, ancestral da base atual"
+  },
+  {
+    "branch": "fix/ORA-nome-nogle",
+    "sha": "f77b0df42ee67c915975a275ca214defccbd42a4",
+    "estado": "ancestral/main",
+    "prova": "head presente nos 100 commits da main"
+  },
+  {
+    "branch": "fix/homologacao-trava",
+    "sha": "7430b7aa8a6c555468eebed42e0b6d543b264869",
+    "estado": "ancestral",
+    "prova": "prova anterior com base 51fc428, ancestral da base atual"
+  },
+  {
+    "branch": "fix/homologacao-vigia",
+    "sha": "1b20bdde3d792231b04a4b1bc91ebf8f46d17004",
+    "estado": "ancestral",
+    "prova": "prova anterior com base 51fc428, ancestral da base atual"
+  },
+  {
+    "branch": "fix/polimento-apresentacao",
+    "sha": "fbabeb960985fb5695469680ed64852fd1e4b1b0",
+    "estado": "ancestral",
+    "prova": "prova anterior com base 51fc428, ancestral da base atual"
+  },
+  {
+    "branch": "fix/raiz-atras-do-apache",
+    "sha": "0ab7ad718d8f79c0344ecdb2d40880f5555e940b",
+    "estado": "ancestral",
+    "prova": "prova anterior com base 51fc428, ancestral da base atual"
+  },
+  {
+    "branch": "fix/raiz-atras-do-apache-https",
+    "sha": "021bdc7305089e68a4b156c5adc8a92e1fd94dbd",
+    "estado": "ancestral",
+    "prova": "prova anterior com base 51fc428, ancestral da base atual"
+  },
+  {
+    "branch": "fix/residuos-codex-2026-11-07",
+    "sha": "5775f60fb3ce204b246b656773f38a426bd4ae8a",
+    "estado": "ancestral",
+    "prova": "prova anterior com base 51fc428, ancestral da base atual"
+  },
+  {
+    "branch": "fix/revisao-codex-2026-11-07",
+    "sha": "6850b20a17193b4c2baacfc009f8e53c9e3a6e0c",
+    "estado": "ancestral",
+    "prova": "prova anterior com base 51fc428, ancestral da base atual"
+  },
+  {
+    "branch": "fix/usuarios-teste-gerente-20261110",
+    "sha": "c6480d5f39c5313ca1fcfeea9b6910e994509741",
+    "estado": "ancestral/main",
+    "prova": "head presente nos 100 commits da main"
+  },
+  {
+    "branch": "integra/pr64-gerente-de-teste",
+    "sha": "2ac6a2527efd84aeb53e18ac410a8b25741b17bb",
+    "estado": "ancestral/main",
+    "prova": "head presente nos 100 commits da main"
+  },
+  {
+    "branch": "main",
+    "sha": "51417a8af70e1277328c78962fee2397a4d2a171",
+    "estado": "ancestral/main",
+    "prova": "head presente nos 100 commits da main"
+  },
+  {
+    "branch": "test/ORA-QUAL-autorizacao-funcoes",
+    "sha": "7911a2238ca4be9ffea1ed9c42357fc65991dad3",
+    "estado": "ancestral/main",
+    "prova": "head presente nos 100 commits da main"
+  }
+]

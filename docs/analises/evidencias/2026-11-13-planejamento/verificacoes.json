@@ -1,0 +1,83 @@
+{
+  "base_funcional_testada": "46638ee07acade6fc85cba3dc635416f3f74d836",
+  "base_final": "51417a8af70e1277328c78962fee2397a4d2a171",
+  "ci_base_funcional": {
+    "run": 43539959897,
+    "conclusao": "success"
+  },
+  "ci_base_final": {
+    "run": 43542297795,
+    "conclusao": "success"
+  },
+  "checks_locais_base_funcional": [
+    {
+      "check": "instalacao",
+      "exit_code": 0,
+      "segundos": 20.26
+    },
+    {
+      "check": "lint",
+      "exit_code": 0,
+      "segundos": 34.57
+    },
+    {
+      "check": "tipos",
+      "exit_code": 0,
+      "segundos": 31.33
+    },
+    {
+      "check": "testes",
+      "exit_code": 0,
+      "segundos": 516.81
+    },
+    {
+      "check": "build",
+      "exit_code": 0,
+      "segundos": 51.56
+    },
+    {
+      "check": "audit",
+      "exit_code": 0,
+      "segundos": 0.65
+    },
+    {
+      "check": "rastreabilidade",
+      "exit_code": 0,
+      "segundos": 0.07
+    },
+    {
+      "check": "catalogo-nogle",
+      "exit_code": 0,
+      "segundos": 0.04
+    },
+    {
+      "check": "e2e",
+      "exit_code": 0,
+      "segundos": 174.35
+    }
+  ],
+  "testes": {
+    "passaram": 1649,
+    "todo": 1,
+    "arquivos": 140
+  },
+  "e2e": {
+    "passaram": 237,
+    "ignorados": 11,
+    "total": 248
+  },
+  "delta_final": {
+    "escopo": "registro de aplicação, renome de 12 migrations com blob SQL idêntico, comentários de reversão, tipos regenerados e documentação",
+    "typecheck": "passou",
+    "provas_independentes": 11,
+    "provas_passaram": 11
+  },
+  "provas_independentes": {
+    "resultado_seguro_de_correcoes_antigas": 4,
+    "bugs_atuais_observados": 5,
+    "diagnostico_historico_schema39": 1,
+    "exportacao_condicionada_ao_teto_API_simulado": 1
+  },
+  "audit_producao_vulnerabilidades": 0,
+  "limites": "Sem login no destino, consulta ao Supabase remoto ou acesso ao servidor. Registro de 51 aplicadas é do programador; MD5 conferido nos arquivos."
+}
