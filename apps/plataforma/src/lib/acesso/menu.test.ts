@@ -115,4 +115,10 @@ describe("menu único das telas reais", () => {
     for (const papel of ["vendedor", "administrador", "tecnico"] as const) expect(menu(papel).visiveis).not.toContain("conciliacao");
     expect(PAGINAS_REAIS.conciliacao.grupo).toBe("Gestão");
   });
+
+  it("recebíveis (L8e): quem concilia (dono e gerente) em Gestão; vendedor, administrador e técnico não", () => {
+    for (const papel of ["dono", "gerente"] as const) expect(menu(papel).visiveis).toContain("recebiveis");
+    for (const papel of ["vendedor", "administrador", "tecnico"] as const) expect(menu(papel).visiveis).not.toContain("recebiveis");
+    expect(PAGINAS_REAIS.recebiveis).toMatchObject({ grupo: "Gestão", caminho: "/pagamentos/recebiveis" });
+  });
 });

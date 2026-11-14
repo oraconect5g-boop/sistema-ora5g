@@ -19,6 +19,7 @@ const ICONES: Record<string, LucideIcon> = {
   conciliacao: Scale,
   maquininhas: CreditCard,
   financeiras: HandCoins,
+  recebiveis: CalendarClock,
   contas: ReceiptText,
   resultado: PiggyBank,
   previsao: Landmark,
