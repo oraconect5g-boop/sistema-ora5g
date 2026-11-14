@@ -365,4 +365,3 @@ begin
   return v_telefone;
 end;
 $$;
-

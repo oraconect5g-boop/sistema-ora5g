@@ -1,6 +1,6 @@
--- Reversão de 20261114163000_orcamento_da_os (só em banco sem dados reais: apaga os orçamentos; com evento de orçamento,
+-- Reversão de 20261114162305_orcamento_da_os (só em banco sem dados reais: apaga os orçamentos; com evento de orçamento,
 -- resposta ou conserto na trilha, a restrição antiga dos eventos não volta e a reversão para, de propósito).
--- public.os_contato_whatsapp volta ao texto do L12a (20261114160000_ordem_de_servico).
+-- public.os_contato_whatsapp volta ao texto do L12a (20261114162103_ordem_de_servico).
 create or replace function public.os_contato_whatsapp(p_os uuid, p_aviso text)
 returns text
 language plpgsql
