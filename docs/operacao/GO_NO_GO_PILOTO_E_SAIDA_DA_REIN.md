@@ -36,8 +36,8 @@ Legenda: ✅ provado em desenvolvimento · 🟡 feito no código, falta uso real
 | 9 | Isolamento por papel, loja e organização | Testes de banco dos cenários I (acesso, estoque, venda, Connect, notas) | ✅ no banco; 🔒 E2E com usuário real (chave secreta) |
 | 10 | Usuários reais completam o PDV no celular | Gravação ou acompanhamento de uma venda completa por vendedor da piloto; gerente aprovando desconto e nota | 🔒 chave secreta e usuários de teste |
 | 11 | Backup e restauração comprovados | Ensaio de restauração do banco e das fotos em homologação, com o tempo gasto; volta de versão defeituosa | 🟡 volta de versão automática (REV-016); 🔴 ensaio de restauração (cenário J) |
-| 12 | Contingência e suporte | Procedimento para internet ou sistema fora (sem venda "offline" no sistema, D-029), contatos e escalonamento | 🔴 a escrever com o proprietário |
-| 13 | Monitoramento e responsáveis | Alerta de erro e de worker parado; quem atende em cada horário | 🔴 |
+| 12 | Contingência e suporte | Procedimento para internet ou sistema fora (sem venda "offline" no sistema, D-029), contatos e escalonamento | 🟡 proposta escrita em [contingência e incidentes](CONTINGENCIA_E_INCIDENTES.md) (14/11); falta a decisão do proprietário (D-041 e D-042) e o treino da equipe da piloto |
+| 13 | Monitoramento e responsáveis | Alerta de erro e de worker parado; quem atende em cada horário | 🟡 as filas paradas na saúde da operação (Q1) e as pendências da loja no sino (G6), 14/11; 🔴 alerta de erro do servidor e de worker parado; quem atende (D-042) |
 
 ## 3. Relatório diário Rein × Ora (Fase 1)
 
@@ -58,5 +58,5 @@ Comparar por loja e dia, no fechamento: quantidade e total de vendas; total por 
 
 1. **Duração do paralelo:** 2 a 4 semanas (padrão do plano). Confirma?
 2. **Depois do go:** por quanto tempo a licença da Rein fica ativa para uma eventual volta (só consulta não basta para voltar)?
-3. **Contingência:** se a internet da loja cair, a venda espera ou vai para um formulário em papel lançado depois pelo gerente?
-4. **Quem atende** problemas no horário da loja durante o piloto?
+3. **Contingência:** se a internet da loja cair, a venda espera ou vai para um formulário em papel lançado depois pelo gerente? (D-041, com a proposta em [contingência e incidentes](CONTINGENCIA_E_INCIDENTES.md))
+4. **Quem atende** problemas no horário da loja durante o piloto? (D-042)

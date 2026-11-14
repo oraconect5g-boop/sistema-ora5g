@@ -2,7 +2,7 @@
   "_leia": "Checkpoint do programa de execução integral (PR #67). Carregar ao retomar e seguir para o próximo item executável da fila; não reiniciar o projeto. Estados vêm de status-requisitos.json (fonte da rastreabilidade); este arquivo acrescenta lote, bloqueio externo e revisão.",
   "atualizado_em": "2026-11-14",
   "base": {
-    "main": "05a104a",
+    "main": "ad4e377",
     "pacote": {
       "pr": 67,
       "branch": "docs/execucao-integral-20261110",
@@ -18,12 +18,12 @@
   },
   "publicado": {
     "homologacao": {
-      "commit": "05a104a",
+      "commit": "ad4e377",
       "quando": "2026-11-14",
-      "conferido": "rodapé da tela de entrada (05a104a · build 14/11/2026 19:23), /saude 200 e as rotas reais respondendo 307 para o login"
+      "conferido": "rodapé da tela de entrada (ad4e377 · build 14/11/2026 19:33), /saude 200 e as rotas reais respondendo 307 para o login"
     },
     "falta_publicar": [
-      "Q1, saúde da operação: as filas paradas na rede (QUAL-006 em parte), sem migration, publicado ao fim do lote"
+      "Q2, plano de contingência e de incidentes da piloto (QUAL-008 e QUAL-013 em parte), só documento"
     ]
   },
   "contagem_dos_estados": {
