@@ -220,6 +220,8 @@ describe("quem vê e quem mexe (L12a)", () => {
     const tecnico = await naLoja(ids.tecnico, ids.assistencia);
     expect(await ver(tecnico)).toEqual([]);
     expect(await verEventos(tecnico)).toBe(0);
+    // Antes de a OS ir para a assistência, o técnico nem a encontra (a OS sem assistência não é dele: nulo vale "não").
+    expect(await codigo(tecnico, PASSO, [id, "tecnico_recebeu", null, null])).toBe("P0002");
     await valor(ana, PASSO, [id, "enviar_ao_tecnico", ids.assistencia, null]);
     expect(await ver(tecnico)).toEqual([id]);
     expect(await verEventos(tecnico)).toBe(2);

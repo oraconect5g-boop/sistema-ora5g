@@ -331,9 +331,10 @@ begin
     raise exception 'Passo da ordem de serviço desconhecido' using errcode = '22023';
   end if;
   select * into os from public.ordens_servico o where o.id = p_os for update;
-  v_pela_loja := os.id is not null and os.unidade_id = v_unidade and (select public.tem_permissao('os.abrir', v_unidade));
-  v_gere := os.id is not null and os.unidade_id = v_unidade and (select public.tem_permissao('os.gerir', v_unidade));
-  v_tecnico := os.id is not null and os.assistencia_id = v_unidade and (select public.tem_permissao('os.orcar', v_unidade));
+  -- coalesce: sem loja do turno ou sem assistência na OS, a comparação dá nulo, e nulo aqui é "não".
+  v_pela_loja := coalesce(os.id is not null and os.unidade_id = v_unidade and (select public.tem_permissao('os.abrir', v_unidade)), false);
+  v_gere := coalesce(os.id is not null and os.unidade_id = v_unidade and (select public.tem_permissao('os.gerir', v_unidade)), false);
+  v_tecnico := coalesce(os.id is not null and os.assistencia_id = v_unidade and (select public.tem_permissao('os.orcar', v_unidade)), false);
   if not (v_pela_loja or v_gere or v_tecnico) then
     raise exception 'Ordem de serviço não encontrada' using errcode = 'P0002';
   end if;
