@@ -1,4 +1,4 @@
-// Lote FISC-009b (15/11/2026, ORA-FISC-009 em parte; migration 20261115200000_carta_de_correcao): a carta de correção
+// Lote FISC-009b (15/11/2026, ORA-FISC-009 em parte; migration 20261115181840_carta_de_correcao): a carta de correção
 // da NF-e feita no portal do fisco, registrada com o número, o protocolo e o texto. As regras são as do Manual de
 // Orientação ao Contribuinte (SEFAZ-PR, Web Service da Carta de Correção): só NF-e (modelo 55), autorizada e não
 // cancelada; número de 1 a 20; texto de 15 a 1.000 caracteres; a mais recente substitui as anteriores. Dados

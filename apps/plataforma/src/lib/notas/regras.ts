@@ -39,7 +39,7 @@ export const ERROS_DAS_NOTAS = {
   carta_protocolo_repetido: "Este protocolo já está registrado em outra carta de correção: confira no portal.",
   carta_nfce: "A carta de correção é só da NF-e. A NFC-e não tem: para corrigir, cancele a nota no fisco e peça outra.",
   carta_nao_emitida: "Só a nota emitida (autorizada e não cancelada) tem carta de correção: recarregue a venda.",
-  falha:"Não foi possível concluir agora. Tente de novo em instantes.",
+  falha: "Não foi possível concluir agora. Tente de novo em instantes.",
 } as const;
 export type ErroDasNotas = keyof typeof ERROS_DAS_NOTAS;
 
