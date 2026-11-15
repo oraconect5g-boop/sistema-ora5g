@@ -1,4 +1,4 @@
--- Reversão de 20261115170000_segundo_fator (lote ORG-007a): a exigência do segundo fator sai das permissões e da
+-- Reversão de 20261115164226_segundo_fator (antes 20261115170000; lote ORG-007a): a exigência do segundo fator sai das permissões e da
 -- situação da sessão, que volta a ter as cinco colunas de antes. Os fatores cadastrados ficam no Supabase Auth (são
 -- do Auth, não do banco do sistema): sem esta exigência, a sessão sem o código volta a ter as permissões.
 create or replace function privado.vinculos_vigentes()
