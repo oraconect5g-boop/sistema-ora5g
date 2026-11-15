@@ -1,5 +1,5 @@
 // ARQUIVO GERADO pelo Supabase (generate_typescript_types do projeto ora5g-dev) depois da
-// migration 20261115102535_correcao_do_custo. Não edite à mão: gere de novo a cada
+// migration 20261115142547_limpeza_das_fotos. Não edite à mão: gere de novo a cada
 // migration aplicada (auditoria do Codex de 08/11, §7.2). O teste tipos-banco.test.ts confere
 // que funções e tabelas públicas daqui são as mesmas das migrations.
 export type Json =
@@ -6423,7 +6423,10 @@ export type Database = {
         Returns: Json
       }
       fotos_sem_registro: { Args: never; Returns: Json }
-      fotos_sem_registro_limpar: { Args: { p_caminhos: string[] }; Returns: Json }
+      fotos_sem_registro_limpar: {
+        Args: { p_caminhos: string[] }
+        Returns: Json
+      }
       identidade_bloqueios_a_aplicar: {
         Args: never
         Returns: {

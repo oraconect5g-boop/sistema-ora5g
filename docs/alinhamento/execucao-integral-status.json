@@ -2,7 +2,7 @@
   "_leia": "Checkpoint do programa de execução integral (PR #67). Carregar ao retomar e seguir para o próximo item executável da fila; não reiniciar o projeto. Estados vêm de status-requisitos.json (fonte da rastreabilidade); este arquivo acrescenta lote, bloqueio externo e revisão.",
   "atualizado_em": "2026-11-15",
   "base": {
-    "main": "43ff5da",
+    "main": "37faa93",
     "pacote": {
       "pr": 67,
       "branch": "docs/execucao-integral-20261110",
@@ -18,13 +18,12 @@
   },
   "publicado": {
     "homologacao": {
-      "commit": "43ff5da",
+      "commit": "37faa93",
       "quando": "2026-11-15",
-      "conferido": "rodapé da tela de entrada (43ff5da · build 15/11/2026 08:03), /saude 200 e as rotas reais respondendo 307 para o login (inclusive /inicio e /estoque)"
+      "conferido": "rodapé da tela de entrada (37faa93 · build 15/11/2026 08:21), /saude 200 e as rotas reais respondendo 307 para o login (inclusive /catalogo/lote e /inicio)"
     },
     "falta_publicar": [
-      "CAT-011b, a limpeza das fotos enviadas sem registro, publicado ao fim do lote",
-      "migration 20261115110000_limpeza_das_fotos (CAT-011b): aplicar no ora5g-dev pede o sim do proprietário"
+      "registro da migration do CAT-011b aplicada no ora5g-dev (só documentos e nomes de arquivo), publicado ao fim do lote"
     ]
   },
   "contagem_dos_estados": {
@@ -219,7 +218,7 @@
       "titulo": "Exigir foto principal por produto e imagem própria para variantes visualmente diferentes",
       "prioridade": "P0",
       "estado": "parcial",
-      "lote": "L3 catálogo/importador; B5 leituras completas (14/11); CAT-011b (15/11): a limpeza das fotos enviadas sem registro",
+      "lote": "L3 catálogo/importador; B5 leituras completas (14/11); CAT-011b (15/11): a limpeza das fotos enviadas sem registro; migration aplicada no ora5g-dev em 15/11",
       "bloqueio_externo": null,
       "revisado_codex": false,
       "homologado": false

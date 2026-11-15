@@ -79,6 +79,7 @@
     { "versao": "20261115102330", "nome": "margem_por_vendedor", "md5": "192df897589ce525c19f3b46472df470", "aplicada_em": "2026-11-15" },
     { "versao": "20261115102358", "nome": "conta_da_entrada", "md5": "d141bf13599fa56ca3b405ae2e25753a", "aplicada_em": "2026-11-15" },
     { "versao": "20261115102440", "nome": "documentos_da_conta", "md5": "92590050a4e88f5c10194520286306bb", "aplicada_em": "2026-11-15" },
-    { "versao": "20261115102535", "nome": "correcao_do_custo", "md5": "54dc0a37454671dde3f628af24cccfd7", "aplicada_em": "2026-11-15" }
+    { "versao": "20261115102535", "nome": "correcao_do_custo", "md5": "54dc0a37454671dde3f628af24cccfd7", "aplicada_em": "2026-11-15" },
+    { "versao": "20261115142547", "nome": "limpeza_das_fotos", "md5": "36aa0ce0cd1e32802f7f3c944e2eb9cf", "aplicada_em": "2026-11-15" }
   ]
 }
