@@ -81,6 +81,7 @@
     { "versao": "20261115102440", "nome": "documentos_da_conta", "md5": "92590050a4e88f5c10194520286306bb", "aplicada_em": "2026-11-15" },
     { "versao": "20261115102535", "nome": "correcao_do_custo", "md5": "54dc0a37454671dde3f628af24cccfd7", "aplicada_em": "2026-11-15" },
     { "versao": "20261115142547", "nome": "limpeza_das_fotos", "md5": "36aa0ce0cd1e32802f7f3c944e2eb9cf", "aplicada_em": "2026-11-15" },
-    { "versao": "20261115150738", "nome": "pedido_de_compra", "md5": "ddebd3f45a0efeab013d944c23936122", "aplicada_em": "2026-11-15" }
+    { "versao": "20261115150738", "nome": "pedido_de_compra", "md5": "ddebd3f45a0efeab013d944c23936122", "aplicada_em": "2026-11-15" },
+    { "versao": "20261115164226", "nome": "segundo_fator", "md5": "8296376240ee3be69ddd8d5effda2e57", "aplicada_em": "2026-11-15" }
   ]
 }

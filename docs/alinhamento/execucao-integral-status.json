@@ -2,7 +2,7 @@
   "_leia": "Checkpoint do programa de execução integral (PR #67). Carregar ao retomar e seguir para o próximo item executável da fila; não reiniciar o projeto. Estados vêm de status-requisitos.json (fonte da rastreabilidade); este arquivo acrescenta lote, bloqueio externo e revisão.",
   "atualizado_em": "2026-11-15",
   "base": {
-    "main": "49e4e4e",
+    "main": "96db1d6",
     "pacote": {
       "pr": 67,
       "branch": "docs/execucao-integral-20261110",
@@ -18,13 +18,12 @@
   },
   "publicado": {
     "homologacao": {
-      "commit": "49e4e4e",
+      "commit": "96db1d6",
       "quando": "2026-11-15",
-      "conferido": "rodapé da tela de entrada (49e4e4e · build 15/11/2026 12:46), /saude 200 e as rotas reais respondendo 307 para o login (inclusive /produtos/importar e /estoque/pedidos)"
+      "conferido": "rodapé da tela de entrada (96db1d6 · build 15/11/2026 13:15), /saude 200 e as rotas reais respondendo 307 para o login (inclusive /entrar/codigo e /conta/seguranca)"
     },
     "falta_publicar": [
-      "ORG-007a, o segundo fator para entrar, publicado ao fim do lote",
-      "migration 20261115170000_segundo_fator (ORG-007a): aplicar no ora5g-dev pede o sim do proprietário"
+      "registro da migration do ORG-007a aplicada no ora5g-dev (só documentos e nomes de arquivo), publicado ao fim do lote"
     ]
   },
   "contagem_dos_estados": {
@@ -93,7 +92,7 @@
       "titulo": "Autenticação reforçada para perfis privilegiados",
       "prioridade": "P1",
       "estado": "parcial",
-      "lote": "L2 cadastros; ORG-007a (15/11): o segundo fator para entrar, exigido pelo banco de quem o liga",
+      "lote": "L2 cadastros; ORG-007a (15/11): o segundo fator para entrar, exigido pelo banco de quem o liga; migration aplicada no ora5g-dev em 15/11",
       "bloqueio_externo": "D-046 (obrigatoriedade para dono e administrador; retirada de quem perdeu os celulares, que pede a chave de serviço da J1)",
       "revisado_codex": false,
       "homologado": false
