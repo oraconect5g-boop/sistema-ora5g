@@ -2,7 +2,7 @@
   "_leia": "Checkpoint do programa de execução integral (PR #67). Carregar ao retomar e seguir para o próximo item executável da fila; não reiniciar o projeto. Estados vêm de status-requisitos.json (fonte da rastreabilidade); este arquivo acrescenta lote, bloqueio externo e revisão.",
   "atualizado_em": "2026-11-15",
   "base": {
-    "main": "b5b6408",
+    "main": "f38a01e",
     "pacote": {
       "pr": 67,
       "branch": "docs/execucao-integral-20261110",
@@ -18,12 +18,12 @@
   },
   "publicado": {
     "homologacao": {
-      "commit": "b5b6408",
+      "commit": "f38a01e",
       "quando": "2026-11-15",
-      "conferido": "rodapé da tela de entrada (b5b6408 · build 15/11/2026 15:32), /saude 200 e as rotas reais respondendo 307 para o login (inclusive /vendas, /notas, /conta/confirmar e /caixa)"
+      "conferido": "rodapé da tela de entrada (f38a01e · build 15/11/2026 15:41), /saude 200 e as rotas reais respondendo 307 para o login (inclusive /vendas, /notas, /conta/confirmar e /caixa)"
     },
     "falta_publicar": [
-      "QUAL-010a, o desempenho no celular (scripts, um passo do CI e documentos), publicado ao fim do lote"
+      "QUAL-010b, o cliente do Supabase sob demanda (quatro telas), publicado ao fim do lote"
     ]
   },
   "contagem_dos_estados": {
@@ -1550,7 +1550,7 @@
       "titulo": "Performance mobile e testes em dispositivos/internet reais",
       "prioridade": "P1",
       "estado": "parcial",
-      "lote": "transversal; QUAL-010a (15/11): o orçamento de cada tela no CI e a medida num celular simulado",
+      "lote": "transversal; QUAL-010a (15/11): o orçamento de cada tela no CI e a medida num celular simulado; QUAL-010b (15/11): o cliente do Supabase sob demanda",
       "bloqueio_externo": "as metas pedem a aprovação do proprietário (D-047); as telas com login dependem do usuário de teste (J1); o teste no celular e na internet da loja é da piloto",
       "revisado_codex": false,
       "homologado": false
