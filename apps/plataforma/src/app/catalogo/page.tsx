@@ -1,4 +1,4 @@
-import { ImageOff, Package } from "lucide-react";
+import { ImageOff, Images, Package } from "lucide-react";
 import type { Metadata } from "next";
 import Link from "next/link";
 
@@ -96,6 +96,7 @@ export default async function Catalogo({ searchParams }: { searchParams: Promise
           <><ImageOff aria-hidden className="size-4 text-aviso" /> {pendencias.data.length} {pendencias.data.length === 1 ? "foto pendente" : "fotos pendentes"} ·{" "}
             <Link href={soPendentes ? "/catalogo" : "/catalogo?pendentes=1"} className="font-semibold text-acao hover:underline">{soPendentes ? "ver tudo" : "ver só os pendentes"}</Link></>
         ) : <Selo tom="sucesso" ponto>todos os produtos com foto</Selo>}
+        {configuracao && <> · <Link href="/catalogo/lote" className="inline-flex items-center gap-1 font-semibold text-acao hover:underline"><Images aria-hidden className="size-4" /> fotos em lote</Link></>}
       </p>
       {maisProdutos && <Aviso tom="info" className="mt-3">Mostrando os primeiros {LIMITE} produtos{busca ? " desta busca; refine o termo" : "; use a busca"}.</Aviso>}
 

@@ -5,6 +5,8 @@ import { revalidatePath } from "next/cache";
 import { ehUuid } from "../../lib/acesso/regras";
 import { obterSessao } from "../../lib/acesso/sessao";
 import type { ErroDeFoto } from "../../lib/catalogo/fotos";
+import { MAXIMO_DO_LOTE, skuDoArquivo, type DestinoDaFoto } from "../../lib/catalogo/lote-de-fotos";
+import { lerPorIds } from "../../lib/leitura-completa";
 
 // Depois do envio ao Storage: o banco confere permissão, caminho e o arquivo, e troca a foto em uso.
 export async function registrarFoto(dados: { produto: string; variante: string | null; caminho: string; largura: number; altura: number }):
@@ -23,4 +25,53 @@ export async function registrarFoto(dados: { produto: string; variante: string |
   if (error) return { ok: false, erro: error.code === "42501" ? "permissao" : "registro" };
   revalidatePath("/catalogo");
   return { ok: true };
+}
+
+/**
+ * Fotos em lote (CAT-010): para cada SKU, para onde vai a foto, pelas leituras de quem pede (o catálogo da rede dela).
+ * A cor da variação quando o produto ativo tem duas cores ou mais e a variação tem cor; senão, o produto (como no
+ * catálogo e nas pendências de foto). Só variações e produtos ativos. Sem catalogo.fotos na loja do turno: recusa.
+ */
+export async function localizarDestinos(skus: string[]): Promise<{ ok: true; destinos: DestinoDaFoto[] } | { ok: false; erro: "dados" | "permissao" | "falha" }> {
+  if (!Array.isArray(skus) || skus.length === 0 || skus.length > MAXIMO_DO_LOTE || !skus.every((s) => typeof s === "string" && skuDoArquivo(s) === s)) {
+    return { ok: false, erro: "dados" };
+  }
+  const { supabase, situacao } = await obterSessao({ exigirLoja: true });
+  const pode = await supabase.rpc("tem_permissao", { p_permissao: "catalogo.fotos", p_unidade: situacao.unidade_id as string });
+  if (pode.error) return { ok: false, erro: "falha" };
+  if (!pode.data) return { ok: false, erro: "permissao" };
+  const procurados = new Set(skus.map((s) => s.toLowerCase()));
+  // ilike sem curinga do nome (o nome só tem letras, números, ponto, hífen e sublinhado): o sublinhado pode trazer a
+  // mais, nunca a menos; a igualdade sem diferença de maiúsculas é conferida aqui.
+  const achadas = await supabase.from("variantes").select("id, produto_id, sku, nome, cor").eq("ativa", true).ilikeAnyOf("sku", [...procurados]).order("sku").limit(1000);
+  if (achadas.error || !achadas.data) {
+    console.error("catálogo: falha ao localizar os SKUs das fotos", { codigo: achadas.error?.code || null });
+    return { ok: false, erro: "falha" };
+  }
+  const variantes = achadas.data.filter((v) => procurados.has(v.sku.toLowerCase()));
+  const ids = [...new Set(variantes.map((v) => v.produto_id))];
+  if (ids.length === 0) return { ok: true, destinos: [] };
+  const [produtos, cores, fotos] = await Promise.all([
+    lerPorIds(ids, (lote, de, ate) => supabase.from("produtos").select("id, nome, organizacao_id").eq("ativo", true).in("id", lote).order("id").range(de, ate)),
+    lerPorIds(ids, (lote, de, ate) => supabase.from("variantes").select("id, produto_id, cor").eq("ativa", true).not("cor", "is", null).in("produto_id", lote).order("id").range(de, ate)),
+    lerPorIds(ids, (lote, de, ate) => supabase.from("fotos_produto").select("id, produto_id, variante_id").in("produto_id", lote).is("substituida_em", null).order("id").range(de, ate)),
+  ]);
+  if (!produtos.ok || !cores.ok || !fotos.ok) {
+    console.error("catálogo: falha ao ler os produtos das fotos em lote", { codigo: (!produtos.ok ? produtos.erro.code : !cores.ok ? cores.erro.code : !fotos.ok ? fotos.erro.code : null) || null });
+    return { ok: false, erro: "falha" };
+  }
+  const destinos: DestinoDaFoto[] = [];
+  for (const v of variantes) {
+    const produto = produtos.linhas.find((p) => p.id === v.produto_id);
+    if (!produto) continue;
+    const quantasCores = new Set(cores.linhas.filter((c) => c.produto_id === produto.id && c.cor).map((c) => (c.cor as string).toLowerCase())).size;
+    const daCor = quantasCores >= 2 && Boolean(v.cor);
+    const variante = daCor ? v.id : null;
+    destinos.push({
+      sku: v.sku, organizacao: produto.organizacao_id, produto: produto.id, variante,
+      rotulo: daCor ? `${v.nome}: foto da cor ${v.cor}` : `${produto.nome}: foto do produto`,
+      temFoto: fotos.linhas.some((f) => f.produto_id === produto.id && f.variante_id === variante),
+    });
+  }
+  return { ok: true, destinos };
 }

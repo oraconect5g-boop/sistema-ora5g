@@ -6,28 +6,18 @@ import { useRouter } from "next/navigation";
 import { useRef, useState } from "react";
 
 import { Botao } from "../../componentes/ui";
-import { caminhoDaFoto, conferirArquivo, dimensionar, ERROS_DE_FOTO, type ErroDeFoto, ehTipoDeFoto, type TipoDeFoto } from "../../lib/catalogo/fotos";
+import { caminhoDaFoto, ERROS_DE_FOTO, type ErroDeFoto } from "../../lib/catalogo/fotos";
+import { prepararFoto, type FotoPreparada } from "../../lib/catalogo/preparar-foto";
 import type { Database } from "../../lib/supabase/tipos-banco";
 import { registrarFoto } from "./acoes";
 
-type Previa = { blob: Blob; url: string; largura: number; altura: number; tipo: TipoDeFoto };
+type Previa = FotoPreparada & { url: string };
 
-// Reduz no próprio celular (lado maior 1600 px, sem cortar) e grava em WebP ou, se o aparelho
-// não souber, em JPEG. A foto anterior só deixa de valer depois do registro no banco.
+// A foto é preparada no próprio celular (lib/catalogo/preparar-foto.ts). A foto anterior só deixa de valer depois do
+// registro no banco.
 async function preparar(arquivo: File): Promise<Previa | ErroDeFoto> {
-  if (!ehTipoDeFoto(arquivo.type)) return "tipo";
-  const imagem = await createImageBitmap(arquivo);
-  const { largura, altura } = dimensionar(imagem.width, imagem.height);
-  const tela = document.createElement("canvas");
-  tela.width = largura;
-  tela.height = altura;
-  tela.getContext("2d")?.drawImage(imagem, 0, 0, largura, altura);
-  const gerar = (tipo: string) => new Promise<Blob | null>((resolver) => tela.toBlob(resolver, tipo, 0.85));
-  let blob = await gerar("image/webp");
-  if (!blob || blob.type !== "image/webp") blob = await gerar("image/jpeg");
-  if (!blob || !ehTipoDeFoto(blob.type)) return "tipo";
-  const problema = conferirArquivo(blob.type, blob.size, largura, altura);
-  return problema ?? { blob, url: URL.createObjectURL(blob), largura, altura, tipo: blob.type };
+  const resultado = await prepararFoto(arquivo);
+  return typeof resultado === "string" ? resultado : { ...resultado, url: URL.createObjectURL(resultado.blob) };
 }
 
 export function EnviarFoto({ supabaseUrl, chavePublica, organizacao, produto, variante, rotulo }: {
