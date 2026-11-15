@@ -11,8 +11,8 @@
 // O arquivo é o mínimo que o formato pede (ECMA-376): o pacote ZIP com [Content_Types].xml, as relações, o
 // workbook, os estilos e uma folha por aba, com texto direto na célula (inlineStr, sem a tabela de textos
 // compartilhados). Cada aba recebe as mesmas seções do CSV (lib/csv: SecaoCsv), uma embaixo da outra com uma
-// linha em branco entre elas; o cabeçalho das colunas sai em negrito, e a aba com uma tabela só fica com o
-// cabeçalho fixo na rolagem e o filtro do Excel nas colunas.
+// linha em branco entre elas; o cabeçalho das colunas sai em negrito, e a tabela principal (a única da aba, ou a
+// marcada com `filtro`) fica com o cabeçalho fixo na rolagem e o filtro do Excel nas colunas.
 import type { Celula, SecaoCsv } from "./csv";
 
 export const TIPO_XLSX = "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet";
@@ -205,6 +205,9 @@ function folhaXml(aba: Aba): Folha {
   const linhas: string[] = [];
   const larguras: number[] = [];
   const tabelas = aba.secoes.filter((s) => s.colunas).length;
+  // A tabela do filtro e do cabeçalho fixo: a marcada (FIN-009d) ou, sem marca, a única tabela da aba.
+  const marcada = aba.secoes.findIndex((s) => s.colunas && s.filtro);
+  const principal = marcada >= 0 ? marcada : tabelas === 1 ? aba.secoes.findIndex((s) => s.colunas) : -1;
   // A largura sai das tabelas (um título comprido no alto não alarga a primeira coluna); sem tabela, de tudo.
   const medir = (linha: readonly Celula[]) => linha.forEach((c, i) => { larguras[i] = Math.max(larguras[i] ?? 0, larguraDaCelula(c)); });
   let numero = 0;
@@ -222,7 +225,7 @@ function folhaXml(aba: Aba): Folha {
       escrever(secao.colunas, true);
       const cabecalho = numero;
       for (const l of secao.linhas) escrever(l, false);
-      if (tabelas === 1) t = { cabecalho, ultima: numero, colunas: secao.colunas.length };
+      if (s === principal) t = { cabecalho, ultima: numero, colunas: secao.colunas.length };
       medir(secao.colunas);
       secao.linhas.forEach(medir);
     } else {

@@ -2,7 +2,7 @@
   "_leia": "Checkpoint do programa de execução integral (PR #67). Carregar ao retomar e seguir para o próximo item executável da fila; não reiniciar o projeto. Estados vêm de status-requisitos.json (fonte da rastreabilidade); este arquivo acrescenta lote, bloqueio externo e revisão.",
   "atualizado_em": "2026-11-15",
   "base": {
-    "main": "3095891",
+    "main": "dff73fd",
     "pacote": {
       "pr": 67,
       "branch": "docs/execucao-integral-20261110",
@@ -18,18 +18,18 @@
   },
   "publicado": {
     "homologacao": {
-      "commit": "3095891",
+      "commit": "dff73fd",
       "quando": "2026-11-15",
-      "conferido": "rodapé da tela de entrada (3095891 · build 15/11/2026 02:16), /saude 200 e as rotas reais respondendo 307 para o login (inclusive /estoque/exportar)"
+      "conferido": "rodapé da tela de entrada (dff73fd · build 15/11/2026 02:41), /saude 200 e as rotas reais respondendo 307 para o login"
     },
     "falta_publicar": [
-      "FIN-009c, o Excel nas planilhas que já existiam (sem migration), publicado ao fim do lote"
+      "FIN-009d, planilhas da equipe e da auditoria (sem migration), publicado ao fim do lote"
     ]
   },
   "contagem_dos_estados": {
     "nao_iniciado": 49,
-    "parcial": 73,
-    "testado": 52,
+    "parcial": 72,
+    "testado": 53,
     "bloqueado": 3,
     "respeitado": 2
   },
@@ -766,8 +766,8 @@
     "ORA-FIN-009": {
       "titulo": "Exportações CSV/XLSX/PDF de relatórios autorizados",
       "prioridade": "P1",
-      "estado": "parcial",
-      "lote": "L8 financeiro; G2 financeiro e relatórios (G2a entregue em 13/11); L8d em 13/11: planilha e PDF do resultado, da previsão e das contas a pagar; B5 leituras completas (14/11); FIN-009b (15/11): planilhas do estoque em Excel (XLSX sem biblioteca) e CSV; FIN-009c (15/11): o Excel nas planilhas que já existiam",
+      "estado": "testado",
+      "lote": "L8 financeiro; G2 financeiro e relatórios (G2a entregue em 13/11); L8d em 13/11: planilha e PDF do resultado, da previsão e das contas a pagar; B5 leituras completas (14/11); FIN-009b (15/11): planilhas do estoque em Excel (XLSX sem biblioteca) e CSV; FIN-009c (15/11): o Excel nas planilhas que já existiam; FIN-009d (15/11): planilhas da equipe e da auditoria",
       "bloqueio_externo": null,
       "revisado_codex": false,
       "homologado": false

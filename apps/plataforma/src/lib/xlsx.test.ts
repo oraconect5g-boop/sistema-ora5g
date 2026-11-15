@@ -98,6 +98,18 @@ describe("planilha do Excel (FIN-009b)", () => {
     expect(outra).not.toContain("<pane");
   });
 
+  it("FIN-009d: com duas tabelas, o filtro e o cabeçalho fixo vão para a marcada; sem marca, para nenhuma", () => {
+    const duas = (filtro: boolean) => abrirXlsx(gerarXlsx([{ nome: "Equipe", secoes: [
+      { linhas: [["Equipe e acessos"]] },
+      { colunas: ["Pessoa", "Função"], linhas: [["Ana", "Dono"], ["Bia", "Gerente"]], filtro },
+      { colunas: ["Convite para", "Situação"], linhas: [["Duda", "não enviado"]] },
+    ] }])).get("xl/worksheets/sheet1.xml") ?? "";
+    expect(duas(true)).toContain('<autoFilter ref="A3:B5"/>');
+    expect(duas(true)).toContain('<pane ySplit="3" topLeftCell="A4" activePane="bottomLeft" state="frozen"/>');
+    expect(duas(false)).not.toContain("<autoFilter");
+    expect(duas(false)).not.toContain("<pane");
+  });
+
   it("o mesmo conteúdo dá o mesmo arquivo; sem aba não há planilha", () => {
     expect(Buffer.compare(gerarXlsx([{ nome: "A", secoes: SECOES }]), gerarXlsx([{ nome: "A", secoes: SECOES }]))).toBe(0);
     expect(() => gerarXlsx([])).toThrow("planilha sem aba");

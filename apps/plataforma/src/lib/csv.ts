@@ -49,7 +49,11 @@ export function textoDaCelula(celula: Celula): string | number {
  * Um arquivo com várias partes (o demonstrativo, as contas por categoria...), separadas por uma linha em
  * branco, cada uma com o próprio cabeçalho. As células passam pela mesma proteção de `celulaCsv`.
  */
-export type SecaoCsv = { colunas?: readonly string[]; linhas: readonly (readonly Celula[])[] };
+export type SecaoCsv = {
+  colunas?: readonly string[]; linhas: readonly (readonly Celula[])[];
+  /** No Excel (lib/xlsx), esta é a tabela com o filtro e o cabeçalho fixo, mesmo havendo outras (FIN-009d). O CSV ignora. */
+  filtro?: boolean;
+};
 export const gerarCsvEmSecoes = (secoes: readonly SecaoCsv[]) =>
   `﻿${secoes
     .map((s) => [...(s.colunas ? [s.colunas] : []), ...s.linhas].map((linha) => linha.map((c) => celulaCsv(textoDaCelula(c))).join(";")).join("\r\n"))
