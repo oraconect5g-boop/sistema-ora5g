@@ -2,7 +2,7 @@
   "_leia": "Checkpoint do programa de execução integral (PR #67). Carregar ao retomar e seguir para o próximo item executável da fila; não reiniciar o projeto. Estados vêm de status-requisitos.json (fonte da rastreabilidade); este arquivo acrescenta lote, bloqueio externo e revisão.",
   "atualizado_em": "2026-11-15",
   "base": {
-    "main": "96db1d6",
+    "main": "076e05f",
     "pacote": {
       "pr": 67,
       "branch": "docs/execucao-integral-20261110",
@@ -18,12 +18,12 @@
   },
   "publicado": {
     "homologacao": {
-      "commit": "96db1d6",
+      "commit": "076e05f",
       "quando": "2026-11-15",
-      "conferido": "rodapé da tela de entrada (96db1d6 · build 15/11/2026 13:15), /saude 200 e as rotas reais respondendo 307 para o login (inclusive /entrar/codigo e /conta/seguranca)"
+      "conferido": "rodapé da tela de entrada (076e05f · build 15/11/2026 13:52), /saude 200 e as rotas reais respondendo 307 para o login (inclusive /entrar/codigo e /conta/seguranca)"
     },
     "falta_publicar": [
-      "registro da migration do ORG-007a aplicada no ora5g-dev (só documentos e nomes de arquivo), publicado ao fim do lote"
+      "INV-009b, receber a mercadoria a partir do pedido de compra, publicado ao fim do lote"
     ]
   },
   "contagem_dos_estados": {
@@ -299,7 +299,7 @@
       "titulo": "Compras e recebimento de fornecedores",
       "prioridade": "P1",
       "estado": "testado",
-      "lote": "L4a entrada de mercadoria; R1 correções do recebimento; INV-009a (15/11): o pedido de compra e a conferência com a nota; migration aplicada no ora5g-dev em 15/11",
+      "lote": "L4a entrada de mercadoria; R1 correções do recebimento; INV-009a (15/11): o pedido de compra e a conferência com a nota; migration aplicada no ora5g-dev em 15/11; INV-009b (15/11): receber a partir do pedido",
       "bloqueio_externo": null,
       "revisado_codex": false,
       "homologado": false

@@ -4,11 +4,17 @@ import { Plus, Search, Trash2 } from "lucide-react";
 import { useId, useState, useTransition } from "react";
 
 import { CONDICOES, separarIdentificadores, TIPOS_DE_ENTRADA } from "../../../lib/estoque/entrada";
+import type { PedidoParaReceber } from "../../../lib/estoque/receber-do-pedido";
 import { buscarItensParaEntrada, registrarEntrada, type ItemParaEntrada } from "./acoes";
 
 const campo = "mt-1 min-h-11 w-full rounded-botao border border-borda bg-white px-3 text-sm outline-none focus:border-acao focus:ring-2 focus:ring-acao/20";
-type Linha = { chave: string; item: ItemParaEntrada | null; quantidade: string; identificadores: string; custo: string; condicao: string };
+/** `falta`: na entrada a partir do pedido de compra (INV-009b), quanto falta receber deste item do pedido. */
+type Linha = { chave: string; item: ItemParaEntrada | null; quantidade: string; identificadores: string; custo: string; condicao: string; falta?: number };
 const novaLinha = (n: number): Linha => ({ chave: `l${n}`, item: null, quantidade: "1", identificadores: "", custo: "", condicao: "novo" });
+/** As linhas do que falta receber do pedido: o acessório já com a quantidade; aparelho e chip esperam a leitura dos códigos. */
+const linhasDoPedido = (pedido: PedidoParaReceber): Linha[] => pedido.linhas.map((l, i) => ({
+  chave: `p${i + 1}`, item: l.item, quantidade: l.item.tipo === "acessorio" ? String(l.falta) : "1", identificadores: "", custo: l.custo, condicao: "novo", falta: l.falta,
+}));
 
 export function BuscaDoItem({ aoEscolher }: { aoEscolher: (item: ItemParaEntrada) => void }) {
   const [termo, setTermo] = useState("");
@@ -45,10 +51,12 @@ export function BuscaDoItem({ aoEscolher }: { aoEscolher: (item: ItemParaEntrada
 
 // Formulário da entrada: as linhas vão para o servidor num campo só (JSON), que o servidor e o banco
 // conferem de novo. A chave do formulário (gerada na tela do servidor) impede entrada em dobro.
-export function FormularioEntrada({ unidade, chave, fornecedores }: { unidade: string; chave: string; fornecedores: { id: string; nome: string }[] }) {
-  const [tipo, setTipo] = useState<"compra" | "carga_inicial">(fornecedores.length ? "compra" : "carga_inicial");
-  const [linhas, setLinhas] = useState<Linha[]>([novaLinha(1)]);
-  const [proxima, setProxima] = useState(2);
+export function FormularioEntrada({ unidade, chave, fornecedores, pedido = null }: {
+  unidade: string; chave: string; fornecedores: { id: string; nome: string }[]; pedido?: PedidoParaReceber | null;
+}) {
+  const [tipo, setTipo] = useState<"compra" | "carga_inicial">(pedido || fornecedores.length ? "compra" : "carga_inicial");
+  const [linhas, setLinhas] = useState<Linha[]>(() => (pedido ? linhasDoPedido(pedido) : [novaLinha(1)]));
+  const [proxima, setProxima] = useState(() => (pedido ? pedido.linhas.length + 1 : 2));
   const mudar = (chaveDaLinha: string, mudanca: Partial<Linha>) => setLinhas((ls) => ls.map((l) => (l.chave === chaveDaLinha ? { ...l, ...mudanca } : l)));
   const prontas = linhas.filter((l) => l.item);
   const itens = JSON.stringify(prontas.map((l) => ({
@@ -60,15 +68,29 @@ export function FormularioEntrada({ unidade, chave, fornecedores }: { unidade: s
       <input type="hidden" name="unidade" value={unidade} />
       <input type="hidden" name="chave" value={chave} />
       <input type="hidden" name="itens" value={itens} />
-      <fieldset className="flex flex-wrap gap-4 text-sm">
-        <legend className="mb-1 font-medium">Tipo de entrada</legend>
-        {Object.entries(TIPOS_DE_ENTRADA).map(([valor, nome]) => (
-          <label key={valor} className="flex min-h-10 items-center gap-2">
-            <input type="radio" name="tipo" value={valor} checked={tipo === valor} onChange={() => setTipo(valor as typeof tipo)} className="size-4 accent-acao" /> {nome}
-          </label>
-        ))}
-      </fieldset>
-      {tipo === "compra" && (
+      {pedido ? (
+        <>
+          {/* INV-009b: a compra do pedido, do fornecedor do pedido; registrada, a entrada já sai ligada a ele. */}
+          <input type="hidden" name="pedido" value={pedido.id} />
+          <input type="hidden" name="tipo" value="compra" />
+          <input type="hidden" name="fornecedor" value={pedido.fornecedorId} />
+          <div className="rounded-xl bg-acao-clara/50 p-3 text-sm">
+            <p className="font-semibold">{`Recebendo o pedido de compra nº ${pedido.numero}, de ${pedido.fornecedor}`}</p>
+            <p className="mt-1 text-suave">As linhas são o que falta receber. Confira com a nota: tire o que não veio e acerte as quantidades; aparelho e chip entram pela leitura do IMEI ou do ICCID.{pedido.deFora === 1 ? " 1 item do pedido ficou de fora por estar inativo no catálogo." : pedido.deFora > 1 ? ` ${pedido.deFora} itens do pedido ficaram de fora por estarem inativos no catálogo.` : ""}</p>
+          </div>
+          <label className="block text-sm font-medium">Documento (nota)<input name="documento" maxLength={60} placeholder="NF 1234" className={campo} /></label>
+        </>
+      ) : (
+        <fieldset className="flex flex-wrap gap-4 text-sm">
+          <legend className="mb-1 font-medium">Tipo de entrada</legend>
+          {Object.entries(TIPOS_DE_ENTRADA).map(([valor, nome]) => (
+            <label key={valor} className="flex min-h-10 items-center gap-2">
+              <input type="radio" name="tipo" value={valor} checked={tipo === valor} onChange={() => setTipo(valor as typeof tipo)} className="size-4 accent-acao" /> {nome}
+            </label>
+          ))}
+        </fieldset>
+      )}
+      {!pedido && tipo === "compra" && (
         <div className="grid gap-3 sm:grid-cols-2">
           <label className="block text-sm font-medium">Fornecedor
             <select name="fornecedor" required className={campo} defaultValue="">
@@ -94,11 +116,13 @@ export function FormularioEntrada({ unidade, chave, fornecedores }: { unidade: s
             {!l.item ? <BuscaDoItem aoEscolher={(item) => mudar(l.chave, { item })} /> : (
               <div className="mt-2 grid gap-3 sm:grid-cols-2">
                 {l.item.tipo === "acessorio" ? (
-                  <label className="block text-sm font-medium">Quantidade<input type="number" min={1} max={10000} value={l.quantidade} onChange={(e) => mudar(l.chave, { quantidade: e.target.value })} required className={campo} /></label>
+                  <label className="block text-sm font-medium">Quantidade<input type="number" min={1} max={10000} value={l.quantidade} onChange={(e) => mudar(l.chave, { quantidade: e.target.value })} required className={campo} />
+                    {l.falta !== undefined && <span className="text-xs text-suave">{`faltam ${l.falta} do pedido`}</span>}
+                  </label>
                 ) : (
                   <label className="block text-sm font-medium sm:col-span-2">{l.item.tipo === "aparelho" ? "IMEI" : "ICCID"} de cada unidade (um por linha)
                     <textarea rows={4} value={l.identificadores} onChange={(e) => mudar(l.chave, { identificadores: e.target.value })} required inputMode="numeric" className={`${campo} py-2 font-mono`} />
-                    <span className="text-xs text-suave">{separarIdentificadores(l.identificadores).length} unidade(s)</span>
+                    <span className="text-xs text-suave">{separarIdentificadores(l.identificadores).length} unidade(s){l.falta !== undefined ? ` · faltam ${l.falta} do pedido` : ""}</span>
                   </label>
                 )}
                 <label className="block text-sm font-medium">Custo por unidade (R$, opcional)<input inputMode="decimal" value={l.custo} onChange={(e) => mudar(l.chave, { custo: e.target.value })} placeholder="1.050,00" className={campo} /></label>
@@ -119,7 +143,7 @@ export function FormularioEntrada({ unidade, chave, fornecedores }: { unidade: s
         className="inline-flex min-h-11 items-center gap-2 rounded-botao border border-borda bg-white px-4 text-sm font-semibold text-acao">
         <Plus aria-hidden className="size-4" /> Mais um item
       </button>
-      <label className="block text-sm font-medium">Motivo (fica na auditoria)<input name="motivo" required minLength={3} maxLength={200} placeholder={tipo === "compra" ? "Pedido da semana" : "Estoque que já estava na loja"} className={campo} /></label>
+      <label className="block text-sm font-medium">Motivo (fica na auditoria)<input name="motivo" required minLength={3} maxLength={200} defaultValue={pedido ? `Recebimento do pedido nº ${pedido.numero}` : undefined} placeholder={tipo === "compra" ? "Pedido da semana" : "Estoque que já estava na loja"} className={campo} /></label>
       <button type="submit" disabled={prontas.length === 0} className="inline-flex min-h-11 items-center justify-center rounded-botao bg-acao px-5 text-sm font-semibold text-white disabled:opacity-50">
         Registrar entrada ({prontas.length} {prontas.length === 1 ? "linha" : "linhas"})
       </button>
