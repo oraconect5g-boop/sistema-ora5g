@@ -23,10 +23,14 @@ export const centavosCsv = (centavos: number) => {
 
 /**
  * Célula de planilha (lote FIN-009b): texto, número ou um valor com tipo, que a planilha do Excel (lib/xlsx) guarda
- * como número ou data de verdade e o CSV escreve como texto: dinheiro em centavos ("1234,56"), dia ("13/11/2026")
- * e instante, mostrado em São Paulo ("13/11/2026 22:10"). Nula é célula vazia.
+ * como número ou data de verdade e o CSV escreve como texto: dinheiro em centavos ("1234,56"), dia ("13/11/2026"),
+ * instante, mostrado em São Paulo ("13/11/2026 22:10"), e fração como percentual com uma casa (FIN-009c: 0,1234 →
+ * "12,3" no CSV; no Excel, o número com o formato de percentual). Nula é célula vazia.
  */
-export type Celula = string | number | null | { centavos: number } | { dia: string } | { instante: string };
+export type Celula = string | number | null | { centavos: number } | { dia: string } | { instante: string } | { fracao: number };
+
+/** Fração como percentual com uma casa, sem o símbolo: 0,1234 → "12,3" (o dos Relatórios). */
+export const fracaoCsv = (fracao: number) => (Math.round(fracao * 1000) / 10).toFixed(1).replace(".", ",");
 
 /** "2026-11-13T22:10:00Z" → "13/11/2026 19:10" (São Paulo). */
 export const instanteCsv = (instante: string) => geradoEm(new Date(instante));
@@ -37,6 +41,7 @@ export function textoDaCelula(celula: Celula): string | number {
   if (typeof celula === "string" || typeof celula === "number") return celula;
   if ("centavos" in celula) return centavosCsv(celula.centavos);
   if ("dia" in celula) return diaCsv(celula.dia);
+  if ("fracao" in celula) return fracaoCsv(celula.fracao);
   return instanteCsv(celula.instante);
 }
 
@@ -57,6 +62,19 @@ export const geradoEm = (agora: Date = new Date()) =>
 /** Parte de nome de arquivo: "São José dos Pinhais" → "sao-jose-dos-pinhais". */
 export const parteDoNome = (texto: string) =>
   texto.normalize("NFD").replace(/[̀-ͯ]/g, "").toLowerCase().replace(/[^a-z0-9]+/g, "-").replace(/^-+|-+$/g, "").slice(0, 40) || "arquivo";
+
+/** As duas formas de baixar uma planilha (FIN-009c): o Excel (lib/xlsx) e o CSV, para outros sistemas. */
+export type FormatoDaPlanilha = "xlsx" | "csv";
+export const formatoPedido = (valor: string | null | undefined, padrao: FormatoDaPlanilha): FormatoDaPlanilha =>
+  (valor === "xlsx" || valor === "csv" ? valor : padrao);
+
+/** O endereço da mesma planilha noutro formato: "/x/exportar?ver=a" → "/x/exportar?ver=a&formato=xlsx". */
+export function comFormato(endereco: string, formato: FormatoDaPlanilha): string {
+  const corte = endereco.indexOf("?");
+  const busca = new URLSearchParams(corte < 0 ? "" : endereco.slice(corte + 1));
+  busca.set("formato", formato);
+  return `${corte < 0 ? endereco : endereco.slice(0, corte)}?${busca}`;
+}
 
 /** "2026-11-13" → "13/11/2026". */
 export const diaCsv = (dia: string) => `${dia.slice(8, 10)}/${dia.slice(5, 7)}/${dia.slice(0, 4)}`;

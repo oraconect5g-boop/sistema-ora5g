@@ -7,7 +7,7 @@
 import { lerReais } from "@ora5g/dominio";
 
 import { ehUuid } from "../acesso/regras";
-import { centavosCsv } from "../csv";
+import type { Celula, SecaoCsv } from "../csv";
 import { RespostaInesperada } from "../financeiro/painel";
 import { ehObjeto, inteiro as n, inteiroOuNulo as nOuNulo, lista, texto as t, type Linha } from "../leitura-do-banco";
 import { somarMeses } from "../metas/painel";
@@ -326,17 +326,17 @@ export function validarAprovacao(campos: Campos): Resultado<Aprovacao> {
 // ---------------------------------------------------------------------------------------------
 // A planilha do fechamento aprovado (para a folha de pagamento)
 // ---------------------------------------------------------------------------------------------
-export function planilhaDoFechamento(f: FechamentoDoMes, nomes: ReadonlyMap<string, string>): { colunas: string[]; linhas: (string | number)[][] } | null {
+// FIN-009c: o dinheiro com o tipo (lib/csv, Celula), para o Excel guardar número; o total vem numa parte à parte,
+// abaixo da tabela (no Excel, fora do filtro: ordenar os vendedores não mexe nele).
+export function planilhaDoFechamento(f: FechamentoDoMes, nomes: ReadonlyMap<string, string>): SecaoCsv[] | null {
   if (f.fechamento?.situacao !== "aprovado") return null;
   const linhas = [...f.linhas].sort((a, b) => (nomes.get(a.vendedorId) ?? "").localeCompare(nomes.get(b.vendedorId) ?? "", "pt-BR"));
-  return {
+  const reais = (centavos: number): Celula => ({ centavos });
+  return [{
     colunas: ["Vendedor", "Bônus calculado (R$)", "Bônus aprovado (R$)", "Motivo do ajuste", "Contestação da gerência", "Decisão do dono"],
-    linhas: [
-      ...linhas.map((l) => [
-        nomes.get(l.vendedorId) ?? "Pessoa sem nome", centavosCsv(l.totalCalculado), centavosCsv(l.totalAprovado ?? 0), l.ajusteMotivo ?? "",
-        l.contestacao?.motivo ?? "", l.contestacao?.decisao === "ajustado" ? "Pagou outro valor" : l.contestacao?.decisao === "mantido" ? "Manteve o calculado" : "",
-      ]),
-      ["Total", centavosCsv(f.fechamento.totalCalculado), centavosCsv(f.fechamento.totalAprovado ?? 0), "", "", ""],
-    ],
-  };
+    linhas: linhas.map((l): Celula[] => [
+      nomes.get(l.vendedorId) ?? "Pessoa sem nome", reais(l.totalCalculado), reais(l.totalAprovado ?? 0), l.ajusteMotivo ?? "",
+      l.contestacao?.motivo ?? "", l.contestacao?.decisao === "ajustado" ? "Pagou outro valor" : l.contestacao?.decisao === "mantido" ? "Manteve o calculado" : "",
+    ]),
+  }, { linhas: [["Total", reais(f.fechamento.totalCalculado), reais(f.fechamento.totalAprovado ?? 0)]] }];
 }

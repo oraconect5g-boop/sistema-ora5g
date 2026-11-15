@@ -2,7 +2,7 @@
   "_leia": "Checkpoint do programa de execução integral (PR #67). Carregar ao retomar e seguir para o próximo item executável da fila; não reiniciar o projeto. Estados vêm de status-requisitos.json (fonte da rastreabilidade); este arquivo acrescenta lote, bloqueio externo e revisão.",
   "atualizado_em": "2026-11-15",
   "base": {
-    "main": "f78523f",
+    "main": "3095891",
     "pacote": {
       "pr": 67,
       "branch": "docs/execucao-integral-20261110",
@@ -18,12 +18,12 @@
   },
   "publicado": {
     "homologacao": {
-      "commit": "f78523f",
+      "commit": "3095891",
       "quando": "2026-11-15",
-      "conferido": "rodapé da tela de entrada (f78523f · build 15/11/2026 01:42), /saude 200 e as rotas reais respondendo 307 para o login"
+      "conferido": "rodapé da tela de entrada (3095891 · build 15/11/2026 02:16), /saude 200 e as rotas reais respondendo 307 para o login (inclusive /estoque/exportar)"
     },
     "falta_publicar": [
-      "FIN-009b, planilhas do estoque em Excel e CSV (sem migration), publicado ao fim do lote"
+      "FIN-009c, o Excel nas planilhas que já existiam (sem migration), publicado ao fim do lote"
     ]
   },
   "contagem_dos_estados": {
@@ -767,7 +767,7 @@
       "titulo": "Exportações CSV/XLSX/PDF de relatórios autorizados",
       "prioridade": "P1",
       "estado": "parcial",
-      "lote": "L8 financeiro; G2 financeiro e relatórios (G2a entregue em 13/11); L8d em 13/11: planilha e PDF do resultado, da previsão e das contas a pagar; B5 leituras completas (14/11); FIN-009b (15/11): planilhas do estoque em Excel (XLSX sem biblioteca) e CSV",
+      "lote": "L8 financeiro; G2 financeiro e relatórios (G2a entregue em 13/11); L8d em 13/11: planilha e PDF do resultado, da previsão e das contas a pagar; B5 leituras completas (14/11); FIN-009b (15/11): planilhas do estoque em Excel (XLSX sem biblioteca) e CSV; FIN-009c (15/11): o Excel nas planilhas que já existiam",
       "bloqueio_externo": null,
       "revisado_codex": false,
       "homologado": false

@@ -1,10 +1,9 @@
 import type { Metadata } from "next";
 
-import { Download } from "lucide-react";
-
+import { BaixarPlanilha } from "../../componentes/BaixarPlanilha";
 import { BotaoImprimir, CarimboDaImpressao } from "../../componentes/BotaoImprimir";
 import { MoldeReal } from "../../componentes/MoldeReal";
-import { Aviso, classeBotao, TituloPagina } from "../../componentes/ui";
+import { Aviso, TituloPagina } from "../../componentes/ui";
 import { FalhaDoServico, obterSessao } from "../../lib/acesso/sessao";
 import { consultarCategorias, consultarContas, consultarFornecedores, consultarResumo, type ResumoDasContas } from "../../lib/contas-a-pagar/consulta";
 import {
@@ -63,7 +62,7 @@ export default async function ContasAPagar({ searchParams }: { searchParams: Pro
         subtitulo="O que a empresa tem a pagar, pelo vencimento: aluguel, luz, fornecedores. O sistema registra a conta e o pagamento feito no banco; não paga nada sozinho."
         acao={resumo.estado === "ok" ? (
           <div className="nao-imprimir flex flex-wrap gap-2">
-            <a href={planilha} download className={classeBotao("secundario", "md")}><Download aria-hidden className="size-4" /> Baixar planilha</a>
+            <BaixarPlanilha endereco={planilha} rotulo="Baixar planilha" />
             <BotaoImprimir />
           </div>
         ) : undefined}

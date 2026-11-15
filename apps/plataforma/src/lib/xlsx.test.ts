@@ -5,8 +5,9 @@ import * as zlib from "node:zlib";
 import { describe, expect, it } from "vitest";
 
 import type { SecaoCsv } from "./csv";
-import { colunaExcel, crc32, gerarXlsx, nomesDasAbas, serialDoDia, serialDoInstante, textoXml } from "./xlsx";
+import { colunaExcel, crc32, montarXlsx, nomesDasAbas, serialDoDia, serialDoInstante, textoXml } from "./xlsx";
 import { abrirXlsx, conferirXml, linhasDaFolha } from "./xlsx-de-teste";
+import { gerarXlsx } from "./xlsx-servidor";
 
 const SECOES: SecaoCsv[] = [
   { linhas: [["Estoque", "Aparelhos e chips", "Santa Cândida & Cia <teste>"], ["Gerado em", "15/11/2026 02:10", "3 itens"]] },
@@ -100,6 +101,18 @@ describe("planilha do Excel (FIN-009b)", () => {
   it("o mesmo conteúdo dá o mesmo arquivo; sem aba não há planilha", () => {
     expect(Buffer.compare(gerarXlsx([{ nome: "A", secoes: SECOES }]), gerarXlsx([{ nome: "A", secoes: SECOES }]))).toBe(0);
     expect(() => gerarXlsx([])).toThrow("planilha sem aba");
+  });
+
+  it("FIN-009c: no navegador, sem compressão, o pacote é o mesmo, só maior (os arquivos vão guardados)", () => {
+    const guardado = montarXlsx([{ nome: "Aparelhos e chips", secoes: SECOES }], null);
+    const comprimido = gerarXlsx([{ nome: "Aparelhos e chips", secoes: SECOES }]);
+    expect(guardado.length).toBeGreaterThan(comprimido.length);
+    // método 0 (guardado) no cabeçalho local do primeiro arquivo; 8 (deflate) no do servidor
+    expect(new DataView(guardado.buffer).getUint16(8, true)).toBe(0);
+    expect(new DataView(comprimido.buffer, comprimido.byteOffset).getUint16(8, true)).toBe(8);
+    const partes = abrirXlsx(guardado);
+    expect(partes).toEqual(abrirXlsx(comprimido));
+    expect(linhasDaFolha(partes.get("xl/worksheets/sheet1.xml") ?? "")[4]?.slice(0, 4)).toEqual(["Santa Cândida", "00123", "351234567890123", "89550100123456789012"]);
   });
 
   it("o conferidor do teste recusa XML quebrado", () => {

@@ -1,8 +1,8 @@
-import { Download } from "lucide-react";
 import type { Metadata } from "next";
 
+import { BaixarPlanilha } from "../../componentes/BaixarPlanilha";
 import { MoldeReal, permissoesDoMenu } from "../../componentes/MoldeReal";
-import { Aviso, classeBotao, FiltroSegmentado, TituloPagina } from "../../componentes/ui";
+import { Aviso, FiltroSegmentado, TituloPagina } from "../../componentes/ui";
 import { podeVerFinanceiro } from "../../lib/acesso/menu";
 import { obterSessao } from "../../lib/acesso/sessao";
 import type { LojaDoFiltro } from "../../lib/financeiro/escopo";
@@ -60,7 +60,7 @@ export default async function Relatorios({ searchParams }: { searchParams: Promi
         sobretitulo={escopo.nome}
         titulo="Relatórios"
         subtitulo="Vendas, recebimentos, mix, ticket, descontos e margem bruta, dia a dia, somados no banco. Os registros por trás de cada número ficam no Financeiro."
-        acao={<a href={enderecoDaExportacao(periodo, lojaDoEndereco, "dias")} download className={classeBotao("secundario")}><Download aria-hidden className="size-4" /> Exportar por dia (CSV)</a>}
+        acao={<BaixarPlanilha endereco={enderecoDaExportacao(periodo, lojaDoEndereco, "dias")} rotulo="Exportar por dia" />}
       />
       <div className="mb-4 flex flex-col gap-3">
         <FiltroSegmentado rotulo="Período" opcoes={ORDEM_DOS_RELATORIOS.map((p) => ({ href: enderecoDosRelatorios(p, lojaDoEndereco), rotulo: PERIODOS_DOS_RELATORIOS[p].rotulo, ativo: p === periodo }))} />

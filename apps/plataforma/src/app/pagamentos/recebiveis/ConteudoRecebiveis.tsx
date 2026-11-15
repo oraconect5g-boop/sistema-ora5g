@@ -1,11 +1,11 @@
 import { Banknote, Clock, CreditCard, HandCoins, Hourglass, Landmark, ListChecks, Scale, TriangleAlert } from "lucide-react";
 import Link from "next/link";
 
-import { ExportarCsv } from "../../../componentes/ExportarCsv";
+import { ExportarPlanilha } from "../../../componentes/ExportarPlanilha";
 import { BarraSegmentada, BarrasHorizontais, TabelaDoGrafico } from "../../../componentes/graficos";
 import { EstadoDoPainel, NOTA } from "../../../componentes/paineis-de-vendas";
 import { Cartao, Celula, EstadoVazio, FiltroSegmentado, Indicador, Selo, Tabela } from "../../../componentes/ui";
-import { centavosCsv } from "../../../lib/csv";
+import type { Celula as CelulaDaPlanilha } from "../../../lib/csv";
 import { brl, numero, percentual } from "../../../lib/formato";
 import {
   ADQUIRENTES, DAS_FINANCEIRAS, DO_EXTRATO, enderecoDosRecebiveis, fracaoDaDiferenca, idadeDoRecebivel, JANELAS, porAdquirente, somar,
@@ -78,9 +78,10 @@ function PainelDosRecebiveis({ r }: { r: Recebiveis }) {
   const csv = {
     colunas: ["Loja", "Quem deve", "A receber (qtd.)", "A receber (R$)", "Até 7 dias (R$)", "De 8 a 30 dias (R$)", "Mais de 30 dias (R$)", "A mais antiga (dias)",
       `Recebidos em ${r.dias} dias (qtd.)`, "Bruto (R$)", "Líquido que caiu (R$)", "Diferença observada (R$)", "Estornos a confirmar (qtd.)", "Estornos a confirmar (R$)"],
-    linhas: r.linhas.map((l) => [nomeDaLoja(l.unidade), ADQUIRENTES[l.adquirente], l.aReceber, centavosCsv(l.valorAReceber), centavosCsv(l.ate7Dias), centavosCsv(l.de8a30Dias),
-      centavosCsv(l.maisDe30Dias), l.maisAntigaDias ?? "", l.recebidos, centavosCsv(l.recebidoBruto), centavosCsv(l.recebidoLiquido), centavosCsv(l.recebidoBruto - l.recebidoLiquido),
-      l.estornos, centavosCsv(l.valorEstornos)]),
+    // FIN-009c: o dinheiro com o tipo (lib/csv, Celula), para o Excel guardar número; o CSV é o de antes.
+    linhas: r.linhas.map((l): CelulaDaPlanilha[] => [nomeDaLoja(l.unidade), ADQUIRENTES[l.adquirente], l.aReceber, { centavos: l.valorAReceber }, { centavos: l.ate7Dias }, { centavos: l.de8a30Dias },
+      { centavos: l.maisDe30Dias }, l.maisAntigaDias, l.recebidos, { centavos: l.recebidoBruto }, { centavos: l.recebidoLiquido }, { centavos: l.recebidoBruto - l.recebidoLiquido },
+      l.estornos, { centavos: l.valorEstornos }]),
   };
   return (
     <>
@@ -146,7 +147,7 @@ function PainelDosRecebiveis({ r }: { r: Recebiveis }) {
       <Cartao
         className="mt-4" titulo={comLoja ? "Por loja e por quem deve" : "Por quem deve"} icone={Clock}
         subtitulo={`O que falta receber agora e o que caiu na conta nos últimos ${r.dias} dias, pela data do extrato`}
-        acao={<ExportarCsv nomeArquivo={`recebiveis-${r.hoje}`} prefixo="ora5g" colunas={csv.colunas} linhas={csv.linhas} rotulo="Planilha (CSV)" />}
+        acao={<ExportarPlanilha nomeArquivo={`recebiveis-${r.hoje}`} aba="Recebíveis" secoes={[csv]} rotulo="Planilha" />}
       >
         <Tabela legenda="Recebíveis por loja e por quem deve" colunas={colunas} alinharDireita={comLoja ? [2, 3, 4, 5, 6] : [1, 2, 3, 4, 5]} minimo="min-w-[44rem]">
           {r.linhas.map((l) => {

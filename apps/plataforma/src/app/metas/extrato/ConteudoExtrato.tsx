@@ -5,7 +5,7 @@ import { Aviso, Cartao, EstadoVazio } from "../../../componentes/ui";
 import type { LeituraDoBonus } from "../../../lib/bonus/consulta";
 import { dataEHora, linhaDoVendedor, type FechamentoDoMes } from "../../../lib/bonus/fechamento";
 import { contaDaMedida, type BonusDoMes, type Efeito, type Extrato, type FatoDoExtrato, type ServicoDoConnect, type TipoDoFato } from "../../../lib/bonus/regras";
-import { centavosCsv } from "../../../lib/csv";
+import type { Celula, SecaoCsv } from "../../../lib/csv";
 import { brl, brlComSinal, numero } from "../../../lib/formato";
 import { nomeDoMes, ORDEM_DAS_MEDIDAS, type FaseDoMes } from "../../../lib/metas/painel";
 import { MedidaDoBonus, semQuebra } from "../ConteudoBonus";
@@ -21,8 +21,6 @@ const instante = (iso: string) => {
   const p = (tipo: string) => partes.find((x) => x.type === tipo)?.value ?? "";
   return `${p("day")}/${p("month")} às ${p("hour")}:${p("minute")}`;
 };
-const instanteCsv = (iso: string) =>
-  new Intl.DateTimeFormat("pt-BR", { timeZone: "America/Sao_Paulo", day: "2-digit", month: "2-digit", year: "numeric", hour: "2-digit", minute: "2-digit" }).format(new Date(iso)).replace(",", "");
 
 /** "Venda nº 1.234", "Cancelamento da venda nº 1.230", "Devolução nº 7 da venda nº 1.200", "Ativação do Ora Connect nº 45". */
 export function descricaoDoFato(f: FatoDoExtrato): string {
@@ -44,15 +42,16 @@ export function efeitosDoFato(e: Efeito): string[] {
   return partes;
 }
 
-/** A planilha do extrato: uma linha por fato e o total (a mesma lista da tela). */
-export function planilhaDoExtrato(e: Extrato): { colunas: string[]; linhas: (string | number)[][] } {
-  return {
+/**
+ * A planilha do extrato: uma linha por fato e o total (a mesma lista da tela). FIN-009c: a data e o dinheiro com o
+ * tipo (lib/csv, Celula), para o Excel guardar data e número; o total numa parte à parte, abaixo da tabela.
+ */
+export function planilhaDoExtrato(e: Extrato): SecaoCsv[] {
+  const reais = (centavos: number): Celula => ({ centavos });
+  return [{
     colunas: ["Data", "Fato", "Vendido líquido (R$)", "Aparelhos", "Acessórios (R$)", "Ora Connect"],
-    linhas: [
-      ...e.linhas.map((f) => [instanteCsv(f.quando), descricaoDoFato(f), centavosCsv(f.efeito.vendido_liquido), f.efeito.aparelhos, centavosCsv(f.efeito.acessorios), f.efeito.connect]),
-      ["Total do mês", "", centavosCsv(e.totais.vendido_liquido), e.totais.aparelhos, centavosCsv(e.totais.acessorios), e.totais.connect],
-    ],
-  };
+    linhas: e.linhas.map((f): Celula[] => [{ instante: f.quando }, descricaoDoFato(f), reais(f.efeito.vendido_liquido), f.efeito.aparelhos, reais(f.efeito.acessorios), f.efeito.connect]),
+  }, { linhas: [["Total do mês", "", reais(e.totais.vendido_liquido), e.totais.aparelhos, reais(e.totais.acessorios), e.totais.connect]] }];
 }
 
 export function ResumoDoBonus({ bonus, vendedor, mes, fase, aqui, fechamento = null }: {

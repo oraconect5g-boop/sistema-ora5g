@@ -3,8 +3,7 @@
 // (margem). Aqui não há acesso a dados (as consultas ficam em ./consulta) e nada aqui decide quem vê
 // custo: a margem só chega a este arquivo depois de o banco conferir custo.ver, loja a loja.
 import { nomeCurtoDoTipo } from "../catalogo/cadastro";
-import { centavosCsv } from "../csv";
-import { quandoNoCsv } from "../financeiro/exportacao";
+import { fracaoCsv, type Celula } from "../csv";
 import { chavesDaJanela, janelasDeDias, rotuloDaChave, type Janela, type PeriodoFinanceiro } from "../financeiro/painel";
 import { endereco, ticketMedio, type TextosDoRecorte, type VendasDoBanco } from "../inicio/painel";
 import { numerosDaMargem, situacaoDaMargem, type ItemDaMargem, type MargemDoBanco } from "../margem/painel";
@@ -119,25 +118,27 @@ export function diasDeMargem(m: MargemDoBanco, janela: Janela): DiaDeMargem[] {
 }
 
 // ---------------------------------------------------------------------------------------------
-// Exportação (CSV): os mesmos números da tela. Valores em reais com vírgula decimal.
+// Exportação: os mesmos números da tela. FIN-009c: cada célula leva o tipo (lib/csv, Celula): o CSV escreve reais
+// com vírgula decimal e o percentual com uma casa; o Excel guarda número, data e percentual de verdade. O total e os
+// avisos vêm à parte (`rodape`), abaixo da tabela: no Excel, ficam fora do filtro e não se misturam aos dias.
 // ---------------------------------------------------------------------------------------------
-type Tabela = { colunas: string[]; linhas: (string | number)[][] };
+type Tabela = { colunas: string[]; linhas: Celula[][]; rodape: Celula[][] };
 
-/** "2026-11-10" → "10/11/2026". */
-const diaNoCsv = (chave: string) => `${chave.slice(8, 10)}/${chave.slice(5, 7)}/${chave.slice(0, 4)}`;
-const opcional = (centavos: number | null) => (centavos === null ? "" : centavosCsv(centavos));
+const reais = (centavos: number): Celula => ({ centavos });
+const opcional = (centavos: number | null): Celula => (centavos === null ? null : { centavos });
+const percentual = (fracao: number | null): Celula => (fracao === null ? null : { fracao });
 /** Fração como percentual com uma casa ("32,4"); sem base, célula vazia. */
-export const percentualCsv = (fracao: number | null) => (fracao === null ? "" : (Math.round(fracao * 1000) / 10).toFixed(1).replace(".", ","));
+export const percentualCsv = (fracao: number | null) => (fracao === null ? "" : fracaoCsv(fracao));
 
 const COLUNAS_DE_VENDAS = ["Dia", "Vendas", "Vendido (R$)", "Ticket médio (R$)", "Valor de tabela (R$)", "Descontos (R$)", "Cancelamentos", "Cancelado (R$)", "Devoluções", "Devolvido (R$)", "Líquido (R$)"];
 const COLUNAS_DE_MARGEM = ["Margem bruta (R$)", "Vendido com custo, líquido (R$)", "Custo (R$)", "Margem (%)", "Cobertura do custo (%)", "Itens sem custo", "Vendido sem custo (R$)"];
 
-const celulasDeVendas = (d: Omit<DiaDeVendas, "chave" | "rotulo" | "desfeito" | "fracaoDeDesconto">) => [
-  d.vendas, centavosCsv(d.vendido), opcional(d.ticket), centavosCsv(d.subtotal), centavosCsv(d.descontos),
-  d.cancelamentos, centavosCsv(d.cancelado), d.devolucoes, centavosCsv(d.devolvido), centavosCsv(d.liquido),
+const celulasDeVendas = (d: Omit<DiaDeVendas, "chave" | "rotulo" | "desfeito" | "fracaoDeDesconto">): Celula[] => [
+  d.vendas, reais(d.vendido), opcional(d.ticket), reais(d.subtotal), reais(d.descontos),
+  d.cancelamentos, reais(d.cancelado), d.devolucoes, reais(d.devolvido), reais(d.liquido),
 ];
-const celulasDeMargem = (d: Omit<DiaDeMargem, "chave" | "rotulo">) => [
-  opcional(d.margem), centavosCsv(d.base), centavosCsv(d.custo), percentualCsv(d.fracao), percentualCsv(d.cobertura), d.itensSemCusto, centavosCsv(d.vendidoSemCusto),
+const celulasDeMargem = (d: Omit<DiaDeMargem, "chave" | "rotulo">): Celula[] => [
+  opcional(d.margem), reais(d.base), reais(d.custo), percentual(d.fracao), percentual(d.cobertura), d.itensSemCusto, reais(d.vendidoSemCusto),
 ];
 /** A margem do período: zero quando não houve fato nenhum; vazia (desconhecida) quando houve e nenhum item tinha custo gravado. */
 const totalDaMargem = (m: MargemDoBanco) => {
@@ -147,7 +148,7 @@ const totalDaMargem = (m: MargemDoBanco) => {
 };
 
 /**
- * Uma linha por dia e a linha "Total", que repete os totais do banco (não é a soma das linhas
+ * Uma linha por dia e, no rodapé, a linha "Total", que repete os totais do banco (não é a soma das linhas
  * refeita aqui). As colunas de margem só entram quando `margem` vem (quem não tem custo.ver recebe o
  * arquivo sem elas) e há loja com movimento em que quem pede vê o custo. A margem considera só essas
  * lojas: se alguma ficou fora, a última linha avisa, para o zero de um dia não passar por margem zero.
@@ -159,25 +160,24 @@ export function tabelaDosDias(vendas: VendasDoBanco, margem: MargemDoBanco | nul
   const margens = comMargem ? diasDeMargem(comMargem, janela) : null;
   const t = vendas.totais;
   const total = celulasDeVendas({ ...t, liquido: t.vendido - t.cancelado - t.devolvido, ticket: ticketMedio(t.vendido, t.vendas) });
-  const linhas: (string | number)[][] = [
-    ...dias.map((d, i) => [diaNoCsv(d.chave), ...celulasDeVendas(d), ...(margens?.[i] ? celulasDeMargem(margens[i]) : [])]),
-    ["Total", ...total, ...(comMargem ? totalDaMargem(comMargem) : [])],
-  ];
+  const linhas: Celula[][] = dias.map((d, i) => [{ dia: d.chave }, ...celulasDeVendas(d), ...(margens?.[i] ? celulasDeMargem(margens[i]) : [])]);
+  const rodape: Celula[][] = [["Total", ...total, ...(comMargem ? totalDaMargem(comMargem) : [])]];
   if (semLojaVisivel) {
-    linhas.push(["Atenção: arquivo sem as colunas de margem, porque o movimento do período foi só em loja em que você não vê o custo."]);
+    rodape.push(["Atenção: arquivo sem as colunas de margem, porque o movimento do período foi só em loja em que você não vê o custo."]);
   } else if (comMargem && comMargem.lojasFora > 0) {
-    linhas.push([`Atenção: a margem considera só as lojas em que você vê o custo; ${comMargem.lojasFora === 1 ? "1 loja com movimento ficou fora" : `${comMargem.lojasFora} lojas com movimento ficaram fora`}.`]);
+    rodape.push([`Atenção: a margem considera só as lojas em que você vê o custo; ${comMargem.lojasFora === 1 ? "1 loja com movimento ficou fora" : `${comMargem.lojasFora} lojas com movimento ficaram fora`}.`]);
   }
-  return { colunas: comMargem ? [...COLUNAS_DE_VENDAS, ...COLUNAS_DE_MARGEM] : COLUNAS_DE_VENDAS, linhas };
+  return { colunas: comMargem ? [...COLUNAS_DE_VENDAS, ...COLUNAS_DE_MARGEM] : COLUNAS_DE_VENDAS, linhas, rodape };
 }
 
 /** O detalhe da margem: uma linha por item das vendas concluídas no período. Item sem custo gravado fica com custo e margem vazios. */
 export function tabelaDosItens(itens: readonly ItemDaMargem[]): Tabela {
   return {
     colunas: ["Venda", "Concluída em", "Loja", "Situação da venda", "Tipo", "Produto", "SKU", "Quantidade", "Preço unitário (R$)", "Desconto (R$)", "Valor (R$)", "Custo unitário (R$)", "Margem bruta (R$)", "Unidades devolvidas"],
-    linhas: itens.map((i) => [
-      i.numero, quandoNoCsv(i.concluidaEm), i.unidade ?? "", situacaoDaVenda(i.situacao).nome, nomeCurtoDoTipo(i.tipo), i.variante ?? "", i.sku ?? "",
-      i.quantidade, centavosCsv(i.precoUnitario), centavosCsv(i.desconto), centavosCsv(i.valor), opcional(i.custoUnitario), opcional(i.margem), i.devolvidos,
+    linhas: itens.map((i): Celula[] => [
+      i.numero, { instante: i.concluidaEm }, i.unidade ?? "", situacaoDaVenda(i.situacao).nome, nomeCurtoDoTipo(i.tipo), i.variante ?? "", i.sku ?? "",
+      i.quantidade, reais(i.precoUnitario), reais(i.desconto), reais(i.valor), opcional(i.custoUnitario), opcional(i.margem), i.devolvidos,
     ]),
+    rodape: [],
   };
 }

@@ -1,15 +1,17 @@
 // Exportação do financeiro real (#65; ORA-FIN-009): todos os registros da visão no período, em CSV
-// para o Excel em português. Mesma permissão e mesmo escopo da tela, conferidos aqui no servidor; o
-// banco confere cada linha de novo (RLS). Lê lote a lote (o limite da API) até o fim ou até o limite
-// de segurança, e avisa na última linha quando parou antes.
+// para o Excel em português ou, desde o FIN-009c, no próprio Excel (?formato=xlsx: número, data e dinheiro de
+// verdade). Mesma permissão e mesmo escopo da tela, conferidos aqui no servidor; o banco confere cada linha de novo
+// (RLS). Lê lote a lote (o limite da API) até o fim ou até o limite de segurança, e avisa na última linha quando
+// parou antes.
 import { permissoesDoMenu } from "../../../componentes/MoldeReal";
 import { podeVerFinanceiro } from "../../../lib/acesso/menu";
 import { FalhaDoServico, obterSessao } from "../../../lib/acesso/sessao";
-import { gerarCsv } from "../../../lib/csv";
+import { formatoPedido } from "../../../lib/csv";
 import { escolherEscopo, type LojaDoFiltro } from "../../../lib/financeiro/escopo";
 import { janelasDoPeriodo, periodoFinanceiro } from "../../../lib/financeiro/painel";
 import { tabelaDoCsv } from "../../../lib/financeiro/exportacao";
-import { idsDosRegistros, LIMITE_DA_EXPORTACAO, situacaoDoParametro, todosOsRegistros, visaoDoParametro } from "../../../lib/financeiro/registros";
+import { idsDosRegistros, LIMITE_DA_EXPORTACAO, situacaoDoParametro, todosOsRegistros, VISOES, visaoDoParametro } from "../../../lib/financeiro/registros";
+import { respostaDaPlanilha } from "../../../lib/xlsx-servidor";
 
 export const dynamic = "force-dynamic";
 
@@ -45,12 +47,12 @@ export async function GET(pedido: Request) {
   const loja = new Map((rLojas.data ?? []).map((l) => [l.id, l.nome] as const));
 
   const { colunas, linhas } = tabelaDoCsv(registros, (id) => pessoa.get(id) ?? "", (id) => loja.get(id) ?? "");
-  if (cortado) linhas.push([`Atenção: exportação limitada a ${LIMITE_DA_EXPORTACAO} registros; escolha um período menor ou uma loja.`]);
-  return new Response(gerarCsv(colunas, linhas), {
-    headers: {
-      "content-type": "text/csv; charset=utf-8",
-      "content-disposition": `attachment; filename="ora5g-financeiro-${visao}-${periodo === "hoje" ? "hoje" : `${periodo}-dias`}.csv"`,
-      "cache-control": "no-store",
-    },
-  });
+  // O aviso do corte fica numa parte à parte (no Excel, fora do filtro da tabela; no CSV, depois de uma linha em branco).
+  const aviso = cortado ? [{ linhas: [[`Atenção: exportação limitada a ${LIMITE_DA_EXPORTACAO} registros; escolha um período menor ou uma loja.`]] }] : [];
+  return respostaDaPlanilha(
+    formatoPedido(url.searchParams.get("formato"), "csv"),
+    `ora5g-financeiro-${visao}-${periodo === "hoje" ? "hoje" : `${periodo}-dias`}`,
+    VISOES[visao].rotulo,
+    [{ colunas, linhas }, ...aviso],
+  );
 }

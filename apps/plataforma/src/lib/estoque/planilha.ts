@@ -7,7 +7,7 @@
 //   vendem, como no painel) e o mínimo da variação.
 //   Aparelhos e chips: cada item com IMEI ou ICCID que está no estoque, com a situação, a condição, quando foi
 //   cadastrado e a última conferência.
-import type { Celula, SecaoCsv } from "../csv";
+import { formatoPedido, type Celula, type FormatoDaPlanilha, type SecaoCsv } from "../csv";
 import { CONDICOES } from "./entrada";
 import { nomeDe, NOMES_DAS_SITUACOES } from "./regras";
 
@@ -20,8 +20,9 @@ export const PARTES_DA_PLANILHA = {
 export type ParteDaPlanilha = keyof typeof PARTES_DA_PLANILHA;
 export const parteDaPlanilha = (valor: string | null | undefined): ParteDaPlanilha => (valor === "itens" ? "itens" : "saldo");
 
-export type FormatoDaPlanilha = "xlsx" | "csv";
-export const formatoDaPlanilha = (valor: string | null | undefined): FormatoDaPlanilha => (valor === "csv" ? "csv" : "xlsx");
+export type { FormatoDaPlanilha };
+/** Planilha nova (FIN-009b): o Excel é o padrão. */
+export const formatoDaPlanilha = (valor: string | null | undefined): FormatoDaPlanilha => formatoPedido(valor, "xlsx");
 
 /** O endereço da planilha: sem `loja`, o recorte padrão (a loja do turno). */
 export function enderecoDaPlanilha(parte: ParteDaPlanilha, formato: FormatoDaPlanilha, loja?: string | null): string {

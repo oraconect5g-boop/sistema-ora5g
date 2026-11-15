@@ -1,11 +1,13 @@
 // Planilha do resultado do mês (lote L8d: ORA-FIN-009). O mesmo número da tela, em CSV para o Excel em
 // português: o demonstrativo (na rede, uma coluna por loja), as contas por categoria, o que ficou fora do
 // resultado e as observações que a tela mostra como aviso. Valores em reais com vírgula, sem milhar.
-import { centavosCsv as v, diaCsv, type SecaoCsv } from "../csv";
+// FIN-009c: o dinheiro vai com o tipo (lib/csv, Celula), para o Excel guardar número; o CSV sai igual.
+import { diaCsv, type Celula, type SecaoCsv } from "../csv";
 import { nomeDoMes } from "../metas/painel";
 import type { LojaDoResultado, ResultadoDoMes } from "./consulta";
 
 const maiuscula = (texto: string) => texto.charAt(0).toUpperCase() + texto.slice(1);
+const v = (centavos: number): Celula => ({ centavos });
 
 export function planilhaDoResultado(r: ResultadoDoMes, onde: string, gerado: string): SecaoCsv[] {
   const l = r.linhas;
@@ -32,7 +34,7 @@ export function planilhaDoResultado(r: ResultadoDoMes, onde: string, gerado: str
       ...(naRede && l.naoDividido > 0 ? [["Contas da rede sem divisão (mês sem venda)", v(l.naoDividido), ...vazio]] : []),
     ],
   };
-  const observacoes: (string | number)[][] = [
+  const observacoes: Celula[][] = [
     ...(l.vendidoSemCusto > 0 ? [["Vendido sem custo cadastrado: o custo não entra e o resultado aparece maior", v(l.vendidoSemCusto), `${l.itensSemCusto} ${l.itensSemCusto === 1 ? "item" : "itens"}`]] : []),
     ...(l.aConciliar > 0 ? [["Cartão e Pix ainda sem conciliação: a taxa deles não entra", v(l.aConciliarValor), `${l.aConciliar} ${l.aConciliar === 1 ? "pagamento" : "pagamentos"}`]] : []),
     ...(!naRede && l.pesoDaRede > 0 ? [["Parte da loja na receita líquida da rede (divide as contas da rede)", `${((l.peso / l.pesoDaRede) * 100).toFixed(1).replace(".", ",")}%`]] : []),

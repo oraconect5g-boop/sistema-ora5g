@@ -4,6 +4,7 @@
 // Dados fictícios.
 import { describe, expect, it } from "vitest";
 
+import { textoDaCelula } from "../csv";
 import { RespostaInesperada } from "../financeiro/painel";
 import {
   erroDoFechamento, lerFechamentoDoMes, lerFechamentosDoMes, linhaDoVendedor, mesesParaFechar, planilhaDoFechamento, totaisNoCampo, validarAprovacao, validarConferencia,
@@ -213,14 +214,14 @@ describe("planilha e meses do fechamento", () => {
   it("só o fechamento aprovado vira planilha: um vendedor por linha, em ordem de nome, e o total", () => {
     const nomes = new Map([[ANA, "Ana (teste)"], [BETO, "Beto (teste)"]]);
     expect(planilhaDoFechamento(ler(ENVIADO), nomes)).toBeNull();
-    expect(planilhaDoFechamento(ler(APROVADO), nomes)).toEqual({
-      colunas: ["Vendedor", "Bônus calculado (R$)", "Bônus aprovado (R$)", "Motivo do ajuste", "Contestação da gerência", "Decisão do dono"],
-      linhas: [
-        ["Ana (teste)", "300,00", "300,00", "", "", ""],
-        ["Beto (teste)", "0,00", "300,00", AJUSTE, CONTESTACAO.motivo, "Pagou outro valor"],
-        ["Total", "300,00", "600,00", "", "", ""],
-      ],
-    });
+    // FIN-009c: o dinheiro com o tipo (o texto é o do CSV) e o total numa parte à parte, abaixo da tabela
+    const planilha = planilhaDoFechamento(ler(APROVADO), nomes);
+    expect(planilha?.[0]?.colunas).toEqual(["Vendedor", "Bônus calculado (R$)", "Bônus aprovado (R$)", "Motivo do ajuste", "Contestação da gerência", "Decisão do dono"]);
+    expect(planilha?.[0]?.linhas[0]?.[1]).toEqual({ centavos: 30_000 });
+    expect(planilha?.map((s) => s.linhas.map((l) => l.map(textoDaCelula)))).toEqual([
+      [["Ana (teste)", "300,00", "300,00", "", "", ""], ["Beto (teste)", "0,00", "300,00", AJUSTE, CONTESTACAO.motivo, "Pagou outro valor"]],
+      [["Total", "300,00", "600,00"]],
+    ]);
   });
 
   it("os seis meses que já terminaram, do mais antigo ao mais recente", () => {

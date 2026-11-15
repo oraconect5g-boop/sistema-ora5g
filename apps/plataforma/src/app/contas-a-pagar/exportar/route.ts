@@ -1,4 +1,5 @@
-// Planilha das contas a pagar (lote L8d: ORA-FIN-009), em CSV para o Excel em português: a mesma lista e o
+// Planilha das contas a pagar (lote L8d: ORA-FIN-009), em CSV para o Excel em português (ou, desde o FIN-009c, no
+// próprio Excel, com ?formato=xlsx): a mesma lista e o
 // mesmo filtro da tela, com todas as colunas. A permissão é a da tela (conta_pagar.gerir: o dono na rede e
 // em todas as lojas, o gerente na loja dele) e o banco confere de novo cada linha (RLS). A loja pedida passa
 // pelo resumo: a que o banco recusa dá 403, em vez de um arquivo vazio com o nome dela.
@@ -8,7 +9,8 @@ import {
 } from "../../../lib/contas-a-pagar/consulta";
 import { planilhaDasContas } from "../../../lib/contas-a-pagar/planilha";
 import { filtroDasContas, hojeEmSaoPaulo, visaoDasContas } from "../../../lib/contas-a-pagar/regras";
-import { geradoEm, gerarCsvEmSecoes, parteDoNome } from "../../../lib/csv";
+import { formatoPedido, geradoEm, parteDoNome } from "../../../lib/csv";
+import { respostaDaPlanilha } from "../../../lib/xlsx-servidor";
 
 export const dynamic = "force-dynamic";
 
@@ -47,11 +49,5 @@ export async function GET(pedido: Request) {
     fornecedor: (id: string | null) => (id === null ? null : fornecedores.get(id) ?? "Fornecedor"),
   };
   const planilha = planilhaDasContas(lista.dados.contas, visao, onde, geradoEm(), nomes, lista.dados.mais ? LIMITE_DA_EXPORTACAO_DAS_CONTAS : null);
-  return new Response(gerarCsvEmSecoes(planilha), {
-    headers: {
-      "content-type": "text/csv; charset=utf-8",
-      "content-disposition": `attachment; filename="ora5g-contas-a-pagar-${visao}-${parteDoNome(onde)}.csv"`,
-      "cache-control": "no-store",
-    },
-  });
+  return respostaDaPlanilha(formatoPedido(url.searchParams.get("formato"), "csv"), `ora5g-contas-a-pagar-${visao}-${parteDoNome(onde)}`, "Contas a pagar", planilha);
 }

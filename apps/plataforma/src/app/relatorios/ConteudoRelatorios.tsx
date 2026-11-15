@@ -1,6 +1,7 @@
 import { BadgePercent, CircleSlash, PiggyBank, ShoppingBag, Ticket } from "lucide-react";
 import Link from "next/link";
 
+import { BaixarPlanilha } from "../../componentes/BaixarPlanilha";
 import { BarraSegmentada, Colunas, Linhas, TabelaDoGrafico } from "../../componentes/graficos";
 import {
   cadaRotulo, EstadoDoPainel, foraDaMargem, indicadorDaMargem, indicadorDoRecebido, Indicadores, indicadoresDeVendas, LIGACAO, NOTA, NUMERO_PRINCIPAL,
@@ -246,7 +247,7 @@ function PainelDosItens({ itens, margem, pagina, comLoja, aqui, enderecoDaPagina
       </Cartao>
     );
   }
-  const baixar = <a href={exportar} download className={LIGACAO}>Exportar itens (CSV)</a>;
+  const baixar = <BaixarPlanilha endereco={exportar} rotulo="Exportar itens" estilo="ligacao" />;
   if (linhas.length === 0) {
     // Página pedida no endereço depois do fim da lista.
     return (

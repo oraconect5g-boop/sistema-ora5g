@@ -40,6 +40,7 @@ import { lerPrevisao } from "../../lib/previsao/consulta";
 import { estimativa, horizonteDoEndereco, lerSaldo, projetar, somarDias, type SemanaBase } from "../../lib/previsao/regras";
 import { enderecoDaPrevisao } from "./ConteudoPrevisao";
 import Previsao from "./page";
+import { gerarCsvEmSecoes, textoDaCelula, type SecaoCsv } from "../../lib/csv";
 import { planilhaDaPrevisao } from "../../lib/previsao/planilha";
 import { BotaoImprimir } from "../../componentes/BotaoImprimir";
 import { Simulador } from "./Simulador";
@@ -286,23 +287,30 @@ describe("estimativa, simulação e saldo previsto (L8c)", () => {
     const fatos = { estornosAConfirmar: { valor: 12_900, quantidade: 2 }, financeiras: { valor: 2_598_000, quantidade: 2 }, aConciliar: { valor: 754_000, quantidade: 12 }, gavetas: { valor: 183_400, caixas: 3 } };
     const estimativaDaTela = { media: 100_000, semanas: 8, de: somarDias(HOJE, -56), ate: somarDias(HOJE, -1) };
     const p = planilhaDaPrevisao({ onde: "Rede inteira", linhas, estimativa: estimativaDaTela, ajuste: -0.2, comSaldo: true, fatos, gerado: "13/11/2026 12:00" });
-    expect(p.colunas).toEqual(["Semana", "De", "Até", "Entrada estimada", "Contas (fato)", "Vencidas incluídas", "Diferença", "Saldo previsto"]);
-    expect(p.linhas.slice(0, 2)).toEqual([
+    // FIN-009c: três partes (as semanas, os fatos e as premissas), com o tipo de cada célula; o texto é o do CSV.
+    const [semanasDaPlanilha] = p;
+    const todas = (s: readonly SecaoCsv[]) => s.flatMap((x) => [...(x.colunas ? [x.colunas] : []), ...x.linhas]).map((l) => l.map(textoDaCelula));
+    expect(p.map((s) => s.colunas?.[0])).toEqual(["Semana", "Fatos fora da conta", "Premissas"]);
+    expect(semanasDaPlanilha?.colunas).toEqual(["Semana", "De", "Até", "Entrada estimada", "Contas (fato)", "Vencidas incluídas", "Diferença", "Saldo previsto"]);
+    expect(semanasDaPlanilha?.linhas[0]?.slice(0, 4)).toEqual([1, { dia: HOJE }, { dia: somarDias(HOJE, 6) }, { centavos: 80_000 }]);
+    expect(semanasDaPlanilha?.linhas.slice(0, 2).map((l) => l.map(textoDaCelula))).toEqual([
       [1, "13/11/2026", "19/11/2026", "800,00", "700,00", "200,00", "100,00", "1600,00"],
       [2, "20/11/2026", "26/11/2026", "800,00", "3000,00", "0,00", "-2200,00", "-600,00"],
     ]);
-    expect(p.linhas).toContainEqual(["A receber das financeiras (sem data)", "25980,00", "2 vendas"]);
+    expect(todas(p)).toContainEqual(["A receber das financeiras (sem data)", "25980,00", "2 vendas"]);
     // Correção #82: os estornos a confirmar ficam fora da conta, e a premissa diz quando a devolução sai.
-    expect(p.linhas).toContainEqual(["Estornos de Pix e cartão a confirmar (ainda não saíram)", "129,00", "2 pedidos"]);
-    expect(p.linhas).toContainEqual(["Devoluções pagas", "o dinheiro devolvido no dia em que saiu do caixa; Pix e cartão só quando o estorno é confirmado, no dia da confirmação"]);
-    expect(planilhaDaPrevisao({ onde: "x", linhas, estimativa: null, ajuste: 0, comSaldo: false, fatos: { ...fatos, estornosAConfirmar: null }, gerado: "x" }).linhas
+    expect(todas(p)).toContainEqual(["Estornos de Pix e cartão a confirmar (ainda não saíram)", "129,00", "2 pedidos"]);
+    expect(todas(p)).toContainEqual(["Devoluções pagas", "o dinheiro devolvido no dia em que saiu do caixa; Pix e cartão só quando o estorno é confirmado, no dia da confirmação"]);
+    expect(todas(planilhaDaPrevisao({ onde: "x", linhas, estimativa: null, ajuste: 0, comSaldo: false, fatos: { ...fatos, estornosAConfirmar: null }, gerado: "x" }))
       .some((l) => String(l[0]).startsWith("Estornos"))).toBe(false);
-    expect(p.linhas).toContainEqual(["Simulação", "menos 20% sobre a média"]);
-    expect(p.linhas).toContainEqual(["Saldo de partida", "digitado na tela (não fica gravado no sistema)"]);
-    expect(p.linhas.at(-1)).toEqual(["Previsão de caixa", "Rede inteira", "gerada em 13/11/2026 12:00"]);
+    expect(todas(p)).toContainEqual(["Simulação", "menos 20% sobre a média"]);
+    expect(todas(p)).toContainEqual(["Saldo de partida", "digitado na tela (não fica gravado no sistema)"]);
+    expect(todas(p).at(-1)).toEqual(["Previsão de caixa", "Rede inteira", "gerada em 13/11/2026 12:00"]);
+    // no CSV, a linha em branco separa as partes, como antes
+    expect(gerarCsvEmSecoes(p)).toContain(";-600,00\r\n\r\nFatos fora da conta;Valor;Detalhe\r\n");
     const semSaldo = planilhaDaPrevisao({ onde: "Loja A (teste)", linhas: projetar(semanas, 0, null, 0, null), estimativa: null, ajuste: 0, comSaldo: false, fatos, gerado: "x" });
-    expect(semSaldo.linhas[0]?.[7]).toBe("");
-    expect(semSaldo.linhas).toContainEqual(["Entrada estimada", "sem estimativa: sem recebimento nas 8 semanas anteriores"]);
+    expect(semSaldo[0]?.linhas[0]?.[7]).toBeNull();
+    expect(todas(semSaldo)).toContainEqual(["Entrada estimada", "sem estimativa: sem recebimento nas 8 semanas anteriores"]);
   });
 
   it("o botão de imprimir não sai no papel", () => {

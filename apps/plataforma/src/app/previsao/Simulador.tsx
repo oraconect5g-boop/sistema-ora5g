@@ -4,7 +4,7 @@ import { useId, useState } from "react";
 
 import { CalendarRange, Scale, TrendingUp, Wallet } from "lucide-react";
 
-import { ExportarCsv } from "../../componentes/ExportarCsv";
+import { ExportarPlanilha } from "../../componentes/ExportarPlanilha";
 import { ColunasDivergentes, Linhas, TabelaDoGrafico } from "../../componentes/graficos";
 import { Aviso, Cartao, Indicador } from "../../componentes/ui";
 import { brl, brlCompacto, brlCompactoComSinal, brlComSinal, brlEixo, brlEixoComSinal, numero } from "../../lib/formato";
@@ -50,7 +50,7 @@ export function Simulador({ semanas, vencidas, estimativa, onde, hoje, fatos }: 
         titulo="Simular"
         icone={Scale}
         subtitulo="O saldo que você digitar fica só neste navegador: não é enviado ao servidor nem gravado."
-        acao={<ExportarCsv prefixo="ora5g" nomeArquivo={`previsao-${parteDoNome(onde)}-${hoje}`} rotulo="Baixar planilha" colunas={planilha.colunas} linhas={planilha.linhas} />}
+        acao={<ExportarPlanilha nomeArquivo={`previsao-${parteDoNome(onde)}-${hoje}`} aba="Previsão de caixa" rotulo="Baixar planilha" secoes={planilha} />}
       >
         <div className="grid grid-cols-1 gap-4 sm:grid-cols-[minmax(0,18rem)_minmax(0,1fr)] sm:items-end">
           <div className="min-w-0">

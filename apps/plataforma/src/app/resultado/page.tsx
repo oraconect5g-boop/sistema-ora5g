@@ -1,10 +1,9 @@
 import type { Metadata } from "next";
 
-import { Download } from "lucide-react";
-
+import { BaixarPlanilha } from "../../componentes/BaixarPlanilha";
 import { BotaoImprimir, CarimboDaImpressao } from "../../componentes/BotaoImprimir";
 import { MoldeReal } from "../../componentes/MoldeReal";
-import { Aviso, classeBotao, TituloPagina } from "../../componentes/ui";
+import { Aviso, TituloPagina } from "../../componentes/ui";
 import { obterSessao } from "../../lib/acesso/sessao";
 import { geradoEm } from "../../lib/csv";
 import { lerRegioesDoPainel } from "../../lib/lojas/regioes";
@@ -58,7 +57,7 @@ export default async function Resultado({ searchParams }: { searchParams: Promis
         subtitulo="Quanto sobrou: as vendas menos devoluções, custo das mercadorias, taxas e contas. É o resultado gerencial com o que está lançado no sistema, não a contabilidade."
         acao={leitura.estado === "ok" ? (
           <div className="nao-imprimir flex flex-wrap gap-2">
-            <a href={planilha} download className={classeBotao("secundario", "md")}><Download aria-hidden className="size-4" /> Baixar planilha</a>
+            <BaixarPlanilha endereco={planilha} rotulo="Baixar planilha" />
             <BotaoImprimir />
           </div>
         ) : undefined}
