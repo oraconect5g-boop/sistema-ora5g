@@ -6,12 +6,14 @@ import { MoldeReal } from "../../../componentes/MoldeReal";
 import { Aviso, Botao, Cartao, Selo, TituloPagina } from "../../../componentes/ui";
 import { ehUuid } from "../../../lib/acesso/regras";
 import { FalhaDoServico, obterSessao } from "../../../lib/acesso/sessao";
+import { ERROS_DO_CUSTO, lerCustos } from "../../../lib/catalogo/custos";
 import { CANAIS, ERROS_DE_PRECO, acaoPossivel, situacaoDoPreco, type LinhaDePreco } from "../../../lib/catalogo/precos";
 import { centavosDoBanco } from "../../../lib/dinheiro";
 import { brl } from "../../../lib/formato";
 import { isoParaHoraDeSaoPaulo } from "../../../lib/lojas/regras";
 import { chaveDoCatalogo, textoDoParametro, type ValorDeParametro } from "../../../lib/parametros";
 import { cancelarPreco, criarCampanha, definirPreco } from "./acoes";
+import { CartaoDoCusto } from "./CartaoDoCusto";
 
 export const metadata: Metadata = { title: "Preços da variação" };
 export const dynamic = "force-dynamic";
@@ -25,6 +27,8 @@ const OK = {
   cancelado: "Cancelado: o preço anterior continua valendo.",
   encerrado: "Campanha encerrada agora: o preço normal volta a valer.",
   ja_cancelado: "Este preço já estava cancelado.",
+  custo_corrigido: "Custo corrigido: vale nas próximas vendas; as vendas já feitas guardam o custo delas.",
+  custo_sem_mudanca: "Nada mudou: o custo já era esse.",
 } as const;
 const SITUACAO = {
   vigente: { texto: "vale agora", tom: "sucesso" },
@@ -65,16 +69,18 @@ export default async function PrecosDaVariante({ searchParams }: {
   const parametros = await searchParams;
   const ok = chaveDoCatalogo(OK, parametros.ok);
   const erro = chaveDoCatalogo(ERROS_DE_PRECO, parametros.erro);
+  const erroDoCusto = chaveDoCatalogo(ERROS_DO_CUSTO, parametros.erro);
   const variante = ehUuid(parametros.variante) ? parametros.variante : null;
   const form = textoDoParametro(parametros.form);
   const sessao = await obterSessao({ exigirLoja: true });
   const { supabase } = sessao;
 
-  const [gerir, alterar] = await Promise.all([
+  const [gerir, alterar, custoVer] = await Promise.all([
     supabase.rpc("tem_permissao", { p_permissao: "catalogo.gerir" }),
     supabase.rpc("tem_permissao", { p_permissao: "preco.alterar" }),
+    supabase.rpc("tem_permissao", { p_permissao: "custo.ver" }),
   ]);
-  if (gerir.error || alterar.error) throw new FalhaDoServico("tem_permissao");
+  if (gerir.error || alterar.error || custoVer.error) throw new FalhaDoServico("tem_permissao");
   if (!gerir.data && !alterar.data) {
     return (
       <MoldeReal sessao={sessao}>
@@ -99,11 +105,13 @@ export default async function PrecosDaVariante({ searchParams }: {
   }
   const v = dadosDaVariante.data as unknown as { id: string; sku: string; nome: string; produto_id: string; produtos: { nome: string } | null };
 
-  const [naLoja, online, historico] = await Promise.all([
+  const [naLoja, online, historico, custos] = await Promise.all([
     supabase.rpc("precos_por_loja", { p_variante: variante, p_canal: "loja" }),
     supabase.rpc("precos_por_loja", { p_variante: variante, p_canal: "online" }),
     supabase.from("precos").select("id, unidade_id, canal, valor_centavos, inicio, fim, origem, motivo, criado_em, cancelado_em, motivo_cancelamento")
       .eq("variante_id", variante).order("inicio", { ascending: false }).limit(200),
+    // CAT-008b: o custo e o histórico dele, só para quem vê custo.
+    custoVer.data ? lerCustos(supabase, variante) : Promise.resolve(null),
   ]);
   if (naLoja.error || online.error || historico.error) throw new FalhaDoServico("precos");
   const lojas = (naLoja.data as PorLoja[]).map((l) => ({ id: l.unidade_id, nome: l.unidade }));
@@ -125,6 +133,7 @@ export default async function PrecosDaVariante({ searchParams }: {
       <TituloPagina titulo={`Preços · ${v.nome}`} subtitulo={<>SKU <span className="numeros">{v.sku}</span> · {v.produtos?.nome ?? ""}. A venda guarda o preço do momento: mudar aqui nunca altera venda já feita.</>} />
       {ok && <Aviso tom="sucesso" className="mt-4">{OK[ok]}</Aviso>}
       {erro && <Aviso tom="perigo" className="mt-4">{ERROS_DE_PRECO[erro]}</Aviso>}
+      {erroDoCusto && <Aviso tom="perigo" className="mt-4">{ERROS_DO_CUSTO[erroDoCusto]}</Aviso>}
 
       <Cartao className="mt-4" titulo="Vale agora em cada loja" icone={Store}>
         <ul className="divide-y divide-borda text-sm">
@@ -140,6 +149,8 @@ export default async function PrecosDaVariante({ searchParams }: {
           {lojas.length === 0 && <li className="py-2 text-suave">Nenhuma loja ativa visível.</li>}
         </ul>
       </Cartao>
+
+      {custos && <CartaoDoCusto custos={custos} podeCorrigir={Boolean(gerir.data)} variante={v.id} aberto={form === "custo"} />}
 
       {alterar.data ? (
         <div className="mt-4 grid gap-4 lg:grid-cols-2">
