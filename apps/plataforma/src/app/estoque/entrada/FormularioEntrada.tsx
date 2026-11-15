@@ -18,7 +18,7 @@ function BuscaDoItem({ aoEscolher }: { aoEscolher: (item: ItemParaEntrada) => vo
   const buscar = () => iniciar(async () => setAchados(await buscarItensParaEntrada(termo)));
   return (
     <div>
-      <label htmlFor={id} className="block text-sm font-medium">Item (nome ou SKU)</label>
+      <label htmlFor={id} className="block text-sm font-medium">Item (nome, marca, SKU ou código de barras)</label>
       <div className="mt-1 flex gap-2">
         <input id={id} value={termo} onChange={(e) => setTermo(e.target.value)} onKeyDown={(e) => { if (e.key === "Enter") { e.preventDefault(); buscar(); } }}
           className="min-h-11 min-w-0 flex-1 rounded-botao border border-borda bg-white px-3 text-sm outline-none focus:border-acao focus:ring-2 focus:ring-acao/20" placeholder="Galaxy A16 ou APA-0001" />

@@ -4,19 +4,25 @@ import { describe, expect, it, vi } from "vitest";
 
 vi.mock("../acesso/sessao", () => ({ FalhaDoServico: class extends Error {} }));
 
-import { buscarNoCatalogo, filtroDoIdentificador, identificadorDigitado, termoDaBusca } from "./busca";
+import { buscarNoCatalogo, digitosParaBusca, filtroDoIdentificador, identificadorDigitado, termoDaBusca } from "./busca";
 
 const tabelas: Record<string, Record<string, unknown>[]> = {
   produtos: [
-    { id: "p1", nome: "Galaxy A15", ativo: true },
-    { id: "p2", nome: "Capa de proteção", ativo: true },
-    { id: "p3", nome: "Galaxy antigo", ativo: false },
+    { id: "p1", nome: "Galaxy A15", ativo: true, marca_id: "m1" },
+    { id: "p2", nome: "Capa de proteção", ativo: true, marca_id: null },
+    { id: "p3", nome: "Galaxy antigo", ativo: false, marca_id: "m1" },
+  ],
+  // CAT-006: a marca traz os produtos dela; o código de barras e o final do IMEI acham a variação.
+  marcas: [{ id: "m1", nome: "Samsung" }, { id: "m2", nome: "Motorola" }],
+  itens_serializados: [
+    { variante_id: "v2", imei: "352099001700010", imei2: "352099001700028", em_estoque: true },
+    { variante_id: "v1", imei: "352099001709999", imei2: null, em_estoque: false },
   ],
   variantes: [
     { id: "v1", produto_id: "p1", sku: "APA-0001", nome: "128 GB Azul", ativa: true },
     { id: "v2", produto_id: "p1", sku: "APA-0002", nome: "256 GB Preto", ativa: true },
     { id: "v3", produto_id: "p1", sku: "APA-0003", nome: "64 GB Verde", ativa: false },
-    { id: "v4", produto_id: "p2", sku: "ACE-0001", nome: "Capa Galaxy A15 transparente", ativa: true },
+    { id: "v4", produto_id: "p2", sku: "ACE-0001", nome: "Capa Galaxy A15 transparente", ativa: true, codigo_barras: "7890000000028" },
     { id: "v5", produto_id: "p3", sku: "APA-0009", nome: "Antigo 32 GB", ativa: false },
   ],
   // CAT-009: códigos em outros canais (o desligado não acha; o da variação inativa só na busca do estoque).
@@ -36,6 +42,12 @@ class Consulta {
   eq(coluna: string, valor: unknown) { this.linhas = this.linhas.filter((l) => l[coluna] === valor); return this; }
   in(coluna: string, valores: unknown[]) { this.linhas = this.linhas.filter((l) => valores.includes(l[coluna])); return this; }
   is(coluna: string, valor: unknown) { this.linhas = this.linhas.filter((l) => l[coluna] === valor); return this; }
+  // O filtro do final do IMEI: "imei.like.*0010,imei2.like.*0010".
+  or(filtro: string) {
+    const condicoes = filtro.split(",").map((c) => { const [coluna, , padrao] = c.split("."); return { coluna: coluna ?? "", fim: (padrao ?? "").replace(/^\*/, "") }; });
+    this.linhas = this.linhas.filter((l) => condicoes.some((c) => typeof l[c.coluna] === "string" && (l[c.coluna] as string).endsWith(c.fim)));
+    return this;
+  }
   ilike(coluna: string, padrao: string) { const t = minusculo(padrao.replaceAll("%", "")); this.linhas = this.linhas.filter((l) => minusculo(l[coluna]).includes(t)); return this; }
   limit(n: number) { this.linhas = this.linhas.slice(0, n); return this; }
   then(resolver: (r: { data: Record<string, unknown>[] | null; error: null | { code: string } }) => unknown) {
@@ -100,6 +112,28 @@ describe("buscarNoCatalogo", () => {
     } finally {
       delete erros.variante_codigos_externos;
     }
+  });
+
+  it("CAT-006: pela marca traz os produtos dela (só os ativos no catálogo e no PDV; no estoque, todos)", async () => {
+    expect(await buscarNoCatalogo(supabase, "samsung")).toEqual({ produtos: ["p1"], variantes: ["v1", "v2"], cortada: false });
+    expect((await buscarNoCatalogo(supabase, "samsung", { ativos: false })).produtos).toEqual(["p1", "p3"]);
+    expect((await buscarNoCatalogo(supabase, "motorola")).variantes).toEqual([]);
+  });
+
+  it("CAT-006: com 4 a 14 dígitos, o código de barras e o final do IMEI (ou do segundo) de aparelho em estoque", async () => {
+    expect((await buscarNoCatalogo(supabase, "0000000028")).variantes).toEqual(["v4"]);
+    expect((await buscarNoCatalogo(supabase, "0010")).variantes).toEqual(["v2"]);
+    expect((await buscarNoCatalogo(supabase, "0028")).variantes).toEqual(expect.arrayContaining(["v2", "v4"]));
+    // O aparelho que já saiu do estoque não é achado pelo final do IMEI.
+    expect((await buscarNoCatalogo(supabase, "9999")).variantes).toEqual([]);
+  });
+
+  it("CAT-006: os dígitos da busca: espaço, ponto e hífen ignorados; menos de 4 ou o IMEI inteiro ficam fora", () => {
+    expect(digitosParaBusca("35 20-99")).toBe("352099");
+    expect(digitosParaBusca("123")).toBeNull();
+    expect(digitosParaBusca("352099001700010")).toBeNull();
+    expect(digitosParaBusca("12a4")).toBeNull();
+    expect(digitosParaBusca("galaxy")).toBeNull();
   });
 
   it("termo vazio não consulta nada", async () => {

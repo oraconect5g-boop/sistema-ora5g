@@ -187,7 +187,7 @@ describe("códigos de outros canais (CAT-009)", () => {
     ];
     const t = (await tela()).replace(/\s+/g, " ");
     for (const trecho of ["Rein 12345", "Mercado Livre MLB111 (SKU GALAXY-A15)", "Códigos em outros canais (2)", "Ligar código", "Desligar",
-      "Buscar por nome, SKU ou código de outro canal (Rein, anúncio)", "continuam pelo SKU APA-TESTE"]) expect(t, trecho).toContain(trecho);
+      "Buscar por nome, marca, SKU, código de barras ou código de outro canal (Rein, anúncio)", "continuam pelo SKU APA-TESTE"]) expect(t, trecho).toContain(trecho);
     // A Rein vem antes do Mercado Livre (a ordem dos canais), seja qual for a ordem do banco.
     expect(t.indexOf("Rein 12345")).toBeLessThan(t.indexOf("Mercado Livre MLB111"));
   });
@@ -198,7 +198,7 @@ describe("códigos de outros canais (CAT-009)", () => {
     cenario.erros.variante_codigos_externos = { code: "PGRST205" };
     let t = await tela();
     expect(t).not.toContain("Códigos em outros canais");
-    expect(t).toContain("Buscar por nome ou SKU");
+    expect(t).toContain("Buscar por nome, marca, SKU ou código de barras");
     expect(t).toContain("APA-TESTE");
     cenario.erros.variante_codigos_externos = { code: "57014" };
     t = await tela();

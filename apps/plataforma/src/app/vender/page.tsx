@@ -137,7 +137,7 @@ export default async function Vender({ searchParams }: { searchParams: Promise<{
         <>
           <Cartao titulo={`Venda nº ${venda.data.numero}`} subtitulo={venda.data.situacao === "aguardando_aprovacao" ? "Aguardando aprovação de desconto" : "Em andamento"} icone={ShoppingCart}>
             <form className="flex flex-wrap items-end gap-2" role="search">
-              <label className="min-w-0 flex-1 text-sm font-medium">Produto, SKU ou IMEI/ICCID<input id="busca-pdv" name="q" defaultValue={busca} className={campo} autoComplete="off" /></label>
+              <label className="min-w-0 flex-1 text-sm font-medium">Produto, marca, SKU, código de barras ou IMEI/ICCID<input id="busca-pdv" name="q" defaultValue={busca} className={campo} autoComplete="off" placeholder="Ex.: galaxy, APA-0002 ou o final do IMEI" /></label>
               <LerCodigo alvo="busca-pdv" />
               <button type="submit" className="min-h-11 rounded-botao bg-acao px-4 text-sm font-semibold text-white"><ScanLine aria-hidden className="inline size-4" /> Buscar</button>
             </form>
