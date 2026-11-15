@@ -2,7 +2,7 @@
   "_leia": "Checkpoint do programa de execução integral (PR #67). Carregar ao retomar e seguir para o próximo item executável da fila; não reiniciar o projeto. Estados vêm de status-requisitos.json (fonte da rastreabilidade); este arquivo acrescenta lote, bloqueio externo e revisão.",
   "atualizado_em": "2026-11-15",
   "base": {
-    "main": "379e27f",
+    "main": "230a23b",
     "pacote": {
       "pr": 67,
       "branch": "docs/execucao-integral-20261110",
@@ -18,18 +18,18 @@
   },
   "publicado": {
     "homologacao": {
-      "commit": "379e27f",
+      "commit": "230a23b",
       "quando": "2026-11-15",
-      "conferido": "rodapé da tela de entrada (379e27f · build 15/11/2026 04:22), /saude 200 e as rotas reais respondendo 307 para o login (inclusive /produtos/precos, /contas-a-pagar e /estoque/entrada)"
+      "conferido": "rodapé da tela de entrada (230a23b · build 15/11/2026 07:41), /saude 200 e as rotas reais respondendo 307 para o login (inclusive /produtos/precos, /contas-a-pagar e /relatorios)"
     },
     "falta_publicar": [
-      "registro das migrations do PERF-003b, do FIN-004a, do FIN-004b e do CAT-008b aplicadas no ora5g-dev (só documentos e nomes de arquivo), publicado ao fim do lote"
+      "CAT-010, fotos em lote (sem migration), publicado ao fim do lote"
     ]
   },
   "contagem_dos_estados": {
     "nao_iniciado": 49,
-    "parcial": 65,
-    "testado": 60,
+    "parcial": 64,
+    "testado": 61,
     "bloqueado": 3,
     "respeitado": 2
   },
@@ -208,8 +208,8 @@
     "ORA-CAT-010": {
       "titulo": "Permitir importação assistida em lote de fotos/atributos",
       "prioridade": "P2",
-      "estado": "parcial",
-      "lote": "L3c importação; R2 correções do importador",
+      "estado": "testado",
+      "lote": "L3c importação; R2 correções do importador; CAT-010 (15/11): fotos em lote",
       "bloqueio_externo": null,
       "revisado_codex": false,
       "homologado": false
