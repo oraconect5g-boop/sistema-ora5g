@@ -6,9 +6,9 @@ import { redirect } from "next/navigation";
 
 import { ehUuid } from "../../lib/acesso/regras";
 import { obterSessao } from "../../lib/acesso/sessao";
+import { erroDosDocumentos, lerRetirada } from "../../lib/contas-a-pagar/documentos";
 import {
-  erroDasContas, filtroDasContas, filtroNoEndereco, lerCategoria, lerCorrecao, lerLancamento, lerLigacao, lerMotivo, lerPagamento, visaoDasContas,
-  type ErroDasContas, type OkDasContas,
+  enderecoDaVolta, erroDasContas, lerCategoria, lerCorrecao, lerLancamento, lerLigacao, lerMotivo, lerPagamento, type ErroDasContas, type OkDasContas,
 } from "../../lib/contas-a-pagar/regras";
 import type { Json } from "../../lib/supabase/tipos-banco";
 
@@ -16,14 +16,7 @@ import type { Json } from "../../lib/supabase/tipos-banco";
 // (o banco confere a permissão de novo) e volta para a mesma lista e o mesmo filtro, com a mensagem.
 
 function voltar(dados: FormData, resultado: { ok: OkDasContas } | { erro: ErroDasContas }): never {
-  const parametros = new URLSearchParams();
-  const visao = visaoDasContas(dados.get("ver"));
-  if (visao !== "abertas") parametros.set("ver", visao);
-  const loja = filtroNoEndereco(filtroDasContas(dados.get("loja")));
-  if (loja) parametros.set("loja", loja);
-  if ("ok" in resultado) parametros.set("ok", resultado.ok);
-  else parametros.set("erro", resultado.erro);
-  redirect(`/contas-a-pagar?${parametros}`);
+  redirect(enderecoDaVolta(dados, resultado));
 }
 const falhou = (dados: FormData, erro: { code?: string; message?: string }) => voltar(dados, { erro: erroDasContas(erro) });
 
@@ -63,6 +56,19 @@ export async function ligarEntrada(dados: FormData) {
   const { data, error } = await supabase.rpc("conta_pagar_ligar_entrada", { p_conta: lido.conta, p_entrada: lido.entrada as string, p_motivo: lido.motivo });
   if (error) falhou(dados, error);
   voltar(dados, { ok: data === 0 ? "sem_mudanca" : lido.entrada ? "ligada" : "desligada" });
+}
+
+/**
+ * FIN-004b: retira o documento errado da conta, com o motivo (o registro, quem retirou e o motivo ficam; o arquivo
+ * continua guardado). Guardar é a rota /contas-a-pagar/[id]/documentos, porque o arquivo pode passar de 1 MB.
+ */
+export async function retirarDocumento(dados: FormData) {
+  const lido = lerRetirada(dados);
+  if (!lido.ok) voltar(dados, { erro: lido.erro });
+  const { supabase } = await obterSessao({ exigirLoja: true });
+  const { data, error } = await supabase.rpc("conta_pagar_retirar_anexo", { p_anexo: lido.documento, p_motivo: lido.motivo });
+  if (error) voltar(dados, { erro: erroDosDocumentos(error) });
+  voltar(dados, { ok: data === false ? "documento_sem_mudanca" : "documento_retirado" });
 }
 
 export async function pagarConta(dados: FormData) {

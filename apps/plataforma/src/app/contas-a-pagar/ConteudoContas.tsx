@@ -1,12 +1,13 @@
 import { randomUUID } from "node:crypto";
 
-import { CalendarClock, CalendarRange, CircleCheck, Layers, PackagePlus, ReceiptText, Store, Tags, TriangleAlert } from "lucide-react";
+import { CalendarClock, CalendarRange, CircleCheck, Layers, PackagePlus, Paperclip, ReceiptText, Store, Tags, TriangleAlert } from "lucide-react";
 
 import { BarrasHorizontais, Colunas, TabelaDoGrafico } from "../../componentes/graficos";
 import { EstadoDoPainel, NOTA } from "../../componentes/paineis-de-vendas";
 import { Botao, Cartao, EstadoVazio, FiltroSegmentado, Indicador, Selo } from "../../componentes/ui";
 import type { CategoriaDaConta, ContaAPagar, ResumoDasContas } from "../../lib/contas-a-pagar/consulta";
 import { LIMITE_DA_LISTA } from "../../lib/contas-a-pagar/consulta";
+import { MAXIMO_DE_DOCUMENTOS, TIPOS_DE_DOCUMENTO, type DocumentoDaConta } from "../../lib/contas-a-pagar/documentos";
 import type { EntradaDaConta, LigacoesDasContas } from "../../lib/contas-a-pagar/entradas";
 import {
   dataDoDia, FORMAS, filtroNoEndereco, parcelaDaConta, prazoDaConta, VISOES_DAS_CONTAS,
@@ -14,7 +15,8 @@ import {
 } from "../../lib/contas-a-pagar/regras";
 import { brl, brlCompacto, brlEixo, diaMes, numero } from "../../lib/formato";
 import type { Leitura } from "../../lib/leitura-do-banco";
-import { cancelarConta, corrigirConta, desfazerPagamento, lancarConta, ligarEntrada, pagarConta, salvarCategoria } from "./acoes";
+import { tamanhoDoAnexo } from "../../lib/vendas/anexos";
+import { cancelarConta, corrigirConta, desfazerPagamento, lancarConta, ligarEntrada, pagarConta, retirarDocumento, salvarCategoria } from "./acoes";
 
 // Contas a pagar da empresa (lote L8a). Só apresentação: o resumo (somado no banco), a lista e as categorias
 // chegam lidos por lib/contas-a-pagar/consulta, cada um com o seu estado; falha nunca vira zero nem lista
@@ -42,10 +44,14 @@ type Props = {
   ligacoes?: Leitura<LigacoesDasContas> | null;
   /** FIN-004a: lançar a conta a partir desta entrada (o formulário vem aberto e preenchido). */
   entradaParaLancar?: EntradaDaConta | null;
+  /** FIN-004b: os documentos de cada conta da lista; nulo: o banco ainda não tem os documentos (some). */
+  documentos?: Leitura<ReadonlyMap<string, DocumentoDaConta[]>> | null;
 };
 
 /** O dia de São Paulo de um instante, no formato da tela ("13/11/2026"). */
 const diaDoInstante = (iso: string) => dataDoDia(new Intl.DateTimeFormat("en-CA", { timeZone: "America/Sao_Paulo" }).format(new Date(iso)));
+/** O dia e a hora de São Paulo ("13/11/2026, 10:30"). */
+const dataHora = (iso: string) => new Intl.DateTimeFormat("pt-BR", { timeZone: "America/Sao_Paulo", dateStyle: "short", timeStyle: "short" }).format(new Date(iso));
 
 function endereco(visao: VisaoDasContas, filtro: FiltroDasContas) {
   const p = new URLSearchParams();
@@ -61,7 +67,7 @@ function Volta({ visao, filtro }: { visao: VisaoDasContas; filtro: FiltroDasCont
   return <><input type="hidden" name="ver" value={visao} /><input type="hidden" name="loja" value={filtroNoEndereco(filtro) ?? ""} /></>;
 }
 
-export function ConteudoContas({ resumo, lista, categorias, fornecedores, visao, filtro, hoje, lojaDoTurno, ligacoes = null, entradaParaLancar = null }: Props) {
+export function ConteudoContas({ resumo, lista, categorias, fornecedores, visao, filtro, hoje, lojaDoTurno, ligacoes = null, entradaParaLancar = null, documentos = null }: Props) {
   const escopo = resumo.estado === "ok" ? resumo.dados.escopo : null;
   const lojas: LojaDaConta[] = escopo?.lojas ?? [lojaDoTurno];
   const nomeDaLoja = (id: string | null) => (id === null ? "Rede (central)" : lojas.find((l) => l.id === id)?.nome ?? "Outra loja");
@@ -112,7 +118,7 @@ export function ConteudoContas({ resumo, lista, categorias, fornecedores, visao,
         />
       )}
 
-      <ListaDeContas lista={lista} visao={visao} filtro={filtro} hoje={hoje} mostrarLoja={mostrarLoja} nomes={nomes} ligacoes={ligacoes} />
+      <ListaDeContas lista={lista} visao={visao} filtro={filtro} hoje={hoje} mostrarLoja={mostrarLoja} nomes={nomes} ligacoes={ligacoes} documentos={documentos} />
 
       {escopo?.rede && categorias.estado === "ok" && <Categorias categorias={categorias.dados} visao={visao} filtro={filtro} />}
     </>
@@ -261,11 +267,12 @@ const SUBTITULOS: Record<VisaoDasContas, string> = {
   canceladas: "Cancelamentos dos últimos 60 dias, com o motivo",
 };
 
-function ListaDeContas({ lista, visao, filtro, hoje, mostrarLoja, nomes, ligacoes }: {
+function ListaDeContas({ lista, visao, filtro, hoje, mostrarLoja, nomes, ligacoes, documentos }: {
   lista: Leitura<{ contas: ContaAPagar[]; mais: boolean }>; visao: VisaoDasContas; filtro: FiltroDasContas; hoje: string; mostrarLoja: boolean; nomes: Nomes;
-  ligacoes: Leitura<LigacoesDasContas> | null;
+  ligacoes: Leitura<LigacoesDasContas> | null; documentos: Leitura<ReadonlyMap<string, DocumentoDaConta[]>> | null;
 }) {
   const lidas = ligacoes?.estado === "ok" ? ligacoes.dados : null;
+  const docs = documentos?.estado === "ok" ? documentos.dados : null;
   return (
     <Cartao className="mt-4" titulo={`Contas: ${VISOES_DAS_CONTAS[visao].toLowerCase()}`} subtitulo={SUBTITULOS[visao]} icone={Layers}>
       {lista.estado !== "ok" ? <EstadoDoPainel estado={lista.estado} fonte="contas_a_pagar" tentarDeNovo={endereco(visao, filtro)} />
@@ -273,9 +280,10 @@ function ListaDeContas({ lista, visao, filtro, hoje, mostrarLoja, nomes, ligacoe
         : (
           <>
             <ul className="divide-y divide-borda text-sm">
-              {lista.dados.contas.map((c) => <LinhaDaConta key={c.id} c={c} visao={visao} filtro={filtro} hoje={hoje} mostrarLoja={mostrarLoja} nomes={nomes} ligacoes={lidas} />)}
+              {lista.dados.contas.map((c) => <LinhaDaConta key={c.id} c={c} visao={visao} filtro={filtro} hoje={hoje} mostrarLoja={mostrarLoja} nomes={nomes} ligacoes={lidas} documentos={docs} />)}
             </ul>
             {ligacoes !== null && ligacoes.estado !== "ok" && <p className={`mt-3 ${NOTA}`}>Não deu para ler as entradas de mercadoria ligadas às contas agora; a ligação volta quando o banco responder.</p>}
+            {documentos !== null && documentos.estado !== "ok" && <p className={`mt-3 ${NOTA}`}>Não deu para ler os documentos das contas (boletos, notas e comprovantes) agora; eles voltam quando o banco responder.</p>}
             {lista.dados.mais && <p className={`mt-3 ${NOTA}`}>{`Mostrando as ${LIMITE_DA_LISTA} primeiras. Escolha uma loja acima para ver as outras.`}</p>}
           </>
         )}
@@ -283,9 +291,11 @@ function ListaDeContas({ lista, visao, filtro, hoje, mostrarLoja, nomes, ligacoe
   );
 }
 
-function LinhaDaConta({ c, visao, filtro, hoje, mostrarLoja, nomes, ligacoes }: {
+function LinhaDaConta({ c, visao, filtro, hoje, mostrarLoja, nomes, ligacoes, documentos }: {
   c: ContaAPagar; visao: VisaoDasContas; filtro: FiltroDasContas; hoje: string; mostrarLoja: boolean; nomes: Nomes; ligacoes: LigacoesDasContas | null;
+  documentos: ReadonlyMap<string, DocumentoDaConta[]> | null;
 }) {
+  const daConta = documentos?.get(c.id) ?? [];
   const parcela = parcelaDaConta(c.forma, c.parcela, c.parcelas);
   // FIN-004a: a entrada de mercadoria da conta (a ligada, se lida; "sem acesso" se o perfil não lê o estoque daquela loja).
   const idDaEntrada = ligacoes?.ligadas.get(c.id) ?? null;
@@ -319,53 +329,122 @@ function LinhaDaConta({ c, visao, filtro, hoje, mostrarLoja, nomes, ligacoes }: 
       {c.situacao === "paga" && <p className="mt-1 text-xs text-suave">{`Referência: ${c.referencia ?? ""} · vencia ${dataDoDia(c.vencimento)}, valor da conta ${brl(c.valor)}`}</p>}
       {c.situacao === "cancelada" && <p className="mt-1 text-xs text-suave">{`Motivo: ${c.motivoCancelamento ?? ""}`}</p>}
 
-      {visao === "abertas" && c.situacao === "aberta" && (
-        <div className="nao-imprimir mt-2 flex flex-wrap gap-2">
+      {/* As ações da conta numa fileira de pílulas; a aberta ocupa a linha inteira. Nada disto sai no papel. */}
+      <div className="nao-imprimir mt-2 flex flex-wrap gap-2 empty:hidden">
+        {visao === "abertas" && c.situacao === "aberta" && (
+          <>
+            <details className="group open:w-full">
+              <summary className={pilula}>Marcar paga</summary>
+              <form action={pagarConta} className="mt-2 grid gap-2 rounded-xl border border-borda p-3 sm:grid-cols-4">
+                <input type="hidden" name="conta" value={c.id} /><Volta visao={visao} filtro={filtro} />
+                <label className={rotulo}>Pago em<input name="pago_em" type="date" required defaultValue={hoje} max={hoje} className={campo} /></label>
+                <label className={rotulo}>Valor pago (R$)<input name="valor_pago" required inputMode="decimal" defaultValue={reaisDoCampo(c.valor)} className={campo} /></label>
+                <label className={rotulo}>Referência<input name="referencia" required minLength={3} maxLength={80} placeholder="Comprovante ou autenticação" className={campo} /></label>
+                <Botao type="submit" tamanho="sm" className="self-end">Registrar</Botao>
+              </form>
+            </details>
+            <details className="group open:w-full">
+              <summary className={pilula}>Corrigir</summary>
+              <form action={corrigirConta} className="mt-2 grid gap-2 rounded-xl border border-borda p-3 sm:grid-cols-4">
+                <input type="hidden" name="conta" value={c.id} /><Volta visao={visao} filtro={filtro} />
+                <label className={rotulo}>Valor (R$)<input name="valor" required inputMode="decimal" defaultValue={reaisDoCampo(c.valor)} className={campo} /></label>
+                <label className={rotulo}>Vencimento<input name="vencimento" type="date" required defaultValue={c.vencimento} className={campo} /></label>
+                <label className={rotulo}>Motivo<input name="motivo" required minLength={3} maxLength={300} placeholder="Ex.: reajuste" className={campo} /></label>
+                <Botao type="submit" tamanho="sm" variante="secundario" className="self-end">Corrigir</Botao>
+              </form>
+            </details>
+            <details className="group open:w-full">
+              <summary className={pilula}>Cancelar</summary>
+              <form action={cancelarConta} className="mt-2 grid gap-2 rounded-xl border border-borda p-3 sm:grid-cols-4">
+                <input type="hidden" name="conta" value={c.id} /><Volta visao={visao} filtro={filtro} />
+                <label className={`${rotulo} sm:col-span-2`}>Motivo<input name="motivo" required minLength={3} maxLength={300} placeholder="Ex.: lançada em dobro" className={campo} /></label>
+                {c.parcela < c.parcelas
+                  ? <label className="flex items-center gap-2 self-end text-xs font-medium"><input type="checkbox" name="seguintes" value="sim" className="size-4" />{`E as seguintes (até ${c.forma === "parcelada" ? "a parcela" : "o mês"} ${c.parcelas})`}</label>
+                  : <span />}
+                <Botao type="submit" tamanho="sm" variante="perigo" className="self-end">Cancelar conta</Botao>
+              </form>
+            </details>
+          </>
+        )}
+        {ligacoes && c.situacao !== "cancelada" && <LigacaoDaConta c={c} entrada={idDaEntrada} candidatas={ligacoes.entradas} visao={visao} filtro={filtro} nomes={nomes} />}
+        {visao === "pagas" && c.situacao === "paga" && (
           <details className="group open:w-full">
-            <summary className={pilula}>Marcar paga</summary>
-            <form action={pagarConta} className="mt-2 grid gap-2 rounded-xl border border-borda p-3 sm:grid-cols-4">
+            <summary className={pilula}>Desfazer pagamento</summary>
+            <form action={desfazerPagamento} className="mt-2 flex flex-wrap items-end gap-2 rounded-xl border border-borda p-3">
               <input type="hidden" name="conta" value={c.id} /><Volta visao={visao} filtro={filtro} />
-              <label className={rotulo}>Pago em<input name="pago_em" type="date" required defaultValue={hoje} max={hoje} className={campo} /></label>
-              <label className={rotulo}>Valor pago (R$)<input name="valor_pago" required inputMode="decimal" defaultValue={reaisDoCampo(c.valor)} className={campo} /></label>
-              <label className={rotulo}>Referência<input name="referencia" required minLength={3} maxLength={80} placeholder="Comprovante ou autenticação" className={campo} /></label>
-              <Botao type="submit" tamanho="sm" className="self-end">Registrar</Botao>
+              <label className={`${rotulo} min-w-0 flex-1`}>Motivo para desfazer<input name="motivo" required minLength={3} maxLength={300} className={campo} /></label>
+              <Botao type="submit" tamanho="sm" variante="secundario">Desfazer</Botao>
             </form>
           </details>
-          <details className="group open:w-full">
-            <summary className={pilula}>Corrigir</summary>
-            <form action={corrigirConta} className="mt-2 grid gap-2 rounded-xl border border-borda p-3 sm:grid-cols-4">
-              <input type="hidden" name="conta" value={c.id} /><Volta visao={visao} filtro={filtro} />
-              <label className={rotulo}>Valor (R$)<input name="valor" required inputMode="decimal" defaultValue={reaisDoCampo(c.valor)} className={campo} /></label>
-              <label className={rotulo}>Vencimento<input name="vencimento" type="date" required defaultValue={c.vencimento} className={campo} /></label>
-              <label className={rotulo}>Motivo<input name="motivo" required minLength={3} maxLength={300} placeholder="Ex.: reajuste" className={campo} /></label>
-              <Botao type="submit" tamanho="sm" variante="secundario" className="self-end">Corrigir</Botao>
-            </form>
-          </details>
-          <details className="group open:w-full">
-            <summary className={pilula}>Cancelar</summary>
-            <form action={cancelarConta} className="mt-2 grid gap-2 rounded-xl border border-borda p-3 sm:grid-cols-4">
-              <input type="hidden" name="conta" value={c.id} /><Volta visao={visao} filtro={filtro} />
-              <label className={`${rotulo} sm:col-span-2`}>Motivo<input name="motivo" required minLength={3} maxLength={300} placeholder="Ex.: lançada em dobro" className={campo} /></label>
-              {c.parcela < c.parcelas
-                ? <label className="flex items-center gap-2 self-end text-xs font-medium"><input type="checkbox" name="seguintes" value="sim" className="size-4" />{`E as seguintes (até ${c.forma === "parcelada" ? "a parcela" : "o mês"} ${c.parcelas})`}</label>
-                : <span />}
-              <Botao type="submit" tamanho="sm" variante="perigo" className="self-end">Cancelar conta</Botao>
-            </form>
-          </details>
-        </div>
-      )}
-      {ligacoes && c.situacao !== "cancelada" && <LigacaoDaConta c={c} entrada={idDaEntrada} candidatas={ligacoes.entradas} visao={visao} filtro={filtro} nomes={nomes} />}
-      {visao === "pagas" && c.situacao === "paga" && (
-        <details className="nao-imprimir group mt-2 open:w-full">
-          <summary className={pilula}>Desfazer pagamento</summary>
-          <form action={desfazerPagamento} className="mt-2 flex flex-wrap items-end gap-2 rounded-xl border border-borda p-3">
-            <input type="hidden" name="conta" value={c.id} /><Volta visao={visao} filtro={filtro} />
-            <label className={`${rotulo} min-w-0 flex-1`}>Motivo para desfazer<input name="motivo" required minLength={3} maxLength={300} className={campo} /></label>
-            <Botao type="submit" tamanho="sm" variante="secundario">Desfazer</Botao>
-          </form>
-        </details>
-      )}
+        )}
+        {documentos && (c.situacao !== "cancelada" || daConta.length > 0) && <DocumentosDaConta c={c} documentos={daConta} visao={visao} filtro={filtro} />}
+      </div>
     </li>
+  );
+}
+
+/**
+ * FIN-004b: os documentos da conta (o boleto, a nota do fornecedor, o comprovante do pagamento): abrir (o link é
+ * assinado na hora, pela rota), guardar outro (PDF ou foto, até 5 MB, pela rota de envio) e retirar o errado, com
+ * motivo. A conta cancelada só mostra os que já tem.
+ */
+function DocumentosDaConta({ c, documentos, visao, filtro }: { c: ContaAPagar; documentos: readonly DocumentoDaConta[]; visao: VisaoDasContas; filtro: FiltroDasContas }) {
+  const vigentes = documentos.filter((d) => d.retiradoEm === null).length;
+  const podeGuardar = c.situacao !== "cancelada" && vigentes < MAXIMO_DE_DOCUMENTOS;
+  return (
+    <details className="group open:w-full">
+      <summary className={pilula}><Paperclip className="mr-1.5 size-3.5" aria-hidden />{vigentes > 0 ? `Documentos (${vigentes})` : "Anexar boleto ou nota"}</summary>
+      <div className="mt-2 rounded-xl border border-borda p-3">
+        {documentos.length === 0
+          ? <p className="text-xs text-suave">Nenhum documento guardado. Guarde aqui o boleto, a nota do fornecedor ou o comprovante do pagamento: fica em privado, só para quem gere a conta.</p>
+          : (
+            <ul className="divide-y divide-borda">
+              {documentos.map((d) => {
+                const nome = TIPOS_DE_DOCUMENTO[d.tipo];
+                return (
+                  <li key={d.id} className="space-y-1 py-2 first:pt-0">
+                    <p className="flex flex-wrap items-center gap-x-2 gap-y-1">
+                      {d.retiradoEm === null
+                        ? <a href={`/contas-a-pagar/${c.id}/documentos/${d.id}`} target="_blank" rel="noreferrer" className="font-semibold text-acao">{nome}</a>
+                        : <span className="text-suave line-through">{nome}</span>}
+                      <span className="numeros text-xs text-suave">{`${d.formato.toUpperCase()} · ${tamanhoDoAnexo(d.bytes)} · ${dataHora(d.enviadoEm)}`}</span>
+                      {d.retiradoEm !== null && <Selo tom="neutro">retirado</Selo>}
+                    </p>
+                    {d.descricao && <p className="text-xs text-suave">{d.descricao}</p>}
+                    {d.retiradoEm !== null && <p className="text-xs text-suave">{`Retirado em ${dataHora(d.retiradoEm)}: ${d.motivoRetirada ?? ""}`}</p>}
+                    {d.retiradoEm === null && (
+                      <details>
+                        <summary className="cursor-pointer text-xs font-semibold text-acao">Retirar (documento errado)</summary>
+                        <form action={retirarDocumento} className="mt-2 flex flex-wrap items-end gap-2">
+                          <input type="hidden" name="documento" value={d.id} /><Volta visao={visao} filtro={filtro} />
+                          <label className={`${rotulo} min-w-0 flex-1`}>Motivo para retirar<input name="motivo" required minLength={3} maxLength={200} placeholder="Ex.: boleto de outra conta" className={campo} /></label>
+                          <Botao type="submit" tamanho="sm" variante="secundario">Retirar</Botao>
+                        </form>
+                      </details>
+                    )}
+                  </li>
+                );
+              })}
+            </ul>
+          )}
+        {podeGuardar && (
+          <form action={`/contas-a-pagar/${c.id}/documentos`} method="post" encType="multipart/form-data" className="mt-3 grid gap-2 border-t border-borda pt-3 sm:grid-cols-4">
+            <Volta visao={visao} filtro={filtro} />
+            <label className={rotulo}>Tipo do documento
+              <select name="tipo" required defaultValue={c.situacao === "paga" ? "comprovante_pagamento" : "boleto"} className={campo}>
+                {(Object.keys(TIPOS_DE_DOCUMENTO) as (keyof typeof TIPOS_DE_DOCUMENTO)[]).map((tipo) => <option key={tipo} value={tipo}>{TIPOS_DE_DOCUMENTO[tipo]}</option>)}
+              </select>
+            </label>
+            <label className={rotulo}>Descrição <span className="font-normal text-suave">(no &quot;Outro&quot;)</span><input name="descricao" maxLength={120} className={campo} /></label>
+            <label className={`${rotulo} sm:col-span-2`}>Arquivo: PDF ou foto, até 5 MB
+              <input type="file" name="arquivo" required accept="application/pdf,image/jpeg,image/png,image/webp" className={`${campo} py-2`} />
+            </label>
+            <div className="sm:col-span-4"><Botao type="submit" tamanho="sm">Guardar o documento</Botao></div>
+          </form>
+        )}
+        {c.situacao !== "cancelada" && !podeGuardar && <p className={`mt-3 ${NOTA}`}>{`A conta já tem ${MAXIMO_DE_DOCUMENTOS} documentos: retire um errado para guardar outro.`}</p>}
+      </div>
+    </details>
   );
 }
 
@@ -379,7 +458,7 @@ function LigacaoDaConta({ c, entrada, candidatas, visao, filtro, nomes }: {
 }) {
   if (entrada !== null) {
     return (
-      <details className="nao-imprimir group mt-2 open:w-full">
+      <details className="group open:w-full">
         <summary className={pilula}>Desligar da entrada</summary>
         <form action={ligarEntrada} className="mt-2 flex flex-wrap items-end gap-2 rounded-xl border border-borda p-3">
           <input type="hidden" name="conta" value={c.id} /><input type="hidden" name="entrada" value="" /><Volta visao={visao} filtro={filtro} />
@@ -392,7 +471,7 @@ function LigacaoDaConta({ c, entrada, candidatas, visao, filtro, nomes }: {
   const opcoes = candidatas.filter((e) => !e.estornada && (c.unidadeId === null || e.unidadeId === c.unidadeId) && (c.fornecedorId === null || e.fornecedorId === c.fornecedorId));
   if (opcoes.length === 0) return null;
   return (
-    <details className="nao-imprimir group mt-2 open:w-full">
+    <details className="group open:w-full">
       <summary className={pilula}>Ligar à entrada</summary>
       <form action={ligarEntrada} className="mt-2 grid gap-2 rounded-xl border border-borda p-3 sm:grid-cols-4">
         <input type="hidden" name="conta" value={c.id} /><Volta visao={visao} filtro={filtro} />

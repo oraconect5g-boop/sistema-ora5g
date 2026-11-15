@@ -28,12 +28,17 @@ export function conferirAnexo(bytes: Uint8Array): { ok: true; formato: FormatoDo
   return formato ? { ok: true, formato, contentType: CONTEUDO[formato] } : { ok: false, erro: "anexo_tipo" };
 }
 
-/** Lê o tipo e a descrição do formulário (a descrição é obrigatória em "Outro documento"). */
-export function lerDadosDoAnexo(tipo: unknown, descricao: unknown): { ok: true; tipo: TipoDeAnexo; descricao: string | null } | { ok: false } {
+/**
+ * Lê o tipo (de um catálogo com "outro") e a descrição do formulário: a descrição tem de 3 a 120 letras e é obrigatória
+ * em "Outro documento". Serve aos documentos da venda e aos da conta a pagar (FIN-004b).
+ */
+export function lerTipoEDescricao<T extends string>(ehTipo: (v: unknown) => v is T, tipo: unknown, descricao: unknown): { ok: true; tipo: T; descricao: string | null } | { ok: false } {
   const texto = typeof descricao === "string" ? descricao.trim().replace(/\s+/g, " ") : "";
-  if (!ehTipoDeAnexo(tipo) || texto.length > 120 || (texto.length > 0 && texto.length < 3) || (tipo === "outro" && texto.length === 0)) return { ok: false };
+  if (!ehTipo(tipo) || texto.length > 120 || (texto.length > 0 && texto.length < 3) || (tipo === "outro" && texto.length === 0)) return { ok: false };
   return { ok: true, tipo, descricao: texto || null };
 }
+/** Lê o tipo e a descrição do formulário (a descrição é obrigatória em "Outro documento"). */
+export const lerDadosDoAnexo = (tipo: unknown, descricao: unknown) => lerTipoEDescricao(ehTipoDeAnexo, tipo, descricao);
 
 export const ERROS_DOS_ANEXOS = {
   anexo_tipo: "Envie PDF ou foto (JPEG, PNG ou WebP); o arquivo é conferido pelo conteúdo.",

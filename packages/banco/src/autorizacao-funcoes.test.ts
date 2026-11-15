@@ -1,9 +1,9 @@
 // Inventário de autorização (prioridade 1 do diagnóstico de 10/11/2026; ORA-ORG-004 e ORA-QUAL-002).
 // O aviso 0029 do Supabase lista as funções SECURITY DEFINER que qualquer usuário logado pode chamar
-// pela API: 150 em 15/11 (48 + 6 do cadastro de lojas, L2, + 5 do cadastro do catálogo, L3a, + 4 dos preços, L3b,
+// pela API: 152 em 15/11 (48 + 6 do cadastro de lojas, L2, + 5 do cadastro do catálogo, L3a, + 4 dos preços, L3b,
 // + 4 da importação do catálogo, L3c, + 3 da entrada de mercadoria, L4a, + 5 do inventário, L4b, + 6 dos clientes, L5a,
 // + 9 do funil e da agenda, L5b, + 4 da mesclagem e dos segmentos, L5c, + 4 das maquininhas e da conciliação, L7a,
-// + 2 da leitura das entradas, R1, + 1 do nome no ranking, G1, + 2 das metas, G4b, + 3 das financeiras, L7b, + 3 da saída autorizada do caixa, L7c, + 6 das contas a pagar, L8a, + 1 das regras do bônus por meta, L9a, + 2 do fechamento do bônus, L9b, + 1 da correção do repasse das financeiras, B4, + 1 dos dados para emitir a nota, K1b, + 1 dos documentos da nota emitida, L10a, + 2 do envio da nota pelo WhatsApp, K1c, + 1 dos recebíveis por loja e adquirente, L8e, + 5 da ordem de serviço, L12a, + 3 do orçamento da OS, L12b, + 2 da cobrança e da entrega da OS, L12c, + 3 das peças da OS, L12d, + 1 dos relatórios da assistência, L12e, + 2 dos documentos da venda, L5d, + 2 da conciliação fiscal, L10b, + 2 do cancelamento e da correção da nota, L10c, + 1 do valor do estoque a custo, G3b, + 2 dos códigos de outros canais, CAT-009, + 2 das regiões, ORG-009, + 1 da conta ligada à entrada, FIN-004a; no L8b, a das categorias ganhou o parâmetro "entra no resultado"). Elas rodam com poder total e cada uma confere sessão, loja e permissão por
+// + 2 da leitura das entradas, R1, + 1 do nome no ranking, G1, + 2 das metas, G4b, + 3 das financeiras, L7b, + 3 da saída autorizada do caixa, L7c, + 6 das contas a pagar, L8a, + 1 das regras do bônus por meta, L9a, + 2 do fechamento do bônus, L9b, + 1 da correção do repasse das financeiras, B4, + 1 dos dados para emitir a nota, K1b, + 1 dos documentos da nota emitida, L10a, + 2 do envio da nota pelo WhatsApp, K1c, + 1 dos recebíveis por loja e adquirente, L8e, + 5 da ordem de serviço, L12a, + 3 do orçamento da OS, L12b, + 2 da cobrança e da entrega da OS, L12c, + 3 das peças da OS, L12d, + 1 dos relatórios da assistência, L12e, + 2 dos documentos da venda, L5d, + 2 da conciliação fiscal, L10b, + 2 do cancelamento e da correção da nota, L10c, + 1 do valor do estoque a custo, G3b, + 2 dos códigos de outros canais, CAT-009, + 2 das regiões, ORG-009, + 1 da conta ligada à entrada, FIN-004a, + 2 dos documentos da conta, FIN-004b; no L8b, a das categorias ganhou o parâmetro "entra no resultado"). Elas rodam com poder total e cada uma confere sessão, loja e permissão por
 // conta própria. Este teste monta um "mundo" fictício com objetos reais em duas lojas e tenta cada
 // função como 13 tipos de atacante. Recusa = erro, ou resposta vazia numa leitura, e nada muda no
 // banco. O teste lista as funções no próprio banco e falha se aparecer uma nova sem casos aqui.
@@ -450,6 +450,15 @@ const CASOS: Record<string, Caso> = {
     A: () => ["select public.conta_pagar_cancelar($1, 'Tentativa', true)", [alvo.contaPagarA]],
     B: () => ["select public.conta_pagar_cancelar($1, 'Tentativa', true)", [alvo.contaPagarB]], semPermissao: true,
   },
+  // FIN-004b: os documentos da conta (boleto, nota, comprovante); quem gere a conta.
+  "conta_pagar_anexar(uuid,text,text,text,text)": {
+    A: () => ["select public.conta_pagar_anexar($1, 'boleto', null, $2, $3)", [alvo.contaPagarA, `${ids.organizacao}/${alvo.contaPagarA}/00000000-0000-4000-a000-000000000061.pdf`, "b".repeat(64)]],
+    B: () => ["select public.conta_pagar_anexar($1, 'boleto', null, $2, $3)", [alvo.contaPagarB, `${ids.organizacao}/${alvo.contaPagarB}/00000000-0000-4000-a000-000000000062.pdf`, "b".repeat(64)]],
+    semPermissao: true,
+  },
+  "conta_pagar_retirar_anexo(uuid,text)": {
+    A: () => ["select public.conta_pagar_retirar_anexo($1, 'Tentativa')", [alvo.anexoContaA]], B: () => ["select public.conta_pagar_retirar_anexo($1, 'Tentativa')", [alvo.anexoContaB]], semPermissao: true,
+  },
   // FIN-004a: ligar (ou desligar) o lançamento à entrada de mercadoria; quem gere a conta.
   "conta_pagar_ligar_entrada(uuid,uuid,text)": {
     A: () => ["select public.conta_pagar_ligar_entrada($1, null, 'Tentativa')", [alvo.contaPagarA]],
@@ -860,6 +869,11 @@ beforeAll(async () => {
       `insert into public.contas_a_pagar (organizacao_id, unidade_id, categoria_id, descricao, valor_centavos, vencimento, grupo_id, forma, chave, criada_por)
        values ($1, $2, $3, 'Conta do mundo', 100, current_date + 10, gen_random_uuid(), 'unica', $4, $5) returning id`,
       [ids.organizacao, loja, alvo.categoriaPagar, `mundo:contapagar:${lado}`, ids.dono])).rows[0]?.id ?? "";
+    // Um documento da conta (FIN-004b), gravado pelo banco: só alvo.
+    alvo[`anexoConta${lado}`] = (await db.query<{ id: string }>(
+      `insert into public.conta_pagar_anexos (organizacao_id, unidade_id, conta_id, tipo, caminho, formato, bytes, sha256, enviado_por)
+       values ($1, $2, $3, 'boleto', $4, 'pdf', 1000, $5, $6) returning id`,
+      [ids.organizacao, loja, alvo[`contaPagar${lado}`], `${ids.organizacao}/${alvo[`contaPagar${lado}`]}/00000000-0000-4000-a000-00000000005${lado === "A" ? 1 : 2}.pdf`, "a".repeat(64), ids.dono])).rows[0]?.id ?? "";
   }
   // Um fechamento do bônus do mês passado enviado em cada loja (L9b), à espera do dono (gravados pelo banco: só alvo).
   for (const [lado, loja, quem] of [["A", ids.lojaA, ids.dono], ["B", ids.lojaB, ids.gerenteB]] as const) {
@@ -919,7 +933,7 @@ describe("inventário: toda função SECURITY DEFINER exposta tem casos de recus
     const expostas = rows.map((r) => r.f);
     expect(expostas.filter((f) => !(f in CASOS)), "função nova exposta sem casos de recusa: acrescente ao CASOS").toEqual([]);
     expect(Object.keys(CASOS).filter((f) => !expostas.includes(f)), "caso de função que não existe mais").toEqual([]);
-    expect(expostas).toHaveLength(150);
+    expect(expostas).toHaveLength(152);
   });
 
   it("visitante anônimo não executa nenhuma função do esquema public; no privado só um gatilho, que não roda sozinho", async () => {

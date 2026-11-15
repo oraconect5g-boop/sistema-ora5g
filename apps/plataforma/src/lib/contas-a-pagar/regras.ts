@@ -61,6 +61,10 @@ export const OK_DAS_CONTAS = {
   desligada: "Conta desligada da entrada de mercadoria; o motivo ficou na auditoria.",
   lancada_e_ligada: "Conta lançada e ligada à entrada de mercadoria.",
   lancada_sem_entrada: "Conta lançada, mas não deu para ligá-la à entrada agora: ligue pela lista, em \"Ligar à entrada\".",
+  // FIN-004b: os documentos da conta.
+  documento_guardado: "Documento guardado em privado: quem gere a conta abre pelo link, em \"Documentos\".",
+  documento_retirado: "Documento retirado; o registro e o motivo ficaram.",
+  documento_sem_mudanca: "Nada mudou: o documento já tinha sido retirado.",
 } as const;
 export type OkDasContas = keyof typeof OK_DAS_CONTAS;
 
@@ -93,10 +97,33 @@ export const ERROS_DAS_CONTAS = {
   entrada_estornada: "A entrada foi estornada: não recebe conta a pagar.",
   entrada_loja: "A entrada é de outra loja: a conta da loja só liga a compra da mesma loja.",
   entrada_fornecedor: "A entrada é de outro fornecedor.",
+  documento_arquivo: "Envie PDF ou foto (JPEG, PNG ou WebP); o arquivo é conferido pelo conteúdo.",
+  documento_grande: "O documento passa de 5 MB: reduza a foto ou envie o PDF menor.",
+  documento_dados: "Escolha o tipo do documento (e descreva, de 3 a 120 letras, se for \"Outro documento\").",
+  documento_limite: "Esta conta já tem 20 documentos: retire um errado antes de guardar outro.",
+  documento_permissao: "Só quem gere as contas desta loja (o dono e a gerência) guarda e retira documentos.",
+  documento_motivo: "Informe o motivo para retirar (de 3 a 200 letras); ele fica na auditoria.",
+  documento_nao_encontrado: "Documento não encontrado (ou não é seu para gerir).",
+  documento_falha: "Não deu para guardar o documento agora. Tente de novo em instantes.",
   indisponivel: "As contas a pagar ainda não estão disponíveis neste ambiente.",
   falha: "Não deu para gravar agora. Tente de novo em instantes.",
 } as const;
 export type ErroDasContas = keyof typeof ERROS_DAS_CONTAS;
+
+/**
+ * O endereço de volta das ações e da rota dos documentos: a mesma lista, o mesmo filtro (lidos do formulário, como
+ * qualquer entrada) e a mensagem.
+ */
+export function enderecoDaVolta(dados: Formulario, resultado: { ok: OkDasContas } | { erro: ErroDasContas }): string {
+  const parametros = new URLSearchParams();
+  const visao = visaoDasContas(dados.get("ver"));
+  if (visao !== "abertas") parametros.set("ver", visao);
+  const loja = filtroNoEndereco(filtroDasContas(dados.get("loja")));
+  if (loja) parametros.set("loja", loja);
+  if ("ok" in resultado) parametros.set("ok", resultado.ok);
+  else parametros.set("erro", resultado.erro);
+  return `/contas-a-pagar?${parametros}`;
+}
 
 /** Do erro do banco para a mensagem. O que não se reconhece é falha; a mensagem do banco não vai para a tela. */
 export function erroDasContas(erro: { code?: string; message?: string } | null | undefined): ErroDasContas {

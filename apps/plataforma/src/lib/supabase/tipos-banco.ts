@@ -1434,6 +1434,96 @@ export type Database = {
           },
         ]
       }
+      conta_pagar_anexos: {
+        Row: {
+          bytes: number
+          caminho: string
+          conta_id: string
+          descricao: string | null
+          enviado_em: string
+          enviado_por: string
+          formato: string
+          id: string
+          motivo_retirada: string | null
+          organizacao_id: string
+          retirado_em: string | null
+          retirado_por: string | null
+          sha256: string
+          tipo: string
+          unidade_id: string | null
+        }
+        Insert: {
+          bytes: number
+          caminho: string
+          conta_id: string
+          descricao?: string | null
+          enviado_em?: string
+          enviado_por: string
+          formato: string
+          id?: string
+          motivo_retirada?: string | null
+          organizacao_id: string
+          retirado_em?: string | null
+          retirado_por?: string | null
+          sha256: string
+          tipo: string
+          unidade_id?: string | null
+        }
+        Update: {
+          bytes?: number
+          caminho?: string
+          conta_id?: string
+          descricao?: string | null
+          enviado_em?: string
+          enviado_por?: string
+          formato?: string
+          id?: string
+          motivo_retirada?: string | null
+          organizacao_id?: string
+          retirado_em?: string | null
+          retirado_por?: string | null
+          sha256?: string
+          tipo?: string
+          unidade_id?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "conta_pagar_anexos_conta_id_fkey"
+            columns: ["conta_id"]
+            isOneToOne: false
+            referencedRelation: "contas_a_pagar"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "conta_pagar_anexos_enviado_por_fkey"
+            columns: ["enviado_por"]
+            isOneToOne: false
+            referencedRelation: "perfis_usuario"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "conta_pagar_anexos_organizacao_id_fkey"
+            columns: ["organizacao_id"]
+            isOneToOne: false
+            referencedRelation: "organizacoes"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "conta_pagar_anexos_retirado_por_fkey"
+            columns: ["retirado_por"]
+            isOneToOne: false
+            referencedRelation: "perfis_usuario"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "conta_pagar_anexos_unidade_id_organizacao_id_fkey"
+            columns: ["unidade_id", "organizacao_id"]
+            isOneToOne: false
+            referencedRelation: "unidades"
+            referencedColumns: ["id", "organizacao_id"]
+          },
+        ]
+      }
       contas_a_pagar: {
         Row: {
           atualizada_em: string
@@ -6128,6 +6218,16 @@ export type Database = {
           tipo: string
         }[]
       }
+      conta_pagar_anexar: {
+        Args: {
+          p_caminho: string
+          p_conta: string
+          p_descricao: string
+          p_sha256: string
+          p_tipo: string
+        }
+        Returns: Json
+      }
       conta_pagar_cancelar: {
         Args: { p_conta: string; p_e_seguintes: boolean; p_motivo: string }
         Returns: number
@@ -6164,6 +6264,10 @@ export type Database = {
           p_referencia: string
           p_valor_pago: number
         }
+        Returns: boolean
+      }
+      conta_pagar_retirar_anexo: {
+        Args: { p_anexo: string; p_motivo: string }
         Returns: boolean
       }
       contas_a_pagar_resumo: {
