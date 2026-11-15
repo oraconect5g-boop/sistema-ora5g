@@ -4,7 +4,7 @@ import { describe, expect, it, vi } from "vitest";
 
 vi.mock("../acesso/sessao", () => ({ FalhaDoServico: class extends Error {} }));
 
-import { agruparPorRegiao, desempenhoPorRegiao, lerRegioes, lerRegioesDoPainel, type MapaDeRegioes } from "./regioes";
+import { agruparPorRegiao, desempenhoPorRegiao, lerRegioes, lerRegioesDoPainel, resultadoPorRegiao, type MapaDeRegioes } from "./regioes";
 
 const NORTE = "00000000-0000-4000-8000-0000000000e1";
 const SUL = "00000000-0000-4000-8000-0000000000e2";
@@ -77,5 +77,19 @@ describe("soma por região", () => {
     expect(desempenhoPorRegiao([loja(A, 1, 100)], { regioes: MAPA.regioes, daLoja: new Map() })).toBeNull();
     expect(desempenhoPorRegiao([loja(A, 1, 100)], null)).toBeNull();
     expect(agruparPorRegiao([{ u: A }], (x) => x.u, MAPA)).toEqual([{ id: NORTE, nome: "Norte", itens: [{ u: A }] }]);
+  });
+});
+
+describe("resultado do mês por região (ORG-009b)", () => {
+  const conta = (unidade: string, receita: number, resultado: number) =>
+    ({ unidade, nome: null, receitaLiquida: receita, cmv: receita / 2, margemBruta: receita / 2, taxas: 100, despesas: 1_000, saidasCaixa: 50, rede: 200, resultado });
+
+  it("cada conta da região é a soma das lojas dela (inclusive a parte da rede); a soma das regiões é a da rede", () => {
+    const lojas = [conta(A, 10_000, 3_650), conta(B, 4_000, 650), conta(C, 8_000, -1_000)];
+    const regioes = resultadoPorRegiao(lojas, MAPA);
+    expect(regioes?.map((r) => [r.nome, r.lojas, r.receitaLiquida, r.rede, r.resultado])).toEqual([["Norte", 2, 14_000, 400, 4_300], ["Sul", 1, 8_000, 200, -1_000]]);
+    const total = (lista: { resultado: number }[]) => lista.reduce((s, x) => s + x.resultado, 0);
+    expect(total(regioes ?? [])).toBe(total(lojas));
+    expect(resultadoPorRegiao(lojas, null)).toBeNull();
   });
 });

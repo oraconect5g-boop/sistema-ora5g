@@ -21,9 +21,28 @@ const cenario = vi.hoisted(() => ({
   /** O banco recusa (42501) só o pedido de uma loja (fora da rede de quem pede). */
   recusarLoja: false,
   chamadas: [] as Record<string, unknown>[],
+  /** ORG-009b: tabelas lidas direto (as regiões); sem regiões no cenário, o banco "ainda não tem" a tabela. */
+  tabelas: {} as Record<string, Linha[]>,
+  lidas: [] as string[],
 }));
 vi.mock("next/headers", () => ({ cookies: async () => ({ getAll: () => [], set: () => undefined }) }));
+class Consulta {
+  linhas: Linha[];
+  erro: { code: string } | null;
+  constructor(nome: string) {
+    cenario.lidas.push(nome);
+    this.linhas = [...(cenario.tabelas[nome] ?? [])];
+    this.erro = nome === "regioes" && !cenario.tabelas.regioes ? { code: "PGRST205" } : null;
+  }
+  select() { return this; }
+  order() { return this; }
+  range(de: number, ate: number) { this.linhas = this.linhas.slice(de, ate + 1); return this; }
+  then(resolver: (r: { data: Linha[] | null; error: { code: string } | null }) => unknown) {
+    return Promise.resolve(this.erro ? { data: null, error: this.erro } : { data: this.linhas, error: null }).then(resolver);
+  }
+}
 const supabase = {
+  from: (nome: string) => new Consulta(nome),
   rpc: async (nome: string, argumentos: Record<string, unknown> = {}) => {
     if (nome !== "resultado_do_mes") return { data: null, error: { code: "PGRST202" } };
     cenario.chamadas.push(argumentos);
@@ -44,6 +63,7 @@ vi.mock("../../lib/acesso/sessao", () => ({
 }));
 
 import { geometriaDaCascata } from "../../componentes/graficos";
+import { brlComSinal } from "../../lib/formato";
 import { lerResultadoDoMes } from "../../lib/resultado/consulta";
 import { daReceita, filtroDoResultado, mesCurto, mesDoResultado } from "../../lib/resultado/regras";
 import { enderecoDoResultado } from "./ConteudoResultado";
@@ -54,7 +74,7 @@ import Resultado from "./page";
 // Leitura da árvore (como em contas.test.ts): os componentes desta tela são executados; os
 // compartilhados ficam como elementos, para o teste conferir as propriedades.
 // ---------------------------------------------------------------------------------------------
-const LOCAIS = new Set(["ConteudoResultado", "PassoDoMes", "Painel", "Despesas", "PorLoja", "ComoLer", "EstadoDoPainel"]);
+const LOCAIS = new Set(["ConteudoResultado", "PassoDoMes", "Painel", "Despesas", "PorLoja", "PorRegiao", "ComoLer", "EstadoDoPainel"]);
 const local = (x: ReactElement<Linha>) => typeof x.type === "function" && LOCAIS.has(x.type.name);
 const executar = (x: ReactElement<Linha>) => (x.type as (p: unknown) => unknown)(x.props);
 const nomeDoTipo = (x: ReactElement<Linha>) => (typeof x.type === "function" ? x.type.name : typeof x.type === "object" && x.type ? String((x.type as { displayName?: string }).displayName ?? "objeto") : String(x.type));
@@ -151,7 +171,7 @@ beforeEach(() => {
   vi.useFakeTimers({ toFake: ["Date"] });
   vi.setSystemTime(new Date("2026-11-13T15:00:00Z"));
   vi.spyOn(console, "error").mockImplementation(() => undefined);
-  Object.assign(cenario, { rede: copia(REDE), lojaA: copia(LOJA), erro: null, recusarLoja: false, chamadas: [] });
+  Object.assign(cenario, { rede: copia(REDE), lojaA: copia(LOJA), erro: null, recusarLoja: false, chamadas: [], tabelas: {}, lidas: [] });
 });
 afterEach(() => {
   vi.useRealTimers();
@@ -204,6 +224,24 @@ describe("/resultado: o dono vê a rede e cada loja (L8b)", () => {
     ]);
     expect(enderecos(tela)).toContain(`/resultado?loja=${LOJA_A}`);
     expect(t).toContain("Não é a contabilidade");
+  });
+
+  it("ORG-009b: com lojas em regiões, o resultado da rede soma por região (cada loja já com a parte da rede); numa loja, nem pergunta", async () => {
+    const NORTE = "00000000-0000-4000-8000-0000000000e1";
+    cenario.tabelas = { regioes: [{ id: NORTE, nome: "Curitiba Norte (teste)", ativa: true }], unidades: [{ id: LOJA_A, regiao_id: NORTE }, { id: LOJA_B, regiao_id: null }] };
+    let tela = await pagina();
+    const tabela = doTipo(tela, "TabelaDoGrafico").find((x) => x.titulo === "Ver as regiões em tabela");
+    expect((tabela?.linhas as string[][]).map((l) => [l[0], l[1], l[2], l[8]])).toEqual([
+      ["Curitiba Norte (teste)", "1", brlComSinal(323_450), brlComSinal(-295_257)], ["Sem região", "1", brlComSinal(139_900), brlComSinal(-10_293)],
+    ]);
+    expect((doTipo(tela, "BarrasComSinal")[1]?.dados as { rotulo: string; valor: number }[]).map((d) => [d.rotulo, d.valor])).toEqual([
+      ["Curitiba Norte (teste)", -295_257], ["Sem região", -10_293],
+    ]);
+    expect(visivel(tela)).toContain("A região soma o resultado das lojas dela");
+    cenario.lidas = [];
+    tela = await pagina({ loja: LOJA_A });
+    expect(visivel(tela)).not.toContain("Por região");
+    expect(cenario.lidas).toEqual([]);
   });
 
   it("uma loja: a pergunta leva a loja; a parte da rede diz quanto da receita a loja fez; sem o quadro das lojas", async () => {
