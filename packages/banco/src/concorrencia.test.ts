@@ -6,7 +6,7 @@
 import type pg from "pg";
 import { afterAll, beforeAll, describe, expect, it } from "vitest";
 
-import { cnpj, comDigitoLuhn, cpf } from "./banco-de-teste";
+import { amrDaSenha, cnpj, comDigitoLuhn, cpf } from "./banco-de-teste";
 import { ids, montarCenario, RAIZ } from "./cenario";
 import { cat, itens, montarCatalogo } from "./cenario-catalogo";
 import { executor, iniciarPostgresReal, type PostgresReal } from "./postgres-real";
@@ -40,7 +40,7 @@ async function sessaoNaLoja(usuario: string, unidade: string): Promise<Sessao> {
   const sessao = { usuario, sessao: `42000000-0000-4000-8000-${String(++sessoes).padStart(12, "0")}` };
   await admin.query("insert into auth.sessions (id, user_id) values ($1, $2)", [sessao.sessao, usuario]);
   await admin.query("begin");
-  await admin.query("select set_config('request.jwt.claims', $1, true)", [JSON.stringify({ sub: usuario, session_id: sessao.sessao, role: "authenticated" })]);
+  await admin.query("select set_config('request.jwt.claims', $1, true)", [JSON.stringify({ sub: usuario, session_id: sessao.sessao, role: "authenticated", amr: amrDaSenha() })]);
   await admin.query("set local role authenticated");
   const { rows } = await admin.query<{ ok: boolean }>("select public.selecionar_unidade($1) as ok", [unidade]);
   await admin.query("commit");
@@ -52,7 +52,7 @@ async function sessaoNaLoja(usuario: string, unidade: string): Promise<Sessao> {
 async function abrir(cliente: pg.Client, sessao?: Sessao) {
   await cliente.query("begin");
   if (sessao) {
-    await cliente.query("select set_config('request.jwt.claims', $1, true)", [JSON.stringify({ sub: sessao.usuario, session_id: sessao.sessao, role: "authenticated" })]);
+    await cliente.query("select set_config('request.jwt.claims', $1, true)", [JSON.stringify({ sub: sessao.usuario, session_id: sessao.sessao, role: "authenticated", amr: amrDaSenha() })]);
     await cliente.query("set local role authenticated");
   }
 }
@@ -342,7 +342,7 @@ describe("duas conexões ao mesmo tempo no PostgreSQL 17", () => {
     const ana = await sessaoNaLoja(ids.vendedorA, ids.lojaA);
     const dono = await sessaoNaLoja(ids.dono, ids.lojaA);
     const entrar = async (cliente: pg.Client, sessao: Sessao) => {
-      await cliente.query("select set_config('request.jwt.claims', $1, true)", [JSON.stringify({ sub: sessao.usuario, session_id: sessao.sessao, role: "authenticated" })]);
+      await cliente.query("select set_config('request.jwt.claims', $1, true)", [JSON.stringify({ sub: sessao.usuario, session_id: sessao.sessao, role: "authenticated", amr: amrDaSenha() })]);
       await cliente.query("set local role authenticated");
     };
     const DECIDIR = "select public.decidir_aprovacao($1, true, 'Conferido') as v";

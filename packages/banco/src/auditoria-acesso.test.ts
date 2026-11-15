@@ -3,7 +3,7 @@
 import type { PGlite } from "@electric-sql/pglite";
 import { beforeAll, describe, expect, it } from "vitest";
 
-import { comoUsuario, criarBanco, type Sessao } from "./banco-de-teste";
+import { amrDaSenha, comoUsuario, criarBanco, type Sessao } from "./banco-de-teste";
 import { ids, montarCenario } from "./cenario";
 
 let db: PGlite;
@@ -32,7 +32,7 @@ const eventos = async (alvoId: string) =>
 
 // Uma função do banco chamada pelo usuário X: o banco sabe quem é X pelo token (auth.uid()).
 async function comoAtor<T>(usuario: string, acao: () => Promise<T>): Promise<T> {
-  await db.query("select set_config('request.jwt.claims', $1, false)", [JSON.stringify({ sub: usuario, role: "authenticated" })]);
+  await db.query("select set_config('request.jwt.claims', $1, false)", [JSON.stringify({ sub: usuario, role: "authenticated", amr: amrDaSenha() })]);
   try {
     return await acao();
   } finally {

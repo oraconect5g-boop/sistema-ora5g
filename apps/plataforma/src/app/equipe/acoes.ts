@@ -3,6 +3,7 @@
 import { redirect } from "next/navigation";
 
 import { ehPapel, ehUuid, erroDoBanco, motivoValido, validarConvite } from "../../lib/acesso/regras";
+import { enderecoDaConfirmacao, precisaConfirmar } from "../../lib/acesso/confirmacao";
 import { obterSessao } from "../../lib/acesso/sessao";
 
 // Cada ação chama UMA função do banco como a pessoa logada (sem chave secreta, ADR-002 §2.5).
@@ -10,6 +11,8 @@ import { obterSessao } from "../../lib/acesso/sessao";
 type Resultado = { error: { code?: string } | null };
 async function concluir(chamada: PromiseLike<Resultado>, ok: string): Promise<never> {
   const { error } = await chamada;
+  // ORG-006b: mexer na equipe pede a senha digitada há pouco (o banco recusa com OR033); confirmada, volta para cá.
+  if (precisaConfirmar(error)) redirect(enderecoDaConfirmacao("/equipe"));
   redirect(error ? `/equipe?erro=${erroDoBanco(error)}` : `/equipe?ok=${ok}`);
 }
 

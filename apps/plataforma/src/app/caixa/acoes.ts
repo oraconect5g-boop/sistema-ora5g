@@ -5,11 +5,14 @@ import { randomUUID } from "node:crypto";
 import { redirect } from "next/navigation";
 
 import { ehUuid } from "../../lib/acesso/regras";
+import { enderecoDaConfirmacao, precisaConfirmar } from "../../lib/acesso/confirmacao";
 import { obterSessao } from "../../lib/acesso/sessao";
 import { erroDaSaida, lerDecisaoDeSaida, lerPedidoDeSaida, type OkDaSaida } from "../../lib/caixa/saidas";
 import { erroDaVenda, lerValor } from "../../lib/vendas/regras";
 
-const voltar = (erro: { code?: string } | null, ok: string): never => redirect(erro ? `/caixa?erro=${erroDaVenda(erro)}` : `/caixa?ok=${ok}`);
+// ORG-006b: conferir o caixa e decidir a saída de dinheiro pedem a senha digitada há pouco (OR033): a confirmação, e volta.
+const voltar = (erro: { code?: string } | null, ok: string): never =>
+  redirect(precisaConfirmar(erro) ? enderecoDaConfirmacao("/caixa") : erro ? `/caixa?erro=${erroDaVenda(erro)}` : `/caixa?ok=${ok}`);
 
 export async function movimentarCaixa(dados: FormData) {
   const tipo = dados.get("tipo");
@@ -49,13 +52,14 @@ export async function decidirAprovacao(dados: FormData) {
   const observacao = String(dados.get("observacao") ?? "").trim();
   const { supabase } = await obterSessao({ exigirLoja: true });
   const { data, error } = await supabase.rpc("decidir_aprovacao", { p_aprovacao: pedido, p_aprovar: decisao === "aprovar", p_observacao: (observacao || null) as string });
+  if (precisaConfirmar(error)) redirect(enderecoDaConfirmacao("/aprovacoes"));
   if (error) redirect(`/aprovacoes?erro=${erroDaVenda(error)}`);
   redirect(`/aprovacoes?ok=${data ? decisao : "vencido"}`);
 }
 
 // Saída autorizada (L7c): quem está com o caixa aberto pede; o gerente ou o dono autoriza ou nega.
 const voltarDaSaida = (erro: { code?: string; message?: string } | null, ok: OkDaSaida): never =>
-  redirect(erro ? `/caixa?erro_saida=${erroDaSaida(erro)}` : `/caixa?saida=${ok}`);
+  redirect(precisaConfirmar(erro) ? enderecoDaConfirmacao("/caixa") : erro ? `/caixa?erro_saida=${erroDaSaida(erro)}` : `/caixa?saida=${ok}`);
 
 export async function pedirSaida(dados: FormData) {
   const pedido = lerPedidoDeSaida(dados);

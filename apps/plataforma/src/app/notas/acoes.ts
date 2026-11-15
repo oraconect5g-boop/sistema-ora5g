@@ -5,6 +5,7 @@ import { randomUUID } from "node:crypto";
 import { redirect } from "next/navigation";
 
 import { ehUuid } from "../../lib/acesso/regras";
+import { enderecoDaConfirmacao, precisaConfirmar } from "../../lib/acesso/confirmacao";
 import { obterSessao } from "../../lib/acesso/sessao";
 import { ehPeriodo, ehTipoDeDivergencia, enderecoDaConciliacao, erroDaConciliacao } from "../../lib/notas/conciliacao";
 import { erroDasNotas } from "../../lib/notas/regras";
@@ -19,7 +20,9 @@ const texto = (dados: FormData, nome: string, maximo = 200) => {
   const valor = dados.get(nome);
   return typeof valor === "string" ? valor.trim().slice(0, maximo) : "";
 };
-const voltarParaFila = (erro: { code?: string } | null, ok: string): never => redirect(erro ? `/notas?erro=${erroDasNotas(erro)}` : `/notas?ok=${ok}`);
+// ORG-006b: aprovar a nota pede a senha digitada há pouco (OR033): a confirmação, e volta para a fila.
+const voltarParaFila = (erro: { code?: string } | null, ok: string): never =>
+  redirect(precisaConfirmar(erro) ? enderecoDaConfirmacao("/notas") : erro ? `/notas?erro=${erroDasNotas(erro)}` : `/notas?ok=${ok}`);
 
 export async function pedirNota(dados: FormData) {
   const venda = dados.get("venda");
