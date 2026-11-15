@@ -127,7 +127,7 @@ export default async function Produtos({ searchParams }: {
       {codigos === "falha" && <Aviso tom="perigo" className="mt-4">Não deu para ler os códigos de outros canais agora; o resto do cadastro está certo. Tente de novo em instantes.</Aviso>}
 
       <form className="mt-4 flex flex-wrap items-end gap-2" role="search">
-        <label className="min-w-0 flex-1 text-sm font-medium">{codigos === null ? "Buscar por nome ou SKU" : "Buscar por nome, SKU ou código de outro canal (Rein, anúncio)"}
+        <label className="min-w-0 flex-1 text-sm font-medium">{codigos === null ? "Buscar por nome, marca, SKU ou código de barras" : "Buscar por nome, marca, SKU, código de barras ou código de outro canal (Rein, anúncio)"}
           <input name="q" defaultValue={busca} className={campo} />
         </label>
         <label className="flex min-h-11 items-center gap-2 text-sm"><input type="checkbox" name="inativos" value="1" defaultChecked={comInativos} className="size-4 accent-acao" /> incluir inativos</label>

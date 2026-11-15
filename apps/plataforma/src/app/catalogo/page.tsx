@@ -85,7 +85,7 @@ export default async function Catalogo({ searchParams }: { searchParams: Promise
       <p className="text-sm text-suave">Loja do turno: <strong>{situacao.unidade_nome}</strong>. Toque na foto para ampliar.</p>
 
       <form className="mt-4 flex flex-wrap gap-2" role="search">
-        <label className="min-w-0 flex-1 text-sm font-medium">Buscar por nome ou SKU
+        <label className="min-w-0 flex-1 text-sm font-medium">Buscar por nome, marca, SKU ou código de barras
           <input name="q" defaultValue={busca} className="mt-1 min-h-11 w-full rounded-botao border border-borda bg-white px-3 text-sm outline-none focus:border-acao focus:ring-2 focus:ring-acao/20" />
         </label>
         {soPendentes && <input type="hidden" name="pendentes" value="1" />}

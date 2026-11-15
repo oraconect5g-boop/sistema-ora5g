@@ -272,7 +272,7 @@ export default async function Estoque({ searchParams }: { searchParams: Promise<
       <TituloPagina sobretitulo={situacao.unidade_nome} titulo="Estoque" />
       {abas}
       <form className="flex flex-wrap items-end gap-2" role="search">
-        <label className="min-w-0 flex-1 text-sm font-medium">Produto, SKU, IMEI ou ICCID<input name="q" defaultValue={busca} autoComplete="off" className={campo} /></label>
+        <label className="min-w-0 flex-1 text-sm font-medium">Produto, marca, SKU, código de barras, IMEI ou ICCID<input name="q" defaultValue={busca} autoComplete="off" placeholder="IMEI inteiro, ou o final dele (4 dígitos ou mais)" className={campo} /></label>
         <Botao type="submit"><Search aria-hidden className="size-4" /> Buscar</Botao>
       </form>
 

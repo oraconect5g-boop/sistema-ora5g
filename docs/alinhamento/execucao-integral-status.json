@@ -2,7 +2,7 @@
   "_leia": "Checkpoint do programa de execução integral (PR #67). Carregar ao retomar e seguir para o próximo item executável da fila; não reiniciar o projeto. Estados vêm de status-requisitos.json (fonte da rastreabilidade); este arquivo acrescenta lote, bloqueio externo e revisão.",
   "atualizado_em": "2026-11-14",
   "base": {
-    "main": "c3f772a",
+    "main": "3e198a6",
     "pacote": {
       "pr": 67,
       "branch": "docs/execucao-integral-20261110",
@@ -18,12 +18,12 @@
   },
   "publicado": {
     "homologacao": {
-      "commit": "c3f772a",
+      "commit": "3e198a6",
       "quando": "2026-11-14",
-      "conferido": "rodapé da tela de entrada (c3f772a · build 14/11/2026 21:07), /saude 200 e as rotas reais respondendo 307 para o login"
+      "conferido": "rodapé da tela de entrada (3e198a6 · build 14/11/2026 21:21), /saude 200 e as rotas reais respondendo 307 para o login"
     },
     "falta_publicar": [
-      "registro das migrations do G3b, do CAT-009 e do ORG-009 (aplicadas no ora5g-dev em 14/11; o registro só muda o repositório), publicado ao fim do lote"
+      "CAT-006, busca por marca, código de barras e final do IMEI (sem migration), publicado ao fim do lote"
     ]
   },
   "contagem_dos_estados": {
@@ -173,7 +173,7 @@
       "titulo": "Pesquisar por nome, SKU e, quando aplicável, IMEI/ICCID",
       "prioridade": "P0",
       "estado": "parcial",
-      "lote": "L3 catálogo/importador",
+      "lote": "L3 catálogo/importador; CAT-006 (14/11): busca por marca, código de barras e final do IMEI",
       "bloqueio_externo": null,
       "revisado_codex": false,
       "homologado": false
