@@ -1,0 +1,54 @@
+{
+  "base": "56c4bde003e719f3ea902c3335f7526b6d1f6a67",
+  "anterior": "dd31e91465335b7ad4a4f1ff59e80f7981ddd78d",
+  "observado_utc": "2026-11-15T02:27:44Z",
+  "local": {
+    "testes_banco": 54,
+    "arquivos_banco": 8,
+    "testes_plataforma": 103,
+    "arquivos_plataforma": 12,
+    "provas_observacionais_de_defeitos": 3,
+    "base": "3e198a6057a50b5bd979bcd215f39a2177f6c187"
+  },
+  "ci": {
+    "run": 43657640844,
+    "job": 132639724873,
+    "conclusao": "failure",
+    "passaram": 2012,
+    "falharam": 1,
+    "todo": 1,
+    "falha": "concorrencia.test.ts:977; aplicacao de outras 2.000 a criar; 8354ms > orcamento 8000ms",
+    "lint": "success",
+    "typecheck": "success",
+    "build": "skipped",
+    "audit": "skipped",
+    "e2e": "skipped",
+    "sha": "3e198a6057a50b5bd979bcd215f39a2177f6c187"
+  },
+  "requisitos": {
+    "nao_iniciado": 49,
+    "parcial": 73,
+    "testado": 52,
+    "bloqueado": 3,
+    "respeitado": 2
+  },
+  "homologados": 0,
+  "migrations": 72,
+  "escopo": "Somente revisao/documentacao e testes locais; sem alteracao da base, servidor, env, deploy ou chamada de provedor.",
+  "verificacoes_adicionais": [
+    {
+      "sha": "94956918bdfc449d171ad907f93aa25cc6c42da5",
+      "testes_busca_produtos": 23,
+      "provas_de_defeitos": 3,
+      "ci_run": 43666989923,
+      "ci_conclusao": "cancelled"
+    },
+    {
+      "sha": "56c4bde003e719f3ea902c3335f7526b6d1f6a67",
+      "testes_regras_venda": 10,
+      "ci_run": 43667800641,
+      "ci_situacao": "in_progress",
+      "ci_conclusao": null
+    }
+  ]
+}

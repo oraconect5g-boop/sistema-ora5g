@@ -3,10 +3,12 @@
 **Atualizado em:** 14/11/2026 (itens 1, A4 e WhatsApp) · **Por:** Claude Code (programador) · **Revisor:** Codex · **Para:** o proprietário
 **Base:** decisões DEC-U19 a DEC-U49, ADR-001 a ADR-003, `docs/10_DECISOES_PENDENTES.md`, `docs/PENDENCIAS_DO_PROPRIETARIO.md`, `.env.example` e a documentação oficial de cada fornecedor (links abaixo).
 
+> **Complemento do Codex (14/11, evidências até 15/11 UTC):** decisões recentes em [adendo de prioridades](../alinhamento/PRIORIDADES_BASE_REAL_E_APIS_FINANCEIRAS_2026-11-14.md). PayJoy/Aiva por API são obrigatórias; QI Tech/J7 ficam preparadas. Nomes das lojas e planilha de estoque já foram enviados pelo proprietário. Este documento separa entrega de código, configuração, dados e homologação.
+
 **Regras desta lista**
 - Aqui só aparecem **nomes** de variáveis. Valores de chaves, senhas, tokens e certificados **nunca** passam pelo chat (Claude ou Codex), pelo GitHub nem por log. Cada valor é gravado direto no servidor com `bash ~/ora5g-connect/deploy/homologacao/definir-chave.sh NOME` (a tela não mostra o que é digitado; depois da próxima publicação o mesmo comando também fica em `~/homologacao/plataforma/deploy/homologacao/`); o Codex confere só com `definir-chave.sh --situacao`.
 - Chaves internas (criptografia `APP_ENCRYPTION_KEY`, rotinas `CRON_SECRET`, avisos no celular `WEB_PUSH_*`, token de verificação de webhooks) **o Claude gera no servidor** quando o código precisar. Não dependem de você.
-- Rein: **só arquivo**, nunca API. Maquininhas PicPay/PagSeguro e financeiras PayJoy/Aiva: **registro operacional e conferência manual** (DEC-U28, DEC-U29). Automatizar esses meios exige contrato oficial e fica separado.
+- Rein: **só arquivo**, nunca API. Maquininhas PicPay/PagSeguro mantêm registro/conferência manual até contrato específico. **PayJoy/Aiva obrigatórias por API**, conforme decisão recente do proprietário; o registro manual atual não encerra o requisito. A integração exige contrato oficial e implementação, além de credenciais.
 - Situação do contrato de cada API: ✅ confirmado na documentação oficial · 🟡 parcialmente confirmado · ⬜ pendente (falta conta, escolha ou resposta) · 🔒 bloqueado por decisão.
 - Situação da implementação: **funciona** (testado) · **pronto aguardando acesso** · **a desenvolver**.
 
@@ -17,7 +19,7 @@
 | # | O quê | Destrava | Como (canal oficial) |
 |---|---|---|---|
 | 1 | Gravar `SUPABASE_SECRET_KEY` no servidor | Convites da tela da equipe (o worker cria a pessoa no Auth); usuários de teste fictícios criados pelo Claude; login real de ponta a ponta (#11) | Supabase → projeto `ora5g-dev` → Project Settings → API Keys → Secret keys. Gravar com `definir-chave.sh SUPABASE_SECRET_KEY`. **Substitui o item 1.1 antigo** (criar usuários de teste à mão deixa de ser necessário). **Conferido em 14/11 (só os nomes):** ainda ausente no ambiente da homologação e no do worker; sem ela, a J1 (contas fictícias do dono, do gerente e do vendedor, já autorizadas) e os convites da tela da equipe não andam. No mesmo exame: o Auth do `ora5g-dev` aceita cadastro aberto; desligar "Allow new users to sign up" (os convites continuam funcionando) |
-| 2 | Enviar o **arquivo da Rein** (produtos, preços, estoque da Santa Cândida) | Importador e estoque real do piloto | Exportar da Rein (CSV/Excel) e copiar para `~/entrada/rein/` no servidor (WinSCP, usuário `dev`, porta 22022). A pasta já existe, só você e o sistema a leem |
+| 2 | Disponibilizar ao programador o **arquivo já fornecido no chat**, relatorioProdutos131258.xlsx (10/11/2026, 13:20) | Mapeamento, prévia, importação de catálogo e saldos das lojas; o importador atual não atende diretamente ao formato | Preservar o original e garantir handoff seguro para `~/entrada/rein/` no servidor (WinSCP, usuário `dev`, porta 22022). A pasta já existe, só você e o sistema a leem |
 | 3 | E-mail ao suporte da **Nogle** (texto pronto em `PENDENCIAS_DO_PROPRIETARIO.md` §2.1) e depois gravar `NOGLE_AUTH_KEY_TYPE`, `NOGLE_ACCESS_KEY`, `NOGLE_SECONDARY_KEY` | Ora Connect real (ativação, recarga, portabilidade) | ti@conteltelecom.com.br. A resposta define o tipo de chave (P9) e as dúvidas da seção A2 |
 | 4 | Escolher o **link de pagamento**: PicPay, PagBank ou os dois | Pagamento online/à distância confirmado pelo provedor | Seção A3. Depois gerar as credenciais no painel do escolhido |
 | 5 | E-mail ao **contador** (texto pronto em `PENDENCIAS_DO_PROPRIETARIO.md` §2.2) e escolha do **emissor fiscal por API** com ele | Nota automática; condição para sair da Rein | Seção A4 |
@@ -45,7 +47,7 @@
 | Eventos e reconciliação | Não há webhook externo. Bloqueio vale na hora no banco (RLS recusa usuário bloqueado); o Auth também é bloqueado para impedir novo login |
 | Situação | **Funciona (testado em desenvolvimento):** banco, RLS, auditoria, catálogo, estoque com integridade e concorrência, login SSR com o par público, escolha da loja, sessão por turno, bloqueio e encerramento de acesso imediatos, tela da equipe. **Pronto aguardando acesso:** convite que cria a pessoa e manda o e-mail (worker: precisa da secret key, do SMTP e dos dois modelos acima) e o "esqueci minha senha" (SMTP e modelo). **A desenvolver:** bucket de fotos (o Claude cria por migration, sem depender de você) |
 
-### A2. Nogle / Nogle — Ora Connect (chips, ativação, recarga, portabilidade)
+### A2. Nogle — Ora Connect (chips, ativação, recarga, portabilidade)
 
 | Item | Detalhe |
 |---|---|
@@ -94,6 +96,20 @@
 
 ---
 
+### A5. Financeiras — PayJoy/Aiva obrigatórias; QI Tech/J7 preparadas
+
+| Item | Situação e ação |
+|---|---|
+| Escopo | Proposta/consulta/aprovação/contrato/cancelamento/repasse conforme capacidades oficiais; venda financiada vinculada à loja, vendedor e cliente. Aprovação externa não equivale a pagamento recebido |
+| PayJoy | [API pública de parceiros](https://www.payjoy.com/apidocs/index.html), [endpoints](https://www.payjoy.com/apidocs/endpoints.html), [webhooks](https://www.payjoy.com/apidocs/webhooks.html). Escopo de originação/aprovação no Brasil, sandbox e conta Ora precisam de confirmação contratual |
+| Aiva | [Site oficial](https://www.aivapay.com.br/). Não localizada documentação pública suficiente; obter documentação e parceria pelo canal oficial |
+| QI Tech | [Documentação](https://docs.qitech.com.br/documentation/primeiros_passos/inicio/). Homologação e produção dependem de provisionamento/parceria; preparar adaptador por capacidade |
+| J7 | Identidade/site/API não confirmados. Não confundir com J17 por semelhança de nome |
+| Configuração | Nomes de variáveis definidos com o contrato e o adaptador real; segredos só no worker. Não há cliente PayJoy/Aiva implementado para ativar apenas preenchendo .env |
+| Implementação local | Domínio e estados, persistência, outbox/inbox, autorização, idempotência, reconciliação e simuladores explícitos de teste podem avançar sem credenciais reais |
+| Aceite | Contrato verificado, teste autorizado, eventos duplicados/fora de ordem, timeout/consulta, estorno e repasse; evidência no aplicativo real |
+| Perguntas | Ver o adendo de prioridades: identidade, operações, autenticação, consentimento, proposta, assinatura, valores, prazos, repasses e suporte |
+
 ## B. Expansão (meses 5 e 6)
 
 | Integração | Funções / requisitos | Contrato | Variáveis (nomes) | Como obter | Webhook / eventos | Situação |
@@ -113,7 +129,7 @@
 | **Monitoramento de erros** | Opcional | `SENTRY_DSN` ou equivalente; decidir antes da produção |
 | **Pix automático pelo banco** | Condicional (D-011) | API Pix do banco com certificado, ou intermediário; até lá, conferência pelo extrato |
 | **Assinatura digital de contratos** | Condicional | Fornecedor a escolher (com validade jurídica e custo por assinatura); até lá, o contrato e o termo assinados em papel são fotografados e guardados na própria venda, em privado (L5d, ORA-CRM-008) |
-| **Maquininhas e financeiras por API** | Condicional | PicPay POS, PagSeguro, PayJoy, Aiva: só com contrato oficial de integração; hoje registro e conferência manual |
+| **Maquininhas por API** | Condicional | PicPay POS/PagSeguro: só com contrato oficial; hoje registro e conferência manual. PayJoy/Aiva constam da seção A5 obrigatória |
 
 ---
 
@@ -121,8 +137,8 @@
 
 | O quê | Para quê | Situação |
 |---|---|---|
-| Arquivo da Rein (produtos, preços, estoque da Santa Cândida) | Importação e conferência do piloto | Não recebido. Pasta `~/entrada/rein/` pronta |
-| Lojas: nome, endereço, CNPJ da filial, telefone, horário | Cadastro real das 11 lojas e do DEFEITOS | Não recebido. Pasta `~/entrada/lojas/` |
+| Arquivo relatorioProdutos131258.xlsx, fornecido no chat | Importação e conferência por loja | Recebido pelo revisor; posição de 10/11/2026 13:20, 2.271 produtos/83 colunas. Garantir disponibilidade segura ao programador em `~/entrada/rein/`, normalização e carga auditável; não foi importado na base consultada |
+| Lojas: nome, endereço, CNPJ da filial, telefone, horário | Cadastro das 11 lojas e DEFEITOS | Nomes confirmados em `docs/cadastros/LOJAS_CONFIRMADAS_2026-11-09.json`; os demais dados completos não foram confirmados. Não inventar campos fiscais. Base consultada ainda tem três unidades de teste |
 | Pessoas autorizadas no piloto (nome, e-mail, loja, função) | Podem ser cadastradas por você ou pelo gerente na **tela da equipe**, assim que a secret key estiver gravada | Tela em desenvolvimento |
 | Fotos dos produtos (ORA-CAT-011) | Foto de cada produto e de cada variante com cor/acabamento diferente | Envio pelo celular dentro do sistema (em desenvolvimento). Se já tiver fotos, `~/entrada/fotos/` com o SKU no nome do arquivo |
 | Política de desconto por categoria (P14) e quem aprova acima do limite | Desconto real no PDV | Pendente |

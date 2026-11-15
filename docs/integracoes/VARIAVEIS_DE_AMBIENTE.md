@@ -1,6 +1,8 @@
 # Variáveis de ambiente e credenciais — Ora 5G Platform
 
 **Data:** 06/11/2026 · **Autor:** Claude Code · **Revisor esperado:** Codex + proprietário
+> **Atualização do Codex:** PayJoy/Aiva passam a obrigatórias por API; QI Tech/J7 ficam preparadas, conforme [adendo de prioridades](../alinhamento/PRIORIDADES_BASE_REAL_E_APIS_FINANCEIRAS_2026-11-14.md). As linhas históricas de configuração não comprovam ativação no ambiente atual.
+
 **Arquivo modelo:** `.env.example` (raiz do repositório)
 **Status:** proposta. **O que falta e como gravar sem passar pelo chat: `docs/PENDENCIAS_DO_PROPRIETARIO.md` (seção 4).** Nomes de variáveis são nossos; os **tipos de credencial** foram conferidos na documentação de cada plataforma na data acima. Itens "a confirmar" serão revalidados no momento da integração.
 
@@ -37,9 +39,10 @@
 | 10 | Mercado Livre | `MERCADOLIVRE_APP_ID`, `MERCADOLIVRE_CLIENT_SECRET`, `MERCADOLIVRE_REDIRECT_URI`, `MERCADOLIVRE_WEBHOOK_PATH` | Criar aplicativo no portal de desenvolvedores do Mercado Livre. O endereço de retorno deve ser **idêntico** ao cadastrado. O token do vendedor dura **6 horas** e é renovado com o refresh token | Proprietário (conta vendedor) | A criar |
 | 11 | Shopee | `SHOPEE_ENVIRONMENT`, `SHOPEE_PARTNER_ID`, `SHOPEE_PARTNER_KEY`, `SHOPEE_REDIRECT_URI` | Cadastro como parceiro na Shopee Open Platform; cada loja autoriza o app e gera `shop_id` + tokens | Proprietário | A criar; aprovação de parceiro depende da Shopee |
 | 12 | TikTok Shop | `TIKTOKSHOP_APP_KEY`, `TIKTOKSHOP_APP_SECRET`, `TIKTOKSHOP_SERVICE_ID`, `TIKTOKSHOP_REDIRECT_URI` | App no TikTok Shop Partner Center; cada loja autoriza e gera token + `shop_cipher` | Proprietário | A criar; detalhes a confirmar na documentação oficial do Partner Center |
+| 14 | Financeiras | A definir por contrato, sem valores ou nomes inventados | PayJoy/Aiva obrigatórias; QI Tech/J7 preparadas. Documentação e perguntas na seção A5 da lista central | Proprietário/fornecedor habilitam; Claude implementa/configura | Falta código e contrato, não apenas credencial |
 | 13 | Monitoramento | `SENTRY_DSN` | Serviço de monitoramento de erros (opcional) | A decidir | Opcional |
 
-**Sem credencial por decisão do projeto:** Rein (só CSV), PayJoy e Aiva (lançamento manual), maquininhas PicPay POS e PagSeguro (conciliação por comprovante/extrato).
+**Sem API da Rein:** importação por arquivo. Maquininhas PicPay POS/PagSeguro continuam com comprovante/extrato até contrato específico. **PayJoy/Aiva exigem integração por API** pela decisão recente: obter contrato e definir os nomes de configuração junto do adaptador implementado; não presumir que as variáveis existentes ativam essas integrações. QI Tech/J7: preparar extensão, aguardando identidade/produto/parceria. Nenhum segredo deve aparecer no Git ou chat.
 
 ---
 

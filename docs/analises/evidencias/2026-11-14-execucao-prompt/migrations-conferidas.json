@@ -1,0 +1,650 @@
+[
+  {
+    "version": "20261107140352",
+    "name": "fundacao_acesso",
+    "arquivo": "20261107140352_fundacao_acesso.sql",
+    "md5_arquivo": "a8f160b848c860269fed9b3dced6aae5",
+    "md5_remoto": "a8f160b848c860269fed9b3dced6aae5",
+    "confere": true,
+    "confere_sem_quebra_final": false
+  },
+  {
+    "version": "20261107140448",
+    "name": "indices_chaves_estrangeiras",
+    "arquivo": "20261107140448_indices_chaves_estrangeiras.sql",
+    "md5_arquivo": "04fa57c5f31bc5cb8beb99ebfac7297e",
+    "md5_remoto": "04fa57c5f31bc5cb8beb99ebfac7297e",
+    "confere": true,
+    "confere_sem_quebra_final": false
+  },
+  {
+    "version": "20261107151305",
+    "name": "correcoes_revisao_codex",
+    "arquivo": "20261107151305_correcoes_revisao_codex.sql",
+    "md5_arquivo": "76dc2a6b2c8e5e3e4648044bf3334caa",
+    "md5_remoto": "76dc2a6b2c8e5e3e4648044bf3334caa",
+    "confere": true,
+    "confere_sem_quebra_final": false
+  },
+  {
+    "version": "20261108150432",
+    "name": "auditoria_automatica_acesso",
+    "arquivo": "20261108150432_auditoria_automatica_acesso.sql",
+    "md5_arquivo": "7b8296f808c4db3ee8a9d910952ec21b",
+    "md5_remoto": "7b8296f808c4db3ee8a9d910952ec21b",
+    "confere": true,
+    "confere_sem_quebra_final": false
+  },
+  {
+    "version": "20261108150620",
+    "name": "catalogo_estoque",
+    "arquivo": "20261108150620_catalogo_estoque.sql",
+    "md5_arquivo": "b5d498c865a0bae257061bbe48fcfbf3",
+    "md5_remoto": "b5d498c865a0bae257061bbe48fcfbf3",
+    "confere": true,
+    "confere_sem_quebra_final": false
+  },
+  {
+    "version": "20261108151325",
+    "name": "indices_catalogo_estoque",
+    "arquivo": "20261108151325_indices_catalogo_estoque.sql",
+    "md5_arquivo": "78cf93f4b911d5d631a1ae83f4565ed8",
+    "md5_remoto": "78cf93f4b911d5d631a1ae83f4565ed8",
+    "confere": true,
+    "confere_sem_quebra_final": false
+  },
+  {
+    "version": "20261108195850",
+    "name": "integridade_estoque",
+    "arquivo": "20261108195850_integridade_estoque.sql",
+    "md5_arquivo": "9795cbcaed323e380191c70659415dbc",
+    "md5_remoto": "9795cbcaed323e380191c70659415dbc",
+    "confere": true,
+    "confere_sem_quebra_final": false
+  },
+  {
+    "version": "20261108202654",
+    "name": "acesso_sessao_e_equipe",
+    "arquivo": "20261108202654_acesso_sessao_e_equipe.sql",
+    "md5_arquivo": "358ae9818908896b186681924ddcde04",
+    "md5_remoto": "358ae9818908896b186681924ddcde04",
+    "confere": true,
+    "confere_sem_quebra_final": false
+  },
+  {
+    "version": "20261108204536",
+    "name": "fotos_dos_produtos",
+    "arquivo": "20261108204536_fotos_dos_produtos.sql",
+    "md5_arquivo": "2f7900b0015e47668ddb478764aa485c",
+    "md5_remoto": "2f7900b0015e47668ddb478764aa485c",
+    "confere": true,
+    "confere_sem_quebra_final": false
+  },
+  {
+    "version": "20261108233546",
+    "name": "vendas_pagamentos_e_caixa",
+    "arquivo": "20261108233546_vendas_pagamentos_e_caixa.sql",
+    "md5_arquivo": "6284f6340341eb65a0be6430d5e9a706",
+    "md5_remoto": "6284f6340341eb65a0be6430d5e9a706",
+    "confere": true,
+    "confere_sem_quebra_final": false
+  },
+  {
+    "version": "20261108233711",
+    "name": "indices_vendas_e_fotos",
+    "arquivo": "20261108233711_indices_vendas_e_fotos.sql",
+    "md5_arquivo": "3b67ed6d41fced7092b8ab013ea5c17f",
+    "md5_remoto": "3b67ed6d41fced7092b8ab013ea5c17f",
+    "confere": true,
+    "confere_sem_quebra_final": false
+  },
+  {
+    "version": "20261109123402",
+    "name": "ora_connect_operacoes",
+    "arquivo": "20261109123402_ora_connect_operacoes.sql",
+    "md5_arquivo": "34fa7602285abc5aafaed8a34c5733b5",
+    "md5_remoto": "34fa7602285abc5aafaed8a34c5733b5",
+    "confere": true,
+    "confere_sem_quebra_final": false
+  },
+  {
+    "version": "20261109123533",
+    "name": "indices_ora_connect",
+    "arquivo": "20261109123533_indices_ora_connect.sql",
+    "md5_arquivo": "81f5a9a345580fedb43ed7c5951e3d79",
+    "md5_remoto": "81f5a9a345580fedb43ed7c5951e3d79",
+    "confere": true,
+    "confere_sem_quebra_final": false
+  },
+  {
+    "version": "20261109123757",
+    "name": "fila_fiscal",
+    "arquivo": "20261109123757_fila_fiscal.sql",
+    "md5_arquivo": "43a75da04d3228214e260201a2ea36af",
+    "md5_remoto": "43a75da04d3228214e260201a2ea36af",
+    "confere": true,
+    "confere_sem_quebra_final": false
+  },
+  {
+    "version": "20261109134507",
+    "name": "devolucao_e_troca",
+    "arquivo": "20261109134507_devolucao_e_troca.sql",
+    "md5_arquivo": "8027f63a195fdfa06af5c02b0ddc179a",
+    "md5_remoto": "8027f63a195fdfa06af5c02b0ddc179a",
+    "confere": true,
+    "confere_sem_quebra_final": false
+  },
+  {
+    "version": "20261109150526",
+    "name": "correcoes_acesso_lote1",
+    "arquivo": "20261109150526_correcoes_acesso_lote1.sql",
+    "md5_arquivo": "0db668934f7f4c72b12164e0d96b6057",
+    "md5_remoto": "0db668934f7f4c72b12164e0d96b6057",
+    "confere": true,
+    "confere_sem_quebra_final": false
+  },
+  {
+    "version": "20261109190240",
+    "name": "integridade_vendas_lote2",
+    "arquivo": "20261109190240_integridade_vendas_lote2.sql",
+    "md5_arquivo": "4f60a31369f04618b40fc1f88e50ec78",
+    "md5_remoto": "4f60a31369f04618b40fc1f88e50ec78",
+    "confere": true,
+    "confere_sem_quebra_final": false
+  },
+  {
+    "version": "20261109190400",
+    "name": "connect_evidencia_lote2",
+    "arquivo": "20261109190400_connect_evidencia_lote2.sql",
+    "md5_arquivo": "50a92b80cbcd527ab22565a988239100",
+    "md5_remoto": "50a92b80cbcd527ab22565a988239100",
+    "confere": true,
+    "confere_sem_quebra_final": false
+  },
+  {
+    "version": "20261109191416",
+    "name": "fotos_idempotentes_lote3",
+    "arquivo": "20261109191416_fotos_idempotentes_lote3.sql",
+    "md5_arquivo": "af993e98aff5d5bc7de704e290264527",
+    "md5_remoto": "af993e98aff5d5bc7de704e290264527",
+    "confere": true,
+    "confere_sem_quebra_final": false
+  },
+  {
+    "version": "20261109193043",
+    "name": "transferencias_e_defeitos",
+    "arquivo": "20261109193043_transferencias_e_defeitos.sql",
+    "md5_arquivo": "71ad04f1afc171fa8db9b0bcb2077044",
+    "md5_remoto": "71ad04f1afc171fa8db9b0bcb2077044",
+    "confere": true,
+    "confere_sem_quebra_final": false
+  },
+  {
+    "version": "20261109201940",
+    "name": "mensagens_nogle",
+    "arquivo": "20261109201940_mensagens_nogle.sql",
+    "md5_arquivo": "a910ebd1bef0e0ff396f312ae97168bc",
+    "md5_remoto": "a910ebd1bef0e0ff396f312ae97168bc",
+    "confere": true,
+    "confere_sem_quebra_final": false
+  },
+  {
+    "version": "20261110124824",
+    "name": "connect_consulta_por_uuid",
+    "arquivo": "20261110124824_connect_consulta_por_uuid.sql",
+    "md5_arquivo": "35af74537bfa72eaddce36b05c36ebc4",
+    "md5_remoto": "35af74537bfa72eaddce36b05c36ebc4",
+    "confere": true,
+    "confere_sem_quebra_final": false
+  },
+  {
+    "version": "20261110224537",
+    "name": "financeiro_painel",
+    "arquivo": "20261110224537_financeiro_painel.sql",
+    "md5_arquivo": "0c0432e2c12bb35139c4ab2729b4f0c0",
+    "md5_remoto": "0c0432e2c12bb35139c4ab2729b4f0c0",
+    "confere": true,
+    "confere_sem_quebra_final": false
+  },
+  {
+    "version": "20261111132503",
+    "name": "lojas_cadastro_e_configuracao",
+    "arquivo": "20261111132503_lojas_cadastro_e_configuracao.sql",
+    "md5_arquivo": "288c2402100e782a7d3ed98a82faf3f0",
+    "md5_remoto": "288c2402100e782a7d3ed98a82faf3f0",
+    "confere": true,
+    "confere_sem_quebra_final": false
+  },
+  {
+    "version": "20261111132621",
+    "name": "catalogo_cadastro",
+    "arquivo": "20261111132621_catalogo_cadastro.sql",
+    "md5_arquivo": "7a9a5b9cb9ebdfb3095b8309a3f30cad",
+    "md5_remoto": "7a9a5b9cb9ebdfb3095b8309a3f30cad",
+    "confere": true,
+    "confere_sem_quebra_final": false
+  },
+  {
+    "version": "20261111133804",
+    "name": "precos_e_campanhas",
+    "arquivo": "20261111133804_precos_e_campanhas.sql",
+    "md5_arquivo": "54e45cffda3f09a7765311e63696a7ac",
+    "md5_remoto": "54e45cffda3f09a7765311e63696a7ac",
+    "confere": true,
+    "confere_sem_quebra_final": false
+  },
+  {
+    "version": "20261111135906",
+    "name": "importacao_catalogo",
+    "arquivo": "20261111135906_importacao_catalogo.sql",
+    "md5_arquivo": "faa52950a5b728b6166cdc65474f064e",
+    "md5_remoto": "faa52950a5b728b6166cdc65474f064e",
+    "confere": true,
+    "confere_sem_quebra_final": false
+  },
+  {
+    "version": "20261111141337",
+    "name": "entrada_estoque",
+    "arquivo": "20261111141337_entrada_estoque.sql",
+    "md5_arquivo": "663f442cb03a7311e2c66acb3de0609d",
+    "md5_remoto": "663f442cb03a7311e2c66acb3de0609d",
+    "confere": true,
+    "confere_sem_quebra_final": false
+  },
+  {
+    "version": "20261111142627",
+    "name": "condicao_obrigatoria_na_devolucao",
+    "arquivo": "20261111142627_condicao_obrigatoria_na_devolucao.sql",
+    "md5_arquivo": "976ebbec1236ca5b6dce1fe09fcc7794",
+    "md5_remoto": "976ebbec1236ca5b6dce1fe09fcc7794",
+    "confere": true,
+    "confere_sem_quebra_final": false
+  },
+  {
+    "version": "20261111142726",
+    "name": "inventario",
+    "arquivo": "20261111142726_inventario.sql",
+    "md5_arquivo": "20d9404bad0bce788ce78c41998ab526",
+    "md5_remoto": "20d9404bad0bce788ce78c41998ab526",
+    "confere": true,
+    "confere_sem_quebra_final": false
+  },
+  {
+    "version": "20261111191909",
+    "name": "clientes_compartilhados",
+    "arquivo": "20261111191909_clientes_compartilhados.sql",
+    "md5_arquivo": "f1c9c6563024611ba4fbe77bf39348ee",
+    "md5_remoto": "f1c9c6563024611ba4fbe77bf39348ee",
+    "confere": true,
+    "confere_sem_quebra_final": false
+  },
+  {
+    "version": "20261111193816",
+    "name": "crm_funil_e_agenda",
+    "arquivo": "20261111193816_crm_funil_e_agenda.sql",
+    "md5_arquivo": "3e247f19ce05b7fdf6b791f104be8b62",
+    "md5_remoto": "3e247f19ce05b7fdf6b791f104be8b62",
+    "confere": true,
+    "confere_sem_quebra_final": false
+  },
+  {
+    "version": "20261111195120",
+    "name": "clientes_mesclagem_e_segmentos",
+    "arquivo": "20261111195120_clientes_mesclagem_e_segmentos.sql",
+    "md5_arquivo": "cbb9c32a5c1e3cab7b122cfb52c4d1fd",
+    "md5_remoto": "cbb9c32a5c1e3cab7b122cfb52c4d1fd",
+    "confere": true,
+    "confere_sem_quebra_final": false
+  },
+  {
+    "version": "20261111200054",
+    "name": "pdv_nota_do_cliente",
+    "arquivo": "20261111200054_pdv_nota_do_cliente.sql",
+    "md5_arquivo": "6078f9dd0f64d21dc7e46aa5e4dd9718",
+    "md5_remoto": "6078f9dd0f64d21dc7e46aa5e4dd9718",
+    "confere": true,
+    "confere_sem_quebra_final": false
+  },
+  {
+    "version": "20261111201342",
+    "name": "pagamentos_maquininhas_e_conciliacao",
+    "arquivo": "20261111201342_pagamentos_maquininhas_e_conciliacao.sql",
+    "md5_arquivo": "b83e29bfd4d7f095173e2845aa9e0a19",
+    "md5_remoto": "b83e29bfd4d7f095173e2845aa9e0a19",
+    "confere": true,
+    "confere_sem_quebra_final": false
+  },
+  {
+    "version": "20261112033713",
+    "name": "recebimento_correcoes",
+    "arquivo": "20261112033713_recebimento_correcoes.sql",
+    "md5_arquivo": "8f985fcbb4766e5b3a5ec676aae67201",
+    "md5_remoto": "8f985fcbb4766e5b3a5ec676aae67201",
+    "confere": true,
+    "confere_sem_quebra_final": false
+  },
+  {
+    "version": "20261112163333",
+    "name": "importador_correcoes",
+    "arquivo": "20261112163333_importador_correcoes.sql",
+    "md5_arquivo": "d4003b4a7642b74117a4442113bfe385",
+    "md5_remoto": "d4003b4a7642b74117a4442113bfe385",
+    "confere": true,
+    "confere_sem_quebra_final": false
+  },
+  {
+    "version": "20261112195200",
+    "name": "vendas_painel",
+    "arquivo": "20261112195200_vendas_painel.sql",
+    "md5_arquivo": "a477b00219c4eff93cc94ebb3066484a",
+    "md5_remoto": "a477b00219c4eff93cc94ebb3066484a",
+    "confere": true,
+    "confere_sem_quebra_final": false
+  },
+  {
+    "version": "20261113065706",
+    "name": "margem_painel",
+    "arquivo": "20261113065706_margem_painel.sql",
+    "md5_arquivo": "7af84d1c116430125d3c769abe29a21e",
+    "md5_remoto": "40a023619c08c2f87c33683bed9fb70c",
+    "confere": false,
+    "confere_sem_quebra_final": true
+  },
+  {
+    "version": "20261114012326",
+    "name": "financeiro_conciliacao",
+    "arquivo": "20261114012326_financeiro_conciliacao.sql",
+    "md5_arquivo": "d9b2f491d11b795ae5923b4eac4ae290",
+    "md5_remoto": "d9b2f491d11b795ae5923b4eac4ae290",
+    "confere": true,
+    "confere_sem_quebra_final": false
+  },
+  {
+    "version": "20261114012407",
+    "name": "estoque_painel",
+    "arquivo": "20261114012407_estoque_painel.sql",
+    "md5_arquivo": "ce11207894796265a90b602e6f7133e2",
+    "md5_remoto": "ce11207894796265a90b602e6f7133e2",
+    "confere": true,
+    "confere_sem_quebra_final": false
+  },
+  {
+    "version": "20261114012431",
+    "name": "connect_painel",
+    "arquivo": "20261114012431_connect_painel.sql",
+    "md5_arquivo": "a3f5cc7e1759ac6ffcf18d901c3a11ad",
+    "md5_remoto": "a3f5cc7e1759ac6ffcf18d901c3a11ad",
+    "confere": true,
+    "confere_sem_quebra_final": false
+  },
+  {
+    "version": "20261114012538",
+    "name": "metas",
+    "arquivo": "20261114012538_metas.sql",
+    "md5_arquivo": "a7ea23bdfac126f02262f4ce815b387e",
+    "md5_remoto": "a7ea23bdfac126f02262f4ce815b387e",
+    "confere": true,
+    "confere_sem_quebra_final": false
+  },
+  {
+    "version": "20261114012604",
+    "name": "metas_lojas",
+    "arquivo": "20261114012604_metas_lojas.sql",
+    "md5_arquivo": "1ac0be9bf479d3f486984f1625630b11",
+    "md5_remoto": "1ac0be9bf479d3f486984f1625630b11",
+    "confere": true,
+    "confere_sem_quebra_final": false
+  },
+  {
+    "version": "20261114012623",
+    "name": "equipe_por_papel",
+    "arquivo": "20261114012623_equipe_por_papel.sql",
+    "md5_arquivo": "c8cde2890516fcea7192cf5f607647ec",
+    "md5_remoto": "c8cde2890516fcea7192cf5f607647ec",
+    "confere": true,
+    "confere_sem_quebra_final": false
+  },
+  {
+    "version": "20261114012647",
+    "name": "venda_item_regra_de_preco",
+    "arquivo": "20261114012647_venda_item_regra_de_preco.sql",
+    "md5_arquivo": "285ab270a635fe29c54ebaf8791b0bb3",
+    "md5_remoto": "285ab270a635fe29c54ebaf8791b0bb3",
+    "confere": true,
+    "confere_sem_quebra_final": false
+  },
+  {
+    "version": "20261114012722",
+    "name": "financeiras_a_receber",
+    "arquivo": "20261114012722_financeiras_a_receber.sql",
+    "md5_arquivo": "37314903a1f24a5181ac099a6d56fedd",
+    "md5_remoto": "37314903a1f24a5181ac099a6d56fedd",
+    "confere": true,
+    "confere_sem_quebra_final": false
+  },
+  {
+    "version": "20261114012802",
+    "name": "caixa_saida_autorizada",
+    "arquivo": "20261114012802_caixa_saida_autorizada.sql",
+    "md5_arquivo": "a33eb3d2e66b257a7774d02ed78be4e9",
+    "md5_remoto": "a33eb3d2e66b257a7774d02ed78be4e9",
+    "confere": true,
+    "confere_sem_quebra_final": false
+  },
+  {
+    "version": "20261114012952",
+    "name": "contas_a_pagar",
+    "arquivo": "20261114012952_contas_a_pagar.sql",
+    "md5_arquivo": "71168df92036d4d537827385711b517c",
+    "md5_remoto": "71168df92036d4d537827385711b517c",
+    "confere": true,
+    "confere_sem_quebra_final": false
+  },
+  {
+    "version": "20261114013120",
+    "name": "resultado_do_mes",
+    "arquivo": "20261114013120_resultado_do_mes.sql",
+    "md5_arquivo": "05f10b59896103ccf88b5c88fc1a82bf",
+    "md5_remoto": "05f10b59896103ccf88b5c88fc1a82bf",
+    "confere": true,
+    "confere_sem_quebra_final": false
+  },
+  {
+    "version": "20261114013159",
+    "name": "previsao_de_caixa",
+    "arquivo": "20261114013159_previsao_de_caixa.sql",
+    "md5_arquivo": "7292b5793b0b7f748c53e867d92505fe",
+    "md5_remoto": "7292b5793b0b7f748c53e867d92505fe",
+    "confere": true,
+    "confere_sem_quebra_final": false
+  },
+  {
+    "version": "20261114092832",
+    "name": "bonus_por_meta",
+    "arquivo": "20261114092832_bonus_por_meta.sql",
+    "md5_arquivo": "dd58eee5bde26398e6666ff830b707fd",
+    "md5_remoto": "dd58eee5bde26398e6666ff830b707fd",
+    "confere": true,
+    "confere_sem_quebra_final": false
+  },
+  {
+    "version": "20261114104004",
+    "name": "bonus_fechamento",
+    "arquivo": "20261114104004_bonus_fechamento.sql",
+    "md5_arquivo": "c3f94fa247705d3c678dd74e33190d4b",
+    "md5_remoto": "c3f94fa247705d3c678dd74e33190d4b",
+    "confere": true,
+    "confere_sem_quebra_final": false
+  },
+  {
+    "version": "20261114145334",
+    "name": "inventario_correcoes",
+    "arquivo": "20261114145334_inventario_correcoes.sql",
+    "md5_arquivo": "4d6d7b29b4d3e47dfe5629dc5d15c165",
+    "md5_remoto": "4d6d7b29b4d3e47dfe5629dc5d15c165",
+    "confere": true,
+    "confere_sem_quebra_final": false
+  },
+  {
+    "version": "20261114145418",
+    "name": "previsao_correcoes",
+    "arquivo": "20261114145418_previsao_correcoes.sql",
+    "md5_arquivo": "cab7d9b21702dd6c4a94d624a6843ad1",
+    "md5_remoto": "cab7d9b21702dd6c4a94d624a6843ad1",
+    "confere": true,
+    "confere_sem_quebra_final": false
+  },
+  {
+    "version": "20261114145505",
+    "name": "financeiras_correcoes",
+    "arquivo": "20261114145505_financeiras_correcoes.sql",
+    "md5_arquivo": "db9d48c1fe8f354e7e28dfb26b5d29cd",
+    "md5_remoto": "db9d48c1fe8f354e7e28dfb26b5d29cd",
+    "confere": true,
+    "confere_sem_quebra_final": false
+  },
+  {
+    "version": "20261114145608",
+    "name": "clientes_nome_e_whatsapp",
+    "arquivo": "20261114145608_clientes_nome_e_whatsapp.sql",
+    "md5_arquivo": "375be4d8ceacefefb248c05b530db470",
+    "md5_remoto": "375be4d8ceacefefb248c05b530db470",
+    "confere": true,
+    "confere_sem_quebra_final": false
+  },
+  {
+    "version": "20261114145952",
+    "name": "notas_destinatario_completo",
+    "arquivo": "20261114145952_notas_destinatario_completo.sql",
+    "md5_arquivo": "5674626260a14e59724692440ba9f851",
+    "md5_remoto": "5674626260a14e59724692440ba9f851",
+    "confere": true,
+    "confere_sem_quebra_final": false
+  },
+  {
+    "version": "20261114150027",
+    "name": "notas_documentos",
+    "arquivo": "20261114150027_notas_documentos.sql",
+    "md5_arquivo": "82b836daafd53de60f8db55ff3520c30",
+    "md5_remoto": "82b836daafd53de60f8db55ff3520c30",
+    "confere": true,
+    "confere_sem_quebra_final": false
+  },
+  {
+    "version": "20261114150135",
+    "name": "whatsapp_envio_da_nota",
+    "arquivo": "20261114150135_whatsapp_envio_da_nota.sql",
+    "md5_arquivo": "cccfb12dfbf315e0187888c702929d31",
+    "md5_remoto": "cccfb12dfbf315e0187888c702929d31",
+    "confere": true,
+    "confere_sem_quebra_final": false
+  },
+  {
+    "version": "20261114161903",
+    "name": "recebiveis_painel",
+    "arquivo": "20261114161903_recebiveis_painel.sql",
+    "md5_arquivo": "e64b6c8bbe0e2943b27739ee93219b0d",
+    "md5_remoto": "e64b6c8bbe0e2943b27739ee93219b0d",
+    "confere": true,
+    "confere_sem_quebra_final": false
+  },
+  {
+    "version": "20261114162103",
+    "name": "ordem_de_servico",
+    "arquivo": "20261114162103_ordem_de_servico.sql",
+    "md5_arquivo": "d33be729a3b9587e72685f6ac70f9423",
+    "md5_remoto": "d33be729a3b9587e72685f6ac70f9423",
+    "confere": true,
+    "confere_sem_quebra_final": false
+  },
+  {
+    "version": "20261114162305",
+    "name": "orcamento_da_os",
+    "arquivo": "20261114162305_orcamento_da_os.sql",
+    "md5_arquivo": "c64ccbbb49b2144f79ba0dad34043599",
+    "md5_remoto": "c64ccbbb49b2144f79ba0dad34043599",
+    "confere": true,
+    "confere_sem_quebra_final": false
+  },
+  {
+    "version": "20261114202336",
+    "name": "entrega_da_os",
+    "arquivo": "20261114202336_entrega_da_os.sql",
+    "md5_arquivo": "a7a8f418bdfb86b4051944364a64fdb7",
+    "md5_remoto": "a7a8f418bdfb86b4051944364a64fdb7",
+    "confere": true,
+    "confere_sem_quebra_final": false
+  },
+  {
+    "version": "20261114202444",
+    "name": "pecas_da_os",
+    "arquivo": "20261114202444_pecas_da_os.sql",
+    "md5_arquivo": "d8d8a679d126b2baef377c6608d7b804",
+    "md5_remoto": "d8d8a679d126b2baef377c6608d7b804",
+    "confere": true,
+    "confere_sem_quebra_final": false
+  },
+  {
+    "version": "20261114202535",
+    "name": "relatorio_da_assistencia",
+    "arquivo": "20261114202535_relatorio_da_assistencia.sql",
+    "md5_arquivo": "833089c3f606ea5082713c121f42c46b",
+    "md5_remoto": "833089c3f606ea5082713c121f42c46b",
+    "confere": true,
+    "confere_sem_quebra_final": false
+  },
+  {
+    "version": "20261114205327",
+    "name": "anexos_da_venda",
+    "arquivo": "20261114205327_anexos_da_venda.sql",
+    "md5_arquivo": "b6e8730659085d32320f1b871502b710",
+    "md5_remoto": "b6e8730659085d32320f1b871502b710",
+    "confere": true,
+    "confere_sem_quebra_final": false
+  },
+  {
+    "version": "20261114215050",
+    "name": "conciliacao_fiscal",
+    "arquivo": "20261114215050_conciliacao_fiscal.sql",
+    "md5_arquivo": "b7af9635e943db7adac220b1ecee8699",
+    "md5_remoto": "b7af9635e943db7adac220b1ecee8699",
+    "confere": true,
+    "confere_sem_quebra_final": false
+  },
+  {
+    "version": "20261114215128",
+    "name": "cancelamento_da_nota",
+    "arquivo": "20261114215128_cancelamento_da_nota.sql",
+    "md5_arquivo": "8bca9bb2d31eea3fbc66a76dbd7dfb55",
+    "md5_remoto": "8bca9bb2d31eea3fbc66a76dbd7dfb55",
+    "confere": true,
+    "confere_sem_quebra_final": false
+  },
+  {
+    "version": "20261115000320",
+    "name": "estoque_valor_em_custo",
+    "arquivo": "20261115000320_estoque_valor_em_custo.sql",
+    "md5_arquivo": "2d305492d0b5a744afc3d5e0dfd38490",
+    "md5_remoto": "2d305492d0b5a744afc3d5e0dfd38490",
+    "confere": true,
+    "confere_sem_quebra_final": false
+  },
+  {
+    "version": "20261115000401",
+    "name": "codigos_de_outros_canais",
+    "arquivo": "20261115000401_codigos_de_outros_canais.sql",
+    "md5_arquivo": "a909de56bf8081c8e025cb082e85de26",
+    "md5_remoto": "a909de56bf8081c8e025cb082e85de26",
+    "confere": true,
+    "confere_sem_quebra_final": false
+  },
+  {
+    "version": "20261115000433",
+    "name": "regioes",
+    "arquivo": "20261115000433_regioes.sql",
+    "md5_arquivo": "c629850bb5835f64aac35b2a7d040529",
+    "md5_remoto": "c629850bb5835f64aac35b2a7d040529",
+    "confere": true,
+    "confere_sem_quebra_final": false
+  }
+]
