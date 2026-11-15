@@ -1,9 +1,9 @@
 // A apresentação dos pedidos de compra (lote INV-009a): a lista e o pedido com a conferência. Só apresentação: os dados
 // chegam lidos por lib/estoque/pedidos-de-compra.ts (o custo só para quem vê custo), e as ações chamam o banco.
-import { ClipboardCheck, PackageSearch } from "lucide-react";
+import { ClipboardCheck, PackageCheck, PackageSearch } from "lucide-react";
 import Link from "next/link";
 
-import { Botao, Cartao, EstadoVazio, Selo } from "../../../componentes/ui";
+import { Botao, BotaoLink, Cartao, EstadoVazio, Selo } from "../../../componentes/ui";
 import { conferenciaDaLinha, type PedidoDaLista, type PedidoDeCompra, type SituacaoDoPedido } from "../../../lib/estoque/pedidos-de-compra";
 import { brl, numero } from "../../../lib/formato";
 import { encerrarPedido } from "./acoes";
@@ -58,6 +58,10 @@ export function DetalheDoPedido({ pedido }: { pedido: PedidoDeCompra }) {
           : [faltam > 0 ? `faltam ${numero(faltam)}` : "nada falta", aMais > 0 ? `${numero(aMais)} a mais ou fora do pedido` : null,
             p.veCusto && custosDiferentes > 0 ? `${custosDiferentes} ${custosDiferentes === 1 ? "item com custo" : "itens com custo"} diferente do combinado` : null].filter(Boolean).join(" · ")}
       </p>
+      {/* INV-009b: o que falta vira a entrada de mercadoria já preenchida, que sai ligada a este pedido. */}
+      {p.situacao === "aberto" && faltam > 0 && (
+        <BotaoLink href={`/estoque/entrada?pedido=${p.id}#nova`} tamanho="sm" className="mt-3"><PackageCheck aria-hidden className="size-4" />Receber este pedido</BotaoLink>
+      )}
       {/* No celular, cada linha num bloco; a tabela a partir da tela média. */}
       <ul className="mt-3 divide-y divide-borda text-sm sm:hidden">
         {conferidas.map((i) => (

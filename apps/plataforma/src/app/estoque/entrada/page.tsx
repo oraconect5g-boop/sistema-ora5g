@@ -16,7 +16,8 @@ import {
 } from "../../../lib/estoque/historico-entradas";
 import { brl, numero } from "../../../lib/formato";
 import { chaveDoCatalogo, textoDoParametro, type ValorDeParametro } from "../../../lib/parametros";
-import { lerPedidoDaEntrada, type PedidoDaEntrada } from "../../../lib/estoque/pedidos-de-compra";
+import { lerPedido, lerPedidoDaEntrada, type PedidoDaEntrada } from "../../../lib/estoque/pedidos-de-compra";
+import { AVISOS_DO_PEDIDO, montarPedidoParaReceber, tiposQueEntram, type AvisoDoPedido, type PedidoParaReceber } from "../../../lib/estoque/receber-do-pedido";
 import { estornarEntrada, ligarPedido, salvarFornecedor } from "./acoes";
 import { FormularioEntrada } from "./FormularioEntrada";
 
@@ -32,6 +33,8 @@ const OK = {
   pedido_ligado: "Entrada ligada ao pedido de compra: a conferência já está no pedido.",
   pedido_desligado: "Entrada desligada do pedido de compra; o motivo ficou na auditoria.",
   pedido_sem_mudanca: "Nada mudou: a entrada já estava assim.",
+  registrada_no_pedido: "Entrada registrada e ligada ao pedido de compra: o estoque e o custo já estão atualizados, e a conferência já está no pedido.",
+  registrada_sem_pedido: "Entrada registrada, mas não deu para ligar ao pedido de compra agora: ligue no bloco \"Pedido de compra\", abaixo.",
 } as const;
 const campo = "mt-1 min-h-11 w-full rounded-botao border border-borda bg-white px-3 text-sm outline-none focus:border-acao focus:ring-2 focus:ring-acao/20";
 const quando = (iso: string) => new Intl.DateTimeFormat("pt-BR", { timeZone: "America/Sao_Paulo", dateStyle: "short", timeStyle: "short" }).format(new Date(iso)).replace(",", "");
@@ -273,7 +276,25 @@ function blocoDoHistorico(h: HistoricoDeEntradas | null, antes: number | null, a
   );
 }
 
-type Parametros = Partial<Record<"ok" | "erro" | "form" | "entrada" | "numero" | "antes" | "id" | "linha" | "sku", ValorDeParametro>>;
+type Parametros = Partial<Record<"ok" | "erro" | "form" | "entrada" | "numero" | "antes" | "id" | "linha" | "sku" | "pedido", ValorDeParametro>>;
+
+/**
+ * INV-009b: o pedido de compra a receber, vindo do endereço (?pedido=). Só o pedido aberto desta loja, com algo que
+ * falta e itens que ainda entram no estoque; senão, o aviso do porquê (e a entrada segue como sempre).
+ */
+async function pedidoParaReceber(supabase: Awaited<ReturnType<typeof obterSessao>>["supabase"], id: string, unidade: string): Promise<PedidoParaReceber | AvisoDoPedido> {
+  const lido = await lerPedido(supabase, id);
+  if (lido === null) return "indisponivel";
+  if (lido.estado === "nao_encontrado") return "nao_encontrado";
+  if (lido.estado !== "ok") return "falha";
+  if (lido.dados.unidadeId !== unidade) return "outra_loja";
+  if (lido.dados.situacao !== "aberto") return "encerrado";
+  const faltam = lido.dados.itens.filter((i) => i.quantidade > i.recebida).map((i) => i.varianteId);
+  if (faltam.length === 0) return "completo";
+  const tipos = await tiposQueEntram(supabase, faltam);
+  if (tipos === null) return "falha";
+  return montarPedidoParaReceber(lido.dados, tipos);
+}
 
 // Entrada de mercadoria (lote L4a: ORA-INV-009, ORA-INV-004, ORA-CAT-008): compra de fornecedor ou carga
 // inicial na loja do turno, por quem tem estoque.receber (dono e gerente). O custo da entrada vira o
@@ -345,6 +366,9 @@ export default async function EntradaDeMercadoria({ searchParams }: { searchPara
   const contas: ContasDasEntradas = lidas === null ? null : lidas.estado !== "ok" ? "falha"
     : { porEntrada: lidas.dados, lancar: (entrada) => `/contas-a-pagar?${new URLSearchParams({ loja: unidade, entrada })}#lancar` };
 
+  // INV-009b: receber a partir do pedido de compra (?pedido=): as linhas do que falta já no formulário.
+  const pedidoDoEndereco = textoDoParametro(parametros.pedido);
+  const receber = ehUuid(pedidoDoEndereco) ? await pedidoParaReceber(supabase, pedidoDoEndereco, unidade) : null;
   // INV-009a: o pedido de compra da compra aberta (à parte: sem os pedidos no banco, o bloco some).
   const pedidoDaEntrada = aberta && aberta.tipo === "compra" ? await lerPedidoDaEntrada(supabase, aberta.id, unidade) : null;
   const reentradas = aberta ? aberta.itens.reduce((soma, l) => soma + l.reentradas, 0) : 0;
@@ -357,8 +381,8 @@ export default async function EntradaDeMercadoria({ searchParams }: { searchPara
       <TituloPagina sobretitulo={situacao.unidade_nome} titulo="Entrada de mercadoria" subtitulo="Compra de fornecedor ou carga inicial. Aparelho e chip entram pelo IMEI/ICCID; acessório por quantidade. Tudo entra numa transação só."
         acao={<Link href="/estoque/pedidos" className={classeBotao("secundario", "sm")}>Pedidos de compra</Link>} />
       {ok && (
-        <Aviso tom="sucesso" className="mt-4">
-          {`${OK[ok]}${ok === "registrada" && reentradas > 0 ? ` ${reentradas} aparelho(s) ou chip(s) voltaram ao estoque com a mesma identidade (reentrada): o histórico anterior foi preservado.` : ""}`}
+        <Aviso tom={ok === "registrada_sem_pedido" ? "aviso" : "sucesso"} className="mt-4">
+          {`${OK[ok]}${(ok === "registrada" || ok === "registrada_no_pedido") && reentradas > 0 ? ` ${reentradas} aparelho(s) ou chip(s) voltaram ao estoque com a mesma identidade (reentrada): o histórico anterior foi preservado.` : ""}`}
         </Aviso>
       )}
       {erro && (detalheDoErroNaTela
@@ -376,8 +400,10 @@ export default async function EntradaDeMercadoria({ searchParams }: { searchPara
       )}
       {aberta && blocoDaEntrada(aberta, erro ? onde.id : null, fechar, pedidoDaEntrada)}
 
-      <Cartao className="mt-4" titulo="Nova entrada" icone={PackagePlus} subtitulo="O custo informado vira o custo atual da variação (último custo). Cada venda guarda o custo que valia quando o item entrou nela.">
-        <FormularioEntrada unidade={unidade} chave={`form:${randomUUID()}`} fornecedores={fornecedores.data} />
+      {typeof receber === "string" && <Aviso tom="aviso" className="mt-4">{AVISOS_DO_PEDIDO[receber]}</Aviso>}
+      <Cartao id="nova" className="mt-4 scroll-mt-24" titulo={receber && typeof receber !== "string" ? `Nova entrada: receber o pedido nº ${receber.numero}` : "Nova entrada"} icone={PackagePlus}
+        subtitulo="O custo informado vira o custo atual da variação (último custo). Cada venda guarda o custo que valia quando o item entrou nela.">
+        <FormularioEntrada unidade={unidade} chave={`form:${randomUUID()}`} fornecedores={fornecedores.data} pedido={receber && typeof receber !== "string" ? receber : null} />
       </Cartao>
 
       <details className="mt-4 rounded-cartao border border-borda/80 bg-superficie p-4 shadow-cartao" open={textoDoParametro(parametros.form) === "fornecedor" || fornecedores.data.length === 0}>

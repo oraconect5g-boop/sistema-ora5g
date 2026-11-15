@@ -621,3 +621,101 @@ describe("entrada aberta: o pedido de compra (INV-009a)", () => {
     expect(cenario.chamadas).toHaveLength(antes);
   });
 });
+
+// ---------------------------------------------------------------------------------------------
+// INV-009b: receber a mercadoria a partir do pedido de compra
+// ---------------------------------------------------------------------------------------------
+/** As props do FormularioEntrada que a página montou (o componente não é executado). */
+function propsDoFormulario(v: unknown): Record<string, unknown> | null {
+  if (Array.isArray(v)) { for (const x of v) { const p = propsDoFormulario(x); if (p) return p; } return null; }
+  if (isValidElement<Record<string, unknown>>(v)) {
+    if (typeof v.type === "function" && v.type.name === "FormularioEntrada") return v.props;
+    for (const filho of Object.values(v.props)) { const p = propsDoFormulario(filho); if (p) return p; }
+    return null;
+  }
+  if (v && typeof v === "object") { for (const x of Object.values(v)) { const p = propsDoFormulario(x); if (p) return p; } }
+  return null;
+}
+const COMPLETO = "00000000-0000-4000-9000-000000000032";
+const itemDoPedido = (extra: Record<string, unknown> = {}) => ({
+  linha: 1, variante_id: CAPA, sku: "ACE-0001", nome: "Capa", produto: "Capa", quantidade: 10, recebida: 4, custo_combinado: 1_800, custo_da_nota: 1_900, ...extra,
+});
+const paginaDoPedido = async (parametros: Record<string, string>) => (await EntradaDeMercadoria({ searchParams: Promise.resolve(parametros) })) as ReactElement;
+
+describe("receber a partir do pedido de compra (INV-009b)", () => {
+  it("o pedido aberto desta loja vira as linhas do que falta, com o custo combinado; o completo e o inativo ficam de fora", async () => {
+    cenario.respostas.pedido_compra = { data: pedidoAberto({ itens: [
+      itemDoPedido(),
+      itemDoPedido({ linha: 2, variante_id: APARELHO, sku: "APA-0001", nome: "Galaxy A15", produto: "Galaxy", quantidade: 2, recebida: 0, custo_combinado: 105_000, custo_da_nota: null }),
+      itemDoPedido({ linha: 3, variante_id: INATIVO, sku: "ACE-0009", nome: "Fone", quantidade: 3, recebida: 0, custo_combinado: null, custo_da_nota: null }),
+      itemDoPedido({ linha: 4, variante_id: COMPLETO, sku: "ACE-0002", nome: "Película", quantidade: 5, recebida: 5 }),
+    ] }), error: null };
+    const arvore = await paginaDoPedido({ pedido: PEDIDO });
+    expect(cenario.chamadas.find((c) => c.nome === "pedido_compra")?.argumentos).toEqual({ p_pedido: PEDIDO });
+    expect(propsDoFormulario(arvore)?.pedido).toEqual({
+      id: PEDIDO, numero: 7, fornecedorId: FORN, fornecedor: "Distribuidora Teste", deFora: 1,
+      linhas: [
+        { item: { id: CAPA, sku: "ACE-0001", nome: "Capa", tipo: "acessorio" }, falta: 6, custo: "18,00" },
+        { item: { id: APARELHO, sku: "APA-0001", nome: "Galaxy A15", tipo: "aparelho" }, falta: 2, custo: "1050,00" },
+      ],
+    });
+    expect(texto(arvore)).toContain("Nova entrada: receber o pedido nº 7");
+    // Sem o pedido no endereço (ou com um endereço que não é identificador), o formulário de sempre, sem ler pedido.
+    cenario.chamadas = [];
+    for (const parametros of [{}, { pedido: "x" }] as Record<string, string>[]) expect(propsDoFormulario(await paginaDoPedido(parametros))?.pedido).toBeNull();
+    expect(cenario.chamadas.some((c) => c.nome === "pedido_compra")).toBe(false);
+  });
+
+  it("os avisos — outra loja, encerrado, completo, inativo, não encontrado, sem os pedidos no banco e a falha — e a entrada segue sem o pedido", async () => {
+    vi.spyOn(console, "error").mockImplementation(() => undefined);
+    const casos: [Resposta, string][] = [
+      [{ data: pedidoAberto({ unidade_id: "00000000-0000-4000-8000-0000000000dd", itens: [itemDoPedido()] }), error: null }, "Este pedido é de outra loja"],
+      [{ data: pedidoAberto({ situacao: "encerrado", encerrado_em: "2026-11-15T13:00:00Z", motivo_encerramento: "Recebido", itens: [itemDoPedido()] }), error: null }, "Este pedido já foi encerrado"],
+      [{ data: pedidoAberto({ itens: [itemDoPedido({ recebida: 10 })] }), error: null }, "Nada falta receber neste pedido"],
+      [{ data: pedidoAberto({ itens: [itemDoPedido({ variante_id: INATIVO })] }), error: null }, "estão inativos no catálogo"],
+      [recusa("P0002", "Pedido de compra não encontrado para você"), "Pedido de compra não encontrado para você"],
+      [recusa("PGRST202", ""), "ainda não estão disponíveis neste ambiente"],
+      [recusa("57014", ""), "Não deu para ler o pedido agora"],
+    ];
+    for (const [resposta, aviso] of casos) {
+      cenario.respostas.pedido_compra = resposta;
+      const arvore = await paginaDoPedido({ pedido: PEDIDO });
+      expect(texto(arvore), aviso).toContain(aviso);
+      expect(propsDoFormulario(arvore)?.pedido, aviso).toBeNull();
+    }
+  });
+
+  it("registrar a entrada do pedido: sai ligada a ele; a ligação recusada deixa a entrada registrada e avisa; sem o pedido, como sempre", async () => {
+    const itens = JSON.stringify([{ variante: CAPA, tipo: "acessorio", quantidade: "6", custo: "18,00" }]);
+    const campos = { unidade: LOJA, tipo: "compra", fornecedor: FORN, documento: "NF 900", chave: "form:pedido007", motivo: "Recebimento do pedido nº 7", itens, pedido: PEDIDO };
+    cenario.respostas.estoque_registrar_entrada = { data: { id: ENTRADA, numero: 12, repetida: false, reentradas: 0 }, error: null };
+    cenario.respostas.pedido_compra_ligar_entrada = { data: true, error: null };
+    expect(await destinoDe(registrarEntrada(formulario(campos)))).toBe(`/estoque/entrada?ok=registrada_no_pedido&entrada=${ENTRADA}`);
+    expect(cenario.chamadas.map((c) => c.nome)).toEqual(["estoque_registrar_entrada", "pedido_compra_ligar_entrada"]);
+    expect(cenario.chamadas[1]?.argumentos).toEqual({ p_entrada: ENTRADA, p_pedido: PEDIDO, p_motivo: "Recebida a partir do pedido de compra" });
+    // A ligação recusada (o pedido encerrou no meio do caminho, por exemplo): a entrada continua registrada.
+    cenario.respostas.pedido_compra_ligar_entrada = recusa("22023", "O pedido já foi encerrado");
+    expect(await destinoDe(registrarEntrada(formulario(campos)))).toBe(`/estoque/entrada?ok=registrada_sem_pedido&entrada=${ENTRADA}`);
+    // O mesmo formulário de novo: a entrada que já existe, ligada (ou religada) ao pedido.
+    cenario.respostas.estoque_registrar_entrada = { data: { id: ENTRADA, numero: 12, repetida: true, reentradas: 0 }, error: null };
+    cenario.respostas.pedido_compra_ligar_entrada = { data: false, error: null };
+    expect(await destinoDe(registrarEntrada(formulario(campos)))).toBe(`/estoque/entrada?ok=repetida&entrada=${ENTRADA}`);
+    // Pedido que não é identificador: nem tenta ligar.
+    cenario.chamadas = [];
+    cenario.respostas.estoque_registrar_entrada = { data: { id: ENTRADA, numero: 12, repetida: false, reentradas: 0 }, error: null };
+    expect(await destinoDe(registrarEntrada(formulario({ ...campos, pedido: "x" })))).toBe(`/estoque/entrada?ok=registrada&entrada=${ENTRADA}`);
+    expect(cenario.chamadas.map((c) => c.nome)).toEqual(["estoque_registrar_entrada"]);
+  });
+
+  it("a tela diz o resultado: ligada ao pedido, ou registrada sem a ligação (com o caminho para ligar)", async () => {
+    cenario.respostas.estoque_entrada = aberta();
+    cenario.tabelas.entradas_estoque = [{ id: ENTRADA, fornecedor_id: FORN, pedido_id: PEDIDO }];
+    cenario.respostas.pedido_compra = { data: pedidoAberto(), error: null };
+    expect(await tela({ ok: "registrada_no_pedido", entrada: ENTRADA })).toContain("Entrada registrada e ligada ao pedido de compra");
+    cenario.tabelas.entradas_estoque = [{ id: ENTRADA, fornecedor_id: FORN, pedido_id: null }];
+    cenario.respostas.pedidos_compra = { data: [pedidoDaLista()], error: null };
+    const t = await tela({ ok: "registrada_sem_pedido", entrada: ENTRADA });
+    expect(t).toContain("não deu para ligar ao pedido de compra agora");
+    expect(t).toContain("Ligar ao pedido");
+  });
+});

@@ -34,7 +34,16 @@ export async function registrarEntrada(dados: FormData) {
   });
   if (error) voltar({ erro: erroDaEntrada(error), ...detalheDoErro(error) });
   const resposta = data as { id?: unknown; repetida?: unknown } | null;
-  voltar({ ok: resposta?.repetida === true ? "repetida" : "registrada", entrada: typeof resposta?.id === "string" ? resposta.id : null });
+  const entrada = typeof resposta?.id === "string" ? resposta.id : null;
+  const repetida = resposta?.repetida === true;
+  // INV-009b: a entrada que veio do pedido de compra sai ligada a ele (o banco confere a loja, o fornecedor e o pedido
+  // aberto). Se a ligação falhar, a entrada continua registrada, e a tela leva ao bloco do pedido para ligar à mão.
+  const pedido = dados.get("pedido");
+  if (entrada && ehUuid(pedido)) {
+    const ligacao = await supabase.rpc("pedido_compra_ligar_entrada", { p_entrada: entrada, p_pedido: pedido, p_motivo: "Recebida a partir do pedido de compra" });
+    voltar({ ok: ligacao.error ? "registrada_sem_pedido" : repetida ? "repetida" : "registrada_no_pedido", entrada });
+  }
+  voltar({ ok: repetida ? "repetida" : "registrada", entrada });
 }
 
 export async function estornarEntrada(dados: FormData) {

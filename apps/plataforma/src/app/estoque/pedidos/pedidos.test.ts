@@ -139,6 +139,9 @@ describe("/estoque/pedidos (INV-009a)", () => {
     ]) expect(t).toContain(trecho);
     const encerrar = elementos(await pagina({ pedido: PEDIDO })).find((e) => e.type === "form" && typeof e.props.action === "function");
     expect((encerrar?.props.action as { name: string }).name).toBe("encerrarPedido");
+    // INV-009b: o aberto com falta leva à entrada já preenchida com o que falta.
+    expect(t).toContain(`/estoque/entrada?pedido=${PEDIDO}#nova`);
+    expect(t).toContain("Receber este pedido");
     // sem custo.ver: nenhuma coluna de custo (o banco também não manda o total combinado na lista)
     cenario.respostas.pedidos_compra = { data: [daLista({ total_previsto: null })], error: null };
     cenario.respostas.pedido_compra = { data: doPedido({ ve_custo: false, itens: doPedido().itens.map((i) => ({ ...i, custo_combinado: null, custo_da_nota: null })), fora_do_pedido: [{ variante_id: PELICULA, sku: "ACE-0050", nome: "Película", recebida: 2, custo_da_nota: null }] }), error: null };
@@ -151,6 +154,10 @@ describe("/estoque/pedidos (INV-009a)", () => {
     const encerrado = await tela({ pedido: PEDIDO });
     expect(encerrado).toContain("Encerrado em 16/11/2026: Faltou o aparelho");
     expect(encerrado).not.toContain("Encerrar o pedido");
+    expect(encerrado).not.toContain("Receber este pedido");
+    // Aberto e sem nada faltando (tudo recebido): nada a receber.
+    cenario.respostas.pedido_compra = { data: doPedido({ itens: doPedido().itens.map((i) => ({ ...i, recebida: i.quantidade })) }), error: null };
+    expect(await tela({ pedido: PEDIDO })).not.toContain("Receber este pedido");
     cenario.respostas.pedido_compra = { data: null, error: { code: "P0002" } };
     expect(await tela({ pedido: PEDIDO })).toContain("Pedido de compra não encontrado (ou não é da sua loja).");
   });
