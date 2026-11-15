@@ -6,7 +6,7 @@ import { nomeCurtoDoTipo } from "../catalogo/cadastro";
 import { fracaoCsv, type Celula } from "../csv";
 import { chavesDaJanela, janelasDeDias, rotuloDaChave, type Janela, type PeriodoFinanceiro } from "../financeiro/painel";
 import { endereco, ticketMedio, type TextosDoRecorte, type VendasDoBanco } from "../inicio/painel";
-import { numerosDaMargem, situacaoDaMargem, type ItemDaMargem, type MargemDoBanco } from "../margem/painel";
+import { numerosDaMargem, situacaoDaMargem, vendedoresDaMargem, type ItemDaMargem, type MargemDoBanco, type MargemPorVendedor } from "../margem/painel";
 import { situacaoDaVenda } from "../vendas/lista";
 
 // ---------------------------------------------------------------------------------------------
@@ -50,8 +50,8 @@ export const enderecoDosRelatorios = (periodo: PeriodoDoRelatorio, loja: string 
   endereco("/relatorios", { periodo: periodoNoEndereco(periodo), loja, pagina: pagina > 1 ? String(pagina) : null });
 
 /** O que vai no arquivo: uma linha por dia (o padrão) ou o detalhe da margem, uma linha por item. */
-export type VisaoDaExportacao = "dias" | "itens";
-export const visaoDaExportacao = (valor: unknown): VisaoDaExportacao => (valor === "itens" ? "itens" : "dias");
+export type VisaoDaExportacao = "dias" | "itens" | "vendedores";
+export const visaoDaExportacao = (valor: unknown): VisaoDaExportacao => (valor === "itens" || valor === "vendedores" ? valor : "dias");
 export const enderecoDaExportacao = (periodo: PeriodoDoRelatorio, loja: string | null, ver: VisaoDaExportacao): string =>
   endereco("/relatorios/exportar", { periodo: periodoNoEndereco(periodo), loja, ver: ver === "dias" ? null : ver });
 
@@ -168,6 +168,26 @@ export function tabelaDosDias(vendas: VendasDoBanco, margem: MargemDoBanco | nul
     rodape.push([`Atenção: a margem considera só as lojas em que você vê o custo; ${comMargem.lojasFora === 1 ? "1 loja com movimento ficou fora" : `${comMargem.lojasFora} lojas com movimento ficaram fora`}.`]);
   }
   return { colunas: comMargem ? [...COLUNAS_DE_VENDAS, ...COLUNAS_DE_MARGEM] : COLUNAS_DE_VENDAS, linhas, rodape };
+}
+
+/**
+ * PERF-003b: a margem por vendedor de origem, uma linha por vendedor (o nome do ranking), da maior margem para a menor.
+ * Vendedor que só vendeu itens sem custo gravado fica com a margem vazia (desconhecida, não zero). As lojas em que
+ * quem pede não vê o custo ficam fora, e o rodapé diz quantas.
+ */
+export function tabelaDosVendedores(m: MargemPorVendedor, nomes: ReadonlyMap<string, string>): Tabela {
+  return {
+    colunas: ["Vendedor", ...COLUNAS_DE_MARGEM],
+    linhas: vendedoresDaMargem(m, nomes).map((l): Celula[] => [
+      l.nome, ...celulasDeMargem({
+        margem: l.temCusto ? l.margem : null, base: l.base, custo: l.custoLiquido, fracao: l.fracao, cobertura: l.cobertura,
+        itensSemCusto: l.parcelas.itensSemCusto, vendidoSemCusto: l.parcelas.vendidoSemCusto,
+      }),
+    ]),
+    rodape: m.lojasFora > 0
+      ? [[`Atenção: a margem considera só as lojas em que você vê o custo; ${m.lojasFora === 1 ? "1 loja com movimento ficou fora" : `${m.lojasFora} lojas com movimento ficaram fora`}.`]]
+      : [],
+  };
 }
 
 /** O detalhe da margem: uma linha por item das vendas concluídas no período. Item sem custo gravado fica com custo e margem vazios. */

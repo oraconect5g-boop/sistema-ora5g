@@ -5,10 +5,10 @@ import { describe, expect, it } from "vitest";
 
 import { gerarCsvEmSecoes, textoDaCelula, type Celula } from "../csv";
 import { lerVendas } from "../inicio/painel";
-import { lerItensDaMargem, lerMargem } from "../margem/painel";
+import { lerItensDaMargem, lerMargem, lerMargemPorVendedor } from "../margem/painel";
 import {
   diasDeMargem, diasDeVendas, enderecoDaExportacao, enderecoDosRelatorios, janelasDoRelatorio, ORDEM_DOS_RELATORIOS, paginaDoRelatorio, percentualCsv,
-  PERIODO_NO_FINANCEIRO, periodoDoRelatorio, PERIODOS_DOS_RELATORIOS, tabelaDosDias, tabelaDosItens, textosDoRelatorio, visaoDaExportacao,
+  PERIODO_NO_FINANCEIRO, periodoDoRelatorio, PERIODOS_DOS_RELATORIOS, tabelaDosDias, tabelaDosItens, tabelaDosVendedores, textosDoRelatorio, visaoDaExportacao,
 } from "./painel";
 
 // Terça-feira, 10/11/2026, 15h em São Paulo: os sete dias vão de 04/11 a 10/11.
@@ -304,5 +304,26 @@ describe("exportação: uma linha por item (detalhe da margem)", () => {
 
   it("sem itens: só o cabeçalho", () => {
     expect(tabelaDosItens([])).toEqual({ colunas: COLUNAS, linhas: [], rodape: [] });
+  });
+
+  it("PERF-003b: a margem por vendedor, pelo nome, da maior para a menor; o vazio quando só vendeu sem custo; o rodapé com as lojas fora", () => {
+    const ANA = "00000000-0000-4000-8000-0000000000a1";
+    const BETO = "00000000-0000-4000-8000-0000000000b2";
+    const ZERADA = {
+      itens: 0, vendido: 0, itens_com_custo: 0, vendido_com_custo: 0, custo: 0, itens_sem_custo: 0, vendido_sem_custo: 0,
+      itens_devolvidos_com_custo: 0, devolvido_com_custo: 0, custo_devolvido: 0, itens_cancelados_com_custo: 0, cancelado_com_custo: 0, custo_cancelado: 0, margem: 0,
+    };
+    const m = lerMargemPorVendedor({
+      vendedores: [
+        { vendedor: BETO, ...ZERADA, itens: 1, vendido: 7_900, itens_sem_custo: 1, vendido_sem_custo: 7_900 },
+        { vendedor: ANA, ...ZERADA, itens: 1, vendido: 7_900, itens_com_custo: 1, vendido_com_custo: 7_900, custo: 1_800, margem: 6_100 },
+      ],
+      lojas_com_custo: 1, lojas_fora: 1,
+    });
+    const t = tabelaDosVendedores(m, new Map([[ANA, "Ana (teste)"], [BETO, "Beto (teste)"]]));
+    expect(t.colunas[0]).toBe("Vendedor");
+    expect(emTexto(t.linhas)).toEqual([["Ana (teste)", "61,00", "79,00", "18,00", "77,2", "100,0", 0, "0,00"], ["Beto (teste)", "", "0,00", "0,00", "", "0,0", 1, "79,00"]]);
+    expect(t.rodape).toEqual([["Atenção: a margem considera só as lojas em que você vê o custo; 1 loja com movimento ficou fora."]]);
+    expect(visaoDaExportacao("vendedores")).toBe("vendedores");
   });
 });

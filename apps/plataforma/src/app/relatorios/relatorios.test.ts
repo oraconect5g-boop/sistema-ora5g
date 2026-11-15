@@ -50,6 +50,11 @@ const cenario = vi.hoisted(() => ({
   erroDosItens: null as null | { code: string },
   producao: null as unknown,
   erroDaProducao: null as null | { code: string },
+  /** PERF-003b: margem_por_vendedor (o padrão é a função ausente: o bloco não aparece) e os nomes de ranking_nomes. */
+  porVendedor: null as unknown,
+  erroPorVendedor: { code: "PGRST202" } as null | { code: string },
+  nomesDoRanking: [] as { id: string; nome: string }[],
+  erroDosNomes: null as null | { code: string },
   /** Resposta de metas_lojas por mês (G4c). */
   metasPorMes: {} as Record<string, unknown>,
   erroDasMetas: null as null | { code: string },
@@ -107,6 +112,8 @@ const supabase = {
     if (nome === "margem_itens") return cenario.loteDosItens ? cenario.loteDosItens(argumentos) : responder(cenario.erroDosItens, cenario.itens);
     if (nome === "connect_painel") return responder(cenario.erroDaProducao, cenario.producao);
     if (nome === "metas_lojas") return responder(cenario.erroDasMetas, cenario.metasPorMes[String(argumentos.p_mes)] ?? null);
+    if (nome === "margem_por_vendedor") return responder(cenario.erroPorVendedor, cenario.porVendedor);
+    if (nome === "ranking_nomes") return responder(cenario.erroDosNomes, cenario.nomesDoRanking.filter((n) => (argumentos.p_vendedores as string[]).includes(n.id)));
     return responder({ code: "PGRST202" }, null);
   },
 };
@@ -136,7 +143,7 @@ import Relatorios from "./page";
 // Linhas, Colunas, BarraSegmentada, Tabela...) ficam como elementos, para o teste conferir o que recebem.
 const APRESENTACAO = new Set([
   "ConteudoRelatorios", "EstadoDoPainel", "Indicadores", "PainelDeVendas", "PainelDeRecebimentos", "PainelDoMix", "PainelDasLojas", "PorRegiao",
-  "PainelDaMargem", "PainelDaCobertura", "PainelDoTicket", "PainelDosDescontos", "PainelDosItens", "PainelDaProducaoPorDia",
+  "PainelDaMargem", "PainelDaCobertura", "PainelDoTicket", "PainelDosDescontos", "PainelDosItens", "PainelDaProducaoPorDia", "PainelDaMargemPorVendedor",
 ]);
 type Elemento = { tipo: string; props: Linha };
 const nomeDoTipo = (tipo: unknown) => (typeof tipo === "string" ? tipo : typeof tipo === "function" ? tipo.name : "");
@@ -364,6 +371,7 @@ beforeEach(() => {
     vendas: VENDAS, anterior: ANTES, erroDeVendas: null, erroDoAnterior: null,
     financeiro: FINANCEIRO, erroDoFinanceiro: null, margem: MARGEM, erroDaMargem: null,
     itens: ITENS, erroDosItens: null, loteDosItens: null, producao: PRODUCAO, erroDaProducao: null, metasPorMes: {}, erroDasMetas: null,
+    porVendedor: null, erroPorVendedor: { code: "PGRST202" }, nomesDoRanking: [], erroDosNomes: null,
     chamadas: {}, errosDasTabelas: {}, lidas: [], sessoes: [],
     tabelas: {
       unidades: [
@@ -837,6 +845,107 @@ describe("Relatórios: quem vê a rede escolhe a loja", () => {
 });
 
 // ---------------------------------------------------------------------------------------------
+// ---------------------------------------------------------------------------------------------
+// PERF-003b: a margem por vendedor de origem (public.margem_por_vendedor), só para quem vê o custo
+// ---------------------------------------------------------------------------------------------
+// Ana: o 10/11 da loja (R$ 820,00 de margem, com a devolução e um item sem custo); Beto: R$ 500,00 vendidos com custo
+// de R$ 600,00 (prejuízo); Caio: só um item sem custo gravado (margem desconhecida, não zero).
+const POR_VENDEDOR = {
+  vendedores: [
+    { vendedor: ANA, ...MARGEM_10 },
+    { vendedor: CAIO, ...MARGEM_08 },
+    { vendedor: BETO, ...MARGEM_ZERADA, itens: 1, vendido: 50_000, itens_com_custo: 1, vendido_com_custo: 50_000, custo: 60_000, margem: -10_000 },
+  ],
+  lojas_com_custo: 1, lojas_fora: 0,
+};
+
+describe("Relatórios: margem por vendedor (PERF-003b)", () => {
+  beforeEach(() => {
+    entrar("gerente");
+    Object.assign(cenario, { porVendedor: POR_VENDEDOR, erroPorVendedor: null, nomesDoRanking: [{ id: ANA, nome: "Ana (teste)" }, { id: BETO, nome: "Beto (teste)" }, { id: CAIO, nome: "Caio (teste)" }] });
+  });
+
+  it("cada vendedor com a margem do período: barras com o sinal, a tabela com a conta, e quem só vendeu sem custo fica fora das barras", async () => {
+    const p = await pagina();
+    expect(cenario.chamadas.margem_por_vendedor).toStrictEqual([{ p_inicio: DESDE["14"], p_fim: FIM, p_unidade: LOJA }]);
+    expect(cenario.chamadas.ranking_nomes).toStrictEqual([{ p_vendedores: [ANA, CAIO, BETO] }]);
+    expect(p.cartoes).toEqual([...PAINEIS_DA_LOJA.slice(0, 4), "Margem por vendedor", ...PAINEIS_DA_LOJA.slice(4)]);
+    const cartao = p.cartao("Margem por vendedor");
+    const barras = cartao.doTipo("BarrasComSinal")[0] as { dados: { rotulo: string; valor: number; detalhe: string }[]; nomeSerie: string };
+    expect(barras.nomeSerie).toBe("Margem bruta");
+    expect(barras.dados.map((d) => [d.rotulo, d.valor])).toEqual([["Ana (teste)", 82_000], ["Beto (teste)", -10_000]]);
+    expect(barras.dados[0]?.detalhe).toMatch(/^\+?28,3\s?% de R\$\s2\.900,00 vendido com custo · 1 sem custo$/);
+    expect(cartao.texto).toContain("1 vendedor só vendeu itens sem custo gravado: a margem dele é desconhecida, não zero, e fica só na tabela.");
+    const tabela = cartao.doTipo("TabelaDoGrafico")[0] as { colunas: string[]; linhas: string[][] };
+    expect(tabela.colunas[0]).toBe("Vendedor");
+    expect(tabela.linhas.map((l) => [l[0], l[1]])).toEqual([["Ana (teste)", "R$ 820,00"], ["Caio (teste)", "sem custo"], ["Beto (teste)", "−R$ 100,00"]]);
+    // a planilha do mesmo recorte, no Excel ou em CSV
+    expect(cartao.enderecos).toContain("/relatorios/exportar?ver=vendedores");
+  });
+
+  it("a planilha por vendedor: o nome, a margem e a conta; sem custo.ver, 403; sem a função, 503; nomes que falham, nada pela metade", async () => {
+    const { resposta, linhas } = await baixar("/relatorios/exportar?ver=vendedores");
+    expect(resposta.status).toBe(200);
+    expect(resposta.headers.get("content-disposition")).toBe('attachment; filename="ora5g-relatorio-margem-por-vendedor-14-dias.csv"');
+    expect(linhas[0]).toBe("Vendedor;Margem bruta (R$);Vendido com custo, líquido (R$);Custo (R$);Margem (%);Cobertura do custo (%);Itens sem custo;Vendido sem custo (R$)");
+    expect(linhas.slice(1)).toEqual([
+      "Ana (teste);820,00;2900,00;2080,00;28,3;97,0;1;100,00",
+      "Caio (teste);;0,00;0,00;;0,0;1;1200,00",
+      "Beto (teste);-100,00;500,00;600,00;-20,0;100,0;0;0,00",
+    ]);
+    // no Excel, a mesma tabela, com a margem como número
+    const excel = await baixar("/relatorios/exportar?ver=vendedores&formato=xlsx");
+    expect(excel.resposta.headers.get("content-disposition")).toBe('attachment; filename="ora5g-relatorio-margem-por-vendedor-14-dias.xlsx"');
+    const folha = linhasDaFolha(abrirXlsx(excel.bytes).get("xl/worksheets/sheet1.xml") ?? "");
+    expect(folha[1]?.slice(0, 2)).toEqual(["Ana (teste)", 820]);
+
+    cenario.porVendedor = { ...POR_VENDEDOR, lojas_fora: 2 };
+    expect((await baixar("/relatorios/exportar?ver=vendedores")).linhas.at(-1)).toBe('"Atenção: a margem considera só as lojas em que você vê o custo; 2 lojas com movimento ficaram fora."');
+    cenario.permissoes.delete("custo.ver");
+    expect((await baixar("/relatorios/exportar?ver=vendedores")).resposta.status).toBe(403);
+    entrar("gerente");
+    cenario.erroPorVendedor = { code: "PGRST202" };
+    expect((await baixar("/relatorios/exportar?ver=vendedores")).resposta.status).toBe(503);
+    cenario.erroPorVendedor = null;
+    cenario.erroDosNomes = { code: "57014" };
+    await expect(baixar("/relatorios/exportar?ver=vendedores")).rejects.toThrow();
+  });
+
+  it("nome que o banco não devolve fica \"Vendedor não identificado\" (numerado, para não se confundirem); loja fora da margem é dita", async () => {
+    cenario.nomesDoRanking = [{ id: ANA, nome: "Ana (teste)" }];
+    cenario.porVendedor = { ...POR_VENDEDOR, lojas_fora: 1 };
+    const cartao = (await pagina()).cartao("Margem por vendedor");
+    const barras = cartao.doTipo("BarrasComSinal")[0] as { dados: { rotulo: string }[] };
+    // o Caio (sem custo, fora das barras) é o primeiro sem nome; o Beto, o segundo
+    expect(barras.dados.map((d) => d.rotulo)).toEqual(["Ana (teste)", "Vendedor não identificado (2)"]);
+    expect(cartao.texto).toContain("A margem considera só as lojas em que você vê o custo; 1 loja com movimento ficou fora.");
+  });
+
+  it("sem a função no banco o bloco não aparece; falha, conta que não fecha ou nomes que não se leram: falha, sem número", async () => {
+    cenario.erroPorVendedor = { code: "PGRST202" };
+    expect((await pagina()).cartoes).toEqual(PAINEIS_DA_LOJA);
+    expect(cenario.chamadas.ranking_nomes).toBeUndefined();
+
+    for (const caso of [
+      () => { cenario.erroPorVendedor = { code: "57014" }; },
+      () => { cenario.erroPorVendedor = null; cenario.porVendedor = { ...POR_VENDEDOR, vendedores: [{ vendedor: ANA, ...MARGEM_10, margem: 1 }] }; },
+      () => { cenario.porVendedor = POR_VENDEDOR; cenario.erroDosNomes = { code: "57014" }; },
+    ]) {
+      caso();
+      const cartao = (await pagina()).cartao("Margem por vendedor");
+      expect(cartao.doTipo("Aviso")).toMatchObject([{ tom: "perigo", titulo: "Não foi possível ler agora" }]);
+      expect(cartao.doTipo("BarrasComSinal")).toEqual([]);
+    }
+  });
+
+  it("sem movimento: o cartão diz que não houve; só loja fora: sem permissão", async () => {
+    cenario.porVendedor = { vendedores: [], lojas_com_custo: 0, lojas_fora: 0 };
+    expect((await pagina()).cartao("Margem por vendedor").texto).toContain("Nenhuma venda, devolução ou cancelamento no período");
+    cenario.porVendedor = { vendedores: [], lojas_com_custo: 0, lojas_fora: 2 };
+    expect((await pagina()).cartao("Margem por vendedor").doTipo("Aviso")).toMatchObject([{ tom: "neutro", titulo: "Sem permissão" }]);
+  });
+});
+
 describe("Relatórios: sem a permissão de ver o custo", () => {
   beforeEach(() => {
     entrar("gerente");
@@ -844,9 +953,13 @@ describe("Relatórios: sem a permissão de ver o custo", () => {
   });
 
   it("a margem não é pedida ao banco; um cartão diz por quê, e o resto do relatório continua", async () => {
+    cenario.erroPorVendedor = null;
     const p = await pagina();
     expect(cenario.chamadas.margem_painel).toBeUndefined();
     expect(cenario.chamadas.margem_itens).toBeUndefined();
+    // PERF-003b: nem a margem por vendedor nem os nomes
+    expect(cenario.chamadas.margem_por_vendedor).toBeUndefined();
+    expect(cenario.chamadas.ranking_nomes).toBeUndefined();
     expect(cenario.chamadas.vendas_painel).toHaveLength(2);
     expect(p.cartoes).toEqual(PAINEIS_SEM_CUSTO);
     expect(p.indicadores).toEqual(INDICADORES);

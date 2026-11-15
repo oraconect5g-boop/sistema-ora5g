@@ -1,7 +1,8 @@
 // Exportação dos Relatórios (lote G2a), em CSV para o Excel em português ou, desde o FIN-009c, no próprio Excel
 // (?formato=xlsx: número, data e percentual de verdade; o total e os avisos abaixo da tabela). Dois arquivos:
 //   ?ver=dias (o padrão): uma linha por dia, com as vendas e, para quem vê o custo, a margem bruta;
-//   ?ver=itens: o detalhe da margem, uma linha por item das vendas concluídas (só para quem vê o custo).
+//   ?ver=itens: o detalhe da margem, uma linha por item das vendas concluídas (só para quem vê o custo);
+//   ?ver=vendedores (PERF-003b): a margem por vendedor de origem, com o nome do ranking (só para quem vê o custo).
 // Mesma permissão e mesmo recorte da tela, conferidos aqui no servidor; o banco confere de novo cada
 // número (RLS, e custo.ver loja a loja dentro das funções da margem). Se uma leitura falha, o arquivo
 // inteiro falha: arquivo pela metade, ou com zero no lugar do que não foi lido, passaria por completo.
@@ -11,11 +12,11 @@ import { FalhaDoServico, obterSessao } from "../../../lib/acesso/sessao";
 import { formatoPedido, type SecaoCsv } from "../../../lib/csv";
 import type { LojaDoFiltro } from "../../../lib/financeiro/escopo";
 import { LIMITE_DA_EXPORTACAO } from "../../../lib/financeiro/registros";
-import { consultarVendas } from "../../../lib/inicio/consulta";
+import { consultarVendas, nomesDoRanking } from "../../../lib/inicio/consulta";
 import type { Leitura } from "../../../lib/leitura-do-banco";
-import { consultarMargem, todosOsItensDaMargem } from "../../../lib/margem/consulta";
+import { consultarMargem, consultarMargemPorVendedor, todosOsItensDaMargem } from "../../../lib/margem/consulta";
 import { escopoDosRelatorios, podeVerCusto } from "../../../lib/relatorios/consulta";
-import { janelasDoRelatorio, periodoDoRelatorio, tabelaDosDias, tabelaDosItens, visaoDaExportacao } from "../../../lib/relatorios/painel";
+import { janelasDoRelatorio, periodoDoRelatorio, tabelaDosDias, tabelaDosItens, tabelaDosVendedores, visaoDaExportacao } from "../../../lib/relatorios/painel";
 import { respostaDaPlanilha } from "../../../lib/xlsx-servidor";
 
 export const dynamic = "force-dynamic";
@@ -40,6 +41,7 @@ export async function GET(pedido: Request) {
   const ver = visaoDaExportacao(url.searchParams.get("ver"));
   const custo = await podeVerCusto(supabase, turno.id);
   if (ver === "itens" && !custo) return texto("Sem permissão para exportar a margem por item: ela depende de ver o custo dos produtos.", 403);
+  if (ver === "vendedores" && !custo) return texto("Sem permissão para exportar a margem por vendedor: ela depende de ver o custo dos produtos.", 403);
 
   const daRede = permissoes.has("venda.ver_todas");
   const lido = await escopoDosRelatorios(supabase, url.searchParams.get("loja") ?? undefined, turno, daRede);
@@ -55,6 +57,14 @@ export async function GET(pedido: Request) {
     if ("recusa" in itens) return itens.recusa;
     tabela = tabelaDosItens(itens.dados.itens);
     if (itens.dados.cortado) tabela.rodape.push([`Atenção: exportação limitada a ${LIMITE_DA_EXPORTACAO} itens; escolha um período menor ou uma loja.`]);
+  } else if (ver === "vendedores") {
+    // PERF-003b: banco sem a função, 503 com o motivo; falha da margem ou dos nomes, o arquivo inteiro falha.
+    const porVendedor = await consultarMargemPorVendedor(supabase, atual, unidade);
+    if (porVendedor === null) return texto("Exportação indisponível neste ambiente: o banco ainda não tem a margem por vendedor.", 503);
+    if (porVendedor.estado !== "ok") throw new FalhaDoServico("relatorios_exportar");
+    const nomes = await nomesDoRanking(supabase, porVendedor.dados.vendedores.map((v) => v.vendedor));
+    if (nomes.estado !== "ok") throw new FalhaDoServico("relatorios_exportar_nomes");
+    tabela = tabelaDosVendedores(porVendedor.dados, nomes.dados);
   } else {
     const [leituraDasVendas, leituraDaMargem] = await Promise.all([
       consultarVendas(supabase, atual, { unidade, vendedor: null }, false),
@@ -70,8 +80,8 @@ export async function GET(pedido: Request) {
   const secoes: SecaoCsv[] = [{ colunas: tabela.colunas, linhas: tabela.linhas }, ...(tabela.rodape.length ? [{ linhas: tabela.rodape }] : [])];
   return respostaDaPlanilha(
     formatoPedido(url.searchParams.get("formato"), "csv"),
-    `ora5g-relatorio-${ver === "itens" ? "margem-por-item" : "por-dia"}-${periodo}-dias`,
-    ver === "itens" ? "Margem por item" : "Por dia",
+    `ora5g-relatorio-${ver === "itens" ? "margem-por-item" : ver === "vendedores" ? "margem-por-vendedor" : "por-dia"}-${periodo}-dias`,
+    ver === "itens" ? "Margem por item" : ver === "vendedores" ? "Margem por vendedor" : "Por dia",
     secoes,
   );
 }

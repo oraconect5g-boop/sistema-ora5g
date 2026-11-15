@@ -9,13 +9,13 @@ import type { ProducaoDoBanco } from "../connect/producao";
 import type { Escopo, LojaDoFiltro } from "../financeiro/escopo";
 import type { ResumoFinanceiro } from "../financeiro/painel";
 import { POR_PAGINA } from "../financeiro/registros";
-import { consultarFinanceiro, consultarVendas, lojasQueVendem } from "../inicio/consulta";
+import { consultarFinanceiro, consultarVendas, lojasQueVendem, nomesDoRanking } from "../inicio/consulta";
 import { escopoDoInicio, lojasDoFiltro, type Leitura, type VendasDoBanco } from "../inicio/painel";
-import { consultarItensDaMargem, consultarMargem } from "../margem/consulta";
+import { consultarItensDaMargem, consultarMargem, consultarMargemPorVendedor } from "../margem/consulta";
 import { consultarMetasDasLojas } from "../metas/consulta";
 import { mesesDaJanela, type MetasDasLojas } from "../metas/painel";
 import type { Janela } from "../financeiro/painel";
-import type { ItensDaMargem, MargemDoBanco } from "../margem/painel";
+import type { ItensDaMargem, MargemDoBanco, MargemPorVendedor } from "../margem/painel";
 import { janelasDoRelatorio, type PeriodoDoRelatorio } from "./painel";
 
 type Cliente = Awaited<ReturnType<typeof obterSessao>>["supabase"];
@@ -58,6 +58,11 @@ export type Relatorios = {
   margem: Leitura<MargemDoBanco> | "sem_permissao";
   /** Uma página do detalhe da margem, por item. */
   itens: Leitura<ItensDaMargem> | "sem_permissao";
+  /**
+   * PERF-003b: a margem por vendedor de origem e os nomes (ranking_nomes). "sem_permissao": sem custo.ver, e o banco
+   * não foi perguntado; null: o banco ainda não tem a função (o bloco não aparece).
+   */
+  vendedores: Leitura<{ margem: MargemPorVendedor; nomes: ReadonlyMap<string, string> }> | "sem_permissao" | null;
   /** Chips vendidos e operações do Ora Connect confirmadas (lote G4a). */
   producao: Leitura<ProducaoDoBanco>;
   /** As metas das lojas em cada mês que o período toca (G4c), para a meta do dia. null: quem pede não acompanha metas. */
@@ -91,21 +96,31 @@ export async function lerRelatorios(supabase: Cliente, pedido: PedidoDosRelatori
     // Sem a lista de lojas não dá para conferir a loja pedida no endereço: nenhum número é mostrado.
     return {
       periodo, daRede, janelas, pagina, escopo: escopoDoInicio(pedido.loja, [], turno, daRede), filtroDeLojas: [], cadastro: [],
-      vendas: FALHA, anterior: FALHA, financeiro: FALHA, margem: margemSemPedir, itens: margemSemPedir, producao: FALHA, metas: pedido.metas ? FALHA : null,
+      // A margem por vendedor (PERF-003b) é um bloco que some sem a função no banco: sem pergunta, não aparece.
+      vendas: FALHA, anterior: FALHA, financeiro: FALHA, margem: margemSemPedir, itens: margemSemPedir, vendedores: pedido.custo ? null : "sem_permissao", producao: FALHA, metas: pedido.metas ? FALHA : null,
     };
   }
   const { escopo, cadastro } = lido;
   const filtro = { unidade: escopo.unidade, vendedor: null };
-  const [vendas, anterior, financeiro, margem, itens, producao, metas] = await Promise.all([
+  const [vendas, anterior, financeiro, margem, itens, vendedores, producao, metas] = await Promise.all([
     consultarVendas(supabase, janelas.atual, filtro, false),
     consultarVendas(supabase, janelas.anterior, filtro, false),
     consultarFinanceiro(supabase, janelas.atual, escopo.unidade),
     pedido.custo ? consultarMargem(supabase, janelas.atual, escopo.unidade) : "sem_permissao" as const,
     pedido.custo ? consultarItensDaMargem(supabase, janelas.atual, escopo.unidade, { limite: POR_PAGINA, apos: (pagina - 1) * POR_PAGINA }) : "sem_permissao" as const,
+    pedido.custo ? margemDosVendedores(supabase, janelas.atual, escopo.unidade) : "sem_permissao" as const,
     consultarProducao(supabase, janelas.atual, filtro),
     pedido.metas ? metasDoPeriodo(supabase, janelas.atual, escopo.unidade) : null,
   ]);
-  return { periodo, daRede, janelas, pagina, escopo, cadastro, filtroDeLojas: daRede ? lojasDoFiltro(cadastro, turno) : [], vendas, anterior, financeiro, margem, itens, producao, metas };
+  return { periodo, daRede, janelas, pagina, escopo, cadastro, filtroDeLojas: daRede ? lojasDoFiltro(cadastro, turno) : [], vendas, anterior, financeiro, margem, itens, vendedores, producao, metas };
+}
+
+/** PERF-003b: a margem por vendedor e, depois, os nomes. Nome que não se leu é falha do bloco inteiro (nunca meia tabela). */
+async function margemDosVendedores(supabase: Cliente, janela: Janela, unidade: string | null): Promise<Relatorios["vendedores"]> {
+  const margem = await consultarMargemPorVendedor(supabase, janela, unidade);
+  if (margem === null || margem.estado !== "ok") return margem;
+  const nomes = await nomesDoRanking(supabase, margem.dados.vendedores.map((v) => v.vendedor));
+  return nomes.estado === "ok" ? { estado: "ok", dados: { margem: margem.dados, nomes: nomes.dados } } : FALHA;
 }
 
 /** As metas de cada mês que a janela toca (um ou dois): todas lidas, ou o pior estado (falha antes de indisponível). */

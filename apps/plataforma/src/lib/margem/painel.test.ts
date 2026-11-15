@@ -6,7 +6,7 @@ import { describe, expect, it } from "vitest";
 
 import { ValorForaDoLimite } from "../dinheiro";
 import { RespostaInesperada } from "../financeiro/painel";
-import { lerItensDaMargem, lerMargem, numerosDaMargem, situacaoDaMargem, temCustoGravado, type MargemDoBanco } from "./painel";
+import { lerItensDaMargem, lerMargem, lerMargemPorVendedor, numerosDaMargem, situacaoDaMargem, temCustoGravado, vendedoresDaMargem, type MargemDoBanco } from "./painel";
 
 const ZERO = {
   itens: 0, vendido: 0, itens_com_custo: 0, vendido_com_custo: 0, custo: 0, itens_sem_custo: 0, vendido_sem_custo: 0,
@@ -182,5 +182,45 @@ describe("leitura da resposta de margem_itens", () => {
     // Custo sem margem (ou margem sem custo): a linha não fecha.
     expect(() => lerItensDaMargem({ total: 1, itens: [{ ...ITEM, margem: null }] })).toThrow(RespostaInesperada);
     expect(() => lerItensDaMargem({ total: 1, itens: [{ ...ITEM, custo_unitario: null }] })).toThrow(RespostaInesperada);
+  });
+});
+
+describe("margem por vendedor (PERF-003b)", () => {
+  const ANA = "00000000-0000-4000-8000-0000000000a1";
+  const BETO = "00000000-0000-4000-8000-0000000000b2";
+  const CAIO = "00000000-0000-4000-8000-0000000000c3";
+  const RESPOSTA = {
+    vendedores: [{ vendedor: ANA, ...DIA_20 }, { vendedor: CAIO, ...SO_SEM_CUSTO }, { vendedor: BETO, ...ZERO, ...CANCELAMENTO, margem: -6_100 }],
+    lojas_com_custo: 1, lojas_fora: 1,
+  };
+
+  it("cada linha com o vendedor e as parcelas que fecham; forma inesperada é falha", () => {
+    const m = lerMargemPorVendedor(RESPOSTA);
+    expect(m.lojasComCusto).toBe(1);
+    expect(m.lojasFora).toBe(1);
+    expect(m.vendedores.map((v) => [v.vendedor, v.margem, v.itensSemCusto])).toEqual([[ANA, 24_300, 0], [CAIO, 0, 2], [BETO, -6_100, 0]]);
+    expect(lerMargemPorVendedor({ vendedores: [], lojas_com_custo: 0, lojas_fora: 0 }).vendedores).toEqual([]);
+    for (const ruim of [
+      null, { ...RESPOSTA, vendedores: [{ ...RESPOSTA.vendedores[0], vendedor: "ana" }] },
+      { ...RESPOSTA, vendedores: [RESPOSTA.vendedores[0], RESPOSTA.vendedores[0]] },
+      { ...RESPOSTA, vendedores: [{ ...RESPOSTA.vendedores[0], margem: 24_301 }] },
+      { ...RESPOSTA, lojas_fora: undefined },
+    ]) {
+      // as duas formas de erro de leitura que a consulta transforma em falha (nunca em zero)
+      let erro: unknown = null;
+      try { lerMargemPorVendedor(ruim); } catch (e) { erro = e; }
+      expect(erro instanceof RespostaInesperada || erro instanceof ValorForaDoLimite, JSON.stringify(ruim)?.slice(0, 80)).toBe(true);
+    }
+  });
+
+  it("as linhas da tela: o nome do ranking (ou não identificado), os números M1 a M3, da maior margem para a menor", () => {
+    const linhas = vendedoresDaMargem(lerMargemPorVendedor(RESPOSTA), new Map([[ANA, "Ana (teste)"]]));
+    expect(linhas.map((l) => [l.nome, l.margem, l.temCusto])).toEqual([
+      ["Ana (teste)", 24_300, true], ["Vendedor não identificado", 0, false], ["Vendedor não identificado (2)", -6_100, true],
+    ]);
+    expect(linhas[0]).toMatchObject({ base: 31_500, custoLiquido: 7_200, cobertura: 1 });
+    expect(linhas[0]?.fracao).toBeCloseTo(24_300 / 31_500, 10);
+    // sem base positiva não há percentual (só o cancelamento)
+    expect(linhas[2]?.fracao).toBeNull();
   });
 });
