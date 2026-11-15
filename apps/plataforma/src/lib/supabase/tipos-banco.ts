@@ -2065,6 +2065,7 @@ export type Database = {
           motivo_estorno: string | null
           numero: number
           organizacao_id: string
+          pedido_id: string | null
           registrada_em: string | null
           situacao: string
           tipo: string
@@ -2085,6 +2086,7 @@ export type Database = {
           motivo_estorno?: string | null
           numero?: never
           organizacao_id: string
+          pedido_id?: string | null
           registrada_em?: string | null
           situacao?: string
           tipo: string
@@ -2105,6 +2107,7 @@ export type Database = {
           motivo_estorno?: string | null
           numero?: never
           organizacao_id?: string
+          pedido_id?: string | null
           registrada_em?: string | null
           situacao?: string
           tipo?: string
@@ -2132,6 +2135,13 @@ export type Database = {
             columns: ["fornecedor_id", "organizacao_id"]
             isOneToOne: false
             referencedRelation: "fornecedores"
+            referencedColumns: ["id", "organizacao_id"]
+          },
+          {
+            foreignKeyName: "entradas_estoque_pedido_fkey"
+            columns: ["pedido_id", "organizacao_id"]
+            isOneToOne: false
+            referencedRelation: "pedidos_compra"
             referencedColumns: ["id", "organizacao_id"]
           },
           {
@@ -4174,6 +4184,147 @@ export type Database = {
             isOneToOne: false
             referencedRelation: "permissoes"
             referencedColumns: ["codigo"]
+          },
+        ]
+      }
+      pedido_compra_itens: {
+        Row: {
+          custo_unitario_centavos: number | null
+          linha: number
+          organizacao_id: string
+          pedido_id: string
+          quantidade: number
+          variante_id: string
+        }
+        Insert: {
+          custo_unitario_centavos?: number | null
+          linha: number
+          organizacao_id: string
+          pedido_id: string
+          quantidade: number
+          variante_id: string
+        }
+        Update: {
+          custo_unitario_centavos?: number | null
+          linha?: number
+          organizacao_id?: string
+          pedido_id?: string
+          quantidade?: number
+          variante_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "pedido_compra_itens_pedido_id_fkey"
+            columns: ["pedido_id"]
+            isOneToOne: false
+            referencedRelation: "pedidos_compra"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "pedido_compra_itens_variante_id_organizacao_id_fkey"
+            columns: ["variante_id", "organizacao_id"]
+            isOneToOne: false
+            referencedRelation: "variantes"
+            referencedColumns: ["id", "organizacao_id"]
+          },
+        ]
+      }
+      pedidos_compra: {
+        Row: {
+          chave: string
+          conteudo: string
+          criado_em: string
+          criado_por: string
+          documento: string | null
+          encerrado_em: string | null
+          encerrado_por: string | null
+          fornecedor_id: string
+          id: string
+          motivo_encerramento: string | null
+          numero: number
+          observacao: string | null
+          organizacao_id: string
+          previsto_para: string | null
+          situacao: string
+          total_previsto_centavos: number | null
+          total_unidades: number
+          unidade_id: string
+        }
+        Insert: {
+          chave: string
+          conteudo: string
+          criado_em?: string
+          criado_por: string
+          documento?: string | null
+          encerrado_em?: string | null
+          encerrado_por?: string | null
+          fornecedor_id: string
+          id?: string
+          motivo_encerramento?: string | null
+          numero?: never
+          observacao?: string | null
+          organizacao_id: string
+          previsto_para?: string | null
+          situacao?: string
+          total_previsto_centavos?: number | null
+          total_unidades: number
+          unidade_id: string
+        }
+        Update: {
+          chave?: string
+          conteudo?: string
+          criado_em?: string
+          criado_por?: string
+          documento?: string | null
+          encerrado_em?: string | null
+          encerrado_por?: string | null
+          fornecedor_id?: string
+          id?: string
+          motivo_encerramento?: string | null
+          numero?: never
+          observacao?: string | null
+          organizacao_id?: string
+          previsto_para?: string | null
+          situacao?: string
+          total_previsto_centavos?: number | null
+          total_unidades?: number
+          unidade_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "pedidos_compra_criado_por_fkey"
+            columns: ["criado_por"]
+            isOneToOne: false
+            referencedRelation: "perfis_usuario"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "pedidos_compra_encerrado_por_fkey"
+            columns: ["encerrado_por"]
+            isOneToOne: false
+            referencedRelation: "perfis_usuario"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "pedidos_compra_fornecedor_id_organizacao_id_fkey"
+            columns: ["fornecedor_id", "organizacao_id"]
+            isOneToOne: false
+            referencedRelation: "fornecedores"
+            referencedColumns: ["id", "organizacao_id"]
+          },
+          {
+            foreignKeyName: "pedidos_compra_organizacao_id_fkey"
+            columns: ["organizacao_id"]
+            isOneToOne: false
+            referencedRelation: "organizacoes"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "pedidos_compra_unidade_id_organizacao_id_fkey"
+            columns: ["unidade_id", "organizacao_id"]
+            isOneToOne: false
+            referencedRelation: "unidades"
+            referencedColumns: ["id", "organizacao_id"]
           },
         ]
       }
@@ -6818,6 +6969,31 @@ export type Database = {
       }
       pagamentos_por_terminal: {
         Args: { p_fim: string; p_inicio: string; p_unidade?: string }
+        Returns: Json
+      }
+      pedido_compra: { Args: { p_pedido: string }; Returns: Json }
+      pedido_compra_criar: {
+        Args: {
+          p_chave: string
+          p_documento: string
+          p_fornecedor: string
+          p_itens: Json
+          p_observacao: string
+          p_previsto: string
+          p_unidade: string
+        }
+        Returns: Json
+      }
+      pedido_compra_encerrar: {
+        Args: { p_motivo: string; p_pedido: string }
+        Returns: string
+      }
+      pedido_compra_ligar_entrada: {
+        Args: { p_entrada: string; p_motivo: string; p_pedido: string }
+        Returns: boolean
+      }
+      pedidos_compra: {
+        Args: { p_situacao?: string; p_unidade?: string }
         Returns: Json
       }
       pedir_aprovacao: {

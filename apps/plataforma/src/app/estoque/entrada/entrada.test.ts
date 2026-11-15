@@ -29,6 +29,8 @@ const cenario = vi.hoisted(() => ({
   /** Tabelas lidas direto (sem função do banco) e os filtros de igualdade pedidos, na ordem. */
   lidas: [] as string[],
   filtros: [] as [tabela: string, coluna: string, valor: unknown][],
+  /** INV-009a: erro da leitura direta de uma tabela (ex.: a coluna pedido_id que o banco ainda não tem). */
+  errosDasTabelas: {} as Record<string, { code: string }>,
 }));
 
 vi.mock("next/headers", () => ({ cookies: async () => ({ getAll: () => [], set: () => undefined }) }));
@@ -54,7 +56,10 @@ class Consulta {
   is() { return this; }
   order() { return this; }
   limit() { return this; }
-  maybeSingle() { return Promise.resolve({ data: this.linhas[0] ?? null, error: null }); }
+  maybeSingle() {
+    const erro = cenario.errosDasTabelas[this.nome];
+    return Promise.resolve(erro ? { data: null, error: erro } : { data: this.linhas[0] ?? null, error: null });
+  }
   then(resolver: (r: { data: Record<string, unknown>[]; error: null }) => unknown) {
     return Promise.resolve({ data: this.linhas, error: null }).then(resolver);
   }
@@ -73,7 +78,7 @@ const sessaoFicticia = {
 };
 vi.mock("../../../lib/acesso/sessao", () => ({ FalhaDoServico: class extends Error {}, obterSessao: async () => sessaoFicticia }));
 
-import { buscarItensParaEntrada, estornarEntrada, registrarEntrada, salvarFornecedor } from "./acoes";
+import { buscarItensParaEntrada, estornarEntrada, ligarPedido, registrarEntrada, salvarFornecedor } from "./acoes";
 import EntradaDeMercadoria from "./page";
 
 // O texto da tela: tudo o que a página montou, na ordem (inclusive endereços e classes). Componentes não
@@ -137,6 +142,7 @@ beforeEach(() => {
   cenario.lidas = [];
   cenario.filtros = [];
   cenario.respostas = { estoque_entradas: historico([entrada()]) };
+  cenario.errosDasTabelas = {};
   cenario.tabelas = {
     unidades: [{ id: LOJA, organizacao_id: ORG }],
     fornecedores: [{ id: FORN, nome: "Distribuidora Teste", ativo: true }],
@@ -205,7 +211,7 @@ describe("/estoque/entrada: permissão e histórico", () => {
     expect(t).toContain("21 unidade(s): APA-0001 × 1 (Seminovo), ACE-0001 × 20");
     expect(t).toContain("Gerente Teste · 21 unidade(s) · custo oculto para o seu perfil");
     expect(t).toContain("SKU APA-0001 · 1 unidade(s) · Seminovo");
-    expect(t).toContain("O estorno não desfaz o custo: se esta entrada informou custo, ele continua valendo");
+    expect(t).toContain("O estorno também volta o custo: se esta entrada informou o custo e foi a última a defini-lo");
     for (const ausente of ["R$", "custo unitário", "sem custo informado", "Hoje o banco recusaria"]) expect(t).not.toContain(ausente);
   });
 
@@ -216,7 +222,7 @@ describe("/estoque/entrada: permissão e histórico", () => {
     const t = await tela({ entrada: ENTRADA });
     expect(t).toContain("1 unidade(s) · sem custo informado: APA-0001 × 1 (Seminovo)");
     expect(t).toContain("SKU APA-0001 · 1 unidade(s) · Seminovo · sem custo informado");
-    for (const ausente of ["R$", "custo oculto", "O estorno não desfaz o custo"]) expect(t).not.toContain(ausente);
+    for (const ausente of ["R$", "custo oculto", "O estorno também volta o custo"]) expect(t).not.toContain(ausente);
   });
 
   it("histórico completo, paginado pelo número: a primeira página aponta a continuação (REV-NOV-009)", async () => {
@@ -325,7 +331,7 @@ describe("/estoque/entrada: a entrada aberta", () => {
       `1 IMEI/ICCID fora do estoque livre desta loja: ${IMEI} (vendido).`,
       "SKU ACE-0001: entraram 20, livres hoje 15.",
       "Quem decide é o banco, que confere de novo na hora do estorno.",
-      "O estorno não desfaz o custo: o custo informado nesta entrada continua sendo o custo atual da variação",
+      "O estorno também volta o custo: se esta entrada foi a última a definir o custo de uma variação",
       `hidden entrada ${ENTRADA}`, "Motivo do estorno", "Fechar esta entrada", "aberta acima",
     ]) expect(t).toContain(trecho);
     expect(t).toMatch(new RegExp(`${IMEI}[^0-9]*aviso vendido`));
@@ -366,7 +372,7 @@ describe("/estoque/entrada: a entrada aberta", () => {
     expect(t).toContain("Estornada em 11/11/2026 12:30 por Gerente Teste");
     expect(t).toContain("Motivo: Lançada na loja errada. As posições abaixo são as de hoje");
     expect(t).toMatch(new RegExp(`${IMEI}[^0-9]*neutro fora do estoque \\(baixado\\)`));
-    for (const ausente of ["Estornar esta entrada", "hidden entrada", "Hoje o banco recusaria", "O estorno não desfaz o custo"]) expect(t).not.toContain(ausente);
+    for (const ausente of ["Estornar esta entrada", "hidden entrada", "Hoje o banco recusaria", "O estorno também volta o custo"]) expect(t).not.toContain(ausente);
   });
 
   it("entrada que não é desta loja: aviso com o número pedido, formulário e histórico continuam", async () => {
@@ -526,5 +532,92 @@ describe("ações da entrada", () => {
     expect(achados.map((a) => a.tipo).sort()).toEqual(["acessorio", "aparelho"]);
     expect(cenario.filtros).toContainEqual(["variantes", "produtos.ativo", true]);
     expect(await buscarItensParaEntrada("g")).toEqual([]);
+  });
+});
+
+// ---------------------------------------------------------------------------------------------
+// INV-009a: o pedido de compra da entrada aberta
+// ---------------------------------------------------------------------------------------------
+const PEDIDO = "00000000-0000-4000-9000-0000000000a7";
+const OUTRO_FORN = "00000000-0000-4000-9000-000000000061";
+const pedidoDaLista = (extra: Record<string, unknown> = {}) => ({
+  id: PEDIDO, numero: 7, unidade_id: LOJA, fornecedor_id: FORN, fornecedor: "Distribuidora Teste", documento: "COT-77", previsto_para: "2026-11-20",
+  situacao: "aberto", criado_em: "2026-11-10T12:00:00Z", encerrado_em: null, motivo_encerramento: null, unidades: 12, recebidas: 0, entradas: 0, total_previsto: null, ...extra,
+});
+const pedidoAberto = (extra: Record<string, unknown> = {}) => ({
+  ...pedidoDaLista(), observacao: null, ve_custo: true, itens: [], fora_do_pedido: [], entradas: [], ...extra,
+});
+
+describe("entrada aberta: o pedido de compra (INV-009a)", () => {
+  beforeEach(() => {
+    cenario.respostas.estoque_entrada = aberta();
+    cenario.tabelas.entradas_estoque = [{ id: ENTRADA, fornecedor_id: FORN, pedido_id: null }];
+  });
+
+  it("a compra sem pedido oferece os pedidos abertos da loja do mesmo fornecedor; sem nenhum, leva aos pedidos", async () => {
+    cenario.respostas.pedidos_compra = { data: [pedidoDaLista(), pedidoDaLista({ id: "00000000-0000-4000-9000-0000000000a8", numero: 8, fornecedor_id: OUTRO_FORN })], error: null };
+    let t = await tela({ entrada: ENTRADA });
+    expect(cenario.chamadas.find((c) => c.nome === "pedidos_compra")?.argumentos).toEqual({ p_unidade: LOJA, p_situacao: "aberto" });
+    expect(t).toContain("Pedido de compra");
+    expect(t).toContain(`${PEDIDO} nº 7 · COT-77 · previsto 20/11`);
+    expect(t).not.toContain("nº 8");
+    expect(t).toContain("Ligar ao pedido");
+    cenario.respostas.pedidos_compra = { data: [pedidoDaLista({ fornecedor_id: OUTRO_FORN })], error: null };
+    t = await tela({ entrada: ENTRADA });
+    expect(t).toContain("Nenhum pedido aberto deste fornecedor nesta loja.");
+    expect(t).toContain("/estoque/pedidos");
+  });
+
+  it("ligada: o atalho para a conferência no pedido; desligar só enquanto o pedido está aberto", async () => {
+    cenario.tabelas.entradas_estoque = [{ id: ENTRADA, fornecedor_id: FORN, pedido_id: PEDIDO }];
+    cenario.respostas.pedido_compra = { data: pedidoAberto(), error: null };
+    let t = await tela({ entrada: ENTRADA });
+    expect(t).toContain(`/estoque/pedidos?pedido=${PEDIDO}`);
+    expect(t).toContain("pedido nº 7 : a conferência está no pedido.");
+    expect(t).toContain("Desligar do pedido (ligada errado)");
+    cenario.respostas.pedido_compra = { data: pedidoAberto({ situacao: "encerrado", encerrado_em: "2026-11-12T12:00:00Z", motivo_encerramento: "Recebido" }), error: null };
+    t = await tela({ entrada: ENTRADA });
+    expect(t).toContain("(pedido encerrado).");
+    expect(t).not.toContain("Desligar do pedido");
+  });
+
+  it("banco sem os pedidos (coluna ausente): o bloco some; falha de leitura: diz; a carga inicial nem pergunta", async () => {
+    cenario.errosDasTabelas.entradas_estoque = { code: "42703" };
+    expect(await tela({ entrada: ENTRADA })).not.toContain("Pedido de compra nº");
+    expect(await tela({ entrada: ENTRADA })).not.toContain("Ligar ao pedido");
+    cenario.errosDasTabelas = {};
+    cenario.respostas.pedidos_compra = { data: null, error: { code: "57014" } };
+    vi.spyOn(console, "error").mockImplementation(() => undefined);
+    expect(await tela({ entrada: ENTRADA })).toContain("Não deu para ler os pedidos de compra agora.");
+    cenario.chamadas = [];
+    cenario.respostas.estoque_entrada = aberta({ tipo: "carga_inicial", fornecedor: null, documento: null });
+    await tela({ entrada: ENTRADA });
+    expect(cenario.chamadas.some((c) => c.nome === "pedidos_compra")).toBe(false);
+  });
+
+  it("ligar e desligar mandam a entrada, o pedido e o motivo; cada recusa volta com a mensagem certa", async () => {
+    cenario.respostas.pedido_compra_ligar_entrada = { data: true, error: null };
+    expect(await destinoDe(ligarPedido(formulario({ entrada: ENTRADA, pedido: PEDIDO, motivo: "NF do pedido" })))).toBe(`/estoque/entrada?ok=pedido_ligado&entrada=${ENTRADA}`);
+    expect(cenario.chamadas.at(-1)).toEqual({ nome: "pedido_compra_ligar_entrada", argumentos: { p_entrada: ENTRADA, p_pedido: PEDIDO, p_motivo: "NF do pedido" } });
+    expect(await destinoDe(ligarPedido(formulario({ entrada: ENTRADA, pedido: "", motivo: "Ligada errado" })))).toBe(`/estoque/entrada?ok=pedido_desligado&entrada=${ENTRADA}`);
+    expect(cenario.chamadas.at(-1)?.argumentos.p_pedido).toBeNull();
+    cenario.respostas.pedido_compra_ligar_entrada = { data: false, error: null };
+    expect(await destinoDe(ligarPedido(formulario({ entrada: ENTRADA, pedido: PEDIDO, motivo: "De novo" })))).toBe(`/estoque/entrada?ok=pedido_sem_mudanca&entrada=${ENTRADA}`);
+    for (const [erro, chave] of [
+      [{ code: "22023", message: "O pedido é de outra loja" }, "pedido_outra_loja"], [{ code: "22023", message: "O pedido é de outro fornecedor" }, "pedido_outro_fornecedor"],
+      [{ code: "22023", message: "O pedido já foi encerrado" }, "pedido_encerrado"], [{ code: "22023", message: "O pedido desta entrada já foi encerrado: a ligação fica" }, "pedido_ligacao_fica"],
+      [{ code: "22023", message: "Só a entrada de compra de fornecedor recebe pedido" }, "pedido_so_compra"], [{ code: "22023", message: "A entrada foi estornada: não recebe pedido" }, "pedido_estornada"],
+      [{ code: "P0002", message: "Pedido de compra não encontrado" }, "pedido_nao_encontrado"], [{ code: "P0002", message: "Entrada não encontrada para você" }, "permissao"],
+      [{ code: "PGRST202", message: "" }, "pedidos_indisponiveis"], [{ code: "57014", message: "" }, "falha"],
+    ] as const) {
+      cenario.respostas.pedido_compra_ligar_entrada = { data: null, error: { ...erro } };
+      expect(await destinoDe(ligarPedido(formulario({ entrada: ENTRADA, pedido: PEDIDO, motivo: "Tentativa" }))), erro.message).toBe(`/estoque/entrada?erro=${chave}&entrada=${ENTRADA}`);
+      expect(Object.hasOwn(ERROS_DA_ENTRADA, chave)).toBe(true);
+    }
+    const antes = cenario.chamadas.length;
+    expect(await destinoDe(ligarPedido(formulario({ entrada: "x", pedido: PEDIDO, motivo: "Tentativa" })))).toBe("/estoque/entrada?erro=dados");
+    expect(await destinoDe(ligarPedido(formulario({ entrada: ENTRADA, pedido: "y", motivo: "Tentativa" })))).toBe(`/estoque/entrada?erro=dados&entrada=${ENTRADA}`);
+    expect(await destinoDe(ligarPedido(formulario({ entrada: ENTRADA, pedido: PEDIDO, motivo: "x" })))).toBe(`/estoque/entrada?erro=motivo&entrada=${ENTRADA}`);
+    expect(cenario.chamadas).toHaveLength(antes);
   });
 });

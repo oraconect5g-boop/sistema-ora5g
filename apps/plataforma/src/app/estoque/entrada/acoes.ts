@@ -5,7 +5,7 @@ import { redirect } from "next/navigation";
 import { ehUuid } from "../../../lib/acesso/regras";
 import { obterSessao } from "../../../lib/acesso/sessao";
 import { buscarNoCatalogo, termoDaBusca } from "../../../lib/catalogo/busca";
-import { detalheDoErro, erroDaEntrada, validarEntrada } from "../../../lib/estoque/entrada";
+import { detalheDoErro, erroDaEntrada, erroDaLigacaoDoPedido, validarEntrada } from "../../../lib/estoque/entrada";
 import type { Json } from "../../../lib/supabase/tipos-banco";
 
 // Entrada de mercadoria (lote L4a). Cada ação chama UMA função do banco como a pessoa logada: o banco
@@ -46,6 +46,20 @@ export async function estornarEntrada(dados: FormData) {
   const { data, error } = await supabase.rpc("estoque_estornar_entrada", { p_entrada: entrada, p_motivo: motivo });
   if (error) voltar({ erro: erroDaEntrada(error), entrada, ...detalheDoErro(error) });
   voltar({ ok: data === "ja_estornada" ? "ja_estornada" : "estornada", entrada });
+}
+
+/** INV-009a: liga a entrada (compra registrada) ao pedido de compra aberto, ou desliga (pedido vazio), com motivo. */
+export async function ligarPedido(dados: FormData) {
+  const entrada = dados.get("entrada");
+  const pedido = texto(dados.get("pedido"));
+  const motivo = texto(dados.get("motivo"));
+  if (!ehUuid(entrada)) voltar({ erro: "dados" });
+  if (pedido !== "" && !ehUuid(pedido)) voltar({ erro: "dados", entrada });
+  if (motivo.length < 3 || motivo.length > 200) voltar({ erro: "motivo", entrada });
+  const { supabase } = await obterSessao({ exigirLoja: true });
+  const { data, error } = await supabase.rpc("pedido_compra_ligar_entrada", { p_entrada: entrada, p_pedido: ouNulo(pedido || null), p_motivo: motivo });
+  if (error) voltar({ erro: erroDaLigacaoDoPedido(error), entrada });
+  voltar({ ok: data === false ? "pedido_sem_mudanca" : pedido ? "pedido_ligado" : "pedido_desligado", entrada });
 }
 
 export async function salvarFornecedor(dados: FormData) {
