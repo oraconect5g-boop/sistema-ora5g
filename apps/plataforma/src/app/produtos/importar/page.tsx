@@ -153,7 +153,7 @@ export default async function Importar({ searchParams }: {
   return (
     <MoldeReal sessao={sessao}>
       <Link href="/produtos" className="inline-flex min-h-10 items-center gap-1 text-sm font-semibold text-acao"><ArrowLeft aria-hidden className="size-4" /> Cadastro de produtos</Link>
-      <TituloPagina titulo="Importar planilha" subtitulo="Produtos, variações, preços e custos por planilha (CSV). Primeiro uma prévia, sem mexer no catálogo; outra pessoa confere e aplica tudo de uma vez." />
+      <TituloPagina titulo="Importar planilha" subtitulo="Produtos, variações, preços e custos por planilha (Excel ou CSV). Primeiro uma prévia, sem mexer no catálogo; outra pessoa confere e aplica tudo de uma vez." />
       {ok && <Aviso tom="sucesso" className="mt-4">{OK[ok]}</Aviso>}
       {erro && <Aviso tom="perigo" className="mt-4">{ERROS_DA_IMPORTACAO[erro]}</Aviso>}
 
@@ -278,7 +278,7 @@ export default async function Importar({ searchParams }: {
       )}
 
       {executar.data ? (
-        <Cartao className="mt-4" titulo="Nova prévia" subtitulo="Primeira linha com o nome das colunas. Campo vazio na planilha não apaga o valor atual." icone={FileUp}>
+        <Cartao className="mt-4" titulo="Nova prévia" subtitulo="Primeira linha com o nome das colunas; no Excel, a primeira aba. Campo vazio na planilha não apaga o valor atual." icone={FileUp}>
           <form action="/produtos/importar/enviar" method="post" encType="multipart/form-data" className="space-y-3">
             <EscolherColunas />
             <div className="grid gap-3 sm:grid-cols-2">

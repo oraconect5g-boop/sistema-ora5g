@@ -2,17 +2,20 @@
 // formulário de envio, filtro e página da conferência e erro do banco → chave do catálogo (a tela nunca repete
 // o texto do banco).
 import { CAMPOS_DO_CATALOGO, NOMES_DOS_CAMPOS, TIPOS_ACEITOS, lerMapeamento, type Mapeamento, type TipoAceito } from "./catalogo";
-import type { FalhaDoCsv } from "./csv";
+import type { FalhaDaPlanilha } from "./csv";
 
 export const ERROS_DA_IMPORTACAO = {
-  arquivo: "Escolha um arquivo CSV (planilha salva como CSV).",
-  vazio: "O arquivo está vazio.",
+  arquivo: "Escolha a planilha: um arquivo do Excel (.xlsx) ou CSV.",
+  vazio: "O arquivo está vazio (no Excel, os itens precisam estar na primeira aba).",
   grande: "Arquivo grande demais: até 5 MB por envio. Divida a planilha em partes.",
   linhas: "Arquivo com mais de 2.000 linhas: divida a planilha em partes de até 2.000 (cada parte é uma importação).",
-  colunas: "Arquivo com mais de 60 colunas: tire as colunas que não serão usadas.",
+  colunas: "Arquivo com mais de 100 colunas: tire as colunas que não serão usadas.",
   celula: "Alguma célula passa de 500 caracteres: confira o arquivo.",
   aspas: "Há aspas abertas sem fechar no arquivo: confira e salve de novo como CSV.",
-  cabecalho: "A primeira linha precisa ter o nome de cada coluna, sem repetir e sem coluna em branco.",
+  cabecalho: "A primeira linha preenchida precisa ter o nome de cada coluna, sem repetir e sem coluna em branco.",
+  xlsx: "Não deu para ler esta planilha do Excel: abra no Excel, salve de novo como .xlsx (ou como CSV) e envie outra vez.",
+  xls: "Planilha do Excel antiga (.xls) ou protegida por senha: no Excel, tire a senha e salve como .xlsx ou CSV.",
+  navegador: "Este navegador não abre planilha do Excel: atualize o navegador ou salve a planilha como CSV.",
   mapeamento: "Diga qual coluna é o SKU e qual é o nome (cada coluna só pode ser usada uma vez).",
   padrao: "Escolha o tipo e a categoria para as linhas que não trouxerem esses dados.",
   ja_aplicado: "Este arquivo já foi aplicado antes. Para mudar algo, gere um arquivo novo.",
@@ -57,7 +60,8 @@ export function erroDoBancoNaImportacao(erro: { code?: string; message?: string 
   return "falha";
 }
 
-export const erroDoCsvNaImportacao = (motivo: FalhaDoCsv): ErroDaImportacao => motivo;
+/** Cada recusa da leitura da planilha (CSV ou Excel) tem a sua mensagem no catálogo. */
+export const erroDaPlanilhaNaImportacao = (motivo: FalhaDaPlanilha): ErroDaImportacao => motivo;
 
 export type Envio = { arquivo: File; mapa: Mapeamento; padroes: { tipo: TipoAceito; categoria: string } };
 /** Formulário de envio: o arquivo, a coluna de cada campo e os padrões (tipo e categoria). */

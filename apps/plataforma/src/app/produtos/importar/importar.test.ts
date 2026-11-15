@@ -71,6 +71,8 @@ const sessaoFicticia = {
 };
 vi.mock("../../../lib/acesso/sessao", () => ({ FalhaDoServico: class extends Error {}, obterSessao: async () => sessaoFicticia }));
 
+import { colunaExcel, TIPO_XLSX } from "../../../lib/xlsx";
+import { gerarXlsx } from "../../../lib/xlsx-servidor";
 import { aplicarImportacao, descartarImportacao, desfazerImportacao } from "./acoes";
 import { POST } from "./enviar/route";
 import Importar from "./page";
@@ -104,9 +106,9 @@ const formulario = (campos: Record<string, string>) => {
   return f;
 };
 const CSV = "SKU;Descrição;Preço\nACE-9;Capa teste;79,90\nACE-10;Película teste;29,90\n";
-function envio(campos: Record<string, string>, conteudo: string | null = CSV, origem = "http://127.0.0.1:3100") {
+function envio(campos: Record<string, string>, conteudo: string | File | null = CSV, origem = "http://127.0.0.1:3100") {
   const f = new FormData();
-  if (conteudo !== null) f.set("arquivo", new File([conteudo], "catalogo.csv", { type: "text/csv" }));
+  if (conteudo !== null) f.set("arquivo", typeof conteudo === "string" ? new File([conteudo], "catalogo.csv", { type: "text/csv" }) : conteudo);
   for (const [k, v] of Object.entries(campos)) f.set(k, v);
   return new Request("http://127.0.0.1:3100/produtos/importar/enviar", { method: "POST", body: f, headers: { origin: origem, host: "127.0.0.1:3100" } });
 }
@@ -136,6 +138,16 @@ beforeEach(() => {
 });
 
 describe("envio da planilha", () => {
+  beforeEach(() => {
+    cenario.permissoes = new Set(["importacao.executar"]);
+  });
+
+  it("sem importacao.executar, a planilha nem é lida: volta sem permissão e o banco não recebe nada (CAT-002b)", async () => {
+    cenario.permissoes = new Set(["importacao.aprovar"]);
+    expect((await POST(envio(MAPA) as never)).headers.get("location")).toBe("/produtos/importar?erro=permissao");
+    expect(cenario.chamadas).toEqual([]);
+  });
+
   it("relê o arquivo no servidor, calcula a impressão digital e manda as linhas e o mapeamento ao banco", async () => {
     cenario.respostas.importacao_catalogo_previa = { data: { id: IMPORTACAO, repetida: false }, error: null };
     const r = await POST(envio(MAPA) as never);
@@ -157,6 +169,34 @@ describe("envio da planilha", () => {
     expect((await POST(envio({ ...MAPA, tipo_padrao: "geladeira" }) as never)).headers.get("location")).toBe("/produtos/importar?erro=padrao");
     expect((await POST(envio(MAPA, 'SKU;Descrição\nA1;"aberta') as never)).headers.get("location")).toBe("/produtos/importar?erro=aspas");
     expect((await POST(envio(MAPA, "SKU;Descrição;Preço\n") as never)).headers.get("location")).toBe("/produtos/importar?erro=vazio");
+    expect(cenario.chamadas).toEqual([]);
+  });
+
+  it("planilha do Excel (.xlsx): relida no servidor como o CSV, com o preço da célula de dinheiro e o número da linha da folha (CAT-002b)", async () => {
+    cenario.respostas.importacao_catalogo_previa = { data: { id: IMPORTACAO, repetida: false }, error: null };
+    const xlsx = gerarXlsx([{ nome: "Produtos", secoes: [{
+      colunas: ["SKU", "Descrição", "Preço"], linhas: [["ACE-9", "Capa teste", { centavos: 7_990 }], ["ACE-10", "Película teste", { centavos: 2_990 }]],
+    }] }]);
+    const r = await POST(envio(MAPA, new File([xlsx], "Relatório de produtos.xlsx", { type: TIPO_XLSX })) as never);
+    expect(r.headers.get("location")).toBe(`/produtos/importar?importacao=${IMPORTACAO}&ok=previa`);
+    const argumentos = cenario.chamadas[0]?.argumentos ?? {};
+    expect(argumentos.p_arquivo_nome).toBe("Relatório de produtos.xlsx");
+    expect(argumentos.p_sha256).toBe(createHash("sha256").update(xlsx).digest("hex"));
+    expect(argumentos.p_mapeamento).toEqual({ colunas: { sku: "SKU", nome: "Descrição", preco: "Preço" }, padroes: { tipo: "acessorio", categoria: "Acessórios" } });
+    expect(argumentos.p_linhas).toEqual([
+      expect.objectContaining({ numero: 2, sku: "ACE-9", nome: "Capa teste", preco: 7_990, erros: [] }),
+      expect.objectContaining({ numero: 3, sku: "ACE-10", preco: 2_990, erros: [] }),
+    ]);
+  });
+
+  it("Excel antigo (ou com senha), danificado ou com mais de 100 colunas volta com a mensagem certa, sem chamar o banco (CAT-002b)", async () => {
+    const destino = async (arquivo: File) => (await POST(envio(MAPA, arquivo) as never)).headers.get("location");
+    const xls = new File([Uint8Array.from([0xd0, 0xcf, 0x11, 0xe0, 0xa1, 0xb1, 0x1a, 0xe1, 0, 0])], "antigo.xls");
+    expect(await destino(xls)).toBe("/produtos/importar?erro=xls");
+    const inteira = gerarXlsx([{ nome: "P", secoes: [{ colunas: ["SKU", "Nome"], linhas: [["A1", "Capa"]] }] }]);
+    expect(await destino(new File([inteira.slice(0, -40)], "cortada.xlsx"))).toBe("/produtos/importar?erro=xlsx");
+    const larga = gerarXlsx([{ nome: "P", secoes: [{ colunas: Array.from({ length: 101 }, (_, i) => `Coluna ${colunaExcel(i)}`), linhas: [["A1"]] }] }]);
+    expect(await destino(new File([larga], "larga.xlsx"))).toBe("/produtos/importar?erro=colunas");
     expect(cenario.chamadas).toEqual([]);
   });
 
