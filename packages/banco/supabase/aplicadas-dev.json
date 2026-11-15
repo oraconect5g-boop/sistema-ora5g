@@ -84,6 +84,7 @@
     { "versao": "20261115150738", "nome": "pedido_de_compra", "md5": "ddebd3f45a0efeab013d944c23936122", "aplicada_em": "2026-11-15" },
     { "versao": "20261115164226", "nome": "segundo_fator", "md5": "8296376240ee3be69ddd8d5effda2e57", "aplicada_em": "2026-11-15" },
     { "versao": "20261115181750", "nome": "confirmacao_recente", "md5": "b09293c9ee81508648d691dfdd8ddc81", "aplicada_em": "2026-11-15" },
-    { "versao": "20261115181840", "nome": "carta_de_correcao", "md5": "d5223a7b2d5ec3deb79d6b47b4d25fc4", "aplicada_em": "2026-11-15" }
+    { "versao": "20261115181840", "nome": "carta_de_correcao", "md5": "d5223a7b2d5ec3deb79d6b47b4d25fc4", "aplicada_em": "2026-11-15" },
+    { "versao": "20261115193611", "nome": "relatorio_do_titular", "md5": "66e40fbaeccd45fe28730cc83f41a802", "aplicada_em": "2026-11-15" }
   ]
 }

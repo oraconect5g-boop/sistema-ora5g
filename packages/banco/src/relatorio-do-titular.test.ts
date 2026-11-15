@@ -1,4 +1,4 @@
-// Lote QUAL-011a (15/11/2026, ORA-QUAL-011 em parte; migration 20261115210000_relatorio_do_titular): o relatório dos dados
+// Lote QUAL-011a (15/11/2026, ORA-QUAL-011 em parte; migration 20261115193611_relatorio_do_titular): o relatório dos dados
 // do titular (LGPD, art. 18, I e II, e art. 19). Só o dono, na loja do turno, com a senha digitada há pouco e um motivo;
 // o relatório junta o cadastro (com os dados guardados em privado), os mesclados, os consentimentos, as compras, o funil,
 // a agenda, as OS e os documentos; cada relatório fica na auditoria sem o conteúdo e entra no limite de consultas.
