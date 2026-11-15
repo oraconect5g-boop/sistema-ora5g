@@ -30,6 +30,8 @@ const cenario = vi.hoisted(() => ({
   semColunaDoResultado: false,
   /** FIN-004a: o banco ainda não tem a coluna entrada_id (o padrão, como a homologação antes da migration). */
   semColunaDaEntrada: true,
+  /** FIN-004b: o banco ainda não tem a tabela dos documentos (o padrão, como a homologação antes da migration). */
+  semTabelaDosDocumentos: true,
   tabelas: {} as Record<string, Record<string, unknown>[]>,
   errosDasTabelas: {} as Record<string, { code: string }>,
   filtros: [] as string[],
@@ -45,6 +47,7 @@ class Consulta {
   constructor(readonly tabela: string) {
     this.linhas = [...(cenario.tabelas[tabela] ?? [])];
     this.erro = cenario.errosDasTabelas[tabela] ?? null;
+    if (tabela === "conta_pagar_anexos" && cenario.semTabelaDosDocumentos) this.erro ??= { code: "PGRST205" };
   }
   unico = false;
   select(colunas = "") {
@@ -99,7 +102,7 @@ vi.mock("../../lib/acesso/sessao", () => ({
   }),
 }));
 
-import { cancelarConta, corrigirConta, desfazerPagamento, lancarConta, ligarEntrada, pagarConta, salvarCategoria } from "./acoes";
+import { cancelarConta, corrigirConta, desfazerPagamento, lancarConta, ligarEntrada, pagarConta, retirarDocumento, salvarCategoria } from "./acoes";
 import { GET as exportar } from "./exportar/route";
 import ContasAPagar from "./page";
 
@@ -107,7 +110,7 @@ import ContasAPagar from "./page";
 // Leitura da árvore: os componentes desta tela (e o estado do painel) são executados; os
 // compartilhados ficam como elementos, para o teste conferir as propriedades.
 // ---------------------------------------------------------------------------------------------
-const LOCAIS = new Set(["ConteudoContas", "PainelDoResumo", "Lancamento", "ListaDeContas", "LinhaDaConta", "LigacaoDaConta", "Categorias", "Volta", "EstadoDoPainel"]);
+const LOCAIS = new Set(["ConteudoContas", "PainelDoResumo", "Lancamento", "ListaDeContas", "LinhaDaConta", "LigacaoDaConta", "DocumentosDaConta", "Categorias", "Volta", "EstadoDoPainel"]);
 const local = (x: ReactElement<Linha>) => typeof x.type === "function" && LOCAIS.has(x.type.name);
 const executar = (x: ReactElement<Linha>) => (x.type as (p: unknown) => unknown)(x.props);
 const nomeDoTipo = (x: ReactElement<Linha>) => (typeof x.type === "function" ? x.type.name : String(x.type));
@@ -185,7 +188,7 @@ beforeEach(() => {
   vi.setSystemTime(new Date("2026-11-13T15:00:00Z"));
   vi.spyOn(console, "error").mockImplementation(() => undefined);
   Object.assign(cenario, {
-    pode: true, resumo: RESUMO, erroDoResumo: null, recusarFiltro: false, semColunaDoResultado: false, semColunaDaEntrada: true, errosDasTabelas: {}, filtros: [], chamadas: [], respostas: {},
+    pode: true, resumo: RESUMO, erroDoResumo: null, recusarFiltro: false, semColunaDoResultado: false, semColunaDaEntrada: true, semTabelaDosDocumentos: true, errosDasTabelas: {}, filtros: [], chamadas: [], respostas: {},
     tabelas: {
       contas_a_pagar: [
         conta(C1, { unidade_id: null, descricao: "Aluguel do escritório", valor_centavos: 100_000, vencimento: "2026-11-10" }),
@@ -568,5 +571,110 @@ describe("/contas-a-pagar: a conta ligada à entrada de mercadoria (FIN-004a)", 
     expect(formularios(tela).filter((f) => f.acao === "ligarEntrada")).toEqual([]);
     expect(visivel(tela)).toContain("Não deu para ler as entradas de mercadoria ligadas às contas agora");
     expect(vi.mocked(console.error).mock.calls).toContainEqual(["contas a pagar: falha ao ler as entradas de mercadoria", { codigo: "57014" }]);
+  });
+});
+
+// ---------------------------------------------------------------------------------------------
+// FIN-004b: os documentos da conta (boleto, nota, comprovante)
+// ---------------------------------------------------------------------------------------------
+const D1 = "00000000-0000-4000-9000-0000000000b1";
+const D2 = "00000000-0000-4000-9000-0000000000b2";
+const D3 = "00000000-0000-4000-9000-0000000000b3";
+const D4 = "00000000-0000-4000-9000-0000000000b4";
+const doc = (id: string, contaId: string, extra: Linha = {}) => ({
+  id, conta_id: contaId, tipo: "boleto", descricao: null, formato: "pdf", bytes: 850 * 1024, enviado_em: "2026-11-12T13:30:00Z", retirado_em: null, motivo_retirada: null, ...extra,
+});
+/** Os formulários de envio (ação é o endereço da rota, não uma função): o endereço, os campos escondidos e o tipo já escolhido. */
+const envios = (v: unknown) => elementos(v).filter((e) => e.type === "form" && typeof e.props.action === "string").map((f) => {
+  const campos: Record<string, string> = {};
+  for (const e of elementos(f.props.children)) if (e.type === "input" && e.props.type === "hidden") campos[String(e.props.name)] = String(e.props.value);
+  const tipo = elementos(f.props.children).find((e) => e.type === "select" && e.props.name === "tipo");
+  return { acao: String(f.props.action), metodo: f.props.method, codificacao: f.props.encType, campos, tipo: tipo?.props.defaultValue };
+});
+const resumoDaPilula = (v: unknown) => elementos(v).filter((e) => e.type === "summary").map((s) => visivel(s.props.children)).filter((s) => s.startsWith("Documentos") || s.startsWith("Anexar"));
+
+describe("/contas-a-pagar: os documentos da conta (FIN-004b)", () => {
+  beforeEach(() => {
+    cenario.semTabelaDosDocumentos = false;
+    cenario.tabelas.conta_pagar_anexos = [
+      doc(D1, C2),
+      doc(D2, C2, { tipo: "outro", descricao: "Boleto em dobro", formato: "jpg", bytes: 1_300_000, enviado_em: "2026-11-12T14:00:00Z", retirado_em: "2026-11-12T15:00:00Z", motivo_retirada: "Boleto de outra conta" }),
+      doc(D3, C4, { tipo: "comprovante_pagamento" }),
+      doc(D4, C5, { tipo: "nota_fiscal" }),
+    ];
+  });
+
+  it("cada conta mostra os seus: abrir pela rota (link assinado na hora), o retirado riscado com o motivo, retirar e guardar outro", async () => {
+    const tela = await pagina();
+    const t = visivel(tela);
+    // a lista em aberto (C1, C2 e C3): a C2 tem um vigente e um retirado; as outras, o convite para anexar
+    expect(resumoDaPilula(tela)).toEqual(["Anexar boleto ou nota", "Documentos (1)", "Anexar boleto ou nota"]);
+    const links = elementos(tela).filter((e) => e.type === "a" && String(e.props.href).includes("/documentos/")).map((e) => [e.props.href, e.props.target, visivel(e.props.children)]);
+    expect(links).toEqual([[`/contas-a-pagar/${C2}/documentos/${D1}`, "_blank", "Boleto"]]);
+    expect(t).toContain("Boleto PDF · 850 KB · 12/11/2026, 10:30");
+    expect(t).toContain("Outro documento JPG · 1,2 MB · 12/11/2026, 11:00 retirado Boleto em dobro Retirado em 12/11/2026, 12:00: Boleto de outra conta");
+    // retirar só o vigente, com o documento e a volta para a mesma lista
+    expect(formularios(tela).filter((f) => f.acao === "retirarDocumento").map((f) => f.campos)).toEqual([{ documento: D1, ver: "abertas", loja: "" }]);
+    // guardar outro: a rota de envio de cada conta, em multipart, com o boleto já escolhido na conta em aberto
+    expect(envios(tela)).toEqual([C1, C2, C3].map((id) => ({
+      acao: `/contas-a-pagar/${id}/documentos`, metodo: "post", codificacao: "multipart/form-data", campos: { ver: "abertas", loja: "" }, tipo: "boleto",
+    })));
+    // a paga sugere o comprovante; a lista de pagas leva o filtro na volta
+    const pagas = await pagina({ ver: "pagas", loja: LOJA_A });
+    expect(envios(pagas)).toEqual([expect.objectContaining({ acao: `/contas-a-pagar/${C4}/documentos`, campos: { ver: "pagas", loja: LOJA_A }, tipo: "comprovante_pagamento" })]);
+    expect(resumoDaPilula(pagas)).toEqual(["Documentos (1)"]);
+  });
+
+  it("a conta cancelada só mostra os que tem, sem guardar outro; com 20 documentos, retirar antes de guardar", async () => {
+    const canceladas = await pagina({ ver: "canceladas" });
+    expect(resumoDaPilula(canceladas)).toEqual(["Documentos (1)"]);
+    expect(envios(canceladas)).toEqual([]);
+    expect(visivel(canceladas)).toContain("Nota fiscal PDF");
+    cenario.tabelas.conta_pagar_anexos = Array.from({ length: 20 }, (_, i) => doc(`00000000-0000-4000-9000-0000000001${String(i).padStart(2, "0")}`, C1));
+    const cheia = await pagina();
+    expect(resumoDaPilula(cheia)[0]).toBe("Documentos (20)");
+    expect(envios(cheia).map((e) => e.acao)).toEqual([`/contas-a-pagar/${C2}/documentos`, `/contas-a-pagar/${C3}/documentos`]);
+    expect(visivel(cheia)).toContain("A conta já tem 20 documentos: retire um errado para guardar outro.");
+  });
+
+  it("retirar manda o documento e o motivo; a resposta do banco escolhe a mensagem e a volta guarda o filtro", async () => {
+    cenario.respostas.conta_pagar_retirar_anexo = { data: true, error: null };
+    expect(await destinoDe(retirarDocumento(formulario({ documento: D1, motivo: " Boleto de  outra conta ", ver: "pagas", loja: LOJA_B }))))
+      .toBe(`/contas-a-pagar?ver=pagas&loja=${LOJA_B}&ok=documento_retirado`);
+    expect(cenario.chamadas.at(-1)).toEqual({ nome: "conta_pagar_retirar_anexo", argumentos: { p_anexo: D1, p_motivo: "Boleto de outra conta" } });
+    cenario.respostas.conta_pagar_retirar_anexo = { data: false, error: null };
+    expect(await destinoDe(retirarDocumento(formulario({ documento: D1, motivo: "De novo" })))).toBe("/contas-a-pagar?ok=documento_sem_mudanca");
+    for (const [erro, mensagem] of [
+      [{ code: "P0002", message: "Documento não encontrado" }, "documento_nao_encontrado"], [{ code: "22023", message: "O motivo tem até 200 letras" }, "documento_motivo"],
+      [{ code: "42501", message: "permission denied" }, "documento_permissao"], [{ code: "57014", message: "canceling statement" }, "documento_falha"],
+    ] as const) {
+      cenario.respostas.conta_pagar_retirar_anexo = { data: null, error: { ...erro } };
+      expect(await destinoDe(retirarDocumento(formulario({ documento: D1, motivo: "Tentativa" }))), erro.message).toBe(`/contas-a-pagar?erro=${mensagem}`);
+    }
+    const antes = cenario.chamadas.length;
+    expect(await destinoDe(retirarDocumento(formulario({ documento: "x", motivo: "Tentativa" })))).toBe("/contas-a-pagar?erro=dados");
+    expect(await destinoDe(retirarDocumento(formulario({ documento: D1, motivo: "x" })))).toBe("/contas-a-pagar?erro=documento_motivo");
+    expect(await destinoDe(retirarDocumento(formulario({ documento: D1, motivo: "y".repeat(201) })))).toBe("/contas-a-pagar?erro=documento_motivo");
+    expect(cenario.chamadas).toHaveLength(antes);
+  });
+
+  it("banco sem os documentos: nada aparece; falha ao ler ou linha estranha: a tela diz, sem documento nenhum", async () => {
+    cenario.semTabelaDosDocumentos = true;
+    let tela = await pagina();
+    expect(resumoDaPilula(tela)).toEqual([]);
+    expect(envios(tela)).toEqual([]);
+    expect(visivel(tela)).not.toContain("Não deu para ler os documentos");
+    cenario.semTabelaDosDocumentos = false;
+    cenario.errosDasTabelas.conta_pagar_anexos = { code: "57014" };
+    tela = await pagina();
+    expect(resumoDaPilula(tela)).toEqual([]);
+    expect(visivel(tela)).toContain("Não deu para ler os documentos das contas (boletos, notas e comprovantes) agora");
+    expect(vi.mocked(console.error).mock.calls).toContainEqual(["contas a pagar: falha ao ler os documentos das contas", { codigo: "57014" }]);
+    delete cenario.errosDasTabelas.conta_pagar_anexos;
+    cenario.tabelas.conta_pagar_anexos = [doc(D1, C2, { tipo: "contrato" })];
+    tela = await pagina();
+    expect(resumoDaPilula(tela)).toEqual([]);
+    expect(visivel(tela)).toContain("Não deu para ler os documentos das contas");
+    expect(vi.mocked(console.error).mock.calls).toContainEqual(["contas a pagar: documento em forma inesperada"]);
   });
 });

@@ -6,6 +6,7 @@ import { MoldeReal } from "../../componentes/MoldeReal";
 import { Aviso, TituloPagina } from "../../componentes/ui";
 import { FalhaDoServico, obterSessao } from "../../lib/acesso/sessao";
 import { consultarCategorias, consultarContas, consultarFornecedores, consultarResumo, type ResumoDasContas } from "../../lib/contas-a-pagar/consulta";
+import { lerDocumentos } from "../../lib/contas-a-pagar/documentos";
 import { lerEntradaParaLancar, lerLigacoes } from "../../lib/contas-a-pagar/entradas";
 import {
   ERROS_DAS_CONTAS, filtroDasContas, filtroNoEndereco, hojeEmSaoPaulo, OK_DAS_CONTAS, VISOES_DAS_CONTAS, visaoDasContas, type FiltroDasContas,
@@ -52,8 +53,10 @@ export default async function ContasAPagar({ searchParams }: { searchParams: Pro
     // FIN-004a: "Lançar a conta" a partir da entrada de mercadoria: o formulário já vem preenchido com ela.
     entradaPedida ? lerEntradaParaLancar(supabase, entradaPedida) : Promise.resolve(null),
   ]);
-  // FIN-004a: a entrada de cada conta da lista e as compras recentes que ainda podem ser ligadas (à parte: sem a coluna, some).
-  const ligacoes = lista.estado === "ok" ? await lerLigacoes(supabase, lista.dados.contas.map((c) => c.id)) : null;
+  // FIN-004a: a entrada de cada conta da lista e as compras recentes que ainda podem ser ligadas; FIN-004b: os documentos
+  // de cada conta. Lidos à parte: sem a coluna ou a tabela, o bloco some.
+  const idsDaLista = lista.estado === "ok" ? lista.dados.contas.map((c) => c.id) : null;
+  const [ligacoes, documentos] = idsDaLista ? await Promise.all([lerLigacoes(supabase, idsDaLista), lerDocumentos(supabase, idsDaLista)]) : [null, null];
   const escopo = resumo.estado === "ok" ? resumo.dados.escopo : null;
   const onde = filtro.tipo === "rede" ? "Rede (central)" : filtro.tipo === "loja" ? (escopo?.lojas.find((l) => l.id === filtro.id)?.nome ?? lojaDoTurno.nome)
     : escopo?.rede ? "Rede e todas as lojas" : lojaDoTurno.nome;
@@ -78,7 +81,7 @@ export default async function ContasAPagar({ searchParams }: { searchParams: Pro
       {erro && <Aviso tom="perigo" className="mt-4">{ERROS_DAS_CONTAS[erro]}</Aviso>}
       <ConteudoContas
         resumo={resumo} lista={lista} categorias={categorias} fornecedores={fornecedores} visao={visao} filtro={filtro} hoje={hoje} lojaDoTurno={lojaDoTurno}
-        ligacoes={ligacoes} entradaParaLancar={entradaParaLancar}
+        ligacoes={ligacoes} entradaParaLancar={entradaParaLancar} documentos={documentos}
       />
     </MoldeReal>
   );

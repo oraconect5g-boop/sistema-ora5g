@@ -2,7 +2,7 @@
   "_leia": "Checkpoint do programa de execução integral (PR #67). Carregar ao retomar e seguir para o próximo item executável da fila; não reiniciar o projeto. Estados vêm de status-requisitos.json (fonte da rastreabilidade); este arquivo acrescenta lote, bloqueio externo e revisão.",
   "atualizado_em": "2026-11-15",
   "base": {
-    "main": "c926d1d",
+    "main": "cb25b5e",
     "pacote": {
       "pr": 67,
       "branch": "docs/execucao-integral-20261110",
@@ -18,14 +18,15 @@
   },
   "publicado": {
     "homologacao": {
-      "commit": "c926d1d",
+      "commit": "cb25b5e",
       "quando": "2026-11-15",
-      "conferido": "rodapé da tela de entrada (c926d1d · build 15/11/2026 03:13), /saude 200 e as rotas reais respondendo 307 para o login"
+      "conferido": "rodapé da tela de entrada (cb25b5e · build 15/11/2026 03:36), /saude 200 e as rotas reais respondendo 307 para o login (inclusive /contas-a-pagar e /estoque/entrada)"
     },
     "falta_publicar": [
-      "FIN-004a, a conta a pagar ligada à entrada de mercadoria, publicado ao fim do lote",
+      "FIN-004b, os documentos da conta a pagar, publicado ao fim do lote",
       "migration 20261115060000_margem_por_vendedor (PERF-003b): aplicar no ora5g-dev pede o sim do proprietário",
-      "migration 20261115070000_conta_da_entrada (FIN-004a): aplicar no ora5g-dev pede o sim do proprietário"
+      "migration 20261115070000_conta_da_entrada (FIN-004a): aplicar no ora5g-dev pede o sim do proprietário",
+      "migration 20261115080000_documentos_da_conta (FIN-004b): aplicar no ora5g-dev pede o sim do proprietário"
     ]
   },
   "contagem_dos_estados": {
@@ -724,7 +725,7 @@
       "titulo": "Contas a pagar ligadas a fornecedor/origem",
       "prioridade": "P0",
       "estado": "parcial",
-      "lote": "L8 financeiro (L8a em 13/11: contas a pagar pela decisão D-036 do proprietário); FIN-004a (15/11): a conta ligada à entrada de mercadoria",
+      "lote": "L8 financeiro (L8a em 13/11: contas a pagar pela decisão D-036 do proprietário); FIN-004a (15/11): a conta ligada à entrada de mercadoria; FIN-004b (15/11): os documentos da conta (boleto, nota e comprovante)",
       "bloqueio_externo": null,
       "revisado_codex": false,
       "homologado": false
