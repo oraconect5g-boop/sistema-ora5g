@@ -7,6 +7,7 @@
 # Uso: ambiente-web.sh <arquivo completo> <arquivo do web>
 set -euo pipefail
 [ "$#" -eq 2 ] || { echo "uso: ambiente-web.sh <arquivo completo> <arquivo do web>" >&2; exit 2; }
-PERMITIDAS='APP_ENV|APP_TIMEZONE|APP_DEFAULT_CURRENCY|NEXT_PUBLIC_[A-Z0-9_]+'
+# LOJA_ONLINE_ORGANIZACAO (ONLINE-a): o id da organização que a vitrine pública mostra; não é segredo.
+PERMITIDAS='APP_ENV|APP_TIMEZONE|APP_DEFAULT_CURRENCY|LOJA_ONLINE_ORGANIZACAO|NEXT_PUBLIC_[A-Z0-9_]+'
 install -m 600 /dev/null "$2"
 grep -E "^[[:space:]]*(export[[:space:]]+)?(${PERMITIDAS})[[:space:]]*=" "$1" >"$2" || true

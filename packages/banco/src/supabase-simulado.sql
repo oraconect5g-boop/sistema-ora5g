@@ -57,6 +57,9 @@ create table storage.objects (
 );
 alter table storage.objects enable row level security;
 grant select, insert, update, delete on storage.objects to authenticated;
+-- O visitante também tem o privilégio de leitura, como no Supabase; quem decide o que ele alcança é o RLS (a vitrine
+-- da loja online, ONLINE-a, é a única política para ele).
+grant select on storage.objects to anon;
 grant select on storage.buckets to authenticated;
 create function storage.foldername(name text) returns text[] language sql immutable
 as $$ select (string_to_array(name, '/'))[1:array_length(string_to_array(name, '/'), 1) - 1] $$;

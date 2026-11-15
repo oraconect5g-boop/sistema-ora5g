@@ -1200,3 +1200,29 @@ Programa de execução integral (PR #67; checkpoint em `docs/alinhamento/EXECUCA
 - **Conferido depois, sem gravar:** Conferido depois, sem gravar: `public.cliente_dados_do_titular(uuid, text)` SECURITY DEFINER com o caminho de busca vazio, executável por `authenticated` e não por `anon`, com o corpo igual ao da migration (md5); os verificadores do Supabase comparados com os de antes da aplicação: na segurança, 162 funções expostas (as 161 de antes e a do QUAL-011a, a conta do inventário) e nada mais novo; no desempenho, nada novo. A partir de agora, na homologação, o dono gera o relatório dos dados do titular na ficha do cliente.
 - **Estado:** ORA-QUAL-011 segue "parcial" (o que falta é do jurídico e do encarregado: D-048).
 - **Pedido ao Codex:** conferir o registro (nome, md5 e a ordem), o nome novo nos documentos e na reversão e os tipos gerados.
+
+## 15/11/2026 — Lote ONLINE-a: a vitrine da loja online (ORA-ONLINE-001, em parte; ADR-009)
+
+- **Origem:** decisão do proprietário de 15/11 ("Sim, comece"): a loja online começa como "reserve no site e retire na loja", sem pagamento online, sem depender de D-024, D-025, P10 e do provedor de pagamento. Esta é a primeira parte: a vitrine, pública e só de leitura. Base: `main` em `93966d8` (registro da migration do QUAL-011a; publicado em 15/11). Branch `feat/ONLINE-a-vitrine`. ADR-009.
+- **O que foi feito:**
+  - migration `20261115220000_loja_online_vitrine`: `privado.preco_do_balcao` (a mesma escolha de preço do PDV, canal "loja", sem o filtro de lojas da sessão), `privado.ofertas_da_vitrine` (cada variação ativa de produto do site em cada loja física ativa com preço, e o disponível = quantidade − reservado), `privado.foto_principal_da_vitrine`;
+  - `public.loja_vitrine(organizacao, busca, categoria)`: a lista de até 60, por nome, e as categorias com produto no site; a busca no nome, na marca e no modelo, sem curinga;
+  - `public.loja_produto(organizacao, produto)`: o detalhe, P0002 fora do site;
+  - `privado.foto_na_vitrine(caminho)` e a política `produtos_fotos_vitrine` do armazenamento (o visitante e o logado alcançam só as fotos vigentes de produto do site); o visitante ganha uso do esquema privado só para essa conferência;
+  - inventário de autorização: 164 funções expostas, um modo novo "pública de propósito" (cada atacante, até o anônimo, recebe a resposta; confere-se que só vem o que é do site, que o banco não muda e que a auditoria não registra nada) e a lista exata do que o visitante executa;
+  - plataforma: `lib/loja/vitrine.ts` (a organização pela `LOJA_ONLINE_ORGANIZACAO`, os formatos, os links temporários das fotos), as páginas `/loja` (a busca, as categorias e a grade) e `/loja/<produto>` (as fotos, a descrição e, por variação, cada loja com o preço e o estoque), com o desenho em `VitrineDaLoja` e `DetalheDaLoja`, fora dos buscadores; a variável na lista de permissão do web da homologação (`deploy/homologacao/ambiente-web.sh`) e nos modelos.
+- **Testes:**
+  - `packages/banco/src/loja-online-vitrine.test.ts` (4: nada sem marcar; só aparelhos e acessórios ativos; o preço da loja B; a busca e a categoria; a outra empresa; o detalhe sem nada interno; o reservado sai do disponível; loja, variação e preço; as fotos e a política no armazenamento);
+  - `apps/plataforma/src/app/loja/loja.test.ts` (4) e `apps/plataforma/e2e/loja-online.spec.ts` (3, sem login, desligada).
+- **Conferência visual:** a 360 e 1.280 px com dados fictícios. O selo do estoque nos cartões ficou curto ("Disponível", "Sem estoque") para caber no celular.
+- **Limite declarado:**
+  1. a migration não está aplicada no `ora5g-dev` (pede o sim do proprietário) e a loja só liga com a `LOJA_ONLINE_ORGANIZACAO` no servidor;
+  2. nenhum produto está marcado para o site hoje;
+  3. a reserva é o ONLINE-b;
+  4. o preço é o do balcão (o canal "online" fica para a entrega);
+  5. o endereço definitivo é a D-024.
+- **Pedido ao Codex:** conferir:
+  1. que nada fora do site sai (produto não marcado ou inativo, outro tipo, loja inativa ou de outro tipo, outra empresa, campos internos);
+  2. a política das fotos e o uso do esquema privado pelo visitante;
+  3. o modo "pública de propósito" do inventário;
+  4. a escolha do preço igual à do PDV.
