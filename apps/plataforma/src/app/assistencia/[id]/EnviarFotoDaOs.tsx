@@ -1,6 +1,5 @@
 "use client";
 
-import { createBrowserClient } from "@supabase/ssr";
 import { Camera } from "lucide-react";
 import { useRouter } from "next/navigation";
 import { useRef, useState } from "react";
@@ -8,7 +7,7 @@ import { useRef, useState } from "react";
 import { Botao } from "../../../componentes/ui";
 import { dimensionar } from "../../../lib/catalogo/fotos";
 import { caminhoDaFotoDaOs, ERROS_DA_OS, type ErroDaOs, LIMITE_DA_FOTO, type TipoDaFoto } from "../../../lib/assistencia/regras";
-import type { Database } from "../../../lib/supabase/tipos-banco";
+import { clienteDoNavegador } from "../../../lib/supabase/navegador";
 import { registrarFotoDaOs } from "../acoes";
 
 // Foto do aparelho na abertura da OS (lote L12a): reduzida no próprio celular (lado maior 1600 px, sem cortar), gravada
@@ -66,7 +65,7 @@ export function EnviarFotoDaOs({ supabaseUrl, chavePublica, organizacao, unidade
       let caminho = enviado;
       if (!caminho) {
         const novo = caminhoDaFotoDaOs(organizacao, unidade, os, crypto.randomUUID(), previa.tipo);
-        const supabase = createBrowserClient<Database>(supabaseUrl, chavePublica);
+        const supabase = await clienteDoNavegador(supabaseUrl, chavePublica);
         const envio = await supabase.storage.from("os").upload(novo, previa.blob, { contentType: previa.tipo, upsert: false });
         if (envio.error) {
           setErro(/row-level security|unauthorized|403/i.test(envio.error.message) ? "sem_permissao" : "falha");

@@ -1,12 +1,7 @@
 {
-  "regra": "QUAL-010a (ORA-QUAL-010): o JavaScript e o CSS que cada tela manda ao navegador na primeira visita, comprimidos (gzip), não passam destes limites. Conferido no CI depois do build por scripts/orcamento-de-desempenho.mjs --conferir. Subir um limite pede motivo aqui e na revisão; o documento DESEMPENHO_NO_CELULAR.md explica a conta.",
+  "regra": "QUAL-010a (ORA-QUAL-010): o JavaScript e o CSS que cada tela manda ao navegador na primeira visita, comprimidos (gzip), não passam destes limites. Conferido no CI depois do build por scripts/orcamento-de-desempenho.mjs --conferir. Subir um limite, ou abrir uma exceção para uma tela, pede motivo aqui e na revisão (desde o QUAL-010b, nenhuma tela precisa de exceção); o documento DESEMPENHO_NO_CELULAR.md explica a conta.",
   "medido_em": "2026-11-15",
   "js_gzip_max_kb": 200,
   "css_gzip_max_kb": 20,
-  "excecoes": {
-    "/catalogo": { "js_gzip_max_kb": 260, "motivo": "o cliente do Supabase no navegador (67 KB), para enviar as fotos do produto direto ao armazenamento privado" },
-    "/catalogo/lote": { "js_gzip_max_kb": 260, "motivo": "o cliente do Supabase no navegador (67 KB), para enviar as fotos dos produtos direto ao armazenamento privado" },
-    "/assistencia/[id]": { "js_gzip_max_kb": 260, "motivo": "o cliente do Supabase no navegador (67 KB), para enviar as fotos da OS direto ao armazenamento privado" },
-    "/conta/seguranca": { "js_gzip_max_kb": 260, "motivo": "o cliente do Supabase no navegador (67 KB), para cadastrar o segundo fator (ORG-007a)" }
-  }
+  "excecoes": {}
 }

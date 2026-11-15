@@ -1,6 +1,5 @@
 "use client";
 
-import { createBrowserClient } from "@supabase/ssr";
 import { CheckCircle2, CircleAlert, ImagePlus, LoaderCircle, MinusCircle } from "lucide-react";
 import Link from "next/link";
 import { useEffect, useRef, useState } from "react";
@@ -11,7 +10,7 @@ import {
   enviarLote, MAXIMO_DO_LOTE, MOTIVOS_DE_FICAR_DE_FORA, planejarLote, resumoDoLote, skusDoLote, type ItemDoLote, type PassosDoEnvio,
 } from "../../../lib/catalogo/lote-de-fotos";
 import { prepararFoto } from "../../../lib/catalogo/preparar-foto";
-import type { Database } from "../../../lib/supabase/tipos-banco";
+import { clienteDoNavegador } from "../../../lib/supabase/navegador";
 import { localizarDestinos, registrarFoto } from "../acoes";
 
 // Fotos em lote (lote CAT-010): escolher várias fotos de uma vez, ver para onde cada uma vai e enviar uma a uma, com o
@@ -108,13 +107,20 @@ export function FotosEmLote({ supabaseUrl, chavePublica }: { supabaseUrl: string
   async function enviar() {
     if (!itens) return;
     setEnviando(true);
-    const supabase = createBrowserClient<Database>(supabaseUrl, chavePublica);
+    // O cliente do Supabase vem na hora da primeira foto (QUAL-010b). Se o download dele falhar (rede ruim), a foto fica
+    // com erro de envio, como uma falha de rede, e pode ser enviada de novo; o botão não fica preso.
+    let supabase: Awaited<ReturnType<typeof clienteDoNavegador>> | null = null;
     const passos: PassosDoEnvio = {
       preparar: async (indice) => {
         const arquivo = arquivos[indice];
         return arquivo ? prepararFoto(arquivo) : "tipo";
       },
       enviar: async (caminho, foto) => {
+        try {
+          supabase ??= await clienteDoNavegador(supabaseUrl, chavePublica);
+        } catch {
+          return "envio";
+        }
         const envio = await supabase.storage.from("produtos").upload(caminho, foto.blob, { contentType: foto.tipo, upsert: false });
         if (!envio.error) return "ok";
         return /row-level security|unauthorized|403/i.test(envio.error.message) ? "permissao" : "envio";

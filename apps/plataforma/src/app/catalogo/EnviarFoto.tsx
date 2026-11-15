@@ -1,6 +1,5 @@
 "use client";
 
-import { createBrowserClient } from "@supabase/ssr";
 import { Camera } from "lucide-react";
 import { useRouter } from "next/navigation";
 import { useRef, useState } from "react";
@@ -8,7 +7,7 @@ import { useRef, useState } from "react";
 import { Botao } from "../../componentes/ui";
 import { caminhoDaFoto, ERROS_DE_FOTO, type ErroDeFoto } from "../../lib/catalogo/fotos";
 import { prepararFoto, type FotoPreparada } from "../../lib/catalogo/preparar-foto";
-import type { Database } from "../../lib/supabase/tipos-banco";
+import { clienteDoNavegador } from "../../lib/supabase/navegador";
 import { registrarFoto } from "./acoes";
 
 type Previa = FotoPreparada & { url: string };
@@ -60,7 +59,7 @@ export function EnviarFoto({ supabaseUrl, chavePublica, organizacao, produto, va
       let caminho = enviado;
       if (!caminho) {
         const novo = caminhoDaFoto(organizacao, produto, variante, crypto.randomUUID(), previa.tipo);
-        const supabase = createBrowserClient<Database>(supabaseUrl, chavePublica);
+        const supabase = await clienteDoNavegador(supabaseUrl, chavePublica);
         const envio = await supabase.storage.from("produtos").upload(novo, previa.blob, { contentType: previa.tipo, upsert: false });
         if (envio.error) {
           setErro(/row-level security|unauthorized|403/i.test(envio.error.message) ? "permissao" : "envio");

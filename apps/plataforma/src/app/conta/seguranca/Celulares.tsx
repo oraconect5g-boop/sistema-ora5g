@@ -3,7 +3,6 @@
 // O cadastro e a retirada dos celulares do segundo fator (lote ORG-007a: ORA-ORG-007), no navegador, pela API do
 // Supabase Auth (mfa.enroll, mfa.challengeAndVerify, mfa.unenroll): o segredo do QR vai do Supabase direto para o
 // aparelho da pessoa, sem passar pelo servidor da Ora. As regras e as mensagens estão em lib/acesso/segundo-fator.ts.
-import { createBrowserClient } from "@supabase/ssr";
 import { Smartphone, Trash2 } from "lucide-react";
 import { useRouter } from "next/navigation";
 import { useState } from "react";
@@ -12,7 +11,7 @@ import { Aviso, Botao } from "../../../componentes/ui";
 import {
   cadastrosAbandonados, codigoValido, ERROS_DO_CADASTRO, erroDoCadastro, nomeDoCelular, segredoEmGrupos, type Celular, type ErroDoCadastro,
 } from "../../../lib/acesso/segundo-fator";
-import type { Database } from "../../../lib/supabase/tipos-banco";
+import { clienteDoNavegador } from "../../../lib/supabase/navegador";
 
 const campo = "mt-1 min-h-11 w-full rounded-botao border border-borda bg-white px-3 text-sm outline-none focus:border-acao focus:ring-2 focus:ring-acao/20";
 type Configuracao = { supabaseUrl: string; chavePublica: string };
@@ -53,7 +52,7 @@ export function CadastrarCelular({ supabaseUrl, chavePublica, primeiro }: Config
   const [codigo, setCodigo] = useState("");
   const [erro, setErro] = useState<ErroDoCadastro | null>(null);
   const [ocupado, setOcupado] = useState(false);
-  const cliente = () => createBrowserClient<Database>(supabaseUrl, chavePublica);
+  const cliente = () => clienteDoNavegador(supabaseUrl, chavePublica);
 
   async function comecar() {
     const valido = nomeDoCelular(nome);
@@ -61,7 +60,7 @@ export function CadastrarCelular({ supabaseUrl, chavePublica, primeiro }: Config
     setErro(null);
     setOcupado(true);
     try {
-      const supabase = cliente();
+      const supabase = await cliente();
       // O cadastro que ficou pela metade (o QR gerado e nunca confirmado) sai antes: senão o nome repetido trava.
       const lista = await supabase.auth.mfa.listFactors();
       if (lista.error) return setErro(erroDoCadastro(lista.error));
@@ -84,7 +83,7 @@ export function CadastrarCelular({ supabaseUrl, chavePublica, primeiro }: Config
     setErro(null);
     setOcupado(true);
     try {
-      const { error } = await cliente().auth.mfa.challengeAndVerify({ factorId: passo.fator, code: valido });
+      const { error } = await (await cliente()).auth.mfa.challengeAndVerify({ factorId: passo.fator, code: valido });
       if (error) return setErro(erroDoCadastro(error));
       setPasso({ tipo: "pronto", nome: nomeDoCelular(nome) ?? nome });
       router.refresh();
@@ -99,7 +98,7 @@ export function CadastrarCelular({ supabaseUrl, chavePublica, primeiro }: Config
     if (passo.tipo !== "qr") return;
     setOcupado(true);
     try {
-      await cliente().auth.mfa.unenroll({ factorId: passo.fator });
+      await (await cliente()).auth.mfa.unenroll({ factorId: passo.fator });
     } catch {
       // o cadastro abandonado sai no próximo começo
     } finally {
@@ -141,7 +140,7 @@ export function ListaDeCelulares({ supabaseUrl, chavePublica, celulares }: Confi
     setErro(null);
     setOcupado(celular.id);
     try {
-      const supabase = createBrowserClient<Database>(supabaseUrl, chavePublica);
+      const supabase = await clienteDoNavegador(supabaseUrl, chavePublica);
       const { error } = await supabase.auth.mfa.unenroll({ factorId: celular.id });
       if (error) return setErro(erroDoCadastro(error));
       // A sessão continua dizendo aal2 até renovar: renova já, para a tela e o banco verem a mudança.

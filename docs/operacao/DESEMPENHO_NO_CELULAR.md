@@ -31,15 +31,13 @@ Medido no build de 15/11/2026 (79 telas):
 | `/estoque` | 159,9 | 200 |
 | `/vendas/[id]` (comprovante) | 161,7 | 200 |
 | `/vender` (PDV) | 171,8 | 200 |
-| `/demo/connect` (a maior fora das exceções) | 183,7 | 200 |
-| `/conta/seguranca` | 225,4 | 260 (exceção) |
-| `/catalogo`, `/catalogo/lote`, `/assistencia/[id]` | 236,2 a 236,5 | 260 (exceção) |
+| `/conta/seguranca` | 159,1 (225,4 antes do QUAL-010b) | 200 |
+| `/catalogo`, `/catalogo/lote`, `/assistencia/[id]` | 169,8 a 170,3 (236,2 a 236,5 antes do QUAL-010b) | 200 |
+| `/demo/connect` (a maior) | 183,7 | 200 |
 
 O CSS é um arquivo só para todas as telas: 15,6 KB, com limite de 20 KB.
 
-As quatro exceções carregam o cliente do Supabase no navegador (67 KB). Ele envia as fotos direto ao armazenamento privado e cadastra o segundo fator.
-
-**Melhoria possível, ainda não feita:** carregar esse cliente só quando a pessoa vai enviar a foto ou cadastrar o celular. As quatro telas ficariam com cerca de 67 KB a menos na primeira visita.
+Até o QUAL-010b, quatro telas (o catálogo, as fotos em lote, a OS da assistência e a segurança da conta) carregavam na primeira visita o cliente do Supabase no navegador (67 KB comprimidos), que envia as fotos direto ao armazenamento privado e cadastra o segundo fator. Elas eram exceções do orçamento, com limite de 260 KB. Desde o QUAL-010b, o cliente vem só quando a pessoa envia a foto ou mexe no celular (`apps/plataforma/src/lib/supabase/navegador.ts`): as quatro telas caíram cerca de 66 KB cada, e o orçamento ficou sem exceções.
 
 ## 2. O tempo num celular simulado (manual)
 
@@ -86,7 +84,7 @@ Oito vendedores vendendo ao mesmo tempo num PostgreSQL 17 de teste: a conclusão
 |---|---|---|---|
 | Maior desenho (LCP) de cada tela, no celular simulado com 4G lento | até 2,5 s | 0,88 a 0,94 s (telas sem login) | item 2 |
 | Bloqueio por JavaScript, no mesmo celular simulado | até 200 ms | 51 a 134 ms | item 2 |
-| JavaScript da primeira visita, por tela | até 200 KB comprimido (260 KB nas quatro exceções) | até 183,7 KB (236,5 KB nas exceções) | item 1, no CI |
+| JavaScript da primeira visita, por tela | até 200 KB comprimido | até 183,7 KB | item 1, no CI |
 | Concluir a venda no banco (95% das vendas) | até 1 s | 59 a 79 ms no banco de teste | item 3 |
 | Na piloto, no celular e na internet da loja | abrir o PDV e concluir uma venda simples em até 3 s cada | — | com o vendedor, na loja piloto |
 
@@ -120,4 +118,3 @@ Para comparar sem limitar a rede e o processador, use `REDE=livre`. Para mais me
 - O proprietário aprovar (ou mudar) as metas.
 - Medir as telas com login (PDV, caixa, início): depende do usuário de teste (J1).
 - O teste no celular e na internet da loja piloto, com o vendedor.
-- A melhoria das quatro exceções (o cliente do Supabase carregado só na hora do envio).
