@@ -2,7 +2,7 @@
   "_leia": "Checkpoint do programa de execução integral (PR #67). Carregar ao retomar e seguir para o próximo item executável da fila; não reiniciar o projeto. Estados vêm de status-requisitos.json (fonte da rastreabilidade); este arquivo acrescenta lote, bloqueio externo e revisão.",
   "atualizado_em": "2026-11-14",
   "base": {
-    "main": "9495691",
+    "main": "56c4bde",
     "pacote": {
       "pr": 67,
       "branch": "docs/execucao-integral-20261110",
@@ -18,12 +18,13 @@
   },
   "publicado": {
     "homologacao": {
-      "commit": "9495691",
+      "commit": "56c4bde",
       "quando": "2026-11-14",
-      "conferido": "rodapé da tela de entrada (9495691 · build 14/11/2026 23:16), /saude 200 e as rotas reais respondendo 307 para o login"
+      "conferido": "rodapé da tela de entrada (56c4bde · build 14/11/2026 23:26), /saude 200 e as rotas reais respondendo 307 para o login"
     },
     "falta_publicar": [
-      "R4, revisão do estado dos P0 (documentos, um teste e um texto do /financeiro), publicado ao fim do lote"
+      "REPORT-005b, pagamentos por maquininha, publicado ao fim do lote",
+      "migration 20261115030000_pagamentos_por_terminal (REPORT-005b): aplicar no ora5g-dev pede o sim do proprietário"
     ]
   },
   "contagem_dos_estados": {
@@ -1433,7 +1434,7 @@
       "titulo": "Relatório por método de pagamento e terminal PicPay",
       "prioridade": "P0",
       "estado": "parcial",
-      "lote": "L8 financeiro/relatórios; G2 financeiro e relatórios; G2b conciliação por meio (entregue em 13/11)",
+      "lote": "L8 financeiro/relatórios; G2 financeiro e relatórios; G2b conciliação por meio (entregue em 13/11); REPORT-005b (14/11): pagamentos por maquininha",
       "bloqueio_externo": null,
       "revisado_codex": false,
       "homologado": false

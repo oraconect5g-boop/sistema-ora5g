@@ -15,6 +15,9 @@ const cenario = vi.hoisted(() => ({
   erroDoPainel: null as null | { code: string },
   chamadas: [] as Record<string, unknown>[],
   tabelas: {} as Record<string, Record<string, unknown>[]>,
+  /** REPORT-005b: a resposta de pagamentos_por_terminal (o padrão é a função ausente). */
+  maquininhas: null as unknown,
+  erroDasMaquininhas: { code: "PGRST202" } as null | { code: string },
 }));
 
 vi.mock("next/headers", () => ({ cookies: async () => ({ getAll: () => [], set: () => undefined }) }));
@@ -46,6 +49,7 @@ const sessaoFicticia = {
     from: (nome: string) => new Consulta(nome),
     rpc: async (nome: string, argumentos: Record<string, unknown>) => {
       if (nome === "tem_permissao") return { data: cenario.permissoes.has(String(argumentos.p_permissao)), error: null };
+      if (nome === "pagamentos_por_terminal") return cenario.erroDasMaquininhas ? { data: null, error: cenario.erroDasMaquininhas } : { data: cenario.maquininhas, error: null };
       if (nome === "financeiro_painel") {
         cenario.chamadas.push(argumentos);
         return cenario.erroDoPainel ? { data: null, error: cenario.erroDoPainel } : { data: cenario.painel, error: null };
@@ -61,7 +65,7 @@ import { GET as exportar } from "./exportar/route";
 
 // Texto de toda a árvore de elementos (todas as props). Executa só os componentes de apresentação
 // desta tela (síncronos, sem estado); os de cliente e o molde ficam como elementos.
-const APRESENTACAO = new Set(["ConteudoFinanceiro", "TabelaDosRegistros", "PainelDaConciliacao"]);
+const APRESENTACAO = new Set(["ConteudoFinanceiro", "TabelaDosRegistros", "PainelDaConciliacao", "PainelDasMaquininhas"]);
 function texto(v: unknown): string {
   if (Array.isArray(v)) return v.map(texto).join(" ");
   if (typeof v === "string" || typeof v === "number") return String(v);
@@ -93,6 +97,8 @@ beforeEach(() => {
   cenario.painel = PAINEL;
   cenario.erroDoPainel = null;
   cenario.chamadas = [];
+  cenario.maquininhas = null;
+  cenario.erroDasMaquininhas = { code: "PGRST202" };
   cenario.tabelas = {
     vendas: [{ id: "v1", numero: 101, unidade_id: LOJA, vendedor_id: VENDEDOR, situacao: "concluida", total_centavos: 15_800, devolvido_centavos: 7_900, concluida_em: "2026-11-10T17:00:00Z" }],
     perfis_usuario: [{ id: VENDEDOR, nome: "Ana Teste" }],
@@ -268,5 +274,27 @@ describe("/financeiro: conciliação de cartão e Pix (G2b)", () => {
     // Só os a conciliar, se pedido.
     const filtrado = await exportar(new Request("http://teste/financeiro/exportar?ver=pagamentos&situacao=a_conciliar"));
     expect(new TextDecoder().decode(new Uint8Array(await filtrado.arrayBuffer())).split("\r\n").slice(1).map((l) => l.split(";")[0])).toEqual(["102"]);
+  });
+});
+
+describe("pagamentos por maquininha (REPORT-005b)", () => {
+  const TERMINAL = "00000000-0000-4000-8000-0000000000f1";
+  it("com a leitura no banco, cada maquininha com o recebido, o conciliado, o que falta conciliar e o líquido; sem a função, o quadro some; falha aparece sem número", async () => {
+    cenario.permissoes = new Set(["venda.ver_unidade"]);
+    cenario.erroDasMaquininhas = null;
+    cenario.maquininhas = { unidade: null, terminais: [{
+      terminal: TERMINAL, unidade: LOJA, provedor: "picpay", identificador: "PP-101", apelido: "Balcão", ativo: true,
+      quantidade: 2, valor: 15_800, conciliados: 1, conciliado: 7_900, liquido: 7_600, estornados: 0, estornado: 0,
+    }] };
+    let t = (await tela()).replace(/\s+/g, " ");
+    for (const trecho of ["Pagamentos por maquininha", "Balcão", "PicPay PP-101", "R$ 158,00", "R$ 79,00", "R$ 76,00", "2 pagamentos"]) expect(t, trecho).toContain(trecho);
+    cenario.erroDasMaquininhas = { code: "PGRST202" };
+    expect(await tela()).not.toContain("Pagamentos por maquininha");
+    vi.spyOn(console, "error").mockImplementation(() => undefined);
+    cenario.erroDasMaquininhas = { code: "57014" };
+    t = await tela();
+    expect(t).toContain("Pagamentos por maquininha");
+    expect(t).not.toContain("PicPay PP-101");
+    vi.restoreAllMocks();
   });
 });

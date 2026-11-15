@@ -9,6 +9,7 @@ import { consultarPainel } from "../../lib/financeiro/consulta";
 import { escolherEscopo, opcoesDeLoja, type LojaDoFiltro } from "../../lib/financeiro/escopo";
 import { janelasDoPeriodo, ORDEM_DOS_PERIODOS, PERIODOS_FINANCEIROS, periodoFinanceiro, resumoDoPainel, seriesDoPainel, type PeriodoFinanceiro } from "../../lib/financeiro/painel";
 import { idsDosRegistros, paginaDeRegistros, situacaoDoParametro, visaoDoParametro, VISOES, type Registros } from "../../lib/financeiro/registros";
+import { lerPagamentosPorMaquininha } from "../../lib/financeiro/terminais";
 import { textoDoParametro, type ValorDeParametro } from "../../lib/parametros";
 import { ConteudoFinanceiro, type Nomes } from "./ConteudoFinanceiro";
 
@@ -60,9 +61,11 @@ export default async function Financeiro({ searchParams }: { searchParams: Promi
     return `${caminho}${texto ? `?${texto}` : ""}`;
   };
 
-  const [atual, anterior] = await Promise.all([
+  // REPORT-005b: os pagamentos por maquininha, lidos à parte (sem a função no banco, nulo: o cartão não aparece).
+  const [atual, anterior, maquininhas] = await Promise.all([
     consultarPainel(supabase, janelas.atual, escopo.unidade, janelas.porHora),
     consultarPainel(supabase, janelas.anterior, escopo.unidade, false),
+    lerPagamentosPorMaquininha(supabase, janelas.atual, escopo.unidade),
   ]);
 
   const cabecalho = (
@@ -121,6 +124,8 @@ export default async function Financeiro({ searchParams }: { searchParams: Promi
         nomes={nomes}
         daRede={escopo.unidade === null}
         href={href}
+        maquininhas={maquininhas}
+        nomeDaLoja={(id) => [...lojas, turno].find((l) => l.id === id)?.nome ?? "Loja"}
       />
     </MoldeReal>
   );
