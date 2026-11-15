@@ -2,7 +2,7 @@
   "_leia": "Checkpoint do programa de execução integral (PR #67). Carregar ao retomar e seguir para o próximo item executável da fila; não reiniciar o projeto. Estados vêm de status-requisitos.json (fonte da rastreabilidade); este arquivo acrescenta lote, bloqueio externo e revisão.",
   "atualizado_em": "2026-11-15",
   "base": {
-    "main": "076e05f",
+    "main": "67c22a2",
     "pacote": {
       "pr": 67,
       "branch": "docs/execucao-integral-20261110",
@@ -18,12 +18,13 @@
   },
   "publicado": {
     "homologacao": {
-      "commit": "076e05f",
+      "commit": "67c22a2",
       "quando": "2026-11-15",
-      "conferido": "rodapé da tela de entrada (076e05f · build 15/11/2026 13:52), /saude 200 e as rotas reais respondendo 307 para o login (inclusive /entrar/codigo e /conta/seguranca)"
+      "conferido": "rodapé da tela de entrada (67c22a2 · build 15/11/2026 14:01), /saude 200 e as rotas reais respondendo 307 para o login (inclusive /estoque/entrada, /estoque/pedidos e /conta/seguranca)"
     },
     "falta_publicar": [
-      "INV-009b, receber a mercadoria a partir do pedido de compra, publicado ao fim do lote"
+      "ORG-006b, a confirmação de senha recente nas ações sensíveis, publicado ao fim do lote",
+      "migration 20261115190000_confirmacao_recente (ORG-006b): aplicar no ora5g-dev pede o sim do proprietário"
     ]
   },
   "contagem_dos_estados": {
@@ -83,7 +84,7 @@
       "titulo": "Login, recuperação de conta e revogação de sessão",
       "prioridade": "P0",
       "estado": "parcial",
-      "lote": "L2 cadastros",
+      "lote": "L2 cadastros; ORG-006b (15/11): a confirmação de senha recente nas ações sensíveis",
       "bloqueio_externo": null,
       "revisado_codex": false,
       "homologado": false

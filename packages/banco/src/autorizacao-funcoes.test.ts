@@ -11,7 +11,7 @@ import type { PGlite } from "@electric-sql/pglite";
 import { randomUUID } from "node:crypto";
 import { afterAll, afterEach, beforeAll, beforeEach, describe, expect, it } from "vitest";
 
-import { cnpj, comDigitoLuhn, comoUsuario, cpf, criarBanco, type Sessao } from "./banco-de-teste";
+import { amrDaSenha, cnpj, comDigitoLuhn, comoUsuario, cpf, criarBanco, type Sessao } from "./banco-de-teste";
 import { ids, montarCenario, RAIZ } from "./cenario";
 import { cat, itens, montarCatalogo } from "./cenario-catalogo";
 
@@ -165,8 +165,9 @@ async function montarMundo() {
   await db.query("update public.perfis_usuario set status = 'bloqueado' where id = $1", [ids.bloqueado]);
 
   atacantes.anonimo = (acao) => comClaims(null, "anon", acao);
-  atacantes.semLogin = (acao) => comClaims({ role: "authenticated" }, "authenticated", acao);
-  atacantes.semSessao = (acao) => comClaims({ sub: ids.vendedorAB, role: "authenticated" }, "authenticated", acao);
+  // Com o amr de quem acabou de entrar (ORG-006b): o inventário prova a autorização, não a confirmação recente.
+  atacantes.semLogin = (acao) => comClaims({ role: "authenticated", amr: amrDaSenha() }, "authenticated", acao);
+  atacantes.semSessao = (acao) => comClaims({ sub: ids.vendedorAB, role: "authenticated", amr: amrDaSenha() }, "authenticated", acao);
   atacantes.sessaoEncerrada = comSessao(encerrada);
   atacantes.foraDoTurno = comSessao(antiga);
   atacantes.bloqueado = comSessao(bloqueado);

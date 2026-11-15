@@ -36,7 +36,12 @@ export async function criarBanco(limite: { antesDe?: string; ate?: string } = {}
 }
 
 // `aal`: o nível da sessão no JWT (aal2 depois do segundo fator; ORG-007a). Sem ele, o JWT vem sem o campo, como antes.
-export type Sessao = { usuario: string; sessao?: string; aal?: "aal1" | "aal2" };
+// `amr`: como e quando a pessoa entrou (ORG-006b: a confirmação de senha recente). Sem ele, o de um login com a senha
+// agora mesmo, como o Supabase manda depois de entrar; nulo tira o campo do JWT.
+export type Amr = { method: string; timestamp: number }[];
+export type Sessao = { usuario: string; sessao?: string; aal?: "aal1" | "aal2"; amr?: Amr | null };
+/** O amr de quem digitou a senha agora (ou há `segundos`). */
+export const amrDaSenha = (segundos = 0): Amr => [{ method: "password", timestamp: Math.floor(Date.now() / 1000) - segundos }];
 
 // Executa como um usuário logado (papel authenticated), como faria a API do Supabase. Com sessão,
 // a linha de auth.sessions é criada como no login (a regra do turno lê a hora em que ela começou).
@@ -45,7 +50,10 @@ export async function comoUsuario<T>(db: PGlite, sessao: Sessao | null, acao: ()
     await db.query("insert into auth.sessions (id, user_id) values ($1, $2) on conflict (id) do nothing", [sessao.sessao, sessao.usuario]);
   }
   const claims = sessao
-    ? JSON.stringify({ sub: sessao.usuario, session_id: sessao.sessao, role: "authenticated", ...(sessao.aal ? { aal: sessao.aal } : {}) })
+    ? JSON.stringify({
+      sub: sessao.usuario, session_id: sessao.sessao, role: "authenticated", ...(sessao.aal ? { aal: sessao.aal } : {}),
+      ...(sessao.amr === null ? {} : { amr: sessao.amr ?? amrDaSenha() }),
+    })
     : "";
   await db.query("select set_config('request.jwt.claims', $1, false)", [claims]);
   await db.exec(sessao ? "set role authenticated" : "set role anon");
