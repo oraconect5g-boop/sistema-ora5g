@@ -1,7 +1,7 @@
 {
   "projeto": "ora5g-dev (qgnbeuugklzzcevdzrvg)",
   "regra": "REV-018 / #17: o nome do arquivo usa a versão que o Supabase gravou no histórico (supabase_migrations.schema_migrations). Migration aplicada não muda mais: o teste src/migrations.test.ts compara o md5 do arquivo com o registrado aqui. Correção = migration nova.",
-  "conferido_em": "2026-11-14",
+  "conferido_em": "2026-11-15",
   "migrations": [
     { "versao": "20261107140352", "nome": "fundacao_acesso", "md5": "a8f160b848c860269fed9b3dced6aae5", "aplicada_em": "2026-11-07" },
     { "versao": "20261107140448", "nome": "indices_chaves_estrangeiras", "md5": "04fa57c5f31bc5cb8beb99ebfac7297e", "aplicada_em": "2026-11-07" },
@@ -74,6 +74,7 @@
     { "versao": "20261114215128", "nome": "cancelamento_da_nota", "md5": "8bca9bb2d31eea3fbc66a76dbd7dfb55", "aplicada_em": "2026-11-14" },
     { "versao": "20261115000320", "nome": "estoque_valor_em_custo", "md5": "2d305492d0b5a744afc3d5e0dfd38490", "aplicada_em": "2026-11-14" },
     { "versao": "20261115000401", "nome": "codigos_de_outros_canais", "md5": "a909de56bf8081c8e025cb082e85de26", "aplicada_em": "2026-11-14" },
-    { "versao": "20261115000433", "nome": "regioes", "md5": "c629850bb5835f64aac35b2a7d040529", "aplicada_em": "2026-11-14" }
+    { "versao": "20261115000433", "nome": "regioes", "md5": "c629850bb5835f64aac35b2a7d040529", "aplicada_em": "2026-11-14" },
+    { "versao": "20261115043059", "nome": "pagamentos_por_terminal", "md5": "25d9229bb2b527fbf49977cd49c04e85", "aplicada_em": "2026-11-15" }
   ]
 }

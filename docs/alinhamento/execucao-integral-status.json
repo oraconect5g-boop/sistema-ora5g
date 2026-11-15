@@ -2,7 +2,7 @@
   "_leia": "Checkpoint do programa de execução integral (PR #67). Carregar ao retomar e seguir para o próximo item executável da fila; não reiniciar o projeto. Estados vêm de status-requisitos.json (fonte da rastreabilidade); este arquivo acrescenta lote, bloqueio externo e revisão.",
   "atualizado_em": "2026-11-14",
   "base": {
-    "main": "56c4bde",
+    "main": "309a7ac",
     "pacote": {
       "pr": 67,
       "branch": "docs/execucao-integral-20261110",
@@ -18,13 +18,12 @@
   },
   "publicado": {
     "homologacao": {
-      "commit": "56c4bde",
+      "commit": "309a7ac",
       "quando": "2026-11-14",
-      "conferido": "rodapé da tela de entrada (56c4bde · build 14/11/2026 23:26), /saude 200 e as rotas reais respondendo 307 para o login"
+      "conferido": "rodapé da tela de entrada (309a7ac · build 14/11/2026 23:34), /saude 200 e as rotas reais respondendo 307 para o login"
     },
     "falta_publicar": [
-      "REPORT-005b, pagamentos por maquininha, publicado ao fim do lote",
-      "migration 20261115030000_pagamentos_por_terminal (REPORT-005b): aplicar no ora5g-dev pede o sim do proprietário"
+      "registro da migration do REPORT-005b (aplicada no ora5g-dev em 15/11; o registro só muda o repositório), publicado ao fim do lote"
     ]
   },
   "contagem_dos_estados": {
