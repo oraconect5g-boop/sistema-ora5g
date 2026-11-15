@@ -1,4 +1,6 @@
+import { ShieldCheck } from "lucide-react";
 import type { Metadata } from "next";
+import Link from "next/link";
 import { redirect } from "next/navigation";
 
 import { Marca } from "../../componentes/Marca";
@@ -53,6 +55,9 @@ export default async function Conta() {
           {(unidades ?? []).map((u) => <li key={u.id}>{u.nome} <span className="text-suave">· {u.tipo}</span></li>)}
           {(unidades ?? []).length === 0 && <li className="text-suave">Nenhuma loja vinculada.</li>}
         </ul>
+        <Link href="/conta/seguranca" className="mt-5 flex items-center gap-2 rounded-botao border border-borda px-3 py-2.5 text-sm font-semibold text-acao hover:bg-acao-clara/40">
+          <ShieldCheck aria-hidden className="size-4" />Segurança da conta: verificação em duas etapas
+        </Link>
         <form action={sair} className="mt-6"><Botao type="submit" variante="secundario">Sair</Botao></form>
       </Cartao>
     </main>

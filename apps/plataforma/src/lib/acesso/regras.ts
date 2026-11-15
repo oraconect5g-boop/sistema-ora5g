@@ -8,18 +8,24 @@ export type SituacaoSessao = {
   unidade_id: string | null;
   unidade_nome: string | null;
   turno_termina_em: string | null;
+  /** ORG-007a: quem ligou a verificação em duas etapas ainda não digitou o código nesta sessão (o banco nega tudo até lá).
+   *  Num banco sem a migration do segundo fator o campo não vem: segue como antes. */
+  segundo_fator_pendente?: boolean | null;
 };
 
 export type DecisaoSessao =
   | { tipo: "seguir" }
   | { tipo: "entrar" }
   | { tipo: "sair"; erro: "bloqueado" | "turno" }
+  | { tipo: "segundo_fator" }
   | { tipo: "escolher_loja" };
 
 export function decidirSessao(entrada: { temUsuario: boolean; situacao: SituacaoSessao | null; exigirLoja: boolean }): DecisaoSessao {
   if (!entrada.temUsuario || !entrada.situacao) return { tipo: "entrar" };
   if (!entrada.situacao.usuario_ativo) return { tipo: "sair", erro: "bloqueado" };
   if (!entrada.situacao.sessao_no_turno) return { tipo: "sair", erro: "turno" };
+  // O código vem antes da loja: sem ele, o banco não mostra loja nenhuma, e a tela levaria à escolha da loja vazia.
+  if (entrada.situacao.segundo_fator_pendente === true) return { tipo: "segundo_fator" };
   if (entrada.exigirLoja && !entrada.situacao.unidade_id) return { tipo: "escolher_loja" };
   return { tipo: "seguir" };
 }

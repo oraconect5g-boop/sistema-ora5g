@@ -15,6 +15,19 @@ create table auth.sessions (
   created_at timestamptz not null default now(),
   not_after timestamptz
 );
+-- Fatores do segundo fator (MFA) do Auth (ORG-007a): só as colunas que o banco lê, com os tipos do Supabase. No
+-- Supabase real a API do Auth grava aqui (cadastrar, conferir, tirar); o banco do sistema só lê.
+create type auth.factor_type as enum ('totp', 'webauthn', 'phone', 'recovery_code');
+create type auth.factor_status as enum ('unverified', 'verified');
+create table auth.mfa_factors (
+  id uuid primary key default gen_random_uuid(),
+  user_id uuid not null references auth.users (id) on delete cascade,
+  friendly_name text,
+  factor_type auth.factor_type not null,
+  status auth.factor_status not null,
+  created_at timestamptz not null default now(),
+  updated_at timestamptz not null default now()
+);
 
 create function auth.jwt() returns jsonb
 language sql stable

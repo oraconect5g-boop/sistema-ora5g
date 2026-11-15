@@ -14,6 +14,8 @@ export async function definirSenha(dados: FormData) {
   const { data } = await supabase.auth.getUser();
   if (!data.user) redirect("/entrar?erro=link");
   const { error } = await supabase.auth.updateUser({ password: String(dados.get("senha")) });
+  // ORG-007a: o Supabase pede o código (aal2) de quem tem o segundo fator; depois do código, volta para cá.
+  if (error?.code === "insufficient_aal") redirect("/entrar/codigo?depois=senha");
   if (error) redirect("/conta/senha?erro=servico");
   redirect("/escolher-loja");
 }

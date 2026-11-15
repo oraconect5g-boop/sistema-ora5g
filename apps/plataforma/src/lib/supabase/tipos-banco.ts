@@ -7115,6 +7115,7 @@ export type Database = {
       situacao_da_sessao: {
         Args: never
         Returns: {
+          segundo_fator_pendente: boolean
           sessao_no_turno: boolean
           turno_termina_em: string
           unidade_id: string

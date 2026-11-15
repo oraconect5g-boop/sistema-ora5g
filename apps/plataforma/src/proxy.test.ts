@@ -44,5 +44,7 @@ describe("proxy de sessão", () => {
 
   it("não pega as páginas públicas nem a demonstração", () => {
     for (const caminho of ["/", "/entrar", "/entrar/recuperar", "/demo", "/demo/relatorios", "/saude", "/sair"]) expect(cobre(caminho), caminho).toBe(false);
+    // ORG-007a: a tela do código já tem sessão (a senha passou) e a renova; a Segurança da conta fica em /conta.
+    for (const caminho of ["/entrar/codigo", "/conta/seguranca"]) expect(cobre(caminho), caminho).toBe(true);
   });
 });

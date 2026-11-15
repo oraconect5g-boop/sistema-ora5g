@@ -20,6 +20,10 @@ export default async function DefinirSenha({ searchParams }: { searchParams: Pro
   if (!supabase) redirect("/entrar?erro=configuracao");
   const { data } = await supabase.auth.getUser();
   if (!data.user) redirect("/entrar?erro=link");
+  // ORG-007a: quem tem o segundo fator digita o código antes de trocar a senha (a recuperação pelo e-mail também).
+  // Sem a resposta do banco, a página segue: a ação manda ao código se o Supabase pedir.
+  const situacao = await supabase.rpc("situacao_da_sessao").maybeSingle();
+  if (!situacao.error && situacao.data?.segundo_fator_pendente === true) redirect("/entrar/codigo?depois=senha");
   const erro = chaveDoCatalogo(ERROS_DE_SENHA, (await searchParams).erro);
   return (
     <main className="mx-auto max-w-lg px-4 py-8">
