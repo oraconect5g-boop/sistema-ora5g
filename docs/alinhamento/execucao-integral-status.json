@@ -28,8 +28,8 @@
   },
   "contagem_dos_estados": {
     "nao_iniciado": 49,
-    "parcial": 77,
-    "testado": 48,
+    "parcial": 76,
+    "testado": 49,
     "bloqueado": 3,
     "respeitado": 2
   },
@@ -172,7 +172,7 @@
     "ORA-CAT-006": {
       "titulo": "Pesquisar por nome, SKU e, quando aplicável, IMEI/ICCID",
       "prioridade": "P0",
-      "estado": "parcial",
+      "estado": "testado",
       "lote": "L3 catálogo/importador; CAT-006 (14/11): busca por marca, código de barras e final do IMEI",
       "bloqueio_externo": null,
       "revisado_codex": false,
