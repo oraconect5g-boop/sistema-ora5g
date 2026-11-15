@@ -7,8 +7,9 @@ import { enderecoDaConfirmacao, erroDaSenha, ERROS_DA_CONFIRMACAO, precisaConfir
 
 describe("confirmação de senha recente (ORG-006b)", () => {
   it("a volta: só as telas das ações sensíveis (com o resto do endereço); o resto vira o Início", () => {
-    expect(["/equipe", "/aprovacoes", "/notas?ok=aprovada", "/caixa#saidas", "/notas/conciliacao"].map(voltaDaConfirmacao))
-      .toEqual(["/equipe", "/aprovacoes", "/notas?ok=aprovada", "/caixa#saidas", "/notas/conciliacao"]);
+    const titular = "/clientes/00000000-0000-4000-8000-0000000000c1/titular";
+    expect(["/equipe", "/aprovacoes", "/notas?ok=aprovada", "/caixa#saidas", "/notas/conciliacao", titular].map(voltaDaConfirmacao))
+      .toEqual(["/equipe", "/aprovacoes", "/notas?ok=aprovada", "/caixa#saidas", "/notas/conciliacao", titular]);
     for (const fora of ["/financeiro", "https://outro.exemplo/equipe", "//outro.exemplo", "/equipe//x", "/equipe\\x", "/equipe?<script>", "equipe", "", null, 3, ["/equipe"]]) {
       expect(voltaDaConfirmacao(fora), JSON.stringify(fora)).toBe("/inicio");
     }
