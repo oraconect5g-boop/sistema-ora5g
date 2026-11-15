@@ -2,7 +2,7 @@
   "_leia": "Checkpoint do programa de execução integral (PR #67). Carregar ao retomar e seguir para o próximo item executável da fila; não reiniciar o projeto. Estados vêm de status-requisitos.json (fonte da rastreabilidade); este arquivo acrescenta lote, bloqueio externo e revisão.",
   "atualizado_em": "2026-11-15",
   "base": {
-    "main": "b9eec8d",
+    "main": "c87b1a8",
     "pacote": {
       "pr": 67,
       "branch": "docs/execucao-integral-20261110",
@@ -18,13 +18,14 @@
   },
   "publicado": {
     "homologacao": {
-      "commit": "b9eec8d",
+      "commit": "c87b1a8",
       "quando": "2026-11-15",
-      "conferido": "rodapé da tela de entrada (b9eec8d · build 15/11/2026 14:18), /saude 200 e as rotas reais respondendo 307 para o login (inclusive /conta/confirmar, /caixa e /equipe)"
+      "conferido": "rodapé da tela de entrada (c87b1a8 · build 15/11/2026 14:32), /saude 200 e as rotas reais respondendo 307 para o login (inclusive /conta/confirmar, /caixa, /equipe, /notas e /vendas)"
     },
     "falta_publicar": [
-      "QUAL-012a, carga e recuperação (só testes), publicado ao fim do lote",
-      "migration 20261115190000_confirmacao_recente (ORG-006b): aplicar no ora5g-dev pede o sim do proprietário"
+      "FISC-009b, a carta de correção da NF-e registrada, publicado ao fim do lote",
+      "migration 20261115190000_confirmacao_recente (ORG-006b): aplicar no ora5g-dev pede o sim do proprietário",
+      "migration 20261115200000_carta_de_correcao (FISC-009b): aplicar no ora5g-dev pede o sim do proprietário"
     ]
   },
   "contagem_dos_estados": {
@@ -948,7 +949,7 @@
       "titulo": "Devolução, troca, cancelamento e correção fiscal",
       "prioridade": "P1",
       "estado": "parcial",
-      "lote": "L10 fiscal",
+      "lote": "L10 fiscal; FISC-009b (15/11): a carta de correção da NF-e registrada",
       "bloqueio_externo": null,
       "revisado_codex": false,
       "homologado": false

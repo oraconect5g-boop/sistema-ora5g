@@ -3240,6 +3240,54 @@ export type Database = {
           },
         ]
       }
+      notas_cartas_de_correcao: {
+        Row: {
+          correcao: string
+          id: string
+          numero: number
+          organizacao_id: string
+          pedido_id: string
+          protocolo: string
+          registrada_em: string
+          registrada_por: string
+        }
+        Insert: {
+          correcao: string
+          id?: string
+          numero: number
+          organizacao_id: string
+          pedido_id: string
+          protocolo: string
+          registrada_em?: string
+          registrada_por: string
+        }
+        Update: {
+          correcao?: string
+          id?: string
+          numero?: number
+          organizacao_id?: string
+          pedido_id?: string
+          protocolo?: string
+          registrada_em?: string
+          registrada_por?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "notas_cartas_de_correcao_pedido_id_fkey"
+            columns: ["pedido_id"]
+            isOneToOne: false
+            referencedRelation: "notas_pedidos"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "notas_cartas_de_correcao_registrada_por_fkey"
+            columns: ["registrada_por"]
+            isOneToOne: false
+            referencedRelation: "perfis_usuario"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       notas_documentos: {
         Row: {
           bytes: number
@@ -6857,6 +6905,15 @@ export type Database = {
       }
       notas_registrar_cancelamento: {
         Args: { p_justificativa: string; p_pedido: string; p_protocolo: string }
+        Returns: boolean
+      }
+      notas_registrar_carta_de_correcao: {
+        Args: {
+          p_correcao: string
+          p_numero: number
+          p_pedido: string
+          p_protocolo: string
+        }
         Returns: boolean
       }
       notas_registrar_emissao: {

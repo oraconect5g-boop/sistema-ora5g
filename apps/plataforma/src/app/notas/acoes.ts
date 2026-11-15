@@ -137,6 +137,23 @@ export async function corrigirChaveDaNota(dados: FormData) {
   redirect(error ? `/vendas/${venda}?erro_nota=${erroDasNotas(error)}` : `/vendas/${venda}?nota=chave_corrigida`);
 }
 
+// FISC-009b (ORA-FISC-009): a carta de correção da NF-e feita no portal do fisco, registrada com o número do evento, o
+// protocolo e o texto. O banco confere quem, a nota (NF-e emitida e não cancelada) e as regras do evento; repetir a
+// mesma carta não muda nada. O texto não é cortado aqui (o banco recusa o que passar de 1.000 caracteres).
+export async function registrarCartaDeCorrecao(dados: FormData) {
+  const pedido = dados.get("pedido");
+  const venda = dados.get("venda");
+  if (!ehUuid(pedido) || !ehUuid(venda)) redirect("/vendas?erro=dados");
+  const digitado = texto(dados, "numero", 10);
+  const numero = /^[0-9]{1,2}$/.test(digitado) ? Number(digitado) : 0;
+  if (numero < 1 || numero > 20) redirect(`/vendas/${venda}?erro_nota=carta_numero`);
+  const { supabase } = await obterSessao({ exigirLoja: true });
+  const { data, error } = await supabase.rpc("notas_registrar_carta_de_correcao", {
+    p_pedido: pedido, p_numero: numero, p_protocolo: texto(dados, "protocolo", 60), p_correcao: texto(dados, "correcao", 1001),
+  });
+  redirect(error ? `/vendas/${venda}?erro_nota=${erroDasNotas(error)}` : `/vendas/${venda}?nota=${data === false ? "carta_repetida" : "carta_registrada"}`);
+}
+
 // L10b (ORA-FISC-008): quem aprova nota registra que conferiu uma divergência da conciliação (o que viu e o que fez). O
 // banco confere a permissão na loja do pedido e se a divergência ainda existe; a conferência fica na auditoria.
 export async function conferirDivergencia(dados: FormData) {
