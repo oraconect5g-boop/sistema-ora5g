@@ -2,7 +2,7 @@
   "_leia": "Checkpoint do programa de execução integral (PR #67). Carregar ao retomar e seguir para o próximo item executável da fila; não reiniciar o projeto. Estados vêm de status-requisitos.json (fonte da rastreabilidade); este arquivo acrescenta lote, bloqueio externo e revisão.",
   "atualizado_em": "2026-11-15",
   "base": {
-    "main": "ec98b1b",
+    "main": "49e4e4e",
     "pacote": {
       "pr": 67,
       "branch": "docs/execucao-integral-20261110",
@@ -18,17 +18,18 @@
   },
   "publicado": {
     "homologacao": {
-      "commit": "ec98b1b",
+      "commit": "49e4e4e",
       "quando": "2026-11-15",
-      "conferido": "rodapé da tela de entrada (ec98b1b · build 15/11/2026 12:26), /saude 200 e as rotas reais respondendo 307 para o login (inclusive /estoque/pedidos e /produtos/importar)"
+      "conferido": "rodapé da tela de entrada (49e4e4e · build 15/11/2026 12:46), /saude 200 e as rotas reais respondendo 307 para o login (inclusive /produtos/importar e /estoque/pedidos)"
     },
     "falta_publicar": [
-      "CAT-002b, a planilha do Excel no importador, publicado ao fim do lote"
+      "ORG-007a, o segundo fator para entrar, publicado ao fim do lote",
+      "migration 20261115170000_segundo_fator (ORG-007a): aplicar no ora5g-dev pede o sim do proprietário"
     ]
   },
   "contagem_dos_estados": {
-    "nao_iniciado": 49,
-    "parcial": 63,
+    "nao_iniciado": 48,
+    "parcial": 64,
     "testado": 62,
     "bloqueado": 3,
     "respeitado": 2
@@ -91,9 +92,9 @@
     "ORA-ORG-007": {
       "titulo": "Autenticação reforçada para perfis privilegiados",
       "prioridade": "P1",
-      "estado": "nao_iniciado",
-      "lote": "L2 cadastros",
-      "bloqueio_externo": null,
+      "estado": "parcial",
+      "lote": "L2 cadastros; ORG-007a (15/11): o segundo fator para entrar, exigido pelo banco de quem o liga",
+      "bloqueio_externo": "D-046 (obrigatoriedade para dono e administrador; retirada de quem perdeu os celulares, que pede a chave de serviço da J1)",
       "revisado_codex": false,
       "homologado": false
     },

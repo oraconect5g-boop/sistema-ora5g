@@ -20,6 +20,17 @@ describe("decidirSessao", () => {
     expect(decidirSessao({ temUsuario: true, situacao: { ...ok, unidade_id: null }, exigirLoja: false })).toEqual({ tipo: "seguir" });
     expect(decidirSessao({ temUsuario: true, situacao: ok, exigirLoja: true })).toEqual({ tipo: "seguir" });
   });
+
+  it("o código do segundo fator pendente leva à tela do código, antes da loja; bloqueio e fim do turno vêm antes dele (ORG-007a)", () => {
+    const pendente = { ...ok, unidade_id: null, segundo_fator_pendente: true };
+    expect(decidirSessao({ temUsuario: true, situacao: pendente, exigirLoja: true })).toEqual({ tipo: "segundo_fator" });
+    expect(decidirSessao({ temUsuario: true, situacao: pendente, exigirLoja: false })).toEqual({ tipo: "segundo_fator" });
+    expect(decidirSessao({ temUsuario: true, situacao: { ...pendente, usuario_ativo: false }, exigirLoja: true })).toEqual({ tipo: "sair", erro: "bloqueado" });
+    expect(decidirSessao({ temUsuario: true, situacao: { ...pendente, sessao_no_turno: false }, exigirLoja: true })).toEqual({ tipo: "sair", erro: "turno" });
+    // Banco sem a migration (o campo não vem) ou com o código já digitado: segue como antes.
+    expect(decidirSessao({ temUsuario: true, situacao: { ...ok, segundo_fator_pendente: false }, exigirLoja: true })).toEqual({ tipo: "seguir" });
+    expect(decidirSessao({ temUsuario: true, situacao: { ...ok, segundo_fator_pendente: null }, exigirLoja: true })).toEqual({ tipo: "seguir" });
+  });
 });
 
 describe("equipe", () => {

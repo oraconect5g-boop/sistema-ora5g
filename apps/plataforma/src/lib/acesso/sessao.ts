@@ -12,7 +12,8 @@ export class FalhaDoServico extends Error {
 }
 
 // Sessão real para as páginas e ações do servidor: usuário validado no Auth, pessoa ativa,
-// turno valendo e, quando a tela pede, loja escolhida. O banco decide de novo em cada consulta.
+// turno valendo, o código do segundo fator digitado (de quem o ligou; ORG-007a) e, quando a tela pede,
+// loja escolhida. O banco decide de novo em cada consulta.
 export async function obterSessao(opcoes: { exigirLoja: boolean }) {
   const supabase = await clienteSupabaseServidor();
   if (!supabase) redirect("/entrar?erro=configuracao");
@@ -30,6 +31,7 @@ export async function obterSessao(opcoes: { exigirLoja: boolean }) {
   const decisao = decidirSessao({ temUsuario: Boolean(usuario), situacao, exigirLoja: opcoes.exigirLoja });
   if (decisao.tipo === "entrar") redirect("/entrar");
   if (decisao.tipo === "sair") redirect(`/sair?motivo=${decisao.erro}`);
+  if (decisao.tipo === "segundo_fator") redirect("/entrar/codigo");
   if (decisao.tipo === "escolher_loja") redirect("/escolher-loja");
   if (!usuario || !situacao) redirect("/entrar");
   return { supabase, usuario, situacao };
