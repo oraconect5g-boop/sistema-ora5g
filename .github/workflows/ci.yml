@@ -58,6 +58,8 @@ jobs:
       - run: npm run typecheck
       - run: npm test
       - run: npm run build
+      - name: Orçamento de desempenho (JavaScript e CSS de cada tela, QUAL-010a)
+        run: node scripts/orcamento-de-desempenho.mjs --conferir
       - run: npm audit --omit=dev
       - run: npx -w @ora5g/plataforma playwright install --with-deps chromium
       - run: npm run test:e2e
