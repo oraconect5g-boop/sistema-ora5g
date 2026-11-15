@@ -12,6 +12,7 @@ import { periodoFinanceiro } from "../../lib/financeiro/painel";
 import { lerPaineisDoInicio, permissoesDoInicio } from "../../lib/inicio/consulta";
 import { ICONES_DAS_PENDENCIAS } from "../../lib/inicio/icones-das-pendencias";
 import { visaoDoInicio } from "../../lib/inicio/painel";
+import { lerAlertaDoEstoque } from "../../lib/inicio/alerta-do-estoque";
 import { lerPendencias } from "../../lib/inicio/pendencias";
 import { lerRegioesDoPainel } from "../../lib/lojas/regioes";
 import { textoDoParametro, type ValorDeParametro } from "../../lib/parametros";
@@ -45,12 +46,15 @@ export default async function Inicio({ searchParams }: { searchParams: Promise<P
   // O que espera a pessoa (lib/inicio/pendencias.ts: a mesma leitura do sino do topo, G6) e os painéis, em paralelo.
   // Erro nas pendências derruba a página; os painéis não: cada leitura volta com o próprio estado (ok, indisponível ou falha).
   // ORG-009: as regiões só servem a quem vê a rede (a soma por região na rede inteira).
-  const [pendencias, paineis, regioes] = await Promise.all([
+  // REPORT-001b: o estoque abaixo do mínimo, só aqui (o sino não lê o painel do estoque).
+  const [pendenciasLidas, paineis, regioes, alertaDoEstoque] = await Promise.all([
     lerPendencias(supabase, { usuario: usuario.id, unidade, permissoes }),
     lerPaineisDoInicio(supabase, { visao, periodo: periodoFinanceiro(textoDoParametro(parametros.periodo)), loja: textoDoParametro(parametros.loja), turno, usuario: usuario.id, ranking: inicio.ranking, custo: inicio.custo,
       metas: { gestao: permissoes.has("metas.gerir") || permissoes.has("metas.ver_unidade"), propria: permissoes.has("metas.ver_propria") } }),
     visao === "rede" ? lerRegioesDoPainel(supabase) : Promise.resolve(null),
+    lerAlertaDoEstoque(supabase, { rede: visao === "rede", unidade, permissoes }),
   ]);
+  const pendencias = alertaDoEstoque?.estado === "ok" && alertaDoEstoque.pendencia ? [...pendenciasLidas, alertaDoEstoque.pendencia] : pendenciasLidas;
   const fim = horaDoFimDoTurno(situacao.turno_termina_em);
   const atalhos = montarMenu(permissoes).visiveis.filter((p) => p !== "inicio");
 
@@ -74,6 +78,7 @@ export default async function Inicio({ searchParams }: { searchParams: Promise<P
           })}
         </section>
       )}
+      {alertaDoEstoque?.estado === "falha" && <Aviso tom="aviso">Não deu para ler o estoque abaixo do mínimo agora; o painel do estoque mostra quando o banco responder.</Aviso>}
       <ConteudoInicio paineis={paineis} usuario={usuario.id} turno={turno} conferenteDeCaixa={permissoes.has("caixa.conferir")} regioes={regioes} />
       <Cartao titulo="Atalhos">
         <div className="grid grid-cols-2 gap-2 sm:grid-cols-3 lg:grid-cols-4">

@@ -1,7 +1,7 @@
 // O ícone de cada pendência (Início e sino do topo, G6). A leitura devolve só o nome (vai pela rede até o sino); a tela
 // troca o nome pelo ícone daqui.
 import {
-  AlarmClock, ArrowRightLeft, BadgePercent, Banknote, CreditCard, FileClock, FileText, FileUp, Gift, PackageCheck, RadioTower, ReceiptText, RotateCcw, Scale, Send,
+  AlarmClock, ArrowRightLeft, BadgePercent, Banknote, CreditCard, FileClock, FileText, FileUp, Gift, PackageCheck, PackageMinus, RadioTower, ReceiptText, RotateCcw, Scale, Send,
   ShieldAlert, SignalZero, Undo2, Wallet, Wrench, type LucideIcon,
 } from "lucide-react";
 
@@ -23,6 +23,8 @@ export const ICONES_DAS_PENDENCIAS = {
   nota_parada: FileClock,
   ativacao_com_falha: SignalZero,
   nota_com_divergencia: ShieldAlert,
+  // REPORT-001b: só no Início (o sino não lê o painel do estoque).
+  estoque_abaixo_do_minimo: PackageMinus,
   // Saúde da operação (Q1): as filas que não estão no Início.
   envio_whatsapp: Send,
   pagamento_a_conciliar: CreditCard,
