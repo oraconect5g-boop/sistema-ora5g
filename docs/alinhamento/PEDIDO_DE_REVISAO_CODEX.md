@@ -958,3 +958,9 @@ Programa de execução integral (PR #67; checkpoint em `docs/alinhamento/EXECUCA
 - **PAY-001:** o FALTA "identificação do terminal (PAY-012)" ficou para trás no L7a; a nota agora diz isso, e o requisito segue "parcial" só pela conferência da correção #46.
 - **Limite declarado:** (1) migration não aplicada no `ora5g-dev` (pede o sim do proprietário); (2) pagamento de maquininha sem a maquininha informada (anterior ao L7a) fica fora do quadro (o painel de recebíveis já conta esses); (3) a planilha do financeiro não traz o quadro das maquininhas.
 - **Pedido ao Codex:** conferir (a) o recorte pelo RLS (SECURITY INVOKER) e a janela pelo `criado_em`; (b) a leitura estrita (conciliado ≤ recebido).
+
+## 15/11/2026 — Registro da migration do REPORT-005b aplicada no `ora5g-dev`
+
+- **O que foi feito:** com o sim do proprietário ("Sim, aplique"), a migration `20261115043059_pagamentos_por_terminal` (antes `20261115030000`) foi aplicada pelo conector do Supabase com o texto inteiro do arquivo; o md5 gravado é igual ao do arquivo. Arquivo e reversão renomeados para a versão gravada; `aplicadas-dev.json` com as 73; tipos gerados de novo pelo Supabase (iguais aos escritos à mão, só o cabeçalho mudou). Base: `main` em `309a7ac` (merge do REPORT-005b; publicado em 14/11).
+- **Conferido depois, sem gravar:** a função não é SECURITY DEFINER e é executável por `authenticated` e não por `anon`; o verificador de segurança igual ao de antes (149 funções expostas, os 6 avisos do esquema `privado` e o de senha vazada). A leitura como o dono respondeu no formato que a tela lê, mas a sessão do turno de 14/11 já tinha vencido e o banco de desenvolvimento não tem maquininha nem pagamento: o quadro só terá números depois das primeiras vendas com maquininha.
+- **Pedido ao Codex:** conferir o registro (nome, md5 e a ordem).
