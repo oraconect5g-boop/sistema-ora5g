@@ -51,6 +51,9 @@ const cenario = vi.hoisted(() => ({
   /** Conciliação das notas (L10b): a resposta de notas_conciliacao; o padrão é a função ausente. */
   conciliacao: null as unknown,
   erroDaConciliacao: null as null | { code: string },
+  /** Painel do estoque (REPORT-001b): a resposta de estoque_painel; o padrão é a função ausente. */
+  estoque: null as unknown,
+  erroDoEstoque: null as null | { code: string },
   /** Argumentos de cada chamada de função do banco, por nome. */
   chamadas: {} as Record<string, Record<string, unknown>[]>,
   tabelas: {} as Record<string, Record<string, unknown>[]>,
@@ -137,6 +140,7 @@ const supabase = {
     if (nome === "metas_lojas") return responder(cenario.erroDasMetas, cenario.metasDasLojas);
     if (nome === "metas_painel") return responder(cenario.erroDasMetas, cenario.minhaMeta);
     if (nome === "notas_conciliacao") return responder(cenario.erroDaConciliacao, cenario.conciliacao);
+    if (nome === "estoque_painel") return responder(cenario.erroDoEstoque, cenario.estoque);
     return responder({ code: "PGRST202" }, null);
   },
 };
@@ -385,6 +389,7 @@ beforeEach(() => {
     vendas: HOJE, anterior: ONTEM, erroDeVendas: null, erroDoAnterior: null,
     financeiro: FINANCEIRO, erroDoFinanceiro: null, margem: MARGEM, erroDaMargem: null, producao: PRODUCAO, erroDaProducao: null, nomes: NOMES, erroDosNomes: null,
     metasDasLojas: METAS_DA_LOJA, minhaMeta: MINHA_META, erroDasMetas: null, conciliacao: null, erroDaConciliacao: { code: "PGRST202" },
+    estoque: null, erroDoEstoque: { code: "PGRST202" },
     chamadas: {}, errosDasTabelas: {}, semContagem: [], semColunas: [], lidas: [], sessoes: [],
     tabelas: {
       perfis_usuario: [{ id: GESTOR, nome: "Gestor Teste" }, { id: ANA, nome: "Ana Teste" }, { id: BETO, nome: "Beto Teste" }],
@@ -1475,5 +1480,56 @@ describe("Início: alertas da loja do turno (REPORT-007, L12f)", () => {
     Object.assign(cenario, { erroDaConciliacao: null, chamadas: {} });
     await pagina();
     expect(cenario.chamadas.notas_conciliacao).toBeUndefined();
+  });
+});
+
+// ---------------------------------------------------------------------------------------------
+// REPORT-001b: o estoque abaixo do mínimo, só no Início
+// ---------------------------------------------------------------------------------------------
+const ESTOQUE = (abaixo: number) => ({
+  totais: { fisico: 40, reservado: 2, disponivel: 38, abaixo_do_minimo: abaixo, parado: 0, chegando: 0, fora_da_venda: 0 },
+  locais: [], modelos: [], categorias: [],
+});
+describe("Início: o estoque abaixo do mínimo (REPORT-001b)", () => {
+  it("na loja do turno: o aviso conta os produtos abaixo do mínimo e leva ao painel do estoque; zero não aparece", async () => {
+    entrar("gerente");
+    Object.assign(cenario, { estoque: ESTOQUE(3), erroDoEstoque: null });
+    let p = await pagina();
+    expect(cenario.chamadas.estoque_painel).toEqual([{ p_unidade: LOJA }]);
+    expect(p.pendencias["Estoque abaixo do mínimo"]).toBe(3);
+    expect(p.enderecos).toContain("/estoque?aba=painel");
+    expect(p.texto).toContain("produtos nesta loja");
+    cenario.estoque = ESTOQUE(0);
+    p = await pagina();
+    expect(p.pendencias["Estoque abaixo do mínimo"]).toBeUndefined();
+  });
+
+  it("na rede: as lojas que a pessoa consulta, com o painel da rede; o vendedor vê o da loja dele", async () => {
+    entrar("dono");
+    Object.assign(cenario, { estoque: ESTOQUE(7), erroDoEstoque: null, metasDasLojas: METAS_DA_REDE });
+    const p = await pagina();
+    expect(cenario.chamadas.estoque_painel).toEqual([{}]);
+    expect(p.pendencias["Estoque abaixo do mínimo"]).toBe(7);
+    expect(p.enderecos).toContain("/estoque?aba=painel&loja=rede");
+    cenario.chamadas = {};
+    entrar("vendedor", ANA);
+    const v = await pagina();
+    expect(cenario.chamadas.estoque_painel).toEqual([{ p_unidade: LOJA }]);
+    expect(v.pendencias["Estoque abaixo do mínimo"]).toBe(7);
+  });
+
+  it("sem consultar o estoque, nem pergunta; banco sem o painel, some; falha, o Início diz que não leu, sem número", async () => {
+    entrar("tecnico");
+    await pagina();
+    expect(cenario.chamadas.estoque_painel).toBeUndefined();
+    entrar("gerente");
+    let p = await pagina();
+    expect(p.pendencias["Estoque abaixo do mínimo"]).toBeUndefined();
+    expect(p.texto).not.toContain("Não deu para ler o estoque");
+    Object.assign(cenario, { estoque: null, erroDoEstoque: { code: "57014" } });
+    p = await pagina();
+    expect(p.pendencias["Estoque abaixo do mínimo"]).toBeUndefined();
+    expect(p.texto).toContain("Não deu para ler o estoque abaixo do mínimo agora");
+    expect(errosRegistrados()).toContainEqual(["estoque: falha ao consultar estoque_painel", { codigo: "57014" }]);
   });
 });
