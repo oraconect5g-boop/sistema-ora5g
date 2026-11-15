@@ -5,15 +5,17 @@ import type { NextRequest } from "next/server";
 import { redirecionar } from "../../../../lib/acesso/redirecionar";
 import { obterSessao } from "../../../../lib/acesso/sessao";
 import { montarLinhas } from "../../../../lib/importacao/catalogo";
-import { ErroDoCsv, LIMITES_DO_CSV, lerCsv } from "../../../../lib/importacao/csv";
-import { erroDoBancoNaImportacao, lerEnvio, mapeamentoParaGravar } from "../../../../lib/importacao/regras";
+import { ErroDaPlanilha, LIMITES_DA_PLANILHA } from "../../../../lib/importacao/csv";
+import { descomprimirNoServidor } from "../../../../lib/importacao/descomprimir-servidor";
+import { lerPlanilha } from "../../../../lib/importacao/planilha";
+import { erroDaPlanilhaNaImportacao, erroDoBancoNaImportacao, lerEnvio, mapeamentoParaGravar } from "../../../../lib/importacao/regras";
 
 export const dynamic = "force-dynamic";
 
 const voltar = (parametros: Record<string, string>) => redirecionar(`/produtos/importar?${new URLSearchParams(parametros)}`);
 
-// Envio da planilha (lote L3c: ORA-CAT-002). Rota própria, e não ação do servidor, por causa do
-// tamanho do arquivo (até 5 MB). O servidor relê o arquivo inteiro (a tela só leu o cabeçalho), calcula
+// Envio da planilha (lote L3c: ORA-CAT-002; o Excel .xlsx desde o CAT-002b). Rota própria, e não ação do servidor,
+// por causa do tamanho do arquivo (até 5 MB). O servidor relê o arquivo inteiro (a tela só leu o cabeçalho), calcula
 // a impressão digital (SHA-256), monta as linhas com o mapeamento e grava a PRÉVIA no banco, que
 // valida tudo de novo. Nada entra no catálogo aqui: aplicar é outra pessoa, em outra etapa.
 export async function POST(requisicao: NextRequest) {
@@ -23,8 +25,13 @@ export async function POST(requisicao: NextRequest) {
   if (origem && host && new URL(origem).host !== host) return new Response("Origem não permitida", { status: 403 });
 
   const { supabase, situacao } = await obterSessao({ exigirLoja: true });
+  // Só quem gera a prévia tem a planilha lida (CAT-002b): ler o Excel custa mais que ler o CSV, e o banco recusaria
+  // depois de qualquer jeito. Quem decide continua sendo o banco (importacao_catalogo_previa); aqui só poupa o servidor.
+  const pode = await supabase.rpc("tem_permissao", { p_permissao: "importacao.executar" });
+  if (pode.error) return voltar({ erro: "falha" });
+  if (pode.data !== true) return voltar({ erro: "permissao" });
   const tamanho = Number(requisicao.headers.get("content-length") ?? "0");
-  if (tamanho > LIMITES_DO_CSV.bytes + 64 * 1024) return voltar({ erro: "grande" });
+  if (tamanho > LIMITES_DA_PLANILHA.bytes + 64 * 1024) return voltar({ erro: "grande" });
   let dados: FormData;
   try {
     dados = await requisicao.formData();
@@ -33,14 +40,14 @@ export async function POST(requisicao: NextRequest) {
   }
   const arquivo = dados.get("arquivo");
   if (!(arquivo instanceof File) || arquivo.size === 0) return voltar({ erro: arquivo instanceof File ? "vazio" : "arquivo" });
-  if (arquivo.size > LIMITES_DO_CSV.bytes) return voltar({ erro: "grande" });
+  if (arquivo.size > LIMITES_DA_PLANILHA.bytes) return voltar({ erro: "grande" });
   const bytes = new Uint8Array(await arquivo.arrayBuffer());
 
   let planilha;
   try {
-    planilha = lerCsv(bytes);
+    planilha = await lerPlanilha(bytes, descomprimirNoServidor);
   } catch (e) {
-    return voltar({ erro: e instanceof ErroDoCsv ? e.motivo : "arquivo" });
+    return voltar({ erro: e instanceof ErroDaPlanilha ? erroDaPlanilhaNaImportacao(e.motivo) : "arquivo" });
   }
   const lido = lerEnvio(dados, planilha.cabecalho.length);
   if (!lido.ok) return voltar({ erro: lido.erro });
@@ -51,7 +58,7 @@ export async function POST(requisicao: NextRequest) {
   const linhas = montarLinhas(planilha, lido.envio.mapa, lido.envio.padroes);
   const { data, error } = await supabase.rpc("importacao_catalogo_previa", {
     p_organizacao: unidade.data.organizacao_id,
-    p_arquivo_nome: arquivo.name.slice(0, 200) || "planilha.csv",
+    p_arquivo_nome: arquivo.name.slice(0, 200) || (planilha.formato === "xlsx" ? "planilha.xlsx" : "planilha.csv"),
     p_sha256: createHash("sha256").update(bytes).digest("hex"),
     p_mapeamento: mapeamentoParaGravar(planilha.cabecalho, lido.envio.mapa, lido.envio.padroes),
     p_linhas: linhas,

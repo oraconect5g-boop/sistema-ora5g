@@ -81,7 +81,8 @@ export function montarLinhas(planilha: Planilha, mapa: Mapeamento, padroes: { ti
     }
     const nome = celula(linha, "nome");
     return {
-      numero: i + 2, // a linha 1 é o cabeçalho
+      // A linha do arquivo (no Excel, a da folha; CAT-002b): a prévia aponta a linha que a pessoa vê.
+      numero: planilha.numeros[i] ?? i + 2,
       sku: celula(linha, "sku"),
       nome,
       produto: celula(linha, "produto") ?? nome,

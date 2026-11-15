@@ -1,12 +1,12 @@
 import { describe, expect, it } from "vitest";
 
-import { ErroDoCsv, LIMITES_DO_CSV, lerCabecalho, lerCsv, semAcento } from "./csv";
+import { ErroDaPlanilha, LIMITES_DA_PLANILHA, lerCabecalho, lerCsv, semAcento } from "./csv";
 
 // Planilhas FICTÍCIAS montadas no teste (nenhum arquivo real da Rein: o formato chega com a pendência B1).
 const utf8 = (texto: string) => new TextEncoder().encode(texto);
 const latin1 = (texto: string) => Uint8Array.from([...texto].map((c) => c.charCodeAt(0)));
 const falha = (fn: () => unknown) => {
-  try { fn(); } catch (e) { return e instanceof ErroDoCsv ? e.motivo : "outro"; }
+  try { fn(); } catch (e) { return e instanceof ErroDaPlanilha ? e.motivo : "outro"; }
   return null;
 };
 
@@ -17,6 +17,7 @@ describe("leitura do CSV", () => {
     expect(p.codificacao).toBe("utf-8");
     expect(p.cabecalho).toEqual(["SKU", "Descrição", "Preço"]);
     expect(p.linhas).toEqual([["APA-1", 'Galaxy "A15" 128 GB', "1.299,90"], ["ACE-1", "Capa\ncom alça", "79,90"]]);
+    expect([p.formato, p.numeros]).toEqual(["csv", [2, 3]]);
   });
 
   it("vírgula e tabulação; BOM; linhas vazias ignoradas; espaços nas pontas aparados", () => {
@@ -37,17 +38,27 @@ describe("leitura do CSV", () => {
     expect(falha(() => lerCsv(utf8('sku;nome\nA1;"sem fim')))).toBe("aspas");
     expect(falha(() => lerCsv(utf8("sku;SKU\nA1;A2")))).toBe("cabecalho");
     expect(falha(() => lerCsv(utf8("sku;;nome\nA1;x;y")))).toBe("cabecalho");
-    expect(falha(() => lerCsv(utf8(`sku;nome\nA1;${"x".repeat(LIMITES_DO_CSV.celula + 1)}`)))).toBe("celula");
-    expect(falha(() => lerCsv(utf8(`${Array.from({ length: 61 }, (_, i) => `c${i}`).join(";")}\n1`)))).toBe("colunas");
-    const muitas = `sku;nome\n${Array.from({ length: LIMITES_DO_CSV.linhas + 1 }, (_, i) => `S${i};n`).join("\n")}`;
+    expect(falha(() => lerCsv(utf8(`sku;nome\nA1;${"x".repeat(LIMITES_DA_PLANILHA.celula + 1)}`)))).toBe("celula");
+    // 100 colunas passam (o relatório de produtos da Rein tem 83); a 101ª não.
+    expect(lerCsv(utf8(`${Array.from({ length: 100 }, (_, i) => `c${i}`).join(";")}\n1`)).cabecalho).toHaveLength(100);
+    expect(falha(() => lerCsv(utf8(`${Array.from({ length: 101 }, (_, i) => `c${i}`).join(";")}\n1`)))).toBe("colunas");
+    const muitas = `sku;nome\n${Array.from({ length: LIMITES_DA_PLANILHA.linhas + 1 }, (_, i) => `S${i};n`).join("\n")}`;
     expect(falha(() => lerCsv(utf8(muitas)))).toBe("linhas");
-    expect(falha(() => lerCsv(new Uint8Array(LIMITES_DO_CSV.bytes + 1)))).toBe("grande");
+    expect(falha(() => lerCsv(new Uint8Array(LIMITES_DA_PLANILHA.bytes + 1)))).toBe("grande");
   });
 
   it("lê só o cabeçalho, mesmo com o resto do arquivo cortado no meio", () => {
     const bytes = utf8('Código;"Descrição; completa";Preço\nA1;"texto cortado no mei');
     expect(lerCabecalho(bytes)).toEqual({ separador: ";", colunas: ["Código", "Descrição; completa", "Preço"] });
     expect(lerCabecalho(latin1("SKU;Pre\u00e7o\r\nA1;1"))).toEqual({ separador: ";", colunas: ["SKU", "Preço"] });
+  });
+
+  it("o número de cada linha é a linha do arquivo: linha vazia e célula de várias linhas não desalinham a prévia (CAT-002b)", () => {
+    const p = lerCsv(utf8('SKU;Nome\n\nA1;"Capa\ncom alça"\nA2;Película\n\n\nA3;Cabo\n'));
+    expect(p.linhas.map((l) => l[0])).toEqual(["A1", "A2", "A3"]);
+    expect(p.numeros).toEqual([3, 5, 8]);
+    // O banco guarda a linha com até 6 algarismos: arquivo com dados além da linha 999.999 é recusado antes.
+    expect(falha(() => lerCsv(utf8(`SKU;Nome${"\n".repeat(999_999)}A1;Capa`)))).toBe("linhas");
   });
 
   it("compara nomes sem acento nem maiúsculas", () => {
