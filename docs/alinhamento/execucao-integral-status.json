@@ -2,7 +2,7 @@
   "_leia": "Checkpoint do programa de execução integral (PR #67). Carregar ao retomar e seguir para o próximo item executável da fila; não reiniciar o projeto. Estados vêm de status-requisitos.json (fonte da rastreabilidade); este arquivo acrescenta lote, bloqueio externo e revisão.",
   "atualizado_em": "2026-11-14",
   "base": {
-    "main": "3e198a6",
+    "main": "9495691",
     "pacote": {
       "pr": 67,
       "branch": "docs/execucao-integral-20261110",
@@ -18,18 +18,18 @@
   },
   "publicado": {
     "homologacao": {
-      "commit": "3e198a6",
+      "commit": "9495691",
       "quando": "2026-11-14",
-      "conferido": "rodapé da tela de entrada (3e198a6 · build 14/11/2026 21:21), /saude 200 e as rotas reais respondendo 307 para o login"
+      "conferido": "rodapé da tela de entrada (9495691 · build 14/11/2026 23:16), /saude 200 e as rotas reais respondendo 307 para o login"
     },
     "falta_publicar": [
-      "CAT-006, busca por marca, código de barras e final do IMEI (sem migration), publicado ao fim do lote"
+      "R4, revisão do estado dos P0 (documentos, um teste e um texto do /financeiro), publicado ao fim do lote"
     ]
   },
   "contagem_dos_estados": {
     "nao_iniciado": 49,
-    "parcial": 76,
-    "testado": 49,
+    "parcial": 73,
+    "testado": 52,
     "bloqueado": 3,
     "respeitado": 2
   },
@@ -47,7 +47,7 @@
       "titulo": "Associar usuários a uma ou múltiplas lojas com função e vigência",
       "prioridade": "P0",
       "estado": "parcial",
-      "lote": "L2 cadastros",
+      "lote": "L2 cadastros; R4 (14/11): revisão do estado",
       "bloqueio_externo": null,
       "revisado_codex": false,
       "homologado": false
@@ -65,7 +65,7 @@
       "titulo": "Isolar dados por loja na API e PostgreSQL/RLS",
       "prioridade": "P0",
       "estado": "parcial",
-      "lote": "L2 cadastros",
+      "lote": "L2 cadastros; R4 (14/11): revisão do estado",
       "bloqueio_externo": null,
       "revisado_codex": false,
       "homologado": false
@@ -227,7 +227,7 @@
       "titulo": "Manter disponibilidade por loja e localização física",
       "prioridade": "P0",
       "estado": "parcial",
-      "lote": "L4 estoque/compras; G3 painéis do estoque (entregue em 13/11); B5 leituras completas (14/11)",
+      "lote": "L4 estoque/compras; G3 painéis do estoque (entregue em 13/11); B5 leituras completas (14/11); R4 (14/11): revisão do estado",
       "bloqueio_externo": null,
       "revisado_codex": false,
       "homologado": false
@@ -254,7 +254,7 @@
       "titulo": "Receber estoque inicial validado por contagem real",
       "prioridade": "P0",
       "estado": "parcial",
-      "lote": "L4a entrada de mercadoria; R1 correções do recebimento; B2 correção #80 (14/11)",
+      "lote": "L4a entrada de mercadoria; R1 correções do recebimento; B2 correção #80 (14/11); R4 (14/11): revisão do estado",
       "bloqueio_externo": null,
       "revisado_codex": false,
       "homologado": false
@@ -271,8 +271,8 @@
     "ORA-INV-006": {
       "titulo": "Bloquear venda de IMEI indisponível/transferido/reservado",
       "prioridade": "P0",
-      "estado": "parcial",
-      "lote": "L4 estoque/compras",
+      "estado": "testado",
+      "lote": "L4 estoque/compras; R4 (14/11): revisão do estado",
       "bloqueio_externo": null,
       "revisado_codex": false,
       "homologado": false
@@ -344,7 +344,7 @@
       "titulo": "Relacionar cliente às compras/IMEIs/chips/linhas e atendimentos",
       "prioridade": "P0",
       "estado": "parcial",
-      "lote": "L5a clientes",
+      "lote": "L5a clientes; R4 (14/11): revisão do estado",
       "bloqueio_externo": null,
       "revisado_codex": false,
       "homologado": false
@@ -506,7 +506,7 @@
       "titulo": "Cancelar e devolver sem apagar origem",
       "prioridade": "P0",
       "estado": "parcial",
-      "lote": "L6 PDV",
+      "lote": "L6 PDV; R4 (14/11): revisão do estado",
       "bloqueio_externo": null,
       "revisado_codex": false,
       "homologado": false
@@ -578,7 +578,7 @@
       "titulo": "Suportar financiamento, boleto, parcelamento e pagamentos online",
       "prioridade": "P0",
       "estado": "parcial",
-      "lote": "L7 pagamentos/caixa",
+      "lote": "L7 pagamentos/caixa; R4 (14/11): revisão do estado",
       "bloqueio_externo": null,
       "revisado_codex": false,
       "homologado": false
@@ -587,7 +587,7 @@
       "titulo": "Diferenciar autorizado, pago, liquidado, estornado e conciliado",
       "prioridade": "P0",
       "estado": "parcial",
-      "lote": "L7a pagamentos",
+      "lote": "L7a pagamentos; R4 (14/11): revisão do estado",
       "bloqueio_externo": null,
       "revisado_codex": false,
       "homologado": false
@@ -632,7 +632,7 @@
       "titulo": "Evitar confirmação duplicada via webhook/retry",
       "prioridade": "P0",
       "estado": "parcial",
-      "lote": "L7 pagamentos/caixa",
+      "lote": "L7 pagamentos/caixa; R4 (14/11): revisão do estado",
       "bloqueio_externo": null,
       "revisado_codex": false,
       "homologado": false
@@ -785,7 +785,7 @@
       "titulo": "Contar individualmente aparelhos, acessórios, chips, ativações e recargas",
       "prioridade": "P0",
       "estado": "parcial",
-      "lote": "L9 metas/comissões; G4 metas e Ora Connect (G4b: realizado das metas por vendedor); L9a em 13/11: o extrato do vendedor, fato a fato",
+      "lote": "L9 metas/comissões; G4 metas e Ora Connect (G4b: realizado das metas por vendedor); L9a em 13/11: o extrato do vendedor, fato a fato; R4 (14/11): revisão do estado",
       "bloqueio_externo": null,
       "revisado_codex": false,
       "homologado": false
@@ -803,7 +803,7 @@
       "titulo": "Distinguir quantidade, valor bruto, margem, receita elegível e comissão",
       "prioridade": "P0",
       "estado": "parcial",
-      "lote": "L9 metas/comissões; G4 metas e Ora Connect; L9a em 13/11: o extrato e a conta do bônus por medida (D-014); L9b em 14/11: o calculado e o aprovado no fechamento, com o motivo do ajuste",
+      "lote": "L9 metas/comissões; G4 metas e Ora Connect; L9a em 13/11: o extrato e a conta do bônus por medida (D-014); L9b em 14/11: o calculado e o aprovado no fechamento, com o motivo do ajuste; R4 (14/11): revisão do estado",
       "bloqueio_externo": null,
       "revisado_codex": false,
       "homologado": false
@@ -1469,7 +1469,7 @@
       "titulo": "CI, lint, typecheck, testes e code review obrigatórios",
       "prioridade": "P0",
       "estado": "parcial",
-      "lote": "transversal",
+      "lote": "transversal; R4 (14/11): revisão do estado",
       "bloqueio_externo": null,
       "revisado_codex": false,
       "homologado": false
@@ -1478,7 +1478,7 @@
       "titulo": "RLS e autorização negada por padrão, testadas por loja",
       "prioridade": "P0",
       "estado": "parcial",
-      "lote": "transversal",
+      "lote": "transversal; R4 (14/11): revisão do estado",
       "bloqueio_externo": null,
       "revisado_codex": false,
       "homologado": false
@@ -1486,8 +1486,8 @@
     "ORA-QUAL-003": {
       "titulo": "Auditoria imutável de operações e aprovações críticas",
       "prioridade": "P0",
-      "estado": "parcial",
-      "lote": "transversal",
+      "estado": "testado",
+      "lote": "transversal; R4 (14/11): revisão do estado",
       "bloqueio_externo": null,
       "revisado_codex": false,
       "homologado": false
@@ -1496,7 +1496,7 @@
       "titulo": "Segredos em ambientes seguros sem exposição no Git/cliente",
       "prioridade": "P0",
       "estado": "parcial",
-      "lote": "transversal",
+      "lote": "transversal; R4 (14/11): revisão do estado",
       "bloqueio_externo": null,
       "revisado_codex": false,
       "homologado": false
@@ -1522,8 +1522,8 @@
     "ORA-QUAL-007": {
       "titulo": "Migrations versionadas, não destrutivas, testadas",
       "prioridade": "P0",
-      "estado": "parcial",
-      "lote": "transversal",
+      "estado": "testado",
+      "lote": "transversal; R4 (14/11): revisão do estado",
       "bloqueio_externo": null,
       "revisado_codex": false,
       "homologado": false

@@ -1,7 +1,7 @@
 import { describe, expect, it } from "vitest";
 
 import { identificadorDigitado } from "../catalogo/termos";
-import { erroDaVenda, lerDevolucao, lerPagamentos, lerValor } from "./regras";
+import { ERROS_DA_VENDA, erroDaVenda, lerDevolucao, lerPagamentos, lerValor } from "./regras";
 
 const formulario = (campos: Record<string, string>) => ({ get: (nome: string) => campos[nome] ?? null });
 
@@ -46,6 +46,13 @@ describe("erros e busca", () => {
     expect(erroDaVenda({ code: "OR013" })).toBe("connect");
     expect(erroDaVenda({ code: "OR015" })).toBe("nota_emitida");
     expect(erroDaVenda({ code: "toString" })).toBe("falha");
+  });
+  it("INV-006: IMEI/ICCID reservado, vendido ou de outra loja vira mensagem clara na tela, nunca falha genérica", () => {
+    expect(erroDaVenda({ code: "OR002" })).toBe("indisponivel");
+    expect(erroDaVenda({ code: "OR005" })).toBe("indisponivel");
+    expect(erroDaVenda({ code: "OR003" })).toBe("outra_loja");
+    expect(ERROS_DA_VENDA.indisponivel).toBe("Este aparelho ou chip não está disponível (já reservado, vendido ou com a reserva vencida). Tire e coloque de novo.");
+    expect(ERROS_DA_VENDA.outra_loja).toBe("Este IMEI/ICCID é de outra loja.");
   });
   it("valor em reais e identificador", () => {
     expect(lerValor("R$ 1.299,90")).toBe(129_990);

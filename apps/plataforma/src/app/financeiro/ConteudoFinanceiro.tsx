@@ -182,8 +182,8 @@ export function ConteudoFinanceiro({ resumo: r, anterior: ra, series, porHora, p
       <ul className="grid gap-2 text-sm sm:grid-cols-2">
         {[
           ["Conciliação automática com extratos", "hoje a conciliação é manual, em Pagamentos › Conciliação; a automática depende dos arquivos das maquininhas e do banco (PAY-009/010)"],
-          ["Contas a pagar e DRE", "modelos ainda não existem (FIN-002/004)"],
-          ["Repasses das financeiras e da Nogle", "prazo, taxa e contrato ainda não confirmados"],
+          ["Demonstrativo contábil (DRE)", "o resultado gerencial do mês está em Resultado e as contas em Contas a pagar; a DRE contábil depende do contador"],
+          ["Prazo e taxa dos repasses", "o repasse das financeiras é registrado à mão em Pagamentos › Financeiras; o prazo e a taxa de cada financeira e da Nogle dependem do contrato (P8)"],
         ].map(([titulo, motivo]) => (
           <li key={titulo} className="flex items-start gap-2 rounded-2xl bg-fundo/70 px-3 py-2.5">
             <Selo tom="neutro">indisponível</Selo>
