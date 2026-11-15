@@ -1,10 +1,12 @@
 "use server";
 
 import { revalidatePath } from "next/cache";
+import { redirect } from "next/navigation";
 
 import { ehUuid } from "../../lib/acesso/regras";
 import { obterSessao } from "../../lib/acesso/sessao";
 import type { ErroDeFoto } from "../../lib/catalogo/fotos";
+import { APAGAR_DE_CADA_VEZ } from "../../lib/catalogo/fotos-sem-registro";
 import { MAXIMO_DO_LOTE, skuDoArquivo, type DestinoDaFoto } from "../../lib/catalogo/lote-de-fotos";
 import { lerPorIds } from "../../lib/leitura-completa";
 
@@ -74,4 +76,36 @@ export async function localizarDestinos(skus: string[]): Promise<{ ok: true; des
     });
   }
   return { ok: true, destinos };
+}
+
+/**
+ * CAT-011b: limpa os arquivos de foto enviados sem registro. O banco lista e confere (tudo ou nada, com a auditoria), e
+ * a API do Storage apaga, como a pessoa logada (a regra do Storage confere de novo cada arquivo), de 100 em 100. Volta
+ * para as fotos em lote com quantos foram apagados.
+ */
+export async function limparFotosSemRegistro(): Promise<void> {
+  const { supabase } = await obterSessao({ exigirLoja: true });
+  const volta = (parametros: string): never => redirect(`/catalogo/lote?${parametros}#limpeza`);
+  const lista = await supabase.rpc("fotos_sem_registro");
+  if (lista.error) volta(`limpeza=${lista.error.code === "42501" ? "permissao" : "falha"}`);
+  const arquivos = (lista.data as { arquivos?: { caminho?: unknown }[] } | null)?.arquivos;
+  const caminhos = Array.isArray(arquivos) ? arquivos.flatMap((a) => (typeof a?.caminho === "string" ? [a.caminho] : [])) : [];
+  if (caminhos.length === 0) volta("limpeza=nada");
+  const pedido = await supabase.rpc("fotos_sem_registro_limpar", { p_caminhos: caminhos });
+  if (pedido.error) {
+    console.error("catálogo: o banco não liberou a limpeza das fotos", { codigo: pedido.error.code || null });
+    volta(`limpeza=${pedido.error.code === "42501" ? "permissao" : "falha"}`);
+  }
+  const liberados = ((pedido.data as { caminhos?: unknown } | null)?.caminhos as unknown[] | undefined)?.filter((c): c is string => typeof c === "string") ?? [];
+  let apagados = 0;
+  for (let i = 0; i < liberados.length; i += APAGAR_DE_CADA_VEZ) {
+    const r = await supabase.storage.from("produtos").remove(liberados.slice(i, i + APAGAR_DE_CADA_VEZ));
+    if (r.error) {
+      console.error("catálogo: o Storage não apagou as fotos sem registro", { codigo: (r.error as { statusCode?: string }).statusCode ?? null });
+      break;
+    }
+    apagados += r.data?.length ?? 0;
+  }
+  if (apagados === 0) volta("limpeza=falha");
+  volta(`apagados=${apagados}&de=${liberados.length}`);
 }

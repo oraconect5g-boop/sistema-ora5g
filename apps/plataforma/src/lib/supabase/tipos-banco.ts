@@ -6422,6 +6422,8 @@ export type Database = {
         }
         Returns: Json
       }
+      fotos_sem_registro: { Args: never; Returns: Json }
+      fotos_sem_registro_limpar: { Args: { p_caminhos: string[] }; Returns: Json }
       identidade_bloqueios_a_aplicar: {
         Args: never
         Returns: {
