@@ -2,7 +2,7 @@
   "_leia": "Checkpoint do programa de execução integral (PR #67). Carregar ao retomar e seguir para o próximo item executável da fila; não reiniciar o projeto. Estados vêm de status-requisitos.json (fonte da rastreabilidade); este arquivo acrescenta lote, bloqueio externo e revisão.",
   "atualizado_em": "2026-11-15",
   "base": {
-    "main": "c87b1a8",
+    "main": "22a47c4",
     "pacote": {
       "pr": 67,
       "branch": "docs/execucao-integral-20261110",
@@ -18,14 +18,12 @@
   },
   "publicado": {
     "homologacao": {
-      "commit": "c87b1a8",
+      "commit": "22a47c4",
       "quando": "2026-11-15",
-      "conferido": "rodapé da tela de entrada (c87b1a8 · build 15/11/2026 14:32), /saude 200 e as rotas reais respondendo 307 para o login (inclusive /conta/confirmar, /caixa, /equipe, /notas e /vendas)"
+      "conferido": "rodapé da tela de entrada (22a47c4 · build 15/11/2026 14:55), /saude 200 e as rotas reais respondendo 307 para o login (inclusive /vendas, /notas, /conta/confirmar e /caixa)"
     },
     "falta_publicar": [
-      "FISC-009b, a carta de correção da NF-e registrada, publicado ao fim do lote",
-      "migration 20261115190000_confirmacao_recente (ORG-006b): aplicar no ora5g-dev pede o sim do proprietário",
-      "migration 20261115200000_carta_de_correcao (FISC-009b): aplicar no ora5g-dev pede o sim do proprietário"
+      "registro das migrations do ORG-006b e do FISC-009b aplicadas no ora5g-dev (só documentos e nomes de arquivo), publicado ao fim do lote"
     ]
   },
   "contagem_dos_estados": {
@@ -85,7 +83,7 @@
       "titulo": "Login, recuperação de conta e revogação de sessão",
       "prioridade": "P0",
       "estado": "parcial",
-      "lote": "L2 cadastros; ORG-006b (15/11): a confirmação de senha recente nas ações sensíveis",
+      "lote": "L2 cadastros; ORG-006b (15/11): a confirmação de senha recente nas ações sensíveis; migration do ORG-006b aplicada no ora5g-dev em 15/11",
       "bloqueio_externo": null,
       "revisado_codex": false,
       "homologado": false
@@ -949,7 +947,7 @@
       "titulo": "Devolução, troca, cancelamento e correção fiscal",
       "prioridade": "P1",
       "estado": "parcial",
-      "lote": "L10 fiscal; FISC-009b (15/11): a carta de correção da NF-e registrada",
+      "lote": "L10 fiscal; FISC-009b (15/11): a carta de correção da NF-e registrada; migration do FISC-009b aplicada no ora5g-dev em 15/11",
       "bloqueio_externo": null,
       "revisado_codex": false,
       "homologado": false

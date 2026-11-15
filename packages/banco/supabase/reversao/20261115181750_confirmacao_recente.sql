@@ -1,4 +1,4 @@
--- Reversão de 20261115190000_confirmacao_recente (lote ORG-006b): as dez funções voltam às versões em vigor antes
+-- Reversão de 20261115181750_confirmacao_recente (lote ORG-006b): as dez funções voltam às versões em vigor antes
 -- (sem a confirmação recente), e as duas funções da conferência saem.
 
 -- convidar_pessoa: de volta à versão de 20261109150526_correcoes_acesso_lote1.sql.

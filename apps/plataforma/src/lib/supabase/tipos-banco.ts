@@ -1,5 +1,5 @@
 // ARQUIVO GERADO pelo Supabase (generate_typescript_types do projeto ora5g-dev) depois da
-// migration 20261115164226_segundo_fator. Não edite à mão: gere de novo a cada
+// migration 20261115181840_carta_de_correcao. Não edite à mão: gere de novo a cada
 // migration aplicada (auditoria do Codex de 08/11, §7.2). O teste tipos-banco.test.ts confere
 // que funções e tabelas públicas daqui são as mesmas das migrations.
 export type Json =
@@ -3185,6 +3185,54 @@ export type Database = {
           },
         ]
       }
+      notas_cartas_de_correcao: {
+        Row: {
+          correcao: string
+          id: string
+          numero: number
+          organizacao_id: string
+          pedido_id: string
+          protocolo: string
+          registrada_em: string
+          registrada_por: string
+        }
+        Insert: {
+          correcao: string
+          id?: string
+          numero: number
+          organizacao_id: string
+          pedido_id: string
+          protocolo: string
+          registrada_em?: string
+          registrada_por: string
+        }
+        Update: {
+          correcao?: string
+          id?: string
+          numero?: number
+          organizacao_id?: string
+          pedido_id?: string
+          protocolo?: string
+          registrada_em?: string
+          registrada_por?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "notas_cartas_de_correcao_pedido_id_fkey"
+            columns: ["pedido_id"]
+            isOneToOne: false
+            referencedRelation: "notas_pedidos"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "notas_cartas_de_correcao_registrada_por_fkey"
+            columns: ["registrada_por"]
+            isOneToOne: false
+            referencedRelation: "perfis_usuario"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       notas_divergencias_conferidas: {
         Row: {
           conferida_em: string
@@ -3237,54 +3285,6 @@ export type Database = {
             isOneToOne: false
             referencedRelation: "unidades"
             referencedColumns: ["id", "organizacao_id"]
-          },
-        ]
-      }
-      notas_cartas_de_correcao: {
-        Row: {
-          correcao: string
-          id: string
-          numero: number
-          organizacao_id: string
-          pedido_id: string
-          protocolo: string
-          registrada_em: string
-          registrada_por: string
-        }
-        Insert: {
-          correcao: string
-          id?: string
-          numero: number
-          organizacao_id: string
-          pedido_id: string
-          protocolo: string
-          registrada_em?: string
-          registrada_por: string
-        }
-        Update: {
-          correcao?: string
-          id?: string
-          numero?: number
-          organizacao_id?: string
-          pedido_id?: string
-          protocolo?: string
-          registrada_em?: string
-          registrada_por?: string
-        }
-        Relationships: [
-          {
-            foreignKeyName: "notas_cartas_de_correcao_pedido_id_fkey"
-            columns: ["pedido_id"]
-            isOneToOne: false
-            referencedRelation: "notas_pedidos"
-            referencedColumns: ["id"]
-          },
-          {
-            foreignKeyName: "notas_cartas_de_correcao_registrada_por_fkey"
-            columns: ["registrada_por"]
-            isOneToOne: false
-            referencedRelation: "perfis_usuario"
-            referencedColumns: ["id"]
           },
         ]
       }
