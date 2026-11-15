@@ -1,4 +1,4 @@
-// Lote CAT-009 (14/11/2026, ORA-CAT-009; migration 20261115001000_codigos_de_outros_canais): os códigos de uma
+// Lote CAT-009 (14/11/2026, ORA-CAT-009; migration 20261115000401_codigos_de_outros_canais, antes 20261115001000): os códigos de uma
 // variação em outros canais (Rein, site e marketplaces) só apontam para ela; o ID interno continua sendo a chave.
 // Banco em memória com todas as migrations; dados FICTÍCIOS; cada teste numa transação desfeita.
 import type { PGlite } from "@electric-sql/pglite";

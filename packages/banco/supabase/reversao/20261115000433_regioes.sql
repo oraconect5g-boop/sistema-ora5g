@@ -1,4 +1,4 @@
--- Reversão de 20261115003000_regioes.sql (lote ORG-009). Tira as lojas das regiões e apaga as regiões
+-- Reversão de 20261115000433_regioes.sql (antes 20261115003000) (lote ORG-009). Tira as lojas das regiões e apaga as regiões
 -- (a auditoria guarda o que foi feito).
 drop function if exists public.loja_definir_regiao(uuid, uuid, text);
 drop function if exists public.regiao_salvar(uuid, uuid, text, boolean, text);

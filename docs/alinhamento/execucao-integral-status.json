@@ -2,7 +2,7 @@
   "_leia": "Checkpoint do programa de execução integral (PR #67). Carregar ao retomar e seguir para o próximo item executável da fila; não reiniciar o projeto. Estados vêm de status-requisitos.json (fonte da rastreabilidade); este arquivo acrescenta lote, bloqueio externo e revisão.",
   "atualizado_em": "2026-11-14",
   "base": {
-    "main": "572e3a0",
+    "main": "c3f772a",
     "pacote": {
       "pr": 67,
       "branch": "docs/execucao-integral-20261110",
@@ -18,21 +18,18 @@
   },
   "publicado": {
     "homologacao": {
-      "commit": "572e3a0",
+      "commit": "c3f772a",
       "quando": "2026-11-14",
-      "conferido": "rodapé da tela de entrada (572e3a0 · build 14/11/2026 20:52), /saude 200 e as rotas reais respondendo 307 para o login"
+      "conferido": "rodapé da tela de entrada (c3f772a · build 14/11/2026 21:07), /saude 200 e as rotas reais respondendo 307 para o login"
     },
     "falta_publicar": [
-      "ORG-009b, resultado do mês por região, publicado ao fim do lote",
-      "migration 20261114235000_estoque_valor_em_custo (G3b): aplicar no ora5g-dev pede o sim do proprietário",
-      "migration 20261115001000_codigos_de_outros_canais (CAT-009): aplicar no ora5g-dev pede o sim do proprietário",
-      "migration 20261115003000_regioes (ORG-009 e ORG-009b): aplicar no ora5g-dev pede o sim do proprietário"
+      "registro das migrations do G3b, do CAT-009 e do ORG-009 (aplicadas no ora5g-dev em 14/11; o registro só muda o repositório), publicado ao fim do lote"
     ]
   },
   "contagem_dos_estados": {
     "nao_iniciado": 49,
-    "parcial": 78,
-    "testado": 47,
+    "parcial": 77,
+    "testado": 48,
     "bloqueado": 3,
     "respeitado": 2
   },
@@ -1453,7 +1450,7 @@
     "ORA-REPORT-007": {
       "titulo": "Alertas de estoque mínimo/IMEI/caixa divergente/fiscal pendente",
       "prioridade": "P1",
-      "estado": "parcial",
+      "estado": "testado",
       "lote": "L8 financeiro/relatórios; G3 estoque (G3 entregue em 13/11)",
       "bloqueio_externo": null,
       "revisado_codex": false,

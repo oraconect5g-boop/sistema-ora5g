@@ -71,6 +71,9 @@
     { "versao": "20261114202535", "nome": "relatorio_da_assistencia", "md5": "833089c3f606ea5082713c121f42c46b", "aplicada_em": "2026-11-14" },
     { "versao": "20261114205327", "nome": "anexos_da_venda", "md5": "b6e8730659085d32320f1b871502b710", "aplicada_em": "2026-11-14" },
     { "versao": "20261114215050", "nome": "conciliacao_fiscal", "md5": "b7af9635e943db7adac220b1ecee8699", "aplicada_em": "2026-11-14" },
-    { "versao": "20261114215128", "nome": "cancelamento_da_nota", "md5": "8bca9bb2d31eea3fbc66a76dbd7dfb55", "aplicada_em": "2026-11-14" }
+    { "versao": "20261114215128", "nome": "cancelamento_da_nota", "md5": "8bca9bb2d31eea3fbc66a76dbd7dfb55", "aplicada_em": "2026-11-14" },
+    { "versao": "20261115000320", "nome": "estoque_valor_em_custo", "md5": "2d305492d0b5a744afc3d5e0dfd38490", "aplicada_em": "2026-11-14" },
+    { "versao": "20261115000401", "nome": "codigos_de_outros_canais", "md5": "a909de56bf8081c8e025cb082e85de26", "aplicada_em": "2026-11-14" },
+    { "versao": "20261115000433", "nome": "regioes", "md5": "c629850bb5835f64aac35b2a7d040529", "aplicada_em": "2026-11-14" }
   ]
 }

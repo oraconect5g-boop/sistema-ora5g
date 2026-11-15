@@ -1,4 +1,4 @@
--- Reversão de 20261115001000_codigos_de_outros_canais.sql (lote CAT-009). Apaga os códigos de outros canais
+-- Reversão de 20261115000401_codigos_de_outros_canais.sql (antes 20261115001000) (lote CAT-009). Apaga os códigos de outros canais
 -- (a auditoria guarda o que foi ligado e desligado).
 drop function if exists public.catalogo_variante_por_codigo(text, text);
 drop function if exists public.catalogo_desligar_codigo(uuid, text);
