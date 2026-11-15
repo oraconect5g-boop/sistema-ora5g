@@ -63,6 +63,7 @@ function elementos(v: unknown, criterio: (props: Record<string, unknown>) => boo
   return achados;
 }
 const tela = async (parametros: Record<string, string> = {}) => (await Codigo({ searchParams: Promise.resolve(parametros) })) as ReactElement;
+const destinoDaTela = (parametros: Record<string, string>) => destino(Codigo({ searchParams: Promise.resolve(parametros) }));
 const formulario = (campos: Record<string, string>) => {
   const f = new FormData();
   for (const [k, v] of Object.entries(campos)) f.set(k, v);
@@ -116,6 +117,13 @@ describe("a tela do código (ORG-007a)", () => {
     expect(elementos(arvore, (p) => p.name === "codigo")).toEqual([]);
   });
 
+  it("vindo da troca de senha (a recuperação pelo e-mail): o código e, depois, a senha; sem pendência, direto para a senha", async () => {
+    expect(elementos(await tela({ depois: "senha" }), (p) => p.name === "depois").map((p) => p.value)).toEqual(["senha"]);
+    expect(elementos(await tela({ depois: "https://outro.exemplo" }), (p) => p.name === "depois")).toEqual([]);
+    cenario.pendente = false;
+    expect(await destinoDaTela({ depois: "senha" })).toBe("/conta/senha");
+  });
+
   it("a mensagem vem do catálogo; chave estranha não vira aviso", async () => {
     expect(texto(await tela({ erro: "codigo" }))).toContain("Código errado ou vencido");
     const limpa = texto(await tela());
@@ -140,6 +148,14 @@ describe("a conferência do código (ORG-007a)", () => {
       expect(await destino(confirmarCodigo(formulario({ codigo: "654321", celular }))), celular).toBe("/entrar/codigo?erro=celular");
     }
     expect(cenario.conferidos).toHaveLength(1);
+  });
+
+  it("vindo da troca de senha: conferido, volta para a senha; recusado, a mensagem e o mesmo destino", async () => {
+    expect(await destino(confirmarCodigo(formulario({ codigo: "123456", depois: "senha" })))).toBe("/conta/senha");
+    cenario.recusa = { code: "mfa_verification_failed", status: 422 };
+    expect(await destino(confirmarCodigo(formulario({ codigo: "123456", depois: "senha" })))).toBe("/entrar/codigo?erro=codigo&depois=senha");
+    expect(await destino(confirmarCodigo(formulario({ codigo: "12", depois: "senha" })))).toBe("/entrar/codigo?erro=formato&depois=senha");
+    expect(await destino(confirmarCodigo(formulario({ codigo: "123456", depois: "/inicio" })))).toBe("/entrar/codigo?erro=codigo");
   });
 
   it("cada recusa do Supabase volta com a sua mensagem, e nenhuma vira entrada; sem login, volta ao /entrar", async () => {

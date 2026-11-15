@@ -3,7 +3,8 @@
 import { describe, expect, it } from "vitest";
 
 import {
-  cadastrosAbandonados, celularesCadastrados, codigoValido, ERROS_DO_CADASTRO, ERROS_DO_CODIGO, erroDoCadastro, erroDoCodigo, nomeDoCelular, segredoEmGrupos,
+  cadastrosAbandonados, caminhoDepoisDoCodigo, celularesCadastrados, codigoValido, depoisDoCodigo, enderecoDoCodigo, ERROS_DO_CADASTRO, ERROS_DO_CODIGO,
+  erroDoCadastro, erroDoCodigo, nomeDoCelular, segredoEmGrupos,
 } from "./segundo-fator";
 
 describe("segundo fator (ORG-007a)", () => {
@@ -56,6 +57,13 @@ describe("segundo fator (ORG-007a)", () => {
     ]);
     expect(cadastrosAbandonados(lista)).toEqual(["f2"]);
     expect([celularesCadastrados(null), cadastrosAbandonados(undefined)]).toEqual([[], []]);
+  });
+
+  it("depois do código: a troca de senha (só a chave conhecida) ou a escolha da loja; o endereço leva o erro e o destino", () => {
+    expect(["senha", "Senha", "/inicio", "https://outro.exemplo", null].map(depoisDoCodigo)).toEqual(["senha", null, null, null, null]);
+    expect([caminhoDepoisDoCodigo("senha"), caminhoDepoisDoCodigo(null)]).toEqual(["/conta/senha", "/escolher-loja"]);
+    expect([enderecoDoCodigo("codigo", "senha"), enderecoDoCodigo("falha", null), enderecoDoCodigo(null, "senha"), enderecoDoCodigo(null, null)])
+      .toEqual(["/entrar/codigo?erro=codigo&depois=senha", "/entrar/codigo?erro=falha", "/entrar/codigo?depois=senha", "/entrar/codigo"]);
   });
 
   it("o segredo em grupos de 4, para digitar no aplicativo", () => {

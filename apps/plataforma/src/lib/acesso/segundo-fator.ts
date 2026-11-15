@@ -68,6 +68,19 @@ export function erroDoCadastro(erro: ErroDoAuth): ErroDoCadastro {
   }
 }
 
+/** Para onde a tela do código leva depois de conferir: a troca de senha (a recuperação pelo e-mail de quem tem o
+ *  segundo fator passa pelo código antes) ou, como sempre, a escolha da loja. Só "senha" vale; o resto é a loja. */
+export const depoisDoCodigo = (valor: unknown): "senha" | null => (valor === "senha" ? "senha" : null);
+export const caminhoDepoisDoCodigo = (depois: "senha" | null) => (depois === "senha" ? "/conta/senha" : "/escolher-loja");
+/** O endereço da tela do código, com a mensagem do erro e o destino de depois. */
+export function enderecoDoCodigo(erro: string | null, depois: "senha" | null) {
+  const p = new URLSearchParams();
+  if (erro) p.set("erro", erro);
+  if (depois) p.set("depois", depois);
+  const q = p.toString();
+  return `/entrar/codigo${q ? `?${q}` : ""}`;
+}
+
 /** O código digitado: 6 algarismos (aceita espaço e hífen no meio, como alguns aplicativos mostram). */
 export function codigoValido(valor: unknown): string | null {
   const limpo = typeof valor === "string" ? valor.replace(/[\s-]/g, "") : "";

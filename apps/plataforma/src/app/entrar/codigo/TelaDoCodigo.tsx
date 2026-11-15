@@ -29,7 +29,7 @@ function escolhaDoCelular(celulares: readonly Celular[]) {
 }
 
 /** A tela inteira: o código para os celulares cadastrados, com a mensagem do erro, se houver. */
-export function telaDoCodigo(celulares: readonly Celular[], erro?: ErroDoCodigo | null) {
+export function telaDoCodigo(celulares: readonly Celular[], erro?: ErroDoCodigo | null, depois: "senha" | null = null) {
   return (
     <main className="mx-auto flex min-h-dvh w-full max-w-sm flex-col px-5 py-8">
       <Marca tamanho="text-2xl" />
@@ -42,6 +42,7 @@ export function telaDoCodigo(celulares: readonly Celular[], erro?: ErroDoCodigo 
           <Aviso tom="aviso" className="mt-5">Sua conta pede o código, mas nenhum celular com aplicativo autenticador está cadastrado. Procure o dono: a verificação só sai pela administração do Supabase, fora do sistema.</Aviso>
         ) : (
           <form action={confirmarCodigo} className="mt-6 space-y-4">
+            {depois && <input type="hidden" name="depois" value={depois} />}
             {escolhaDoCelular(celulares)}
             <div>
               <label htmlFor="codigo" className="text-sm font-semibold">Código</label>
