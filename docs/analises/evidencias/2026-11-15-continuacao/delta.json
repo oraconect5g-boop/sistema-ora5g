@@ -1,0 +1,527 @@
+{
+  "base": "56c4bde",
+  "head": "a4cf325",
+  "commits": 30,
+  "arquivos": [
+    {
+      "path": "apps/plataforma/e2e/acesso-real.spec.ts",
+      "status": "modified"
+    },
+    {
+      "path": "apps/plataforma/src/app/auditoria/exportar.test.ts",
+      "status": "added"
+    },
+    {
+      "path": "apps/plataforma/src/app/auditoria/exportar/route.ts",
+      "status": "added"
+    },
+    {
+      "path": "apps/plataforma/src/app/auditoria/page.tsx",
+      "status": "modified"
+    },
+    {
+      "path": "apps/plataforma/src/app/catalogo/EnviarFoto.tsx",
+      "status": "modified"
+    },
+    {
+      "path": "apps/plataforma/src/app/catalogo/acoes.ts",
+      "status": "modified"
+    },
+    {
+      "path": "apps/plataforma/src/app/catalogo/lote/FotosEmLote.tsx",
+      "status": "added"
+    },
+    {
+      "path": "apps/plataforma/src/app/catalogo/lote/lote.test.ts",
+      "status": "added"
+    },
+    {
+      "path": "apps/plataforma/src/app/catalogo/lote/page.tsx",
+      "status": "added"
+    },
+    {
+      "path": "apps/plataforma/src/app/catalogo/page.tsx",
+      "status": "modified"
+    },
+    {
+      "path": "apps/plataforma/src/app/contas-a-pagar/ConteudoContas.tsx",
+      "status": "modified"
+    },
+    {
+      "path": "apps/plataforma/src/app/contas-a-pagar/[id]/documentos/[documento]/route.ts",
+      "status": "added"
+    },
+    {
+      "path": "apps/plataforma/src/app/contas-a-pagar/[id]/documentos/documentos.test.ts",
+      "status": "added"
+    },
+    {
+      "path": "apps/plataforma/src/app/contas-a-pagar/[id]/documentos/route.ts",
+      "status": "added"
+    },
+    {
+      "path": "apps/plataforma/src/app/contas-a-pagar/acoes.ts",
+      "status": "modified"
+    },
+    {
+      "path": "apps/plataforma/src/app/contas-a-pagar/contas.test.ts",
+      "status": "modified"
+    },
+    {
+      "path": "apps/plataforma/src/app/contas-a-pagar/exportar/route.ts",
+      "status": "modified"
+    },
+    {
+      "path": "apps/plataforma/src/app/contas-a-pagar/page.tsx",
+      "status": "modified"
+    },
+    {
+      "path": "apps/plataforma/src/app/equipe/equipe.test.ts",
+      "status": "modified"
+    },
+    {
+      "path": "apps/plataforma/src/app/equipe/exportar.test.ts",
+      "status": "added"
+    },
+    {
+      "path": "apps/plataforma/src/app/equipe/exportar/route.ts",
+      "status": "added"
+    },
+    {
+      "path": "apps/plataforma/src/app/equipe/page.tsx",
+      "status": "modified"
+    },
+    {
+      "path": "apps/plataforma/src/app/estoque/CartaoDasPlanilhas.tsx",
+      "status": "added"
+    },
+    {
+      "path": "apps/plataforma/src/app/estoque/LinksDaPlanilha.tsx",
+      "status": "added"
+    },
+    {
+      "path": "apps/plataforma/src/app/estoque/conferencia.test.ts",
+      "status": "modified"
+    },
+    {
+      "path": "apps/plataforma/src/app/estoque/entrada/entrada.test.ts",
+      "status": "modified"
+    },
+    {
+      "path": "apps/plataforma/src/app/estoque/entrada/page.tsx",
+      "status": "modified"
+    },
+    {
+      "path": "apps/plataforma/src/app/estoque/exportar.test.ts",
+      "status": "added"
+    },
+    {
+      "path": "apps/plataforma/src/app/estoque/exportar/route.ts",
+      "status": "added"
+    },
+    {
+      "path": "apps/plataforma/src/app/estoque/page.tsx",
+      "status": "modified"
+    },
+    {
+      "path": "apps/plataforma/src/app/estoque/painel.test.ts",
+      "status": "modified"
+    },
+    {
+      "path": "apps/plataforma/src/app/estoque/saldo.test.ts",
+      "status": "modified"
+    },
+    {
+      "path": "apps/plataforma/src/app/financeiro/ConteudoFinanceiro.tsx",
+      "status": "modified"
+    },
+    {
+      "path": "apps/plataforma/src/app/financeiro/PainelDasMaquininhas.tsx",
+      "status": "added"
+    },
+    {
+      "path": "apps/plataforma/src/app/financeiro/exportar/route.ts",
+      "status": "modified"
+    },
+    {
+      "path": "apps/plataforma/src/app/financeiro/financeiro.test.ts",
+      "status": "modified"
+    },
+    {
+      "path": "apps/plataforma/src/app/financeiro/page.tsx",
+      "status": "modified"
+    },
+    {
+      "path": "apps/plataforma/src/app/inicio/inicio.test.ts",
+      "status": "modified"
+    },
+    {
+      "path": "apps/plataforma/src/app/inicio/page.tsx",
+      "status": "modified"
+    },
+    {
+      "path": "apps/plataforma/src/app/metas/extrato/ConteudoExtrato.tsx",
+      "status": "modified"
+    },
+    {
+      "path": "apps/plataforma/src/app/metas/extrato/extrato.test.ts",
+      "status": "modified"
+    },
+    {
+      "path": "apps/plataforma/src/app/metas/extrato/page.tsx",
+      "status": "modified"
+    },
+    {
+      "path": "apps/plataforma/src/app/metas/fechamento/fechamento.test.ts",
+      "status": "modified"
+    },
+    {
+      "path": "apps/plataforma/src/app/metas/fechamento/page.tsx",
+      "status": "modified"
+    },
+    {
+      "path": "apps/plataforma/src/app/pagamentos/recebiveis/ConteudoRecebiveis.tsx",
+      "status": "modified"
+    },
+    {
+      "path": "apps/plataforma/src/app/previsao/Simulador.tsx",
+      "status": "modified"
+    },
+    {
+      "path": "apps/plataforma/src/app/previsao/previsao.test.ts",
+      "status": "modified"
+    },
+    {
+      "path": "apps/plataforma/src/app/produtos/precos/CartaoDoCusto.tsx",
+      "status": "added"
+    },
+    {
+      "path": "apps/plataforma/src/app/produtos/precos/acoes.ts",
+      "status": "modified"
+    },
+    {
+      "path": "apps/plataforma/src/app/produtos/precos/page.tsx",
+      "status": "modified"
+    },
+    {
+      "path": "apps/plataforma/src/app/produtos/precos/precos.test.ts",
+      "status": "modified"
+    },
+    {
+      "path": "apps/plataforma/src/app/relatorios/ConteudoRelatorios.tsx",
+      "status": "modified"
+    },
+    {
+      "path": "apps/plataforma/src/app/relatorios/exportar/route.ts",
+      "status": "modified"
+    },
+    {
+      "path": "apps/plataforma/src/app/relatorios/page.tsx",
+      "status": "modified"
+    },
+    {
+      "path": "apps/plataforma/src/app/relatorios/relatorios.test.ts",
+      "status": "modified"
+    },
+    {
+      "path": "apps/plataforma/src/app/resultado/exportar/route.ts",
+      "status": "modified"
+    },
+    {
+      "path": "apps/plataforma/src/app/resultado/page.tsx",
+      "status": "modified"
+    },
+    {
+      "path": "apps/plataforma/src/app/resultado/resultado.test.ts",
+      "status": "modified"
+    },
+    {
+      "path": "apps/plataforma/src/componentes/BaixarPlanilha.tsx",
+      "status": "added"
+    },
+    {
+      "path": "apps/plataforma/src/componentes/ExportarPlanilha.tsx",
+      "status": "added"
+    },
+    {
+      "path": "apps/plataforma/src/componentes/planilhas.test.ts",
+      "status": "added"
+    },
+    {
+      "path": "apps/plataforma/src/lib/auditoria/planilha.test.ts",
+      "status": "added"
+    },
+    {
+      "path": "apps/plataforma/src/lib/auditoria/planilha.ts",
+      "status": "added"
+    },
+    {
+      "path": "apps/plataforma/src/lib/bonus/fechamento.test.ts",
+      "status": "modified"
+    },
+    {
+      "path": "apps/plataforma/src/lib/bonus/fechamento.ts",
+      "status": "modified"
+    },
+    {
+      "path": "apps/plataforma/src/lib/catalogo/custos.test.ts",
+      "status": "added"
+    },
+    {
+      "path": "apps/plataforma/src/lib/catalogo/custos.ts",
+      "status": "added"
+    },
+    {
+      "path": "apps/plataforma/src/lib/catalogo/fotos-sem-registro.test.ts",
+      "status": "added"
+    },
+    {
+      "path": "apps/plataforma/src/lib/catalogo/fotos-sem-registro.ts",
+      "status": "added"
+    },
+    {
+      "path": "apps/plataforma/src/lib/catalogo/lote-de-fotos.test.ts",
+      "status": "added"
+    },
+    {
+      "path": "apps/plataforma/src/lib/catalogo/lote-de-fotos.ts",
+      "status": "added"
+    },
+    {
+      "path": "apps/plataforma/src/lib/catalogo/preparar-foto.ts",
+      "status": "added"
+    },
+    {
+      "path": "apps/plataforma/src/lib/contas-a-pagar/documentos.test.ts",
+      "status": "added"
+    },
+    {
+      "path": "apps/plataforma/src/lib/contas-a-pagar/documentos.ts",
+      "status": "added"
+    },
+    {
+      "path": "apps/plataforma/src/lib/contas-a-pagar/entradas.ts",
+      "status": "added"
+    },
+    {
+      "path": "apps/plataforma/src/lib/contas-a-pagar/planilha.ts",
+      "status": "modified"
+    },
+    {
+      "path": "apps/plataforma/src/lib/contas-a-pagar/regras.ts",
+      "status": "modified"
+    },
+    {
+      "path": "apps/plataforma/src/lib/csv.test.ts",
+      "status": "modified"
+    },
+    {
+      "path": "apps/plataforma/src/lib/csv.ts",
+      "status": "modified"
+    },
+    {
+      "path": "apps/plataforma/src/lib/equipe/planilha.test.ts",
+      "status": "added"
+    },
+    {
+      "path": "apps/plataforma/src/lib/equipe/planilha.ts",
+      "status": "added"
+    },
+    {
+      "path": "apps/plataforma/src/lib/estoque/planilha.test.ts",
+      "status": "added"
+    },
+    {
+      "path": "apps/plataforma/src/lib/estoque/planilha.ts",
+      "status": "added"
+    },
+    {
+      "path": "apps/plataforma/src/lib/financeiro/exportacao.ts",
+      "status": "modified"
+    },
+    {
+      "path": "apps/plataforma/src/lib/financeiro/terminais.test.ts",
+      "status": "added"
+    },
+    {
+      "path": "apps/plataforma/src/lib/financeiro/terminais.ts",
+      "status": "added"
+    },
+    {
+      "path": "apps/plataforma/src/lib/inicio/alerta-do-estoque.ts",
+      "status": "added"
+    },
+    {
+      "path": "apps/plataforma/src/lib/inicio/icones-das-pendencias.ts",
+      "status": "modified"
+    },
+    {
+      "path": "apps/plataforma/src/lib/margem/consulta.ts",
+      "status": "modified"
+    },
+    {
+      "path": "apps/plataforma/src/lib/margem/painel.test.ts",
+      "status": "modified"
+    },
+    {
+      "path": "apps/plataforma/src/lib/margem/painel.ts",
+      "status": "modified"
+    },
+    {
+      "path": "apps/plataforma/src/lib/previsao/planilha.ts",
+      "status": "modified"
+    },
+    {
+      "path": "apps/plataforma/src/lib/relatorios/consulta.ts",
+      "status": "modified"
+    },
+    {
+      "path": "apps/plataforma/src/lib/relatorios/painel.test.ts",
+      "status": "modified"
+    },
+    {
+      "path": "apps/plataforma/src/lib/relatorios/painel.ts",
+      "status": "modified"
+    },
+    {
+      "path": "apps/plataforma/src/lib/resultado/planilha.ts",
+      "status": "modified"
+    },
+    {
+      "path": "apps/plataforma/src/lib/supabase/tipos-banco.ts",
+      "status": "modified"
+    },
+    {
+      "path": "apps/plataforma/src/lib/vendas/anexos.ts",
+      "status": "modified"
+    },
+    {
+      "path": "apps/plataforma/src/lib/xlsx-de-teste.ts",
+      "status": "added"
+    },
+    {
+      "path": "apps/plataforma/src/lib/xlsx-servidor.ts",
+      "status": "added"
+    },
+    {
+      "path": "apps/plataforma/src/lib/xlsx.test.ts",
+      "status": "added"
+    },
+    {
+      "path": "apps/plataforma/src/lib/xlsx.ts",
+      "status": "added"
+    },
+    {
+      "path": "docs/10_DECISOES_PENDENTES.md",
+      "status": "modified"
+    },
+    {
+      "path": "docs/ESTADO_ATUAL_E_PASSAGEM.md",
+      "status": "modified"
+    },
+    {
+      "path": "docs/alinhamento/EXECUCAO_INTEGRAL_STATUS.md",
+      "status": "modified"
+    },
+    {
+      "path": "docs/alinhamento/PEDIDO_DE_REVISAO_CODEX.md",
+      "status": "modified"
+    },
+    {
+      "path": "docs/alinhamento/RASTREABILIDADE.md",
+      "status": "modified"
+    },
+    {
+      "path": "docs/alinhamento/execucao-integral-status.json",
+      "status": "modified"
+    },
+    {
+      "path": "docs/alinhamento/status-requisitos.json",
+      "status": "modified"
+    },
+    {
+      "path": "packages/banco/README.md",
+      "status": "modified"
+    },
+    {
+      "path": "packages/banco/src/autorizacao-funcoes.test.ts",
+      "status": "modified"
+    },
+    {
+      "path": "packages/banco/src/conta-da-entrada.test.ts",
+      "status": "added"
+    },
+    {
+      "path": "packages/banco/src/correcao-do-custo.test.ts",
+      "status": "added"
+    },
+    {
+      "path": "packages/banco/src/documentos-da-conta.test.ts",
+      "status": "added"
+    },
+    {
+      "path": "packages/banco/src/limpeza-das-fotos.test.ts",
+      "status": "added"
+    },
+    {
+      "path": "packages/banco/src/margem-por-vendedor.test.ts",
+      "status": "added"
+    },
+    {
+      "path": "packages/banco/src/pagamentos-por-terminal.test.ts",
+      "status": "added"
+    },
+    {
+      "path": "packages/banco/supabase/aplicadas-dev.json",
+      "status": "modified"
+    },
+    {
+      "path": "packages/banco/supabase/migrations/20261115043059_pagamentos_por_terminal.sql",
+      "status": "added"
+    },
+    {
+      "path": "packages/banco/supabase/migrations/20261115102330_margem_por_vendedor.sql",
+      "status": "added"
+    },
+    {
+      "path": "packages/banco/supabase/migrations/20261115102358_conta_da_entrada.sql",
+      "status": "added"
+    },
+    {
+      "path": "packages/banco/supabase/migrations/20261115102440_documentos_da_conta.sql",
+      "status": "added"
+    },
+    {
+      "path": "packages/banco/supabase/migrations/20261115102535_correcao_do_custo.sql",
+      "status": "added"
+    },
+    {
+      "path": "packages/banco/supabase/migrations/20261115142547_limpeza_das_fotos.sql",
+      "status": "added"
+    },
+    {
+      "path": "packages/banco/supabase/reversao/20261115043059_pagamentos_por_terminal.sql",
+      "status": "added"
+    },
+    {
+      "path": "packages/banco/supabase/reversao/20261115102330_margem_por_vendedor.sql",
+      "status": "added"
+    },
+    {
+      "path": "packages/banco/supabase/reversao/20261115102358_conta_da_entrada.sql",
+      "status": "added"
+    },
+    {
+      "path": "packages/banco/supabase/reversao/20261115102440_documentos_da_conta.sql",
+      "status": "added"
+    },
+    {
+      "path": "packages/banco/supabase/reversao/20261115102535_correcao_do_custo.sql",
+      "status": "added"
+    },
+    {
+      "path": "packages/banco/supabase/reversao/20261115142547_limpeza_das_fotos.sql",
+      "status": "added"
+    }
+  ]
+}

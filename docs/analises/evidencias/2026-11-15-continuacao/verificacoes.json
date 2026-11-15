@@ -1,0 +1,53 @@
+{
+  "base_funcional": "37faa93e45a7ad67303c86e718ea024434afc7c6",
+  "base_registro": "a4cf3257753dfc1405ef41bcf2ce2a88cc341aab",
+  "testes_locais": {
+    "banco": 24,
+    "plataforma": 193,
+    "migrations": 76,
+    "total": 293,
+    "migrations_duracao_segundos": 357.73,
+    "provas_observacionais_de_defeitos": 4
+  },
+  "requisitos": {
+    "testado": 61,
+    "parcial": 64,
+    "nao_iniciado": 49,
+    "bloqueado": 3,
+    "respeitado": 2,
+    "homologado": 0
+  },
+  "ci_anterior": {
+    "run": 43708425656,
+    "sha": "37faa93",
+    "conclusao": "cancelled",
+    "fase": "npm test",
+    "build": "skipped",
+    "audit": "skipped",
+    "e2e": "skipped"
+  },
+  "ci_final": {
+    "run": 43725391328,
+    "job": 132846091470,
+    "sha": "a4cf3257753dfc1405ef41bcf2ce2a88cc341aab",
+    "situacao": "completed",
+    "conclusao": "failure",
+    "testes_passaram": 2145,
+    "testes_falharam": 1,
+    "todo": 1,
+    "falha": {
+      "arquivo": "packages/banco/src/concorrencia.test.ts",
+      "linha": 977,
+      "fase": "aplicacao de outras 2.000 a criar",
+      "duracao_ms": 8505,
+      "limite_ms": 8000
+    },
+    "lint": "success",
+    "typecheck": "success",
+    "build": "skipped",
+    "audit": "skipped",
+    "e2e": "skipped",
+    "encerramento_observado_utc": "2026-11-15T14:50:23Z"
+  },
+  "escopo": "revisao e testes locais, Supabase somente leitura"
+}
