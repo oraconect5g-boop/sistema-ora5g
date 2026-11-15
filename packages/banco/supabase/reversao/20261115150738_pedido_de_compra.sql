@@ -1,4 +1,4 @@
--- Reversão de 20261115150000_pedido_de_compra (lote INV-009a; só em banco sem dados reais): as funções, a ligação da
+-- Reversão de 20261115150738_pedido_de_compra (antes 20261115150000; lote INV-009a; só em banco sem dados reais): as funções, a ligação da
 -- entrada ao pedido e as tabelas dos pedidos.
 drop function if exists public.pedido_compra(uuid);
 drop function if exists public.pedidos_compra(uuid, text);

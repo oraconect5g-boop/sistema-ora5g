@@ -2,7 +2,7 @@
   "_leia": "Checkpoint do programa de execução integral (PR #67). Carregar ao retomar e seguir para o próximo item executável da fila; não reiniciar o projeto. Estados vêm de status-requisitos.json (fonte da rastreabilidade); este arquivo acrescenta lote, bloqueio externo e revisão.",
   "atualizado_em": "2026-11-15",
   "base": {
-    "main": "a4cf325",
+    "main": "082e065",
     "pacote": {
       "pr": 67,
       "branch": "docs/execucao-integral-20261110",
@@ -18,19 +18,18 @@
   },
   "publicado": {
     "homologacao": {
-      "commit": "a4cf325",
+      "commit": "082e065",
       "quando": "2026-11-15",
-      "conferido": "rodapé da tela de entrada (a4cf325 · build 15/11/2026 11:37) e /saude 200"
+      "conferido": "rodapé da tela de entrada (082e065 · build 15/11/2026 12:01), /saude 200 e as rotas reais respondendo 307 para o login (inclusive /estoque/pedidos)"
     },
     "falta_publicar": [
-      "INV-009a, o pedido de compra e a conferência com a nota, publicado ao fim do lote",
-      "migration 20261115150000_pedido_de_compra (INV-009a): aplicar no ora5g-dev pede o sim do proprietário"
+      "registro da migration do INV-009a aplicada no ora5g-dev (só documentos e nomes de arquivo), publicado ao fim do lote"
     ]
   },
   "contagem_dos_estados": {
     "nao_iniciado": 49,
-    "parcial": 64,
-    "testado": 61,
+    "parcial": 63,
+    "testado": 62,
     "bloqueado": 3,
     "respeitado": 2
   },
@@ -299,8 +298,8 @@
     "ORA-INV-009": {
       "titulo": "Compras e recebimento de fornecedores",
       "prioridade": "P1",
-      "estado": "parcial",
-      "lote": "L4a entrada de mercadoria; R1 correções do recebimento; INV-009a (15/11): o pedido de compra e a conferência com a nota",
+      "estado": "testado",
+      "lote": "L4a entrada de mercadoria; R1 correções do recebimento; INV-009a (15/11): o pedido de compra e a conferência com a nota; migration aplicada no ora5g-dev em 15/11",
       "bloqueio_externo": null,
       "revisado_codex": false,
       "homologado": false
