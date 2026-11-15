@@ -1,8 +1,8 @@
 {
   "_leia": "Checkpoint do programa de execução integral (PR #67). Carregar ao retomar e seguir para o próximo item executável da fila; não reiniciar o projeto. Estados vêm de status-requisitos.json (fonte da rastreabilidade); este arquivo acrescenta lote, bloqueio externo e revisão.",
-  "atualizado_em": "2026-11-14",
+  "atualizado_em": "2026-11-15",
   "base": {
-    "main": "309a7ac",
+    "main": "f78523f",
     "pacote": {
       "pr": 67,
       "branch": "docs/execucao-integral-20261110",
@@ -18,12 +18,12 @@
   },
   "publicado": {
     "homologacao": {
-      "commit": "309a7ac",
-      "quando": "2026-11-14",
-      "conferido": "rodapé da tela de entrada (309a7ac · build 14/11/2026 23:34), /saude 200 e as rotas reais respondendo 307 para o login"
+      "commit": "f78523f",
+      "quando": "2026-11-15",
+      "conferido": "rodapé da tela de entrada (f78523f · build 15/11/2026 01:42), /saude 200 e as rotas reais respondendo 307 para o login"
     },
     "falta_publicar": [
-      "registro da migration do REPORT-005b (aplicada no ora5g-dev em 15/11; o registro só muda o repositório), publicado ao fim do lote"
+      "FIN-009b, planilhas do estoque em Excel e CSV (sem migration), publicado ao fim do lote"
     ]
   },
   "contagem_dos_estados": {
@@ -767,7 +767,7 @@
       "titulo": "Exportações CSV/XLSX/PDF de relatórios autorizados",
       "prioridade": "P1",
       "estado": "parcial",
-      "lote": "L8 financeiro; G2 financeiro e relatórios (G2a entregue em 13/11); L8d em 13/11: planilha e PDF do resultado, da previsão e das contas a pagar; B5 leituras completas (14/11)",
+      "lote": "L8 financeiro; G2 financeiro e relatórios (G2a entregue em 13/11); L8d em 13/11: planilha e PDF do resultado, da previsão e das contas a pagar; B5 leituras completas (14/11); FIN-009b (15/11): planilhas do estoque em Excel (XLSX sem biblioteca) e CSV",
       "bloqueio_externo": null,
       "revisado_codex": false,
       "homologado": false

@@ -22,7 +22,9 @@ import { ERROS_DA_TRANSFERENCIA } from "../../lib/transferencias/regras";
 import { FotoAmpliavel } from "../catalogo/FotoAmpliavel";
 import { solicitarTransferencia } from "../transferencias/acoes";
 import { conferirItem, conferirPorIdentificador } from "./acoes";
+import { CartaoDasPlanilhas } from "./CartaoDasPlanilhas";
 import { CartaoDoValorDoEstoque } from "./CartaoDoValorDoEstoque";
+import { LinksDaPlanilha } from "./LinksDaPlanilha";
 import { PainelDoEstoque } from "./PainelDoEstoque";
 
 export const metadata: Metadata = { title: "Estoque" };
@@ -100,6 +102,9 @@ export default async function Estoque({ searchParams }: { searchParams: Promise<
         </div>
         <PainelDoEstoque estoque={estoque} redeInteira={redeInteira} aqui={enderecoDoLocal(escopo.chave)} enderecoDoLocal={enderecoDoLocal} />
         {valor && <CartaoDoValorDoEstoque leitura={valor} aqui={enderecoDoLocal(escopo.chave)} />}
+        {/* FIN-009b: as planilhas do mesmo recorte. Sem os locais (falha do painel), a rota não sabe o recorte e o
+            cartão some; banco sem o painel: a planilha é da loja do turno. */}
+        {todos.estado !== "falha" && <CartaoDasPlanilhas loja={locais.length > 1 ? escopo.chave : null} />}
       </MoldeReal>
     );
   }
@@ -132,7 +137,8 @@ export default async function Estoque({ searchParams }: { searchParams: Promise<
         {erro && <Aviso tom="perigo">{ERROS_DO_ESTOQUE[erro]}</Aviso>}
         {textoDoParametro(parametros.ok) === "conferido" && <Aviso tom="sucesso"><CheckCircle2 aria-hidden className="inline size-4" /> Item conferido (gravado na auditoria).</Aviso>}
         {!numeros && <Aviso tom="aviso">Não deu para contar os aparelhos e chips agora: os números não aparecem, para a conferência não parecer terminada sem estar. Tente de novo em instantes.</Aviso>}
-        <Cartao titulo="Conferência física de hoje" subtitulo={numeros ? `${numeros.conferidos} de ${numeros.total} aparelhos e chips conferidos` : "Não deu para contar agora"} icone={ClipboardCheck}>
+        <Cartao titulo="Conferência física de hoje" subtitulo={numeros ? `${numeros.conferidos} de ${numeros.total} aparelhos e chips conferidos` : "Não deu para contar agora"} icone={ClipboardCheck}
+          acao={<LinksDaPlanilha parte="itens" rotulo="Aparelhos e chips" />}>
           {numeros && (
             <div className="h-2 overflow-hidden rounded-full bg-slate-100" role="progressbar" aria-valuemin={0} aria-valuemax={numeros.total} aria-valuenow={numeros.conferidos} aria-label="Conferidos hoje">
               <div className="h-full bg-acao" style={{ width: `${numeros.total ? Math.floor((numeros.conferidos / numeros.total) * 100) : 0}%` }} />
@@ -355,7 +361,8 @@ export default async function Estoque({ searchParams }: { searchParams: Promise<
       )}
 
       {!identificador && (
-        <Cartao titulo="Saldo da loja" subtitulo={`${totalDoSaldo} produto(s)${busca ? ` com "${busca}"` : ""}${paginasDoSaldo > 1 ? ` · mostrando ${(paginaDoSaldo - 1) * POR_PAGINA_DO_SALDO + 1} a ${Math.min(paginaDoSaldo * POR_PAGINA_DO_SALDO, totalDoSaldo)}` : ""}`} icone={Boxes}>
+        <Cartao titulo="Saldo da loja" subtitulo={`${totalDoSaldo} produto(s)${busca ? ` com "${busca}"` : ""}${paginasDoSaldo > 1 ? ` · mostrando ${(paginaDoSaldo - 1) * POR_PAGINA_DO_SALDO + 1} a ${Math.min(paginaDoSaldo * POR_PAGINA_DO_SALDO, totalDoSaldo)}` : ""}`} icone={Boxes}
+          acao={<LinksDaPlanilha parte="saldo" rotulo={busca ? "Saldo da loja inteira" : "Saldo"} />}>
           {buscaCortada && <p className="mb-2 text-xs text-aviso">A busca achou muitos produtos e parou no limite: escreva mais do nome ou o SKU para ver os outros.</p>}
           {linhas.length === 0 ? <p className="text-sm text-suave">Nenhum produto com saldo nesta loja{busca ? " para essa busca" : ""}.</p> : (
             <ul className="divide-y divide-borda text-sm">
