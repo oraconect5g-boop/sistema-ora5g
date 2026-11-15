@@ -15,6 +15,7 @@
 //   Lojas            só entram as lojas em que quem pede tem custo.ver. As demais ficam fora da
 //                    conta inteira (numerador e denominador) e são só contadas (lojasFora).
 //   Não é lucro: taxa de meio de pagamento, comissão, frete e imposto ficam fora.
+import { ehUuid } from "../acesso/regras";
 import { RespostaInesperada } from "../financeiro/painel";
 import { ehObjeto, inteiro as n, inteiroOuNulo, lista, objeto, texto as t, textoOuNulo as tOuNulo, type Linha } from "../leitura-do-banco";
 
@@ -65,6 +66,40 @@ export function lerMargem(dado: unknown): MargemDoBanco {
     lojasComCusto: n(dado, "lojas_com_custo"),
     lojasFora: n(dado, "lojas_fora"),
   };
+}
+
+// ---------------------------------------------------------------------------------------------
+// Leitura de margem_por_vendedor (lote PERF-003b): as mesmas parcelas, uma linha por vendedor de origem
+// ---------------------------------------------------------------------------------------------
+export type MargemDoVendedor = { vendedor: string } & ParcelasDaMargem;
+export type MargemPorVendedor = { vendedores: MargemDoVendedor[]; lojasComCusto: number; lojasFora: number };
+
+/** Converte a resposta de public.margem_por_vendedor; cada linha refaz a conta das parcelas (falha se não fechar). */
+export function lerMargemPorVendedor(dado: unknown): MargemPorVendedor {
+  if (!ehObjeto(dado)) throw new RespostaInesperada("margem_por_vendedor");
+  const vendedores = lista(dado, "vendedores").map((l): MargemDoVendedor => {
+    const vendedor = t(l, "vendedor");
+    if (!ehUuid(vendedor)) throw new RespostaInesperada("vendedor");
+    return { vendedor, ...parcelas(l) };
+  });
+  if (new Set(vendedores.map((v) => v.vendedor)).size !== vendedores.length) throw new RespostaInesperada("vendedor repetido");
+  return { vendedores, lojasComCusto: n(dado, "lojas_com_custo"), lojasFora: n(dado, "lojas_fora") };
+}
+
+/**
+ * As linhas da tela (PERF-003b): o nome de cada vendedor (de ranking_nomes; sem ele, "Vendedor não identificado",
+ * como no ranking) e os números da margem (M1 a M3), da maior margem para a menor. Nome repetido ganha número.
+ */
+export function vendedoresDaMargem(m: MargemPorVendedor, nomes: ReadonlyMap<string, string>) {
+  const vistos = new Map<string, number>();
+  return [...m.vendedores]
+    .map((v) => ({ vendedor: v.vendedor, nome: nomes.get(v.vendedor) ?? "Vendedor não identificado", parcelas: v, ...numerosDaMargem(v) }))
+    .sort((a, b) => b.margem - a.margem || a.nome.localeCompare(b.nome, "pt-BR") || a.vendedor.localeCompare(b.vendedor))
+    .map((l) => {
+      const vez = (vistos.get(l.nome) ?? 0) + 1;
+      vistos.set(l.nome, vez);
+      return vez === 1 ? l : { ...l, nome: `${l.nome} (${vez})` };
+    });
 }
 
 // ---------------------------------------------------------------------------------------------

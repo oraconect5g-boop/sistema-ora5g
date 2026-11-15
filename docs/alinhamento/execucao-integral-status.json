@@ -2,7 +2,7 @@
   "_leia": "Checkpoint do programa de execução integral (PR #67). Carregar ao retomar e seguir para o próximo item executável da fila; não reiniciar o projeto. Estados vêm de status-requisitos.json (fonte da rastreabilidade); este arquivo acrescenta lote, bloqueio externo e revisão.",
   "atualizado_em": "2026-11-15",
   "base": {
-    "main": "54ebbec",
+    "main": "e607413",
     "pacote": {
       "pr": 67,
       "branch": "docs/execucao-integral-20261110",
@@ -18,12 +18,13 @@
   },
   "publicado": {
     "homologacao": {
-      "commit": "54ebbec",
+      "commit": "e607413",
       "quando": "2026-11-15",
-      "conferido": "rodapé da tela de entrada (54ebbec · build 15/11/2026 02:49), /saude 200 e as rotas reais respondendo 307 para o login (inclusive /auditoria/exportar e /equipe/exportar)"
+      "conferido": "rodapé da tela de entrada (e607413 · build 15/11/2026 03:03), /saude 200 e as rotas reais respondendo 307 para o login"
     },
     "falta_publicar": [
-      "R5, revisão do estado (só documentos), publicada ao fim do lote"
+      "PERF-003b, margem por vendedor, publicado ao fim do lote",
+      "migration 20261115060000_margem_por_vendedor (PERF-003b): aplicar no ora5g-dev pede o sim do proprietário"
     ]
   },
   "contagem_dos_estados": {
@@ -803,7 +804,7 @@
       "titulo": "Distinguir quantidade, valor bruto, margem, receita elegível e comissão",
       "prioridade": "P0",
       "estado": "parcial",
-      "lote": "L9 metas/comissões; G4 metas e Ora Connect; L9a em 13/11: o extrato e a conta do bônus por medida (D-014); L9b em 14/11: o calculado e o aprovado no fechamento, com o motivo do ajuste; R4 (14/11): revisão do estado",
+      "lote": "L9 metas/comissões; G4 metas e Ora Connect; L9a em 13/11: o extrato e a conta do bônus por medida (D-014); L9b em 14/11: o calculado e o aprovado no fechamento, com o motivo do ajuste; R4 (14/11): revisão do estado; PERF-003b (15/11): margem por vendedor para a gestão",
       "bloqueio_externo": null,
       "revisado_codex": false,
       "homologado": false
@@ -821,7 +822,7 @@
       "titulo": "Painel do gestor mostra metas e resultados da equipe",
       "prioridade": "P0",
       "estado": "parcial",
-      "lote": "L9 metas/comissões; G4 metas e Ora Connect (G4a: produção no Início; metas no G4b); G4b: metas e resultados da equipe no /metas; G4c: a meta no Início; L9a: o bônus de cada vendedor no /metas; L9b: o fechamento no cartão do bônus",
+      "lote": "L9 metas/comissões; G4 metas e Ora Connect (G4a: produção no Início; metas no G4b); G4b: metas e resultados da equipe no /metas; G4c: a meta no Início; L9a: o bônus de cada vendedor no /metas; L9b: o fechamento no cartão do bônus; PERF-003b (15/11): margem por vendedor para a gestão",
       "bloqueio_externo": null,
       "revisado_codex": false,
       "homologado": false

@@ -6500,6 +6500,10 @@ export type Database = {
         Args: { p_fim: string; p_inicio: string; p_unidade?: string }
         Returns: Json
       }
+      margem_por_vendedor: {
+        Args: { p_fim: string; p_inicio: string; p_unidade?: string }
+        Returns: Json
+      }
       metas_definir: {
         Args: {
           p_mes: string

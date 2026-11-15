@@ -1,8 +1,8 @@
-import { BadgePercent, CircleSlash, PiggyBank, ShoppingBag, Ticket } from "lucide-react";
+import { BadgePercent, CircleSlash, PiggyBank, ShoppingBag, Ticket, UsersRound } from "lucide-react";
 import Link from "next/link";
 
 import { BaixarPlanilha } from "../../componentes/BaixarPlanilha";
-import { BarraSegmentada, Colunas, Linhas, TabelaDoGrafico } from "../../componentes/graficos";
+import { BarraSegmentada, BarrasComSinal, Colunas, Linhas, TabelaDoGrafico } from "../../componentes/graficos";
 import {
   cadaRotulo, EstadoDoPainel, foraDaMargem, indicadorDaMargem, indicadorDoRecebido, Indicadores, indicadoresDeVendas, LIGACAO, NOTA, NUMERO_PRINCIPAL,
   PainelDasLojas, PainelDeRecebimentos, PainelDeVendas, PainelDoMix, plural, type MetaDoGrafico,
@@ -17,7 +17,7 @@ import { brl, brlCompacto, brlCompactoComSinal, brlComSinal, brlEixo, brlEixoCom
 import { enderecoDoFinanceiro, numerosDasVendas, type Leitura, type VendasDoBanco } from "../../lib/inicio/painel";
 import type { RegioesDoPainel } from "../../lib/lojas/regioes";
 import { metaDoDiaPorMes } from "../../lib/metas/painel";
-import { numerosDaMargem, situacaoDaMargem, type ItensDaMargem, type MargemDoBanco } from "../../lib/margem/painel";
+import { numerosDaMargem, situacaoDaMargem, vendedoresDaMargem, type ItensDaMargem, type MargemDoBanco, type MargemPorVendedor } from "../../lib/margem/painel";
 import type { Relatorios } from "../../lib/relatorios/consulta";
 import { diasDeMargem, diasDeVendas, enderecoDaExportacao, enderecoDosRelatorios, PERIODO_NO_FINANCEIRO, textosDoRelatorio } from "../../lib/relatorios/painel";
 import { situacaoDaVenda } from "../../lib/vendas/lista";
@@ -85,6 +85,55 @@ function PainelDaMargem({ margem, janela, aqui }: { margem: Leitura<MargemDoBanc
       </div>
       {dias.some((d) => d.margem === null) && <p className={RODAPE}>Dia em branco no gráfico: houve movimento, e nenhum item dele tinha custo gravado. A margem desse dia é desconhecida, não zero.</p>}
       <TabelaDoGrafico colunas={["Dia", ...COLUNAS_DA_MARGEM]} linhas={[...dias.map((d) => [d.rotulo, ...medidasDaMargem(d)]), ["Total", ...medidasDaMargem(total)]]} />
+    </Cartao>
+  );
+}
+
+// ---------------------------------------------------------------------------------------------
+// Margem por vendedor (lote PERF-003b: ORA-PERF-003 e ORA-PERF-005): a mesma conta da margem bruta (M1 a M3), pelo
+// vendedor de origem de cada venda (cancelar ou devolver por outra pessoa não muda o vendedor), só das lojas em que
+// quem pede vê o custo. Os nomes vêm de ranking_nomes. Vendedor sem nenhum item com custo gravado fica fora das
+// barras (a margem dele é desconhecida, não zero) e aparece na tabela como "sem custo".
+// ---------------------------------------------------------------------------------------------
+type MargemDosVendedores = { margem: MargemPorVendedor; nomes: ReadonlyMap<string, string> };
+function PainelDaMargemPorVendedor({ leitura, aqui, exportar }: { leitura: Leitura<MargemDosVendedores>; aqui: string; exportar: string }) {
+  const cartao = { titulo: "Margem por vendedor", subtitulo: "Pelo vendedor de origem de cada venda, com o custo gravado no item. Não é comissão nem lucro" };
+  if (leitura.estado !== "ok") return <Cartao {...cartao}><EstadoDoPainel estado={leitura.estado} fonte="margem" tentarDeNovo={aqui} /></Cartao>;
+
+  const { margem, nomes } = leitura.dados;
+  if (margem.lojasComCusto === 0 && margem.lojasFora > 0) return <Cartao {...cartao}><EstadoDoPainel estado="sem_permissao" motivo={SO_LOJA_FORA} /></Cartao>;
+  const linhas = vendedoresDaMargem(margem, nomes);
+  if (linhas.length === 0) {
+    return (
+      <Cartao {...cartao}>
+        <EstadoVazio titulo="Nenhuma venda, devolução ou cancelamento no período" icone={UsersRound}>A leitura está funcionando; só não houve movimento para calcular a margem de cada vendedor.</EstadoVazio>
+      </Cartao>
+    );
+  }
+  const comCusto = linhas.filter((l) => l.temCusto);
+  const semCusto = linhas.length - comCusto.length;
+  return (
+    <Cartao {...cartao} acao={<BaixarPlanilha endereco={exportar} rotulo="Exportar" estilo="ligacao" />}>
+      {comCusto.length > 0 ? (
+        <BarrasComSinal
+          dados={comCusto.map((l) => ({
+            rotulo: l.nome, valor: l.margem,
+            detalhe: [`${semBase(l.fracao, percentualComSinal)} de ${brl(l.base)} vendido com custo`, ...(l.parcelas.itensSemCusto > 0 ? [`${numero(l.parcelas.itensSemCusto)} sem custo`] : [])].join(" · "),
+          }))}
+          formatar={brlComSinal} nomeSerie="Margem bruta" nomes={["Margem positiva", "Margem negativa"]}
+        />
+      ) : (
+        <Aviso tom="aviso" titulo="Margem desconhecida">Houve movimento no período, e nenhum item dele tinha custo gravado. Isso não é margem zero: sem custo não há como calcular.</Aviso>
+      )}
+      {comCusto.length > 0 && semCusto > 0 && <p className={RODAPE}>{semCusto === 1 ? "1 vendedor só vendeu itens sem custo gravado: a margem dele é desconhecida, não zero, e fica só na tabela." : `${semCusto} vendedores só venderam itens sem custo gravado: a margem deles é desconhecida, não zero, e fica só na tabela.`}</p>}
+      {margem.lojasFora > 0 && <p className={RODAPE}>{`A margem considera só as lojas em que você vê o custo; ${margem.lojasFora === 1 ? "1 loja com movimento ficou fora" : `${margem.lojasFora} lojas com movimento ficaram fora`}.`}</p>}
+      <TabelaDoGrafico
+        colunas={["Vendedor", ...COLUNAS_DA_MARGEM]}
+        linhas={linhas.map((l) => [l.nome, ...medidasDaMargem({
+          margem: l.temCusto ? l.margem : null, base: l.base, custo: l.custoLiquido, fracao: l.fracao, cobertura: l.cobertura,
+          itensSemCusto: l.parcelas.itensSemCusto, vendidoSemCusto: l.parcelas.vendidoSemCusto,
+        })])}
+      />
     </Cartao>
   );
 }
@@ -317,7 +366,7 @@ export function ConteudoRelatorios({ relatorios, turno, regioes = null }: {
   /** ORG-009: as regiões da rede (só para quem vê a rede); a soma por região aparece na rede inteira. */
   regioes?: RegioesDoPainel;
 }) {
-  const { periodo, escopo, daRede, janelas, cadastro, vendas, anterior, financeiro, margem, itens, pagina, producao, metas } = relatorios;
+  const { periodo, escopo, daRede, janelas, cadastro, vendas, anterior, financeiro, margem, itens, vendedores, pagina, producao, metas } = relatorios;
   // A meta do dia (G4c): a meta do mês do vendido líquido ÷ dias do mês, de cada mês do período.
   const meta: MetaDoGrafico | null = metas === null ? null : metas.estado === "ok" ? { estado: "ok", ...metaDoDiaPorMes(metas.dados) } : { estado: metas.estado };
   const redeInteira = daRede && escopo.unidade === null;
@@ -347,6 +396,11 @@ export function ConteudoRelatorios({ relatorios, turno, regioes = null }: {
           <PainelDaMargem margem={margem} janela={janelas.atual} aqui={aqui} />
           <PainelDaCobertura margem={margem} aqui={aqui} />
         </div>
+      )}
+
+      {/* PERF-003b: só com custo.ver e com a função no banco (sem ela, o bloco não aparece). */}
+      {vendedores !== null && vendedores !== "sem_permissao" && (
+        <PainelDaMargemPorVendedor leitura={vendedores} aqui={aqui} exportar={enderecoDaExportacao(periodo, lojaDoEndereco, "vendedores")} />
       )}
 
       <div className="grid gap-4 xl:grid-cols-2">
