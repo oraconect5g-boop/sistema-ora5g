@@ -1,6 +1,7 @@
 import { ScrollText, ShieldAlert } from "lucide-react";
 import type { Metadata } from "next";
 
+import { BaixarPlanilha } from "../../componentes/BaixarPlanilha";
 import { MoldeReal } from "../../componentes/MoldeReal";
 import { Aviso, Cartao, EstadoVazio, FiltroSegmentado, Selo, TituloPagina } from "../../componentes/ui";
 import { FalhaDoServico, obterSessao } from "../../lib/acesso/sessao";
@@ -43,12 +44,12 @@ export default async function Auditoria({ searchParams }: { searchParams: Promis
   const pessoas = pessoaIds.length ? await supabase.from("perfis_usuario").select("id, nome").in("id", pessoaIds) : { data: [], error: null };
   if (pessoas.error) throw new FalhaDoServico("auditoria_pessoas");
   const quem = (id: string | null) => (id ? pessoas.data.find((p) => p.id === id)?.nome ?? "Pessoa de fora da sua equipe" : "Sistema");
-  const href = (mudanca: Record<string, string | undefined>) => {
+  const href = (mudanca: Record<string, string | undefined>, caminho = "/auditoria") => {
     const p = new URLSearchParams();
     const valores = { periodo: periodo === "hoje" ? undefined : periodo, alertas: soAlertas ? "1" : undefined, ...mudanca };
     for (const [k, v] of Object.entries(valores)) if (v) p.set(k, v);
     const texto = p.toString();
-    return `/auditoria${texto ? `?${texto}` : ""}`;
+    return `${caminho}${texto ? `?${texto}` : ""}`;
   };
 
   return (
@@ -58,7 +59,8 @@ export default async function Auditoria({ searchParams }: { searchParams: Promis
         <FiltroSegmentado rotulo="Período" opcoes={(Object.keys(PERIODOS_DA_AUDITORIA) as (keyof typeof PERIODOS_DA_AUDITORIA)[]).map((p) => ({ href: href({ periodo: p === "hoje" ? undefined : p }), rotulo: PERIODOS_DA_AUDITORIA[p].rotulo, ativo: p === periodo }))} />
         <FiltroSegmentado rotulo="O que mostrar" opcoes={[{ href: href({ alertas: undefined }), rotulo: "Tudo", ativo: !soAlertas }, { href: href({ alertas: "1" }), rotulo: "Só alertas", ativo: soAlertas }]} />
       </div>
-      <Cartao corpo="p-0" titulo={`${visiveis.length} registro(s)`} icone={ScrollText}>
+      {/* FIN-009d: a planilha do mesmo período e do mesmo filtro, com todas as linhas (não só as 200 da tela). */}
+      <Cartao corpo="p-0" titulo={`${visiveis.length} registro(s)`} icone={ScrollText} acao={<BaixarPlanilha endereco={href({}, "/auditoria/exportar")} rotulo="Planilha do período" />}>
         {visiveis.length === 0 ? (
           <div className="p-4 sm:p-5"><EstadoVazio titulo="Nada no período" icone={ScrollText}>Tente um período maior.</EstadoVazio></div>
         ) : (

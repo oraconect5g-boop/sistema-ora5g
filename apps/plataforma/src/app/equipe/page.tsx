@@ -1,11 +1,13 @@
 import { MailPlus, ShieldAlert, UserCheck, UserX, Users } from "lucide-react";
 import type { Metadata } from "next";
 
+import { BaixarPlanilha } from "../../componentes/BaixarPlanilha";
 import { MoldeReal } from "../../componentes/MoldeReal";
 import { Aviso, Avatar, Botao, Cartao, Selo, TituloPagina } from "../../componentes/ui";
 import { ERROS_DA_EQUIPE, PAPEIS, papeisQuePodeConceder, type Papel } from "../../lib/acesso/regras";
 import { FalhaDoServico, obterSessao } from "../../lib/acesso/sessao";
 import { consultarEquipePorPapel } from "../../lib/equipe/consulta";
+import { SITUACOES_DO_CONVITE } from "../../lib/equipe/planilha";
 import { chaveDoCatalogo, type ValorDeParametro } from "../../lib/parametros";
 import { alterarSituacao, cancelarConvite, convidar, encerrarVinculo, repetirConvite, vincular } from "./acoes";
 import { PessoasPorPapel } from "./PessoasPorPapel";
@@ -23,11 +25,12 @@ const OK = {
   repetido: "Convite enviado de novo para a fila.",
 } as const;
 
+// Os textos vêm de lib/equipe/planilha (os mesmos da planilha, FIN-009d).
 const SITUACAO_DO_CONVITE: Record<string, { texto: string; tom: "aviso" | "sucesso" | "perigo" | "info" }> = {
-  pendente: { texto: "na fila de envio", tom: "info" },
-  processando: { texto: "enviando", tom: "info" },
-  enviado: { texto: "e-mail enviado; aguardando a pessoa entrar", tom: "sucesso" },
-  erro: { texto: "não enviado", tom: "perigo" },
+  pendente: { texto: SITUACOES_DO_CONVITE.pendente ?? "", tom: "info" },
+  processando: { texto: SITUACOES_DO_CONVITE.processando ?? "", tom: "info" },
+  enviado: { texto: SITUACOES_DO_CONVITE.enviado ?? "", tom: "sucesso" },
+  erro: { texto: SITUACOES_DO_CONVITE.erro ?? "", tom: "perigo" },
 };
 
 const campo = "mt-1 min-h-11 w-full rounded-botao border border-borda bg-white px-3 text-sm outline-none focus:border-acao focus:ring-2 focus:ring-acao/20";
@@ -80,7 +83,8 @@ export default async function Equipe({ searchParams }: { searchParams: Promise<{
 
   return (
     <MoldeReal sessao={sessao}>
-      <TituloPagina titulo="Equipe e acessos" subtitulo="Quem entra em cada loja, com qual função. Toda mudança vale na hora e fica na auditoria com o motivo." />
+      <TituloPagina titulo="Equipe e acessos" subtitulo="Quem entra em cada loja, com qual função. Toda mudança vale na hora e fica na auditoria com o motivo."
+        acao={<BaixarPlanilha endereco="/equipe/exportar" rotulo="Baixar planilha" />} />
       {ok && <Aviso tom="sucesso" className="mt-4">{OK[ok]}</Aviso>}
       {erro && <Aviso tom="perigo" className="mt-4">{ERROS_DA_EQUIPE[erro]}</Aviso>}
 

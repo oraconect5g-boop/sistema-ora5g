@@ -124,6 +124,12 @@ describe("/equipe: pessoas por papel (G5)", () => {
     expect((await pagina()).cartao?.texto).toContain("Não foi possível ler agora");
   });
 
+  it("FIN-009d: a planilha da equipe e dos acessos, no Excel ou em CSV, no alto da tela", async () => {
+    const elementos: Elemento[] = [];
+    percorrer(await Equipe({ searchParams: Promise.resolve({}) }) as ReactElement, (e) => elementos.push(e), () => undefined);
+    expect(elementos.filter((e) => e.tipo === "BaixarPlanilha").map((e) => e.props)).toEqual([{ endereco: "/equipe/exportar", rotulo: "Baixar planilha" }]);
+  });
+
   it("quem não cuida da equipe não chega à contagem", async () => {
     cenario.permitido = false;
     const p = await pagina();
