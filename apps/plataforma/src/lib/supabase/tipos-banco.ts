@@ -6298,6 +6298,10 @@ export type Database = {
         }
         Returns: boolean
       }
+      cliente_dados_do_titular: {
+        Args: { p_cliente: string; p_motivo: string }
+        Returns: Json
+      }
       cliente_ficha: { Args: { p_cliente: string }; Returns: Json }
       cliente_revelar: {
         Args: { p_campo: string; p_cliente: string }

@@ -2,7 +2,7 @@
   "_leia": "Checkpoint do programa de execução integral (PR #67). Carregar ao retomar e seguir para o próximo item executável da fila; não reiniciar o projeto. Estados vêm de status-requisitos.json (fonte da rastreabilidade); este arquivo acrescenta lote, bloqueio externo e revisão.",
   "atualizado_em": "2026-11-15",
   "base": {
-    "main": "f38a01e",
+    "main": "c75a3e7",
     "pacote": {
       "pr": 67,
       "branch": "docs/execucao-integral-20261110",
@@ -18,17 +18,18 @@
   },
   "publicado": {
     "homologacao": {
-      "commit": "f38a01e",
+      "commit": "c75a3e7",
       "quando": "2026-11-15",
-      "conferido": "rodapé da tela de entrada (f38a01e · build 15/11/2026 15:41), /saude 200 e as rotas reais respondendo 307 para o login (inclusive /vendas, /notas, /conta/confirmar e /caixa)"
+      "conferido": "rodapé da tela de entrada (c75a3e7 · build 15/11/2026 15:49), /saude 200 e as rotas reais respondendo 307 para o login (inclusive /catalogo, /conta/seguranca, /assistencia, /vendas e /clientes)"
     },
     "falta_publicar": [
-      "QUAL-010b, o cliente do Supabase sob demanda (quatro telas), publicado ao fim do lote"
+      "QUAL-011a, o relatório dos dados do titular, publicado ao fim do lote",
+      "migration 20261115210000_relatorio_do_titular (QUAL-011a): aplicar no ora5g-dev pede o sim do proprietário"
     ]
   },
   "contagem_dos_estados": {
-    "nao_iniciado": 46,
-    "parcial": 66,
+    "nao_iniciado": 45,
+    "parcial": 67,
     "testado": 62,
     "bloqueado": 3,
     "respeitado": 2
@@ -1558,9 +1559,9 @@
     "ORA-QUAL-011": {
       "titulo": "LGPD: bases legais, retenção, direitos do titular e minimização",
       "prioridade": "P1",
-      "estado": "nao_iniciado",
-      "lote": "transversal",
-      "bloqueio_externo": "encarregado/jurídico (LGPD)",
+      "estado": "parcial",
+      "lote": "transversal; QUAL-011a (15/11): o relatório dos dados do titular",
+      "bloqueio_externo": "encarregado/jurídico (LGPD): bases legais, retenção, anonimização a pedido e quem gera o relatório (D-048)",
       "revisado_codex": false,
       "homologado": false
     },

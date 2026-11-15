@@ -60,11 +60,13 @@ export default async function FichaDoCliente({ params, searchParams }: { params:
   const sessao = await obterSessao({ exigirLoja: true });
   const { supabase, situacao } = sessao;
   const unidade = situacao.unidade_id as string;
-  const [busca, cadastro, auditoria, abreOs] = await Promise.all([
+  const [busca, cadastro, auditoria, abreOs, exporta] = await Promise.all([
     supabase.rpc("tem_permissao", { p_permissao: "cliente.buscar", p_unidade: unidade }),
     supabase.rpc("tem_permissao", { p_permissao: "cliente.cadastrar", p_unidade: unidade }),
     supabase.rpc("tem_permissao", { p_permissao: "auditoria.ver", p_unidade: unidade }),
     supabase.rpc("tem_permissao", { p_permissao: "os.abrir", p_unidade: unidade }),
+    // QUAL-011a: o relatório dos dados do titular é do dono (cliente.exportar).
+    supabase.rpc("tem_permissao", { p_permissao: "cliente.exportar", p_unidade: unidade }),
   ]);
   if (busca.error || cadastro.error || auditoria.error) throw new FalhaDoServico("tem_permissao");
   if (!busca.data) return <MoldeReal sessao={sessao}><Aviso tom="aviso" className="mt-6">Seu papel não consulta clientes.</Aviso></MoldeReal>;
@@ -118,6 +120,9 @@ export default async function FichaDoCliente({ params, searchParams }: { params:
             ...(f.endereco_informado ? [[CAMPOS_REVELAVEIS.endereco, <Revelar key="en" cliente={f.id} campo="endereco" mascara="informado" />] as const] : []),
           ]} />
           <p className="mt-3 text-xs text-suave">Usado para: compra, garantia e histórico{f.finalidades.filter(ehFinalidade).map((x) => `; ${FINALIDADES[x].nome.toLowerCase()}`).join("")}.</p>
+          {exporta.data === true && !f.mesclado_em && (
+            <p className="mt-2 text-xs"><Link href={`/clientes/${f.id}/titular`} className="font-semibold text-acao">Relatório dos dados do titular (LGPD)</Link>: para responder quando o cliente pede os dados dele.</p>
+          )}
         </Cartao>
 
         <Cartao titulo="Compras" subtitulo={`${f.compras.total} compra(s) concluída(s) na rede${f.compras.ultima ? `, a última em ${quando(f.compras.ultima)}` : ""}. Abaixo, as que você pode ver.`} icone={ShoppingBag}>

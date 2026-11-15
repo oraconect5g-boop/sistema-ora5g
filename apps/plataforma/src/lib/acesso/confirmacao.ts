@@ -8,7 +8,8 @@ export const CODIGO_DA_CONFIRMACAO = "OR033";
 export const precisaConfirmar = (erro: { code?: string } | null | undefined) => erro?.code === CODIGO_DA_CONFIRMACAO;
 
 /** As telas das ações que pedem a confirmação; a volta é uma delas (com o resto do endereço) ou o Início. */
-const VOLTAS = ["/equipe", "/aprovacoes", "/notas", "/caixa"] as const;
+// QUAL-011a: o relatório dos dados do titular (/clientes/<id>/titular) também pede a confirmação.
+const VOLTAS = ["/equipe", "/aprovacoes", "/notas", "/caixa", "/clientes"] as const;
 export function voltaDaConfirmacao(valor: unknown): string {
   if (typeof valor !== "string" || valor.length > 300 || valor.includes("//") || valor.includes("\\")) return "/inicio";
   const base = VOLTAS.find((v) => valor === v || valor.startsWith(`${v}?`) || valor.startsWith(`${v}#`) || valor.startsWith(`${v}/`));

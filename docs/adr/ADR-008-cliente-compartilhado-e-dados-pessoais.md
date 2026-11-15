@@ -42,7 +42,7 @@
 
 - Leads, funil, atividades e motivos de perda (L5b); mesclagem de duplicados, contratos e anexos, histórico omnichannel e segmentação (L5c).
 - Linhas e chips da Ora Connect ligados ao cliente (L11) e OS (L12) usam este cadastro quando chegarem.
-- Política de retenção, anonimização a pedido do titular e relatório de dados do titular: dependem da decisão do jurídico/encarregado (ORA-QUAL-011). O banco já guarda o necessário para responder "quem acessou meus dados".
+- Política de retenção e anonimização a pedido do titular: dependem da decisão do jurídico/encarregado (ORA-QUAL-011, D-048). O relatório dos dados do titular saiu no lote QUAL-011a (15/11/2026, `public.cliente_dados_do_titular` e a tela `/clientes/<id>/titular`): só o dono, com a senha recente e um motivo, na auditoria; quem mais gera o relatório também fica para o jurídico/encarregado. O banco já guarda o necessário para responder "quem acessou meus dados".
 
 ## Perguntas para o proprietário
 

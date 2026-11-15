@@ -92,6 +92,7 @@ Financeiro real (#65): a primeira fatia (vendas, pagamentos registrados e caixas
 | D-006 | O gerente aprova **toda** nota ou só exceções? Quem pediu a nota pode aprovar a própria? | Hoje: todas passam pela fila, quem pediu pode aprovar, e a aprovação nunca segura a emissão (ADR-006) |
 | D-026 | **Troca e devolução:** em quantos dias o cliente pode trocar ou devolver? Que estado do aparelho é aceito? Devolve dinheiro ou só vale-troca? | O sistema já registra e controla (reembolso nos meios pagos ou vale-troca); falta a regra comercial |
 | G1 | Piloto em paralelo com a Rein: 2 a 4 semanas? Quanto tempo a Rein fica ativa depois do "go" (para poder voltar)? | [Go/no-go](operacao/GO_NO_GO_PILOTO_E_SAIDA_DA_REIN.md) §5 |
+| D-048 | **LGPD com o jurídico**: base legal de cada dado, por quanto tempo fica, anonimização a pedido, quem atende o titular (encarregado) e por qual canal | O relatório dos dados do titular já existe (só o dono gera, na ficha do cliente); o resto espera o jurídico |
 | D-047 | **Metas de desempenho no celular**: aprovar (ou mudar) as metas propostas | [Desempenho no celular](operacao/DESEMPENHO_NO_CELULAR.md); hoje todas as telas medidas estão dentro delas |
 | G2 | Se a internet da loja cair: a venda espera ou vai para um formulário em papel? Quem atende problemas no horário da loja? | D-041 e D-042, com a proposta em [contingência e incidentes](operacao/CONTINGENCIA_E_INCIDENTES.md) |
 
