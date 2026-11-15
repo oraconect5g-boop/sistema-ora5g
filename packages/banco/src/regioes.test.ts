@@ -1,4 +1,4 @@
-// Lote ORG-009 (14/11/2026, ORA-ORG-009; migration 20261115003000_regioes): as regiões agrupam as lojas da rede para
+// Lote ORG-009 (14/11/2026, ORA-ORG-009; migration 20261115000433_regioes, antes 20261115003000): as regiões agrupam as lojas da rede para
 // ver vendas e metas por região. Não dão acesso: o vínculo de cada pessoa continua decidindo o que ela vê.
 // Banco em memória com todas as migrations; dados FICTÍCIOS; cada teste numa transação desfeita.
 import type { PGlite } from "@electric-sql/pglite";

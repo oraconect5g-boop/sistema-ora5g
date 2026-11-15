@@ -1,5 +1,5 @@
 // ARQUIVO GERADO pelo Supabase (generate_typescript_types do projeto ora5g-dev) depois da
-// migration 20261114215128_cancelamento_da_nota. Não edite à mão: gere de novo a cada
+// migration 20261115000433_regioes. Não edite à mão: gere de novo a cada
 // migration aplicada (auditoria do Codex de 08/11, §7.2). O teste tipos-banco.test.ts confere
 // que funções e tabelas públicas daqui são as mesmas das migrations.
 export type Json =
@@ -6223,7 +6223,6 @@ export type Database = {
         }[]
       }
       estoque_painel: { Args: { p_unidade?: string }; Returns: Json }
-      estoque_valor_em_custo: { Args: { p_unidade?: string }; Returns: Json }
       estoque_registrar_entrada: {
         Args: {
           p_chave: string
@@ -6236,6 +6235,7 @@ export type Database = {
         }
         Returns: Json
       }
+      estoque_valor_em_custo: { Args: { p_unidade?: string }; Returns: Json }
       extrato_do_vendedor: {
         Args: { p_mes: string; p_unidade: string; p_vendedor: string }
         Returns: Json

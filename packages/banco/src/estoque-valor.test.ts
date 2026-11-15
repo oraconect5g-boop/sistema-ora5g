@@ -1,4 +1,4 @@
-// Lote G3b (14/11/2026, ORA-REPORT-007 o resto; E8 da matriz; migration 20261114235000_estoque_valor_em_custo): o valor
+// Lote G3b (14/11/2026, ORA-REPORT-007 o resto; E8 da matriz; migration 20261115000320_estoque_valor_em_custo, antes 20261114235000): o valor
 // do estoque pelo custo vigente da variação, só para quem tem custo.ver e estoque.consultar. Dados FICTÍCIOS do cenário
 // do catálogo: loja A com 2 aparelhos (custo R$ 1.100,00), 10 capas (R$ 18,00) e 1 chip sem custo; loja B com 1 aparelho
 // e 3 capas.
