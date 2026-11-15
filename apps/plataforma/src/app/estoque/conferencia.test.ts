@@ -86,6 +86,15 @@ function texto(v: unknown): string {
 }
 const tela = async (parametros: Record<string, string> = {}) =>
   texto(await Estoque({ searchParams: Promise.resolve({ aba: "conferencia", ...parametros }) }) as ReactElement).replace(/\s+/g, " ");
+// FIN-009b: as propriedades de cada componente de um tipo (a planilha do estoque), pela árvore da tela.
+function doTipo(v: unknown, tipo: string, achados: Linha[] = []): Linha[] {
+  if (Array.isArray(v)) for (const x of v) doTipo(x, tipo, achados);
+  else if (isValidElement<Linha>(v)) {
+    if (typeof v.type === "function" && v.type.name === tipo) achados.push(v.props);
+    for (const x of Object.values(v.props)) doTipo(x, tipo, achados);
+  } else if (v && typeof v === "object") for (const x of Object.values(v)) doTipo(x, tipo, achados);
+  return achados;
+}
 const item = (n: number, mudancas: Linha = {}) => ({
   id: `item-${String(n).padStart(5, "0")}`, variante_id: n % 2 ? "variante-1" : "variante-2", imei: n % 2 ? `35${String(n).padStart(13, "0")}` : null,
   iccid: n % 2 ? null : `8955${String(n).padStart(15, "0")}`, situacao: "disponivel", em_estoque: true, unidade_id: LOJA, conferido_em: HOJE, ...mudancas,
@@ -164,6 +173,13 @@ describe("conferência do dia (#80)", () => {
     cenario.semNumero = false;
     cenario.erro = { code: "57014" };
     await expect(tela()).rejects.toThrow();
+  });
+});
+
+describe("planilha da conferência (FIN-009b)", () => {
+  it("a conferência leva à planilha dos aparelhos e chips da loja (com a última conferência de cada um)", async () => {
+    cenario.itens = [item(1)];
+    expect(doTipo(await Estoque({ searchParams: Promise.resolve({ aba: "conferencia" }) }), "LinksDaPlanilha")).toEqual([{ parte: "itens", rotulo: "Aparelhos e chips" }]);
   });
 });
 

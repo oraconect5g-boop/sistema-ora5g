@@ -22,13 +22,32 @@ export const centavosCsv = (centavos: number) => {
 };
 
 /**
+ * Célula de planilha (lote FIN-009b): texto, número ou um valor com tipo, que a planilha do Excel (lib/xlsx) guarda
+ * como número ou data de verdade e o CSV escreve como texto: dinheiro em centavos ("1234,56"), dia ("13/11/2026")
+ * e instante, mostrado em São Paulo ("13/11/2026 22:10"). Nula é célula vazia.
+ */
+export type Celula = string | number | null | { centavos: number } | { dia: string } | { instante: string };
+
+/** "2026-11-13T22:10:00Z" → "13/11/2026 19:10" (São Paulo). */
+export const instanteCsv = (instante: string) => geradoEm(new Date(instante));
+
+/** O texto da célula no CSV (antes da proteção contra fórmula de `celulaCsv`). */
+export function textoDaCelula(celula: Celula): string | number {
+  if (celula === null) return "";
+  if (typeof celula === "string" || typeof celula === "number") return celula;
+  if ("centavos" in celula) return centavosCsv(celula.centavos);
+  if ("dia" in celula) return diaCsv(celula.dia);
+  return instanteCsv(celula.instante);
+}
+
+/**
  * Um arquivo com várias partes (o demonstrativo, as contas por categoria...), separadas por uma linha em
  * branco, cada uma com o próprio cabeçalho. As células passam pela mesma proteção de `celulaCsv`.
  */
-export type SecaoCsv = { colunas?: readonly string[]; linhas: readonly (readonly (string | number)[])[] };
+export type SecaoCsv = { colunas?: readonly string[]; linhas: readonly (readonly Celula[])[] };
 export const gerarCsvEmSecoes = (secoes: readonly SecaoCsv[]) =>
   `﻿${secoes
-    .map((s) => [...(s.colunas ? [s.colunas] : []), ...s.linhas].map((linha) => linha.map(celulaCsv).join(";")).join("\r\n"))
+    .map((s) => [...(s.colunas ? [s.colunas] : []), ...s.linhas].map((linha) => linha.map((c) => celulaCsv(textoDaCelula(c))).join(";")).join("\r\n"))
     .join("\r\n\r\n")}`;
 
 /** Instante de geração do arquivo, em São Paulo: "13/11/2026 22:10". */

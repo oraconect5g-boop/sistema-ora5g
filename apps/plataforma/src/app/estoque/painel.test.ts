@@ -48,7 +48,7 @@ vi.mock("../../lib/acesso/sessao", () => ({
 import Estoque from "./page";
 
 // Só os componentes de apresentação do painel são executados; os compartilhados ficam como elementos.
-const APRESENTACAO = new Set(["PainelDoEstoque", "EstadoDoPainel", "Indicadores", "CartaoDoValorDoEstoque"]);
+const APRESENTACAO = new Set(["PainelDoEstoque", "EstadoDoPainel", "Indicadores", "CartaoDoValorDoEstoque", "CartaoDasPlanilhas"]);
 type Elemento = { tipo: string; props: Linha };
 function percorrer(v: unknown, elemento: (e: Elemento) => void, folha: (t: string) => void): void {
   if (Array.isArray(v)) for (const x of v) percorrer(x, elemento, folha);
@@ -124,7 +124,9 @@ describe("/estoque, aba Painel (G3)", () => {
     expect(cenario.chamadas).toEqual([{}]);
     expect(p.filtro).toBeUndefined();
     expect(p.titulo).toMatchObject({ sobretitulo: "Santa Cândida (teste)", titulo: "Estoque" });
-    expect(p.cartoes).toEqual(["Disponível por modelo", "Por categoria", "Pendências"]);
+    expect(p.cartoes).toEqual(["Disponível por modelo", "Por categoria", "Pendências", "Planilhas do estoque"]);
+    // FIN-009b: as planilhas do recorte; com um local só, sem escolher local (a rota usa a loja do turno)
+    expect(p.doTipo("LinksDaPlanilha")).toEqual([{ parte: "saldo", loja: null, rotulo: "Saldo" }, { parte: "itens", loja: null, rotulo: "Aparelhos e chips" }]);
     expect(p.indicador("Disponível para vender")).toMatchObject({ valor: "11", detalhe: "Físico 13 · reservado 2" });
     expect(p.indicador("Abaixo do mínimo")).toMatchObject({ valor: "1", tom: "atencao" });
     expect(p.indicador("Parado há mais de 60 dias")).toMatchObject({ valor: "1", tom: "atencao" });
@@ -152,6 +154,7 @@ describe("/estoque, aba Painel (G3)", () => {
     ] });
     expect(p.cartoes).not.toContain("Por local");
     expect(p.indicador("Disponível para vender")).toMatchObject({ valor: "11" });
+    expect(p.doTipo("LinksDaPlanilha").map((l) => l.loja)).toEqual([LOJA, LOJA]);
   });
 
   it("rede inteira: uma pergunta só, o painel por local e o que está fora da venda", async () => {
@@ -159,7 +162,8 @@ describe("/estoque, aba Painel (G3)", () => {
     const p = await pagina({ loja: "rede" });
     expect(cenario.chamadas).toEqual([{}]);
     expect(p.titulo).toMatchObject({ sobretitulo: "Rede inteira" });
-    expect(p.cartoes).toEqual(["Disponível por modelo", "Por categoria", "Por local", "Pendências"]);
+    expect(p.cartoes).toEqual(["Disponível por modelo", "Por categoria", "Por local", "Pendências", "Planilhas do estoque"]);
+    expect(p.doTipo("LinksDaPlanilha").map((l) => l.loja)).toEqual(["rede", "rede"]);
     expect(p.indicador("Fora da venda")).toMatchObject({ valor: "5" });
     expect(p.indicador("Abaixo do mínimo")).toMatchObject({ detalhe: "Variações abaixo do mínimo, contando cada loja" });
     const locais = p.cartao("Por local");
@@ -181,12 +185,16 @@ describe("/estoque, aba Painel (G3)", () => {
     expect(p.texto).toContain("migration estoque_painel");
     expect(p.doTipo("Indicador")).toEqual([]);
     expect(errosRegistrados()).toEqual([]);
+    // sem o painel, a planilha ainda sai (da loja do turno)
+    expect(p.cartoes).toContain("Planilhas do estoque");
 
     cenario.erro = { code: "57014" };
     p = await pagina({ loja: "rede" });
     expect(p.doTipo("Aviso")).toMatchObject([{ tom: "perigo", titulo: "Não foi possível ler agora" }]);
     expect(p.elementos.map((e) => e.props.href)).toContain("/estoque?aba=painel");
     expect(errosRegistrados()).toEqual([["estoque: falha ao consultar estoque_painel", { codigo: "57014" }]]);
+    // com a falha, a rota não saberia o recorte: as planilhas somem
+    expect(p.cartoes).not.toContain("Planilhas do estoque");
 
     cenario.erro = null;
     cenario.respostas = { rede: { ...DA_LOJA, totais: { ...DA_LOJA.totais, disponivel: 12 } } };

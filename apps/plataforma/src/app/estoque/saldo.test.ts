@@ -85,6 +85,15 @@ function texto(v: unknown): string {
   return "";
 }
 const tela = async (parametros: Record<string, string> = {}) => texto(await Estoque({ searchParams: Promise.resolve(parametros) }) as ReactElement).replace(/\s+/g, " ");
+// FIN-009b: as propriedades de cada componente de um tipo (a planilha do estoque), pela árvore da tela.
+function doTipo(v: unknown, tipo: string, achados: Linha[] = []): Linha[] {
+  if (Array.isArray(v)) for (const x of v) doTipo(x, tipo, achados);
+  else if (isValidElement<Linha>(v)) {
+    if (typeof v.type === "function" && v.type.name === tipo) achados.push(v.props);
+    for (const x of Object.values(v.props)) doTipo(x, tipo, achados);
+  } else if (v && typeof v === "object") for (const x of Object.values(v)) doTipo(x, tipo, achados);
+  return achados;
+}
 const variante = (n: number, saldos: Record<string, Linha>) => ({
   id: `00000000-0000-4000-9000-${String(n).padStart(12, "0")}`, nome: `Capa modelo ${String(n).padStart(4, "0")}`, sku: `CAP-${String(n).padStart(4, "0")}`,
   estoque_minimo: 0, produto_id: `00000000-0000-4000-9100-${String(n).padStart(12, "0")}`, ativa: true, saldos,
@@ -133,5 +142,10 @@ describe("saldo da loja (B5)", () => {
   it("contagem sem número é falha, não zero", async () => {
     cenario.semNumero = true;
     await expect(tela()).rejects.toThrow();
+  });
+
+  it("FIN-009b: o saldo leva à planilha da loja inteira (a busca não corta a planilha)", async () => {
+    expect(doTipo(await Estoque({ searchParams: Promise.resolve({}) }), "LinksDaPlanilha")).toEqual([{ parte: "saldo", rotulo: "Saldo" }]);
+    expect(doTipo(await Estoque({ searchParams: Promise.resolve({ q: "capa" }) }), "LinksDaPlanilha")).toEqual([{ parte: "saldo", rotulo: "Saldo da loja inteira" }]);
   });
 });
