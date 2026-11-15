@@ -1,9 +1,9 @@
 // Inventário de autorização (prioridade 1 do diagnóstico de 10/11/2026; ORA-ORG-004 e ORA-QUAL-002).
 // O aviso 0029 do Supabase lista as funções SECURITY DEFINER que qualquer usuário logado pode chamar
-// pela API: 153 em 15/11 (48 + 6 do cadastro de lojas, L2, + 5 do cadastro do catálogo, L3a, + 4 dos preços, L3b,
+// pela API: 155 em 15/11 (48 + 6 do cadastro de lojas, L2, + 5 do cadastro do catálogo, L3a, + 4 dos preços, L3b,
 // + 4 da importação do catálogo, L3c, + 3 da entrada de mercadoria, L4a, + 5 do inventário, L4b, + 6 dos clientes, L5a,
 // + 9 do funil e da agenda, L5b, + 4 da mesclagem e dos segmentos, L5c, + 4 das maquininhas e da conciliação, L7a,
-// + 2 da leitura das entradas, R1, + 1 do nome no ranking, G1, + 2 das metas, G4b, + 3 das financeiras, L7b, + 3 da saída autorizada do caixa, L7c, + 6 das contas a pagar, L8a, + 1 das regras do bônus por meta, L9a, + 2 do fechamento do bônus, L9b, + 1 da correção do repasse das financeiras, B4, + 1 dos dados para emitir a nota, K1b, + 1 dos documentos da nota emitida, L10a, + 2 do envio da nota pelo WhatsApp, K1c, + 1 dos recebíveis por loja e adquirente, L8e, + 5 da ordem de serviço, L12a, + 3 do orçamento da OS, L12b, + 2 da cobrança e da entrega da OS, L12c, + 3 das peças da OS, L12d, + 1 dos relatórios da assistência, L12e, + 2 dos documentos da venda, L5d, + 2 da conciliação fiscal, L10b, + 2 do cancelamento e da correção da nota, L10c, + 1 do valor do estoque a custo, G3b, + 2 dos códigos de outros canais, CAT-009, + 2 das regiões, ORG-009, + 1 da conta ligada à entrada, FIN-004a, + 2 dos documentos da conta, FIN-004b, + 1 da correção do custo, CAT-008b; no L8b, a das categorias ganhou o parâmetro "entra no resultado"). Elas rodam com poder total e cada uma confere sessão, loja e permissão por
+// + 2 da leitura das entradas, R1, + 1 do nome no ranking, G1, + 2 das metas, G4b, + 3 das financeiras, L7b, + 3 da saída autorizada do caixa, L7c, + 6 das contas a pagar, L8a, + 1 das regras do bônus por meta, L9a, + 2 do fechamento do bônus, L9b, + 1 da correção do repasse das financeiras, B4, + 1 dos dados para emitir a nota, K1b, + 1 dos documentos da nota emitida, L10a, + 2 do envio da nota pelo WhatsApp, K1c, + 1 dos recebíveis por loja e adquirente, L8e, + 5 da ordem de serviço, L12a, + 3 do orçamento da OS, L12b, + 2 da cobrança e da entrega da OS, L12c, + 3 das peças da OS, L12d, + 1 dos relatórios da assistência, L12e, + 2 dos documentos da venda, L5d, + 2 da conciliação fiscal, L10b, + 2 do cancelamento e da correção da nota, L10c, + 1 do valor do estoque a custo, G3b, + 2 dos códigos de outros canais, CAT-009, + 2 das regiões, ORG-009, + 1 da conta ligada à entrada, FIN-004a, + 2 dos documentos da conta, FIN-004b, + 1 da correção do custo, CAT-008b, + 2 da limpeza das fotos, CAT-011b; no L8b, a das categorias ganhou o parâmetro "entra no resultado"). Elas rodam com poder total e cada uma confere sessão, loja e permissão por
 // conta própria. Este teste monta um "mundo" fictício com objetos reais em duas lojas e tenta cada
 // função como 13 tipos de atacante. Recusa = erro, ou resposta vazia numa leitura, e nada muda no
 // banco. O teste lista as funções no próprio banco e falha se aparecer uma nova sem casos aqui.
@@ -662,6 +662,11 @@ const CASOS: Record<string, Caso> = {
   },
   // O catálogo (nomes e SKUs, sem custo) é visível a quem é da rede, como as políticas de produtos.
   "pendencias_de_foto()": { leitura: true, A: () => ["select * from public.pendencias_de_foto()", []], contextoProprio: ["tecnico"] },
+  // Limpeza das fotos enviadas sem registro (CAT-011b): quem envia fotos (catalogo.fotos); o vendedor é recusado.
+  "fotos_sem_registro()": { leitura: true, A: () => ["select public.fotos_sem_registro() as v", []], semPermissao: true },
+  "fotos_sem_registro_limpar(text[])": {
+    A: () => ["select public.fotos_sem_registro_limpar($1::text[]) as v", [[`${ids.organizacao}/${cat.produtoCapa}/produto/00000000-0000-4000-a000-000000000071.webp`]]], semPermissao: true,
+  },
   // Preços pela tela (L3b): preco.alterar na rede (preço geral) ou na loja (exceção).
   "preco_campanha(uuid,uuid,text,bigint,timestamp with time zone,timestamp with time zone,text)": {
     A: () => ["select public.preco_campanha($1, null, 'loja', 1, null, now() + interval '1 day', 'Tentativa')", [cat.capa]],
@@ -773,6 +778,8 @@ function vazio(funcao: string, linhas: Record<string, unknown>[]) {
     const v = (linhas[0]?.v ?? {}) as { oportunidades?: unknown[]; atividades?: unknown[] };
     return linhas.length === 1 && (v.oportunidades ?? v.atividades ?? [1]).length === 0;
   }
+  // A lista dos arquivos sem registro de outra rede: a do atacante, vazia (nunca os da rede atacada).
+  if (funcao === "fotos_sem_registro()") return linhas.length === 1 && ((linhas[0]?.v as { arquivos?: unknown[] } | undefined)?.arquivos ?? [1]).length === 0;
   if (funcao === "cliente_buscar(text,text)") return linhas.length === 1 && (linhas[0]?.v as { clientes?: unknown[] } | undefined)?.clientes?.length === 0;
   // A lista de lojas pode trazer as da rede de quem pergunta, nunca uma da rede atacada.
   if (funcao === "lojas_da_rede()") return linhas.every((l) => !LOJAS_DA_REDE_ATACADA.has(String(l.id)));
@@ -935,7 +942,7 @@ describe("inventário: toda função SECURITY DEFINER exposta tem casos de recus
     const expostas = rows.map((r) => r.f);
     expect(expostas.filter((f) => !(f in CASOS)), "função nova exposta sem casos de recusa: acrescente ao CASOS").toEqual([]);
     expect(Object.keys(CASOS).filter((f) => !expostas.includes(f)), "caso de função que não existe mais").toEqual([]);
-    expect(expostas).toHaveLength(153);
+    expect(expostas).toHaveLength(155);
   });
 
   it("visitante anônimo não executa nenhuma função do esquema public; no privado só um gatilho, que não roda sozinho", async () => {

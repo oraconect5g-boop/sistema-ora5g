@@ -17,6 +17,10 @@ const cenario = vi.hoisted(() => ({
   tabelas: {} as Record<string, Record<string, unknown>[]>,
   erros: {} as Record<string, { code: string }>,
   pedidos: [] as string[],
+  /** CAT-011b: as respostas das funções da limpeza (o padrão é a função ausente) e o que o Storage apagou. */
+  respostas: {} as Record<string, { data: unknown; error: { code: string } | null }>,
+  apagadosPeloStorage: [] as string[][],
+  falhaDoStorageNaVez: 0,
 }));
 vi.mock("next/headers", () => ({ cookies: async () => ({ getAll: () => [], set: () => undefined }) }));
 vi.mock("next/navigation", () => ({ redirect: (d: string) => { throw new Error(`redirecionou para ${d}`); } }));
@@ -53,15 +57,26 @@ vi.mock("../../../lib/acesso/sessao", () => ({
     situacao: { usuario_ativo: true, sessao_no_turno: true, unidade_id: LOJA, unidade_nome: "Loja A (teste)", turno_termina_em: "2026-11-15T23:00:00Z" },
     supabase: {
       from: (tabela: string) => new Consulta(tabela),
-      rpc: async (nome: string, argumentos: Record<string, unknown>) => {
+      rpc: async (nome: string, argumentos: Record<string, unknown> = {}) => {
         cenario.pedidos.push(`rpc ${nome} ${JSON.stringify(argumentos)}`);
-        return { data: cenario.pode, error: null };
+        if (nome === "tem_permissao") return { data: cenario.pode, error: null };
+        return cenario.respostas[nome] ?? { data: null, error: { code: "PGRST202" } };
+      },
+      storage: {
+        from: (balde: string) => ({
+          remove: async (caminhos: string[]) => {
+            expect(balde).toBe("produtos");
+            cenario.apagadosPeloStorage.push(caminhos);
+            if (cenario.falhaDoStorageNaVez === cenario.apagadosPeloStorage.length) return { data: null, error: { statusCode: "500" } };
+            return { data: caminhos.map((name) => ({ name })), error: null };
+          },
+        }),
       },
     },
   }),
 }));
 
-import { localizarDestinos } from "../acoes";
+import { limparFotosSemRegistro, localizarDestinos } from "../acoes";
 import FotosEmLotePagina from "./page";
 
 const elementos = (v: unknown): ReactElement<Linha>[] => {
@@ -84,6 +99,9 @@ beforeEach(() => {
   cenario.pode = true;
   cenario.erros = {};
   cenario.pedidos = [];
+  cenario.respostas = {};
+  cenario.apagadosPeloStorage = [];
+  cenario.falhaDoStorageNaVez = 0;
   cenario.tabelas = {
     variantes: [
       { id: V(1), produto_id: CAPA, sku: "ACE-0001", nome: "Capa azul", cor: "Azul", ativa: true },
@@ -144,13 +162,76 @@ describe("/catalogo/lote: para onde vai cada foto (CAT-010)", () => {
 
   it("a página: sem permissão, só o aviso; com ela, o envio com a configuração pública do Supabase", async () => {
     cenario.pode = false;
-    let tela = await FotosEmLotePagina();
+    let tela = await FotosEmLotePagina({ searchParams: Promise.resolve({}) });
     expect(texto(tela)).toContain("Só quem gere o catálogo envia fotos.");
     expect(elementos(tela).some((e) => typeof e.type === "function" && e.type.name === "FotosEmLote")).toBe(false);
     cenario.pode = true;
-    tela = await FotosEmLotePagina();
+    tela = await FotosEmLotePagina({ searchParams: Promise.resolve({}) });
     const envio = elementos(tela).find((e) => typeof e.type === "function" && e.type.name === "FotosEmLote");
     expect(envio?.props).toEqual({ supabaseUrl: "https://banco.exemplo", chavePublica: "chave-publica-de-teste" });
     expect(texto(tela)).toContain("Até 50 fotos por vez");
+  });
+});
+
+// ---------------------------------------------------------------------------------------------
+// CAT-011b: a limpeza das fotos enviadas sem registro
+// ---------------------------------------------------------------------------------------------
+const ARQ = (n: number) => `${ORG}/${CAPA}/produto/00000000-0000-4000-a000-${String(n).padStart(12, "0")}.webp`;
+const lista = (n: number) => ({ data: { quantos: n, bytes: n * 300_000, arquivos: Array.from({ length: n }, (_, i) => ({ caminho: ARQ(i), bytes: 300_000, enviado_em: "2026-11-13T10:00:00Z" })) }, error: null });
+const destinoDe = async (acao: Promise<unknown>) => {
+  try { await acao; } catch (e) { return (e as Error).message.replace("redirecionou para ", ""); }
+  throw new Error("a ação não redirecionou");
+};
+const telaDaLimpeza = async (parametros: Record<string, string> = {}) => texto(await FotosEmLotePagina({ searchParams: Promise.resolve(parametros) }));
+
+describe("/catalogo/lote: a limpeza dos arquivos sem registro (CAT-011b)", () => {
+  it("o cartão: sem a função no banco some; com arquivos, quantos, o tamanho e o botão; sem nenhum, diz; falha, diz", async () => {
+    expect(await telaDaLimpeza()).not.toContain("Arquivos sem registro");
+    cenario.respostas.fotos_sem_registro = lista(3);
+    let t = await telaDaLimpeza();
+    expect(t).toContain("3 arquivos enviados há mais de um dia e nunca registrados (879 KB)");
+    expect(t).toContain("Limpar 3 arquivos");
+    const formulario = elementos(await FotosEmLotePagina({ searchParams: Promise.resolve({}) })).find((e) => e.type === "form");
+    expect((formulario?.props.action as { name: string } | undefined)?.name).toBe("limparFotosSemRegistro");
+    cenario.respostas.fotos_sem_registro = lista(0);
+    expect(await telaDaLimpeza()).toContain("Nenhum arquivo sem registro enviado há mais de um dia.");
+    cenario.respostas.fotos_sem_registro = { data: null, error: { code: "57014" } };
+    t = await telaDaLimpeza();
+    expect(t).toContain("Não deu para ver os arquivos sem registro agora.");
+    expect(t).not.toContain("Limpar");
+  });
+
+  it("as mensagens da volta: tudo apagado, parte apagada, nada a limpar e falha", async () => {
+    cenario.respostas.fotos_sem_registro = lista(0);
+    expect(await telaDaLimpeza({ apagados: "3", de: "3" })).toContain("3 arquivos apagados; a limpeza ficou na auditoria.");
+    expect(await telaDaLimpeza({ apagados: "2", de: "3" })).toContain("2 de 3 arquivos apagados; tente de novo para os outros.");
+    expect(await telaDaLimpeza({ limpeza: "nada" })).toContain("Nada a limpar: nenhum arquivo sem registro.");
+    expect(await telaDaLimpeza({ limpeza: "falha" })).toContain("Não deu para limpar agora. Nada foi apagado");
+    // números estranhos no endereço não viram mensagem
+    expect(await telaDaLimpeza({ apagados: "5", de: "3" })).not.toContain("apagados");
+  });
+
+  it("limpar: o banco lista e libera (tudo ou nada), e o Storage apaga de 100 em 100; cada recusa volta com a mensagem", async () => {
+    cenario.respostas.fotos_sem_registro = lista(150);
+    cenario.respostas.fotos_sem_registro_limpar = { data: { caminhos: Array.from({ length: 150 }, (_, i) => ARQ(i)) }, error: null };
+    expect(await destinoDe(limparFotosSemRegistro())).toBe("/catalogo/lote?apagados=150&de=150#limpeza");
+    expect(cenario.pedidos.find((p) => p.startsWith("rpc fotos_sem_registro_limpar"))).toContain(ARQ(149));
+    expect(cenario.apagadosPeloStorage.map((l) => l.length)).toEqual([100, 50]);
+    // o Storage falha na segunda vez: volta com quantos saíram
+    cenario.apagadosPeloStorage = [];
+    cenario.falhaDoStorageNaVez = 2;
+    expect(await destinoDe(limparFotosSemRegistro())).toBe("/catalogo/lote?apagados=100&de=150#limpeza");
+    cenario.apagadosPeloStorage = [];
+    cenario.falhaDoStorageNaVez = 1;
+    expect(await destinoDe(limparFotosSemRegistro())).toBe("/catalogo/lote?limpeza=falha#limpeza");
+    // o banco recusa a limpeza: nada vai ao Storage
+    cenario.apagadosPeloStorage = [];
+    cenario.respostas.fotos_sem_registro_limpar = { data: null, error: { code: "P0002" } };
+    expect(await destinoDe(limparFotosSemRegistro())).toBe("/catalogo/lote?limpeza=falha#limpeza");
+    expect(cenario.apagadosPeloStorage).toEqual([]);
+    cenario.respostas.fotos_sem_registro = lista(0);
+    expect(await destinoDe(limparFotosSemRegistro())).toBe("/catalogo/lote?limpeza=nada#limpeza");
+    cenario.respostas.fotos_sem_registro = { data: null, error: { code: "42501" } };
+    expect(await destinoDe(limparFotosSemRegistro())).toBe("/catalogo/lote?limpeza=permissao#limpeza");
   });
 });
