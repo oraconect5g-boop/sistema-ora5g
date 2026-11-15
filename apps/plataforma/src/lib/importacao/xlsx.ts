@@ -84,10 +84,6 @@ class Pacote {
     }
   }
 
-  tem(nome: string) {
-    return this.partes.has(nome.toLowerCase());
-  }
-
   /** O XML de uma parte, conferido (tamanho e CRC-32). Parte que não existe: nulo. */
   async xml(nome: string): Promise<string | null> {
     const parte = this.partes.get(nome.toLowerCase());
