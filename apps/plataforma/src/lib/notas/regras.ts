@@ -31,7 +31,15 @@ export const ERROS_DAS_NOTAS = {
   cancelamento_devolucao: "Esta venda tem nota de devolução: o cancelamento da nota de origem é tratado com o contador.",
   chave_xml: "O XML guardado confirma a chave registrada: se a nota é outra, cancele esta no fisco e registre a certa.",
   chave_motivo: "Informe o motivo da correção (de 10 a 300 letras): fica no histórico da nota.",
-  falha: "Não foi possível concluir agora. Tente de novo em instantes.",
+  // FISC-009b (FISC-009): a carta de correção da NF-e registrada.
+  carta_numero: "O número da carta de correção vai de 1 a 20: é o número do evento no portal do fisco.",
+  carta_protocolo: "Protocolo da carta de correção inválido: são os 15 dígitos do evento no portal do fisco.",
+  carta_texto: "O texto da correção tem de 15 a 1.000 caracteres, como o do evento no fisco.",
+  carta_outra: "Esta nota já tem uma carta de correção com este número, com outro texto ou protocolo: confira no portal.",
+  carta_protocolo_repetido: "Este protocolo já está registrado em outra carta de correção: confira no portal.",
+  carta_nfce: "A carta de correção é só da NF-e. A NFC-e não tem: para corrigir, cancele a nota no fisco e peça outra.",
+  carta_nao_emitida: "Só a nota emitida (autorizada e não cancelada) tem carta de correção: recarregue a venda.",
+  falha:"Não foi possível concluir agora. Tente de novo em instantes.",
 } as const;
 export type ErroDasNotas = keyof typeof ERROS_DAS_NOTAS;
 
@@ -62,6 +70,15 @@ export function erroDasNotas(erro: { code?: string; message?: string } | null | 
   ];
   const doFisco = codigo === "22023" ? doCancelamento.find(([padrao]) => padrao.test(erro?.message ?? "")) : undefined;
   if (doFisco) return doFisco[1];
+  // FISC-009b (FISC-009): a carta de correção.
+  const daCarta: [RegExp, ErroDasNotas][] = [
+    [/número da carta de correção/i, "carta_numero"], [/protocolo da carta de correção inválido/i, "carta_protocolo"],
+    [/texto da correção/i, "carta_texto"], [/carta de correção nº \d+ desta nota já foi registrada/i, "carta_outra"],
+    [/protocolo já foi registrado em outra carta/i, "carta_protocolo_repetido"], [/carta de correção é só da nf-e/i, "carta_nfce"],
+    [/tem carta de correção/i, "carta_nao_emitida"],
+  ];
+  const doEvento = codigo === "22023" ? daCarta.find(([padrao]) => padrao.test(erro?.message ?? "")) : undefined;
+  if (doEvento) return doEvento[1];
   return codigo && Object.hasOwn(DO_BANCO, codigo) ? (DO_BANCO[codigo] as ErroDasNotas) : "falha";
 }
 

@@ -24,6 +24,7 @@ import { BuscaDeCliente } from "../../clientes/BuscaDeCliente";
 import { conferirEnvioDesconhecido, corrigirChaveDaNota, corrigirNota, enviarNotaPeloWhatsApp, pedirNota, registrarCancelamentoNoFisco } from "../../notas/acoes";
 import { cancelarVenda, conferirRetorno, confirmarEstorno, devolverItens, retirarAnexo } from "../../vender/acoes";
 import { regraNaTela, regrasDosItens } from "../../../lib/vendas/regra-de-preco";
+import { CartasDeCorrecao } from "./CartasDeCorrecao";
 
 export const metadata: Metadata = { title: "Comprovante da venda" };
 export const dynamic = "force-dynamic";
@@ -92,6 +93,12 @@ export default async function Comprovante({ params, searchParams }: { params: Pr
   const envios = enviosDaNota && !enviosDaNota.error ? enviosDaNota.data : null;
   const ultimoEnvio = envios?.[0] ?? null;
   const temPdf = Boolean(documentosLidos?.some((d) => d.tipo === "pdf"));
+  // FISC-009b (FISC-009): as cartas de correção da NF-e emitida (só a NF-e, modelo 55, tem carta), lidas à parte. Banco
+  // sem a migration (sem a tabela) ou falha de leitura: a lista e o formulário não aparecem; a venda segue.
+  const cartasDaNota = notaEmitida?.modelo === "55"
+    ? await supabase.from("notas_cartas_de_correcao").select("id, numero, protocolo, correcao, registrada_em").eq("pedido_id", notaEmitida.id).order("numero")
+    : null;
+  const cartas = cartasDaNota && !cartasDaNota.error ? cartasDaNota.data : null;
   // A regra de preço de cada item (L6b): campanha, preço da loja ou da rede, lida à parte. Banco sem a
   // migration ou falha de leitura não derrubam a venda.
   const regras = await regrasDosItens(supabase, id);
@@ -170,6 +177,8 @@ export default async function Comprovante({ params, searchParams }: { params: Pr
       {textoDoParametro(parametros.nota) === "whatsapp_conferido" && <Aviso tom="sucesso">Conferência registrada: o envio ficou como &quot;não chegou&quot; e a nota pode ser reenviada.</Aviso>}
       {textoDoParametro(parametros.nota) === "cancelada_no_fisco" && <Aviso tom="sucesso">Cancelamento da nota registrado: agora a venda pode ser cancelada ou pedir outra nota.</Aviso>}
       {textoDoParametro(parametros.nota) === "chave_corrigida" && <Aviso tom="sucesso">Chave da nota corrigida; a anterior ficou no histórico da nota.</Aviso>}
+      {textoDoParametro(parametros.nota) === "carta_registrada" && <Aviso tom="sucesso">Carta de correção registrada no bloco “Nota fiscal”: a mais recente substitui as anteriores.</Aviso>}
+      {textoDoParametro(parametros.nota) === "carta_repetida" && <Aviso tom="info">Nada mudou: esta carta de correção já estava registrada.</Aviso>}
       <Cartao titulo={`Venda nº ${v.numero}`} subtitulo={`${loja.data?.nome ?? situacao.unidade_nome}${quando ? ` · ${quando}` : ""}`} icone={Receipt}>
         <p className="text-sm">Vendedor: {vendedor.data?.nome ?? "—"}{v.cliente_nome ? ` · Cliente: ${v.cliente_nome}` : ""}
           {v.cliente_id && buscaCliente.data && <> · <Link href={`/clientes/${v.cliente_id}`} className="font-semibold text-acao">ficha do cliente</Link></>}</p>
@@ -311,6 +320,7 @@ export default async function Comprovante({ params, searchParams }: { params: Pr
                   )}
                 </div>
               )}
+              {notaEmitida && cartas && <CartasDeCorrecao cartas={cartas} pedido={notaEmitida.id} venda={v.id} podeRegistrar={Boolean(aprovaNota.data)} />}
               {nota.data.situacao === "correcao_solicitada" && (nota.data.solicitado_por === usuario.id || aprovaNota.data) && (
                 <form action={corrigirNota} className="grid gap-2 sm:grid-cols-2">
                   <input type="hidden" name="pedido" value={nota.data.id} /><input type="hidden" name="venda" value={v.id} />
