@@ -2,7 +2,7 @@
   "_leia": "Checkpoint do programa de execução integral (PR #67). Carregar ao retomar e seguir para o próximo item executável da fila; não reiniciar o projeto. Estados vêm de status-requisitos.json (fonte da rastreabilidade); este arquivo acrescenta lote, bloqueio externo e revisão.",
   "atualizado_em": "2026-11-15",
   "base": {
-    "main": "c6b6a33",
+    "main": "379e27f",
     "pacote": {
       "pr": 67,
       "branch": "docs/execucao-integral-20261110",
@@ -18,22 +18,18 @@
   },
   "publicado": {
     "homologacao": {
-      "commit": "c6b6a33",
+      "commit": "379e27f",
       "quando": "2026-11-15",
-      "conferido": "rodapé da tela de entrada (c6b6a33 · build 15/11/2026 03:56), /saude 200 e as rotas reais respondendo 307 para o login (inclusive /contas-a-pagar e a rota de abrir documento)"
+      "conferido": "rodapé da tela de entrada (379e27f · build 15/11/2026 04:22), /saude 200 e as rotas reais respondendo 307 para o login (inclusive /produtos/precos, /contas-a-pagar e /estoque/entrada)"
     },
     "falta_publicar": [
-      "CAT-008b, a correção do custo atual, publicado ao fim do lote",
-      "migration 20261115060000_margem_por_vendedor (PERF-003b): aplicar no ora5g-dev pede o sim do proprietário",
-      "migration 20261115070000_conta_da_entrada (FIN-004a): aplicar no ora5g-dev pede o sim do proprietário",
-      "migration 20261115080000_documentos_da_conta (FIN-004b): aplicar no ora5g-dev pede o sim do proprietário",
-      "migration 20261115090000_correcao_do_custo (CAT-008b): aplicar no ora5g-dev pede o sim do proprietário"
+      "registro das migrations do PERF-003b, do FIN-004a, do FIN-004b e do CAT-008b aplicadas no ora5g-dev (só documentos e nomes de arquivo), publicado ao fim do lote"
     ]
   },
   "contagem_dos_estados": {
     "nao_iniciado": 49,
-    "parcial": 68,
-    "testado": 57,
+    "parcial": 65,
+    "testado": 60,
     "bloqueado": 3,
     "respeitado": 2
   },
@@ -194,8 +190,8 @@
     "ORA-CAT-008": {
       "titulo": "Custo de produto/lote/entrada e margem gerencial",
       "prioridade": "P1",
-      "estado": "parcial",
-      "lote": "L4a entrada de mercadoria; R1 correções do recebimento; R5 (15/11): revisão do estado; CAT-008b (15/11): a correção do custo atual",
+      "estado": "testado",
+      "lote": "L4a entrada de mercadoria; R1 correções do recebimento; R5 (15/11): revisão do estado; CAT-008b (15/11): a correção do custo atual; migration aplicada no ora5g-dev em 15/11",
       "bloqueio_externo": null,
       "revisado_codex": false,
       "homologado": false
@@ -403,7 +399,7 @@
       "prioridade": "P1",
       "estado": "parcial",
       "lote": "L5d documentos da venda (14/11)",
-      "bloqueio_externo": "D-026 (guarda e descarte) e fornecedor de assinatura digital",
+      "bloqueio_externo": "D-045 (guarda e descarte) e fornecedor de assinatura digital",
       "revisado_codex": false,
       "homologado": false
     },
@@ -725,8 +721,8 @@
     "ORA-FIN-004": {
       "titulo": "Contas a pagar ligadas a fornecedor/origem",
       "prioridade": "P0",
-      "estado": "parcial",
-      "lote": "L8 financeiro (L8a em 13/11: contas a pagar pela decisão D-036 do proprietário); FIN-004a (15/11): a conta ligada à entrada de mercadoria; FIN-004b (15/11): os documentos da conta (boleto, nota e comprovante)",
+      "estado": "testado",
+      "lote": "L8 financeiro (L8a em 13/11: contas a pagar pela decisão D-036 do proprietário); FIN-004a (15/11): a conta ligada à entrada de mercadoria; FIN-004b (15/11): os documentos da conta (boleto, nota e comprovante); migration aplicada no ora5g-dev em 15/11",
       "bloqueio_externo": null,
       "revisado_codex": false,
       "homologado": false
@@ -806,8 +802,8 @@
     "ORA-PERF-003": {
       "titulo": "Distinguir quantidade, valor bruto, margem, receita elegível e comissão",
       "prioridade": "P0",
-      "estado": "parcial",
-      "lote": "L9 metas/comissões; G4 metas e Ora Connect; L9a em 13/11: o extrato e a conta do bônus por medida (D-014); L9b em 14/11: o calculado e o aprovado no fechamento, com o motivo do ajuste; R4 (14/11): revisão do estado; PERF-003b (15/11): margem por vendedor para a gestão",
+      "estado": "testado",
+      "lote": "L9 metas/comissões; G4 metas e Ora Connect; L9a em 13/11: o extrato e a conta do bônus por medida (D-014); L9b em 14/11: o calculado e o aprovado no fechamento, com o motivo do ajuste; R4 (14/11): revisão do estado; PERF-003b (15/11): margem por vendedor para a gestão; migration aplicada no ora5g-dev em 15/11",
       "bloqueio_externo": null,
       "revisado_codex": false,
       "homologado": false
@@ -825,7 +821,7 @@
       "titulo": "Painel do gestor mostra metas e resultados da equipe",
       "prioridade": "P0",
       "estado": "parcial",
-      "lote": "L9 metas/comissões; G4 metas e Ora Connect (G4a: produção no Início; metas no G4b); G4b: metas e resultados da equipe no /metas; G4c: a meta no Início; L9a: o bônus de cada vendedor no /metas; L9b: o fechamento no cartão do bônus; PERF-003b (15/11): margem por vendedor para a gestão",
+      "lote": "L9 metas/comissões; G4 metas e Ora Connect (G4a: produção no Início; metas no G4b); G4b: metas e resultados da equipe no /metas; G4c: a meta no Início; L9a: o bônus de cada vendedor no /metas; L9b: o fechamento no cartão do bônus; PERF-003b (15/11): margem por vendedor para a gestão; migration aplicada no ora5g-dev em 15/11",
       "bloqueio_externo": null,
       "revisado_codex": false,
       "homologado": false

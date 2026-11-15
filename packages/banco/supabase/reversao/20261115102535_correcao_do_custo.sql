@@ -1,4 +1,4 @@
--- Reversão de 20261115090000_correcao_do_custo (só em banco sem dados reais): apaga a correção do custo, a conta pelo
+-- Reversão de 20261115102535_correcao_do_custo (antes 20261115090000; só em banco sem dados reais): apaga a correção do custo, a conta pelo
 -- histórico e o instante do registro da entrada, devolve o estorno da entrada do L4a (sem voltar o custo) e tira o gatilho da auditoria dos custos. Os
 -- custos já gravados com as origens novas ('estorno' e 'correcao') ficam: a regra antiga das origens volta como NOT
 -- VALID (vale para os custos novos, sem apagar o histórico).
