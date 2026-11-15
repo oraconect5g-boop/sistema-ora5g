@@ -1,19 +1,20 @@
 import { randomUUID } from "node:crypto";
 
-import { CalendarClock, CalendarRange, CircleCheck, Layers, ReceiptText, Store, Tags, TriangleAlert } from "lucide-react";
+import { CalendarClock, CalendarRange, CircleCheck, Layers, PackagePlus, ReceiptText, Store, Tags, TriangleAlert } from "lucide-react";
 
 import { BarrasHorizontais, Colunas, TabelaDoGrafico } from "../../componentes/graficos";
 import { EstadoDoPainel, NOTA } from "../../componentes/paineis-de-vendas";
 import { Botao, Cartao, EstadoVazio, FiltroSegmentado, Indicador, Selo } from "../../componentes/ui";
 import type { CategoriaDaConta, ContaAPagar, ResumoDasContas } from "../../lib/contas-a-pagar/consulta";
 import { LIMITE_DA_LISTA } from "../../lib/contas-a-pagar/consulta";
+import type { EntradaDaConta, LigacoesDasContas } from "../../lib/contas-a-pagar/entradas";
 import {
   dataDoDia, FORMAS, filtroNoEndereco, parcelaDaConta, prazoDaConta, VISOES_DAS_CONTAS,
   type FiltroDasContas, type VisaoDasContas,
 } from "../../lib/contas-a-pagar/regras";
 import { brl, brlCompacto, brlEixo, diaMes, numero } from "../../lib/formato";
 import type { Leitura } from "../../lib/leitura-do-banco";
-import { cancelarConta, corrigirConta, desfazerPagamento, lancarConta, pagarConta, salvarCategoria } from "./acoes";
+import { cancelarConta, corrigirConta, desfazerPagamento, lancarConta, ligarEntrada, pagarConta, salvarCategoria } from "./acoes";
 
 // Contas a pagar da empresa (lote L8a). Só apresentação: o resumo (somado no banco), a lista e as categorias
 // chegam lidos por lib/contas-a-pagar/consulta, cada um com o seu estado; falha nunca vira zero nem lista
@@ -37,7 +38,14 @@ type Props = {
   hoje: string;
   /** Sem o resumo (falha), o formulário oferece só a loja do turno. */
   lojaDoTurno: LojaDaConta;
+  /** FIN-004a: a entrada de cada conta e as compras que podem ser ligadas; nulo: o banco ainda não tem a ligação (some). */
+  ligacoes?: Leitura<LigacoesDasContas> | null;
+  /** FIN-004a: lançar a conta a partir desta entrada (o formulário vem aberto e preenchido). */
+  entradaParaLancar?: EntradaDaConta | null;
 };
+
+/** O dia de São Paulo de um instante, no formato da tela ("13/11/2026"). */
+const diaDoInstante = (iso: string) => dataDoDia(new Intl.DateTimeFormat("en-CA", { timeZone: "America/Sao_Paulo" }).format(new Date(iso)));
 
 function endereco(visao: VisaoDasContas, filtro: FiltroDasContas) {
   const p = new URLSearchParams();
@@ -53,7 +61,7 @@ function Volta({ visao, filtro }: { visao: VisaoDasContas; filtro: FiltroDasCont
   return <><input type="hidden" name="ver" value={visao} /><input type="hidden" name="loja" value={filtroNoEndereco(filtro) ?? ""} /></>;
 }
 
-export function ConteudoContas({ resumo, lista, categorias, fornecedores, visao, filtro, hoje, lojaDoTurno }: Props) {
+export function ConteudoContas({ resumo, lista, categorias, fornecedores, visao, filtro, hoje, lojaDoTurno, ligacoes = null, entradaParaLancar = null }: Props) {
   const escopo = resumo.estado === "ok" ? resumo.dados.escopo : null;
   const lojas: LojaDaConta[] = escopo?.lojas ?? [lojaDoTurno];
   const nomeDaLoja = (id: string | null) => (id === null ? "Rede (central)" : lojas.find((l) => l.id === id)?.nome ?? "Outra loja");
@@ -61,7 +69,10 @@ export function ConteudoContas({ resumo, lista, categorias, fornecedores, visao,
   const nomeDoFornecedor = (id: string | null) => (id === null ? null : fornecedores?.find((f) => f.id === id)?.nome ?? null);
   const varias = Boolean(escopo && (escopo.rede || escopo.lojas.length > 1));
   const mostrarLoja = varias && filtro.tipo === "todas";
-  const nomes = { nomeDaLoja, nomeDaCategoria, nomeDoFornecedor };
+  // FIN-004a: a entrada como aparece na conta e no formulário: "nº 12 · 13/11/2026 · NF 123 · Fornecedor".
+  const rotuloDaEntrada = (e: EntradaDaConta) => [`nº ${e.numero}`, diaDoInstante(e.criadaEm), e.documento, nomeDoFornecedor(e.fornecedorId), mostrarLoja ? nomeDaLoja(e.unidadeId) : null]
+    .filter((x): x is string => Boolean(x)).join(" · ");
+  const nomes = { nomeDaLoja, nomeDaCategoria, nomeDoFornecedor, rotuloDaEntrada };
 
   return (
     <>
@@ -96,18 +107,22 @@ export function ConteudoContas({ resumo, lista, categorias, fornecedores, visao,
       {resumo.estado !== "indisponivel" && (
         <Lancamento
           lojas={lojas} rede={escopo?.rede ?? false} categorias={categorias} fornecedores={fornecedores} filtro={filtro} visao={visao} hoje={hoje}
-          lojaDoTurno={lojaDoTurno} abrir={resumo.estado === "ok" && resumo.dados.abertas.quantidade === 0 && visao === "abertas"}
+          lojaDoTurno={lojaDoTurno} abrir={entradaParaLancar !== null || (resumo.estado === "ok" && resumo.dados.abertas.quantidade === 0 && visao === "abertas")}
+          entrada={entradaParaLancar} rotuloDaEntrada={rotuloDaEntrada}
         />
       )}
 
-      <ListaDeContas lista={lista} visao={visao} filtro={filtro} hoje={hoje} mostrarLoja={mostrarLoja} nomes={nomes} />
+      <ListaDeContas lista={lista} visao={visao} filtro={filtro} hoje={hoje} mostrarLoja={mostrarLoja} nomes={nomes} ligacoes={ligacoes} />
 
       {escopo?.rede && categorias.estado === "ok" && <Categorias categorias={categorias.dados} visao={visao} filtro={filtro} />}
     </>
   );
 }
 
-type Nomes = { nomeDaLoja: (id: string | null) => string; nomeDaCategoria: (id: string) => string; nomeDoFornecedor: (id: string | null) => string | null };
+type Nomes = {
+  nomeDaLoja: (id: string | null) => string; nomeDaCategoria: (id: string) => string; nomeDoFornecedor: (id: string | null) => string | null;
+  rotuloDaEntrada: (e: EntradaDaConta) => string;
+};
 
 function PainelDoResumo({ r, porLoja, nomes }: { r: ResumoDasContas; porLoja: boolean; nomes: Nomes }) {
   const diferenca = r.pagasNoMes.valorPago - r.pagasNoMes.valor;
@@ -163,15 +178,20 @@ function PainelDoResumo({ r, porLoja, nomes }: { r: ResumoDasContas; porLoja: bo
   );
 }
 
-function Lancamento({ lojas, rede, categorias, fornecedores, filtro, visao, hoje, lojaDoTurno, abrir }: {
+function Lancamento({ lojas, rede, categorias, fornecedores, filtro, visao, hoje, lojaDoTurno, abrir, entrada, rotuloDaEntrada }: {
   lojas: LojaDaConta[]; rede: boolean; categorias: Leitura<CategoriaDaConta[]>; fornecedores: { id: string; nome: string }[] | null;
   filtro: FiltroDasContas; visao: VisaoDasContas; hoje: string; lojaDoTurno: LojaDaConta; abrir: boolean;
+  /** FIN-004a: a conta desta entrada de mercadoria (o formulário vem com a loja, o fornecedor e o documento dela). */
+  entrada: EntradaDaConta | null; rotuloDaEntrada: (e: EntradaDaConta) => string;
 }) {
   const ativas = categorias.estado === "ok" ? categorias.dados.filter((c) => c.ativa) : [];
-  const onde = filtro.tipo === "rede" && rede ? "rede" : filtro.tipo === "loja" && lojas.some((l) => l.id === filtro.id) ? filtro.id
+  const daEntrada = entrada !== null && lojas.some((l) => l.id === entrada.unidadeId) ? entrada : null;
+  const onde = daEntrada ? daEntrada.unidadeId : filtro.tipo === "rede" && rede ? "rede" : filtro.tipo === "loja" && lojas.some((l) => l.id === filtro.id) ? filtro.id
     : lojas.some((l) => l.id === lojaDoTurno.id) ? lojaDoTurno.id : (lojas[0]?.id ?? "rede");
+  // A categoria da mercadoria (a lista inicial tem "Mercadoria (fornecedor)"), se ainda existir e estiver ativa.
+  const mercadoria = daEntrada ? ativas.find((c) => c.nome.toLowerCase().startsWith("mercadoria"))?.id : undefined;
   return (
-    <Cartao className="nao-imprimir mt-4" titulo="Lançar conta" icone={ReceiptText} subtitulo="A conta fica registrada para pagar; o pagamento é feito no banco e registrado aqui depois.">
+    <Cartao id="lancar" className="nao-imprimir mt-4 scroll-mt-24" titulo="Lançar conta" icone={ReceiptText} subtitulo="A conta fica registrada para pagar; o pagamento é feito no banco e registrado aqui depois.">
       {categorias.estado !== "ok" ? <EstadoDoPainel estado={categorias.estado} fonte="contas_a_pagar" /> : (
         <details open={abrir} className="group">
           <summary className={`${pilula} border-acao text-acao`}>
@@ -180,6 +200,15 @@ function Lancamento({ lojas, rede, categorias, fornecedores, filtro, visao, hoje
           <form action={lancarConta} className="mt-4 grid gap-3 sm:grid-cols-2 lg:grid-cols-4">
             <input type="hidden" name="chave" value={randomUUID()} />
             <Volta visao={visao} filtro={filtro} />
+            {daEntrada && (
+              <>
+                <input type="hidden" name="entrada" value={daEntrada.id} />
+                <p className="flex items-start gap-2 rounded-xl bg-acao-clara px-3 py-2 text-sm sm:col-span-2 lg:col-span-4">
+                  <PackagePlus aria-hidden className="mt-0.5 size-4 shrink-0 text-acao" />
+                  <span>{`A conta fica ligada à entrada de mercadoria ${rotuloDaEntrada(daEntrada)}. Confira o valor e o vencimento no boleto ou na nota.`}</span>
+                </p>
+              </>
+            )}
             <label className={rotulo}>Onde fica a conta
               <select name="unidade" defaultValue={onde} className={campo}>
                 {rede && <option value="rede">Rede (central)</option>}
@@ -187,11 +216,11 @@ function Lancamento({ lojas, rede, categorias, fornecedores, filtro, visao, hoje
               </select>
             </label>
             <label className={rotulo}>Categoria
-              <select name="categoria" required className={campo}>
+              <select name="categoria" required defaultValue={mercadoria} className={campo}>
                 {ativas.map((c) => <option key={c.id} value={c.id}>{c.entraNoResultado === false ? `${c.nome} (fora do resultado)` : c.nome}</option>)}
               </select>
             </label>
-            <label className={`${rotulo} sm:col-span-2`}>Descrição<input name="descricao" required minLength={3} maxLength={120} placeholder="Ex.: aluguel de novembro" className={campo} /></label>
+            <label className={`${rotulo} sm:col-span-2`}>Descrição<input name="descricao" required minLength={3} maxLength={120} placeholder="Ex.: aluguel de novembro" defaultValue={daEntrada ? `Mercadoria da entrada nº ${daEntrada.numero}` : undefined} className={campo} /></label>
             <label className={rotulo}>Valor (R$)<input name="valor" required inputMode="decimal" placeholder="0,00" className={campo} /></label>
             <label className={rotulo}>Vencimento (o primeiro)<input name="vencimento" type="date" required defaultValue={hoje} className={campo} /></label>
             <label className={rotulo}>Como é a conta
@@ -202,13 +231,13 @@ function Lancamento({ lojas, rede, categorias, fornecedores, filtro, visao, hoje
             <label className={rotulo}>Parcelas ou meses<input name="vezes" type="number" min={2} max={36} placeholder="De 2 a 36" className={campo} /></label>
             {fornecedores && fornecedores.length > 0 && (
               <label className={`${rotulo} sm:col-span-2`}>Fornecedor (opcional)
-                <select name="fornecedor" defaultValue="" className={campo}>
+                <select name="fornecedor" defaultValue={daEntrada?.fornecedorId ?? ""} className={campo}>
                   <option value="">Sem fornecedor</option>
                   {fornecedores.map((f) => <option key={f.id} value={f.id}>{f.nome}</option>)}
                 </select>
               </label>
             )}
-            <label className={`${rotulo} sm:col-span-2`}>Documento (opcional)<input name="documento" maxLength={60} placeholder="Nº do boleto ou da nota" className={campo} /></label>
+            <label className={`${rotulo} sm:col-span-2`}>Documento (opcional)<input name="documento" maxLength={60} placeholder="Nº do boleto ou da nota" defaultValue={daEntrada?.documento ?? undefined} className={campo} /></label>
             <ul className={`${NOTA} list-disc space-y-0.5 pl-5 sm:col-span-2 lg:col-span-4`}>
               <li><strong>Parcelada:</strong> {FORMAS.parcelada.explicacao}</li>
               <li><strong>Repete todo mês:</strong> {FORMAS.mensal.explicacao}</li>
@@ -232,9 +261,11 @@ const SUBTITULOS: Record<VisaoDasContas, string> = {
   canceladas: "Cancelamentos dos últimos 60 dias, com o motivo",
 };
 
-function ListaDeContas({ lista, visao, filtro, hoje, mostrarLoja, nomes }: {
+function ListaDeContas({ lista, visao, filtro, hoje, mostrarLoja, nomes, ligacoes }: {
   lista: Leitura<{ contas: ContaAPagar[]; mais: boolean }>; visao: VisaoDasContas; filtro: FiltroDasContas; hoje: string; mostrarLoja: boolean; nomes: Nomes;
+  ligacoes: Leitura<LigacoesDasContas> | null;
 }) {
+  const lidas = ligacoes?.estado === "ok" ? ligacoes.dados : null;
   return (
     <Cartao className="mt-4" titulo={`Contas: ${VISOES_DAS_CONTAS[visao].toLowerCase()}`} subtitulo={SUBTITULOS[visao]} icone={Layers}>
       {lista.estado !== "ok" ? <EstadoDoPainel estado={lista.estado} fonte="contas_a_pagar" tentarDeNovo={endereco(visao, filtro)} />
@@ -242,8 +273,9 @@ function ListaDeContas({ lista, visao, filtro, hoje, mostrarLoja, nomes }: {
         : (
           <>
             <ul className="divide-y divide-borda text-sm">
-              {lista.dados.contas.map((c) => <LinhaDaConta key={c.id} c={c} visao={visao} filtro={filtro} hoje={hoje} mostrarLoja={mostrarLoja} nomes={nomes} />)}
+              {lista.dados.contas.map((c) => <LinhaDaConta key={c.id} c={c} visao={visao} filtro={filtro} hoje={hoje} mostrarLoja={mostrarLoja} nomes={nomes} ligacoes={lidas} />)}
             </ul>
+            {ligacoes !== null && ligacoes.estado !== "ok" && <p className={`mt-3 ${NOTA}`}>Não deu para ler as entradas de mercadoria ligadas às contas agora; a ligação volta quando o banco responder.</p>}
             {lista.dados.mais && <p className={`mt-3 ${NOTA}`}>{`Mostrando as ${LIMITE_DA_LISTA} primeiras. Escolha uma loja acima para ver as outras.`}</p>}
           </>
         )}
@@ -251,9 +283,16 @@ function ListaDeContas({ lista, visao, filtro, hoje, mostrarLoja, nomes }: {
   );
 }
 
-function LinhaDaConta({ c, visao, filtro, hoje, mostrarLoja, nomes }: { c: ContaAPagar; visao: VisaoDasContas; filtro: FiltroDasContas; hoje: string; mostrarLoja: boolean; nomes: Nomes }) {
+function LinhaDaConta({ c, visao, filtro, hoje, mostrarLoja, nomes, ligacoes }: {
+  c: ContaAPagar; visao: VisaoDasContas; filtro: FiltroDasContas; hoje: string; mostrarLoja: boolean; nomes: Nomes; ligacoes: LigacoesDasContas | null;
+}) {
   const parcela = parcelaDaConta(c.forma, c.parcela, c.parcelas);
-  const detalhes = [nomes.nomeDaCategoria(c.categoriaId), mostrarLoja ? nomes.nomeDaLoja(c.unidadeId) : null, nomes.nomeDoFornecedor(c.fornecedorId), c.documento ? `doc. ${c.documento}` : null]
+  // FIN-004a: a entrada de mercadoria da conta (a ligada, se lida; "sem acesso" se o perfil não lê o estoque daquela loja).
+  const idDaEntrada = ligacoes?.ligadas.get(c.id) ?? null;
+  const entrada = idDaEntrada ? (ligacoes?.entradas.find((e) => e.id === idDaEntrada) ?? null) : null;
+  const textoDaEntrada = idDaEntrada === null ? null
+    : entrada ? `entrada nº ${entrada.numero}${entrada.estornada ? " (estornada)" : ""}` : "ligada a uma entrada de loja que você não consulta";
+  const detalhes = [nomes.nomeDaCategoria(c.categoriaId), mostrarLoja ? nomes.nomeDaLoja(c.unidadeId) : null, nomes.nomeDoFornecedor(c.fornecedorId), c.documento ? `doc. ${c.documento}` : null, textoDaEntrada]
     .filter((d): d is string => Boolean(d)).join(" · ");
   const prazo = prazoDaConta(c.vencimento, hoje);
   const diferenca = c.valorPago === null ? 0 : c.valorPago - c.valor;
@@ -315,6 +354,7 @@ function LinhaDaConta({ c, visao, filtro, hoje, mostrarLoja, nomes }: { c: Conta
           </details>
         </div>
       )}
+      {ligacoes && c.situacao !== "cancelada" && <LigacaoDaConta c={c} entrada={idDaEntrada} candidatas={ligacoes.entradas} visao={visao} filtro={filtro} nomes={nomes} />}
       {visao === "pagas" && c.situacao === "paga" && (
         <details className="nao-imprimir group mt-2 open:w-full">
           <summary className={pilula}>Desfazer pagamento</summary>
@@ -326,6 +366,45 @@ function LinhaDaConta({ c, visao, filtro, hoje, mostrarLoja, nomes }: { c: Conta
         </details>
       )}
     </li>
+  );
+}
+
+/**
+ * FIN-004a: ligar a conta à entrada de mercadoria de origem (as compras registradas da mesma loja e, se a conta tem, do
+ * mesmo fornecedor; a conta da rede, de qualquer loja), ou desligar. O banco confere tudo de novo e liga o lançamento
+ * inteiro (todas as parcelas).
+ */
+function LigacaoDaConta({ c, entrada, candidatas, visao, filtro, nomes }: {
+  c: ContaAPagar; entrada: string | null; candidatas: readonly EntradaDaConta[]; visao: VisaoDasContas; filtro: FiltroDasContas; nomes: Nomes;
+}) {
+  if (entrada !== null) {
+    return (
+      <details className="nao-imprimir group mt-2 open:w-full">
+        <summary className={pilula}>Desligar da entrada</summary>
+        <form action={ligarEntrada} className="mt-2 flex flex-wrap items-end gap-2 rounded-xl border border-borda p-3">
+          <input type="hidden" name="conta" value={c.id} /><input type="hidden" name="entrada" value="" /><Volta visao={visao} filtro={filtro} />
+          <label className={`${rotulo} min-w-0 flex-1`}>Motivo para desligar<input name="motivo" required minLength={3} maxLength={300} placeholder="Ex.: ligada à entrada errada" className={campo} /></label>
+          <Botao type="submit" tamanho="sm" variante="secundario">Desligar</Botao>
+        </form>
+      </details>
+    );
+  }
+  const opcoes = candidatas.filter((e) => !e.estornada && (c.unidadeId === null || e.unidadeId === c.unidadeId) && (c.fornecedorId === null || e.fornecedorId === c.fornecedorId));
+  if (opcoes.length === 0) return null;
+  return (
+    <details className="nao-imprimir group mt-2 open:w-full">
+      <summary className={pilula}>Ligar à entrada</summary>
+      <form action={ligarEntrada} className="mt-2 grid gap-2 rounded-xl border border-borda p-3 sm:grid-cols-4">
+        <input type="hidden" name="conta" value={c.id} /><Volta visao={visao} filtro={filtro} />
+        <label className={`${rotulo} sm:col-span-2`}>Entrada de mercadoria
+          <select name="entrada" required className={campo}>
+            {opcoes.map((e) => <option key={e.id} value={e.id}>{nomes.rotuloDaEntrada(e)}</option>)}
+          </select>
+        </label>
+        <label className={rotulo}>Motivo<input name="motivo" required minLength={3} maxLength={300} placeholder="Ex.: boleto da compra" className={campo} /></label>
+        <Botao type="submit" tamanho="sm" variante="secundario" className="self-end">Ligar</Botao>
+      </form>
+    </details>
   );
 }
 

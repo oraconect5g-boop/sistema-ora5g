@@ -7,7 +7,7 @@ import { redirect } from "next/navigation";
 import { ehUuid } from "../../lib/acesso/regras";
 import { obterSessao } from "../../lib/acesso/sessao";
 import {
-  erroDasContas, filtroDasContas, filtroNoEndereco, lerCategoria, lerCorrecao, lerLancamento, lerMotivo, lerPagamento, visaoDasContas,
+  erroDasContas, filtroDasContas, filtroNoEndereco, lerCategoria, lerCorrecao, lerLancamento, lerLigacao, lerMotivo, lerPagamento, visaoDasContas,
   type ErroDasContas, type OkDasContas,
 } from "../../lib/contas-a-pagar/regras";
 import type { Json } from "../../lib/supabase/tipos-banco";
@@ -33,12 +33,36 @@ export async function lancarConta(dados: FormData) {
   const l = lido.lancamento;
   const chave = dados.get("chave");
   const { supabase } = await obterSessao({ exigirLoja: true });
-  const { error } = await supabase.rpc("conta_pagar_lancar", {
+  const { data: grupo, error } = await supabase.rpc("conta_pagar_lancar", {
     p_dados: { unidade: l.unidade, categoria: l.categoria, fornecedor: l.fornecedor, descricao: l.descricao, documento: l.documento, valor: l.valor, vencimento: l.vencimento, forma: l.forma, vezes: l.vezes } as Json,
     p_chave: ehUuid(chave) ? chave : randomUUID(),
   });
   if (error) falhou(dados, error);
+  // FIN-004a: lançada a partir de uma entrada de mercadoria, a conta já sai ligada a ela. A conta existe mesmo se a
+  // ligação falhar (lançar e ligar são dois passos): a tela diz para ligar pela lista.
+  const entrada = dados.get("entrada");
+  if (ehUuid(entrada) && typeof grupo === "string") {
+    const primeira = await supabase.from("contas_a_pagar").select("id").eq("grupo_id", grupo).eq("parcela", 1).maybeSingle();
+    const ligou = primeira.data
+      ? await supabase.rpc("conta_pagar_ligar_entrada", { p_conta: primeira.data.id, p_entrada: entrada, p_motivo: "Conta lançada a partir da entrada de mercadoria" })
+      : null;
+    if (!ligou || ligou.error) {
+      console.error("contas a pagar: a conta foi lançada e não foi ligada à entrada", { codigo: ligou?.error?.code ?? primeira.error?.code ?? null });
+      voltar(dados, { ok: "lancada_sem_entrada" });
+    }
+    voltar(dados, { ok: "lancada_e_ligada" });
+  }
   voltar(dados, { ok: l.vezes > 1 ? "lancadas" : "lancada" });
+}
+
+/** FIN-004a: liga o lançamento da conta a uma entrada de mercadoria, ou desliga (entrada vazia), com motivo. */
+export async function ligarEntrada(dados: FormData) {
+  const lido = lerLigacao(dados);
+  if (!lido.ok) voltar(dados, { erro: lido.erro });
+  const { supabase } = await obterSessao({ exigirLoja: true });
+  const { data, error } = await supabase.rpc("conta_pagar_ligar_entrada", { p_conta: lido.conta, p_entrada: lido.entrada as string, p_motivo: lido.motivo });
+  if (error) falhou(dados, error);
+  voltar(dados, { ok: data === 0 ? "sem_mudanca" : lido.entrada ? "ligada" : "desligada" });
 }
 
 export async function pagarConta(dados: FormData) {
