@@ -68,6 +68,7 @@ export default async function Estoque({ searchParams }: { searchParams: Promise<
       <Link href="/estoque?aba=painel" aria-current={painel ? "page" : undefined} className={`rounded-botao px-3 py-2 font-semibold ${painel ? "bg-acao text-white" : "bg-white text-acao ring-1 ring-borda"}`}>Painel</Link>
       <Link href="/estoque?aba=conferencia" aria-current={conferencia ? "page" : undefined} className={`rounded-botao px-3 py-2 font-semibold ${conferencia ? "bg-acao text-white" : "bg-white text-acao ring-1 ring-borda"}`}>Conferência do dia</Link>
       {recebe.data && <Link href="/estoque/entrada" className="rounded-botao bg-white px-3 py-2 font-semibold text-acao ring-1 ring-borda">Entrada de mercadoria</Link>}
+      {recebe.data && <Link href="/estoque/pedidos" className="rounded-botao bg-white px-3 py-2 font-semibold text-acao ring-1 ring-borda">Pedidos de compra</Link>}
       {confere.data && <Link href="/estoque/inventario" className="rounded-botao bg-white px-3 py-2 font-semibold text-acao ring-1 ring-borda">Inventário</Link>}
     </nav>
   );

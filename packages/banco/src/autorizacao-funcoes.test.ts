@@ -1,9 +1,9 @@
 // Inventário de autorização (prioridade 1 do diagnóstico de 10/11/2026; ORA-ORG-004 e ORA-QUAL-002).
 // O aviso 0029 do Supabase lista as funções SECURITY DEFINER que qualquer usuário logado pode chamar
-// pela API: 155 em 15/11 (48 + 6 do cadastro de lojas, L2, + 5 do cadastro do catálogo, L3a, + 4 dos preços, L3b,
+// pela API: 160 em 15/11 (48 + 6 do cadastro de lojas, L2, + 5 do cadastro do catálogo, L3a, + 4 dos preços, L3b,
 // + 4 da importação do catálogo, L3c, + 3 da entrada de mercadoria, L4a, + 5 do inventário, L4b, + 6 dos clientes, L5a,
 // + 9 do funil e da agenda, L5b, + 4 da mesclagem e dos segmentos, L5c, + 4 das maquininhas e da conciliação, L7a,
-// + 2 da leitura das entradas, R1, + 1 do nome no ranking, G1, + 2 das metas, G4b, + 3 das financeiras, L7b, + 3 da saída autorizada do caixa, L7c, + 6 das contas a pagar, L8a, + 1 das regras do bônus por meta, L9a, + 2 do fechamento do bônus, L9b, + 1 da correção do repasse das financeiras, B4, + 1 dos dados para emitir a nota, K1b, + 1 dos documentos da nota emitida, L10a, + 2 do envio da nota pelo WhatsApp, K1c, + 1 dos recebíveis por loja e adquirente, L8e, + 5 da ordem de serviço, L12a, + 3 do orçamento da OS, L12b, + 2 da cobrança e da entrega da OS, L12c, + 3 das peças da OS, L12d, + 1 dos relatórios da assistência, L12e, + 2 dos documentos da venda, L5d, + 2 da conciliação fiscal, L10b, + 2 do cancelamento e da correção da nota, L10c, + 1 do valor do estoque a custo, G3b, + 2 dos códigos de outros canais, CAT-009, + 2 das regiões, ORG-009, + 1 da conta ligada à entrada, FIN-004a, + 2 dos documentos da conta, FIN-004b, + 1 da correção do custo, CAT-008b, + 2 da limpeza das fotos, CAT-011b; no L8b, a das categorias ganhou o parâmetro "entra no resultado"). Elas rodam com poder total e cada uma confere sessão, loja e permissão por
+// + 2 da leitura das entradas, R1, + 1 do nome no ranking, G1, + 2 das metas, G4b, + 3 das financeiras, L7b, + 3 da saída autorizada do caixa, L7c, + 6 das contas a pagar, L8a, + 1 das regras do bônus por meta, L9a, + 2 do fechamento do bônus, L9b, + 1 da correção do repasse das financeiras, B4, + 1 dos dados para emitir a nota, K1b, + 1 dos documentos da nota emitida, L10a, + 2 do envio da nota pelo WhatsApp, K1c, + 1 dos recebíveis por loja e adquirente, L8e, + 5 da ordem de serviço, L12a, + 3 do orçamento da OS, L12b, + 2 da cobrança e da entrega da OS, L12c, + 3 das peças da OS, L12d, + 1 dos relatórios da assistência, L12e, + 2 dos documentos da venda, L5d, + 2 da conciliação fiscal, L10b, + 2 do cancelamento e da correção da nota, L10c, + 1 do valor do estoque a custo, G3b, + 2 dos códigos de outros canais, CAT-009, + 2 das regiões, ORG-009, + 1 da conta ligada à entrada, FIN-004a, + 2 dos documentos da conta, FIN-004b, + 1 da correção do custo, CAT-008b, + 2 da limpeza das fotos, CAT-011b, + 5 do pedido de compra, INV-009a; no L8b, a das categorias ganhou o parâmetro "entra no resultado"). Elas rodam com poder total e cada uma confere sessão, loja e permissão por
 // conta própria. Este teste monta um "mundo" fictício com objetos reais em duas lojas e tenta cada
 // função como 13 tipos de atacante. Recusa = erro, ou resposta vazia numa leitura, e nada muda no
 // banco. O teste lista as funções no próprio banco e falha se aparecer uma nova sem casos aqui.
@@ -661,6 +661,25 @@ const CASOS: Record<string, Caso> = {
     A: () => ["select public.pedir_aprovacao($1, 'Tentativa')", [alvo.itemVendaA]], B: () => ["select public.pedir_aprovacao($1, 'Tentativa')", [alvo.itemVendaB]], outroVendedor: true,
   },
   // O catálogo (nomes e SKUs, sem custo) é visível a quem é da rede, como as políticas de produtos.
+  // Pedido de compra (INV-009a): quem recebe mercadoria na loja (estoque.receber); o vendedor da loja A é recusado.
+  "pedido_compra_criar(uuid,uuid,text,date,jsonb,text,text)": {
+    A: () => ["select public.pedido_compra_criar($1, $2, null, null, $3::jsonb, null, $4)", [ids.lojaA, alvo.fornecedor, JSON.stringify([{ variante: cat.capa, quantidade: 1 }]), chave("ataque:pedido:a")]],
+    B: () => ["select public.pedido_compra_criar($1, $2, null, null, $3::jsonb, null, $4)", [ids.lojaB, alvo.fornecedor, JSON.stringify([{ variante: cat.capa, quantidade: 1 }]), chave("ataque:pedido:b")]],
+    semPermissao: true,
+  },
+  "pedido_compra_encerrar(uuid,text)": {
+    A: () => ["select public.pedido_compra_encerrar($1, 'Tentativa')", [alvo.pedidoA]], B: () => ["select public.pedido_compra_encerrar($1, 'Tentativa')", [alvo.pedidoB]], semPermissao: true,
+  },
+  "pedido_compra_ligar_entrada(uuid,uuid,text)": {
+    A: () => ["select public.pedido_compra_ligar_entrada($1, $2, 'Tentativa')", [alvo.entradaA, alvo.pedidoA]],
+    B: () => ["select public.pedido_compra_ligar_entrada($1, $2, 'Tentativa')", [alvo.entradaB, alvo.pedidoB]], semPermissao: true,
+  },
+  "pedidos_compra(uuid,text)": {
+    leitura: true, A: () => ["select public.pedidos_compra($1, null) as v", [ids.lojaA]], B: () => ["select public.pedidos_compra($1, null) as v", [ids.lojaB]], semPermissao: true,
+  },
+  "pedido_compra(uuid)": {
+    leitura: true, A: () => ["select public.pedido_compra($1) as v", [alvo.pedidoA]], B: () => ["select public.pedido_compra($1) as v", [alvo.pedidoB]], semPermissao: true,
+  },
   "pendencias_de_foto()": { leitura: true, A: () => ["select * from public.pendencias_de_foto()", []], contextoProprio: ["tecnico"] },
   // Limpeza das fotos enviadas sem registro (CAT-011b): quem envia fotos (catalogo.fotos); o vendedor é recusado.
   "fotos_sem_registro()": { leitura: true, A: () => ["select public.fotos_sem_registro() as v", []], semPermissao: true },
@@ -897,6 +916,14 @@ beforeAll(async () => {
       "insert into public.entradas_estoque (organizacao_id, unidade_id, tipo, chave, conteudo, total_unidades, criado_por) values ($1, $2, 'carga_inicial', $3, 'mundo', 1, $4) returning id",
       [ids.organizacao, loja, `mundo:entrada:${chaveDoAlvo}`, ids.dono])).rows[0]?.id ?? "";
   }
+  // Um fornecedor e um pedido de compra aberto em cada loja (INV-009a; gravados pelo banco: só alvo, sem linhas).
+  alvo.fornecedor = (await db.query<{ id: string }>(
+    "insert into public.fornecedores (organizacao_id, nome, criado_por) values ($1, 'Fornecedor do mundo', $2) returning id", [ids.organizacao, ids.dono])).rows[0]?.id ?? "";
+  for (const [lado, loja] of [["A", ids.lojaA], ["B", ids.lojaB]] as const) {
+    alvo[`pedido${lado}`] = (await db.query<{ id: string }>(
+      "insert into public.pedidos_compra (organizacao_id, unidade_id, fornecedor_id, chave, conteudo, total_unidades, criado_por) values ($1, $2, $3, $4, 'mundo', 1, $5) returning id",
+      [ids.organizacao, loja, alvo.fornecedor, `mundo:pedido:${lado}`, ids.dono])).rows[0]?.id ?? "";
+  }
   // Uma prévia e uma importação aplicada da rede A (gravadas pelo banco: só alvo, sem linhas).
   for (const [chave, situacao] of [["importacaoPrevia", "previa"], ["importacaoAplicada", "aplicada"]] as const) {
     alvo[chave] = (await db.query<{ id: string }>(
@@ -942,7 +969,7 @@ describe("inventário: toda função SECURITY DEFINER exposta tem casos de recus
     const expostas = rows.map((r) => r.f);
     expect(expostas.filter((f) => !(f in CASOS)), "função nova exposta sem casos de recusa: acrescente ao CASOS").toEqual([]);
     expect(Object.keys(CASOS).filter((f) => !expostas.includes(f)), "caso de função que não existe mais").toEqual([]);
-    expect(expostas).toHaveLength(155);
+    expect(expostas).toHaveLength(160);
   });
 
   it("visitante anônimo não executa nenhuma função do esquema public; no privado só um gatilho, que não roda sozinho", async () => {

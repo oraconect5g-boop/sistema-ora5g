@@ -10,7 +10,7 @@ const campo = "mt-1 min-h-11 w-full rounded-botao border border-borda bg-white p
 type Linha = { chave: string; item: ItemParaEntrada | null; quantidade: string; identificadores: string; custo: string; condicao: string };
 const novaLinha = (n: number): Linha => ({ chave: `l${n}`, item: null, quantidade: "1", identificadores: "", custo: "", condicao: "novo" });
 
-function BuscaDoItem({ aoEscolher }: { aoEscolher: (item: ItemParaEntrada) => void }) {
+export function BuscaDoItem({ aoEscolher }: { aoEscolher: (item: ItemParaEntrada) => void }) {
   const [termo, setTermo] = useState("");
   const [achados, setAchados] = useState<ItemParaEntrada[] | null>(null);
   const [buscando, iniciar] = useTransition();

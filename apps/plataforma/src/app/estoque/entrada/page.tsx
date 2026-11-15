@@ -16,7 +16,8 @@ import {
 } from "../../../lib/estoque/historico-entradas";
 import { brl, numero } from "../../../lib/formato";
 import { chaveDoCatalogo, textoDoParametro, type ValorDeParametro } from "../../../lib/parametros";
-import { estornarEntrada, salvarFornecedor } from "./acoes";
+import { lerPedidoDaEntrada, type PedidoDaEntrada } from "../../../lib/estoque/pedidos-de-compra";
+import { estornarEntrada, ligarPedido, salvarFornecedor } from "./acoes";
 import { FormularioEntrada } from "./FormularioEntrada";
 
 export const metadata: Metadata = { title: "Entrada de mercadoria" };
@@ -28,6 +29,9 @@ const OK = {
   estornada: "Entrada estornada: os itens saíram do estoque pelo livro, com o motivo.",
   ja_estornada: "Esta entrada já estava estornada.",
   fornecedor: "Fornecedor cadastrado.",
+  pedido_ligado: "Entrada ligada ao pedido de compra: a conferência já está no pedido.",
+  pedido_desligado: "Entrada desligada do pedido de compra; o motivo ficou na auditoria.",
+  pedido_sem_mudanca: "Nada mudou: a entrada já estava assim.",
 } as const;
 const campo = "mt-1 min-h-11 w-full rounded-botao border border-borda bg-white px-3 text-sm outline-none focus:border-acao focus:ring-2 focus:ring-acao/20";
 const quando = (iso: string) => new Intl.DateTimeFormat("pt-BR", { timeZone: "America/Sao_Paulo", dateStyle: "short", timeStyle: "short" }).format(new Date(iso)).replace(",", "");
@@ -128,7 +132,7 @@ function linhaDoDetalhe(l: LinhaDaEntrada, veCusto: boolean, estornada: boolean,
 }
 
 /** A entrada aberta: o que entrou, linha por linha, com a posição de HOJE de cada IMEI/ICCID, e o estorno. */
-function blocoDaEntrada(e: EntradaAberta, destaque: string | null, fechar: string) {
+function blocoDaEntrada(e: EntradaAberta, destaque: string | null, fechar: string, pedido: PedidoDaEntrada | null) {
   const estornada = e.situacao === "estornada";
   const impedimentos = estornada ? null : impedimentosDoEstorno(e);
   const informouCusto = e.itens.some((l) => l.custoUnitario !== null);
@@ -154,8 +158,8 @@ function blocoDaEntrada(e: EntradaAberta, destaque: string | null, fechar: strin
           {(!e.veCusto || informouCusto) && (
             <p className="mt-2 text-xs text-suave">
               {e.veCusto
-                ? "O estorno não desfaz o custo: o custo informado nesta entrada continua sendo o custo atual da variação até uma nova entrada ou importação informar outro."
-                : "O estorno não desfaz o custo: se esta entrada informou custo, ele continua valendo até uma nova entrada ou importação informar outro."}
+                ? "O estorno também volta o custo: se esta entrada foi a última a definir o custo de uma variação, o custo volta ao que valia antes dela; se outra entrada, a importação ou uma correção definiu depois, o custo de hoje fica."
+                : "O estorno também volta o custo: se esta entrada informou o custo e foi a última a defini-lo, o custo volta ao que valia antes dela."}
             </p>
           )}
           <form action={estornarEntrada} className="mt-2 grid gap-2 sm:grid-cols-[1fr_auto]">
@@ -165,8 +169,61 @@ function blocoDaEntrada(e: EntradaAberta, destaque: string | null, fechar: strin
           </form>
         </div>
       )}
+      {pedido && e.tipo === "compra" && blocoDoPedido(e.id, estornada, pedido)}
       <p className="mt-3"><Link href={fechar} className="inline-flex min-h-10 items-center text-sm font-semibold text-acao">Fechar esta entrada</Link></p>
     </Cartao>
+  );
+}
+
+/**
+ * INV-009a: o pedido de compra da entrada aberta: o pedido ligado (com o atalho para a conferência e o desligar, com
+ * motivo, enquanto o pedido está aberto) ou, para a compra registrada sem pedido, os pedidos abertos desta loja do mesmo
+ * fornecedor para ligar. O banco confere tudo de novo.
+ */
+function blocoDoPedido(entrada: string, estornada: boolean, pedido: PedidoDaEntrada) {
+  return (
+    <div className="mt-4 border-t border-borda pt-4">
+      <h3 className="text-sm font-bold">Pedido de compra</h3>
+      {pedido.estado === "falha" ? <p className="mt-1 text-xs text-perigo">Não deu para ler os pedidos de compra agora. Tente de novo em instantes.</p>
+        : pedido.ligado ? (
+          <>
+            <p className="mt-1 text-sm">
+              {"Esta entrada recebeu o "}
+              <Link href={`/estoque/pedidos?pedido=${pedido.ligado.id}`} className="font-semibold text-acao underline-offset-2 hover:underline">{`pedido nº ${pedido.ligado.numero}`}</Link>
+              {pedido.ligado.situacao === "aberto" ? ": a conferência está no pedido." : ` (pedido ${pedido.ligado.situacao}).`}
+            </p>
+            {pedido.ligado.situacao === "aberto" && (
+              <details className="mt-2">
+                <summary className="cursor-pointer text-xs font-semibold text-acao">Desligar do pedido (ligada errado)</summary>
+                <form action={ligarPedido} className="mt-2 grid gap-2 sm:grid-cols-[1fr_auto]">
+                  <input type="hidden" name="entrada" value={entrada} /><input type="hidden" name="pedido" value="" />
+                  <input name="motivo" required minLength={3} maxLength={200} placeholder="Motivo (ex.: ligada ao pedido errado)" aria-label="Motivo para desligar do pedido" className={campo} />
+                  <Botao type="submit" variante="secundario" className="self-end">Desligar</Botao>
+                </form>
+              </details>
+            )}
+          </>
+        ) : estornada ? <p className="mt-1 text-xs text-suave">Entrada estornada: não recebe pedido.</p>
+        : pedido.candidatos.length === 0 ? (
+          <p className="mt-1 text-xs text-suave">
+            {"Nenhum pedido aberto deste fornecedor nesta loja. "}
+            <Link href="/estoque/pedidos" className="font-semibold text-acao">Pedidos de compra</Link>
+          </p>
+        ) : (
+          <form action={ligarPedido} className="mt-2 grid gap-2 sm:grid-cols-[1fr_1fr_auto]">
+            <input type="hidden" name="entrada" value={entrada} />
+            <label className="block text-xs font-medium">Pedido
+              <select name="pedido" required className={campo}>
+                {pedido.candidatos.map((p) => (
+                  <option key={p.id} value={p.id}>{[`nº ${p.numero}`, p.documento, p.previstoPara ? `previsto ${p.previstoPara.slice(8, 10)}/${p.previstoPara.slice(5, 7)}` : null].filter(Boolean).join(" · ")}</option>
+                ))}
+              </select>
+            </label>
+            <label className="block text-xs font-medium">Motivo<input name="motivo" required minLength={3} maxLength={200} placeholder="Ex.: NF do pedido" className={campo} /></label>
+            <Botao type="submit" variante="secundario" className="self-end">Ligar ao pedido</Botao>
+          </form>
+        )}
+    </div>
   );
 }
 
@@ -288,6 +345,8 @@ export default async function EntradaDeMercadoria({ searchParams }: { searchPara
   const contas: ContasDasEntradas = lidas === null ? null : lidas.estado !== "ok" ? "falha"
     : { porEntrada: lidas.dados, lancar: (entrada) => `/contas-a-pagar?${new URLSearchParams({ loja: unidade, entrada })}#lancar` };
 
+  // INV-009a: o pedido de compra da compra aberta (à parte: sem os pedidos no banco, o bloco some).
+  const pedidoDaEntrada = aberta && aberta.tipo === "compra" ? await lerPedidoDaEntrada(supabase, aberta.id, unidade) : null;
   const reentradas = aberta ? aberta.itens.reduce((soma, l) => soma + l.reentradas, 0) : 0;
   const detalheDoErroNaTela = erro ? ondeDoErro(erro, onde, entradaPedida !== null) : null;
   const fechar = `/estoque/entrada${antes !== null ? `?antes=${antes}` : ""}#historico`;
@@ -295,7 +354,8 @@ export default async function EntradaDeMercadoria({ searchParams }: { searchPara
   return (
     <MoldeReal sessao={sessao}>
       <Link href="/estoque" className="inline-flex min-h-10 items-center gap-1 text-sm font-semibold text-acao"><ArrowLeft aria-hidden className="size-4" /> Estoque</Link>
-      <TituloPagina sobretitulo={situacao.unidade_nome} titulo="Entrada de mercadoria" subtitulo="Compra de fornecedor ou carga inicial. Aparelho e chip entram pelo IMEI/ICCID; acessório por quantidade. Tudo entra numa transação só." />
+      <TituloPagina sobretitulo={situacao.unidade_nome} titulo="Entrada de mercadoria" subtitulo="Compra de fornecedor ou carga inicial. Aparelho e chip entram pelo IMEI/ICCID; acessório por quantidade. Tudo entra numa transação só."
+        acao={<Link href="/estoque/pedidos" className={classeBotao("secundario", "sm")}>Pedidos de compra</Link>} />
       {ok && (
         <Aviso tom="sucesso" className="mt-4">
           {`${OK[ok]}${ok === "registrada" && reentradas > 0 ? ` ${reentradas} aparelho(s) ou chip(s) voltaram ao estoque com a mesma identidade (reentrada): o histórico anterior foi preservado.` : ""}`}
@@ -314,7 +374,7 @@ export default async function EntradaDeMercadoria({ searchParams }: { searchPara
           </Aviso>
         </div>
       )}
-      {aberta && blocoDaEntrada(aberta, erro ? onde.id : null, fechar)}
+      {aberta && blocoDaEntrada(aberta, erro ? onde.id : null, fechar, pedidoDaEntrada)}
 
       <Cartao className="mt-4" titulo="Nova entrada" icone={PackagePlus} subtitulo="O custo informado vira o custo atual da variação (último custo). Cada venda guarda o custo que valia quando o item entrou nela.">
         <FormularioEntrada unidade={unidade} chave={`form:${randomUUID()}`} fornecedores={fornecedores.data} />

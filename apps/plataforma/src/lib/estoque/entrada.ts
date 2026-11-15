@@ -43,9 +43,33 @@ export const ERROS_DA_ENTRADA = {
   cnpj: "CNPJ do fornecedor inválido ou já usado em outro fornecedor.",
   nome_repetido: "Já existe outro fornecedor com este nome.",
   permissao: "Sem permissão para receber mercadoria nesta loja.",
+  // INV-009a: a ligação da entrada ao pedido de compra.
+  pedido_outra_loja: "O pedido é de outra loja: a entrada só recebe pedido da mesma loja.",
+  pedido_outro_fornecedor: "O pedido é de outro fornecedor.",
+  pedido_encerrado: "O pedido já foi encerrado: não recebe entrada nova.",
+  pedido_ligacao_fica: "O pedido desta entrada já foi encerrado: a ligação fica.",
+  pedido_nao_encontrado: "Pedido de compra não encontrado.",
+  pedido_so_compra: "Só a entrada de compra de fornecedor recebe pedido.",
+  pedido_estornada: "A entrada foi estornada: não recebe pedido.",
+  pedidos_indisponiveis: "Os pedidos de compra ainda não estão disponíveis neste ambiente.",
   falha: "Não deu para gravar agora. Tente de novo em instantes.",
 } as const;
 export type ErroDaEntrada = keyof typeof ERROS_DA_ENTRADA;
+
+/** INV-009a: do erro da ligação ao pedido de compra para a mensagem (a do banco não vai para a tela). */
+export function erroDaLigacaoDoPedido(erro: { code?: string; message?: string } | null | undefined): ErroDaEntrada {
+  const codigo = erro?.code ?? "";
+  const m = (erro?.message ?? "").toLowerCase();
+  if (codigo === "P0002") return m.includes("pedido de compra") ? "pedido_nao_encontrado" : "permissao";
+  if (codigo === "42501") return "permissao";
+  if (codigo === "PGRST202" || codigo === "42883") return "pedidos_indisponiveis";
+  if (codigo !== "22023") return "falha";
+  const regras: [string, ErroDaEntrada][] = [
+    ["outra loja", "pedido_outra_loja"], ["outro fornecedor", "pedido_outro_fornecedor"], ["a ligação fica", "pedido_ligacao_fica"],
+    ["já foi encerrado", "pedido_encerrado"], ["só a entrada de compra", "pedido_so_compra"], ["estornada", "pedido_estornada"], ["motivo", "motivo"],
+  ];
+  return regras.find(([trecho]) => m.includes(trecho))?.[1] ?? "falha";
+}
 
 export function erroDaEntrada(erro: { code?: string; message?: string } | null | undefined): ErroDaEntrada {
   const codigo = erro?.code ?? "";
