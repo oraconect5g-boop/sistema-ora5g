@@ -1,0 +1,71 @@
+{
+  "base_anterior": "dd31e91465335b7ad4a4f1ff59e80f7981ddd78d",
+  "base_atual": "f55856e54e5016475320bdc108c009830007ff99",
+  "commits": 29,
+  "arquivos_alterados": 111,
+  "arquivos_texto_git_verificados": 818,
+  "binarios_inventariados": 12,
+  "diretorios_git": 178,
+  "ci": {
+    "run": 43616391498,
+    "job": 132512272223,
+    "sha": "f55856e54e5016475320bdc108c009830007ff99",
+    "resultado": "success",
+    "testes": 1863,
+    "todo": 1,
+    "e2e_passou": 249,
+    "e2e_ignorado": 11,
+    "audit_producao": 0,
+    "aviso_npm_ci_moderadas_desenvolvimento": 8
+  },
+  "local": {
+    "banco": {
+      "arquivos": 11,
+      "testes": 234,
+      "resultado": "success",
+      "inclui_concorrencia_postgresql17": true
+    },
+    "plataforma": {
+      "arquivos": 16,
+      "testes": 129,
+      "resultado": "success"
+    },
+    "worker": {
+      "arquivos": 1,
+      "testes": 3,
+      "resultado": "success"
+    },
+    "total_positivos": 381,
+    "provas_independentes_observacionais": 2,
+    "provas_significado": "Passar reproduz defeito; não é aceite. Dados fictícios e banco descartável; nenhum envio externo.",
+    "dependencias": "hardlinks da instalação anterior; package-lock idêntico; CI remoto fez npm ci limpo",
+    "transferencias_e_estoque": {
+      "arquivos": 2,
+      "testes": 15,
+      "resultado": "success"
+    }
+  },
+  "estado_requisitos_anterior": {
+    "parcial": 65,
+    "testado": 38,
+    "nao_iniciado": 73,
+    "respeitado": 1,
+    "bloqueado": 2
+  },
+  "estado_requisitos_atual": {
+    "nao_iniciado": 65,
+    "parcial": 68,
+    "testado": 42,
+    "bloqueado": 3,
+    "respeitado": 1
+  },
+  "homologados": 0,
+  "migrations_no_git": 63,
+  "hashes_conferidos_no_registro": 63,
+  "supabase_remoto": "Consultado por MCP somente leitura nesta revisão: 63 migrations; 62 hashes exatos e margem_painel idêntica sem quebra final; contagens de unidades, catálogo, estoque, acesso e Connect registradas em supabase-contagens.json.",
+  "limites": [
+    "Sem sessão autenticada no site, sem acesso ao servidor ou .env; Supabase consultado somente em leitura, sem dados pessoais ou credenciais.",
+    "Sem acesso aos logs privados da sessão do Claude ou à conversa privada por link de projeto.",
+    "Números testado são o registro do projeto, não percentual de funcionalidades homologadas."
+  ]
+}

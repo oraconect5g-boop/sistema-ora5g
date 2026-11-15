@@ -232,3 +232,19 @@ Seis provas adicionais, um controle passou e cinco falharam por cinco causas, fo
 Histórico total analisado149 commits/43 merges/81 árvores; os oito merges novos não restauraram caminho removido. Resolução de navegação/SSR/E2E preserva estoque,Connect e notas. #55 mostra integração nova usando caminho antigo não atualizado, sem exigir conflito textual no Git. O reexport antigo Nogle aponta a uma implementação canônica no domínio.
 
 Proprietário confirmou11 lojas comerciais e DEFEITOS para erro/problema, substituindo 14 lojas. Referência em docs/cadastros/LOJAS_CONFIRMADAS_2026-11-09.json; fluxo interno #60 e [proposta visual](../prototipos/estoque-por-loja-2026-11-09/LEIA-ME.md). Pedidos simulados no protótipo não alteram estoque. Operação real, repasse e homologação continuam pendentes.
+
+
+## 14/11/2026 — revisão do prompt #86 (corte em 15/11 UTC)
+
+Base final: `56c4bde`, site publicado e 72 migrations conferidas. CI desta base ainda em execução; a falha #95 refere-se a `3e198a6`. [Relatório](../analises/VERIFICACAO_EXECUCAO_PROMPT_86_2026-11-14.md), [matriz dos 179 requisitos](../analises/MATRIZ_EXECUCAO_PROMPT_86_179_2026-11-14.md) e [prioridades](PRIORIDADES_BASE_REAL_E_APIS_FINANCEIRAS_2026-11-14.md).
+
+| Achado | Gravidade | Evidência e correção |
+|---|---|---|
+| REV-PROMPT-001 / #87 | P1 | Corrigir pedido fiscal apaga cliente/endereço/versão; alinhar snapshot em migration nova. Reproduzido com 72 migrations |
+| REV-PROMPT-002 / #88 | P1 | Trocar cliente da venda permite enfileirar PDF fiscal anterior para outro cliente; preservar/validar destinatário. Reproduzido sem envio externo |
+| REV-PROMPT-003 / #96 | P2 | Cache do sino por loja não isola identidade/sessão; teste local confirma reuso dos itens administrativos. Não foi demonstrado bypass do RLS |
+| #95 | P1 | CI exato falha: importação de 2.000 produtos em 8.354 ms, limite 8.000 ms. Medir/otimizar e executar pipeline completo |
+| #89 | P0 operacional | Só três unidades de teste e seis produtos; arquivo fornecido não importado, três perfis pendentes |
+| #90 | Planejamento | PayJoy/Aiva por API obrigatórias; preparar QI Tech/J7, sem supor contrato nem confundir J7/J17 |
+
+157 testes selecionados passaram no corte atual. Três provas observacionais confirmam defeitos; não são aprovação da funcionalidade. Nenhum requisito está homologado no checkpoint. Codex não acessou servidor/.env nem alterou banco/deploy.

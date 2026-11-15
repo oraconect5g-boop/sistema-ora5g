@@ -1,5 +1,7 @@
 # Estado atual do projeto e passagem de contexto
 
+> **Revisão Codex — corte 15/11/2026 02:27 UTC:** ler [relatório da execução do prompt #86](analises/VERIFICACAO_EXECUCAO_PROMPT_86_2026-11-14.md) e [prioridades atuais](alinhamento/PRIORIDADES_BASE_REAL_E_APIS_FINANCEIRAS_2026-11-14.md). Main/site em `56c4bde`, 72 migrations, CI final ainda em execução; a execução anterior de `3e198a6` falhou em desempenho, base ainda com três unidades de teste e seis produtos. PayJoy/Aiva obrigatórias por API; QI Tech/J7 preparadas. Os nomes das 11 lojas e DEFEITOS e a planilha já foram fornecidos. Esta observação prevalece sobre os próximos passos históricos abaixo; não declara funcionalidades concluídas.
+
 **Atualizado em:** 14/11/2026 · **Por:** Claude Code (programador, no servidor)
 **Para:** o Claude Code que programa no servidor (usuário `dev`) e o Codex (revisor)
 
@@ -47,7 +49,7 @@ Papéis **fixos** (decisão do proprietário). Detalhes: ADR-001, seção 2.7.
 3. **Vendedores fazem tudo** (vendem, recebem, lançam), usam **celular pessoal e da loja**, entram por **e-mail**, e **circulam entre lojas**. Não há caixa, estoquista nem gerente oficial hoje.
 4. **Rein** (sistema atual) continua rodando em paralelo durante o desenvolvimento e o piloto. Dela vem **só um CSV** com produtos, preços e **estoque**. Nenhuma API da Rein.
 5. **Nota fiscal:** hoje o dono emite manualmente num portal, anexa na Rein e envia ao cliente. Objetivo: **solicitação pelo vendedor → aviso no celular do dono/gerente → aprovar em 1 toque → emissão por API → envio automático por e-mail ou WhatsApp**. Provedor fiscal e contador ainda não definidos.
-6. **Pagamentos:** dinheiro, Pix, maquininhas **PicPay** e **PagSeguro**, **link de pagamento** online, financeiras **PayJoy** e **Aiva (Flexphone)**: registra-se o preço do aparelho e a entrada; os juros da financeira **não** entram. E-mail do cliente obrigatório só na PayJoy.
+6. **Pagamentos:** dinheiro, Pix, maquininhas **PicPay** e **PagSeguro**, **link de pagamento** online, financeiras **PayJoy** e **Aiva (Flexphone)**: registra-se o preço do aparelho e a entrada; os juros da financeira **não** entram. E-mail opcional no cadastro geral (decisão recente). Eventual exigência de fornecedor deve ser comprovada e restrita ao fluxo dele, sem tornar o e-mail obrigatório no cadastro/venda comum.
 7. **Desconto:** hoje é livre e gera diferenças de caixa. Regra nova: vendedor não edita preço; o limite depende da **margem** do produto (teto da categoria, ex.: até 10% à vista, e margem mínima). Acima disso, pedido de aprovação ao gerente ou dono.
 8. **Assistência técnica:** técnico central, orçamentos hoje no WhatsApp e em papel → **Ordem de Serviço digital** com avisos ao cliente e ao técnico; registrar a assistência conta na comissão do vendedor (combate o serviço feito "por fora").
 9. **Desempenho do vendedor:** turno por loja, vendas por categoria (incluindo chips, ativações, portabilidades e recargas, que hoje não contam), metas e incentivos.

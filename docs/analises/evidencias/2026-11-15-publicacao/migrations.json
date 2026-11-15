@@ -1,0 +1,594 @@
+{
+  "total": 84,
+  "observacao": "83 hashes exatos; margem_painel coincide com quebra final (7af84d1c116430125d3c769abe29a21e).",
+  "migrations": [
+    {
+      "version": "20261107140352",
+      "name": "fundacao_acesso",
+      "md5": "a8f160b848c860269fed9b3dced6aae5",
+      "in_git": true,
+      "hash_matches_registry": true
+    },
+    {
+      "version": "20261107140448",
+      "name": "indices_chaves_estrangeiras",
+      "md5": "04fa57c5f31bc5cb8beb99ebfac7297e",
+      "in_git": true,
+      "hash_matches_registry": true
+    },
+    {
+      "version": "20261107151305",
+      "name": "correcoes_revisao_codex",
+      "md5": "76dc2a6b2c8e5e3e4648044bf3334caa",
+      "in_git": true,
+      "hash_matches_registry": true
+    },
+    {
+      "version": "20261108150432",
+      "name": "auditoria_automatica_acesso",
+      "md5": "7b8296f808c4db3ee8a9d910952ec21b",
+      "in_git": true,
+      "hash_matches_registry": true
+    },
+    {
+      "version": "20261108150620",
+      "name": "catalogo_estoque",
+      "md5": "b5d498c865a0bae257061bbe48fcfbf3",
+      "in_git": true,
+      "hash_matches_registry": true
+    },
+    {
+      "version": "20261108151325",
+      "name": "indices_catalogo_estoque",
+      "md5": "78cf93f4b911d5d631a1ae83f4565ed8",
+      "in_git": true,
+      "hash_matches_registry": true
+    },
+    {
+      "version": "20261108195850",
+      "name": "integridade_estoque",
+      "md5": "9795cbcaed323e380191c70659415dbc",
+      "in_git": true,
+      "hash_matches_registry": true
+    },
+    {
+      "version": "20261108202654",
+      "name": "acesso_sessao_e_equipe",
+      "md5": "358ae9818908896b186681924ddcde04",
+      "in_git": true,
+      "hash_matches_registry": true
+    },
+    {
+      "version": "20261108204536",
+      "name": "fotos_dos_produtos",
+      "md5": "2f7900b0015e47668ddb478764aa485c",
+      "in_git": true,
+      "hash_matches_registry": true
+    },
+    {
+      "version": "20261108233546",
+      "name": "vendas_pagamentos_e_caixa",
+      "md5": "6284f6340341eb65a0be6430d5e9a706",
+      "in_git": true,
+      "hash_matches_registry": true
+    },
+    {
+      "version": "20261108233711",
+      "name": "indices_vendas_e_fotos",
+      "md5": "3b67ed6d41fced7092b8ab013ea5c17f",
+      "in_git": true,
+      "hash_matches_registry": true
+    },
+    {
+      "version": "20261109123402",
+      "name": "ora_connect_operacoes",
+      "md5": "34fa7602285abc5aafaed8a34c5733b5",
+      "in_git": true,
+      "hash_matches_registry": true
+    },
+    {
+      "version": "20261109123533",
+      "name": "indices_ora_connect",
+      "md5": "81f5a9a345580fedb43ed7c5951e3d79",
+      "in_git": true,
+      "hash_matches_registry": true
+    },
+    {
+      "version": "20261109123757",
+      "name": "fila_fiscal",
+      "md5": "43a75da04d3228214e260201a2ea36af",
+      "in_git": true,
+      "hash_matches_registry": true
+    },
+    {
+      "version": "20261109134507",
+      "name": "devolucao_e_troca",
+      "md5": "8027f63a195fdfa06af5c02b0ddc179a",
+      "in_git": true,
+      "hash_matches_registry": true
+    },
+    {
+      "version": "20261109150526",
+      "name": "correcoes_acesso_lote1",
+      "md5": "0db668934f7f4c72b12164e0d96b6057",
+      "in_git": true,
+      "hash_matches_registry": true
+    },
+    {
+      "version": "20261109190240",
+      "name": "integridade_vendas_lote2",
+      "md5": "4f60a31369f04618b40fc1f88e50ec78",
+      "in_git": true,
+      "hash_matches_registry": true
+    },
+    {
+      "version": "20261109190400",
+      "name": "connect_evidencia_lote2",
+      "md5": "50a92b80cbcd527ab22565a988239100",
+      "in_git": true,
+      "hash_matches_registry": true
+    },
+    {
+      "version": "20261109191416",
+      "name": "fotos_idempotentes_lote3",
+      "md5": "af993e98aff5d5bc7de704e290264527",
+      "in_git": true,
+      "hash_matches_registry": true
+    },
+    {
+      "version": "20261109193043",
+      "name": "transferencias_e_defeitos",
+      "md5": "71ad04f1afc171fa8db9b0bcb2077044",
+      "in_git": true,
+      "hash_matches_registry": true
+    },
+    {
+      "version": "20261109201940",
+      "name": "mensagens_nogle",
+      "md5": "a910ebd1bef0e0ff396f312ae97168bc",
+      "in_git": true,
+      "hash_matches_registry": true
+    },
+    {
+      "version": "20261110124824",
+      "name": "connect_consulta_por_uuid",
+      "md5": "35af74537bfa72eaddce36b05c36ebc4",
+      "in_git": true,
+      "hash_matches_registry": true
+    },
+    {
+      "version": "20261110224537",
+      "name": "financeiro_painel",
+      "md5": "0c0432e2c12bb35139c4ab2729b4f0c0",
+      "in_git": true,
+      "hash_matches_registry": true
+    },
+    {
+      "version": "20261111132503",
+      "name": "lojas_cadastro_e_configuracao",
+      "md5": "288c2402100e782a7d3ed98a82faf3f0",
+      "in_git": true,
+      "hash_matches_registry": true
+    },
+    {
+      "version": "20261111132621",
+      "name": "catalogo_cadastro",
+      "md5": "7a9a5b9cb9ebdfb3095b8309a3f30cad",
+      "in_git": true,
+      "hash_matches_registry": true
+    },
+    {
+      "version": "20261111133804",
+      "name": "precos_e_campanhas",
+      "md5": "54e45cffda3f09a7765311e63696a7ac",
+      "in_git": true,
+      "hash_matches_registry": true
+    },
+    {
+      "version": "20261111135906",
+      "name": "importacao_catalogo",
+      "md5": "faa52950a5b728b6166cdc65474f064e",
+      "in_git": true,
+      "hash_matches_registry": true
+    },
+    {
+      "version": "20261111141337",
+      "name": "entrada_estoque",
+      "md5": "663f442cb03a7311e2c66acb3de0609d",
+      "in_git": true,
+      "hash_matches_registry": true
+    },
+    {
+      "version": "20261111142627",
+      "name": "condicao_obrigatoria_na_devolucao",
+      "md5": "976ebbec1236ca5b6dce1fe09fcc7794",
+      "in_git": true,
+      "hash_matches_registry": true
+    },
+    {
+      "version": "20261111142726",
+      "name": "inventario",
+      "md5": "20d9404bad0bce788ce78c41998ab526",
+      "in_git": true,
+      "hash_matches_registry": true
+    },
+    {
+      "version": "20261111191909",
+      "name": "clientes_compartilhados",
+      "md5": "f1c9c6563024611ba4fbe77bf39348ee",
+      "in_git": true,
+      "hash_matches_registry": true
+    },
+    {
+      "version": "20261111193816",
+      "name": "crm_funil_e_agenda",
+      "md5": "3e247f19ce05b7fdf6b791f104be8b62",
+      "in_git": true,
+      "hash_matches_registry": true
+    },
+    {
+      "version": "20261111195120",
+      "name": "clientes_mesclagem_e_segmentos",
+      "md5": "cbb9c32a5c1e3cab7b122cfb52c4d1fd",
+      "in_git": true,
+      "hash_matches_registry": true
+    },
+    {
+      "version": "20261111200054",
+      "name": "pdv_nota_do_cliente",
+      "md5": "6078f9dd0f64d21dc7e46aa5e4dd9718",
+      "in_git": true,
+      "hash_matches_registry": true
+    },
+    {
+      "version": "20261111201342",
+      "name": "pagamentos_maquininhas_e_conciliacao",
+      "md5": "b83e29bfd4d7f095173e2845aa9e0a19",
+      "in_git": true,
+      "hash_matches_registry": true
+    },
+    {
+      "version": "20261112033713",
+      "name": "recebimento_correcoes",
+      "md5": "8f985fcbb4766e5b3a5ec676aae67201",
+      "in_git": true,
+      "hash_matches_registry": true
+    },
+    {
+      "version": "20261112163333",
+      "name": "importador_correcoes",
+      "md5": "d4003b4a7642b74117a4442113bfe385",
+      "in_git": true,
+      "hash_matches_registry": true
+    },
+    {
+      "version": "20261112195200",
+      "name": "vendas_painel",
+      "md5": "a477b00219c4eff93cc94ebb3066484a",
+      "in_git": true,
+      "hash_matches_registry": true
+    },
+    {
+      "version": "20261113065706",
+      "name": "margem_painel",
+      "md5": "40a023619c08c2f87c33683bed9fb70c",
+      "in_git": true,
+      "hash_matches_registry": false
+    },
+    {
+      "version": "20261114012326",
+      "name": "financeiro_conciliacao",
+      "md5": "d9b2f491d11b795ae5923b4eac4ae290",
+      "in_git": true,
+      "hash_matches_registry": true
+    },
+    {
+      "version": "20261114012407",
+      "name": "estoque_painel",
+      "md5": "ce11207894796265a90b602e6f7133e2",
+      "in_git": true,
+      "hash_matches_registry": true
+    },
+    {
+      "version": "20261114012431",
+      "name": "connect_painel",
+      "md5": "a3f5cc7e1759ac6ffcf18d901c3a11ad",
+      "in_git": true,
+      "hash_matches_registry": true
+    },
+    {
+      "version": "20261114012538",
+      "name": "metas",
+      "md5": "a7ea23bdfac126f02262f4ce815b387e",
+      "in_git": true,
+      "hash_matches_registry": true
+    },
+    {
+      "version": "20261114012604",
+      "name": "metas_lojas",
+      "md5": "1ac0be9bf479d3f486984f1625630b11",
+      "in_git": true,
+      "hash_matches_registry": true
+    },
+    {
+      "version": "20261114012623",
+      "name": "equipe_por_papel",
+      "md5": "c8cde2890516fcea7192cf5f607647ec",
+      "in_git": true,
+      "hash_matches_registry": true
+    },
+    {
+      "version": "20261114012647",
+      "name": "venda_item_regra_de_preco",
+      "md5": "285ab270a635fe29c54ebaf8791b0bb3",
+      "in_git": true,
+      "hash_matches_registry": true
+    },
+    {
+      "version": "20261114012722",
+      "name": "financeiras_a_receber",
+      "md5": "37314903a1f24a5181ac099a6d56fedd",
+      "in_git": true,
+      "hash_matches_registry": true
+    },
+    {
+      "version": "20261114012802",
+      "name": "caixa_saida_autorizada",
+      "md5": "a33eb3d2e66b257a7774d02ed78be4e9",
+      "in_git": true,
+      "hash_matches_registry": true
+    },
+    {
+      "version": "20261114012952",
+      "name": "contas_a_pagar",
+      "md5": "71168df92036d4d537827385711b517c",
+      "in_git": true,
+      "hash_matches_registry": true
+    },
+    {
+      "version": "20261114013120",
+      "name": "resultado_do_mes",
+      "md5": "05f10b59896103ccf88b5c88fc1a82bf",
+      "in_git": true,
+      "hash_matches_registry": true
+    },
+    {
+      "version": "20261114013159",
+      "name": "previsao_de_caixa",
+      "md5": "7292b5793b0b7f748c53e867d92505fe",
+      "in_git": true,
+      "hash_matches_registry": true
+    },
+    {
+      "version": "20261114092832",
+      "name": "bonus_por_meta",
+      "md5": "dd58eee5bde26398e6666ff830b707fd",
+      "in_git": true,
+      "hash_matches_registry": true
+    },
+    {
+      "version": "20261114104004",
+      "name": "bonus_fechamento",
+      "md5": "c3f94fa247705d3c678dd74e33190d4b",
+      "in_git": true,
+      "hash_matches_registry": true
+    },
+    {
+      "version": "20261114145334",
+      "name": "inventario_correcoes",
+      "md5": "4d6d7b29b4d3e47dfe5629dc5d15c165",
+      "in_git": true,
+      "hash_matches_registry": true
+    },
+    {
+      "version": "20261114145418",
+      "name": "previsao_correcoes",
+      "md5": "cab7d9b21702dd6c4a94d624a6843ad1",
+      "in_git": true,
+      "hash_matches_registry": true
+    },
+    {
+      "version": "20261114145505",
+      "name": "financeiras_correcoes",
+      "md5": "db9d48c1fe8f354e7e28dfb26b5d29cd",
+      "in_git": true,
+      "hash_matches_registry": true
+    },
+    {
+      "version": "20261114145608",
+      "name": "clientes_nome_e_whatsapp",
+      "md5": "375be4d8ceacefefb248c05b530db470",
+      "in_git": true,
+      "hash_matches_registry": true
+    },
+    {
+      "version": "20261114145952",
+      "name": "notas_destinatario_completo",
+      "md5": "5674626260a14e59724692440ba9f851",
+      "in_git": true,
+      "hash_matches_registry": true
+    },
+    {
+      "version": "20261114150027",
+      "name": "notas_documentos",
+      "md5": "82b836daafd53de60f8db55ff3520c30",
+      "in_git": true,
+      "hash_matches_registry": true
+    },
+    {
+      "version": "20261114150135",
+      "name": "whatsapp_envio_da_nota",
+      "md5": "cccfb12dfbf315e0187888c702929d31",
+      "in_git": true,
+      "hash_matches_registry": true
+    },
+    {
+      "version": "20261114161903",
+      "name": "recebiveis_painel",
+      "md5": "e64b6c8bbe0e2943b27739ee93219b0d",
+      "in_git": true,
+      "hash_matches_registry": true
+    },
+    {
+      "version": "20261114162103",
+      "name": "ordem_de_servico",
+      "md5": "d33be729a3b9587e72685f6ac70f9423",
+      "in_git": true,
+      "hash_matches_registry": true
+    },
+    {
+      "version": "20261114162305",
+      "name": "orcamento_da_os",
+      "md5": "c64ccbbb49b2144f79ba0dad34043599",
+      "in_git": true,
+      "hash_matches_registry": true
+    },
+    {
+      "version": "20261114202336",
+      "name": "entrega_da_os",
+      "md5": "a7a8f418bdfb86b4051944364a64fdb7",
+      "in_git": true,
+      "hash_matches_registry": true
+    },
+    {
+      "version": "20261114202444",
+      "name": "pecas_da_os",
+      "md5": "d8d8a679d126b2baef377c6608d7b804",
+      "in_git": true,
+      "hash_matches_registry": true
+    },
+    {
+      "version": "20261114202535",
+      "name": "relatorio_da_assistencia",
+      "md5": "833089c3f606ea5082713c121f42c46b",
+      "in_git": true,
+      "hash_matches_registry": true
+    },
+    {
+      "version": "20261114205327",
+      "name": "anexos_da_venda",
+      "md5": "b6e8730659085d32320f1b871502b710",
+      "in_git": true,
+      "hash_matches_registry": true
+    },
+    {
+      "version": "20261114215050",
+      "name": "conciliacao_fiscal",
+      "md5": "b7af9635e943db7adac220b1ecee8699",
+      "in_git": true,
+      "hash_matches_registry": true
+    },
+    {
+      "version": "20261114215128",
+      "name": "cancelamento_da_nota",
+      "md5": "8bca9bb2d31eea3fbc66a76dbd7dfb55",
+      "in_git": true,
+      "hash_matches_registry": true
+    },
+    {
+      "version": "20261115000320",
+      "name": "estoque_valor_em_custo",
+      "md5": "2d305492d0b5a744afc3d5e0dfd38490",
+      "in_git": true,
+      "hash_matches_registry": true
+    },
+    {
+      "version": "20261115000401",
+      "name": "codigos_de_outros_canais",
+      "md5": "a909de56bf8081c8e025cb082e85de26",
+      "in_git": true,
+      "hash_matches_registry": true
+    },
+    {
+      "version": "20261115000433",
+      "name": "regioes",
+      "md5": "c629850bb5835f64aac35b2a7d040529",
+      "in_git": true,
+      "hash_matches_registry": true
+    },
+    {
+      "version": "20261115043059",
+      "name": "pagamentos_por_terminal",
+      "md5": "25d9229bb2b527fbf49977cd49c04e85",
+      "in_git": true,
+      "hash_matches_registry": true
+    },
+    {
+      "version": "20261115102330",
+      "name": "margem_por_vendedor",
+      "md5": "192df897589ce525c19f3b46472df470",
+      "in_git": true,
+      "hash_matches_registry": true
+    },
+    {
+      "version": "20261115102358",
+      "name": "conta_da_entrada",
+      "md5": "d141bf13599fa56ca3b405ae2e25753a",
+      "in_git": true,
+      "hash_matches_registry": true
+    },
+    {
+      "version": "20261115102440",
+      "name": "documentos_da_conta",
+      "md5": "92590050a4e88f5c10194520286306bb",
+      "in_git": true,
+      "hash_matches_registry": true
+    },
+    {
+      "version": "20261115102535",
+      "name": "correcao_do_custo",
+      "md5": "54dc0a37454671dde3f628af24cccfd7",
+      "in_git": true,
+      "hash_matches_registry": true
+    },
+    {
+      "version": "20261115142547",
+      "name": "limpeza_das_fotos",
+      "md5": "36aa0ce0cd1e32802f7f3c944e2eb9cf",
+      "in_git": true,
+      "hash_matches_registry": true
+    },
+    {
+      "version": "20261115150738",
+      "name": "pedido_de_compra",
+      "md5": "ddebd3f45a0efeab013d944c23936122",
+      "in_git": true,
+      "hash_matches_registry": true
+    },
+    {
+      "version": "20261115164226",
+      "name": "segundo_fator",
+      "md5": "8296376240ee3be69ddd8d5effda2e57",
+      "in_git": true,
+      "hash_matches_registry": true
+    },
+    {
+      "version": "20261115181750",
+      "name": "confirmacao_recente",
+      "md5": "b09293c9ee81508648d691dfdd8ddc81",
+      "in_git": true,
+      "hash_matches_registry": true
+    },
+    {
+      "version": "20261115181840",
+      "name": "carta_de_correcao",
+      "md5": "d5223a7b2d5ec3deb79d6b47b4d25fc4",
+      "in_git": true,
+      "hash_matches_registry": true
+    },
+    {
+      "version": "20261115193611",
+      "name": "relatorio_do_titular",
+      "md5": "66e40fbaeccd45fe28730cc83f41a802",
+      "in_git": true,
+      "hash_matches_registry": true
+    },
+    {
+      "version": "20261115210812",
+      "name": "loja_online_vitrine",
+      "md5": "427f2942c3d013a2a98b9ff5d9839fb2",
+      "in_git": true,
+      "hash_matches_registry": true
+    }
+  ]
+}

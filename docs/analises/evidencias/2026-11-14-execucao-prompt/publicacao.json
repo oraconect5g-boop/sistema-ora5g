@@ -1,0 +1,40 @@
+{
+  "observado_utc": "2026-11-15T02:11:42.367753+00:00",
+  "rotas": [
+    {
+      "path": "/saude",
+      "status": 200,
+      "location": null,
+      "body": "<!DOCTYPE html><html lang=\"pt-BR\" class=\"t6NpHa_variable\"><head><meta charSet=\"utf-8\"/><meta name=\"viewport\" content=\"width=device-width, initial-scale=1\"/><link rel=\"stylesheet\" href=\"/_next/static/chunks/39ybe5uv6fynf.css\" data-precedence=\"next\"/><link rel=\"preload\" as=\"script\" fetchPriority=\"low\" href=\"/_next/static/chunks/310vm2bl3xxpt.js\"/><script src=\"/_next/static/chunks/1wnov70f88xjy.js\" async=\"\"></script><script src=\"/_next/static/chunks/199owtf_lxt4q.js\" async=\"\"></script><script src=\"/_next/static/chunks/2smldbxlkv6co.js\" async=\"\"></script><script src=\"/_next/static/chunks/turbopack-2u1d16houkiyo.js\" async=\"\"></script><script src=\"/_next/static/chunks/3qfy96eoyh-ek.js\" async=\"\"></"
+    },
+    {
+      "path": "/entrar",
+      "status": 200,
+      "location": null,
+      "build": [
+        "ext-left mt-0\">ora5G · <!-- -->v0.1.0 · 3e198a6 · build 14/11/2026 21:21</p></section><section aria-hidden=\"true\" class=\"relative hidden ",
+        "\",\\\"children\\\":[\\\"ora5G · \\\",\\\"v0.1.0 · 3e198a6 · build 14/11/2026 21:21\\\"]}]]}],[\\\"$\\\",\\\"section\\\",null,{\\\"aria-hidden\\\":true,\\\"classNam"
+      ]
+    },
+    {
+      "path": "/demo",
+      "status": 200,
+      "location": null
+    },
+    {
+      "path": "/estoque",
+      "status": 307,
+      "location": "/entrar"
+    },
+    {
+      "path": "/connect",
+      "status": 307,
+      "location": "/entrar"
+    },
+    {
+      "path": "/financeiro",
+      "status": 307,
+      "location": "/entrar"
+    }
+  ]
+}

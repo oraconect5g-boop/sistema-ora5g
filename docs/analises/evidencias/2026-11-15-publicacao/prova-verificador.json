@@ -1,0 +1,14 @@
+[
+  {
+    "cenario": "resposta_antiga",
+    "exit_code": 0,
+    "saida": "No ar (pasta):  123abcd  (release, publicada em 15/11/2026 22:23)\nmain no GitHub: 123abcd\nSite informa:   v0.1.0 · deadbee\nTudo publicado: o site está na mesma versão da main.\n",
+    "falso_positivo": true
+  },
+  {
+    "cenario": "servico_fora_do_ar",
+    "exit_code": 0,
+    "saida": "No ar (pasta):  123abcd  (release, publicada em 15/11/2026 22:23)\nmain no GitHub: 123abcd\nSite informa:   sem o commit na tela (versão anterior a 10/11/2026) ou fora do ar\nTudo publicado: o site está na mesma versão da main.\n",
+    "falso_positivo": true
+  }
+]

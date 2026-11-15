@@ -1,0 +1,44 @@
+{
+  "observado_utc": "2026-11-15T02:12:00.123Z",
+  "dados": [
+    {
+      "dados": {
+        "connect": {
+          "operacoes": 0,
+          "referencias": 0,
+          "habilitacoes": []
+        },
+        "unidades": [
+          {
+            "nome": "Assistência (teste)",
+            "tipo": "assistencia",
+            "status": "ativa"
+          },
+          {
+            "nome": "Loja de teste 2",
+            "tipo": "loja_fisica",
+            "status": "ativa"
+          },
+          {
+            "nome": "Santa Cândida (teste)",
+            "tipo": "loja_fisica",
+            "status": "ativa"
+          }
+        ],
+        "contagens": {
+          "vendas": 1,
+          "clientes": 0,
+          "produtos": 6,
+          "variantes": 6,
+          "migrations": 72,
+          "importacoes": 0,
+          "linhas_saldo": 10,
+          "usuarios_auth": 1,
+          "transferencias": 0,
+          "entradas_estoque": 0,
+          "itens_serializados": 17
+        }
+      }
+    }
+  ]
+}

@@ -1,0 +1,2 @@
+{"id":"REV-PROMPT-001","prova":{"antes":{"cliente_presente":true,"endereco_presente":true,"versao_presente":true},"depois":{"cliente":null,"endereco":null,"dados_de":null,"documento_presente":true}}}
+{"id":"REV-PROMPT-002","prova":{"nota_do_cliente_original":true,"destino_e_outro_cliente":true,"telefone_corresponde_ao_novo":true,"envio_externo":false}}
