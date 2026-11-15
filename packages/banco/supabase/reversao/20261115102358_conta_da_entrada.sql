@@ -1,4 +1,4 @@
--- Reversão de 20261115070000_conta_da_entrada.sql (lote FIN-004a): a função, a coluna (com a ligação de cada conta) e a
+-- Reversão de 20261115102358_conta_da_entrada.sql (antes 20261115070000; lote FIN-004a): a função, a coluna (com a ligação de cada conta) e a
 -- chave única das entradas. As contas e as entradas continuam como estavam; só a ligação entre elas se perde.
 drop function if exists public.conta_pagar_ligar_entrada(uuid, uuid, text);
 drop index if exists public.contas_a_pagar_entrada;
