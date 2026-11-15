@@ -2065,6 +2065,7 @@ export type Database = {
           motivo_estorno: string | null
           numero: number
           organizacao_id: string
+          registrada_em: string | null
           situacao: string
           tipo: string
           total_custo_centavos: number | null
@@ -2084,6 +2085,7 @@ export type Database = {
           motivo_estorno?: string | null
           numero?: never
           organizacao_id: string
+          registrada_em?: string | null
           situacao?: string
           tipo: string
           total_custo_centavos?: number | null
@@ -2103,6 +2105,7 @@ export type Database = {
           motivo_estorno?: string | null
           numero?: never
           organizacao_id?: string
+          registrada_em?: string | null
           situacao?: string
           tipo?: string
           total_custo_centavos?: number | null
@@ -6288,6 +6291,10 @@ export type Database = {
       criar_venda: { Args: { p_chave: string }; Returns: string }
       crm_agenda: { Args: never; Returns: Json }
       crm_funil: { Args: never; Returns: Json }
+      custo_corrigir: {
+        Args: { p_motivo: string; p_valor_centavos: number; p_variante: string }
+        Returns: boolean
+      }
       decidir_aprovacao: {
         Args: { p_aprovacao: string; p_aprovar: boolean; p_observacao: string }
         Returns: boolean

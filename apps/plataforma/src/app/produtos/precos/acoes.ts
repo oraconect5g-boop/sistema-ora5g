@@ -4,6 +4,7 @@ import { redirect } from "next/navigation";
 
 import { ehUuid } from "../../../lib/acesso/regras";
 import { obterSessao } from "../../../lib/acesso/sessao";
+import { erroDoCusto, lerCorrecaoDoCusto } from "../../../lib/catalogo/custos";
 import { erroDePreco, validarCampanha, validarCancelamento, validarPreco } from "../../../lib/catalogo/precos";
 
 // Cada ação chama UMA função do banco como a pessoa logada (sem chave secreta). O banco confere
@@ -19,6 +20,16 @@ function voltar(variante: string | null, parametros: Record<string, string | nul
 const ouNulo = <T,>(valor: T | null) => valor as unknown as T;
 const varianteDo = (dados: FormData) => (ehUuid(dados.get("variante")) ? (dados.get("variante") as string) : null);
 const repetida = (data: unknown) => (data as { repetida?: unknown } | null)?.repetida === true;
+
+/** CAT-008b: corrige o custo atual da variação, com motivo (o banco confere: o dono e o administrador). */
+export async function corrigirCusto(dados: FormData) {
+  const r = lerCorrecaoDoCusto(dados);
+  if (!r.ok) voltar(varianteDo(dados), { erro: r.erro, form: "custo" });
+  const { supabase } = await obterSessao({ exigirLoja: true });
+  const { data, error } = await supabase.rpc("custo_corrigir", { p_variante: r.variante, p_valor_centavos: r.valor, p_motivo: r.motivo });
+  if (error) voltar(r.variante, { erro: erroDoCusto(error), form: "custo" });
+  voltar(r.variante, { ok: data === false ? "custo_sem_mudanca" : "custo_corrigido" });
+}
 
 export async function definirPreco(dados: FormData) {
   const r = validarPreco((n) => dados.get(n));

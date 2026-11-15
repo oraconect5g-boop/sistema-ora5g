@@ -2,7 +2,7 @@
   "_leia": "Checkpoint do programa de execução integral (PR #67). Carregar ao retomar e seguir para o próximo item executável da fila; não reiniciar o projeto. Estados vêm de status-requisitos.json (fonte da rastreabilidade); este arquivo acrescenta lote, bloqueio externo e revisão.",
   "atualizado_em": "2026-11-15",
   "base": {
-    "main": "cb25b5e",
+    "main": "c6b6a33",
     "pacote": {
       "pr": 67,
       "branch": "docs/execucao-integral-20261110",
@@ -18,15 +18,16 @@
   },
   "publicado": {
     "homologacao": {
-      "commit": "cb25b5e",
+      "commit": "c6b6a33",
       "quando": "2026-11-15",
-      "conferido": "rodapé da tela de entrada (cb25b5e · build 15/11/2026 03:36), /saude 200 e as rotas reais respondendo 307 para o login (inclusive /contas-a-pagar e /estoque/entrada)"
+      "conferido": "rodapé da tela de entrada (c6b6a33 · build 15/11/2026 03:56), /saude 200 e as rotas reais respondendo 307 para o login (inclusive /contas-a-pagar e a rota de abrir documento)"
     },
     "falta_publicar": [
-      "FIN-004b, os documentos da conta a pagar, publicado ao fim do lote",
+      "CAT-008b, a correção do custo atual, publicado ao fim do lote",
       "migration 20261115060000_margem_por_vendedor (PERF-003b): aplicar no ora5g-dev pede o sim do proprietário",
       "migration 20261115070000_conta_da_entrada (FIN-004a): aplicar no ora5g-dev pede o sim do proprietário",
-      "migration 20261115080000_documentos_da_conta (FIN-004b): aplicar no ora5g-dev pede o sim do proprietário"
+      "migration 20261115080000_documentos_da_conta (FIN-004b): aplicar no ora5g-dev pede o sim do proprietário",
+      "migration 20261115090000_correcao_do_custo (CAT-008b): aplicar no ora5g-dev pede o sim do proprietário"
     ]
   },
   "contagem_dos_estados": {
@@ -194,7 +195,7 @@
       "titulo": "Custo de produto/lote/entrada e margem gerencial",
       "prioridade": "P1",
       "estado": "parcial",
-      "lote": "L4a entrada de mercadoria; R1 correções do recebimento; R5 (15/11): revisão do estado",
+      "lote": "L4a entrada de mercadoria; R1 correções do recebimento; R5 (15/11): revisão do estado; CAT-008b (15/11): a correção do custo atual",
       "bloqueio_externo": null,
       "revisado_codex": false,
       "homologado": false
