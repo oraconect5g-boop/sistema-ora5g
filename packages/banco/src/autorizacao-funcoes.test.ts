@@ -1,9 +1,9 @@
 // Inventário de autorização (prioridade 1 do diagnóstico de 10/11/2026; ORA-ORG-004 e ORA-QUAL-002).
 // O aviso 0029 do Supabase lista as funções SECURITY DEFINER que qualquer usuário logado pode chamar
-// pela API: 162 em 15/11 (48 + 6 do cadastro de lojas, L2, + 5 do cadastro do catálogo, L3a, + 4 dos preços, L3b,
+// pela API: 164 em 15/11 (48 + 6 do cadastro de lojas, L2, + 5 do cadastro do catálogo, L3a, + 4 dos preços, L3b,
 // + 4 da importação do catálogo, L3c, + 3 da entrada de mercadoria, L4a, + 5 do inventário, L4b, + 6 dos clientes, L5a,
 // + 9 do funil e da agenda, L5b, + 4 da mesclagem e dos segmentos, L5c, + 4 das maquininhas e da conciliação, L7a,
-// + 2 da leitura das entradas, R1, + 1 do nome no ranking, G1, + 2 das metas, G4b, + 3 das financeiras, L7b, + 3 da saída autorizada do caixa, L7c, + 6 das contas a pagar, L8a, + 1 das regras do bônus por meta, L9a, + 2 do fechamento do bônus, L9b, + 1 da correção do repasse das financeiras, B4, + 1 dos dados para emitir a nota, K1b, + 1 dos documentos da nota emitida, L10a, + 2 do envio da nota pelo WhatsApp, K1c, + 1 dos recebíveis por loja e adquirente, L8e, + 5 da ordem de serviço, L12a, + 3 do orçamento da OS, L12b, + 2 da cobrança e da entrega da OS, L12c, + 3 das peças da OS, L12d, + 1 dos relatórios da assistência, L12e, + 2 dos documentos da venda, L5d, + 2 da conciliação fiscal, L10b, + 2 do cancelamento e da correção da nota, L10c, + 1 do valor do estoque a custo, G3b, + 2 dos códigos de outros canais, CAT-009, + 2 das regiões, ORG-009, + 1 da conta ligada à entrada, FIN-004a, + 2 dos documentos da conta, FIN-004b, + 1 da correção do custo, CAT-008b, + 2 da limpeza das fotos, CAT-011b, + 5 do pedido de compra, INV-009a, + 1 da carta de correção, FISC-009b, + 1 do relatório do titular, QUAL-011a; no L8b, a das categorias ganhou o parâmetro "entra no resultado"). Elas rodam com poder total e cada uma confere sessão, loja e permissão por
+// + 2 da leitura das entradas, R1, + 1 do nome no ranking, G1, + 2 das metas, G4b, + 3 das financeiras, L7b, + 3 da saída autorizada do caixa, L7c, + 6 das contas a pagar, L8a, + 1 das regras do bônus por meta, L9a, + 2 do fechamento do bônus, L9b, + 1 da correção do repasse das financeiras, B4, + 1 dos dados para emitir a nota, K1b, + 1 dos documentos da nota emitida, L10a, + 2 do envio da nota pelo WhatsApp, K1c, + 1 dos recebíveis por loja e adquirente, L8e, + 5 da ordem de serviço, L12a, + 3 do orçamento da OS, L12b, + 2 da cobrança e da entrega da OS, L12c, + 3 das peças da OS, L12d, + 1 dos relatórios da assistência, L12e, + 2 dos documentos da venda, L5d, + 2 da conciliação fiscal, L10b, + 2 do cancelamento e da correção da nota, L10c, + 1 do valor do estoque a custo, G3b, + 2 dos códigos de outros canais, CAT-009, + 2 das regiões, ORG-009, + 1 da conta ligada à entrada, FIN-004a, + 2 dos documentos da conta, FIN-004b, + 1 da correção do custo, CAT-008b, + 2 da limpeza das fotos, CAT-011b, + 5 do pedido de compra, INV-009a, + 1 da carta de correção, FISC-009b, + 1 do relatório do titular, QUAL-011a, + 2 da vitrine da loja online, ONLINE-a, públicas de propósito; no L8b, a das categorias ganhou o parâmetro "entra no resultado"). Elas rodam com poder total e cada uma confere sessão, loja e permissão por
 // conta própria. Este teste monta um "mundo" fictício com objetos reais em duas lojas e tenta cada
 // função como 13 tipos de atacante. Recusa = erro, ou resposta vazia numa leitura, e nada muda no
 // banco. O teste lista as funções no próprio banco e falha se aparecer uma nova sem casos aqui.
@@ -205,6 +205,9 @@ type Caso = {
   outrosCodigosDeRecusa?: string[];
   // Registro de consulta legítima no próprio contexto (a busca de cliente fica na auditoria mesmo vazia).
   auditoriaDaConsulta?: RegExp;
+  // Leitura pública de propósito (a vitrine da loja online, ONLINE-a): qualquer um, até o visitante sem login, recebe
+  // a resposta; o que se confere é que ela só traz o que é do site, que nada muda e que nada vai para a auditoria.
+  publica?: (linhas: Record<string, unknown>[]) => Promise<boolean>;
 };
 const CPF_DO_MUNDO = cpf("246813579");
 const IMEI_INTRUSO = comDigitoLuhn("35209900700001");
@@ -283,6 +286,17 @@ const CASOS: Record<string, Caso> = {
   // Relatório dos dados do titular (QUAL-011a): só o dono (cliente.exportar), com a senha recente e um motivo; o
   // vendedor da loja A é recusado antes de qualquer leitura do cliente.
   "cliente_dados_do_titular(uuid,text)": { A: () => ["select public.cliente_dados_do_titular($1, 'Tentativa de relatório') as v", [alvo.clienteA]], semPermissao: true },
+  // A vitrine da loja online (ONLINE-a): pública de propósito. Só pode trazer produto marcado para o site e ativo
+  // (neste mundo, nenhum: a lista vem vazia e o detalhe de um produto da rede é "não encontrado").
+  "loja_vitrine(uuid,text,uuid)": { A: () => ["select public.loja_vitrine($1, null, null) as v", [ids.organizacao]], publica: async (linhas) => {
+    const produtos = ((linhas[0]?.v as { produtos?: { id: string }[] } | undefined)?.produtos ?? []).map((p) => p.id);
+    const doSite = (await db.query<{ id: string }>("select id from public.produtos where publicar_online and ativo")).rows.map((r) => r.id);
+    return produtos.every((id) => doSite.includes(id));
+  } },
+  "loja_produto(uuid,uuid)": { A: () => ["select public.loja_produto($1, $2) as v", [ids.organizacao, cat.produtoAparelho]], publica: async (linhas) => {
+    const produto = (linhas[0]?.v as { id?: string } | undefined)?.id;
+    return Boolean(produto) && (await db.query("select 1 from public.produtos where id = $1 and publicar_online and ativo", [produto])).rows.length === 1;
+  } },
   "cliente_salvar(uuid,jsonb,text,text)": { A: () => ["select public.cliente_salvar($1, '{\"nome\": \"Tentativa\"}'::jsonb, 'Tentativa', null)", [alvo.clienteA]] },
   "concluir_venda(uuid,jsonb,jsonb,text)": {
     A: () => ["select public.concluir_venda($1, $2::jsonb, '{}'::jsonb, $3)", [alvo.vendaA, pagamentoDinheiro, chave("ataque")]],
@@ -979,14 +993,17 @@ describe("inventário: toda função SECURITY DEFINER exposta tem casos de recus
     const expostas = rows.map((r) => r.f);
     expect(expostas.filter((f) => !(f in CASOS)), "função nova exposta sem casos de recusa: acrescente ao CASOS").toEqual([]);
     expect(Object.keys(CASOS).filter((f) => !expostas.includes(f)), "caso de função que não existe mais").toEqual([]);
-    expect(expostas).toHaveLength(162);
+    expect(expostas).toHaveLength(164);
   });
 
-  it("visitante anônimo não executa nenhuma função do esquema public; no privado só um gatilho, que não roda sozinho", async () => {
+  it("visitante anônimo executa só a vitrine da loja online (ONLINE-a); no privado, a conferência da foto do site e um gatilho, que não roda sozinho", async () => {
     const { rows } = await db.query<{ f: string; gatilho: boolean }>(`
       select p.oid::regprocedure::text as f, p.prorettype = 'trigger'::regtype as gatilho from pg_proc p
       where p.pronamespace in ('public'::regnamespace, 'privado'::regnamespace) and has_function_privilege('anon', p.oid, 'EXECUTE')`);
-    expect(rows).toEqual([{ f: "privado.auditoria_completar_organizacao()", gatilho: true }]);
+    expect(rows.sort((a, b) => a.f.localeCompare(b.f))).toEqual([
+      { f: "loja_produto(uuid,uuid)", gatilho: false }, { f: "loja_vitrine(uuid,text,uuid)", gatilho: false },
+      { f: "privado.auditoria_completar_organizacao()", gatilho: true }, { f: "privado.foto_na_vitrine(text)", gatilho: false },
+    ]);
   });
 });
 
@@ -1006,6 +1023,13 @@ describe("cada função recusa quem não tem acesso", () => {
         const depois = await impressao();
         const novasNaAuditoria = await auditoriaDesde(marca);
         const descricao = `${atacante}: ${r.codigo ?? JSON.stringify(r.linhas)}`;
+        if (caso.publica) {
+          if (antes !== depois) falhas.push(`${descricao} (o banco mudou)`);
+          if (novasNaAuditoria.length > 0) falhas.push(`${descricao} (auditoria registrou ${novasNaAuditoria.join(", ")})`);
+          if (r.codigo !== null && !CODIGOS_DE_RECUSA.has(r.codigo)) falhas.push(`${descricao} (falhou por outro motivo)`);
+          if (r.codigo === null && !(await caso.publica(r.linhas))) falhas.push(`${descricao} (trouxe o que não é do site)`);
+          continue;
+        }
         if (atacante === "anonimo") {
           if (r.codigo !== "42501") falhas.push(`${descricao} (anônimo não pode nem executar)`);
           continue;

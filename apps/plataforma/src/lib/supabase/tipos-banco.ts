@@ -6789,6 +6789,14 @@ export type Database = {
           vigente_desde: string
         }[]
       }
+      loja_produto: {
+        Args: { p_organizacao: string; p_produto: string }
+        Returns: Json
+      }
+      loja_vitrine: {
+        Args: { p_busca?: string; p_categoria?: string; p_organizacao: string }
+        Returns: Json
+      }
       lojas_da_rede: {
         Args: never
         Returns: {

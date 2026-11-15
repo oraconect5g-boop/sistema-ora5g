@@ -18,7 +18,7 @@
 | PERF | 10 | 5 | 5 | 0 | 5 | 4 | 0 | 0 | 0 | 1 |
 | FISC | 10 | 6 | 6 | 0 | 2 | 4 | 0 | 0 | 2 | 2 |
 | CONNECT | 11 | 6 | 3 | 0 | 6 | 4 | 0 | 0 | 0 | 1 |
-| ONLINE | 8 | 0 | 0 | 0 | 0 | 0 | 0 | 0 | 0 | 8 |
+| ONLINE | 8 | 0 | 0 | 0 | 0 | 1 | 0 | 0 | 0 | 7 |
 | MKTPL | 8 | 0 | 0 | 0 | 0 | 0 | 0 | 0 | 0 | 8 |
 | WHATS | 8 | 0 | 0 | 0 | 0 | 1 | 0 | 0 | 1 | 6 |
 | META | 6 | 0 | 0 | 0 | 0 | 0 | 0 | 0 | 0 | 6 |
@@ -26,7 +26,7 @@
 | REPORT | 8 | 5 | 5 | 0 | 2 | 5 | 0 | 0 | 0 | 1 |
 | QUAL | 14 | 9 | 9 | 0 | 2 | 11 | 0 | 0 | 0 | 1 |
 | OS | 6 | 0 | 0 | 0 | 4 | 2 | 0 | 0 | 0 | 0 |
-| **Total** | **179** | **78** | **71** | **0** | **62** | **67** | **0** | **2** | **3** | **45** |
+| **Total** | **179** | **78** | **71** | **0** | **62** | **68** | **0** | **2** | **3** | **44** |
 
 ## ORG — Organização, lojas e usuários
 
@@ -196,7 +196,7 @@
 
 | ID | Prio. | Piloto | Requisito | Aceite | Status | Nota e evidência |
 |---|---|---|---|---|---|---|
-| ORA-ONLINE-001 | P1 | — | Site de aparelhos, acessórios e planos Ora Connect | Catálogo e estoque centralizados; não criar outro sistema de venda. | ⬜ não iniciado |  |
+| ORA-ONLINE-001 | P1 | — | Site de aparelhos, acessórios e planos Ora Connect | Catálogo e estoque centralizados; não criar outro sistema de venda. | 🟡 parcial | ONLINE-a (15/11; ADR-009; decisão do proprietário: "reserve no site e retire na loja", sem pagamento online): a vitrine pública em /loja e /loja/<produto>, dentro da plataforma (o mesmo catálogo e o mesmo estoque, sem outro sistema de venda). Só aparece o que o dono marca no cadastro ("mostrar na loja online") e está ativo, só aparelhos e acessórios, com as fotos, a descrição, as variações e, em cada loja física ativa, o preço do balcão (o do PDV) e se há estoque (disponível, últimas unidades ou sem estoque, sem a quantidade); nada de custo, SKU, código de barras, quantidade, IMEI ou dado de cliente. O visitante sem login executa só loja_vitrine, loja_produto e privado.foto_na_vitrine (o inventário de autorização lista as três e confere que nada fora do site sai); as fotos seguem privadas, assinadas só as do site. Liga com LOJA_ONLINE_ORGANIZACAO; fora dos buscadores até a D-024. Migration 20261115220000_loja_online_vitrine (ainda não aplicada no ora5g-dev). FALTA: aplicar a migration (pede o sim do proprietário) e ligar a loja na homologação; o dono marcar os produtos e as fotos; os planos da Ora Connect (dependem da Nogle); a reserva (ONLINE-b); o endereço definitivo (D-024); a revisão do Codex e a homologação. Evidência: `packages/banco/supabase/migrations/20261115220000_loja_online_vitrine.sql; packages/banco/src/loja-online-vitrine.test.ts; packages/banco/src/autorizacao-funcoes.test.ts; apps/plataforma/src/app/loja/loja.test.ts; apps/plataforma/e2e/loja-online.spec.ts; docs/adr/ADR-009-loja-online.md` |
 | ORA-ONLINE-002 | P1 | — | Carrinho/checkout online e pedido com status | Pagamento confirmado antes de liberar fulfillment. | ⬜ não iniciado |  |
 | ORA-ONLINE-003 | P1 | — | Atribuir origem online, campanhas e vendedor quando aplicável | Sem atribuição indevida ou dupla comissão. | ⬜ não iniciado |  |
 | ORA-ONLINE-004 | P1 | — | Frete, CEP, retirada em loja e entrega com rastreio | Reserva e prazos consistentes. | ⬜ não iniciado |  |
