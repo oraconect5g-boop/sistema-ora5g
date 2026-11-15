@@ -48,6 +48,8 @@ class Consulta {
     return this;
   }
   in(coluna: string, valores: unknown[]) { this.linhas = this.linhas.filter((l) => l[coluna] === undefined || valores.includes(l[coluna])); return this; }
+  // FIN-004a: as contas das entradas vêm em páginas (lib/leitura-completa).
+  range(de: number, ate: number) { this.linhas = this.linhas.slice(de, ate + 1); return this; }
   ilike() { return this; }
   is() { return this; }
   order() { return this; }
@@ -268,6 +270,39 @@ describe("/estoque/entrada: permissão e histórico", () => {
       cenario.respostas.estoque_entrada = ruim;
       await expect(tela({ entrada: ENTRADA })).rejects.toThrow(/^estoque_entrada$/);
     }
+  });
+});
+
+describe("/estoque/entrada: a conta a pagar de cada compra (FIN-004a)", () => {
+  const OUTRA = "00000000-0000-4000-9000-000000000071";
+  const CARGA = "00000000-0000-4000-9000-000000000072";
+  beforeEach(() => {
+    cenario.permissoes = new Set(["estoque.receber", "conta_pagar.gerir"]);
+    cenario.respostas.estoque_entradas = historico([
+      entrada(), entrada({ id: OUTRA, numero: 11, documento: "NF 99" }), entrada({ id: CARGA, numero: 10, tipo: "carga_inicial", documento: null, fornecedor: null }),
+    ]);
+    cenario.tabelas.contas_a_pagar = [
+      { id: "c1", entrada_id: ENTRADA, situacao: "paga", valor_centavos: 50_000 },
+      { id: "c2", entrada_id: ENTRADA, situacao: "aberta", valor_centavos: 50_000 },
+      { id: "c3", entrada_id: ENTRADA, situacao: "cancelada", valor_centavos: 50_000 },
+    ];
+  });
+
+  it("a compra com conta mostra as parcelas, o valor e quantas foram pagas; a sem conta leva ao lançamento já preenchido; a carga inicial, nada", async () => {
+    const t = await tela();
+    expect(t).toContain("Conta a pagar ligada: 2 parcelas, R$ 1.000,00 · 1 de 2 pagas · 1 cancelada(s)");
+    expect(t).toContain(`/contas-a-pagar?loja=${LOJA}&entrada=${OUTRA}#lancar`);
+    expect(t).toContain("Lançar a conta a pagar desta compra");
+    expect(t).not.toContain(`entrada=${CARGA}#lancar`);
+    expect(t).not.toContain(`entrada=${ENTRADA}#lancar`);
+  });
+
+  it("quem não gere as contas da loja não vê nada sobre elas, e as contas nem são lidas", async () => {
+    cenario.permissoes = new Set(["estoque.receber"]);
+    const t = await tela();
+    expect(t).not.toContain("Conta a pagar");
+    expect(t).not.toContain("Lançar a conta a pagar");
+    expect(cenario.lidas).not.toContain("contas_a_pagar");
   });
 });
 

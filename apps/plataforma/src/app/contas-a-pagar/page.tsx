@@ -6,6 +6,7 @@ import { MoldeReal } from "../../componentes/MoldeReal";
 import { Aviso, TituloPagina } from "../../componentes/ui";
 import { FalhaDoServico, obterSessao } from "../../lib/acesso/sessao";
 import { consultarCategorias, consultarContas, consultarFornecedores, consultarResumo, type ResumoDasContas } from "../../lib/contas-a-pagar/consulta";
+import { lerEntradaParaLancar, lerLigacoes } from "../../lib/contas-a-pagar/entradas";
 import {
   ERROS_DAS_CONTAS, filtroDasContas, filtroNoEndereco, hojeEmSaoPaulo, OK_DAS_CONTAS, VISOES_DAS_CONTAS, visaoDasContas, type FiltroDasContas,
 } from "../../lib/contas-a-pagar/regras";
@@ -17,7 +18,7 @@ import { ConteudoContas } from "./ConteudoContas";
 export const metadata: Metadata = { title: "Contas a pagar" };
 export const dynamic = "force-dynamic";
 
-type Parametros = { ver?: ValorDeParametro; loja?: ValorDeParametro; ok?: ValorDeParametro; erro?: ValorDeParametro };
+type Parametros = { ver?: ValorDeParametro; loja?: ValorDeParametro; ok?: ValorDeParametro; erro?: ValorDeParametro; entrada?: ValorDeParametro };
 
 // Contas a pagar da empresa (lote L8a: ORA-FIN-004), pelas decisões do proprietário de 13/11/2026: o dono
 // lança e paga as contas da rede e de todas as lojas; o gerente, as da loja dele (conta_pagar.gerir).
@@ -45,9 +46,14 @@ export default async function ContasAPagar({ searchParams }: { searchParams: Pro
     primeiro = await consultarResumo(supabase, filtro);
   }
   const resumo: Leitura<ResumoDasContas> = primeiro.estado === "recusado" ? { estado: "falha" } : primeiro;
-  const [lista, categorias, fornecedores] = await Promise.all([
+  const entradaPedida = textoDoParametro(parametros.entrada);
+  const [lista, categorias, fornecedores, entradaParaLancar] = await Promise.all([
     consultarContas(supabase, visao, filtro, hoje), consultarCategorias(supabase), consultarFornecedores(supabase),
+    // FIN-004a: "Lançar a conta" a partir da entrada de mercadoria: o formulário já vem preenchido com ela.
+    entradaPedida ? lerEntradaParaLancar(supabase, entradaPedida) : Promise.resolve(null),
   ]);
+  // FIN-004a: a entrada de cada conta da lista e as compras recentes que ainda podem ser ligadas (à parte: sem a coluna, some).
+  const ligacoes = lista.estado === "ok" ? await lerLigacoes(supabase, lista.dados.contas.map((c) => c.id)) : null;
   const escopo = resumo.estado === "ok" ? resumo.dados.escopo : null;
   const onde = filtro.tipo === "rede" ? "Rede (central)" : filtro.tipo === "loja" ? (escopo?.lojas.find((l) => l.id === filtro.id)?.nome ?? lojaDoTurno.nome)
     : escopo?.rede ? "Rede e todas as lojas" : lojaDoTurno.nome;
@@ -70,7 +76,10 @@ export default async function ContasAPagar({ searchParams }: { searchParams: Pro
       <CarimboDaImpressao texto={`Ora 5G · contas a pagar (${VISOES_DAS_CONTAS[visao].toLowerCase()}) · ${onde} · impresso em ${geradoEm()}`} />
       {ok && <Aviso tom="sucesso" className="mt-4">{OK_DAS_CONTAS[ok]}</Aviso>}
       {erro && <Aviso tom="perigo" className="mt-4">{ERROS_DAS_CONTAS[erro]}</Aviso>}
-      <ConteudoContas resumo={resumo} lista={lista} categorias={categorias} fornecedores={fornecedores} visao={visao} filtro={filtro} hoje={hoje} lojaDoTurno={lojaDoTurno} />
+      <ConteudoContas
+        resumo={resumo} lista={lista} categorias={categorias} fornecedores={fornecedores} visao={visao} filtro={filtro} hoje={hoje} lojaDoTurno={lojaDoTurno}
+        ligacoes={ligacoes} entradaParaLancar={entradaParaLancar}
+      />
     </MoldeReal>
   );
 }

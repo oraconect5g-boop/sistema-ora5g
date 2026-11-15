@@ -28,6 +28,8 @@ const cenario = vi.hoisted(() => ({
   recusarFiltro: false,
   /** O banco ainda não tem a coluna entra_no_resultado (migration do L8b): o select com ela dá 42703. */
   semColunaDoResultado: false,
+  /** FIN-004a: o banco ainda não tem a coluna entrada_id (o padrão, como a homologação antes da migration). */
+  semColunaDaEntrada: true,
   tabelas: {} as Record<string, Record<string, unknown>[]>,
   errosDasTabelas: {} as Record<string, { code: string }>,
   filtros: [] as string[],
@@ -44,10 +46,15 @@ class Consulta {
     this.linhas = [...(cenario.tabelas[tabela] ?? [])];
     this.erro = cenario.errosDasTabelas[tabela] ?? null;
   }
+  unico = false;
   select(colunas = "") {
     if (cenario.semColunaDoResultado && colunas.includes("entra_no_resultado")) this.erro = { code: "42703" };
+    if (cenario.semColunaDaEntrada && colunas.includes("entrada_id")) this.erro ??= { code: "42703" };
     return this;
   }
+  in(coluna: string, valores: unknown[]) { this.linhas = this.linhas.filter((l) => valores.includes(l[coluna])); return this; }
+  not(coluna: string, _operador: string, valor: null) { this.linhas = this.linhas.filter((l) => l[coluna] !== valor && l[coluna] !== undefined); return this; }
+  maybeSingle() { this.unico = true; return this; }
   eq(coluna: string, valor: unknown) {
     cenario.filtros.push(`${this.tabela} ${coluna}=${String(valor)}`);
     this.linhas = this.linhas.filter((l) => l[coluna] === valor);
@@ -67,8 +74,8 @@ class Consulta {
   limit() { return this; }
   // B5: a lista vem em páginas (range); a simulação devolve a fatia pedida.
   range(de: number, ate: number) { this.linhas = this.linhas.slice(de, ate + 1); return this; }
-  then(resolver: (r: { data: Linha[] | null; error: Erro | null }) => unknown) {
-    return Promise.resolve(this.erro ? { data: null, error: this.erro } : { data: this.linhas, error: null }).then(resolver);
+  then(resolver: (r: { data: Linha[] | Linha | null; error: Erro | null }) => unknown) {
+    return Promise.resolve(this.erro ? { data: null, error: this.erro } : { data: this.unico ? (this.linhas[0] ?? null) : this.linhas, error: null }).then(resolver);
   }
 }
 const supabase = {
@@ -92,7 +99,7 @@ vi.mock("../../lib/acesso/sessao", () => ({
   }),
 }));
 
-import { cancelarConta, corrigirConta, desfazerPagamento, lancarConta, pagarConta, salvarCategoria } from "./acoes";
+import { cancelarConta, corrigirConta, desfazerPagamento, lancarConta, ligarEntrada, pagarConta, salvarCategoria } from "./acoes";
 import { GET as exportar } from "./exportar/route";
 import ContasAPagar from "./page";
 
@@ -100,7 +107,7 @@ import ContasAPagar from "./page";
 // Leitura da árvore: os componentes desta tela (e o estado do painel) são executados; os
 // compartilhados ficam como elementos, para o teste conferir as propriedades.
 // ---------------------------------------------------------------------------------------------
-const LOCAIS = new Set(["ConteudoContas", "PainelDoResumo", "Lancamento", "ListaDeContas", "LinhaDaConta", "Categorias", "Volta", "EstadoDoPainel"]);
+const LOCAIS = new Set(["ConteudoContas", "PainelDoResumo", "Lancamento", "ListaDeContas", "LinhaDaConta", "LigacaoDaConta", "Categorias", "Volta", "EstadoDoPainel"]);
 const local = (x: ReactElement<Linha>) => typeof x.type === "function" && LOCAIS.has(x.type.name);
 const executar = (x: ReactElement<Linha>) => (x.type as (p: unknown) => unknown)(x.props);
 const nomeDoTipo = (x: ReactElement<Linha>) => (typeof x.type === "function" ? x.type.name : String(x.type));
@@ -178,7 +185,7 @@ beforeEach(() => {
   vi.setSystemTime(new Date("2026-11-13T15:00:00Z"));
   vi.spyOn(console, "error").mockImplementation(() => undefined);
   Object.assign(cenario, {
-    pode: true, resumo: RESUMO, erroDoResumo: null, recusarFiltro: false, semColunaDoResultado: false, errosDasTabelas: {}, filtros: [], chamadas: [], respostas: {},
+    pode: true, resumo: RESUMO, erroDoResumo: null, recusarFiltro: false, semColunaDoResultado: false, semColunaDaEntrada: true, errosDasTabelas: {}, filtros: [], chamadas: [], respostas: {},
     tabelas: {
       contas_a_pagar: [
         conta(C1, { unidade_id: null, descricao: "Aluguel do escritório", valor_centavos: 100_000, vencimento: "2026-11-10" }),
@@ -463,5 +470,103 @@ describe("/contas-a-pagar: planilha e impressão (L8d)", () => {
     expect((await baixar()).status).toBe(503);
     Object.assign(cenario, { erroDoResumo: null, errosDasTabelas: { fornecedores: { code: "57014" } } });
     await expect(baixar()).rejects.toThrow();
+  });
+});
+
+// ---------------------------------------------------------------------------------------------
+// FIN-004a: a conta ligada à entrada de mercadoria
+// ---------------------------------------------------------------------------------------------
+const E12 = "00000000-0000-4000-9000-0000000000d1";
+const E15 = "00000000-0000-4000-9000-0000000000d2";
+const E16 = "00000000-0000-4000-9000-0000000000d3";
+const entrada = (id: string, numero: number, extra: Linha = {}) => ({
+  id, numero, unidade_id: LOJA_A, fornecedor_id: FORN, documento: `NF ${numero}`, situacao: "registrada", tipo: "compra", criado_em: "2026-11-10T13:00:00Z", ...extra,
+});
+
+describe("/contas-a-pagar: a conta ligada à entrada de mercadoria (FIN-004a)", () => {
+  beforeEach(() => {
+    cenario.semColunaDaEntrada = false;
+    cenario.tabelas.contas_a_pagar = (cenario.tabelas.contas_a_pagar ?? []).map((c) => ({ ...c, entrada_id: c.id === C2 ? E12 : null }));
+    cenario.tabelas.entradas_estoque = [
+      entrada(E12, 12), entrada(E15, 15, { documento: "NF 90" }), entrada(E16, 16, { unidade_id: LOJA_B, fornecedor_id: null, documento: null }),
+      entrada("00000000-0000-4000-9000-0000000000d4", 17, { situacao: "estornada" }),
+    ];
+  });
+
+  it("a conta mostra a entrada ligada e pode desligar; as outras ligam às compras da mesma loja (e do mesmo fornecedor)", async () => {
+    const tela = await pagina();
+    const t = visivel(tela);
+    expect(t).toContain("Boleto de aparelhos · parcela 2 de 3");
+    expect(t).toContain("doc. NF 77 · entrada nº 12");
+    const forms = formularios(tela).filter((f) => f.acao === "ligarEntrada");
+    // a C2 (ligada) desliga; a C1 (da rede, sem fornecedor) liga qualquer compra registrada, da mais nova para a mais velha;
+    // a C3 (loja B), só as da loja B; a estornada nunca aparece
+    expect(forms.map((f) => [f.campos.conta, f.campos.entrada ?? null, f.selecoes.entrada ?? null])).toEqual([
+      [C1, null, [E16, E15, E12]],
+      [C2, "", null],
+      [C3, null, [E16]],
+    ]);
+  });
+
+  it("ligar e desligar mandam a conta, a entrada e o motivo; a recusa do banco volta com a mensagem certa", async () => {
+    cenario.respostas.conta_pagar_ligar_entrada = { data: 3, error: null };
+    expect(await destinoDe(ligarEntrada(formulario({ conta: C2, entrada: E15, motivo: "Boleto da compra" })))).toBe("/contas-a-pagar?ok=ligada");
+    expect(cenario.chamadas.at(-1)).toEqual({ nome: "conta_pagar_ligar_entrada", argumentos: { p_conta: C2, p_entrada: E15, p_motivo: "Boleto da compra" } });
+    expect(await destinoDe(ligarEntrada(formulario({ conta: C2, entrada: "", motivo: "Ligada errado" })))).toBe("/contas-a-pagar?ok=desligada");
+    expect(cenario.chamadas.at(-1)?.argumentos.p_entrada).toBeNull();
+    cenario.respostas.conta_pagar_ligar_entrada = { data: 0, error: null };
+    expect(await destinoDe(ligarEntrada(formulario({ conta: C2, entrada: E15, motivo: "De novo" })))).toBe("/contas-a-pagar?ok=sem_mudanca");
+    for (const [mensagem, erro] of [
+      ["A entrada é de outro fornecedor", "entrada_fornecedor"], ["A entrada é de outra loja", "entrada_loja"],
+      ["A entrada foi estornada: não recebe conta a pagar", "entrada_estornada"], ["Só a entrada de compra de fornecedor tem conta a pagar", "entrada_tipo"],
+    ]) {
+      cenario.respostas.conta_pagar_ligar_entrada = { data: null, error: { code: "22023", message: mensagem } };
+      expect(await destinoDe(ligarEntrada(formulario({ conta: C2, entrada: E15, motivo: "Tentativa" }))), mensagem).toBe(`/contas-a-pagar?erro=${erro}`);
+    }
+    cenario.respostas.conta_pagar_ligar_entrada = { data: null, error: { code: "P0002", message: "Entrada de mercadoria não encontrada" } };
+    expect(await destinoDe(ligarEntrada(formulario({ conta: C2, entrada: E15, motivo: "Tentativa" })))).toBe("/contas-a-pagar?erro=entrada_nao_encontrada");
+    const antes = cenario.chamadas.length;
+    expect(await destinoDe(ligarEntrada(formulario({ conta: C2, entrada: "x", motivo: "Tentativa" })))).toBe("/contas-a-pagar?erro=dados");
+    expect(await destinoDe(ligarEntrada(formulario({ conta: C2, entrada: E15, motivo: "x" })))).toBe("/contas-a-pagar?erro=motivo");
+    expect(cenario.chamadas).toHaveLength(antes);
+  });
+
+  it("lançar a conta a partir da entrada: o formulário vem preenchido e a conta sai ligada; se a ligação falha, a conta fica e a tela diz", async () => {
+    const tela = await pagina({ entrada: E15 });
+    const lancar = formularios(tela).find((f) => f.acao === "lancarConta");
+    expect(lancar?.campos.entrada).toBe(E15);
+    expect(visivel(tela)).toContain("A conta fica ligada à entrada de mercadoria nº 15 · 10/11/2026 · NF 90 · Distribuidora Teste");
+    const padrao = (nome: string) => elementos(tela).find((e) => (e.type === "select" || e.type === "input") && e.props.name === nome)?.props.defaultValue;
+    expect([padrao("unidade"), padrao("categoria"), padrao("fornecedor"), padrao("documento"), padrao("descricao")]).toEqual([LOJA_A, CAT_MERCADORIA, FORN, "NF 90", "Mercadoria da entrada nº 15"]);
+
+    cenario.respostas.conta_pagar_lancar = { data: "grupo-15", error: null };
+    cenario.tabelas.contas_a_pagar = [...(cenario.tabelas.contas_a_pagar ?? []), conta("00000000-0000-4000-9000-0000000000e9", { grupo_id: "grupo-15" })];
+    cenario.respostas.conta_pagar_ligar_entrada = { data: 1, error: null };
+    const dados = { chave: "00000000-0000-4000-8000-000000000123", unidade: LOJA_A, categoria: CAT_MERCADORIA, descricao: "Mercadoria da entrada nº 15", valor: "900,00", vencimento: "2026-11-30", forma: "unica", fornecedor: FORN, documento: "NF 90", entrada: E15 };
+    expect(await destinoDe(lancarConta(formulario(dados)))).toBe("/contas-a-pagar?ok=lancada_e_ligada");
+    expect(cenario.chamadas.slice(-2).map((c) => c.nome)).toEqual(["conta_pagar_lancar", "conta_pagar_ligar_entrada"]);
+    expect(cenario.chamadas.at(-1)?.argumentos).toEqual({ p_conta: "00000000-0000-4000-9000-0000000000e9", p_entrada: E15, p_motivo: "Conta lançada a partir da entrada de mercadoria" });
+    cenario.respostas.conta_pagar_ligar_entrada = { data: null, error: { code: "22023", message: "A entrada é de outro fornecedor" } };
+    expect(await destinoDe(lancarConta(formulario(dados)))).toBe("/contas-a-pagar?ok=lancada_sem_entrada");
+    // sem a entrada no formulário, o lançamento é o de sempre
+    const semEntrada: Record<string, string> = { ...dados };
+    delete semEntrada.entrada;
+    const chamadas = cenario.chamadas.length;
+    expect(await destinoDe(lancarConta(formulario(semEntrada)))).toBe("/contas-a-pagar?ok=lancada");
+    expect(cenario.chamadas.slice(chamadas).map((c) => c.nome)).toEqual(["conta_pagar_lancar"]);
+  });
+
+  it("banco sem a ligação: nada aparece e a lista segue; falha ao ler as entradas: a tela diz, sem formulários de ligação", async () => {
+    cenario.semColunaDaEntrada = true;
+    let tela = await pagina();
+    expect(formularios(tela).filter((f) => f.acao === "ligarEntrada")).toEqual([]);
+    expect(visivel(tela)).not.toContain("entrada nº");
+    expect(visivel(tela)).not.toContain("Não deu para ler as entradas");
+    cenario.semColunaDaEntrada = false;
+    cenario.errosDasTabelas.entradas_estoque = { code: "57014" };
+    tela = await pagina();
+    expect(formularios(tela).filter((f) => f.acao === "ligarEntrada")).toEqual([]);
+    expect(visivel(tela)).toContain("Não deu para ler as entradas de mercadoria ligadas às contas agora");
+    expect(vi.mocked(console.error).mock.calls).toContainEqual(["contas a pagar: falha ao ler as entradas de mercadoria", { codigo: "57014" }]);
   });
 });

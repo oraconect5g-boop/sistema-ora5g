@@ -2,7 +2,7 @@
   "_leia": "Checkpoint do programa de execução integral (PR #67). Carregar ao retomar e seguir para o próximo item executável da fila; não reiniciar o projeto. Estados vêm de status-requisitos.json (fonte da rastreabilidade); este arquivo acrescenta lote, bloqueio externo e revisão.",
   "atualizado_em": "2026-11-15",
   "base": {
-    "main": "e607413",
+    "main": "c926d1d",
     "pacote": {
       "pr": 67,
       "branch": "docs/execucao-integral-20261110",
@@ -18,13 +18,14 @@
   },
   "publicado": {
     "homologacao": {
-      "commit": "e607413",
+      "commit": "c926d1d",
       "quando": "2026-11-15",
-      "conferido": "rodapé da tela de entrada (e607413 · build 15/11/2026 03:03), /saude 200 e as rotas reais respondendo 307 para o login"
+      "conferido": "rodapé da tela de entrada (c926d1d · build 15/11/2026 03:13), /saude 200 e as rotas reais respondendo 307 para o login"
     },
     "falta_publicar": [
-      "PERF-003b, margem por vendedor, publicado ao fim do lote",
-      "migration 20261115060000_margem_por_vendedor (PERF-003b): aplicar no ora5g-dev pede o sim do proprietário"
+      "FIN-004a, a conta a pagar ligada à entrada de mercadoria, publicado ao fim do lote",
+      "migration 20261115060000_margem_por_vendedor (PERF-003b): aplicar no ora5g-dev pede o sim do proprietário",
+      "migration 20261115070000_conta_da_entrada (FIN-004a): aplicar no ora5g-dev pede o sim do proprietário"
     ]
   },
   "contagem_dos_estados": {
@@ -723,7 +724,7 @@
       "titulo": "Contas a pagar ligadas a fornecedor/origem",
       "prioridade": "P0",
       "estado": "parcial",
-      "lote": "L8 financeiro (L8a em 13/11: contas a pagar pela decisão D-036 do proprietário)",
+      "lote": "L8 financeiro (L8a em 13/11: contas a pagar pela decisão D-036 do proprietário); FIN-004a (15/11): a conta ligada à entrada de mercadoria",
       "bloqueio_externo": null,
       "revisado_codex": false,
       "homologado": false

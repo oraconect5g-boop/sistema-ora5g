@@ -56,6 +56,11 @@ export const OK_DAS_CONTAS = {
   corrigida: "Conta corrigida; o motivo ficou na auditoria.",
   categoria: "Categoria salva.",
   sem_mudanca: "Nada mudou: os dados já eram esses.",
+  // FIN-004a: a conta ligada à entrada de mercadoria de origem.
+  ligada: "Conta ligada à entrada de mercadoria (todas as parcelas do lançamento); o motivo ficou na auditoria.",
+  desligada: "Conta desligada da entrada de mercadoria; o motivo ficou na auditoria.",
+  lancada_e_ligada: "Conta lançada e ligada à entrada de mercadoria.",
+  lancada_sem_entrada: "Conta lançada, mas não deu para ligá-la à entrada agora: ligue pela lista, em \"Ligar à entrada\".",
 } as const;
 export type OkDasContas = keyof typeof OK_DAS_CONTAS;
 
@@ -83,6 +88,11 @@ export const ERROS_DAS_CONTAS = {
   so_dono: "Só o dono ajusta as categorias das contas a pagar.",
   permissao: "Sem permissão para lançar contas a pagar aqui.",
   nao_encontrada: "Conta não encontrada (ou não é sua para gerir).",
+  entrada_nao_encontrada: "Entrada de mercadoria não encontrada.",
+  entrada_tipo: "Só a entrada de compra de fornecedor tem conta a pagar (a carga inicial não).",
+  entrada_estornada: "A entrada foi estornada: não recebe conta a pagar.",
+  entrada_loja: "A entrada é de outra loja: a conta da loja só liga a compra da mesma loja.",
+  entrada_fornecedor: "A entrada é de outro fornecedor.",
   indisponivel: "As contas a pagar ainda não estão disponíveis neste ambiente.",
   falha: "Não deu para gravar agora. Tente de novo em instantes.",
 } as const;
@@ -92,13 +102,16 @@ export type ErroDasContas = keyof typeof ERROS_DAS_CONTAS;
 export function erroDasContas(erro: { code?: string; message?: string } | null | undefined): ErroDasContas {
   const codigo = erro?.code ?? "";
   const m = (erro?.message ?? "").toLowerCase();
-  if (codigo === "P0002") return m.includes("categoria") ? "so_dono" : "nao_encontrada";
+  if (codigo === "P0002") return m.includes("categoria") ? "so_dono" : m.includes("entrada de mercadoria") ? "entrada_nao_encontrada" : "nao_encontrada";
   if (codigo === "42501") return m.includes("dono") ? "so_dono" : "permissao";
   if (codigo === "OR030") return "ja_paga";
   if (codigo === "OR004") return "dados";
   if (codigo === "PGRST202" || codigo === "42883") return "indisponivel";
   if (codigo !== "22023") return "falha";
   const regras: [string, ErroDasContas][] = [
+    // FIN-004a: antes das regras gerais ("fornecedor" e "loja" também aparecem nestas mensagens).
+    ["só a entrada de compra", "entrada_tipo"], ["entrada foi estornada", "entrada_estornada"], ["entrada é de outra loja", "entrada_loja"],
+    ["entrada é de outro fornecedor", "entrada_fornecedor"],
     ["loja inválida", "loja"], ["descreva a conta", "descricao"], ["documento", "documento"], ["vencimento", "vencimento"],
     ["parcelas ou meses", "vezes"], ["pequeno demais", "parcelas_pequenas"], ["categoria ativa", "categoria"], ["fornecedor", "fornecedor"],
     ["referência do pagamento", "referencia"], ["valor pago", "valor_pago"], ["data do pagamento", "data_pagamento"],
@@ -181,6 +194,17 @@ export function lerMotivo(dados: Formulario): Resultado<{ conta: string; motivo:
   const motivo = textoDo(dados.get("motivo"));
   if (!motivoValido(motivo)) return { ok: false, erro: "motivo" };
   return { ok: true, conta, motivo, seguintes: dados.get("seguintes") === "sim" };
+}
+
+/** FIN-004a: ligar a conta a uma entrada de mercadoria, ou desligar (entrada vazia), com motivo. */
+export function lerLigacao(dados: Formulario): Resultado<{ conta: string; entrada: string | null; motivo: string }> {
+  const conta = textoDo(dados.get("conta"));
+  if (!ehUuid(conta)) return { ok: false, erro: "dados" };
+  const entrada = textoDo(dados.get("entrada"));
+  if (entrada !== "" && !ehUuid(entrada)) return { ok: false, erro: "dados" };
+  const motivo = textoDo(dados.get("motivo"));
+  if (!motivoValido(motivo)) return { ok: false, erro: "motivo" };
+  return { ok: true, conta, entrada: entrada === "" ? null : entrada, motivo };
 }
 
 /** Corrigir a conta aberta: o valor e o vencimento, com motivo. */

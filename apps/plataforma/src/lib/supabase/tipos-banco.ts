@@ -1445,6 +1445,7 @@ export type Database = {
           criada_por: string
           descricao: string
           documento: string | null
+          entrada_id: string | null
           forma: string
           fornecedor_id: string | null
           grupo_id: string
@@ -1472,6 +1473,7 @@ export type Database = {
           criada_por: string
           descricao: string
           documento?: string | null
+          entrada_id?: string | null
           forma: string
           fornecedor_id?: string | null
           grupo_id: string
@@ -1499,6 +1501,7 @@ export type Database = {
           criada_por?: string
           descricao?: string
           documento?: string | null
+          entrada_id?: string | null
           forma?: string
           fornecedor_id?: string | null
           grupo_id?: string
@@ -1537,6 +1540,13 @@ export type Database = {
             isOneToOne: false
             referencedRelation: "perfis_usuario"
             referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "contas_a_pagar_entrada_fkey"
+            columns: ["entrada_id", "organizacao_id"]
+            isOneToOne: false
+            referencedRelation: "entradas_estoque"
+            referencedColumns: ["id", "organizacao_id"]
           },
           {
             foreignKeyName: "contas_a_pagar_fornecedor_id_organizacao_id_fkey"
@@ -6142,6 +6152,10 @@ export type Database = {
       conta_pagar_lancar: {
         Args: { p_chave: string; p_dados: Json }
         Returns: string
+      }
+      conta_pagar_ligar_entrada: {
+        Args: { p_conta: string; p_entrada: string; p_motivo: string }
+        Returns: number
       }
       conta_pagar_pagar: {
         Args: {

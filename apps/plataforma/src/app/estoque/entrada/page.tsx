@@ -7,6 +7,7 @@ import Link from "next/link";
 import { MoldeReal } from "../../../componentes/MoldeReal";
 import { Aviso, Botao, Cartao, Selo, TituloPagina, classeBotao } from "../../../componentes/ui";
 import { ehUuid } from "../../../lib/acesso/regras";
+import { lerContasDasEntradas, type ContaDaEntrada } from "../../../lib/contas-a-pagar/entradas";
 import { FalhaDoServico, obterSessao } from "../../../lib/acesso/sessao";
 import { CONDICOES, ERROS_DA_ENTRADA, TIPOS_DE_ENTRADA, detalheDoEndereco, type ErroDaEntrada } from "../../../lib/estoque/entrada";
 import {
@@ -76,6 +77,28 @@ function textoDosImpedimentos(i: ImpedimentosDoEstorno): string {
 
 // As partes da tela abaixo são funções comuns (não componentes): devolvem o JSX já montado, para a
 // página continuar sendo uma árvore só, legível de ponta a ponta nos testes.
+
+/**
+ * FIN-004a: a conta a pagar da compra. Nulo: quem vê não gere as contas da loja, ou o banco ainda não tem a ligação (nada
+ * aparece). Com contas ligadas, o resumo delas; sem, o atalho para lançar a conta já preenchida com a entrada.
+ */
+type ContasDasEntradas = { porEntrada: ReadonlyMap<string, ContaDaEntrada>; lancar: (entrada: string) => string } | "falha" | null;
+function contaDaCompra(e: EntradaLida, contas: ContasDasEntradas) {
+  if (contas === null || e.tipo !== "compra") return null;
+  if (contas === "falha") return <p className="text-xs text-suave">Não deu para ler a conta a pagar desta compra agora.</p>;
+  const c = contas.porEntrada.get(e.id);
+  if (c) {
+    const pagas = c.pagas > 0 ? ` · ${c.pagas === c.parcelas ? "paga" : `${c.pagas} de ${c.parcelas} pagas`}` : "";
+    return (
+      <p className="text-xs">
+        <Link href="/contas-a-pagar" className="font-semibold text-acao underline-offset-2 hover:underline">Conta a pagar</Link>
+        {` ligada: ${c.parcelas === 1 ? "1 parcela" : `${c.parcelas} parcelas`}, ${brl(c.valor)}${pagas}${c.canceladas > 0 ? ` · ${c.canceladas} cancelada(s)` : ""}`}
+      </p>
+    );
+  }
+  if (e.situacao === "estornada") return null;
+  return <Link href={contas.lancar(e.id)} className="inline-flex min-h-9 items-center text-xs font-semibold text-acao underline-offset-2 hover:underline">Lançar a conta a pagar desta compra</Link>;
+}
 
 function linhaDoDetalhe(l: LinhaDaEntrada, veCusto: boolean, estornada: boolean, destaque: string | null) {
   const ids = l.identificadores ?? [];
@@ -148,7 +171,7 @@ function blocoDaEntrada(e: EntradaAberta, destaque: string | null, fechar: strin
 }
 
 /** Histórico completo da loja, paginado pelo número da entrada; nulo = o perfil não consulta o estoque daqui. */
-function blocoDoHistorico(h: HistoricoDeEntradas | null, antes: number | null, aberta: string | null) {
+function blocoDoHistorico(h: HistoricoDeEntradas | null, antes: number | null, aberta: string | null, contas: ContasDasEntradas) {
   const pagina = antes !== null ? `&antes=${antes}` : "";
   return (
     <Cartao id="historico" className="mt-4 scroll-mt-24" titulo="Entradas desta loja" icone={History}
@@ -175,6 +198,7 @@ function blocoDoHistorico(h: HistoricoDeEntradas | null, antes: number | null, a
                 <p className="text-xs text-suave">{`${origemDaEntrada(e)} · ${quando(e.criadoEm)}${e.criadoPor ? ` · ${e.criadoPor}` : ""}`}</p>
                 <p className="text-xs text-suave">{`${numero(e.totalUnidades)} unidade(s)${custoTotal(h.veCusto, e.totalCusto)}: ${resumoDasLinhas(e)}`}</p>
                 {e.situacao === "estornada" && e.motivoEstorno && <p className="text-xs text-perigo">{`Estornada: ${e.motivoEstorno}`}</p>}
+                {contaDaCompra(e, contas)}
               </li>
             ))}
             {h.entradas.length === 0 && <li className="py-2 text-suave">{antes !== null ? `Nenhuma entrada anterior à nº ${antes}.` : "Nenhuma entrada ainda nesta loja."}</li>}
@@ -257,6 +281,13 @@ export default async function EntradaDeMercadoria({ searchParams }: { searchPara
     }
   }
 
+  // FIN-004a: a conta a pagar de cada compra mostrada, para quem gere as contas desta loja (à parte: sem a ligação no banco, some).
+  const geraContas = await supabase.rpc("tem_permissao", { p_permissao: "conta_pagar.gerir", p_unidade: unidade });
+  const compras = [...(h?.entradas ?? []), ...(aberta ? [aberta] : [])].filter((e) => e.tipo === "compra").map((e) => e.id);
+  const lidas = geraContas.data === true && compras.length > 0 ? await lerContasDasEntradas(supabase, compras) : null;
+  const contas: ContasDasEntradas = lidas === null ? null : lidas.estado !== "ok" ? "falha"
+    : { porEntrada: lidas.dados, lancar: (entrada) => `/contas-a-pagar?${new URLSearchParams({ loja: unidade, entrada })}#lancar` };
+
   const reentradas = aberta ? aberta.itens.reduce((soma, l) => soma + l.reentradas, 0) : 0;
   const detalheDoErroNaTela = erro ? ondeDoErro(erro, onde, entradaPedida !== null) : null;
   const fechar = `/estoque/entrada${antes !== null ? `?antes=${antes}` : ""}#historico`;
@@ -300,7 +331,7 @@ export default async function EntradaDeMercadoria({ searchParams }: { searchPara
         </form>
       </details>
 
-      {blocoDoHistorico(h, antes, aberta?.id ?? null)}
+      {blocoDoHistorico(h, antes, aberta?.id ?? null, contas)}
     </MoldeReal>
   );
 }
