@@ -3,7 +3,7 @@
 // de public.vendas_painel, public.margem_painel e public.margem_itens. Dados fictícios.
 import { describe, expect, it } from "vitest";
 
-import { gerarCsv } from "../csv";
+import { gerarCsvEmSecoes, textoDaCelula, type Celula } from "../csv";
 import { lerVendas } from "../inicio/painel";
 import { lerItensDaMargem, lerMargem } from "../margem/painel";
 import {
@@ -51,6 +51,9 @@ const MARGEM = lerMargem({ totais: TOTAIS_DA_MARGEM, periodos: DIAS_DA_MARGEM, l
 const MARGEM_SEM_FATOS = lerMargem({ totais: ZERO, periodos: [], lojas_com_custo: 0, lojas_fora: 0 });
 const MARGEM_SO_LOJAS_FORA = lerMargem({ totais: ZERO, periodos: [], lojas_com_custo: 0, lojas_fora: 2 });
 const MARGEM_SEM_CUSTO = lerMargem({ totais: DIA_07, periodos: [{ periodo: "2026-11-07", ...DIA_07 }], lojas_com_custo: 1, lojas_fora: 0 });
+
+/** FIN-009c: as células com tipo, como o CSV as escreve (o texto de antes do tipo). */
+const emTexto = (linhas: readonly (readonly Celula[])[]) => linhas.map((l) => l.map(textoDaCelula));
 
 describe("recorte de tempo", () => {
   it("7, 14 e 30 dias; o padrão é 14 e o que a tela não conhece cai nele", () => {
@@ -192,7 +195,10 @@ describe("exportação: uma linha por dia", () => {
   it("sem a margem (quem não tem custo.ver): só as colunas de vendas, e nenhuma coluna de custo", () => {
     const t = tabelaDosDias(VENDAS, null, SETE);
     expect(t.colunas).toEqual(COLUNAS_DE_VENDAS);
-    expect(t.linhas).toEqual([
+    // FIN-009c: o dia e o dinheiro com tipo (o Excel guarda data e número); o total no rodapé, abaixo da tabela
+    expect(t.linhas[1]?.slice(0, 4)).toEqual([{ dia: "2026-11-05" }, 4, { centavos: 339_200 }, { centavos: 84_800 }]);
+    expect(t.rodape).toHaveLength(1);
+    expect([...emTexto(t.linhas), ...emTexto(t.rodape)]).toEqual([
       ["04/11/2026", 0, "0,00", "", "0,00", "0,00", 0, "0,00", 0, "0,00", "0,00"],
       ["05/11/2026", 4, "3392,00", "848,00", "3393,00", "1,00", 0, "0,00", 0, "0,00", "3392,00"],
       ["06/11/2026", 0, "0,00", "", "0,00", "0,00", 0, "0,00", 1, "78,50", "-78,50"],
@@ -208,7 +214,8 @@ describe("exportação: uma linha por dia", () => {
   it("com a margem: sete colunas a mais; dia sem custo gravado fica com a margem vazia, não zero", () => {
     const t = tabelaDosDias(VENDAS, MARGEM, SETE);
     expect(t.colunas).toEqual([...COLUNAS_DE_VENDAS, ...COLUNAS_DE_MARGEM]);
-    expect(t.linhas.map((l) => l.slice(11))).toEqual([
+    expect(t.linhas[1]?.slice(14, 16)).toEqual([{ fracao: expect.closeTo(0.3058, 3) }, { fracao: expect.closeTo(0.977, 3) }]);
+    expect([...emTexto(t.linhas), ...emTexto(t.rodape)].map((l) => l.slice(11))).toEqual([
       ["0,00", "0,00", "0,00", "", "", 0, "0,00"],
       ["1013,00", "3313,00", "2300,00", "30,6", "97,7", 1, "79,00"],
       ["-60,50", "-78,50", "-18,00", "", "", 0, "0,00"],
@@ -229,28 +236,29 @@ describe("exportação: uma linha por dia", () => {
       totais: { vendas: 3, vendido: 30_000, subtotal: 30_000, descontos: 0, vendas_com_desconto: 0, ...SEM_ESTORNO },
       periodos: [{ periodo: "2026-11-10", vendas: 2, vendido: 20_000, subtotal: 20_000, descontos: 0, ...SEM_ESTORNO }], ...LISTAS,
     });
-    expect(tabelaDosDias(vendas, null, SETE).linhas.at(-1)).toEqual(["Total", 3, "300,00", "100,00", "300,00", "0,00", 0, "0,00", 0, "0,00", "300,00"]);
+    expect(emTexto(tabelaDosDias(vendas, null, SETE).rodape)[0]).toEqual(["Total", 3, "300,00", "100,00", "300,00", "0,00", 0, "0,00", 0, "0,00", "300,00"]);
   });
 
   it("sem fato nenhum: a margem do período é zero; só sem custo gravado: é vazia (desconhecida)", () => {
     const semFatos = tabelaDosDias(SEM_VENDAS, MARGEM_SEM_FATOS, SETE);
     expect(semFatos.colunas).toHaveLength(18);
-    expect(semFatos.linhas.at(-1)).toEqual(["Total", 0, "0,00", "", "0,00", "0,00", 0, "0,00", 0, "0,00", "0,00", "0,00", "0,00", "0,00", "", "", 0, "0,00"]);
+    expect(emTexto(semFatos.rodape)[0]).toEqual(["Total", 0, "0,00", "", "0,00", "0,00", 0, "0,00", 0, "0,00", "0,00", "0,00", "0,00", "0,00", "", "", 0, "0,00"]);
     const semCusto = tabelaDosDias(VENDAS, MARGEM_SEM_CUSTO, SETE);
-    expect(semCusto.linhas.at(-1)?.slice(11)).toEqual(["", "0,00", "0,00", "", "0,0", 2, "158,00"]);
-    expect(semCusto.linhas[3]?.slice(11)).toEqual(["", "0,00", "0,00", "", "0,0", 2, "158,00"]);
-    expect(semCusto.linhas[0]?.slice(11)).toEqual(["0,00", "0,00", "0,00", "", "", 0, "0,00"]);
+    expect(emTexto(semCusto.rodape)[0]?.slice(11)).toEqual(["", "0,00", "0,00", "", "0,0", 2, "158,00"]);
+    expect(emTexto(semCusto.linhas)[3]?.slice(11)).toEqual(["", "0,00", "0,00", "", "0,0", 2, "158,00"]);
+    expect(emTexto(semCusto.linhas)[0]?.slice(11)).toEqual(["0,00", "0,00", "0,00", "", "", 0, "0,00"]);
   });
 
   it("movimento só em loja em que quem pede não vê o custo: arquivo sem as colunas de margem, e o aviso na última linha", () => {
     const t = tabelaDosDias(VENDAS, MARGEM_SO_LOJAS_FORA, SETE);
     expect(t.colunas).toEqual(COLUNAS_DE_VENDAS);
-    expect(t.linhas.slice(0, -1)).toEqual(tabelaDosDias(VENDAS, null, SETE).linhas);
-    expect(t.linhas.at(-1)).toEqual(["Atenção: arquivo sem as colunas de margem, porque o movimento do período foi só em loja em que você não vê o custo."]);
+    expect(t.linhas).toEqual(tabelaDosDias(VENDAS, null, SETE).linhas);
+    expect(t.rodape[0]).toEqual(tabelaDosDias(VENDAS, null, SETE).rodape[0]);
+    expect(t.rodape.at(-1)).toEqual(["Atenção: arquivo sem as colunas de margem, porque o movimento do período foi só em loja em que você não vê o custo."]);
   });
 
   it("loja com movimento fora da margem: a última linha avisa quantas", () => {
-    const com = (lojasFora: number) => tabelaDosDias(VENDAS, lerMargem({ totais: TOTAIS_DA_MARGEM, periodos: DIAS_DA_MARGEM, lojas_com_custo: 1, lojas_fora: lojasFora }), SETE).linhas.at(-1);
+    const com = (lojasFora: number) => tabelaDosDias(VENDAS, lerMargem({ totais: TOTAIS_DA_MARGEM, periodos: DIAS_DA_MARGEM, lojas_com_custo: 1, lojas_fora: lojasFora }), SETE).rodape.at(-1);
     expect(com(1)).toEqual(["Atenção: a margem considera só as lojas em que você vê o custo; 1 loja com movimento ficou fora."]);
     expect(com(3)).toEqual(["Atenção: a margem considera só as lojas em que você vê o custo; 3 lojas com movimento ficaram fora."]);
     expect(com(0)?.[0]).toBe("Total");
@@ -258,8 +266,11 @@ describe("exportação: uma linha por dia", () => {
 
   it("o arquivo abre no Excel em português: ponto e vírgula, e negativo como número", () => {
     const t = tabelaDosDias(VENDAS, MARGEM, SETE);
-    const linhas = gerarCsv(t.colunas, t.linhas).split("\r\n");
-    expect(linhas).toHaveLength(9);
+    const linhas = gerarCsvEmSecoes([{ colunas: t.colunas, linhas: t.linhas }, { linhas: t.rodape }]).split("\r\n");
+    // o cabeçalho, os sete dias, a linha em branco e o total (FIN-009c: o total abaixo da tabela)
+    expect(linhas).toHaveLength(10);
+    expect(linhas[8]).toBe("");
+    expect(linhas[9]?.startsWith("Total;7;4949,00;707,00;")).toBe(true);
     expect(linhas[3]).toBe("06/11/2026;0;0,00;;0,00;0,00;0;0,00;1;78,50;-78,50;-60,50;-78,50;-18,00;;;0;0,00");
     // "Vendido com custo, líquido (R$)" tem vírgula, não ponto e vírgula: não precisa de aspas.
     expect(linhas[0]?.split(";")).toHaveLength(18);
@@ -277,7 +288,8 @@ describe("exportação: uma linha por item (detalhe da margem)", () => {
   it("as colunas e os valores do item, com a hora de São Paulo", () => {
     const t = tabelaDosItens(lerItensDaMargem({ total: 1, itens: [ITEM] }).itens);
     expect(t.colunas).toEqual(COLUNAS);
-    expect(t.linhas).toEqual([[1002, "05/11/2026 10:15", "Loja A", "concluída", "Acessório", "Capa (fictícia)", "CAPA-01", 2, "79,00", "1,00", "157,00", "18,00", "121,00", 1]]);
+    expect(t.linhas[0]?.[1]).toEqual({ instante: "2026-11-05T13:15:00+00:00" });
+    expect(emTexto(t.linhas)).toEqual([[1002, "05/11/2026 10:15", "Loja A", "concluída", "Acessório", "Capa (fictícia)", "CAPA-01", 2, "79,00", "1,00", "157,00", "18,00", "121,00", 1]]);
   });
 
   it("item sem custo gravado: custo e margem vazios, nunca zero; textos ausentes ficam vazios", () => {
@@ -285,12 +297,12 @@ describe("exportação: uma linha por item (detalhe da margem)", () => {
       { ...ITEM, item_id: "item-3", custo_unitario: null, margem: null, devolvidos: 0 },
       { ...ITEM, item_id: "item-4", situacao: "cancelada", tipo: "tipo_novo", unidade: null, variante: null, sku: null, custo_unitario: 20_000, margem: -24_300 },
     ] }).itens;
-    const [semCusto, comPrejuizo] = tabelaDosItens(itens).linhas;
+    const [semCusto, comPrejuizo] = emTexto(tabelaDosItens(itens).linhas);
     expect(semCusto?.slice(11)).toEqual(["", "", 0]);
     expect(comPrejuizo).toEqual([1002, "05/11/2026 10:15", "", "cancelada", "tipo_novo", "", "", 2, "79,00", "1,00", "157,00", "200,00", "-243,00", 1]);
   });
 
   it("sem itens: só o cabeçalho", () => {
-    expect(tabelaDosItens([])).toEqual({ colunas: COLUNAS, linhas: [] });
+    expect(tabelaDosItens([])).toEqual({ colunas: COLUNAS, linhas: [], rodape: [] });
   });
 });

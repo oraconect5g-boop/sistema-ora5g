@@ -6,7 +6,7 @@
 // estoque.consultar no local). Tudo vem em páginas abaixo do teto da API, até o limite, com aviso no fim; uma
 // leitura que falha ou um nome que não se leu derruba o arquivo inteiro (nada pela metade). Custo não entra.
 import { FalhaDoServico, obterSessao } from "../../../lib/acesso/sessao";
-import { geradoEm, gerarCsvEmSecoes, parteDoNome, type SecaoCsv } from "../../../lib/csv";
+import { geradoEm, parteDoNome, type SecaoCsv } from "../../../lib/csv";
 import { consultarEstoque } from "../../../lib/estoque/consulta-painel";
 import { escopoDoEstoque } from "../../../lib/estoque/painel";
 import {
@@ -14,7 +14,7 @@ import {
   type ItemDaPlanilha, type LocalDaPlanilha, type NomesDaPlanilha, type ProdutoDaPlanilha, type SaldoDaPlanilha, type VarianteDaPlanilha,
 } from "../../../lib/estoque/planilha";
 import { lerEmPaginas, lerPorIds } from "../../../lib/leitura-completa";
-import { gerarXlsx, TIPO_XLSX } from "../../../lib/xlsx";
+import { respostaDaPlanilha } from "../../../lib/xlsx-servidor";
 
 export const dynamic = "force-dynamic";
 
@@ -111,13 +111,5 @@ export async function GET(pedido: Request) {
     if (!(erro instanceof NomeQueFaltou)) throw erro;
     throw new FalhaDoServico("estoque_exportar_nomes");
   }
-  const arquivo = `ora5g-estoque-${PARTES_DA_PLANILHA[parte].arquivo}-${parteDoNome(onde)}`;
-  if (formato === "csv") {
-    return new Response(gerarCsvEmSecoes(secoes), {
-      headers: { "content-type": "text/csv; charset=utf-8", "content-disposition": `attachment; filename="${arquivo}.csv"`, "cache-control": "no-store" },
-    });
-  }
-  return new Response(new Uint8Array(gerarXlsx([{ nome: PARTES_DA_PLANILHA[parte].titulo, secoes }])), {
-    headers: { "content-type": TIPO_XLSX, "content-disposition": `attachment; filename="${arquivo}.xlsx"`, "cache-control": "no-store" },
-  });
+  return respostaDaPlanilha(formato, `ora5g-estoque-${PARTES_DA_PLANILHA[parte].arquivo}-${parteDoNome(onde)}`, PARTES_DA_PLANILHA[parte].titulo, secoes);
 }

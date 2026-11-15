@@ -1,4 +1,5 @@
-// Exportação dos Relatórios (lote G2a), em CSV para o Excel em português. Dois arquivos:
+// Exportação dos Relatórios (lote G2a), em CSV para o Excel em português ou, desde o FIN-009c, no próprio Excel
+// (?formato=xlsx: número, data e percentual de verdade; o total e os avisos abaixo da tabela). Dois arquivos:
 //   ?ver=dias (o padrão): uma linha por dia, com as vendas e, para quem vê o custo, a margem bruta;
 //   ?ver=itens: o detalhe da margem, uma linha por item das vendas concluídas (só para quem vê o custo).
 // Mesma permissão e mesmo recorte da tela, conferidos aqui no servidor; o banco confere de novo cada
@@ -7,7 +8,7 @@
 import { permissoesDoMenu } from "../../../componentes/MoldeReal";
 import { podeVerFinanceiro } from "../../../lib/acesso/menu";
 import { FalhaDoServico, obterSessao } from "../../../lib/acesso/sessao";
-import { gerarCsv } from "../../../lib/csv";
+import { formatoPedido, type SecaoCsv } from "../../../lib/csv";
 import type { LojaDoFiltro } from "../../../lib/financeiro/escopo";
 import { LIMITE_DA_EXPORTACAO } from "../../../lib/financeiro/registros";
 import { consultarVendas } from "../../../lib/inicio/consulta";
@@ -15,6 +16,7 @@ import type { Leitura } from "../../../lib/leitura-do-banco";
 import { consultarMargem, todosOsItensDaMargem } from "../../../lib/margem/consulta";
 import { escopoDosRelatorios, podeVerCusto } from "../../../lib/relatorios/consulta";
 import { janelasDoRelatorio, periodoDoRelatorio, tabelaDosDias, tabelaDosItens, visaoDaExportacao } from "../../../lib/relatorios/painel";
+import { respostaDaPlanilha } from "../../../lib/xlsx-servidor";
 
 export const dynamic = "force-dynamic";
 
@@ -52,7 +54,7 @@ export async function GET(pedido: Request) {
     const itens = exigir(await todosOsItensDaMargem(supabase, atual, unidade));
     if ("recusa" in itens) return itens.recusa;
     tabela = tabelaDosItens(itens.dados.itens);
-    if (itens.dados.cortado) tabela.linhas.push([`Atenção: exportação limitada a ${LIMITE_DA_EXPORTACAO} itens; escolha um período menor ou uma loja.`]);
+    if (itens.dados.cortado) tabela.rodape.push([`Atenção: exportação limitada a ${LIMITE_DA_EXPORTACAO} itens; escolha um período menor ou uma loja.`]);
   } else {
     const [leituraDasVendas, leituraDaMargem] = await Promise.all([
       consultarVendas(supabase, atual, { unidade, vendedor: null }, false),
@@ -65,11 +67,11 @@ export async function GET(pedido: Request) {
     tabela = tabelaDosDias(vendas.dados, margem ? margem.dados : null, atual);
   }
 
-  return new Response(gerarCsv(tabela.colunas, tabela.linhas), {
-    headers: {
-      "content-type": "text/csv; charset=utf-8",
-      "content-disposition": `attachment; filename="ora5g-relatorio-${ver === "itens" ? "margem-por-item" : "por-dia"}-${periodo}-dias.csv"`,
-      "cache-control": "no-store",
-    },
-  });
+  const secoes: SecaoCsv[] = [{ colunas: tabela.colunas, linhas: tabela.linhas }, ...(tabela.rodape.length ? [{ linhas: tabela.rodape }] : [])];
+  return respostaDaPlanilha(
+    formatoPedido(url.searchParams.get("formato"), "csv"),
+    `ora5g-relatorio-${ver === "itens" ? "margem-por-item" : "por-dia"}-${periodo}-dias`,
+    ver === "itens" ? "Margem por item" : "Por dia",
+    secoes,
+  );
 }

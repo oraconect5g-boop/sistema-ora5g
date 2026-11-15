@@ -5,6 +5,8 @@
 import { isValidElement, type ReactElement } from "react";
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 
+import { textoDaCelula, type SecaoCsv } from "../../../lib/csv";
+
 const LOJA = "00000000-0000-4000-8000-0000000000cc";
 const OUTRA = "00000000-0000-4000-8000-0000000000dd";
 const ANA = "00000000-0000-4000-8000-00000000a001";
@@ -149,11 +151,14 @@ describe("/metas/extrato (L9a)", () => {
       "Venda nº 1.234 09/11 às 10:30 +1 aparelho · +R$ 158,00 em acessórios +R$ 1.657,00",
       "Total do mês Vendido líquido R$ 1.578,00 · 1 aparelho · R$ 79,00 em acessórios · 1 Ora Connect",
     ].join(" "));
-    const planilha = p.doTipo("ExportarCsv")[0] as { prefixo: string; nomeArquivo: string; colunas: string[]; linhas: unknown[][] };
-    expect(planilha).toMatchObject({ prefixo: "ora5g", nomeArquivo: "extrato-do-bonus-2026-11-meu-santa-candida-teste" });
-    expect(planilha.colunas).toEqual(["Data", "Fato", "Vendido líquido (R$)", "Aparelhos", "Acessórios (R$)", "Ora Connect"]);
-    expect(planilha.linhas[0]).toEqual(["13/11/2026 11:05", "Ativação do Ora Connect nº 45", "0,00", 0, "0,00", 1]);
-    expect(planilha.linhas.at(-1)).toEqual(["Total do mês", "", "1578,00", 1, "79,00", 1]);
+    // FIN-009c: Excel e CSV montados no navegador; as células com o tipo (o texto é o do CSV) e o total abaixo da tabela
+    const planilha = p.doTipo("ExportarPlanilha")[0] as { nomeArquivo: string; aba: string; secoes: SecaoCsv[] };
+    expect(planilha).toMatchObject({ aba: "Extrato do bônus", nomeArquivo: "extrato-do-bonus-2026-11-meu-santa-candida-teste" });
+    const [fatos, total] = planilha.secoes;
+    expect(fatos?.colunas).toEqual(["Data", "Fato", "Vendido líquido (R$)", "Aparelhos", "Acessórios (R$)", "Ora Connect"]);
+    expect(fatos?.linhas[0]?.map(textoDaCelula)).toEqual(["13/11/2026 11:05", "Ativação do Ora Connect nº 45", "0,00", 0, "0,00", 1]);
+    expect(fatos?.linhas[0]?.[0]).toEqual({ instante: expect.any(String) });
+    expect(total?.linhas.map((l) => l.map(textoDaCelula))).toEqual([["Total do mês", "", "1578,00", 1, "79,00", 1]]);
     expect(p.doTipo("BotaoImprimir")).toHaveLength(1);
     expect(p.doTipo("CarimboDaImpressao")[0]).toMatchObject({ texto: "Ora 5G · extrato do bônus · próprio · Santa Cândida (teste) · novembro de 2026 · impresso em 13/11/2026 12:00" });
   });
@@ -185,7 +190,7 @@ describe("/metas/extrato (L9a)", () => {
     cenario.respostas.extrato_do_vendedor = { data: null, error: { code: "42501" } };
     let p = await pagina();
     expect(p.visivel).toContain("O banco recusou este extrato");
-    expect(p.doTipo("ExportarCsv")).toEqual([]);
+    expect(p.doTipo("ExportarPlanilha")).toEqual([]);
     expect(p.doTipo("BotaoImprimir")).toEqual([]);
     cenario.respostas.extrato_do_vendedor = { data: null, error: { code: "PGRST202" } };
     expect((await pagina()).visivel).toContain("a leitura do bônus por meta (migration bonus_por_meta)");

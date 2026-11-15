@@ -428,7 +428,8 @@ describe("/contas-a-pagar: planilha e impressão (L8d)", () => {
   const baixar = (consulta = "") => exportar(new Request(`http://localhost/contas-a-pagar/exportar${consulta ? `?${consulta}` : ""}`));
   it("a tela oferece a planilha com a mesma lista e o mesmo filtro, e o botão de imprimir; os formulários não saem no papel", async () => {
     const tela = await pagina({ ver: "pagas", loja: LOJA_B });
-    const links = elementos(tela).map((e) => e.props.href).filter((h): h is string => typeof h === "string" && h.includes("exportar"));
+    // FIN-009c: o BaixarPlanilha leva o endereço base (o Excel e o CSV saem dele, com ?formato=)
+    const links = elementos(tela).map((e) => e.props.href ?? e.props.endereco).filter((h): h is string => typeof h === "string" && h.includes("exportar"));
     expect(links).toEqual([`/contas-a-pagar/exportar?ver=pagas&loja=${LOJA_B}`]);
     expect(doTipo(tela, "BotaoImprimir")).toHaveLength(1);
     expect(String(doTipo(tela, "CarimboDaImpressao")[0]?.texto)).toMatch(/^Ora 5G · contas a pagar \(pagas \(60 dias\)\) · Loja B \(teste\) · impresso em /);

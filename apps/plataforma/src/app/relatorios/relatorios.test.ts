@@ -8,6 +8,9 @@
 import { isValidElement, type ReactElement } from "react";
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 
+import { serialDoDia } from "../../lib/xlsx";
+import { abrirXlsx, linhasDaFolha } from "../../lib/xlsx-de-teste";
+
 const LOJA = "00000000-0000-4000-8000-0000000000cc";
 const OUTRA = "00000000-0000-4000-8000-0000000000dd";
 const SEM_VENDA = "00000000-0000-4000-8000-0000000000ee";
@@ -172,7 +175,11 @@ function visivel(v: unknown): string {
 }
 /** As células de uma linha de tabela, como aparecem escritas. */
 const celulas = (linha: Linha) => (linha.children as unknown[]).filter((c) => isValidElement(c)).map((c) => visivel(c).replace(/\s+/g, " ").trim());
-const enderecosDe = (elementos: Elemento[]) => elementos.flatMap((e) => (typeof e.props.href === "string" ? [e.props.href] : []));
+// FIN-009c: a planilha vem pelo BaixarPlanilha (Excel e CSV do mesmo endereço, com ?formato=): conta o endereço base.
+const enderecosDe = (elementos: Elemento[]) => elementos.flatMap((e) => {
+  const destino = e.tipo === "BaixarPlanilha" ? e.props.endereco : e.props.href;
+  return typeof destino === "string" ? [destino] : [];
+});
 
 async function pagina(parametros: Record<string, string> = {}) {
   const lida = ler((await Relatorios({ searchParams: Promise.resolve(parametros) })) as ReactElement);
@@ -1055,17 +1062,41 @@ describe("/relatorios/exportar", () => {
     expect(resposta.headers.get("cache-control")).toBe("no-store");
     expect([...bytes.slice(0, 3)]).toEqual([0xef, 0xbb, 0xbf]);
     expect(linhas[0]).toBe(`${CABECALHO_DE_VENDAS};${CABECALHO_DA_MARGEM}`);
-    expect(linhas).toHaveLength(16);
+    // o cabeçalho, os 14 dias, uma linha em branco e o total (FIN-009c: o total abaixo da tabela)
+    expect(linhas).toHaveLength(17);
     expect(linhas[1]).toBe("28/10/2026;0;0,00;;0,00;0,00;0;0,00;0;0,00;0,00;0,00;0,00;0,00;;;0;0,00");
     // 08/11: houve venda, e nenhum item tinha custo gravado: a margem do dia fica vazia, não zero.
     expect(linhas[12]).toBe("08/11/2026;1;1200,00;1200,00;1200,00;0,00;0;0,00;0;0,00;1200,00;;0,00;0,00;;0,0;1;1200,00");
     expect(linhas[14]).toBe("10/11/2026;2;3300,00;1650,00;3500,00;200,00;0;0,00;1;300,00;3000,00;820,00;2900,00;2080,00;28,3;97,0;1;100,00");
-    expect(linhas[15]).toBe("Total;3;4500,00;1500,00;4700,00;200,00;0;0,00;1;300,00;4200,00;820,00;2900,00;2080,00;28,3;71,1;2;1300,00");
+    expect(linhas[15]).toBe("");
+    expect(linhas[16]).toBe("Total;3;4500,00;1500,00;4700,00;200,00;0;0,00;1;300,00;4200,00;820,00;2900,00;2080,00;28,3;71,1;2;1300,00");
     // O mesmo recorte da tela, lido uma vez; recebimentos e o detalhe por item não entram neste arquivo.
     expect(cenario.chamadas.vendas_painel).toStrictEqual([{ p_inicio: DESDE["14"], p_fim: FIM, p_por_hora: false, p_unidade: LOJA }]);
     expect(cenario.chamadas.margem_painel).toStrictEqual([{ p_inicio: DESDE["14"], p_fim: FIM, p_unidade: LOJA }]);
     expect(cenario.chamadas.financeiro_painel).toBeUndefined();
     expect(cenario.chamadas.margem_itens).toBeUndefined();
+  });
+
+  it("FIN-009c: o mesmo arquivo no Excel, com o dia como data, o dinheiro e o percentual como número e o total fora do filtro", async () => {
+    entrar("gerente");
+    const { resposta, bytes } = await baixar("/relatorios/exportar?formato=xlsx");
+    expect(resposta.status).toBe(200);
+    expect(resposta.headers.get("content-type")).toBe("application/vnd.openxmlformats-officedocument.spreadsheetml.sheet");
+    expect(resposta.headers.get("content-disposition")).toBe('attachment; filename="ora5g-relatorio-por-dia-14-dias.xlsx"');
+    const partes = abrirXlsx(bytes);
+    expect(partes.get("xl/workbook.xml")).toContain('<sheet name="Por dia" sheetId="1" r:id="rId1"/>');
+    const folha = partes.get("xl/worksheets/sheet1.xml") ?? "";
+    const linhas = linhasDaFolha(folha);
+    expect(linhas[0]?.slice(0, 3)).toEqual(["Dia", "Vendas", "Vendido (R$)"]);
+    expect(linhas[14]?.slice(0, 6)).toEqual([serialDoDia("2026-11-10"), 2, 3300, 1650, 3500, 200]);
+    expect(linhas[14]?.[14]).toBeCloseTo(0.283, 3);
+    expect(linhas[15]).toEqual([]);
+    expect(linhas[16]?.slice(0, 3)).toEqual(["Total", 3, 4500]);
+    // o filtro e o cabeçalho fixo só nos dias; o total fica abaixo
+    expect(folha).toContain('<autoFilter ref="A1:R15"/>');
+    expect(folha).toContain('<pane ySplit="1" topLeftCell="A2" activePane="bottomLeft" state="frozen"/>');
+    // o mesmo endereço sem o formato continua dando o CSV de antes
+    expect((await baixar("/relatorios/exportar")).resposta.headers.get("content-type")).toBe("text/csv; charset=utf-8");
   });
 
   it("sem a permissão de ver o custo: o arquivo sai sem as colunas de margem, e a margem nem é pedida", async () => {
@@ -1075,7 +1106,7 @@ describe("/relatorios/exportar", () => {
     expect(resposta.status).toBe(200);
     expect(resposta.headers.get("content-disposition")).toBe('attachment; filename="ora5g-relatorio-por-dia-7-dias.csv"');
     expect(linhas[0]).toBe(CABECALHO_DE_VENDAS);
-    expect(linhas).toHaveLength(9);
+    expect(linhas).toHaveLength(10);
     expect(linhas.join("\n")).not.toMatch(/[Cc]usto|[Mm]argem/);
     expect(cenario.chamadas.margem_painel).toBeUndefined();
     expect(cenario.chamadas.vendas_painel).toStrictEqual([{ p_inicio: DESDE["7"], p_fim: FIM, p_por_hora: false, p_unidade: LOJA }]);
@@ -1110,7 +1141,7 @@ describe("/relatorios/exportar", () => {
     cenario.loteDosItens = (a) => lote(25_000, Number(a.p_apos), Number(a.p_limite));
     const { linhas } = await baixar("/relatorios/exportar?ver=itens");
     expect(cenario.chamadas.margem_itens).toHaveLength(20);
-    expect(linhas).toHaveLength(1 + 20_000 + 1);
+    expect(linhas).toHaveLength(1 + 20_000 + 2); // o aviso depois de uma linha em branco
     // O aviso tem ponto e vírgula: vai entre aspas, para o Excel mostrar numa célula só.
     expect(linhas.at(-1)).toBe('"Atenção: exportação limitada a 20000 itens; escolha um período menor ou uma loja."');
   });

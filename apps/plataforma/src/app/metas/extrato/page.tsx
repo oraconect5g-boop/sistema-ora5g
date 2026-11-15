@@ -3,7 +3,7 @@ import type { Metadata } from "next";
 import Link from "next/link";
 
 import { BotaoImprimir, CarimboDaImpressao } from "../../../componentes/BotaoImprimir";
-import { ExportarCsv } from "../../../componentes/ExportarCsv";
+import { ExportarPlanilha } from "../../../componentes/ExportarPlanilha";
 import { MoldeReal, permissoesDoMenu } from "../../../componentes/MoldeReal";
 import { Aviso, classeBotao, FiltroSegmentado, TituloPagina } from "../../../componentes/ui";
 import { podeVerMetas } from "../../../lib/acesso/menu";
@@ -83,8 +83,8 @@ export default async function ExtratoDoBonus({ searchParams }: { searchParams: P
           <div className="nao-imprimir flex flex-wrap gap-2">
             <Link href={endereco("/metas", { mes: mesNoEndereco, loja: lojaNoEndereco })} className={classeBotao("secundario", "md")}><ArrowLeft aria-hidden className="size-4" /> Metas</Link>
             {planilha && (
-              <ExportarCsv
-                prefixo="ora5g" rotulo="Baixar planilha" colunas={planilha.colunas} linhas={planilha.linhas}
+              <ExportarPlanilha
+                rotulo="Baixar planilha" aba="Extrato do bônus" secoes={planilha}
                 nomeArquivo={`extrato-do-bonus-${mes.slice(0, 7)}-${parteDoNome(nome ?? "meu")}-${parteDoNome(loja.nome)}`}
               />
             )}

@@ -5,6 +5,8 @@
 import { isValidElement, type ReactElement } from "react";
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 
+import { textoDaCelula, type SecaoCsv } from "../../../lib/csv";
+
 const LOJA = "00000000-0000-4000-8000-0000000000cc";
 const OUTRA = "00000000-0000-4000-8000-0000000000dd";
 const ANA = "00000000-0000-4000-8000-00000000a001";
@@ -182,7 +184,7 @@ describe("/metas/fechamento (L9b)", () => {
     expect(p.doTipo("textarea").map((t) => t.name)).toEqual([`motivo_${ANA}`, `motivo_${BETO}`]);
     expect(p.links).toContain(`/metas/extrato?mes=2026-10&vendedor=${ANA}`);
     expect(p.links).toContain("/metas?mes=2026-10");
-    expect(p.doTipo("ExportarCsv")).toEqual([]);
+    expect(p.doTipo("ExportarPlanilha")).toEqual([]);
   });
 
   it("sem regra no mês ou sem ninguém com meta: não há o que fechar, e não há formulário", async () => {
@@ -237,9 +239,10 @@ describe("/metas/fechamento (L9b)", () => {
     expect(p.visivel).toContain(`Pago outro valor: ${AJUSTE}`);
     expect(p.visivel).toContain(`Contestada pela gerência: ${CONTESTACAO.motivo}`);
     expect(p.doTipo("form")).toEqual([]);
-    const planilha = p.doTipo("ExportarCsv")[0] as { prefixo: string; nomeArquivo: string; linhas: unknown[][] };
-    expect(planilha).toMatchObject({ prefixo: "ora5g", nomeArquivo: "fechamento-do-bonus-2026-10-santa-candida-teste" });
-    expect(planilha.linhas.at(-1)).toEqual(["Total", "300,00", "600,00", "", "", ""]);
+    // FIN-009c: Excel e CSV montados no navegador; o total abaixo da tabela dos vendedores
+    const planilha = p.doTipo("ExportarPlanilha")[0] as { nomeArquivo: string; aba: string; secoes: SecaoCsv[] };
+    expect(planilha).toMatchObject({ aba: "Fechamento do bônus", nomeArquivo: "fechamento-do-bonus-2026-10-santa-candida-teste" });
+    expect(planilha.secoes.at(-1)?.linhas.map((l) => l.map(textoDaCelula))).toEqual([["Total", "300,00", "600,00"]]);
     expect(p.doTipo("BotaoImprimir")).toHaveLength(1);
     expect(p.doTipo("CarimboDaImpressao")[0]).toMatchObject({ texto: "Ora 5G · fechamento do bônus · Santa Cândida (teste) · outubro de 2026 · impresso em 13/11/2026 12:00" });
   });

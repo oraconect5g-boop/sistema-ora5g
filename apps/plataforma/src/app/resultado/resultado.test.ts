@@ -108,7 +108,8 @@ function elementos(v: unknown): ReactElement<Linha>[] {
   return achados;
 }
 const doTipo = (v: unknown, nome: string) => elementos(v).filter((e) => nomeDoTipo(e) === nome).map((e) => e.props);
-const enderecos = (v: unknown) => elementos(v).map((e) => e.props.href).filter((h): h is string => typeof h === "string" && h.startsWith("/resultado"));
+// FIN-009c: a planilha vem pelo BaixarPlanilha (Excel e CSV do mesmo endereço, com ?formato=): conta o endereço base.
+const enderecos = (v: unknown) => elementos(v).map((e) => e.props.href ?? e.props.endereco).filter((h): h is string => typeof h === "string" && h.startsWith("/resultado"));
 const pagina = async (parametros: Record<string, string> = {}) => (await Resultado({ searchParams: Promise.resolve(parametros) })) as ReactElement;
 
 // ---------------------------------------------------------------------------------------------

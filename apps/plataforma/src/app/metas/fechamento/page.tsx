@@ -4,7 +4,7 @@ import Link from "next/link";
 import type { ReactNode } from "react";
 
 import { BotaoImprimir, CarimboDaImpressao } from "../../../componentes/BotaoImprimir";
-import { ExportarCsv } from "../../../componentes/ExportarCsv";
+import { ExportarPlanilha } from "../../../componentes/ExportarPlanilha";
 import { MoldeReal, permissoesDoMenu } from "../../../componentes/MoldeReal";
 import { EstadoDoPainel } from "../../../componentes/paineis-de-vendas";
 import { Aviso, Cartao, classeBotao, FiltroSegmentado, TituloPagina } from "../../../componentes/ui";
@@ -116,7 +116,7 @@ export default async function FechamentoDoBonus({ searchParams }: { searchParams
           <div className="nao-imprimir flex flex-wrap gap-2">
             <Link href={endereco("/metas", { mes: mes.slice(0, 7), loja: lojaNoEndereco })} className={classeBotao("secundario", "md")}><ArrowLeft aria-hidden className="size-4" /> Metas</Link>
             {planilha && (
-              <ExportarCsv prefixo="ora5g" rotulo="Baixar planilha" colunas={planilha.colunas} linhas={planilha.linhas}
+              <ExportarPlanilha rotulo="Baixar planilha" aba="Fechamento do bônus" secoes={planilha}
                 nomeArquivo={`fechamento-do-bonus-${mes.slice(0, 7)}-${parteDoNome(loja.nome)}`} />
             )}
             {planilha && <BotaoImprimir />}

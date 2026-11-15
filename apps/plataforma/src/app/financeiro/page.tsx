@@ -1,8 +1,8 @@
-import { Download } from "lucide-react";
 import type { Metadata } from "next";
 
+import { BaixarPlanilha } from "../../componentes/BaixarPlanilha";
 import { MoldeReal, permissoesDoMenu } from "../../componentes/MoldeReal";
-import { Aviso, classeBotao, FiltroSegmentado, TituloPagina } from "../../componentes/ui";
+import { Aviso, FiltroSegmentado, TituloPagina } from "../../componentes/ui";
 import { podeVerFinanceiro } from "../../lib/acesso/menu";
 import { FalhaDoServico, obterSessao } from "../../lib/acesso/sessao";
 import { consultarPainel } from "../../lib/financeiro/consulta";
@@ -74,7 +74,7 @@ export default async function Financeiro({ searchParams }: { searchParams: Promi
         sobretitulo={escopo.nome}
         titulo="Financeiro"
         subtitulo="Vendas, pagamentos registrados e movimentação dos caixas, somados no banco. Pagamento registrado não é dinheiro liquidado: só o conciliado com o extrato foi visto cair na conta."
-        acao={<a href={href({ pagina: undefined }, "/financeiro/exportar")} download className={classeBotao("secundario")}><Download aria-hidden className="size-4" /> Exportar {VISOES[visao].rotulo.toLowerCase()}</a>}
+        acao={<BaixarPlanilha endereco={href({ pagina: undefined }, "/financeiro/exportar")} rotulo={`Exportar ${VISOES[visao].rotulo.toLowerCase()}`} />}
       />
       <div className="mb-4 flex flex-col gap-3">
         <FiltroSegmentado rotulo="Período" opcoes={ORDEM_DOS_PERIODOS.map((p: PeriodoFinanceiro) => ({ href: href({ periodo: p === "hoje" ? undefined : p, pagina: undefined }), rotulo: PERIODOS_FINANCEIROS[p].rotulo, ativo: p === periodo }))} />
