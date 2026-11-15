@@ -1,0 +1,107 @@
+{
+  "captured_at": "2026-11-15T22:20:51.375859+00:00",
+  "routes": [
+    {
+      "path": "/",
+      "status": 200,
+      "url": "https://ora5g.com.br/",
+      "headers": {
+        "date": "Sun, 15 Nov 2026 22:20:49 GMT",
+        "server": "envoy",
+        "cache-control": "private, no-cache, no-store, max-age=0, must-revalidate"
+      },
+      "versoes": []
+    },
+    {
+      "path": "/entrar",
+      "status": 200,
+      "url": "https://ora5g.com.br/entrar",
+      "headers": {
+        "date": "Sun, 15 Nov 2026 22:20:49 GMT",
+        "server": "envoy",
+        "cache-control": "private, no-cache, no-store, max-age=0, must-revalidate"
+      },
+      "versoes": [
+        "vê só o que o papel dela permite. Ver a demonstração ora5G · v0.1.0 · 5468d9e · build 15/11/2026 18:21 Tecnologia para crescer Toda a operação da rede, em tempo real. Vendas, esto"
+      ]
+    },
+    {
+      "path": "/demo",
+      "status": 200,
+      "url": "https://ora5g.com.br/demo",
+      "headers": {
+        "date": "Sun, 15 Nov 2026 22:20:49 GMT",
+        "server": "envoy",
+        "cache-control": "private, no-cache, no-store, max-age=0, must-revalidate"
+      },
+      "versoes": [
+        ") Sair da demonstração 11 lojas + DEFEITOS · dados fictícios v0.1.0 · 5468d9e · build 15/11/2026 18:21 Demonstração · dados fictícios · nada é gravado Perfil: Dono / diretoria · t",
+        "Trocar o perfil da demonstração Sair da demonstração ora5G · v0.1.0 · 5468d9e · build 15/11/2026 18:21 Início 7 Aprovações Relatórios Caixa Mais Ricardo Andrade (fictício) Dono / ",
+        "SV da Rein Auditoria Trocar o perfil da demonstração ora5G · v0.1.0 · 5468d9e · build 15/11/2026 18:21 Hoje · domingo, 15/11 Visão geral da rede Consolidado das 11 lojas · troque "
+      ]
+    },
+    {
+      "path": "/loja",
+      "status": 200,
+      "url": "https://ora5g.com.br/loja",
+      "headers": {
+        "date": "Sun, 15 Nov 2026 22:20:49 GMT",
+        "server": "envoy",
+        "cache-control": "private, no-cache, no-store, max-age=0, must-revalidate"
+      },
+      "versoes": []
+    },
+    {
+      "path": "/saude",
+      "status": 200,
+      "url": "https://ora5g.com.br/saude",
+      "headers": {
+        "date": "Sun, 15 Nov 2026 22:20:50 GMT",
+        "server": "envoy",
+        "cache-control": "private, no-cache, no-store, max-age=0, must-revalidate"
+      },
+      "versoes": [
+        "ento Sistema no ar Serviço plataforma Versão 0.1.0 Publicada v0.1.0 · 5468d9e · build 15/11/2026 18:21 Verificado em 15/11/2026, 19:20:50 Login (Supabase) conectado Confere o apli"
+      ]
+    },
+    {
+      "path": "/inicio",
+      "status": 200,
+      "url": "https://ora5g.com.br/entrar",
+      "headers": {
+        "date": "Sun, 15 Nov 2026 22:20:50 GMT",
+        "server": "envoy",
+        "cache-control": "private, no-cache, no-store, max-age=0, must-revalidate"
+      },
+      "versoes": [
+        "vê só o que o papel dela permite. Ver a demonstração ora5G · v0.1.0 · 5468d9e · build 15/11/2026 18:21 Tecnologia para crescer Toda a operação da rede, em tempo real. Vendas, esto"
+      ]
+    },
+    {
+      "path": "/estoque",
+      "status": 200,
+      "url": "https://ora5g.com.br/entrar",
+      "headers": {
+        "date": "Sun, 15 Nov 2026 22:20:51 GMT",
+        "server": "envoy",
+        "cache-control": "private, no-cache, no-store, max-age=0, must-revalidate"
+      },
+      "versoes": [
+        "vê só o que o papel dela permite. Ver a demonstração ora5G · v0.1.0 · 5468d9e · build 15/11/2026 18:21 Tecnologia para crescer Toda a operação da rede, em tempo real. Vendas, esto"
+      ]
+    },
+    {
+      "path": "/financeiro",
+      "status": 200,
+      "url": "https://ora5g.com.br/entrar",
+      "headers": {
+        "date": "Sun, 15 Nov 2026 22:20:51 GMT",
+        "server": "envoy",
+        "cache-control": "private, no-cache, no-store, max-age=0, must-revalidate"
+      },
+      "versoes": [
+        "vê só o que o papel dela permite. Ver a demonstração ora5G · v0.1.0 · 5468d9e · build 15/11/2026 18:21 Tecnologia para crescer Toda a operação da rede, em tempo real. Vendas, esto"
+      ]
+    }
+  ]
+}

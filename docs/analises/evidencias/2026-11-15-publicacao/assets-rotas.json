@@ -1,0 +1,127 @@
+{
+  "observed_at": "2026-11-15T22:23:14.496580+00:00",
+  "assets": [
+    {
+      "path": "/_next/static/chunks/0cz1d0mv5g_q7.js",
+      "status": 200,
+      "type": "application/javascript; charset=UTF-8"
+    },
+    {
+      "path": "/_next/static/chunks/0ndjfiflcc8yo.js",
+      "status": 200,
+      "type": "application/javascript; charset=UTF-8"
+    },
+    {
+      "path": "/_next/static/chunks/199owtf_lxt4q.js",
+      "status": 200,
+      "type": "application/javascript; charset=UTF-8"
+    },
+    {
+      "path": "/_next/static/chunks/1wnov70f88xjy.js",
+      "status": 200,
+      "type": "application/javascript; charset=UTF-8"
+    },
+    {
+      "path": "/_next/static/chunks/1y4nr_zqn9v21.js",
+      "status": 200,
+      "type": "application/javascript; charset=UTF-8"
+    },
+    {
+      "path": "/_next/static/chunks/29ikmkkqrr2ne.js",
+      "status": 200,
+      "type": "application/javascript; charset=UTF-8"
+    },
+    {
+      "path": "/_next/static/chunks/2ihz_-y5p7f4b.js",
+      "status": 200,
+      "type": "application/javascript; charset=UTF-8"
+    },
+    {
+      "path": "/_next/static/chunks/2nxvcosy9fin5.css",
+      "status": 200,
+      "type": "text/css; charset=UTF-8"
+    },
+    {
+      "path": "/_next/static/chunks/2smldbxlkv6co.js",
+      "status": 200,
+      "type": "application/javascript; charset=UTF-8"
+    },
+    {
+      "path": "/_next/static/chunks/310vm2bl3xxpt.js",
+      "status": 200,
+      "type": "application/javascript; charset=UTF-8"
+    },
+    {
+      "path": "/_next/static/chunks/32jjxuqxf295d.js",
+      "status": 200,
+      "type": "application/javascript; charset=UTF-8"
+    },
+    {
+      "path": "/_next/static/chunks/32wf2-p0i30hy.js",
+      "status": 200,
+      "type": "application/javascript; charset=UTF-8"
+    },
+    {
+      "path": "/_next/static/chunks/3dxjw_htee4_a.js",
+      "status": 200,
+      "type": "application/javascript; charset=UTF-8"
+    },
+    {
+      "path": "/_next/static/chunks/3qfy96eoyh-ek.js",
+      "status": 200,
+      "type": "application/javascript; charset=UTF-8"
+    },
+    {
+      "path": "/_next/static/chunks/3zt_16xndew4w.js",
+      "status": 200,
+      "type": "application/javascript; charset=UTF-8"
+    },
+    {
+      "path": "/_next/static/chunks/3zwgy3fubeo70.js",
+      "status": 200,
+      "type": "application/javascript; charset=UTF-8"
+    },
+    {
+      "path": "/_next/static/chunks/turbopack-2u1d16houkiyo.js",
+      "status": 200,
+      "type": "application/javascript; charset=UTF-8"
+    }
+  ],
+  "private_routes_without_session": [
+    {
+      "path": "/inicio",
+      "status": 307,
+      "location": "/entrar"
+    },
+    {
+      "path": "/estoque",
+      "status": 307,
+      "location": "/entrar"
+    },
+    {
+      "path": "/financeiro",
+      "status": 307,
+      "location": "/entrar"
+    },
+    {
+      "path": "/produtos/importar",
+      "status": 307,
+      "location": "/entrar"
+    },
+    {
+      "path": "/estoque/pedidos",
+      "status": 307,
+      "location": "/entrar"
+    },
+    {
+      "path": "/conta/seguranca",
+      "status": 307,
+      "location": "/entrar"
+    },
+    {
+      "path": "/conta/confirmar",
+      "status": 307,
+      "location": "/entrar"
+    }
+  ]
+}

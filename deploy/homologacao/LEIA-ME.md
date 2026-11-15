@@ -21,7 +21,13 @@ A plataforma de homologação roda **só em `127.0.0.1:3100`**. O Apache do cPan
 | `curl -s 127.0.0.1:3100/saude` | Confere se está no ar |
 | `bash ~/homologacao/plataforma/deploy/homologacao/conferir-publicacao.sh` | Só leitura: mostra o commit no ar, o da `main` no GitHub e a lista do que falta publicar |
 
-**Publicar é manual e depende da autorização do proprietário a cada vez.** Merge na `main` não muda o site: em 10/11/2026 a `main` estava 5 commits à frente do site e isso só foi notado na demonstração. Desde então, cada tela mostra no rodapé a versão no ar (`ora5G · v0.1.0 · <commit> · build <data e hora>`), também em `/saude` e no "Mais" do celular. Para conferir de fora do servidor, abra `https://ora5g.com.br/saude` numa aba anônima e compare o commit com o da `main`.
+**A publicação de homologação é manual e integra o encerramento de cada lote, conforme o pedido do proprietário de 13/11, reiterado em 15/11.** A autorização já dada para esse fluxo habitual não precisa ser solicitada novamente a cada lote. Isso não altera as autorizações específicas de produção, operações críticas ou mudanças de dados fora do escopo autorizado. Merge na `main` não muda o site: em 10/11/2026 a `main` estava 5 commits à frente do site e isso só foi notado na demonstração. Desde então, cada tela mostra no rodapé a versão no ar (`ora5G · v0.1.0 · <commit> · build <data e hora>`), também em `/saude` e no "Mais" do celular. Para conferir de fora do servidor, abra `https://ora5g.com.br/saude` numa aba anônima e compare o commit com o da `main`.
+
+### Conferência obrigatória ao fim do lote
+
+Claude registra o SHA final integrado e o CI correspondente, confere as migrations/configuração necessárias e publica pelo script existente. Depois compara o SHA esperado com o retornado pelo serviço local **e pelo domínio HTTPS**; verifica os recursos estáticos e o percurso da função alterada na aplicação real, com o perfil autorizado. Registra endereço, horário, versão e resultado em evidência associada ao SHA. Falha ou falta de configuração mantém a etapa pendente; funcionamento da demo não substitui esse aceite.
+
+**Limitação do verificador atual (issue #99):** conferir-publicacao.sh pode imprimir “Tudo publicado” com resposta antiga ou erro do serviço, porque não usa a versão HTTP na decisão. Até a correção, comparar explicitamente os três SHAs; não usar a mensagem do script ou HTTP 200 isolado como prova. A verificação de 15/11 encontrou o domínio em 5468d9e, igual à main, mas o CI desse SHA reprovou na #95. [Relatório e evidências](../../docs/analises/PUBLICACAO_DOMINIO_2026-11-15.md).
 
 **Versões antigas não são apagadas sozinhas** (pedido do proprietário em 10/11/2026: nada é apagado do servidor sem perguntar antes). O `publicar.sh` só lista as que passam das 3 mais recentes e mostra o comando para apagar uma depois de autorizado. Cada pasta ocupa cerca de 1,2 GB.
 

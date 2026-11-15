@@ -1,0 +1,852 @@
+{
+  "main": "5468d9e59d6a68587ba176fff178163eec81ff9c",
+  "total": 169,
+  "ancestralidade_main": 415,
+  "branches": [
+    {
+      "branch": "chore/Q3-seguranca-periodica",
+      "sha": "5aa32146b388ec249a1dec8dca5814008a8568bf",
+      "in_main": true
+    },
+    {
+      "branch": "chore/R3-reconciliacao-dos-estados",
+      "sha": "036218ce2e7168701cc1521e8c1c0147dfcbbbda",
+      "in_main": true
+    },
+    {
+      "branch": "chore/R4-revisao-dos-p0",
+      "sha": "ac6697ed5216a19b54b2acf2e9c2ef621f3c92ae",
+      "in_main": true
+    },
+    {
+      "branch": "chore/R5-revisao-dos-parciais",
+      "sha": "b656ed8b1d3660ebf5cb9d31dc30f73fa0cf89c4",
+      "in_main": true
+    },
+    {
+      "branch": "chore/aplicar-migration-cat011b",
+      "sha": "db23cb72eb83df6ae3a865933ca7fa10d9792f98",
+      "in_main": true
+    },
+    {
+      "branch": "chore/aplicar-migration-inv009a",
+      "sha": "1a1a98c5a775a31f955816584976c70d0cc250da",
+      "in_main": true
+    },
+    {
+      "branch": "chore/aplicar-migration-online-a",
+      "sha": "7883ac90426b847b9736b7bcfb1854e8868f5e60",
+      "in_main": true
+    },
+    {
+      "branch": "chore/aplicar-migration-org007a",
+      "sha": "a8f83f6873433ee2b597d6485c1598b2d9041e6a",
+      "in_main": true
+    },
+    {
+      "branch": "chore/aplicar-migration-qual011a",
+      "sha": "c14794a699986e4326c5fd36746acc708cf92d3b",
+      "in_main": true
+    },
+    {
+      "branch": "chore/aplicar-migrations-20261115",
+      "sha": "18c79e51c7e55b7857fd32661cf02a3500675dc2",
+      "in_main": true
+    },
+    {
+      "branch": "chore/aplicar-migrations-org006b-fisc009b",
+      "sha": "1d687c0d80dea9590f8928df1bdb7f6128f36789",
+      "in_main": true
+    },
+    {
+      "branch": "chore/migration-l9a-dev",
+      "sha": "a6dfe8d681777021f1d64a5239e37fbb9e1cfe30",
+      "in_main": true
+    },
+    {
+      "branch": "chore/migration-l9b-dev",
+      "sha": "7b1179d677b65f02c915754aeda10d812b2aef68",
+      "in_main": true
+    },
+    {
+      "branch": "chore/migrations-aplicadas-dev",
+      "sha": "14cf89a7bc38e163982fdbd1cac28d6f36aec07c",
+      "in_main": true
+    },
+    {
+      "branch": "chore/migrations-correcoes-dev",
+      "sha": "b45c401925a72ff5f7dbbbf01884e40863288eb2",
+      "in_main": true
+    },
+    {
+      "branch": "chore/migrations-l5d-dev",
+      "sha": "82bf6e3a739a5aff074a2429333efcb1378b0ba2",
+      "in_main": true
+    },
+    {
+      "branch": "chore/migrations-l8e-l12-dev",
+      "sha": "0fb8a64fe61747cc51566e221ccb6b61027c70a5",
+      "in_main": true
+    },
+    {
+      "branch": "chore/migrations-l10b-l10c-dev",
+      "sha": "e57cbafdac0a6c8b4b45b2288fd4d39ccfac3fa9",
+      "in_main": true
+    },
+    {
+      "branch": "chore/migrations-l12c-l12e-dev",
+      "sha": "d0b16ab8ee5d7abce3cb57ccee0d8acbd8dc47a7",
+      "in_main": true
+    },
+    {
+      "branch": "chore/registro-migration-report005b",
+      "sha": "cecdfb27b605a396d9cae1fe7c63d0f873678247",
+      "in_main": true
+    },
+    {
+      "branch": "chore/registro-migrations-g3b-cat009-org009",
+      "sha": "5ba051c92f3221c23a2425d908310cdaeaaf8181",
+      "in_main": true
+    },
+    {
+      "branch": "dependabot/npm_and_yarn/correcoes-e-menores-4a377ed8c9",
+      "sha": "22655346ba3a6c8948f86e2e5a2895693df59175",
+      "in_main": false
+    },
+    {
+      "branch": "dependabot/npm_and_yarn/eslint-10.14.0",
+      "sha": "65e7bfdcf4c8579590b70e7b87f31dfbc7a1172d",
+      "in_main": false
+    },
+    {
+      "branch": "dependabot/npm_and_yarn/types/node-26.6.6",
+      "sha": "0d19d65339d3a02529d6334155c112768961af7e",
+      "in_main": false
+    },
+    {
+      "branch": "dependabot/npm_and_yarn/typescript-7.0.2",
+      "sha": "66307e5dccce334da86eaec136b55d789ad4f3d3",
+      "in_main": false
+    },
+    {
+      "branch": "docs/ORA-P0-matriz-graficos",
+      "sha": "6e0f7a8fe1f4846439b365ccd7769225848d8cce",
+      "in_main": true
+    },
+    {
+      "branch": "docs/Q2-contingencia-e-incidentes",
+      "sha": "49363681578698708e485d556c303d5788b8831b",
+      "in_main": true
+    },
+    {
+      "branch": "docs/adr-002-acesso",
+      "sha": "21f4f7c620831ffabbf9fb32ea16143a8e626206",
+      "in_main": true
+    },
+    {
+      "branch": "docs/analise-sistemas-2026-11-07",
+      "sha": "173fd5c18ad45a8d2df950aa348dbbcc2b0ca5c0",
+      "in_main": true
+    },
+    {
+      "branch": "docs/auditoria-claude-code-2026-11-08",
+      "sha": "f472635b8536fb60f2eb9bd37777d0985dffc629",
+      "in_main": true
+    },
+    {
+      "branch": "docs/auditoria-diretorios-real-20261112",
+      "sha": "fe2b8bb99e7db974b13c971bc7d96244179fdf33",
+      "in_main": false
+    },
+    {
+      "branch": "docs/clientes-nota-whatsapp-20261112",
+      "sha": "6b71bb0a927993ade46da50f276f5b013b552190",
+      "in_main": false
+    },
+    {
+      "branch": "docs/configuracao-e-transicao-2026-11-07",
+      "sha": "5f4dec7079b57effa0e555b536ad7f0550ec5e87",
+      "in_main": true
+    },
+    {
+      "branch": "docs/crontab-ligado",
+      "sha": "3c950eda73a12ad0800198a857573fa4f701a596",
+      "in_main": true
+    },
+    {
+      "branch": "docs/dominio-principal-no-ar",
+      "sha": "bb14add66439e218eff7d2428e53abd976e89306",
+      "in_main": true
+    },
+    {
+      "branch": "docs/dominio-principal-temporario",
+      "sha": "6fc3102c253f50af997b857f24eab73add2ea484",
+      "in_main": true
+    },
+    {
+      "branch": "docs/estado-pos-publicacao",
+      "sha": "b8ae443ce6557dfb7f526e651e5b60e00ce3a2c0",
+      "in_main": true
+    },
+    {
+      "branch": "docs/execucao-integral-20261110",
+      "sha": "d8c1bc6c80646df2153290ea567237a17df20885",
+      "in_main": false
+    },
+    {
+      "branch": "docs/homologacao-0fa1546",
+      "sha": "a74cb6efc5fd307b4c587a4947b3ee6eff2d9796",
+      "in_main": true
+    },
+    {
+      "branch": "docs/homologacao-8f7a458",
+      "sha": "3a404173b2acb9f27a6d9379d61d1b850f2977e8",
+      "in_main": true
+    },
+    {
+      "branch": "docs/homologacao-3157e70",
+      "sha": "b2fea558fa1fadfb9b54d5b78cd364b27836aa6a",
+      "in_main": true
+    },
+    {
+      "branch": "docs/passo0-reconciliacao-pr33",
+      "sha": "0146f4ddc045c42a9cb055654658a397df29aa24",
+      "in_main": true
+    },
+    {
+      "branch": "docs/planejamento-bugs-config-20261113",
+      "sha": "c4a07c589dd9a97d2e2bc964c0a120413b11c9cd",
+      "in_main": false
+    },
+    {
+      "branch": "docs/plano-inicio-implementacao",
+      "sha": "29e9e6103ebfe0fe696a6cc03d00ce66cbfb920f",
+      "in_main": true
+    },
+    {
+      "branch": "docs/prompt-conclusao-total-20261114",
+      "sha": "568ad2da3dc83ff6386a19a749bb3902a32387c7",
+      "in_main": false
+    },
+    {
+      "branch": "docs/prompt-financeiro-real-20261110",
+      "sha": "9216f9247c376c1dbe6b26a409c0daf131d93a33",
+      "in_main": false
+    },
+    {
+      "branch": "docs/reconciliacao-lotes-1-a-5",
+      "sha": "2b92423d4473be8fcfa7713316cd05717173e0a1",
+      "in_main": true
+    },
+    {
+      "branch": "docs/resultado-publicacao",
+      "sha": "0bdb47fdf864e271febddfe79fd29c48c6ec5771",
+      "in_main": true
+    },
+    {
+      "branch": "docs/revisao-integral-claude-20261111",
+      "sha": "df4eba7da36faac6a8d0062d20baef83fad0dcdd",
+      "in_main": false
+    },
+    {
+      "branch": "docs/revisao-web-nogle-2026-11-08",
+      "sha": "290f1111f964710d744c4ded40df48fed6762b1b",
+      "in_main": false
+    },
+    {
+      "branch": "docs/skill-engenheiro-senior-ora5g-2026-11-10",
+      "sha": "c643b9ab1c0812a37e68023f7fadb4ad0744550d",
+      "in_main": true
+    },
+    {
+      "branch": "docs/variaveis-de-ambiente",
+      "sha": "a28a4930fcedc416a6ad374d4cf5240c5531cedb",
+      "in_main": true
+    },
+    {
+      "branch": "docs/verificacao-prompt86-20261114",
+      "sha": "8c580902290fe99123f8c96d723a43714c9c8efc",
+      "in_main": false
+    },
+    {
+      "branch": "feat/CAT-002b-planilha-do-excel",
+      "sha": "1d2c38b11ebb50002c0982ecdd8695ca1c2013af",
+      "in_main": true
+    },
+    {
+      "branch": "feat/CAT-006-busca-por-marca-ean-e-final-do-imei",
+      "sha": "dcf4d00649021fa27d2906b19020b6af338a65ef",
+      "in_main": true
+    },
+    {
+      "branch": "feat/CAT-008b-correcao-do-custo",
+      "sha": "851af165df0a8cab0b5aa990301ca803ef448a20",
+      "in_main": true
+    },
+    {
+      "branch": "feat/CAT-009-codigos-de-outros-canais",
+      "sha": "b294d9cec379af88fe3f8c14ae178bee7f3de9f1",
+      "in_main": true
+    },
+    {
+      "branch": "feat/CAT-010-fotos-em-lote",
+      "sha": "0e4aaaa3e2b0884fdae383e2bb7a6567267dd877",
+      "in_main": true
+    },
+    {
+      "branch": "feat/CAT-011b-limpeza-das-fotos",
+      "sha": "1122eb7169a4037bdb4202ce6aab8e3fab9485a3",
+      "in_main": true
+    },
+    {
+      "branch": "feat/FIN-004a-conta-da-entrada",
+      "sha": "b96b51baa57f9837cc0a9c6ac02c7679142e36db",
+      "in_main": true
+    },
+    {
+      "branch": "feat/FIN-004b-documentos-da-conta",
+      "sha": "b828f94c80450d70c5072f667c7b989942d7f886",
+      "in_main": true
+    },
+    {
+      "branch": "feat/FIN-009b-planilhas-do-estoque",
+      "sha": "a470271a94d3403d62fc39a772eaa309fd50ce35",
+      "in_main": true
+    },
+    {
+      "branch": "feat/FIN-009c-excel-nas-planilhas",
+      "sha": "04392b21a59270110415a9a81b416434a835310e",
+      "in_main": true
+    },
+    {
+      "branch": "feat/FIN-009d-planilhas-da-equipe-e-auditoria",
+      "sha": "00912fd9e7e049ee676d1548147105b3034b09c2",
+      "in_main": true
+    },
+    {
+      "branch": "feat/FISC-009b-carta-de-correcao",
+      "sha": "35cd39214095579ca62963ca063f430bed94fbfb",
+      "in_main": true
+    },
+    {
+      "branch": "feat/G3b-valor-do-estoque",
+      "sha": "e96f98bdb516611ddf1797ab11888117a07c51b1",
+      "in_main": true
+    },
+    {
+      "branch": "feat/G6-sino-de-alertas",
+      "sha": "70b196a24d96c147d4d3a751a1e9aff395af445f",
+      "in_main": true
+    },
+    {
+      "branch": "feat/INV-009a-pedido-de-compra",
+      "sha": "88eb5a82226f61135c8b4791a3671d87b46b1c66",
+      "in_main": true
+    },
+    {
+      "branch": "feat/INV-009b-receber-do-pedido",
+      "sha": "e1d3a78fba81ef6d6a265db1af2bd76c2d2a53df",
+      "in_main": true
+    },
+    {
+      "branch": "feat/K1a-cliente-nome-e-whatsapp",
+      "sha": "133d15a8c6d890f0f465725dd27e5bda2041184d",
+      "in_main": true
+    },
+    {
+      "branch": "feat/K1b-nota-destinatario",
+      "sha": "71a3d784dd5a884749f57335ca7889a9e3897033",
+      "in_main": true
+    },
+    {
+      "branch": "feat/K1c-whatsapp-nota",
+      "sha": "01f4c7e73f341345839aa872317a299c145bde7d",
+      "in_main": true
+    },
+    {
+      "branch": "feat/L5d-anexos-da-venda",
+      "sha": "cda0bbe501ee4dbcfd8588bb706c63de395f52a1",
+      "in_main": true
+    },
+    {
+      "branch": "feat/L5e-ficha-360",
+      "sha": "329e537a2309936667a86c72bef293c2dab92ef9",
+      "in_main": true
+    },
+    {
+      "branch": "feat/L8e-recebiveis",
+      "sha": "4000cfd31dc0fb311b363eb7535e51f5586c8678",
+      "in_main": true
+    },
+    {
+      "branch": "feat/L10a-documentos-da-nota",
+      "sha": "73817a1579bb7a22cc7c869ef78c0c3bd584bdbe",
+      "in_main": true
+    },
+    {
+      "branch": "feat/L10b-conciliacao-fiscal",
+      "sha": "e9c4664a23540a0cb50173015467bf0768388ace",
+      "in_main": true
+    },
+    {
+      "branch": "feat/L10c-cancelamento-da-nota",
+      "sha": "0d59c5733da3c1fb7b5968149a5539caee80abd6",
+      "in_main": true
+    },
+    {
+      "branch": "feat/L12a-ordem-de-servico",
+      "sha": "2a05e61cc0aba9e50723a0ce168912256c1bfbea",
+      "in_main": true
+    },
+    {
+      "branch": "feat/L12b-orcamento-da-os",
+      "sha": "3f8f0b2ef4c370b6578d8b0f65302e9e83b94651",
+      "in_main": true
+    },
+    {
+      "branch": "feat/L12c-entrega-da-os",
+      "sha": "9242089b95ffaa538c8e9889b6717de126173fee",
+      "in_main": true
+    },
+    {
+      "branch": "feat/L12d-pecas-da-os",
+      "sha": "ac4aff5fb34baa6fe0e0d35d370e5e054e8806e1",
+      "in_main": true
+    },
+    {
+      "branch": "feat/L12e-relatorios-da-assistencia",
+      "sha": "14ae2efa69f1588ff6a81d5bca890409a1e1df9c",
+      "in_main": true
+    },
+    {
+      "branch": "feat/L12f-alertas-da-assistencia",
+      "sha": "506d6df89c3a4ca445ebf7a79965fef6aa28611b",
+      "in_main": true
+    },
+    {
+      "branch": "feat/ONLINE-a-vitrine",
+      "sha": "3c408b262b0403b07106b33957e8b336621fb31f",
+      "in_main": true
+    },
+    {
+      "branch": "feat/ORG-006b-confirmacao-recente",
+      "sha": "c09cda78e11c862118a36758e3e5f9af92619587",
+      "in_main": true
+    },
+    {
+      "branch": "feat/ORG-007a-segundo-fator",
+      "sha": "63e26f78f61ef998acd1252c857e547e72fecc95",
+      "in_main": true
+    },
+    {
+      "branch": "feat/ORG-009-regioes",
+      "sha": "c48f6e62a537eb31769829eece868e8374fa30da",
+      "in_main": true
+    },
+    {
+      "branch": "feat/ORG-009b-resultado-por-regiao",
+      "sha": "486134a97f286d32bfe06d5fa1d1653541d2b407",
+      "in_main": true
+    },
+    {
+      "branch": "feat/PERF-003b-margem-por-vendedor",
+      "sha": "09e34660738be01b05dccbf1f6a4c8fe59a94952",
+      "in_main": true
+    },
+    {
+      "branch": "feat/Q1-saude-da-operacao",
+      "sha": "3677adbe351a6fcbd5955f868941a86e050d9739",
+      "in_main": true
+    },
+    {
+      "branch": "feat/QUAL-010a-desempenho-no-celular",
+      "sha": "9a16ca5c7ecd1a6e39beaafc0257dacc6348237d",
+      "in_main": true
+    },
+    {
+      "branch": "feat/QUAL-010b-cliente-sob-demanda",
+      "sha": "3c55d7405d30fc8a12a3db9347642b3759f8ac1d",
+      "in_main": true
+    },
+    {
+      "branch": "feat/QUAL-011a-relatorio-do-titular",
+      "sha": "73cf987a586e7fd88a35f55b8bdecb90c39ae7dc",
+      "in_main": true
+    },
+    {
+      "branch": "feat/QUAL-012a-carga-e-recuperacao",
+      "sha": "d3e38e157c5dc25391e39c90b83713d8dd88d0dc",
+      "in_main": true
+    },
+    {
+      "branch": "feat/REPORT-001b-alerta-do-estoque",
+      "sha": "d51683663796ba6ac79138c9bde1c1b18d65cece",
+      "in_main": true
+    },
+    {
+      "branch": "feat/REPORT-005b-pagamentos-por-maquininha",
+      "sha": "5200ceb43e8cec84ef8a0ed7d03d6bdd7b5673d5",
+      "in_main": true
+    },
+    {
+      "branch": "feat/l8b-resultado-do-mes",
+      "sha": "9bb285fbf7438e34e9bc196ce5443dc2a1012837",
+      "in_main": true
+    },
+    {
+      "branch": "feat/l8c-previsao-de-caixa",
+      "sha": "ea3c3ce45bd9eae2e476f74d23ad71c9ecfa2691",
+      "in_main": true
+    },
+    {
+      "branch": "feat/l8d-exportacao-financeira",
+      "sha": "c42aca726c39789d72c79d3bccd4ef54344f731e",
+      "in_main": true
+    },
+    {
+      "branch": "feat/l9a-bonus-por-meta",
+      "sha": "4bcd4cb0bd892eda04ced1271b896031f4161dc5",
+      "in_main": true
+    },
+    {
+      "branch": "feat/l9b-fechamento-do-bonus",
+      "sha": "30fafa2354f0a1d9f46a4c8b3d063ece7bbd9a07",
+      "in_main": true
+    },
+    {
+      "branch": "feature/ORA-002-esqueleto-monorepo",
+      "sha": "e4d386fffb0ffb9195e28524dce3c7a05c35a86b",
+      "in_main": true
+    },
+    {
+      "branch": "feature/ORA-003-ambiente-e-segredos",
+      "sha": "85adb92293263a4b21ecee8c0ed60343a8094267",
+      "in_main": true
+    },
+    {
+      "branch": "feature/ORA-004-005-banco-acesso",
+      "sha": "eb3710d9ab1eac38dd1f4276b21504b44a1fdd45",
+      "in_main": true
+    },
+    {
+      "branch": "feature/ORA-006-acesso-equipe",
+      "sha": "ee2de080af1ed6adf35842ad1b5623508846cfad",
+      "in_main": true
+    },
+    {
+      "branch": "feature/ORA-008-frontend-moderno",
+      "sha": "78fcccef15769c17fcd6274cef762cdf8a4326bc",
+      "in_main": true
+    },
+    {
+      "branch": "feature/ORA-65-financeiro-real",
+      "sha": "dc775b0dd3130629c9b581167faaf73d6bb5db28",
+      "in_main": true
+    },
+    {
+      "branch": "feature/ORA-ADR-004-vendas",
+      "sha": "a5092a8338a503c5c40344adfae9837b0af21ede",
+      "in_main": true
+    },
+    {
+      "branch": "feature/ORA-CAT-011-fotos",
+      "sha": "ce7b446bf61a3010f1ad2573bbfcea9edb505257",
+      "in_main": true
+    },
+    {
+      "branch": "feature/ORA-CONNECT-adaptador",
+      "sha": "8253c65a2d82a9118abb6a28f22d8482997eb5ed",
+      "in_main": true
+    },
+    {
+      "branch": "feature/ORA-FISC-fila",
+      "sha": "f12580529bc8861565752d4f350431cc59bd71c0",
+      "in_main": true
+    },
+    {
+      "branch": "feature/ORA-G1-inicio-paineis",
+      "sha": "bfd7de9dc659771657b1cf9886672d9b980dfd38",
+      "in_main": true
+    },
+    {
+      "branch": "feature/ORA-G2-relatorios",
+      "sha": "78382adf05f72c0c23f8cd95784082dd12e4227e",
+      "in_main": true
+    },
+    {
+      "branch": "feature/ORA-G2b-conciliacao",
+      "sha": "cc3ab645bed1269c67d10f774a954c77e26ff7e2",
+      "in_main": true
+    },
+    {
+      "branch": "feature/ORA-G3-estoque",
+      "sha": "b859700c944d0fcaf6428b949e306bb13721c00a",
+      "in_main": true
+    },
+    {
+      "branch": "feature/ORA-G4-producao-connect",
+      "sha": "c9834860fa80ac6c92ada769a7189bb8803f91d9",
+      "in_main": true
+    },
+    {
+      "branch": "feature/ORA-G4b-metas",
+      "sha": "9258b07d7eb4856caa4b57a332c3124ef2f69297",
+      "in_main": true
+    },
+    {
+      "branch": "feature/ORA-G4c-meta-inicio-relatorios",
+      "sha": "be70f694b693086fda39983bf09ec07fb680e7f9",
+      "in_main": true
+    },
+    {
+      "branch": "feature/ORA-G5-equipe-por-papel",
+      "sha": "444256577bb1fbd46462ac13fa432c9a68571809",
+      "in_main": true
+    },
+    {
+      "branch": "feature/ORA-INV-tela-estoque",
+      "sha": "1d479e60b383ad5aef69e036bc96ceb7d07473ed",
+      "in_main": true
+    },
+    {
+      "branch": "feature/ORA-L2-lojas",
+      "sha": "9a884ad8e7a8cbb61582789aa862b0fa14ca1183",
+      "in_main": true
+    },
+    {
+      "branch": "feature/ORA-L3-catalogo-cadastro",
+      "sha": "da56f5f555f22ce7280a8c66d650b72709b41d48",
+      "in_main": true
+    },
+    {
+      "branch": "feature/ORA-L3b-precos",
+      "sha": "3ce8d532b68d1b287e878b5fdf5cff5fbd327070",
+      "in_main": true
+    },
+    {
+      "branch": "feature/ORA-L3c-importador",
+      "sha": "bcd2dd839527c395b5bed54f940f5891f07deebc",
+      "in_main": true
+    },
+    {
+      "branch": "feature/ORA-L4a-entrada-estoque",
+      "sha": "e2265816302618fe24b6a1ad9ea2431aa6c4e07b",
+      "in_main": true
+    },
+    {
+      "branch": "feature/ORA-L4b-inventario",
+      "sha": "1c89d9be43f62c42aeaa32a63aedcdc87df62903",
+      "in_main": true
+    },
+    {
+      "branch": "feature/ORA-L5a-clientes",
+      "sha": "baf17210d62f1522f32f69af4ea82968848ce824",
+      "in_main": true
+    },
+    {
+      "branch": "feature/ORA-L5b-funil",
+      "sha": "035df34ac5814ae0befe5e2141e0751c3ab3f6a5",
+      "in_main": true
+    },
+    {
+      "branch": "feature/ORA-L5c-crm",
+      "sha": "2c65b31f0fcb6048245789f9fe5fc147e558cd0a",
+      "in_main": true
+    },
+    {
+      "branch": "feature/ORA-L6a-pdv",
+      "sha": "7fb840c3bdbec9b4ab9b3760a0d27ea2e87a7ded",
+      "in_main": true
+    },
+    {
+      "branch": "feature/ORA-L6b-regra-de-preco-na-venda",
+      "sha": "e95d91c093650363e6d73e65ee2836ef404ff102",
+      "in_main": true
+    },
+    {
+      "branch": "feature/ORA-L7a-pagamentos",
+      "sha": "fb6aa27e2d3f3185258520c738a60aa08020891d",
+      "in_main": true
+    },
+    {
+      "branch": "feature/ORA-L7b-financeiras-a-receber",
+      "sha": "4236e267641991be2f68197b2abd795505463802",
+      "in_main": true
+    },
+    {
+      "branch": "feature/ORA-L7c-saida-autorizada-do-caixa",
+      "sha": "c996ba6a4ae94d9482f23f4ae9e95ea0ee4f8702",
+      "in_main": true
+    },
+    {
+      "branch": "feature/ORA-L8a-contas-a-pagar",
+      "sha": "84a4ec96cc0c9a64aeace8e79e94ed08d81b7ffc",
+      "in_main": true
+    },
+    {
+      "branch": "feature/ORA-POS-012-devolucao-troca",
+      "sha": "2e6097ca29f522dcc846601d372a460b198cc13c",
+      "in_main": true
+    },
+    {
+      "branch": "feature/ORA-connect-nogle",
+      "sha": "ff67f14ee8b9d97b5291c897298e131781a42570",
+      "in_main": true
+    },
+    {
+      "branch": "feature/ORA-implantacao-piloto",
+      "sha": "cb7bfe9fc408722acb765957a0dee63fdbae485e",
+      "in_main": true
+    },
+    {
+      "branch": "feature/ORA-nogle-respostas",
+      "sha": "ba9587c0cadce2a0bd8d4f602aab65cbc001911d",
+      "in_main": true
+    },
+    {
+      "branch": "feature/ORA-telas-reais-consistentes",
+      "sha": "14b0f8ab8d617c79a9521e4f85f63d4d5ad99833",
+      "in_main": true
+    },
+    {
+      "branch": "feature/ORA-transferencias-defeitos-lote5",
+      "sha": "7a8a47c5fbabcadabbae650a93aecef19eb852ce",
+      "in_main": true
+    },
+    {
+      "branch": "feature/ORA-visual-azul",
+      "sha": "de7d6fbba45b055dc4c02dc7861d397f8c6e7c45",
+      "in_main": true
+    },
+    {
+      "branch": "feature/demonstracao-e-alinhamento",
+      "sha": "d0616c8e53196a0a8d73617ab1c594bcb9ef388e",
+      "in_main": true
+    },
+    {
+      "branch": "fix/ORA-65-redirecionamento-financeiro",
+      "sha": "4ce6997d6c81065b6d0679c5533f65adb1c3250d",
+      "in_main": true
+    },
+    {
+      "branch": "fix/ORA-78-79-inventario",
+      "sha": "40b693de74550ec6552b31f2e944d04ff1c49f69",
+      "in_main": true
+    },
+    {
+      "branch": "fix/ORA-80-conferencia",
+      "sha": "0b8bd0ae511a5c783df49e795fe7a8e637ef87ca",
+      "in_main": true
+    },
+    {
+      "branch": "fix/ORA-82-previsao",
+      "sha": "975aff9a7ddd2d621c3c08e08ee652a990c0e41e",
+      "in_main": true
+    },
+    {
+      "branch": "fix/ORA-83-repasse",
+      "sha": "b8bfd14d7c2696acccba2bdccc9c27899b07798d",
+      "in_main": true
+    },
+    {
+      "branch": "fix/ORA-B5-leitura-completa",
+      "sha": "14b7ca9a7dd4cf2710ec8db7772f836b29c260cd",
+      "in_main": true
+    },
+    {
+      "branch": "fix/ORA-R1-recebimento",
+      "sha": "5a556428340e692d0609ee58397e152855e63ba4",
+      "in_main": true
+    },
+    {
+      "branch": "fix/ORA-R2-importador",
+      "sha": "912835903e5a57ac743e8ca23ce6c2cd3f40b228",
+      "in_main": true
+    },
+    {
+      "branch": "fix/ORA-acesso-configuracao-lote1",
+      "sha": "bf450d976adc56f27c2449371acb2ecaab8c4ce9",
+      "in_main": true
+    },
+    {
+      "branch": "fix/ORA-busca-csv-fotos-lote3",
+      "sha": "77de9e9b491b2e1d144e88159801fdc4fabfb9e1",
+      "in_main": true
+    },
+    {
+      "branch": "fix/ORA-demo-lote4",
+      "sha": "0a695d55e3802f067b4ff9d5c4badba25c7f880b",
+      "in_main": true
+    },
+    {
+      "branch": "fix/ORA-integridade-estoque",
+      "sha": "283532cdf69631ea0885c0d543aa86f2c94e63d8",
+      "in_main": true
+    },
+    {
+      "branch": "fix/ORA-integridade-lote2",
+      "sha": "82e1d884a1c4b19d9fca2a79d692371c38198890",
+      "in_main": true
+    },
+    {
+      "branch": "fix/ORA-nome-nogle",
+      "sha": "f77b0df42ee67c915975a275ca214defccbd42a4",
+      "in_main": true
+    },
+    {
+      "branch": "fix/homologacao-trava",
+      "sha": "7430b7aa8a6c555468eebed42e0b6d543b264869",
+      "in_main": true
+    },
+    {
+      "branch": "fix/homologacao-vigia",
+      "sha": "1b20bdde3d792231b04a4b1bc91ebf8f46d17004",
+      "in_main": true
+    },
+    {
+      "branch": "fix/polimento-apresentacao",
+      "sha": "fbabeb960985fb5695469680ed64852fd1e4b1b0",
+      "in_main": true
+    },
+    {
+      "branch": "fix/raiz-atras-do-apache",
+      "sha": "0ab7ad718d8f79c0344ecdb2d40880f5555e940b",
+      "in_main": true
+    },
+    {
+      "branch": "fix/raiz-atras-do-apache-https",
+      "sha": "021bdc7305089e68a4b156c5adc8a92e1fd94dbd",
+      "in_main": true
+    },
+    {
+      "branch": "fix/residuos-codex-2026-11-07",
+      "sha": "5775f60fb3ce204b246b656773f38a426bd4ae8a",
+      "in_main": true
+    },
+    {
+      "branch": "fix/revisao-codex-2026-11-07",
+      "sha": "6850b20a17193b4c2baacfc009f8e53c9e3a6e0c",
+      "in_main": true
+    },
+    {
+      "branch": "fix/usuarios-teste-gerente-20261110",
+      "sha": "c6480d5f39c5313ca1fcfeea9b6910e994509741",
+      "in_main": true
+    },
+    {
+      "branch": "integra/pr64-gerente-de-teste",
+      "sha": "2ac6a2527efd84aeb53e18ac410a8b25741b17bb",
+      "in_main": true
+    },
+    {
+      "branch": "main",
+      "sha": "5468d9e59d6a68587ba176fff178163eec81ff9c",
+      "in_main": true
+    },
+    {
+      "branch": "test/ORA-QUAL-autorizacao-funcoes",
+      "sha": "7911a2238ca4be9ffea1ed9c42357fc65991dad3",
+      "in_main": true
+    }
+  ]
+}
