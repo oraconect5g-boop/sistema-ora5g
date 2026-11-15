@@ -6682,6 +6682,10 @@ export type Database = {
         Args: { p_fim: string; p_inicio: string }
         Returns: Json
       }
+      pagamentos_por_terminal: {
+        Args: { p_fim: string; p_inicio: string; p_unidade?: string }
+        Returns: Json
+      }
       pedir_aprovacao: {
         Args: { p_item: string; p_motivo: string }
         Returns: string

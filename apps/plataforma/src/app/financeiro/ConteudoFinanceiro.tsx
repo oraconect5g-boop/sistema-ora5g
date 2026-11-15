@@ -6,7 +6,10 @@ import { plural } from "../../componentes/paineis-de-vendas";
 import { Aviso, BotaoLink, Cartao, Celula, EstadoVazio, FiltroSegmentado, Indicador, ListaDados, Selo, Tabela, type Tom } from "../../componentes/ui";
 import { PERIODOS_FINANCEIROS, variacaoFinanceira, type ConciliacaoDoPeriodo, type PeriodoFinanceiro, type ResumoFinanceiro, type seriesDoPainel } from "../../lib/financeiro/painel";
 import { nomeDoMeio, ORDEM_DAS_VISOES, POR_PAGINA, VISOES, type Registros, type Visao } from "../../lib/financeiro/registros";
+import type { PagamentosDoTerminal } from "../../lib/financeiro/terminais";
 import { brl, brlCompacto, brlEixo, numero, percentual } from "../../lib/formato";
+import type { Leitura } from "../../lib/leitura-do-banco";
+import { PainelDasMaquininhas } from "./PainelDasMaquininhas";
 
 // Apresentação do financeiro real (#65), separada da leitura: recebe os números já somados no banco
 // e os registros da página. Sem acesso a dados aqui (a página confere sessão, permissão e escopo).
@@ -27,7 +30,7 @@ const diaDaData = (dia: string) => `${dia.slice(8, 10)}/${dia.slice(5, 7)}`;
 export type Nomes = { pessoa: (id: string) => string; loja: (id: string) => string };
 export type Ligacao = (mudanca: Partial<Record<"periodo" | "loja" | "ver" | "situacao" | "pagina", string | undefined>>) => string;
 
-export function ConteudoFinanceiro({ resumo: r, anterior: ra, series, porHora, periodo, conferenteDeCaixa, podeConciliar, visao, filtroSituacao, pagina, lista, nomes, daRede, href }: {
+export function ConteudoFinanceiro({ resumo: r, anterior: ra, series, porHora, periodo, conferenteDeCaixa, podeConciliar, visao, filtroSituacao, pagina, lista, nomes, daRede, href, maquininhas = null, nomeDaLoja }: {
   resumo: ResumoFinanceiro;
   anterior: ResumoFinanceiro;
   series: ReturnType<typeof seriesDoPainel>;
@@ -43,6 +46,9 @@ export function ConteudoFinanceiro({ resumo: r, anterior: ra, series, porHora, p
   nomes: Nomes;
   daRede: boolean;
   href: Ligacao;
+  /** REPORT-005b: os pagamentos por maquininha (nulo: o banco ainda não tem a leitura; o cartão não aparece). */
+  maquininhas?: Leitura<PagamentosDoTerminal[]> | null;
+  nomeDaLoja?: (id: string) => string;
 }) {
   const comparacao = PERIODOS_FINANCEIROS[periodo].comparacao;
   const variacao = (agora: number, antes: number, bomQuandoSobe = true) => {
@@ -112,6 +118,7 @@ export function ConteudoFinanceiro({ resumo: r, anterior: ra, series, porHora, p
     </div>
 
     <PainelDaConciliacao conciliacao={r.conciliacao} podeConciliar={podeConciliar} aConciliar={`${href({ ver: "pagamentos", situacao: "a_conciliar", pagina: undefined })}#registros`} />
+    {maquininhas && <PainelDasMaquininhas leitura={maquininhas} nomeDaLoja={nomeDaLoja ?? nomes.loja} daRede={daRede} aqui={href({})} />}
 
     <div className="grid gap-4 xl:grid-cols-3">
       <Cartao titulo="Movimentação dos caixas" subtitulo="Só dinheiro, na gaveta. Fundo e suprimento não são receita; sangria não é despesa" className="xl:col-span-2">
