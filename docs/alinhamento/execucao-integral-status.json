@@ -2,7 +2,7 @@
   "_leia": "Checkpoint do programa de execução integral (PR #67). Carregar ao retomar e seguir para o próximo item executável da fila; não reiniciar o projeto. Estados vêm de status-requisitos.json (fonte da rastreabilidade); este arquivo acrescenta lote, bloqueio externo e revisão.",
   "atualizado_em": "2026-11-15",
   "base": {
-    "main": "93966d8",
+    "main": "db1b8a0",
     "pacote": {
       "pr": 67,
       "branch": "docs/execucao-integral-20261110",
@@ -18,13 +18,12 @@
   },
   "publicado": {
     "homologacao": {
-      "commit": "93966d8",
+      "commit": "db1b8a0",
       "quando": "2026-11-15",
-      "conferido": "rodapé da tela de entrada (93966d8 · build 15/11/2026 16:47), /saude 200 e as rotas reais respondendo 307 para o login (inclusive /clientes/<id>/titular, /vendas e /caixa)"
+      "conferido": "rodapé da tela de entrada (db1b8a0 · build 15/11/2026 18:09), /saude 200, as rotas reais respondendo 307 para o login e /loja respondendo 200 sem login"
     },
     "falta_publicar": [
-      "ONLINE-a, a vitrine da loja online, publicado ao fim do lote",
-      "migration 20261115220000_loja_online_vitrine (ONLINE-a): aplicar no ora5g-dev pede o sim do proprietário; depois, LOJA_ONLINE_ORGANIZACAO na homologação"
+      "registro da migration do ONLINE-a aplicada no ora5g-dev (só documentos e nomes de arquivo), publicado ao fim do lote"
     ]
   },
   "contagem_dos_estados": {
@@ -1065,7 +1064,7 @@
       "titulo": "Site de aparelhos, acessórios e planos Ora Connect",
       "prioridade": "P1",
       "estado": "parcial",
-      "lote": "L13 loja online; ONLINE-a (15/11): a vitrine pública (\"reserve no site e retire na loja\", ADR-009)",
+      "lote": "L13 loja online; ONLINE-a (15/11): a vitrine pública (\"reserve no site e retire na loja\", ADR-009); migration do ONLINE-a aplicada no ora5g-dev e a loja online ligada na homologação em 15/11",
       "bloqueio_externo": "o endereço definitivo (D-024); os planos da Ora Connect dependem da Nogle",
       "revisado_codex": false,
       "homologado": false

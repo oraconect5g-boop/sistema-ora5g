@@ -37,7 +37,7 @@ Até 08/11 os três arquivos acima tinham versões `20261107120000`, `…130000`
 
 | Ambiente | Projeto | Situação |
 |---|---|---|
-| Desenvolvimento | `ora5g-dev` (`qgnbeuugklzzcevdzrvg`, São Paulo, plano gratuito) | 83 migrations aplicadas (de 07 a 15/11/2026), lista em `supabase/aplicadas-dev.json` |
+| Desenvolvimento | `ora5g-dev` (`qgnbeuugklzzcevdzrvg`, São Paulo, plano gratuito) | 84 migrations aplicadas (de 07 a 15/11/2026), lista em `supabase/aplicadas-dev.json` |
 | Homologação | a criar | — |
 | Produção | a criar | — |
 

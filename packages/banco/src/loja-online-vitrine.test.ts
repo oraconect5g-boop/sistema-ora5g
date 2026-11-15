@@ -1,4 +1,4 @@
-// Lote ONLINE-a (15/11/2026, ORA-ONLINE-001 em parte; migration 20261115220000_loja_online_vitrine): a vitrine da loja
+// Lote ONLINE-a (15/11/2026, ORA-ONLINE-001 em parte; migration 20261115210812_loja_online_vitrine): a vitrine da loja
 // online, que qualquer visitante vê sem login. Só o que o dono marcou para o site (produtos.publicar_online), ativo, e só
 // aparelhos e acessórios; de cada um, o preço do balcão em cada loja física ativa e se há estoque, sem custo, SKU, código
 // de barras, quantidade, IMEI ou outro dado interno. As fotos: só as do site, e o visitante alcança só essas.

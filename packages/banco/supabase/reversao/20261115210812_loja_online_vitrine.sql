@@ -1,4 +1,4 @@
--- Reversão de 20261115220000_loja_online_vitrine (lote ONLINE-a): a vitrine sai, o visitante volta a não alcançar nada
+-- Reversão de 20261115210812_loja_online_vitrine (lote ONLINE-a): a vitrine sai, o visitante volta a não alcançar nada
 -- no banco (nem o esquema privado) e as fotos voltam a ser só da equipe.
 drop policy if exists produtos_fotos_vitrine on storage.objects;
 drop function if exists public.loja_produto(uuid, uuid);
