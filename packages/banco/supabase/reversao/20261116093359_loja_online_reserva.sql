@@ -1,4 +1,4 @@
--- Reversão de 20261115230000_loja_online_reserva (lote ONLINE-b): as funções da reserva do site saem, a vitrine volta a
+-- Reversão de 20261116093359_loja_online_reserva (lote ONLINE-b): as funções da reserva do site saem, a vitrine volta a
 -- contar como reservada a reserva vencida ainda não liberada, e as tabelas das reservas do site saem (as reservas feitas
 -- se perdem: só em banco sem dados reais; as reservas de estoque de origem "online" ficam como estavam).
 drop function if exists public.loja_reservas_liberar_vencidas();

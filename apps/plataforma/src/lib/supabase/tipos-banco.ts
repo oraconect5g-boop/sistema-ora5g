@@ -1,5 +1,5 @@
 // ARQUIVO GERADO pelo Supabase (generate_typescript_types do projeto ora5g-dev) depois da
-// migration 20261115210812_loja_online_vitrine. Não edite à mão: gere de novo a cada
+// migration 20261116093359_loja_online_reserva. Não edite à mão: gere de novo a cada
 // migration aplicada (auditoria do Codex de 08/11, §7.2). O teste tipos-banco.test.ts confere
 // que funções e tabelas públicas daqui são as mesmas das migrations.
 export type Json =
@@ -3127,6 +3127,7 @@ export type Database = {
           item_serializado_id?: string | null
           motivo_cancelamento?: string | null
           nome: string
+          numero?: never
           organizacao_id: string
           preco_centavos: number
           situacao?: string
@@ -3149,6 +3150,7 @@ export type Database = {
           item_serializado_id?: string | null
           motivo_cancelamento?: string | null
           nome?: string
+          numero?: never
           organizacao_id?: string
           preco_centavos?: number
           situacao?: string
@@ -3185,6 +3187,20 @@ export type Database = {
             isOneToOne: false
             referencedRelation: "itens_serializados"
             referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "loja_reservas_unidade_id_organizacao_id_fkey"
+            columns: ["unidade_id", "organizacao_id"]
+            isOneToOne: false
+            referencedRelation: "unidades"
+            referencedColumns: ["id", "organizacao_id"]
+          },
+          {
+            foreignKeyName: "loja_reservas_variante_id_organizacao_id_fkey"
+            columns: ["variante_id", "organizacao_id"]
+            isOneToOne: false
+            referencedRelation: "variantes"
+            referencedColumns: ["id", "organizacao_id"]
           },
           {
             foreignKeyName: "loja_reservas_venda_id_fkey"

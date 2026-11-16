@@ -1,4 +1,4 @@
-// Lote ONLINE-b (15/11/2026, ORA-ONLINE-006 e ORA-ONLINE-004 em parte; migration 20261115230000_loja_online_reserva): a
+// Lote ONLINE-b (15/11/2026, ORA-ONLINE-006 e ORA-ONLINE-004 em parte; migration 20261116093359_loja_online_reserva (antes 20261115230000)): a
 // reserva do site com retirada na loja. O visitante reserva sem login uma unidade de produto do site por 24 horas (o
 // aparelho pelo IMEI); até 2 reservas ativas por WhatsApp e 20 por loja por hora. A loja vê as reservas dela, revela o
 // WhatsApp (na auditoria), cancela (devolve ao estoque) ou atende (abre a venda no PDV com a unidade reservada).

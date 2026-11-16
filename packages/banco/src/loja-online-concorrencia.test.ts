@@ -1,6 +1,6 @@
 // A reserva do site e a venda no balcão disputando os mesmos aparelhos, num PostgreSQL 17 de verdade (lote ONLINE-b;
 // ORA-ONLINE-006: "pedido online concorrente com loja não vende unidade duplicada"; migration
-// 20261115230000_loja_online_reserva). A reserva do site usa a mesma reserva de estoque do PDV, então:
+// 20261116093359_loja_online_reserva (antes 20261115230000)). A reserva do site usa a mesma reserva de estoque do PDV, então:
 //   * o site segura o aparelho e o balcão pede o mesmo: o balcão espera a trava e depois recebe OR002;
 //   * o balcão segura o aparelho e o site pede o produto: o site pula a unidade presa, espera só o saldo (que o balcão
 //     também trava) e fica com outra unidade livre;

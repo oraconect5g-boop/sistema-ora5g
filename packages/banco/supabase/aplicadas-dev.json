@@ -1,7 +1,7 @@
 {
   "projeto": "ora5g-dev (qgnbeuugklzzcevdzrvg)",
   "regra": "REV-018 / #17: o nome do arquivo usa a versão que o Supabase gravou no histórico (supabase_migrations.schema_migrations). Migration aplicada não muda mais: o teste src/migrations.test.ts compara o md5 do arquivo com o registrado aqui. Correção = migration nova.",
-  "conferido_em": "2026-11-15",
+  "conferido_em": "2026-11-16",
   "migrations": [
     { "versao": "20261107140352", "nome": "fundacao_acesso", "md5": "a8f160b848c860269fed9b3dced6aae5", "aplicada_em": "2026-11-07" },
     { "versao": "20261107140448", "nome": "indices_chaves_estrangeiras", "md5": "04fa57c5f31bc5cb8beb99ebfac7297e", "aplicada_em": "2026-11-07" },
@@ -86,6 +86,7 @@
     { "versao": "20261115181750", "nome": "confirmacao_recente", "md5": "b09293c9ee81508648d691dfdd8ddc81", "aplicada_em": "2026-11-15" },
     { "versao": "20261115181840", "nome": "carta_de_correcao", "md5": "d5223a7b2d5ec3deb79d6b47b4d25fc4", "aplicada_em": "2026-11-15" },
     { "versao": "20261115193611", "nome": "relatorio_do_titular", "md5": "66e40fbaeccd45fe28730cc83f41a802", "aplicada_em": "2026-11-15" },
-    { "versao": "20261115210812", "nome": "loja_online_vitrine", "md5": "427f2942c3d013a2a98b9ff5d9839fb2", "aplicada_em": "2026-11-15" }
+    { "versao": "20261115210812", "nome": "loja_online_vitrine", "md5": "427f2942c3d013a2a98b9ff5d9839fb2", "aplicada_em": "2026-11-15" },
+    { "versao": "20261116093359", "nome": "loja_online_reserva", "md5": "13da54cb51bec3e21c82f2e2d9eb6c09", "aplicada_em": "2026-11-16" }
   ]
 }
