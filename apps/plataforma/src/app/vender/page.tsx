@@ -14,6 +14,8 @@ import { FalhaDoServico, obterSessao } from "../../lib/acesso/sessao";
 import { centavosDoBanco } from "../../lib/dinheiro";
 import { brl } from "../../lib/formato";
 import { chaveDoCatalogo, textoDoParametro, type ValorDeParametro } from "../../lib/parametros";
+import { avisoDaReservaAtendida } from "../../lib/loja/reserva";
+import { soltarReservasDoSiteVencidas } from "../../lib/loja/reservas-vencidas";
 import { buscarNoCatalogo, filtroDoIdentificador, identificadorDigitado, termoDaBusca } from "../../lib/catalogo/busca";
 import { osDosItens, type OsDoItem } from "../../lib/vendas/os-dos-itens";
 import { ERROS_DA_VENDA } from "../../lib/vendas/regras";
@@ -32,7 +34,7 @@ const MEIOS_DA_LOJA = (Object.keys(MEIOS) as (keyof typeof MEIOS)[]).filter((m) 
 
 // PDV real (ADR-004): loja do turno, caixa aberto, carrinho com reserva, desconto com aprovação,
 // pagamento misto e conclusão no banco. O navegador nunca recebe custo nem calcula o total final.
-export default async function Vender({ searchParams }: { searchParams: Promise<{ q?: ValorDeParametro; erro?: ValorDeParametro; desconto?: ValorDeParametro; cancelada?: ValorDeParametro; os?: ValorDeParametro }> }) {
+export default async function Vender({ searchParams }: { searchParams: Promise<{ q?: ValorDeParametro; erro?: ValorDeParametro; desconto?: ValorDeParametro; cancelada?: ValorDeParametro; os?: ValorDeParametro; reserva?: ValorDeParametro; anunciado?: ValorDeParametro; atual?: ValorDeParametro }> }) {
   const parametros = await searchParams;
   const erro = chaveDoCatalogo(ERROS_DA_VENDA, parametros.erro);
   const busca = termoDaBusca(textoDoParametro(parametros.q)).slice(0, 40);
@@ -49,6 +51,8 @@ export default async function Vender({ searchParams }: { searchParams: Promise<{
     supabase.rpc("tem_permissao", { p_permissao: "cliente.buscar", p_unidade: unidade }),
     // Maquininhas ativas da loja (L7a): quem paga por maquininha escolhe qual foi usada.
     supabase.from("terminais").select("id, provedor, apelido, identificador").eq("unidade_id", unidade).eq("ativo", true).order("apelido"),
+    // ONLINE-b: o aparelho de uma reserva do site vencida volta livre antes de a tela ler o estoque (mais abaixo).
+    soltarReservasDoSiteVencidas(supabase),
   ]);
   if (pode.error || aprova.error || caixa.error || venda.error || buscaCliente.error || maquininhas.error) throw new FalhaDoServico("vender");
 
@@ -119,6 +123,11 @@ export default async function Vender({ searchParams }: { searchParams: Promise<{
       {erro && <Aviso tom="perigo">{ERROS_DA_VENDA[erro]}</Aviso>}
       {textoDoParametro(parametros.desconto) === "pedir" && <Aviso tom="aviso">Esse desconto passa do limite: peça a aprovação do gerente ou do dono.</Aviso>}
       {textoDoParametro(parametros.cancelada) === "1" && <Aviso tom="info">Venda cancelada. Os itens voltaram para o estoque da loja.</Aviso>}
+      {/* ONLINE-b: a reserva do site atendida abre a venda com a unidade reservada; a oferta anunciada obriga. */}
+      {textoDoParametro(parametros.reserva) === "atendida" && (() => {
+        const aviso = avisoDaReservaAtendida(textoDoParametro(parametros.anunciado), textoDoParametro(parametros.atual));
+        return <Aviso tom={aviso.tom}>{aviso.texto}</Aviso>;
+      })()}
       {textoDoParametro(parametros.os) === "no_carrinho" && <Aviso tom="sucesso">O conserto da OS entrou no carrinho pelo valor do orçamento aprovado. Conclua a venda; depois registre a entrega na OS.</Aviso>}
 
       {!caixa.data && (

@@ -18,6 +18,17 @@ test("o produto responde sem login; endereço que não é de produto é não enc
   expect(invalido?.status()).toBe(404);
 });
 
+// ONLINE-b: a página de reservar também é pública; desligada, avisa; sem a variação e a loja no endereço, não existe.
+test("a página de reservar responde sem login; desligada, avisa; sem a loja no endereço é não encontrada", async ({ page }) => {
+  const id = "00000000-0000-4000-8000-000000000001";
+  const reservar = await page.goto(`/loja/${id}/reservar?variante=${id}&loja=${id}`);
+  expect(reservar?.status()).toBe(200);
+  expect(new URL(page.url()).pathname).toBe(`/loja/${id}/reservar`);
+  await expect(page.getByText("A loja online ainda não está no ar")).toBeVisible();
+  const semLoja = await page.goto(`/loja/${id}/reservar?variante=${id}`);
+  expect(semLoja?.status()).toBe(404);
+});
+
 test("a vitrine cabe na tela do celular, sem rolagem lateral", async ({ page }) => {
   await page.setViewportSize({ width: 360, height: 780 });
   await page.goto("/loja");
