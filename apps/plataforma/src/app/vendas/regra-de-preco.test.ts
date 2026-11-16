@@ -1,5 +1,7 @@
 // A regra de preço de cada item na tela da venda e no carrinho do PDV (lote L6b), com sessão e Supabase
 // SIMULADOS: nenhuma credencial, nenhuma rede. Dados fictícios.
+// Desde o VEL-a o carrinho do PDV vem inteiro de public.pdv_tela (uma ida ao banco), já com a linha de preço de cada
+// item; a tela da venda concluída continua lendo as tabelas.
 import { isValidElement, type ReactElement } from "react";
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 
@@ -9,6 +11,9 @@ const VENDA = "00000000-0000-4000-8000-00000000d001";
 const CAPA = "00000000-0000-4000-8000-00000000e001";
 const CABO = "00000000-0000-4000-8000-00000000e002";
 const CAMPANHA = "00000000-0000-4000-8000-00000000f001";
+const CAIXA = "00000000-0000-4000-8000-00000000c001";
+const ITEM_CAPA = "00000000-0000-4000-8000-00000000a001";
+const ITEM_CABO = "00000000-0000-4000-8000-00000000a002";
 
 type Linha = Record<string, unknown>;
 const cenario = vi.hoisted(() => ({
@@ -16,6 +21,10 @@ const cenario = vi.hoisted(() => ({
   erros: {} as Record<string, { code: string }>,
   /** O banco ainda sem a migration do L6b: pedir a coluna preco_id dá erro de coluna ausente. */
   semColunaDaRegra: false,
+  /** A resposta de public.pdv_tela (a tela do PDV numa ida só). */
+  pdv: null as unknown,
+  /** As funções do banco chamadas, na ordem. */
+  rpcs: [] as string[],
 }));
 vi.mock("next/headers", () => ({ cookies: async () => ({ getAll: () => [], set: () => undefined }) }));
 vi.mock("next/navigation", () => ({
@@ -44,8 +53,12 @@ class Consulta {
 }
 const supabase = {
   from: (nome: string) => new Consulta(nome),
-  rpc: async (nome: string, argumentos: Record<string, unknown> = {}) =>
-    nome === "tem_permissao" ? { data: argumentos.p_permissao === "venda.registrar", error: null } : { data: null, error: { code: "PGRST202" } },
+  rpc: async (nome: string, argumentos: Record<string, unknown> = {}) => {
+    cenario.rpcs.push(nome);
+    if (nome === "tem_permissao") return { data: argumentos.p_permissao === "venda.registrar", error: null };
+    if (nome === "pdv_tela") return { data: cenario.pdv, error: null };
+    return { data: null, error: { code: "PGRST202" } };
+  },
   storage: { from: () => ({ createSignedUrls: async () => ({ data: [], error: null }) }) },
 };
 vi.mock("../../lib/acesso/sessao", () => ({
@@ -53,6 +66,8 @@ vi.mock("../../lib/acesso/sessao", () => ({
   obterSessao: async () => ({
     usuario: { id: EU },
     situacao: { usuario_ativo: true, sessao_no_turno: true, unidade_id: LOJA, unidade_nome: "Santa Cândida (teste)", turno_termina_em: "2026-11-13T23:00:00Z" },
+    // As permissões chegam com a sessão (public.molde_da_sessao): o PDV não pergunta de novo.
+    molde: { permissoes: new Set(["venda.registrar"]), nome: "Vendedora Teste", vinculos: [], pendencias: { aprovacoes: 0, notas: 0 } },
     supabase,
   }),
 }));
@@ -75,10 +90,24 @@ function texto(v: unknown): string {
   return pedacos.join(" ").replace(/\s+/g, " ");
 }
 
+/** Um item do carrinho como public.pdv_tela devolve: todos os campos do combinado, com a linha de preço junto. */
+const itemDoPdv = (mudar: Linha): Linha => ({
+  id: ITEM_CAPA, variante_id: CAPA, item_serializado_id: null, tipo: "acessorio", quantidade: 1, preco_unitario_centavos: 6_900, desconto_centavos: 0,
+  preco_id: null, os_id: null, variante: { sku: "ACE-0001", nome: "Capa de proteção" }, serial: null, preco: null, os: null, aprovacao: null, ...mudar,
+});
+const carrinho = async (itens: Linha[]) => {
+  cenario.pdv = { caixa: { id: CAIXA, aberto_em: "2026-11-13T12:00:00+00:00" }, venda: { id: VENDA, numero: 43, situacao: "rascunho" }, itens, terminais: [] };
+  cenario.rpcs = [];
+  return texto(await Vender({ searchParams: Promise.resolve({}) }) as ReactElement);
+};
+const CABO_NO_CARRINHO = itemDoPdv({ id: ITEM_CABO, variante_id: CABO, preco_unitario_centavos: 7_900, variante: { sku: "ACE-0002", nome: "Cabo USB-C" } });
+
 beforeEach(() => {
   vi.spyOn(console, "error").mockImplementation(() => undefined);
   cenario.erros = {};
   cenario.semColunaDaRegra = false;
+  cenario.pdv = null;
+  cenario.rpcs = [];
   cenario.tabelas = {
     vendas: [{ id: VENDA, numero: 42, situacao: "concluida", unidade_id: LOJA, vendedor_id: EU, cliente_nome: null, cliente_id: null, total_centavos: 14_800, subtotal_centavos: 14_800, desconto_centavos: 0, troco_centavos: 0, recebido_centavos: 14_800, a_receber_centavos: 0, devolvido_centavos: 0, concluida_em: "2026-11-13T15:00:00Z", cancelada_em: null, motivo_cancelamento: null }],
     venda_itens: [
@@ -108,25 +137,39 @@ describe("a regra de preço de cada item (L6b)", () => {
   });
 
   it("no carrinho do PDV: só a campanha aparece, com o nome e até quando", async () => {
-    cenario.tabelas.vendas = [{ id: VENDA, numero: 43, situacao: "rascunho", vendedor_id: EU, unidade_id: LOJA }];
-    cenario.tabelas.caixas = [{ id: "cx1", aberto_em: "2026-11-13T12:00:00Z" }];
-    const t = texto(await Vender({ searchParams: Promise.resolve({}) }) as ReactElement);
+    const t = await carrinho([
+      itemDoPdv({ preco_id: CAMPANHA, preco: { id: CAMPANHA, origem: "campanha", unidade_id: LOJA, motivo: "Semana da capa", fim: "2026-11-15T02:59:00+00:00" } }),
+      CABO_NO_CARRINHO,
+    ]);
+    expect(t).toContain("Capa de proteção");
+    expect(t).toContain("Cabo USB-C");
     expect(t).toContain("Campanha da loja: Semana da capa (até 14/11, 23:59)");
     expect(t).not.toContain("Regra de preço não registrada");
+    // VEL-a: a regra veio junto com o carrinho. A tela não lê a tabela de preços nem pergunta a permissão.
+    expect(cenario.rpcs).toEqual(expect.arrayContaining(["pdv_tela"]));
+    expect(cenario.rpcs).not.toContain("tem_permissao");
   });
 
-  it("banco ainda sem a migration: a venda e o carrinho seguem iguais, só sem a linha da regra", async () => {
+  it("no carrinho do PDV: preço da rede e regra que não veio junto não ganham linha (só a campanha é anunciada)", async () => {
+    const t = await carrinho([
+      itemDoPdv({ preco_id: CAMPANHA, preco: { id: CAMPANHA, origem: "manual", unidade_id: null, motivo: null, fim: null } }),
+      // A regra está gravada no item, mas a linha de preço não veio (quem pede não a lê mais): o item continua lá.
+      itemDoPdv({ id: ITEM_CABO, variante_id: CABO, preco_unitario_centavos: 7_900, variante: { sku: "ACE-0002", nome: "Cabo USB-C" }, preco_id: CAMPANHA, preco: null }),
+    ]);
+    expect(t).toContain("Capa de proteção");
+    expect(t).toContain("Cabo USB-C");
+    expect(t).not.toContain("Campanha");
+    expect(t).not.toContain("Regra de preço");
+    expect(vi.mocked(console.error).mock.calls).toEqual([]);
+  });
+
+  it("banco ainda sem a migration: a venda segue igual, só sem a linha da regra", async () => {
     cenario.semColunaDaRegra = true;
     const venda = texto(await Venda({ params: Promise.resolve({ id: VENDA }), searchParams: Promise.resolve({}) } as never) as ReactElement);
     expect(venda).toContain("Capa de proteção ACE-0001 · 1 un.");
     expect(venda).not.toContain("Regra de preço");
     expect(venda).not.toContain("Campanha");
     expect(venda).toContain("Total");
-    cenario.tabelas.vendas = [{ id: VENDA, numero: 43, situacao: "rascunho", vendedor_id: EU, unidade_id: LOJA }];
-    cenario.tabelas.caixas = [{ id: "cx1", aberto_em: "2026-11-13T12:00:00Z" }];
-    const carrinho = texto(await Vender({ searchParams: Promise.resolve({}) }) as ReactElement);
-    expect(carrinho).toContain("Capa de proteção");
-    expect(carrinho).not.toContain("Campanha");
     expect(vi.mocked(console.error).mock.calls).toEqual([]);
   });
 });

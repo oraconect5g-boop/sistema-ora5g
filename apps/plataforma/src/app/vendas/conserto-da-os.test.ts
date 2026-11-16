@@ -1,5 +1,7 @@
 // O conserto da OS no carrinho do PDV e no comprovante (lote L12c: ORA-OS-006), com sessão e Supabase SIMULADOS: nenhuma
 // credencial, nenhuma rede. Dados fictícios. As regras do banco estão em packages/banco/src/ordem-de-servico.test.ts.
+// Desde o VEL-a o carrinho do PDV vem inteiro de public.pdv_tela (uma ida ao banco), já com a OS de cada conserto; o
+// comprovante da venda concluída continua lendo as tabelas.
 import { isValidElement, type ReactElement } from "react";
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 
@@ -8,12 +10,18 @@ const LOJA = "00000000-0000-4000-8000-0000000000cc";
 const VENDA = "00000000-0000-4000-8000-00000000d101";
 const CONSERTO = "00000000-0000-4000-8000-00000000e111";
 const OS = "00000000-0000-4000-8000-00000000e112";
+const CAIXA = "00000000-0000-4000-8000-00000000c101";
+const ITEM = "00000000-0000-4000-8000-00000000a101";
 
 type Linha = Record<string, unknown>;
 const cenario = vi.hoisted(() => ({
   tabelas: {} as Record<string, Record<string, unknown>[]>,
   /** O banco ainda sem a migration do L12c: pedir a coluna os_id dá erro de coluna ausente. */
   semColunaDaOs: false,
+  /** A resposta de public.pdv_tela (a tela do PDV numa ida só). */
+  pdv: null as unknown,
+  /** As funções do banco chamadas, na ordem. */
+  rpcs: [] as string[],
 }));
 vi.mock("next/headers", () => ({ cookies: async () => ({ getAll: () => [], set: () => undefined }) }));
 vi.mock("next/navigation", () => ({
@@ -46,8 +54,12 @@ class Consulta {
 }
 const supabase = {
   from: (nome: string) => new Consulta(nome),
-  rpc: async (nome: string, argumentos: Record<string, unknown> = {}) =>
-    nome === "tem_permissao" ? { data: argumentos.p_permissao === "venda.registrar", error: null } : { data: null, error: { code: "PGRST202" } },
+  rpc: async (nome: string, argumentos: Record<string, unknown> = {}) => {
+    cenario.rpcs.push(nome);
+    if (nome === "tem_permissao") return { data: argumentos.p_permissao === "venda.registrar", error: null };
+    if (nome === "pdv_tela") return { data: cenario.pdv, error: null };
+    return { data: null, error: { code: "PGRST202" } };
+  },
   storage: { from: () => ({ createSignedUrls: async () => ({ data: [], error: null }) }) },
 };
 vi.mock("../../lib/acesso/sessao", () => ({
@@ -55,6 +67,8 @@ vi.mock("../../lib/acesso/sessao", () => ({
   obterSessao: async () => ({
     usuario: { id: EU },
     situacao: { usuario_ativo: true, sessao_no_turno: true, unidade_id: LOJA, unidade_nome: "Santa Cândida (teste)", turno_termina_em: "2026-11-14T23:00:00Z" },
+    // As permissões chegam com a sessão (public.molde_da_sessao): o PDV não pergunta de novo.
+    molde: { permissoes: new Set(["venda.registrar"]), nome: "Vendedora Teste", vinculos: [], pendencias: { aprovacoes: 0, notas: 0 } },
     supabase,
   }),
 }));
@@ -77,15 +91,26 @@ function texto(v: unknown): string {
   return pedacos.join(" ").replace(/\s+/g, " ");
 }
 const comprovante = async () => texto(await Venda({ params: Promise.resolve({ id: VENDA }), searchParams: Promise.resolve({}) } as never) as ReactElement);
-const carrinho = async (parametros: Record<string, string> = {}) => {
-  cenario.tabelas.vendas = [{ id: VENDA, numero: 43, situacao: "rascunho", vendedor_id: EU, unidade_id: LOJA }];
-  cenario.tabelas.caixas = [{ id: "cx1", aberto_em: "2026-11-14T12:00:00Z" }];
+/** O conserto no carrinho como public.pdv_tela devolve: o item com a OS dele junto (nula quando quem pede não a lê). */
+const carrinho = async (parametros: Record<string, string> = {}, os: Linha | null = { id: OS, numero: 7, situacao: "aberta" }) => {
+  cenario.pdv = {
+    caixa: { id: CAIXA, aberto_em: "2026-11-14T12:00:00+00:00" },
+    venda: { id: VENDA, numero: 43, situacao: "rascunho" },
+    itens: [{
+      id: ITEM, variante_id: CONSERTO, item_serializado_id: null, tipo: "servico", quantidade: 1, preco_unitario_centavos: 33_000, desconto_centavos: 0,
+      preco_id: null, os_id: OS, variante: { sku: "OS-CONSERTO", nome: "Conserto genérico" }, serial: null, preco: null, os, aprovacao: null,
+    }],
+    terminais: [],
+  };
+  cenario.rpcs = [];
   return texto(await Vender({ searchParams: Promise.resolve(parametros) }) as ReactElement);
 };
 
 beforeEach(() => {
   vi.spyOn(console, "error").mockImplementation(() => undefined);
   cenario.semColunaDaOs = false;
+  cenario.pdv = null;
+  cenario.rpcs = [];
   cenario.tabelas = {
     vendas: [{ id: VENDA, numero: 42, situacao: "concluida", unidade_id: LOJA, vendedor_id: EU, cliente_nome: null, cliente_id: null, total_centavos: 33_000, subtotal_centavos: 33_000, desconto_centavos: 0, troco_centavos: 0, recebido_centavos: 33_000, a_receber_centavos: 0, devolvido_centavos: 0, concluida_em: "2026-11-14T15:00:00Z", cancelada_em: null, motivo_cancelamento: null }],
     venda_itens: [{ id: "i1", venda_id: VENDA, variante_id: CONSERTO, item_serializado_id: null, tipo: "servico", quantidade: 1, preco_unitario_centavos: 33_000, desconto_centavos: 0, preco_id: null, os_id: OS }],
@@ -105,6 +130,17 @@ describe("o conserto da OS na venda (L12c)", () => {
     expect(t).toContain("valor do orçamento aprovado");
     expect(t).toContain("ver a OS");
     expect(t).toContain("R$ 330,00");
+    // VEL-a: a OS veio junto com o carrinho. A tela não lê a tabela das ordens nem pergunta a permissão.
+    expect(cenario.rpcs).toEqual(expect.arrayContaining(["pdv_tela"]));
+    expect(cenario.rpcs).not.toContain("tem_permissao");
+  });
+
+  it("no carrinho do PDV, OS que quem pede não lê mais: o conserto continua apontado, só sem o número", async () => {
+    const t = await carrinho({}, null);
+    expect(t).toContain("Conserto da OS nº —");
+    expect(t).toContain("ver a OS");
+    expect(t).not.toContain("Conserto genérico");
+    expect(vi.mocked(console.error).mock.calls).toEqual([]);
   });
 
   it("no comprovante: o item é o conserto da OS nº 7; concluída e a OS ainda aberta, lembra de registrar a entrega; entregue, não", async () => {
@@ -117,15 +153,12 @@ describe("o conserto da OS na venda (L12c)", () => {
     expect(t).not.toContain("Falta registrar a entrega");
   });
 
-  it("banco ainda sem a migration: a venda e o carrinho mostram o item pelo nome do produto, sem erro", async () => {
+  it("banco ainda sem a migration: o comprovante mostra o item pelo nome do produto, sem erro", async () => {
     cenario.semColunaDaOs = true;
     const venda = await comprovante();
     expect(venda).toContain("Conserto genérico");
     expect(venda).not.toContain("OS nº 7");
     expect(venda).toContain("Total");
-    const pdv = await carrinho();
-    expect(pdv).toContain("Conserto genérico");
-    expect(pdv).not.toContain("OS nº 7");
     expect(vi.mocked(console.error).mock.calls).toEqual([]);
   });
 });
