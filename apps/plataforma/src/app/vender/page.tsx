@@ -270,7 +270,7 @@ export default async function Vender({ searchParams }: { searchParams: Promise<{
                 )}
                 <div className="grid gap-2 sm:grid-cols-2">
                   <label className="text-xs font-medium">Nome do cliente (opcional)<input name="cliente_nome" className={campo} /></label>
-                  <label className="text-xs font-medium">E-mail do cliente (obrigatório na PayJoy)<input name="cliente_email" type="email" className={campo} /></label>
+                  <label className="text-xs font-medium">E-mail do cliente (opcional)<input name="cliente_email" type="email" className={campo} /></label>
                 </div>
                 <BotaoConfirmar className="w-full" enquanto="Confirmando a venda no sistema…" disabled={!caixa.data || venda.data.situacao === "aguardando_aprovacao"}>Concluir venda</BotaoConfirmar>
                 {!caixa.data && <p className="text-xs text-aviso">Abra o caixa para concluir.</p>}

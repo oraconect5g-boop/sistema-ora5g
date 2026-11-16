@@ -13,7 +13,7 @@ type Estado = { tipo: "lendo" } | { tipo: "ok"; itens: ItemDoSino[] } | { tipo: 
 // O sino do topo de todas as telas (G6, REPORT-007): o que espera a pessoa na loja do turno, a mesma leitura do Início.
 // Pede /api/pendencias depois que a tela abre (não atrasa nenhuma tela) e lembra a resposta por um minuto nesta aba;
 // abrir o sino lê de novo. Falha de leitura aparece como falha, nunca como zero.
-export function SinoDePendencias({ unidade }: { unidade: string }) {
+export function SinoDePendencias({ unidade, usuario }: { unidade: string; usuario: string }) {
   const [estado, setEstado] = useState<Estado>({ tipo: "lendo" });
 
   // Releitura ao abrir: se falhar, fica o que já foi lido (menos de um minuto); na primeira leitura, a falha aparece.
@@ -27,21 +27,21 @@ export function SinoDePendencias({ unidade }: { unidade: string }) {
         return;
       }
       setEstado({ tipo: "ok", itens });
-      try { sessionStorage.setItem(CHAVE_DO_SINO, lembrar(unidade, itens, Date.now())); } catch { /* aba sem armazenamento: lê de novo na próxima tela */ }
+      try { sessionStorage.setItem(CHAVE_DO_SINO, lembrar({ usuario, unidade }, itens, Date.now())); } catch { /* aba sem armazenamento: lê de novo na próxima tela */ }
     } catch {
       falhou();
     }
-  }, [unidade]);
+  }, [unidade, usuario]);
 
   useEffect(() => {
     const comecar = () => {
       let lembrada: ItemDoSino[] | null = null;
-      try { lembrada = lembrancaDoSino(sessionStorage.getItem(CHAVE_DO_SINO), unidade, Date.now()); } catch { /* sem armazenamento */ }
+      try { lembrada = lembrancaDoSino(sessionStorage.getItem(CHAVE_DO_SINO), { usuario, unidade }, Date.now()); } catch { /* sem armazenamento */ }
       if (lembrada) setEstado({ tipo: "ok", itens: lembrada });
       else void ler();
     };
     comecar();
-  }, [unidade, ler]);
+  }, [unidade, usuario, ler]);
 
   const emblema = estado.tipo === "ok" ? emblemaDoSino(estado.itens) : null;
   const rotulo = estado.tipo === "falha" ? "O que espera você: não deu para ler" : emblema ? `O que espera você: ${emblema}` : "O que espera você";

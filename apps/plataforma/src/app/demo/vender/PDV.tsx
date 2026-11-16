@@ -48,7 +48,6 @@ export function PDV({ dados, itemInicial }: { dados: DadosPdv; itemInicial?: Ata
   const [buscaCliente, setBuscaCliente] = useState("");
   const [resultadoCliente, setResultadoCliente] = useState<"nao_encontrado" | "incompleto" | null>(null);
   const [cadastro, setCadastro] = useState<{ aberto: boolean; nome: string; email: string; erro: string }>({ aberto: false, nome: "", email: "", erro: "" });
-  const [emailPayjoy, setEmailPayjoy] = useState("");
   const [busca, setBusca] = useState("");
   const [escolhendoImei, setEscolhendoImei] = useState<string | null>(null);
   const [imeiDigitado, setImeiDigitado] = useState("");
@@ -122,8 +121,7 @@ export function PDV({ dados, itemInicial }: { dados: DadosPdv; itemInicial?: Ata
   const temErros = falhaNoTotal || analise.some((a) => a.erros.length > 0);
 
   const pagamentosDominio: Pagamento[] = pagamentos.map((p) => ({ meio: p.meio, valor: lerSeguro(p.valorTexto) ?? -1, entrada: MEIOS[p.meio].financeira ? (lerSeguro(p.entradaTexto) ?? -1) : undefined }));
-  const emailDaVenda = cliente?.email ?? (emailValido(emailPayjoy) ? emailPayjoy.trim() : null);
-  const conferencia = conferirPagamentos(totais.total, pagamentosDominio, { email: emailDaVenda });
+  const conferencia = conferirPagamentos(totais.total, pagamentosDominio);
   const semPagamento = totais.total === 0 && pagamentos.length === 0;
 
   const assinatura = assinaturaDoCarrinho(itens, taxaDaVenda);
@@ -227,7 +225,6 @@ export function PDV({ dados, itemInicial }: { dados: DadosPdv; itemInicial?: Ata
     setCliente(null);
     setBuscaCliente("");
     setResultadoCliente(null);
-    setEmailPayjoy("");
     setAprovacao(null);
     setBusca("");
     setEscolhendoImei(null);
@@ -464,12 +461,6 @@ export function PDV({ dados, itemInicial }: { dados: DadosPdv; itemInicial?: Ata
                 </li>
               ))}
             </ul>
-          )}
-          {pagamentos.some((p) => p.meio === "payjoy") && !cliente?.email && (
-            <label className="mt-3 block text-sm font-medium">
-              E-mail do cliente (obrigatório na PayJoy)
-              <input value={emailPayjoy} onChange={(e) => setEmailPayjoy(e.target.value)} type="email" autoComplete="off" className={`${classeCampo} mt-1 w-full border-borda`} />
-            </label>
           )}
 
           <div aria-live="polite" className="mt-3 space-y-1 text-sm">

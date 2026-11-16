@@ -1,5 +1,5 @@
 // O destinatário fiscal íntegro (lote INTEG-a; diagnóstico integral de 16/11/2026; migration
-// 20261116120000_destinatario_fiscal_integro). As provas REV-PROMPT-001 (#87) e REV-PROMPT-002 (#88) da revisão do Codex
+// 20261116095825_destinatario_fiscal_integro, antes 20261116120000). As provas REV-PROMPT-001 (#87) e REV-PROMPT-002 (#88) da revisão do Codex
 // (PR #97, docs/analises/evidencias/2026-11-14-execucao-prompt/provas.test.ts) viram regressões do comportamento certo:
 //   * #87: corrigir a nota não apaga mais o endereço, o cliente nem a versão do cadastro guardados; a nota no nome do
 //     cliente se corrige com os dados atuais do cadastro (o CPF não se digita), e a nota digitada à mão segue igual;

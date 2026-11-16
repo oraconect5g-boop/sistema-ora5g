@@ -9,7 +9,7 @@ export const ERROS_DA_VENDA = {
   chave: "Essa ação já foi feita com outro conteúdo. Recarregue a tela.",
   preco_mudou: "O preço de um item mudou. Tire e coloque o item de novo para ver o preço novo.",
   sem_caixa: "Abra o seu caixa antes de concluir a venda.",
-  pagamento: "O pagamento não confere: some os valores, informe o comprovante de cartão e Pix e o e-mail na PayJoy.",
+  pagamento: "O pagamento não confere: some os valores e informe o comprovante de cartão e Pix.",
   aprovacao: "Há desconto sem aprovação válida. Peça a aprovação ou tire o desconto.",
   sem_permissao: "Você não tem permissão para isso.",
   nao_encontrado: "Não encontrado (talvez já tenha sido alterado).",

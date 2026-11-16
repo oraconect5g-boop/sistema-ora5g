@@ -180,14 +180,15 @@ describe("B — desconto e aprovação", () => {
 });
 
 describe("E — financiamento", () => {
-  it("PayJoy: exige e-mail; entrada no caixa; restante a receber da financeira; juros fora", async () => {
+  it("PayJoy: e-mail opcional (16/11, a DEC-U30 substituída); entrada no caixa; restante a receber da financeira; juros fora", async () => {
     const ana = await naLoja(ids.vendedorA, ids.lojaA);
     const caixa = await abrirCaixa(ana);
     const venda = await novaVenda(ana);
     await adicionar(ana, venda, cat.aparelho, itens.a1);
     const payjoy = [{ meio: "payjoy", valor: 149_900, entrada: 30_000, meio_entrada: "dinheiro" }];
-    expect(await errou(ana, CONCLUIR, [venda, JSON.stringify(payjoy), "{}", chave("c")])).toBe("OR009");
-    const r = await concluir(ana, venda, payjoy, { nome: "Cliente Teste", email: "cliente@teste.invalid" });
+    // Sem e-mail a venda fecha (antes: OR009 "PayJoy exige o e-mail do cliente"); o e-mail digitado continua conferido.
+    expect(await errou(ana, CONCLUIR, [venda, JSON.stringify(payjoy), JSON.stringify({ email: "sem-arroba" }), chave("c")])).toBe("22023");
+    const r = await concluir(ana, venda, payjoy, { nome: "Cliente Teste" });
     expect(r).toMatchObject({ total: 149_900, recebido: 30_000, a_receber: 119_900 });
     const receber = (await db.query<{ devedor: string; valor_centavos: string; vencimento: string | null }>("select devedor, valor_centavos, vencimento from public.contas_a_receber where venda_id = $1", [venda])).rows;
     expect(receber.map((x) => [x.devedor, Number(x.valor_centavos), x.vencimento])).toEqual([["payjoy", 119_900, null]]);

@@ -1,4 +1,4 @@
--- Reversão de 20261116120000_destinatario_fiscal_integro (lote INTEG-a): as quatro funções voltam às versões de antes e o
+-- Reversão de 20261116095825_destinatario_fiscal_integro (lote INTEG-a): as quatro funções voltam às versões de antes e o
 -- cliente do pedido sai (os pedidos feitos depois perdem esse dado; o envio volta a usar o cliente da venda de agora).
 
 -- public.notas_solicitar: de volta à de 20261114145952_notas_destinatario_completo.sql.

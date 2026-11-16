@@ -1256,3 +1256,25 @@ Programa de execução integral (PR #67; checkpoint em `docs/alinhamento/EXECUCA
   2. a ordem das travas (a unidade, depois o saldo) e o teste de concorrência;
   3. o atender na mesma transação e o aviso do preço;
   4. a saída das reservas vencidas só do site, sem esperar trava.
+
+## 16/11/2026 — Lote INTEG-a: integridade, primeira parte (#87, #88, #96, #99 e o e-mail da PayJoy)
+
+- **Origem:** o diagnóstico integral de 16/11 (branch `docs/diagnostico-integral-supabase-20261116`, `398dfa0`, sobre `5468d9e`), seção 3 do prompt: reproduzir e corrigir #87, #88, #98, #96, #95 e #99 e reconciliar o e-mail da PayJoy. Este lote fecha #87, #88, #96, #99 e a PayJoy; #98 (fotos) e #95 (importação) vão no INTEG-b. Base: `main` em `ad6beb4` (ONLINE-b; publicado em 16/11). Branch `fix/INTEG-a-destinatario-fiscal`.
+- **O que foi feito:**
+  - migration `20261116095825_destinatario_fiscal_integro`: `notas_pedidos.cliente_id` (o cliente da venda quando a nota foi pedida; os pedidos de antes recebem o do destinatário guardado ou o da venda); `notas_solicitar` guarda-o; `notas_corrigir` reescrita (com `{"cliente"}` guarda de novo o destinatário inteiro pelo cadastro atual; com nome/documento digitados, só na nota que não é do cadastro); `nota_enviar_whatsapp` manda só ao cliente do pedido e só se a venda ainda é dele; `whatsapp_worker_reivindicar` confere o destinatário de novo antes de expedir;
+  - migration `20261116095941_email_opcional_na_payjoy`: `concluir_venda` sem a recusa da PayJoy sem e-mail (o e-mail digitado continua conferido e guardado); no domínio (`conferirPagamentos`), no PDV ("E-mail do cliente (opcional)") e na demonstração, igual;
+  - plataforma: "Usar o cadastro atualizado" na correção da nota; o botão do WhatsApp só quando o cliente da venda é o da nota, com o motivo quando não é; a lembrança do sino da pessoa e da loja, apagada na tela de entrada (`EsquecerLembrancas`); `/saude/versao` com o commit inteiro, a build e o ambiente;
+  - publicação: `conferir-publicacao.sh` reescrito (pasta, serviço local e domínio com o mesmo commit inteiro e o ambiente; reversão declarada por `ORA_SHA_ESPERADO`); `publicar.sh` volta para a anterior se a nova não servir o commit dela e reprova se a conferência completa falhar.
+- **Aplicação no `ora5g-dev`:** em 16/11, pela autorização do proprietário de 16/11 para publicar os lotes na homologação (a migration do lote antes da publicação), pelo conector do Supabase com o texto inteiro de cada arquivo (md5 `508b1c15eae36b9b7875cbbd9530ddee` e `35f35ae2320912e9c32e1aa58e1ba252`, iguais aos gravados). Antes de redefinir, o corpo de cada função em vigor foi conferido igual ao da última migration que a definiu. Conferido depois, sem gravar: Conferido depois, sem gravar: os 5 corpos de função (notas_solicitar, notas_corrigir, nota_enviar_whatsapp, whatsapp_worker_reivindicar e concluir_venda) iguais aos dos arquivos (md5); as permissões de antes mantidas (as quatro da loja só para o logado; a do worker só para o serviço); os pedidos de nota existentes no ora5g-dev: nenhum (o preenchimento do cliente do pedido não teve o que mudar); os verificadores do Supabase sem nenhuma mudança (a chave nova do cliente do pedido já nasce com índice); tipos gerados de novo pelo Supabase, iguais aos escritos à mão.
+- **Testes:**
+  - as provas do Codex (PR #97) viraram regressões do comportamento certo: `packages/banco/src/destinatario-fiscal.test.ts` (5: REV-PROMPT-001 e 002 e os casos vizinhos), `apps/plataforma/src/lib/inicio/sino.test.ts` (REV-PROMPT-003) e `packages/config/src/conferir-publicacao.test.ts` (4, a prova do verificador com git e curl simulados);
+  - atualizados os que esperavam o comportamento antigo: `whatsapp-nota.test.ts` (a mensagem da nota pedida sem cliente), `vendas.test.ts` e `pagamento.test.ts` (a PayJoy sem e-mail fecha), `nota-whatsapp.test.ts` (o botão e a correção pelo cadastro).
+- **Limite declarado:**
+  1. a nota pedida sem o cliente na venda não vai pelo WhatsApp, nem se ligarem um cliente depois (para não mandar a nota de um a outro);
+  2. a PayJoy continua registrada à mão: a API dela depende do contrato (a pendência do e-mail fica para o adaptador, se o contrato exigir);
+  3. #98 e #95 ficam para o INTEG-b; o CI do GitHub segue vermelho até o #95.
+- **Pedido ao Codex:** conferir:
+  1. que a correção nunca perde o destinatário e que o CPF não se digita na nota do cliente;
+  2. as três barreiras do #88 (o pedido, a tela e o worker) e o preenchimento dos pedidos de antes;
+  3. o conferidor contra as suas provas (resposta antiga, fora do ar, domínio antigo e reversão declarada);
+  4. que nenhum outro fluxo dependia do e-mail da PayJoy.

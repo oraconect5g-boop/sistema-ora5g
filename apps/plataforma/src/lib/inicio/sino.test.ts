@@ -43,13 +43,26 @@ describe("emblema e lembrança", () => {
 
   it("a lembrança vale um minuto, só para a mesma loja, e passa pela mesma leitura", () => {
     const agora = 1_800_000_000_000;
-    const guardada = lembrar(LOJA, [item()], agora);
-    expect(lembrancaDoSino(guardada, LOJA, agora + 30_000)).toHaveLength(1);
-    expect(lembrancaDoSino(guardada, LOJA, agora + VALIDADE_DO_SINO_MS + 1)).toBeNull();
-    expect(lembrancaDoSino(guardada, OUTRA, agora + 1)).toBeNull();
-    expect(lembrancaDoSino(guardada, LOJA, agora - 1)).toBeNull();
-    expect(lembrancaDoSino(lembrar(LOJA, [item({ href: "https://x" })], agora), LOJA, agora)).toBeNull();
-    expect(lembrancaDoSino("{quebrado", LOJA, agora)).toBeNull();
-    expect(lembrancaDoSino(null, LOJA, agora)).toBeNull();
+    const eu = { usuario: "u-ana", unidade: LOJA };
+    const guardada = lembrar(eu, [item()], agora);
+    expect(lembrancaDoSino(guardada, eu, agora + 30_000)).toHaveLength(1);
+    expect(lembrancaDoSino(guardada, eu, agora + VALIDADE_DO_SINO_MS + 1)).toBeNull();
+    expect(lembrancaDoSino(guardada, { ...eu, unidade: OUTRA }, agora + 1)).toBeNull();
+    expect(lembrancaDoSino(guardada, eu, agora - 1)).toBeNull();
+    expect(lembrancaDoSino(lembrar(eu, [item({ href: "https://x" })], agora), eu, agora)).toBeNull();
+    expect(lembrancaDoSino("{quebrado", eu, agora)).toBeNull();
+    expect(lembrancaDoSino(null, eu, agora)).toBeNull();
+    // A lembrança no formato de antes (só a loja) não vale mais.
+    expect(lembrancaDoSino(JSON.stringify({ unidade: LOJA, em: agora, itens: [item()] }), eu, agora)).toBeNull();
+  });
+
+  it("#96 (REV-PROMPT-003): a lembrança do dono não é lida pela vendedora que entra depois na mesma aba e na mesma loja", () => {
+    const agora = 1_000_000;
+    const itensDoDono = [item({ rotulo: "Bônus para aprovar", href: "/metas/fechamento", quantidade: 7 })];
+    const armazenamentoDaAba = lembrar({ usuario: "u-dono", unidade: LOJA }, itensDoDono, agora);
+    // A prova do Codex devolvia os itens do dono para a vendedora; agora não devolve nada (ela lê de novo do servidor).
+    expect(lembrancaDoSino(armazenamentoDaAba, { usuario: "u-vendedora", unidade: LOJA }, agora + 15_000)).toBeNull();
+    expect(lembrancaDoSino(armazenamentoDaAba, { usuario: "u-dono", unidade: LOJA }, agora + 15_000)).toEqual(itensDoDono);
+    expect(lembrancaDoSino(armazenamentoDaAba, { usuario: "", unidade: LOJA }, agora + 15_000)).toBeNull();
   });
 });
