@@ -103,17 +103,20 @@ describe("limpeza das fotos enviadas sem registro (CAT-011b)", () => {
     }
     expect(await recusa(gerente, LIMPAR, [[]])).toBe("22023");
     expect(await recusa(gerente, LIMPAR, [Array.from({ length: 501 }, () => caminho())])).toBe("22023");
-    expect(Number((await db.query<{ n: string }>("select count(*)::text as n from public.auditoria where acao = 'storage.fotos_sem_registro_limpas'")).rows[0]?.n)).toBe(0);
+    expect(Number((await db.query<{ n: string }>("select count(*)::text as n from public.auditoria where acao = 'storage.fotos_sem_registro_limpeza_pedida'")).rows[0]?.n)).toBe(0);
     // repetido no pedido conta uma vez
     const r = await valor<{ caminhos: string[] }>(gerente, LIMPAR, [[...soltos, soltos[0]]]);
     expect(r.caminhos).toEqual([...soltos].sort());
     const auditoria = await db.query<{ usuario_id: string; organizacao_id: string; depois: { quantos: number; caminhos: string[] }; motivo: string }>(
-      "select usuario_id, organizacao_id, depois, motivo from public.auditoria where acao = 'storage.fotos_sem_registro_limpas'");
-    expect(auditoria.rows).toEqual([{ usuario_id: ids.gerenteB, organizacao_id: ids.organizacao, depois: { quantos: 2, caminhos: [...soltos].sort() }, motivo: "Limpeza das fotos enviadas sem registro" }]);
+      "select usuario_id, organizacao_id, depois, motivo from public.auditoria where acao = 'storage.fotos_sem_registro_limpeza_pedida'");
+    expect(auditoria.rows).toEqual([{ usuario_id: ids.gerenteB, organizacao_id: ids.organizacao, depois: { quantos: 2, caminhos: [...soltos].sort() }, motivo: "Limpeza das fotos enviadas sem registro: separadas para apagar" }]);
+    // #98: a separação fica gravada (o registro passa a recusar estes arquivos e o Storage passa a deixar apagá-los).
+    expect((await db.query("select caminho, tentativas, removida_em from privado.fotos_em_limpeza order by caminho")).rows)
+      .toEqual([...soltos].sort().map((c) => ({ caminho: c, tentativas: 1, removida_em: null })));
     expect(await recusa(await naLoja(ids.vendedorA, ids.lojaA), LIMPAR, [soltos])).toBe("42501");
   });
 
-  it("a regra do Storage: quem envia fotos apaga só o arquivo da rede dele, sem registro e de mais de um dia", async () => {
+  it("a regra do Storage: quem envia fotos apaga só o arquivo separado da rede dele, sem registro e de mais de um dia", async () => {
     const gerente = await naLoja(ids.gerenteB, ids.lojaB);
     const solto = caminho();
     await arquivo(solto, 30);
@@ -127,9 +130,40 @@ describe("limpeza das fotos enviadas sem registro (CAT-011b)", () => {
     // o vendedor não apaga nada, nem o arquivo solto
     expect(await apagar(await naLoja(ids.vendedorA, ids.lojaA), solto)).toBe(0);
     expect([await apagar(gerente, comFoto), await apagar(gerente, novo), await apagar(gerente, deFora)]).toEqual([0, 0, 0]);
+    // #98: sem a separação, nem o arquivo solto se apaga direto; separado, apaga.
+    expect(await apagar(gerente, solto)).toBe(0);
+    await valor(gerente, LIMPAR, [[solto]]);
     expect(await apagar(gerente, solto)).toBe(1);
     const restam = (await db.query<{ name: string }>("select name from storage.objects where bucket_id = 'produtos' order by name")).rows.map((l) => l.name);
     expect(restam).toEqual(expect.arrayContaining([comFoto, novo, deFora]));
     expect(restam).not.toContain(solto);
+  });
+
+  it("#98: o arquivo separado não vira foto; a conclusão confere o que saiu do Storage e o que ficou pendente; separar de novo tenta outra vez", async () => {
+    const gerente = await naLoja(ids.gerenteB, ids.lojaB);
+    const [a, b] = [caminho(), caminho()];
+    for (const c of [a, b]) await arquivo(c, 30);
+    await valor(gerente, LIMPAR, [[a, b]]);
+    // O registro de um arquivo separado é recusado (envie a foto de novo).
+    expect(await tentar(gerente, "select public.registrar_foto($1, null, $2, 1200, 1200, false) as v", [cat.produtoCapa, a]))
+      .toMatchObject({ codigo: "OR004", mensagem: expect.stringContaining("separado para a limpeza") });
+    // O Storage apagou só o "a" (o "b" falhou na chamada HTTP): a conclusão marca o removido e devolve o pendente.
+    await comoUsuario(db, gerente, () => db.query("delete from storage.objects where bucket_id = 'produtos' and name = $1", [a]), { criarSessao: false });
+    const CONCLUIR = "select public.fotos_limpeza_concluir($1::text[]) as v";
+    expect(await valor(gerente, CONCLUIR, [[a, b, caminho()]])).toEqual({ removidos: [a], pendentes: [b] });
+    expect((await db.query("select caminho, removida_em is not null as removida from privado.fotos_em_limpeza order by caminho")).rows)
+      .toEqual([{ caminho: a, removida: true }, { caminho: b, removida: false }].sort((x, y) => x.caminho.localeCompare(y.caminho)));
+    expect((await db.query<{ depois: { caminhos: string[] }; motivo: string }>("select depois, motivo from public.auditoria where acao = 'storage.fotos_sem_registro_removidas'")).rows)
+      .toEqual([{ depois: { quantos: 1, caminhos: [a] }, motivo: "Limpeza das fotos enviadas sem registro: conferido que o arquivo saiu do Storage" }]);
+    // A nova tentativa: separar de novo o pendente conta mais uma tentativa; apagar e concluir fecham.
+    await valor(gerente, LIMPAR, [[b]]);
+    expect((await db.query("select tentativas from privado.fotos_em_limpeza where caminho = $1", [b])).rows).toEqual([{ tentativas: 2 }]);
+    await comoUsuario(db, gerente, () => db.query("delete from storage.objects where bucket_id = 'produtos' and name = $1", [b]), { criarSessao: false });
+    expect(await valor(gerente, CONCLUIR, [[b]])).toEqual({ removidos: [b], pendentes: [] });
+    // Nada mais aberto para concluir: recusa (P0002), sem marcar de novo.
+    expect(await recusa(gerente, CONCLUIR, [[b]])).toBe("P0002");
+    // Quem não envia fotos não conclui; o pedido vazio ou grande demais é recusado.
+    expect(await recusa(await naLoja(ids.vendedorA, ids.lojaA), CONCLUIR, [[b]])).toBe("42501");
+    expect(await recusa(gerente, CONCLUIR, [[]])).toBe("22023");
   });
 });
