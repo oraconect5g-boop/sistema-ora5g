@@ -72,6 +72,42 @@ test("o botão de ver a senha mostra e esconde o que foi digitado", async ({ pag
   await expect(senha).toHaveAttribute("type", "password");
 });
 
+// VEL-a (ORA-QUAL-010, ORA-POS-002): retorno imediato no botão de envio, no navegador de verdade. O formulário de
+// entrada é o único de ação que abre sem login; os botões das outras telas usam o mesmo componente (BotaoDeEnvio),
+// e o teste retorno-imediato.test.ts confere que nenhum formulário ficou de fora.
+test("o botão de entrar trava e avisa enquanto o pedido está no servidor", async ({ page }) => {
+  test.skip(!supabaseConfigurado, "o formulário só aparece com o login configurado");
+  await page.goto("/entrar");
+  const senha = page.getByLabel("Senha", { exact: true });
+  // a página já responde a toque (o estado do envio só existe depois disso)
+  await page.getByRole("button", { name: "Mostrar a senha" }).click();
+  await expect(senha).toHaveAttribute("type", "text");
+  // Campos vazios: o servidor recusa sem consultar o Supabase, então nenhuma tentativa de login é contada.
+  // O navegador não deixaria enviar vazio; aqui a trava dele sai para o pedido chegar ao servidor.
+  await page.locator("form input[required]").evaluateAll((campos) => campos.forEach((campo) => campo.removeAttribute("required")));
+
+  // segura o pedido no caminho, para a espera durar o bastante para ser conferida
+  let soltar = () => {};
+  const segurado = new Promise<void>((resolver) => { soltar = resolver; });
+  await page.route("**/entrar", async (rota) => {
+    if (rota.request().method() !== "POST") return rota.fallback();
+    await segurado;
+    await rota.continue();
+  });
+
+  await page.getByRole("button", { name: "Entrar na plataforma" }).click();
+  const esperando = page.getByRole("button", { name: "Entrando…" });
+  await expect(esperando).toBeDisabled();
+  await expect(esperando).toHaveAttribute("aria-busy", "true");
+  await expect(page.getByRole("button", { name: "Entrar na plataforma" })).toHaveCount(0);
+
+  soltar();
+  await expect(page.getByText("Preencha e-mail e senha.")).toBeVisible();
+  const deVolta = page.getByRole("button", { name: "Entrar na plataforma" });
+  await expect(deVolta).toBeEnabled();
+  await expect(deVolta).toHaveAttribute("aria-busy", "false");
+});
+
 test("endereço que não existe mostra a página 404 em português", async ({ page }) => {
   const resposta = await page.goto("/nao-existe-esta-pagina");
   expect(resposta?.status()).toBe(404);

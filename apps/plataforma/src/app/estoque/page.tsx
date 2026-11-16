@@ -2,6 +2,7 @@ import { randomUUID } from "node:crypto";
 
 import { ArrowRightLeft, Boxes, CheckCircle2, ClipboardCheck, History, Search } from "lucide-react";
 import type { Metadata } from "next";
+import Form from "next/form";
 import Link from "next/link";
 
 import { MoldeReal } from "../../componentes/MoldeReal";
@@ -278,10 +279,11 @@ export default async function Estoque({ searchParams }: { searchParams: Promise<
     <MoldeReal sessao={sessao}>
       <TituloPagina sobretitulo={situacao.unidade_nome} titulo="Estoque" />
       {abas}
-      <form className="flex flex-wrap items-end gap-2" role="search">
-        <label className="min-w-0 flex-1 text-sm font-medium">Produto, marca, SKU, código de barras, IMEI ou ICCID<input name="q" defaultValue={busca} autoComplete="off" placeholder="IMEI inteiro, ou o final dele (4 dígitos ou mais)" className={campo} /></label>
-        <Botao type="submit"><Search aria-hidden className="size-4" /> Buscar</Botao>
-      </form>
+      {/* next/form: a busca troca só o endereço, sem recarregar; a tela fica até o resultado chegar. */}
+      <Form action="/estoque" prefetch={false} className="flex flex-wrap items-end gap-2" role="search">
+        <label className="min-w-0 flex-1 text-sm font-medium">Produto, marca, SKU, código de barras, IMEI ou ICCID<input key={busca} name="q" defaultValue={busca} autoComplete="off" placeholder="IMEI inteiro, ou o final dele (4 dígitos ou mais)" className={campo} /></label>
+        <Botao type="submit" enquanto="Buscando…"><Search aria-hidden className="size-4" /> Buscar</Botao>
+      </Form>
 
       {identificador && (
         item.data ? (

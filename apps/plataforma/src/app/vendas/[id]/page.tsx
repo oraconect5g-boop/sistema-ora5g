@@ -8,6 +8,7 @@ import { notFound } from "next/navigation";
 import { MEIOS } from "@ora5g/dominio";
 import { chaveEmGrupos, MODELOS_DE_NOTA, SITUACOES_DA_NOTA, type SituacaoDaNota } from "@ora5g/dominio/fiscal";
 
+import { FormularioDeArquivo } from "../../../componentes/FormularioDeArquivo";
 import { MoldeReal } from "../../../componentes/MoldeReal";
 import { Aviso, Botao, Cartao, Selo } from "../../../componentes/ui";
 import { ehUuid } from "../../../lib/acesso/regras";
@@ -288,11 +289,11 @@ export default async function Comprovante({ params, searchParams }: { params: Pr
                     </div>
                   )}
                   {aprovaNota.data && (
-                    <form action={`/notas/${notaEmitida.id}/documentos`} method="post" encType="multipart/form-data" className="grid gap-2 sm:grid-cols-3">
+                    <FormularioDeArquivo action={`/notas/${notaEmitida.id}/documentos`} className="grid gap-2 sm:grid-cols-3">
                       <label className="text-xs font-medium sm:col-span-2">PDF ou XML da nota (até 5 MB)<input name="arquivo" type="file" required accept=".pdf,.xml,application/pdf,application/xml,text/xml" className={`${campo} py-2`} /></label>
                       <label className="text-xs font-medium">Protocolo (opcional, 15 dígitos)<input name="protocolo" inputMode="numeric" maxLength={20} defaultValue={protocolo ?? ""} className={campo} /></label>
-                      <div><Botao type="submit" tamanho="sm" variante="secundario">Guardar documento</Botao></div>
-                    </form>
+                      <div><Botao type="submit" tamanho="sm" variante="secundario" enquanto="Enviando o arquivo…">Guardar documento</Botao></div>
+                    </FormularioDeArquivo>
                   )}
                 </div>
               )}
@@ -392,7 +393,7 @@ export default async function Comprovante({ params, searchParams }: { params: Pr
               })}
             </ul>
           )}
-          <form action={`/vendas/${v.id}/anexos`} method="post" encType="multipart/form-data" className="mt-3 grid gap-2 sm:grid-cols-2">
+          <FormularioDeArquivo action={`/vendas/${v.id}/anexos`} className="mt-3 grid gap-2 sm:grid-cols-2">
             <label className="text-xs font-medium">Tipo do documento
               <select name="tipo" required className={campo}>
                 {Object.entries(TIPOS_DE_ANEXO).map(([valor, rotulo]) => <option key={valor} value={valor}>{rotulo}</option>)}
@@ -402,8 +403,8 @@ export default async function Comprovante({ params, searchParams }: { params: Pr
             <label className="text-xs font-medium sm:col-span-2">Arquivo: PDF ou foto, até 5 MB
               <input type="file" name="arquivo" required accept="application/pdf,image/jpeg,image/png,image/webp" className={`${campo} py-2`} />
             </label>
-            <div><Botao type="submit" tamanho="sm">Guardar o documento</Botao></div>
-          </form>
+            <div><Botao type="submit" tamanho="sm" enquanto="Enviando o arquivo…">Guardar o documento</Botao></div>
+          </FormularioDeArquivo>
         </Cartao>
       )}
       {devolucoes.data.length > 0 && (

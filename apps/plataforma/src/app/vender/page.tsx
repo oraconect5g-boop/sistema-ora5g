@@ -2,6 +2,7 @@ import { randomUUID } from "node:crypto";
 
 import { ScanLine, ShoppingCart, Wallet } from "lucide-react";
 import type { Metadata } from "next";
+import Form from "next/form";
 import Link from "next/link";
 
 import { MEIOS } from "@ora5g/dominio";
@@ -130,21 +131,24 @@ export default async function Vender({ searchParams }: { searchParams: Promise<{
           <form action={abrirCaixa} className="flex flex-wrap items-end gap-2">
             <input type="hidden" name="chave" value={randomUUID()} />
             <label className="text-sm font-medium">Fundo de troco (R$)<input name="fundo" inputMode="decimal" required defaultValue="0,00" className={campo} /></label>
-            <Botao type="submit">Abrir caixa</Botao>
+            <Botao type="submit" enquanto="Abrindo o caixa…">Abrir caixa</Botao>
           </form>
         </Cartao>
       )}
 
       {!venda ? (
-        <form action={novaVenda}><input type="hidden" name="chave" value={randomUUID()} /><Botao type="submit" tamanho="lg" className="w-full"><ShoppingCart aria-hidden className="size-5" /> Nova venda</Botao></form>
+        <form action={novaVenda}><input type="hidden" name="chave" value={randomUUID()} /><Botao type="submit" tamanho="lg" className="w-full" enquanto="Abrindo a venda…"><ShoppingCart aria-hidden className="size-5" /> Nova venda</Botao></form>
       ) : (
         <>
           <Cartao titulo={`Venda nº ${venda.numero}`} subtitulo={venda.situacao === "aguardando_aprovacao" ? "Aguardando aprovação de desconto" : "Em andamento"} icone={ShoppingCart}>
-            <form className="flex flex-wrap items-end gap-2" role="search">
-              <label className="min-w-0 flex-1 text-sm font-medium">Produto, marca, SKU, código de barras ou IMEI/ICCID<input id="busca-pdv" name="q" defaultValue={busca} className={campo} autoComplete="off" placeholder="Ex.: galaxy, APA-0002 ou o final do IMEI" /></label>
+            {/* A busca troca só o endereço (?q=) sem recarregar a página (next/form): o carrinho fica na tela enquanto os
+                resultados chegam e o botão avisa que está buscando. A chave do campo devolve a ele o termo que o servidor
+                usou: depois de pôr um item a tela volta sem busca e o campo volta vazio, pronto para o próximo produto. */}
+            <Form action="/vender" prefetch={false} className="flex flex-wrap items-end gap-2" role="search">
+              <label className="min-w-0 flex-1 text-sm font-medium">Produto, marca, SKU, código de barras ou IMEI/ICCID<input key={busca} id="busca-pdv" name="q" defaultValue={busca} className={campo} autoComplete="off" placeholder="Ex.: galaxy, APA-0002 ou o final do IMEI" /></label>
               <LerCodigo alvo="busca-pdv" />
-              <button type="submit" className="min-h-11 rounded-botao bg-acao px-4 text-sm font-semibold text-white"><ScanLine aria-hidden className="inline size-4" /> Buscar</button>
-            </form>
+              <Botao type="submit" enquanto="Buscando…"><ScanLine aria-hidden className="size-4" /> Buscar</Botao>
+            </Form>
             {busca && resultados.length === 0 && <p className="mt-3 text-sm text-suave">Nada encontrado nesta loja.</p>}
             <ul className="mt-3 space-y-3">
               {[...new Set(resultados)].map((id) => {
@@ -167,7 +171,7 @@ export default async function Vender({ searchParams }: { searchParams: Promise<{
                             {itensLivres.map((i) => (
                               <form key={i.id} action={adicionarItem}>
                                 <input type="hidden" name="venda" value={venda.id} /><input type="hidden" name="variante" value={id} /><input type="hidden" name="item" value={i.id} /><input type="hidden" name="chave" value={randomUUID()} />
-                                <Botao type="submit" tamanho="sm" variante="secundario" className="numeros">{tipo === "chip" ? "ICCID" : "IMEI"} {final(i.imei ?? i.iccid)}</Botao>
+                                <Botao type="submit" tamanho="sm" variante="secundario" className="numeros" enquanto="Adicionando…">{tipo === "chip" ? "ICCID" : "IMEI"} {final(i.imei ?? i.iccid)}</Botao>
                               </form>
                             ))}
                           </div>
@@ -176,7 +180,7 @@ export default async function Vender({ searchParams }: { searchParams: Promise<{
                         <form action={adicionarItem} className="mt-2 flex items-end gap-2">
                           <input type="hidden" name="venda" value={venda.id} /><input type="hidden" name="variante" value={id} /><input type="hidden" name="chave" value={randomUUID()} />
                           <label className="text-xs font-medium">Qtd.<input name="quantidade" type="number" min={1} max={99} defaultValue={1} className={`${campo} w-20`} /></label>
-                          <Botao type="submit" tamanho="sm">Adicionar</Botao>
+                          <Botao type="submit" tamanho="sm" enquanto="Adicionando…">Adicionar</Botao>
                         </form>
                       ))}
                     </div>
@@ -207,9 +211,9 @@ export default async function Vender({ searchParams }: { searchParams: Promise<{
                         <form action={aplicarDesconto} className="flex items-end gap-2">
                           <input type="hidden" name="item" value={i.id} />
                           <label className="text-xs font-medium">Desconto (R$)<input name="desconto" inputMode="decimal" required defaultValue={(desconto / 100).toFixed(2).replace(".", ",")} className={`${campo} w-28`} /></label>
-                          <Botao type="submit" tamanho="sm" variante="secundario">Aplicar</Botao>
+                          <Botao type="submit" tamanho="sm" variante="secundario" enquanto="Aplicando…">Aplicar</Botao>
                         </form>
-                        <form action={removerItem}><input type="hidden" name="item" value={i.id} /><Botao type="submit" tamanho="sm" variante="fantasma">Tirar</Botao></form>
+                        <form action={removerItem}><input type="hidden" name="item" value={i.id} /><Botao type="submit" tamanho="sm" variante="fantasma" enquanto="Tirando…">Tirar</Botao></form>
                         {aprovacao === "pendente" && <Selo tom="aviso" ponto>aprovação pendente</Selo>}
                         {aprovacao === "aprovada" && <Selo tom="sucesso" ponto>desconto aprovado</Selo>}
                         {aprovacao === "negada" && <Selo tom="perigo" ponto>desconto negado</Selo>}
@@ -219,7 +223,7 @@ export default async function Vender({ searchParams }: { searchParams: Promise<{
                           <form action={pedirAprovacao} className="mt-2 flex flex-wrap items-end gap-2">
                             <input type="hidden" name="item" value={i.id} />
                             <label className="min-w-0 flex-1 text-xs font-medium">Motivo<input name="motivo" required minLength={3} className={campo} /></label>
-                            <Botao type="submit" tamanho="sm">Pedir</Botao>
+                            <Botao type="submit" tamanho="sm" enquanto="Pedindo…">Pedir</Botao>
                           </form>
                         </details>
                       )}
@@ -275,7 +279,7 @@ export default async function Vender({ searchParams }: { searchParams: Promise<{
             <form action={cancelarVenda} className="mt-2 flex flex-wrap items-end gap-2">
               <input type="hidden" name="venda" value={venda.id} />
               <label className="min-w-0 flex-1 text-xs font-medium">Motivo<input name="motivo" required minLength={3} className={campo} /></label>
-              <Botao type="submit" tamanho="sm" variante="perigo">Cancelar venda</Botao>
+              <Botao type="submit" tamanho="sm" variante="perigo" enquanto="Cancelando…">Cancelar venda</Botao>
             </form>
           </details>
         </>

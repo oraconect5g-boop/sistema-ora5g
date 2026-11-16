@@ -2,6 +2,7 @@ import { randomUUID } from "node:crypto";
 
 import { Boxes, CircleDollarSign, FileUp, PackagePlus, Pencil, Plus, ShieldAlert, Tag, Tags } from "lucide-react";
 import type { Metadata } from "next";
+import Form from "next/form";
 import Link from "next/link";
 
 import { MoldeReal } from "../../componentes/MoldeReal";
@@ -126,13 +127,14 @@ export default async function Produtos({ searchParams }: {
       {erro && <Aviso tom="perigo" className="mt-4">{ERROS_DO_CADASTRO[erro]}</Aviso>}
       {codigos === "falha" && <Aviso tom="perigo" className="mt-4">Não deu para ler os códigos de outros canais agora; o resto do cadastro está certo. Tente de novo em instantes.</Aviso>}
 
-      <form className="mt-4 flex flex-wrap items-end gap-2" role="search">
+      {/* next/form: a busca troca só o endereço, sem recarregar; a lista fica na tela até o resultado chegar. */}
+      <Form action="/produtos" prefetch={false} className="mt-4 flex flex-wrap items-end gap-2" role="search">
         <label className="min-w-0 flex-1 text-sm font-medium">{codigos === null ? "Buscar por nome, marca, SKU ou código de barras" : "Buscar por nome, marca, SKU, código de barras ou código de outro canal (Rein, anúncio)"}
-          <input name="q" defaultValue={busca} className={campo} />
+          <input key={busca} name="q" defaultValue={busca} className={campo} />
         </label>
-        <label className="flex min-h-11 items-center gap-2 text-sm"><input type="checkbox" name="inativos" value="1" defaultChecked={comInativos} className="size-4 accent-acao" /> incluir inativos</label>
-        <Botao type="submit">Buscar</Botao>
-      </form>
+        <label className="flex min-h-11 items-center gap-2 text-sm"><input key={String(comInativos)} type="checkbox" name="inativos" value="1" defaultChecked={comInativos} className="size-4 accent-acao" /> incluir inativos</label>
+        <Botao type="submit" enquanto="Buscando…">Buscar</Botao>
+      </Form>
 
       <details id="novo-produto" className="mt-4 rounded-cartao border border-borda/80 bg-superficie shadow-cartao" open={textoDoParametro(parametros.form) === "novo"}>
         <summary className="flex min-h-12 cursor-pointer list-none items-center gap-3 px-4 py-3 font-semibold sm:px-6">

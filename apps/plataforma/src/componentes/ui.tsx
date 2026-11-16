@@ -1,8 +1,10 @@
-import { ArrowDownRight, ArrowUpRight, CircleCheck, Info, OctagonAlert, Search, TriangleAlert, type LucideIcon } from "lucide-react";
+import { ArrowDownRight, ArrowUpRight, CircleCheck, Info, LoaderCircle, OctagonAlert, Search, TriangleAlert, type LucideIcon } from "lucide-react";
+import Form from "next/form";
 import Link from "next/link";
 import type { ComponentProps, ReactNode } from "react";
 
 import { iniciais, variacao as textoVariacao } from "../lib/formato";
+import { BotaoDeEnvio } from "./BotaoDeEnvio";
 import { Sparkline } from "./graficos";
 
 // Componentes visuais básicos (docs/08: KpiCard, Badge, EmptyState, NoPermissionState...).
@@ -96,8 +98,19 @@ export type VarianteBotao = keyof typeof BOTOES;
 export const classeBotao = (variante: VarianteBotao = "primario", tamanho: keyof typeof TAMANHOS = "md", extra = "") =>
   `inline-flex items-center justify-center gap-2 rounded-botao font-semibold transition-colors disabled:cursor-not-allowed disabled:opacity-50 ${TAMANHOS[tamanho]} ${BOTOES[variante]} ${extra}`;
 
-export function Botao({ variante = "primario", tamanho = "md", className = "", ...props }: ComponentProps<"button"> & { variante?: VarianteBotao; tamanho?: keyof typeof TAMANHOS }) {
-  return <button type="button" className={classeBotao(variante, tamanho, className)} {...props} />;
+/**
+ * O botão do sistema. Com type="submit" ele é o botão de envio (BotaoDeEnvio): enquanto o formulário está no servidor
+ * fica travado e mostra o texto de `enquanto` ("Aguarde…" quando a tela não escolhe outro).
+ */
+export function Botao({ variante = "primario", tamanho = "md", className = "", enquanto, type = "button", ...props }: ComponentProps<"button"> & {
+  variante?: VarianteBotao;
+  tamanho?: keyof typeof TAMANHOS;
+  /** Só para type="submit": o que o botão mostra enquanto o pedido está no servidor. */
+  enquanto?: ReactNode;
+}) {
+  const classe = classeBotao(variante, tamanho, className);
+  if (type === "submit") return <BotaoDeEnvio className={classe} enquanto={enquanto} {...props} />;
+  return <button type={type} className={classe} {...props} />;
 }
 
 export function BotaoLink({ variante = "primario", tamanho = "md", className = "", ...props }: ComponentProps<typeof Link> & { variante?: VarianteBotao; tamanho?: keyof typeof TAMANHOS }) {
@@ -363,7 +376,11 @@ export function FiltroSegmentado({ opcoes, rotulo }: { opcoes: readonly { href: 
   );
 }
 
-/** Campo de busca que envia por GET (funciona sem JavaScript). */
+/**
+ * Campo de busca que envia por GET. Com o next/form a busca troca só o endereço, sem recarregar a página: o que está na
+ * tela fica até o resultado chegar e o botão gira enquanto isso. Sem JavaScript continua um formulário GET comum.
+ * A chave do campo devolve a ele o termo que o servidor usou (um link que limpa o filtro também limpa o campo).
+ */
 export function FormBusca({ acao, nome = "busca", valor, rotulo, dica, ocultos = {} }: {
   acao: string;
   nome?: string;
@@ -373,13 +390,13 @@ export function FormBusca({ acao, nome = "busca", valor, rotulo, dica, ocultos =
   ocultos?: Record<string, string | undefined>;
 }) {
   return (
-    <form action={acao} method="get" role="search" className="flex min-w-0 flex-1 gap-2 sm:max-w-md">
+    <Form action={acao} prefetch={false} role="search" className="flex min-w-0 flex-1 gap-2 sm:max-w-md">
       {Object.entries(ocultos).map(([k, v]) => (v ? <input key={k} type="hidden" name={k} value={v} /> : null))}
       <label className="sr-only" htmlFor={`campo-${nome}`}>{rotulo}</label>
-      <input id={`campo-${nome}`} name={nome} defaultValue={valor} placeholder={dica} autoComplete="off" className="min-h-11 min-w-0 flex-1 rounded-full border border-borda bg-white px-4 text-sm outline-none focus:border-acao focus:ring-2 focus:ring-acao/20" />
-      <button type="submit" aria-label="Buscar" title="Buscar" className="grid size-11 shrink-0 place-items-center rounded-full bg-acao text-white transition-colors hover:bg-acao-escura">
+      <input key={valor ?? ""} id={`campo-${nome}`} name={nome} defaultValue={valor} placeholder={dica} autoComplete="off" className="min-h-11 min-w-0 flex-1 rounded-full border border-borda bg-white px-4 text-sm outline-none focus:border-acao focus:ring-2 focus:ring-acao/20" />
+      <BotaoDeEnvio aria-label="Buscar" title="Buscar" enquanto={<LoaderCircle aria-hidden className="size-5 animate-spin" />} className="grid size-11 shrink-0 place-items-center rounded-full bg-acao text-white transition-colors hover:bg-acao-escura disabled:cursor-not-allowed disabled:opacity-70">
         <Search aria-hidden className="size-5" />
-      </button>
-    </form>
+      </BotaoDeEnvio>
+    </Form>
   );
 }

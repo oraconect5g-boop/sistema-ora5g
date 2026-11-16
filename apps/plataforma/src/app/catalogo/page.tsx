@@ -1,9 +1,10 @@
 import { ImageOff, Images, Package } from "lucide-react";
 import type { Metadata } from "next";
+import Form from "next/form";
 import Link from "next/link";
 
 import { MoldeReal } from "../../componentes/MoldeReal";
-import { Aviso, Cartao, Selo, TituloPagina } from "../../componentes/ui";
+import { Aviso, Botao, Cartao, Selo, TituloPagina } from "../../componentes/ui";
 import { FalhaDoServico, obterSessao } from "../../lib/acesso/sessao";
 import { buscarNoCatalogo, termoDaBusca } from "../../lib/catalogo/busca";
 import { nomeCurtoDoTipo } from "../../lib/catalogo/cadastro";
@@ -84,13 +85,14 @@ export default async function Catalogo({ searchParams }: { searchParams: Promise
       <TituloPagina sobretitulo={situacao.unidade_nome} titulo="Catálogo e fotos" />
       <p className="text-sm text-suave">Loja do turno: <strong>{situacao.unidade_nome}</strong>. Toque na foto para ampliar.</p>
 
-      <form className="mt-4 flex flex-wrap gap-2" role="search">
+      {/* next/form: a busca troca só o endereço, sem recarregar; a lista fica na tela até o resultado chegar. */}
+      <Form action="/catalogo" prefetch={false} className="mt-4 flex flex-wrap gap-2" role="search">
         <label className="min-w-0 flex-1 text-sm font-medium">Buscar por nome, marca, SKU ou código de barras
-          <input name="q" defaultValue={busca} className="mt-1 min-h-11 w-full rounded-botao border border-borda bg-white px-3 text-sm outline-none focus:border-acao focus:ring-2 focus:ring-acao/20" />
+          <input key={busca} name="q" defaultValue={busca} className="mt-1 min-h-11 w-full rounded-botao border border-borda bg-white px-3 text-sm outline-none focus:border-acao focus:ring-2 focus:ring-acao/20" />
         </label>
         {soPendentes && <input type="hidden" name="pendentes" value="1" />}
-        <button type="submit" className="mt-6 min-h-11 rounded-botao bg-acao px-4 text-sm font-semibold text-white">Buscar</button>
-      </form>
+        <Botao type="submit" enquanto="Buscando…" className="mt-6">Buscar</Botao>
+      </Form>
       <p className="mt-3 flex flex-wrap items-center gap-2 text-sm">
         {pendencias.data.length > 0 ? (
           <><ImageOff aria-hidden className="size-4 text-aviso" /> {pendencias.data.length} {pendencias.data.length === 1 ? "foto pendente" : "fotos pendentes"} ·{" "}

@@ -9,7 +9,9 @@ import { horaDoFimDoTurno, PAPEIS, type Papel, type SituacaoSessao } from "../li
 import type { obterSessao } from "../lib/acesso/sessao";
 import { iniciais } from "../lib/formato";
 import { textoDaVersao } from "../lib/versao";
+import { IrParaAncora } from "./ancora";
 import { AvisoDeRede } from "./AvisoDeRede";
+import { BotaoDeEnvio } from "./BotaoDeEnvio";
 import { classeDaAcaoDoTrilho } from "./LinkNavegacao";
 import { Marca } from "./Marca";
 import { MenuSuspenso } from "./MenuSuspenso";
@@ -63,14 +65,14 @@ export function MoldeReal({ sessao, children, largura = "max-w-3xl" }: {
     <>
       <Link href="/escolher-loja" className={classeDaAcaoDoTrilho}><Store aria-hidden className="size-4" /> Trocar de loja</Link>
       <Link href="/conta/senha" className={classeDaAcaoDoTrilho}><KeyRound aria-hidden className="size-4" /> Trocar minha senha</Link>
-      <form action={sair}><button type="submit" className={classeDaAcaoDoTrilho}><LogOut aria-hidden className="size-4" /> Sair</button></form>
+      <form action={sair}><BotaoDeEnvio className={`${classeDaAcaoDoTrilho} disabled:opacity-60`} enquanto={<><LogOut aria-hidden className="size-4" /> Saindo…</>}><LogOut aria-hidden className="size-4" /> Sair</BotaoDeEnvio></form>
     </>
   );
   const contaESaida = (
     <div className="space-y-1 border-t border-borda pt-2">
       <Link href="/escolher-loja" className={classeDoItemDoMenu}><Store aria-hidden className="size-4 text-suave" /> Trocar de loja</Link>
       <Link href="/conta/senha" className={classeDoItemDoMenu}><KeyRound aria-hidden className="size-4 text-suave" /> Trocar minha senha</Link>
-      <form action={sair}><button type="submit" className={classeDoItemDoMenu}><LogOut aria-hidden className="size-4 text-suave" /> Sair</button></form>
+      <form action={sair}><BotaoDeEnvio className={`${classeDoItemDoMenu} disabled:opacity-60`} enquanto={<><LogOut aria-hidden className="size-4 text-suave" /> Saindo…</>}><LogOut aria-hidden className="size-4 text-suave" /> Sair</BotaoDeEnvio></form>
     </div>
   );
 
@@ -130,6 +132,8 @@ export function MoldeReal({ sessao, children, largura = "max-w-3xl" }: {
       <main id="conteudo" className={`mx-auto ${largura} space-y-4 px-4 pb-32 pt-3 sm:px-6 sm:pt-5 lg:pb-10`}>
         {children}
         <RodapeVersao />
+        {/* Âncora do endereço (#saidas, #lancar…) quando o esqueleto apareceu antes desta tela: ver ancora.tsx. */}
+        <IrParaAncora />
       </main>
 
       <NavegacaoCelular atalhos={menu.atalhos.map(item)} grupos={gruposDoMais} pessoa={pessoa} papel={papel} loja={loja} rodape={contaESaida} versao={versao} />

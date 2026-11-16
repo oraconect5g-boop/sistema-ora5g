@@ -1,6 +1,6 @@
 import { Gift, History, Info } from "lucide-react";
 
-import { Cartao, Celula, classeBotao, EstadoVazio, Tabela } from "../../../componentes/ui";
+import { Botao, Cartao, Celula, EstadoVazio, Tabela } from "../../../componentes/ui";
 import { MAXIMO_DE_FAIXAS, regraNoMes, resumoDasFaixas, valorDaFaixaNoCampo, type VersaoDaRegra } from "../../../lib/bonus/regras";
 import { MEDIDAS, nomeDoMes, ORDEM_DAS_MEDIDAS } from "../../../lib/metas/painel";
 import { definirBonus } from "./acoes";
@@ -50,7 +50,7 @@ export function Formulario({ versoes, desde }: { versoes: readonly VersaoDaRegra
           Motivo (para mudar ou retirar uma regra que já vale)
           <input name="motivo" maxLength={300} placeholder="Ex.: campanha de Natal" autoComplete="off" className={`mt-1 ${campo}`} />
         </label>
-        <button type="submit" className={classeBotao("primario", "md", "w-full sm:w-auto sm:justify-self-start")}>Salvar as regras</button>
+        <Botao type="submit" className="w-full sm:w-auto sm:justify-self-start" enquanto="Salvando…">Salvar as regras</Botao>
       </form>
     </Cartao>
   );

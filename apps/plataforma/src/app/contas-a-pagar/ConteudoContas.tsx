@@ -2,6 +2,7 @@ import { randomUUID } from "node:crypto";
 
 import { CalendarClock, CalendarRange, CircleCheck, Layers, PackagePlus, Paperclip, ReceiptText, Store, Tags, TriangleAlert } from "lucide-react";
 
+import { FormularioDeArquivo } from "../../componentes/FormularioDeArquivo";
 import { BarrasHorizontais, Colunas, TabelaDoGrafico } from "../../componentes/graficos";
 import { EstadoDoPainel, NOTA } from "../../componentes/paineis-de-vendas";
 import { Botao, Cartao, EstadoVazio, FiltroSegmentado, Indicador, Selo } from "../../componentes/ui";
@@ -428,7 +429,7 @@ function DocumentosDaConta({ c, documentos, visao, filtro }: { c: ContaAPagar; d
             </ul>
           )}
         {podeGuardar && (
-          <form action={`/contas-a-pagar/${c.id}/documentos`} method="post" encType="multipart/form-data" className="mt-3 grid gap-2 border-t border-borda pt-3 sm:grid-cols-4">
+          <FormularioDeArquivo action={`/contas-a-pagar/${c.id}/documentos`} className="mt-3 grid gap-2 border-t border-borda pt-3 sm:grid-cols-4">
             <Volta visao={visao} filtro={filtro} />
             <label className={rotulo}>Tipo do documento
               <select name="tipo" required defaultValue={c.situacao === "paga" ? "comprovante_pagamento" : "boleto"} className={campo}>
@@ -439,8 +440,8 @@ function DocumentosDaConta({ c, documentos, visao, filtro }: { c: ContaAPagar; d
             <label className={`${rotulo} sm:col-span-2`}>Arquivo: PDF ou foto, até 5 MB
               <input type="file" name="arquivo" required accept="application/pdf,image/jpeg,image/png,image/webp" className={`${campo} py-2`} />
             </label>
-            <div className="sm:col-span-4"><Botao type="submit" tamanho="sm">Guardar o documento</Botao></div>
-          </form>
+            <div className="sm:col-span-4"><Botao type="submit" tamanho="sm" enquanto="Enviando o arquivo…">Guardar o documento</Botao></div>
+          </FormularioDeArquivo>
         )}
         {c.situacao !== "cancelada" && !podeGuardar && <p className={`mt-3 ${NOTA}`}>{`A conta já tem ${MAXIMO_DE_DOCUMENTOS} documentos: retire um errado para guardar outro.`}</p>}
       </div>

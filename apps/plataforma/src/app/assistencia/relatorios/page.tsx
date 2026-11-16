@@ -1,5 +1,6 @@
 import { ArrowLeft } from "lucide-react";
 import type { Metadata } from "next";
+import Form from "next/form";
 import Link from "next/link";
 
 import { MoldeReal } from "../../../componentes/MoldeReal";
@@ -41,16 +42,16 @@ export default async function RelatoriosDaAssistencia({ searchParams }: { search
       <div className="nao-imprimir mt-4 flex flex-wrap items-end gap-3">
         <FiltroSegmentado rotulo="Período" opcoes={(Object.keys(PERIODOS) as Periodo[]).map((p) => ({ href: endereco(p), rotulo: PERIODOS[p], ativo: p === periodo }))} />
         {leitura.estado === "ok" && leitura.dados.lojas.length > 1 && (
-          <form className="flex items-end gap-2" action="/assistencia/relatorios">
+          <Form action="/assistencia/relatorios" prefetch={false} className="flex items-end gap-2">
             <input type="hidden" name="periodo" value={periodo} />
             <label className="text-sm font-medium">Loja
-              <select name="loja" defaultValue={unidade ?? ""} className={campo}>
+              <select key={unidade ?? ""} name="loja" defaultValue={unidade ?? ""} className={campo}>
                 <option value="">Todas as lojas</option>
                 {leitura.dados.lojas.map((l) => <option key={l.id} value={l.id}>{l.nome}</option>)}
               </select>
             </label>
-            <Botao type="submit" tamanho="sm" variante="secundario">Ver</Botao>
-          </form>
+            <Botao type="submit" tamanho="sm" variante="secundario" enquanto="Carregando…">Ver</Botao>
+          </Form>
         )}
       </div>
       {leitura.estado === "ok"

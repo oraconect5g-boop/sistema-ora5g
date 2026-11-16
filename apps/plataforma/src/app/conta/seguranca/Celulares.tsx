@@ -35,7 +35,7 @@ export function PassoDoQr({ qr, segredo, codigo, aoDigitar, aoConfirmar, aoCance
         <input value={codigo} onChange={(e) => aoDigitar(e.target.value)} inputMode="numeric" autoComplete="one-time-code" maxLength={7} placeholder="000000" className={`${campo} numeros text-center text-lg tracking-[0.35em]`} />
       </label>
       <div className="flex flex-wrap gap-2">
-        <Botao type="button" onClick={aoConfirmar} disabled={ocupado}>Confirmar e ligar</Botao>
+        <Botao type="button" onClick={aoConfirmar} disabled={ocupado}>{ocupado ? "Aguarde…" : "Confirmar e ligar"}</Botao>
         <Botao type="button" variante="secundario" onClick={aoCancelar} disabled={ocupado}>Cancelar</Botao>
       </div>
     </div>
@@ -122,7 +122,7 @@ export function CadastrarCelular({ supabaseUrl, chavePublica, primeiro }: Config
           <label className="block text-sm font-medium">Nome do celular (para reconhecer depois)
             <input value={nome} onChange={(e) => setNome(e.target.value)} maxLength={40} className={campo} />
           </label>
-          <Botao type="button" onClick={comecar} disabled={ocupado} className="self-end">{primeiro ? "Ligar" : "Cadastrar"}</Botao>
+          <Botao type="button" onClick={comecar} disabled={ocupado} className="self-end">{ocupado ? "Aguarde…" : primeiro ? "Ligar" : "Cadastrar"}</Botao>
         </div>
       )}
       {!primeiro && passo.tipo === "inicio" && <p className="mt-2 text-xs text-suave">Um celular de reserva evita ficar sem entrar se o principal quebrar ou se perder.</p>}
