@@ -4,7 +4,10 @@
 #   1. monta a versão nova numa pasta própria (~/homologacao/versoes/<commit>-<configuração>):
 #      npm ci + build; se falhar, a versão atual continua no ar e nada muda;
 #   2. troca o link ~/homologacao/plataforma para a versão nova e reinicia;
-#   3. se a nova não responder em /saude, volta o link para a anterior e reinicia a anterior.
+#   3. se a nova não responder em /saude com o commit dela (/saude/versao, #99), volta o link para a anterior e
+#      reinicia a anterior;
+#   4. confere a pasta, o serviço local e o domínio público com conferir-publicacao.sh (o mesmo commit inteiro e o
+#      ambiente): se o domínio não servir a versão nova, a publicação reprova (o serviço local fica, o Apache é conferido à parte).
 #
 # Identidade da versão (REV-016): commit + impressão digital (sha256) do arquivo de ambiente.
 # Mudou o arquivo, monta de novo, mesmo no mesmo commit: variáveis NEXT_PUBLIC_* e páginas
@@ -61,6 +64,14 @@ ATIVA="$(readlink -f "$LINK" 2>/dev/null || true)"
 echo "Versão $CURTO, configuração $CONFIG (impressão digital do arquivo de ambiente; valores não são exibidos)."
 
 no_ar() { curl -fsS --max-time 10 -o /dev/null "http://127.0.0.1:$PORTA/saude"; }
+# #99: responder não basta; o serviço precisa servir ESTE commit (inteiro), lido em /saude/versao.
+serve_esta_versao() {
+  local commit
+  commit="$(curl -fsS --max-time 10 "http://127.0.0.1:$PORTA/saude/versao" 2>/dev/null | node -e 'let d="";process.stdin.on("data",(c)=>{d+=c}).on("end",()=>{try{process.stdout.write(String(JSON.parse(d).commit??""))}catch{}})' || true)"
+  [ "$commit" = "$SHA" ]
+}
+# No teste isolado o domínio público não é conferido (ele serve a homologação real).
+if [ "$BASE" != "$REAL" ]; then export ORA_HML_DOMINIO="${ORA_HML_DOMINIO:-nenhum}"; fi
 # Mesma combinação já montada: build completa, mesmo commit e a mesma cópia do ambiente.
 pronta() {
   [ -f "$1/apps/plataforma/.next/BUILD_ID" ] && [ "$(git -C "$1" rev-parse HEAD 2>/dev/null)" = "$SHA" ] &&
@@ -71,7 +82,7 @@ pronta() {
 # um antigo pararia e reiniciaria a homologação real (porta 3100).
 script_seguro() { [ "$BASE" = "$REAL" ] || grep -q 'ORA_HML_PORTA' "$1/deploy/homologacao/garantir-no-ar.sh"; }
 
-if [ "$NOVA" = "$ATIVA" ] && pronta "$NOVA" && no_ar; then
+if [ "$NOVA" = "$ATIVA" ] && pronta "$NOVA" && no_ar && serve_esta_versao; then
   echo "A versão $CURTO com esta configuração já está no ar; nada a fazer."
   exit 0
 fi
@@ -114,17 +125,23 @@ if [ -d "$LINK" ] && [ ! -L "$LINK" ]; then
 fi
 ANTERIOR="$(readlink -f "$LINK" 2>/dev/null || true)"
 ln -sfn "$NOVA" "$LINK.novo" && mv -T "$LINK.novo" "$LINK"
-if "$LINK/deploy/homologacao/garantir-no-ar.sh" --reiniciar && no_ar; then
+if "$LINK/deploy/homologacao/garantir-no-ar.sh" --reiniciar && no_ar && serve_esta_versao; then
   touch "$NOVA" # a lista de versões antigas abaixo ordena pelas usadas por último
   echo "Homologação no ar em 127.0.0.1:$PORTA com a versão $CURTO, configuração $CONFIG."
 else
   # 3. Volta para a anterior: código e configuração dela, que ficam na própria pasta.
-  echo "A versão $CURTO não subiu (veja $LOGS/plataforma.log)."
+  echo "A versão $CURTO não subiu ou não serve o commit $CURTO em /saude/versao (veja $LOGS/plataforma.log)."
   if [ -n "$ANTERIOR" ] && [ -d "$ANTERIOR" ] && [ "$ANTERIOR" != "$NOVA" ] && script_seguro "$ANTERIOR"; then
     "$NOVA/deploy/homologacao/garantir-no-ar.sh" --parar || true
     ln -sfn "$ANTERIOR" "$LINK.novo" && mv -T "$LINK.novo" "$LINK"
     "$LINK/deploy/homologacao/garantir-no-ar.sh" --reiniciar && echo "Voltou para a versão anterior: $(basename "$ANTERIOR")."
   fi
+  exit 1
+fi
+
+# 4. A conferência completa (#99): a pasta, o serviço local e o domínio com o mesmo commit inteiro e o ambiente.
+if ! ORA_SHA_ESPERADO="$SHA" ORA_REPO_DIR="$REPO" ORA_HML_BASE="$BASE" ORA_HML_PORTA="$PORTA" bash "$(dirname "$0")/conferir-publicacao.sh"; then
+  echo "A versão $CURTO está no ar no serviço local, mas a conferência completa reprovou (veja acima; o domínio passa pelo Apache)."
   exit 1
 fi
 

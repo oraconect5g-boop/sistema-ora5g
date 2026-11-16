@@ -118,7 +118,7 @@ describe("envio da nota pelo WhatsApp: o pedido (K1c)", () => {
     const semPdf = await notaEmitida(802, { comPdf: false });
     expect(await tentar(semPdf.ana, ENVIAR, [semPdf.pedido, chave("envio"), null])).toMatchObject({ codigo: "22023", mensagem: "Guarde o PDF da nota antes de enviar pelo WhatsApp" });
     const semCliente = await notaEmitida(803, { cliente: "sem_cliente" });
-    expect(await tentar(semCliente.ana, ENVIAR, [semCliente.pedido, chave("envio"), null])).toMatchObject({ codigo: "22023", mensagem: "Ligue a venda ao cliente da rede antes de enviar a nota pelo WhatsApp" });
+    expect(await tentar(semCliente.ana, ENVIAR, [semCliente.pedido, chave("envio"), null])).toMatchObject({ codigo: "22023", mensagem: "A nota foi pedida sem o cliente da rede na venda: o envio pelo WhatsApp vale para a nota pedida com o cliente ligado à venda" }); // #88 (INTEG-a)
     const n = await notaEmitida(804);
     // Cadastro antigo sem WhatsApp (o número tirado à força, como os anteriores ao #76).
     await db.exec("set session_replication_role = replica");

@@ -25,7 +25,7 @@ describe("vendas fictícias seguem as regras do domínio", () => {
 
   it("vendas concluídas estão pagas pelo valor exato (troco só em dinheiro)", () => {
     for (const v of VENDAS_HOJE.filter((x) => x.situacao === "concluida")) {
-      const conferencia = conferirPagamentos(v.total, v.pagamentos, { email: "cliente@exemplo.invalid" });
+      const conferencia = conferirPagamentos(v.total, v.pagamentos);
       expect(conferencia.erros, v.numero).toEqual([]);
       expect(conferencia.valido, v.numero).toBe(true);
     }

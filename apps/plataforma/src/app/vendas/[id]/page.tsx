@@ -55,7 +55,7 @@ export default async function Comprovante({ params, searchParams }: { params: Pr
     supabase.rpc("tem_permissao", { p_permissao: "venda.cancelar", p_unidade: venda.data.unidade_id }),
     supabase.rpc("tem_permissao", { p_permissao: "nota.solicitar", p_unidade: venda.data.unidade_id }),
     supabase.rpc("tem_permissao", { p_permissao: "nota.aprovar", p_unidade: venda.data.unidade_id }),
-    supabase.from("notas_pedidos").select("id, situacao, solicitado_por, destinatario_nome, destinatario_mascarado, observacao, chave_acesso, modelo, serie, numero_documento")
+    supabase.from("notas_pedidos").select("id, situacao, solicitado_por, destinatario_nome, destinatario_mascarado, observacao, chave_acesso, modelo, serie, numero_documento, cliente_id")
       .eq("venda_id", id).eq("tipo", "venda").neq("situacao", "cancelada").maybeSingle(),
     supabase.from("venda_devolucoes").select("id, numero, valor_centavos, motivo, criado_em, venda_devolucao_itens(venda_item_id, quantidade, valor_centavos, condicao), venda_devolucao_reembolsos(meio, valor_centavos), vales_troca(numero, saldo_centavos)")
       .eq("venda_id", id).order("criado_em"),
@@ -274,14 +274,16 @@ export default async function Comprovante({ params, searchParams }: { params: Pr
                           <Botao type="submit" tamanho="sm" variante="secundario">Registrar a conferência</Botao>
                         </form>
                       )}
-                      {v.cliente_id && temPdf && (!ultimoEnvio || !["na_fila", "enviando", "desconhecido"].includes(ultimoEnvio.situacao)) && (
+                      {/* INTEG-a (#88): a nota vai só ao cliente que estava na venda quando ela foi pedida. */}
+                      {v.cliente_id && nota.data.cliente_id === v.cliente_id && temPdf && (!ultimoEnvio || !["na_fila", "enviando", "desconhecido"].includes(ultimoEnvio.situacao)) && (
                         <form action={enviarNotaPeloWhatsApp} className="flex flex-wrap items-end gap-2">
                           <input type="hidden" name="pedido" value={notaEmitida.id} /><input type="hidden" name="venda" value={v.id} /><input type="hidden" name="chave" value={randomUUID()} />
                           {ultimoEnvio && <label className="text-xs font-medium">Motivo do reenvio<input name="motivo" required minLength={3} maxLength={200} className={campo} /></label>}
                           <Botao type="submit" tamanho="sm">{ultimoEnvio ? "Reenviar pelo WhatsApp" : "Enviar a nota pelo WhatsApp"}</Botao>
                         </form>
                       )}
-                      {!v.cliente_id && <p className="text-xs text-suave">Para enviar pelo WhatsApp, ligue a venda ao cliente da rede.</p>}
+                      {!v.cliente_id && <p className="text-xs text-suave">Para enviar pelo WhatsApp, a nota precisa ter sido pedida com o cliente da rede ligado à venda.</p>}
+                      {v.cliente_id && nota.data.cliente_id !== v.cliente_id && <p className="text-xs text-suave">{nota.data.cliente_id ? "O cliente da venda mudou depois do pedido da nota: ela está no nome de outro cliente e não vai pelo WhatsApp." : "A nota foi pedida sem o cliente da rede: ela não vai pelo WhatsApp."}</p>}
                       {v.cliente_id && !temPdf && <p className="text-xs text-suave">Para enviar pelo WhatsApp, guarde antes o PDF da nota.</p>}
                     </div>
                   )}
@@ -327,6 +329,15 @@ export default async function Comprovante({ params, searchParams }: { params: Pr
                   <label className="text-xs font-medium">Nome na nota (opcional)<input name="nome" maxLength={120} className={campo} /></label>
                   <label className="text-xs font-medium">CPF ou CNPJ (opcional)<input name="documento" inputMode="numeric" autoComplete="off" className={campo} /></label>
                   <div><Botao type="submit" tamanho="sm">Enviar correção</Botao></div>
+                </form>
+              )}
+              {/* INTEG-a (#87): a nota no nome do cliente se corrige com o cadastro atualizado dele (o CPF não se digita). */}
+              {nota.data.situacao === "correcao_solicitada" && (nota.data.solicitado_por === usuario.id || aprovaNota.data) && v.cliente_id && (
+                <form action={corrigirNota} className="flex flex-wrap items-center gap-2 text-xs text-suave">
+                  <input type="hidden" name="pedido" value={nota.data.id} /><input type="hidden" name="venda" value={v.id} />
+                  <input type="hidden" name="usar_cadastro" value="sim" /><input type="hidden" name="cliente" value={v.cliente_id} />
+                  <span>Nota no nome do cliente? Corrija o cadastro dele e</span>
+                  <Botao type="submit" tamanho="sm" variante="secundario">Usar o cadastro atualizado</Botao>
                 </form>
               )}
             </div>

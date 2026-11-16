@@ -2,7 +2,8 @@ import { exigirCentavos, type Centavos } from "./dinheiro";
 
 // Pagamento misto (ORA-POS-007) e venda financiada (DEC-U38):
 // na PayJoy/Aiva lança-se o preço do aparelho e a entrada; o restante fica "a receber da
-// financeira". Juros da financeira NUNCA entram. E-mail do cliente obrigatório só na PayJoy (DEC-U30).
+// financeira". Juros da financeira NUNCA entram. E-mail do cliente sempre opcional, também na PayJoy (16/11/2026: a regra
+// do proprietário de 12/11, #76, substitui a DEC-U30; exigência de parceiro só com o contrato dele, no adaptador).
 
 // comprovante: o meio só se confirma com o código do comprovante (maquininha/Pix) ou o número do
 // vale — inclusive como ENTRADA de financiamento (#46). Mesma regra de privado.meio_com_comprovante.
@@ -32,11 +33,7 @@ export type ResultadoPagamento = {
   erros: string[];
 };
 
-export function conferirPagamentos(
-  total: Centavos,
-  pagamentos: readonly Pagamento[],
-  cliente: { email?: string | null } = {},
-): ResultadoPagamento {
+export function conferirPagamentos(total: Centavos, pagamentos: readonly Pagamento[]): ResultadoPagamento {
   exigirCentavos(total, "total da venda");
   const erros: string[] = [];
   let recebidoNaLoja = 0;
@@ -64,7 +61,6 @@ export function conferirPagamentos(
       }
       recebidoNaLoja += entrada;
       aReceberDeFinanceiras += p.valor - entrada;
-      if (p.meio === "payjoy" && !cliente.email) erros.push("PayJoy exige o e-mail do cliente");
     } else {
       recebidoNaLoja += p.valor;
       if (p.meio === "dinheiro") pagoEmDinheiro += p.valor;

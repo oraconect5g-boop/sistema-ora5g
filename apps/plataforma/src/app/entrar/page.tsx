@@ -2,6 +2,7 @@ import { ArrowRight, Lock, ShieldCheck, Signal, Store } from "lucide-react";
 import type { Metadata } from "next";
 import Link from "next/link";
 
+import { EsquecerLembrancas } from "../../componentes/EsquecerLembrancas";
 import { Marca } from "../../componentes/Marca";
 import { RodapeVersao } from "../../componentes/RodapeVersao";
 import { Aviso, Botao } from "../../componentes/ui";
@@ -32,6 +33,7 @@ export default async function Entrar({ searchParams }: { searchParams: Promise<{
   const configurado = configuracaoSupabase() !== null;
   return (
     <main className="grid min-h-dvh bg-white lg:grid-cols-[minmax(0,1fr)_minmax(0,1.05fr)]">
+      <EsquecerLembrancas />
       <section className="flex flex-col px-5 py-8 sm:px-10 lg:px-16">
         <Link href="/" aria-label="Página inicial da Ora 5G" className="w-fit"><Marca tamanho="text-2xl" /></Link>
         <div className="mx-auto flex w-full max-w-sm flex-1 flex-col justify-center py-10">

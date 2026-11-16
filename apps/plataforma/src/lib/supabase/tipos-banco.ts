@@ -1,5 +1,5 @@
 // ARQUIVO GERADO pelo Supabase (generate_typescript_types do projeto ora5g-dev) depois da
-// migration 20261116093359_loja_online_reserva. Não edite à mão: gere de novo a cada
+// migration 20261116095941_email_opcional_na_payjoy. Não edite à mão: gere de novo a cada
 // migration aplicada (auditoria do Codex de 08/11, §7.2). O teste tipos-banco.test.ts confere
 // que funções e tabelas públicas daqui são as mesmas das migrations.
 export type Json =
@@ -3528,6 +3528,7 @@ export type Database = {
           cancelada_no_fisco_por: string | null
           chave: string
           chave_acesso: string | null
+          cliente_id: string | null
           criado_em: string
           destinatario_mascarado: string | null
           destinatario_nome: string | null
@@ -3560,6 +3561,7 @@ export type Database = {
           cancelada_no_fisco_por?: string | null
           chave: string
           chave_acesso?: string | null
+          cliente_id?: string | null
           criado_em?: string
           destinatario_mascarado?: string | null
           destinatario_nome?: string | null
@@ -3592,6 +3594,7 @@ export type Database = {
           cancelada_no_fisco_por?: string | null
           chave?: string
           chave_acesso?: string | null
+          cliente_id?: string | null
           criado_em?: string
           destinatario_mascarado?: string | null
           destinatario_nome?: string | null
@@ -3629,6 +3632,13 @@ export type Database = {
             columns: ["cancelada_no_fisco_por"]
             isOneToOne: false
             referencedRelation: "perfis_usuario"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "notas_pedidos_cliente_id_fkey"
+            columns: ["cliente_id"]
+            isOneToOne: false
+            referencedRelation: "clientes"
             referencedColumns: ["id"]
           },
           {

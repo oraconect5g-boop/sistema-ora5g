@@ -13,9 +13,20 @@ function commitCurto(): string {
   }
 }
 
+// O commit inteiro (40 caracteres) para /saude/versao: o conferidor da publicação compara a identidade exata (#99).
+function commitCompleto(): string {
+  if (process.env.ORA_COMMIT && /^[0-9a-f]{40}$/.test(process.env.ORA_COMMIT)) return process.env.ORA_COMMIT;
+  try {
+    const sha = execSync("git rev-parse HEAD", { stdio: ["ignore", "pipe", "ignore"] }).toString().trim();
+    return /^[0-9a-f]{40}$/.test(sha) ? sha : "";
+  } catch {
+    return "";
+  }
+}
+
 const configuracao: NextConfig = {
   poweredByHeader: false,
-  env: { NEXT_PUBLIC_ORA_COMMIT: commitCurto(), NEXT_PUBLIC_ORA_BUILD: new Date().toISOString() },
+  env: { NEXT_PUBLIC_ORA_COMMIT: commitCurto(), NEXT_PUBLIC_ORA_BUILD: new Date().toISOString(), ORA_COMMIT_COMPLETO: commitCompleto() },
   transpilePackages: ["@ora5g/config", "@ora5g/dominio"],
   // Atrás do Apache do cPanel, o pedido da raiz chega como o arquivo de índice que o Apache
   // procura (index.php, index.html, default.htm...). A reescrita só olha o caminho, então

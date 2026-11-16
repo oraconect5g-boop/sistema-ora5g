@@ -22,7 +22,7 @@
 | DEC-U27 | **Desconto à vista: até 10%.** Acima de 10%, só o gerente ou o dono. Limites de 5% ou 10% conforme o produto, **a validar antes de implantar** *(refinado por DEC-U41: o limite passa a considerar a margem)* | Teto por categoria + margem mínima; acima do limite, pedido de aprovação ao gerente/dono |
 | DEC-U28 | **Maquininhas: PicPay e PagSeguro.** Haverá pagamento online por **link de pagamento** | Pagamento registra provedor (PicPay, PagSeguro, link online) + meio (Pix, débito, crédito) |
 | DEC-U29 | **Financeiras: PayJoy e Aiva (Flexphone, pagamento mensal)** | Venda financiada lançada e contabilizada no sistema, para aparelho e chip; financeira é um tipo de pagamento com repasse posterior |
-| DEC-U30 | **E-mail do cliente obrigatório só na venda PayJoy** | Validação condicional por meio de pagamento |
+| DEC-U30 | ~~**E-mail do cliente obrigatório só na venda PayJoy**~~ — **substituída em 16/11/2026** pela regra do proprietário de 12/11 (#76): e-mail sempre opcional, também na PayJoy; exigência de parceiro só com o contrato dele comprovado, no adaptador e só na operação dele (lote INTEG-a; `docs/alinhamento/LEITURA_DIAGNOSTICO_INTEGRAL_2026-11-16.md`) | Validação condicional por meio de pagamento (retirada) |
 | DEC-U31 | **Código de barras preparado desde já** para leitores futuros | Campo EAN/código de barras em produtos e busca já aceita código; leitor entra depois sem mudar a regra |
 | DEC-U32 | **A base de clientes começa vazia** | Sem migração de clientes |
 | DEC-U33 | **Vendedores têm e-mail próprio**; usam celular pessoal, celular da loja e às vezes notebook | Login por e-mail; sessão curta e nada sensível salvo no aparelho; revogação imediata |

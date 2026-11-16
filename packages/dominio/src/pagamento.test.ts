@@ -42,15 +42,13 @@ describe("venda financiada (DEC-U38)", () => {
     const r = conferirPagamentos(
       199_900,
       [{ meio: "payjoy", valor: 199_900, entrada: 40_000 }],
-      { email: "cliente@exemplo.invalid" },
     );
     expect(r).toMatchObject({ valido: true, recebidoNaLoja: 40_000, aReceberDeFinanceiras: 159_900 });
   });
 
-  it("PayJoy sem e-mail do cliente é recusada (DEC-U30); Aiva não exige", () => {
-    expect(conferirPagamentos(100_000, [{ meio: "payjoy", valor: 100_000, entrada: 0 }]).erros).toContain(
-      "PayJoy exige o e-mail do cliente",
-    );
+  it("e-mail sempre opcional, também na PayJoy (16/11: a regra de 12/11, #76, substitui a DEC-U30); Aiva igual", () => {
+    // A prova do diagnóstico de 16/11 achava "PayJoy exige o e-mail do cliente"; agora a PayJoy sem e-mail fecha.
+    expect(conferirPagamentos(100_000, [{ meio: "payjoy", valor: 100_000, entrada: 0 }])).toMatchObject({ valido: true, erros: [] });
     expect(conferirPagamentos(100_000, [{ meio: "aiva", valor: 100_000, entrada: 10_000 }]).valido).toBe(true);
   });
 

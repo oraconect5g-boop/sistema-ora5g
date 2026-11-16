@@ -1,5 +1,5 @@
 // O sino do topo de todas as telas (G6, REPORT-007): a leitura estrita da resposta de /api/pendencias, o número do
-// emblema e a lembrança de um minuto na aba (para não repetir a leitura a cada tela). Sem React: testado à parte.
+// emblema e a lembrança de um minuto na aba, da pessoa e da loja (para não repetir a leitura a cada tela). Sem React: testado à parte.
 import { ehNomeDoIconeDaPendencia, type NomeDoIconeDaPendencia } from "./icones-das-pendencias";
 
 export type ItemDoSino = { rotulo: string; detalhe: string; href: string; icone: NomeDoIconeDaPendencia; quantidade: number; alerta: boolean };
@@ -39,16 +39,23 @@ export function emblemaDoSino(itens: readonly ItemDoSino[]): string | null {
   return total > 99 ? "99+" : String(total);
 }
 
-/** A lembrança da aba: vale um minuto, só para a mesma loja, e passa pela mesma leitura estrita. */
-export function lembrancaDoSino(bruta: string | null, unidade: string, agora: number): ItemDoSino[] | null {
-  if (!bruta) return null;
+/**
+ * De quem é a lembrança: a pessoa e a loja do turno (#96). Outra pessoa na mesma aba (troca de usuário sem fechar a aba)
+ * ou outra loja nunca lê a lembrança de antes; a tela de entrada apaga a lembrança (saída, sessão revogada ou vencida).
+ */
+export type DonoDaLembranca = { usuario: string; unidade: string };
+
+/** A lembrança da aba: vale um minuto, só para a mesma pessoa e a mesma loja, e passa pela mesma leitura estrita. */
+export function lembrancaDoSino(bruta: string | null, dono: DonoDaLembranca, agora: number): ItemDoSino[] | null {
+  if (!bruta || !dono.usuario || !dono.unidade) return null;
   try {
-    const { unidade: daLembranca, em, itens } = JSON.parse(bruta) as Record<string, unknown>;
-    if (daLembranca !== unidade || typeof em !== "number" || em > agora || agora - em > VALIDADE_DO_SINO_MS) return null;
+    const { versao, usuario, unidade, em, itens } = JSON.parse(bruta) as Record<string, unknown>;
+    if (versao !== 2 || usuario !== dono.usuario || unidade !== dono.unidade || typeof em !== "number" || em > agora || agora - em > VALIDADE_DO_SINO_MS) return null;
     return lerItensDoSino(itens);
   } catch {
     return null;
   }
 }
 
-export const lembrar = (unidade: string, itens: readonly ItemDoSino[], agora: number) => JSON.stringify({ unidade, em: agora, itens });
+export const lembrar = (dono: DonoDaLembranca, itens: readonly ItemDoSino[], agora: number) =>
+  JSON.stringify({ versao: 2, usuario: dono.usuario, unidade: dono.unidade, em: agora, itens });

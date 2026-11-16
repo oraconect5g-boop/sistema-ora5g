@@ -2,7 +2,7 @@
   "_leia": "Checkpoint do programa de execução integral (PR #67). Carregar ao retomar e seguir para o próximo item executável da fila; não reiniciar o projeto. Estados vêm de status-requisitos.json (fonte da rastreabilidade); este arquivo acrescenta lote, bloqueio externo e revisão.",
   "atualizado_em": "2026-11-16",
   "base": {
-    "main": "5468d9e",
+    "main": "ad6beb4",
     "pacote": {
       "pr": 67,
       "branch": "docs/execucao-integral-20261110",
@@ -14,16 +14,22 @@
       "commit": "568ad2d",
       "main_analisada": "dd31e91",
       "lido": "ESTADO_VERIFICADO, FILA_INTEGRAL_179, FONTES_OBRIGATORIAS, evidencias/LEIA-ME e as provas, pelo Git, sem merge"
+    },
+    "pacote_diagnostico": {
+      "branch": "docs/diagnostico-integral-supabase-20261116",
+      "commit": "398dfa0",
+      "main_analisada": "5468d9e",
+      "lido": "ver docs/alinhamento/LEITURA_DIAGNOSTICO_INTEGRAL_2026-11-16.md (o que foi lido por inteiro, o que foi conferido por programa e o que falta)"
     }
   },
   "publicado": {
     "homologacao": {
-      "commit": "5468d9e",
-      "quando": "2026-11-15",
-      "conferido": "rodapé da tela de entrada (5468d9e · build 15/11/2026 18:21), /saude 200, as rotas reais respondendo 307 para o login e /loja respondendo 200 sem login (conferido de novo pelo diagnóstico integral de 16/11)"
+      "commit": "ad6beb4",
+      "quando": "2026-11-16",
+      "conferido": "rodapé da tela de entrada (ad6beb4 · build 16/11/2026 06:46), /saude 200, /loja 200, /reservas-do-site 307 para o login e a função loja_reservar conferida no banco do domínio como visitante (produto fora do site recusado, P0002; nada gravado)"
     },
     "falta_publicar": [
-      "ONLINE-b, a reserva do site, publicado ao fim do lote (a migration 20261116093359_loja_online_reserva já está no ora5g-dev desde 16/11)"
+      "INTEG-a (#87, #88, #96, #99 e o e-mail da PayJoy), publicado ao fim do lote (as migrations 20261116095825_destinatario_fiscal_integro e 20261116095941_email_opcional_na_payjoy já estão no ora5g-dev desde 16/11)"
     ]
   },
   "contagem_dos_estados": {
@@ -83,7 +89,7 @@
       "titulo": "Login, recuperação de conta e revogação de sessão",
       "prioridade": "P0",
       "estado": "parcial",
-      "lote": "L2 cadastros; ORG-006b (15/11): a confirmação de senha recente nas ações sensíveis; migration do ORG-006b aplicada no ora5g-dev em 15/11",
+      "lote": "L2 cadastros; ORG-006b (15/11): a confirmação de senha recente nas ações sensíveis; migration do ORG-006b aplicada no ora5g-dev em 15/11; INTEG-a (16/11): #96",
       "bloqueio_externo": null,
       "revisado_codex": false,
       "homologado": false
@@ -335,7 +341,7 @@
       "titulo": "Cadastro de cliente com dados mínimos e finalidade",
       "prioridade": "P0",
       "estado": "testado",
-      "lote": "L5a clientes; K1a cadastro rápido com WhatsApp (14/11)",
+      "lote": "L5a clientes; K1a cadastro rápido com WhatsApp (14/11); INTEG-a (16/11): e-mail opcional na PayJoy",
       "bloqueio_externo": null,
       "revisado_codex": false,
       "homologado": false
@@ -488,7 +494,7 @@
       "titulo": "Vincular venda a vendedor, loja, cliente quando aplicável e canal",
       "prioridade": "P0",
       "estado": "testado",
-      "lote": "L6 PDV; R5 (15/11): revisão do estado",
+      "lote": "L6 PDV; R5 (15/11): revisão do estado; INTEG-a (16/11): #88",
       "bloqueio_externo": null,
       "revisado_codex": false,
       "homologado": false
@@ -533,7 +539,7 @@
       "titulo": "Venda parcelada/PayJoy/boleto por fluxo homologado",
       "prioridade": "P1",
       "estado": "parcial",
-      "lote": "L6 PDV",
+      "lote": "L6 PDV; INTEG-a (16/11): e-mail opcional na PayJoy",
       "bloqueio_externo": null,
       "revisado_codex": false,
       "homologado": false
@@ -578,7 +584,7 @@
       "titulo": "Suportar financiamento, boleto, parcelamento e pagamentos online",
       "prioridade": "P0",
       "estado": "parcial",
-      "lote": "L7 pagamentos/caixa; R4 (14/11): revisão do estado",
+      "lote": "L7 pagamentos/caixa; R4 (14/11): revisão do estado; INTEG-a (16/11): e-mail opcional na PayJoy",
       "bloqueio_externo": null,
       "revisado_codex": false,
       "homologado": false
@@ -875,7 +881,7 @@
       "titulo": "Solicitar nota diretamente da venda no celular",
       "prioridade": "P0",
       "estado": "testado",
-      "lote": "L10 fiscal",
+      "lote": "L10 fiscal; INTEG-a (16/11): #87",
       "bloqueio_externo": null,
       "revisado_codex": false,
       "homologado": false
@@ -1208,7 +1214,7 @@
       "titulo": "WhatsApp Business Platform oficial conectado ao CRM",
       "prioridade": "P1",
       "estado": "bloqueado",
-      "lote": "K1c envio da nota pelo WhatsApp (14/11)",
+      "lote": "K1c envio da nota pelo WhatsApp (14/11); INTEG-a (16/11): #88, conferência antes de expedir",
       "bloqueio_externo": "Meta: verificação da empresa, número, token, modelo de utilidade aprovado (lista de integrações)",
       "revisado_codex": false,
       "homologado": false
@@ -1469,7 +1475,7 @@
       "titulo": "CI, lint, typecheck, testes e code review obrigatórios",
       "prioridade": "P0",
       "estado": "parcial",
-      "lote": "transversal; R4 (14/11): revisão do estado",
+      "lote": "transversal; R4 (14/11): revisão do estado; INTEG-a (16/11): #99",
       "bloqueio_externo": null,
       "revisado_codex": false,
       "homologado": false

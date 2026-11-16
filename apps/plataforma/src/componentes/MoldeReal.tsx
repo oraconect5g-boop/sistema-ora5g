@@ -125,7 +125,7 @@ export async function MoldeReal({ sessao, children, largura = "max-w-3xl", permi
           {fim && <span className="hidden items-center gap-1 text-xs text-suave sm:flex"><Clock aria-hidden className="size-3.5" /> turno até {fim}</span>}
           <div className="hidden flex-1 lg:block" />
           {/* G6 (REPORT-007): o que espera a pessoa nesta loja, lido depois que a tela abre. */}
-          <SinoDePendencias unidade={unidade} />
+          <SinoDePendencias unidade={unidade} usuario={sessao.usuario.id} />
           <MenuSuspenso
             rotulo={`${pessoa}, ${papel}`}
             classeBotao="flex min-h-11 items-center gap-2 rounded-full p-1 pr-2 hover:bg-white"
