@@ -1,5 +1,5 @@
 // O registro da foto e a limpeza das fotos sem registro ao mesmo tempo, num PostgreSQL 17 de verdade (#98, lote INTEG-b;
-// migration 20261116130000_limpeza_das_fotos_protocolo). A prova do Codex (PR #97,
+// migration 20261116102346_limpeza_das_fotos_protocolo, antes 20261116130000). A prova do Codex (PR #97,
 // docs/analises/evidencias/2026-11-15-continuacao/concorrencia-fotos.test.ts) terminava com uma foto ativa e nenhum
 // arquivo; aqui ela vira regressão do comportamento certo, nas três ordens:
 //   * o registro em andamento e a limpeza depois: a limpeza espera a trava do caminho e, com a foto confirmada, recusa

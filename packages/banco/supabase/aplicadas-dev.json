@@ -89,6 +89,7 @@
     { "versao": "20261115210812", "nome": "loja_online_vitrine", "md5": "427f2942c3d013a2a98b9ff5d9839fb2", "aplicada_em": "2026-11-15" },
     { "versao": "20261116093359", "nome": "loja_online_reserva", "md5": "13da54cb51bec3e21c82f2e2d9eb6c09", "aplicada_em": "2026-11-16" },
     { "versao": "20261116095825", "nome": "destinatario_fiscal_integro", "md5": "508b1c15eae36b9b7875cbbd9530ddee", "aplicada_em": "2026-11-16" },
-    { "versao": "20261116095941", "nome": "email_opcional_na_payjoy", "md5": "35f35ae2320912e9c32e1aa58e1ba252", "aplicada_em": "2026-11-16" }
+    { "versao": "20261116095941", "nome": "email_opcional_na_payjoy", "md5": "35f35ae2320912e9c32e1aa58e1ba252", "aplicada_em": "2026-11-16" },
+    { "versao": "20261116102346", "nome": "limpeza_das_fotos_protocolo", "md5": "f78270f3028f4ad1b316e22fea185023", "aplicada_em": "2026-11-16" }
   ]
 }

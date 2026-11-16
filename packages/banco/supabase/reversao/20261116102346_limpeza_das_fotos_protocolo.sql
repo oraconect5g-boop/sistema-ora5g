@@ -1,4 +1,4 @@
--- Reversão de 20261116130000_limpeza_das_fotos_protocolo (lote INTEG-b): o registro, a limpeza e a política do Storage
+-- Reversão de 20261116102346_limpeza_das_fotos_protocolo (lote INTEG-b): o registro, a limpeza e a política do Storage
 -- voltam às versões de antes (sem a separação), a conclusão sai e a tabela das separações sai.
 
 drop function if exists public.fotos_limpeza_concluir(text[]);

@@ -2,7 +2,7 @@
   "_leia": "Checkpoint do programa de execução integral (PR #67). Carregar ao retomar e seguir para o próximo item executável da fila; não reiniciar o projeto. Estados vêm de status-requisitos.json (fonte da rastreabilidade); este arquivo acrescenta lote, bloqueio externo e revisão.",
   "atualizado_em": "2026-11-16",
   "base": {
-    "main": "ad6beb4",
+    "main": "11c534f",
     "pacote": {
       "pr": 67,
       "branch": "docs/execucao-integral-20261110",
@@ -24,12 +24,13 @@
   },
   "publicado": {
     "homologacao": {
-      "commit": "ad6beb4",
+      "commit": "11c534f",
       "quando": "2026-11-16",
-      "conferido": "rodapé da tela de entrada (ad6beb4 · build 16/11/2026 06:46), /saude 200, /loja 200, /reservas-do-site 307 para o login e a função loja_reservar conferida no banco do domínio como visitante (produto fora do site recusado, P0002; nada gravado)"
+      "conferido": "publicar.sh com a conferência nova (#99): a pasta ativa, o serviço local e o domínio ora5g.com.br servindo o commit inteiro de 11c534f e o ambiente homologacao em /saude/versao; rodapé 11c534f · build 16/11/2026 07:12"
     },
     "falta_publicar": [
-      "INTEG-a (#87, #88, #96, #99 e o e-mail da PayJoy), publicado ao fim do lote (as migrations 20261116095825_destinatario_fiscal_integro e 20261116095941_email_opcional_na_payjoy já estão no ora5g-dev desde 16/11)"
+      "INTEG-b (#98, a limpeza das fotos, e #95, a importação), publicado ao fim do lote (a migration 20261116102346_limpeza_das_fotos_protocolo já está no ora5g-dev desde 16/11)",
+      "migration 20261116130100_importacao_estatisticas (#95): aplicar no ora5g-dev pede o sim do proprietário (a aplicação foi barrada pela proteção automática da sessão)"
     ]
   },
   "contagem_dos_estados": {
@@ -143,7 +144,7 @@
       "titulo": "Importar produtos e preços da Rein somente por CSV/XLSX",
       "prioridade": "P0",
       "estado": "parcial",
-      "lote": "L3c importação; R2 correções do importador; CAT-002b (15/11): a planilha do Excel (.xlsx) direto",
+      "lote": "L3c importação; R2 correções do importador; CAT-002b (15/11): a planilha do Excel (.xlsx) direto; INTEG-b (16/11): #95, a importação de 2.000 linhas no orçamento",
       "bloqueio_externo": "B1: arquivo real da Rein para testar o mapeamento (o importador não supõe o formato)",
       "revisado_codex": false,
       "homologado": false
@@ -224,7 +225,7 @@
       "titulo": "Exigir foto principal por produto e imagem própria para variantes visualmente diferentes",
       "prioridade": "P0",
       "estado": "parcial",
-      "lote": "L3 catálogo/importador; B5 leituras completas (14/11); CAT-011b (15/11): a limpeza das fotos enviadas sem registro; migration aplicada no ora5g-dev em 15/11",
+      "lote": "L3 catálogo/importador; B5 leituras completas (14/11); CAT-011b (15/11): a limpeza das fotos enviadas sem registro; migration aplicada no ora5g-dev em 15/11; INTEG-b (16/11): #98, o protocolo da limpeza das fotos",
       "bloqueio_externo": null,
       "revisado_codex": false,
       "homologado": false
@@ -1475,7 +1476,7 @@
       "titulo": "CI, lint, typecheck, testes e code review obrigatórios",
       "prioridade": "P0",
       "estado": "parcial",
-      "lote": "transversal; R4 (14/11): revisão do estado; INTEG-a (16/11): #99",
+      "lote": "transversal; R4 (14/11): revisão do estado; INTEG-a (16/11): #99; INTEG-b (16/11): #95, a causa do CI vermelho do GitHub",
       "bloqueio_externo": null,
       "revisado_codex": false,
       "homologado": false
