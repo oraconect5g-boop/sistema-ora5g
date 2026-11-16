@@ -2,7 +2,7 @@
   "_leia": "Checkpoint do programa de execução integral (PR #67). Carregar ao retomar e seguir para o próximo item executável da fila; não reiniciar o projeto. Estados vêm de status-requisitos.json (fonte da rastreabilidade); este arquivo acrescenta lote, bloqueio externo e revisão.",
   "atualizado_em": "2026-11-16",
   "base": {
-    "main": "11c534f",
+    "main": "376f0ff",
     "pacote": {
       "pr": 67,
       "branch": "docs/execucao-integral-20261110",
@@ -24,13 +24,12 @@
   },
   "publicado": {
     "homologacao": {
-      "commit": "11c534f",
+      "commit": "376f0ff",
       "quando": "2026-11-16",
-      "conferido": "publicar.sh com a conferência nova (#99): a pasta ativa, o serviço local e o domínio ora5g.com.br servindo o commit inteiro de 11c534f e o ambiente homologacao em /saude/versao; rodapé 11c534f · build 16/11/2026 07:12"
+      "conferido": "publicar.sh com a conferência completa (#99): a pasta ativa, o serviço local e o domínio ora5g.com.br servindo o commit inteiro de 376f0ff e o ambiente homologacao em /saude/versao; rodapé 376f0ff · build 16/11/2026 07:36"
     },
     "falta_publicar": [
-      "INTEG-b (#98, a limpeza das fotos, e #95, a importação), publicado ao fim do lote (a migration 20261116102346_limpeza_das_fotos_protocolo já está no ora5g-dev desde 16/11)",
-      "migration 20261116130100_importacao_estatisticas (#95): aplicar no ora5g-dev pede o sim do proprietário (a aplicação foi barrada pela proteção automática da sessão)"
+      "migration 20261116130100_importacao_estatisticas (#95): aplicar no ora5g-dev pede o sim do proprietário (a aplicação foi barrada pela proteção automática da sessão de 16/11)"
     ]
   },
   "contagem_dos_estados": {
@@ -1652,5 +1651,6 @@
       "revisado_codex": false,
       "homologado": false
     }
-  }
+  },
+  "proximo_passo": "Retomar pelo diagnóstico integral de 16/11 (docs/alinhamento/LEITURA_DIAGNOSTICO_INTEGRAL_2026-11-16.md e RELATORIO_179_2026-11-16.md): (1) com o sim do proprietário, aplicar 20261116130100_importacao_estatisticas no ora5g-dev e registrar; (2) conferir o CI do GitHub no SHA da main (o #95 era a única falha); (3) lote SUPA-a: config.toml mínimo em packages/banco/supabase (sem buckets) e o proprietário troca o Working directory da integração para packages/banco; (4) lote BASE-a: as 11 lojas e DEFEITOS com o cadastro operacional separado da liberação fiscal (sem CNPJ/endereço inventado) e as três contas de teste (autorizadas); (5) a planilha original inteira (precisa do arquivo no servidor) e a carga de estoque por local; (6) a transferência de vários produtos; (7) a jornada real autenticada; depois parceiros, fiscal, WhatsApp e o restante dos 179."
 }
