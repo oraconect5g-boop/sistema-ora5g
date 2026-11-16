@@ -1,0 +1,116 @@
+{
+  "base": "dd31e91465335b7ad4a4f1ff59e80f7981ddd78d",
+  "ci": {
+    "run": 43587125655,
+    "attempt": 2,
+    "job": 132449975649,
+    "sha": "dd31e91465335b7ad4a4f1ff59e80f7981ddd78d",
+    "conclusao": "success",
+    "testes": [
+      {
+        "passaram": 915,
+        "todo": 0
+      },
+      {
+        "passaram": 12,
+        "todo": 0
+      },
+      {
+        "passaram": 634,
+        "todo": 1
+      },
+      {
+        "passaram": 56,
+        "todo": 0
+      },
+      {
+        "passaram": 112,
+        "todo": 0
+      }
+    ],
+    "total_testes": 1729,
+    "e2e": {
+      "passaram": 243,
+      "ignorados": 11,
+      "total": 254
+    },
+    "audit_zero": true
+  },
+  "checks_locais": [
+    {
+      "check": "lint",
+      "exit_code": 0,
+      "segundos": 37.89
+    },
+    {
+      "check": "tipos",
+      "exit_code": 0,
+      "segundos": 32.33
+    },
+    {
+      "check": "banco-l9",
+      "exit_code": 0,
+      "segundos": 38.49
+    },
+    {
+      "check": "app-l9",
+      "exit_code": 0,
+      "segundos": 5.77
+    },
+    {
+      "check": "provas",
+      "exit_code": 0,
+      "segundos": 13.24
+    },
+    {
+      "check": "rastreabilidade",
+      "exit_code": 0,
+      "segundos": 0.04
+    },
+    {
+      "check": "nogle-catalogo",
+      "exit_code": 0,
+      "segundos": 0.04
+    },
+    {
+      "check": "e2e",
+      "exit_code": 1,
+      "segundos": 2.14
+    },
+    {
+      "check": "tipos-gerados",
+      "exit_code": 0,
+      "segundos": 0.84
+    },
+    {
+      "check": "build",
+      "exit_code": 0,
+      "segundos": 43.76
+    },
+    {
+      "check": "e2e-pos-build",
+      "exit_code": 0,
+      "segundos": 176.97
+    }
+  ],
+  "dependencias": "Hardlinks da instalação anterior; package-lock idêntico; workspaces resolvem o snapshot atual.",
+  "testes_locais_selecionados": {
+    "banco_autorizacao_bonus": 141,
+    "ui_regras": 132,
+    "tipos_gerados": 2,
+    "total": 275
+  },
+  "provas": {
+    "total": 11,
+    "correcoes_seguras": 4,
+    "bugs_observados": 5,
+    "diagnostico_schema_historico": 1,
+    "exportacao_teto_simulado": 1
+  },
+  "e2e_local": {
+    "passaram": 243,
+    "ignorados": 11,
+    "total": 254
+  },
+  "limites": "Sem acesso ao servidor, .env, banco remoto ou fornecedores autenticados. J1 pendente."
+}

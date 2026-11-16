@@ -1,0 +1,56 @@
+{
+  "quando_utc": "2026-11-14T12:38:57.885455+00:00",
+  "respostas": [
+    {
+      "path": "/saude",
+      "status": 200,
+      "location": null,
+      "texto": " Saúde do sistema | Ora 5G Em funcionamento Sistema no ar Serviço plataforma Versão 0.1.0 Publicada v0.1.0 · dd31e91 · build 14/11/2026 07:50 Verificado em 14/11/2026, 09:38:59 Login (Supabase) conectado Confere o aplicativo e se o serviço de login responde. Não lê dados do banco. "
+    },
+    {
+      "path": "/demo",
+      "status": 200,
+      "location": null
+    },
+    {
+      "path": "/inicio",
+      "status": 307,
+      "location": "/entrar"
+    },
+    {
+      "path": "/metas",
+      "status": 307,
+      "location": "/entrar"
+    },
+    {
+      "path": "/metas/bonus",
+      "status": 307,
+      "location": "/entrar"
+    },
+    {
+      "path": "/metas/extrato",
+      "status": 307,
+      "location": "/entrar"
+    },
+    {
+      "path": "/metas/fechamento",
+      "status": 307,
+      "location": "/entrar"
+    },
+    {
+      "path": "/financeiro",
+      "status": 307,
+      "location": "/entrar"
+    },
+    {
+      "path": "/vender",
+      "status": 307,
+      "location": "/entrar"
+    },
+    {
+      "path": "/clientes",
+      "status": 307,
+      "location": "/entrar"
+    }
+  ]
+}
