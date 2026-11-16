@@ -97,15 +97,21 @@ export async function limparFotosSemRegistro(): Promise<void> {
     volta(`limpeza=${pedido.error.code === "42501" ? "permissao" : "falha"}`);
   }
   const liberados = ((pedido.data as { caminhos?: unknown } | null)?.caminhos as unknown[] | undefined)?.filter((c): c is string => typeof c === "string") ?? [];
-  let apagados = 0;
   for (let i = 0; i < liberados.length; i += APAGAR_DE_CADA_VEZ) {
     const r = await supabase.storage.from("produtos").remove(liberados.slice(i, i + APAGAR_DE_CADA_VEZ));
     if (r.error) {
       console.error("catálogo: o Storage não apagou as fotos sem registro", { codigo: (r.error as { statusCode?: string }).statusCode ?? null });
       break;
     }
-    apagados += r.data?.length ?? 0;
   }
-  if (apagados === 0) volta("limpeza=falha");
-  volta(`apagados=${apagados}&de=${liberados.length}`);
+  // #98: o que saiu do Storage de fato fica marcado e na auditoria como removido; o que não saiu fica separado e pendente
+  // (a próxima limpeza tenta de novo). O número mostrado é o conferido pelo banco, não o que a chamada disse.
+  const conclusao = await supabase.rpc("fotos_limpeza_concluir", { p_caminhos: liberados });
+  if (conclusao.error) {
+    console.error("catálogo: o banco não conferiu a limpeza das fotos", { codigo: conclusao.error.code || null });
+    volta("limpeza=falha");
+  }
+  const removidos = ((conclusao.data as { removidos?: unknown } | null)?.removidos as unknown[] | undefined)?.length ?? 0;
+  if (removidos === 0) volta("limpeza=falha");
+  volta(`apagados=${removidos}&de=${liberados.length}`);
 }

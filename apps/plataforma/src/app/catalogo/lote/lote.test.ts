@@ -211,18 +211,27 @@ describe("/catalogo/lote: a limpeza dos arquivos sem registro (CAT-011b)", () =>
     expect(await telaDaLimpeza({ apagados: "5", de: "3" })).not.toContain("apagados");
   });
 
-  it("limpar: o banco lista e libera (tudo ou nada), e o Storage apaga de 100 em 100; cada recusa volta com a mensagem", async () => {
+  it("limpar: o banco lista e separa (tudo ou nada), o Storage apaga de 100 em 100 e o banco confere o que saiu; cada recusa volta com a mensagem", async () => {
+    const concluir = (n: number) => { cenario.respostas.fotos_limpeza_concluir = { data: { removidos: Array.from({ length: n }, (_, i) => ARQ(i)), pendentes: Array.from({ length: 150 - n }, (_, i) => ARQ(n + i)) }, error: null }; };
     cenario.respostas.fotos_sem_registro = lista(150);
     cenario.respostas.fotos_sem_registro_limpar = { data: { caminhos: Array.from({ length: 150 }, (_, i) => ARQ(i)) }, error: null };
+    concluir(150);
     expect(await destinoDe(limparFotosSemRegistro())).toBe("/catalogo/lote?apagados=150&de=150#limpeza");
+    // #98: a conclusão vai ao banco com os separados; o número mostrado é o que o banco conferiu (não o que a chamada disse).
+    expect(cenario.pedidos.find((p) => p.startsWith("rpc fotos_limpeza_concluir"))).toContain(ARQ(149));
+    cenario.apagadosPeloStorage = [];
+    concluir(140);
+    expect(await destinoDe(limparFotosSemRegistro())).toBe("/catalogo/lote?apagados=140&de=150#limpeza");
     expect(cenario.pedidos.find((p) => p.startsWith("rpc fotos_sem_registro_limpar"))).toContain(ARQ(149));
     expect(cenario.apagadosPeloStorage.map((l) => l.length)).toEqual([100, 50]);
     // o Storage falha na segunda vez: volta com quantos saíram
     cenario.apagadosPeloStorage = [];
     cenario.falhaDoStorageNaVez = 2;
+    concluir(100);
     expect(await destinoDe(limparFotosSemRegistro())).toBe("/catalogo/lote?apagados=100&de=150#limpeza");
     cenario.apagadosPeloStorage = [];
     cenario.falhaDoStorageNaVez = 1;
+    concluir(0);
     expect(await destinoDe(limparFotosSemRegistro())).toBe("/catalogo/lote?limpeza=falha#limpeza");
     // o banco recusa a limpeza: nada vai ao Storage
     cenario.apagadosPeloStorage = [];
