@@ -1,122 +1,109 @@
-# Prompt para o Claude Code — concluir a implementação com evidências
+# Prompt completo para Claude Code — concluir, integrar, testar e publicar
 
-Você é o programador responsável pelo sistema Ora. Continue o projeto existente, preservando TypeScript, Next.js/React, Node e Supabase/PostgreSQL. Não adicione Firebase, não reescreva a arquitetura e não reinicie o backlog. O objetivo é concluir todas as funções planejadas com operação real, mantendo integrações oficiais, rastreabilidade e publicação por lote.
+Você é o programador principal da Ora 5G; o Codex é o revisor. Continue a implementação existente até cobrir o planejamento e os pedidos atuais do proprietário. Entregue a menor etapa funcional completa, teste, publique no ambiente autorizado, comprove no domínio, documente e prossiga. Não se limite a planos, menus, telas sem persistência ou adapters sem execução. Refinamento visual vem depois da funcionalidade, preservando usabilidade mobile, acessibilidade, fotos e gráficos necessários à operação.
 
-## 1. Retomada obrigatória
+## 1. Leitura obrigatória e reconciliação
 
-Leia AGENTS.md, docs/ESTADO_ATUAL_E_PASSAGEM.md, docs/alinhamento/ANALISE_DO_PLANO.md, CLAUDE.md, README.md, ADRs, backlog.json e os dois checkpoints JSON. Depois leia integralmente este pacote:
+Repositório: `oraconect5g-boop/sistema-ora5g`. Leia a **PR #100**, branch `docs/diagnostico-integral-supabase-20261116`, pasta `docs/analises/diagnostico-integral-2026-11-16/`, mesmo se não estiver na main:
 
-- RELATORIO_INTEGRAL.md;
-- SUPABASE_E_PUBLICACAO.md;
-- MATRIZ_179.md, todos os 179 IDs;
-- FONTES_COMPLETAS.md e cada documento listado, incluindo as 88 versões de 9 PRs fora da main;
-- INVENTARIO_ARQUIVOS_E_FUNCOES.md e evidencias/RESUMO.md.
+- `LEIA-ME.md`, **`ATUALIZACAO_2026-11-16.md`**, **`ADENDO_LOJA_CANAIS_E_PUBLICACAO.md`**, `MATRIZ_179_ATUALIZADA.md` e este prompt.
+- `RELATORIO_INTEGRAL.md`, `SUPABASE_E_PUBLICACAO.md`, `MATRIZ_179.md`, `INVENTARIO_ARQUIVOS_E_FUNCOES.md`, `FONTES_COMPLETAS.md` e evidências. Os arquivos históricos descrevem `5468d9e`; a atualização e o código atual prevalecem para correções/status.
+- As fontes indexadas: 116 Markdown do corte original e 88 versões dos 9 PRs documentais #33, #66, #67, #68, #77, #81, #85, #86 e #97. Ler conteúdo único por assunto; hash idêntico permite reaproveitar leitura com registro. Encontrar arquivo não significa ler conteúdo. Não fazer merge cego de versões antigas sobre documentos vivos.
+- Na main: AGENTS.md, CLAUDE.md, README, docs 00–13, ADRs, decisões, backlog.json, alinhamento, cadastros confirmados, integrações, ambiente, operação, matriz demo/real, relatórios do Codex, respostas às revisões, status JSON, LEITURA_DIAGNOSTICO_INTEGRAL_2026-11-16 e RELATORIO_179_2026-11-16. Incluir documentos surgidos depois do índice.
+- Issues/PRs, diffs, migrations/reversões, testes e código de cada domínio. Não afirmar leitura de outras conversas privadas do projeto ChatGPT; registrar limitações reais.
 
-Consulte as versões pelos SHAs fixos do índice. Não considere lida apenas a lista de nomes. Registre a leitura e concilie decisões contraditórias. Não faça merge automático dos PRs documentais antigos: selecione o conteúdo atual e preserve a história.
+Registrar caminho, SHA/hash, conteúdo lido, decisões válidas e conflitos. Ler todos os aceites do domínio antes de implementá-lo; revisar todos os 179 antes do fechamento. Decisão explícita recente do proprietário prevalece sobre proposta/ADR histórico incompatível; atualizar a fonte canônica preservando histórico datado.
 
-O arquivo SOLUCOES_PARA_AVALIACAO.md contém propostas ilustrativas pedidas pelo proprietário para avaliação. **Não é especificação aprovada nem instrução para copiar/aplicar aqueles códigos.** Corrija os defeitos por análise do código existente, critérios de aceite e menor mudança completa.
+## 2. Partir do estado real, sem refazer correções
 
-Base desta revisão: 5468d9e59d6a68587ba176fff178163eec81ff9c. Se main mudou, faça diff desde essa base, revalide cada achado e não reverta correções posteriores. Os números históricos deste relatório não devem ser carimbados como atuais sem nova medição.
+Corte da revisão: **89927dc2a82f07cfd5a04fcee503d307ac1037f6**. Obter a main atual e comparar o delta. Esse SHA estava no domínio `/saude/versao`, ambiente homologacao, com **CI run 43854750798 aprovado: 2.335 testes, 1 TODO; 281 E2E aprovados, 11 ignorados**. O CI cancelado de 4e1a5d1 é histórico. Preservar o orçamento de importação de 8 s; o job agora tem teto de 30 minutos.
 
-## 2. Regras de execução e conclusão
+Foram corrigidos #87/#88 para novos registros fiscais, e-mail PayJoy opcional, #98 fotos, #95 desempenho, #96 cache/acesso e #99 verificação de versão. Preservar/revalidar regressões, sem reimplementar por seguir relatório antigo.
 
-Trabalhe em uma tarefa delimitada por vez. Para cada lote: IDs → contrato/estados/permissões → implementação → testes → revisão → integração conforme autorização vigente → migration/configuração necessária → publicação em homologação → conferência do domínio → atualização do checkpoint.
+O proprietário já corrigiu **Working directory = packages/banco**. Há **89 migrations** aplicadas, incluindo 20261116130100_importacao_estatisticas; integração GitHub e registro conferidos. Não pedir autorização para reaplicar, resetar histórico ou duplicar migrations. A diferença de MD5 por quatro statements sem delimitadores foi esclarecida. Conferir config.toml mínimo/reprodutibilidade sem defaults que alterem recursos inadvertidamente.
 
-Não inicie outra implementação deixando a atual parcialmente publicada ou sem dizer o bloqueio. Se dependência externa impedir a conclusão, registre exatamente o que falta, deixe a parte dependente desabilitada/explicada e avance na próxima tarefa independente. Não simule parceiro nem declare sucesso com fixture em ambiente real.
+179 IDs: **62 testados em desenvolvimento, 70 parciais, 42 não iniciados, 3 bloqueados, 2 restrições respeitadas; 0 homologados**. Base observada: 3 unidades, 6 produtos/variantes, 2 vendas, 0 clientes, 1 usuário Auth e 0 notas/objetos Storage. Testado, configurado, publicado e homologado são estados separados.
 
-Há autorização prévia para criar as três contas de teste e publicar os lotes na homologação real; não volte a pedir a mesma autorização a cada etapa. Não invente credenciais, e-mails de terceiros, CNPJs, endereços ou dados pessoais. Segredos somente nos ambientes apropriados, nunca no Git, navegador ou relatório.
+## 3. Stack
 
-“Testado” é diferente de “homologado”. Registre apenas testes executados. Não marcar requisito concluído por existir tela, tabela, adapter, variável ou fila. Não encerrar com promessa de “refinar depois” se faltar integridade, integração contratada ou operação básica.
+Preservar **TypeScript, React/Next.js, Node 22 na faixa suportada, Supabase/PostgreSQL, SQL versionado e workers existentes**. Node já é o runtime; não adicionar segundo backend, Firebase ou migrar linguagem como atalho. Reutilizar domínio, componentes, autorização e adapters; evitar outro motor de vendas/estoque/financeiro.
 
-## 3. Primeiro lote: integridade e CI
+`SOLUCOES_PARA_AVALIACAO.md` e `NODE_E_ACELERACAO.md` são propostas para avaliação exclusiva do proprietário: **não copiar/aplicar automaticamente**. Resolver as tarefas a partir do código, contratos e testes. Tecnologia nova somente mediante gargalo medido, custo de migração e decisão explícita, sem parar os módulos atuais.
 
-Reproduza e corrija em PRs pequenos:
-1. #87: notas_corrigir preserva cliente_id/endereco/dados_de e o snapshot fiscal completo.
-2. #88: nota/documento/destinatário WhatsApp permanecem compatíveis após reatribuição de cliente na venda; nenhuma mensagem ao cliente errado.
-3. #98: protocolo seguro de registro/remoção de fotos com duas conexões, falha da chamada HTTP e retentativa; não basta lock que termina antes da exclusão externa.
-4. #96: cache de notificações isolado por identidade e sessão, limpo no logout/troca/revogação.
-5. #95: medir e otimizar importação de 2.000 novas linhas para o orçamento aceito; preservar idempotência, auditoria, validação e concorrência.
-6. #99: publicação reprova SHA servido divergente e confirma também ora5g.com.br.
-7. Reconciliar a exigência antiga de e-mail PayJoy com a regra recente de e-mail opcional. Contrato do parceiro não pode ser presumido.
+## 4. Correções prioritárias
 
-Use migrations novas para corrigir funções já aplicadas. Preserve os testes que demonstram os defeitos, alterando o resultado esperado para o comportamento correto e cobrindo regressão. Não enfraqueça orçamento ou permissão para obter verde.
+**#101, P1:** o backfill de 20261116095825_destinatario_fiscal_integro pode associar nota antiga de Alfa ao cliente comercial atual Beta quando não há snapshot; o envio aceita Beta. Reproduzir a prova e corrigir por migration nova, identidade histórica comprovada, tratamento de casos incertos e conciliação/auditoria. Não inferir destinatário apenas da venda atual. Cobrir fila existente, emissão/correção, troca de cliente e reenvio; não editar migration aplicada.
 
-## 4. GitHub/Supabase e distribuição
+**#102, P2:** com 19 reservas, duas transações com telefones distintos conseguem confirmar e totalizar 21, ultrapassando a cota de 20/hora/loja. Proteger a invariável no banco por escopo/janela, testar conexões reais/retries/idempotência e preservar estoque/IMEI. Limite de IP em memória não basta para RPC público.
 
-A captura do proprietário mostra Working directory “.”, mas a pasta correta é packages/banco/supabase. Prepare a correção para **packages/banco**, confira a documentação oficial e a configuração necessária no config.toml. Não crie segunda árvore de migrations nem rode reset/repair para um histórico que já corresponde às 84 versões.
+Revalidar correções anteriores. Procurar duplicações de merge: escritores SQL antigos, actions/rotas sobrepostas, handlers/webhooks/jobs duplicados, demo importada no real e checkpoints obsoletos. Migrations históricas e demo isolada não são duplicações a apagar. Concluir a etapa com regressões corretas, CI e publicação; prova que reproduz bug não é correção aprovada.
 
-Prove o pipeline da integração e o histórico remoto. Verifique drift, RLS, grants, tipos e Storage. Não trate “FUNCTIONS_DEPLOYED” como prova de operação comercial ou publicação web.
+## 5. Lojas, contas, arquivo e estoque
 
-Mantenha o processo de deploy web real separado do deploy Supabase. Após cada lote, compare SHA do Git, build, serviço e /saude/rodapé pelo domínio. Faça rollback concreto se o novo lote falhar. Registre as limitações do ambiente e preserve as autorizações existentes para homologação; produção crítica segue o aceite requerido pelas regras locais.
+Preparar **11 lojas**: Santa Felicidade, Água Verde, Colônia, Almirante Tamandaré, Dubai, Colombo, Muffato Santa, Butiatuvinha, Ventania, Balneário e Santa Cândida; mais **DEFEITOS**, local sem vendas para itens com problema. Quatorze é meta futura. Separar cadastro operacional de liberação fiscal, sem inventar CNPJ/endereço. Transferir para DEFEITOS não é abrir assistência.
 
-## 5. Base operacional e acesso
+Concluir as **três contas de teste já autorizadas: dono, gerente e vendedor**, vínculos e lojas. Conferir conta existente antes de duplicar; convite/criação segura, canal privado e usuários controlados. Não publicar senhas/tokens nem pedir novamente autorização genérica.
 
-As unidades atuais não representam a rede solicitada. Preparar:
-Santa Felicidade, Água Verde, Colônia, Almirante Tamandaré, Dubai, Colombo, Muffato Santa, Butiatuvinha, Ventania, Balneário, Santa Cândida; e DEFEITOS, local que não vende. A meta de 14 é futura. DEFEITOS recebe transferência de avarias/erros; não é assistência.
+O arquivo **relatorioProdutos131258.xlsx já foi fornecido**: posição de **10/11/2026 às 13:20**, SHA-256 `76f9cf33198de7205c01dc8ec78dea70fcf86c17847f9faea6356f0c8e612c06`, 83 colunas, 2.271 produtos, 12 locais e linha total. Se não está no seu servidor, registrar transferência segura pendente; não afirmar que nunca foi enviado ou colocar a base real no Git.
 
-Reutilizar IDs/códigos existentes quando corresponderem, com prévia e verificação de duplicados. Não transformar loja de teste em real silenciosamente. Separar cadastro operacional de liberação fiscal quando necessário, sem inventar dados obrigatórios.
+Corrigir leitura integral: K955 tem observação de 3.220 caracteres rejeitada pelo limite genérico de 500; o arquivo excede 2.000 linhas. Validar campos mapeados corretamente, sem truncar/descartar silenciosamente. Prévia global, locais/SKUs, duplicatas, números, hash/mapeamento/lotes idempotentes, conferência e reversão. Importar catálogo não carrega saldo. Criar saldo por local com trilha e conciliar movimentos posteriores ao corte; não chamar estoque histórico de atual.
 
-Completar vendedor, gerente e dono de teste com vínculo/loja e acesso correto. O e-mail do dono já foi informado em canal privado nesta conversa; não republique em relatório. Configurar convite/recuperação/SMTP conforme necessário e provar login, bloqueio, revogação, mudança de loja e MFA/confirmação recente.
+Fotos por produto/variante visual; busca com foto e disponível/reservado/trânsito/avarias por loja. Transferência de múltiplos itens X/Y: comprometimento reduz disponível da origem, envio representa saída/trânsito, recebimento credita destino uma vez; cancelar/recusar/divergir têm efeitos explícitos. Evitar dupla baixa por reserva+envio. Testar conservação da rede e concorrência com PDV/site/canais.
 
-## 6. Planilha original, fotos e estoque
+## 6. Vendas, financeiro, clientes e gráficos
 
-O arquivo relatorioProdutos131258.xlsx já foi entregue, com posição de 10/11/2026 às 13:20. Não pedir o mesmo arquivo como se estivesse ausente. Se não estiver no seu ambiente, recuperar pelo canal disponível ou registrar apenas a transferência de acesso necessária.
+Concluir CRM, PDV/pagamento misto, caixa, desconto/aprovação, troca/devolução/estorno, recebíveis, contas a pagar, DRE gerencial, previsão, conciliação, relatórios e exportações. Usar centavos/decimal conforme convenção; efeitos idempotentes. Registro manual, autorização externa e dinheiro liquidado são fatos diferentes.
 
-A prova atual encontra 83 colunas, 2.271 produtos, 12 locais e linha de total; falha em K955 por observação com 3.220 caracteres e existe teto de 2.000 linhas. Corrigir parsing, limites, mapeamento, normalização e prévia sem truncar/descartar silenciosamente. Não importar total como produto. Separar catálogo/preço de saldos e pendências por loja.
+Cadastro rápido: **nome completo + WhatsApp; e-mail sempre opcional**. Nota pede documento/endereço fiscal completo conforme operação. Nunca inventar e-mail. Enviar documento correto por WhatsApp oficial, validando identidade também no worker e acompanhando entrega.
 
-Criar carga de estoque idempotente por arquivo/lote/local/produto, com prévia completa, erros por linha, aprovação, conciliação e reversão lógica segura. Não marcar foto genérica como foto do produto. Upload e miniaturas devem funcionar na busca, estoque, PDV e variantes visuais, com pendências visíveis.
+Preservar/validar gráficos reais por loja/rede/vendedor/período: vendas líquidas, devoluções, custo/margem, pagamentos, caixa, contas, resultado, previsão, metas, estoque e telecom. Comparar cada indicador com fatos conhecidos e autorização no banco. Vazio, erro e sem permissão são distintos; nenhum número fictício no real. Bônus por **meta mensal**, não reintroduzir comissão por venda contrariando D-014.
 
-A posição histórica não pode sobrescrever venda/entrada/transferência ocorrida depois. Definir corte e reconciliar movimentos. Não inserir saldos como se fossem movimentação atual sem origem auditável.
+## 7. Ora Connect, financeiras, fiscal e WhatsApp
 
-## 7. Transferências e venda real
+**Nogle é a integração externa oficial**: chips/ICCID, ativação, linha/plano, recarga, portabilidade, contratação, recorrência, gateway/pagamentos e repasses/bonificações da Ora Connect conforme contrato/habilitação. Sucesso só com evidência oficial. Atribuição vendedor/loja; venda de chip distinta de ativação; bruto distinto de receita/repasse e confirmado distinto de liquidado. Após timeout, reconsultar/reconciliar antes de duplicar cobrança/ativação. Testar worker, fila, assinatura/webhook, ordem de eventos e retry.
 
-Permitir selecionar produto X e Y na mesma operação ou lote com atomicidade clara. A disponibilidade de venda da origem deve cair na confirmação operacional por reserva; no envio, converter reserva em saída física/trânsito sem descontar duas vezes; destino só recebe o saldo ao confirmar recebimento.
+**PayJoy e Aiva por API obrigatórias**; manual não conclui integração. Documentação/parceria/sandbox, solicitação, decisão, contrato, liquidação, cancelamento, callback e conciliação. J7/QI Tech: extensão planejada com identidade/contrato confirmados, sem presumir endpoints ou confundir empresas.
 
-Testar disputa com PDV, clique repetido, rejeição, cancelamento, divergência, recebimento parcial se suportado, IMEI/ICCID, permissão da outra loja e DEFEITOS. O agregado da rede deve explicar loja/origem/destino/trânsito.
+Fiscal: completar emissão/ciclo oficial com provedor/contador, operação/UF/empresa, contingência, cancelamento/correção, anexos e conciliação. WhatsApp: adapter oficial, executável/scheduler, fila, templates, assinatura, status e caixa multiatendente/CRM. Fila não é entrega; wa.me não é automação oficial. Implementar o que independe de credenciais e listar o bloqueio exato do restante.
 
-Executar jornada real autenticada: busca/foto → cliente rápido → carrinho misto → reserva/IMEI → preço/desconto/aprovação → pagamentos → conclusão → caixa → comprovante → fiscal → devolução/troca/estorno → relatórios. Usar dados de teste isolados, não transações financeiras reais por engano.
+## 8. Loja pública com compra completa — decisão atual
 
-## 8. Clientes, fiscal e WhatsApp
+**https://ora5g.com.br/loja** é o endereço de referência. A rota já existe; completar o fluxo. No topo do site, botão **Comprar/Loja**; manter **Entrar** na plataforma, separado do acesso do comprador, sem conceder papel de funcionário. Na loja: busca, fotos, catálogo elegível, variantes, preço, carrinho e acompanhamento. Não exigir e-mail por conveniência técnica.
 
-Cadastro rápido: nome completo e WhatsApp; e-mail opcional. Cadastro fiscal: endereço completo e documentos exigidos para aquela operação, com finalidade e proteção adequadas. Não tornar CPF/e-mail obrigatórios globalmente.
+O novo pedido **amplia o ADR-009**: deixar de limitar o escopo final a reservar e pagar no balcão. Preservar retirada e implementar checkout, pagamento verificado, pedido com estados, frete/CEP/entrega/rastreio, fiscal e pós-venda. Atualizar documentos que consideram o endereço indefinido. Gateway de mercadorias e Nogle telecom dependem dos contratos próprios; não presumir que Nogle liquide aparelhos/acessórios.
 
-Nota deriva da venda e preserva destinatário histórico. Integrar o provedor fiscal homologado com o contador, estados oficiais e idempotência. Emissão manual/anexo não é integração fiscal completa.
+Servidor recalcula totais; pagamento confirmado por fonte confiável, não retorno do navegador. Estoque/IMEI compartilhados com PDV/canais. Testar duplo clique, abandono, webhook repetido/fora de ordem, pagamento tardio, expiração, disputa de estoque, falha de frete, cancelamento e reembolso. Não expor custo, IMEI ou dados privados. Telecom online conforme capacidade oficial.
 
-Completar WhatsApp Business Platform oficial: adapter, serviço executável/scheduler, callback assinado, retentativas/reconciliação, template/consentimento e estados de envio/entrega/falha. A fila da nota já existe, mas enfileirar não é entregar. Revalidar o destinatário antes de expedir. Não usar automação não oficial.
+## 9. Marketplaces e Meta reais
 
-## 9. Nogle e financeiras — prioridade comercial
+Concluir **ORA-MKTPL-001 a 008**: Mercado Livre/TikTok Shop prioritários; Shopee permanece no planejamento. Adapters separados, OAuth/renovação/escopos; importação inicial/incremental de anúncios/produtos/pedidos conforme API; SKU; sincronização preço/estoque; webhooks autenticados conforme contrato, paginação/checkpoints, rate limit/backoff, reconciliação agendada e dedupe por organização/canal/conta/ID. Não criar outro livro de estoque.
 
-Nogle é sistema parceiro externo oficial para Ora Connect. Reaproveitar adapter/worker existente, conferir contratos e scopes; nunca criar endpoint por suposição. Venda de chip, ativação, recarga, portabilidade, linha/plano, recorrência, gateway e repasses precisam de vínculo e conciliação com o registro oficial.
+Ciclo pedido/pagamento/expedição/etiqueta/rastreio/entrega e reversões. Contabilidade gerencial por pedido/canal: bruto, desconto, frete, taxas, comissão, líquido previsto/recebido, repasse e divergência. Provar importação automática; botão ou planilha manual não cumprem esse aceite. Separar escrituração formal de conciliação gerencial.
 
-Separar venda do chip, ativação, recarga, valor movimentado, valor devido à parceira e receita/repasse da Ora. Vendedor e loja acompanham a operação de origem; eventos repetidos não duplicam resultado. Timeout após envio exige reconsulta oficial antes de tentar executar novamente. Nada de concluir como sucesso só porque a chamada foi enfileirada.
+Concluir **ORA-META-001 a 006**: gastos/insights por conta/campanha/período/moeda/fuso; UTM/leads/origem; atribuição loja/vendedor; CTR/CPC/CPL/CPA/ROAS/CAC quando calculáveis e margem reconciliável. Pixel/Conversions API deduplicados, consentimento/minimização. Ads, WhatsApp e Commerce são produtos distintos; não inventar repasse de marketplace na Meta. Sem dado/permissão, mostrar indisponibilidade honesta.
 
-PayJoy e Aiva **via API** fazem parte do escopo obrigatório. Registro manual atual não cumpre o requisito. Preparar contrato do adapter e jornada com aprovação, oferta, expiração, contrato, repasse, cancelamento e conciliação, implementando chamadas reais somente com documentação confirmada. J7 e QI Tech: espaço de extensão e avaliação de parceria/documentação; não equiparar J7 a empresa de nome parecido.
+## 10. Todos os 179, sem exceções silenciosas
 
-Consolidar uma lista objetiva de dependências externas por parceiro: documentação/versionamento, ambiente, autenticação/escopos, identificação de PDV/loja, operações contratadas, idempotência, callbacks/assinatura, reconsulta, rate limits, testes autorizados, taxas e prazos de repasse. Não pedir segredos no chat.
+Percorrer os 18 domínios: **ORG, CAT, INV, CRM, POS, PAY, FIN, PERF, FISC, CONNECT, ONLINE, MKTPL, WHATS, META, IA, REPORT, QUAL e OS**. Concluir parciais/não iniciados respeitando dependências: acesso, compras/inventário, assistência/custódia/peças, bônus/fechamento, atendimento, relatórios/IA supervisionada, LGPD, observabilidade, backup/restauração, contingência, desempenho e piloto. A01–A20 do adendo detalham os IDs existentes; não inflar o denominador nem reduzir o escopo aos módulos fáceis.
 
-## 10. Financeiro, gráficos e demais áreas
+Matriz por ID: aceite, arquivos/implementação, testes/resultados, configuração, migration, publicação/SHA/URL, jornada real, homologação, bugs e dependências. Não promover domínio inteiro porque um helper passou. E2E anônimo não homologa os três perfis.
 
-Preservar os gráficos reais existentes. Comparar a demo por indicador, não copiar valores. Validar filtros de loja/período, direitos de custo/margem, recebimento versus liquidação, taxas, estorno e previsão. Oferecer tabela acessível e estados distintos de vazio/erro/sem permissão.
+## 11. Publicar cada etapa no real e na demo
 
-Metas são mensais e o incentivo é bônus por meta, conforme D-014; não comissão por venda. Fechamento, contestação, aprovação e pagamento precisam de trilha.
+A publicação de etapas concluídas no ambiente atual já foi autorizada. **Não acumular código sem visibilidade nem pedir novamente autorização genérica a cada lote.** Branch/etapa delimitada, migrations compatíveis, testes, CI e publicação. App conectado com funções reais; demo com os mesmos fluxos em dados fictícios isolados.
 
-Completar OS/custódia/orçamento/peças/cobrança/avisos, CRM/consentimento/anexos/mesclagem e todos os requisitos parciais antes de declarar cada área fechada.
+Reconciliar regra antiga que desliga demo em produção com a decisão atual de mantê-la acessível. Demo identificada, sem disparar pagamento/estoque/API real ou expor credenciais/dados. Compartilhar componentes seguros e separar fontes de dados, sem duplicar regras de negócio desnecessariamente.
 
-Depois continuar os 179 IDs ainda abertos: checkout/frete/retirada/devolução online; marketplaces com estoque/reserva central; Meta Ads/atribuição; WhatsApp multiatendente; IA supervisionada; observabilidade, segurança, retenção, contingência, backup/restauração e expansão. Não substituir a lista integral por uma seleção de telas.
+Antes de anunciar publicado: migrations, serviços web/worker, assets, variáveis por presença, rotas e **SHA completo esperado em /saude/versao pelo domínio**; conferir /loja, /demo e telas alteradas com perfis corretos. Main e Supabase check não provam deploy Next.js. O domínio observado está em homologação; não renomear ambiente para fingir produção.
 
-## 11. Validação por lote
+Adicionar acompanhamento visível ao dono (tela autenticada de versão/entregas ou equivalente): etapa, funções, links para testar, horário/SHA e bloqueios; desenvolvido, testado, configurado, publicado e homologado separados. Não expor inventário interno/segredos ao visitante.
 
-- Node 22 compatível; instalação pelo lockfile; lint, typecheck, testes pertinentes e build.
-- Nas mudanças transacionais, autorização positiva/negativa, organização/loja, idempotência, duas conexões, compensações e tipos gerados.
-- Na UI, E2E autenticado do comportamento alterado; não apenas /demo ou redirecionamento ao login.
-- Em parceiro, contratos/fixtures demonstram implementação; homologação oficial demonstra integração. Relatar separadamente.
-- Em distribuição, SHA do domínio e migration aplicada; rota 200/307 isolada não comprova a função.
-- Não repetir a suíte inteira sem motivo após resultados válidos; ampliar conforme a mudança/risco.
-- Atualizar status-requisitos.json, execucao-integral-status.json, rastreabilidade, passagem de contexto e matriz demo/real. Não registrar CI verde de outro SHA como se fosse do atual.
+Executar instalação com Node suportado, scanner, lint, typecheck, testes e sequência CI exigida, build, orçamento, audit e E2E pertinente. Banco/dinheiro/estoque exigem RLS, concorrência, idempotência e reversões. Depois, jornada no domínio e evidência. Não apagar teste/aumentar orçamento funcional para obter verde. Deploy crítico de produção segue o aceite aplicável, sem bloquear homologação já autorizada.
 
-## 12. Entrega final
+## 12. Dependências, continuidade e encerramento
 
-Forneça relatório por todos os 179 IDs: implementado, testado, configurado, publicado e homologado como campos separados; links de código/PR/check/migration/domínio e evidência do aceite. Adicione os pedidos novos desta conversa com vínculo aos IDs, sem escondê-los.
+Manter **lista única de APIs/habilitações**, sem valores secretos: parceiro, documentação/versão, produto/conta/escopos, sandbox, nomes de variáveis, callback/assinatura, limites, teste pendente, responsável e função bloqueada. Credencial ausente não justifica parar áreas independentes ou inventar endpoints. Pedir só informação indispensável ainda não fornecida.
 
-Apresente também dependências externas faltantes, com responsável e impacto exato. Sem credencial/contrato não prometa “100% funcionando”. Conclua todo trabalho independente autorizado e deixe checkpoint que permita retomar precisamente do ponto restante.
+Ao fim de cada etapa: IDs, implementado, publicado no real/demo, roteiro para testar, CI/SHA/migrations, limitações e próximo lote. Atualizar checkpoints. Se a sessão terminar, deixar passagem exata e retomar do próximo item; não reapresentar toda a tarefa como plano novo.
 
+Só declarar completo quando requisitos/aceites estiverem implementados, testados, configurados, publicados e validados nos fluxos aplicáveis. Enquanto houver API, dado, bug ou aceite pendente, registrar precisamente e continuar o restante. O objetivo é operação verificável com loja, PDV, financeiro, Ora Connect e canais integrados.

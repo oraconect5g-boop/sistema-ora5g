@@ -1,3 +1,5 @@
+> **Documento histórico de 5468d9e.** Correções, CI, migrations, contagens e pedidos posteriores estão em [ATUALIZACAO_2026-11-16.md](ATUALIZACAO_2026-11-16.md). Não tratar achados já corrigidos como pendências atuais.
+
 # Relatório integral — planejamento, código e operação
 
 ## 1. Diagnóstico

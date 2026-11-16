@@ -1,17 +1,14 @@
 # Diagnóstico integral do sistema Ora
 
-Base auditada: `5468d9e59d6a68587ba176fff178163eec81ff9c`. Coleta final em 16/11/2026 UTC, noite de 15/11 em São Paulo.
+**Atualização: 16/11/2026, código 89927dc.** Este pacote documenta análise, provas e prompt de execução. Não altera aplicativo, migrations remotas, contas, estoque ou deploy. A integração GitHub/Supabase corrigida e o CI aprovado foram verificados; operação completa ainda está pendente.
 
-Este pacote registra análise, evidências e encaminhamento. Não altera aplicativo, migrations, contas, estoque, configuração do Supabase ou publicação no domínio.
+1. [Atualização atual](ATUALIZACAO_2026-11-16.md): correções confirmadas, bugs #101/#102, Supabase, CI e domínio.
+2. [Loja, canais e publicação real/demo](ADENDO_LOJA_CANAIS_E_PUBLICACAO.md): novo pedido do proprietário, 20 aceites vinculados aos 179 IDs.
+3. [Prompt completo para Claude Code](PROMPT_CLAUDE.md): continuar até concluir, testar e publicar por etapas.
+4. [Matriz atual dos 179](MATRIZ_179_ATUALIZADA.md): 62 testados, 70 parciais, 42 não iniciados, 3 bloqueados, 2 restrições respeitadas, 0 homologados.
+5. [Node e aceleração](NODE_E_ACELERACAO.md): stack atual recomendada e exemplos de código apenas para avaliação do proprietário.
+6. [Evidências atuais](evidencias/REVALIDACAO.md): testes, provas e limites.
 
-1. [Relatório integral](RELATORIO_INTEGRAL.md): o que existe, defeitos reproduzidos, lacunas e prioridades.
-2. [Supabase e publicação](SUPABASE_E_PUBLICACAO.md): banco efetivo, arquivos, permissões e integração GitHub.
-3. [Matriz dos 179 requisitos](MATRIZ_179.md): todos os IDs, aceites, evidências, bloqueios e próximos passos.
-4. [Inventário completo](INVENTARIO_ARQUIVOS_E_FUNCOES.md): 1.033 arquivos, 339 funções SQL e 95 relações.
-5. [Fontes completas](FONTES_COMPLETAS.md): 116 Markdown da main e 88 versões documentais de 9 PRs.
-6. [Prompt para o Claude Code](PROMPT_CLAUDE.md): execução ordenada, aproveitando o código atual.
-7. [Soluções com código para avaliação do proprietário](SOLUCOES_PARA_AVALIACAO.md): propostas separadas; não são ordem de aplicação.
-8. [Evidências](evidencias/RESUMO.md).
+Base histórica preservada: [relatório integral](RELATORIO_INTEGRAL.md), [Supabase](SUPABASE_E_PUBLICACAO.md), [matriz detalhada](MATRIZ_179.md), [inventário de arquivos/funções](INVENTARIO_ARQUIVOS_E_FUNCOES.md), [fontes dos relatórios](FONTES_COMPLETAS.md), [propostas anteriores](SOLUCOES_PARA_AVALIACAO.md) e [evidências anteriores](evidencias/RESUMO.md). Esses números/bugs se referem a 5468d9e e não substituem a atualização.
 
-**Conclusão:** há implementação real significativa; a entrega operacional está incompleta. O checkpoint declara 62 testados, 68 parciais, 44 não iniciados, 3 bloqueados e 2 restrições respeitadas. Nenhum homologado registrado. O site publica o SHA auditado, mas isso não confirma dados carregados, integrações habilitadas ou jornadas reais concluídas.
-
+O domínio confirmou 89927dc em homologação; CI completo aprovado com 2.335 testes e 281 E2E. Isso não prova todas as jornadas, credenciais ou dados carregados. Node já é usado: os bloqueios observados não justificam reescrever em outra linguagem.

@@ -1,3 +1,5 @@
+> **Documento histórico de 5468d9e.** Correções, CI, migrations, contagens e pedidos posteriores estão em [ATUALIZACAO_2026-11-16.md](ATUALIZACAO_2026-11-16.md). Não tratar achados já corrigidos como pendências atuais.
+
 # Soluções com código — somente para avaliação do proprietário
 
 Estas propostas mostram caminhos viáveis para acelerar o trabalho sem trocar a stack. **Não foram aplicadas ao aplicativo, banco ou servidor e não são instruções para o Claude copiá-las.** O prompt de execução exclui sua adoção automática.

@@ -1,0 +1,91 @@
+[
+  {
+    "function": "privado.importacao_atualizar_estatisticas",
+    "source": "20261116130100_importacao_estatisticas.sql",
+    "body_equal": true,
+    "settings": [
+      "search_path=\"\""
+    ]
+  },
+  {
+    "function": "privado.importacao_recomparar",
+    "source": "20261116130100_importacao_estatisticas.sql",
+    "body_equal": true,
+    "settings": [
+      "search_path=\"\""
+    ]
+  },
+  {
+    "function": "public.concluir_venda",
+    "source": "20261116095941_email_opcional_na_payjoy.sql",
+    "body_equal": true,
+    "settings": [
+      "search_path=\"\""
+    ]
+  },
+  {
+    "function": "public.fotos_limpeza_concluir",
+    "source": "20261116102346_limpeza_das_fotos_protocolo.sql",
+    "body_equal": true,
+    "settings": [
+      "search_path=\"\""
+    ]
+  },
+  {
+    "function": "public.fotos_sem_registro_limpar",
+    "source": "20261116102346_limpeza_das_fotos_protocolo.sql",
+    "body_equal": true,
+    "settings": [
+      "search_path=\"\""
+    ]
+  },
+  {
+    "function": "public.importacao_aplicar",
+    "source": "20261112163333_importador_correcoes.sql",
+    "body_equal": true,
+    "settings": [
+      "search_path=\"\"",
+      "enable_seqscan=off"
+    ]
+  },
+  {
+    "function": "public.nota_enviar_whatsapp",
+    "source": "20261116095825_destinatario_fiscal_integro.sql",
+    "body_equal": true,
+    "settings": [
+      "search_path=\"\""
+    ]
+  },
+  {
+    "function": "public.notas_corrigir",
+    "source": "20261116095825_destinatario_fiscal_integro.sql",
+    "body_equal": true,
+    "settings": [
+      "search_path=\"\""
+    ]
+  },
+  {
+    "function": "public.notas_solicitar",
+    "source": "20261116095825_destinatario_fiscal_integro.sql",
+    "body_equal": true,
+    "settings": [
+      "search_path=\"\""
+    ]
+  },
+  {
+    "function": "public.registrar_foto",
+    "source": "20261116102346_limpeza_das_fotos_protocolo.sql",
+    "body_equal": true,
+    "settings": [
+      "search_path=\"\""
+    ]
+  },
+  {
+    "function": "public.whatsapp_worker_reivindicar",
+    "source": "20261116095825_destinatario_fiscal_integro.sql",
+    "body_equal": true,
+    "settings": [
+      "search_path=\"\""
+    ]
+  }
+]
