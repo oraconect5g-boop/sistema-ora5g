@@ -78,6 +78,91 @@ O JavaScript baixado passa um pouco da conta do item 1. Duas coisas explicam a d
 
 Oito vendedores vendendo ao mesmo tempo num PostgreSQL 17 de teste: a conclusão da venda levou entre 59 e 79 ms para 95% das vendas, em quatro rodadas. Os detalhes estão em `packages/banco/src/carga-e-recuperacao.test.ts`.
 
+## 4. O caminho do servidor até o banco (VEL-a, 16/11/2026)
+
+As telas com login demoram por um motivo só: cada tela fazia muitas idas ao banco, uma depois da outra, e cada ida custa caro porque o servidor da homologação fica longe do banco.
+
+### 4.1 Antes: o que o proprietário mediu no navegador (conta do dono, boa internet)
+
+| Tela ou ação | Tempo |
+|---|---:|
+| `/saude/versao` (sem banco) | 0,14 s |
+| `/caixa` | 1,2 s até o primeiro byte |
+| `/clientes` | 1,8 s |
+| `/catalogo`, `/estoque`, `/vender`, `/vendas` | 2,5 a 2,8 s |
+| `/vender` com busca (`?q=`) | 4,7 s |
+| `/inicio`, `/financeiro`, `/relatorios`, `/metas` | 0,5 a 0,7 s para começar, 2,0 a 2,6 s para terminar |
+| Botão "Adicionar" do PDV | 3,6 s |
+| Botão "Tirar" do PDV | 5,9 s |
+
+Durante a espera o botão não travava e nada avisava que o pedido tinha sido enviado.
+
+### 4.2 Antes: quanto custa uma ida ao banco, medido no servidor
+
+Com `curl -w`, do servidor da homologação até o Supabase (`ora5g-dev`, São Paulo):
+
+| Medida | Tempo |
+|---|---:|
+| Pedido em conexão nova (inteiro) | 0,42 a 0,44 s |
+| — dos quais, abrir a conexão | 0,12 s |
+| — dos quais, terminar a criptografia (TLS) | 0,26 s (acumulado) |
+| Pedido em conexão reaproveitada | 0,16 a 0,20 s |
+| `/saude/versao` no próprio servidor | 0,008 s |
+| `/saude` no próprio servidor | 0,48 s |
+| `/saude/versao` pelo domínio | 0,012 s |
+
+Com o Node do servidor (o mesmo que roda a plataforma), antes de qualquer mudança:
+
+| Medida | Tempo |
+|---|---:|
+| 1º pedido (conexão nova) | 0,64 s |
+| Pedidos seguintes (reaproveitada) | 0,16 s |
+| Depois de 3 s parado | 0,16 s |
+| Depois de 6 s parado | 0,42 s (a conexão já tinha sido fechada) |
+| Depois de 15 s parado | 0,41 s |
+| 32 pedidos ao mesmo tempo, depois de parado | 0,90 s o mais lento (0,73 s a mediana) |
+| 6 pedidos ao mesmo tempo, com as conexões abertas | 0,18 a 0,20 s |
+
+O servidor está a cerca de 0,12 s de qualquer destino na internet (o terceiro salto da rota já mostra 128 ms), então a distância não é do Supabase: é do servidor da homologação. `ping` médio: São Paulo 123 ms, Virgínia 141 ms, Ohio 164 ms, Oregon 209 ms, Frankfurt 222 ms. **Na produção, o servidor da plataforma e o banco devem ficar na mesma região** (decisão do proprietário, D-027 e D-044): só isso tira a maior parte do tempo de cada ida.
+
+### 4.3 Antes: quantas idas cada tela fazia
+
+Conta simples: uma tela leva perto de 0,42 s (primeira ida, em conexão nova) mais 0,17 s para cada ida seguinte.
+
+| Tela | Idas em fila | Tempo esperado |
+|---|---:|---:|
+| Qualquer tela com menu | conferir a sessão no serviço de login + situação da sessão + as leituras da tela + 32 pedidos do menu ao mesmo tempo + 2 contagens | — |
+| `/caixa` | cerca de 7 | 1,2 s |
+| `/vender` com venda aberta, sem busca | 10 a 13 | 2,0 a 2,4 s |
+| `/vender` com busca | mais 3 da busca, mais detalhes, preços, fotos e endereços das fotos | 4 s ou mais |
+| Uma ação do carrinho | sessão + ação + a tela inteira de novo | 3,2 a 3,6 s |
+
+### 4.4 A conexão mantida aberta (medido antes de aplicar)
+
+O Node fecha a conexão parada depois de 4 s. Com a conexão mantida por mais tempo, no mesmo servidor:
+
+| Medida | Padrão do Node | Mantendo aberta |
+|---|---:|---:|
+| Depois de 6 s parado | 0,42 s | 0,18 s |
+| Depois de 15 s parado | 0,41 s | 0,17 s |
+| Depois de 30 s parado | — | 0,17 s |
+| Depois de 60 s parado | — | 0,17 s |
+| Depois de 100 s parado | — | 0,40 s (o outro lado fechou) |
+
+Por isso a plataforma passa a manter a conexão com o banco aberta por 60 s.
+
+### 4.5 O que mudou no VEL-a
+
+- **Uma ida só para a sessão e o menu.** A função `molde_da_sessao` responde de uma vez a situação da sessão, as permissões do menu, o nome, o papel e as duas contagens. Antes eram 2 idas em fila e 34 pedidos ao mesmo tempo.
+- **Sem ida ao serviço de login a cada tela.** A plataforma confere a assinatura do crachá da sessão no próprio servidor (`getClaims`, ADR-010). Quem decide se a sessão vale continua sendo o banco, a cada pedido.
+- **O PDV lê a venda numa ida só** (`pdv_tela`): caixa, venda aberta, carrinho com preço, campanha, ordem de serviço e aprovação, e as maquininhas.
+- **A conexão com o banco fica aberta por 60 s.**
+- **Todo botão de ação trava e mostra um texto de espera** assim que é tocado.
+
+### 4.6 Depois
+
+*A preencher depois da publicação do lote, com as mesmas medidas.*
+
 ## Metas propostas (o proprietário aprova ou muda)
 
 | Meta | Proposta | Hoje | Onde se mede |
