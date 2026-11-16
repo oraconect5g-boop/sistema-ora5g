@@ -1,0 +1,77 @@
+{
+  "base": "953b21e0b90f4823759de9bba8f38452dd6769e8",
+  "ambiente": "local descartável, fixtures",
+  "casos": [
+    {
+      "id": "REV-NOV-001",
+      "custo_ver": false,
+      "linhas": [
+        {
+          "total_custo_centavos": 2468,
+          "custo_unitario_centavos": 1234
+        }
+      ]
+    },
+    {
+      "id": "REV-NOV-002",
+      "antes": [
+        {
+          "valor_centavos": 12000
+        }
+      ],
+      "depois": [
+        {
+          "valor_centavos": 9000
+        }
+      ]
+    },
+    {
+      "id": "REV-NOV-003",
+      "nome": "Nome revisado depois da importacao",
+      "ativa": false
+    },
+    {
+      "id": "REV-NOV-004",
+      "codigo": "23505",
+      "estado": {
+        "situacao": "baixado",
+        "em_estoque": false
+      }
+    },
+    {
+      "id": "REV-NOV-005",
+      "entrada": "6018c793-d3a0-40c9-ac37-c63509427fa8",
+      "atual": {
+        "ativo": false,
+        "quantidade": 2
+      }
+    },
+    {
+      "id": "REV-NOV-006",
+      "linhas": [
+        {
+          "nome": "CATEGORIA CONCORRENTE"
+        },
+        {
+          "nome": "categoria concorrente"
+        }
+      ]
+    },
+    {
+      "id": "REV-NOV-007",
+      "antes": [
+        {
+          "valor_centavos": 9000,
+          "origem": "manual"
+        }
+      ],
+      "depois": [
+        {
+          "valor_centavos": 7900,
+          "origem": "importacao"
+        }
+      ]
+    }
+  ],
+  "interpretacao": "Observações que reproduzem seis defeitos e um comportamento de contrato; não são aceites do comportamento defeituoso."
+}
