@@ -7021,6 +7021,13 @@ export type Database = {
         Args: { p_mes: string; p_unidade: string }
         Returns: Json
       }
+      molde_da_sessao: {
+        Args: {
+          p_permissoes_da_loja: string[]
+          p_permissoes_da_rede?: string[]
+        }
+        Returns: Json
+      }
       movimentar_caixa: {
         Args: {
           p_chave: string
@@ -7194,6 +7201,7 @@ export type Database = {
         Args: { p_fim: string; p_inicio: string; p_unidade?: string }
         Returns: Json
       }
+      pdv_tela: { Args: never; Returns: Json }
       pedido_compra: { Args: { p_pedido: string }; Returns: Json }
       pedido_compra_criar: {
         Args: {
