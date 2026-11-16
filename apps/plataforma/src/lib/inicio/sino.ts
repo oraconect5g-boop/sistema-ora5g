@@ -59,3 +59,20 @@ export function lembrancaDoSino(bruta: string | null, dono: DonoDaLembranca, ago
 
 export const lembrar = (dono: DonoDaLembranca, itens: readonly ItemDoSino[], agora: number) =>
   JSON.stringify({ versao: 2, usuario: dono.usuario, unidade: dono.unidade, em: agora, itens });
+
+/** A lembrança válida com a hora em que foi lida (para a lista não durar além do minuto). */
+export function lembrancaComHora(bruta: string | null, dono: DonoDaLembranca, agora: number): { itens: ItemDoSino[]; em: number } | null {
+  const itens = lembrancaDoSino(bruta, dono, agora);
+  return itens && bruta ? { itens, em: (JSON.parse(bruta) as { em: number }).em } : null;
+}
+
+/** A releitura mandada para o login (sessão encerrada ou revogada) ou recusada (401/403): o acesso acabou (#96). */
+export const acessoNegado = (resposta: { status: number; redirected: boolean }) => resposta.redirected || resposta.status === 401 || resposta.status === 403;
+
+/**
+ * Depois de uma releitura que falhou (#96): com o acesso negado, a lista sai na hora; outra falha (rede, 503) mantém a
+ * lista só enquanto ela tem menos de um minuto. Quem chama apaga a lembrança da aba nos dois casos.
+ */
+export function manterDepoisDaFalha(negado: boolean, lidoEm: number | null, agora: number): boolean {
+  return !negado && lidoEm !== null && agora >= lidoEm && agora - lidoEm <= VALIDADE_DO_SINO_MS;
+}

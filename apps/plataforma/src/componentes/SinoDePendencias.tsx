@@ -5,10 +5,10 @@ import Link from "next/link";
 import { useCallback, useEffect, useState } from "react";
 
 import { ICONES_DAS_PENDENCIAS } from "../lib/inicio/icones-das-pendencias";
-import { CHAVE_DO_SINO, emblemaDoSino, lembrancaDoSino, lembrar, lerRespostaDoSino, type ItemDoSino } from "../lib/inicio/sino";
+import { acessoNegado, CHAVE_DO_SINO, emblemaDoSino, lembrancaComHora, lembrar, lerRespostaDoSino, manterDepoisDaFalha, type ItemDoSino } from "../lib/inicio/sino";
 import { MenuSuspenso } from "./MenuSuspenso";
 
-type Estado = { tipo: "lendo" } | { tipo: "ok"; itens: ItemDoSino[] } | { tipo: "falha" };
+type Estado = { tipo: "lendo" } | { tipo: "ok"; itens: ItemDoSino[]; lidoEm: number } | { tipo: "falha" };
 
 // O sino do topo de todas as telas (G6, REPORT-007): o que espera a pessoa na loja do turno, a mesma leitura do Início.
 // Pede /api/pendencias depois que a tela abre (não atrasa nenhuma tela) e lembra a resposta por um minuto nesta aba;
@@ -18,26 +18,36 @@ export function SinoDePendencias({ unidade, usuario }: { unidade: string; usuari
 
   // Releitura ao abrir: se falhar, fica o que já foi lido (menos de um minuto); na primeira leitura, a falha aparece.
   const ler = useCallback(async () => {
-    const falhou = () => setEstado((atual) => (atual.tipo === "ok" ? atual : { tipo: "falha" }));
+    // #96: a falha apaga a lembrança da aba; o acesso negado (sessão encerrada ou revogada) apaga também a lista na hora,
+    // e outra falha só mantém a lista enquanto ela tem menos de um minuto.
+    const falhou = (negado: boolean) => {
+      try { sessionStorage.removeItem(CHAVE_DO_SINO); } catch { /* aba sem armazenamento */ }
+      const agora = Date.now();
+      setEstado((atual) => (atual.tipo === "ok" && manterDepoisDaFalha(negado, atual.lidoEm, agora) ? atual : { tipo: "falha" }));
+    };
     try {
       const resposta = await fetch("/api/pendencias", { cache: "no-store", headers: { accept: "application/json" } });
-      const itens = resposta.ok ? lerRespostaDoSino(await resposta.json(), unidade) : null;
-      if (!itens) {
-        falhou();
+      if (acessoNegado(resposta)) {
+        falhou(true);
         return;
       }
-      setEstado({ tipo: "ok", itens });
+      const itens = resposta.ok ? lerRespostaDoSino(await resposta.json(), unidade) : null;
+      if (!itens) {
+        falhou(false);
+        return;
+      }
+      setEstado({ tipo: "ok", itens, lidoEm: Date.now() });
       try { sessionStorage.setItem(CHAVE_DO_SINO, lembrar({ usuario, unidade }, itens, Date.now())); } catch { /* aba sem armazenamento: lê de novo na próxima tela */ }
     } catch {
-      falhou();
+      falhou(false);
     }
   }, [unidade, usuario]);
 
   useEffect(() => {
     const comecar = () => {
-      let lembrada: ItemDoSino[] | null = null;
-      try { lembrada = lembrancaDoSino(sessionStorage.getItem(CHAVE_DO_SINO), { usuario, unidade }, Date.now()); } catch { /* sem armazenamento */ }
-      if (lembrada) setEstado({ tipo: "ok", itens: lembrada });
+      let lembrada: { itens: ItemDoSino[]; em: number } | null = null;
+      try { lembrada = lembrancaComHora(sessionStorage.getItem(CHAVE_DO_SINO), { usuario, unidade }, Date.now()); } catch { /* sem armazenamento */ }
+      if (lembrada) setEstado({ tipo: "ok", itens: lembrada.itens, lidoEm: lembrada.em });
       else void ler();
     };
     comecar();

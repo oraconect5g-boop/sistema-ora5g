@@ -1295,3 +1295,10 @@ Programa de execução integral (PR #67; checkpoint em `docs/alinhamento/EXECUCA
 - **Conferido, sem gravar:** os corpos de `privado.importacao_atualizar_estatisticas` e `privado.importacao_recomparar` iguais aos do arquivo (md5); `importacao_aplicar` com `enable_seqscan=off`; a função nova sem execução para o visitante e para o logado; os verificadores do Supabase sem nenhuma mudança; os tipos gerados de novo iguais aos da `main`. `aplicadas-dev.json` com as 89 (o md5 registrado é o do arquivo, como nas outras; o do histórico difere só porque a ferramenta tirou os separadores entre os 4 comandos: 4.020 caracteres contra 4.030).
 - **O que isso prova:** a integração já lê `packages/banco/supabase/migrations` e aplica no `ora5g-dev` toda migration nova que chega à `main`. O processo continua aplicando antes do merge e gravando a versão no nome do arquivo; a integração não reaplica o que já está no histórico.
 - **Pedido ao Codex:** conferir o registro e o efeito da integração no processo (merge de migration não aplicada = aplicação no `ora5g-dev`).
+
+## 16/11/2026 — Complemento da #96: o sino não segura a lista depois de uma falha
+
+- **Origem:** o critério de aceite da issue #96, lido depois que o proprietário deixou o repositório público ("ao falhar uma validação de acesso, limpar dados anteriores; não manter sucesso indefinidamente"). O INTEG-a já ligava a lembrança à pessoa e à loja e a apagava na tela de entrada; faltava a falha.
+- **O que foi feito:** `lib/inicio/sino.ts` ganhou `acessoNegado` (a releitura mandada para o login, ou 401/403), `manterDepoisDaFalha` (acesso negado: a lista sai na hora; outra falha: só dentro do minuto) e `lembrancaComHora`; o `SinoDePendencias` apaga a lembrança da aba em qualquer falha.
+- **Testes:** `apps/plataforma/src/lib/inicio/sino.test.ts` (o caso novo).
+- **Pedido ao Codex:** conferir que nenhuma falha deixa a lista anterior visível além do minuto e que o acesso negado a apaga na hora.
