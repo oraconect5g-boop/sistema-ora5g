@@ -1,7 +1,7 @@
 // O sino do topo (G6, REPORT-007): a leitura estrita da resposta, o emblema e a lembrança de um minuto. Dados FICTÍCIOS.
 import { describe, expect, it } from "vitest";
 
-import { emblemaDoSino, lembrancaDoSino, lembrar, lerItensDoSino, lerRespostaDoSino, VALIDADE_DO_SINO_MS, type ItemDoSino } from "./sino";
+import { acessoNegado, emblemaDoSino, lembrancaComHora, lembrancaDoSino, lembrar, lerItensDoSino, lerRespostaDoSino, manterDepoisDaFalha, VALIDADE_DO_SINO_MS, type ItemDoSino } from "./sino";
 
 const LOJA = "00000000-0000-4000-8000-0000000000cc";
 const OUTRA = "00000000-0000-4000-8000-0000000000dd";
@@ -64,5 +64,20 @@ describe("emblema e lembrança", () => {
     expect(lembrancaDoSino(armazenamentoDaAba, { usuario: "u-vendedora", unidade: LOJA }, agora + 15_000)).toBeNull();
     expect(lembrancaDoSino(armazenamentoDaAba, { usuario: "u-dono", unidade: LOJA }, agora + 15_000)).toEqual(itensDoDono);
     expect(lembrancaDoSino(armazenamentoDaAba, { usuario: "", unidade: LOJA }, agora + 15_000)).toBeNull();
+  });
+
+  it("#96: a falha não mantém a lista do acesso anterior: acesso negado apaga na hora; outra falha só dentro do minuto", () => {
+    const agora = 2_000_000;
+    expect([acessoNegado({ status: 200, redirected: true }), acessoNegado({ status: 401, redirected: false }), acessoNegado({ status: 403, redirected: false }),
+      acessoNegado({ status: 503, redirected: false }), acessoNegado({ status: 200, redirected: false })]).toEqual([true, true, true, false, false]);
+    expect(manterDepoisDaFalha(true, agora - 1_000, agora)).toBe(false);
+    expect(manterDepoisDaFalha(false, agora - 1_000, agora)).toBe(true);
+    expect(manterDepoisDaFalha(false, agora - VALIDADE_DO_SINO_MS - 1, agora)).toBe(false);
+    expect(manterDepoisDaFalha(false, null, agora)).toBe(false);
+    expect(manterDepoisDaFalha(false, agora + 5, agora)).toBe(false);
+    const eu = { usuario: "u-ana", unidade: "loja" };
+    const guardada = lembrar(eu, [item()], agora - 10_000);
+    expect(lembrancaComHora(guardada, eu, agora)).toEqual({ itens: [item()], em: agora - 10_000 });
+    expect(lembrancaComHora(guardada, { ...eu, usuario: "outra" }, agora)).toBeNull();
   });
 });

@@ -17,7 +17,10 @@ jobs:
   verificacoes:
     name: Verificações
     runs-on: ubuntu-24.04
-    timeout-minutes: 15
+    # 16/11/2026: a suíte inteira (2.335 testes com as migrations e as provas no PostgreSQL 17, a build e o E2E) passou dos
+    # 15 min no GitHub (run 43851653053, cancelada por tempo nos testes). O limite é do job inteiro; o orçamento de 8 s por
+    # chamada da importação (concorrencia.test.ts) e todos os testes continuam iguais.
+    timeout-minutes: 30
     env:
       NEXT_TELEMETRY_DISABLED: "1"
       # Valores ficticios so para o CI; nenhum segredo real aqui.

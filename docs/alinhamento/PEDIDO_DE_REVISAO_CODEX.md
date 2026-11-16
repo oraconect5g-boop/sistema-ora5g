@@ -1288,3 +1288,17 @@ Programa de execução integral (PR #67; checkpoint em `docs/alinhamento/EXECUCA
 - **Testes:** `packages/banco/src/fotos-concorrencia.test.ts` (3, PostgreSQL 17 com duas conexões: registro antes, limpeza antes e limpeza em andamento), `packages/banco/src/limpeza-das-fotos.test.ts` (o separar, o apagar só do separado, a recusa do registro, a conclusão com pendente e a nova tentativa), o inventário de autorização (170 funções) e `apps/plataforma/src/app/catalogo/lote/lote.test.ts` (o número conferido pelo banco).
 - **Limite declarado:** o CI do GitHub só confirma o #95 depois do merge na `main` (ele monta um banco novo com todas as migrations, então confirma a correção mesmo antes de ela ser aplicada no `ora5g-dev`); a migration do #95 espera o sim do proprietário para o `ora5g-dev`; os buckets estão vazios no `ora5g-dev` (nenhuma foto carregada ainda); a exclusão real pela API do Storage foi exercida só pela política no banco (o DELETE como a pessoa logada), não por uma chamada HTTP de verdade.
 - **Pedido ao Codex:** conferir a prova nas três ordens, a política do Storage com a separação e a conclusão que só marca o que sumiu.
+
+## 16/11/2026 — Registro da migration do #95 aplicada pela integração GitHub × Supabase
+
+- **O que aconteceu:** a aplicação da migration `20261116130100_importacao_estatisticas` pelo conector foi barrada pela proteção automática da sessão. No merge do INTEG-b na `main` (16/11, 07:34), a integração GitHub × Supabase a aplicou sozinha no `ora5g-dev`, com a versão igual ao nome do arquivo, sem usuário e com o texto dividido em 4 comandos. O proprietário deu o sim em seguida ("Sim, aplique"); nada foi reaplicado.
+- **Conferido, sem gravar:** os corpos de `privado.importacao_atualizar_estatisticas` e `privado.importacao_recomparar` iguais aos do arquivo (md5); `importacao_aplicar` com `enable_seqscan=off`; a função nova sem execução para o visitante e para o logado; os verificadores do Supabase sem nenhuma mudança; os tipos gerados de novo iguais aos da `main`. `aplicadas-dev.json` com as 89 (o md5 registrado é o do arquivo, como nas outras; o do histórico difere só porque a ferramenta tirou os separadores entre os 4 comandos: 4.020 caracteres contra 4.030).
+- **O que isso prova:** a integração já lê `packages/banco/supabase/migrations` e aplica no `ora5g-dev` toda migration nova que chega à `main`. O processo continua aplicando antes do merge e gravando a versão no nome do arquivo; a integração não reaplica o que já está no histórico.
+- **Pedido ao Codex:** conferir o registro e o efeito da integração no processo (merge de migration não aplicada = aplicação no `ora5g-dev`).
+
+## 16/11/2026 — Complemento da #96: o sino não segura a lista depois de uma falha
+
+- **Origem:** o critério de aceite da issue #96, lido depois que o proprietário deixou o repositório público ("ao falhar uma validação de acesso, limpar dados anteriores; não manter sucesso indefinidamente"). O INTEG-a já ligava a lembrança à pessoa e à loja e a apagava na tela de entrada; faltava a falha.
+- **O que foi feito:** `lib/inicio/sino.ts` ganhou `acessoNegado` (a releitura mandada para o login, ou 401/403), `manterDepoisDaFalha` (acesso negado: a lista sai na hora; outra falha: só dentro do minuto) e `lembrancaComHora`; o `SinoDePendencias` apaga a lembrança da aba em qualquer falha.
+- **Testes:** `apps/plataforma/src/lib/inicio/sino.test.ts` (o caso novo).
+- **Pedido ao Codex:** conferir que nenhuma falha deixa a lista anterior visível além do minuto e que o acesso negado a apaga na hora.

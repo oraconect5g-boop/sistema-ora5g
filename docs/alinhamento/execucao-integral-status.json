@@ -2,7 +2,7 @@
   "_leia": "Checkpoint do programa de execução integral (PR #67). Carregar ao retomar e seguir para o próximo item executável da fila; não reiniciar o projeto. Estados vêm de status-requisitos.json (fonte da rastreabilidade); este arquivo acrescenta lote, bloqueio externo e revisão.",
   "atualizado_em": "2026-11-16",
   "base": {
-    "main": "376f0ff",
+    "main": "4e1a5d1",
     "pacote": {
       "pr": 67,
       "branch": "docs/execucao-integral-20261110",
@@ -24,12 +24,12 @@
   },
   "publicado": {
     "homologacao": {
-      "commit": "376f0ff",
+      "commit": "4e1a5d1",
       "quando": "2026-11-16",
-      "conferido": "publicar.sh com a conferência completa (#99): a pasta ativa, o serviço local e o domínio ora5g.com.br servindo o commit inteiro de 376f0ff e o ambiente homologacao em /saude/versao; rodapé 376f0ff · build 16/11/2026 07:36"
+      "conferido": "publicar.sh com a conferência completa (#99): a pasta ativa, o serviço local e o domínio ora5g.com.br servindo o commit inteiro de 4e1a5d1 e o ambiente homologacao em /saude/versao; rodapé 4e1a5d1 · build 16/11/2026 07:46"
     },
     "falta_publicar": [
-      "migration 20261116130100_importacao_estatisticas (#95): aplicar no ora5g-dev pede o sim do proprietário (a aplicação foi barrada pela proteção automática da sessão de 16/11)"
+      "registro da migration 20261116130100_importacao_estatisticas (aplicada pela integração GitHub × Supabase no merge do INTEG-b), só documentos, publicado ao fim do lote"
     ]
   },
   "contagem_dos_estados": {
@@ -143,7 +143,7 @@
       "titulo": "Importar produtos e preços da Rein somente por CSV/XLSX",
       "prioridade": "P0",
       "estado": "parcial",
-      "lote": "L3c importação; R2 correções do importador; CAT-002b (15/11): a planilha do Excel (.xlsx) direto; INTEG-b (16/11): #95, a importação de 2.000 linhas no orçamento",
+      "lote": "L3c importação; R2 correções do importador; CAT-002b (15/11): a planilha do Excel (.xlsx) direto; INTEG-b (16/11): #95, a importação de 2.000 linhas no orçamento; registro do #95 (16/11): aplicada pela integração GitHub × Supabase no merge",
       "bloqueio_externo": "B1: arquivo real da Rein para testar o mapeamento (o importador não supõe o formato)",
       "revisado_codex": false,
       "homologado": false
@@ -1475,7 +1475,7 @@
       "titulo": "CI, lint, typecheck, testes e code review obrigatórios",
       "prioridade": "P0",
       "estado": "parcial",
-      "lote": "transversal; R4 (14/11): revisão do estado; INTEG-a (16/11): #99; INTEG-b (16/11): #95, a causa do CI vermelho do GitHub",
+      "lote": "transversal; R4 (14/11): revisão do estado; INTEG-a (16/11): #99; INTEG-b (16/11): #95, a causa do CI vermelho do GitHub; registro do #95 (16/11): aplicada pela integração GitHub × Supabase no merge",
       "bloqueio_externo": null,
       "revisado_codex": false,
       "homologado": false
@@ -1652,5 +1652,5 @@
       "homologado": false
     }
   },
-  "proximo_passo": "Retomar pelo diagnóstico integral de 16/11 (docs/alinhamento/LEITURA_DIAGNOSTICO_INTEGRAL_2026-11-16.md e RELATORIO_179_2026-11-16.md): (1) com o sim do proprietário, aplicar 20261116130100_importacao_estatisticas no ora5g-dev e registrar; (2) conferir o CI do GitHub no SHA da main (o #95 era a única falha); (3) lote SUPA-a: config.toml mínimo em packages/banco/supabase (sem buckets) e o proprietário troca o Working directory da integração para packages/banco; (4) lote BASE-a: as 11 lojas e DEFEITOS com o cadastro operacional separado da liberação fiscal (sem CNPJ/endereço inventado) e as três contas de teste (autorizadas); (5) a planilha original inteira (precisa do arquivo no servidor) e a carga de estoque por local; (6) a transferência de vários produtos; (7) a jornada real autenticada; depois parceiros, fiscal, WhatsApp e o restante dos 179."
+  "proximo_passo": "Retomar pelo diagnóstico integral de 16/11 (docs/alinhamento/LEITURA_DIAGNOSTICO_INTEGRAL_2026-11-16.md e RELATORIO_179_2026-11-16.md): (1) conferir o CI do GitHub no SHA da main (o #95 era a única falha); (2) lote SUPA-a: config.toml mínimo em packages/banco/supabase (sem buckets) e conferir o check da integração GitHub × Supabase, que já aplica as migrations novas da main (provado em 16/11 com a do #95); (3) lote BASE-a: as 11 lojas e DEFEITOS com o cadastro operacional separado da liberação fiscal (sem CNPJ/endereço inventado) e as três contas de teste (autorizadas); (4) a planilha original inteira (precisa do arquivo no servidor) e a carga de estoque por local; (5) a transferência de vários produtos; (6) a jornada real autenticada; depois parceiros, fiscal, WhatsApp e o restante dos 179."
 }
