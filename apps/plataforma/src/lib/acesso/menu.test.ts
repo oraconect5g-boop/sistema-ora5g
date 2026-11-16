@@ -15,10 +15,17 @@ const menu = (papel: keyof typeof PAPEL) => montarMenu(new Set(PAPEL[papel]));
 describe("menu único das telas reais", () => {
   it("vendedor: vende, vê as próprias vendas, caixa, Connect, estoque e catálogo; da gestão, só as próprias metas", () => {
     const m = menu("vendedor");
-    expect(m.visiveis).toEqual(["inicio", "vender", "vendas", "clientes", "funil", "agenda", "caixa", "connect", "assistencia", "estoque", "transferencias", "catalogo", "metas"]);
+    expect(m.visiveis).toEqual(["inicio", "vender", "vendas", "reservas_site", "clientes", "funil", "agenda", "caixa", "connect", "assistencia", "estoque", "transferencias", "catalogo", "metas"]);
     expect(m.atalhos).toEqual(["inicio", "vender", "vendas", "estoque"]);
     expect(m.grupos.map((g) => g.grupo)).toEqual(["Operação", "Clientes", "Estoque e catálogo", "Gestão"]);
     expect(m.grupos.find((g) => g.grupo === "Gestão")?.paginas).toEqual(["metas"]);
+  });
+
+  it("reservas do site (ONLINE-b): quem vende (dono, gerente e vendedor), no grupo Operação, sem tirar o estoque dos atalhos do celular", () => {
+    for (const papel of ["dono", "gerente", "vendedor"] as const) expect(menu(papel).visiveis).toContain("reservas_site");
+    for (const papel of ["administrador", "tecnico"] as const) expect(menu(papel).visiveis).not.toContain("reservas_site");
+    expect(PAGINAS_REAIS.reservas_site).toMatchObject({ caminho: "/reservas-do-site", grupo: "Operação" });
+    expect(menu("vendedor").atalhos).toEqual(["inicio", "vender", "vendas", "estoque"]);
   });
 
   it("metas (G4b): dono e gerente (a loja e a equipe) e vendedor (as próprias), no grupo Gestão; administrador e técnico não", () => {

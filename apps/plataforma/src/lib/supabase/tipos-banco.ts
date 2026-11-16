@@ -1,5 +1,5 @@
 // ARQUIVO GERADO pelo Supabase (generate_typescript_types do projeto ora5g-dev) depois da
-// migration 20261115210812_loja_online_vitrine. Não edite à mão: gere de novo a cada
+// migration 20261116093359_loja_online_reserva. Não edite à mão: gere de novo a cada
 // migration aplicada (auditoria do Codex de 08/11, §7.2). O teste tipos-banco.test.ts confere
 // que funções e tabelas públicas daqui são as mesmas das migrations.
 export type Json =
@@ -3086,6 +3086,128 @@ export type Database = {
             isOneToOne: false
             referencedRelation: "variantes"
             referencedColumns: ["id", "organizacao_id"]
+          },
+        ]
+      }
+      loja_reservas: {
+        Row: {
+          atendida_em: string | null
+          atendida_por: string | null
+          cancelada_em: string | null
+          cancelada_por: string | null
+          chave: string
+          codigo: string
+          criada_em: string
+          estoque_reserva_id: string
+          expira_em: string
+          id: string
+          item_serializado_id: string | null
+          motivo_cancelamento: string | null
+          nome: string
+          numero: number
+          organizacao_id: string
+          preco_centavos: number
+          situacao: string
+          unidade_id: string
+          variante_id: string
+          venda_id: string | null
+          whatsapp_mascarado: string
+        }
+        Insert: {
+          atendida_em?: string | null
+          atendida_por?: string | null
+          cancelada_em?: string | null
+          cancelada_por?: string | null
+          chave: string
+          codigo: string
+          criada_em?: string
+          estoque_reserva_id: string
+          expira_em: string
+          id?: string
+          item_serializado_id?: string | null
+          motivo_cancelamento?: string | null
+          nome: string
+          numero?: never
+          organizacao_id: string
+          preco_centavos: number
+          situacao?: string
+          unidade_id: string
+          variante_id: string
+          venda_id?: string | null
+          whatsapp_mascarado: string
+        }
+        Update: {
+          atendida_em?: string | null
+          atendida_por?: string | null
+          cancelada_em?: string | null
+          cancelada_por?: string | null
+          chave?: string
+          codigo?: string
+          criada_em?: string
+          estoque_reserva_id?: string
+          expira_em?: string
+          id?: string
+          item_serializado_id?: string | null
+          motivo_cancelamento?: string | null
+          nome?: string
+          numero?: never
+          organizacao_id?: string
+          preco_centavos?: number
+          situacao?: string
+          unidade_id?: string
+          variante_id?: string
+          venda_id?: string | null
+          whatsapp_mascarado?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "loja_reservas_atendida_por_fkey"
+            columns: ["atendida_por"]
+            isOneToOne: false
+            referencedRelation: "perfis_usuario"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "loja_reservas_cancelada_por_fkey"
+            columns: ["cancelada_por"]
+            isOneToOne: false
+            referencedRelation: "perfis_usuario"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "loja_reservas_estoque_reserva_id_fkey"
+            columns: ["estoque_reserva_id"]
+            isOneToOne: false
+            referencedRelation: "estoque_reservas"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "loja_reservas_item_serializado_id_fkey"
+            columns: ["item_serializado_id"]
+            isOneToOne: false
+            referencedRelation: "itens_serializados"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "loja_reservas_unidade_id_organizacao_id_fkey"
+            columns: ["unidade_id", "organizacao_id"]
+            isOneToOne: false
+            referencedRelation: "unidades"
+            referencedColumns: ["id", "organizacao_id"]
+          },
+          {
+            foreignKeyName: "loja_reservas_variante_id_organizacao_id_fkey"
+            columns: ["variante_id", "organizacao_id"]
+            isOneToOne: false
+            referencedRelation: "variantes"
+            referencedColumns: ["id", "organizacao_id"]
+          },
+          {
+            foreignKeyName: "loja_reservas_venda_id_fkey"
+            columns: ["venda_id"]
+            isOneToOne: false
+            referencedRelation: "vendas"
+            referencedColumns: ["id"]
           },
         ]
       }
@@ -6793,6 +6915,27 @@ export type Database = {
         Args: { p_organizacao: string; p_produto: string }
         Returns: Json
       }
+      loja_reserva_atender: {
+        Args: { p_chave: string; p_reserva: string }
+        Returns: Json
+      }
+      loja_reserva_cancelar: {
+        Args: { p_motivo: string; p_reserva: string }
+        Returns: boolean
+      }
+      loja_reserva_contato: { Args: { p_reserva: string }; Returns: string }
+      loja_reservar: {
+        Args: {
+          p_chave: string
+          p_nome: string
+          p_organizacao: string
+          p_unidade: string
+          p_variante: string
+          p_whatsapp: string
+        }
+        Returns: Json
+      }
+      loja_reservas_liberar_vencidas: { Args: never; Returns: number }
       loja_vitrine: {
         Args: { p_busca?: string; p_categoria?: string; p_organizacao: string }
         Returns: Json

@@ -25,11 +25,23 @@ O banco já previa o canal: `produtos.publicar_online` (a caixa "mostrar na loja
    - as fotos continuam no armazenamento privado: a política nova deixa o visitante gerar o link temporário (1 hora) só das fotos vigentes de produto do site.
 7. **Ligar e desligar:** a variável `LOJA_ONLINE_ORGANIZACAO` (no servidor) diz qual empresa o site mostra; vazia, a loja online fica desligada e as páginas dizem isso.
 
+## Decisões da reserva (ONLINE-b, 15 e 16/11/2026)
+
+O proprietário aprovou (15/11, "Sim, siga") o prazo de 24 horas e até 2 reservas ativas por WhatsApp.
+
+8. **Como o cliente reserva:** no produto, cada loja com estoque tem o botão "Reservar". A página confirma a variação, a loja e o preço do balcão e pede o nome, o WhatsApp (celular com DDD) e o aceite do uso desses dados só para a reserva. O cliente recebe um código de 6 letras e números (sem 0, O, 1 e I), a loja e até quando vale. Não há pagamento no site: paga-se na loja, na retirada.
+9. **O que a reserva segura:** uma unidade, na mesma reserva de estoque do PDV (origem "online"), por 24 horas: o aparelho pelo IMEI, escolhido pelo banco (o primeiro livre, pulando o que outra venda segura naquele instante); o acessório pela quantidade. O preço anunciado fica gravado na reserva.
+10. **Contra abuso:** até 2 reservas ativas por WhatsApp (OR034), até 20 reservas novas por loja por hora (OR035) e até 5 por hora por endereço de rede (na memória do servidor; conta o último endereço da lista x-forwarded-for, o que o Apache acrescenta, porque o começo dela pode ser inventado por quem pede). A mesma chave da página devolve a mesma reserva: o clique duplo não reserva duas vezes.
+11. **Os dados do cliente:** o nome fica na reserva; o WhatsApp fica no esquema privado (fora da API) e, na tabela que a loja lê, só a máscara. A loja vê o número inteiro só quando pede, e o pedido fica na auditoria. Nada do que o cliente digita vai para log. O prazo de guarda desses dados é da política de privacidade (D-048).
+12. **A loja:** quem vende na loja do turno tem a tela "Reservas do site" no menu: as ativas no prazo e as dos últimos 3 dias. Pode ver o WhatsApp, cancelar com motivo (a unidade volta ao estoque) ou atender: a reserva sai e a venda abre no PDV com a mesma unidade, na mesma transação. A oferta anunciada obriga (Código de Defesa do Consumidor, art. 30): se o preço de hoje for maior, o PDV avisa para dar a diferença como desconto, dentro das regras de desconto de sempre.
+13. **O vencimento:** depois de 24 horas a reserva não se atende mais. A vitrine já conta a unidade como livre; o PDV e a tela da loja, ao abrir, soltam de vez as reservas do site vencidas da loja do turno (`loja_reservas_liberar_vencidas`, só as do site, sem esperar trava), e a próxima reserva daquele produto naquela loja também solta. A reserva do PDV vencida segue a regra de sempre.
+14. **Concorrência:** provado num PostgreSQL 17 de verdade que o site e o balcão disputando os mesmos aparelhos nunca levam a mesma unidade (`packages/banco/src/loja-online-concorrencia.test.ts`).
+
 ## Consequências
 
 - Nada aparece no site sem o dono marcar o produto. Hoje, nenhum está marcado.
 - A vitrine é uma leitura: o PDV, o estoque e o caixa não mudam.
 - O que vem depois:
-  - **ONLINE-b, a reserva:** o cliente informa o nome e o WhatsApp; a reserva segura o aparelho (pelo IMEI) ou a quantidade por algumas horas, com limite por telefone e por endereço de rede contra abuso. A loja vê a lista, cancela ou abre a venda no PDV com o item reservado e o preço reservado (o preço anunciado obriga). A política de privacidade passa pelo jurídico (D-048).
+  - **ONLINE-b, a reserva:** feita em 15 e 16/11 (decisões 8 a 14, acima). A política de privacidade passa pelo jurídico (D-048).
   - **ONLINE-003:** a origem online na venda, sem atribuição indevida nem comissão em dobro.
   - **A entrega e o pagamento online:** só depois de D-024, D-025, P10 e do provedor de pagamento (E1).

@@ -1,0 +1,73 @@
+import { CalendarClock, Globe } from "lucide-react";
+
+import { Botao, Cartao, EstadoVazio, Selo } from "../../componentes/ui";
+import { brl } from "../../lib/formato";
+import { tempoAteVencer } from "../../lib/loja/reserva";
+import { atenderReserva, cancelarReserva } from "./acoes";
+import { RevelarContato } from "./RevelarContato";
+
+export type ReservaDaLoja = {
+  id: string; codigo: string; nome: string; whatsapp_mascarado: string; preco_centavos: number; situacao: string; expira_em: string; criada_em: string;
+  variante_id: string; item_serializado_id: string | null; cancelada_em: string | null; motivo_cancelamento: string | null; atendida_em: string | null;
+};
+
+const campo = "mt-1 min-h-10 w-full rounded-botao border border-borda bg-white px-3 text-sm outline-none focus:border-acao focus:ring-2 focus:ring-acao/20";
+const dataHora = (iso: string) => new Intl.DateTimeFormat("pt-BR", { timeZone: "America/Sao_Paulo", dateStyle: "short", timeStyle: "short" }).format(new Date(iso));
+
+/**
+ * As reservas do site na loja (ONLINE-b; ADR-009): as ativas no prazo, com atender, cancelar e ver o WhatsApp; as
+ * outras dos últimos 3 dias (atendidas, canceladas e vencidas), só para consulta. `produtos` e `imeis` vêm por id.
+ */
+export function ListaDeReservas({ reservas, produtos, imeis, instante }: {
+  reservas: ReservaDaLoja[]; produtos: Record<string, string>; imeis: Record<string, string>; instante: number;
+}) {
+  const ativas = reservas.filter((r) => r.situacao === "ativa" && Date.parse(r.expira_em) > instante);
+  const outras = reservas.filter((r) => !ativas.includes(r)).sort((a, b) => b.criada_em.localeCompare(a.criada_em));
+  const produto = (r: ReservaDaLoja) => produtos[r.variante_id] ?? "Produto";
+  const rotulo = (r: ReservaDaLoja) => r.situacao === "cancelada" ? <Selo tom="neutro">Cancelada</Selo> : r.situacao === "atendida" ? <Selo tom="sucesso">Atendida</Selo> : <Selo tom="aviso">Vencida</Selo>;
+  return (
+    <div className="mt-4 space-y-4">
+      {ativas.length === 0
+        ? <EstadoVazio titulo="Nenhuma reserva esperando" icone={Globe}>Quando um cliente reservar no site para retirar nesta loja, a reserva aparece aqui.</EstadoVazio>
+        : ativas.map((r) => {
+          const imei = r.item_serializado_id ? imeis[r.item_serializado_id] : undefined;
+          return (
+            <Cartao key={r.id} titulo={`Código ${r.codigo}`} subtitulo={`Reservada em ${dataHora(r.criada_em)}`} icone={CalendarClock}
+              acao={<Selo tom="info" ponto>{`vence em ${tempoAteVencer(r.expira_em, instante)}`}</Selo>}>
+              <dl className="grid gap-x-4 gap-y-1 text-sm sm:grid-cols-2">
+                <div><dt className="text-suave">Cliente</dt><dd className="font-medium">{r.nome}</dd></div>
+                <div><dt className="text-suave">WhatsApp</dt><dd><RevelarContato reserva={r.id} mascara={r.whatsapp_mascarado} /></dd></div>
+                <div><dt className="text-suave">Produto</dt><dd className="font-medium">{produto(r)}</dd></div>
+                <div><dt className="text-suave">Preço anunciado</dt><dd className="numeros font-bold">{brl(r.preco_centavos)}</dd></div>
+                {imei && <div className="sm:col-span-2"><dt className="text-suave">IMEI reservado</dt><dd className="numeros break-all">{imei}</dd></div>}
+              </dl>
+              {/* No celular, o cancelar fica numa linha só dele, para o motivo ter a largura toda. */}
+              <div className="mt-3 flex flex-wrap items-start gap-x-4 gap-y-1">
+                <form action={atenderReserva}><input type="hidden" name="reserva" value={r.id} /><Botao type="submit" tamanho="sm">Atender no PDV</Botao></form>
+                <details className="w-full min-w-0 text-sm sm:w-auto sm:flex-1">
+                  <summary className="cursor-pointer py-1.5 font-semibold text-acao">Cancelar a reserva</summary>
+                  <form action={cancelarReserva} className="mt-1 flex flex-wrap items-end gap-2">
+                    <input type="hidden" name="reserva" value={r.id} />
+                    <label className="min-w-0 flex-1 text-xs font-medium">Motivo (de 3 a 200 letras)<input name="motivo" required minLength={3} maxLength={200} className={campo} /></label>
+                    <Botao type="submit" tamanho="sm" variante="secundario">Cancelar</Botao>
+                  </form>
+                </details>
+              </div>
+            </Cartao>
+          );
+        })}
+      {outras.length > 0 && (
+        <Cartao titulo="Últimos 3 dias" subtitulo="Atendidas, canceladas e vencidas" icone={Globe}>
+          <ul className="divide-y divide-borda text-sm">
+            {outras.map((r) => (
+              <li key={r.id} className="flex flex-wrap items-center justify-between gap-2 py-2">
+                <span className="min-w-0"><span className="numeros font-semibold">{r.codigo}</span> · {r.nome} · {produto(r)}{r.motivo_cancelamento ? ` · ${r.motivo_cancelamento}` : ""}</span>
+                {rotulo(r)}
+              </li>
+            ))}
+          </ul>
+        </Cartao>
+      )}
+    </div>
+  );
+}

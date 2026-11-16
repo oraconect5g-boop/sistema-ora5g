@@ -1,8 +1,8 @@
 {
   "_leia": "Checkpoint do programa de execução integral (PR #67). Carregar ao retomar e seguir para o próximo item executável da fila; não reiniciar o projeto. Estados vêm de status-requisitos.json (fonte da rastreabilidade); este arquivo acrescenta lote, bloqueio externo e revisão.",
-  "atualizado_em": "2026-11-15",
+  "atualizado_em": "2026-11-16",
   "base": {
-    "main": "db1b8a0",
+    "main": "5468d9e",
     "pacote": {
       "pr": 67,
       "branch": "docs/execucao-integral-20261110",
@@ -18,17 +18,17 @@
   },
   "publicado": {
     "homologacao": {
-      "commit": "db1b8a0",
+      "commit": "5468d9e",
       "quando": "2026-11-15",
-      "conferido": "rodapé da tela de entrada (db1b8a0 · build 15/11/2026 18:09), /saude 200, as rotas reais respondendo 307 para o login e /loja respondendo 200 sem login"
+      "conferido": "rodapé da tela de entrada (5468d9e · build 15/11/2026 18:21), /saude 200, as rotas reais respondendo 307 para o login e /loja respondendo 200 sem login (conferido de novo pelo diagnóstico integral de 16/11)"
     },
     "falta_publicar": [
-      "registro da migration do ONLINE-a aplicada no ora5g-dev (só documentos e nomes de arquivo), publicado ao fim do lote"
+      "ONLINE-b, a reserva do site, publicado ao fim do lote (a migration 20261116093359_loja_online_reserva já está no ora5g-dev desde 16/11)"
     ]
   },
   "contagem_dos_estados": {
-    "nao_iniciado": 44,
-    "parcial": 68,
+    "nao_iniciado": 42,
+    "parcial": 70,
     "testado": 62,
     "bloqueado": 3,
     "respeitado": 2
@@ -1090,9 +1090,9 @@
     "ORA-ONLINE-004": {
       "titulo": "Frete, CEP, retirada em loja e entrega com rastreio",
       "prioridade": "P1",
-      "estado": "nao_iniciado",
-      "lote": "L13 loja online",
-      "bloqueio_externo": null,
+      "estado": "parcial",
+      "lote": "L13 loja online; ONLINE-b (15 e 16/11): a retirada em loja pela reserva do site (ADR-009), migration aplicada no ora5g-dev em 16/11",
+      "bloqueio_externo": "frete, CEP e entrega com rastreio dependem de D-025, P10 e da transportadora",
       "revisado_codex": false,
       "homologado": false
     },
@@ -1108,9 +1108,9 @@
     "ORA-ONLINE-006": {
       "titulo": "Reserva de IMEI por pedido/canal anti-overselling",
       "prioridade": "P1",
-      "estado": "nao_iniciado",
-      "lote": "L13 loja online",
-      "bloqueio_externo": null,
+      "estado": "parcial",
+      "lote": "L13 loja online; ONLINE-b (15 e 16/11): a reserva do site com retirada na loja (ADR-009), migration aplicada no ora5g-dev em 16/11",
+      "bloqueio_externo": "a reserva do pedido com pagamento e entrega depende de D-024, D-025, P10 e do provedor de pagamento (E1)",
       "revisado_codex": false,
       "homologado": false
     },

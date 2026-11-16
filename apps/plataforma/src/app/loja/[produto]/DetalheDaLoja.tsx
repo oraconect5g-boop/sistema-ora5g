@@ -46,7 +46,7 @@ export function DetalheDaLoja({ produto, imagens }: { produto: DetalheDoProduto;
           <div className="rounded-cartao border border-acao/20 bg-acao-clara p-4 text-sm">
             <p className="font-semibold">Como comprar</p>
             <p className="mt-1">{comEstoque
-              ? "Vá a uma das lojas com estoque abaixo: o preço é o do balcão de cada loja. Em breve, você vai poder reservar aqui e retirar na loja."
+              ? "Escolha uma loja com estoque e toque em \"Reservar\": a unidade fica guardada por 24 horas, e você paga e retira na loja. O preço é o do balcão de cada loja."
               : "No momento, nenhuma loja tem este produto em estoque. Volte em breve ou fale com a loja mais perto de você."}</p>
           </div>
 
@@ -62,9 +62,12 @@ export function DetalheDaLoja({ produto, imagens }: { produto: DetalheDoProduto;
                         <span className="block font-medium">{l.nome}</span>
                         {(l.endereco || l.cidade) && <span className="flex items-start gap-1 text-xs text-suave"><MapPin aria-hidden className="mt-0.5 size-3.5 shrink-0" />{[l.endereco, l.cidade].filter(Boolean).join(" · ")}</span>}
                       </span>
-                      <span className="flex items-center gap-2">
+                      <span className="flex flex-wrap items-center justify-end gap-2">
                         <Selo tom={DISPONIBILIDADES[l.disponibilidade]?.tom ?? "neutro"} ponto={l.disponibilidade !== "sem_estoque"}>{DISPONIBILIDADES[l.disponibilidade]?.nome ?? l.disponibilidade}</Selo>
                         <span className="numeros text-base font-bold">{brl(l.preco_centavos)}</span>
+                        {l.disponibilidade !== "sem_estoque" && (
+                          <Link href={`/loja/${p.id}/reservar?variante=${v.id}&loja=${l.id}`} className="inline-flex min-h-9 items-center rounded-botao bg-acao px-3 text-sm font-semibold text-white hover:bg-acao-escura">Reservar</Link>
+                        )}
                       </span>
                     </li>
                   ))}

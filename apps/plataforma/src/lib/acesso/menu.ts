@@ -16,7 +16,7 @@ export type PermissaoDoMenu = (typeof PERMISSOES_DO_MENU)[number];
 export const PERMISSOES_DA_REDE: ReadonlySet<PermissaoDoMenu> = new Set(["usuarios.gerir", "unidades.gerir", "catalogo.gerir"]);
 
 export type PaginaReal =
-  | "inicio" | "vender" | "vendas" | "clientes" | "funil" | "agenda" | "caixa" | "connect"
+  | "inicio" | "vender" | "vendas" | "reservas_site" | "clientes" | "funil" | "agenda" | "caixa" | "connect"
   | "estoque" | "transferencias" | "catalogo" | "produtos"
   | "financeiro" | "relatorios" | "metas" | "contas_pagar" | "resultado" | "previsao" | "conciliacao" | "recebiveis" | "financeiras" | "assistencia" | "maquininhas" | "aprovacoes" | "notas" | "operacao" | "auditoria"
   | "equipe" | "lojas";
@@ -36,6 +36,8 @@ export const PAGINAS_REAIS: Record<PaginaReal, { titulo: string; curto: string; 
     titulo: "Vendas", curto: "Vendas", caminho: "/vendas", icone: "vendas", grupo: "Operação",
     liberada: (p) => p.has("venda.registrar") || p.has("venda.ver_unidade") || p.has("venda.ver_todas"),
   },
+  // Reservas do site (ONLINE-b): quem vende na loja atende as reservas da loja online para retirar nela.
+  reservas_site: { titulo: "Reservas do site", curto: "Reservas", caminho: "/reservas-do-site", icone: "canais", grupo: "Operação", liberada: (p) => p.has("venda.registrar") },
   // Clientes da rede (L5a): busca exata e ficha para quem atende (dono, gerente e vendedor); o administrador não.
   clientes: { titulo: "Clientes", curto: "Clientes", caminho: "/clientes", icone: "contatos", grupo: "Clientes", liberada: (p) => p.has("cliente.buscar") },
   // Funil e agenda (L5b): quem atende (dono, gerente e vendedor); a gerência vê a loja inteira.
@@ -84,7 +86,7 @@ export const PAGINAS_REAIS: Record<PaginaReal, { titulo: string; curto: string; 
 
 // Barra inferior do celular: até 4 atalhos, na ordem de uso no balcão; o resto fica em "Mais".
 const PRIORIDADE_NO_CELULAR: readonly PaginaReal[] = [
-  "inicio", "vender", "aprovacoes", "vendas", "financeiro", "estoque", "metas", "clientes", "agenda", "funil", "caixa", "connect", "assistencia", "catalogo", "produtos", "relatorios", "notas", "contas_pagar", "resultado", "previsao", "conciliacao", "recebiveis", "financeiras", "maquininhas", "equipe", "lojas", "operacao", "auditoria", "transferencias",
+  "inicio", "vender", "aprovacoes", "vendas", "financeiro", "estoque", "reservas_site", "metas", "clientes", "agenda", "funil", "caixa", "connect", "assistencia", "catalogo", "produtos", "relatorios", "notas", "contas_pagar", "resultado", "previsao", "conciliacao", "recebiveis", "financeiras", "maquininhas", "equipe", "lojas", "operacao", "auditoria", "transferencias",
 ];
 
 export function montarMenu(permissoes: Permissoes) {

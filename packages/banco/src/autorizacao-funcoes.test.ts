@@ -1,9 +1,9 @@
 // Inventário de autorização (prioridade 1 do diagnóstico de 10/11/2026; ORA-ORG-004 e ORA-QUAL-002).
 // O aviso 0029 do Supabase lista as funções SECURITY DEFINER que qualquer usuário logado pode chamar
-// pela API: 164 em 15/11 (48 + 6 do cadastro de lojas, L2, + 5 do cadastro do catálogo, L3a, + 4 dos preços, L3b,
+// pela API: 169 em 15/11 (48 + 6 do cadastro de lojas, L2, + 5 do cadastro do catálogo, L3a, + 4 dos preços, L3b,
 // + 4 da importação do catálogo, L3c, + 3 da entrada de mercadoria, L4a, + 5 do inventário, L4b, + 6 dos clientes, L5a,
 // + 9 do funil e da agenda, L5b, + 4 da mesclagem e dos segmentos, L5c, + 4 das maquininhas e da conciliação, L7a,
-// + 2 da leitura das entradas, R1, + 1 do nome no ranking, G1, + 2 das metas, G4b, + 3 das financeiras, L7b, + 3 da saída autorizada do caixa, L7c, + 6 das contas a pagar, L8a, + 1 das regras do bônus por meta, L9a, + 2 do fechamento do bônus, L9b, + 1 da correção do repasse das financeiras, B4, + 1 dos dados para emitir a nota, K1b, + 1 dos documentos da nota emitida, L10a, + 2 do envio da nota pelo WhatsApp, K1c, + 1 dos recebíveis por loja e adquirente, L8e, + 5 da ordem de serviço, L12a, + 3 do orçamento da OS, L12b, + 2 da cobrança e da entrega da OS, L12c, + 3 das peças da OS, L12d, + 1 dos relatórios da assistência, L12e, + 2 dos documentos da venda, L5d, + 2 da conciliação fiscal, L10b, + 2 do cancelamento e da correção da nota, L10c, + 1 do valor do estoque a custo, G3b, + 2 dos códigos de outros canais, CAT-009, + 2 das regiões, ORG-009, + 1 da conta ligada à entrada, FIN-004a, + 2 dos documentos da conta, FIN-004b, + 1 da correção do custo, CAT-008b, + 2 da limpeza das fotos, CAT-011b, + 5 do pedido de compra, INV-009a, + 1 da carta de correção, FISC-009b, + 1 do relatório do titular, QUAL-011a, + 2 da vitrine da loja online, ONLINE-a, públicas de propósito; no L8b, a das categorias ganhou o parâmetro "entra no resultado"). Elas rodam com poder total e cada uma confere sessão, loja e permissão por
+// + 2 da leitura das entradas, R1, + 1 do nome no ranking, G1, + 2 das metas, G4b, + 3 das financeiras, L7b, + 3 da saída autorizada do caixa, L7c, + 6 das contas a pagar, L8a, + 1 das regras do bônus por meta, L9a, + 2 do fechamento do bônus, L9b, + 1 da correção do repasse das financeiras, B4, + 1 dos dados para emitir a nota, K1b, + 1 dos documentos da nota emitida, L10a, + 2 do envio da nota pelo WhatsApp, K1c, + 1 dos recebíveis por loja e adquirente, L8e, + 5 da ordem de serviço, L12a, + 3 do orçamento da OS, L12b, + 2 da cobrança e da entrega da OS, L12c, + 3 das peças da OS, L12d, + 1 dos relatórios da assistência, L12e, + 2 dos documentos da venda, L5d, + 2 da conciliação fiscal, L10b, + 2 do cancelamento e da correção da nota, L10c, + 1 do valor do estoque a custo, G3b, + 2 dos códigos de outros canais, CAT-009, + 2 das regiões, ORG-009, + 1 da conta ligada à entrada, FIN-004a, + 2 dos documentos da conta, FIN-004b, + 1 da correção do custo, CAT-008b, + 2 da limpeza das fotos, CAT-011b, + 5 do pedido de compra, INV-009a, + 1 da carta de correção, FISC-009b, + 1 do relatório do titular, QUAL-011a, + 2 da vitrine da loja online, ONLINE-a, públicas de propósito, + 5 da reserva do site, ONLINE-b (a de reservar, pública); no L8b, a das categorias ganhou o parâmetro "entra no resultado"). Elas rodam com poder total e cada uma confere sessão, loja e permissão por
 // conta própria. Este teste monta um "mundo" fictício com objetos reais em duas lojas e tenta cada
 // função como 13 tipos de atacante. Recusa = erro, ou resposta vazia numa leitura, e nada muda no
 // banco. O teste lista as funções no próprio banco e falha se aparecer uma nova sem casos aqui.
@@ -293,6 +293,24 @@ const CASOS: Record<string, Caso> = {
     const doSite = (await db.query<{ id: string }>("select id from public.produtos where publicar_online and ativo")).rows.map((r) => r.id);
     return produtos.every((id) => doSite.includes(id));
   } },
+  // A reserva do site (ONLINE-b): a primeira gravação aberta ao visitante. Aqui o atacante tenta reservar o aparelho,
+  // que está fora do site: todos são recusados e nada muda (reservar o que está no site é o uso normal, provado em
+  // loja-online-reserva.test.ts).
+  "loja_reservar(uuid,uuid,uuid,text,text,text)": {
+    A: () => ["select public.loja_reservar($1, $2, $3, 'Atacante', '41999990009', $4) as v", [ids.organizacao, cat.aparelho, ids.lojaA, chave("ataque")]],
+    publica: async () => false,
+  },
+  // A loja atende a reserva do site: quem vende na loja da reserva; o de outra loja e quem não tem acesso, não.
+  "loja_reserva_contato(uuid)": { A: () => ["select public.loja_reserva_contato($1) as v", [alvo.reservaSiteA]], B: () => ["select public.loja_reserva_contato($1) as v", [alvo.reservaSiteB]] },
+  "loja_reserva_cancelar(uuid,text)": {
+    A: () => ["select public.loja_reserva_cancelar($1, 'Tentativa') as v", [alvo.reservaSiteA]], B: () => ["select public.loja_reserva_cancelar($1, 'Tentativa') as v", [alvo.reservaSiteB]],
+  },
+  "loja_reserva_atender(uuid,text)": {
+    A: () => ["select public.loja_reserva_atender($1, $2) as v", [alvo.reservaSiteA, chave("ataque")]], B: () => ["select public.loja_reserva_atender($1, $2) as v", [alvo.reservaSiteB, chave("ataque")]],
+  },
+  // Age só na loja do turno de quem chama (soltar as reservas do site vencidas dela): para quem vende em outra loja ou rede, é o
+  // próprio contexto, legítimo; os 9 sem acesso válido são recusados.
+  "loja_reservas_liberar_vencidas()": { A: () => ["select public.loja_reservas_liberar_vencidas() as v", []], outraOrganizacao: false },
   "loja_produto(uuid,uuid)": { A: () => ["select public.loja_produto($1, $2) as v", [ids.organizacao, cat.produtoAparelho]], publica: async (linhas) => {
     const produto = (linhas[0]?.v as { id?: string } | undefined)?.id;
     return Boolean(produto) && (await db.query("select 1 from public.produtos where id = $1 and publicar_online and ativo", [produto])).rows.length === 1;
@@ -963,6 +981,13 @@ beforeAll(async () => {
   await db.query(`insert into public.unidade_configuracoes (organizacao_id, unidade_id, vigente_desde, telefone, motivo, criado_por)
     values ($1, $2, now() - interval '1 day', '4133330001', 'Mundo do teste', $4), ($1, $3, now() - interval '1 day', '4133330002', 'Mundo do teste', $4)`,
   [ids.organizacao, ids.lojaA, ids.lojaB, ids.dono]);
+  // Reservas do site (ONLINE-b) nas lojas A e B: a capa vai para o site só para isso; o aparelho segue fora dele.
+  await db.query("update public.produtos set publicar_online = true where id = $1", [cat.produtoCapa]);
+  for (const [nome, loja, telefone] of [["reservaSiteA", ids.lojaA, "41999990001"], ["reservaSiteB", ids.lojaB, "41999990002"]] as const) {
+    const codigo = (await db.query<{ v: { codigo: string } }>("select public.loja_reservar($1, $2, $3, 'Cliente do mundo', $4, $5) as v",
+      [ids.organizacao, cat.capa, loja, telefone, `mundo:${nome}`])).rows[0]?.v.codigo;
+    alvo[nome] = (await db.query<{ id: string }>("select id from public.loja_reservas where codigo = $1", [codigo])).rows[0]?.id ?? "";
+  }
   chaveNotaA = chaveDeAcesso(await cnpjLojaA(), 4242);
   await db.exec(`
     create schema teste;
@@ -993,15 +1018,15 @@ describe("inventário: toda função SECURITY DEFINER exposta tem casos de recus
     const expostas = rows.map((r) => r.f);
     expect(expostas.filter((f) => !(f in CASOS)), "função nova exposta sem casos de recusa: acrescente ao CASOS").toEqual([]);
     expect(Object.keys(CASOS).filter((f) => !expostas.includes(f)), "caso de função que não existe mais").toEqual([]);
-    expect(expostas).toHaveLength(164);
+    expect(expostas).toHaveLength(169);
   });
 
-  it("visitante anônimo executa só a vitrine da loja online (ONLINE-a); no privado, a conferência da foto do site e um gatilho, que não roda sozinho", async () => {
+  it("visitante anônimo executa só a vitrine e a reserva da loja online (ONLINE-a e ONLINE-b); no privado, a conferência da foto do site e um gatilho, que não roda sozinho", async () => {
     const { rows } = await db.query<{ f: string; gatilho: boolean }>(`
       select p.oid::regprocedure::text as f, p.prorettype = 'trigger'::regtype as gatilho from pg_proc p
       where p.pronamespace in ('public'::regnamespace, 'privado'::regnamespace) and has_function_privilege('anon', p.oid, 'EXECUTE')`);
     expect(rows.sort((a, b) => a.f.localeCompare(b.f))).toEqual([
-      { f: "loja_produto(uuid,uuid)", gatilho: false }, { f: "loja_vitrine(uuid,text,uuid)", gatilho: false },
+      { f: "loja_produto(uuid,uuid)", gatilho: false }, { f: "loja_reservar(uuid,uuid,uuid,text,text,text)", gatilho: false }, { f: "loja_vitrine(uuid,text,uuid)", gatilho: false },
       { f: "privado.auditoria_completar_organizacao()", gatilho: true }, { f: "privado.foto_na_vitrine(text)", gatilho: false },
     ]);
   });
