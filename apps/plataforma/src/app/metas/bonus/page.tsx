@@ -2,7 +2,7 @@ import { ArrowLeft } from "lucide-react";
 import type { Metadata } from "next";
 import Link from "next/link";
 
-import { MoldeReal, permissoesDoMenu } from "../../../componentes/MoldeReal";
+import { MoldeReal } from "../../../componentes/MoldeReal";
 import { EstadoDoPainel } from "../../../componentes/paineis-de-vendas";
 import { Aviso, Cartao, classeBotao, FiltroSegmentado, TituloPagina } from "../../../componentes/ui";
 import { obterSessao } from "../../../lib/acesso/sessao";
@@ -26,11 +26,11 @@ const NOMES_DOS_MESES = ["Janeiro", "Fevereiro", "Março", "Abril", "Maio", "Jun
 export default async function RegrasDoBonus({ searchParams }: { searchParams: Promise<Parametros> }) {
   const parametros = await searchParams;
   const sessao = await obterSessao({ exigirLoja: true });
-  const { supabase, situacao } = sessao;
-  const permissoes = await permissoesDoMenu(supabase, situacao.unidade_id as string);
+  const { supabase } = sessao;
+  const { permissoes } = sessao.molde;
   if (!permissoes.has("bonus.definir")) {
     return (
-      <MoldeReal sessao={sessao} permissoes={permissoes}>
+      <MoldeReal sessao={sessao}>
         <TituloPagina titulo="Regras do bônus" />
         <Aviso tom="aviso" titulo="Sem permissão">
           Só o dono define as regras do bônus. O vendedor e a gerência veem as faixas que valem na tela de Metas. O banco também recusa, mesmo que alguém digite o endereço.
@@ -49,7 +49,7 @@ export default async function RegrasDoBonus({ searchParams }: { searchParams: Pr
   const erro = chaveDoCatalogo(ERROS_DO_BONUS, parametros.erro);
 
   return (
-    <MoldeReal sessao={sessao} permissoes={permissoes} largura="max-w-5xl">
+    <MoldeReal sessao={sessao} largura="max-w-5xl">
       <TituloPagina
         sobretitulo="Metas e desempenho"
         titulo="Regras do bônus"

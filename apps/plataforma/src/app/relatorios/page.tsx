@@ -1,14 +1,14 @@
 import type { Metadata } from "next";
 
 import { BaixarPlanilha } from "../../componentes/BaixarPlanilha";
-import { MoldeReal, permissoesDoMenu } from "../../componentes/MoldeReal";
+import { MoldeReal } from "../../componentes/MoldeReal";
 import { Aviso, FiltroSegmentado, TituloPagina } from "../../componentes/ui";
 import { podeVerFinanceiro } from "../../lib/acesso/menu";
 import { obterSessao } from "../../lib/acesso/sessao";
 import type { LojaDoFiltro } from "../../lib/financeiro/escopo";
 import { lerRegioesDoPainel } from "../../lib/lojas/regioes";
 import { textoDoParametro, type ValorDeParametro } from "../../lib/parametros";
-import { lerRelatorios, podeVerCusto } from "../../lib/relatorios/consulta";
+import { lerRelatorios } from "../../lib/relatorios/consulta";
 import { enderecoDaExportacao, enderecoDosRelatorios, ORDEM_DOS_RELATORIOS, paginaDoRelatorio, PERIODOS_DOS_RELATORIOS, periodoDoRelatorio } from "../../lib/relatorios/painel";
 import { ConteudoRelatorios } from "./ConteudoRelatorios";
 
@@ -26,10 +26,10 @@ export default async function Relatorios({ searchParams }: { searchParams: Promi
   const sessao = await obterSessao({ exigirLoja: true });
   const { supabase, situacao: situacaoDaSessao } = sessao;
   const turno: LojaDoFiltro = { id: situacaoDaSessao.unidade_id as string, nome: situacaoDaSessao.unidade_nome ?? "Loja do turno" };
-  const permissoes = await permissoesDoMenu(supabase, turno.id);
+  const { permissoes } = sessao.molde;
   if (!podeVerFinanceiro(permissoes)) {
     return (
-      <MoldeReal sessao={sessao} permissoes={permissoes}>
+      <MoldeReal sessao={sessao}>
         <TituloPagina titulo="Relatórios" />
         <Aviso tom="aviso" titulo="Sem permissão">
           Os relatórios são da gerência e da diretoria. As suas vendas continuam em Vendas, e os seus resultados, no Início. O banco também recusa, mesmo que alguém digite o endereço.
@@ -39,7 +39,8 @@ export default async function Relatorios({ searchParams }: { searchParams: Promi
   }
 
   const daRede = permissoes.has("venda.ver_todas");
-  const custo = await podeVerCusto(supabase, turno.id);
+  // custo.ver decide se a margem aparece; veio com a sessão. O banco confere de novo, loja a loja, em margem_painel.
+  const custo = permissoes.has("custo.ver");
   // ORG-009: as regiões só servem a quem vê a rede (a soma por região na rede inteira).
   const [relatorios, regioes] = await Promise.all([lerRelatorios(supabase, {
     periodo: periodoDoRelatorio(textoDoParametro(parametros.periodo)),
@@ -55,7 +56,7 @@ export default async function Relatorios({ searchParams }: { searchParams: Promi
   const lojaDoEndereco = daRede ? escopo.unidade : null;
 
   return (
-    <MoldeReal sessao={sessao} permissoes={permissoes} largura="max-w-6xl">
+    <MoldeReal sessao={sessao} largura="max-w-6xl">
       <TituloPagina
         sobretitulo={escopo.nome}
         titulo="Relatórios"

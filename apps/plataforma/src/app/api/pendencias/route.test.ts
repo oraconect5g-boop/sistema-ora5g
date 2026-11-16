@@ -8,7 +8,8 @@ const LOJA = "00000000-0000-4000-8000-0000000000cc";
 type Linha = Record<string, unknown>;
 const cenario = vi.hoisted(() => ({
   permissoes: new Set<string>(),
-  erroDoMenu: false,
+  erroDaSessao: false,
+  semSessao: false,
   tabelas: {} as Record<string, Record<string, unknown>[]>,
   erros: {} as Record<string, { code: string }>,
   lidas: [] as string[],
@@ -35,20 +36,20 @@ const supabase = {
   from: (nome: string) => new Consulta(nome),
   rpc: async () => ({ data: null, error: { code: "PGRST202" } }),
 };
-vi.mock("../../../lib/acesso/sessao", () => ({
-  FalhaDoServico: class FalhaDoServico extends Error {},
-  obterSessao: async () => ({
-    usuario: { id: EU },
-    situacao: { usuario_ativo: true, sessao_no_turno: true, unidade_id: LOJA, unidade_nome: "Santa Cândida (teste)", turno_termina_em: "2026-11-14T23:00:00Z" },
-    supabase,
-  }),
-}));
-vi.mock("../../../componentes/MoldeReal", async () => {
-  const { FalhaDoServico } = await import("../../../lib/acesso/sessao");
+// As permissões chegam com a sessão (public.molde_da_sessao, lote VEL-a): a rota não pergunta de novo ao banco.
+vi.mock("../../../lib/acesso/sessao", () => {
+  class FalhaDoServico extends Error {}
   return {
-    permissoesDoMenu: async () => {
-      if (cenario.erroDoMenu) throw new FalhaDoServico("menu");
-      return cenario.permissoes;
+    FalhaDoServico,
+    obterSessao: async () => {
+      if (cenario.semSessao) throw new Error("redirecionou para /entrar");
+      if (cenario.erroDaSessao) throw new FalhaDoServico("Falha ao consultar o serviço (molde_da_sessao)");
+      return {
+        usuario: { id: EU },
+        situacao: { usuario_ativo: true, sessao_no_turno: true, unidade_id: LOJA, unidade_nome: "Santa Cândida (teste)", turno_termina_em: "2026-11-14T23:00:00Z" },
+        molde: { permissoes: cenario.permissoes, nome: "Ana (fictícia)", vinculos: [], pendencias: { aprovacoes: 0, notas: 0 } },
+        supabase,
+      };
     },
   };
 });
@@ -58,7 +59,8 @@ import { GET } from "./route";
 beforeEach(() => {
   vi.spyOn(console, "error").mockImplementation(() => undefined);
   cenario.permissoes = new Set();
-  cenario.erroDoMenu = false;
+  cenario.erroDaSessao = false;
+  cenario.semSessao = false;
   cenario.tabelas = {};
   cenario.erros = {};
   cenario.lidas = [];
@@ -88,16 +90,29 @@ describe("a rota do sino", () => {
     expect(cenario.lidas).toEqual([]);
   });
 
-  it("falha de leitura (das pendências ou das permissões) volta 503 e o sino diz que não leu; o log não leva dado", async () => {
+  it("falha de leitura (das pendências ou da sessão, que traz as permissões) volta 503 e o sino diz que não leu; o log não leva dado", async () => {
     cenario.permissoes = new Set(["desconto.aprovar"]);
     cenario.erros = { aprovacoes_desconto: { code: "57014" } };
     let resposta = await GET();
     expect(resposta.status).toBe(503);
     expect(await resposta.json()).toEqual({ erro: "falha" });
+    expect(resposta.headers.get("cache-control")).toBe("private, no-store");
     cenario.erros = {};
-    cenario.erroDoMenu = true;
+    cenario.erroDaSessao = true;
     resposta = await GET();
     expect(resposta.status).toBe(503);
+    expect(await resposta.json()).toEqual({ erro: "falha" });
+    expect(console.error).toHaveBeenCalledTimes(2);
     expect(console.error).toHaveBeenCalledWith("sino: falha ao ler as pendências", { fonte: expect.any(String) });
+    expect(console.error).toHaveBeenLastCalledWith("sino: falha ao ler as pendências", { fonte: "Falha ao consultar o serviço (molde_da_sessao)" });
+    // Nenhuma leitura de tabela foi tentada sem a sessão.
+    expect(cenario.lidas).toEqual(["aprovacoes_desconto"]);
+  });
+
+  it("sem sessão não é falha: o caminho para a entrada segue, sem virar 503", async () => {
+    cenario.semSessao = true;
+    await expect(GET()).rejects.toThrow("redirecionou para /entrar");
+    expect(console.error).not.toHaveBeenCalled();
+    expect(cenario.lidas).toEqual([]);
   });
 });

@@ -30,8 +30,8 @@ type Erro = { code: string };
 const cenario = vi.hoisted(() => ({
   usuario: "",
   permissoes: new Set<string>(),
-  /** Permissão cuja consulta falha. */
-  erroDaPermissao: null as null | string,
+  /** A sessão chega sem o nome de quem entrou (perfil que o banco não deixa ler). */
+  semNome: false,
   vendas: null as unknown,
   anterior: null as unknown,
   erroDeVendas: null as null | { code: string },
@@ -127,10 +127,8 @@ const supabase = {
   from: (nome: string) => new Consulta(nome),
   rpc: async (nome: string, argumentos: Record<string, unknown> = {}) => {
     (cenario.chamadas[nome] ??= []).push(argumentos);
-    if (nome === "tem_permissao") {
-      // As permissões de rede chegam sem p_unidade; as de loja, com a loja do turno.
-      return argumentos.p_permissao === cenario.erroDaPermissao ? responder({ code: "57014" }, null) : responder(null, cenario.permissoes.has(String(argumentos.p_permissao)));
-    }
+    // As permissões (as do menu e as três só do Início) e o nome chegam com a sessão (public.molde_da_sessao, lote VEL-a).
+    if (nome === "tem_permissao") throw new Error("o Início não pergunta permissão ao banco: ela chega com a sessão (molde)");
     // A janela atual termina "agora"; qualquer outra é a do período anterior.
     if (nome === "vendas_painel") return argumentos.p_fim === AGORA.toISOString() ? responder(cenario.erroDeVendas, cenario.vendas) : responder(cenario.erroDoAnterior, cenario.anterior);
     if (nome === "financeiro_painel") return responder(cenario.erroDoFinanceiro, cenario.financeiro);
@@ -144,9 +142,12 @@ const supabase = {
     return responder({ code: "PGRST202" }, null);
   },
 };
+const NOMES_DE_QUEM_ENTRA: Record<string, string> = { [GESTOR]: "Gestor Teste", [ANA]: "Ana Teste", [BETO]: "Beto Teste" };
 const sessao = () => ({
   usuario: { id: cenario.usuario },
   situacao: { usuario_ativo: true, sessao_no_turno: true, unidade_id: LOJA, unidade_nome: "Santa Cândida (teste)", turno_termina_em: "2026-11-10T23:00:00Z" },
+  // O molde da sessão: as permissões e o nome, lidos junto com a sessão. A tela não vai ao banco por eles.
+  molde: { permissoes: cenario.permissoes, nome: cenario.semNome ? null : (NOMES_DE_QUEM_ENTRA[cenario.usuario] ?? null), vinculos: [], pendencias: { aprovacoes: 0, notas: 0 } },
   supabase,
 });
 vi.mock("../../lib/acesso/sessao", () => ({
@@ -385,14 +386,13 @@ beforeEach(() => {
   vi.setSystemTime(AGORA);
   vi.spyOn(console, "error").mockImplementation(() => undefined);
   Object.assign(cenario, {
-    usuario: GESTOR, permissoes: new Set<string>(), erroDaPermissao: null,
+    usuario: GESTOR, permissoes: new Set<string>(), semNome: false,
     vendas: HOJE, anterior: ONTEM, erroDeVendas: null, erroDoAnterior: null,
     financeiro: FINANCEIRO, erroDoFinanceiro: null, margem: MARGEM, erroDaMargem: null, producao: PRODUCAO, erroDaProducao: null, nomes: NOMES, erroDosNomes: null,
     metasDasLojas: METAS_DA_LOJA, minhaMeta: MINHA_META, erroDasMetas: null, conciliacao: null, erroDaConciliacao: { code: "PGRST202" },
     estoque: null, erroDoEstoque: { code: "PGRST202" },
     chamadas: {}, errosDasTabelas: {}, semContagem: [], semColunas: [], lidas: [], sessoes: [],
     tabelas: {
-      perfis_usuario: [{ id: GESTOR, nome: "Gestor Teste" }, { id: ANA, nome: "Ana Teste" }, { id: BETO, nome: "Beto Teste" }],
       unidades: [
         { id: OUTRA, nome: "Loja 02 (teste)", tipo: "loja_fisica" },
         { id: SEM_VENDA, nome: "Loja 03 (teste)", tipo: "loja_fisica" },
@@ -1104,7 +1104,6 @@ describe("Início: sem permissão não há número nem pergunta ao banco", () =>
     entrar("gerente");
     cenario.permissoes.delete("custo.ver");
     const p = await pagina();
-    expect(cenario.chamadas.tem_permissao).toEqual(expect.arrayContaining([{ p_permissao: "custo.ver", p_unidade: LOJA }]));
     expect(cenario.chamadas.margem_painel).toBeUndefined();
     // O indicador continua no lugar, dizendo o motivo, sem tom de alerta: não é problema a resolver.
     expect(p.indicadores).toEqual(INDICADORES_DA_LOJA);
@@ -1181,14 +1180,14 @@ describe("Início: sem permissão não há número nem pergunta ao banco", () =>
 describe("Início: o que para a página inteira", () => {
   beforeEach(() => entrar("gerente"));
 
-  it("sem resposta sobre uma permissão não há como decidir a visão", async () => {
-    for (const permissao of ["ranking.ver", "venda.ver_propria", "custo.ver"]) {
-      cenario.erroDaPermissao = permissao;
-      cenario.chamadas = {};
-      await expect(pagina()).rejects.toBeInstanceOf(FalhaDoServico);
-      expect(cenario.chamadas.vendas_painel).toBeUndefined();
-      expect(cenario.chamadas.margem_painel).toBeUndefined();
-    }
+  it("as permissões e o nome chegam com a sessão: a tela não pergunta de novo ao banco (VEL-a)", async () => {
+    const p = await pagina();
+    // Nenhuma pergunta de permissão (a de mentira lança se for chamada) e nenhuma leitura do perfil: sem resposta do
+    // banco sobre elas, quem para é a leitura da sessão (lib/acesso/sessao.test.ts), antes de qualquer tela.
+    expect(cenario.chamadas.tem_permissao).toBeUndefined();
+    expect(cenario.lidas).not.toContain("perfis_usuario");
+    expect(cenario.lidas).not.toContain("vinculos");
+    expect(p.texto).toContain("Olá, Gestor Teste");
   });
 
   it("contagem de pendência com erro não vira zero pendências", async () => {
@@ -1199,9 +1198,11 @@ describe("Início: o que para a página inteira", () => {
     await expect(pagina()).rejects.toBeInstanceOf(FalhaDoServico);
   });
 
-  it("nome de quem entrou não lido: a página para em vez de saudar errado", async () => {
-    cenario.errosDasTabelas.perfis_usuario = { code: "57014" };
-    await expect(pagina()).rejects.toBeInstanceOf(FalhaDoServico);
+  it("sessão sem o nome de quem entrou: a saudação fica neutra, sem nome inventado", async () => {
+    cenario.semNome = true;
+    const p = await pagina();
+    expect(p.texto).toContain("Olá, bem-vindo");
+    expect(p.texto).not.toContain("Gestor Teste");
   });
 });
 

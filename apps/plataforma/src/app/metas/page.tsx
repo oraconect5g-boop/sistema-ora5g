@@ -1,6 +1,6 @@
 import type { Metadata } from "next";
 
-import { MoldeReal, permissoesDoMenu } from "../../componentes/MoldeReal";
+import { MoldeReal } from "../../componentes/MoldeReal";
 import { Aviso, FiltroSegmentado, TituloPagina } from "../../componentes/ui";
 import { podeVerMetas } from "../../lib/acesso/menu";
 import { obterSessao } from "../../lib/acesso/sessao";
@@ -33,10 +33,10 @@ export default async function Metas({ searchParams }: { searchParams: Promise<Pa
   const sessao = await obterSessao({ exigirLoja: true });
   const { supabase, usuario, situacao: situacaoDaSessao } = sessao;
   const turno: LojaDoFiltro = { id: situacaoDaSessao.unidade_id as string, nome: situacaoDaSessao.unidade_nome ?? "Loja do turno" };
-  const permissoes = await permissoesDoMenu(supabase, turno.id);
+  const { permissoes } = sessao.molde;
   if (!podeVerMetas(permissoes)) {
     return (
-      <MoldeReal sessao={sessao} permissoes={permissoes}>
+      <MoldeReal sessao={sessao}>
         <TituloPagina titulo="Metas e desempenho" />
         <Aviso tom="aviso" titulo="Sem permissão">
           As metas são do dono, da gerência e de cada vendedor (as próprias). O banco também recusa, mesmo que alguém digite o endereço.
@@ -88,7 +88,7 @@ export default async function Metas({ searchParams }: { searchParams: Promise<Pa
   const alvo = textoDoParametro(parametros.alvo) ?? null;
 
   return (
-    <MoldeReal sessao={sessao} permissoes={permissoes} largura="max-w-6xl">
+    <MoldeReal sessao={sessao} largura="max-w-6xl">
       <TituloPagina
         sobretitulo={loja.nome}
         titulo={gestao ? "Metas e desempenho" : "Minhas metas"}

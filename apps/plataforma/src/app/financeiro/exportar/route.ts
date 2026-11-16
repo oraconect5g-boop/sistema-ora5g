@@ -3,7 +3,6 @@
 // verdade). Mesma permissão e mesmo escopo da tela, conferidos aqui no servidor; o banco confere cada linha de novo
 // (RLS). Lê lote a lote (o limite da API) até o fim ou até o limite de segurança, e avisa na última linha quando
 // parou antes.
-import { permissoesDoMenu } from "../../../componentes/MoldeReal";
 import { podeVerFinanceiro } from "../../../lib/acesso/menu";
 import { FalhaDoServico, obterSessao } from "../../../lib/acesso/sessao";
 import { formatoPedido } from "../../../lib/csv";
@@ -20,7 +19,7 @@ export async function GET(pedido: Request) {
   const sessao = await obterSessao({ exigirLoja: true });
   const { supabase, situacao } = sessao;
   const turno: LojaDoFiltro = { id: situacao.unidade_id as string, nome: situacao.unidade_nome ?? "Loja do turno" };
-  const permissoes = await permissoesDoMenu(supabase, turno.id);
+  const { permissoes } = sessao.molde;
   if (!podeVerFinanceiro(permissoes)) return new Response("Sem permissão para exportar o financeiro.", { status: 403 });
 
   const daRede = permissoes.has("venda.ver_todas");

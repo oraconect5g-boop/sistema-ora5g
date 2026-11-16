@@ -21,21 +21,6 @@ const FUNCAO_AUSENTE = new Set(["PGRST202", "42883"]);
 const FALHA = { estado: "falha" } as const;
 const INDISPONIVEL = { estado: "indisponivel" } as const;
 
-/**
- * As três permissões que só o Início pergunta (não fazem parte do menu): ver o ranking de vendedores,
- * ver as próprias vendas e ver o custo dos produtos (a margem). Sem resposta do banco não há como
- * decidir a visão: a página para.
- */
-export async function permissoesDoInicio(supabase: Cliente, unidade: string): Promise<{ ranking: boolean; propria: boolean; custo: boolean }> {
-  const [ranking, propria, custo] = await Promise.all([
-    supabase.rpc("tem_permissao", { p_permissao: "ranking.ver", p_unidade: unidade }),
-    supabase.rpc("tem_permissao", { p_permissao: "venda.ver_propria", p_unidade: unidade }),
-    supabase.rpc("tem_permissao", { p_permissao: "custo.ver", p_unidade: unidade }),
-  ]);
-  if (ranking.error || propria.error || custo.error) throw new FalhaDoServico("inicio_permissoes");
-  return { ranking: ranking.data === true, propria: propria.data === true, custo: custo.data === true };
-}
-
 /** Vendas do período inteiro, somadas no banco (public.vendas_painel, com o RLS de quem pede). */
 export async function consultarVendas(supabase: Cliente, janela: Janela, filtro: { unidade: string | null; vendedor: string | null }, porHora: boolean): Promise<Leitura<VendasDoBanco>> {
   const r = await supabase.rpc("vendas_painel", {

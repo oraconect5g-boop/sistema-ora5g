@@ -37,7 +37,7 @@ class Consulta {
 const supabase = {
   from: (nome: string) => new Consulta(nome),
   rpc: async (nome: string, argumentos: Record<string, unknown> = {}) => {
-    if (nome === "tem_permissao") return { data: cenario.permissoes.has(String(argumentos.p_permissao)), error: null };
+    if (nome === "tem_permissao") throw new Error("a tela não pergunta permissão do menu ao banco: ela chega com a sessão (molde)");
     cenario.chamadas.push({ nome, argumentos });
     return cenario.respostas[nome] ?? { data: null, error: { code: "PGRST202" } };
   },
@@ -47,6 +47,8 @@ vi.mock("../../lib/acesso/sessao", () => ({
   obterSessao: async () => ({
     usuario: { id: cenario.usuario },
     situacao: { usuario_ativo: true, sessao_no_turno: true, unidade_id: LOJA, unidade_nome: "Santa Cândida (teste)", turno_termina_em: "2026-11-13T23:00:00Z" },
+    // As permissões do menu chegam com a sessão (public.molde_da_sessao, lote VEL-a): a tela não pergunta de novo ao banco.
+    molde: { permissoes: cenario.permissoes, nome: "Ana (fictícia)", vinculos: [], pendencias: { aprovacoes: 0, notas: 0 } },
     supabase,
   }),
 }));

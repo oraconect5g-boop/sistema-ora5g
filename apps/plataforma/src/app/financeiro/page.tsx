@@ -1,7 +1,7 @@
 import type { Metadata } from "next";
 
 import { BaixarPlanilha } from "../../componentes/BaixarPlanilha";
-import { MoldeReal, permissoesDoMenu } from "../../componentes/MoldeReal";
+import { MoldeReal } from "../../componentes/MoldeReal";
 import { Aviso, FiltroSegmentado, TituloPagina } from "../../componentes/ui";
 import { podeVerFinanceiro } from "../../lib/acesso/menu";
 import { FalhaDoServico, obterSessao } from "../../lib/acesso/sessao";
@@ -27,10 +27,10 @@ export default async function Financeiro({ searchParams }: { searchParams: Promi
   const sessao = await obterSessao({ exigirLoja: true });
   const { supabase, situacao: situacaoDaSessao } = sessao;
   const turno: LojaDoFiltro = { id: situacaoDaSessao.unidade_id as string, nome: situacaoDaSessao.unidade_nome ?? "Loja do turno" };
-  const permissoes = await permissoesDoMenu(supabase, turno.id);
+  const { permissoes } = sessao.molde;
   if (!podeVerFinanceiro(permissoes)) {
     return (
-      <MoldeReal sessao={sessao} permissoes={permissoes}>
+      <MoldeReal sessao={sessao}>
         <TituloPagina titulo="Financeiro" />
         <Aviso tom="aviso" titulo="Sem permissão">
           O financeiro é da gerência e da diretoria. As suas vendas e o seu caixa continuam em Vendas e em Caixa. O banco também recusa, mesmo que alguém digite o endereço.
@@ -90,7 +90,7 @@ export default async function Financeiro({ searchParams }: { searchParams: Promi
 
   if (atual === "indisponivel" || anterior === "indisponivel") {
     return (
-      <MoldeReal sessao={sessao} permissoes={permissoes} largura="max-w-6xl">
+      <MoldeReal sessao={sessao} largura="max-w-6xl">
         {cabecalho}
         <Aviso tom="aviso" titulo="Financeiro indisponível neste ambiente">
           O banco deste ambiente ainda não tem a leitura agregada do financeiro (migration <code>financeiro_painel</code>). Nenhum número é mostrado até ela ser instalada.
@@ -106,7 +106,7 @@ export default async function Financeiro({ searchParams }: { searchParams: Promi
   const nomes = await nomesDosRegistros(supabase, listaDeRegistros.registros);
 
   return (
-    <MoldeReal sessao={sessao} permissoes={permissoes} largura="max-w-6xl">
+    <MoldeReal sessao={sessao} largura="max-w-6xl">
       {cabecalho}
 
       <ConteudoFinanceiro

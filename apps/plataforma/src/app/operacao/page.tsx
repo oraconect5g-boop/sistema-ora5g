@@ -1,6 +1,6 @@
 import type { Metadata } from "next";
 
-import { MoldeReal, permissoesDoMenu } from "../../componentes/MoldeReal";
+import { MoldeReal } from "../../componentes/MoldeReal";
 import { Aviso } from "../../componentes/ui";
 import { obterSessao } from "../../lib/acesso/sessao";
 import { podeVerFinanceiro } from "../../lib/acesso/menu";
@@ -17,15 +17,15 @@ export const dynamic = "force-dynamic";
 // monitoramento do servidor.
 export default async function SaudeDaOperacao() {
   const sessao = await obterSessao({ exigirLoja: true });
-  const { supabase, situacao } = sessao;
-  const permissoes = await permissoesDoMenu(supabase, situacao.unidade_id as string);
+  const { supabase } = sessao;
+  const { permissoes } = sessao.molde;
   if (!podeVerFinanceiro(permissoes)) {
-    return <MoldeReal sessao={sessao} permissoes={permissoes}><Aviso tom="aviso" className="mt-6">A saúde da operação é do dono e da gerência.</Aviso></MoldeReal>;
+    return <MoldeReal sessao={sessao}><Aviso tom="aviso" className="mt-6">A saúde da operação é do dono e da gerência.</Aviso></MoldeReal>;
   }
   const hoje = hojeEmSaoPaulo();
   const filas = await lerFilas(supabase, permissoes, hoje);
   return (
-    <MoldeReal sessao={sessao} permissoes={permissoes} largura="max-w-5xl">
+    <MoldeReal sessao={sessao} largura="max-w-5xl">
       <ConteudoDaOperacao filas={filas} hoje={hoje} />
     </MoldeReal>
   );
