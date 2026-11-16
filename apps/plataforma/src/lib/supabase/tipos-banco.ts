@@ -3528,6 +3528,7 @@ export type Database = {
           cancelada_no_fisco_por: string | null
           chave: string
           chave_acesso: string | null
+          cliente_id: string | null
           criado_em: string
           destinatario_mascarado: string | null
           destinatario_nome: string | null
@@ -3560,6 +3561,7 @@ export type Database = {
           cancelada_no_fisco_por?: string | null
           chave: string
           chave_acesso?: string | null
+          cliente_id?: string | null
           criado_em?: string
           destinatario_mascarado?: string | null
           destinatario_nome?: string | null
@@ -3592,6 +3594,7 @@ export type Database = {
           cancelada_no_fisco_por?: string | null
           chave?: string
           chave_acesso?: string | null
+          cliente_id?: string | null
           criado_em?: string
           destinatario_mascarado?: string | null
           destinatario_nome?: string | null
@@ -3617,6 +3620,13 @@ export type Database = {
           venda_id?: string
         }
         Relationships: [
+          {
+            foreignKeyName: "notas_pedidos_cliente_id_fkey"
+            columns: ["cliente_id"]
+            isOneToOne: false
+            referencedRelation: "clientes"
+            referencedColumns: ["id"]
+          },
           {
             foreignKeyName: "notas_pedidos_aprovado_por_fkey"
             columns: ["aprovado_por"]

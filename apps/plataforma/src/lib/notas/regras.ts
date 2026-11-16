@@ -18,7 +18,11 @@ export const ERROS_DAS_NOTAS = {
   protocolo_outro: "O protocolo digitado é diferente do que está no XML (ou do já registrado nesta nota): confira.",
   whatsapp_nao_emitida: "Só a nota emitida vai ao cliente pelo WhatsApp.",
   whatsapp_sem_pdf: "Guarde o PDF da nota antes de enviar pelo WhatsApp.",
-  whatsapp_sem_cliente: "Ligue a venda ao cliente da rede antes de enviar a nota pelo WhatsApp.",
+  whatsapp_sem_cliente: "A nota foi pedida sem o cliente da rede na venda: o envio pelo WhatsApp vale só para a nota pedida com o cliente ligado.",
+  // INTEG-a (#88): o cliente da venda mudou depois do pedido da nota.
+  whatsapp_cliente_mudou: "O cliente da venda mudou depois do pedido da nota: a nota está no nome de outro cliente e não vai pelo WhatsApp. Confira a venda e a nota.",
+  // INTEG-a (#87): a nota no nome do cliente se corrige pelo cadastro dele.
+  nota_do_cadastro: "Esta nota está no nome do cliente do cadastro: corrija o cadastro do cliente e use \"Usar o cadastro atualizado\" (o CPF/CNPJ não se digita aqui).",
   whatsapp_sem_numero: "O cliente da venda não tem WhatsApp no cadastro: complete o cadastro dele.",
   whatsapp_desconhecido: "O último envio ficou com resultado desconhecido: a gerência confere antes de reenviar.",
   whatsapp_motivo: "Para reenviar a nota, informe o motivo (de 3 a 200 letras): ele fica no histórico.",
@@ -50,13 +54,15 @@ export function erroDasNotas(erro: { code?: string; message?: string } | null | 
   const codigo = erro?.code;
   if (codigo === "22023" && /não tem cpf\/cnpj no cadastro/i.test(erro?.message ?? "")) return "cliente_sem_documento";
   if (codigo === "22023" && /não tem o endereço completo no cadastro/i.test(erro?.message ?? "")) return "cliente_sem_endereco";
+  if (codigo === "22023" && /está no nome do cliente do cadastro/i.test(erro?.message ?? "")) return "nota_do_cadastro";
   if (codigo === "22023" && /só aparecem enquanto a nota espera/i.test(erro?.message ?? "")) return "ja_emitida";
   if (codigo === "22023" && /já tem outro protocolo/i.test(erro?.message ?? "")) return "protocolo_outro";
   if (codigo === "22023" && /protocolo de autorização inválido/i.test(erro?.message ?? "")) return "protocolo";
   // K1c (#76): o envio da nota pelo WhatsApp.
   const doWhatsApp: [RegExp, ErroDasNotas][] = [
     [/só a nota emitida vai ao cliente/i, "whatsapp_nao_emitida"], [/guarde o pdf da nota/i, "whatsapp_sem_pdf"],
-    [/ligue a venda ao cliente/i, "whatsapp_sem_cliente"], [/não tem whatsapp no cadastro/i, "whatsapp_sem_numero"],
+    [/ligue a venda ao cliente|pedida sem o cliente da rede/i, "whatsapp_sem_cliente"], [/não tem whatsapp no cadastro/i, "whatsapp_sem_numero"],
+    [/cliente da venda mudou depois do pedido da nota/i, "whatsapp_cliente_mudou"],
     [/resultado desconhecido/i, "whatsapp_desconhecido"], [/para reenviar a nota/i, "whatsapp_motivo"],
   ];
   const doEnvio = codigo === "22023" ? doWhatsApp.find(([padrao]) => padrao.test(erro?.message ?? "")) : undefined;

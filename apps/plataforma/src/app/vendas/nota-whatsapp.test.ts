@@ -59,7 +59,7 @@ vi.mock("../../lib/acesso/sessao", () => ({
   }),
 }));
 
-import { conferirEnvioDesconhecido, enviarNotaPeloWhatsApp } from "../notas/acoes";
+import { conferirEnvioDesconhecido, corrigirNota, enviarNotaPeloWhatsApp } from "../notas/acoes";
 import Venda from "./[id]/page";
 
 function texto(v: unknown): string {
@@ -93,7 +93,7 @@ beforeEach(() => {
   cenario.tabelas = {
     vendas: [{ id: VENDA, numero: 51, situacao: "concluida", unidade_id: LOJA, vendedor_id: EU, cliente_nome: "Carla Cliente", cliente_id: CLIENTE, total_centavos: 7_900, subtotal_centavos: 7_900, desconto_centavos: 0, troco_centavos: 0, recebido_centavos: 7_900, a_receber_centavos: 0, devolvido_centavos: 0, concluida_em: "2026-11-14T13:00:00Z", cancelada_em: null, motivo_cancelamento: null }],
     venda_itens: [],
-    notas_pedidos: [{ id: PEDIDO, venda_id: VENDA, tipo: "venda", situacao: "emitida", solicitado_por: EU, destinatario_nome: null, destinatario_mascarado: null, observacao: null, chave_acesso: "4".repeat(44), modelo: "65", serie: 1, numero_documento: 801, protocolo: "141260000123456" }],
+    notas_pedidos: [{ id: PEDIDO, venda_id: VENDA, tipo: "venda", situacao: "emitida", solicitado_por: EU, destinatario_nome: null, destinatario_mascarado: null, observacao: null, chave_acesso: "4".repeat(44), modelo: "65", serie: 1, numero_documento: 801, protocolo: "141260000123456", cliente_id: CLIENTE }],
     notas_documentos: [{ id: "doc1", pedido_id: PEDIDO, tipo: "pdf", caminho: `org/loja/${PEDIDO}/a.pdf`, bytes: 51_200, enviado_em: "2026-11-14T13:30:00Z" }],
     whatsapp_envios: [],
     unidades: [{ id: LOJA, nome: "Santa Cândida (teste)", cnpj: null }],
@@ -130,9 +130,26 @@ describe("documentos e envio da nota na tela da venda (L10a, K1c)", () => {
     cenario.tabelas.notas_documentos = [];
     expect(await tela()).toContain("Para enviar pelo WhatsApp, guarde antes o PDF da nota.");
     cenario.tabelas.vendas = [{ ...cenario.tabelas.vendas![0], cliente_id: null }];
-    expect(await tela()).toContain("Para enviar pelo WhatsApp, ligue a venda ao cliente da rede.");
+    expect(await tela()).toContain("Para enviar pelo WhatsApp, a nota precisa ter sido pedida com o cliente da rede ligado à venda.");
+    // INTEG-a (#88): o cliente da venda trocado depois do pedido da nota: sem o botão, com o motivo.
+    cenario.tabelas.notas_documentos = [{ id: "doc1", pedido_id: PEDIDO, tipo: "pdf", caminho: `org/loja/${PEDIDO}/a.pdf`, bytes: 51_200, enviado_em: "2026-11-14T13:30:00Z" }];
+    cenario.tabelas.vendas = [{ ...cenario.tabelas.vendas![0], cliente_id: "00000000-0000-4000-8000-0000000000b9" }];
+    const trocado = await tela();
+    expect(trocado).toContain("O cliente da venda mudou depois do pedido da nota");
+    expect(trocado).not.toContain("Enviar a nota pelo WhatsApp");
     cenario.erros = { whatsapp_envios: { code: "PGRST205" } };
     expect(await tela()).not.toContain("Envio ao cliente pelo WhatsApp");
+  });
+
+  it("corrigir a nota pelo cadastro atualizado manda só o cliente da venda; a recusa da nota do cadastro vira a mensagem (INTEG-a, #87)", async () => {
+    cenario.respostas.notas_corrigir = { data: true, error: null };
+    expect(await destinoDe(corrigirNota(formulario({ pedido: PEDIDO, venda: VENDA, usar_cadastro: "sim", cliente: CLIENTE, nome: "Ignorado", documento: "123" })))).toBe(`/vendas/${VENDA}?nota=corrigida`);
+    expect(cenario.chamadas.at(-1)).toEqual({ nome: "notas_corrigir", argumentos: { p_pedido: PEDIDO, p_destinatario: { cliente: CLIENTE } } });
+    cenario.respostas.notas_corrigir = { data: null, error: { code: "22023", message: "Esta nota está no nome do cliente do cadastro: corrija o cadastro do cliente e use os dados atualizados (o CPF/CNPJ não se digita aqui)" } };
+    expect(await destinoDe(corrigirNota(formulario({ pedido: PEDIDO, venda: VENDA, nome: "Outro Nome" })))).toBe(`/vendas/${VENDA}?erro_nota=nota_do_cadastro`);
+    expect(cenario.chamadas.at(-1)?.argumentos).toEqual({ p_pedido: PEDIDO, p_destinatario: { nome: "Outro Nome" } });
+    cenario.respostas.nota_enviar_whatsapp = { data: null, error: { code: "22023", message: "O cliente da venda mudou depois do pedido da nota: a nota é de outro cliente; confira a venda e a nota antes de enviar" } };
+    expect(await destinoDe(enviarNotaPeloWhatsApp(formulario({ pedido: PEDIDO, venda: VENDA, chave: "00000000-0000-4000-8000-00000000c009" })))).toBe(`/vendas/${VENDA}?erro_nota=whatsapp_cliente_mudou`);
   });
 
   it("as ações: o envio vai ao banco com a chave e volta à venda; os erros do banco viram a mensagem certa; a conferência pede motivo", async () => {

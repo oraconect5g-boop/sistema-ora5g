@@ -75,7 +75,11 @@ export async function corrigirNota(dados: FormData) {
   const pedido = dados.get("pedido");
   const venda = dados.get("venda");
   if (!ehUuid(pedido) || !ehUuid(venda)) redirect("/vender?erro=dados");
-  const destinatario = { ...(texto(dados, "nome", 120) ? { nome: texto(dados, "nome", 120) } : {}), ...(texto(dados, "documento", 20) ? { documento: texto(dados, "documento", 20) } : {}) };
+  // INTEG-a (#87): "usar o cadastro atualizado" manda só o cliente da venda; o banco guarda de novo o destinatário inteiro.
+  const cliente = dados.get("cliente");
+  const destinatario = dados.get("usar_cadastro") === "sim" && ehUuid(cliente)
+    ? { cliente }
+    : { ...(texto(dados, "nome", 120) ? { nome: texto(dados, "nome", 120) } : {}), ...(texto(dados, "documento", 20) ? { documento: texto(dados, "documento", 20) } : {}) };
   const { supabase } = await obterSessao({ exigirLoja: true });
   const { error } = await supabase.rpc("notas_corrigir", { p_pedido: pedido, p_destinatario: destinatario });
   redirect(error ? `/vendas/${venda}?erro_nota=${erroDasNotas(error)}` : `/vendas/${venda}?nota=corrigida`);
