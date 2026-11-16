@@ -1,0 +1,506 @@
+[
+  {
+    "version": "20261107140352",
+    "name": "fundacao_acesso",
+    "statements_md5": "a8f160b848c860269fed9b3dced6aae5",
+    "with_newline_md5": "2cced6afbd83199c71eda0c9d471f3a7"
+  },
+  {
+    "version": "20261107140448",
+    "name": "indices_chaves_estrangeiras",
+    "statements_md5": "04fa57c5f31bc5cb8beb99ebfac7297e",
+    "with_newline_md5": "97edde16c4890ae44d56d8f969ddf9cb"
+  },
+  {
+    "version": "20261107151305",
+    "name": "correcoes_revisao_codex",
+    "statements_md5": "76dc2a6b2c8e5e3e4648044bf3334caa",
+    "with_newline_md5": "4b3c5a7922b7cbd1e340466d11b9b60b"
+  },
+  {
+    "version": "20261108150432",
+    "name": "auditoria_automatica_acesso",
+    "statements_md5": "7b8296f808c4db3ee8a9d910952ec21b",
+    "with_newline_md5": "7c19b821e84f6903b87d99f48f8780a9"
+  },
+  {
+    "version": "20261108150620",
+    "name": "catalogo_estoque",
+    "statements_md5": "b5d498c865a0bae257061bbe48fcfbf3",
+    "with_newline_md5": "aeefb9ad06c23de5f690568e8141c66d"
+  },
+  {
+    "version": "20261108151325",
+    "name": "indices_catalogo_estoque",
+    "statements_md5": "78cf93f4b911d5d631a1ae83f4565ed8",
+    "with_newline_md5": "a3b1f25e7a36a7ab1e6d7ed998f12ff6"
+  },
+  {
+    "version": "20261108195850",
+    "name": "integridade_estoque",
+    "statements_md5": "9795cbcaed323e380191c70659415dbc",
+    "with_newline_md5": "d9155fec0cf90e1c23016fa83aecef8c"
+  },
+  {
+    "version": "20261108202654",
+    "name": "acesso_sessao_e_equipe",
+    "statements_md5": "358ae9818908896b186681924ddcde04",
+    "with_newline_md5": "904473f0bf5708f59f7fe1fd254f9f92"
+  },
+  {
+    "version": "20261108204536",
+    "name": "fotos_dos_produtos",
+    "statements_md5": "2f7900b0015e47668ddb478764aa485c",
+    "with_newline_md5": "4fc12283e11f793760976ff3962879d1"
+  },
+  {
+    "version": "20261108233546",
+    "name": "vendas_pagamentos_e_caixa",
+    "statements_md5": "6284f6340341eb65a0be6430d5e9a706",
+    "with_newline_md5": "7420b33d2368679410f0b8c393c25bf0"
+  },
+  {
+    "version": "20261108233711",
+    "name": "indices_vendas_e_fotos",
+    "statements_md5": "3b67ed6d41fced7092b8ab013ea5c17f",
+    "with_newline_md5": "a4d46dfc9ed78cbe677b52d73b930048"
+  },
+  {
+    "version": "20261109123402",
+    "name": "ora_connect_operacoes",
+    "statements_md5": "34fa7602285abc5aafaed8a34c5733b5",
+    "with_newline_md5": "48b534f94902f397b580d24449270142"
+  },
+  {
+    "version": "20261109123533",
+    "name": "indices_ora_connect",
+    "statements_md5": "81f5a9a345580fedb43ed7c5951e3d79",
+    "with_newline_md5": "1a200717a062f48ad73d8630c1e603d0"
+  },
+  {
+    "version": "20261109123757",
+    "name": "fila_fiscal",
+    "statements_md5": "43a75da04d3228214e260201a2ea36af",
+    "with_newline_md5": "559d8f7236d1e334f1499d1ebe880c79"
+  },
+  {
+    "version": "20261109134507",
+    "name": "devolucao_e_troca",
+    "statements_md5": "8027f63a195fdfa06af5c02b0ddc179a",
+    "with_newline_md5": "cc06b9902da304a709e56825702cba18"
+  },
+  {
+    "version": "20261109150526",
+    "name": "correcoes_acesso_lote1",
+    "statements_md5": "0db668934f7f4c72b12164e0d96b6057",
+    "with_newline_md5": "f6c724a38f66fe8db0391775e48534fd"
+  },
+  {
+    "version": "20261109190240",
+    "name": "integridade_vendas_lote2",
+    "statements_md5": "4f60a31369f04618b40fc1f88e50ec78",
+    "with_newline_md5": "42119cd7b6fb89a9fab224f9392ce380"
+  },
+  {
+    "version": "20261109190400",
+    "name": "connect_evidencia_lote2",
+    "statements_md5": "50a92b80cbcd527ab22565a988239100",
+    "with_newline_md5": "c8f93ddf57c72cf510f701ae7eb08f96"
+  },
+  {
+    "version": "20261109191416",
+    "name": "fotos_idempotentes_lote3",
+    "statements_md5": "af993e98aff5d5bc7de704e290264527",
+    "with_newline_md5": "1e035be4c29d0fd060c1308be1ad200a"
+  },
+  {
+    "version": "20261109193043",
+    "name": "transferencias_e_defeitos",
+    "statements_md5": "71ad04f1afc171fa8db9b0bcb2077044",
+    "with_newline_md5": "0fc77f2c3312336560745511ad4cbb97"
+  },
+  {
+    "version": "20261109201940",
+    "name": "mensagens_nogle",
+    "statements_md5": "a910ebd1bef0e0ff396f312ae97168bc",
+    "with_newline_md5": "442006288361612ffcbd8d3b48dde7c8"
+  },
+  {
+    "version": "20261110124824",
+    "name": "connect_consulta_por_uuid",
+    "statements_md5": "35af74537bfa72eaddce36b05c36ebc4",
+    "with_newline_md5": "282542a5cbe3d8bbd40319a77cf1fad1"
+  },
+  {
+    "version": "20261110224537",
+    "name": "financeiro_painel",
+    "statements_md5": "0c0432e2c12bb35139c4ab2729b4f0c0",
+    "with_newline_md5": "b7af53e5c90d95ed134f2a6b9835cb1a"
+  },
+  {
+    "version": "20261111132503",
+    "name": "lojas_cadastro_e_configuracao",
+    "statements_md5": "288c2402100e782a7d3ed98a82faf3f0",
+    "with_newline_md5": "17dd50f939ca83e8ec7eec28ab27036a"
+  },
+  {
+    "version": "20261111132621",
+    "name": "catalogo_cadastro",
+    "statements_md5": "7a9a5b9cb9ebdfb3095b8309a3f30cad",
+    "with_newline_md5": "2a2c3e50a64ece48d7ece65070a7c02e"
+  },
+  {
+    "version": "20261111133804",
+    "name": "precos_e_campanhas",
+    "statements_md5": "54e45cffda3f09a7765311e63696a7ac",
+    "with_newline_md5": "f73baefcf0e27d692a30b696b00012d4"
+  },
+  {
+    "version": "20261111135906",
+    "name": "importacao_catalogo",
+    "statements_md5": "faa52950a5b728b6166cdc65474f064e",
+    "with_newline_md5": "300b0ebe1e5f33e82fcd43a0820eb7a4"
+  },
+  {
+    "version": "20261111141337",
+    "name": "entrada_estoque",
+    "statements_md5": "663f442cb03a7311e2c66acb3de0609d",
+    "with_newline_md5": "b63410889a4ee37e9f9c3411fafe3649"
+  },
+  {
+    "version": "20261111142627",
+    "name": "condicao_obrigatoria_na_devolucao",
+    "statements_md5": "976ebbec1236ca5b6dce1fe09fcc7794",
+    "with_newline_md5": "2e6597acd29c6f9ce26578fb8146c4a3"
+  },
+  {
+    "version": "20261111142726",
+    "name": "inventario",
+    "statements_md5": "20d9404bad0bce788ce78c41998ab526",
+    "with_newline_md5": "6b242a22b63ce59bd4ec997676bca8be"
+  },
+  {
+    "version": "20261111191909",
+    "name": "clientes_compartilhados",
+    "statements_md5": "f1c9c6563024611ba4fbe77bf39348ee",
+    "with_newline_md5": "53b1e873756584d0240ec5e5f36365d1"
+  },
+  {
+    "version": "20261111193816",
+    "name": "crm_funil_e_agenda",
+    "statements_md5": "3e247f19ce05b7fdf6b791f104be8b62",
+    "with_newline_md5": "065e53d3c7d9c1e7d3c3360561571d28"
+  },
+  {
+    "version": "20261111195120",
+    "name": "clientes_mesclagem_e_segmentos",
+    "statements_md5": "cbb9c32a5c1e3cab7b122cfb52c4d1fd",
+    "with_newline_md5": "b4b0283d5e701fd6810286f4044d105f"
+  },
+  {
+    "version": "20261111200054",
+    "name": "pdv_nota_do_cliente",
+    "statements_md5": "6078f9dd0f64d21dc7e46aa5e4dd9718",
+    "with_newline_md5": "d686f376522d907345aee999903d1b16"
+  },
+  {
+    "version": "20261111201342",
+    "name": "pagamentos_maquininhas_e_conciliacao",
+    "statements_md5": "b83e29bfd4d7f095173e2845aa9e0a19",
+    "with_newline_md5": "17d70b439d8a56f90c841eb591f53e36"
+  },
+  {
+    "version": "20261112033713",
+    "name": "recebimento_correcoes",
+    "statements_md5": "8f985fcbb4766e5b3a5ec676aae67201",
+    "with_newline_md5": "937f13f652aaebad02392ca4d5a4bffe"
+  },
+  {
+    "version": "20261112163333",
+    "name": "importador_correcoes",
+    "statements_md5": "d4003b4a7642b74117a4442113bfe385",
+    "with_newline_md5": "995fda680443e87119fd3bcd347f7a19"
+  },
+  {
+    "version": "20261112195200",
+    "name": "vendas_painel",
+    "statements_md5": "a477b00219c4eff93cc94ebb3066484a",
+    "with_newline_md5": "d33fa497ab8ed43a1e6c39cce6a58b68"
+  },
+  {
+    "version": "20261113065706",
+    "name": "margem_painel",
+    "statements_md5": "40a023619c08c2f87c33683bed9fb70c",
+    "with_newline_md5": "7af84d1c116430125d3c769abe29a21e"
+  },
+  {
+    "version": "20261114012326",
+    "name": "financeiro_conciliacao",
+    "statements_md5": "d9b2f491d11b795ae5923b4eac4ae290",
+    "with_newline_md5": "591343f5213e4aec297784754aa11e85"
+  },
+  {
+    "version": "20261114012407",
+    "name": "estoque_painel",
+    "statements_md5": "ce11207894796265a90b602e6f7133e2",
+    "with_newline_md5": "bcc47330a691681a1b7bf6ce0864a782"
+  },
+  {
+    "version": "20261114012431",
+    "name": "connect_painel",
+    "statements_md5": "a3f5cc7e1759ac6ffcf18d901c3a11ad",
+    "with_newline_md5": "9b87c354bd6a93c840a236dffe325086"
+  },
+  {
+    "version": "20261114012538",
+    "name": "metas",
+    "statements_md5": "a7ea23bdfac126f02262f4ce815b387e",
+    "with_newline_md5": "be6c1305e910a17fd2884d32ebe0b759"
+  },
+  {
+    "version": "20261114012604",
+    "name": "metas_lojas",
+    "statements_md5": "1ac0be9bf479d3f486984f1625630b11",
+    "with_newline_md5": "d97fe5a7cb7ed6167f4beb1eda1efcb0"
+  },
+  {
+    "version": "20261114012623",
+    "name": "equipe_por_papel",
+    "statements_md5": "c8cde2890516fcea7192cf5f607647ec",
+    "with_newline_md5": "9fd7754f91e51bdb75bad8f4da44beb7"
+  },
+  {
+    "version": "20261114012647",
+    "name": "venda_item_regra_de_preco",
+    "statements_md5": "285ab270a635fe29c54ebaf8791b0bb3",
+    "with_newline_md5": "e152473cc45279390ca5535016659971"
+  },
+  {
+    "version": "20261114012722",
+    "name": "financeiras_a_receber",
+    "statements_md5": "37314903a1f24a5181ac099a6d56fedd",
+    "with_newline_md5": "c5e8bd4b72c4a790061aa487ce9c5b6a"
+  },
+  {
+    "version": "20261114012802",
+    "name": "caixa_saida_autorizada",
+    "statements_md5": "a33eb3d2e66b257a7774d02ed78be4e9",
+    "with_newline_md5": "4ba8b74e8dcb1cef97a814a75d528a13"
+  },
+  {
+    "version": "20261114012952",
+    "name": "contas_a_pagar",
+    "statements_md5": "71168df92036d4d537827385711b517c",
+    "with_newline_md5": "4f541cdba354e78ba7bd7a7f3e782621"
+  },
+  {
+    "version": "20261114013120",
+    "name": "resultado_do_mes",
+    "statements_md5": "05f10b59896103ccf88b5c88fc1a82bf",
+    "with_newline_md5": "c42d0de04e018bf08c8903c14ef85433"
+  },
+  {
+    "version": "20261114013159",
+    "name": "previsao_de_caixa",
+    "statements_md5": "7292b5793b0b7f748c53e867d92505fe",
+    "with_newline_md5": "284c64c43582860bb2b6fecd1b2fde98"
+  },
+  {
+    "version": "20261114092832",
+    "name": "bonus_por_meta",
+    "statements_md5": "dd58eee5bde26398e6666ff830b707fd",
+    "with_newline_md5": "04ca44cf1942be6efee07bcc804ed2ad"
+  },
+  {
+    "version": "20261114104004",
+    "name": "bonus_fechamento",
+    "statements_md5": "c3f94fa247705d3c678dd74e33190d4b",
+    "with_newline_md5": "6b6ecb12e7a18492cf355f6d1836630f"
+  },
+  {
+    "version": "20261114145334",
+    "name": "inventario_correcoes",
+    "statements_md5": "4d6d7b29b4d3e47dfe5629dc5d15c165",
+    "with_newline_md5": "8faec686210292531cb31e8e9e5df9bf"
+  },
+  {
+    "version": "20261114145418",
+    "name": "previsao_correcoes",
+    "statements_md5": "cab7d9b21702dd6c4a94d624a6843ad1",
+    "with_newline_md5": "5932b22b1a604e7096c9336e4e970851"
+  },
+  {
+    "version": "20261114145505",
+    "name": "financeiras_correcoes",
+    "statements_md5": "db9d48c1fe8f354e7e28dfb26b5d29cd",
+    "with_newline_md5": "a2c5b18df922edc69062a45d8734293c"
+  },
+  {
+    "version": "20261114145608",
+    "name": "clientes_nome_e_whatsapp",
+    "statements_md5": "375be4d8ceacefefb248c05b530db470",
+    "with_newline_md5": "b2c4b6b99e7926823b0dc903ba605a62"
+  },
+  {
+    "version": "20261114145952",
+    "name": "notas_destinatario_completo",
+    "statements_md5": "5674626260a14e59724692440ba9f851",
+    "with_newline_md5": "bb9531ee3a9d70b8cce63bb86f3c71fa"
+  },
+  {
+    "version": "20261114150027",
+    "name": "notas_documentos",
+    "statements_md5": "82b836daafd53de60f8db55ff3520c30",
+    "with_newline_md5": "1c7c03411997345ce02082bec25cd518"
+  },
+  {
+    "version": "20261114150135",
+    "name": "whatsapp_envio_da_nota",
+    "statements_md5": "cccfb12dfbf315e0187888c702929d31",
+    "with_newline_md5": "ef71bfc08fbd31bfac0b4aa805e266bc"
+  },
+  {
+    "version": "20261114161903",
+    "name": "recebiveis_painel",
+    "statements_md5": "e64b6c8bbe0e2943b27739ee93219b0d",
+    "with_newline_md5": "b256854a4aad0c7dacf4c80d4cd2a229"
+  },
+  {
+    "version": "20261114162103",
+    "name": "ordem_de_servico",
+    "statements_md5": "d33be729a3b9587e72685f6ac70f9423",
+    "with_newline_md5": "3d46c4eca979b49074a3ced8b5ccbb81"
+  },
+  {
+    "version": "20261114162305",
+    "name": "orcamento_da_os",
+    "statements_md5": "c64ccbbb49b2144f79ba0dad34043599",
+    "with_newline_md5": "13f7ecc57fa4b25cb570f47c07e90748"
+  },
+  {
+    "version": "20261114202336",
+    "name": "entrega_da_os",
+    "statements_md5": "a7a8f418bdfb86b4051944364a64fdb7",
+    "with_newline_md5": "feff27cc95a6d4c48b04bb29d05d5aa3"
+  },
+  {
+    "version": "20261114202444",
+    "name": "pecas_da_os",
+    "statements_md5": "d8d8a679d126b2baef377c6608d7b804",
+    "with_newline_md5": "646c403c39afcaac0f096062967a5880"
+  },
+  {
+    "version": "20261114202535",
+    "name": "relatorio_da_assistencia",
+    "statements_md5": "833089c3f606ea5082713c121f42c46b",
+    "with_newline_md5": "f20794f72cd8b5177e12a5544e53b7f3"
+  },
+  {
+    "version": "20261114205327",
+    "name": "anexos_da_venda",
+    "statements_md5": "b6e8730659085d32320f1b871502b710",
+    "with_newline_md5": "b86e7a56020fdb18d9ac8da5f8678bd5"
+  },
+  {
+    "version": "20261114215050",
+    "name": "conciliacao_fiscal",
+    "statements_md5": "b7af9635e943db7adac220b1ecee8699",
+    "with_newline_md5": "59f07ca68e79ecf4ae71fa6e111661af"
+  },
+  {
+    "version": "20261114215128",
+    "name": "cancelamento_da_nota",
+    "statements_md5": "8bca9bb2d31eea3fbc66a76dbd7dfb55",
+    "with_newline_md5": "d79bd31edf2ce78808b8c1bce13bcaaf"
+  },
+  {
+    "version": "20261115000320",
+    "name": "estoque_valor_em_custo",
+    "statements_md5": "2d305492d0b5a744afc3d5e0dfd38490",
+    "with_newline_md5": "956f5023e6048f84bc0719e251890082"
+  },
+  {
+    "version": "20261115000401",
+    "name": "codigos_de_outros_canais",
+    "statements_md5": "a909de56bf8081c8e025cb082e85de26",
+    "with_newline_md5": "696b20929eab93b4ad07d92390f7e2a3"
+  },
+  {
+    "version": "20261115000433",
+    "name": "regioes",
+    "statements_md5": "c629850bb5835f64aac35b2a7d040529",
+    "with_newline_md5": "1eff22770e5e36836c6e8eb2bb403730"
+  },
+  {
+    "version": "20261115043059",
+    "name": "pagamentos_por_terminal",
+    "statements_md5": "25d9229bb2b527fbf49977cd49c04e85",
+    "with_newline_md5": "aed963ac4efcf106f027719a523aec83"
+  },
+  {
+    "version": "20261115102330",
+    "name": "margem_por_vendedor",
+    "statements_md5": "192df897589ce525c19f3b46472df470",
+    "with_newline_md5": "69836387188fdd4979ef9254ac341095"
+  },
+  {
+    "version": "20261115102358",
+    "name": "conta_da_entrada",
+    "statements_md5": "d141bf13599fa56ca3b405ae2e25753a",
+    "with_newline_md5": "9b85b794c31d5fa0691cf31825b27c63"
+  },
+  {
+    "version": "20261115102440",
+    "name": "documentos_da_conta",
+    "statements_md5": "92590050a4e88f5c10194520286306bb",
+    "with_newline_md5": "9b0cee8a844a683164a7b7089b2dc24d"
+  },
+  {
+    "version": "20261115102535",
+    "name": "correcao_do_custo",
+    "statements_md5": "54dc0a37454671dde3f628af24cccfd7",
+    "with_newline_md5": "dac7dedb5cc39246030b0459c8f1da33"
+  },
+  {
+    "version": "20261115142547",
+    "name": "limpeza_das_fotos",
+    "statements_md5": "36aa0ce0cd1e32802f7f3c944e2eb9cf",
+    "with_newline_md5": "b97dcfacfce42860ba10f89bee5f5fcd"
+  },
+  {
+    "version": "20261115150738",
+    "name": "pedido_de_compra",
+    "statements_md5": "ddebd3f45a0efeab013d944c23936122",
+    "with_newline_md5": "79733b435151661d603dd4d2b1392e8f"
+  },
+  {
+    "version": "20261115164226",
+    "name": "segundo_fator",
+    "statements_md5": "8296376240ee3be69ddd8d5effda2e57",
+    "with_newline_md5": "9ba4a7ceda72928ae0c716ef727af01d"
+  },
+  {
+    "version": "20261115181750",
+    "name": "confirmacao_recente",
+    "statements_md5": "b09293c9ee81508648d691dfdd8ddc81",
+    "with_newline_md5": "216d0bdddacd8d827292b46ed8e0a7bd"
+  },
+  {
+    "version": "20261115181840",
+    "name": "carta_de_correcao",
+    "statements_md5": "d5223a7b2d5ec3deb79d6b47b4d25fc4",
+    "with_newline_md5": "fcb8a6e51c1a40eba1f1bae6908a631c"
+  },
+  {
+    "version": "20261115193611",
+    "name": "relatorio_do_titular",
+    "statements_md5": "66e40fbaeccd45fe28730cc83f41a802",
+    "with_newline_md5": "ae560724d34ad37d9a841d04fd97e2ec"
+  },
+  {
+    "version": "20261115210812",
+    "name": "loja_online_vitrine",
+    "statements_md5": "427f2942c3d013a2a98b9ff5d9839fb2",
+    "with_newline_md5": "8e9bd81f5250631aac6d176d51797a9f"
+  }
+]

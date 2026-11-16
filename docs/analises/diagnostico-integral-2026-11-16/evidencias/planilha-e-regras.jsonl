@@ -1,0 +1,2 @@
+{"id":"ARQUIVO-REIN","dados":{"sha256":"76f9cf33198de7205c01dc8ec78dea70fcf86c17847f9faea6356f0c8e612c06","resultado":{"aceita":false,"motivo":"celula","linha":955,"tipo":"ErroDaPlanilha"},"cabecalho":{"colunas":83}}}
+{"id":"EMAIL-PAYJOY","dados":{"valido":false,"erros":["PayJoy exige o e-mail do cliente"]}}

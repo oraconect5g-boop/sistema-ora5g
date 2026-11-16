@@ -1,0 +1,4409 @@
+[
+  {
+    "schema": "privado",
+    "name": "abaixo_do_custo",
+    "args": "p_item venda_itens",
+    "result": "boolean",
+    "security_definer": true,
+    "settings": [
+      "search_path=\"\""
+    ],
+    "anon_execute": false,
+    "authenticated_execute": false,
+    "definition_sha256": "c4d00bfddc99520fa031a98c702f1c9ec5a32b2cb83e34cde899ea88f6759a8a"
+  },
+  {
+    "schema": "privado",
+    "name": "atualizar_espera_de_aprovacao",
+    "args": "p_venda uuid",
+    "result": "void",
+    "security_definer": true,
+    "settings": [
+      "search_path=\"\""
+    ],
+    "anon_execute": false,
+    "authenticated_execute": false,
+    "definition_sha256": "3b8944129db2e29ee75c99015a9166bdb97a92912cfb0edd38a44abe62018669"
+  },
+  {
+    "schema": "privado",
+    "name": "atualizar_saldo",
+    "args": "",
+    "result": "trigger",
+    "security_definer": true,
+    "settings": [
+      "search_path=\"\""
+    ],
+    "anon_execute": false,
+    "authenticated_execute": false,
+    "definition_sha256": "63d164053d3671217cee16c14e40367ef4bc30fe97cbc004271970e3df5f5971"
+  },
+  {
+    "schema": "privado",
+    "name": "auditar_mudanca",
+    "args": "",
+    "result": "trigger",
+    "security_definer": true,
+    "settings": [
+      "search_path=\"\""
+    ],
+    "anon_execute": false,
+    "authenticated_execute": false,
+    "definition_sha256": "3a20a03b7b8fed84f99d51b4f580c7476be9fcdaed40ef8f74c33a78870fe72c"
+  },
+  {
+    "schema": "privado",
+    "name": "auditoria_completar_organizacao",
+    "args": "",
+    "result": "trigger",
+    "security_definer": false,
+    "settings": [
+      "search_path=\"\""
+    ],
+    "anon_execute": true,
+    "authenticated_execute": true,
+    "definition_sha256": "14779f7e70c04c80fbce86aec025b418b9b466a9aec7b4ee1511d950947ca3a8"
+  },
+  {
+    "schema": "privado",
+    "name": "auditoria_imutavel",
+    "args": "",
+    "result": "trigger",
+    "security_definer": false,
+    "settings": [
+      "search_path=\"\""
+    ],
+    "anon_execute": false,
+    "authenticated_execute": true,
+    "definition_sha256": "3e51aefaf6238905d0206f1f198cb29893cab83e9d52dd9b5589caa90e99e30e"
+  },
+  {
+    "schema": "privado",
+    "name": "autenticacao_recente",
+    "args": "",
+    "result": "boolean",
+    "security_definer": true,
+    "settings": [
+      "search_path=\"\""
+    ],
+    "anon_execute": false,
+    "authenticated_execute": false,
+    "definition_sha256": "1673cca677cb63acf482349a9a702c1f6508aa2592297861aee175afb96b4e8e"
+  },
+  {
+    "schema": "privado",
+    "name": "bonus_da_medida",
+    "args": "p_meta bigint, p_realizado bigint, p_faixas jsonb",
+    "result": "jsonb",
+    "security_definer": false,
+    "settings": [
+      "search_path=\"\""
+    ],
+    "anon_execute": false,
+    "authenticated_execute": true,
+    "definition_sha256": "f56bf4c674d404b3251f341e58c4760268a83dc74142cb48b2e4b0238d840ca1"
+  },
+  {
+    "schema": "privado",
+    "name": "bonus_so_aprovacao",
+    "args": "",
+    "result": "trigger",
+    "security_definer": false,
+    "settings": [
+      "search_path=\"\""
+    ],
+    "anon_execute": false,
+    "authenticated_execute": false,
+    "definition_sha256": "545864f80e36be43291a91ea6b7b3e3544d7c43c4fe2cb652edcd70a854a3264"
+  },
+  {
+    "schema": "privado",
+    "name": "chave_de_acesso_valida",
+    "args": "p_chave text",
+    "result": "boolean",
+    "security_definer": false,
+    "settings": [
+      "search_path=\"\""
+    ],
+    "anon_execute": false,
+    "authenticated_execute": false,
+    "definition_sha256": "63ae3d8136535ce3a196750692eec65cb45d3dfab794d1eda3570c6487734566"
+  },
+  {
+    "schema": "privado",
+    "name": "cliente_compras",
+    "args": "p_organizacao uuid",
+    "result": "TABLE(cliente_id uuid, compras_12m integer, compras_total integer, primeira timestamp with time zone, ultima timestamp with time zone, liquido_12m bigint, liquido_total bigint)",
+    "security_definer": true,
+    "settings": [
+      "search_path=\"\""
+    ],
+    "anon_execute": false,
+    "authenticated_execute": false,
+    "definition_sha256": "c58a0109972e46e1bb966281fe23d33ae434425f9b1790935bc867aebd2d3b77"
+  },
+  {
+    "schema": "privado",
+    "name": "cliente_consultas_recentes",
+    "args": "",
+    "result": "integer",
+    "security_definer": true,
+    "settings": [
+      "search_path=\"\""
+    ],
+    "anon_execute": false,
+    "authenticated_execute": false,
+    "definition_sha256": "987f403a5cae89e7b688bf735a2cbf1ca9f02ae87f30931a30456a72a67ae391"
+  },
+  {
+    "schema": "privado",
+    "name": "cliente_contexto",
+    "args": "p_permissao text",
+    "result": "TABLE(unidade_id uuid, organizacao_id uuid)",
+    "security_definer": true,
+    "settings": [
+      "search_path=\"\""
+    ],
+    "anon_execute": false,
+    "authenticated_execute": false,
+    "definition_sha256": "ac72558118e155674ef6df7d3fe5d7a942220fc7067140f73b2fa5eb6f392d1d"
+  },
+  {
+    "schema": "privado",
+    "name": "cliente_explicacao",
+    "args": "p_compras_12m integer, p_compras_total integer, p_ultima timestamp with time zone",
+    "result": "text",
+    "security_definer": false,
+    "settings": [
+      "search_path=\"\""
+    ],
+    "anon_execute": false,
+    "authenticated_execute": false,
+    "definition_sha256": "d0a1cbdf09b09e486f616d7b7e7c51ab3b8874eda7ca79bc88399ddfd93ef026"
+  },
+  {
+    "schema": "privado",
+    "name": "cliente_mesclado_fixo",
+    "args": "",
+    "result": "trigger",
+    "security_definer": false,
+    "settings": [
+      "search_path=\"\""
+    ],
+    "anon_execute": false,
+    "authenticated_execute": false,
+    "definition_sha256": "dd83af57ab482424cbe657bd402914c89f3b7dda1c919534cbc3f6e0c732183a"
+  },
+  {
+    "schema": "privado",
+    "name": "cliente_pode_contatar",
+    "args": "p_cliente uuid, p_canal text, p_finalidade text",
+    "result": "boolean",
+    "security_definer": true,
+    "settings": [
+      "search_path=\"\""
+    ],
+    "anon_execute": false,
+    "authenticated_execute": false,
+    "definition_sha256": "b6cbcf5eff6b408f7677ebe9822f77b49c6b5efa32bc35eaa3bbb14a3ff709f1"
+  },
+  {
+    "schema": "privado",
+    "name": "cliente_registrar_acesso",
+    "args": "p_acao text, p_cliente uuid, p_unidade uuid, p_organizacao uuid, p_detalhe jsonb",
+    "result": "void",
+    "security_definer": true,
+    "settings": [
+      "search_path=\"\""
+    ],
+    "anon_execute": false,
+    "authenticated_execute": false,
+    "definition_sha256": "c610d35d6d5890e316420ca7ac2f615dc5bf01de62f8652d675563e8a79c7b83"
+  },
+  {
+    "schema": "privado",
+    "name": "cliente_resumo",
+    "args": "p_organizacao uuid, p_tipo text, p_valor text",
+    "result": "text",
+    "security_definer": true,
+    "settings": [
+      "search_path=\"\""
+    ],
+    "anon_execute": false,
+    "authenticated_execute": false,
+    "definition_sha256": "c79cfa18f73ab2761af59afab2887aadd92c68fa9fadb02c0ab731027aaa1a0d"
+  },
+  {
+    "schema": "privado",
+    "name": "cliente_segmento",
+    "args": "p_compras_12m integer, p_compras_total integer, p_primeira timestamp with time zone, p_ultima timestamp with time zone",
+    "result": "text",
+    "security_definer": false,
+    "settings": [
+      "search_path=\"\""
+    ],
+    "anon_execute": false,
+    "authenticated_execute": false,
+    "definition_sha256": "1b9910077f5430c8015bba075638df30f95a8ef288a0d6786c91e301d31351e0"
+  },
+  {
+    "schema": "privado",
+    "name": "cnpj_valido",
+    "args": "p_cnpj text",
+    "result": "boolean",
+    "security_definer": false,
+    "settings": [
+      "search_path=\"\""
+    ],
+    "anon_execute": false,
+    "authenticated_execute": true,
+    "definition_sha256": "59a2946a20b4f3f2d0a878515b2989f10f226dad9b2d458ffad056a0b58694f0"
+  },
+  {
+    "schema": "privado",
+    "name": "configuracao_vigente",
+    "args": "p_unidade uuid",
+    "result": "unidade_configuracoes",
+    "security_definer": true,
+    "settings": [
+      "search_path=\"\""
+    ],
+    "anon_execute": false,
+    "authenticated_execute": false,
+    "definition_sha256": "02148daaa9c055af08ff4dc4ef1d4a740369ddd164cc3f49e4d3e8f951046cad"
+  },
+  {
+    "schema": "privado",
+    "name": "connect_evento",
+    "args": "p_operacao connect_operacoes, p_tipo text, p_anterior text, p_nova text, p_status integer, p_mensagem text, p_dados jsonb",
+    "result": "void",
+    "security_definer": true,
+    "settings": [
+      "search_path=\"\""
+    ],
+    "anon_execute": false,
+    "authenticated_execute": false,
+    "definition_sha256": "a4699ad77e8f59a09e0dc1a74f766997e86656bf608a4157ace3970fb18daa9a"
+  },
+  {
+    "schema": "privado",
+    "name": "connect_operacao_travada",
+    "args": "p_operacao uuid",
+    "result": "connect_operacoes",
+    "security_definer": true,
+    "settings": [
+      "search_path=\"\""
+    ],
+    "anon_execute": false,
+    "authenticated_execute": false,
+    "definition_sha256": "41e2876fda6ce828668237fe8b83a9e33322c67cb72a0290bac17735fc00050b"
+  },
+  {
+    "schema": "privado",
+    "name": "connect_resumo_titular",
+    "args": "p_organizacao uuid, p_cliente jsonb",
+    "result": "text",
+    "security_definer": true,
+    "settings": [
+      "search_path=\"\""
+    ],
+    "anon_execute": false,
+    "authenticated_execute": false,
+    "definition_sha256": "6478189104ae97ac5b533b6c03256b613f45a04cee9753eb2733b9f719c0b43d"
+  },
+  {
+    "schema": "privado",
+    "name": "connect_texto",
+    "args": "p_dados jsonb, p_campo text, p_rotulo text, p_maximo integer, p_obrigatorio boolean",
+    "result": "text",
+    "security_definer": false,
+    "settings": [
+      "search_path=\"\""
+    ],
+    "anon_execute": false,
+    "authenticated_execute": false,
+    "definition_sha256": "b7b30fd7469faa229aa387ee3607e43a04f3b1ac6c12abc136cc82c4dce3654c"
+  },
+  {
+    "schema": "privado",
+    "name": "conta_anexo_so_retirada",
+    "args": "",
+    "result": "trigger",
+    "security_definer": false,
+    "settings": [
+      "search_path=\"\""
+    ],
+    "anon_execute": false,
+    "authenticated_execute": false,
+    "definition_sha256": "9386ec9bf1937fb5f4ac2bf5292610dfab27cec0566a3a41407b98a3ea88d31e"
+  },
+  {
+    "schema": "privado",
+    "name": "contas_pagar_categorias_da_organizacao",
+    "args": "",
+    "result": "trigger",
+    "security_definer": true,
+    "settings": [
+      "search_path=\"\""
+    ],
+    "anon_execute": false,
+    "authenticated_execute": false,
+    "definition_sha256": "810c02e6ecf8eb43f77bd34d0e69cb6995b8bc4f83bf2cdc448d7b46b388000e"
+  },
+  {
+    "schema": "privado",
+    "name": "contas_pagar_semear_categorias",
+    "args": "p_organizacao uuid",
+    "result": "void",
+    "security_definer": true,
+    "settings": [
+      "search_path=\"\""
+    ],
+    "anon_execute": false,
+    "authenticated_execute": false,
+    "definition_sha256": "77a1c5ae37d5de04094b055b78c9f30b2b854f5597ecdf028ca5c4b1412cd94b"
+  },
+  {
+    "schema": "privado",
+    "name": "conteudo_do_item",
+    "args": "p_item venda_itens",
+    "result": "text",
+    "security_definer": false,
+    "settings": [
+      "search_path=\"\""
+    ],
+    "anon_execute": false,
+    "authenticated_execute": false,
+    "definition_sha256": "8f2e15e9aa73e15e794177b0ded7e8983cb93dff5575f307d3e04b0cb03577c2"
+  },
+  {
+    "schema": "privado",
+    "name": "cpf_valido",
+    "args": "p_cpf text",
+    "result": "boolean",
+    "security_definer": false,
+    "settings": [
+      "search_path=\"\""
+    ],
+    "anon_execute": false,
+    "authenticated_execute": false,
+    "definition_sha256": "8dda24c92a8a673ebb91256a6342d1f76b7d665f1d64801763c9ce24416765ce"
+  },
+  {
+    "schema": "privado",
+    "name": "crm_atende_na_loja",
+    "args": "p_usuario uuid, p_unidade uuid",
+    "result": "boolean",
+    "security_definer": true,
+    "settings": [
+      "search_path=\"\""
+    ],
+    "anon_execute": false,
+    "authenticated_execute": false,
+    "definition_sha256": "39b38bf6b7578d14e4abaa7decb64ac6c67d12a1b21199778719c6ce9fc4e01c"
+  },
+  {
+    "schema": "privado",
+    "name": "crm_criar_segredo",
+    "args": "",
+    "result": "trigger",
+    "security_definer": true,
+    "settings": [
+      "search_path=\"\""
+    ],
+    "anon_execute": false,
+    "authenticated_execute": false,
+    "definition_sha256": "88cc13f028350b3854fe5ee892ab9b385ce399cf4e47d1d13f3a7d77a5ad0cd8"
+  },
+  {
+    "schema": "privado",
+    "name": "crm_evento",
+    "args": "p_oportunidade uuid, p_organizacao uuid, p_tipo text, p_de text, p_para text, p_texto text",
+    "result": "void",
+    "security_definer": true,
+    "settings": [
+      "search_path=\"\""
+    ],
+    "anon_execute": false,
+    "authenticated_execute": false,
+    "definition_sha256": "a0b45f49e77f99c98f650a96b6d51368ccd134e9b9c0e410168800f40ff31edb"
+  },
+  {
+    "schema": "privado",
+    "name": "crm_pode_conduzir",
+    "args": "p_unidade uuid, p_responsavel uuid",
+    "result": "boolean",
+    "security_definer": true,
+    "settings": [
+      "search_path=\"\""
+    ],
+    "anon_execute": false,
+    "authenticated_execute": false,
+    "definition_sha256": "96286cac77e679e526666065be198de6a85b6d917111d90fe0c91deb224f2354"
+  },
+  {
+    "schema": "privado",
+    "name": "crm_proximo_passo",
+    "args": "p_dados jsonb, p_atual timestamp with time zone",
+    "result": "TABLE(texto text, quando timestamp with time zone)",
+    "security_definer": false,
+    "settings": [
+      "search_path=\"\""
+    ],
+    "anon_execute": false,
+    "authenticated_execute": false,
+    "definition_sha256": "bf5de8f2befd54c161927f51a7f331b910baa9c203cc208c9b280e78e24e082c"
+  },
+  {
+    "schema": "privado",
+    "name": "custo_atual",
+    "args": "p_variante uuid",
+    "result": "bigint",
+    "security_definer": true,
+    "settings": [
+      "search_path=\"\""
+    ],
+    "anon_execute": false,
+    "authenticated_execute": false,
+    "definition_sha256": "d14c9713c4b92bbfd2cc2b1b122a717b26024d5004e728ba192957b2ec4d542f"
+  },
+  {
+    "schema": "privado",
+    "name": "custo_pelo_historico",
+    "args": "p_variante uuid",
+    "result": "bigint",
+    "security_definer": true,
+    "settings": [
+      "search_path=\"\""
+    ],
+    "anon_execute": false,
+    "authenticated_execute": false,
+    "definition_sha256": "9c7a64e3910babb1978fe84b6bef86242cb62dd30069b9a32f8bf97c01a4bb98"
+  },
+  {
+    "schema": "privado",
+    "name": "custo_vigente",
+    "args": "p_variante uuid",
+    "result": "custos",
+    "security_definer": true,
+    "settings": [
+      "search_path=\"\""
+    ],
+    "anon_execute": false,
+    "authenticated_execute": false,
+    "definition_sha256": "42d4a9d1bb5b1879338d567e671613f0fb45d3386a33d8b0894230b7dd259bc4"
+  },
+  {
+    "schema": "privado",
+    "name": "dinheiro_no_caixa",
+    "args": "p_caixa uuid",
+    "result": "bigint",
+    "security_definer": true,
+    "settings": [
+      "search_path=\"\""
+    ],
+    "anon_execute": false,
+    "authenticated_execute": false,
+    "definition_sha256": "64508d51d7393838b741dc2127a238045263f6a53068b13890d6ec8d594c93b0"
+  },
+  {
+    "schema": "privado",
+    "name": "divergencias_estoque",
+    "args": "p_organizacao uuid",
+    "result": "TABLE(regra text, unidade_id uuid, variante_id uuid, item_serializado_id uuid, esperado bigint, encontrado bigint)",
+    "security_definer": true,
+    "settings": [
+      "search_path=\"\""
+    ],
+    "anon_execute": false,
+    "authenticated_execute": false,
+    "definition_sha256": "981ab9c2bcbb333f97f80cbca76eb2d1338416922802b9238120279d47a21f5b"
+  },
+  {
+    "schema": "privado",
+    "name": "dono_da_organizacao",
+    "args": "p_organizacao uuid",
+    "result": "boolean",
+    "security_definer": true,
+    "settings": [
+      "search_path=\"\""
+    ],
+    "anon_execute": false,
+    "authenticated_execute": false,
+    "definition_sha256": "f6bd4298ec93911211c338d3fef926ed57e1098b0a56316958b8bd77c7bdb44a"
+  },
+  {
+    "schema": "privado",
+    "name": "encerrar_reserva",
+    "args": "p_reserva uuid, p_situacao text, p_sem_esperar boolean",
+    "result": "boolean",
+    "security_definer": true,
+    "settings": [
+      "search_path=\"\""
+    ],
+    "anon_execute": false,
+    "authenticated_execute": false,
+    "definition_sha256": "651fff7bb18aad236cc7ca83a74a999a1037fb5dd5968b8df4f90f3072086564"
+  },
+  {
+    "schema": "privado",
+    "name": "entrada_em_json",
+    "args": "p_entrada uuid, p_ve_custo boolean, p_detalhe boolean",
+    "result": "jsonb",
+    "security_definer": true,
+    "settings": [
+      "search_path=\"\""
+    ],
+    "anon_execute": false,
+    "authenticated_execute": false,
+    "definition_sha256": "b587b6a13cc1fc38fdcedba966e59cdcb5e2e2d5bdcc539e1f66d3e8756c03a7"
+  },
+  {
+    "schema": "privado",
+    "name": "exigir_autenticacao_recente",
+    "args": "",
+    "result": "void",
+    "security_definer": true,
+    "settings": [
+      "search_path=\"\""
+    ],
+    "anon_execute": false,
+    "authenticated_execute": false,
+    "definition_sha256": "d1597f460d78ccdb62e2410aa14031655c71ea25f4e6aaed41c905303bf6079a"
+  },
+  {
+    "schema": "privado",
+    "name": "exigir_motivo",
+    "args": "p_motivo text",
+    "result": "text",
+    "security_definer": false,
+    "settings": [
+      "search_path=\"\""
+    ],
+    "anon_execute": false,
+    "authenticated_execute": false,
+    "definition_sha256": "04cebe39ff8e60cf5b195555d0ed77994df721a64b62f8cc2765a113a97f1855"
+  },
+  {
+    "schema": "privado",
+    "name": "expirar_reservas",
+    "args": "p_unidade uuid, p_variante uuid",
+    "result": "integer",
+    "security_definer": true,
+    "settings": [
+      "search_path=\"\""
+    ],
+    "anon_execute": false,
+    "authenticated_execute": false,
+    "definition_sha256": "40b6e18bfb47c3267c20c94680e3e898ddaa5d92a34d2b317ded15bf3497395d"
+  },
+  {
+    "schema": "privado",
+    "name": "fim_do_turno",
+    "args": "p_inicio timestamp with time zone",
+    "result": "timestamp with time zone",
+    "security_definer": false,
+    "settings": [
+      "search_path=\"\""
+    ],
+    "anon_execute": false,
+    "authenticated_execute": false,
+    "definition_sha256": "d1b55536e3fee74f278c350135bbeca0b0a9255aec5c5773a0efd570a755b504"
+  },
+  {
+    "schema": "privado",
+    "name": "foto_na_vitrine",
+    "args": "p_caminho text",
+    "result": "boolean",
+    "security_definer": true,
+    "settings": [
+      "search_path=\"\""
+    ],
+    "anon_execute": true,
+    "authenticated_execute": true,
+    "definition_sha256": "650fe192461c3f59d833295e39722660097fffd59755b3ddd6b2b8da24fe21f4"
+  },
+  {
+    "schema": "privado",
+    "name": "foto_principal_da_vitrine",
+    "args": "p_produto uuid",
+    "result": "text",
+    "security_definer": true,
+    "settings": [
+      "search_path=\"\""
+    ],
+    "anon_execute": false,
+    "authenticated_execute": false,
+    "definition_sha256": "22d31a2d7388f982c17e831081a4bd034bc8e8296c92ae9da12e441cb8439698"
+  },
+  {
+    "schema": "privado",
+    "name": "foto_registrada",
+    "args": "p_caminho text",
+    "result": "boolean",
+    "security_definer": true,
+    "settings": [
+      "search_path=\"\""
+    ],
+    "anon_execute": false,
+    "authenticated_execute": true,
+    "definition_sha256": "78e48bf72360216474c18f18c1a61ccb83871c873b1b9358c630b1a23c994573"
+  },
+  {
+    "schema": "privado",
+    "name": "gere_catalogo",
+    "args": "p_organizacao uuid",
+    "result": "boolean",
+    "security_definer": true,
+    "settings": [
+      "search_path=\"\""
+    ],
+    "anon_execute": false,
+    "authenticated_execute": false,
+    "definition_sha256": "d6fe2982d9d945713afbd1a42f8f8ab6ed178b569a853c56ad736f977f50658d"
+  },
+  {
+    "schema": "privado",
+    "name": "gere_lojas_da_organizacao",
+    "args": "p_organizacao uuid",
+    "result": "boolean",
+    "security_definer": true,
+    "settings": [
+      "search_path=\"\""
+    ],
+    "anon_execute": false,
+    "authenticated_execute": false,
+    "definition_sha256": "9c21fe9a6f0d01916c1e66f271deb6967f690cc35f06b6cba24bfabd1ae9beac"
+  },
+  {
+    "schema": "privado",
+    "name": "gere_organizacao",
+    "args": "p_organizacao uuid",
+    "result": "boolean",
+    "security_definer": true,
+    "settings": [
+      "search_path=\"\""
+    ],
+    "anon_execute": false,
+    "authenticated_execute": false,
+    "definition_sha256": "0775b89119f4c8327559a381b7bb0d11cd05146050613fb3c2e9b6700d2e1193"
+  },
+  {
+    "schema": "privado",
+    "name": "gestao_do_bonus",
+    "args": "p_unidade uuid",
+    "result": "boolean",
+    "security_definer": false,
+    "settings": [
+      "search_path=\"\""
+    ],
+    "anon_execute": false,
+    "authenticated_execute": true,
+    "definition_sha256": "6b812730b0730386f6ff62774e45f5701da8c367481698bd69ee221190483bfe"
+  },
+  {
+    "schema": "privado",
+    "name": "horarios_validos",
+    "args": "p_horarios jsonb",
+    "result": "boolean",
+    "security_definer": false,
+    "settings": [
+      "search_path=\"\""
+    ],
+    "anon_execute": false,
+    "authenticated_execute": false,
+    "definition_sha256": "c638d3b340899d10a1c4c3ec6ed24e3766f66d76c08a9588e1ef1989248aa85e"
+  },
+  {
+    "schema": "privado",
+    "name": "iccid_valido",
+    "args": "p_iccid text",
+    "result": "boolean",
+    "security_definer": false,
+    "settings": [
+      "search_path=\"\""
+    ],
+    "anon_execute": false,
+    "authenticated_execute": false,
+    "definition_sha256": "48c6acc2446788005d221381284cb2a2ab9f7dd90e2e94c792bddf6d40697890"
+  },
+  {
+    "schema": "privado",
+    "name": "imei_valido",
+    "args": "p_imei text",
+    "result": "boolean",
+    "security_definer": false,
+    "settings": [
+      "search_path=\"\""
+    ],
+    "anon_execute": false,
+    "authenticated_execute": false,
+    "definition_sha256": "a9afe3cffae37de4ac00ae760d22a282bdadfe360a04b7784e8915dd1c4c07d7"
+  },
+  {
+    "schema": "privado",
+    "name": "importacao_comparar",
+    "args": "p_organizacao uuid, p_dados jsonb, OUT o_variante uuid, OUT o_acao text, OUT o_erros text[], OUT o_diferencas jsonb, OUT o_base jsonb",
+    "result": "record",
+    "security_definer": true,
+    "settings": [
+      "search_path=\"\""
+    ],
+    "anon_execute": false,
+    "authenticated_execute": false,
+    "definition_sha256": "190ae0ed559490c06612fdf319e9bb71daf9833e88654504e82dd8b267b0d749"
+  },
+  {
+    "schema": "privado",
+    "name": "importacao_conferir_travas",
+    "args": "p_importacao uuid, p_mensagem text",
+    "result": "void",
+    "security_definer": true,
+    "settings": [
+      "search_path=\"\""
+    ],
+    "anon_execute": false,
+    "authenticated_execute": false,
+    "definition_sha256": "221cf18dfd7310f949b3456427db9771246d9174ea0cc5797de58601c4b5617e"
+  },
+  {
+    "schema": "privado",
+    "name": "importacao_recomparar",
+    "args": "p_importacao uuid",
+    "result": "boolean",
+    "security_definer": true,
+    "settings": [
+      "search_path=\"\""
+    ],
+    "anon_execute": false,
+    "authenticated_execute": false,
+    "definition_sha256": "f6ab9bdafbd8b2b9e7d27198fbbd1829df8722f64f3e98b8d24eeafad754a65f"
+  },
+  {
+    "schema": "privado",
+    "name": "importacao_totais",
+    "args": "p_importacao uuid",
+    "result": "jsonb",
+    "security_definer": true,
+    "settings": [
+      "search_path=\"\""
+    ],
+    "anon_execute": false,
+    "authenticated_execute": false,
+    "definition_sha256": "cabb4513009c7323d64da43db216f78c262842f165bc3365da4c451ad0553151"
+  },
+  {
+    "schema": "privado",
+    "name": "item_saiu_por_estorno_de_entrada",
+    "args": "p_item uuid",
+    "result": "boolean",
+    "security_definer": true,
+    "settings": [
+      "search_path=\"\""
+    ],
+    "anon_execute": false,
+    "authenticated_execute": false,
+    "definition_sha256": "e94108c9625d27c196d1d244f4a5f53d4063ee8733d92a87693ffd02ed86020f"
+  },
+  {
+    "schema": "privado",
+    "name": "item_so_teve_recebimentos",
+    "args": "p_item uuid",
+    "result": "boolean",
+    "security_definer": true,
+    "settings": [
+      "search_path=\"\""
+    ],
+    "anon_execute": false,
+    "authenticated_execute": false,
+    "definition_sha256": "4ae403e29d6b7f641f6478a8e16df12b98ca0305efd8b3795813c396e3f37284"
+  },
+  {
+    "schema": "privado",
+    "name": "lancar_movimento",
+    "args": "p_unidade uuid, p_variante uuid, p_quantidade integer, p_tipo text, p_item uuid, p_motivo text, p_referencia_tipo text, p_referencia_id text, p_chave text, p_usuario uuid",
+    "result": "bigint",
+    "security_definer": true,
+    "settings": [
+      "search_path=\"\""
+    ],
+    "anon_execute": false,
+    "authenticated_execute": false,
+    "definition_sha256": "d38b735fda625b8777680ab4e3e7805583f198b7458ae2a7f340d4d46993a6a1"
+  },
+  {
+    "schema": "privado",
+    "name": "linha_valida",
+    "args": "p_linha text",
+    "result": "boolean",
+    "security_definer": false,
+    "settings": [
+      "search_path=\"\""
+    ],
+    "anon_execute": false,
+    "authenticated_execute": false,
+    "definition_sha256": "11fd836fd53919c40e45267a2ea8742801077228fa819831d121c73151823799"
+  },
+  {
+    "schema": "privado",
+    "name": "livro_imutavel",
+    "args": "",
+    "result": "trigger",
+    "security_definer": false,
+    "settings": [
+      "search_path=\"\""
+    ],
+    "anon_execute": false,
+    "authenticated_execute": false,
+    "definition_sha256": "c33af3a536f6e9aafe1c3c38954d5cd9733ed1ae9fe4ec59f6fc8d8e89742f14"
+  },
+  {
+    "schema": "privado",
+    "name": "local_de_excecao_nao_vende",
+    "args": "",
+    "result": "trigger",
+    "security_definer": true,
+    "settings": [
+      "search_path=\"\""
+    ],
+    "anon_execute": false,
+    "authenticated_execute": false,
+    "definition_sha256": "791d322fae1307453d78a1c9d398d0bb46ee43488b9679b3140c832641cca1b1"
+  },
+  {
+    "schema": "privado",
+    "name": "loja_ativa_para_movimento",
+    "args": "",
+    "result": "trigger",
+    "security_definer": false,
+    "settings": [
+      "search_path=\"\""
+    ],
+    "anon_execute": false,
+    "authenticated_execute": false,
+    "definition_sha256": "ccf6dc23194e623040e46062ee423c81369a74a87623565754b5964220d6b367"
+  },
+  {
+    "schema": "privado",
+    "name": "luhn_valido",
+    "args": "p_digitos text",
+    "result": "boolean",
+    "security_definer": false,
+    "settings": [
+      "search_path=\"\""
+    ],
+    "anon_execute": false,
+    "authenticated_execute": false,
+    "definition_sha256": "c6721a0b6372f2305cc08edea2eb553b9cd742096a079ca1d0fd885b648e446e"
+  },
+  {
+    "schema": "privado",
+    "name": "mascara_documento",
+    "args": "p_documento text",
+    "result": "text",
+    "security_definer": false,
+    "settings": [
+      "search_path=\"\""
+    ],
+    "anon_execute": false,
+    "authenticated_execute": false,
+    "definition_sha256": "052ecd531335a39d26f0753c6b32106f740ff9280ffe84d404597469234890f0"
+  },
+  {
+    "schema": "privado",
+    "name": "mascara_email",
+    "args": "p_email text",
+    "result": "text",
+    "security_definer": false,
+    "settings": [
+      "search_path=\"\""
+    ],
+    "anon_execute": false,
+    "authenticated_execute": false,
+    "definition_sha256": "9f67f7466dfe045fca38420fc9808001579405eece6023a32eecc1d8fb7af2e4"
+  },
+  {
+    "schema": "privado",
+    "name": "mascara_telefone",
+    "args": "p_telefone text",
+    "result": "text",
+    "security_definer": false,
+    "settings": [
+      "search_path=\"\""
+    ],
+    "anon_execute": false,
+    "authenticated_execute": false,
+    "definition_sha256": "2d97f1d0e784623a32b1f4884e70af6530598b04a621fd0014dd1bf04308729a"
+  },
+  {
+    "schema": "privado",
+    "name": "mascarar_documento",
+    "args": "p_documento text",
+    "result": "text",
+    "security_definer": false,
+    "settings": [
+      "search_path=\"\""
+    ],
+    "anon_execute": false,
+    "authenticated_execute": false,
+    "definition_sha256": "ab4ca37789f8a8577be923d0797fdf632172ca7c46612398a67de6316fac6c0b"
+  },
+  {
+    "schema": "privado",
+    "name": "maximo_sem_aprovacao",
+    "args": "p_item venda_itens",
+    "result": "bigint",
+    "security_definer": true,
+    "settings": [
+      "search_path=\"\""
+    ],
+    "anon_execute": false,
+    "authenticated_execute": false,
+    "definition_sha256": "0067883dcea390366a55f2c6aa8baf44e96162be30a6da1ebc67262cc82ead27"
+  },
+  {
+    "schema": "privado",
+    "name": "meio_com_comprovante",
+    "args": "p_meio text",
+    "result": "boolean",
+    "security_definer": false,
+    "settings": [
+      "search_path=\"\""
+    ],
+    "anon_execute": false,
+    "authenticated_execute": false,
+    "definition_sha256": "245e80da63339668bee7d93ce9200da3cfb71171afd7f1e0899bdbb9c5e00693"
+  },
+  {
+    "schema": "privado",
+    "name": "meio_financeira",
+    "args": "p_meio text",
+    "result": "boolean",
+    "security_definer": false,
+    "settings": [
+      "search_path=\"\""
+    ],
+    "anon_execute": false,
+    "authenticated_execute": false,
+    "definition_sha256": "57a1c90d9412f6780c1f8a2e9a9ec6a084c3348d37b003cb269b0c1b3decaf09"
+  },
+  {
+    "schema": "privado",
+    "name": "meio_liquidavel",
+    "args": "p_meio text",
+    "result": "boolean",
+    "security_definer": false,
+    "settings": [
+      "search_path=\"\""
+    ],
+    "anon_execute": false,
+    "authenticated_execute": false,
+    "definition_sha256": "737f246b1458f67dd6b530bc17fa622c80315d375debd0a4913103366465633f"
+  },
+  {
+    "schema": "privado",
+    "name": "meio_provedor",
+    "args": "p_meio text",
+    "result": "text",
+    "security_definer": false,
+    "settings": [
+      "search_path=\"\""
+    ],
+    "anon_execute": false,
+    "authenticated_execute": false,
+    "definition_sha256": "53c3685bbd3c437f7b62e09e04017e65ea90c9f1210435308a0b18b64f2153c7"
+  },
+  {
+    "schema": "privado",
+    "name": "meio_valido",
+    "args": "p_meio text",
+    "result": "boolean",
+    "security_definer": false,
+    "settings": [
+      "search_path=\"\""
+    ],
+    "anon_execute": false,
+    "authenticated_execute": false,
+    "definition_sha256": "6e37d12445c4105476c7c976eec3c3d62655bb078c75e078ec46bec20465dce6"
+  },
+  {
+    "schema": "privado",
+    "name": "meu_caixa_aberto",
+    "args": "",
+    "result": "caixas",
+    "security_definer": true,
+    "settings": [
+      "search_path=\"\""
+    ],
+    "anon_execute": false,
+    "authenticated_execute": false,
+    "definition_sha256": "d7e722f22dc64b254b2c6a98ba9be9a2055c35531ee0dedd933753b279db8a26"
+  },
+  {
+    "schema": "privado",
+    "name": "minha_venda_aberta",
+    "args": "p_venda uuid",
+    "result": "vendas",
+    "security_definer": true,
+    "settings": [
+      "search_path=\"\""
+    ],
+    "anon_execute": false,
+    "authenticated_execute": false,
+    "definition_sha256": "6ef794c93b60b37a25474da7fe9c25bd1e3624d51950140738d5779f6e318aa9"
+  },
+  {
+    "schema": "privado",
+    "name": "nota_documento",
+    "args": "p_destinatario jsonb",
+    "result": "text",
+    "security_definer": false,
+    "settings": [
+      "search_path=\"\""
+    ],
+    "anon_execute": false,
+    "authenticated_execute": false,
+    "definition_sha256": "5ec8a65e914a2d9e9aaf09330211fcdf43d6eb3f2857650fd9d485215094067b"
+  },
+  {
+    "schema": "privado",
+    "name": "nota_documento_so_substituir",
+    "args": "",
+    "result": "trigger",
+    "security_definer": false,
+    "settings": [
+      "search_path=\"\""
+    ],
+    "anon_execute": false,
+    "authenticated_execute": false,
+    "definition_sha256": "1a341d8aa7122f2dafbea0f3d4fcb767838e5d03e8e68c49734a7de5c1687a99"
+  },
+  {
+    "schema": "privado",
+    "name": "nota_evento",
+    "args": "p_pedido notas_pedidos, p_tipo text, p_observacao text",
+    "result": "void",
+    "security_definer": true,
+    "settings": [
+      "search_path=\"\""
+    ],
+    "anon_execute": false,
+    "authenticated_execute": false,
+    "definition_sha256": "b67d664ef786497405f132ededc6b0ca67e95ebdf5ec8585d983e69c0057c349"
+  },
+  {
+    "schema": "privado",
+    "name": "nota_para_aprovar",
+    "args": "p_pedido uuid",
+    "result": "notas_pedidos",
+    "security_definer": true,
+    "settings": [
+      "search_path=\"\""
+    ],
+    "anon_execute": false,
+    "authenticated_execute": false,
+    "definition_sha256": "83c789f19812be0748bf76420c60a7f618821f6bb838975549bfdff5f0f4f411"
+  },
+  {
+    "schema": "privado",
+    "name": "notas_da_venda_cancelada",
+    "args": "",
+    "result": "trigger",
+    "security_definer": true,
+    "settings": [
+      "search_path=\"\""
+    ],
+    "anon_execute": false,
+    "authenticated_execute": false,
+    "definition_sha256": "7a17ed90aaf7205fc74b33b284af985ae90f3e9cc8db647c6dfe03eaa03ae592"
+  },
+  {
+    "schema": "privado",
+    "name": "ofertas_da_vitrine",
+    "args": "p_organizacao uuid, p_produto uuid",
+    "result": "TABLE(variante_id uuid, unidade_id uuid, preco_centavos bigint, disponivel integer)",
+    "security_definer": true,
+    "settings": [
+      "search_path=\"\""
+    ],
+    "anon_execute": false,
+    "authenticated_execute": false,
+    "definition_sha256": "e1fb4a3a6222bfea84df2386dd9385a116d4d34e1383a672422de8e67afa4554"
+  },
+  {
+    "schema": "privado",
+    "name": "organizacoes_com_permissao",
+    "args": "p_permissao text",
+    "result": "SETOF uuid",
+    "security_definer": true,
+    "settings": [
+      "search_path=\"\""
+    ],
+    "anon_execute": false,
+    "authenticated_execute": true,
+    "definition_sha256": "d5154ba1dfb19daf7eba33b8c5506d6e7e0d079e6b9278c9901c566c558ffa8d"
+  },
+  {
+    "schema": "privado",
+    "name": "organizacoes_do_catalogo",
+    "args": "",
+    "result": "SETOF uuid",
+    "security_definer": true,
+    "settings": [
+      "search_path=\"\""
+    ],
+    "anon_execute": false,
+    "authenticated_execute": true,
+    "definition_sha256": "9e4e60d72272b12a464f6c86c7c8caf7ef8be4bb5ce4cfd665879f2d2a442d0d"
+  },
+  {
+    "schema": "privado",
+    "name": "organizacoes_que_enviam_fotos",
+    "args": "",
+    "result": "SETOF uuid",
+    "security_definer": true,
+    "settings": [
+      "search_path=\"\""
+    ],
+    "anon_execute": false,
+    "authenticated_execute": true,
+    "definition_sha256": "5d4178b626be28100e92bcb1fc8390ddba2e8bcd06b8865b00f4f10a0ff42547"
+  },
+  {
+    "schema": "privado",
+    "name": "os_da_venda_cancelada",
+    "args": "",
+    "result": "trigger",
+    "security_definer": true,
+    "settings": [
+      "search_path=\"\""
+    ],
+    "anon_execute": false,
+    "authenticated_execute": false,
+    "definition_sha256": "f914055a9a3297ed5ac2beb094e8340a4cb7e76878e78eb760ec0267980db7c8"
+  },
+  {
+    "schema": "privado",
+    "name": "os_evento",
+    "args": "p_os ordens_servico, p_tipo text, p_de text, p_para text, p_observacao text, p_em_nome_do_tecnico boolean, p_unidade uuid",
+    "result": "void",
+    "security_definer": true,
+    "settings": [
+      "search_path=\"\""
+    ],
+    "anon_execute": false,
+    "authenticated_execute": false,
+    "definition_sha256": "74bde0da4539e0862fb6d433ff267424886ee8ceeb2c5bd44b9a67796187d721"
+  },
+  {
+    "schema": "privado",
+    "name": "os_orcamento_aprovado",
+    "args": "p_os uuid",
+    "result": "os_orcamentos",
+    "security_definer": true,
+    "settings": [
+      "search_path=\"\""
+    ],
+    "anon_execute": false,
+    "authenticated_execute": false,
+    "definition_sha256": "e73a272007ae90fc5fe15ebf1b987f5991416cbd443eb8d5e9a70eb7a59cb871"
+  },
+  {
+    "schema": "privado",
+    "name": "os_orcamento_so_resposta",
+    "args": "",
+    "result": "trigger",
+    "security_definer": false,
+    "settings": [
+      "search_path=\"\""
+    ],
+    "anon_execute": false,
+    "authenticated_execute": false,
+    "definition_sha256": "9b8c08047505d5c57ef2dfad5b373a846c6a80951a6e7adfe2f1f6ebbc325fe3"
+  },
+  {
+    "schema": "privado",
+    "name": "os_peca_so_devolucao",
+    "args": "",
+    "result": "trigger",
+    "security_definer": false,
+    "settings": [
+      "search_path=\"\""
+    ],
+    "anon_execute": false,
+    "authenticated_execute": false,
+    "definition_sha256": "15a273e7552057412d005d4b4e13d0c8e09e8e7c786c86fc2c18a38edb7473de"
+  },
+  {
+    "schema": "privado",
+    "name": "os_variante_do_conserto",
+    "args": "p_organizacao uuid",
+    "result": "uuid",
+    "security_definer": true,
+    "settings": [
+      "search_path=\"\""
+    ],
+    "anon_execute": false,
+    "authenticated_execute": false,
+    "definition_sha256": "dbbd3e6ea52b71ad8cbbc673871697cfaf6b2cbd8db7f201b4fcda834d11432f"
+  },
+  {
+    "schema": "privado",
+    "name": "papel_de_direcao",
+    "args": "p_papel text",
+    "result": "boolean",
+    "security_definer": false,
+    "settings": [
+      "search_path=\"\""
+    ],
+    "anon_execute": false,
+    "authenticated_execute": false,
+    "definition_sha256": "339ed8b3b208b860ce9733701c42b1d2a6093145f88f80fd5e46f15403163e0a"
+  },
+  {
+    "schema": "privado",
+    "name": "pedido_compra_so_encerramento",
+    "args": "",
+    "result": "trigger",
+    "security_definer": false,
+    "settings": [
+      "search_path=\"\""
+    ],
+    "anon_execute": false,
+    "authenticated_execute": false,
+    "definition_sha256": "c4ca1d0cdd837c5ae486937fcfe12a967cf087ce3bc612316076d54ab6630a22"
+  },
+  {
+    "schema": "privado",
+    "name": "perfis_que_gero",
+    "args": "",
+    "result": "SETOF uuid",
+    "security_definer": true,
+    "settings": [
+      "search_path=\"\""
+    ],
+    "anon_execute": false,
+    "authenticated_execute": true,
+    "definition_sha256": "3a85ee00546189cf39aad3792aa863b39be06de6351f1e1cfe121c10df97f645"
+  },
+  {
+    "schema": "privado",
+    "name": "pessoa_gere_equipe",
+    "args": "p_usuario uuid, p_organizacao uuid, p_papel text",
+    "result": "boolean",
+    "security_definer": true,
+    "settings": [
+      "search_path=\"\""
+    ],
+    "anon_execute": false,
+    "authenticated_execute": false,
+    "definition_sha256": "d2f8a2694d4b2106bf02004c9b083d428103b785c5733a88961c218cbbc036bf"
+  },
+  {
+    "schema": "privado",
+    "name": "pode_alterar_preco",
+    "args": "p_organizacao uuid, p_unidade uuid",
+    "result": "boolean",
+    "security_definer": true,
+    "settings": [
+      "search_path=\"\""
+    ],
+    "anon_execute": false,
+    "authenticated_execute": false,
+    "definition_sha256": "fa0bc0eac34697f156dc0b7add7b5ed8fd65df9958a25cb57cf7366726940fe8"
+  },
+  {
+    "schema": "privado",
+    "name": "pode_gerir_conta_pagar",
+    "args": "p_organizacao uuid, p_unidade uuid",
+    "result": "boolean",
+    "security_definer": true,
+    "settings": [
+      "search_path=\"\""
+    ],
+    "anon_execute": false,
+    "authenticated_execute": true,
+    "definition_sha256": "1e8efe3bd00de20af24781ed63b38765679c5910a938489d0b96fc64c53cbf40"
+  },
+  {
+    "schema": "privado",
+    "name": "preco_do_balcao",
+    "args": "p_variante uuid, p_unidade uuid",
+    "result": "bigint",
+    "security_definer": true,
+    "settings": [
+      "search_path=\"\""
+    ],
+    "anon_execute": false,
+    "authenticated_execute": false,
+    "definition_sha256": "515406c0a226bb71c44f846158279bbb1c6adab12f5e24d68e18346e026923ea"
+  },
+  {
+    "schema": "privado",
+    "name": "preco_geral_aberto",
+    "args": "p_variante uuid",
+    "result": "precos",
+    "security_definer": true,
+    "settings": [
+      "search_path=\"\""
+    ],
+    "anon_execute": false,
+    "authenticated_execute": false,
+    "definition_sha256": "034cf602b27ff953ad4775d480884cdde0f05e55744b18335d2a0068bae71a9d"
+  },
+  {
+    "schema": "privado",
+    "name": "preco_vigente_linha",
+    "args": "p_variante uuid, p_unidade uuid, p_canal text, p_momento timestamp with time zone",
+    "result": "precos",
+    "security_definer": true,
+    "settings": [
+      "search_path=\"\""
+    ],
+    "anon_execute": false,
+    "authenticated_execute": false,
+    "definition_sha256": "301e03ef8366c648637ee041c894c49e526bf7895c482616ad4933fb6aa92f38"
+  },
+  {
+    "schema": "privado",
+    "name": "precos_protegidos",
+    "args": "",
+    "result": "trigger",
+    "security_definer": false,
+    "settings": [
+      "search_path=\"\""
+    ],
+    "anon_execute": false,
+    "authenticated_execute": false,
+    "definition_sha256": "786402a9db1664428b07cb8169f25c8aeaaf4ce7df60da20e6c74412b6cabed5"
+  },
+  {
+    "schema": "privado",
+    "name": "produto_reservado_fixo",
+    "args": "",
+    "result": "trigger",
+    "security_definer": false,
+    "settings": [
+      "search_path=\"\""
+    ],
+    "anon_execute": false,
+    "authenticated_execute": false,
+    "definition_sha256": "8a1aa7c2cb68d6c78e2088a728c96021e44143e8f950540843a692389d9edec4"
+  },
+  {
+    "schema": "privado",
+    "name": "proteger_chip_com_ativacao",
+    "args": "",
+    "result": "trigger",
+    "security_definer": true,
+    "settings": [
+      "search_path=\"\""
+    ],
+    "anon_execute": false,
+    "authenticated_execute": false,
+    "definition_sha256": "219634198b24b316fc779201da9774103a5801fb8b5cd8de7c4d318bfda27437"
+  },
+  {
+    "schema": "privado",
+    "name": "proteger_posicao_item",
+    "args": "",
+    "result": "trigger",
+    "security_definer": false,
+    "settings": [
+      "search_path=\"\""
+    ],
+    "anon_execute": false,
+    "authenticated_execute": false,
+    "definition_sha256": "b030275da2e75e0024238866b9f286fda0761929e15d2928c6d8c3395824aac3"
+  },
+  {
+    "schema": "privado",
+    "name": "proteger_venda_com_connect",
+    "args": "",
+    "result": "trigger",
+    "security_definer": true,
+    "settings": [
+      "search_path=\"\""
+    ],
+    "anon_execute": false,
+    "authenticated_execute": false,
+    "definition_sha256": "8e6ff3ac868ce5d2217ae568e654dfaf8bf7af5d1979c79717469e81d84a0d2d"
+  },
+  {
+    "schema": "privado",
+    "name": "proteger_venda_com_devolucao",
+    "args": "",
+    "result": "trigger",
+    "security_definer": true,
+    "settings": [
+      "search_path=\"\""
+    ],
+    "anon_execute": false,
+    "authenticated_execute": false,
+    "definition_sha256": "3407718337f89a17a42d2afa513eb2e46c0ca40e3aa2812c40d4a29eff46e73a"
+  },
+  {
+    "schema": "privado",
+    "name": "recebido_do_pedido",
+    "args": "p_pedido uuid",
+    "result": "TABLE(variante_id uuid, quantidade bigint, custo_medio_centavos bigint)",
+    "security_definer": true,
+    "settings": [
+      "search_path=\"\""
+    ],
+    "anon_execute": false,
+    "authenticated_execute": false,
+    "definition_sha256": "85858c16d02db03ac1d50f5494c94f653b3c20db1f03f2b0397ad558ebc6eccc"
+  },
+  {
+    "schema": "privado",
+    "name": "reconciliar_identidades_do_catalogo",
+    "args": "",
+    "result": "jsonb",
+    "security_definer": true,
+    "settings": [
+      "search_path=\"\""
+    ],
+    "anon_execute": false,
+    "authenticated_execute": false,
+    "definition_sha256": "b81032c43ecc4ffc06dcc39e9522c7afa70b8cb50e99041e58b74e4f53934c91"
+  },
+  {
+    "schema": "privado",
+    "name": "registrar_identificadores",
+    "args": "",
+    "result": "trigger",
+    "security_definer": true,
+    "settings": [
+      "search_path=\"\""
+    ],
+    "anon_execute": false,
+    "authenticated_execute": false,
+    "definition_sha256": "c52f34d179441cfb683387927c5ec4c361f5f8d178748f0983087b94d3237e16"
+  },
+  {
+    "schema": "privado",
+    "name": "registrar_item_serializado",
+    "args": "p_unidade uuid, p_variante uuid, p_imei text, p_imei2 text, p_iccid text, p_tipo text, p_chave text, p_usuario uuid, p_condicao text, p_numero_serie text",
+    "result": "uuid",
+    "security_definer": true,
+    "settings": [
+      "search_path=\"\""
+    ],
+    "anon_execute": false,
+    "authenticated_execute": false,
+    "definition_sha256": "9b6fc29c9bb073e034b6fffcb126ac32e7ee1c64a8605483e58da34bdd89bae5"
+  },
+  {
+    "schema": "privado",
+    "name": "segundo_fator_em_dia",
+    "args": "",
+    "result": "boolean",
+    "security_definer": true,
+    "settings": [
+      "search_path=\"\""
+    ],
+    "anon_execute": false,
+    "authenticated_execute": false,
+    "definition_sha256": "57c1183fbca817838e896da64b429a06831db6500a0caaba3ac8b6f85b0e9edc"
+  },
+  {
+    "schema": "privado",
+    "name": "sessao_atual",
+    "args": "",
+    "result": "uuid",
+    "security_definer": false,
+    "settings": [
+      "search_path=\"\""
+    ],
+    "anon_execute": false,
+    "authenticated_execute": true,
+    "definition_sha256": "c713cbfb38a6dcc9a0b45136ac06a83f5c22a675058b58a8d7bc8cb82b0df01a"
+  },
+  {
+    "schema": "privado",
+    "name": "sessao_no_turno",
+    "args": "",
+    "result": "boolean",
+    "security_definer": true,
+    "settings": [
+      "search_path=\"\""
+    ],
+    "anon_execute": false,
+    "authenticated_execute": false,
+    "definition_sha256": "2854ddf92c7ee67b9472819b5650cb4b6c7c9a5a4105cc03d463a97aa70914a6"
+  },
+  {
+    "schema": "privado",
+    "name": "situacao_do_dinheiro",
+    "args": "p venda_pagamentos",
+    "result": "text",
+    "security_definer": false,
+    "settings": [
+      "search_path=\"\""
+    ],
+    "anon_execute": false,
+    "authenticated_execute": false,
+    "definition_sha256": "81312c55046f26b39850a2503d22772e1ad9d4fd6a237a3fec27e15077fcc768"
+  },
+  {
+    "schema": "privado",
+    "name": "so_desfecho_do_pendente",
+    "args": "",
+    "result": "trigger",
+    "security_definer": false,
+    "settings": [
+      "search_path=\"\""
+    ],
+    "anon_execute": false,
+    "authenticated_execute": false,
+    "definition_sha256": "3a33e4fee71e9ef95a61d1bab1737d966f9d09094cd0dee8ba6570fe5cafe174"
+  },
+  {
+    "schema": "privado",
+    "name": "so_insercao",
+    "args": "",
+    "result": "trigger",
+    "security_definer": false,
+    "settings": [
+      "search_path=\"\""
+    ],
+    "anon_execute": false,
+    "authenticated_execute": false,
+    "definition_sha256": "13ea1ee0ddb05782bffcd6670158bdf76cf08a0bd849de18f0e9e589751988dc"
+  },
+  {
+    "schema": "privado",
+    "name": "telefone_normalizado",
+    "args": "p_texto text",
+    "result": "text",
+    "security_definer": false,
+    "settings": [
+      "search_path=\"\""
+    ],
+    "anon_execute": false,
+    "authenticated_execute": false,
+    "definition_sha256": "317d625e33ec60b374c0cd087500c98bcc433c016fa046d2e999211b095a2e59"
+  },
+  {
+    "schema": "privado",
+    "name": "terminal_do_pagamento",
+    "args": "p_unidade uuid, p_meio text, p_terminal text",
+    "result": "uuid",
+    "security_definer": true,
+    "settings": [
+      "search_path=\"\""
+    ],
+    "anon_execute": false,
+    "authenticated_execute": false,
+    "definition_sha256": "39f6e8bcc2f11f1a9193ab169aab07365dea05ec96aab93b8de5528e058a235e"
+  },
+  {
+    "schema": "privado",
+    "name": "tipo_da_variante",
+    "args": "p_variante uuid",
+    "result": "text",
+    "security_definer": true,
+    "settings": [
+      "search_path=\"\""
+    ],
+    "anon_execute": false,
+    "authenticated_execute": false,
+    "definition_sha256": "9a0b649f1e50e7fe7e8df569d466ca8c0e1b08b9cc043979d73d298df07f1334"
+  },
+  {
+    "schema": "privado",
+    "name": "transferencia_travada",
+    "args": "p_transferencia uuid",
+    "result": "transferencias",
+    "security_definer": true,
+    "settings": [
+      "search_path=\"\""
+    ],
+    "anon_execute": false,
+    "authenticated_execute": false,
+    "definition_sha256": "9b4f212d7523b18302e44589646f227cd1b347ee84f8359c97288d2af399fb7e"
+  },
+  {
+    "schema": "privado",
+    "name": "trava_da_chave",
+    "args": "p_espaco text, p_organizacao uuid, p_chave text",
+    "result": "bigint",
+    "security_definer": false,
+    "settings": [
+      "search_path=\"\""
+    ],
+    "anon_execute": false,
+    "authenticated_execute": false,
+    "definition_sha256": "abf7956f2a1d574bb088a9ecc058329df39653b7135ea9bba6261093febc12ae"
+  },
+  {
+    "schema": "privado",
+    "name": "travar_preco",
+    "args": "p_organizacao uuid, p_variante uuid, p_unidade uuid, p_canal text",
+    "result": "void",
+    "security_definer": false,
+    "settings": [
+      "search_path=\"\""
+    ],
+    "anon_execute": false,
+    "authenticated_execute": false,
+    "definition_sha256": "4fce03bcc07a2bc6c45afbc60820d24cf59f5e6e38f564b7675cb6dae37b75c4"
+  },
+  {
+    "schema": "privado",
+    "name": "trocar_preco_geral",
+    "args": "p_organizacao uuid, p_variante uuid, p_valor bigint, p_motivo text",
+    "result": "uuid",
+    "security_definer": true,
+    "settings": [
+      "search_path=\"\""
+    ],
+    "anon_execute": false,
+    "authenticated_execute": false,
+    "definition_sha256": "714f9a3050eab6f4695f44f048bbfbeeb65fbd2eb6aaa9440c0e148a97f76e01"
+  },
+  {
+    "schema": "privado",
+    "name": "turno_valido",
+    "args": "p_inicio timestamp with time zone, p_agora timestamp with time zone",
+    "result": "boolean",
+    "security_definer": false,
+    "settings": [
+      "search_path=\"\""
+    ],
+    "anon_execute": false,
+    "authenticated_execute": false,
+    "definition_sha256": "865b576a09c040cf48ef195d7eb50c42b3037e1c92db09dbe028e744604783c7"
+  },
+  {
+    "schema": "privado",
+    "name": "unidades_com_permissao",
+    "args": "p_permissao text",
+    "result": "SETOF uuid",
+    "security_definer": true,
+    "settings": [
+      "search_path=\"\""
+    ],
+    "anon_execute": false,
+    "authenticated_execute": true,
+    "definition_sha256": "b5862bdad8cca5a6803a08279873f8d7e8429ffdd8e6a2f2e110b0135184efa3"
+  },
+  {
+    "schema": "privado",
+    "name": "unidades_visiveis",
+    "args": "",
+    "result": "SETOF uuid",
+    "security_definer": true,
+    "settings": [
+      "search_path=\"\""
+    ],
+    "anon_execute": false,
+    "authenticated_execute": true,
+    "definition_sha256": "4542d14f9dfdf630daa603386b949f231e8df01cf97db50ba5f6bea04cfcd552"
+  },
+  {
+    "schema": "privado",
+    "name": "usuario_ativo",
+    "args": "",
+    "result": "boolean",
+    "security_definer": true,
+    "settings": [
+      "search_path=\"\""
+    ],
+    "anon_execute": false,
+    "authenticated_execute": true,
+    "definition_sha256": "01c112ddf93f859e6d1e26159c267fd40fad09ec8571e5cfad990cfb7401a750"
+  },
+  {
+    "schema": "privado",
+    "name": "vale_no_pagamento",
+    "args": "",
+    "result": "trigger",
+    "security_definer": true,
+    "settings": [
+      "search_path=\"\""
+    ],
+    "anon_execute": false,
+    "authenticated_execute": false,
+    "definition_sha256": "220f6e0ee1507f628efce4d873923c5246333ef6adda13716ff27baa9c6ed77c"
+  },
+  {
+    "schema": "privado",
+    "name": "validar_item_serializado",
+    "args": "",
+    "result": "trigger",
+    "security_definer": false,
+    "settings": [
+      "search_path=\"\""
+    ],
+    "anon_execute": false,
+    "authenticated_execute": false,
+    "definition_sha256": "d37fe155d1be21390df3aa5ccbbab369b1f1d35b3299d62cc2f62456ee015b9f"
+  },
+  {
+    "schema": "privado",
+    "name": "validar_movimento",
+    "args": "",
+    "result": "trigger",
+    "security_definer": true,
+    "settings": [
+      "search_path=\"\""
+    ],
+    "anon_execute": false,
+    "authenticated_execute": false,
+    "definition_sha256": "89855345f954c637d18ac85d80b4dd2099a663c4f4472faa57fdbbe6912ec716"
+  },
+  {
+    "schema": "privado",
+    "name": "validar_unidade",
+    "args": "",
+    "result": "trigger",
+    "security_definer": false,
+    "settings": [
+      "search_path=\"\""
+    ],
+    "anon_execute": false,
+    "authenticated_execute": true,
+    "definition_sha256": "2f3cf29fd6e4300016998fee1d48366707f444a5764421884b9509593cf639d7"
+  },
+  {
+    "schema": "privado",
+    "name": "validar_vinculo",
+    "args": "",
+    "result": "trigger",
+    "security_definer": false,
+    "settings": [
+      "search_path=\"\""
+    ],
+    "anon_execute": false,
+    "authenticated_execute": true,
+    "definition_sha256": "f9b36af38bced62750fcb793d98f236788cc9be1ac4bebf2d4bba830702ebada"
+  },
+  {
+    "schema": "privado",
+    "name": "variante_codigo_so_desligamento",
+    "args": "",
+    "result": "trigger",
+    "security_definer": false,
+    "settings": [
+      "search_path=\"\""
+    ],
+    "anon_execute": false,
+    "authenticated_execute": false,
+    "definition_sha256": "d65e962dbfd6448c66b1c0195ac8e537a3cf8d8a9e75949ea18033ba9bb3f847"
+  },
+  {
+    "schema": "privado",
+    "name": "variante_com_estoque",
+    "args": "p_variante uuid",
+    "result": "boolean",
+    "security_definer": true,
+    "settings": [
+      "search_path=\"\""
+    ],
+    "anon_execute": false,
+    "authenticated_execute": false,
+    "definition_sha256": "38157bcf6750025d739b0af0a748bf5170b1f9a26eb005218873bd71ebd6d10a"
+  },
+  {
+    "schema": "privado",
+    "name": "variante_usada",
+    "args": "p_variante uuid",
+    "result": "boolean",
+    "security_definer": true,
+    "settings": [
+      "search_path=\"\""
+    ],
+    "anon_execute": false,
+    "authenticated_execute": false,
+    "definition_sha256": "a0a39cb622310dc9cc881c35d8ac333754491e8e2c9453c3364f235dcf2f057e"
+  },
+  {
+    "schema": "privado",
+    "name": "venda_anexo_so_retirada",
+    "args": "",
+    "result": "trigger",
+    "security_definer": false,
+    "settings": [
+      "search_path=\"\""
+    ],
+    "anon_execute": false,
+    "authenticated_execute": false,
+    "definition_sha256": "53d606b04a14fd4e402b755af1d3efecdf1f8ad1a21866c5653634d6b22c7fd5"
+  },
+  {
+    "schema": "privado",
+    "name": "venda_item_reservado",
+    "args": "",
+    "result": "trigger",
+    "security_definer": false,
+    "settings": [
+      "search_path=\"\""
+    ],
+    "anon_execute": false,
+    "authenticated_execute": false,
+    "definition_sha256": "3c1987ab3882573f392fa93cf2f3499942070fa0c0b4794ec45f7cc29fba8948"
+  },
+  {
+    "schema": "privado",
+    "name": "vinculos_vigentes",
+    "args": "",
+    "result": "TABLE(papel text, escopo text, organizacao_id uuid, unidade_id uuid)",
+    "security_definer": true,
+    "settings": [
+      "search_path=\"\""
+    ],
+    "anon_execute": false,
+    "authenticated_execute": true,
+    "definition_sha256": "db6620fa1f41f980dc7d5187f1de4ef13ebb682083ef2835698f0ddcb4fb6788"
+  },
+  {
+    "schema": "privado",
+    "name": "whatsapp_evento",
+    "args": "p_envio whatsapp_envios, p_situacao text, p_detalhe text, p_origem text",
+    "result": "void",
+    "security_definer": true,
+    "settings": [
+      "search_path=\"\""
+    ],
+    "anon_execute": false,
+    "authenticated_execute": false,
+    "definition_sha256": "bef3d0fc45868fc630c5c83d565f1c906cb3a5b315c6b2cacf5fa4820c3da40f"
+  },
+  {
+    "schema": "public",
+    "name": "abrir_caixa",
+    "args": "p_fundo bigint, p_chave text",
+    "result": "uuid",
+    "security_definer": true,
+    "settings": [
+      "search_path=\"\""
+    ],
+    "anon_execute": false,
+    "authenticated_execute": true,
+    "definition_sha256": "e7955ced5683d98ad6c92ea008d27f94a392af9def358216532fecf9e7948ae0"
+  },
+  {
+    "schema": "public",
+    "name": "adicionar_item",
+    "args": "p_venda uuid, p_variante uuid, p_item uuid, p_quantidade integer, p_chave text",
+    "result": "uuid",
+    "security_definer": true,
+    "settings": [
+      "search_path=\"\""
+    ],
+    "anon_execute": false,
+    "authenticated_execute": true,
+    "definition_sha256": "bedc17c47ec624ea3cdd9a9d4eee4695734c141393d5457a45e0e91c00081105"
+  },
+  {
+    "schema": "public",
+    "name": "alterar_situacao_pessoa",
+    "args": "p_usuario uuid, p_situacao text, p_motivo text",
+    "result": "boolean",
+    "security_definer": true,
+    "settings": [
+      "search_path=\"\""
+    ],
+    "anon_execute": false,
+    "authenticated_execute": true,
+    "definition_sha256": "0581b497b9e22cfed92009fe0314be1781dc6645fdadeccb49e0493df327e58b"
+  },
+  {
+    "schema": "public",
+    "name": "aplicar_desconto",
+    "args": "p_item uuid, p_desconto bigint",
+    "result": "text",
+    "security_definer": true,
+    "settings": [
+      "search_path=\"\""
+    ],
+    "anon_execute": false,
+    "authenticated_execute": true,
+    "definition_sha256": "44b14a062dc30de8046c30fc1592df968235dae263a4ad40a1d0644ce1222621"
+  },
+  {
+    "schema": "public",
+    "name": "atividade_criar",
+    "args": "p_dados jsonb, p_chave text",
+    "result": "jsonb",
+    "security_definer": true,
+    "settings": [
+      "search_path=\"\""
+    ],
+    "anon_execute": false,
+    "authenticated_execute": true,
+    "definition_sha256": "461139b356c2a0d56bc226acd53f335c6e5e773558d310f31c49b6109ad67565"
+  },
+  {
+    "schema": "public",
+    "name": "atividade_encerrar",
+    "args": "p_atividade uuid, p_feita boolean, p_resultado text",
+    "result": "boolean",
+    "security_definer": true,
+    "settings": [
+      "search_path=\"\""
+    ],
+    "anon_execute": false,
+    "authenticated_execute": true,
+    "definition_sha256": "6c48052b4b5e052fcba02e125e1d9411d6cefbe399ca33b488dea899b05fcf4c"
+  },
+  {
+    "schema": "public",
+    "name": "bonus_definir",
+    "args": "p_vigente_desde date, p_faixas jsonb, p_motivo text",
+    "result": "integer",
+    "security_definer": true,
+    "settings": [
+      "search_path=\"\""
+    ],
+    "anon_execute": false,
+    "authenticated_execute": true,
+    "definition_sha256": "55ba1abc1f360c3fcff547b2374fe5fd07494ba4d70198b974278a06b791ad66"
+  },
+  {
+    "schema": "public",
+    "name": "bonus_do_mes",
+    "args": "p_mes date, p_unidade uuid",
+    "result": "jsonb",
+    "security_definer": false,
+    "settings": [
+      "search_path=\"\""
+    ],
+    "anon_execute": false,
+    "authenticated_execute": true,
+    "definition_sha256": "e8000c1ec70123a29bf591281e9e6213e488f9ab219cfd732b47453508f6b3d1"
+  },
+  {
+    "schema": "public",
+    "name": "bonus_fechamento_aprovar",
+    "args": "p_fechamento uuid, p_decisoes jsonb",
+    "result": "bigint",
+    "security_definer": true,
+    "settings": [
+      "search_path=\"\""
+    ],
+    "anon_execute": false,
+    "authenticated_execute": true,
+    "definition_sha256": "1241bf4d32e4dfa4fbc458e368d8c41f90f06b3ac3c8a050817c2213e77bfb6f"
+  },
+  {
+    "schema": "public",
+    "name": "bonus_fechamento_do_mes",
+    "args": "p_mes date, p_unidade uuid",
+    "result": "jsonb",
+    "security_definer": false,
+    "settings": [
+      "search_path=\"\""
+    ],
+    "anon_execute": false,
+    "authenticated_execute": true,
+    "definition_sha256": "09ad2a579f3f7db7573fc36cf9bb7e4a6675c7616a646a1d1ef28e15310f60b3"
+  },
+  {
+    "schema": "public",
+    "name": "bonus_fechamento_enviar",
+    "args": "p_mes date, p_unidade uuid, p_totais jsonb, p_contestacoes jsonb",
+    "result": "uuid",
+    "security_definer": true,
+    "settings": [
+      "search_path=\"\""
+    ],
+    "anon_execute": false,
+    "authenticated_execute": true,
+    "definition_sha256": "f7447e12cc995b5d046ef335b13c6ff6151dc149949161ac34e1faf1842399e5"
+  },
+  {
+    "schema": "public",
+    "name": "caixa_cancelar_saida",
+    "args": "p_saida uuid",
+    "result": "boolean",
+    "security_definer": true,
+    "settings": [
+      "search_path=\"\""
+    ],
+    "anon_execute": false,
+    "authenticated_execute": true,
+    "definition_sha256": "ee27b87cecee7b9fdc8ed11b41dcdfb07707dbb1ccccc31993ab32e8bb53d1be"
+  },
+  {
+    "schema": "public",
+    "name": "caixa_decidir_saida",
+    "args": "p_saida uuid, p_autorizar boolean, p_motivo text",
+    "result": "text",
+    "security_definer": true,
+    "settings": [
+      "search_path=\"\""
+    ],
+    "anon_execute": false,
+    "authenticated_execute": true,
+    "definition_sha256": "7fd8794f7cfecdced4501f1129378a4b0a87ed66142675659e06cba7114e2e4c"
+  },
+  {
+    "schema": "public",
+    "name": "caixa_pedir_saida",
+    "args": "p_valor bigint, p_motivo text, p_chave text",
+    "result": "uuid",
+    "security_definer": true,
+    "settings": [
+      "search_path=\"\""
+    ],
+    "anon_execute": false,
+    "authenticated_execute": true,
+    "definition_sha256": "6de64873b8f04d3c7793474a9b9a56af1baa0424d9703c65882463fd5be5863a"
+  },
+  {
+    "schema": "public",
+    "name": "cancelar_convite",
+    "args": "p_convite uuid, p_motivo text",
+    "result": "boolean",
+    "security_definer": true,
+    "settings": [
+      "search_path=\"\""
+    ],
+    "anon_execute": false,
+    "authenticated_execute": true,
+    "definition_sha256": "5250fe84e27d1688c6d16e450483fb3c6b1a731d8ed6ec8cb01eb756844ad641"
+  },
+  {
+    "schema": "public",
+    "name": "cancelar_venda",
+    "args": "p_venda uuid, p_motivo text",
+    "result": "boolean",
+    "security_definer": true,
+    "settings": [
+      "search_path=\"\""
+    ],
+    "anon_execute": false,
+    "authenticated_execute": true,
+    "definition_sha256": "04bd8147b95ef35ee141b77d2dba84d15cfdec6598d44ee1df53c6904e35a097"
+  },
+  {
+    "schema": "public",
+    "name": "catalogo_definir_peca_de_assistencia",
+    "args": "p_organizacao uuid, p_categoria uuid, p_peca boolean, p_motivo text",
+    "result": "boolean",
+    "security_definer": true,
+    "settings": [
+      "search_path=\"\""
+    ],
+    "anon_execute": false,
+    "authenticated_execute": true,
+    "definition_sha256": "e487054cb361d7bef7da7b7a114b259b43fab2c17445d0dd59a765b3458ffde2"
+  },
+  {
+    "schema": "public",
+    "name": "catalogo_definir_politica_desconto",
+    "args": "p_categoria uuid, p_teto_pb integer, p_margem_minima_pb integer, p_motivo text",
+    "result": "boolean",
+    "security_definer": true,
+    "settings": [
+      "search_path=\"\""
+    ],
+    "anon_execute": false,
+    "authenticated_execute": true,
+    "definition_sha256": "9320d27bd042442deb5eb639dcc50d4f96712d8b4fe6efa3fa6361c76aa3cea0"
+  },
+  {
+    "schema": "public",
+    "name": "catalogo_desligar_codigo",
+    "args": "p_vinculo uuid, p_motivo text",
+    "result": "boolean",
+    "security_definer": true,
+    "settings": [
+      "search_path=\"\""
+    ],
+    "anon_execute": false,
+    "authenticated_execute": true,
+    "definition_sha256": "cb07b0d545732566f2b7d97e11cbfb2e034d37802d95ae62310aed78b502a685"
+  },
+  {
+    "schema": "public",
+    "name": "catalogo_ligar_codigo",
+    "args": "p_variante uuid, p_canal text, p_codigo text, p_sku_no_canal text, p_motivo text",
+    "result": "jsonb",
+    "security_definer": true,
+    "settings": [
+      "search_path=\"\""
+    ],
+    "anon_execute": false,
+    "authenticated_execute": true,
+    "definition_sha256": "c28b50a410730fd6643bad80c5e604a2c84369ffa884ceaba5f4415cacc36ee0"
+  },
+  {
+    "schema": "public",
+    "name": "catalogo_salvar_categoria",
+    "args": "p_organizacao uuid, p_id uuid, p_nome text, p_ativa boolean, p_motivo text",
+    "result": "jsonb",
+    "security_definer": true,
+    "settings": [
+      "search_path=\"\""
+    ],
+    "anon_execute": false,
+    "authenticated_execute": true,
+    "definition_sha256": "47d7fb6025046e885a3be85111db67444076c3bf836b12e5f94fbe26dad54c54"
+  },
+  {
+    "schema": "public",
+    "name": "catalogo_salvar_marca",
+    "args": "p_organizacao uuid, p_id uuid, p_nome text, p_motivo text",
+    "result": "jsonb",
+    "security_definer": true,
+    "settings": [
+      "search_path=\"\""
+    ],
+    "anon_execute": false,
+    "authenticated_execute": true,
+    "definition_sha256": "bc269c338c01641d0af446eeede74142d714fa77b44e6a0df593b6d0085ad7bb"
+  },
+  {
+    "schema": "public",
+    "name": "catalogo_salvar_produto",
+    "args": "p_organizacao uuid, p_id uuid, p_tipo text, p_nome text, p_categoria uuid, p_marca uuid, p_modelo text, p_descricao text, p_publicar_online boolean, p_ativo boolean, p_chave text, p_motivo text",
+    "result": "jsonb",
+    "security_definer": true,
+    "settings": [
+      "search_path=\"\""
+    ],
+    "anon_execute": false,
+    "authenticated_execute": true,
+    "definition_sha256": "a9bb0aefa48427adbfb600df08a69fa19e782405d7aa0cc6fc3cce2f2c5c5048"
+  },
+  {
+    "schema": "public",
+    "name": "catalogo_salvar_variante",
+    "args": "p_produto uuid, p_id uuid, p_sku text, p_nome text, p_cor text, p_capacidade text, p_codigo_barras text, p_estoque_minimo integer, p_ativa boolean, p_motivo text",
+    "result": "jsonb",
+    "security_definer": true,
+    "settings": [
+      "search_path=\"\""
+    ],
+    "anon_execute": false,
+    "authenticated_execute": true,
+    "definition_sha256": "390f1aebcd45aaf95991efc00b999dc839817e23d928c11d503c11c99edeab01"
+  },
+  {
+    "schema": "public",
+    "name": "catalogo_variante_por_codigo",
+    "args": "p_canal text, p_codigo text",
+    "result": "uuid",
+    "security_definer": false,
+    "settings": [
+      "search_path=\"\""
+    ],
+    "anon_execute": false,
+    "authenticated_execute": true,
+    "definition_sha256": "f8a09eba7e6480284002116f198b0b9e931a463130ab88ee05ee09a34ad492b3"
+  },
+  {
+    "schema": "public",
+    "name": "cliente_buscar",
+    "args": "p_criterio text, p_valor text",
+    "result": "jsonb",
+    "security_definer": true,
+    "settings": [
+      "search_path=\"\""
+    ],
+    "anon_execute": false,
+    "authenticated_execute": true,
+    "definition_sha256": "bfb12adfbabe832c5c0a1e6c22d85ed249ce97a343a037db68a6e10bccaa2d5b"
+  },
+  {
+    "schema": "public",
+    "name": "cliente_consentir",
+    "args": "p_cliente uuid, p_canal text, p_finalidade text, p_concedido boolean, p_fonte text",
+    "result": "boolean",
+    "security_definer": true,
+    "settings": [
+      "search_path=\"\""
+    ],
+    "anon_execute": false,
+    "authenticated_execute": true,
+    "definition_sha256": "e6bf402f2ca0d3efb7323bfc9cd6cac17ed7ee2cab4b882e8e127973b13b2fe9"
+  },
+  {
+    "schema": "public",
+    "name": "cliente_dados_do_titular",
+    "args": "p_cliente uuid, p_motivo text",
+    "result": "jsonb",
+    "security_definer": true,
+    "settings": [
+      "search_path=\"\""
+    ],
+    "anon_execute": false,
+    "authenticated_execute": true,
+    "definition_sha256": "3322742ba09235c9060e295f19462b841eae3c45624f5d5a1fc45149a69781d9"
+  },
+  {
+    "schema": "public",
+    "name": "cliente_ficha",
+    "args": "p_cliente uuid",
+    "result": "jsonb",
+    "security_definer": true,
+    "settings": [
+      "search_path=\"\""
+    ],
+    "anon_execute": false,
+    "authenticated_execute": true,
+    "definition_sha256": "fef5d85cbec0a053b27025ca90459106fe978f7963378b0da6d82537f46182d6"
+  },
+  {
+    "schema": "public",
+    "name": "cliente_revelar",
+    "args": "p_cliente uuid, p_campo text",
+    "result": "jsonb",
+    "security_definer": true,
+    "settings": [
+      "search_path=\"\""
+    ],
+    "anon_execute": false,
+    "authenticated_execute": true,
+    "definition_sha256": "7b8d29d81342bbe56781c00978cc6f315b4f781c5e7af612b8cfeee46ac2700e"
+  },
+  {
+    "schema": "public",
+    "name": "cliente_salvar",
+    "args": "p_cliente uuid, p_dados jsonb, p_motivo text, p_chave text",
+    "result": "jsonb",
+    "security_definer": true,
+    "settings": [
+      "search_path=\"\""
+    ],
+    "anon_execute": false,
+    "authenticated_execute": true,
+    "definition_sha256": "c7cc3a68586ca27cf4543f43c5680d2ce1b4372107302543adbb6f296de762a5"
+  },
+  {
+    "schema": "public",
+    "name": "clientes_duplicados",
+    "args": "",
+    "result": "jsonb",
+    "security_definer": true,
+    "settings": [
+      "search_path=\"\""
+    ],
+    "anon_execute": false,
+    "authenticated_execute": true,
+    "definition_sha256": "b731cd8853d48a38f407d42b67fae5bf6e2ff7c949f499847bb2a72515d6762d"
+  },
+  {
+    "schema": "public",
+    "name": "clientes_marcar_diferentes",
+    "args": "p_a uuid, p_b uuid, p_motivo text",
+    "result": "boolean",
+    "security_definer": true,
+    "settings": [
+      "search_path=\"\""
+    ],
+    "anon_execute": false,
+    "authenticated_execute": true,
+    "definition_sha256": "5c05babc70bc0b7e41b6d5b6f17c68cb455fadd23095721d2d0962d3819cce62"
+  },
+  {
+    "schema": "public",
+    "name": "clientes_mesclar",
+    "args": "p_manter uuid, p_absorver uuid, p_motivo text",
+    "result": "jsonb",
+    "security_definer": true,
+    "settings": [
+      "search_path=\"\""
+    ],
+    "anon_execute": false,
+    "authenticated_execute": true,
+    "definition_sha256": "36768a139d3bc44972755b1f469e27184f5c0ab30a20625f3838e3d806803fd1"
+  },
+  {
+    "schema": "public",
+    "name": "clientes_segmentos",
+    "args": "",
+    "result": "jsonb",
+    "security_definer": true,
+    "settings": [
+      "search_path=\"\""
+    ],
+    "anon_execute": false,
+    "authenticated_execute": true,
+    "definition_sha256": "bcdb75a8d1eff1bf86a4e3cc1b110a5237c031270acca39f4aaa8b07f7d58970"
+  },
+  {
+    "schema": "public",
+    "name": "concluir_venda",
+    "args": "p_venda uuid, p_pagamentos jsonb, p_cliente jsonb, p_chave text",
+    "result": "jsonb",
+    "security_definer": true,
+    "settings": [
+      "search_path=\"\""
+    ],
+    "anon_execute": false,
+    "authenticated_execute": true,
+    "definition_sha256": "49894bae05068c0d59a27f12b014fd1c2f3c0e45602469a32823b8229c6cd3f3"
+  },
+  {
+    "schema": "public",
+    "name": "conferir_caixa",
+    "args": "p_caixa uuid, p_observacao text",
+    "result": "boolean",
+    "security_definer": true,
+    "settings": [
+      "search_path=\"\""
+    ],
+    "anon_execute": false,
+    "authenticated_execute": true,
+    "definition_sha256": "b08c21767a4b09d9eb402d77ff5f280f1979c38cc5befd7a50327962ee3d7e44"
+  },
+  {
+    "schema": "public",
+    "name": "conferir_item",
+    "args": "p_item uuid",
+    "result": "boolean",
+    "security_definer": true,
+    "settings": [
+      "search_path=\"\""
+    ],
+    "anon_execute": false,
+    "authenticated_execute": true,
+    "definition_sha256": "f396e78af4ed659465785ef02d15fc55254d56f067702ffc91ec669a07d2e4f9"
+  },
+  {
+    "schema": "public",
+    "name": "conferir_retorno",
+    "args": "p_retorno uuid, p_recebido boolean, p_identificador text, p_condicao text, p_observacao text",
+    "result": "text",
+    "security_definer": true,
+    "settings": [
+      "search_path=\"\""
+    ],
+    "anon_execute": false,
+    "authenticated_execute": true,
+    "definition_sha256": "b81eb474930258fe5623e8ddb4d4097d5b27ac2ab2cdf531d4d5b8ad21d3ec5c"
+  },
+  {
+    "schema": "public",
+    "name": "confirmar_estorno_externo",
+    "args": "p_estorno uuid, p_comprovante text, p_observacao text",
+    "result": "text",
+    "security_definer": true,
+    "settings": [
+      "search_path=\"\""
+    ],
+    "anon_execute": false,
+    "authenticated_execute": true,
+    "definition_sha256": "5f9f404ec8ccc32d0ce77bffb3e08bc5dc05636cd1246e9ba243be75f63d7149"
+  },
+  {
+    "schema": "public",
+    "name": "connect_cancelar",
+    "args": "p_operacao uuid, p_motivo text",
+    "result": "boolean",
+    "security_definer": true,
+    "settings": [
+      "search_path=\"\""
+    ],
+    "anon_execute": false,
+    "authenticated_execute": true,
+    "definition_sha256": "1a7a7180779e5f099ecdc5527926f6dfc5d9717707a78ccd09170113e14eb07d"
+  },
+  {
+    "schema": "public",
+    "name": "connect_habilitar",
+    "args": "p_tipo text, p_habilitar boolean, p_evidencia text",
+    "result": "boolean",
+    "security_definer": true,
+    "settings": [
+      "search_path=\"\""
+    ],
+    "anon_execute": false,
+    "authenticated_execute": true,
+    "definition_sha256": "0accc3bd52aec853d31492fab1cc383586cff71643cfa4811aab69d0058a3ca9"
+  },
+  {
+    "schema": "public",
+    "name": "connect_painel",
+    "args": "p_inicio timestamp with time zone, p_fim timestamp with time zone, p_unidade uuid, p_vendedor uuid",
+    "result": "jsonb",
+    "security_definer": false,
+    "settings": [
+      "search_path=\"\""
+    ],
+    "anon_execute": false,
+    "authenticated_execute": true,
+    "definition_sha256": "7ec027fb4566e61d1042822fbdff3ecbe42416ff57c2555e39329860d5834d2c"
+  },
+  {
+    "schema": "public",
+    "name": "connect_registrar",
+    "args": "p_tipo text, p_pedido jsonb, p_chave text",
+    "result": "uuid",
+    "security_definer": true,
+    "settings": [
+      "search_path=\"\""
+    ],
+    "anon_execute": false,
+    "authenticated_execute": true,
+    "definition_sha256": "27a0d50b6203ed47ed10a21cc193103005f4b6b9e86a61fe4c847b2f7710e192"
+  },
+  {
+    "schema": "public",
+    "name": "connect_resolver",
+    "args": "p_operacao uuid, p_resultado text, p_motivo text",
+    "result": "text",
+    "security_definer": true,
+    "settings": [
+      "search_path=\"\""
+    ],
+    "anon_execute": false,
+    "authenticated_execute": true,
+    "definition_sha256": "89615f384699c60c6efc642e9bc7ce180206a38d3ff0f5c1bffa1109329fd353"
+  },
+  {
+    "schema": "public",
+    "name": "connect_worker_atualizar_referencias",
+    "args": "p_organizacao uuid, p_tipo text, p_itens jsonb",
+    "result": "integer",
+    "security_definer": true,
+    "settings": [
+      "search_path=\"\""
+    ],
+    "anon_execute": false,
+    "authenticated_execute": false,
+    "definition_sha256": "19f01a5a91989437a6abfe5d23964bf17c4caeb84dfd899a51d6f893b0b4e74c"
+  },
+  {
+    "schema": "public",
+    "name": "connect_worker_operacoes_a_consultar",
+    "args": "p_organizacao uuid, p_tipos text[], p_limite integer",
+    "result": "TABLE(operacao_id uuid, tipo text, situacao text, iccid text, linha text, linha_doadora text, id_externo text, data_cadastro_externa text, metodo_pagamento text, enviado_em timestamp with time zone, tentativas_consulta integer, uuid_externo text)",
+    "security_definer": true,
+    "settings": [
+      "search_path=\"\""
+    ],
+    "anon_execute": false,
+    "authenticated_execute": false,
+    "definition_sha256": "12dec50452deb555b71e8e166c6d8e26acd9123e9389f4f3ac70e14020170823"
+  },
+  {
+    "schema": "public",
+    "name": "connect_worker_registrar_consulta",
+    "args": "p_operacao uuid, p_evidencia jsonb",
+    "result": "text",
+    "security_definer": true,
+    "settings": [
+      "search_path=\"\""
+    ],
+    "anon_execute": false,
+    "authenticated_execute": false,
+    "definition_sha256": "c7d652f01e14e34f8cdf19effb7239ec8cb1234114206d40a2c8b93526e5c3ac"
+  },
+  {
+    "schema": "public",
+    "name": "connect_worker_registrar_envio",
+    "args": "p_operacao uuid, p_resultado jsonb",
+    "result": "text",
+    "security_definer": true,
+    "settings": [
+      "search_path=\"\""
+    ],
+    "anon_execute": false,
+    "authenticated_execute": false,
+    "definition_sha256": "b4f4fca3b72ec8567616096fc3a3e3f0d53b190e9adf659e25269c6c02fc9ac6"
+  },
+  {
+    "schema": "public",
+    "name": "connect_worker_reivindicar_envios",
+    "args": "p_organizacao uuid, p_tipos text[], p_limite integer",
+    "result": "TABLE(operacao_id uuid, tipo text, metodo_pagamento text, iccid text, esim boolean, ddd smallint, linha text, linha_doadora text, operadora_doadora_id integer, plano_id integer, dados jsonb)",
+    "security_definer": true,
+    "settings": [
+      "search_path=\"\""
+    ],
+    "anon_execute": false,
+    "authenticated_execute": false,
+    "definition_sha256": "079b976bb0919876156a3437f7b655d47fb38c61a1524f1c110886c7d0cc8440"
+  },
+  {
+    "schema": "public",
+    "name": "conta_pagar_anexar",
+    "args": "p_conta uuid, p_tipo text, p_descricao text, p_caminho text, p_sha256 text",
+    "result": "jsonb",
+    "security_definer": true,
+    "settings": [
+      "search_path=\"\""
+    ],
+    "anon_execute": false,
+    "authenticated_execute": true,
+    "definition_sha256": "bfd9e28fc322c7d586660f32e4b92e23687dc99b86698d6a165b55a754cf270d"
+  },
+  {
+    "schema": "public",
+    "name": "conta_pagar_cancelar",
+    "args": "p_conta uuid, p_motivo text, p_e_seguintes boolean",
+    "result": "integer",
+    "security_definer": true,
+    "settings": [
+      "search_path=\"\""
+    ],
+    "anon_execute": false,
+    "authenticated_execute": true,
+    "definition_sha256": "a7ea3cf959cfb4691fc2919429860e0af8de5d39233c9dc97cd58437286630f0"
+  },
+  {
+    "schema": "public",
+    "name": "conta_pagar_categoria_salvar",
+    "args": "p_categoria uuid, p_nome text, p_ativa boolean, p_entra_no_resultado boolean",
+    "result": "uuid",
+    "security_definer": true,
+    "settings": [
+      "search_path=\"\""
+    ],
+    "anon_execute": false,
+    "authenticated_execute": true,
+    "definition_sha256": "fa5afe7e3be53ffad9ec3a156a9ff185989980c8a3aa3c1f53798150545101e2"
+  },
+  {
+    "schema": "public",
+    "name": "conta_pagar_corrigir",
+    "args": "p_conta uuid, p_dados jsonb, p_motivo text",
+    "result": "boolean",
+    "security_definer": true,
+    "settings": [
+      "search_path=\"\""
+    ],
+    "anon_execute": false,
+    "authenticated_execute": true,
+    "definition_sha256": "8868869ec12f2fe8ea87fd1797b471d36cd5695c943faf8b7e97f296d74a5963"
+  },
+  {
+    "schema": "public",
+    "name": "conta_pagar_desfazer_pagamento",
+    "args": "p_conta uuid, p_motivo text",
+    "result": "boolean",
+    "security_definer": true,
+    "settings": [
+      "search_path=\"\""
+    ],
+    "anon_execute": false,
+    "authenticated_execute": true,
+    "definition_sha256": "df58899ba3ce510b98734895292fcfbfa2f8f9c183a29950cae36181e6c919d1"
+  },
+  {
+    "schema": "public",
+    "name": "conta_pagar_lancar",
+    "args": "p_dados jsonb, p_chave text",
+    "result": "uuid",
+    "security_definer": true,
+    "settings": [
+      "search_path=\"\""
+    ],
+    "anon_execute": false,
+    "authenticated_execute": true,
+    "definition_sha256": "baa3cf50db957e57b4b9caa86ca507993da722157e8bba9a5ff19a6ba3b87b5b"
+  },
+  {
+    "schema": "public",
+    "name": "conta_pagar_ligar_entrada",
+    "args": "p_conta uuid, p_entrada uuid, p_motivo text",
+    "result": "integer",
+    "security_definer": true,
+    "settings": [
+      "search_path=\"\""
+    ],
+    "anon_execute": false,
+    "authenticated_execute": true,
+    "definition_sha256": "2bc3deae643bcea8bd0c9370c6f63d26eae8976e2049cabbe071943cff589723"
+  },
+  {
+    "schema": "public",
+    "name": "conta_pagar_pagar",
+    "args": "p_conta uuid, p_pago_em date, p_valor_pago bigint, p_referencia text",
+    "result": "boolean",
+    "security_definer": true,
+    "settings": [
+      "search_path=\"\""
+    ],
+    "anon_execute": false,
+    "authenticated_execute": true,
+    "definition_sha256": "d987d2d1b48539aabe6f199b2b5b73cd3c2b92d7d39bfe721299ba8827a72501"
+  },
+  {
+    "schema": "public",
+    "name": "conta_pagar_retirar_anexo",
+    "args": "p_anexo uuid, p_motivo text",
+    "result": "boolean",
+    "security_definer": true,
+    "settings": [
+      "search_path=\"\""
+    ],
+    "anon_execute": false,
+    "authenticated_execute": true,
+    "definition_sha256": "fbf39d06d2c1946b12230e12422f1c3ee7f27698e5d90360f4f2c8f74e1ce586"
+  },
+  {
+    "schema": "public",
+    "name": "contas_a_pagar_resumo",
+    "args": "p_unidade uuid, p_rede boolean",
+    "result": "jsonb",
+    "security_definer": false,
+    "settings": [
+      "search_path=\"\""
+    ],
+    "anon_execute": false,
+    "authenticated_execute": true,
+    "definition_sha256": "d67d0fa8f62c53e0a0532b5a16c0054ce3968585da22c653ed977d7b1329b6e9"
+  },
+  {
+    "schema": "public",
+    "name": "convidar_pessoa",
+    "args": "p_organizacao uuid, p_nome text, p_email text, p_papel text, p_unidades uuid[], p_motivo text",
+    "result": "uuid",
+    "security_definer": true,
+    "settings": [
+      "search_path=\"\""
+    ],
+    "anon_execute": false,
+    "authenticated_execute": true,
+    "definition_sha256": "cf7f575456ba57b5a19d57996e1b5f3bf91bd6d0fe074edfd9e150cc703457f1"
+  },
+  {
+    "schema": "public",
+    "name": "criar_venda",
+    "args": "p_chave text",
+    "result": "uuid",
+    "security_definer": true,
+    "settings": [
+      "search_path=\"\""
+    ],
+    "anon_execute": false,
+    "authenticated_execute": true,
+    "definition_sha256": "1da443f1ea02887eae417f3d71e0b86eebf9c6296fb072b7c2dacede9eb58559"
+  },
+  {
+    "schema": "public",
+    "name": "crm_agenda",
+    "args": "",
+    "result": "jsonb",
+    "security_definer": true,
+    "settings": [
+      "search_path=\"\""
+    ],
+    "anon_execute": false,
+    "authenticated_execute": true,
+    "definition_sha256": "b97cd9e4bb0a22f98ef1d646149696ac62d84f9f6a29d78d0b9b8b9deb6ef4a4"
+  },
+  {
+    "schema": "public",
+    "name": "crm_funil",
+    "args": "",
+    "result": "jsonb",
+    "security_definer": true,
+    "settings": [
+      "search_path=\"\""
+    ],
+    "anon_execute": false,
+    "authenticated_execute": true,
+    "definition_sha256": "e5c6823e004a8631e4a5f6d2e2ac682fa51af887b5160a248b4dd24c874b3e47"
+  },
+  {
+    "schema": "public",
+    "name": "custo_corrigir",
+    "args": "p_variante uuid, p_valor_centavos bigint, p_motivo text",
+    "result": "boolean",
+    "security_definer": true,
+    "settings": [
+      "search_path=\"\""
+    ],
+    "anon_execute": false,
+    "authenticated_execute": true,
+    "definition_sha256": "0c9c34c0a9c4b1aacc5d1893d103d42c774c13b0ba69676dcde745385a2ffb31"
+  },
+  {
+    "schema": "public",
+    "name": "decidir_aprovacao",
+    "args": "p_aprovacao uuid, p_aprovar boolean, p_observacao text",
+    "result": "boolean",
+    "security_definer": true,
+    "settings": [
+      "search_path=\"\""
+    ],
+    "anon_execute": false,
+    "authenticated_execute": true,
+    "definition_sha256": "261034aa206c3f37cc5f75e107cd4e3f2d880f59fa60add89f62f14cdc676f0a"
+  },
+  {
+    "schema": "public",
+    "name": "devolver_itens",
+    "args": "p_venda uuid, p_itens jsonb, p_reembolsos jsonb, p_motivo text, p_chave text",
+    "result": "jsonb",
+    "security_definer": true,
+    "settings": [
+      "search_path=\"\""
+    ],
+    "anon_execute": false,
+    "authenticated_execute": true,
+    "definition_sha256": "8122d8df4be42d7e2ea106c54029e70aad45c045591b22c8d4f3db55fb1deaf9"
+  },
+  {
+    "schema": "public",
+    "name": "disponibilidade_na_rede",
+    "args": "p_variante uuid",
+    "result": "TABLE(unidade_id uuid, unidade text, disponivel integer)",
+    "security_definer": true,
+    "settings": [
+      "search_path=\"\""
+    ],
+    "anon_execute": false,
+    "authenticated_execute": true,
+    "definition_sha256": "c58fcfe5270c5de0ff3a969b9539504e62b7b7e37d60e44d788affc24e844070"
+  },
+  {
+    "schema": "public",
+    "name": "encerrar_vinculo",
+    "args": "p_vinculo uuid, p_motivo text",
+    "result": "boolean",
+    "security_definer": true,
+    "settings": [
+      "search_path=\"\""
+    ],
+    "anon_execute": false,
+    "authenticated_execute": true,
+    "definition_sha256": "776d1b72fa33206837c6bd95d0aa6aa64cb058d2291b06f8bc662d21858f4190"
+  },
+  {
+    "schema": "public",
+    "name": "equipe_por_papel",
+    "args": "p_organizacao uuid",
+    "result": "jsonb",
+    "security_definer": false,
+    "settings": [
+      "search_path=\"\""
+    ],
+    "anon_execute": false,
+    "authenticated_execute": true,
+    "definition_sha256": "a86002bc2ff4b32b83d11296a4aa89fd9f394004a140e48120d0417e5249b0c3"
+  },
+  {
+    "schema": "public",
+    "name": "estoque_entrada",
+    "args": "p_unidade uuid, p_entrada uuid, p_numero bigint",
+    "result": "jsonb",
+    "security_definer": true,
+    "settings": [
+      "search_path=\"\""
+    ],
+    "anon_execute": false,
+    "authenticated_execute": true,
+    "definition_sha256": "3d1d9bfd8df4fd52799bf5b174f4c4a0c2913a98dd67d3473440a4c0f9d87dee"
+  },
+  {
+    "schema": "public",
+    "name": "estoque_entradas",
+    "args": "p_unidade uuid, p_antes bigint, p_limite integer",
+    "result": "jsonb",
+    "security_definer": true,
+    "settings": [
+      "search_path=\"\""
+    ],
+    "anon_execute": false,
+    "authenticated_execute": true,
+    "definition_sha256": "4d1e59634a8e630e807381f272cb95b44cf58bd469451bb9665b9609d3480486"
+  },
+  {
+    "schema": "public",
+    "name": "estoque_estornar_entrada",
+    "args": "p_entrada uuid, p_motivo text",
+    "result": "text",
+    "security_definer": true,
+    "settings": [
+      "search_path=\"\""
+    ],
+    "anon_execute": false,
+    "authenticated_execute": true,
+    "definition_sha256": "65a9ad68a42e92592e6b3a25f80a7d852a2b06d3d59a63e740fbe1a1de7fd5dd"
+  },
+  {
+    "schema": "public",
+    "name": "estoque_na_rede",
+    "args": "p_variante uuid",
+    "result": "TABLE(unidade_id uuid, unidade text, tipo text, fisico integer, reservado integer, disponivel integer, chegando integer, pedidos_abertos integer)",
+    "security_definer": true,
+    "settings": [
+      "search_path=\"\""
+    ],
+    "anon_execute": false,
+    "authenticated_execute": true,
+    "definition_sha256": "a881dbeba83beca0213a41d32d00ad07ceacba11f8d125993b75f60679dcf48b"
+  },
+  {
+    "schema": "public",
+    "name": "estoque_painel",
+    "args": "p_unidade uuid",
+    "result": "jsonb",
+    "security_definer": false,
+    "settings": [
+      "search_path=\"\""
+    ],
+    "anon_execute": false,
+    "authenticated_execute": true,
+    "definition_sha256": "f5b8ed8ff149722158809ff435027d4792dca013b18f946cb4df667bd0cc322d"
+  },
+  {
+    "schema": "public",
+    "name": "estoque_registrar_entrada",
+    "args": "p_unidade uuid, p_tipo text, p_fornecedor uuid, p_documento text, p_itens jsonb, p_chave text, p_motivo text",
+    "result": "jsonb",
+    "security_definer": true,
+    "settings": [
+      "search_path=\"\""
+    ],
+    "anon_execute": false,
+    "authenticated_execute": true,
+    "definition_sha256": "313c0c22129fe90930eb9f00eb4baea8704ef6ae4349eb9a7bf97573847ee090"
+  },
+  {
+    "schema": "public",
+    "name": "estoque_valor_em_custo",
+    "args": "p_unidade uuid",
+    "result": "jsonb",
+    "security_definer": true,
+    "settings": [
+      "search_path=\"\""
+    ],
+    "anon_execute": false,
+    "authenticated_execute": true,
+    "definition_sha256": "3358e861e0393e5329f3f89ed01cc02f1f8485c9970ae65639158f12318822b2"
+  },
+  {
+    "schema": "public",
+    "name": "extrato_do_vendedor",
+    "args": "p_mes date, p_unidade uuid, p_vendedor uuid",
+    "result": "jsonb",
+    "security_definer": false,
+    "settings": [
+      "search_path=\"\""
+    ],
+    "anon_execute": false,
+    "authenticated_execute": true,
+    "definition_sha256": "0c713c80bf939d052de076af30ff29b2445bd92b570629327c86f35c75b74848"
+  },
+  {
+    "schema": "public",
+    "name": "fechar_caixa",
+    "args": "p_contado bigint, p_observacao text",
+    "result": "TABLE(esperado bigint, contado bigint, diferenca bigint)",
+    "security_definer": true,
+    "settings": [
+      "search_path=\"\""
+    ],
+    "anon_execute": false,
+    "authenticated_execute": true,
+    "definition_sha256": "9d4888e3dd0e24426e86b97e18b399cbf78640efd014fce84398c34b08c82df0"
+  },
+  {
+    "schema": "public",
+    "name": "financeira_corrigir_recebimento",
+    "args": "p_conta uuid, p_referencia text, p_valor_recebido bigint, p_recebido_em date, p_motivo text",
+    "result": "boolean",
+    "security_definer": true,
+    "settings": [
+      "search_path=\"\""
+    ],
+    "anon_execute": false,
+    "authenticated_execute": true,
+    "definition_sha256": "c9bdd0406c29d10cc4edc52f93bdac0b943968c0461fe6c5fe5b3f2fcf7de4d1"
+  },
+  {
+    "schema": "public",
+    "name": "financeira_desfazer_recebimento",
+    "args": "p_conta uuid, p_motivo text",
+    "result": "boolean",
+    "security_definer": true,
+    "settings": [
+      "search_path=\"\""
+    ],
+    "anon_execute": false,
+    "authenticated_execute": true,
+    "definition_sha256": "ac3cf909a598a79c4ed5cbbd4f8874ac54d635e6bdbd9a6266da8b27267a80f9"
+  },
+  {
+    "schema": "public",
+    "name": "financeira_receber",
+    "args": "p_conta uuid, p_referencia text, p_valor_recebido bigint, p_recebido_em date",
+    "result": "boolean",
+    "security_definer": true,
+    "settings": [
+      "search_path=\"\""
+    ],
+    "anon_execute": false,
+    "authenticated_execute": true,
+    "definition_sha256": "a4abe9d138ce2752ca9c0a41a8a53bf0a257ab27b6ea1967798565794d4afc9c"
+  },
+  {
+    "schema": "public",
+    "name": "financeiras_a_receber",
+    "args": "",
+    "result": "jsonb",
+    "security_definer": true,
+    "settings": [
+      "search_path=\"\""
+    ],
+    "anon_execute": false,
+    "authenticated_execute": true,
+    "definition_sha256": "d2d8a391141b59253c67699fa949485dc1cc9570426ab599b082cdaa36691fdc"
+  },
+  {
+    "schema": "public",
+    "name": "financeiro_painel",
+    "args": "p_inicio timestamp with time zone, p_fim timestamp with time zone, p_unidade uuid, p_por_hora boolean",
+    "result": "jsonb",
+    "security_definer": false,
+    "settings": [
+      "search_path=\"\""
+    ],
+    "anon_execute": false,
+    "authenticated_execute": true,
+    "definition_sha256": "a095ffa890398105eb05285f95c82018d934d308e7254d734bb32604d9519c1d"
+  },
+  {
+    "schema": "public",
+    "name": "fiscal_definir_politica",
+    "args": "p_alerta_minutos integer, p_fonte text",
+    "result": "boolean",
+    "security_definer": true,
+    "settings": [
+      "search_path=\"\""
+    ],
+    "anon_execute": false,
+    "authenticated_execute": true,
+    "definition_sha256": "d350f915e088dc17215dd3f548427e7bea0aeb5a19d6ae3710e118b432ea3697"
+  },
+  {
+    "schema": "public",
+    "name": "fornecedor_salvar",
+    "args": "p_organizacao uuid, p_id uuid, p_nome text, p_cnpj text, p_contato text, p_ativo boolean, p_motivo text",
+    "result": "jsonb",
+    "security_definer": true,
+    "settings": [
+      "search_path=\"\""
+    ],
+    "anon_execute": false,
+    "authenticated_execute": true,
+    "definition_sha256": "6606fb7ffde4436c363447f1f49477f1838fa94f7e3823a1ef5ac88fcb676548"
+  },
+  {
+    "schema": "public",
+    "name": "fotos_sem_registro",
+    "args": "",
+    "result": "jsonb",
+    "security_definer": true,
+    "settings": [
+      "search_path=\"\""
+    ],
+    "anon_execute": false,
+    "authenticated_execute": true,
+    "definition_sha256": "aac29333ffeef322eb96de557d443e95817ccde56c1dff077f664ea8398f4e78"
+  },
+  {
+    "schema": "public",
+    "name": "fotos_sem_registro_limpar",
+    "args": "p_caminhos text[]",
+    "result": "jsonb",
+    "security_definer": true,
+    "settings": [
+      "search_path=\"\""
+    ],
+    "anon_execute": false,
+    "authenticated_execute": true,
+    "definition_sha256": "661565531d788c90f4aebc58ab582184e131738184347ccc9a484766b6c1d76c"
+  },
+  {
+    "schema": "public",
+    "name": "identidade_bloqueios_a_aplicar",
+    "args": "",
+    "result": "TABLE(usuario_id uuid, bloquear boolean)",
+    "security_definer": true,
+    "settings": [
+      "search_path=\"\""
+    ],
+    "anon_execute": false,
+    "authenticated_execute": false,
+    "definition_sha256": "f148209b3f5d50e38b533b5d37ca91b378772023e26f046a4b87238ab698745b"
+  },
+  {
+    "schema": "public",
+    "name": "identidade_concluir_convite",
+    "args": "p_convite uuid, p_usuario uuid, p_ja_existia boolean",
+    "result": "text",
+    "security_definer": true,
+    "settings": [
+      "search_path=\"\""
+    ],
+    "anon_execute": false,
+    "authenticated_execute": false,
+    "definition_sha256": "78f61b76417788b1877c22e2c129b09a4baad8ee5b27fb52d69b12e43040205a"
+  },
+  {
+    "schema": "public",
+    "name": "identidade_convites_a_processar",
+    "args": "p_limite integer",
+    "result": "SETOF convites",
+    "security_definer": true,
+    "settings": [
+      "search_path=\"\""
+    ],
+    "anon_execute": false,
+    "authenticated_execute": false,
+    "definition_sha256": "3a05975bc08bb676b267f8f1bc023dc64e47152369e6e4f4569fbfe12ba3e24a"
+  },
+  {
+    "schema": "public",
+    "name": "identidade_falha_convite",
+    "args": "p_convite uuid, p_erro text",
+    "result": "void",
+    "security_definer": true,
+    "settings": [
+      "search_path=\"\""
+    ],
+    "anon_execute": false,
+    "authenticated_execute": false,
+    "definition_sha256": "131ce6f412ae2c6a8c9013f5ed0fc2b72f8a044bf6d6676146610973dbf0a32b"
+  },
+  {
+    "schema": "public",
+    "name": "identidade_usuario_por_email",
+    "args": "p_email text",
+    "result": "uuid",
+    "security_definer": true,
+    "settings": [
+      "search_path=\"\""
+    ],
+    "anon_execute": false,
+    "authenticated_execute": false,
+    "definition_sha256": "73f038347e2dbd2fb32ceb654e05ef143b66be509423f64a742b87c06c3b3746"
+  },
+  {
+    "schema": "public",
+    "name": "importacao_aplicar",
+    "args": "p_importacao uuid, p_motivo text, p_comparacao integer",
+    "result": "jsonb",
+    "security_definer": true,
+    "settings": [
+      "search_path=\"\""
+    ],
+    "anon_execute": false,
+    "authenticated_execute": true,
+    "definition_sha256": "39154aab866495afbf6a6e6ee9822c39e66f1e95721e92132da2c491631d65b9"
+  },
+  {
+    "schema": "public",
+    "name": "importacao_catalogo_previa",
+    "args": "p_organizacao uuid, p_arquivo_nome text, p_sha256 text, p_mapeamento jsonb, p_linhas jsonb",
+    "result": "jsonb",
+    "security_definer": true,
+    "settings": [
+      "search_path=\"\""
+    ],
+    "anon_execute": false,
+    "authenticated_execute": true,
+    "definition_sha256": "2a456e2a35ed56bbdd67e8ff1540ec131ef4d0b719659348655017168b52d412"
+  },
+  {
+    "schema": "public",
+    "name": "importacao_descartar",
+    "args": "p_importacao uuid, p_motivo text",
+    "result": "boolean",
+    "security_definer": true,
+    "settings": [
+      "search_path=\"\""
+    ],
+    "anon_execute": false,
+    "authenticated_execute": true,
+    "definition_sha256": "8ffedddaa1ebc9b5a648f55f1223450754321255c9d4c9a37cb576e5c8cf2b84"
+  },
+  {
+    "schema": "public",
+    "name": "importacao_desfazer",
+    "args": "p_importacao uuid, p_motivo text",
+    "result": "jsonb",
+    "security_definer": true,
+    "settings": [
+      "search_path=\"\""
+    ],
+    "anon_execute": false,
+    "authenticated_execute": true,
+    "definition_sha256": "39f056c59f70c76ae1b22608a1c9ee81445f10ba531406d6e0486ff02201fd50"
+  },
+  {
+    "schema": "public",
+    "name": "inventario_abrir",
+    "args": "p_unidade uuid, p_variantes uuid[], p_descricao text, p_chave text",
+    "result": "jsonb",
+    "security_definer": true,
+    "settings": [
+      "search_path=\"\""
+    ],
+    "anon_execute": false,
+    "authenticated_execute": true,
+    "definition_sha256": "94ecde7c3f7dfd9e52acb8f149b1c7cad107a64dfde556a554bf8d86fc04d722"
+  },
+  {
+    "schema": "public",
+    "name": "inventario_cancelar",
+    "args": "p_inventario uuid, p_motivo text",
+    "result": "boolean",
+    "security_definer": true,
+    "settings": [
+      "search_path=\"\""
+    ],
+    "anon_execute": false,
+    "authenticated_execute": true,
+    "definition_sha256": "03f566c2a80dd8cc658b6ef28a72f17662ea355a29cfd1fccbaed46ebae7d372"
+  },
+  {
+    "schema": "public",
+    "name": "inventario_contar",
+    "args": "p_inventario uuid, p_variante uuid, p_quantidade integer, p_identificadores text[]",
+    "result": "jsonb",
+    "security_definer": true,
+    "settings": [
+      "search_path=\"\""
+    ],
+    "anon_execute": false,
+    "authenticated_execute": true,
+    "definition_sha256": "4d97d56f1d35b6c4efb99777bc240e6416674503c308463c9efa3138f222650e"
+  },
+  {
+    "schema": "public",
+    "name": "inventario_decidir",
+    "args": "p_inventario uuid, p_aprovar boolean, p_motivo text",
+    "result": "jsonb",
+    "security_definer": true,
+    "settings": [
+      "search_path=\"\""
+    ],
+    "anon_execute": false,
+    "authenticated_execute": true,
+    "definition_sha256": "e48975e5e6df2add058beada4b321d2befa1f3fa808de1ee93b3e392104e3e8d"
+  },
+  {
+    "schema": "public",
+    "name": "inventario_enviar",
+    "args": "p_inventario uuid, p_motivo text",
+    "result": "boolean",
+    "security_definer": true,
+    "settings": [
+      "search_path=\"\""
+    ],
+    "anon_execute": false,
+    "authenticated_execute": true,
+    "definition_sha256": "92fbed704bb65781bb5b5604b5a773b55b94a5294b1088ce3231776158fd44b8"
+  },
+  {
+    "schema": "public",
+    "name": "liberar_reserva",
+    "args": "p_reserva uuid",
+    "result": "boolean",
+    "security_definer": true,
+    "settings": [
+      "search_path=\"\""
+    ],
+    "anon_execute": false,
+    "authenticated_execute": true,
+    "definition_sha256": "f26e1b1a2cdf4c4b64bf4779671a9278265514444e3df2fca96150e0eb3b15fc"
+  },
+  {
+    "schema": "public",
+    "name": "loja_atualizar",
+    "args": "p_unidade uuid, p_nome text, p_cnpj text, p_uf text, p_cidade text, p_motivo text",
+    "result": "boolean",
+    "security_definer": true,
+    "settings": [
+      "search_path=\"\""
+    ],
+    "anon_execute": false,
+    "authenticated_execute": true,
+    "definition_sha256": "29517eaca63c80a34722a6bfcb5a412ee05f5f945b70362624c94f45b4123b15"
+  },
+  {
+    "schema": "public",
+    "name": "loja_criar",
+    "args": "p_empresa uuid, p_codigo text, p_nome text, p_tipo text, p_cnpj text, p_uf text, p_cidade text, p_emissora uuid, p_motivo text",
+    "result": "jsonb",
+    "security_definer": true,
+    "settings": [
+      "search_path=\"\""
+    ],
+    "anon_execute": false,
+    "authenticated_execute": true,
+    "definition_sha256": "83a8e7b2e011741ef58043848b061aac7a876de7b23cc0e150608dadc50990ea"
+  },
+  {
+    "schema": "public",
+    "name": "loja_definir_configuracao",
+    "args": "p_unidade uuid, p_dados jsonb, p_vigente_desde timestamp with time zone, p_motivo text",
+    "result": "jsonb",
+    "security_definer": true,
+    "settings": [
+      "search_path=\"\""
+    ],
+    "anon_execute": false,
+    "authenticated_execute": true,
+    "definition_sha256": "dbf49251f10d5832ba1c6c04d720db7012fd5580a669cbdba6dc831f70bb64bc"
+  },
+  {
+    "schema": "public",
+    "name": "loja_definir_regiao",
+    "args": "p_unidade uuid, p_regiao uuid, p_motivo text",
+    "result": "boolean",
+    "security_definer": true,
+    "settings": [
+      "search_path=\"\""
+    ],
+    "anon_execute": false,
+    "authenticated_execute": true,
+    "definition_sha256": "7ec029b74e88411203c4f880244314e83beee7e30e53193b3e3ceff4ad3523b2"
+  },
+  {
+    "schema": "public",
+    "name": "loja_definir_situacao",
+    "args": "p_unidade uuid, p_situacao text, p_motivo text",
+    "result": "boolean",
+    "security_definer": true,
+    "settings": [
+      "search_path=\"\""
+    ],
+    "anon_execute": false,
+    "authenticated_execute": true,
+    "definition_sha256": "7b3ffcf388fef36c26b38538db162749cd69e97baf8e5f1803d7f8e60c0c1e84"
+  },
+  {
+    "schema": "public",
+    "name": "loja_historico",
+    "args": "p_unidade uuid",
+    "result": "TABLE(id bigint, vigente_desde timestamp with time zone, telefone text, cep text, logradouro text, numero text, complemento text, bairro text, inscricao_estadual text, inscricao_municipal text, horarios jsonb, motivo text, criado_por uuid, criado_por_nome text, criado_em timestamp with time zone)",
+    "security_definer": true,
+    "settings": [
+      "search_path=\"\""
+    ],
+    "anon_execute": false,
+    "authenticated_execute": true,
+    "definition_sha256": "a0973e710a34d8702b67aa72eca87204ab3cae9f9af0ba71ca12637e1901b061"
+  },
+  {
+    "schema": "public",
+    "name": "loja_produto",
+    "args": "p_organizacao uuid, p_produto uuid",
+    "result": "jsonb",
+    "security_definer": true,
+    "settings": [
+      "search_path=\"\""
+    ],
+    "anon_execute": true,
+    "authenticated_execute": true,
+    "definition_sha256": "e29f2bb1e93fc84afedd0458ffe0687b412e4d473738ef50dc3b079b875aa59e"
+  },
+  {
+    "schema": "public",
+    "name": "loja_vitrine",
+    "args": "p_organizacao uuid, p_busca text, p_categoria uuid",
+    "result": "jsonb",
+    "security_definer": true,
+    "settings": [
+      "search_path=\"\""
+    ],
+    "anon_execute": true,
+    "authenticated_execute": true,
+    "definition_sha256": "1014824cd9b453bb73f8c4f394013eaa56fbac73f6c12bcb8909db300d840afe"
+  },
+  {
+    "schema": "public",
+    "name": "lojas_da_rede",
+    "args": "",
+    "result": "TABLE(id uuid, organizacao_id uuid, empresa_id uuid, codigo text, nome text, tipo text, cnpj text, uf text, cidade text, status text, unidade_emissora_id uuid, criado_em timestamp with time zone, configuracao_id bigint, vigente_desde timestamp with time zone, telefone text, cep text, logradouro text, numero text, complemento text, bairro text, inscricao_estadual text, inscricao_municipal text, horarios jsonb, versoes integer, proxima_versao timestamp with time zone)",
+    "security_definer": true,
+    "settings": [
+      "search_path=\"\""
+    ],
+    "anon_execute": false,
+    "authenticated_execute": true,
+    "definition_sha256": "926fa719d80a41a00682e36bace7f1783912eb722969a7583e6266bda2c4a812"
+  },
+  {
+    "schema": "public",
+    "name": "margem_itens",
+    "args": "p_inicio timestamp with time zone, p_fim timestamp with time zone, p_unidade uuid, p_limite integer, p_apos integer",
+    "result": "jsonb",
+    "security_definer": false,
+    "settings": [
+      "search_path=\"\""
+    ],
+    "anon_execute": false,
+    "authenticated_execute": true,
+    "definition_sha256": "38f6f3aad804d01d62c98e2100b9aae7510bd11202183c93e135e62f918dc672"
+  },
+  {
+    "schema": "public",
+    "name": "margem_painel",
+    "args": "p_inicio timestamp with time zone, p_fim timestamp with time zone, p_unidade uuid",
+    "result": "jsonb",
+    "security_definer": false,
+    "settings": [
+      "search_path=\"\""
+    ],
+    "anon_execute": false,
+    "authenticated_execute": true,
+    "definition_sha256": "e5cfd1136e10142c699199a405abd4e6242108b239494f96ef16c7670a72ecda"
+  },
+  {
+    "schema": "public",
+    "name": "margem_por_vendedor",
+    "args": "p_inicio timestamp with time zone, p_fim timestamp with time zone, p_unidade uuid",
+    "result": "jsonb",
+    "security_definer": false,
+    "settings": [
+      "search_path=\"\""
+    ],
+    "anon_execute": false,
+    "authenticated_execute": true,
+    "definition_sha256": "97cf13dff3ba21df283f47c1473f49f255f96401fb9c97fb9f2025a3b9fe6e29"
+  },
+  {
+    "schema": "public",
+    "name": "metas_definir",
+    "args": "p_unidade uuid, p_vendedor uuid, p_mes date, p_valores jsonb, p_motivo text",
+    "result": "integer",
+    "security_definer": true,
+    "settings": [
+      "search_path=\"\""
+    ],
+    "anon_execute": false,
+    "authenticated_execute": true,
+    "definition_sha256": "f9f3c86020548fcffbe3c7b3ac1bf9980b99bc85ffa273f645ed417f6d65f874"
+  },
+  {
+    "schema": "public",
+    "name": "metas_equipe",
+    "args": "p_unidade uuid, p_mes date",
+    "result": "jsonb",
+    "security_definer": true,
+    "settings": [
+      "search_path=\"\""
+    ],
+    "anon_execute": false,
+    "authenticated_execute": true,
+    "definition_sha256": "343ebe0bb138ae86c2206795db128973e99db77b24113027e193aa1562813e72"
+  },
+  {
+    "schema": "public",
+    "name": "metas_lojas",
+    "args": "p_mes date, p_unidade uuid",
+    "result": "jsonb",
+    "security_definer": false,
+    "settings": [
+      "search_path=\"\""
+    ],
+    "anon_execute": false,
+    "authenticated_execute": true,
+    "definition_sha256": "6162ce16a7ff362b10143515fcc28d5084b2043e039303cbe838590640497fcb"
+  },
+  {
+    "schema": "public",
+    "name": "metas_painel",
+    "args": "p_mes date, p_unidade uuid",
+    "result": "jsonb",
+    "security_definer": false,
+    "settings": [
+      "search_path=\"\""
+    ],
+    "anon_execute": false,
+    "authenticated_execute": true,
+    "definition_sha256": "7d93d60f5715a9b0b779e9f07dbe723cd1780ec9957bf47570f786ace2976a62"
+  },
+  {
+    "schema": "public",
+    "name": "movimentar_caixa",
+    "args": "p_tipo text, p_valor bigint, p_motivo text, p_chave text",
+    "result": "bigint",
+    "security_definer": true,
+    "settings": [
+      "search_path=\"\""
+    ],
+    "anon_execute": false,
+    "authenticated_execute": true,
+    "definition_sha256": "9a78e089449ac9012d49b5da1480080a399b8193b58fd5228372d1320a8a013e"
+  },
+  {
+    "schema": "public",
+    "name": "nota_enviar_whatsapp",
+    "args": "p_pedido uuid, p_chave text, p_motivo text",
+    "result": "uuid",
+    "security_definer": true,
+    "settings": [
+      "search_path=\"\""
+    ],
+    "anon_execute": false,
+    "authenticated_execute": true,
+    "definition_sha256": "510b7c27396c82a7148c7a1c34cf7e896d8c818b20768d188f2a842b800950f4"
+  },
+  {
+    "schema": "public",
+    "name": "notas_anexar_documento",
+    "args": "p_pedido uuid, p_tipo text, p_caminho text, p_sha256 text, p_protocolo text",
+    "result": "uuid",
+    "security_definer": true,
+    "settings": [
+      "search_path=\"\""
+    ],
+    "anon_execute": false,
+    "authenticated_execute": true,
+    "definition_sha256": "1e5752dedabe6001dc8fffdee6f7d8e07fb4be2f8f138631cc3bdea629425687"
+  },
+  {
+    "schema": "public",
+    "name": "notas_cancelar",
+    "args": "p_pedido uuid, p_motivo text",
+    "result": "boolean",
+    "security_definer": true,
+    "settings": [
+      "search_path=\"\""
+    ],
+    "anon_execute": false,
+    "authenticated_execute": true,
+    "definition_sha256": "b2708a1e537959b26ae2943ebdcbe9d5c72e2de7f834382b4707192d3be10c2d"
+  },
+  {
+    "schema": "public",
+    "name": "notas_conciliacao",
+    "args": "p_inicio date, p_fim date, p_unidade uuid",
+    "result": "jsonb",
+    "security_definer": true,
+    "settings": [
+      "search_path=\"\""
+    ],
+    "anon_execute": false,
+    "authenticated_execute": true,
+    "definition_sha256": "d8d6afeeb47a35902ea7929ec31dc66eeaa21ab0817f862ee4eb8ff4c43b9e61"
+  },
+  {
+    "schema": "public",
+    "name": "notas_conferir_divergencia",
+    "args": "p_pedido uuid, p_tipo text, p_observacao text",
+    "result": "boolean",
+    "security_definer": true,
+    "settings": [
+      "search_path=\"\""
+    ],
+    "anon_execute": false,
+    "authenticated_execute": true,
+    "definition_sha256": "ff91bfc48a1cbd9e338c773c3d5e62f3262f254c58e56f19d38904e88ef36ffa"
+  },
+  {
+    "schema": "public",
+    "name": "notas_corrigir",
+    "args": "p_pedido uuid, p_destinatario jsonb",
+    "result": "boolean",
+    "security_definer": true,
+    "settings": [
+      "search_path=\"\""
+    ],
+    "anon_execute": false,
+    "authenticated_execute": true,
+    "definition_sha256": "85091d224b2edebfa82d708dc101707b2297c95c001b4e3e106164efd46c5533"
+  },
+  {
+    "schema": "public",
+    "name": "notas_corrigir_chave",
+    "args": "p_pedido uuid, p_chave_acesso text, p_motivo text",
+    "result": "boolean",
+    "security_definer": true,
+    "settings": [
+      "search_path=\"\""
+    ],
+    "anon_execute": false,
+    "authenticated_execute": true,
+    "definition_sha256": "496aadc3307c1250e642071d0b7941fadb019c0f639bf131ca5779efa2624b53"
+  },
+  {
+    "schema": "public",
+    "name": "notas_dados_para_emitir",
+    "args": "p_pedido uuid",
+    "result": "jsonb",
+    "security_definer": true,
+    "settings": [
+      "search_path=\"\""
+    ],
+    "anon_execute": false,
+    "authenticated_execute": true,
+    "definition_sha256": "633fa63e71c792c7c349fd2cf7369714774ba14a82d2b0fe27f3e8a403671b9d"
+  },
+  {
+    "schema": "public",
+    "name": "notas_decidir",
+    "args": "p_pedido uuid, p_aprovar boolean, p_observacao text",
+    "result": "text",
+    "security_definer": true,
+    "settings": [
+      "search_path=\"\""
+    ],
+    "anon_execute": false,
+    "authenticated_execute": true,
+    "definition_sha256": "fa5333633766fee25db893de640190ff5deb051405fd3867e2e2a56af9455392"
+  },
+  {
+    "schema": "public",
+    "name": "notas_registrar_cancelamento",
+    "args": "p_pedido uuid, p_protocolo text, p_justificativa text",
+    "result": "boolean",
+    "security_definer": true,
+    "settings": [
+      "search_path=\"\""
+    ],
+    "anon_execute": false,
+    "authenticated_execute": true,
+    "definition_sha256": "1ce2fd118eb76d6022ef936d1a7d5f9db47887f85cdfeb8c4e8f38b1cd770574"
+  },
+  {
+    "schema": "public",
+    "name": "notas_registrar_carta_de_correcao",
+    "args": "p_pedido uuid, p_numero integer, p_protocolo text, p_correcao text",
+    "result": "boolean",
+    "security_definer": true,
+    "settings": [
+      "search_path=\"\""
+    ],
+    "anon_execute": false,
+    "authenticated_execute": true,
+    "definition_sha256": "69be74bcb7520f7683ef8fbf66a8017326f339b877286c7ae0e8ca1425b6fc9d"
+  },
+  {
+    "schema": "public",
+    "name": "notas_registrar_emissao",
+    "args": "p_pedido uuid, p_chave_acesso text, p_observacao text",
+    "result": "text",
+    "security_definer": true,
+    "settings": [
+      "search_path=\"\""
+    ],
+    "anon_execute": false,
+    "authenticated_execute": true,
+    "definition_sha256": "c128535b48d35833613928f08fc20b8f012c49590028c18268e6429f18e86897"
+  },
+  {
+    "schema": "public",
+    "name": "notas_solicitar",
+    "args": "p_venda uuid, p_destinatario jsonb, p_chave text",
+    "result": "uuid",
+    "security_definer": true,
+    "settings": [
+      "search_path=\"\""
+    ],
+    "anon_execute": false,
+    "authenticated_execute": true,
+    "definition_sha256": "99f32c44e6969e7271086ed748560a711323a2520cc3e28d56f9ee92a4f5c7e9"
+  },
+  {
+    "schema": "public",
+    "name": "oportunidade_anotar",
+    "args": "p_oportunidade uuid, p_texto text",
+    "result": "boolean",
+    "security_definer": true,
+    "settings": [
+      "search_path=\"\""
+    ],
+    "anon_execute": false,
+    "authenticated_execute": true,
+    "definition_sha256": "03ed1b4711c262d85b51f6952c74282af0f5d0479bf9d184ba254e5a7b20f790"
+  },
+  {
+    "schema": "public",
+    "name": "oportunidade_atribuir",
+    "args": "p_oportunidade uuid, p_responsavel uuid, p_motivo text",
+    "result": "boolean",
+    "security_definer": true,
+    "settings": [
+      "search_path=\"\""
+    ],
+    "anon_execute": false,
+    "authenticated_execute": true,
+    "definition_sha256": "09d6750c7b5e1c6aa6a084024df8be78fc99fe3a578b802ff35390ac3dff8c9c"
+  },
+  {
+    "schema": "public",
+    "name": "oportunidade_detalhe",
+    "args": "p_oportunidade uuid",
+    "result": "jsonb",
+    "security_definer": true,
+    "settings": [
+      "search_path=\"\""
+    ],
+    "anon_execute": false,
+    "authenticated_execute": true,
+    "definition_sha256": "d58892ec99e6648f4289840b96d74e41a0da1b17fb5e53b561fcfa2a4e0f37d0"
+  },
+  {
+    "schema": "public",
+    "name": "oportunidade_mover",
+    "args": "p_oportunidade uuid, p_etapa text, p_dados jsonb",
+    "result": "boolean",
+    "security_definer": true,
+    "settings": [
+      "search_path=\"\""
+    ],
+    "anon_execute": false,
+    "authenticated_execute": true,
+    "definition_sha256": "6d21686cc7bfb381019ec957dae64f6fb3c9ed1bbe419826bc6e7ebcddf35064"
+  },
+  {
+    "schema": "public",
+    "name": "oportunidade_registrar",
+    "args": "p_cliente uuid, p_dados jsonb, p_chave text",
+    "result": "jsonb",
+    "security_definer": true,
+    "settings": [
+      "search_path=\"\""
+    ],
+    "anon_execute": false,
+    "authenticated_execute": true,
+    "definition_sha256": "631d3498a8c7ce478d4c24b64965a10ef3ecb60e5277bc5104b720b9f8c3aa13"
+  },
+  {
+    "schema": "public",
+    "name": "os_abrir",
+    "args": "p_dados jsonb, p_chave text",
+    "result": "jsonb",
+    "security_definer": true,
+    "settings": [
+      "search_path=\"\""
+    ],
+    "anon_execute": false,
+    "authenticated_execute": true,
+    "definition_sha256": "f0cc5593002b4715dd59806d48dbbadfcf5fd2ef456ae00f899f8da63dbce9ab"
+  },
+  {
+    "schema": "public",
+    "name": "os_anexar_foto",
+    "args": "p_os uuid, p_caminho text, p_sha256 text",
+    "result": "uuid",
+    "security_definer": true,
+    "settings": [
+      "search_path=\"\""
+    ],
+    "anon_execute": false,
+    "authenticated_execute": true,
+    "definition_sha256": "5fb94a07adf7f37208a52e7ccfd2f1bb50083536cff9a84868fbb639d97cd9ec"
+  },
+  {
+    "schema": "public",
+    "name": "os_assistencias",
+    "args": "",
+    "result": "jsonb",
+    "security_definer": true,
+    "settings": [
+      "search_path=\"\""
+    ],
+    "anon_execute": false,
+    "authenticated_execute": true,
+    "definition_sha256": "29e354f2e9b0903fae6c114d7d5ed2dc7ee0e1f22a571d2852c6dca31116b1e2"
+  },
+  {
+    "schema": "public",
+    "name": "os_cobrar",
+    "args": "p_venda uuid, p_os uuid, p_chave text",
+    "result": "uuid",
+    "security_definer": true,
+    "settings": [
+      "search_path=\"\""
+    ],
+    "anon_execute": false,
+    "authenticated_execute": true,
+    "definition_sha256": "59bd5a62ef1e4acb7b781d2ea6bb7493dd5c4bf556eb9e8cbcc874717d84edf6"
+  },
+  {
+    "schema": "public",
+    "name": "os_concluir_servico",
+    "args": "p_os uuid, p_observacao text",
+    "result": "boolean",
+    "security_definer": true,
+    "settings": [
+      "search_path=\"\""
+    ],
+    "anon_execute": false,
+    "authenticated_execute": true,
+    "definition_sha256": "87f9bb2c4555b2c87f499c62029f69e628713455cb3fc73c703b7f5c473b87d5"
+  },
+  {
+    "schema": "public",
+    "name": "os_contato_whatsapp",
+    "args": "p_os uuid, p_aviso text",
+    "result": "text",
+    "security_definer": true,
+    "settings": [
+      "search_path=\"\""
+    ],
+    "anon_execute": false,
+    "authenticated_execute": true,
+    "definition_sha256": "db937dde6dccaf43d33f8ae4d8101b10864ad352e22b5226facc46e8fbccf8d7"
+  },
+  {
+    "schema": "public",
+    "name": "os_custodia",
+    "args": "p_os uuid, p_passo text, p_assistencia uuid, p_observacao text",
+    "result": "boolean",
+    "security_definer": true,
+    "settings": [
+      "search_path=\"\""
+    ],
+    "anon_execute": false,
+    "authenticated_execute": true,
+    "definition_sha256": "0e351ff6e099d89d660d9cb27174bdc0b79a8095997119be5c3d3f075dd6cc95"
+  },
+  {
+    "schema": "public",
+    "name": "os_devolver_peca",
+    "args": "p_peca uuid, p_motivo text",
+    "result": "boolean",
+    "security_definer": true,
+    "settings": [
+      "search_path=\"\""
+    ],
+    "anon_execute": false,
+    "authenticated_execute": true,
+    "definition_sha256": "ed2692594bab581c5dbf15084b15da4995e27546c0263e259ddf5132b3ca1ce4"
+  },
+  {
+    "schema": "public",
+    "name": "os_entregar",
+    "args": "p_os uuid, p_observacao text",
+    "result": "boolean",
+    "security_definer": true,
+    "settings": [
+      "search_path=\"\""
+    ],
+    "anon_execute": false,
+    "authenticated_execute": true,
+    "definition_sha256": "8bb378af9efcb693f368a2448f38b55491c2e255370b427f7674c9842a5a0f2e"
+  },
+  {
+    "schema": "public",
+    "name": "os_orcar",
+    "args": "p_os uuid, p_dados jsonb, p_chave text",
+    "result": "jsonb",
+    "security_definer": true,
+    "settings": [
+      "search_path=\"\""
+    ],
+    "anon_execute": false,
+    "authenticated_execute": true,
+    "definition_sha256": "e2f8bb19356d3841e6d5f7805614764e709817af8504eb30393f47235c35c5e5"
+  },
+  {
+    "schema": "public",
+    "name": "os_relatorio",
+    "args": "p_inicio date, p_fim date, p_unidade uuid",
+    "result": "jsonb",
+    "security_definer": true,
+    "settings": [
+      "search_path=\"\""
+    ],
+    "anon_execute": false,
+    "authenticated_execute": true,
+    "definition_sha256": "fa1150b892b3217e11db625e68b08163887d444daf81623998ed99cc816a560d"
+  },
+  {
+    "schema": "public",
+    "name": "os_responder_orcamento",
+    "args": "p_orcamento uuid, p_resposta text, p_canal text, p_observacao text",
+    "result": "boolean",
+    "security_definer": true,
+    "settings": [
+      "search_path=\"\""
+    ],
+    "anon_execute": false,
+    "authenticated_execute": true,
+    "definition_sha256": "a1bc97d1860c0df32298df9fd7cb696f6984b2c1431cc169b9b84331b86e61aa"
+  },
+  {
+    "schema": "public",
+    "name": "os_usar_peca",
+    "args": "p_os uuid, p_variante uuid, p_quantidade integer, p_observacao text, p_chave text",
+    "result": "jsonb",
+    "security_definer": true,
+    "settings": [
+      "search_path=\"\""
+    ],
+    "anon_execute": false,
+    "authenticated_execute": true,
+    "definition_sha256": "98b8bac8be1d8ba5d12cf4069c9ebcb9fc225edd9745c50e0757e4a2948ebc9a"
+  },
+  {
+    "schema": "public",
+    "name": "pagamento_conciliar",
+    "args": "p_pagamento uuid, p_referencia text, p_valor_liquido bigint, p_liquidado_em date",
+    "result": "boolean",
+    "security_definer": true,
+    "settings": [
+      "search_path=\"\""
+    ],
+    "anon_execute": false,
+    "authenticated_execute": true,
+    "definition_sha256": "0e0e8fac5bc9e507875e9e2d2efa1bb545ea94b712c40769a01d1dac03e7fcab"
+  },
+  {
+    "schema": "public",
+    "name": "pagamento_desconciliar",
+    "args": "p_pagamento uuid, p_motivo text",
+    "result": "boolean",
+    "security_definer": true,
+    "settings": [
+      "search_path=\"\""
+    ],
+    "anon_execute": false,
+    "authenticated_execute": true,
+    "definition_sha256": "1e2f04c892c670001d249b2b72375ea1cf82edeab32720f847f2b8c3e8599cd2"
+  },
+  {
+    "schema": "public",
+    "name": "pagamentos_do_periodo",
+    "args": "p_inicio date, p_fim date",
+    "result": "jsonb",
+    "security_definer": true,
+    "settings": [
+      "search_path=\"\""
+    ],
+    "anon_execute": false,
+    "authenticated_execute": true,
+    "definition_sha256": "90205b826d7d1ea0e3db9f83acd0c91ccc48eeaf4f314b36e01daec17b3e933e"
+  },
+  {
+    "schema": "public",
+    "name": "pagamentos_por_terminal",
+    "args": "p_inicio timestamp with time zone, p_fim timestamp with time zone, p_unidade uuid",
+    "result": "jsonb",
+    "security_definer": false,
+    "settings": [
+      "search_path=\"\""
+    ],
+    "anon_execute": false,
+    "authenticated_execute": true,
+    "definition_sha256": "43cb8cd5af5d5149b0c25196c94f1de006774203743dc1d9f3c2eb6f9bc61204"
+  },
+  {
+    "schema": "public",
+    "name": "pedido_compra",
+    "args": "p_pedido uuid",
+    "result": "jsonb",
+    "security_definer": true,
+    "settings": [
+      "search_path=\"\""
+    ],
+    "anon_execute": false,
+    "authenticated_execute": true,
+    "definition_sha256": "05e59c767f2b3c72da084493057580065cbfbf60fe39201f4555823e7fb9aef8"
+  },
+  {
+    "schema": "public",
+    "name": "pedido_compra_criar",
+    "args": "p_unidade uuid, p_fornecedor uuid, p_documento text, p_previsto date, p_itens jsonb, p_observacao text, p_chave text",
+    "result": "jsonb",
+    "security_definer": true,
+    "settings": [
+      "search_path=\"\""
+    ],
+    "anon_execute": false,
+    "authenticated_execute": true,
+    "definition_sha256": "df8daac964019e8b7b0bc5f9e383012daf755c273275a9f7288dd0441cfc473a"
+  },
+  {
+    "schema": "public",
+    "name": "pedido_compra_encerrar",
+    "args": "p_pedido uuid, p_motivo text",
+    "result": "text",
+    "security_definer": true,
+    "settings": [
+      "search_path=\"\""
+    ],
+    "anon_execute": false,
+    "authenticated_execute": true,
+    "definition_sha256": "d5541a3d92a9e5cf1bf6c000e3182ab0246bc10d585bec36847d127ac5c22318"
+  },
+  {
+    "schema": "public",
+    "name": "pedido_compra_ligar_entrada",
+    "args": "p_entrada uuid, p_pedido uuid, p_motivo text",
+    "result": "boolean",
+    "security_definer": true,
+    "settings": [
+      "search_path=\"\""
+    ],
+    "anon_execute": false,
+    "authenticated_execute": true,
+    "definition_sha256": "09629d32bb29ebd781c18ef1443a03346d5beab58fa1fc73aee34b64e3e6cfbb"
+  },
+  {
+    "schema": "public",
+    "name": "pedidos_compra",
+    "args": "p_unidade uuid, p_situacao text",
+    "result": "jsonb",
+    "security_definer": true,
+    "settings": [
+      "search_path=\"\""
+    ],
+    "anon_execute": false,
+    "authenticated_execute": true,
+    "definition_sha256": "7d30facd0ee269feb09a2d1e7579c6ffdc21715c2ba42c0d7e29a2dd1e1fb30b"
+  },
+  {
+    "schema": "public",
+    "name": "pedir_aprovacao",
+    "args": "p_item uuid, p_motivo text",
+    "result": "uuid",
+    "security_definer": true,
+    "settings": [
+      "search_path=\"\""
+    ],
+    "anon_execute": false,
+    "authenticated_execute": true,
+    "definition_sha256": "47f0a5d73ad5d599f075ecd6c5db4bf9570013d8eb617e35e5d33e4148104bcf"
+  },
+  {
+    "schema": "public",
+    "name": "pendencias_de_foto",
+    "args": "",
+    "result": "TABLE(produto_id uuid, variante_id uuid, sku text, nome text, motivo text)",
+    "security_definer": true,
+    "settings": [
+      "search_path=\"\""
+    ],
+    "anon_execute": false,
+    "authenticated_execute": true,
+    "definition_sha256": "86d84b00408e151376f0a4f55c1d2f720c04311c3d804a26b544a9addea64688"
+  },
+  {
+    "schema": "public",
+    "name": "preco_campanha",
+    "args": "p_variante uuid, p_unidade uuid, p_canal text, p_valor bigint, p_inicio timestamp with time zone, p_fim timestamp with time zone, p_motivo text",
+    "result": "jsonb",
+    "security_definer": true,
+    "settings": [
+      "search_path=\"\""
+    ],
+    "anon_execute": false,
+    "authenticated_execute": true,
+    "definition_sha256": "a258bc9f452791e97627b0b7b63c2df114113aa9ec924f40988476e2f4001c46"
+  },
+  {
+    "schema": "public",
+    "name": "preco_cancelar",
+    "args": "p_preco uuid, p_motivo text",
+    "result": "text",
+    "security_definer": true,
+    "settings": [
+      "search_path=\"\""
+    ],
+    "anon_execute": false,
+    "authenticated_execute": true,
+    "definition_sha256": "c7782b752ea8a4f88b89446a6a9d764d101acffb4d3b30292e4eafd751dc2629"
+  },
+  {
+    "schema": "public",
+    "name": "preco_definir",
+    "args": "p_variante uuid, p_unidade uuid, p_canal text, p_valor bigint, p_inicio timestamp with time zone, p_motivo text",
+    "result": "jsonb",
+    "security_definer": true,
+    "settings": [
+      "search_path=\"\""
+    ],
+    "anon_execute": false,
+    "authenticated_execute": true,
+    "definition_sha256": "2d36b32451053ec69accb7792b918666568c116f1041448d3139b35c0f0028cb"
+  },
+  {
+    "schema": "public",
+    "name": "preco_vigente",
+    "args": "p_variante uuid, p_unidade uuid, p_canal text, p_momento timestamp with time zone",
+    "result": "bigint",
+    "security_definer": true,
+    "settings": [
+      "search_path=\"\""
+    ],
+    "anon_execute": false,
+    "authenticated_execute": true,
+    "definition_sha256": "2edd2b7f96cab97830d0a2c8dbdda138cbbc8f5bb16a80222fb49cc7f56487bc"
+  },
+  {
+    "schema": "public",
+    "name": "precos_por_loja",
+    "args": "p_variante uuid, p_canal text",
+    "result": "TABLE(unidade_id uuid, unidade text, valor_centavos bigint, origem text, de_loja boolean, preco_id uuid, fim timestamp with time zone)",
+    "security_definer": true,
+    "settings": [
+      "search_path=\"\""
+    ],
+    "anon_execute": false,
+    "authenticated_execute": true,
+    "definition_sha256": "806072e684c32d3b5903f0f92b1eeda9ddcdc8dd5cc5a41ec2c091612d44d201"
+  },
+  {
+    "schema": "public",
+    "name": "previsao_de_caixa",
+    "args": "p_semanas integer, p_unidade uuid",
+    "result": "jsonb",
+    "security_definer": false,
+    "settings": [
+      "search_path=\"\""
+    ],
+    "anon_execute": false,
+    "authenticated_execute": true,
+    "definition_sha256": "f3fb674711b0b5be6edef62c625881264dcbda7350eb5b80fe964f260dd1eb88"
+  },
+  {
+    "schema": "public",
+    "name": "ranking_nomes",
+    "args": "p_vendedores uuid[]",
+    "result": "TABLE(id uuid, nome text)",
+    "security_definer": true,
+    "settings": [
+      "search_path=\"\""
+    ],
+    "anon_execute": false,
+    "authenticated_execute": true,
+    "definition_sha256": "d06adf8739283a90ec50d25df4134e832975fb505b9d6a0be5080c1ce3ad57e6"
+  },
+  {
+    "schema": "public",
+    "name": "recebiveis_painel",
+    "args": "p_unidade uuid, p_dias integer",
+    "result": "jsonb",
+    "security_definer": true,
+    "settings": [
+      "search_path=\"\""
+    ],
+    "anon_execute": false,
+    "authenticated_execute": true,
+    "definition_sha256": "98115647c4f3e4e49f0eb428866214f70dec508337207606b8e458f3dc027168"
+  },
+  {
+    "schema": "public",
+    "name": "regiao_salvar",
+    "args": "p_organizacao uuid, p_id uuid, p_nome text, p_ativa boolean, p_motivo text",
+    "result": "jsonb",
+    "security_definer": true,
+    "settings": [
+      "search_path=\"\""
+    ],
+    "anon_execute": false,
+    "authenticated_execute": true,
+    "definition_sha256": "8f02052594015ba805438d5e09b19a7950400306c9bd46a1fb5e431eec959865"
+  },
+  {
+    "schema": "public",
+    "name": "registrar_foto",
+    "args": "p_produto uuid, p_variante uuid, p_caminho text, p_largura integer, p_altura integer, p_ilustracao boolean",
+    "result": "uuid",
+    "security_definer": true,
+    "settings": [
+      "search_path=\"\""
+    ],
+    "anon_execute": false,
+    "authenticated_execute": true,
+    "definition_sha256": "30f6dd6b290d74c67a4cc829554b84e3efd14d821aeaa1f5cf582f3a60e567e7"
+  },
+  {
+    "schema": "public",
+    "name": "remover_item",
+    "args": "p_item uuid",
+    "result": "boolean",
+    "security_definer": true,
+    "settings": [
+      "search_path=\"\""
+    ],
+    "anon_execute": false,
+    "authenticated_execute": true,
+    "definition_sha256": "2cee61f0de83296ac063f29e34510357182fa7a7566c91d4f5889481741d0b40"
+  },
+  {
+    "schema": "public",
+    "name": "repetir_convite",
+    "args": "p_convite uuid",
+    "result": "boolean",
+    "security_definer": true,
+    "settings": [
+      "search_path=\"\""
+    ],
+    "anon_execute": false,
+    "authenticated_execute": true,
+    "definition_sha256": "60d1a080330a9c1c873504b72908e794d2440c6a2be0ce032f7aa3a0052d1178"
+  },
+  {
+    "schema": "public",
+    "name": "reservar_estoque",
+    "args": "p_variante uuid, p_quantidade integer, p_item uuid, p_chave text, p_origem text, p_minutos integer",
+    "result": "uuid",
+    "security_definer": true,
+    "settings": [
+      "search_path=\"\""
+    ],
+    "anon_execute": false,
+    "authenticated_execute": true,
+    "definition_sha256": "2d759b1d88ecd9ad51c614cfe0c7f3b5d0f46ce72daea1506e9917b645b0dc6a"
+  },
+  {
+    "schema": "public",
+    "name": "resultado_do_mes",
+    "args": "p_mes date, p_unidade uuid, p_meses integer",
+    "result": "jsonb",
+    "security_definer": false,
+    "settings": [
+      "search_path=\"\""
+    ],
+    "anon_execute": false,
+    "authenticated_execute": true,
+    "definition_sha256": "0f33d7d75d12caf0fc040eb138dea93c787c3bc1cdc92e7d013cc59c5dfcc103"
+  },
+  {
+    "schema": "public",
+    "name": "selecionar_unidade",
+    "args": "p_unidade uuid",
+    "result": "boolean",
+    "security_definer": true,
+    "settings": [
+      "search_path=\"\""
+    ],
+    "anon_execute": false,
+    "authenticated_execute": true,
+    "definition_sha256": "6e5eab1df61b24e1445e37e9e65684f01e834ac268d63e49c09493b95628a217"
+  },
+  {
+    "schema": "public",
+    "name": "situacao_da_sessao",
+    "args": "",
+    "result": "TABLE(usuario_ativo boolean, sessao_no_turno boolean, unidade_id uuid, unidade_nome text, turno_termina_em timestamp with time zone, segundo_fator_pendente boolean)",
+    "security_definer": true,
+    "settings": [
+      "search_path=\"\""
+    ],
+    "anon_execute": false,
+    "authenticated_execute": true,
+    "definition_sha256": "31c48bba5f105ed2a160df8ff486c3186ee71eb57f2a08f3588a5df4dd493c95"
+  },
+  {
+    "schema": "public",
+    "name": "tem_permissao",
+    "args": "p_permissao text, p_unidade uuid",
+    "result": "boolean",
+    "security_definer": true,
+    "settings": [
+      "search_path=\"\""
+    ],
+    "anon_execute": false,
+    "authenticated_execute": true,
+    "definition_sha256": "ac360b66f75d4510983e4e57f0de5f7e914862acae17bdb9530e3e41990f5841"
+  },
+  {
+    "schema": "public",
+    "name": "terminal_salvar",
+    "args": "p_id uuid, p_unidade uuid, p_provedor text, p_identificador text, p_apelido text, p_ativo boolean, p_motivo text",
+    "result": "uuid",
+    "security_definer": true,
+    "settings": [
+      "search_path=\"\""
+    ],
+    "anon_execute": false,
+    "authenticated_execute": true,
+    "definition_sha256": "8557a67c101d795ba46ecc8986fe739dec9a0d3b6fbcc07b3491d0b3fd0b2af2"
+  },
+  {
+    "schema": "public",
+    "name": "transferencia_encerrar",
+    "args": "p_transferencia uuid, p_situacao text, p_motivo text",
+    "result": "text",
+    "security_definer": true,
+    "settings": [
+      "search_path=\"\""
+    ],
+    "anon_execute": false,
+    "authenticated_execute": true,
+    "definition_sha256": "8c0f7032b013b4bb2288aed333c0f06a3694dccda4253c65d393180320c43fc5"
+  },
+  {
+    "schema": "public",
+    "name": "transferencia_enviar",
+    "args": "p_transferencia uuid",
+    "result": "text",
+    "security_definer": true,
+    "settings": [
+      "search_path=\"\""
+    ],
+    "anon_execute": false,
+    "authenticated_execute": true,
+    "definition_sha256": "45a89b03db04423e413bea37fcc69bcf7a23a53a037e39ba718fa3722c060dcb"
+  },
+  {
+    "schema": "public",
+    "name": "transferencia_receber",
+    "args": "p_transferencia uuid, p_identificadores text[], p_quantidade integer, p_observacao text",
+    "result": "text",
+    "security_definer": true,
+    "settings": [
+      "search_path=\"\""
+    ],
+    "anon_execute": false,
+    "authenticated_execute": true,
+    "definition_sha256": "e284a9328cd4c9715590700e6906e8c3873e844b837d3e16b4c11621237913c7"
+  },
+  {
+    "schema": "public",
+    "name": "transferencia_separar",
+    "args": "p_transferencia uuid, p_itens uuid[]",
+    "result": "text",
+    "security_definer": true,
+    "settings": [
+      "search_path=\"\""
+    ],
+    "anon_execute": false,
+    "authenticated_execute": true,
+    "definition_sha256": "0ec7cd76b64c32231124415538d92a5e12a84941d79ce469a3df01bac3c7641a"
+  },
+  {
+    "schema": "public",
+    "name": "transferencia_solicitar",
+    "args": "p_origem uuid, p_destino uuid, p_variante uuid, p_quantidade integer, p_motivo text, p_chave text",
+    "result": "uuid",
+    "security_definer": true,
+    "settings": [
+      "search_path=\"\""
+    ],
+    "anon_execute": false,
+    "authenticated_execute": true,
+    "definition_sha256": "ce0367e077704e8cee388386ba50cf8cd590394e583adaa35fbabee4a211b232"
+  },
+  {
+    "schema": "public",
+    "name": "unidade_atual",
+    "args": "",
+    "result": "uuid",
+    "security_definer": true,
+    "settings": [
+      "search_path=\"\""
+    ],
+    "anon_execute": false,
+    "authenticated_execute": true,
+    "definition_sha256": "e058aa74bb8fad3b110a357d2662f9d43bf9c228ea3ee4bc036a4ff16159f3fb"
+  },
+  {
+    "schema": "public",
+    "name": "venda_anexar_documento",
+    "args": "p_venda uuid, p_tipo text, p_descricao text, p_caminho text, p_sha256 text",
+    "result": "jsonb",
+    "security_definer": true,
+    "settings": [
+      "search_path=\"\""
+    ],
+    "anon_execute": false,
+    "authenticated_execute": true,
+    "definition_sha256": "8f5461bd53cfa0e8e096e5db81da89731d09a58543e099b1c1b97bbfbf59b444"
+  },
+  {
+    "schema": "public",
+    "name": "venda_retirar_anexo",
+    "args": "p_anexo uuid, p_motivo text",
+    "result": "boolean",
+    "security_definer": true,
+    "settings": [
+      "search_path=\"\""
+    ],
+    "anon_execute": false,
+    "authenticated_execute": true,
+    "definition_sha256": "a3c42bbbd3ed906e517f1b0b58b81b75c9d750190e9b32bbf1de693183cb6989"
+  },
+  {
+    "schema": "public",
+    "name": "venda_vincular_cliente",
+    "args": "p_venda uuid, p_cliente uuid, p_motivo text",
+    "result": "boolean",
+    "security_definer": true,
+    "settings": [
+      "search_path=\"\""
+    ],
+    "anon_execute": false,
+    "authenticated_execute": true,
+    "definition_sha256": "df4bf84c884a0209abd57101a0d22d96c2c19815aa33709e2a174eb7485f23c2"
+  },
+  {
+    "schema": "public",
+    "name": "vendas_painel",
+    "args": "p_inicio timestamp with time zone, p_fim timestamp with time zone, p_unidade uuid, p_por_hora boolean, p_vendedor uuid",
+    "result": "jsonb",
+    "security_definer": false,
+    "settings": [
+      "search_path=\"\""
+    ],
+    "anon_execute": false,
+    "authenticated_execute": true,
+    "definition_sha256": "1680f242cf83b8d7bd941ec945411e75eb5ea3e28bc0ff5cd793243bbda5e925"
+  },
+  {
+    "schema": "public",
+    "name": "vincular_pessoa",
+    "args": "p_usuario uuid, p_organizacao uuid, p_papel text, p_unidade uuid, p_motivo text",
+    "result": "uuid",
+    "security_definer": true,
+    "settings": [
+      "search_path=\"\""
+    ],
+    "anon_execute": false,
+    "authenticated_execute": true,
+    "definition_sha256": "71abd384110b22ea68a96601d9fa824a6301d3405a5df09a8d867552442cd8c7"
+  },
+  {
+    "schema": "public",
+    "name": "whatsapp_aviso_de_status",
+    "args": "p_provedor_id text, p_status text, p_detalhe text",
+    "result": "boolean",
+    "security_definer": true,
+    "settings": [
+      "search_path=\"\""
+    ],
+    "anon_execute": false,
+    "authenticated_execute": false,
+    "definition_sha256": "44d2b8f18263659076469026f776d60e36f9951b035cae6a3eedee208651c6e3"
+  },
+  {
+    "schema": "public",
+    "name": "whatsapp_envio_resolver",
+    "args": "p_envio uuid, p_motivo text",
+    "result": "boolean",
+    "security_definer": true,
+    "settings": [
+      "search_path=\"\""
+    ],
+    "anon_execute": false,
+    "authenticated_execute": true,
+    "definition_sha256": "2bf85ea8900a4a699f62a5872434a2b3ddc2a559a9dcf936b4e93b9b35cbd5d0"
+  },
+  {
+    "schema": "public",
+    "name": "whatsapp_worker_reivindicar",
+    "args": "p_limite integer",
+    "result": "TABLE(envio_id uuid, organizacao_id uuid, telefone text, documento_caminho text, nota_numero bigint, nota_serie integer, chave_acesso text, cliente_nome text)",
+    "security_definer": true,
+    "settings": [
+      "search_path=\"\""
+    ],
+    "anon_execute": false,
+    "authenticated_execute": false,
+    "definition_sha256": "940d78285dfaad3d3bc7f116c075a241d7dd8342281a8e3c5b48e920e76244bf"
+  },
+  {
+    "schema": "public",
+    "name": "whatsapp_worker_resultado",
+    "args": "p_envio uuid, p_resultado jsonb",
+    "result": "text",
+    "security_definer": true,
+    "settings": [
+      "search_path=\"\""
+    ],
+    "anon_execute": false,
+    "authenticated_execute": false,
+    "definition_sha256": "90a3c44930dd77039c1c671e6ffb0c483e39c54861bc0c2de33f350c6635d0c6"
+  }
+]

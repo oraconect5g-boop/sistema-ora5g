@@ -1,0 +1,37 @@
+{
+  "checked_at_utc": "2026-11-16T01:18:07.199300+00:00",
+  "routes": [
+    {
+      "route": "/saude",
+      "status": 200,
+      "sha_auditado_presente": true,
+      "cache_control": "private, no-cache, no-store, max-age=0, must-revalidate",
+      "em_breve": false,
+      "bytes": 9988
+    },
+    {
+      "route": "/entrar",
+      "status": 200,
+      "sha_auditado_presente": true,
+      "cache_control": "private, no-cache, no-store, max-age=0, must-revalidate",
+      "em_breve": false,
+      "bytes": 23223
+    },
+    {
+      "route": "/demo",
+      "status": 200,
+      "sha_auditado_presente": true,
+      "cache_control": "private, no-cache, no-store, max-age=0, must-revalidate",
+      "em_breve": false,
+      "bytes": 244618
+    },
+    {
+      "route": "/loja",
+      "status": 200,
+      "sha_auditado_presente": false,
+      "cache_control": "private, no-cache, no-store, max-age=0, must-revalidate",
+      "em_breve": true,
+      "bytes": 14454
+    }
+  ]
+}

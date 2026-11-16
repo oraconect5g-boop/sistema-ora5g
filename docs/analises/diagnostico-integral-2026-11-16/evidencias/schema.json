@@ -1,0 +1,2810 @@
+[
+  {
+    "inventory": {
+      "policies": [
+        {
+          "cmd": "SELECT",
+          "qual": "(id IN ( SELECT v.organizacao_id\n   FROM privado.vinculos_vigentes() v(papel, escopo, organizacao_id, unidade_id)))",
+          "roles": [
+            "authenticated"
+          ],
+          "tablename": "organizacoes",
+          "permissive": "PERMISSIVE",
+          "policyname": "organizacoes_ler",
+          "schemaname": "public",
+          "with_check": null
+        },
+        {
+          "cmd": "SELECT",
+          "qual": "(organizacao_id IN ( SELECT v.organizacao_id\n   FROM privado.vinculos_vigentes() v(papel, escopo, organizacao_id, unidade_id)))",
+          "roles": [
+            "authenticated"
+          ],
+          "tablename": "empresas",
+          "permissive": "PERMISSIVE",
+          "policyname": "empresas_ler",
+          "schemaname": "public",
+          "with_check": null
+        },
+        {
+          "cmd": "SELECT",
+          "qual": "(id IN ( SELECT privado.unidades_visiveis() AS unidades_visiveis))",
+          "roles": [
+            "authenticated"
+          ],
+          "tablename": "unidades",
+          "permissive": "PERMISSIVE",
+          "policyname": "unidades_ler",
+          "schemaname": "public",
+          "with_check": null
+        },
+        {
+          "cmd": "SELECT",
+          "qual": "( SELECT privado.usuario_ativo() AS usuario_ativo)",
+          "roles": [
+            "authenticated"
+          ],
+          "tablename": "papeis",
+          "permissive": "PERMISSIVE",
+          "policyname": "papeis_ler",
+          "schemaname": "public",
+          "with_check": null
+        },
+        {
+          "cmd": "SELECT",
+          "qual": "( SELECT privado.usuario_ativo() AS usuario_ativo)",
+          "roles": [
+            "authenticated"
+          ],
+          "tablename": "permissoes",
+          "permissive": "PERMISSIVE",
+          "policyname": "permissoes_ler",
+          "schemaname": "public",
+          "with_check": null
+        },
+        {
+          "cmd": "SELECT",
+          "qual": "( SELECT privado.usuario_ativo() AS usuario_ativo)",
+          "roles": [
+            "authenticated"
+          ],
+          "tablename": "papel_permissoes",
+          "permissive": "PERMISSIVE",
+          "policyname": "papel_permissoes_ler",
+          "schemaname": "public",
+          "with_check": null
+        },
+        {
+          "cmd": "SELECT",
+          "qual": "(((usuario_id = ( SELECT auth.uid() AS uid)) AND ( SELECT privado.usuario_ativo() AS usuario_ativo)) OR (organizacao_id IN ( SELECT v.organizacao_id\n   FROM (privado.vinculos_vigentes() v(papel, escopo, organizacao_id, unidade_id)\n     JOIN papel_permissoes pp ON (((pp.papel = v.papel) AND (pp.permissao = 'usuarios.gerir'::text))))\n  WHERE (v.escopo = 'organizacao'::text))))",
+          "roles": [
+            "authenticated"
+          ],
+          "tablename": "vinculos",
+          "permissive": "PERMISSIVE",
+          "policyname": "vinculos_ler",
+          "schemaname": "public",
+          "with_check": null
+        },
+        {
+          "cmd": "SELECT",
+          "qual": "((usuario_id = ( SELECT auth.uid() AS uid)) AND ( SELECT privado.usuario_ativo() AS usuario_ativo))",
+          "roles": [
+            "authenticated"
+          ],
+          "tablename": "contexto_sessao",
+          "permissive": "PERMISSIVE",
+          "policyname": "contexto_ler",
+          "schemaname": "public",
+          "with_check": null
+        },
+        {
+          "cmd": "SELECT",
+          "qual": "(((id = ( SELECT auth.uid() AS uid)) AND ( SELECT privado.usuario_ativo() AS usuario_ativo)) OR (id IN ( SELECT privado.perfis_que_gero() AS perfis_que_gero)))",
+          "roles": [
+            "authenticated"
+          ],
+          "tablename": "perfis_usuario",
+          "permissive": "PERMISSIVE",
+          "policyname": "perfis_ler",
+          "schemaname": "public",
+          "with_check": null
+        },
+        {
+          "cmd": "SELECT",
+          "qual": "(organizacao_id IN ( SELECT v.organizacao_id\n   FROM privado.vinculos_vigentes() v(papel, escopo, organizacao_id, unidade_id)))",
+          "roles": [
+            "authenticated"
+          ],
+          "tablename": "categorias",
+          "permissive": "PERMISSIVE",
+          "policyname": "categorias_ler",
+          "schemaname": "public",
+          "with_check": null
+        },
+        {
+          "cmd": "SELECT",
+          "qual": "(organizacao_id IN ( SELECT v.organizacao_id\n   FROM privado.vinculos_vigentes() v(papel, escopo, organizacao_id, unidade_id)))",
+          "roles": [
+            "authenticated"
+          ],
+          "tablename": "marcas",
+          "permissive": "PERMISSIVE",
+          "policyname": "marcas_ler",
+          "schemaname": "public",
+          "with_check": null
+        },
+        {
+          "cmd": "SELECT",
+          "qual": "(organizacao_id IN ( SELECT v.organizacao_id\n   FROM privado.vinculos_vigentes() v(papel, escopo, organizacao_id, unidade_id)))",
+          "roles": [
+            "authenticated"
+          ],
+          "tablename": "produtos",
+          "permissive": "PERMISSIVE",
+          "policyname": "produtos_ler",
+          "schemaname": "public",
+          "with_check": null
+        },
+        {
+          "cmd": "SELECT",
+          "qual": "(organizacao_id IN ( SELECT v.organizacao_id\n   FROM privado.vinculos_vigentes() v(papel, escopo, organizacao_id, unidade_id)))",
+          "roles": [
+            "authenticated"
+          ],
+          "tablename": "variantes",
+          "permissive": "PERMISSIVE",
+          "policyname": "variantes_ler",
+          "schemaname": "public",
+          "with_check": null
+        },
+        {
+          "cmd": "SELECT",
+          "qual": "(organizacao_id IN ( SELECT v.organizacao_id\n   FROM privado.vinculos_vigentes() v(papel, escopo, organizacao_id, unidade_id)))",
+          "roles": [
+            "authenticated"
+          ],
+          "tablename": "precos",
+          "permissive": "PERMISSIVE",
+          "policyname": "precos_ler",
+          "schemaname": "public",
+          "with_check": null
+        },
+        {
+          "cmd": "SELECT",
+          "qual": "((organizacao_id IN ( SELECT privado.organizacoes_com_permissao('custo.ver'::text) AS organizacoes_com_permissao)) OR (organizacao_id IN ( SELECT u.organizacao_id\n   FROM unidades u\n  WHERE (u.id IN ( SELECT privado.unidades_com_permissao('custo.ver'::text) AS unidades_com_permissao)))))",
+          "roles": [
+            "authenticated"
+          ],
+          "tablename": "custos",
+          "permissive": "PERMISSIVE",
+          "policyname": "custos_ler",
+          "schemaname": "public",
+          "with_check": null
+        },
+        {
+          "cmd": "SELECT",
+          "qual": "(unidade_id IN ( SELECT privado.unidades_com_permissao('estoque.consultar'::text) AS unidades_com_permissao))",
+          "roles": [
+            "authenticated"
+          ],
+          "tablename": "itens_serializados",
+          "permissive": "PERMISSIVE",
+          "policyname": "itens_ler",
+          "schemaname": "public",
+          "with_check": null
+        },
+        {
+          "cmd": "SELECT",
+          "qual": "(unidade_id IN ( SELECT privado.unidades_com_permissao('estoque.consultar'::text) AS unidades_com_permissao))",
+          "roles": [
+            "authenticated"
+          ],
+          "tablename": "estoque_movimentos",
+          "permissive": "PERMISSIVE",
+          "policyname": "movimentos_ler",
+          "schemaname": "public",
+          "with_check": null
+        },
+        {
+          "cmd": "SELECT",
+          "qual": "(unidade_id IN ( SELECT privado.unidades_com_permissao('estoque.consultar'::text) AS unidades_com_permissao))",
+          "roles": [
+            "authenticated"
+          ],
+          "tablename": "estoque_saldos",
+          "permissive": "PERMISSIVE",
+          "policyname": "saldos_ler",
+          "schemaname": "public",
+          "with_check": null
+        },
+        {
+          "cmd": "SELECT",
+          "qual": "(unidade_id IN ( SELECT privado.unidades_com_permissao('estoque.consultar'::text) AS unidades_com_permissao))",
+          "roles": [
+            "authenticated"
+          ],
+          "tablename": "estoque_reservas",
+          "permissive": "PERMISSIVE",
+          "policyname": "reservas_ler",
+          "schemaname": "public",
+          "with_check": null
+        },
+        {
+          "cmd": "SELECT",
+          "qual": "(organizacao_id IN ( SELECT privado.organizacoes_com_permissao('usuarios.gerir'::text) AS organizacoes_com_permissao))",
+          "roles": [
+            "authenticated"
+          ],
+          "tablename": "convites",
+          "permissive": "PERMISSIVE",
+          "policyname": "convites_ler",
+          "schemaname": "public",
+          "with_check": null
+        },
+        {
+          "cmd": "SELECT",
+          "qual": "((bucket_id = 'produtos'::text) AND ((storage.foldername(name))[1] IN ( SELECT (o.o)::text AS o\n   FROM privado.organizacoes_do_catalogo() o(o))))",
+          "roles": [
+            "authenticated"
+          ],
+          "tablename": "objects",
+          "permissive": "PERMISSIVE",
+          "policyname": "produtos_fotos_ler",
+          "schemaname": "storage",
+          "with_check": null
+        },
+        {
+          "cmd": "INSERT",
+          "qual": null,
+          "roles": [
+            "authenticated"
+          ],
+          "tablename": "objects",
+          "permissive": "PERMISSIVE",
+          "policyname": "produtos_fotos_enviar",
+          "schemaname": "storage",
+          "with_check": "((bucket_id = 'produtos'::text) AND (array_length(storage.foldername(name), 1) = 3) AND ((storage.foldername(name))[1] IN ( SELECT (o.o)::text AS o\n   FROM privado.organizacoes_que_enviam_fotos() o(o))))"
+        },
+        {
+          "cmd": "SELECT",
+          "qual": "(organizacao_id IN ( SELECT privado.organizacoes_do_catalogo() AS organizacoes_do_catalogo))",
+          "roles": [
+            "authenticated"
+          ],
+          "tablename": "fotos_produto",
+          "permissive": "PERMISSIVE",
+          "policyname": "fotos_ler",
+          "schemaname": "public",
+          "with_check": null
+        },
+        {
+          "cmd": "SELECT",
+          "qual": "(((operador_id = ( SELECT auth.uid() AS uid)) AND (unidade_id IN ( SELECT privado.unidades_visiveis() AS unidades_visiveis))) OR ( SELECT tem_permissao('caixa.conferir'::text, caixas.unidade_id) AS tem_permissao))",
+          "roles": [
+            "authenticated"
+          ],
+          "tablename": "caixas",
+          "permissive": "PERMISSIVE",
+          "policyname": "caixas_ler",
+          "schemaname": "public",
+          "with_check": null
+        },
+        {
+          "cmd": "SELECT",
+          "qual": "(caixa_id IN ( SELECT c.id\n   FROM caixas c))",
+          "roles": [
+            "authenticated"
+          ],
+          "tablename": "caixa_movimentos",
+          "permissive": "PERMISSIVE",
+          "policyname": "caixa_movimentos_ler",
+          "schemaname": "public",
+          "with_check": null
+        },
+        {
+          "cmd": "SELECT",
+          "qual": "(((vendedor_id = ( SELECT auth.uid() AS uid)) AND (unidade_id IN ( SELECT privado.unidades_visiveis() AS unidades_visiveis))) OR ( SELECT tem_permissao('venda.ver_unidade'::text, vendas.unidade_id) AS tem_permissao) OR ( SELECT tem_permissao('venda.ver_todas'::text, vendas.unidade_id) AS tem_permissao))",
+          "roles": [
+            "authenticated"
+          ],
+          "tablename": "vendas",
+          "permissive": "PERMISSIVE",
+          "policyname": "vendas_ler",
+          "schemaname": "public",
+          "with_check": null
+        },
+        {
+          "cmd": "SELECT",
+          "qual": "(venda_id IN ( SELECT v.id\n   FROM vendas v))",
+          "roles": [
+            "authenticated"
+          ],
+          "tablename": "venda_itens",
+          "permissive": "PERMISSIVE",
+          "policyname": "venda_itens_ler",
+          "schemaname": "public",
+          "with_check": null
+        },
+        {
+          "cmd": "SELECT",
+          "qual": "( SELECT tem_permissao('custo.ver'::text, venda_itens_custos.unidade_id) AS tem_permissao)",
+          "roles": [
+            "authenticated"
+          ],
+          "tablename": "venda_itens_custos",
+          "permissive": "PERMISSIVE",
+          "policyname": "venda_itens_custos_ler",
+          "schemaname": "public",
+          "with_check": null
+        },
+        {
+          "cmd": "SELECT",
+          "qual": "(venda_id IN ( SELECT v.id\n   FROM vendas v))",
+          "roles": [
+            "authenticated"
+          ],
+          "tablename": "venda_pagamentos",
+          "permissive": "PERMISSIVE",
+          "policyname": "venda_pagamentos_ler",
+          "schemaname": "public",
+          "with_check": null
+        },
+        {
+          "cmd": "SELECT",
+          "qual": "(venda_id IN ( SELECT v.id\n   FROM vendas v))",
+          "roles": [
+            "authenticated"
+          ],
+          "tablename": "contas_a_receber",
+          "permissive": "PERMISSIVE",
+          "policyname": "contas_a_receber_ler",
+          "schemaname": "public",
+          "with_check": null
+        },
+        {
+          "cmd": "SELECT",
+          "qual": "(organizacao_id IN ( SELECT privado.organizacoes_do_catalogo() AS organizacoes_do_catalogo))",
+          "roles": [
+            "authenticated"
+          ],
+          "tablename": "connect_habilitacoes",
+          "permissive": "PERMISSIVE",
+          "policyname": "connect_habilitacoes_ler",
+          "schemaname": "public",
+          "with_check": null
+        },
+        {
+          "cmd": "SELECT",
+          "qual": "(organizacao_id IN ( SELECT privado.organizacoes_do_catalogo() AS organizacoes_do_catalogo))",
+          "roles": [
+            "authenticated"
+          ],
+          "tablename": "connect_referencias",
+          "permissive": "PERMISSIVE",
+          "policyname": "connect_referencias_ler",
+          "schemaname": "public",
+          "with_check": null
+        },
+        {
+          "cmd": "SELECT",
+          "qual": "(((vendedor_id = ( SELECT auth.uid() AS uid)) AND (unidade_id IN ( SELECT privado.unidades_visiveis() AS unidades_visiveis))) OR ( SELECT tem_permissao('connect.gerir'::text, connect_operacoes.unidade_id) AS tem_permissao))",
+          "roles": [
+            "authenticated"
+          ],
+          "tablename": "connect_operacoes",
+          "permissive": "PERMISSIVE",
+          "policyname": "connect_operacoes_ler",
+          "schemaname": "public",
+          "with_check": null
+        },
+        {
+          "cmd": "SELECT",
+          "qual": "(operacao_id IN ( SELECT o.id\n   FROM connect_operacoes o))",
+          "roles": [
+            "authenticated"
+          ],
+          "tablename": "connect_eventos",
+          "permissive": "PERMISSIVE",
+          "policyname": "connect_eventos_ler",
+          "schemaname": "public",
+          "with_check": null
+        },
+        {
+          "cmd": "SELECT",
+          "qual": "(((vendedor_id = ( SELECT auth.uid() AS uid)) AND (unidade_id IN ( SELECT privado.unidades_visiveis() AS unidades_visiveis))) OR ( SELECT tem_permissao('connect.gerir'::text, connect_producao.unidade_id) AS tem_permissao))",
+          "roles": [
+            "authenticated"
+          ],
+          "tablename": "connect_producao",
+          "permissive": "PERMISSIVE",
+          "policyname": "connect_producao_ler",
+          "schemaname": "public",
+          "with_check": null
+        },
+        {
+          "cmd": "SELECT",
+          "qual": "(organizacao_id IN ( SELECT privado.organizacoes_do_catalogo() AS organizacoes_do_catalogo))",
+          "roles": [
+            "authenticated"
+          ],
+          "tablename": "fiscal_politicas",
+          "permissive": "PERMISSIVE",
+          "policyname": "fiscal_politicas_ler",
+          "schemaname": "public",
+          "with_check": null
+        },
+        {
+          "cmd": "SELECT",
+          "qual": "(((solicitado_por = ( SELECT auth.uid() AS uid)) AND (unidade_id IN ( SELECT privado.unidades_visiveis() AS unidades_visiveis))) OR (venda_id IN ( SELECT v.id\n   FROM vendas v)) OR ( SELECT tem_permissao('nota.aprovar'::text, notas_pedidos.unidade_id) AS tem_permissao))",
+          "roles": [
+            "authenticated"
+          ],
+          "tablename": "notas_pedidos",
+          "permissive": "PERMISSIVE",
+          "policyname": "notas_pedidos_ler",
+          "schemaname": "public",
+          "with_check": null
+        },
+        {
+          "cmd": "SELECT",
+          "qual": "(pedido_id IN ( SELECT p.id\n   FROM notas_pedidos p))",
+          "roles": [
+            "authenticated"
+          ],
+          "tablename": "notas_eventos",
+          "permissive": "PERMISSIVE",
+          "policyname": "notas_eventos_ler",
+          "schemaname": "public",
+          "with_check": null
+        },
+        {
+          "cmd": "SELECT",
+          "qual": "(venda_id IN ( SELECT v.id\n   FROM vendas v))",
+          "roles": [
+            "authenticated"
+          ],
+          "tablename": "venda_devolucoes",
+          "permissive": "PERMISSIVE",
+          "policyname": "venda_devolucoes_ler",
+          "schemaname": "public",
+          "with_check": null
+        },
+        {
+          "cmd": "SELECT",
+          "qual": "(devolucao_id IN ( SELECT d.id\n   FROM venda_devolucoes d))",
+          "roles": [
+            "authenticated"
+          ],
+          "tablename": "venda_devolucao_itens",
+          "permissive": "PERMISSIVE",
+          "policyname": "venda_devolucao_itens_ler",
+          "schemaname": "public",
+          "with_check": null
+        },
+        {
+          "cmd": "SELECT",
+          "qual": "(devolucao_id IN ( SELECT d.id\n   FROM venda_devolucoes d))",
+          "roles": [
+            "authenticated"
+          ],
+          "tablename": "venda_devolucao_reembolsos",
+          "permissive": "PERMISSIVE",
+          "policyname": "venda_devolucao_reembolsos_ler",
+          "schemaname": "public",
+          "with_check": null
+        },
+        {
+          "cmd": "SELECT",
+          "qual": "(unidade_id IN ( SELECT privado.unidades_visiveis() AS unidades_visiveis))",
+          "roles": [
+            "authenticated"
+          ],
+          "tablename": "vales_troca",
+          "permissive": "PERMISSIVE",
+          "policyname": "vales_troca_ler",
+          "schemaname": "public",
+          "with_check": null
+        },
+        {
+          "cmd": "SELECT",
+          "qual": "((vale_id IN ( SELECT v.id\n   FROM vales_troca v)) OR (venda_id IN ( SELECT v.id\n   FROM vendas v)))",
+          "roles": [
+            "authenticated"
+          ],
+          "tablename": "vales_troca_usos",
+          "permissive": "PERMISSIVE",
+          "policyname": "vales_troca_usos_ler",
+          "schemaname": "public",
+          "with_check": null
+        },
+        {
+          "cmd": "SELECT",
+          "qual": "( SELECT tem_permissao('custo.ver'::text, connect_operacoes_custos.unidade_id) AS tem_permissao)",
+          "roles": [
+            "authenticated"
+          ],
+          "tablename": "connect_operacoes_custos",
+          "permissive": "PERMISSIVE",
+          "policyname": "connect_operacoes_custos_ler",
+          "schemaname": "public",
+          "with_check": null
+        },
+        {
+          "cmd": "SELECT",
+          "qual": "(((solicitado_por = ( SELECT auth.uid() AS uid)) AND (unidade_id IN ( SELECT privado.unidades_visiveis() AS unidades_visiveis))) OR ( SELECT tem_permissao('desconto.aprovar'::text, aprovacoes_desconto.unidade_id) AS tem_permissao))",
+          "roles": [
+            "authenticated"
+          ],
+          "tablename": "aprovacoes_desconto",
+          "permissive": "PERMISSIVE",
+          "policyname": "aprovacoes_ler",
+          "schemaname": "public",
+          "with_check": null
+        },
+        {
+          "cmd": "SELECT",
+          "qual": "(venda_id IN ( SELECT v.id\n   FROM vendas v))",
+          "roles": [
+            "authenticated"
+          ],
+          "tablename": "estornos_externos",
+          "permissive": "PERMISSIVE",
+          "policyname": "estornos_externos_ler",
+          "schemaname": "public",
+          "with_check": null
+        },
+        {
+          "cmd": "SELECT",
+          "qual": "(venda_id IN ( SELECT v.id\n   FROM vendas v))",
+          "roles": [
+            "authenticated"
+          ],
+          "tablename": "venda_retornos",
+          "permissive": "PERMISSIVE",
+          "policyname": "venda_retornos_ler",
+          "schemaname": "public",
+          "with_check": null
+        },
+        {
+          "cmd": "SELECT",
+          "qual": "((origem_id IN ( SELECT privado.unidades_com_permissao('estoque.consultar'::text) AS unidades_com_permissao)) OR (destino_id IN ( SELECT privado.unidades_com_permissao('estoque.consultar'::text) AS unidades_com_permissao)))",
+          "roles": [
+            "authenticated"
+          ],
+          "tablename": "transferencias",
+          "permissive": "PERMISSIVE",
+          "policyname": "transferencias_ler",
+          "schemaname": "public",
+          "with_check": null
+        },
+        {
+          "cmd": "SELECT",
+          "qual": "(transferencia_id IN ( SELECT t.id\n   FROM transferencias t))",
+          "roles": [
+            "authenticated"
+          ],
+          "tablename": "transferencia_itens",
+          "permissive": "PERMISSIVE",
+          "policyname": "transferencia_itens_ler",
+          "schemaname": "public",
+          "with_check": null
+        },
+        {
+          "cmd": "SELECT",
+          "qual": "(unidade_id IN ( SELECT privado.unidades_visiveis() AS unidades_visiveis))",
+          "roles": [
+            "authenticated"
+          ],
+          "tablename": "unidade_configuracoes",
+          "permissive": "PERMISSIVE",
+          "policyname": "unidade_configuracoes_ler",
+          "schemaname": "public",
+          "with_check": null
+        },
+        {
+          "cmd": "SELECT",
+          "qual": "((organizacao_id IN ( SELECT privado.organizacoes_com_permissao('importacao.executar'::text) AS organizacoes_com_permissao)) OR (organizacao_id IN ( SELECT privado.organizacoes_com_permissao('importacao.aprovar'::text) AS organizacoes_com_permissao)))",
+          "roles": [
+            "authenticated"
+          ],
+          "tablename": "importacoes",
+          "permissive": "PERMISSIVE",
+          "policyname": "importacoes_ler",
+          "schemaname": "public",
+          "with_check": null
+        },
+        {
+          "cmd": "SELECT",
+          "qual": "(importacao_id IN ( SELECT i.id\n   FROM importacoes i))",
+          "roles": [
+            "authenticated"
+          ],
+          "tablename": "importacao_linhas",
+          "permissive": "PERMISSIVE",
+          "policyname": "importacao_linhas_ler",
+          "schemaname": "public",
+          "with_check": null
+        },
+        {
+          "cmd": "SELECT",
+          "qual": "(organizacao_id IN ( SELECT v.organizacao_id\n   FROM privado.vinculos_vigentes() v(papel, escopo, organizacao_id, unidade_id)))",
+          "roles": [
+            "authenticated"
+          ],
+          "tablename": "fornecedores",
+          "permissive": "PERMISSIVE",
+          "policyname": "fornecedores_ler",
+          "schemaname": "public",
+          "with_check": null
+        },
+        {
+          "cmd": "SELECT",
+          "qual": "(unidade_id IN ( SELECT privado.unidades_com_permissao('estoque.consultar'::text) AS unidades_com_permissao))",
+          "roles": [
+            "authenticated"
+          ],
+          "tablename": "entradas_estoque",
+          "permissive": "PERMISSIVE",
+          "policyname": "entradas_estoque_ler",
+          "schemaname": "public",
+          "with_check": null
+        },
+        {
+          "cmd": "SELECT",
+          "qual": "(entrada_id IN ( SELECT e.id\n   FROM entradas_estoque e))",
+          "roles": [
+            "authenticated"
+          ],
+          "tablename": "entrada_itens",
+          "permissive": "PERMISSIVE",
+          "policyname": "entrada_itens_ler",
+          "schemaname": "public",
+          "with_check": null
+        },
+        {
+          "cmd": "SELECT",
+          "qual": "(unidade_id IN ( SELECT privado.unidades_com_permissao('estoque.consultar'::text) AS unidades_com_permissao))",
+          "roles": [
+            "authenticated"
+          ],
+          "tablename": "inventarios",
+          "permissive": "PERMISSIVE",
+          "policyname": "inventarios_ler",
+          "schemaname": "public",
+          "with_check": null
+        },
+        {
+          "cmd": "SELECT",
+          "qual": "(inventario_id IN ( SELECT i.id\n   FROM inventarios i))",
+          "roles": [
+            "authenticated"
+          ],
+          "tablename": "inventario_itens",
+          "permissive": "PERMISSIVE",
+          "policyname": "inventario_itens_ler",
+          "schemaname": "public",
+          "with_check": null
+        },
+        {
+          "cmd": "SELECT",
+          "qual": "(organizacao_id IN ( SELECT privado.organizacoes_com_permissao('cliente.exportar'::text) AS organizacoes_com_permissao))",
+          "roles": [
+            "authenticated"
+          ],
+          "tablename": "clientes",
+          "permissive": "PERMISSIVE",
+          "policyname": "clientes_ler",
+          "schemaname": "public",
+          "with_check": null
+        },
+        {
+          "cmd": "SELECT",
+          "qual": "(unidade_id IN ( SELECT privado.unidades_visiveis() AS unidades_visiveis))",
+          "roles": [
+            "authenticated"
+          ],
+          "tablename": "terminais",
+          "permissive": "PERMISSIVE",
+          "policyname": "terminais_ler",
+          "schemaname": "public",
+          "with_check": null
+        },
+        {
+          "cmd": "SELECT",
+          "qual": "(organizacao_id IN ( SELECT privado.organizacoes_com_permissao('cliente.exportar'::text) AS organizacoes_com_permissao))",
+          "roles": [
+            "authenticated"
+          ],
+          "tablename": "cliente_consentimentos",
+          "permissive": "PERMISSIVE",
+          "policyname": "cliente_consentimentos_ler",
+          "schemaname": "public",
+          "with_check": null
+        },
+        {
+          "cmd": "SELECT",
+          "qual": "((unidade_id IN ( SELECT privado.unidades_com_permissao('crm.gerir'::text) AS unidades_com_permissao)) OR ((responsavel_id = ( SELECT auth.uid() AS uid)) AND (unidade_id IN ( SELECT privado.unidades_com_permissao('crm.atender'::text) AS unidades_com_permissao))))",
+          "roles": [
+            "authenticated"
+          ],
+          "tablename": "oportunidades",
+          "permissive": "PERMISSIVE",
+          "policyname": "oportunidades_ler",
+          "schemaname": "public",
+          "with_check": null
+        },
+        {
+          "cmd": "SELECT",
+          "qual": "(oportunidade_id IN ( SELECT o.id\n   FROM oportunidades o))",
+          "roles": [
+            "authenticated"
+          ],
+          "tablename": "oportunidade_eventos",
+          "permissive": "PERMISSIVE",
+          "policyname": "oportunidade_eventos_ler",
+          "schemaname": "public",
+          "with_check": null
+        },
+        {
+          "cmd": "SELECT",
+          "qual": "((unidade_id IN ( SELECT privado.unidades_com_permissao('crm.gerir'::text) AS unidades_com_permissao)) OR ((responsavel_id = ( SELECT auth.uid() AS uid)) AND (unidade_id IN ( SELECT privado.unidades_com_permissao('crm.atender'::text) AS unidades_com_permissao))))",
+          "roles": [
+            "authenticated"
+          ],
+          "tablename": "atividades",
+          "permissive": "PERMISSIVE",
+          "policyname": "atividades_ler",
+          "schemaname": "public",
+          "with_check": null
+        },
+        {
+          "cmd": "SELECT",
+          "qual": "(organizacao_id IN ( SELECT privado.organizacoes_com_permissao('cliente.mesclar'::text) AS organizacoes_com_permissao))",
+          "roles": [
+            "authenticated"
+          ],
+          "tablename": "cliente_nao_duplicados",
+          "permissive": "PERMISSIVE",
+          "policyname": "cliente_nao_duplicados_ler",
+          "schemaname": "public",
+          "with_check": null
+        },
+        {
+          "cmd": "SELECT",
+          "qual": "(( SELECT tem_permissao('metas.gerir'::text, metas.unidade_id) AS tem_permissao) OR ( SELECT tem_permissao('metas.ver_unidade'::text, metas.unidade_id) AS tem_permissao) OR ((vendedor_id = ( SELECT auth.uid() AS uid)) AND ( SELECT tem_permissao('metas.ver_propria'::text, metas.unidade_id) AS tem_permissao)))",
+          "roles": [
+            "authenticated"
+          ],
+          "tablename": "metas",
+          "permissive": "PERMISSIVE",
+          "policyname": "metas_ler",
+          "schemaname": "public",
+          "with_check": null
+        },
+        {
+          "cmd": "SELECT",
+          "qual": "((pedida_por = ( SELECT auth.uid() AS uid)) OR ( SELECT tem_permissao('caixa.conferir'::text, caixa_saidas.unidade_id) AS tem_permissao))",
+          "roles": [
+            "authenticated"
+          ],
+          "tablename": "caixa_saidas",
+          "permissive": "PERMISSIVE",
+          "policyname": "caixa_saidas_ler",
+          "schemaname": "public",
+          "with_check": null
+        },
+        {
+          "cmd": "SELECT",
+          "qual": "(organizacao_id IN ( SELECT v.organizacao_id\n   FROM (privado.vinculos_vigentes() v(papel, escopo, organizacao_id, unidade_id)\n     JOIN papel_permissoes pp ON (((pp.papel = v.papel) AND (pp.permissao = 'conta_pagar.gerir'::text))))))",
+          "roles": [
+            "authenticated"
+          ],
+          "tablename": "contas_pagar_categorias",
+          "permissive": "PERMISSIVE",
+          "policyname": "contas_pagar_categorias_ler",
+          "schemaname": "public",
+          "with_check": null
+        },
+        {
+          "cmd": "SELECT",
+          "qual": "((unidade_id IN ( SELECT privado.unidades_com_permissao('conta_pagar.gerir'::text) AS unidades_com_permissao)) OR ((unidade_id IS NULL) AND (organizacao_id IN ( SELECT privado.organizacoes_com_permissao('conta_pagar.gerir'::text) AS organizacoes_com_permissao))))",
+          "roles": [
+            "authenticated"
+          ],
+          "tablename": "contas_a_pagar",
+          "permissive": "PERMISSIVE",
+          "policyname": "contas_a_pagar_ler",
+          "schemaname": "public",
+          "with_check": null
+        },
+        {
+          "cmd": "SELECT",
+          "qual": "(organizacao_id IN ( SELECT v.organizacao_id\n   FROM privado.vinculos_vigentes() v(papel, escopo, organizacao_id, unidade_id)))",
+          "roles": [
+            "authenticated"
+          ],
+          "tablename": "bonus_regras",
+          "permissive": "PERMISSIVE",
+          "policyname": "bonus_regras_ler",
+          "schemaname": "public",
+          "with_check": null
+        },
+        {
+          "cmd": "SELECT",
+          "qual": "( SELECT privado.gestao_do_bonus(bonus_fechamentos.unidade_id) AS gestao_do_bonus)",
+          "roles": [
+            "authenticated"
+          ],
+          "tablename": "bonus_fechamentos",
+          "permissive": "PERMISSIVE",
+          "policyname": "bonus_fechamentos_ler",
+          "schemaname": "public",
+          "with_check": null
+        },
+        {
+          "cmd": "SELECT",
+          "qual": "(( SELECT privado.gestao_do_bonus(bonus_fechamento_linhas.unidade_id) AS gestao_do_bonus) OR ((vendedor_id = ( SELECT auth.uid() AS uid)) AND ( SELECT tem_permissao('metas.ver_propria'::text, bonus_fechamento_linhas.unidade_id) AS tem_permissao)))",
+          "roles": [
+            "authenticated"
+          ],
+          "tablename": "bonus_fechamento_linhas",
+          "permissive": "PERMISSIVE",
+          "policyname": "bonus_fechamento_linhas_ler",
+          "schemaname": "public",
+          "with_check": null
+        },
+        {
+          "cmd": "SELECT",
+          "qual": "( SELECT privado.gestao_do_bonus(bonus_contestacoes.unidade_id) AS gestao_do_bonus)",
+          "roles": [
+            "authenticated"
+          ],
+          "tablename": "bonus_contestacoes",
+          "permissive": "PERMISSIVE",
+          "policyname": "bonus_contestacoes_ler",
+          "schemaname": "public",
+          "with_check": null
+        },
+        {
+          "cmd": "SELECT",
+          "qual": "(inventario_id IN ( SELECT i.id\n   FROM inventarios i))",
+          "roles": [
+            "authenticated"
+          ],
+          "tablename": "inventario_contagens",
+          "permissive": "PERMISSIVE",
+          "policyname": "inventario_contagens_ler",
+          "schemaname": "public",
+          "with_check": null
+        },
+        {
+          "cmd": "SELECT",
+          "qual": "((unidade_id IN ( SELECT privado.unidades_com_permissao('os.abrir'::text) AS unidades_com_permissao)) OR (unidade_id IN ( SELECT privado.unidades_com_permissao('os.gerir'::text) AS unidades_com_permissao)) OR (assistencia_id IN ( SELECT privado.unidades_com_permissao('os.orcar'::text) AS unidades_com_permissao)))",
+          "roles": [
+            "authenticated"
+          ],
+          "tablename": "ordens_servico",
+          "permissive": "PERMISSIVE",
+          "policyname": "ordens_servico_ler",
+          "schemaname": "public",
+          "with_check": null
+        },
+        {
+          "cmd": "SELECT",
+          "qual": "((bucket_id = 'notas'::text) AND ((storage.foldername(name))[3] IN ( SELECT (p.id)::text AS id\n   FROM notas_pedidos p)))",
+          "roles": [
+            "authenticated"
+          ],
+          "tablename": "objects",
+          "permissive": "PERMISSIVE",
+          "policyname": "notas_documentos_ler",
+          "schemaname": "storage",
+          "with_check": null
+        },
+        {
+          "cmd": "INSERT",
+          "qual": null,
+          "roles": [
+            "authenticated"
+          ],
+          "tablename": "objects",
+          "permissive": "PERMISSIVE",
+          "policyname": "notas_documentos_enviar",
+          "schemaname": "storage",
+          "with_check": "((bucket_id = 'notas'::text) AND (array_length(storage.foldername(name), 1) = 3) AND ((storage.foldername(name))[2] IN ( SELECT (u.u)::text AS u\n   FROM privado.unidades_com_permissao('nota.aprovar'::text) u(u))))"
+        },
+        {
+          "cmd": "SELECT",
+          "qual": "(pedido_id IN ( SELECT p.id\n   FROM notas_pedidos p))",
+          "roles": [
+            "authenticated"
+          ],
+          "tablename": "notas_documentos",
+          "permissive": "PERMISSIVE",
+          "policyname": "notas_documentos_ler",
+          "schemaname": "public",
+          "with_check": null
+        },
+        {
+          "cmd": "SELECT",
+          "qual": "(pedido_id IN ( SELECT p.id\n   FROM notas_pedidos p))",
+          "roles": [
+            "authenticated"
+          ],
+          "tablename": "whatsapp_envios",
+          "permissive": "PERMISSIVE",
+          "policyname": "whatsapp_envios_ler",
+          "schemaname": "public",
+          "with_check": null
+        },
+        {
+          "cmd": "SELECT",
+          "qual": "(envio_id IN ( SELECT e.id\n   FROM whatsapp_envios e))",
+          "roles": [
+            "authenticated"
+          ],
+          "tablename": "whatsapp_envio_eventos",
+          "permissive": "PERMISSIVE",
+          "policyname": "whatsapp_envio_eventos_ler",
+          "schemaname": "public",
+          "with_check": null
+        },
+        {
+          "cmd": "SELECT",
+          "qual": "(os_id IN ( SELECT o.id\n   FROM ordens_servico o))",
+          "roles": [
+            "authenticated"
+          ],
+          "tablename": "os_eventos",
+          "permissive": "PERMISSIVE",
+          "policyname": "os_eventos_ler",
+          "schemaname": "public",
+          "with_check": null
+        },
+        {
+          "cmd": "SELECT",
+          "qual": "(os_id IN ( SELECT o.id\n   FROM ordens_servico o))",
+          "roles": [
+            "authenticated"
+          ],
+          "tablename": "os_fotos",
+          "permissive": "PERMISSIVE",
+          "policyname": "os_fotos_ler",
+          "schemaname": "public",
+          "with_check": null
+        },
+        {
+          "cmd": "SELECT",
+          "qual": "((bucket_id = 'os'::text) AND ((storage.foldername(name))[3] IN ( SELECT (o.id)::text AS id\n   FROM ordens_servico o)))",
+          "roles": [
+            "authenticated"
+          ],
+          "tablename": "objects",
+          "permissive": "PERMISSIVE",
+          "policyname": "os_fotos_ler",
+          "schemaname": "storage",
+          "with_check": null
+        },
+        {
+          "cmd": "INSERT",
+          "qual": null,
+          "roles": [
+            "authenticated"
+          ],
+          "tablename": "objects",
+          "permissive": "PERMISSIVE",
+          "policyname": "os_fotos_enviar",
+          "schemaname": "storage",
+          "with_check": "((bucket_id = 'os'::text) AND (array_length(storage.foldername(name), 1) = 3) AND ((storage.foldername(name))[2] IN ( SELECT (u.u)::text AS u\n   FROM privado.unidades_com_permissao('os.abrir'::text) u(u))))"
+        },
+        {
+          "cmd": "SELECT",
+          "qual": "(os_id IN ( SELECT o.id\n   FROM ordens_servico o))",
+          "roles": [
+            "authenticated"
+          ],
+          "tablename": "os_orcamentos",
+          "permissive": "PERMISSIVE",
+          "policyname": "os_orcamentos_ler",
+          "schemaname": "public",
+          "with_check": null
+        },
+        {
+          "cmd": "SELECT",
+          "qual": "(os_id IN ( SELECT o.id\n   FROM ordens_servico o))",
+          "roles": [
+            "authenticated"
+          ],
+          "tablename": "os_pecas",
+          "permissive": "PERMISSIVE",
+          "policyname": "os_pecas_ler",
+          "schemaname": "public",
+          "with_check": null
+        },
+        {
+          "cmd": "SELECT",
+          "qual": "((bucket_id = 'anexos'::text) AND ((storage.foldername(name))[3] IN ( SELECT (v.id)::text AS id\n   FROM vendas v)))",
+          "roles": [
+            "authenticated"
+          ],
+          "tablename": "objects",
+          "permissive": "PERMISSIVE",
+          "policyname": "venda_anexos_ler",
+          "schemaname": "storage",
+          "with_check": null
+        },
+        {
+          "cmd": "INSERT",
+          "qual": null,
+          "roles": [
+            "authenticated"
+          ],
+          "tablename": "objects",
+          "permissive": "PERMISSIVE",
+          "policyname": "venda_anexos_enviar",
+          "schemaname": "storage",
+          "with_check": "((bucket_id = 'anexos'::text) AND (array_length(storage.foldername(name), 1) = 3) AND ((storage.foldername(name))[2] IN ( SELECT (u.u)::text AS u\n   FROM privado.unidades_com_permissao('venda.registrar'::text) u(u))) AND ((storage.foldername(name))[3] IN ( SELECT (v.id)::text AS id\n   FROM vendas v)))"
+        },
+        {
+          "cmd": "SELECT",
+          "qual": "(venda_id IN ( SELECT v.id\n   FROM vendas v))",
+          "roles": [
+            "authenticated"
+          ],
+          "tablename": "venda_anexos",
+          "permissive": "PERMISSIVE",
+          "policyname": "venda_anexos_ler",
+          "schemaname": "public",
+          "with_check": null
+        },
+        {
+          "cmd": "SELECT",
+          "qual": "(pedido_id IN ( SELECT p.id\n   FROM notas_pedidos p))",
+          "roles": [
+            "authenticated"
+          ],
+          "tablename": "notas_divergencias_conferidas",
+          "permissive": "PERMISSIVE",
+          "policyname": "notas_divergencias_conferidas_ler",
+          "schemaname": "public",
+          "with_check": null
+        },
+        {
+          "cmd": "SELECT",
+          "qual": "(organizacao_id IN ( SELECT v.organizacao_id\n   FROM privado.vinculos_vigentes() v(papel, escopo, organizacao_id, unidade_id)))",
+          "roles": [
+            "authenticated"
+          ],
+          "tablename": "variante_codigos_externos",
+          "permissive": "PERMISSIVE",
+          "policyname": "variante_codigos_ler",
+          "schemaname": "public",
+          "with_check": null
+        },
+        {
+          "cmd": "SELECT",
+          "qual": "(organizacao_id IN ( SELECT v.organizacao_id\n   FROM privado.vinculos_vigentes() v(papel, escopo, organizacao_id, unidade_id)))",
+          "roles": [
+            "authenticated"
+          ],
+          "tablename": "regioes",
+          "permissive": "PERMISSIVE",
+          "policyname": "regioes_ler",
+          "schemaname": "public",
+          "with_check": null
+        },
+        {
+          "cmd": "SELECT",
+          "qual": "((bucket_id = 'contas'::text) AND ((storage.foldername(name))[2] IN ( SELECT (c.id)::text AS id\n   FROM contas_a_pagar c)))",
+          "roles": [
+            "authenticated"
+          ],
+          "tablename": "objects",
+          "permissive": "PERMISSIVE",
+          "policyname": "conta_anexos_ler",
+          "schemaname": "storage",
+          "with_check": null
+        },
+        {
+          "cmd": "INSERT",
+          "qual": null,
+          "roles": [
+            "authenticated"
+          ],
+          "tablename": "objects",
+          "permissive": "PERMISSIVE",
+          "policyname": "conta_anexos_enviar",
+          "schemaname": "storage",
+          "with_check": "((bucket_id = 'contas'::text) AND (array_length(storage.foldername(name), 1) = 2) AND (EXISTS ( SELECT 1\n   FROM contas_a_pagar c\n  WHERE (((c.id)::text = (storage.foldername(objects.name))[2]) AND ((c.organizacao_id)::text = (storage.foldername(objects.name))[1]) AND privado.pode_gerir_conta_pagar(c.organizacao_id, c.unidade_id)))))"
+        },
+        {
+          "cmd": "SELECT",
+          "qual": "(conta_id IN ( SELECT c.id\n   FROM contas_a_pagar c))",
+          "roles": [
+            "authenticated"
+          ],
+          "tablename": "conta_pagar_anexos",
+          "permissive": "PERMISSIVE",
+          "policyname": "conta_pagar_anexos_ler",
+          "schemaname": "public",
+          "with_check": null
+        },
+        {
+          "cmd": "DELETE",
+          "qual": "((bucket_id = 'produtos'::text) AND ((storage.foldername(name))[1] IN ( SELECT (o.o)::text AS o\n   FROM privado.organizacoes_que_enviam_fotos() o(o))) AND (created_at < (now() - '1 day'::interval)) AND (NOT privado.foto_registrada(name)))",
+          "roles": [
+            "authenticated"
+          ],
+          "tablename": "objects",
+          "permissive": "PERMISSIVE",
+          "policyname": "produtos_fotos_limpar",
+          "schemaname": "storage",
+          "with_check": null
+        },
+        {
+          "cmd": "SELECT",
+          "qual": "((((unidade_id IS NOT NULL) AND ( SELECT tem_permissao('auditoria.ver'::text, auditoria.unidade_id) AS tem_permissao)) OR ((unidade_id IS NULL) AND (organizacao_id IS NOT NULL) AND (organizacao_id IN ( SELECT privado.organizacoes_com_permissao('auditoria.ver'::text) AS organizacoes_com_permissao)))) AND ((alvo_tipo IS DISTINCT FROM 'entradas_estoque'::text) OR ((unidade_id IS NOT NULL) AND ( SELECT tem_permissao('custo.ver'::text, auditoria.unidade_id) AS tem_permissao))) AND ((alvo_tipo IS DISTINCT FROM 'custos'::text) OR (organizacao_id IN ( SELECT privado.organizacoes_com_permissao('custo.ver'::text) AS organizacoes_com_permissao))) AND ((alvo_tipo IS DISTINCT FROM 'pedidos_compra'::text) OR ((unidade_id IS NOT NULL) AND ( SELECT tem_permissao('custo.ver'::text, auditoria.unidade_id) AS tem_permissao))))",
+          "roles": [
+            "authenticated"
+          ],
+          "tablename": "auditoria",
+          "permissive": "PERMISSIVE",
+          "policyname": "auditoria_ler",
+          "schemaname": "public",
+          "with_check": null
+        },
+        {
+          "cmd": "SELECT",
+          "qual": "(pedido_id IN ( SELECT p.id\n   FROM notas_pedidos p))",
+          "roles": [
+            "authenticated"
+          ],
+          "tablename": "notas_cartas_de_correcao",
+          "permissive": "PERMISSIVE",
+          "policyname": "notas_cartas_de_correcao_ler",
+          "schemaname": "public",
+          "with_check": null
+        },
+        {
+          "cmd": "SELECT",
+          "qual": "((bucket_id = 'produtos'::text) AND privado.foto_na_vitrine(name))",
+          "roles": [
+            "anon",
+            "authenticated"
+          ],
+          "tablename": "objects",
+          "permissive": "PERMISSIVE",
+          "policyname": "produtos_fotos_vitrine",
+          "schemaname": "storage",
+          "with_check": null
+        }
+      ],
+      "triggers": [
+        {
+          "table": "unidades",
+          "schema": "public",
+          "definition": "CREATE TRIGGER unidades_validar BEFORE INSERT OR UPDATE ON public.unidades FOR EACH ROW EXECUTE FUNCTION privado.validar_unidade()"
+        },
+        {
+          "table": "vinculos",
+          "schema": "public",
+          "definition": "CREATE TRIGGER vinculos_validar BEFORE INSERT OR UPDATE ON public.vinculos FOR EACH ROW EXECUTE FUNCTION privado.validar_vinculo()"
+        },
+        {
+          "table": "auditoria",
+          "schema": "public",
+          "definition": "CREATE TRIGGER auditoria_sem_alteracao BEFORE DELETE OR UPDATE ON public.auditoria FOR EACH ROW EXECUTE FUNCTION privado.auditoria_imutavel()"
+        },
+        {
+          "table": "auditoria",
+          "schema": "public",
+          "definition": "CREATE TRIGGER auditoria_sem_truncate BEFORE TRUNCATE ON public.auditoria FOR EACH STATEMENT EXECUTE FUNCTION privado.auditoria_imutavel()"
+        },
+        {
+          "table": "auditoria",
+          "schema": "public",
+          "definition": "CREATE TRIGGER auditoria_organizacao BEFORE INSERT ON public.auditoria FOR EACH ROW EXECUTE FUNCTION privado.auditoria_completar_organizacao()"
+        },
+        {
+          "table": "organizacoes",
+          "schema": "public",
+          "definition": "CREATE TRIGGER organizacoes_auditar AFTER INSERT OR DELETE OR UPDATE ON public.organizacoes FOR EACH ROW EXECUTE FUNCTION privado.auditar_mudanca()"
+        },
+        {
+          "table": "empresas",
+          "schema": "public",
+          "definition": "CREATE TRIGGER empresas_auditar AFTER INSERT OR DELETE OR UPDATE ON public.empresas FOR EACH ROW EXECUTE FUNCTION privado.auditar_mudanca()"
+        },
+        {
+          "table": "unidades",
+          "schema": "public",
+          "definition": "CREATE TRIGGER unidades_auditar AFTER INSERT OR DELETE OR UPDATE ON public.unidades FOR EACH ROW EXECUTE FUNCTION privado.auditar_mudanca()"
+        },
+        {
+          "table": "perfis_usuario",
+          "schema": "public",
+          "definition": "CREATE TRIGGER perfis_usuario_auditar AFTER INSERT OR DELETE OR UPDATE ON public.perfis_usuario FOR EACH ROW EXECUTE FUNCTION privado.auditar_mudanca()"
+        },
+        {
+          "table": "papeis",
+          "schema": "public",
+          "definition": "CREATE TRIGGER papeis_auditar AFTER INSERT OR DELETE OR UPDATE ON public.papeis FOR EACH ROW EXECUTE FUNCTION privado.auditar_mudanca()"
+        },
+        {
+          "table": "permissoes",
+          "schema": "public",
+          "definition": "CREATE TRIGGER permissoes_auditar AFTER INSERT OR DELETE OR UPDATE ON public.permissoes FOR EACH ROW EXECUTE FUNCTION privado.auditar_mudanca()"
+        },
+        {
+          "table": "papel_permissoes",
+          "schema": "public",
+          "definition": "CREATE TRIGGER papel_permissoes_auditar AFTER INSERT OR DELETE OR UPDATE ON public.papel_permissoes FOR EACH ROW EXECUTE FUNCTION privado.auditar_mudanca()"
+        },
+        {
+          "table": "vinculos",
+          "schema": "public",
+          "definition": "CREATE TRIGGER vinculos_auditar AFTER INSERT OR DELETE OR UPDATE ON public.vinculos FOR EACH ROW EXECUTE FUNCTION privado.auditar_mudanca()"
+        },
+        {
+          "table": "itens_serializados",
+          "schema": "public",
+          "definition": "CREATE TRIGGER itens_serializados_validar BEFORE INSERT OR UPDATE ON public.itens_serializados FOR EACH ROW EXECUTE FUNCTION privado.validar_item_serializado()"
+        },
+        {
+          "table": "estoque_movimentos",
+          "schema": "public",
+          "definition": "CREATE TRIGGER estoque_movimentos_validar BEFORE INSERT ON public.estoque_movimentos FOR EACH ROW EXECUTE FUNCTION privado.validar_movimento()"
+        },
+        {
+          "table": "estoque_movimentos",
+          "schema": "public",
+          "definition": "CREATE TRIGGER estoque_movimentos_sem_alteracao BEFORE DELETE OR UPDATE ON public.estoque_movimentos FOR EACH ROW EXECUTE FUNCTION privado.livro_imutavel()"
+        },
+        {
+          "table": "estoque_movimentos",
+          "schema": "public",
+          "definition": "CREATE TRIGGER estoque_movimentos_sem_truncate BEFORE TRUNCATE ON public.estoque_movimentos FOR EACH STATEMENT EXECUTE FUNCTION privado.livro_imutavel()"
+        },
+        {
+          "table": "estoque_movimentos",
+          "schema": "public",
+          "definition": "CREATE TRIGGER estoque_movimentos_saldo AFTER INSERT ON public.estoque_movimentos FOR EACH ROW EXECUTE FUNCTION privado.atualizar_saldo()"
+        },
+        {
+          "table": "categorias",
+          "schema": "public",
+          "definition": "CREATE TRIGGER categorias_auditar AFTER INSERT OR DELETE OR UPDATE ON public.categorias FOR EACH ROW EXECUTE FUNCTION privado.auditar_mudanca()"
+        },
+        {
+          "table": "itens_serializados",
+          "schema": "public",
+          "definition": "CREATE TRIGGER itens_serializados_identificadores AFTER INSERT OR UPDATE OF imei, imei2, iccid, organizacao_id ON public.itens_serializados FOR EACH ROW EXECUTE FUNCTION privado.registrar_identificadores()"
+        },
+        {
+          "table": "itens_serializados",
+          "schema": "public",
+          "definition": "CREATE TRIGGER itens_serializados_proteger_posicao BEFORE INSERT OR UPDATE ON public.itens_serializados FOR EACH ROW EXECUTE FUNCTION privado.proteger_posicao_item()"
+        },
+        {
+          "table": "convites",
+          "schema": "public",
+          "definition": "CREATE TRIGGER convites_auditar AFTER INSERT OR UPDATE ON public.convites FOR EACH ROW EXECUTE FUNCTION privado.auditar_mudanca()"
+        },
+        {
+          "table": "fotos_produto",
+          "schema": "public",
+          "definition": "CREATE TRIGGER fotos_produto_auditar AFTER INSERT OR UPDATE ON public.fotos_produto FOR EACH ROW EXECUTE FUNCTION privado.auditar_mudanca()"
+        },
+        {
+          "table": "caixa_movimentos",
+          "schema": "public",
+          "definition": "CREATE TRIGGER caixa_movimentos_sem_alteracao BEFORE DELETE OR UPDATE ON public.caixa_movimentos FOR EACH ROW EXECUTE FUNCTION privado.so_insercao()"
+        },
+        {
+          "table": "caixa_movimentos",
+          "schema": "public",
+          "definition": "CREATE TRIGGER caixa_movimentos_sem_truncate BEFORE TRUNCATE ON public.caixa_movimentos FOR EACH STATEMENT EXECUTE FUNCTION privado.so_insercao()"
+        },
+        {
+          "table": "caixas",
+          "schema": "public",
+          "definition": "CREATE TRIGGER caixas_auditar AFTER INSERT OR UPDATE ON public.caixas FOR EACH ROW EXECUTE FUNCTION privado.auditar_mudanca()"
+        },
+        {
+          "table": "vendas",
+          "schema": "public",
+          "definition": "CREATE TRIGGER vendas_auditar AFTER INSERT OR UPDATE ON public.vendas FOR EACH ROW EXECUTE FUNCTION privado.auditar_mudanca()"
+        },
+        {
+          "table": "aprovacoes_desconto",
+          "schema": "public",
+          "definition": "CREATE TRIGGER aprovacoes_auditar AFTER INSERT OR UPDATE ON public.aprovacoes_desconto FOR EACH ROW EXECUTE FUNCTION privado.auditar_mudanca()"
+        },
+        {
+          "table": "venda_pagamentos",
+          "schema": "public",
+          "definition": "CREATE TRIGGER venda_pagamentos_auditar AFTER INSERT OR UPDATE ON public.venda_pagamentos FOR EACH ROW EXECUTE FUNCTION privado.auditar_mudanca()"
+        },
+        {
+          "table": "contas_a_receber",
+          "schema": "public",
+          "definition": "CREATE TRIGGER contas_a_receber_auditar AFTER INSERT OR UPDATE ON public.contas_a_receber FOR EACH ROW EXECUTE FUNCTION privado.auditar_mudanca()"
+        },
+        {
+          "table": "connect_habilitacoes",
+          "schema": "public",
+          "definition": "CREATE TRIGGER connect_habilitacoes_auditar AFTER INSERT OR DELETE OR UPDATE ON public.connect_habilitacoes FOR EACH ROW EXECUTE FUNCTION privado.auditar_mudanca()"
+        },
+        {
+          "table": "connect_eventos",
+          "schema": "public",
+          "definition": "CREATE TRIGGER connect_eventos_sem_alteracao BEFORE DELETE OR UPDATE ON public.connect_eventos FOR EACH ROW EXECUTE FUNCTION privado.so_insercao()"
+        },
+        {
+          "table": "connect_eventos",
+          "schema": "public",
+          "definition": "CREATE TRIGGER connect_eventos_sem_truncate BEFORE TRUNCATE ON public.connect_eventos FOR EACH STATEMENT EXECUTE FUNCTION privado.so_insercao()"
+        },
+        {
+          "table": "connect_producao",
+          "schema": "public",
+          "definition": "CREATE TRIGGER connect_producao_sem_alteracao BEFORE DELETE OR UPDATE ON public.connect_producao FOR EACH ROW EXECUTE FUNCTION privado.so_insercao()"
+        },
+        {
+          "table": "connect_producao",
+          "schema": "public",
+          "definition": "CREATE TRIGGER connect_producao_sem_truncate BEFORE TRUNCATE ON public.connect_producao FOR EACH STATEMENT EXECUTE FUNCTION privado.so_insercao()"
+        },
+        {
+          "table": "itens_serializados",
+          "schema": "public",
+          "definition": "CREATE TRIGGER itens_serializados_chip_com_ativacao BEFORE UPDATE OF situacao ON public.itens_serializados FOR EACH ROW EXECUTE FUNCTION privado.proteger_chip_com_ativacao()"
+        },
+        {
+          "table": "vendas",
+          "schema": "public",
+          "definition": "CREATE TRIGGER vendas_com_connect BEFORE UPDATE OF situacao ON public.vendas FOR EACH ROW EXECUTE FUNCTION privado.proteger_venda_com_connect()"
+        },
+        {
+          "table": "fiscal_politicas",
+          "schema": "public",
+          "definition": "CREATE TRIGGER fiscal_politicas_auditar AFTER INSERT OR DELETE OR UPDATE ON public.fiscal_politicas FOR EACH ROW EXECUTE FUNCTION privado.auditar_mudanca()"
+        },
+        {
+          "table": "notas_eventos",
+          "schema": "public",
+          "definition": "CREATE TRIGGER notas_eventos_sem_alteracao BEFORE DELETE OR UPDATE ON public.notas_eventos FOR EACH ROW EXECUTE FUNCTION privado.so_insercao()"
+        },
+        {
+          "table": "notas_eventos",
+          "schema": "public",
+          "definition": "CREATE TRIGGER notas_eventos_sem_truncate BEFORE TRUNCATE ON public.notas_eventos FOR EACH STATEMENT EXECUTE FUNCTION privado.so_insercao()"
+        },
+        {
+          "table": "vendas",
+          "schema": "public",
+          "definition": "CREATE TRIGGER vendas_notas BEFORE UPDATE OF situacao ON public.vendas FOR EACH ROW EXECUTE FUNCTION privado.notas_da_venda_cancelada()"
+        },
+        {
+          "table": "venda_devolucoes",
+          "schema": "public",
+          "definition": "CREATE TRIGGER venda_devolucoes_sem_alteracao BEFORE DELETE OR UPDATE ON public.venda_devolucoes FOR EACH ROW EXECUTE FUNCTION privado.so_insercao()"
+        },
+        {
+          "table": "venda_devolucao_itens",
+          "schema": "public",
+          "definition": "CREATE TRIGGER venda_devolucao_itens_sem_alteracao BEFORE DELETE OR UPDATE ON public.venda_devolucao_itens FOR EACH ROW EXECUTE FUNCTION privado.so_insercao()"
+        },
+        {
+          "table": "venda_devolucao_reembolsos",
+          "schema": "public",
+          "definition": "CREATE TRIGGER venda_devolucao_reembolsos_sem_alteracao BEFORE DELETE OR UPDATE ON public.venda_devolucao_reembolsos FOR EACH ROW EXECUTE FUNCTION privado.so_insercao()"
+        },
+        {
+          "table": "vendas",
+          "schema": "public",
+          "definition": "CREATE TRIGGER vendas_com_devolucao BEFORE UPDATE OF situacao ON public.vendas FOR EACH ROW EXECUTE FUNCTION privado.proteger_venda_com_devolucao()"
+        },
+        {
+          "table": "venda_pagamentos",
+          "schema": "public",
+          "definition": "CREATE TRIGGER venda_pagamentos_vale AFTER INSERT OR UPDATE OF situacao ON public.venda_pagamentos FOR EACH ROW EXECUTE FUNCTION privado.vale_no_pagamento()"
+        },
+        {
+          "table": "estornos_externos",
+          "schema": "public",
+          "definition": "CREATE TRIGGER estornos_externos_fixos BEFORE DELETE OR UPDATE ON public.estornos_externos FOR EACH ROW EXECUTE FUNCTION privado.so_desfecho_do_pendente()"
+        },
+        {
+          "table": "venda_retornos",
+          "schema": "public",
+          "definition": "CREATE TRIGGER venda_retornos_fixos BEFORE DELETE OR UPDATE ON public.venda_retornos FOR EACH ROW EXECUTE FUNCTION privado.so_desfecho_do_pendente()"
+        },
+        {
+          "table": "estornos_externos",
+          "schema": "public",
+          "definition": "CREATE TRIGGER estornos_externos_auditar AFTER INSERT OR UPDATE ON public.estornos_externos FOR EACH ROW EXECUTE FUNCTION privado.auditar_mudanca()"
+        },
+        {
+          "table": "venda_retornos",
+          "schema": "public",
+          "definition": "CREATE TRIGGER venda_retornos_auditar AFTER INSERT OR UPDATE ON public.venda_retornos FOR EACH ROW EXECUTE FUNCTION privado.auditar_mudanca()"
+        },
+        {
+          "table": "vendas",
+          "schema": "public",
+          "definition": "CREATE TRIGGER vendas_fora_da_excecao BEFORE INSERT ON public.vendas FOR EACH ROW EXECUTE FUNCTION privado.local_de_excecao_nao_vende()"
+        },
+        {
+          "table": "estoque_reservas",
+          "schema": "public",
+          "definition": "CREATE TRIGGER reservas_fora_da_excecao BEFORE INSERT ON public.estoque_reservas FOR EACH ROW EXECUTE FUNCTION privado.local_de_excecao_nao_vende()"
+        },
+        {
+          "table": "transferencias",
+          "schema": "public",
+          "definition": "CREATE TRIGGER transferencias_auditar AFTER INSERT OR UPDATE ON public.transferencias FOR EACH ROW EXECUTE FUNCTION privado.auditar_mudanca()"
+        },
+        {
+          "table": "unidade_configuracoes",
+          "schema": "public",
+          "definition": "CREATE TRIGGER unidade_configuracoes_sem_alteracao BEFORE DELETE OR UPDATE ON public.unidade_configuracoes FOR EACH ROW EXECUTE FUNCTION privado.so_insercao()"
+        },
+        {
+          "table": "unidade_configuracoes",
+          "schema": "public",
+          "definition": "CREATE TRIGGER unidade_configuracoes_sem_truncate BEFORE TRUNCATE ON public.unidade_configuracoes FOR EACH STATEMENT EXECUTE FUNCTION privado.so_insercao()"
+        },
+        {
+          "table": "unidade_configuracoes",
+          "schema": "public",
+          "definition": "CREATE TRIGGER unidade_configuracoes_auditar AFTER INSERT ON public.unidade_configuracoes FOR EACH ROW EXECUTE FUNCTION privado.auditar_mudanca()"
+        },
+        {
+          "table": "caixas",
+          "schema": "public",
+          "definition": "CREATE TRIGGER caixas_loja_ativa BEFORE INSERT ON public.caixas FOR EACH ROW EXECUTE FUNCTION privado.loja_ativa_para_movimento('unidade_id')"
+        },
+        {
+          "table": "vendas",
+          "schema": "public",
+          "definition": "CREATE TRIGGER vendas_loja_ativa BEFORE INSERT ON public.vendas FOR EACH ROW EXECUTE FUNCTION privado.loja_ativa_para_movimento('unidade_id')"
+        },
+        {
+          "table": "estoque_reservas",
+          "schema": "public",
+          "definition": "CREATE TRIGGER estoque_reservas_loja_ativa BEFORE INSERT ON public.estoque_reservas FOR EACH ROW EXECUTE FUNCTION privado.loja_ativa_para_movimento('unidade_id')"
+        },
+        {
+          "table": "estoque_movimentos",
+          "schema": "public",
+          "definition": "CREATE TRIGGER estoque_movimentos_loja_ativa BEFORE INSERT ON public.estoque_movimentos FOR EACH ROW EXECUTE FUNCTION privado.loja_ativa_para_movimento('unidade_id')"
+        },
+        {
+          "table": "itens_serializados",
+          "schema": "public",
+          "definition": "CREATE TRIGGER itens_serializados_loja_ativa BEFORE INSERT ON public.itens_serializados FOR EACH ROW EXECUTE FUNCTION privado.loja_ativa_para_movimento('unidade_id')"
+        },
+        {
+          "table": "transferencias",
+          "schema": "public",
+          "definition": "CREATE TRIGGER transferencias_loja_ativa BEFORE INSERT ON public.transferencias FOR EACH ROW EXECUTE FUNCTION privado.loja_ativa_para_movimento('origem_id', 'destino_id')"
+        },
+        {
+          "table": "marcas",
+          "schema": "public",
+          "definition": "CREATE TRIGGER marcas_auditar AFTER INSERT OR UPDATE ON public.marcas FOR EACH ROW EXECUTE FUNCTION privado.auditar_mudanca()"
+        },
+        {
+          "table": "produtos",
+          "schema": "public",
+          "definition": "CREATE TRIGGER produtos_auditar AFTER INSERT OR UPDATE ON public.produtos FOR EACH ROW EXECUTE FUNCTION privado.auditar_mudanca()"
+        },
+        {
+          "table": "variantes",
+          "schema": "public",
+          "definition": "CREATE TRIGGER variantes_auditar AFTER INSERT OR UPDATE ON public.variantes FOR EACH ROW EXECUTE FUNCTION privado.auditar_mudanca()"
+        },
+        {
+          "table": "precos",
+          "schema": "public",
+          "definition": "CREATE TRIGGER precos_protegidos BEFORE DELETE OR UPDATE ON public.precos FOR EACH ROW EXECUTE FUNCTION privado.precos_protegidos()"
+        },
+        {
+          "table": "precos",
+          "schema": "public",
+          "definition": "CREATE TRIGGER precos_sem_truncate BEFORE TRUNCATE ON public.precos FOR EACH STATEMENT EXECUTE FUNCTION privado.so_insercao()"
+        },
+        {
+          "table": "precos",
+          "schema": "public",
+          "definition": "CREATE TRIGGER precos_auditar AFTER INSERT OR UPDATE ON public.precos FOR EACH ROW EXECUTE FUNCTION privado.auditar_mudanca()"
+        },
+        {
+          "table": "importacoes",
+          "schema": "public",
+          "definition": "CREATE TRIGGER importacoes_auditar AFTER INSERT OR UPDATE ON public.importacoes FOR EACH ROW EXECUTE FUNCTION privado.auditar_mudanca()"
+        },
+        {
+          "table": "fornecedores",
+          "schema": "public",
+          "definition": "CREATE TRIGGER fornecedores_auditar AFTER INSERT OR UPDATE ON public.fornecedores FOR EACH ROW EXECUTE FUNCTION privado.auditar_mudanca()"
+        },
+        {
+          "table": "entradas_estoque",
+          "schema": "public",
+          "definition": "CREATE TRIGGER entradas_estoque_auditar AFTER INSERT OR UPDATE ON public.entradas_estoque FOR EACH ROW EXECUTE FUNCTION privado.auditar_mudanca()"
+        },
+        {
+          "table": "inventarios",
+          "schema": "public",
+          "definition": "CREATE TRIGGER inventarios_auditar AFTER INSERT OR UPDATE ON public.inventarios FOR EACH ROW EXECUTE FUNCTION privado.auditar_mudanca()"
+        },
+        {
+          "table": "organizacoes",
+          "schema": "public",
+          "definition": "CREATE TRIGGER organizacoes_segredo_crm AFTER INSERT ON public.organizacoes FOR EACH ROW EXECUTE FUNCTION privado.crm_criar_segredo()"
+        },
+        {
+          "table": "cliente_consentimentos",
+          "schema": "public",
+          "definition": "CREATE TRIGGER cliente_consentimentos_auditar AFTER INSERT ON public.cliente_consentimentos FOR EACH ROW EXECUTE FUNCTION privado.auditar_mudanca()"
+        },
+        {
+          "table": "oportunidades",
+          "schema": "public",
+          "definition": "CREATE TRIGGER oportunidades_auditar AFTER INSERT OR UPDATE ON public.oportunidades FOR EACH ROW EXECUTE FUNCTION privado.auditar_mudanca()"
+        },
+        {
+          "table": "atividades",
+          "schema": "public",
+          "definition": "CREATE TRIGGER atividades_auditar AFTER INSERT OR UPDATE ON public.atividades FOR EACH ROW EXECUTE FUNCTION privado.auditar_mudanca()"
+        },
+        {
+          "table": "clientes",
+          "schema": "public",
+          "definition": "CREATE TRIGGER clientes_mesclado_fixo BEFORE UPDATE ON public.clientes FOR EACH ROW EXECUTE FUNCTION privado.cliente_mesclado_fixo()"
+        },
+        {
+          "table": "cliente_nao_duplicados",
+          "schema": "public",
+          "definition": "CREATE TRIGGER cliente_nao_duplicados_auditar AFTER INSERT ON public.cliente_nao_duplicados FOR EACH ROW EXECUTE FUNCTION privado.auditar_mudanca()"
+        },
+        {
+          "table": "terminais",
+          "schema": "public",
+          "definition": "CREATE TRIGGER terminais_auditar AFTER INSERT OR UPDATE ON public.terminais FOR EACH ROW EXECUTE FUNCTION privado.auditar_mudanca()"
+        },
+        {
+          "table": "metas",
+          "schema": "public",
+          "definition": "CREATE TRIGGER metas_sem_alteracao BEFORE DELETE OR UPDATE ON public.metas FOR EACH ROW EXECUTE FUNCTION privado.so_insercao()"
+        },
+        {
+          "table": "metas",
+          "schema": "public",
+          "definition": "CREATE TRIGGER metas_auditar AFTER INSERT ON public.metas FOR EACH ROW EXECUTE FUNCTION privado.auditar_mudanca()"
+        },
+        {
+          "table": "caixa_saidas",
+          "schema": "public",
+          "definition": "CREATE TRIGGER caixa_saidas_auditar AFTER INSERT OR UPDATE ON public.caixa_saidas FOR EACH ROW EXECUTE FUNCTION privado.auditar_mudanca()"
+        },
+        {
+          "table": "contas_pagar_categorias",
+          "schema": "public",
+          "definition": "CREATE TRIGGER contas_pagar_categorias_auditar AFTER INSERT OR UPDATE ON public.contas_pagar_categorias FOR EACH ROW EXECUTE FUNCTION privado.auditar_mudanca()"
+        },
+        {
+          "table": "organizacoes",
+          "schema": "public",
+          "definition": "CREATE TRIGGER organizacoes_categorias_contas_pagar AFTER INSERT ON public.organizacoes FOR EACH ROW EXECUTE FUNCTION privado.contas_pagar_categorias_da_organizacao()"
+        },
+        {
+          "table": "contas_a_pagar",
+          "schema": "public",
+          "definition": "CREATE TRIGGER contas_a_pagar_auditar AFTER INSERT OR UPDATE ON public.contas_a_pagar FOR EACH ROW EXECUTE FUNCTION privado.auditar_mudanca()"
+        },
+        {
+          "table": "bonus_regras",
+          "schema": "public",
+          "definition": "CREATE TRIGGER bonus_regras_sem_alteracao BEFORE DELETE OR UPDATE ON public.bonus_regras FOR EACH ROW EXECUTE FUNCTION privado.so_insercao()"
+        },
+        {
+          "table": "bonus_regras",
+          "schema": "public",
+          "definition": "CREATE TRIGGER bonus_regras_sem_truncate BEFORE TRUNCATE ON public.bonus_regras FOR EACH STATEMENT EXECUTE FUNCTION privado.so_insercao()"
+        },
+        {
+          "table": "bonus_regras",
+          "schema": "public",
+          "definition": "CREATE TRIGGER bonus_regras_auditar AFTER INSERT ON public.bonus_regras FOR EACH ROW EXECUTE FUNCTION privado.auditar_mudanca()"
+        },
+        {
+          "table": "bonus_fechamentos",
+          "schema": "public",
+          "definition": "CREATE TRIGGER bonus_fechamentos_so_aprovacao BEFORE UPDATE ON public.bonus_fechamentos FOR EACH ROW EXECUTE FUNCTION privado.bonus_so_aprovacao('aprovado_em', 'situacao', 'total_aprovado', 'aprovado_por')"
+        },
+        {
+          "table": "bonus_fechamentos",
+          "schema": "public",
+          "definition": "CREATE TRIGGER bonus_fechamentos_sem_remocao BEFORE DELETE ON public.bonus_fechamentos FOR EACH ROW EXECUTE FUNCTION privado.so_insercao()"
+        },
+        {
+          "table": "bonus_fechamentos",
+          "schema": "public",
+          "definition": "CREATE TRIGGER bonus_fechamentos_sem_truncate BEFORE TRUNCATE ON public.bonus_fechamentos FOR EACH STATEMENT EXECUTE FUNCTION privado.so_insercao()"
+        },
+        {
+          "table": "bonus_fechamentos",
+          "schema": "public",
+          "definition": "CREATE TRIGGER bonus_fechamentos_auditar AFTER INSERT OR UPDATE ON public.bonus_fechamentos FOR EACH ROW EXECUTE FUNCTION privado.auditar_mudanca()"
+        },
+        {
+          "table": "bonus_fechamento_linhas",
+          "schema": "public",
+          "definition": "CREATE TRIGGER bonus_fechamento_linhas_so_aprovacao BEFORE UPDATE ON public.bonus_fechamento_linhas FOR EACH ROW EXECUTE FUNCTION privado.bonus_so_aprovacao('aprovado_em', 'total_aprovado', 'ajuste_motivo')"
+        },
+        {
+          "table": "bonus_fechamento_linhas",
+          "schema": "public",
+          "definition": "CREATE TRIGGER bonus_fechamento_linhas_sem_remocao BEFORE DELETE ON public.bonus_fechamento_linhas FOR EACH ROW EXECUTE FUNCTION privado.so_insercao()"
+        },
+        {
+          "table": "bonus_fechamento_linhas",
+          "schema": "public",
+          "definition": "CREATE TRIGGER bonus_fechamento_linhas_sem_truncate BEFORE TRUNCATE ON public.bonus_fechamento_linhas FOR EACH STATEMENT EXECUTE FUNCTION privado.so_insercao()"
+        },
+        {
+          "table": "bonus_fechamento_linhas",
+          "schema": "public",
+          "definition": "CREATE TRIGGER bonus_fechamento_linhas_auditar AFTER INSERT OR UPDATE ON public.bonus_fechamento_linhas FOR EACH ROW EXECUTE FUNCTION privado.auditar_mudanca()"
+        },
+        {
+          "table": "bonus_contestacoes",
+          "schema": "public",
+          "definition": "CREATE TRIGGER bonus_contestacoes_so_aprovacao BEFORE UPDATE ON public.bonus_contestacoes FOR EACH ROW EXECUTE FUNCTION privado.bonus_so_aprovacao('decidida_em', 'decisao', 'resposta', 'decidida_por')"
+        },
+        {
+          "table": "bonus_contestacoes",
+          "schema": "public",
+          "definition": "CREATE TRIGGER bonus_contestacoes_sem_remocao BEFORE DELETE ON public.bonus_contestacoes FOR EACH ROW EXECUTE FUNCTION privado.so_insercao()"
+        },
+        {
+          "table": "bonus_contestacoes",
+          "schema": "public",
+          "definition": "CREATE TRIGGER bonus_contestacoes_sem_truncate BEFORE TRUNCATE ON public.bonus_contestacoes FOR EACH STATEMENT EXECUTE FUNCTION privado.so_insercao()"
+        },
+        {
+          "table": "bonus_contestacoes",
+          "schema": "public",
+          "definition": "CREATE TRIGGER bonus_contestacoes_auditar AFTER INSERT OR UPDATE ON public.bonus_contestacoes FOR EACH ROW EXECUTE FUNCTION privado.auditar_mudanca()"
+        },
+        {
+          "table": "inventario_contagens",
+          "schema": "public",
+          "definition": "CREATE TRIGGER inventario_contagens_sem_alteracao BEFORE DELETE OR UPDATE ON public.inventario_contagens FOR EACH ROW EXECUTE FUNCTION privado.so_insercao()"
+        },
+        {
+          "table": "inventario_contagens",
+          "schema": "public",
+          "definition": "CREATE TRIGGER inventario_contagens_sem_truncate BEFORE TRUNCATE ON public.inventario_contagens FOR EACH STATEMENT EXECUTE FUNCTION privado.so_insercao()"
+        },
+        {
+          "table": "notas_documentos",
+          "schema": "public",
+          "definition": "CREATE TRIGGER notas_documentos_so_substituir BEFORE UPDATE ON public.notas_documentos FOR EACH ROW EXECUTE FUNCTION privado.nota_documento_so_substituir()"
+        },
+        {
+          "table": "notas_documentos",
+          "schema": "public",
+          "definition": "CREATE TRIGGER notas_documentos_sem_apagar BEFORE DELETE ON public.notas_documentos FOR EACH ROW EXECUTE FUNCTION privado.so_insercao()"
+        },
+        {
+          "table": "notas_documentos",
+          "schema": "public",
+          "definition": "CREATE TRIGGER notas_documentos_sem_truncate BEFORE TRUNCATE ON public.notas_documentos FOR EACH STATEMENT EXECUTE FUNCTION privado.so_insercao()"
+        },
+        {
+          "table": "notas_documentos",
+          "schema": "public",
+          "definition": "CREATE TRIGGER notas_documentos_auditar AFTER INSERT OR UPDATE ON public.notas_documentos FOR EACH ROW EXECUTE FUNCTION privado.auditar_mudanca()"
+        },
+        {
+          "table": "whatsapp_envios",
+          "schema": "public",
+          "definition": "CREATE TRIGGER whatsapp_envios_auditar AFTER INSERT OR UPDATE ON public.whatsapp_envios FOR EACH ROW EXECUTE FUNCTION privado.auditar_mudanca()"
+        },
+        {
+          "table": "whatsapp_envio_eventos",
+          "schema": "public",
+          "definition": "CREATE TRIGGER whatsapp_envio_eventos_sem_alteracao BEFORE DELETE OR UPDATE ON public.whatsapp_envio_eventos FOR EACH ROW EXECUTE FUNCTION privado.so_insercao()"
+        },
+        {
+          "table": "whatsapp_envio_eventos",
+          "schema": "public",
+          "definition": "CREATE TRIGGER whatsapp_envio_eventos_sem_truncate BEFORE TRUNCATE ON public.whatsapp_envio_eventos FOR EACH STATEMENT EXECUTE FUNCTION privado.so_insercao()"
+        },
+        {
+          "table": "ordens_servico",
+          "schema": "public",
+          "definition": "CREATE TRIGGER ordens_servico_auditar AFTER INSERT OR UPDATE ON public.ordens_servico FOR EACH ROW EXECUTE FUNCTION privado.auditar_mudanca()"
+        },
+        {
+          "table": "ordens_servico",
+          "schema": "public",
+          "definition": "CREATE TRIGGER ordens_servico_loja_ativa BEFORE INSERT ON public.ordens_servico FOR EACH ROW EXECUTE FUNCTION privado.loja_ativa_para_movimento('unidade_id')"
+        },
+        {
+          "table": "os_eventos",
+          "schema": "public",
+          "definition": "CREATE TRIGGER os_eventos_sem_alteracao BEFORE DELETE OR UPDATE ON public.os_eventos FOR EACH ROW EXECUTE FUNCTION privado.so_insercao()"
+        },
+        {
+          "table": "os_eventos",
+          "schema": "public",
+          "definition": "CREATE TRIGGER os_eventos_sem_truncate BEFORE TRUNCATE ON public.os_eventos FOR EACH STATEMENT EXECUTE FUNCTION privado.so_insercao()"
+        },
+        {
+          "table": "os_fotos",
+          "schema": "public",
+          "definition": "CREATE TRIGGER os_fotos_sem_alteracao BEFORE DELETE OR UPDATE ON public.os_fotos FOR EACH ROW EXECUTE FUNCTION privado.so_insercao()"
+        },
+        {
+          "table": "os_fotos",
+          "schema": "public",
+          "definition": "CREATE TRIGGER os_fotos_sem_truncate BEFORE TRUNCATE ON public.os_fotos FOR EACH STATEMENT EXECUTE FUNCTION privado.so_insercao()"
+        },
+        {
+          "table": "os_orcamentos",
+          "schema": "public",
+          "definition": "CREATE TRIGGER os_orcamentos_auditar AFTER INSERT OR UPDATE ON public.os_orcamentos FOR EACH ROW EXECUTE FUNCTION privado.auditar_mudanca()"
+        },
+        {
+          "table": "os_orcamentos",
+          "schema": "public",
+          "definition": "CREATE TRIGGER os_orcamentos_so_resposta BEFORE UPDATE ON public.os_orcamentos FOR EACH ROW EXECUTE FUNCTION privado.os_orcamento_so_resposta()"
+        },
+        {
+          "table": "os_orcamentos",
+          "schema": "public",
+          "definition": "CREATE TRIGGER os_orcamentos_sem_apagar BEFORE DELETE ON public.os_orcamentos FOR EACH ROW EXECUTE FUNCTION privado.so_insercao()"
+        },
+        {
+          "table": "os_orcamentos",
+          "schema": "public",
+          "definition": "CREATE TRIGGER os_orcamentos_sem_truncate BEFORE TRUNCATE ON public.os_orcamentos FOR EACH STATEMENT EXECUTE FUNCTION privado.so_insercao()"
+        },
+        {
+          "table": "venda_itens",
+          "schema": "public",
+          "definition": "CREATE TRIGGER venda_itens_reservado BEFORE INSERT OR UPDATE OF variante_id, os_id ON public.venda_itens FOR EACH ROW EXECUTE FUNCTION privado.venda_item_reservado()"
+        },
+        {
+          "table": "produtos",
+          "schema": "public",
+          "definition": "CREATE TRIGGER produtos_reservado_fixo BEFORE UPDATE ON public.produtos FOR EACH ROW EXECUTE FUNCTION privado.produto_reservado_fixo()"
+        },
+        {
+          "table": "vendas",
+          "schema": "public",
+          "definition": "CREATE TRIGGER vendas_os_cobrada AFTER UPDATE OF situacao ON public.vendas FOR EACH ROW WHEN (((old.situacao = 'concluida'::text) AND (new.situacao = 'cancelada'::text))) EXECUTE FUNCTION privado.os_da_venda_cancelada()"
+        },
+        {
+          "table": "os_pecas",
+          "schema": "public",
+          "definition": "CREATE TRIGGER os_pecas_auditar AFTER INSERT OR UPDATE ON public.os_pecas FOR EACH ROW EXECUTE FUNCTION privado.auditar_mudanca()"
+        },
+        {
+          "table": "os_pecas",
+          "schema": "public",
+          "definition": "CREATE TRIGGER os_pecas_so_devolucao BEFORE UPDATE ON public.os_pecas FOR EACH ROW EXECUTE FUNCTION privado.os_peca_so_devolucao()"
+        },
+        {
+          "table": "os_pecas",
+          "schema": "public",
+          "definition": "CREATE TRIGGER os_pecas_sem_apagar BEFORE DELETE ON public.os_pecas FOR EACH ROW EXECUTE FUNCTION privado.so_insercao()"
+        },
+        {
+          "table": "os_pecas",
+          "schema": "public",
+          "definition": "CREATE TRIGGER os_pecas_sem_truncate BEFORE TRUNCATE ON public.os_pecas FOR EACH STATEMENT EXECUTE FUNCTION privado.so_insercao()"
+        },
+        {
+          "table": "venda_anexos",
+          "schema": "public",
+          "definition": "CREATE TRIGGER venda_anexos_auditar AFTER INSERT OR UPDATE ON public.venda_anexos FOR EACH ROW EXECUTE FUNCTION privado.auditar_mudanca()"
+        },
+        {
+          "table": "venda_anexos",
+          "schema": "public",
+          "definition": "CREATE TRIGGER venda_anexos_so_retirada BEFORE UPDATE ON public.venda_anexos FOR EACH ROW EXECUTE FUNCTION privado.venda_anexo_so_retirada()"
+        },
+        {
+          "table": "venda_anexos",
+          "schema": "public",
+          "definition": "CREATE TRIGGER venda_anexos_sem_apagar BEFORE DELETE ON public.venda_anexos FOR EACH ROW EXECUTE FUNCTION privado.so_insercao()"
+        },
+        {
+          "table": "venda_anexos",
+          "schema": "public",
+          "definition": "CREATE TRIGGER venda_anexos_sem_truncate BEFORE TRUNCATE ON public.venda_anexos FOR EACH STATEMENT EXECUTE FUNCTION privado.so_insercao()"
+        },
+        {
+          "table": "notas_divergencias_conferidas",
+          "schema": "public",
+          "definition": "CREATE TRIGGER notas_divergencias_conferidas_auditar AFTER INSERT OR DELETE OR UPDATE ON public.notas_divergencias_conferidas FOR EACH ROW EXECUTE FUNCTION privado.auditar_mudanca()"
+        },
+        {
+          "table": "notas_divergencias_conferidas",
+          "schema": "public",
+          "definition": "CREATE TRIGGER notas_divergencias_conferidas_sem_alteracao BEFORE DELETE OR UPDATE ON public.notas_divergencias_conferidas FOR EACH ROW EXECUTE FUNCTION privado.so_insercao()"
+        },
+        {
+          "table": "notas_divergencias_conferidas",
+          "schema": "public",
+          "definition": "CREATE TRIGGER notas_divergencias_conferidas_sem_truncate BEFORE TRUNCATE ON public.notas_divergencias_conferidas FOR EACH STATEMENT EXECUTE FUNCTION privado.so_insercao()"
+        },
+        {
+          "table": "variante_codigos_externos",
+          "schema": "public",
+          "definition": "CREATE TRIGGER variante_codigos_auditar AFTER INSERT OR UPDATE ON public.variante_codigos_externos FOR EACH ROW EXECUTE FUNCTION privado.auditar_mudanca()"
+        },
+        {
+          "table": "variante_codigos_externos",
+          "schema": "public",
+          "definition": "CREATE TRIGGER variante_codigos_so_desligamento BEFORE UPDATE ON public.variante_codigos_externos FOR EACH ROW EXECUTE FUNCTION privado.variante_codigo_so_desligamento()"
+        },
+        {
+          "table": "variante_codigos_externos",
+          "schema": "public",
+          "definition": "CREATE TRIGGER variante_codigos_sem_apagar BEFORE DELETE ON public.variante_codigos_externos FOR EACH ROW EXECUTE FUNCTION privado.so_insercao()"
+        },
+        {
+          "table": "variante_codigos_externos",
+          "schema": "public",
+          "definition": "CREATE TRIGGER variante_codigos_sem_truncate BEFORE TRUNCATE ON public.variante_codigos_externos FOR EACH STATEMENT EXECUTE FUNCTION privado.so_insercao()"
+        },
+        {
+          "table": "regioes",
+          "schema": "public",
+          "definition": "CREATE TRIGGER regioes_auditar AFTER INSERT OR UPDATE ON public.regioes FOR EACH ROW EXECUTE FUNCTION privado.auditar_mudanca()"
+        },
+        {
+          "table": "regioes",
+          "schema": "public",
+          "definition": "CREATE TRIGGER regioes_sem_apagar BEFORE DELETE ON public.regioes FOR EACH ROW EXECUTE FUNCTION privado.so_insercao()"
+        },
+        {
+          "table": "regioes",
+          "schema": "public",
+          "definition": "CREATE TRIGGER regioes_sem_truncate BEFORE TRUNCATE ON public.regioes FOR EACH STATEMENT EXECUTE FUNCTION privado.so_insercao()"
+        },
+        {
+          "table": "conta_pagar_anexos",
+          "schema": "public",
+          "definition": "CREATE TRIGGER conta_pagar_anexos_auditar AFTER INSERT OR UPDATE ON public.conta_pagar_anexos FOR EACH ROW EXECUTE FUNCTION privado.auditar_mudanca()"
+        },
+        {
+          "table": "conta_pagar_anexos",
+          "schema": "public",
+          "definition": "CREATE TRIGGER conta_pagar_anexos_so_retirada BEFORE UPDATE ON public.conta_pagar_anexos FOR EACH ROW EXECUTE FUNCTION privado.conta_anexo_so_retirada()"
+        },
+        {
+          "table": "conta_pagar_anexos",
+          "schema": "public",
+          "definition": "CREATE TRIGGER conta_pagar_anexos_sem_apagar BEFORE DELETE ON public.conta_pagar_anexos FOR EACH ROW EXECUTE FUNCTION privado.so_insercao()"
+        },
+        {
+          "table": "conta_pagar_anexos",
+          "schema": "public",
+          "definition": "CREATE TRIGGER conta_pagar_anexos_sem_truncate BEFORE TRUNCATE ON public.conta_pagar_anexos FOR EACH STATEMENT EXECUTE FUNCTION privado.so_insercao()"
+        },
+        {
+          "table": "custos",
+          "schema": "public",
+          "definition": "CREATE TRIGGER custos_auditar AFTER INSERT ON public.custos FOR EACH ROW EXECUTE FUNCTION privado.auditar_mudanca()"
+        },
+        {
+          "table": "pedidos_compra",
+          "schema": "public",
+          "definition": "CREATE TRIGGER pedidos_compra_auditar AFTER INSERT OR UPDATE ON public.pedidos_compra FOR EACH ROW EXECUTE FUNCTION privado.auditar_mudanca()"
+        },
+        {
+          "table": "pedidos_compra",
+          "schema": "public",
+          "definition": "CREATE TRIGGER pedidos_compra_so_encerramento BEFORE UPDATE ON public.pedidos_compra FOR EACH ROW EXECUTE FUNCTION privado.pedido_compra_so_encerramento()"
+        },
+        {
+          "table": "pedidos_compra",
+          "schema": "public",
+          "definition": "CREATE TRIGGER pedidos_compra_sem_apagar BEFORE DELETE ON public.pedidos_compra FOR EACH ROW EXECUTE FUNCTION privado.so_insercao()"
+        },
+        {
+          "table": "pedidos_compra",
+          "schema": "public",
+          "definition": "CREATE TRIGGER pedidos_compra_sem_truncate BEFORE TRUNCATE ON public.pedidos_compra FOR EACH STATEMENT EXECUTE FUNCTION privado.so_insercao()"
+        },
+        {
+          "table": "pedido_compra_itens",
+          "schema": "public",
+          "definition": "CREATE TRIGGER pedido_compra_itens_sem_mudar BEFORE DELETE OR UPDATE ON public.pedido_compra_itens FOR EACH ROW EXECUTE FUNCTION privado.so_insercao()"
+        },
+        {
+          "table": "pedido_compra_itens",
+          "schema": "public",
+          "definition": "CREATE TRIGGER pedido_compra_itens_sem_truncate BEFORE TRUNCATE ON public.pedido_compra_itens FOR EACH STATEMENT EXECUTE FUNCTION privado.so_insercao()"
+        },
+        {
+          "table": "notas_cartas_de_correcao",
+          "schema": "public",
+          "definition": "CREATE TRIGGER notas_cartas_de_correcao_sem_alteracao BEFORE DELETE OR UPDATE ON public.notas_cartas_de_correcao FOR EACH ROW EXECUTE FUNCTION privado.so_insercao()"
+        },
+        {
+          "table": "notas_cartas_de_correcao",
+          "schema": "public",
+          "definition": "CREATE TRIGGER notas_cartas_de_correcao_sem_truncate BEFORE TRUNCATE ON public.notas_cartas_de_correcao FOR EACH STATEMENT EXECUTE FUNCTION privado.so_insercao()"
+        }
+      ],
+      "relations": [
+        {
+          "rls": true,
+          "kind": "r",
+          "name": "categorias",
+          "schema": "public",
+          "policies": 1,
+          "anon_select": false,
+          "authenticated_select": true
+        },
+        {
+          "rls": true,
+          "kind": "r",
+          "name": "organizacoes",
+          "schema": "public",
+          "policies": 1,
+          "anon_select": false,
+          "authenticated_select": true
+        },
+        {
+          "rls": true,
+          "kind": "r",
+          "name": "empresas",
+          "schema": "public",
+          "policies": 1,
+          "anon_select": false,
+          "authenticated_select": true
+        },
+        {
+          "rls": true,
+          "kind": "r",
+          "name": "perfis_usuario",
+          "schema": "public",
+          "policies": 1,
+          "anon_select": false,
+          "authenticated_select": true
+        },
+        {
+          "rls": true,
+          "kind": "r",
+          "name": "papeis",
+          "schema": "public",
+          "policies": 1,
+          "anon_select": false,
+          "authenticated_select": true
+        },
+        {
+          "rls": true,
+          "kind": "r",
+          "name": "permissoes",
+          "schema": "public",
+          "policies": 1,
+          "anon_select": false,
+          "authenticated_select": true
+        },
+        {
+          "rls": true,
+          "kind": "r",
+          "name": "papel_permissoes",
+          "schema": "public",
+          "policies": 1,
+          "anon_select": false,
+          "authenticated_select": true
+        },
+        {
+          "rls": true,
+          "kind": "r",
+          "name": "vinculos",
+          "schema": "public",
+          "policies": 1,
+          "anon_select": false,
+          "authenticated_select": true
+        },
+        {
+          "rls": true,
+          "kind": "r",
+          "name": "contexto_sessao",
+          "schema": "public",
+          "policies": 1,
+          "anon_select": false,
+          "authenticated_select": true
+        },
+        {
+          "rls": true,
+          "kind": "r",
+          "name": "auditoria",
+          "schema": "public",
+          "policies": 1,
+          "anon_select": false,
+          "authenticated_select": true
+        },
+        {
+          "rls": true,
+          "kind": "r",
+          "name": "marcas",
+          "schema": "public",
+          "policies": 1,
+          "anon_select": false,
+          "authenticated_select": true
+        },
+        {
+          "rls": true,
+          "kind": "r",
+          "name": "variantes",
+          "schema": "public",
+          "policies": 1,
+          "anon_select": false,
+          "authenticated_select": true
+        },
+        {
+          "rls": true,
+          "kind": "r",
+          "name": "estoque_saldos",
+          "schema": "public",
+          "policies": 1,
+          "anon_select": false,
+          "authenticated_select": true
+        },
+        {
+          "rls": true,
+          "kind": "r",
+          "name": "unidades",
+          "schema": "public",
+          "policies": 1,
+          "anon_select": false,
+          "authenticated_select": true
+        },
+        {
+          "rls": true,
+          "kind": "r",
+          "name": "custos",
+          "schema": "public",
+          "policies": 1,
+          "anon_select": false,
+          "authenticated_select": true
+        },
+        {
+          "rls": true,
+          "kind": "r",
+          "name": "produtos",
+          "schema": "public",
+          "policies": 1,
+          "anon_select": false,
+          "authenticated_select": true
+        },
+        {
+          "rls": false,
+          "kind": "r",
+          "name": "identificadores_itens",
+          "schema": "privado",
+          "policies": 0,
+          "anon_select": false,
+          "authenticated_select": false
+        },
+        {
+          "rls": true,
+          "kind": "r",
+          "name": "itens_serializados",
+          "schema": "public",
+          "policies": 1,
+          "anon_select": false,
+          "authenticated_select": true
+        },
+        {
+          "rls": true,
+          "kind": "r",
+          "name": "estoque_reservas",
+          "schema": "public",
+          "policies": 1,
+          "anon_select": false,
+          "authenticated_select": true
+        },
+        {
+          "rls": true,
+          "kind": "r",
+          "name": "convites",
+          "schema": "public",
+          "policies": 1,
+          "anon_select": false,
+          "authenticated_select": true
+        },
+        {
+          "rls": true,
+          "kind": "r",
+          "name": "fotos_produto",
+          "schema": "public",
+          "policies": 1,
+          "anon_select": false,
+          "authenticated_select": true
+        },
+        {
+          "rls": true,
+          "kind": "r",
+          "name": "vendas",
+          "schema": "public",
+          "policies": 1,
+          "anon_select": false,
+          "authenticated_select": true
+        },
+        {
+          "rls": true,
+          "kind": "r",
+          "name": "caixa_movimentos",
+          "schema": "public",
+          "policies": 1,
+          "anon_select": false,
+          "authenticated_select": true
+        },
+        {
+          "rls": true,
+          "kind": "r",
+          "name": "venda_itens",
+          "schema": "public",
+          "policies": 1,
+          "anon_select": false,
+          "authenticated_select": true
+        },
+        {
+          "rls": true,
+          "kind": "r",
+          "name": "caixas",
+          "schema": "public",
+          "policies": 1,
+          "anon_select": false,
+          "authenticated_select": true
+        },
+        {
+          "rls": true,
+          "kind": "r",
+          "name": "venda_itens_custos",
+          "schema": "public",
+          "policies": 1,
+          "anon_select": false,
+          "authenticated_select": true
+        },
+        {
+          "rls": true,
+          "kind": "r",
+          "name": "aprovacoes_desconto",
+          "schema": "public",
+          "policies": 1,
+          "anon_select": false,
+          "authenticated_select": true
+        },
+        {
+          "rls": true,
+          "kind": "r",
+          "name": "venda_pagamentos",
+          "schema": "public",
+          "policies": 1,
+          "anon_select": false,
+          "authenticated_select": true
+        },
+        {
+          "rls": true,
+          "kind": "r",
+          "name": "contas_a_receber",
+          "schema": "public",
+          "policies": 1,
+          "anon_select": false,
+          "authenticated_select": true
+        },
+        {
+          "rls": true,
+          "kind": "r",
+          "name": "connect_dados_envio",
+          "schema": "privado",
+          "policies": 0,
+          "anon_select": false,
+          "authenticated_select": false
+        },
+        {
+          "rls": true,
+          "kind": "r",
+          "name": "connect_habilitacoes",
+          "schema": "public",
+          "policies": 1,
+          "anon_select": false,
+          "authenticated_select": true
+        },
+        {
+          "rls": true,
+          "kind": "r",
+          "name": "connect_referencias",
+          "schema": "public",
+          "policies": 1,
+          "anon_select": false,
+          "authenticated_select": true
+        },
+        {
+          "rls": true,
+          "kind": "r",
+          "name": "connect_producao",
+          "schema": "public",
+          "policies": 1,
+          "anon_select": false,
+          "authenticated_select": true
+        },
+        {
+          "rls": true,
+          "kind": "r",
+          "name": "connect_eventos",
+          "schema": "public",
+          "policies": 1,
+          "anon_select": false,
+          "authenticated_select": true
+        },
+        {
+          "rls": true,
+          "kind": "r",
+          "name": "connect_operacoes",
+          "schema": "public",
+          "policies": 1,
+          "anon_select": false,
+          "authenticated_select": true
+        },
+        {
+          "rls": true,
+          "kind": "r",
+          "name": "fiscal_politicas",
+          "schema": "public",
+          "policies": 1,
+          "anon_select": false,
+          "authenticated_select": true
+        },
+        {
+          "rls": true,
+          "kind": "r",
+          "name": "notas_destinatarios",
+          "schema": "privado",
+          "policies": 0,
+          "anon_select": false,
+          "authenticated_select": false
+        },
+        {
+          "rls": true,
+          "kind": "r",
+          "name": "estornos_externos",
+          "schema": "public",
+          "policies": 1,
+          "anon_select": false,
+          "authenticated_select": true
+        },
+        {
+          "rls": true,
+          "kind": "r",
+          "name": "venda_retornos",
+          "schema": "public",
+          "policies": 1,
+          "anon_select": false,
+          "authenticated_select": true
+        },
+        {
+          "rls": true,
+          "kind": "r",
+          "name": "venda_devolucoes",
+          "schema": "public",
+          "policies": 1,
+          "anon_select": false,
+          "authenticated_select": true
+        },
+        {
+          "rls": true,
+          "kind": "r",
+          "name": "venda_devolucao_itens",
+          "schema": "public",
+          "policies": 1,
+          "anon_select": false,
+          "authenticated_select": true
+        },
+        {
+          "rls": true,
+          "kind": "r",
+          "name": "venda_devolucao_reembolsos",
+          "schema": "public",
+          "policies": 1,
+          "anon_select": false,
+          "authenticated_select": true
+        },
+        {
+          "rls": true,
+          "kind": "r",
+          "name": "vales_troca",
+          "schema": "public",
+          "policies": 1,
+          "anon_select": false,
+          "authenticated_select": true
+        },
+        {
+          "rls": true,
+          "kind": "r",
+          "name": "vales_troca_usos",
+          "schema": "public",
+          "policies": 1,
+          "anon_select": false,
+          "authenticated_select": true
+        },
+        {
+          "rls": true,
+          "kind": "r",
+          "name": "connect_operacoes_custos",
+          "schema": "public",
+          "policies": 1,
+          "anon_select": false,
+          "authenticated_select": true
+        },
+        {
+          "rls": true,
+          "kind": "r",
+          "name": "connect_segredos",
+          "schema": "privado",
+          "policies": 0,
+          "anon_select": false,
+          "authenticated_select": false
+        },
+        {
+          "rls": true,
+          "kind": "r",
+          "name": "precos",
+          "schema": "public",
+          "policies": 1,
+          "anon_select": false,
+          "authenticated_select": true
+        },
+        {
+          "rls": true,
+          "kind": "r",
+          "name": "transferencias",
+          "schema": "public",
+          "policies": 1,
+          "anon_select": false,
+          "authenticated_select": true
+        },
+        {
+          "rls": true,
+          "kind": "r",
+          "name": "transferencia_itens",
+          "schema": "public",
+          "policies": 1,
+          "anon_select": false,
+          "authenticated_select": true
+        },
+        {
+          "rls": true,
+          "kind": "r",
+          "name": "unidade_configuracoes",
+          "schema": "public",
+          "policies": 1,
+          "anon_select": false,
+          "authenticated_select": true
+        },
+        {
+          "rls": true,
+          "kind": "r",
+          "name": "importacoes",
+          "schema": "public",
+          "policies": 1,
+          "anon_select": false,
+          "authenticated_select": true
+        },
+        {
+          "rls": true,
+          "kind": "r",
+          "name": "importacao_linhas",
+          "schema": "public",
+          "policies": 1,
+          "anon_select": false,
+          "authenticated_select": true
+        },
+        {
+          "rls": true,
+          "kind": "r",
+          "name": "fornecedores",
+          "schema": "public",
+          "policies": 1,
+          "anon_select": false,
+          "authenticated_select": true
+        },
+        {
+          "rls": true,
+          "kind": "r",
+          "name": "entradas_estoque",
+          "schema": "public",
+          "policies": 1,
+          "anon_select": false,
+          "authenticated_select": false
+        },
+        {
+          "rls": true,
+          "kind": "r",
+          "name": "inventarios",
+          "schema": "public",
+          "policies": 1,
+          "anon_select": false,
+          "authenticated_select": true
+        },
+        {
+          "rls": true,
+          "kind": "r",
+          "name": "inventario_itens",
+          "schema": "public",
+          "policies": 1,
+          "anon_select": false,
+          "authenticated_select": true
+        },
+        {
+          "rls": true,
+          "kind": "r",
+          "name": "entrada_itens",
+          "schema": "public",
+          "policies": 1,
+          "anon_select": false,
+          "authenticated_select": false
+        },
+        {
+          "rls": true,
+          "kind": "r",
+          "name": "cliente_dados",
+          "schema": "privado",
+          "policies": 0,
+          "anon_select": false,
+          "authenticated_select": false
+        },
+        {
+          "rls": true,
+          "kind": "r",
+          "name": "crm_segredos",
+          "schema": "privado",
+          "policies": 0,
+          "anon_select": false,
+          "authenticated_select": false
+        },
+        {
+          "rls": true,
+          "kind": "r",
+          "name": "cliente_consentimentos",
+          "schema": "public",
+          "policies": 1,
+          "anon_select": false,
+          "authenticated_select": true
+        },
+        {
+          "rls": true,
+          "kind": "r",
+          "name": "clientes",
+          "schema": "public",
+          "policies": 1,
+          "anon_select": false,
+          "authenticated_select": true
+        },
+        {
+          "rls": true,
+          "kind": "r",
+          "name": "oportunidades",
+          "schema": "public",
+          "policies": 1,
+          "anon_select": false,
+          "authenticated_select": true
+        },
+        {
+          "rls": true,
+          "kind": "r",
+          "name": "oportunidade_eventos",
+          "schema": "public",
+          "policies": 1,
+          "anon_select": false,
+          "authenticated_select": true
+        },
+        {
+          "rls": true,
+          "kind": "r",
+          "name": "atividades",
+          "schema": "public",
+          "policies": 1,
+          "anon_select": false,
+          "authenticated_select": true
+        },
+        {
+          "rls": true,
+          "kind": "r",
+          "name": "cliente_nao_duplicados",
+          "schema": "public",
+          "policies": 1,
+          "anon_select": false,
+          "authenticated_select": true
+        },
+        {
+          "rls": true,
+          "kind": "r",
+          "name": "terminais",
+          "schema": "public",
+          "policies": 1,
+          "anon_select": false,
+          "authenticated_select": true
+        },
+        {
+          "rls": true,
+          "kind": "r",
+          "name": "metas",
+          "schema": "public",
+          "policies": 1,
+          "anon_select": false,
+          "authenticated_select": true
+        },
+        {
+          "rls": true,
+          "kind": "r",
+          "name": "caixa_saidas",
+          "schema": "public",
+          "policies": 1,
+          "anon_select": false,
+          "authenticated_select": true
+        },
+        {
+          "rls": true,
+          "kind": "r",
+          "name": "contas_a_pagar",
+          "schema": "public",
+          "policies": 1,
+          "anon_select": false,
+          "authenticated_select": true
+        },
+        {
+          "rls": true,
+          "kind": "r",
+          "name": "bonus_regras",
+          "schema": "public",
+          "policies": 1,
+          "anon_select": false,
+          "authenticated_select": true
+        },
+        {
+          "rls": true,
+          "kind": "r",
+          "name": "contas_pagar_categorias",
+          "schema": "public",
+          "policies": 1,
+          "anon_select": false,
+          "authenticated_select": true
+        },
+        {
+          "rls": true,
+          "kind": "r",
+          "name": "inventario_contagens",
+          "schema": "public",
+          "policies": 1,
+          "anon_select": false,
+          "authenticated_select": true
+        },
+        {
+          "rls": true,
+          "kind": "r",
+          "name": "bonus_fechamentos",
+          "schema": "public",
+          "policies": 1,
+          "anon_select": false,
+          "authenticated_select": true
+        },
+        {
+          "rls": true,
+          "kind": "r",
+          "name": "bonus_fechamento_linhas",
+          "schema": "public",
+          "policies": 1,
+          "anon_select": false,
+          "authenticated_select": true
+        },
+        {
+          "rls": true,
+          "kind": "r",
+          "name": "bonus_contestacoes",
+          "schema": "public",
+          "policies": 1,
+          "anon_select": false,
+          "authenticated_select": true
+        },
+        {
+          "rls": true,
+          "kind": "r",
+          "name": "notas_documentos",
+          "schema": "public",
+          "policies": 1,
+          "anon_select": false,
+          "authenticated_select": true
+        },
+        {
+          "rls": true,
+          "kind": "r",
+          "name": "whatsapp_destinos",
+          "schema": "privado",
+          "policies": 0,
+          "anon_select": false,
+          "authenticated_select": false
+        },
+        {
+          "rls": true,
+          "kind": "r",
+          "name": "whatsapp_envios",
+          "schema": "public",
+          "policies": 1,
+          "anon_select": false,
+          "authenticated_select": true
+        },
+        {
+          "rls": true,
+          "kind": "r",
+          "name": "whatsapp_envio_eventos",
+          "schema": "public",
+          "policies": 1,
+          "anon_select": false,
+          "authenticated_select": true
+        },
+        {
+          "rls": true,
+          "kind": "r",
+          "name": "ordens_servico",
+          "schema": "public",
+          "policies": 1,
+          "anon_select": false,
+          "authenticated_select": true
+        },
+        {
+          "rls": true,
+          "kind": "r",
+          "name": "os_fotos",
+          "schema": "public",
+          "policies": 1,
+          "anon_select": false,
+          "authenticated_select": true
+        },
+        {
+          "rls": true,
+          "kind": "r",
+          "name": "os_orcamentos",
+          "schema": "public",
+          "policies": 1,
+          "anon_select": false,
+          "authenticated_select": true
+        },
+        {
+          "rls": true,
+          "kind": "r",
+          "name": "estoque_movimentos",
+          "schema": "public",
+          "policies": 1,
+          "anon_select": false,
+          "authenticated_select": true
+        },
+        {
+          "rls": true,
+          "kind": "r",
+          "name": "os_pecas",
+          "schema": "public",
+          "policies": 1,
+          "anon_select": false,
+          "authenticated_select": true
+        },
+        {
+          "rls": true,
+          "kind": "r",
+          "name": "os_eventos",
+          "schema": "public",
+          "policies": 1,
+          "anon_select": false,
+          "authenticated_select": true
+        },
+        {
+          "rls": true,
+          "kind": "r",
+          "name": "notas_pedidos",
+          "schema": "public",
+          "policies": 1,
+          "anon_select": false,
+          "authenticated_select": true
+        },
+        {
+          "rls": true,
+          "kind": "r",
+          "name": "venda_anexos",
+          "schema": "public",
+          "policies": 1,
+          "anon_select": false,
+          "authenticated_select": true
+        },
+        {
+          "rls": true,
+          "kind": "r",
+          "name": "notas_divergencias_conferidas",
+          "schema": "public",
+          "policies": 1,
+          "anon_select": false,
+          "authenticated_select": true
+        },
+        {
+          "rls": true,
+          "kind": "r",
+          "name": "notas_eventos",
+          "schema": "public",
+          "policies": 1,
+          "anon_select": false,
+          "authenticated_select": true
+        },
+        {
+          "rls": true,
+          "kind": "r",
+          "name": "variante_codigos_externos",
+          "schema": "public",
+          "policies": 1,
+          "anon_select": false,
+          "authenticated_select": true
+        },
+        {
+          "rls": true,
+          "kind": "r",
+          "name": "conta_pagar_anexos",
+          "schema": "public",
+          "policies": 1,
+          "anon_select": false,
+          "authenticated_select": true
+        },
+        {
+          "rls": true,
+          "kind": "r",
+          "name": "regioes",
+          "schema": "public",
+          "policies": 1,
+          "anon_select": false,
+          "authenticated_select": true
+        },
+        {
+          "rls": true,
+          "kind": "r",
+          "name": "pedidos_compra",
+          "schema": "public",
+          "policies": 0,
+          "anon_select": false,
+          "authenticated_select": false
+        },
+        {
+          "rls": true,
+          "kind": "r",
+          "name": "pedido_compra_itens",
+          "schema": "public",
+          "policies": 0,
+          "anon_select": false,
+          "authenticated_select": false
+        },
+        {
+          "rls": true,
+          "kind": "r",
+          "name": "notas_cartas_de_correcao",
+          "schema": "public",
+          "policies": 1,
+          "anon_select": false,
+          "authenticated_select": true
+        }
+      ],
+      "invalid_indexes": 0
+    }
+  }
+]
