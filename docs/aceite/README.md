@@ -36,4 +36,5 @@ Um lote aceito que entrega só uma parte do requisito fica registrado em `aceite
 | TRF-a (vários produtos na mesma transferência: a remessa) | [TRF-a.md](TRF-a.md) | ORA-INV-007 e a issue #60 (o estado não muda) | aguardando (pedido em 17/11; no ar em `e603531`) |
 | REIN-a (o importador pronto para a planilha inteira da Rein) | [REIN-a.md](REIN-a.md) | ORA-CAT-002 e a issue #89 (o estado não muda) | aguardando (pedido em 17/11; no ar em `03123d0`) |
 | MKT-a (de onde veio a reserva do site) | [MKT-a.md](MKT-a.md) | ORA-ONLINE-003 (passa a testado) e ORA-META-002 (passa a parcial) | aguardando (pedido em 17/11; no ar em `2e3fa24`) |
-| DEP-a (a lista única do que depende de fora: o aceite A19) | [DEP-a.md](DEP-a.md) | nenhum (só documentação) | a pedir depois da publicação |
+| DEP-a (a lista única do que depende de fora: o aceite A19) | [DEP-a.md](DEP-a.md) | nenhum (só documentação) | aguardando (pedido em 17/11; no ar em `569eab8`) |
+| PWA-b (o aviso no celular para aprovar num toque) | [PWA-b.md](PWA-b.md) | ORA-REPORT-002 e ORA-QUAL-006 (o estado de cada um não muda) | a pedir depois da publicação |

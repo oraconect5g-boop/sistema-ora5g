@@ -1652,6 +1652,34 @@ Programa de execução integral (PR #67; checkpoint em `docs/alinhamento/EXECUCA
   3. A regra das chaves internas: o Claude gera no servidor, mas só com a autorização do proprietário para cada uma (plano de 16/11, §3). A versão de 14/11 dizia que elas não dependiam dele.
   4. A lista do que ele providencia ganhou a autorização do par `WEB_PUSH_*` e os dados das lojas; as linhas das fotos, da equipe, das lojas e do arquivo da Rein foram postas em dia (o que já existe desde 14/11).
 - **Banco e código:** nada.
+- **CI, merge e publicação (17/11):**
+  - **CI:** a sequência completa, de instalação limpa no servidor, passou em `4a713de`: 2.743 testes e 1 TODO, 293 E2E (13 pulados), auditoria sem vulnerabilidade e o orçamento em dia.
+  - **Merge:** `569eab8`; a árvore é a da branch testada. No GitHub, os checks de `569eab8` terminaram com sucesso: "Verificações" e "Supabase Preview".
+  - **Publicação:** na homologação, em 17/11 (build 15:20), conferida pela pasta, pelo serviço local e pelo domínio com o commit inteiro.
 - **Pedido ao Codex:** conferir:
   1. se alguma integração ou dependência ficou de fora;
   2. se o mapeamento dos requisitos de cada linha confere com o backlog.
+
+## 17/11/2026 — Lote PWA-b: o aviso no celular de desconto, nota e saída de caixa a aprovar (Onda 1, item 7, a segunda parte)
+
+- **Origem:** o plano do proprietário de 16/11, Onda 1, item 7 ("Web Push para desconto, nota e saída de caixa a aprovar"; o objetivo "o dono aprova em um toque"). As chaves foram autorizadas pelo proprietário em 17/11. A decisão está no [ADR-014](../adr/ADR-014-avisos-no-celular.md).
+- **As chaves:** geradas no servidor por um script fora do repositório, direto no ambiente da homologação (permissão 600), sem exibir valor: o par VAPID P-256, o contato (`https://ora5g.com.br`) e o segredo da fila (32 bytes). O par foi conferido assinando e verificando, sem exibir. O banco guarda só a impressão digital SHA-256 do segredo (`privado.segredos_de_rotina`, gravada por `execute_sql`, fora da migration).
+- **Banco:** a migration `20261117190556_avisos_no_celular`, aplicada no `ora5g-dev` em 17/11 (16:05), depois do merge do DEP-a e dos checks dele.
+  1. `privado.avisos_inscricoes` (até 10 por pessoa; o mesmo endereço com outra pessoa passa a ser dela) e `privado.avisos` (a fila; `unique (tipo, alvo_id)`), com RLS ligado e sem política.
+  2. Gatilhos `after insert` em `aprovacoes_desconto` e `caixa_saidas` e `after insert or update of situacao` em `notas_pedidos` (a nota que volta a `aguardando_aprovacao` arma de novo).
+  3. `privado.quem_recebe_aviso(loja, permissão)`: vínculo vigente pela rede ou pela loja, papel ativo, organização e loja ativas, pessoa ativa. O envio exclui quem pediu; o aviso de teste vai só para quem pediu.
+  4. As funções da pessoa logada (`aviso_inscrever`, `aviso_cancelar`, `aviso_minhas_inscricoes`, `aviso_teste`) exigem o vínculo vigente (`privado.vinculos_vigentes()`); desligar o celular de outra pessoa recusa com 42501. Os erros do teste têm códigos próprios: OR039 (sem celular) e OR040 (espere um minuto).
+  5. As funções do worker (`avisos_a_enviar` e `avisos_resultado`) conferem o segredo pela impressão digital e recusam com 42501 sem ele; estão abertas ao papel `anon` porque o worker usa a chave pública (ADR-014).
+- **Worker:** `apps/worker/src/avisos/web-push.ts` cifra a mensagem (RFC 8291, aes128gcm, um registro de 4096) e assina o VAPID (RFC 8292, JWT ES256 com `aud` do serviço de envio, 12 horas, `sub` do contato). Posta só nos serviços de envio dos navegadores (`@ora5g/dominio/avisos`); 404 e 410 tiram o celular; o resto tenta de novo. `executar-avisos.ts` lê a fila com a chave pública e o segredo; o log só leva contagens. Sem dependência nova.
+- **Site:** o service worker mostra o aviso (`push`) e abre só um endereço do sistema (`notificationclick`); a tela `/conta/avisos` liga, desliga e pede o teste; a inscrição deste navegador volta ao servidor a cada visita.
+- **Testes:** `avisos-no-celular.test.ts` (8); o inventário de autorização com 183 funções; `web-push.test.ts` (6, com o exemplo da RFC 8291 byte a byte e a volta decifrada); `processar.test.ts` (4); `avisos.test.ts` do domínio (3); `manifest.test.ts` (+3, o aviso e o toque); `conta/avisos/avisos.test.ts` (6).
+- **Conferido no ar antes da publicação:** pela API, com a chave pública, o segredo do servidor abre a fila (vazia) e o errado recebe 42501; os tipos à mão são iguais aos gerados.
+- **Limite declarado:**
+  1. O worker dos avisos não está agendado: espera a autorização do proprietário.
+  2. Os avisos que ninguém lê ficam na fila (só valem no mesmo dia); a limpeza da fila fica para a rotina do banco.
+  3. O aviso quando uma fila passa do limite (ORA-QUAL-006) ainda não existe: só o canal.
+- **Pedido ao Codex:** conferir:
+  1. a cifra e o VAPID contra as RFCs (o teste com o exemplo oficial está em `web-push.test.ts`);
+  2. que nenhuma função entrega inscrição de outra pessoa sem o segredo;
+  3. que o worker não posta fora dos serviços de envio e que o service worker não abre endereço de fora;
+  4. que quem pediu nunca recebe o aviso do próprio pedido e que a pessoa bloqueada não recebe.

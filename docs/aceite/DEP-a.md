@@ -4,6 +4,7 @@
 - **Quanto tempo leva:** uns cinco minutos.
 - **O que o lote entrega:** o aceite A19 do adendo do Codex de 16/11, que é uma lista única com tudo o que depende de fora do sistema. Nenhum requisito muda de estado.
 - **Resposta:** "aceito" ou "não aceito". No "não aceito", diga o que falta ou o que está errado na lista.
+- **No ar:** desde 17/11, às 15:20, no commit `569eab8`. O rodapé pode mostrar um commit mais novo, de um lote seguinte.
 
 ## O que mudou
 
