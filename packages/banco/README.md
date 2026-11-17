@@ -39,7 +39,7 @@ Sete arquivos sobem um PostgreSQL 17 de verdade (`src/postgres-real.ts`, com o s
 
 | Ambiente | Projeto | Situação |
 |---|---|---|
-| Desenvolvimento | `ora5g-dev` (`qgnbeuugklzzcevdzrvg`, São Paulo, plano gratuito) | 94 migrations aplicadas (de 07 a 17/11/2026), lista em `supabase/aplicadas-dev.json` |
+| Desenvolvimento | `ora5g-dev` (`qgnbeuugklzzcevdzrvg`, São Paulo, plano gratuito) | 95 migrations aplicadas (de 07 a 17/11/2026), lista em `supabase/aplicadas-dev.json` |
 | Homologação | a criar | — |
 | Produção | a criar | — |
 

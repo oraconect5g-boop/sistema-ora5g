@@ -35,7 +35,7 @@
       "conferido": "publicar.sh com a conferência completa (#99): a pasta ativa, o serviço local e o domínio ora5g.com.br servindo o commit inteiro de 9012f7f e o ambiente homologacao em /saude/versao; build 17/11/2026 11:15 (o lote INTEG-c); sem login, pelo domínio, /entrar e /loja respondem 200, o produto que não existe responde 404, e /vender e /operacao respondem 307 para a entrada; o log de tempos está ligado (ORA_MEDIR_TEMPOS=1) até o roteiro de aceite do VEL-a; nenhum pedido com login chegou ainda à versão publicada (não há conta de teste: J1)"
     },
     "falta_publicar": [
-      "lote BANCO-a (Onda 0.5: os índices das chaves estrangeiras, o RLS e os comentários): a migration 20261117141658_indices_e_rls_do_banco já está no ora5g-dev (aplicada em 17/11, 11:16) e não muda nada que a versão no ar use; a publicação traz os documentos e o teste novo",
+      "lote BANCO-a (Onda 0.5: os índices das chaves estrangeiras, o RLS e os comentários): as migrations 20261117141658_indices_e_rls_do_banco e 20261117143744_indice_redundante_das_fotos já estão no ora5g-dev (aplicadas em 17/11, 11:16 e 11:37) e não muda nada que a versão no ar use; a publicação traz os documentos e o teste novo",
       "o log de tempos está ligado na homologação até o roteiro de aceite do VEL-a: depois ele é desligado e a plataforma é publicada de novo, sem mudança de código"
     ]
   },
