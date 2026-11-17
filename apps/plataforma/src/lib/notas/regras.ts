@@ -26,6 +26,12 @@ export const ERROS_DAS_NOTAS = {
   whatsapp_sem_numero: "O cliente da venda não tem WhatsApp no cadastro: complete o cadastro dele.",
   whatsapp_desconhecido: "O último envio ficou com resultado desconhecido: a gerência confere antes de reenviar.",
   whatsapp_motivo: "Para reenviar a nota, informe o motivo (de 3 a 200 letras): ele fica no histórico.",
+  // INTEG-c (#101): a nota sem a identidade do destinatário comprovada e a conferência da gerência.
+  whatsapp_identidade: "A identidade do destinatário desta nota não está comprovada: a gerência confere o PDF da nota e confirma o cliente antes do envio.",
+  conferencia_motivo: "Informe como o destinatário foi conferido (de 10 a 200 letras): fica na auditoria.",
+  conferencia_feita: "A identidade do destinatário desta nota já está comprovada: recarregue a venda.",
+  conferencia_sem_cliente: "A venda não tem um cliente ativo do cadastro para confirmar: ligue o cliente certo à venda antes.",
+  conferencia_nao_emitida: "A conferência do destinatário é da nota de venda emitida: recarregue a venda.",
   // L10c (FISC-009): o cancelamento no fisco registrado e a chave corrigida.
   chave_repetida: "Esta chave de acesso já está registrada em outro pedido: confira se é a nota certa.",
   nao_emitida: "Esta nota não está emitida (talvez o pedido já tenha mudado): recarregue a venda.",
@@ -48,7 +54,7 @@ export const ERROS_DAS_NOTAS = {
 export type ErroDasNotas = keyof typeof ERROS_DAS_NOTAS;
 
 const DO_BANCO: Record<string, ErroDasNotas> = {
-  OR004: "chave", OR014: "ja_pedida", OR015: "nota_emitida", "42501": "sem_permissao", P0002: "nao_encontrado", "22023": "dados",
+  OR004: "chave", OR014: "ja_pedida", OR015: "nota_emitida", OR037: "whatsapp_identidade", "42501": "sem_permissao", P0002: "nao_encontrado", "22023": "dados",
 };
 export function erroDasNotas(erro: { code?: string; message?: string } | null | undefined): ErroDasNotas {
   const codigo = erro?.code;
@@ -67,6 +73,13 @@ export function erroDasNotas(erro: { code?: string; message?: string } | null | 
   ];
   const doEnvio = codigo === "22023" ? doWhatsApp.find(([padrao]) => padrao.test(erro?.message ?? "")) : undefined;
   if (doEnvio) return doEnvio[1];
+  // INTEG-c (#101): a conferência do destinatário pela gerência.
+  const daConferencia: [RegExp, ErroDasNotas][] = [
+    [/como o destinatário foi conferido/i, "conferencia_motivo"], [/destinatário desta nota já está comprovada/i, "conferencia_feita"],
+    [/não tem um cliente ativo do cadastro para confirmar/i, "conferencia_sem_cliente"], [/conferência do destinatário é da nota/i, "conferencia_nao_emitida"],
+  ];
+  const doConferido = codigo === "22023" ? daConferencia.find(([padrao]) => padrao.test(erro?.message ?? "")) : undefined;
+  if (doConferido) return doConferido[1];
   // L10c (FISC-009): o cancelamento no fisco e a correção da chave.
   const doCancelamento: [RegExp, ErroDasNotas][] = [
     [/já está registrada em outro pedido/i, "chave_repetida"], [/protocolo do cancelamento inválido/i, "cancelamento_protocolo"],

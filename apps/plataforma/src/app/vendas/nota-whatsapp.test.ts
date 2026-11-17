@@ -59,7 +59,7 @@ vi.mock("../../lib/acesso/sessao", () => ({
   }),
 }));
 
-import { conferirEnvioDesconhecido, corrigirNota, enviarNotaPeloWhatsApp } from "../notas/acoes";
+import { conferirEnvioDesconhecido, confirmarDestinatarioDaNota, corrigirNota, enviarNotaPeloWhatsApp } from "../notas/acoes";
 import Venda from "./[id]/page";
 
 function texto(v: unknown): string {
@@ -93,7 +93,7 @@ beforeEach(() => {
   cenario.tabelas = {
     vendas: [{ id: VENDA, numero: 51, situacao: "concluida", unidade_id: LOJA, vendedor_id: EU, cliente_nome: "Carla Cliente", cliente_id: CLIENTE, total_centavos: 7_900, subtotal_centavos: 7_900, desconto_centavos: 0, troco_centavos: 0, recebido_centavos: 7_900, a_receber_centavos: 0, devolvido_centavos: 0, concluida_em: "2026-11-14T13:00:00Z", cancelada_em: null, motivo_cancelamento: null }],
     venda_itens: [],
-    notas_pedidos: [{ id: PEDIDO, venda_id: VENDA, tipo: "venda", situacao: "emitida", solicitado_por: EU, destinatario_nome: null, destinatario_mascarado: null, observacao: null, chave_acesso: "4".repeat(44), modelo: "65", serie: 1, numero_documento: 801, protocolo: "141260000123456", cliente_id: CLIENTE }],
+    notas_pedidos: [{ id: PEDIDO, venda_id: VENDA, tipo: "venda", situacao: "emitida", solicitado_por: EU, destinatario_nome: null, destinatario_mascarado: null, observacao: null, chave_acesso: "4".repeat(44), modelo: "65", serie: 1, numero_documento: 801, protocolo: "141260000123456", cliente_id: CLIENTE, cliente_origem: "pedido" }],
     notas_documentos: [{ id: "doc1", pedido_id: PEDIDO, tipo: "pdf", caminho: `org/loja/${PEDIDO}/a.pdf`, bytes: 51_200, enviado_em: "2026-11-14T13:30:00Z" }],
     whatsapp_envios: [],
     unidades: [{ id: LOJA, nome: "Santa Cândida (teste)", cnpj: null }],
@@ -168,5 +168,41 @@ describe("documentos e envio da nota na tela da venda (L10a, K1c)", () => {
     expect(await destinoDe(conferirEnvioDesconhecido(formulario({ envio: ENVIO, venda: VENDA, motivo: "x" })))).toBe(`/vendas/${VENDA}?erro_nota=motivo`);
     cenario.respostas.whatsapp_envio_resolver = { data: true, error: null };
     expect(await destinoDe(conferirEnvioDesconhecido(formulario({ envio: ENVIO, venda: VENDA, motivo: "Cliente disse que não chegou" })))).toBe(`/vendas/${VENDA}?nota=whatsapp_conferido`);
+  });
+});
+
+describe("a nota antiga sem a identidade do destinatário comprovada (INTEG-c, #101)", () => {
+  const semProva = () => { cenario.tabelas.notas_pedidos = [{ ...cenario.tabelas.notas_pedidos![0], cliente_origem: null }]; };
+
+  it("sem prova, não oferece o envio: quem aprova a nota confere o PDF e confirma o cliente da venda; o vendedor vê que a gerência confere", async () => {
+    semProva();
+    let t = await tela();
+    expect(t).not.toContain("Enviar a nota pelo WhatsApp");
+    expect(t).toContain("A identidade do destinatário desta nota não está comprovada");
+    expect(t).toContain("Abra o PDF e confira se o destinatário é Carla Cliente");
+    expect(t).toContain("Confirmar: a nota é de Carla Cliente");
+    cenario.permissoes = new Set(["venda.registrar", "nota.solicitar"]);
+    t = await tela();
+    expect(t).not.toContain("Confirmar: a nota é de");
+    expect(t).toContain("a gerência confere o PDF antes do envio");
+  });
+
+  it("a confirmação vai ao banco com o motivo e volta à venda; motivo curto nem chega ao banco; as recusas viram a mensagem certa", async () => {
+    expect(await destinoDe(confirmarDestinatarioDaNota(formulario({ pedido: PEDIDO, venda: VENDA, motivo: "curto" })))).toBe(`/vendas/${VENDA}?erro_nota=conferencia_motivo`);
+    expect(cenario.chamadas.some((c) => c.nome === "nota_confirmar_destinatario")).toBe(false);
+    cenario.respostas.nota_confirmar_destinatario = { data: true, error: null };
+    expect(await destinoDe(confirmarDestinatarioDaNota(formulario({ pedido: PEDIDO, venda: VENDA, motivo: "Conferi o CPF do DANFE com o cadastro" })))).toBe(`/vendas/${VENDA}?nota=destinatario_conferido`);
+    expect(cenario.chamadas.at(-1)).toEqual({ nome: "nota_confirmar_destinatario", argumentos: { p_pedido: PEDIDO, p_motivo: "Conferi o CPF do DANFE com o cadastro" } });
+    for (const [erro, chave] of [
+      [{ code: "22023", message: "A identidade do destinatário desta nota já está comprovada" }, "conferencia_feita"],
+      [{ code: "22023", message: "A venda não tem um cliente ativo do cadastro para confirmar" }, "conferencia_sem_cliente"],
+      [{ code: "22023", message: "A conferência do destinatário é da nota de venda emitida" }, "conferencia_nao_emitida"],
+      [{ code: "42501", message: "Nota não encontrada nesta loja" }, "sem_permissao"],
+    ] as const) {
+      cenario.respostas.nota_confirmar_destinatario = { data: null, error: erro };
+      expect(await destinoDe(confirmarDestinatarioDaNota(formulario({ pedido: PEDIDO, venda: VENDA, motivo: "Conferi o CPF do DANFE com o cadastro" })))).toBe(`/vendas/${VENDA}?erro_nota=${chave}`);
+    }
+    cenario.respostas.nota_enviar_whatsapp = { data: null, error: { code: "OR037", message: "A identidade do destinatário desta nota não está comprovada" } };
+    expect(await destinoDe(enviarNotaPeloWhatsApp(formulario({ pedido: PEDIDO, venda: VENDA, chave: "00000000-0000-4000-8000-00000000c010" })))).toBe(`/vendas/${VENDA}?erro_nota=whatsapp_identidade`);
   });
 });

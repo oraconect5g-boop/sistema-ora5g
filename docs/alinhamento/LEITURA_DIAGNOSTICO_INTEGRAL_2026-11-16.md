@@ -49,3 +49,32 @@ Na ordem do relatório integral (o INTEG-a e o INTEG-b já fecharam #87, #88, #9
 **Integração GitHub × Supabase (lida em 16/11 na documentação oficial):** com "Deploy to production" ligado, a integração aplica as migrations novas, as Edge Functions e os buckets declarados no `config.toml`, e ignora Auth, API e seed. O diretório de trabalho deve ser `packages/banco` (o pai de `supabase/`). Um `config.toml` mínimo, sem buckets declarados (eles nascem nas migrations), não muda o login nem as URLs. Como as migrations são aplicadas antes do merge e renomeadas para a versão gravada, a integração não terá o que reaplicar; trocar o diretório de trabalho no painel é do proprietário.
 
 **A integração já está ligada (16/11, 07:34):** no merge do INTEG-b na `main`, ela aplicou sozinha no `ora5g-dev` a migration nova `20261116130100_importacao_estatisticas` (versão igual ao nome do arquivo, sem usuário e o texto dividido em 4 comandos). Ou seja, ela já lê `packages/banco/supabase/migrations`. Daqui em diante, migration que chega à `main` é aplicada no `ora5g-dev`; o processo continua aplicando antes do merge e gravando a versão no nome do arquivo, e a integração não reaplica o que já está no histórico.
+
+## 6. A continuação do Codex de 16/11 (PR #100, commit `e311060`), lida em 17/11
+
+O commit `e311060` (16/11, 19:26) chegou depois da leitura de `398dfa0`. Ele revalida o código em `89927dc` e acrescenta o pedido mais recente do proprietário para a loja online, os canais e a publicação.
+
+**Lidos por inteiro em 17/11** (na pasta `docs/analises/diagnostico-integral-2026-11-16/`):
+
+- `LEIA-ME.md`, `ATUALIZACAO_2026-11-16.md`, `ADENDO_LOJA_CANAIS_E_PUBLICACAO.md`, `PROMPT_CLAUDE.md` e `NODE_E_ACELERACAO.md`;
+- em `evidencias/`: `REVALIDACAO.md`, `revalidacao-legado.test.ts` (#101), `revalidacao-cota.test.ts` (#102) e `revalidacao-resumo.json`;
+- as duas linhas novas de `RELATORIO_INTEGRAL.md`, `SUPABASE_E_PUBLICACAO.md` e `SOLUCOES_PARA_AVALIACAO.md`: o aviso de documento histórico de `5468d9e`.
+
+**Lidos em parte:**
+
+- `MATRIZ_179_ATUALIZADA.md`: o cabeçalho e as primeiras linhas. Os estados declarados nela são os de `status-requisitos.json` em `89927dc`, que segue como a fonte.
+- `evidencias/revalidacao-funcoes-comparadas.json`: o resumo, com 11 corpos de função iguais aos do código.
+
+**Decisões válidas, aplicadas ou já na fila:**
+
+1. Corrigir o #101 (P1) e o #102 (P2) primeiro. Feito no lote INTEG-c, em 17/11: as provas do Codex viraram regressões.
+2. A loja em `https://ora5g.com.br/loja` passa a ter compra completa (carrinho, checkout, pagamento verificado, pedido, entrega ou retirada e pós-venda), com o link "Comprar/Loja" no topo do site. Isso amplia a ADR-009, que limitava o escopo a "reserve no site e pague na loja". O registro na ADR vai no lote da loja online, com os aceites A01 a A20 do adendo. O meio de pagamento dos aparelhos depende do contrato do gateway: a Nogle não prova checkout de aparelho.
+3. A demonstração continua acessível e atualizada, com dados fictícios e selo, sem ação real.
+4. A publicação de cada etapa na homologação já está autorizada. Isso confere com a autorização do proprietário de 16/11.
+5. A pilha continua TypeScript, Next.js, Node 22 e PostgreSQL. `NODE_E_ACELERACAO.md` e `SOLUCOES_PARA_AVALIACAO.md` são propostas para o proprietário avaliar: nada delas foi aplicado.
+6. O acompanhamento visível ao dono (a tela de entregas, aceite A18) e a lista única de dependências por API (A19) entram na fila.
+
+**Conflitos, conciliados:**
+
+- A ordem do Codex põe as lojas, as contas e a planilha logo depois dos dois defeitos. O plano do proprietário de 16/11 (ondas 0 a 3) põe a Onda 0 antes. Segue o plano do proprietário, que é a ordem vigente, com os dois defeitos à frente.
+- O arquivo `relatorioProdutos131258.xlsx` já foi fornecido pelo proprietário, como lembra o Codex, mas não está no servidor do Claude Code. O pedido registrado é o da transferência segura para `~/entrada/rein/`, não o de um novo envio.

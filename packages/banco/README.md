@@ -25,7 +25,7 @@ Até 08/11 os três arquivos acima tinham versões `20261107120000`, `…130000`
 
 `npm test -w @ora5g/banco` cria um PostgreSQL em memória (PGlite), simula o que o Supabase traz pronto (`src/supabase-simulado.sql`), aplica todas as migrations do zero e roda os testes de permissão T1–T12 do ADR-002 (`src/acesso.test.ts`). Não precisa de Docker nem de internet.
 
-Seis arquivos sobem um PostgreSQL 17 de verdade (`src/postgres-real.ts`, com o servidor que vem no pacote `embedded-postgres`, numa pasta temporária), para o que o banco em memória não prova: duas conexões ao mesmo tempo (`concorrencia.test.ts`, `loja-online-concorrencia.test.ts`, `fotos-concorrencia.test.ts`, `sessao-molde-e-pdv-concorrencia.test.ts` e `rotinas-agendadas-concorrencia.test.ts`) e a queda de repente do servidor (`carga-e-recuperacao.test.ts`). Todos os outros rodam no PGlite. Ao citar um teste como prova, diga em qual dos dois ele roda.
+Sete arquivos sobem um PostgreSQL 17 de verdade (`src/postgres-real.ts`, com o servidor que vem no pacote `embedded-postgres`, numa pasta temporária), para o que o banco em memória não prova: duas conexões ao mesmo tempo (`concorrencia.test.ts`, `loja-online-concorrencia.test.ts`, `fotos-concorrencia.test.ts`, `sessao-molde-e-pdv-concorrencia.test.ts`, `rotinas-agendadas-concorrencia.test.ts` e `loja-online-cota-concorrencia.test.ts`) e a queda de repente do servidor (`carga-e-recuperacao.test.ts`). Todos os outros rodam no PGlite. Ao citar um teste como prova, diga em qual dos dois ele roda.
 
 ## Como o aplicativo deve usar
 
@@ -39,7 +39,7 @@ Seis arquivos sobem um PostgreSQL 17 de verdade (`src/postgres-real.ts`, com o s
 
 | Ambiente | Projeto | Situação |
 |---|---|---|
-| Desenvolvimento | `ora5g-dev` (`qgnbeuugklzzcevdzrvg`, São Paulo, plano gratuito) | 92 migrations aplicadas (de 07 a 17/11/2026), lista em `supabase/aplicadas-dev.json` |
+| Desenvolvimento | `ora5g-dev` (`qgnbeuugklzzcevdzrvg`, São Paulo, plano gratuito) | 93 migrations aplicadas (de 07 a 17/11/2026), lista em `supabase/aplicadas-dev.json` |
 | Homologação | a criar | — |
 | Produção | a criar | — |
 

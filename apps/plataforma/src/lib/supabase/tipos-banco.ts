@@ -3528,7 +3528,10 @@ export type Database = {
           cancelada_no_fisco_por: string | null
           chave: string
           chave_acesso: string | null
+          cliente_conferido_em: string | null
+          cliente_conferido_por: string | null
           cliente_id: string | null
+          cliente_origem: string | null
           criado_em: string
           destinatario_mascarado: string | null
           destinatario_nome: string | null
@@ -3561,7 +3564,10 @@ export type Database = {
           cancelada_no_fisco_por?: string | null
           chave: string
           chave_acesso?: string | null
+          cliente_conferido_em?: string | null
+          cliente_conferido_por?: string | null
           cliente_id?: string | null
+          cliente_origem?: string | null
           criado_em?: string
           destinatario_mascarado?: string | null
           destinatario_nome?: string | null
@@ -3594,7 +3600,10 @@ export type Database = {
           cancelada_no_fisco_por?: string | null
           chave?: string
           chave_acesso?: string | null
+          cliente_conferido_em?: string | null
+          cliente_conferido_por?: string | null
           cliente_id?: string | null
+          cliente_origem?: string | null
           criado_em?: string
           destinatario_mascarado?: string | null
           destinatario_nome?: string | null
@@ -3630,6 +3639,13 @@ export type Database = {
           {
             foreignKeyName: "notas_pedidos_cancelada_no_fisco_por_fkey"
             columns: ["cancelada_no_fisco_por"]
+            isOneToOne: false
+            referencedRelation: "perfis_usuario"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "notas_pedidos_cliente_conferido_por_fkey"
+            columns: ["cliente_conferido_por"]
             isOneToOne: false
             referencedRelation: "perfis_usuario"
             referencedColumns: ["id"]
@@ -7036,6 +7052,10 @@ export type Database = {
           p_valor: number
         }
         Returns: number
+      }
+      nota_confirmar_destinatario: {
+        Args: { p_motivo: string; p_pedido: string }
+        Returns: boolean
       }
       nota_enviar_whatsapp: {
         Args: { p_chave: string; p_motivo: string; p_pedido: string }
