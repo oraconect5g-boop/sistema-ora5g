@@ -4,9 +4,9 @@
   "total": 179,
   "homologados": 0,
   "contagem": {
-    "nao_iniciado": 37,
-    "parcial": 72,
-    "testado": 65,
+    "nao_iniciado": 33,
+    "parcial": 73,
+    "testado": 68,
     "bloqueado": 3,
     "respeitado": 2
   },
@@ -253,6 +253,22 @@
         "ORA-FIN-006"
       ],
       "entrega": "o extrato da maquininha e do banco por arquivo (CSV, Excel ou OFX), com a coluna de cada campo escolhida pela pessoa, a venda sugerida para cada linha, conciliar uma linha ou as certas, tirar da conta e desfazer com motivo, o bruto, as taxas, o líquido e o que vai cair, e as vendas do período sem conciliação (Onda 3, item E3; ADR-016)",
+      "commit": "721e021",
+      "publicado_em": "2026-11-17",
+      "pedido_em": null,
+      "resposta": null,
+      "respondido_em": null
+    },
+    {
+      "lote": "META-a",
+      "roteiro": "docs/aceite/META-a.md",
+      "requisitos": [
+        "ORA-META-001",
+        "ORA-META-003",
+        "ORA-META-004",
+        "ORA-META-006"
+      ],
+      "entrega": "o custo dos anúncios da Meta por arquivo (o relatório do Gerenciador de Anúncios, por dia), junto aos contatos e às vendas de cada campanha: CTR, CPC, CPL, CPA, ROAS, margem, CAC e o recebido de fato, e o funil por loja e por vendedor (Onda 3, item \"Meta Ads\"; ADR-017)",
       "commit": null,
       "publicado_em": null,
       "pedido_em": null,

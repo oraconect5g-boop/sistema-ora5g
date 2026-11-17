@@ -39,4 +39,5 @@ Um lote aceito que entrega só uma parte do requisito fica registrado em `aceite
 | DEP-a (a lista única do que depende de fora: o aceite A19) | [DEP-a.md](DEP-a.md) | nenhum (só documentação) | aguardando (pedido em 17/11; no ar em `569eab8`) |
 | PWA-b (o aviso no celular para aprovar num toque) | [PWA-b.md](PWA-b.md) | ORA-REPORT-002 e ORA-QUAL-006 (o estado de cada um não muda) | **aceito em 17/11** (no ar em `252bcad`; o caminho pelo menu em `3c617c7`) |
 | QUAL-a (o alerta no celular quando algo espera demais) | [QUAL-a.md](QUAL-a.md) | ORA-QUAL-006 (o estado não muda) | a pedir na lista final (no ar em `87c8dbe`) |
-| EXT-a (o extrato da maquininha por arquivo) | [EXT-a.md](EXT-a.md) | ORA-PAY-009 (passa a testado), ORA-PAY-010 e ORA-FIN-006 (passam a parcial) | a pedir depois da publicação, com um extrato real da maquininha (E3) |
+| EXT-a (o extrato da maquininha por arquivo) | [EXT-a.md](EXT-a.md) | ORA-PAY-009 (passa a testado), ORA-PAY-010 e ORA-FIN-006 (passam a parcial) | a pedir na lista final (no ar em `721e021`), com um extrato real da maquininha (E3) |
+| META-a (quanto custou cada contato e cada venda dos anúncios) | [META-a.md](META-a.md) | ORA-META-003, ORA-META-004 e ORA-META-006 (passam a testado) e ORA-META-001 (passa a parcial) | a pedir depois da publicação, com um relatório real do Gerenciador de Anúncios |

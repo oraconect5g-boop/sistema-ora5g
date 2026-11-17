@@ -183,6 +183,8 @@ describe("envio de arquivo: <FormularioDeArquivo>", () => {
     "app/produtos/importar/page.tsx": { componente: "EscolherColunas", arquivo: "app/produtos/importar/EscolherColunas.tsx" },
     // EXT-a: o extrato da maquininha ou do banco; o componente lê o arquivo no aparelho (as colunas, ou o OFX).
     "app/pagamentos/extratos/importar/page.tsx": { componente: "EscolherColunasDoExtrato", arquivo: "app/pagamentos/extratos/importar/EscolherColunasDoExtrato.tsx" },
+    // META-a: o relatório do Gerenciador de Anúncios; o componente lê as colunas no aparelho.
+    "app/relatorios/anuncios/page.tsx": { componente: "EscolherColunasDosAnuncios", arquivo: "app/relatorios/anuncios/EscolherColunasDosAnuncios.tsx" },
   };
   const temCampoDeArquivo = (trecho: string) => aberturas(trecho, "input").some(({ etiqueta }) => etiqueta.includes('type="file"'));
 
