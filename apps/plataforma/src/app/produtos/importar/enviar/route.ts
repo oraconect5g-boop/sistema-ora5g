@@ -4,7 +4,8 @@ import type { NextRequest } from "next/server";
 
 import { redirecionar } from "../../../../lib/acesso/redirecionar";
 import { obterSessao } from "../../../../lib/acesso/sessao";
-import { montarLinhas } from "../../../../lib/importacao/catalogo";
+import { dividirEmPartes, linhaDeTotal, montarLinhas } from "../../../../lib/importacao/catalogo";
+import type { Json } from "../../../../lib/supabase/tipos-banco";
 import { ErroDaPlanilha, LIMITES_DA_PLANILHA } from "../../../../lib/importacao/csv";
 import { descomprimirNoServidor } from "../../../../lib/importacao/descomprimir-servidor";
 import { lerPlanilha } from "../../../../lib/importacao/planilha";
@@ -55,20 +56,47 @@ export async function POST(requisicao: NextRequest) {
 
   const unidade = await supabase.from("unidades").select("organizacao_id").eq("id", situacao.unidade_id as string).maybeSingle();
   if (unidade.error || !unidade.data) return voltar({ erro: "falha" });
-  const linhas = montarLinhas(planilha, lido.envio.mapa, lido.envio.padroes);
-  const { data, error } = await supabase.rpc("importacao_catalogo_previa", {
-    p_organizacao: unidade.data.organizacao_id,
-    p_arquivo_nome: arquivo.name.slice(0, 200) || (planilha.formato === "xlsx" ? "planilha.xlsx" : "planilha.csv"),
-    p_sha256: createHash("sha256").update(bytes).digest("hex"),
-    p_mapeamento: mapeamentoParaGravar(planilha.cabecalho, lido.envio.mapa, lido.envio.padroes),
-    p_linhas: linhas,
-  });
-  if (error) return voltar({ erro: erroDoBancoNaImportacao(error) });
-  const resposta = data as { id?: unknown; repetida?: unknown; atualizada?: unknown } | null;
-  // Sem o número da prévia na resposta não há o que mostrar: nada de dizer "prévia gravada" no escuro.
-  if (typeof resposta?.id !== "string") return voltar({ erro: "falha" });
-  // Arquivo já enviado antes (R2): a prévia é a mesma, comparada de novo com o cadastro de agora; se algo
-  // mudou desde a última comparação, a tela avisa para conferir outra vez.
-  const ok = resposta.repetida !== true ? "previa" : resposta.atualizada === true ? "previa_atualizada" : "previa_repetida";
-  return voltar({ importacao: resposta.id, ok });
+  // A linha de total no fim da planilha (a da Rein) fica de fora, à vista na prévia; o resto vai em partes de até 2.000
+  // linhas, uma prévia por parte (o banco aceita até 2.000 por chamada). Arquivo de uma parte só fica como antes.
+  const total = linhaDeTotal(planilha, lido.envio.mapa);
+  const todas = montarLinhas(planilha, lido.envio.mapa, lido.envio.padroes);
+  const ignoradas = total === null ? [] : [{ linha: todas[total]?.numero ?? total + 2, motivo: "linha de total no fim da planilha" }];
+  const linhas = total === null ? todas : todas.filter((_, i) => i !== total);
+  if (linhas.length === 0) return voltar({ erro: "vazio" });
+  const partes = dividirEmPartes(linhas);
+  const impressao = (parte: number) => {
+    const hash = createHash("sha256").update(bytes);
+    // Cada parte tem a própria impressão digital: o banco recusa aplicar duas vezes o mesmo arquivo (OR023).
+    if (partes.length > 1) hash.update(`:parte:${parte}:de:${partes.length}`);
+    return hash.digest("hex");
+  };
+  const nomeDoArquivo = arquivo.name.slice(0, 170) || (planilha.formato === "xlsx" ? "planilha.xlsx" : "planilha.csv");
+  const mapeamento = mapeamentoParaGravar(planilha.cabecalho, lido.envio.mapa, lido.envio.padroes);
+  // O que a prévia guarda além das colunas: a linha que ficou de fora e, na planilha grande, qual parte é esta.
+  const extrasDoMapeamento = (numero: number, parte: readonly { numero: number }[]) => {
+    const extras: { [chave: string]: Json } = {};
+    if (ignoradas.length > 0) extras.ignoradas = ignoradas;
+    if (partes.length > 1) extras.parte = { numero, de: partes.length, linhas: [parte[0]?.numero ?? 0, parte.at(-1)?.numero ?? 0] };
+    return extras;
+  };
+  let primeira: { id: string; ok: string } | null = null;
+  for (const [i, parte] of partes.entries()) {
+    const numero = i + 1;
+    const { data, error } = await supabase.rpc("importacao_catalogo_previa", {
+      p_organizacao: unidade.data.organizacao_id,
+      p_arquivo_nome: partes.length > 1 ? `${nomeDoArquivo} (parte ${numero} de ${partes.length})` : nomeDoArquivo,
+      p_sha256: impressao(numero),
+      p_mapeamento: { ...mapeamento, ...extrasDoMapeamento(numero, parte) },
+      p_linhas: parte,
+    });
+    if (error) return voltar({ erro: erroDoBancoNaImportacao(error), ...(primeira ? { importacao: primeira.id } : {}) });
+    const resposta = data as { id?: unknown; repetida?: unknown; atualizada?: unknown } | null;
+    // Sem o número da prévia na resposta não há o que mostrar: nada de dizer "prévia gravada" no escuro.
+    if (typeof resposta?.id !== "string") return voltar({ erro: "falha", ...(primeira ? { importacao: primeira.id } : {}) });
+    // Arquivo já enviado antes (R2): a prévia é a mesma, comparada de novo com o cadastro de agora; se algo
+    // mudou desde a última comparação, a tela avisa para conferir outra vez.
+    const ok = partes.length > 1 ? "previa_partes" : resposta.repetida !== true ? "previa" : resposta.atualizada === true ? "previa_atualizada" : "previa_repetida";
+    if (!primeira) primeira = { id: resposta.id, ok };
+  }
+  return primeira ? voltar({ importacao: primeira.id, ok: primeira.ok }) : voltar({ erro: "falha" });
 }

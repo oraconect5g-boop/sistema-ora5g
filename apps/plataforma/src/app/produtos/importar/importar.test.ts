@@ -162,6 +162,38 @@ describe("envio da planilha", () => {
     ]);
   });
 
+  it("REIN-a: planilha de 2.500 linhas com a linha de total no fim vira duas prévias, a total fica de fora e cada parte tem a própria impressão digital", async () => {
+    cenario.respostas.importacao_catalogo_previa = { data: { id: IMPORTACAO, repetida: false }, error: null };
+    const linhas = Array.from({ length: 2_500 }, (_, i) => `ACE-${i + 1};Item ${i + 1};9,90`);
+    const conteudo = `SKU;Descrição;Preço\n${linhas.join("\n")}\n;TOTAL;24.750,00\n`;
+    const r = await POST(envio(MAPA, conteudo) as never);
+    expect(r.headers.get("location")).toBe(`/produtos/importar?importacao=${IMPORTACAO}&ok=previa_partes`);
+    const chamadas = cenario.chamadas.filter((c) => c.nome === "importacao_catalogo_previa");
+    expect(chamadas.map((c) => (c.argumentos.p_linhas as unknown[]).length)).toEqual([2_000, 500]);
+    expect(chamadas.map((c) => c.argumentos.p_arquivo_nome)).toEqual(["catalogo.csv (parte 1 de 2)", "catalogo.csv (parte 2 de 2)"]);
+    const hashes = chamadas.map((c) => c.argumentos.p_sha256);
+    expect(new Set(hashes).size).toBe(2);
+    expect(hashes).not.toContain(createHash("sha256").update(conteudo).digest("hex"));
+    expect(chamadas[1]?.argumentos.p_mapeamento).toMatchObject({
+      parte: { numero: 2, de: 2, linhas: [2_002, 2_501] },
+      ignoradas: [{ linha: 2_502, motivo: "linha de total no fim da planilha" }],
+    });
+    // A linha de total não foi ao banco em nenhuma parte.
+    expect(chamadas.flatMap((c) => c.argumentos.p_linhas as { nome: string | null }[]).some((l) => l.nome === "TOTAL")).toBe(false);
+  });
+
+  it("REIN-a: arquivo de uma parte só com a linha de total grava uma prévia, com a total à vista, e a impressão digital de sempre", async () => {
+    cenario.respostas.importacao_catalogo_previa = { data: { id: IMPORTACAO, repetida: false }, error: null };
+    const conteudo = `${CSV};TOTAL;109,80\n`;
+    const r = await POST(envio(MAPA, conteudo) as never);
+    expect(r.headers.get("location")).toBe(`/produtos/importar?importacao=${IMPORTACAO}&ok=previa`);
+    const argumentos = cenario.chamadas[0]?.argumentos ?? {};
+    expect(argumentos.p_sha256).toBe(createHash("sha256").update(conteudo).digest("hex"));
+    expect((argumentos.p_linhas as unknown[]).length).toBe(2);
+    expect(argumentos.p_mapeamento).toMatchObject({ ignoradas: [{ linha: 4, motivo: "linha de total no fim da planilha" }] });
+    expect(argumentos.p_mapeamento).not.toHaveProperty("parte");
+  });
+
   it("recusa outra origem, arquivo ausente, colunas faltando e CSV quebrado, sem chamar o banco", async () => {
     expect((await POST(envio(MAPA, CSV, "https://outro-site.exemplo") as never)).status).toBe(403);
     expect((await POST(envio(MAPA, null) as never)).headers.get("location")).toBe("/produtos/importar?erro=arquivo");
@@ -286,6 +318,20 @@ describe("/produtos/importar", () => {
     const t = await tela({ importacao: IMPORTACAO, erro: "desatualizada" });
     expect(t).toContain("O cadastro mudou depois da conferência e nada foi aplicado");
     expect(await tela({ importacao: IMPORTACAO, ok: "previa_atualizada" })).toContain("O cadastro mudou desde a última comparação");
+  });
+
+  it("REIN-a: a prévia de uma parte diz qual parte é e mostra a linha de total que ficou de fora", async () => {
+    cenario.usuario = DONO;
+    cenario.permissoes = new Set(["importacao.aprovar"]);
+    mudarImportacao({ mapeamento: {
+      colunas: { sku: "SKU", nome: "Descrição", preco: "Preço" }, padroes: { tipo: "acessorio", categoria: "Acessórios" },
+      parte: { numero: 2, de: 2, linhas: [2_002, 2_272] }, ignoradas: [{ linha: 2_273, motivo: "linha de total no fim da planilha" }],
+    } });
+    const t = await tela({ importacao: IMPORTACAO, ok: "previa_partes" });
+    expect(t).toContain("A planilha passa de 2.000 linhas e entrou em várias prévias");
+    expect(t).toContain("Parte 2 de 2 (linhas 2002 a 2272 da planilha)");
+    expect(t).toContain("cada parte se confere e se aplica à parte.");
+    expect(t).toContain("Ficou de fora a linha 2273 da planilha: linha de total no fim da planilha");
   });
 
   it("conferência integral: o arquivo inteiro por filtro e por página, sem teto de linhas", async () => {

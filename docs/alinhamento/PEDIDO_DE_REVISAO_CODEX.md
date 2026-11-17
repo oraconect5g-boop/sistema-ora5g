@@ -1582,7 +1582,33 @@ Programa de execução integral (PR #67; checkpoint em `docs/alinhamento/EXECUCA
   - Na plataforma: as linhas da remessa (`regras.test.ts`, 3) e a tela de montar (`remessa/remessa.test.ts`, 4).
 - **Aplicação no `ora5g-dev`:** em 17/11 (13:53), depois do merge do PWA-a e do check "Supabase Preview" dele, com o md5 `48151e5f3bd11246def3d40ccdb4e75d`, igual ao do arquivo.
 - **Registro:** o roteiro `docs/aceite/TRF-a.md` entrou antes, sem querer, no commit dos documentos do PWA-a (`76a3823`). Nada mais deste lote foi junto.
+- **CI, merge e publicação (17/11):**
+  - **CI:** a sequência completa, de instalação limpa no servidor, passou em `9a12d1d`: 2.713 testes e 1 TODO, 293 E2E (13 pulados), auditoria sem vulnerabilidade e o orçamento em dia.
+  - **Merge:** `e603531`; a árvore é a da branch testada. No GitHub, os checks de `e603531` terminaram com sucesso: "Verificações" e "Supabase Preview".
+  - **Publicação:** na homologação, em 17/11 (build 14:26), conferida pela pasta, pelo serviço local e pelo domínio com o commit inteiro.
 - **Pedido ao Codex:** conferir:
   1. que a remessa não abre caminho que o pedido avulso fecha (a loja da pessoa, a rede, o tipo do produto);
   2. a idempotência com a chave por linha;
   3. que o envio de uma vez respeita a regra de DEFEITOS (só quem ajusta estoque).
+
+## 17/11/2026 — Lote REIN-a: o importador lê a planilha inteira da Rein (Onda 1, item 3, a parte sem o arquivo; ORA-CAT-002 e #89)
+
+- **Origem:** o plano do proprietário de 16/11 (Onda 1, item 3): a leitura de `relatorioProdutos131258.xlsx` falha na célula K955 (observação com 3.220 caracteres; o leitor limita a 500) e o teto é de 2.000 linhas; corrigir sem truncar nem descartar em silêncio e sem importar o total como produto. O arquivo não está no servidor: este lote faz o que não depende dele.
+- **Banco:** nenhuma migration. O banco segue aceitando até 2.000 linhas por prévia, e o mapeamento é um objeto livre.
+- **O que mudou:**
+  1. `LIMITES_DA_PLANILHA`: 10.000 linhas e 10.000 caracteres por célula. `MAXIMO_DO_CAMPO` (500): em `montarLinhas`, o campo mapeado que passa disso não vai ao banco, e a linha ganha o erro com o tamanho.
+  2. `linhaDeTotal`: só a última linha. É total quando não tem SKU, não tem nome (ou o nome começa com "Total") e alguma célula começa com "Total". Ela sai das linhas, entra em `mapeamento.ignoradas` com o número da linha e o motivo, e a prévia mostra "Ficou de fora a linha N".
+  3. `dividirEmPartes` (até 2.000): a rota grava uma prévia por parte, em ordem. Cada parte recebe:
+     - a impressão digital `sha256(arquivo + ":parte:N:de:M")`, sem a qual o banco recusaria aplicar a segunda parte (`OR023`, "Este arquivo já foi aplicado");
+     - "(parte N de M)" no nome;
+     - `mapeamento.parte` com as linhas da planilha.
+     O arquivo de uma parte só fica igual a antes, com a mesma impressão digital.
+  4. A tela da prévia mostra a parte e as linhas que ficaram de fora; a mensagem `previa_partes` explica as várias prévias.
+- **Testes:** `catalogo.test.ts` (+4) e `importar.test.ts` (+3): a observação de 3.220 caracteres lida sem erro; o campo de 501 caracteres; a total no fim, inclusive em outra coluna, e o produto "Total Flex" com SKU, que não é total; 2.271 linhas em 2.000 + 271; 2.500 linhas com a total em duas prévias, com as impressões digitais diferentes; a tela da parte.
+- **Limite declarado:**
+  1. As partes não se conferem entre si: o mesmo SKU em duas partes não é acusado como repetido.
+  2. A carga do estoque por local, com a data de corte, espera o arquivo, para não supor as colunas.
+- **Pedido ao Codex:** conferir:
+  1. a regra da linha de total contra falsos positivos;
+  2. que nenhuma linha de dados se perde entre as partes;
+  3. a impressão digital por parte contra a recusa de aplicar o mesmo arquivo duas vezes.

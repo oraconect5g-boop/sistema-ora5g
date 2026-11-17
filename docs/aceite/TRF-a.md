@@ -4,6 +4,7 @@
 - **Quanto tempo leva:** uns dez minutos.
 - **O que o lote entrega:** o item 5 da onda 1 do plano de 16/11, que é a transferência de vários produtos na mesma operação. Os requisitos ligados são o ORA-INV-007 e a issue #60, e o estado não muda.
 - **Resposta:** "aceito" ou "não aceito". No "não aceito", diga o passo e o que aconteceu.
+- **No ar:** desde 17/11, às 14:26, no commit `e603531`. O rodapé pode mostrar um commit mais novo, de um lote seguinte.
 
 ## O que mudou
 

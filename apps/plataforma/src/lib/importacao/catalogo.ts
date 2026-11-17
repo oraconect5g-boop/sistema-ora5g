@@ -3,7 +3,7 @@
 // que valida tudo de novo, compara com o catálogo e guarda a prévia para aprovação.
 import { lerReais } from "@ora5g/dominio";
 
-import { semAcento, type Planilha } from "./csv";
+import { LINHAS_POR_PARTE, MAXIMO_DO_CAMPO, semAcento, type Planilha } from "./csv";
 
 export const CAMPOS_DO_CATALOGO = {
   sku: { rotulo: "SKU (código do item)", obrigatorio: true, sugestoes: ["sku", "codigo", "cod", "codigo do produto", "referencia", "ref"] },
@@ -50,13 +50,19 @@ export type LinhaDoCatalogo = {
 
 /** Monta as linhas no formato do banco. Erros de leitura (dinheiro, tipo) vão junto, para a prévia mostrar. */
 export function montarLinhas(planilha: Planilha, mapa: Mapeamento, padroes: { tipo: TipoAceito; categoria: string }): LinhaDoCatalogo[] {
-  const celula = (linha: readonly string[], campo: CampoDoCatalogo) => {
-    const indice = mapa[campo];
-    const valor = indice === undefined ? "" : (linha[indice] ?? "").trim();
-    return valor === "" ? null : valor;
-  };
   return planilha.linhas.map((linha, i) => {
     const erros: string[] = [];
+    // O campo que passa do limite não vai ao banco: a linha fica com o erro, à vista na prévia (REIN-a).
+    const celula = (linha: readonly string[], campo: CampoDoCatalogo) => {
+      const indice = mapa[campo];
+      const valor = indice === undefined ? "" : (linha[indice] ?? "").trim();
+      if (valor.length > MAXIMO_DO_CAMPO) {
+        const aviso = `${CAMPOS_DO_CATALOGO[campo].rotulo}: passa de ${MAXIMO_DO_CAMPO} caracteres (tem ${valor.length})`;
+        if (!erros.includes(aviso)) erros.push(aviso);
+        return null;
+      }
+      return valor === "" ? null : valor;
+    };
     const dinheiro = (campo: "preco" | "custo") => {
       const texto = celula(linha, campo);
       if (texto === null) return null;
@@ -113,4 +119,31 @@ export function lerMapeamento(campo: (nome: string) => unknown, colunas: number)
     mapa[nome] = indice;
   }
   return mapa.sku === undefined || mapa.nome === undefined ? null : mapa;
+}
+
+// ---------------------------------------------------------------------------------------------
+// A planilha inteira da Rein (lote REIN-a; plano de 16/11, Onda 1, item 3): a linha de total no fim e as partes.
+// ---------------------------------------------------------------------------------------------
+const COMECA_COM_TOTAL = /^\s*total\b/i;
+
+/**
+ * A linha de total no fim da planilha (o relatório de produtos da Rein termina com uma): a última linha sem SKU, sem
+ * nome (ou com "Total" no nome) e com alguma célula começando por "Total". Ela não é produto, e mandá-la ao banco
+ * travaria a prévia inteira (linha com erro); a tela mostra que ela ficou de fora. Devolve a posição dela ou nulo.
+ */
+export function linhaDeTotal(planilha: Planilha, mapa: Mapeamento): number | null {
+  const posicao = planilha.linhas.length - 1;
+  const linha = planilha.linhas[posicao];
+  if (!linha || mapa.sku === undefined || mapa.nome === undefined) return null;
+  const sku = (linha[mapa.sku] ?? "").trim();
+  const nome = (linha[mapa.nome] ?? "").trim();
+  if (sku !== "" || (nome !== "" && !COMECA_COM_TOTAL.test(nome))) return null;
+  return linha.some((celula) => COMECA_COM_TOTAL.test(celula)) ? posicao : null;
+}
+
+/** As partes da importação: até 2.000 linhas cada, na ordem do arquivo (uma prévia por parte). */
+export function dividirEmPartes<T>(linhas: readonly T[], tamanho: number = LINHAS_POR_PARTE): T[][] {
+  const partes: T[][] = [];
+  for (let i = 0; i < linhas.length; i += tamanho) partes.push(linhas.slice(i, i + tamanho));
+  return partes;
 }

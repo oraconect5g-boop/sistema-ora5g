@@ -39,7 +39,7 @@ export function EscolherColunas() {
 
   return (
     <div className="space-y-3">
-      <label className="block text-sm font-medium">Planilha (Excel .xlsx ou CSV, até 5 MB e 2.000 linhas)
+      <label className="block text-sm font-medium">Planilha (Excel .xlsx ou CSV, até 5 MB e 10.000 linhas; acima de 2.000, a prévia sai em partes)
         <input type="file" name="arquivo" required accept={TIPOS_ACEITOS} onChange={aoEscolher} className="mt-1 block w-full text-sm file:mr-3 file:min-h-11 file:rounded-botao file:border-0 file:bg-acao-clara file:px-4 file:font-semibold file:text-acao" />
       </label>
       {problema && <p role="alert" className="text-sm text-perigo">{problema}</p>}
