@@ -41,7 +41,7 @@ describe("nova loja", () => {
 });
 
 describe("edição", () => {
-  it("valida nome, CNPJ, UF, cidade e motivo; loja física não fica sem CNPJ", () => {
+  it("valida nome, CNPJ, UF, cidade e motivo; a loja física pode ficar sem CNPJ (ORG-a: só não vende)", () => {
     const edicao = { unidade: LOJA, tipo: "loja_fisica", nome: "Santa Cândida Centro", cnpj: CNPJ, uf: "PR", cidade: "", motivo: "Nome comercial" };
     expect(validarEdicao(edicao)).toEqual({ ok: true, dados: { unidade: LOJA, nome: "Santa Cândida Centro", cnpj: "11222333000181", uf: "PR", cidade: null, motivo: "Nome comercial" } });
     expect(validarEdicao({ ...edicao, cnpj: "" })).toMatchObject({ ok: true, dados: { cnpj: null } });
