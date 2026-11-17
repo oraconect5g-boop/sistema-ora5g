@@ -49,6 +49,19 @@ export async function enviarNotaPeloWhatsApp(dados: FormData) {
   redirect(error ? `/vendas/${venda}?erro_nota=${erroDasNotas(error)}` : `/vendas/${venda}?nota=whatsapp`);
 }
 
+// INTEG-c (#101): a nota antiga, sem a identidade do destinatário comprovada. Quem aprova a nota confere o PDF e
+// confirma que o destinatário é o cliente de hoje da venda; o banco grava quem, quando e o motivo (auditoria).
+export async function confirmarDestinatarioDaNota(dados: FormData) {
+  const pedido = dados.get("pedido");
+  const venda = dados.get("venda");
+  if (!ehUuid(pedido) || !ehUuid(venda)) redirect("/vendas?erro=dados");
+  const motivo = texto(dados, "motivo");
+  if (motivo.length < 10) redirect(`/vendas/${venda}?erro_nota=conferencia_motivo`);
+  const { supabase } = await obterSessao({ exigirLoja: true });
+  const { error } = await supabase.rpc("nota_confirmar_destinatario", { p_pedido: pedido, p_motivo: motivo });
+  redirect(error ? `/vendas/${venda}?erro_nota=${erroDasNotas(error)}` : `/vendas/${venda}?nota=destinatario_conferido`);
+}
+
 // Resultado desconhecido conferido por quem aprova a nota: "não chegou", com motivo, libera o reenvio.
 export async function conferirEnvioDesconhecido(dados: FormData) {
   const envio = dados.get("envio");

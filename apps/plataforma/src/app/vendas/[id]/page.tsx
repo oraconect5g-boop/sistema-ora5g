@@ -22,7 +22,7 @@ import { osDosItens, type OsDoItem } from "../../../lib/vendas/os-dos-itens";
 import { CONDICOES_DE_RETORNO, ERROS_DA_VENDA } from "../../../lib/vendas/regras";
 import { vincularClienteNaVenda } from "../../clientes/acoes";
 import { BuscaDeCliente } from "../../clientes/BuscaDeCliente";
-import { conferirEnvioDesconhecido, corrigirChaveDaNota, corrigirNota, enviarNotaPeloWhatsApp, pedirNota, registrarCancelamentoNoFisco } from "../../notas/acoes";
+import { conferirEnvioDesconhecido, confirmarDestinatarioDaNota, corrigirChaveDaNota, corrigirNota, enviarNotaPeloWhatsApp, pedirNota, registrarCancelamentoNoFisco } from "../../notas/acoes";
 import { cancelarVenda, conferirRetorno, confirmarEstorno, devolverItens, retirarAnexo } from "../../vender/acoes";
 import { regraNaTela, regrasDosItens } from "../../../lib/vendas/regra-de-preco";
 import { CartasDeCorrecao } from "./CartasDeCorrecao";
@@ -74,18 +74,22 @@ export default async function Comprovante({ params, searchParams }: { params: Pr
   // L10a (FISC-005): o PDF e o XML da nota emitida e o protocolo, lidos à parte. Banco sem a migration (sem a
   // tabela ou a coluna) ou falha de leitura não derrubam a venda: o bloco só não aparece.
   const notaEmitida = nota.data?.situacao === "emitida" ? nota.data : null;
-  const [documentosDaNota, protocoloDaNota] = notaEmitida
+  const [documentosDaNota, protocoloDaNota, origemDaNota] = notaEmitida
     ? await Promise.all([
       supabase.from("notas_documentos").select("id, tipo, caminho, bytes, enviado_em").eq("pedido_id", notaEmitida.id).is("substituido_em", null).order("tipo"),
       supabase.from("notas_pedidos").select("protocolo").eq("id", notaEmitida.id).maybeSingle(),
+      // INTEG-c (#101): de onde vem a identidade do cliente da nota, também à parte.
+      supabase.from("notas_pedidos").select("cliente_origem").eq("id", notaEmitida.id).maybeSingle(),
     ])
-    : [null, null];
+    : [null, null, null];
   const documentosLidos = documentosDaNota && !documentosDaNota.error ? documentosDaNota.data : null;
   const linksDosDocumentos = documentosLidos && documentosLidos.length
     ? await supabase.storage.from("notas").createSignedUrls(documentosLidos.map((d) => d.caminho), 600)
     : { data: [], error: null };
   const linkDe = new Map((linksDosDocumentos.data ?? []).map((l) => [l.path, l.error ? null : l.signedUrl]));
   const protocolo = protocoloDaNota && !protocoloDaNota.error ? (protocoloDaNota.data as { protocolo?: string | null } | null)?.protocolo ?? null : null;
+  // Sem a coluna (banco sem a migration do INTEG-c) ou falha de leitura, vale a regra do INTEG-a; quem decide é o banco.
+  const identidadeComprovada = !origemDaNota || origemDaNota.error ? true : Boolean((origemDaNota.data as { cliente_origem?: string | null } | null)?.cliente_origem);
   // K1c (#76): os envios da nota pelo WhatsApp, lidos à parte (banco sem a migration: o bloco do envio não aparece).
   const enviosDaNota = notaEmitida
     ? await supabase.from("whatsapp_envios").select("id, numero, situacao, destino_mascarado, motivo, erro, pedido_em, atualizado_em")
@@ -175,6 +179,7 @@ export default async function Comprovante({ params, searchParams }: { params: Pr
       {textoDoParametro(parametros.anexo) === "guardado" && <Aviso tom="sucesso">Documento guardado em privado: quem lê esta venda abre pelo link.</Aviso>}
       {textoDoParametro(parametros.anexo) === "retirado" && <Aviso tom="sucesso">Documento retirado; o registro e o motivo ficaram.</Aviso>}
       {textoDoParametro(parametros.anexo) === "sem_mudanca" && <Aviso tom="info">Nada mudou: o documento já tinha sido retirado.</Aviso>}
+      {textoDoParametro(parametros.nota) === "destinatario_conferido" && <Aviso tom="sucesso">Destinatário conferido e confirmado: a nota pode ir pelo WhatsApp. A conferência ficou na auditoria.</Aviso>}
       {textoDoParametro(parametros.nota) === "whatsapp_conferido" && <Aviso tom="sucesso">Conferência registrada: o envio ficou como &quot;não chegou&quot; e a nota pode ser reenviada.</Aviso>}
       {textoDoParametro(parametros.nota) === "cancelada_no_fisco" && <Aviso tom="sucesso">Cancelamento da nota registrado: agora a venda pode ser cancelada ou pedir outra nota.</Aviso>}
       {textoDoParametro(parametros.nota) === "chave_corrigida" && <Aviso tom="sucesso">Chave da nota corrigida; a anterior ficou no histórico da nota.</Aviso>}
@@ -276,13 +281,22 @@ export default async function Comprovante({ params, searchParams }: { params: Pr
                         </form>
                       )}
                       {/* INTEG-a (#88): a nota vai só ao cliente que estava na venda quando ela foi pedida. */}
-                      {v.cliente_id && nota.data.cliente_id === v.cliente_id && temPdf && (!ultimoEnvio || !["na_fila", "enviando", "desconhecido"].includes(ultimoEnvio.situacao)) && (
+                      {v.cliente_id && nota.data.cliente_id === v.cliente_id && temPdf && identidadeComprovada && (!ultimoEnvio || !["na_fila", "enviando", "desconhecido"].includes(ultimoEnvio.situacao)) && (
                         <form action={enviarNotaPeloWhatsApp} className="flex flex-wrap items-end gap-2">
                           <input type="hidden" name="pedido" value={notaEmitida.id} /><input type="hidden" name="venda" value={v.id} /><input type="hidden" name="chave" value={randomUUID()} />
                           {ultimoEnvio && <label className="text-xs font-medium">Motivo do reenvio<input name="motivo" required minLength={3} maxLength={200} className={campo} /></label>}
                           <Botao type="submit" tamanho="sm">{ultimoEnvio ? "Reenviar pelo WhatsApp" : "Enviar a nota pelo WhatsApp"}</Botao>
                         </form>
                       )}
+                      {/* INTEG-c (#101): a nota antiga sem a identidade do destinatário comprovada: quem aprova confere o PDF e confirma. */}
+                      {v.cliente_id && nota.data.cliente_id === v.cliente_id && temPdf && !identidadeComprovada && (aprovaNota.data ? (
+                        <form action={confirmarDestinatarioDaNota} className="space-y-2">
+                          <p className="text-xs text-suave">{`A identidade do destinatário desta nota não está comprovada: ela foi emitida antes da conferência de identidade. Abra o PDF e confira se o destinatário é ${v.cliente_nome ?? "o cliente da venda"}. Se for outra pessoa, não confirme: a nota não vai pelo WhatsApp.`}</p>
+                          <input type="hidden" name="pedido" value={notaEmitida.id} /><input type="hidden" name="venda" value={v.id} />
+                          <label className="text-xs font-medium">Como você conferiu (fica na auditoria)<input name="motivo" required minLength={10} maxLength={200} className={campo} /></label>
+                          <Botao type="submit" tamanho="sm" variante="secundario">{`Confirmar: a nota é de ${v.cliente_nome ?? "cliente da venda"}`}</Botao>
+                        </form>
+                      ) : <p className="text-xs text-suave">A identidade do destinatário desta nota não está comprovada: a gerência confere o PDF antes do envio.</p>)}
                       {!v.cliente_id && <p className="text-xs text-suave">Para enviar pelo WhatsApp, a nota precisa ter sido pedida com o cliente da rede ligado à venda.</p>}
                       {v.cliente_id && nota.data.cliente_id !== v.cliente_id && <p className="text-xs text-suave">{nota.data.cliente_id ? "O cliente da venda mudou depois do pedido da nota: ela está no nome de outro cliente e não vai pelo WhatsApp." : "A nota foi pedida sem o cliente da rede: ela não vai pelo WhatsApp."}</p>}
                       {v.cliente_id && !temPdf && <p className="text-xs text-suave">Para enviar pelo WhatsApp, guarde antes o PDF da nota.</p>}
