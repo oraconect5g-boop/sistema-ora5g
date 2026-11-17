@@ -23,6 +23,7 @@ export const dynamic = "force-dynamic";
 
 const OK = {
   previa: "Prévia gravada. Nada entrou no catálogo ainda: confira e peça a aprovação.",
+  previa_partes: "A planilha passa de 2.000 linhas e entrou em várias prévias, uma por parte. Esta é a primeira: confira e aplique cada parte (as outras estão na lista abaixo).",
   previa_repetida: "Este arquivo, com as mesmas colunas, já tinha prévia: é esta, comparada de novo com o cadastro de agora. Nada mudou.",
   previa_atualizada: "Este arquivo já tinha prévia: é esta. O cadastro mudou desde a última comparação e a prévia abaixo já mostra a comparação nova: confira de novo.",
   aplicada: "Importação aplicada no catálogo, numa transação só.",
@@ -59,7 +60,11 @@ const dinheiro = (v: unknown) => (v === null || v === undefined ? "—" : brl(ce
 const valorDoCampo = (campo: string, v: unknown) => (campo === "preco" || campo === "custo" ? dinheiro(v) : v === null || v === undefined ? "—" : String(v));
 
 type Importacao = {
-  id: string; numero: number; arquivo_nome: string; situacao: string; totais: Record<string, number>; mapeamento: { colunas?: Record<string, string>; padroes?: { tipo?: string; categoria?: string } };
+  id: string; numero: number; arquivo_nome: string; situacao: string; totais: Record<string, number>; mapeamento: {
+    colunas?: Record<string, string>; padroes?: { tipo?: string; categoria?: string };
+    // REIN-a: a parte da planilha grande e as linhas que ficaram de fora (a de total), gravadas junto com a prévia.
+    parte?: { numero?: number; de?: number; linhas?: [number, number] }; ignoradas?: { linha?: number; motivo?: string }[];
+  };
   criado_por: string; criado_em: string; aplicado_em: string | null; encerrado_em: string | null; motivo: string | null;
   comparacao: number; comparado_em: string | null; desfazer: { desfeitas?: number; parciais?: number; mantidas?: number } | null;
 };
@@ -178,6 +183,12 @@ export default async function Importar({ searchParams }: {
             {imp.totais.categorias_novas ? `${imp.totais.categorias_novas} categoria(s) nova(s) · ` : ""}{imp.totais.marcas_novas ? `${imp.totais.marcas_novas} marca(s) nova(s) · ` : ""}
             Colunas: {Object.entries(imp.mapeamento.colunas ?? {}).map(([c, nome]) => `${rotuloDoCampo(c)} = "${nome}"`).join("; ")}
           </p>
+          {imp.mapeamento.parte?.numero && imp.mapeamento.parte.de && (
+            <p className="mt-1 text-xs font-medium">Parte {imp.mapeamento.parte.numero} de {imp.mapeamento.parte.de}{imp.mapeamento.parte.linhas ? ` (linhas ${imp.mapeamento.parte.linhas[0]} a ${imp.mapeamento.parte.linhas[1]} da planilha)` : ""}: cada parte se confere e se aplica à parte.</p>
+          )}
+          {(imp.mapeamento.ignoradas ?? []).map((ig) => (
+            <p key={`${ig.linha}`} className="mt-1 text-xs text-aviso">Ficou de fora a linha {ig.linha} da planilha: {ig.motivo}.</p>
+          ))}
 
           {imp.situacao === "previa" && Boolean(imp.totais.erro) && (
             <Aviso tom="perigo" className="mt-3" titulo={`${numero(imp.totais.erro ?? 0)} linha(s) com erro: corrija a planilha e gere outra prévia`}>

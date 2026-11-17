@@ -1,14 +1,20 @@
 // Leitura de planilha CSV para a importação (ORA-CAT-002). Não supõe o formato da Rein (ADR-003 §3,
 // pendência B1): lê qualquer CSV com cabeçalho na primeira linha, separado por ponto e vírgula,
 // vírgula ou tabulação, com ou sem aspas, em UTF-8 ou Windows-1252 (comum em sistemas brasileiros).
-// Limites protegem o servidor: 5 MB, 2.000 linhas de dados (cada arquivo cabe no limite de 8 s por
-// chamada do banco; planilha maior vai em partes), 100 colunas e 500 caracteres por célula.
+// Limites protegem o servidor: 5 MB, 10.000 linhas de dados, 100 colunas e 10.000 caracteres por célula. Desde o
+// REIN-a (17/11), a planilha acima de 2.000 linhas entra em partes de até 2.000 (cada parte cabe no limite de 8 s por
+// chamada do banco), e o limite de 500 caracteres vale para cada campo que entra na importação, não para as colunas
+// que ficam de fora (a planilha de produtos da Rein tem uma observação com 3.220 caracteres, na célula K955).
 //
 // Desde o CAT-002b, a planilha do Excel (.xlsx) é lida por lib/importacao/xlsx.ts e chega na mesma forma (a
 // Planilha daqui), com os mesmos limites e os mesmos erros; lib/importacao/planilha.ts escolhe o leitor.
 
 // 100 colunas (eram 60 até o CAT-002b): o relatório de produtos da Rein tem 83 (o layout chega com a pendência B1).
-export const LIMITES_DA_PLANILHA = { bytes: 5 * 1024 * 1024, linhas: 2_000, colunas: 100, celula: 500 } as const;
+export const LIMITES_DA_PLANILHA = { bytes: 5 * 1024 * 1024, linhas: 10_000, colunas: 100, celula: 10_000 } as const;
+// O banco aceita até 2.000 linhas por prévia (importacao_catalogo_previa): a planilha maior vira várias prévias.
+export const LINHAS_POR_PARTE = 2_000;
+// O maior texto de um campo que entra na importação (SKU, nome, marca...): passar disso é erro daquela linha.
+export const MAXIMO_DO_CAMPO = 500;
 // O banco guarda o número da linha com até 6 algarismos (importacao_catalogo_previa).
 export const MAIOR_NUMERO_DE_LINHA = 999_999;
 
