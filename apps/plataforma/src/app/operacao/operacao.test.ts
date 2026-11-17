@@ -1,13 +1,16 @@
 // /operacao (lote Q1: ORA-QUAL-006 em parte) com a sessão, o menu e o Supabase SIMULADOS: nenhuma credencial, dados
-// fictícios. Quem vê, o que está parado (as mais antigas primeiro) e a falha de uma fila sem derrubar as outras.
+// fictícios. Quem vê, o que está parado (as mais antigas primeiro) e a falha de uma fila sem derrubar as outras; desde
+// o ROT-a (ADR-011), as rotinas automáticas do banco, com o aviso no topo quando uma falha ou atrasa.
 import { isValidElement, type ReactElement } from "react";
 import { beforeEach, describe, expect, it, vi } from "vitest";
 
 const LOJA = "00000000-0000-4000-8000-0000000000cc";
 type Resposta = { data: unknown; count: number | null; error: { code: string } | null };
+type RespostaRpc = { data: unknown; error: { code: string } | null };
 const cenario = vi.hoisted(() => ({
   permissoes: new Set<string>(),
   respostas: {} as Record<string, Resposta>,
+  rpc: {} as Record<string, RespostaRpc>,
 }));
 vi.mock("next/headers", () => ({ cookies: async () => ({ getAll: () => [], set: () => undefined }) }));
 vi.mock("next/navigation", () => ({ redirect: (destino: string) => { throw new Error(`redirecionou para ${destino}`); } }));
@@ -25,7 +28,8 @@ vi.mock("../../lib/acesso/sessao", () => ({
     situacao: { usuario_ativo: true, sessao_no_turno: true, unidade_id: LOJA, unidade_nome: "Santa Cândida (teste)", turno_termina_em: "2026-11-14T23:00:00Z" },
     // As permissões do menu chegam com a sessão (public.molde_da_sessao, lote VEL-a).
     molde: { permissoes: cenario.permissoes, nome: "Ana (fictícia)", vinculos: [], pendencias: { aprovacoes: 0, notas: 0 } },
-    supabase: { from: consulta },
+    // Sem resposta combinada, a função das rotinas "ainda não existe" no banco (PGRST202): o cartão some.
+    supabase: { from: consulta, rpc: async (nome: string) => cenario.rpc[nome] ?? { data: null, error: { code: "PGRST202" } } },
   }),
 }));
 vi.mock("../../componentes/MoldeReal", () => ({
@@ -53,6 +57,7 @@ beforeEach(() => {
   vi.spyOn(console, "error").mockImplementation(() => undefined);
   cenario.permissoes = new Set(["venda.ver_todas", "nota.aprovar", "caixa.conferir", "connect.gerir"]);
   cenario.respostas = {};
+  cenario.rpc = {};
 });
 
 describe("saúde da operação (Q1)", () => {
@@ -80,8 +85,62 @@ describe("saúde da operação (Q1)", () => {
     expect(t).toContain("Caixas para conferir");
   });
 
+  it("banco sem a função das rotinas (migration do ROT-a não aplicada): o cartão não aparece, e o resto segue", async () => {
+    const t = await tela();
+    expect(t).not.toContain("Rotinas automáticas");
+    expect(t).toContain("Nada parado nas filas que você acompanha");
+  });
+
   it("quem não é da gestão não vê a tela", async () => {
     cenario.permissoes = new Set(["venda.registrar"]);
     expect(await tela()).toContain("A saúde da operação é do dono e da gerência.");
+  });
+});
+
+describe("rotinas automáticas do banco na saúde da operação (ROT-a)", () => {
+  const haMinutos = (n: number) => new Date(Date.now() - n * 60_000 - 5_000).toISOString();
+  const rotina = (nome: string, descricao: string, frequencia: string, situacao: string, extra: Record<string, unknown> = {}) =>
+    ({ nome, descricao, frequencia, situacao, ultima_ok: null, ultima_falha: null, erro: null, ...extra });
+
+  it("em dia e aguardando: o cartão mostra cada rotina, a frequência e a última rodada certa, sem aviso no topo", async () => {
+    cenario.rpc.rotinas_situacao = { data: [
+      rotina("limpeza_dos_registros", "Limpeza do registro das rotinas", "todo dia às 03:30", "aguardando"),
+      rotina("reservas_vencidas", "Vencimento das reservas (PDV e site)", "a cada 5 minutos", "em_dia", { ultima_ok: haMinutos(3) }),
+    ], error: null };
+    const t = await tela();
+    for (const trecho of ["Rotinas automáticas", "O que o banco faz sozinho, na hora marcada", "Vencimento das reservas (PDV e site)",
+      "a cada 5 minutos · última rodada certa há 3 min", "Em dia", "Limpeza do registro das rotinas", "todo dia às 03:30 · ainda sem rodada certa",
+      "Aguardando a 1ª rodada"]) {
+      expect(t, trecho).toContain(trecho);
+    }
+    expect(t).not.toContain("pede atenção");
+    expect(t).not.toContain("pedem atenção");
+  });
+
+  it("com falha ou atrasada: o aviso no topo, antes das filas, e o código do erro no cartão", async () => {
+    cenario.rpc.rotinas_situacao = { data: [
+      rotina("limpeza_dos_registros", "Limpeza do registro das rotinas", "todo dia às 03:30", "atrasada", { ultima_ok: haMinutos(60 * 30) }),
+      rotina("reservas_vencidas", "Vencimento das reservas (PDV e site)", "a cada 5 minutos", "com_falha", { ultima_ok: haMinutos(12), ultima_falha: haMinutos(2), erro: "57014" }),
+    ], error: null };
+    const t = await tela();
+    expect(t).toContain("2 rotinas automáticas do banco pedem atenção");
+    expect(t).toContain("Vencimento das reservas (PDV e site): com falha; Limpeza do registro das rotinas: atrasada. Veja o cartão \"Rotinas automáticas\", abaixo.");
+    expect(t).toContain("a cada 5 minutos · última rodada certa há 12 min; a última falhou (código 57014)");
+    expect(t).toContain("todo dia às 03:30 · última rodada certa há 1 d");
+    expect(t.indexOf("pedem atenção")).toBeLessThan(t.indexOf("Itens esperando"));
+  });
+
+  it("uma rotina só com problema: o aviso no singular", async () => {
+    cenario.rpc.rotinas_situacao = { data: [rotina("reservas_vencidas", "Vencimento das reservas (PDV e site)", "a cada 5 minutos", "atrasada", { ultima_ok: haMinutos(25) })], error: null };
+    expect(await tela()).toContain("Uma rotina automática do banco pede atenção Vencimento das reservas (PDV e site): atrasada.");
+  });
+
+  it("falha ao ler as rotinas: o cartão diz que não leu, sem inventar \"em dia\", e as filas seguem", async () => {
+    cenario.rpc.rotinas_situacao = { data: null, error: { code: "57014" } };
+    cenario.respostas = { caixas: { data: [{ fechado_em: `${hoje}T10:00:00Z` }], count: 1, error: null } };
+    const t = await tela();
+    expect(t).toContain("Não deu para ler as rotinas agora");
+    expect(t).not.toContain("Em dia");
+    expect(t).toContain("Caixas para conferir");
   });
 });

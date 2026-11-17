@@ -63,3 +63,28 @@ grant select on storage.objects to anon;
 grant select on storage.buckets to authenticated;
 create function storage.foldername(name text) returns text[] language sql immutable
 as $$ select (string_to_array(name, '/'))[1:array_length(string_to_array(name, '/'), 1) - 1] $$;
+
+-- Agendador (Supabase Cron, a extensão pg_cron; lote ROT-a, ADR-011): só o que as migrations usam, com as colunas do
+-- pg_cron. No Supabase real a extensão cria o esquema cron, guarda as tarefas em cron.job, roda cada uma na hora marcada
+-- e anota cada rodada em cron.job_run_details. Aqui nada roda sozinho: os testes chamam a rotina direto e conferem o
+-- que ficou agendado.
+create schema cron;
+create table cron.job (
+  jobid bigserial primary key, schedule text not null, command text not null, nodename text not null default 'localhost',
+  nodeport int not null default 5432, database text not null default current_database(),
+  username text not null default current_user, active boolean not null default true, jobname text,
+  unique (jobname, username)
+);
+create table cron.job_run_details (
+  jobid bigint, runid bigserial primary key, job_pid int, database text, username text, command text, status text,
+  return_message text, start_time timestamptz, end_time timestamptz
+);
+-- Como no pg_cron: agendar de novo pelo mesmo nome atualiza a tarefa.
+create function cron.schedule(job_name text, schedule text, command text) returns bigint language sql
+as $$
+  insert into cron.job (jobname, schedule, command) values (job_name, schedule, command)
+  on conflict (jobname, username) do update set schedule = excluded.schedule, command = excluded.command, active = true
+  returning jobid
+$$;
+create function cron.unschedule(job_name text) returns boolean language sql
+as $$ with apagada as (delete from cron.job where jobname = job_name and username = current_user returning 1) select exists (select 1 from apagada) $$;
