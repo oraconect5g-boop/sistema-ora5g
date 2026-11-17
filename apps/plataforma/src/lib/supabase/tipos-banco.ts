@@ -7342,6 +7342,18 @@ export type Database = {
         Args: { p_mes: string; p_meses?: number; p_unidade?: string }
         Returns: Json
       }
+      rotinas_situacao: {
+        Args: never
+        Returns: {
+          descricao: string
+          erro: string
+          frequencia: string
+          nome: string
+          situacao: string
+          ultima_falha: string
+          ultima_ok: string
+        }[]
+      }
       selecionar_unidade: { Args: { p_unidade: string }; Returns: boolean }
       situacao_da_sessao: {
         Args: never
