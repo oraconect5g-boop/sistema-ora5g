@@ -2,14 +2,14 @@ import type { Metadata } from "next";
 import Link from "next/link";
 
 import { Icone } from "../../componentes/Icone";
-import { MoldeReal, permissoesDoMenu } from "../../componentes/MoldeReal";
+import { MoldeReal } from "../../componentes/MoldeReal";
 import { Aviso, Cartao, TituloPagina } from "../../componentes/ui";
 import { montarMenu, PAGINAS_REAIS } from "../../lib/acesso/menu";
 import { horaDoFimDoTurno } from "../../lib/acesso/regras";
-import { FalhaDoServico, obterSessao } from "../../lib/acesso/sessao";
+import { obterSessao } from "../../lib/acesso/sessao";
 import type { LojaDoFiltro } from "../../lib/financeiro/escopo";
 import { periodoFinanceiro } from "../../lib/financeiro/painel";
-import { lerPaineisDoInicio, permissoesDoInicio } from "../../lib/inicio/consulta";
+import { lerPaineisDoInicio } from "../../lib/inicio/consulta";
 import { ICONES_DAS_PENDENCIAS } from "../../lib/inicio/icones-das-pendencias";
 import { visaoDoInicio } from "../../lib/inicio/painel";
 import { lerAlertaDoEstoque } from "../../lib/inicio/alerta-do-estoque";
@@ -35,12 +35,10 @@ export default async function Inicio({ searchParams }: { searchParams: Promise<P
   const { supabase, usuario, situacao } = sessao;
   const unidade = situacao.unidade_id as string;
   const turno: LojaDoFiltro = { id: unidade, nome: situacao.unidade_nome ?? "Loja do turno" };
-  const [permissoes, inicio, perfil] = await Promise.all([
-    permissoesDoMenu(supabase, unidade),
-    permissoesDoInicio(supabase, unidade),
-    supabase.from("perfis_usuario").select("nome").eq("id", usuario.id).maybeSingle(),
-  ]);
-  if (perfil.error) throw new FalhaDoServico("inicio");
+  // As permissões (as do menu e as três só do Início: ranking, próprias vendas e custo) e o nome já vieram com a
+  // sessão (public.molde_da_sessao): a tela não pergunta de novo ao banco.
+  const { permissoes, nome } = sessao.molde;
+  const inicio = { ranking: permissoes.has("ranking.ver"), propria: permissoes.has("venda.ver_propria"), custo: permissoes.has("custo.ver") };
   const gestao = permissoes.has("venda.ver_unidade");
   const visao = visaoDoInicio({ verTodas: permissoes.has("venda.ver_todas"), verUnidade: gestao, verPropria: inicio.propria });
   // O que espera a pessoa (lib/inicio/pendencias.ts: a mesma leitura do sino do topo, G6) e os painéis, em paralelo.
@@ -59,8 +57,8 @@ export default async function Inicio({ searchParams }: { searchParams: Promise<P
   const atalhos = montarMenu(permissoes).visiveis.filter((p) => p !== "inicio");
 
   return (
-    <MoldeReal sessao={sessao} permissoes={permissoes} largura="max-w-6xl">
-      <TituloPagina sobretitulo={situacao.unidade_nome} titulo={`Olá, ${perfil.data?.nome ?? "bem-vindo"}`} subtitulo={fim ? `Turno até ${fim}. Para trabalhar em outra loja, toque no nome da loja no topo.` : undefined} />
+    <MoldeReal sessao={sessao} largura="max-w-6xl">
+      <TituloPagina sobretitulo={situacao.unidade_nome} titulo={`Olá, ${nome ?? "bem-vindo"}`} subtitulo={fim ? `Turno até ${fim}. Para trabalhar em outra loja, toque no nome da loja no topo.` : undefined} />
       {pendencias.length > 0 && (
         <section aria-label="O que espera você" className="grid grid-cols-2 gap-3 sm:grid-cols-3 lg:grid-cols-4">
           {pendencias.map((p) => {

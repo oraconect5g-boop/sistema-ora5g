@@ -23,12 +23,13 @@ vi.mock("../../lib/acesso/sessao", () => ({
   obterSessao: async () => ({
     usuario: { id: "u" },
     situacao: { usuario_ativo: true, sessao_no_turno: true, unidade_id: LOJA, unidade_nome: "Santa Cândida (teste)", turno_termina_em: "2026-11-14T23:00:00Z" },
+    // As permissões do menu chegam com a sessão (public.molde_da_sessao, lote VEL-a).
+    molde: { permissoes: cenario.permissoes, nome: "Ana (fictícia)", vinculos: [], pendencias: { aprovacoes: 0, notas: 0 } },
     supabase: { from: consulta },
   }),
 }));
 vi.mock("../../componentes/MoldeReal", () => ({
   MoldeReal: ({ children }: { children: unknown }) => children,
-  permissoesDoMenu: async () => cenario.permissoes,
 }));
 
 import SaudeDaOperacao from "./page";

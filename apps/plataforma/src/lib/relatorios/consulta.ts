@@ -3,7 +3,7 @@
 // sem a permissão, o banco nem é perguntado. Cada leitura devolve o próprio estado ("ok",
 // "indisponivel" ou "falha"); falha nunca vira zero e não derruba a página. O que cada pessoa lê é
 // decidido no banco (RLS e tem_permissao); aqui só se escolhe quais perguntas fazer.
-import { FalhaDoServico, type obterSessao } from "../acesso/sessao";
+import type { obterSessao } from "../acesso/sessao";
 import { consultarProducao } from "../connect/consulta-producao";
 import type { ProducaoDoBanco } from "../connect/producao";
 import type { Escopo, LojaDoFiltro } from "../financeiro/escopo";
@@ -20,16 +20,6 @@ import { janelasDoRelatorio, type PeriodoDoRelatorio } from "./painel";
 
 type Cliente = Awaited<ReturnType<typeof obterSessao>>["supabase"];
 const FALHA = { estado: "falha" } as const;
-
-/**
- * custo.ver na loja do turno: decide se a margem aparece na tela e no arquivo. Sem resposta do banco
- * não há como decidir: a página para. O banco confere de novo, loja a loja, dentro de margem_painel.
- */
-export async function podeVerCusto(supabase: Cliente, unidade: string): Promise<boolean> {
-  const r = await supabase.rpc("tem_permissao", { p_permissao: "custo.ver", p_unidade: unidade });
-  if (r.error) throw new FalhaDoServico("relatorios_permissoes");
-  return r.data === true;
-}
 
 /**
  * De qual loja é o relatório. Quem vê a rede começa pela rede inteira e pode escolher uma loja do

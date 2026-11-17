@@ -6,7 +6,6 @@
 // Mesma permissão e mesmo recorte da tela, conferidos aqui no servidor; o banco confere de novo cada
 // número (RLS, e custo.ver loja a loja dentro das funções da margem). Se uma leitura falha, o arquivo
 // inteiro falha: arquivo pela metade, ou com zero no lugar do que não foi lido, passaria por completo.
-import { permissoesDoMenu } from "../../../componentes/MoldeReal";
 import { podeVerFinanceiro } from "../../../lib/acesso/menu";
 import { FalhaDoServico, obterSessao } from "../../../lib/acesso/sessao";
 import { formatoPedido, type SecaoCsv } from "../../../lib/csv";
@@ -15,7 +14,7 @@ import { LIMITE_DA_EXPORTACAO } from "../../../lib/financeiro/registros";
 import { consultarVendas, nomesDoRanking } from "../../../lib/inicio/consulta";
 import type { Leitura } from "../../../lib/leitura-do-banco";
 import { consultarMargem, consultarMargemPorVendedor, todosOsItensDaMargem } from "../../../lib/margem/consulta";
-import { escopoDosRelatorios, podeVerCusto } from "../../../lib/relatorios/consulta";
+import { escopoDosRelatorios } from "../../../lib/relatorios/consulta";
 import { janelasDoRelatorio, periodoDoRelatorio, tabelaDosDias, tabelaDosItens, tabelaDosVendedores, visaoDaExportacao } from "../../../lib/relatorios/painel";
 import { respostaDaPlanilha } from "../../../lib/xlsx-servidor";
 
@@ -35,11 +34,12 @@ export async function GET(pedido: Request) {
   const sessao = await obterSessao({ exigirLoja: true });
   const { supabase, situacao } = sessao;
   const turno: LojaDoFiltro = { id: situacao.unidade_id as string, nome: situacao.unidade_nome ?? "Loja do turno" };
-  const permissoes = await permissoesDoMenu(supabase, turno.id);
+  const { permissoes } = sessao.molde;
   if (!podeVerFinanceiro(permissoes)) return texto("Sem permissão para exportar os relatórios.", 403);
 
   const ver = visaoDaExportacao(url.searchParams.get("ver"));
-  const custo = await podeVerCusto(supabase, turno.id);
+  // custo.ver veio com a sessão; o banco confere de novo dentro das leituras da margem.
+  const custo = permissoes.has("custo.ver");
   if (ver === "itens" && !custo) return texto("Sem permissão para exportar a margem por item: ela depende de ver o custo dos produtos.", 403);
   if (ver === "vendedores" && !custo) return texto("Sem permissão para exportar a margem por vendedor: ela depende de ver o custo dos produtos.", 403);
 

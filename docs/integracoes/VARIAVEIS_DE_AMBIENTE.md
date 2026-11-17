@@ -21,7 +21,7 @@
 
 | # | Grupo | Variáveis | O que é / onde se obtém | Quem providencia | Status |
 |---|---|---|---|---|---|
-| 1 | Aplicação | `APP_ENV`, `NEXT_PUBLIC_APP_URL`, `APP_TIMEZONE`, `APP_DEFAULT_CURRENCY`, `LOJA_ONLINE_ORGANIZACAO` (a organização que a loja online mostra; vazia, a loja fica desligada, ONLINE-a) | Configuração geral | Claude/Codex | Pronto para usar |
+| 1 | Aplicação | `APP_ENV`, `NEXT_PUBLIC_APP_URL`, `APP_TIMEZONE`, `APP_DEFAULT_CURRENCY`, `LOJA_ONLINE_ORGANIZACAO` (a organização que a loja online mostra; vazia, a loja fica desligada, ONLINE-a), `ORA_MEDIR_TEMPOS` (com `1`, o servidor escreve no log uma linha por ida ao banco, só com o caminho e o tempo; vazia, que é o normal, fica desligado; VEL-a, ADR-010) | Configuração geral | Claude/Codex | Pronto para usar |
 | 1 | Aplicação | `APP_ENCRYPTION_KEY` | Chave aleatória gerada por nós (`openssl rand -base64 32`), uma por ambiente | Administrador, no servidor | Pronto para usar |
 | 1 | Aplicação | `CRON_SECRET` | Senha aleatória das rotinas automáticas | Administrador | Pronto para usar |
 | 2 | Supabase | `NEXT_PUBLIC_SUPABASE_URL`, `NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY`, `SUPABASE_SECRET_KEY`, `DATABASE_URL` | Painel do projeto Supabase → configurações de API e banco. **`DATABASE_URL` deve ser a do pooler compartilhado em modo sessão (porta 5432)**, porque a conexão direta é só IPv6 e o servidor é só IPv4 (ADR-001) | Proprietário cria o projeto; Claude configura | Projeto `ora5g-dev` criado em 07/11; endereço e chave pública configurados. Chave secreta e `DATABASE_URL` pendentes: ver `docs/PENDENCIAS_DO_PROPRIETARIO.md` |

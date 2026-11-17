@@ -5,7 +5,12 @@
 import { isValidElement, type ReactElement } from "react";
 import { beforeEach, describe, expect, it, vi } from "vitest";
 
-const cenario = vi.hoisted(() => ({ permissoes: new Set<string>(), tabelas: {} as Record<string, Record<string, unknown>[]> }));
+const cenario = vi.hoisted(() => ({
+  permissoes: new Set<string>(),
+  tabelas: {} as Record<string, Record<string, unknown>[]>,
+  pendencias: { aprovacoes: 0, notas: 0 },
+  idasAoBanco: 0,
+}));
 
 vi.mock("next/headers", () => ({ cookies: async () => ({ getAll: () => [], set: () => undefined }) }));
 vi.mock("next/navigation", () => ({ redirect: (destino: string) => { throw new Error(`redirecionou para ${destino}`); } }));
@@ -13,7 +18,7 @@ vi.mock("next/navigation", () => ({ redirect: (destino: string) => { throw new E
 class Consulta {
   linhas: Record<string, unknown>[];
   cabeca = false;
-  constructor(nome: string) { this.linhas = [...(cenario.tabelas[nome] ?? [])]; }
+  constructor(nome: string) { cenario.idasAoBanco += 1; this.linhas = [...(cenario.tabelas[nome] ?? [])]; }
   select(_colunas?: string, opcoes?: { head?: boolean }) { this.cabeca = Boolean(opcoes?.head); return this; }
   eq(coluna: string, valor: unknown) { this.linhas = this.linhas.filter((l) => l[coluna] === valor); return this; }
   neq(coluna: string, valor: unknown) { this.linhas = this.linhas.filter((l) => l[coluna] !== valor); return this; }
@@ -38,10 +43,21 @@ const LOJA = "00000000-0000-4000-8000-0000000000cc";
 const sessaoFicticia = {
   usuario: { id: EU },
   situacao: { usuario_ativo: true, sessao_no_turno: true, unidade_id: LOJA, unidade_nome: "Santa Cândida (teste)", turno_termina_em: "2026-11-10T23:00:00Z" },
+  // O molde chega com a sessão (public.molde_da_sessao, lote VEL-a): permissões do menu, nome, vínculos e contagens.
+  get molde() {
+    return {
+      permissoes: cenario.permissoes,
+      nome: "Ana (fictícia)",
+      vinculos: [{ papel: "vendedor", escopo: "unidade", unidade_id: LOJA }],
+      pendencias: cenario.pendencias,
+    };
+  },
   supabase: {
     from: (nome: string) => new Consulta(nome),
-    rpc: async (nome: string, argumentos: { p_permissao?: string }) =>
-      ({ data: nome === "tem_permissao" ? cenario.permissoes.has(argumentos.p_permissao ?? "") : null, error: null }),
+    rpc: async (nome: string, argumentos: { p_permissao?: string }) => {
+      cenario.idasAoBanco += 1;
+      return { data: nome === "tem_permissao" ? cenario.permissoes.has(argumentos.p_permissao ?? "") : null, error: null };
+    },
   },
 };
 vi.mock("../../lib/acesso/sessao", () => ({ FalhaDoServico: class extends Error {}, obterSessao: async () => sessaoFicticia }));
@@ -72,9 +88,9 @@ beforeEach(() => {
     vendas: [venda(1, EU, "concluida", 149_900), venda(2, COLEGA, "concluida", 7_900, 7_900), venda(3, EU, "rascunho", null), venda(4, COLEGA, "cancelada", 50_000)],
     notas_pedidos: [{ venda_id: venda(1, EU, "", 0).id, situacao: "aguardando_aprovacao", unidade_id: LOJA }],
     perfis_usuario: [{ id: EU, nome: "Ana (fictícia)" }, { id: COLEGA, nome: "Bruno (fictício)" }],
-    vinculos: [{ usuario_id: EU, papel: "vendedor", escopo: "unidade", unidade_id: LOJA, fim: null }],
-    aprovacoes_desconto: [{ id: "a1", unidade_id: LOJA, situacao: "pendente" }],
   };
+  cenario.pendencias = { aprovacoes: 0, notas: 0 };
+  cenario.idasAoBanco = 0;
 });
 
 describe("lista real de vendas", () => {
@@ -114,7 +130,7 @@ describe("lista real de vendas", () => {
 });
 
 describe("molde comum das telas reais", () => {
-  const menu = async () => texto(await MoldeReal({ sessao: sessaoFicticia as never, children: null }) as ReactElement);
+  const menu = async () => texto(MoldeReal({ sessao: sessaoFicticia as never, children: null }) as ReactElement);
 
   it("vendedor não vê aprovações, notas, auditoria nem equipe; vê vender, vendas, caixa e estoque", async () => {
     cenario.permissoes = new Set(["venda.registrar", "caixa.abrir", "estoque.consultar", "connect.operar"]);
@@ -133,5 +149,25 @@ describe("molde comum das telas reais", () => {
     expect(await menu()).not.toContain("Equipe e acessos");
     cenario.permissoes = new Set([...cenario.permissoes, "usuarios.gerir"]);
     expect(await menu()).toContain("Equipe e acessos");
+  });
+
+  it("não vai ao banco: menu, nome, papel e emblemas chegam com a sessão (VEL-a)", async () => {
+    cenario.permissoes = new Set(["venda.registrar", "venda.ver_unidade", "desconto.aprovar", "nota.aprovar"]);
+    cenario.pendencias = { aprovacoes: 3, notas: 14 };
+    const molde = MoldeReal({ sessao: sessaoFicticia as never, children: null }) as ReactElement;
+    expect(cenario.idasAoBanco).toBe(0);
+    const emblemas: Record<string, unknown> = {};
+    const colher = (v: unknown): void => {
+      if (Array.isArray(v)) return v.forEach(colher);
+      if (!v || typeof v !== "object") return;
+      const o = (isValidElement<Record<string, unknown>>(v) ? v.props : v) as Record<string, unknown>;
+      if (typeof o.href === "string" && "emblema" in o) emblemas[o.href] = o.emblema;
+      Object.values(o).forEach(colher);
+    };
+    colher(molde);
+    expect(emblemas["/aprovacoes"]).toBe(3);
+    expect(emblemas["/notas"]).toBe(14);
+    // As outras páginas não levam emblema.
+    expect(Object.entries(emblemas).filter(([, n]) => n !== undefined).map(([href]) => href).sort()).toEqual(["/aprovacoes", "/notas"]);
   });
 });

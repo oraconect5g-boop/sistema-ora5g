@@ -2,6 +2,7 @@ import { ArrowLeft, FileSpreadsheet, FileUp, History, ShieldAlert, TriangleAlert
 import type { Metadata } from "next";
 import Link from "next/link";
 
+import { FormularioDeArquivo } from "../../../componentes/FormularioDeArquivo";
 import { MoldeReal } from "../../../componentes/MoldeReal";
 import { Aviso, Botao, BotaoLink, Cartao, FiltroSegmentado, Selo, TituloPagina, type Tom } from "../../../componentes/ui";
 import { ehUuid } from "../../../lib/acesso/regras";
@@ -279,7 +280,7 @@ export default async function Importar({ searchParams }: {
 
       {executar.data ? (
         <Cartao className="mt-4" titulo="Nova prévia" subtitulo="Primeira linha com o nome das colunas; no Excel, a primeira aba. Campo vazio na planilha não apaga o valor atual." icone={FileUp}>
-          <form action="/produtos/importar/enviar" method="post" encType="multipart/form-data" className="space-y-3">
+          <FormularioDeArquivo action="/produtos/importar/enviar" className="space-y-3">
             <EscolherColunas />
             <div className="grid gap-3 sm:grid-cols-2">
               <label className="block text-sm font-medium">Tipo para as linhas sem tipo
@@ -290,8 +291,8 @@ export default async function Importar({ searchParams }: {
                 <datalist id="categorias-existentes">{categorias.data.map((c) => <option key={c.nome} value={c.nome} />)}</datalist>
               </label>
             </div>
-            <Botao type="submit">Gerar prévia</Botao>
-          </form>
+            <Botao type="submit" enquanto="Enviando a planilha…">Gerar prévia</Botao>
+          </FormularioDeArquivo>
         </Cartao>
       ) : (
         <Aviso tom="info" className="mt-4">Quem envia a planilha é o administrador; você confere e aplica as prévias.</Aviso>

@@ -36,8 +36,6 @@ type Erro = { code: string };
 const cenario = vi.hoisted(() => ({
   usuario: "",
   permissoes: new Set<string>(),
-  /** Permissão cuja consulta falha. */
-  erroDaPermissao: null as null | string,
   vendas: null as unknown,
   anterior: null as unknown,
   erroDeVendas: null as null | { code: string },
@@ -101,10 +99,8 @@ const supabase = {
   from: (nome: string) => new Consulta(nome),
   rpc: async (nome: string, argumentos: Record<string, unknown> = {}) => {
     (cenario.chamadas[nome] ??= []).push(argumentos);
-    if (nome === "tem_permissao") {
-      // As permissões de rede chegam sem p_unidade; as de loja, com a loja do turno.
-      return argumentos.p_permissao === cenario.erroDaPermissao ? responder({ code: "57014" }, null) : responder(null, cenario.permissoes.has(String(argumentos.p_permissao)));
-    }
+    // As permissões (as do menu e custo.ver) chegam com a sessão (public.molde_da_sessao, lote VEL-a).
+    if (nome === "tem_permissao") throw new Error("os Relatórios não perguntam permissão ao banco: ela chega com a sessão (molde)");
     // A janela atual termina "agora"; qualquer outra é a do período anterior.
     if (nome === "vendas_painel") return argumentos.p_fim === FIM ? responder(cenario.erroDeVendas, cenario.vendas) : responder(cenario.erroDoAnterior, cenario.anterior);
     if (nome === "financeiro_painel") return responder(cenario.erroDoFinanceiro, cenario.financeiro);
@@ -120,6 +116,8 @@ const supabase = {
 const sessao = () => ({
   usuario: { id: cenario.usuario },
   situacao: { usuario_ativo: true, sessao_no_turno: true, unidade_id: LOJA, unidade_nome: "Santa Cândida (teste)", turno_termina_em: "2026-11-10T23:00:00Z" },
+  // O molde da sessão: as permissões, lidas junto com a sessão. A tela e a exportação não vão ao banco por elas.
+  molde: { permissoes: cenario.permissoes, nome: "Gestor Teste", vinculos: [], pendencias: { aprovacoes: 0, notas: 0 } },
   supabase,
 });
 vi.mock("../../lib/acesso/sessao", () => ({
@@ -367,7 +365,7 @@ beforeEach(() => {
   vi.setSystemTime(AGORA);
   vi.spyOn(console, "error").mockImplementation(() => undefined);
   Object.assign(cenario, {
-    usuario: GESTOR, permissoes: new Set<string>(), erroDaPermissao: null,
+    usuario: GESTOR, permissoes: new Set<string>(),
     vendas: VENDAS, anterior: ANTES, erroDeVendas: null, erroDoAnterior: null,
     financeiro: FINANCEIRO, erroDoFinanceiro: null, margem: MARGEM, erroDaMargem: null,
     itens: ITENS, erroDosItens: null, loteDosItens: null, producao: PRODUCAO, erroDaProducao: null, metasPorMes: {}, erroDasMetas: null,
@@ -408,8 +406,8 @@ describe("Relatórios: o gerente acompanha a loja do turno", () => {
     // A margem é pedida uma vez, só para o período atual; o detalhe, uma página de 50 itens.
     expect(cenario.chamadas.margem_painel).toStrictEqual([{ ...atual, p_unidade: LOJA }]);
     expect(cenario.chamadas.margem_itens).toStrictEqual([{ ...atual, p_unidade: LOJA, p_limite: 50, p_apos: 0 }]);
-    // custo.ver é perguntado na loja do turno, uma vez; os nomes da equipe não são assunto dos relatórios.
-    expect(cenario.chamadas.tem_permissao?.filter((c) => c.p_permissao === "custo.ver")).toStrictEqual([{ p_permissao: "custo.ver", p_unidade: LOJA }]);
+    // custo.ver veio com a sessão (nenhuma pergunta de permissão ao banco); os nomes da equipe não são assunto dos relatórios.
+    expect(cenario.chamadas.tem_permissao).toBeUndefined();
     expect(cenario.chamadas.ranking_nomes).toBeUndefined();
     // Não lê o cadastro de lojas nem oferece troca de loja.
     expect(cenario.lidas).not.toContain("unidades");
@@ -1105,24 +1103,23 @@ describe("Relatórios: quem não é da gerência não vê número nenhum", () =>
     expect(p.doTipo("Aviso")).toMatchObject([{ tom: "aviso", titulo: "Sem permissão" }]);
     expect(p.texto).toContain("Os relatórios são da gerência e da diretoria.");
     expect(p.titulo).toMatchObject({ titulo: "Relatórios" });
-    // Só o menu foi perguntado; nem custo.ver, nem leitura de tabela.
-    expect(Object.keys(cenario.chamadas)).toEqual(["tem_permissao"]);
-    expect(cenario.chamadas.tem_permissao?.map((c) => c.p_permissao)).not.toContain("custo.ver");
+    // Nenhuma ida ao banco: as permissões vieram com a sessão, e sem elas não há número a pedir.
+    expect(Object.keys(cenario.chamadas)).toEqual([]);
     expect(cenario.lidas).toEqual([]);
     expect(p.cartoes).toEqual([]);
     expect(p.indicadores).toEqual([]);
     expect(p.enderecos.filter((e) => e.startsWith("/relatorios/exportar"))).toEqual([]);
   });
 
-  it("sem resposta sobre uma permissão a página para: não há como decidir o que mostrar", async () => {
+  it("gerente sem custo.ver na sessão: a margem não é pedida ao banco, e nenhuma permissão é perguntada de novo", async () => {
+    // Sem resposta do banco sobre as permissões, quem para é a leitura da sessão (lib/acesso/sessao.test.ts), antes da tela.
     entrar("gerente");
-    for (const permissao of ["venda.ver_unidade", "custo.ver"]) {
-      cenario.erroDaPermissao = permissao;
-      cenario.chamadas = {};
-      await expect(pagina(), permissao).rejects.toBeInstanceOf(FalhaDoServico);
-      expect(cenario.chamadas.vendas_painel).toBeUndefined();
-      expect(cenario.chamadas.margem_painel).toBeUndefined();
-    }
+    cenario.permissoes.delete("custo.ver");
+    await pagina();
+    expect(cenario.chamadas.tem_permissao).toBeUndefined();
+    expect(cenario.chamadas.vendas_painel).toBeDefined();
+    expect(cenario.chamadas.margem_painel).toBeUndefined();
+    expect(cenario.chamadas.margem_itens).toBeUndefined();
   });
 });
 
@@ -1277,8 +1274,7 @@ describe("/relatorios/exportar", () => {
         expect(await resposta.text()).toBe("Sem permissão para exportar os relatórios.");
         expect(resposta.headers.get("cache-control")).toBe("no-store");
       }
-      expect(Object.keys(cenario.chamadas)).toEqual(["tem_permissao"]);
-      expect(cenario.chamadas.tem_permissao?.map((c) => c.p_permissao)).not.toContain("custo.ver");
+      expect(Object.keys(cenario.chamadas)).toEqual([]);
     }
     expect(cenario.lidas).toEqual([]);
   });

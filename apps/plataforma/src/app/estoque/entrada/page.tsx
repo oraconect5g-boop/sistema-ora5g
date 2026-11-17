@@ -2,6 +2,7 @@ import { randomUUID } from "node:crypto";
 
 import { ArrowLeft, ClipboardList, History, PackagePlus, Truck } from "lucide-react";
 import type { Metadata } from "next";
+import Form from "next/form";
 import Link from "next/link";
 
 import { MoldeReal } from "../../../componentes/MoldeReal";
@@ -242,11 +243,12 @@ function blocoDoHistorico(h: HistoricoDeEntradas | null, antes: number | null, a
         </Aviso>
       ) : (
         <>
-          <form method="get" action="/estoque/entrada#entrada" className="grid gap-2 sm:grid-cols-[minmax(0,16rem)_auto] sm:items-end">
-            <label className="block text-sm font-medium">Abrir pelo número<input name="numero" inputMode="numeric" pattern="[0-9]{1,12}" maxLength={12} required placeholder="ex.: 12" className={campo} /></label>
+          {/* next/form: abre a entrada sem recarregar a página e rola até ela (#entrada); o campo esvazia quando a entrada abre. */}
+          <Form action="/estoque/entrada#entrada" prefetch={false} className="grid gap-2 sm:grid-cols-[minmax(0,16rem)_auto] sm:items-end">
+            <label className="block text-sm font-medium">Abrir pelo número<input key={aberta ?? ""} name="numero" inputMode="numeric" pattern="[0-9]{1,12}" maxLength={12} required placeholder="ex.: 12" className={campo} /></label>
             {antes !== null && <input type="hidden" name="antes" value={antes} />}
-            <Botao type="submit" variante="secundario">Abrir</Botao>
-          </form>
+            <Botao type="submit" variante="secundario" enquanto="Abrindo…">Abrir</Botao>
+          </Form>
           <ul className="mt-3 divide-y divide-borda text-sm">
             {h.entradas.map((e) => (
               <li key={e.id} className="space-y-1 py-3">

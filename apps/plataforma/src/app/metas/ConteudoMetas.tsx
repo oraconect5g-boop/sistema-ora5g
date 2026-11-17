@@ -4,7 +4,7 @@ import type { ReactNode } from "react";
 import { BarrasHorizontais, Medidor, TabelaDoGrafico } from "../../componentes/graficos";
 import { BarrasDoRitmo, compacto, TOM_DO_MEDIDOR } from "../../componentes/paineis-de-metas";
 import { EstadoDoPainel, NOTA, NUMERO_PRINCIPAL, PainelDasLojas } from "../../componentes/paineis-de-vendas";
-import { Aviso, Avatar, Cartao, Celula, classeBotao, EstadoVazio, FiltroSegmentado, Indicador, ListaDados, Selo, Tabela } from "../../componentes/ui";
+import { Aviso, Avatar, Botao, Cartao, Celula, EstadoVazio, FiltroSegmentado, Indicador, ListaDados, Selo, Tabela } from "../../componentes/ui";
 import type { LojaDoFiltro } from "../../lib/financeiro/escopo";
 import { percentual } from "../../lib/formato";
 import type { VendasDoBanco } from "../../lib/inicio/painel";
@@ -231,7 +231,7 @@ function DefinirMetas({ dados, linhas, mes, fase, loja, lojaNoEndereco, alvoEmFo
                 <input name="motivo" maxLength={300} placeholder="Ex.: campanha de fim de ano" autoComplete="off" className={campo} />
               </label>
               <div className="flex items-end">
-                <button type="submit" className={classeBotao("primario", "md", "w-full")}>Salvar</button>
+                <Botao type="submit" className="w-full" enquanto="Salvando…">Salvar</Botao>
               </div>
             </form>
           </details>

@@ -30,6 +30,7 @@ describe("configuração do aplicativo web na publicação (#55)", () => {
       "NEXT_PUBLIC_SUPABASE_URL=https://ficticio.supabase.co",
       "NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY='sb_publishable_ficticia$com\\$cifrao'",
       "export APP_TIMEZONE=America/Sao_Paulo",
+      "ORA_MEDIR_TEMPOS=1",
     ];
     const segredos = [
       "SUPABASE_SECRET_KEY=ficticia-1", "DATABASE_URL=postgres://ficticia", "NOGLE_ACCESS_KEY=ficticia-2",

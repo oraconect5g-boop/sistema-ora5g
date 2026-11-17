@@ -5,7 +5,7 @@ import type { ReactNode } from "react";
 
 import { BotaoImprimir, CarimboDaImpressao } from "../../../componentes/BotaoImprimir";
 import { ExportarPlanilha } from "../../../componentes/ExportarPlanilha";
-import { MoldeReal, permissoesDoMenu } from "../../../componentes/MoldeReal";
+import { MoldeReal } from "../../../componentes/MoldeReal";
 import { EstadoDoPainel } from "../../../componentes/paineis-de-vendas";
 import { Aviso, Cartao, classeBotao, FiltroSegmentado, TituloPagina } from "../../../componentes/ui";
 import { podeVerFechamento } from "../../../lib/acesso/menu";
@@ -41,10 +41,10 @@ export default async function FechamentoDoBonus({ searchParams }: { searchParams
   const sessao = await obterSessao({ exigirLoja: true });
   const { supabase, usuario, situacao } = sessao;
   const turno: LojaDoFiltro = { id: situacao.unidade_id as string, nome: situacao.unidade_nome ?? "Loja do turno" };
-  const permissoes = await permissoesDoMenu(supabase, turno.id);
+  const { permissoes } = sessao.molde;
   if (!podeVerFechamento(permissoes)) {
     return (
-      <MoldeReal sessao={sessao} permissoes={permissoes}>
+      <MoldeReal sessao={sessao}>
         <TituloPagina titulo="Fechamento do bônus" />
         <Aviso tom="aviso" titulo="Sem permissão">
           O fechamento é da gerência e do dono. O seu bônus aprovado aparece em Metas e no seu extrato. O banco também recusa, mesmo que alguém digite o endereço.
@@ -107,7 +107,7 @@ export default async function FechamentoDoBonus({ searchParams }: { searchParams
   const todas = cadastro ? (cadastro.some((l) => l.id === turno.id) ? cadastro : [turno, ...cadastro]) : [];
 
   return (
-    <MoldeReal sessao={sessao} permissoes={permissoes} largura="max-w-5xl">
+    <MoldeReal sessao={sessao} largura="max-w-5xl">
       <TituloPagina
         sobretitulo={loja.nome}
         titulo="Fechamento do bônus"

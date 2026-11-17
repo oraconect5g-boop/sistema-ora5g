@@ -4,7 +4,7 @@ import Link from "next/link";
 
 import { BotaoImprimir, CarimboDaImpressao } from "../../../componentes/BotaoImprimir";
 import { ExportarPlanilha } from "../../../componentes/ExportarPlanilha";
-import { MoldeReal, permissoesDoMenu } from "../../../componentes/MoldeReal";
+import { MoldeReal } from "../../../componentes/MoldeReal";
 import { Aviso, classeBotao, FiltroSegmentado, TituloPagina } from "../../../componentes/ui";
 import { podeVerMetas } from "../../../lib/acesso/menu";
 import { ehUuid } from "../../../lib/acesso/regras";
@@ -32,10 +32,10 @@ export default async function ExtratoDoBonus({ searchParams }: { searchParams: P
   const sessao = await obterSessao({ exigirLoja: true });
   const { supabase, usuario, situacao } = sessao;
   const turno: LojaDoFiltro = { id: situacao.unidade_id as string, nome: situacao.unidade_nome ?? "Loja do turno" };
-  const permissoes = await permissoesDoMenu(supabase, turno.id);
+  const { permissoes } = sessao.molde;
   if (!podeVerMetas(permissoes)) {
     return (
-      <MoldeReal sessao={sessao} permissoes={permissoes}>
+      <MoldeReal sessao={sessao}>
         <TituloPagina titulo="Extrato do bônus" />
         <Aviso tom="aviso" titulo="Sem permissão">O extrato é de cada vendedor (o próprio) e da gerência da loja. O banco também recusa, mesmo que alguém digite o endereço.</Aviso>
       </MoldeReal>
@@ -74,7 +74,7 @@ export default async function ExtratoDoBonus({ searchParams }: { searchParams: P
   const planilha = extrato.estado === "ok" ? planilhaDoExtrato(extrato.dados) : null;
 
   return (
-    <MoldeReal sessao={sessao} permissoes={permissoes} largura="max-w-5xl">
+    <MoldeReal sessao={sessao} largura="max-w-5xl">
       <TituloPagina
         sobretitulo={loja.nome}
         titulo={nome === null ? "Meu extrato do bônus" : `Extrato de ${nome}`}

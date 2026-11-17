@@ -51,7 +51,7 @@ export default async function Entrar({ searchParams }: { searchParams: Promise<{
                 <CampoSenha classe={classeCampo} />
               </div>
               <p className="text-sm"><Link href="/entrar/recuperar" className="font-semibold text-acao hover:underline">Esqueci minha senha</Link></p>
-              <Botao type="submit" tamanho="lg" className="w-full">Entrar na plataforma <ArrowRight aria-hidden className="size-5" /></Botao>
+              <Botao type="submit" tamanho="lg" className="w-full" enquanto="Entrando…">Entrar na plataforma <ArrowRight aria-hidden className="size-5" /></Botao>
             </form>
           ) : (
             <Aviso tom="aviso" className="mt-6">O login ainda não está configurado neste ambiente.</Aviso>

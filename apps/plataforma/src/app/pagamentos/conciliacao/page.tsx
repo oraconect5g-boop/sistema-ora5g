@@ -1,5 +1,6 @@
 import { Landmark, Scale } from "lucide-react";
 import type { Metadata } from "next";
+import Form from "next/form";
 import Link from "next/link";
 
 import { MEIOS } from "@ora5g/dominio";
@@ -48,11 +49,12 @@ export default async function Conciliacao({ searchParams }: { searchParams: Prom
       <TituloPagina sobretitulo={situacao.unidade_nome} titulo="Conciliação de pagamentos" subtitulo={`Vendas concluídas de ${dataCurta(inicio)} a ${dataCurta(fim)}. Venda não é dinheiro recebido: confira cada cartão e Pix com o extrato.`} />
       {ok && <Aviso tom="sucesso" className="mt-4">{OK[ok]}</Aviso>}
       {erro && <Aviso tom="perigo" className="mt-4">{ERROS_DOS_PAGAMENTOS[erro]}</Aviso>}
-      <form className="mt-4 flex flex-wrap items-end gap-2">
-        <label className="text-xs font-medium">De<input name="inicio" type="date" defaultValue={inicio} className={campo} /></label>
-        <label className="text-xs font-medium">Até<input name="fim" type="date" defaultValue={fim} className={campo} /></label>
-        <Botao type="submit" tamanho="sm" variante="secundario">Ver</Botao>
-      </form>
+      {/* next/form: trocar o período muda só o endereço, sem recarregar; as datas voltam como o servidor as usou. */}
+      <Form action="/pagamentos/conciliacao" prefetch={false} className="mt-4 flex flex-wrap items-end gap-2">
+        <label className="text-xs font-medium">De<input key={inicio} name="inicio" type="date" defaultValue={inicio} className={campo} /></label>
+        <label className="text-xs font-medium">Até<input key={fim} name="fim" type="date" defaultValue={fim} className={campo} /></label>
+        <Botao type="submit" tamanho="sm" variante="secundario" enquanto="Carregando…">Ver</Botao>
+      </Form>
 
       <Cartao className="mt-4" titulo="Onde está o dinheiro" icone={Scale}>
         <ul className="grid gap-2 text-sm sm:grid-cols-2">

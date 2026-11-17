@@ -3,6 +3,7 @@
 import { Plus, Trash2 } from "lucide-react";
 import { useState } from "react";
 
+import { BotaoDeEnvio } from "../../../componentes/BotaoDeEnvio";
 import type { ItemParaEntrada } from "../entrada/acoes";
 import { BuscaDoItem } from "../entrada/FormularioEntrada";
 import { criarPedido } from "./acoes";
@@ -64,9 +65,9 @@ export function FormularioPedido({ unidade, chave, fornecedores, hoje }: { unida
         className="inline-flex min-h-11 items-center gap-2 rounded-botao border border-borda bg-white px-4 text-sm font-semibold text-acao">
         <Plus aria-hidden className="size-4" /> Mais um item
       </button>
-      <button type="submit" disabled={prontas.length === 0} className="block min-h-11 rounded-botao bg-acao px-5 text-sm font-semibold text-white disabled:opacity-50">
+      <BotaoDeEnvio disabled={prontas.length === 0} enquanto="Registrando o pedido…" className="block min-h-11 rounded-botao bg-acao px-5 text-sm font-semibold text-white disabled:opacity-50">
         {`Registrar o pedido (${prontas.length} ${prontas.length === 1 ? "item" : "itens"}, ${unidades} ${unidades === 1 ? "unidade" : "unidades"})`}
-      </button>
+      </BotaoDeEnvio>
     </form>
   );
 }

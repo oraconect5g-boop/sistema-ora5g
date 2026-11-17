@@ -102,6 +102,7 @@ vi.mock("../../lib/acesso/sessao", () => ({
   }),
 }));
 
+import { FormularioDeArquivo } from "../../componentes/FormularioDeArquivo";
 import { cancelarConta, corrigirConta, desfazerPagamento, lancarConta, ligarEntrada, pagarConta, retirarDocumento, salvarCategoria } from "./acoes";
 import { GET as exportar } from "./exportar/route";
 import ContasAPagar from "./page";
@@ -584,12 +585,15 @@ const D4 = "00000000-0000-4000-9000-0000000000b4";
 const doc = (id: string, contaId: string, extra: Linha = {}) => ({
   id, conta_id: contaId, tipo: "boleto", descricao: null, formato: "pdf", bytes: 850 * 1024, enviado_em: "2026-11-12T13:30:00Z", retirado_em: null, motivo_retirada: null, ...extra,
 });
-/** Os formulários de envio (ação é o endereço da rota, não uma função): o endereço, os campos escondidos e o tipo já escolhido. */
-const envios = (v: unknown) => elementos(v).filter((e) => e.type === "form" && typeof e.props.action === "string").map((f) => {
+/**
+ * Os formulários de envio (ação é o endereço da rota, não uma função): o endereço, os campos escondidos e o tipo já escolhido.
+ * São o FormularioDeArquivo, que é quem manda em POST e multipart (conferido no teste dele) e trava o botão no envio.
+ */
+const envios = (v: unknown) => elementos(v).filter((e) => e.type === FormularioDeArquivo && typeof e.props.action === "string").map((f) => {
   const campos: Record<string, string> = {};
   for (const e of elementos(f.props.children)) if (e.type === "input" && e.props.type === "hidden") campos[String(e.props.name)] = String(e.props.value);
   const tipo = elementos(f.props.children).find((e) => e.type === "select" && e.props.name === "tipo");
-  return { acao: String(f.props.action), metodo: f.props.method, codificacao: f.props.encType, campos, tipo: tipo?.props.defaultValue };
+  return { acao: String(f.props.action), campos, tipo: tipo?.props.defaultValue };
 });
 const resumoDaPilula = (v: unknown) => elementos(v).filter((e) => e.type === "summary").map((s) => visivel(s.props.children)).filter((s) => s.startsWith("Documentos") || s.startsWith("Anexar"));
 
@@ -615,9 +619,9 @@ describe("/contas-a-pagar: os documentos da conta (FIN-004b)", () => {
     expect(t).toContain("Outro documento JPG · 1,2 MB · 12/11/2026, 11:00 retirado Boleto em dobro Retirado em 12/11/2026, 12:00: Boleto de outra conta");
     // retirar só o vigente, com o documento e a volta para a mesma lista
     expect(formularios(tela).filter((f) => f.acao === "retirarDocumento").map((f) => f.campos)).toEqual([{ documento: D1, ver: "abertas", loja: "" }]);
-    // guardar outro: a rota de envio de cada conta, em multipart, com o boleto já escolhido na conta em aberto
+    // guardar outro: a rota de envio de cada conta, com o boleto já escolhido na conta em aberto
     expect(envios(tela)).toEqual([C1, C2, C3].map((id) => ({
-      acao: `/contas-a-pagar/${id}/documentos`, metodo: "post", codificacao: "multipart/form-data", campos: { ver: "abertas", loja: "" }, tipo: "boleto",
+      acao: `/contas-a-pagar/${id}/documentos`, campos: { ver: "abertas", loja: "" }, tipo: "boleto",
     })));
     // a paga sugere o comprovante; a lista de pagas leva o filtro na volta
     const pagas = await pagina({ ver: "pagas", loja: LOJA_A });

@@ -1,5 +1,5 @@
 // ARQUIVO GERADO pelo Supabase (generate_typescript_types do projeto ora5g-dev) depois da
-// migration 20261116102346_limpeza_das_fotos_protocolo. Não edite à mão: gere de novo a cada
+// migration 20261117015315_sessao_molde_e_pdv. Não edite à mão: gere de novo a cada
 // migration aplicada (auditoria do Codex de 08/11, §7.2). O teste tipos-banco.test.ts confere
 // que funções e tabelas públicas daqui são as mesmas das migrations.
 export type Json =
@@ -7021,6 +7021,13 @@ export type Database = {
         Args: { p_mes: string; p_unidade: string }
         Returns: Json
       }
+      molde_da_sessao: {
+        Args: {
+          p_permissoes_da_loja: string[]
+          p_permissoes_da_rede?: string[]
+        }
+        Returns: Json
+      }
       movimentar_caixa: {
         Args: {
           p_chave: string
@@ -7194,6 +7201,7 @@ export type Database = {
         Args: { p_fim: string; p_inicio: string; p_unidade?: string }
         Returns: Json
       }
+      pdv_tela: { Args: never; Returns: Json }
       pedido_compra: { Args: { p_pedido: string }; Returns: Json }
       pedido_compra_criar: {
         Args: {

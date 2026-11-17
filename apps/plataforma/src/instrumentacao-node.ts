@@ -18,3 +18,18 @@ export async function validarAmbienteOuEncerrar() {
     process.exit(1);
   }
 }
+
+const SEM_CONEXAO_MANTIDA = "conexão com o banco: não foi possível manter aberta; cada pedido volta a abrir a sua";
+
+// A conexão do servidor com o Supabase fica aberta entre um pedido e outro (lote VEL-a: ORA-QUAL-010; ADR-010).
+// É só ganho de tempo: se não der para ligar, o servidor sobe do mesmo jeito. Uma linha na saída diz o que valeu,
+// para quem lê o log da homologação saber em qual das duas situações o servidor está.
+export async function manterConexaoComOBanco() {
+  try {
+    const { CONEXAO_PARADA_MS, manterConexoesAbertas } = await import("./lib/supabase/conexao-mantida");
+    if (await manterConexoesAbertas()) console.info(`conexão com o banco: fica aberta por até ${CONEXAO_PARADA_MS / 1000} s parada`);
+    else console.warn(SEM_CONEXAO_MANTIDA);
+  } catch {
+    console.warn(SEM_CONEXAO_MANTIDA);
+  }
+}

@@ -3,6 +3,7 @@
 import { Plus, Search, Trash2 } from "lucide-react";
 import { useId, useState, useTransition } from "react";
 
+import { BotaoDeEnvio } from "../../../componentes/BotaoDeEnvio";
 import { CONDICOES, separarIdentificadores, TIPOS_DE_ENTRADA } from "../../../lib/estoque/entrada";
 import type { PedidoParaReceber } from "../../../lib/estoque/receber-do-pedido";
 import { buscarItensParaEntrada, registrarEntrada, type ItemParaEntrada } from "./acoes";
@@ -144,9 +145,9 @@ export function FormularioEntrada({ unidade, chave, fornecedores, pedido = null 
         <Plus aria-hidden className="size-4" /> Mais um item
       </button>
       <label className="block text-sm font-medium">Motivo (fica na auditoria)<input name="motivo" required minLength={3} maxLength={200} defaultValue={pedido ? `Recebimento do pedido nº ${pedido.numero}` : undefined} placeholder={tipo === "compra" ? "Pedido da semana" : "Estoque que já estava na loja"} className={campo} /></label>
-      <button type="submit" disabled={prontas.length === 0} className="inline-flex min-h-11 items-center justify-center rounded-botao bg-acao px-5 text-sm font-semibold text-white disabled:opacity-50">
+      <BotaoDeEnvio disabled={prontas.length === 0} enquanto="Registrando a entrada…" className="inline-flex min-h-11 items-center justify-center rounded-botao bg-acao px-5 text-sm font-semibold text-white disabled:opacity-50">
         Registrar entrada ({prontas.length} {prontas.length === 1 ? "linha" : "linhas"})
-      </button>
+      </BotaoDeEnvio>
     </form>
   );
 }

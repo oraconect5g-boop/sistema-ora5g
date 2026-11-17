@@ -57,7 +57,7 @@ export function MinhasSaidas({ leitura }: { leitura: Leitura<SaidaDoCaixa[]> }) 
 export function SaidasParaAutorizar({ leitura, nomes, usuario }: { leitura: Leitura<SaidaDoCaixa[]>; nomes: Map<string, string> | null; usuario: string }) {
   const quem = (id: string) => (nomes === null ? "nome indisponível" : nomes.get(id) ?? "Pessoa de fora da sua equipe");
   return (
-    <Cartao id="saidas" titulo="Saídas para autorizar" icone={ShieldCheck} subtitulo="Dinheiro da gaveta para despesa da loja. Autorizar lança a saída no caixa de quem pediu.">
+    <Cartao id="saidas" className="scroll-mt-24" titulo="Saídas para autorizar" icone={ShieldCheck} subtitulo="Dinheiro da gaveta para despesa da loja. Autorizar lança a saída no caixa de quem pediu.">
       {leitura.estado === "indisponivel" ? <p className="text-sm text-suave">{ERROS_DA_SAIDA.indisponivel}</p>
         : leitura.estado === "falha" ? <Aviso tom="perigo">{NAO_LEU}</Aviso>
         : leitura.dados.length === 0 ? <p className="text-sm text-suave">Nenhum pedido de saída esperando autorização.</p>

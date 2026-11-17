@@ -3,12 +3,15 @@ import Link from "next/link";
 import type { ReactNode } from "react";
 
 import { sair } from "../app/entrar/acoes";
-import { montarMenu, PAGINAS_REAIS, PERMISSOES_DA_REDE, PERMISSOES_DO_MENU, type PaginaReal } from "../lib/acesso/menu";
+import { montarMenu, PAGINAS_REAIS, type PaginaReal } from "../lib/acesso/menu";
+import type { VinculoDoMolde } from "../lib/acesso/molde";
 import { horaDoFimDoTurno, PAPEIS, type Papel, type SituacaoSessao } from "../lib/acesso/regras";
-import { FalhaDoServico, type obterSessao } from "../lib/acesso/sessao";
+import type { obterSessao } from "../lib/acesso/sessao";
 import { iniciais } from "../lib/formato";
 import { textoDaVersao } from "../lib/versao";
+import { IrParaAncora } from "./ancora";
 import { AvisoDeRede } from "./AvisoDeRede";
+import { BotaoDeEnvio } from "./BotaoDeEnvio";
 import { classeDaAcaoDoTrilho } from "./LinkNavegacao";
 import { Marca } from "./Marca";
 import { MenuSuspenso } from "./MenuSuspenso";
@@ -18,18 +21,9 @@ import { SinoDePendencias } from "./SinoDePendencias";
 import { Trilho } from "./Trilho";
 
 type Sessao = Awaited<ReturnType<typeof obterSessao>>;
-type Cliente = Sessao["supabase"];
-
-// Permissões que montam o menu, conferidas no banco na loja do turno (equipe e lojas valem para a rede).
-export async function permissoesDoMenu(supabase: Cliente, unidade: string): Promise<Set<string>> {
-  const respostas = await Promise.all(PERMISSOES_DO_MENU.map((p) =>
-    supabase.rpc("tem_permissao", PERMISSOES_DA_REDE.has(p) ? { p_permissao: p } : { p_permissao: p, p_unidade: unidade })));
-  if (respostas.some((r) => r.error)) throw new FalhaDoServico("menu");
-  return new Set(PERMISSOES_DO_MENU.filter((_, i) => respostas[i]?.data === true));
-}
 
 // Papel mostrado no topo: o da rede (dono, administrador) ou o desta loja.
-function papelNaLoja(vinculos: { papel: string; escopo: string; unidade_id: string | null }[], unidade: string) {
+function papelNaLoja(vinculos: readonly VinculoDoMolde[], unidade: string) {
   const papel = vinculos.find((v) => v.escopo === "organizacao")?.papel ?? vinculos.find((v) => v.unidade_id === unidade)?.papel;
   return papel && Object.hasOwn(PAPEIS, papel) ? PAPEIS[papel as Papel].nome : "Equipe";
 }
@@ -41,39 +35,25 @@ const classeDoItemDoMenu = "flex min-h-11 w-full items-center gap-3 rounded-xl p
  * barra inferior no celular, loja do turno e turno no topo, troca de loja, senha e saída sempre no
  * mesmo lugar. Os emblemas mostram o que espera a pessoa (aprovações, notas). Visual azul com trilho
  * e pílula (mesmas peças da demonstração) e a versão no ar no fim da tela.
+ *
+ * Não vai ao banco (lote VEL-a): as permissões do menu, o nome, os vínculos e as contagens dos emblemas chegam com a
+ * sessão (sessao.molde), lidos na mesma ida em que o banco decide a sessão (public.molde_da_sessao).
  */
-export async function MoldeReal({ sessao, children, largura = "max-w-3xl", permissoes: jaConferidas }: {
+export function MoldeReal({ sessao, children, largura = "max-w-3xl" }: {
   sessao: Sessao;
   children: ReactNode;
   largura?: string;
-  /** Quando a tela já conferiu as permissões do menu (o início), não pergunta de novo ao banco. */
-  permissoes?: ReadonlySet<string>;
 }) {
-  const { supabase, usuario } = sessao;
+  const { molde } = sessao;
   const situacao = sessao.situacao as SituacaoSessao;
   const unidade = situacao.unidade_id as string;
-  const [permissoes, perfil, vinculos] = await Promise.all([
-    jaConferidas ?? permissoesDoMenu(supabase, unidade),
-    supabase.from("perfis_usuario").select("nome").eq("id", usuario.id).maybeSingle(),
-    supabase.from("vinculos").select("papel, escopo, unidade_id").eq("usuario_id", usuario.id).is("fim", null),
-  ]);
-  if (perfil.error || vinculos.error) throw new FalhaDoServico("molde");
-  const [aprovacoes, notas] = await Promise.all([
-    permissoes.has("desconto.aprovar")
-      ? supabase.from("aprovacoes_desconto").select("id", { count: "exact", head: true }).eq("unidade_id", unidade).eq("situacao", "pendente")
-      : Promise.resolve({ count: 0, error: null }),
-    permissoes.has("nota.aprovar")
-      ? supabase.from("notas_pedidos").select("id", { count: "exact", head: true }).eq("unidade_id", unidade).in("situacao", ["aguardando_aprovacao", "aprovada"])
-      : Promise.resolve({ count: 0, error: null }),
-  ]);
-  if (aprovacoes.error || notas.error) throw new FalhaDoServico("molde_pendencias");
-  const pendencias: Partial<Record<PaginaReal, number>> = { aprovacoes: aprovacoes.count ?? 0, notas: notas.count ?? 0 };
+  const pendencias: Partial<Record<PaginaReal, number>> = { aprovacoes: molde.pendencias.aprovacoes, notas: molde.pendencias.notas };
 
-  const pessoa = perfil.data?.nome ?? "Equipe";
-  const papel = papelNaLoja(vinculos.data, unidade);
+  const pessoa = molde.nome ?? "Equipe";
+  const papel = papelNaLoja(molde.vinculos, unidade);
   const loja = situacao.unidade_nome ?? "Loja";
   const fim = horaDoFimDoTurno(situacao.turno_termina_em);
-  const menu = montarMenu(permissoes);
+  const menu = montarMenu(molde.permissoes);
   const item = (p: PaginaReal): ItemNavegacao => ({
     href: PAGINAS_REAIS[p].caminho, titulo: PAGINAS_REAIS[p].titulo, curto: PAGINAS_REAIS[p].curto, icone: PAGINAS_REAIS[p].icone, emblema: pendencias[p],
   });
@@ -85,14 +65,14 @@ export async function MoldeReal({ sessao, children, largura = "max-w-3xl", permi
     <>
       <Link href="/escolher-loja" className={classeDaAcaoDoTrilho}><Store aria-hidden className="size-4" /> Trocar de loja</Link>
       <Link href="/conta/senha" className={classeDaAcaoDoTrilho}><KeyRound aria-hidden className="size-4" /> Trocar minha senha</Link>
-      <form action={sair}><button type="submit" className={classeDaAcaoDoTrilho}><LogOut aria-hidden className="size-4" /> Sair</button></form>
+      <form action={sair}><BotaoDeEnvio className={`${classeDaAcaoDoTrilho} disabled:opacity-60`} enquanto={<><LogOut aria-hidden className="size-4" /> Saindo…</>}><LogOut aria-hidden className="size-4" /> Sair</BotaoDeEnvio></form>
     </>
   );
   const contaESaida = (
     <div className="space-y-1 border-t border-borda pt-2">
       <Link href="/escolher-loja" className={classeDoItemDoMenu}><Store aria-hidden className="size-4 text-suave" /> Trocar de loja</Link>
       <Link href="/conta/senha" className={classeDoItemDoMenu}><KeyRound aria-hidden className="size-4 text-suave" /> Trocar minha senha</Link>
-      <form action={sair}><button type="submit" className={classeDoItemDoMenu}><LogOut aria-hidden className="size-4 text-suave" /> Sair</button></form>
+      <form action={sair}><BotaoDeEnvio className={`${classeDoItemDoMenu} disabled:opacity-60`} enquanto={<><LogOut aria-hidden className="size-4 text-suave" /> Saindo…</>}><LogOut aria-hidden className="size-4 text-suave" /> Sair</BotaoDeEnvio></form>
     </div>
   );
 
@@ -152,6 +132,8 @@ export async function MoldeReal({ sessao, children, largura = "max-w-3xl", permi
       <main id="conteudo" className={`mx-auto ${largura} space-y-4 px-4 pb-32 pt-3 sm:px-6 sm:pt-5 lg:pb-10`}>
         {children}
         <RodapeVersao />
+        {/* Âncora do endereço (#saidas, #lancar…) quando o esqueleto apareceu antes desta tela: ver ancora.tsx. */}
+        <IrParaAncora />
       </main>
 
       <NavegacaoCelular atalhos={menu.atalhos.map(item)} grupos={gruposDoMais} pessoa={pessoa} papel={papel} loja={loja} rodape={contaESaida} versao={versao} />

@@ -1,7 +1,10 @@
+import { MarcaDeEsqueleto } from "../../componentes/ancora";
+
 // Enquanto o Início soma o período no banco: esqueleto no lugar do conteúdo (sem número algum).
 export default function CarregandoInicio() {
   return (
     <div aria-busy="true" aria-label="Carregando o início" className="mx-auto max-w-6xl animate-pulse px-4 pt-6 sm:px-6">
+      <MarcaDeEsqueleto />
       <div className="h-4 w-40 rounded bg-slate-200" />
       <div className="mt-3 h-8 w-56 max-w-full rounded-lg bg-slate-200" />
       <div className="mt-5 grid grid-cols-2 gap-3 sm:grid-cols-3 lg:grid-cols-4">

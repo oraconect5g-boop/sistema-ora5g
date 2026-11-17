@@ -31,6 +31,20 @@ export const inteiro = (l: Linha, campo: string) => centavosDoBanco(l[campo]);
 /** Inteiro que o banco pode mandar nulo (o custo de um item sem custo gravado). Campo ausente continua sendo erro. */
 export const inteiroOuNulo = (l: Linha, campo: string) => (l[campo] === null ? null : centavosDoBanco(l[campo]));
 
+/** Contagem que chega como número do JSON (itens, pendências, quantidade): inteiro, nunca negativo, nunca texto. */
+export const contagem = (l: Linha, campo: string) => {
+  const v = l[campo];
+  if (typeof v !== "number" || !Number.isSafeInteger(v) || v < 0) throw new RespostaInesperada(campo);
+  return v;
+};
+
+/** Sim ou não. Ausente, nulo ou texto ("true") é erro. */
+export const booleano = (l: Linha, campo: string) => {
+  const v = l[campo];
+  if (typeof v !== "boolean") throw new RespostaInesperada(campo);
+  return v;
+};
+
 /** Texto obrigatório e não vazio. */
 export const texto = (l: Linha, campo: string) => {
   const v = l[campo];
