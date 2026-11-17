@@ -54,5 +54,6 @@ O proprietário aprovou (15/11, "Sim, siga") o prazo de 24 horas e até 2 reserv
 - O que vem depois:
   - **ONLINE-b, a reserva:** feita em 15 e 16/11 (decisões 8 a 14, acima). A política de privacidade passa pelo jurídico (D-048).
   - **ONLINE-c, sem erro de servidor para o visitante:** feito em 17/11 (decisão 15, acima).
+  - **#102, a cota de 20 reservas por loja e por hora com reservas ao mesmo tempo:** corrigido em 17/11 no INTEG-c. A conta vem depois de uma trava por loja, tomada antes de qualquer trava de aparelho ou de saldo. Com 19 reservas, duas ao mesmo tempo terminam com 20, e a segunda recebe `OR035`. A prova está em `packages/banco/src/loja-online-cota-concorrencia.test.ts`, no PostgreSQL 17 de verdade.
   - **ONLINE-003:** a origem online na venda, sem atribuição indevida nem comissão em dobro.
   - **A entrega e o pagamento online:** só depois de D-024, D-025, P10 e do provedor de pagamento (E1).

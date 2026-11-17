@@ -32,3 +32,21 @@ Emissão automática, consulta e cancelamento no emissor; anexos (XML/PDF) e env
 1. **Contador (e-mail 2.2):** documento de cada operação, prazo legal entre venda e emissão, emissor por API e certificado A1 das filiais.
 2. **D-006:** o gerente aprova toda nota ou só exceções? Hoje o sistema segue a DEC-U20 (todas), sem nunca bloquear a emissão.
 3. **Quem pediu pode aprovar a própria nota?** Hoje pode (diferente do desconto), porque a aprovação da nota não pode atrasar a obrigação legal. Confirma?
+
+## Decisão sobre a identidade do destinatário (INTEG-c, 17/11/2026; #101)
+
+A revisão do Codex de 16/11 (PR #100, commit e311060) reproduziu o #101: a migration do INTEG-a ligou as notas antigas, já sem o destinatário guardado (ele sai na emissão), ao cliente de hoje da venda. Com a venda trocada de cliente, a nota de Alfa iria pelo WhatsApp para Beta.
+
+1. **A identidade do cliente da nota tem origem registrada** (`notas_pedidos.cliente_origem`):
+   - `pedido`: gravada no pedido, ou na correção antes da emissão;
+   - `destinatario_guardado`: conferida no destinatário guardado;
+   - `conferencia`: a gerência conferiu o documento da nota e confirmou; o registro guarda quem e quando.
+
+   Sem origem, não há prova. Nada é deduzido do cliente de hoje da venda.
+2. **O envio pelo WhatsApp exige a prova.** `nota_enviar_whatsapp` recusa com `OR037` (HTTP 400). O worker confere de novo antes de expedir: o envio que já estava na fila falha com o motivo, e nada sai.
+3. **A conferência é da gerência** (`nota_confirmar_destinatario`, permissão `nota.aprovar`). Ela vale só para a nota de venda emitida sem prova. Confirma o cliente de hoje da venda, depois de conferir o PDF, e o motivo vai para a auditoria. Se a nota é de outra pessoa, não se confirma, e ela não vai pelo WhatsApp.
+4. **Novas funções não usam o código `P0002`** (a API do banco responde HTTP 500 a ele; ADR-009, decisão 15): a recusa por loja ou permissão usa `42501`.
+
+Migration `20261117135133_identidade_da_nota_e_cota_da_loja`. Testes:
+- `packages/banco/src/identidade-da-nota.test.ts`: o banco de antes do INTEG-a recebe as migrations em ordem;
+- `apps/plataforma/src/app/vendas/nota-whatsapp.test.ts`: a tela.
