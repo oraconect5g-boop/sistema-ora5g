@@ -37,11 +37,22 @@ O proprietário aprovou (15/11, "Sim, siga") o prazo de 24 horas e até 2 reserv
 13. **O vencimento:** depois de 24 horas a reserva não se atende mais. A vitrine já conta a unidade como livre; o PDV e a tela da loja, ao abrir, soltam de vez as reservas do site vencidas da loja do turno (`loja_reservas_liberar_vencidas`, só as do site, sem esperar trava), e a próxima reserva daquele produto naquela loja também solta. A reserva do PDV vencida segue a regra de sempre.
 14. **Concorrência:** provado num PostgreSQL 17 de verdade que o site e o balcão disputando os mesmos aparelhos nunca levam a mesma unidade (`packages/banco/src/loja-online-concorrencia.test.ts`).
 
+## Decisão sobre o "não encontrado" (ONLINE-c, 17/11/2026)
+
+15. **Fora do site, sem erro de servidor:** a API do banco responde HTTP 500 a todo erro da classe `P0` que não seja o `P0001`, e as funções do visitante diziam "não encontrado" com o `P0002`: cada visita ao endereço de um produto fora do site deixava um erro de servidor no registro, sem nada quebrado. Desde 17/11:
+    - `public.loja_produto` devolve vazio (nulo), sem erro, para o produto fora do site: não marcado, inativo, chip, de outra empresa, sem preço em loja nenhuma ou que não existe. A resposta é a mesma em todos os casos, então ela não revela se o produto existe. A página mostra "não encontrada" (404).
+    - `public.loja_reservar` recusa com o código próprio `OR036` ("não está à venda na loja online") quando o produto não está no site, a loja não é uma loja física ativa da empresa ou o produto não tem preço naquela loja. A API responde HTTP 400, como já faz com `OR001`, `OR004`, `OR034` e `OR035`. A tela diz que o produto não está mais disponível para reserva.
+    - Uma falha de verdade (qualquer outro erro) mostra "A loja online está fora do ar agora" e grava no log só o código do erro.
+    - As páginas continuam tratando o `P0002` como "não encontrada", para servir a um banco que ainda não recebeu a migration.
+    - Nenhuma função que o visitante alcança tem o `P0002` no texto: as cinco que ele executa, as que elas chamam e os gatilhos das tabelas que elas citam (28 funções, conferidas no `ora5g-dev` em 17/11).
+    - Fora desta decisão: as funções das telas com login e dos serviços internos, que ainda dizem "não encontrado" com `P0002`. Trocar o código nelas é um lote à parte.
+
 ## Consequências
 
 - Nada aparece no site sem o dono marcar o produto. Hoje, nenhum está marcado.
 - A vitrine é uma leitura: o PDV, o estoque e o caixa não mudam.
 - O que vem depois:
   - **ONLINE-b, a reserva:** feita em 15 e 16/11 (decisões 8 a 14, acima). A política de privacidade passa pelo jurídico (D-048).
+  - **ONLINE-c, sem erro de servidor para o visitante:** feito em 17/11 (decisão 15, acima).
   - **ONLINE-003:** a origem online na venda, sem atribuição indevida nem comissão em dobro.
   - **A entrega e o pagamento online:** só depois de D-024, D-025, P10 e do provedor de pagamento (E1).

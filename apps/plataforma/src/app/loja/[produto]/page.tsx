@@ -21,11 +21,14 @@ export default async function ProdutoDaLoja({ params }: { params: Promise<{ prod
     return <EstadoVazio titulo="A loja online ainda não está no ar" icone={Store}>Enquanto isso, procure uma das lojas da Ora 5G.</EstadoVazio>;
   }
   const { data, error } = await supabase.rpc("loja_produto", { p_organizacao: organizacao, p_produto: produto });
+  // Fora do site, o banco devolve vazio, sem erro (ONLINE-c). O P0002 era o jeito antigo de dizer o mesmo e continua
+  // tratado, para a página servir a um banco que ainda não recebeu a migration.
   if (error?.code === "P0002") notFound();
-  if (error || !data) {
-    console.error("loja: falha ao ler o produto", { codigo: error?.code });
+  if (error) {
+    console.error("loja: falha ao ler o produto", { codigo: error.code });
     return <EstadoVazio titulo="A loja online está fora do ar agora" icone={Store}>Tente de novo em instantes.</EstadoVazio>;
   }
+  if (!data) notFound();
   const p = data as unknown as DetalheDoProduto;
   const fotos = await linksDasFotos(supabase, p.fotos.map((f) => f.caminho));
   const imagens = p.fotos.flatMap((f) => (fotos.get(f.caminho) ? [{ ...f, url: fotos.get(f.caminho) as string }] : []));

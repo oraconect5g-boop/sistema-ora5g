@@ -95,12 +95,14 @@ describe("a vitrine da loja online (ONLINE-a)", () => {
     expect((await detalhe(cat.produtoAparelho)).variantes[0]?.lojas.map((l) => l.nome)).toEqual(["Loja B", "Loja A"]);
     // (o preço que já valeu não se cancela: termina agora, como na tela dos preços)
     await db.query("update public.precos set fim = now() where variante_id = $1", [cat.aparelho]);
-    expect(await erroDoVisitante(DETALHE, [ids.organizacao, cat.produtoAparelho])).toBe("P0002");
+    // Fora do site, o detalhe vem VAZIO, sem erro (ONLINE-c): o erro P0002 de antes virava HTTP 500 na API do banco.
+    expect(await detalhe(cat.produtoAparelho)).toBeNull();
     expect((await vitrine()).produtos).toEqual([]);
-    // Fora do site (não marcado, ou chip): não encontrado.
-    expect(await erroDoVisitante(DETALHE, [ids.organizacao, cat.produtoCapa])).toBe("P0002");
-    expect(await erroDoVisitante(DETALHE, [ids.organizacao, cat.produtoChip])).toBe("P0002");
-    expect(await erroDoVisitante(DETALHE, [ids.outraOrganizacao, cat.produtoAparelho])).toBe("P0002");
+    // Fora do site (não marcado, chip, de outra empresa ou que não existe): vazio também.
+    expect(await detalhe(cat.produtoCapa)).toBeNull();
+    expect(await detalhe(cat.produtoChip)).toBeNull();
+    expect(await visitante<Detalhe | null>(DETALHE, [ids.outraOrganizacao, cat.produtoAparelho])).toBeNull();
+    expect(await detalhe("6d43d3aa-4610-42cc-8573-9ccef3cdc5f3")).toBeNull();
   });
 
   it("as fotos: a do produto primeiro; o visitante alcança só as vigentes de produto do site", async () => {
