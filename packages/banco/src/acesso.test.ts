@@ -251,8 +251,8 @@ describe("T10 — cadastro de unidade validado pelo banco", () => {
     expect((await falha(inserir("nova-2", "loja_fisica", cnpj("44555666", "0001")))).code).toBe("23514");
   });
 
-  it("recusa loja física sem CNPJ e loja online sem emissor", async () => {
-    expect((await falha(inserir("nova-3", "loja_fisica", null))).code).toBe("23514");
+  it("aceita a loja física sem CNPJ (o cadastro operacional, ORG-a: ela só não vende) e recusa a loja online sem emissor", async () => {
+    await inserir("nova-3", "loja_fisica", null);
     expect((await falha(inserir("nova-4", "online", null))).code).toBe("23514");
   });
 

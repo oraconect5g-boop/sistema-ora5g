@@ -9,7 +9,7 @@ import { FalhaDoServico, obterSessao } from "../../lib/acesso/sessao";
 import { dataCurta } from "../../lib/formato";
 import {
   DIAS_DA_SEMANA, ERROS_DE_LOJAS, PENDENCIAS, TIPOS_DE_LOJA, ehPendencia, ehTipoDeLoja, formatarCnpj, formatarTelefone,
-  isoParaHoraDeSaoPaulo, lacunasDaLoja, textoDoEndereco, textoDosHorarios, type Horario,
+  isoParaHoraDeSaoPaulo, lacunasDaLoja, textoDoEndereco, textoDosHorarios, type Horario, vendeNaLoja,
 } from "../../lib/lojas/regras";
 import { lerRegioesDoPainel } from "../../lib/lojas/regioes";
 import { chaveDoCatalogo, textoDoParametro, type ValorDeParametro } from "../../lib/parametros";
@@ -153,7 +153,7 @@ export default async function Lojas({ searchParams }: {
               {Object.entries(TIPOS_DE_LOJA).map(([valor, nome]) => <option key={valor} value={valor}>{nome}</option>)}
             </select>
           </label>
-          <label className={rotulo}>CNPJ da filial (obrigatório na loja física)
+          <label className={rotulo}>CNPJ da filial (sem ele, a loja física existe, mas não vende)
             <input name="cnpj" inputMode="numeric" pattern="[0-9./\- ]{14,20}" placeholder="00.000.000/0000-00" className={campo} />
           </label>
           <label className={rotulo}>Cidade<input name="cidade" maxLength={80} className={campo} /></label>
@@ -180,7 +180,7 @@ export default async function Lojas({ searchParams }: {
           return (
             <li key={l.id} id={`loja-${l.id}`} className="scroll-mt-24">
               <Cartao
-                titulo={<span className="flex flex-wrap items-center gap-2">{l.nome}<Selo tom={ativa ? "sucesso" : "neutro"} ponto>{ativa ? "ativa" : "inativa"}</Selo></span>}
+                titulo={<span className="flex flex-wrap items-center gap-2">{l.nome}<Selo tom={ativa ? "sucesso" : "neutro"} ponto>{ativa ? "ativa" : "inativa"}</Selo>{!vendeNaLoja(l) && <Selo tom="aviso">não vende: falta o CNPJ</Selo>}</span>}
                 subtitulo={[tipo, l.codigo, l.cnpj ? `CNPJ ${formatarCnpj(l.cnpj)}` : l.unidade_emissora_id ? `notas pela ${nomeDaLoja(l.unidade_emissora_id)}` : "sem CNPJ", [l.cidade, l.uf].filter(Boolean).join("/")].filter(Boolean).join(" · ")}
                 icone={Building2}
                 className={emFoco ? "ring-2 ring-acao/40" : ""}
@@ -200,7 +200,7 @@ export default async function Lojas({ searchParams }: {
 
                 <div className="mt-4 flex flex-col gap-2">
                   {regioes !== null && regioes !== "falha" && <RegiaoDaLoja loja={l.id} regioes={regioes} aberta={emFoco && erro === "regiao_inativa"} />}
-                  <details className="rounded-xl border border-borda px-3 py-2" open={emFoco && (erro === "dados" || erro === "nome" || erro === "cnpj" || erro === "cnpj_obrigatorio" || erro === "cnpj_raiz" || erro === "cnpj_repetido" || erro === "uf" || erro === "cidade")}>
+                  <details className="rounded-xl border border-borda px-3 py-2" open={emFoco && (erro === "dados" || erro === "nome" || erro === "cnpj" || erro === "cnpj_apagar" || erro === "cnpj_raiz" || erro === "cnpj_repetido" || erro === "uf" || erro === "cidade")}>
                     <summary className="flex min-h-10 cursor-pointer items-center gap-2 text-sm font-semibold text-acao"><Pencil aria-hidden className="size-4" /> Editar nome, CNPJ e cidade</summary>
                     <form action={atualizarLoja} className="mt-2 grid gap-3 sm:grid-cols-2">
                       <input type="hidden" name="unidade" value={l.id} /><input type="hidden" name="tipo" value={l.tipo} />

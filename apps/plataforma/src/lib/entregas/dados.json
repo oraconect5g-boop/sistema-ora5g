@@ -133,6 +133,19 @@
         "ORA-QUAL-014"
       ],
       "entrega": "a arrumação do GitHub (Onda 0.7): a situação de cada issue aberta, com o commit e o teste das corrigidas; o Dependabot; o histórico sem segredo; a lista do que o repositório público expõe; o estado dos três requisitos não muda",
+      "commit": "3235772",
+      "publicado_em": "2026-11-17",
+      "pedido_em": "2026-11-17",
+      "resposta": null,
+      "respondido_em": null
+    },
+    {
+      "lote": "ORG-a",
+      "roteiro": "docs/aceite/ORG-a.md",
+      "requisitos": [
+        "ORA-ORG-001"
+      ],
+      "entrega": "as 11 lojas e DEFEITOS no sistema, pelo cadastro operacional, sem CNPJ nem endereço inventado; a loja física sem CNPJ não vende até ele chegar (Onda 1, item 2); o estado do requisito não muda",
       "commit": null,
       "publicado_em": null,
       "pedido_em": null,

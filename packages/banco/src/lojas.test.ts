@@ -113,7 +113,8 @@ describe("cadastro de lojas (L2)", () => {
     expect(await criar("loja-e", "  ", "loja_fisica", novo, "PR", null)).toBe("22023");
     expect(await criar("loja-e", "Loja E", "quiosque", novo, "PR", null)).toBe("22023");
     expect(await criar("loja-e", "Loja E", "loja_fisica", novo, "Paraná", null)).toBe("22023");
-    expect(await criar("loja-e", "Loja E", "loja_fisica", null, "PR", null)).toBe("22023");
+    // Desde o ORG-a (17/11), a loja física sem CNPJ entra pelo cadastro operacional e só não vende (lojas-cadastro-operacional.test.ts).
+    expect(await criar("loja-sem-cnpj", "Loja sem CNPJ", "loja_fisica", null, "PR", null)).toBeNull();
     expect(await criar("loja-e", "Loja E", "loja_fisica", `${novo.slice(0, 13)}${(Number(novo[13]) + 1) % 10}`, "PR", null)).toBe("22023");
     expect(await criar("loja-e", "Loja E", "loja_fisica", cnpj("99888777", "0009"), "PR", null)).toBe("23514");
     expect(await criar("loja-e", "Loja E", "loja_fisica", cnpj(RAIZ, "0001"), "PR", null)).toBe("23505");
