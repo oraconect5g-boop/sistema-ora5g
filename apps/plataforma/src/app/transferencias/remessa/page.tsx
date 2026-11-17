@@ -2,6 +2,7 @@ import { randomUUID } from "node:crypto";
 
 import { PackagePlus, Search, Trash2 } from "lucide-react";
 import type { Metadata } from "next";
+import Form from "next/form";
 import Link from "next/link";
 
 import { MoldeReal } from "../../../componentes/MoldeReal";
@@ -74,33 +75,34 @@ export default async function NovaRemessa({ searchParams }: { searchParams: Prom
       {erro && <Aviso tom="perigo">{ERROS_DA_TRANSFERENCIA[erro]}</Aviso>}
 
       <Cartao titulo="1. De onde vem e para onde vai" subtitulo="A sua loja precisa ser a de origem ou a de destino.">
-        <form method="get" action="/transferencias/remessa" className="grid gap-3 sm:grid-cols-2">
+        {/* next/form: escolher as lojas e buscar só trocam o endereço, sem recarregar a tela. */}
+        <Form action="/transferencias/remessa" prefetch={false} className="grid gap-3 sm:grid-cols-2">
           {linhas.length > 0 && <input type="hidden" name="linhas" value={escreverLinhasDaRemessa(linhas)} />}
           <label className="text-sm font-medium">De (origem)
-            <select name="origem" defaultValue={origem ?? ""} required className={campo}>
+            <select key={origem ?? ""} name="origem" defaultValue={origem ?? ""} required className={campo}>
               <option value="" disabled>Escolha a loja que manda</option>
               {lojas.data.map((l) => <option key={l.id} value={l.id}>{l.nome}</option>)}
             </select>
           </label>
           <label className="text-sm font-medium">Para (destino)
-            <select name="destino" defaultValue={destino} required className={campo}>
+            <select key={destino} name="destino" defaultValue={destino} required className={campo}>
               {lojas.data.map((l) => <option key={l.id} value={l.id}>{l.nome}</option>)}
             </select>
           </label>
-          <Botao type="submit" variante="secundario" className="sm:col-span-2">Usar estas lojas</Botao>
-        </form>
+          <Botao type="submit" variante="secundario" enquanto="Abrindo…" className="sm:col-span-2">Usar estas lojas</Botao>
+        </Form>
         {origem !== null && origem === destino && <Aviso tom="aviso">A origem e o destino são a mesma loja: escolha duas lojas diferentes.</Aviso>}
         {origem !== null && origem !== atual && destino !== atual && <Aviso tom="aviso">A sua loja ({situacao.unidade_nome}) precisa ser a origem ou o destino.</Aviso>}
       </Cartao>
 
       <Cartao className="mt-4" titulo="2. Os produtos" subtitulo={`Até ${MAXIMO_DE_LINHAS_DA_REMESSA} produtos. Busque pelo nome, pela marca ou pelo código e toque em "Adicionar".`} icone={Search}>
-        <form method="get" action="/transferencias/remessa" className="flex gap-2">
+        <Form action="/transferencias/remessa" prefetch={false} className="flex gap-2" role="search">
           {origem && <input type="hidden" name="origem" value={origem} />}
           <input type="hidden" name="destino" value={destino} />
           {linhas.length > 0 && <input type="hidden" name="linhas" value={escreverLinhasDaRemessa(linhas)} />}
-          <input name="busca" defaultValue={busca ?? ""} placeholder="Ex.: capinha, Galaxy, SKU" aria-label="Buscar produto" className={campo} />
-          <Botao type="submit" variante="secundario">Buscar</Botao>
-        </form>
+          <input key={busca ?? ""} name="busca" defaultValue={busca ?? ""} placeholder="Ex.: capinha, Galaxy, SKU" aria-label="Buscar produto" className={campo} />
+          <Botao type="submit" variante="secundario" enquanto="Buscando…">Buscar</Botao>
+        </Form>
         {busca && resultados.length === 0 && <p className="mt-3 text-sm text-suave">Nenhum aparelho, chip ou acessório com esse nome ou código.</p>}
         {resultados.length > 0 && (
           <ul className="mt-3 divide-y divide-borda text-sm">
