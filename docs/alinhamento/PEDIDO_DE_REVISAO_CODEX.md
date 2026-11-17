@@ -1493,7 +1493,35 @@ Programa de execução integral (PR #67; checkpoint em `docs/alinhamento/EXECUCA
   3. A #92 (`@types/node` 26) foi recusada, porque o código roda no Node 22. A #93 (TypeScript 7) e a #94 (ESLint 10) ficam abertas, para avaliar.
 - **Segredos:** o histórico inteiro (`npm run segredos -- --historico HEAD`, 470 commits) não tem nenhum.
 - **Exposição:** a lista do que o repositório público mostra foi entregue ao proprietário fora do repositório. Aqui só se registra que ela existe.
+- **CI, merge e publicação (17/11):**
+  - **CI:** a sequência completa, de instalação limpa no servidor, passou em `d5fe93c`: 2.686 testes e 1 TODO, 285 E2E (13 pulados), auditoria sem vulnerabilidade e o orçamento em dia. A primeira rodada parou no E2E: o Playwright 1.65.1 da #103 pede uma revisão nova do navegador, que foi baixada no servidor (`npx playwright install chromium`).
+  - **Merge:** `3235772`; a árvore é a da branch testada, com o commit original da #103. No GitHub, os checks de `3235772` terminaram com sucesso: "Verificações" e "Supabase Preview", e os do Dependabot.
+  - **Publicação:** na homologação, em 17/11 (build 13:01), conferida pela pasta, pelo serviço local e pelo domínio com o commit inteiro.
 - **Pedido ao Codex:** conferir:
   1. por amostragem, que o teste citado para cada issue reproduz o defeito sem a correção;
   2. as 13 que ficam abertas;
   3. que a troca do `package-lock.json` não muda nenhuma dependência de produção.
+
+## 17/11/2026 — Lote ORG-a: as 11 lojas e DEFEITOS pelo cadastro operacional (Onda 1, item 2; ORA-ORG-001, em parte)
+
+- **Origem:** o plano do proprietário de 16/11: as 11 lojas e DEFEITOS pelos nomes de `docs/cadastros/LOJAS_CONFIRMADAS_2026-11-09.json`, com o cadastro operacional separado da liberação fiscal e sem CNPJ nem endereço inventado (autorizado em 16/11).
+- **Banco:** migration `20261117160216_lojas_cadastro_operacional`, com reversão. As três funções são cópias das definições em vigor (o md5 do corpo foi conferido no `ora5g-dev` antes), com só a mudança abaixo.
+  1. Sai a restrição `loja_fisica_exige_cnpj` (07/11).
+  2. `privado.loja_liberada_para_vender()`, gatilho antes da inclusão em `vendas` e em `estoque_reservas` (origem `pdv` ou `online`): na loja física sem CNPJ, `OR038`. É o mesmo desenho do local de exceção (ADR-007), e vale também para o dono das tabelas.
+  3. `privado.ofertas_da_vitrine`: a vitrine só oferece a loja física com CNPJ.
+  4. `loja_criar` aceita a loja física sem CNPJ, e `loja_atualizar` aceita o CNPJ depois. Apagar o CNPJ de uma loja que já o tem é recusado (22023).
+- **Dados:** `packages/banco/supabase/semente/lojas-confirmadas.sql` cadastra, na organização e na empresa de desenvolvimento, as 11 lojas (`loja-...`) e o `defeitos` (exceção), só com o nome, o código e o tipo e com o motivo na auditoria. Rodou no `ora5g-dev` em 17/11 (13:02, logo depois), depois da migration. Pode rodar de novo sem duplicar.
+- **Plataforma:** o CNPJ fica opcional no cadastro da loja física; o selo "não vende: falta o CNPJ"; o CNPJ entra em "Falta cadastrar"; o `OR038` vira a mensagem "Esta loja ainda não está liberada para vender" na venda.
+- **Testes:**
+  - `packages/banco/src/lojas-cadastro-operacional.test.ts` (4): a loja física e o DEFEITOS sem CNPJ; a venda e a reserva recusadas, também por inclusão direta do dono das tabelas; com o CNPJ, vende; o CNPJ que não se apaga; a vitrine com e sem o CNPJ.
+  - `semente.test.ts` (+2): o arquivo das lojas do zero e de novo, sem CNPJ nem endereço, e o motivo na auditoria.
+  - `lojas.test.ts`: a loja física sem CNPJ, que antes era recusada, agora entra.
+  - Na plataforma: as regras da tela (`regras.test.ts`).
+- **Aplicação no `ora5g-dev`:** em 17/11 (13:02), depois do merge do GIT-a e do check "Supabase Preview" dele, com o md5 `398d3cee51ac0fac6e862017765e4b1d`, igual ao do arquivo. Conferido depois, só com leitura: 15 unidades; as 12 novas sem CNPJ, cidade, UF ou endereço, com o motivo.
+- **Limite declarado:**
+  1. A empresa de desenvolvimento tem a raiz fictícia de CNPJ. Quando o CNPJ real de uma loja chegar, a raiz não vai bater (23514): a empresa real (razão social e raiz) precisa ser cadastrada antes, e as lojas, ligadas a ela.
+  2. Os nomes "Muffato Santa" e "Balneário" ficam como na imagem, para o proprietário confirmar.
+- **Pedido ao Codex:** conferir:
+  1. que nenhum caminho de venda escapa do gatilho (o PDV, a OS cobrada pelo PDV e a reserva do site);
+  2. que a loja sem CNPJ não aparece em nenhuma leitura pública;
+  3. a reversão, que só roda com todas as lojas físicas com CNPJ.

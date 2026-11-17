@@ -4,6 +4,7 @@
 - **Quanto tempo leva:** uns cinco minutos.
 - **O que o lote entrega:** o item 7 da onda 0 do plano de 16/11. Os requisitos ligados são o ORA-QUAL-001, o ORA-QUAL-004 e o ORA-QUAL-014, e nenhum deles muda de estado.
 - **Resposta:** "aceito" ou "não aceito".
+- **No ar:** desde 17/11, às 13:01, no commit `3235772`. O rodapé pode mostrar um commit mais novo, de um lote seguinte.
 
 ## O que mudou
 
