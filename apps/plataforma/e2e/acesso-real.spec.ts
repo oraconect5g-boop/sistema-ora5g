@@ -3,7 +3,7 @@ import { expect, test } from "@playwright/test";
 // Sistema real (ORA-006): sem login, nenhuma página real abre; saída forçada só mostra motivos
 // conhecidos. Roda com ou sem a configuração pública do Supabase no ambiente de teste.
 // Telas reais e exportações: sem login, nenhuma abre (nem o esqueleto de carregamento).
-const PROTEGIDAS = ["/inicio", "/escolher-loja", "/equipe", "/catalogo", "/catalogo/lote", "/vender", "/caixa", "/aprovacoes", "/estoque", "/transferencias", "/transferencias/remessa", "/connect", "/notas", "/notas/conciliacao", "/vendas", "/auditoria", "/financeiro", "/financeiro/exportar", "/relatorios", "/relatorios/exportar", "/metas", "/metas/bonus", "/metas/extrato", "/metas/fechamento", "/lojas", "/produtos", "/produtos/precos", "/produtos/importar", "/estoque/entrada", "/estoque/pedidos", "/estoque/inventario", "/clientes", "/clientes/novo", "/clientes/00000000-0000-4000-8000-000000000001", "/clientes/00000000-0000-4000-8000-000000000001/titular", "/reservas-do-site", "/crm", "/crm/agenda", "/crm/00000000-0000-4000-8000-000000000001", "/pagamentos/conciliacao", "/pagamentos/recebiveis", "/assistencia", "/assistencia/nova", "/assistencia/relatorios", "/pagamentos/financeiras", "/pagamentos/maquininhas", "/contas-a-pagar", "/contas-a-pagar/00000000-0000-4000-8000-000000000001/documentos/00000000-0000-4000-8000-000000000002", "/resultado", "/previsao", "/vendas/00000000-0000-4000-8000-000000000001", "/conta/senha", "/conta/seguranca", "/conta/confirmar", "/entrar/codigo", "/api/pendencias", "/operacao", "/entregas"];
+const PROTEGIDAS = ["/inicio", "/escolher-loja", "/equipe", "/catalogo", "/catalogo/lote", "/vender", "/caixa", "/aprovacoes", "/estoque", "/transferencias", "/transferencias/remessa", "/connect", "/notas", "/notas/conciliacao", "/vendas", "/auditoria", "/financeiro", "/financeiro/exportar", "/relatorios", "/relatorios/exportar", "/metas", "/metas/bonus", "/metas/extrato", "/metas/fechamento", "/lojas", "/produtos", "/produtos/precos", "/produtos/importar", "/estoque/entrada", "/estoque/pedidos", "/estoque/inventario", "/clientes", "/clientes/novo", "/clientes/00000000-0000-4000-8000-000000000001", "/clientes/00000000-0000-4000-8000-000000000001/titular", "/reservas-do-site", "/crm", "/crm/agenda", "/crm/00000000-0000-4000-8000-000000000001", "/pagamentos/conciliacao", "/pagamentos/recebiveis", "/pagamentos/extratos", "/pagamentos/extratos/importar", "/pagamentos/extratos/00000000-0000-4000-8000-000000000001", "/assistencia", "/assistencia/nova", "/assistencia/relatorios", "/pagamentos/financeiras", "/pagamentos/maquininhas", "/contas-a-pagar", "/contas-a-pagar/00000000-0000-4000-8000-000000000001/documentos/00000000-0000-4000-8000-000000000002", "/resultado", "/previsao", "/vendas/00000000-0000-4000-8000-000000000001", "/conta/senha", "/conta/seguranca", "/conta/confirmar", "/entrar/codigo", "/api/pendencias", "/operacao", "/entregas"];
 
 for (const caminho of PROTEGIDAS) {
   test(`${caminho} sem login volta para /entrar`, async ({ page }) => {
@@ -22,6 +22,16 @@ test("sem login, o servidor redireciona (307) antes de mandar qualquer tela", as
     expect(resposta.status(), caminho).toBe(307);
     expect(resposta.headers()["location"] ?? "", caminho).toMatch(/\/entrar/);
   }
+});
+
+// EXT-a: o envio do extrato por arquivo, sem login, volta para /entrar antes de ler o arquivo (nada chega ao banco).
+test("o envio do extrato sem login volta para /entrar", async ({ request }) => {
+  const resposta = await request.post("/pagamentos/extratos/enviar", {
+    multipart: { onde: "loja", tipo: "maquininha", fonte: "Teste", meios: "pix_picpay", arquivo: { name: "extrato.csv", mimeType: "text/csv", buffer: Buffer.from("Data;Valor\n17/11/2026;1,00\n") } },
+    maxRedirects: 0,
+  });
+  expect([303, 307]).toContain(resposta.status());
+  expect(resposta.headers()["location"] ?? "").toMatch(/\/entrar/);
 });
 
 test("saída forçada mostra só motivo conhecido", async ({ page }) => {

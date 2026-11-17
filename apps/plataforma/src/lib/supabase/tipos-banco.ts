@@ -1,5 +1,5 @@
 // ARQUIVO GERADO pelo Supabase (generate_typescript_types do projeto ora5g-dev) depois da
-// migration 20261117221322_alertas_das_filas. Não edite à mão: gere de novo a cada
+// migration 20261117225818_extratos_e_conciliacao. Não edite à mão: gere de novo a cada
 // migration aplicada (auditoria do Codex de 08/11, §7.2). O teste tipos-banco.test.ts confere
 // que funções e tabelas públicas daqui são as mesmas das migrations.
 export type Json =
@@ -2446,6 +2446,171 @@ export type Database = {
             isOneToOne: false
             referencedRelation: "vendas"
             referencedColumns: ["id"]
+          },
+        ]
+      }
+      extrato_linhas: {
+        Row: {
+          data: string
+          data_liquidacao: string | null
+          decidida_em: string | null
+          decidida_por: string | null
+          descricao: string | null
+          extrato_id: string
+          id: string
+          liquido_centavos: number | null
+          motivo: string | null
+          numero: number
+          organizacao_id: string
+          pagamento_id: string | null
+          referencia: string | null
+          situacao: string
+          taxa_centavos: number | null
+          terminal: string | null
+          valor_centavos: number
+        }
+        Insert: {
+          data: string
+          data_liquidacao?: string | null
+          decidida_em?: string | null
+          decidida_por?: string | null
+          descricao?: string | null
+          extrato_id: string
+          id?: string
+          liquido_centavos?: number | null
+          motivo?: string | null
+          numero: number
+          organizacao_id: string
+          pagamento_id?: string | null
+          referencia?: string | null
+          situacao?: string
+          taxa_centavos?: number | null
+          terminal?: string | null
+          valor_centavos: number
+        }
+        Update: {
+          data?: string
+          data_liquidacao?: string | null
+          decidida_em?: string | null
+          decidida_por?: string | null
+          descricao?: string | null
+          extrato_id?: string
+          id?: string
+          liquido_centavos?: number | null
+          motivo?: string | null
+          numero?: number
+          organizacao_id?: string
+          pagamento_id?: string | null
+          referencia?: string | null
+          situacao?: string
+          taxa_centavos?: number | null
+          terminal?: string | null
+          valor_centavos?: number
+        }
+        Relationships: [
+          {
+            foreignKeyName: "extrato_linhas_decidida_por_fkey"
+            columns: ["decidida_por"]
+            isOneToOne: false
+            referencedRelation: "perfis_usuario"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "extrato_linhas_extrato_id_fkey"
+            columns: ["extrato_id"]
+            isOneToOne: false
+            referencedRelation: "extratos"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "extrato_linhas_organizacao_id_fkey"
+            columns: ["organizacao_id"]
+            isOneToOne: false
+            referencedRelation: "organizacoes"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "extrato_linhas_pagamento_id_fkey"
+            columns: ["pagamento_id"]
+            isOneToOne: false
+            referencedRelation: "venda_pagamentos"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      extratos: {
+        Row: {
+          arquivo: string
+          fonte: string
+          id: string
+          importado_em: string
+          importado_por: string
+          impressao: string
+          linhas: number
+          mapeamento: Json
+          meios: string[]
+          numero: number
+          organizacao_id: string
+          periodo_fim: string
+          periodo_inicio: string
+          tipo: string
+          unidade_id: string | null
+        }
+        Insert: {
+          arquivo: string
+          fonte: string
+          id?: string
+          importado_em?: string
+          importado_por: string
+          impressao: string
+          linhas: number
+          mapeamento?: Json
+          meios: string[]
+          numero?: never
+          organizacao_id: string
+          periodo_fim: string
+          periodo_inicio: string
+          tipo: string
+          unidade_id?: string | null
+        }
+        Update: {
+          arquivo?: string
+          fonte?: string
+          id?: string
+          importado_em?: string
+          importado_por?: string
+          impressao?: string
+          linhas?: number
+          mapeamento?: Json
+          meios?: string[]
+          numero?: never
+          organizacao_id?: string
+          periodo_fim?: string
+          periodo_inicio?: string
+          tipo?: string
+          unidade_id?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "extratos_importado_por_fkey"
+            columns: ["importado_por"]
+            isOneToOne: false
+            referencedRelation: "perfis_usuario"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "extratos_organizacao_id_fkey"
+            columns: ["organizacao_id"]
+            isOneToOne: false
+            referencedRelation: "organizacoes"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "extratos_unidade_id_organizacao_id_fkey"
+            columns: ["unidade_id", "organizacao_id"]
+            isOneToOne: false
+            referencedRelation: "unidades"
+            referencedColumns: ["id", "organizacao_id"]
           },
         ]
       }
@@ -6824,9 +6989,69 @@ export type Database = {
         Returns: Json
       }
       estoque_valor_em_custo: { Args: { p_unidade?: string }; Returns: Json }
+      extrato_conciliar: {
+        Args: { p_linha: string; p_pagamento: string }
+        Returns: Json
+      }
+      extrato_conciliar_certas: { Args: { p_extrato: string }; Returns: Json }
+      extrato_desfazer: {
+        Args: { p_linha: string; p_motivo: string }
+        Returns: boolean
+      }
       extrato_do_vendedor: {
         Args: { p_mes: string; p_unidade: string; p_vendedor: string }
         Returns: Json
+      }
+      extrato_ignorar: {
+        Args: { p_linha: string; p_motivo: string }
+        Returns: boolean
+      }
+      extrato_importar: {
+        Args: {
+          p_arquivo: string
+          p_fonte: string
+          p_impressao: string
+          p_linhas: Json
+          p_mapeamento: Json
+          p_meios: string[]
+          p_tipo: string
+          p_unidade: string
+        }
+        Returns: Json
+      }
+      extrato_resumo: { Args: { p_extrato: string }; Returns: Json }
+      extrato_sugestoes: {
+        Args: { p_extrato: string }
+        Returns: {
+          concluida_em: string
+          linha_id: string
+          loja: string
+          meio: string
+          pagamento_id: string
+          pela_referencia: boolean
+          terminal: string
+          valor_centavos: number
+          venda_numero: number
+        }[]
+      }
+      extratos_recentes: {
+        Args: { p_limite: number }
+        Returns: {
+          arquivo: string
+          conciliadas: number
+          fonte: string
+          id: string
+          ignoradas: number
+          importado_em: string
+          linhas: number
+          loja: string
+          numero: number
+          pendentes: number
+          periodo_fim: string
+          periodo_inicio: string
+          tipo: string
+          unidade_id: string
+        }[]
       }
       fechar_caixa: {
         Args: { p_contado: number; p_observacao: string }

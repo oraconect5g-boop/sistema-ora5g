@@ -1,4 +1,4 @@
-import { Landmark, Scale } from "lucide-react";
+import { FileSpreadsheet, Landmark, Scale } from "lucide-react";
 import type { Metadata } from "next";
 import Form from "next/form";
 import Link from "next/link";
@@ -47,6 +47,12 @@ export default async function Conciliacao({ searchParams }: { searchParams: Prom
   return (
     <MoldeReal sessao={sessao} largura="max-w-5xl">
       <TituloPagina sobretitulo={situacao.unidade_nome} titulo="Conciliação de pagamentos" subtitulo={`Vendas concluídas de ${dataCurta(inicio)} a ${dataCurta(fim)}. Venda não é dinheiro recebido: confira cada cartão e Pix com o extrato.`} />
+      {/* EXT-a: o extrato inteiro por arquivo, com a venda sugerida para cada linha (ADR-016). */}
+      <p className="mt-3 flex flex-wrap items-center gap-x-2 text-sm">
+        <FileSpreadsheet className="size-4 text-acao" aria-hidden />
+        Tem o extrato da maquininha ou do banco em arquivo?
+        <Link href="/pagamentos/extratos" className="font-semibold text-acao">Extratos por arquivo: importe e concilie de uma vez</Link>
+      </p>
       {ok && <Aviso tom="sucesso" className="mt-4">{OK[ok]}</Aviso>}
       {erro && <Aviso tom="perigo" className="mt-4">{ERROS_DOS_PAGAMENTOS[erro]}</Aviso>}
       {/* next/form: trocar o período muda só o endereço, sem recarregar; as datas voltam como o servidor as usou. */}
