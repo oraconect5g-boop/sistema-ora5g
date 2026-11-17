@@ -4,6 +4,7 @@
 - **Quanto tempo leva:** uns dois minutos.
 - **O que o lote entrega:** o item 5 da onda 0 do plano de 16/11, que é a arrumação do banco que o próprio Supabase recomenda. Os requisitos ligados são o ORA-ORG-004 e o ORA-QUAL-002 (o isolamento por loja e o RLS). Nenhum deles muda de estado.
 - **Resposta:** "aceito" ou "não aceito".
+- **No ar:** desde 17/11, às 11:51, no commit `0bfad91`. O rodapé pode mostrar um commit mais novo, de um lote seguinte.
 
 ## O que mudou
 

@@ -112,3 +112,19 @@ login os bloqueios feitos no banco. Ligar depois de publicar uma versão que ten
 
 Sem a chave, ele só registra "desligado" no log (`~/homologacao/logs/worker-identidade.log`).
 O log tem só contagens e códigos de erro, nunca e-mail, nome ou chave.
+
+## Worker do WhatsApp oficial (o envio da nota ao cliente)
+
+Desde 17/11 (lote WHATS-a): o executável `apps/worker/src/executar-whatsapp.ts` pega a fila do envio da nota (as
+funções `whatsapp_worker_*` do banco), gera o link temporário do PDF no bucket privado e registra a resposta.
+**Não está agendado:** só entra no crontab depois da habilitação na Meta, do adaptador oficial com o contrato
+verificado e da autorização do proprietário (uma linha no crontab do usuário `dev`):
+
+```
+* * * * * bash $HOME/homologacao/plataforma/deploy/homologacao/worker-whatsapp.sh
+```
+
+Sem a chave secreta, sem as variáveis do WhatsApp (`WHATSAPP_GRAPH_API_VERSION`, `WHATSAPP_PHONE_NUMBER_ID` e
+`WHATSAPP_ACCESS_TOKEN`) ou sem o adaptador, ele só registra "desligado" e o que falta no log
+(`~/homologacao/logs/worker-whatsapp.log`), e nada sai da fila. O log tem só contagens, nunca telefone, nome, link
+ou token.

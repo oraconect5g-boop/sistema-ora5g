@@ -62,3 +62,11 @@ test("com os cabeçalhos que o Apache envia, a página inicial e a demonstraçã
   expect(troca.status()).toBe(303);
   expect(troca.headers()["location"]).toBe("/demo");
 });
+
+test("A01: o topo da página inicial leva quem compra à loja online e a equipe à entrada, separados e sem rolagem para o lado", async ({ page }) => {
+  await page.goto("/");
+  const topo = page.getByRole("navigation", { name: "Acesso" });
+  await expect(topo.getByRole("link", { name: "Comprar" })).toHaveAttribute("href", "/loja");
+  await expect(topo.getByRole("link", { name: "Entrar" })).toHaveAttribute("href", "/entrar");
+  expect(await page.evaluate(() => document.documentElement.scrollWidth <= window.innerWidth)).toBe(true);
+});
