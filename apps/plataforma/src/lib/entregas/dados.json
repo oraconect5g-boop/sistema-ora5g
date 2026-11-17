@@ -230,6 +230,19 @@
       "pedido_em": "2026-11-17",
       "resposta": "aceito",
       "respondido_em": "2026-11-17"
+    },
+    {
+      "lote": "QUAL-a",
+      "roteiro": "docs/aceite/QUAL-a.md",
+      "requisitos": [
+        "ORA-QUAL-006"
+      ],
+      "entrega": "o alerta no celular quando um desconto, uma nota ou uma saída de caixa espera além do limite (para quem decide) e quando uma rotina do banco falha ou atrasa (para o dono e o administrador), um por dia (Onda 2; ADR-015); o estado do requisito não muda",
+      "commit": null,
+      "publicado_em": null,
+      "pedido_em": null,
+      "resposta": null,
+      "respondido_em": null
     }
   ]
 }

@@ -76,10 +76,11 @@ const rodadaCerta = (rotina: string, minutosAtras: number) => db.query(
    values ($1, now() - make_interval(mins => $2::int), now() - make_interval(mins => $2::int), 'ok', 0)`, [rotina, minutosAtras]);
 
 describe("o agendamento (no Supabase, o pg_cron)", () => {
-  it("as duas tarefas ficam agendadas pelo nome, cada uma chamando a sua rotina", async () => {
+  it("as tarefas ficam agendadas pelo nome, cada uma chamando a sua rotina (os alertas das filas desde o QUAL-a)", async () => {
     const { rows } = await db.query<{ jobname: string; schedule: string; command: string; active: boolean }>(
       "select jobname, schedule, command, active from cron.job order by jobname");
     expect(rows).toEqual([
+      { jobname: "ora5g-alertas-das-filas", schedule: "*/10 * * * *", command: "select privado.rodar_rotina('alertas_das_filas')", active: true },
       { jobname: "ora5g-limpeza-dos-registros", schedule: "30 6 * * *", command: "select privado.rodar_rotina('limpeza_dos_registros')", active: true },
       { jobname: "ora5g-reservas-vencidas", schedule: "*/5 * * * *", command: "select privado.rodar_rotina('reservas_vencidas')", active: true },
     ]);
@@ -89,7 +90,7 @@ describe("o agendamento (no Supabase, o pg_cron)", () => {
     const { rows } = await db.query<{ nome: string; tarefas: number }>(`
       select r.nome, (select count(*)::int from cron.job j where j.command = format('select privado.rodar_rotina(%L)', r.nome)) as tarefas
       from privado.rotinas r order by r.nome`);
-    expect(rows).toEqual([{ nome: "limpeza_dos_registros", tarefas: 1 }, { nome: "reservas_vencidas", tarefas: 1 }]);
+    expect(rows).toEqual([{ nome: "alertas_das_filas", tarefas: 1 }, { nome: "limpeza_dos_registros", tarefas: 1 }, { nome: "reservas_vencidas", tarefas: 1 }]);
     expect(await contar("select count(*)::int as n from cron.job j where j.jobname like 'ora5g-%' and not exists (select 1 from privado.rotinas r where j.command = format('select privado.rodar_rotina(%L)', r.nome))")).toBe(0);
   });
 });
@@ -190,7 +191,7 @@ describe("a limpeza do registro", () => {
 
 describe("a situação das rotinas, na Saúde da operação (ORA-QUAL-006)", () => {
   it("sem rodada ainda, aguardando; depois de uma rodada certa, em dia", async () => {
-    expect((await situacoes()).map((s) => [s.nome, s.situacao])).toEqual([["limpeza_dos_registros", "aguardando"], ["reservas_vencidas", "aguardando"]]);
+    expect((await situacoes()).map((s) => [s.nome, s.situacao])).toEqual([["alertas_das_filas", "aguardando"], ["limpeza_dos_registros", "aguardando"], ["reservas_vencidas", "aguardando"]]);
     await rodar("reservas_vencidas");
     const vencimento = await daRotina("reservas_vencidas");
     expect(vencimento).toMatchObject({ situacao: "em_dia", ultima_falha: null, erro: null });
@@ -220,8 +221,8 @@ describe("a situação das rotinas, na Saúde da operação (ORA-QUAL-006)", () 
   });
 
   it("o dono (a rede) e o gerente (a loja dele) leem; o vendedor, o técnico e o visitante, não", async () => {
-    expect(await situacoes(ids.dono, ids.lojaA)).toHaveLength(2);
-    expect(await situacoes(ids.gerenteB, ids.lojaB)).toHaveLength(2);
+    expect(await situacoes(ids.dono, ids.lojaA)).toHaveLength(3);
+    expect(await situacoes(ids.gerenteB, ids.lojaB)).toHaveLength(3);
     for (const [usuario, unidade] of [[ids.vendedorA, ids.lojaA], [ids.tecnico, ids.assistencia]] as const) {
       await naLoja(usuario, unidade, async () => {
         expect(await erroDe(() => db.query("select * from public.rotinas_situacao()"))).toBe("42501");
