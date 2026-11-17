@@ -29,7 +29,7 @@ export const ERROS_DE_LOJAS = {
   uf: "UF inválida: use a sigla de duas letras, por exemplo PR.",
   cidade: "Cidade muito longa (até 80 letras).",
   cnpj: "CNPJ inválido: confira os 14 dígitos.",
-  cnpj_obrigatorio: "Loja física precisa do CNPJ da filial.",
+  cnpj_apagar: "A loja já tem o CNPJ da filial: ele pode ser trocado, mas não apagado.",
   cnpj_raiz: "Este CNPJ não é da empresa escolhida (a raiz, os 8 primeiros dígitos, é de outra).",
   cnpj_repetido: "Este CNPJ já está em outra loja.",
   codigo_repetido: "Já existe uma loja com este código.",
@@ -73,6 +73,9 @@ export function pendenciasDaMensagem(mensagem: string | null | undefined): Pende
 }
 
 // Erro do banco → chave do catálogo (a tela nunca mostra o texto cru do banco).
+/** A loja vende? A loja física só depois do CNPJ da filial (ORG-a, OR038 no banco); os outros tipos seguem as próprias regras. */
+export const vendeNaLoja = (l: { tipo: string; cnpj: string | null }) => l.tipo !== "loja_fisica" || l.cnpj !== null;
+
 export function erroDeLojas(erro: { code?: string; message?: string } | null | undefined): ErroDeLojas {
   const codigo = erro?.code ?? "";
   const m = (erro?.message ?? "").toLowerCase();
@@ -85,7 +88,7 @@ export function erroDeLojas(erro: { code?: string; message?: string } | null | u
     const regras: [string, ErroDeLojas][] = [
       ["informe o motivo", "motivo"], ["nome da região", "regiao_nome"], ["região inativa", "regiao_inativa"],
       ["código inválido", "codigo"], ["nome da loja", "nome"], ["tipo de loja", "tipo"],
-      ["uf inválida", "uf"], ["cidade", "cidade"], ["cnpj da filial", "cnpj_obrigatorio"], ["loja online", "emissora"],
+      ["uf inválida", "uf"], ["cidade", "cidade"], ["cnpj da filial", "cnpj_apagar"], ["loja online", "emissora"],
       ["cnpj", "cnpj"], ["telefone", "telefone"], ["cep", "cep"], ["endereço", "endereco"],
       ["inscrição estadual", "inscricao_estadual"], ["inscrição municipal", "inscricao_municipal"], ["horários", "horarios"],
       ["vigência", "vigencia"],
@@ -132,7 +135,7 @@ export function validarNovaLoja(c: Record<string, unknown>): Resultado<NovaLoja>
   if (!ehTipoDeLoja(c.tipo)) return falha("tipo");
   const lido = lerCnpj(c.cnpj);
   if (!lido) return falha("cnpj");
-  if (c.tipo === "loja_fisica" && !lido.cnpj) return falha("cnpj_obrigatorio");
+  // Desde o ORG-a (17/11), a loja física pode entrar sem o CNPJ (o cadastro operacional): ela só não vende até ele chegar.
   const emissora = c.tipo === "online" && ehUuid(c.emissora) ? c.emissora : null;
   if (c.tipo === "online" && !lido.cnpj && !emissora) return falha("emissora");
   const lugar = lerUfECidade(c.uf, c.cidade);
@@ -149,7 +152,7 @@ export function validarEdicao(c: Record<string, unknown>): Resultado<EdicaoDeLoj
   if (!nome || nome.length > 80) return falha("nome");
   const lido = lerCnpj(c.cnpj);
   if (!lido) return falha("cnpj");
-  if (c.tipo === "loja_fisica" && !lido.cnpj) return falha("cnpj_obrigatorio");
+  // Apagar o CNPJ de uma loja que já o tem: quem decide é o banco, que conhece a loja (ORG-a).
   const lugar = lerUfECidade(c.uf, c.cidade);
   if (typeof lugar === "string") return falha(lugar);
   const motivo = motivoDeLojas(c.motivo);
@@ -275,9 +278,11 @@ export function textoDoEndereco(c: { logradouro?: string | null; numero?: string
 }
 
 /** O que falta na configuração de uma loja ativa que vende (para o resumo do topo). */
-export function lacunasDaLoja(l: { tipo: string; status: string; telefone: string | null; logradouro: string | null; horarios: unknown }) {
+export function lacunasDaLoja(l: { tipo: string; status: string; cnpj?: string | null; telefone: string | null; logradouro: string | null; horarios: unknown }) {
   if (l.status !== "ativa" || l.tipo === "excecao" || l.tipo === "deposito") return [];
   const faltas: string[] = [];
+  // ORG-a: a loja física sem o CNPJ da filial existe, mas não vende até ele chegar.
+  if (l.tipo === "loja_fisica" && l.cnpj === null) faltas.push("CNPJ (sem ele, a loja não vende)");
   if (!l.telefone) faltas.push("telefone");
   if (l.tipo !== "online" && !l.logradouro) faltas.push("endereço");
   if (!Array.isArray(l.horarios) || l.horarios.length === 0) faltas.push("horário");

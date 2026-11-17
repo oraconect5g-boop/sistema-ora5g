@@ -93,3 +93,37 @@ describe("usuários de teste", () => {
     });
   });
 });
+
+// Lote ORG-a (17/11): as 11 lojas e DEFEITOS confirmados pelo proprietário em 09/11, pelo cadastro operacional. Roda
+// depois dos outros blocos deste arquivo, que contam as 3 unidades da semente.
+describe("as 11 lojas e DEFEITOS confirmados (ORG-a)", () => {
+  const lojasConfirmadas = readFileSync(join(PASTA, "lojas-confirmadas.sql"), "utf8");
+  const CODIGOS = [
+    "loja-santa-felicidade", "loja-agua-verde", "loja-colonia", "loja-almirante-tamandare", "loja-dubai", "loja-colombo",
+    "loja-muffato-santa", "loja-butiatuvinha", "loja-ventania", "loja-balneario", "loja-santa-candida", "defeitos",
+  ];
+  type Loja = { codigo: string; nome: string; tipo: string; cnpj: string | null; cidade: string | null; uf: string | null; endereco: string | null };
+  const confirmadas = async () =>
+    (await db.query<Loja>("select codigo, nome, tipo, cnpj, cidade, uf, endereco from public.unidades where codigo = any($1) order by codigo", [CODIGOS])).rows;
+
+  it("entram só com o nome, o código e o tipo, sem CNPJ nem endereço, e rodar de novo não duplica", async () => {
+    await db.exec(lojasConfirmadas);
+    const lojas = await confirmadas();
+    expect(lojas).toHaveLength(12);
+    expect(lojas.filter((l) => l.tipo === "loja_fisica")).toHaveLength(11);
+    expect(lojas.find((l) => l.codigo === "defeitos")).toMatchObject({ nome: "DEFEITOS", tipo: "excecao" });
+    expect(lojas.every((l) => l.cnpj === null && l.cidade === null && l.uf === null && l.endereco === null)).toBe(true);
+    await db.exec(lojasConfirmadas);
+    expect(await contar("unidades")).toBe(15);
+    // As de teste continuam como estavam, com o "(teste)" no nome.
+    const { rows } = await db.query<{ nome: string }>("select nome from public.unidades where id = $1", [SANTA]);
+    expect(rows[0]?.nome).toBe("Santa Cândida (teste)");
+  });
+
+  it("ficam na auditoria com o motivo do cadastro operacional", async () => {
+    const { rows } = await db.query<{ motivo: string }>(`
+      select distinct a.motivo from public.auditoria a join public.unidades u on u.id::text = a.alvo_id::text
+      where a.acao = 'unidades.criado' and u.codigo = any($1)`, [CODIGOS]);
+    expect(rows.map((r) => r.motivo)).toEqual(["Cadastro operacional das 11 lojas e de DEFEITOS confirmados pelo proprietário em 09/11 (ORG-a)"]);
+  });
+});

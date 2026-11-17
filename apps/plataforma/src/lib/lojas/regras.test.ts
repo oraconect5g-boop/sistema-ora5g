@@ -1,7 +1,7 @@
 import { describe, expect, it } from "vitest";
 
 import {
-  erroDeLojas, horaDeSaoPauloParaIso, isoParaHoraDeSaoPaulo, lacunasDaLoja, pendenciasDaMensagem, textoDoEndereco, textoDosHorarios,
+  erroDeLojas, horaDeSaoPauloParaIso, isoParaHoraDeSaoPaulo, lacunasDaLoja, pendenciasDaMensagem, textoDoEndereco, textoDosHorarios, vendeNaLoja,
   validarConfiguracao, validarEdicao, validarNovaLoja, formatarTelefone,
 } from "./regras";
 
@@ -26,7 +26,8 @@ describe("nova loja", () => {
     expect(validarNovaLoja({ ...base, uf: "Paraná" })).toMatchObject({ erro: "uf" });
     expect(validarNovaLoja({ ...base, cnpj: "11.222.333/0001-82" })).toMatchObject({ erro: "cnpj" });
     expect(validarNovaLoja({ ...base, cnpj: "CNPJ 1122233300018" })).toMatchObject({ erro: "cnpj" });
-    expect(validarNovaLoja({ ...base, cnpj: "" })).toMatchObject({ erro: "cnpj_obrigatorio" });
+    // ORG-a: a loja física entra sem o CNPJ (cadastro operacional) e só não vende até ele chegar.
+    expect(validarNovaLoja({ ...base, cnpj: "" })).toMatchObject({ ok: true, dados: { cnpj: null } });
     expect(validarNovaLoja({ ...base, empresa: "x" })).toMatchObject({ erro: "dados" });
   });
 
@@ -43,7 +44,7 @@ describe("edição", () => {
   it("valida nome, CNPJ, UF, cidade e motivo; loja física não fica sem CNPJ", () => {
     const edicao = { unidade: LOJA, tipo: "loja_fisica", nome: "Santa Cândida Centro", cnpj: CNPJ, uf: "PR", cidade: "", motivo: "Nome comercial" };
     expect(validarEdicao(edicao)).toEqual({ ok: true, dados: { unidade: LOJA, nome: "Santa Cândida Centro", cnpj: "11222333000181", uf: "PR", cidade: null, motivo: "Nome comercial" } });
-    expect(validarEdicao({ ...edicao, cnpj: "" })).toMatchObject({ erro: "cnpj_obrigatorio" });
+    expect(validarEdicao({ ...edicao, cnpj: "" })).toMatchObject({ ok: true, dados: { cnpj: null } });
     expect(validarEdicao({ ...edicao, tipo: "online", cnpj: "" })).toMatchObject({ ok: true, dados: { cnpj: null } });
     expect(validarEdicao({ ...edicao, cidade: "x".repeat(81) })).toMatchObject({ erro: "cidade" });
     expect(validarEdicao({ ...edicao, unidade: "1" })).toMatchObject({ erro: "dados" });
@@ -116,7 +117,7 @@ describe("erros do banco", () => {
     expect(erroDeLojas({ code: "23505", message: "Já existe uma loja com o código loja-d" })).toBe("codigo_repetido");
     expect(erroDeLojas({ code: "23514", message: "CNPJ da unidade não pertence ao CNPJ raiz da empresa" })).toBe("cnpj_raiz");
     expect(erroDeLojas({ code: "23514", message: "Unidade emissora precisa ser da mesma organização e ter CNPJ" })).toBe("emissora");
-    expect(erroDeLojas({ code: "22023", message: "Loja física precisa do CNPJ da filial" })).toBe("cnpj_obrigatorio");
+    expect(erroDeLojas({ code: "22023", message: "A loja já tem o CNPJ da filial: ele pode ser trocado, mas não apagado" })).toBe("cnpj_apagar");
     expect(erroDeLojas({ code: "22023", message: "Horários inválidos: um por dia" })).toBe("horarios");
     expect(erroDeLojas({ code: "22023", message: "Campo desconhecido na configuração: x" })).toBe("dados");
     expect(erroDeLojas({ code: "08006" })).toBe("falha");
@@ -146,5 +147,12 @@ describe("apresentação", () => {
     expect(lacunasDaLoja({ tipo: "loja_fisica", status: "ativa", telefone: null, logradouro: null, horarios: [] })).toEqual(["telefone", "endereço", "horário"]);
     expect(lacunasDaLoja({ tipo: "online", status: "ativa", telefone: "4133334444", logradouro: null, horarios: [{ dia: 1 }] })).toEqual([]);
     expect(lacunasDaLoja({ tipo: "loja_fisica", status: "inativa", telefone: null, logradouro: null, horarios: [] })).toEqual([]);
+    // ORG-a: a loja física sem CNPJ mostra o CNPJ entre o que falta; o DEFEITOS (exceção) não tem lacuna.
+    expect(lacunasDaLoja({ tipo: "loja_fisica", status: "ativa", cnpj: null, telefone: null, logradouro: null, horarios: [] }))
+      .toEqual(["CNPJ (sem ele, a loja não vende)", "telefone", "endereço", "horário"]);
+    expect(lacunasDaLoja({ tipo: "excecao", status: "ativa", cnpj: null, telefone: null, logradouro: null, horarios: [] })).toEqual([]);
+    expect(vendeNaLoja({ tipo: "loja_fisica", cnpj: null })).toBe(false);
+    expect(vendeNaLoja({ tipo: "loja_fisica", cnpj: "11222333000181" })).toBe(true);
+    expect(vendeNaLoja({ tipo: "online", cnpj: null })).toBe(true);
   });
 });

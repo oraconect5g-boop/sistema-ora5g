@@ -34,6 +34,7 @@ export const ERROS_DA_VENDA = {
   cliente: "Cliente não encontrado nesta rede (ou inativo): busque de novo pelo CPF ou telefone.",
   os_cobrada: "Esta ordem de serviço já foi cobrada em outra venda: tire o conserto do carrinho.",
   so_pela_os: "Este item só sai pela ordem de serviço: o conserto entra pela OS e a peça da assistência não se vende no PDV.",
+  loja_sem_cnpj: "Esta loja ainda não está liberada para vender: falta o CNPJ da filial no cadastro da loja (Gestão → Lojas).",
   falha: "Não foi possível concluir agora. Tente de novo em instantes.",
 } as const;
 export type ErroDaVenda = keyof typeof ERROS_DA_VENDA;
@@ -42,7 +43,7 @@ const DO_BANCO: Record<string, ErroDaVenda> = {
   OR001: "sem_estoque", OR002: "indisponivel", OR003: "outra_loja", OR004: "chave", OR005: "indisponivel", OR007: "preco_mudou",
   OR008: "sem_caixa", OR009: "pagamento", OR010: "aprovacao", "42501": "sem_permissao", P0002: "nao_encontrado",
   "22023": "dados", "23505": "ja_aberto", "23514": "limite", OR013: "connect", OR015: "nota_emitida", OR016: "financiada", OR017: "com_devolucao", OR018: "vale",
-  OR032: "os_cobrada",
+  OR032: "os_cobrada", OR038: "loja_sem_cnpj",
 };
 export function erroDaVenda(erro: { code?: string } | null | undefined): ErroDaVenda {
   const codigo = erro?.code;
