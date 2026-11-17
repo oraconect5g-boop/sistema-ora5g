@@ -293,8 +293,8 @@
     },
     "ORA-INV-007": {
       "status": "testado",
-      "nota": "Transferência entre lojas (ADR-007, 09/11): pedir, separar (IMEI/ICCID escolhido e reservado na origem), enviar (sai pelo livro, em trânsito), receber e conferir (só o IMEI/ICCID enviado; falta vira divergência com explicação), recusar e cancelar antes do envio; local DEFEITOS sem venda; painel \"onde tem\" e tela /transferencias. Testado em desenvolvimento; aguardando revisão do Codex. Falta o cadastro real das 11 lojas e do DEFEITOS (lista única, linha B2).",
-      "evidencia": "packages/banco/supabase/migrations/20261109193043_transferencias_e_defeitos.sql; packages/banco/src/transferencias.test.ts; packages/banco/src/concorrencia.test.ts; apps/plataforma/src/app/transferencias"
+      "nota": "Transferência entre lojas (ADR-007, 09/11): pedir, separar (IMEI/ICCID escolhido e reservado na origem), enviar (sai pelo livro, em trânsito), receber e conferir (só o IMEI/ICCID enviado; falta vira divergência com explicação), recusar e cancelar antes do envio; local DEFEITOS sem venda; painel \"onde tem\" e tela /transferencias. Testado em desenvolvimento; aguardando revisão do Codex. ORG-a (17/11): as 11 lojas e DEFEITOS estão cadastrados, pelo cadastro operacional. TRF-a (17/11; plano de 16/11, Onda 1, item 5; #60): a remessa, vários produtos pedidos de uma vez entre as mesmas duas lojas (até 30, cada um uma vez), cada produto uma transferência com o próprio caminho; a origem envia de uma vez as já separadas; a tela /transferencias/remessa monta o pedido. FALTA: o estoque das 11 lojas (a planilha da Rein), a revisão do Codex e a homologação.",
+      "evidencia": "packages/banco/supabase/migrations/20261109193043_transferencias_e_defeitos.sql; packages/banco/src/transferencias.test.ts; packages/banco/src/concorrencia.test.ts; apps/plataforma/src/app/transferencias; packages/banco/supabase/migrations/20261117165326_transferencia_remessa.sql; packages/banco/src/transferencia-remessa.test.ts; apps/plataforma/src/app/transferencias/remessa; docs/aceite/TRF-a.md"
     },
     "ORA-INV-008": {
       "status": "testado",

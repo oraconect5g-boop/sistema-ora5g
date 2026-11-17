@@ -4,6 +4,7 @@
 - **Quanto tempo leva:** uns cinco minutos.
 - **O que o lote entrega:** a primeira parte do item 7 da onda 1 do plano de 16/11, que é o site instalável. Os requisitos ligados são o ORA-QUAL-010 e o ORA-POS-015, e nenhum deles muda de estado.
 - **Resposta:** "aceito" ou "não aceito". No "não aceito", diga o passo, o celular (Android ou iPhone) e o que aconteceu.
+- **No ar:** desde 17/11, às 13:51, no commit `ccdf342`. O rodapé pode mostrar um commit mais novo, de um lote seguinte.
 
 ## O que mudou
 
