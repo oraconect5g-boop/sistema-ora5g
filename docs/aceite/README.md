@@ -31,4 +31,5 @@ Um lote aceito que entrega só uma parte do requisito fica registrado em `aceite
 | WHATS-a (o programa que manda a nota pelo WhatsApp, desligado até a Meta) | [WHATS-a.md](WHATS-a.md) | ORA-WHATS-001 e ORA-WHATS-006 (o estado de cada um não muda: depende da Meta) | aguardando (pedido em 17/11; no ar em `69bfab6`) |
 | SAUDE-a (o que é fila na Saúde da operação, e a página /saude lendo o banco) | [SAUDE-a.md](SAUDE-a.md) | ORA-QUAL-006 e ORA-FISC-008 (em parte; o estado de cada um não muda) | aguardando (pedido em 17/11; no ar em `7e1ff5f`) |
 | GIT-a (a arrumação do GitHub: issues, atualizações e o que fica exposto) | [GIT-a.md](GIT-a.md) | ORA-QUAL-001, ORA-QUAL-004 e ORA-QUAL-014 (o estado de cada um não muda) | aguardando (pedido em 17/11; no ar em `3235772`) |
-| ORG-a (as 11 lojas e o DEFEITOS no sistema, pelo cadastro operacional) | [ORG-a.md](ORG-a.md) | ORA-ORG-001 (em parte; o estado não muda) | a pedir depois da publicação |
+| ORG-a (as 11 lojas e o DEFEITOS no sistema, pelo cadastro operacional) | [ORG-a.md](ORG-a.md) | ORA-ORG-001 (em parte; o estado não muda) | aguardando (pedido em 17/11; no ar em `13fca19`) |
+| PWA-a (o Ora 5G na tela inicial do celular) | [PWA-a.md](PWA-a.md) | ORA-QUAL-010 e ORA-POS-015 (em parte; o estado de cada um não muda) | a pedir depois da publicação |

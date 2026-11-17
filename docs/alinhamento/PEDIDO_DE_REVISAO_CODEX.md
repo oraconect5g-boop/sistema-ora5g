@@ -1521,7 +1521,35 @@ Programa de execução integral (PR #67; checkpoint em `docs/alinhamento/EXECUCA
 - **Limite declarado:**
   1. A empresa de desenvolvimento tem a raiz fictícia de CNPJ. Quando o CNPJ real de uma loja chegar, a raiz não vai bater (23514): a empresa real (razão social e raiz) precisa ser cadastrada antes, e as lojas, ligadas a ela.
   2. Os nomes "Muffato Santa" e "Balneário" ficam como na imagem, para o proprietário confirmar.
+- **CI, merge e publicação (17/11):**
+  - **CI:** a sequência completa, de instalação limpa no servidor, passou em `511aa58`: 2.693 testes e 1 TODO, 285 E2E (13 pulados), auditoria sem vulnerabilidade e o orçamento em dia. A primeira rodada acusou o T10 do `acesso.test.ts` (07/11), que ainda esperava a recusa da loja física sem CNPJ: ele passou a aceitá-la, e a loja online sem emissor continua recusada.
+  - **Merge:** `13fca19`; a árvore é a da branch testada. No GitHub, os checks de `13fca19` terminaram com sucesso: "Verificações" e "Supabase Preview".
+  - **Publicação:** na homologação, em 17/11 (build 13:31), conferida pela pasta, pelo serviço local e pelo domínio com o commit inteiro.
 - **Pedido ao Codex:** conferir:
   1. que nenhum caminho de venda escapa do gatilho (o PDV, a OS cobrada pelo PDV e a reserva do site);
   2. que a loja sem CNPJ não aparece em nenhuma leitura pública;
   3. a reversão, que só roda com todas as lojas físicas com CNPJ.
+
+## 17/11/2026 — Lote PWA-a: o site instalável (Onda 1, item 7, primeira parte; ORA-QUAL-010 e ORA-POS-015, em parte)
+
+- **Origem:** o plano do proprietário de 16/11 (Onda 1, item 7): "manifesto, ícones, service worker mínimo e Web Push". Este lote é a parte sem credencial. O Web Push pede um par de chaves VAPID, que é credencial, e espera a autorização.
+- **Banco:** nenhuma migration.
+- **O que mudou:**
+  1. `app/manifest.ts` (`/manifest.webmanifest`): `start_url` e `id` em `/inicio`, `scope` `/`, `standalone`, `pt-BR`, as cores da marca e três ícones (192, 512 e o recortável de 512). `src/app/apple-icon.png` (180) gera o `apple-touch-icon`; `appleWebApp` no layout.
+  2. `public/sw.js`:
+     - na instalação, guarda só `public/sem-internet.html`;
+     - na ativação, apaga as versões antigas do cache;
+     - no `fetch`, só a navegação GET passa por ele: vai à rede e, se a rede falhar, devolve a página guardada;
+     - nada mais é guardado: nem dado, nem tela, nem envio de formulário, nem chamada da tela.
+  3. `RegistrarServiceWorker` registra `/sw.js` só com `NODE_ENV=production`, com `updateViaCache: none`.
+  4. `next.config.ts` serve `/sw.js` com `no-cache`, o tipo JavaScript e `Content-Security-Policy` própria, como o guia de PWA do Next 16 recomenda.
+  5. Os ícones vêm de `scripts/gerar-icones-do-app.mjs` (Chromium do Playwright), no desenho de `icon.svg`.
+- **Testes:**
+  - `src/app/manifest.test.ts` (5): o manifesto; cada ícone com o tamanho declarado (lido do cabeçalho do PNG); o service worker de verdade num contexto simulado (a instalação guarda só a página, a ativação limpa, a navegação vai à rede e cai na página guardada sem rede, e o resto não passa por ele).
+  - `e2e/site-instalavel.spec.ts` (3): o manifesto e os ícones respondem, e a página aponta para eles; `/sw.js` sem cache; com a rede desligada (`context.setOffline`), a navegação mostra "Sem internet agora", e "Tentar de novo" volta.
+- **Correção de teste:** o E2E da `/saude` (SAUDE-a) só aceitava o espaço comum entre o número e "ms", e a página usa o espaço que não quebra a linha. No CI passava, porque ali o banco não está configurado; com o banco, falhava (visto rodando a versão de produção aqui). Agora o teste aceita os dois espaços.
+- **Limite declarado:** o Safari do iPhone só usa service worker no site instalado a partir do iOS 16.4. Nos mais antigos, a página "sem internet" não aparece, mas o resto funciona.
+- **Pedido ao Codex:** conferir:
+  1. que o service worker não intercepta POST, Server Actions nem chamadas da tela;
+  2. que a troca de versão do service worker não deixa telas velhas em cache;
+  3. a CSP do `/sw.js`.
