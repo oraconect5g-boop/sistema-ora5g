@@ -4858,6 +4858,67 @@ export type Database = {
           },
         ]
       }
+      transferencia_remessas: {
+        Row: {
+          chave: string
+          conteudo: string
+          destino_id: string
+          id: string
+          motivo: string
+          numero: number
+          organizacao_id: string
+          origem_id: string
+          solicitado_em: string
+          solicitado_por: string
+        }
+        Insert: {
+          chave: string
+          conteudo: string
+          destino_id: string
+          id?: string
+          motivo: string
+          numero?: never
+          organizacao_id: string
+          origem_id: string
+          solicitado_em?: string
+          solicitado_por: string
+        }
+        Update: {
+          chave?: string
+          conteudo?: string
+          destino_id?: string
+          id?: string
+          motivo?: string
+          numero?: never
+          organizacao_id?: string
+          origem_id?: string
+          solicitado_em?: string
+          solicitado_por?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "transferencia_remessas_destino_id_organizacao_id_fkey"
+            columns: ["destino_id", "organizacao_id"]
+            isOneToOne: false
+            referencedRelation: "unidades"
+            referencedColumns: ["id", "organizacao_id"]
+          },
+          {
+            foreignKeyName: "transferencia_remessas_origem_id_organizacao_id_fkey"
+            columns: ["origem_id", "organizacao_id"]
+            isOneToOne: false
+            referencedRelation: "unidades"
+            referencedColumns: ["id", "organizacao_id"]
+          },
+          {
+            foreignKeyName: "transferencia_remessas_solicitado_por_fkey"
+            columns: ["solicitado_por"]
+            isOneToOne: false
+            referencedRelation: "perfis_usuario"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       transferencias: {
         Row: {
           atualizado_em: string
@@ -4878,6 +4939,7 @@ export type Database = {
           quantidade_recebida: number | null
           recebido_em: string | null
           recebido_por: string | null
+          remessa_id: string | null
           reserva_id: string | null
           separado_em: string | null
           separado_por: string | null
@@ -4905,6 +4967,7 @@ export type Database = {
           quantidade_recebida?: number | null
           recebido_em?: string | null
           recebido_por?: string | null
+          remessa_id?: string | null
           reserva_id?: string | null
           separado_em?: string | null
           separado_por?: string | null
@@ -4932,6 +4995,7 @@ export type Database = {
           quantidade_recebida?: number | null
           recebido_em?: string | null
           recebido_por?: string | null
+          remessa_id?: string | null
           reserva_id?: string | null
           separado_em?: string | null
           separado_por?: string | null
@@ -4974,6 +5038,13 @@ export type Database = {
             columns: ["recebido_por"]
             isOneToOne: false
             referencedRelation: "perfis_usuario"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "transferencias_remessa_id_fkey"
+            columns: ["remessa_id"]
+            isOneToOne: false
+            referencedRelation: "transferencia_remessas"
             referencedColumns: ["id"]
           },
           {
@@ -7412,6 +7483,14 @@ export type Database = {
         Args: { p_transferencia: string }
         Returns: string
       }
+      transferencia_lojas: {
+        Args: never
+        Returns: {
+          id: string
+          nome: string
+          tipo: string
+        }[]
+      }
       transferencia_receber: {
         Args: {
           p_identificadores: string[]
@@ -7420,6 +7499,10 @@ export type Database = {
           p_transferencia: string
         }
         Returns: string
+      }
+      transferencia_remessa_enviar: {
+        Args: { p_remessa: string }
+        Returns: Json
       }
       transferencia_separar: {
         Args: { p_itens: string[]; p_transferencia: string }
@@ -7435,6 +7518,16 @@ export type Database = {
           p_variante: string
         }
         Returns: string
+      }
+      transferencia_solicitar_remessa: {
+        Args: {
+          p_chave: string
+          p_destino: string
+          p_itens: Json
+          p_motivo: string
+          p_origem: string
+        }
+        Returns: Json
       }
       unidade_atual: { Args: never; Returns: string }
       venda_anexar_documento: {

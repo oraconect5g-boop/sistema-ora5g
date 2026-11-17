@@ -1,9 +1,9 @@
 // Inventário de autorização (prioridade 1 do diagnóstico de 10/11/2026; ORA-ORG-004 e ORA-QUAL-002).
 // O aviso 0029 do Supabase lista as funções SECURITY DEFINER que qualquer usuário logado pode chamar
-// pela API: 174 em 17/11 (48 + 6 do cadastro de lojas, L2, + 5 do cadastro do catálogo, L3a, + 4 dos preços, L3b,
+// pela API: 177 em 17/11 (48 + 6 do cadastro de lojas, L2, + 5 do cadastro do catálogo, L3a, + 4 dos preços, L3b,
 // + 4 da importação do catálogo, L3c, + 3 da entrada de mercadoria, L4a, + 5 do inventário, L4b, + 6 dos clientes, L5a,
 // + 9 do funil e da agenda, L5b, + 4 da mesclagem e dos segmentos, L5c, + 4 das maquininhas e da conciliação, L7a,
-// + 2 da leitura das entradas, R1, + 1 do nome no ranking, G1, + 2 das metas, G4b, + 3 das financeiras, L7b, + 3 da saída autorizada do caixa, L7c, + 6 das contas a pagar, L8a, + 1 das regras do bônus por meta, L9a, + 2 do fechamento do bônus, L9b, + 1 da correção do repasse das financeiras, B4, + 1 dos dados para emitir a nota, K1b, + 1 dos documentos da nota emitida, L10a, + 2 do envio da nota pelo WhatsApp, K1c, + 1 dos recebíveis por loja e adquirente, L8e, + 5 da ordem de serviço, L12a, + 3 do orçamento da OS, L12b, + 2 da cobrança e da entrega da OS, L12c, + 3 das peças da OS, L12d, + 1 dos relatórios da assistência, L12e, + 2 dos documentos da venda, L5d, + 2 da conciliação fiscal, L10b, + 2 do cancelamento e da correção da nota, L10c, + 1 do valor do estoque a custo, G3b, + 2 dos códigos de outros canais, CAT-009, + 2 das regiões, ORG-009, + 1 da conta ligada à entrada, FIN-004a, + 2 dos documentos da conta, FIN-004b, + 1 da correção do custo, CAT-008b, + 2 da limpeza das fotos, CAT-011b, + 5 do pedido de compra, INV-009a, + 1 da carta de correção, FISC-009b, + 1 do relatório do titular, QUAL-011a, + 2 da vitrine da loja online, ONLINE-a, públicas de propósito, + 5 da reserva do site, ONLINE-b (a de reservar, pública), + 1 da conclusão da limpeza das fotos, INTEG-b, + 1 da situação das rotinas agendadas, ROT-a, + 1 da conferência do destinatário da nota, INTEG-c, + 2 da Saúde da operação e da página /saude, SAUDE-a; no L8b, a das categorias ganhou o parâmetro "entra no resultado"). Elas rodam com poder total e cada uma confere sessão, loja e permissão por
+// + 2 da leitura das entradas, R1, + 1 do nome no ranking, G1, + 2 das metas, G4b, + 3 das financeiras, L7b, + 3 da saída autorizada do caixa, L7c, + 6 das contas a pagar, L8a, + 1 das regras do bônus por meta, L9a, + 2 do fechamento do bônus, L9b, + 1 da correção do repasse das financeiras, B4, + 1 dos dados para emitir a nota, K1b, + 1 dos documentos da nota emitida, L10a, + 2 do envio da nota pelo WhatsApp, K1c, + 1 dos recebíveis por loja e adquirente, L8e, + 5 da ordem de serviço, L12a, + 3 do orçamento da OS, L12b, + 2 da cobrança e da entrega da OS, L12c, + 3 das peças da OS, L12d, + 1 dos relatórios da assistência, L12e, + 2 dos documentos da venda, L5d, + 2 da conciliação fiscal, L10b, + 2 do cancelamento e da correção da nota, L10c, + 1 do valor do estoque a custo, G3b, + 2 dos códigos de outros canais, CAT-009, + 2 das regiões, ORG-009, + 1 da conta ligada à entrada, FIN-004a, + 2 dos documentos da conta, FIN-004b, + 1 da correção do custo, CAT-008b, + 2 da limpeza das fotos, CAT-011b, + 5 do pedido de compra, INV-009a, + 1 da carta de correção, FISC-009b, + 1 do relatório do titular, QUAL-011a, + 2 da vitrine da loja online, ONLINE-a, públicas de propósito, + 5 da reserva do site, ONLINE-b (a de reservar, pública), + 1 da conclusão da limpeza das fotos, INTEG-b, + 1 da situação das rotinas agendadas, ROT-a, + 1 da conferência do destinatário da nota, INTEG-c, + 2 da Saúde da operação e da página /saude, SAUDE-a, + 3 da remessa de transferência, TRF-a; no L8b, a das categorias ganhou o parâmetro "entra no resultado"). Elas rodam com poder total e cada uma confere sessão, loja e permissão por
 // conta própria. Este teste monta um "mundo" fictício com objetos reais em duas lojas e tenta cada
 // função como 13 tipos de atacante. Recusa = erro, ou resposta vazia numa leitura, e nada muda no
 // banco. O teste lista as funções no próprio banco e falha se aparecer uma nova sem casos aqui.
@@ -146,6 +146,16 @@ async function montarMundo() {
   alvo.transfEnviadaB = await solicitar(gerB, ids.lojaA, ids.lojaB);
   await separar(donoA, alvo.transfEnviadaB);
   await enviar(donoA, alvo.transfEnviadaB);
+  // Remessas (TRF-a): A sai da loja A, B sai da loja B; cada uma com a transferência dela já separada.
+  const remessa = async (s: Sessao, origem: string, destino: string) =>
+    (await valor<{ remessa: string; transferencias: string[] }>(s, "select public.transferencia_solicitar_remessa($1, $2, $3::jsonb, 'Reposição', $4) as v",
+      [origem, destino, JSON.stringify([{ variante: cat.capa, quantidade: 1 }]), chave("remessa")]));
+  const remessaA = await remessa(gerB, ids.lojaA, ids.lojaB);
+  await separar(donoA, remessaA.transferencias[0] as string);
+  alvo.remessaA = remessaA.remessa;
+  const remessaB = await remessa(donoC, ids.lojaB, ids.lojaC);
+  await separar(gerB, remessaB.transferencias[0] as string);
+  alvo.remessaB = remessaB.remessa;
 
   // Equipe: convite pendente e o vínculo do vendedorAB na loja A.
   alvo.convite = await valor<string>(donoA, "select public.convidar_pessoa($1, 'Pessoa Convidada', 'convidada@teste.invalid', 'vendedor', $2::uuid[], 'Contratação') as v",
@@ -804,6 +814,17 @@ const CASOS: Record<string, Caso> = {
     B: () => ["select public.transferencia_separar($1, '{}'::uuid[])", [alvo.transfSolicitadaB]], semPermissao: true,
   },
   // Pedir é de quem consulta estoque na origem ou no destino (ADR-007 §3); fora das duas lojas, não.
+  // A remessa (TRF-a): pedir vários produtos de uma vez segue as regras do pedido avulso; enviar a remessa é só da
+  // loja de origem, e o vendedor da origem, sem estoque.transferir, é recusado ao enviar a transferência separada.
+  "transferencia_solicitar_remessa(uuid,uuid,jsonb,text,text)": {
+    A: () => ["select public.transferencia_solicitar_remessa($1, $2, $3::jsonb, 'Tentativa', $4)", [ids.lojaB, ids.lojaA, JSON.stringify([{ variante: cat.capa, quantidade: 1 }]), chave("ataque")]],
+    B: () => ["select public.transferencia_solicitar_remessa($1, $2, $3::jsonb, 'Tentativa', $4)", [ids.lojaB, ids.lojaC, JSON.stringify([{ variante: cat.capa, quantidade: 1 }]), chave("ataque")]],
+  },
+  // As lojas para escolher a origem e o destino (TRF-a): a outra rede recebe as dela, nunca uma da rede atacada.
+  "transferencia_lojas()": { leitura: true, A: () => ["select * from public.transferencia_lojas()", []] },
+  "transferencia_remessa_enviar(uuid)": {
+    A: () => ["select public.transferencia_remessa_enviar($1)", [alvo.remessaA]], B: () => ["select public.transferencia_remessa_enviar($1)", [alvo.remessaB]], semPermissao: true,
+  },
   "transferencia_solicitar(uuid,uuid,uuid,integer,text,text)": {
     A: () => ["select public.transferencia_solicitar($1, $2, $3, 1, 'Tentativa', $4)", [ids.lojaB, ids.lojaA, cat.capa, chave("ataque")]],
     B: () => ["select public.transferencia_solicitar($1, $2, $3, 1, 'Tentativa', $4)", [ids.lojaB, ids.lojaC, cat.capa, chave("ataque")]],
@@ -867,7 +888,7 @@ function vazio(funcao: string, linhas: Record<string, unknown>[]) {
   if (funcao === "notas_vendas_sem_pedido()") return linhas.length === 1 && (linhas[0]?.v as { quantidade?: number } | undefined)?.quantidade === 0;
   if (funcao === "cliente_buscar(text,text)") return linhas.length === 1 && (linhas[0]?.v as { clientes?: unknown[] } | undefined)?.clientes?.length === 0;
   // A lista de lojas pode trazer as da rede de quem pergunta, nunca uma da rede atacada.
-  if (funcao === "lojas_da_rede()") return linhas.every((l) => !LOJAS_DA_REDE_ATACADA.has(String(l.id)));
+  if (funcao === "lojas_da_rede()" || funcao === "transferencia_lojas()") return linhas.every((l) => !LOJAS_DA_REDE_ATACADA.has(String(l.id)));
   if (funcao.endsWith("_na_rede(uuid)")) {
     return linhas.every((l) => !LOJAS_DA_REDE_ATACADA.has(String(l.unidade_id))
       && Object.values(l).every((v) => typeof v !== "number" || v === 0));
@@ -1042,7 +1063,7 @@ describe("inventário: toda função SECURITY DEFINER exposta tem casos de recus
     const expostas = rows.map((r) => r.f);
     expect(expostas.filter((f) => !(f in CASOS)), "função nova exposta sem casos de recusa: acrescente ao CASOS").toEqual([]);
     expect(Object.keys(CASOS).filter((f) => !expostas.includes(f)), "caso de função que não existe mais").toEqual([]);
-    expect(expostas).toHaveLength(174);
+    expect(expostas).toHaveLength(177);
   });
 
   it("visitante anônimo executa só a vitrine e a reserva da loja online (ONLINE-a e ONLINE-b) e a leitura leve do banco da página /saude (SAUDE-a); no privado, a conferência da foto do site e um gatilho, que não roda sozinho", async () => {
