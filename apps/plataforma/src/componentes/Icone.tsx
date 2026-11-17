@@ -1,4 +1,4 @@
-import { Activity, ArrowRightLeft, Building2, CalendarClock, ChartColumn, ChartLine, ClipboardCheck, ContactRound, CreditCard, FileText, FileUp, Filter, Globe, HandCoins, House, Landmark, MessageCircle, Package, PackagePlus, PiggyBank, Receipt, ReceiptText, Scale, ScrollText, ShoppingCart, Signal, Tags, Target, Users, Wallet, Wrench, type LucideIcon } from "lucide-react";
+import { Activity, ArrowRightLeft, Building2, CalendarClock, ChartColumn, ChartLine, ClipboardCheck, ContactRound, CreditCard, FileText, FileUp, Filter, Globe, HandCoins, House, Landmark, MessageCircle, Package, PackagePlus, PiggyBank, Receipt, ReceiptText, Rocket, Scale, ScrollText, ShoppingCart, Signal, Tags, Target, Users, Wallet, Wrench, type LucideIcon } from "lucide-react";
 
 const ICONES: Record<string, LucideIcon> = {
   inicio: House,
@@ -33,6 +33,7 @@ const ICONES: Record<string, LucideIcon> = {
   notas: FileText,
   transferencias: ArrowRightLeft,
   operacao: Activity,
+  entregas: Rocket,
 };
 
 export function Icone({ nome, className = "size-5" }: { nome: string; className?: string }) {

@@ -1,4 +1,4 @@
-import { ArrowRight, ChartColumn, MessageCircle, Package, ShoppingCart, Signal, Target, Wallet, Wrench } from "lucide-react";
+import { ArrowRight, ChartColumn, MessageCircle, Package, ShoppingBag, ShoppingCart, Signal, Target, Wallet, Wrench } from "lucide-react";
 
 import { Marca } from "../componentes/Marca";
 import { BotaoLink } from "../componentes/ui";
@@ -28,9 +28,13 @@ export default function Inicio() {
       <div aria-hidden className="pointer-events-none absolute inset-0 opacity-[0.07] [background-image:linear-gradient(rgba(255,255,255,.6)_1px,transparent_1px),linear-gradient(90deg,rgba(255,255,255,.6)_1px,transparent_1px)] [background-size:44px_44px] [mask-image:radial-gradient(ellipse_at_center,black,transparent_75%)]" />
 
       <div className="relative mx-auto flex min-h-dvh max-w-6xl flex-col px-4 py-6 sm:px-6">
-        <header className="flex items-center justify-between">
+        <header className="flex items-center justify-between gap-3">
           <Marca claro tamanho="text-2xl" />
-          <BotaoLink href="/entrar" variante="claro" tamanho="sm">Entrar</BotaoLink>
+          {/* A01 (adendo do Codex de 16/11): quem compra vai à loja online; a equipe entra na plataforma, separado. */}
+          <nav aria-label="Acesso" className="flex items-center gap-2">
+            <BotaoLink href="/loja" tamanho="sm" className="bg-destaque text-navegacao shadow-none hover:bg-teal-300"><ShoppingBag aria-hidden className="size-4" /> Comprar</BotaoLink>
+            <BotaoLink href="/entrar" variante="claro" tamanho="sm">Entrar</BotaoLink>
+          </nav>
         </header>
 
         <section className="flex flex-1 flex-col justify-center py-14 sm:py-20">

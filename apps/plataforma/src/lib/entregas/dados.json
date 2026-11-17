@@ -1,0 +1,87 @@
+{
+  "_leia": "Gerado por scripts/gerar-rastreabilidade.mjs a partir de docs/alinhamento/execucao-integral-status.json; não editar à mão.",
+  "atualizado_em": "2026-11-17",
+  "total": 179,
+  "homologados": 0,
+  "contagem": {
+    "nao_iniciado": 42,
+    "parcial": 69,
+    "testado": 63,
+    "bloqueado": 3,
+    "respeitado": 2
+  },
+  "lotes": [
+    {
+      "lote": "VEL-a",
+      "roteiro": "docs/aceite/VEL-a.md",
+      "requisitos": [
+        "ORA-QUAL-010",
+        "ORA-POS-002"
+      ],
+      "entrega": "parte dos dois requisitos: os dois seguem parciais mesmo com o aceite",
+      "commit": "087ef53",
+      "publicado_em": "2026-11-17",
+      "pedido_em": "2026-11-17",
+      "resposta": null,
+      "respondido_em": null
+    },
+    {
+      "lote": "ONLINE-c",
+      "roteiro": "docs/aceite/ONLINE-c.md",
+      "requisitos": [
+        "ORA-ONLINE-001",
+        "ORA-ONLINE-006"
+      ],
+      "entrega": "parte dos dois requisitos: os dois seguem parciais mesmo com o aceite",
+      "commit": "dc12dce",
+      "publicado_em": "2026-11-17",
+      "pedido_em": "2026-11-17",
+      "resposta": null,
+      "respondido_em": null
+    },
+    {
+      "lote": "ROT-a",
+      "roteiro": "docs/aceite/ROT-a.md",
+      "requisitos": [
+        "ORA-INV-005",
+        "ORA-ONLINE-006",
+        "ORA-QUAL-006"
+      ],
+      "entrega": "o ORA-INV-005 inteiro (o vencimento automático das reservas); parte do ORA-ONLINE-006 e do ORA-QUAL-006, que seguem parciais mesmo com o aceite",
+      "commit": "a2041b1",
+      "publicado_em": "2026-11-17",
+      "pedido_em": "2026-11-17",
+      "resposta": null,
+      "respondido_em": null
+    },
+    {
+      "lote": "INTEG-c",
+      "roteiro": "docs/aceite/INTEG-c.md",
+      "requisitos": [
+        "ORA-FISC-001",
+        "ORA-POS-008",
+        "ORA-ONLINE-006"
+      ],
+      "entrega": "as correções dos defeitos #101 e #102 da revisão do Codex de 16/11; o estado de cada requisito não muda",
+      "commit": "9012f7f",
+      "publicado_em": "2026-11-17",
+      "pedido_em": "2026-11-17",
+      "resposta": null,
+      "respondido_em": null
+    },
+    {
+      "lote": "BANCO-a",
+      "roteiro": "docs/aceite/BANCO-a.md",
+      "requisitos": [
+        "ORA-ORG-004",
+        "ORA-QUAL-002"
+      ],
+      "entrega": "a arrumação do banco que o Supabase aponta (Onda 0.5); o estado dos dois requisitos não muda",
+      "commit": null,
+      "publicado_em": null,
+      "pedido_em": null,
+      "resposta": null,
+      "respondido_em": null
+    }
+  ]
+}

@@ -18,7 +18,7 @@ export const PERMISSOES_DA_REDE: ReadonlySet<PermissaoDoMenu> = new Set(["usuari
 export type PaginaReal =
   | "inicio" | "vender" | "vendas" | "reservas_site" | "clientes" | "funil" | "agenda" | "caixa" | "connect"
   | "estoque" | "transferencias" | "catalogo" | "produtos"
-  | "financeiro" | "relatorios" | "metas" | "contas_pagar" | "resultado" | "previsao" | "conciliacao" | "recebiveis" | "financeiras" | "assistencia" | "maquininhas" | "aprovacoes" | "notas" | "operacao" | "auditoria"
+  | "financeiro" | "relatorios" | "metas" | "contas_pagar" | "resultado" | "previsao" | "conciliacao" | "recebiveis" | "financeiras" | "assistencia" | "maquininhas" | "aprovacoes" | "notas" | "operacao" | "entregas" | "auditoria"
   | "equipe" | "lojas";
 export type GrupoReal = "Operação" | "Clientes" | "Estoque e catálogo" | "Gestão" | "Administração";
 export const GRUPOS_REAIS: readonly GrupoReal[] = ["Operação", "Clientes", "Estoque e catálogo", "Gestão", "Administração"];
@@ -78,6 +78,8 @@ export const PAGINAS_REAIS: Record<PaginaReal, { titulo: string; curto: string; 
   notas: { titulo: "Notas fiscais", curto: "Notas", caminho: "/notas", icone: "notas", grupo: "Gestão", liberada: (p) => p.has("nota.aprovar") },
   // Saúde da operação (Q1, QUAL-006): as filas paradas nas lojas que a pessoa acompanha; dono e gerência.
   operacao: { titulo: "Saúde da operação", curto: "Operação", caminho: "/operacao", icone: "operacao", grupo: "Gestão", liberada: (p) => podeVerFinanceiro(p) },
+  // Entregas do projeto (ENTREGAS-a; aceite A18 do Codex): os lotes, os aceites e o placar dos 179; o dono (e o administrador).
+  entregas: { titulo: "Entregas do projeto", curto: "Entregas", caminho: "/entregas", icone: "entregas", grupo: "Gestão", liberada: (p) => p.has("venda.ver_todas") },
   auditoria: { titulo: "Auditoria", curto: "Auditoria", caminho: "/auditoria", icone: "auditoria", grupo: "Gestão", liberada: (p) => p.has("auditoria.ver") },
   equipe: { titulo: "Equipe e acessos", curto: "Equipe", caminho: "/equipe", icone: "equipe", grupo: "Administração", liberada: (p) => p.has("usuarios.gerir") },
   // Lojas da rede (L2): cadastro, situação e configuração com vigência; dono e administrador.
@@ -86,7 +88,7 @@ export const PAGINAS_REAIS: Record<PaginaReal, { titulo: string; curto: string; 
 
 // Barra inferior do celular: até 4 atalhos, na ordem de uso no balcão; o resto fica em "Mais".
 const PRIORIDADE_NO_CELULAR: readonly PaginaReal[] = [
-  "inicio", "vender", "aprovacoes", "vendas", "financeiro", "estoque", "reservas_site", "metas", "clientes", "agenda", "funil", "caixa", "connect", "assistencia", "catalogo", "produtos", "relatorios", "notas", "contas_pagar", "resultado", "previsao", "conciliacao", "recebiveis", "financeiras", "maquininhas", "equipe", "lojas", "operacao", "auditoria", "transferencias",
+  "inicio", "vender", "aprovacoes", "vendas", "financeiro", "estoque", "reservas_site", "metas", "clientes", "agenda", "funil", "caixa", "connect", "assistencia", "catalogo", "produtos", "relatorios", "notas", "contas_pagar", "resultado", "previsao", "conciliacao", "recebiveis", "financeiras", "maquininhas", "equipe", "lojas", "operacao", "auditoria", "transferencias", "entregas",
 ];
 
 export function montarMenu(permissoes: Permissoes) {

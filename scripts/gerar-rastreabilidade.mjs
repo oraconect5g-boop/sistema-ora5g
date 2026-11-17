@@ -81,6 +81,23 @@ for (const r of Object.values(execucao.requisitos)) contagem[r.estado] = (contag
 execucao.contagem_dos_estados = contagem;
 const textoExecucaoNovo = `${JSON.stringify(execucao, null, 2)}\n`;
 
+// A tela de entregas da plataforma (lote ENTREGAS-a; aceite A18 do adendo do Codex de 16/11): os lotes com roteiro de
+// aceite e a contagem dos requisitos saem do checkpoint, daqui, e nunca são escritos à mão.
+const caminhoEntregas = "apps/plataforma/src/lib/entregas/dados.json";
+const entregas = {
+  _leia: "Gerado por scripts/gerar-rastreabilidade.mjs a partir de docs/alinhamento/execucao-integral-status.json; não editar à mão.",
+  atualizado_em: execucao.atualizado_em,
+  total: Object.keys(execucao.requisitos).length,
+  homologados: Object.values(execucao.requisitos).filter((r) => r.homologado === true).length,
+  contagem: execucao.contagem_dos_estados,
+  lotes: Object.entries(execucao.aceites ?? {}).map(([lote, a]) => ({
+    lote, roteiro: a.roteiro, requisitos: a.requisitos, entrega: a.entrega, commit: a.commit ?? null,
+    publicado_em: a.publicado_em ?? null, pedido_em: a.pedido_em ?? null, resposta: a.resposta ?? null, respondido_em: a.respondido_em ?? null,
+  })),
+};
+const textoEntregas = `${JSON.stringify(entregas, null, 2)}\n`;
+const lerOuVazio = (caminho) => { try { return readFileSync(caminho, "utf8"); } catch { return ""; } };
+
 const destino = "docs/alinhamento/RASTREABILIDADE.md";
 if (process.argv.includes("--conferir")) {
   if (readFileSync(destino, "utf8") !== md) {
@@ -91,6 +108,10 @@ if (process.argv.includes("--conferir")) {
     console.error(`${caminhoExecucao} diverge de status-requisitos.json${divergentes.length ? `: ${divergentes.join("; ")}` : " (contagem dos estados)"}. Rode: node scripts/gerar-rastreabilidade.mjs`);
     process.exit(1);
   }
+  if (lerOuVazio(caminhoEntregas) !== textoEntregas) {
+    console.error(`${caminhoEntregas} está desatualizado. Rode: node scripts/gerar-rastreabilidade.mjs`);
+    process.exit(1);
+  }
   console.log("Rastreabilidade em dia.");
 } else {
   writeFileSync(destino, md);
@@ -98,5 +119,9 @@ if (process.argv.includes("--conferir")) {
   if (textoExecucao !== textoExecucaoNovo) {
     writeFileSync(caminhoExecucao, textoExecucaoNovo);
     console.log(`Atualizado ${caminhoExecucao}: ${divergentes.length ? divergentes.join("; ") : "contagem dos estados"}.`);
+  }
+  if (lerOuVazio(caminhoEntregas) !== textoEntregas) {
+    writeFileSync(caminhoEntregas, textoEntregas);
+    console.log(`Gerado ${caminhoEntregas}: ${entregas.lotes.length} lotes com roteiro de aceite.`);
   }
 }
