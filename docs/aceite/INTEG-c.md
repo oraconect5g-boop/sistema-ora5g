@@ -4,6 +4,7 @@
 - **Quanto tempo leva:** uns dois minutos.
 - **O que o lote entrega:** as correções dos defeitos **#101** e **#102**, que o Codex reproduziu na revisão de 16/11 (PR #100). Os requisitos ligados são o ORA-FISC-001, o ORA-POS-008 e o ORA-ONLINE-006, e eles continuam com o estado que tinham.
 - **Resposta:** "aceito" ou "não aceito". Com o "aceito", as issues #101 e #102 são fechadas no GitHub, citando o commit e os testes.
+- **No ar:** desde 17/11, às 11:15, no commit `9012f7f`. O rodapé pode mostrar um commit mais novo, de um lote seguinte.
 
 ## O que mudou
 

@@ -1370,9 +1370,39 @@ Programa de execução integral (PR #67; checkpoint em `docs/alinhamento/EXECUCA
   2. A conferência só confirma o cliente de hoje da venda. Se a nota é de outra pessoa, ela não vai pelo WhatsApp: o documento vai por outro caminho.
   3. A trava da cota serializa as reservas do site da mesma loja durante a parte curta da transação. As outras lojas não esperam.
   4. O cabeçalho da migration cita também o ORA-CRM-002, como o do INTEG-a, mas nada nele muda.
+- **CI, merge e publicação (17/11):**
+  - **CI:** a sequência completa, de instalação limpa no servidor, passou em `58f371e`: 2.651 testes e 1 TODO (plataforma 1.547, worker 15, banco 917 e 1 TODO, config 60 e domínio 112), 281 E2E (13 pulados), auditoria sem vulnerabilidade e o orçamento em dia (84 telas; a maior com 186,4 KB de JavaScript, para o limite de 200 KB).
+  - **Merge:** `9012f7f`; a árvore é a da branch testada. No GitHub, os checks de `9012f7f` terminaram com sucesso: "Verificações" e "Supabase Preview".
+  - **Publicação:** na homologação, em 17/11 (build 11:15). Conferida pela pasta, pelo serviço local e pelo domínio com o commit inteiro. Sem login, pelo domínio: `/entrar` e `/loja` respondem 200, o produto que não existe responde 404, e `/vender` e `/operacao` respondem 307 para a entrada.
+  - **Não conferido:** a tela da conferência no ar. Ela só aparece numa nota antiga sem prova, e não há nenhuma.
 - **Pedido ao Codex:** conferir:
   1. a regra da origem e o gatilho, inclusive a marca da conferência na transação;
   2. que nenhum caminho de escrita deixa a origem `pedido` com um cliente deduzido;
   3. a ordem das travas na `loja_reservar` (chave, WhatsApp, loja, aparelho, saldo) contra o PDV e as transferências;
   4. o uso de `42501` no lugar de `P0002` na função nova;
   5. se as duas provas do Codex, convertidas, cobrem o que ele reproduziu.
+
+## 17/11/2026 — Lote BANCO-a: os avisos do Supabase sobre o banco (Onda 0.5; ORA-ORG-004 e ORA-QUAL-002, coerência)
+
+- **Origem:** o plano do proprietário de 16/11 (Onda 0.5) e os avisos do Supabase no `ora5g-dev`: 10 chaves estrangeiras sem índice ("unindexed foreign keys"), 1 tabela do privado sem RLS e as tabelas com RLS e sem política sem o comentário que diz que o acesso é só por função ("RLS enabled no policy", informativo). O limite da função aberta que grava (a reserva, #102) veio no INTEG-c.
+- **Banco:** migration `20261117141658_indices_e_rls_do_banco`, com reversão.
+  1. **Os 10 índices**, cada um com as colunas da chave na mesma ordem: `caixa_saidas`, `conta_pagar_anexos`, `contas_a_pagar` (entrada), `entradas_estoque` (pedido e unidade), `fotos_produto`, `inventarios`, `metas`, `pedidos_compra` e `unidade_configuracoes`. O índice parcial `contas_a_pagar_entrada` e o `fotos_organizacao`, este com as colunas na outra ordem, ficam; o verificador não os conta como cobertura.
+  2. **O RLS em `privado.identificadores_itens`**, sem política e com o `revoke`. Só duas funções a usam, as duas `SECURITY DEFINER` do dono da tabela: `inventario_contar` e o gatilho `registrar_identificadores`.
+  3. **Os 10 comentários.**
+
+  Nada muda em dado, função, política ou permissão.
+- **Testes:** `packages/banco/src/higiene-do-esquema.test.ts` (3), no PGlite com todas as migrations. Valem para as migrations futuras:
+  - toda chave estrangeira dos esquemas public e privado tem um índice que começa pelas colunas dela, na mesma ordem;
+  - toda tabela do privado tem RLS;
+  - toda tabela com RLS e sem política tem no comentário "só por" ou "só pel".
+
+  Rodado sem a migration, falhou nos três. A prova da reversão é a de sempre (`migrations.test.ts`).
+- **Aplicação no `ora5g-dev`:** em 17/11 (11:16 em São Paulo), pela autorização do proprietário de 16/11, pelo conector do Supabase, com o texto inteiro do arquivo (md5 `b9cf77d06a4c54fccf96e512b40a2072`, igual ao gravado no histórico do banco). Conferido depois, só com leitura: 94 migrations; 0 chaves sem índice; 0 tabelas do privado sem RLS; 0 tabelas sem política e sem o comentário. Nos avisos de desempenho do Supabase sobra só o dos índices sem uso (238).
+- **Limite declarado:**
+  1. Os índices sem uso ficam, porque a base está quase vazia.
+  2. A proteção contra senha vazada é do plano pago (decisão de produção).
+  3. As leituras abertas ao público (a vitrine e o produto) ficam com o limite do servidor web.
+- **Pedido ao Codex:** conferir:
+  1. a regra de cobertura do teste, a mesma do verificador do Supabase;
+  2. que nenhuma função `SECURITY INVOKER` lê `privado.identificadores_itens`;
+  3. o texto dos comentários contra o uso real de cada tabela.
