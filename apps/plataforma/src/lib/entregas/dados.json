@@ -200,6 +200,17 @@
         "ORA-META-002"
       ],
       "entrega": "de onde veio a reserva do site: a origem, a campanha do link e o domínio de quem mandou, na reserva, na tela Reservas do site e no quadro dos Relatórios, com as vendas que vieram delas e quem vendeu (Onda 2; ADR-013)",
+      "commit": "2e3fa24",
+      "publicado_em": "2026-11-17",
+      "pedido_em": "2026-11-17",
+      "resposta": null,
+      "respondido_em": null
+    },
+    {
+      "lote": "DEP-a",
+      "roteiro": "docs/aceite/DEP-a.md",
+      "requisitos": [],
+      "entrega": "a lista única do que depende de fora (aceite A19 do adendo do Codex de 16/11), conferida no servidor em 17/11, só pelos nomes; nenhum requisito muda de estado",
       "commit": null,
       "publicado_em": null,
       "pedido_em": null,
