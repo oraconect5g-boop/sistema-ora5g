@@ -57,6 +57,8 @@ export function FormularioDaReserva({ variante, loja, chave }: { variante: strin
       </label>
       <Botao type="submit" className="w-full" disabled={reservando}>{reservando ? "Reservando..." : "Reservar por 24 horas"}</Botao>
       <p className="text-xs text-suave">Você paga na loja, na retirada. Sem compromisso: se não puder ir, a reserva vence sozinha.</p>
+      {/* MKT-a: a origem vai junto com a reserva; o aviso diz isso a quem reserva. */}
+      <p className="text-xs text-suave">A reserva também guarda por onde você chegou ao site (por exemplo, um anúncio ou uma busca no Google). Isso não identifica você.</p>
     </form>
   );
 }

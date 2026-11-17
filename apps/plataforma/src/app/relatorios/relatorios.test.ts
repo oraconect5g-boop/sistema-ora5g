@@ -53,6 +53,9 @@ const cenario = vi.hoisted(() => ({
   erroPorVendedor: { code: "PGRST202" } as null | { code: string },
   nomesDoRanking: [] as { id: string; nome: string }[],
   erroDosNomes: null as null | { code: string },
+  /** MKT-a: reservas_do_site_painel (o padrão é a função ausente: o quadro diz que a leitura não está no ambiente). */
+  reservasDoSite: null as unknown,
+  erroDasReservas: { code: "PGRST202" } as null | { code: string },
   /** Resposta de metas_lojas por mês (G4c). */
   metasPorMes: {} as Record<string, unknown>,
   erroDasMetas: null as null | { code: string },
@@ -109,6 +112,7 @@ const supabase = {
     if (nome === "connect_painel") return responder(cenario.erroDaProducao, cenario.producao);
     if (nome === "metas_lojas") return responder(cenario.erroDasMetas, cenario.metasPorMes[String(argumentos.p_mes)] ?? null);
     if (nome === "margem_por_vendedor") return responder(cenario.erroPorVendedor, cenario.porVendedor);
+    if (nome === "reservas_do_site_painel") return responder(cenario.erroDasReservas, cenario.reservasDoSite);
     if (nome === "ranking_nomes") return responder(cenario.erroDosNomes, cenario.nomesDoRanking.filter((n) => (argumentos.p_vendedores as string[]).includes(n.id)));
     return responder({ code: "PGRST202" }, null);
   },
@@ -142,6 +146,7 @@ import Relatorios from "./page";
 const APRESENTACAO = new Set([
   "ConteudoRelatorios", "EstadoDoPainel", "Indicadores", "PainelDeVendas", "PainelDeRecebimentos", "PainelDoMix", "PainelDasLojas", "PorRegiao",
   "PainelDaMargem", "PainelDaCobertura", "PainelDoTicket", "PainelDosDescontos", "PainelDosItens", "PainelDaProducaoPorDia", "PainelDaMargemPorVendedor",
+  "PainelDasReservasDoSite",
 ]);
 type Elemento = { tipo: string; props: Linha };
 const nomeDoTipo = (tipo: unknown) => (typeof tipo === "string" ? tipo : typeof tipo === "function" ? tipo.name : "");
@@ -344,9 +349,10 @@ function entrar(perfil: keyof typeof PERFIS, usuario = GESTOR) {
 
 const INDICADORES = ["Vendas realizadas", "Ticket médio", "Descontos concedidos", "Devoluções e cancelamentos", "Margem bruta", "Recebido na loja (registro)"];
 const CONNECT = "Chips, ativações e recargas por dia";
-const PAINEIS_DA_LOJA = ["Vendas", "Recebimentos por meio", "Margem bruta por dia", "Cobertura do custo", "Ticket médio por dia", "Descontos concedidos por dia", "Mix de vendas", CONNECT, "Margem por item"];
-const PAINEIS_DA_REDE = [...PAINEIS_DA_LOJA.slice(0, 7), "Desempenho das lojas", CONNECT, "Margem por item"];
-const PAINEIS_SEM_CUSTO = ["Vendas", "Recebimentos por meio", "Margem bruta", "Ticket médio por dia", "Descontos concedidos por dia", "Mix de vendas", CONNECT];
+const RESERVAS_DO_SITE = "Reservas do site por origem";
+const PAINEIS_DA_LOJA = ["Vendas", "Recebimentos por meio", "Margem bruta por dia", "Cobertura do custo", "Ticket médio por dia", "Descontos concedidos por dia", "Mix de vendas", CONNECT, RESERVAS_DO_SITE, "Margem por item"];
+const PAINEIS_DA_REDE = [...PAINEIS_DA_LOJA.slice(0, 7), "Desempenho das lojas", CONNECT, RESERVAS_DO_SITE, "Margem por item"];
+const PAINEIS_SEM_CUSTO = ["Vendas", "Recebimentos por meio", "Margem bruta", "Ticket médio por dia", "Descontos concedidos por dia", "Mix de vendas", CONNECT, RESERVAS_DO_SITE];
 // Ora Connect (G4a): em 08/11, 1 chip vendido e 2 ativações; em 10/11, 1 recarga; 1 operação ainda sem confirmação.
 const PRODUCAO = {
   totais: { chips: 1, ativacoes: 2, portabilidades: 0, recargas: 1, por_evidencia: 2, por_revisao: 1, valor_face_recargas: 2_000, em_andamento: 1, sem_resultado: 0, debito: 3_300, lojas_sem_custo: 0 },
@@ -370,6 +376,7 @@ beforeEach(() => {
     financeiro: FINANCEIRO, erroDoFinanceiro: null, margem: MARGEM, erroDaMargem: null,
     itens: ITENS, erroDosItens: null, loteDosItens: null, producao: PRODUCAO, erroDaProducao: null, metasPorMes: {}, erroDasMetas: null,
     porVendedor: null, erroPorVendedor: { code: "PGRST202" }, nomesDoRanking: [], erroDosNomes: null,
+    reservasDoSite: null, erroDasReservas: { code: "PGRST202" },
     chamadas: {}, errosDasTabelas: {}, lidas: [], sessoes: [],
     tabelas: {
       unidades: [
@@ -1364,6 +1371,61 @@ describe("Relatórios: produção do Ora Connect por dia (G4a)", () => {
     cenario.erroDaProducao = { code: "57014" };
     expect((await pagina()).cartao(CONNECT).doTipo("Aviso")).toMatchObject([{ tom: "perigo", titulo: "Não foi possível ler agora" }]);
     expect(errosRegistrados()).toEqual([["connect: falha ao consultar connect_painel", { codigo: "57014" }]]);
+  });
+});
+
+// ---------------------------------------------------------------------------------------------
+// MKT-a (ORA-ONLINE-003 e ORA-META-002): as reservas do site por origem e campanha, e as vendas que vieram delas.
+describe("Relatórios: reservas do site por origem (MKT-a)", () => {
+  const RESERVAS = RESERVAS_DO_SITE;
+  const linha = (origem: string, fonte: string | null, campanha: string | null, n: Partial<Record<string, number>> = {}) => ({
+    origem, fonte, campanha, reservas: 1, atendidas: 0, canceladas: 0, vencidas: 0, vendas: 0, vendas_centavos: 0, ...n,
+  });
+  const PAINEL = {
+    origens: [
+      linha("instagram", "instagram", "natal", { reservas: 3, atendidas: 2, canceladas: 1, vendas: 2, vendas_centavos: 158_000 }),
+      linha("outra_campanha", "panfleto", null, { reservas: 2, vencidas: 1 }),
+      linha("sem_registro", null, null),
+    ],
+    vendedores: [{ vendedor_id: ANA, vendas: 1, vendas_centavos: 79_000 }, { vendedor_id: CAIO, vendas: 1, vendas_centavos: 79_000 }],
+  };
+  beforeEach(() => {
+    entrar("gerente");
+    cenario.erroDasReservas = null;
+    cenario.reservasDoSite = PAINEL;
+    cenario.nomesDoRanking = [{ id: ANA, nome: "Ana (teste)" }];
+  });
+
+  it("por origem e campanha, na mesma janela e no mesmo recorte das vendas; quem vendeu, pelo nome que se pode ver", async () => {
+    const p = await pagina();
+    expect(cenario.chamadas.reservas_do_site_painel).toStrictEqual([{ p_inicio: DESDE["14"], p_fim: FIM, p_unidade: LOJA }]);
+    expect(cenario.chamadas.ranking_nomes).toStrictEqual([{ p_vendedores: [ANA, CAIO] }]);
+    const cartao = p.cartao(RESERVAS);
+    for (const trecho of ["6 reservas", "2 atendidas", "2 vendas concluídas", "R$ 1.580,00", "Quem vendeu as reservas do site", "Ana (teste)", "Vendedor", "Sem registro"]) {
+      expect(cartao.texto, trecho).toContain(trecho);
+    }
+    expect(primeiro(cartao.doTipo("BarrasHorizontais")).dados).toMatchObject([
+      { rotulo: "Instagram · natal", valor: 3, detalhe: "2 vendas · R$ 1.580,00" },
+      { rotulo: "Outra campanha (panfleto)", valor: 2, detalhe: undefined },
+      { rotulo: "Sem registro", valor: 1 },
+    ]);
+    expect((primeiro(cartao.doTipo("TabelaDoGrafico")).linhas as string[][])[0]).toEqual(["Instagram", "instagram", "natal", "3", "2", "1", "0", "2", "R$ 1.580,00"]);
+  });
+
+  it("sem reserva, a falta é explicada; leitura indisponível, em falha ou fora da forma não vira zero", async () => {
+    cenario.reservasDoSite = { origens: [], vendedores: [] };
+    expect((await pagina()).cartao(RESERVAS).texto).toContain("Nenhuma reserva do site no período");
+    cenario.erroDasReservas = { code: "PGRST202" };
+    expect((await pagina()).cartao(RESERVAS).doTipo("Aviso")).toMatchObject([{ tom: "aviso", titulo: "Indisponível neste ambiente" }]);
+    cenario.erroDasReservas = { code: "57014" };
+    expect((await pagina()).cartao(RESERVAS).doTipo("Aviso")).toMatchObject([{ tom: "perigo", titulo: "Não foi possível ler agora" }]);
+    expect(errosRegistrados()).toEqual([["relatorios: falha ao consultar reservas_do_site_painel", { codigo: "57014" }]]);
+    cenario.erroDasReservas = null;
+    cenario.reservasDoSite = { ...PAINEL, origens: [linha("instagram", null, null, { reservas: 1, atendidas: 1, vendas: 2 })] };
+    expect((await pagina()).cartao(RESERVAS).doTipo("Aviso")).toMatchObject([{ tom: "perigo" }]);
+    cenario.reservasDoSite = PAINEL;
+    cenario.erroDosNomes = { code: "57014" };
+    expect((await pagina()).cartao(RESERVAS).doTipo("Aviso")).toMatchObject([{ tom: "perigo" }]);
   });
 });
 

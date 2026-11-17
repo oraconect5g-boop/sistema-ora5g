@@ -1,7 +1,8 @@
 "use server";
 
-import { headers } from "next/headers";
+import { cookies, headers } from "next/headers";
 
+import { COOKIE_DA_ORIGEM, lerOrigem } from "../../../../lib/loja/origem";
 import { ehUuidDaVitrine, organizacaoDaLoja } from "../../../../lib/loja/vitrine";
 import {
   criarLimitador, enderecoDeQuemPede, erroDaReserva, nomeDoFormulario, whatsappDoFormulario, type ConfirmacaoDaReserva, type ErroDaReserva,
@@ -41,8 +42,11 @@ export async function reservarNoSite(_anterior: EstadoDaReserva, dados: FormData
   const supabase = organizacao ? await clienteSupabaseServidor() : null;
   if (!organizacao || !supabase) return recusa("falha");
   if (!limitar(enderecoDeQuemPede(await headers()))) return recusa("limite_rede");
+  // MKT-a: de onde o visitante chegou (o cookie que o proxy grava na loja online); sem o cookie, "direto".
+  const origem = lerOrigem((await cookies()).get(COOKIE_DA_ORIGEM)?.value) ?? { origem: "direto" };
   const { data, error } = await supabase.rpc("loja_reservar", {
     p_organizacao: organizacao, p_variante: variante, p_unidade: loja, p_nome: nome, p_whatsapp: whatsapp, p_chave: `site:${chave}`,
+    p_origem: origem,
   });
   if (error || !data) {
     const erro = erroDaReserva(error);

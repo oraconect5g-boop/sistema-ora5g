@@ -1,8 +1,8 @@
-import { BadgePercent, CircleSlash, PiggyBank, ShoppingBag, Ticket, UsersRound } from "lucide-react";
+import { BadgePercent, CircleSlash, Globe, PiggyBank, ShoppingBag, Ticket, UsersRound } from "lucide-react";
 import Link from "next/link";
 
 import { BaixarPlanilha } from "../../componentes/BaixarPlanilha";
-import { BarraSegmentada, BarrasComSinal, Colunas, Linhas, TabelaDoGrafico } from "../../componentes/graficos";
+import { BarraSegmentada, BarrasComSinal, BarrasHorizontais, Colunas, Linhas, TabelaDoGrafico } from "../../componentes/graficos";
 import {
   cadaRotulo, EstadoDoPainel, foraDaMargem, indicadorDaMargem, indicadorDoRecebido, Indicadores, indicadoresDeVendas, LIGACAO, NOTA, NUMERO_PRINCIPAL,
   PainelDasLojas, PainelDeRecebimentos, PainelDeVendas, PainelDoMix, plural, type MetaDoGrafico,
@@ -15,6 +15,7 @@ import { PERIODOS_FINANCEIROS, type Janela } from "../../lib/financeiro/painel";
 import { POR_PAGINA } from "../../lib/financeiro/registros";
 import { brl, brlCompacto, brlCompactoComSinal, brlComSinal, brlEixo, brlEixoComSinal, numero, percentual, percentualComSinal } from "../../lib/formato";
 import { enderecoDoFinanceiro, numerosDasVendas, type Leitura, type VendasDoBanco } from "../../lib/inicio/painel";
+import { rotuloDaOrigem, totaisDasReservas, type PainelDasReservas } from "../../lib/loja/painel-das-reservas";
 import type { RegioesDoPainel } from "../../lib/lojas/regioes";
 import { metaDoDiaPorMes } from "../../lib/metas/painel";
 import { numerosDaMargem, situacaoDaMargem, vendedoresDaMargem, type ItensDaMargem, type MargemDoBanco, type MargemPorVendedor } from "../../lib/margem/painel";
@@ -33,6 +34,46 @@ const SO_LOJA_FORA = "O movimento do período foi só em loja em que você não 
 const NAO_E_LUCRO = "Não é lucro: taxa de meio de pagamento, comissão, frete e imposto ficam fora.";
 const quando = (iso: string) => new Intl.DateTimeFormat("pt-BR", { timeZone: "America/Sao_Paulo", day: "2-digit", month: "2-digit", hour: "2-digit", minute: "2-digit" }).format(new Date(iso));
 const semBase = (fracao: number | null, formatar: (fracao: number) => string) => (fracao === null ? "—" : formatar(fracao));
+
+// ---------------------------------------------------------------------------------------------
+// MKT-a: as reservas do site por origem e campanha, e as vendas que vieram delas
+// ---------------------------------------------------------------------------------------------
+function PainelDasReservasDoSite({ leitura, aqui }: { leitura: Leitura<PainelDasReservas & { nomes: ReadonlyMap<string, string> }>; aqui: string }) {
+  const cartao = { titulo: "Reservas do site por origem", subtitulo: "De onde vieram os clientes que reservaram no site no período, e as vendas concluídas dessas reservas", icone: Globe };
+  if (leitura.estado !== "ok") return <Cartao {...cartao}><EstadoDoPainel estado={leitura.estado} fonte="reservas_do_site" tentarDeNovo={aqui} /></Cartao>;
+  const { origens, vendedores, nomes } = leitura.dados;
+  if (origens.length === 0) {
+    return (
+      <Cartao {...cartao}>
+        <EstadoVazio titulo="Nenhuma reserva do site no período" icone={Globe}>A leitura está funcionando; só não houve reserva pela loja online nas lojas que você acompanha.</EstadoVazio>
+      </Cartao>
+    );
+  }
+  const total = totaisDasReservas(leitura.dados);
+  return (
+    <Cartao {...cartao}>
+      <p className="mb-3 text-sm">
+        <strong className="numeros">{plural(total.reservas, "reserva", "reservas")}</strong> · {plural(total.atendidas, "atendida", "atendidas")} ·{" "}
+        {plural(total.vendas, "venda concluída", "vendas concluídas")}, <strong className="numeros">{brl(total.vendasCentavos)}</strong>
+      </p>
+      <BarrasHorizontais
+        dados={origens.map((l) => ({ rotulo: rotuloDaOrigem(l), valor: l.reservas, detalhe: l.vendas > 0 ? `${plural(l.vendas, "venda", "vendas")} · ${brl(l.vendasCentavos)}` : undefined }))}
+        formatar={numero} nomeSerie="Reservas"
+      />
+      {vendedores.length > 0 && (
+        <div className="mt-4">
+          <p className="mb-2 text-sm font-semibold">Quem vendeu as reservas do site</p>
+          <ListaDados itens={vendedores.map((v) => [nomes.get(v.vendedor) ?? "Vendedor", `${plural(v.vendas, "venda", "vendas")} · ${brl(v.vendasCentavos)}`] as const)} />
+        </div>
+      )}
+      <p className={RODAPE}>A origem vem do link em que o cliente tocou (a campanha) ou do site que o mandou; “Direto” é quem chegou sem link de campanha. As reservas de antes de 17/11 ficam como “Sem registro”. O valor é o da venda inteira que saiu da reserva.</p>
+      <TabelaDoGrafico
+        colunas={["Origem", "Fonte", "Campanha", "Reservas", "Atendidas", "Canceladas", "Vencidas", "Vendas concluídas", "Valor das vendas"]}
+        linhas={origens.map((l) => [rotuloDaOrigem({ ...l, campanha: null }), l.fonte ?? "—", l.campanha ?? "—", numero(l.reservas), numero(l.atendidas), numero(l.canceladas), numero(l.vencidas), numero(l.vendas), brl(l.vendasCentavos)])}
+      />
+    </Cartao>
+  );
+}
 
 // ---------------------------------------------------------------------------------------------
 // Margem bruta por dia (M1, cada fato no dia em que aconteceu)
@@ -366,7 +407,7 @@ export function ConteudoRelatorios({ relatorios, turno, regioes = null }: {
   /** ORG-009: as regiões da rede (só para quem vê a rede); a soma por região aparece na rede inteira. */
   regioes?: RegioesDoPainel;
 }) {
-  const { periodo, escopo, daRede, janelas, cadastro, vendas, anterior, financeiro, margem, itens, vendedores, pagina, producao, metas } = relatorios;
+  const { periodo, escopo, daRede, janelas, cadastro, vendas, anterior, financeiro, margem, itens, vendedores, pagina, producao, metas, reservasDoSite } = relatorios;
   // A meta do dia (G4c): a meta do mês do vendido líquido ÷ dias do mês, de cada mês do período.
   const meta: MetaDoGrafico | null = metas === null ? null : metas.estado === "ok" ? { estado: "ok", ...metaDoDiaPorMes(metas.dados) } : { estado: metas.estado };
   const redeInteira = daRede && escopo.unidade === null;
@@ -418,6 +459,8 @@ export function ConteudoRelatorios({ relatorios, turno, regioes = null }: {
       )}
 
       <PainelDaProducaoPorDia producao={producao} janela={janelas.atual} aqui={aqui} />
+
+      <PainelDasReservasDoSite leitura={reservasDoSite} aqui={aqui} />
 
       {margem !== "sem_permissao" && itens !== "sem_permissao" && (
         <PainelDosItens

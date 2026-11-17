@@ -56,6 +56,7 @@ const FONTE = {
   previsao: "a leitura da previsão de caixa (migration previsao_de_caixa)",
   bonus: "a leitura do bônus por meta (migration bonus_por_meta)",
   fechamento: "o fechamento do bônus (migration bonus_fechamento)",
+  reservas_do_site: "a leitura das reservas do site por origem (migration origem_das_reservas_do_site)",
 } as const;
 
 /** O conteúdo de um painel que não tem número para mostrar: o motivo aparece, zero nunca. */

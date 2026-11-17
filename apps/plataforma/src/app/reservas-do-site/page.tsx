@@ -34,7 +34,7 @@ export default async function ReservasDoSite({ searchParams }: { searchParams: P
   const instante = agoraDoServidor().getTime();
   const desde = new Date(instante - 3 * 86_400_000).toISOString();
   const lidas = await supabase.from("loja_reservas")
-    .select("id, codigo, nome, whatsapp_mascarado, preco_centavos, situacao, expira_em, criada_em, variante_id, item_serializado_id, cancelada_em, motivo_cancelamento, atendida_em")
+    .select("id, codigo, nome, whatsapp_mascarado, preco_centavos, situacao, expira_em, criada_em, variante_id, item_serializado_id, cancelada_em, motivo_cancelamento, atendida_em, origem, utm_source, utm_campaign")
     .eq("unidade_id", unidade).gte("criada_em", desde).order("expira_em").limit(100);
   if (lidas.error) {
     if (!reservasAusentes(lidas.error)) throw new FalhaDoServico("loja_reservas");
