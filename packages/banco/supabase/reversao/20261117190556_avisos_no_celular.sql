@@ -1,4 +1,4 @@
--- Reversão de 20261117200000_avisos_no_celular (lote PWA-b): tira as funções dos avisos, os gatilhos dos três pedidos, a
+-- Reversão de 20261117190556_avisos_no_celular (lote PWA-b): tira as funções dos avisos, os gatilhos dos três pedidos, a
 -- fila, as inscrições dos celulares e o segredo dos avisos. Os pedidos de desconto, nota e saída de caixa ficam como estão.
 drop function public.avisos_resultado(text, jsonb);
 drop function public.avisos_a_enviar(text, int);

@@ -1,4 +1,4 @@
-// Lote PWA-b (17/11/2026; plano de 16/11, Onda 1, item 7, segunda parte; migration 20261117200000_avisos_no_celular): o
+// Lote PWA-b (17/11/2026; plano de 16/11, Onda 1, item 7, segunda parte; migration 20261117190556_avisos_no_celular): o
 // aviso no celular quando um desconto, uma nota ou uma saída de caixa espera aprovação. A pessoa liga os avisos nos
 // próprios celulares; os três pedidos põem o aviso na fila; o worker, com o segredo dos avisos, pega o lote com os
 // celulares de quem decide (menos quem pediu) e devolve o resultado. Endereços, chaves e segredo FICTÍCIOS; cada teste
