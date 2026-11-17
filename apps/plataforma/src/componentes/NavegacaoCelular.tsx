@@ -20,7 +20,7 @@ export function NavegacaoCelular({ atalhos, grupos, pessoa, papel, loja, rodape,
   pessoa: string;
   papel: string;
   loja: string;
-  /** Fim da lista "Mais" (telas reais: trocar de loja, senha e sair). Sem ele, o atalho da demonstração. */
+  /** Fim da lista "Mais" (telas reais: trocar de loja, avisos no celular, senha e sair). Sem ele, o atalho da demonstração. */
   rodape?: ReactNode;
   /** Versão no ar ("v0.1.0 · commit · build"), no fim da lista "Mais". */
   versao?: string;

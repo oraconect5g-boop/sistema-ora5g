@@ -1,6 +1,8 @@
 // A tela "Avisos no celular" e as ações dela (lote PWA-b; ADR-014), com a sessão e o Supabase SIMULADOS. Quem decide é o
 // banco (packages/banco/src/avisos-no-celular.test.ts); a inscrição de verdade, no navegador, é do roteiro de aceite.
 // Endereços e chaves fictícios.
+import { readFileSync } from "node:fs";
+
 import { isValidElement, type ReactElement } from "react";
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 
@@ -82,6 +84,14 @@ describe("a tela Avisos no celular (PWA-b)", () => {
     await expect(tela()).rejects.toThrow();
     cenario.respostas.aviso_minhas_inscricoes = { data: { celulares: "x" }, error: null };
     await expect(tela()).rejects.toThrow();
+  });
+});
+
+describe("o caminho até os avisos (PWA-b)", () => {
+  it("o menu de todas as telas leva aos avisos: a lista Mais do celular e o menu do nome, no computador", () => {
+    const molde = readFileSync(new URL("../../../componentes/MoldeReal.tsx", import.meta.url), "utf8");
+    expect(molde.match(/href="\/conta\/avisos"/g)).toHaveLength(2);
+    expect(readFileSync(new URL("../page.tsx", import.meta.url), "utf8")).toContain('href="/conta/avisos"');
   });
 });
 
