@@ -7,6 +7,8 @@ test("responde 200 e informa que o sistema esta no ar", async ({ page }) => {
   await expect(page.getByRole("heading", { name: "Sistema no ar" })).toBeVisible();
   await expect(page.locator("html")).toHaveAttribute("lang", "pt-BR");
   await expect(page.getByTestId("conexao-supabase")).toHaveText(/conectado|não configurado neste ambiente|sem resposta/);
+  // SAUDE-a (ADR-012): a leitura leve do banco, com o tempo de resposta.
+  await expect(page.getByTestId("conexao-banco")).toHaveText(/respondeu em \d+ ms|não configurado neste ambiente|sem resposta/);
 });
 
 test("calcula o horario no acesso, nao na construcao do aplicativo", async ({ page }) => {

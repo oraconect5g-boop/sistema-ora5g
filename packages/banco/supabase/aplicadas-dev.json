@@ -97,6 +97,7 @@
     { "versao": "20261117124230", "nome": "rotinas_agendadas", "md5": "0ca5e45cf3c6f4900aa22eb92bfcd913", "aplicada_em": "2026-11-17" },
     { "versao": "20261117135133", "nome": "identidade_da_nota_e_cota_da_loja", "md5": "3f05b51f795b8d981f8078564c015f3a", "aplicada_em": "2026-11-17" },
     { "versao": "20261117141658", "nome": "indices_e_rls_do_banco", "md5": "b9cf77d06a4c54fccf96e512b40a2072", "aplicada_em": "2026-11-17" },
-    { "versao": "20261117143744", "nome": "indice_redundante_das_fotos", "md5": "fff5bdb5c03fdc3f146fd03b94820d4a", "aplicada_em": "2026-11-17" }
+    { "versao": "20261117143744", "nome": "indice_redundante_das_fotos", "md5": "fff5bdb5c03fdc3f146fd03b94820d4a", "aplicada_em": "2026-11-17" },
+    { "versao": "20261117145723", "nome": "saude_do_banco_e_vendas_sem_nota", "md5": "6cbb482e0bf71fd510fbc906db070cb1", "aplicada_em": "2026-11-17" }
   ]
 }
