@@ -1702,3 +1702,22 @@ Programa de execução integral (PR #67; checkpoint em `docs/alinhamento/EXECUCA
 - **A prova:** o proprietário ligou os avisos no celular dele (Android · Chrome, às 18:03:08) e pediu o aviso de teste (18:03:14); o worker entregou às 18:04:05 (o serviço de envio do Google aceitou: 1 entregue, 0 falhas), e o banco registrou o aviso como enviado e o último aviso do celular. O log do worker (`~/homologacao/logs/worker-avisos.log`) registrou "1 na vez, 1 entregues, 0 celulares fora, 0 falhas".
 - **Antes disso:** o proprietário respondeu "Chegou" a um primeiro pedido de teste, mas o banco e os registros do Supabase mostraram que ninguém tinha entrado no sistema nem ligado os avisos; o registro só foi feito com a segunda tentativa, com o rastro completo.
 - **A resposta:** "aceito", em 17/11. Os requisitos ligados (ORA-REPORT-002 e ORA-QUAL-006) seguem parciais: o aviso de um pedido de verdade espera as contas de teste (J1), e a regra de fila acima do limite não existe ainda.
+- **CI, merge e publicação do registro (17/11):** CI verde em `a93d406` (2.781 testes e 1 TODO, 293 E2E, com 13 pulados); merge `7026a16`, com a árvore da branch testada; no GitHub, os checks de `7026a16` terminaram com sucesso: "Verificações" e "Supabase Preview"; no ar desde 18:21.
+
+## 17/11/2026 — Lote QUAL-a: o alerta no celular quando uma fila passa do limite ou uma rotina do banco tem problema (ORA-QUAL-006)
+
+- **Origem:** o plano do proprietário de 16/11, Onda 2 (QUAL-006: "aviso fora da tela quando uma fila passa do limite"). A decisão está no [ADR-015](../adr/ADR-015-alertas-das-filas.md).
+- **Banco:** a migration `20261117221322_alertas_das_filas`, aplicada no `ora5g-dev` em 17/11 (19:13), depois do merge do registro do aceite do PWA-b e dos checks dele. Antes, o `md5(prosrc)` de `privado.rodar_rotina` e de `public.avisos_a_enviar` em vigor foi conferido com as cópias.
+  1. `privado.avisos`: o tipo `alerta`, `solicitante_id` opcional e a regra por tipo (`aviso_de_cada_tipo`): o pedido tem loja, permissão e quem pediu; o teste, quem pediu e nada mais; o alerta, permissão e nenhum quem pediu.
+  2. `privado.limites_dos_alertas` (desconto 30, nota 240 e saída de caixa 30 minutos).
+  3. `privado.quem_recebe_aviso_da_rede(organização, permissão)`: só o vínculo da rede inteira.
+  4. `privado.alertas_das_filas()`: um alerta por fila, loja e dia (`alvo_id` = md5 de fila, loja e dia), e um por rotina, rede e dia, para `auditoria.ver` (o dono não tem `integracoes.gerir`); `on conflict do nothing` não repete.
+  5. A rotina `alertas_das_filas` (a cada 10 minutos, `ora5g-alertas-das-filas`), com a chamada em `privado.rodar_rotina`.
+  6. `public.avisos_a_enviar`: o alerta da rede vai para quem recebe na rede; o alerta sem quem pediu vai para todos.
+- **Testes:** `alertas-das-filas.test.ts` (6) e `rotinas-agendadas.test.ts` (a rotina nova no catálogo, na tarefa e na situação).
+- **Conferido no ar:** a tarefa agendada e uma rodada manual, certa, sem alerta.
+- **Limite declarado:** os erros e o tempo de resposta do servidor ficam para outro lote; os limites mudam por `update`, sem tela.
+- **Pedido ao Codex:** conferir:
+  1. que o alerta não repete no mesmo dia e não chega a quem não decide;
+  2. que a regra por tipo da fila não aceita pedido sem loja nem alerta com quem pediu;
+  3. as cópias de `privado.rodar_rotina` e `public.avisos_a_enviar` contra as versões anteriores.
