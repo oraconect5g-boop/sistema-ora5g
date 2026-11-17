@@ -93,6 +93,7 @@
     { "versao": "20261116102346", "nome": "limpeza_das_fotos_protocolo", "md5": "f78270f3028f4ad1b316e22fea185023", "aplicada_em": "2026-11-16" },
     { "versao": "20261116130100", "nome": "importacao_estatisticas", "md5": "f3194c38a8629feec2387dcaf56d201c", "aplicada_em": "2026-11-16" },
     { "versao": "20261117015315", "nome": "sessao_molde_e_pdv", "md5": "0feeaa69b16809c063d69edc58748460", "aplicada_em": "2026-11-16" },
-    { "versao": "20261117071458", "nome": "loja_online_sem_erro_500", "md5": "413ad5192c2d038ba09e6cc0846c16e7", "aplicada_em": "2026-11-17" }
+    { "versao": "20261117071458", "nome": "loja_online_sem_erro_500", "md5": "413ad5192c2d038ba09e6cc0846c16e7", "aplicada_em": "2026-11-17" },
+    { "versao": "20261117124230", "nome": "rotinas_agendadas", "md5": "0ca5e45cf3c6f4900aa22eb92bfcd913", "aplicada_em": "2026-11-17" }
   ]
 }
