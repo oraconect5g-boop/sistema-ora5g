@@ -2,7 +2,7 @@
   "_leia": "Checkpoint do programa de execução integral (PR #67). Carregar ao retomar e seguir para o próximo item executável da fila; não reiniciar o projeto. Estados vêm de status-requisitos.json (fonte da rastreabilidade); este arquivo acrescenta lote, bloqueio externo e revisão. Desde 16/11/2026 a medida de avanço é o requisito homologado pelo proprietário: a chave aceites guarda a resposta dele a cada roteiro de aceite (docs/aceite/); um requisito só recebe homologado: true com todos os lotes dele aceitos e sem nada em FALTA na nota de status-requisitos.json.",
   "atualizado_em": "2026-11-17",
   "base": {
-    "main": "7026a16",
+    "main": "87c8dbe",
     "pacote": {
       "pr": 67,
       "branch": "docs/execucao-integral-20261110",
@@ -30,12 +30,12 @@
   },
   "publicado": {
     "homologacao": {
-      "commit": "7026a16",
+      "commit": "87c8dbe",
       "quando": "2026-11-17",
-      "conferido": "publicar.sh com a conferência completa (#99): a pasta ativa, o serviço local e o domínio ora5g.com.br servindo o commit inteiro de 7026a16 e o ambiente homologacao em /saude/versao; build 17/11/2026 18:21 (o registro do aceite do PWA-b, só documentos); o worker dos avisos roda a cada minuto desde 16:32; o log de tempos está ligado (ORA_MEDIR_TEMPOS=1) até o roteiro de aceite do VEL-a"
+      "conferido": "publicar.sh com a conferência completa (#99): a pasta ativa, o serviço local e o domínio ora5g.com.br servindo o commit inteiro de 87c8dbe e o ambiente homologacao em /saude/versao; build 17/11/2026 19:29 (o QUAL-a: os documentos e os testes; a migration já estava no ora5g-dev); o worker dos avisos roda a cada minuto desde 16:32 e a tarefa dos alertas a cada 10 minutos desde 19:13; o log de tempos está ligado (ORA_MEDIR_TEMPOS=1) até o roteiro de aceite do VEL-a"
     },
     "falta_publicar": [
-      "lote QUAL-a (o alerta de fila e de rotina): a migration 20261117221322_alertas_das_filas já está no ora5g-dev (17/11, 19:13), e a tarefa dos alertas já roda a cada 10 minutos; a publicação traz só os documentos e os testes",
+      "lote EXT-a (o extrato da maquininha e do banco por arquivo): a migration 20261117225818_extratos_e_conciliacao já está no ora5g-dev (17/11, 19:58); a publicação traz as telas dos extratos",
       "o log de tempos está ligado na homologação até o roteiro de aceite do VEL-a: depois ele é desligado e a plataforma é publicada de novo, sem mudança de código"
     ]
   },
@@ -266,18 +266,33 @@
         "ORA-QUAL-006"
       ],
       "entrega": "o alerta no celular quando um desconto, uma nota ou uma saída de caixa espera além do limite (para quem decide) e quando uma rotina do banco falha ou atrasa (para o dono e o administrador), um por dia (Onda 2; ADR-015); o estado do requisito não muda",
+      "commit": "87c8dbe",
+      "publicado_em": "2026-11-17",
+      "pedido_em": null,
+      "resposta": null,
+      "respondido_em": null,
+      "nota": "no ar em 87c8dbe (build 19:29); o pedido de aceite vai na lista final do que depende do proprietário (o pedido dele de 17/11: terminar as 179 e mandar no fim o que faltar); a resposta é \"aceito\" ou \"não aceito\""
+    },
+    "EXT-a": {
+      "roteiro": "docs/aceite/EXT-a.md",
+      "requisitos": [
+        "ORA-PAY-009",
+        "ORA-PAY-010",
+        "ORA-FIN-006"
+      ],
+      "entrega": "o extrato da maquininha e do banco por arquivo (CSV, Excel ou OFX), com a coluna de cada campo escolhida pela pessoa, a venda sugerida para cada linha, conciliar uma linha ou as certas, tirar da conta e desfazer com motivo, o bruto, as taxas, o líquido e o que vai cair, e as vendas do período sem conciliação (Onda 3, item E3; ADR-016)",
       "commit": null,
       "publicado_em": null,
       "pedido_em": null,
       "resposta": null,
       "respondido_em": null,
-      "nota": "o pedido de aceite sai depois da publicação do lote, com o commit que está no ar; a resposta é \"aceito\" ou \"não aceito\""
+      "nota": "o pedido de aceite sai depois da publicação do lote, com um extrato real da maquininha (E3); a resposta é \"aceito\" ou \"não aceito\""
     }
   },
   "contagem_dos_estados": {
-    "nao_iniciado": 40,
-    "parcial": 70,
-    "testado": 64,
+    "nao_iniciado": 37,
+    "parcial": 72,
+    "testado": 65,
     "bloqueado": 3,
     "respeitado": 2
   },
@@ -835,7 +850,7 @@
       "titulo": "Diferenciar autorizado, pago, liquidado, estornado e conciliado",
       "prioridade": "P0",
       "estado": "parcial",
-      "lote": "L7a pagamentos; R4 (14/11): revisão do estado",
+      "lote": "L7a pagamentos; R4 (14/11): revisão do estado; EXT-a (17/11): o extrato por arquivo (ADR-016)",
       "bloqueio_externo": null,
       "revisado_codex": false,
       "homologado": false
@@ -871,7 +886,7 @@
       "titulo": "Conciliação manual PicPay POS usando referência/comprovante",
       "prioridade": "P0",
       "estado": "parcial",
-      "lote": "L7a pagamentos; G2b (resultado no /financeiro); R5 (15/11): revisão do estado",
+      "lote": "L7a pagamentos; G2b (resultado no /financeiro); R5 (15/11): revisão do estado; EXT-a (17/11): o extrato por arquivo (ADR-016)",
       "bloqueio_externo": null,
       "revisado_codex": false,
       "homologado": false
@@ -888,18 +903,18 @@
     "ORA-PAY-009": {
       "titulo": "Importar extratos de adquirente/banco por arquivo validado",
       "prioridade": "P1",
-      "estado": "nao_iniciado",
-      "lote": "L7 pagamentos/caixa",
-      "bloqueio_externo": "E3 (extratos)",
+      "estado": "testado",
+      "lote": "EXT-a (17/11): o extrato por arquivo, com a venda sugerida para cada linha (ADR-016)",
+      "bloqueio_externo": "E3 (o arquivo real de cada maquininha e do banco, para o aceite)",
       "revisado_codex": false,
       "homologado": false
     },
     "ORA-PAY-010": {
       "titulo": "Reconciliar taxas, parcelas e datas de repasse",
       "prioridade": "P1",
-      "estado": "nao_iniciado",
-      "lote": "L7 pagamentos/caixa",
-      "bloqueio_externo": "E3 + E2 (taxas/repasses)",
+      "estado": "parcial",
+      "lote": "EXT-a (17/11): a taxa, o líquido e a data do repasse de cada linha; o bruto, o líquido e o que vai cair no resumo (ADR-016)",
+      "bloqueio_externo": "E2 (as parcelas: prazos e taxas do contrato de cada maquininha)",
       "revisado_codex": false,
       "homologado": false
     },
@@ -907,7 +922,7 @@
       "titulo": "Gerir chargebacks, estornos, antecipação e ajustes",
       "prioridade": "P1",
       "estado": "parcial",
-      "lote": "L7 pagamentos/caixa (L7b em 13/11: repasse das financeiras registrado à mão); B4 correção #83 (14/11)",
+      "lote": "L7 pagamentos/caixa (L7b em 13/11: repasse das financeiras registrado à mão); B4 correção #83 (14/11); EXT-a (17/11): o extrato por arquivo (ADR-016)",
       "bloqueio_externo": null,
       "revisado_codex": false,
       "homologado": false
@@ -987,9 +1002,9 @@
     "ORA-FIN-006": {
       "titulo": "Conciliação bancária e contas multiempresa",
       "prioridade": "P1",
-      "estado": "nao_iniciado",
-      "lote": "L8 financeiro",
-      "bloqueio_externo": "E3 (extratos bancários)",
+      "estado": "parcial",
+      "lote": "EXT-a (17/11): o extrato do banco da loja ou da rede por arquivo (OFX ou planilha), conciliado linha a linha com aprovação (ADR-016)",
+      "bloqueio_externo": "as contas bancárias de cada empresa (multiempresa)",
       "revisado_codex": false,
       "homologado": false
     },
@@ -1681,7 +1696,7 @@
       "titulo": "Relatório por método de pagamento e terminal PicPay",
       "prioridade": "P0",
       "estado": "parcial",
-      "lote": "L8 financeiro/relatórios; G2 financeiro e relatórios; G2b conciliação por meio (entregue em 13/11); REPORT-005b (14/11): pagamentos por maquininha",
+      "lote": "L8 financeiro/relatórios; G2 financeiro e relatórios; G2b conciliação por meio (entregue em 13/11); REPORT-005b (14/11): pagamentos por maquininha; EXT-a (17/11): o extrato por arquivo (ADR-016)",
       "bloqueio_externo": null,
       "revisado_codex": false,
       "homologado": false
@@ -1894,5 +1909,5 @@
       "homologado": false
     }
   },
-  "proximo_passo": "Seguir o plano do proprietário de 16/11 (resumo na seção 5.A de EXECUCAO_INTEGRAL_STATUS.md), um lote por vez, cada um com o roteiro de aceite em docs/aceite/ e a lista do que se precisa do proprietário: (1) fechar o VEL-a, que está no ar desde 17/11 (087ef53, build 00:40, com o log de tempos ligado): esperar a resposta do proprietário ao roteiro docs/aceite/VEL-a.md, pedido em 17/11 (é a primeira vez que a versão publicada roda com uma sessão de verdade: se uma tela com login mostrar a página de erro, publicar de novo o commit 89927dc, sem desfazer a migration, e corrigir); depois do roteiro, ler as linhas [tempos] de ~/homologacao/logs/plataforma.log, preencher a seção 4.6 de docs/operacao/DESEMPENHO_NO_CELULAR.md, confirmar qual chave assina os tokens (uma linha GET /auth/v1/user por pedido quer dizer segredo compartilhado), gravar a resposta em aceites.VEL-a e, por fim, desligar o log e publicar de novo (seção \"Como medir de novo\" do mesmo documento); enquanto a resposta não chega, seguir para o item 3; (2) fechar o ONLINE-c (Onda 0.2: a loja online sem erro 500 para o visitante), que está no ar desde 17/11 (dc12dce, build 09:09; conferido num navegador pelo domínio e no registro da homologação, sem resposta 500): esperar a resposta do proprietário ao roteiro docs/aceite/ONLINE-c.md, pedido em 17/11, e gravá-la em aceites.ONLINE-c; enquanto a resposta não chega, seguir para o item 3; (3) fechar o ROT-a (Onda 0.3: as rotinas agendadas no banco, com o registro de cada rodada e o aviso na Saúde da operação; ADR-011), que está no ar desde 17/11 (a2041b1, build 10:03; as tarefas rodam no ora5g-dev desde 09:45): esperar a resposta do proprietário ao roteiro docs/aceite/ROT-a.md, pedido em 17/11, e gravá-la em aceites.ROT-a; enquanto a resposta não chega, seguir para o item 4; (4) fechar o INTEG-c (as correções do #101 e do #102, da revisão do Codex de 16/11; PR #100, commit e311060, lido em 17/11), que está no ar desde 17/11 (9012f7f, build 11:15): esperar a resposta do proprietário ao roteiro docs/aceite/INTEG-c.md, pedido em 17/11, e, com o aceite, fechar as issues #101 e #102 no GitHub, citando o commit e os testes; (5) fechar o BANCO-a (Onda 0.5: os índices, o RLS e os comentários), que está no ar desde 17/11 (0bfad91, build 11:51): esperar a resposta do proprietário ao roteiro docs/aceite/BANCO-a.md, pedido em 17/11, e gravá-la em aceites.BANCO-a; (6) fechar o ENTREGAS-a (o botão Comprar e a tela de entregas; aceites A01 e A18 do adendo do Codex de 16/11) e o WHATS-a (Onda 0.4: o executável do worker do WhatsApp, desligado sem a Meta), que estão no ar desde 17/11 (69bfab6, build 12:03, um merge só): esperar as respostas do proprietário aos roteiros docs/aceite/ENTREGAS-a.md e docs/aceite/WHATS-a.md, pedidos em 17/11, e gravá-las em aceites; (7) fechar o SAUDE-a (Onda 0.6; ADR-012: a venda sem o pedido da nota como fila, o estoque abaixo do mínimo como aviso e a leitura leve do banco na /saude), que está no ar desde 17/11 (7e1ff5f, build 12:28): esperar a resposta do proprietário ao roteiro docs/aceite/SAUDE-a.md, pedido em 17/11, e gravá-la em aceites.SAUDE-a; (8) fechar o GIT-a (Onda 0.7), que está no ar desde 17/11 (3235772, build 13:01): esperar a resposta do proprietário ao roteiro docs/aceite/GIT-a.md, pedido em 17/11, e as decisões sobre a visibilidade do repositório e as PRs de documentação; com a permissão do conector do GitHub, fechar as 48 issues da seção 1 de docs/alinhamento/ISSUES_E_PRS_2026-11-17.md (e a #92 e a #44), cada uma com o comentário que cita o commit e o teste; (9) fechar o ORG-a (Onda 1, item 2: as 11 lojas e DEFEITOS pelo cadastro operacional), que está no ar desde 17/11 (13fca19, build 13:31): esperar a resposta do proprietário ao roteiro docs/aceite/ORG-a.md, pedido em 17/11, e as correções de nome; (9a) fechar o PWA-a (Onda 1, item 7, primeira parte: o site instalável), que está no ar desde 17/11 (ccdf342, build 13:51): esperar a resposta do proprietário ao roteiro docs/aceite/PWA-a.md, pedido em 17/11; a segunda parte (o Web Push) espera a autorização do proprietário para o par de chaves de envio; (9b) fechar o TRF-a (Onda 1, item 5: a remessa), que está no ar desde 17/11 (e603531, build 14:26): esperar a resposta do proprietário ao roteiro docs/aceite/TRF-a.md, pedido em 17/11; (9c) fechar o REIN-a (Onda 1, item 3, a parte sem o arquivo), que está no ar desde 17/11 (03123d0, build 14:40): esperar a resposta do proprietário ao roteiro docs/aceite/REIN-a.md, pedido em 17/11; com o arquivo da Rein em ~/entrada/rein/, conferir a importação de verdade e fazer a carga do estoque por loja, com a data de corte; (9d) fechar o MKT-a (Onda 2, origem e UTM), que está no ar desde 17/11 (2e3fa24, build 15:02): esperar a resposta do proprietário ao roteiro docs/aceite/MKT-a.md, pedido em 17/11; (9e) fechar o DEP-a (o aceite A19: a lista única do que depende de fora), que está no ar desde 17/11 (569eab8, build 15:20): esperar a resposta do proprietário ao roteiro docs/aceite/DEP-a.md, pedido em 17/11; (9f) o PWA-b (Onda 1, item 7, a segunda parte: o aviso no celular) foi aceito pelo proprietário em 17/11, o primeiro lote aceito, depois do aviso de teste entregue no celular dele; falta o aviso de um pedido de verdade (contas de teste, J1); (9g) fechar o QUAL-a (o alerta de fila e de rotina), que entra na main pelo merge que traz este texto: publicar e pedir o aceite pelo roteiro docs/aceite/QUAL-a.md; (10) VEL-b: uma leitura por tela em Vendas, Estoque, Catálogo, Clientes e Caixa e os arquivos que ainda perguntam as permissões uma a uma; (11) Onda 1, a loja piloto: as contas de teste (dependem da SUPABASE_SECRET_KEY no servidor, J1), as 11 lojas e DEFEITOS, a planilha inteira da Rein (depende do arquivo em ~/entrada/rein/), as fotos, a transferência de vários produtos, a jornada autenticada no celular e o aviso no celular (PWA); (12) Onda 2: os requisitos parciais e as decisões do proprietário, mais a lista única de dependências por API (A19); (13) Onda 3: as integrações, cada uma com contrato, documentação e credencial, e a loja online com compra completa (aceites A02 a A17 e A20 do adendo do Codex de 16/11, que amplia a ADR-009; o A01, o botão Comprar no topo do site, veio no ENTREGAS-a). Fora do plano novo e ainda registrado: o lote SUPA-a do diagnóstico de 16/11 (config.toml mínimo em packages/banco/supabase, sem buckets, para o check da integração GitHub × Supabase; docs/alinhamento/LEITURA_DIAGNOSTICO_INTEGRAL_2026-11-16.md); e as 114 funções que o visitante não executa e ainda têm o P0002 no texto (HTTP 500 no registro da API a cada recusa): trocar o código é um lote à parte, a propor ao proprietário."
+  "proximo_passo": "Seguir o plano do proprietário de 16/11 (resumo na seção 5.A de EXECUCAO_INTEGRAL_STATUS.md), um lote por vez, cada um com o roteiro de aceite em docs/aceite/ e a lista do que se precisa do proprietário: (1) fechar o VEL-a, que está no ar desde 17/11 (087ef53, build 00:40, com o log de tempos ligado): esperar a resposta do proprietário ao roteiro docs/aceite/VEL-a.md, pedido em 17/11 (é a primeira vez que a versão publicada roda com uma sessão de verdade: se uma tela com login mostrar a página de erro, publicar de novo o commit 89927dc, sem desfazer a migration, e corrigir); depois do roteiro, ler as linhas [tempos] de ~/homologacao/logs/plataforma.log, preencher a seção 4.6 de docs/operacao/DESEMPENHO_NO_CELULAR.md, confirmar qual chave assina os tokens (uma linha GET /auth/v1/user por pedido quer dizer segredo compartilhado), gravar a resposta em aceites.VEL-a e, por fim, desligar o log e publicar de novo (seção \"Como medir de novo\" do mesmo documento); enquanto a resposta não chega, seguir para o item 3; (2) fechar o ONLINE-c (Onda 0.2: a loja online sem erro 500 para o visitante), que está no ar desde 17/11 (dc12dce, build 09:09; conferido num navegador pelo domínio e no registro da homologação, sem resposta 500): esperar a resposta do proprietário ao roteiro docs/aceite/ONLINE-c.md, pedido em 17/11, e gravá-la em aceites.ONLINE-c; enquanto a resposta não chega, seguir para o item 3; (3) fechar o ROT-a (Onda 0.3: as rotinas agendadas no banco, com o registro de cada rodada e o aviso na Saúde da operação; ADR-011), que está no ar desde 17/11 (a2041b1, build 10:03; as tarefas rodam no ora5g-dev desde 09:45): esperar a resposta do proprietário ao roteiro docs/aceite/ROT-a.md, pedido em 17/11, e gravá-la em aceites.ROT-a; enquanto a resposta não chega, seguir para o item 4; (4) fechar o INTEG-c (as correções do #101 e do #102, da revisão do Codex de 16/11; PR #100, commit e311060, lido em 17/11), que está no ar desde 17/11 (9012f7f, build 11:15): esperar a resposta do proprietário ao roteiro docs/aceite/INTEG-c.md, pedido em 17/11, e, com o aceite, fechar as issues #101 e #102 no GitHub, citando o commit e os testes; (5) fechar o BANCO-a (Onda 0.5: os índices, o RLS e os comentários), que está no ar desde 17/11 (0bfad91, build 11:51): esperar a resposta do proprietário ao roteiro docs/aceite/BANCO-a.md, pedido em 17/11, e gravá-la em aceites.BANCO-a; (6) fechar o ENTREGAS-a (o botão Comprar e a tela de entregas; aceites A01 e A18 do adendo do Codex de 16/11) e o WHATS-a (Onda 0.4: o executável do worker do WhatsApp, desligado sem a Meta), que estão no ar desde 17/11 (69bfab6, build 12:03, um merge só): esperar as respostas do proprietário aos roteiros docs/aceite/ENTREGAS-a.md e docs/aceite/WHATS-a.md, pedidos em 17/11, e gravá-las em aceites; (7) fechar o SAUDE-a (Onda 0.6; ADR-012: a venda sem o pedido da nota como fila, o estoque abaixo do mínimo como aviso e a leitura leve do banco na /saude), que está no ar desde 17/11 (7e1ff5f, build 12:28): esperar a resposta do proprietário ao roteiro docs/aceite/SAUDE-a.md, pedido em 17/11, e gravá-la em aceites.SAUDE-a; (8) fechar o GIT-a (Onda 0.7), que está no ar desde 17/11 (3235772, build 13:01): esperar a resposta do proprietário ao roteiro docs/aceite/GIT-a.md, pedido em 17/11, e as decisões sobre a visibilidade do repositório e as PRs de documentação; com a permissão do conector do GitHub, fechar as 48 issues da seção 1 de docs/alinhamento/ISSUES_E_PRS_2026-11-17.md (e a #92 e a #44), cada uma com o comentário que cita o commit e o teste; (9) fechar o ORG-a (Onda 1, item 2: as 11 lojas e DEFEITOS pelo cadastro operacional), que está no ar desde 17/11 (13fca19, build 13:31): esperar a resposta do proprietário ao roteiro docs/aceite/ORG-a.md, pedido em 17/11, e as correções de nome; (9a) fechar o PWA-a (Onda 1, item 7, primeira parte: o site instalável), que está no ar desde 17/11 (ccdf342, build 13:51): esperar a resposta do proprietário ao roteiro docs/aceite/PWA-a.md, pedido em 17/11; a segunda parte (o Web Push) espera a autorização do proprietário para o par de chaves de envio; (9b) fechar o TRF-a (Onda 1, item 5: a remessa), que está no ar desde 17/11 (e603531, build 14:26): esperar a resposta do proprietário ao roteiro docs/aceite/TRF-a.md, pedido em 17/11; (9c) fechar o REIN-a (Onda 1, item 3, a parte sem o arquivo), que está no ar desde 17/11 (03123d0, build 14:40): esperar a resposta do proprietário ao roteiro docs/aceite/REIN-a.md, pedido em 17/11; com o arquivo da Rein em ~/entrada/rein/, conferir a importação de verdade e fazer a carga do estoque por loja, com a data de corte; (9d) fechar o MKT-a (Onda 2, origem e UTM), que está no ar desde 17/11 (2e3fa24, build 15:02): esperar a resposta do proprietário ao roteiro docs/aceite/MKT-a.md, pedido em 17/11; (9e) fechar o DEP-a (o aceite A19: a lista única do que depende de fora), que está no ar desde 17/11 (569eab8, build 15:20): esperar a resposta do proprietário ao roteiro docs/aceite/DEP-a.md, pedido em 17/11; (9f) o PWA-b (Onda 1, item 7, a segunda parte: o aviso no celular) foi aceito pelo proprietário em 17/11, o primeiro lote aceito, depois do aviso de teste entregue no celular dele; falta o aviso de um pedido de verdade (contas de teste, J1); (9g) o QUAL-a (o alerta de fila e de rotina) está no ar desde 17/11 (87c8dbe, build 19:29); o pedido de aceite pelo roteiro docs/aceite/QUAL-a.md vai na lista final; (9h) fechar o EXT-a (o extrato da maquininha e do banco por arquivo), que entra na main pelo merge que traz este texto: publicar e pedir o aceite pelo roteiro docs/aceite/EXT-a.md, com um extrato real da maquininha (E3); (10) VEL-b: uma leitura por tela em Vendas, Estoque, Catálogo, Clientes e Caixa e os arquivos que ainda perguntam as permissões uma a uma; (11) Onda 1, a loja piloto: as contas de teste (dependem da SUPABASE_SECRET_KEY no servidor, J1), as 11 lojas e DEFEITOS, a planilha inteira da Rein (depende do arquivo em ~/entrada/rein/), as fotos, a transferência de vários produtos, a jornada autenticada no celular e o aviso no celular (PWA); (12) Onda 2: os requisitos parciais e as decisões do proprietário, mais a lista única de dependências por API (A19); (13) Onda 3: as integrações, cada uma com contrato, documentação e credencial, e a loja online com compra completa (aceites A02 a A17 e A20 do adendo do Codex de 16/11, que amplia a ADR-009; o A01, o botão Comprar no topo do site, veio no ENTREGAS-a). Fora do plano novo e ainda registrado: o lote SUPA-a do diagnóstico de 16/11 (config.toml mínimo em packages/banco/supabase, sem buckets, para o check da integração GitHub × Supabase; docs/alinhamento/LEITURA_DIAGNOSTICO_INTEGRAL_2026-11-16.md); e as 114 funções que o visitante não executa e ainda têm o P0002 no texto (HTTP 500 no registro da API a cada recusa): trocar o código é um lote à parte, a propor ao proprietário."
 }

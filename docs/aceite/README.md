@@ -38,4 +38,5 @@ Um lote aceito que entrega só uma parte do requisito fica registrado em `aceite
 | MKT-a (de onde veio a reserva do site) | [MKT-a.md](MKT-a.md) | ORA-ONLINE-003 (passa a testado) e ORA-META-002 (passa a parcial) | aguardando (pedido em 17/11; no ar em `2e3fa24`) |
 | DEP-a (a lista única do que depende de fora: o aceite A19) | [DEP-a.md](DEP-a.md) | nenhum (só documentação) | aguardando (pedido em 17/11; no ar em `569eab8`) |
 | PWA-b (o aviso no celular para aprovar num toque) | [PWA-b.md](PWA-b.md) | ORA-REPORT-002 e ORA-QUAL-006 (o estado de cada um não muda) | **aceito em 17/11** (no ar em `252bcad`; o caminho pelo menu em `3c617c7`) |
-| QUAL-a (o alerta no celular quando algo espera demais) | [QUAL-a.md](QUAL-a.md) | ORA-QUAL-006 (o estado não muda) | a pedir depois da publicação |
+| QUAL-a (o alerta no celular quando algo espera demais) | [QUAL-a.md](QUAL-a.md) | ORA-QUAL-006 (o estado não muda) | a pedir na lista final (no ar em `87c8dbe`) |
+| EXT-a (o extrato da maquininha por arquivo) | [EXT-a.md](EXT-a.md) | ORA-PAY-009 (passa a testado), ORA-PAY-010 e ORA-FIN-006 (passam a parcial) | a pedir depois da publicação, com um extrato real da maquininha (E3) |

@@ -1717,7 +1717,26 @@ Programa de execução integral (PR #67; checkpoint em `docs/alinhamento/EXECUCA
 - **Testes:** `alertas-das-filas.test.ts` (6) e `rotinas-agendadas.test.ts` (a rotina nova no catálogo, na tarefa e na situação).
 - **Conferido no ar:** a tarefa agendada e uma rodada manual, certa, sem alerta.
 - **Limite declarado:** os erros e o tempo de resposta do servidor ficam para outro lote; os limites mudam por `update`, sem tela.
+- **CI, merge e publicação (17/11):** CI verde em `29edf9d` (2.788 testes e 1 TODO, 293 E2E, com 13 pulados); merge `87c8dbe`, com a árvore da branch testada; no GitHub, os checks de `87c8dbe` terminaram com sucesso: "Verificações" e "Supabase Preview"; no ar desde 19:29. A tarefa dos alertas rodou certa às 19:20 e às 19:30.
 - **Pedido ao Codex:** conferir:
   1. que o alerta não repete no mesmo dia e não chega a quem não decide;
   2. que a regra por tipo da fila não aceita pedido sem loja nem alerta com quem pediu;
   3. as cópias de `privado.rodar_rotina` e `public.avisos_a_enviar` contra as versões anteriores.
+
+## 17/11/2026 — Lote EXT-a: o extrato da maquininha e do banco por arquivo (ORA-PAY-009, ORA-PAY-010 e ORA-FIN-006)
+
+- **Origem:** o plano do proprietário de 16/11, Onda 3, item E3 ("Extratos"), a parte que não depende do arquivo real. A decisão está no [ADR-016](../adr/ADR-016-extratos-por-arquivo.md).
+- **Banco:** a migration `20261117225818_extratos_e_conciliacao`, aplicada no `ora5g-dev` em 17/11 (19:58), depois do merge do QUAL-a e dos checks dele. Nenhuma função em vigor mudou: a conciliação usa `public.pagamento_conciliar` e `public.pagamento_desconciliar` como estão.
+  1. `public.extratos` e `public.extrato_linhas`, com RLS de leitura por `privado.extrato_e_meu` (a loja: `pagamento.conciliar` nela; a rede: a permissão pela rede inteira) e auditoria na importação e em cada decisão.
+  2. `extrato_importar`: as regras de cada campo, os meios só entre os que se conciliam, a impressão digital por organização (o mesmo arquivo devolve o mesmo extrato; em outro lugar, é recusado) e a trava pela chave.
+  3. `extrato_sugestoes`: só os meios do extrato, o mesmo valor bruto, a venda concluída no dia da linha (±1), a loja do extrato e a maquininha quando os dois dizem; nunca o pagamento já conciliado por outra linha.
+  4. `extrato_conciliar`: o meio do extrato, o mesmo valor, o pagamento em uma linha só (índice único parcial), a data do repasse até hoje e nunca antes do dia da venda; a referência curta vira "Extrato nº, linha nº".
+  5. `extrato_conciliar_certas`, `extrato_ignorar`, `extrato_desfazer`, `extrato_resumo` (invoker) e `extratos_recentes`.
+  6. O gatilho `venda_pagamentos_extrato_de_volta`: a conciliação desfeita na tela da Conciliação devolve a linha.
+- **Aplicação:** `lib/extratos/leitura.ts` lê o valor e a data como aparecem nos arquivos brasileiros (R$, milhar com ponto, débito com sinal, parênteses ou D; a data do Excel; a data do OFX com o fuso) e o OFX 1 e 2; a rota `/pagamentos/extratos/enviar` relê o arquivo inteiro, aponta a linha que não deu para ler e grava com a impressão digital; as telas `/pagamentos/extratos`, `/importar` e `/[id]`.
+- **Testes:** `extratos.test.ts` do banco (7), o inventário de autorização (190 funções: as 7 novas contra os 13 atacantes), `lib/extratos` (23), `app/pagamentos/extratos` (11) e o E2E das telas e do envio sem login.
+- **Limite declarado:** as parcelas (agenda de recebíveis), o depósito agrupado no banco, as contas bancárias de cada empresa, o chargeback ligado ao estorno e a busca pela API do provedor ficam de fora (ADR-016); o formato real de cada provedor é conferido no aceite (E3).
+- **Pedido ao Codex:** conferir:
+  1. que nenhuma linha é conciliada sem a decisão de quem concilia, e que "as certas" são só as de sugestão única nos dois sentidos;
+  2. que o gerente de outra loja e o vendedor não leem nem decidem o extrato (RLS e as 7 funções);
+  3. a leitura dos valores e das datas (o milhar, o sinal e a data do Excel) contra arquivos de verdade, quando chegarem.

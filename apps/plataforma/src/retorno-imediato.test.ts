@@ -181,6 +181,8 @@ describe("envio de arquivo: <FormularioDeArquivo>", () => {
   /** Onde o campo do arquivo fica em outro componente, usado dentro do formulário: a tela e o arquivo do componente. */
   const CAMPO_EM_OUTRO_COMPONENTE: Record<string, { componente: string; arquivo: string }> = {
     "app/produtos/importar/page.tsx": { componente: "EscolherColunas", arquivo: "app/produtos/importar/EscolherColunas.tsx" },
+    // EXT-a: o extrato da maquininha ou do banco; o componente lê o arquivo no aparelho (as colunas, ou o OFX).
+    "app/pagamentos/extratos/importar/page.tsx": { componente: "EscolherColunasDoExtrato", arquivo: "app/pagamentos/extratos/importar/EscolherColunasDoExtrato.tsx" },
   };
   const temCampoDeArquivo = (trecho: string) => aberturas(trecho, "input").some(({ etiqueta }) => etiqueta.includes('type="file"'));
 

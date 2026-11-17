@@ -4,9 +4,9 @@
   "total": 179,
   "homologados": 0,
   "contagem": {
-    "nao_iniciado": 40,
-    "parcial": 70,
-    "testado": 64,
+    "nao_iniciado": 37,
+    "parcial": 72,
+    "testado": 65,
     "bloqueado": 3,
     "respeitado": 2
   },
@@ -238,6 +238,21 @@
         "ORA-QUAL-006"
       ],
       "entrega": "o alerta no celular quando um desconto, uma nota ou uma saída de caixa espera além do limite (para quem decide) e quando uma rotina do banco falha ou atrasa (para o dono e o administrador), um por dia (Onda 2; ADR-015); o estado do requisito não muda",
+      "commit": "87c8dbe",
+      "publicado_em": "2026-11-17",
+      "pedido_em": null,
+      "resposta": null,
+      "respondido_em": null
+    },
+    {
+      "lote": "EXT-a",
+      "roteiro": "docs/aceite/EXT-a.md",
+      "requisitos": [
+        "ORA-PAY-009",
+        "ORA-PAY-010",
+        "ORA-FIN-006"
+      ],
+      "entrega": "o extrato da maquininha e do banco por arquivo (CSV, Excel ou OFX), com a coluna de cada campo escolhida pela pessoa, a venda sugerida para cada linha, conciliar uma linha ou as certas, tirar da conta e desfazer com motivo, o bruto, as taxas, o líquido e o que vai cair, e as vendas do período sem conciliação (Onda 3, item E3; ADR-016)",
       "commit": null,
       "publicado_em": null,
       "pedido_em": null,
