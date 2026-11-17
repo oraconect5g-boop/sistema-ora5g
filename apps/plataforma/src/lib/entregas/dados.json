@@ -225,9 +225,9 @@
         "ORA-QUAL-006"
       ],
       "entrega": "o aviso no celular de desconto, nota e saída de caixa a aprovar, para quem decide (menos quem pediu), com o toque que abre a tela da aprovação (Onda 1, item 7, a segunda parte; ADR-014); o estado dos requisitos não muda",
-      "commit": null,
-      "publicado_em": null,
-      "pedido_em": null,
+      "commit": "252bcad",
+      "publicado_em": "2026-11-17",
+      "pedido_em": "2026-11-17",
       "resposta": null,
       "respondido_em": null
     }

@@ -13,7 +13,7 @@
 
 ## Decisões
 
-1. **Quem envia é o worker, não o aplicativo web.** O worker dos avisos (`apps/worker/src/executar-avisos.ts`) roda como os outros, a cada minuto, pelo crontab do usuário `dev`. Ele fica com a chave privada e com o segredo da fila. Agendar é com a autorização do proprietário, porque a rotina fala com serviços de fora (os de envio dos navegadores).
+1. **Quem envia é o worker, não o aplicativo web.** O worker dos avisos (`apps/worker/src/executar-avisos.ts`) roda como os outros, a cada minuto, pelo crontab do usuário `dev`. Ele fica com a chave privada e com o segredo da fila. Agendar é com a autorização do proprietário, porque a rotina fala com serviços de fora (os de envio dos navegadores); ela foi dada em 17/11/2026, e o worker está no crontab desde 16:32.
 2. **O worker lê a fila com a chave pública e um segredo só dos avisos, não com a chave secreta do Supabase.**
    - **As funções da fila:** `public.avisos_a_enviar` e `public.avisos_resultado`. Sem o segredo, elas recusam com 42501; o inventário de autorização prova isso para todos, até o visitante sem login.
    - **O que o segredo abre:** só a fila dos avisos. Por isso o worker dos avisos funciona já, sem a chave secreta do Supabase.

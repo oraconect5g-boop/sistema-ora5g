@@ -137,7 +137,7 @@ Desde 17/11 (lote PWA-b, ADR-014): o executável `apps/worker/src/executar-aviso
 (`avisos_resultado`). Não precisa da chave secreta do Supabase. As quatro chaves (`NEXT_PUBLIC_WEB_PUSH_PUBLIC_KEY`,
 `WEB_PUSH_PRIVATE_KEY`, `WEB_PUSH_SUBJECT` e `WEB_PUSH_SEGREDO_DA_FILA`) foram geradas no servidor em 17/11, com a
 autorização do proprietário; o banco guarda só a impressão digital SHA-256 do segredo.
-**Não está agendado:** entra no crontab com a autorização do proprietário (uma linha no crontab do usuário `dev`):
+**Agendado desde 17/11/2026 (16:32),** com a autorização do proprietário (uma linha no crontab do usuário `dev`):
 
 ```
 * * * * * bash $HOME/homologacao/plataforma/deploy/homologacao/worker-avisos.sh

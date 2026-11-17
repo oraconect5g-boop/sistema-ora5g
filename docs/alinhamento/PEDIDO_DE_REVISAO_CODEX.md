@@ -1675,9 +1675,14 @@ Programa de execução integral (PR #67; checkpoint em `docs/alinhamento/EXECUCA
 - **Testes:** `avisos-no-celular.test.ts` (8); o inventário de autorização com 183 funções; `web-push.test.ts` (6, com o exemplo da RFC 8291 byte a byte e a volta decifrada); `processar.test.ts` (4); `avisos.test.ts` do domínio (3); `manifest.test.ts` (+3, o aviso e o toque); `conta/avisos/avisos.test.ts` (6).
 - **Conferido no ar antes da publicação:** pela API, com a chave pública, o segredo do servidor abre a fila (vazia) e o errado recebe 42501; os tipos à mão são iguais aos gerados.
 - **Limite declarado:**
-  1. O worker dos avisos não está agendado: espera a autorização do proprietário.
+  1. O worker dos avisos ficou agendado no mesmo dia (16:32), com a autorização do proprietário.
   2. Os avisos que ninguém lê ficam na fila (só valem no mesmo dia); a limpeza da fila fica para a rotina do banco.
   3. O aviso quando uma fila passa do limite (ORA-QUAL-006) ainda não existe: só o canal.
+- **CI, merge e publicação (17/11):**
+  - **CI:** a sequência completa, de instalação limpa no servidor, passou em `5868540`: 2.780 testes e 1 TODO, 293 E2E (13 pulados), auditoria sem vulnerabilidade e o orçamento em dia.
+  - **Merge:** `252bcad`; a árvore é a da branch testada. No GitHub, os checks de `252bcad` terminaram com sucesso: "Verificações" e "Supabase Preview".
+  - **Publicação:** na homologação, em 17/11 (build 16:22), conferida pela pasta, pelo serviço local e pelo domínio com o commit inteiro, montada com a configuração nova (as chaves dos avisos).
+  - **Agendamento:** autorizado pelo proprietário em 17/11; a linha do worker dos avisos está no crontab do usuário `dev` desde 16:32. Pelos registros do Supabase, a fila é lida a cada minuto, com resposta 200; ela está vazia (ninguém ligou os avisos ainda).
 - **Pedido ao Codex:** conferir:
   1. a cifra e o VAPID contra as RFCs (o teste com o exemplo oficial está em `web-push.test.ts`);
   2. que nenhuma função entrega inscrição de outra pessoa sem o segredo;
