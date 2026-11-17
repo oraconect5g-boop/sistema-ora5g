@@ -213,6 +213,26 @@ As metas de LCP e de bloqueio usam o "bom" do Google:
 
 As outras são propostas do projeto. Todas valem até o proprietário aprovar ou mudar.
 
+### Telas com login (proposta de 16/11/2026, lote VEL-a)
+
+| O que | Antes (16/11, navegador do proprietário) | Meta proposta | Onde se mede |
+|---|---:|---:|---|
+| Retorno ao toque: o botão trava e avisa; a tela nova mostra o esqueleto | nenhum | na hora | `retorno-imediato.test.ts`, `esqueletos.test.ts` e o roteiro de aceite |
+| Abrir o PDV (`/vender`) | 2,5 a 2,8 s | até 1,5 s | navegador do proprietário e log de tempos |
+| Buscar no PDV, com a venda aberta | 4,7 s | até 2 s | os mesmos |
+| Botões "Adicionar" e "Tirar" | 3,6 s e 5,9 s | até 2 s cada | os mesmos |
+| Botão "Concluir venda" (venda simples, em dinheiro) | não medido | até 3 s | os mesmos |
+| Vendas, Estoque, Catálogo, Clientes e Caixa | 1,2 a 2,8 s | até 2 s, a partir do VEL-b | os mesmos |
+
+**De onde saem os números.** Cada ida ao banco custa de 0,16 a 0,20 s com a conexão aberta (seção 4.2). Abrir o PDV são 2 rodadas; a busca dentro da venda, até 3 a mais; uma ação do carrinho, 4 (seção 4.5). Só de idas, a conta dá perto de 0,4 s, 1,0 s e 0,8 s. A montagem da tela, a rede do celular e o desenho somam o resto.
+
+A folga das metas cobre dois casos:
+
+- a primeira ida depois de mais de um minuto sem uso pode levar de 0,35 a 0,60 s (seção 4.4);
+- se o token da sessão ainda for assinado com o segredo compartilhado, cada leitura da sessão ganha uma ida ao serviço de login (seção 4.5).
+
+O "depois" destas linhas ainda não foi medido. Ele entra na seção 4.6 com o roteiro de aceite do lote (`docs/aceite/VEL-a.md`): o proprietário repete as medidas no navegador e o log de tempos mostra as idas de cada tela.
+
 ## Como medir de novo
 
 Primeiro o build; depois o tamanho de cada tela; por fim o tempo no celular simulado:
@@ -271,7 +291,8 @@ Como ler:
 
 ## O que falta
 
-- O proprietário aprovar (ou mudar) as metas.
+- O proprietário aprovar (ou mudar) as metas, inclusive as das telas com login.
+- Medir o "depois" das telas com login: seção 4.6, com o roteiro de aceite do VEL-a.
 - Medir as telas com login (PDV, caixa, início) pelo script: depende do usuário de teste (J1). Até lá, a medida com login é a do proprietário no navegador (seção 4.6).
 - Confirmar com um login qual chave assina os tokens de hoje (o log de tempos mostra).
 - O teste de ponta a ponta no celular que adiciona, tira e conclui uma venda: depende do usuário de teste (J1).

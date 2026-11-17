@@ -1,8 +1,8 @@
 {
-  "_leia": "Checkpoint do programa de execução integral (PR #67). Carregar ao retomar e seguir para o próximo item executável da fila; não reiniciar o projeto. Estados vêm de status-requisitos.json (fonte da rastreabilidade); este arquivo acrescenta lote, bloqueio externo e revisão.",
-  "atualizado_em": "2026-11-16",
+  "_leia": "Checkpoint do programa de execução integral (PR #67). Carregar ao retomar e seguir para o próximo item executável da fila; não reiniciar o projeto. Estados vêm de status-requisitos.json (fonte da rastreabilidade); este arquivo acrescenta lote, bloqueio externo e revisão. Desde 16/11/2026 a medida de avanço é o requisito homologado pelo proprietário: a chave aceites guarda a resposta dele a cada roteiro de aceite (docs/aceite/); um requisito só recebe homologado: true com todos os lotes dele aceitos e sem nada em FALTA na nota de status-requisitos.json.",
+  "atualizado_em": "2026-11-17",
   "base": {
-    "main": "4e1a5d1",
+    "main": "89927dc",
     "pacote": {
       "pr": 67,
       "branch": "docs/execucao-integral-20261110",
@@ -20,17 +20,38 @@
       "commit": "398dfa0",
       "main_analisada": "5468d9e",
       "lido": "ver docs/alinhamento/LEITURA_DIAGNOSTICO_INTEGRAL_2026-11-16.md (o que foi lido por inteiro, o que foi conferido por programa e o que falta)"
+    },
+    "plano_de_16_11": {
+      "origem": "plano do proprietário de 16/11/2026 (ondas 0 a 3, com um roteiro de aceite por lote), entregue na conversa; o texto inteiro fica fora deste repositório, que é público",
+      "main_analisada": "89927dc",
+      "resumo": "docs/alinhamento/EXECUCAO_INTEGRAL_STATUS.md, seção 5.A",
+      "lido": "inteiro; substitui a ordem do diagnóstico integral de 16/11 (pacote_diagnostico), que fica como registro"
     }
   },
   "publicado": {
     "homologacao": {
-      "commit": "4e1a5d1",
+      "commit": "89927dc",
       "quando": "2026-11-16",
-      "conferido": "publicar.sh com a conferência completa (#99): a pasta ativa, o serviço local e o domínio ora5g.com.br servindo o commit inteiro de 4e1a5d1 e o ambiente homologacao em /saude/versao; rodapé 4e1a5d1 · build 16/11/2026 07:46"
+      "conferido": "publicar.sh com a conferência completa (#99): a pasta ativa, o serviço local e o domínio ora5g.com.br servindo o commit inteiro de 89927dc e o ambiente homologacao em /saude/versao; rodapé 89927dc · build 16/11/2026 08:06"
     },
     "falta_publicar": [
-      "registro da migration 20261116130100_importacao_estatisticas (aplicada pela integração GitHub × Supabase no merge do INTEG-b), só documentos, publicado ao fim do lote"
+      "lote VEL-a (telas com login mais rápidas; ADR-010): a migration 20261117015315_sessao_molde_e_pdv já está no ora5g-dev (aplicada em 16/11) e vai antes da plataforma, que não abre tela com login sem ela"
     ]
+  },
+  "aceites": {
+    "VEL-a": {
+      "roteiro": "docs/aceite/VEL-a.md",
+      "requisitos": [
+        "ORA-QUAL-010",
+        "ORA-POS-002"
+      ],
+      "entrega": "parte dos dois requisitos: os dois seguem parciais mesmo com o aceite",
+      "publicado_em": null,
+      "pedido_em": null,
+      "resposta": null,
+      "respondido_em": null,
+      "nota": "o pedido de aceite sai depois da publicação do lote, com o commit que está no ar; a resposta é \"aceito\" ou \"não aceito\""
+    }
   },
   "contagem_dos_estados": {
     "nao_iniciado": 42,
@@ -89,7 +110,7 @@
       "titulo": "Login, recuperação de conta e revogação de sessão",
       "prioridade": "P0",
       "estado": "parcial",
-      "lote": "L2 cadastros; ORG-006b (15/11): a confirmação de senha recente nas ações sensíveis; migration do ORG-006b aplicada no ora5g-dev em 15/11; INTEG-a (16/11): #96",
+      "lote": "L2 cadastros; ORG-006b (15/11): a confirmação de senha recente nas ações sensíveis; migration do ORG-006b aplicada no ora5g-dev em 15/11; INTEG-a (16/11): #96; VEL-a (16/11): a identidade pela assinatura do token (getClaims), com a decisão da sessão no banco em cada pedido (ADR-010)",
       "bloqueio_externo": null,
       "revisado_codex": false,
       "homologado": false
@@ -440,8 +461,8 @@
       "titulo": "Busca rápida por nome/SKU/IMEI e carrinho responsivo",
       "prioridade": "P0",
       "estado": "parcial",
-      "lote": "L6 PDV",
-      "bloqueio_externo": null,
+      "lote": "L6 PDV; VEL-a (16/11): o PDV numa leitura (pdv_tela) e o retorno imediato nos botões do carrinho",
+      "bloqueio_externo": "o aceite do VEL-a (docs/aceite/VEL-a.md); o E2E no celular que adiciona, tira e conclui depende do usuário de teste (J1); validar com o vendedor é da piloto",
       "revisado_codex": false,
       "homologado": false
     },
@@ -1556,8 +1577,8 @@
       "titulo": "Performance mobile e testes em dispositivos/internet reais",
       "prioridade": "P1",
       "estado": "parcial",
-      "lote": "transversal; QUAL-010a (15/11): o orçamento de cada tela no CI e a medida num celular simulado; QUAL-010b (15/11): o cliente do Supabase sob demanda",
-      "bloqueio_externo": "as metas pedem a aprovação do proprietário (D-047); as telas com login dependem do usuário de teste (J1); o teste no celular e na internet da loja é da piloto",
+      "lote": "transversal; QUAL-010a (15/11): o orçamento de cada tela no CI e a medida num celular simulado; QUAL-010b (15/11): o cliente do Supabase sob demanda; VEL-a (16/11): a sessão e o molde numa ida ao banco, o PDV numa leitura, a conexão mantida entre as telas, o retorno imediato em todo botão de envio e o esqueleto em toda tela do menu (ADR-010); migration do VEL-a aplicada no ora5g-dev em 16/11",
+      "bloqueio_externo": "as metas pedem a aprovação do proprietário (D-047), agora também as das telas com login; o aceite do VEL-a (docs/aceite/VEL-a.md); a medida por script e o E2E das telas com login dependem do usuário de teste (J1); o teste no celular e na internet da loja é da piloto",
       "revisado_codex": false,
       "homologado": false
     },
@@ -1652,5 +1673,5 @@
       "homologado": false
     }
   },
-  "proximo_passo": "Retomar pelo diagnóstico integral de 16/11 (docs/alinhamento/LEITURA_DIAGNOSTICO_INTEGRAL_2026-11-16.md e RELATORIO_179_2026-11-16.md): (1) conferir o CI do GitHub no SHA da main (o #95 era a única falha); (2) lote SUPA-a: config.toml mínimo em packages/banco/supabase (sem buckets) e conferir o check da integração GitHub × Supabase, que já aplica as migrations novas da main (provado em 16/11 com a do #95); (3) lote BASE-a: as 11 lojas e DEFEITOS com o cadastro operacional separado da liberação fiscal (sem CNPJ/endereço inventado) e as três contas de teste (autorizadas); (4) a planilha original inteira (precisa do arquivo no servidor) e a carga de estoque por local; (5) a transferência de vários produtos; (6) a jornada real autenticada; depois parceiros, fiscal, WhatsApp e o restante dos 179."
+  "proximo_passo": "Seguir o plano do proprietário de 16/11 (resumo na seção 5.A de EXECUCAO_INTEGRAL_STATUS.md), um lote por vez, cada um com o roteiro de aceite em docs/aceite/ e a lista do que se precisa do proprietário: (1) fechar o VEL-a: a sequência do CI na branch feat/vel-a-sessao-molde-rapidos, o merge, a publicação com o log de tempos ligado (ORA_MEDIR_TEMPOS=1), a conferência do commit pelo domínio, o pedido de aceite pelo roteiro docs/aceite/VEL-a.md, a medida do depois na seção 4.6 de docs/operacao/DESEMPENHO_NO_CELULAR.md, a confirmação da chave que assina os tokens e, por fim, o log desligado com nova publicação; (2) o resto da Onda 0: 0.2 a página de produto da loja online sem erro 5xx para produto não publicado; 0.3 as rotinas periódicas do banco agendadas, com registro de cada execução; 0.4 o executável do worker do WhatsApp, desligado sem credencial; 0.5 os índices das chaves estrangeiras e os avisos dos verificadores do Supabase; 0.6 as filas da Saúde da operação e a leitura leve do banco em /saude; 0.7 as issues abertas, o Dependabot e o histórico de segredos; (3) VEL-b: uma leitura por tela em Vendas, Estoque, Catálogo, Clientes e Caixa e os arquivos que ainda perguntam as permissões uma a uma; (4) Onda 1, a loja piloto: as contas de teste (dependem da SUPABASE_SECRET_KEY no servidor, J1), as 11 lojas e DEFEITOS, a planilha inteira da Rein (depende do arquivo em ~/entrada/rein/), as fotos, a transferência de vários produtos, a jornada autenticada no celular e o aviso no celular (PWA); (5) Onda 2: os requisitos parciais e as decisões do proprietário; (6) Onda 3: as integrações, cada uma com contrato, documentação e credencial. Fora do plano novo e ainda registrado: o lote SUPA-a do diagnóstico de 16/11 (config.toml mínimo em packages/banco/supabase, sem buckets, para o check da integração GitHub × Supabase; docs/alinhamento/LEITURA_DIAGNOSTICO_INTEGRAL_2026-11-16.md)."
 }
