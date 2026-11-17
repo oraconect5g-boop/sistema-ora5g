@@ -295,10 +295,11 @@ const CASOS: Record<string, Caso> = {
   } },
   // A reserva do site (ONLINE-b): a primeira gravação aberta ao visitante. Aqui o atacante tenta reservar o aparelho,
   // que está fora do site: todos são recusados e nada muda (reservar o que está no site é o uso normal, provado em
-  // loja-online-reserva.test.ts).
+  // loja-online-reserva.test.ts). A recusa é o código OR036, "não está à venda na loja online" (ONLINE-c; antes,
+  // P0002, que a API do banco respondia com HTTP 500).
   "loja_reservar(uuid,uuid,uuid,text,text,text)": {
     A: () => ["select public.loja_reservar($1, $2, $3, 'Atacante', '41999990009', $4) as v", [ids.organizacao, cat.aparelho, ids.lojaA, chave("ataque")]],
-    publica: async () => false,
+    publica: async () => false, outrosCodigosDeRecusa: ["OR036"],
   },
   // A loja atende a reserva do site: quem vende na loja da reserva; o de outra loja e quem não tem acesso, não.
   "loja_reserva_contato(uuid)": { A: () => ["select public.loja_reserva_contato($1) as v", [alvo.reservaSiteA]], B: () => ["select public.loja_reserva_contato($1) as v", [alvo.reservaSiteB]] },
@@ -311,7 +312,9 @@ const CASOS: Record<string, Caso> = {
   // Age só na loja do turno de quem chama (soltar as reservas do site vencidas dela): para quem vende em outra loja ou rede, é o
   // próprio contexto, legítimo; os 9 sem acesso válido são recusados.
   "loja_reservas_liberar_vencidas()": { A: () => ["select public.loja_reservas_liberar_vencidas() as v", []], outraOrganizacao: false },
+  // O aparelho está fora do site: o detalhe vem vazio, sem erro (ONLINE-c). Se viesse um produto, teria de ser do site.
   "loja_produto(uuid,uuid)": { A: () => ["select public.loja_produto($1, $2) as v", [ids.organizacao, cat.produtoAparelho]], publica: async (linhas) => {
+    if (linhas.length === 1 && linhas[0]?.v === null) return true;
     const produto = (linhas[0]?.v as { id?: string } | undefined)?.id;
     return Boolean(produto) && (await db.query("select 1 from public.produtos where id = $1 and publicar_online and ativo", [produto])).rows.length === 1;
   } },
@@ -1055,7 +1058,7 @@ describe("cada função recusa quem não tem acesso", () => {
         if (caso.publica) {
           if (antes !== depois) falhas.push(`${descricao} (o banco mudou)`);
           if (novasNaAuditoria.length > 0) falhas.push(`${descricao} (auditoria registrou ${novasNaAuditoria.join(", ")})`);
-          if (r.codigo !== null && !CODIGOS_DE_RECUSA.has(r.codigo)) falhas.push(`${descricao} (falhou por outro motivo)`);
+          if (r.codigo !== null && !CODIGOS_DE_RECUSA.has(r.codigo) && !caso.outrosCodigosDeRecusa?.includes(r.codigo)) falhas.push(`${descricao} (falhou por outro motivo)`);
           if (r.codigo === null && !(await caso.publica(r.linhas))) falhas.push(`${descricao} (trouxe o que não é do site)`);
           continue;
         }

@@ -108,18 +108,23 @@ describe("a reserva pelo visitante (ONLINE-b)", () => {
   });
 
   it("o que se recusa: produto fora do site, chip, loja inativa ou de outra empresa, sem preço; nome, WhatsApp e chave inválidos", async () => {
-    expect(await recusaAoVisitante([ids.organizacao, cat.capa, ids.lojaA, "Cliente do Site", "41987650001", chave("r")])).toBe("P0002");
+    // "Não está à venda na loja online" é OR036 (ONLINE-c): o P0002 de antes virava HTTP 500 na API do banco.
+    expect(await recusaAoVisitante([ids.organizacao, cat.capa, ids.lojaA, "Cliente do Site", "41987650001", chave("r")])).toBe("OR036");
+    expect(await recusaAoVisitante([ids.organizacao, "6d43d3aa-4610-42cc-8573-9ccef3cdc5f3", ids.lojaA, "Cliente do Site", "41987650001", chave("r")])).toBe("OR036");
     await publicar();
     for (const [variante, loja] of [[cat.chip, ids.lojaA], [cat.capa, ids.assistencia], [cat.capa, ids.online], [cat.capa, ids.lojaOutraOrg]] as const) {
-      expect(await recusaAoVisitante([ids.organizacao, variante, loja, "Cliente do Site", "41987650001", chave("r")]), `${variante} ${loja}`).toBe("P0002");
+      expect(await recusaAoVisitante([ids.organizacao, variante, loja, "Cliente do Site", "41987650001", chave("r")]), `${variante} ${loja}`).toBe("OR036");
     }
     await db.query("update public.unidades set status = 'inativa' where id = $1", [ids.lojaC]);
-    expect(await recusaAoVisitante([ids.organizacao, cat.capa, ids.lojaC, "Cliente do Site", "41987650001", chave("r")])).toBe("P0002");
+    expect(await recusaAoVisitante([ids.organizacao, cat.capa, ids.lojaC, "Cliente do Site", "41987650001", chave("r")])).toBe("OR036");
     for (const [nome, whatsapp, k] of [["A", "41987650001", chave("r")], ["Cliente do Site", "4198765000", chave("r")], ["Cliente do Site", "4133334444", chave("r")], ["Cliente do Site", "41987650001", "curta"]]) {
       expect(await recusaAoVisitante([ids.organizacao, cat.capa, ids.lojaA, nome, whatsapp, k]), `${nome} ${whatsapp} ${k}`).toBe("22023");
     }
     // O WhatsApp com o 55 do país também vale.
     expect((await reservar(cat.capa, ids.lojaA, "+55 41 98765-0001")).codigo).toMatch(/^[A-HJ-NP-Z2-9]{6}$/);
+    // Sem preço na loja (o preço que valia terminou): a mesma recusa.
+    await db.query("update public.precos set fim = now() where variante_id = $1", [cat.capa]);
+    expect(await recusaAoVisitante([ids.organizacao, cat.capa, ids.lojaA, "Cliente do Site", "41987650002", chave("r")])).toBe("OR036");
   });
 });
 
