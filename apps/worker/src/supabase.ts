@@ -1,5 +1,6 @@
 import { createClient, type SupabaseClient } from "@supabase/supabase-js";
 
+import type { AvisoParaEnviar, BancoDosAvisos, ResultadoDoAviso } from "./avisos/processar.ts";
 import type { BancoConnect } from "./connect/processar.ts";
 import type { BancoWhatsApp, EnvioParaFazer, ResultadoDoEnvio } from "./whatsapp/processar.ts";
 import { mensagemSegura, type DesfechoDoConvite, type ServicoIdentidade } from "./identidade.ts";
@@ -9,6 +10,26 @@ const BANIMENTO = "876000h";
 
 export function clienteAdministrativo(url: string, chaveSecreta: string): SupabaseClient {
   return createClient(url, chaveSecreta, { auth: { persistSession: false, autoRefreshToken: false, detectSessionInUrl: false } });
+}
+
+// O cliente com a chave pública, sem sessão de pessoa (PWA-b): o que abre a fila dos avisos é o segredo deles.
+export function clientePublico(url: string, chavePublica: string): SupabaseClient {
+  return createClient(url, chavePublica, { auth: { persistSession: false, autoRefreshToken: false, detectSessionInUrl: false } });
+}
+
+// A fila dos avisos no celular (PWA-b): public.avisos_a_enviar e public.avisos_resultado, com o segredo dos avisos.
+export function bancoDosAvisos(cliente: SupabaseClient, segredo: string): BancoDosAvisos {
+  return {
+    async aEnviar(limite) {
+      const { data, error } = await cliente.rpc("avisos_a_enviar", { p_segredo: segredo, p_limite: limite });
+      if (error) throw error;
+      return data as AvisoParaEnviar[];
+    },
+    async registrar(resultados: ResultadoDoAviso[]) {
+      const { error } = await cliente.rpc("avisos_resultado", { p_segredo: segredo, p_resultados: resultados });
+      if (error) throw error;
+    },
+  };
 }
 
 // Conta que já existe no Auth: o Supabase responde 422 com código email_exists.

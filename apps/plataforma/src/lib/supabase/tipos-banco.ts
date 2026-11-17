@@ -6395,6 +6395,26 @@ export type Database = {
         Args: { p_atividade: string; p_feita: boolean; p_resultado: string }
         Returns: boolean
       }
+      aviso_cancelar: { Args: { p_endpoint: string }; Returns: boolean }
+      aviso_inscrever: {
+        Args: {
+          p_auth: string
+          p_dispositivo?: string
+          p_endpoint: string
+          p_p256dh: string
+        }
+        Returns: Json
+      }
+      aviso_minhas_inscricoes: { Args: never; Returns: Json }
+      aviso_teste: { Args: never; Returns: Json }
+      avisos_a_enviar: {
+        Args: { p_limite?: number; p_segredo: string }
+        Returns: Json
+      }
+      avisos_resultado: {
+        Args: { p_resultados: Json; p_segredo: string }
+        Returns: Json
+      }
       bonus_definir: {
         Args: { p_faixas: Json; p_motivo: string; p_vigente_desde: string }
         Returns: number

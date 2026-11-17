@@ -34,8 +34,11 @@ describe("o manifesto do site instalável", () => {
 });
 
 // O service worker de verdade (public/sw.js), num contexto simulado: os eventos que ele registra, o cache e a rede.
-function montarServiceWorker(rede: (pedido: Request) => Promise<Response>) {
+function montarServiceWorker(rede: (pedido: Request) => Promise<Response>, janelasAbertas: { url: string }[] = []) {
   const ouvintes: Record<string, (evento: unknown) => void> = {};
+  // PWA-b: os avisos mostrados, as janelas focadas e levadas a outra tela e as abertas.
+  const avisos: { titulo: string; opcoes: Record<string, unknown> }[] = [];
+  const janelas: string[] = [];
   const guardados = new Map<string, Response>();
   const caches = {
     open: async () => ({ add: async (pedido: Request) => { guardados.set(new URL(pedido.url, "https://ora5g.com.br").pathname, new Response("<h1>Sem internet agora</h1>")); } }),
@@ -46,14 +49,22 @@ function montarServiceWorker(rede: (pedido: Request) => Promise<Response>) {
   const self = {
     addEventListener: (tipo: string, ouvinte: (evento: unknown) => void) => { ouvintes[tipo] = ouvinte; },
     skipWaiting: () => undefined,
-    clients: { claim: async () => undefined },
+    location: { origin: "https://ora5g.com.br" },
+    registration: { showNotification: async (titulo: string, opcoes: Record<string, unknown>) => { avisos.push({ titulo, opcoes }); } },
+    clients: {
+      claim: async () => undefined,
+      matchAll: async () => janelasAbertas.map((j) => ({
+        url: j.url, focus: async () => { janelas.push(`focada ${j.url}`); }, navigate: async (para: string) => { janelas.push(`levada a ${para}`); },
+      })),
+      openWindow: async (url: string) => { janelas.push(`aberta ${url}`); },
+    },
   };
   // No navegador, o endereço relativo vale a partir do service worker; aqui, a partir do domínio.
   class PedidoDoNavegador extends Request {
     constructor(url: string, opcoes?: RequestInit) { super(new URL(url, "https://ora5g.com.br"), opcoes); }
   }
-  runInNewContext(readFileSync(join(PUBLICA, "sw.js"), "utf8"), { self, caches, fetch: rede, Request: PedidoDoNavegador, Response, Promise });
-  return { ouvintes, guardados };
+  runInNewContext(readFileSync(join(PUBLICA, "sw.js"), "utf8"), { self, caches, fetch: rede, Request: PedidoDoNavegador, Response, Promise, URL });
+  return { ouvintes, guardados, avisos, janelas };
 }
 async function disparar(ouvinte: ((evento: unknown) => void) | undefined, dados: Record<string, unknown> = {}) {
   let espera: Promise<unknown> = Promise.resolve();
@@ -86,5 +97,40 @@ describe("o service worker do site instalável", () => {
     expect(await disparar(ouvintes.fetch, { request: navegacao("https://ora5g.com.br/vender", "POST") })).toBeNull();
     expect(await disparar(ouvintes.fetch, { request: { url: "https://ora5g.com.br/api/pendencias", method: "GET", mode: "cors" } })).toBeNull();
     expect(await disparar(ouvintes.fetch, { request: { url: "https://ora5g.com.br/icones/icone-192.png", method: "GET", mode: "no-cors" } })).toBeNull();
+  });
+});
+
+// PWA-b: o aviso no celular. O servidor manda {titulo, corpo, endereco} cifrado; o navegador entrega decifrado ao evento.
+describe("o aviso no celular (PWA-b)", () => {
+  const empurrao = (dados: unknown) => ({ data: { json: () => { if (dados instanceof Error) throw dados; return dados; } } });
+
+  it("mostra o título e o texto do aviso, com o ícone do Ora 5G; o toque abre a tela da aprovação", async () => {
+    const { ouvintes, avisos, janelas } = montarServiceWorker(async () => new Response("rede"));
+    await disparar(ouvintes.push, empurrao({ titulo: "Desconto para aprovar", corpo: "Loja A: desconto pedido na venda nº 7", endereco: "/aprovacoes" }));
+    expect(avisos).toEqual([{ titulo: "Desconto para aprovar", opcoes: {
+      body: "Loja A: desconto pedido na venda nº 7", icon: "/icones/icone-192.png", badge: "/icones/icone-192.png", tag: "/aprovacoes", lang: "pt-BR", data: { endereco: "/aprovacoes" },
+    } }]);
+    let fechada = false;
+    await disparar(ouvintes.notificationclick, { notification: { data: { endereco: "/aprovacoes" }, close: () => { fechada = true; } } });
+    expect(fechada).toBe(true);
+    expect(janelas).toEqual(["aberta https://ora5g.com.br/aprovacoes"]);
+  });
+
+  it("com o sistema aberto, o toque leva a janela aberta para a tela da aprovação", async () => {
+    const { ouvintes, janelas } = montarServiceWorker(async () => new Response("rede"), [{ url: "https://ora5g.com.br/vender" }]);
+    await disparar(ouvintes.notificationclick, { notification: { data: { endereco: "/notas" }, close: () => undefined } });
+    expect(janelas).toEqual(["focada https://ora5g.com.br/vender", "levada a https://ora5g.com.br/notas"]);
+  });
+
+  it("mensagem fora do formato vira o aviso genérico; endereço fora do sistema vira o Início", async () => {
+    const { ouvintes, avisos, janelas } = montarServiceWorker(async () => new Response("rede"));
+    await disparar(ouvintes.push, empurrao(new Error("não é JSON")));
+    await disparar(ouvintes.push, { data: null });
+    await disparar(ouvintes.push, empurrao({ titulo: "Clique aqui", corpo: "x", endereco: "https://golpe.invalid/entrar" }));
+    expect(avisos.map((a) => [a.titulo, a.opcoes.data])).toEqual([
+      ["Ora 5G", { endereco: "/inicio" }], ["Ora 5G", { endereco: "/inicio" }], ["Clique aqui", { endereco: "/inicio" }],
+    ]);
+    await disparar(ouvintes.notificationclick, { notification: { data: { endereco: "//golpe.invalid/x" }, close: () => undefined } });
+    expect(janelas).toEqual(["aberta https://ora5g.com.br/inicio"]);
   });
 });

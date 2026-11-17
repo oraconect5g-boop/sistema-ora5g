@@ -317,6 +317,18 @@ const CASOS: Record<string, Caso> = {
     A: () => ["select public.loja_reservar($1, $2, $3, 'Atacante', '41999990009', $4) as v", [ids.organizacao, cat.aparelho, ids.lojaA, chave("ataque")]],
     publica: async () => false, outrosCodigosDeRecusa: ["OR036"],
   },
+  // Avisos no celular (PWA-b): a própria pessoa liga, confere, testa e desliga os avisos dos próprios celulares (o técnico,
+  // no contexto dele, é legítimo); quem não tem a sessão válida é recusado, e desligar o celular de outra pessoa também.
+  // O worker lê a fila só com o segredo dos avisos: sem ele, todos são recusados, até o visitante sem login.
+  "aviso_inscrever(text,text,text,text)": {
+    A: () => ["select public.aviso_inscrever($1, $2, $3, null) as v", ["https://push.exemplo.invalid/ataque", `B${"C".repeat(86)}`, "y".repeat(22)]],
+    contextoProprio: ["tecnico"], outraOrganizacao: false,
+  },
+  "aviso_cancelar(text)": { A: () => ["select public.aviso_cancelar($1) as v", [alvo.celularA]], outroVendedor: true },
+  "aviso_minhas_inscricoes()": { leitura: true, A: () => ["select public.aviso_minhas_inscricoes() as v", []], contextoProprio: ["tecnico"], outraOrganizacao: false },
+  "aviso_teste()": { A: () => ["select public.aviso_teste() as v", []], contextoProprio: ["tecnico"], outraOrganizacao: false },
+  "avisos_a_enviar(text,integer)": { A: () => ["select public.avisos_a_enviar('segredo-errado-com-tamanho-suficiente-000000') as v", []] },
+  "avisos_resultado(text,jsonb)": { A: () => ["select public.avisos_resultado('segredo-errado-com-tamanho-suficiente-000000', '[]'::jsonb) as v", []] },
   // A loja atende a reserva do site: quem vende na loja da reserva; o de outra loja e quem não tem acesso, não.
   "loja_reserva_contato(uuid)": { A: () => ["select public.loja_reserva_contato($1) as v", [alvo.reservaSiteA]], B: () => ["select public.loja_reserva_contato($1) as v", [alvo.reservaSiteB]] },
   "loja_reserva_cancelar(uuid,text)": {
@@ -1033,6 +1045,10 @@ beforeAll(async () => {
       [ids.organizacao, cat.capa, loja, telefone, `mundo:${nome}`])).rows[0]?.v.codigo;
     alvo[nome] = (await db.query<{ id: string }>("select id from public.loja_reservas where codigo = $1", [codigo])).rows[0]?.id ?? "";
   }
+  // Avisos no celular (PWA-b): o celular do vendedorAB, alvo de quem tenta desligá-lo.
+  alvo.celularA = "https://push.exemplo.invalid/mundo/vendedorAB";
+  await db.query("insert into privado.avisos_inscricoes (usuario_id, endpoint, p256dh, auth) values ($1, $2, $3, $4)",
+    [ids.vendedorAB, alvo.celularA, `B${"A".repeat(86)}`, "x".repeat(22)]);
   chaveNotaA = chaveDeAcesso(await cnpjLojaA(), 4242);
   await db.exec(`
     create schema teste;
@@ -1063,14 +1079,15 @@ describe("inventário: toda função SECURITY DEFINER exposta tem casos de recus
     const expostas = rows.map((r) => r.f);
     expect(expostas.filter((f) => !(f in CASOS)), "função nova exposta sem casos de recusa: acrescente ao CASOS").toEqual([]);
     expect(Object.keys(CASOS).filter((f) => !expostas.includes(f)), "caso de função que não existe mais").toEqual([]);
-    expect(expostas).toHaveLength(177);
+    expect(expostas).toHaveLength(183);
   });
 
-  it("visitante anônimo executa só a vitrine e a reserva da loja online (ONLINE-a e ONLINE-b) e a leitura leve do banco da página /saude (SAUDE-a); no privado, a conferência da foto do site e um gatilho, que não roda sozinho", async () => {
+  it("visitante anônimo executa só a vitrine e a reserva da loja online (ONLINE-a e ONLINE-b), a leitura leve do banco da página /saude (SAUDE-a) e a fila dos avisos, que pede o segredo (PWA-b); no privado, a conferência da foto do site e um gatilho, que não roda sozinho", async () => {
     const { rows } = await db.query<{ f: string; gatilho: boolean }>(`
       select p.oid::regprocedure::text as f, p.prorettype = 'trigger'::regtype as gatilho from pg_proc p
       where p.pronamespace in ('public'::regnamespace, 'privado'::regnamespace) and has_function_privilege('anon', p.oid, 'EXECUTE')`);
     expect(rows.sort((a, b) => a.f.localeCompare(b.f))).toEqual([
+      { f: "avisos_a_enviar(text,integer)", gatilho: false }, { f: "avisos_resultado(text,jsonb)", gatilho: false },
       { f: "loja_produto(uuid,uuid)", gatilho: false }, { f: "loja_reservar(uuid,uuid,uuid,text,text,text,jsonb)", gatilho: false }, { f: "loja_vitrine(uuid,text,uuid)", gatilho: false },
       { f: "privado.auditoria_completar_organizacao()", gatilho: true }, { f: "privado.foto_na_vitrine(text)", gatilho: false },
       { f: "saude_do_banco(text)", gatilho: false },

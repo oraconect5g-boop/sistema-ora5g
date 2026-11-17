@@ -128,3 +128,20 @@ Sem a chave secreta, sem as variáveis do WhatsApp (`WHATSAPP_GRAPH_API_VERSION`
 `WHATSAPP_ACCESS_TOKEN`) ou sem o adaptador, ele só registra "desligado" e o que falta no log
 (`~/homologacao/logs/worker-whatsapp.log`), e nada sai da fila. O log tem só contagens, nunca telefone, nome, link
 ou token.
+
+## Worker dos avisos no celular (desconto, nota e saída de caixa a aprovar)
+
+Desde 17/11 (lote PWA-b, ADR-014): o executável `apps/worker/src/executar-avisos.ts` pega um lote da fila dos avisos
+(`avisos_a_enviar`, com o segredo dos avisos), manda cada aviso aos celulares de quem decide pelo padrão Web Push
+(cifrado com as chaves do servidor; só os serviços de envio dos navegadores) e registra o resultado
+(`avisos_resultado`). Não precisa da chave secreta do Supabase. As quatro chaves (`NEXT_PUBLIC_WEB_PUSH_PUBLIC_KEY`,
+`WEB_PUSH_PRIVATE_KEY`, `WEB_PUSH_SUBJECT` e `WEB_PUSH_SEGREDO_DA_FILA`) foram geradas no servidor em 17/11, com a
+autorização do proprietário; o banco guarda só a impressão digital SHA-256 do segredo.
+**Não está agendado:** entra no crontab com a autorização do proprietário (uma linha no crontab do usuário `dev`):
+
+```
+* * * * * bash $HOME/homologacao/plataforma/deploy/homologacao/worker-avisos.sh
+```
+
+Sem alguma das chaves, ele só registra "desligado" e o que falta no log (`~/homologacao/logs/worker-avisos.log`), e
+nada sai da fila. O log tem só contagens, nunca endereço de celular, chave ou texto do aviso.
