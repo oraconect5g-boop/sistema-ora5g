@@ -77,6 +77,33 @@
         "ORA-QUAL-002"
       ],
       "entrega": "a arrumação do banco que o Supabase aponta (Onda 0.5); o estado dos dois requisitos não muda",
+      "commit": "0bfad91",
+      "publicado_em": "2026-11-17",
+      "pedido_em": "2026-11-17",
+      "resposta": null,
+      "respondido_em": null
+    },
+    {
+      "lote": "ENTREGAS-a",
+      "roteiro": "docs/aceite/ENTREGAS-a.md",
+      "requisitos": [
+        "ORA-ONLINE-001"
+      ],
+      "entrega": "o botão Comprar no topo do site (A01 do adendo do Codex de 16/11) e a tela de entregas do projeto (A18, sem ID próprio); o estado do requisito não muda",
+      "commit": null,
+      "publicado_em": null,
+      "pedido_em": null,
+      "resposta": null,
+      "respondido_em": null
+    },
+    {
+      "lote": "WHATS-a",
+      "roteiro": "docs/aceite/WHATS-a.md",
+      "requisitos": [
+        "ORA-WHATS-001",
+        "ORA-WHATS-006"
+      ],
+      "entrega": "o executável do worker do WhatsApp, ligado à fila do banco e desligado sem a Meta (Onda 0.4); o estado dos dois requisitos não muda",
       "commit": null,
       "publicado_em": null,
       "pedido_em": null,

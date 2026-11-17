@@ -1403,7 +1403,44 @@ Programa de execução integral (PR #67; checkpoint em `docs/alinhamento/EXECUCA
   1. Os índices sem uso ficam, porque a base está quase vazia.
   2. A proteção contra senha vazada é do plano pago (decisão de produção).
   3. As leituras abertas ao público (a vitrine e o produto) ficam com o limite do servidor web.
+- **CI, merge e publicação (17/11):**
+  - **CI:** a sequência completa, de instalação limpa no servidor, passou em `9d36fce`: 2.657 testes e 1 TODO, 281 E2E (13 pulados), auditoria sem vulnerabilidade e o orçamento em dia. A primeira rodada, antes da correção, acusou o índice repetido das fotos (`fotos-lote3.test.ts`).
+  - **Merge:** `0bfad91`; a árvore é a da branch testada. No GitHub, os checks de `0bfad91` terminaram com sucesso: "Verificações" e "Supabase Preview".
+  - **Publicação:** na homologação, em 17/11 (build 11:51). Conferida pela pasta, pelo serviço local e pelo domínio com o commit inteiro. Sem login, pelo domínio: `/entrar` e `/loja` respondem 200, o produto que não existe responde 404, e `/vender` e `/operacao` respondem 307 para a entrada.
 - **Pedido ao Codex:** conferir:
   1. a regra de cobertura do teste (as colunas em qualquer ordem, mais branda que a do verificador do Supabase) e a regra contra índice repetido;
   2. que nenhuma função `SECURITY INVOKER` lê `privado.identificadores_itens`;
   3. o texto dos comentários contra o uso real de cada tabela.
+
+## 17/11/2026 — Lote ENTREGAS-a: o botão Comprar e a tela de entregas do projeto (aceites A01 e A18 do adendo de 16/11)
+
+- **Origem:** o adendo do Codex de 16/11 (PR #100, commit `e311060`): A01, o link "Comprar" no topo do site, separado do "Entrar"; A18, o acompanhamento visível ao dono. Vai no mesmo merge do WHATS-a.
+- **Banco:** nenhuma migration.
+- **O que mudou:**
+  1. A página inicial ganha "Comprar" (para `/loja`) ao lado de "Entrar", num `nav` próprio.
+  2. `/entregas` (menu Gestão; `venda.ver_todas`, o dono e o administrador; no `proxy` e na lista das telas protegidas do E2E) lê `apps/plataforma/src/lib/entregas/dados.json`. Esse arquivo é gerado por `scripts/gerar-rastreabilidade.mjs` a partir da chave `aceites` e dos requisitos do checkpoint, e o `--conferir` do CI falha se ele estiver desatualizado.
+  3. A situação de cada lote segue esta ordem: a resposta do proprietário manda; sem ela, conta o pedido do aceite; sem pedido, conta se o lote está no ar; senão, "em preparo".
+- **Testes:**
+  - `lib/entregas/entregas.test.ts` (3): a situação de cada lote, a data e o link do roteiro, e os dados gerados (os 179, a contagem que soma o total e cada roteiro existente em `docs/aceite`);
+  - `app/entregas/entregas.test.ts` (3): o dono vê os indicadores, o placar e os lotes, do mais novo para o mais antigo; o gerente não vê;
+  - no navegador, `e2e/saude.spec.ts`: o topo da página inicial em tela de celular, sem rolagem para o lado, e o "Comprar" levando à loja.
+- **Limite declarado:** a tela mostra o checkpoint da versão publicada. Uma resposta do proprietário aparece na publicação seguinte.
+- **Pedido ao Codex:** conferir:
+  1. que `/entregas` só mostra o que o checkpoint já diz, e que o checkpoint não tem nada além do que o repositório já publica;
+  2. a regra da situação de cada lote contra a chave `aceites`.
+
+## 17/11/2026 — Lote WHATS-a: o worker do WhatsApp executável, desligado sem a Meta (Onda 0.4; ORA-WHATS-001 e ORA-WHATS-006)
+
+- **Origem:** o plano do proprietário de 16/11 (Onda 0.4): o worker do WhatsApp no padrão dos outros dois. Vai no mesmo merge do ENTREGAS-a.
+- **Banco:** nenhuma migration. Usa as funções do K1c e do INTEG-c (`whatsapp_worker_reivindicar` e `whatsapp_worker_resultado`) e o bucket privado `notas`.
+- **O que mudou:**
+  1. `apps/worker/src/executar-whatsapp.ts` lê o `.env.local` da pasta do worker e confere, antes de qualquer chamada, o que falta: `NEXT_PUBLIC_SUPABASE_URL`, `SUPABASE_SECRET_KEY`, `WHATSAPP_GRAPH_API_VERSION`, `WHATSAPP_PHONE_NUMBER_ID`, `WHATSAPP_ACCESS_TOKEN` (os nomes do `.env.example`) e o adaptador oficial da Meta. Se falta algo, mostra só os nomes e termina com sucesso; nada sai da fila.
+  2. `bancoWhatsApp` (em `supabase.ts`) traduz as linhas da fila para o núcleo de antes (`whatsapp/processar.ts`) e gera o link do PDF; um link que não sai vira nulo, e o envio volta à fila.
+  3. O log só tem contagens: nada de telefone, nome, link ou token.
+  4. `deploy/homologacao/worker-whatsapp.sh` segue o dos outros workers (trava, ambiente limpo, a cópia do ambiente que só o worker recebe) e **não está agendado**.
+- **Testes:** `whatsapp/configuracao.test.ts` (2) e `whatsapp/banco.test.ts` (3, com o executável rodado de verdade sem credencial).
+- **Limite declarado:** o adaptador da Meta não existe. `ADAPTADOR_DA_META_PRONTO` fica `false` até o contrato ser verificado na documentação oficial vigente, com uma conta para testar (F1).
+- **Pedido ao Codex:** conferir:
+  1. que nada chama o banco sem as variáveis e o adaptador;
+  2. que o log não leva dado pessoal;
+  3. o script de deploy contra o dos outros workers.
