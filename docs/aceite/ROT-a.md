@@ -24,7 +24,7 @@
 ## Antes de começar
 
 - Entre com a sua conta de dono e escolha a loja **Santa Cândida (teste)**.
-- Confira a versão no ar: toque em **Mais**, na barra de baixo. No fim da lista aparece `ora5G · v0.1.0 · commit · build`. O Claude Code informa o commit ao pedir o aceite.
+- Confira a versão no ar: toque em **Mais**, na barra de baixo. No fim da lista aparece `ora5G · v0.1.0 · commit · build`. O lote foi ao ar no commit `a2041b1`, em 17/11. O rodapé pode mostrar um commit mais novo, que só muda documentos: vale o que o Claude Code informou ao pedir o aceite.
 
 ## Os passos
 
@@ -71,7 +71,7 @@ Responda **"aceito"** ou **"não aceito"**.
 
 ## O que você não vê no celular (medido pelo Claude Code)
 
-- **No banco de desenvolvimento:** a primeira rodada automática foi em 17/11, às 09:45:00. Ela deu certo, não havia reserva vencida para soltar, e levou 7 milésimos de segundo. O agendador anotou a tarefa como concluída.
+- **No banco de desenvolvimento:** a primeira rodada automática foi em 17/11, às 09:45:00. Ela deu certo, não havia reserva vencida para soltar, e levou 7 milésimos de segundo. O agendador anotou a tarefa como concluída. Até a publicação do lote, de 09:45 a 10:00, 4 rodadas do vencimento, todas certas (nenhuma reserva vencida para soltar; a mais longa, 12 ms).
 - **Nos testes automáticos,** que provam o resto:
   - a reserva vencida do balcão e a do site saem na rodada, e o aparelho volta a ficar livre;
   - uma falha fica anotada com o código do erro e aparece como **"Com falha"**;
