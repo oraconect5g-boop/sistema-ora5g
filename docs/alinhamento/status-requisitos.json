@@ -725,6 +725,26 @@
       "status": "parcial",
       "nota": "Lote EXT-a (17/11; ADR-016): o extrato do banco entra por arquivo (OFX ou planilha), da loja ou da rede (a conta da empresa, só para quem concilia pela rede inteira), e cada linha é conciliada com aprovação de quem concilia; a importação é reproduzível (o mapeamento das colunas fica gravado e o mesmo arquivo devolve o mesmo extrato). FALTA: as contas bancárias de cada empresa, com o saldo (a parte multiempresa), o depósito agrupado da maquininha no banco (hoje sai da conta com motivo), a revisão do Codex e a homologação.",
       "evidencia": "packages/banco/supabase/migrations/20261117225818_extratos_e_conciliacao.sql; packages/banco/src/extratos.test.ts; apps/plataforma/src/lib/extratos; apps/plataforma/src/app/pagamentos/extratos; docs/adr/ADR-016-extratos-por-arquivo.md; docs/aceite/EXT-a.md"
+    },
+    "ORA-META-001": {
+      "status": "parcial",
+      "nota": "Lote META-a (17/11; ADR-017): o custo dos anúncios entra por arquivo, o relatório exportado do Gerenciador de Anúncios por dia, em /relatorios/anuncios (Gestão → Relatórios → Anúncios), sem supor o formato (a pessoa diz a coluna de cada campo, com sugestão em português e em inglês); o arquivo que não vem por dia é recusado. Dados de custo e período auditáveis: cada importação guarda o arquivo (SHA-256), o período, as campanhas, o gasto, quantos dias substituiu, quem importou e quando; o mesmo dia de uma campanha nunca conta duas vezes. Só o dono (resultado.ver). FALTA: a conexão direta com a conta de anúncios (OAuth e escopos revisados, D-022), a revisão do Codex e a homologação.",
+      "evidencia": "packages/banco/supabase/migrations/20261117232910_custo_dos_anuncios.sql; packages/banco/src/anuncios.test.ts; apps/plataforma/src/lib/anuncios; apps/plataforma/src/app/relatorios/anuncios; docs/adr/ADR-017-custo-dos-anuncios.md; docs/aceite/META-a.md"
+    },
+    "ORA-META-003": {
+      "status": "testado",
+      "nota": "Lote META-a (17/11; ADR-017): por campanha e no total do período, o valor usado, as impressões, os cliques, o CTR (cliques ÷ impressões), o CPC (valor ÷ cliques), o custo por resultado da Meta, o CPL (valor ÷ contatos no sistema: as reservas do site com a campanha no link e as oportunidades do CRM com a campanha digitada), o CPA (valor ÷ vendas concluídas desses contatos) e o ROAS (receita ÷ valor); a métrica com divisor zero aparece como \"—\". As fórmulas, o período e os limites ficam no fim da tela.",
+      "evidencia": "packages/banco/supabase/migrations/20261117232910_custo_dos_anuncios.sql; packages/banco/src/anuncios.test.ts; apps/plataforma/src/lib/anuncios; apps/plataforma/src/app/relatorios/anuncios; docs/adr/ADR-017-custo-dos-anuncios.md; docs/aceite/META-a.md"
+    },
+    "ORA-META-004": {
+      "status": "testado",
+      "nota": "Lote META-a (17/11; ADR-017): o funil de cada campanha (contatos, vendas e receita) por loja e por vendedor. Uma venda conta uma vez: se veio da reserva do site e da oportunidade do CRM, vale a campanha da reserva (o clique no link). A política de atribuição é a padrão do ADR-017, reversível, até a decisão D-022 do proprietário.",
+      "evidencia": "packages/banco/supabase/migrations/20261117232910_custo_dos_anuncios.sql; packages/banco/src/anuncios.test.ts; apps/plataforma/src/lib/anuncios; apps/plataforma/src/app/relatorios/anuncios; docs/adr/ADR-017-custo-dos-anuncios.md; docs/aceite/META-a.md"
+    },
+    "ORA-META-006": {
+      "status": "testado",
+      "nota": "Lote META-a (17/11; ADR-017): por campanha, a margem das vendas (dos itens com custo gravado; a venda com item sem custo é contada à parte), o ROAS da margem e o CAC (valor ÷ clientes novos, a primeira compra concluída do cliente). A receita é estimativa de venda; o \"recebido de fato\" é o dinheiro no caixa e o cartão ou Pix já conciliado, pelo líquido.",
+      "evidencia": "packages/banco/supabase/migrations/20261117232910_custo_dos_anuncios.sql; packages/banco/src/anuncios.test.ts; apps/plataforma/src/lib/anuncios; apps/plataforma/src/app/relatorios/anuncios; docs/adr/ADR-017-custo-dos-anuncios.md; docs/aceite/META-a.md"
     }
   }
 }

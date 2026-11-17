@@ -1,4 +1,6 @@
+import { Megaphone } from "lucide-react";
 import type { Metadata } from "next";
+import Link from "next/link";
 
 import { BaixarPlanilha } from "../../componentes/BaixarPlanilha";
 import { MoldeReal } from "../../componentes/MoldeReal";
@@ -73,6 +75,14 @@ export default async function Relatorios({ searchParams }: { searchParams: Promi
         )}
       </div>
 
+      {/* META-a: o custo dos anúncios por campanha (ADR-017), só para quem vê o resultado da rede (o dono). */}
+      {permissoes.has("resultado.ver") && (
+        <p className="mb-4 flex flex-wrap items-center gap-x-2 text-sm">
+          <Megaphone className="size-4 text-acao" aria-hidden />
+          Quanto custou cada contato e cada venda dos anúncios?
+          <Link href="/relatorios/anuncios" className="font-semibold text-acao">Anúncios (Meta): custo e retorno por campanha</Link>
+        </p>
+      )}
       <ConteudoRelatorios relatorios={relatorios} turno={turno} regioes={regioes} />
     </MoldeReal>
   );

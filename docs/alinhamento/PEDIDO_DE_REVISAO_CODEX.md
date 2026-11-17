@@ -1740,3 +1740,20 @@ Programa de execução integral (PR #67; checkpoint em `docs/alinhamento/EXECUCA
   1. que nenhuma linha é conciliada sem a decisão de quem concilia, e que "as certas" são só as de sugestão única nos dois sentidos;
   2. que o gerente de outra loja e o vendedor não leem nem decidem o extrato (RLS e as 7 funções);
   3. a leitura dos valores e das datas (o milhar, o sinal e a data do Excel) contra arquivos de verdade, quando chegarem.
+- **CI, merge e publicação (17/11):** CI verde em `a6cf2c3` (2.837 testes e 1 TODO, 301 E2E, com 13 pulados); merge `721e021`, com a árvore da branch testada; no GitHub, os checks de `721e021` terminaram com sucesso: "Verificações" e "Supabase Preview"; no ar desde 20:20. Conferido pela API, no ar, que o visitante recebe 42501 nas funções novas.
+
+## 17/11/2026 — Lote META-a: o custo dos anúncios por arquivo, junto aos contatos e às vendas de cada campanha (ORA-META-001, ORA-META-003, ORA-META-004 e ORA-META-006)
+
+- **Origem:** o plano do proprietário de 16/11, Onda 3, item "Meta Ads", a parte que não depende do acesso à conta de anúncios. A decisão está no [ADR-017](../adr/ADR-017-custo-dos-anuncios.md); a atribuição é a padrão, reversível, até a decisão D-022.
+- **Banco:** a migration `20261117232910_custo_dos_anuncios`, aplicada no `ora5g-dev` em 17/11 (20:29), depois do merge do EXT-a e do check "Supabase Preview" dele; o md5 do histórico confere com o arquivo. Nenhuma função em vigor mudou.
+  1. `privado.chave_de_campanha`: minúsculas, sem acento e espaços simples; a campanha do arquivo e a do link casam por ela (e o CHECK de `anuncios_custos` só aceita a chave já normalizada).
+  2. `public.anuncios_importacoes` e `public.anuncios_custos` (chave primária: rede, plataforma, campanha e dia), com RLS só para `resultado.ver` pela rede.
+  3. `anuncios_importar` (definer): as regras de cada linha, a soma do mesmo dia e campanha, a impressão digital por rede e o `on conflict` que substitui o dia, contando os substituídos.
+  4. `anuncios_painel` (invoker): os contatos com campanha do período, a venda contada uma vez (reserva antes da oportunidade), a margem dos itens com custo, o recebido de fato e o cliente novo.
+- **Aplicação:** `lib/anuncios` (a leitura do arquivo, com as colunas em português e em inglês e a recusa do arquivo que não vem por dia; as fórmulas com divisor zero dando "—"; a leitura estrita do painel), a rota `/relatorios/anuncios/enviar` e a tela `/relatorios/anuncios`, com o caminho pelos Relatórios só para quem vê o resultado.
+- **Testes:** `anuncios.test.ts` do banco (3: a importação, as recusas e o painel com reserva, oportunidade, venda contada uma vez, margem, recebido e cliente novo), o inventário (191 funções), `lib/anuncios` (12), `app/relatorios/anuncios` (6) e o E2E da tela e do envio sem login.
+- **Limite declarado:** a conexão com a conta de anúncios (OAuth), a Conversions API e o contato pelo WhatsApp ficam de fora (ADR-017); o número depende de o link do anúncio levar o nome da campanha no `utm_campaign`.
+- **Pedido ao Codex:** conferir:
+  1. que o mesmo dia de uma campanha não conta duas vezes, com arquivos por campanha, por conjunto e por anúncio;
+  2. que a venda não conta duas vezes entre campanhas, e que o painel só mostra o que o RLS de quem pede deixa ler;
+  3. as fórmulas da tela contra o ADR-017.

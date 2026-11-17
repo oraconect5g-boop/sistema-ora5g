@@ -1,5 +1,5 @@
 // ARQUIVO GERADO pelo Supabase (generate_typescript_types do projeto ora5g-dev) depois da
-// migration 20261117225818_extratos_e_conciliacao. Não edite à mão: gere de novo a cada
+// migration 20261117232910_custo_dos_anuncios. Não edite à mão: gere de novo a cada
 // migration aplicada (auditoria do Codex de 08/11, §7.2). O teste tipos-banco.test.ts confere
 // que funções e tabelas públicas daqui são as mesmas das migrations.
 export type Json =
@@ -18,6 +18,135 @@ export type Database = {
   }
   public: {
     Tables: {
+      anuncios_custos: {
+        Row: {
+          atualizado_em: string
+          campanha: string
+          campanha_chave: string
+          cliques: number | null
+          dia: string
+          gasto_centavos: number
+          importacao_id: string
+          impressoes: number | null
+          organizacao_id: string
+          plataforma: string
+          resultados: number | null
+        }
+        Insert: {
+          atualizado_em?: string
+          campanha: string
+          campanha_chave: string
+          cliques?: number | null
+          dia: string
+          gasto_centavos: number
+          importacao_id: string
+          impressoes?: number | null
+          organizacao_id: string
+          plataforma: string
+          resultados?: number | null
+        }
+        Update: {
+          atualizado_em?: string
+          campanha?: string
+          campanha_chave?: string
+          cliques?: number | null
+          dia?: string
+          gasto_centavos?: number
+          importacao_id?: string
+          impressoes?: number | null
+          organizacao_id?: string
+          plataforma?: string
+          resultados?: number | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "anuncios_custos_importacao_id_fkey"
+            columns: ["importacao_id"]
+            isOneToOne: false
+            referencedRelation: "anuncios_importacoes"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "anuncios_custos_organizacao_id_fkey"
+            columns: ["organizacao_id"]
+            isOneToOne: false
+            referencedRelation: "organizacoes"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      anuncios_importacoes: {
+        Row: {
+          arquivo: string
+          campanhas: number
+          dias_de_campanha: number
+          gasto_centavos: number
+          id: string
+          importado_em: string
+          importado_por: string
+          impressao: string
+          linhas: number
+          mapeamento: Json
+          numero: number
+          organizacao_id: string
+          periodo_fim: string
+          periodo_inicio: string
+          plataforma: string
+          substituidos: number
+        }
+        Insert: {
+          arquivo: string
+          campanhas: number
+          dias_de_campanha: number
+          gasto_centavos: number
+          id?: string
+          importado_em?: string
+          importado_por: string
+          impressao: string
+          linhas: number
+          mapeamento?: Json
+          numero?: never
+          organizacao_id: string
+          periodo_fim: string
+          periodo_inicio: string
+          plataforma: string
+          substituidos: number
+        }
+        Update: {
+          arquivo?: string
+          campanhas?: number
+          dias_de_campanha?: number
+          gasto_centavos?: number
+          id?: string
+          importado_em?: string
+          importado_por?: string
+          impressao?: string
+          linhas?: number
+          mapeamento?: Json
+          numero?: never
+          organizacao_id?: string
+          periodo_fim?: string
+          periodo_inicio?: string
+          plataforma?: string
+          substituidos?: number
+        }
+        Relationships: [
+          {
+            foreignKeyName: "anuncios_importacoes_importado_por_fkey"
+            columns: ["importado_por"]
+            isOneToOne: false
+            referencedRelation: "perfis_usuario"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "anuncios_importacoes_organizacao_id_fkey"
+            columns: ["organizacao_id"]
+            isOneToOne: false
+            referencedRelation: "organizacoes"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       aprovacoes_desconto: {
         Row: {
           abaixo_do_custo: boolean
@@ -6547,6 +6676,20 @@ export type Database = {
       alterar_situacao_pessoa: {
         Args: { p_motivo: string; p_situacao: string; p_usuario: string }
         Returns: boolean
+      }
+      anuncios_importar: {
+        Args: {
+          p_arquivo: string
+          p_impressao: string
+          p_linhas: Json
+          p_mapeamento: Json
+          p_plataforma: string
+        }
+        Returns: Json
+      }
+      anuncios_painel: {
+        Args: { p_fim: string; p_inicio: string }
+        Returns: Json
       }
       aplicar_desconto: {
         Args: { p_desconto: number; p_item: string }
