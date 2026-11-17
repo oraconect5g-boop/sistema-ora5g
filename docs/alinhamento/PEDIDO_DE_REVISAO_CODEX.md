@@ -1695,3 +1695,10 @@ Programa de execução integral (PR #67; checkpoint em `docs/alinhamento/EXECUCA
 - **O que mudou:** o item "Avisos no celular" (`/conta/avisos`) no menu de todas as telas, na lista Mais do celular e no menu do nome, no computador (`componentes/MoldeReal.tsx`); o roteiro `docs/aceite/PWA-b.md` diz onde fica e dá o endereço direto.
 - **Teste:** `app/conta/avisos/avisos.test.ts` confere que o menu e a Minha conta levam à tela.
 - **Banco:** nada.
+- **CI, merge e publicação (17/11):** CI verde em `21c7ab0` (2.781 testes e 1 TODO, 293 E2E, com 13 pulados); merge `3c617c7`, com a árvore da branch testada; no GitHub, os checks de `3c617c7` terminaram com sucesso: "Verificações" e "Supabase Preview"; no ar desde 17:58.
+
+## 17/11/2026 — Aceite do PWA-b (o primeiro lote aceito pelo proprietário)
+
+- **A prova:** o proprietário ligou os avisos no celular dele (Android · Chrome, às 18:03:08) e pediu o aviso de teste (18:03:14); o worker entregou às 18:04:05 (o serviço de envio do Google aceitou: 1 entregue, 0 falhas), e o banco registrou o aviso como enviado e o último aviso do celular. O log do worker (`~/homologacao/logs/worker-avisos.log`) registrou "1 na vez, 1 entregues, 0 celulares fora, 0 falhas".
+- **Antes disso:** o proprietário respondeu "Chegou" a um primeiro pedido de teste, mas o banco e os registros do Supabase mostraram que ninguém tinha entrado no sistema nem ligado os avisos; o registro só foi feito com a segunda tentativa, com o rastro completo.
+- **A resposta:** "aceito", em 17/11. Os requisitos ligados (ORA-REPORT-002 e ORA-QUAL-006) seguem parciais: o aviso de um pedido de verdade espera as contas de teste (J1), e a regra de fila acima do limite não existe ainda.
