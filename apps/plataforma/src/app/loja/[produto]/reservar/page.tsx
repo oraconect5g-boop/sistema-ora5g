@@ -27,11 +27,13 @@ export default async function Reservar({ params, searchParams }: { params: Promi
     return <EstadoVazio titulo="A loja online ainda não está no ar" icone={Store}>Enquanto isso, procure uma das lojas da Ora 5G.</EstadoVazio>;
   }
   const { data, error } = await supabase.rpc("loja_produto", { p_organizacao: organizacao, p_produto: produto });
+  // Fora do site, o banco devolve vazio, sem erro (ONLINE-c); o P0002 antigo continua tratado (ver a página do produto).
   if (error?.code === "P0002") notFound();
-  if (error || !data) {
-    console.error("loja: falha ao ler o produto para reservar", { codigo: error?.code });
+  if (error) {
+    console.error("loja: falha ao ler o produto para reservar", { codigo: error.code });
     return <EstadoVazio titulo="A loja online está fora do ar agora" icone={Store}>Tente de novo em instantes.</EstadoVazio>;
   }
+  if (!data) notFound();
   const p = data as unknown as DetalheDoProduto;
   const escolhida = p.variantes.find((v) => v.id === variante);
   const naLoja = escolhida?.lojas.find((l) => l.id === loja);

@@ -29,7 +29,8 @@ export function erroDaReserva(erro: { code?: string } | null | undefined): ErroD
     case "OR034": return "limite_whatsapp";
     case "OR035": return "limite_loja";
     case "OR001": return "sem_estoque";
-    case "P0002": return "indisponivel";
+    // "Não está à venda na loja online": OR036 desde o ONLINE-c; P0002 é o código antigo (banco sem a migration).
+    case "OR036": case "P0002": return "indisponivel";
     case "OR004": return "repetida";
     // A função ainda não existe no banco (migration do ONLINE-b não aplicada).
     case "PGRST202": case "42883": return "sem_reserva";

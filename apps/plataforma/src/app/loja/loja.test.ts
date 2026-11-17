@@ -127,6 +127,9 @@ describe("a página do produto (ONLINE-a)", () => {
       expect(t, trecho).toContain(trecho);
     }
     expect(elementos(arvore, (p) => typeof p.src === "string").map((p) => p.src)).toEqual(["https://fotos.invalid/org/a1/produto/f1.webp?token=t", "https://fotos.invalid/org/a1/v1/f2.webp?token=t"]);
+    // Fora do site, o banco devolve vazio, SEM erro (ONLINE-c): "não encontrada". O P0002 de antes dá no mesmo.
+    cenario.respostas.loja_produto = { data: null, error: null };
+    await expect(produto()).rejects.toThrow("não encontrada");
     cenario.respostas.loja_produto = { data: null, error: { code: "P0002" } };
     await expect(produto()).rejects.toThrow("não encontrada");
     await expect(produto("não-é-uuid")).rejects.toThrow("não encontrada");

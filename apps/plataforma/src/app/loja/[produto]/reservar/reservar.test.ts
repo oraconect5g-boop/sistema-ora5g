@@ -86,8 +86,13 @@ describe("a tela de reservar (ONLINE-b)", () => {
     expect(texto(await tela({ variante: VARIANTE, loja: SEM_ESTOQUE }))).toContain("Esta loja não tem este produto agora");
     expect(elementos(await tela({ variante: VARIANTE, loja: SEM_ESTOQUE }), (p) => typeof p.chave === "string")).toEqual([]);
     await expect(tela({ variante: "x", loja: LOJA })).rejects.toThrow("não encontrada");
+    // Produto fora do site: o banco devolve vazio, SEM erro (ONLINE-c); o P0002 de antes dá no mesmo. Outro erro não é "não encontrada".
+    cenario.respostas.loja_produto = { data: null, error: null };
+    await expect(tela({ variante: VARIANTE, loja: LOJA })).rejects.toThrow("não encontrada");
     cenario.respostas.loja_produto = { data: null, error: { code: "P0002" } };
     await expect(tela({ variante: VARIANTE, loja: LOJA })).rejects.toThrow("não encontrada");
+    cenario.respostas.loja_produto = { data: null, error: { code: "57014" } };
+    expect(texto(await tela({ variante: VARIANTE, loja: LOJA }))).toContain("A loja online está fora do ar agora");
   });
 });
 
