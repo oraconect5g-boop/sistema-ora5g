@@ -1,0 +1,15 @@
+-- =============================================================================
+-- O índice redundante das fotos, de volta à decisão de 09/11 (lote BANCO-a, correção).
+--
+-- A migration 20261117141658_indices_e_rls_do_banco criou fotos_produto_fk_produto_organizacao (produto_id,
+-- organizacao_id) para o aviso do Supabase sobre a chave estrangeira das fotos. Esse mesmo índice já tinha sido criado
+-- em 08/11 (fotos_produto_produto_organizacao) e tirado em 09/11 (20261109191416_fotos_idempotentes_lote3), na
+-- revisão do Codex: fotos_organizacao (organizacao_id, produto_id) tem as mesmas duas colunas e cobre a chave composta
+-- (o banco usa o índice para as duas igualdades, como mostra o EXPLAIN em packages/banco/src/fotos-lote3.test.ts), e o
+-- aviso do Supabase, que exige a mesma ordem, ficou aceito. O CI do lote acusou a volta do índice redundante.
+--
+-- Tira o índice repetido. Os outros 9 índices da migration anterior ficam: neles não havia outro índice com as mesmas
+-- colunas.
+-- Reversão: supabase/reversao/<mesmo nome>.sql (cria o índice de novo).
+-- =============================================================================
+drop index public.fotos_produto_fk_produto_organizacao;
