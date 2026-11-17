@@ -2,13 +2,14 @@ import { randomUUID } from "node:crypto";
 
 import { ArrowRightLeft } from "lucide-react";
 import type { Metadata } from "next";
+import Link from "next/link";
 
 import { MoldeReal } from "../../componentes/MoldeReal";
 import { Aviso, Botao, Cartao, Selo, TituloPagina } from "../../componentes/ui";
 import { FalhaDoServico, obterSessao } from "../../lib/acesso/sessao";
 import { chaveDoCatalogo, textoDoParametro, type ValorDeParametro } from "../../lib/parametros";
 import { ERROS_DA_TRANSFERENCIA, nomeDaSituacao } from "../../lib/transferencias/regras";
-import { encerrarTransferencia, enviarTransferencia, receberTransferencia, separarTransferencia } from "./acoes";
+import { encerrarTransferencia, enviarRemessa, enviarTransferencia, receberTransferencia, separarTransferencia } from "./acoes";
 
 export const metadata: Metadata = { title: "Transferências entre lojas" };
 export const dynamic = "force-dynamic";
@@ -19,6 +20,8 @@ const OK: Record<string, string> = {
   pedida: "Pedido registrado: aparece para a loja de origem.", separada: "Separado: os itens ficaram reservados na origem.",
   enviada: "Enviado: saiu do estoque da origem e está em trânsito.", recebida: "Recebido e conferido.",
   recusada: "Pedido recusado.", cancelada: "Pedido cancelado; a reserva foi liberada.",
+  remessa: "Remessa pedida: aparece para a loja de origem, produto por produto.",
+  remessa_enviada: "Remessa enviada: o que já estava separado saiu do estoque desta loja; o resto espera a separação.",
 };
 
 // Pedidos internos de transferência (ADR-007, #60): os que saem e os que chegam na loja do turno.
@@ -31,7 +34,7 @@ export default async function Transferencias({ searchParams }: { searchParams: P
   const { supabase, usuario, situacao } = sessao;
   const unidade = situacao.unidade_id as string;
   const [lista, transfere, ajusta] = await Promise.all([
-    supabase.from("transferencias").select("id, numero, origem_id, destino_id, variante_id, quantidade, motivo, situacao, solicitado_por, quantidade_recebida, observacao, solicitado_em")
+    supabase.from("transferencias").select("id, numero, origem_id, destino_id, variante_id, quantidade, motivo, situacao, solicitado_por, quantidade_recebida, observacao, solicitado_em, remessa_id")
       .or(`origem_id.eq.${unidade},destino_id.eq.${unidade}`).order("numero", { ascending: false }).limit(50),
     supabase.rpc("tem_permissao", { p_permissao: "estoque.transferir", p_unidade: unidade }),
     supabase.rpc("tem_permissao", { p_permissao: "estoque.ajustar", p_unidade: unidade }),
@@ -39,12 +42,20 @@ export default async function Transferencias({ searchParams }: { searchParams: P
   if (lista.error || transfere.error || ajusta.error) throw new FalhaDoServico("transferencias");
   const varianteIds = [...new Set(lista.data.map((t) => t.variante_id))];
   const unidadeIds = [...new Set(lista.data.flatMap((t) => [t.origem_id, t.destino_id]))];
-  const [variantes, unidades, itensDasTransferencias] = await Promise.all([
+  // As remessas (TRF-a) das transferências da lista: o número e a origem, para agrupar e enviar de uma vez.
+  const remessaIds = [...new Set(lista.data.flatMap((t) => (t.remessa_id ? [t.remessa_id] : [])))];
+  const [variantes, unidades, itensDasTransferencias, remessas] = await Promise.all([
     varianteIds.length ? supabase.from("variantes").select("id, nome, sku, produtos(tipo)").in("id", varianteIds) : Promise.resolve({ data: [], error: null }),
     unidadeIds.length ? supabase.from("unidades").select("id, nome, tipo").in("id", unidadeIds) : Promise.resolve({ data: [], error: null }),
     lista.data.length ? supabase.from("transferencia_itens").select("transferencia_id, item_serializado_id, recebido").in("transferencia_id", lista.data.map((t) => t.id)) : Promise.resolve({ data: [], error: null }),
+    remessaIds.length ? supabase.from("transferencia_remessas").select("id, numero, origem_id").in("id", remessaIds) : Promise.resolve({ data: [], error: null }),
   ]);
-  if (variantes.error || unidades.error || itensDasTransferencias.error) throw new FalhaDoServico("transferencias_detalhes");
+  if (variantes.error || unidades.error || itensDasTransferencias.error || remessas.error) throw new FalhaDoServico("transferencias_detalhes");
+  const remessa = (id: string | null) => (id ? remessas.data.find((r) => r.id === id) : undefined);
+  // Remessas que saem desta loja com transferência já separada: a origem envia todas de uma vez.
+  const remessasParaEnviar = remessas.data.filter((r) => r.origem_id === unidade)
+    .map((r) => ({ ...r, separadas: lista.data.filter((t) => t.remessa_id === r.id && t.situacao === "separada").length }))
+    .filter((r) => r.separadas > 0);
   const variante = (id: string) => variantes.data.find((v) => v.id === id);
   const serializado = (id: string) => { const t = variante(id)?.produtos?.tipo; return t === "aparelho" || t === "chip"; };
   const local = (id: string) => unidades.data.find((u) => u.id === id);
@@ -62,15 +73,23 @@ export default async function Transferencias({ searchParams }: { searchParams: P
     <MoldeReal sessao={sessao}>
       <TituloPagina sobretitulo={situacao.unidade_nome} titulo="Transferências" />
       <p className="text-sm text-suave">Para pedir, abra o produto no estoque e toque em &quot;na rede&quot;. Aqui a loja de origem separa e envia, e a de destino recebe e confere.</p>
+      <p className="mt-2 text-sm"><Link href="/transferencias/remessa" className="font-semibold text-acao">Pedir vários produtos de uma vez (nova remessa)</Link></p>
       {ok && Object.hasOwn(OK, ok) && <Aviso tom="sucesso">{OK[ok]}</Aviso>}
       {erro && <Aviso tom="perigo">{ERROS_DA_TRANSFERENCIA[erro]}</Aviso>}
       {lista.data.length === 0 && <Aviso tom="info">Nenhuma transferência saindo ou chegando nesta loja.</Aviso>}
+      {remessasParaEnviar.map((r) => (
+        <form key={r.id} action={enviarRemessa} className="mt-3 flex flex-wrap items-center justify-between gap-2 rounded-xl border border-borda bg-white px-4 py-3">
+          <input type="hidden" name="remessa" value={r.id} />
+          <span className="text-sm"><span className="font-semibold">Remessa Nº {r.numero}</span>: {r.separadas} {r.separadas === 1 ? "produto separado" : "produtos separados"}, prontos para sair</span>
+          <Botao type="submit" tamanho="sm">Enviar os separados da remessa</Botao>
+        </form>
+      ))}
       {lista.data.map((t) => {
         const v = variante(t.variante_id);
         const saindo = t.origem_id === unidade;
         const itens = itensDasTransferencias.data.filter((i) => i.transferencia_id === t.id);
         return (
-          <Cartao key={t.id} titulo={`Nº ${t.numero} · ${v?.nome ?? "Produto"} × ${t.quantidade}`} subtitulo={`${local(t.origem_id)?.nome ?? "origem"} → ${local(t.destino_id)?.nome ?? "destino"} · ${saindo ? "saindo daqui" : "chegando aqui"}`} icone={ArrowRightLeft}>
+          <Cartao key={t.id} titulo={`${remessa(t.remessa_id) ? `Remessa Nº ${remessa(t.remessa_id)?.numero} · ` : ""}Nº ${t.numero} · ${v?.nome ?? "Produto"} × ${t.quantidade}`} subtitulo={`${local(t.origem_id)?.nome ?? "origem"} → ${local(t.destino_id)?.nome ?? "destino"} · ${saindo ? "saindo daqui" : "chegando aqui"}`} icone={ArrowRightLeft}>
             <p className="flex flex-wrap items-center gap-2 text-sm">
               <Selo tom={t.situacao === "recebida" ? "sucesso" : t.situacao === "recebida_com_divergencia" ? "aviso" : ABERTAS.has(t.situacao) ? "info" : "neutro"} ponto>{nomeDaSituacao(t.situacao)}</Selo>
               {local(t.destino_id)?.tipo === "excecao" && <Selo tom="aviso">para DEFEITOS</Selo>}

@@ -6,7 +6,7 @@ import { redirect } from "next/navigation";
 
 import { ehUuid } from "../../lib/acesso/regras";
 import { obterSessao } from "../../lib/acesso/sessao";
-import { erroDaTransferencia, lerIdentificadores, lerQuantidade } from "../../lib/transferencias/regras";
+import { erroDaTransferencia, escreverLinhasDaRemessa, lerIdentificadores, lerQuantidade, linhasDoFormulario } from "../../lib/transferencias/regras";
 
 // Pedidos internos de transferência (ADR-007, #60). Cada ação chama UMA função do banco como a
 // pessoa logada; o banco confere loja, permissão, situação, saldo, IMEI/ICCID e idempotência.
@@ -78,4 +78,35 @@ export async function encerrarTransferencia(dados: FormData) {
   const { supabase } = await obterSessao({ exigirLoja: true });
   const { error } = await supabase.rpc("transferencia_encerrar", { p_transferencia: transferencia, p_situacao: situacao, p_motivo: motivo });
   voltar(error, situacao);
+}
+
+// A remessa (TRF-a): vários produtos de uma vez. O pedido volta para a tela de montar com as mesmas linhas se der erro.
+export async function solicitarRemessa(dados: FormData) {
+  const origem = dados.get("origem");
+  const destino = dados.get("destino");
+  const linhas = linhasDoFormulario(dados.getAll("variante"), dados.getAll("quantidade"));
+  const motivo = texto(dados, "motivo");
+  const deVolta = (codigo: string) => {
+    const busca = new URLSearchParams({ erro: codigo });
+    if (ehUuid(origem)) busca.set("origem", origem);
+    if (ehUuid(destino)) busca.set("destino", destino);
+    if (linhas) busca.set("linhas", escreverLinhasDaRemessa(linhas));
+    return `/transferencias/remessa?${busca.toString()}`;
+  };
+  if (!ehUuid(origem) || !ehUuid(destino) || linhas === null) redirect(deVolta("dados"));
+  if (motivo.length < 3) redirect(deVolta("motivo"));
+  const { supabase } = await obterSessao({ exigirLoja: true });
+  const { error } = await supabase.rpc("transferencia_solicitar_remessa", {
+    p_origem: origem, p_destino: destino, p_itens: linhas, p_motivo: motivo, p_chave: chaveDe(dados),
+  });
+  if (error) redirect(deVolta(erroDaTransferencia(error)));
+  redirect("/transferencias?ok=remessa");
+}
+
+export async function enviarRemessa(dados: FormData) {
+  const remessa = dados.get("remessa");
+  if (!ehUuid(remessa)) redirect("/transferencias?erro=dados");
+  const { supabase } = await obterSessao({ exigirLoja: true });
+  const { error } = await supabase.rpc("transferencia_remessa_enviar", { p_remessa: remessa });
+  voltar(error, "remessa_enviada");
 }

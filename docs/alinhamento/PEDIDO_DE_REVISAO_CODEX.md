@@ -1549,7 +1549,40 @@ Programa de execução integral (PR #67; checkpoint em `docs/alinhamento/EXECUCA
   - `e2e/site-instalavel.spec.ts` (3): o manifesto e os ícones respondem, e a página aponta para eles; `/sw.js` sem cache; com a rede desligada (`context.setOffline`), a navegação mostra "Sem internet agora", e "Tentar de novo" volta.
 - **Correção de teste:** o E2E da `/saude` (SAUDE-a) só aceitava o espaço comum entre o número e "ms", e a página usa o espaço que não quebra a linha. No CI passava, porque ali o banco não está configurado; com o banco, falhava (visto rodando a versão de produção aqui). Agora o teste aceita os dois espaços.
 - **Limite declarado:** o Safari do iPhone só usa service worker no site instalado a partir do iOS 16.4. Nos mais antigos, a página "sem internet" não aparece, mas o resto funciona.
+- **CI, merge e publicação (17/11):**
+  - **CI:** a sequência completa, de instalação limpa no servidor, passou em `76a3823`: 2.698 testes e 1 TODO, 291 E2E (13 pulados), auditoria sem vulnerabilidade e o orçamento em dia.
+  - **Merge:** `ccdf342`; a árvore é a da branch testada. No GitHub, os checks de `ccdf342` terminaram com sucesso: "Verificações" e "Supabase Preview".
+  - **Publicação:** na homologação, em 17/11 (build 13:51), conferida pela pasta, pelo serviço local e pelo domínio com o commit inteiro; pelo domínio, `/manifest.webmanifest` e `/sw.js` respondem 200.
 - **Pedido ao Codex:** conferir:
   1. que o service worker não intercepta POST, Server Actions nem chamadas da tela;
   2. que a troca de versão do service worker não deixa telas velhas em cache;
   3. a CSP do `/sw.js`.
+
+## 17/11/2026 — Lote TRF-a: a remessa, vários produtos na mesma transferência (Onda 1, item 5; ORA-INV-007 e #60)
+
+- **Origem:** o plano do proprietário de 16/11 (Onda 1, item 5): "transferência de vários produtos na mesma operação, com reserva na origem, trânsito, recebimento, divergência, cancelamento e DEFEITOS".
+- **Banco:** migration `20261117165326_transferencia_remessa`, com reversão.
+  1. `transferencia_remessas`: o número, as lojas, o motivo, a chave e o conteúdo da idempotência, quem pediu e quando. Tem RLS e a leitura igual à das transferências; a escrita é só por função.
+  2. `transferencias.remessa_id`: a remessa de cada transferência, nula no pedido avulso.
+  3. `transferencia_solicitar_remessa(origem, destino, itens, motivo, chave)`:
+     - aceita de 1 a 30 linhas `{variante, quantidade}`, sem repetir a variante, numa transação só;
+     - segue as regras do pedido avulso: a pessoa na origem ou no destino, com `estoque.consultar`; duas lojas ativas e diferentes da rede; aparelho, chip ou acessório; quantidade de 1 a 9.999; motivo;
+     - cada linha vira uma transferência, com a chave `<chave>:<n>`;
+     - repetir com a mesma chave e o mesmo conteúdo devolve a mesma remessa; com outro conteúdo, `OR004`.
+  4. `transferencia_remessa_enviar(remessa)`: só a loja de origem. Chama `transferencia_enviar` em cada transferência já separada e devolve quantas foram enviadas e quantas esperam a separação. Remessa que não existe dá `42501`, sem `P0002`.
+  5. `transferencia_lojas()`: as lojas ativas da rede (nome e tipo), as mesmas que `estoque_na_rede` já mostra.
+- **Plataforma:** `/transferencias/remessa` monta a remessa sem rascunho no banco:
+  - as lojas, as linhas e a busca viajam no endereço, e "Adicionar" e a lixeira são links;
+  - o pedido final vai num formulário com as quantidades;
+  - `/transferencias` mostra a "Remessa Nº" em cada transferência e a faixa para enviar as separadas;
+  - `/transferencias/remessa` entra na lista das telas protegidas do E2E.
+- **Testes:**
+  - `packages/banco/src/transferencia-remessa.test.ts` (4): do pedido ao recebimento, com a idempotência e o envio de uma vez; o envio só das separadas e só pela origem; as regras; a leitura.
+  - O inventário de autorização: 177 funções.
+  - Na plataforma: as linhas da remessa (`regras.test.ts`, 3) e a tela de montar (`remessa/remessa.test.ts`, 4).
+- **Aplicação no `ora5g-dev`:** em 17/11 (13:53), depois do merge do PWA-a e do check "Supabase Preview" dele, com o md5 `48151e5f3bd11246def3d40ccdb4e75d`, igual ao do arquivo.
+- **Registro:** o roteiro `docs/aceite/TRF-a.md` entrou antes, sem querer, no commit dos documentos do PWA-a (`76a3823`). Nada mais deste lote foi junto.
+- **Pedido ao Codex:** conferir:
+  1. que a remessa não abre caminho que o pedido avulso fecha (a loja da pessoa, a rede, o tipo do produto);
+  2. a idempotência com a chave por linha;
+  3. que o envio de uma vez respeita a regra de DEFEITOS (só quem ajusta estoque).

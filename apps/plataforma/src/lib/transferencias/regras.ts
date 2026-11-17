@@ -48,3 +48,47 @@ export function lerQuantidade(texto: unknown, minimo = 1): number | null {
   const n = Number(texto.trim());
   return n >= minimo && n <= 9999 ? n : null;
 }
+
+// ---------------------------------------------------------------------------------------------
+// A remessa (lote TRF-a; ORA-INV-007, #60): vários produtos pedidos de uma vez entre as mesmas duas lojas. As linhas
+// viajam no endereço da tela de montar ("variante:quantidade", separadas por vírgula), sem rascunho no banco; o banco
+// confere tudo de novo no pedido.
+// ---------------------------------------------------------------------------------------------
+export const MAXIMO_DE_LINHAS_DA_REMESSA = 30;
+export type LinhaDaRemessa = { variante: string; quantidade: number };
+const UUID = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/;
+
+/** As linhas do endereço: só variante válida e quantidade de 1 a 9999; a variante repetida fica com a primeira. */
+export function lerLinhasDaRemessa(texto: unknown): LinhaDaRemessa[] {
+  if (typeof texto !== "string" || !texto) return [];
+  const vistas = new Set<string>();
+  const linhas: LinhaDaRemessa[] = [];
+  for (const parte of texto.split(",").slice(0, MAXIMO_DE_LINHAS_DA_REMESSA * 2)) {
+    const [variante = "", quantidade = ""] = parte.split(":");
+    const n = lerQuantidade(quantidade);
+    if (!UUID.test(variante) || n === null || vistas.has(variante)) continue;
+    vistas.add(variante);
+    linhas.push({ variante, quantidade: n });
+  }
+  return linhas.slice(0, MAXIMO_DE_LINHAS_DA_REMESSA);
+}
+export const escreverLinhasDaRemessa = (linhas: readonly LinhaDaRemessa[]) => linhas.map((l) => `${l.variante}:${l.quantidade}`).join(",");
+/** Acrescenta o produto (uma unidade) se ainda não está e se cabe; senão, devolve as mesmas linhas. */
+export function comALinha(linhas: readonly LinhaDaRemessa[], variante: string): LinhaDaRemessa[] {
+  if (!UUID.test(variante) || linhas.some((l) => l.variante === variante) || linhas.length >= MAXIMO_DE_LINHAS_DA_REMESSA) return [...linhas];
+  return [...linhas, { variante, quantidade: 1 }];
+}
+export const semALinha = (linhas: readonly LinhaDaRemessa[], variante: string) => linhas.filter((l) => l.variante !== variante);
+
+/** As linhas do formulário do pedido: os pares variante e quantidade, na ordem; qualquer valor inválido recusa tudo. */
+export function linhasDoFormulario(variantes: readonly unknown[], quantidades: readonly unknown[]): LinhaDaRemessa[] | null {
+  if (variantes.length === 0 || variantes.length !== quantidades.length || variantes.length > MAXIMO_DE_LINHAS_DA_REMESSA) return null;
+  const linhas: LinhaDaRemessa[] = [];
+  for (let i = 0; i < variantes.length; i++) {
+    const variante = variantes[i];
+    const quantidade = lerQuantidade(quantidades[i]);
+    if (typeof variante !== "string" || !UUID.test(variante) || quantidade === null || linhas.some((l) => l.variante === variante)) return null;
+    linhas.push({ variante, quantidade });
+  }
+  return linhas;
+}

@@ -1,6 +1,8 @@
 import { describe, expect, it } from "vitest";
 
-import { erroDaTransferencia, lerIdentificadores, lerQuantidade, nomeDaSituacao } from "./regras";
+import {
+  comALinha, erroDaTransferencia, escreverLinhasDaRemessa, lerIdentificadores, lerLinhasDaRemessa, lerQuantidade, linhasDoFormulario, MAXIMO_DE_LINHAS_DA_REMESSA, nomeDaSituacao, semALinha,
+} from "./regras";
 
 describe("regras da tela de transferência", () => {
   it("IMEI/ICCID: um por linha, sem máscara e sem repetir; número curto recusa a lista", () => {
@@ -19,5 +21,36 @@ describe("regras da tela de transferência", () => {
     expect(erroDaTransferencia({ code: "OR002" })).toBe("indisponivel");
     expect(erroDaTransferencia({ code: "toString" })).toBe("falha");
     expect(nomeDaSituacao("enviada")).toBe("Em trânsito");
+  });
+});
+
+// A remessa (lote TRF-a): as linhas no endereço da tela de montar e no formulário do pedido.
+describe("as linhas da remessa", () => {
+  const A = "11111111-1111-4111-8111-111111111111";
+  const B = "22222222-2222-4222-8222-222222222222";
+  it("lê do endereço só o que vale, sem repetir o produto, e escreve de volta igual", () => {
+    expect(lerLinhasDaRemessa(`${A}:2,${B}:10`)).toEqual([{ variante: A, quantidade: 2 }, { variante: B, quantidade: 10 }]);
+    expect(lerLinhasDaRemessa(`${A}:2,${A}:5,nao-e-uuid:1,${B}:0,${B}:abc`)).toEqual([{ variante: A, quantidade: 2 }]);
+    expect(lerLinhasDaRemessa(undefined)).toEqual([]);
+    expect(escreverLinhasDaRemessa(lerLinhasDaRemessa(`${A}:2,${B}:10`))).toBe(`${A}:2,${B}:10`);
+  });
+
+  it("adiciona com uma unidade, não repete, respeita o máximo, e tira", () => {
+    const uma = comALinha([], A);
+    expect(uma).toEqual([{ variante: A, quantidade: 1 }]);
+    expect(comALinha(uma, A)).toEqual(uma);
+    expect(comALinha(uma, "nao-e-uuid")).toEqual(uma);
+    const cheias = Array.from({ length: MAXIMO_DE_LINHAS_DA_REMESSA }, (_, i) => ({ variante: `${String(i).padStart(8, "0")}-1111-4111-8111-111111111111`, quantidade: 1 }));
+    expect(comALinha(cheias, B)).toHaveLength(MAXIMO_DE_LINHAS_DA_REMESSA);
+    expect(semALinha([{ variante: A, quantidade: 1 }, { variante: B, quantidade: 3 }], A)).toEqual([{ variante: B, quantidade: 3 }]);
+  });
+
+  it("o formulário do pedido: os pares na ordem; um valor ruim recusa tudo", () => {
+    expect(linhasDoFormulario([A, B], ["2", "10"])).toEqual([{ variante: A, quantidade: 2 }, { variante: B, quantidade: 10 }]);
+    expect(linhasDoFormulario([A, B], ["2"])).toBeNull();
+    expect(linhasDoFormulario([A, A], ["2", "3"])).toBeNull();
+    expect(linhasDoFormulario([A], ["0"])).toBeNull();
+    expect(linhasDoFormulario([A], ["10000"])).toBeNull();
+    expect(linhasDoFormulario([], [])).toBeNull();
   });
 });

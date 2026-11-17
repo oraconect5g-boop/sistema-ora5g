@@ -160,6 +160,19 @@
         "ORA-POS-015"
       ],
       "entrega": "o site instalável: o Ora 5G na tela inicial do celular, em tela cheia, e a página sem internet quando a conexão cai, sem nada guardado (Onda 1, item 7, primeira parte); o estado dos dois requisitos não muda",
+      "commit": "ccdf342",
+      "publicado_em": "2026-11-17",
+      "pedido_em": "2026-11-17",
+      "resposta": null,
+      "respondido_em": null
+    },
+    {
+      "lote": "TRF-a",
+      "roteiro": "docs/aceite/TRF-a.md",
+      "requisitos": [
+        "ORA-INV-007"
+      ],
+      "entrega": "a remessa: vários produtos na mesma transferência, cada um com o próprio caminho, e o envio de uma vez dos já separados (Onda 1, item 5; #60); o estado do requisito não muda",
       "commit": null,
       "publicado_em": null,
       "pedido_em": null,
