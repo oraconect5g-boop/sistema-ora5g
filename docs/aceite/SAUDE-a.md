@@ -4,6 +4,7 @@
 - **Quanto tempo leva:** uns cinco minutos.
 - **O que o lote entrega:** o item 6 da onda 0 do plano de 16/11. A decisão está escrita no [ADR-012](../adr/ADR-012-o-que-e-fila-e-a-leitura-do-banco-na-saude.md). Os requisitos ligados são o ORA-QUAL-006 e o ORA-FISC-008. Nenhum deles muda de estado.
 - **Resposta:** "aceito" ou "não aceito". No "não aceito", diga o passo e o que aconteceu.
+- **No ar:** desde 17/11, às 12:28, no commit `7e1ff5f`. O rodapé pode mostrar um commit mais novo, de um lote seguinte.
 
 ## O que mudou
 

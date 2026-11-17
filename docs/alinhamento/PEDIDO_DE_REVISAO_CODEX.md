@@ -1470,7 +1470,30 @@ Programa de execução integral (PR #67; checkpoint em `docs/alinhamento/EXECUCA
 - **Limite declarado:**
   1. O aviso fora da tela, quando uma fila passa do limite, depende do site instalável com notificação (Onda 1).
   2. Erros do sistema e tempo de resposta das telas dependem do monitoramento (T6).
+- **CI, merge e publicação (17/11):**
+  - **CI:** a sequência completa, de instalação limpa no servidor, passou em `02c0c27`: 2.686 testes e 1 TODO (plataforma 1.563, worker 20, banco 931 e 1 TODO, config 60 e domínio 112), 285 E2E (13 pulados), auditoria sem vulnerabilidade e o orçamento em dia (85 telas; a maior com 186,6 KB de JavaScript, para o limite de 200 KB).
+  - **Merge:** `7e1ff5f`; a árvore é a da branch testada. No GitHub, os checks de `7e1ff5f` terminaram com sucesso: "Verificações" e "Supabase Preview", este de novo verde com a migration do SAUDE-a na `main`.
+  - **Publicação:** na homologação, em 17/11 (build 12:28). Conferida pela pasta, pelo serviço local e pelo domínio com o commit inteiro. Pelo domínio, sem login, a `/saude` mostra "respondeu em 166 ms" e "em dia com esta versão".
 - **Pedido ao Codex:** conferir:
   1. a regra da fila contra a do grupo "sem pedido" da conciliação;
   2. que `saude_do_banco` não abre leitura além da hora e de um sim ou não sobre uma versão;
   3. a leitura da `/saude` com a chave pública e o limite de tempo.
+
+## 17/11/2026 — Lote GIT-a: as issues, o Dependabot e o que o repositório expõe (Onda 0.7; ORA-QUAL-001, ORA-QUAL-004 e ORA-QUAL-014)
+
+- **Origem:** o plano do proprietário de 16/11 (Onda 0.7).
+- **A tabela:** [`ISSUES_E_PRS_2026-11-17.md`](ISSUES_E_PRS_2026-11-17.md). As 62 issues abertas em 17/11, cada uma com a situação. Das corrigidas, o merge da correção na `main` e o teste permanente; os caminhos e os commits foram conferidos por programa.
+  - 48 corrigidas e comprovadas, a maioria pela matriz da reconciliação de 09/11 e pelos lotes B1 a B5, R1, R2, INTEG-a e INTEG-b.
+  - A #44 corrigida neste lote.
+  - 13 abertas, com o que falta em cada uma.
+- **O fechamento no GitHub:** o conector do GitHub respondeu 403 ("Resource not accessible by integration") ao comentário, e o fechamento pediu a confirmação do proprietário, issue por issue. Nada foi fechado. Fica para quando ele liberar a permissão de escrita em issues, cada uma com o comentário que cita o commit e o teste.
+- **Dependências:**
+  1. A PR #103 do Dependabot entra por merge, com o commit original (`7571e3f`), para o GitHub reconhecê-la. Ela traz `next` e `@next/env` 16.4.6, `eslint-config-next` 16.4.6, `lucide-react` 1.73.0, `@playwright/test` 1.65.1, `postcss` 8.5.33, `@electric-sql/pglite` 0.5.16 e `supabase` 3.1.0.
+  2. Por cima, o `npm audit fix`, sem `--force`: o `typescript-eslint` 8.73.0 pede o `minimatch` ^11.0.1, a versão corrigida do GHSA-g3hv-75wg-m249. Só o `package-lock.json` muda, e só em dependências de desenvolvimento. O `npm audit` completo dá 0 (eram 7 moderadas), e o lint continua em dia.
+  3. A #92 (`@types/node` 26) foi recusada, porque o código roda no Node 22. A #93 (TypeScript 7) e a #94 (ESLint 10) ficam abertas, para avaliar.
+- **Segredos:** o histórico inteiro (`npm run segredos -- --historico HEAD`, 470 commits) não tem nenhum.
+- **Exposição:** a lista do que o repositório público mostra foi entregue ao proprietário fora do repositório. Aqui só se registra que ela existe.
+- **Pedido ao Codex:** conferir:
+  1. por amostragem, que o teste citado para cada issue reproduz o defeito sem a correção;
+  2. as 13 que ficam abertas;
+  3. que a troca do `package-lock.json` não muda nenhuma dependência de produção.

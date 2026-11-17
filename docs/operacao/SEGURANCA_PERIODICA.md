@@ -41,11 +41,21 @@ Quem faz: o Claude Code propõe a correção numa branch; o Codex revisa; o prop
 - **Segredos:** nenhum nos arquivos nem em todo o histórico (`npm run segredos -- --historico HEAD`).
 - **Desatualizadas com versão maior nova:** TypeScript 7, ESLint 10, `@types/node` 26 e `embedded-postgres` 18 (plano à parte; versão maior pede ajuste de código e é decidida lote a lote).
 
+**Atualização de 17/11/2026 (lote GIT-a):**
+
+- **Desenvolvimento** (`npm audit`): **0 vulnerabilidades**. O `typescript-eslint` 8.73.0 passou a pedir o `minimatch` ^11.0.1, a versão corrigida. A troca veio do `npm audit fix`, sem `--force`, e só mudou o `package-lock.json` (#44).
+- **Segredos:** de novo nenhum, em todo o histórico (470 commits).
+- **Dependabot:**
+  - a #103, com 8 atualizações pequenas, entrou por merge depois do CI completo;
+  - a #92 (`@types/node` 26) foi recusada, porque o código roda no Node 22;
+  - a #93 (TypeScript 7) e a #94 (ESLint 10) ficam para avaliar em branch própria.
+
 ## 5. Registro das decisões
 
 | Data | Achado | Decisão | Rever em |
 |---|---|---|---|
 | 14/11/2026 | 8 moderadas em dependências só de desenvolvimento (`minimatch` via `eslint-config-next`) | Risco aceito (proposta; o Codex confere): sem correção sem quebra; nada roda no site no ar | Revisão mensal de dezembro |
+| 17/11/2026 | As mesmas moderadas do `minimatch` (7 em 17/11) | Corrigidas: `typescript-eslint` 8.73.0 com o `minimatch` 11, só no `package-lock.json` (#44, lote GIT-a) | Revisão mensal de dezembro |
 
 ## 6. Pendências do proprietário
 
