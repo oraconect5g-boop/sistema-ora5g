@@ -17,7 +17,7 @@ Quase nada do que se vê. A mudança é no que o banco responde quando alguém a
 
 - Hoje nenhum produto está marcado para o site. Por isso a loja online mostra "Em breve".
 - Os endereços dos passos 2 e 3 usam, de propósito, um código de produto que não existe.
-- Confira a versão no ar: abra <https://ora5g.com.br/entrar>. No fim da página, abaixo de "Ver a demonstração", aparece `ora5G · v0.1.0 · commit · build`. O Claude Code informa o commit ao pedir o aceite.
+- Confira a versão no ar: abra <https://ora5g.com.br/entrar>. No fim da página, abaixo de "Ver a demonstração", aparece `ora5G · v0.1.0 · commit · build`. O lote foi ao ar no commit `dc12dce`, em 17/11. O rodapé pode mostrar um commit mais novo, que só muda documentos: vale o que o Claude Code informou ao pedir o aceite.
 
 ## Os passos
 
@@ -60,7 +60,7 @@ A diferença está na resposta do banco. Foi medida pela internet, como um visit
 | Detalhe de um produto fora do site | erro de servidor (500) | resposta vazia, sem erro (200) |
 | Reserva de um produto fora do site | erro de servidor (500) | pedido recusado (400), com o código próprio `OR036` |
 
-Depois da publicação, o Claude Code confere no registro da homologação que os passos 2 e 3 não deixam nenhuma resposta 500, e informa ao pedir o aceite.
+**Conferido depois da publicação** (17/11, 09:10): o Claude Code abriu os passos 1, 2 e 3 pela internet, num navegador com a tela do tamanho de um celular. Os passos 2 e 3 mostraram "Página não encontrada". No registro da homologação, as duas consultas desse produto ao banco tiveram resposta normal (200), e nenhuma resposta 500 apareceu. O registro do banco, no Supabase, confirma: nenhuma resposta 500 nas consultas da loja online desde a mudança no banco (17/11, 04:14).
 
 ## O que este roteiro não cobre
 

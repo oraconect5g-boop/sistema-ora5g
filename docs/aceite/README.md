@@ -23,4 +23,4 @@ Um lote aceito que entrega só uma parte do requisito fica registrado em `aceite
 | Lote | Roteiro | Requisitos | Resposta |
 |---|---|---|---|
 | VEL-a (telas com login mais rápidas) | [VEL-a.md](VEL-a.md) | ORA-QUAL-010, ORA-POS-002 (parte) | aguardando (pedido em 17/11; no ar em `087ef53`) |
-| ONLINE-c (a loja online sem erro de servidor) | [ONLINE-c.md](ONLINE-c.md) | ORA-ONLINE-001, ORA-ONLINE-006 (parte) | a pedir depois da publicação |
+| ONLINE-c (a loja online sem erro de servidor) | [ONLINE-c.md](ONLINE-c.md) | ORA-ONLINE-001, ORA-ONLINE-006 (parte) | aguardando (pedido em 17/11; no ar em `dc12dce`) |
