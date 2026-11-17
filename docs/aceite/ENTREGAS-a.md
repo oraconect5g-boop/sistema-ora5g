@@ -6,6 +6,7 @@
   - **A01:** o botão "Comprar" no topo do site, separado do "Entrar". Faz parte do ORA-ONLINE-001.
   - **A18:** uma tela para você acompanhar as entregas do projeto. Ela não tem um número próprio entre os 179 requisitos.
 - **Resposta:** "aceito" ou "não aceito". No "não aceito", diga o passo e o que aconteceu.
+- **No ar:** desde 17/11, às 12:03, no commit `69bfab6`. O rodapé pode mostrar um commit mais novo, de um lote seguinte.
 
 ## O que mudou
 
