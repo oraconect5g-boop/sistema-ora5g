@@ -5,6 +5,7 @@
 - **O que o lote entrega:** a segunda parte do item 7 da onda 1 do plano de 16/11 (o objetivo "o dono aprova em um toque"). Os requisitos ligados são o ORA-REPORT-002 e o ORA-QUAL-006, e o estado deles não muda.
 - **Resposta:** "aceito" ou "não aceito". No "não aceito", diga o passo, o celular (Android ou iPhone) e o que aconteceu.
 - **No ar:** desde 17/11, às 16:22, no commit `252bcad`. O rodapé pode mostrar um commit mais novo, de um lote seguinte.
+- **Resposta do proprietário:** **aceito**, em 17/11, depois do aviso de teste entregue no celular dele (Android · Chrome) às 18:04. O caminho pelo menu, "Avisos no celular", entrou no mesmo dia, às 17:58.
 
 ## O que mudou
 
