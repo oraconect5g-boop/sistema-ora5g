@@ -1633,8 +1633,25 @@ Programa de execução integral (PR #67; checkpoint em `docs/alinhamento/EXECUCA
   1. A atribuição é a do último toque e vale enquanto o navegador está aberto.
   2. O link pode ser forjado por qualquer pessoa: o dado mede campanhas, não paga ninguém.
   3. O contato do WhatsApp e a oportunidade do CRM ficam de fora (ADR-013).
+- **CI, merge e publicação (17/11):**
+  - **CI:** a sequência completa, de instalação limpa no servidor, passou em `d4cb394`: 2.743 testes e 1 TODO, 293 E2E (13 pulados), auditoria sem vulnerabilidade e o orçamento em dia.
+  - **Merge:** `2e3fa24`; a árvore é a da branch testada. No GitHub, os checks de `2e3fa24` terminaram com sucesso: "Verificações" e "Supabase Preview".
+  - **Publicação:** na homologação, em 17/11 (build 15:02), conferida pela pasta, pelo serviço local e pelo domínio com o commit inteiro; pelo domínio, `/loja` com um link de campanha grava o cookie da origem.
 - **Pedido ao Codex:** conferir:
   1. que o cookie não leva nada que identifique a pessoa e não vai a cache compartilhado;
   2. que a navegação interna (inclusive atrás do Apache, com `x-forwarded-host`) não troca a origem;
   3. que o banco não recusa a reserva por causa da origem e que a chamada antiga continua valendo;
   4. que o painel não conta a mesma venda duas vezes nem mostra reserva de loja que a pessoa não vê.
+
+## 17/11/2026 — Lote DEP-a: a lista única do que depende de fora (aceite A19 do adendo de 16/11)
+
+- **Origem:** o adendo do Codex de 16/11 (aceite A19), registrado na leitura do diagnóstico integral (item 6 das decisões válidas): "a lista única de dependências por API".
+- **O que mudou:** só `docs/integracoes/APIS_E_HABILITACOES_NECESSARIAS.md`.
+  1. No começo, uma tabela com cada integração: os requisitos, o que já existe, o que falta no código, o que o proprietário entrega e a situação. As linhas seguem o quadro da Onda 3 do plano de 16/11, mais o Supabase, os avisos no celular, a logística e o Meta Ads.
+  2. A situação conferida no servidor em 17/11, só pelos nomes (`definir-chave.sh --situacao`): nenhuma chave de fora gravada; as pastas de entrada vazias.
+  3. A regra das chaves internas: o Claude gera no servidor, mas só com a autorização do proprietário para cada uma (plano de 16/11, §3). A versão de 14/11 dizia que elas não dependiam dele.
+  4. A lista do que ele providencia ganhou a autorização do par `WEB_PUSH_*` e os dados das lojas; as linhas das fotos, da equipe, das lojas e do arquivo da Rein foram postas em dia (o que já existe desde 14/11).
+- **Banco e código:** nada.
+- **Pedido ao Codex:** conferir:
+  1. se alguma integração ou dependência ficou de fora;
+  2. se o mapeamento dos requisitos de cada linha confere com o backlog.

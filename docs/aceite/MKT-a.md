@@ -4,6 +4,7 @@
 - **Quanto tempo leva:** uns cinco minutos.
 - **O que o lote entrega:** o item "origem e UTM do pedido e do lead" da onda 2 do plano de 16/11. Os requisitos ligados são o ORA-ONLINE-003, que passa a testado, e o ORA-META-002, que passa a parcial (o WhatsApp espera a integração oficial).
 - **Resposta:** "aceito" ou "não aceito". No "não aceito", diga o passo e o que aconteceu.
+- **No ar:** desde 17/11, às 15:02, no commit `2e3fa24`. O rodapé pode mostrar um commit mais novo, de um lote seguinte.
 
 ## O que mudou
 
