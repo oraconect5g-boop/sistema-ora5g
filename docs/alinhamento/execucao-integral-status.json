@@ -2,7 +2,7 @@
   "_leia": "Checkpoint do programa de execução integral (PR #67). Carregar ao retomar e seguir para o próximo item executável da fila; não reiniciar o projeto. Estados vêm de status-requisitos.json (fonte da rastreabilidade); este arquivo acrescenta lote, bloqueio externo e revisão. Desde 16/11/2026 a medida de avanço é o requisito homologado pelo proprietário: a chave aceites guarda a resposta dele a cada roteiro de aceite (docs/aceite/); um requisito só recebe homologado: true com todos os lotes dele aceitos e sem nada em FALTA na nota de status-requisitos.json.",
   "atualizado_em": "2026-11-17",
   "base": {
-    "main": "087ef53",
+    "main": "67a27db",
     "pacote": {
       "pr": 67,
       "branch": "docs/execucao-integral-20261110",
@@ -30,12 +30,13 @@
   },
   "publicado": {
     "homologacao": {
-      "commit": "087ef53",
+      "commit": "67a27db",
       "quando": "2026-11-17",
-      "conferido": "publicar.sh com a conferência completa (#99): a pasta ativa, o serviço local e o domínio ora5g.com.br servindo o commit inteiro de 087ef53 e o ambiente homologacao em /saude/versao; rodapé 087ef53 · build 17/11/2026 00:40; sem login, pelo domínio, /entrar e /loja respondem 200 e /vender, /inicio e /caixa respondem 307 para a entrada; o log de tempos está ligado (ORA_MEDIR_TEMPOS=1) até o roteiro de aceite; nenhum pedido com login chegou ainda à versão publicada (não há conta de teste: J1)"
+      "conferido": "publicar.sh com a conferência completa (#99): a pasta ativa, o serviço local e o domínio ora5g.com.br servindo o commit inteiro de 67a27db e o ambiente homologacao em /saude/versao; rodapé 67a27db · build 17/11/2026 01:03 (o registro da publicação do VEL-a; o VEL-a entrou em 087ef53, build 00:40); sem login, pelo domínio, /entrar e /loja respondem 200 e /vender, /inicio e /caixa respondem 307 para a entrada; o log de tempos está ligado (ORA_MEDIR_TEMPOS=1) até o roteiro de aceite; nenhum pedido com login chegou ainda à versão publicada (não há conta de teste: J1)"
     },
     "falta_publicar": [
-      "nada de código; o log de tempos está ligado na homologação até o roteiro de aceite do VEL-a: depois ele é desligado e a plataforma é publicada de novo, sem mudança de código"
+      "lote ONLINE-c (a loja online sem erro 500 para o visitante; ADR-009, decisão 15): a migration 20261117071458_loja_online_sem_erro_500 já está no ora5g-dev (aplicada em 17/11); até a publicação, a versão no ar mostra \"A loja online está fora do ar agora\" no lugar da página \"não encontrada\" para um produto fora do site (nenhum produto está marcado para o site)",
+      "o log de tempos está ligado na homologação até o roteiro de aceite do VEL-a: depois ele é desligado e a plataforma é publicada de novo, sem mudança de código"
     ]
   },
   "aceites": {
@@ -52,6 +53,20 @@
       "resposta": null,
       "respondido_em": null,
       "nota": "pedido feito ao proprietário em 17/11, com o lote no ar em 087ef53 (build 00:40) e o log de tempos ligado; o rodapé pode mostrar um commit mais novo, que só muda documentos; a resposta é \"aceito\" ou \"não aceito\"; o roteiro é também a primeira vez que a versão publicada roda com uma sessão de verdade"
+    },
+    "ONLINE-c": {
+      "roteiro": "docs/aceite/ONLINE-c.md",
+      "requisitos": [
+        "ORA-ONLINE-001",
+        "ORA-ONLINE-006"
+      ],
+      "entrega": "parte dos dois requisitos: os dois seguem parciais mesmo com o aceite",
+      "commit": null,
+      "publicado_em": null,
+      "pedido_em": null,
+      "resposta": null,
+      "respondido_em": null,
+      "nota": "o pedido de aceite sai depois da publicação do lote, com o commit que está no ar; a resposta é \"aceito\" ou \"não aceito\""
     }
   },
   "contagem_dos_estados": {
@@ -1092,7 +1107,7 @@
       "titulo": "Site de aparelhos, acessórios e planos Ora Connect",
       "prioridade": "P1",
       "estado": "parcial",
-      "lote": "L13 loja online; ONLINE-a (15/11): a vitrine pública (\"reserve no site e retire na loja\", ADR-009); migration do ONLINE-a aplicada no ora5g-dev e a loja online ligada na homologação em 15/11",
+      "lote": "L13 loja online; ONLINE-a (15/11): a vitrine pública (\"reserve no site e retire na loja\", ADR-009); migration do ONLINE-a aplicada no ora5g-dev e a loja online ligada na homologação em 15/11; ONLINE-c (17/11): o produto fora do site responde vazio, sem erro de servidor (ADR-009, decisão 15), migration aplicada no ora5g-dev em 17/11",
       "bloqueio_externo": "o endereço definitivo (D-024); os planos da Ora Connect dependem da Nogle",
       "revisado_codex": false,
       "homologado": false
@@ -1137,7 +1152,7 @@
       "titulo": "Reserva de IMEI por pedido/canal anti-overselling",
       "prioridade": "P1",
       "estado": "parcial",
-      "lote": "L13 loja online; ONLINE-b (15 e 16/11): a reserva do site com retirada na loja (ADR-009), migration aplicada no ora5g-dev em 16/11",
+      "lote": "L13 loja online; ONLINE-b (15 e 16/11): a reserva do site com retirada na loja (ADR-009), migration aplicada no ora5g-dev em 16/11; ONLINE-c (17/11): as recusas \"não está à venda na loja online\" com o código próprio OR036, sem erro de servidor, migration aplicada no ora5g-dev em 17/11",
       "bloqueio_externo": "a reserva do pedido com pagamento e entrega depende de D-024, D-025, P10 e do provedor de pagamento (E1)",
       "revisado_codex": false,
       "homologado": false
@@ -1674,5 +1689,5 @@
       "homologado": false
     }
   },
-  "proximo_passo": "Seguir o plano do proprietário de 16/11 (resumo na seção 5.A de EXECUCAO_INTEGRAL_STATUS.md), um lote por vez, cada um com o roteiro de aceite em docs/aceite/ e a lista do que se precisa do proprietário: (1) fechar o VEL-a, que está no ar desde 17/11 (087ef53, build 00:40, com o log de tempos ligado): esperar a resposta do proprietário ao roteiro docs/aceite/VEL-a.md, pedido em 17/11 (é a primeira vez que a versão publicada roda com uma sessão de verdade: se uma tela com login mostrar a página de erro, publicar de novo o commit 89927dc, sem desfazer a migration, e corrigir); depois do roteiro, ler as linhas [tempos] de ~/homologacao/logs/plataforma.log, preencher a seção 4.6 de docs/operacao/DESEMPENHO_NO_CELULAR.md, confirmar qual chave assina os tokens (uma linha GET /auth/v1/user por pedido quer dizer segredo compartilhado), gravar a resposta em aceites.VEL-a e, por fim, desligar o log e publicar de novo (seção \"Como medir de novo\" do mesmo documento); enquanto a resposta não chega, seguir para o item 2; (2) o resto da Onda 0: 0.2 a página de produto da loja online sem erro 5xx para produto não publicado; 0.3 as rotinas periódicas do banco agendadas, com registro de cada execução; 0.4 o executável do worker do WhatsApp, desligado sem credencial; 0.5 os índices das chaves estrangeiras e os avisos dos verificadores do Supabase; 0.6 as filas da Saúde da operação e a leitura leve do banco em /saude; 0.7 as issues abertas, o Dependabot e o histórico de segredos; (3) VEL-b: uma leitura por tela em Vendas, Estoque, Catálogo, Clientes e Caixa e os arquivos que ainda perguntam as permissões uma a uma; (4) Onda 1, a loja piloto: as contas de teste (dependem da SUPABASE_SECRET_KEY no servidor, J1), as 11 lojas e DEFEITOS, a planilha inteira da Rein (depende do arquivo em ~/entrada/rein/), as fotos, a transferência de vários produtos, a jornada autenticada no celular e o aviso no celular (PWA); (5) Onda 2: os requisitos parciais e as decisões do proprietário; (6) Onda 3: as integrações, cada uma com contrato, documentação e credencial. Fora do plano novo e ainda registrado: o lote SUPA-a do diagnóstico de 16/11 (config.toml mínimo em packages/banco/supabase, sem buckets, para o check da integração GitHub × Supabase; docs/alinhamento/LEITURA_DIAGNOSTICO_INTEGRAL_2026-11-16.md)."
+  "proximo_passo": "Seguir o plano do proprietário de 16/11 (resumo na seção 5.A de EXECUCAO_INTEGRAL_STATUS.md), um lote por vez, cada um com o roteiro de aceite em docs/aceite/ e a lista do que se precisa do proprietário: (1) fechar o VEL-a, que está no ar desde 17/11 (087ef53, build 00:40, com o log de tempos ligado): esperar a resposta do proprietário ao roteiro docs/aceite/VEL-a.md, pedido em 17/11 (é a primeira vez que a versão publicada roda com uma sessão de verdade: se uma tela com login mostrar a página de erro, publicar de novo o commit 89927dc, sem desfazer a migration, e corrigir); depois do roteiro, ler as linhas [tempos] de ~/homologacao/logs/plataforma.log, preencher a seção 4.6 de docs/operacao/DESEMPENHO_NO_CELULAR.md, confirmar qual chave assina os tokens (uma linha GET /auth/v1/user por pedido quer dizer segredo compartilhado), gravar a resposta em aceites.VEL-a e, por fim, desligar o log e publicar de novo (seção \"Como medir de novo\" do mesmo documento); enquanto a resposta não chega, seguir para os itens 2 e 3; (2) fechar o ONLINE-c (Onda 0.2: a loja online sem erro 500 para o visitante), que entra na main pelo merge que traz este texto, com a migration já no ora5g-dev: publicar, conferir o commit pelo domínio e o registro da homologação sem resposta 500, e pedir o aceite pelo roteiro docs/aceite/ONLINE-c.md; (3) o resto da Onda 0: 0.3 as rotinas periódicas do banco agendadas, com registro de cada execução; 0.4 o executável do worker do WhatsApp, desligado sem credencial; 0.5 os índices das chaves estrangeiras e os avisos dos verificadores do Supabase; 0.6 as filas da Saúde da operação e a leitura leve do banco em /saude; 0.7 as issues abertas, o Dependabot e o histórico de segredos; (4) VEL-b: uma leitura por tela em Vendas, Estoque, Catálogo, Clientes e Caixa e os arquivos que ainda perguntam as permissões uma a uma; (5) Onda 1, a loja piloto: as contas de teste (dependem da SUPABASE_SECRET_KEY no servidor, J1), as 11 lojas e DEFEITOS, a planilha inteira da Rein (depende do arquivo em ~/entrada/rein/), as fotos, a transferência de vários produtos, a jornada autenticada no celular e o aviso no celular (PWA); (6) Onda 2: os requisitos parciais e as decisões do proprietário; (7) Onda 3: as integrações, cada uma com contrato, documentação e credencial. Fora do plano novo e ainda registrado: o lote SUPA-a do diagnóstico de 16/11 (config.toml mínimo em packages/banco/supabase, sem buckets, para o check da integração GitHub × Supabase; docs/alinhamento/LEITURA_DIAGNOSTICO_INTEGRAL_2026-11-16.md); e as 114 funções que o visitante não executa e ainda têm o P0002 no texto (HTTP 500 no registro da API a cada recusa): trocar o código é um lote à parte, a propor ao proprietário."
 }
