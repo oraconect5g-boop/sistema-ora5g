@@ -48,6 +48,19 @@ const configuracao: NextConfig = {
   // Atrás do Apache do cPanel, o pedido da raiz chega como o arquivo de índice que o Apache
   // procura (index.php, index.html, default.htm...). A reescrita só olha o caminho, então
   // funciona com os cabeçalhos X-Forwarded-* do proxy (reescrever no proxy.ts não funcionava).
+  // O service worker do site instalável (PWA-a) não fica em cache: a versão nova chega na próxima visita.
+  async headers() {
+    return [
+      {
+        source: "/sw.js",
+        headers: [
+          { key: "Content-Type", value: "application/javascript; charset=utf-8" },
+          { key: "Cache-Control", value: "no-cache, no-store, must-revalidate" },
+          { key: "Content-Security-Policy", value: "default-src 'self'; script-src 'self'" },
+        ],
+      },
+    ];
+  },
   async rewrites() {
     return {
       beforeFiles: [{ source: "/:indice((?:index|default|home|Default|Home|INDEX)\\.[a-zA-Z0-9]{1,6})", destination: "/" }],
