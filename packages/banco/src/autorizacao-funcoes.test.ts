@@ -313,7 +313,7 @@ const CASOS: Record<string, Caso> = {
   // que está fora do site: todos são recusados e nada muda (reservar o que está no site é o uso normal, provado em
   // loja-online-reserva.test.ts). A recusa é o código OR036, "não está à venda na loja online" (ONLINE-c; antes,
   // P0002, que a API do banco respondia com HTTP 500).
-  "loja_reservar(uuid,uuid,uuid,text,text,text)": {
+  "loja_reservar(uuid,uuid,uuid,text,text,text,jsonb)": {
     A: () => ["select public.loja_reservar($1, $2, $3, 'Atacante', '41999990009', $4) as v", [ids.organizacao, cat.aparelho, ids.lojaA, chave("ataque")]],
     publica: async () => false, outrosCodigosDeRecusa: ["OR036"],
   },
@@ -1071,7 +1071,7 @@ describe("inventário: toda função SECURITY DEFINER exposta tem casos de recus
       select p.oid::regprocedure::text as f, p.prorettype = 'trigger'::regtype as gatilho from pg_proc p
       where p.pronamespace in ('public'::regnamespace, 'privado'::regnamespace) and has_function_privilege('anon', p.oid, 'EXECUTE')`);
     expect(rows.sort((a, b) => a.f.localeCompare(b.f))).toEqual([
-      { f: "loja_produto(uuid,uuid)", gatilho: false }, { f: "loja_reservar(uuid,uuid,uuid,text,text,text)", gatilho: false }, { f: "loja_vitrine(uuid,text,uuid)", gatilho: false },
+      { f: "loja_produto(uuid,uuid)", gatilho: false }, { f: "loja_reservar(uuid,uuid,uuid,text,text,text,jsonb)", gatilho: false }, { f: "loja_vitrine(uuid,text,uuid)", gatilho: false },
       { f: "privado.auditoria_completar_organizacao()", gatilho: true }, { f: "privado.foto_na_vitrine(text)", gatilho: false },
       { f: "saude_do_banco(text)", gatilho: false },
     ]);

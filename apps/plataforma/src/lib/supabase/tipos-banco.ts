@@ -1,5 +1,5 @@
 // ARQUIVO GERADO pelo Supabase (generate_typescript_types do projeto ora5g-dev) depois da
-// migration 20261117015315_sessao_molde_e_pdv. Não edite à mão: gere de novo a cada
+// migration 20261117174218_origem_das_reservas_do_site. Não edite à mão: gere de novo a cada
 // migration aplicada (auditoria do Codex de 08/11, §7.2). O teste tipos-banco.test.ts confere
 // que funções e tabelas públicas daqui são as mesmas das migrations.
 export type Json =
@@ -3106,9 +3106,16 @@ export type Database = {
           nome: string
           numero: number
           organizacao_id: string
+          origem: string | null
           preco_centavos: number
+          referencia: string | null
           situacao: string
           unidade_id: string
+          utm_campaign: string | null
+          utm_content: string | null
+          utm_medium: string | null
+          utm_source: string | null
+          utm_term: string | null
           variante_id: string
           venda_id: string | null
           whatsapp_mascarado: string
@@ -3129,9 +3136,16 @@ export type Database = {
           nome: string
           numero?: never
           organizacao_id: string
+          origem?: string | null
           preco_centavos: number
+          referencia?: string | null
           situacao?: string
           unidade_id: string
+          utm_campaign?: string | null
+          utm_content?: string | null
+          utm_medium?: string | null
+          utm_source?: string | null
+          utm_term?: string | null
           variante_id: string
           venda_id?: string | null
           whatsapp_mascarado: string
@@ -3152,9 +3166,16 @@ export type Database = {
           nome?: string
           numero?: never
           organizacao_id?: string
+          origem?: string | null
           preco_centavos?: number
+          referencia?: string | null
           situacao?: string
           unidade_id?: string
+          utm_campaign?: string | null
+          utm_content?: string | null
+          utm_medium?: string | null
+          utm_source?: string | null
+          utm_term?: string | null
           variante_id?: string
           venda_id?: string | null
           whatsapp_mascarado?: string
@@ -7027,6 +7048,7 @@ export type Database = {
           p_chave: string
           p_nome: string
           p_organizacao: string
+          p_origem?: Json
           p_unidade: string
           p_variante: string
           p_whatsapp: string
@@ -7429,6 +7451,10 @@ export type Database = {
           p_variante: string
         }
         Returns: string
+      }
+      reservas_do_site_painel: {
+        Args: { p_fim: string; p_inicio: string; p_unidade?: string }
+        Returns: Json
       }
       resultado_do_mes: {
         Args: { p_mes: string; p_meses?: number; p_unidade?: string }

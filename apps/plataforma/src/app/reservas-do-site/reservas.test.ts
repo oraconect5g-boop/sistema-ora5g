@@ -73,7 +73,8 @@ const formulario = (campos: Record<string, string>) => { const f = new FormData(
 const AGORA = "2026-11-15T15:00:00Z";
 const reserva = (id: string, outros: Record<string, unknown>) => ({
   id, codigo: "K7M3QP", nome: "Maria Cliente", whatsapp_mascarado: "(41) 9****-0001", preco_centavos: 139_900, situacao: "ativa", expira_em: "2026-11-16T14:00:00Z",
-  criada_em: "2026-11-15T14:00:00Z", variante_id: VARIANTE, item_serializado_id: null, cancelada_em: null, motivo_cancelamento: null, atendida_em: null, ...outros,
+  criada_em: "2026-11-15T14:00:00Z", variante_id: VARIANTE, item_serializado_id: null, cancelada_em: null, motivo_cancelamento: null, atendida_em: null,
+  origem: null, utm_source: null, utm_campaign: null, ...outros,
 });
 
 beforeEach(() => {
@@ -82,7 +83,7 @@ beforeEach(() => {
   cenario.vende = true;
   cenario.tabelas = {
     loja_reservas: { data: [
-      reserva(ATIVA, { item_serializado_id: APARELHO }),
+      reserva(ATIVA, { item_serializado_id: APARELHO, origem: "instagram", utm_source: "instagram", utm_campaign: "natal" }),
       reserva(VENCIDA, { codigo: "VENC22", nome: "João Atrasado", expira_em: "2026-11-15T12:00:00Z", criada_em: "2026-11-14T12:00:00Z" }),
       reserva(CANCELADA, { codigo: "CANC33", nome: "Ana Desistiu", situacao: "cancelada", motivo_cancelamento: "Cliente desistiu pelo WhatsApp", criada_em: "2026-11-15T10:00:00Z" }),
     ], error: null },
@@ -103,7 +104,8 @@ describe("a tela Reservas do site (ONLINE-b)", () => {
     const consulta = cenario.consultas.find((c) => c.tabela === "loja_reservas");
     expect(consulta?.filtros).toEqual(expect.arrayContaining([["eq", "unidade_id", LOJA], ["gte", "criada_em", "2026-11-12T15:00:00.000Z"], ["limit", 100]]));
     const t = texto(arvore);
-    for (const trecho of ["Reservas do site", "Código K7M3QP", "vence em 23 h", "Maria Cliente", "Galaxy A15 128 GB Azul", "R$ 1.399,00", "352099001234567", "Atender no PDV", "Cancelar a reserva"]) {
+    for (const trecho of ["Reservas do site", "Código K7M3QP", "vence em 23 h", "Maria Cliente", "Galaxy A15 128 GB Azul", "R$ 1.399,00", "352099001234567", "Atender no PDV", "Cancelar a reserva",
+      "Veio de", "Instagram · campanha natal"]) {
       expect(t, trecho).toContain(trecho);
     }
     // O WhatsApp chega só mascarado; o número inteiro só sai pela ação de revelar (que fica na auditoria).
@@ -111,7 +113,9 @@ describe("a tela Reservas do site (ONLINE-b)", () => {
     const ocultos = elementos(arvore, (p) => p.name === "reserva").map((p) => p.value);
     expect(ocultos).toEqual([ATIVA, ATIVA]);
     // A vencida (ainda "ativa" no banco, mas fora do prazo) e a cancelada vão para a lista dos últimos 3 dias, sem ações.
-    for (const trecho of ["Últimos 3 dias", "VENC22", "João Atrasado", "Vencida", "CANC33", "Cliente desistiu pelo WhatsApp", "Cancelada"]) expect(t, trecho).toContain(trecho);
+    for (const trecho of ["Últimos 3 dias", "VENC22", "João Atrasado", "Vencida", "CANC33", "Cliente desistiu pelo WhatsApp", "Cancelada", "Sem registro"]) expect(t, trecho).toContain(trecho);
+    // MKT-a: a origem vem na mesma leitura, sem consulta a mais.
+    expect(String(consulta?.filtros.find((f) => f[0] === "select")?.[1])).toContain("origem, utm_source, utm_campaign");
     expect(t).not.toContain("Código VENC22");
   });
 

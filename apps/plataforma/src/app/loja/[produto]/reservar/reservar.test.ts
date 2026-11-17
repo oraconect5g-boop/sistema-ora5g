@@ -13,15 +13,20 @@ const cenario = vi.hoisted(() => ({
   respostas: {} as Record<string, { data: unknown; error: null | { code: string } }>,
   chamadas: [] as { nome: string; argumentos: Record<string, unknown> }[],
   ip: "200.1.1.1",
+  cookie: undefined as string | undefined,
 }));
 vi.mock("next/navigation", () => ({ notFound: () => { throw new Error("não encontrada"); } }));
-vi.mock("next/headers", () => ({ headers: async () => ({ get: (n: string) => (n === "x-forwarded-for" ? cenario.ip : null) }) }));
+vi.mock("next/headers", () => ({
+  headers: async () => ({ get: (n: string) => (n === "x-forwarded-for" ? cenario.ip : null) }),
+  cookies: async () => ({ get: (n: string) => (n === "ora_origem" && cenario.cookie !== undefined ? { name: n, value: cenario.cookie } : undefined) }),
+}));
 vi.mock("../../../../lib/supabase/servidor", () => ({
   clienteSupabaseServidor: async () => ({
     rpc: async (nome: string, argumentos: Record<string, unknown>) => { cenario.chamadas.push({ nome, argumentos }); return cenario.respostas[nome] ?? { data: null, error: { code: "PGRST202" } }; },
   }),
 }));
 
+import { escreverOrigem } from "../../../../lib/loja/origem";
 import { reservarNoSite } from "./acoes";
 import { ReservaConfirmada } from "./FormularioDaReserva";
 import Reservar from "./page";
@@ -70,6 +75,7 @@ beforeEach(() => {
   vi.spyOn(console, "error").mockImplementation(() => undefined);
   cenario.respostas = { loja_produto: { data: DETALHE, error: null }, loja_reservar: { data: CONFIRMACAO, error: null } };
   cenario.chamadas = [];
+  cenario.cookie = undefined;
   cenario.ip = `200.1.1.${Math.floor(Math.random() * 250) + 1}`;
 });
 afterEach(() => { vi.unstubAllEnvs(); vi.restoreAllMocks(); });
@@ -105,11 +111,21 @@ describe("a reserva feita (ONLINE-b)", () => {
 });
 
 describe("a ação da reserva (ONLINE-b)", () => {
-  it("manda ao banco os dados limpos e a chave do site; devolve a confirmação", async () => {
+  it("manda ao banco os dados limpos, a chave do site e a origem (sem o cookie, direto); devolve a confirmação", async () => {
     expect(await reservar()).toEqual({ situacao: "pronta", reserva: CONFIRMACAO });
     expect(cenario.chamadas).toEqual([{ nome: "loja_reservar", argumentos: {
       p_organizacao: ORGANIZACAO, p_variante: VARIANTE, p_unidade: LOJA, p_nome: "Maria Cliente", p_whatsapp: "41987650001", p_chave: `site:${CHAVE}`,
+      p_origem: { origem: "direto" },
     } }]);
+  });
+
+  it("MKT-a: a origem do cookie que o proxy gravou vai junto; cookie fora do formato vale como direto", async () => {
+    cenario.cookie = escreverOrigem({ origem: "instagram", utm_source: "instagram", utm_campaign: "natal", referencia: "l.instagram.com" });
+    await reservar();
+    expect(cenario.chamadas.at(-1)?.argumentos.p_origem).toEqual({ origem: "instagram", utm_source: "instagram", utm_campaign: "natal", referencia: "l.instagram.com" });
+    cenario.cookie = "cookie-estranho!";
+    await reservar({ ...BOM, chave: "00000000-0000-4000-8000-0000000000d2" });
+    expect(cenario.chamadas.at(-1)?.argumentos.p_origem).toEqual({ origem: "direto" });
   });
 
   it("o formulário e o aceite são conferidos antes do banco; cada recusa vira a mensagem; o 6º pedido do mesmo endereço na hora para", async () => {

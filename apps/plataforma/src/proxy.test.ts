@@ -9,6 +9,7 @@ import { NextRequest } from "next/server";
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 
 import { PAGINAS_REAIS } from "./lib/acesso/menu";
+import { lerOrigem } from "./lib/loja/origem";
 import { config, proxy } from "./proxy";
 
 const cobre = (caminho: string) => config.matcher.some((padrao) => {
@@ -210,5 +211,46 @@ describe("proxy de sessão — conferência do token e log de tempos", () => {
     ]);
     const tudo = JSON.stringify(escrito);
     for (const sensivel of [token, USUARIO.id, USUARIO.email, CHAVE_FICTICIA, ID, "52998224725", "supabase", "60c1f2a9"]) expect(tudo, sensivel).not.toContain(sensivel);
+  });
+});
+
+// Lote MKT-a (ORA-ONLINE-003 e ORA-META-002): na loja online, que é pública, o proxy não renova sessão nenhuma; só guarda
+// de onde o visitante chegou, num cookie da sessão do navegador, só da loja online. Endereços e campanhas fictícios.
+describe("proxy da loja online — de onde o visitante chegou", () => {
+  const SITE = "https://loja.homologacao.invalid";
+  const pedido = (caminho: string, cabecalhos: Record<string, string> = {}) => new NextRequest(`${SITE}${caminho}`, { headers: cabecalhos });
+  const cookieGravado = (resposta: Response) => resposta.headers.get("set-cookie") ?? "";
+
+  afterEach(() => {
+    vi.unstubAllGlobals();
+    vi.unstubAllEnvs();
+  });
+
+  it("passa pelo proxy em todas as telas da loja online", () => {
+    for (const caminho of ["/loja", "/loja/produto-x", "/loja/produto-x/reservar"]) expect(cobre(caminho), caminho).toBe(true);
+  });
+
+  it("com o link da campanha, grava o cookie só da loja, fora do JavaScript da página, e sem cache compartilhado; sem ir ao Supabase", async () => {
+    vi.stubEnv("NEXT_PUBLIC_SUPABASE_URL", "https://nao-chamar.supabase.invalid");
+    vi.stubEnv("NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY", ["sb", "publishable", "chaveFicticiaDeTeste123"].join("_"));
+    vi.stubGlobal("fetch", async () => { throw new Error("a loja online não chama o Supabase no proxy"); });
+    const resposta = await proxy(pedido("/loja?utm_source=Instagram&utm_campaign=Natal", { "x-forwarded-proto": "https" }));
+    expect(resposta.headers.get("x-middleware-next")).toBe("1");
+    expect(resposta.headers.get("cache-control")).toBe("private, no-store");
+    const cookie = cookieGravado(resposta);
+    expect(cookie).toMatch(/^ora_origem=[A-Za-z0-9_-]+; Path=\/loja; Secure; HttpOnly; SameSite=lax$/i);
+    const valor = /^ora_origem=([^;]+)/.exec(cookie)?.[1];
+    expect(lerOrigem(valor)).toEqual({ origem: "instagram", utm_source: "instagram", utm_campaign: "natal" });
+  });
+
+  it("vindo de outro site, guarda o site; navegando dentro da loja, não muda nada", async () => {
+    const deFora = await proxy(pedido("/loja/produto-x", { referer: "https://www.google.com.br/" }));
+    expect(lerOrigem(/^ora_origem=([^;]+)/.exec(cookieGravado(deFora))?.[1])).toEqual({ origem: "google", referencia: "www.google.com.br" });
+    const dentro = await proxy(pedido("/loja/produto-x/reservar?variante=1", { referer: `${SITE}/loja/produto-x`, cookie: "ora_origem=abc" }));
+    expect(cookieGravado(dentro)).toBe("");
+    expect(dentro.headers.get("cache-control")).toBeNull();
+    // Atrás do Apache: o host do pedido é o do servidor local, e o próprio site chega pelo x-forwarded-host.
+    const atras = await proxy(new NextRequest("http://127.0.0.1:3100/loja", { headers: { referer: "https://ora5g.com.br/loja", "x-forwarded-host": "ora5g.com.br" } }));
+    expect(cookieGravado(atras)).toBe("");
   });
 });

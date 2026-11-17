@@ -4,9 +4,9 @@
   "total": 179,
   "homologados": 0,
   "contagem": {
-    "nao_iniciado": 42,
-    "parcial": 69,
-    "testado": 63,
+    "nao_iniciado": 40,
+    "parcial": 70,
+    "testado": 64,
     "bloqueado": 3,
     "respeitado": 2
   },
@@ -186,6 +186,20 @@
         "ORA-CAT-002"
       ],
       "entrega": "o importador lê a planilha de produtos da Rein inteira: a observação longa, mais de 2.000 linhas em partes e a linha de total de fora (Onda 1, item 3, a parte sem o arquivo; #89); o estado do requisito não muda",
+      "commit": "03123d0",
+      "publicado_em": "2026-11-17",
+      "pedido_em": "2026-11-17",
+      "resposta": null,
+      "respondido_em": null
+    },
+    {
+      "lote": "MKT-a",
+      "roteiro": "docs/aceite/MKT-a.md",
+      "requisitos": [
+        "ORA-ONLINE-003",
+        "ORA-META-002"
+      ],
+      "entrega": "de onde veio a reserva do site: a origem, a campanha do link e o domínio de quem mandou, na reserva, na tela Reservas do site e no quadro dos Relatórios, com as vendas que vieram delas e quem vendeu (Onda 2; ADR-013)",
       "commit": null,
       "publicado_em": null,
       "pedido_em": null,

@@ -1608,7 +1608,33 @@ Programa de execução integral (PR #67; checkpoint em `docs/alinhamento/EXECUCA
 - **Limite declarado:**
   1. As partes não se conferem entre si: o mesmo SKU em duas partes não é acusado como repetido.
   2. A carga do estoque por local, com a data de corte, espera o arquivo, para não supor as colunas.
+- **CI, merge e publicação (17/11):**
+  - **CI:** a sequência completa, de instalação limpa no servidor, passou em `57376c3`: 2.720 testes e 1 TODO, 293 E2E (13 pulados), auditoria sem vulnerabilidade e o orçamento em dia.
+  - **Merge:** `03123d0`; a árvore é a da branch testada. No GitHub, os checks de `03123d0` terminaram com sucesso: "Verificações" e "Supabase Preview".
+  - **Publicação:** na homologação, em 17/11 (build 14:40), conferida pela pasta, pelo serviço local e pelo domínio com o commit inteiro.
 - **Pedido ao Codex:** conferir:
   1. a regra da linha de total contra falsos positivos;
   2. que nenhuma linha de dados se perde entre as partes;
   3. a impressão digital por parte contra a recusa de aplicar o mesmo arquivo duas vezes.
+
+## 17/11/2026 — Lote MKT-a: de onde veio a reserva do site (Onda 2; ORA-ONLINE-003 e ORA-META-002)
+
+- **Origem:** o plano do proprietário de 16/11, Onda 2 ("ONLINE-003 e META-002: origem e UTM do pedido e do lead"). O canal online de hoje é a reserva do site; a decisão está no [ADR-013](../adr/ADR-013-origem-das-reservas-do-site.md).
+- **Banco:** a migration `20261117174218_origem_das_reservas_do_site`, aplicada no `ora5g-dev` em 17/11 (14:42), depois do merge do REIN-a e do check "Supabase Preview" dele. Antes, o `md5(prosrc)` da `loja_reservar` em vigor foi conferido com a cópia do INTEG-c (`20261117135133`).
+  1. `loja_reservas`: `origem` (lista fechada), `utm_source`, `utm_medium`, `utm_campaign`, `utm_content`, `utm_term` (minúsculas, até 100) e `referencia` (o domínio), todas opcionais, com as restrições na tabela; o índice `(unidade_id, criada_em)` para o painel.
+  2. `privado.campo_de_campanha(jsonb, text)`: o texto limpo de um parâmetro; o que não é texto fica vazio.
+  3. `loja_reservar`: a do INTEG-c, com `p_origem jsonb default null` no fim. A assinatura muda: a antiga sai (`drop`) e a nova entra com as mesmas permissões (`anon` e `authenticated`). A origem não entra na conferência da chave.
+  4. `reservas_do_site_painel(início, fim, loja)`: security invoker; período de até 400 dias; por origem, fonte e campanha (reservas, atendidas, canceladas, vencidas, vendas concluídas e o valor) e por vendedor.
+- **Site:** o proxy, só em `/loja` (sem sessão e sem banco), grava o cookie `ora_origem` (base64url de um JSON conferido campo a campo na leitura) quando o link traz `utm_*` ou o `Referer` é de outro site; o próprio site é reconhecido pelo `x-forwarded-host`, pelo `host` e pelo endereço do pedido, com ou sem `www`. A ação da reserva lê o cookie e manda `p_origem`; sem ele, `{"origem": "direto"}`.
+- **Telas:** "Veio de" em cada reserva (Reservas do site); o quadro "Reservas do site por origem" nos Relatórios, com o estado próprio (indisponível, falha e forma inesperada não viram zero; as partes nunca passam do todo).
+- **Testes:** `origem-das-reservas.test.ts` (6, no PGlite); `origem.test.ts` (10); `proxy.test.ts` (+3); `reservar.test.ts` (+1 e o caso de antes com a origem); `reservas.test.ts` (a origem na tela e na leitura); `relatorios.test.ts` (+2 e as listas de painéis); o inventário de autorização com a assinatura nova.
+- **Conferido no ar antes da publicação:** a versão publicada chama a reserva sem `p_origem`; pela API, com um produto que não existe, a chamada sem e com a origem recebem a mesma recusa `OR036` (a função é achada; nada é gravado).
+- **Limite declarado:**
+  1. A atribuição é a do último toque e vale enquanto o navegador está aberto.
+  2. O link pode ser forjado por qualquer pessoa: o dado mede campanhas, não paga ninguém.
+  3. O contato do WhatsApp e a oportunidade do CRM ficam de fora (ADR-013).
+- **Pedido ao Codex:** conferir:
+  1. que o cookie não leva nada que identifique a pessoa e não vai a cache compartilhado;
+  2. que a navegação interna (inclusive atrás do Apache, com `x-forwarded-host`) não troca a origem;
+  3. que o banco não recusa a reserva por causa da origem e que a chamada antiga continua valendo;
+  4. que o painel não conta a mesma venda duas vezes nem mostra reserva de loja que a pessoa não vê.

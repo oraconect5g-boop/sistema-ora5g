@@ -4,6 +4,7 @@
 - **Quanto tempo leva:** uns dois minutos.
 - **O que o lote entrega:** a parte do item 3 da onda 1 do plano de 16/11 que não depende do arquivo: o importador lê a planilha de produtos da Rein inteira. Os requisitos ligados são o ORA-CAT-002 e a issue #89, e o estado não muda.
 - **Resposta:** "aceito" ou "não aceito".
+- **No ar:** desde 17/11, às 14:40, no commit `03123d0`. O rodapé pode mostrar um commit mais novo, de um lote seguinte.
 
 ## O que mudou
 

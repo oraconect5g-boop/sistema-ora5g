@@ -2,6 +2,7 @@ import { CalendarClock, Globe } from "lucide-react";
 
 import { Botao, Cartao, EstadoVazio, Selo } from "../../componentes/ui";
 import { brl } from "../../lib/formato";
+import { textoDaOrigem } from "../../lib/loja/origem";
 import { tempoAteVencer } from "../../lib/loja/reserva";
 import { atenderReserva, cancelarReserva } from "./acoes";
 import { RevelarContato } from "./RevelarContato";
@@ -9,6 +10,8 @@ import { RevelarContato } from "./RevelarContato";
 export type ReservaDaLoja = {
   id: string; codigo: string; nome: string; whatsapp_mascarado: string; preco_centavos: number; situacao: string; expira_em: string; criada_em: string;
   variante_id: string; item_serializado_id: string | null; cancelada_em: string | null; motivo_cancelamento: string | null; atendida_em: string | null;
+  /** MKT-a: de onde o cliente chegou ao site (nula nas reservas de antes de 17/11/2026). */
+  origem: string | null; utm_source: string | null; utm_campaign: string | null;
 };
 
 const campo = "mt-1 min-h-10 w-full rounded-botao border border-borda bg-white px-3 text-sm outline-none focus:border-acao focus:ring-2 focus:ring-acao/20";
@@ -39,6 +42,7 @@ export function ListaDeReservas({ reservas, produtos, imeis, instante }: {
                 <div><dt className="text-suave">WhatsApp</dt><dd><RevelarContato reserva={r.id} mascara={r.whatsapp_mascarado} /></dd></div>
                 <div><dt className="text-suave">Produto</dt><dd className="font-medium">{produto(r)}</dd></div>
                 <div><dt className="text-suave">Preço anunciado</dt><dd className="numeros font-bold">{brl(r.preco_centavos)}</dd></div>
+                <div className="sm:col-span-2"><dt className="text-suave">Veio de</dt><dd>{textoDaOrigem(r)}</dd></div>
                 {imei && <div className="sm:col-span-2"><dt className="text-suave">IMEI reservado</dt><dd className="numeros break-all">{imei}</dd></div>}
               </dl>
               {/* No celular, o cancelar fica numa linha só dele, para o motivo ter a largura toda. */}
@@ -61,7 +65,7 @@ export function ListaDeReservas({ reservas, produtos, imeis, instante }: {
           <ul className="divide-y divide-borda text-sm">
             {outras.map((r) => (
               <li key={r.id} className="flex flex-wrap items-center justify-between gap-2 py-2">
-                <span className="min-w-0"><span className="numeros font-semibold">{r.codigo}</span> · {r.nome} · {produto(r)}{r.motivo_cancelamento ? ` · ${r.motivo_cancelamento}` : ""}</span>
+                <span className="min-w-0"><span className="numeros font-semibold">{r.codigo}</span> · {r.nome} · {produto(r)}{r.motivo_cancelamento ? ` · ${r.motivo_cancelamento}` : ""} · <span className="text-suave">{textoDaOrigem(r)}</span></span>
                 {rotulo(r)}
               </li>
             ))}
