@@ -1,6 +1,7 @@
 import { createClient, type SupabaseClient } from "@supabase/supabase-js";
 
 import type { BancoConnect } from "./connect/processar.ts";
+import type { BancoWhatsApp, EnvioParaFazer, ResultadoDoEnvio } from "./whatsapp/processar.ts";
 import { mensagemSegura, type DesfechoDoConvite, type ServicoIdentidade } from "./identidade.ts";
 
 // Bloqueio no Auth: 100 anos (o desbloqueio usa "none"). O banco é a fonte da verdade do acesso.
@@ -57,5 +58,32 @@ export function bancoConnect(cliente: SupabaseClient, organizacao: string): Banc
     operacoesAConsultar: (tipos, limite) => rpc("connect_worker_operacoes_a_consultar", { p_organizacao: organizacao, p_tipos: tipos, p_limite: limite }),
     registrarConsulta: (operacao, evidencia) => rpc("connect_worker_registrar_consulta", { p_operacao: operacao, p_evidencia: evidencia }),
     atualizarReferencias: (tipo, itens) => rpc("connect_worker_atualizar_referencias", { p_organizacao: organizacao, p_tipo: tipo, p_itens: itens }),
+  };
+}
+
+// Funções whatsapp_worker_* (só service_role) e o PDF da nota no bucket privado "notas" (lote WHATS-a; K1c).
+type LinhaDaFila = {
+  envio_id: string; organizacao_id: string; telefone: string; documento_caminho: string;
+  nota_numero: number | null; nota_serie: number | null; chave_acesso: string | null; cliente_nome: string;
+};
+export function bancoWhatsApp(cliente: SupabaseClient): BancoWhatsApp {
+  const rpc = async <T>(nome: string, argumentos: Record<string, unknown>): Promise<T> => {
+    const { data, error } = await cliente.rpc(nome, argumentos);
+    if (error) throw error;
+    return data as T;
+  };
+  return {
+    async reivindicar(limite): Promise<EnvioParaFazer[]> {
+      const linhas = await rpc<LinhaDaFila[]>("whatsapp_worker_reivindicar", { p_limite: limite });
+      return (linhas ?? []).map((l) => ({
+        envioId: l.envio_id, telefone: l.telefone, documentoCaminho: l.documento_caminho, notaNumero: l.nota_numero,
+        notaSerie: l.nota_serie, chaveAcesso: l.chave_acesso, clienteNome: l.cliente_nome,
+      }));
+    },
+    registrarResultado: (envio: string, resultado: ResultadoDoEnvio) => rpc<string>("whatsapp_worker_resultado", { p_envio: envio, p_resultado: resultado }),
+    async linkTemporario(caminho, segundos) {
+      const { data, error } = await cliente.storage.from("notas").createSignedUrl(caminho, segundos);
+      return error || !data?.signedUrl ? null : data.signedUrl;
+    },
   };
 }
