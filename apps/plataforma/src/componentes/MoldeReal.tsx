@@ -1,4 +1,4 @@
-import { ChevronDown, Clock, KeyRound, LogOut, MapPin, Store } from "lucide-react";
+import { BellRing, ChevronDown, Clock, KeyRound, LogOut, MapPin, Store } from "lucide-react";
 import Link from "next/link";
 import type { ReactNode } from "react";
 
@@ -64,6 +64,8 @@ export function MoldeReal({ sessao, children, largura = "max-w-3xl" }: {
   const acoesDoTrilho = (
     <>
       <Link href="/escolher-loja" className={classeDaAcaoDoTrilho}><Store aria-hidden className="size-4" /> Trocar de loja</Link>
+      {/* PWA-b: ligar os avisos no celular fica a um toque, em qualquer tela. */}
+      <Link href="/conta/avisos" className={classeDaAcaoDoTrilho}><BellRing aria-hidden className="size-4" /> Avisos no celular</Link>
       <Link href="/conta/senha" className={classeDaAcaoDoTrilho}><KeyRound aria-hidden className="size-4" /> Trocar minha senha</Link>
       <form action={sair}><BotaoDeEnvio className={`${classeDaAcaoDoTrilho} disabled:opacity-60`} enquanto={<><LogOut aria-hidden className="size-4" /> Saindo…</>}><LogOut aria-hidden className="size-4" /> Sair</BotaoDeEnvio></form>
     </>
@@ -71,6 +73,7 @@ export function MoldeReal({ sessao, children, largura = "max-w-3xl" }: {
   const contaESaida = (
     <div className="space-y-1 border-t border-borda pt-2">
       <Link href="/escolher-loja" className={classeDoItemDoMenu}><Store aria-hidden className="size-4 text-suave" /> Trocar de loja</Link>
+      <Link href="/conta/avisos" className={classeDoItemDoMenu}><BellRing aria-hidden className="size-4 text-suave" /> Avisos no celular</Link>
       <Link href="/conta/senha" className={classeDoItemDoMenu}><KeyRound aria-hidden className="size-4 text-suave" /> Trocar minha senha</Link>
       <form action={sair}><BotaoDeEnvio className={`${classeDoItemDoMenu} disabled:opacity-60`} enquanto={<><LogOut aria-hidden className="size-4 text-suave" /> Saindo…</>}><LogOut aria-hidden className="size-4 text-suave" /> Sair</BotaoDeEnvio></form>
     </div>

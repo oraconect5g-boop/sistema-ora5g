@@ -1688,3 +1688,10 @@ Programa de execução integral (PR #67; checkpoint em `docs/alinhamento/EXECUCA
   2. que nenhuma função entrega inscrição de outra pessoa sem o segredo;
   3. que o worker não posta fora dos serviços de envio e que o service worker não abre endereço de fora;
   4. que quem pediu nunca recebe o aviso do próprio pedido e que a pessoa bloqueada não recebe.
+
+## 17/11/2026 — Correção do PWA-b: o caminho até os avisos
+
+- **Origem:** o proprietário perguntou como chegar à tela no celular. O roteiro mandava abrir "Minha conta", que não está no menu das telas (só pelo endereço `/conta`).
+- **O que mudou:** o item "Avisos no celular" (`/conta/avisos`) no menu de todas as telas, na lista Mais do celular e no menu do nome, no computador (`componentes/MoldeReal.tsx`); o roteiro `docs/aceite/PWA-b.md` diz onde fica e dá o endereço direto.
+- **Teste:** `app/conta/avisos/avisos.test.ts` confere que o menu e a Minha conta levam à tela.
+- **Banco:** nada.

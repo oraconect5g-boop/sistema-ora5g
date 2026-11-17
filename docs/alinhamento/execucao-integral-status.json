@@ -2,7 +2,7 @@
   "_leia": "Checkpoint do programa de execução integral (PR #67). Carregar ao retomar e seguir para o próximo item executável da fila; não reiniciar o projeto. Estados vêm de status-requisitos.json (fonte da rastreabilidade); este arquivo acrescenta lote, bloqueio externo e revisão. Desde 16/11/2026 a medida de avanço é o requisito homologado pelo proprietário: a chave aceites guarda a resposta dele a cada roteiro de aceite (docs/aceite/); um requisito só recebe homologado: true com todos os lotes dele aceitos e sem nada em FALTA na nota de status-requisitos.json.",
   "atualizado_em": "2026-11-17",
   "base": {
-    "main": "252bcad",
+    "main": "9f064d8",
     "pacote": {
       "pr": 67,
       "branch": "docs/execucao-integral-20261110",
@@ -30,12 +30,12 @@
   },
   "publicado": {
     "homologacao": {
-      "commit": "252bcad",
+      "commit": "9f064d8",
       "quando": "2026-11-17",
-      "conferido": "publicar.sh com a conferência completa (#99): a pasta ativa, o serviço local e o domínio ora5g.com.br servindo o commit inteiro de 252bcad e o ambiente homologacao em /saude/versao; build 17/11/2026 16:22 (o lote PWA-b), com a configuração nova (as chaves dos avisos); sem login, pelo domínio, /conta/avisos responde 307 para a entrada e /sw.js traz o aviso e o toque; o worker dos avisos roda a cada minuto desde 16:32 (crontab do usuário dev, autorização do proprietário de 17/11) e lê a fila com resposta 200; o log de tempos está ligado (ORA_MEDIR_TEMPOS=1) até o roteiro de aceite do VEL-a"
+      "conferido": "publicar.sh com a conferência completa (#99): a pasta ativa, o serviço local e o domínio ora5g.com.br servindo o commit inteiro de 9f064d8 e o ambiente homologacao em /saude/versao; build 17/11/2026 16:50 (o registro do PWA-b, só documentos); o worker dos avisos roda a cada minuto desde 16:32 e seguiu rodando na versão nova (16:52); o log de tempos está ligado (ORA_MEDIR_TEMPOS=1) até o roteiro de aceite do VEL-a"
     },
     "falta_publicar": [
-      "registro da publicação do PWA-b (só documentos): a publicação e o agendamento do worker dos avisos",
+      "a correção do caminho até os avisos: o item \"Avisos no celular\" no menu de todas as telas",
       "o log de tempos está ligado na homologação até o roteiro de aceite do VEL-a: depois ele é desligado e a plataforma é publicada de novo, sem mudança de código"
     ]
   },

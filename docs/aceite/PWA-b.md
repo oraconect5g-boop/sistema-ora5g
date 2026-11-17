@@ -29,7 +29,12 @@
 - **Android:** abra <https://ora5g.com.br> no Chrome.
 - **iPhone:** abra pelo ícone do Ora 5G instalado na tela inicial (roteiro PWA-a). No Safari aberto direto, o iPhone não recebe avisos de site.
 
-Entre com o seu login. Abra **Minha conta** e toque em **"Avisos no celular"**. Depois:
+Entre com o seu login e escolha a loja do turno. No menu, toque em **"Avisos no celular"**:
+
+- **no celular:** na barra de baixo, toque em **Mais**; o item fica no fim da lista;
+- **no computador:** toque no seu nome, no alto da tela.
+
+Ou abra direto o endereço **ora5g.com.br/conta/avisos**. Depois:
 
 1. Toque em **"Receber avisos neste celular"**.
 2. Quando o celular perguntar, toque em **"Permitir"**.
