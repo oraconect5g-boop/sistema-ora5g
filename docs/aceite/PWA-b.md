@@ -4,6 +4,7 @@
 - **Quanto tempo leva:** uns cinco minutos.
 - **O que o lote entrega:** a segunda parte do item 7 da onda 1 do plano de 16/11 (o objetivo "o dono aprova em um toque"). Os requisitos ligados são o ORA-REPORT-002 e o ORA-QUAL-006, e o estado deles não muda.
 - **Resposta:** "aceito" ou "não aceito". No "não aceito", diga o passo, o celular (Android ou iPhone) e o que aconteceu.
+- **No ar:** desde 17/11, às 16:22, no commit `252bcad`. O rodapé pode mostrar um commit mais novo, de um lote seguinte.
 
 ## O que mudou
 
@@ -18,8 +19,8 @@
 
 ## Antes de começar
 
-- **O envio dos avisos ainda não está agendado no servidor.** Ele roda a cada minuto, mas só depois da sua autorização, pedida junto com este roteiro.
-- **Sem o agendamento,** os passos 1 e 2 funcionam, mas o aviso de teste do passo 3 fica na fila e não chega.
+- **O envio dos avisos roda a cada minuto no servidor** desde 17/11, às 16:32, com a sua autorização.
+- **O aviso de teste chega em até um minuto** depois do pedido.
 
 ## Os passos
 
@@ -43,7 +44,7 @@ Entre com o seu login. Abra **Minha conta** e toque em **"Avisos no celular"**. 
 
 **Tem de acontecer:** a tela diz que o aviso chega quando houver um desconto, uma nota ou uma saída de caixa para decidir numa loja sua.
 
-### 3. O aviso de teste (depois do agendamento)
+### 3. O aviso de teste
 
 Toque em **"Mandar um aviso de teste"**.
 

@@ -1,6 +1,6 @@
 #!/usr/bin/env bash
-# Worker dos avisos no celular (lote PWA-b; ADR-014). NÃO está agendado: entra na rotina com a autorização do
-# proprietário. Quando autorizado:
+# Worker dos avisos no celular (lote PWA-b; ADR-014). Agendado desde 17/11/2026 (16:32), com a autorização do
+# proprietário, no crontab do usuário dev:
 #   * * * * * bash $HOME/homologacao/plataforma/deploy/homologacao/worker-avisos.sh
 # Usa a versão no ar e a cópia COMPLETA do ambiente que só o worker recebe (apps/worker/.env.local). Não precisa da chave
 # secreta do Supabase: lê a fila com a chave pública e o segredo dos avisos, que só abre a fila deles. Sem alguma chave,
