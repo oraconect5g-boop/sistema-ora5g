@@ -3,14 +3,15 @@
   "version": "0.1.0",
   "private": true,
   "type": "module",
-  "description": "Rotinas do servidor que usam a chave secreta do Supabase (ADR-002 §2.5): nunca atendem requisição de usuário.",
+  "description": "Rotinas do servidor (ADR-002 §2.5): as que usam a chave secreta do Supabase e a dos avisos no celular, que lê só a fila deles com o segredo próprio (ADR-014). Nunca atendem requisição de usuário.",
   "scripts": {
     "lint": "eslint . --max-warnings=0",
     "typecheck": "tsc --noEmit",
     "test": "vitest run",
     "identidade": "node src/executar-identidade.ts",
     "connect": "node src/executar-connect.ts",
-    "whatsapp": "node src/executar-whatsapp.ts"
+    "whatsapp": "node src/executar-whatsapp.ts",
+    "avisos": "node src/executar-avisos.ts"
   },
   "dependencies": {
     "@next/env": "16.4.6",

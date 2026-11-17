@@ -211,6 +211,20 @@
       "roteiro": "docs/aceite/DEP-a.md",
       "requisitos": [],
       "entrega": "a lista única do que depende de fora (aceite A19 do adendo do Codex de 16/11), conferida no servidor em 17/11, só pelos nomes; nenhum requisito muda de estado",
+      "commit": "569eab8",
+      "publicado_em": "2026-11-17",
+      "pedido_em": "2026-11-17",
+      "resposta": null,
+      "respondido_em": null
+    },
+    {
+      "lote": "PWA-b",
+      "roteiro": "docs/aceite/PWA-b.md",
+      "requisitos": [
+        "ORA-REPORT-002",
+        "ORA-QUAL-006"
+      ],
+      "entrega": "o aviso no celular de desconto, nota e saída de caixa a aprovar, para quem decide (menos quem pediu), com o toque que abre a tela da aprovação (Onda 1, item 7, a segunda parte; ADR-014); o estado dos requisitos não muda",
       "commit": null,
       "publicado_em": null,
       "pedido_em": null,

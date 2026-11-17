@@ -1,4 +1,4 @@
-import { ShieldCheck } from "lucide-react";
+import { BellRing, ShieldCheck } from "lucide-react";
 import type { Metadata } from "next";
 import Link from "next/link";
 import { redirect } from "next/navigation";
@@ -57,6 +57,9 @@ export default async function Conta() {
         </ul>
         <Link href="/conta/seguranca" className="mt-5 flex items-center gap-2 rounded-botao border border-borda px-3 py-2.5 text-sm font-semibold text-acao hover:bg-acao-clara/40">
           <ShieldCheck aria-hidden className="size-4" />Segurança da conta: verificação em duas etapas
+        </Link>
+        <Link href="/conta/avisos" className="mt-2 flex items-center gap-2 rounded-botao border border-borda px-3 py-2.5 text-sm font-semibold text-acao hover:bg-acao-clara/40">
+          <BellRing aria-hidden className="size-4" />Avisos no celular: aprovações num toque
         </Link>
         <form action={sair} className="mt-6"><Botao type="submit" variante="secundario">Sair</Botao></form>
       </Cartao>

@@ -6,7 +6,8 @@
   "exports": {
     ".": "./src/index.ts",
     "./nogle": "./src/nogle.ts",
-    "./fiscal": "./src/fiscal.ts"
+    "./fiscal": "./src/fiscal.ts",
+    "./avisos": "./src/avisos.ts"
   },
   "scripts": {
     "lint": "eslint . --max-warnings=0",

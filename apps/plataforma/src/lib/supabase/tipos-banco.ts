@@ -1,5 +1,5 @@
 // ARQUIVO GERADO pelo Supabase (generate_typescript_types do projeto ora5g-dev) depois da
-// migration 20261117174218_origem_das_reservas_do_site. Não edite à mão: gere de novo a cada
+// migration 20261117190556_avisos_no_celular. Não edite à mão: gere de novo a cada
 // migration aplicada (auditoria do Codex de 08/11, §7.2). O teste tipos-banco.test.ts confere
 // que funções e tabelas públicas daqui são as mesmas das migrations.
 export type Json =
@@ -6394,6 +6394,26 @@ export type Database = {
       atividade_encerrar: {
         Args: { p_atividade: string; p_feita: boolean; p_resultado: string }
         Returns: boolean
+      }
+      aviso_cancelar: { Args: { p_endpoint: string }; Returns: boolean }
+      aviso_inscrever: {
+        Args: {
+          p_auth: string
+          p_dispositivo?: string
+          p_endpoint: string
+          p_p256dh: string
+        }
+        Returns: Json
+      }
+      aviso_minhas_inscricoes: { Args: never; Returns: Json }
+      aviso_teste: { Args: never; Returns: Json }
+      avisos_a_enviar: {
+        Args: { p_limite?: number; p_segredo: string }
+        Returns: Json
+      }
+      avisos_resultado: {
+        Args: { p_resultados: Json; p_segredo: string }
+        Returns: Json
       }
       bonus_definir: {
         Args: { p_faixas: Json; p_motivo: string; p_vigente_desde: string }
