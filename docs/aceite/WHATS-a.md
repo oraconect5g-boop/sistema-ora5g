@@ -4,6 +4,7 @@
 - **Quanto tempo leva:** uns dois minutos.
 - **O que o lote entrega:** o item 4 da onda 0 do plano de 16/11, que é o programa que manda a nota ao cliente pelo WhatsApp oficial. Os requisitos ligados são o ORA-WHATS-001 e o ORA-WHATS-006. Nenhum deles muda de estado: o envio depende da Meta.
 - **Resposta:** "aceito" ou "não aceito".
+- **No ar:** desde 17/11, às 12:03, no commit `69bfab6`. O rodapé pode mostrar um commit mais novo, de um lote seguinte.
 
 ## O que mudou
 

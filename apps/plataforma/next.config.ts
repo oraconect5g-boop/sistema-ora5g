@@ -1,4 +1,6 @@
 import { execSync } from "node:child_process";
+import { readdirSync } from "node:fs";
+import { join } from "node:path";
 
 import type { NextConfig } from "next";
 
@@ -24,9 +26,24 @@ function commitCompleto(): string {
   }
 }
 
+// A última migration que esta versão espera no banco (lote SAUDE-a; ADR-012): a página /saude pergunta ao banco se ela
+// está no histórico. Sai da pasta das migrations na build (a build roda em apps/plataforma); sem a pasta, fica vazia e
+// a página não confere.
+function ultimaMigracao(): string {
+  try {
+    const pasta = join(process.cwd(), "..", "..", "packages", "banco", "supabase", "migrations");
+    return readdirSync(pasta).flatMap((nome) => /^(\d{14})_.+\.sql$/.exec(nome)?.[1] ?? []).sort().at(-1) ?? "";
+  } catch {
+    return "";
+  }
+}
+
 const configuracao: NextConfig = {
   poweredByHeader: false,
-  env: { NEXT_PUBLIC_ORA_COMMIT: commitCurto(), NEXT_PUBLIC_ORA_BUILD: new Date().toISOString(), ORA_COMMIT_COMPLETO: commitCompleto() },
+  env: {
+    NEXT_PUBLIC_ORA_COMMIT: commitCurto(), NEXT_PUBLIC_ORA_BUILD: new Date().toISOString(), ORA_COMMIT_COMPLETO: commitCompleto(),
+    ORA_MIGRACAO_ESPERADA: ultimaMigracao(),
+  },
   transpilePackages: ["@ora5g/config", "@ora5g/dominio"],
   // Atrás do Apache do cPanel, o pedido da raiz chega como o arquivo de índice que o Apache
   // procura (index.php, index.html, default.htm...). A reescrita só olha o caminho, então

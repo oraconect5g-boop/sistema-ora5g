@@ -1,9 +1,10 @@
-import { Activity, CalendarClock, Hourglass, Layers } from "lucide-react";
+import { Activity, CalendarClock, Hourglass, Layers, PackageMinus } from "lucide-react";
 import Link from "next/link";
 
 import { BarrasHorizontais } from "../../componentes/graficos";
 import { Aviso, Cartao, EstadoVazio, Indicador, Selo, TituloPagina } from "../../componentes/ui";
 import { numero } from "../../lib/formato";
+import type { AlertaDoEstoque } from "../../lib/inicio/alerta-do-estoque";
 import { ICONES_DAS_PENDENCIAS } from "../../lib/inicio/icones-das-pendencias";
 import { haQuanto } from "../../lib/notas/regras";
 import { diasDesde, type LeituraDaFila } from "../../lib/operacao/filas";
@@ -19,9 +20,10 @@ function ultimaRodada(r: Rotina, agora: number): string {
   return r.situacao === "com_falha" && r.erro ? `${certa}; a última falhou (código ${r.erro})` : certa;
 }
 
-// O conteúdo da saúde da operação (lote Q1; as rotinas, ROT-a), à parte da página: recebe as filas e as rotinas já lidas.
-export function ConteudoDaOperacao({ filas, hoje, rotinas, agora }: {
-  filas: readonly LeituraDaFila[]; hoje: string; rotinas: LeituraDasRotinas; agora: number;
+// O conteúdo da saúde da operação (lote Q1; as rotinas, ROT-a; o aviso do estoque, SAUDE-a), à parte da página: recebe
+// as filas, as rotinas e o estoque já lidos. O estoque é nulo para quem não consulta o estoque (ou banco sem o painel).
+export function ConteudoDaOperacao({ filas, hoje, rotinas, agora, estoque = null }: {
+  filas: readonly LeituraDaFila[]; hoje: string; rotinas: LeituraDasRotinas; agora: number; estoque?: AlertaDoEstoque | null;
 }) {
   const problemas = rotinas.estado === "ok" ? rotinasComProblema(rotinas.rotinas) : [];
   const lidas = filas.flatMap((f) => (f.estado === "ok" ? [{ ...f, dias: f.desde ? diasDesde(f.desde, hoje) : null }] : []));
@@ -76,6 +78,20 @@ export function ConteudoDaOperacao({ filas, hoje, rotinas, agora }: {
 
       {lidas.some((f) => f.quantidade === 0) && (
         <p className="mt-3 text-xs text-suave">Sem nada esperando: {lidas.filter((f) => f.quantidade === 0).map((f) => f.rotulo).join(" · ")}</p>
+      )}
+      {estoque && (
+        <Cartao className="mt-4" titulo="Estoque abaixo do mínimo" subtitulo="Um aviso, não uma fila: não espera a decisão de ninguém e some quando o estoque volta ao mínimo" icone={PackageMinus}>
+          {estoque.estado === "falha" ? (
+            <Aviso tom="aviso">Não deu para ler o estoque agora. As filas acima não dependem desta leitura.</Aviso>
+          ) : estoque.pendencia ? (
+            <p className="text-sm">
+              <Link href={estoque.pendencia.href} className="font-semibold text-acao">{`${numero(estoque.pendencia.quantidade)} ${estoque.pendencia.quantidade === 1 ? "produto numa loja" : "pares de produto e loja"}`}</Link>
+              {" com o disponível abaixo do mínimo, nas lojas que você acompanha. Resolve-se com compra ou transferência, no painel do estoque."}
+            </p>
+          ) : (
+            <p className="text-sm text-suave">Nenhum produto abaixo do mínimo nas lojas que você acompanha.</p>
+          )}
+        </Cartao>
       )}
       {rotinas.estado !== "ausente" && (
         <Cartao className="mt-4" titulo="Rotinas automáticas" subtitulo="O que o banco faz sozinho, na hora marcada" icone={CalendarClock}>

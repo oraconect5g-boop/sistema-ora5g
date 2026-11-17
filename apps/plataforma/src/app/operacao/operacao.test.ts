@@ -1,6 +1,7 @@
 // /operacao (lote Q1: ORA-QUAL-006 em parte) com a sessão, o menu e o Supabase SIMULADOS: nenhuma credencial, dados
 // fictícios. Quem vê, o que está parado (as mais antigas primeiro) e a falha de uma fila sem derrubar as outras; desde
-// o ROT-a (ADR-011), as rotinas automáticas do banco, com o aviso no topo quando uma falha ou atrasa.
+// o ROT-a (ADR-011), as rotinas automáticas do banco, com o aviso no topo quando uma falha ou atrasa; desde o SAUDE-a
+// (ADR-012), a fila das vendas sem pedido de nota e o estoque abaixo do mínimo à parte, como aviso.
 import { isValidElement, type ReactElement } from "react";
 import { beforeEach, describe, expect, it, vi } from "vitest";
 
@@ -142,5 +143,40 @@ describe("rotinas automáticas do banco na saúde da operação (ROT-a)", () => 
     expect(t).toContain("Não deu para ler as rotinas agora");
     expect(t).not.toContain("Em dia");
     expect(t).toContain("Caixas para conferir");
+  });
+});
+
+describe("o que é fila e o que é aviso (SAUDE-a; ADR-012)", () => {
+  const ESTOQUE = (abaixo: number) => ({
+    totais: { fisico: 40, reservado: 2, disponivel: 38, abaixo_do_minimo: abaixo, parado: 0, chegando: 0, fora_da_venda: 0 },
+    locais: [], modelos: [], categorias: [],
+  });
+
+  it("a venda concluída sem o pedido da nota é fila: entra nos itens esperando, com há quanto tempo, e leva à conciliação", async () => {
+    cenario.rpc = { notas_vendas_sem_pedido: { data: { quantidade: 1, desde: `${diasAtras(3)}T15:00:00Z` }, error: null } };
+    const t = await tela();
+    for (const trecho of ["Itens esperando", "Vendas sem pedido de nota", "concluídas, sem a nota pedida", "há 3 dias"]) expect(t, trecho).toContain(trecho);
+    expect(t).toMatch(/Itens esperando 1 em 1 de \d+ filas/);
+  });
+
+  it("o estoque abaixo do mínimo aparece à parte, como aviso, e não conta nos itens esperando", async () => {
+    cenario.permissoes = new Set(["venda.ver_todas", "estoque.consultar"]);
+    cenario.rpc = { estoque_painel: { data: ESTOQUE(5), error: null } };
+    let t = await tela();
+    expect(t).toContain("Estoque abaixo do mínimo");
+    expect(t).toContain("Um aviso, não uma fila");
+    expect(t).toContain("5 pares de produto e loja");
+    expect(t).toMatch(/Itens esperando 0 /);
+    cenario.rpc = { estoque_painel: { data: ESTOQUE(0), error: null } };
+    t = await tela();
+    expect(t).toContain("Nenhum produto abaixo do mínimo nas lojas que você acompanha");
+    cenario.rpc = { estoque_painel: { data: null, error: { code: "57014" } } };
+    t = await tela();
+    expect(t).toContain("Não deu para ler o estoque agora");
+  });
+
+  it("quem não consulta o estoque não vê o aviso", async () => {
+    cenario.rpc = { estoque_painel: { data: ESTOQUE(5), error: null } };
+    expect(await tela()).not.toContain("Estoque abaixo do mínimo");
   });
 });

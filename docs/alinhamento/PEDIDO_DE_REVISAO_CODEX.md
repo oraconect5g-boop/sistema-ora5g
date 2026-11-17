@@ -1425,6 +1425,10 @@ Programa de execução integral (PR #67; checkpoint em `docs/alinhamento/EXECUCA
   - `app/entregas/entregas.test.ts` (3): o dono vê os indicadores, o placar e os lotes, do mais novo para o mais antigo; o gerente não vê;
   - no navegador, `e2e/saude.spec.ts`: o topo da página inicial em tela de celular, sem rolagem para o lado, e o "Comprar" levando à loja.
 - **Limite declarado:** a tela mostra o checkpoint da versão publicada. Uma resposta do proprietário aparece na publicação seguinte.
+- **CI, merge e publicação (17/11; o mesmo merge do WHATS-a):**
+  - **CI:** a sequência completa, de instalação limpa no servidor, passou em `edcfeae`: 2.668 testes e 1 TODO (plataforma 1.553, worker 20, banco 923 e 1 TODO, config 60 e domínio 112), 285 E2E (13 pulados), auditoria sem vulnerabilidade e o orçamento em dia (85 telas; a maior com 186,6 KB de JavaScript, para o limite de 200 KB).
+  - **Merge:** `69bfab6`; a árvore é a da branch testada. No GitHub, "Verificações" terminou com sucesso em `69bfab6`, e o "Supabase Preview" falhou com "Remote migration versions not found in local migrations directory": a migration do SAUDE-a já estava no banco e ainda não na `main`; ele volta a passar com o merge do SAUDE-a.
+  - **Publicação:** na homologação, em 17/11 (build 12:03). Conferida pela pasta, pelo serviço local e pelo domínio com o commit inteiro. Sem login, pelo domínio: `/`, `/entrar` e `/loja` respondem 200, a página inicial tem o "Comprar" levando a `/loja`, o produto que não existe responde 404, e `/vender`, `/operacao` e `/entregas` respondem 307 para a entrada.
 - **Pedido ao Codex:** conferir:
   1. que `/entregas` só mostra o que o checkpoint já diz, e que o checkpoint não tem nada além do que o repositório já publica;
   2. a regra da situação de cada lote contra a chave `aceites`.
@@ -1440,7 +1444,33 @@ Programa de execução integral (PR #67; checkpoint em `docs/alinhamento/EXECUCA
   4. `deploy/homologacao/worker-whatsapp.sh` segue o dos outros workers (trava, ambiente limpo, a cópia do ambiente que só o worker recebe) e **não está agendado**.
 - **Testes:** `whatsapp/configuracao.test.ts` (2) e `whatsapp/banco.test.ts` (3, com o executável rodado de verdade sem credencial).
 - **Limite declarado:** o adaptador da Meta não existe. `ADAPTADOR_DA_META_PRONTO` fica `false` até o contrato ser verificado na documentação oficial vigente, com uma conta para testar (F1).
+- **CI, merge e publicação (17/11):** as do ENTREGAS-a, no mesmo merge (`69bfab6`, CI verde em `edcfeae`, build 12:03).
 - **Pedido ao Codex:** conferir:
   1. que nada chama o banco sem as variáveis e o adaptador;
   2. que o log não leva dado pessoal;
   3. o script de deploy contra o dos outros workers.
+
+## 17/11/2026 — Lote SAUDE-a: o que é fila na Saúde da operação, e a /saude lendo o banco (Onda 0.6; ADR-012; ORA-QUAL-006 e ORA-FISC-008, em parte)
+
+- **Origem:** o plano do proprietário de 16/11 (Onda 0.6). O Início mostrava "Estoque abaixo do mínimo: 5", e a Saúde da operação, 0 itens em 15 filas. Era preciso decidir se o estoque mínimo e a venda concluída sem o pedido da nota são filas, e documentar. A `/saude` só conferia o serviço de login.
+- **Decisão:** [`docs/adr/ADR-012-o-que-e-fila-e-a-leitura-do-banco-na-saude.md`](../adr/ADR-012-o-que-e-fila-e-a-leitura-do-banco-na-saude.md). Fila é o que espera a decisão ou o trabalho de alguém e tem a data em que começou a esperar. A venda sem o pedido da nota é fila. O estoque abaixo do mínimo é aviso: é o estado do estoque e não tem data de entrada.
+- **Banco:** migration `20261117145723_saude_do_banco_e_vendas_sem_nota`, com reversão.
+  1. `public.notas_vendas_sem_pedido()`: para quem aprova nota, nas lojas onde tem a permissão (senão, 42501). Conta a venda concluída sem o pedido vivo da nota de venda e não devolvida inteira, sem período, e devolve a quantidade e a conclusão da mais antiga. É o grupo "sem pedido" de `notas_conciliacao`.
+  2. `public.saude_do_banco(p_migracao)`: o visitante executa, de propósito. Devolve só `hora` e `migracao`, que é true, false ou nulo: se a versão pedida, com 14 dígitos, está em `supabase_migrations.schema_migrations`. O texto fora do formato não é procurado. A leitura do histórico é `SECURITY DEFINER`, com `search_path` vazio e a consulta com parâmetro.
+- **Plataforma:**
+  1. `lib/operacao/filas.ts`: a fila "Vendas sem pedido de nota" vem da função e leva a `/notas/conciliacao`. Sem a função no banco (`PGRST202` ou `42883`), a fila some, como as outras.
+  2. `/operacao`: o quadro "Estoque abaixo do mínimo", à parte, usa `lerAlertaDoEstoque` na visão das lojas que a pessoa acompanha e não entra em "Itens esperando".
+  3. `/saude`: `saude/banco.ts` chama a função com a chave pública e sem sessão, com limite de 4 s, e mede o tempo. A última migration desta versão é gravada na build (`ORA_MIGRACAO_ESPERADA`, em `next.config.ts`, lida da pasta das migrations).
+- **Testes:**
+  - `packages/banco/src/saude-e-vendas-sem-nota.test.ts` (5): a fila contra a conciliação do mês, com cada grupo fora; sem período (uma venda de 400 dias atrás); só quem aprova nota; a leitura leve sem e com o histórico.
+  - O inventário de autorização: 174 funções, e o visitante executa também `saude_do_banco(text)`.
+  - Na plataforma: a fila nova em `filas.test.ts`; o aviso do estoque em `operacao.test.ts`; `saude/banco.test.ts` (6, inclusive que a build grava a última migration da pasta); e a linha do banco no E2E da `/saude`.
+- **Aplicação no `ora5g-dev`:** em 17/11 (11:57 em São Paulo), pelo conector do Supabase, com o md5 `6cbb482e0bf71fd510fbc906db070cb1`, igual ao do arquivo. Conferido depois, só com leitura: os privilégios de execução, a resposta para a versão nova e para uma futura, 1 venda sem pedido (de 16/11, na Santa Cândida (teste)) e os tipos iguais aos gerados. A `/saude`, rodando aqui contra o `ora5g-dev`, mostrou "respondeu em 190 ms" e "em dia com esta versão".
+- **Efeito colateral registrado:** a migration foi aplicada antes do merge dos lotes ENTREGAS-a e WHATS-a. Por isso o check "Supabase Preview" do GitHub falhou no merge deles (`69bfab6`): o histórico do banco tinha uma versão que o repositório ainda não tinha. Ele volta a passar com este merge. Daqui em diante, a migration de um lote só é aplicada depois do merge do lote anterior.
+- **Limite declarado:**
+  1. O aviso fora da tela, quando uma fila passa do limite, depende do site instalável com notificação (Onda 1).
+  2. Erros do sistema e tempo de resposta das telas dependem do monitoramento (T6).
+- **Pedido ao Codex:** conferir:
+  1. a regra da fila contra a do grupo "sem pedido" da conciliação;
+  2. que `saude_do_banco` não abre leitura além da hora e de um sim ou não sobre uma versão;
+  3. a leitura da `/saude` com a chave pública e o limite de tempo.

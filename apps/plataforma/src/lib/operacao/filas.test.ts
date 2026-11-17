@@ -1,13 +1,19 @@
 // Saúde da operação (lote Q1): quem vê cada fila, a contagem e a data da mais antiga, a fila que some num banco sem a
-// tabela e a falha que aparece como falha. Supabase SIMULADO; dados fictícios.
+// tabela e a falha que aparece como falha; a fila das vendas sem pedido de nota, que vem de uma função (SAUDE-a).
+// Supabase SIMULADO; dados fictícios.
 import { describe, expect, it, vi } from "vitest";
 
 import { diasDesde, FILAS, lerFilas } from "./filas";
 
 type Resposta = { data: unknown; count: number | null; error: { code: string } | null };
-function supabaseSimulado(respostas: Record<string, Resposta>) {
+type RespostaRpc = { data: unknown; error: { code: string } | null };
+function supabaseSimulado(respostas: Record<string, Resposta>, rpc: Record<string, RespostaRpc> = {}) {
   const pedidos: { tabela: string; filtros: unknown[] }[] = [];
   const cliente = {
+    rpc(nome: string) {
+      pedidos.push({ tabela: `rpc:${nome}`, filtros: [] });
+      return Promise.resolve(rpc[nome] ?? { data: { quantidade: 0, desde: null }, error: null });
+    },
     from(tabela: string) {
       const filtros: unknown[] = [];
       pedidos.push({ tabela, filtros });
@@ -34,13 +40,14 @@ describe("filas da operação", () => {
       whatsapp_envios: { data: [], count: 0, error: null },
     });
     const filas = await lerFilas(cliente, new Set(["nota.aprovar"]), "2026-11-14");
-    expect(pedidos.map((p) => p.tabela)).toEqual(["notas_pedidos", "whatsapp_envios"]);
+    expect(pedidos.map((p) => p.tabela)).toEqual(["rpc:notas_vendas_sem_pedido", "notas_pedidos", "whatsapp_envios"]);
     expect(filas).toEqual([
+      expect.objectContaining({ estado: "ok", chave: "vendas_sem_nota", quantidade: 0, desde: null, href: "/notas/conciliacao" }),
       expect.objectContaining({ estado: "ok", chave: "notas", quantidade: 4, desde: "2026-11-10T14:00:00Z", href: "/notas" }),
       expect.objectContaining({ estado: "ok", chave: "whatsapp", quantidade: 0, desde: null }),
     ]);
     // A contagem é exata e a data é a mais antiga (ordem crescente, uma linha).
-    expect(pedidos[0]?.filtros).toEqual([
+    expect(pedidos[1]?.filtros).toEqual([
       ["select", "venda_concluida_em", { count: "exact" }], ["in", "situacao", ["aguardando_aprovacao", "correcao_solicitada", "aprovada"]],
       ["order", "venda_concluida_em"], ["limit", 1],
     ]);
@@ -64,8 +71,29 @@ describe("filas da operação", () => {
       connect_operacoes: { data: [], count: null, error: null },
     });
     const filas = await lerFilas(cliente, new Set(["nota.aprovar", "connect.gerir"]), "2026-11-14");
-    expect(filas).toEqual([{ estado: "falha", chave: "notas", rotulo: "Notas na fila", href: "/notas", icone: "nota" }]);
+    expect(filas).toEqual([
+      expect.objectContaining({ estado: "ok", chave: "vendas_sem_nota" }),
+      { estado: "falha", chave: "notas", rotulo: "Notas na fila", href: "/notas", icone: "nota" },
+    ]);
     expect(console.error).toHaveBeenCalledWith("operação: falha ao ler a fila", { fila: "notas", codigo: "57014" });
+  });
+
+  it("a venda sem o pedido da nota (SAUDE-a) vem da função do banco, com quantas e a mais antiga; sem a função, some; com erro, falha", async () => {
+    vi.spyOn(console, "error").mockImplementation(() => undefined);
+    const comVendas = supabaseSimulado({}, { notas_vendas_sem_pedido: { data: { quantidade: 3, desde: "2026-11-11T13:00:00Z" }, error: null } });
+    const [fila] = await lerFilas(comVendas.cliente, new Set(["nota.aprovar"]), "2026-11-14");
+    expect(fila).toEqual({ estado: "ok", chave: "vendas_sem_nota", rotulo: "Vendas sem pedido de nota", detalhe: "concluídas, sem a nota pedida",
+      href: "/notas/conciliacao", icone: "venda_sem_nota", quantidade: 3, desde: "2026-11-11T13:00:00Z" });
+    const semFuncao = supabaseSimulado({}, { notas_vendas_sem_pedido: { data: null, error: { code: "PGRST202" } } });
+    expect((await lerFilas(semFuncao.cliente, new Set(["nota.aprovar"]), "2026-11-14")).map((f) => f.chave)).toEqual(["notas", "whatsapp"]);
+    const comErro = supabaseSimulado({}, { notas_vendas_sem_pedido: { data: null, error: { code: "57014" } } });
+    expect((await lerFilas(comErro.cliente, new Set(["nota.aprovar"]), "2026-11-14"))[0]).toMatchObject({ estado: "falha", chave: "vendas_sem_nota" });
+    const estranha = supabaseSimulado({}, { notas_vendas_sem_pedido: { data: [1], error: null } });
+    expect((await lerFilas(estranha.cliente, new Set(["nota.aprovar"]), "2026-11-14")).map((f) => f.chave)).toEqual(["notas", "whatsapp"]);
+    // Quem não aprova nota não pergunta.
+    const vendedor = supabaseSimulado({});
+    await lerFilas(vendedor.cliente, new Set(["venda.registrar"]), "2026-11-14");
+    expect(vendedor.pedidos).toEqual([]);
   });
 
   it("cada fila tem uma chave só e leva a uma tela do sistema", () => {

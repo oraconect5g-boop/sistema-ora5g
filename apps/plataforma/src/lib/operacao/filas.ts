@@ -1,7 +1,10 @@
 // Saúde da operação (lote Q1: ORA-QUAL-006 em parte): as filas que esperam alguém, cada uma com quantas e desde quando
 // está a mais antiga, lidas pelo RLS de quem abre (o dono vê a rede; o gerente, a loja dele) e só para quem decide
 // aquela fila (a mesma regra do Início). Uma consulta por fila: a contagem exata e a primeira linha pela data. Fila que
-// o banco ainda não tem (tabela ausente) some; outra falha aparece como falha da fila (nunca zero). Só leitura.
+// o banco ainda não tem (tabela ou função ausente) some; outra falha aparece como falha da fila (nunca zero). Só leitura.
+// O que é fila (ADR-012): o que espera a decisão ou o trabalho de alguém e tem a data em que começou a esperar. A venda
+// concluída sem o pedido da nota é fila (SAUDE-a); o estoque abaixo do mínimo não é: é o estado do estoque, sem data de
+// entrada, e a tela o mostra à parte, como aviso.
 import type { obterSessao } from "../acesso/sessao";
 import { tabelaAusente } from "../caixa/saidas";
 import { hojeEmSaoPaulo } from "../contas-a-pagar/regras";
@@ -22,6 +25,15 @@ type Definicao = {
 };
 
 const conta = { count: "exact" } as const;
+// A venda sem o pedido da nota (SAUDE-a) vem de uma função do banco, porque a conta precisa saber se a venda tem o
+// pedido vivo da nota de venda e se foi devolvida inteira (a regra da conciliação fiscal). Chega como as outras filas.
+const vendasSemPedido = (s: Cliente): PromiseLike<Resposta> =>
+  s.rpc("notas_vendas_sem_pedido").then((r): Resposta => {
+    if (r.error) return { data: null, count: null, error: r.error };
+    const v = r.data && typeof r.data === "object" && !Array.isArray(r.data) ? r.data : {};
+    const quantidade = typeof v.quantidade === "number" ? v.quantidade : null;
+    return { data: [{ desde: typeof v.desde === "string" ? v.desde : null }], count: quantidade, error: null };
+  });
 const gestao = (p: ReadonlySet<string>) => p.has("venda.ver_unidade") || p.has("venda.ver_todas");
 
 /** As filas, na ordem da tela (do balcão para o escritório). */
@@ -29,6 +41,9 @@ export const FILAS: readonly Definicao[] = [
   { chave: "descontos", rotulo: "Descontos para aprovar", detalhe: "pedidos dos vendedores", href: "/aprovacoes", icone: "desconto", coluna: "solicitado_em",
     permitida: (p) => p.has("desconto.aprovar"),
     consulta: (s, c) => s.from("aprovacoes_desconto").select(c, conta).eq("situacao", "pendente").order(c).limit(1) },
+  { chave: "vendas_sem_nota", rotulo: "Vendas sem pedido de nota", detalhe: "concluídas, sem a nota pedida", href: "/notas/conciliacao", icone: "venda_sem_nota", coluna: "desde",
+    permitida: (p) => p.has("nota.aprovar"),
+    consulta: (s) => vendasSemPedido(s) },
   { chave: "notas", rotulo: "Notas na fila", detalhe: "esperando aprovação ou o registro da chave", href: "/notas", icone: "nota", coluna: "venda_concluida_em",
     permitida: (p) => p.has("nota.aprovar"),
     consulta: (s, c) => s.from("notas_pedidos").select(c, conta).in("situacao", ["aguardando_aprovacao", "correcao_solicitada", "aprovada"]).order(c).limit(1) },
@@ -81,7 +96,7 @@ export async function lerFilas(supabase: Cliente, permissoes: ReadonlySet<string
     const r = respostas[i] as Resposta;
     const base = { chave: f.chave, rotulo: f.rotulo, href: f.href, icone: f.icone };
     if (r.error) {
-      if (tabelaAusente(r.error) || ["42703", "PGRST204"].includes(r.error.code ?? "")) return [];
+      if (tabelaAusente(r.error) || ["42703", "42883", "PGRST202", "PGRST204"].includes(r.error.code ?? "")) return [];
       console.error("operação: falha ao ler a fila", { fila: f.chave, codigo: r.error.code ?? null });
       return [{ estado: "falha", ...base }];
     }

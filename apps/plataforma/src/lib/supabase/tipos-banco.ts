@@ -7117,6 +7117,7 @@ export type Database = {
         Args: { p_chave: string; p_destinatario: Json; p_venda: string }
         Returns: string
       }
+      notas_vendas_sem_pedido: { Args: never; Returns: Json }
       oportunidade_anotar: {
         Args: { p_oportunidade: string; p_texto: string }
         Returns: boolean
@@ -7374,6 +7375,7 @@ export type Database = {
           ultima_ok: string
         }[]
       }
+      saude_do_banco: { Args: { p_migracao?: string }; Returns: Json }
       selecionar_unidade: { Args: { p_unidade: string }; Returns: boolean }
       situacao_da_sessao: {
         Args: never

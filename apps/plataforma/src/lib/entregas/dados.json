@@ -90,9 +90,9 @@
         "ORA-ONLINE-001"
       ],
       "entrega": "o botão Comprar no topo do site (A01 do adendo do Codex de 16/11) e a tela de entregas do projeto (A18, sem ID próprio); o estado do requisito não muda",
-      "commit": null,
-      "publicado_em": null,
-      "pedido_em": null,
+      "commit": "69bfab6",
+      "publicado_em": "2026-11-17",
+      "pedido_em": "2026-11-17",
       "resposta": null,
       "respondido_em": null
     },
@@ -104,6 +104,20 @@
         "ORA-WHATS-006"
       ],
       "entrega": "o executável do worker do WhatsApp, ligado à fila do banco e desligado sem a Meta (Onda 0.4); o estado dos dois requisitos não muda",
+      "commit": "69bfab6",
+      "publicado_em": "2026-11-17",
+      "pedido_em": "2026-11-17",
+      "resposta": null,
+      "respondido_em": null
+    },
+    {
+      "lote": "SAUDE-a",
+      "roteiro": "docs/aceite/SAUDE-a.md",
+      "requisitos": [
+        "ORA-QUAL-006",
+        "ORA-FISC-008"
+      ],
+      "entrega": "o que é fila e o que é aviso na Saúde da operação (a venda sem o pedido da nota vira fila; o estoque abaixo do mínimo, aviso) e a página /saude com uma leitura leve do banco (Onda 0.6; ADR-012); o estado dos dois requisitos não muda",
       "commit": null,
       "publicado_em": null,
       "pedido_em": null,

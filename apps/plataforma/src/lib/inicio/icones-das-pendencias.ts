@@ -1,7 +1,7 @@
 // O ícone de cada pendência (Início e sino do topo, G6). A leitura devolve só o nome (vai pela rede até o sino); a tela
 // troca o nome pelo ícone daqui.
 import {
-  AlarmClock, ArrowRightLeft, BadgePercent, Banknote, CreditCard, FileClock, FileText, FileUp, Gift, PackageCheck, PackageMinus, RadioTower, ReceiptText, RotateCcw, Scale, Send,
+  AlarmClock, ArrowRightLeft, BadgePercent, Banknote, CreditCard, FileClock, FileText, FileUp, FileWarning, Gift, PackageCheck, PackageMinus, RadioTower, ReceiptText, RotateCcw, Scale, Send,
   ShieldAlert, SignalZero, Undo2, Wallet, Wrench, type LucideIcon,
 } from "lucide-react";
 
@@ -29,6 +29,8 @@ export const ICONES_DAS_PENDENCIAS = {
   envio_whatsapp: Send,
   pagamento_a_conciliar: CreditCard,
   importacao: FileUp,
+  // SAUDE-a (ADR-012): a venda concluída sem o pedido da nota.
+  venda_sem_nota: FileWarning,
 } as const satisfies Record<string, LucideIcon>;
 
 export type NomeDoIconeDaPendencia = keyof typeof ICONES_DAS_PENDENCIAS;
