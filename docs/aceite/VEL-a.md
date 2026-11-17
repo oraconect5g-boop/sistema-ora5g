@@ -15,7 +15,7 @@
 
 - Use a loja **Santa Cândida (teste)**. Tudo ali é dado de teste: nenhuma venda é de verdade.
 - Nessa loja o seu caixa já está aberto e existe uma venda em andamento, sem itens (a nº 3).
-- Confira a versão no ar: toque em **Mais**, na barra de baixo. No fim da lista aparece `ora5G · v0.1.0 · commit · build`. O commit tem de ser o que o Claude Code informou ao publicar o lote.
+- Confira a versão no ar: toque em **Mais**, na barra de baixo. No fim da lista aparece `ora5G · v0.1.0 · commit · build`. O lote foi ao ar no commit `087ef53`, em 17/11. O rodapé pode mostrar um commit mais novo, que só muda documentos: vale o que o Claude Code informou ao pedir o aceite.
 - O log de tempos fica ligado enquanto você faz o roteiro. Ele grava o caminho, a duração e o código da resposta de cada ida ao banco, e nada do que você digita (nem a busca, nem a senha). O Claude Code lê o log depois e preenche a tabela de "depois" em `docs/operacao/DESEMPENHO_NO_CELULAR.md`.
 
 ## Os passos

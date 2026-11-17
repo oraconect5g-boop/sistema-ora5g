@@ -188,13 +188,15 @@ Na prática: com pedidos a menos de um minuto um do outro, a ida fica em 0,15 a 
 - **As outras telas mais usadas** (Vendas, Estoque, Catálogo, Clientes e Caixa) ganharam a sessão e o menu numa ida, mas ainda fazem as próprias leituras como antes. A leitura única de cada uma fica para o VEL-b.
 - **A conexão com o banco fica aberta por até 180 s parada** (antes, 4 s): seção 4.4.
 - **Todo botão de envio trava e mostra um texto de espera** assim que é tocado, e toda tela do menu mostra um esqueleto enquanto carrega.
-- **Log de tempos, desligado no dia a dia.** Com `ORA_MEDIR_TEMPOS=1`, o servidor escreve uma linha por ida ao Supabase, só com o caminho e o tempo (veja "Como medir de novo").
+- **Log de tempos, desligado no dia a dia.** Com `ORA_MEDIR_TEMPOS=1`, o servidor escreve uma linha por ida ao Supabase, só com o método, o caminho (sem o que vem depois do `?`), o código da resposta e o tempo (veja "Como medir de novo").
 
 ### 4.6 Depois
 
 **No servidor, sem login (16/11):** a tabela da seção 4.4.
 
-**Com login, na homologação:** a preencher depois da publicação. O proprietário repete no navegador as medidas da seção 4.1 (roteiro de aceite, `docs/aceite/VEL-a.md`), e o log de tempos mostra as idas de cada tela.
+**Na homologação, sem login (17/11):** o lote foi ao ar em `087ef53` (build 00:40), com o log de tempos ligado. Uma medida de cada, feita do próprio servidor pelo domínio (não conta a rede do celular): `/entrar` em 0,03 s; `/vender`, `/inicio` e `/caixa` respondem 307 para a entrada em 0,02 a 0,04 s, sem ida ao banco; `/loja` em 0,44 s, com uma ida ao banco de 0,43 s (a primeira depois de o serviço subir, com a conexão nova).
+
+**Com login, na homologação:** a preencher com o roteiro de aceite, pedido em 17/11. O proprietário repete no navegador as medidas da seção 4.1 (`docs/aceite/VEL-a.md`), e o log de tempos mostra as idas de cada tela. Até o pedido do aceite, nenhum pedido com login tinha chegado à versão publicada: não há conta de teste (J1).
 
 ## Metas propostas (o proprietário aprova ou muda)
 
