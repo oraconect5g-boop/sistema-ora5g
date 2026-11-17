@@ -1,4 +1,4 @@
-// Lote MKT-a (17/11/2026, ORA-ONLINE-003 e ORA-META-002; migration 20261117190000_origem_das_reservas_do_site): a reserva
+// Lote MKT-a (17/11/2026, ORA-ONLINE-003 e ORA-META-002; migration 20261117174218_origem_das_reservas_do_site): a reserva
 // do site guarda de onde o visitante chegou (a origem, os cinco parâmetros de campanha do link e o domínio do site que
 // o mandou), limpa no banco; o painel dos Relatórios soma as reservas por origem e campanha, com as vendas concluídas
 // que vieram delas, e por vendedor. Dados FICTÍCIOS; cada teste numa transação desfeita.

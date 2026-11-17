@@ -1,4 +1,4 @@
--- Reversão de 20261117190000_origem_das_reservas_do_site (lote MKT-a): tira o painel, volta a reserva do site à versão
+-- Reversão de 20261117174218_origem_das_reservas_do_site (lote MKT-a): tira o painel, volta a reserva do site à versão
 -- do INTEG-c (sem o parâmetro da origem, com as mesmas permissões) e tira as colunas da origem. As reservas ficam; só
 -- a origem delas se perde.
 drop function public.reservas_do_site_painel(timestamptz, timestamptz, uuid);

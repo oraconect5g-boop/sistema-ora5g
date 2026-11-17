@@ -100,6 +100,7 @@
     { "versao": "20261117143744", "nome": "indice_redundante_das_fotos", "md5": "fff5bdb5c03fdc3f146fd03b94820d4a", "aplicada_em": "2026-11-17" },
     { "versao": "20261117145723", "nome": "saude_do_banco_e_vendas_sem_nota", "md5": "6cbb482e0bf71fd510fbc906db070cb1", "aplicada_em": "2026-11-17" },
     { "versao": "20261117160216", "nome": "lojas_cadastro_operacional", "md5": "398d3cee51ac0fac6e862017765e4b1d", "aplicada_em": "2026-11-17" },
-    { "versao": "20261117165326", "nome": "transferencia_remessa", "md5": "48151e5f3bd11246def3d40ccdb4e75d", "aplicada_em": "2026-11-17" }
+    { "versao": "20261117165326", "nome": "transferencia_remessa", "md5": "48151e5f3bd11246def3d40ccdb4e75d", "aplicada_em": "2026-11-17" },
+    { "versao": "20261117174218", "nome": "origem_das_reservas_do_site", "md5": "362e735f8c813313220bb0a0b85047dc", "aplicada_em": "2026-11-17" }
   ]
 }
