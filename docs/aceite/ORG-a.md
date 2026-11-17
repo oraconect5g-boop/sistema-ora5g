@@ -4,6 +4,7 @@
 - **Quanto tempo leva:** uns cinco minutos.
 - **O que o lote entrega:** o item 2 da onda 1 do plano de 16/11. O requisito ligado é o ORA-ORG-001, que não muda de estado.
 - **Resposta:** "aceito" ou "não aceito". No "não aceito", diga o passo e o que aconteceu.
+- **No ar:** desde 17/11, às 13:31, no commit `13fca19`. O rodapé pode mostrar um commit mais novo, de um lote seguinte.
 
 ## O que mudou
 
