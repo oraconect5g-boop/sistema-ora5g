@@ -118,6 +118,21 @@
         "ORA-FISC-008"
       ],
       "entrega": "o que é fila e o que é aviso na Saúde da operação (a venda sem o pedido da nota vira fila; o estoque abaixo do mínimo, aviso) e a página /saude com uma leitura leve do banco (Onda 0.6; ADR-012); o estado dos dois requisitos não muda",
+      "commit": "7e1ff5f",
+      "publicado_em": "2026-11-17",
+      "pedido_em": "2026-11-17",
+      "resposta": null,
+      "respondido_em": null
+    },
+    {
+      "lote": "GIT-a",
+      "roteiro": "docs/aceite/GIT-a.md",
+      "requisitos": [
+        "ORA-QUAL-001",
+        "ORA-QUAL-004",
+        "ORA-QUAL-014"
+      ],
+      "entrega": "a arrumação do GitHub (Onda 0.7): a situação de cada issue aberta, com o commit e o teste das corrigidas; o Dependabot; o histórico sem segredo; a lista do que o repositório público expõe; o estado dos três requisitos não muda",
       "commit": null,
       "publicado_em": null,
       "pedido_em": null,
