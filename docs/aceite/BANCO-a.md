@@ -25,8 +25,9 @@ São três arrumações. Nada muda no que as telas mostram nem nos dados.
 | Tabelas sem regra e sem a nota explicativa | 9 | 0 |
 
 - **Teste automático novo:** ele falha se uma tabela futura voltar a ficar sem índice, sem proteção ou sem a nota, ou se um índice repetir outro. Rodado sem a arrumação, ele falhou nos três pontos, como devia.
-- **Avisos que continuam no Supabase**, ambos esperados:
+- **Avisos que continuam no Supabase**, todos esperados:
   - os índices ainda sem uso, porque a base está quase vazia;
+  - a ligação das fotos, já coberta pelo índice de 09/11;
   - a proteção contra senha vazada, que só existe no plano pago e entra na decisão de produção.
 
 ## O que você confere
