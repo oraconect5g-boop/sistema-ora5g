@@ -95,6 +95,7 @@
     { "versao": "20261117015315", "nome": "sessao_molde_e_pdv", "md5": "0feeaa69b16809c063d69edc58748460", "aplicada_em": "2026-11-16" },
     { "versao": "20261117071458", "nome": "loja_online_sem_erro_500", "md5": "413ad5192c2d038ba09e6cc0846c16e7", "aplicada_em": "2026-11-17" },
     { "versao": "20261117124230", "nome": "rotinas_agendadas", "md5": "0ca5e45cf3c6f4900aa22eb92bfcd913", "aplicada_em": "2026-11-17" },
-    { "versao": "20261117135133", "nome": "identidade_da_nota_e_cota_da_loja", "md5": "3f05b51f795b8d981f8078564c015f3a", "aplicada_em": "2026-11-17" }
+    { "versao": "20261117135133", "nome": "identidade_da_nota_e_cota_da_loja", "md5": "3f05b51f795b8d981f8078564c015f3a", "aplicada_em": "2026-11-17" },
+    { "versao": "20261117141658", "nome": "indices_e_rls_do_banco", "md5": "b9cf77d06a4c54fccf96e512b40a2072", "aplicada_em": "2026-11-17" }
   ]
 }
