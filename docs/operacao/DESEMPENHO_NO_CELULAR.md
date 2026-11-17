@@ -137,31 +137,64 @@ Conta simples: uma tela leva perto de 0,42 s (primeira ida, em conexão nova) ma
 | `/vender` com busca | mais 3 da busca, mais detalhes, preços, fotos e endereços das fotos | 4 s ou mais |
 | Uma ação do carrinho | sessão + ação + a tela inteira de novo | 3,2 a 3,6 s |
 
-### 4.4 A conexão mantida aberta (medido antes de aplicar)
+### 4.4 A conexão mantida aberta
 
-O Node fecha a conexão parada depois de 4 s. Com a conexão mantida por mais tempo, no mesmo servidor:
+O Node fecha a conexão que ficou 4 s parada. A plataforma passa a mantê-la aberta por até **180 s** (`apps/plataforma/src/lib/supabase/conexao-mantida.ts`; ADR-010, decisão 4).
 
-| Medida | Padrão do Node | Mantendo aberta |
-|---|---:|---:|
-| Depois de 6 s parado | 0,42 s | 0,18 s |
-| Depois de 15 s parado | 0,41 s | 0,17 s |
-| Depois de 30 s parado | — | 0,17 s |
-| Depois de 60 s parado | — | 0,17 s |
-| Depois de 100 s parado | — | 0,40 s (o outro lado fechou) |
+**Por que 180 s.** O Supabase não avisa por quanto tempo guarda a conexão. Medido em 16/11, ele fechou a conexão parada aos 400 s, nas nove vezes. O pedido que sai no instante desse fechamento falha, e o Node não repete (conferido no Node do servidor e fixado em teste). Por isso o nosso limite fica abaixo da metade do deles: a nossa conexão fecha antes, e o pedido seguinte abre outra.
 
-Por isso a plataforma passa a manter a conexão com o banco aberta por 60 s.
+**Antes e depois, no servidor.** A mesma versão da plataforma, num servidor de teste na máquina da homologação, sem e com a conexão mantida. É o tempo inteiro de duas telas públicas, cada uma com uma ida ao Supabase (a vitrine da loja online, hoje sem produto marcado, e a conferência do serviço de login):
+
+| Medida | `/loja` antes | `/loja` depois | `/saude` antes | `/saude` depois |
+|---|---:|---:|---:|---:|
+| Primeiro pedido depois de o servidor subir | 0,85 s | 0,89 s | — | — |
+| 1 s depois do pedido anterior | 0,21 s | 0,21 s | 0,18 s | 0,18 s |
+| Depois de 8 s parada | 0,47 s | 0,21 s | 0,42 s | 0,17 s |
+| 10 s depois do último pedido da outra tela | — | — | 0,59 s | 0,20 s |
+| Depois de 30 s parada | 0,65 s | 0,19 s | 0,57 s | 0,18 s |
+| Depois de 100 s parada | não medido | 0,42 s | não medido | 0,40 s |
+
+**Quanto tempo parada ela continua rápida.** Outro roteiro, no mesmo servidor, com a conexão mantida por 180 s: o mesmo pedido leve (`GET /auth/v1/health`) depois de pausas diferentes, contando as conexões abertas e fechadas.
+
+| Pausa antes do pedido | Tempo | Conexão |
+|---|---:|---|
+| Nenhuma (logo em seguida) | 0,18 e 0,19 s | a mesma |
+| 45 s | 0,16 e 0,15 s | a mesma |
+| 60 s | 0,15 e 0,15 s | a mesma |
+| 75 s | 0,16 e 0,36 s | a mesma |
+| 90 s | 0,35 e 0,16 s | a mesma |
+| 100 s | 0,17 s | a mesma |
+| 105 s | 0,17 e 0,17 s | a mesma |
+| 120 s | 0,42 e 0,60 s | a mesma |
+| 170 s | 0,16 s | a mesma |
+| 175 s | 0,58 s | a mesma |
+| 190 s | 0,69 s | outra (a nossa fechou aos 180 s) |
+
+O que as medidas mostram:
+
+- até 60 s parada, a ida foi rápida nas 4 medidas (0,15 a 0,16 s);
+- de 75 a 175 s, foi lenta (0,35 a 0,60 s) em 5 das 11, sempre na mesma conexão, sem abrir outra. A causa não foi identificada; não é conexão nova, porque o contador ficou em uma só;
+- as duas medidas dentro do servidor depois de 100 s (tabela anterior) também foram lentas: 0,42 e 0,40 s.
+
+Limite desta medida: o vigia da homologação pede a `/saude` a cada 5 minutos, e esse pedido também vai ao Supabase, de outro processo e por outra conexão. Três das onze medidas (as duas de 105 s e a de 170 s) tiveram um pedido do vigia no meio da pausa, e as três foram rápidas. Das oito sem ele, cinco foram lentas e três rápidas. Isso não prova a causa. A hipótese, ainda não testada, é que algum trecho do lado do Supabase esfria depois de cerca de um minuto sem pedidos do projeto.
+
+Na prática: com pedidos a menos de um minuto um do outro, a ida fica em 0,15 a 0,20 s. Depois de mais de um minuto sem ninguém usar, a primeira ida pode levar de 0,35 a 0,60 s, como antes.
 
 ### 4.5 O que mudou no VEL-a
 
-- **Uma ida só para a sessão e o menu.** A função `molde_da_sessao` responde de uma vez a situação da sessão, as permissões do menu, o nome, o papel e as duas contagens. Antes eram 2 idas em fila e 34 pedidos ao mesmo tempo.
-- **Sem ida ao serviço de login a cada tela.** A plataforma confere a assinatura do crachá da sessão no próprio servidor (`getClaims`, ADR-010). Quem decide se a sessão vale continua sendo o banco, a cada pedido.
-- **O PDV lê a venda numa ida só** (`pdv_tela`): caixa, venda aberta, carrinho com preço, campanha, ordem de serviço e aprovação, e as maquininhas.
-- **A conexão com o banco fica aberta por 60 s.**
-- **Todo botão de ação trava e mostra um texto de espera** assim que é tocado.
+- **Uma ida só para a sessão e o menu.** A função `molde_da_sessao` responde de uma vez a situação da sessão, as permissões do menu, o nome, o papel e as duas contagens. Antes eram 2 idas em fila (o serviço de login e a situação da sessão) e mais 34 pedidos (32 ao mesmo tempo e, depois, 2 contagens).
+- **Sem ida ao serviço de login a cada tela**, quando o projeto assina os tokens com a chave assimétrica. A plataforma confere a assinatura do token da sessão no próprio servidor (`getClaims`, ADR-010, decisão 1). Quem decide se a sessão vale continua sendo o banco, a cada pedido. Falta confirmar com um login qual chave assina os tokens de hoje: o `ora5g-dev` publica uma chave assimétrica, mas isso não prova qual está em uso.
+- **O PDV lê a venda numa ida só** (`pdv_tela`): caixa, venda aberta, carrinho com preço, campanha, ordem de serviço e aprovação, e as maquininhas. Abrir o PDV sem busca passou de 10 a 13 idas em fila para duas rodadas. Uma ação do carrinho passou a ser quatro rodadas: a sessão, a ação e a tela de novo (duas).
+- **As outras telas mais usadas** (Vendas, Estoque, Catálogo, Clientes e Caixa) ganharam a sessão e o menu numa ida, mas ainda fazem as próprias leituras como antes. A leitura única de cada uma fica para o VEL-b.
+- **A conexão com o banco fica aberta por até 180 s parada** (antes, 4 s): seção 4.4.
+- **Todo botão de envio trava e mostra um texto de espera** assim que é tocado, e toda tela do menu mostra um esqueleto enquanto carrega.
+- **Log de tempos, desligado no dia a dia.** Com `ORA_MEDIR_TEMPOS=1`, o servidor escreve uma linha por ida ao Supabase, só com o caminho e o tempo (veja "Como medir de novo").
 
 ### 4.6 Depois
 
-*A preencher depois da publicação do lote, com as mesmas medidas.*
+**No servidor, sem login (16/11):** a tabela da seção 4.4.
+
+**Com login, na homologação:** a preencher depois da publicação. O proprietário repete no navegador as medidas da seção 4.1 (roteiro de aceite, `docs/aceite/VEL-a.md`), e o log de tempos mostra as idas de cada tela.
 
 ## Metas propostas (o proprietário aprova ou muda)
 
@@ -198,8 +231,48 @@ node scripts/medir-no-celular.mjs https://ora5g.com.br /entrar / /demo/vender /d
 
 Para comparar sem limitar a rede e o processador, use `REDE=livre`. Para mais medidas por tela, use `VEZES=5`.
 
+### As idas ao banco de cada tela (log de tempos)
+
+O log fica desligado no dia a dia. Ele só é lido na publicação, então ligar e desligar exigem publicar de novo.
+
+1. Ligar: num terminal do servidor, rodar o comando abaixo e digitar `1`. O Claude Code também pode editar a linha `ORA_MEDIR_TEMPOS=` em `~/homologacao/plataforma.env`.
+
+```bash
+bash deploy/homologacao/definir-chave.sh ORA_MEDIR_TEMPOS
+```
+
+2. Publicar de novo:
+
+```bash
+bash deploy/homologacao/publicar.sh
+```
+
+3. Usar as telas e ler as linhas:
+
+```bash
+grep '^\[tempos\]' ~/homologacao/logs/plataforma.log | tail -n 60
+```
+
+4. Desligar: esvaziar a linha `ORA_MEDIR_TEMPOS=` em `~/homologacao/plataforma.env` (o `definir-chave.sh` recusa valor vazio) e publicar de novo.
+
+Como ler:
+
+```text
+[tempos] p41 pedido GET /vender (página inteira)
+[tempos] c12 #1 +2ms 171ms 200 POST /rest/v1/rpc/molde_da_sessao
+[tempos] c12 #2 +175ms 168ms 200 POST /rest/v1/rpc/pdv_tela
+```
+
+- `p41` é um pedido que chegou ao servidor; `c12` é uma tela sendo montada (ou uma ação, ou uma rota). Os dois se ligam só pelo horário.
+- `#2` é a ordem da ida dentro da tela, `+175ms` é quanto depois do começo ela saiu e `168ms` é quanto demorou até a resposta começar a chegar.
+- Idas ao mesmo tempo saem com o `+` quase igual; idas em fila saem uma depois da outra.
+- Uma linha `GET /auth/v1/user` em cada pedido quer dizer que o token ainda é assinado com o segredo compartilhado (ADR-010, decisão 1).
+- A linha nunca traz o que vem depois do `?` no endereço, cabeçalhos, corpo, token, chave, o endereço do projeto nem o texto do erro.
+
 ## O que falta
 
 - O proprietário aprovar (ou mudar) as metas.
-- Medir as telas com login (PDV, caixa, início): depende do usuário de teste (J1).
+- Medir as telas com login (PDV, caixa, início) pelo script: depende do usuário de teste (J1). Até lá, a medida com login é a do proprietário no navegador (seção 4.6).
+- Confirmar com um login qual chave assina os tokens de hoje (o log de tempos mostra).
+- O teste de ponta a ponta no celular que adiciona, tira e conclui uma venda: depende do usuário de teste (J1).
 - O teste no celular e na internet da loja piloto, com o vendedor.

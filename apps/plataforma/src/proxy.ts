@@ -2,6 +2,7 @@ import { createServerClient } from "@supabase/ssr";
 import { NextResponse, type NextRequest } from "next/server";
 
 import { configuracaoSupabase } from "./lib/supabase/configuracao";
+import { medidorDeTempos, rotuloDoPedido } from "./lib/supabase/tempos";
 
 export async function proxy(requisicao: NextRequest) {
   return renovarSessao(requisicao);
@@ -14,8 +15,12 @@ async function renovarSessao(requisicao: NextRequest) {
   const configuracao = configuracaoSupabase();
   if (!configuracao) return NextResponse.next();
 
+  // Log de tempos (ORA_MEDIR_TEMPOS=1; desligado, é null e nada muda): uma linha diz qual pedido chegou, e a conferência
+  // do token só aparece embaixo dela quando precisou ir ao Auth (token sem chave assimétrica, ou renovação).
+  const tempos = medidorDeTempos("p", () => rotuloDoPedido(requisicao.method, requisicao.nextUrl.pathname, requisicao.headers));
   let resposta = NextResponse.next({ request: requisicao });
   const supabase = createServerClient(configuracao.url, configuracao.chavePublica, {
+    ...(tempos ? { global: { fetch: tempos.fetch } } : {}),
     cookies: {
       getAll: () => requisicao.cookies.getAll(),
       setAll: (lista, cabecalhos) => {
