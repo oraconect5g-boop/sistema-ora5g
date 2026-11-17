@@ -1,4 +1,4 @@
--- Reversão de 20261117220000_alertas_das_filas (lote QUAL-a): tira a tarefa do agendador, volta o envio dos avisos e a
+-- Reversão de 20261117221322_alertas_das_filas (lote QUAL-a): tira a tarefa do agendador, volta o envio dos avisos e a
 -- execução das rotinas às versões anteriores (PWA-b e ROT-a), tira a rotina dos alertas, os alertas da fila, o limite das
 -- filas e as funções novas, e volta as regras da fila dos avisos.
 select cron.unschedule('ora5g-alertas-das-filas');

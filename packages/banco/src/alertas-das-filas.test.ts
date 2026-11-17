@@ -1,4 +1,4 @@
-// Lote QUAL-a (17/11/2026; ORA-QUAL-006; migration 20261117220000_alertas_das_filas): o aviso no celular quando uma
+// Lote QUAL-a (17/11/2026; ORA-QUAL-006; migration 20261117221322_alertas_das_filas): o aviso no celular quando uma
 // fila passa do limite (desconto, nota ou saída de caixa esperando demais numa loja) ou quando uma rotina do banco falha
 // ou atrasa. Usa a fila e o envio do PWA-b. Endereços, chaves e segredo FICTÍCIOS; cada teste numa transação desfeita.
 import type { PGlite } from "@electric-sql/pglite";
