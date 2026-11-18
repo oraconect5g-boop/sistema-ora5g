@@ -1,8 +1,8 @@
 "use client";
 
 import {
-  avaliarDesconto, conferirPagamentos, cpfValido, imeiValido, mascararIdentificador, MEIOS, normalizarTelefone, totaisDaVenda, validarItem,
-  type AvaliacaoDesconto, type ItemVenda, type MeioPagamento, type Pagamento,
+  avaliarDesconto, conferirPagamentos, cpfValido, ehMeioDaEntrada, imeiValido, mascararIdentificador, MAXIMO_DE_PARCELAS, MEIOS, nomeDoPagamento,
+  normalizarTelefone, textoDasParcelas, totaisDaVenda, validarItem, type AvaliacaoDesconto, type ItemVenda, type MeioPagamento, type Pagamento,
 } from "@ora5g/dominio";
 import {
   ArrowRightLeft, Banknote, CircleCheck, CreditCard, HandCoins, Hourglass, Link2, LoaderCircle, Minus, PackageSearch, Plus, QrCode,
@@ -15,13 +15,15 @@ import { Aviso, Botao, Cartao, ListaDados, Selo } from "../../../componentes/ui"
 import { brl, percentualDePontosBase } from "../../../lib/formato";
 import { Comprovante } from "./Comprovante";
 import { avisoDeLimite, conferirQuantidade, podeAumentar } from "./estoque";
-import { assinaturaDoCarrinho, lerSeguro, reaisParaTexto, type Aprovacao, type Cliente, type DadosPdv, type ItemCarrinho, type LinhaPagamento } from "./tipos";
+import { assinaturaDoCarrinho, lerParcelas, lerSeguro, reaisParaTexto, type Aprovacao, type Cliente, type DadosPdv, type ItemCarrinho, type LinhaPagamento } from "./tipos";
 
 const ICONE_MEIO: Record<MeioPagamento, typeof QrCode> = {
   pix_picpay: QrCode, pix_direto: QrCode, cartao_picpay: CreditCard, cartao_pagseguro: CreditCard, dinheiro: Banknote, link_pagamento: Link2, payjoy: HandCoins, aiva: HandCoins,
   vale_troca: Banknote,
 };
-const ORDEM_MEIOS: MeioPagamento[] = ["pix_picpay", "cartao_picpay", "dinheiro", "pix_direto", "cartao_pagseguro", "link_pagamento", "payjoy", "aiva"];
+// PDV-c (o proprietário, 18/11): na loja não se gera link de pagamento; o link é só da compra online.
+const ORDEM_MEIOS: MeioPagamento[] = ["pix_picpay", "cartao_picpay", "dinheiro", "pix_direto", "cartao_pagseguro", "payjoy", "aiva"];
+const MAXIMO_DE_FORMAS = 8;
 const emailValido = (texto: string) => /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(texto.trim());
 const classeCampo = "min-h-11 rounded-botao border bg-white px-3 text-[15px] outline-none transition focus:border-acao focus:ring-2 focus:ring-acao/20";
 
@@ -44,6 +46,7 @@ export function PDV({ dados, itemInicial }: { dados: DadosPdv; itemInicial?: Ata
 
   const [itens, setItens] = useState<ItemCarrinho[]>(() => itensDoAtalho(itemInicial, dados, 1));
   const [pagamentos, setPagamentos] = useState<LinhaPagamento[]>([]);
+  const [escolhendoMeio, setEscolhendoMeio] = useState(false);
   const [cliente, setCliente] = useState<Cliente | null>(null);
   const [buscaCliente, setBuscaCliente] = useState("");
   const [resultadoCliente, setResultadoCliente] = useState<"nao_encontrado" | "incompleto" | null>(null);
@@ -120,8 +123,16 @@ export function PDV({ dados, itemInicial }: { dados: DadosPdv; itemInicial?: Ata
   const subtotal = validos.reduce((s, v) => s + v.precoUnitario * v.quantidade, 0);
   const temErros = falhaNoTotal || analise.some((a) => a.erros.length > 0);
 
-  const pagamentosDominio: Pagamento[] = pagamentos.map((p) => ({ meio: p.meio, valor: lerSeguro(p.valorTexto) ?? -1, entrada: MEIOS[p.meio].financeira ? (lerSeguro(p.entradaTexto) ?? -1) : undefined }));
-  const conferencia = conferirPagamentos(totais.total, pagamentosDominio);
+  // PDV-c: a PayJoy e a Aiva financiam só o celular; a entrada é outra forma (dinheiro, Pix ou cartão) marcada como a entrada.
+  const valorDosCelulares = validos.filter((v) => v.tipo === "aparelho").reduce((s, v) => s + v.precoUnitario * v.quantidade - (v.desconto ?? 0), 0);
+  const temFinanceira = pagamentos.some((p) => MEIOS[p.meio].financeira);
+  const pagamentosDominio: Pagamento[] = pagamentos.map((p) => ({
+    meio: p.meio,
+    valor: lerSeguro(p.valorTexto) ?? -1,
+    parcelas: MAXIMO_DE_PARCELAS[p.meio] !== undefined ? lerParcelas(p.parcelasTexto) : undefined,
+    entradaDoFinanciamento: temFinanceira && ehMeioDaEntrada(p.meio) && p.entrada ? true : undefined,
+  }));
+  const conferencia = conferirPagamentos(totais.total, pagamentosDominio, { valorDosCelulares });
   const semPagamento = totais.total === 0 && pagamentos.length === 0;
 
   const assinatura = assinaturaDoCarrinho(itens, taxaDaVenda);
@@ -197,11 +208,17 @@ export function PDV({ dados, itemInicial }: { dados: DadosPdv; itemInicial?: Ata
     setCadastro({ aberto: false, nome: "", email: "", erro: "" });
   }
 
+  // O valor sugerido é o que falta; na PayJoy e na Aiva, no máximo o valor dos celulares ainda não financiado.
   function adicionarPagamento(meio: MeioPagamento) {
     const pago = pagamentosDominio.reduce((s, p) => s + Math.max(0, p.valor), 0);
+    const financiado = pagamentosDominio.reduce((s, p) => s + (MEIOS[p.meio].financeira ? Math.max(0, p.valor) : 0), 0);
     const restante = Math.max(0, totais.total - pago);
-    setPagamentos([...pagamentos, { id: novoId(), meio, valorTexto: reaisParaTexto(restante), entradaTexto: "0,00" }]);
+    const sugerido = MEIOS[meio].financeira ? Math.max(0, Math.min(restante, valorDosCelulares - financiado)) : restante;
+    const parcelasTexto = MAXIMO_DE_PARCELAS[meio] !== undefined && !MEIOS[meio].financeira ? "1" : "";
+    setPagamentos([...pagamentos, { id: novoId(), meio, valorTexto: reaisParaTexto(sugerido), parcelasTexto, entrada: false }]);
+    setEscolhendoMeio(false);
   }
+  const mudarPagamento = (id: number, mudanca: Partial<LinhaPagamento>) => setPagamentos(pagamentos.map((x) => (x.id === id ? { ...x, ...mudanca } : x)));
 
   function enviarPedido() {
     if (pedido.motivo.trim().length < 5) return;
@@ -222,6 +239,7 @@ export function PDV({ dados, itemInicial }: { dados: DadosPdv; itemInicial?: Ata
   function novaVenda() {
     setItens([]);
     setPagamentos([]);
+    setEscolhendoMeio(false);
     setCliente(null);
     setBuscaCliente("");
     setResultadoCliente(null);
@@ -429,39 +447,67 @@ export function PDV({ dados, itemInicial }: { dados: DadosPdv; itemInicial?: Ata
           {temErros && <p role="alert" className="mt-2 text-sm font-medium text-perigo">Corrija os itens destacados no carrinho. Itens com erro não entram no total.</p>}
 
           <p className="mb-2 mt-4 text-sm font-semibold">Formas de pagamento <span className="font-normal text-suave">(pode misturar)</span></p>
-          <div className="grid grid-cols-2 gap-2">
-            {ORDEM_MEIOS.map((m) => {
-              const IconeMeio = ICONE_MEIO[m];
-              return (
-                <button key={m} type="button" onClick={() => adicionarPagamento(m)} disabled={itens.length === 0} className="flex min-h-11 items-center gap-2 rounded-botao border border-borda bg-white px-2.5 text-left text-xs font-semibold hover:border-acao/50 hover:bg-acao-clara/40 disabled:cursor-not-allowed disabled:opacity-50">
-                  <IconeMeio aria-hidden className="size-4 shrink-0 text-acao" /> <span className="leading-4">{MEIOS[m].nome}</span>
-                </button>
-              );
-            })}
-          </div>
+          {pagamentos.length === 0 && (
+            <p className="text-sm text-suave">Nenhuma forma de pagamento ainda. Toque em &quot;Adicionar forma de pagamento&quot; e escolha como o cliente paga.</p>
+          )}
 
           {pagamentos.length > 0 && (
-            <ul className="mt-3 space-y-2">
-              {pagamentos.map((p) => (
-                <li key={p.id} className="rounded-xl border border-borda p-3">
-                  <div className="flex items-center justify-between gap-2">
-                    <span className="text-sm font-semibold">{MEIOS[p.meio].nome}</span>
-                    <button type="button" aria-label={`Remover ${MEIOS[p.meio].nome}`} onClick={() => setPagamentos(pagamentos.filter((x) => x.id !== p.id))} className="grid size-9 place-items-center rounded-lg text-perigo hover:bg-perigo-clara"><Trash2 aria-hidden className="size-4" /></button>
-                  </div>
-                  <label className="mt-2 flex items-center justify-between gap-2 text-sm">
-                    {MEIOS[p.meio].financeira ? "Valor do aparelho financiado R$" : "Valor R$"}
-                    <input value={p.valorTexto} onChange={(e) => setPagamentos(pagamentos.map((x) => (x.id === p.id ? { ...x, valorTexto: e.target.value } : x)))} inputMode="decimal" className={`${classeCampo} numeros w-32 border-borda text-right`} />
-                  </label>
-                  {MEIOS[p.meio].financeira && (
+            <ul className="space-y-2">
+              {pagamentos.map((p) => {
+                const maximo = MAXIMO_DE_PARCELAS[p.meio];
+                const financeira = MEIOS[p.meio].financeira;
+                return (
+                  <li key={p.id} className="rounded-xl border border-borda p-3">
+                    <div className="flex items-center justify-between gap-2">
+                      <span className="text-sm font-semibold">{nomeDoPagamento({ meio: p.meio, entradaDoFinanciamento: temFinanceira && ehMeioDaEntrada(p.meio) && p.entrada })}</span>
+                      <button type="button" aria-label={`Remover ${MEIOS[p.meio].nome}`} onClick={() => setPagamentos(pagamentos.filter((x) => x.id !== p.id))} className="grid size-9 place-items-center rounded-lg text-perigo hover:bg-perigo-clara"><Trash2 aria-hidden className="size-4" /></button>
+                    </div>
                     <label className="mt-2 flex items-center justify-between gap-2 text-sm">
-                      Entrada paga na loja R$
-                      <input value={p.entradaTexto} onChange={(e) => setPagamentos(pagamentos.map((x) => (x.id === p.id ? { ...x, entradaTexto: e.target.value } : x)))} inputMode="decimal" className={`${classeCampo} numeros w-32 border-borda text-right`} />
+                      {financeira ? "Valor financiado (só o celular) R$" : "Valor R$"}
+                      <input value={p.valorTexto} onChange={(e) => mudarPagamento(p.id, { valorTexto: e.target.value })} inputMode="decimal" className={`${classeCampo} numeros w-32 border-borda text-right`} />
                     </label>
-                  )}
-                </li>
-              ))}
+                    {maximo !== undefined && (financeira ? (
+                      <label className="mt-2 flex items-center justify-between gap-2 text-sm">
+                        {`Parcelas (1 a ${maximo})`}
+                        <input value={p.parcelasTexto} onChange={(e) => mudarPagamento(p.id, { parcelasTexto: e.target.value })} inputMode="numeric" placeholder="ex.: 12" className={`${classeCampo} numeros w-32 border-borda text-right`} />
+                      </label>
+                    ) : (
+                      <label className="mt-2 flex items-center justify-between gap-2 text-sm">
+                        Parcelas no cartão
+                        <select value={p.parcelasTexto} onChange={(e) => mudarPagamento(p.id, { parcelasTexto: e.target.value })} className={`${classeCampo} w-32 border-borda`}>
+                          {Array.from({ length: maximo }, (_, k) => k + 1).map((n) => <option key={n} value={String(n)}>{n === 1 ? "1x (à vista)" : `${n}x`}</option>)}
+                        </select>
+                      </label>
+                    ))}
+                    {temFinanceira && ehMeioDaEntrada(p.meio) && (
+                      <label className="mt-2 flex min-h-11 items-center gap-2 text-sm">
+                        <input type="checkbox" checked={p.entrada} onChange={(e) => mudarPagamento(p.id, { entrada: e.target.checked })} className="size-5 accent-acao" />
+                        É a entrada da PayJoy ou da Aiva
+                      </label>
+                    )}
+                  </li>
+                );
+              })}
             </ul>
           )}
+
+          {pagamentos.length < MAXIMO_DE_FORMAS && (escolhendoMeio ? (
+            <div role="group" aria-label="Escolha a forma de pagamento" className="mt-3 grid grid-cols-2 gap-2">
+              {ORDEM_MEIOS.map((m) => {
+                const IconeMeio = ICONE_MEIO[m];
+                return (
+                  <button key={m} type="button" onClick={() => adicionarPagamento(m)} className="flex min-h-11 items-center gap-2 rounded-botao border border-borda bg-white px-2.5 text-left text-xs font-semibold hover:border-acao/50 hover:bg-acao-clara/40">
+                    <IconeMeio aria-hidden className="size-4 shrink-0 text-acao" /> <span className="leading-4">{MEIOS[m].nome}</span>
+                  </button>
+                );
+              })}
+              <button type="button" onClick={() => setEscolhendoMeio(false)} className="min-h-11 rounded-botao px-2.5 text-xs font-semibold text-suave">Cancelar</button>
+            </div>
+          ) : (
+            <Botao variante="secundario" className="mt-3 w-full" disabled={itens.length === 0} onClick={() => setEscolhendoMeio(true)}>
+              <Plus aria-hidden className="size-4" /> Adicionar forma de pagamento
+            </Botao>
+          ))}
 
           <div aria-live="polite" className="mt-3 space-y-1 text-sm">
             {itens.length > 0 && !semPagamento && conferencia.falta > 0 && <p className="font-semibold text-aviso">Falta receber {brl(conferencia.falta)}</p>}
@@ -519,7 +565,7 @@ export function PDV({ dados, itemInicial }: { dados: DadosPdv; itemInicial?: Ata
         </ul>
         <ListaDados className="mt-3" itens={[
           ["Cliente", cliente?.nome ?? "Não identificado"],
-          ...pagamentosDominio.map((p): [ReactNode, ReactNode] => [MEIOS[p.meio].nome, brl(Math.max(0, p.valor))]),
+          ...pagamentosDominio.map((p): [ReactNode, ReactNode] => [nomeDoPagamento(p), `${brl(Math.max(0, p.valor))}${textoDasParcelas(p.meio, p.parcelas)}`]),
           ...(conferencia.troco > 0 ? [["Troco", brl(conferencia.troco)] as [ReactNode, ReactNode]] : []),
           ["Total", <strong key="t" className="text-base">{brl(totais.total)}</strong>],
         ]} />

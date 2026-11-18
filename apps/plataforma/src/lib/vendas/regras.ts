@@ -1,6 +1,6 @@
 // Regras puras das telas de venda e caixa (ADR-004). O banco decide tudo de novo; aqui só se lê
 // o formulário e se escolhe a mensagem. Mensagem só por código de catálogo (o endereço não injeta texto).
-import { lerReais, MEIOS, type MeioPagamento } from "@ora5g/dominio";
+import { MAXIMO_DE_PARCELAS, MEIOS, ehMeioDaEntrada, type MeioPagamento, lerReais } from "@ora5g/dominio";
 
 export const ERROS_DA_VENDA = {
   sem_estoque: "Não há quantidade suficiente nesta loja.",
@@ -10,6 +10,9 @@ export const ERROS_DA_VENDA = {
   preco_mudou: "O preço de um item mudou. Tire e coloque o item de novo para ver o preço novo.",
   sem_caixa: "Abra o seu caixa antes de concluir a venda.",
   pagamento: "O pagamento não confere: some os valores e informe o comprovante de cartão e Pix.",
+  parcelas: "Informe as parcelas: na PayJoy e na Aiva, de 1 a 48; no cartão, de 1 a 24 (1 é à vista). Dinheiro, Pix e vale-troca não têm parcelas.",
+  so_celular: "A PayJoy e a Aiva financiam só o valor do celular: o chip, os acessórios e os serviços entram na mesma venda e são pagos à parte.",
+  entrada: "A entrada da PayJoy ou da Aiva é um pagamento à parte, em dinheiro, Pix ou cartão, numa venda com o financiamento.",
   aprovacao: "Há desconto sem aprovação válida. Peça a aprovação ou tire o desconto.",
   sem_permissao: "Você não tem permissão para isso.",
   nao_encontrado: "Não encontrado (talvez já tenha sido alterado).",
@@ -61,12 +64,21 @@ export function lerValor(texto: unknown): number | null {
   }
 }
 
-export type LinhaDePagamento = { meio: MeioPagamento; valor: number; entrada?: number; meio_entrada?: MeioPagamento; comprovante?: string; terminal?: string };
+export type LinhaDePagamento = {
+  meio: MeioPagamento; valor: number; entrada?: number; meio_entrada?: MeioPagamento; comprovante?: string; terminal?: string;
+  /** PDV-c: em quantas parcelas (a PayJoy e a Aiva, de 1 a 48; o cartão, de 1 a 24). */
+  parcelas?: number;
+  /** PDV-c: este pagamento (dinheiro, Pix ou cartão) é a entrada da PayJoy ou da Aiva da mesma venda. */
+  entrada_do_financiamento?: true;
+};
+/** PDV-c: os meios que parcelam e o máximo de parcelas de cada um (a regra do domínio, a mesma do banco). */
+/** PDV-c: o máximo de parcelas e os meios da entrada do financiamento vêm do domínio (a mesma regra da tela e do banco). */
+export { MAXIMO_DE_PARCELAS, ehMeioDaEntrada };
 /** Meios que passam por maquininha (o provedor decide quais maquininhas servem: L7a). */
 export const PROVEDOR_DO_MEIO: Partial<Record<MeioPagamento, "picpay" | "pagbank">> = { pix_picpay: "picpay", cartao_picpay: "picpay", cartao_pagseguro: "pagbank" };
 
 // Lê até N linhas do formulário (pagamento_1_meio, pagamento_1_valor...); linha sem valor é ignorada.
-export function lerPagamentos(dados: { get: (nome: string) => unknown }, linhas = 3): { ok: true; pagamentos: LinhaDePagamento[] } | { ok: false; erro: ErroDaVenda } {
+export function lerPagamentos(dados: { get: (nome: string) => unknown }, linhas = 8): { ok: true; pagamentos: LinhaDePagamento[] } | { ok: false; erro: ErroDaVenda } {
   const pagamentos: LinhaDePagamento[] = [];
   for (let i = 1; i <= linhas; i++) {
     const bruto = dados.get(`pagamento_${i}_valor`);
@@ -86,6 +98,22 @@ export function lerPagamentos(dados: { get: (nome: string) => unknown }, linhas 
       if (!/^\d{1,12}$/.test(numero)) return { ok: false, erro: "vale_numero" };
       linha.comprovante = `VT-${Number(numero)}`;
     }
+    // PDV-c: as parcelas, obrigatórias na PayJoy e na Aiva; no cartão, sem informar é à vista; nos outros meios, nenhuma.
+    const parcelasBrutas = dados.get(`pagamento_${i}_parcelas`);
+    const textoDasParcelas = typeof parcelasBrutas === "string" ? parcelasBrutas.trim() : "";
+    const maximo = MAXIMO_DE_PARCELAS[meio];
+    if (textoDasParcelas !== "") {
+      const parcelas = /^\d{1,2}$/.test(textoDasParcelas) ? Number(textoDasParcelas) : 0;
+      if (maximo === undefined ? parcelas !== 1 : parcelas < 1 || parcelas > maximo) return { ok: false, erro: "parcelas" };
+      if (maximo !== undefined) linha.parcelas = parcelas;
+    } else if (MEIOS[meio].financeira) {
+      return { ok: false, erro: "parcelas" };
+    }
+    // PDV-c: a entrada da PayJoy e da Aiva é um lançamento à parte, em dinheiro, Pix ou cartão.
+    if (dados.get(`pagamento_${i}_entrada_do_financiamento`) === "sim") {
+      if (!ehMeioDaEntrada(meio)) return { ok: false, erro: "entrada" };
+      linha.entrada_do_financiamento = true;
+    }
     if (MEIOS[meio].financeira) {
       const entradaBruta = dados.get(`pagamento_${i}_entrada`);
       const entrada = typeof entradaBruta === "string" && entradaBruta.trim() ? lerValor(entradaBruta) : 0;
@@ -104,7 +132,17 @@ export function lerPagamentos(dados: { get: (nome: string) => unknown }, linhas 
     }
     pagamentos.push(linha);
   }
+  if (pagamentos.some((p) => p.entrada_do_financiamento) && !pagamentos.some((p) => MEIOS[p.meio].financeira)) return { ok: false, erro: "entrada" };
   return pagamentos.length ? { ok: true, pagamentos } : { ok: false, erro: "pagamento" };
+}
+
+/** PDV-c: a recusa do banco na conclusão (OR009) vira a mensagem da regra que falhou; o texto do banco não vai à tela. */
+export function erroDoPagamento(mensagem: string): ErroDaVenda | null {
+  if (/maquininha/i.test(mensagem)) return "maquininha";
+  if (/parcela/i.test(mensagem)) return "parcelas";
+  if (/financiam só/i.test(mensagem)) return "so_celular";
+  if (/entrada/i.test(mensagem)) return "entrada";
+  return null;
 }
 
 

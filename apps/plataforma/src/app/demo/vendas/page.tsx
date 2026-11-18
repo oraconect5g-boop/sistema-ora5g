@@ -1,4 +1,4 @@
-import { MEIOS } from "@ora5g/dominio";
+import { nomeDoPagamento, textoDasParcelas } from "@ora5g/dominio";
 import { Coins, Hourglass, Receipt, ShoppingBag } from "lucide-react";
 import type { Metadata } from "next";
 
@@ -63,7 +63,7 @@ export default async function Vendas({ searchParams }: { searchParams: Promise<{
         sobretitulo={rede ? "Rede inteira" : nomeDaLoja(contexto.loja)}
         titulo={gestao ? "Vendas de hoje" : "Minhas vendas de hoje"}
         subtitulo={gestao ? "Todos os vendedores do seu escopo, com situação da venda e da nota" : "Só as suas vendas nesta loja. As de outras lojas aparecem em Metas."}
-        acao={<ExportarCsv nomeArquivo="vendas" colunas={["Venda", "Hora", "Loja", "Vendedor", "Cliente", "Itens", "Pagamento", "Total (R$)", "Situação", "Nota"]} linhas={visiveis.map((v) => [v.numero, v.hora, nomeDaLoja(v.loja), nomeDaPessoa(v.vendedor), v.cliente ?? "", v.itens.map((i) => i.nome).join(" + "), v.pagamentos.map((p) => MEIOS[p.meio].nome).join(" + "), (v.total / 100).toFixed(2).replace(".", ","), NOMES_SITUACAO[v.situacao], NOMES_NOTA[v.nota]])} />}
+        acao={<ExportarCsv nomeArquivo="vendas" colunas={["Venda", "Hora", "Loja", "Vendedor", "Cliente", "Itens", "Pagamento", "Total (R$)", "Situação", "Nota"]} linhas={visiveis.map((v) => [v.numero, v.hora, nomeDaLoja(v.loja), nomeDaPessoa(v.vendedor), v.cliente ?? "", v.itens.map((i) => i.nome).join(" + "), v.pagamentos.map((p) => `${nomeDoPagamento(p)}${textoDasParcelas(p.meio, p.parcelas)}`).join(" + "), (v.total / 100).toFixed(2).replace(".", ","), NOMES_SITUACAO[v.situacao], NOMES_NOTA[v.nota]])} />}
       />
 
       <div className="grid grid-cols-2 gap-3 sm:gap-4 xl:grid-cols-4">
@@ -112,7 +112,7 @@ export default async function Vendas({ searchParams }: { searchParams: Promise<{
                       <span className="block truncate">{v.itens.map((i) => (i.quantidade > 1 ? `${i.quantidade}× ${i.nome}` : i.nome)).join(" + ")}</span>
                       <span className="block truncate text-xs text-suave">{gestao ? `${nomeDaPessoa(v.vendedor)} · ` : ""}{v.cliente ?? "Cliente não identificado"}</span>
                     </span>
-                    <span className="hidden truncate text-xs text-suave lg:block">{v.pagamentos.map((p) => MEIOS[p.meio].nome).join(" + ") || "—"}</span>
+                    <span className="hidden truncate text-xs text-suave lg:block">{v.pagamentos.map((p) => nomeDoPagamento(p)).join(" + ") || "—"}</span>
                     <span className="numeros text-right text-sm font-semibold lg:text-left">{brl(v.total)}</span>
                     <span className="flex flex-wrap gap-1 max-lg:order-4 max-lg:col-span-2">
                       <Selo tom={TOM_SITUACAO[v.situacao]} ponto>{NOMES_SITUACAO[v.situacao]}</Selo>
@@ -135,7 +135,7 @@ export default async function Vendas({ searchParams }: { searchParams: Promise<{
                       <p className="mb-1 text-xs font-semibold uppercase tracking-wide text-suave">Pagamento</p>
                       <ul className="space-y-1">
                         {v.pagamentos.map((p, k) => (
-                          <li key={k} className="flex justify-between gap-3"><span>{MEIOS[p.meio].nome}{p.entrada !== undefined ? ` (entrada ${brl(p.entrada)})` : ""}</span><span className="numeros">{brl(p.valor)}</span></li>
+                          <li key={k} className="flex justify-between gap-3"><span>{nomeDoPagamento(p)}{p.entrada !== undefined ? ` (entrada ${brl(p.entrada)})` : ""}</span><span className="numeros">{brl(p.valor)}{textoDasParcelas(p.meio, p.parcelas)}</span></li>
                         ))}
                       </ul>
                       {v.pedido && <p className="mt-2 text-xs text-suave">Pedido: {v.pedido.motivo} · há {v.pedido.esperaMinutos} min</p>}

@@ -16,6 +16,8 @@ export const ERROS_DO_CONNECT = {
   motivo: "Informe o motivo (fica na auditoria).",
   evidencia: "Descreva a evidência com pelo menos 10 caracteres (fica na auditoria).",
   link_pago: "Este serviço já foi pago no caixa: escolha SALDO. O LINK cobraria o cliente de novo.",
+  link_so_online: "Na loja não se gera link de pagamento: o cliente paga no caixa e a operação usa o SALDO da Ora. O link é só da compra online.",
+  sem_servico_pago: "Escolha o serviço pago no caixa: venda a ativação ou a recarga no PDV antes de registrar a operação.",
   falha: "Não foi possível concluir agora. Tente de novo em instantes.",
 } as const;
 export type ErroDoConnect = keyof typeof ERROS_DO_CONNECT;
@@ -58,8 +60,10 @@ export function lerPedido(tipo: TipoOperacao, dados: Formulario): { ok: true; pe
   const metodo = texto(dados, "metodo", 5);
   const plano = texto(dados, "plano", 9);
   if ((metodo !== "LINK" && metodo !== "SALDO") || !/^\d{1,9}$/.test(plano)) return { ok: false, erro: "dados" };
-  // Serviço já recebido no caixa não vai pelo LINK (REV-054, #57): o banco recusa também.
-  if (metodo === "LINK" && vendaItem) return { ok: false, erro: "link_pago" };
+  // Serviço já recebido no caixa não vai pelo LINK (REV-054, #57): o banco recusa também. PDV-c (o proprietário, 18/11):
+  // na loja não se gera link de pagamento nenhum; o link é só da compra online. A loja usa o SALDO, com o serviço pago.
+  if (metodo === "LINK") return { ok: false, erro: vendaItem ? "link_pago" : "link_so_online" };
+  if (!vendaItem) return { ok: false, erro: "sem_servico_pago" };
   if (tipo === "recarga") {
     const linha = digitos(texto(dados, "linha"));
     if (!linhaValida(linha)) return { ok: false, erro: "linha" };

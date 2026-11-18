@@ -156,7 +156,7 @@ describe("troca com vale (ORA-POS-012)", () => {
     await adicionar(ana, segunda, cat.aparelho, itens.a2);
     expect(await errou(ana, CONCLUIR, [segunda, JSON.stringify([{ meio: "vale_troca", valor: 7_900, comprovante: "VT-999999" }, { meio: "dinheiro", valor: 142_000 }]), chave("c")])).toBe("OR018");
     expect(await errou(ana, CONCLUIR, [segunda, JSON.stringify([{ meio: "vale_troca", valor: 8_000, comprovante: `VT-${troca.vale}` }, { meio: "dinheiro", valor: 141_900 }]), chave("c")])).toBe("OR018");
-    expect(await errou(ana, CONCLUIR, [segunda, JSON.stringify([{ meio: "payjoy", valor: 149_900, entrada: 7_900, meio_entrada: "vale_troca" }]), chave("c")])).not.toBeNull();
+    expect(await errou(ana, CONCLUIR, [segunda, JSON.stringify([{ meio: "payjoy", valor: 149_900, entrada: 7_900, meio_entrada: "vale_troca", parcelas: 12 }]), chave("c")])).not.toBeNull();
     await concluir(ana, segunda, [{ meio: "vale_troca", valor: 7_900, comprovante: `VT-${troca.vale}` }, { meio: "dinheiro", valor: 142_000 }]);
     expect(await saldoDoVale(Number(troca.vale))).toBe(0);
 
@@ -205,7 +205,7 @@ describe("proteções", () => {
 
     const financiada = await novaVenda(ana);
     const aparelho = await adicionar(ana, financiada, cat.aparelho, itens.a1);
-    await concluir(ana, financiada, [{ meio: "payjoy", valor: 149_900, entrada: 20_000 }], { email: "cliente@exemplo.com" });
+    await concluir(ana, financiada, [{ meio: "payjoy", valor: 149_900, entrada: 20_000, parcelas: 12 }], { email: "cliente@exemplo.com" });
     expect(await errouDevolver(dono, financiada, [{ item: aparelho }], [{ meio: "dinheiro", valor: 20_000 }])).toBe("OR016");
     expect(await errou(dono, "select * from public.venda_devolucoes")).toBeNull();
     expect(await errou(dono, "update public.venda_devolucoes set motivo = 'outro'")).toBe("42501");

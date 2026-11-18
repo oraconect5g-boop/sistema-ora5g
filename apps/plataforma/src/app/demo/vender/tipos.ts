@@ -32,7 +32,18 @@ export type ItemCarrinho = {
   valor?: number;
 };
 
-export type LinhaPagamento = { id: number; meio: MeioPagamento; valorTexto: string; entradaTexto: string };
+/**
+ * Uma forma de pagamento na tela (PDV-c): o valor, as parcelas (a PayJoy, a Aiva e o cartão) e se é a entrada da PayJoy
+ * ou da Aiva, paga à parte em dinheiro, Pix ou cartão.
+ */
+export type LinhaPagamento = { id: number; meio: MeioPagamento; valorTexto: string; parcelasTexto: string; entrada: boolean };
+
+/** As parcelas digitadas: vazio = não informado; outra coisa que não 1 ou 2 algarismos = inválido (a conferência recusa). */
+export function lerParcelas(texto: string): number | undefined {
+  const t = texto.trim();
+  if (t === "") return undefined;
+  return /^\d{1,2}$/.test(t) ? Number(t) : -1;
+}
 
 export type Cliente = { nome: string; email: string | null; novo?: boolean };
 

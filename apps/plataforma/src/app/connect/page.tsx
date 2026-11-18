@@ -86,11 +86,12 @@ export default async function Connect({ searchParams }: { searchParams: Promise<
   );
   const formaDePagamento = (tipo: TipoOperacao) => (
     <fieldset className="space-y-2">
-      <legend className="text-sm font-medium">Quem paga a Nogle</legend>
-      <label className="flex items-center gap-2 text-sm"><input type="radio" name="metodo" value="LINK" defaultChecked /> LINK: o cliente paga pelo link da Nogle</label>
-      <label className="flex items-center gap-2 text-sm"><input type="radio" name="metodo" value="SALDO" /> SALDO: carteira da Ora (o cliente já pagou no caixa)</label>
-      <label className={rotulo}>Serviço pago no caixa (só no SALDO; no LINK deixe em branco)
-        <select name="venda_item" className={campo} defaultValue=""><option value="">—</option>{pagosLivres(tipo).map(opcaoDePago)}</select>
+      <legend className="text-sm font-medium">Pagamento</legend>
+      {/* PDV-c (o proprietário, 18/11): na loja não se gera link de pagamento; o cliente paga no caixa e a operação usa o SALDO. */}
+      <input type="hidden" name="metodo" value="SALDO" />
+      <p className="text-xs text-suave">O cliente paga no caixa (venda a ativação ou a recarga no PDV) e a operação usa o SALDO da Ora. Na loja não se gera link de pagamento: o link é só da compra online.</p>
+      <label className={rotulo}>Serviço pago no caixa
+        <select name="venda_item" required className={campo} defaultValue=""><option value="" disabled>Escolha a venda</option>{pagosLivres(tipo).map(opcaoDePago)}</select>
       </label>
     </fieldset>
   );

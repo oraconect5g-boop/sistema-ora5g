@@ -92,7 +92,7 @@ async function diaDaRede() {
   // V3: aparelho financiado na PayJoy, com entrada em dinheiro (a venda é o preço inteiro).
   const v3 = await novaVenda(ana);
   await adicionar(ana, v3, cat.aparelho, itens.a1);
-  await concluir(ana, v3, [{ meio: "payjoy", valor: 149_900, entrada: 20_000, meio_entrada: "dinheiro" }], { nome: "Cliente Teste", email: "cliente@teste.invalid" });
+  await concluir(ana, v3, [{ meio: "payjoy", valor: 149_900, entrada: 20_000, meio_entrada: "dinheiro", parcelas: 12 }], { nome: "Cliente Teste", email: "cliente@teste.invalid" });
   // V5: aparelho e capa na mesma venda, três pagamentos: dois itens x três pagamentos é uma venda.
   const v5 = await novaVenda(ana);
   await adicionar(ana, v5, cat.aparelho, itens.a2);

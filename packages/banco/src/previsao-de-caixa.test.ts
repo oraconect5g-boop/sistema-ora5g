@@ -134,7 +134,7 @@ async function semanasDaRede() {
   const s1 = await vendaDeCapa(ana, [{ meio: "dinheiro", valor: 10_000 }]);
   const s2 = await novaVenda(ana);
   await adicionar(ana, s2, cat.aparelho, itens.a1);
-  await concluir(ana, s2, [{ meio: "payjoy", valor: 149_900, entrada: 20_000, meio_entrada: "dinheiro" }], { nome: "Cliente Teste", email: "cliente@teste.invalid" });
+  await concluir(ana, s2, [{ meio: "payjoy", valor: 149_900, entrada: 20_000, meio_entrada: "dinheiro", parcelas: 12 }], { nome: "Cliente Teste", email: "cliente@teste.invalid" });
   const s3 = await vendaDeCapa(ana, [{ meio: "pix_picpay", valor: 7_900, comprovante: "111111" }]);
   const s4 = await vendaDeCapa(ana, [{ meio: "cartao_picpay", valor: 7_900, comprovante: "222222" }]);
   const s5 = await vendaDeCapa(ana, [{ meio: "pix_direto", valor: 7_900, comprovante: "E2E-FICTICIO-L8C" }]);
@@ -312,7 +312,7 @@ describe("previsão de caixa: devolvido só quando o dinheiro sai (#82)", () => 
     const dinheiro = await vendaDeCapa(ana, [{ meio: "dinheiro", valor: 7_900 }]);
     const financiada = await novaVenda(ana);
     await adicionar(ana, financiada, cat.aparelho, itens.a1);
-    await concluir(ana, financiada, [{ meio: "payjoy", valor: 149_900, entrada: 20_000, meio_entrada: "pix_direto", comprovante: "E2E-FICTICIO-B3-3" }],
+    await concluir(ana, financiada, [{ meio: "payjoy", valor: 149_900, entrada: 20_000, meio_entrada: "pix_direto", comprovante: "E2E-FICTICIO-B3-3", parcelas: 12 }],
       { nome: "Cliente Teste", email: "cliente@teste.invalid" });
     const dono = await naLoja(ids.dono, ids.lojaA);
     await abrirCaixa(dono, 50_000);

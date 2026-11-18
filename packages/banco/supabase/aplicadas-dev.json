@@ -114,6 +114,7 @@
     { "versao": "20261118095048", "nome": "precos_em_lote", "md5": "f1ebfa1f1ec00ec51935eb7a6074bf9e", "aplicada_em": "2026-11-18" },
     { "versao": "20261118135333", "nome": "reconciliacao_da_carga", "md5": "f4119851886f5c62801938930a4dd612", "aplicada_em": "2026-11-18" },
     { "versao": "20261118142358", "nome": "transferencia_reserva_no_pedido", "md5": "e856800c7dbe69a40837123e59161e5c", "aplicada_em": "2026-11-18" },
-    { "versao": "20261118151653", "nome": "conciliacao_da_nogle", "md5": "ed42e7427e4114316159bf3bb9388230", "aplicada_em": "2026-11-18" }
+    { "versao": "20261118151653", "nome": "conciliacao_da_nogle", "md5": "ed42e7427e4114316159bf3bb9388230", "aplicada_em": "2026-11-18" },
+    { "versao": "20261118155834", "nome": "pagamentos_por_linha", "md5": "383fa05e4c25e81ac87a59d776e52e83", "aplicada_em": "2026-11-18" }
   ]
 }

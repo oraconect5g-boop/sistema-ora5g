@@ -114,22 +114,17 @@ test("consultar linha: saldo, consumo e titularidade", async ({ page }) => {
   await expect(page.getByText("Linha não encontrada")).toBeVisible();
 });
 
-test("recarga pelo saldo e pelo link, conferindo antes de pedir de novo", async ({ page }) => {
+test("recarga na loja: pelo saldo da Ora, conferindo antes de pedir de novo; sem link de pagamento (PDV-c)", async ({ page }) => {
   await usarPerfil(page, "vendedor");
   await page.goto("/demo/connect?aba=recarga");
+  await expect(page.getByText(/Link de pagamento só na compra online/)).toBeVisible();
+  await expect(page.getByRole("radio", { name: "Link de pagamento" })).toHaveCount(0);
   await page.getByLabel("Número da linha").fill("(41) 9 0000-0101");
   await page.getByRole("button", { name: "Solicitar recarga" }).click();
   await page.getByRole("dialog", { name: "Conferir a recarga" }).getByRole("button", { name: "Solicitar recarga" }).click();
   await expect(page.getByText(/feita pelo saldo \(simulação\)/)).toBeVisible();
-
-  await page.getByRole("button", { name: "Nova recarga" }).click();
-  await page.getByLabel("Número da linha").fill("(41) 9 0000-0202");
-  await page.getByRole("radio", { name: "Link de pagamento" }).check();
-  await page.getByRole("button", { name: "Solicitar recarga" }).click();
-  await page.getByRole("dialog", { name: "Conferir a recarga" }).getByRole("button", { name: "Solicitar recarga" }).click();
-  await expect(page.getByText(/aguardando pagamento do link/)).toBeVisible();
   await page.getByRole("button", { name: "Conferir na operadora" }).click();
-  await expect(page.getByText(/Ainda não paga/)).toBeVisible();
+  await expect(page.getByText(/aparece no histórico da linha/)).toBeVisible();
 });
 
 test("portabilidade: pedido e acompanhamento do status", async ({ page }) => {
@@ -208,19 +203,20 @@ test("REV-024: eSIM não passa do estoque virgem e sai dele ao ser transferido",
   await expect(page.getByText("19", { exact: true })).toBeVisible();
 });
 
-test("REV-025: recarga paga pelo LINK continua LINK e não mexe no caixa nem no saldo da Ora", async ({ page }) => {
+test("PDV-c: na loja não há link de pagamento; a recarga pelo saldo debita a carteira e a ativação explica o pagamento", async ({ page }) => {
   await usarPerfil(page, "vendedor");
   await page.goto("/demo/connect?aba=recarga");
   const saldo = page.getByRole("heading", { name: "Saldo da Ora na Nogle" }).locator("xpath=ancestor::section[1]").locator("p.numeros");
   const saldoAntes = await saldo.textContent();
+  await expect(page.getByLabel("Link de pagamento", { exact: true })).toHaveCount(0);
   await page.getByLabel("Número da linha", { exact: true }).fill("(41) 9 0000-0101");
-  await page.getByLabel("Link de pagamento", { exact: true }).check();
   await page.getByRole("button", { name: "Solicitar recarga", exact: true }).click();
-  await page.getByRole("dialog", { name: "Conferir a recarga" }).getByRole("button", { name: "Solicitar recarga" }).click();
-  await expect(page.getByText(/aguardando pagamento do link/)).toBeVisible();
-  await page.getByRole("button", { name: "Cliente pagou (simulação)" }).click();
-  await expect(page.getByText(/paga pelo link \(simulação\)/)).toBeVisible();
-  await expect(page.getByText(/feita pelo saldo/)).toHaveCount(0);
-  await expect(page.getByText(/O cliente pagou.*na loja/)).toHaveCount(0);
-  expect(await saldo.textContent()).toBe(saldoAntes);
+  const dialogo = page.getByRole("dialog", { name: "Conferir a recarga" });
+  await expect(dialogo.getByText("Saldo da Ora (cliente paga no caixa)")).toBeVisible();
+  await dialogo.getByRole("button", { name: "Solicitar recarga" }).click();
+  await expect(page.getByText(/feita pelo saldo \(simulação\)/)).toBeVisible();
+  expect(await saldo.textContent()).not.toBe(saldoAntes);
+
+  await page.goto("/demo/connect?aba=ativar");
+  await expect(page.getByText(/o link é só da compra online/)).toBeVisible();
 });

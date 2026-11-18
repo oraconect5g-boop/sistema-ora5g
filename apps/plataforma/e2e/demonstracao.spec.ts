@@ -57,6 +57,12 @@ async function adicionarProduto(page: Page, busca: string, nome: string) {
   await page.getByRole("button", { name: `Adicionar ${nome}` }).click();
 }
 
+// PDV-c (o proprietário, 18/11): nenhuma forma aparece até tocar em "Adicionar forma de pagamento" e escolher.
+async function escolherPagamento(page: Page, meio: string) {
+  await botaoExato(page, "Adicionar forma de pagamento").click();
+  await botaoExato(page, meio).click();
+}
+
 async function concluirVenda(page: Page) {
   await botaoExato(page, "Conferir e concluir venda").click();
   const dialogo = page.getByRole("dialog", { name: "Conferir antes de concluir" });
@@ -116,7 +122,7 @@ test("REV-015: desconto maior que o item mostra o erro, mantém o carrinho e a v
   await desconto.fill("5,00");
   await expect(page.getByText("Desconto maior que o item")).toHaveCount(0);
   await expect(page.getByText("Desconto inválido")).toHaveCount(0);
-  await botaoExato(page, "Pix na maquininha PicPay").click();
+  await escolherPagamento(page, "Pix na maquininha PicPay");
   await expect(botaoExato(page, "Conferir e concluir venda")).toBeEnabled();
   await concluirVenda(page);
   await expect(page.getByText("R$ 74,00").first()).toBeVisible();
@@ -132,7 +138,7 @@ test("venda no celular: aparelho com IMEI, Pix na maquininha, confirmação e co
 
   const concluir = botaoExato(page, "Conferir e concluir venda");
   await expect(concluir).toBeDisabled();
-  await botaoExato(page, "Pix na maquininha PicPay").click();
+  await escolherPagamento(page, "Pix na maquininha PicPay");
   await expect(page.getByText("Pagamento confere com o total")).toBeVisible();
   await concluirVenda(page);
   await expect(page.getByText("R$ 2.199,00").first()).toBeVisible();
@@ -177,7 +183,7 @@ test("desconto acima do limite: pede aprovação, recebe a resposta (simulada) e
   await page.getByRole("button", { name: /^IMEI/ }).first().click();
   await page.getByLabel("Desconto R$").fill("400,00");
   await expect(page.getByText("Precisa de aprovação do gerente ou dono")).toBeVisible();
-  await botaoExato(page, "Pix na maquininha PicPay").click();
+  await escolherPagamento(page, "Pix na maquininha PicPay");
   await expect(botaoExato(page, "Conferir e concluir venda")).toBeDisabled();
 
   await page.getByRole("button", { name: "Pedir aprovação do desconto" }).click();
@@ -200,11 +206,49 @@ test("desconto acima do limite: pede aprovação, recebe a resposta (simulada) e
   await expect(page.getByText("(aprovado)")).toBeVisible();
 });
 
+test("PDV-c: a PayJoy financia só o celular, com as parcelas; a entrada é outra forma; a loja não gera link", async ({ page }) => {
+  await usarPerfil(page, "vendedor");
+  await page.goto("/demo/vender");
+  await adicionarProduto(page, "galaxy", "Galaxy A55 256 GB");
+  await page.getByRole("button", { name: /^IMEI/ }).first().click();
+  await adicionarProduto(page, "capa", "Capa de proteção");
+
+  // Nenhuma forma aparece antes do botão, e o link de pagamento não é opção na loja.
+  await expect(page.getByText("Nenhuma forma de pagamento ainda.", { exact: false })).toBeVisible();
+  await expect(botaoExato(page, "Dinheiro")).toHaveCount(0);
+  await botaoExato(page, "Adicionar forma de pagamento").click();
+  await expect(botaoExato(page, "Link de pagamento")).toHaveCount(0);
+  await botaoExato(page, "Financiamento PayJoy").click();
+
+  // O valor sugerido é só o do celular (a capa não entra no financiamento) e as parcelas são obrigatórias.
+  const financiado = page.getByLabel("Valor financiado (só o celular) R$");
+  await expect(financiado).toHaveValue("2199,00");
+  await expect(page.getByText("Financiamento PayJoy: informe as parcelas (de 1 a 48)")).toBeVisible();
+  await page.getByLabel("Parcelas (1 a 48)").fill("12");
+  await financiado.fill("2.278,00");
+  await expect(page.getByText(/financiam só o valor do celular/)).toBeVisible();
+  await financiado.fill("1.899,00");
+  await expect(page.getByText("A receber da financeira: R$ 1.899,00", { exact: false })).toBeVisible();
+
+  // A entrada é um lançamento à parte (dinheiro), e a capa é paga à parte (Pix), sem financiamento.
+  await escolherPagamento(page, "Dinheiro");
+  await page.getByLabel("Valor R$").fill("300,00");
+  await page.getByLabel("É a entrada da PayJoy ou da Aiva").check();
+  await escolherPagamento(page, "Pix na maquininha PicPay");
+  await expect(page.getByText("Pagamento confere com o total")).toBeVisible();
+
+  await concluirVenda(page);
+  await expect(page.getByText("Recebimento via PayJoy")).toBeVisible();
+  await expect(page.getByText("R$ 1.899,00 em 12x")).toBeVisible();
+  await expect(page.getByText("Entrada do financiamento (Dinheiro)")).toBeVisible();
+  await expect(page.getByText("Pix na maquininha PicPay")).toBeVisible();
+});
+
 test("pagamento misto mostra troco e o que falta", async ({ page }) => {
   await usarPerfil(page, "vendedor");
   await page.goto("/demo/vender");
   await adicionarProduto(page, "capa", "Capa de proteção");
-  await botaoExato(page, "Dinheiro").click();
+  await escolherPagamento(page, "Dinheiro");
   await page.getByLabel("Valor R$").fill("100,00");
   await expect(page.getByText("Troco: R$ 21,00")).toBeVisible();
   await page.getByLabel("Valor R$").fill("50,00");
@@ -232,7 +276,7 @@ test("REV-019: acessório não passa do estoque da loja (limite exato e tentativ
   await expect(quantidade).toHaveText("3");
 
   // No limite exato a venda segue normalmente.
-  await botaoExato(page, "Dinheiro").click();
+  await escolherPagamento(page, "Dinheiro");
   await expect(botaoExato(page, "Conferir e concluir venda")).toBeEnabled();
   // O aviso some quando a pessoa começa uma nova busca.
   await page.getByLabel("Buscar produto").fill("capa");

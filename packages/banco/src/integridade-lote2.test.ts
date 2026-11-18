@@ -73,11 +73,11 @@ describe("#46 — entrada de financiamento por Pix ou cartão exige comprovante"
     const ana = await naLoja(ids.vendedorA);
     await abrirCaixa(ana);
     const { venda } = await vendaCom(ana);
-    expect(await errouConcluir(ana, venda, [{ meio: "payjoy", valor: 149_900, entrada: 20_000, meio_entrada: meio }])).toBe("OR009");
-    expect(await errouConcluir(ana, venda, [{ meio: "payjoy", valor: 149_900, entrada: 20_000, meio_entrada: meio, comprovante: "12" }])).toBe("OR009");
+    expect(await errouConcluir(ana, venda, [{ meio: "payjoy", valor: 149_900, entrada: 20_000, meio_entrada: meio, parcelas: 12 }])).toBe("OR009");
+    expect(await errouConcluir(ana, venda, [{ meio: "payjoy", valor: 149_900, entrada: 20_000, meio_entrada: meio, comprovante: "12", parcelas: 12 }])).toBe("OR009");
     expect(await posicao(itens.a1)).toMatchObject({ situacao: "reservado", em_estoque: true });
     expect((await db.query("select 1 from public.contas_a_receber where venda_id = $1", [venda])).rows).toHaveLength(0);
-    const r = await concluir(ana, venda, [{ meio: "payjoy", valor: 149_900, entrada: 20_000, meio_entrada: meio, comprovante: "FICTICIO-1234" }]);
+    const r = await concluir(ana, venda, [{ meio: "payjoy", valor: 149_900, entrada: 20_000, meio_entrada: meio, comprovante: "FICTICIO-1234", parcelas: 12 }]);
     expect(r).toMatchObject({ recebido: 20_000, a_receber: 129_900, troco: 0 });
   });
 
@@ -85,7 +85,7 @@ describe("#46 — entrada de financiamento por Pix ou cartão exige comprovante"
     const ana = await naLoja(ids.vendedorA);
     await abrirCaixa(ana);
     const { venda } = await vendaCom(ana);
-    expect(await errouConcluir(ana, venda, [{ meio: "aiva", valor: 149_900, entrada: 20_000, meio_entrada: "vale_troca", comprovante: "VT-1" }])).toBe("OR009");
+    expect(await errouConcluir(ana, venda, [{ meio: "aiva", valor: 149_900, entrada: 20_000, meio_entrada: "vale_troca", comprovante: "VT-1", parcelas: 12 }])).toBe("OR009");
   });
 
   it("banco e domínio concordam sobre quais meios pedem comprovante e quais são financeiras", async () => {
@@ -100,12 +100,12 @@ describe("#46 — entrada de financiamento por Pix ou cartão exige comprovante"
 describe("#48 — troco só de linha em dinheiro: banco = domínio", () => {
   // Mesmos vetores no SQL (concluir_venda) e no TypeScript (conferirPagamentos). Preço do aparelho: 149.900.
   const vetores: { nome: string; pagamentos: (Pagamento & { meio_entrada?: string })[]; valido: boolean }[] = [
-    { nome: "financiamento acima do preço com entrada em dinheiro", pagamentos: [{ meio: "aiva", valor: 150_000, entrada: 20_000, meio_entrada: "dinheiro" }], valido: false },
-    { nome: "financiamento acima do preço sem entrada", pagamentos: [{ meio: "aiva", valor: 150_000 }], valido: false },
-    { nome: "financiamento exato com entrada em dinheiro", pagamentos: [{ meio: "aiva", valor: 149_900, entrada: 20_000, meio_entrada: "dinheiro" }], valido: true },
-    { nome: "financiamento e dinheiro com troco do dinheiro", pagamentos: [{ meio: "aiva", valor: 140_000, entrada: 20_000, meio_entrada: "dinheiro" }, { meio: "dinheiro", valor: 10_000 }], valido: true },
-    { nome: "financiamento grande e pouco dinheiro", pagamentos: [{ meio: "aiva", valor: 149_000 }, { meio: "dinheiro", valor: 1_000 }], valido: true },
-    { nome: "excedente maior que o dinheiro", pagamentos: [{ meio: "aiva", valor: 149_500 }, { meio: "dinheiro", valor: 300 }], valido: false },
+    { nome: "financiamento acima do preço com entrada em dinheiro", pagamentos: [{ meio: "aiva", valor: 150_000, entrada: 20_000, meio_entrada: "dinheiro", parcelas: 12 }], valido: false },
+    { nome: "financiamento acima do preço sem entrada", pagamentos: [{ meio: "aiva", valor: 150_000, parcelas: 12 }], valido: false },
+    { nome: "financiamento exato com entrada em dinheiro", pagamentos: [{ meio: "aiva", valor: 149_900, entrada: 20_000, meio_entrada: "dinheiro", parcelas: 12 }], valido: true },
+    { nome: "financiamento e dinheiro com troco do dinheiro", pagamentos: [{ meio: "aiva", valor: 140_000, entrada: 20_000, meio_entrada: "dinheiro", parcelas: 12 }, { meio: "dinheiro", valor: 10_000 }], valido: true },
+    { nome: "financiamento grande e pouco dinheiro", pagamentos: [{ meio: "aiva", valor: 149_000, parcelas: 12 }, { meio: "dinheiro", valor: 1_000 }], valido: true },
+    { nome: "excedente maior que o dinheiro", pagamentos: [{ meio: "aiva", valor: 149_500, parcelas: 12 }, { meio: "dinheiro", valor: 300 }], valido: false },
     { nome: "dinheiro com troco", pagamentos: [{ meio: "dinheiro", valor: 150_000 }], valido: true },
   ];
   it.each(vetores)("$nome", async ({ pagamentos, valido }) => {
@@ -129,7 +129,7 @@ describe("#47 e #49 — estorno em dinheiro: saldo do caixa e recebido líquido"
     const ana = await naLoja(ids.vendedorA);
     const caixaAna = await abrirCaixa(ana);
     const { venda } = await vendaCom(ana);
-    await concluir(ana, venda, [{ meio: "aiva", valor: 140_000, entrada: 20_000, meio_entrada: "dinheiro" }, { meio: "dinheiro", valor: 10_000 }]);
+    await concluir(ana, venda, [{ meio: "aiva", valor: 140_000, entrada: 20_000, meio_entrada: "dinheiro", parcelas: 12 }, { meio: "dinheiro", valor: 10_000 }]);
     const retido = await dinheiroNoCaixa(caixaAna);
     expect(retido).toBe(29_900);
 
@@ -181,7 +181,7 @@ describe("#50 — Pix, cartão e financeira: estorno pedido não é estorno conf
     const ana = await naLoja(ids.vendedorA);
     await abrirCaixa(ana);
     const { venda } = await vendaCom(ana);
-    await concluir(ana, venda, [{ meio: "payjoy", valor: 149_900, entrada: 20_000, meio_entrada: "pix_direto", comprovante: "PIX-ENTRADA-1" }]);
+    await concluir(ana, venda, [{ meio: "payjoy", valor: 149_900, entrada: 20_000, meio_entrada: "pix_direto", comprovante: "PIX-ENTRADA-1", parcelas: 12 }]);
     const dono = await naLoja(ids.dono);
     await abrirCaixa(dono);
     await cancelar(dono, venda);

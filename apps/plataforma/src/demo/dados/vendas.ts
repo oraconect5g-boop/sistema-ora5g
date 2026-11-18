@@ -22,7 +22,11 @@ export type ItemVendaDemo = {
   situacaoTelecom?: SituacaoTelecom;
 };
 
-export type PagamentoDemo = { meio: MeioPagamento; valor: number; entrada?: number };
+/**
+ * Um pagamento da venda fictícia, na forma do domínio. D-050 (o proprietário, 18/11): a PayJoy e a Aiva financiam só o
+ * celular, em parcelas; a entrada é outro lançamento (marcado como a entrada); o resto da venda é pago à parte.
+ */
+export type PagamentoDemo = { meio: MeioPagamento; valor: number; entrada?: number; parcelas?: number; entradaDoFinanciamento?: boolean };
 
 export type VendaDemo = {
   numero: string;
@@ -112,14 +116,25 @@ function montarItens(g: Gerador, indice: number): ItemVendaDemo[] {
 const totalDe = (itens: readonly ItemVendaDemo[]) => itens.reduce((s, i) => s + i.precoUnitario * i.quantidade - i.desconto, 0);
 const custoDe = (itens: readonly ItemVendaDemo[]) => itens.reduce((s, i) => s + i.custoUnitario * i.quantidade, 0);
 
-function montarPagamentos(g: Gerador, total: number, temAparelho: boolean): PagamentoDemo[] {
+const PARCELAS_DE_EXEMPLO = [6, 10, 12, 18, 24] as const;
+
+// D-050: a PayJoy e a Aiva financiam só o valor dos celulares, em parcelas; a entrada é um lançamento em dinheiro; o chip,
+// os acessórios e as recargas são pagos à parte. A loja não gera link de pagamento (o link é só da compra online).
+function montarPagamentos(g: Gerador, total: number, valorAparelhos: number): PagamentoDemo[] {
   if (total === 0) return [];
-  if (temAparelho && g.chance(0.14)) {
+  if (valorAparelhos > 0 && g.chance(0.14)) {
     const meio: MeioPagamento = g.chance(0.7) ? "payjoy" : "aiva";
-    return [{ meio, valor: total, entrada: Math.round((total * g.entre(20, 30)) / 100 / 100) * 100 }];
+    const entrada = Math.round((valorAparelhos * g.entre(20, 30)) / 100 / 100) * 100;
+    const parcelas = PARCELAS_DE_EXEMPLO[(entrada / 100) % PARCELAS_DE_EXEMPLO.length] ?? 12;
+    const resto = total - valorAparelhos;
+    return [
+      { meio, valor: valorAparelhos - entrada, parcelas },
+      ...(entrada > 0 ? [{ meio: "dinheiro" as const, valor: entrada, entradaDoFinanciamento: true }] : []),
+      ...(resto > 0 ? [{ meio: "pix_picpay" as const, valor: resto }] : []),
+    ];
   }
   const sorteio = g.proximo();
-  const principal: MeioPagamento = sorteio < 0.32 ? "pix_picpay" : sorteio < 0.58 ? "cartao_picpay" : sorteio < 0.74 ? "dinheiro" : sorteio < 0.85 ? "pix_direto" : sorteio < 0.95 ? "cartao_pagseguro" : "link_pagamento";
+  const principal: MeioPagamento = sorteio < 0.32 ? "pix_picpay" : sorteio < 0.58 ? "cartao_picpay" : sorteio < 0.74 ? "dinheiro" : sorteio < 0.85 ? "pix_direto" : "cartao_pagseguro";
   if (total > 20_000 && g.chance(0.15)) {
     const parte = Math.round((total * g.entre(20, 50)) / 100 / 100) * 100;
     return [{ meio: "dinheiro", valor: parte }, { meio: principal === "dinheiro" ? "pix_picpay" : principal, valor: total - parte }];
@@ -151,7 +166,7 @@ function casosFixos(): Omit<VendaDemo, "numero">[] {
     fixo({ minutos: 9 * 60 + 48, loja: "santa-candida", vendedor: "rafael", cliente: "Carlos L.", itens: [item(redmi), item(exigir("ACE-0002"))], pagamentos: [{ meio: "dinheiro", valor: 153_890 }], situacao: "concluida", nota: "solicitada", pedido: { motivo: "Envio por WhatsApp (cliente sem e-mail)", esperaMinutos: 47 } }),
     fixo({ minutos: 10 * 60 + 5, loja: "santa-candida", vendedor: "julia", cliente: null, itens: [item(capa)], pagamentos: [{ meio: "dinheiro", valor: 7_900 }], situacao: "cancelamento_solicitado", nota: "nao_solicitada", pedido: { motivo: "Cliente desistiu da capa; justificativa anexada", esperaMinutos: 25 } }),
     fixo({ minutos: 15 * 60 + 20, loja: "loja-05", vendedor: "v07", cliente: "Jorge P.", itens: [item(exigir("APA-0005"), 1, 38_000)], pagamentos: [{ meio: "cartao_pagseguro", valor: 311_900 }], situacao: "aguardando_aprovacao", nota: "nao_solicitada", pedido: { motivo: "Troca de aparelho usado como parte do pagamento", esperaMinutos: 11 } }),
-    fixo({ minutos: 14 * 60 + 2, loja: "loja-02", vendedor: "v01", cliente: "Aline M.", itens: [item(galaxy)], pagamentos: [{ meio: "payjoy", valor: 219_900, entrada: 50_000 }], situacao: "concluida", nota: "solicitada", pedido: { motivo: "Envio por e-mail", esperaMinutos: 9 } }),
+    fixo({ minutos: 14 * 60 + 2, loja: "loja-02", vendedor: "v01", cliente: "Aline M.", itens: [item(galaxy)], pagamentos: [{ meio: "payjoy", valor: 169_900, parcelas: 12 }, { meio: "dinheiro", valor: 50_000, entradaDoFinanciamento: true }], situacao: "concluida", nota: "solicitada", pedido: { motivo: "Envio por e-mail", esperaMinutos: 9 } }),
   ];
 }
 
@@ -170,6 +185,7 @@ function gerarVendasDaLoja(loja: Loja, ultimoIndice: { valor: number }): Omit<Ve
     const itens = montarItens(g, ultimoIndice.valor++);
     const total = totalDe(itens);
     const temAparelho = itens.some((i) => i.tipo === "aparelho");
+    const valorAparelhos = itens.filter((i) => i.tipo === "aparelho").reduce((s, i) => s + i.precoUnitario * i.quantidade - i.desconto, 0);
     const sorteio = g.proximo();
     const situacao: SituacaoVenda = sorteio < 0.04 ? "cancelada" : sorteio < 0.06 && total > 0 ? "pagamento_pendente" : "concluida";
     const venda: Omit<VendaDemo, "numero"> = {
@@ -179,7 +195,8 @@ function gerarVendasDaLoja(loja: Loja, ultimoIndice: { valor: number }): Omit<Ve
       vendedor: g.escolher(disponiveis).id,
       cliente: g.chance(0.55) ? g.escolher(CLIENTES_FICTICIOS) : null,
       itens,
-      pagamentos: situacao === "pagamento_pendente" ? [{ meio: "link_pagamento", valor: total }] : montarPagamentos(g, total, temAparelho),
+      // O pagamento pendente é o Pix direto à espera da confirmação (a loja não gera link: D-050).
+      pagamentos: situacao === "pagamento_pendente" ? [{ meio: "pix_direto", valor: total }] : montarPagamentos(g, total, valorAparelhos),
       total,
       custo: custoDe(itens),
       descontos: itens.reduce((s, i) => s + i.desconto, 0),

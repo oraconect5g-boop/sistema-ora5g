@@ -19,10 +19,12 @@ import { avisoDaReservaAtendida } from "../../lib/loja/reserva";
 import { soltarReservasDoSiteVencidas } from "../../lib/loja/reservas-vencidas";
 import { buscarNoCatalogo, filtroDoIdentificador, identificadorDigitado, termoDaBusca } from "../../lib/catalogo/busca";
 import { consultarTelaDoPdv } from "../../lib/vendas/pdv-tela";
-import { ERROS_DA_VENDA } from "../../lib/vendas/regras";
+import type { OpcaoDeMeio } from "../../lib/vendas/formas-de-pagamento";
+import { ERROS_DA_VENDA, MAXIMO_DE_PARCELAS, PROVEDOR_DO_MEIO, ehMeioDaEntrada } from "../../lib/vendas/regras";
 import { FotoAmpliavel } from "../catalogo/FotoAmpliavel";
 import { BuscaDeCliente } from "../clientes/BuscaDeCliente";
 import { abrirCaixa, adicionarItem, aplicarDesconto, cancelarVenda, concluirVenda, novaVenda, pedirAprovacao, removerItem } from "./acoes";
+import { FormasDePagamento } from "./FormasDePagamento";
 
 export const metadata: Metadata = { title: "Vender" };
 export const dynamic = "force-dynamic";
@@ -30,7 +32,13 @@ export const dynamic = "force-dynamic";
 const campo = "mt-1 min-h-11 w-full rounded-botao border border-borda bg-white px-3 text-sm outline-none focus:border-acao focus:ring-2 focus:ring-acao/20";
 const FISICOS = new Set(["aparelho", "chip", "acessorio"]);
 const final = (texto: string | null) => (texto ? `•••• ${texto.slice(-6)}` : "");
+// O link de pagamento não existe no PDV: "a compra online é que tem link de pagamento" (o proprietário, 18/11).
 const MEIOS_DA_LOJA = (Object.keys(MEIOS) as (keyof typeof MEIOS)[]).filter((m) => m !== "link_pagamento");
+// PDV-c: as formas que o botão "Adicionar forma de pagamento" oferece, com o que cada uma pede.
+const OPCOES_DE_PAGAMENTO: OpcaoDeMeio[] = MEIOS_DA_LOJA.map((m) => ({
+  meio: m, nome: MEIOS[m].nome, financeira: MEIOS[m].financeira, comprovante: MEIOS[m].comprovante, maximoDeParcelas: MAXIMO_DE_PARCELAS[m] ?? null,
+  provedor: PROVEDOR_DO_MEIO[m] ?? null, aceitaTroco: MEIOS[m].aceitaTroco, podeSerEntrada: ehMeioDaEntrada(m),
+}));
 
 // PDV real (ADR-004): loja do turno, caixa aberto, carrinho com reserva, desconto com aprovação,
 // pagamento misto e conclusão no banco. O navegador nunca recebe custo nem calcula o total final.
@@ -113,6 +121,8 @@ export default async function Vender({ searchParams }: { searchParams: Promise<{
   // O carrinho veio inteiro da leitura única, com os valores já conferidos (lib/vendas/pdv-tela.ts).
   const subtotal = itens.reduce((t, i) => t + i.preco_unitario_centavos * i.quantidade, 0);
   const descontos = itens.reduce((t, i) => t + i.desconto_centavos, 0);
+  // PDV-c: o que a PayJoy e a Aiva podem financiar (os celulares, com o desconto); o resto é pago à parte.
+  const valorDosCelulares = itens.filter((i) => i.tipo === "aparelho").reduce((t, i) => t + i.preco_unitario_centavos * i.quantidade - i.desconto_centavos, 0);
 
   return (
     <MoldeReal sessao={sessao}>
@@ -241,25 +251,11 @@ export default async function Vender({ searchParams }: { searchParams: Promise<{
           </Cartao>
 
           {itens.length > 0 && (
-            <Cartao titulo="Pagamento" subtitulo="Cartão e Pix: informe o código do comprovante. Vale-troca: o número do vale no mesmo campo. Financiamento: valor financiado e a entrada; entrada por Pix ou cartão leva o comprovante dela no mesmo campo. Troco só sai de pagamento em dinheiro.">
+            <Cartao titulo="Pagamento" subtitulo="Toque em “Adicionar forma de pagamento” para cada forma que o cliente usar. PayJoy e Aiva: o valor financiado (só o do celular) e as parcelas; a entrada é outra forma, marcada como entrada. Cartão: as parcelas e o comprovante. Troco só sai do dinheiro.">
               <form action={concluirVenda} className="space-y-3">
                 <input type="hidden" name="venda" value={venda.id} /><input type="hidden" name="chave" value={randomUUID()} />
-                {[1, 2, 3].map((n) => (
-                  <fieldset key={n} className="grid gap-2 rounded-xl border border-borda p-2 sm:grid-cols-3">
-                    <legend className="px-1 text-xs font-semibold">Pagamento {n}{n > 1 ? " (opcional)" : ""}</legend>
-                    <label className="text-xs font-medium">Meio<select name={`pagamento_${n}_meio`} className={campo} defaultValue="dinheiro">{MEIOS_DA_LOJA.map((m) => <option key={m} value={m}>{MEIOS[m].nome}</option>)}</select></label>
-                    <label className="text-xs font-medium">Valor (R$)<input name={`pagamento_${n}_valor`} inputMode="decimal" defaultValue={n === 1 ? ((subtotal - descontos) / 100).toFixed(2).replace(".", ",") : ""} className={campo} /></label>
-                    <label className="text-xs font-medium">Comprovante ou nº do vale<input name={`pagamento_${n}_comprovante`} className={campo} autoComplete="off" /></label>
-                    {terminais.length > 0 && (
-                      <label className="text-xs font-medium">Maquininha (cartão e Pix na maquininha)<select name={`pagamento_${n}_terminal`} defaultValue="" className={campo}>
-                        <option value="">nenhuma</option>
-                        {terminais.map((m) => <option key={m.id} value={m.id}>{m.apelido} · {m.provedor === "picpay" ? "PicPay" : "PagBank"} {m.identificador}</option>)}
-                      </select></label>
-                    )}
-                    <label className="text-xs font-medium">Entrada (financiamento)<input name={`pagamento_${n}_entrada`} inputMode="decimal" className={campo} /></label>
-                    <label className="text-xs font-medium">Meio da entrada<select name={`pagamento_${n}_meio_entrada`} className={campo} defaultValue="dinheiro">{MEIOS_DA_LOJA.filter((m) => !MEIOS[m].financeira && m !== "vale_troca").map((m) => <option key={m} value={m}>{MEIOS[m].nome}</option>)}</select></label>
-                  </fieldset>
-                ))}
+                <FormasDePagamento total={subtotal - descontos} valorDosCelulares={valorDosCelulares} opcoes={OPCOES_DE_PAGAMENTO}
+                  terminais={terminais.map((m) => ({ id: m.id, provedor: m.provedor === "picpay" ? "picpay" as const : "pagbank" as const, rotulo: `${m.apelido} · ${m.provedor === "picpay" ? "PicPay" : "PagBank"} ${m.identificador}` }))} />
                 {permissoes.has("cliente.buscar") && (
                   <div className="space-y-1 rounded-xl border border-borda p-2">
                     <p className="px-1 text-xs font-semibold">Cliente da rede (opcional): CPF ou telefone completos</p>

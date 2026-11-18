@@ -7,12 +7,12 @@ import { useState } from "react";
 import { Dialogo } from "../../../../componentes/Dialogo";
 import { Aviso, Botao, Cartao, Etapas, ListaDados, Selo } from "../../../../componentes/ui";
 import { codigoDoIccid, type PlanoConnect } from "../../../../demo/dados/connect";
-import { situacaoDoIccid, type MetodoPagamentoNogle } from "../../../../integracoes/nogle/regras";
+import { situacaoDoIccid } from "../../../../integracoes/nogle/regras";
 import { brl } from "../../../../lib/formato";
 import { classeCampo, formatarLinha, mascararDocumento, soDigitos } from "./util";
 
 type Cliente = { nome: string; cpf: string; novo: boolean };
-type Resultado = { id: number; situacao: "aguardando_pagamento" | "solicitada" | "ativa"; numero: string; tipo: "fisico" | "esim" };
+type Resultado = { id: number; situacao: "solicitada" | "ativa"; numero: string; tipo: "fisico" | "esim" };
 
 const ETAPAS = ["Chip", "Cliente", "Plano", "Pagamento", "Resultado"];
 
@@ -35,7 +35,6 @@ export function AtivarChip({ planos, ddds, chipsDaLoja, clientes, saldoCarteira,
   const [cadastro, setCadastro] = useState<{ nome: string; nascimento: string; cep: string; numero: string; erro: string } | null>(null);
   const [plano, setPlano] = useState(planos.find((p) => !p.campanha)?.id ?? 0);
   const [ddd, setDdd] = useState(ddds[0] ?? 41);
-  const [pagamento, setPagamento] = useState<MetodoPagamentoNogle>("SALDO");
   const [querPortabilidade, setQuerPortabilidade] = useState(false);
   const [confirmando, setConfirmando] = useState(false);
   const [resultado, setResultado] = useState<Resultado | null>(null);
@@ -44,9 +43,10 @@ export function AtivarChip({ planos, ddds, chipsDaLoja, clientes, saldoCarteira,
   const situacao = codigo === null ? null : situacaoDoIccid(codigo);
   const planoEscolhido = planos.find((p) => p.id === plano);
   // Débito simulado da carteira (80% do plano é número de exemplo da demonstração, não contrato).
-  // Sem saldo, o SALDO não segue: a carteira nunca fica negativa (REV-037, #39).
+  // Sem saldo, a ativação não segue: a carteira nunca fica negativa (REV-037, #39). PDV-c (o proprietário, 18/11): na loja
+  // o cliente paga no caixa e a ativação sai do saldo da Ora; o link de pagamento é só da compra online.
   const custoNoSaldo = planoEscolhido ? Math.round(planoEscolhido.valor * 0.8) : 0;
-  const semSaldo = pagamento === "SALDO" && custoNoSaldo > saldo;
+  const semSaldo = custoNoSaldo > saldo;
 
   function validarIccid() {
     setCodigo(codigoDoIccid(iccid));
@@ -85,8 +85,8 @@ export function AtivarChip({ planos, ddds, chipsDaLoja, clientes, saldoCarteira,
     setConfirmando(false);
     const numero = `${ddd}9${String(10_000_000 + Math.floor(Math.random() * 89_999_999)).slice(0, 8)}`;
     if (semSaldo) return;
-    if (pagamento === "SALDO" && planoEscolhido) setSaldo((s) => s - custoNoSaldo);
-    setResultado({ id: 90_000 + Math.floor(Math.random() * 9_999), situacao: pagamento === "LINK" ? "aguardando_pagamento" : "solicitada", numero, tipo });
+    if (planoEscolhido) setSaldo((s) => s - custoNoSaldo);
+    setResultado({ id: 90_000 + Math.floor(Math.random() * 9_999), situacao: "solicitada", numero, tipo });
     setEtapa(4);
   }
 
@@ -187,27 +187,16 @@ export function AtivarChip({ planos, ddds, chipsDaLoja, clientes, saldoCarteira,
 
         {etapa === 3 && planoEscolhido && cliente && (
           <div className="mt-4 space-y-4">
-            <div className="grid gap-2 sm:grid-cols-2" role="radiogroup" aria-label="Forma de pagamento da ativação">
-              {([["SALDO", "Saldo da Ora na Nogle", "O cliente paga na loja; desconta do saldo pré-pago"], ["LINK", "Link de pagamento", "A Nogle manda o link ao cliente; ativa depois do pagamento"]] as const).map(([valor, rotulo, explicacao]) => (
-                <button key={valor} type="button" role="radio" aria-checked={pagamento === valor} onClick={() => setPagamento(valor)} className={`rounded-xl border p-3 text-left text-sm ${pagamento === valor ? "border-acao bg-acao-clara/60" : "border-borda bg-white"}`}>
-                  <strong>{rotulo}</strong><span className="block text-xs text-suave">{explicacao}</span>
-                </button>
-              ))}
-            </div>
+            <p className="rounded-xl bg-slate-50 px-3 py-2 text-sm text-suave"><strong className="text-texto">Pagamento:</strong> o cliente paga no caixa da loja e a ativação sai do saldo pré-pago da Ora na Nogle. Link de pagamento só na compra online.</p>
             <label className="flex items-center gap-2 text-sm"><input type="checkbox" checked={querPortabilidade} onChange={(e) => setQuerPortabilidade(e.target.checked)} className="size-4 accent-acao" /> Cliente quer trazer o número de outra operadora (recebe SMS para a portabilidade)</label>
-            {pagamento === "SALDO" && <p className="text-sm text-suave">Saldo da carteira: <strong className="numeros text-texto">{brl(saldo)}</strong></p>}
-            {semSaldo && <p role="alert" className="text-sm text-perigo">Saldo da carteira insuficiente para este plano: use o link de pagamento ou recarregue a carteira.</p>}
+            <p className="text-sm text-suave">Saldo da carteira: <strong className="numeros text-texto">{brl(saldo)}</strong></p>
+            {semSaldo && <p role="alert" className="text-sm text-perigo">Saldo da carteira insuficiente para este plano: peça ao dono para recarregar a carteira.</p>}
             <div className="flex justify-between"><Botao variante="secundario" onClick={() => setEtapa(2)}>Voltar</Botao><Botao onClick={() => setConfirmando(true)} disabled={semSaldo}>Conferir e ativar</Botao></div>
           </div>
         )}
 
         {etapa === 4 && resultado && (
           <div className="mt-4 space-y-3" aria-live="polite">
-            {resultado.situacao === "aguardando_pagamento" && (
-              <Aviso tom="aviso" titulo="Aguardando o pagamento do link">A Nogle enviou o link ao cliente. A linha só é ativada depois do pagamento.
-                <Botao tamanho="sm" variante="secundario" className="mt-2" onClick={() => setResultado({ ...resultado, situacao: "solicitada" })}>Cliente pagou (simulação)</Botao>
-              </Aviso>
-            )}
             {resultado.situacao === "solicitada" && (
               <Aviso tom="info" titulo={`Ativação ${resultado.id} solicitada`}>A ativação só conta na produção depois que a operadora confirmar. Se a resposta demorar, consulte (nunca reenvie).
                 <Botao tamanho="sm" className="mt-2" onClick={() => setResultado({ ...resultado, situacao: "ativa" })}><RefreshCw aria-hidden className="size-4" /> Consultar ativação</Botao>
@@ -231,7 +220,7 @@ export function AtivarChip({ planos, ddds, chipsDaLoja, clientes, saldoCarteira,
             <li>1. <strong>Validar o ICCID</strong>: só chip virgem (código 88) é ativado.</li>
             <li>2. <strong>Cliente</strong> buscado ou cadastrado na Nogle pelo CPF.</li>
             <li>3. <strong>Plano e DDD</strong> da linha nova.</li>
-            <li>4. <strong>Pagamento</strong> por saldo da Ora ou link ao cliente.</li>
+            <li>4. <strong>Pagamento</strong> no caixa da loja, pelo saldo da Ora (o link é só da compra online).</li>
             <li>5. A linha só conta como ativa <strong>depois da confirmação</strong> da operadora.</li>
           </ol>
         </Cartao>
@@ -251,7 +240,7 @@ export function AtivarChip({ planos, ddds, chipsDaLoja, clientes, saldoCarteira,
             ["Titular", cliente.nome],
             ["Plano", `${planoEscolhido.plano} · ${brl(planoEscolhido.valor)}`],
             ["DDD", String(ddd)],
-            ["Pagamento", pagamento === "SALDO" ? "Saldo da Ora na Nogle" : "Link de pagamento"],
+            ["Pagamento", "Saldo da Ora na Nogle (cliente paga no caixa)"],
           ]} />
         )}
       </Dialogo>

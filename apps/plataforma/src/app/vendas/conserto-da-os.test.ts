@@ -162,3 +162,20 @@ describe("o conserto da OS na venda (L12c)", () => {
     expect(vi.mocked(console.error).mock.calls).toEqual([]);
   });
 });
+
+// PDV-c (pedido do proprietário de 18/11): o comprovante diz que o recebimento é via a financeira, mostra a entrada à parte
+// e as parcelas (a PayJoy, a Aiva e o cartão).
+describe("o comprovante com a PayJoy, a entrada à parte e as parcelas (PDV-c)", () => {
+  it("o recebimento via PayJoy em 12x, a entrada do financiamento em dinheiro e o cartão em 3x", async () => {
+    cenario.tabelas.venda_pagamentos = [
+      { venda_id: VENDA, ordem: 1, meio: "payjoy", valor_centavos: 119_900, entrada_centavos: 0, comprovante: "CONTRATO-FICTICIO-1", situacao: "confirmado", parcelas: 12, entrada_do_financiamento: false },
+      { venda_id: VENDA, ordem: 2, meio: "dinheiro", valor_centavos: 30_000, entrada_centavos: 0, comprovante: null, situacao: "confirmado", parcelas: null, entrada_do_financiamento: true },
+      { venda_id: VENDA, ordem: 3, meio: "cartao_picpay", valor_centavos: 1_000, entrada_centavos: 0, comprovante: "NSU-1", situacao: "confirmado", parcelas: 3, entrada_do_financiamento: false },
+    ];
+    const t = await comprovante();
+    expect(t).toContain("Recebimento via PayJoy : R$ 1.199,00 em 12x");
+    expect(t).toContain("Entrada do financiamento (Dinheiro) : R$ 300,00");
+    expect(t).toContain("Cartão na maquininha PicPay : R$ 10,00 em 3x");
+  });
+});
+

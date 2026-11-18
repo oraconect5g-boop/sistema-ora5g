@@ -111,12 +111,15 @@ export function recebimentosPorMeio(vendas: readonly VendaDemo[]) {
 
 export function financiadoPorFinanceira(vendas: readonly VendaDemo[]) {
   const lista = (["payjoy", "aiva"] as const).map((meio) => {
-    const pagamentos = vendas.filter(contaNoFaturamento).flatMap((v) => v.pagamentos.filter((p) => p.meio === meio));
+    const vendasDoMeio = vendas.filter(contaNoFaturamento).filter((v) => v.pagamentos.some((p) => p.meio === meio));
+    const pagamentos = vendasDoMeio.flatMap((v) => v.pagamentos.filter((p) => p.meio === meio));
+    // D-050: a entrada é um lançamento à parte na mesma venda (marcado); a forma antiga a guardava dentro do financiamento.
+    const entradasAParte = vendasDoMeio.flatMap((v) => v.pagamentos.filter((p) => p.entradaDoFinanciamento)).reduce((s, p) => s + p.valor, 0);
     return {
       meio,
       nome: MEIOS[meio].nome.replace("Financiamento ", ""),
       vendas: pagamentos.length,
-      entradas: pagamentos.reduce((s, p) => s + (p.entrada ?? 0), 0),
+      entradas: entradasAParte + pagamentos.reduce((s, p) => s + (p.entrada ?? 0), 0),
       aReceber: pagamentos.reduce((s, p) => s + p.valor - (p.entrada ?? 0), 0),
     };
   });

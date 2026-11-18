@@ -1,5 +1,5 @@
 // ARQUIVO GERADO pelo Supabase (generate_typescript_types do projeto ora5g-dev) depois da
-// migration 20261118151653_conciliacao_da_nogle. Não edite à mão: gere de novo a cada
+// migration 20261118155834_pagamentos_por_linha. Não edite à mão: gere de novo a cada
 // migration aplicada (auditoria do Codex de 08/11, §7.2). O teste tipos-banco.test.ts confere
 // que funções e tabelas públicas daqui são as mesmas das migrations.
 export type Json =
@@ -6731,6 +6731,7 @@ export type Database = {
           confirmado_por: string | null
           criado_em: string
           entrada_centavos: number
+          entrada_do_financiamento: boolean
           estornado_em: string | null
           id: string
           liquidado_em: string | null
@@ -6738,6 +6739,7 @@ export type Database = {
           meio_entrada: string | null
           ordem: number
           organizacao_id: string
+          parcelas: number | null
           referencia_conciliacao: string | null
           situacao: string
           terminal_id: string | null
@@ -6753,6 +6755,7 @@ export type Database = {
           confirmado_por?: string | null
           criado_em?: string
           entrada_centavos?: number
+          entrada_do_financiamento?: boolean
           estornado_em?: string | null
           id?: string
           liquidado_em?: string | null
@@ -6760,6 +6763,7 @@ export type Database = {
           meio_entrada?: string | null
           ordem: number
           organizacao_id: string
+          parcelas?: number | null
           referencia_conciliacao?: string | null
           situacao?: string
           terminal_id?: string | null
@@ -6775,6 +6779,7 @@ export type Database = {
           confirmado_por?: string | null
           criado_em?: string
           entrada_centavos?: number
+          entrada_do_financiamento?: boolean
           estornado_em?: string | null
           id?: string
           liquidado_em?: string | null
@@ -6782,6 +6787,7 @@ export type Database = {
           meio_entrada?: string | null
           ordem?: number
           organizacao_id?: string
+          parcelas?: number | null
           referencia_conciliacao?: string | null
           situacao?: string
           terminal_id?: string | null

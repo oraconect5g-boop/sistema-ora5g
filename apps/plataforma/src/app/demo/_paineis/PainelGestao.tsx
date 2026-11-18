@@ -19,7 +19,7 @@ const ORDEM_MEIOS: MeioPagamento[] = ["pix_picpay", "cartao_picpay", "dinheiro",
 export function partesPorMeio(mapa: Map<MeioPagamento, number>): Parte[] {
   const principais = ORDEM_MEIOS.slice(0, 5).map((meio, i) => ({ nome: MEIOS[meio].nome, valor: mapa.get(meio) ?? 0, serie: (i + 1) as SerieCor }));
   const outros = [...mapa.entries()].filter(([meio]) => !ORDEM_MEIOS.slice(0, 5).includes(meio)).reduce((s, [, v]) => s + v, 0);
-  return [...principais, { nome: "Outros (link e entradas de financiamento)", valor: outros, serie: 6 }];
+  return [...principais, { nome: "Outros meios", valor: outros, serie: 6 }];
 }
 
 // Período do gráfico principal (visual de 10/11/2026): hoje por hora contra ontem, ou os últimos 7 ou 14
