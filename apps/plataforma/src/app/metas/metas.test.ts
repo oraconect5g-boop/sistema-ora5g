@@ -119,10 +119,10 @@ async function pagina(parametros: Record<string, string> = {}) {
 
 const PAINEL = {
   mes: "2026-11-01", dias_no_mes: 30, dias_decorridos: 13, regra_contagem: 1,
-  loja: { metas: { vendido_liquido: "5000000", aparelhos: 40 }, realizado: { vendido_liquido: "2600000", aparelhos: 12, acessorios: 150000, connect: 9 } },
+  loja: { metas: { vendido_liquido: "5000000", aparelhos: 40 }, realizado: { vendido_liquido: "2600000", aparelhos: 12, chips: 0, acessorios: 150000, connect: 9 } },
   vendedores: [
-    { vendedor_id: ANA, metas: { vendido_liquido: 2000000, connect: 10 }, realizado: { vendido_liquido: 1200000, aparelhos: 7, acessorios: 90000, connect: 6 } },
-    { vendedor_id: BETO, metas: {}, realizado: { vendido_liquido: 1400000, aparelhos: 5, acessorios: 60000, connect: 3 } },
+    { vendedor_id: ANA, metas: { vendido_liquido: 2000000, connect: 10 }, realizado: { vendido_liquido: 1200000, aparelhos: 7, chips: 0, acessorios: 90000, connect: 6 } },
+    { vendedor_id: BETO, metas: {}, realizado: { vendido_liquido: 1400000, aparelhos: 5, chips: 0, acessorios: 60000, connect: 3 } },
   ],
 };
 const EQUIPE = [
@@ -189,12 +189,12 @@ describe("/metas, gestão (G4b)", () => {
     ]);
     expect(p.filtro("Medida")?.opcoes.map((o) => [o.rotulo, o.href, o.ativo])).toEqual([
       ["Vendido líquido", "/metas#por-vendedor", true], ["Aparelhos", "/metas?medida=aparelhos#por-vendedor", false],
-      ["Acessórios", "/metas?medida=acessorios#por-vendedor", false], ["Ora Connect", "/metas?medida=connect#por-vendedor", false],
+      ["Chips", "/metas?medida=chips#por-vendedor", false], ["Acessórios", "/metas?medida=acessorios#por-vendedor", false], ["Ora Connect", "/metas?medida=connect#por-vendedor", false],
     ]);
     const equipe = p.cartao("Equipe no mês");
-    expect(equipe.visivel).toContain("Ana (teste) R$ 12.000,00 de R$ 20.000,00 · 60% 7 sem meta R$ 900,00 sem meta 6 de 10 · 60%");
+    expect(equipe.visivel).toContain("Ana (teste) R$ 12.000,00 de R$ 20.000,00 · 60% 7 sem meta 0 sem meta R$ 900,00 sem meta 6 de 10 · 60%");
     expect(equipe.visivel).toContain("Beto (teste) fora da equipe atual R$ 14.000,00 sem meta");
-    expect(equipe.visivel).toContain("Caio (teste) R$ 0,00 sem meta 0 sem meta R$ 0,00 sem meta 0 sem meta");
+    expect(equipe.visivel).toContain("Caio (teste) R$ 0,00 sem meta 0 sem meta 0 sem meta R$ 0,00 sem meta 0 sem meta");
 
     // Ora Connect confirmado por vendedor (linha 24 da matriz): do vendedor de origem, com a meta.
     p = await pagina({ medida: "connect" });
@@ -208,9 +208,9 @@ describe("/metas, gestão (G4b)", () => {
     expect(formularios).toHaveLength(3);
     const campos = c.doTipo("input").map((i) => [i.name, i.defaultValue ?? i.value]);
     expect(campos.filter(([nome]) => nome === "alvo").map(([, v]) => v)).toEqual(["loja", ANA, CAIO]);
-    expect(campos.slice(0, 9)).toEqual([
+    expect(campos.slice(0, 10)).toEqual([
       ["unidade", LOJA], ["alvo", "loja"], ["mes", "2026-11-01"],
-      ["meta_vendido_liquido", "50.000,00"], ["meta_aparelhos", "40"], ["meta_acessorios", ""], ["meta_connect", ""], ["motivo", undefined],
+      ["meta_vendido_liquido", "50.000,00"], ["meta_aparelhos", "40"], ["meta_chips", ""], ["meta_acessorios", ""], ["meta_connect", ""], ["motivo", undefined],
       ["unidade", LOJA],
     ]);
     expect(c.visivel).toContain("Loja inteira (Santa Cândida (teste)) Vendido líquido: R$ 50.000,00 · Aparelhos: 40 Editar");
@@ -253,7 +253,7 @@ describe("/metas, gestão (G4b)", () => {
     expect(p.cartao("Definir as metas de outubro de 2026").texto).toContain("O mês que já terminou não muda");
     expect(p.doTipo("form")).toEqual([]);
 
-    cenario.respostas.metas_painel = { data: { ...PAINEL, mes: "2026-12-01", dias_no_mes: 31, dias_decorridos: 0, loja: { ...PAINEL.loja, realizado: { vendido_liquido: 0, aparelhos: 0, acessorios: 0, connect: 0 } } }, error: null };
+    cenario.respostas.metas_painel = { data: { ...PAINEL, mes: "2026-12-01", dias_no_mes: 31, dias_decorridos: 0, loja: { ...PAINEL.loja, realizado: { vendido_liquido: 0, aparelhos: 0, chips: 0, acessorios: 0, connect: 0 } } }, error: null };
     p = await pagina({ mes: "2026-12" });
     expect(p.cartao("Ritmo da loja em dezembro de 2026").doTipo("ListaDados")[0]).toMatchObject({ itens: [["Valor vendido líquido", "R$ 50.000,00"], ["Aparelhos", "40"]] });
     expect(p.indicador("Aparelhos")).toMatchObject({ detalhe: "0% de 40 · O mês ainda não começou" });
@@ -350,11 +350,11 @@ describe("ação: definir as metas de um alvo (G4b)", () => {
     throw new Error("a ação não redirecionou");
   }
 
-  it("manda as quatro medidas numa chamada só (tudo ou nada) e volta com o resultado", async () => {
+  it("manda as cinco medidas numa chamada só (tudo ou nada) e volta com o resultado", async () => {
     cenario.respostas.metas_definir = { data: 2, error: null };
     expect(await destinoDe(definirMetas(formulario({})))).toBe("/metas?mes=2026-11&ok=salvas");
     expect(cenario.chamadas).toEqual([{ nome: "metas_definir", argumentos: {
-      p_unidade: LOJA, p_vendedor: null, p_mes: "2026-11-01", p_valores: { vendido_liquido: 5_000_000, aparelhos: 40, acessorios: null, connect: null }, p_motivo: null,
+      p_unidade: LOJA, p_vendedor: null, p_mes: "2026-11-01", p_valores: { vendido_liquido: 5_000_000, aparelhos: 40, chips: null, acessorios: null, connect: null }, p_motivo: null,
     } }]);
     cenario.respostas.metas_definir = { data: 0, error: null };
     expect(await destinoDe(definirMetas(formulario({ alvo: ANA, motivo: "Campanha", loja: OUTRA, unidade: OUTRA })))).toBe(`/metas?mes=2026-11&loja=${OUTRA}&ok=sem_mudanca`);
@@ -405,7 +405,7 @@ describe("/metas, bônus por meta (L9a)", () => {
     expect(String(c.props.subtitulo)).toContain("Provisório até o fechamento do mês");
     expect(p.indicador("Bônus até agora")).toMatchObject({ valor: "R$\u00a050,00" });
     expect(p.indicador("Com bônus")).toMatchObject({ valor: "1 de 2", detalhe: "vendedores" });
-    expect(c.visivel).toContain("Valor vendido líquido 100%: R$ 300,00 · 120%: R$ 500,00 (desde outubro de 2026) Aparelhos sem bônus Acessórios sem bônus Ora Connect confirmado 50%: R$ 50,00");
+    expect(c.visivel).toContain("Valor vendido líquido 100%: R$ 300,00 · 120%: R$ 500,00 (desde outubro de 2026) Aparelhos sem bônus Chips sem bônus Acessórios sem bônus Ora Connect confirmado 50%: R$ 50,00");
     expect(c.visivel).toContain("Ana (teste) nenhuma faixa 60% da meta · faltam R$ 8.000,00 R$ 50,00 · faixa 1 60% da meta R$ 50,00 Extrato");
     expect(c.visivel).toContain("Beto (teste) sem meta sem meta R$ 0,00 Extrato");
     expect(c.doTipo("Tabela")[0]).toMatchObject({ colunas: ["Vendedor", "Vendido líquido", "Ora Connect", "Bônus", ""] });

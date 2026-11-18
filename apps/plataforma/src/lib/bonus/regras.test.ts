@@ -96,14 +96,14 @@ describe("leitura do bônus do mês", () => {
 });
 
 describe("leitura do extrato", () => {
-  const linha = (tipo: string, quando: string, extra: Record<string, unknown>) => ({ tipo, quando, venda: null, devolucao: null, operacao: null, servico: null, vendido_liquido: 0, aparelhos: 0, acessorios: 0, connect: 0, ...extra });
+  const linha = (tipo: string, quando: string, extra: Record<string, unknown>) => ({ tipo, quando, venda: null, devolucao: null, operacao: null, servico: null, vendido_liquido: 0, aparelhos: 0, chips: 0, acessorios: 0, connect: 0, ...extra });
   const RESPOSTA = {
     mes: "2026-11-01", regra_contagem: 1, unidade_id: LOJA, vendedor_id: ANA, quantidade: 4,
-    totais: { vendido_liquido: 157_800, aparelhos: 1, acessorios: 7_900, connect: 1 },
+    totais: { vendido_liquido: 157_800, aparelhos: 1, chips: 0, acessorios: 7_900, connect: 1 },
     linhas: [
       linha("connect", "2026-11-13T18:00:00+00:00", { operacao: 45, servico: "ativacao", connect: 1 }),
       linha("devolucao", "2026-11-12T18:00:00+00:00", { venda: 10, devolucao: 2, vendido_liquido: -7_900, acessorios: -7_900 }),
-      linha("venda", "2026-11-10T18:00:00+00:00", { venda: 10, vendido_liquido: 165_700, aparelhos: 1, acessorios: 15_800 }),
+      linha("venda", "2026-11-10T18:00:00+00:00", { venda: 10, vendido_liquido: 165_700, aparelhos: 1, chips: 0, acessorios: 15_800 }),
       // 1/11 às 00:30 em São Paulo (03:30 UTC): ainda é novembro.
       linha("venda", "2026-11-01T03:30:00+00:00", { venda: 9, vendido_liquido: 0 }),
     ],
@@ -160,7 +160,7 @@ describe("as versões das regras", () => {
 
 describe("o formulário do dono", () => {
   const campos = (valores: Record<string, string>) => (nome: string) => valores[nome] ?? null;
-  it("lê as faixas de cada medida, põe em ordem de porcentagem e manda as quatro medidas", () => {
+  it("lê as faixas de cada medida, põe em ordem de porcentagem e manda as cinco medidas", () => {
     const r = validarRegras(campos({
       desde: "2026-11-01",
       pct_vendido_liquido_1: "120", valor_vendido_liquido_1: "500,00", pct_vendido_liquido_2: "100%", valor_vendido_liquido_2: "R$ 300",
@@ -168,9 +168,9 @@ describe("o formulário do dono", () => {
     }));
     expect(r).toEqual({ ok: true, dados: {
       vigenteDesde: "2026-11-01", motivo: "Campanha de Natal",
-      faixas: { vendido_liquido: [f(100, 30_000), f(120, 50_000)], aparelhos: null, acessorios: null, connect: [f(50, 100_050)] },
+      faixas: { vendido_liquido: [f(100, 30_000), f(120, 50_000)], aparelhos: null, chips: null, acessorios: null, connect: [f(50, 100_050)] },
     } });
-    if (r.ok) expect(faixasParaOBanco(r.dados.faixas)).toEqual({ vendido_liquido: [fb(100, 30_000), fb(120, 50_000)], aparelhos: null, acessorios: null, connect: [fb(50, 100_050)] });
+    if (r.ok) expect(faixasParaOBanco(r.dados.faixas)).toEqual({ vendido_liquido: [fb(100, 30_000), fb(120, 50_000)], aparelhos: null, chips: null, acessorios: null, connect: [fb(50, 100_050)] });
   });
   it("cada erro com a sua mensagem", () => {
     const base = { desde: "2026-11-01" };

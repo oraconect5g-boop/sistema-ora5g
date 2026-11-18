@@ -365,7 +365,7 @@ const PRODUCAO = {
   periodos: [{ periodo: "2026-11-10", chips: 1, ativacoes: 2, portabilidades: 0, recargas: 1 }],
 };
 // Metas de novembro (G4c), no dia 10 de 30: o ritmo pede 1/3 da meta até hoje.
-const R = (vendido_liquido: number, aparelhos: number, acessorios: number, connect: number) => ({ vendido_liquido, aparelhos, acessorios, connect });
+const R = (vendido_liquido: number, aparelhos: number, acessorios: number, connect: number) => ({ vendido_liquido, aparelhos, chips: 0, acessorios, connect });
 const METAS_DA_LOJA = {
   mes: "2026-11-01", dias_no_mes: 30, dias_decorridos: 10, regra_contagem: 1,
   lojas: [{ unidade_id: LOJA, metas: { vendido_liquido: "3000000", aparelhos: 30 }, realizado: R(1_200_000, 8, 50_000, 4) }],

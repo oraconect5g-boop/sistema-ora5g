@@ -65,7 +65,7 @@ async function connectConfirmado(unidade: string, vendedor: string) {
   await db.query("insert into public.connect_producao (organizacao_id, unidade_id, vendedor_id, operacao_id, tipo, origem) values ($1, $2, $3, $4, 'ativacao', 'evidencia_da_operadora')", [ids.organizacao, unidade, vendedor, op]);
 }
 
-type Medidas = { vendido_liquido: number; aparelhos: number; connect: number; acessorios: number };
+type Medidas = { vendido_liquido: number; aparelhos: number; connect: number; acessorios: number; chips: number };
 type Painel = { mes: string; dias_no_mes: number; dias_decorridos: number; regra_contagem: number; loja: { metas: Record<string, number>; realizado: Medidas } | null; vendedores: { vendedor_id: string; metas: Record<string, number>; realizado: Medidas }[] };
 const inteiros = <T>(v: T): T => JSON.parse(JSON.stringify(v), (_, x: unknown) => (typeof x === "string" && /^-?\d+$/.test(x) ? Number(x) : x)) as T;
 const painel = async (s: Sessao, unidade: string, mes = esteMes()) => inteiros(await valor<Painel>(s, "select public.metas_painel($1::date, $2) as v", [mes, unidade]));
@@ -175,7 +175,7 @@ describe("metas: realizado do mês pela regra de contagem 1 (G4b)", () => {
     await connectConfirmado(ids.lojaA, ids.vendedorA);
     return dono;
   }
-  const REALIZADO = { vendido_liquido: 157_800, aparelhos: 1, connect: 1, acessorios: 7_900 };
+  const REALIZADO = { vendido_liquido: 157_800, aparelhos: 1, connect: 1, acessorios: 7_900, chips: 0 };
 
   it("loja e vendedor: vendido líquido, aparelhos, acessórios e Ora Connect, com a meta vigente ao lado", async () => {
     const dono = await produzir();
@@ -202,7 +202,7 @@ describe("metas: realizado do mês pela regra de contagem 1 (G4b)", () => {
 
   it("mês sem fato nenhum: zeros, e meta não definida é ausência, não zero", async () => {
     const p = await painel(await naLoja(ids.dono, ids.lojaA), ids.lojaB);
-    expect(p.loja).toEqual({ metas: {}, realizado: { vendido_liquido: 0, aparelhos: 0, connect: 0, acessorios: 0 } });
+    expect(p.loja).toEqual({ metas: {}, realizado: { vendido_liquido: 0, aparelhos: 0, connect: 0, acessorios: 0, chips: 0 } });
     expect(p.vendedores).toEqual([]);
   });
 
@@ -219,7 +219,7 @@ describe("metas: realizado do mês pela regra de contagem 1 (G4b)", () => {
   type DasLojas = { mes: string; dias_no_mes: number; dias_decorridos: number; regra_contagem: number; lojas: { unidade_id: string; metas: Record<string, number>; realizado: Medidas }[] };
   const dasLojas = async (s: Sessao, unidade: string | null = null) =>
     inteiros(await valor<DasLojas>(s, "select public.metas_lojas($1::date, $2) as v", [esteMes(), unidade]));
-  const ZERO = { vendido_liquido: 0, aparelhos: 0, connect: 0, acessorios: 0 };
+  const ZERO = { vendido_liquido: 0, aparelhos: 0, connect: 0, acessorios: 0, chips: 0 };
 
   it("metas_lojas (G4c): cada loja da rede com a meta da loja inteira e o realizado, o mesmo do painel da loja; sem meta, vazio", async () => {
     const dono = await produzir();
@@ -251,4 +251,29 @@ describe("metas: realizado do mês pela regra de contagem 1 (G4b)", () => {
     expect((await dasLojas(await naLoja(ids.donoOutraOrg, ids.lojaOutraOrg))).lojas).toEqual([{ unidade_id: ids.lojaOutraOrg, metas: {}, realizado: ZERO }]);
     expect(await codigo(dono, "select public.metas_lojas(null) as v")).toBe("22023");
   });
+
+  // PERF-a (ORA-PERF-001; o proprietário, 18/11: "o chip é vendido separado do celular. Eles têm que contar como
+  // separado"): os chips vendidos como medida própria, contados como os aparelhos (venda, cancelamento e devolução).
+  it("PERF-a: os chips vendidos contam à parte: a meta, o realizado da loja e do vendedor, metas_lojas e o cancelamento", async () => {
+    await db.query("insert into public.precos (organizacao_id, variante_id, unidade_id, valor_centavos, inicio, origem) values ($1, $2, null, 1000, now() - interval '1 day', 'manual')",
+      [ids.organizacao, cat.chip]);
+    const ana = await naLoja(ids.vendedorA, ids.lojaA);
+    await valor(ana, "select public.abrir_caixa(10000, $1) as v", [chave("caixa")]);
+    const venda = await valor<string>(ana, "select public.criar_venda($1) as v", [chave("venda")]);
+    await valor(ana, "select public.adicionar_item($1, $2, $3, 1, $4) as v", [venda, cat.chip, itens.chipA, chave("item")]);
+    await valor(ana, "select public.concluir_venda($1, $2::jsonb, '{}'::jsonb, $3) as v", [venda, JSON.stringify([{ meio: "dinheiro", valor: 1_000 }]), chave("concluir")]);
+    const dono = await naLoja(ids.dono, ids.lojaA);
+    expect(await valor(dono, DEFINIR, [ids.lojaA, ids.vendedorA, esteMes(), metas({ chips: 30 }), null])).toBe(1);
+    expect(await valor(dono, DEFINIR, [ids.lojaA, null, esteMes(), metas({ chips: 100 }), null])).toBe(1);
+    const umChip = { vendido_liquido: 1_000, aparelhos: 0, connect: 0, acessorios: 0, chips: 1 };
+    const p = await painel(dono, ids.lojaA);
+    expect(p.loja).toEqual({ metas: { chips: 100 }, realizado: umChip });
+    expect(p.vendedores).toEqual([{ vendedor_id: ids.vendedorA, metas: { chips: 30 }, realizado: umChip }]);
+    expect((await dasLojas(dono, ids.lojaA)).lojas).toEqual([{ unidade_id: ids.lojaA, metas: { chips: 100 }, realizado: umChip }]);
+    // Cancelada no mesmo mês, a venda tira o chip do realizado.
+    await valor(dono, "select public.abrir_caixa(50000, $1) as v", [chave("caixa")]);
+    await valor(dono, "select public.cancelar_venda($1, 'Cliente desistiu') as v", [venda]);
+    expect((await painel(dono, ids.lojaA)).loja?.realizado).toEqual({ ...umChip, vendido_liquido: 0, chips: 0 });
+  });
 });
+

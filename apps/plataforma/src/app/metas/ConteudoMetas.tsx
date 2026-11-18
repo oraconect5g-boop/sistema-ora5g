@@ -1,4 +1,4 @@
-import { Headphones, Pencil, Signal, Smartphone, Store, Target, TrendingUp, type LucideIcon } from "lucide-react";
+import { Headphones, Microchip, Pencil, Signal, Smartphone, Store, Target, TrendingUp, type LucideIcon } from "lucide-react";
 import type { ReactNode } from "react";
 
 import { BarrasHorizontais, Medidor, TabelaDoGrafico } from "../../componentes/graficos";
@@ -20,7 +20,7 @@ import { ComoOBonusConta } from "./ConteudoBonus";
 // estado da leitura (falha nunca vira zero). A gestão vê a loja e cada vendedor e, com metas.gerir,
 // define; o vendedor vê as próprias metas e onde vendeu. O banco decide o que cada um recebe.
 
-const ICONES: Record<Medida, LucideIcon> = { vendido_liquido: TrendingUp, aparelhos: Smartphone, acessorios: Headphones, connect: Signal };
+const ICONES: Record<Medida, LucideIcon> = { vendido_liquido: TrendingUp, aparelhos: Smartphone, chips: Microchip, acessorios: Headphones, connect: Signal };
 const TOM_DO_INDICADOR = { sem_meta: "neutro", nao_comecou: "neutro", batida: "bom", no_ritmo: "bom", abaixo: "atencao", nao_batida: "ruim" } as const;
 const campo = "mt-1 min-h-11 w-full rounded-botao border border-borda bg-white px-3 text-sm outline-none focus:border-acao focus:ring-2 focus:ring-acao/20";
 const rotulo = "block text-sm font-medium";
@@ -156,7 +156,7 @@ function PorVendedor({ linhas, medida, enderecoDaMedida, mes }: { linhas: readon
 
 function EquipeNoMes({ linhas, mes }: { linhas: readonly LinhaDaEquipe[]; mes: string }) {
   return (
-    <Cartao className="mt-4" titulo="Equipe no mês" subtitulo="O realizado de cada um nas quatro medidas, com a meta e quanto dela já foi feito" corpo="px-4 pb-2 pt-3 sm:px-5">
+    <Cartao className="mt-4" titulo="Equipe no mês" subtitulo="O realizado de cada um nas cinco medidas, com a meta e quanto dela já foi feito" corpo="px-4 pb-2 pt-3 sm:px-5">
       {linhas.length === 0 ? (
         <EstadoVazio titulo="Ninguém na equipe da loja" icone={Store}>Quem vende na loja aparece aqui, mesmo antes da primeira venda do mês.</EstadoVazio>
       ) : (

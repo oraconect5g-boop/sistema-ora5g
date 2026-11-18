@@ -26,8 +26,8 @@
 ## O chip contado à parte
 
 - **Nos relatórios** (Início e Relatórios), o chip já aparece separado do celular, no grupo da Ora Connect.
-- **Nas metas,** os celulares contam por unidade e a Ora Connect conta as operações confirmadas.
-- **Ainda não há uma meta só de chips.** Se você quiser, diga, e ela entra num próximo lote.
+- **Nas metas,** os celulares e os chips contam por unidade (os chips desde o lote PERF-a) e a Ora Connect conta as operações confirmadas.
+- **A meta só de chips entrou no lote PERF-a.** O roteiro dela está em `PERF-a.md`.
 
 ## Os passos (no sistema real)
 

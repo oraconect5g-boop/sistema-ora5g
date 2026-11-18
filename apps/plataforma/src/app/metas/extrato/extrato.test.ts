@@ -100,16 +100,16 @@ async function pagina(parametros: Record<string, string> = {}) {
   };
 }
 
-const fato = (tipo: string, quando: string, extra: Linha) => ({ tipo, quando, venda: null, devolucao: null, operacao: null, servico: null, vendido_liquido: 0, aparelhos: 0, acessorios: 0, connect: 0, ...extra });
+const fato = (tipo: string, quando: string, extra: Linha) => ({ tipo, quando, venda: null, devolucao: null, operacao: null, servico: null, vendido_liquido: 0, aparelhos: 0, chips: 0, acessorios: 0, connect: 0, ...extra });
 const extrato = (vendedor: string, mes = "2026-11-01", unidade = LOJA) => ({
   mes, regra_contagem: 1, unidade_id: unidade, vendedor_id: vendedor, quantidade: 5,
-  totais: { vendido_liquido: 157_800, aparelhos: 1, acessorios: 7_900, connect: 1 },
+  totais: { vendido_liquido: 157_800, aparelhos: 1, chips: 0, acessorios: 7_900, connect: 1 },
   linhas: [
     fato("connect", `${mes.slice(0, 8)}13T14:05:00+00:00`, { operacao: 45, servico: "ativacao", connect: 1 }),
     fato("devolucao", `${mes.slice(0, 8)}12T18:00:00+00:00`, { venda: 1234, devolucao: 7, vendido_liquido: -7_900, acessorios: -7_900 }),
     fato("cancelamento", `${mes.slice(0, 8)}11T18:00:00+00:00`, { venda: 1235, vendido_liquido: -7_900, acessorios: -7_900 }),
     fato("venda", `${mes.slice(0, 8)}10T18:00:00+00:00`, { venda: 1235, vendido_liquido: 7_900, acessorios: 7_900 }),
-    fato("venda", `${mes.slice(0, 8)}09T13:30:00+00:00`, { venda: 1234, vendido_liquido: 165_700, aparelhos: 1, acessorios: 15_800 }),
+    fato("venda", `${mes.slice(0, 8)}09T13:30:00+00:00`, { venda: 1234, vendido_liquido: 165_700, aparelhos: 1, chips: 0, acessorios: 15_800 }),
   ],
 });
 const BONUS = {
@@ -151,16 +151,16 @@ describe("/metas/extrato (L9a)", () => {
       "Cancelamento da venda nº 1.235 11/11 às 15:00 −R$ 79,00 em acessórios −R$ 79,00",
       "Venda nº 1.235 10/11 às 15:00 +R$ 79,00 em acessórios +R$ 79,00",
       "Venda nº 1.234 09/11 às 10:30 +1 aparelho · +R$ 158,00 em acessórios +R$ 1.657,00",
-      "Total do mês Vendido líquido R$ 1.578,00 · 1 aparelho · R$ 79,00 em acessórios · 1 Ora Connect",
+      "Total do mês Vendido líquido R$ 1.578,00 · 1 aparelho · 0 chips · R$ 79,00 em acessórios · 1 Ora Connect",
     ].join(" "));
     // FIN-009c: Excel e CSV montados no navegador; as células com o tipo (o texto é o do CSV) e o total abaixo da tabela
     const planilha = p.doTipo("ExportarPlanilha")[0] as { nomeArquivo: string; aba: string; secoes: SecaoCsv[] };
     expect(planilha).toMatchObject({ aba: "Extrato do bônus", nomeArquivo: "extrato-do-bonus-2026-11-meu-santa-candida-teste" });
     const [fatos, total] = planilha.secoes;
-    expect(fatos?.colunas).toEqual(["Data", "Fato", "Vendido líquido (R$)", "Aparelhos", "Acessórios (R$)", "Ora Connect"]);
-    expect(fatos?.linhas[0]?.map(textoDaCelula)).toEqual(["13/11/2026 11:05", "Ativação do Ora Connect nº 45", "0,00", 0, "0,00", 1]);
+    expect(fatos?.colunas).toEqual(["Data", "Fato", "Vendido líquido (R$)", "Aparelhos", "Chips", "Acessórios (R$)", "Ora Connect"]);
+    expect(fatos?.linhas[0]?.map(textoDaCelula)).toEqual(["13/11/2026 11:05", "Ativação do Ora Connect nº 45", "0,00", 0, 0, "0,00", 1]);
     expect(fatos?.linhas[0]?.[0]).toEqual({ instante: expect.any(String) });
-    expect(total?.linhas.map((l) => l.map(textoDaCelula))).toEqual([["Total do mês", "", "1578,00", 1, "79,00", 1]]);
+    expect(total?.linhas.map((l) => l.map(textoDaCelula))).toEqual([["Total do mês", "", "1578,00", 1, 0, "79,00", 1]]);
     expect(p.doTipo("BotaoImprimir")).toHaveLength(1);
     expect(p.doTipo("CarimboDaImpressao")[0]).toMatchObject({ texto: "Ora 5G · extrato do bônus · próprio · Santa Cândida (teste) · novembro de 2026 · impresso em 13/11/2026 12:00" });
   });
@@ -196,14 +196,14 @@ describe("/metas/extrato (L9a)", () => {
     expect(p.doTipo("BotaoImprimir")).toEqual([]);
     cenario.respostas.extrato_do_vendedor = { data: null, error: { code: "PGRST202" } };
     expect((await pagina()).visivel).toContain("a leitura do bônus por meta (migration bonus_por_meta)");
-    cenario.respostas.extrato_do_vendedor = { data: { ...extrato(ANA), totais: { vendido_liquido: 1, aparelhos: 1, acessorios: 7_900, connect: 1 } }, error: null };
+    cenario.respostas.extrato_do_vendedor = { data: { ...extrato(ANA), totais: { vendido_liquido: 1, aparelhos: 1, chips: 0, acessorios: 7_900, connect: 1 } }, error: null };
     p = await pagina();
     expect(p.visivel).toContain("Não foi possível ler agora");
     expect(vi.mocked(console.error).mock.calls).toContainEqual(["bonus: resposta inesperada de extrato_do_vendedor"]);
   });
 
   it("mês sem fato: o aviso vazio; quem não vê metas não pergunta nada ao banco", async () => {
-    cenario.respostas.extrato_do_vendedor = { data: { ...extrato(ANA), quantidade: 0, linhas: [], totais: { vendido_liquido: 0, aparelhos: 0, acessorios: 0, connect: 0 } }, error: null };
+    cenario.respostas.extrato_do_vendedor = { data: { ...extrato(ANA), quantidade: 0, linhas: [], totais: { vendido_liquido: 0, aparelhos: 0, chips: 0, acessorios: 0, connect: 0 } }, error: null };
     expect((await pagina()).visivel).toContain("Nenhum fato em novembro de 2026");
     cenario.permissoes = new Set(["venda.registrar"]);
     cenario.chamadas = [];

@@ -25,8 +25,8 @@ export function linhaDoVendedor(f: FechamentoDoMes | null, vendedor: string): Li
 /** Os meses que se fecham pela tela: os seis que já terminaram, do mais antigo ao mais recente. */
 export const mesesParaFechar = (hoje: string) => [6, 5, 4, 3, 2, 1].map((i) => somarMeses(hoje, -i));
 
-/** R$ 400.000,00 por vendedor: as quatro medidas na faixa mais alta permitida. */
-export const VALOR_APROVADO_MAXIMO = 40_000_000;
+/** R$ 500.000,00 por vendedor: as cinco medidas (com os chips, desde o PERF-a) na faixa mais alta permitida, R$ 100.000,00 cada. */
+export const VALOR_APROVADO_MAXIMO = 50_000_000;
 const MOTIVO_MINIMO = 3;
 const MOTIVO_MAXIMO = 300;
 
@@ -200,7 +200,7 @@ export const ERROS_DO_FECHAMENTO = {
   dados: "Dados inválidos: confira os campos.",
   motivo: "Cada contestação, e cada valor diferente do calculado, precisa de um motivo de 3 a 300 letras.",
   decidir: "Decida cada contestação: manter o valor calculado ou pagar outro.",
-  valor: "O valor a pagar é em reais com vírgula (por exemplo, 300,00), de R$ 0,00 a R$ 400.000,00.",
+  valor: "O valor a pagar é em reais com vírgula (por exemplo, 300,00), de R$ 0,00 a R$ 500.000,00.",
   igual: "Para pagar o valor calculado, escolha \"Manter o calculado\".",
   mudou: "Os números do mês mudaram desde que a tela abriu. Confira de novo antes de enviar.",
   ja_enviado: "O fechamento deste mês já tinha sido enviado.",

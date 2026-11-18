@@ -541,6 +541,19 @@
       "pedido_em": null,
       "resposta": null,
       "respondido_em": null
+    },
+    {
+      "lote": "PERF-a",
+      "roteiro": "docs/aceite/PERF-a.md",
+      "requisitos": [
+        "ORA-PERF-001"
+      ],
+      "entrega": "os chips como a quinta medida das metas e do bônus (unidades), por vendedor e por loja, com o extrato e a planilha; o teto do valor aprovado no fechamento em R$ 500.000,00",
+      "commit": null,
+      "publicado_em": null,
+      "pedido_em": null,
+      "resposta": null,
+      "respondido_em": null
     }
   ]
 }

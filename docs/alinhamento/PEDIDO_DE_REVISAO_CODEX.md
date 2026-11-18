@@ -1937,10 +1937,20 @@ Programa de execução integral (PR #67; checkpoint em `docs/alinhamento/EXECUCA
 - **Código:** a tela de entrada passa a esconder o link com `ORA_DEMO_DESLIGADA=1`, como a tela inicial; `e2e/inicializacao.spec.ts` sobe a homologação com a chave e confere o 404 das páginas e das trocas de perfil e de loja e a falta dos dois links.
 - **Servidor:** a chave no ambiente da homologação (o arquivo de ambiente do servidor; o valor não é segredo).
 - **Pedido ao Codex:** conferir se alguma rota da demonstração ficou fora do 404 com a chave.
-- **CI, merge e publicação (18/11):** CI verde em `c950629` (3.044 testes, 1 ignorado que pede a planilha privada e 1 TODO; 325 E2E, com 13 pulados); merge `324d7b8`, com a árvore da branch testada; os checks do GitHub de `324d7b8` rodavam neste registro e entram no registro do lote seguinte; no ar desde 14:51, com a demonstração desligada (404 em `/demo` e nas trocas de perfil e de loja; sem o link em `/` e em `/entrar`).
+- **CI, merge e publicação (18/11):** CI verde em `c950629` (3.044 testes, 1 ignorado que pede a planilha privada e 1 TODO; 325 E2E, com 13 pulados); merge `324d7b8`, com a árvore da branch testada; os checks do GitHub de `324d7b8` terminaram verdes ("Verificações" e "Supabase Preview"); no ar desde 14:51, com a demonstração desligada (404 em `/demo` e nas trocas de perfil e de loja; sem o link em `/` e em `/entrar`).
 
 ## 18/11/2026 — Lote ABERTO-a: os pontos em aberto atualizados
 
 - **Origem:** o pedido do proprietário de 18/11 (reler a documentação do Codex e seguir um a um os pontos em aberto, com as transferências, a Ora Connect, as vendas e o estoque primeiro).
 - **Só documentos:** a primeira passagem em `PONTOS_EM_ABERTO_2026-11-18.md` (o CNPJ pela tela Lojas; a Nogle com as configurações públicas; os seis casos do F18-05 já cobertos por testes) e a linha do banco no quadro corrigida (114 migrations, até a do VEL-c).
 - **Pedido ao Codex:** conferir se algum caso de transferência do F18-05 ficou sem teste, e se o primeiro passo da Nogle (`--listas`) é mesmo só leitura do lado da operadora.
+- **CI, merge e publicação (18/11):** CI verde em `a0f9404` (3.044 testes, 1 ignorado que pede a planilha privada e 1 TODO; 325 E2E, com 13 pulados); merge `235c56c`, com a árvore da branch testada; os checks do GitHub de `235c56c` terminaram verdes ("Verificações" e "Supabase Preview"); no ar desde 15:08.
+
+## 18/11/2026 — Lote PERF-a: os chips contados à parte nas metas e no bônus
+
+- **Origem:** o pedido do proprietário de 18/11 ("o chip é vendido separado do celular. Eles têm que contar como separado", D-050) e o primeiro lote dos outros setores ("feche todas as outras pendências dos outros setores"; seção 5 de `PONTOS_EM_ABERTO_2026-11-18.md`). Requisito: ORA-PERF-001.
+- **Banco:** a migration `20261118192056_chips_nas_metas` (com reversão). As medidas das metas e do bônus aceitam `chips`; `metas_definir` e `bonus_definir` aceitam a medida; `metas_painel`, `metas_lojas` e `extrato_do_vendedor` contam os chips como os aparelhos (os das vendas concluídas no mês, menos os das canceladas e os devolvidos no mês). `bonus_do_mes` não muda: lê as medidas pelo nome. As seis funções foram copiadas da definição em vigor, com o md5 do corpo conferido antes.
+- **O teto do fechamento:** o valor aprovado por vendedor ia até R$ 400.000,00 (as quatro medidas na faixa mais alta, R$ 100.000,00 cada). Com cinco medidas, um vendedor que batesse a faixa mais alta em todas teria o "manter" recusado pela restrição da linha. O teto passou a R$ 500.000,00 na restrição, em `bonus_fechamento_aprovar` e na tela.
+- **Telas:** o campo **Chips (unidades)** nas metas; a coluna dos chips na equipe do mês e no extrato ("+1 chip" e a planilha); as faixas dos chips nas regras do bônus.
+- **Testes:** no banco (`metas.test.ts`: o chip conta 1, a meta da loja e do vendedor, o cancelamento no mês tira; `bonus.test.ts`: a regra dos chips paga a faixa e o extrato bate; `bonus-fechamento.test.ts`: o teto novo) e nas telas (`app/metas`, `lib/metas` e `lib/bonus`).
+- **Pedido ao Codex:** conferir se o chip devolvido numa troca (devolução com troca no mesmo dia) conta uma vez só, e se o teto de R$ 500.000,00 deve seguir o número de medidas ou virar uma constante própria.

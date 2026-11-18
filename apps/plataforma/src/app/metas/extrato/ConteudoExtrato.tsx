@@ -37,6 +37,7 @@ const sinal = (n: number) => (n > 0 ? "+" : n < 0 ? "−" : "");
 export function efeitosDoFato(e: Efeito): string[] {
   const partes: string[] = [];
   if (e.aparelhos !== 0) partes.push(`${sinal(e.aparelhos)}${numero(Math.abs(e.aparelhos))} ${Math.abs(e.aparelhos) === 1 ? "aparelho" : "aparelhos"}`);
+  if (e.chips !== 0) partes.push(`${sinal(e.chips)}${numero(Math.abs(e.chips))} ${Math.abs(e.chips) === 1 ? "chip" : "chips"}`);
   if (e.acessorios !== 0) partes.push(`${sinal(e.acessorios)}${brl(Math.abs(e.acessorios))} em acessórios`);
   if (e.connect !== 0) partes.push(`${sinal(e.connect)}${numero(Math.abs(e.connect))} Ora Connect`);
   return partes;
@@ -49,9 +50,9 @@ export function efeitosDoFato(e: Efeito): string[] {
 export function planilhaDoExtrato(e: Extrato): SecaoCsv[] {
   const reais = (centavos: number): Celula => ({ centavos });
   return [{
-    colunas: ["Data", "Fato", "Vendido líquido (R$)", "Aparelhos", "Acessórios (R$)", "Ora Connect"],
-    linhas: e.linhas.map((f): Celula[] => [{ instante: f.quando }, descricaoDoFato(f), reais(f.efeito.vendido_liquido), f.efeito.aparelhos, reais(f.efeito.acessorios), f.efeito.connect]),
-  }, { linhas: [["Total do mês", "", reais(e.totais.vendido_liquido), e.totais.aparelhos, reais(e.totais.acessorios), e.totais.connect]] }];
+    colunas: ["Data", "Fato", "Vendido líquido (R$)", "Aparelhos", "Chips", "Acessórios (R$)", "Ora Connect"],
+    linhas: e.linhas.map((f): Celula[] => [{ instante: f.quando }, descricaoDoFato(f), reais(f.efeito.vendido_liquido), f.efeito.aparelhos, f.efeito.chips, reais(f.efeito.acessorios), f.efeito.connect]),
+  }, { linhas: [["Total do mês", "", reais(e.totais.vendido_liquido), e.totais.aparelhos, e.totais.chips, reais(e.totais.acessorios), e.totais.connect]] }];
 }
 
 export function ResumoDoBonus({ bonus, vendedor, mes, fase, aqui, fechamento = null }: {
@@ -141,7 +142,7 @@ export function FatosDoMes({ extrato, mes, aqui }: { extrato: LeituraDoBonus<Ext
           <div className="mt-2 rounded-xl bg-slate-50 px-4 py-3 text-sm">
             <p className="font-semibold">Total do mês</p>
             <p className="numeros">
-              {semQuebra(`Vendido líquido ${brlComSinal(e.totais.vendido_liquido)} · ${numero(e.totais.aparelhos)} ${Math.abs(e.totais.aparelhos) === 1 ? "aparelho" : "aparelhos"} · ${brlComSinal(e.totais.acessorios)} em acessórios · ${numero(e.totais.connect)} Ora Connect`)}
+              {semQuebra(`Vendido líquido ${brlComSinal(e.totais.vendido_liquido)} · ${numero(e.totais.aparelhos)} ${Math.abs(e.totais.aparelhos) === 1 ? "aparelho" : "aparelhos"} · ${numero(e.totais.chips)} ${Math.abs(e.totais.chips) === 1 ? "chip" : "chips"} · ${brlComSinal(e.totais.acessorios)} em acessórios · ${numero(e.totais.connect)} Ora Connect`)}
             </p>
             <p className="mt-1 text-xs text-suave">É o realizado das metas no mês: os mesmos números da tela de Metas.</p>
           </div>

@@ -1,6 +1,6 @@
 import { MarcaDeEsqueleto } from "../../../componentes/ancora";
 
-// Esqueleto das regras do bônus: título, filtro do mês, o formulário das quatro medidas e o histórico.
+// Esqueleto das regras do bônus: título, filtro do mês, o formulário das cinco medidas e o histórico.
 export default function CarregandoRegrasDoBonus() {
   return (
     <div aria-busy="true" aria-label="Carregando as regras do bônus" className="mx-auto max-w-5xl animate-pulse px-4 pt-6 sm:px-6">
