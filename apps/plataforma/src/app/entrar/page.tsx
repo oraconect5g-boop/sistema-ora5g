@@ -57,7 +57,8 @@ export default async function Entrar({ searchParams }: { searchParams: Promise<{
             <Aviso tom="aviso" className="mt-6">O login ainda não está configurado neste ambiente.</Aviso>
           )}
           <p className="mt-6 flex items-start gap-2 text-xs text-suave"><Lock aria-hidden className="mt-0.5 size-3.5 shrink-0" /> Acesso protegido por loja e perfil. Cada pessoa vê só o que o papel dela permite.</p>
-          {process.env.APP_ENV !== "producao" && (
+          {/* D-051 (o proprietário, 18/11): com a demonstração desligada (ORA_DEMO_DESLIGADA=1), o link some, como na página inicial. */}
+          {process.env.APP_ENV !== "producao" && process.env.ORA_DEMO_DESLIGADA !== "1" && (
             <Link href="/demo" className="mt-6 flex items-center justify-center gap-1.5 rounded-botao border border-dashed border-borda-forte px-4 py-3 text-sm font-semibold text-acao hover:bg-acao-clara/50">
               Ver a demonstração
             </Link>

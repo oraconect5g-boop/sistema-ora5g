@@ -58,8 +58,9 @@ test("CONFIG-001: com só o par público, o sistema sobe e oferece o login, sem 
 });
 
 // DEMO-a (ADR-022): a demonstração fica no ar em todo ambiente, inclusive em produção, isolada da aplicação real; a
-// chave ORA_DEMO_DESLIGADA=1 a tira do ar (a página, a troca de perfil e o botão da página inicial).
-test("em produção a demonstração fica no ar; com ORA_DEMO_DESLIGADA=1, ela sai", async () => {
+// chave ORA_DEMO_DESLIGADA=1 a tira do ar (a página, a troca de perfil e de loja, o botão da página inicial e o link da
+// entrada). D-051: desde 18/11 a chave está ligada em ora5g.com.br (a homologação), a pedido do proprietário.
+test("em produção a demonstração fica no ar; com ORA_DEMO_DESLIGADA=1 (como em ora5g.com.br), ela sai", async () => {
   test.skip(test.info().project.name !== "computador", "basta rodar uma vez");
 
   const noAr = iniciarServidor({ APP_ENV: "producao", NEXT_PUBLIC_APP_URL: "http://127.0.0.1:3199" });
@@ -70,13 +71,17 @@ test("em produção a demonstração fica no ar; com ORA_DEMO_DESLIGADA=1, ela s
   } finally {
     await noAr.parar();
   }
-  const desligada = iniciarServidor({ APP_ENV: "producao", NEXT_PUBLIC_APP_URL: "http://127.0.0.1:3199", ORA_DEMO_DESLIGADA: "1" });
+  const desligada = iniciarServidor({ APP_ENV: "homologacao", NEXT_PUBLIC_APP_URL: "http://127.0.0.1:3199", ORA_DEMO_DESLIGADA: "1" });
   try {
     await desligada.esperarNoAr();
     expect((await fetch(`${desligada.url}/demo`)).status).toBe(404);
     expect((await fetch(`${desligada.url}/demo/vender`)).status).toBe(404);
     expect((await fetch(`${desligada.url}/demo/perfil/usar?p=dono`, { redirect: "manual" })).status).toBe(404);
+    expect((await fetch(`${desligada.url}/demo/loja/usar?l=santa-candida`, { redirect: "manual" })).status).toBe(404);
     expect(await (await fetch(desligada.url)).text()).not.toContain("Ver demonstração");
+    const entrada = await fetch(`${desligada.url}/entrar`);
+    expect(entrada.status).toBe(200);
+    expect(await entrada.text()).not.toContain("Ver a demonstração");
   } finally {
     await desligada.parar();
   }
