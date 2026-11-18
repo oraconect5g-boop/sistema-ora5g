@@ -1,0 +1,820 @@
+{
+  "consultado_em": "2026-11-18",
+  "commit": "27b4f6eeb9b4b456b2283d9b365ebecc0901f6ef",
+  "contagens": [
+    {
+      "entidade": "auth.users",
+      "total": 1
+    },
+    {
+      "entidade": "unidades",
+      "total": 15
+    },
+    {
+      "entidade": "produtos",
+      "total": 6
+    },
+    {
+      "entidade": "variantes",
+      "total": 6
+    },
+    {
+      "entidade": "importacoes",
+      "total": 0
+    },
+    {
+      "entidade": "clientes",
+      "total": 0
+    },
+    {
+      "entidade": "fotos_produto",
+      "total": 0
+    },
+    {
+      "entidade": "estoque_movimentos",
+      "total": 25
+    },
+    {
+      "entidade": "estoque_saldos",
+      "total": 10
+    },
+    {
+      "entidade": "transferencias",
+      "total": 2
+    },
+    {
+      "entidade": "connect_habilitacoes",
+      "total": 0
+    },
+    {
+      "entidade": "connect_operacoes",
+      "total": 0
+    },
+    {
+      "entidade": "notas_pedidos",
+      "total": 0
+    },
+    {
+      "entidade": "objetos_storage",
+      "total": 0
+    }
+  ],
+  "base_nova": [
+    {
+      "entidade": "estoque_cargas",
+      "total": 0
+    },
+    {
+      "entidade": "estoque_carga_linhas",
+      "total": 0
+    },
+    {
+      "entidade": "entradas_estoque",
+      "total": 0
+    },
+    {
+      "entidade": "extratos",
+      "total": 0
+    },
+    {
+      "entidade": "anuncios_importacoes",
+      "total": 0
+    },
+    {
+      "entidade": "marketplace_importacoes",
+      "total": 0
+    },
+    {
+      "entidade": "loja_pedidos",
+      "total": 0
+    },
+    {
+      "entidade": "avisos_inscricoes",
+      "total": 1
+    },
+    {
+      "entidade": "publicar_online",
+      "total": 0
+    }
+  ],
+  "estoque_por_unidade": [
+    {
+      "codigo": "loja-agua-verde",
+      "nome": "Água Verde",
+      "variantes": 0,
+      "fisico": 0,
+      "reservado": 0,
+      "tem_cnpj": false
+    },
+    {
+      "codigo": "loja-almirante-tamandare",
+      "nome": "Almirante Tamandaré",
+      "variantes": 0,
+      "fisico": 0,
+      "reservado": 0,
+      "tem_cnpj": false
+    },
+    {
+      "codigo": "assistencia",
+      "nome": "Assistência (teste)",
+      "variantes": 0,
+      "fisico": 0,
+      "reservado": 0,
+      "tem_cnpj": false
+    },
+    {
+      "codigo": "loja-balneario",
+      "nome": "Balneário",
+      "variantes": 0,
+      "fisico": 0,
+      "reservado": 0,
+      "tem_cnpj": false
+    },
+    {
+      "codigo": "loja-butiatuvinha",
+      "nome": "Butiatuvinha",
+      "variantes": 0,
+      "fisico": 0,
+      "reservado": 0,
+      "tem_cnpj": false
+    },
+    {
+      "codigo": "loja-colombo",
+      "nome": "Colombo",
+      "variantes": 0,
+      "fisico": 0,
+      "reservado": 0,
+      "tem_cnpj": false
+    },
+    {
+      "codigo": "loja-colonia",
+      "nome": "Colônia",
+      "variantes": 0,
+      "fisico": 0,
+      "reservado": 0,
+      "tem_cnpj": false
+    },
+    {
+      "codigo": "defeitos",
+      "nome": "DEFEITOS",
+      "variantes": 0,
+      "fisico": 0,
+      "reservado": 0,
+      "tem_cnpj": false
+    },
+    {
+      "codigo": "loja-dubai",
+      "nome": "Dubai",
+      "variantes": 0,
+      "fisico": 0,
+      "reservado": 0,
+      "tem_cnpj": false
+    },
+    {
+      "codigo": "loja-teste-2",
+      "nome": "Loja de teste 2",
+      "variantes": 5,
+      "fisico": 30,
+      "reservado": 0,
+      "tem_cnpj": true
+    },
+    {
+      "codigo": "loja-muffato-santa",
+      "nome": "Muffato Santa",
+      "variantes": 0,
+      "fisico": 0,
+      "reservado": 0,
+      "tem_cnpj": false
+    },
+    {
+      "codigo": "loja-santa-candida",
+      "nome": "Santa Cândida",
+      "variantes": 0,
+      "fisico": 0,
+      "reservado": 0,
+      "tem_cnpj": false
+    },
+    {
+      "codigo": "santa-candida",
+      "nome": "Santa Cândida (teste)",
+      "variantes": 5,
+      "fisico": 34,
+      "reservado": 0,
+      "tem_cnpj": true
+    },
+    {
+      "codigo": "loja-santa-felicidade",
+      "nome": "Santa Felicidade",
+      "variantes": 0,
+      "fisico": 0,
+      "reservado": 0,
+      "tem_cnpj": false
+    },
+    {
+      "codigo": "loja-ventania",
+      "nome": "Ventania",
+      "variantes": 0,
+      "fisico": 0,
+      "reservado": 0,
+      "tem_cnpj": false
+    }
+  ],
+  "perfis": [
+    {
+      "papel": "dono",
+      "usuarios": 1,
+      "vinculos": 1
+    }
+  ],
+  "transferencias": [
+    {
+      "situacao": "enviada",
+      "origem": "Santa Cândida (teste)",
+      "destino": "Muffato Santa",
+      "operacoes": 2,
+      "quantidade": 2
+    }
+  ],
+  "cron": [
+    {
+      "jobname": "ora5g-alertas-das-filas",
+      "active": true,
+      "schedule": "*/10 * * * *",
+      "execucoes_24h": 86,
+      "falhas_24h": 0,
+      "ultima_fim": "2026-11-18 12:30:00.287031+00"
+    },
+    {
+      "jobname": "ora5g-limpeza-dos-registros",
+      "active": true,
+      "schedule": "30 6 * * *",
+      "execucoes_24h": 1,
+      "falhas_24h": 0,
+      "ultima_fim": "2026-11-18 06:30:00.161227+00"
+    },
+    {
+      "jobname": "ora5g-reservas-vencidas",
+      "active": true,
+      "schedule": "*/5 * * * *",
+      "execucoes_24h": 286,
+      "falhas_24h": 0,
+      "ultima_fim": "2026-11-18 12:30:00.275172+00"
+    }
+  ],
+  "logs_24h": {
+    "result": [
+      {
+        "http_status": "",
+        "level": "info",
+        "pg_severity": "",
+        "source": "auth_logs",
+        "sqlstate": "",
+        "total": 37
+      },
+      {
+        "http_status": "200",
+        "level": "",
+        "pg_severity": "",
+        "source": "edge_logs",
+        "sqlstate": "",
+        "total": 2934
+      },
+      {
+        "http_status": "401",
+        "level": "",
+        "pg_severity": "",
+        "source": "edge_logs",
+        "sqlstate": "",
+        "total": 15
+      },
+      {
+        "http_status": "400",
+        "level": "",
+        "pg_severity": "",
+        "source": "edge_logs",
+        "sqlstate": "",
+        "total": 5
+      },
+      {
+        "http_status": "404",
+        "level": "",
+        "pg_severity": "",
+        "source": "edge_logs",
+        "sqlstate": "",
+        "total": 2
+      },
+      {
+        "http_status": "204",
+        "level": "",
+        "pg_severity": "",
+        "source": "edge_logs",
+        "sqlstate": "",
+        "total": 2
+      },
+      {
+        "http_status": "",
+        "level": "",
+        "pg_severity": "LOG",
+        "source": "postgres_logs",
+        "sqlstate": "00000",
+        "total": 1352
+      },
+      {
+        "http_status": "",
+        "level": "",
+        "pg_severity": "ERROR",
+        "source": "postgres_logs",
+        "sqlstate": "42501",
+        "total": 15
+      },
+      {
+        "http_status": "",
+        "level": "",
+        "pg_severity": "ERROR",
+        "source": "postgres_logs",
+        "sqlstate": "OR036",
+        "total": 4
+      },
+      {
+        "http_status": "",
+        "level": "",
+        "pg_severity": "ERROR",
+        "source": "postgres_logs",
+        "sqlstate": "42703",
+        "total": 2
+      },
+      {
+        "http_status": "",
+        "level": "",
+        "pg_severity": "LOG",
+        "source": "postgres_logs",
+        "sqlstate": "08006",
+        "total": 1
+      },
+      {
+        "http_status": "",
+        "level": "",
+        "pg_severity": "ERROR",
+        "source": "postgres_logs",
+        "sqlstate": "OR009",
+        "total": 1
+      },
+      {
+        "http_status": "",
+        "level": "",
+        "pg_severity": "ERROR",
+        "source": "postgres_logs",
+        "sqlstate": "P0001",
+        "total": 1
+      },
+      {
+        "http_status": "",
+        "level": "info",
+        "pg_severity": "",
+        "source": "storage_logs",
+        "sqlstate": "",
+        "total": 41
+      }
+    ]
+  },
+  "migrations": {
+    "migrations": [
+      {
+        "version": "20261107140352",
+        "name": "fundacao_acesso"
+      },
+      {
+        "version": "20261107140448",
+        "name": "indices_chaves_estrangeiras"
+      },
+      {
+        "version": "20261107151305",
+        "name": "correcoes_revisao_codex"
+      },
+      {
+        "version": "20261108150432",
+        "name": "auditoria_automatica_acesso"
+      },
+      {
+        "version": "20261108150620",
+        "name": "catalogo_estoque"
+      },
+      {
+        "version": "20261108151325",
+        "name": "indices_catalogo_estoque"
+      },
+      {
+        "version": "20261108195850",
+        "name": "integridade_estoque"
+      },
+      {
+        "version": "20261108202654",
+        "name": "acesso_sessao_e_equipe"
+      },
+      {
+        "version": "20261108204536",
+        "name": "fotos_dos_produtos"
+      },
+      {
+        "version": "20261108233546",
+        "name": "vendas_pagamentos_e_caixa"
+      },
+      {
+        "version": "20261108233711",
+        "name": "indices_vendas_e_fotos"
+      },
+      {
+        "version": "20261109123402",
+        "name": "ora_connect_operacoes"
+      },
+      {
+        "version": "20261109123533",
+        "name": "indices_ora_connect"
+      },
+      {
+        "version": "20261109123757",
+        "name": "fila_fiscal"
+      },
+      {
+        "version": "20261109134507",
+        "name": "devolucao_e_troca"
+      },
+      {
+        "version": "20261109150526",
+        "name": "correcoes_acesso_lote1"
+      },
+      {
+        "version": "20261109190240",
+        "name": "integridade_vendas_lote2"
+      },
+      {
+        "version": "20261109190400",
+        "name": "connect_evidencia_lote2"
+      },
+      {
+        "version": "20261109191416",
+        "name": "fotos_idempotentes_lote3"
+      },
+      {
+        "version": "20261109193043",
+        "name": "transferencias_e_defeitos"
+      },
+      {
+        "version": "20261109201940",
+        "name": "mensagens_nogle"
+      },
+      {
+        "version": "20261110124824",
+        "name": "connect_consulta_por_uuid"
+      },
+      {
+        "version": "20261110224537",
+        "name": "financeiro_painel"
+      },
+      {
+        "version": "20261111132503",
+        "name": "lojas_cadastro_e_configuracao"
+      },
+      {
+        "version": "20261111132621",
+        "name": "catalogo_cadastro"
+      },
+      {
+        "version": "20261111133804",
+        "name": "precos_e_campanhas"
+      },
+      {
+        "version": "20261111135906",
+        "name": "importacao_catalogo"
+      },
+      {
+        "version": "20261111141337",
+        "name": "entrada_estoque"
+      },
+      {
+        "version": "20261111142627",
+        "name": "condicao_obrigatoria_na_devolucao"
+      },
+      {
+        "version": "20261111142726",
+        "name": "inventario"
+      },
+      {
+        "version": "20261111191909",
+        "name": "clientes_compartilhados"
+      },
+      {
+        "version": "20261111193816",
+        "name": "crm_funil_e_agenda"
+      },
+      {
+        "version": "20261111195120",
+        "name": "clientes_mesclagem_e_segmentos"
+      },
+      {
+        "version": "20261111200054",
+        "name": "pdv_nota_do_cliente"
+      },
+      {
+        "version": "20261111201342",
+        "name": "pagamentos_maquininhas_e_conciliacao"
+      },
+      {
+        "version": "20261112033713",
+        "name": "recebimento_correcoes"
+      },
+      {
+        "version": "20261112163333",
+        "name": "importador_correcoes"
+      },
+      {
+        "version": "20261112195200",
+        "name": "vendas_painel"
+      },
+      {
+        "version": "20261113065706",
+        "name": "margem_painel"
+      },
+      {
+        "version": "20261114012326",
+        "name": "financeiro_conciliacao"
+      },
+      {
+        "version": "20261114012407",
+        "name": "estoque_painel"
+      },
+      {
+        "version": "20261114012431",
+        "name": "connect_painel"
+      },
+      {
+        "version": "20261114012538",
+        "name": "metas"
+      },
+      {
+        "version": "20261114012604",
+        "name": "metas_lojas"
+      },
+      {
+        "version": "20261114012623",
+        "name": "equipe_por_papel"
+      },
+      {
+        "version": "20261114012647",
+        "name": "venda_item_regra_de_preco"
+      },
+      {
+        "version": "20261114012722",
+        "name": "financeiras_a_receber"
+      },
+      {
+        "version": "20261114012802",
+        "name": "caixa_saida_autorizada"
+      },
+      {
+        "version": "20261114012952",
+        "name": "contas_a_pagar"
+      },
+      {
+        "version": "20261114013120",
+        "name": "resultado_do_mes"
+      },
+      {
+        "version": "20261114013159",
+        "name": "previsao_de_caixa"
+      },
+      {
+        "version": "20261114092832",
+        "name": "bonus_por_meta"
+      },
+      {
+        "version": "20261114104004",
+        "name": "bonus_fechamento"
+      },
+      {
+        "version": "20261114145334",
+        "name": "inventario_correcoes"
+      },
+      {
+        "version": "20261114145418",
+        "name": "previsao_correcoes"
+      },
+      {
+        "version": "20261114145505",
+        "name": "financeiras_correcoes"
+      },
+      {
+        "version": "20261114145608",
+        "name": "clientes_nome_e_whatsapp"
+      },
+      {
+        "version": "20261114145952",
+        "name": "notas_destinatario_completo"
+      },
+      {
+        "version": "20261114150027",
+        "name": "notas_documentos"
+      },
+      {
+        "version": "20261114150135",
+        "name": "whatsapp_envio_da_nota"
+      },
+      {
+        "version": "20261114161903",
+        "name": "recebiveis_painel"
+      },
+      {
+        "version": "20261114162103",
+        "name": "ordem_de_servico"
+      },
+      {
+        "version": "20261114162305",
+        "name": "orcamento_da_os"
+      },
+      {
+        "version": "20261114202336",
+        "name": "entrega_da_os"
+      },
+      {
+        "version": "20261114202444",
+        "name": "pecas_da_os"
+      },
+      {
+        "version": "20261114202535",
+        "name": "relatorio_da_assistencia"
+      },
+      {
+        "version": "20261114205327",
+        "name": "anexos_da_venda"
+      },
+      {
+        "version": "20261114215050",
+        "name": "conciliacao_fiscal"
+      },
+      {
+        "version": "20261114215128",
+        "name": "cancelamento_da_nota"
+      },
+      {
+        "version": "20261115000320",
+        "name": "estoque_valor_em_custo"
+      },
+      {
+        "version": "20261115000401",
+        "name": "codigos_de_outros_canais"
+      },
+      {
+        "version": "20261115000433",
+        "name": "regioes"
+      },
+      {
+        "version": "20261115043059",
+        "name": "pagamentos_por_terminal"
+      },
+      {
+        "version": "20261115102330",
+        "name": "margem_por_vendedor"
+      },
+      {
+        "version": "20261115102358",
+        "name": "conta_da_entrada"
+      },
+      {
+        "version": "20261115102440",
+        "name": "documentos_da_conta"
+      },
+      {
+        "version": "20261115102535",
+        "name": "correcao_do_custo"
+      },
+      {
+        "version": "20261115142547",
+        "name": "limpeza_das_fotos"
+      },
+      {
+        "version": "20261115150738",
+        "name": "pedido_de_compra"
+      },
+      {
+        "version": "20261115164226",
+        "name": "segundo_fator"
+      },
+      {
+        "version": "20261115181750",
+        "name": "confirmacao_recente"
+      },
+      {
+        "version": "20261115181840",
+        "name": "carta_de_correcao"
+      },
+      {
+        "version": "20261115193611",
+        "name": "relatorio_do_titular"
+      },
+      {
+        "version": "20261115210812",
+        "name": "loja_online_vitrine"
+      },
+      {
+        "version": "20261116093359",
+        "name": "loja_online_reserva"
+      },
+      {
+        "version": "20261116095825",
+        "name": "destinatario_fiscal_integro"
+      },
+      {
+        "version": "20261116095941",
+        "name": "email_opcional_na_payjoy"
+      },
+      {
+        "version": "20261116102346",
+        "name": "limpeza_das_fotos_protocolo"
+      },
+      {
+        "version": "20261116130100",
+        "name": "importacao_estatisticas"
+      },
+      {
+        "version": "20261117015315",
+        "name": "sessao_molde_e_pdv"
+      },
+      {
+        "version": "20261117071458",
+        "name": "loja_online_sem_erro_500"
+      },
+      {
+        "version": "20261117124230",
+        "name": "rotinas_agendadas"
+      },
+      {
+        "version": "20261117135133",
+        "name": "identidade_da_nota_e_cota_da_loja"
+      },
+      {
+        "version": "20261117141658",
+        "name": "indices_e_rls_do_banco"
+      },
+      {
+        "version": "20261117143744",
+        "name": "indice_redundante_das_fotos"
+      },
+      {
+        "version": "20261117145723",
+        "name": "saude_do_banco_e_vendas_sem_nota"
+      },
+      {
+        "version": "20261117160216",
+        "name": "lojas_cadastro_operacional"
+      },
+      {
+        "version": "20261117165326",
+        "name": "transferencia_remessa"
+      },
+      {
+        "version": "20261117174218",
+        "name": "origem_das_reservas_do_site"
+      },
+      {
+        "version": "20261117190556",
+        "name": "avisos_no_celular"
+      },
+      {
+        "version": "20261117221322",
+        "name": "alertas_das_filas"
+      },
+      {
+        "version": "20261117225818",
+        "name": "extratos_e_conciliacao"
+      },
+      {
+        "version": "20261117232910",
+        "name": "custo_dos_anuncios"
+      },
+      {
+        "version": "20261118010000",
+        "name": "marketplaces_por_arquivo"
+      },
+      {
+        "version": "20261118014003",
+        "name": "anuncios_com_devolucoes"
+      },
+      {
+        "version": "20261118021151",
+        "name": "estoque_inicial_por_arquivo"
+      },
+      {
+        "version": "20261118031404",
+        "name": "pedido_do_site"
+      },
+      {
+        "version": "20261118034536",
+        "name": "comentario_do_contato_do_pedido"
+      },
+      {
+        "version": "20261118095048",
+        "name": "precos_em_lote"
+      }
+    ]
+  }
+}

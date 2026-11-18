@@ -1,5 +1,7 @@
 # Auditoria integral Ora 5G — comece aqui
 
+> **Atualização de 18/11/2026:** leia a [reanálise do commit `27b4f6e`](../reanalise-2026-11-18/README.md), com avanços, novos bugs reproduzidos, banco e publicação conferidos. Este pacote preserva o corte histórico de 17/11.
+
 Este diretório contém o pacote completo da auditoria de **17/11/2026**, publicado por solicitação expressa do proprietário. **Corte analisado: `03123d042f0d51493a17eec449967a5a48124a59`.** Compare os commits posteriores antes de tratar um achado como ainda aberto.
 
 ## Ordem de leitura para Claude Code

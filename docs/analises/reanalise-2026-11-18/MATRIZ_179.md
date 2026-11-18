@@ -1,0 +1,2374 @@
+# Matriz dos 179 requisitos — corte de 18/11/2026
+
+Fonte: `backlog.json`, `status-requisitos.json` e `execucao-integral-status.json` no commit `27b4f6eeb9b4b456b2283d9b365ebecc0901f6ef`.
+
+**Esta matriz reproduz e compara os estados declarados pelo implementador; não certifica de novo os 179 requisitos.** Evidências independentes, limites e divergências: [RELATORIO.md](RELATORIO.md). Um lote aceito de Web Push não homologa um requisito inteiro.
+
+## Contagem
+
+| Estado | Quantidade |
+|---|---:|
+| testado | 69 |
+| respeitado | 2 |
+| parcial | 79 |
+| nao_iniciado | 16 |
+| bloqueado | 13 |
+| homologado | 0 |
+
+## Mudanças desde o corte anterior
+
+| ID | Antes | Agora |
+|---|---|---|
+| ORA-PAY-009 | nao_iniciado | testado |
+| ORA-PAY-010 | nao_iniciado | parcial |
+| ORA-PAY-013 | nao_iniciado | bloqueado |
+| ORA-PAY-014 | nao_iniciado | bloqueado |
+| ORA-FIN-006 | nao_iniciado | parcial |
+| ORA-FISC-007 | nao_iniciado | bloqueado |
+| ORA-FISC-010 | nao_iniciado | bloqueado |
+| ORA-ONLINE-002 | nao_iniciado | parcial |
+| ORA-ONLINE-003 | nao_iniciado | testado |
+| ORA-ONLINE-007 | nao_iniciado | bloqueado |
+| ORA-ONLINE-008 | nao_iniciado | bloqueado |
+| ORA-MKTPL-001 | nao_iniciado | bloqueado |
+| ORA-MKTPL-002 | nao_iniciado | bloqueado |
+| ORA-MKTPL-003 | nao_iniciado | parcial |
+| ORA-MKTPL-004 | nao_iniciado | parcial |
+| ORA-MKTPL-005 | nao_iniciado | parcial |
+| ORA-MKTPL-006 | nao_iniciado | parcial |
+| ORA-MKTPL-007 | nao_iniciado | bloqueado |
+| ORA-MKTPL-008 | nao_iniciado | parcial |
+| ORA-META-001 | nao_iniciado | parcial |
+| ORA-META-002 | nao_iniciado | parcial |
+| ORA-META-003 | nao_iniciado | testado |
+| ORA-META-004 | nao_iniciado | testado |
+| ORA-META-005 | nao_iniciado | bloqueado |
+| ORA-META-006 | nao_iniciado | testado |
+| ORA-REPORT-008 | nao_iniciado | testado |
+
+## ORA-ORG-001 — Cadastrar empresa, organização, 11 lojas comerciais, o local DEFEITOS e a loja piloto (meta de 14 lojas)
+
+- Área: Organização, lojas e usuários; prioridade: P0.
+- Estado anterior: `parcial`; atual: `parcial`; homologação integral documentada: não.
+- Critério original: Usuários autorizados selecionam unidade; IDs e dados fiscais coerentes.
+- Dependência declarada: B2: CNPJs e endereços reais das lojas (cadastro pela tela /lojas).
+
+**Nota do implementador, preservada integralmente:**
+Tabelas organização/empresa/unidade com CNPJ validado no banco; escolha real da loja na sessão (/escolher-loja; uma loja só é escolhida sozinha), gravada e auditada pelo banco. Tela real /lojas (lote L2, 10/11): dono e administrador cadastram (repetição devolve a mesma loja), editam nome/CNPJ/UF/cidade e inativam ou reativam com motivo e auditoria, sem apagar; código e tipo não mudam; loja inativa sai da escolha de loja e não recebe caixa, venda, reserva, estoque, aparelho nem transferência nova (OR019, também por escrita direta), e inativar exige a loja sem pendências (caixa, estoque, aparelhos, reservas, transferências, vendas e notas). Disputa inativar × abrir caixa provada nas duas ordens num PostgreSQL 17 real. ORG-a (17/11; plano de 16/11, Onda 1, item 2): a loja física pelo cadastro operacional, separado da liberação fiscal: ela existe sem o CNPJ da filial (estoque, transferência, inventário e a escolha de loja), mas não vende (OR038, na venda e na reserva de venda, por qualquer caminho) nem aparece na vitrine do site até o CNPJ chegar; o CNPJ de uma loja que já o tem não se apaga. As 11 lojas (Santa Felicidade, Água Verde, Colônia, Almirante Tamandaré, Dubai, Colombo, Muffato Santa, Butiatuvinha, Ventania, Balneário e Santa Cândida) e o DEFEITOS (local de exceção) foram cadastrados no ora5g-dev em 17/11, só com o nome, o código e o tipo, pelo arquivo packages/banco/supabase/semente/lojas-confirmadas.sql. FALTA: o CNPJ, o endereço, o telefone e o horário de cada loja (do proprietário, lista B2), a empresa com a razão social e a raiz do CNPJ reais (a de desenvolvimento é fictícia), revisão do Codex e homologação.
+
+**Evidência declarada:**
+packages/banco/supabase/migrations/20261107140352_fundacao_acesso.sql; packages/banco/src/acesso.test.ts (T10); apps/plataforma/src/app/escolher-loja; packages/banco/supabase/migrations/20261108202654_acesso_sessao_e_equipe.sql; packages/banco/supabase/migrations/20261111132503_lojas_cadastro_e_configuracao.sql; packages/banco/src/lojas.test.ts; packages/banco/src/concorrencia.test.ts (L2); apps/plataforma/src/app/lojas; apps/plataforma/src/lib/lojas; packages/banco/supabase/migrations/20261117160216_lojas_cadastro_operacional.sql; packages/banco/src/lojas-cadastro-operacional.test.ts; packages/banco/supabase/semente/lojas-confirmadas.sql; packages/banco/src/semente.test.ts; docs/aceite/ORG-a.md
+
+## ORA-ORG-002 — Associar usuários a uma ou múltiplas lojas com função e vigência
+
+- Área: Organização, lojas e usuários; prioridade: P0.
+- Estado anterior: `parcial`; atual: `parcial`; homologação integral documentada: não.
+- Critério original: Bloqueio testado para loja sem vínculo.
+- Dependência declarada: não especificada no checkpoint; isso não prova ausência de pendências.
+
+**Nota do implementador, preservada integralmente:**
+Vínculos com vigência e várias lojas por pessoa. Tela real /equipe ligada ao banco: convidar, dar loja ou função, encerrar acesso e bloquear, sempre com motivo e auditoria; mudança vale na sessão aberta (testado). Convite vira pessoa no Auth pelo worker (precisa SUPABASE_SECRET_KEY e SMTP). Falta: homologar com pessoas reais. Revisão do Codex (PR #33, trazida em 10/11): em 55d10af apontou #27 a #30 na gestão da equipe e na conclusão de convites; corrigidos no lote 1 (b967870), aguardando a conferência do Codex. G5 (13/11): o /equipe mostra no topo quantas pessoas têm acesso vigente na rede, por papel (quem tem dois papéis conta nos dois) e quantas estão bloqueadas, somadas no banco (equipe_por_papel) só para dono e administrador. R4 (14/11, revisão do estado): o aceite (bloqueio para loja sem vínculo) está provado no banco (acesso.test.ts, T1 a T7) e as telas usam essas funções. FALTA: a conferência do Codex das correções #27 a #30 (o estado volta a "testado" depois dela), o convite virar pessoa no Auth (depende da SUPABASE_SECRET_KEY e do SMTP, J1) e a homologação com pessoas reais.
+
+**Evidência declarada:**
+acesso.test.ts (T1, T2/T3, T7); packages/banco/src/acesso-equipe.test.ts; apps/plataforma/src/app/equipe; apps/worker; packages/banco/supabase/migrations/20261114012623_equipe_por_papel.sql; packages/banco/src/equipe-por-papel.test.ts; apps/plataforma/src/app/equipe/PessoasPorPapel.tsx
+
+## ORA-ORG-003 — Gerir perfis diretoria, regional, gerente, vendedor, financeiro, fiscal, marketing e atendimento
+
+- Área: Organização, lojas e usuários; prioridade: P0.
+- Estado anterior: `parcial`; atual: `parcial`; homologação integral documentada: não.
+- Critério original: Matriz de autorização versionada e auditada.
+- Dependência declarada: Decisão em vigor: cinco papéis do ADR-002; papéis novos entram por migration quando houver pessoa na função (10_DECISOES_PENDENTES).
+
+**Nota do implementador, preservada integralmente:**
+5 papéis do ADR-002 (dono, administrador, gerente, vendedor, técnico) com matriz versionada por migration. Regional, financeiro, fiscal, marketing e atendimento entram depois por migration. G5 (13/11): contagem de pessoas por papel no /equipe, com os cinco papéis conhecidos sempre listados (zero também) e papel novo do banco mostrado pelo código.
+
+**Evidência declarada:**
+migration fundacao_acesso (catálogo de papéis e permissões); packages/banco/supabase/migrations/20261114012623_equipe_por_papel.sql; packages/banco/src/equipe-por-papel.test.ts; apps/plataforma/src/app/equipe/PessoasPorPapel.tsx
+
+## ORA-ORG-004 — Isolar dados por loja na API e PostgreSQL/RLS
+
+- Área: Organização, lojas e usuários; prioridade: P0.
+- Estado anterior: `parcial`; atual: `parcial`; homologação integral documentada: não.
+- Critério original: Testes de acesso cruzado e negação por ID arbitrário.
+- Dependência declarada: não especificada no checkpoint; isso não prova ausência de pendências.
+
+**Nota do implementador, preservada integralmente:**
+RLS e funções do banco testadas, inclusive negação por ID arbitrário, troca de unidade e isolamento entre organizações (REV-001/REV-002 corrigidos em 07/11, aguardando revisão do Codex). As telas reais (equipe, catálogo, estoque, venda, caixa, Connect, notas e transferências) usam essas funções e o RLS. Revisão do Codex (PR #33, trazida em 10/11): #27 a #29 (bloqueio entre organizações, autoconvite e perda de donos), #45 (aprovação própria legível após bloqueio) e #56 (custo da carteira legível pelo vendedor); corrigidos no lote 1 (b967870), aguardando a conferência do Codex. Inventário de autorização (10/11, autorizacao-funcoes.test.ts): as 48 funções SECURITY DEFINER que um usuário logado pode chamar (aviso 0029 do Supabase) recusam 528 tentativas de 13 tipos de atacante (anônimo, sem login, sem sessão, sessão encerrada, fora do turno, bloqueado, vínculo encerrado, sem vínculo, papel sem permissão, outra rede, outra loja, outro vendedor e permissão faltando), sem mudar o banco; anônimo não executa nenhuma; o teste falha se surgir função nova sem casos (prova: 4 defeitos introduzidos de propósito foram pegos). G1 (13/11): vendas_painel roda com as permissões de quem chama (security invoker): o RLS das vendas decide o recorte (vendedor só as próprias, gerente a loja, dono e admin a rede; outra rede, técnico e pessoa sem vínculo recebem zero; visitante não executa), provado em vendas-painel.test.ts. ranking_nomes é a 101ª função SECURITY DEFINER do inventário: só devolve nome a quem tem ranking.ver na loja da venda, com casos de recusa em autorizacao-funcoes.test.ts. Aguardando a revisão do Codex. G2a (13/11): margem_painel e margem_itens rodam com as permissões de quem chama (security invoker) e perguntam custo.ver loja a loja; o teste do banco cobre gerente, vendedor, quem lê as vendas sem custo.ver, outra rede, técnico, sem vínculo e visitante. R4 (14/11, revisão do estado): o aceite (acesso cruzado e negação por ID arbitrário) está provado; o inventário de autorização cobre hoje 149 funções SECURITY DEFINER contra os 13 tipos de atacante e falha se aparecer função nova sem casos. BANCO-a (17/11, Onda 0.5): RLS ligado na última tabela do esquema privado sem ele (identificadores_itens; nenhum papel da API tinha privilégio) e o comentário de acesso só por função nas 10 tabelas com RLS e sem política; o teste de higiene do esquema falha se uma tabela futura do privado nascer sem RLS. FALTA: a conferência do Codex das correções REV-001, REV-002, #27 a #29, #45 e #56 (o estado volta a "testado" depois dela) e a homologação.
+
+**Evidência declarada:**
+packages/banco/src/acesso.test.ts; packages/banco/src/revisao-codex.test.ts; packages/banco/src/autorizacao-funcoes.test.ts; packages/banco/src/vendas-painel.test.ts; packages/banco/supabase/migrations/20261113065706_margem_painel.sql; packages/banco/src/margem-painel.test.ts; packages/banco/supabase/migrations/20261117141658_indices_e_rls_do_banco.sql; packages/banco/src/higiene-do-esquema.test.ts; docs/aceite/BANCO-a.md
+
+## ORA-ORG-005 — Histórico de alterações de papéis, políticas e configurações
+
+- Área: Organização, lojas e usuários; prioridade: P0.
+- Estado anterior: `testado`; atual: `testado`; homologação integral documentada: não.
+- Critério original: Auditoria identifica ator, horário, alvo e motivo.
+- Dependência declarada: não especificada no checkpoint; isso não prova ausência de pendências.
+
+**Nota do implementador, preservada integralmente:**
+Auditoria automática (gatilho) em organizações, empresas, unidades, perfis, papéis, permissões, matriz papel × permissão, vínculos e categorias: ator, horário, alvo, antes/depois e motivo, separada por organização (REV-002). Aplicada no ora5g-dev em 08/11. Conferido pelo Codex em 08/11 nos testes de banco e na correspondência dos objetos remotos. Homologação pelo proprietário e uso por usuário real continuam pendentes.
+
+**Evidência declarada:**
+packages/banco/supabase/migrations/20261108150432_auditoria_automatica_acesso.sql; packages/banco/src/auditoria-acesso.test.ts
+
+## ORA-ORG-006 — Login, recuperação de conta e revogação de sessão
+
+- Área: Organização, lojas e usuários; prioridade: P0.
+- Estado anterior: `parcial`; atual: `parcial`; homologação integral documentada: não.
+- Critério original: Acessos revogados deixam de funcionar; mensagens neutras.
+- Dependência declarada: não especificada no checkpoint; isso não prova ausência de pendências.
+
+**Nota do implementador, preservada integralmente:**
+Login real com escolha da loja, sessão por turno no banco (sessão viva no Auth, até 12 h e no mesmo dia: sair ou revogar corta o acesso na hora, mesmo com token válido), bloqueio e encerramento de vínculo imediatos, saída forçada com mensagem neutra, convite e recuperação por link com definição de senha. Testado no banco (acesso-equipe.test.ts) e nas regras/E2E do app. Falta (até 15/11): SMTP e modelos de e-mail no painel (proprietário), prova com usuário real (#11, depende da SUPABASE_SECRET_KEY) e confirmação de senha recente para ações da equipe (ADR-002 §2.6). Revisão do Codex (PR #33, trazida em 10/11): #27 a #30 e #45 (aprovação própria legível com token anterior); corrigidos no lote 1 (b967870), aguardando a conferência do Codex. ORG-006b (15/11): a confirmação de senha recente (ADR-002 §2.6) — aprovar desconto, aprovar a nota, conferir o caixa, decidir a saída de dinheiro e mexer na equipe pedem a senha, o código do segundo fator ou o link do e-mail nos últimos 30 minutos (o amr do JWT; OR033 antes de gravar), e a tela leva a /conta/confirmar (o código do celular para quem tem o segundo fator, na mesma sessão; a senha para os outros, numa sessão nova que volta para a mesma loja) e volta para a tela da ação. Migration 20261115181750_confirmacao_recente (antes 20261115190000) aplicada no ora5g-dev em 15/11, com o sim do proprietário. FALTA: SMTP e modelos de e-mail no painel (proprietário), a prova com usuário real (#11, J1), a conferência do Codex e a homologação. INTEG-a (16/11, #96, REV-PROMPT-003): a lembrança do sino de pendências é da pessoa e da loja (outra pessoa na mesma aba lê de novo do servidor) e a tela de entrada a apaga (saída, sessão revogada ou vencida); regressão em apps/plataforma/src/lib/inicio/sino.test.ts. Complemento da #96 (16/11, critério de aceite da issue lido depois que o repositório ficou público): quando a releitura do sino é mandada para o login (sessão encerrada ou revogada) ou recusada (401/403), a lista anterior sai na hora; outra falha apaga a lembrança da aba e só mantém a lista enquanto ela tem menos de um minuto (apps/plataforma/src/lib/inicio/sino.test.ts). VEL-a (16/11, ADR-010): a identidade de quem entrou passou a vir da assinatura do token (auth.getClaims; com a chave assimétrica do projeto, sem ida ao serviço de login a cada tela) e a decisão continua sendo do banco, em cada pedido: public.molde_da_sessao devolve a mesma linha de situacao_da_sessao e nenhuma permissão a quem não pode seguir (bloqueado, vínculo encerrado, saída, turno vencido, segundo fator pendente). Os testes de revogação e bloqueio passam no banco (packages/banco/src/sessao-molde-e-pdv.test.ts, no banco de teste em memória, e packages/banco/src/sessao-molde-e-pdv-concorrencia.test.ts, num PostgreSQL 17 de verdade com duas conexões: o bloqueio feito pelo dono em outra conexão e a sessão apagada em outro lugar valem no pedido seguinte de quem já estava dentro, e também na transação que já estava aberta) e na plataforma (apps/plataforma/src/lib/acesso/sessao.test.ts: pessoa bloqueada ou sessão encerrada sai mesmo com o token ainda válido, e a tela seguinte pergunta de novo). FALTA também: confirmar, com um login novo e o log de tempos, qual chave assina os tokens do ora5g-dev.
+
+**Evidência declarada:**
+packages/banco/supabase/migrations/20261108202654_acesso_sessao_e_equipe.sql; packages/banco/src/acesso-equipe.test.ts; apps/plataforma/src/lib/acesso; apps/plataforma/e2e/acesso-real.spec.ts; packages/banco/supabase/migrations/20261115181750_confirmacao_recente.sql; packages/banco/src/confirmacao-recente.test.ts; apps/plataforma/src/lib/acesso/confirmacao.ts; apps/plataforma/src/lib/acesso/confirmacao.test.ts; apps/plataforma/src/app/conta/confirmar; apps/plataforma/src/app/conta/confirmar/confirmar.test.ts; docs/adr/ADR-010-sessao-idas-ao-banco-e-retorno-imediato.md; packages/banco/supabase/migrations/20261117015315_sessao_molde_e_pdv.sql; packages/banco/src/sessao-molde-e-pdv.test.ts; packages/banco/src/sessao-molde-e-pdv-concorrencia.test.ts; apps/plataforma/src/lib/acesso/sessao.ts; apps/plataforma/src/lib/acesso/sessao.test.ts
+
+## ORA-ORG-007 — Autenticação reforçada para perfis privilegiados
+
+- Área: Organização, lojas e usuários; prioridade: P1.
+- Estado anterior: `parcial`; atual: `parcial`; homologação integral documentada: não.
+- Critério original: MFA e política de sessão validados com segurança.
+- Dependência declarada: D-046 (obrigatoriedade para dono e administrador; retirada de quem perdeu os celulares, que pede a chave de serviço da J1).
+
+**Nota do implementador, preservada integralmente:**
+ORG-007a (15/11): a verificação em duas etapas do Supabase Auth (TOTP: o código de 6 algarismos do aplicativo autenticador do celular), opcional por pessoa, em /conta/seguranca: o cadastro (o QR vai do Supabase direto para o aparelho; o código confirma), o celular de reserva e a retirada. Depois da senha, quem ligou digita o código em /entrar/codigo. O banco exige o código de quem o ligou: privado.vinculos_vigentes(), por onde passam todas as permissões, nega tudo à sessão sem ele (aal1), pela tela ou pela API direta; situacao_da_sessao traz segundo_fator_pendente, e a tela leva ao código. Quem não ligou segue como antes. A troca de senha (inclusive a recuperação pelo e-mail) de quem tem o segundo fator passa antes pelo código. A tela só oferece o cadastro quando o banco já exige o código. Migration 20261115164226_segundo_fator (antes 20261115170000) aplicada no ora5g-dev em 15/11, com o sim do proprietário. FALTA: a obrigatoriedade para o dono e o administrador e a retirada de quem perdeu todos os celulares (D-046; a retirada pede a chave de serviço, J1); a política de sessão validada com segurança (hoje: o turno de 12 horas no mesmo dia, ADR-002 §2.6); a prova com usuário real (J1); a revisão do Codex e a homologação.
+
+**Evidência declarada:**
+packages/banco/supabase/migrations/20261115164226_segundo_fator.sql; packages/banco/src/segundo-fator.test.ts; apps/plataforma/src/lib/acesso/segundo-fator.ts; apps/plataforma/src/lib/acesso/segundo-fator.test.ts; apps/plataforma/src/app/entrar/codigo; apps/plataforma/src/app/entrar/codigo/codigo.test.ts; apps/plataforma/src/app/conta/seguranca; apps/plataforma/src/app/conta/seguranca/seguranca.test.ts; apps/plataforma/src/lib/acesso/regras.test.ts; apps/plataforma/src/app/conta/senha/senha.test.ts
+
+## ORA-ORG-008 — Configurar horários, endereços, caixas e dados fiscais por loja
+
+- Área: Organização, lojas e usuários; prioridade: P1.
+- Estado anterior: `testado`; atual: `testado`; homologação integral documentada: não.
+- Critério original: Mudanças versionadas com regras de vigência.
+- Dependência declarada: não especificada no checkpoint; isso não prova ausência de pendências.
+
+**Nota do implementador, preservada integralmente:**
+Configuração por loja com vigência (lote L2, 10/11): telefone, endereço (CEP, rua, número, complemento, bairro), inscrições estadual e municipal e horário por dia da semana, em versões só de inclusão com 'vale desde' agora ou futuro (nunca retroativo), motivo e auditoria; repetir a mesma vigência ou salvar sem mudar não duplica; histórico de versões na tela /lojas; leitura segue a visibilidade da loja (RLS). Falta: caixas e terminais por loja (lote L7), dados reais (lista B2), revisão do Codex e homologação. R5 (15/11, revisão do estado): o FALTA acima (caixas e terminais por loja) foi entregue: o caixa é aberto por loja e por operador desde o PDV, e as maquininhas (terminais) são cadastradas por loja desde o L7a (/pagamentos/maquininhas). O aceite (mudanças versionadas, com vigência) está provado desde o L2. FALTA: os dados reais das lojas (lista B2, do proprietário), a revisão do Codex e a homologação.
+
+**Evidência declarada:**
+packages/banco/supabase/migrations/20261111132503_lojas_cadastro_e_configuracao.sql; packages/banco/src/lojas.test.ts; apps/plataforma/src/app/lojas; apps/plataforma/src/lib/lojas/regras.test.ts; packages/banco/src/pagamentos-conciliacao.test.ts
+
+## ORA-ORG-009 — Gerir unidades regionais, grupos e metas agregadas
+
+- Área: Organização, lojas e usuários; prioridade: P1.
+- Estado anterior: `testado`; atual: `testado`; homologação integral documentada: não.
+- Critério original: Relatórios respeitam hierarquia de acesso.
+- Dependência declarada: não especificada no checkpoint; isso não prova ausência de pendências.
+
+**Nota do implementador, preservada integralmente:**
+Lote ORG-009 (14/11): regiões da rede (tabela regioes e a região de cada loja). Em /lojas, quem gere as lojas (unidades.gerir: dono e administrador) cria, renomeia, inativa e reativa a região e escolhe a região de cada loja, com motivo e auditoria; nome repetido é recusado (sem diferença de maiúscula e minúscula), região inativa não recebe loja e só inativa sem loja ativa nela; nada se apaga. No Início e nos Relatórios da rede inteira, as vendas somam por região e a meta da rede mostra a meta por região (a soma das metas das lojas dela). ORG-009b (14/11): o resultado do mês da rede também soma por região. A região não dá acesso: quem vê cada loja continua decidido pelo vínculo (o gerente regional é um gerente com vínculo nas lojas da região), e as telas só somam o que a pessoa já vê (provado no banco: o vendedor da loja A não vê a loja B na mesma região). Migration 20261115000433_regioes aplicada no ora5g-dev em 14/11, com o sim do proprietário. FALTA: a revisão do Codex e a homologação.
+
+**Evidência declarada:**
+packages/banco/supabase/migrations/20261115000433_regioes.sql; packages/banco/src/regioes.test.ts; packages/banco/src/autorizacao-funcoes.test.ts; apps/plataforma/src/lib/lojas/regioes.test.ts; apps/plataforma/src/app/lojas/lojas.test.ts; apps/plataforma/src/app/relatorios/relatorios.test.ts; apps/plataforma/src/app/inicio/inicio.test.ts
+
+## ORA-ORG-010 — Preparar multi-CNPJ/UF para expansão física nacional
+
+- Área: Organização, lojas e usuários; prioridade: P2.
+- Estado anterior: `parcial`; atual: `parcial`; homologação integral documentada: não.
+- Critério original: Vínculos fiscais e locais operam sem dados globais hard-coded.
+- Dependência declarada: não especificada no checkpoint; isso não prova ausência de pendências.
+
+**Nota do implementador, preservada integralmente:**
+R3 (14/11): conferido no código. Cada loja tem CNPJ próprio (validado no banco), UF e cidade, e as inscrições estadual e municipal com vigência (L2); a empresa guarda a raiz do CNPJ e a rede pode ter várias. Não há CNPJ nem UF fixos no código (a lista de UFs só valida o endereço). FALTA: o fuso horário por loja (o dia das vendas, do caixa e dos relatórios é o de Brasília, America/Sao_Paulo, em toda a rede: 26 migrations e as telas; a coluna unidades.fuso existe, com Brasília em todas, mas as contas não a usam) e os parâmetros fiscais por UF, que dependem do contador (ORA-FISC-010).
+
+**Evidência declarada:**
+packages/banco/supabase/migrations/20261107140352_fundacao_acesso.sql; packages/banco/supabase/migrations/20261111132503_lojas_cadastro_e_configuracao.sql; packages/banco/src/lojas.test.ts
+
+## ORA-CAT-001 — Cadastrar categorias, marcas, produtos, variantes e SKUs
+
+- Área: Catálogo e precificação; prioridade: P0.
+- Estado anterior: `testado`; atual: `testado`; homologação integral documentada: não.
+- Critério original: SKU interno identificado e único no escopo definido.
+- Dependência declarada: não especificada no checkpoint; isso não prova ausência de pendências.
+
+**Nota do implementador, preservada integralmente:**
+Categorias, marcas, produtos por tipo e variações com SKU e código de barras únicos no banco (ADR-003 proposto, aplicado no ora5g-dev em 08/11). Desde 08/11 (noite): tela real /catalogo lendo pelo RLS, sem custo para quem não tem custo.ver. 09/11 (lote 3): busca por nome, SKU e nome da variante feita no banco antes do limite (#40). Lote L3a (10/11): tela /produtos com cadastro e edição de categorias, marcas, produtos e variações por quem tem catalogo.gerir (dono e administrador), com motivo e auditoria; repetir não duplica (nome sem diferença de maiúsculas, SKU, chave do formulário); SKU fixo depois de usado; inativar exige estoque zerado (OR020). A importação da Rein é o ORA-CAT-002. Aguardando revisão do Codex e homologação. Lote R2 (12/11, REV-NOV-006, issue #73): a unicidade sem diferença de maiúsculas de categoria, marca e SKU passou a valer no banco para qualquer escritor (índices únicos por lower() em categorias, marcas e variações), e a importação pega as mesmas travas de nome do cadastro manual. Duplicata que já existisse seria renomeada com auditoria, sem apagar nem mesclar (no ora5g-dev não havia nenhuma). Disputa real em PostgreSQL 17: categoria e marca de mesmo nome pelo cadastro e pela importação, nas duas ordens, e fica uma só. Limite declarado: lower() não iguala acentos.
+
+**Evidência declarada:**
+packages/banco/supabase/migrations/20261108150620_catalogo_estoque.sql; packages/banco/src/catalogo-estoque.test.ts; apps/plataforma/src/app/catalogo/busca.test.ts; packages/banco/supabase/migrations/20261111132621_catalogo_cadastro.sql; packages/banco/src/catalogo-cadastro.test.ts; apps/plataforma/src/app/produtos; apps/plataforma/src/lib/catalogo/cadastro.test.ts; packages/banco/supabase/migrations/20261112163333_importador_correcoes.sql; packages/banco/src/concorrencia.test.ts (R2)
+
+## ORA-CAT-002 — Importar produtos e preços da Rein somente por CSV/XLSX
+
+- Área: Catálogo e precificação; prioridade: P0.
+- Estado anterior: `parcial`; atual: `parcial`; homologação integral documentada: não.
+- Critério original: Prévia, validação, relatório de erro, confirmação e rollback lógico.
+- Dependência declarada: B1: arquivo real da Rein para testar o mapeamento (o importador não supõe o formato).
+
+**Nota do implementador, preservada integralmente:**
+Lote L3c (11/11): importação por planilha CSV em /produtos/importar, sem supor o formato da Rein (a pessoa diz qual coluna é cada campo; o servidor relê o arquivo, em UTF-8 ou Windows-1252, e calcula a impressão digital). Prévia no banco sem mexer no catálogo (criar, atualizar, igual ou erro, com o relatório de erros por linha e as diferenças), aprovação por outra pessoa (administrador gera, dono aplica; OR024), aplicação tudo-ou-nada com antes e depois por linha, o mesmo arquivo não se aplica duas vezes (OR023) e desfazer lógico (volta o que ainda está como a importação deixou, sem apagar nada). Até 2.000 linhas por arquivo (3.000 linhas medidas em 3 s num PostgreSQL 17; o limite da API é 8 s). Aplicada no ora5g-dev. Falta: testar com o arquivo real da Rein (pendência B1), estoque inicial por arquivo (lote L4) e XLSX direto (hoje: salvar a planilha como CSV); revisão do Codex e homologação. Lote R2 (12/11; achados REV-NOV-002, 006, 007 e 008 e a observação 003 da revisão da PR #68; issues #70, #73, #74 e a parte da importação da #75, numeração conferida pelo Codex em 13/11): a aprovação só aplica a prévia que ainda vale. Cada linha guarda o estado do cadastro com que foi comparada e a importação guarda a versão da comparação; aplicar exige a versão conferida, refaz a comparação de todas as linhas sob trava e, se algo mudou, não grava nada e devolve a prévia nova para a conferência. O desfazer volta só o que a importação gravou e ninguém tocou depois (identidade do preço, do custo e do evento de auditoria de cada linha) e registra, linha a linha, o que voltou e o que ficou, com o motivo. Categoria, marca e SKU ficaram únicos sem diferença de maiúsculas no banco (índices por lower()), e a importação pega as mesmas travas do cadastro manual e do preço manual. A tela confere o arquivo inteiro (100 linhas por página, com filtro por ação), e não só as 300 primeiras linhas. Aplicada no ora5g-dev em 12/11 (37 migrations). Medido num PostgreSQL 17 local com 2.000 linhas: prévia 0,26 a 0,39 s, comparação refeita 0,10 s, aplicação 0,78 a 1,08 s e desfazer 0,70 a 1,73 s. Limites declarados no pedido de revisão: migration e aplicação publicadas juntas (a função de aplicar de dois argumentos deixou de existir); teto de 2.500 travas por importação, com os valores de produção a conferir antes do deploy; importação antiga sem identidade mantém preço e custo ao desfazer. Continua faltando: testar com o arquivo real da Rein (B1), estoque inicial por arquivo e XLSX direto; revisão do Codex e homologação. CAT-002b (15/11): a planilha do Excel (.xlsx) entra direto, sem salvar como CSV (lib/importacao/xlsx.ts, sem biblioteca: o ZIP com limite de tamanho e soma CRC-32 de cada parte, o XML percorrido numa passada só, a primeira aba visível, o número como o Excel mostra no formato Geral, sem arredondar dinheiro), com os mesmos limites e mensagens do CSV e até 100 colunas nos dois formatos (o relatório de produtos da Rein tem 83; eram 60). A prévia aponta a linha do arquivo (no Excel, a da folha; no CSV, a linha onde o registro começa); o seletor de colunas mostra a letra de cada coluna e a aba lida; o .xls antigo (ou com senha) tem mensagem própria; a rota confere importacao.executar antes de ler o arquivo. REIN-a (17/11; plano de 16/11, Onda 1, item 3, a parte sem o arquivo): o leitor aceita até 10.000 linhas e 10.000 caracteres por célula (a observação de 3.220 caracteres da célula K955 deixa de parar a leitura); o limite de 500 vale para cada campo que entra, como erro daquela linha; acima de 2.000 linhas, uma prévia por parte (cada uma com a própria impressão digital); a linha de total no fim fica de fora, gravada no mapeamento e mostrada na prévia. FALTA: testar com o arquivo real da Rein (B1), estoque inicial por arquivo, revisão do Codex e homologação. INTEG-b (16/11, #95): a aplicação de 2.000 linhas cabe no orçamento de 8 s com folga: a comparação refeita atualiza as estatísticas (privado.importacao_atualizar_estatisticas) e a aplicação roda com os índices obrigatórios; medido no teste do orçamento (concorrencia.test.ts, duas rodadas): a carga em catálogo já preenchido de 7,2 s (8,5 s no CI do GitHub) para 1,0-1,1 s; migration 20261116130100_importacao_estatisticas (aplicada no ora5g-dev pela integração GitHub × Supabase no merge, 16/11). FALTA também: a planilha original inteira (2.271 produtos, 83 colunas; K955 com 3.220 caracteres e o teto de 2.000 linhas) e a carga de estoque por local. AUD-a (18/11; achado F01 da auditoria do Codex de 17/11): o relatório de produtos da Rein termina com uma linha de totais sem a palavra "Total" (a 2.273 do arquivo de 10/11, só com números), que entrava como produto sem código e sem nome e travava a segunda parte. Agora o rodapé de totais sem rótulo (a última linha, sem código e sem nome, com números em duas colunas ou mais) fica de fora, com o motivo e a conferência das somas na prévia; a linha do meio sem código e a última com algum texto continuam indo à prévia. FALTA: a prova com o arquivo original (no servidor, em ~/entrada/rein/) e a carga do estoque por loja (REIN-b). REIN-b (18/11; ADR-021): a mesma planilha da Rein também carrega o estoque de cada loja (/estoque/carga), com o rodapé de totais de fora pela regra do F01, sem supor o formato (a pessoa confirma as colunas de cada loja).
+
+**Evidência declarada:**
+packages/banco/supabase/migrations/20261111135906_importacao_catalogo.sql; packages/banco/src/importacao.test.ts; apps/plataforma/src/lib/importacao; apps/plataforma/src/app/produtos/importar; packages/banco/supabase/migrations/20261112163333_importador_correcoes.sql; packages/banco/src/importacao-correcoes.test.ts; packages/banco/src/concorrencia.test.ts (R2); apps/plataforma/src/lib/importacao/regras.test.ts; apps/plataforma/src/app/produtos/importar/importar.test.ts; apps/plataforma/src/lib/importacao/xlsx.ts; apps/plataforma/src/lib/importacao/xlsx.test.ts; apps/plataforma/src/lib/importacao/planilha.ts; apps/plataforma/src/lib/importacao/csv.test.ts; apps/plataforma/src/app/produtos/importar/importar.test.ts; apps/plataforma/src/lib/importacao/catalogo.ts; apps/plataforma/src/app/produtos/importar/enviar/route.ts; docs/aceite/REIN-a.md; apps/plataforma/src/lib/importacao/catalogo.ts; apps/plataforma/src/lib/importacao/catalogo.test.ts; docs/alinhamento/LEITURA_AUDITORIA_2026-11-17.md; docs/aceite/AUD-a.md; packages/banco/supabase/migrations/20261118021151_estoque_inicial_por_arquivo.sql; packages/banco/src/estoque-carga.test.ts; apps/plataforma/src/lib/estoque/carga.ts; apps/plataforma/src/app/estoque/carga; docs/adr/ADR-021-estoque-inicial-por-arquivo.md; docs/aceite/REIN-b.md
+
+## ORA-CAT-003 — Não consumir API Rein em nenhuma operação diária
+
+- Área: Catálogo e precificação; prioridade: P0.
+- Estado anterior: `respeitado`; atual: `respeitado`; homologação integral documentada: não.
+- Critério original: Nenhum módulo de runtime depende de rede/credencial Rein.
+- Dependência declarada: não especificada no checkpoint; isso não prova ausência de pendências.
+
+**Nota do implementador, preservada integralmente:**
+Nenhum código usa a API da Rein. Importação só por arquivo (DEC-U04/DEC-U24).
+
+**Evidência declarada:**
+busca no repositório
+
+## ORA-CAT-004 — Cadastrar preços vigentes por loja/canal conforme regra
+
+- Área: Catálogo e precificação; prioridade: P0.
+- Estado anterior: `testado`; atual: `testado`; homologação integral documentada: não.
+- Critério original: Preço final tem origem explicável e histórico.
+- Dependência declarada: não especificada no checkpoint; isso não prova ausência de pendências.
+
+**Nota do implementador, preservada integralmente:**
+Preço com histórico por loja e canal, campanha com período e preço vigente consultável em qualquer momento (preco_vigente), sem apagar o anterior. A venda guarda o preço do momento e recusa concluir se ele mudou (OR007, ADR-004). Lote L3b (11/11): tela /produtos/precos por quem tem preco.alterar, com o que vale em cada loja e por quê (campanha, preço da loja ou da rede), preço novo agora ou agendado (um agendamento por alcance, OR022), cancelamento do que não começou e o passado protegido no banco (precos_protegidos: valor, início e o que já valeu não mudam, nem pelo dono do banco). Aplicada no ora5g-dev. Aguardando revisão do Codex e homologação. Lote R2 (12/11): a importação pega a mesma trava do preço manual antes de trocar o preço geral de uma variação, e o preço que alguém decidiu depois da prévia não é sobrescrito nem desfeito por ela. Em preco_definir, "ainda vai começar" passou a ser medido pelo relógio do instante, e não pelo início da transação: o preço manual que esperou atrás de outra gravação recebe "tente de novo" (40001), e nunca "mudança agendada" (OR022) por engano. preco_cancelar não mudou (limite declarado).
+
+**Evidência declarada:**
+packages/banco/supabase/migrations/20261108150620_catalogo_estoque.sql; packages/banco/src/catalogo-estoque.test.ts; packages/banco/supabase/migrations/20261111133804_precos_e_campanhas.sql; packages/banco/src/precos.test.ts; packages/banco/src/concorrencia.test.ts (L3b); apps/plataforma/src/app/produtos/precos; apps/plataforma/src/lib/catalogo/precos.test.ts; packages/banco/supabase/migrations/20261112163333_importador_correcoes.sql; packages/banco/src/concorrencia.test.ts (R2)
+
+## ORA-CAT-005 — Diferenciar smartphone, acessório, chip e serviço comercial
+
+- Área: Catálogo e precificação; prioridade: P0.
+- Estado anterior: `testado`; atual: `testado`; homologação integral documentada: não.
+- Critério original: Tipos exigem campos apropriados sem tabelas isoladas de venda.
+- Dependência declarada: não especificada no checkpoint; isso não prova ausência de pendências.
+
+**Nota do implementador, preservada integralmente:**
+Tipos no banco iguais aos de packages/dominio, com exigências: aparelho só com IMEI, chip só com ICCID, acessório por quantidade, serviços sem estoque. A venda real (ADR-004, adicionar_item) aplica o tipo: aparelho e chip um a um com o item, acessório por quantidade com reserva, serviço sem estoque. Lote L3a (10/11): o cadastro pela tela escolhe o tipo uma vez (não muda depois) e só pede estoque mínimo para quem tem estoque. Aguardando revisão do Codex e homologação.
+
+**Evidência declarada:**
+packages/dominio/src/venda.ts; packages/banco/supabase/migrations/20261108150620_catalogo_estoque.sql; packages/banco/src/catalogo-estoque.test.ts; packages/banco/src/vendas.test.ts; packages/banco/src/catalogo-cadastro.test.ts
+
+## ORA-CAT-006 — Pesquisar por nome, SKU e, quando aplicável, IMEI/ICCID
+
+- Área: Catálogo e precificação; prioridade: P0.
+- Estado anterior: `testado`; atual: `testado`; homologação integral documentada: não.
+- Critério original: Busca rápida funciona no celular sem leitor.
+- Dependência declarada: não especificada no checkpoint; isso não prova ausência de pendências.
+
+**Nota do implementador, preservada integralmente:**
+Validação de IMEI (dígito verificador), ICCID e CPF prontas e testadas; busca por nome, marca, SKU, código de barras e final do IMEI na demonstração (desde o CAT-006, 14/11, também na busca real). Revisão das telas (10/11): a mesma busca no catálogo, no estoque e no PDV (lib/catalogo/busca.ts): nome do produto, nome da variação, SKU, IMEI, segundo IMEI e ICCID; antes só o catálogo achava pelo nome do produto e o PDV não via o segundo IMEI (busca.test.ts). CAT-009 (14/11): a mesma busca acha a variação também pelo código ativo dela em outro canal, como o da Rein (migration do CAT-009 aplicada no ora5g-dev em 14/11). CAT-006 (14/11): a busca única passa a achar também pela marca (traz os produtos dela), pelo código de barras e pelo final do IMEI ou do segundo IMEI de aparelho em estoque (de 4 a 14 dígitos; o IMEI inteiro continua na busca exata), no catálogo, no estoque, na entrada de mercadoria e no PDV, e os rótulos das buscas dizem isso. FALTA: a revisão do Codex e a homologação no celular da loja (J1).
+
+**Evidência declarada:**
+packages/dominio/src/identificadores.ts; apps/plataforma/src/app/demo/vender/PDV.tsx; apps/plataforma/src/lib/catalogo/busca.ts; apps/plataforma/src/lib/catalogo/busca.test.ts; apps/plataforma/src/app/vender/page.tsx; apps/plataforma/src/app/estoque/page.tsx
+
+## ORA-CAT-007 — Programar vigência de promoções e campanhas comerciais
+
+- Área: Catálogo e precificação; prioridade: P1.
+- Estado anterior: `testado`; atual: `testado`; homologação integral documentada: não.
+- Critério original: Preço aplicado respeita período e autorização.
+- Dependência declarada: não especificada no checkpoint; isso não prova ausência de pendências.
+
+**Nota do implementador, preservada integralmente:**
+Lote L3b (11/11): campanha com início e fim por loja ou rede e por canal, gravada por quem tem preco.alterar, com motivo e auditoria; vale acima do preço da loja e do geral só no período; campanhas do mesmo alcance não se sobrepõem (OR021); dura no máximo um ano; a que não começou é cancelada e a em curso é encerrada agora, sem reescrever o passado. Aplicada no ora5g-dev. Aguardando revisão do Codex e homologação.
+
+**Evidência declarada:**
+packages/banco/supabase/migrations/20261111133804_precos_e_campanhas.sql; packages/banco/src/precos.test.ts; apps/plataforma/src/app/produtos/precos
+
+## ORA-CAT-008 — Custo de produto/lote/entrada e margem gerencial
+
+- Área: Catálogo e precificação; prioridade: P1.
+- Estado anterior: `testado`; atual: `testado`; homologação integral documentada: não.
+- Critério original: Custo histórico de venda não muda retroativamente.
+- Dependência declarada: não especificada no checkpoint; isso não prova ausência de pendências.
+
+**Nota do implementador, preservada integralmente:**
+Custo com histórico, visível só com custo.ver (vendedor não vê; testado). A venda guarda o custo do momento (venda_itens_custos): custo novo não muda venda passada. Lote L4a (11/11): custo por entrada (compra ou carga inicial) vira o custo atual da variação, com a referência da entrada; a importação também grava custo (L3c). Falta: relatório de margem gerencial (lote L8). Lote R1 (12/11, REV-NOV-001, issue #69): o custo de entrada deixou de ser legível direto nas tabelas do recebimento (entradas_estoque e entrada_itens) e na auditoria do cabeçalho da entrada para quem não tem custo.ver; as funções de leitura devolvem custo nulo e a tela diz que o custo está oculto, sem valor e sem zero. Pendência declarada: o estorno da entrada não desfaz o custo atual adotado (último custo, sem média ponderada) e não há tela de correção de custo; a regra precisa ser explícita antes da margem gerencial. Lote R2 (12/11, REV-NOV-007): o desfazer da importação só volta o custo que a própria importação gravou e que ainda é o vigente (pela identidade da linha de custo); custo lançado depois fica, mesmo com o mesmo valor, e sem custo anterior à importação o custo fica como está, com o motivo gravado na linha. Limite declarado: as linhas da prévia trazem o custo do arquivo e são lidas por quem lê a importação; hoje todo papel com permissão de importação tem custo.ver, e um teste do banco prende essa relação. R5 (15/11, revisão do estado): o "relatório de margem gerencial" do Falta acima foi entregue no G2a (a margem bruta por dia e por item nos Relatórios, pelo custo gravado no item quando entrou na venda) e no L8b (o resultado do mês). O aceite (o custo histórico da venda não muda) está provado (venda_itens_custos). FALTA: a correção do custo atual (o estorno da entrada voltar o custo anterior e uma tela de correção do custo com motivo; hoje vale o último custo gravado, sem média ponderada), a revisão do Codex e a homologação. CAT-008b (15/11): a correção do custo atual. O estorno da entrada passa a voltar o custo: o custo de cada variação da entrada vira o que o histórico diz sem ela (privado.custo_pelo_historico: o último custo definido por importação, correção ou entrada registrada); se outra coisa definiu depois, nada muda; sem custo anterior, o atual fica. A função custo_corrigir grava o custo certo com motivo (o dono e o administrador: catalogo.gerir e custo.ver na rede), e o cartão "Custo" dos preços da variação mostra o custo de agora, de onde veio e os anteriores. Todo custo gravado entra na auditoria (só para quem vê custo na rede). Média ponderada: não (vale o último custo definido). Migration 20261115102535_correcao_do_custo (antes 20261115090000) aplicada no ora5g-dev em 15/11, com o sim do proprietário. FALTA: a revisão do Codex e a homologação.
+
+**Evidência declarada:**
+packages/banco/supabase/migrations/20261108150620_catalogo_estoque.sql; packages/banco/src/catalogo-estoque.test.ts; packages/banco/supabase/migrations/20261111141337_entrada_estoque.sql; packages/banco/src/entrada-estoque.test.ts; packages/banco/supabase/migrations/20261112033713_recebimento_correcoes.sql; packages/banco/supabase/migrations/20261112163333_importador_correcoes.sql; packages/banco/src/importacao.test.ts; packages/banco/src/margem-painel.test.ts; packages/banco/supabase/migrations/20261115102535_correcao_do_custo.sql; packages/banco/src/correcao-do-custo.test.ts; apps/plataforma/src/lib/catalogo/custos.test.ts; apps/plataforma/src/app/produtos/precos/precos.test.ts
+
+## ORA-CAT-009 — Canais externos usam mapeamento de SKU e IDs próprios
+
+- Área: Catálogo e precificação; prioridade: P1.
+- Estado anterior: `testado`; atual: `testado`; homologação integral documentada: não.
+- Critério original: Identificadores externos não substituem PK interna.
+- Dependência declarada: não especificada no checkpoint; isso não prova ausência de pendências.
+
+**Nota do implementador, preservada integralmente:**
+Lote CAT-009 (14/11): cada variação guarda os códigos que tem em outros canais (Rein, site, Mercado Livre, Shopee e TikTok Shop, DEC-U13), com o SKU no canal se houver, numa tabela à parte: o código só aponta para a variação, e o ID interno continua sendo a chave de venda, preço e estoque. Ligar e desligar pela tela /produtos, por quem gere o catálogo (dono e administrador), com motivo e auditoria; um código ativo de um canal fica numa só variação (sem diferença de maiúscula e minúscula); desligar só marca, e o histórico fica. A busca única acha a variação também pelo código ativo, e catalogo_variante_por_codigo(canal, código) devolve a variação para quem lê o catálogo (base da importação de pedidos dos canais, MKTPL-003). Migration 20261115000401_codigos_de_outros_canais aplicada no ora5g-dev em 14/11, com o sim do proprietário. FALTA: a revisão do Codex e a homologação.
+
+**Evidência declarada:**
+packages/banco/supabase/migrations/20261115000401_codigos_de_outros_canais.sql; packages/banco/src/codigos-de-outros-canais.test.ts; packages/banco/src/autorizacao-funcoes.test.ts; apps/plataforma/src/lib/catalogo/codigos.ts; apps/plataforma/src/app/produtos/produtos.test.ts; apps/plataforma/src/lib/catalogo/busca.test.ts
+
+## ORA-CAT-010 — Permitir importação assistida em lote de fotos/atributos
+
+- Área: Catálogo e precificação; prioridade: P2.
+- Estado anterior: `testado`; atual: `testado`; homologação integral documentada: não.
+- Critério original: Erros não criam duplicatas nem sobrescritas silenciosas.
+- Dependência declarada: não especificada no checkpoint; isso não prova ausência de pendências.
+
+**Nota do implementador, preservada integralmente:**
+Lote L3c (11/11): atributos em lote (nome, cor, capacidade, código de barras, preço e custo) pela importação por planilha, com prévia que mostra cada mudança, SKU e código de barras únicos (sem duplicar) e campo vazio que não apaga o valor atual (sem sobrescrita silenciosa). Falta: fotos em lote. Lote R2 (12/11): os atributos em lote seguem as correções do importador. A prévia desatualizada volta para a conferência em vez de sobrescrever o que mudou no cadastro; o desfazer não volta campo editado depois da importação (mesmo com o mesmo valor), e a variação criada só sai de circulação sem uso e sem trabalho posterior; SKU sem diferença de maiúsculas; conferência do arquivo inteiro, por página. Continua faltando: fotos em lote. CAT-010 (15/11): as fotos em lote, em /catalogo/lote (quem envia fotos: catalogo.fotos na loja do turno). O nome de cada arquivo é o SKU (sem diferença de maiúsculas); a foto vai para a cor daquele SKU quando o produto tem cores diferentes, senão vira a foto do produto. Antes de enviar, a tela mostra o destino de cada foto, se ela troca a foto atual e o que fica de fora e por quê (formato, nome, SKU sem variação ativa, segunda foto para o mesmo lugar, mais de 50). O envio é um a um, pelo mesmo caminho da foto avulsa (redução no aparelho, Storage como a pessoa logada, registrar_foto); o erro de cada foto fica nela, e a nova tentativa da que já foi ao Storage só registra. O aceite está provado: erro não duplica (a segunda foto para o mesmo lugar fica de fora; registrar o mesmo arquivo de novo devolve a mesma foto, lote 3) nem sobrescreve em silêncio (a troca aparece antes de enviar, e a foto anterior só sai de uso com a nova registrada, e fica no histórico). Sem migration. FALTA: a revisão do Codex e a homologação com fotos reais.
+
+**Evidência declarada:**
+packages/banco/supabase/migrations/20261111135906_importacao_catalogo.sql; packages/banco/src/importacao.test.ts; packages/banco/supabase/migrations/20261112163333_importador_correcoes.sql; packages/banco/src/importacao-correcoes.test.ts; apps/plataforma/src/lib/catalogo/lote-de-fotos.test.ts; apps/plataforma/src/app/catalogo/lote/lote.test.ts
+
+## ORA-CAT-011 — Exigir foto principal por produto e imagem própria para variantes visualmente diferentes
+
+- Área: Catálogo e precificação; prioridade: P0.
+- Estado anterior: `parcial`; atual: `parcial`; homologação integral documentada: não.
+- Critério original: Todos os produtos do catálogo piloto têm foto correspondente; busca, estoque e PDV exibem foto com nome/SKU e ampliação no celular; ausência de imagem é pendência, não foto genérica aceita.
+- Dependência declarada: não especificada no checkpoint; isso não prova ausência de pendências.
+
+**Nota do implementador, preservada integralmente:**
+Implementado em desenvolvimento (08/11): bucket privado no Storage com RLS por organização (vendedor vê, dono e gerente enviam: catalogo.fotos), caminho como identidade estável e URL assinada temporária, registro no banco com tamanho e tipo vindos do Storage, troca que guarda a anterior, ilustração só para item não físico, pendências (produto sem foto e cor sem foto própria) e tela /catalogo com miniatura, ampliação e envio pelo celular (redução no aparelho). FALTA: homologar com fotos reais e usuário real (critérios da #26), limpeza de arquivo enviado sem registro. 09/11 (lote 3): registro da mesma foto idempotente (#42), nova tentativa não reenvia o arquivo, foto quebrada volta com URL nova (#41), descartar libera o arquivo (#43); fixture de componentes do Codex verde. Fotos também no estoque real (/estoque) e no PDV real (/vender). Lote B5 (14/11, achado REV-PLAN-003 do Codex): leituras completas abaixo do teto de linhas da API (o PostgREST corta cada resposta no max_rows, 1.000 no padrão do Supabase, sem erro). No catálogo (/catalogo) e no cadastro (/produtos), as variações, as fotos e os saldos dos produtos da página vêm completos, lote a lote e página a página (200 produtos com mais de mil variações perdiam algumas); o aviso "mostrando os primeiros 200" passou a valer só quando há mesmo mais. CAT-010 (15/11): as fotos em lote (/catalogo/lote) usam o mesmo envio, a mesma redução no aparelho e o mesmo registro da foto avulsa, e seguem a mesma regra (a foto da cor quando o produto tem cores diferentes; senão, a do produto). CAT-011b (15/11): a limpeza das fotos enviadas sem registro. public.fotos_sem_registro lista os arquivos do bucket "produtos" das redes em que a pessoa envia fotos que nenhuma foto registrada usa (nem as substituídas) e foram enviados há mais de um dia; public.fotos_sem_registro_limpar confere de novo, tudo ou nada, e registra a limpeza na auditoria; a API do Storage apaga como a pessoa logada, e a política nova produtos_fotos_limpar confere cada arquivo (privado.foto_registrada, que não depende do que a pessoa enxerga). Na tela, o cartão "Arquivos sem registro" nas fotos em lote. Migration 20261115142547_limpeza_das_fotos (antes 20261115110000) aplicada no ora5g-dev em 15/11, com o sim do proprietário. FALTA: homologar com fotos reais e usuário real (critérios da #26), a conferência do Codex da correção B5 (REV-PLAN-003, que também mexeu no catálogo) e a revisão do Codex. INTEG-b (16/11, #98, REV-CONT-001): a limpeza das fotos sem registro virou protocolo (separar com a mesma trava do registro, apagar só o separado, concluir pelo que saiu do Storage de fato, com retentativa); o registro recusa o arquivo separado; provado com duas conexões no PostgreSQL 17 (packages/banco/src/fotos-concorrencia.test.ts) nas três ordens; migration 20261116102346_limpeza_das_fotos_protocolo.
+
+**Evidência declarada:**
+packages/banco/supabase/migrations/20261108204536_fotos_dos_produtos.sql; packages/banco/src/fotos-produto.test.ts; apps/plataforma/src/app/catalogo; apps/plataforma/src/lib/catalogo; packages/banco/src/fotos-lote3.test.ts; apps/plataforma/src/app/catalogo/busca.test.ts; packages/banco/supabase/migrations/20261115142547_limpeza_das_fotos.sql; packages/banco/src/limpeza-das-fotos.test.ts; apps/plataforma/src/lib/catalogo/fotos-sem-registro.test.ts
+
+## ORA-INV-001 — Manter disponibilidade por loja e localização física
+
+- Área: Estoque, serial/IMEI e suprimentos; prioridade: P0.
+- Estado anterior: `parcial`; atual: `parcial`; homologação integral documentada: não.
+- Critério original: Reserva/venda nunca usa saldo de outra loja sem transferência.
+- Dependência declarada: não especificada no checkpoint; isso não prova ausência de pendências.
+
+**Nota do implementador, preservada integralmente:**
+Saldo por loja no banco, isolado por RLS, e tela real /estoque: saldo da loja do turno com foto (ampliação no celular) com busca por nome/SKU, alerta abaixo do mínimo, busca por IMEI/ICCID com o histórico do livro e disponibilidade na rede sem IMEI. Falta: transferência entre lojas (ORA-INV-007) e homologação com usuário real. 09/11 (lote 3): busca por nome/SKU no banco antes do limite dos saldos (#40). 09/11 (lote 5, ADR-007): painel "onde tem" com físico, reservado, disponível e chegando por local, DEFEITOS à parte; pedido interno de transferência (pedir, separar, enviar, receber e conferir, recusar e cancelar). G3 (13/11): aba Painel do /estoque com a disponibilidade por modelo, categoria e local somada no banco (estoque_painel, sem o corte de 500 linhas da lista), com mínimo, trânsito, parado há mais de 60 dias e pendências; quem consulta mais de um local escolhe o recorte. Lote B5 (14/11, achado REV-PLAN-003 do Codex): leituras completas abaixo do teto de linhas da API (o PostgREST corta cada resposta no max_rows, 1.000 no padrão do Supabase, sem erro). A lista "Saldo da loja" do /estoque trazia os 500 primeiros saldos e dizia "500 produto(s)"; agora o total é contado no banco e a lista vem em páginas de 100, ordenada pelo nome; com busca, os saldos das variações achadas vêm completos (em lotes de ids) e a tela avisa quando a busca parou no limite. As fotos da página vêm completas. R4 (14/11, revisão do estado): o aceite (reserva e venda nunca usam saldo de outra loja sem transferência) está no banco e provado (item de outra loja recusado com OR003, reserva e venda só na loja do turno: integridade-estoque.test.ts e concorrencia.test.ts), e a transferência entre lojas existe desde o ADR-007 (09/11). FALTA: a conferência do Codex da correção B5 (REV-PLAN-003) e a homologação com usuário real (J1).
+
+**Evidência declarada:**
+packages/banco/supabase/migrations/20261108150620_catalogo_estoque.sql; packages/banco/src/catalogo-estoque.test.ts; apps/plataforma/src/app/estoque; apps/plataforma/src/lib/estoque/regras.test.ts; apps/plataforma/src/app/estoque/page.tsx; packages/banco/src/transferencias.test.ts; packages/banco/supabase/migrations/20261114012407_estoque_painel.sql; packages/banco/src/estoque-painel.test.ts; apps/plataforma/src/lib/estoque/painel.ts; apps/plataforma/src/app/estoque/PainelDoEstoque.tsx; apps/plataforma/src/app/estoque/saldo.test.ts; packages/banco/src/integridade-estoque.test.ts; packages/banco/src/concorrencia.test.ts
+
+## ORA-INV-002 — Identificar aparelho por IMEI/serial e impedir venda duplicada
+
+- Área: Estoque, serial/IMEI e suprimentos; prioridade: P0.
+- Estado anterior: `testado`; atual: `testado`; homologação integral documentada: não.
+- Critério original: Concorrência e unique indexes bloqueiam duplicidade.
+- Dependência declarada: não especificada no checkpoint; isso não prova ausência de pendências.
+
+**Nota do implementador, preservada integralmente:**
+IMEI, IMEI2 e ICCID num conjunto único por organização (REV-020/#19 corrigido por migration nova, aplicada no ora5g-dev em 08/11). Provado com duas conexões simultâneas num PostgreSQL 17 real: mesmo IMEI em duas entradas, IMEI de um × IMEI2 de outro e o mesmo aparelho disputado por dois vendedores. Correção conferida pelo Codex em 08/11 na base 55d10af (reproduções independentes e concorrência passaram; #19 a #22 encerradas; PR #33). A venda real consome a reserva e lança a saída na mesma transação (ADR-004). Não é homologação operacional. Lote R1 (12/11, REV-NOV-004, issue #71): o IMEI/ICCID estornado volta ao estoque pela mesma identidade (a reentrada não cria outra nem apaga o histórico); disputa real de duas entradas recebendo de volta o mesmo IMEI num PostgreSQL 17: uma reentra e a outra é recusada porque ele já voltou.
+
+**Evidência declarada:**
+packages/banco/supabase/migrations/20261108195850_integridade_estoque.sql; packages/banco/src/integridade-estoque.test.ts; packages/banco/src/concorrencia.test.ts; packages/banco/supabase/migrations/20261112033713_recebimento_correcoes.sql; packages/banco/src/entrada-estoque.test.ts
+
+## ORA-INV-003 — Registrar cada entrada/saída em livro auditável de estoque
+
+- Área: Estoque, serial/IMEI e suprimentos; prioridade: P0.
+- Estado anterior: `testado`; atual: `testado`; homologação integral documentada: não.
+- Critério original: Saldo reconciliável com movimentos e motivos.
+- Dependência declarada: não especificada no checkpoint; isso não prova ausência de pendências.
+
+**Nota do implementador, preservada integralmente:**
+Livro só de inserção; saldo = soma do livro e posição de cada aparelho/chip controlada pelo próprio livro, com o item travado (REV-022/#21 e REV-023/#22 corrigidos; saída legítima voltou a funcionar: o upsert antigo recusava toda saída). privado.divergencias_estoque() confere livro × saldo × itens × reservas e a migration só termina sem divergência. Regressões e concorrência real passando. Correção conferida pelo Codex em 08/11 na base 55d10af (PR #33). Revisão do Codex (PR #33, trazida em 10/11): #34 (repetição com conteúdo diferente) e #51 (cancelamento devolvendo item sem conferência) corrigidos no lote 2 (c071968), aguardando a conferência do Codex.
+
+**Evidência declarada:**
+packages/banco/supabase/migrations/20261108195850_integridade_estoque.sql; packages/banco/src/integridade-estoque.test.ts; packages/banco/src/concorrencia.test.ts
+
+## ORA-INV-004 — Receber estoque inicial validado por contagem real
+
+- Área: Estoque, serial/IMEI e suprimentos; prioridade: P0.
+- Estado anterior: `parcial`; atual: `parcial`; homologação integral documentada: não.
+- Critério original: Divergências e aprovadores ficam registrados.
+- Dependência declarada: não especificada no checkpoint; isso não prova ausência de pendências.
+
+**Nota do implementador, preservada integralmente:**
+Conferência física do dia na tela /estoque: progresso, conferir pelo IMEI/ICCID digitado ou item a item, gravada e auditada pelo banco (conferir_item); relatório de divergências no banco. Lote L4a (11/11): carga inicial pela tela /estoque/entrada (aparelho e chip pelo IMEI/ICCID validado e único, acessório por quantidade, condição e custo), por quem tem estoque.receber, com motivo, auditoria e estorno pelo livro. Falta: carga inicial pelo arquivo da Rein (B1), aprovadores do ajuste e inventário assinado (lote L4b). Lote R1 (12/11): a carga inicial pela tela segue as mesmas correções do recebimento (custo só com custo.ver, histórico completo, reentrada auditada da identidade estornada e recusa de produto inativo). Lote B2 (14/11, correção da issue #80, achado REV-DIR-003 do Codex): a conferência do dia lia só os 500 primeiros aparelhos e chips da loja e, com 501 e o último pendente, dizia "Tudo conferido". Agora total, conferidos e pendentes são contagens feitas no banco sobre todo o conjunto que a pessoa vê (o RLS vale em cada uma); a lista dos pendentes vem em páginas de 100, ordenada por variação e item; conferido em dia anterior conta como pendente; sem número do banco, a tela avisa e não declara nada; loja sem aparelho não aparece como "tudo conferido". Sem migration. R4 (14/11, revisão do estado): os aprovadores do ajuste e o inventário aprovado por outra pessoa vieram no L4b. FALTA: a carga inicial pelo arquivo da Rein (B1: o arquivo e o layout das 83 colunas, que não estão no servidor), a conferência do Codex da correção B2 (#80) e a homologação. REIN-b (18/11; ADR-021; a orientação "Primeiro lote" da auditoria do Codex de 17/11): o estoque inicial de cada loja pelo relatório de produtos, com a quantidade de cada local. Uma prévia por loja (o físico e o disponível do arquivo, a data de corte e o que acontece com cada produto: entrar, serializado, fora do catálogo, conferir com o motivo, nada); o dono aplica pelo livro (entrada com chave própria, sem nunca ser quem gerou a prévia); uma carga aplicada por loja de cada vez; desfazer devolve o que está livre. A loja que já tinha o produto na data de corte vai para conferência; o DEFEITOS recebe a carga. FALTA: o arquivo no servidor, a conta de administrador (J1) e a carga de verdade; os aparelhos e os chips entram pela Entrada de mercadoria, com o IMEI ou o ICCID.
+
+**Evidência declarada:**
+packages/banco/supabase/migrations/20261108150620_catalogo_estoque.sql; packages/banco/src/catalogo-estoque.test.ts; apps/plataforma/src/app/estoque; packages/banco/supabase/migrations/20261111141337_entrada_estoque.sql; packages/banco/src/entrada-estoque.test.ts; packages/banco/supabase/migrations/20261112033713_recebimento_correcoes.sql; apps/plataforma/src/lib/estoque/conferencia.ts; apps/plataforma/src/app/estoque/conferencia.test.ts; packages/banco/supabase/migrations/20261118021151_estoque_inicial_por_arquivo.sql; packages/banco/src/estoque-carga.test.ts; apps/plataforma/src/lib/estoque/carga.ts; apps/plataforma/src/app/estoque/carga; docs/adr/ADR-021-estoque-inicial-por-arquivo.md; docs/aceite/REIN-b.md
+
+## ORA-INV-005 — Reservar estoque durante checkout e liberar em expiração/cancelamento
+
+- Área: Estoque, serial/IMEI e suprimentos; prioridade: P0.
+- Estado anterior: `testado`; atual: `testado`; homologação integral documentada: não.
+- Critério original: Concorrência entre caixas e canais não vende duas vezes.
+- Dependência declarada: Autorização do proprietário para agendar a rotina de vencimento de reservas (cron do servidor ou pg_cron).
+
+**Nota do implementador, preservada integralmente:**
+Reserva com prazo, liberação, vencimento e idempotência no banco; a mesma chave só repete a mesma reserva (REV-021/#20). Concorrência real provada: último item, mesma chave, liberação × nova reserva e vencimento disputado; a rotina de vencimento não espera item em venda. Liberar reserva de outra pessoa exige permissão e fica auditado. O carrinho real reserva e a conclusão consome a reserva (ADR-004). ROT-a (17/11; ADR-011): a rotina de vencimento roda sozinha, pelo agendador do próprio banco (pg_cron), a cada 5 minutos: privado.rodar_rotina('reservas_vencidas') chama privado.expirar_reservas() sem filtro, vence as reservas do PDV e do site, devolve o aparelho e o saldo e não espera o aparelho preso por uma venda em andamento (fica para a rodada seguinte). Cada rodada fica registrada (privado.rotinas_execucoes: certa, com falha ou pulada, só com o código do erro); duas rodadas ao mesmo tempo não repetem o trabalho (provado no PostgreSQL 17 de verdade). Migration 20261117124230_rotinas_agendadas aplicada no ora5g-dev em 17/11; a primeira rodada automática, às 09:45, certa. Antes do ROT-a (L4b, 11/11), a reserva vencida só saía quando alguém reservava de novo o mesmo item.
+
+**Evidência declarada:**
+packages/banco/supabase/migrations/20261108195850_integridade_estoque.sql; packages/banco/src/integridade-estoque.test.ts; packages/banco/src/concorrencia.test.ts; packages/banco/src/catalogo-estoque.test.ts; packages/banco/supabase/migrations/20261117124230_rotinas_agendadas.sql; packages/banco/src/rotinas-agendadas.test.ts; packages/banco/src/rotinas-agendadas-concorrencia.test.ts; docs/adr/ADR-011-rotinas-agendadas-no-banco.md; docs/aceite/ROT-a.md
+
+## ORA-INV-006 — Bloquear venda de IMEI indisponível/transferido/reservado
+
+- Área: Estoque, serial/IMEI e suprimentos; prioridade: P0.
+- Estado anterior: `testado`; atual: `testado`; homologação integral documentada: não.
+- Critério original: Mensagem operacional clara e sem mutações parciais.
+- Dependência declarada: não especificada no checkpoint; isso não prova ausência de pendências.
+
+**Nota do implementador, preservada integralmente:**
+O banco recusa reservar ou movimentar IMEI/ICCID reservado, vendido, de outra loja ou já no estoque, com códigos próprios (OR002, OR003, OR005) e sem mudança parcial (item e lançamento juntos ou nenhum). Falta: mensagens na tela real. R4 (14/11, revisão do estado): as mensagens na tela real existem desde o PDV real (L6a): OR002 e OR005 viram "não está disponível (já reservado, vendido ou com a reserva vencida)" e OR003 "é de outra loja" (lib/vendas/regras.ts, agora com teste), e o banco não muda nada pela metade. FALTA: a conferência do Codex e a homologação.
+
+**Evidência declarada:**
+packages/banco/supabase/migrations/20261108195850_integridade_estoque.sql; packages/banco/src/integridade-estoque.test.ts; packages/banco/src/concorrencia.test.ts; apps/plataforma/src/lib/vendas/regras.ts; apps/plataforma/src/lib/vendas/regras.test.ts
+
+## ORA-INV-007 — Transferência entre lojas com trânsito/recebimento
+
+- Área: Estoque, serial/IMEI e suprimentos; prioridade: P1.
+- Estado anterior: `testado`; atual: `testado`; homologação integral documentada: não.
+- Critério original: Origem e destino confirmam quantidades e divergências.
+- Dependência declarada: não especificada no checkpoint; isso não prova ausência de pendências.
+
+**Nota do implementador, preservada integralmente:**
+Transferência entre lojas (ADR-007, 09/11): pedir, separar (IMEI/ICCID escolhido e reservado na origem), enviar (sai pelo livro, em trânsito), receber e conferir (só o IMEI/ICCID enviado; falta vira divergência com explicação), recusar e cancelar antes do envio; local DEFEITOS sem venda; painel "onde tem" e tela /transferencias. Testado em desenvolvimento; aguardando revisão do Codex. ORG-a (17/11): as 11 lojas e DEFEITOS estão cadastrados, pelo cadastro operacional. TRF-a (17/11; plano de 16/11, Onda 1, item 5; #60): a remessa, vários produtos pedidos de uma vez entre as mesmas duas lojas (até 30, cada um uma vez), cada produto uma transferência com o próprio caminho; a origem envia de uma vez as já separadas; a tela /transferencias/remessa monta o pedido. FALTA: o estoque das 11 lojas (a planilha da Rein), a revisão do Codex e a homologação. TRF-b (18/11; achado F10 da auditoria do Codex de 17/11): a tela de transferências diz o que cada passo fez no estoque (pedir não reserva; separar reserva na origem; enviar baixa o físico uma vez; receber põe no destino) e o saldo de agora de cada lado. Reservar já no pedido é a decisão D-049 do proprietário.
+
+**Evidência declarada:**
+packages/banco/supabase/migrations/20261109193043_transferencias_e_defeitos.sql; packages/banco/src/transferencias.test.ts; packages/banco/src/concorrencia.test.ts; apps/plataforma/src/app/transferencias; packages/banco/supabase/migrations/20261117165326_transferencia_remessa.sql; packages/banco/src/transferencia-remessa.test.ts; apps/plataforma/src/app/transferencias/remessa; docs/aceite/TRF-a.md; apps/plataforma/src/lib/transferencias/regras.ts; apps/plataforma/src/app/transferencias/transferencias.test.ts; docs/aceite/TRF-b.md
+
+## ORA-INV-008 — Inventário cíclico e ajuste com aprovação
+
+- Área: Estoque, serial/IMEI e suprimentos; prioridade: P1.
+- Estado anterior: `testado`; atual: `testado`; homologação integral documentada: não.
+- Critério original: Trilha permite reconstruir antes/depois e justificativa.
+- Dependência declarada: não especificada no checkpoint; isso não prova ausência de pendências.
+
+**Nota do implementador, preservada integralmente:**
+Lote L4b (11/11): inventário cíclico em /estoque/inventario. Quem tem estoque.conferir (gerente, vendedor e dono) abre o inventário de 1 a 300 itens da loja do turno e conta às cegas (a tela só mostra o que o sistema tem depois do envio): acessório por quantidade, aparelho e chip pelo IMEI/ICCID lido. O banco guarda o que o sistema tinha na hora de cada contagem, para a diferença não mudar com as vendas seguintes. Quem tem estoque.solicitar_ajuste envia com motivo; quem tem estoque.ajustar (dono) e não abriu nem enviou aprova ou recusa (OR025). Aprovado: acessório ajusta pela diferença (a mais: ajuste; a menos: perda), aparelho ou chip não encontrado e ainda livre sai como perda, o vendido/reservado/transferido depois fica como está e o lido sem cadastro na loja só é apontado. Ajuste que não cabe mais no saldo é barrado (OR001). Tudo com motivo, auditoria e chave de idempotência por item; nada se apaga. Aplicada no ora5g-dev. Falta: leitura pela câmera (vem com ORA-POS-016), revisão do Codex e homologação. Lote B1 (14/11, correções das issues #78 e #79, achados REV-DIR-001 e REV-DIR-002 do Codex): quem contou qualquer item, inclusive numa contagem refeita depois por outra pessoa, também não decide (OR025, antes só quem abriu ou enviou); cada contagem fica na trilha inventario_contagens (só inserção, com a última contagem de antes da correção). Aparelho e chip contam uma vez por unidade: cada código lido vira o item cadastrado na rede (IMEI, IMEI2 e ICCID num só conjunto) e só conta a unidade desta variação no estoque da loja; código sem cadastro, de outra loja ou fora do estoque e de outra variação viram alerta na tela, sem mexer no saldo. A migration 20261114145334_inventario_correcoes foi aplicada no ora5g-dev em 14/11, com o sim do proprietário.
+
+**Evidência declarada:**
+packages/banco/supabase/migrations/20261111142726_inventario.sql; packages/banco/src/inventario.test.ts; packages/banco/src/autorizacao-funcoes.test.ts; apps/plataforma/src/app/estoque/inventario; apps/plataforma/src/app/estoque/inventario/inventario.test.ts; packages/banco/supabase/migrations/20261114145334_inventario_correcoes.sql; apps/plataforma/src/app/estoque/inventario/inventario.test.ts
+
+## ORA-INV-009 — Compras e recebimento de fornecedores
+
+- Área: Estoque, serial/IMEI e suprimentos; prioridade: P1.
+- Estado anterior: `testado`; atual: `testado`; homologação integral documentada: não.
+- Critério original: Pedido, nota/entrega, custo e entrada identificáveis.
+- Dependência declarada: não especificada no checkpoint; isso não prova ausência de pendências.
+
+**Nota do implementador, preservada integralmente:**
+Lote L4a (11/11): recebimento de compras na tela /estoque/entrada por quem tem estoque.receber (dono e gerente, permissão nova; o gerente na loja do turno): fornecedor (cadastro com CNPJ opcional e validado), documento (nota ou pedido), aparelho e chip pelo IMEI/ICCID, acessório por quantidade, custo de entrada por linha, tudo numa transação com a chave do formulário (sem duplicar; OR004) e estorno pelo livro enquanto os itens estiverem livres (OR001/OR002). Aplicada no ora5g-dev. Falta: pedido de compra antes do recebimento e conferência da nota com o fornecedor; revisão do Codex e homologação. Lote R1 (12/11; achados REV-NOV-001, 004, 005 e 009 da revisão da PR #68, issues #69, #71, #72 e a parte de entradas da #75, numeração conferida pelo Codex em 13/11): o custo do recebimento saiu da leitura direta das tabelas (colunas fechadas) e só sai pelas funções estoque_entradas e estoque_entrada para quem tem custo.ver na loja; histórico completo e paginado das entradas da loja, com abertura pelo número e o estorno alcançável em qualquer entrada; a entrada aberta mostra a posição de hoje de cada IMEI/ICCID e o que impediria o estorno; IMEI/ICCID que saiu por estorno do recebimento volta pela própria entrada (reentrada auditada: mesma identidade, sem apagar e sem reescrever o livro), na loja e na variação certas; a entrada exige produto e variação ativos e segura os dois até o fim, e a inativação concorrente espera. Aplicada no ora5g-dev em 12/11. Continua faltando: pedido de compra antes do recebimento e conferência da nota com o fornecedor; reentrada de item baixado por perda ou ajuste (fora do escopo, segue pelo ajuste); revisão do Codex e homologação. INV-009a (15/11): o pedido de compra antes do recebimento (public.pedidos_compra e pedido_compra_itens; quem recebe mercadoria na loja: o fornecedor, a referência, a previsão, a observação e os itens com a quantidade e o custo combinado opcional; a mesma chave não duplica; encerrado com motivo, cancelado se nada chegou; nada muda nem se apaga depois) e a conferência com a nota: a compra registrada da mesma loja e do mesmo fornecedor liga ao pedido aberto (entradas_estoque.pedido_id, com motivo), e o pedido mostra, linha a linha, o pedido contra o recebido nas entradas ligadas (falta, a mais, fora do pedido; a estornada não conta) e, para quem vê custo, o custo combinado contra o da nota. Telas: /estoque/pedidos e o bloco "Pedido de compra" na entrada aberta. Migration 20261115150738_pedido_de_compra (antes 20261115150000) aplicada no ora5g-dev em 15/11, com o sim do proprietário. FALTA: a revisão do Codex e a homologação; a reentrada de item baixado por perda ou ajuste segue fora do escopo (pelo ajuste). INV-009b (15/11): receber a partir do pedido — o "Receber este pedido" do pedido aberto leva à entrada de mercadoria já preenchida com o que falta (a quantidade do acessório; aparelho e chip pela leitura, com quantos faltam), o custo combinado para quem vê custo e o fornecedor do pedido; registrada, a entrada sai ligada ao pedido (pedido_compra_ligar_entrada, com as mesmas conferências), e a ligação recusada deixa a entrada registrada e leva ao bloco do pedido. Sem migration.
+
+**Evidência declarada:**
+packages/banco/supabase/migrations/20261111141337_entrada_estoque.sql; packages/banco/src/entrada-estoque.test.ts; apps/plataforma/src/app/estoque/entrada; apps/plataforma/src/lib/estoque/entrada.test.ts; packages/banco/supabase/migrations/20261112033713_recebimento_correcoes.sql; packages/banco/src/concorrencia.test.ts; apps/plataforma/src/lib/estoque/historico-entradas.test.ts; apps/plataforma/src/app/estoque/entrada/entrada.test.ts; packages/banco/supabase/migrations/20261115150738_pedido_de_compra.sql; packages/banco/src/pedido-de-compra.test.ts; apps/plataforma/src/lib/estoque/pedidos-de-compra.test.ts; apps/plataforma/src/app/estoque/pedidos/pedidos.test.ts; apps/plataforma/src/app/estoque/entrada/entrada.test.ts; apps/plataforma/src/lib/estoque/receber-do-pedido.ts; apps/plataforma/src/lib/estoque/receber-do-pedido.test.ts; apps/plataforma/src/app/estoque/pedidos/pedidos.test.ts
+
+## ORA-INV-010 — Histórico de reparo/devolução e condição de unidade
+
+- Área: Estoque, serial/IMEI e suprimentos; prioridade: P1.
+- Estado anterior: `testado`; atual: `testado`; homologação integral documentada: não.
+- Critério original: Produto retornado não reaparece automaticamente como novo.
+- Dependência declarada: não especificada no checkpoint; isso não prova ausência de pendências.
+
+**Nota do implementador, preservada integralmente:**
+Lote L4b (11/11): a condição do item físico devolvido (novo, seminovo ou avariado) passa a ser obrigatória no banco (devolver_itens recusa sem ela; antes voltava "novo" por omissão) e na tela da venda (sem opção pré-escolhida). A condição de entrada já vinha do lote L4a e cada mudança fica no livro do estoque com motivo. L5e (14/11, sem migration): a busca por IMEI do estoque mostra, depois do livro do estoque, os consertos do aparelho (as OS da assistência pelos dois IMEIs, com o defeito, a situação e o caminho para a OS), pelo RLS de quem consulta. Falta: revisão do Codex e homologação.
+
+**Evidência declarada:**
+packages/banco/supabase/migrations/20261111142627_condicao_obrigatoria_na_devolucao.sql; packages/banco/src/devolucao.test.ts; apps/plataforma/src/app/vendas/[id]/page.tsx; apps/plataforma/src/lib/vendas/regras.test.ts; apps/plataforma/src/app/estoque/historico-do-aparelho.test.ts
+
+## ORA-INV-011 — Controle de ICCID de chip físico quando exigido
+
+- Área: Estoque, serial/IMEI e suprimentos; prioridade: P1.
+- Estado anterior: `parcial`; atual: `parcial`; homologação integral documentada: não.
+- Critério original: ICCID não é atribuído a duas ativações incompatíveis.
+- Dependência declarada: não especificada no checkpoint; isso não prova ausência de pendências.
+
+**Nota do implementador, preservada integralmente:**
+ICCID com dígito verificador, único e controlado chip a chip (proposta Q4 do ADR-003). Falta: ligar à ativação da Nogle.
+
+**Evidência declarada:**
+packages/banco/supabase/migrations/20261108150620_catalogo_estoque.sql; packages/banco/src/catalogo-estoque.test.ts
+
+## ORA-INV-012 — Transferência para CD e alocação futura a canais nacionais
+
+- Área: Estoque, serial/IMEI e suprimentos; prioridade: P2.
+- Estado anterior: `parcial`; atual: `parcial`; homologação integral documentada: não.
+- Critério original: Apropriação de localização e logística auditável.
+- Dependência declarada: não especificada no checkpoint; isso não prova ausência de pendências.
+
+**Nota do implementador, preservada integralmente:**
+R3 (14/11): o centro de distribuição é um local do tipo depósito. A entrada de mercadoria aceita o depósito (como a loja), e ele manda e recebe pelo mesmo pedido de transferência das lojas (pedir, separar, enviar, receber), com cada passo no livro do estoque (quem, de onde, para onde); provado num teste novo, ida e volta. Os painéis do estoque mostram o físico do depósito como fora da venda. FALTA: a decisão D-043 (hoje o banco deixa abrir venda no depósito; proposta: o depósito não vende) e a alocação a canais nacionais (estoque por canal), que depende da loja online e dos marketplaces (L13 e L14).
+
+**Evidência declarada:**
+packages/banco/src/transferencias.test.ts (centro de distribuição); packages/banco/supabase/migrations/20261109193043_transferencias_e_defeitos.sql; packages/banco/supabase/migrations/20261112033713_recebimento_correcoes.sql
+
+## ORA-CRM-001 — Cadastro de cliente com dados mínimos e finalidade
+
+- Área: Clientes, CRM, oportunidades e contratos; prioridade: P0.
+- Estado anterior: `testado`; atual: `testado`; homologação integral documentada: não.
+- Critério original: Dados obrigatórios dependem da operação; LGPD documentada.
+- Dependência declarada: não especificada no checkpoint; isso não prova ausência de pendências.
+
+**Nota do implementador, preservada integralmente:**
+Lote L5a (11/11, ADR-008): cadastro único da rede em /clientes/novo por quem tem cliente.cadastrar (dono, gerente, vendedor). Dados mínimos: nome e CPF/CNPJ ou telefone; cada finalidade marcada pede o que precisa (nota: documento; Ora Connect: documento, telefone e nascimento de pessoa física; financiamento: CPF, telefone, e-mail e nascimento; assistência: telefone; entrega: endereço) e nascimento/endereço sem finalidade que os justifique são recusados. CPF/CNPJ, telefone, e-mail, nascimento e endereço ficam em privado.cliente_dados (fora da API); a tabela pública guarda máscaras e um resumo com segredo da rede. O mesmo CPF não entra duas vezes (OR026, também com duas conexões ao mesmo tempo); telefone de outra pessoa pede confirmação (OR027). Correção com motivo; a auditoria guarda só o nome dos campos. Aplicada no ora5g-dev. Falta: política de retenção e direitos do titular com o jurídico (ORA-QUAL-011), revisão do Codex e homologação. Lote K1a (14/11, issue #76, decisão do proprietário de 12/11 documentada na PR #77): o cadastro rápido é nome completo (nome e sobrenome, para pessoa física) e WhatsApp com DDD; e-mail sempre opcional, inclusive no financiamento (a exigência do e-mail na venda PayJoy, DEC-U30, fica só na venda); a nota no nome do cliente pede o CPF/CNPJ e o endereço completo; o WhatsApp não se apaga (troca-se pelo número novo); o cadastro antigo sem WhatsApp continua valendo e a ficha avisa que falta, sem inventar número. Regra igual na tela, nas regras compartilhadas e no banco (migration 20261114145608_clientes_nome_e_whatsapp, aplicada no ora5g-dev em 14/11). Depois vieram a preparação fiscal com o destinatário guardado na nota (K1b, ORA-POS-011) e o envio pelo WhatsApp oficial (K1c, ORA-WHATS-006), que espera a habilitação da Meta (ORA-WHATS-001). INTEG-a (16/11): o e-mail ficou opcional também na PayJoy (no domínio, no PDV e na concluir_venda, migration 20261116095941_email_opcional_na_payjoy); a exigência de um parceiro só com o contrato dele comprovado, no adaptador e só na operação dele.
+
+**Evidência declarada:**
+packages/banco/supabase/migrations/20261111191909_clientes_compartilhados.sql; packages/banco/src/clientes.test.ts; packages/banco/src/concorrencia.test.ts; apps/plataforma/src/app/clientes; apps/plataforma/src/lib/clientes/regras.test.ts; docs/adr/ADR-008-cliente-compartilhado-e-dados-pessoais.md; packages/banco/supabase/migrations/20261114145608_clientes_nome_e_whatsapp.sql; packages/banco/src/clientes.test.ts; apps/plataforma/src/lib/clientes/regras.test.ts
+
+## ORA-CRM-002 — Relacionar cliente às compras/IMEIs/chips/linhas e atendimentos
+
+- Área: Clientes, CRM, oportunidades e contratos; prioridade: P0.
+- Estado anterior: `parcial`; atual: `parcial`; homologação integral documentada: não.
+- Critério original: Perfil 360 apresenta histórico autorizado por loja/função.
+- Dependência declarada: não especificada no checkpoint; isso não prova ausência de pendências.
+
+**Nota do implementador, preservada integralmente:**
+Lote L5a (11/11): a venda guarda o cliente da rede (vendas.cliente_id) escolhido pela busca exata no PDV, sem apagar o nome e o e-mail digitados (origem); corrigir depois exige motivo (venda_vincular_cliente, por quem vendeu ou vê as vendas da loja). A ficha mostra o total de compras da rede e só as vendas que a pessoa já pode ver (RLS). L5e (14/11, sem migration): a ficha mostra as OS do cliente (L12), as negociações com a etapa e o próximo passo e os contatos agendados (L5b) e as operações do Ora Connect das compras dele (ativação, portabilidade e recarga, com a linha só com o DDD e os quatro últimos dígitos), cada bloco pelo RLS de quem abre e lido à parte (falha aparece como falha; banco sem a tabela, o bloco some). Falta: as linhas e os chips como cadastro próprio da Ora Connect (L11, sem venda ligada), revisão do Codex e homologação. R4 (14/11, revisão do estado): FALTA: as linhas e os chips como cadastro próprio da Ora Connect, sem venda ligada (L11, depende da Nogle), a conferência do Codex e a homologação.
+
+**Evidência declarada:**
+packages/banco/supabase/migrations/20261111191909_clientes_compartilhados.sql; packages/banco/src/clientes.test.ts; apps/plataforma/src/app/vender/acoes.ts; apps/plataforma/src/app/vendas/[id]/page.tsx; apps/plataforma/src/app/clientes/clientes.test.ts; apps/plataforma/src/lib/clientes/historico.ts; apps/plataforma/src/app/clientes/clientes.test.ts
+
+## ORA-CRM-003 — Pesquisar cliente por identificadores protegidos
+
+- Área: Clientes, CRM, oportunidades e contratos; prioridade: P0.
+- Estado anterior: `testado`; atual: `testado`; homologação integral documentada: não.
+- Critério original: Resultados evitam expor CPF desnecessariamente.
+- Dependência declarada: não especificada no checkpoint; isso não prova ausência de pendências.
+
+**Nota do implementador, preservada integralmente:**
+Lote L5a (11/11): busca só exata (CPF/CNPJ ou telefone completos) para quem tem cliente.buscar; o dono (cliente.exportar) também por código e nome e lista os clientes. O vendedor e o gerente não leem a tabela (teste T11 do ADR-002). A busca e a ficha devolvem só máscaras; o dado inteiro aparece só quando pedido (cliente_revelar). Cada busca, ficha e revelação fica na auditoria sem o valor procurado; mais de 30 buscas ou revelações em 10 minutos pela mesma pessoa são barradas (OR028). O valor buscado vai no corpo da requisição, nunca no endereço. Falta: revisão do Codex e homologação.
+
+**Evidência declarada:**
+packages/banco/supabase/migrations/20261111191909_clientes_compartilhados.sql; packages/banco/src/clientes.test.ts; packages/banco/src/acesso.test.ts; packages/banco/src/autorizacao-funcoes.test.ts; apps/plataforma/src/app/clientes; apps/plataforma/src/lib/clientes/regras.test.ts; docs/adr/ADR-008-cliente-compartilhado-e-dados-pessoais.md
+
+## ORA-CRM-004 — Registrar lead, origem, atendente, vendedor responsável e etapa
+
+- Área: Clientes, CRM, oportunidades e contratos; prioridade: P0.
+- Estado anterior: `testado`; atual: `testado`; homologação integral documentada: não.
+- Critério original: Funil mostra histórico e próximo passo.
+- Dependência declarada: não especificada no checkpoint; isso não prova ausência de pendências.
+
+**Nota do implementador, preservada integralmente:**
+Lote L5b (11/11): funil em /crm. A oportunidade nasce do cliente da rede (L5a) com origem (loja, WhatsApp, Instagram, Facebook, Google, site, indicação, telefone, outro), campanha, interesse, valor estimado, quem atendeu primeiro, o vendedor responsável e o próximo passo com data. Etapas novo → contato → proposta → negociação → ganha (com a venda concluída do mesmo cliente, quando houver) ou perdida (motivo do catálogo; "outro" pede observação). Reabrir e trocar o responsável são da gerência (crm.gerir), com motivo; quem recebe precisa atender na loja. Cada mudança vira evento com autor e hora (histórico que só cresce); o funil mostra o atraso do próximo passo. Quem atende (crm.atender) vê e conduz as suas; a gerência, a loja. Chave do formulário contra duplicidade. Aplicada no ora5g-dev. Falta: leads automáticos do WhatsApp/Meta com UTM (L15/L16), regra de comissão na troca de responsável (D-015), revisão do Codex e homologação.
+
+**Evidência declarada:**
+packages/banco/supabase/migrations/20261111193816_crm_funil_e_agenda.sql; packages/banco/src/crm.test.ts; packages/banco/src/autorizacao-funcoes.test.ts; apps/plataforma/src/app/crm; apps/plataforma/src/lib/crm/regras.test.ts
+
+## ORA-CRM-005 — Atividades, lembretes, follow-up e motivos de perda
+
+- Área: Clientes, CRM, oportunidades e contratos; prioridade: P1.
+- Estado anterior: `testado`; atual: `testado`; homologação integral documentada: não.
+- Critério original: Histórico com autor e vencimento.
+- Dependência declarada: não especificada no checkpoint; isso não prova ausência de pendências.
+
+**Nota do implementador, preservada integralmente:**
+Lote L5b (11/11): agenda em /crm/agenda e na oportunidade. Atividades (ligação, mensagem, visita, tarefa) com descrição, vencimento e responsável, ligadas a uma oportunidade, só ao cliente ou da rotina; a gerência agenda para quem atende na loja. Concluir ou cancelar pede o resultado; a oportunidade guarda o que foi agendado e feito no histórico. Motivos de perda no catálogo. Atrasadas destacadas. Falta: avisos/lembretes ativos (notificação no celular ou WhatsApp, L15), revisão do Codex e homologação.
+
+**Evidência declarada:**
+packages/banco/supabase/migrations/20261111193816_crm_funil_e_agenda.sql; packages/banco/src/crm.test.ts; packages/banco/src/autorizacao-funcoes.test.ts; apps/plataforma/src/app/crm; apps/plataforma/src/lib/crm/regras.test.ts
+
+## ORA-CRM-006 — Detecção e mesclagem controlada de cadastros duplicados
+
+- Área: Clientes, CRM, oportunidades e contratos; prioridade: P1.
+- Estado anterior: `testado`; atual: `testado`; homologação integral documentada: não.
+- Critério original: Não perde compras/documentos; operação auditável.
+- Dependência declarada: não especificada no checkpoint; isso não prova ausência de pendências.
+
+**Nota do implementador, preservada integralmente:**
+Lote L5c (11/11): /clientes/duplicados, só para o dono (cliente.mesclar). Candidatos por mesmo telefone ou mesmo nome e nascimento (sem comparar todos com todos). Mesclar: o cadastro que fica recebe os dados que faltavam e todo o histórico (vendas, oportunidades, atividades, consentimentos); o outro vira "mesclado", aponta para o que ficou, perde os identificadores e não muda mais (gatilho). Documentos diferentes não se mesclam (OR029). "Não são a mesma pessoa" tira o par da lista. Motivo e auditoria em tudo; as vendas guardam o nome digitado na hora. Aplicada no ora5g-dev. Falta: revisão do Codex e homologação.
+
+**Evidência declarada:**
+packages/banco/supabase/migrations/20261111195120_clientes_mesclagem_e_segmentos.sql; packages/banco/src/clientes-mesclagem.test.ts; packages/banco/src/autorizacao-funcoes.test.ts; apps/plataforma/src/app/clientes/duplicados; apps/plataforma/src/app/clientes/clientes.test.ts
+
+## ORA-CRM-007 — Registros de consentimento/preferência de comunicação
+
+- Área: Clientes, CRM, oportunidades e contratos; prioridade: P1.
+- Estado anterior: `parcial`; atual: `parcial`; homologação integral documentada: não.
+- Critério original: Retirada afeta automações e respeita obrigações.
+- Dependência declarada: não especificada no checkpoint; isso não prova ausência de pendências.
+
+**Nota do implementador, preservada integralmente:**
+Lote L5a (11/11): consentimento por canal (WhatsApp, SMS, e-mail, ligação) e finalidade (ofertas, pós-venda) num histórico que só cresce, com origem, loja e quem registrou; repetir não duplica; canal sem contato cadastrado é recusado; retirar vale na hora em privado.cliente_pode_contatar, que as automações devem consultar. Falta: as automações (WhatsApp e campanhas, L15/L16) usarem a regra, com teste ponta a ponta; revisão do Codex e homologação.
+
+**Evidência declarada:**
+packages/banco/supabase/migrations/20261111191909_clientes_compartilhados.sql; packages/banco/src/clientes.test.ts; apps/plataforma/src/app/clientes/[id]/page.tsx
+
+## ORA-CRM-008 — Contratos/anexos de venda, garantia, financiamento e telecom
+
+- Área: Clientes, CRM, oportunidades e contratos; prioridade: P1.
+- Estado anterior: `parcial`; atual: `parcial`; homologação integral documentada: não.
+- Critério original: Acesso, assinatura, guarda e retenção adequados.
+- Dependência declarada: D-045 (guarda e descarte) e fornecedor de assinatura digital.
+
+**Nota do implementador, preservada integralmente:**
+Lote L5d (14/11): documentos da venda no comprovante (venda concluída ou cancelada): o contrato do financiamento, o termo de garantia, o contrato da linha, o comprovante assinado ou outro documento (descrito), em PDF ou foto de até 5 MB, conferido pelo conteúdo no servidor e guardado no armazenamento privado "anexos" com o SHA-256. Guarda quem vendeu ou a gerência da loja; lê quem lê a venda (o vendedor as próprias, a gerência as da loja), por link temporário; a gerência retira o documento errado, com o motivo, e nada se apaga (o registro e o arquivo ficam); até 20 vigentes por venda; tudo na auditoria. Migration 20261114205327_anexos_da_venda (aplicada no ora5g-dev em 14/11). FALTA: a guarda e o descarte (prazo legal, D-026, com o jurídico e o contador) e a assinatura digital (fornecedor a escolher; hoje o papel assinado é fotografado e guardado). Correção (15/11): a guarda e o descarte dos documentos são a decisão pendente D-045 (registrada no FIN-004b); a D-026, citada acima por engano, é a política de troca e devolução.
+
+**Evidência declarada:**
+packages/banco/supabase/migrations/20261114205327_anexos_da_venda.sql; packages/banco/src/anexos-da-venda.test.ts; packages/banco/src/autorizacao-funcoes.test.ts; apps/plataforma/src/lib/vendas/anexos.test.ts; apps/plataforma/src/app/vendas/[id]/anexos/anexos.test.ts; apps/plataforma/src/app/vendas/documentos-da-venda.test.ts
+
+## ORA-CRM-009 — Histórico omnichannel de compras físicas/online
+
+- Área: Clientes, CRM, oportunidades e contratos; prioridade: P1.
+- Estado anterior: `parcial`; atual: `parcial`; homologação integral documentada: não.
+- Critério original: Pedido externo e venda vinculados sem sobrescrever origem.
+- Dependência declarada: Pedidos externos dependem da loja online e dos marketplaces (L13/L14).
+
+**Nota do implementador, preservada integralmente:**
+L5c (11/11): a ficha do cliente mostra as compras da loja física e da loja online (canal da venda) no mesmo histórico, sem mudar a origem de cada uma. Falta: pedido externo (loja online própria e marketplaces, L13/L14) ligado à venda sem sobrescrever a origem.
+
+**Evidência declarada:**
+apps/plataforma/src/app/clientes/[id]/page.tsx; packages/banco/supabase/migrations/20261111191909_clientes_compartilhados.sql
+
+## ORA-CRM-010 — Segmentação comercial e valor de vida do cliente
+
+- Área: Clientes, CRM, oportunidades e contratos; prioridade: P2.
+- Estado anterior: `testado`; atual: `testado`; homologação integral documentada: não.
+- Critério original: Segmentos minimizam dados e são explicáveis.
+- Dependência declarada: não especificada no checkpoint; isso não prova ausência de pendências.
+
+**Nota do implementador, preservada integralmente:**
+Lote L5c (11/11): segmentos explicáveis sem dado novo (recalculados a cada consulta pelas compras concluídas, menos devoluções): recorrente, novo, ocasional, em risco, inativo e sem compra, com "alto valor" para o décimo de maior gasto líquido em 12 meses. A ficha mostra o segmento com a explicação (sem valores); o dono vê em /clientes/segmentos os totais, o alto valor, o líquido e quantos aceitam ofertas por canal (público possível de campanha). Falta: usar o público nas campanhas (L15/L16), revisão do Codex e homologação.
+
+**Evidência declarada:**
+packages/banco/supabase/migrations/20261111195120_clientes_mesclagem_e_segmentos.sql; packages/banco/src/clientes-mesclagem.test.ts; packages/banco/src/autorizacao-funcoes.test.ts; apps/plataforma/src/app/clientes/segmentos; apps/plataforma/src/lib/clientes/regras.ts
+
+## ORA-POS-001 — Efetuar venda completa em celular sem notebook
+
+- Área: PDV mobile e vendas; prioridade: P0.
+- Estado anterior: `parcial`; atual: `parcial`; homologação integral documentada: não.
+- Critério original: E2E em smartphone real da loja piloto.
+- Dependência declarada: não especificada no checkpoint; isso não prova ausência de pendências.
+
+**Nota do implementador, preservada integralmente:**
+PDV real no celular (/vender) ligado ao banco: caixa, busca, carrinho com reserva, desconto com aprovação, pagamento misto, conclusão e comprovante. Regras do banco testadas (13 cenários e concorrência real). FALTA: E2E com usuário real em smartphone da loja piloto (depende da SUPABASE_SECRET_KEY para criar o usuário de teste) e homologação. Revisão do Codex (PR #33, trazida em 10/11): 371cef0 pediu correção de #45 a #53 (feita nos lotes 1 e 2, aguardando a conferência do Codex) e E2E autenticado com pessoa de teste, que segue pendente.
+
+**Evidência declarada:**
+packages/banco/supabase/migrations/20261108233546_vendas_pagamentos_e_caixa.sql; packages/banco/src/vendas.test.ts; packages/banco/src/concorrencia.test.ts; apps/plataforma/src/app/vender; apps/plataforma/src/app/caixa; apps/plataforma/src/app/aprovacoes; apps/plataforma/src/app/vendas
+
+## ORA-POS-002 — Busca rápida por nome/SKU/IMEI e carrinho responsivo
+
+- Área: PDV mobile e vendas; prioridade: P0.
+- Estado anterior: `parcial`; atual: `parcial`; homologação integral documentada: não.
+- Critério original: Usabilidade e velocidade validadas com vendedor.
+- Dependência declarada: o aceite do VEL-a (docs/aceite/VEL-a.md); o E2E no celular que adiciona, tira e conclui depende do usuário de teste (J1); validar com o vendedor é da piloto.
+
+**Nota do implementador, preservada integralmente:**
+Busca por nome, SKU e IMEI/ICCID com foto, preço vigente e quantidade livre na loja. Falta (até 14/11): medir velocidade e validar com vendedor. Revisão das telas (10/11): o PDV usa a busca única: acha pelo nome do produto e pelo segundo IMEI; IMEI de 14 dígitos deixou de ser aceito como identificador. CAT-006 (14/11): a busca do PDV acha também pela marca, pelo código de barras e pelo final do IMEI (4 a 14 dígitos), sem leitor. VEL-a (16/11, ADR-010): a velocidade foi medida antes, no navegador do proprietário (conta do dono): abrir o PDV 2,5 a 2,8 s, buscar 4,7 s, "Adicionar" 3,6 s e "Tirar" 5,9 s, sem nenhum aviso durante a espera. O PDV passou a ler o caixa, a venda em andamento, o carrinho (com o preço, a campanha, a ordem de serviço e o pedido de desconto) e as maquininhas numa leitura só (public.pdv_tela), junto com a soltura das reservas vencidas do site: com a venda aberta, de 10 a 13 idas em fila para 2 rodadas; a busca dentro da venda, até 3 rodadas a mais; uma ação do carrinho, 4 rodadas. Os botões Buscar, Adicionar, Tirar, Nova venda e Concluir venda travam no toque e mostram o texto de espera. Provado em apps/plataforma/src/app/vender/vender.test.ts (49 casos, que falham na tela anterior) e em packages/banco/src/sessao-molde-e-pdv.test.ts (o carrinho igual ao que a tela lia em separado; a venda de uma loja não aparece no turno de outra; quem foi bloqueado ou saiu não lê mais o carrinho) e em packages/banco/src/sessao-molde-e-pdv-concorrencia.test.ts (PostgreSQL 17 de verdade, duas conexões: a tela não espera a ação do carrinho que outra conexão ainda não confirmou e mostra só o que foi confirmado). VEL-b (18/11): o preço de todos os resultados da busca numa ida só (public.precos_vigentes, migration 20261118095048_precos_em_lote, que chama preco_vigente: o mesmo preço, sem outra regra); até 9 pedidos ao mesmo tempo viraram 1; a falha da leitura leva à página de erro, nunca a "sem preço" para todos. FALTA: o aceite do proprietário pelo roteiro docs/aceite/VEL-a.md e pelo docs/aceite/VEL-b.md, com a medida do "depois" na homologação; o E2E em tela de celular que adiciona, tira e conclui uma venda (depende do usuário de teste, J1); validar com o vendedor na piloto.
+
+**Evidência declarada:**
+apps/plataforma/src/app/vender; apps/plataforma/src/app/caixa; apps/plataforma/src/app/aprovacoes; apps/plataforma/src/app/vendas; apps/plataforma/src/lib/vendas/pdv-tela.ts; apps/plataforma/src/app/vender/vender.test.ts; packages/banco/supabase/migrations/20261117015315_sessao_molde_e_pdv.sql; packages/banco/src/sessao-molde-e-pdv.test.ts; packages/banco/src/sessao-molde-e-pdv-concorrencia.test.ts; docs/aceite/VEL-a.md; packages/banco/supabase/migrations/20261118095048_precos_em_lote.sql; packages/banco/src/precos-em-lote.test.ts; apps/plataforma/src/app/vender/vender.test.ts
+
+## ORA-POS-003 — Itens mistos em venda: aparelho, acessório, chip, ativação, recarga
+
+- Área: PDV mobile e vendas; prioridade: P0.
+- Estado anterior: `parcial`; atual: `parcial`; homologação integral documentada: não.
+- Critério original: Itens mantêm natureza e regras próprias sem dupla contabilização.
+- Dependência declarada: não especificada no checkpoint; isso não prova ausência de pendências.
+
+**Nota do implementador, preservada integralmente:**
+Itens de aparelho, chip e acessório com estoque e serviço sem estoque mantêm o tipo do produto na venda; sem dupla contagem no livro. FALTA: ativação e recarga ligadas à Ora Connect (fila 11).
+
+**Evidência declarada:**
+packages/banco/supabase/migrations/20261108233546_vendas_pagamentos_e_caixa.sql; packages/banco/src/vendas.test.ts; packages/banco/src/concorrencia.test.ts
+
+## ORA-POS-004 — Selecionar IMEI físico disponível antes de concluir
+
+- Área: PDV mobile e vendas; prioridade: P0.
+- Estado anterior: `testado`; atual: `testado`; homologação integral documentada: não.
+- Critério original: Reserva e baixa atomizadas no banco.
+- Dependência declarada: não especificada no checkpoint; isso não prova ausência de pendências.
+
+**Nota do implementador, preservada integralmente:**
+Reserva do IMEI atômica (trava + índice único) ao pôr no carrinho; a conclusão consome a reserva e lança a saída 'venda' na mesma transação (ADR-004); reserva vencida barra a conclusão. Testado com concorrência real. FALTA: homologação com usuário real.
+
+**Evidência declarada:**
+packages/banco/supabase/migrations/20261108233546_vendas_pagamentos_e_caixa.sql; packages/banco/src/vendas.test.ts; packages/banco/src/concorrencia.test.ts; packages/banco/supabase/migrations/20261108195850_integridade_estoque.sql
+
+## ORA-POS-005 — Calcular preço/desconto e totais server-side
+
+- Área: PDV mobile e vendas; prioridade: P0.
+- Estado anterior: `testado`; atual: `testado`; homologação integral documentada: não.
+- Critério original: Cliente não consegue alterar preço enviado.
+- Dependência declarada: não especificada no checkpoint; isso não prova ausência de pendências.
+
+**Nota do implementador, preservada integralmente:**
+Preço lido do banco (preco_vigente) ao pôr no carrinho e conferido de novo na conclusão (preço mudou = OR007); totais, desconto e troco calculados no banco; o navegador só envia o pedido. Aguardando revisão do Codex. Revisão do Codex (PR #33, trazida em 10/11): #52 (valor ilegível virava zero na tela); corrigido no lote 2 (c071968), aguardando a conferência do Codex.
+
+**Evidência declarada:**
+packages/banco/supabase/migrations/20261108233546_vendas_pagamentos_e_caixa.sql; packages/banco/src/vendas.test.ts; packages/banco/src/concorrencia.test.ts
+
+## ORA-POS-006 — Solicitar aprovação do gerente para desconto acima do limite
+
+- Área: PDV mobile e vendas; prioridade: P0.
+- Estado anterior: `testado`; atual: `testado`; homologação integral documentada: não.
+- Critério original: Aprovador, limite, motivo, prazo e decisão auditáveis.
+- Dependência declarada: não especificada no checkpoint; isso não prova ausência de pendências.
+
+**Nota do implementador, preservada integralmente:**
+Pedido de aprovação com motivo, limite, validade de 30 min e conteúdo do item; aprova só quem tem desconto.aprovar e nunca quem pediu; mudar o item invalida; auditado. Sem política P14 todo desconto pede aprovação. Revisão do Codex (PR #33, trazida em 10/11): #45 (leitura da aprovação própria após revogação) e #53 (ordem das travas venda × aprovação) corrigidos nos lotes 1 e 2, aguardando a conferência do Codex.
+
+**Evidência declarada:**
+packages/banco/supabase/migrations/20261108233546_vendas_pagamentos_e_caixa.sql; packages/banco/src/vendas.test.ts; packages/banco/src/concorrencia.test.ts; apps/plataforma/src/app/aprovacoes
+
+## ORA-POS-007 — Suportar múltiplos pagamentos na mesma venda
+
+- Área: PDV mobile e vendas; prioridade: P0.
+- Estado anterior: `testado`; atual: `testado`; homologação integral documentada: não.
+- Critério original: Soma, troco, confirmação e estorno consistentes.
+- Dependência declarada: não especificada no checkpoint; isso não prova ausência de pendências.
+
+**Nota do implementador, preservada integralmente:**
+Pagamento misto com os 8 meios: soma, troco só de linha em dinheiro (banco = domínio, #48), comprovante em cartão e Pix também na entrada de financiamento (#46). Estorno no cancelamento: dinheiro líquido do troco com saldo conferido (#47/#49); cartão, Pix e financeira ficam a confirmar com o comprovante (#50). Link bloqueado até o provedor. Aguardando revisão do Codex. Revisão do Codex (PR #33, trazida em 10/11): 371cef0 rebaixou para parcial por #46 a #50; corrigidos no lote 2 (c071968), aguardando a conferência do Codex.
+
+**Evidência declarada:**
+packages/banco/supabase/migrations/20261108233546_vendas_pagamentos_e_caixa.sql; packages/banco/src/vendas.test.ts; packages/banco/src/concorrencia.test.ts; packages/banco/src/integridade-lote2.test.ts
+
+## ORA-POS-008 — Vincular venda a vendedor, loja, cliente quando aplicável e canal
+
+- Área: PDV mobile e vendas; prioridade: P0.
+- Estado anterior: `testado`; atual: `testado`; homologação integral documentada: não.
+- Critério original: Atribuição preservada em todas as consultas.
+- Dependência declarada: não especificada no checkpoint; isso não prova ausência de pendências.
+
+**Nota do implementador, preservada integralmente:**
+Venda gravada com loja, vendedor e canal; cliente por nome e e-mail até o CRM existir; RLS: vendedor vê as próprias, gerência a loja. FALTA: cliente do CRM. Revisão das telas (10/11): lista real /vendas: o vendedor vê as próprias vendas, a gerência a loja inteira com o nome de quem vendeu, a situação da nota e a devolução (vendas.test.ts, banco simulado). L5a (11/11): o PDV liga a venda ao cliente da rede pela busca exata (CPF ou telefone) na conclusão; o nome e o e-mail digitados seguem como origem; a venda concluída pode ser ligada depois, com motivo. R5 (15/11, revisão do estado): o FALTA acima (o cliente do CRM) foi entregue no L5a: o PDV liga a venda ao cliente da rede, e a venda concluída pode ser ligada depois, só por quem vendeu ou vê as vendas da loja, com motivo (clientes.test.ts). A atribuição (loja, vendedor, canal e cliente) é a gravada na venda e é a mesma em todas as consultas: a lista de vendas pelo RLS (o vendedor, as próprias; a gerência, a loja), os relatórios e as metas pelo vendedor de origem. FALTA: a revisão do Codex e a homologação. INTEG-a (16/11, #88, REV-PROMPT-002): o pedido da nota guarda o cliente da venda; trocar o cliente da venda depois não leva a nota de um cliente ao WhatsApp de outro (o pedido de envio é recusado e a tela explica); regressão em destinatario-fiscal.test.ts. INTEG-c (17/11, #101): a nota antiga sem identidade comprovada não vai pelo WhatsApp, nem a que já estava na fila (o worker falha o envio com o motivo); a gerência confere o PDF e confirma o cliente da venda, com o motivo na auditoria (nota_confirmar_destinatario).
+
+**Evidência declarada:**
+packages/banco/supabase/migrations/20261108233546_vendas_pagamentos_e_caixa.sql; packages/banco/src/vendas.test.ts; packages/banco/src/concorrencia.test.ts; packages/banco/src/clientes.test.ts; apps/plataforma/src/app/vendas/vendas.test.ts; packages/banco/supabase/migrations/20261117135133_identidade_da_nota_e_cota_da_loja.sql; packages/banco/src/identidade-da-nota.test.ts; apps/plataforma/src/app/vendas/nota-whatsapp.test.ts; docs/aceite/INTEG-c.md
+
+## ORA-POS-009 — Consultar status e comprovantes sem concluir pagamento pendente
+
+- Área: PDV mobile e vendas; prioridade: P0.
+- Estado anterior: `parcial`; atual: `parcial`; homologação integral documentada: não.
+- Critério original: Vendedor vê pendência e ação de reprocessamento segura.
+- Dependência declarada: não especificada no checkpoint; isso não prova ausência de pendências.
+
+**Nota do implementador, preservada integralmente:**
+Revisão das telas (10/11): lista real /vendas com período, situação e número, e o comprovante de cada venda; antes não havia como voltar a uma venda concluída. FALTA: pagamento pendente com reprocessamento (link de pagamento, linha E1). L6a (11/11): painel de pendências em /vendas: venda em aberto (retomar no PDV), esperando aprovação de desconto, nota com correção pedida, estorno a confirmar e item a conferir na volta, da mais antiga para a mais nova, cada uma levando à tela que resolve (repetir não duplica: chaves de idempotência). Continua faltando o pagamento pendente por link (E1).
+
+**Evidência declarada:**
+; apps/plataforma/src/app/vendas/Pendencias.tsx; apps/plataforma/src/app/vendas/pendencias.test.ts
+
+## ORA-POS-010 — Cancelar e devolver sem apagar origem
+
+- Área: PDV mobile e vendas; prioridade: P0.
+- Estado anterior: `parcial`; atual: `parcial`; homologação integral documentada: não.
+- Critério original: Reversão reflexa em estoque, pagamentos, fiscal e comissões.
+- Dependência declarada: não especificada no checkpoint; isso não prova ausência de pendências.
+
+**Nota do implementador, preservada integralmente:**
+Cancelamento total sem apagar (ADR-004) e devolução parcial (adendo de 09/11): a gerência devolve itens com motivo; estoque volta pelo livro com a condição informada; reembolso só nos meios pagos e até o que cada um pagou — cancelamento e devolução: o dinheiro sai do caixa; cartão, Pix e financeira ficam como estorno a confirmar com o comprovante (#50); no cancelamento os itens esperam o retorno conferido por IMEI/ICCID e condição (#51), e a devolução também confere o IMEI/ICCID. Item avariado ainda volta à loja com a condição registrada (DEFEITOS é o #60). Política comercial (D-026) pendente. Revisão do Codex (PR #33, trazida em 10/11): #47, #49, #50 e #51 corrigidos no lote 2 (c071968), aguardando a conferência do Codex. R4 (14/11, revisão do estado): o reflexo no fiscal e no bônus já existe: a venda com nota emitida só é cancelada depois de registrado o cancelamento no fisco (L10c), e a devolução e o cancelamento descontam do bônus no mês em que acontecem (L9a, D-014). FALTA: a política comercial de troca e devolução (D-026, do proprietário), a conferência do Codex das correções #47, #49, #50 e #51 e a homologação.
+
+**Evidência declarada:**
+packages/banco/supabase/migrations/20261109134507_devolucao_e_troca.sql; packages/banco/src/devolucao.test.ts; packages/dominio/src/pagamento.test.ts; apps/plataforma/src/lib/vendas/regras.test.ts; apps/plataforma/src/app/vendas/[id]/page.tsx; apps/plataforma/src/app/vender/acoes.ts; apps/plataforma/src/app/vender/page.tsx; packages/banco/src/integridade-lote2.test.ts
+
+## ORA-POS-011 — Gerar solicitação fiscal a partir da venda em poucos toques
+
+- Área: PDV mobile e vendas; prioridade: P0.
+- Estado anterior: `testado`; atual: `testado`; homologação integral documentada: não.
+- Critério original: Vendedor não precisa escolher documento fiscal incorreto.
+- Dependência declarada: não especificada no checkpoint; isso não prova ausência de pendências.
+
+**Nota do implementador, preservada integralmente:**
+Lote L6a (11/11): o pedido de nota nasce da venda concluída em um toque (fila fiscal do ADR-006). Com o cliente da rede ligado à venda, "no nome do cliente" faz o banco copiar o nome e o CPF/CNPJ do cadastro protegido: ninguém digita nem vê o documento; o cadastro ganha a finalidade nota fiscal e o uso fica na auditoria sem o valor. Quem vende nunca escolhe o tipo de documento fiscal (a nota é registrada pela chave; a matriz por operação é do contador, FISC-003/007). Aplicada no ora5g-dev. Falta: emissão automática (D1/A4), revisão do Codex e homologação. Lote K1b (14/11, #76): a nota no nome do cliente pede também o endereço completo do cadastro (sem ele, a tela da venda leva a completar o MESMO cadastro) e o pedido guarda o documento, o endereço, o cliente e a versão do cadastro usados (corrigir o cadastro depois não muda o pedido). Quem aprova a nota na loja ganhou "Dados para emitir" (/notas/[id]/emitir): nome, CPF/CNPJ e endereço para digitar no emissor enquanto a nota espera a emissão, cada abertura na auditoria sem os valores; depois da emissão os dados saem do pedido, como antes. Migration 20261114145952_notas_destinatario_completo (aplicada no ora5g-dev em 14/11).
+
+**Evidência declarada:**
+packages/banco/supabase/migrations/20261111200054_pdv_nota_do_cliente.sql; packages/banco/src/pdv-l6.test.ts; apps/plataforma/src/app/notas/acoes.ts; apps/plataforma/src/app/vendas/pendencias.test.ts; packages/banco/supabase/migrations/20261114145952_notas_destinatario_completo.sql; packages/banco/src/pdv-l6.test.ts; apps/plataforma/src/app/notas/[id]/emitir/emitir.test.ts
+
+## ORA-POS-012 — Troca com diferença de preço e meios de pagamento
+
+- Área: PDV mobile e vendas; prioridade: P1.
+- Estado anterior: `testado`; atual: `testado`; homologação integral documentada: não.
+- Critério original: Histórico e estoque correto na devolução/saída.
+- Dependência declarada: não especificada no checkpoint; isso não prova ausência de pendências.
+
+**Nota do implementador, preservada integralmente:**
+Troca: a devolução vira vale-troca (crédito na rede, sem dinheiro) e o vale paga a nova venda até o saldo, com a diferença em qualquer meio; sem troco do vale; vale sem saldo ou inexistente é recusado; o cancelamento da nova venda devolve o saldo. Histórico (devolução, itens, reembolsos, usos do vale) só de inserção. Política comercial (prazo, estado aceito) pendente: D-026.
+
+**Evidência declarada:**
+packages/banco/supabase/migrations/20261109134507_devolucao_e_troca.sql; packages/banco/src/devolucao.test.ts; packages/dominio/src/pagamento.test.ts; apps/plataforma/src/lib/vendas/regras.test.ts; apps/plataforma/src/app/vendas/[id]/page.tsx; apps/plataforma/src/app/vender/acoes.ts; apps/plataforma/src/app/vender/page.tsx
+
+## ORA-POS-013 — Venda parcelada/PayJoy/boleto por fluxo homologado
+
+- Área: PDV mobile e vendas; prioridade: P1.
+- Estado anterior: `parcial`; atual: `parcial`; homologação integral documentada: não.
+- Critério original: Etapas reais, aprovação e termos exigidos.
+- Dependência declarada: não especificada no checkpoint; isso não prova ausência de pendências.
+
+**Nota do implementador, preservada integralmente:**
+PayJoy/Aiva: preço, entrada (com o meio) e restante a receber da financeira, sem juros; e-mail opcional também na PayJoy desde 16/11 (INTEG-a). FALTA: prazo/taxa do repasse (P8) e termos da financeira. Revisão do Codex (PR #33, trazida em 10/11): #46 (entrada sem comprovante) e #48 (financiamento acima do preço) corrigidos no lote 2 (c071968), aguardando a conferência do Codex.
+
+**Evidência declarada:**
+packages/banco/supabase/migrations/20261108233546_vendas_pagamentos_e_caixa.sql; packages/banco/src/vendas.test.ts; packages/banco/src/concorrencia.test.ts
+
+## ORA-POS-014 — Aplicar campanhas, combos e regras por loja
+
+- Área: PDV mobile e vendas; prioridade: P1.
+- Estado anterior: `parcial`; atual: `parcial`; homologação integral documentada: não.
+- Critério original: Persistência da regra aplicada para auditoria.
+- Dependência declarada: não especificada no checkpoint; isso não prova ausência de pendências.
+
+**Nota do implementador, preservada integralmente:**
+L6b (13/11): cada item da venda grava em venda_itens.preco_id qual linha de public.precos deu o valor (a campanha da loja ou da rede, ou o preço da loja ou da rede), pela mesma escolha de preco_vigente (privado.preco_vigente_linha, uma regra só); encerrar a campanha depois não muda o item já vendido. A venda (/vendas/[id]) mostra a regra em cada item e o carrinho do PDV destaca o item com preço de campanha; a regra é lida à parte, e um banco ainda sem a migration não afeta a venda. A migration foi aplicada no ora5g-dev em 13/11 (md5 conferido). FALTA: combos e regras de desconto por loja (decisão D-035), revisão do Codex e homologação.
+
+**Evidência declarada:**
+packages/banco/supabase/migrations/20261114012647_venda_item_regra_de_preco.sql; packages/banco/src/venda-regra-de-preco.test.ts; apps/plataforma/src/lib/vendas/regra-de-preco.ts; apps/plataforma/src/app/vendas/regra-de-preco.test.ts
+
+## ORA-POS-015 — Atalhos para supervisor e estados offline/sem rede
+
+- Área: PDV mobile e vendas; prioridade: P1.
+- Estado anterior: `parcial`; atual: `parcial`; homologação integral documentada: não.
+- Critério original: Sem venda presumida como concluída sem confirmação.
+- Dependência declarada: não especificada no checkpoint; isso não prova ausência de pendências.
+
+**Nota do implementador, preservada integralmente:**
+Lote L6a (11/11): sem internet, uma faixa avisa que nada é gravado e todo formulário enviado é segurado no aparelho (não sai, não presume venda feita); a conclusão da venda mostra "confirmando" e só aparece como concluída na tela seguinte, depois que o banco gravou; repetir com a mesma chave devolve o mesmo resultado. Atalhos da gerência: aprovações, notas e pendências no menu e no início. Não há venda offline (decisão do projeto). PWA-a (17/11): no site instalável, a navegação sem internet mostra a página "Sem internet agora", guardada pelo service worker, em vez do erro do navegador; nada mais é guardado, e não há venda offline; provado no navegador com a rede desligada (e2e/site-instalavel.spec.ts). Falta: prova em celular da loja com a rede desligada (E2E autenticado, A1) e homologação.
+
+**Evidência declarada:**
+apps/plataforma/src/componentes/AvisoDeRede.tsx; apps/plataforma/src/componentes/BotaoConfirmar.tsx; apps/plataforma/src/app/vender/page.tsx; apps/plataforma/src/app/manifest.ts; apps/plataforma/public/sw.js; apps/plataforma/src/app/manifest.test.ts; apps/plataforma/e2e/site-instalavel.spec.ts; docs/aceite/PWA-a.md
+
+## ORA-POS-016 — Entrada por leitor USB/Bluetooth ou câmera
+
+- Área: PDV mobile e vendas; prioridade: P2.
+- Estado anterior: `parcial`; atual: `parcial`; homologação integral documentada: não.
+- Critério original: Sem mudança na regra central de busca/checkout.
+- Dependência declarada: não especificada no checkpoint; isso não prova ausência de pendências.
+
+**Nota do implementador, preservada integralmente:**
+Lote L6a (11/11): botão "Câmera" na busca do PDV lê código de barras e QR pela câmera do celular (BarcodeDetector do navegador, sem biblioteca externa) e envia como se fosse digitado: a regra da busca e do checkout não muda. Leitor USB/Bluetooth funciona como teclado no mesmo campo. Sem suporte no navegador (iPhone), avisa para digitar. Falta: teste em celular real da loja e homologação.
+
+**Evidência declarada:**
+apps/plataforma/src/componentes/LerCodigo.tsx; apps/plataforma/src/app/vender/page.tsx
+
+## ORA-PAY-001 — Registrar dinheiro, Pix direto, Pix PicPay POS e cartões
+
+- Área: Pagamentos, PicPay e caixa; prioridade: P0.
+- Estado anterior: `parcial`; atual: `parcial`; homologação integral documentada: não.
+- Critério original: Provider, terminal, método e comprovante quando disponível.
+- Dependência declarada: não especificada no checkpoint; isso não prova ausência de pendências.
+
+**Nota do implementador, preservada integralmente:**
+Dinheiro, Pix direto, Pix e cartão na maquininha PicPay, cartão PagSeguro registrados com comprovante e quem conferiu. FALTA: identificação do terminal (PAY-012). Revisão do Codex (PR #33, trazida em 10/11): #46 (comprovante na entrada de financiamento) corrigido no lote 2 (c071968), aguardando a conferência do Codex. Lote L7a (11/11): o terminal usado passou a ser identificado em cada pagamento por maquininha (PAY-012 entregue). REPORT-005b (14/11): a identificação do terminal está feita desde o L7a (o FALTA acima ficou para trás) e o /financeiro soma os pagamentos por maquininha. FALTA: a conferência do Codex da correção #46.
+
+**Evidência declarada:**
+packages/banco/supabase/migrations/20261108233546_vendas_pagamentos_e_caixa.sql; packages/banco/src/vendas.test.ts; packages/banco/src/concorrencia.test.ts; packages/banco/src/pagamentos-conciliacao.test.ts
+
+## ORA-PAY-002 — Suportar financiamento, boleto, parcelamento e pagamentos online
+
+- Área: Pagamentos, PicPay e caixa; prioridade: P0.
+- Estado anterior: `parcial`; atual: `parcial`; homologação integral documentada: não.
+- Critério original: Estados e elegibilidade definidos por integração específica.
+- Dependência declarada: não especificada no checkpoint; isso não prova ausência de pendências.
+
+**Nota do implementador, preservada integralmente:**
+Regra da venda financiada PayJoy/Aiva (DEC-U38) testada; o e-mail obrigatório na PayJoy (DEC-U30) caiu em 16/11 (INTEG-a): a regra do proprietário de 12/11 (#76) deixa o e-mail sempre opcional, e nenhum contrato da PayJoy o exige. Registro real da venda financiada e conta a receber pela ADR-004; #46 a #49 corrigidos no lote 2 (c071968). Falta o repasse (P8, E2) e os termos da financeira. R4 (14/11, revisão do estado): FALTA: o repasse e as taxas das financeiras (P8, E2), os termos de cada financeira, o boleto e o pagamento online (dependem do provedor a contratar, PAY-013) e a conferência do Codex das correções #46 a #49.
+
+**Evidência declarada:**
+packages/dominio/src/pagamento.test.ts
+
+## ORA-PAY-003 — Diferenciar autorizado, pago, liquidado, estornado e conciliado
+
+- Área: Pagamentos, PicPay e caixa; prioridade: P0.
+- Estado anterior: `parcial`; atual: `parcial`; homologação integral documentada: não.
+- Critério original: Relatórios não misturam venda com dinheiro recebido.
+- Dependência declarada: não especificada no checkpoint; isso não prova ausência de pendências.
+
+**Nota do implementador, preservada integralmente:**
+Lote L7a (11/11): situação real do dinheiro de cada pagamento, calculada no banco (situacao_do_dinheiro) e mostrada em /pagamentos/conciliacao: no caixa (dinheiro), a liquidar (cartão e Pix confirmados na loja), conciliado com o extrato (referência, valor líquido e data), a receber da financeira, pago com vale-troca, estorno a confirmar e estornado. Venda não é dinheiro recebido: nada vira liquidado sozinho. Aplicada no ora5g-dev. Falta: autorização e liquidação informadas pelo provedor (dependem de API contratada: PAY-013) e a importação de extratos (PAY-009, pendência E3). L7b (13/11): o valor a receber da financeira passa a ter o registro do repasse (recebido, data e referência), na mesma linha da conciliação de cartão e Pix. R4 (14/11, revisão do estado). EXT-a (17/11): a importação dos extratos por arquivo entrou (PAY-009, ADR-016): o pagamento passa a conciliado pela linha do extrato, com o líquido e a data do repasse, e o extrato separa o bruto, as taxas, o líquido e o que ainda vai cair. FALTA: a autorização e a liquidação informadas pelo provedor (PAY-013).
+
+**Evidência declarada:**
+packages/banco/supabase/migrations/20261111201342_pagamentos_maquininhas_e_conciliacao.sql; packages/banco/src/pagamentos-conciliacao.test.ts; apps/plataforma/src/app/pagamentos/conciliacao/page.tsx; packages/banco/supabase/migrations/20261114012722_financeiras_a_receber.sql; packages/banco/src/financeiras-a-receber.test.ts; apps/plataforma/src/lib/pagamentos/financeiras.ts; apps/plataforma/src/app/pagamentos/financeiras; packages/banco/supabase/migrations/20261117225818_extratos_e_conciliacao.sql; packages/banco/src/extratos.test.ts; apps/plataforma/src/lib/extratos; apps/plataforma/src/app/pagamentos/extratos; docs/adr/ADR-016-extratos-por-arquivo.md; docs/aceite/EXT-a.md
+
+## ORA-PAY-004 — Abrir caixa com saldo inicial e responsável
+
+- Área: Pagamentos, PicPay e caixa; prioridade: P0.
+- Estado anterior: `testado`; atual: `testado`; homologação integral documentada: não.
+- Critério original: Uma sessão ativa segundo regra por gaveta/terminal.
+- Dependência declarada: não especificada no checkpoint; isso não prova ausência de pendências.
+
+**Nota do implementador, preservada integralmente:**
+Caixa por pessoa e loja com fundo de troco; um aberto por vez; idempotente. Revisão do Codex (PR #33, trazida em 10/11): #47 (estorno de entrada deixava o caixa negativo) e #52 (fundo inválido virava zero) corrigidos no lote 2 (c071968), aguardando a conferência do Codex.
+
+**Evidência declarada:**
+packages/banco/supabase/migrations/20261108233546_vendas_pagamentos_e_caixa.sql; packages/banco/src/vendas.test.ts; packages/banco/src/concorrencia.test.ts; apps/plataforma/src/app/caixa
+
+## ORA-PAY-005 — Registrar sangria, suprimento, reforço, devolução e saída autorizada
+
+- Área: Pagamentos, PicPay e caixa; prioridade: P0.
+- Estado anterior: `testado`; atual: `testado`; homologação integral documentada: não.
+- Critério original: Cada movimento tem motivo, autor e impacto no saldo.
+- Dependência declarada: não especificada no checkpoint; isso não prova ausência de pendências.
+
+**Nota do implementador, preservada integralmente:**
+Suprimento e sangria com motivo, autor e efeito no dinheiro da gaveta; sangria não passa do dinheiro; lançamentos só de inserção; estorno e reembolso em dinheiro como movimento próprio. L7c (13/11), pela decisão do proprietário do mesmo dia (D-017 em parte: autoriza o gerente ou o dono): quem está com o caixa aberto pede a saída de dinheiro (valor até o dinheiro da gaveta, motivo de 3 a 200 letras, idempotente); outra pessoa com caixa.conferir na loja autoriza ou nega (negar pede motivo); quem pediu nunca autoriza a própria; ao autorizar, o banco lança 'saida_autorizada' (negativa, em dinheiro) no caixa de quem pediu, com a mesma trava do fechamento, e o fechamento já desconta; quem pediu cancela enquanto pende; tudo auditado. Telas: quadros 'Saída de dinheiro' e 'Saídas para autorizar' no /caixa, pendência no Início e a saída na movimentação dos caixas do /financeiro. A migration foi aplicada no ora5g-dev em 13/11 (md5 conferido). FALTA: revisão do Codex e homologação.
+
+**Evidência declarada:**
+packages/banco/supabase/migrations/20261108233546_vendas_pagamentos_e_caixa.sql; packages/banco/src/vendas.test.ts; packages/banco/src/concorrencia.test.ts; packages/banco/supabase/migrations/20261114012802_caixa_saida_autorizada.sql; packages/banco/src/caixa-saida.test.ts; apps/plataforma/src/lib/caixa/saidas.ts; apps/plataforma/src/app/caixa; apps/plataforma/src/app/caixa/caixa.test.ts
+
+## ORA-PAY-006 — Fechar caixa com valor contado e diferença
+
+- Área: Pagamentos, PicPay e caixa; prioridade: P0.
+- Estado anterior: `testado`; atual: `testado`; homologação integral documentada: não.
+- Critério original: Gerente confere e aprova divergência.
+- Dependência declarada: não especificada no checkpoint; isso não prova ausência de pendências.
+
+**Nota do implementador, preservada integralmente:**
+Fechamento com contagem, diferença e explicação obrigatória quando há diferença; conferência por outra pessoa com caixa.conferir. Aguardando revisão do Codex.
+
+**Evidência declarada:**
+packages/banco/supabase/migrations/20261108233546_vendas_pagamentos_e_caixa.sql; packages/banco/src/vendas.test.ts; packages/banco/src/concorrencia.test.ts
+
+## ORA-PAY-007 — Conciliação manual PicPay POS usando referência/comprovante
+
+- Área: Pagamentos, PicPay e caixa; prioridade: P0.
+- Estado anterior: `parcial`; atual: `parcial`; homologação integral documentada: não.
+- Critério original: Sem API não se presume liquidação automática.
+- Dependência declarada: não especificada no checkpoint; isso não prova ausência de pendências.
+
+**Nota do implementador, preservada integralmente:**
+Comprovante registrado em cada pagamento de maquininha e Pix (confirmação manual, sem presumir liquidação). FALTA: tela de conciliação com o extrato. Revisão do Codex (PR #33, trazida em 10/11): #46 e #50 (estorno sem comprovante) corrigidos no lote 2 (c071968), aguardando a conferência do Codex. Lote L7a (11/11): tela /pagamentos/conciliacao por quem tem pagamento.conciliar (dono e gerente, permissão nova): período de até 62 dias, totais por situação do dinheiro, cada cartão e Pix com comprovante e maquininha; conciliar exige a referência do extrato, o valor líquido (a taxa é a diferença) e a data em que o dinheiro caiu (do dia da venda até hoje); pagamento já conciliado não se altera (OR030) e desfazer exige motivo, tudo auditado. Aplicada no ora5g-dev. Falta: conferência automática por arquivo de extrato (PAY-009, pendência E3). G2b (13/11): o resultado da conciliação manual aparece no /financeiro, por meio (a conciliar × conciliado, líquido e diferença observada), para toda a gerência que vê o financeiro; conciliar continua só com pagamento.conciliar. R5 (15/11, revisão do estado): o FALTA "tela de conciliação com o extrato" ficou para trás no L7a (/pagamentos/conciliacao); a conferência automática por arquivo de extrato é o ORA-PAY-009 (E3). EXT-a (17/11): a conferência por arquivo de extrato entrou (ORA-PAY-009, ADR-016), com a venda sugerida para cada linha. FALTA: a conferência do Codex das correções #46 e #50 (o estado volta a "testado" depois dela) e a homologação.
+
+**Evidência declarada:**
+packages/banco/supabase/migrations/20261108233546_vendas_pagamentos_e_caixa.sql; packages/banco/supabase/migrations/20261111201342_pagamentos_maquininhas_e_conciliacao.sql; packages/banco/src/pagamentos-conciliacao.test.ts; apps/plataforma/src/app/pagamentos/pagamentos.test.ts; packages/banco/supabase/migrations/20261114012326_financeiro_conciliacao.sql; packages/banco/src/financeiro-conciliacao.test.ts; apps/plataforma/src/app/financeiro/financeiro.test.ts
+
+## ORA-PAY-008 — Evitar confirmação duplicada via webhook/retry
+
+- Área: Pagamentos, PicPay e caixa; prioridade: P0.
+- Estado anterior: `parcial`; atual: `parcial`; homologação integral documentada: não.
+- Critério original: Constraints de evento externo e idempotency key.
+- Dependência declarada: não especificada no checkpoint; isso não prova ausência de pendências.
+
+**Nota do implementador, preservada integralmente:**
+Conclusão da venda idempotente (mesma chave, mesmo resultado; repetição simultânea testada em PostgreSQL real). Webhooks ainda não existem (link bloqueado). R4 (14/11, revisão do estado): a idempotência da conclusão da venda está provada, inclusive com repetição simultânea. FALTA: os webhooks e os eventos externos dos provedores (o link de pagamento está bloqueado até o contrato, PAY-013). ADAPT-a (17/11; ADR-020): a regra do aviso do provedor do link está pronta e testada no worker (o mesmo aviso, repetido, nunca confirma duas vezes; sem assinatura conferida, nada muda), desligada até o provedor (E1).
+
+**Evidência declarada:**
+packages/banco/supabase/migrations/20261108233546_vendas_pagamentos_e_caixa.sql; packages/banco/src/vendas.test.ts; packages/banco/src/concorrencia.test.ts; apps/worker/src/cobranca/cobranca.ts
+
+## ORA-PAY-009 — Importar extratos de adquirente/banco por arquivo validado
+
+- Área: Pagamentos, PicPay e caixa; prioridade: P1.
+- Estado anterior: `nao_iniciado`; atual: `testado`; homologação integral documentada: não.
+- Critério original: Linhas conciliadas, discrepâncias e taxas reportadas.
+- Dependência declarada: E3 (o arquivo real de cada maquininha e do banco, para o aceite).
+
+**Nota do implementador, preservada integralmente:**
+Lote EXT-a (17/11; ADR-016): o extrato da maquininha ou do banco entra por arquivo em /pagamentos/extratos (Gestão → Conciliação → Extratos por arquivo), sem supor o formato do provedor: no CSV e no Excel a pessoa diz qual coluna é cada campo (com sugestão pelo nome); o OFX dos bancos traz os campos com nome. A linha que não dá para ler recusa o arquivo e aparece apontada; saldo, total e linha sem valor ficam de fora, contados; o mesmo arquivo não entra duas vezes (SHA-256). Cada linha de crédito ganha a venda sugerida (mesmo valor, mesmo dia, mesma loja, os meios do extrato e a maquininha), e a pessoa concilia uma linha ou as certas de uma vez, pela conciliação de sempre (L7a); a linha que não é venda sai da conta com motivo. O extrato mostra as linhas conciliadas, as que esperam e as fora da conta, as taxas, e as vendas do período que o extrato não trouxe (a discrepância no outro sentido). Migration aplicada no ora5g-dev em 17/11. A conferência com o arquivo real de cada maquininha e do banco é parte do aceite (E3).
+
+**Evidência declarada:**
+packages/banco/supabase/migrations/20261117225818_extratos_e_conciliacao.sql; packages/banco/src/extratos.test.ts; apps/plataforma/src/lib/extratos; apps/plataforma/src/app/pagamentos/extratos; docs/adr/ADR-016-extratos-por-arquivo.md; docs/aceite/EXT-a.md
+
+## ORA-PAY-010 — Reconciliar taxas, parcelas e datas de repasse
+
+- Área: Pagamentos, PicPay e caixa; prioridade: P1.
+- Estado anterior: `nao_iniciado`; atual: `parcial`; homologação integral documentada: não.
+- Critério original: Venda bruta vs líquido recebido visíveis.
+- Dependência declarada: E2 (as parcelas: prazos e taxas do contrato de cada maquininha).
+
+**Nota do implementador, preservada integralmente:**
+Lote EXT-a (17/11; ADR-016): cada linha do extrato traz a taxa, o líquido e a data do repasse; conciliar grava no pagamento o líquido (o do arquivo, ou o valor menos a taxa) e a data em que o dinheiro caiu, e o repasse com data futura ainda não concilia. O resumo do extrato mostra o bruto das vendas, as taxas, o líquido, os estornos e saídas e o que ainda vai cair. FALTA: as parcelas (o extrato com uma linha por parcela, a agenda de recebíveis, não casa com o pagamento; dependem dos prazos e das taxas do contrato de cada maquininha, E2), a revisão do Codex e a homologação.
+
+**Evidência declarada:**
+packages/banco/supabase/migrations/20261117225818_extratos_e_conciliacao.sql; packages/banco/src/extratos.test.ts; apps/plataforma/src/lib/extratos; apps/plataforma/src/app/pagamentos/extratos; docs/adr/ADR-016-extratos-por-arquivo.md; docs/aceite/EXT-a.md
+
+## ORA-PAY-011 — Gerir chargebacks, estornos, antecipação e ajustes
+
+- Área: Pagamentos, PicPay e caixa; prioridade: P1.
+- Estado anterior: `parcial`; atual: `parcial`; homologação integral documentada: não.
+- Critério original: Efeito financeiro e comissão não duplicado.
+- Dependência declarada: não especificada no checkpoint; isso não prova ausência de pendências.
+
+**Nota do implementador, preservada integralmente:**
+L7b (13/11): o repasse das financeiras (PayJoy, Aiva) é registrado à mão em /pagamentos/financeiras, conferindo o extrato: referência, valor que caiu e data; a diferença para o valor a receber fica como a taxa observada; desfazer pede motivo; tudo auditado; só quem concilia na loja da venda (pagamento.conciliar). Os estornos de cartão, Pix e financeira já são confirmados com o comprovante desde os lotes de integridade (#50). A migration foi aplicada no ora5g-dev em 13/11 (md5 conferido). FALTA: chargebacks e antecipação (dependem dos extratos das maquininhas, E3), o relatório de repasse das financeiras (E2), revisão do Codex e homologação. Lote B4 (14/11, correção da issue #83, achado REV-PLAN-002 do Codex): registrar o repasse, cancelar a venda e desfazer o repasse deixava a conta aberta numa venda cancelada, e um novo repasse era aceito. Agora o registro e o desfazer travam a venda antes da conta (a ordem do cancelamento) e conferem o estado comercial: venda cancelada ou pagamento estornado não recebe; desfazer o repasse de venda cancelada deixa a conta cancelada, nunca aberta; a correção do repasse (referência, valor e data, com motivo) mantém o recebimento registrado, também na venda cancelada; a lista marca a venda cancelada e avisa do acerto com a financeira. Disputa real das duas transações com o cancelamento, nas duas ordens, num PostgreSQL 17. A migration 20261114145505_financeiras_correcoes foi aplicada no ora5g-dev em 14/11, com o sim do proprietário. EXT-a (17/11; ADR-016): no extrato importado, o estorno, o chargeback e a tarifa aparecem como linhas de débito, somadas à parte no resumo, e saem da conta com motivo, sem mexer na venda nem na comissão. FALTA: ligar o chargeback da maquininha ao estorno da venda e a antecipação como operação própria.
+
+**Evidência declarada:**
+packages/banco/supabase/migrations/20261114012722_financeiras_a_receber.sql; packages/banco/src/financeiras-a-receber.test.ts; apps/plataforma/src/lib/pagamentos/financeiras.ts; apps/plataforma/src/app/pagamentos/financeiras; packages/banco/supabase/migrations/20261114145505_financeiras_correcoes.sql; packages/banco/src/concorrencia.test.ts
+
+## ORA-PAY-012 — Permitir múltiplas maquininhas/provedores por loja
+
+- Área: Pagamentos, PicPay e caixa; prioridade: P1.
+- Estado anterior: `testado`; atual: `testado`; homologação integral documentada: não.
+- Critério original: Terminal tem identificação e escopo correto.
+- Dependência declarada: não especificada no checkpoint; isso não prova ausência de pendências.
+
+**Nota do implementador, preservada integralmente:**
+Lote L7a (11/11): maquininhas por loja em /pagamentos/maquininhas, cadastradas por quem tem terminal.gerir (dono e gerente, permissão nova): provedor (PicPay ou PagBank), número do terminal único na rede (OR020), apelido e situação, com motivo e auditoria; nada se apaga (desativar mantém o histórico). Cada pagamento por maquininha guarda qual foi usada; com maquininha ativa do provedor na loja, escolher é obrigatório no PDV, e o banco recusa a de outra loja, a desativada e a de outro provedor (OR009). Aplicada no ora5g-dev. Aguardando revisão do Codex e homologação.
+
+**Evidência declarada:**
+packages/banco/supabase/migrations/20261111201342_pagamentos_maquininhas_e_conciliacao.sql; packages/banco/src/pagamentos-conciliacao.test.ts; apps/plataforma/src/app/pagamentos/pagamentos.test.ts
+
+## ORA-PAY-013 — Integração automática com PicPay POS se API contratual confirmada
+
+- Área: Pagamentos, PicPay e caixa; prioridade: P2.
+- Estado anterior: `nao_iniciado`; atual: `bloqueado`; homologação integral documentada: não.
+- Critério original: Contrato, autenticação, eventos e homologação aprovados.
+- Dependência declarada: API da PicPay POS confirmada em contrato (sem API por decisão do projeto: conciliação por comprovante e extrato).
+
+**Nota do implementador, preservada integralmente:**
+BLOQUEADO (ADAPT-a, 17/11; ADR-020): sem API da PicPay POS por decisão do projeto. O pagamento na maquininha é confirmado com o comprovante (L7a) e conciliado pelo extrato por arquivo (EXT-a). Fica bloqueado até uma API confirmada em contrato.
+
+**Evidência declarada:**
+docs/adr/ADR-020-integracoes-que-esperam-contrato.md; docs/aceite/ADAPT-a.md; docs/integracoes/APIS_E_HABILITACOES_NECESSARIAS.md
+
+## ORA-PAY-014 — Pix/checkout web e links por provedores validados
+
+- Área: Pagamentos, PicPay e caixa; prioridade: P2.
+- Estado anterior: `nao_iniciado`; atual: `bloqueado`; homologação integral documentada: não.
+- Critério original: Confirmação no backend antes de fulfill/baixa definitiva.
+- Dependência declarada: E1: a escolha do provedor do link (PicPay, PagBank ou os dois), a credencial e o formato do aviso confirmado.
+
+**Nota do implementador, preservada integralmente:**
+BLOQUEADO (ADAPT-a, 17/11; ADR-020): o worker tem o adaptador do link de pagamento e do Pix online (cobranca/cobranca.ts), desligado: a interface do provedor, o formato comum do aviso e a regra de cada aviso (só confirma com a assinatura conferida, de uma cobrança nossa, do mesmo valor e uma vez só; no resto, consulta o provedor). No PDV, o meio "link" segue recusado. Falta: a escolha do provedor (PicPay, PagBank ou os dois; E1), a credencial e o formato do aviso confirmado.
+
+**Evidência declarada:**
+apps/worker/src/cobranca/cobranca.ts; apps/worker/src/cobranca/cobranca.test.ts; docs/adr/ADR-020-integracoes-que-esperam-contrato.md; docs/aceite/ADAPT-a.md; docs/integracoes/APIS_E_HABILITACOES_NECESSARIAS.md
+
+## ORA-FIN-001 — Resumo diário de vendas x recebimentos x produção comercial
+
+- Área: Financeiro e controladoria; prioridade: P0.
+- Estado anterior: `parcial`; atual: `parcial`; homologação integral documentada: não.
+- Critério original: Categorias e status reconciliáveis.
+- Dependência declarada: não especificada no checkpoint; isso não prova ausência de pendências.
+
+**Nota do implementador, preservada integralmente:**
+Financeiro real, lote 1 (#65, 10/11): vendas concluídas, devoluções e cancelamentos, e pagamentos registrados (recebido na loja, troco descontado, entradas de financiamento), por dia ou hora, da loja do turno ou da rede, somados no banco (financeiro_painel). G1 (13/11): o /inicio mostra, em hoje, 7 ou 30 dias, as vendas ao lado dos recebimentos por meio e a produção em itens por grupo (aparelhos, acessórios, Ora Connect e serviços), somadas por vendas_painel; os períodos de vendas_painel fecham com os de financeiro_painel (teste no banco). FALTA: produção comercial confirmada (metas e operações do Ora Connect, G4), liquidação e conciliação.
+
+**Evidência declarada:**
+packages/banco/supabase/migrations/20261110224537_financeiro_painel.sql; packages/banco/src/financeiro-painel.test.ts; apps/plataforma/src/lib/financeiro; apps/plataforma/src/app/financeiro; packages/banco/supabase/migrations/20261112195200_vendas_painel.sql; packages/banco/src/vendas-painel.test.ts; apps/plataforma/src/app/inicio
+
+## ORA-FIN-002 — DRE/margem gerencial com custo, taxa e desconto
+
+- Área: Financeiro e controladoria; prioridade: P0.
+- Estado anterior: `parcial`; atual: `parcial`; homologação integral documentada: não.
+- Critério original: Números não são apresentados como contabilidade formal auditada.
+- Dependência declarada: não especificada no checkpoint; isso não prova ausência de pendências.
+
+**Nota do implementador, preservada integralmente:**
+G2a (13/11): margem bruta gerencial pelo custo gravado no item quando ele entrou na venda, somada no banco (public.margem_painel, por dia, e public.margem_itens, por item), com a cobertura do custo e a margem percentual sobre a base líquida, só para quem tem custo.ver (o banco confere loja a loja; loja sem a permissão fica fora do numerador e do denominador e é só contada). Aparece no /relatorios (por dia, cobertura, conta da margem e detalhe por item), no indicador do /inicio e na exportação. Item sem custo gravado fica fora e é contado (nunca custo zero); devolução e cancelamento saem na data deles. Não é contabilidade formal nem lucro: a tela e o arquivo dizem que taxa de meio de pagamento, comissão, frete e imposto ficam fora. L8b (13/11), pelas decisões do proprietário do mesmo dia (D-037): resultado do mês gerencial em /resultado, só para o dono (resultado.ver; o banco exige também, em papel de organização, as permissões de todas as partes), da rede ou de uma loja e com os últimos 6 meses: vendas concluídas com o desconto abatido, devoluções e cancelamentos, receita líquida, custo das mercadorias (custo gravado; item sem custo é contado e avisado), margem bruta, taxas de cartão e Pix observadas na conciliação (os pagamentos ainda sem conciliação são contados), contas a pagar pelo vencimento (paga pelo valor pago; compra de mercadoria fora, pela marcação da categoria), dinheiro do caixa e as contas da rede divididas pela receita líquida de cada loja (centavos que fecham). A tela diz que não é a contabilidade. A migration foi aplicada no ora5g-dev em 13/11 (md5 conferido). FALTA: a taxa das financeiras (P8), o imposto sobre a venda calculado (fiscal), a comissão (D-014), a exportação, a revisão do Codex e a jornada com login (J1). FIN-009c (15/11): o resultado do mês e a margem dos Relatórios saem em planilha (CSV desde o L8d e o G2a; agora também no Excel): "a exportação", no FALTA acima, ficou para trás.
+
+**Evidência declarada:**
+packages/banco/supabase/migrations/20261113065706_margem_painel.sql; packages/banco/src/margem-painel.test.ts; apps/plataforma/src/lib/margem; apps/plataforma/src/lib/relatorios; apps/plataforma/src/app/relatorios; apps/plataforma/src/app/inicio; packages/banco/supabase/migrations/20261114013120_resultado_do_mes.sql; packages/banco/src/resultado-do-mes.test.ts; apps/plataforma/src/lib/resultado; apps/plataforma/src/app/resultado
+
+## ORA-FIN-003 — Contas a receber ligadas a venda, vencimento e meio
+
+- Área: Financeiro e controladoria; prioridade: P0.
+- Estado anterior: `parcial`; atual: `parcial`; homologação integral documentada: não.
+- Critério original: Aging e status dependem de confirmação.
+- Dependência declarada: não especificada no checkpoint; isso não prova ausência de pendências.
+
+**Nota do implementador, preservada integralmente:**
+Contas a receber das financeiras ligadas à venda e ao pagamento, abertas até o recebimento; canceladas no estorno. FALTA: vencimento (P8), baixa e aging.
+
+**Evidência declarada:**
+packages/banco/supabase/migrations/20261108233546_vendas_pagamentos_e_caixa.sql; packages/banco/src/vendas.test.ts; packages/banco/src/concorrencia.test.ts
+
+## ORA-FIN-004 — Contas a pagar ligadas a fornecedor/origem
+
+- Área: Financeiro e controladoria; prioridade: P0.
+- Estado anterior: `testado`; atual: `testado`; homologação integral documentada: não.
+- Critério original: Vencimentos e responsabilidades autorizadas.
+- Dependência declarada: não especificada no checkpoint; isso não prova ausência de pendências.
+
+**Nota do implementador, preservada integralmente:**
+L8a (13/11), pelas decisões do proprietário do mesmo dia (D-036): contas a pagar da rede (central) e de cada loja, com categoria (lista inicial que o dono ajusta), fornecedor opcional (o cadastro do L4a), documento, valor e vencimento; conta única, parcelada (o total dividido, os centavos na primeira) ou repetida todo mês; o pagamento feito no banco é registrado com a data, o valor pago (juros ou desconto) e a referência, e se desfaz com motivo; corrigir valor e vencimento e cancelar (uma ou as seguintes) pedem motivo; tudo auditado. Responsabilidade autorizada: conta_pagar.gerir, o dono na rede e em todas as lojas, o gerente na loja dele (banco e RLS). Tela /contas-a-pagar com o vencido, o que vence hoje e nos próximos dias, o pago no mês, as próximas 8 semanas, o aberto por categoria e por loja, e pendência no Início. A migration foi aplicada no ora5g-dev em 13/11 (md5 conferido). FALTA: ligar a conta à entrada de mercadoria de origem, anexar o boleto ou a nota (módulo de documentos), revisão do Codex e homologação. L8b (13/11): cada categoria diz se entra no resultado do mês; a lista inicial nasce com "Mercadoria (fornecedor)" fora (compra de mercadoria vira estoque) e o dono muda ou cria categoria fora do resultado. FIN-004a (15/11): a conta a pagar ligada à entrada de mercadoria de origem: a coluna contas_a_pagar.entrada_id (da mesma rede) e a função conta_pagar_ligar_entrada (o lançamento inteiro, todas as parcelas; só a compra registrada, da mesma loja e do mesmo fornecedor; com motivo e auditoria; quem gere a conta). Em /contas-a-pagar, a entrada ligada aparece na conta e pode ser desligada; a conta sem entrada oferece as compras recentes que combinam. Na entrada de mercadoria, cada compra mostra a conta ligada ou o atalho para lançá-la já preenchida (e ligada). Num banco sem a migration, nada disso aparece. Migration 20261115102358_conta_da_entrada (antes 20261115070000; aplicada no ora5g-dev em 15/11, com o sim do proprietário). FALTA: aplicar a migration (pede o sim do proprietário), anexar o boleto ou a nota (o módulo de documentos), a revisão do Codex e a homologação. FIN-004b (15/11): os documentos da conta: o boleto, a nota do fornecedor e o comprovante do pagamento no bucket privado "contas" (PDF ou foto, até 5 MB, conferidos pelo conteúdo e com o SHA-256), registrados em conta_pagar_anexos pela função conta_pagar_anexar (quem gere a conta; até 20 vigentes) e retirados com motivo por conta_pagar_retirar_anexo (só marca; nada se apaga). Em /contas-a-pagar, cada conta abre, guarda e retira os seus; o link é assinado na hora de abrir, por um minuto. O prazo de guarda e o descarte são a decisão pendente D-045. Num banco sem a migration, nada disso aparece. Migration 20261115102440_documentos_da_conta (antes 20261115080000). As duas migrations foram aplicadas no ora5g-dev em 15/11, com o sim do proprietário. FALTA: a revisão do Codex e a homologação.
+
+**Evidência declarada:**
+packages/banco/supabase/migrations/20261114012952_contas_a_pagar.sql; packages/banco/src/contas-a-pagar.test.ts; apps/plataforma/src/lib/contas-a-pagar; apps/plataforma/src/app/contas-a-pagar; packages/banco/supabase/migrations/20261115102358_conta_da_entrada.sql; packages/banco/src/conta-da-entrada.test.ts; packages/banco/src/autorizacao-funcoes.test.ts; apps/plataforma/src/lib/contas-a-pagar/entradas.ts; apps/plataforma/src/app/contas-a-pagar/contas.test.ts; apps/plataforma/src/app/estoque/entrada/entrada.test.ts; packages/banco/supabase/migrations/20261115102440_documentos_da_conta.sql; packages/banco/src/documentos-da-conta.test.ts; apps/plataforma/src/lib/contas-a-pagar/documentos.test.ts; apps/plataforma/src/app/contas-a-pagar/[id]/documentos/documentos.test.ts
+
+## ORA-FIN-005 — Rastrear recebíveis e repasses por loja/adquirente
+
+- Área: Financeiro e controladoria; prioridade: P0.
+- Estado anterior: `testado`; atual: `testado`; homologação integral documentada: não.
+- Critério original: Diferenças e pendências visíveis ao financeiro.
+- Dependência declarada: não especificada no checkpoint; isso não prova ausência de pendências.
+
+**Nota do implementador, preservada integralmente:**
+Lote L8e (14/11): recebíveis por loja e adquirente em /pagamentos/recebiveis, para quem concilia os pagamentos (pagamento.conciliar: o dono vê a rede inteira ou uma loja; o gerente, a loja do turno; outra loja é recusada pelo banco, sem resposta parcial). Leitura única public.recebiveis_painel (só lê): o que PicPay, PagBank, o Pix direto na conta e as financeiras PayJoy e Aiva ainda devem, com a idade desde a venda (até 7, de 8 a 30 e mais de 30 dias); o que caiu na conta em 7, 30 ou 90 dias pela data do extrato (conciliação do L7a e repasse do L7b), com a diferença observada (valor menos líquido: taxa, antecipação e o que mais o extrato descontou; não é a taxa do contrato); estornos de cartão e Pix a confirmar; pendências do financeiro (cartão ou Pix da maquininha sem a maquininha informada, entrada de financiamento paga na maquininha, que ainda não se concilia, e repasse de financeira de venda cancelada); os 20 mais antigos a receber, com o total contado no banco. Conta aberta de venda cancelada não entra no a receber (#83). Tela com os indicadores, a idade do que falta receber, o a receber por quem deve, a tabela por loja e a planilha CSV; resposta que não fecha é falha de leitura. Migration 20261114161903_recebiveis_painel (aplicada no ora5g-dev em 14/11). FALTA: data prevista e taxa contratada, que dependem dos contratos das maquininhas e das financeiras (E2/E3, P8), e a importação dos extratos (ORA-PAY-009).
+
+**Evidência declarada:**
+packages/banco/supabase/migrations/20261114161903_recebiveis_painel.sql; packages/banco/src/recebiveis.test.ts; packages/banco/src/autorizacao-funcoes.test.ts; apps/plataforma/src/lib/pagamentos/recebiveis.ts; apps/plataforma/src/lib/pagamentos/recebiveis.test.ts; apps/plataforma/src/app/pagamentos/recebiveis.test.ts
+
+## ORA-FIN-006 — Conciliação bancária e contas multiempresa
+
+- Área: Financeiro e controladoria; prioridade: P1.
+- Estado anterior: `nao_iniciado`; atual: `parcial`; homologação integral documentada: não.
+- Critério original: Imports/matches reproduzíveis com aprovação.
+- Dependência declarada: as contas bancárias de cada empresa (multiempresa).
+
+**Nota do implementador, preservada integralmente:**
+Lote EXT-a (17/11; ADR-016): o extrato do banco entra por arquivo (OFX ou planilha), da loja ou da rede (a conta da empresa, só para quem concilia pela rede inteira), e cada linha é conciliada com aprovação de quem concilia; a importação é reproduzível (o mapeamento das colunas fica gravado e o mesmo arquivo devolve o mesmo extrato). FALTA: as contas bancárias de cada empresa, com o saldo (a parte multiempresa), o depósito agrupado da maquininha no banco (hoje sai da conta com motivo), a revisão do Codex e a homologação.
+
+**Evidência declarada:**
+packages/banco/supabase/migrations/20261117225818_extratos_e_conciliacao.sql; packages/banco/src/extratos.test.ts; apps/plataforma/src/lib/extratos; apps/plataforma/src/app/pagamentos/extratos; docs/adr/ADR-016-extratos-por-arquivo.md; docs/aceite/EXT-a.md
+
+## ORA-FIN-007 — Gestão de inadimplência e cobranças autorizadas
+
+- Área: Financeiro e controladoria; prioridade: P1.
+- Estado anterior: `nao_iniciado`; atual: `nao_iniciado`; homologação integral documentada: não.
+- Critério original: Ações e consentimentos com auditoria.
+- Dependência declarada: não especificada no checkpoint; isso não prova ausência de pendências.
+
+**Nota do implementador, preservada integralmente:**
+NÃO INICIADO. A inadimplência e a cobrança autorizada: a lista do que está atrasado (as contas a receber das financeiras e da OS) e a régua de cobrança. A mensagem ao cliente depende do WhatsApp oficial (ORA-WHATS-001) e do consentimento. (Linha própria desde o AUD-a, 18/11, a pedido da auditoria do Codex de 17/11.)
+
+**Evidência declarada:**
+docs/alinhamento/LEITURA_AUDITORIA_2026-11-17.md; docs/aceite/AUD-a.md
+
+## ORA-FIN-008 — Relatório financeiro consolidado por loja/região/rede
+
+- Área: Financeiro e controladoria; prioridade: P1.
+- Estado anterior: `testado`; atual: `testado`; homologação integral documentada: não.
+- Critério original: RBAC respeita visão global vs local.
+- Dependência declarada: não especificada no checkpoint; isso não prova ausência de pendências.
+
+**Nota do implementador, preservada integralmente:**
+Real em /financeiro (lote 1 da #65): loja do turno e rede inteira (só com venda.ver_todas), com gráficos, tabelas e detalhamento. ORG-009 (14/11): a região existe no cadastro e as vendas da rede somam por região no Início e nos Relatórios (migration do ORG-009 aplicada no ora5g-dev em 14/11). ORG-009b (14/11): o resultado do mês da rede (/resultado) também soma por região, com cada loja já trazendo a sua parte das contas da rede. FALTA: contas, conciliação e DRE. A tela da demonstração continua com dados fictícios. G2a (13/11): /relatorios mostra vendas, recebimentos, mix, lojas, ticket, descontos e margem por dia em 7, 14 ou 30 dias, da loja do turno ou da rede (o filtro de loja só aparece para quem tem venda.ver_todas, e o endereço não amplia o recorte de quem não tem). L8b (13/11): o resultado do mês (/resultado, só o dono) consolida a rede e mostra cada loja lado a lado (receita, margem, taxas, contas, caixa, parte das contas da rede e resultado), e abre o resultado de uma loja. FALTA: região (não existe no cadastro) e exportação. FIN-009c (15/11): o último FALTA acima ficou para trás: a região veio no ORG-009 e no ORG-009b, e a exportação no L8d (o resultado do mês) e no G2a (os relatórios), agora também no Excel. R5 (15/11, revisão do estado): os FALTA acima ficaram para trás: as contas (L8a, contas a pagar, que entram no resultado do mês), a conciliação (G2b, no /financeiro) e o demonstrativo gerencial (L8b, /resultado, que diz não ser a contabilidade), a região (ORG-009 e ORG-009b) e a exportação (L8d, G2a e FIN-009c). O aceite (a visão da rede só para quem pode; a da loja para a loja do turno) está provado nas telas e no banco. FALTA: a revisão do Codex e a homologação (a DRE contábil é do contador, fora deste requisito).
+
+**Evidência declarada:**
+packages/banco/supabase/migrations/20261110224537_financeiro_painel.sql; packages/banco/src/financeiro-painel.test.ts; apps/plataforma/src/lib/financeiro; apps/plataforma/src/app/financeiro; packages/banco/supabase/migrations/20261113065706_margem_painel.sql; packages/banco/src/margem-painel.test.ts; apps/plataforma/src/lib/margem; apps/plataforma/src/lib/relatorios; apps/plataforma/src/app/relatorios; packages/banco/supabase/migrations/20261114013120_resultado_do_mes.sql; packages/banco/src/resultado-do-mes.test.ts; apps/plataforma/src/app/resultado; apps/plataforma/src/lib/lojas/regioes.ts; apps/plataforma/src/app/relatorios/relatorios.test.ts; apps/plataforma/src/app/resultado/resultado.test.ts
+
+## ORA-FIN-009 — Exportações CSV/XLSX/PDF de relatórios autorizados
+
+- Área: Financeiro e controladoria; prioridade: P1.
+- Estado anterior: `testado`; atual: `testado`; homologação integral documentada: não.
+- Critério original: Filtros e dados sensíveis protegidos.
+- Dependência declarada: não especificada no checkpoint; isso não prova ausência de pendências.
+
+**Nota do implementador, preservada integralmente:**
+Real: /financeiro/exportar gera CSV de vendas, pagamentos, devoluções e caixas do período, lote a lote (todas as linhas, até 20 mil), com a mesma permissão e escopo da tela (#65, 10/11). Na demonstração, CSV das telas com dados fictícios. Texto que a planilha leria como fórmula sai neutralizado (#38). G2a (13/11): /relatorios/exportar gera CSV por dia (vendas e, para quem tem custo.ver, as colunas de margem) e por item (o detalhe da margem, só com custo.ver: sem a permissão, 403), com a mesma permissão e o mesmo recorte da tela, conferidos no servidor; se uma leitura falha, o arquivo inteiro falha (nada pela metade); o detalhe vem em lotes de 1.000, até 20 mil itens, com aviso na última linha. L8d (13/11): planilha CSV do resultado do mês (/resultado/exportar, só o dono: o demonstrativo com uma coluna por loja, as categorias, o que ficou fora e as observações), das contas a pagar (/contas-a-pagar/exportar, a lista e o filtro da tela, até 5 mil contas, com todas as colunas; loja recusada dá 403) e da previsão de caixa (feita no navegador, com a simulação e o saldo digitado, que não vão ao servidor); PDF pela impressão do navegador ("Imprimir ou salvar em PDF" nas três telas: abre as tabelas dos gráficos e tira menus, filtros, botões e formulários do papel). FALTA: XLSX nativo (o CSV abre no Excel), exportação nas demais telas reais, revisão do Codex e homologação. Lote B5 (14/11, achado REV-PLAN-003 do Codex): leituras completas abaixo do teto de linhas da API (o PostgREST corta cada resposta no max_rows, 1.000 no padrão do Supabase, sem erro). A lista e a planilha das contas a pagar pediam até 5.001 linhas de uma vez: com o teto de 1.000, 1.001 contas saíam como 1.000 e sem o aviso de "há mais". Agora vêm em páginas de 500 com o id no fim da ordem, avançando pelo que veio (um teto menor não corta nada), até o máximo + 1; os nomes dos fornecedores também (mais que o máximo é falha, não planilha sem nome); a planilha do financeiro passou a avançar pelo que veio e todas as ordens dela terminam num campo único. FIN-009b (15/11): planilhas do estoque em /estoque/exportar, no Excel ou em CSV: o saldo por produto (cada produto em cada local, com físico, reservado, disponível para vender, mínimo e "abaixo do mínimo") e os aparelhos e chips (IMEI, ICCID, situação, condição, cadastro e a última conferência), com a permissão da tela (estoque.consultar) e o recorte do painel (a loja do turno, outro local que a pessoa consulta ou a rede inteira; local que não consulta dá 403), todas as linhas em páginas abaixo do teto da API, até 20 mil, sem custo. O XLSX é gerado sem biblioteca (lib/xlsx.ts: o pacote mínimo do formato, com cada célula no próprio tipo): o IMEI e o ICCID saem inteiros, como texto, quantidade e dinheiro como número, data como data, texto nunca como fórmula. FIN-009c (15/11): o Excel também nas planilhas que já existiam: as do servidor (financeiro, relatórios por dia e margem por item, resultado do mês e contas a pagar, pelo mesmo endereço com ?formato=xlsx; sem ele, o CSV de antes) e as montadas no navegador (previsão de caixa com a simulação, recebíveis, extrato e fechamento do bônus, sem ir ao servidor). Cada célula com o tipo (dinheiro e quantidade como número, dia e instante como data, margem como percentual); o total e os avisos abaixo da tabela, fora do filtro do Excel; em cada tela, o botão "(Excel)" e o "CSV" ao lado. FIN-009d (15/11): planilhas da auditoria (/auditoria/exportar: o período e o filtro da tela, da loja do turno e da rede, com todas as linhas do período; quem, quando, onde, o quê e o motivo, sem o antes e o depois, como na tela) e da equipe (/equipe/exportar: uma linha por acesso ativo, com a situação, o último acesso e desde quando, e os convites em andamento; serve à revisão periódica de acessos), no Excel ou em CSV, com a permissão de cada tela e o RLS. Com elas, o aceite está cumprido nas telas reais: CSV e Excel de todas as que têm relatório ou lista (financeiro, relatórios, resultado, contas a pagar, previsão, recebíveis, estoque, bônus, equipe e auditoria) e PDF pela impressão do navegador, com a permissão e o recorte da tela conferidos no servidor e o dado sensível fora (custo só com custo.ver, sem o antes e o depois da auditoria). FALTA: a revisão do Codex e a homologação (inclusive abrir as planilhas no Microsoft Excel: o pacote foi conferido no openpyxl e no download real do navegador).
+
+**Evidência declarada:**
+apps/plataforma/src/app/financeiro/exportar/route.ts; apps/plataforma/src/lib/csv.ts; apps/plataforma/src/app/financeiro/financeiro.test.ts; apps/plataforma/src/app/relatorios/exportar/route.ts; apps/plataforma/src/lib/relatorios; apps/plataforma/src/app/relatorios/relatorios.test.ts; apps/plataforma/src/app/resultado/exportar/route.ts; apps/plataforma/src/app/contas-a-pagar/exportar/route.ts; apps/plataforma/src/lib/previsao/planilha.ts; apps/plataforma/src/componentes/BotaoImprimir.tsx; apps/plataforma/src/lib/leitura-completa.ts; apps/plataforma/src/lib/leitura-completa.test.ts; apps/plataforma/src/lib/xlsx.ts; apps/plataforma/src/lib/xlsx.test.ts; apps/plataforma/src/lib/estoque/planilha.ts; apps/plataforma/src/lib/estoque/planilha.test.ts; apps/plataforma/src/app/estoque/exportar/route.ts; apps/plataforma/src/app/estoque/exportar.test.ts; apps/plataforma/src/lib/xlsx-servidor.ts; apps/plataforma/src/componentes/BaixarPlanilha.tsx; apps/plataforma/src/componentes/ExportarPlanilha.tsx; apps/plataforma/src/componentes/planilhas.test.ts; apps/plataforma/src/lib/auditoria/planilha.ts; apps/plataforma/src/lib/auditoria/planilha.test.ts; apps/plataforma/src/app/auditoria/exportar/route.ts; apps/plataforma/src/app/auditoria/exportar.test.ts; apps/plataforma/src/lib/equipe/planilha.ts; apps/plataforma/src/lib/equipe/planilha.test.ts; apps/plataforma/src/app/equipe/exportar/route.ts; apps/plataforma/src/app/equipe/exportar.test.ts
+
+## ORA-FIN-010 — Previsão de fluxo de caixa e simulações
+
+- Área: Financeiro e controladoria; prioridade: P2.
+- Estado anterior: `testado`; atual: `testado`; homologação integral documentada: não.
+- Critério original: Premissas explicadas e separadas de fatos.
+- Dependência declarada: não especificada no checkpoint; isso não prova ausência de pendências.
+
+**Nota do implementador, preservada integralmente:**
+L8c (13/11), pelas decisões do proprietário do mesmo dia (D-038): previsão de caixa em /previsao, só para o dono (previsao.ver; o banco exige também, em papel de organização, as permissões de todas as partes), da rede ou de uma loja, em 4, 8 ou 13 semanas. Fatos (public.previsao_de_caixa, que só lê): as contas a pagar em aberto por semana de vencimento, as vencidas, as 8 semanas anteriores (recebido na loja menos devoluções pagas e saídas do caixa), o que as financeiras devem, cartão e Pix a conciliar e o dinheiro nas gavetas. Premissas explicadas na tela e separadas dos fatos: a entrada estimada é a média das semanas com movimento, simulada de 30% a menos a 30% a mais; o saldo de partida é digitado e fica só no navegador (não é enviado nem gravado); o saldo previsto e o aviso do saldo negativo são contas da tela. A migration foi aplicada no ora5g-dev em 13/11 (md5 conferido). FALTA: o prazo do cartão (contrato das maquininhas) e o das financeiras (P8) para pôr esses valores na semana certa, as contas bancárias com extrato (ORA-FIN-006), a revisão do Codex e a homologação. Lote B3 (14/11, correção da issue #82, achado REV-PLAN-001 do Codex): a base descontava como devolvido o Pix e o cartão que só pediram o estorno. Agora devolvido é só o dinheiro que saiu, na data em que saiu: o estorno em dinheiro lançado no caixa (devolução ou cancelamento) e o estorno de Pix e cartão confirmado com o comprovante, no dia da confirmação, uma vez; o da financeira não (o contrato se cancela na financeira); a venda cancelada depois continua recebida na semana em que o dinheiro entrou; os pedidos de estorno ainda sem comprovante aparecem à parte (estornos a confirmar), fora da conta, na tela e na planilha. A migration 20261114145418_previsao_correcoes foi aplicada no ora5g-dev em 14/11, com o sim do proprietário; num banco sem ela, a tela segue sem a linha nova.
+
+**Evidência declarada:**
+packages/banco/supabase/migrations/20261114013159_previsao_de_caixa.sql; packages/banco/src/previsao-de-caixa.test.ts; apps/plataforma/src/lib/previsao; apps/plataforma/src/app/previsao; packages/banco/supabase/migrations/20261114145418_previsao_correcoes.sql
+
+## ORA-PERF-001 — Contar individualmente aparelhos, acessórios, chips, ativações e recargas
+
+- Área: Vendedor, metas, comissões e bonificações; prioridade: P0.
+- Estado anterior: `parcial`; atual: `parcial`; homologação integral documentada: não.
+- Critério original: Painel por vendedor/loja/período sem duplicidade.
+- Dependência declarada: não especificada no checkpoint; isso não prova ausência de pendências.
+
+**Nota do implementador, preservada integralmente:**
+Contagem de produção por categoria (aparelho, acessório, chip, ativação só confirmada, recarga) em regra pura testada. Falta ledger de performance no banco. G4b (13/11): o realizado das metas conta, por vendedor e por loja, no banco, os aparelhos (unidades), os acessórios (valor) e o Ora Connect confirmado, com devolução e cancelamento no mês em que acontecem. L9a (13/11): o extrato do vendedor (extrato_do_vendedor) mostra, fato a fato, cada venda concluída, cancelamento, devolução e operação do Ora Connect confirmada que soma o realizado do mês, com o efeito em cada medida; os totais são os de metas_painel (provado no banco). Chips e recargas por unidade ainda não são medida própria. R4 (14/11, revisão do estado): os chips vendidos e as operações do Ora Connect confirmadas (ativação, portabilidade e recarga) são contados à parte no Início e nos Relatórios (G4a). FALTA: chips e recargas por unidade como medida própria nas metas e no extrato do vendedor, se o proprietário quiser (as medidas de hoje são as quatro da D-014).
+
+**Evidência declarada:**
+packages/dominio/src/venda.test.ts; packages/banco/supabase/migrations/20261114012538_metas.sql; packages/banco/src/metas.test.ts; apps/plataforma/src/lib/metas/painel.ts; apps/plataforma/src/app/metas; packages/banco/supabase/migrations/20261114092832_bonus_por_meta.sql; packages/banco/src/bonus.test.ts; apps/plataforma/src/app/metas/extrato
+
+## ORA-PERF-002 — Registrar performance_event único por origem/ação confirmada
+
+- Área: Vendedor, metas, comissões e bonificações; prioridade: P0.
+- Estado anterior: `testado`; atual: `testado`; homologação integral documentada: não.
+- Critério original: Retries de API não criam duas bonificações.
+- Dependência declarada: não especificada no checkpoint; isso não prova ausência de pendências.
+
+**Nota do implementador, preservada integralmente:**
+L9a (13/11): o bônus é calculado sobre fatos que o banco já guarda uma vez só (venda concluída, devolução e operação do Ora Connect confirmada, cada uma com chave única), pela regra de contagem 1 das metas; ler de novo não muda nada e não existe bônus gravado por evento. L9b (14/11): o fechamento grava o bônus de cada vendedor uma vez por loja e mês (um fechamento por loja e mês, uma linha por vendedor), com a apuração inteira do envio; enviar de novo ou aprovar de novo é recusado, e depois de aprovado nada muda nem se apaga, nem direto no banco (provado no banco). A migration do fechamento foi aplicada no ora5g-dev em 14/11, com o sim do proprietário (md5 conferido).
+
+**Evidência declarada:**
+packages/banco/supabase/migrations/20261114092832_bonus_por_meta.sql; packages/banco/src/bonus.test.ts; packages/banco/supabase/migrations/20261114104004_bonus_fechamento.sql; packages/banco/src/bonus-fechamento.test.ts
+
+## ORA-PERF-003 — Distinguir quantidade, valor bruto, margem, receita elegível e comissão
+
+- Área: Vendedor, metas, comissões e bonificações; prioridade: P0.
+- Estado anterior: `testado`; atual: `testado`; homologação integral documentada: não.
+- Critério original: Extrato explica cálculo de cada evento.
+- Dependência declarada: não especificada no checkpoint; isso não prova ausência de pendências.
+
+**Nota do implementador, preservada integralmente:**
+L9a (13/11), pela decisão do proprietário (D-014: bônus por meta, sem comissão por venda): o extrato mostra cada fato com a quantidade (aparelhos, Ora Connect) e o valor (vendido líquido e acessórios, com o desconto do item), e o bônus de cada medida com a meta, o realizado, a faixa alcançada e quanto falta para a próxima; a conta do banco é refeita na tela e o que não fecha vira falha. O vendedor nunca vê custo nem margem. L9b (14/11): o fechamento mostra, por vendedor, o calculado e o aprovado, com o motivo do ajuste (que o vendedor vê), e dá a planilha para a folha. Falta: a margem por vendedor para a gestão (custo.ver). R4 (14/11, revisão do estado): FALTA: a margem por vendedor para a gestão (com custo.ver), a conferência do Codex e a homologação. PERF-003b (15/11): a margem por vendedor para a gestão, nos Relatórios, só para quem vê o custo: a margem bruta do período pelo vendedor de origem (cancelar ou devolver por outra pessoa não muda o vendedor), pelo custo gravado no item, somada no banco com o RLS e o custo.ver de quem pede (margem_por_vendedor; as lojas sem custo.ver ficam fora e são contadas), em barras com o sinal e a tabela com a conta, e a planilha por vendedor (Excel e CSV). O vendedor continua sem ver custo nem margem. Não é comissão (D-014) nem lucro. Migration 20261115102330_margem_por_vendedor (antes 20261115060000) aplicada no ora5g-dev em 15/11, com o sim do proprietário. FALTA: a conferência do Codex e a homologação.
+
+**Evidência declarada:**
+packages/banco/src/bonus.test.ts; apps/plataforma/src/lib/bonus/regras.ts; apps/plataforma/src/lib/bonus/regras.test.ts; apps/plataforma/src/app/metas/extrato; apps/plataforma/src/lib/bonus/fechamento.ts; apps/plataforma/src/app/metas/fechamento; packages/banco/supabase/migrations/20261115102330_margem_por_vendedor.sql; packages/banco/src/margem-por-vendedor.test.ts; apps/plataforma/src/lib/margem/painel.test.ts; apps/plataforma/src/app/relatorios/relatorios.test.ts
+
+## ORA-PERF-004 — Definir meta por vendedor, loja, categoria e período
+
+- Área: Vendedor, metas, comissões e bonificações; prioridade: P0.
+- Estado anterior: `parcial`; atual: `parcial`; homologação integral documentada: não.
+- Critério original: Alteração não reescreve resultado histórico.
+- Dependência declarada: não especificada no checkpoint; isso não prova ausência de pendências.
+
+**Nota do implementador, preservada integralmente:**
+G4b (13/11), pela decisão do proprietário do mesmo dia (D-014 em parte): meta mensal da loja e de cada vendedor, em quatro medidas (valor vendido líquido, aparelhos, acessórios e Ora Connect confirmado), com versões só de inserção, motivo para mudar ou retirar e auditoria; o mês que terminou não muda; o dono define em todas as lojas e o gerente na dele (metas.gerir); meta nova só para quem vende na loja e não está bloqueado; tudo ou nada por pessoa. Tela /metas com o formulário. A migration foi aplicada no ora5g-dev em 13/11 (md5 conferido). FALTA: meta por categoria do catálogo (se o proprietário quiser), comissão e bônus (D-014, P8), revisão do Codex e homologação. L9a (13/11): o bônus usa só a meta individual de cada vendedor; a meta da loja inteira não paga bônus (D-014).
+
+**Evidência declarada:**
+packages/banco/supabase/migrations/20261114012538_metas.sql; packages/banco/src/metas.test.ts; apps/plataforma/src/lib/metas/painel.ts; apps/plataforma/src/app/metas; packages/banco/supabase/migrations/20261114092832_bonus_por_meta.sql; packages/banco/src/bonus.test.ts
+
+## ORA-PERF-005 — Painel do gestor mostra metas e resultados da equipe
+
+- Área: Vendedor, metas, comissões e bonificações; prioridade: P0.
+- Estado anterior: `parcial`; atual: `parcial`; homologação integral documentada: não.
+- Critério original: Filtragem loja e perfil aplicada no servidor.
+- Dependência declarada: não especificada no checkpoint; isso não prova ausência de pendências.
+
+**Nota do implementador, preservada integralmente:**
+Demonstração: painel do gestor com metas e produção de todos os vendedores do escopo; o vendedor vê só os próprios números (dados fictícios). Real desde o G1 (13/11): os resultados da equipe por vendedor de origem (vendas, vendido, devolvido e cancelado, líquido e ticket) no /inicio do gerente e do dono, em hoje, 7 ou 30 dias, só para quem tem ranking.ver na loja da venda; o vendedor vê só os próprios números. FALTA (G4): metas (modelo versionado, com valores definidos pelo proprietário), atingimento e produção de telecom confirmada; o Início real ainda não tem medidor de meta. Contrato: MATRIZ_DEMO_REAL.md, linhas 5 e 18 a 20. G4a (13/11): a produção do Ora Connect confirmada entra no Início da gestão (indicador do período). Metas e produção por vendedor continuam no G4b. G4b (13/11): /metas mostra à gestão as metas e o realizado da loja e de cada vendedor no mês (ritmo esperado do dia, atingimento, por vendedor em cada medida e a equipe inteira), e ao vendedor só as próprias. FALTA: margem por vendedor (custo.ver), ranking com colegas (P3). G4c (13/11): a meta do mês também no Início: da loja (ou a soma das lojas da rede com meta, com o vendido líquido de cada loja) para a gestão, a própria para o vendedor. L9a (13/11): o cartão do bônus no /metas mostra à gestão o bônus provisório de cada vendedor (a faixa por medida, o total e o extrato) e ao vendedor só o próprio, com a régua das faixas; o banco decide quem vê o quê (bonus_do_mes chama metas_painel). L9b (14/11): no mês que terminou, o cartão do bônus diz à gestão onde está o fechamento (não enviado, com o dono ou aprovado, com o total aprovado) e leva à tela dele; o vendedor vê o valor aprovado. PERF-003b (15/11): a margem por vendedor (custo.ver) entrou nos Relatórios, com a planilha (migration 20261115102330_margem_por_vendedor, antes 20261115060000, aplicada no ora5g-dev em 15/11, com o sim do proprietário). FALTA: o ranking com os colegas (decisão P3).
+
+**Evidência declarada:**
+packages/banco/supabase/migrations/20261112195200_vendas_painel.sql; packages/banco/src/vendas-painel.test.ts; apps/plataforma/src/lib/inicio; apps/plataforma/src/app/inicio; apps/plataforma/src/app/demo; apps/plataforma/e2e/demonstracao.spec.ts; packages/banco/supabase/migrations/20261114012431_connect_painel.sql; packages/banco/src/connect-painel.test.ts; apps/plataforma/src/lib/connect/producao.ts; apps/plataforma/src/componentes/paineis-do-connect.tsx; packages/banco/supabase/migrations/20261114012538_metas.sql; packages/banco/src/metas.test.ts; apps/plataforma/src/lib/metas/painel.ts; apps/plataforma/src/app/metas; packages/banco/supabase/migrations/20261114012604_metas_lojas.sql; apps/plataforma/src/componentes/paineis-de-metas.tsx; apps/plataforma/src/app/metas/ConteudoBonus.tsx; apps/plataforma/src/app/metas/metas.test.ts; apps/plataforma/src/app/metas/fechamento; packages/banco/supabase/migrations/20261115102330_margem_por_vendedor.sql; packages/banco/src/margem-por-vendedor.test.ts; apps/plataforma/src/lib/margem/painel.test.ts; apps/plataforma/src/app/relatorios/relatorios.test.ts
+
+## ORA-PERF-006 — Regras de bonificação por categoria/campanha/margem/escala
+
+- Área: Vendedor, metas, comissões e bonificações; prioridade: P1.
+- Estado anterior: `testado`; atual: `testado`; homologação integral documentada: não.
+- Critério original: Edição versionada e período de vigência.
+- Dependência declarada: não especificada no checkpoint; isso não prova ausência de pendências.
+
+**Nota do implementador, preservada integralmente:**
+L9a (13/11), pela decisão do proprietário (D-014): regras do bônus por meta, só do dono (bonus.definir), da rede inteira, por medida (vendido líquido, aparelhos, acessórios e Ora Connect): de 1 a 5 faixas "a partir de X% da meta, R$ Y" (escala), vale a maior alcançada. Versões só de inserção em bonus_regras, com o mês em que passam a valer (deste mês até 12 à frente; o mês que terminou não muda), motivo para mudar ou retirar e auditoria; tudo ou nada nas quatro medidas. Tela /metas/bonus com o formulário e o histórico. Campanha e margem ficam fora por decisão do proprietário (bônus só por meta). A migration foi aplicada no ora5g-dev em 14/11, com o sim do proprietário (md5 conferido).
+
+**Evidência declarada:**
+packages/banco/supabase/migrations/20261114092832_bonus_por_meta.sql; packages/banco/src/bonus.test.ts; packages/banco/src/autorizacao-funcoes.test.ts; apps/plataforma/src/app/metas/bonus
+
+## ORA-PERF-007 — Ajustar comissão por cancelamento/devolução conforme regra
+
+- Área: Vendedor, metas, comissões e bonificações; prioridade: P1.
+- Estado anterior: `testado`; atual: `testado`; homologação integral documentada: não.
+- Critério original: Comprovante de origem e reversão sem apagar histórico.
+- Dependência declarada: não especificada no checkpoint; isso não prova ausência de pendências.
+
+**Nota do implementador, preservada integralmente:**
+L9a (13/11), pela decisão do proprietário (D-014): devolução e cancelamento descontam no mês em que acontecem, cada um numa linha do extrato com o número da venda (e o da devolução), sem apagar a venda original (provado no banco, inclusive a devolução de venda de outro mês). L9b (14/11): o mês aprovado não muda: a devolução feita depois do fechamento desconta no mês em que acontece e o fechamento aprovado continua igual (provado no banco); nenhum fato do sistema leva data passada. A migration do fechamento foi aplicada no ora5g-dev em 14/11, com o sim do proprietário (md5 conferido).
+
+**Evidência declarada:**
+packages/banco/src/bonus.test.ts; apps/plataforma/src/app/metas/extrato; packages/banco/src/bonus-fechamento.test.ts
+
+## ORA-PERF-008 — Apurar e aprovar fechamento de bonificação
+
+- Área: Vendedor, metas, comissões e bonificações; prioridade: P1.
+- Estado anterior: `testado`; atual: `testado`; homologação integral documentada: não.
+- Critério original: Totais detalhados, contestação e trilha de aprovação.
+- Dependência declarada: não especificada no checkpoint; isso não prova ausência de pendências.
+
+**Nota do implementador, preservada integralmente:**
+L9b (14/11), pela decisão do proprietário (D-014): no mês que terminou, quem confere a loja (bonus.conferir: o gerente, na dele, e o dono) envia o fechamento; o banco apura de novo (bonus_do_mes), compara com os totais que a tela mostrou e grava a apuração inteira, uma linha por vendedor e as contestações com motivo (de 3 a 300 letras). Só o dono (bonus.aprovar) aprova: decide cada contestação (manter o calculado ou pagar outro valor, com motivo que o vendedor vê) e pode ajustar qualquer linha; aprovado, o valor de cada vendedor fica gravado e nada muda (gatilhos). Trilha: auditoria do envio, de cada linha, de cada contestação e da aprovação, com o motivo. Telas: /metas/fechamento (conferência, aprovação, planilha para a folha e impressão), o aviso e o botão no cartão do bônus do /metas, o valor aprovado no cartão do vendedor e no extrato, e a pendência do dono no Início. A migration do fechamento foi aplicada no ora5g-dev em 14/11, com o sim do proprietário (md5 conferido). Fora: o bônus aprovado virar conta a pagar e entrar no resultado do mês (D-039).
+
+**Evidência declarada:**
+packages/banco/supabase/migrations/20261114104004_bonus_fechamento.sql; packages/banco/src/bonus-fechamento.test.ts; packages/banco/src/autorizacao-funcoes.test.ts; apps/plataforma/src/lib/bonus/fechamento.ts; apps/plataforma/src/lib/bonus/fechamento.test.ts; apps/plataforma/src/app/metas/fechamento
+
+## ORA-PERF-009 — Metas coletivas/regional e rankings configuráveis
+
+- Área: Vendedor, metas, comissões e bonificações; prioridade: P1.
+- Estado anterior: `parcial`; atual: `parcial`; homologação integral documentada: não.
+- Critério original: Desempate transparente e autorização adequada.
+- Dependência declarada: não especificada no checkpoint; isso não prova ausência de pendências.
+
+**Nota do implementador, preservada integralmente:**
+ORG-009 (14/11): a meta por região no Início da rede, como a soma das metas das lojas da região (só as lojas com meta), com o atingimento e o ritmo esperado. FALTA: o ranking configurável e os nomes dos colegas (decisão P3) e uma meta própria da região, se o proprietário quiser uma diferente da soma das lojas.
+
+**Evidência declarada:**
+apps/plataforma/src/componentes/paineis-de-metas.tsx; apps/plataforma/src/app/inicio/inicio.test.ts; apps/plataforma/src/lib/lojas/regioes.test.ts
+
+## ORA-PERF-010 — IA recomenda campanhas/metas com aprovação humana
+
+- Área: Vendedor, metas, comissões e bonificações; prioridade: P2.
+- Estado anterior: `nao_iniciado`; atual: `nao_iniciado`; homologação integral documentada: não.
+- Critério original: Sem alterar remuneração automaticamente.
+- Dependência declarada: não especificada no checkpoint; isso não prova ausência de pendências.
+
+**Nota do implementador, preservada integralmente:**
+NÃO INICIADO. A IA que recomenda campanhas e metas, com aprovação humana, depende da escolha do provedor de IA, do orçamento e dos dados reais de venda. (Linha própria desde o AUD-a, 18/11, a pedido da auditoria do Codex de 17/11.)
+
+**Evidência declarada:**
+docs/alinhamento/LEITURA_AUDITORIA_2026-11-17.md; docs/aceite/AUD-a.md
+
+## ORA-FISC-001 — Solicitar nota diretamente da venda no celular
+
+- Área: Fiscal, nota e conformidade; prioridade: P0.
+- Estado anterior: `testado`; atual: `testado`; homologação integral documentada: não.
+- Critério original: Fluxo intuitivo e prefill de dados necessários.
+- Dependência declarada: não especificada no checkpoint; isso não prova ausência de pendências.
+
+**Nota do implementador, preservada integralmente:**
+Botão "Pedir nota fiscal" no comprovante da venda concluída (celular), com nome e CPF/CNPJ opcionais; idempotente; um pedido vivo por venda; isolamento de loja, rede e papel. INTEG-a (16/11, #87, REV-PROMPT-001): corrigir a nota não apaga mais o destinatário guardado (cliente, endereço e versão do cadastro); a nota no nome do cliente se corrige com o cadastro atualizado ("Usar o cadastro atualizado"), e o CPF digitado nela é recusado; regressão em packages/banco/src/destinatario-fiscal.test.ts; migration 20261116095825_destinatario_fiscal_integro. INTEG-c (17/11, #101, revisão do Codex de 16/11): a migration do INTEG-a ligou as notas antigas, sem o destinatário guardado, ao cliente de hoje da venda; agora a identidade do cliente da nota tem origem registrada (o pedido, o destinatário guardado ou a conferência da gerência), e a nota sem prova não vai pelo WhatsApp (OR037); regressão em packages/banco/src/identidade-da-nota.test.ts; migration 20261117135133_identidade_da_nota_e_cota_da_loja.
+
+**Evidência declarada:**
+packages/banco/supabase/migrations/20261109123757_fila_fiscal.sql; packages/banco/src/notas.test.ts; packages/dominio/src/fiscal.test.ts; apps/plataforma/src/app/notas; apps/plataforma/src/app/vendas/[id]/page.tsx; docs/adr/ADR-006-fila-fiscal-interna.md; packages/banco/supabase/migrations/20261117135133_identidade_da_nota_e_cota_da_loja.sql; packages/banco/src/identidade-da-nota.test.ts; apps/plataforma/src/app/vendas/nota-whatsapp.test.ts; docs/aceite/INTEG-c.md
+
+## ORA-FISC-002 — Fluxo interno de aprovação de solicitações pelo gestor conforme política
+
+- Área: Fiscal, nota e conformidade; prioridade: P0.
+- Estado anterior: `testado`; atual: `testado`; homologação integral documentada: não.
+- Critério original: Auditoria sem impedir obrigação legal de emissão.
+- Dependência declarada: não especificada no checkpoint; isso não prova ausência de pendências.
+
+**Nota do implementador, preservada integralmente:**
+Fila do dono/gerente por antiguidade da venda, aprovar ou pedir correção; a aprovação nunca segura a emissão (registrar a nota vale como aprovação, com evento); alerta de atraso só com o prazo e a fonte do contador.
+
+**Evidência declarada:**
+packages/banco/supabase/migrations/20261109123757_fila_fiscal.sql; packages/banco/src/notas.test.ts; packages/dominio/src/fiscal.test.ts; apps/plataforma/src/app/notas; apps/plataforma/src/app/vendas/[id]/page.tsx; docs/adr/ADR-006-fila-fiscal-interna.md
+
+## ORA-FISC-003 — Identificar perfil fiscal por produto/serviço/UF/CNPJ
+
+- Área: Fiscal, nota e conformidade; prioridade: P0.
+- Estado anterior: `bloqueado`; atual: `bloqueado`; homologação integral documentada: não.
+- Critério original: Regras homologadas com contador/especialista.
+- Dependência declarada: D1 (contador).
+
+**Nota do implementador, preservada integralmente:**
+Depende do contador e do emissor fiscal (P7).
+
+**Evidência declarada:**
+docs/ESTADO_ATUAL_E_PASSAGEM.md §5
+
+## ORA-FISC-004 — Integrar provedor fiscal homologado para documento correto
+
+- Área: Fiscal, nota e conformidade; prioridade: P0.
+- Estado anterior: `bloqueado`; atual: `bloqueado`; homologação integral documentada: não.
+- Critério original: Estados emitido/autorizado/rejeitado/contingência claros.
+- Dependência declarada: D1 (emissor fiscal).
+
+**Nota do implementador, preservada integralmente:**
+Contrato do emissor (EmissorFiscal) com implementação bloqueada; emissão real só com emissor escolhido e homologado com o contador (A4).
+
+**Evidência declarada:**
+packages/dominio/src/fiscal.ts; docs/adr/ADR-006-fila-fiscal-interna.md
+
+## ORA-FISC-005 — Guardar chave, protocolo, referência e evidências legais com segurança
+
+- Área: Fiscal, nota e conformidade; prioridade: P0.
+- Estado anterior: `parcial`; atual: `parcial`; homologação integral documentada: não.
+- Critério original: Controle de acesso e retenção definidos.
+- Dependência declarada: não especificada no checkpoint; isso não prova ausência de pendências.
+
+**Nota do implementador, preservada integralmente:**
+Chave de acesso de 44 dígitos registrada com dígito e CNPJ da loja conferidos, única, com modelo, série e número; CPF/CNPJ só até a emissão. FALTA: protocolo, XML/PDF anexos e retenção definida com o contador. Lote L10a (14/11): o PDF (DANFE) e o XML da nota emitida ficam num bucket privado ("notas"), enviados por quem aprova a nota na loja e lidos por quem pode ler o pedido (quem pediu, quem vê a venda, quem aprova), sempre por link assinado de 10 minutos; o servidor confere antes de guardar que o PDF é PDF e que o XML é desta nota (a chave de acesso dentro dele) e calcula o SHA-256; o protocolo de autorização (15 dígitos) entra digitado ou lido do XML, uma vez; trocar o arquivo guarda o anterior como substituído, nada se apaga; tudo na auditoria. Migration 20261114150027_notas_documentos (aplicada no ora5g-dev em 14/11). FALTA: prazo de guarda com o contador (sem regra de descarte por ora) e a integração com o emissor (A4).
+
+**Evidência declarada:**
+packages/banco/supabase/migrations/20261109123757_fila_fiscal.sql; packages/banco/src/notas.test.ts; packages/dominio/src/fiscal.test.ts; packages/banco/supabase/migrations/20261114150027_notas_documentos.sql; packages/banco/src/notas.test.ts; apps/plataforma/src/lib/notas/documento.test.ts; apps/plataforma/src/app/notas/[id]/documentos/documentos.test.ts
+
+## ORA-FISC-006 — Tratar falha fiscal, reprocesso, contingência e cancelamento
+
+- Área: Fiscal, nota e conformidade; prioridade: P0.
+- Estado anterior: `parcial`; atual: `parcial`; homologação integral documentada: não.
+- Critério original: Nenhum documento duplicado nem venda marcada indevidamente.
+- Dependência declarada: não especificada no checkpoint; isso não prova ausência de pendências.
+
+**Nota do implementador, preservada integralmente:**
+Chave repetida recusada; venda cancelada cancela pedido sem nota; venda com nota emitida só cancela depois do tratamento fiscal (OR015). L10c (14/11): a nota cancelada no portal do fisco é registrada com o protocolo e a justificativa, e então a venda pode ser cancelada ou pedir outra nota; a chave registrada errada é corrigida com motivo (com o XML guardado, não). Migration 20261114215128_cancelamento_da_nota (aplicada no ora5g-dev em 14/11). FALTA: reprocesso e contingência no emissor (A4).
+
+**Evidência declarada:**
+packages/banco/supabase/migrations/20261109123757_fila_fiscal.sql; packages/banco/src/notas.test.ts; packages/dominio/src/fiscal.test.ts; packages/banco/src/cancelamento-da-nota.test.ts
+
+## ORA-FISC-007 — Mapear cenários NF-e/NFC-e/NFS-e/NFCom conforme natureza
+
+- Área: Fiscal, nota e conformidade; prioridade: P1.
+- Estado anterior: `nao_iniciado`; atual: `bloqueado`; homologação integral documentada: não.
+- Critério original: Matriz validada por contador com decisões por UF e operação.
+- Dependência declarada: D1 (matriz validada pelo contador).
+
+**Nota do implementador, preservada integralmente:**
+BLOQUEADO (ADAPT-a, 17/11; ADR-020): os cenários de NF-e, NFC-e, NFS-e e NFCom por natureza da operação dependem da matriz validada pelo contador (D1). Nada fiscal é decidido sem ele.
+
+**Evidência declarada:**
+docs/adr/ADR-020-integracoes-que-esperam-contrato.md; docs/aceite/ADAPT-a.md; docs/integracoes/APIS_E_HABILITACOES_NECESSARIAS.md
+
+## ORA-FISC-008 — Conciliação fiscal de vendas, tributos e documentos
+
+- Área: Fiscal, nota e conformidade; prioridade: P1.
+- Estado anterior: `parcial`; atual: `parcial`; homologação integral documentada: não.
+- Critério original: Pendências e divergências alertadas.
+- Dependência declarada: não especificada no checkpoint; isso não prova ausência de pendências.
+
+**Nota do implementador, preservada integralmente:**
+Lote L10b (14/11): conciliação das notas em /notas/conciliacao, para quem aprova nota (dono e gerente, das lojas onde aprova), por período e loja: as vendas concluídas em quatro grupos que não se cruzam (com a nota emitida, com o pedido em andamento, sem pedido e devolvidas inteiras sem nota), com o valor e a cobertura por loja; os pedidos que passaram do prazo de alerta da fila e as notas registradas depois dele (só com prazo registrado); as notas emitidas sem o PDF, sem o XML ou sem o protocolo; as notas de devolução (emitidas, na fila e canceladas); e as divergências que não dependem de regra do contador: chave de acesso com o mês de antes da venda ou de depois do registro, o mesmo número de nota (CNPJ, modelo, série e número) em dois pedidos e a devolução de venda com nota que ficou sem a nota de devolução. Quem aprova nota na loja do pedido registra a conferência de cada divergência (o que viu e o que fez; só inserção, na auditoria), e a conferida deixa de contar como aberta; as abertas da loja do turno nos últimos 90 dias viram alerta no Início. Migration 20261114215050_conciliacao_fiscal (aplicada no ora5g-dev em 14/11). SAUDE-a (17/11; ADR-012): a venda concluída sem o pedido da nota virou fila na Saúde da operação (public.notas_vendas_sem_pedido: a regra do grupo "sem pedido" da conciliação, sem período, para quem aprova nota), visível todo dia. FALTA: o valor da nota contra o da venda e os tributos, que dependem da matriz fiscal do contador (o que entra em cada documento: ORA-FISC-003 e ORA-FISC-007), e a conferência com o próprio emissor (A4).
+
+**Evidência declarada:**
+packages/banco/supabase/migrations/20261114215050_conciliacao_fiscal.sql; packages/banco/src/conciliacao-fiscal.test.ts; packages/banco/src/autorizacao-funcoes.test.ts; apps/plataforma/src/lib/notas/conciliacao.test.ts; apps/plataforma/src/app/notas/conciliacao/conciliacao.test.ts; apps/plataforma/src/app/inicio/inicio.test.ts; packages/banco/supabase/migrations/20261117145723_saude_do_banco_e_vendas_sem_nota.sql; packages/banco/src/saude-e-vendas-sem-nota.test.ts; docs/adr/ADR-012-o-que-e-fila-e-a-leitura-do-banco-na-saude.md; docs/aceite/SAUDE-a.md
+
+## ORA-FISC-009 — Devolução, troca, cancelamento e correção fiscal
+
+- Área: Fiscal, nota e conformidade; prioridade: P1.
+- Estado anterior: `parcial`; atual: `parcial`; homologação integral documentada: não.
+- Critério original: Fluxos e prazos homologados com fiscal.
+- Dependência declarada: não especificada no checkpoint; isso não prova ausência de pendências.
+
+**Nota do implementador, preservada integralmente:**
+Lote L10c (14/11): o cancelamento da nota feito no portal do fisco é registrado no comprovante por quem aprova nota, na loja do pedido, com o protocolo do evento (15 dígitos) e a justificativa (de 15 a 255 letras, como a do evento): a nota fica cancelada no fisco (quem, quando e o protocolo), a chave continua gravada e não serve para outro pedido, e só então a venda pode ser cancelada (antes, OR015 com o caminho na mensagem) ou pedir outra nota; nota de venda com nota de devolução não se cancela aqui (é com o contador); a nota de devolução emitida também pode ser cancelada. A chave registrada errada é corrigida com o motivo (dígito, CNPJ da loja e unicidade conferidos; a anterior fica no histórico da nota; com o XML guardado, a chave é a do XML e não se corrige; o protocolo de autorização entra de novo). O histórico das notas canceladas no fisco aparece na venda, inclusive na cancelada. Migration 20261114215128_cancelamento_da_nota (aplicada no ora5g-dev em 14/11). A devolução com nota de devolução já existia (ADR-006 e devolução de 09/11). FISC-009b (15/11): a carta de correção da NF-e feita no portal do fisco é registrada no bloco "Nota fiscal" da venda por quem aprova nota, na loja do pedido, com o número (de 1 a 20), o protocolo do evento (15 dígitos) e o texto (de 15 a 1.000 caracteres), pelas regras do Manual de Orientação ao Contribuinte da SEFAZ-PR, Web Service da Carta de Correção (moc.sped.fazenda.pr.gov.br/NFe_NFCe/RecepcaoEventoCartaCorrecao.html), conferido em 15/11/2026: só a NF-e (modelo 55) tem carta, a NFC-e não (rejeição 784); só a nota emitida e não cancelada (580); a mais recente substitui as anteriores (a tela marca a que vale). Repetir a mesma carta não muda nada; o mesmo número com outro conteúdo ou o protocolo de outra carta é recusado; o registro só aceita inserção, é lido por quem vê a nota e entra no histórico da nota. O prazo e o que a carta pode corrigir são do fisco (a tela lembra o § 1º-A do art. 7º do Convênio S/N, de 15/12/1970). Migration 20261115181840_carta_de_correcao (antes 20261115200000) aplicada no ora5g-dev em 15/11, com o sim do proprietário. FALTA: os prazos de cancelamento, de devolução e da carta de correção homologados com o contador (o sistema registra, não decide), a emissão da carta pelo emissor (A4) e a troca como operação fiscal própria.
+
+**Evidência declarada:**
+packages/banco/supabase/migrations/20261114215128_cancelamento_da_nota.sql; packages/banco/src/cancelamento-da-nota.test.ts; packages/banco/src/autorizacao-funcoes.test.ts; packages/banco/src/devolucao.test.ts; apps/plataforma/src/app/vendas/cancelamento-da-nota.test.ts; packages/banco/supabase/migrations/20261115181840_carta_de_correcao.sql; packages/banco/src/carta-de-correcao.test.ts; apps/plataforma/src/app/vendas/carta-de-correcao.test.ts
+
+## ORA-FISC-010 — Multi-UF/multi-CNPJ e reforma tributária preparada
+
+- Área: Fiscal, nota e conformidade; prioridade: P2.
+- Estado anterior: `nao_iniciado`; atual: `bloqueado`; homologação integral documentada: não.
+- Critério original: Alterações versionadas e conformes à norma vigente.
+- Dependência declarada: D1 (o contador), para vários estados, vários CNPJs e a reforma tributária.
+
+**Nota do implementador, preservada integralmente:**
+BLOQUEADO (ADAPT-a, 17/11; ADR-020): vários estados, vários CNPJs e a reforma tributária dependem do contador (D1). A rede já guarda o CNPJ e o estado de cada loja (L2), e a nota guarda a identidade da loja que emite (INTEG-c).
+
+**Evidência declarada:**
+docs/adr/ADR-020-integracoes-que-esperam-contrato.md; docs/aceite/ADAPT-a.md; docs/integracoes/APIS_E_HABILITACOES_NECESSARIAS.md
+
+## ORA-CONNECT-001 — Cadastrar e vender chip físico ligado ao estoque e vendedor
+
+- Área: Ora Connect, chips, ativações e recargas; prioridade: P0.
+- Estado anterior: `testado`; atual: `testado`; homologação integral documentada: não.
+- Critério original: Unidade/ICCID e venda reconciliáveis.
+- Dependência declarada: não especificada no checkpoint; isso não prova ausência de pendências.
+
+**Nota do implementador, preservada integralmente:**
+Chip vendido no PDV com ICCID do estoque (ADR-004); a ativação só aceita chip do estoque depois de vendido (OR011), fica ligada à venda do chip, e o chip ativado não volta ao estoque pelo cancelamento. Sem chamada real à Nogle: falta credencial no worker, P9 e linha de teste para homologar. Revisão do Codex (PR #33, trazida em 10/11): 9b1109e reproduziu #55 a #59; corrigidos nos lotes 1 e 2, aguardando a conferência do Codex. Cobrança, carteira, recorrência e repasse (#54) ficam no ORA-CONNECT-009.
+
+**Evidência declarada:**
+packages/banco/supabase/migrations/20261109123402_ora_connect_operacoes.sql; packages/banco/src/connect.test.ts; packages/banco/src/concorrencia.test.ts; packages/dominio/src/nogle.test.ts; apps/worker/src/connect/ponta-a-ponta.test.ts; apps/worker/src/connect/transporte.test.ts; apps/plataforma/src/app/connect; apps/worker/src/connect; docs/adr/ADR-005-ora-connect-operacoes.md
+
+## ORA-CONNECT-002 — Separar evento de venda de chip do evento de ativação
+
+- Área: Ora Connect, chips, ativações e recargas; prioridade: P0.
+- Estado anterior: `testado`; atual: `testado`; homologação integral documentada: não.
+- Critério original: Quantidades, status, valor e comissão independentes.
+- Dependência declarada: não especificada no checkpoint; isso não prova ausência de pendências.
+
+**Nota do implementador, preservada integralmente:**
+Venda do chip, pedido de ativação, resposta da operadora e produção são registros separados; a produção nasce só da operação confirmada, uma vez (chave única). Sem chamada real à Nogle: falta credencial no worker, P9 e linha de teste para homologar. Revisão do Codex (PR #33, trazida em 10/11): 9b1109e reproduziu #55 a #59; corrigidos nos lotes 1 e 2, aguardando a conferência do Codex. Cobrança, carteira, recorrência e repasse (#54) ficam no ORA-CONNECT-009.
+
+**Evidência declarada:**
+packages/banco/supabase/migrations/20261109123402_ora_connect_operacoes.sql; packages/banco/src/connect.test.ts; packages/banco/src/concorrencia.test.ts; packages/dominio/src/nogle.test.ts; apps/worker/src/connect/ponta-a-ponta.test.ts; apps/worker/src/connect/transporte.test.ts
+
+## ORA-CONNECT-003 — Separar recarga como operação telecom com status próprio
+
+- Área: Ora Connect, chips, ativações e recargas; prioridade: P0.
+- Estado anterior: `parcial`; atual: `parcial`; homologação integral documentada: não.
+- Critério original: Total pago e valor repassado/receita reconhecida não confundidos.
+- Dependência declarada: não especificada no checkpoint; isso não prova ausência de pendências.
+
+**Nota do implementador, preservada integralmente:**
+Recarga é operação própria com estado; separa valor de face (lista oficial), recebido na loja (venda do serviço, obrigatório no SALDO) e debitado da carteira (histórico da Nogle). FALTA: receita da recarga por LINK (repasse, P8/D-009) e homologação. Revisão do Codex (PR #33, trazida em 10/11): 9b1109e reproduziu #55 a #59; corrigidos nos lotes 1 e 2, aguardando a conferência do Codex. Cobrança, carteira, recorrência e repasse (#54) ficam no ORA-CONNECT-009.
+
+**Evidência declarada:**
+packages/banco/supabase/migrations/20261109123402_ora_connect_operacoes.sql; packages/banco/src/connect.test.ts; packages/banco/src/concorrencia.test.ts; packages/dominio/src/nogle.test.ts; apps/worker/src/connect/ponta-a-ponta.test.ts; apps/worker/src/connect/transporte.test.ts; apps/plataforma/src/app/connect; apps/worker/src/connect; docs/adr/ADR-005-ora-connect-operacoes.md
+
+## ORA-CONNECT-004 — Registrar Nogle como integração externa por adapter
+
+- Área: Ora Connect, chips, ativações e recargas; prioridade: P0.
+- Estado anterior: `testado`; atual: `testado`; homologação integral documentada: não.
+- Critério original: Sem endpoint presumido; contrato deve vir dos docs autenticados.
+- Dependência declarada: não especificada no checkpoint; isso não prova ausência de pendências.
+
+**Nota do implementador, preservada integralmente:**
+Adaptador só no worker do servidor (credenciais fora do web e do navegador); pedido só com campos documentados, provado contra a cópia oficial da coleção; GET com corpo só depois da confirmação da Nogle. Testado contra servidor local com os exemplos oficiais; nenhuma chamada real. Revisão do Codex (PR #33, trazida em 10/11): 9b1109e reproduziu #55 a #59; corrigidos nos lotes 1 e 2, aguardando a conferência do Codex. Cobrança, carteira, recorrência e repasse (#54) ficam no ORA-CONNECT-009.
+
+**Evidência declarada:**
+packages/dominio/src/nogle.ts; apps/worker/src/connect; packages/banco/src/connect.test.ts; packages/banco/src/concorrencia.test.ts; packages/dominio/src/nogle.test.ts; apps/worker/src/connect/ponta-a-ponta.test.ts; apps/worker/src/connect/transporte.test.ts
+
+## ORA-CONNECT-005 — Refletir ativação somente após resposta verificada da Nogle
+
+- Área: Ora Connect, chips, ativações e recargas; prioridade: P0.
+- Estado anterior: `testado`; atual: `testado`; homologação integral documentada: não.
+- Critério original: Falhas ficam pendentes/revisão sem gerar sucesso falso.
+- Dependência declarada: não especificada no checkpoint; isso não prova ausência de pendências.
+
+**Nota do implementador, preservada integralmente:**
+Ativação só confirma com a evidência da operadora (ICCID ativo com a linha); resposta ambígua, sem resposta ou worker interrompido viram resultado desconhecido, sem sucesso falso nem reenvio; a gerência decide (não a própria operação). Sem chamada real à Nogle: falta credencial no worker, P9 e linha de teste para homologar. Revisão do Codex (PR #33, trazida em 10/11): 9b1109e reproduziu #55 a #59; corrigidos nos lotes 1 e 2, aguardando a conferência do Codex. Cobrança, carteira, recorrência e repasse (#54) ficam no ORA-CONNECT-009.
+
+**Evidência declarada:**
+packages/banco/supabase/migrations/20261109123402_ora_connect_operacoes.sql; packages/banco/src/connect.test.ts; packages/banco/src/concorrencia.test.ts; packages/dominio/src/nogle.test.ts; apps/worker/src/connect/ponta-a-ponta.test.ts; apps/worker/src/connect/transporte.test.ts
+
+## ORA-CONNECT-006 — Atribuir performance de ativação/recarga ao vendedor de origem
+
+- Área: Ora Connect, chips, ativações e recargas; prioridade: P0.
+- Estado anterior: `testado`; atual: `testado`; homologação integral documentada: não.
+- Critério original: Evento idempotente e elegibilidade transparente.
+- Dependência declarada: não especificada no checkpoint; isso não prova ausência de pendências.
+
+**Nota do implementador, preservada integralmente:**
+Produção por operação confirmada, do vendedor e da loja de origem, com origem (evidência da operadora ou revisão da gerência) e chave única por operação. Comissão sobre ela ainda não existe (P8). Revisão do Codex (PR #33, trazida em 10/11): 9b1109e reproduziu #55 a #59; corrigidos nos lotes 1 e 2, aguardando a conferência do Codex. Cobrança, carteira, recorrência e repasse (#54) ficam no ORA-CONNECT-009. G4a (13/11): a produção confirmada aparece somada no /connect, no Início e nos Relatórios, sempre pelo vendedor e pela loja de origem. G4b (13/11): a produção confirmada por vendedor de origem aparece no /metas da gestão, com a meta de cada um; o vendedor vê só a própria.
+
+**Evidência declarada:**
+packages/banco/supabase/migrations/20261109123402_ora_connect_operacoes.sql; packages/banco/src/connect.test.ts; packages/banco/src/concorrencia.test.ts; packages/dominio/src/nogle.test.ts; apps/worker/src/connect/ponta-a-ponta.test.ts; apps/worker/src/connect/transporte.test.ts; packages/banco/supabase/migrations/20261114012431_connect_painel.sql; packages/banco/src/connect-painel.test.ts; apps/plataforma/src/lib/connect/producao.ts; apps/plataforma/src/componentes/paineis-do-connect.tsx; packages/banco/supabase/migrations/20261114012538_metas.sql; packages/banco/src/metas.test.ts; apps/plataforma/src/lib/metas/painel.ts; apps/plataforma/src/app/metas
+
+## ORA-CONNECT-007 — Consulta/atualização de linha e plano conforme API disponível
+
+- Área: Ora Connect, chips, ativações e recargas; prioridade: P1.
+- Estado anterior: `parcial`; atual: `parcial`; homologação integral documentada: não.
+- Critério original: Permissão e rate limit respeitados.
+- Dependência declarada: C1/C2 (Nogle).
+
+**Nota do implementador, preservada integralmente:**
+Listas oficiais (planos, DDDs, cidades, operadoras) sincronizadas pelo worker e usadas na tela; consultas de evidência com intervalo crescente. FALTA: telas de consulta de linha, saldo e consumo e limites de chamada (não documentados). Revisão do Codex (PR #33, trazida em 10/11): 9b1109e reproduziu #55 a #59; corrigidos nos lotes 1 e 2, aguardando a conferência do Codex. Cobrança, carteira, recorrência e repasse (#54) ficam no ORA-CONNECT-009.
+
+**Evidência declarada:**
+apps/plataforma/src/app/connect; apps/worker/src/connect; docs/adr/ADR-005-ora-connect-operacoes.md; packages/banco/src/connect.test.ts; packages/banco/src/concorrencia.test.ts; packages/dominio/src/nogle.test.ts; apps/worker/src/connect/ponta-a-ponta.test.ts; apps/worker/src/connect/transporte.test.ts
+
+## ORA-CONNECT-008 — Portabilidade, contrato e venda de plano conforme contrato
+
+- Área: Ora Connect, chips, ativações e recargas; prioridade: P1.
+- Estado anterior: `parcial`; atual: `parcial`; homologação integral documentada: não.
+- Critério original: Jornada e documentos homologados.
+- Dependência declarada: C1/C2 (Nogle).
+
+**Nota do implementador, preservada integralmente:**
+Portabilidade registrada, enviada e acompanhada pelo status documentado; o exemplo contraditório da documentação fica como resultado desconhecido (pergunta 7). FALTA: contrato/venda de plano e homologação. Revisão do Codex (PR #33, trazida em 10/11): 9b1109e reproduziu #55 a #59; corrigidos nos lotes 1 e 2, aguardando a conferência do Codex. Cobrança, carteira, recorrência e repasse (#54) ficam no ORA-CONNECT-009.
+
+**Evidência declarada:**
+packages/banco/supabase/migrations/20261109123402_ora_connect_operacoes.sql; packages/banco/src/connect.test.ts; packages/banco/src/concorrencia.test.ts; packages/dominio/src/nogle.test.ts; apps/worker/src/connect/ponta-a-ponta.test.ts; apps/worker/src/connect/transporte.test.ts; apps/plataforma/src/app/connect; apps/worker/src/connect; docs/adr/ADR-005-ora-connect-operacoes.md
+
+## ORA-CONNECT-009 — Reconciliar repasses/bonificações Nogle e operação local
+
+- Área: Ora Connect, chips, ativações e recargas; prioridade: P1.
+- Estado anterior: `nao_iniciado`; atual: `nao_iniciado`; homologação integral documentada: não.
+- Critério original: Divergências rastreáveis e reversão segura.
+- Dependência declarada: C2 (repasses Nogle).
+
+**Nota do implementador, preservada integralmente:**
+Carteira, extrato, cobrança/gateway, recorrência e repasses oficiais não implementados (#54). Respostas da Nogle de 10/11 (NOGLE_API_REFERENCIA.md §3.1): GET /saldo/extrato existe; a API não traz comissões. Persistir estados e correlação e homologar sem apresentar estimativa local como recebimento. Entrada vinda da PR #33 (Codex).
+
+**Evidência declarada:**
+não indicada
+
+## ORA-CONNECT-010 — Recuperar falha de rede com reconsulta sem reativação duplicada
+
+- Área: Ora Connect, chips, ativações e recargas; prioridade: P1.
+- Estado anterior: `testado`; atual: `testado`; homologação integral documentada: não.
+- Critério original: Idempotência/reconciliação externa aprovadas.
+- Dependência declarada: não especificada no checkpoint; isso não prova ausência de pendências.
+
+**Nota do implementador, preservada integralmente:**
+Sem conexão volta para a fila; conectou e não respondeu = desconhecido, nunca reenviado; envio interrompido expira para desconhecido; resposta atrasada ainda vale; dois workers não pegam a mesma operação (PostgreSQL 17 real). Revisão do Codex (PR #33, trazida em 10/11): 9b1109e reproduziu #55 a #59; corrigidos nos lotes 1 e 2, aguardando a conferência do Codex. Cobrança, carteira, recorrência e repasse (#54) ficam no ORA-CONNECT-009.
+
+**Evidência declarada:**
+packages/banco/supabase/migrations/20261109123402_ora_connect_operacoes.sql; packages/banco/src/connect.test.ts; packages/banco/src/concorrencia.test.ts; packages/dominio/src/nogle.test.ts; apps/worker/src/connect/ponta-a-ponta.test.ts; apps/worker/src/connect/transporte.test.ts
+
+## ORA-CONNECT-011 — eSIM, contratação digital e entrega de chip nacional
+
+- Área: Ora Connect, chips, ativações e recargas; prioridade: P2.
+- Estado anterior: `parcial`; atual: `parcial`; homologação integral documentada: não.
+- Critério original: Implementar somente se Nogle suportar e acordo permitir.
+- Dependência declarada: C1/C2 (eSIM, se a Nogle suportar).
+
+**Nota do implementador, preservada integralmente:**
+Ativação de eSIM pelo formato documentado (sem ICCID, "esim": "SIM"), com o ICCID e o link vindos da resposta. FALTA: confirmar com a Nogle (pergunta 11), compra com entrega e contratação digital. Revisão do Codex (PR #33, trazida em 10/11): 9b1109e reproduziu #55 a #59; corrigidos nos lotes 1 e 2, aguardando a conferência do Codex. Cobrança, carteira, recorrência e repasse (#54) ficam no ORA-CONNECT-009.
+
+**Evidência declarada:**
+packages/banco/supabase/migrations/20261109123402_ora_connect_operacoes.sql; packages/dominio/src/nogle.ts; packages/banco/src/connect.test.ts; packages/banco/src/concorrencia.test.ts; packages/dominio/src/nogle.test.ts; apps/worker/src/connect/ponta-a-ponta.test.ts; apps/worker/src/connect/transporte.test.ts
+
+## ORA-ONLINE-001 — Site de aparelhos, acessórios e planos Ora Connect
+
+- Área: E-commerce e vendas online; prioridade: P1.
+- Estado anterior: `parcial`; atual: `parcial`; homologação integral documentada: não.
+- Critério original: Catálogo e estoque centralizados; não criar outro sistema de venda.
+- Dependência declarada: o endereço definitivo (D-024); os planos da Ora Connect dependem da Nogle.
+
+**Nota do implementador, preservada integralmente:**
+ONLINE-a (15/11; ADR-009; decisão do proprietário: "reserve no site e retire na loja", sem pagamento online): a vitrine pública em /loja e /loja/<produto>, dentro da plataforma (o mesmo catálogo e o mesmo estoque, sem outro sistema de venda). Só aparece o que o dono marca no cadastro ("mostrar na loja online") e está ativo, só aparelhos e acessórios, com as fotos, a descrição, as variações e, em cada loja física ativa, o preço do balcão (o do PDV) e se há estoque (disponível, últimas unidades ou sem estoque, sem a quantidade); nada de custo, SKU, código de barras, quantidade, IMEI ou dado de cliente. O visitante sem login executa só loja_vitrine, loja_produto e privado.foto_na_vitrine (o inventário de autorização lista as três e confere que nada fora do site sai); as fotos seguem privadas, assinadas só as do site. Liga com LOJA_ONLINE_ORGANIZACAO; fora dos buscadores até a D-024. Migration 20261115210812_loja_online_vitrine (antes 20261115220000) aplicada no ora5g-dev em 15/11, com o sim do proprietário; a loja online ligada na homologação (LOJA_ONLINE_ORGANIZACAO). A reserva do site com retirada na loja veio no ONLINE-b (ver ORA-ONLINE-006 e 004). ONLINE-c (17/11; ADR-009, decisão 15): para o produto fora do site (não marcado, inativo, chip, de outra empresa, sem preço em loja nenhuma ou que não existe), loja_produto passou a devolver vazio, sem erro, e a página mostra "não encontrada" (404); antes a função levantava P0002, que a API do banco responde com HTTP 500, e cada visita a um endereço desses deixava um erro de servidor no registro. Uma falha de verdade mostra "A loja online está fora do ar agora". Migration 20261117071458_loja_online_sem_erro_500 aplicada no ora5g-dev em 17/11; medido pela API, como visitante: antes HTTP 500, depois HTTP 200 com resposta vazia. ENTREGAS-a (17/11; aceite A01 do adendo do Codex de 16/11): o botão "Comprar" no topo da página inicial, ao lado de "Entrar" e separado dele, leva à loja online; provado no navegador, em tela de celular, sem rolagem para o lado. FALTA: o dono marcar os produtos e as fotos; os planos da Ora Connect (dependem da Nogle); o endereço definitivo (D-024); a revisão do Codex e a homologação.
+
+**Evidência declarada:**
+packages/banco/supabase/migrations/20261115210812_loja_online_vitrine.sql; packages/banco/src/loja-online-vitrine.test.ts; packages/banco/src/autorizacao-funcoes.test.ts; apps/plataforma/src/app/loja/loja.test.ts; apps/plataforma/e2e/loja-online.spec.ts; docs/adr/ADR-009-loja-online.md; packages/banco/supabase/migrations/20261117071458_loja_online_sem_erro_500.sql; docs/aceite/ONLINE-c.md; apps/plataforma/src/app/page.tsx; apps/plataforma/e2e/saude.spec.ts; docs/aceite/ENTREGAS-a.md
+
+## ORA-ONLINE-002 — Carrinho/checkout online e pedido com status
+
+- Área: E-commerce e vendas online; prioridade: P1.
+- Estado anterior: `nao_iniciado`; atual: `parcial`; homologação integral documentada: não.
+- Critério original: Pagamento confirmado antes de liberar fulfillment.
+- Dependência declarada: não especificada no checkpoint; isso não prova ausência de pendências.
+
+**Nota do implementador, preservada integralmente:**
+ONLINE-d (18/11; ADR-023; aceites A03 e A06 do adendo do Codex de 16/11; a orientação "Loja online" da auditoria de 17/11): o carrinho do site fica no aparelho do visitante, num cookie sem dado pessoal (até 3 unidades de uma loja só, a de retirada), e o pedido fica no banco (public.loja_pedidos, com o WhatsApp à parte). O visitante reserva o carrinho de uma vez ou nada (public.loja_pedir: faltou uma unidade, OR001, e nada fica preso); cada unidade vira uma reserva do site ligada ao pedido, pela mesma regra da reserva avulsa (privado.reservar_unidade_do_site, um escritor só); a mesma chave devolve o mesmo pedido (outros dados: OR004); o WhatsApp tem até 2 compromissos ativos, e cada pedido conta um (OR034); a loja aceita até 20 unidades por hora (OR035); a loja sem o CNPJ da filial não recebe pedido (OR038). Os estados: reservado por 24 horas; atendido no balcão, numa venda só com todas as unidades (public.loja_pedido_atender, que devolve o total anunciado e o de hoje: a oferta vale, e o PDV diz o desconto a dar); cancelado (public.loja_pedido_cancelar: as unidades voltam); o reservado que passou da hora aparece vencido, e a rotina do banco libera o estoque. A reserva de um pedido não se atende nem se cancela sozinha. O visitante acompanha pelo código e pelo WhatsApp (public.loja_pedido_consultar; sem o par certo, nulo, sem erro). Telas: "Pôr no carrinho" no produto, /loja/carrinho, /loja/pedido e o cartão do pedido em /reservas-do-site. Migrations 20261118031404_pedido_do_site e 20261118034536_comentario_do_contato_do_pedido (o comentário de acesso da tabela do contato) aplicadas no ora5g-dev em 18/11. FALTA: o pagamento online e a confirmação pelo provedor (E1; ORA-PAY-014, bloqueado); a entrega, o frete e o rastreio (P10, ORA-ONLINE-004); a devolução (ORA-ONLINE-005); o dono marcar produtos para o site; a revisão do Codex e a homologação.
+
+**Evidência declarada:**
+packages/banco/supabase/migrations/20261118031404_pedido_do_site.sql; packages/banco/supabase/migrations/20261118034536_comentario_do_contato_do_pedido.sql; packages/banco/src/higiene-do-esquema.test.ts; packages/banco/src/loja-online-pedido.test.ts; packages/banco/src/autorizacao-funcoes.test.ts; apps/plataforma/src/lib/loja/carrinho.test.ts; apps/plataforma/src/app/loja/carrinho/carrinho.test.ts; apps/plataforma/src/app/reservas-do-site/reservas.test.ts; apps/plataforma/e2e/loja-online.spec.ts; docs/adr/ADR-023-pedido-do-site.md; docs/aceite/ONLINE-d.md
+
+## ORA-ONLINE-003 — Atribuir origem online, campanhas e vendedor quando aplicável
+
+- Área: E-commerce e vendas online; prioridade: P1.
+- Estado anterior: `nao_iniciado`; atual: `testado`; homologação integral documentada: não.
+- Critério original: Sem atribuição indevida ou dupla comissão.
+- Dependência declarada: não especificada no checkpoint; isso não prova ausência de pendências.
+
+**Nota do implementador, preservada integralmente:**
+MKT-a (17/11; plano de 16/11, Onda 2; ADR-013): o canal online de hoje é a reserva do site (ONLINE-b). A reserva guarda a origem (Google, Instagram, Facebook, WhatsApp, TikTok, YouTube, e-mail, outro site, outra campanha ou direto), os cinco parâmetros de campanha do link (utm_*) e o domínio de quem mandou o visitante: o proxy, só na loja online, guarda isso num cookie da sessão do navegador, e o banco limpa de novo (public.loja_reservar, com p_origem); as reservas de antes ficam "sem registro". O vendedor é o da venda que saiu da reserva, uma vez só (vendas.vendedor_id; a origem fica na reserva, ligada à venda): sem atribuição a mais nem conta dupla no bônus e nas metas. A equipe vê "Veio de" em cada reserva; os Relatórios têm o quadro "Reservas do site por origem" (public.reservas_do_site_painel, security invoker): as reservas por origem e campanha, as atendidas, as vendas concluídas e o valor, e quem vendeu. Migration aplicada no ora5g-dev em 17/11. O pedido do site com pagamento (ONLINE-002 e ONLINE-005) ainda não existe; quando existir, usa as mesmas colunas e a mesma regra.
+
+**Evidência declarada:**
+packages/banco/supabase/migrations/20261117174218_origem_das_reservas_do_site.sql; packages/banco/src/origem-das-reservas.test.ts; apps/plataforma/src/lib/loja/origem.ts; apps/plataforma/src/lib/loja/origem.test.ts; apps/plataforma/src/proxy.ts; apps/plataforma/src/proxy.test.ts; apps/plataforma/src/app/loja/[produto]/reservar/reservar.test.ts; apps/plataforma/src/lib/loja/painel-das-reservas.ts; apps/plataforma/src/app/relatorios/relatorios.test.ts; apps/plataforma/src/app/reservas-do-site/reservas.test.ts; docs/adr/ADR-013-origem-das-reservas-do-site.md; docs/aceite/MKT-a.md
+
+## ORA-ONLINE-004 — Frete, CEP, retirada em loja e entrega com rastreio
+
+- Área: E-commerce e vendas online; prioridade: P1.
+- Estado anterior: `parcial`; atual: `parcial`; homologação integral documentada: não.
+- Critério original: Reserva e prazos consistentes.
+- Dependência declarada: frete, CEP e entrega com rastreio dependem de D-025, P10 e da transportadora.
+
+**Nota do implementador, preservada integralmente:**
+ONLINE-b (15 e 16/11; ADR-009): a retirada em loja. O cliente reserva no site por 24 horas numa loja com estoque e recebe o código, a loja e até quando vale; a loja vê as reservas dela na tela "Reservas do site", chama o cliente pelo WhatsApp (na auditoria), cancela ou atende no PDV; a reserva vence sozinha. Migration 20261116093359_loja_online_reserva aplicada no ora5g-dev em 16/11. ONLINE-d (18/11; ADR-023): o pedido do site com até 3 unidades também é para retirar na loja: o cliente mostra o código no balcão, e a loja atende numa venda só ou cancela o pedido inteiro. FALTA: frete, CEP e entrega com rastreio (dependem de D-025, P10 e da transportadora); o dono marcar produtos para o site; a revisão do Codex e a homologação.
+
+**Evidência declarada:**
+packages/banco/supabase/migrations/20261116093359_loja_online_reserva.sql; packages/banco/src/loja-online-reserva.test.ts; packages/banco/src/loja-online-concorrencia.test.ts; packages/banco/src/autorizacao-funcoes.test.ts; apps/plataforma/src/app/loja/[produto]/reservar/reservar.test.ts; apps/plataforma/src/app/reservas-do-site/reservas.test.ts; apps/plataforma/src/lib/loja/reserva.test.ts; docs/adr/ADR-009-loja-online.md; docs/adr/ADR-023-pedido-do-site.md; docs/aceite/ONLINE-d.md
+
+## ORA-ONLINE-005 — Devolução, arrependimento e reembolso de venda online
+
+- Área: E-commerce e vendas online; prioridade: P1.
+- Estado anterior: `nao_iniciado`; atual: `nao_iniciado`; homologação integral documentada: não.
+- Critério original: Prazo/regra legal homologado e efeitos auditados.
+- Dependência declarada: não especificada no checkpoint; isso não prova ausência de pendências.
+
+**Nota do implementador, preservada integralmente:**
+NÃO INICIADO. A devolução, o arrependimento e o reembolso da venda do site dependem do pedido do site (ORA-ONLINE-002) e da política de troca e devolução (D-026). (Linha própria desde o AUD-a, 18/11, a pedido da auditoria do Codex de 17/11.) O pedido do site existe desde o ONLINE-d (18/11; ADR-023), com o pagamento na loja; a devolução e o arrependimento seguem dependendo da D-026 e do pagamento online (E1).
+
+**Evidência declarada:**
+docs/alinhamento/LEITURA_AUDITORIA_2026-11-17.md; docs/aceite/AUD-a.md
+
+## ORA-ONLINE-006 — Reserva de IMEI por pedido/canal anti-overselling
+
+- Área: E-commerce e vendas online; prioridade: P1.
+- Estado anterior: `parcial`; atual: `parcial`; homologação integral documentada: não.
+- Critério original: Pedido online concorrente com loja não vende unidade duplicada.
+- Dependência declarada: a reserva do pedido com pagamento e entrega depende de D-024, D-025, P10 e do provedor de pagamento (E1).
+
+**Nota do implementador, preservada integralmente:**
+ONLINE-b (15 e 16/11; ADR-009; decisão do proprietário: 24 horas e até 2 reservas ativas por WhatsApp): a reserva do site com retirada na loja usa a mesma reserva de estoque do PDV (estoque_reservas, origem "online"). O visitante sem login (public.loja_reservar) segura uma unidade de produto do site numa loja física com estoque, por 24 horas: o aparelho pelo IMEI, escolhido pelo banco (o primeiro livre, pulando o que outra transação segura), o acessório pela quantidade; o saldo reservado sobe junto; a mesma chave devolve a mesma reserva. A loja atende abrindo a venda no PDV com a mesma unidade, na mesma transação, ou cancela (a unidade volta); as vencidas saem de vez quando o PDV abre (public.loja_reservas_liberar_vencidas). Provado no PostgreSQL 17 de verdade (loja-online-concorrencia.test.ts): o site segurando o aparelho faz o balcão esperar e receber OR002; o balcão segurando o aparelho faz o site ficar com outra unidade; visitantes e vendedores ao mesmo tempo disputando todos os aparelhos da loja: cada unidade com uma reserva só, o saldo igual às reservas, nenhuma divergência. Migration 20261116093359_loja_online_reserva (antes 20261115230000) aplicada no ora5g-dev em 16/11. ONLINE-c (17/11; ADR-009, decisão 15): as três recusas "não está à venda na loja online" de loja_reservar (o produto, a loja e o preço na loja) passaram do código P0002, que a API do banco responde com HTTP 500, para o código próprio OR036 (HTTP 400); a tela continua dizendo que o produto não está mais disponível para reserva. Migration 20261117071458_loja_online_sem_erro_500 aplicada no ora5g-dev em 17/11; medido pela API, como visitante: antes HTTP 500, depois HTTP 400 com OR036. ROT-a (17/11; ADR-011): as reservas do site vencidas saem também pela rotina do banco, a cada 5 minutos (pg_cron), sem depender de alguém abrir o PDV da loja; a rotina não espera o aparelho preso por uma venda em andamento. INTEG-c (17/11, #102, revisão do Codex de 16/11): a cota de 20 reservas do site por loja e por hora passa a contar depois de uma trava por loja; com 19 reservas, duas ao mesmo tempo terminam com 20, e a segunda recebe OR035 (provado no PostgreSQL 17 de verdade; o teste falha sem a correção). ONLINE-d (18/11; ADR-023): o pedido do site, com até 3 unidades, usa a mesma reserva de estoque: uma por unidade, pela mesma função da reserva avulsa (privado.reservar_unidade_do_site), tudo ou nada na mesma transação; as travas seguem na ordem de sempre (o WhatsApp, depois a loja). FALTA: o pagamento e a entrega do pedido (ONLINE-002, dependem de D-024, D-025, P10 e do provedor de pagamento); o dono marcar produtos para o site; a revisão do Codex e a homologação.
+
+**Evidência declarada:**
+packages/banco/supabase/migrations/20261116093359_loja_online_reserva.sql; packages/banco/src/loja-online-reserva.test.ts; packages/banco/src/loja-online-concorrencia.test.ts; packages/banco/src/autorizacao-funcoes.test.ts; apps/plataforma/src/app/loja/[produto]/reservar/reservar.test.ts; apps/plataforma/src/app/reservas-do-site/reservas.test.ts; apps/plataforma/src/lib/loja/reserva.test.ts; docs/adr/ADR-009-loja-online.md; packages/banco/supabase/migrations/20261117071458_loja_online_sem_erro_500.sql; docs/aceite/ONLINE-c.md; packages/banco/supabase/migrations/20261117124230_rotinas_agendadas.sql; packages/banco/src/rotinas-agendadas.test.ts; packages/banco/src/rotinas-agendadas-concorrencia.test.ts; docs/adr/ADR-011-rotinas-agendadas-no-banco.md; docs/aceite/ROT-a.md; packages/banco/supabase/migrations/20261117135133_identidade_da_nota_e_cota_da_loja.sql; packages/banco/src/loja-online-cota-concorrencia.test.ts; docs/aceite/INTEG-c.md; packages/banco/supabase/migrations/20261118031404_pedido_do_site.sql; packages/banco/src/loja-online-pedido.test.ts; packages/banco/src/autorizacao-funcoes.test.ts; apps/plataforma/src/lib/loja/carrinho.test.ts; apps/plataforma/src/app/loja/carrinho/carrinho.test.ts; apps/plataforma/src/app/reservas-do-site/reservas.test.ts; apps/plataforma/e2e/loja-online.spec.ts; docs/adr/ADR-023-pedido-do-site.md; docs/aceite/ONLINE-d.md
+
+## ORA-ONLINE-007 — Contratação online de planos/chips/eSIM se habilitado
+
+- Área: E-commerce e vendas online; prioridade: P2.
+- Estado anterior: `nao_iniciado`; atual: `bloqueado`; homologação integral documentada: não.
+- Critério original: Validação de identidade/contrato, antifraude e cobertura.
+- Dependência declarada: a Nogle confirmar a operação (pergunta 11), a validação de identidade, o antifraude e o contrato digital.
+
+**Nota do implementador, preservada integralmente:**
+BLOQUEADO (ADAPT-a, 17/11; ADR-020): a contratação online de planos, chips e eSIM depende da Nogle confirmar a operação (pergunta 11) e da escolha da validação de identidade, do antifraude e do contrato digital.
+
+**Evidência declarada:**
+docs/adr/ADR-020-integracoes-que-esperam-contrato.md; docs/aceite/ADAPT-a.md; docs/integracoes/APIS_E_HABILITACOES_NECESSARIAS.md
+
+## ORA-ONLINE-008 — Expansão interestadual com parâmetros fiscais e logísticos
+
+- Área: E-commerce e vendas online; prioridade: P2.
+- Estado anterior: `nao_iniciado`; atual: `bloqueado`; homologação integral documentada: não.
+- Critério original: Multi-UF testado antes da abertura nacional.
+- Dependência declarada: o frete (D-025, P10) e as regras fiscais de cada estado com o contador.
+
+**Nota do implementador, preservada integralmente:**
+BLOQUEADO (ADAPT-a, 17/11; ADR-020): a venda para outros estados depende do frete (D-025, P10) e das regras fiscais de cada estado, com o contador.
+
+**Evidência declarada:**
+docs/adr/ADR-020-integracoes-que-esperam-contrato.md; docs/aceite/ADAPT-a.md; docs/integracoes/APIS_E_HABILITACOES_NECESSARIAS.md
+
+## ORA-MKTPL-001 — Preparar adaptadores separados Mercado Livre/Shopee/TikTok Shop
+
+- Área: Marketplaces e channel manager; prioridade: P1.
+- Estado anterior: `nao_iniciado`; atual: `bloqueado`; homologação integral documentada: não.
+- Critério original: Contratos e permissões confirmados antes do deploy.
+- Dependência declarada: contrato e aplicativo aprovado de cada canal (Mercado Livre, Shopee, TikTok Shop).
+
+**Nota do implementador, preservada integralmente:**
+Lote MKTPL-a (17/11; ADR-018): os adaptadores do Mercado Livre, da Shopee e do TikTok Shop ficam separados, um por canal, no worker (marketplaces/adaptadores.ts), com a interface, o formato comum do pedido conferido antes do banco e o que falta para ligar pelos nomes já documentados; nenhum fala com o canal. BLOQUEADO até o contrato de cada canal (o aplicativo aprovado no portal, a autorização da conta do vendedor e a documentação oficial conferida). Enquanto isso, os pedidos entram por arquivo.
+
+**Evidência declarada:**
+packages/banco/supabase/migrations/20261118010000_marketplaces_por_arquivo.sql; packages/banco/src/marketplaces.test.ts; apps/plataforma/src/lib/marketplaces; apps/plataforma/src/app/relatorios/marketplaces; apps/worker/src/marketplaces; docs/adr/ADR-018-marketplaces-por-arquivo.md; docs/aceite/MKTPL-a.md
+
+## ORA-MKTPL-002 — Sincronizar SKU/preço/estoque/anúncio conforme recursos
+
+- Área: Marketplaces e channel manager; prioridade: P1.
+- Estado anterior: `nao_iniciado`; atual: `bloqueado`; homologação integral documentada: não.
+- Critério original: Evitam overselling e divergência detectável.
+- Dependência declarada: contrato de cada canal; a baixa do estoque pelo pedido do canal é decisão do proprietário.
+
+**Nota do implementador, preservada integralmente:**
+Lote MKTPL-a (17/11; ADR-018): o item do pedido do canal se liga à variação pelo código do anúncio (CAT-009) ou pelo SKU, e o item sem produto ligado é contado. BLOQUEADO: a sincronização de preço, estoque e anúncio depende da conexão com cada canal (contrato), e a baixa do estoque pelo pedido do canal é uma decisão do proprietário.
+
+**Evidência declarada:**
+packages/banco/supabase/migrations/20261118010000_marketplaces_por_arquivo.sql; packages/banco/src/marketplaces.test.ts; apps/plataforma/src/lib/marketplaces; apps/plataforma/src/app/relatorios/marketplaces; apps/worker/src/marketplaces; docs/adr/ADR-018-marketplaces-por-arquivo.md; docs/aceite/MKTPL-a.md
+
+## ORA-MKTPL-003 — Importar pedido marketplace com ID externo e dedupe
+
+- Área: Marketplaces e channel manager; prioridade: P1.
+- Estado anterior: `nao_iniciado`; atual: `parcial`; homologação integral documentada: não.
+- Critério original: Reenvio de webhook não duplica pedido/reserva.
+- Dependência declarada: contrato de cada canal, para o webhook.
+
+**Nota do implementador, preservada integralmente:**
+Lote MKTPL-a (17/11; ADR-018): o pedido entra por arquivo (o relatório de vendas do painel do vendedor), com o número do canal único por canal e rede: o arquivo novo com o mesmo pedido atualiza a situação, os valores e os itens, e o mesmo arquivo devolve a mesma importação. FALTA: o webhook de cada canal (contrato), a revisão do Codex e a homologação.
+
+**Evidência declarada:**
+packages/banco/supabase/migrations/20261118010000_marketplaces_por_arquivo.sql; packages/banco/src/marketplaces.test.ts; apps/plataforma/src/lib/marketplaces; apps/plataforma/src/app/relatorios/marketplaces; apps/worker/src/marketplaces; docs/adr/ADR-018-marketplaces-por-arquivo.md; docs/aceite/MKTPL-a.md
+
+## ORA-MKTPL-004 — Tratar entrega/frete/etiquetas/rastreio por canal
+
+- Área: Marketplaces e channel manager; prioridade: P1.
+- Estado anterior: `nao_iniciado`; atual: `parcial`; homologação integral documentada: não.
+- Critério original: Estados de fulfillment corretos e não inventados.
+- Dependência declarada: contrato de cada canal, para a etiqueta e o rastreio.
+
+**Nota do implementador, preservada integralmente:**
+Lote MKTPL-a (17/11; ADR-018): o frete pago pelo vendedor entra no pedido e no lucro, e a situação do pedido é a que o canal escreve, sem tradução nem estado inventado. FALTA: a etiqueta e o rastreio, que dependem da conexão com cada canal.
+
+**Evidência declarada:**
+packages/banco/supabase/migrations/20261118010000_marketplaces_por_arquivo.sql; packages/banco/src/marketplaces.test.ts; apps/plataforma/src/lib/marketplaces; apps/plataforma/src/app/relatorios/marketplaces; apps/worker/src/marketplaces; docs/adr/ADR-018-marketplaces-por-arquivo.md; docs/aceite/MKTPL-a.md
+
+## ORA-MKTPL-005 — Conciliação de tarifas, comissões e repasses por marketplace
+
+- Área: Marketplaces e channel manager; prioridade: P1.
+- Estado anterior: `nao_iniciado`; atual: `parcial`; homologação integral documentada: não.
+- Critério original: Lucratividade por pedido/canal explicável.
+- Dependência declarada: não especificada no checkpoint; isso não prova ausência de pendências.
+
+**Nota do implementador, preservada integralmente:**
+PARCIAL (AUD-a, 18/11: a auditoria do Codex de 17/11 e o aceite A13 do adendo de 16/11). O que existe: Lote MKTPL-a (17/11; ADR-018): por pedido e por canal, o bruto, as tarifas e a comissão, o frete, os reembolsos, o líquido do repasse (do arquivo, ou o bruto menos o resto, marcado como estimado), a data do repasse, o custo do cadastro no dia do pedido e o lucro estimado, com as fórmulas na tela. FALTA (A13 e A10): o líquido recebido conferido com o extrato do banco (o repasse de cada canal casado com a linha do extrato do EXT-a), as divergências por pedido e por repasse, e a importação automática dos pedidos de cada canal (o contrato e a autorização de cada um, ORA-MKTPL-001, bloqueado); o arquivo real de cada canal, para conferir o desenho.
+
+**Evidência declarada:**
+packages/banco/supabase/migrations/20261118010000_marketplaces_por_arquivo.sql; packages/banco/src/marketplaces.test.ts; apps/plataforma/src/lib/marketplaces; apps/plataforma/src/app/relatorios/marketplaces; apps/worker/src/marketplaces; docs/adr/ADR-018-marketplaces-por-arquivo.md; docs/aceite/MKTPL-a.md
+
+## ORA-MKTPL-006 — Cancelamentos, devoluções e reembolsos por canal
+
+- Área: Marketplaces e channel manager; prioridade: P1.
+- Estado anterior: `nao_iniciado`; atual: `parcial`; homologação integral documentada: não.
+- Critério original: Estoque/financeiro/fiscal/commission reversos.
+- Dependência declarada: decisão do proprietário sobre o estoque do pedido do canal; contrato de cada canal.
+
+**Nota do implementador, preservada integralmente:**
+Lote MKTPL-a (17/11; ADR-018): o reembolso e o cancelamento do canal aparecem no pedido (a situação e o valor) e no lucro; o pedido reembolsado por inteiro não leva o custo. FALTA: o estorno no estoque, no fiscal e na comissão, que depende de o pedido do canal mexer no estoque (decisão do proprietário) e da conexão com cada canal.
+
+**Evidência declarada:**
+packages/banco/supabase/migrations/20261118010000_marketplaces_por_arquivo.sql; packages/banco/src/marketplaces.test.ts; apps/plataforma/src/lib/marketplaces; apps/plataforma/src/app/relatorios/marketplaces; apps/worker/src/marketplaces; docs/adr/ADR-018-marketplaces-por-arquivo.md; docs/aceite/MKTPL-a.md
+
+## ORA-MKTPL-007 — Sincronização near-real-time por webhooks/adapters
+
+- Área: Marketplaces e channel manager; prioridade: P2.
+- Estado anterior: `nao_iniciado`; atual: `bloqueado`; homologação integral documentada: não.
+- Critério original: Rate limits/retries monitorados.
+- Dependência declarada: contrato de cada canal.
+
+**Nota do implementador, preservada integralmente:**
+Lote MKTPL-a (17/11; ADR-018): os adaptadores estão separados e desligados. BLOQUEADO: a sincronização quase em tempo real (webhooks, limites de chamada e novas tentativas monitoradas) depende do contrato de cada canal.
+
+**Evidência declarada:**
+packages/banco/supabase/migrations/20261118010000_marketplaces_por_arquivo.sql; packages/banco/src/marketplaces.test.ts; apps/plataforma/src/lib/marketplaces; apps/plataforma/src/app/relatorios/marketplaces; apps/worker/src/marketplaces; docs/adr/ADR-018-marketplaces-por-arquivo.md; docs/aceite/MKTPL-a.md
+
+## ORA-MKTPL-008 — Métricas por anúncio/canal/produto e margem
+
+- Área: Marketplaces e channel manager; prioridade: P2.
+- Estado anterior: `nao_iniciado`; atual: `parcial`; homologação integral documentada: não.
+- Critério original: Valores reconciliados sem confundir receita bruta com líquida.
+- Dependência declarada: não especificada no checkpoint; isso não prova ausência de pendências.
+
+**Nota do implementador, preservada integralmente:**
+PARCIAL (AUD-a, 18/11: a auditoria do Codex de 17/11 e o aceite A13). O que existe: Lote MKTPL-a (17/11; ADR-018): por canal, por anúncio e produto e por pedido, as unidades, o bruto, o líquido, o custo e o lucro estimado e a margem sobre o bruto; a receita bruta e a líquida ficam separadas, e o pedido sem custo fica fora do lucro e é contado. FALTA: os valores reconciliados com o repasse recebido (o extrato) e com o relatório real de cada canal, e a importação automática (ORA-MKTPL-001, bloqueado).
+
+**Evidência declarada:**
+packages/banco/supabase/migrations/20261118010000_marketplaces_por_arquivo.sql; packages/banco/src/marketplaces.test.ts; apps/plataforma/src/lib/marketplaces; apps/plataforma/src/app/relatorios/marketplaces; apps/worker/src/marketplaces; docs/adr/ADR-018-marketplaces-por-arquivo.md; docs/aceite/MKTPL-a.md
+
+## ORA-WHATS-001 — WhatsApp Business Platform oficial conectado ao CRM
+
+- Área: WhatsApp, atendimento e automação; prioridade: P1.
+- Estado anterior: `bloqueado`; atual: `bloqueado`; homologação integral documentada: não.
+- Critério original: Conta/números/escopos homologados; templates válidos.
+- Dependência declarada: Meta: verificação da empresa, número, token, modelo de utilidade aprovado (lista de integrações).
+
+**Nota do implementador, preservada integralmente:**
+Depende da Meta (verificação da empresa, número habilitado, token permanente de Usuário do Sistema, segredo do app e modelo de utilidade aprovado; lista única de integrações, linha WhatsApp). O que não depende dela já está pronto: a fila do envio da nota (K1c, ORA-WHATS-006) e a rotina do worker com o canal como interface. O adaptador real só é escrito contra a documentação oficial vigente, quando houver a conta para testar. INTEG-a (16/11, #88): o worker confere o destinatário de novo antes de expedir (nota emitida, o mesmo PDF, o mesmo cliente no pedido, na venda e no envio, cadastro ativo e o mesmo WhatsApp); se algo mudou, nada sai e o envio falha com o motivo. WHATS-a (17/11, Onda 0.4): o executável do worker (apps/worker/src/executar-whatsapp.ts) liga a fila do banco ao canal; sem a chave secreta, sem as variáveis do WhatsApp ou sem o adaptador oficial, diz o que falta e termina sem erro, sem chamar o banco; o script deploy/homologacao/worker-whatsapp.sh não está agendado. Segue bloqueado pela Meta.
+
+**Evidência declarada:**
+docs/integracoes/APIS_E_HABILITACOES_NECESSARIAS.md; apps/worker/src/whatsapp/processar.ts; apps/worker/src/executar-whatsapp.ts; apps/worker/src/whatsapp/configuracao.ts; apps/worker/src/whatsapp/banco.test.ts; deploy/homologacao/worker-whatsapp.sh; docs/aceite/WHATS-a.md
+
+## ORA-WHATS-002 — Caixa de entrada multiatendente com atribuição à loja/vendedor
+
+- Área: WhatsApp, atendimento e automação; prioridade: P1.
+- Estado anterior: `nao_iniciado`; atual: `nao_iniciado`; homologação integral documentada: não.
+- Critério original: Mensagens e transferência auditadas.
+- Dependência declarada: não especificada no checkpoint; isso não prova ausência de pendências.
+
+**Nota do implementador, preservada integralmente:**
+NÃO INICIADO. A caixa de entrada com vários atendentes depende do WhatsApp oficial (ORA-WHATS-001, bloqueado: o adaptador da Meta, a conta e o modelo de mensagem aprovado). (Linha própria desde o AUD-a, 18/11, a pedido da auditoria do Codex de 17/11.)
+
+**Evidência declarada:**
+docs/alinhamento/LEITURA_AUDITORIA_2026-11-17.md; docs/aceite/AUD-a.md
+
+## ORA-WHATS-003 — Leads orgânicos e pagos identificados por origem consentida
+
+- Área: WhatsApp, atendimento e automação; prioridade: P1.
+- Estado anterior: `nao_iniciado`; atual: `nao_iniciado`; homologação integral documentada: não.
+- Critério original: Campanha e UTM preservados quando disponíveis.
+- Dependência declarada: não especificada no checkpoint; isso não prova ausência de pendências.
+
+**Nota do implementador, preservada integralmente:**
+NÃO INICIADO. O contato que chega pelo WhatsApp com a origem depende do WhatsApp oficial (ORA-WHATS-001). O do site já tem a origem e a campanha (MKT-a). (Linha própria desde o AUD-a, 18/11, a pedido da auditoria do Codex de 17/11.)
+
+**Evidência declarada:**
+docs/alinhamento/LEITURA_AUDITORIA_2026-11-17.md; docs/aceite/AUD-a.md
+
+## ORA-WHATS-004 — Histórico 360 de conversas/negócios por cliente
+
+- Área: WhatsApp, atendimento e automação; prioridade: P1.
+- Estado anterior: `nao_iniciado`; atual: `nao_iniciado`; homologação integral documentada: não.
+- Critério original: Política de retenção/consentimento aplicada.
+- Dependência declarada: não especificada no checkpoint; isso não prova ausência de pendências.
+
+**Nota do implementador, preservada integralmente:**
+NÃO INICIADO. O histórico das conversas por cliente depende do WhatsApp oficial (ORA-WHATS-001). (Linha própria desde o AUD-a, 18/11, a pedido da auditoria do Codex de 17/11.)
+
+**Evidência declarada:**
+docs/alinhamento/LEITURA_AUDITORIA_2026-11-17.md; docs/aceite/AUD-a.md
+
+## ORA-WHATS-005 — Respostas rápidas, etiquetas, SLA e repasse para humano
+
+- Área: WhatsApp, atendimento e automação; prioridade: P1.
+- Estado anterior: `nao_iniciado`; atual: `nao_iniciado`; homologação integral documentada: não.
+- Critério original: Handoff sempre acessível.
+- Dependência declarada: não especificada no checkpoint; isso não prova ausência de pendências.
+
+**Nota do implementador, preservada integralmente:**
+NÃO INICIADO. As respostas rápidas, as etiquetas, o prazo de resposta e a passagem para uma pessoa dependem do WhatsApp oficial (ORA-WHATS-001). (Linha própria desde o AUD-a, 18/11, a pedido da auditoria do Codex de 17/11.)
+
+**Evidência declarada:**
+docs/alinhamento/LEITURA_AUDITORIA_2026-11-17.md; docs/aceite/AUD-a.md
+
+## ORA-WHATS-006 — Templates e mensagens proativas em conformidade Meta
+
+- Área: WhatsApp, atendimento e automação; prioridade: P1.
+- Estado anterior: `parcial`; atual: `parcial`; homologação integral documentada: não.
+- Critério original: Sem spam nem envio sem permissão/consentimento apropriado.
+- Dependência declarada: F1.
+
+**Nota do implementador, preservada integralmente:**
+Lote K1c (14/11, #76, decisão do proprietário de 12/11): envio da nota emitida ao cliente pelo WhatsApp oficial, com finalidade de documento fiscal (não depende de aceite de ofertas). A loja pede o envio (vendedor da venda ou quem aprova a nota): só nota emitida com o PDF guardado (L10a) e cliente ligado com WhatsApp; a mesma chave e o clique repetido com o envio na fila não duplicam; reenviar pede motivo; resultado desconhecido espera a conferência da gerência, que só pode concluir "não chegou". O worker pega a fila, gera o link temporário do PDF e registra a resposta (aceito com o id da mensagem, falhou, desconhecido ou de volta à fila se nada saiu) e os avisos de entrega e leitura, uma vez cada e sem voltar estado. O número completo fica só para o worker; a tela mostra mascarado. Migration 20261114150135_whatsapp_envio_da_nota (aplicada no ora5g-dev em 14/11). WHATS-a (17/11): o worker virou um executável ligado à fila, que fica desligado e diz o que falta enquanto não há a Meta. FALTA (ORA-WHATS-001): o adaptador da Meta com o contrato verificado, o número habilitado, o token, o modelo (template) de utilidade aprovado e o receptor dos avisos com a assinatura conferida; sem isso nada sai da fila e nada aparece como enviado.
+
+**Evidência declarada:**
+packages/banco/supabase/migrations/20261114150135_whatsapp_envio_da_nota.sql; packages/banco/src/whatsapp-nota.test.ts; apps/worker/src/whatsapp/processar.ts; apps/worker/src/whatsapp/processar.test.ts; apps/plataforma/src/app/vendas/nota-whatsapp.test.ts; apps/worker/src/executar-whatsapp.ts; apps/worker/src/whatsapp/configuracao.ts; apps/worker/src/whatsapp/banco.test.ts; deploy/homologacao/worker-whatsapp.sh; docs/aceite/WHATS-a.md
+
+## ORA-WHATS-007 — IA supervisionada para qualificação e sugestão de respostas
+
+- Área: WhatsApp, atendimento e automação; prioridade: P2.
+- Estado anterior: `nao_iniciado`; atual: `nao_iniciado`; homologação integral documentada: não.
+- Critério original: Ações sensíveis exigem revisão e logs.
+- Dependência declarada: não especificada no checkpoint; isso não prova ausência de pendências.
+
+**Nota do implementador, preservada integralmente:**
+NÃO INICIADO. A IA que sugere a resposta, sempre com uma pessoa aprovando, depende do WhatsApp oficial e da escolha do provedor de IA. (Linha própria desde o AUD-a, 18/11, a pedido da auditoria do Codex de 17/11.)
+
+**Evidência declarada:**
+docs/alinhamento/LEITURA_AUDITORIA_2026-11-17.md; docs/aceite/AUD-a.md
+
+## ORA-WHATS-008 — Recuperação de carrinho e pós-venda sob consentimento
+
+- Área: WhatsApp, atendimento e automação; prioridade: P2.
+- Estado anterior: `nao_iniciado`; atual: `nao_iniciado`; homologação integral documentada: não.
+- Critério original: Taxa de resposta/conversão mensurada.
+- Dependência declarada: não especificada no checkpoint; isso não prova ausência de pendências.
+
+**Nota do implementador, preservada integralmente:**
+NÃO INICIADO. A recuperação do carrinho e o pós-venda, com consentimento, dependem do carrinho do site (ORA-ONLINE-002) e do WhatsApp oficial. (Linha própria desde o AUD-a, 18/11, a pedido da auditoria do Codex de 17/11.) O carrinho do site existe desde o ONLINE-d (18/11; ADR-023), sem contato: fica no aparelho do visitante; recuperar o carrinho exige o consentimento e o WhatsApp oficial.
+
+**Evidência declarada:**
+docs/alinhamento/LEITURA_AUDITORIA_2026-11-17.md; docs/aceite/AUD-a.md
+
+## ORA-META-001 — Importar insights autorizados de Meta Ads por conta/campanha
+
+- Área: Meta Ads e atribuição; prioridade: P1.
+- Estado anterior: `nao_iniciado`; atual: `parcial`; homologação integral documentada: não.
+- Critério original: OAuth/scopes revisados; dados de custo e período auditáveis.
+- Dependência declarada: conta Meta Ads (OAuth e escopos, D-022) para a conexão direta.
+
+**Nota do implementador, preservada integralmente:**
+Lote META-a (17/11; ADR-017): o custo dos anúncios entra por arquivo, o relatório exportado do Gerenciador de Anúncios por dia, em /relatorios/anuncios (Gestão → Relatórios → Anúncios), sem supor o formato (a pessoa diz a coluna de cada campo, com sugestão em português e em inglês); o arquivo que não vem por dia é recusado. Dados de custo e período auditáveis: cada importação guarda o arquivo (SHA-256), o período, as campanhas, o gasto, quantos dias substituiu, quem importou e quando; o mesmo dia de uma campanha nunca conta duas vezes. Só o dono (resultado.ver). FALTA: a conexão direta com a conta de anúncios (OAuth e escopos revisados, D-022), a revisão do Codex e a homologação. AUD-a (18/11; aceite A14): só real (BRL) entra: pela coluna Moeda, quando escolhida, ou pela moeda no nome da coluna do valor ("Amount spent (USD)" recusa o arquivo); a importação registra de onde veio a moeda. O dia do arquivo é o do fuso da conta de anúncios, e a tela avisa que, com a conta em outro fuso, o custo de um dia pode cair no dia vizinho.
+
+**Evidência declarada:**
+packages/banco/supabase/migrations/20261117232910_custo_dos_anuncios.sql; packages/banco/src/anuncios.test.ts; apps/plataforma/src/lib/anuncios; apps/plataforma/src/app/relatorios/anuncios; docs/adr/ADR-017-custo-dos-anuncios.md; docs/aceite/META-a.md; apps/plataforma/src/lib/anuncios/leitura.ts; docs/alinhamento/LEITURA_AUDITORIA_2026-11-17.md; docs/aceite/AUD-a.md
+
+## ORA-META-002 — Capturar UTM e origem de leads de site/WhatsApp
+
+- Área: Meta Ads e atribuição; prioridade: P1.
+- Estado anterior: `nao_iniciado`; atual: `parcial`; homologação integral documentada: não.
+- Critério original: Jornada vincula campanha, oportunidade e venda quando possível.
+- Dependência declarada: o contato que chega pelo WhatsApp depende da integração oficial com a Meta (F1: verificação da empresa, número e token).
+
+**Nota do implementador, preservada integralmente:**
+MKT-a (17/11; plano de 16/11, Onda 2; ADR-013): o contato do site (a reserva, com nome e WhatsApp) guarda o UTM e a origem do link ou do site que mandou o visitante, e a reserva atendida liga a campanha à venda (loja_reservas.venda_id); os Relatórios somam por origem e campanha, com as vendas concluídas. FALTA: o contato que chega pelo WhatsApp, que depende da integração oficial com a Meta (F1); a ligação com a oportunidade do CRM (a reserva não cria oportunidade sozinha; a oportunidade guarda a origem e a campanha digitadas por quem atende).
+
+**Evidência declarada:**
+packages/banco/supabase/migrations/20261117174218_origem_das_reservas_do_site.sql; packages/banco/src/origem-das-reservas.test.ts; apps/plataforma/src/lib/loja/origem.ts; apps/plataforma/src/lib/loja/origem.test.ts; apps/plataforma/src/proxy.ts; apps/plataforma/src/proxy.test.ts; apps/plataforma/src/app/loja/[produto]/reservar/reservar.test.ts; apps/plataforma/src/lib/loja/painel-das-reservas.ts; apps/plataforma/src/app/relatorios/relatorios.test.ts; apps/plataforma/src/app/reservas-do-site/reservas.test.ts; docs/adr/ADR-013-origem-das-reservas-do-site.md; docs/aceite/MKT-a.md
+
+## ORA-META-003 — Mostrar gasto, CTR, CPC, CPL, CPA e ROAS quando calculáveis
+
+- Área: Meta Ads e atribuição; prioridade: P1.
+- Estado anterior: `nao_iniciado`; atual: `testado`; homologação integral documentada: não.
+- Critério original: Fórmulas, período e limitações explicitadas.
+- Dependência declarada: não especificada no checkpoint; isso não prova ausência de pendências.
+
+**Nota do implementador, preservada integralmente:**
+Lote META-a (17/11; ADR-017): por campanha e no total do período, o valor usado, as impressões, os cliques, o CTR (cliques ÷ impressões), o CPC (valor ÷ cliques), o custo por resultado da Meta, o CPL (valor ÷ contatos no sistema: as reservas do site com a campanha no link e as oportunidades do CRM com a campanha digitada), o CPA (valor ÷ vendas concluídas desses contatos) e o ROAS (receita ÷ valor); a métrica com divisor zero aparece como "—". As fórmulas, o período e os limites ficam no fim da tela. AUD-a (18/11; aceite A14, migration 20261118014003_anuncios_com_devolucoes): as devoluções saem da conta. O CPA divide pelas vendas que ficaram (sem as devolvidas por inteiro) e o ROAS usa a receita líquida (o valor das vendas menos o devolvido, em qualquer data); a tela diz que atribuição não é prova de causa.
+
+**Evidência declarada:**
+packages/banco/supabase/migrations/20261117232910_custo_dos_anuncios.sql; packages/banco/src/anuncios.test.ts; apps/plataforma/src/lib/anuncios; apps/plataforma/src/app/relatorios/anuncios; docs/adr/ADR-017-custo-dos-anuncios.md; docs/aceite/META-a.md; packages/banco/supabase/migrations/20261118014003_anuncios_com_devolucoes.sql
+
+## ORA-META-004 — Funil por vendedor/loja/campanha e atribuição
+
+- Área: Meta Ads e atribuição; prioridade: P1.
+- Estado anterior: `nao_iniciado`; atual: `testado`; homologação integral documentada: não.
+- Critério original: Dupla contagem/dedup de conversões minimizada.
+- Dependência declarada: não especificada no checkpoint; isso não prova ausência de pendências.
+
+**Nota do implementador, preservada integralmente:**
+Lote META-a (17/11; ADR-017): o funil de cada campanha (contatos, vendas e receita) por loja e por vendedor. Uma venda conta uma vez: se veio da reserva do site e da oportunidade do CRM, vale a campanha da reserva (o clique no link). A política de atribuição é a padrão do ADR-017, reversível, até a decisão D-022 do proprietário. AUD-a (18/11; aceite A14, migration 20261118014003_anuncios_com_devolucoes): o funil por loja e por vendedor mostra a receita sem o devolvido.
+
+**Evidência declarada:**
+packages/banco/supabase/migrations/20261117232910_custo_dos_anuncios.sql; packages/banco/src/anuncios.test.ts; apps/plataforma/src/lib/anuncios; apps/plataforma/src/app/relatorios/anuncios; docs/adr/ADR-017-custo-dos-anuncios.md; docs/aceite/META-a.md; packages/banco/supabase/migrations/20261118014003_anuncios_com_devolucoes.sql
+
+## ORA-META-005 — Conversions API/eventos com consentimento e dedupe
+
+- Área: Meta Ads e atribuição; prioridade: P2.
+- Estado anterior: `nao_iniciado`; atual: `bloqueado`; homologação integral documentada: não.
+- Critério original: Sem rastrear dados sem base legal/autorização.
+- Dependência declarada: a conta de anúncios, a autorização e a base legal do consentimento (D-022, D-048).
+
+**Nota do implementador, preservada integralmente:**
+BLOQUEADO (ADAPT-a, 17/11; ADR-020): o worker tem o envio dos eventos de conversão (meta/conversoes.ts), desligado: o formato comum do evento, sem dado que identifique o cliente, e a regra de quais saem (só com o consentimento do cliente e sem repetir o identificador). Falta: a conta de anúncios, a autorização e a base legal (D-022 e D-048).
+
+**Evidência declarada:**
+apps/worker/src/meta/conversoes.ts; apps/worker/src/meta/conversoes.test.ts; docs/adr/ADR-020-integracoes-que-esperam-contrato.md; docs/aceite/ADAPT-a.md; docs/integracoes/APIS_E_HABILITACOES_NECESSARIAS.md
+
+## ORA-META-006 — Analisar margem e CAC por campanha
+
+- Área: Meta Ads e atribuição; prioridade: P2.
+- Estado anterior: `nao_iniciado`; atual: `testado`; homologação integral documentada: não.
+- Critério original: Distingue métrica estimada de valor liquidado.
+- Dependência declarada: não especificada no checkpoint; isso não prova ausência de pendências.
+
+**Nota do implementador, preservada integralmente:**
+Lote META-a (17/11; ADR-017): por campanha, a margem das vendas (dos itens com custo gravado; a venda com item sem custo é contada à parte), o ROAS da margem e o CAC (valor ÷ clientes novos, a primeira compra concluída do cliente). A receita é estimativa de venda; o "recebido de fato" é o dinheiro no caixa e o cartão ou Pix já conciliado, pelo líquido. AUD-a (18/11; aceite A14, migration 20261118014003_anuncios_com_devolucoes): a margem desconta a das unidades devolvidas (o valor devolvido menos o custo delas, a regra do margem_painel); o CAC não conta o cliente cuja primeira compra foi devolvida por inteiro; o "recebido de fato" desconta o que voltou ao cliente em dinheiro, Pix ou cartão.
+
+**Evidência declarada:**
+packages/banco/supabase/migrations/20261117232910_custo_dos_anuncios.sql; packages/banco/src/anuncios.test.ts; apps/plataforma/src/lib/anuncios; apps/plataforma/src/app/relatorios/anuncios; docs/adr/ADR-017-custo-dos-anuncios.md; docs/aceite/META-a.md; packages/banco/supabase/migrations/20261118014003_anuncios_com_devolucoes.sql
+
+## ORA-AI-001 — Painéis básicos e alertas desde o MVP
+
+- Área: Inteligência artificial e análise; prioridade: P1.
+- Estado anterior: `testado`; atual: `testado`; homologação integral documentada: não.
+- Critério original: KPIs operacionais calculados de fatos transacionais.
+- Dependência declarada: não especificada no checkpoint; isso não prova ausência de pendências.
+
+**Nota do implementador, preservada integralmente:**
+R3 (14/11): atendido pelo que já existe, sem IA. Os painéis reais calculam cada número no banco a partir das tabelas de venda, pagamento, estoque, nota, OS e Ora Connect (nenhum número fictício nas telas reais; falha de leitura aparece como falha, nunca como zero): Início (G1, G4a e G4c), Relatórios (G2a), Financeiro (G2b, L8b e L8c), painel do estoque (G3 e G3b), metas (G4b), assistência (L12e), conciliação fiscal (L10b) e saúde da operação (Q1). Alertas: no Início (L12f), no sino de todas as telas (G6) e nas filas da operação (Q1). FALTA: revisão do Codex e homologação com login (J1); o que falta em cada painel está nos ORA-REPORT-001 a 008.
+
+**Evidência declarada:**
+packages/banco/src/vendas-painel.test.ts; packages/banco/src/estoque-painel.test.ts; packages/banco/src/estoque-valor.test.ts; packages/banco/src/connect-painel.test.ts; packages/banco/src/financeiro-conciliacao.test.ts; packages/banco/src/resultado-do-mes.test.ts; packages/banco/src/previsao-de-caixa.test.ts; packages/banco/src/metas.test.ts; apps/plataforma/src/lib/inicio/alertas.test.ts; apps/plataforma/src/lib/inicio/sino.test.ts; apps/plataforma/src/lib/operacao/filas.test.ts
+
+## ORA-AI-002 — IA auxilia atendimento e qualificação de leads
+
+- Área: Inteligência artificial e análise; prioridade: P2.
+- Estado anterior: `nao_iniciado`; atual: `nao_iniciado`; homologação integral documentada: não.
+- Critério original: Base de conhecimento versionada, revisão e handoff.
+- Dependência declarada: não especificada no checkpoint; isso não prova ausência de pendências.
+
+**Nota do implementador, preservada integralmente:**
+NÃO INICIADO. A IA no atendimento e na qualificação dos contatos depende da escolha do provedor de IA, do orçamento e da base de conhecimento. Nada decide sozinho (ORA-AI-005). (Linha própria desde o AUD-a, 18/11, a pedido da auditoria do Codex de 17/11.)
+
+**Evidência declarada:**
+docs/alinhamento/LEITURA_AUDITORIA_2026-11-17.md; docs/aceite/AUD-a.md
+
+## ORA-AI-003 — IA sugere produtos, respostas e roteamento de cliente
+
+- Área: Inteligência artificial e análise; prioridade: P2.
+- Estado anterior: `nao_iniciado`; atual: `nao_iniciado`; homologação integral documentada: não.
+- Critério original: Sem enviar informações sensíveis não autorizadas.
+- Dependência declarada: não especificada no checkpoint; isso não prova ausência de pendências.
+
+**Nota do implementador, preservada integralmente:**
+NÃO INICIADO. A IA que sugere produtos e respostas depende da escolha do provedor de IA e do catálogo real. (Linha própria desde o AUD-a, 18/11, a pedido da auditoria do Codex de 17/11.)
+
+**Evidência declarada:**
+docs/alinhamento/LEITURA_AUDITORIA_2026-11-17.md; docs/aceite/AUD-a.md
+
+## ORA-AI-004 — IA resume campanhas, metas e falhas operacionais
+
+- Área: Inteligência artificial e análise; prioridade: P2.
+- Estado anterior: `nao_iniciado`; atual: `nao_iniciado`; homologação integral documentada: não.
+- Critério original: Valores e fonte verificáveis; sem inventar dados.
+- Dependência declarada: não especificada no checkpoint; isso não prova ausência de pendências.
+
+**Nota do implementador, preservada integralmente:**
+NÃO INICIADO. O resumo das campanhas, das metas e das falhas pela IA depende da escolha do provedor de IA; hoje os alertas e os painéis são por regra (ORA-AI-001). (Linha própria desde o AUD-a, 18/11, a pedido da auditoria do Codex de 17/11.)
+
+**Evidência declarada:**
+docs/alinhamento/LEITURA_AUDITORIA_2026-11-17.md; docs/aceite/AUD-a.md
+
+## ORA-AI-005 — Autorização humana obrigatória para operações financeiras/fiscais
+
+- Área: Inteligência artificial e análise; prioridade: P2.
+- Estado anterior: `respeitado`; atual: `respeitado`; homologação integral documentada: não.
+- Critério original: Auditoria de proposta/aprovador/execução.
+- Dependência declarada: não especificada no checkpoint; isso não prova ausência de pendências.
+
+**Nota do implementador, preservada integralmente:**
+R3 (14/11): não há IA no sistema, e nenhuma operação financeira ou fiscal acontece sem uma pessoa autenticada, na loja do turno e com a permissão do papel, conferida no banco (cada função exposta tem caso de recusa no inventário de autorização). As aprovações gravam quem pediu e quem aprovou (desconto acima do limite, nota, saída do caixa, fechamento do bônus) e a auditoria só de inserção guarda quem fez cada operação. Quando a IA assistiva entrar (L17), ela só sugere: quem executa continua sendo uma pessoa, pelo mesmo caminho.
+
+**Evidência declarada:**
+packages/banco/src/autorizacao-funcoes.test.ts; packages/banco/src/auditoria-acesso.test.ts; packages/banco/src/vendas.test.ts; packages/banco/src/caixa-saida.test.ts; packages/banco/src/bonus-fechamento.test.ts; packages/banco/src/notas.test.ts
+
+## ORA-AI-006 — Controle de custo por chamada de modelo e retenção
+
+- Área: Inteligência artificial e análise; prioridade: P2.
+- Estado anterior: `nao_iniciado`; atual: `nao_iniciado`; homologação integral documentada: não.
+- Critério original: Orçamento configurável, logs redigidos e alertas.
+- Dependência declarada: não especificada no checkpoint; isso não prova ausência de pendências.
+
+**Nota do implementador, preservada integralmente:**
+NÃO INICIADO. O controle do custo de cada chamada ao modelo e da guarda das conversas vem com o primeiro uso de IA. (Linha própria desde o AUD-a, 18/11, a pedido da auditoria do Codex de 17/11.)
+
+**Evidência declarada:**
+docs/alinhamento/LEITURA_AUDITORIA_2026-11-17.md; docs/aceite/AUD-a.md
+
+## ORA-AI-007 — Avaliação de qualidade e red-team de agentes
+
+- Área: Inteligência artificial e análise; prioridade: P2.
+- Estado anterior: `nao_iniciado`; atual: `nao_iniciado`; homologação integral documentada: não.
+- Critério original: Testes de prompt injection e permissões aprovados.
+- Dependência declarada: não especificada no checkpoint; isso não prova ausência de pendências.
+
+**Nota do implementador, preservada integralmente:**
+NÃO INICIADO. A avaliação de qualidade e os testes de ataque dos agentes vêm com o primeiro uso de IA. (Linha própria desde o AUD-a, 18/11, a pedido da auditoria do Codex de 17/11.)
+
+**Evidência declarada:**
+docs/alinhamento/LEITURA_AUDITORIA_2026-11-17.md; docs/aceite/AUD-a.md
+
+## ORA-REPORT-001 — Dashboard diretoria consolidado de todas as lojas (11 hoje; meta de 14)
+
+- Área: Gestão, BI e relatórios; prioridade: P0.
+- Estado anterior: `parcial`; atual: `parcial`; homologação integral documentada: não.
+- Critério original: Filtro por período, loja, vendedor, natureza e status.
+- Dependência declarada: não especificada no checkpoint; isso não prova ausência de pendências.
+
+**Nota do implementador, preservada integralmente:**
+Real desde o G1 (13/11): o /inicio de quem tem venda.ver_todas mostra a rede inteira, ou uma loja escolhida no topo, em hoje, 7 ou 30 dias: vendas, ticket, descontos, devoluções e cancelamentos, recebido na loja e gaveta (esta só com caixa.conferir); a linha de vendas com o período anterior; recebimentos por meio; mix por grupo e por categoria; desempenho das lojas; e melhores vendedores (só com ranking.ver). Tudo somado no banco (vendas_painel, que roda com as permissões de quem chama; financeiro_painel; nomes por ranking_nomes), cada gráfico com a tabela equivalente e com os estados sem movimento, sem histórico comparável, fonte indisponível, falha e sem permissão; falha nunca vira zero. FALTA: metas (G4), os alertas da demonstração (sem linha na matriz e sem lote), a jornada com login (J1, depende do item A1) e a publicação. A demonstração continua com o painel completo fictício. Contrato de cada número: MATRIZ_DEMO_REAL.md, linhas 1 a 5, 8 e 11. G2a (13/11): o indicador da margem bruta do período entrou no /inicio da rede e da loja (só com custo.ver; nunca na visão do vendedor), e os mesmos painéis de vendas vão para /relatorios em 7, 14 ou 30 dias. G4c (13/11): a linha "Meta do dia" no gráfico de vendas dos Relatórios (a meta do mês do vendido líquido ÷ os dias do mês, de cada mês do período), com a soma no período e o líquido em % dela; na rede, só quando todas as lojas têm meta. REPORT-001b (15/11): os alertas da demonstração para a gestão estão todos no Início real: os descontos para aprovar, as notas paradas, os caixas com diferença, as ativações com falha e as OS atrasadas (REPORT-007 e L12f) e, agora, o estoque abaixo do mínimo, para quem consulta o estoque (a mesma conta do painel do estoque: produto × loja; na rede, as lojas que a pessoa consulta), com o atalho para o painel. Só no Início (o sino do topo segue com as contagens leves); zero não aparece, banco sem o painel some e falha é dita. As metas (G4) já estavam no Início desde o G4c. FALTA: a jornada com login (J1, depende do item A1) e a revisão do Codex.
+
+**Evidência declarada:**
+packages/banco/supabase/migrations/20261112195200_vendas_painel.sql; packages/banco/src/vendas-painel.test.ts; apps/plataforma/src/lib/inicio; apps/plataforma/src/app/inicio; apps/plataforma/src/app/demo; apps/plataforma/e2e/demonstracao.spec.ts; packages/banco/supabase/migrations/20261113065706_margem_painel.sql; packages/banco/src/margem-painel.test.ts; apps/plataforma/src/lib/margem; apps/plataforma/src/lib/relatorios; apps/plataforma/src/app/relatorios; packages/banco/supabase/migrations/20261114012604_metas_lojas.sql; apps/plataforma/src/componentes/paineis-de-metas.tsx; apps/plataforma/src/lib/inicio/alerta-do-estoque.ts; apps/plataforma/src/app/inicio/inicio.test.ts
+
+## ORA-REPORT-002 — Dashboard gerente de loja: caixa, metas, aprovação de desconto/NF
+
+- Área: Gestão, BI e relatórios; prioridade: P0.
+- Estado anterior: `parcial`; atual: `parcial`; homologação integral documentada: não.
+- Critério original: Só dados autorizados; alertas com link ao fato original.
+- Dependência declarada: não especificada no checkpoint; isso não prova ausência de pendências.
+
+**Nota do implementador, preservada integralmente:**
+Real: o /inicio do gerente mostra o que espera a loja (aprovações, notas, caixas, transferências, Connect, estornos e retornos); /financeiro tem caixas e fechamentos. G1 (13/11): o /inicio ganhou os painéis de vendas da loja do turno em hoje, 7 ou 30 dias: indicadores (vendas, ticket, descontos, devoluções e cancelamentos, recebido na loja e gaveta), vendas com o período anterior, recebimentos por meio, mix por grupo e por categoria e a equipe por vendedor de origem (só com ranking.ver), somados no banco por vendas_painel. O gerente soma só a loja dele (teste no banco). As metas da equipe estão no /metas desde o G4b, e a meta da loja no Início desde o G4c. PWA-b (17/11; ADR-014): o aviso no celular de quem decide quando um desconto, uma nota ou uma saída de caixa espera aprovação na loja dele (menos quem pediu), com o toque que abre a tela da aprovação (o "link ao fato original"); a pessoa liga em Minha conta, Avisos no celular. O worker dos avisos roda a cada minuto desde 17/11 (16:32), com a autorização do proprietário. Aceite do lote PWA-b em 17/11: o aviso de teste entregue no celular do proprietário (Android · Chrome) às 18:04. FALTA: a jornada com login (J1), que prova o aviso de um pedido de verdade. A demonstração continua com o painel completo fictício. REPORT-001b (15/11): o Início do gerente também mostra o estoque abaixo do mínimo da loja, com o atalho para o painel do estoque.
+
+**Evidência declarada:**
+apps/plataforma/src/app/inicio; apps/plataforma/src/lib/inicio; packages/banco/src/vendas-painel.test.ts; apps/plataforma/src/app/financeiro; packages/banco/supabase/migrations/20261114012604_metas_lojas.sql; apps/plataforma/src/componentes/paineis-de-metas.tsx; packages/banco/supabase/migrations/20261117190556_avisos_no_celular.sql; packages/banco/src/avisos-no-celular.test.ts; apps/worker/src/avisos/web-push.test.ts; apps/plataforma/src/app/conta/avisos/avisos.test.ts; docs/aceite/PWA-b.md
+
+## ORA-REPORT-003 — Dashboard vendedor mobile: produção do dia, metas e atalhos
+
+- Área: Gestão, BI e relatórios; prioridade: P0.
+- Estado anterior: `parcial`; atual: `parcial`; homologação integral documentada: não.
+- Critério original: Dados apenas do escopo autorizado.
+- Dependência declarada: não especificada no checkpoint; isso não prova ausência de pendências.
+
+**Nota do implementador, preservada integralmente:**
+Demonstração: início do vendedor no celular com meta do dia, produção por categoria, vendas por loja (vendedor em duas lojas) e atalhos, com dados fictícios. Real: o /inicio mostra o que espera a pessoa na loja (aprovações, notas, caixas a conferir, transferências, estornos, retornos e Ora Connect a decidir), cada contagem só para quem tem a permissão, e os atalhos do menu único (revisão das telas, 10/11). G1 (13/11): "Meus resultados" com as vendas de quem consulta em hoje, 7 ou 30 dias (vendas, ticket, descontos, devoluções e cancelamentos), a linha "Minhas vendas" com o período anterior, "Minha produção" (itens vendidos por grupo) e "Onde vendi" (para quem vendeu em mais de uma loja); sem recebimentos, gaveta nem nome de colega, e o banco confere de novo (pedir as vendas de um colega não devolve nada). FALTA: meta e produção de telecom confirmada (G4), resumo da loja e ranking com colegas (decisão P3) e a jornada com login no celular (J1, depende do item A1).
+
+**Evidência declarada:**
+apps/plataforma/src/app/inicio; apps/plataforma/src/lib/inicio; packages/banco/src/vendas-painel.test.ts; apps/plataforma/src/app/demo; apps/plataforma/e2e/demonstracao.spec.ts
+
+## ORA-REPORT-004 — Relatório de chips vendidos, ativações e recargas separadamente
+
+- Área: Gestão, BI e relatórios; prioridade: P0.
+- Estado anterior: `testado`; atual: `testado`; homologação integral documentada: não.
+- Critério original: Produção não implica faturamento tributável idêntico.
+- Dependência declarada: não especificada no checkpoint; isso não prova ausência de pendências.
+
+**Nota do implementador, preservada integralmente:**
+Relatório de chips, ativações, portabilidades e recargas por dia e por vendedor, só confirmadas. Só dados fictícios. Destino real, fonte e contrato: MATRIZ_DEMO_REAL.md (P0, 12/11), linhas 15, 23 e 24 (chip vendido separado de operação confirmada). G4a (13/11): real nos Relatórios (por dia, 7, 14 ou 30 dias), no indicador do Início da gestão e no cartão "Produção do período" do /connect: chips vendidos separados das operações confirmadas (uma por operação), por tipo e por origem, somados no banco (connect_painel); em andamento e sem resultado à parte, fora da conta. A migration foi aplicada no ora5g-dev em 13/11 (md5 conferido). FALTA: o recorte por vendedor (G4b). G4b (13/11): o recorte por vendedor entrou no /metas (Ora Connect confirmado por vendedor de origem, no mês, com a meta de cada um). R5 (15/11, revisão do estado): o FALTA acima (o recorte por vendedor) foi entregue no G4b, como a própria nota diz. O aceite (chips vendidos, ativações, portabilidades e recargas separados, e produção que não é faturamento) está provado no banco (connect-painel.test.ts: o chip vendido à parte das operações confirmadas, em andamento e sem resultado fora da conta; metas.test.ts: por vendedor de origem) e nas telas. FALTA: a revisão do Codex e a homologação.
+
+**Evidência declarada:**
+apps/plataforma/src/app/demo; apps/plataforma/e2e/demonstracao.spec.ts; packages/banco/supabase/migrations/20261114012431_connect_painel.sql; packages/banco/src/connect-painel.test.ts; apps/plataforma/src/lib/connect/producao.ts; apps/plataforma/src/componentes/paineis-do-connect.tsx; packages/banco/supabase/migrations/20261114012538_metas.sql; packages/banco/src/metas.test.ts; apps/plataforma/src/lib/metas/painel.ts; apps/plataforma/src/app/metas
+
+## ORA-REPORT-005 — Relatório por método de pagamento e terminal PicPay
+
+- Área: Gestão, BI e relatórios; prioridade: P0.
+- Estado anterior: `parcial`; atual: `parcial`; homologação integral documentada: não.
+- Critério original: Distinção pagamento/pêndencia/liquidação/reconciliação.
+- Dependência declarada: não especificada no checkpoint; isso não prova ausência de pendências.
+
+**Nota do implementador, preservada integralmente:**
+Real em /financeiro (#65, lote 1): pagamentos confirmados por meio (dinheiro já sem troco, entradas de financiamento no meio pago), parte financiada a receber, vale-troca à parte, pagamentos de vendas canceladas e estornos pendentes × confirmados. Até o lote 1 faltavam o terminal PicPay e a situação de liquidação e conciliação. Lote L7a (11/11): cada pagamento por maquininha traz o terminal usado, e /pagamentos/conciliacao mostra o período por situação do dinheiro. G2b (13/11): o /financeiro mostra a situação da conciliação por meio (cartão e Pix registrados no período: a conciliar, conciliado, o líquido que caiu na conta e a diferença observada no extrato), somada no banco (financeiro_painel, grão pagamentos), com os registros filtráveis em "A conciliar" e "Conciliados" e a exportação com a conciliação de cada pagamento. A migration financeiro_conciliacao foi aplicada no ora5g-dev em 13/11 (md5 conferido). REPORT-005b (14/11): o /financeiro mostra os pagamentos por maquininha (provedor, número e apelido; recebido, conciliado, a conciliar, líquido na conta e estornados), somados no banco com o RLS de quem pede (pagamentos_por_terminal). Migration 20261115043059_pagamentos_por_terminal aplicada no ora5g-dev em 15/11, com o sim do proprietário. EXT-a (17/11; ADR-016): o extrato por arquivo, com a maquininha de cada linha, o bruto, a taxa, o líquido e a data do repasse, e a conciliação linha a linha com a venda sugerida. FALTA: a conferência com o arquivo real de cada maquininha (E3), a conferência do Codex e a homologação.
+
+**Evidência declarada:**
+packages/banco/supabase/migrations/20261110224537_financeiro_painel.sql; packages/banco/src/financeiro-painel.test.ts; apps/plataforma/src/lib/financeiro; apps/plataforma/src/app/financeiro; packages/banco/supabase/migrations/20261114012326_financeiro_conciliacao.sql; packages/banco/src/financeiro-conciliacao.test.ts; apps/plataforma/src/app/financeiro/financeiro.test.ts; packages/banco/supabase/migrations/20261115043059_pagamentos_por_terminal.sql; packages/banco/src/pagamentos-por-terminal.test.ts; apps/plataforma/src/lib/financeiro/terminais.test.ts; apps/plataforma/src/app/financeiro/financeiro.test.ts
+
+## ORA-REPORT-006 — Relatórios de margem, vendedor e ranking configurável
+
+- Área: Gestão, BI e relatórios; prioridade: P1.
+- Estado anterior: `parcial`; atual: `parcial`; homologação integral documentada: não.
+- Critério original: Comissão/estorno reconciliáveis.
+- Dependência declarada: não especificada no checkpoint; isso não prova ausência de pendências.
+
+**Nota do implementador, preservada integralmente:**
+Demonstração: relatórios de margem, ticket, descontos e ranking de lojas e vendedores por período (7, 14 e 30 dias), com exportação CSV, com dados fictícios. Real desde o G1 (13/11), no /inicio: desempenho das lojas e ranking de vendedores por vendido (vendedor de origem; não é comissão) em hoje, 7 ou 30 dias, com tabela, e ticket e descontos do período como indicadores. O ranking só aparece para quem tem ranking.ver na loja da venda. Até o G1 faltavam a rota /relatorios, a margem, ticket e descontos por dia, o período de 14 dias e a exportação. Contrato: MATRIZ_DEMO_REAL.md, linhas 11 a 14. G2a (13/11): /relatorios real com margem bruta por dia, cobertura do custo e margem por item (só com custo.ver, pelo custo gravado no item), ticket e descontos por dia, lojas e mix em 7, 14 ou 30 dias, e exportação em CSV. FALTA agora: ranking configurável e comissão (G4, regras do proprietário), ranking para o vendedor (P3) e a jornada com login (J1).
+
+**Evidência declarada:**
+packages/banco/supabase/migrations/20261112195200_vendas_painel.sql; packages/banco/src/vendas-painel.test.ts; apps/plataforma/src/lib/inicio; apps/plataforma/src/app/inicio; apps/plataforma/src/app/demo; apps/plataforma/e2e/demonstracao.spec.ts; packages/banco/supabase/migrations/20261113065706_margem_painel.sql; packages/banco/src/margem-painel.test.ts; apps/plataforma/src/lib/margem; apps/plataforma/src/lib/relatorios; apps/plataforma/src/app/relatorios
+
+## ORA-REPORT-007 — Alertas de estoque mínimo/IMEI/caixa divergente/fiscal pendente
+
+- Área: Gestão, BI e relatórios; prioridade: P1.
+- Estado anterior: `testado`; atual: `testado`; homologação integral documentada: não.
+- Critério original: Notificação contextual e auditada.
+- Dependência declarada: não especificada no checkpoint; isso não prova ausência de pendências.
+
+**Nota do implementador, preservada integralmente:**
+Alertas de estoque mínimo, caixa divergente, nota parada, OS parada e ativação com falha, no sino e no painel. Só dados fictícios. Estoque mínimo, parado e pendências: destino real, fonte e contrato em MATRIZ_DEMO_REAL.md (P0, 12/11), linha 21 e números E1 a E8. G3 (13/11): real no /estoque, aba Painel: abaixo do mínimo (cada loja que vende, inclusive sem saldo), parado há mais de 60 dias e as pendências do estoque (transferências a separar, enviar e receber, inventários abertos, retornos a conferir e a conferência do dia), somados no banco (estoque_painel), com a ligação para onde cada uma se resolve. A migration foi aplicada no ora5g-dev em 13/11 (md5 conferido). L12f (14/11, sem migration): no Início, os alertas de OS (atrasadas, prontas para entregar e, para o técnico, as que esperam por ele) e os da loja do turno, só quando há o que ver e para quem decide: caixas fechados com diferença nos últimos 7 dias, notas na fila há mais de um dia e ativações ou portabilidades com falha nos últimos 7 dias. L10b (14/11): no Início, as notas com divergência ainda não conferidas da loja do turno nos últimos 90 dias, para quem aprova nota (migration 20261114215050_conciliacao_fiscal, aplicada no ora5g-dev em 14/11; num banco sem ela, o alerta some). G6 (14/11, sem migration): o sino no topo de todas as telas reais, com a mesma lista do Início (o que espera a pessoa e os alertas da loja do turno), só o que tem algo a fazer, com o número no emblema; lido depois que a tela abre e lembrado por um minuto na aba; a falha de leitura aparece como falha, sem número. G3b (14/11): o valor do estoque a custo na aba Painel do estoque, só para quem tem custo.ver (o dono na rede, o gerente na loja dele): quantidade de agora × o custo vigente da variação nos locais que vendem, o que está chegando por transferência e o que está fora da venda à parte, com os itens e as variações sem custo contados fora da soma (também no que está chegando e no que está fora da venda). Na main em 27bd799 (CI verde em e96f98b) e publicado em 14/11; migration 20261115000320_estoque_valor_em_custo aplicada no ora5g-dev em 14/11, com o sim do proprietário (lida como o dono: R$ 9.156,00 a custo nas lojas de teste). FALTA: a revisão do Codex e a homologação com login (J1).
+
+**Evidência declarada:**
+apps/plataforma/src/app/demo; apps/plataforma/e2e/demonstracao.spec.ts; packages/banco/supabase/migrations/20261114012407_estoque_painel.sql; packages/banco/src/estoque-painel.test.ts; apps/plataforma/src/lib/estoque/painel.ts; apps/plataforma/src/app/estoque/PainelDoEstoque.tsx; apps/plataforma/src/lib/notas/conciliacao.test.ts; apps/plataforma/src/lib/inicio/sino.test.ts; apps/plataforma/src/app/api/pendencias/route.test.ts; packages/banco/supabase/migrations/20261115000320_estoque_valor_em_custo.sql; packages/banco/src/estoque-valor.test.ts; apps/plataforma/src/lib/estoque/valor.test.ts; apps/plataforma/src/app/estoque/painel.test.ts
+
+## ORA-REPORT-008 — Dashboard expansão nacional por marketplace, ads e canais
+
+- Área: Gestão, BI e relatórios; prioridade: P2.
+- Estado anterior: `nao_iniciado`; atual: `testado`; homologação integral documentada: não.
+- Critério original: Receitas/fees/margens por canal.
+- Dependência declarada: não especificada no checkpoint; isso não prova ausência de pendências.
+
+**Nota do implementador, preservada integralmente:**
+Lote CANAIS-a (17/11; ADR-019): a tela /relatorios/canais (Gestão → Relatórios → Canais de venda lado a lado, só para o dono) mostra, no mesmo período, as lojas físicas (o vendido, as devoluções e os cancelamentos, a receita, as taxas dos meios já observadas na conciliação e a margem bruta; e, delas, o que veio do site), cada marketplace (o bruto, as tarifas, o frete e os reembolsos, o líquido e o lucro estimado) e os anúncios (o valor usado e as vendas das campanhas), sem contar duas vezes, e o resultado dos canais estimado. Cada número vem do painel do próprio canal, com a permissão de quem pede. DEMO-a (18/11; ADR-022): a demonstração tem os canais lado a lado com números fictícios no mesmo cálculo (/demo/canais), com o que entra por arquivo e o que falta para conectar cada canal direto.
+
+**Evidência declarada:**
+apps/plataforma/src/lib/canais; apps/plataforma/src/app/relatorios/canais; docs/adr/ADR-019-canais-lado-a-lado.md; docs/aceite/CANAIS-a.md; apps/plataforma/src/app/demo/canais/page.tsx; docs/adr/ADR-022-demonstracao-no-ar-e-isolada.md
+
+## ORA-QUAL-001 — CI, lint, typecheck, testes e code review obrigatórios
+
+- Área: Segurança, qualidade, operação e compliance; prioridade: P0.
+- Estado anterior: `parcial`; atual: `parcial`; homologação integral documentada: não.
+- Critério original: PR sem CI verde não libera merge.
+- Dependência declarada: não especificada no checkpoint; isso não prova ausência de pendências.
+
+**Nota do implementador, preservada integralmente:**
+CI com lint, tipos, testes, build, auditoria, E2E, rastreabilidade e detector de segredos nos arquivos, nos commits do PR e nos commits de cada envio à main (REV-003). Proteção da main não ativada; merges diretos pelo Claude Code por decisão de 07/11. R4 (14/11, revisão do estado): desde o Q3, também a verificação semanal de segurança e o Dependabot. GIT-a (17/11, Onda 0.7): a tabela das 62 issues abertas, com o merge da correção e o teste permanente de cada uma (docs/alinhamento/ISSUES_E_PRS_2026-11-17.md); 48 corrigidas e comprovadas, a fechar no GitHub com o comentário que cita o commit e o teste quando o conector tiver a permissão de comentar. FALTA: a proteção da main no GitHub (do proprietário); hoje o merge só acontece depois da mesma sequência do CI, em instalação limpa no servidor (decisão de 07/11). INTEG-a (16/11, #99): a publicação confere a identidade servida: /saude/versao responde o commit inteiro, a build e o ambiente; deploy/homologacao/conferir-publicacao.sh reprova serviço fora do ar, commit diferente, domínio com outra build ou ambiente trocado (com a reversão declarada por ORA_SHA_ESPERADO), e publicar.sh volta para a anterior se a nova não servir o commit dela; regressão em packages/config/src/conferir-publicacao.test.ts. INTEG-b (16/11): a causa do CI vermelho do GitHub (#95, a importação de 2.000 linhas acima de 8 s) corrigida e medida no servidor; FALTA conferir o CI do GitHub no SHA integrado. Registro do #95 (16/11): a integração GitHub × Supabase aplicou sozinha no ora5g-dev a migration nova que chegou à main no merge do INTEG-b (versão igual ao nome do arquivo, sem usuário): o pipeline do banco pela integração funciona; FALTA o config.toml mínimo em packages/banco/supabase e conferir o check da integração no GitHub. CI do GitHub (16/11, lido com o repositório público): a run da main 4e1a5d1 (43851653053) foi cancelada por passar dos 15 min do job, ainda nos testes; a anterior, 11c534f, reprovava só pelo #95 (8.513 ms). O limite do job passou a 30 min (os testes e o orçamento de 8 s por chamada iguais); FALTA conferir a primeira run verde no GitHub depois deste merge. Auditoria do Codex de 17/11 (F07): a main está sem proteção (protected: false, sem rulesets, conferido em 17/11). Proteger contra exclusão e push forçado é a pendência 5.5 do proprietário; exigir os checks antes do merge muda o fluxo para PR e é decisão dele.
+
+**Evidência declarada:**
+.github/workflows/ci.yml; docs/alinhamento/ISSUES_E_PRS_2026-11-17.md
+
+## ORA-QUAL-002 — RLS e autorização negada por padrão, testadas por loja
+
+- Área: Segurança, qualidade, operação e compliance; prioridade: P0.
+- Estado anterior: `parcial`; atual: `parcial`; homologação integral documentada: não.
+- Critério original: Testes positivos e negativos com dois vendedores/lojas.
+- Dependência declarada: não especificada no checkpoint; isso não prova ausência de pendências.
+
+**Nota do implementador, preservada integralmente:**
+RLS negando por padrão, testada com várias lojas, perfis e duas organizações. Defeitos de isolamento REV-001/REV-002 corrigidos em 07/11 com regressões; aguardando revisão do Codex antes de voltar a 'testado'. Inventário de autorização (10/11, autorizacao-funcoes.test.ts): as 48 funções SECURITY DEFINER que um usuário logado pode chamar (aviso 0029 do Supabase) recusam 528 tentativas de 13 tipos de atacante (anônimo, sem login, sem sessão, sessão encerrada, fora do turno, bloqueado, vínculo encerrado, sem vínculo, papel sem permissão, outra rede, outra loja, outro vendedor e permissão faltando), sem mudar o banco; anônimo não executa nenhuma; o teste falha se surgir função nova sem casos (prova: 4 defeitos introduzidos de propósito foram pegos). 11/11: inventário com 81 funções (L2 a L5a); a busca de cliente feita por outra rede não acha nada e fica registrada. T11 (vendedor só busca exata) virou teste no L5a. L5b (11/11): 90 funções no inventário (funil e agenda: outra loja, outro vendedor e sem crm.gerir recusados). L5c (11/11): 94 funções (mesclagem e segmentos só do dono). L7a (11/11): 98 funções (maquininhas e conciliação: gerência da loja). R4 (14/11, revisão do estado): o inventário de autorização cobre hoje 149 funções. BANCO-a (17/11): o inventário de autorização cobre 172 funções (era 149 em 14/11), e o teste de higiene do esquema confere índice em toda chave estrangeira, RLS em todo o esquema privado e o comentário de acesso só por função em toda tabela com RLS e sem política. FALTA: a conferência do Codex das correções REV-001 e REV-002 (o estado volta a "testado" depois dela).
+
+**Evidência declarada:**
+packages/banco/src/acesso.test.ts; packages/banco/src/revisao-codex.test.ts; packages/banco/supabase/migrations/20261117141658_indices_e_rls_do_banco.sql; packages/banco/src/higiene-do-esquema.test.ts; docs/aceite/BANCO-a.md
+
+## ORA-QUAL-003 — Auditoria imutável de operações e aprovações críticas
+
+- Área: Segurança, qualidade, operação e compliance; prioridade: P0.
+- Estado anterior: `testado`; atual: `testado`; homologação integral documentada: não.
+- Critério original: Prova quem fez o quê e quando.
+- Dependência declarada: não especificada no checkpoint; isso não prova ausência de pendências.
+
+**Nota do implementador, preservada integralmente:**
+Auditoria só de inserção, inclusive para o dono do banco. Operações críticas futuras (venda, caixa, aprovação) ainda não existem. Desde 08/11: auditoria automática das mudanças de acesso e configuração (ORA-ORG-005) e livro de estoque imutável (ADR-003). Revisão das telas (10/11): tela real /auditoria (auditoria.ver, pelo RLS): quem fez o quê e quando, na loja e na rede, com destaque para tentativas negadas e bloqueios; o antes/depois não aparece (pode ter dado pessoal). R4 (14/11, revisão do estado): as operações críticas já existem e ficam na auditoria só de inserção, com quem, quando e o motivo: venda e pagamento, caixa e saída do caixa, aprovação de desconto, estorno, transferência, entrada, inventário, nota, OS, bônus e os cadastros (um gatilho de auditoria em cada tabela), além do livro do estoque. FALTA: a conferência do Codex e a homologação.
+
+**Evidência declarada:**
+acesso.test.ts (T9); packages/banco/src/auditoria-acesso.test.ts; packages/banco/src/catalogo-estoque.test.ts; packages/banco/src/anexos-da-venda.test.ts; packages/banco/src/codigos-de-outros-canais.test.ts; packages/banco/src/regioes.test.ts
+
+## ORA-QUAL-004 — Segredos em ambientes seguros sem exposição no Git/cliente
+
+- Área: Segurança, qualidade, operação e compliance; prioridade: P0.
+- Estado anterior: `parcial`; atual: `parcial`; homologação integral documentada: não.
+- Critério original: Secret scanning e testes de configuração.
+- Dependência declarada: não especificada no checkpoint; isso não prova ausência de pendências.
+
+**Nota do implementador, preservada integralmente:**
+Detector de segredos (arquivos, commits do PR e do envio à main), validação de variáveis na inicialização e no login, chave pública conferida (sem secreta nem service_role). REV-003/REV-004 corrigidos em 07/11; grupos do verificar-env alinhados nas instruções e login sem exigir o grupo servidor (CONFIG-001, 08/11); aguardando revisão do Codex. Desde 08/11 (noite): o aplicativo web não recebe SUPABASE_SECRET_KEY nem DATABASE_URL (publicar.sh separa a cópia do worker, ADR-002 §2.5). R4 (14/11, revisão do estado): desde o Q3, a verificação semanal procura segredos em todo o histórico. GIT-a (17/11): de novo nenhum segredo em todo o histórico (470 commits); a lista do que o repositório público mostra (endereço do servidor, porta do SSH, conta do cPanel e referência do projeto Supabase) foi entregue ao proprietário fora do repositório, com a recomendação de torná-lo privado. FALTA: a conferência do Codex das correções REV-003 e REV-004.
+
+**Evidência declarada:**
+packages/config/src/segredos.ts; packages/config/src/ambiente.ts; packages/config/src/historico-segredos.test.ts; packages/config/src/verificar-env.test.ts; docs/alinhamento/ISSUES_E_PRS_2026-11-17.md
+
+## ORA-QUAL-005 — Backups e ensaio de restauração de banco e anexos
+
+- Área: Segurança, qualidade, operação e compliance; prioridade: P0.
+- Estado anterior: `parcial`; atual: `parcial`; homologação integral documentada: não.
+- Critério original: RPO/RTO definidos com responsável e evidência.
+- Dependência declarada: não especificada no checkpoint; isso não prova ausência de pendências.
+
+**Nota do implementador, preservada integralmente:**
+Lote Q3 (14/11): proposta de backup e restauração em docs/operacao/BACKUP_E_RESTAURACAO.md, com os fatos conferidos na documentação do Supabase e no próprio projeto: o ora5g-dev está no plano gratuito, sem backup automático (só dados de teste); o plano Pro faz backup diário (7 dias) e o PITR, adicional pago, perde no máximo 2 minutos; o backup do banco não inclui os arquivos do Storage (fotos, notas, anexos, OS), que precisam de cópia própria. Proposta (decisão D-044): na Fase 1 perder até 1 dia e voltar em 1 dia útil; na Fase 2 até 5 minutos e 4 horas no horário da loja; ensaio de restauração antes da Fase 2 e a cada trimestre, com o registro. O esquema já é reconstruído do zero pelas migrations em cada teste. FALTA: a decisão D-044, a infraestrutura de produção (D-027) e o ensaio de restauração (cenário J), que precisa do ambiente e da senha do banco guardada no servidor.
+
+**Evidência declarada:**
+docs/operacao/BACKUP_E_RESTAURACAO.md; docs/10_DECISOES_PENDENTES.md; docs/operacao/GO_NO_GO_PILOTO_E_SAIDA_DA_REIN.md; packages/banco/src/migrations.test.ts
+
+## ORA-QUAL-006 — Observabilidade de erros, latência, filas e conciliação
+
+- Área: Segurança, qualidade, operação e compliance; prioridade: P0.
+- Estado anterior: `parcial`; atual: `parcial`; homologação integral documentada: não.
+- Critério original: Alertas e dashboards com dono e severidade.
+- Dependência declarada: não especificada no checkpoint; isso não prova ausência de pendências.
+
+**Nota do implementador, preservada integralmente:**
+Lote Q1 (14/11, sem migration): a tela /operacao (Saúde da operação, no menu Gestão, para o dono e a gerência) mostra as filas que esperam alguém nas lojas que a pessoa acompanha (descontos, notas na fila, notas a enviar pelo WhatsApp, Ora Connect em andamento, pagamentos a conciliar, caixas e saídas do caixa, estornos, itens a conferir, transferências, OS atrasadas e prontas, contas a pagar vencidas, bônus e importações em prévia), cada uma só para quem decide sobre ela, com quantos e há quanto tempo está o mais antigo: uma consulta por fila, com a contagem exata e a primeira linha pela data, pelo RLS (o dono vê a rede; o gerente, a loja dele). Fila que o banco ainda não tem some; outra falha aparece como falha daquela fila, nunca como zero. O alerta das pendências da loja do turno continua no Início e no sino (G6). ROT-a (17/11; ADR-011): a Saúde da operação mostra as rotinas automáticas do banco (o vencimento das reservas a cada 5 minutos e a limpeza diária do registro), cada uma com a frequência, a última rodada certa e a situação que o banco decide (em dia, atrasada, com falha ou aguardando a primeira rodada; public.rotinas_situacao, só para o dono e a gerência), e um aviso no topo quando uma falha ou atrasa; cada rodada fica registrada no banco, só com o código do erro na falha. SAUDE-a (17/11; ADR-012): fila é o que espera a decisão ou o trabalho de alguém e tem a data em que começou a esperar; a venda concluída sem o pedido da nota virou fila ("Vendas sem pedido de nota", para quem aprova nota, public.notas_vendas_sem_pedido), e o estoque abaixo do mínimo aparece à parte, como aviso, fora de "Itens esperando"; a página pública /saude faz uma leitura leve do banco (public.saude_do_banco: só a hora e se a última migration desta versão está no histórico) e mostra o tempo de resposta do banco e a migration que falta. QUAL-a (17/11; ADR-015): a rotina do banco alertas_das_filas, a cada 10 minutos, põe no celular de quem decide um alerta por fila, loja e dia quando um desconto, uma nota ou uma saída de caixa espera além do limite (o padrão é 30 min, 4 h e 30 min, numa tabela que muda sem migration), e no do dono e do administrador um alerta por rotina, rede e dia quando uma rotina do banco falha ou atrasa; o worker dos avisos (PWA-b) roda a cada minuto desde 17/11. FALTA: erros e tempo de resposta do servidor (monitoramento: serviço a escolher ou leitura dos logs) e a atividade do worker do WhatsApp (desligado até a Meta).
+
+**Evidência declarada:**
+apps/plataforma/src/lib/operacao/filas.ts; apps/plataforma/src/lib/operacao/filas.test.ts; apps/plataforma/src/app/operacao/operacao.test.ts; apps/plataforma/src/lib/operacao/rotinas.ts; apps/plataforma/src/lib/operacao/rotinas.test.ts; packages/banco/supabase/migrations/20261117124230_rotinas_agendadas.sql; packages/banco/src/rotinas-agendadas.test.ts; packages/banco/src/rotinas-agendadas-concorrencia.test.ts; docs/adr/ADR-011-rotinas-agendadas-no-banco.md; docs/aceite/ROT-a.md; packages/banco/supabase/migrations/20261117145723_saude_do_banco_e_vendas_sem_nota.sql; packages/banco/src/saude-e-vendas-sem-nota.test.ts; docs/adr/ADR-012-o-que-e-fila-e-a-leitura-do-banco-na-saude.md; docs/aceite/SAUDE-a.md; apps/plataforma/src/lib/operacao/filas.ts; apps/plataforma/src/saude/banco.ts; packages/banco/supabase/migrations/20261117221322_alertas_das_filas.sql; packages/banco/src/alertas-das-filas.test.ts; docs/adr/ADR-015-alertas-das-filas.md; docs/aceite/QUAL-a.md
+
+## ORA-QUAL-007 — Migrations versionadas, não destrutivas, testadas
+
+- Área: Segurança, qualidade, operação e compliance; prioridade: P0.
+- Estado anterior: `testado`; atual: `testado`; homologação integral documentada: não.
+- Critério original: Revisão humana e rollback/roll-forward preparados.
+- Dependência declarada: não especificada no checkpoint; isso não prova ausência de pendências.
+
+**Nota do implementador, preservada integralmente:**
+Sete migrations versionadas e aplicadas do zero nos testes; nome, versão e md5 iguais ao histórico do ora5g-dev (registro em aplicadas-dev.json, conferido por teste). A reversão de integridade_estoque é testada: volta funções, colunas, gatilhos e permissões ao estado anterior. Faltam homologação e procedimento de produção. R4 (14/11, revisão do estado): hoje 72 migrations, todas com o md5 registrado e a reversão provada uma a uma desde 08/11 (o esquema volta ao estado anterior), e cada aplicação no ora5g-dev pede o sim do proprietário. FALTA: o procedimento de produção (D-027) e a conferência do Codex. Registro do #95 (16/11): a integração GitHub × Supabase aplicou sozinha no ora5g-dev a migration nova que chegou à main no merge do INTEG-b (versão igual ao nome do arquivo, sem usuário): o pipeline do banco pela integração funciona; FALTA o config.toml mínimo em packages/banco/supabase e conferir o check da integração no GitHub. Auditoria do Codex de 17/11 (F02): a migration que estava no banco além do Git (20261117174218) foi versionada no MKT-a; em 18/11, 105 no ora5g-dev e 105 arquivos, com o md5 de cada uma conferido em aplicadas-dev.json.
+
+**Evidência declarada:**
+packages/banco/supabase; packages/banco/src/migrations.test.ts; packages/banco/supabase/aplicadas-dev.json
+
+## ORA-QUAL-008 — Plano de contingência para internet, pagamentos e fiscal
+
+- Área: Segurança, qualidade, operação e compliance; prioridade: P0.
+- Estado anterior: `parcial`; atual: `parcial`; homologação integral documentada: não.
+- Critério original: Equipe piloto sabe como operar com segurança.
+- Dependência declarada: não especificada no checkpoint; isso não prova ausência de pendências.
+
+**Nota do implementador, preservada integralmente:**
+Lote Q2 (14/11, só documento): proposta de contingência para a piloto em docs/operacao/CONTINGENCIA_E_INCIDENTES.md: as regras que não mudam (o sistema não vende sem internet e segura qualquer envio no aparelho, D-029; reenviar não duplica; pagamento só com comprovante; operação do Ora Connect com resultado desconhecido não se refaz; a aprovação nunca segura a emissão da nota) e o que fazer em cada situação: internet da loja, aparelho do vendedor, maquininha, Pix, financeira, portal do fisco ou emissor, Nogle, WhatsApp, sistema fora do ar e erro na tela; na Fase 1 a venda segue na Rein. Ligada ao critério 12 do go/no-go. FALTA: a decisão do proprietário sobre a venda sem internet na Fase 2 (D-041), a contingência fiscal com o contador e o treino da equipe da piloto (lista no documento).
+
+**Evidência declarada:**
+docs/operacao/CONTINGENCIA_E_INCIDENTES.md; docs/operacao/GO_NO_GO_PILOTO_E_SAIDA_DA_REIN.md; apps/plataforma/src/componentes/AvisoDeRede.tsx
+
+## ORA-QUAL-009 — Piloto com testes de usuário, caixa e fechamento diário
+
+- Área: Segurança, qualidade, operação e compliance; prioridade: P0.
+- Estado anterior: `nao_iniciado`; atual: `nao_iniciado`; homologação integral documentada: não.
+- Critério original: Critérios de go/no-go assinados.
+- Dependência declarada: não especificada no checkpoint; isso não prova ausência de pendências.
+
+**Nota do implementador, preservada integralmente:**
+NÃO INICIADO. A piloto (usuários, caixa e fechamento do dia) depende da base: a planilha carregada, as contas de gerente e vendedor (J1), o CNPJ da Santa Cândida e o roteiro do go/no-go (docs/operacao/GO_NO_GO_PILOTO_E_SAIDA_DA_REIN.md). (Linha própria desde o AUD-a, 18/11, a pedido da auditoria do Codex de 17/11.)
+
+**Evidência declarada:**
+docs/alinhamento/LEITURA_AUDITORIA_2026-11-17.md; docs/aceite/AUD-a.md
+
+## ORA-QUAL-010 — Performance mobile e testes em dispositivos/internet reais
+
+- Área: Segurança, qualidade, operação e compliance; prioridade: P1.
+- Estado anterior: `parcial`; atual: `parcial`; homologação integral documentada: não.
+- Critério original: SLOs aprovados e comparados com resultado.
+- Dependência declarada: as metas pedem a aprovação do proprietário (D-047), agora também as das telas com login; o aceite do VEL-a (docs/aceite/VEL-a.md); a medida por script e o E2E das telas com login dependem do usuário de teste (J1); o teste no celular e na internet da loja é da piloto.
+
+**Nota do implementador, preservada integralmente:**
+QUAL-010a (15/11, sem migration): o tamanho de cada tela é conferido no CI (scripts/orcamento-de-desempenho.mjs --conferir, depois do build: o JavaScript e o CSS da primeira visita, comprimidos, contra docs/operacao/orcamento-de-desempenho.json: 200 KB de JavaScript por tela e 20 KB de CSS; em 15/11, 128,3 KB comuns e o PDV com 171,8 KB). O tempo num celular simulado (scripts/medir-no-celular.mjs: 360 px, processador 4 vezes mais lento, 4G lento do Lighthouse, sem cache, mediana de 3) nas telas sem login da homologação: o maior desenho (LCP) em 0,88 a 0,94 s, o bloqueio por JavaScript em 51 a 134 ms, a carga completa em 1,42 a 1,64 s. O banco (QUAL-012a): concluir a venda em 59 a 79 ms para 95% das vendas. Metas propostas em docs/operacao/DESEMPENHO_NO_CELULAR.md (D-047): LCP até 2,5 s e bloqueio até 200 ms no celular simulado (o "bom" do Google), o orçamento por tela, a venda em até 1 s no banco e, na piloto, o PDV aberto e uma venda simples concluída em até 3 s cada no celular e na internet da loja. QUAL-010b (15/11): o cliente do Supabase no navegador (67 KB comprimidos), que quatro telas carregavam na primeira visita só para enviar a foto ou mexer no segundo fator, vem só na hora do uso (lib/supabase/navegador.ts): as quatro caíram cerca de 66 KB cada (até 170,3 KB) e o orçamento ficou sem exceções. Falta (até 15/11): o proprietário aprovar ou mudar as metas (D-047), medir as telas com login (depende do usuário de teste, J1), o teste no celular e na internet da loja piloto. VEL-a (16/11, ADR-010; a Onda 0.1 do plano do proprietário de 16/11): as telas com login. Antes, no navegador do proprietário (conta do dono, boa internet): /caixa 1,2 s até o primeiro byte, /clientes 1,8 s, /catalogo, /estoque, /vender e /vendas 2,5 a 2,8 s, /vender com busca 4,7 s, o botão "Adicionar" 3,6 s e o "Tirar" 5,9 s, sem nenhum aviso durante a espera. Antes, no servidor: uma ida ao banco custa 0,42 a 0,44 s em conexão nova e 0,16 a 0,20 s em conexão reaproveitada (o servidor da homologação fica a cerca de 0,12 s do banco), e cada tela fazia muitas idas em fila. O que mudou: (1) a sessão e o menu numa ida só (public.molde_da_sessao: a situação da sessão, as 33 permissões que a plataforma pergunta, o nome, os vínculos e as duas contagens; antes eram 2 idas em fila e mais 34 pedidos); (2) a identidade pela assinatura do token (getClaims), com a decisão da sessão no banco em cada pedido; (3) o PDV numa leitura (public.pdv_tela): com a venda aberta, de 10 a 13 idas em fila para 2 rodadas; (4) a conexão com o banco mantida por até 180 s parada (antes, 4 s); (5) todo botão de envio trava no toque e mostra um texto de espera (BotaoDeEnvio, com useFormStatus: 163 formulários de ação, 9 de busca e 4 de envio de arquivo) e toda pasta de tela do menu tem esqueleto (29); (6) um log de tempos, desligado no dia a dia (ORA_MEDIR_TEMPOS=1: só o caminho e a duração de cada ida ao banco). Migration 20261117015315_sessao_molde_e_pdv aplicada no ora5g-dev em 16/11, pela autorização do proprietário de 16/11 (duas funções novas, que rodam com as permissões de quem chama; nenhuma tabela, política ou permissão muda). As duas leituras também rodam num PostgreSQL 17 de verdade, com duas conexões (packages/banco/src/sessao-molde-e-pdv-concorrencia.test.ts): nenhuma espera a ação do carrinho ainda não confirmada. Metas propostas para as telas com login em docs/operacao/DESEMPENHO_NO_CELULAR.md (D-047): abrir o PDV em até 1,5 s, buscar e cada ação do carrinho em até 2 s, concluir a venda em até 3 s. PWA-a (17/11; Onda 1, item 7, primeira parte): o site é instalável na tela inicial do celular (manifesto, ícones de 192 e 512 e o recortável, o do iPhone), abre em tela cheia no Início e, sem internet, mostra a página "Sem internet agora" (service worker mínimo, sem guardar dado). VEL-b (18/11; ADR-010, "O que veio no VEL-b"): em 46 arquivos, 73 perguntas deixam de ir ao banco, uma a uma: a permissão da loja do turno ou da rede (vem no molde da sessão, com 12 permissões a mais; a resposta é a mesma, provado no banco para o catálogo inteiro e todos os papéis; só as perguntas sobre outra loja seguem no banco, e um teste impede a volta); o preço da busca do PDV numa ida (public.precos_vigentes); o Caixa em 3 rodadas. O "antes" com login, medido no log de tempos da homologação (scripts/idas-por-tela.mjs): Vendas com 8 a 9 idas em 4 a 5 rodadas (0,9 a 1,2 s no banco), o sino e o Início com 17 a 28 pedidos ao mesmo tempo (0,7 a 1,5 s). FALTA: o aceite do proprietário pelo roteiro docs/aceite/VEL-a.md, com a medida do "depois" na homologação; ele aprovar ou mudar as metas (D-047); confirmar qual chave assina os tokens do ora5g-dev (com o segredo compartilhado, cada leitura da sessão ainda vai ao serviço de login); o E2E em tela de celular que adiciona, tira e conclui uma venda e a medida das telas com login por script (dependem do usuário de teste, J1); o VEL-c (o sino de avisos e o Início numa leitura, a leitura única do Catálogo e do Estoque e a ação do carrinho, que espera a decisão); a medida do "depois" do VEL-b com login (seção 4.7 de DESEMPENHO_NO_CELULAR.md); o teste no celular e na internet da loja piloto.
+
+**Evidência declarada:**
+scripts/orcamento-de-desempenho.mjs; docs/operacao/orcamento-de-desempenho.json; scripts/medir-no-celular.mjs; docs/operacao/DESEMPENHO_NO_CELULAR.md; .github/workflows/ci.yml; apps/plataforma/src/lib/supabase/navegador.ts; docs/adr/ADR-010-sessao-idas-ao-banco-e-retorno-imediato.md; packages/banco/supabase/migrations/20261117015315_sessao_molde_e_pdv.sql; packages/banco/src/sessao-molde-e-pdv.test.ts; packages/banco/src/sessao-molde-e-pdv-concorrencia.test.ts; apps/plataforma/src/lib/acesso/sessao.ts; apps/plataforma/src/lib/acesso/molde.ts; apps/plataforma/src/lib/vendas/pdv-tela.ts; apps/plataforma/src/componentes/BotaoDeEnvio.tsx; apps/plataforma/src/retorno-imediato.test.ts; apps/plataforma/src/esqueletos.test.ts; apps/plataforma/src/lib/supabase/conexao-mantida.ts; apps/plataforma/src/lib/supabase/tempos.ts; docs/aceite/VEL-a.md; apps/plataforma/src/app/manifest.ts; apps/plataforma/public/sw.js; apps/plataforma/src/app/manifest.test.ts; apps/plataforma/e2e/site-instalavel.spec.ts; docs/aceite/PWA-a.md; apps/plataforma/src/lib/acesso/molde.ts; apps/plataforma/src/permissoes-do-molde.test.ts; packages/banco/src/sessao-molde-e-pdv.test.ts; scripts/idas-por-tela.mjs; docs/aceite/VEL-b.md
+
+## ORA-QUAL-011 — LGPD: bases legais, retenção, direitos do titular e minimização
+
+- Área: Segurança, qualidade, operação e compliance; prioridade: P1.
+- Estado anterior: `parcial`; atual: `parcial`; homologação integral documentada: não.
+- Critério original: Encarregado/jurídico revisa e aprova políticas.
+- Dependência declarada: encarregado/jurídico (LGPD): bases legais, retenção, anonimização a pedido e quem gera o relatório (D-048).
+
+**Nota do implementador, preservada integralmente:**
+Já havia: dados mínimos por finalidade, os dados sensíveis do cliente em privado.cliente_dados (fora da API), cada busca, ficha e dado revelado na auditoria, o limite de consultas (OR028) e o consentimento de contato por canal e finalidade (L5a, ADR-008). QUAL-011a (15/11): o relatório dos dados do titular (LGPD, art. 18, I e II, e art. 19): public.cliente_dados_do_titular junta o cadastro com os dados em privado, a origem e as finalidades, os cadastros mesclados (em cadeia), os consentimentos, as compras (itens, valores, meios de pagamento, notas), o funil, a agenda, as OS e a lista dos documentos; só o dono (cliente.exportar), com a senha recente (ORG-006b) e um motivo; cada relatório na auditoria (motivo e contagens, sem o conteúdo) e no limite de consultas. A tela /clientes/<id>/titular gera, imprime (só o relatório) e baixa em JSON (a cópia eletrônica do art. 19, § 3º). Migration 20261115193611_relatorio_do_titular (antes 20261115210000) aplicada no ora5g-dev em 15/11, com o sim do proprietário. FALTA: com o jurídico/encarregado (D-048 e ADR-008): as bases legais por finalidade, a retenção e o descarte, a anonimização ou eliminação a pedido (respeitando a guarda fiscal), quem mais gera o relatório e o canal do titular; a revisão do Codex e a homologação.
+
+**Evidência declarada:**
+packages/banco/supabase/migrations/20261115193611_relatorio_do_titular.sql; packages/banco/src/relatorio-do-titular.test.ts; packages/banco/src/autorizacao-funcoes.test.ts; apps/plataforma/src/app/clientes/[id]/titular/titular.test.ts; apps/plataforma/src/lib/clientes/titular.ts
+
+## ORA-QUAL-012 — Testes de carga, concorrência e disaster recovery
+
+- Área: Segurança, qualidade, operação e compliance; prioridade: P1.
+- Estado anterior: `parcial`; atual: `parcial`; homologação integral documentada: não.
+- Critério original: Sem venda/IMEI duplo, serviço retorna ao estado previsto.
+- Dependência declarada: carga e queda em produção e o ensaio de restauração do backup dependem da infraestrutura de produção (D-027) e da D-044.
+
+**Nota do implementador, preservada integralmente:**
+Concorrência: concorrencia.test.ts (PostgreSQL 17 de verdade, duas conexões disputando o mesmo IMEI, a mesma chave, o último item, a reserva, a venda, a transferência e o vínculo; desde a auditoria do Codex de 08/11). QUAL-012a (15/11): carga e recuperação no mesmo PostgreSQL 17 — 8 vendedores vendendo ao mesmo tempo (capas do mesmo estoque e 12 aparelhos disputados pelo IMEI): cada aparelho numa venda concluída só, o saldo e o livro do estoque descendo exatamente o que foi vendido (sem reserva pendurada) e os recebimentos fechando com as vendas; 60 vendas concluídas por 8 vendedores ao mesmo tempo (48 de capas e 12 de aparelhos), com mediana de 34 a 38 ms, p95 de 59 a 79 ms e a mais lenta entre 79 e 115 ms, em quatro rodadas no servidor de desenvolvimento (o teste exige o p95 abaixo de 5 s). A conexão que cai no meio da venda não deixa item, reserva nem estoque mexido; o servidor que cai de repente (parada imediata, sem checkpoint) volta com o que estava confirmado, sem o item nem a reserva da transação que estava no meio, e as vendas seguem. FALTA: a carga e a queda no ambiente de produção (Supabase, com a rede e o volume da piloto) e o ensaio de restauração do backup (ORA-QUAL-005: D-044 e a infraestrutura de produção, D-027).
+
+**Evidência declarada:**
+packages/banco/src/carga-e-recuperacao.test.ts; packages/banco/src/postgres-real.ts; packages/banco/src/concorrencia.test.ts
+
+## ORA-QUAL-013 — Processo de resposta a incidentes e suporte às lojas
+
+- Área: Segurança, qualidade, operação e compliance; prioridade: P1.
+- Estado anterior: `parcial`; atual: `parcial`; homologação integral documentada: não.
+- Critério original: Playbook, contatos e rastreio de incidentes.
+- Dependência declarada: não especificada no checkpoint; isso não prova ausência de pendências.
+
+**Nota do implementador, preservada integralmente:**
+Lote Q2 (14/11, só documento): proposta de resposta a incidentes e suporte às lojas em docs/operacao/CONTINGENCIA_E_INCIDENTES.md: quatro níveis (crítico, alto, médio, baixo) com a resposta proposta, quem avisa quem (vendedor, gerente, proprietário, desenvolvimento), o que mandar no aviso (loja, hora, tela, mensagem, número, versão do rodapé, foto sem dado de cliente), o que não fazer (senha, CPF, documento, refazer a operação, mudar fora das telas) e o que acontece depois (causa, correção com teste, CI, revisão, aviso às lojas); a saúde da operação (Q1) e o sino (G6) mostram o que está parado. FALTA: o canal, os horários, quem atende fora do horário e os prazos aprovados pelo proprietário (D-042) e o alerta automático de erro do servidor.
+
+**Evidência declarada:**
+docs/operacao/CONTINGENCIA_E_INCIDENTES.md; docs/operacao/GO_NO_GO_PILOTO_E_SAIDA_DA_REIN.md; apps/plataforma/src/componentes/AvisoDeRede.tsx; apps/plataforma/src/lib/operacao/filas.ts
+
+## ORA-QUAL-014 — Análise de segurança periódica e monitoramento de dependências
+
+- Área: Segurança, qualidade, operação e compliance; prioridade: P2.
+- Estado anterior: `parcial`; atual: `parcial`; homologação integral documentada: não.
+- Critério original: Atualizações e vulnerabilidades triadas.
+- Dependência declarada: não especificada no checkpoint; isso não prova ausência de pendências.
+
+**Nota do implementador, preservada integralmente:**
+Lote Q3 (14/11): verificação semanal automática no GitHub (segredos em todo o histórico; vulnerabilidade alta ou crítica nas dependências da produção e crítica em qualquer uma fazem a verificação falhar e o GitHub avisar; relatório completo do npm audit e do npm outdated), o Dependabot abrindo PR das atualizações (semanal das dependências, mensal das ações do GitHub; tudo passa pelo CI e pela revisão) e o roteiro de triagem por gravidade, com a revisão mensal e a linha de base de 14/11 (produção sem vulnerabilidade; 8 moderadas só de desenvolvimento, da cadeia do minimatch no lint, com o risco aceito proposto). GIT-a (17/11): npm audit com as dependências de desenvolvimento em 0 (o typescript-eslint 8.73.0 pede o minimatch 11; #44); a PR #103 do Dependabot (8 atualizações pequenas) entrou por merge com o CI completo; a #92 recusada (Node 22); a #93 e a #94 para avaliar em branch própria. FALTA: o proprietário ligar os alertas e as atualizações de segurança do Dependabot no GitHub, dizer quem recebe o aviso e a primeira revisão mensal com o Codex. Auditoria do Codex de 17/11 (F08): o audit completo tem 16 avisos altos, todos da cadeia de desenvolvimento (eslint, typescript-eslint, fast-glob e tinyglobby levam ao picomatch <= 4.0.7, GHSA-fc5q-39xc-vjpf); a produção (--omit=dev) tem 0. Em 17/11 o npm não tinha versão corrigida do picomatch: atualizar quando sair.
+
+**Evidência declarada:**
+.github/workflows/seguranca-semanal.yml; .github/dependabot.yml; docs/operacao/SEGURANCA_PERIODICA.md; .github/workflows/ci.yml; docs/alinhamento/ISSUES_E_PRS_2026-11-17.md; docs/operacao/SEGURANCA_PERIODICA.md
+
+## ORA-OS-001 — Abrir OS obrigatória para todo aparelho de cliente que entra (até limpeza), com cliente, IMEI, defeito, estado, fotos e acessórios deixados (custódia)
+
+- Área: Assistência técnica e ordens de serviço; prioridade: P1.
+- Estado anterior: `testado`; atual: `testado`; homologação integral documentada: não.
+- Critério original: Nenhum aparelho de cliente fica na loja sem OS numerada; fotos e acessórios registrados; isolamento por loja; auditoria.
+- Dependência declarada: P5 só para o acesso do técnico (login próprio ou registro pela gerência).
+
+**Nota do implementador, preservada integralmente:**
+Lote L12a (14/11, DEC-U44 e DEC-U47): ordem de serviço em /assistencia no lugar da folha de papel. Abre quem recebe aparelho na loja (os.abrir: vendedor, gerente e dono), a partir da ficha do cliente da rede, que precisa ter WhatsApp: aparelho, IMEI (ou número de série, se não tiver IMEI), defeito relatado, estado na chegada, acessórios deixados e prazo combinado (opcional); número da OS gerado pelo banco; o cadastro ganha a finalidade "assistência". A mesma chave devolve a mesma OS e o mesmo IMEI não tem duas OS abertas na rede (OR031). Até 8 fotos no bucket privado "os" (o servidor confere que é imagem e guarda o SHA-256). Quem vê: a loja da OS, a gerência e o dono (RLS) e o técnico só depois que ela vai para a assistência dele; nada se escreve direto nas tabelas; toda mudança fica na auditoria e na trilha. Inativar a loja com OS aberta é recusado (OR019). Migration 20261114162103_ordem_de_servico (aplicada no ora5g-dev em 14/11). FALTA: o acesso do técnico depende da P5 (login próprio ou registro pela gerência, que já funciona).
+
+**Evidência declarada:**
+packages/banco/supabase/migrations/20261114162103_ordem_de_servico.sql; packages/banco/src/ordem-de-servico.test.ts; packages/banco/src/autorizacao-funcoes.test.ts; apps/plataforma/src/lib/assistencia/regras.ts; apps/plataforma/src/lib/assistencia/regras.test.ts; apps/plataforma/src/app/assistencia/assistencia.test.ts
+
+## ORA-OS-002 — Registrar saída para o técnico central e retorno à loja (custódia em trânsito)
+
+- Área: Assistência técnica e ordens de serviço; prioridade: P1.
+- Estado anterior: `parcial`; atual: `parcial`; homologação integral documentada: não.
+- Critério original: A posição do aparelho (loja, em trânsito, técnico, de volta) é conhecida a qualquer momento; parado além do prazo vira alerta ao dono.
+- Dependência declarada: não especificada no checkpoint; isso não prova ausência de pendências.
+
+**Nota do implementador, preservada integralmente:**
+Lote L12a (14/11): custódia passo a passo, com a posição sempre na OS: na loja → a caminho do técnico → com o técnico → voltando para a loja → na loja; e encerrada devolvida ao cliente (sem conserto, com motivo) ou cancelada (gerência, só antes de sair da loja). A OS vai para a única assistência ativa da rede (ou a escolhida, se houver mais de uma); o técnico registra o recebimento e a devolução, ou a gerência registra em nome dele dizendo como ele confirmou. Passo já feito não muda nada; fora de ordem é recusado; a trilha guarda quem, quando, de onde para onde e se foi em nome do técnico. A lista mostra quantas estão na loja, com o técnico e atrasadas (prazo combinado vencido), da mais antiga para a mais nova. L12c (14/11; migration 20261114202336_entrega_da_os, aplicada no ora5g-dev em 14/11): o conserto feito sai pela entrega com a cobrança no PDV; sem cobrar, só a gerência devolve, com o motivo; a OS cobrada só sai pela entrega; a lista também conta as prontas para entregar. Migration 20261114162103_ordem_de_servico (aplicada no ora5g-dev em 14/11). L12f (14/11, sem migration): no Início, as OS atrasadas e as prontas para entregar (para a loja e, para o dono, na rede) e, para o técnico, as que esperam por ele. FALTA: um prazo por etapa quando o prazo com o cliente não foi combinado (decisão do proprietário).
+
+**Evidência declarada:**
+packages/banco/supabase/migrations/20261114162103_ordem_de_servico.sql; packages/banco/src/ordem-de-servico.test.ts; packages/banco/src/autorizacao-funcoes.test.ts; apps/plataforma/src/lib/assistencia/regras.ts; apps/plataforma/src/lib/assistencia/regras.test.ts; apps/plataforma/src/app/assistencia/assistencia.test.ts; apps/plataforma/src/app/inicio/inicio.test.ts
+
+## ORA-OS-003 — Orçamento do técnico dentro da OS (diagnóstico, peças, valor), com histórico
+
+- Área: Assistência técnica e ordens de serviço; prioridade: P1.
+- Estado anterior: `testado`; atual: `testado`; homologação integral documentada: não.
+- Critério original: O orçamento sai do grupo de WhatsApp e fica na OS; técnico só vê e orça as próprias OS (T12 do teste de acesso).
+- Dependência declarada: P5 só para o técnico orçar no próprio celular (a gerência registra em nome dele).
+
+**Nota do implementador, preservada integralmente:**
+Lote L12b (14/11, DEC-U47): o orçamento sai do grupo de WhatsApp e fica na OS, com histórico: cada versão com o diagnóstico, até 10 peças descritas (quantidade e valor), a mão de obra, o total e o prazo do conserto; o novo substitui o que esperava o cliente, e nada se apaga (só a resposta é gravada, uma vez). Orça o técnico da assistência para onde a OS foi (os.orcar), com o aparelho com ele, e só as OS que foram para a assistência dele; o vendedor não orça (42501); a gerência da loja pode registrar em nome do técnico, dizendo como ele passou o orçamento. A mesma chave devolve o mesmo orçamento. Migration 20261114162305_orcamento_da_os (aplicada no ora5g-dev em 14/11). FALTA: o técnico orçar no próprio celular depende da P5 (login próprio).
+
+**Evidência declarada:**
+packages/banco/supabase/migrations/20261114162305_orcamento_da_os.sql; packages/banco/src/ordem-de-servico.test.ts; packages/banco/src/autorizacao-funcoes.test.ts; apps/plataforma/src/lib/assistencia/regras.ts; apps/plataforma/src/lib/assistencia/regras.test.ts; apps/plataforma/src/app/assistencia/assistencia.test.ts
+
+## ORA-OS-004 — Aprovação ou recusa do orçamento pelo cliente, registrada
+
+- Área: Assistência técnica e ordens de serviço; prioridade: P1.
+- Estado anterior: `testado`; atual: `testado`; homologação integral documentada: não.
+- Critério original: Nada é executado sem a resposta do cliente registrada (canal e momento); recusa encerra com devolução.
+- Dependência declarada: não especificada no checkpoint; isso não prova ausência de pendências.
+
+**Nota do implementador, preservada integralmente:**
+Lote L12b (14/11): a loja da OS registra a resposta do cliente ao orçamento que espera (aprovado ou recusado; na loja, pelo WhatsApp ou por telefone; quem registrou e quando), uma vez: a mesma resposta repetida não muda nada, e o orçamento substituído ou já respondido não aceita resposta. O conserto só é marcado pronto depois da aprovação registrada e com o aparelho no técnico. Recusado: o técnico pode fazer outro orçamento ou mandar o aparelho de volta, e a loja devolve ao cliente com o motivo (a OS se encerra). Migration 20261114162305_orcamento_da_os (aplicada no ora5g-dev em 14/11).
+
+**Evidência declarada:**
+packages/banco/supabase/migrations/20261114162305_orcamento_da_os.sql; packages/banco/src/ordem-de-servico.test.ts; packages/banco/src/autorizacao-funcoes.test.ts; apps/plataforma/src/lib/assistencia/regras.ts; apps/plataforma/src/lib/assistencia/regras.test.ts; apps/plataforma/src/app/assistencia/assistencia.test.ts
+
+## ORA-OS-005 — Avisos ao cliente e ao técnico (comprovante, orçamento, aparelho pronto, entrega)
+
+- Área: Assistência técnica e ordens de serviço; prioridade: P1.
+- Estado anterior: `parcial`; atual: `parcial`; homologação integral documentada: não.
+- Critério original: Botão que abre o WhatsApp com a mensagem pronta até a API oficial; depois, envio pela API oficial com consentimento; sem automação não oficial.
+- Dependência declarada: F1 (WhatsApp oficial) para o envio automático; o clique para conversar já funciona.
+
+**Nota do implementador, preservada integralmente:**
+Lote L12a (14/11): aviso ao cliente pelo WhatsApp por clique para conversar (oficial), com a mensagem pronta: o comprovante da OS (número, aparelho com o final do IMEI, defeito, acessórios e prazo) e a chegada do aparelho de volta na loja. O banco entrega o número só para a loja da OS e registra o aviso na trilha e na auditoria, sem o número; quem envia é a pessoa, pelo WhatsApp da loja, sem automação não oficial. L12b (14/11): o aviso do orçamento (diagnóstico, peças, mão de obra, total, prazo e como responder), enquanto ele espera o cliente. L12c (14/11): o comprovante da entrega (o dia e a venda que cobrou o conserto), depois de registrada (migration 20261114202336_entrega_da_os, aplicada no ora5g-dev em 14/11). FALTA: o envio automático pela API oficial com modelo aprovado (ORA-WHATS-001) e o aviso ao técnico (P5).
+
+**Evidência declarada:**
+packages/banco/supabase/migrations/20261114162103_ordem_de_servico.sql; packages/banco/src/ordem-de-servico.test.ts; packages/banco/src/autorizacao-funcoes.test.ts; apps/plataforma/src/lib/assistencia/regras.ts; apps/plataforma/src/lib/assistencia/regras.test.ts; apps/plataforma/src/app/assistencia/assistencia.test.ts
+
+## ORA-OS-006 — Entrega com cobrança pelo PDV e produção do vendedor; peças só saem do estoque ligadas a uma OS
+
+- Área: Assistência técnica e ordens de serviço; prioridade: P1.
+- Estado anterior: `testado`; atual: `testado`; homologação integral documentada: não.
+- Critério original: Serviço cobrado na venda conta uma vez na produção; peça consumida sem OS aparece como divergência; relatórios de OS sem venda, por vendedor, tempo de conserto e peças × serviços.
+- Dependência declarada: não especificada no checkpoint; isso não prova ausência de pendências.
+
+**Nota do implementador, preservada integralmente:**
+Lote L12c (14/11, seção 2C da Etapa 0, etapa 8): o conserto pronto, com o aparelho de volta na loja, é cobrado no PDV: "Cobrar no PDV" na OS põe no carrinho de quem cobra o item "Conserto da OS nº N" pelo valor do orçamento aprovado (produto do sistema por rede, sem preço de catálogo, que só entra pela OS); a venda concluída marca a OS como cobrada e conta na produção de quem a concluiu, uma vez (o valor está só na venda; a mesma OS em duas vendas: só uma conclui, OR032, provado também com duas conexões no PostgreSQL 17). Venda cancelada antes da entrega desfaz a cobrança. A entrega ao cliente vem só depois da cobrança; o conserto feito não sai sem cobrança pela loja (só a gerência devolve sem cobrar, com o motivo). A lista mostra as prontas para entregar. Migration 20261114202336_entrega_da_os (aplicada no ora5g-dev em 14/11). L12d (14/11; migration 20261114202444_pecas_da_os, aplicada no ora5g-dev em 14/11): a rede marca as categorias de peças da assistência (no catálogo); peça não entra em venda e só sai do estoque da assistência pela OS: o técnico, ou a gerência em nome dele, registra a peça usada pelo SKU, com o aparelho com ele e o conserto aprovado; o livro de estoque grava a saída com a OS como referência; sem saldo, é recusada; a que não foi usada volta uma vez, com o motivo; a peça que faltar na contagem sem OS aparece como divergência do inventário. L12e (14/11; migration 20261114202535_relatorio_da_assistencia, aplicada no ora5g-dev em 14/11): os relatórios em /assistencia/relatorios, da gerência e do dono, por período e loja: OS abertas, consertos cobrados e o valor, prontas sem cobrança, devolvidas sem cobrar, como as OS se encerraram, as OS que pedem atenção (conserto devolvido sem cobrar, venda cancelada depois da entrega, pronta parada na loja), por pessoa (quem abriu e quem cobrou), tempo de conserto e peças × serviços por loja. A quem a produção é creditada é a D-040 (hoje, a quem conclui a venda).
+
+**Evidência declarada:**
+packages/banco/supabase/migrations/20261114202535_relatorio_da_assistencia.sql; packages/banco/supabase/migrations/20261114202444_pecas_da_os.sql; packages/banco/supabase/migrations/20261114202336_entrega_da_os.sql; packages/banco/src/ordem-de-servico.test.ts; packages/banco/src/concorrencia.test.ts; packages/banco/src/autorizacao-funcoes.test.ts; apps/plataforma/src/app/assistencia/assistencia.test.ts; apps/plataforma/src/app/vendas/conserto-da-os.test.ts; apps/plataforma/src/lib/assistencia/regras.test.ts; apps/plataforma/src/app/produtos/produtos.test.ts; apps/plataforma/src/lib/assistencia/relatorio.test.ts
