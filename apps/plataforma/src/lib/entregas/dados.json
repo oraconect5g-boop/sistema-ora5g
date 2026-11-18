@@ -536,8 +536,8 @@
         "ORA-QUAL-010"
       ],
       "entrega": "o sino de avisos e o Início com as pendências da loja numa ida só ao banco (antes, de 17 a 29 pedidos por abertura), com a mesma permissão e o mesmo RLS",
-      "commit": null,
-      "publicado_em": null,
+      "commit": "3fd64b6",
+      "publicado_em": "2026-11-18",
       "pedido_em": null,
       "resposta": null,
       "respondido_em": null

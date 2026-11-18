@@ -43,3 +43,12 @@
 1. **O proprietário mostra o sistema com os nomes das lojas dele,** sem misturar com dado real.
 2. **Um teste falha** se alguém ligar a demonstração ao banco ou usar dado dela numa tela real.
 3. **Reverter:** `ORA_DEMO_DESLIGADA=1` no ambiente desliga a demonstração na hora. A regra antiga, presa ao `APP_ENV`, volta com uma linha em `garantirDemonstracaoLigada`.
+
+## Adendo de 18/11/2026 — A demonstração deixa de ser atualizada (D-051)
+
+O proprietário, em 18/11: "Todas as atualizações devem ser direcionadas ao servidor principal", com o link https://ora5g.com.br/ ("nesse endereço"), e "a versão demo já não é mais necessária".
+
+1. **A demonstração não recebe lotes novos.** O DEMO-b foi o último. A matriz demonstração × real fica como registro.
+2. **Os roteiros de aceite usam o sistema real,** em ora5g.com.br. O do PDV-c foi reescrito para a loja de teste Santa Cândida (teste). Os do DEMO-a e do DEMO-b não serão pedidos.
+3. **Desligar a demonstração** espera a resposta do proprietário. Até lá, ela fica no ar como estava. Para desligar: `ORA_DEMO_DESLIGADA=1` no ambiente do servidor; a tela inicial já esconde o botão, e o link da tela de entrada precisa passar a respeitar a mesma chave.
+4. **O isolamento continua provado** por `src/demo/isolamento.test.ts` enquanto o código da demonstração existir.

@@ -1914,7 +1914,7 @@ Programa de execução integral (PR #67; checkpoint em `docs/alinhamento/EXECUCA
 - **Origem:** a seção 5 da orientação do proprietário de 18/11 ("atualizar a demo dos fluxos novos com dados fictícios isolados"; "extratos, origem das reservas, carga de estoque e novas jornadas não podem ser omitidos"; "paridade visual não é homologação funcional").
 - **Telas:** `/demo/financeiro/extratos` (EXT-a), `/demo/estoque/carga` (REIN-b, REIN-c e AUD-b, com os rótulos e as resoluções de `lib/estoque/carga-regras.ts`), a origem das reservas em `/demo/canais` (MKT-a) e a conciliação da Nogle na carteira de `/demo/connect` (CONNECT-c, com os rótulos de `lib/connect/conciliacao.ts`). Os dados ficam em `src/demo/dados/fluxos-novos.ts`; o isolamento segue provado por `src/demo/isolamento.test.ts`.
 - **Pedido ao Codex:** conferir se a demonstração promete algo que a tela real não faz (o motivo de 3 a 200 letras, a decisão em bloco só com o disponível ou de fora, o aparelho pelo IMEI) e se algum fluxo novo de 14 a 18/11 ficou sem linha na matriz demonstração × real.
-- **CI, merge e publicação (18/11):** CI verde em `8763689` (3.035 testes, 1 ignorado que pede a planilha privada e 1 TODO; 325 E2E, com 13 pulados); merge `aaedf0d`, com a árvore da branch testada; os checks do GitHub de `aaedf0d` rodavam neste registro e entram no registro do lote seguinte; no ar desde 13:56.
+- **CI, merge e publicação (18/11):** CI verde em `8763689` (3.035 testes, 1 ignorado que pede a planilha privada e 1 TODO; 325 E2E, com 13 pulados); merge `aaedf0d`, com a árvore da branch testada; no GitHub, os checks de `aaedf0d` terminaram com sucesso: "Verificações" e "Supabase Preview"; no ar desde 13:56.
 
 ## 18/11/2026 — Lote VEL-c: o sino de avisos e o Início numa ida só ao banco
 
@@ -1922,3 +1922,10 @@ Programa de execução integral (PR #67; checkpoint em `docs/alinhamento/EXECUCA
 - **Banco:** `20261118165816_pendencias_numa_ida`: `public.pendencias_da_loja()`, SECURITY INVOKER e STABLE, com as 16 contagens de `lib/inicio/pendencias.ts`, cada uma só para quem tem a permissão da fila pela mesma `tem_permissao`, com o RLS de quem chama; sem loja ou sem login, nada; sem grant para anon.
 - **Plataforma:** `lerPendencias` usa a função numa ida (com as divergências das notas ao mesmo tempo); a resposta é conferida (`lerContagens`); o banco sem a função usa as contagens uma a uma, como antes.
 - **Pedido ao Codex:** conferir a equivalência das 16 contagens com o caminho antigo (o teste compara as duas para o dono, o gerente, o vendedor e o técnico) e se o dia de hoje e as janelas no banco (`now()` e o fuso de São Paulo) batem com as da tela em todos os casos de borda (a virada do dia).
+- **CI, merge e publicação (18/11):** CI verde em `4d10032` (3.044 testes, 1 ignorado que pede a planilha privada e 1 TODO; 325 E2E, com 13 pulados); merge `3fd64b6`, com a árvore da branch testada; os checks do GitHub de `3fd64b6` rodavam neste registro e entram no registro do lote seguinte; no ar desde 14:14.
+
+## 18/11/2026 — Lote DOC-a: o servidor principal e a demonstração (D-051)
+
+- **Origem:** o proprietário, em 18/11: "Todas as atualizações devem ser direcionadas ao servidor principal", com o link https://ora5g.com.br/ ("nesse endereço"), e "a versão demo já não é mais necessária".
+- **Só documentos:** a D-051; o adendo da ADR-022 (a demonstração sem lotes novos; desligar espera a resposta); o roteiro do PDV-c no sistema real (a loja de teste Santa Cândida (teste)); os roteiros do DEMO-a e do DEMO-b que não serão pedidos; o aviso na matriz demonstração × real.
+- **Pedido ao Codex:** conferir se algum roteiro ainda manda o proprietário à demonstração sem dizer que ela foi dispensada.
