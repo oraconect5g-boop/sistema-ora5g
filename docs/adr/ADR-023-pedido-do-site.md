@@ -49,4 +49,4 @@ Amplia a [ADR-009](ADR-009-loja-online.md) (reserve no site e pague na loja), se
 
 1. O cliente junta até 3 itens e reserva de uma vez; a loja atende num balcão só.
 2. As reservas do pedido contam nos painéis das reservas do site (uma por unidade), com a origem e a campanha do link (ADR-013).
-3. **Reverter:** primeiro volte a plataforma para a versão anterior ao lote ONLINE-d. Depois aplique a reversão da migration (`supabase/reversao/20261118031404_pedido_do_site.sql`): ela devolve as três funções da reserva como estavam e tira o pedido. As reservas que eram de um pedido ficam como reservas avulsas.
+3. **Reverter:** primeiro volte a plataforma para a versão anterior ao lote ONLINE-d. Depois aplique as reversões, da mais nova para a mais antiga (`supabase/reversao/20261118034536_comentario_do_contato_do_pedido.sql`, que só tira o comentário, e `supabase/reversao/20261118031404_pedido_do_site.sql`): a segunda devolve as três funções da reserva como estavam e tira o pedido. As reservas que eram de um pedido ficam como reservas avulsas.

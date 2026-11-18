@@ -35,7 +35,7 @@
       "conferido": "publicar.sh com a conferência completa (#99): a pasta ativa, o serviço local e o domínio ora5g.com.br servindo o commit inteiro de bdbd8b6 e o ambiente homologacao em /saude/versao; build 18/11/2026 00:08 (o DEMO-a e o TRF-b: /demo com os nomes das lojas, /demo/canais com os números fictícios e os cartões \"Para conectar direto\", e /transferencias respondendo 307 para a entrada, sem login); o worker dos avisos roda a cada minuto desde 16:32 de 17/11 e a tarefa dos alertas a cada 10 minutos desde 19:13 de 17/11; o log de tempos está ligado (ORA_MEDIR_TEMPOS=1) até o roteiro de aceite do VEL-a"
     },
     "falta_publicar": [
-      "lote ONLINE-d (o carrinho e o pedido do site, reservado de uma vez para retirar e pagar na loja; ADR-023): a migration 20261118031404_pedido_do_site já está no ora5g-dev",
+      "lote ONLINE-d (o carrinho e o pedido do site, reservado de uma vez para retirar e pagar na loja; ADR-023): as migrations 20261118031404_pedido_do_site e 20261118034536_comentario_do_contato_do_pedido já estão no ora5g-dev",
       "o log de tempos está ligado na homologação até o roteiro de aceite do VEL-a: depois ele é desligado e a plataforma é publicada de novo, sem mudança de código"
     ]
   },
