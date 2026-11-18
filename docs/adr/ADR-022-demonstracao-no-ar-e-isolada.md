@@ -18,7 +18,7 @@
 
 1. **A demonstração fica no ar em todo ambiente.**
    - A regra deixa de olhar o `APP_ENV`. Para tirá-la do ar, basta `ORA_DEMO_DESLIGADA=1`: a variável passa ao serviço web pela lista de permissão (REV-052) e não é segredo.
-   - A regra continua num lugar só: `garantirDemonstracaoLigada`, em `src/demo/sessao.ts`, mais as duas rotas de troca de perfil e de loja.
+   - A regra fica em `garantirDemonstracaoLigada` (`src/demo/sessao.ts`), nas duas rotas de troca de perfil e de loja e no botão "Ver demonstração" da página inicial, todos com a mesma chave.
 2. **O isolamento é provado por teste** (`src/demo/isolamento.test.ts`), lendo o código:
    - a demonstração não lê o banco nem a sessão de verdade;
    - fora dela, só a moldura e o aviso de permissão da demonstração importam os dados dela, e só a demonstração os usa.
