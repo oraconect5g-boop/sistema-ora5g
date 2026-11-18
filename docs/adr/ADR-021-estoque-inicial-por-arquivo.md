@@ -1,6 +1,6 @@
 # ADR-021: O estoque inicial de cada loja pelo relatório de produtos da Rein, com prévia, aprovação e o livro
 
-**Situação:** proposta (18/11/2026), reversível; aplicada no lote REIN-b. **Por:** Claude Code. **Revisor:** Codex. **Aceite:** proprietário.
+**Situação:** proposta (18/11/2026), reversível; aplicada no lote REIN-b e atualizada no lote REIN-c (18/11, a decisão 8 e a seção "Atualização de 18/11"). **Por:** Claude Code. **Revisor:** Codex. **Aceite:** proprietário.
 
 **Pedida por:**
 
@@ -47,7 +47,29 @@
 5. **Uma carga aplicada por loja de cada vez** (OR041). A segunda espera a primeira ser desfeita, e assim um arquivo novo nunca soma com o antigo.
 6. **Desfazer é pelo livro:** um ajuste negativo, linha a linha, onde a loja ainda tem a quantidade livre. O que já foi vendido, reservado ou transferido fica e é contado, e a correção vai pelo inventário.
 7. **O DEFEITOS recebe a carga como as lojas** e continua sem vender (ADR-007). A Entrada de mercadoria continua só para loja física e depósito.
-8. **O disponível não vira reserva.** A diferença entre o físico e o disponível do arquivo aparece como informação ("reservado ou a caminho na Rein: confira na loja"), sem reservar nada, como pede a auditoria.
+8. **O disponível não vira reserva.** A diferença entre o físico e o disponível do arquivo não é reservada, porque não se sabe o que ela é. **Desde o REIN-c, ela também não vira estoque livre:** a linha espera uma decisão registrada (veja "Atualização de 18/11").
+
+## Atualização de 18/11/2026: a diferença entre o físico e o disponível (lote REIN-c)
+
+**Pedida por:** o achado F18-03 da reanálise do Codex de 18/11 (PR #104): "não inventar reserva" não significa "liberar tudo para venda".
+
+**O problema:** até o REIN-b, o acessório com físico 10 e disponível 8 entrava com as 10 unidades livres. A diferença de 2 aparecia só como informação. O sistema novo podia vender o que a Rein considerava comprometido: uma reserva de cliente, uma transferência a caminho ou um erro.
+
+**As decisões:**
+
+1. **A linha fica pendente.** O acessório com o físico maior que o disponível vai para "conferir", com o motivo e a pendência `fisico_maior_que_disponivel`. A prévia não presume nada.
+2. **A carga não se aplica com pendência sem decisão.** O banco recusa com o código OR042.
+3. **Quem importa ou aprova decide cada linha, com o motivo.** A decisão pode mudar enquanto a carga é prévia. As três decisões possíveis:
+   - **lançar só o disponível:** a diferença fica fora do estoque até a contagem, pelo inventário;
+   - **lançar o físico:** conferido na loja, a diferença está lá e livre para vender;
+   - **deixar a linha de fora:** nada entra dela; a contagem e o lançamento vão depois, pelo inventário.
+4. **A decisão fica registrada.** A linha guarda quem decidiu, quando e o motivo. A auditoria da carga guarda cada decisão, com o texto.
+5. **Decisão em bloco, só a conservadora.** Para muitas linhas, dá para decidir de uma vez as que ainda não têm decisão. Valem só as duas decisões que não liberam o que pode estar comprometido: lançar só o disponível, ou deixar de fora. Lançar o físico é sempre linha a linha.
+6. **Aplicar lança a quantidade decidida, e desfazer devolve a mesma.** A quantidade fica na coluna `lancar` da linha. Ela vale o físico quando não havia diferença e o decidido quando havia.
+7. **O aparelho e o chip com diferença levam o aviso.** A carga não lança serializados, que entram pela Entrada de mercadoria. O motivo da linha avisa para conferir quais unidades estão reservadas ou a caminho antes de dar entrada.
+8. **Continua sem inventar nada:** nenhuma reserva, nenhum trânsito e nenhum destino sai da diferença.
+
+**Reverter:** a migration do lote tem reversão, que volta as três funções à versão do REIN-b e tira a função da decisão e as colunas novas. As cargas aplicadas com uma decisão são desfeitas antes, pela tela.
 
 ## O que fica de fora
 

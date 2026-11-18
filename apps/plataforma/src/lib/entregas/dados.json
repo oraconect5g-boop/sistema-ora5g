@@ -419,6 +419,19 @@
         "ORA-INV-004"
       ],
       "entrega": "os achados F18-01, F18-02 e F18-04 da reanálise do Codex de 18/11: a quantidade e o dinheiro do Excel pela origem, o rodapé comprovado ou candidato com a decisão registrada, a tela de entregas e a lista de dependências",
+      "commit": "bf5eaf5",
+      "publicado_em": "2026-11-18",
+      "pedido_em": null,
+      "resposta": null,
+      "respondido_em": null
+    },
+    {
+      "lote": "REIN-c",
+      "roteiro": "docs/aceite/REIN-c.md",
+      "requisitos": [
+        "ORA-INV-004"
+      ],
+      "entrega": "o achado F18-03 da reanálise do Codex de 18/11: a linha com o físico maior que o disponível espera uma decisão registrada (lançar só o disponível, lançar o físico ou deixar de fora), e a carga não se aplica sem ela",
       "commit": null,
       "publicado_em": null,
       "pedido_em": null,
