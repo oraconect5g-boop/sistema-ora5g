@@ -6,6 +6,8 @@
 
 **Primeira passagem (18/11, à tarde):** o CNPJ das lojas pode ser cadastrado pelo próprio proprietário na tela Lojas; a Nogle ficou com as configurações públicas prontas no servidor; as transferências já têm teste para os seis casos que o Codex pediu. O que segue em aberto depende dos itens 1 a 4 da seção 2.
 
+**Segunda passagem (18/11, fim da tarde):** os outros setores, a pedido do proprietário ("feche todas as outras pendências dos outros setores"), na seção 5.
+
 ## 1. O que foi relido e como
 
 | Fonte | Como |
@@ -75,3 +77,21 @@
    - o cadastro dos CNPJs;
    - a Nogle ligada, com a primeira consulta segura (só leitura).
 3. Fecha as issues já corrigidas no GitHub, quando o proprietário disser sim (o conector pede a confirmação dele em cada uma).
+
+## 5. Os outros setores (o pedido de 18/11, no fim da tarde)
+
+**Pedido do proprietário:** "Agora feche todas as outras pendências dos outros setores, por favor", "completando os códigos que faltam e configurações".
+
+Os lotes que não dependem de ninguém, um por vez. Cada um tem teste, publicação em ora5g.com.br e roteiro de aceite.
+
+| Lote | O que fecha | Situação |
+|---|---|---|
+| PERF-a | Os chips como medida própria nas metas e no bônus (ORA-PERF-001). O seu pedido de 18/11: "o chip é vendido separado do celular. Eles têm que contar como separado" | **Feito** (roteiro `docs/aceite/PERF-a.md`) |
+| QUAL-001 | A nota do CI: as runs do GitHub na `main` terminam verdes desde 17/11 (ORA-QUAL-001) | **Feito** junto com o PERF-a, só a nota; a proteção da `main` continua sendo sua (pendência 5.5) |
+| B | O depósito não vende (D-043, ORA-INV-012), como padrão que se muda fácil | A fazer |
+| D | Os erros do servidor (as respostas 5xx e as lentas) na tela Saúde da operação (ORA-QUAL-006 e ORA-QUAL-013) | A fazer |
+| E | As contas bancárias de cada empresa, com o saldo pelo extrato (ORA-FIN-006) | A fazer |
+| F | O repasse do marketplace casado com a linha do extrato do banco (ORA-MKTPL-005 e ORA-MKTPL-008) | A fazer |
+| G | A leitura única do Catálogo e do Estoque (ORA-QUAL-010) | A fazer |
+
+**Configurações:** só as públicas, documentadas no `.env.example`. Nenhum segredo entra pelo chat nem no Git. As que faltam são do proprietário (seção 2).
