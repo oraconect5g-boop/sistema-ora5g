@@ -562,6 +562,20 @@
         "ORA-INV-012"
       ],
       "entrega": "o depósito não vende (o padrão reversível da D-043): a venda e a reserva de venda recusadas no banco com OR043; a transferência que sai do depósito segue igual; a tela Lojas diz por que cada local não vende",
+      "commit": "3839819",
+      "publicado_em": "2026-11-18",
+      "pedido_em": null,
+      "resposta": null,
+      "respondido_em": null
+    },
+    {
+      "lote": "OBS-a",
+      "roteiro": "docs/aceite/OBS-a.md",
+      "requisitos": [
+        "ORA-QUAL-006",
+        "ORA-QUAL-013"
+      ],
+      "entrega": "os erros do servidor na Saúde da operação: quantos, em que tela, quando e o código que a página de erro mostra à loja; o aviso no topo quando houve erro na última hora; nunca o texto do erro nem os valores do endereço",
       "commit": null,
       "publicado_em": null,
       "pedido_em": null,

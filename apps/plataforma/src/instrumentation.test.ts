@@ -13,8 +13,10 @@ vi.mock("./lib/supabase/conexao-mantida", async (original) => ({
   },
 }));
 
-import { register } from "./instrumentation";
+import { onRequestError, register } from "./instrumentation";
 import { manterConexaoComOBanco } from "./instrumentacao-node";
+import { FalhaDoServico } from "./lib/acesso/sessao";
+import { recomecarErrosDoServidor, resumoDosErros } from "./lib/saude/erros-do-servidor";
 
 const NIVEIS = ["error", "warn", "info", "log", "debug"] as const;
 function saidaDoServidor() {
@@ -63,5 +65,19 @@ describe("manterConexaoComOBanco", () => {
     const escrito = saidaDoServidor();
     await expect(manterConexaoComOBanco()).resolves.toBeUndefined();
     expect(escrito).toEqual([["warn", AVISO]]);
+  });
+});
+
+// OBS-a: cada erro do servidor vira uma linha no log e entra na lista da Saúde da operação, sem o texto do erro.
+describe("erro do servidor", () => {
+  it("a falha do banco numa tela vira a linha do log (com a etapa e o código) e entra no resumo", async () => {
+    recomecarErrosDoServidor(Date.now() - 1_000);
+    const escrito = saidaDoServidor();
+    const falha = Object.assign(new FalhaDoServico("vendas_painel"), { digest: "778899" });
+    await onRequestError(falha, { path: "/vendas?cpf=12345678900", method: "GET", headers: { cookie: "sessao=segredo" } },
+      { routerKind: "App Router", routePath: "/vendas", routeType: "render", revalidateReason: undefined });
+    expect(escrito).toEqual([["error", "[erro] tela GET /vendas código 778899 etapa vendas_painel"]]);
+    expect(JSON.stringify(escrito)).not.toMatch(/12345678900|segredo|Falha ao consultar/);
+    expect(resumoDosErros(Date.now())).toMatchObject({ total: 1, ultimaHora: 1, porRota: [{ tipo: "tela", rota: "/vendas", quantidade: 1 }] });
   });
 });

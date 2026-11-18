@@ -1954,7 +1954,7 @@ Programa de execução integral (PR #67; checkpoint em `docs/alinhamento/EXECUCA
 - **Telas:** o campo **Chips (unidades)** nas metas; a coluna dos chips na equipe do mês e no extrato ("+1 chip" e a planilha); as faixas dos chips nas regras do bônus.
 - **Testes:** no banco (`metas.test.ts`: o chip conta 1, a meta da loja e do vendedor, o cancelamento no mês tira; `bonus.test.ts`: a regra dos chips paga a faixa e o extrato bate; `bonus-fechamento.test.ts`: o teto novo) e nas telas (`app/metas`, `lib/metas` e `lib/bonus`).
 - **Pedido ao Codex:** conferir se o chip devolvido numa troca (devolução com troca no mesmo dia) conta uma vez só, e se o teto de R$ 500.000,00 deve seguir o número de medidas ou virar uma constante própria.
-- **CI, merge e publicação (18/11):** CI verde em `c700692` (3.047 testes, 1 ignorado que pede a planilha privada e 1 TODO; 325 E2E, com 13 pulados); merge `bfb3125`, com a árvore da branch testada; os checks do GitHub de `bfb3125` rodavam neste registro e entram no registro do lote seguinte; no ar desde 16:39.
+- **CI, merge e publicação (18/11):** CI verde em `c700692` (3.047 testes, 1 ignorado que pede a planilha privada e 1 TODO; 325 E2E, com 13 pulados); merge `bfb3125`, com a árvore da branch testada; os checks do GitHub de `bfb3125` terminaram verdes ("Verificações" e "Supabase Preview"); no ar desde 16:39.
 
 ## 18/11/2026 — Lote CD-a: o depósito não vende (o padrão da D-043)
 
@@ -1964,3 +1964,12 @@ Programa de execução integral (PR #67; checkpoint em `docs/alinhamento/EXECUCA
 - **Telas:** a mensagem própria da recusa na venda; a tela Lojas diz por que cada local não vende; a troca de loja mostra o depósito com "não vende"; a loja online trata o OR043 como a loja fechada (a vitrine não oferece o depósito).
 - **Testes:** `transferencias.test.ts` (o depósito recusa a venda e as reservas de venda, mesmo direto nas tabelas, e a transferência que sai dele chega à loja sem divergência no livro); `lib/vendas`, `lib/lojas` e `lib/loja` nas telas.
 - **Pedido ao Codex:** conferir se algum caminho de venda insere a venda ou a reserva sem passar pelos dois gatilhos (por exemplo, um `copy` ou uma função que desliga gatilhos).
+- **CI, merge e publicação (18/11):** CI verde em `317b236` (3.049 testes, 1 ignorado que pede a planilha privada e 1 TODO; 325 E2E, com 13 pulados); merge `3839819`, com a árvore da branch testada; os checks do GitHub de `3839819` rodavam neste registro e entram no registro do lote seguinte; no ar desde 16:54.
+
+## 18/11/2026 — Lote OBS-a: os erros do servidor na Saúde da operação
+
+- **Origem:** ORA-QUAL-006 ("erros e tempo de resposta do servidor") e ORA-QUAL-013 ("o alerta automático de erro do servidor"); o terceiro lote dos outros setores (o pedido do proprietário de 18/11).
+- **Servidor:** `instrumentation.ts` exporta `onRequestError`; `lib/saude/erros-do-servidor.ts` registra cada erro numa linha `[erro]` do log e numa lista em memória (os 200 mais recentes, num símbolo global, para a tela e o gancho verem a mesma). Do erro entram só o tipo (tela, ação, rota ou proxy), o método, o molde da rota, o código (o digest) e, da `FalhaDoServico`, a etapa. Os "erros" do próprio Next (redirect, 404) não contam.
+- **Tela:** o cartão "Erros do servidor" na Saúde da operação, só para quem gere a rede (`unidades.gerir`), e o aviso no topo quando houve erro na última hora. Sem migration.
+- **Testes:** `lib/saude/erros-do-servidor.test.ts` (o que entra e o que nunca entra: o texto do erro, o CPF, os valores do endereço), `instrumentation.test.ts` (a falha do banco numa tela vira a linha e entra no resumo) e `app/operacao/operacao.test.ts` (o cartão, o aviso e a gerência sem o cartão).
+- **Pedido ao Codex:** conferir se algum erro sensível chega ao `digest` (o Next gera o código a partir do erro), e se a lista em memória deveria ficar no banco quando houver mais de um processo servindo o site.

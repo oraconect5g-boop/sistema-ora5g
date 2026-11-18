@@ -50,6 +50,16 @@
 - **Contar a venda sem pedido pela API, sem função:** a API não compara o devolvido com o total, nem exclui só o pedido vivo da nota de venda.
 - **Ler uma tabela de negócio na /saude:** mostraria que o banco responde, mas daria ao visitante uma leitura que ele não precisa.
 
+## Atualização de 18/11/2026: os erros do servidor (lote OBS-a)
+
+Erro do servidor não é fila (ninguém decide sobre ele), mas é o que a Saúde da operação ainda não mostrava.
+
+- **De onde vem:** o Next chama `onRequestError` (`instrumentation.ts`) a cada erro que vira a página de erro ou uma resposta 500. Cada erro vira uma linha `[erro]` no log e entra numa lista em memória, a do processo que serve o site. A conta recomeça a cada publicação.
+- **O que mostra:** quantos na última hora e nas últimas 24 horas, as telas com erro e os mais recentes, com o código que a página de erro mostra à loja. O aviso no topo aparece quando houve erro na última hora.
+- **Quem vê:** quem gere a rede (`unidades.gerir`). O erro é do sistema inteiro, não de uma loja.
+- **O que nunca entra:** o texto do erro, os valores do endereço (só o molde da rota), cabeçalhos, corpo e a sessão.
+- **Alternativa adiada:** um serviço de monitoramento (o tempo de resposta e o aviso no celular dependem dele, a escolher). Com mais de um processo servindo o site, a lista em memória deixa de bastar.
+
 ## Reversão
 
 - **Banco:** `supabase/reversao/20261117145723_saude_do_banco_e_vendas_sem_nota.sql` tira as duas funções.

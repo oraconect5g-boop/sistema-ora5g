@@ -8,9 +8,12 @@ import { decidirSessao, ehUuid } from "./regras";
 
 // Falha do serviço (rede, banco): vira a página de erro, nunca "sem acesso" (REV-014).
 export class FalhaDoServico extends Error {
+  /** A etapa que falhou, palavra escrita no código: a Saúde da operação a mostra nos erros do servidor (OBS-a). */
+  readonly etapa: string;
   constructor(etapa: string) {
     super(`Falha ao consultar o serviço (${etapa})`);
     this.name = "FalhaDoServico";
+    this.etapa = etapa;
   }
 }
 

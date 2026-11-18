@@ -37,6 +37,7 @@ vi.mock("../../componentes/MoldeReal", () => ({
   MoldeReal: ({ children }: { children: unknown }) => children,
 }));
 
+import { recomecarErrosDoServidor, registrarErroDoServidor } from "../../lib/saude/erros-do-servidor";
 import SaudeDaOperacao from "./page";
 
 function texto(v: unknown): string {
@@ -71,7 +72,7 @@ describe("saúde da operação (Q1)", () => {
     const t = await tela();
     for (const trecho of ["Saúde da operação", "Itens esperando", "9", "em 2 de", "O mais antigo", "há 5 dias", "Notas na fila", "7", "Caixas para conferir", "há 1 dia",
       "Sem nada esperando: Notas a enviar pelo WhatsApp · Ora Connect em andamento · Saídas do caixa · Estornos a confirmar · Itens a conferir",
-      "Erros do sistema e tempo de resposta ainda não aparecem aqui"]) {
+      "O tempo de resposta do servidor ainda não aparece aqui"]) {
       expect(t, trecho).toContain(trecho);
     }
     expect(t.indexOf("Notas na fila")).toBeLessThan(t.indexOf("Caixas para conferir"));
@@ -178,5 +179,42 @@ describe("o que é fila e o que é aviso (SAUDE-a; ADR-012)", () => {
   it("quem não consulta o estoque não vê o aviso", async () => {
     cenario.rpc = { estoque_painel: { data: ESTOQUE(5), error: null } };
     expect(await tela()).not.toContain("Estoque abaixo do mínimo");
+  });
+});
+
+// OBS-a: os erros do servidor (a lista do processo), para quem gere a rede.
+describe("erros do servidor (OBS-a)", () => {
+  const silencio = { escrever: () => undefined };
+  it("quem gere a rede vê o cartão: quantos na última hora e no dia, por rota, e os mais recentes com o código que a loja vê", async () => {
+    cenario.permissoes.add("unidades.gerir");
+    const agora = Date.now();
+    recomecarErrosDoServidor(agora - 3 * 3_600_000);
+    const erro = (minutosAtras: number, rota: string, digest: string, tipo = "render") =>
+      registrarErroDoServidor(Object.assign(new Error("texto que não aparece"), { digest }), { method: "GET" }, { routePath: rota, routeType: tipo }, { ...silencio, agora: () => agora - minutosAtras * 60_000 });
+    erro(120, "/vender", "111");
+    erro(10, "/vender", "222");
+    erro(5, "/estoque", "333", "action");
+    const t = await tela();
+    for (const trecho of ["2 erros do servidor na última hora", "Erros do servidor", "Na última hora", "Nas últimas 24 horas", "Desde que subiu",
+      "/vender", "tela · o último há 10 min", "2 erros", "/estoque", "ação · o último há 5 min", "código 333", "código 111"]) {
+      expect(t, trecho).toContain(trecho);
+    }
+    expect(t).not.toContain("texto que não aparece");
+  });
+
+  it("sem erro desde que o servidor subiu: o cartão diz que não houve, sem aviso no topo", async () => {
+    cenario.permissoes.add("unidades.gerir");
+    recomecarErrosDoServidor(Date.now() - 60_000);
+    const t = await tela();
+    expect(t).toContain("Nenhum erro do servidor desde então");
+    expect(t).not.toContain("na última hora");
+  });
+
+  it("a gerência de uma loja não vê o cartão (os erros são da rede inteira)", async () => {
+    recomecarErrosDoServidor(Date.now() - 60_000);
+    registrarErroDoServidor(new Error("x"), { method: "GET" }, { routePath: "/vender", routeType: "render" }, silencio);
+    const t = await tela();
+    expect(t).not.toContain("Erros do servidor");
+    expect(t).toContain("O tempo de resposta do servidor ainda não aparece aqui");
   });
 });
