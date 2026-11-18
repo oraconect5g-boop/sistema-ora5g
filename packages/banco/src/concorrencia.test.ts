@@ -407,6 +407,66 @@ describe("duas conexões ao mesmo tempo no PostgreSQL 17", () => {
     expect(await divergencias()).toEqual([]);
   });
 
+  // TRF-c (achado F18-05 da reanálise de 18/11; D-049): o pedido reserva na origem, com a mesma trava da venda.
+  it("pedido de transferência e venda disputando a última capa, nas duas ordens: quem chega primeiro fica, o outro recebe OR001 (TRF-c)", async () => {
+    const gerenteB = await sessaoNaLoja(ids.gerenteB, ids.lojaB);
+    const vendedora = await sessaoNaLoja(ids.vendedorA, ids.lojaA);
+    const PEDIDO = "select public.transferencia_solicitar($1, $2, $3, 1, 'Reposição', $4) as v";
+    const inicio = await saldo(ids.lojaA, cat.capa);
+    for (const [ordem, primeiro] of [[1, "pedido"], [2, "venda"]] as const) {
+      // Deixa só uma capa livre na Loja A (o resto vai para uma reserva de venda, fora da disputa).
+      const atual = await saldo(ids.lojaA, cat.capa);
+      const livre = (atual?.quantidade ?? 0) - (atual?.reservado ?? 0);
+      if (livre > 1) {
+        await abrir(admin, vendedora);
+        await admin.query(RESERVA, [cat.capa, livre - 1, null, `conc:trfc:sobra:${ordem}`]);
+        await admin.query("commit");
+      }
+      expect((await saldo(ids.lojaA, cat.capa))?.reservado).toBe(((await saldo(ids.lojaA, cat.capa))?.quantidade ?? 0) - 1);
+      const pedido = (c: pg.Client) => c.query(PEDIDO, [ids.lojaA, ids.lojaB, cat.capa, `conc:trfc:pedido:${ordem}`]);
+      const venda = (c: pg.Client) => c.query(RESERVA, [cat.capa, 1, null, `conc:trfc:venda:${ordem}`]);
+      await abrir(a, primeiro === "pedido" ? gerenteB : vendedora);
+      await abrir(b, primeiro === "pedido" ? vendedora : gerenteB);
+      const final = await disputa(() => (primeiro === "pedido" ? pedido(a) : venda(a)), () => (primeiro === "pedido" ? venda(b) : pedido(b)));
+      expect(final, `ordem ${ordem}`).toEqual({ erro: "OR001" });
+      const depois = await saldo(ids.lojaA, cat.capa);
+      expect(depois?.reservado).toBe(depois?.quantidade);
+      expect(await contar("select count(*) as n from public.transferencias where chave = $1", [`conc:trfc:pedido:${ordem}`])).toBe(primeiro === "pedido" ? 1 : 0);
+      expect(await divergencias()).toEqual([]);
+      if (primeiro === "pedido") {
+        // Cancelar o pedido devolve a capa ao disponível, para a outra ordem ter a última livre.
+        await abrir(admin, gerenteB);
+        await admin.query("select public.transferencia_encerrar(id, 'cancelada', 'Teste de concorrência') from public.transferencias where chave = $1", [`conc:trfc:pedido:${ordem}`]);
+        await admin.query("commit");
+      }
+    }
+    // As reservas de venda deste teste voltam ao disponível: os testes seguintes contam com as capas da Loja A.
+    await abrir(admin, vendedora);
+    await admin.query("select public.liberar_reserva(r.id) from public.estoque_reservas r where r.chave_idempotencia like 'conc:trfc:%' and r.situacao = 'ativa'");
+    await admin.query("commit");
+    expect(await saldo(ids.lojaA, cat.capa)).toEqual(inicio);
+    expect(await divergencias()).toEqual([]);
+  });
+
+  it("a mesma remessa pedida duas vezes ao mesmo tempo (a mesma chave): uma remessa, cada produto reservado uma vez (TRF-c)", async () => {
+    const gerenteB = await sessaoNaLoja(ids.gerenteB, ids.lojaB);
+    const entrada = await valor<string>(admin, ENTRADA, [ids.lojaA, cat.aparelho, comDigitoLuhn("35209900173077"), null, "conc:trfc:remessa:entrada"]);
+    expect(entrada).toBeTruthy();
+    const antes = await saldo(ids.lojaA, cat.aparelho);
+    const PEDIR = "select public.transferencia_solicitar_remessa($1, $2, $3::jsonb, 'Reposição da semana', 'conc:trfc:remessa') as v";
+    const itensDaRemessa = JSON.stringify([{ variante: cat.aparelho, quantidade: 1 }]);
+    await abrir(a, gerenteB);
+    await abrir(b, gerenteB);
+    const final = await disputa(
+      () => a.query(PEDIR, [ids.lojaA, ids.lojaB, itensDaRemessa]),
+      () => valor<{ repetida: boolean }>(b, PEDIR, [ids.lojaA, ids.lojaB, itensDaRemessa]),
+    );
+    expect(final).toMatchObject({ ok: { repetida: true } });
+    expect(await contar("select count(*) as n from public.transferencia_remessas where chave = 'conc:trfc:remessa'")).toBe(1);
+    expect(await saldo(ids.lojaA, cat.aparelho)).toEqual({ quantidade: antes?.quantidade, reservado: (antes?.reservado ?? 0) + 1 });
+    expect(await divergencias()).toEqual([]);
+  });
+
   it("o mesmo envio de transferência em duas conexões: uma saída só no livro", async () => {
     const gerenteB = await sessaoNaLoja(ids.gerenteB, ids.lojaB);
     const dono = await sessaoNaLoja(ids.dono, ids.lojaA);

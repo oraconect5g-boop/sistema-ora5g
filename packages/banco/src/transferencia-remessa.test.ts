@@ -55,6 +55,9 @@ const situacoes = async (remessa: string) =>
   (await db.query<{ variante_id: string; quantidade: number; situacao: string; chave: string }>(
     "select variante_id, quantidade, situacao, chave from public.transferencias where remessa_id = $1 order by numero", [remessa])).rows;
 const imeiDe = async (item: string) => (await db.query<{ imei: string }>("select imei from public.itens_serializados where id = $1", [item])).rows[0]?.imei ?? "";
+const saldo = async (unidade: string, variante: string) =>
+  (await db.query<{ quantidade: number; reservado: number }>("select quantidade, reservado from public.estoque_saldos where unidade_id = $1 and variante_id = $2", [unidade, variante])).rows[0]
+  ?? { quantidade: 0, reservado: 0 };
 
 describe("a remessa: vários produtos pedidos de uma vez (TRF-a)", () => {
   it("cada produto vira uma transferência da remessa, com o próprio caminho até o recebimento; a mesma chave devolve a mesma remessa", async () => {
@@ -121,5 +124,33 @@ describe("a remessa: vários produtos pedidos de uma vez (TRF-a)", () => {
     const ler = "select count(*)::int as v from public.transferencia_remessas where id = $1";
     expect(await valor<number>(await naLoja(ids.vendedorA, ids.lojaA), ler, [r.remessa])).toBe(1);
     expect(await valor<number>(await naLoja(ids.donoOutraOrg, ids.lojaOutraOrg), ler, [r.remessa])).toBe(0);
+  });
+});
+
+describe("a remessa reserva no pedido (TRF-c; achado F18-05 da reanálise de 18/11 e a D-049)", () => {
+  it("cada produto reserva na origem ao pedir, uma vez, mesmo repetindo a chave; sem o livre de um produto, nada da remessa fica", async () => {
+    const pedinte = await naLoja(ids.gerenteB, ids.lojaB);
+    const capa = await saldo(ids.lojaA, cat.capa);
+    const aparelho = await saldo(ids.lojaA, cat.aparelho);
+    const linhas = [{ variante: cat.capa, quantidade: 3 }, { variante: cat.aparelho, quantidade: 1 }];
+    const k = chave("r");
+    const r = await pedir(pedinte, ids.lojaA, ids.lojaB, linhas, k);
+    expect(await pedir(pedinte, ids.lojaA, ids.lojaB, linhas, k)).toEqual({ ...r, repetida: true });
+    expect(await saldo(ids.lojaA, cat.capa)).toEqual({ quantidade: capa.quantidade, reservado: capa.reservado + 3 });
+    expect(await saldo(ids.lojaA, cat.aparelho)).toEqual({ quantidade: aparelho.quantidade, reservado: aparelho.reservado + 1 });
+    // O aparelho que sobrou é o último livre: pedir 2 numa remessa nova recusa tudo, inclusive a capa.
+    const remessas = async () => (await db.query<{ n: number }>("select count(*)::int as n from public.transferencia_remessas")).rows[0]?.n;
+    const antes = await remessas();
+    expect(await errou(pedinte, PEDIR, [ids.lojaA, ids.lojaB, JSON.stringify([{ variante: cat.capa, quantidade: 1 }, { variante: cat.aparelho, quantidade: 2 }]),
+      "Reposição da semana", chave("r")])).toBe("OR001");
+    expect(await remessas()).toBe(antes);
+    expect(await saldo(ids.lojaA, cat.capa)).toEqual({ quantidade: capa.quantidade, reservado: capa.reservado + 3 });
+    // Cancelar cada produto da remessa devolve o reservado dele.
+    for (const t of r.transferencias) {
+      expect(await valor(pedinte, "select public.transferencia_encerrar($1, 'cancelada', 'Não precisa mais') as v", [t])).toBe("cancelada");
+    }
+    expect(await saldo(ids.lojaA, cat.capa)).toEqual(capa);
+    expect(await saldo(ids.lojaA, cat.aparelho)).toEqual(aparelho);
+    expect((await db.query("select regra from privado.divergencias_estoque()")).rows).toEqual([]);
   });
 });

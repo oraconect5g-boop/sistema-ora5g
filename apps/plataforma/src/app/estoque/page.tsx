@@ -322,7 +322,7 @@ export default async function Estoque({ searchParams }: { searchParams: Promise<
 
       {erroTransferencia && <Aviso tom="perigo">{ERROS_DA_TRANSFERENCIA[erroTransferencia]}</Aviso>}
       {nomeNaRede && ehUuid(varianteNaRede) && (
-        <Cartao titulo={`Onde tem: ${nomeNaRede}`} subtitulo="Disponível para vender = físico − reservado (venda e transferência). Sem IMEI de outra loja." icone={ArrowRightLeft}
+        <Cartao titulo={`Onde tem: ${nomeNaRede}`} subtitulo="Disponível para vender = físico − reservado (venda e transferência). Sem IMEI de outra loja. Pedir já reserva na origem: sai do disponível de lá na hora." icone={ArrowRightLeft}
           acao={<Link href="/transferencias" className="text-xs font-semibold text-acao">pedidos</Link>}>
           <ul className="divide-y divide-borda text-sm">
             {locaisDaRede.map((r) => {

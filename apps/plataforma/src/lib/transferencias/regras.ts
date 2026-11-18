@@ -15,18 +15,20 @@ export const nomeDaSituacao = (s: string) =>
   Object.hasOwn(SITUACOES_DA_TRANSFERENCIA, s) ? SITUACOES_DA_TRANSFERENCIA[s as SituacaoDaTransferencia] : s;
 
 /**
- * O que cada passo faz no estoque (TRF-b, 18/11; achado F10 da auditoria do Codex de 17/11 e a decisão D-049, pendente).
- * O contrato não muda: pedir não reserva; separar reserva na origem (sai do disponível, o físico fica); enviar baixa o
- * físico da origem uma vez (em trânsito); receber põe no físico do destino. A tela só diz isso em cada transferência.
+ * O que cada passo faz no estoque (TRF-b, 18/11; achado F10 da auditoria do Codex de 17/11). Desde o TRF-c (achado F18-05
+ * da reanálise de 18/11; a D-049 decidida pela orientação do proprietário de 18/11): pedir reserva na origem (sai do
+ * disponível, o físico fica); separar escolhe os itens, sem reservar de novo (no aparelho e no chip, a reserva passa
+ * para cada IMEI/ICCID); enviar baixa o físico da origem uma vez (em trânsito); receber põe no físico do destino;
+ * cancelar ou recusar devolve a reserva ao disponível da origem.
  */
 export const EFEITO_NO_ESTOQUE: Record<SituacaoDaTransferencia, string> = {
-  solicitada: "Pedida: o estoque da origem ainda não mudou (o pedido não reserva; decisão D-049 do proprietário).",
-  separada: "Separada: reservada na origem. Saiu do disponível; o físico continua lá até o envio.",
+  solicitada: "Pedida: reservada na origem desde o pedido. Saiu do disponível; o físico continua lá até o envio.",
+  separada: "Separada: os itens foram escolhidos e seguem reservados na origem; o físico continua lá até o envio.",
   enviada: "Em trânsito: saiu do físico da origem. Entra no destino quando a loja receber e conferir.",
   recebida: "Recebida: entrou no físico do destino.",
   recebida_com_divergencia: "Recebida com divergência: entrou no destino só o que chegou; a diferença fica registrada.",
-  recusada: "Recusada: nada mudou no estoque.",
-  cancelada: "Cancelada: a reserva, se havia, voltou ao disponível da origem.",
+  recusada: "Recusada: a reserva do pedido voltou ao disponível da origem.",
+  cancelada: "Cancelada: a reserva voltou ao disponível da origem.",
 };
 export const efeitoNoEstoque = (s: string) => (Object.hasOwn(EFEITO_NO_ESTOQUE, s) ? EFEITO_NO_ESTOQUE[s as SituacaoDaTransferencia] : null);
 
@@ -44,7 +46,7 @@ export function saldoDaLoja(linhas: readonly { unidade_id: string; variante_id: 
 export const ERROS_DA_TRANSFERENCIA = {
   sem_permissao: "Seu papel não faz este passo nesta loja (separar e enviar: origem; receber: destino; sair de DEFEITOS: só quem ajusta estoque).",
   nao_encontrada: "Transferência não encontrada nesta loja.",
-  sem_saldo: "Não há disponível suficiente na origem.",
+  sem_saldo: "Não há disponível suficiente na origem (vendas e outros pedidos já reservaram parte).",
   indisponivel: "Esse IMEI/ICCID não está disponível (reservado, vendido ou em trânsito).",
   outra_loja: "Esse IMEI/ICCID não é deste produto nesta loja.",
   repetida: "Este passo já foi feito de outro jeito. Recarregue a tela.",

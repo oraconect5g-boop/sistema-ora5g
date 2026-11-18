@@ -138,7 +138,7 @@ export default async function Estoque({ searchParams }: { searchParams: Promise<
       )}
 
       {aba === "transferencias" && (
-        <Cartao className="mt-4" titulo="Transferências entre lojas" subtitulo="O aparelho sai de uma loja e só entra na outra quando alguém confere o recebimento" icone={ArrowRightLeft}>
+        <Cartao className="mt-4" titulo="Transferências entre lojas" subtitulo="Ao pedir, o produto já sai do disponível da origem (reservado); sai do físico no envio e só entra na outra loja quando alguém confere o recebimento" icone={ArrowRightLeft}>
           {transferencias.length === 0 ? <EstadoVazio titulo="Nenhuma transferência desta loja" icone={Truck} /> : (
             <ul className="divide-y divide-borda">
               {transferencias.map((t) => (

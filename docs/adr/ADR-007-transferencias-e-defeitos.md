@@ -1,12 +1,12 @@
 # ADR-007 — Pedidos internos de transferência e local DEFEITOS (#60)
 
-**Situação:** proposta (09/11/2026), reversível, aplicada só no desenvolvimento. **Por:** Claude Code. **Revisor:** Codex. **Aceite:** proprietário.
+**Situação:** proposta (09/11/2026), reversível, aplicada só no desenvolvimento; atualizada no lote TRF-c (18/11: o pedido reserva na origem, a decisão D-049). **Por:** Claude Code. **Revisor:** Codex. **Aceite:** proprietário.
 **Base:** decisão do proprietário de 09/11 (11 lojas comerciais + DEFEITOS), especificação `BUSCA_ESTOQUE_E_TRANSFERENCIAS_2026-11-09.md` (PR #33).
 
 ## Resumo para o proprietário (o que você aceita)
 
 1. **DEFEITOS é um local de exceção**, não loja: guarda itens com erro ou problema, tem saldo próprio, aparece separado na rede e **nunca vende**. Voltar de DEFEITOS para uma loja é uma transferência com motivo, conferida.
-2. **Pedido interno:** quem precisa pede (produto, quantidade, motivo); a loja que tem **separa** (escolhe o IMEI/ICCID certo, que fica reservado); **envia** (sai do estoque dela e fica em trânsito); a loja que pediu **recebe e confere** (o IMEI/ICCID precisa ser o enviado). Pode ser recusado ou cancelado antes do envio; depois do envio, só por recebimento com divergência registrada.
+2. **Pedido interno:** quem precisa pede (produto, quantidade, motivo), e **desde o TRF-c (18/11) o pedido já reserva na origem**: a quantidade sai do disponível de lá na hora; a loja que tem **separa** (escolhe o IMEI/ICCID certo, que fica reservado no lugar da quantidade); **envia** (sai do estoque dela e fica em trânsito); a loja que pediu **recebe e confere** (o IMEI/ICCID precisa ser o enviado). Pode ser recusado ou cancelado antes do envio; depois do envio, só por recebimento com divergência registrada.
 3. **Quem faz:** pedir — quem consulta estoque na loja de destino; separar e enviar — gerência ou estoquista da origem (`estoque.transferir`, nova); receber — gerência ou estoquista do destino. Dono e gerente têm a permissão; o papel de estoquista entra quando existir. Não depende de haver gerente oficial em toda loja: o dono faz em qualquer uma.
 4. **Disponível para vender** = físico − reservado (venda + transferência), contado uma vez. Trânsito e DEFEITOS ficam à parte.
 5. **Faltou item no recebimento:** entra no destino só o que foi conferido. A diferença fica registrada no pedido (recebida com divergência, com explicação). Aparelho que não chegou continua "em trânsito", visível, até a regularização.
@@ -21,9 +21,24 @@
 - Envio: consome a reserva e lança `transferencia_saida`. O livro passou a aceitar essa saída de item reservado, como já aceitava `venda` (o aparelho fica `em_transito`). Recebimento: `transferencia_entrada` só dos IMEI/ICCID lidos que são da transferência (outro número dá 22023). Acessório, pela quantidade contada.
 - Idempotência pela situação e pela chave do pedido. Ordem das travas: transferência → item (por id) → reserva → saldo.
 
+## Atualização de 18/11/2026: o pedido reserva na origem (lote TRF-c; a decisão D-049)
+
+**Pedida por:** a orientação do proprietário de 18/11 ("alinhe o momento em que a interface compromete o produto com o pedido do usuário de reduzir o disponível ao colocá-lo em transferência") e o achado F18-05 da reanálise do Codex de 18/11. A D-049 deixa de ser pendente: o padrão reversível de antes (o pedido não reservava) foi trocado pela regra pedida.
+
+**As decisões:**
+
+1. **Pedir reserva.** `privado.transferencia_reservar` reserva na origem a quantidade do pedido, na mesma transação, com a trava da venda: a linha do saldo só muda se houver o livre. Sem o livre, o pedido é recusado com OR001 e nada fica gravado.
+2. **A remessa é tudo ou nada.** Cada produto reserva; se faltar o livre de um, nenhum fica. A ordem das reservas é a das variações, para dois pedidos ao mesmo tempo não travarem um ao outro.
+3. **No aparelho e no chip, a reserva do pedido é pela quantidade.** O IMEI/ICCID continua escolhido na separação. A venda não leva uma unidade prometida, mesmo com o IMEI ainda "disponível", porque o saldo livre já caiu.
+4. **Separar não reserva de novo.** No acessório, o saldo não muda. No aparelho e no chip, a reserva pela quantidade é consumida e cada IMEI/ICCID escolhido ganha a sua, na mesma transação: o reservado fica igual.
+5. **Sem mudança:** cancelar ou recusar libera a reserva; enviar consome a reserva e baixa o físico uma vez; receber põe no físico do destino.
+6. **O pedido de antes do lote**, sem reserva, reserva na separação, como antes. A reserva do pedido tem a chave `transferencia:<id>:pedido`, diferente da antiga, e a reversão do lote libera as reservas dos pedidos abertos.
+
+**O risco que fica, para o proprietário e o Codex:** quem pede pela loja de destino (com `estoque.consultar`) agora prende o estoque da origem até a origem separar, recusar ou alguém cancelar. A origem vê o pedido na hora, com o reservado. Mudar quem pode pedir é mudança de permissão e fica para a sua decisão.
+
 ## Provas
 
-`packages/banco/src/transferencias.test.ts` (8): ciclo completo de acessório e de aparelho, cada passo repetido, divergência, cancelamento antes e depois do envio, recusa, permissão e leitura entre lojas e redes, DEFEITOS sem venda e regularização. `concorrencia.test.ts` (2, PostgreSQL 17 com duas conexões): separação × reserva de venda do mesmo aparelho (uma fica com ele, a outra recebe OR002) e o mesmo envio duas vezes (uma saída no livro).
+TRF-c (18/11): `transferencias.test.ts` (a reserva no pedido, a venda que não leva o reservado e o pedido que não leva o reservado da venda, o aparelho que troca a reserva pela do IMEI sem contar duas vezes, o cancelamento antes e depois da separação, o pedido antigo sem reserva), `transferencia-remessa.test.ts` (a remessa tudo ou nada) e `concorrencia.test.ts` (o pedido e a venda disputando a última capa, nas duas ordens; a mesma remessa duas vezes ao mesmo tempo). Antes: `packages/banco/src/transferencias.test.ts` (8): ciclo completo de acessório e de aparelho, cada passo repetido, divergência, cancelamento antes e depois do envio, recusa, permissão e leitura entre lojas e redes, DEFEITOS sem venda e regularização. `concorrencia.test.ts` (2, PostgreSQL 17 com duas conexões): separação × reserva de venda do mesmo aparelho (uma fica com ele, a outra recebe OR002) e o mesmo envio duas vezes (uma saída no livro).
 
 ## Fora desta etapa
 

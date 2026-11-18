@@ -61,7 +61,8 @@ const imeiDe = async (item: string) => (await db.query<{ imei: string }>("select
 const divergencias = async () => (await db.query("select regra from privado.divergencias_estoque()")).rows;
 
 describe("pedido interno de acessório", () => {
-  it("pedir não mexe no estoque; separar reserva na origem; enviar tira da origem; receber põe no destino; cada passo repetido devolve o mesmo", async () => {
+  // TRF-c (achado F18-05 da reanálise de 18/11; D-049 pela orientação do proprietário de 18/11): pedir já reserva.
+  it("pedir reserva na origem uma vez; separar não reserva de novo; enviar tira da origem; receber põe no destino; cada passo repetido devolve o mesmo", async () => {
     const pedinte = await naLoja(ids.gerenteB, ids.lojaB);
     const origem = await naLoja(ids.dono, ids.lojaA);
     const antesA = await saldo(ids.lojaA, cat.capa);
@@ -70,7 +71,7 @@ describe("pedido interno de acessório", () => {
     const t = await solicitar(pedinte, ids.lojaA, ids.lojaB, cat.capa, 2, k);
     expect(await solicitar(pedinte, ids.lojaA, ids.lojaB, cat.capa, 2, k)).toBe(t);
     expect(await errou(pedinte, SOLICITAR, [ids.lojaA, ids.lojaB, cat.capa, 3, "Reposição da loja", k])).toBe("OR004");
-    expect(await saldo(ids.lojaA, cat.capa)).toEqual(antesA);
+    expect(await saldo(ids.lojaA, cat.capa)).toEqual({ quantidade: antesA.quantidade, reservado: antesA.reservado + 2 });
 
     expect(await errou(pedinte, "select public.transferencia_separar($1, '{}'::uuid[])", [t])).toBe("42501");
     expect(await separar(origem, t)).toBe("separada");
@@ -122,18 +123,106 @@ describe("pedido interno de acessório", () => {
     await enviar(origem, outra);
     expect(await errou(pedinte, "select public.transferencia_encerrar($1, 'cancelada', 'Desisti')", [outra])).toBe("42501");
 
+    const antesDaRecusa = await saldo(ids.lojaA, cat.capa);
     const recusada = await solicitar(pedinte, ids.lojaA, ids.lojaB, cat.capa, 1);
+    expect((await saldo(ids.lojaA, cat.capa)).reservado).toBe(antesDaRecusa.reservado + 1);
     expect(await valor(origem, "select public.transferencia_encerrar($1, 'recusada', 'Precisamos dela aqui') as v", [recusada])).toBe("recusada");
+    expect(await saldo(ids.lojaA, cat.capa)).toEqual(antesDaRecusa);
     expect(await errou(origem, "select public.transferencia_separar($1, '{}'::uuid[])", [recusada])).toBe("OR004");
+    expect(await divergencias()).toEqual([]);
   });
 
-  it("separar além do disponível é OR001; vendedor da origem não separa", async () => {
+  it("pedir além do disponível é OR001 e nada fica gravado; vendedor da origem não separa", async () => {
     const pedinte = await naLoja(ids.gerenteB, ids.lojaB);
     const disponivel = await saldo(ids.lojaA, cat.capa);
-    const t = await solicitar(pedinte, ids.lojaA, ids.lojaB, cat.capa, disponivel.quantidade - disponivel.reservado + 1);
-    expect(await errou(await naLoja(ids.dono, ids.lojaA), "select public.transferencia_separar($1, '{}'::uuid[])", [t])).toBe("OR001");
+    const pedidos = async () => (await db.query<{ n: number }>("select count(*)::int as n from public.transferencias")).rows[0]?.n;
+    const antes = await pedidos();
+    expect(await errou(pedinte, SOLICITAR, [ids.lojaA, ids.lojaB, cat.capa, disponivel.quantidade - disponivel.reservado + 1, "Reposição da loja", chave("t")])).toBe("OR001");
+    expect(await pedidos()).toBe(antes);
+    expect(await saldo(ids.lojaA, cat.capa)).toEqual(disponivel);
     const pequena = await solicitar(pedinte, ids.lojaA, ids.lojaB, cat.capa, 1);
     expect(await errou(await naLoja(ids.vendedorA, ids.lojaA), "select public.transferencia_separar($1, '{}'::uuid[])", [pequena])).toBe("42501");
+  });
+});
+
+describe("a reserva no pedido (TRF-c; achado F18-05 da reanálise de 18/11 e a D-049)", () => {
+  it("a venda não leva o que o pedido reservou, e o pedido não leva o que a venda reservou; cancelar devolve ao disponível", async () => {
+    const pedinte = await naLoja(ids.gerenteB, ids.lojaB);
+    const vendedora = await naLoja(ids.vendedorA, ids.lojaA);
+    const antes = await saldo(ids.lojaA, cat.capa);
+    const livre = antes.quantidade - antes.reservado;
+    await valor(vendedora, "select public.reservar_estoque($1, 1, null, $2) as v", [cat.capa, chave("r")]);
+    expect(await errou(pedinte, SOLICITAR, [ids.lojaA, ids.lojaB, cat.capa, livre, "Reposição da loja", chave("t")])).toBe("OR001");
+    const t = await solicitar(pedinte, ids.lojaA, ids.lojaB, cat.capa, livre - 1);
+    expect(await saldo(ids.lojaA, cat.capa)).toEqual({ quantidade: antes.quantidade, reservado: antes.reservado + livre });
+    expect(await errou(vendedora, "select public.reservar_estoque($1, 1, null, $2)", [cat.capa, chave("r")])).toBe("OR001");
+    const rede = await valor<{ unidade: string; reservado: number; disponivel: number; pedidos_abertos: number }[]>(pedinte,
+      "select json_agg(r) as v from public.estoque_na_rede($1) r", [cat.capa]);
+    expect(rede.find((r) => r.unidade === "Loja A")).toMatchObject({ reservado: antes.reservado + livre, disponivel: 0, pedidos_abertos: 1 });
+    expect(await valor(pedinte, "select public.transferencia_encerrar($1, 'cancelada', 'Não precisa mais') as v", [t])).toBe("cancelada");
+    expect(await saldo(ids.lojaA, cat.capa)).toEqual({ quantidade: antes.quantidade, reservado: antes.reservado + 1 });
+    await valor(vendedora, "select public.reservar_estoque($1, 1, null, $2) as v", [cat.capa, chave("r")]);
+    expect(await divergencias()).toEqual([]);
+  });
+
+  it("aparelho: o pedido reserva pela quantidade (o IMEI se escolhe na separação); a separação troca pela reserva do IMEI sem contar duas vezes", async () => {
+    const pedinte = await naLoja(ids.gerenteB, ids.lojaB);
+    const origem = await naLoja(ids.dono, ids.lojaA);
+    const vendedora = await naLoja(ids.vendedorA, ids.lojaA);
+    const antes = await saldo(ids.lojaA, cat.aparelho);
+    expect(antes).toEqual({ quantidade: 2, reservado: 0 });
+    const t = await solicitar(pedinte, ids.lojaA, ids.lojaB, cat.aparelho, 2);
+    expect(await saldo(ids.lojaA, cat.aparelho)).toEqual({ quantidade: 2, reservado: 2 });
+    expect(await posicao(itens.a1)).toMatchObject({ situacao: "disponivel" });
+    // Os dois aparelhos estão prometidos: a venda não reserva nenhum, mesmo com o IMEI ainda "disponível".
+    expect(await errou(vendedora, "select public.reservar_estoque($1, 1, $2, $3)", [cat.aparelho, itens.a1, chave("r")])).toBe("OR001");
+    expect(await divergencias()).toEqual([]);
+    expect(await separar(origem, t, [itens.a1, itens.a2])).toBe("separada");
+    expect(await saldo(ids.lojaA, cat.aparelho)).toEqual({ quantidade: 2, reservado: 2 });
+    expect(await posicao(itens.a1)).toMatchObject({ situacao: "reservado" });
+    expect((await db.query("select reserva_id from public.transferencias where id = $1", [t])).rows).toEqual([{ reserva_id: null }]);
+    expect((await db.query("select situacao, count(*)::int as n from public.estoque_reservas where chave_idempotencia like $1 group by 1 order by 1", [`transferencia:${t}%`])).rows)
+      .toEqual([{ situacao: "ativa", n: 2 }, { situacao: "consumida", n: 1 }]);
+    expect(await divergencias()).toEqual([]);
+    expect(await enviar(origem, t)).toBe("enviada");
+    expect(await saldo(ids.lojaA, cat.aparelho)).toEqual({ quantidade: 0, reservado: 0 });
+    expect(await divergencias()).toEqual([]);
+  });
+
+  it("aparelho pedido e cancelado antes de separar, ou depois de separar: tudo volta, sem sobra de reserva", async () => {
+    const pedinte = await naLoja(ids.gerenteB, ids.lojaB);
+    const origem = await naLoja(ids.dono, ids.lojaA);
+    const t = await solicitar(pedinte, ids.lojaA, ids.lojaB, cat.aparelho, 1);
+    expect(await valor(pedinte, "select public.transferencia_encerrar($1, 'cancelada', 'Não precisa mais') as v", [t])).toBe("cancelada");
+    expect(await saldo(ids.lojaA, cat.aparelho)).toEqual({ quantidade: 2, reservado: 0 });
+    const outra = await solicitar(pedinte, ids.lojaA, ids.lojaB, cat.aparelho, 1);
+    await separar(origem, outra, [itens.a2]);
+    expect(await valor(pedinte, "select public.transferencia_encerrar($1, 'cancelada', 'Não precisa mais') as v", [outra])).toBe("cancelada");
+    expect(await saldo(ids.lojaA, cat.aparelho)).toEqual({ quantidade: 2, reservado: 0 });
+    expect(await posicao(itens.a2)).toMatchObject({ situacao: "disponivel" });
+    expect(await divergencias()).toEqual([]);
+  });
+
+  it("o pedido de antes do TRF-c, sem reserva, reserva na separação; sem o livre, a separação é OR001", async () => {
+    const pedinte = await naLoja(ids.gerenteB, ids.lojaB);
+    const origem = await naLoja(ids.dono, ids.lojaA);
+    const antes = await saldo(ids.lojaA, cat.capa);
+    // Simula o pedido antigo: a reserva do pedido é desfeita direto no banco, como se o pedido fosse de antes do lote.
+    const antigo = async (quantidade: number) => {
+      const t = await solicitar(pedinte, ids.lojaA, ids.lojaB, cat.capa, quantidade);
+      await db.query("select privado.encerrar_reserva(reserva_id, 'liberada') from public.transferencias where id = $1", [t]);
+      await db.query("update public.transferencias set reserva_id = null where id = $1", [t]);
+      return t;
+    };
+    const t = await antigo(2);
+    expect(await saldo(ids.lojaA, cat.capa)).toEqual(antes);
+    expect(await separar(origem, t)).toBe("separada");
+    expect(await saldo(ids.lojaA, cat.capa)).toEqual({ quantidade: antes.quantidade, reservado: antes.reservado + 2 });
+    const livre = antes.quantidade - antes.reservado - 2;
+    const semLivre = await antigo(livre);
+    await solicitar(pedinte, ids.lojaA, ids.lojaB, cat.capa, 1);
+    expect(await errou(origem, "select public.transferencia_separar($1, '{}'::uuid[])", [semLivre])).toBe("OR001");
+    expect(await divergencias()).toEqual([]);
   });
 });
 

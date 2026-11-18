@@ -18,10 +18,10 @@ export const dynamic = "force-dynamic";
 const campo = "mt-1 min-h-11 w-full rounded-botao border border-borda bg-white px-3 text-sm outline-none focus:border-acao focus:ring-2 focus:ring-acao/20";
 const ABERTAS = new Set(["solicitada", "separada", "enviada"]);
 const OK: Record<string, string> = {
-  pedida: "Pedido registrado: aparece para a loja de origem.", separada: "Separado: os itens ficaram reservados na origem.",
+  pedida: "Pedido registrado e reservado na origem: já saiu do disponível de lá.", separada: "Separado: os itens escolhidos seguem reservados na origem.",
   enviada: "Enviado: saiu do estoque da origem e está em trânsito.", recebida: "Recebido e conferido.",
-  recusada: "Pedido recusado.", cancelada: "Pedido cancelado; a reserva foi liberada.",
-  remessa: "Remessa pedida: aparece para a loja de origem, produto por produto.",
+  recusada: "Pedido recusado; a reserva voltou ao disponível.", cancelada: "Pedido cancelado; a reserva voltou ao disponível.",
+  remessa: "Remessa pedida e reservada na origem, produto por produto.",
   remessa_enviada: "Remessa enviada: o que já estava separado saiu do estoque desta loja; o resto espera a separação.",
 };
 
@@ -121,7 +121,7 @@ export default async function Transferencias({ searchParams }: { searchParams: P
                     ))}
                     {disponiveis.data.every((d) => d.variante_id !== t.variante_id) && <p className="text-xs text-perigo">Nenhum disponível nesta loja agora.</p>}
                   </fieldset>
-                ) : <p className="text-xs text-suave">Separa {t.quantidade} unidade(s) do saldo desta loja (ficam reservadas).</p>}
+                ) : <p className="text-xs text-suave">As {t.quantidade} unidade(s) já estão reservadas desde o pedido: separar confirma que estão prontas para enviar.</p>}
                 <Botao type="submit" tamanho="sm">Separar</Botao>
               </form>
             )}

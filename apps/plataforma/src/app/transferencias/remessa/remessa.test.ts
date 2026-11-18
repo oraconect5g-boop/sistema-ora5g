@@ -93,6 +93,8 @@ describe("montar a remessa (TRF-a)", () => {
     const { texto, links } = await tela({ origem: OUTRA, destino: LOJA, linhas: `${CABO}:2,${CAPA}:1` });
     expect(texto).toContain("Loja de teste 2 → Santa Cândida (teste)");
     expect(texto).toContain("Pedir a remessa (2 produtos)");
+    // TRF-c (D-049): a tela avisa que pedir já reserva na origem, tudo ou nada.
+    expect(texto).toContain("Ao pedir, cada produto já sai do disponível da origem (fica reservado). Se faltar o livre de um deles, nada da remessa é pedido.");
     expect(texto).not.toContain("Para pedir, escolha a origem e o destino");
     const tirarCabo = links.find((l) => l.texto.includes("Tirar Cabo USB-C"));
     expect(tirarCabo?.href).toContain(`linhas=${encodeURIComponent(`${CAPA}:1`)}`);

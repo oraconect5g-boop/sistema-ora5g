@@ -290,5 +290,8 @@ A demonstração usa só dados fictícios e não lê o banco nem a sessão de ve
 | META-a, AUD-a (A14) | O custo dos anúncios por arquivo, com as devoluções | `/relatorios/anuncios` | Sim, resumido: a linha dos anúncios em `/demo/canais` (CPA, ROAS e CAC sem as devoluções) |
 | MKTPL-a | Os pedidos dos marketplaces por arquivo, com o lucro | `/relatorios/marketplaces` | Sim, resumido: as linhas dos marketplaces em `/demo/canais` |
 | CANAIS-a | Os canais lado a lado | `/relatorios/canais` | Sim: `/demo/canais`, com o mesmo cálculo |
+| AUD-b | A quantidade e o dinheiro do Excel pela origem e o rodapé comprovado ou candidato | `/produtos/importar` e `/estoque/carga` | Não: a prévia da demonstração (`/demo/importacao`) não reproduz a leitura do Excel |
+| REIN-c | A decisão de cada linha com o físico maior que o disponível na carga do estoque | `/estoque/carga/[id]` | Não: a demonstração não tem a carga do estoque (REIN-b); fica para o mesmo lote da demonstração da carga |
+| TRF-c | O pedido de transferência reserva na origem | `/transferencias` e `/transferencias/remessa` | Parcial: `/demo/estoque` (aba "Transferências") diz que o pedido já reserva; a demonstração não simula o saldo de cada lado |
 | ADAPT-a | As integrações que esperam contrato | — (só o worker) | Sim: os cartões "Para conectar direto" em `/demo/canais` |
 | ONLINE-d | O carrinho e o pedido do site, para retirar e pagar na loja | `/loja/carrinho`, `/loja/pedido` e `/reservas-do-site` | Não se aplica: a loja online já é pública, sem login; a demonstração não tem loja |

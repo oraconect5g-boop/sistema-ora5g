@@ -73,8 +73,8 @@ describe("a tela das transferências (TRF-b)", () => {
   it("cada transferência diz o que o passo fez no estoque e o saldo de agora de cada lado que a pessoa vê", async () => {
     const tela = limpar(await Transferencias({ searchParams: Promise.resolve({}) }));
     for (const trecho of [
-      "Pedida: o estoque da origem ainda não mudou (o pedido não reserva; decisão D-049 do proprietário).",
-      "Separada: reservada na origem. Saiu do disponível; o físico continua lá até o envio.",
+      "Pedida: reservada na origem desde o pedido. Saiu do disponível; o físico continua lá até o envio.",
+      "Separada: os itens foram escolhidos e seguem reservados na origem; o físico continua lá até o envio.",
       "Em trânsito: saiu do físico da origem. Entra no destino quando a loja receber e conferir.",
       "Agora na origem (Santa Cândida): físico 8 · reservado 2 · disponível 6",
     ]) {
