@@ -15,7 +15,7 @@ describe("a reserva do site: o formulário e as mensagens (ONLINE-b)", () => {
   });
 
   it("cada recusa do banco vira uma mensagem que existe; o PDV só aceita números", () => {
-    const casos = [["22023", "dados"], ["OR034", "limite_whatsapp"], ["OR035", "limite_loja"], ["OR001", "sem_estoque"], ["OR036", "indisponivel"], ["P0002", "indisponivel"], ["OR004", "repetida"],
+    const casos = [["22023", "dados"], ["OR034", "limite_whatsapp"], ["OR035", "limite_loja"], ["OR001", "sem_estoque"], ["OR036", "indisponivel"], ["P0002", "indisponivel"], ["OR038", "loja_fechada"], ["OR004", "repetida"],
       ["PGRST202", "sem_reserva"], ["42883", "sem_reserva"], ["57014", "falha"]] as const;
     for (const [code, erro] of casos) {
       expect(erroDaReserva({ code })).toBe(erro);
@@ -41,6 +41,10 @@ describe("a reserva do site: o formulário e as mensagens (ONLINE-b)", () => {
     for (const [anunciado, atual] of [["139900", "139900"], ["149900", "139900"], ["x", "139900"], [undefined, undefined]]) {
       expect(avisoDaReservaAtendida(anunciado, atual), `${anunciado} → ${atual}`).toEqual({ tom: "sucesso", texto: "Venda da reserva do site aberta com a unidade reservada. Confira o cliente, o pagamento e conclua." });
     }
+    // ONLINE-d: o pedido do site traz o total; a diferença vira desconto na venda.
+    expect(avisoDaReservaAtendida("15800", "17800", true).texto.replace(/\s/g, " ")).toBe(
+      "Venda do pedido do site aberta com as unidades reservadas. O total anunciado foi R$ 158,00 e o de hoje é R$ 178,00: a oferta vale, dê R$ 20,00 de desconto na venda.");
+    expect(avisoDaReservaAtendida("15800", "15800", true)).toEqual({ tom: "sucesso", texto: "Venda do pedido do site aberta com as unidades reservadas. Confira o cliente, o pagamento e conclua." });
   });
 
   it("o limite por endereço: 5 por hora, cada endereço o seu; depois da hora, libera; o endereço é o que o servidor de entrada acrescenta", () => {

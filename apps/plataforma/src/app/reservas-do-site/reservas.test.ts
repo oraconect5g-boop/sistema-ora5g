@@ -42,7 +42,7 @@ vi.mock("../../lib/acesso/sessao", () => ({
   obterSessao: async () => ({ usuario: { id: "u1" }, situacao: { usuario_ativo: true, sessao_no_turno: true, unidade_id: LOJA, unidade_nome: "Santa Cândida (teste)" }, supabase }),
 }));
 
-import { atenderReserva, cancelarReserva, revelarContato } from "./acoes";
+import { atenderPedido, atenderReserva, cancelarPedido, cancelarReserva, revelarContato } from "./acoes";
 import ReservasDoSite from "./page";
 
 // A lista (componente de desenho sem estado) é aberta aqui; o de ver o WhatsApp (formulário) fica fechado.
@@ -122,7 +122,7 @@ describe("a tela Reservas do site (ONLINE-b)", () => {
   it("sem reservas, avisa; quem não vende na loja não vê a lista; os avisos de volta das ações aparecem", async () => {
     cenario.tabelas.loja_reservas = { data: [], error: null };
     expect(texto(await tela())).toContain("Nenhuma reserva esperando");
-    expect(cenario.consultas.map((c) => c.tabela)).toEqual(["loja_reservas"]);
+    expect(cenario.consultas.map((c) => c.tabela)).toEqual(["loja_reservas", "loja_pedidos"]);
     cenario.vende = false;
     cenario.consultas = [];
     expect(texto(await tela())).toContain("Só quem vende nesta loja atende as reservas do site.");
@@ -174,5 +174,33 @@ describe("as ações da loja (ONLINE-b)", () => {
     cenario.respostas.loja_reserva_atender = { data: null, error: { code: "22023", message: "Esta reserva venceu: venda pelo PDV" } };
     await expect(atenderReserva(formulario({ reserva: ATIVA }))).rejects.toThrow("redirecionou para /reservas-do-site?erro=vencida");
     await expect(atenderReserva(formulario({ reserva: "x" }))).rejects.toThrow("redirecionou para /reservas-do-site?erro=nao_encontrada");
+  });
+
+  // ONLINE-d (ADR-023): o pedido do site aparece inteiro, com as unidades dele; sai numa venda só ou volta inteiro.
+  it("o pedido do site: um cartão com as unidades e o total; as unidades dele não aparecem como reservas avulsas", async () => {
+    const PEDIDO = "00000000-0000-4000-8000-0000000000d1";
+    const futuro = new Date(Date.now() + 3_600_000).toISOString();
+    const unidade = (id: string, preco: number) => ({ id, codigo: `UN${id.slice(-4).toUpperCase()}`.slice(0, 6), nome: "Cliente do Pedido", whatsapp_mascarado: "(41) 9****-0001",
+      preco_centavos: preco, situacao: "ativa", expira_em: futuro, criada_em: new Date().toISOString(), variante_id: VARIANTE, item_serializado_id: null,
+      cancelada_em: null, motivo_cancelamento: null, atendida_em: null, origem: "instagram", utm_source: null, utm_campaign: null, pedido_id: PEDIDO });
+    cenario.tabelas.loja_reservas = { data: [unidade("00000000-0000-4000-8000-0000000000a1", 7_900), unidade("00000000-0000-4000-8000-0000000000a2", 7_900)], error: null };
+    cenario.tabelas.loja_pedidos = { data: [{ id: PEDIDO, codigo: "PED234", nome: "Cliente do Pedido", whatsapp_mascarado: "(41) 9****-0001", total_centavos: 15_800, unidades: 2,
+      situacao: "reservado", expira_em: futuro, criado_em: new Date().toISOString(), motivo_cancelamento: null }], error: null };
+    const t = texto(await tela());
+    for (const trecho of ["Pedido PED234", "2 unidades", "Cliente do Pedido", "R$ 158,00", "Atender o pedido no PDV", "Cancelar o pedido"]) expect(t, trecho).toContain(trecho);
+    expect(t).not.toContain("Atender no PDV");
+  });
+
+  it("atender e cancelar o pedido: uma venda só, com o total anunciado; o cancelamento devolve as unidades", async () => {
+    const PEDIDO = "00000000-0000-4000-8000-0000000000d1";
+    cenario.respostas.loja_pedido_atender = { data: { venda: "v9", total_reservado_centavos: 15_800, total_atual_centavos: 17_800, repetida: false }, error: null };
+    await expect(atenderPedido(formulario({ pedido: PEDIDO }))).rejects.toThrow("redirecionou para /vender?reserva=atendida&pedido=sim&anunciado=15800&atual=17800");
+    cenario.respostas.loja_pedido_atender = { data: null, error: { code: "22023", message: "Este pedido venceu: venda pelo PDV, se ainda houver estoque" } };
+    await expect(atenderPedido(formulario({ pedido: PEDIDO }))).rejects.toThrow("redirecionou para /reservas-do-site?erro=vencida");
+    cenario.respostas.loja_pedido_cancelar = { data: true, error: null };
+    await expect(cancelarPedido(formulario({ pedido: PEDIDO, motivo: "Cliente desistiu" }))).rejects.toThrow("redirecionou para /reservas-do-site?ok=pedido_cancelado");
+    await expect(cancelarPedido(formulario({ pedido: PEDIDO, motivo: "x" }))).rejects.toThrow("redirecionou para /reservas-do-site?erro=motivo");
+    cenario.respostas.loja_reserva_atender = { data: null, error: { code: "22023", message: "Esta reserva é de um pedido do site: atenda o pedido inteiro" } };
+    await expect(atenderReserva(formulario({ reserva: ATIVA }))).rejects.toThrow("redirecionou para /reservas-do-site?erro=do_pedido");
   });
 });

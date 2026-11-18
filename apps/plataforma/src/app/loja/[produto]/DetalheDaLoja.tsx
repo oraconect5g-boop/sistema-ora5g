@@ -1,9 +1,10 @@
 import { ArrowLeft, MapPin, PackageSearch } from "lucide-react";
 import Link from "next/link";
 
-import { Selo } from "../../../componentes/ui";
+import { Botao, Selo } from "../../../componentes/ui";
 import { brl } from "../../../lib/formato";
 import { DISPONIBILIDADES, type DetalheDoProduto } from "../../../lib/loja/vitrine";
+import { adicionarAoCarrinho } from "../carrinho/acoes";
 
 export type ImagemDaLoja = DetalheDoProduto["fotos"][number] & { url: string };
 
@@ -46,7 +47,7 @@ export function DetalheDaLoja({ produto, imagens }: { produto: DetalheDoProduto;
           <div className="rounded-cartao border border-acao/20 bg-acao-clara p-4 text-sm">
             <p className="font-semibold">Como comprar</p>
             <p className="mt-1">{comEstoque
-              ? "Escolha uma loja com estoque e toque em \"Reservar\": a unidade fica guardada por 24 horas, e você paga e retira na loja. O preço é o do balcão de cada loja."
+              ? "Escolha uma loja com estoque e toque em \"Reservar\" (uma unidade) ou \"Pôr no carrinho\" (até 3 unidades da mesma loja, reservadas de uma vez): fica guardado por 24 horas, e você paga e retira na loja. O preço é o do balcão de cada loja."
               : "No momento, nenhuma loja tem este produto em estoque. Volte em breve ou fale com a loja mais perto de você."}</p>
           </div>
 
@@ -67,6 +68,12 @@ export function DetalheDaLoja({ produto, imagens }: { produto: DetalheDoProduto;
                         <span className="numeros text-base font-bold">{brl(l.preco_centavos)}</span>
                         {l.disponibilidade !== "sem_estoque" && (
                           <Link href={`/loja/${p.id}/reservar?variante=${v.id}&loja=${l.id}`} className="inline-flex min-h-9 items-center rounded-botao bg-acao px-3 text-sm font-semibold text-white hover:bg-acao-escura">Reservar</Link>
+                        )}
+                        {l.disponibilidade !== "sem_estoque" && (
+                          <form action={adicionarAoCarrinho}>
+                            <input type="hidden" name="produto" value={p.id} /><input type="hidden" name="variante" value={v.id} /><input type="hidden" name="loja" value={l.id} />
+                            <Botao type="submit" tamanho="sm" variante="secundario" enquanto="Pondo…">Pôr no carrinho</Botao>
+                          </form>
                         )}
                       </span>
                     </li>

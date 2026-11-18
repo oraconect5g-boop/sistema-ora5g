@@ -16,6 +16,7 @@ export const ERROS_DA_RESERVA = {
   limite_rede: "Muitas reservas seguidas deste aparelho. Tente de novo mais tarde.",
   sem_estoque: "Acabou de acabar: esta loja não tem mais este produto agora. Veja outra loja.",
   indisponivel: "Este produto não está mais disponível para reserva nesta loja.",
+  loja_fechada: "Esta loja não está vendendo pelo site agora. Escolha outra loja.",
   repetida: "Esta reserva já foi feita com outros dados. Recarregue a página e tente de novo.",
   sem_reserva: "A reserva pelo site ainda não está disponível. Enquanto isso, procure a loja.",
   falha: "Não deu para reservar agora. Tente de novo em instantes.",
@@ -31,6 +32,8 @@ export function erroDaReserva(erro: { code?: string } | null | undefined): ErroD
     case "OR001": return "sem_estoque";
     // "Não está à venda na loja online": OR036 desde o ONLINE-c; P0002 é o código antigo (banco sem a migration).
     case "OR036": case "P0002": return "indisponivel";
+    // A loja sem o CNPJ da filial não vende (OR038, desde o ORG-a); a vitrine nem a oferece, mas a recusa tem nome.
+    case "OR038": return "loja_fechada";
     case "OR004": return "repetida";
     // A função ainda não existe no banco (migration do ONLINE-b não aplicada).
     case "PGRST202": case "42883": return "sem_reserva";
@@ -103,6 +106,7 @@ export const ERROS_DA_LOJA = {
   cancelada: "Esta reserva foi cancelada.",
   vencida: "Esta reserva venceu: venda pelo PDV, se ainda houver estoque.",
   atendida: "Esta reserva já foi atendida: a venda segue no PDV.",
+  do_pedido: "Esta reserva é de um pedido do site: atenda ou cancele o pedido inteiro.",
   sem_permissao: "Você não tem permissão para isso.",
   falha: "Não deu para concluir agora. Tente de novo em instantes.",
 } as const;
@@ -112,9 +116,11 @@ export type ErroDaLoja = keyof typeof ERROS_DA_LOJA;
 export function erroDaLoja(erro: { code?: string; message?: string } | null | undefined): ErroDaLoja {
   const mensagem = erro?.message ?? "";
   if (erro?.code === "22023") {
-    if (/venceu/i.test(mensagem)) return "vencida";
-    if (/cancelada/i.test(mensagem)) return "cancelada";
-    if (/atendida/i.test(mensagem)) return "atendida";
+    // ONLINE-d: o pedido do site recusa com as mesmas palavras no masculino, e a unidade solta do pedido tem a mensagem dela.
+    if (/pedido do site/i.test(mensagem)) return "do_pedido";
+    if (/venceu|não está mais ativa/i.test(mensagem)) return "vencida";
+    if (/cancelad[ao]/i.test(mensagem)) return "cancelada";
+    if (/atendid[ao]/i.test(mensagem)) return "atendida";
     return "motivo";
   }
   if (erro?.code === "P0002") return "nao_encontrada";
@@ -134,11 +140,12 @@ export function avisoDaReservaNoPdv(anunciado: unknown, atual: unknown): { anunc
  * O aviso do PDV quando a loja atende a reserva: a venda abre com a unidade reservada. Se o preço de hoje subiu, a oferta
  * anunciada no site vale (Código de Defesa do Consumidor, art. 30): o vendedor dá a diferença de desconto no item.
  */
-export function avisoDaReservaAtendida(anunciado: unknown, atual: unknown): { tom: "aviso" | "sucesso"; texto: string } {
+export function avisoDaReservaAtendida(anunciado: unknown, atual: unknown, doPedido = false): { tom: "aviso" | "sucesso"; texto: string } {
   const precos = avisoDaReservaNoPdv(anunciado, atual);
-  const inicio = "Venda da reserva do site aberta com a unidade reservada.";
+  const inicio = doPedido ? "Venda do pedido do site aberta com as unidades reservadas." : "Venda da reserva do site aberta com a unidade reservada.";
   if (precos && precos.atual > precos.anunciado) {
-    return { tom: "aviso", texto: `${inicio} O preço anunciado foi ${brl(precos.anunciado)} e o de hoje é ${brl(precos.atual)}: a oferta vale, dê ${brl(precos.atual - precos.anunciado)} de desconto no item.` };
+    const [oQue, onde] = doPedido ? ["O total anunciado", "na venda"] : ["O preço anunciado", "no item"];
+    return { tom: "aviso", texto: `${inicio} ${oQue} foi ${brl(precos.anunciado)} e o de hoje é ${brl(precos.atual)}: a oferta vale, dê ${brl(precos.atual - precos.anunciado)} de desconto ${onde}.` };
   }
   return { tom: "sucesso", texto: `${inicio} Confira o cliente, o pagamento e conclua.` };
 }
