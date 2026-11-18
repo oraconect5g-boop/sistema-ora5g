@@ -49,8 +49,8 @@ Os registros `LEITURA_DIAGNOSTICO_INTEGRAL_2026-11-16.md` (seção 3) e `LEITURA
 1. **AUD-b:** F18-01, F18-02 e F18-04. No ar desde 18/11 (`bf5eaf5`, build 10:31).
 2. **REIN-c:** F18-03, a diferença entre o físico e o disponível como pendência de reconciliação na carga. No ar desde 18/11 (`488844b`, build 11:14).
 3. **TRF-c:** F18-05, a transferência que reserva no pedido. No ar desde 18/11 (`37a2b03`, build 11:46).
-4. **PAY-b:** F18-06, o contrato do pagamento antes de ligar.
-5. **INTEG-d:** a tabela de uma linha por API, com todas as colunas que a orientação pede, depois da leitura da PR #97.
+4. **PAY-b:** F18-06, o contrato do pagamento antes de ligar. No ar desde 18/11 (`ddb6cd6`, build 11:58).
+5. **INTEG-d:** a tabela de uma linha por API, com todas as colunas que a orientação pede, depois da leitura da PR #97. Feita: [`MATRIZ_DAS_APIS.md`](../integracoes/MATRIZ_DAS_APIS.md); a leitura na seção 6.
 6. **Na sequência:** a base operacional e as jornadas, que dependem da chave secreta do Supabase, da cópia da planilha ao servidor e dos CNPJs. Depois as integrações por contrato, a loja, os gráficos, a demonstração e o VEL-c, cada uma no ponto em que não depende de terceiros.
 
 ## 6. A leitura da PR #97 (18/11, no lote INTEG-d)

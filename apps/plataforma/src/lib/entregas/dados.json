@@ -459,6 +459,17 @@
         "ORA-PAY-014"
       ],
       "entrega": "o achado F18-06 da reanálise do Codex de 18/11: o aviso do provedor de pagamento nunca confirma; só a reconsulta, com a cobrança, o valor, a moeda e a ordem; o tempo esgotado não cobra duas vezes",
+      "commit": "ddb6cd6",
+      "publicado_em": "2026-11-18",
+      "pedido_em": null,
+      "resposta": null,
+      "respondido_em": null
+    },
+    {
+      "lote": "INTEG-d",
+      "roteiro": "docs/aceite/INTEG-d.md",
+      "requisitos": [],
+      "entrega": "a seção 4 da orientação de 18/11: a matriz das APIs, uma linha por integração, com as 15 colunas, quem fornece o que falta e o que pode andar sem isso; a leitura da PR #97",
       "commit": null,
       "publicado_em": null,
       "pedido_em": null,
