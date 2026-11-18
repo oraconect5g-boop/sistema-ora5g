@@ -291,6 +291,32 @@ Como ler:
 - Uma linha `GET /auth/v1/user` em cada pedido quer dizer que o token ainda é assinado com o segredo compartilhado (ADR-010, decisão 1).
 - A linha nunca traz o que vem depois do `?` no endereço, cabeçalhos, corpo, token, chave, o endereço do projeto nem o texto do erro.
 
+### 4.7 O VEL-b (18/11): as telas com login, medidas no log
+
+O log de tempos ficou ligado na homologação desde o VEL-a, e as telas foram usadas com login. Cada linha é uma ida ao banco. A tela é reconhecida pelo que ela leu: a ligação pelo número do pedido falha quando o menu pré-carrega várias telas ao mesmo tempo. O script `scripts/idas-por-tela.mjs` faz essa conta.
+
+**Antes do VEL-b** (as versões até 17/11, lidas em 18/11, de 06:50 em diante). As medianas são de 1 a 7 aberturas de cada tela; as poucas aberturas de Clientes, Catálogo e do painel do Estoque não somam o bastante para concluir.
+
+| Tela | Idas | Rodadas | Tempo no banco | O que tinha de pergunta de permissão |
+|---|---:|---:|---:|---|
+| Vendas | 8 a 9 | 4 a 5 | 0,9 a 1,2 s | uma rodada só para ela |
+| Detalhe de uma venda | 21 a 22 | 8 | 1,8 s | 4 (3 ficam: são da loja da venda) |
+| Caixa | 7 | 3 | 0,9 s | 1, junto com o caixa aberto |
+| Transferências | 8 | 3 | 0,7 s | 2, junto com a lista |
+| Ora Connect | 10 | 3 | 0,7 s | 4, junto com as listas |
+| Painel do Estoque | 6 | 4 | 0,8 s | uma rodada com 3 |
+| Catálogo | 12 | 3 | 1,5 s | 1, junto com a busca |
+| PDV, sem busca | 3 | 2 | 0,5 s | nenhuma (VEL-a) |
+| O sino de avisos e o Início | 17 a 28 | 2 | 0,7 a 1,5 s | nenhuma; o peso são os pedidos ao mesmo tempo |
+
+**Depois do VEL-b:** depois da publicação, rodar com `--desde` igual ao número de linhas do log naquele momento:
+
+```bash
+node scripts/idas-por-tela.mjs --desde <número da linha>
+```
+
+A conta das rodadas, pelo código, está na ADR-010 ("O que veio no VEL-b").
+
 ## O que falta
 
 - O proprietário aprovar (ou mudar) as metas, inclusive as das telas com login.
@@ -299,3 +325,4 @@ Como ler:
 - Confirmar com um login qual chave assina os tokens de hoje (o log de tempos mostra).
 - O teste de ponta a ponta no celular que adiciona, tira e conclui uma venda: depende do usuário de teste (J1).
 - O teste no celular e na internet da loja piloto, com o vendedor.
+- A medida do "depois" do VEL-b, com login (seção 4.7), e o VEL-c: a ação do carrinho, a leitura única do Catálogo e do Estoque, o sino e o Início (ADR-010, "O que fica para depois").

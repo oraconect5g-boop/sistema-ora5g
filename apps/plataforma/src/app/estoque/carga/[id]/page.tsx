@@ -5,6 +5,7 @@ import Link from "next/link";
 import { MoldeReal } from "../../../../componentes/MoldeReal";
 import { Aviso, Botao, Cartao, Indicador, Selo, TituloPagina } from "../../../../componentes/ui";
 import { ehUuid } from "../../../../lib/acesso/regras";
+import { permite } from "../../../../lib/acesso/molde";
 import { FalhaDoServico, obterSessao } from "../../../../lib/acesso/sessao";
 import { ACOES_DA_LINHA, ERROS_DA_CARGA, ROTULOS_DAS_ACOES, SITUACOES_DA_CARGA, acaoDaLinha, totaisDaCarga, type AcaoDaLinha } from "../../../../lib/estoque/carga-regras";
 import { numero } from "../../../../lib/formato";
@@ -39,15 +40,12 @@ export default async function UmaCarga({ params, searchParams }: {
   const { supabase, usuario } = sessao;
   const voltar = <Link href="/estoque/carga" className="inline-flex min-h-11 items-center gap-1 text-sm font-semibold text-acao"><ArrowLeft className="size-4" aria-hidden />As cargas</Link>;
   if (!ehUuid(id)) return <MoldeReal sessao={sessao}>{voltar}<Aviso tom="aviso" className="mt-4">Carga não encontrada.</Aviso></MoldeReal>;
-  const [executar, aprovar, lida] = await Promise.all([
-    supabase.rpc("tem_permissao", { p_permissao: "importacao.executar" }),
-    supabase.rpc("tem_permissao", { p_permissao: "importacao.aprovar" }),
-    supabase.from("estoque_cargas").select("id, numero, arquivo_nome, corte, situacao, totais, mapeamento, criado_por, criado_em, aplicado_em, encerrado_em, motivo, unidades(nome)")
-      .eq("id", id).maybeSingle(),
-  ]);
-  if (executar.error || aprovar.error) throw new FalhaDoServico("tem_permissao");
+  const executar = permite(sessao, "importacao.executar");
+  const aprovar = permite(sessao, "importacao.aprovar");
+  const lida = await supabase.from("estoque_cargas").select("id, numero, arquivo_nome, corte, situacao, totais, mapeamento, criado_por, criado_em, aplicado_em, encerrado_em, motivo, unidades(nome)")
+    .eq("id", id).maybeSingle();
   if (lida.error) throw new FalhaDoServico("estoque_cargas");
-  if (!executar.data && !aprovar.data) return <MoldeReal sessao={sessao}><Aviso tom="aviso" className="mt-6">{ERROS_DA_CARGA.permissao}</Aviso></MoldeReal>;
+  if (!executar && !aprovar) return <MoldeReal sessao={sessao}><Aviso tom="aviso" className="mt-6">{ERROS_DA_CARGA.permissao}</Aviso></MoldeReal>;
   const carga = lida.data as unknown as Carga | null;
   if (!carga) return <MoldeReal sessao={sessao}>{voltar}<Aviso tom="aviso" className="mt-4">Carga não encontrada.</Aviso></MoldeReal>;
 
@@ -130,7 +128,7 @@ export default async function UmaCarga({ params, searchParams }: {
         )}
       </Cartao>
 
-      {carga.situacao === "previa" && aprovar.data && !minha && (
+      {carga.situacao === "previa" && aprovar && !minha && (
         <Cartao className="mt-4" titulo="Aplicar" subtitulo={`${numero(t.unidadesEntrar)} unidades de ${numero(t.entrar)} acessórios entram no estoque da ${carga.unidades?.nome ?? "loja"}. O resto fica como está.`} icone={CheckCircle2}>
           <form action={aplicarCarga} className="space-y-3">
             <input type="hidden" name="carga" value={carga.id} />
@@ -139,7 +137,7 @@ export default async function UmaCarga({ params, searchParams }: {
           </form>
         </Cartao>
       )}
-      {carga.situacao === "previa" && aprovar.data && minha && (
+      {carga.situacao === "previa" && aprovar && minha && (
         <Aviso tom="info" className="mt-4">Você gerou esta prévia: quem aplica é outra pessoa com a aprovação.</Aviso>
       )}
       {carga.situacao === "previa" && (
@@ -151,7 +149,7 @@ export default async function UmaCarga({ params, searchParams }: {
           </form>
         </Cartao>
       )}
-      {carga.situacao === "aplicada" && aprovar.data && (
+      {carga.situacao === "aplicada" && aprovar && (
         <Cartao className="mt-4" titulo="Desfazer a carga" subtitulo="Devolve pelo livro o que a carga lançou e ainda está livre na loja; o que já foi vendido, reservado ou transferido fica e é contado." icone={Undo2}>
           <form action={desfazerCarga} className="space-y-3">
             <input type="hidden" name="carga" value={carga.id} />

@@ -3,6 +3,7 @@
 // mesmo filtro da tela, com todas as colunas. A permissão é a da tela (conta_pagar.gerir: o dono na rede e
 // em todas as lojas, o gerente na loja dele) e o banco confere de novo cada linha (RLS). A loja pedida passa
 // pelo resumo: a que o banco recusa dá 403, em vez de um arquivo vazio com o nome dela.
+import { permite } from "../../../lib/acesso/molde";
 import { FalhaDoServico, obterSessao } from "../../../lib/acesso/sessao";
 import {
   consultarCategorias, consultarContas, consultarResumo, LIMITE_DA_EXPORTACAO_DAS_CONTAS, nomesDosFornecedores,
@@ -21,9 +22,8 @@ export async function GET(pedido: Request) {
   const url = new URL(pedido.url);
   const sessao = await obterSessao({ exigirLoja: true });
   const { supabase, situacao } = sessao;
-  const pode = await supabase.rpc("tem_permissao", { p_permissao: "conta_pagar.gerir", p_unidade: situacao.unidade_id as string });
-  if (pode.error) throw new FalhaDoServico("tem_permissao");
-  if (!pode.data) return texto("Sem permissão para exportar as contas a pagar.", 403);
+  const pode = permite(sessao, "conta_pagar.gerir");
+  if (!pode) return texto("Sem permissão para exportar as contas a pagar.", 403);
 
   const visao = visaoDasContas(url.searchParams.get("ver"));
   const filtro = filtroDasContas(url.searchParams.get("loja"));

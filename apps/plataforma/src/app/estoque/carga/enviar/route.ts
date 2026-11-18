@@ -3,6 +3,7 @@ import { createHash } from "node:crypto";
 import type { NextRequest } from "next/server";
 
 import { redirecionar } from "../../../../lib/acesso/redirecionar";
+import { permite } from "../../../../lib/acesso/molde";
 import { obterSessao } from "../../../../lib/acesso/sessao";
 import { LINHAS_POR_LOJA, lerMapaDaCarga, linhasDaCarga, mapaDaCargaParaGravar } from "../../../../lib/estoque/carga";
 import { corteDoFormulario, erroDaCarga, erroDaPlanilhaNaCarga } from "../../../../lib/estoque/carga-regras";
@@ -26,10 +27,10 @@ export async function POST(requisicao: NextRequest) {
   const host = requisicao.headers.get("x-forwarded-host") ?? requisicao.headers.get("host");
   if (origem && host && new URL(origem).host !== host) return new Response("Origem não permitida", { status: 403 });
 
-  const { supabase, situacao } = await obterSessao({ exigirLoja: true });
-  const pode = await supabase.rpc("tem_permissao", { p_permissao: "importacao.executar" });
-  if (pode.error) return voltar({ erro: "falha" });
-  if (pode.data !== true) return voltar({ erro: "permissao" });
+  const sessao = await obterSessao({ exigirLoja: true });
+  const { supabase, situacao } = sessao;
+  const pode = permite(sessao, "importacao.executar");
+  if (!pode) return voltar({ erro: "permissao" });
   const tamanho = Number(requisicao.headers.get("content-length") ?? "0");
   if (tamanho > LIMITES_DA_PLANILHA.bytes + 64 * 1024) return voltar({ erro: "grande" });
   let dados: FormData;

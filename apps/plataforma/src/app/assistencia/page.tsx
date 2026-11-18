@@ -5,7 +5,8 @@ import Link from "next/link";
 import { MoldeReal } from "../../componentes/MoldeReal";
 import { EstadoDoPainel } from "../../componentes/paineis-de-vendas";
 import { Aviso, Cartao, EstadoVazio, FiltroSegmentado, Indicador, Selo, TituloPagina } from "../../componentes/ui";
-import { FalhaDoServico, obterSessao } from "../../lib/acesso/sessao";
+import { permite } from "../../lib/acesso/molde";
+import { obterSessao } from "../../lib/acesso/sessao";
 import { contarOrdens, ehVisao, listarOrdens, POR_PAGINA, VISOES, type Visao } from "../../lib/assistencia/consulta";
 import { atrasada, diasEntre, finalDoImei, LOCAIS, SITUACOES } from "../../lib/assistencia/regras";
 import { numero } from "../../lib/formato";
@@ -27,10 +28,10 @@ export default async function Assistencia({ searchParams }: { searchParams: Prom
   const hoje = new Intl.DateTimeFormat("en-CA", { timeZone: "America/Sao_Paulo" }).format(new Date());
   const sessao = await obterSessao({ exigirLoja: true });
   const { supabase, situacao } = sessao;
-  const unidade = situacao.unidade_id as string;
-  const [abrir, gerir, orcar] = await Promise.all(["os.abrir", "os.gerir", "os.orcar"].map((p) => supabase.rpc("tem_permissao", { p_permissao: p, p_unidade: unidade })));
-  if (abrir?.error || gerir?.error || orcar?.error) throw new FalhaDoServico("tem_permissao");
-  if (!abrir?.data && !gerir?.data && !orcar?.data) return <MoldeReal sessao={sessao}><Aviso tom="aviso" className="mt-6">A assistência é de quem recebe aparelhos na loja e do técnico.</Aviso></MoldeReal>;
+  const abrir = permite(sessao, "os.abrir");
+  const gerir = permite(sessao, "os.gerir");
+  const orcar = permite(sessao, "os.orcar");
+  if (!abrir && !gerir && !orcar) return <MoldeReal sessao={sessao}><Aviso tom="aviso" className="mt-6">A assistência é de quem recebe aparelhos na loja e do técnico.</Aviso></MoldeReal>;
   const [lista, contagens] = await Promise.all([listarOrdens(supabase, visao, pagina), contarOrdens(supabase, hoje)]);
   const endereco = (v: Visao, p = 0) => `/assistencia${v === "abertas" && p === 0 ? "" : `?ver=${v}${p > 0 ? `&pagina=${p}` : ""}`}`;
 
@@ -41,12 +42,12 @@ export default async function Assistencia({ searchParams }: { searchParams: Prom
         titulo="Assistência"
         subtitulo="Todo aparelho de cliente que entra para assistência, até limpeza, tem ordem de serviço: o número é o comprovante do cliente e a posição do aparelho fica registrada da loja ao técnico e de volta."
       />
-      {gerir?.data && (
+      {gerir && (
         <Link href="/assistencia/relatorios" className="mt-3 inline-flex min-h-10 items-center gap-1 text-sm font-semibold text-acao">
           <ChartNoAxesColumn aria-hidden className="size-4" /> Relatórios da assistência
         </Link>
       )}
-      {abrir?.data && (
+      {abrir && (
         <Aviso tom="info" className="mt-4" titulo="Abrir uma OS">
           Busque o cliente (ou cadastre com nome completo e WhatsApp) em <Link href="/clientes" className="font-semibold underline">Clientes</Link> e toque em &quot;Abrir ordem de serviço&quot; na ficha dele.
         </Aviso>

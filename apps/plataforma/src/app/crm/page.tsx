@@ -6,6 +6,7 @@ import Link from "next/link";
 
 import { MoldeReal } from "../../componentes/MoldeReal";
 import { Aviso, Botao, BotaoLink, Cartao, FiltroSegmentado, Selo, TituloPagina } from "../../componentes/ui";
+import { permite } from "../../lib/acesso/molde";
 import { FalhaDoServico, obterSessao } from "../../lib/acesso/sessao";
 import { ERROS_DO_CRM, ETAPAS, ETAPAS_ABERTAS, MOTIVOS_DE_PERDA, ORIGENS, type Etapa } from "../../lib/crm/regras";
 import { brl } from "../../lib/formato";
@@ -34,13 +35,9 @@ export default async function Funil({ searchParams }: { searchParams: Promise<{ 
   const erro = chaveDoCatalogo(ERROS_DO_CRM, parametros.erro);
   const sessao = await obterSessao({ exigirLoja: true });
   const { supabase, usuario, situacao } = sessao;
-  const unidade = situacao.unidade_id as string;
-  const [atende, buscaCliente] = await Promise.all([
-    supabase.rpc("tem_permissao", { p_permissao: "crm.atender", p_unidade: unidade }),
-    supabase.rpc("tem_permissao", { p_permissao: "cliente.buscar", p_unidade: unidade }),
-  ]);
-  if (atende.error || buscaCliente.error) throw new FalhaDoServico("tem_permissao");
-  if (!atende.data) return <MoldeReal sessao={sessao}><Aviso tom="aviso" className="mt-6">Seu papel não atende clientes nesta loja.</Aviso></MoldeReal>;
+  const atende = permite(sessao, "crm.atender");
+  const buscaCliente = permite(sessao, "cliente.buscar");
+  if (!atende) return <MoldeReal sessao={sessao}><Aviso tom="aviso" className="mt-6">Seu papel não atende clientes nesta loja.</Aviso></MoldeReal>;
   const funil = await supabase.rpc("crm_funil");
   if (funil.error) throw new FalhaDoServico("crm_funil");
   const { gerencia, oportunidades } = funil.data as unknown as { gerencia: boolean; oportunidades: OportunidadeDoFunil[] };
@@ -66,7 +63,7 @@ export default async function Funil({ searchParams }: { searchParams: Promise<{ 
 
       <details className="mt-4 rounded-xl border border-borda bg-white px-3 py-2">
         <summary className="flex min-h-10 cursor-pointer items-center gap-2 text-sm font-semibold text-acao"><Plus aria-hidden className="size-4" /> Nova oportunidade</summary>
-        {buscaCliente.data ? (
+        {buscaCliente ? (
           <form action={registrarOportunidade} className="mt-2 space-y-3">
             <input type="hidden" name="chave" value={`form:${randomUUID()}`} />
             <div className="space-y-1"><p className="text-sm font-medium">Cliente (CPF ou telefone completos; cadastre antes se for novo)</p><BuscaDeCliente modo="escolher" /></div>

@@ -6,6 +6,7 @@ import { FormularioDeArquivo } from "../../../componentes/FormularioDeArquivo";
 import { MoldeReal } from "../../../componentes/MoldeReal";
 import { Aviso, Botao, BotaoLink, Cartao, FiltroSegmentado, Selo, TituloPagina, type Tom } from "../../../componentes/ui";
 import { ehUuid } from "../../../lib/acesso/regras";
+import { permite } from "../../../lib/acesso/molde";
 import { FalhaDoServico, obterSessao } from "../../../lib/acesso/sessao";
 import { TIPOS_DE_PRODUTO } from "../../../lib/catalogo/cadastro";
 import { centavosDoBanco } from "../../../lib/dinheiro";
@@ -103,12 +104,9 @@ export default async function Importar({ searchParams }: {
   const sessao = await obterSessao({ exigirLoja: true });
   const { supabase, usuario } = sessao;
 
-  const [executar, aprovar] = await Promise.all([
-    supabase.rpc("tem_permissao", { p_permissao: "importacao.executar" }),
-    supabase.rpc("tem_permissao", { p_permissao: "importacao.aprovar" }),
-  ]);
-  if (executar.error || aprovar.error) throw new FalhaDoServico("tem_permissao");
-  if (!executar.data && !aprovar.data) {
+  const executar = permite(sessao, "importacao.executar");
+  const aprovar = permite(sessao, "importacao.aprovar");
+  if (!executar && !aprovar) {
     return (
       <MoldeReal sessao={sessao}>
         <Cartao titulo="Sem permissão" icone={ShieldAlert}>
@@ -255,7 +253,7 @@ export default async function Importar({ searchParams }: {
           </div>
 
           <div className="mt-4 flex flex-col gap-2">
-            {imp.situacao === "previa" && aprovar.data && (minhaPrevia
+            {imp.situacao === "previa" && aprovar && (minhaPrevia
               ? <Aviso tom="info">Você gerou esta prévia: outra pessoa com permissão de aprovar confere e aplica.</Aviso>
               : comparacaoMudou ? <Aviso tom="aviso">Para aplicar, confira de novo desde o começo: a comparação mudou enquanto você conferia.</Aviso> : (
                 <details className="rounded-xl border border-borda px-3 py-2" open={!imp.totais.erro}>
@@ -275,7 +273,7 @@ export default async function Importar({ searchParams }: {
                 <form action={descartarImportacao} className="mt-2 space-y-2"><input type="hidden" name="importacao" value={imp.id} /><Motivo exemplo="Arquivo errado" /><Botao type="submit" tamanho="sm" variante="perigo">Descartar</Botao></form>
               </details>
             )}
-            {imp.situacao === "aplicada" && aprovar.data && (
+            {imp.situacao === "aplicada" && aprovar && (
               <details className="rounded-xl border border-borda px-3 py-2">
                 <summary className="flex min-h-10 cursor-pointer items-center gap-2 text-sm font-semibold text-perigo"><TriangleAlert aria-hidden className="size-4" /> Desfazer esta importação</summary>
                 <form action={desfazerImportacao} className="mt-2 space-y-2">
@@ -290,7 +288,7 @@ export default async function Importar({ searchParams }: {
         </Cartao>
       )}
 
-      {executar.data ? (
+      {executar ? (
         <Cartao className="mt-4" titulo="Nova prévia" subtitulo="Primeira linha com o nome das colunas; no Excel, a primeira aba. Campo vazio na planilha não apaga o valor atual." icone={FileUp}>
           <FormularioDeArquivo action="/produtos/importar/enviar" className="space-y-3">
             <EscolherColunas />

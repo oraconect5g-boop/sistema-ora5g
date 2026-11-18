@@ -8,6 +8,7 @@ import { notFound } from "next/navigation";
 import { MoldeReal } from "../../../componentes/MoldeReal";
 import { Aviso, Botao, Cartao, ListaDados, Selo, TituloPagina } from "../../../componentes/ui";
 import { ehUuid } from "../../../lib/acesso/regras";
+import { permite } from "../../../lib/acesso/molde";
 import { FalhaDoServico, obterSessao } from "../../../lib/acesso/sessao";
 import { ERROS_DO_CRM, ETAPAS, ETAPAS_ABERTAS, MOTIVOS_DE_PERDA, ORIGENS, TIPOS_DE_ATIVIDADE, ehEtapa, paraCampoLocal, type Etapa } from "../../../lib/crm/regras";
 import { centavosDoBanco } from "../../../lib/dinheiro";
@@ -51,23 +52,21 @@ export default async function Oportunidade({ params, searchParams }: { params: P
   const ok = chaveDoCatalogo(OK, parametros.ok);
   const erro = chaveDoCatalogo(ERROS_DO_CRM, parametros.erro);
   const sessao = await obterSessao({ exigirLoja: true });
-  const { supabase, situacao } = sessao;
+  const { supabase } = sessao;
   const resposta = await supabase.rpc("oportunidade_detalhe", { p_oportunidade: id });
   if (resposta.error?.code === "P0002") notFound();
   if (resposta.error) throw new FalhaDoServico("oportunidade_detalhe");
   const o = resposta.data as unknown as Detalhe;
-  const [buscaCliente, vendas] = await Promise.all([
-    supabase.rpc("tem_permissao", { p_permissao: "cliente.buscar", p_unidade: situacao.unidade_id as string }),
-    supabase.from("vendas").select("id, numero, concluida_em, total_centavos").eq("cliente_id", o.cliente.id).eq("situacao", "concluida").order("concluida_em", { ascending: false }).limit(10),
-  ]);
-  if (buscaCliente.error || vendas.error) throw new FalhaDoServico("oportunidade_extras");
+  const buscaCliente = permite(sessao, "cliente.buscar");
+  const vendas = await supabase.from("vendas").select("id, numero, concluida_em, total_centavos").eq("cliente_id", o.cliente.id).eq("situacao", "concluida").order("concluida_em", { ascending: false }).limit(10);
+  if (vendas.error) throw new FalhaDoServico("oportunidade_extras");
   const aberta = ETAPAS_ABERTAS.includes(o.etapa);
 
   return (
     <MoldeReal sessao={sessao}>
       <Link href="/crm" className="inline-flex min-h-10 items-center gap-1 text-sm font-semibold text-acao"><ArrowLeft aria-hidden className="size-4" /> Funil</Link>
       <TituloPagina titulo={`Oportunidade nº ${o.numero}`} subtitulo={<span className="flex flex-wrap items-center gap-2">
-        {buscaCliente.data ? <Link href={`/clientes/${o.cliente.id}`} className="font-semibold text-acao">{o.cliente.nome}</Link> : o.cliente.nome}
+        {buscaCliente ? <Link href={`/clientes/${o.cliente.id}`} className="font-semibold text-acao">{o.cliente.nome}</Link> : o.cliente.nome}
         · {o.interesse}<Selo tom={ETAPAS[o.etapa].tom}>{ETAPAS[o.etapa].nome}</Selo></span>} />
       {ok && <Aviso tom="sucesso" className="mt-4">{OK[ok]}</Aviso>}
       {erro && <Aviso tom="perigo" className="mt-4">{ERROS_DO_CRM[erro]}</Aviso>}

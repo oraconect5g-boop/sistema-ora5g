@@ -6,6 +6,7 @@ import Link from "next/link";
 
 import { MoldeReal } from "../../../componentes/MoldeReal";
 import { Aviso, Botao, Cartao, Selo, TituloPagina } from "../../../componentes/ui";
+import { permite } from "../../../lib/acesso/molde";
 import { FalhaDoServico, obterSessao } from "../../../lib/acesso/sessao";
 import { ERROS_DO_INVENTARIO, SITUACOES_DO_INVENTARIO } from "../../../lib/estoque/inventario";
 import { chaveDoCatalogo, type ValorDeParametro } from "../../../lib/parametros";
@@ -26,12 +27,9 @@ export default async function Inventarios({ searchParams }: { searchParams: Prom
   const sessao = await obterSessao({ exigirLoja: true });
   const { supabase, situacao } = sessao;
   const unidade = situacao.unidade_id as string;
-  const [confere, ajusta] = await Promise.all([
-    supabase.rpc("tem_permissao", { p_permissao: "estoque.conferir", p_unidade: unidade }),
-    supabase.rpc("tem_permissao", { p_permissao: "estoque.ajustar", p_unidade: unidade }),
-  ]);
-  if (confere.error || ajusta.error) throw new FalhaDoServico("tem_permissao");
-  if (!confere.data && !ajusta.data) {
+  const confere = permite(sessao, "estoque.conferir");
+  const ajusta = permite(sessao, "estoque.ajustar");
+  if (!confere && !ajusta) {
     return <MoldeReal sessao={sessao}><Aviso tom="aviso" className="mt-6">Seu papel não faz inventário nesta loja.</Aviso></MoldeReal>;
   }
   const lista = await supabase.from("inventarios").select("id, numero, descricao, situacao, criado_em, enviado_em, decidido_em").eq("unidade_id", unidade).order("criado_em", { ascending: false }).limit(30);
@@ -43,7 +41,7 @@ export default async function Inventarios({ searchParams }: { searchParams: Prom
       <TituloPagina sobretitulo={situacao.unidade_nome} titulo="Inventário" subtitulo="Conte um grupo de itens; a diferença só entra no estoque depois que outra pessoa aprova. Nada se apaga: fica a trilha do antes, do contado e do ajuste." />
       {erro && <Aviso tom="perigo" className="mt-4">{ERROS_DO_INVENTARIO[erro]}</Aviso>}
 
-      {confere.data && (
+      {confere && (
         <Cartao className="mt-4" titulo="Novo inventário" icone={ClipboardList}>
           <form action={abrirInventario} className="space-y-3">
             <input type="hidden" name="chave" value={`form:${randomUUID()}`} />

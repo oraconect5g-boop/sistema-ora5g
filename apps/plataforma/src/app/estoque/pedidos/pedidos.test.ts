@@ -24,6 +24,8 @@ const consulta = { select: () => consulta, eq: () => consulta, order: () => Prom
 vi.mock("../../../lib/acesso/sessao", () => ({
   FalhaDoServico: class extends Error {},
   obterSessao: async () => ({
+    // VEL-b: as permissões vêm no molde da sessão, pela mesma regra do rpc simulado.
+    molde: { permissoes: { has: (p: string) => Boolean(cenario.permissoes.has(p)) }, nome: null, vinculos: [], pendencias: { aprovacoes: 0, notas: 0 } },
     usuario: { id: "u" },
     situacao: { usuario_ativo: true, sessao_no_turno: true, unidade_id: LOJA, unidade_nome: "Santa Cândida (teste)", turno_termina_em: "2026-11-15T23:00:00Z" },
     supabase: {

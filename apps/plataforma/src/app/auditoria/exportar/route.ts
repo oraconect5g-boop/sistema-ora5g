@@ -3,6 +3,7 @@
 // permissão é a da tela (auditoria.ver na loja do turno) e o banco confere cada linha de novo (RLS). Leitura em páginas
 // abaixo do teto da API, do mais recente ao mais antigo, até o limite, com aviso no fim; uma página que falha ou um
 // nome que não se leu derruba o arquivo (nada pela metade).
+import { permite } from "../../../lib/acesso/molde";
 import { FalhaDoServico, obterSessao } from "../../../lib/acesso/sessao";
 import { LIMITE_DA_PLANILHA_DA_AUDITORIA as LIMITE, planilhaDaAuditoria } from "../../../lib/auditoria/planilha";
 import { PERIODOS_DA_AUDITORIA } from "../../../lib/auditoria/regras";
@@ -21,9 +22,8 @@ export async function GET(pedido: Request) {
   const sessao = await obterSessao({ exigirLoja: true });
   const { supabase, situacao } = sessao;
   const unidade = situacao.unidade_id as string;
-  const pode = await supabase.rpc("tem_permissao", { p_permissao: "auditoria.ver", p_unidade: unidade });
-  if (pode.error) throw new FalhaDoServico("auditoria_permissao");
-  if (!pode.data) return texto("Sem permissão para exportar a auditoria.", 403);
+  const pode = permite(sessao, "auditoria.ver");
+  if (!pode) return texto("Sem permissão para exportar a auditoria.", 403);
 
   const periodo = chaveDoCatalogo(PERIODOS_DA_AUDITORIA, url.searchParams.get("periodo") ?? undefined) ?? "hoje";
   const soAlertas = url.searchParams.get("alertas") === "1";

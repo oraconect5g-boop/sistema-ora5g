@@ -2,7 +2,8 @@ import type { Metadata } from "next";
 
 import { MoldeReal } from "../../../componentes/MoldeReal";
 import { Aviso, TituloPagina } from "../../../componentes/ui";
-import { FalhaDoServico, obterSessao } from "../../../lib/acesso/sessao";
+import { permite } from "../../../lib/acesso/molde";
+import { obterSessao } from "../../../lib/acesso/sessao";
 import { consultarFinanceiras, ERROS_DAS_FINANCEIRAS } from "../../../lib/pagamentos/financeiras";
 import { chaveDoCatalogo, type ValorDeParametro } from "../../../lib/parametros";
 import { ConteudoFinanceiras } from "./ConteudoFinanceiras";
@@ -29,9 +30,8 @@ export default async function Financeiras({ searchParams }: { searchParams: Prom
   const hoje = new Intl.DateTimeFormat("en-CA", { timeZone: "America/Sao_Paulo" }).format(new Date());
   const sessao = await obterSessao({ exigirLoja: true });
   const { supabase, situacao } = sessao;
-  const pode = await supabase.rpc("tem_permissao", { p_permissao: "pagamento.conciliar", p_unidade: situacao.unidade_id as string });
-  if (pode.error) throw new FalhaDoServico("tem_permissao");
-  if (!pode.data) return <MoldeReal sessao={sessao}><Aviso tom="aviso" className="mt-6">Os valores a receber das financeiras são da gerência da loja.</Aviso></MoldeReal>;
+  const pode = permite(sessao, "pagamento.conciliar");
+  if (!pode) return <MoldeReal sessao={sessao}><Aviso tom="aviso" className="mt-6">Os valores a receber das financeiras são da gerência da loja.</Aviso></MoldeReal>;
   const leitura = await consultarFinanceiras(supabase);
 
   return (

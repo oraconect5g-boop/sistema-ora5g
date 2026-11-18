@@ -8,6 +8,7 @@ import { MEIOS } from "@ora5g/dominio";
 
 import { MoldeReal } from "../../componentes/MoldeReal";
 import { Aviso, Botao, Cartao, Selo, TituloPagina } from "../../componentes/ui";
+import { permite } from "../../lib/acesso/molde";
 import { FalhaDoServico, obterSessao } from "../../lib/acesso/sessao";
 import { ERROS_DA_SAIDA, lerNomes, lerSaidas, OK_DA_SAIDA } from "../../lib/caixa/saidas";
 import { centavosDoBanco } from "../../lib/dinheiro";
@@ -39,21 +40,24 @@ export default async function Caixa({ searchParams }: { searchParams: Promise<Pa
   const sessao = await obterSessao({ exigirLoja: true });
   const { supabase, usuario, situacao } = sessao;
   const unidade = situacao.unidade_id as string;
-  const [aberto, confere] = await Promise.all([
+  // VEL-b: a permissão vem no molde da sessão; o que depende só dela vai na mesma rodada do caixa aberto, e os nomes
+  // de quem pediu a saída vão junto com os movimentos. Três rodadas com o molde, em vez de quatro.
+  const confere = permite(sessao, "caixa.conferir");
+  const [aberto, fechados, paraAutorizar] = await Promise.all([
     supabase.from("caixas").select("id, aberto_em, fundo_centavos").eq("operador_id", usuario.id).eq("unidade_id", unidade).eq("situacao", "aberto").maybeSingle(),
-    supabase.rpc("tem_permissao", { p_permissao: "caixa.conferir", p_unidade: unidade }),
+    confere ? supabase.from("caixas").select("id, operador_id, fechado_em, esperado_centavos, contado_centavos, diferenca_centavos, observacao_fechamento").eq("unidade_id", unidade).eq("situacao", "fechado").order("fechado_em", { ascending: false }).limit(20) : { data: [], error: null },
+    confere ? lerSaidas(supabase, { pendentesDaLoja: unidade }) : null,
   ]);
-  if (aberto.error || confere.error) throw new FalhaDoServico("caixa");
-  const [movimentos, fechados, minhas, paraAutorizar] = await Promise.all([
+  if (aberto.error) throw new FalhaDoServico("caixa");
+  if (fechados.error) throw new FalhaDoServico("caixa_detalhes");
+  const [movimentos, minhas, nomes] = await Promise.all([
     aberto.data ? supabase.from("caixa_movimentos").select("tipo, meio, valor_centavos").eq("caixa_id", aberto.data.id) : { data: [], error: null },
-    confere.data ? supabase.from("caixas").select("id, operador_id, fechado_em, esperado_centavos, contado_centavos, diferenca_centavos, observacao_fechamento").eq("unidade_id", unidade).eq("situacao", "fechado").order("fechado_em", { ascending: false }).limit(20) : { data: [], error: null },
     aberto.data ? lerSaidas(supabase, { caixa: aberto.data.id }) : null,
-    confere.data ? lerSaidas(supabase, { pendentesDaLoja: unidade }) : null,
+    paraAutorizar?.estado === "ok" ? lerNomes(supabase, paraAutorizar.dados.map((s) => s.pedidaPor)) : new Map<string, string>(),
   ]);
-  if (movimentos.error || fechados.error) throw new FalhaDoServico("caixa_detalhes");
+  if (movimentos.error) throw new FalhaDoServico("caixa_detalhes");
   const porMeio = new Map<string, number>();
   for (const m of movimentos.data) porMeio.set(m.meio, (porMeio.get(m.meio) ?? 0) + centavosDoBanco(m.valor_centavos));
-  const nomes = paraAutorizar?.estado === "ok" ? await lerNomes(supabase, paraAutorizar.dados.map((s) => s.pedidaPor)) : new Map<string, string>();
   const meusPendentes = minhas?.estado === "ok" ? minhas.dados.filter((s) => s.situacao === "pendente").length : 0;
   // Alguém espera no balcão: o quadro de autorizar sobe para o topo.
   const urgente = paraAutorizar?.estado === "ok" && paraAutorizar.dados.some((s) => s.pedidaPor !== usuario.id);
@@ -114,7 +118,7 @@ export default async function Caixa({ searchParams }: { searchParams: Promise<Pa
 
       {!urgente && quadroDeAutorizar}
 
-      {confere.data && (
+      {confere && (
         <Cartao titulo="Caixas fechados para conferir">
           {fechados.data.length === 0 ? <p className="text-sm text-suave">Nenhum caixa fechado esperando conferência.</p> : (
             <ul className="divide-y divide-borda">

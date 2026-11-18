@@ -16,6 +16,8 @@ const cenario = vi.hoisted(() => ({
 vi.mock("next/headers", () => ({ cookies: async () => ({ getAll: () => [], set: () => undefined }) }));
 vi.mock("next/navigation", () => ({ redirect: (destino: string) => { throw new Error(`redirecionou para ${destino}`); } }));
 const sessaoFicticia = {
+  // VEL-b: as permissões vêm no molde da sessão, pela mesma regra do rpc simulado.
+  get molde() { return { permissoes: { has: () => Boolean(cenario.pode) }, nome: null, vinculos: [], pendencias: { aprovacoes: 0, notas: 0 } }; },
   usuario: { id: "eu" },
   situacao: { usuario_ativo: true, sessao_no_turno: true, unidade_id: LOJA, unidade_nome: "Santa Cândida (teste)", turno_termina_em: "2026-11-14T23:00:00Z" },
   supabase: {

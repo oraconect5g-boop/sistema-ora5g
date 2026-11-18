@@ -53,6 +53,8 @@ class Consulta {
 vi.mock("../../../lib/acesso/sessao", () => ({
   FalhaDoServico: class extends Error {},
   obterSessao: async () => ({
+    // VEL-b: as permissões vêm no molde da sessão, pela mesma regra do rpc simulado.
+    molde: { permissoes: { has: () => Boolean(cenario.pode) }, nome: null, vinculos: [], pendencias: { aprovacoes: 0, notas: 0 } },
     usuario: { id: "u" },
     situacao: { usuario_ativo: true, sessao_no_turno: true, unidade_id: LOJA, unidade_nome: "Loja A (teste)", turno_termina_em: "2026-11-15T23:00:00Z" },
     supabase: {
@@ -135,9 +137,10 @@ describe("/catalogo/lote: para onde vai cada foto (CAT-010)", () => {
       // o aparelho tem "Azul" e "azul": uma cor só, então a foto é do produto (que já tem foto)
       { sku: "APA_0001", organizacao: ORG, produto: APARELHO, variante: null, rotulo: "Galaxy A15: foto do produto", temFoto: true },
     ] });
-    // a permissão é a da foto avulsa, na loja do turno; o "_" do APA_0001 também casa APAX0001, que fica de fora na conferência
-    expect(cenario.pedidos[0]).toBe(`rpc tem_permissao {"p_permissao":"catalogo.fotos","p_unidade":"${LOJA}"}`);
-    expect(cenario.pedidos[1]).toBe("variantes sku ilike(any) ace-0001,ace-0003,apa_0001,old-0001,ace-0009,nao-existe");
+    // a permissão (a da foto avulsa, na loja do turno) veio no molde da sessão (VEL-b): o primeiro pedido já é a busca; o "_"
+    // do APA_0001 também casa APAX0001, que fica de fora na conferência
+    expect(cenario.pedidos.some((p) => p.startsWith("rpc tem_permissao"))).toBe(false);
+    expect(cenario.pedidos[0]).toBe("variantes sku ilike(any) ace-0001,ace-0003,apa_0001,old-0001,ace-0009,nao-existe");
   });
 
   it("sem permissão, nome fora do padrão ou lote grande demais: recusa sem procurar; falha de leitura é falha", async () => {

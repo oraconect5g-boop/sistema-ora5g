@@ -49,7 +49,7 @@ const cenario = vi.hoisted(() => ({
   erroDoPdv: null as { code: string } | null,
   /** O que public.loja_reservas_liberar_vencidas responde. */
   soltura: { data: 0, error: null } as { data: number | null; error: { code: string } | null },
-  /** O preço vigente de cada variação nesta loja, em centavos; "falha": a leitura do preço falha; ausente: sem preço. */
+  /** O preço vigente de cada variação nesta loja, em centavos; "falha": a leitura dos preços falha; ausente: sem preço. */
   precos: {} as Record<string, number | "falha">,
   /** As fotos que a tela pediu para assinar. */
   assinaturas: [] as { deposito: string; caminhos: string[]; segundos: number }[],
@@ -122,11 +122,16 @@ const supabase = {
     registrar(`funcao:${nome}`);
     if (nome === "pdv_tela") return responder(cenario.erroDoPdv ? { data: null, error: cenario.erroDoPdv } : { data: cenario.pdv, error: null });
     if (nome === "loja_reservas_liberar_vencidas") return responder(cenario.soltura);
-    if (nome === "preco_vigente") {
-      // O preço é o da loja do turno: pedido para outra loja, não há preço.
-      const preco = argumentos.p_unidade === LOJA ? cenario.precos[String(argumentos.p_variante)] : undefined;
-      if (preco === "falha") return responder({ data: null, error: { code: "57014" } });
-      return responder({ data: preco ?? null, error: null });
+    // VEL-b: o preço de todos os resultados num pedido só; perguntar um a um quebra o teste.
+    if (nome === "preco_vigente") throw new Error("a busca do PDV perguntou o preço de um resultado por vez");
+    if (nome === "precos_vigentes") {
+      // O preço é o da loja do turno: pedido para outra loja, não há preço. Só volta a variação que tem preço.
+      const variantes = [...new Set((argumentos.p_variantes as string[] | undefined) ?? [])];
+      if (variantes.some((v) => cenario.precos[v] === "falha")) return responder({ data: null, error: { code: "57014" } });
+      const linhas = argumentos.p_unidade === LOJA
+        ? variantes.flatMap((v) => { const preco = cenario.precos[v]; return typeof preco === "number" ? [{ variante_id: v, preco_centavos: preco }] : []; })
+        : [];
+      return responder({ data: linhas, error: null });
     }
     return responder({ data: null, error: { code: "PGRST202" } });
   },
@@ -315,7 +320,7 @@ describe("as idas ao banco para abrir o PDV (VEL-a)", () => {
       [...PRIMEIRA_IDA, ...CATALOGO],
       ["tabela:variantes"], // o catálogo: as variações do produto achado pelo nome
       ["tabela:variantes"], // a tela: os oito primeiros resultados, com o tipo do produto
-      ["funcao:preco_vigente", "funcao:preco_vigente", "tabela:estoque_saldos", "tabela:fotos_produto", "tabela:itens_serializados"],
+      ["funcao:precos_vigentes", "tabela:estoque_saldos", "tabela:fotos_produto", "tabela:itens_serializados"],
       ["fotos:assinar"],
     ]);
   });
@@ -327,7 +332,7 @@ describe("as idas ao banco para abrir o PDV (VEL-a)", () => {
       ["tabela:produtos"],
       ["tabela:variantes"],
       ["tabela:variantes"],
-      ["funcao:preco_vigente", "tabela:estoque_saldos", "tabela:fotos_produto", "tabela:itens_serializados"],
+      ["funcao:precos_vigentes", "tabela:estoque_saldos", "tabela:fotos_produto", "tabela:itens_serializados"],
     ]);
   });
 
@@ -339,7 +344,7 @@ describe("as idas ao banco para abrir o PDV (VEL-a)", () => {
     expect(depois).toEqual([
       ["tabela:variantes"],
       ["tabela:variantes"],
-      ["funcao:preco_vigente", "tabela:estoque_saldos", "tabela:fotos_produto", "tabela:itens_serializados"],
+      ["funcao:precos_vigentes", "tabela:estoque_saldos", "tabela:fotos_produto", "tabela:itens_serializados"],
     ]);
   });
 
@@ -348,7 +353,7 @@ describe("as idas ao banco para abrir o PDV (VEL-a)", () => {
     expect(rodadas()).toEqual([
       PRIMEIRA_IDA,
       ["tabela:itens_serializados"],
-      ["funcao:preco_vigente", "tabela:estoque_saldos", "tabela:fotos_produto"],
+      ["funcao:precos_vigentes", "tabela:estoque_saldos", "tabela:fotos_produto"],
     ]);
   });
 
@@ -361,7 +366,7 @@ describe("as idas ao banco para abrir o PDV (VEL-a)", () => {
     expect(pedidos).not.toContain("tabela:estoque_saldos");
     expect(pedidos).not.toContain("tabela:itens_serializados");
     expect(pedidos).not.toContain("tabela:fotos_produto");
-    expect(pedidos).not.toContain("funcao:preco_vigente");
+    expect(pedidos).not.toContain("funcao:precos_vigentes");
     expect(pedidos).not.toContain("fotos:assinar");
   });
 
@@ -585,13 +590,9 @@ describe("a busca de produto dentro da venda", () => {
     expect(formularios(arvore, adicionarItem).map((f) => f.escondidos.variante)).toEqual([V_AZUL]);
   });
 
-  it("leitura do preço de uma variação que falha: só ela fica sem preço; as outras seguem", async () => {
+  it("a leitura dos preços falha: página de erro, nunca \"sem preço\" inventado para todos os resultados", async () => {
     cenario.precos = { [V_AZUL]: "falha", [V_CAPA]: 6_900 };
-    const arvore = await abrir({ q: "galaxy" });
-    const t = texto(arvore);
-    expect(t).toContain("APA-0001 · sem preço nesta loja");
-    expect(t).toContain("ACE-0001 · R$ 69,00");
-    expect(formularios(arvore, adicionarItem).map((f) => f.escondidos.variante)).toEqual([V_CAPA]);
+    await expect(abrir({ q: "galaxy" })).rejects.toThrow("Falha ao consultar o serviço (precos)");
   });
 
   it("o termo perde o que o filtro do banco leria como curinga, e volta para o campo de busca", async () => {

@@ -2,6 +2,7 @@
 // linha por acesso ativo, e os convites em andamento, das redes em que quem pede é dono ou administrador. A permissão é
 // a da tela (usuarios.gerir) e o banco confere cada linha de novo (RLS). Tudo em páginas abaixo do teto da API; uma
 // leitura que falha, ou mais linhas que o limite, derruba o arquivo (equipe pela metade passaria por completa).
+import { permite } from "../../../lib/acesso/molde";
 import { FalhaDoServico, obterSessao } from "../../../lib/acesso/sessao";
 import { formatoPedido, geradoEm, parteDoNome } from "../../../lib/csv";
 import { LIMITE_DA_PLANILHA_DA_EQUIPE as LIMITE, planilhaDaEquipe, SITUACOES_DO_CONVITE } from "../../../lib/equipe/planilha";
@@ -16,9 +17,8 @@ export async function GET(pedido: Request) {
   const url = new URL(pedido.url);
   const sessao = await obterSessao({ exigirLoja: true });
   const { supabase, usuario } = sessao;
-  const permitido = await supabase.rpc("tem_permissao", { p_permissao: "usuarios.gerir" });
-  if (permitido.error) throw new FalhaDoServico("tem_permissao");
-  if (!permitido.data) return texto("Sem permissão para exportar a equipe.", 403);
+  const permitido = permite(sessao, "usuarios.gerir");
+  if (!permitido) return texto("Sem permissão para exportar a equipe.", 403);
 
   // As redes em que quem pede é dono ou administrador (as mesmas da tela).
   const meus = await supabase.from("vinculos").select("organizacao_id, papel").eq("usuario_id", usuario.id).eq("escopo", "organizacao").is("fim", null);

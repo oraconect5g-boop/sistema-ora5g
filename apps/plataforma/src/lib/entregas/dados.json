@@ -391,6 +391,20 @@
         "ORA-ONLINE-006"
       ],
       "entrega": "o carrinho e o pedido do site, reservado de uma vez para retirar e pagar na loja (ADR-023; aceites A03 e A06 do adendo de 16/11)",
+      "commit": "cc50523",
+      "publicado_em": "2026-11-18",
+      "pedido_em": null,
+      "resposta": null,
+      "respondido_em": null
+    },
+    {
+      "lote": "VEL-b",
+      "roteiro": "docs/aceite/VEL-b.md",
+      "requisitos": [
+        "ORA-QUAL-010",
+        "ORA-POS-002"
+      ],
+      "entrega": "as permissões do molde da sessão em 46 arquivos, o preço em lote na busca do PDV e o Caixa em três rodadas (ADR-010, \"O que veio no VEL-b\")",
       "commit": null,
       "publicado_em": null,
       "pedido_em": null,

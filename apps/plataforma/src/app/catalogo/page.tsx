@@ -5,6 +5,7 @@ import Link from "next/link";
 
 import { MoldeReal } from "../../componentes/MoldeReal";
 import { Aviso, Botao, Cartao, Selo, TituloPagina } from "../../componentes/ui";
+import { permite } from "../../lib/acesso/molde";
 import { FalhaDoServico, obterSessao } from "../../lib/acesso/sessao";
 import { buscarNoCatalogo, termoDaBusca } from "../../lib/catalogo/busca";
 import { nomeCurtoDoTipo } from "../../lib/catalogo/cadastro";
@@ -34,12 +35,12 @@ export default async function Catalogo({ searchParams }: { searchParams: Promise
   // Busca na fonte, ANTES do limite (REV-038, #40): nome do produto, SKU ou nome da variante, a
   // mesma do estoque e do PDV (lib/catalogo/busca.ts).
   const termo = termoDaBusca(busca);
-  const [podeEnviar, pendencias, achados] = await Promise.all([
-    supabase.rpc("tem_permissao", { p_permissao: "catalogo.fotos", p_unidade: unidade }),
+  const podeEnviar = permite(sessao, "catalogo.fotos");
+  const [pendencias, achados] = await Promise.all([
     supabase.rpc("pendencias_de_foto"),
     termo ? buscarNoCatalogo(supabase, termo, { limite: LIMITE }) : Promise.resolve(null),
   ]);
-  if (podeEnviar.error || pendencias.error) throw new FalhaDoServico("catalogo");
+  if (pendencias.error) throw new FalhaDoServico("catalogo");
   const pendentesPorProduto = new Set(pendencias.data.map((p) => p.produto_id));
   let ids: string[] | null = achados ? achados.produtos : null;
   if (soPendentes) ids = (ids ?? [...pendentesPorProduto]).filter((id) => pendentesPorProduto.has(id));
@@ -77,7 +78,7 @@ export default async function Catalogo({ searchParams }: { searchParams: Promise
     const s = saldos.data.find((x) => x.variante_id === variante);
     return s ? inteiroDoBanco(s.quantidade) - inteiroDoBanco(s.reservado) : 0;
   };
-  const configuracao = podeEnviar.data ? configuracaoSupabase() : null;
+  const configuracao = podeEnviar ? configuracaoSupabase() : null;
   const lista = produtos.data;
 
   return (

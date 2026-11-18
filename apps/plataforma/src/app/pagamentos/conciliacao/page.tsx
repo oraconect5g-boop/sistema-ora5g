@@ -7,6 +7,7 @@ import { MEIOS } from "@ora5g/dominio";
 
 import { MoldeReal } from "../../../componentes/MoldeReal";
 import { Aviso, Botao, Cartao, Selo, TituloPagina } from "../../../componentes/ui";
+import { permite } from "../../../lib/acesso/molde";
 import { FalhaDoServico, obterSessao } from "../../../lib/acesso/sessao";
 import { brl } from "../../../lib/formato";
 import { ERROS_DOS_PAGAMENTOS, periodoDaConciliacao, SITUACOES_DO_DINHEIRO, type SituacaoDoDinheiro } from "../../../lib/pagamentos/regras";
@@ -36,9 +37,8 @@ export default async function Conciliacao({ searchParams }: { searchParams: Prom
   const { inicio, fim } = periodoDaConciliacao(textoDoParametro(parametros.inicio), textoDoParametro(parametros.fim), hoje);
   const sessao = await obterSessao({ exigirLoja: true });
   const { supabase, situacao } = sessao;
-  const pode = await supabase.rpc("tem_permissao", { p_permissao: "pagamento.conciliar", p_unidade: situacao.unidade_id as string });
-  if (pode.error) throw new FalhaDoServico("tem_permissao");
-  if (!pode.data) return <MoldeReal sessao={sessao}><Aviso tom="aviso" className="mt-6">Conciliar pagamentos é da gerência da loja.</Aviso></MoldeReal>;
+  const pode = permite(sessao, "pagamento.conciliar");
+  if (!pode) return <MoldeReal sessao={sessao}><Aviso tom="aviso" className="mt-6">Conciliar pagamentos é da gerência da loja.</Aviso></MoldeReal>;
   const resposta = await supabase.rpc("pagamentos_do_periodo", { p_inicio: inicio, p_fim: fim });
   if (resposta.error) throw new FalhaDoServico("pagamentos_do_periodo");
   const { totais, pagamentos } = resposta.data as unknown as { totais: Partial<Record<SituacaoDoDinheiro, { quantidade: number; valor: number; liquido: number | null }>>; pagamentos: Linha[] };

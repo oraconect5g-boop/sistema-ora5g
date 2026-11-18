@@ -6,6 +6,7 @@ import Link from "next/link";
 
 import { MoldeReal } from "../../../componentes/MoldeReal";
 import { Aviso, Botao, BotaoLink, Cartao, Selo, TituloPagina } from "../../../componentes/ui";
+import { permite } from "../../../lib/acesso/molde";
 import { FalhaDoServico, obterSessao } from "../../../lib/acesso/sessao";
 import { ERROS_DO_CRM, TIPOS_DE_ATIVIDADE } from "../../../lib/crm/regras";
 import { chaveDoCatalogo, type ValorDeParametro } from "../../../lib/parametros";
@@ -30,9 +31,8 @@ export default async function Agenda({ searchParams }: { searchParams: Promise<{
   const erro = chaveDoCatalogo(ERROS_DO_CRM, parametros.erro);
   const sessao = await obterSessao({ exigirLoja: true });
   const { supabase, situacao } = sessao;
-  const atende = await supabase.rpc("tem_permissao", { p_permissao: "crm.atender", p_unidade: situacao.unidade_id as string });
-  if (atende.error) throw new FalhaDoServico("tem_permissao");
-  if (!atende.data) return <MoldeReal sessao={sessao}><Aviso tom="aviso" className="mt-6">Seu papel não atende clientes nesta loja.</Aviso></MoldeReal>;
+  const atende = permite(sessao, "crm.atender");
+  if (!atende) return <MoldeReal sessao={sessao}><Aviso tom="aviso" className="mt-6">Seu papel não atende clientes nesta loja.</Aviso></MoldeReal>;
   const agenda = await supabase.rpc("crm_agenda");
   if (agenda.error) throw new FalhaDoServico("crm_agenda");
   const { gerencia, atividades } = agenda.data as unknown as { gerencia: boolean; atividades: Atividade[] };

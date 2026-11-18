@@ -2,7 +2,8 @@ import type { Metadata } from "next";
 
 import { MoldeReal } from "../../../componentes/MoldeReal";
 import { Aviso, TituloPagina } from "../../../componentes/ui";
-import { FalhaDoServico, obterSessao } from "../../../lib/acesso/sessao";
+import { permite } from "../../../lib/acesso/molde";
+import { obterSessao } from "../../../lib/acesso/sessao";
 import { consultarRecebiveis, lerFiltro } from "../../../lib/pagamentos/recebiveis";
 import type { ValorDeParametro } from "../../../lib/parametros";
 import { ConteudoRecebiveis } from "./ConteudoRecebiveis";
@@ -17,10 +18,9 @@ export const dynamic = "force-dynamic";
 export default async function Recebiveis({ searchParams }: { searchParams: Promise<{ loja?: ValorDeParametro; dias?: ValorDeParametro }> }) {
   const filtro = lerFiltro(await searchParams);
   const sessao = await obterSessao({ exigirLoja: true });
-  const { supabase, situacao } = sessao;
-  const pode = await supabase.rpc("tem_permissao", { p_permissao: "pagamento.conciliar", p_unidade: situacao.unidade_id as string });
-  if (pode.error) throw new FalhaDoServico("tem_permissao");
-  if (!pode.data) return <MoldeReal sessao={sessao}><Aviso tom="aviso" className="mt-6">Os recebíveis são de quem concilia os pagamentos da loja (dono e gerente).</Aviso></MoldeReal>;
+  const { supabase } = sessao;
+  const pode = permite(sessao, "pagamento.conciliar");
+  if (!pode) return <MoldeReal sessao={sessao}><Aviso tom="aviso" className="mt-6">Os recebíveis são de quem concilia os pagamentos da loja (dono e gerente).</Aviso></MoldeReal>;
   const leitura = await consultarRecebiveis(supabase, filtro);
 
   return (

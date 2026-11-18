@@ -76,10 +76,33 @@ Medido no servidor da homologação, as causas são quatro:
   - (4) tira-se a chamada em `instrumentation.ts`;
   - (5) é só tela: volta com o código;
   - (6) a variável fica vazia.
-- O que vem depois (VEL-b):
-  - os 44 arquivos que ainda perguntam `tem_permissao` um a um;
-  - uma leitura por tela para Vendas, Estoque, Catálogo, Clientes e Caixa;
-  - o preço em lote na busca do PDV;
-  - a ação do carrinho ainda lê a sessão duas vezes, na ação e na tela que volta;
-  - medir se um pedido leve periódico mantém a ida rápida depois de um minuto parado (não foi feito);
-  - avaliar a navegação instantânea do Next.
+- O que veio no VEL-b (18/11; nenhuma decisão acima muda):
+  - **As permissões vêm do molde.**
+    - Antes, 47 arquivos faziam 79 perguntas de permissão ao banco, uma a uma. Em 46 deles, 73 perguntas eram sobre a loja do turno ou a rede.
+    - O molde passou a trazer as 12 permissões que faltavam: são 45 ao todo, abaixo do limite de 80.
+    - As telas, as rotas e as ações leem `permite(sessao, "...")` (`apps/plataforma/src/lib/acesso/molde.ts`).
+    - Por que vale: perguntar na loja do turno ou sem loja dá a mesma resposta numa sessão. O vínculo de organização vale sem loja e em toda loja dela; o de loja só vale na loja do turno. Está provado para o catálogo inteiro de permissões e todos os papéis em `packages/banco/src/sessao-molde-e-pdv.test.ts`.
+    - Continuam indo ao banco só as perguntas sobre outra loja: a da venda, em `/vendas/[id]`, e a do inventário, em `/estoque/inventario/[id]`.
+    - O teste `apps/plataforma/src/permissoes-do-molde.test.ts` impede que uma tela nova volte a perguntar.
+  - **O preço da busca do PDV numa ida.**
+    - A função nova `public.precos_vigentes` chama `preco_vigente` para cada variação, sem outra regra de preço (migration `20261118095048_precos_em_lote`).
+    - Até 9 pedidos ao mesmo tempo viraram 1.
+    - Se a leitura falha, a tela mostra a página de erro: escrever "sem preço" em todos os resultados seria falso.
+  - **O Caixa em 3 rodadas, contando o molde.**
+    - Os caixas fechados e as saídas a autorizar vêm junto com o caixa aberto.
+    - Os nomes de quem pediu a saída vêm junto com os movimentos.
+    - Antes eram 4 rodadas quando havia saída a autorizar.
+  - **O efeito, pela conta das rodadas:**
+    - Clientes, de 3 para 2;
+    - Vendas, de 4 ou 5 para 3 ou 4;
+    - o painel do Estoque, de 4 para 3;
+    - o Ora Connect e as Transferências fazem 4 e 2 pedidos a menos ao mesmo tempo.
+  - **A medida com login** é feita depois da publicação, pelo log de tempos, com `scripts/idas-por-tela.mjs`. O "antes", tirado do mesmo log, está na seção 4.7 do documento de desempenho.
+- O que fica para depois (VEL-c):
+  - **A ação do carrinho ainda lê a sessão duas vezes.**
+    - Tirar a leitura do molde da ação deixaria só o banco decidindo a sessão naquela ação. Ele já decide em cada função.
+    - Como isso muda a camada de segurança das ações do PDV, espera a revisão do Codex e o sim do proprietário.
+  - **A leitura única do Catálogo e do Estoque.** Hoje são 3 a 5 rodadas, de 0,8 a 1,5 s no banco, pelo log.
+  - **O sino de avisos (`/api/pendencias`) e o Início.** São 17 a 28 pedidos ao mesmo tempo a cada abertura, de 0,7 a 1,5 s pelo log: é o maior ganho que sobra.
+  - **A conexão parada.** Medir se um pedido leve periódico mantém a ida rápida depois de um minuto parado (não foi feito).
+  - **A navegação instantânea do Next.** Avaliar.

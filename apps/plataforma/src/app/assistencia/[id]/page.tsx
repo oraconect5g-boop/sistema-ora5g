@@ -11,7 +11,8 @@ import { MoldeReal } from "../../../componentes/MoldeReal";
 import { EstadoDoPainel } from "../../../componentes/paineis-de-vendas";
 import { Aviso, Cartao, ListaDados, Selo, TituloPagina } from "../../../componentes/ui";
 import { ehUuid } from "../../../lib/acesso/regras";
-import { FalhaDoServico, obterSessao } from "../../../lib/acesso/sessao";
+import { permite } from "../../../lib/acesso/molde";
+import { obterSessao } from "../../../lib/acesso/sessao";
 import { assistenciasDaRede, lerOrdem, type CobrancaDaOs, type OrcamentoDaOs, type OrdemDeServico, type PecaDaOs } from "../../../lib/assistencia/consulta";
 import {
   ACESSORIOS, atrasada, CANAIS_DE_RESPOSTA, ERROS_DA_OS, EVENTOS, LINHAS_DE_PECAS, LOCAIS, PASSOS, SERVICOS, SITUACOES, SITUACOES_DO_ORCAMENTO, type Passo, type ServicoDaOs,
@@ -52,8 +53,9 @@ export default async function Ordem({ params, searchParams }: { params: Promise<
   const sessao = await obterSessao({ exigirLoja: true });
   const { supabase, situacao } = sessao;
   const unidade = situacao.unidade_id as string;
-  const [abrir, gerir, orcar] = await Promise.all(["os.abrir", "os.gerir", "os.orcar"].map((p) => supabase.rpc("tem_permissao", { p_permissao: p, p_unidade: unidade })));
-  if (abrir?.error || gerir?.error || orcar?.error) throw new FalhaDoServico("tem_permissao");
+  const abrir = permite(sessao, "os.abrir");
+  const gerir = permite(sessao, "os.gerir");
+  const orcar = permite(sessao, "os.orcar");
   const leitura = await lerOrdem(supabase, id);
   if (leitura.estado === "nao_encontrada") notFound();
   if (leitura.estado !== "ok") {
@@ -61,7 +63,7 @@ export default async function Ordem({ params, searchParams }: { params: Promise<
   }
   const { os, eventos, fotos, nomes, servico, orcamentos, cobranca, pecas } = leitura;
   const daLoja = os.unidade_id === unidade;
-  const pela = { loja: daLoja && Boolean(abrir?.data), gerencia: daLoja && Boolean(gerir?.data), tecnico: os.assistencia_id === unidade && Boolean(orcar?.data) };
+  const pela = { loja: daLoja && Boolean(abrir), gerencia: daLoja && Boolean(gerir), tecnico: os.assistencia_id === unidade && Boolean(orcar) };
   const aberta = os.situacao === "aberta";
   const voltouDoTecnico = eventos.some((e) => e.tipo === "recebida_na_loja");
   const foiAoTecnico = eventos.some((e) => e.tipo === "enviada_ao_tecnico");

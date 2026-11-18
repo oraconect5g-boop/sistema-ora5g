@@ -8,6 +8,7 @@ import { NOMES_DAS_OPERACOES, SITUACOES_OPERACAO, TIPOS_OPERACAO, type SituacaoO
 import { MoldeReal } from "../../componentes/MoldeReal";
 import { PainelDaProducao } from "../../componentes/paineis-do-connect";
 import { Aviso, Botao, Cartao, FiltroSegmentado, Selo, TituloPagina, type Tom } from "../../componentes/ui";
+import { permite } from "../../lib/acesso/molde";
 import { FalhaDoServico, obterSessao } from "../../lib/acesso/sessao";
 import { consultarProducao } from "../../lib/connect/consulta-producao";
 import { ERROS_DO_CONNECT, inicioDaJanela } from "../../lib/connect/regras";
@@ -48,11 +49,11 @@ export default async function Connect({ searchParams }: { searchParams: Promise<
   const unidade = situacao.unidade_id as string;
   const seteDias = inicioDaJanela(7);
 
-  const [opera, gere, integra, veCusto, habilitacoes, referencias, operacoes, pagos] = await Promise.all([
-    supabase.rpc("tem_permissao", { p_permissao: "connect.operar", p_unidade: unidade }),
-    supabase.rpc("tem_permissao", { p_permissao: "connect.gerir", p_unidade: unidade }),
-    supabase.rpc("tem_permissao", { p_permissao: "integracoes.gerir", p_unidade: unidade }),
-    supabase.rpc("tem_permissao", { p_permissao: "custo.ver", p_unidade: unidade }),
+  const opera = permite(sessao, "connect.operar");
+  const gere = permite(sessao, "connect.gerir");
+  const integra = permite(sessao, "integracoes.gerir");
+  const veCusto = permite(sessao, "custo.ver");
+  const [habilitacoes, referencias, operacoes, pagos] = await Promise.all([
     supabase.from("connect_habilitacoes").select("tipo, habilitada, evidencia, alterado_em"),
     supabase.from("connect_referencias").select("tipo, codigo, nome, uf, valor_centavos").eq("ativo", true).order("nome").limit(3000),
     supabase.from("connect_operacoes").select("id, numero, tipo, situacao, vendedor_id, metodo_pagamento, iccid, esim, linha, linha_doadora, plano_nome, valor_face_centavos, recebido_na_loja_centavos, venda_item_id, cliente_nome, documento_mascarado, link_pagamento, link_esim, numero_ativado, mensagem_operadora, evidencia, motivo_resolucao, criado_em")
@@ -60,16 +61,16 @@ export default async function Connect({ searchParams }: { searchParams: Promise<
     supabase.from("venda_itens").select("id, tipo, preco_unitario_centavos, quantidade, desconto_centavos, vendas!inner(numero, situacao, unidade_id, concluida_em)")
       .in("tipo", ["ativacao", "recarga", "portabilidade"]).eq("vendas.situacao", "concluida").eq("vendas.unidade_id", unidade).gte("vendas.concluida_em", seteDias).limit(50),
   ]);
-  if (opera.error || gere.error || integra.error || veCusto.error || habilitacoes.error || referencias.error || operacoes.error || pagos.error) throw new FalhaDoServico("connect");
+  if (habilitacoes.error || referencias.error || operacoes.error || pagos.error) throw new FalhaDoServico("connect");
   // Débito da carteira é custo (#56): só para quem tem custo.ver, lido da tabela própria (o RLS também barra).
-  const custos = veCusto.data && operacoes.data.length
+  const custos = veCusto && operacoes.data.length
     ? await supabase.from("connect_operacoes_custos").select("operacao_id, valor_debitado_centavos").in("operacao_id", operacoes.data.map((o) => o.id))
     : { data: [], error: null };
   if (custos.error) throw new FalhaDoServico("connect_custos");
   // Produção do período (lote G4a), somada no banco: a loja para quem gere; só a própria para quem opera.
   const periodo = periodoFinanceiro(textoDoParametro(parametros.periodo));
-  const producao = opera.data || gere.data
-    ? await consultarProducao(supabase, janelasDoPeriodo(periodo).atual, { unidade, vendedor: gere.data ? null : usuario.id })
+  const producao = opera || gere
+    ? await consultarProducao(supabase, janelasDoPeriodo(periodo).atual, { unidade, vendedor: gere ? null : usuario.id })
     : null;
   const enderecoDoPeriodo = (p: string) => (p === "hoje" ? "/connect" : `/connect?periodo=${p}`);
   const debitoDe = (id: string) => custos.data.find((c) => c.operacao_id === id)?.valor_debitado_centavos ?? null;
@@ -109,7 +110,7 @@ export default async function Connect({ searchParams }: { searchParams: Promise<
       {ok && <Aviso tom="sucesso">{OK[ok]}</Aviso>}
       {producao && (
         <PainelDaProducao
-          producao={producao} veCusto={veCusto.data === true} aqui={enderecoDoPeriodo(periodo)}
+          producao={producao} veCusto={veCusto} aqui={enderecoDoPeriodo(periodo)}
           filtro={<FiltroSegmentado rotulo="Período" opcoes={ORDEM_DOS_PERIODOS.map((p) => ({ href: enderecoDoPeriodo(p), rotulo: PERIODOS_FINANCEIROS[p].rotulo, ativo: p === periodo }))} />}
         />
       )}
@@ -124,9 +125,9 @@ export default async function Connect({ searchParams }: { searchParams: Promise<
         {habilitada.size > 0 && semListas && <p className="mt-3 text-sm text-suave">Os planos da Nogle ainda não foram carregados pelo servidor.</p>}
       </Cartao>
 
-      {!opera.data && <Aviso tom="aviso">Seu papel não registra operações da Ora Connect nesta loja.</Aviso>}
+      {!opera && <Aviso tom="aviso">Seu papel não registra operações da Ora Connect nesta loja.</Aviso>}
 
-      {opera.data && habilitada.has("ativacao") && !semListas && (
+      {opera && habilitada.has("ativacao") && !semListas && (
         <details className="rounded-cartao border border-borda bg-white p-4">
           <summary className="cursor-pointer font-semibold"><Smartphone aria-hidden className="mr-1 inline size-4" /> Ativar chip</summary>
           <p className="mt-2 text-xs text-suave">Chip do estoque: venda o chip no PDV antes. Os dados do cliente vão só para a Nogle e saem do sistema depois do envio.</p>
@@ -157,7 +158,7 @@ export default async function Connect({ searchParams }: { searchParams: Promise<
         </details>
       )}
 
-      {opera.data && habilitada.has("recarga") && !semListas && (
+      {opera && habilitada.has("recarga") && !semListas && (
         <details className="rounded-cartao border border-borda bg-white p-4">
           <summary className="cursor-pointer font-semibold"><Zap aria-hidden className="mr-1 inline size-4" /> Recarga</summary>
           <form action={registrarOperacao} className="mt-3 grid gap-3 sm:grid-cols-2">
@@ -170,7 +171,7 @@ export default async function Connect({ searchParams }: { searchParams: Promise<
         </details>
       )}
 
-      {opera.data && habilitada.has("portabilidade") && lista("operadora").length > 0 && (
+      {opera && habilitada.has("portabilidade") && lista("operadora").length > 0 && (
         <details className="rounded-cartao border border-borda bg-white p-4">
           <summary className="cursor-pointer font-semibold"><ArrowLeftRight aria-hidden className="mr-1 inline size-4" /> Portabilidade</summary>
           <p className="mt-2 text-xs text-suave">O cliente aceita pelo SMS que chega na linha da outra operadora. A troca leva até 3 dias úteis depois do aceite.</p>
@@ -189,14 +190,14 @@ export default async function Connect({ searchParams }: { searchParams: Promise<
         </details>
       )}
 
-      <Cartao titulo={gere.data ? "Operações da loja" : "Minhas operações"} subtitulo="As 30 mais recentes">
+      <Cartao titulo={gere ? "Operações da loja" : "Minhas operações"} subtitulo="As 30 mais recentes">
         {operacoes.data.length === 0 ? <p className="text-sm text-suave">Nenhuma operação registrada.</p> : (
           <ul className="divide-y divide-borda">
             {operacoes.data.map((o) => {
               const s = ehSituacao(o.situacao) ? o.situacao : "registrada";
               const Icone = ICONES[o.tipo as TipoOperacao] ?? Zap;
               const evidencia = o.evidencia as { mensagem?: string; consultado_em?: string } | null;
-              const decide = gere.data && o.vendedor_id !== usuario.id && (s === "resultado_desconhecido" || s === "erro_operadora");
+              const decide = gere && o.vendedor_id !== usuario.id && (s === "resultado_desconhecido" || s === "erro_operadora");
               return (
                 <li key={o.id} className="space-y-1 py-3 text-sm">
                   <div className="flex flex-wrap items-center justify-between gap-2">
@@ -222,7 +223,7 @@ export default async function Connect({ searchParams }: { searchParams: Promise<
                   {o.mensagem_operadora && <p className="text-xs text-suave">Nogle: {o.mensagem_operadora}</p>}
                   {evidencia?.mensagem && <p className="text-xs text-suave">Última consulta{evidencia.consultado_em ? ` (${quando(evidencia.consultado_em)})` : ""}: {evidencia.mensagem}</p>}
                   {o.motivo_resolucao && <p className="text-xs text-suave">Motivo registrado: {o.motivo_resolucao}</p>}
-                  {s === "registrada" && (o.vendedor_id === usuario.id || gere.data) && (
+                  {s === "registrada" && (o.vendedor_id === usuario.id || gere) && (
                     <form action={cancelarOperacao} className="flex flex-wrap items-end gap-2">
                       <input type="hidden" name="operacao" value={o.id} />
                       <label className="text-xs font-medium">Motivo<input name="motivo" required minLength={3} className={campo} /></label>
@@ -250,7 +251,7 @@ export default async function Connect({ searchParams }: { searchParams: Promise<
         )}
       </Cartao>
 
-      {integra.data && (
+      {integra && (
         <Cartao titulo="Liberar operações (integrações)" subtitulo="Só depois de homologar com a Nogle; a evidência fica na auditoria" icone={ShieldCheck}>
           <form action={habilitarOperacao} className="grid gap-3 sm:grid-cols-3">
             <label className={rotulo}>Operação

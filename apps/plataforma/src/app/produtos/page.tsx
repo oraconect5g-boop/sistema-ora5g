@@ -7,6 +7,7 @@ import Link from "next/link";
 
 import { MoldeReal } from "../../componentes/MoldeReal";
 import { Aviso, Botao, Cartao, Selo, TituloPagina } from "../../componentes/ui";
+import { permite } from "../../lib/acesso/molde";
 import { FalhaDoServico, obterSessao } from "../../lib/acesso/sessao";
 import { termoDaBusca, buscarNoCatalogo } from "../../lib/catalogo/busca";
 import { ERROS_DO_CADASTRO, TEM_ESTOQUE, TIPOS_DE_PRODUTO, ehTipoDeProduto, percentualDosPontosBase } from "../../lib/catalogo/cadastro";
@@ -67,12 +68,9 @@ export default async function Produtos({ searchParams }: {
   const sessao = await obterSessao({ exigirLoja: true });
   const { supabase } = sessao;
 
-  const [gerir, preco] = await Promise.all([
-    supabase.rpc("tem_permissao", { p_permissao: "catalogo.gerir" }),
-    supabase.rpc("tem_permissao", { p_permissao: "preco.alterar" }),
-  ]);
-  if (gerir.error || preco.error) throw new FalhaDoServico("tem_permissao");
-  if (!gerir.data) {
+  const gerir = permite(sessao, "catalogo.gerir");
+  const preco = permite(sessao, "preco.alterar");
+  if (!gerir) {
     return (
       <MoldeReal sessao={sessao}>
         <Cartao titulo="Sem permissão" icone={ShieldAlert}>
@@ -251,7 +249,7 @@ export default async function Produtos({ searchParams }: {
       {lista.length === LIMITE && <Aviso tom="info" className="mt-3">Mostrando {LIMITE} produtos{busca ? " desta busca; refine o termo" : " mais recentes; use a busca"}.</Aviso>}
 
       <section id="categorias" className="mt-6 scroll-mt-24">
-        <Cartao titulo="Categorias" subtitulo={preco.data ? "A política de desconto (teto e margem mínima) liga o desconto real das vendas da categoria." : "A política de desconto é definida por quem altera preços."} icone={Tags}>
+        <Cartao titulo="Categorias" subtitulo={preco ? "A política de desconto (teto e margem mínima) liga o desconto real das vendas da categoria." : "A política de desconto é definida por quem altera preços."} icone={Tags}>
           <ul className="divide-y divide-borda">
             {cats.map((c) => (
               <li key={c.id} className="space-y-1 py-2 text-sm">
@@ -267,7 +265,7 @@ export default async function Produtos({ searchParams }: {
                     <div className="sm:col-span-2"><Motivo exemplo="Novo nome da categoria" /></div>
                     <Botao type="submit" tamanho="sm" className="sm:col-span-2">Salvar categoria</Botao>
                   </form>
-                  {preco.data && (
+                  {preco && (
                     <form action={definirPolitica} className="mt-3 grid gap-2 rounded-xl bg-fundo p-3 sm:grid-cols-2">
                       <input type="hidden" name="categoria" value={c.id} />{ocultoBusca}
                       <label className={rotulo}>Desconto máximo (%)<input name="teto" inputMode="decimal" defaultValue={percentualDosPontosBase(c.desconto_teto_pb)} placeholder="vazio = desligado" className={campo} /></label>

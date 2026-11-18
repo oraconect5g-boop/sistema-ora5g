@@ -8,6 +8,7 @@ import { BotaoConfirmar } from "../../../componentes/BotaoConfirmar";
 import { MoldeReal } from "../../../componentes/MoldeReal";
 import { Aviso, Cartao, TituloPagina } from "../../../componentes/ui";
 import { ehUuid } from "../../../lib/acesso/regras";
+import { permite } from "../../../lib/acesso/molde";
 import { FalhaDoServico, obterSessao } from "../../../lib/acesso/sessao";
 import { ACESSORIOS, ERROS_DA_OS, somarDias } from "../../../lib/assistencia/regras";
 import { chaveDoCatalogo, textoDoParametro, type ValorDeParametro } from "../../../lib/parametros";
@@ -28,9 +29,8 @@ export default async function NovaOrdem({ searchParams }: { searchParams: Promis
   const hoje = new Intl.DateTimeFormat("en-CA", { timeZone: "America/Sao_Paulo" }).format(new Date());
   const sessao = await obterSessao({ exigirLoja: true });
   const { supabase, situacao } = sessao;
-  const pode = await supabase.rpc("tem_permissao", { p_permissao: "os.abrir", p_unidade: situacao.unidade_id as string });
-  if (pode.error) throw new FalhaDoServico("tem_permissao");
-  if (!pode.data) return <MoldeReal sessao={sessao}><Aviso tom="aviso" className="mt-6">Abrir ordem de serviço é de quem recebe aparelhos na loja.</Aviso></MoldeReal>;
+  const pode = permite(sessao, "os.abrir");
+  if (!pode) return <MoldeReal sessao={sessao}><Aviso tom="aviso" className="mt-6">Abrir ordem de serviço é de quem recebe aparelhos na loja.</Aviso></MoldeReal>;
   if (!ehUuid(clienteId)) {
     return (
       <MoldeReal sessao={sessao}>

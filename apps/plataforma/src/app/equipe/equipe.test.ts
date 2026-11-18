@@ -48,6 +48,8 @@ const supabase = {
 vi.mock("../../lib/acesso/sessao", () => ({
   FalhaDoServico: class FalhaDoServico extends Error {},
   obterSessao: async () => ({
+    // VEL-b: as permissões vêm no molde da sessão, pela mesma regra do rpc simulado.
+    molde: { permissoes: { has: () => Boolean(cenario.permitido) }, nome: null, vinculos: [], pendencias: { aprovacoes: 0, notas: 0 } },
     usuario: { id: DONO },
     situacao: { usuario_ativo: true, sessao_no_turno: true, unidade_id: LOJA, unidade_nome: "Santa Cândida (teste)", turno_termina_em: "2026-11-13T23:00:00Z" },
     supabase,

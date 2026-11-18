@@ -81,19 +81,20 @@ export default async function Vender({ searchParams }: { searchParams: Promise<{
   const variantes = [...porNome.data, ...porNumero.data.flatMap((i) => (i.variantes ? [i.variantes] : []))];
   const resultados = [...porNome.data.map((v) => v.id), ...porNumero.data.map((i) => i.variante_id)];
   const produtoIds = [...new Set(variantes.map((v) => v.produto_id))];
-  // 3ª ida, só com resultado: o saldo livre, os aparelhos disponíveis, as fotos e o preço vigente, em paralelo.
+  // 3ª ida, só com resultado: o saldo livre, os aparelhos disponíveis, as fotos e o preço vigente, em paralelo. O preço de
+  // todos os resultados vem num pedido só (VEL-b: public.precos_vigentes, a mesma regra de preco_vigente); a variação sem
+  // preço nesta loja não volta.
   const [saldos, disponiveis, fotos, precosLidos] = await Promise.all([
     resultados.length ? supabase.from("estoque_saldos").select("variante_id, quantidade, reservado").eq("unidade_id", unidade).in("variante_id", resultados) : Promise.resolve({ data: [], error: null }),
     porNome.data.length ? supabase.from("itens_serializados").select("id, variante_id, imei, iccid").eq("unidade_id", unidade).eq("situacao", "disponivel").eq("em_estoque", true).in("variante_id", porNome.data.map((v) => v.id)).limit(40) : Promise.resolve({ data: [], error: null }),
     produtoIds.length ? supabase.from("fotos_produto").select("produto_id, variante_id, caminho, ilustracao").in("produto_id", produtoIds).is("substituida_em", null) : Promise.resolve({ data: [], error: null }),
-    Promise.all(resultados.map(async (id) => {
-      const r = await supabase.rpc("preco_vigente", { p_variante: id, p_unidade: unidade });
-      return [id, r.error || r.data === null ? null : centavosDoBanco(r.data)] as const;
-    })),
+    resultados.length ? supabase.rpc("precos_vigentes", { p_variantes: resultados, p_unidade: unidade }) : Promise.resolve({ data: [], error: null }),
   ]);
   if (saldos.error || disponiveis.error) throw new FalhaDoServico("vender_detalhes");
   if (fotos.error) throw new FalhaDoServico("fotos");
-  const precos = new Map(precosLidos);
+  // Sem os preços, a página de erro: "sem preço nesta loja" para todos seria falso.
+  if (precosLidos.error) throw new FalhaDoServico("precos");
+  const precos = new Map<string, number | null>((precosLidos.data ?? []).map((p) => [p.variante_id, centavosDoBanco(p.preco_centavos)]));
   // 4ª ida, só com foto: o endereço assinado de cada foto (o depósito das fotos é fechado).
   const assinadas = fotos.data.length ? await supabase.storage.from("produtos").createSignedUrls(fotos.data.map((f) => f.caminho), 3600) : { data: [], error: null };
   const urlDe = new Map((assinadas.data ?? []).map((a) => [a.path, a.error ? null : a.signedUrl]));

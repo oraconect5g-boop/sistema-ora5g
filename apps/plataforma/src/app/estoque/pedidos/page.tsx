@@ -7,6 +7,7 @@ import Link from "next/link";
 import { MoldeReal } from "../../../componentes/MoldeReal";
 import { Aviso, Cartao, FiltroSegmentado, TituloPagina } from "../../../componentes/ui";
 import { ehUuid } from "../../../lib/acesso/regras";
+import { permite } from "../../../lib/acesso/molde";
 import { FalhaDoServico, obterSessao } from "../../../lib/acesso/sessao";
 import {
   ERROS_DOS_PEDIDOS, FILTROS_DOS_PEDIDOS, filtroDosPedidos, lerPedido, lerPedidos, OK_DOS_PEDIDOS, type FiltroDosPedidos,
@@ -33,9 +34,8 @@ export default async function PedidosDeCompra({ searchParams }: { searchParams: 
   const sessao = await obterSessao({ exigirLoja: true });
   const { supabase, situacao } = sessao;
   const unidade = situacao.unidade_id as string;
-  const pode = await supabase.rpc("tem_permissao", { p_permissao: "estoque.receber", p_unidade: unidade });
-  if (pode.error) throw new FalhaDoServico("tem_permissao");
-  if (!pode.data) return <MoldeReal sessao={sessao}><Aviso tom="aviso" className="mt-6">{ERROS_DOS_PEDIDOS.permissao}</Aviso></MoldeReal>;
+  const pode = permite(sessao, "estoque.receber");
+  if (!pode) return <MoldeReal sessao={sessao}><Aviso tom="aviso" className="mt-6">{ERROS_DOS_PEDIDOS.permissao}</Aviso></MoldeReal>;
 
   const [lista, detalhe, fornecedores] = await Promise.all([
     lerPedidos(supabase, unidade, filtro),

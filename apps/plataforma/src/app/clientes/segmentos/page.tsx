@@ -4,6 +4,7 @@ import Link from "next/link";
 
 import { MoldeReal } from "../../../componentes/MoldeReal";
 import { Aviso, Cartao, Selo, Tabela, Celula, TituloPagina } from "../../../componentes/ui";
+import { permite } from "../../../lib/acesso/molde";
 import { FalhaDoServico, obterSessao } from "../../../lib/acesso/sessao";
 import { SEGMENTOS, ehSegmento } from "../../../lib/clientes/regras";
 import { brl } from "../../../lib/formato";
@@ -18,10 +19,9 @@ type Linha = { segmento: string; clientes: number; alto_valor: number; liquido_1
 // conta só quem deu o "sim" naquele canal: é o público possível de uma campanha.
 export default async function Segmentos() {
   const sessao = await obterSessao({ exigirLoja: true });
-  const { supabase, situacao } = sessao;
-  const pode = await supabase.rpc("tem_permissao", { p_permissao: "cliente.exportar", p_unidade: situacao.unidade_id as string });
-  if (pode.error) throw new FalhaDoServico("tem_permissao");
-  if (!pode.data) return <MoldeReal sessao={sessao}><Aviso tom="aviso" className="mt-6">Os segmentos da rede são do dono.</Aviso></MoldeReal>;
+  const { supabase } = sessao;
+  const pode = permite(sessao, "cliente.exportar");
+  if (!pode) return <MoldeReal sessao={sessao}><Aviso tom="aviso" className="mt-6">Os segmentos da rede são do dono.</Aviso></MoldeReal>;
   const resposta = await supabase.rpc("clientes_segmentos");
   if (resposta.error) throw new FalhaDoServico("clientes_segmentos");
   const { corte_alto_valor: corte, segmentos } = resposta.data as unknown as { corte_alto_valor: number | null; segmentos: Linha[] };

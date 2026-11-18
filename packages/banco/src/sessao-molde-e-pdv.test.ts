@@ -153,6 +153,29 @@ describe("molde_da_sessao: a sessão, as permissões, o nome, os vínculos e as 
       .toEqual(["usuarios.gerir", "venda.registrar"]);
   });
 
+  // VEL-b (18/11): as telas e as ações passam a ler do molde as permissões que antes perguntavam uma a uma, na loja do
+  // turno ou sem loja. As duas perguntas dão a mesma resposta numa sessão: o vínculo de organização vale sem loja e em
+  // qualquer loja dela; o de loja só vale na loja do turno (com ou sem a loja na pergunta). O molde responde pelas duas.
+  it("na loja do turno e sem loja, a resposta é a mesma em todo papel, para o catálogo inteiro de permissões (VEL-b)", async () => {
+    const codigos = (await db.query<{ codigo: string }>("select codigo from public.permissoes order by codigo")).rows.map((r) => r.codigo);
+    const quem: [string, string | null][] = [
+      [ids.dono, ids.lojaA], [ids.dono, null], [ids.administrador, ids.lojaB], [ids.gerenteB, ids.lojaB], [ids.vendedorA, ids.lojaA],
+      [ids.vendedorAB, ids.lojaB], [ids.vendedorAB, ids.lojaA], [ids.tecnico, ids.assistencia], [ids.donoOutraOrg, ids.lojaOutraOrg], [ids.semVinculo, null],
+    ];
+    const vistos = new Set<string>();
+    for (const [usuario, unidade] of quem) {
+      const s = unidade ? await naLoja(usuario, unidade) : await nova(usuario);
+      const naLojaDoTurno = await linhas<{ c: string }>(s, "select c from unnest($1::text[]) c where public.tem_permissao(c, public.unidade_atual()) order by c", [codigos]);
+      const semLoja = await linhas<{ c: string }>(s, "select c from unnest($1::text[]) c where public.tem_permissao(c) order by c", [codigos]);
+      expect(naLojaDoTurno, `${usuario} em ${unidade}`).toEqual(semLoja);
+      expect((await molde(s, codigos.slice(0, 40), codigos.slice(40, 80))).permissoes, `${usuario} em ${unidade}: o molde`).toEqual(
+        semLoja.map((l) => l.c).filter((c) => codigos.slice(0, 80).includes(c)));
+      for (const l of semLoja) vistos.add(l.c);
+    }
+    // Não passa com as pontas vazias: os papéis de teste somam muitas permissões.
+    expect(vistos.size).toBeGreaterThan(30);
+  });
+
   it("a situação é a mesma de situacao_da_sessao, com os mesmos campos", async () => {
     const s = await naLoja(ids.vendedorAB, ids.lojaB);
     const m = await molde(s);

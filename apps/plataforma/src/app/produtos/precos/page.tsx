@@ -5,6 +5,7 @@ import Link from "next/link";
 import { MoldeReal } from "../../../componentes/MoldeReal";
 import { Aviso, Botao, Cartao, Selo, TituloPagina } from "../../../componentes/ui";
 import { ehUuid } from "../../../lib/acesso/regras";
+import { permite } from "../../../lib/acesso/molde";
 import { FalhaDoServico, obterSessao } from "../../../lib/acesso/sessao";
 import { ERROS_DO_CUSTO, lerCustos } from "../../../lib/catalogo/custos";
 import { CANAIS, ERROS_DE_PRECO, acaoPossivel, situacaoDoPreco, type LinhaDePreco } from "../../../lib/catalogo/precos";
@@ -75,13 +76,10 @@ export default async function PrecosDaVariante({ searchParams }: {
   const sessao = await obterSessao({ exigirLoja: true });
   const { supabase } = sessao;
 
-  const [gerir, alterar, custoVer] = await Promise.all([
-    supabase.rpc("tem_permissao", { p_permissao: "catalogo.gerir" }),
-    supabase.rpc("tem_permissao", { p_permissao: "preco.alterar" }),
-    supabase.rpc("tem_permissao", { p_permissao: "custo.ver" }),
-  ]);
-  if (gerir.error || alterar.error || custoVer.error) throw new FalhaDoServico("tem_permissao");
-  if (!gerir.data && !alterar.data) {
+  const gerir = permite(sessao, "catalogo.gerir");
+  const alterar = permite(sessao, "preco.alterar");
+  const custoVer = permite(sessao, "custo.ver");
+  if (!gerir && !alterar) {
     return (
       <MoldeReal sessao={sessao}>
         <Cartao titulo="Sem permissão" icone={ShieldAlert}>
@@ -111,7 +109,7 @@ export default async function PrecosDaVariante({ searchParams }: {
     supabase.from("precos").select("id, unidade_id, canal, valor_centavos, inicio, fim, origem, motivo, criado_em, cancelado_em, motivo_cancelamento")
       .eq("variante_id", variante).order("inicio", { ascending: false }).limit(200),
     // CAT-008b: o custo e o histórico dele, só para quem vê custo.
-    custoVer.data ? lerCustos(supabase, variante) : Promise.resolve(null),
+    custoVer ? lerCustos(supabase, variante) : Promise.resolve(null),
   ]);
   if (naLoja.error || online.error || historico.error) throw new FalhaDoServico("precos");
   const lojas = (naLoja.data as PorLoja[]).map((l) => ({ id: l.unidade_id, nome: l.unidade }));
@@ -150,9 +148,9 @@ export default async function PrecosDaVariante({ searchParams }: {
         </ul>
       </Cartao>
 
-      {custos && <CartaoDoCusto custos={custos} podeCorrigir={Boolean(gerir.data)} variante={v.id} aberto={form === "custo"} />}
+      {custos && <CartaoDoCusto custos={custos} podeCorrigir={Boolean(gerir)} variante={v.id} aberto={form === "custo"} />}
 
-      {alterar.data ? (
+      {alterar ? (
         <div className="mt-4 grid gap-4 lg:grid-cols-2">
           <details className="rounded-cartao border border-borda/80 bg-superficie p-4 shadow-cartao" open={form === "preco" || linhas.length === 0}>
             <summary className="flex min-h-10 cursor-pointer items-center gap-2 font-semibold"><Tag aria-hidden className="size-4 text-acao" /> Mudar preço</summary>
@@ -204,7 +202,7 @@ export default async function PrecosDaVariante({ searchParams }: {
                 <li key={l.id} className="space-y-1 py-2">
                   <p className="flex flex-wrap items-center gap-2"><strong className="numeros">{brl(l.valor_centavos)}</strong> {ORIGEM[l.origem] ?? l.origem} · {nomeDaLoja(l.unidade_id)} · {CANAIS[l.canal as keyof typeof CANAIS] ?? l.canal}</p>
                   <p className="text-xs text-suave">de {quando(l.inicio)}{l.fim ? ` até ${quando(l.fim)}` : " em diante"}{l.motivo ? ` · ${l.motivo}` : ""}</p>
-                  {alterar.data && acao && (
+                  {alterar && acao && (
                     <details>
                       <summary className="cursor-pointer text-xs font-semibold text-perigo">{acao === "cancelar" ? "Cancelar (ainda não começou)" : "Encerrar a campanha agora"}</summary>
                       <form action={cancelarPreco} className="mt-2 grid gap-2 sm:grid-cols-[1fr_auto]">

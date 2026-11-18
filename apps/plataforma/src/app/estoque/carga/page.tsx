@@ -5,6 +5,7 @@ import Link from "next/link";
 import { FormularioDeArquivo } from "../../../componentes/FormularioDeArquivo";
 import { MoldeReal } from "../../../componentes/MoldeReal";
 import { Aviso, Botao, Cartao, EstadoVazio, Selo, TituloPagina } from "../../../componentes/ui";
+import { permite } from "../../../lib/acesso/molde";
 import { FalhaDoServico, obterSessao } from "../../../lib/acesso/sessao";
 import { lojasDaCarga } from "../../../lib/estoque/carga-lojas";
 import { ERROS_DA_CARGA, SITUACOES_DA_CARGA, totaisDaCarga } from "../../../lib/estoque/carga-regras";
@@ -30,18 +31,15 @@ export default async function CargaDoEstoque({ searchParams }: { searchParams: P
   const parametros = await searchParams;
   const sessao = await obterSessao({ exigirLoja: true });
   const { supabase } = sessao;
-  const [executar, aprovar] = await Promise.all([
-    supabase.rpc("tem_permissao", { p_permissao: "importacao.executar" }),
-    supabase.rpc("tem_permissao", { p_permissao: "importacao.aprovar" }),
-  ]);
-  if (executar.error || aprovar.error) throw new FalhaDoServico("tem_permissao");
-  if (!executar.data && !aprovar.data) {
+  const executar = permite(sessao, "importacao.executar");
+  const aprovar = permite(sessao, "importacao.aprovar");
+  if (!executar && !aprovar) {
     return <MoldeReal sessao={sessao}><Aviso tom="aviso" className="mt-6">{ERROS_DA_CARGA.permissao}</Aviso></MoldeReal>;
   }
   const [lista, lojas] = await Promise.all([
     supabase.from("estoque_cargas").select("id, numero, unidade_id, arquivo_nome, corte, situacao, totais, criado_em, unidades(nome)")
       .order("criado_em", { ascending: false }).limit(40),
-    executar.data ? lojasDaCarga(supabase) : Promise.resolve([]),
+    executar ? lojasDaCarga(supabase) : Promise.resolve([]),
   ]);
   if (lista.error) throw new FalhaDoServico("estoque_cargas");
   if (lojas === null) throw new FalhaDoServico("unidades");
@@ -86,7 +84,7 @@ export default async function CargaDoEstoque({ searchParams }: { searchParams: P
         )}
       </Cartao>
 
-      {executar.data ? (
+      {executar ? (
         <Cartao className="mt-4" titulo="Enviar o relatório" subtitulo="O relatório de produtos com a quantidade de cada local (o físico e, se tiver, o disponível). Uma prévia por loja." icone={FileUp}>
           <FormularioDeArquivo action="/estoque/carga/enviar" className="space-y-3">
             <label className="block text-sm font-medium">Data e hora da posição do arquivo (a data de corte)<span className="text-perigo"> *</span>
