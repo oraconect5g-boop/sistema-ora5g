@@ -3555,6 +3555,202 @@ export type Database = {
           },
         ]
       }
+      marketplace_importacoes: {
+        Row: {
+          arquivo: string
+          atualizados: number
+          canal: string
+          id: string
+          importado_em: string
+          importado_por: string
+          impressao: string
+          linhas: number
+          mapeamento: Json
+          novos: number
+          numero: number
+          organizacao_id: string
+          pedidos: number
+          periodo_fim: string
+          periodo_inicio: string
+        }
+        Insert: {
+          arquivo: string
+          atualizados: number
+          canal: string
+          id?: string
+          importado_em?: string
+          importado_por: string
+          impressao: string
+          linhas: number
+          mapeamento?: Json
+          novos: number
+          numero?: never
+          organizacao_id: string
+          pedidos: number
+          periodo_fim: string
+          periodo_inicio: string
+        }
+        Update: {
+          arquivo?: string
+          atualizados?: number
+          canal?: string
+          id?: string
+          importado_em?: string
+          importado_por?: string
+          impressao?: string
+          linhas?: number
+          mapeamento?: Json
+          novos?: number
+          numero?: never
+          organizacao_id?: string
+          pedidos?: number
+          periodo_fim?: string
+          periodo_inicio?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "marketplace_importacoes_importado_por_fkey"
+            columns: ["importado_por"]
+            isOneToOne: false
+            referencedRelation: "perfis_usuario"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "marketplace_importacoes_organizacao_id_fkey"
+            columns: ["organizacao_id"]
+            isOneToOne: false
+            referencedRelation: "organizacoes"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      marketplace_pedido_itens: {
+        Row: {
+          codigo: string | null
+          id: string
+          numero: number
+          organizacao_id: string
+          pedido_id: string
+          quantidade: number
+          titulo: string | null
+          valor_centavos: number
+          variante_id: string | null
+        }
+        Insert: {
+          codigo?: string | null
+          id?: string
+          numero: number
+          organizacao_id: string
+          pedido_id: string
+          quantidade: number
+          titulo?: string | null
+          valor_centavos: number
+          variante_id?: string | null
+        }
+        Update: {
+          codigo?: string | null
+          id?: string
+          numero?: number
+          organizacao_id?: string
+          pedido_id?: string
+          quantidade?: number
+          titulo?: string | null
+          valor_centavos?: number
+          variante_id?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "marketplace_pedido_itens_organizacao_id_fkey"
+            columns: ["organizacao_id"]
+            isOneToOne: false
+            referencedRelation: "organizacoes"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "marketplace_pedido_itens_pedido_id_fkey"
+            columns: ["pedido_id"]
+            isOneToOne: false
+            referencedRelation: "marketplace_pedidos"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "marketplace_pedido_itens_variante_id_organizacao_id_fkey"
+            columns: ["variante_id", "organizacao_id"]
+            isOneToOne: false
+            referencedRelation: "variantes"
+            referencedColumns: ["id", "organizacao_id"]
+          },
+        ]
+      }
+      marketplace_pedidos: {
+        Row: {
+          atualizado_em: string
+          bruto_centavos: number
+          canal: string
+          criado_em: string
+          data: string
+          data_repasse: string | null
+          frete_centavos: number | null
+          id: string
+          id_externo: string
+          importacao_id: string
+          liquido_centavos: number | null
+          organizacao_id: string
+          reembolsos_centavos: number | null
+          situacao_no_canal: string | null
+          tarifas_centavos: number | null
+        }
+        Insert: {
+          atualizado_em?: string
+          bruto_centavos: number
+          canal: string
+          criado_em?: string
+          data: string
+          data_repasse?: string | null
+          frete_centavos?: number | null
+          id?: string
+          id_externo: string
+          importacao_id: string
+          liquido_centavos?: number | null
+          organizacao_id: string
+          reembolsos_centavos?: number | null
+          situacao_no_canal?: string | null
+          tarifas_centavos?: number | null
+        }
+        Update: {
+          atualizado_em?: string
+          bruto_centavos?: number
+          canal?: string
+          criado_em?: string
+          data?: string
+          data_repasse?: string | null
+          frete_centavos?: number | null
+          id?: string
+          id_externo?: string
+          importacao_id?: string
+          liquido_centavos?: number | null
+          organizacao_id?: string
+          reembolsos_centavos?: number | null
+          situacao_no_canal?: string | null
+          tarifas_centavos?: number | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "marketplace_pedidos_importacao_id_fkey"
+            columns: ["importacao_id"]
+            isOneToOne: false
+            referencedRelation: "marketplace_importacoes"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "marketplace_pedidos_organizacao_id_fkey"
+            columns: ["organizacao_id"]
+            isOneToOne: false
+            referencedRelation: "organizacoes"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       metas: {
         Row: {
           definida_em: string
@@ -7494,6 +7690,21 @@ export type Database = {
       }
       margem_por_vendedor: {
         Args: { p_fim: string; p_inicio: string; p_unidade?: string }
+        Returns: Json
+      }
+      marketplace_importar: {
+        Args: {
+          p_arquivo: string
+          p_canal: string
+          p_impressao: string
+          p_linhas: number
+          p_mapeamento: Json
+          p_pedidos: Json
+        }
+        Returns: Json
+      }
+      marketplace_painel: {
+        Args: { p_fim: string; p_inicio: string }
         Returns: Json
       }
       metas_definir: {
