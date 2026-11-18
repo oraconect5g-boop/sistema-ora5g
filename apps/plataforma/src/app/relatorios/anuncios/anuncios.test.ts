@@ -86,7 +86,7 @@ describe("o envio do custo dos anúncios (rota)", () => {
     expect(chamadas("anuncios_importar")).toEqual([{
       p_plataforma: "meta", p_arquivo: "relatorio.csv", p_impressao: createHash("sha256").update(csv).digest("hex"),
       p_linhas: [{ numero: 2, dia: "2026-11-17", campanha: "Natal 2026", gasto: 15_025, impressoes: 12_345, cliques: 321 }],
-      p_mapeamento: { formato: "csv", colunas: { dia: "Dia", campanha: "Nome da campanha", gasto: "Valor usado (BRL)", impressoes: "Impressões", cliques: "Cliques no link" }, de_fora: 1 },
+      p_mapeamento: { formato: "csv", colunas: { dia: "Dia", campanha: "Nome da campanha", gasto: "Valor usado (BRL)", impressoes: "Impressões", cliques: "Cliques no link" }, moeda: "BRL", moeda_conferida_por: "cabecalho", de_fora: 1 },
     }]);
   });
 
@@ -98,6 +98,17 @@ describe("o envio do custo dos anúncios (rota)", () => {
     expect(destino(await enviar(colunas, null))).toBe("/relatorios/anuncios?erro=arquivo");
     cenario.permissoes = new Set(["venda.ver_todas"]);
     expect(destino(await enviar(colunas))).toBe("/relatorios/anuncios?erro=permissao");
+    expect(chamadas("anuncios_importar")).toEqual([]);
+  });
+
+  // Lote AUD-a (auditoria do Codex de 17/11; aceite A14): só real. A moeda no nome da coluna recusa o arquivo inteiro; a
+  // coluna Moeda, quando escolhida, aponta a linha.
+  it("o arquivo em outra moeda volta recusado, sem ir ao banco; a linha em dólar, apontada", async () => {
+    const emDolar = "Day;Campaign name;Amount spent (USD)\n2026-11-17;Natal;20.00\n";
+    expect(destino(await enviar({ coluna_dia: "0", coluna_campanha: "1", coluna_gasto: "2" }, emDolar))).toBe("/relatorios/anuncios?erro=moeda");
+    const comColuna = "Dia;Nome da campanha;Valor usado;Moeda\n17/11/2026;Natal;150,00;BRL\n17/11/2026;Capas;20,00;USD\n";
+    expect(destino(await enviar({ coluna_dia: "0", coluna_campanha: "1", coluna_gasto: "2", coluna_moeda: "3" }, comColuna)))
+      .toBe("/relatorios/anuncios?erro=linha&linha=3&campo=moeda&texto=USD");
     expect(chamadas("anuncios_importar")).toEqual([]);
   });
 
@@ -122,12 +133,12 @@ describe("a tela dos anúncios", () => {
     cenario.respostas.anuncios_painel = { data: {
       campanhas: [
         { chave: "natal 2026", campanha: "Natal 2026", gasto: 15_000, impressoes: 10_000, cliques: 200, resultados: 10, dias: 2, reservas: 1, oportunidades: 1,
-          vendas: 2, receita: 15_800, margem: 7_000, vendas_sem_custo: 0, recebido: 15_700, clientes_novos: 1 },
+          vendas: 2, vendas_devolvidas: 0, receita: 15_800, devolvido: 0, margem: 7_000, vendas_sem_custo: 0, recebido: 15_700, reembolsado: 0, clientes_novos: 1 },
         { chave: "sem contato", campanha: "Sem Contato", gasto: 2_000, impressoes: null, cliques: null, resultados: null, dias: 1, reservas: 0, oportunidades: 0,
-          vendas: 0, receita: 0, margem: 0, vendas_sem_custo: 0, recebido: 0, clientes_novos: 0 },
+          vendas: 0, vendas_devolvidas: 0, receita: 0, devolvido: 0, margem: 0, vendas_sem_custo: 0, recebido: 0, reembolsado: 0, clientes_novos: 0 },
       ],
-      por_loja: [{ chave: "natal 2026", unidade_id: LOJA, loja: "Santa Cândida", contatos: 2, vendas: 2, receita: 15_800 }],
-      por_vendedor: [{ chave: "natal 2026", vendedor_id: VENDEDOR, vendas: 2, receita: 15_800 }],
+      por_loja: [{ chave: "natal 2026", unidade_id: LOJA, loja: "Santa Cândida", contatos: 2, vendas: 2, receita: 15_800, devolvido: 0 }],
+      por_vendedor: [{ chave: "natal 2026", vendedor_id: VENDEDOR, vendas: 2, receita: 15_800, devolvido: 0 }],
       contatos_sem_campanha: 3, importado_ate: "2026-11-17",
     }, error: null };
     cenario.respostas.ranking_nomes = { data: [{ id: VENDEDOR, nome: "Ana (fictícia)" }], error: null };
@@ -143,6 +154,22 @@ describe("a tela dos anúncios", () => {
       expect(tela, trecho).toContain(trecho);
     }
     expect(chamadas("anuncios_painel")).toEqual([{ p_inicio: "2026-11-16", p_fim: "2026-11-17" }]);
+  });
+
+  it("as devoluções: a venda devolvida por inteiro, a receita líquida, o reembolso; a moeda, o fuso e a atribuição explicados", async () => {
+    cenario.respostas.anuncios_painel = { data: {
+      campanhas: [{ chave: "black", campanha: "Black", gasto: 10_000, impressoes: null, cliques: null, resultados: null, dias: 1, reservas: 0, oportunidades: 2,
+        vendas: 2, vendas_devolvidas: 1, receita: 23_700, devolvido: 15_800, margem: 3_000, vendas_sem_custo: 0, recebido: 23_700, reembolsado: 7_900, clientes_novos: 1 }],
+      por_loja: [{ chave: "black", unidade_id: LOJA, loja: "Santa Cândida", contatos: 2, vendas: 2, receita: 23_700, devolvido: 15_800 }],
+      por_vendedor: [], contatos_sem_campanha: 0, importado_ate: "2026-11-17",
+    }, error: null };
+    const tela = limpar(await Anuncios(params({ inicio: "2026-11-17", fim: "2026-11-17" })));
+    for (const trecho of ["2 vendas (1 devolvida por inteiro)", "CPA R$ 100,00", "receita R$ 237,00 − devolvido R$ 158,00 = R$ 79,00", "ROAS 0,79×",
+      "recebido de fato R$ 158,00", "(já sem R$ 79,00 devolvidos ao cliente)", "1 venda · R$ 79,00 sem as devoluções", "R$ 79,00 (sem R$ 158,00 devolvidos)",
+      "Atribuição não é prova de causa", "o arquivo em outra moeda é recusado", "o custo de um dia pode cair no dia vizinho"]) {
+      expect(tela, trecho).toContain(trecho);
+    }
+    expect(limpar(await Anuncios(params({ erro: "moeda" })))).toContain("não está em reais (BRL)");
   });
 
   it("o período adulterado volta aos últimos 30 dias; a linha que não deu para ler aparece explicada", async () => {

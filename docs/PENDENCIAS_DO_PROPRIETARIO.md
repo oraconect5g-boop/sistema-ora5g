@@ -94,6 +94,7 @@ Financeiro real (#65): a primeira fatia (vendas, pagamentos registrados e caixas
 | G1 | Piloto em paralelo com a Rein: 2 a 4 semanas? Quanto tempo a Rein fica ativa depois do "go" (para poder voltar)? | [Go/no-go](operacao/GO_NO_GO_PILOTO_E_SAIDA_DA_REIN.md) §5 |
 | D-048 | **LGPD com o jurídico**: base legal de cada dado, por quanto tempo fica, anonimização a pedido, quem atende o titular (encarregado) e por qual canal | O relatório dos dados do titular já existe (só o dono gera, na ficha do cliente); o resto espera o jurídico |
 | D-047 | **Metas de desempenho no celular**: aprovar (ou mudar) as metas propostas | [Desempenho no celular](operacao/DESEMPENHO_NO_CELULAR.md); as telas sem login estão dentro delas. Para as telas com login há proposta nova de 16/11 (abrir o PDV em até 1,5 s; buscar, adicionar e tirar em até 2 s cada; concluir a venda em até 3 s), que você confere no [roteiro de aceite do VEL-a](aceite/VEL-a.md) |
+| D-049 | **Transferência:** o estoque da loja de origem sai do disponível já quando a transferência é **pedida**, ou só quando é **separada**? | Hoje: só na separação (o pedido é só um pedido); o envio baixa o físico uma vez (TRF-a). Se for no pedido, a reserva entra no mesmo passo do pedido, sem baixar duas vezes (auditoria do Codex de 17/11, F10) |
 | G2 | Se a internet da loja cair: a venda espera ou vai para um formulário em papel? Quem atende problemas no horário da loja? | D-041 e D-042, com a proposta em [contingência e incidentes](operacao/CONTINGENCIA_E_INCIDENTES.md) |
 
 ## 4. Chaves e senhas: como gravar no servidor sem passar pelo chat
@@ -147,9 +148,10 @@ Sem chave por decisão do projeto: Rein (só arquivo), PayJoy e Aiva (lançament
 | 5.2 | **Supabase → Authentication → Emails → SMTP Settings** | Ligar o SMTP próprio com essa caixa (servidor, porta, usuário e senha **digitados por você no painel**). Na mesma área, nos modelos **Invite user** e **Reset password**, trocar o link pelo texto da seção A1 de `docs/integracoes/APIS_E_HABILITACOES_NECESSARIAS.md` | Antes de convidar pessoas novas e do "esqueci minha senha" (sem SMTP próprio o Supabase só manda e-mail para a equipe do projeto) |
 | 5.3 | **Supabase → Authentication → URL Configuration** | **Site URL** = `https://ora5g.com.br` (a recuperação de senha e o convite já estão prontos) | Junto com o 5.2 |
 | 5.4 | **WHM/DNS** | Subdomínio `hml-app.ora5g.com.br`: registro **A** para `69.6.214.94` (sem AAAA), SSL automático e encaminhamento para `127.0.0.1:3100` (ADR-001 §4A). Depois apagar o `.htaccess` da `public_html` para o domínio principal voltar ao site | Quando quiser tirar a homologação do domínio principal |
-| 5.5 | **GitHub** | Proteger a `main` contra exclusão e push forçado (sem exigir PR, para não travar os merges combinados em 07/11) | Quando puder |
+| 5.5 | **GitHub** | Proteger a `main` contra exclusão e push forçado (sem exigir PR, para não travar os merges combinados em 07/11). A auditoria do Codex de 17/11 (F07) achou a `main` sem proteção nenhuma (`protected: false`, sem rulesets). Exigir que os checks passem antes do merge também é possível, mas muda o fluxo: os merges passam a ser por PR. É decisão sua | Quando puder |
 | 5.6 | **Meta Business** | Iniciar a **verificação da empresa** (WhatsApp oficial e anúncios) | Já: a aprovação demora semanas |
 | 5.7 | **Mercado Livre, TikTok Shop, Shopee** | Cadastro de desenvolvedor/parceiro com a conta da empresa | Mês 1, porque a aprovação demora |
+| 5.8 | **Supabase → Authentication → Attack Protection** (ou Password Security) | Ligar a proteção contra senha vazada ("Leaked password protection"): o login recusa a senha que já apareceu em vazamento. O aviso do Supabase continua acusando (auditoria do Codex de 17/11, F09). Pode exigir o plano Pro | Antes da piloto |
 
 ## 6. Para o Codex: como usar esta lista
 

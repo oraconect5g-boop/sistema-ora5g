@@ -7,7 +7,7 @@ import { lerCsv } from "../importacao/csv";
 import { descomprimirNoServidor } from "../importacao/descomprimir-servidor";
 import { lerPlanilha } from "../importacao/planilha";
 import { gerarXlsx } from "../xlsx-servidor";
-import { lerContagem, lerMapaDosAnuncios, mapaDosAnunciosParaGravar, montarLinhasDosAnuncios, sugerirMapaDosAnuncios } from "./leitura";
+import { lerContagem, lerMapaDosAnuncios, mapaDosAnunciosParaGravar, moedaDosAnuncios, montarLinhasDosAnuncios, sugerirMapaDosAnuncios } from "./leitura";
 
 const utf8 = (t: string) => new TextEncoder().encode(t);
 
@@ -70,5 +70,28 @@ describe("as linhas do arquivo de anúncios", () => {
     expect(montarLinhasDosAnuncios(planilha, sugerirMapaDosAnuncios(planilha.cabecalho)).linhas).toEqual([
       { numero: 2, dia: "2026-11-17", campanha: "Capas", gasto: 1_999, impressoes: 1500 },
     ]);
+  });
+});
+
+// Lote AUD-a (auditoria do Codex de 17/11; aceite A14): só real (BRL) entra.
+describe("a moeda do arquivo de anúncios", () => {
+  it("a moeda no nome da coluna do valor: BRL passa, outra recusa o arquivo; sem moeda, fica registrado que não veio", () => {
+    const br = ["Dia", "Nome da campanha", "Valor usado (BRL)"];
+    expect(moedaDosAnuncios(br, sugerirMapaDosAnuncios(br))).toEqual({ de: "cabecalho", outra: null });
+    const us = ["Day", "Campaign name", "Amount spent (USD)"];
+    expect(moedaDosAnuncios(us, sugerirMapaDosAnuncios(us))).toEqual({ de: "cabecalho", outra: "USD" });
+    const sem = ["Dia", "Nome da campanha", "Valor usado"];
+    expect(moedaDosAnuncios(sem, sugerirMapaDosAnuncios(sem))).toEqual({ de: "nao_informada", outra: null });
+  });
+
+  it("a coluna Moeda, quando escolhida: a linha em outra moeda volta como problema, apontada", () => {
+    const planilha = lerCsv(utf8("Dia;Nome da campanha;Valor usado;Moeda\n2026-11-17;Natal;150,00;BRL\n2026-11-17;Capas;20,00;USD\n"));
+    const mapa = sugerirMapaDosAnuncios(planilha.cabecalho);
+    expect(mapa.moeda).toBe(3);
+    expect(moedaDosAnuncios(planilha.cabecalho, mapa)).toEqual({ de: "coluna", outra: null });
+    expect(montarLinhasDosAnuncios(planilha, mapa)).toMatchObject({
+      linhas: [{ numero: 2, dia: "2026-11-17", campanha: "Natal", gasto: 15_000 }],
+      problemas: [{ numero: 3, campo: "moeda", texto: "USD" }],
+    });
   });
 });

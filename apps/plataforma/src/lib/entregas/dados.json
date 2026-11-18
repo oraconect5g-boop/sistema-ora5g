@@ -5,8 +5,8 @@
   "homologados": 0,
   "contagem": {
     "nao_iniciado": 17,
-    "parcial": 76,
-    "testado": 71,
+    "parcial": 78,
+    "testado": 69,
     "bloqueado": 13,
     "respeitado": 2
   },
@@ -321,6 +321,24 @@
         "ORA-FISC-010"
       ],
       "entrega": "as integrações que esperam contrato: o link de pagamento e os eventos de conversão com o adaptador desligado, a regra e os testes; e o que falta para ligar cada integração bloqueada (ADR-020)",
+      "commit": "7c7bdf1",
+      "publicado_em": "2026-11-17",
+      "pedido_em": null,
+      "resposta": null,
+      "respondido_em": null
+    },
+    {
+      "lote": "AUD-a",
+      "roteiro": "docs/aceite/AUD-a.md",
+      "requisitos": [
+        "ORA-CAT-002",
+        "ORA-META-003",
+        "ORA-META-004",
+        "ORA-META-006",
+        "ORA-MKTPL-005",
+        "ORA-MKTPL-008"
+      ],
+      "entrega": "o que a auditoria do Codex de 17/11 (PR #104) pediu: o rodapé da planilha da Rein (F01), os anúncios com as devoluções, a moeda e o fuso (A14) e os estados honestos (A13)",
       "commit": null,
       "publicado_em": null,
       "pedido_em": null,

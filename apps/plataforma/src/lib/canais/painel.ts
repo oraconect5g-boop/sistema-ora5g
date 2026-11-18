@@ -46,10 +46,13 @@ export const marketplacesNosCanais = (p: PainelDosMarketplaces): MarketplaceNosC
   liquido: c.liquido, lucro: c.lucro, semCusto: c.pedidosSemCusto,
 }));
 
-/** Os anúncios no período: o valor usado e a receita das vendas que vieram das campanhas (já dentro da receita das lojas). */
+/**
+ * Os anúncios no período: o valor usado e a receita das vendas que vieram das campanhas (já dentro da receita das lojas),
+ * como a das lojas: sem as devoluções (lote AUD-a). As vendas são as que ficaram (sem as devolvidas por inteiro).
+ */
 export function anunciosNosCanais(p: PainelDosAnuncios): AnunciosNosCanais {
   const t = totalDasCampanhas(p.campanhas);
-  return { gasto: t.gasto, vendas: t.vendas, receita: t.receita };
+  return { gasto: t.gasto, vendas: t.vendas - t.vendasDevolvidas, receita: t.receita - t.devolvido };
 }
 
 /**

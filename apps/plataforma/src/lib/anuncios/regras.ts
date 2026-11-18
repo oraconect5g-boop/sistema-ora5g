@@ -19,6 +19,7 @@ export const ERROS_DOS_ANUNCIOS = {
   nenhuma: "Nenhuma linha com dia e campanha no arquivo. Confira as colunas escolhidas.",
   linha: "Há linha que não deu para ler. Confira a coluna escolhida e o arquivo.",
   por_dia: "O arquivo não vem por dia: no Gerenciador de Anúncios, exporte com o detalhamento por dia (Detalhamento → Por tempo → Dia).",
+  moeda: "O valor usado deste arquivo não está em reais (BRL), e a plataforma soma só reais: exporte o relatório de uma conta de anúncios em reais.",
   periodo: "Escolha um período de até 400 dias, com o fim depois do início.",
   permissao: "O custo dos anúncios é do dono (a mesma permissão do resultado do mês).",
   instante: "Outra importação mexeu nos mesmos dias no mesmo instante: tente de novo.",
@@ -43,13 +44,14 @@ export function erroDosAnuncios(erro: { code?: string; message?: string } | null
 const NA_FRASE: Record<CampoDosAnuncios | "por_dia", string> = {
   dia: "o dia (dia/mês/ano)", fim: "o fim do período (dia/mês/ano)", campanha: "a campanha (até 200 letras)", gasto: "o valor usado (em reais)",
   impressoes: "as impressões (número inteiro)", cliques: "os cliques (número inteiro)", resultados: "os resultados (número inteiro)",
-  por_dia: "um dia só (o arquivo precisa vir por dia)",
+  moeda: "a moeda (só real, BRL)", por_dia: "um dia só (o arquivo precisa vir por dia)",
 };
 /** A linha que não deu para ler, em texto para a tela. */
 export function textoDoProblemaDosAnuncios(linha: unknown, campo: unknown, texto: unknown): string | null {
   if (typeof linha !== "string" || !/^\d{1,6}$/.test(linha) || typeof campo !== "string" || !(Object.hasOwn(CAMPOS_DOS_ANUNCIOS, campo) || campo === "por_dia")) return null;
   const lido = typeof texto === "string" ? texto.slice(0, 40) : "";
   if (campo === "por_dia") return `Linha ${linha} do arquivo: o período "${lido}" não é ${NA_FRASE.por_dia}. ${ERROS_DOS_ANUNCIOS.por_dia}`;
+  if (campo === "moeda") return `Linha ${linha} do arquivo: a moeda "${lido}" não é real (BRL). ${ERROS_DOS_ANUNCIOS.moeda}`;
   return `Linha ${linha} do arquivo: não deu para ler ${NA_FRASE[campo as CampoDosAnuncios]}${lido === "" ? "" : ` "${lido}"`}. Confira a coluna escolhida e o arquivo.`;
 }
 

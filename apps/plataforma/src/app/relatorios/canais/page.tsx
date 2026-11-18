@@ -97,7 +97,7 @@ export default async function CanaisDeVenda({ searchParams }: { searchParams: Pr
           {canais.anuncios && (
             <li className="space-y-1 py-3">
               <p className="font-semibold">Anúncios (Meta)</p>
-              <p className="numeros text-xs">Valor usado {brl(canais.anuncios.gasto)} · {plural(canais.anuncios.vendas, "venda", "vendas")} das campanhas, {brl(canais.anuncios.receita)} (já dentro da receita das lojas)</p>
+              <p className="numeros text-xs">Valor usado {brl(canais.anuncios.gasto)} · {plural(canais.anuncios.vendas, "venda", "vendas")} das campanhas que ficaram, {brl(canais.anuncios.receita)} sem as devoluções (já dentro da receita das lojas)</p>
             </li>
           )}
         </ul>

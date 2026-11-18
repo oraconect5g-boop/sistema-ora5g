@@ -4,7 +4,7 @@ import type { NextRequest } from "next/server";
 
 import { redirecionar } from "../../../../lib/acesso/redirecionar";
 import { obterSessao } from "../../../../lib/acesso/sessao";
-import { LINHAS_DO_ARQUIVO_DE_ANUNCIOS, lerMapaDosAnuncios, mapaDosAnunciosParaGravar, montarLinhasDosAnuncios } from "../../../../lib/anuncios/leitura";
+import { LINHAS_DO_ARQUIVO_DE_ANUNCIOS, lerMapaDosAnuncios, mapaDosAnunciosParaGravar, moedaDosAnuncios, montarLinhasDosAnuncios } from "../../../../lib/anuncios/leitura";
 import { erroDaPlanilhaNosAnuncios, erroDosAnuncios } from "../../../../lib/anuncios/regras";
 import { ErroDaPlanilha, LIMITES_DA_PLANILHA } from "../../../../lib/importacao/csv";
 import { descomprimirNoServidor } from "../../../../lib/importacao/descomprimir-servidor";
@@ -46,12 +46,17 @@ export async function POST(requisicao: NextRequest) {
   }
   const mapa = lerMapaDosAnuncios((n) => dados.get(n), planilha.cabecalho.length);
   if (!mapa) return voltar({ erro: "mapeamento" });
+  // Lote AUD-a (aceite A14): só real. A moeda no nome da coluna do valor ("Amount spent (USD)") recusa o arquivo inteiro.
+  const moeda = moedaDosAnuncios(planilha.cabecalho, mapa);
+  if (moeda.outra !== null) return voltar({ erro: "moeda" });
   const lidas = montarLinhasDosAnuncios(planilha, mapa);
   const [problema] = lidas.problemas;
   if (problema) return voltar({ erro: "linha", linha: String(problema.numero), campo: problema.campo, texto: problema.texto });
   if (lidas.linhas.length === 0) return voltar({ erro: "nenhuma" });
   if (lidas.linhas.length > LINHAS_DO_ARQUIVO_DE_ANUNCIOS) return voltar({ erro: "linhas" });
-  const mapeamento: { [chave: string]: Json } = { formato: planilha.formato, ...mapaDosAnunciosParaGravar(planilha.cabecalho, mapa) };
+  const mapeamento: { [chave: string]: Json } = {
+    formato: planilha.formato, ...mapaDosAnunciosParaGravar(planilha.cabecalho, mapa), moeda: "BRL", moeda_conferida_por: moeda.de,
+  };
   if (lidas.deFora > 0) mapeamento.de_fora = lidas.deFora;
 
   const { data, error } = await supabase.rpc("anuncios_importar", {

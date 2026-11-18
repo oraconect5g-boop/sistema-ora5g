@@ -149,18 +149,55 @@ describe("o painel por campanha (META-a)", () => {
     const porChave = Object.fromEntries(p.campanhas.map((c) => [c.chave, c]));
     expect(porChave["natal 2026"]).toEqual({
       chave: "natal 2026", campanha: "Natal 2026", gasto: 15_000, impressoes: 10_000, cliques: 200, resultados: 10, dias: 2, reservas: 1, oportunidades: 1,
-      vendas: 2, receita: 15_800, margem, vendas_sem_custo: 0, recebido: 7_900 + 7_800, clientes_novos: 1,
+      vendas: 2, vendas_devolvidas: 0, receita: 15_800, devolvido: 0, margem, vendas_sem_custo: 0, recebido: 7_900 + 7_800, reembolsado: 0, clientes_novos: 1,
     });
     expect(porChave["outra campanha"]).toMatchObject({ gasto: 0, dias: 0, reservas: 0, oportunidades: 1, vendas: 0, receita: 0 });
     expect(porChave["sem contato"]).toMatchObject({ gasto: 2_000, reservas: 0, oportunidades: 0, vendas: 0 });
     expect(p.por_loja).toEqual([
-      { chave: "natal 2026", unidade_id: ids.lojaA, loja: "Loja A", contatos: 2, vendas: 2, receita: 15_800 },
-      { chave: "outra campanha", unidade_id: ids.lojaA, loja: "Loja A", contatos: 1, vendas: 0, receita: 0 },
+      { chave: "natal 2026", unidade_id: ids.lojaA, loja: "Loja A", contatos: 2, vendas: 2, receita: 15_800, devolvido: 0 },
+      { chave: "outra campanha", unidade_id: ids.lojaA, loja: "Loja A", contatos: 1, vendas: 0, receita: 0, devolvido: 0 },
     ]);
-    expect(p.por_vendedor).toEqual([{ chave: "natal 2026", vendedor_id: ids.vendedorA, vendas: 2, receita: 15_800 }]);
+    expect(p.por_vendedor).toEqual([{ chave: "natal 2026", vendedor_id: ids.vendedorA, vendas: 2, receita: 15_800, devolvido: 0 }]);
     expect(p).toMatchObject({ contatos_sem_campanha: 0, importado_ate: d });
     // Fora do período, o custo e os contatos somem.
     expect((await painel(dono, await diasAtras(10), await diasAtras(5))).campanhas).toEqual([]);
     expect(await recusa(dono, PAINEL, [d, ontem])).toBe("22023");
+  });
+
+  // Lote AUD-a (auditoria do Codex de 17/11; aceite A14): a devolução sai da receita, da margem, do CPA e do CAC.
+  it("as devoluções das vendas da campanha: o valor devolvido, a margem sem as unidades devolvidas, a venda devolvida por inteiro e o reembolso", async () => {
+    const dono = await naLoja(ids.dono, ids.lojaA);
+    const d = await hoje();
+    await importar(dono, [{ numero: 2, dia: d, campanha: "Black 2026", gasto: 10_000 }]);
+    const ana = await naLoja(ids.vendedorA, ids.lojaA);
+    await valor(ana, "select public.abrir_caixa(10000, $1) as v", [chave("caixa")]);
+    // Maria compra duas capas e devolve uma (reembolso em dinheiro); João compra uma e devolve (vale-troca).
+    const maria = await cliente(ana, "Maria da Black");
+    const joao = await cliente(ana, "João da Black");
+    const vendaMaria = await valor<string>(ana, "select public.criar_venda($1) as v", [chave("venda")]);
+    const itemMaria = await valor<string>(ana, "select public.adicionar_item($1, $2, null, 2, $3) as v", [vendaMaria, cat.capa, chave("item")]);
+    await vender(ana, maria, { meio: "dinheiro", valor: 15_800 }, vendaMaria);
+    await ganhar(ana, await oportunidade(ana, maria, "Black 2026"), vendaMaria);
+    const vendaJoao = await vender(ana, joao, { meio: "dinheiro", valor: 7_900 });
+    await ganhar(ana, await oportunidade(ana, joao, "Black 2026"), vendaJoao);
+    const itemJoao = (await db.query<{ id: string }>("select id from public.venda_itens where venda_id = $1", [vendaJoao])).rows[0]?.id;
+    const custo = Number((await db.query<{ c: string }>("select custo_unitario_centavos as c from public.venda_itens_custos where item_id = $1", [itemMaria])).rows[0]?.c);
+    expect(custo).toBeGreaterThan(0);
+
+    await valor(dono, "select public.abrir_caixa(50000, $1) as v", [chave("caixa")]);
+    const DEVOLVER = "select public.devolver_itens($1, $2::jsonb, $3::jsonb, 'Cliente desistiu', $4) as v";
+    await valor(dono, DEVOLVER, [vendaMaria, JSON.stringify([{ item: itemMaria, quantidade: 1, condicao: "novo" }]), JSON.stringify([{ meio: "dinheiro", valor: 7_900 }]), chave("dev")]);
+    await valor(dono, DEVOLVER, [vendaJoao, JSON.stringify([{ item: itemJoao, quantidade: 1, condicao: "novo" }]), JSON.stringify([{ meio: "vale_troca", valor: 7_900 }]), chave("dev")]);
+
+    const p = await painel(dono, d, d);
+    const black = p.campanhas.find((c) => c.chave === "black 2026");
+    // A margem: a das duas capas da Maria menos a da devolvida (7.900 − custo); a do João volta inteira (zero).
+    expect(black).toEqual({
+      chave: "black 2026", campanha: "Black 2026", gasto: 10_000, impressoes: null, cliques: null, resultados: null, dias: 1, reservas: 0, oportunidades: 2,
+      vendas: 2, vendas_devolvidas: 1, receita: 23_700, devolvido: 15_800, margem: 7_900 - custo, vendas_sem_custo: 0,
+      recebido: 23_700, reembolsado: 7_900, clientes_novos: 1,
+    });
+    expect(p.por_loja).toEqual([{ chave: "black 2026", unidade_id: ids.lojaA, loja: "Loja A", contatos: 2, vendas: 2, receita: 23_700, devolvido: 15_800 }]);
+    expect(p.por_vendedor).toEqual([{ chave: "black 2026", vendedor_id: ids.vendedorA, vendas: 2, receita: 23_700, devolvido: 15_800 }]);
   });
 });
