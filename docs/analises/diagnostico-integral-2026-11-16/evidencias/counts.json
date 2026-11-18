@@ -1,0 +1,18 @@
+[
+  {
+    "counts": {
+      "vendas": 1,
+      "clientes": 0,
+      "entradas": 0,
+      "produtos": 6,
+      "unidades": 3,
+      "variantes": 6,
+      "importacoes": 0,
+      "usuarios_auth": 1,
+      "transferencias": 0,
+      "connect_operacoes": 0,
+      "connect_referencias": 0,
+      "connect_habilitacoes": 0
+    }
+  }
+]

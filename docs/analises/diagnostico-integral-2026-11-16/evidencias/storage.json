@@ -1,0 +1,64 @@
+[
+  {
+    "id": "anexos",
+    "public": false,
+    "file_size_limit": 5242880,
+    "allowed_mime_types": [
+      "application/pdf",
+      "image/jpeg",
+      "image/png",
+      "image/webp"
+    ],
+    "objects": 0,
+    "missing_metadata": 0
+  },
+  {
+    "id": "contas",
+    "public": false,
+    "file_size_limit": 5242880,
+    "allowed_mime_types": [
+      "application/pdf",
+      "image/jpeg",
+      "image/png",
+      "image/webp"
+    ],
+    "objects": 0,
+    "missing_metadata": 0
+  },
+  {
+    "id": "notas",
+    "public": false,
+    "file_size_limit": 5242880,
+    "allowed_mime_types": [
+      "application/pdf",
+      "application/xml",
+      "text/xml"
+    ],
+    "objects": 0,
+    "missing_metadata": 0
+  },
+  {
+    "id": "os",
+    "public": false,
+    "file_size_limit": 5242880,
+    "allowed_mime_types": [
+      "image/jpeg",
+      "image/png",
+      "image/webp"
+    ],
+    "objects": 0,
+    "missing_metadata": 0
+  },
+  {
+    "id": "produtos",
+    "public": false,
+    "file_size_limit": 5242880,
+    "allowed_mime_types": [
+      "image/jpeg",
+      "image/png",
+      "image/webp"
+    ],
+    "objects": 0,
+    "missing_metadata": 0
+  }
+]

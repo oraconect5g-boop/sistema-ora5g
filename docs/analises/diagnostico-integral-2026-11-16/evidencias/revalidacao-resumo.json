@@ -1,0 +1,53 @@
+{
+  "codigo": "89927dc2a82f07cfd5a04fcee503d307ac1037f6",
+  "testes_locais_no_ancestral": "4e1a5d1c592c3884312d37f34faafd25fa49e9e6",
+  "ci": {
+    "run": 43854750798,
+    "job": 133256011463,
+    "resultado": "success",
+    "testes": 2335,
+    "todo": 1,
+    "e2e_aprovados": 281,
+    "e2e_ignorados": 11
+  },
+  "local": {
+    "dirigidos_aprovados": 83,
+    "provas_defeitos": 2,
+    "build": "passou",
+    "e2e_aprovados": 154,
+    "e2e_ignorados": 4
+  },
+  "contagem_179": {
+    "parcial": 70,
+    "testado": 62,
+    "respeitado": 2,
+    "nao_iniciado": 42,
+    "bloqueado": 3
+  },
+  "supabase": {
+    "migrations": 89,
+    "funcoes": 350,
+    "relacoes": 98,
+    "unidades": 3,
+    "produtos": 6,
+    "variantes": 6,
+    "vendas": 2,
+    "clientes": 0,
+    "auth_users": 1,
+    "notas": 0,
+    "objetos_storage": 0
+  },
+  "dominio": {
+    "url": "https://ora5g.com.br/saude/versao",
+    "commit": "89927dc2a82f07cfd5a04fcee503d307ac1037f6",
+    "build": "2026-11-16T11:06:24.744Z",
+    "ambiente": "homologacao"
+  },
+  "nao_executado": [
+    "login dos tres perfis no dominio",
+    "compra ou pagamento externo real",
+    "ativacao telecom real",
+    "mutacao remota Supabase",
+    "deploy pelo revisor"
+  ]
+}

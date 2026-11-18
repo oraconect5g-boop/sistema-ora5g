@@ -1,0 +1,4160 @@
+{
+  "security": [
+    {
+      "name": "rls_enabled_no_policy",
+      "level": "INFO",
+      "remediation": "https://supabase.com/docs/guides/database/database-linter?lint=0008_rls_enabled_no_policy",
+      "count": 8,
+      "findings": [
+        {
+          "detail": "Table \\`privado.cliente_dados\\` has RLS enabled, but no policies exist",
+          "metadata": {
+            "name": "cliente_dados",
+            "type": "table",
+            "schema": "privado"
+          },
+          "observed_at": "2026-11-16T01:05:41.532Z"
+        },
+        {
+          "detail": "Table \\`privado.connect_dados_envio\\` has RLS enabled, but no policies exist",
+          "metadata": {
+            "name": "connect_dados_envio",
+            "type": "table",
+            "schema": "privado"
+          },
+          "observed_at": "2026-11-16T01:05:41.532Z"
+        },
+        {
+          "detail": "Table \\`privado.connect_segredos\\` has RLS enabled, but no policies exist",
+          "metadata": {
+            "name": "connect_segredos",
+            "type": "table",
+            "schema": "privado"
+          },
+          "observed_at": "2026-11-16T01:05:41.532Z"
+        },
+        {
+          "detail": "Table \\`privado.crm_segredos\\` has RLS enabled, but no policies exist",
+          "metadata": {
+            "name": "crm_segredos",
+            "type": "table",
+            "schema": "privado"
+          },
+          "observed_at": "2026-11-16T01:05:41.532Z"
+        },
+        {
+          "detail": "Table \\`privado.notas_destinatarios\\` has RLS enabled, but no policies exist",
+          "metadata": {
+            "name": "notas_destinatarios",
+            "type": "table",
+            "schema": "privado"
+          },
+          "observed_at": "2026-11-16T01:05:41.532Z"
+        },
+        {
+          "detail": "Table \\`privado.whatsapp_destinos\\` has RLS enabled, but no policies exist",
+          "metadata": {
+            "name": "whatsapp_destinos",
+            "type": "table",
+            "schema": "privado"
+          },
+          "observed_at": "2026-11-16T01:05:41.532Z"
+        },
+        {
+          "detail": "Table \\`public.pedido_compra_itens\\` has RLS enabled, but no policies exist",
+          "metadata": {
+            "name": "pedido_compra_itens",
+            "type": "table",
+            "schema": "public"
+          },
+          "observed_at": "2026-11-16T01:05:41.532Z"
+        },
+        {
+          "detail": "Table \\`public.pedidos_compra\\` has RLS enabled, but no policies exist",
+          "metadata": {
+            "name": "pedidos_compra",
+            "type": "table",
+            "schema": "public"
+          },
+          "observed_at": "2026-11-16T01:05:41.532Z"
+        }
+      ]
+    },
+    {
+      "name": "anon_security_definer_function_executable",
+      "level": "WARN",
+      "remediation": "https://supabase.com/docs/guides/database/database-linter?lint=0028_anon_security_definer_function_executable",
+      "count": 2,
+      "findings": [
+        {
+          "detail": "Function `public.loja_produto(p_organizacao uuid, p_produto uuid)` can be executed by the `anon` role as a `SECURITY DEFINER` function via `/rest/v1/rpc/loja_produto`. Revoke `EXECUTE` or switch it to `SECURITY INVOKER` if that is not intentional.",
+          "metadata": {
+            "name": "loja_produto",
+            "schema": "public",
+            "language": "plpgsql",
+            "arguments": "p_organizacao uuid, p_produto uuid",
+            "security_definer": true
+          },
+          "observed_at": "2026-11-16T01:05:41.532Z"
+        },
+        {
+          "detail": "Function `public.loja_vitrine(p_organizacao uuid, p_busca text, p_categoria uuid)` can be executed by the `anon` role as a `SECURITY DEFINER` function via `/rest/v1/rpc/loja_vitrine`. Revoke `EXECUTE` or switch it to `SECURITY INVOKER` if that is not intentional.",
+          "metadata": {
+            "name": "loja_vitrine",
+            "schema": "public",
+            "language": "sql",
+            "arguments": "p_organizacao uuid, p_busca text, p_categoria uuid",
+            "security_definer": true
+          },
+          "observed_at": "2026-11-16T01:05:41.532Z"
+        }
+      ]
+    },
+    {
+      "name": "authenticated_security_definer_function_executable",
+      "level": "WARN",
+      "remediation": "https://supabase.com/docs/guides/database/database-linter?lint=0029_authenticated_security_definer_function_executable",
+      "count": 164,
+      "findings": [
+        {
+          "detail": "Function `public.abrir_caixa(p_fundo bigint, p_chave text)` can be executed by the `authenticated` role as a `SECURITY DEFINER` function via `/rest/v1/rpc/abrir_caixa`. Revoke `EXECUTE` or switch it to `SECURITY INVOKER` if that is not intentional.",
+          "metadata": {
+            "name": "abrir_caixa",
+            "schema": "public",
+            "language": "plpgsql",
+            "arguments": "p_fundo bigint, p_chave text",
+            "security_definer": true
+          },
+          "observed_at": "2026-11-16T01:05:41.532Z"
+        },
+        {
+          "detail": "Function `public.adicionar_item(p_venda uuid, p_variante uuid, p_item uuid, p_quantidade integer, p_chave text)` can be executed by the `authenticated` role as a `SECURITY DEFINER` function via `/rest/v1/rpc/adicionar_item`. Revoke `EXECUTE` or switch it to `SECURITY INVOKER` if that is not intentional.",
+          "metadata": {
+            "name": "adicionar_item",
+            "schema": "public",
+            "language": "plpgsql",
+            "arguments": "p_venda uuid, p_variante uuid, p_item uuid, p_quantidade integer, p_chave text",
+            "security_definer": true
+          },
+          "observed_at": "2026-11-16T01:05:41.532Z"
+        },
+        {
+          "detail": "Function `public.alterar_situacao_pessoa(p_usuario uuid, p_situacao text, p_motivo text)` can be executed by the `authenticated` role as a `SECURITY DEFINER` function via `/rest/v1/rpc/alterar_situacao_pessoa`. Revoke `EXECUTE` or switch it to `SECURITY INVOKER` if that is not intentional.",
+          "metadata": {
+            "name": "alterar_situacao_pessoa",
+            "schema": "public",
+            "language": "plpgsql",
+            "arguments": "p_usuario uuid, p_situacao text, p_motivo text",
+            "security_definer": true
+          },
+          "observed_at": "2026-11-16T01:05:41.532Z"
+        },
+        {
+          "detail": "Function `public.aplicar_desconto(p_item uuid, p_desconto bigint)` can be executed by the `authenticated` role as a `SECURITY DEFINER` function via `/rest/v1/rpc/aplicar_desconto`. Revoke `EXECUTE` or switch it to `SECURITY INVOKER` if that is not intentional.",
+          "metadata": {
+            "name": "aplicar_desconto",
+            "schema": "public",
+            "language": "plpgsql",
+            "arguments": "p_item uuid, p_desconto bigint",
+            "security_definer": true
+          },
+          "observed_at": "2026-11-16T01:05:41.532Z"
+        },
+        {
+          "detail": "Function `public.atividade_criar(p_dados jsonb, p_chave text)` can be executed by the `authenticated` role as a `SECURITY DEFINER` function via `/rest/v1/rpc/atividade_criar`. Revoke `EXECUTE` or switch it to `SECURITY INVOKER` if that is not intentional.",
+          "metadata": {
+            "name": "atividade_criar",
+            "schema": "public",
+            "language": "plpgsql",
+            "arguments": "p_dados jsonb, p_chave text",
+            "security_definer": true
+          },
+          "observed_at": "2026-11-16T01:05:41.532Z"
+        },
+        {
+          "detail": "Function `public.atividade_encerrar(p_atividade uuid, p_feita boolean, p_resultado text)` can be executed by the `authenticated` role as a `SECURITY DEFINER` function via `/rest/v1/rpc/atividade_encerrar`. Revoke `EXECUTE` or switch it to `SECURITY INVOKER` if that is not intentional.",
+          "metadata": {
+            "name": "atividade_encerrar",
+            "schema": "public",
+            "language": "plpgsql",
+            "arguments": "p_atividade uuid, p_feita boolean, p_resultado text",
+            "security_definer": true
+          },
+          "observed_at": "2026-11-16T01:05:41.532Z"
+        },
+        {
+          "detail": "Function `public.bonus_definir(p_vigente_desde date, p_faixas jsonb, p_motivo text)` can be executed by the `authenticated` role as a `SECURITY DEFINER` function via `/rest/v1/rpc/bonus_definir`. Revoke `EXECUTE` or switch it to `SECURITY INVOKER` if that is not intentional.",
+          "metadata": {
+            "name": "bonus_definir",
+            "schema": "public",
+            "language": "plpgsql",
+            "arguments": "p_vigente_desde date, p_faixas jsonb, p_motivo text",
+            "security_definer": true
+          },
+          "observed_at": "2026-11-16T01:05:41.532Z"
+        },
+        {
+          "detail": "Function `public.bonus_fechamento_aprovar(p_fechamento uuid, p_decisoes jsonb)` can be executed by the `authenticated` role as a `SECURITY DEFINER` function via `/rest/v1/rpc/bonus_fechamento_aprovar`. Revoke `EXECUTE` or switch it to `SECURITY INVOKER` if that is not intentional.",
+          "metadata": {
+            "name": "bonus_fechamento_aprovar",
+            "schema": "public",
+            "language": "plpgsql",
+            "arguments": "p_fechamento uuid, p_decisoes jsonb",
+            "security_definer": true
+          },
+          "observed_at": "2026-11-16T01:05:41.532Z"
+        },
+        {
+          "detail": "Function `public.bonus_fechamento_enviar(p_mes date, p_unidade uuid, p_totais jsonb, p_contestacoes jsonb)` can be executed by the `authenticated` role as a `SECURITY DEFINER` function via `/rest/v1/rpc/bonus_fechamento_enviar`. Revoke `EXECUTE` or switch it to `SECURITY INVOKER` if that is not intentional.",
+          "metadata": {
+            "name": "bonus_fechamento_enviar",
+            "schema": "public",
+            "language": "plpgsql",
+            "arguments": "p_mes date, p_unidade uuid, p_totais jsonb, p_contestacoes jsonb",
+            "security_definer": true
+          },
+          "observed_at": "2026-11-16T01:05:41.532Z"
+        },
+        {
+          "detail": "Function `public.caixa_cancelar_saida(p_saida uuid)` can be executed by the `authenticated` role as a `SECURITY DEFINER` function via `/rest/v1/rpc/caixa_cancelar_saida`. Revoke `EXECUTE` or switch it to `SECURITY INVOKER` if that is not intentional.",
+          "metadata": {
+            "name": "caixa_cancelar_saida",
+            "schema": "public",
+            "language": "plpgsql",
+            "arguments": "p_saida uuid",
+            "security_definer": true
+          },
+          "observed_at": "2026-11-16T01:05:41.532Z"
+        },
+        {
+          "detail": "Function `public.caixa_decidir_saida(p_saida uuid, p_autorizar boolean, p_motivo text)` can be executed by the `authenticated` role as a `SECURITY DEFINER` function via `/rest/v1/rpc/caixa_decidir_saida`. Revoke `EXECUTE` or switch it to `SECURITY INVOKER` if that is not intentional.",
+          "metadata": {
+            "name": "caixa_decidir_saida",
+            "schema": "public",
+            "language": "plpgsql",
+            "arguments": "p_saida uuid, p_autorizar boolean, p_motivo text",
+            "security_definer": true
+          },
+          "observed_at": "2026-11-16T01:05:41.532Z"
+        },
+        {
+          "detail": "Function `public.caixa_pedir_saida(p_valor bigint, p_motivo text, p_chave text)` can be executed by the `authenticated` role as a `SECURITY DEFINER` function via `/rest/v1/rpc/caixa_pedir_saida`. Revoke `EXECUTE` or switch it to `SECURITY INVOKER` if that is not intentional.",
+          "metadata": {
+            "name": "caixa_pedir_saida",
+            "schema": "public",
+            "language": "plpgsql",
+            "arguments": "p_valor bigint, p_motivo text, p_chave text",
+            "security_definer": true
+          },
+          "observed_at": "2026-11-16T01:05:41.532Z"
+        },
+        {
+          "detail": "Function `public.cancelar_convite(p_convite uuid, p_motivo text)` can be executed by the `authenticated` role as a `SECURITY DEFINER` function via `/rest/v1/rpc/cancelar_convite`. Revoke `EXECUTE` or switch it to `SECURITY INVOKER` if that is not intentional.",
+          "metadata": {
+            "name": "cancelar_convite",
+            "schema": "public",
+            "language": "plpgsql",
+            "arguments": "p_convite uuid, p_motivo text",
+            "security_definer": true
+          },
+          "observed_at": "2026-11-16T01:05:41.532Z"
+        },
+        {
+          "detail": "Function `public.cancelar_venda(p_venda uuid, p_motivo text)` can be executed by the `authenticated` role as a `SECURITY DEFINER` function via `/rest/v1/rpc/cancelar_venda`. Revoke `EXECUTE` or switch it to `SECURITY INVOKER` if that is not intentional.",
+          "metadata": {
+            "name": "cancelar_venda",
+            "schema": "public",
+            "language": "plpgsql",
+            "arguments": "p_venda uuid, p_motivo text",
+            "security_definer": true
+          },
+          "observed_at": "2026-11-16T01:05:41.532Z"
+        },
+        {
+          "detail": "Function `public.catalogo_definir_peca_de_assistencia(p_organizacao uuid, p_categoria uuid, p_peca boolean, p_motivo text)` can be executed by the `authenticated` role as a `SECURITY DEFINER` function via `/rest/v1/rpc/catalogo_definir_peca_de_assistencia`. Revoke `EXECUTE` or switch it to `SECURITY INVOKER` if that is not intentional.",
+          "metadata": {
+            "name": "catalogo_definir_peca_de_assistencia",
+            "schema": "public",
+            "language": "plpgsql",
+            "arguments": "p_organizacao uuid, p_categoria uuid, p_peca boolean, p_motivo text",
+            "security_definer": true
+          },
+          "observed_at": "2026-11-16T01:05:41.532Z"
+        },
+        {
+          "detail": "Function `public.catalogo_definir_politica_desconto(p_categoria uuid, p_teto_pb integer, p_margem_minima_pb integer, p_motivo text)` can be executed by the `authenticated` role as a `SECURITY DEFINER` function via `/rest/v1/rpc/catalogo_definir_politica_desconto`. Revoke `EXECUTE` or switch it to `SECURITY INVOKER` if that is not intentional.",
+          "metadata": {
+            "name": "catalogo_definir_politica_desconto",
+            "schema": "public",
+            "language": "plpgsql",
+            "arguments": "p_categoria uuid, p_teto_pb integer, p_margem_minima_pb integer, p_motivo text",
+            "security_definer": true
+          },
+          "observed_at": "2026-11-16T01:05:41.532Z"
+        },
+        {
+          "detail": "Function `public.catalogo_desligar_codigo(p_vinculo uuid, p_motivo text)` can be executed by the `authenticated` role as a `SECURITY DEFINER` function via `/rest/v1/rpc/catalogo_desligar_codigo`. Revoke `EXECUTE` or switch it to `SECURITY INVOKER` if that is not intentional.",
+          "metadata": {
+            "name": "catalogo_desligar_codigo",
+            "schema": "public",
+            "language": "plpgsql",
+            "arguments": "p_vinculo uuid, p_motivo text",
+            "security_definer": true
+          },
+          "observed_at": "2026-11-16T01:05:41.532Z"
+        },
+        {
+          "detail": "Function `public.catalogo_ligar_codigo(p_variante uuid, p_canal text, p_codigo text, p_sku_no_canal text, p_motivo text)` can be executed by the `authenticated` role as a `SECURITY DEFINER` function via `/rest/v1/rpc/catalogo_ligar_codigo`. Revoke `EXECUTE` or switch it to `SECURITY INVOKER` if that is not intentional.",
+          "metadata": {
+            "name": "catalogo_ligar_codigo",
+            "schema": "public",
+            "language": "plpgsql",
+            "arguments": "p_variante uuid, p_canal text, p_codigo text, p_sku_no_canal text, p_motivo text",
+            "security_definer": true
+          },
+          "observed_at": "2026-11-16T01:05:41.532Z"
+        },
+        {
+          "detail": "Function `public.catalogo_salvar_categoria(p_organizacao uuid, p_id uuid, p_nome text, p_ativa boolean, p_motivo text)` can be executed by the `authenticated` role as a `SECURITY DEFINER` function via `/rest/v1/rpc/catalogo_salvar_categoria`. Revoke `EXECUTE` or switch it to `SECURITY INVOKER` if that is not intentional.",
+          "metadata": {
+            "name": "catalogo_salvar_categoria",
+            "schema": "public",
+            "language": "plpgsql",
+            "arguments": "p_organizacao uuid, p_id uuid, p_nome text, p_ativa boolean, p_motivo text",
+            "security_definer": true
+          },
+          "observed_at": "2026-11-16T01:05:41.532Z"
+        },
+        {
+          "detail": "Function `public.catalogo_salvar_marca(p_organizacao uuid, p_id uuid, p_nome text, p_motivo text)` can be executed by the `authenticated` role as a `SECURITY DEFINER` function via `/rest/v1/rpc/catalogo_salvar_marca`. Revoke `EXECUTE` or switch it to `SECURITY INVOKER` if that is not intentional.",
+          "metadata": {
+            "name": "catalogo_salvar_marca",
+            "schema": "public",
+            "language": "plpgsql",
+            "arguments": "p_organizacao uuid, p_id uuid, p_nome text, p_motivo text",
+            "security_definer": true
+          },
+          "observed_at": "2026-11-16T01:05:41.532Z"
+        },
+        {
+          "detail": "Function `public.catalogo_salvar_produto(p_organizacao uuid, p_id uuid, p_tipo text, p_nome text, p_categoria uuid, p_marca uuid, p_modelo text, p_descricao text, p_publicar_online boolean, p_ativo boolean, p_chave text, p_motivo text)` can be executed by the `authenticated` role as a `SECURITY DEFINER` function via `/rest/v1/rpc/catalogo_salvar_produto`. Revoke `EXECUTE` or switch it to `SECURITY INVOKER` if that is not intentional.",
+          "metadata": {
+            "name": "catalogo_salvar_produto",
+            "schema": "public",
+            "language": "plpgsql",
+            "arguments": "p_organizacao uuid, p_id uuid, p_tipo text, p_nome text, p_categoria uuid, p_marca uuid, p_modelo text, p_descricao text, p_publicar_online boolean, p_ativo boolean, p_chave text, p_motivo text",
+            "security_definer": true
+          },
+          "observed_at": "2026-11-16T01:05:41.532Z"
+        },
+        {
+          "detail": "Function `public.catalogo_salvar_variante(p_produto uuid, p_id uuid, p_sku text, p_nome text, p_cor text, p_capacidade text, p_codigo_barras text, p_estoque_minimo integer, p_ativa boolean, p_motivo text)` can be executed by the `authenticated` role as a `SECURITY DEFINER` function via `/rest/v1/rpc/catalogo_salvar_variante`. Revoke `EXECUTE` or switch it to `SECURITY INVOKER` if that is not intentional.",
+          "metadata": {
+            "name": "catalogo_salvar_variante",
+            "schema": "public",
+            "language": "plpgsql",
+            "arguments": "p_produto uuid, p_id uuid, p_sku text, p_nome text, p_cor text, p_capacidade text, p_codigo_barras text, p_estoque_minimo integer, p_ativa boolean, p_motivo text",
+            "security_definer": true
+          },
+          "observed_at": "2026-11-16T01:05:41.532Z"
+        },
+        {
+          "detail": "Function `public.cliente_buscar(p_criterio text, p_valor text)` can be executed by the `authenticated` role as a `SECURITY DEFINER` function via `/rest/v1/rpc/cliente_buscar`. Revoke `EXECUTE` or switch it to `SECURITY INVOKER` if that is not intentional.",
+          "metadata": {
+            "name": "cliente_buscar",
+            "schema": "public",
+            "language": "plpgsql",
+            "arguments": "p_criterio text, p_valor text",
+            "security_definer": true
+          },
+          "observed_at": "2026-11-16T01:05:41.532Z"
+        },
+        {
+          "detail": "Function `public.cliente_consentir(p_cliente uuid, p_canal text, p_finalidade text, p_concedido boolean, p_fonte text)` can be executed by the `authenticated` role as a `SECURITY DEFINER` function via `/rest/v1/rpc/cliente_consentir`. Revoke `EXECUTE` or switch it to `SECURITY INVOKER` if that is not intentional.",
+          "metadata": {
+            "name": "cliente_consentir",
+            "schema": "public",
+            "language": "plpgsql",
+            "arguments": "p_cliente uuid, p_canal text, p_finalidade text, p_concedido boolean, p_fonte text",
+            "security_definer": true
+          },
+          "observed_at": "2026-11-16T01:05:41.532Z"
+        },
+        {
+          "detail": "Function `public.cliente_dados_do_titular(p_cliente uuid, p_motivo text)` can be executed by the `authenticated` role as a `SECURITY DEFINER` function via `/rest/v1/rpc/cliente_dados_do_titular`. Revoke `EXECUTE` or switch it to `SECURITY INVOKER` if that is not intentional.",
+          "metadata": {
+            "name": "cliente_dados_do_titular",
+            "schema": "public",
+            "language": "plpgsql",
+            "arguments": "p_cliente uuid, p_motivo text",
+            "security_definer": true
+          },
+          "observed_at": "2026-11-16T01:05:41.532Z"
+        },
+        {
+          "detail": "Function `public.cliente_ficha(p_cliente uuid)` can be executed by the `authenticated` role as a `SECURITY DEFINER` function via `/rest/v1/rpc/cliente_ficha`. Revoke `EXECUTE` or switch it to `SECURITY INVOKER` if that is not intentional.",
+          "metadata": {
+            "name": "cliente_ficha",
+            "schema": "public",
+            "language": "plpgsql",
+            "arguments": "p_cliente uuid",
+            "security_definer": true
+          },
+          "observed_at": "2026-11-16T01:05:41.532Z"
+        },
+        {
+          "detail": "Function `public.cliente_revelar(p_cliente uuid, p_campo text)` can be executed by the `authenticated` role as a `SECURITY DEFINER` function via `/rest/v1/rpc/cliente_revelar`. Revoke `EXECUTE` or switch it to `SECURITY INVOKER` if that is not intentional.",
+          "metadata": {
+            "name": "cliente_revelar",
+            "schema": "public",
+            "language": "plpgsql",
+            "arguments": "p_cliente uuid, p_campo text",
+            "security_definer": true
+          },
+          "observed_at": "2026-11-16T01:05:41.532Z"
+        },
+        {
+          "detail": "Function `public.cliente_salvar(p_cliente uuid, p_dados jsonb, p_motivo text, p_chave text)` can be executed by the `authenticated` role as a `SECURITY DEFINER` function via `/rest/v1/rpc/cliente_salvar`. Revoke `EXECUTE` or switch it to `SECURITY INVOKER` if that is not intentional.",
+          "metadata": {
+            "name": "cliente_salvar",
+            "schema": "public",
+            "language": "plpgsql",
+            "arguments": "p_cliente uuid, p_dados jsonb, p_motivo text, p_chave text",
+            "security_definer": true
+          },
+          "observed_at": "2026-11-16T01:05:41.532Z"
+        },
+        {
+          "detail": "Function `public.clientes_duplicados()` can be executed by the `authenticated` role as a `SECURITY DEFINER` function via `/rest/v1/rpc/clientes_duplicados`. Revoke `EXECUTE` or switch it to `SECURITY INVOKER` if that is not intentional.",
+          "metadata": {
+            "name": "clientes_duplicados",
+            "schema": "public",
+            "language": "plpgsql",
+            "arguments": "",
+            "security_definer": true
+          },
+          "observed_at": "2026-11-16T01:05:41.532Z"
+        },
+        {
+          "detail": "Function `public.clientes_marcar_diferentes(p_a uuid, p_b uuid, p_motivo text)` can be executed by the `authenticated` role as a `SECURITY DEFINER` function via `/rest/v1/rpc/clientes_marcar_diferentes`. Revoke `EXECUTE` or switch it to `SECURITY INVOKER` if that is not intentional.",
+          "metadata": {
+            "name": "clientes_marcar_diferentes",
+            "schema": "public",
+            "language": "plpgsql",
+            "arguments": "p_a uuid, p_b uuid, p_motivo text",
+            "security_definer": true
+          },
+          "observed_at": "2026-11-16T01:05:41.532Z"
+        },
+        {
+          "detail": "Function `public.clientes_mesclar(p_manter uuid, p_absorver uuid, p_motivo text)` can be executed by the `authenticated` role as a `SECURITY DEFINER` function via `/rest/v1/rpc/clientes_mesclar`. Revoke `EXECUTE` or switch it to `SECURITY INVOKER` if that is not intentional.",
+          "metadata": {
+            "name": "clientes_mesclar",
+            "schema": "public",
+            "language": "plpgsql",
+            "arguments": "p_manter uuid, p_absorver uuid, p_motivo text",
+            "security_definer": true
+          },
+          "observed_at": "2026-11-16T01:05:41.532Z"
+        },
+        {
+          "detail": "Function `public.clientes_segmentos()` can be executed by the `authenticated` role as a `SECURITY DEFINER` function via `/rest/v1/rpc/clientes_segmentos`. Revoke `EXECUTE` or switch it to `SECURITY INVOKER` if that is not intentional.",
+          "metadata": {
+            "name": "clientes_segmentos",
+            "schema": "public",
+            "language": "plpgsql",
+            "arguments": "",
+            "security_definer": true
+          },
+          "observed_at": "2026-11-16T01:05:41.532Z"
+        },
+        {
+          "detail": "Function `public.concluir_venda(p_venda uuid, p_pagamentos jsonb, p_cliente jsonb, p_chave text)` can be executed by the `authenticated` role as a `SECURITY DEFINER` function via `/rest/v1/rpc/concluir_venda`. Revoke `EXECUTE` or switch it to `SECURITY INVOKER` if that is not intentional.",
+          "metadata": {
+            "name": "concluir_venda",
+            "schema": "public",
+            "language": "plpgsql",
+            "arguments": "p_venda uuid, p_pagamentos jsonb, p_cliente jsonb, p_chave text",
+            "security_definer": true
+          },
+          "observed_at": "2026-11-16T01:05:41.532Z"
+        },
+        {
+          "detail": "Function `public.conferir_caixa(p_caixa uuid, p_observacao text)` can be executed by the `authenticated` role as a `SECURITY DEFINER` function via `/rest/v1/rpc/conferir_caixa`. Revoke `EXECUTE` or switch it to `SECURITY INVOKER` if that is not intentional.",
+          "metadata": {
+            "name": "conferir_caixa",
+            "schema": "public",
+            "language": "plpgsql",
+            "arguments": "p_caixa uuid, p_observacao text",
+            "security_definer": true
+          },
+          "observed_at": "2026-11-16T01:05:41.532Z"
+        },
+        {
+          "detail": "Function `public.conferir_item(p_item uuid)` can be executed by the `authenticated` role as a `SECURITY DEFINER` function via `/rest/v1/rpc/conferir_item`. Revoke `EXECUTE` or switch it to `SECURITY INVOKER` if that is not intentional.",
+          "metadata": {
+            "name": "conferir_item",
+            "schema": "public",
+            "language": "plpgsql",
+            "arguments": "p_item uuid",
+            "security_definer": true
+          },
+          "observed_at": "2026-11-16T01:05:41.532Z"
+        },
+        {
+          "detail": "Function `public.conferir_retorno(p_retorno uuid, p_recebido boolean, p_identificador text, p_condicao text, p_observacao text)` can be executed by the `authenticated` role as a `SECURITY DEFINER` function via `/rest/v1/rpc/conferir_retorno`. Revoke `EXECUTE` or switch it to `SECURITY INVOKER` if that is not intentional.",
+          "metadata": {
+            "name": "conferir_retorno",
+            "schema": "public",
+            "language": "plpgsql",
+            "arguments": "p_retorno uuid, p_recebido boolean, p_identificador text, p_condicao text, p_observacao text",
+            "security_definer": true
+          },
+          "observed_at": "2026-11-16T01:05:41.532Z"
+        },
+        {
+          "detail": "Function `public.confirmar_estorno_externo(p_estorno uuid, p_comprovante text, p_observacao text)` can be executed by the `authenticated` role as a `SECURITY DEFINER` function via `/rest/v1/rpc/confirmar_estorno_externo`. Revoke `EXECUTE` or switch it to `SECURITY INVOKER` if that is not intentional.",
+          "metadata": {
+            "name": "confirmar_estorno_externo",
+            "schema": "public",
+            "language": "plpgsql",
+            "arguments": "p_estorno uuid, p_comprovante text, p_observacao text",
+            "security_definer": true
+          },
+          "observed_at": "2026-11-16T01:05:41.532Z"
+        },
+        {
+          "detail": "Function `public.connect_cancelar(p_operacao uuid, p_motivo text)` can be executed by the `authenticated` role as a `SECURITY DEFINER` function via `/rest/v1/rpc/connect_cancelar`. Revoke `EXECUTE` or switch it to `SECURITY INVOKER` if that is not intentional.",
+          "metadata": {
+            "name": "connect_cancelar",
+            "schema": "public",
+            "language": "plpgsql",
+            "arguments": "p_operacao uuid, p_motivo text",
+            "security_definer": true
+          },
+          "observed_at": "2026-11-16T01:05:41.532Z"
+        },
+        {
+          "detail": "Function `public.connect_habilitar(p_tipo text, p_habilitar boolean, p_evidencia text)` can be executed by the `authenticated` role as a `SECURITY DEFINER` function via `/rest/v1/rpc/connect_habilitar`. Revoke `EXECUTE` or switch it to `SECURITY INVOKER` if that is not intentional.",
+          "metadata": {
+            "name": "connect_habilitar",
+            "schema": "public",
+            "language": "plpgsql",
+            "arguments": "p_tipo text, p_habilitar boolean, p_evidencia text",
+            "security_definer": true
+          },
+          "observed_at": "2026-11-16T01:05:41.532Z"
+        },
+        {
+          "detail": "Function `public.connect_registrar(p_tipo text, p_pedido jsonb, p_chave text)` can be executed by the `authenticated` role as a `SECURITY DEFINER` function via `/rest/v1/rpc/connect_registrar`. Revoke `EXECUTE` or switch it to `SECURITY INVOKER` if that is not intentional.",
+          "metadata": {
+            "name": "connect_registrar",
+            "schema": "public",
+            "language": "plpgsql",
+            "arguments": "p_tipo text, p_pedido jsonb, p_chave text",
+            "security_definer": true
+          },
+          "observed_at": "2026-11-16T01:05:41.532Z"
+        },
+        {
+          "detail": "Function `public.connect_resolver(p_operacao uuid, p_resultado text, p_motivo text)` can be executed by the `authenticated` role as a `SECURITY DEFINER` function via `/rest/v1/rpc/connect_resolver`. Revoke `EXECUTE` or switch it to `SECURITY INVOKER` if that is not intentional.",
+          "metadata": {
+            "name": "connect_resolver",
+            "schema": "public",
+            "language": "plpgsql",
+            "arguments": "p_operacao uuid, p_resultado text, p_motivo text",
+            "security_definer": true
+          },
+          "observed_at": "2026-11-16T01:05:41.532Z"
+        },
+        {
+          "detail": "Function `public.conta_pagar_anexar(p_conta uuid, p_tipo text, p_descricao text, p_caminho text, p_sha256 text)` can be executed by the `authenticated` role as a `SECURITY DEFINER` function via `/rest/v1/rpc/conta_pagar_anexar`. Revoke `EXECUTE` or switch it to `SECURITY INVOKER` if that is not intentional.",
+          "metadata": {
+            "name": "conta_pagar_anexar",
+            "schema": "public",
+            "language": "plpgsql",
+            "arguments": "p_conta uuid, p_tipo text, p_descricao text, p_caminho text, p_sha256 text",
+            "security_definer": true
+          },
+          "observed_at": "2026-11-16T01:05:41.532Z"
+        },
+        {
+          "detail": "Function `public.conta_pagar_cancelar(p_conta uuid, p_motivo text, p_e_seguintes boolean)` can be executed by the `authenticated` role as a `SECURITY DEFINER` function via `/rest/v1/rpc/conta_pagar_cancelar`. Revoke `EXECUTE` or switch it to `SECURITY INVOKER` if that is not intentional.",
+          "metadata": {
+            "name": "conta_pagar_cancelar",
+            "schema": "public",
+            "language": "plpgsql",
+            "arguments": "p_conta uuid, p_motivo text, p_e_seguintes boolean",
+            "security_definer": true
+          },
+          "observed_at": "2026-11-16T01:05:41.532Z"
+        },
+        {
+          "detail": "Function `public.conta_pagar_categoria_salvar(p_categoria uuid, p_nome text, p_ativa boolean, p_entra_no_resultado boolean)` can be executed by the `authenticated` role as a `SECURITY DEFINER` function via `/rest/v1/rpc/conta_pagar_categoria_salvar`. Revoke `EXECUTE` or switch it to `SECURITY INVOKER` if that is not intentional.",
+          "metadata": {
+            "name": "conta_pagar_categoria_salvar",
+            "schema": "public",
+            "language": "plpgsql",
+            "arguments": "p_categoria uuid, p_nome text, p_ativa boolean, p_entra_no_resultado boolean",
+            "security_definer": true
+          },
+          "observed_at": "2026-11-16T01:05:41.532Z"
+        },
+        {
+          "detail": "Function `public.conta_pagar_corrigir(p_conta uuid, p_dados jsonb, p_motivo text)` can be executed by the `authenticated` role as a `SECURITY DEFINER` function via `/rest/v1/rpc/conta_pagar_corrigir`. Revoke `EXECUTE` or switch it to `SECURITY INVOKER` if that is not intentional.",
+          "metadata": {
+            "name": "conta_pagar_corrigir",
+            "schema": "public",
+            "language": "plpgsql",
+            "arguments": "p_conta uuid, p_dados jsonb, p_motivo text",
+            "security_definer": true
+          },
+          "observed_at": "2026-11-16T01:05:41.532Z"
+        },
+        {
+          "detail": "Function `public.conta_pagar_desfazer_pagamento(p_conta uuid, p_motivo text)` can be executed by the `authenticated` role as a `SECURITY DEFINER` function via `/rest/v1/rpc/conta_pagar_desfazer_pagamento`. Revoke `EXECUTE` or switch it to `SECURITY INVOKER` if that is not intentional.",
+          "metadata": {
+            "name": "conta_pagar_desfazer_pagamento",
+            "schema": "public",
+            "language": "plpgsql",
+            "arguments": "p_conta uuid, p_motivo text",
+            "security_definer": true
+          },
+          "observed_at": "2026-11-16T01:05:41.532Z"
+        },
+        {
+          "detail": "Function `public.conta_pagar_lancar(p_dados jsonb, p_chave text)` can be executed by the `authenticated` role as a `SECURITY DEFINER` function via `/rest/v1/rpc/conta_pagar_lancar`. Revoke `EXECUTE` or switch it to `SECURITY INVOKER` if that is not intentional.",
+          "metadata": {
+            "name": "conta_pagar_lancar",
+            "schema": "public",
+            "language": "plpgsql",
+            "arguments": "p_dados jsonb, p_chave text",
+            "security_definer": true
+          },
+          "observed_at": "2026-11-16T01:05:41.532Z"
+        },
+        {
+          "detail": "Function `public.conta_pagar_ligar_entrada(p_conta uuid, p_entrada uuid, p_motivo text)` can be executed by the `authenticated` role as a `SECURITY DEFINER` function via `/rest/v1/rpc/conta_pagar_ligar_entrada`. Revoke `EXECUTE` or switch it to `SECURITY INVOKER` if that is not intentional.",
+          "metadata": {
+            "name": "conta_pagar_ligar_entrada",
+            "schema": "public",
+            "language": "plpgsql",
+            "arguments": "p_conta uuid, p_entrada uuid, p_motivo text",
+            "security_definer": true
+          },
+          "observed_at": "2026-11-16T01:05:41.532Z"
+        },
+        {
+          "detail": "Function `public.conta_pagar_pagar(p_conta uuid, p_pago_em date, p_valor_pago bigint, p_referencia text)` can be executed by the `authenticated` role as a `SECURITY DEFINER` function via `/rest/v1/rpc/conta_pagar_pagar`. Revoke `EXECUTE` or switch it to `SECURITY INVOKER` if that is not intentional.",
+          "metadata": {
+            "name": "conta_pagar_pagar",
+            "schema": "public",
+            "language": "plpgsql",
+            "arguments": "p_conta uuid, p_pago_em date, p_valor_pago bigint, p_referencia text",
+            "security_definer": true
+          },
+          "observed_at": "2026-11-16T01:05:41.532Z"
+        },
+        {
+          "detail": "Function `public.conta_pagar_retirar_anexo(p_anexo uuid, p_motivo text)` can be executed by the `authenticated` role as a `SECURITY DEFINER` function via `/rest/v1/rpc/conta_pagar_retirar_anexo`. Revoke `EXECUTE` or switch it to `SECURITY INVOKER` if that is not intentional.",
+          "metadata": {
+            "name": "conta_pagar_retirar_anexo",
+            "schema": "public",
+            "language": "plpgsql",
+            "arguments": "p_anexo uuid, p_motivo text",
+            "security_definer": true
+          },
+          "observed_at": "2026-11-16T01:05:41.532Z"
+        },
+        {
+          "detail": "Function `public.convidar_pessoa(p_organizacao uuid, p_nome text, p_email text, p_papel text, p_unidades uuid[], p_motivo text)` can be executed by the `authenticated` role as a `SECURITY DEFINER` function via `/rest/v1/rpc/convidar_pessoa`. Revoke `EXECUTE` or switch it to `SECURITY INVOKER` if that is not intentional.",
+          "metadata": {
+            "name": "convidar_pessoa",
+            "schema": "public",
+            "language": "plpgsql",
+            "arguments": "p_organizacao uuid, p_nome text, p_email text, p_papel text, p_unidades uuid[], p_motivo text",
+            "security_definer": true
+          },
+          "observed_at": "2026-11-16T01:05:41.532Z"
+        },
+        {
+          "detail": "Function `public.criar_venda(p_chave text)` can be executed by the `authenticated` role as a `SECURITY DEFINER` function via `/rest/v1/rpc/criar_venda`. Revoke `EXECUTE` or switch it to `SECURITY INVOKER` if that is not intentional.",
+          "metadata": {
+            "name": "criar_venda",
+            "schema": "public",
+            "language": "plpgsql",
+            "arguments": "p_chave text",
+            "security_definer": true
+          },
+          "observed_at": "2026-11-16T01:05:41.532Z"
+        },
+        {
+          "detail": "Function `public.crm_agenda()` can be executed by the `authenticated` role as a `SECURITY DEFINER` function via `/rest/v1/rpc/crm_agenda`. Revoke `EXECUTE` or switch it to `SECURITY INVOKER` if that is not intentional.",
+          "metadata": {
+            "name": "crm_agenda",
+            "schema": "public",
+            "language": "plpgsql",
+            "arguments": "",
+            "security_definer": true
+          },
+          "observed_at": "2026-11-16T01:05:41.532Z"
+        },
+        {
+          "detail": "Function `public.crm_funil()` can be executed by the `authenticated` role as a `SECURITY DEFINER` function via `/rest/v1/rpc/crm_funil`. Revoke `EXECUTE` or switch it to `SECURITY INVOKER` if that is not intentional.",
+          "metadata": {
+            "name": "crm_funil",
+            "schema": "public",
+            "language": "plpgsql",
+            "arguments": "",
+            "security_definer": true
+          },
+          "observed_at": "2026-11-16T01:05:41.532Z"
+        },
+        {
+          "detail": "Function `public.custo_corrigir(p_variante uuid, p_valor_centavos bigint, p_motivo text)` can be executed by the `authenticated` role as a `SECURITY DEFINER` function via `/rest/v1/rpc/custo_corrigir`. Revoke `EXECUTE` or switch it to `SECURITY INVOKER` if that is not intentional.",
+          "metadata": {
+            "name": "custo_corrigir",
+            "schema": "public",
+            "language": "plpgsql",
+            "arguments": "p_variante uuid, p_valor_centavos bigint, p_motivo text",
+            "security_definer": true
+          },
+          "observed_at": "2026-11-16T01:05:41.532Z"
+        },
+        {
+          "detail": "Function `public.decidir_aprovacao(p_aprovacao uuid, p_aprovar boolean, p_observacao text)` can be executed by the `authenticated` role as a `SECURITY DEFINER` function via `/rest/v1/rpc/decidir_aprovacao`. Revoke `EXECUTE` or switch it to `SECURITY INVOKER` if that is not intentional.",
+          "metadata": {
+            "name": "decidir_aprovacao",
+            "schema": "public",
+            "language": "plpgsql",
+            "arguments": "p_aprovacao uuid, p_aprovar boolean, p_observacao text",
+            "security_definer": true
+          },
+          "observed_at": "2026-11-16T01:05:41.532Z"
+        },
+        {
+          "detail": "Function `public.devolver_itens(p_venda uuid, p_itens jsonb, p_reembolsos jsonb, p_motivo text, p_chave text)` can be executed by the `authenticated` role as a `SECURITY DEFINER` function via `/rest/v1/rpc/devolver_itens`. Revoke `EXECUTE` or switch it to `SECURITY INVOKER` if that is not intentional.",
+          "metadata": {
+            "name": "devolver_itens",
+            "schema": "public",
+            "language": "plpgsql",
+            "arguments": "p_venda uuid, p_itens jsonb, p_reembolsos jsonb, p_motivo text, p_chave text",
+            "security_definer": true
+          },
+          "observed_at": "2026-11-16T01:05:41.532Z"
+        },
+        {
+          "detail": "Function `public.disponibilidade_na_rede(p_variante uuid)` can be executed by the `authenticated` role as a `SECURITY DEFINER` function via `/rest/v1/rpc/disponibilidade_na_rede`. Revoke `EXECUTE` or switch it to `SECURITY INVOKER` if that is not intentional.",
+          "metadata": {
+            "name": "disponibilidade_na_rede",
+            "schema": "public",
+            "language": "sql",
+            "arguments": "p_variante uuid",
+            "security_definer": true
+          },
+          "observed_at": "2026-11-16T01:05:41.532Z"
+        },
+        {
+          "detail": "Function `public.encerrar_vinculo(p_vinculo uuid, p_motivo text)` can be executed by the `authenticated` role as a `SECURITY DEFINER` function via `/rest/v1/rpc/encerrar_vinculo`. Revoke `EXECUTE` or switch it to `SECURITY INVOKER` if that is not intentional.",
+          "metadata": {
+            "name": "encerrar_vinculo",
+            "schema": "public",
+            "language": "plpgsql",
+            "arguments": "p_vinculo uuid, p_motivo text",
+            "security_definer": true
+          },
+          "observed_at": "2026-11-16T01:05:41.532Z"
+        },
+        {
+          "detail": "Function `public.estoque_entrada(p_unidade uuid, p_entrada uuid, p_numero bigint)` can be executed by the `authenticated` role as a `SECURITY DEFINER` function via `/rest/v1/rpc/estoque_entrada`. Revoke `EXECUTE` or switch it to `SECURITY INVOKER` if that is not intentional.",
+          "metadata": {
+            "name": "estoque_entrada",
+            "schema": "public",
+            "language": "plpgsql",
+            "arguments": "p_unidade uuid, p_entrada uuid, p_numero bigint",
+            "security_definer": true
+          },
+          "observed_at": "2026-11-16T01:05:41.532Z"
+        },
+        {
+          "detail": "Function `public.estoque_entradas(p_unidade uuid, p_antes bigint, p_limite integer)` can be executed by the `authenticated` role as a `SECURITY DEFINER` function via `/rest/v1/rpc/estoque_entradas`. Revoke `EXECUTE` or switch it to `SECURITY INVOKER` if that is not intentional.",
+          "metadata": {
+            "name": "estoque_entradas",
+            "schema": "public",
+            "language": "plpgsql",
+            "arguments": "p_unidade uuid, p_antes bigint, p_limite integer",
+            "security_definer": true
+          },
+          "observed_at": "2026-11-16T01:05:41.532Z"
+        },
+        {
+          "detail": "Function `public.estoque_estornar_entrada(p_entrada uuid, p_motivo text)` can be executed by the `authenticated` role as a `SECURITY DEFINER` function via `/rest/v1/rpc/estoque_estornar_entrada`. Revoke `EXECUTE` or switch it to `SECURITY INVOKER` if that is not intentional.",
+          "metadata": {
+            "name": "estoque_estornar_entrada",
+            "schema": "public",
+            "language": "plpgsql",
+            "arguments": "p_entrada uuid, p_motivo text",
+            "security_definer": true
+          },
+          "observed_at": "2026-11-16T01:05:41.532Z"
+        },
+        {
+          "detail": "Function `public.estoque_na_rede(p_variante uuid)` can be executed by the `authenticated` role as a `SECURITY DEFINER` function via `/rest/v1/rpc/estoque_na_rede`. Revoke `EXECUTE` or switch it to `SECURITY INVOKER` if that is not intentional.",
+          "metadata": {
+            "name": "estoque_na_rede",
+            "schema": "public",
+            "language": "sql",
+            "arguments": "p_variante uuid",
+            "security_definer": true
+          },
+          "observed_at": "2026-11-16T01:05:41.532Z"
+        },
+        {
+          "detail": "Function `public.estoque_registrar_entrada(p_unidade uuid, p_tipo text, p_fornecedor uuid, p_documento text, p_itens jsonb, p_chave text, p_motivo text)` can be executed by the `authenticated` role as a `SECURITY DEFINER` function via `/rest/v1/rpc/estoque_registrar_entrada`. Revoke `EXECUTE` or switch it to `SECURITY INVOKER` if that is not intentional.",
+          "metadata": {
+            "name": "estoque_registrar_entrada",
+            "schema": "public",
+            "language": "plpgsql",
+            "arguments": "p_unidade uuid, p_tipo text, p_fornecedor uuid, p_documento text, p_itens jsonb, p_chave text, p_motivo text",
+            "security_definer": true
+          },
+          "observed_at": "2026-11-16T01:05:41.532Z"
+        },
+        {
+          "detail": "Function `public.estoque_valor_em_custo(p_unidade uuid)` can be executed by the `authenticated` role as a `SECURITY DEFINER` function via `/rest/v1/rpc/estoque_valor_em_custo`. Revoke `EXECUTE` or switch it to `SECURITY INVOKER` if that is not intentional.",
+          "metadata": {
+            "name": "estoque_valor_em_custo",
+            "schema": "public",
+            "language": "plpgsql",
+            "arguments": "p_unidade uuid",
+            "security_definer": true
+          },
+          "observed_at": "2026-11-16T01:05:41.532Z"
+        },
+        {
+          "detail": "Function `public.fechar_caixa(p_contado bigint, p_observacao text)` can be executed by the `authenticated` role as a `SECURITY DEFINER` function via `/rest/v1/rpc/fechar_caixa`. Revoke `EXECUTE` or switch it to `SECURITY INVOKER` if that is not intentional.",
+          "metadata": {
+            "name": "fechar_caixa",
+            "schema": "public",
+            "language": "plpgsql",
+            "arguments": "p_contado bigint, p_observacao text",
+            "security_definer": true
+          },
+          "observed_at": "2026-11-16T01:05:41.532Z"
+        },
+        {
+          "detail": "Function `public.financeira_corrigir_recebimento(p_conta uuid, p_referencia text, p_valor_recebido bigint, p_recebido_em date, p_motivo text)` can be executed by the `authenticated` role as a `SECURITY DEFINER` function via `/rest/v1/rpc/financeira_corrigir_recebimento`. Revoke `EXECUTE` or switch it to `SECURITY INVOKER` if that is not intentional.",
+          "metadata": {
+            "name": "financeira_corrigir_recebimento",
+            "schema": "public",
+            "language": "plpgsql",
+            "arguments": "p_conta uuid, p_referencia text, p_valor_recebido bigint, p_recebido_em date, p_motivo text",
+            "security_definer": true
+          },
+          "observed_at": "2026-11-16T01:05:41.532Z"
+        },
+        {
+          "detail": "Function `public.financeira_desfazer_recebimento(p_conta uuid, p_motivo text)` can be executed by the `authenticated` role as a `SECURITY DEFINER` function via `/rest/v1/rpc/financeira_desfazer_recebimento`. Revoke `EXECUTE` or switch it to `SECURITY INVOKER` if that is not intentional.",
+          "metadata": {
+            "name": "financeira_desfazer_recebimento",
+            "schema": "public",
+            "language": "plpgsql",
+            "arguments": "p_conta uuid, p_motivo text",
+            "security_definer": true
+          },
+          "observed_at": "2026-11-16T01:05:41.532Z"
+        },
+        {
+          "detail": "Function `public.financeira_receber(p_conta uuid, p_referencia text, p_valor_recebido bigint, p_recebido_em date)` can be executed by the `authenticated` role as a `SECURITY DEFINER` function via `/rest/v1/rpc/financeira_receber`. Revoke `EXECUTE` or switch it to `SECURITY INVOKER` if that is not intentional.",
+          "metadata": {
+            "name": "financeira_receber",
+            "schema": "public",
+            "language": "plpgsql",
+            "arguments": "p_conta uuid, p_referencia text, p_valor_recebido bigint, p_recebido_em date",
+            "security_definer": true
+          },
+          "observed_at": "2026-11-16T01:05:41.532Z"
+        },
+        {
+          "detail": "Function `public.financeiras_a_receber()` can be executed by the `authenticated` role as a `SECURITY DEFINER` function via `/rest/v1/rpc/financeiras_a_receber`. Revoke `EXECUTE` or switch it to `SECURITY INVOKER` if that is not intentional.",
+          "metadata": {
+            "name": "financeiras_a_receber",
+            "schema": "public",
+            "language": "plpgsql",
+            "arguments": "",
+            "security_definer": true
+          },
+          "observed_at": "2026-11-16T01:05:41.532Z"
+        },
+        {
+          "detail": "Function `public.fiscal_definir_politica(p_alerta_minutos integer, p_fonte text)` can be executed by the `authenticated` role as a `SECURITY DEFINER` function via `/rest/v1/rpc/fiscal_definir_politica`. Revoke `EXECUTE` or switch it to `SECURITY INVOKER` if that is not intentional.",
+          "metadata": {
+            "name": "fiscal_definir_politica",
+            "schema": "public",
+            "language": "plpgsql",
+            "arguments": "p_alerta_minutos integer, p_fonte text",
+            "security_definer": true
+          },
+          "observed_at": "2026-11-16T01:05:41.532Z"
+        },
+        {
+          "detail": "Function `public.fornecedor_salvar(p_organizacao uuid, p_id uuid, p_nome text, p_cnpj text, p_contato text, p_ativo boolean, p_motivo text)` can be executed by the `authenticated` role as a `SECURITY DEFINER` function via `/rest/v1/rpc/fornecedor_salvar`. Revoke `EXECUTE` or switch it to `SECURITY INVOKER` if that is not intentional.",
+          "metadata": {
+            "name": "fornecedor_salvar",
+            "schema": "public",
+            "language": "plpgsql",
+            "arguments": "p_organizacao uuid, p_id uuid, p_nome text, p_cnpj text, p_contato text, p_ativo boolean, p_motivo text",
+            "security_definer": true
+          },
+          "observed_at": "2026-11-16T01:05:41.532Z"
+        },
+        {
+          "detail": "Function `public.fotos_sem_registro()` can be executed by the `authenticated` role as a `SECURITY DEFINER` function via `/rest/v1/rpc/fotos_sem_registro`. Revoke `EXECUTE` or switch it to `SECURITY INVOKER` if that is not intentional.",
+          "metadata": {
+            "name": "fotos_sem_registro",
+            "schema": "public",
+            "language": "plpgsql",
+            "arguments": "",
+            "security_definer": true
+          },
+          "observed_at": "2026-11-16T01:05:41.532Z"
+        },
+        {
+          "detail": "Function `public.fotos_sem_registro_limpar(p_caminhos text[])` can be executed by the `authenticated` role as a `SECURITY DEFINER` function via `/rest/v1/rpc/fotos_sem_registro_limpar`. Revoke `EXECUTE` or switch it to `SECURITY INVOKER` if that is not intentional.",
+          "metadata": {
+            "name": "fotos_sem_registro_limpar",
+            "schema": "public",
+            "language": "plpgsql",
+            "arguments": "p_caminhos text[]",
+            "security_definer": true
+          },
+          "observed_at": "2026-11-16T01:05:41.532Z"
+        },
+        {
+          "detail": "Function `public.importacao_aplicar(p_importacao uuid, p_motivo text, p_comparacao integer)` can be executed by the `authenticated` role as a `SECURITY DEFINER` function via `/rest/v1/rpc/importacao_aplicar`. Revoke `EXECUTE` or switch it to `SECURITY INVOKER` if that is not intentional.",
+          "metadata": {
+            "name": "importacao_aplicar",
+            "schema": "public",
+            "language": "plpgsql",
+            "arguments": "p_importacao uuid, p_motivo text, p_comparacao integer",
+            "security_definer": true
+          },
+          "observed_at": "2026-11-16T01:05:41.532Z"
+        },
+        {
+          "detail": "Function `public.importacao_catalogo_previa(p_organizacao uuid, p_arquivo_nome text, p_sha256 text, p_mapeamento jsonb, p_linhas jsonb)` can be executed by the `authenticated` role as a `SECURITY DEFINER` function via `/rest/v1/rpc/importacao_catalogo_previa`. Revoke `EXECUTE` or switch it to `SECURITY INVOKER` if that is not intentional.",
+          "metadata": {
+            "name": "importacao_catalogo_previa",
+            "schema": "public",
+            "language": "plpgsql",
+            "arguments": "p_organizacao uuid, p_arquivo_nome text, p_sha256 text, p_mapeamento jsonb, p_linhas jsonb",
+            "security_definer": true
+          },
+          "observed_at": "2026-11-16T01:05:41.532Z"
+        },
+        {
+          "detail": "Function `public.importacao_descartar(p_importacao uuid, p_motivo text)` can be executed by the `authenticated` role as a `SECURITY DEFINER` function via `/rest/v1/rpc/importacao_descartar`. Revoke `EXECUTE` or switch it to `SECURITY INVOKER` if that is not intentional.",
+          "metadata": {
+            "name": "importacao_descartar",
+            "schema": "public",
+            "language": "plpgsql",
+            "arguments": "p_importacao uuid, p_motivo text",
+            "security_definer": true
+          },
+          "observed_at": "2026-11-16T01:05:41.532Z"
+        },
+        {
+          "detail": "Function `public.importacao_desfazer(p_importacao uuid, p_motivo text)` can be executed by the `authenticated` role as a `SECURITY DEFINER` function via `/rest/v1/rpc/importacao_desfazer`. Revoke `EXECUTE` or switch it to `SECURITY INVOKER` if that is not intentional.",
+          "metadata": {
+            "name": "importacao_desfazer",
+            "schema": "public",
+            "language": "plpgsql",
+            "arguments": "p_importacao uuid, p_motivo text",
+            "security_definer": true
+          },
+          "observed_at": "2026-11-16T01:05:41.532Z"
+        },
+        {
+          "detail": "Function `public.inventario_abrir(p_unidade uuid, p_variantes uuid[], p_descricao text, p_chave text)` can be executed by the `authenticated` role as a `SECURITY DEFINER` function via `/rest/v1/rpc/inventario_abrir`. Revoke `EXECUTE` or switch it to `SECURITY INVOKER` if that is not intentional.",
+          "metadata": {
+            "name": "inventario_abrir",
+            "schema": "public",
+            "language": "plpgsql",
+            "arguments": "p_unidade uuid, p_variantes uuid[], p_descricao text, p_chave text",
+            "security_definer": true
+          },
+          "observed_at": "2026-11-16T01:05:41.532Z"
+        },
+        {
+          "detail": "Function `public.inventario_cancelar(p_inventario uuid, p_motivo text)` can be executed by the `authenticated` role as a `SECURITY DEFINER` function via `/rest/v1/rpc/inventario_cancelar`. Revoke `EXECUTE` or switch it to `SECURITY INVOKER` if that is not intentional.",
+          "metadata": {
+            "name": "inventario_cancelar",
+            "schema": "public",
+            "language": "plpgsql",
+            "arguments": "p_inventario uuid, p_motivo text",
+            "security_definer": true
+          },
+          "observed_at": "2026-11-16T01:05:41.532Z"
+        },
+        {
+          "detail": "Function `public.inventario_contar(p_inventario uuid, p_variante uuid, p_quantidade integer, p_identificadores text[])` can be executed by the `authenticated` role as a `SECURITY DEFINER` function via `/rest/v1/rpc/inventario_contar`. Revoke `EXECUTE` or switch it to `SECURITY INVOKER` if that is not intentional.",
+          "metadata": {
+            "name": "inventario_contar",
+            "schema": "public",
+            "language": "plpgsql",
+            "arguments": "p_inventario uuid, p_variante uuid, p_quantidade integer, p_identificadores text[]",
+            "security_definer": true
+          },
+          "observed_at": "2026-11-16T01:05:41.532Z"
+        },
+        {
+          "detail": "Function `public.inventario_decidir(p_inventario uuid, p_aprovar boolean, p_motivo text)` can be executed by the `authenticated` role as a `SECURITY DEFINER` function via `/rest/v1/rpc/inventario_decidir`. Revoke `EXECUTE` or switch it to `SECURITY INVOKER` if that is not intentional.",
+          "metadata": {
+            "name": "inventario_decidir",
+            "schema": "public",
+            "language": "plpgsql",
+            "arguments": "p_inventario uuid, p_aprovar boolean, p_motivo text",
+            "security_definer": true
+          },
+          "observed_at": "2026-11-16T01:05:41.532Z"
+        },
+        {
+          "detail": "Function `public.inventario_enviar(p_inventario uuid, p_motivo text)` can be executed by the `authenticated` role as a `SECURITY DEFINER` function via `/rest/v1/rpc/inventario_enviar`. Revoke `EXECUTE` or switch it to `SECURITY INVOKER` if that is not intentional.",
+          "metadata": {
+            "name": "inventario_enviar",
+            "schema": "public",
+            "language": "plpgsql",
+            "arguments": "p_inventario uuid, p_motivo text",
+            "security_definer": true
+          },
+          "observed_at": "2026-11-16T01:05:41.532Z"
+        },
+        {
+          "detail": "Function `public.liberar_reserva(p_reserva uuid)` can be executed by the `authenticated` role as a `SECURITY DEFINER` function via `/rest/v1/rpc/liberar_reserva`. Revoke `EXECUTE` or switch it to `SECURITY INVOKER` if that is not intentional.",
+          "metadata": {
+            "name": "liberar_reserva",
+            "schema": "public",
+            "language": "plpgsql",
+            "arguments": "p_reserva uuid",
+            "security_definer": true
+          },
+          "observed_at": "2026-11-16T01:05:41.532Z"
+        },
+        {
+          "detail": "Function `public.loja_atualizar(p_unidade uuid, p_nome text, p_cnpj text, p_uf text, p_cidade text, p_motivo text)` can be executed by the `authenticated` role as a `SECURITY DEFINER` function via `/rest/v1/rpc/loja_atualizar`. Revoke `EXECUTE` or switch it to `SECURITY INVOKER` if that is not intentional.",
+          "metadata": {
+            "name": "loja_atualizar",
+            "schema": "public",
+            "language": "plpgsql",
+            "arguments": "p_unidade uuid, p_nome text, p_cnpj text, p_uf text, p_cidade text, p_motivo text",
+            "security_definer": true
+          },
+          "observed_at": "2026-11-16T01:05:41.532Z"
+        },
+        {
+          "detail": "Function `public.loja_criar(p_empresa uuid, p_codigo text, p_nome text, p_tipo text, p_cnpj text, p_uf text, p_cidade text, p_emissora uuid, p_motivo text)` can be executed by the `authenticated` role as a `SECURITY DEFINER` function via `/rest/v1/rpc/loja_criar`. Revoke `EXECUTE` or switch it to `SECURITY INVOKER` if that is not intentional.",
+          "metadata": {
+            "name": "loja_criar",
+            "schema": "public",
+            "language": "plpgsql",
+            "arguments": "p_empresa uuid, p_codigo text, p_nome text, p_tipo text, p_cnpj text, p_uf text, p_cidade text, p_emissora uuid, p_motivo text",
+            "security_definer": true
+          },
+          "observed_at": "2026-11-16T01:05:41.532Z"
+        },
+        {
+          "detail": "Function `public.loja_definir_configuracao(p_unidade uuid, p_dados jsonb, p_vigente_desde timestamp with time zone, p_motivo text)` can be executed by the `authenticated` role as a `SECURITY DEFINER` function via `/rest/v1/rpc/loja_definir_configuracao`. Revoke `EXECUTE` or switch it to `SECURITY INVOKER` if that is not intentional.",
+          "metadata": {
+            "name": "loja_definir_configuracao",
+            "schema": "public",
+            "language": "plpgsql",
+            "arguments": "p_unidade uuid, p_dados jsonb, p_vigente_desde timestamp with time zone, p_motivo text",
+            "security_definer": true
+          },
+          "observed_at": "2026-11-16T01:05:41.532Z"
+        },
+        {
+          "detail": "Function `public.loja_definir_regiao(p_unidade uuid, p_regiao uuid, p_motivo text)` can be executed by the `authenticated` role as a `SECURITY DEFINER` function via `/rest/v1/rpc/loja_definir_regiao`. Revoke `EXECUTE` or switch it to `SECURITY INVOKER` if that is not intentional.",
+          "metadata": {
+            "name": "loja_definir_regiao",
+            "schema": "public",
+            "language": "plpgsql",
+            "arguments": "p_unidade uuid, p_regiao uuid, p_motivo text",
+            "security_definer": true
+          },
+          "observed_at": "2026-11-16T01:05:41.532Z"
+        },
+        {
+          "detail": "Function `public.loja_definir_situacao(p_unidade uuid, p_situacao text, p_motivo text)` can be executed by the `authenticated` role as a `SECURITY DEFINER` function via `/rest/v1/rpc/loja_definir_situacao`. Revoke `EXECUTE` or switch it to `SECURITY INVOKER` if that is not intentional.",
+          "metadata": {
+            "name": "loja_definir_situacao",
+            "schema": "public",
+            "language": "plpgsql",
+            "arguments": "p_unidade uuid, p_situacao text, p_motivo text",
+            "security_definer": true
+          },
+          "observed_at": "2026-11-16T01:05:41.532Z"
+        },
+        {
+          "detail": "Function `public.loja_historico(p_unidade uuid)` can be executed by the `authenticated` role as a `SECURITY DEFINER` function via `/rest/v1/rpc/loja_historico`. Revoke `EXECUTE` or switch it to `SECURITY INVOKER` if that is not intentional.",
+          "metadata": {
+            "name": "loja_historico",
+            "schema": "public",
+            "language": "sql",
+            "arguments": "p_unidade uuid",
+            "security_definer": true
+          },
+          "observed_at": "2026-11-16T01:05:41.532Z"
+        },
+        {
+          "detail": "Function `public.loja_produto(p_organizacao uuid, p_produto uuid)` can be executed by the `authenticated` role as a `SECURITY DEFINER` function via `/rest/v1/rpc/loja_produto`. Revoke `EXECUTE` or switch it to `SECURITY INVOKER` if that is not intentional.",
+          "metadata": {
+            "name": "loja_produto",
+            "schema": "public",
+            "language": "plpgsql",
+            "arguments": "p_organizacao uuid, p_produto uuid",
+            "security_definer": true
+          },
+          "observed_at": "2026-11-16T01:05:41.532Z"
+        },
+        {
+          "detail": "Function `public.loja_vitrine(p_organizacao uuid, p_busca text, p_categoria uuid)` can be executed by the `authenticated` role as a `SECURITY DEFINER` function via `/rest/v1/rpc/loja_vitrine`. Revoke `EXECUTE` or switch it to `SECURITY INVOKER` if that is not intentional.",
+          "metadata": {
+            "name": "loja_vitrine",
+            "schema": "public",
+            "language": "sql",
+            "arguments": "p_organizacao uuid, p_busca text, p_categoria uuid",
+            "security_definer": true
+          },
+          "observed_at": "2026-11-16T01:05:41.532Z"
+        },
+        {
+          "detail": "Function `public.lojas_da_rede()` can be executed by the `authenticated` role as a `SECURITY DEFINER` function via `/rest/v1/rpc/lojas_da_rede`. Revoke `EXECUTE` or switch it to `SECURITY INVOKER` if that is not intentional.",
+          "metadata": {
+            "name": "lojas_da_rede",
+            "schema": "public",
+            "language": "sql",
+            "arguments": "",
+            "security_definer": true
+          },
+          "observed_at": "2026-11-16T01:05:41.532Z"
+        },
+        {
+          "detail": "Function `public.metas_definir(p_unidade uuid, p_vendedor uuid, p_mes date, p_valores jsonb, p_motivo text)` can be executed by the `authenticated` role as a `SECURITY DEFINER` function via `/rest/v1/rpc/metas_definir`. Revoke `EXECUTE` or switch it to `SECURITY INVOKER` if that is not intentional.",
+          "metadata": {
+            "name": "metas_definir",
+            "schema": "public",
+            "language": "plpgsql",
+            "arguments": "p_unidade uuid, p_vendedor uuid, p_mes date, p_valores jsonb, p_motivo text",
+            "security_definer": true
+          },
+          "observed_at": "2026-11-16T01:05:41.532Z"
+        },
+        {
+          "detail": "Function `public.metas_equipe(p_unidade uuid, p_mes date)` can be executed by the `authenticated` role as a `SECURITY DEFINER` function via `/rest/v1/rpc/metas_equipe`. Revoke `EXECUTE` or switch it to `SECURITY INVOKER` if that is not intentional.",
+          "metadata": {
+            "name": "metas_equipe",
+            "schema": "public",
+            "language": "plpgsql",
+            "arguments": "p_unidade uuid, p_mes date",
+            "security_definer": true
+          },
+          "observed_at": "2026-11-16T01:05:41.532Z"
+        },
+        {
+          "detail": "Function `public.movimentar_caixa(p_tipo text, p_valor bigint, p_motivo text, p_chave text)` can be executed by the `authenticated` role as a `SECURITY DEFINER` function via `/rest/v1/rpc/movimentar_caixa`. Revoke `EXECUTE` or switch it to `SECURITY INVOKER` if that is not intentional.",
+          "metadata": {
+            "name": "movimentar_caixa",
+            "schema": "public",
+            "language": "plpgsql",
+            "arguments": "p_tipo text, p_valor bigint, p_motivo text, p_chave text",
+            "security_definer": true
+          },
+          "observed_at": "2026-11-16T01:05:41.532Z"
+        },
+        {
+          "detail": "Function `public.nota_enviar_whatsapp(p_pedido uuid, p_chave text, p_motivo text)` can be executed by the `authenticated` role as a `SECURITY DEFINER` function via `/rest/v1/rpc/nota_enviar_whatsapp`. Revoke `EXECUTE` or switch it to `SECURITY INVOKER` if that is not intentional.",
+          "metadata": {
+            "name": "nota_enviar_whatsapp",
+            "schema": "public",
+            "language": "plpgsql",
+            "arguments": "p_pedido uuid, p_chave text, p_motivo text",
+            "security_definer": true
+          },
+          "observed_at": "2026-11-16T01:05:41.532Z"
+        },
+        {
+          "detail": "Function `public.notas_anexar_documento(p_pedido uuid, p_tipo text, p_caminho text, p_sha256 text, p_protocolo text)` can be executed by the `authenticated` role as a `SECURITY DEFINER` function via `/rest/v1/rpc/notas_anexar_documento`. Revoke `EXECUTE` or switch it to `SECURITY INVOKER` if that is not intentional.",
+          "metadata": {
+            "name": "notas_anexar_documento",
+            "schema": "public",
+            "language": "plpgsql",
+            "arguments": "p_pedido uuid, p_tipo text, p_caminho text, p_sha256 text, p_protocolo text",
+            "security_definer": true
+          },
+          "observed_at": "2026-11-16T01:05:41.532Z"
+        },
+        {
+          "detail": "Function `public.notas_cancelar(p_pedido uuid, p_motivo text)` can be executed by the `authenticated` role as a `SECURITY DEFINER` function via `/rest/v1/rpc/notas_cancelar`. Revoke `EXECUTE` or switch it to `SECURITY INVOKER` if that is not intentional.",
+          "metadata": {
+            "name": "notas_cancelar",
+            "schema": "public",
+            "language": "plpgsql",
+            "arguments": "p_pedido uuid, p_motivo text",
+            "security_definer": true
+          },
+          "observed_at": "2026-11-16T01:05:41.532Z"
+        },
+        {
+          "detail": "Function `public.notas_conciliacao(p_inicio date, p_fim date, p_unidade uuid)` can be executed by the `authenticated` role as a `SECURITY DEFINER` function via `/rest/v1/rpc/notas_conciliacao`. Revoke `EXECUTE` or switch it to `SECURITY INVOKER` if that is not intentional.",
+          "metadata": {
+            "name": "notas_conciliacao",
+            "schema": "public",
+            "language": "plpgsql",
+            "arguments": "p_inicio date, p_fim date, p_unidade uuid",
+            "security_definer": true
+          },
+          "observed_at": "2026-11-16T01:05:41.532Z"
+        },
+        {
+          "detail": "Function `public.notas_conferir_divergencia(p_pedido uuid, p_tipo text, p_observacao text)` can be executed by the `authenticated` role as a `SECURITY DEFINER` function via `/rest/v1/rpc/notas_conferir_divergencia`. Revoke `EXECUTE` or switch it to `SECURITY INVOKER` if that is not intentional.",
+          "metadata": {
+            "name": "notas_conferir_divergencia",
+            "schema": "public",
+            "language": "plpgsql",
+            "arguments": "p_pedido uuid, p_tipo text, p_observacao text",
+            "security_definer": true
+          },
+          "observed_at": "2026-11-16T01:05:41.532Z"
+        },
+        {
+          "detail": "Function `public.notas_corrigir(p_pedido uuid, p_destinatario jsonb)` can be executed by the `authenticated` role as a `SECURITY DEFINER` function via `/rest/v1/rpc/notas_corrigir`. Revoke `EXECUTE` or switch it to `SECURITY INVOKER` if that is not intentional.",
+          "metadata": {
+            "name": "notas_corrigir",
+            "schema": "public",
+            "language": "plpgsql",
+            "arguments": "p_pedido uuid, p_destinatario jsonb",
+            "security_definer": true
+          },
+          "observed_at": "2026-11-16T01:05:41.532Z"
+        },
+        {
+          "detail": "Function `public.notas_corrigir_chave(p_pedido uuid, p_chave_acesso text, p_motivo text)` can be executed by the `authenticated` role as a `SECURITY DEFINER` function via `/rest/v1/rpc/notas_corrigir_chave`. Revoke `EXECUTE` or switch it to `SECURITY INVOKER` if that is not intentional.",
+          "metadata": {
+            "name": "notas_corrigir_chave",
+            "schema": "public",
+            "language": "plpgsql",
+            "arguments": "p_pedido uuid, p_chave_acesso text, p_motivo text",
+            "security_definer": true
+          },
+          "observed_at": "2026-11-16T01:05:41.532Z"
+        },
+        {
+          "detail": "Function `public.notas_dados_para_emitir(p_pedido uuid)` can be executed by the `authenticated` role as a `SECURITY DEFINER` function via `/rest/v1/rpc/notas_dados_para_emitir`. Revoke `EXECUTE` or switch it to `SECURITY INVOKER` if that is not intentional.",
+          "metadata": {
+            "name": "notas_dados_para_emitir",
+            "schema": "public",
+            "language": "plpgsql",
+            "arguments": "p_pedido uuid",
+            "security_definer": true
+          },
+          "observed_at": "2026-11-16T01:05:41.532Z"
+        },
+        {
+          "detail": "Function `public.notas_decidir(p_pedido uuid, p_aprovar boolean, p_observacao text)` can be executed by the `authenticated` role as a `SECURITY DEFINER` function via `/rest/v1/rpc/notas_decidir`. Revoke `EXECUTE` or switch it to `SECURITY INVOKER` if that is not intentional.",
+          "metadata": {
+            "name": "notas_decidir",
+            "schema": "public",
+            "language": "plpgsql",
+            "arguments": "p_pedido uuid, p_aprovar boolean, p_observacao text",
+            "security_definer": true
+          },
+          "observed_at": "2026-11-16T01:05:41.532Z"
+        },
+        {
+          "detail": "Function `public.notas_registrar_cancelamento(p_pedido uuid, p_protocolo text, p_justificativa text)` can be executed by the `authenticated` role as a `SECURITY DEFINER` function via `/rest/v1/rpc/notas_registrar_cancelamento`. Revoke `EXECUTE` or switch it to `SECURITY INVOKER` if that is not intentional.",
+          "metadata": {
+            "name": "notas_registrar_cancelamento",
+            "schema": "public",
+            "language": "plpgsql",
+            "arguments": "p_pedido uuid, p_protocolo text, p_justificativa text",
+            "security_definer": true
+          },
+          "observed_at": "2026-11-16T01:05:41.532Z"
+        },
+        {
+          "detail": "Function `public.notas_registrar_carta_de_correcao(p_pedido uuid, p_numero integer, p_protocolo text, p_correcao text)` can be executed by the `authenticated` role as a `SECURITY DEFINER` function via `/rest/v1/rpc/notas_registrar_carta_de_correcao`. Revoke `EXECUTE` or switch it to `SECURITY INVOKER` if that is not intentional.",
+          "metadata": {
+            "name": "notas_registrar_carta_de_correcao",
+            "schema": "public",
+            "language": "plpgsql",
+            "arguments": "p_pedido uuid, p_numero integer, p_protocolo text, p_correcao text",
+            "security_definer": true
+          },
+          "observed_at": "2026-11-16T01:05:41.532Z"
+        },
+        {
+          "detail": "Function `public.notas_registrar_emissao(p_pedido uuid, p_chave_acesso text, p_observacao text)` can be executed by the `authenticated` role as a `SECURITY DEFINER` function via `/rest/v1/rpc/notas_registrar_emissao`. Revoke `EXECUTE` or switch it to `SECURITY INVOKER` if that is not intentional.",
+          "metadata": {
+            "name": "notas_registrar_emissao",
+            "schema": "public",
+            "language": "plpgsql",
+            "arguments": "p_pedido uuid, p_chave_acesso text, p_observacao text",
+            "security_definer": true
+          },
+          "observed_at": "2026-11-16T01:05:41.532Z"
+        },
+        {
+          "detail": "Function `public.notas_solicitar(p_venda uuid, p_destinatario jsonb, p_chave text)` can be executed by the `authenticated` role as a `SECURITY DEFINER` function via `/rest/v1/rpc/notas_solicitar`. Revoke `EXECUTE` or switch it to `SECURITY INVOKER` if that is not intentional.",
+          "metadata": {
+            "name": "notas_solicitar",
+            "schema": "public",
+            "language": "plpgsql",
+            "arguments": "p_venda uuid, p_destinatario jsonb, p_chave text",
+            "security_definer": true
+          },
+          "observed_at": "2026-11-16T01:05:41.532Z"
+        },
+        {
+          "detail": "Function `public.oportunidade_anotar(p_oportunidade uuid, p_texto text)` can be executed by the `authenticated` role as a `SECURITY DEFINER` function via `/rest/v1/rpc/oportunidade_anotar`. Revoke `EXECUTE` or switch it to `SECURITY INVOKER` if that is not intentional.",
+          "metadata": {
+            "name": "oportunidade_anotar",
+            "schema": "public",
+            "language": "plpgsql",
+            "arguments": "p_oportunidade uuid, p_texto text",
+            "security_definer": true
+          },
+          "observed_at": "2026-11-16T01:05:41.532Z"
+        },
+        {
+          "detail": "Function `public.oportunidade_atribuir(p_oportunidade uuid, p_responsavel uuid, p_motivo text)` can be executed by the `authenticated` role as a `SECURITY DEFINER` function via `/rest/v1/rpc/oportunidade_atribuir`. Revoke `EXECUTE` or switch it to `SECURITY INVOKER` if that is not intentional.",
+          "metadata": {
+            "name": "oportunidade_atribuir",
+            "schema": "public",
+            "language": "plpgsql",
+            "arguments": "p_oportunidade uuid, p_responsavel uuid, p_motivo text",
+            "security_definer": true
+          },
+          "observed_at": "2026-11-16T01:05:41.532Z"
+        },
+        {
+          "detail": "Function `public.oportunidade_detalhe(p_oportunidade uuid)` can be executed by the `authenticated` role as a `SECURITY DEFINER` function via `/rest/v1/rpc/oportunidade_detalhe`. Revoke `EXECUTE` or switch it to `SECURITY INVOKER` if that is not intentional.",
+          "metadata": {
+            "name": "oportunidade_detalhe",
+            "schema": "public",
+            "language": "plpgsql",
+            "arguments": "p_oportunidade uuid",
+            "security_definer": true
+          },
+          "observed_at": "2026-11-16T01:05:41.532Z"
+        },
+        {
+          "detail": "Function `public.oportunidade_mover(p_oportunidade uuid, p_etapa text, p_dados jsonb)` can be executed by the `authenticated` role as a `SECURITY DEFINER` function via `/rest/v1/rpc/oportunidade_mover`. Revoke `EXECUTE` or switch it to `SECURITY INVOKER` if that is not intentional.",
+          "metadata": {
+            "name": "oportunidade_mover",
+            "schema": "public",
+            "language": "plpgsql",
+            "arguments": "p_oportunidade uuid, p_etapa text, p_dados jsonb",
+            "security_definer": true
+          },
+          "observed_at": "2026-11-16T01:05:41.532Z"
+        },
+        {
+          "detail": "Function `public.oportunidade_registrar(p_cliente uuid, p_dados jsonb, p_chave text)` can be executed by the `authenticated` role as a `SECURITY DEFINER` function via `/rest/v1/rpc/oportunidade_registrar`. Revoke `EXECUTE` or switch it to `SECURITY INVOKER` if that is not intentional.",
+          "metadata": {
+            "name": "oportunidade_registrar",
+            "schema": "public",
+            "language": "plpgsql",
+            "arguments": "p_cliente uuid, p_dados jsonb, p_chave text",
+            "security_definer": true
+          },
+          "observed_at": "2026-11-16T01:05:41.532Z"
+        },
+        {
+          "detail": "Function `public.os_abrir(p_dados jsonb, p_chave text)` can be executed by the `authenticated` role as a `SECURITY DEFINER` function via `/rest/v1/rpc/os_abrir`. Revoke `EXECUTE` or switch it to `SECURITY INVOKER` if that is not intentional.",
+          "metadata": {
+            "name": "os_abrir",
+            "schema": "public",
+            "language": "plpgsql",
+            "arguments": "p_dados jsonb, p_chave text",
+            "security_definer": true
+          },
+          "observed_at": "2026-11-16T01:05:41.532Z"
+        },
+        {
+          "detail": "Function `public.os_anexar_foto(p_os uuid, p_caminho text, p_sha256 text)` can be executed by the `authenticated` role as a `SECURITY DEFINER` function via `/rest/v1/rpc/os_anexar_foto`. Revoke `EXECUTE` or switch it to `SECURITY INVOKER` if that is not intentional.",
+          "metadata": {
+            "name": "os_anexar_foto",
+            "schema": "public",
+            "language": "plpgsql",
+            "arguments": "p_os uuid, p_caminho text, p_sha256 text",
+            "security_definer": true
+          },
+          "observed_at": "2026-11-16T01:05:41.532Z"
+        },
+        {
+          "detail": "Function `public.os_assistencias()` can be executed by the `authenticated` role as a `SECURITY DEFINER` function via `/rest/v1/rpc/os_assistencias`. Revoke `EXECUTE` or switch it to `SECURITY INVOKER` if that is not intentional.",
+          "metadata": {
+            "name": "os_assistencias",
+            "schema": "public",
+            "language": "plpgsql",
+            "arguments": "",
+            "security_definer": true
+          },
+          "observed_at": "2026-11-16T01:05:41.532Z"
+        },
+        {
+          "detail": "Function `public.os_cobrar(p_venda uuid, p_os uuid, p_chave text)` can be executed by the `authenticated` role as a `SECURITY DEFINER` function via `/rest/v1/rpc/os_cobrar`. Revoke `EXECUTE` or switch it to `SECURITY INVOKER` if that is not intentional.",
+          "metadata": {
+            "name": "os_cobrar",
+            "schema": "public",
+            "language": "plpgsql",
+            "arguments": "p_venda uuid, p_os uuid, p_chave text",
+            "security_definer": true
+          },
+          "observed_at": "2026-11-16T01:05:41.532Z"
+        },
+        {
+          "detail": "Function `public.os_concluir_servico(p_os uuid, p_observacao text)` can be executed by the `authenticated` role as a `SECURITY DEFINER` function via `/rest/v1/rpc/os_concluir_servico`. Revoke `EXECUTE` or switch it to `SECURITY INVOKER` if that is not intentional.",
+          "metadata": {
+            "name": "os_concluir_servico",
+            "schema": "public",
+            "language": "plpgsql",
+            "arguments": "p_os uuid, p_observacao text",
+            "security_definer": true
+          },
+          "observed_at": "2026-11-16T01:05:41.532Z"
+        },
+        {
+          "detail": "Function `public.os_contato_whatsapp(p_os uuid, p_aviso text)` can be executed by the `authenticated` role as a `SECURITY DEFINER` function via `/rest/v1/rpc/os_contato_whatsapp`. Revoke `EXECUTE` or switch it to `SECURITY INVOKER` if that is not intentional.",
+          "metadata": {
+            "name": "os_contato_whatsapp",
+            "schema": "public",
+            "language": "plpgsql",
+            "arguments": "p_os uuid, p_aviso text",
+            "security_definer": true
+          },
+          "observed_at": "2026-11-16T01:05:41.532Z"
+        },
+        {
+          "detail": "Function `public.os_custodia(p_os uuid, p_passo text, p_assistencia uuid, p_observacao text)` can be executed by the `authenticated` role as a `SECURITY DEFINER` function via `/rest/v1/rpc/os_custodia`. Revoke `EXECUTE` or switch it to `SECURITY INVOKER` if that is not intentional.",
+          "metadata": {
+            "name": "os_custodia",
+            "schema": "public",
+            "language": "plpgsql",
+            "arguments": "p_os uuid, p_passo text, p_assistencia uuid, p_observacao text",
+            "security_definer": true
+          },
+          "observed_at": "2026-11-16T01:05:41.532Z"
+        },
+        {
+          "detail": "Function `public.os_devolver_peca(p_peca uuid, p_motivo text)` can be executed by the `authenticated` role as a `SECURITY DEFINER` function via `/rest/v1/rpc/os_devolver_peca`. Revoke `EXECUTE` or switch it to `SECURITY INVOKER` if that is not intentional.",
+          "metadata": {
+            "name": "os_devolver_peca",
+            "schema": "public",
+            "language": "plpgsql",
+            "arguments": "p_peca uuid, p_motivo text",
+            "security_definer": true
+          },
+          "observed_at": "2026-11-16T01:05:41.532Z"
+        },
+        {
+          "detail": "Function `public.os_entregar(p_os uuid, p_observacao text)` can be executed by the `authenticated` role as a `SECURITY DEFINER` function via `/rest/v1/rpc/os_entregar`. Revoke `EXECUTE` or switch it to `SECURITY INVOKER` if that is not intentional.",
+          "metadata": {
+            "name": "os_entregar",
+            "schema": "public",
+            "language": "plpgsql",
+            "arguments": "p_os uuid, p_observacao text",
+            "security_definer": true
+          },
+          "observed_at": "2026-11-16T01:05:41.532Z"
+        },
+        {
+          "detail": "Function `public.os_orcar(p_os uuid, p_dados jsonb, p_chave text)` can be executed by the `authenticated` role as a `SECURITY DEFINER` function via `/rest/v1/rpc/os_orcar`. Revoke `EXECUTE` or switch it to `SECURITY INVOKER` if that is not intentional.",
+          "metadata": {
+            "name": "os_orcar",
+            "schema": "public",
+            "language": "plpgsql",
+            "arguments": "p_os uuid, p_dados jsonb, p_chave text",
+            "security_definer": true
+          },
+          "observed_at": "2026-11-16T01:05:41.532Z"
+        },
+        {
+          "detail": "Function `public.os_relatorio(p_inicio date, p_fim date, p_unidade uuid)` can be executed by the `authenticated` role as a `SECURITY DEFINER` function via `/rest/v1/rpc/os_relatorio`. Revoke `EXECUTE` or switch it to `SECURITY INVOKER` if that is not intentional.",
+          "metadata": {
+            "name": "os_relatorio",
+            "schema": "public",
+            "language": "plpgsql",
+            "arguments": "p_inicio date, p_fim date, p_unidade uuid",
+            "security_definer": true
+          },
+          "observed_at": "2026-11-16T01:05:41.532Z"
+        },
+        {
+          "detail": "Function `public.os_responder_orcamento(p_orcamento uuid, p_resposta text, p_canal text, p_observacao text)` can be executed by the `authenticated` role as a `SECURITY DEFINER` function via `/rest/v1/rpc/os_responder_orcamento`. Revoke `EXECUTE` or switch it to `SECURITY INVOKER` if that is not intentional.",
+          "metadata": {
+            "name": "os_responder_orcamento",
+            "schema": "public",
+            "language": "plpgsql",
+            "arguments": "p_orcamento uuid, p_resposta text, p_canal text, p_observacao text",
+            "security_definer": true
+          },
+          "observed_at": "2026-11-16T01:05:41.532Z"
+        },
+        {
+          "detail": "Function `public.os_usar_peca(p_os uuid, p_variante uuid, p_quantidade integer, p_observacao text, p_chave text)` can be executed by the `authenticated` role as a `SECURITY DEFINER` function via `/rest/v1/rpc/os_usar_peca`. Revoke `EXECUTE` or switch it to `SECURITY INVOKER` if that is not intentional.",
+          "metadata": {
+            "name": "os_usar_peca",
+            "schema": "public",
+            "language": "plpgsql",
+            "arguments": "p_os uuid, p_variante uuid, p_quantidade integer, p_observacao text, p_chave text",
+            "security_definer": true
+          },
+          "observed_at": "2026-11-16T01:05:41.532Z"
+        },
+        {
+          "detail": "Function `public.pagamento_conciliar(p_pagamento uuid, p_referencia text, p_valor_liquido bigint, p_liquidado_em date)` can be executed by the `authenticated` role as a `SECURITY DEFINER` function via `/rest/v1/rpc/pagamento_conciliar`. Revoke `EXECUTE` or switch it to `SECURITY INVOKER` if that is not intentional.",
+          "metadata": {
+            "name": "pagamento_conciliar",
+            "schema": "public",
+            "language": "plpgsql",
+            "arguments": "p_pagamento uuid, p_referencia text, p_valor_liquido bigint, p_liquidado_em date",
+            "security_definer": true
+          },
+          "observed_at": "2026-11-16T01:05:41.532Z"
+        },
+        {
+          "detail": "Function `public.pagamento_desconciliar(p_pagamento uuid, p_motivo text)` can be executed by the `authenticated` role as a `SECURITY DEFINER` function via `/rest/v1/rpc/pagamento_desconciliar`. Revoke `EXECUTE` or switch it to `SECURITY INVOKER` if that is not intentional.",
+          "metadata": {
+            "name": "pagamento_desconciliar",
+            "schema": "public",
+            "language": "plpgsql",
+            "arguments": "p_pagamento uuid, p_motivo text",
+            "security_definer": true
+          },
+          "observed_at": "2026-11-16T01:05:41.532Z"
+        },
+        {
+          "detail": "Function `public.pagamentos_do_periodo(p_inicio date, p_fim date)` can be executed by the `authenticated` role as a `SECURITY DEFINER` function via `/rest/v1/rpc/pagamentos_do_periodo`. Revoke `EXECUTE` or switch it to `SECURITY INVOKER` if that is not intentional.",
+          "metadata": {
+            "name": "pagamentos_do_periodo",
+            "schema": "public",
+            "language": "plpgsql",
+            "arguments": "p_inicio date, p_fim date",
+            "security_definer": true
+          },
+          "observed_at": "2026-11-16T01:05:41.532Z"
+        },
+        {
+          "detail": "Function `public.pedido_compra(p_pedido uuid)` can be executed by the `authenticated` role as a `SECURITY DEFINER` function via `/rest/v1/rpc/pedido_compra`. Revoke `EXECUTE` or switch it to `SECURITY INVOKER` if that is not intentional.",
+          "metadata": {
+            "name": "pedido_compra",
+            "schema": "public",
+            "language": "plpgsql",
+            "arguments": "p_pedido uuid",
+            "security_definer": true
+          },
+          "observed_at": "2026-11-16T01:05:41.532Z"
+        },
+        {
+          "detail": "Function `public.pedido_compra_criar(p_unidade uuid, p_fornecedor uuid, p_documento text, p_previsto date, p_itens jsonb, p_observacao text, p_chave text)` can be executed by the `authenticated` role as a `SECURITY DEFINER` function via `/rest/v1/rpc/pedido_compra_criar`. Revoke `EXECUTE` or switch it to `SECURITY INVOKER` if that is not intentional.",
+          "metadata": {
+            "name": "pedido_compra_criar",
+            "schema": "public",
+            "language": "plpgsql",
+            "arguments": "p_unidade uuid, p_fornecedor uuid, p_documento text, p_previsto date, p_itens jsonb, p_observacao text, p_chave text",
+            "security_definer": true
+          },
+          "observed_at": "2026-11-16T01:05:41.532Z"
+        },
+        {
+          "detail": "Function `public.pedido_compra_encerrar(p_pedido uuid, p_motivo text)` can be executed by the `authenticated` role as a `SECURITY DEFINER` function via `/rest/v1/rpc/pedido_compra_encerrar`. Revoke `EXECUTE` or switch it to `SECURITY INVOKER` if that is not intentional.",
+          "metadata": {
+            "name": "pedido_compra_encerrar",
+            "schema": "public",
+            "language": "plpgsql",
+            "arguments": "p_pedido uuid, p_motivo text",
+            "security_definer": true
+          },
+          "observed_at": "2026-11-16T01:05:41.532Z"
+        },
+        {
+          "detail": "Function `public.pedido_compra_ligar_entrada(p_entrada uuid, p_pedido uuid, p_motivo text)` can be executed by the `authenticated` role as a `SECURITY DEFINER` function via `/rest/v1/rpc/pedido_compra_ligar_entrada`. Revoke `EXECUTE` or switch it to `SECURITY INVOKER` if that is not intentional.",
+          "metadata": {
+            "name": "pedido_compra_ligar_entrada",
+            "schema": "public",
+            "language": "plpgsql",
+            "arguments": "p_entrada uuid, p_pedido uuid, p_motivo text",
+            "security_definer": true
+          },
+          "observed_at": "2026-11-16T01:05:41.532Z"
+        },
+        {
+          "detail": "Function `public.pedidos_compra(p_unidade uuid, p_situacao text)` can be executed by the `authenticated` role as a `SECURITY DEFINER` function via `/rest/v1/rpc/pedidos_compra`. Revoke `EXECUTE` or switch it to `SECURITY INVOKER` if that is not intentional.",
+          "metadata": {
+            "name": "pedidos_compra",
+            "schema": "public",
+            "language": "plpgsql",
+            "arguments": "p_unidade uuid, p_situacao text",
+            "security_definer": true
+          },
+          "observed_at": "2026-11-16T01:05:41.532Z"
+        },
+        {
+          "detail": "Function `public.pedir_aprovacao(p_item uuid, p_motivo text)` can be executed by the `authenticated` role as a `SECURITY DEFINER` function via `/rest/v1/rpc/pedir_aprovacao`. Revoke `EXECUTE` or switch it to `SECURITY INVOKER` if that is not intentional.",
+          "metadata": {
+            "name": "pedir_aprovacao",
+            "schema": "public",
+            "language": "plpgsql",
+            "arguments": "p_item uuid, p_motivo text",
+            "security_definer": true
+          },
+          "observed_at": "2026-11-16T01:05:41.532Z"
+        },
+        {
+          "detail": "Function `public.pendencias_de_foto()` can be executed by the `authenticated` role as a `SECURITY DEFINER` function via `/rest/v1/rpc/pendencias_de_foto`. Revoke `EXECUTE` or switch it to `SECURITY INVOKER` if that is not intentional.",
+          "metadata": {
+            "name": "pendencias_de_foto",
+            "schema": "public",
+            "language": "sql",
+            "arguments": "",
+            "security_definer": true
+          },
+          "observed_at": "2026-11-16T01:05:41.532Z"
+        },
+        {
+          "detail": "Function `public.preco_campanha(p_variante uuid, p_unidade uuid, p_canal text, p_valor bigint, p_inicio timestamp with time zone, p_fim timestamp with time zone, p_motivo text)` can be executed by the `authenticated` role as a `SECURITY DEFINER` function via `/rest/v1/rpc/preco_campanha`. Revoke `EXECUTE` or switch it to `SECURITY INVOKER` if that is not intentional.",
+          "metadata": {
+            "name": "preco_campanha",
+            "schema": "public",
+            "language": "plpgsql",
+            "arguments": "p_variante uuid, p_unidade uuid, p_canal text, p_valor bigint, p_inicio timestamp with time zone, p_fim timestamp with time zone, p_motivo text",
+            "security_definer": true
+          },
+          "observed_at": "2026-11-16T01:05:41.532Z"
+        },
+        {
+          "detail": "Function `public.preco_cancelar(p_preco uuid, p_motivo text)` can be executed by the `authenticated` role as a `SECURITY DEFINER` function via `/rest/v1/rpc/preco_cancelar`. Revoke `EXECUTE` or switch it to `SECURITY INVOKER` if that is not intentional.",
+          "metadata": {
+            "name": "preco_cancelar",
+            "schema": "public",
+            "language": "plpgsql",
+            "arguments": "p_preco uuid, p_motivo text",
+            "security_definer": true
+          },
+          "observed_at": "2026-11-16T01:05:41.532Z"
+        },
+        {
+          "detail": "Function `public.preco_definir(p_variante uuid, p_unidade uuid, p_canal text, p_valor bigint, p_inicio timestamp with time zone, p_motivo text)` can be executed by the `authenticated` role as a `SECURITY DEFINER` function via `/rest/v1/rpc/preco_definir`. Revoke `EXECUTE` or switch it to `SECURITY INVOKER` if that is not intentional.",
+          "metadata": {
+            "name": "preco_definir",
+            "schema": "public",
+            "language": "plpgsql",
+            "arguments": "p_variante uuid, p_unidade uuid, p_canal text, p_valor bigint, p_inicio timestamp with time zone, p_motivo text",
+            "security_definer": true
+          },
+          "observed_at": "2026-11-16T01:05:41.532Z"
+        },
+        {
+          "detail": "Function `public.preco_vigente(p_variante uuid, p_unidade uuid, p_canal text, p_momento timestamp with time zone)` can be executed by the `authenticated` role as a `SECURITY DEFINER` function via `/rest/v1/rpc/preco_vigente`. Revoke `EXECUTE` or switch it to `SECURITY INVOKER` if that is not intentional.",
+          "metadata": {
+            "name": "preco_vigente",
+            "schema": "public",
+            "language": "sql",
+            "arguments": "p_variante uuid, p_unidade uuid, p_canal text, p_momento timestamp with time zone",
+            "security_definer": true
+          },
+          "observed_at": "2026-11-16T01:05:41.532Z"
+        },
+        {
+          "detail": "Function `public.precos_por_loja(p_variante uuid, p_canal text)` can be executed by the `authenticated` role as a `SECURITY DEFINER` function via `/rest/v1/rpc/precos_por_loja`. Revoke `EXECUTE` or switch it to `SECURITY INVOKER` if that is not intentional.",
+          "metadata": {
+            "name": "precos_por_loja",
+            "schema": "public",
+            "language": "sql",
+            "arguments": "p_variante uuid, p_canal text",
+            "security_definer": true
+          },
+          "observed_at": "2026-11-16T01:05:41.532Z"
+        },
+        {
+          "detail": "Function `public.ranking_nomes(p_vendedores uuid[])` can be executed by the `authenticated` role as a `SECURITY DEFINER` function via `/rest/v1/rpc/ranking_nomes`. Revoke `EXECUTE` or switch it to `SECURITY INVOKER` if that is not intentional.",
+          "metadata": {
+            "name": "ranking_nomes",
+            "schema": "public",
+            "language": "sql",
+            "arguments": "p_vendedores uuid[]",
+            "security_definer": true
+          },
+          "observed_at": "2026-11-16T01:05:41.532Z"
+        },
+        {
+          "detail": "Function `public.recebiveis_painel(p_unidade uuid, p_dias integer)` can be executed by the `authenticated` role as a `SECURITY DEFINER` function via `/rest/v1/rpc/recebiveis_painel`. Revoke `EXECUTE` or switch it to `SECURITY INVOKER` if that is not intentional.",
+          "metadata": {
+            "name": "recebiveis_painel",
+            "schema": "public",
+            "language": "plpgsql",
+            "arguments": "p_unidade uuid, p_dias integer",
+            "security_definer": true
+          },
+          "observed_at": "2026-11-16T01:05:41.532Z"
+        },
+        {
+          "detail": "Function `public.regiao_salvar(p_organizacao uuid, p_id uuid, p_nome text, p_ativa boolean, p_motivo text)` can be executed by the `authenticated` role as a `SECURITY DEFINER` function via `/rest/v1/rpc/regiao_salvar`. Revoke `EXECUTE` or switch it to `SECURITY INVOKER` if that is not intentional.",
+          "metadata": {
+            "name": "regiao_salvar",
+            "schema": "public",
+            "language": "plpgsql",
+            "arguments": "p_organizacao uuid, p_id uuid, p_nome text, p_ativa boolean, p_motivo text",
+            "security_definer": true
+          },
+          "observed_at": "2026-11-16T01:05:41.532Z"
+        },
+        {
+          "detail": "Function `public.registrar_foto(p_produto uuid, p_variante uuid, p_caminho text, p_largura integer, p_altura integer, p_ilustracao boolean)` can be executed by the `authenticated` role as a `SECURITY DEFINER` function via `/rest/v1/rpc/registrar_foto`. Revoke `EXECUTE` or switch it to `SECURITY INVOKER` if that is not intentional.",
+          "metadata": {
+            "name": "registrar_foto",
+            "schema": "public",
+            "language": "plpgsql",
+            "arguments": "p_produto uuid, p_variante uuid, p_caminho text, p_largura integer, p_altura integer, p_ilustracao boolean",
+            "security_definer": true
+          },
+          "observed_at": "2026-11-16T01:05:41.532Z"
+        },
+        {
+          "detail": "Function `public.remover_item(p_item uuid)` can be executed by the `authenticated` role as a `SECURITY DEFINER` function via `/rest/v1/rpc/remover_item`. Revoke `EXECUTE` or switch it to `SECURITY INVOKER` if that is not intentional.",
+          "metadata": {
+            "name": "remover_item",
+            "schema": "public",
+            "language": "plpgsql",
+            "arguments": "p_item uuid",
+            "security_definer": true
+          },
+          "observed_at": "2026-11-16T01:05:41.532Z"
+        },
+        {
+          "detail": "Function `public.repetir_convite(p_convite uuid)` can be executed by the `authenticated` role as a `SECURITY DEFINER` function via `/rest/v1/rpc/repetir_convite`. Revoke `EXECUTE` or switch it to `SECURITY INVOKER` if that is not intentional.",
+          "metadata": {
+            "name": "repetir_convite",
+            "schema": "public",
+            "language": "plpgsql",
+            "arguments": "p_convite uuid",
+            "security_definer": true
+          },
+          "observed_at": "2026-11-16T01:05:41.532Z"
+        },
+        {
+          "detail": "Function `public.reservar_estoque(p_variante uuid, p_quantidade integer, p_item uuid, p_chave text, p_origem text, p_minutos integer)` can be executed by the `authenticated` role as a `SECURITY DEFINER` function via `/rest/v1/rpc/reservar_estoque`. Revoke `EXECUTE` or switch it to `SECURITY INVOKER` if that is not intentional.",
+          "metadata": {
+            "name": "reservar_estoque",
+            "schema": "public",
+            "language": "plpgsql",
+            "arguments": "p_variante uuid, p_quantidade integer, p_item uuid, p_chave text, p_origem text, p_minutos integer",
+            "security_definer": true
+          },
+          "observed_at": "2026-11-16T01:05:41.532Z"
+        },
+        {
+          "detail": "Function `public.selecionar_unidade(p_unidade uuid)` can be executed by the `authenticated` role as a `SECURITY DEFINER` function via `/rest/v1/rpc/selecionar_unidade`. Revoke `EXECUTE` or switch it to `SECURITY INVOKER` if that is not intentional.",
+          "metadata": {
+            "name": "selecionar_unidade",
+            "schema": "public",
+            "language": "plpgsql",
+            "arguments": "p_unidade uuid",
+            "security_definer": true
+          },
+          "observed_at": "2026-11-16T01:05:41.532Z"
+        },
+        {
+          "detail": "Function `public.situacao_da_sessao()` can be executed by the `authenticated` role as a `SECURITY DEFINER` function via `/rest/v1/rpc/situacao_da_sessao`. Revoke `EXECUTE` or switch it to `SECURITY INVOKER` if that is not intentional.",
+          "metadata": {
+            "name": "situacao_da_sessao",
+            "schema": "public",
+            "language": "sql",
+            "arguments": "",
+            "security_definer": true
+          },
+          "observed_at": "2026-11-16T01:05:41.532Z"
+        },
+        {
+          "detail": "Function `public.tem_permissao(p_permissao text, p_unidade uuid)` can be executed by the `authenticated` role as a `SECURITY DEFINER` function via `/rest/v1/rpc/tem_permissao`. Revoke `EXECUTE` or switch it to `SECURITY INVOKER` if that is not intentional.",
+          "metadata": {
+            "name": "tem_permissao",
+            "schema": "public",
+            "language": "sql",
+            "arguments": "p_permissao text, p_unidade uuid",
+            "security_definer": true
+          },
+          "observed_at": "2026-11-16T01:05:41.532Z"
+        },
+        {
+          "detail": "Function `public.terminal_salvar(p_id uuid, p_unidade uuid, p_provedor text, p_identificador text, p_apelido text, p_ativo boolean, p_motivo text)` can be executed by the `authenticated` role as a `SECURITY DEFINER` function via `/rest/v1/rpc/terminal_salvar`. Revoke `EXECUTE` or switch it to `SECURITY INVOKER` if that is not intentional.",
+          "metadata": {
+            "name": "terminal_salvar",
+            "schema": "public",
+            "language": "plpgsql",
+            "arguments": "p_id uuid, p_unidade uuid, p_provedor text, p_identificador text, p_apelido text, p_ativo boolean, p_motivo text",
+            "security_definer": true
+          },
+          "observed_at": "2026-11-16T01:05:41.532Z"
+        },
+        {
+          "detail": "Function `public.transferencia_encerrar(p_transferencia uuid, p_situacao text, p_motivo text)` can be executed by the `authenticated` role as a `SECURITY DEFINER` function via `/rest/v1/rpc/transferencia_encerrar`. Revoke `EXECUTE` or switch it to `SECURITY INVOKER` if that is not intentional.",
+          "metadata": {
+            "name": "transferencia_encerrar",
+            "schema": "public",
+            "language": "plpgsql",
+            "arguments": "p_transferencia uuid, p_situacao text, p_motivo text",
+            "security_definer": true
+          },
+          "observed_at": "2026-11-16T01:05:41.532Z"
+        },
+        {
+          "detail": "Function `public.transferencia_enviar(p_transferencia uuid)` can be executed by the `authenticated` role as a `SECURITY DEFINER` function via `/rest/v1/rpc/transferencia_enviar`. Revoke `EXECUTE` or switch it to `SECURITY INVOKER` if that is not intentional.",
+          "metadata": {
+            "name": "transferencia_enviar",
+            "schema": "public",
+            "language": "plpgsql",
+            "arguments": "p_transferencia uuid",
+            "security_definer": true
+          },
+          "observed_at": "2026-11-16T01:05:41.532Z"
+        },
+        {
+          "detail": "Function `public.transferencia_receber(p_transferencia uuid, p_identificadores text[], p_quantidade integer, p_observacao text)` can be executed by the `authenticated` role as a `SECURITY DEFINER` function via `/rest/v1/rpc/transferencia_receber`. Revoke `EXECUTE` or switch it to `SECURITY INVOKER` if that is not intentional.",
+          "metadata": {
+            "name": "transferencia_receber",
+            "schema": "public",
+            "language": "plpgsql",
+            "arguments": "p_transferencia uuid, p_identificadores text[], p_quantidade integer, p_observacao text",
+            "security_definer": true
+          },
+          "observed_at": "2026-11-16T01:05:41.532Z"
+        },
+        {
+          "detail": "Function `public.transferencia_separar(p_transferencia uuid, p_itens uuid[])` can be executed by the `authenticated` role as a `SECURITY DEFINER` function via `/rest/v1/rpc/transferencia_separar`. Revoke `EXECUTE` or switch it to `SECURITY INVOKER` if that is not intentional.",
+          "metadata": {
+            "name": "transferencia_separar",
+            "schema": "public",
+            "language": "plpgsql",
+            "arguments": "p_transferencia uuid, p_itens uuid[]",
+            "security_definer": true
+          },
+          "observed_at": "2026-11-16T01:05:41.532Z"
+        },
+        {
+          "detail": "Function `public.transferencia_solicitar(p_origem uuid, p_destino uuid, p_variante uuid, p_quantidade integer, p_motivo text, p_chave text)` can be executed by the `authenticated` role as a `SECURITY DEFINER` function via `/rest/v1/rpc/transferencia_solicitar`. Revoke `EXECUTE` or switch it to `SECURITY INVOKER` if that is not intentional.",
+          "metadata": {
+            "name": "transferencia_solicitar",
+            "schema": "public",
+            "language": "plpgsql",
+            "arguments": "p_origem uuid, p_destino uuid, p_variante uuid, p_quantidade integer, p_motivo text, p_chave text",
+            "security_definer": true
+          },
+          "observed_at": "2026-11-16T01:05:41.532Z"
+        },
+        {
+          "detail": "Function `public.unidade_atual()` can be executed by the `authenticated` role as a `SECURITY DEFINER` function via `/rest/v1/rpc/unidade_atual`. Revoke `EXECUTE` or switch it to `SECURITY INVOKER` if that is not intentional.",
+          "metadata": {
+            "name": "unidade_atual",
+            "schema": "public",
+            "language": "sql",
+            "arguments": "",
+            "security_definer": true
+          },
+          "observed_at": "2026-11-16T01:05:41.532Z"
+        },
+        {
+          "detail": "Function `public.venda_anexar_documento(p_venda uuid, p_tipo text, p_descricao text, p_caminho text, p_sha256 text)` can be executed by the `authenticated` role as a `SECURITY DEFINER` function via `/rest/v1/rpc/venda_anexar_documento`. Revoke `EXECUTE` or switch it to `SECURITY INVOKER` if that is not intentional.",
+          "metadata": {
+            "name": "venda_anexar_documento",
+            "schema": "public",
+            "language": "plpgsql",
+            "arguments": "p_venda uuid, p_tipo text, p_descricao text, p_caminho text, p_sha256 text",
+            "security_definer": true
+          },
+          "observed_at": "2026-11-16T01:05:41.532Z"
+        },
+        {
+          "detail": "Function `public.venda_retirar_anexo(p_anexo uuid, p_motivo text)` can be executed by the `authenticated` role as a `SECURITY DEFINER` function via `/rest/v1/rpc/venda_retirar_anexo`. Revoke `EXECUTE` or switch it to `SECURITY INVOKER` if that is not intentional.",
+          "metadata": {
+            "name": "venda_retirar_anexo",
+            "schema": "public",
+            "language": "plpgsql",
+            "arguments": "p_anexo uuid, p_motivo text",
+            "security_definer": true
+          },
+          "observed_at": "2026-11-16T01:05:41.532Z"
+        },
+        {
+          "detail": "Function `public.venda_vincular_cliente(p_venda uuid, p_cliente uuid, p_motivo text)` can be executed by the `authenticated` role as a `SECURITY DEFINER` function via `/rest/v1/rpc/venda_vincular_cliente`. Revoke `EXECUTE` or switch it to `SECURITY INVOKER` if that is not intentional.",
+          "metadata": {
+            "name": "venda_vincular_cliente",
+            "schema": "public",
+            "language": "plpgsql",
+            "arguments": "p_venda uuid, p_cliente uuid, p_motivo text",
+            "security_definer": true
+          },
+          "observed_at": "2026-11-16T01:05:41.532Z"
+        },
+        {
+          "detail": "Function `public.vincular_pessoa(p_usuario uuid, p_organizacao uuid, p_papel text, p_unidade uuid, p_motivo text)` can be executed by the `authenticated` role as a `SECURITY DEFINER` function via `/rest/v1/rpc/vincular_pessoa`. Revoke `EXECUTE` or switch it to `SECURITY INVOKER` if that is not intentional.",
+          "metadata": {
+            "name": "vincular_pessoa",
+            "schema": "public",
+            "language": "plpgsql",
+            "arguments": "p_usuario uuid, p_organizacao uuid, p_papel text, p_unidade uuid, p_motivo text",
+            "security_definer": true
+          },
+          "observed_at": "2026-11-16T01:05:41.532Z"
+        },
+        {
+          "detail": "Function `public.whatsapp_envio_resolver(p_envio uuid, p_motivo text)` can be executed by the `authenticated` role as a `SECURITY DEFINER` function via `/rest/v1/rpc/whatsapp_envio_resolver`. Revoke `EXECUTE` or switch it to `SECURITY INVOKER` if that is not intentional.",
+          "metadata": {
+            "name": "whatsapp_envio_resolver",
+            "schema": "public",
+            "language": "plpgsql",
+            "arguments": "p_envio uuid, p_motivo text",
+            "security_definer": true
+          },
+          "observed_at": "2026-11-16T01:05:41.532Z"
+        }
+      ]
+    },
+    {
+      "name": "auth_leaked_password_protection",
+      "level": "WARN",
+      "remediation": "https://supabase.com/docs/guides/auth/password-security#password-strength-and-leaked-password-protection",
+      "count": 1,
+      "findings": [
+        {
+          "detail": "Supabase Auth prevents the use of compromised passwords by checking against HaveIBeenPwned.org. Enable this feature to enhance security.",
+          "metadata": {
+            "type": "auth",
+            "entity": "Auth"
+          }
+        }
+      ]
+    }
+  ],
+  "performance": [
+    {
+      "name": "unindexed_foreign_keys",
+      "level": "INFO",
+      "remediation": "https://supabase.com/docs/guides/database/database-linter?lint=0001_unindexed_foreign_keys",
+      "count": 10,
+      "findings": [
+        {
+          "detail": "Table \\`public.caixa_saidas\\` has a foreign key \\`caixa_saidas_unidade_id_organizacao_id_fkey\\` without a covering index. This can lead to suboptimal query performance.",
+          "metadata": {
+            "name": "caixa_saidas",
+            "type": "table",
+            "schema": "public",
+            "fkey_name": "caixa_saidas_unidade_id_organizacao_id_fkey",
+            "fkey_columns": [
+              3,
+              2
+            ]
+          },
+          "observed_at": "2026-11-16T01:05:41.578Z"
+        },
+        {
+          "detail": "Table \\`public.conta_pagar_anexos\\` has a foreign key \\`conta_pagar_anexos_organizacao_id_fkey\\` without a covering index. This can lead to suboptimal query performance.",
+          "metadata": {
+            "name": "conta_pagar_anexos",
+            "type": "table",
+            "schema": "public",
+            "fkey_name": "conta_pagar_anexos_organizacao_id_fkey",
+            "fkey_columns": [
+              2
+            ]
+          },
+          "observed_at": "2026-11-16T01:05:41.578Z"
+        },
+        {
+          "detail": "Table \\`public.contas_a_pagar\\` has a foreign key \\`contas_a_pagar_entrada_fkey\\` without a covering index. This can lead to suboptimal query performance.",
+          "metadata": {
+            "name": "contas_a_pagar",
+            "type": "table",
+            "schema": "public",
+            "fkey_name": "contas_a_pagar_entrada_fkey",
+            "fkey_columns": [
+              26,
+              2
+            ]
+          },
+          "observed_at": "2026-11-16T01:05:41.578Z"
+        },
+        {
+          "detail": "Table \\`public.entradas_estoque\\` has a foreign key \\`entradas_estoque_pedido_fkey\\` without a covering index. This can lead to suboptimal query performance.",
+          "metadata": {
+            "name": "entradas_estoque",
+            "type": "table",
+            "schema": "public",
+            "fkey_name": "entradas_estoque_pedido_fkey",
+            "fkey_columns": [
+              19,
+              3
+            ]
+          },
+          "observed_at": "2026-11-16T01:05:41.578Z"
+        },
+        {
+          "detail": "Table \\`public.entradas_estoque\\` has a foreign key \\`entradas_estoque_unidade_id_organizacao_id_fkey\\` without a covering index. This can lead to suboptimal query performance.",
+          "metadata": {
+            "name": "entradas_estoque",
+            "type": "table",
+            "schema": "public",
+            "fkey_name": "entradas_estoque_unidade_id_organizacao_id_fkey",
+            "fkey_columns": [
+              4,
+              3
+            ]
+          },
+          "observed_at": "2026-11-16T01:05:41.578Z"
+        },
+        {
+          "detail": "Table \\`public.fotos_produto\\` has a foreign key \\`fotos_produto_produto_id_organizacao_id_fkey\\` without a covering index. This can lead to suboptimal query performance.",
+          "metadata": {
+            "name": "fotos_produto",
+            "type": "table",
+            "schema": "public",
+            "fkey_name": "fotos_produto_produto_id_organizacao_id_fkey",
+            "fkey_columns": [
+              3,
+              2
+            ]
+          },
+          "observed_at": "2026-11-16T01:05:41.578Z"
+        },
+        {
+          "detail": "Table \\`public.inventarios\\` has a foreign key \\`inventarios_unidade_id_organizacao_id_fkey\\` without a covering index. This can lead to suboptimal query performance.",
+          "metadata": {
+            "name": "inventarios",
+            "type": "table",
+            "schema": "public",
+            "fkey_name": "inventarios_unidade_id_organizacao_id_fkey",
+            "fkey_columns": [
+              4,
+              3
+            ]
+          },
+          "observed_at": "2026-11-16T01:05:41.578Z"
+        },
+        {
+          "detail": "Table \\`public.metas\\` has a foreign key \\`metas_unidade_id_organizacao_id_fkey\\` without a covering index. This can lead to suboptimal query performance.",
+          "metadata": {
+            "name": "metas",
+            "type": "table",
+            "schema": "public",
+            "fkey_name": "metas_unidade_id_organizacao_id_fkey",
+            "fkey_columns": [
+              4,
+              3
+            ]
+          },
+          "observed_at": "2026-11-16T01:05:41.578Z"
+        },
+        {
+          "detail": "Table \\`public.pedidos_compra\\` has a foreign key \\`pedidos_compra_unidade_id_organizacao_id_fkey\\` without a covering index. This can lead to suboptimal query performance.",
+          "metadata": {
+            "name": "pedidos_compra",
+            "type": "table",
+            "schema": "public",
+            "fkey_name": "pedidos_compra_unidade_id_organizacao_id_fkey",
+            "fkey_columns": [
+              4,
+              3
+            ]
+          },
+          "observed_at": "2026-11-16T01:05:41.578Z"
+        },
+        {
+          "detail": "Table \\`public.unidade_configuracoes\\` has a foreign key \\`unidade_configuracoes_unidade_id_organizacao_id_fkey\\` without a covering index. This can lead to suboptimal query performance.",
+          "metadata": {
+            "name": "unidade_configuracoes",
+            "type": "table",
+            "schema": "public",
+            "fkey_name": "unidade_configuracoes_unidade_id_organizacao_id_fkey",
+            "fkey_columns": [
+              3,
+              2
+            ]
+          },
+          "observed_at": "2026-11-16T01:05:41.578Z"
+        }
+      ]
+    },
+    {
+      "name": "unused_index",
+      "level": "INFO",
+      "remediation": "https://supabase.com/docs/guides/database/database-linter?lint=0005_unused_index",
+      "count": 229,
+      "findings": [
+        {
+          "detail": "Index \\`auditoria_usuario_data\\` on table \\`public.auditoria\\` has not been used",
+          "metadata": {
+            "name": "auditoria",
+            "type": "table",
+            "schema": "public"
+          },
+          "observed_at": "2026-11-16T01:05:41.578Z"
+        },
+        {
+          "detail": "Index \\`contexto_sessao_unidade\\` on table \\`public.contexto_sessao\\` has not been used",
+          "metadata": {
+            "name": "contexto_sessao",
+            "type": "table",
+            "schema": "public"
+          },
+          "observed_at": "2026-11-16T01:05:41.578Z"
+        },
+        {
+          "detail": "Index \\`unidades_empresa_organizacao\\` on table \\`public.unidades\\` has not been used",
+          "metadata": {
+            "name": "unidades",
+            "type": "table",
+            "schema": "public"
+          },
+          "observed_at": "2026-11-16T01:05:41.578Z"
+        },
+        {
+          "detail": "Index \\`unidades_emissora\\` on table \\`public.unidades\\` has not been used",
+          "metadata": {
+            "name": "unidades",
+            "type": "table",
+            "schema": "public"
+          },
+          "observed_at": "2026-11-16T01:05:41.578Z"
+        },
+        {
+          "detail": "Index \\`vinculos_criado_por\\` on table \\`public.vinculos\\` has not been used",
+          "metadata": {
+            "name": "vinculos",
+            "type": "table",
+            "schema": "public"
+          },
+          "observed_at": "2026-11-16T01:05:41.578Z"
+        },
+        {
+          "detail": "Index \\`vinculos_organizacao\\` on table \\`public.vinculos\\` has not been used",
+          "metadata": {
+            "name": "vinculos",
+            "type": "table",
+            "schema": "public"
+          },
+          "observed_at": "2026-11-16T01:05:41.578Z"
+        },
+        {
+          "detail": "Index \\`fotos_organizacao\\` on table \\`public.fotos_produto\\` has not been used",
+          "metadata": {
+            "name": "fotos_produto",
+            "type": "table",
+            "schema": "public"
+          },
+          "observed_at": "2026-11-16T01:05:41.578Z"
+        },
+        {
+          "detail": "Index \\`auditoria_organizacao_data\\` on table \\`public.auditoria\\` has not been used",
+          "metadata": {
+            "name": "auditoria",
+            "type": "table",
+            "schema": "public"
+          },
+          "observed_at": "2026-11-16T01:05:41.578Z"
+        },
+        {
+          "detail": "Index \\`custos_variante_organizacao\\` on table \\`public.custos\\` has not been used",
+          "metadata": {
+            "name": "custos",
+            "type": "table",
+            "schema": "public"
+          },
+          "observed_at": "2026-11-16T01:05:41.578Z"
+        },
+        {
+          "detail": "Index \\`estoque_movimentos_unidade_organizacao\\` on table \\`public.estoque_movimentos\\` has not been used",
+          "metadata": {
+            "name": "estoque_movimentos",
+            "type": "table",
+            "schema": "public"
+          },
+          "observed_at": "2026-11-16T01:05:41.578Z"
+        },
+        {
+          "detail": "Index \\`precos_variante_organizacao\\` on table \\`public.precos\\` has not been used",
+          "metadata": {
+            "name": "precos",
+            "type": "table",
+            "schema": "public"
+          },
+          "observed_at": "2026-11-16T01:05:41.578Z"
+        },
+        {
+          "detail": "Index \\`produtos_organizacao\\` on table \\`public.produtos\\` has not been used",
+          "metadata": {
+            "name": "produtos",
+            "type": "table",
+            "schema": "public"
+          },
+          "observed_at": "2026-11-16T01:05:41.578Z"
+        },
+        {
+          "detail": "Index \\`convites_fila\\` on table \\`public.convites\\` has not been used",
+          "metadata": {
+            "name": "convites",
+            "type": "table",
+            "schema": "public"
+          },
+          "observed_at": "2026-11-16T01:05:41.578Z"
+        },
+        {
+          "detail": "Index \\`identificadores_itens_item\\` on table \\`privado.identificadores_itens\\` has not been used",
+          "metadata": {
+            "name": "identificadores_itens",
+            "type": "table",
+            "schema": "privado"
+          },
+          "observed_at": "2026-11-16T01:05:41.578Z"
+        },
+        {
+          "detail": "Index \\`convites_criado_por\\` on table \\`public.convites\\` has not been used",
+          "metadata": {
+            "name": "convites",
+            "type": "table",
+            "schema": "public"
+          },
+          "observed_at": "2026-11-16T01:05:41.578Z"
+        },
+        {
+          "detail": "Index \\`convites_usuario\\` on table \\`public.convites\\` has not been used",
+          "metadata": {
+            "name": "convites",
+            "type": "table",
+            "schema": "public"
+          },
+          "observed_at": "2026-11-16T01:05:41.578Z"
+        },
+        {
+          "detail": "Index \\`convites_papel\\` on table \\`public.convites\\` has not been used",
+          "metadata": {
+            "name": "convites",
+            "type": "table",
+            "schema": "public"
+          },
+          "observed_at": "2026-11-16T01:05:41.578Z"
+        },
+        {
+          "detail": "Index \\`fotos_variante\\` on table \\`public.fotos_produto\\` has not been used",
+          "metadata": {
+            "name": "fotos_produto",
+            "type": "table",
+            "schema": "public"
+          },
+          "observed_at": "2026-11-16T01:05:41.578Z"
+        },
+        {
+          "detail": "Index \\`fotos_criado_por\\` on table \\`public.fotos_produto\\` has not been used",
+          "metadata": {
+            "name": "fotos_produto",
+            "type": "table",
+            "schema": "public"
+          },
+          "observed_at": "2026-11-16T01:05:41.578Z"
+        },
+        {
+          "detail": "Index \\`produtos_categoria\\` on table \\`public.produtos\\` has not been used",
+          "metadata": {
+            "name": "produtos",
+            "type": "table",
+            "schema": "public"
+          },
+          "observed_at": "2026-11-16T01:05:41.578Z"
+        },
+        {
+          "detail": "Index \\`produtos_marca\\` on table \\`public.produtos\\` has not been used",
+          "metadata": {
+            "name": "produtos",
+            "type": "table",
+            "schema": "public"
+          },
+          "observed_at": "2026-11-16T01:05:41.578Z"
+        },
+        {
+          "detail": "Index \\`precos_unidade\\` on table \\`public.precos\\` has not been used",
+          "metadata": {
+            "name": "precos",
+            "type": "table",
+            "schema": "public"
+          },
+          "observed_at": "2026-11-16T01:05:41.578Z"
+        },
+        {
+          "detail": "Index \\`precos_criado_por\\` on table \\`public.precos\\` has not been used",
+          "metadata": {
+            "name": "precos",
+            "type": "table",
+            "schema": "public"
+          },
+          "observed_at": "2026-11-16T01:05:41.578Z"
+        },
+        {
+          "detail": "Index \\`custos_criado_por\\` on table \\`public.custos\\` has not been used",
+          "metadata": {
+            "name": "custos",
+            "type": "table",
+            "schema": "public"
+          },
+          "observed_at": "2026-11-16T01:05:41.578Z"
+        },
+        {
+          "detail": "Index \\`itens_unidade_variante\\` on table \\`public.itens_serializados\\` has not been used",
+          "metadata": {
+            "name": "itens_serializados",
+            "type": "table",
+            "schema": "public"
+          },
+          "observed_at": "2026-11-16T01:05:41.578Z"
+        },
+        {
+          "detail": "Index \\`itens_variante\\` on table \\`public.itens_serializados\\` has not been used",
+          "metadata": {
+            "name": "itens_serializados",
+            "type": "table",
+            "schema": "public"
+          },
+          "observed_at": "2026-11-16T01:05:41.578Z"
+        },
+        {
+          "detail": "Index \\`itens_conferido_por\\` on table \\`public.itens_serializados\\` has not been used",
+          "metadata": {
+            "name": "itens_serializados",
+            "type": "table",
+            "schema": "public"
+          },
+          "observed_at": "2026-11-16T01:05:41.578Z"
+        },
+        {
+          "detail": "Index \\`estoque_movimentos_unidade_data\\` on table \\`public.estoque_movimentos\\` has not been used",
+          "metadata": {
+            "name": "estoque_movimentos",
+            "type": "table",
+            "schema": "public"
+          },
+          "observed_at": "2026-11-16T01:05:41.578Z"
+        },
+        {
+          "detail": "Index \\`estoque_movimentos_variante\\` on table \\`public.estoque_movimentos\\` has not been used",
+          "metadata": {
+            "name": "estoque_movimentos",
+            "type": "table",
+            "schema": "public"
+          },
+          "observed_at": "2026-11-16T01:05:41.578Z"
+        },
+        {
+          "detail": "Index \\`estoque_movimentos_usuario\\` on table \\`public.estoque_movimentos\\` has not been used",
+          "metadata": {
+            "name": "estoque_movimentos",
+            "type": "table",
+            "schema": "public"
+          },
+          "observed_at": "2026-11-16T01:05:41.578Z"
+        },
+        {
+          "detail": "Index \\`estoque_saldos_variante\\` on table \\`public.estoque_saldos\\` has not been used",
+          "metadata": {
+            "name": "estoque_saldos",
+            "type": "table",
+            "schema": "public"
+          },
+          "observed_at": "2026-11-16T01:05:41.578Z"
+        },
+        {
+          "detail": "Index \\`estoque_reservas_variante\\` on table \\`public.estoque_reservas\\` has not been used",
+          "metadata": {
+            "name": "estoque_reservas",
+            "type": "table",
+            "schema": "public"
+          },
+          "observed_at": "2026-11-16T01:05:41.578Z"
+        },
+        {
+          "detail": "Index \\`estoque_reservas_unidade_org\\` on table \\`public.estoque_reservas\\` has not been used",
+          "metadata": {
+            "name": "estoque_reservas",
+            "type": "table",
+            "schema": "public"
+          },
+          "observed_at": "2026-11-16T01:05:41.578Z"
+        },
+        {
+          "detail": "Index \\`estoque_reservas_criado_por\\` on table \\`public.estoque_reservas\\` has not been used",
+          "metadata": {
+            "name": "estoque_reservas",
+            "type": "table",
+            "schema": "public"
+          },
+          "observed_at": "2026-11-16T01:05:41.578Z"
+        },
+        {
+          "detail": "Index \\`caixas_unidade\\` on table \\`public.caixas\\` has not been used",
+          "metadata": {
+            "name": "caixas",
+            "type": "table",
+            "schema": "public"
+          },
+          "observed_at": "2026-11-16T01:05:41.578Z"
+        },
+        {
+          "detail": "Index \\`caixas_operador\\` on table \\`public.caixas\\` has not been used",
+          "metadata": {
+            "name": "caixas",
+            "type": "table",
+            "schema": "public"
+          },
+          "observed_at": "2026-11-16T01:05:41.578Z"
+        },
+        {
+          "detail": "Index \\`caixas_conferido_por\\` on table \\`public.caixas\\` has not been used",
+          "metadata": {
+            "name": "caixas",
+            "type": "table",
+            "schema": "public"
+          },
+          "observed_at": "2026-11-16T01:05:41.578Z"
+        },
+        {
+          "detail": "Index \\`caixa_movimentos_venda\\` on table \\`public.caixa_movimentos\\` has not been used",
+          "metadata": {
+            "name": "caixa_movimentos",
+            "type": "table",
+            "schema": "public"
+          },
+          "observed_at": "2026-11-16T01:05:41.578Z"
+        },
+        {
+          "detail": "Index \\`caixa_movimentos_usuario\\` on table \\`public.caixa_movimentos\\` has not been used",
+          "metadata": {
+            "name": "caixa_movimentos",
+            "type": "table",
+            "schema": "public"
+          },
+          "observed_at": "2026-11-16T01:05:41.578Z"
+        },
+        {
+          "detail": "Index \\`vendas_unidade\\` on table \\`public.vendas\\` has not been used",
+          "metadata": {
+            "name": "vendas",
+            "type": "table",
+            "schema": "public"
+          },
+          "observed_at": "2026-11-16T01:05:41.578Z"
+        },
+        {
+          "detail": "Index \\`vendas_caixa\\` on table \\`public.vendas\\` has not been used",
+          "metadata": {
+            "name": "vendas",
+            "type": "table",
+            "schema": "public"
+          },
+          "observed_at": "2026-11-16T01:05:41.578Z"
+        },
+        {
+          "detail": "Index \\`vendas_cancelada_por\\` on table \\`public.vendas\\` has not been used",
+          "metadata": {
+            "name": "vendas",
+            "type": "table",
+            "schema": "public"
+          },
+          "observed_at": "2026-11-16T01:05:41.578Z"
+        },
+        {
+          "detail": "Index \\`venda_itens_variante\\` on table \\`public.venda_itens\\` has not been used",
+          "metadata": {
+            "name": "venda_itens",
+            "type": "table",
+            "schema": "public"
+          },
+          "observed_at": "2026-11-16T01:05:41.578Z"
+        },
+        {
+          "detail": "Index \\`venda_itens_item\\` on table \\`public.venda_itens\\` has not been used",
+          "metadata": {
+            "name": "venda_itens",
+            "type": "table",
+            "schema": "public"
+          },
+          "observed_at": "2026-11-16T01:05:41.578Z"
+        },
+        {
+          "detail": "Index \\`venda_itens_reserva\\` on table \\`public.venda_itens\\` has not been used",
+          "metadata": {
+            "name": "venda_itens",
+            "type": "table",
+            "schema": "public"
+          },
+          "observed_at": "2026-11-16T01:05:41.578Z"
+        },
+        {
+          "detail": "Index \\`venda_itens_custos_unidade\\` on table \\`public.venda_itens_custos\\` has not been used",
+          "metadata": {
+            "name": "venda_itens_custos",
+            "type": "table",
+            "schema": "public"
+          },
+          "observed_at": "2026-11-16T01:05:41.578Z"
+        },
+        {
+          "detail": "Index \\`aprovacoes_item\\` on table \\`public.aprovacoes_desconto\\` has not been used",
+          "metadata": {
+            "name": "aprovacoes_desconto",
+            "type": "table",
+            "schema": "public"
+          },
+          "observed_at": "2026-11-16T01:05:41.578Z"
+        },
+        {
+          "detail": "Index \\`aprovacoes_solicitado_por\\` on table \\`public.aprovacoes_desconto\\` has not been used",
+          "metadata": {
+            "name": "aprovacoes_desconto",
+            "type": "table",
+            "schema": "public"
+          },
+          "observed_at": "2026-11-16T01:05:41.578Z"
+        },
+        {
+          "detail": "Index \\`aprovacoes_decidido_por\\` on table \\`public.aprovacoes_desconto\\` has not been used",
+          "metadata": {
+            "name": "aprovacoes_desconto",
+            "type": "table",
+            "schema": "public"
+          },
+          "observed_at": "2026-11-16T01:05:41.578Z"
+        },
+        {
+          "detail": "Index \\`venda_pagamentos_confirmado_por\\` on table \\`public.venda_pagamentos\\` has not been used",
+          "metadata": {
+            "name": "venda_pagamentos",
+            "type": "table",
+            "schema": "public"
+          },
+          "observed_at": "2026-11-16T01:05:41.578Z"
+        },
+        {
+          "detail": "Index \\`contas_a_receber_pagamento\\` on table \\`public.contas_a_receber\\` has not been used",
+          "metadata": {
+            "name": "contas_a_receber",
+            "type": "table",
+            "schema": "public"
+          },
+          "observed_at": "2026-11-16T01:05:41.578Z"
+        },
+        {
+          "detail": "Index \\`connect_operacoes_vendedor\\` on table \\`public.connect_operacoes\\` has not been used",
+          "metadata": {
+            "name": "connect_operacoes",
+            "type": "table",
+            "schema": "public"
+          },
+          "observed_at": "2026-11-16T01:05:41.578Z"
+        },
+        {
+          "detail": "Index \\`connect_operacoes_item\\` on table \\`public.connect_operacoes\\` has not been used",
+          "metadata": {
+            "name": "connect_operacoes",
+            "type": "table",
+            "schema": "public"
+          },
+          "observed_at": "2026-11-16T01:05:41.578Z"
+        },
+        {
+          "detail": "Index \\`connect_operacoes_venda_chip\\` on table \\`public.connect_operacoes\\` has not been used",
+          "metadata": {
+            "name": "connect_operacoes",
+            "type": "table",
+            "schema": "public"
+          },
+          "observed_at": "2026-11-16T01:05:41.578Z"
+        },
+        {
+          "detail": "Index \\`connect_operacoes_resolvida_por\\` on table \\`public.connect_operacoes\\` has not been used",
+          "metadata": {
+            "name": "connect_operacoes",
+            "type": "table",
+            "schema": "public"
+          },
+          "observed_at": "2026-11-16T01:05:41.578Z"
+        },
+        {
+          "detail": "Index \\`connect_operacoes_iccid\\` on table \\`public.connect_operacoes\\` has not been used",
+          "metadata": {
+            "name": "connect_operacoes",
+            "type": "table",
+            "schema": "public"
+          },
+          "observed_at": "2026-11-16T01:05:41.578Z"
+        },
+        {
+          "detail": "Index \\`connect_eventos_operacao\\` on table \\`public.connect_eventos\\` has not been used",
+          "metadata": {
+            "name": "connect_eventos",
+            "type": "table",
+            "schema": "public"
+          },
+          "observed_at": "2026-11-16T01:05:41.578Z"
+        },
+        {
+          "detail": "Index \\`connect_eventos_usuario\\` on table \\`public.connect_eventos\\` has not been used",
+          "metadata": {
+            "name": "connect_eventos",
+            "type": "table",
+            "schema": "public"
+          },
+          "observed_at": "2026-11-16T01:05:41.578Z"
+        },
+        {
+          "detail": "Index \\`connect_producao_vendedor\\` on table \\`public.connect_producao\\` has not been used",
+          "metadata": {
+            "name": "connect_producao",
+            "type": "table",
+            "schema": "public"
+          },
+          "observed_at": "2026-11-16T01:05:41.578Z"
+        },
+        {
+          "detail": "Index \\`connect_habilitacoes_alterado_por\\` on table \\`public.connect_habilitacoes\\` has not been used",
+          "metadata": {
+            "name": "connect_habilitacoes",
+            "type": "table",
+            "schema": "public"
+          },
+          "observed_at": "2026-11-16T01:05:41.578Z"
+        },
+        {
+          "detail": "Index \\`connect_producao_unidade_organizacao\\` on table \\`public.connect_producao\\` has not been used",
+          "metadata": {
+            "name": "connect_producao",
+            "type": "table",
+            "schema": "public"
+          },
+          "observed_at": "2026-11-16T01:05:41.578Z"
+        },
+        {
+          "detail": "Index \\`fiscal_politicas_alterado_por\\` on table \\`public.fiscal_politicas\\` has not been used",
+          "metadata": {
+            "name": "fiscal_politicas",
+            "type": "table",
+            "schema": "public"
+          },
+          "observed_at": "2026-11-16T01:05:41.578Z"
+        },
+        {
+          "detail": "Index \\`notas_pedidos_solicitado_por\\` on table \\`public.notas_pedidos\\` has not been used",
+          "metadata": {
+            "name": "notas_pedidos",
+            "type": "table",
+            "schema": "public"
+          },
+          "observed_at": "2026-11-16T01:05:41.578Z"
+        },
+        {
+          "detail": "Index \\`notas_pedidos_aprovado_por\\` on table \\`public.notas_pedidos\\` has not been used",
+          "metadata": {
+            "name": "notas_pedidos",
+            "type": "table",
+            "schema": "public"
+          },
+          "observed_at": "2026-11-16T01:05:41.578Z"
+        },
+        {
+          "detail": "Index \\`notas_pedidos_emitida_por\\` on table \\`public.notas_pedidos\\` has not been used",
+          "metadata": {
+            "name": "notas_pedidos",
+            "type": "table",
+            "schema": "public"
+          },
+          "observed_at": "2026-11-16T01:05:41.578Z"
+        },
+        {
+          "detail": "Index \\`notas_eventos_pedido\\` on table \\`public.notas_eventos\\` has not been used",
+          "metadata": {
+            "name": "notas_eventos",
+            "type": "table",
+            "schema": "public"
+          },
+          "observed_at": "2026-11-16T01:05:41.578Z"
+        },
+        {
+          "detail": "Index \\`notas_eventos_usuario\\` on table \\`public.notas_eventos\\` has not been used",
+          "metadata": {
+            "name": "notas_eventos",
+            "type": "table",
+            "schema": "public"
+          },
+          "observed_at": "2026-11-16T01:05:41.578Z"
+        },
+        {
+          "detail": "Index \\`venda_devolucoes_unidade_organizacao\\` on table \\`public.venda_devolucoes\\` has not been used",
+          "metadata": {
+            "name": "venda_devolucoes",
+            "type": "table",
+            "schema": "public"
+          },
+          "observed_at": "2026-11-16T01:05:41.578Z"
+        },
+        {
+          "detail": "Index \\`venda_devolucoes_caixa\\` on table \\`public.venda_devolucoes\\` has not been used",
+          "metadata": {
+            "name": "venda_devolucoes",
+            "type": "table",
+            "schema": "public"
+          },
+          "observed_at": "2026-11-16T01:05:41.578Z"
+        },
+        {
+          "detail": "Index \\`venda_devolucoes_criado_por\\` on table \\`public.venda_devolucoes\\` has not been used",
+          "metadata": {
+            "name": "venda_devolucoes",
+            "type": "table",
+            "schema": "public"
+          },
+          "observed_at": "2026-11-16T01:05:41.578Z"
+        },
+        {
+          "detail": "Index \\`venda_devolucao_itens_item\\` on table \\`public.venda_devolucao_itens\\` has not been used",
+          "metadata": {
+            "name": "venda_devolucao_itens",
+            "type": "table",
+            "schema": "public"
+          },
+          "observed_at": "2026-11-16T01:05:41.578Z"
+        },
+        {
+          "detail": "Index \\`venda_retornos_venda\\` on table \\`public.venda_retornos\\` has not been used",
+          "metadata": {
+            "name": "venda_retornos",
+            "type": "table",
+            "schema": "public"
+          },
+          "observed_at": "2026-11-16T01:05:41.578Z"
+        },
+        {
+          "detail": "Index \\`vales_troca_unidade_organizacao\\` on table \\`public.vales_troca\\` has not been used",
+          "metadata": {
+            "name": "vales_troca",
+            "type": "table",
+            "schema": "public"
+          },
+          "observed_at": "2026-11-16T01:05:41.578Z"
+        },
+        {
+          "detail": "Index \\`vales_troca_organizacao_numero\\` on table \\`public.vales_troca\\` has not been used",
+          "metadata": {
+            "name": "vales_troca",
+            "type": "table",
+            "schema": "public"
+          },
+          "observed_at": "2026-11-16T01:05:41.578Z"
+        },
+        {
+          "detail": "Index \\`venda_retornos_unidade_organizacao\\` on table \\`public.venda_retornos\\` has not been used",
+          "metadata": {
+            "name": "venda_retornos",
+            "type": "table",
+            "schema": "public"
+          },
+          "observed_at": "2026-11-16T01:05:41.578Z"
+        },
+        {
+          "detail": "Index \\`vales_troca_usos_vale\\` on table \\`public.vales_troca_usos\\` has not been used",
+          "metadata": {
+            "name": "vales_troca_usos",
+            "type": "table",
+            "schema": "public"
+          },
+          "observed_at": "2026-11-16T01:05:41.578Z"
+        },
+        {
+          "detail": "Index \\`vales_troca_usos_venda\\` on table \\`public.vales_troca_usos\\` has not been used",
+          "metadata": {
+            "name": "vales_troca_usos",
+            "type": "table",
+            "schema": "public"
+          },
+          "observed_at": "2026-11-16T01:05:41.578Z"
+        },
+        {
+          "detail": "Index \\`venda_retornos_solicitado_por\\` on table \\`public.venda_retornos\\` has not been used",
+          "metadata": {
+            "name": "venda_retornos",
+            "type": "table",
+            "schema": "public"
+          },
+          "observed_at": "2026-11-16T01:05:41.578Z"
+        },
+        {
+          "detail": "Index \\`venda_retornos_conferido_por\\` on table \\`public.venda_retornos\\` has not been used",
+          "metadata": {
+            "name": "venda_retornos",
+            "type": "table",
+            "schema": "public"
+          },
+          "observed_at": "2026-11-16T01:05:41.578Z"
+        },
+        {
+          "detail": "Index \\`transferencias_origem\\` on table \\`public.transferencias\\` has not been used",
+          "metadata": {
+            "name": "transferencias",
+            "type": "table",
+            "schema": "public"
+          },
+          "observed_at": "2026-11-16T01:05:41.578Z"
+        },
+        {
+          "detail": "Index \\`transferencias_variante_organizacao\\` on table \\`public.transferencias\\` has not been used",
+          "metadata": {
+            "name": "transferencias",
+            "type": "table",
+            "schema": "public"
+          },
+          "observed_at": "2026-11-16T01:05:41.578Z"
+        },
+        {
+          "detail": "Index \\`transferencias_reserva\\` on table \\`public.transferencias\\` has not been used",
+          "metadata": {
+            "name": "transferencias",
+            "type": "table",
+            "schema": "public"
+          },
+          "observed_at": "2026-11-16T01:05:41.578Z"
+        },
+        {
+          "detail": "Index \\`transferencias_solicitado_por\\` on table \\`public.transferencias\\` has not been used",
+          "metadata": {
+            "name": "transferencias",
+            "type": "table",
+            "schema": "public"
+          },
+          "observed_at": "2026-11-16T01:05:41.578Z"
+        },
+        {
+          "detail": "Index \\`transferencias_separado_por\\` on table \\`public.transferencias\\` has not been used",
+          "metadata": {
+            "name": "transferencias",
+            "type": "table",
+            "schema": "public"
+          },
+          "observed_at": "2026-11-16T01:05:41.578Z"
+        },
+        {
+          "detail": "Index \\`transferencias_enviado_por\\` on table \\`public.transferencias\\` has not been used",
+          "metadata": {
+            "name": "transferencias",
+            "type": "table",
+            "schema": "public"
+          },
+          "observed_at": "2026-11-16T01:05:41.578Z"
+        },
+        {
+          "detail": "Index \\`connect_operacoes_custos_unidade_organizacao\\` on table \\`public.connect_operacoes_custos\\` has not been used",
+          "metadata": {
+            "name": "connect_operacoes_custos",
+            "type": "table",
+            "schema": "public"
+          },
+          "observed_at": "2026-11-16T01:05:41.578Z"
+        },
+        {
+          "detail": "Index \\`estornos_externos_devolucao\\` on table \\`public.estornos_externos\\` has not been used",
+          "metadata": {
+            "name": "estornos_externos",
+            "type": "table",
+            "schema": "public"
+          },
+          "observed_at": "2026-11-16T01:05:41.578Z"
+        },
+        {
+          "detail": "Index \\`estornos_externos_solicitado_por\\` on table \\`public.estornos_externos\\` has not been used",
+          "metadata": {
+            "name": "estornos_externos",
+            "type": "table",
+            "schema": "public"
+          },
+          "observed_at": "2026-11-16T01:05:41.578Z"
+        },
+        {
+          "detail": "Index \\`estornos_externos_confirmado_por\\` on table \\`public.estornos_externos\\` has not been used",
+          "metadata": {
+            "name": "estornos_externos",
+            "type": "table",
+            "schema": "public"
+          },
+          "observed_at": "2026-11-16T01:05:41.578Z"
+        },
+        {
+          "detail": "Index \\`transferencias_recebido_por\\` on table \\`public.transferencias\\` has not been used",
+          "metadata": {
+            "name": "transferencias",
+            "type": "table",
+            "schema": "public"
+          },
+          "observed_at": "2026-11-16T01:05:41.578Z"
+        },
+        {
+          "detail": "Index \\`transferencias_encerrado_por\\` on table \\`public.transferencias\\` has not been used",
+          "metadata": {
+            "name": "transferencias",
+            "type": "table",
+            "schema": "public"
+          },
+          "observed_at": "2026-11-16T01:05:41.578Z"
+        },
+        {
+          "detail": "Index \\`transferencia_itens_item\\` on table \\`public.transferencia_itens\\` has not been used",
+          "metadata": {
+            "name": "transferencia_itens",
+            "type": "table",
+            "schema": "public"
+          },
+          "observed_at": "2026-11-16T01:05:41.578Z"
+        },
+        {
+          "detail": "Index \\`transferencia_itens_reserva\\` on table \\`public.transferencia_itens\\` has not been used",
+          "metadata": {
+            "name": "transferencia_itens",
+            "type": "table",
+            "schema": "public"
+          },
+          "observed_at": "2026-11-16T01:05:41.578Z"
+        },
+        {
+          "detail": "Index \\`precos_cancelado_por\\` on table \\`public.precos\\` has not been used",
+          "metadata": {
+            "name": "precos",
+            "type": "table",
+            "schema": "public"
+          },
+          "observed_at": "2026-11-16T01:05:41.578Z"
+        },
+        {
+          "detail": "Index \\`unidade_configuracoes_organizacao\\` on table \\`public.unidade_configuracoes\\` has not been used",
+          "metadata": {
+            "name": "unidade_configuracoes",
+            "type": "table",
+            "schema": "public"
+          },
+          "observed_at": "2026-11-16T01:05:41.578Z"
+        },
+        {
+          "detail": "Index \\`unidade_configuracoes_criado_por\\` on table \\`public.unidade_configuracoes\\` has not been used",
+          "metadata": {
+            "name": "unidade_configuracoes",
+            "type": "table",
+            "schema": "public"
+          },
+          "observed_at": "2026-11-16T01:05:41.578Z"
+        },
+        {
+          "detail": "Index \\`importacoes_encerrado_por\\` on table \\`public.importacoes\\` has not been used",
+          "metadata": {
+            "name": "importacoes",
+            "type": "table",
+            "schema": "public"
+          },
+          "observed_at": "2026-11-16T01:05:41.578Z"
+        },
+        {
+          "detail": "Index \\`importacoes_organizacao\\` on table \\`public.importacoes\\` has not been used",
+          "metadata": {
+            "name": "importacoes",
+            "type": "table",
+            "schema": "public"
+          },
+          "observed_at": "2026-11-16T01:05:41.578Z"
+        },
+        {
+          "detail": "Index \\`importacoes_criado_por\\` on table \\`public.importacoes\\` has not been used",
+          "metadata": {
+            "name": "importacoes",
+            "type": "table",
+            "schema": "public"
+          },
+          "observed_at": "2026-11-16T01:05:41.578Z"
+        },
+        {
+          "detail": "Index \\`importacoes_aplicado_por\\` on table \\`public.importacoes\\` has not been used",
+          "metadata": {
+            "name": "importacoes",
+            "type": "table",
+            "schema": "public"
+          },
+          "observed_at": "2026-11-16T01:05:41.578Z"
+        },
+        {
+          "detail": "Index \\`entradas_estoque_fornecedor\\` on table \\`public.entradas_estoque\\` has not been used",
+          "metadata": {
+            "name": "entradas_estoque",
+            "type": "table",
+            "schema": "public"
+          },
+          "observed_at": "2026-11-16T01:05:41.578Z"
+        },
+        {
+          "detail": "Index \\`importacao_linhas_variante\\` on table \\`public.importacao_linhas\\` has not been used",
+          "metadata": {
+            "name": "importacao_linhas",
+            "type": "table",
+            "schema": "public"
+          },
+          "observed_at": "2026-11-16T01:05:41.578Z"
+        },
+        {
+          "detail": "Index \\`entradas_estoque_criado_por\\` on table \\`public.entradas_estoque\\` has not been used",
+          "metadata": {
+            "name": "entradas_estoque",
+            "type": "table",
+            "schema": "public"
+          },
+          "observed_at": "2026-11-16T01:05:41.578Z"
+        },
+        {
+          "detail": "Index \\`entradas_estoque_estornado_por\\` on table \\`public.entradas_estoque\\` has not been used",
+          "metadata": {
+            "name": "entradas_estoque",
+            "type": "table",
+            "schema": "public"
+          },
+          "observed_at": "2026-11-16T01:05:41.578Z"
+        },
+        {
+          "detail": "Index \\`fornecedores_criado_por\\` on table \\`public.fornecedores\\` has not been used",
+          "metadata": {
+            "name": "fornecedores",
+            "type": "table",
+            "schema": "public"
+          },
+          "observed_at": "2026-11-16T01:05:41.578Z"
+        },
+        {
+          "detail": "Index \\`entradas_estoque_unidade\\` on table \\`public.entradas_estoque\\` has not been used",
+          "metadata": {
+            "name": "entradas_estoque",
+            "type": "table",
+            "schema": "public"
+          },
+          "observed_at": "2026-11-16T01:05:41.578Z"
+        },
+        {
+          "detail": "Index \\`entrada_itens_variante\\` on table \\`public.entrada_itens\\` has not been used",
+          "metadata": {
+            "name": "entrada_itens",
+            "type": "table",
+            "schema": "public"
+          },
+          "observed_at": "2026-11-16T01:05:41.578Z"
+        },
+        {
+          "detail": "Index \\`inventario_itens_contado_por\\` on table \\`public.inventario_itens\\` has not been used",
+          "metadata": {
+            "name": "inventario_itens",
+            "type": "table",
+            "schema": "public"
+          },
+          "observed_at": "2026-11-16T01:05:41.578Z"
+        },
+        {
+          "detail": "Index \\`inventarios_criado_por\\` on table \\`public.inventarios\\` has not been used",
+          "metadata": {
+            "name": "inventarios",
+            "type": "table",
+            "schema": "public"
+          },
+          "observed_at": "2026-11-16T01:05:41.578Z"
+        },
+        {
+          "detail": "Index \\`inventarios_enviado_por\\` on table \\`public.inventarios\\` has not been used",
+          "metadata": {
+            "name": "inventarios",
+            "type": "table",
+            "schema": "public"
+          },
+          "observed_at": "2026-11-16T01:05:41.578Z"
+        },
+        {
+          "detail": "Index \\`inventarios_decidido_por\\` on table \\`public.inventarios\\` has not been used",
+          "metadata": {
+            "name": "inventarios",
+            "type": "table",
+            "schema": "public"
+          },
+          "observed_at": "2026-11-16T01:05:41.578Z"
+        },
+        {
+          "detail": "Index \\`inventario_itens_variante\\` on table \\`public.inventario_itens\\` has not been used",
+          "metadata": {
+            "name": "inventario_itens",
+            "type": "table",
+            "schema": "public"
+          },
+          "observed_at": "2026-11-16T01:05:41.578Z"
+        },
+        {
+          "detail": "Index \\`clientes_telefone\\` on table \\`public.clientes\\` has not been used",
+          "metadata": {
+            "name": "clientes",
+            "type": "table",
+            "schema": "public"
+          },
+          "observed_at": "2026-11-16T01:05:41.578Z"
+        },
+        {
+          "detail": "Index \\`clientes_unidade_origem\\` on table \\`public.clientes\\` has not been used",
+          "metadata": {
+            "name": "clientes",
+            "type": "table",
+            "schema": "public"
+          },
+          "observed_at": "2026-11-16T01:05:41.578Z"
+        },
+        {
+          "detail": "Index \\`clientes_criado_por\\` on table \\`public.clientes\\` has not been used",
+          "metadata": {
+            "name": "clientes",
+            "type": "table",
+            "schema": "public"
+          },
+          "observed_at": "2026-11-16T01:05:41.578Z"
+        },
+        {
+          "detail": "Index \\`clientes_atualizado_por\\` on table \\`public.clientes\\` has not been used",
+          "metadata": {
+            "name": "clientes",
+            "type": "table",
+            "schema": "public"
+          },
+          "observed_at": "2026-11-16T01:05:41.578Z"
+        },
+        {
+          "detail": "Index \\`cliente_consentimentos_cliente\\` on table \\`public.cliente_consentimentos\\` has not been used",
+          "metadata": {
+            "name": "cliente_consentimentos",
+            "type": "table",
+            "schema": "public"
+          },
+          "observed_at": "2026-11-16T01:05:41.578Z"
+        },
+        {
+          "detail": "Index \\`cliente_consentimentos_atual\\` on table \\`public.cliente_consentimentos\\` has not been used",
+          "metadata": {
+            "name": "cliente_consentimentos",
+            "type": "table",
+            "schema": "public"
+          },
+          "observed_at": "2026-11-16T01:05:41.578Z"
+        },
+        {
+          "detail": "Index \\`cliente_consentimentos_unidade\\` on table \\`public.cliente_consentimentos\\` has not been used",
+          "metadata": {
+            "name": "cliente_consentimentos",
+            "type": "table",
+            "schema": "public"
+          },
+          "observed_at": "2026-11-16T01:05:41.578Z"
+        },
+        {
+          "detail": "Index \\`cliente_consentimentos_registrado_por\\` on table \\`public.cliente_consentimentos\\` has not been used",
+          "metadata": {
+            "name": "cliente_consentimentos",
+            "type": "table",
+            "schema": "public"
+          },
+          "observed_at": "2026-11-16T01:05:41.578Z"
+        },
+        {
+          "detail": "Index \\`vendas_cliente\\` on table \\`public.vendas\\` has not been used",
+          "metadata": {
+            "name": "vendas",
+            "type": "table",
+            "schema": "public"
+          },
+          "observed_at": "2026-11-16T01:05:41.578Z"
+        },
+        {
+          "detail": "Index \\`oportunidades_unidade\\` on table \\`public.oportunidades\\` has not been used",
+          "metadata": {
+            "name": "oportunidades",
+            "type": "table",
+            "schema": "public"
+          },
+          "observed_at": "2026-11-16T01:05:41.578Z"
+        },
+        {
+          "detail": "Index \\`oportunidades_responsavel\\` on table \\`public.oportunidades\\` has not been used",
+          "metadata": {
+            "name": "oportunidades",
+            "type": "table",
+            "schema": "public"
+          },
+          "observed_at": "2026-11-16T01:05:41.578Z"
+        },
+        {
+          "detail": "Index \\`oportunidades_cliente\\` on table \\`public.oportunidades\\` has not been used",
+          "metadata": {
+            "name": "oportunidades",
+            "type": "table",
+            "schema": "public"
+          },
+          "observed_at": "2026-11-16T01:05:41.578Z"
+        },
+        {
+          "detail": "Index \\`oportunidades_atendente\\` on table \\`public.oportunidades\\` has not been used",
+          "metadata": {
+            "name": "oportunidades",
+            "type": "table",
+            "schema": "public"
+          },
+          "observed_at": "2026-11-16T01:05:41.578Z"
+        },
+        {
+          "detail": "Index \\`oportunidades_criado_por\\` on table \\`public.oportunidades\\` has not been used",
+          "metadata": {
+            "name": "oportunidades",
+            "type": "table",
+            "schema": "public"
+          },
+          "observed_at": "2026-11-16T01:05:41.578Z"
+        },
+        {
+          "detail": "Index \\`oportunidades_venda\\` on table \\`public.oportunidades\\` has not been used",
+          "metadata": {
+            "name": "oportunidades",
+            "type": "table",
+            "schema": "public"
+          },
+          "observed_at": "2026-11-16T01:05:41.578Z"
+        },
+        {
+          "detail": "Index \\`oportunidade_eventos_oportunidade\\` on table \\`public.oportunidade_eventos\\` has not been used",
+          "metadata": {
+            "name": "oportunidade_eventos",
+            "type": "table",
+            "schema": "public"
+          },
+          "observed_at": "2026-11-16T01:05:41.578Z"
+        },
+        {
+          "detail": "Index \\`oportunidade_eventos_usuario\\` on table \\`public.oportunidade_eventos\\` has not been used",
+          "metadata": {
+            "name": "oportunidade_eventos",
+            "type": "table",
+            "schema": "public"
+          },
+          "observed_at": "2026-11-16T01:05:41.578Z"
+        },
+        {
+          "detail": "Index \\`atividades_agenda\\` on table \\`public.atividades\\` has not been used",
+          "metadata": {
+            "name": "atividades",
+            "type": "table",
+            "schema": "public"
+          },
+          "observed_at": "2026-11-16T01:05:41.578Z"
+        },
+        {
+          "detail": "Index \\`atividades_oportunidade\\` on table \\`public.atividades\\` has not been used",
+          "metadata": {
+            "name": "atividades",
+            "type": "table",
+            "schema": "public"
+          },
+          "observed_at": "2026-11-16T01:05:41.578Z"
+        },
+        {
+          "detail": "Index \\`atividades_cliente\\` on table \\`public.atividades\\` has not been used",
+          "metadata": {
+            "name": "atividades",
+            "type": "table",
+            "schema": "public"
+          },
+          "observed_at": "2026-11-16T01:05:41.578Z"
+        },
+        {
+          "detail": "Index \\`atividades_criado_por\\` on table \\`public.atividades\\` has not been used",
+          "metadata": {
+            "name": "atividades",
+            "type": "table",
+            "schema": "public"
+          },
+          "observed_at": "2026-11-16T01:05:41.578Z"
+        },
+        {
+          "detail": "Index \\`atividades_encerrada_por\\` on table \\`public.atividades\\` has not been used",
+          "metadata": {
+            "name": "atividades",
+            "type": "table",
+            "schema": "public"
+          },
+          "observed_at": "2026-11-16T01:05:41.578Z"
+        },
+        {
+          "detail": "Index \\`cliente_nao_duplicados_b\\` on table \\`public.cliente_nao_duplicados\\` has not been used",
+          "metadata": {
+            "name": "cliente_nao_duplicados",
+            "type": "table",
+            "schema": "public"
+          },
+          "observed_at": "2026-11-16T01:05:41.578Z"
+        },
+        {
+          "detail": "Index \\`cliente_nao_duplicados_a\\` on table \\`public.cliente_nao_duplicados\\` has not been used",
+          "metadata": {
+            "name": "cliente_nao_duplicados",
+            "type": "table",
+            "schema": "public"
+          },
+          "observed_at": "2026-11-16T01:05:41.578Z"
+        },
+        {
+          "detail": "Index \\`cliente_nao_duplicados_decidido_por\\` on table \\`public.cliente_nao_duplicados\\` has not been used",
+          "metadata": {
+            "name": "cliente_nao_duplicados",
+            "type": "table",
+            "schema": "public"
+          },
+          "observed_at": "2026-11-16T01:05:41.578Z"
+        },
+        {
+          "detail": "Index \\`clientes_mesclado_em\\` on table \\`public.clientes\\` has not been used",
+          "metadata": {
+            "name": "clientes",
+            "type": "table",
+            "schema": "public"
+          },
+          "observed_at": "2026-11-16T01:05:41.578Z"
+        },
+        {
+          "detail": "Index \\`terminais_criado_por\\` on table \\`public.terminais\\` has not been used",
+          "metadata": {
+            "name": "terminais",
+            "type": "table",
+            "schema": "public"
+          },
+          "observed_at": "2026-11-16T01:05:41.578Z"
+        },
+        {
+          "detail": "Index \\`venda_pagamentos_terminal\\` on table \\`public.venda_pagamentos\\` has not been used",
+          "metadata": {
+            "name": "venda_pagamentos",
+            "type": "table",
+            "schema": "public"
+          },
+          "observed_at": "2026-11-16T01:05:41.578Z"
+        },
+        {
+          "detail": "Index \\`venda_pagamentos_conciliado_por\\` on table \\`public.venda_pagamentos\\` has not been used",
+          "metadata": {
+            "name": "venda_pagamentos",
+            "type": "table",
+            "schema": "public"
+          },
+          "observed_at": "2026-11-16T01:05:41.578Z"
+        },
+        {
+          "detail": "Index \\`entradas_estoque_unidade_numero\\` on table \\`public.entradas_estoque\\` has not been used",
+          "metadata": {
+            "name": "entradas_estoque",
+            "type": "table",
+            "schema": "public"
+          },
+          "observed_at": "2026-11-16T01:05:41.578Z"
+        },
+        {
+          "detail": "Index \\`produtos_nome_normalizado\\` on table \\`public.produtos\\` has not been used",
+          "metadata": {
+            "name": "produtos",
+            "type": "table",
+            "schema": "public"
+          },
+          "observed_at": "2026-11-16T01:05:41.578Z"
+        },
+        {
+          "detail": "Index \\`importacao_linhas_preco\\` on table \\`public.importacao_linhas\\` has not been used",
+          "metadata": {
+            "name": "importacao_linhas",
+            "type": "table",
+            "schema": "public"
+          },
+          "observed_at": "2026-11-16T01:05:41.578Z"
+        },
+        {
+          "detail": "Index \\`importacao_linhas_custo\\` on table \\`public.importacao_linhas\\` has not been used",
+          "metadata": {
+            "name": "importacao_linhas",
+            "type": "table",
+            "schema": "public"
+          },
+          "observed_at": "2026-11-16T01:05:41.578Z"
+        },
+        {
+          "detail": "Index \\`vendas_concluida_em\\` on table \\`public.vendas\\` has not been used",
+          "metadata": {
+            "name": "vendas",
+            "type": "table",
+            "schema": "public"
+          },
+          "observed_at": "2026-11-16T01:05:41.578Z"
+        },
+        {
+          "detail": "Index \\`vendas_cancelada_em\\` on table \\`public.vendas\\` has not been used",
+          "metadata": {
+            "name": "vendas",
+            "type": "table",
+            "schema": "public"
+          },
+          "observed_at": "2026-11-16T01:05:41.578Z"
+        },
+        {
+          "detail": "Index \\`metas_definida_por\\` on table \\`public.metas\\` has not been used",
+          "metadata": {
+            "name": "metas",
+            "type": "table",
+            "schema": "public"
+          },
+          "observed_at": "2026-11-16T01:05:41.578Z"
+        },
+        {
+          "detail": "Index \\`caixa_saidas_pedida_por\\` on table \\`public.caixa_saidas\\` has not been used",
+          "metadata": {
+            "name": "caixa_saidas",
+            "type": "table",
+            "schema": "public"
+          },
+          "observed_at": "2026-11-16T01:05:41.578Z"
+        },
+        {
+          "detail": "Index \\`venda_itens_preco\\` on table \\`public.venda_itens\\` has not been used",
+          "metadata": {
+            "name": "venda_itens",
+            "type": "table",
+            "schema": "public"
+          },
+          "observed_at": "2026-11-16T01:05:41.578Z"
+        },
+        {
+          "detail": "Index \\`contas_a_receber_registrado_por\\` on table \\`public.contas_a_receber\\` has not been used",
+          "metadata": {
+            "name": "contas_a_receber",
+            "type": "table",
+            "schema": "public"
+          },
+          "observed_at": "2026-11-16T01:05:41.578Z"
+        },
+        {
+          "detail": "Index \\`caixa_saidas_decidida_por\\` on table \\`public.caixa_saidas\\` has not been used",
+          "metadata": {
+            "name": "caixa_saidas",
+            "type": "table",
+            "schema": "public"
+          },
+          "observed_at": "2026-11-16T01:05:41.578Z"
+        },
+        {
+          "detail": "Index \\`caixa_saidas_movimento\\` on table \\`public.caixa_saidas\\` has not been used",
+          "metadata": {
+            "name": "caixa_saidas",
+            "type": "table",
+            "schema": "public"
+          },
+          "observed_at": "2026-11-16T01:05:41.578Z"
+        },
+        {
+          "detail": "Index \\`bonus_regras_definida_por\\` on table \\`public.bonus_regras\\` has not been used",
+          "metadata": {
+            "name": "bonus_regras",
+            "type": "table",
+            "schema": "public"
+          },
+          "observed_at": "2026-11-16T01:05:41.578Z"
+        },
+        {
+          "detail": "Index \\`contas_a_pagar_unidade\\` on table \\`public.contas_a_pagar\\` has not been used",
+          "metadata": {
+            "name": "contas_a_pagar",
+            "type": "table",
+            "schema": "public"
+          },
+          "observed_at": "2026-11-16T01:05:41.578Z"
+        },
+        {
+          "detail": "Index \\`contas_a_pagar_categoria\\` on table \\`public.contas_a_pagar\\` has not been used",
+          "metadata": {
+            "name": "contas_a_pagar",
+            "type": "table",
+            "schema": "public"
+          },
+          "observed_at": "2026-11-16T01:05:41.578Z"
+        },
+        {
+          "detail": "Index \\`contas_a_pagar_fornecedor\\` on table \\`public.contas_a_pagar\\` has not been used",
+          "metadata": {
+            "name": "contas_a_pagar",
+            "type": "table",
+            "schema": "public"
+          },
+          "observed_at": "2026-11-16T01:05:41.578Z"
+        },
+        {
+          "detail": "Index \\`contas_a_pagar_grupo\\` on table \\`public.contas_a_pagar\\` has not been used",
+          "metadata": {
+            "name": "contas_a_pagar",
+            "type": "table",
+            "schema": "public"
+          },
+          "observed_at": "2026-11-16T01:05:41.578Z"
+        },
+        {
+          "detail": "Index \\`contas_a_pagar_paga_em\\` on table \\`public.contas_a_pagar\\` has not been used",
+          "metadata": {
+            "name": "contas_a_pagar",
+            "type": "table",
+            "schema": "public"
+          },
+          "observed_at": "2026-11-16T01:05:41.578Z"
+        },
+        {
+          "detail": "Index \\`contas_a_pagar_criada_por\\` on table \\`public.contas_a_pagar\\` has not been used",
+          "metadata": {
+            "name": "contas_a_pagar",
+            "type": "table",
+            "schema": "public"
+          },
+          "observed_at": "2026-11-16T01:05:41.578Z"
+        },
+        {
+          "detail": "Index \\`contas_a_pagar_paga_por\\` on table \\`public.contas_a_pagar\\` has not been used",
+          "metadata": {
+            "name": "contas_a_pagar",
+            "type": "table",
+            "schema": "public"
+          },
+          "observed_at": "2026-11-16T01:05:41.578Z"
+        },
+        {
+          "detail": "Index \\`contas_a_pagar_cancelada_por\\` on table \\`public.contas_a_pagar\\` has not been used",
+          "metadata": {
+            "name": "contas_a_pagar",
+            "type": "table",
+            "schema": "public"
+          },
+          "observed_at": "2026-11-16T01:05:41.578Z"
+        },
+        {
+          "detail": "Index \\`bonus_fechamentos_enviado_por\\` on table \\`public.bonus_fechamentos\\` has not been used",
+          "metadata": {
+            "name": "bonus_fechamentos",
+            "type": "table",
+            "schema": "public"
+          },
+          "observed_at": "2026-11-16T01:05:41.578Z"
+        },
+        {
+          "detail": "Index \\`bonus_fechamentos_aprovado_por\\` on table \\`public.bonus_fechamentos\\` has not been used",
+          "metadata": {
+            "name": "bonus_fechamentos",
+            "type": "table",
+            "schema": "public"
+          },
+          "observed_at": "2026-11-16T01:05:41.578Z"
+        },
+        {
+          "detail": "Index \\`bonus_fechamento_linhas_vendedor\\` on table \\`public.bonus_fechamento_linhas\\` has not been used",
+          "metadata": {
+            "name": "bonus_fechamento_linhas",
+            "type": "table",
+            "schema": "public"
+          },
+          "observed_at": "2026-11-16T01:05:41.578Z"
+        },
+        {
+          "detail": "Index \\`notas_documentos_pedido\\` on table \\`public.notas_documentos\\` has not been used",
+          "metadata": {
+            "name": "notas_documentos",
+            "type": "table",
+            "schema": "public"
+          },
+          "observed_at": "2026-11-16T01:05:41.578Z"
+        },
+        {
+          "detail": "Index \\`bonus_contestacoes_unidade\\` on table \\`public.bonus_contestacoes\\` has not been used",
+          "metadata": {
+            "name": "bonus_contestacoes",
+            "type": "table",
+            "schema": "public"
+          },
+          "observed_at": "2026-11-16T01:05:41.578Z"
+        },
+        {
+          "detail": "Index \\`bonus_contestacoes_contestada_por\\` on table \\`public.bonus_contestacoes\\` has not been used",
+          "metadata": {
+            "name": "bonus_contestacoes",
+            "type": "table",
+            "schema": "public"
+          },
+          "observed_at": "2026-11-16T01:05:41.578Z"
+        },
+        {
+          "detail": "Index \\`bonus_contestacoes_decidida_por\\` on table \\`public.bonus_contestacoes\\` has not been used",
+          "metadata": {
+            "name": "bonus_contestacoes",
+            "type": "table",
+            "schema": "public"
+          },
+          "observed_at": "2026-11-16T01:05:41.578Z"
+        },
+        {
+          "detail": "Index \\`notas_destinatarios_cliente\\` on table \\`privado.notas_destinatarios\\` has not been used",
+          "metadata": {
+            "name": "notas_destinatarios",
+            "type": "table",
+            "schema": "privado"
+          },
+          "observed_at": "2026-11-16T01:05:41.578Z"
+        },
+        {
+          "detail": "Index \\`notas_documentos_enviado_por\\` on table \\`public.notas_documentos\\` has not been used",
+          "metadata": {
+            "name": "notas_documentos",
+            "type": "table",
+            "schema": "public"
+          },
+          "observed_at": "2026-11-16T01:05:41.578Z"
+        },
+        {
+          "detail": "Index \\`notas_documentos_unidade\\` on table \\`public.notas_documentos\\` has not been used",
+          "metadata": {
+            "name": "notas_documentos",
+            "type": "table",
+            "schema": "public"
+          },
+          "observed_at": "2026-11-16T01:05:41.578Z"
+        },
+        {
+          "detail": "Index \\`inventario_contagens_item\\` on table \\`public.inventario_contagens\\` has not been used",
+          "metadata": {
+            "name": "inventario_contagens",
+            "type": "table",
+            "schema": "public"
+          },
+          "observed_at": "2026-11-16T01:05:41.578Z"
+        },
+        {
+          "detail": "Index \\`inventario_contagens_contado_por\\` on table \\`public.inventario_contagens\\` has not been used",
+          "metadata": {
+            "name": "inventario_contagens",
+            "type": "table",
+            "schema": "public"
+          },
+          "observed_at": "2026-11-16T01:05:41.578Z"
+        },
+        {
+          "detail": "Index \\`inventario_contagens_unidade\\` on table \\`public.inventario_contagens\\` has not been used",
+          "metadata": {
+            "name": "inventario_contagens",
+            "type": "table",
+            "schema": "public"
+          },
+          "observed_at": "2026-11-16T01:05:41.578Z"
+        },
+        {
+          "detail": "Index \\`whatsapp_envios_pedido\\` on table \\`public.whatsapp_envios\\` has not been used",
+          "metadata": {
+            "name": "whatsapp_envios",
+            "type": "table",
+            "schema": "public"
+          },
+          "observed_at": "2026-11-16T01:05:41.578Z"
+        },
+        {
+          "detail": "Index \\`whatsapp_envios_documento\\` on table \\`public.whatsapp_envios\\` has not been used",
+          "metadata": {
+            "name": "whatsapp_envios",
+            "type": "table",
+            "schema": "public"
+          },
+          "observed_at": "2026-11-16T01:05:41.578Z"
+        },
+        {
+          "detail": "Index \\`whatsapp_envios_venda\\` on table \\`public.whatsapp_envios\\` has not been used",
+          "metadata": {
+            "name": "whatsapp_envios",
+            "type": "table",
+            "schema": "public"
+          },
+          "observed_at": "2026-11-16T01:05:41.578Z"
+        },
+        {
+          "detail": "Index \\`whatsapp_envios_cliente\\` on table \\`public.whatsapp_envios\\` has not been used",
+          "metadata": {
+            "name": "whatsapp_envios",
+            "type": "table",
+            "schema": "public"
+          },
+          "observed_at": "2026-11-16T01:05:41.578Z"
+        },
+        {
+          "detail": "Index \\`whatsapp_envios_pedido_por\\` on table \\`public.whatsapp_envios\\` has not been used",
+          "metadata": {
+            "name": "whatsapp_envios",
+            "type": "table",
+            "schema": "public"
+          },
+          "observed_at": "2026-11-16T01:05:41.578Z"
+        },
+        {
+          "detail": "Index \\`whatsapp_envios_unidade\\` on table \\`public.whatsapp_envios\\` has not been used",
+          "metadata": {
+            "name": "whatsapp_envios",
+            "type": "table",
+            "schema": "public"
+          },
+          "observed_at": "2026-11-16T01:05:41.578Z"
+        },
+        {
+          "detail": "Index \\`whatsapp_envios_fila\\` on table \\`public.whatsapp_envios\\` has not been used",
+          "metadata": {
+            "name": "whatsapp_envios",
+            "type": "table",
+            "schema": "public"
+          },
+          "observed_at": "2026-11-16T01:05:41.578Z"
+        },
+        {
+          "detail": "Index \\`whatsapp_envio_eventos_envio\\` on table \\`public.whatsapp_envio_eventos\\` has not been used",
+          "metadata": {
+            "name": "whatsapp_envio_eventos",
+            "type": "table",
+            "schema": "public"
+          },
+          "observed_at": "2026-11-16T01:05:41.578Z"
+        },
+        {
+          "detail": "Index \\`whatsapp_envio_eventos_usuario\\` on table \\`public.whatsapp_envio_eventos\\` has not been used",
+          "metadata": {
+            "name": "whatsapp_envio_eventos",
+            "type": "table",
+            "schema": "public"
+          },
+          "observed_at": "2026-11-16T01:05:41.578Z"
+        },
+        {
+          "detail": "Index \\`ordens_servico_cliente\\` on table \\`public.ordens_servico\\` has not been used",
+          "metadata": {
+            "name": "ordens_servico",
+            "type": "table",
+            "schema": "public"
+          },
+          "observed_at": "2026-11-16T01:05:41.578Z"
+        },
+        {
+          "detail": "Index \\`ordens_servico_assistencia\\` on table \\`public.ordens_servico\\` has not been used",
+          "metadata": {
+            "name": "ordens_servico",
+            "type": "table",
+            "schema": "public"
+          },
+          "observed_at": "2026-11-16T01:05:41.578Z"
+        },
+        {
+          "detail": "Index \\`ordens_servico_aberta_por\\` on table \\`public.ordens_servico\\` has not been used",
+          "metadata": {
+            "name": "ordens_servico",
+            "type": "table",
+            "schema": "public"
+          },
+          "observed_at": "2026-11-16T01:05:41.578Z"
+        },
+        {
+          "detail": "Index \\`os_eventos_os\\` on table \\`public.os_eventos\\` has not been used",
+          "metadata": {
+            "name": "os_eventos",
+            "type": "table",
+            "schema": "public"
+          },
+          "observed_at": "2026-11-16T01:05:41.578Z"
+        },
+        {
+          "detail": "Index \\`os_eventos_usuario\\` on table \\`public.os_eventos\\` has not been used",
+          "metadata": {
+            "name": "os_eventos",
+            "type": "table",
+            "schema": "public"
+          },
+          "observed_at": "2026-11-16T01:05:41.578Z"
+        },
+        {
+          "detail": "Index \\`os_eventos_unidade\\` on table \\`public.os_eventos\\` has not been used",
+          "metadata": {
+            "name": "os_eventos",
+            "type": "table",
+            "schema": "public"
+          },
+          "observed_at": "2026-11-16T01:05:41.578Z"
+        },
+        {
+          "detail": "Index \\`os_fotos_os\\` on table \\`public.os_fotos\\` has not been used",
+          "metadata": {
+            "name": "os_fotos",
+            "type": "table",
+            "schema": "public"
+          },
+          "observed_at": "2026-11-16T01:05:41.578Z"
+        },
+        {
+          "detail": "Index \\`os_fotos_enviada_por\\` on table \\`public.os_fotos\\` has not been used",
+          "metadata": {
+            "name": "os_fotos",
+            "type": "table",
+            "schema": "public"
+          },
+          "observed_at": "2026-11-16T01:05:41.578Z"
+        },
+        {
+          "detail": "Index \\`notas_pedidos_numero_emitida\\` on table \\`public.notas_pedidos\\` has not been used",
+          "metadata": {
+            "name": "notas_pedidos",
+            "type": "table",
+            "schema": "public"
+          },
+          "observed_at": "2026-11-16T01:05:41.578Z"
+        },
+        {
+          "detail": "Index \\`os_orcamentos_os\\` on table \\`public.os_orcamentos\\` has not been used",
+          "metadata": {
+            "name": "os_orcamentos",
+            "type": "table",
+            "schema": "public"
+          },
+          "observed_at": "2026-11-16T01:05:41.578Z"
+        },
+        {
+          "detail": "Index \\`os_orcamentos_registrado_por\\` on table \\`public.os_orcamentos\\` has not been used",
+          "metadata": {
+            "name": "os_orcamentos",
+            "type": "table",
+            "schema": "public"
+          },
+          "observed_at": "2026-11-16T01:05:41.578Z"
+        },
+        {
+          "detail": "Index \\`os_orcamentos_respondido_por\\` on table \\`public.os_orcamentos\\` has not been used",
+          "metadata": {
+            "name": "os_orcamentos",
+            "type": "table",
+            "schema": "public"
+          },
+          "observed_at": "2026-11-16T01:05:41.578Z"
+        },
+        {
+          "detail": "Index \\`venda_itens_os\\` on table \\`public.venda_itens\\` has not been used",
+          "metadata": {
+            "name": "venda_itens",
+            "type": "table",
+            "schema": "public"
+          },
+          "observed_at": "2026-11-16T01:05:41.578Z"
+        },
+        {
+          "detail": "Index \\`ordens_servico_venda\\` on table \\`public.ordens_servico\\` has not been used",
+          "metadata": {
+            "name": "ordens_servico",
+            "type": "table",
+            "schema": "public"
+          },
+          "observed_at": "2026-11-16T01:05:41.578Z"
+        },
+        {
+          "detail": "Index \\`venda_anexos_venda\\` on table \\`public.venda_anexos\\` has not been used",
+          "metadata": {
+            "name": "venda_anexos",
+            "type": "table",
+            "schema": "public"
+          },
+          "observed_at": "2026-11-16T01:05:41.578Z"
+        },
+        {
+          "detail": "Index \\`venda_anexos_unidade\\` on table \\`public.venda_anexos\\` has not been used",
+          "metadata": {
+            "name": "venda_anexos",
+            "type": "table",
+            "schema": "public"
+          },
+          "observed_at": "2026-11-16T01:05:41.578Z"
+        },
+        {
+          "detail": "Index \\`venda_anexos_enviado_por\\` on table \\`public.venda_anexos\\` has not been used",
+          "metadata": {
+            "name": "venda_anexos",
+            "type": "table",
+            "schema": "public"
+          },
+          "observed_at": "2026-11-16T01:05:41.578Z"
+        },
+        {
+          "detail": "Index \\`os_pecas_os\\` on table \\`public.os_pecas\\` has not been used",
+          "metadata": {
+            "name": "os_pecas",
+            "type": "table",
+            "schema": "public"
+          },
+          "observed_at": "2026-11-16T01:05:41.578Z"
+        },
+        {
+          "detail": "Index \\`os_pecas_unidade\\` on table \\`public.os_pecas\\` has not been used",
+          "metadata": {
+            "name": "os_pecas",
+            "type": "table",
+            "schema": "public"
+          },
+          "observed_at": "2026-11-16T01:05:41.578Z"
+        },
+        {
+          "detail": "Index \\`os_pecas_variante\\` on table \\`public.os_pecas\\` has not been used",
+          "metadata": {
+            "name": "os_pecas",
+            "type": "table",
+            "schema": "public"
+          },
+          "observed_at": "2026-11-16T01:05:41.578Z"
+        },
+        {
+          "detail": "Index \\`os_pecas_movimento\\` on table \\`public.os_pecas\\` has not been used",
+          "metadata": {
+            "name": "os_pecas",
+            "type": "table",
+            "schema": "public"
+          },
+          "observed_at": "2026-11-16T01:05:41.578Z"
+        },
+        {
+          "detail": "Index \\`os_pecas_estorno\\` on table \\`public.os_pecas\\` has not been used",
+          "metadata": {
+            "name": "os_pecas",
+            "type": "table",
+            "schema": "public"
+          },
+          "observed_at": "2026-11-16T01:05:41.578Z"
+        },
+        {
+          "detail": "Index \\`os_pecas_registrado_por\\` on table \\`public.os_pecas\\` has not been used",
+          "metadata": {
+            "name": "os_pecas",
+            "type": "table",
+            "schema": "public"
+          },
+          "observed_at": "2026-11-16T01:05:41.578Z"
+        },
+        {
+          "detail": "Index \\`os_pecas_devolvida_por\\` on table \\`public.os_pecas\\` has not been used",
+          "metadata": {
+            "name": "os_pecas",
+            "type": "table",
+            "schema": "public"
+          },
+          "observed_at": "2026-11-16T01:05:41.578Z"
+        },
+        {
+          "detail": "Index \\`venda_anexos_retirado_por\\` on table \\`public.venda_anexos\\` has not been used",
+          "metadata": {
+            "name": "venda_anexos",
+            "type": "table",
+            "schema": "public"
+          },
+          "observed_at": "2026-11-16T01:05:41.578Z"
+        },
+        {
+          "detail": "Index \\`notas_pedidos_cancelada_no_fisco_por\\` on table \\`public.notas_pedidos\\` has not been used",
+          "metadata": {
+            "name": "notas_pedidos",
+            "type": "table",
+            "schema": "public"
+          },
+          "observed_at": "2026-11-16T01:05:41.578Z"
+        },
+        {
+          "detail": "Index \\`notas_divergencias_conferidas_unidade\\` on table \\`public.notas_divergencias_conferidas\\` has not been used",
+          "metadata": {
+            "name": "notas_divergencias_conferidas",
+            "type": "table",
+            "schema": "public"
+          },
+          "observed_at": "2026-11-16T01:05:41.578Z"
+        },
+        {
+          "detail": "Index \\`notas_divergencias_conferidas_conferida_por\\` on table \\`public.notas_divergencias_conferidas\\` has not been used",
+          "metadata": {
+            "name": "notas_divergencias_conferidas",
+            "type": "table",
+            "schema": "public"
+          },
+          "observed_at": "2026-11-16T01:05:41.578Z"
+        },
+        {
+          "detail": "Index \\`conta_pagar_anexos_conta\\` on table \\`public.conta_pagar_anexos\\` has not been used",
+          "metadata": {
+            "name": "conta_pagar_anexos",
+            "type": "table",
+            "schema": "public"
+          },
+          "observed_at": "2026-11-16T01:05:41.578Z"
+        },
+        {
+          "detail": "Index \\`variante_codigos_variante\\` on table \\`public.variante_codigos_externos\\` has not been used",
+          "metadata": {
+            "name": "variante_codigos_externos",
+            "type": "table",
+            "schema": "public"
+          },
+          "observed_at": "2026-11-16T01:05:41.578Z"
+        },
+        {
+          "detail": "Index \\`variante_codigos_ligado_por\\` on table \\`public.variante_codigos_externos\\` has not been used",
+          "metadata": {
+            "name": "variante_codigos_externos",
+            "type": "table",
+            "schema": "public"
+          },
+          "observed_at": "2026-11-16T01:05:41.578Z"
+        },
+        {
+          "detail": "Index \\`variante_codigos_desligado_por\\` on table \\`public.variante_codigos_externos\\` has not been used",
+          "metadata": {
+            "name": "variante_codigos_externos",
+            "type": "table",
+            "schema": "public"
+          },
+          "observed_at": "2026-11-16T01:05:41.578Z"
+        },
+        {
+          "detail": "Index \\`conta_pagar_anexos_unidade\\` on table \\`public.conta_pagar_anexos\\` has not been used",
+          "metadata": {
+            "name": "conta_pagar_anexos",
+            "type": "table",
+            "schema": "public"
+          },
+          "observed_at": "2026-11-16T01:05:41.578Z"
+        },
+        {
+          "detail": "Index \\`conta_pagar_anexos_enviado_por\\` on table \\`public.conta_pagar_anexos\\` has not been used",
+          "metadata": {
+            "name": "conta_pagar_anexos",
+            "type": "table",
+            "schema": "public"
+          },
+          "observed_at": "2026-11-16T01:05:41.578Z"
+        },
+        {
+          "detail": "Index \\`conta_pagar_anexos_retirado_por\\` on table \\`public.conta_pagar_anexos\\` has not been used",
+          "metadata": {
+            "name": "conta_pagar_anexos",
+            "type": "table",
+            "schema": "public"
+          },
+          "observed_at": "2026-11-16T01:05:41.578Z"
+        },
+        {
+          "detail": "Index \\`regioes_criado_por\\` on table \\`public.regioes\\` has not been used",
+          "metadata": {
+            "name": "regioes",
+            "type": "table",
+            "schema": "public"
+          },
+          "observed_at": "2026-11-16T01:05:41.578Z"
+        },
+        {
+          "detail": "Index \\`unidades_regiao\\` on table \\`public.unidades\\` has not been used",
+          "metadata": {
+            "name": "unidades",
+            "type": "table",
+            "schema": "public"
+          },
+          "observed_at": "2026-11-16T01:05:41.578Z"
+        },
+        {
+          "detail": "Index \\`contas_a_pagar_entrada\\` on table \\`public.contas_a_pagar\\` has not been used",
+          "metadata": {
+            "name": "contas_a_pagar",
+            "type": "table",
+            "schema": "public"
+          },
+          "observed_at": "2026-11-16T01:05:41.578Z"
+        },
+        {
+          "detail": "Index \\`pedidos_compra_unidade\\` on table \\`public.pedidos_compra\\` has not been used",
+          "metadata": {
+            "name": "pedidos_compra",
+            "type": "table",
+            "schema": "public"
+          },
+          "observed_at": "2026-11-16T01:05:41.578Z"
+        },
+        {
+          "detail": "Index \\`pedidos_compra_fornecedor\\` on table \\`public.pedidos_compra\\` has not been used",
+          "metadata": {
+            "name": "pedidos_compra",
+            "type": "table",
+            "schema": "public"
+          },
+          "observed_at": "2026-11-16T01:05:41.578Z"
+        },
+        {
+          "detail": "Index \\`pedidos_compra_criado_por\\` on table \\`public.pedidos_compra\\` has not been used",
+          "metadata": {
+            "name": "pedidos_compra",
+            "type": "table",
+            "schema": "public"
+          },
+          "observed_at": "2026-11-16T01:05:41.578Z"
+        },
+        {
+          "detail": "Index \\`pedidos_compra_encerrado_por\\` on table \\`public.pedidos_compra\\` has not been used",
+          "metadata": {
+            "name": "pedidos_compra",
+            "type": "table",
+            "schema": "public"
+          },
+          "observed_at": "2026-11-16T01:05:41.578Z"
+        },
+        {
+          "detail": "Index \\`pedido_compra_itens_variante\\` on table \\`public.pedido_compra_itens\\` has not been used",
+          "metadata": {
+            "name": "pedido_compra_itens",
+            "type": "table",
+            "schema": "public"
+          },
+          "observed_at": "2026-11-16T01:05:41.578Z"
+        },
+        {
+          "detail": "Index \\`entradas_estoque_pedido\\` on table \\`public.entradas_estoque\\` has not been used",
+          "metadata": {
+            "name": "entradas_estoque",
+            "type": "table",
+            "schema": "public"
+          },
+          "observed_at": "2026-11-16T01:05:41.578Z"
+        },
+        {
+          "detail": "Index \\`notas_cartas_de_correcao_registrada_por\\` on table \\`public.notas_cartas_de_correcao\\` has not been used",
+          "metadata": {
+            "name": "notas_cartas_de_correcao",
+            "type": "table",
+            "schema": "public"
+          },
+          "observed_at": "2026-11-16T01:05:41.578Z"
+        }
+      ]
+    }
+  ],
+  "health": []
+}
