@@ -5,10 +5,10 @@ import type { Metadata } from "next";
 import { ExportarCsv } from "../../../componentes/ExportarCsv";
 import { BarrasHorizontais, TabelaDoGrafico } from "../../../componentes/graficos";
 import { SemPermissao } from "../../../componentes/SemPermissao";
-import { Aviso, Cartao, Celula, EstadoVazio, FiltroSegmentado, FormBusca, Indicador, Progresso, Selo, Tabela, TituloPagina, type Tom } from "../../../componentes/ui";
+import { Aviso, BotaoLink, Cartao, Celula, EstadoVazio, FiltroSegmentado, FormBusca, Indicador, Progresso, Selo, Tabela, TituloPagina, type Tom } from "../../../componentes/ui";
 import { disponibilidadeEmOutrasLojas, estoqueVisivel, lojasVisiveis } from "../../../demo/consultas";
 import { movimentosDoImei, nomeDaLoja, nomeDoProduto, PRODUTOS, SALDOS_ACESSORIOS, TRANSFERENCIAS, VENDAVEL, type SituacaoUnidade } from "../../../demo/dados";
-import { podeVerCusto, REDE } from "../../../demo/perfis";
+import { podeAcessar, podeVerCusto, REDE } from "../../../demo/perfis";
 import { acessoDaPagina } from "../../../demo/sessao";
 import { brl, numero } from "../../../lib/formato";
 import { chaveDoCatalogo, textoDoParametro, type ValorDeParametro } from "../../../lib/parametros";
@@ -69,6 +69,14 @@ export default async function Estoque({ searchParams }: { searchParams: Promise<
           ? <Indicador rotulo="Valor em estoque (custo)" valor={brl(valorEmEstoque)} icone={History} detalhe={`${paradas.length} parados há mais de 60 dias`} tom={paradas.length > 0 ? "atencao" : "bom"} />
           : <Indicador rotulo="Parados há mais de 60 dias" valor={numero(paradas.length)} icone={History} detalhe="Ofereça primeiro" tom={paradas.length > 0 ? "atencao" : "bom"} />}
       </div>
+
+      {/* DEMO-b: a carga do estoque pelo relatório da Rein (REIN-b, REIN-c e AUD-b), para quem importa a planilha. */}
+      {podeAcessar(contexto.perfil, "importacao") && (
+        <p className="mt-4 flex flex-wrap items-center gap-2 text-sm">
+          <BotaoLink href="/demo/estoque/carga" tamanho="sm" variante="secundario">Carga do estoque pelo relatório da Rein</BotaoLink>
+          <span className="text-xs text-suave">A prévia por loja, com a decisão das linhas em que o físico passa do disponível.</span>
+        </p>
+      )}
 
       <div className="mt-4">
         <FiltroSegmentado rotulo="Abas do estoque" opcoes={(Object.keys(ABAS) as Aba[]).map((a) => ({ href: href({ aba: a === "aparelhos" ? undefined : a, situacao: undefined, busca: undefined }), rotulo: ABAS[a], ativo: a === aba }))} />

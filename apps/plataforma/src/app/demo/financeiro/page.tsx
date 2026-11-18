@@ -5,7 +5,7 @@ import type { Metadata } from "next";
 import { ExportarCsv } from "../../../componentes/ExportarCsv";
 import { BarraSegmentada, ColunasDivergentes, TabelaDoGrafico } from "../../../componentes/graficos";
 import { SemPermissao } from "../../../componentes/SemPermissao";
-import { Aviso, Cartao, Celula, Indicador, ListaDados, Selo, Tabela, TituloPagina } from "../../../componentes/ui";
+import { Aviso, BotaoLink, Cartao, Celula, Indicador, ListaDados, Selo, Tabela, TituloPagina } from "../../../componentes/ui";
 import { lojasVisiveis, vendasVisiveis } from "../../../demo/consultas";
 import { caixaDaLoja, CONCILIACAO, CONTAS, financiadoPorFinanceira, fluxoDeCaixa, NOMES_NOTA, nomeDaLoja, recebimentosPorMeio, VENDAS_HOJE } from "../../../demo/dados";
 import { REDE } from "../../../demo/perfis";
@@ -54,7 +54,8 @@ export default async function Financeiro() {
       </div>
 
       <div className="mt-4 grid gap-4 xl:grid-cols-3">
-        <Cartao titulo="Recebimentos por meio" subtitulo="Conciliação por terminal e extrato, sem supor API das maquininhas" className="xl:col-span-2">
+        <Cartao titulo="Recebimentos por meio" subtitulo="Conciliação por terminal e extrato, sem supor API das maquininhas" className="xl:col-span-2"
+          acao={<BotaoLink href="/demo/financeiro/extratos" tamanho="sm" variante="secundario">Extratos</BotaoLink>}>
           <BarraSegmentada partes={partesPorMeio(recebimentos)} formatar={brlCompacto} rotulo="Recebido" />
           <div className="mt-4">
             <Tabela colunas={["Meio", "Valor", "Situação"]} legenda="Recebimentos e conciliação por meio" alinharDireita={[1]}>

@@ -512,6 +512,17 @@
         "ORA-REPORT-008"
       ],
       "entrega": "os gráficos reais conferidos tela a tela: a falha da leitura nunca aparece como vazio, o custo e a margem só com a permissão, as exportações sem arquivo pela metade e a demonstração fora dos relatórios reais; a correção dos canais de venda",
+      "commit": "d27dd1a",
+      "publicado_em": "2026-11-18",
+      "pedido_em": null,
+      "resposta": null,
+      "respondido_em": null
+    },
+    {
+      "lote": "DEMO-b",
+      "roteiro": "docs/aceite/DEMO-b.md",
+      "requisitos": [],
+      "entrega": "os fluxos novos na demonstração, com dados fictícios: os extratos da maquininha e do banco, a carga do estoque pelo relatório da Rein, a origem das reservas do site e a conciliação da Ora Connect com a Nogle",
       "commit": null,
       "publicado_em": null,
       "pedido_em": null,

@@ -3,7 +3,7 @@ import { CircleAlert, FileSpreadsheet, FileUp, ListChecks, UserCheck } from "luc
 import type { Metadata } from "next";
 
 import { SemPermissao } from "../../../componentes/SemPermissao";
-import { Aviso, Cartao, Celula, Etapas, Indicador, Selo, Tabela, TituloPagina } from "../../../componentes/ui";
+import { Aviso, BotaoLink, Cartao, Celula, Etapas, Indicador, Selo, Tabela, TituloPagina } from "../../../componentes/ui";
 import { LINHAS_CSV_REIN } from "../../../demo/dados";
 import { acessoDaPagina } from "../../../demo/sessao";
 import { numero } from "../../../lib/formato";
@@ -40,6 +40,11 @@ export default async function Importacao() {
   return (
     <>
       <TituloPagina titulo="Importar estoque da Rein (prévia)" subtitulo="Só por arquivo, nunca pela API da Rein. Nada é gravado até o dono aprovar." acao={<AprovarImportacao papel={papel} prontas={linhas.length - comErro} comProblema={comErro} />} />
+      {/* DEMO-b: a carga do estoque de cada loja pelo relatório da Rein (REIN-b e REIN-c) tem a tela dela. */}
+      <p className="mb-4 flex flex-wrap items-center gap-2 text-sm">
+        <BotaoLink href="/demo/estoque/carga" tamanho="sm" variante="secundario">Carga do estoque por loja</BotaoLink>
+        <span className="text-xs text-suave">A quantidade de cada loja, com a decisão das linhas em que o físico passa do disponível.</span>
+      </p>
       <Cartao>
         <Etapas etapas={ETAPAS} atual={papel === "dono" ? 2 : 1} rotulo="Etapas da importação" />
         <ol className="mt-3 hidden grid-cols-5 gap-2 text-center text-xs text-suave sm:grid">

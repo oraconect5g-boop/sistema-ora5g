@@ -282,18 +282,18 @@ A demonstração usa só dados fictícios e não lê o banco nem a sessão de ve
 | ORG-a | As 11 lojas e o DEFEITOS, pelo cadastro operacional | `/lojas` | Sim, desde o DEMO-a: os nomes das 11 lojas (`/demo/lojas`); o endereço fica "a confirmar" |
 | TRF-a | A remessa com vários produtos | `/transferencias` | Parcial: `/demo/estoque` mostra a transferência de um item; a remessa de vários, não |
 | REIN-a, AUD-a (F01) | A planilha inteira da Rein, em partes, com o rodapé de fora | `/produtos/importar` | Parcial: `/demo/importacao` mostra a prévia de um arquivo pequeno |
-| REIN-b | O estoque de cada loja pelo relatório | `/estoque/carga` | Não: fica para um lote da demonstração depois da carga de verdade |
+| REIN-b | O estoque de cada loja pelo relatório | `/estoque/carga` | Sim, desde o DEMO-b: `/demo/estoque/carga`, a prévia de uma loja com dados fictícios (o link fica em Estoque e IMEI e na importação, para quem importa) |
 | PWA-a, PWA-b | Instalar no celular e o aviso de aprovação | o menu e `/conta/avisos` | Não se aplica: a demonstração não manda aviso |
 | QUAL-a | O alerta das filas e das rotinas | `/operacao` | Parcial: `/demo` mostra os avisos fictícios do painel |
-| EXT-a | O extrato da maquininha e do banco por arquivo | `/pagamentos/extratos` | Não: fica para um lote da demonstração |
-| MKT-a | A origem e a campanha das reservas do site | `/reservas-do-site` | Não |
+| EXT-a | O extrato da maquininha e do banco por arquivo | `/pagamentos/extratos` | Sim, desde o DEMO-b: `/demo/financeiro/extratos` (a venda sugerida; conciliar as certas, uma a uma, ou tirar da conta com o motivo) |
+| MKT-a | A origem e a campanha das reservas do site | `/reservas-do-site` | Sim, desde o DEMO-b: as reservas por origem e campanha em `/demo/canais` |
 | META-a, AUD-a (A14) | O custo dos anúncios por arquivo, com as devoluções | `/relatorios/anuncios` | Sim, resumido: a linha dos anúncios em `/demo/canais` (CPA, ROAS e CAC sem as devoluções) |
 | MKTPL-a | Os pedidos dos marketplaces por arquivo, com o lucro | `/relatorios/marketplaces` | Sim, resumido: as linhas dos marketplaces em `/demo/canais` |
 | CANAIS-a | Os canais lado a lado | `/relatorios/canais` | Sim: `/demo/canais`, com o mesmo cálculo |
-| AUD-b | A quantidade e o dinheiro do Excel pela origem e o rodapé comprovado ou candidato | `/produtos/importar` e `/estoque/carga` | Não: a prévia da demonstração (`/demo/importacao`) não reproduz a leitura do Excel |
-| REIN-c | A decisão de cada linha com o físico maior que o disponível na carga do estoque | `/estoque/carga/[id]` | Não: a demonstração não tem a carga do estoque (REIN-b); fica para o mesmo lote da demonstração da carga |
+| AUD-b | A quantidade e o dinheiro do Excel pela origem e o rodapé comprovado ou candidato | `/produtos/importar` e `/estoque/carga` | Parcial, desde o DEMO-b: a carga da demonstração mostra o rodapé que saiu sozinho; a leitura das células do Excel não se reproduz |
+| REIN-c | A decisão de cada linha com o físico maior que o disponível na carga do estoque | `/estoque/carga/[id]` | Sim, desde o DEMO-b: a decisão de cada linha em `/demo/estoque/carga`, uma a uma ou em bloco, com o motivo; aplicar fica travado até decidir |
 | TRF-c | O pedido de transferência reserva na origem | `/transferencias` e `/transferencias/remessa` | Parcial: `/demo/estoque` (aba "Transferências") diz que o pedido já reserva; a demonstração não simula o saldo de cada lado |
-| CONNECT-c | A conciliação da Ora Connect com os relatórios da Nogle | `/connect/conciliacao` | Não: a demonstração da Ora Connect (`/demo/connect`) não tem a conciliação; fica para o lote da demonstração |
+| CONNECT-c | A conciliação da Ora Connect com os relatórios da Nogle | `/connect/conciliacao` | Sim, desde o DEMO-b: `/demo/connect`, aba Carteira e relatórios (só o dono), só com o final dos números |
 | PDV-c | As formas de pagamento por botão, a PayJoy e a Aiva com as parcelas e só sobre o celular, a entrada à parte e o link só online (D-050) | `/vender`, o comprovante `/vendas/[id]` e `/connect` | Sim: `/demo/vender` (o botão, a PayJoy com as parcelas, a entrada marcada, o limite do celular e o comprovante) e `/demo/connect` (a recarga e a ativação sem o link) |
 | GRAF-a | Os gráficos reais: a falha da leitura nunca aparece como vazio | `/financeiro`, `/resultado`, `/pagamentos/recebiveis`, `/caixa`, `/vendas`, `/estoque`, `/relatorios` e `/relatorios/canais` | Não se aplica: a demonstração tem os gráficos dela, só com dados fictícios, e não alimenta nenhuma tela real (`src/demo/isolamento.test.ts`) |
 | ADAPT-a | As integrações que esperam contrato | — (só o worker) | Sim: os cartões "Para conectar direto" em `/demo/canais` |

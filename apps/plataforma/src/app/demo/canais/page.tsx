@@ -3,7 +3,7 @@ import type { Metadata } from "next";
 
 import { SemPermissao } from "../../../componentes/SemPermissao";
 import { Aviso, Cartao, Indicador, Selo, TituloPagina } from "../../../componentes/ui";
-import { CANAIS, CANAIS_NO_MES } from "../../../demo/dados";
+import { CANAIS, CANAIS_NO_MES, ORIGENS_DAS_RESERVAS_DEMO } from "../../../demo/dados";
 import { acessoDaPagina } from "../../../demo/sessao";
 
 export const metadata: Metadata = { title: "Canais online" };
@@ -54,6 +54,38 @@ export default async function Canais() {
             <p className="text-xs text-suave">Atribuição não é prova de causa: a venda aparece na campanha porque o contato chegou por ela.</p>
           </li>
         </ul>
+      </Cartao>
+
+      {/* DEMO-b: a origem e a campanha das reservas do site (a tela real é /reservas-do-site e os relatórios; lote MKT-a). */}
+      <Cartao className="mt-4" titulo="De onde vêm as reservas do site (dados fictícios)" subtitulo="A origem e a campanha vêm do link que levou o cliente ao site. A venda conta na loja que atendeu, já dentro da receita das lojas." icone={Globe}>
+        <div className="-mx-1 overflow-x-auto">
+          <table className="w-full min-w-[34rem] text-sm">
+            <caption className="sr-only">Reservas do site por origem e campanha</caption>
+            <thead>
+              <tr className="border-b border-borda text-left text-xs text-suave">
+                <th scope="col" className="px-1 py-2 font-medium">Origem e campanha</th>
+                <th scope="col" className="px-1 py-2 text-right font-medium">Reservas</th>
+                <th scope="col" className="px-1 py-2 text-right font-medium">Atendidas</th>
+                <th scope="col" className="px-1 py-2 text-right font-medium">Canceladas ou vencidas</th>
+                <th scope="col" className="px-1 py-2 text-right font-medium">Vendas</th>
+                <th scope="col" className="px-1 py-2 text-right font-medium">Valor das vendas</th>
+              </tr>
+            </thead>
+            <tbody className="divide-y divide-borda">
+              {ORIGENS_DAS_RESERVAS_DEMO.map((o) => (
+                <tr key={o.origem}>
+                  <th scope="row" className="px-1 py-2 text-left font-medium">{o.origem}{o.campanha ? <span className="block text-xs font-normal text-suave">{`campanha: ${o.campanha}`}</span> : null}</th>
+                  <td className="numeros px-1 py-2 text-right">{o.reservas}</td>
+                  <td className="numeros px-1 py-2 text-right">{o.atendidas}</td>
+                  <td className="numeros px-1 py-2 text-right">{o.canceladas + o.vencidas}</td>
+                  <td className="numeros px-1 py-2 text-right">{o.vendas}</td>
+                  <td className="numeros px-1 py-2 text-right">{reais(o.valor)}</td>
+                </tr>
+              ))}
+            </tbody>
+          </table>
+        </div>
+        <p className="mt-2 text-xs text-suave">Reserva não é venda: a venda só conta quando a loja conclui no PDV. A reserva vale 24 horas e, vencida, devolve o produto ao estoque.</p>
       </Cartao>
 
       <ul className="mt-4 grid gap-4 sm:grid-cols-2 xl:grid-cols-3">
