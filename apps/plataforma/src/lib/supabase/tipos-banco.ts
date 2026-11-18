@@ -8435,6 +8435,7 @@ export type Database = {
         Args: { p_item: string; p_motivo: string }
         Returns: string
       }
+      pendencias_da_loja: { Args: never; Returns: Json }
       pendencias_de_foto: {
         Args: never
         Returns: {
