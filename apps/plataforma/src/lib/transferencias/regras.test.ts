@@ -58,10 +58,12 @@ describe("as linhas da remessa", () => {
 
 // TRF-b (18/11; achado F10 da auditoria do Codex de 17/11): o que cada passo faz no estoque e o saldo de cada lado.
 describe("o efeito de cada passo no estoque", () => {
-  it("toda situação tem o texto; pedir não reserva, separar reserva, enviar baixa o físico, receber põe no destino", () => {
+  // TRF-c (achado F18-05 da reanálise de 18/11; D-049): pedir já reserva; separar não reserva de novo.
+  it("toda situação tem o texto; pedir reserva, separar escolhe os itens, enviar baixa o físico, receber põe no destino", () => {
     for (const s of Object.keys(SITUACOES_DA_TRANSFERENCIA)) expect(efeitoNoEstoque(s), s).toBeTruthy();
-    expect(efeitoNoEstoque("solicitada")).toContain("o pedido não reserva");
-    expect(efeitoNoEstoque("separada")).toContain("Saiu do disponível; o físico continua lá até o envio");
+    expect(efeitoNoEstoque("solicitada")).toContain("reservada na origem desde o pedido. Saiu do disponível");
+    expect(efeitoNoEstoque("separada")).toContain("seguem reservados na origem; o físico continua lá até o envio");
+    expect(efeitoNoEstoque("recusada")).toContain("voltou ao disponível da origem");
     expect(efeitoNoEstoque("enviada")).toContain("saiu do físico da origem");
     expect(efeitoNoEstoque("recebida")).toContain("entrou no físico do destino");
     expect(efeitoNoEstoque("constructor")).toBeNull();

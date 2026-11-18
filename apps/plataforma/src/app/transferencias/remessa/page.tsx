@@ -144,6 +144,7 @@ export default async function NovaRemessa({ searchParams }: { searchParams: Prom
             <label className="block text-sm font-medium">Motivo
               <input name="motivo" required minLength={3} maxLength={500} placeholder="Ex.: reposição da semana" className={campo} />
             </label>
+            <p className="text-xs text-suave">Ao pedir, cada produto já sai do disponível da origem (fica reservado). Se faltar o livre de um deles, nada da remessa é pedido.</p>
             <Botao type="submit" disabled={!prontaParaPedir} className="w-full">Pedir a remessa ({linhas.length} {linhas.length === 1 ? "produto" : "produtos"})</Botao>
             {!prontaParaPedir && <p className="text-xs text-suave">Para pedir, escolha a origem e o destino (a sua loja é uma delas) no passo 1.</p>}
           </form>
