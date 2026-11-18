@@ -73,8 +73,19 @@ export function pendenciasDaMensagem(mensagem: string | null | undefined): Pende
 }
 
 // Erro do banco → chave do catálogo (a tela nunca mostra o texto cru do banco).
-/** A loja vende? A loja física só depois do CNPJ da filial (ORG-a, OR038 no banco); os outros tipos seguem as próprias regras. */
-export const vendeNaLoja = (l: { tipo: string; cnpj: string | null }) => l.tipo !== "loja_fisica" || l.cnpj !== null;
+/**
+ * Por que o local não vende (nulo quando vende), no selo da tela Lojas: a loja física sem o CNPJ da filial (ORG-a, OR038
+ * no banco), o depósito (D-043, padrão do CD-a, OR043) e o local de exceção, DEFEITOS (ADR-007). A loja online e a
+ * assistência seguem as próprias regras.
+ */
+export function porQueNaoVende(l: { tipo: string; cnpj: string | null }): string | null {
+  if (l.tipo === "excecao") return "não vende: local de exceção";
+  if (l.tipo === "deposito") return "não vende: depósito";
+  if (l.tipo === "loja_fisica" && l.cnpj === null) return "não vende: falta o CNPJ";
+  return null;
+}
+/** O local vende? */
+export const vendeNaLoja = (l: { tipo: string; cnpj: string | null }) => porQueNaoVende(l) === null;
 
 export function erroDeLojas(erro: { code?: string; message?: string } | null | undefined): ErroDeLojas {
   const codigo = erro?.code ?? "";

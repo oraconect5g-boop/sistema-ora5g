@@ -117,6 +117,7 @@
     { "versao": "20261118151653", "nome": "conciliacao_da_nogle", "md5": "ed42e7427e4114316159bf3bb9388230", "aplicada_em": "2026-11-18" },
     { "versao": "20261118155834", "nome": "pagamentos_por_linha", "md5": "383fa05e4c25e81ac87a59d776e52e83", "aplicada_em": "2026-11-18" },
     { "versao": "20261118165816", "nome": "pendencias_numa_ida", "md5": "69a0a83c76413fd334fdeb1405d9594e", "aplicada_em": "2026-11-18" },
-    { "versao": "20261118192056", "nome": "chips_nas_metas", "md5": "370975452f899308637b20146ef78fe7", "aplicada_em": "2026-11-18" }
+    { "versao": "20261118192056", "nome": "chips_nas_metas", "md5": "370975452f899308637b20146ef78fe7", "aplicada_em": "2026-11-18" },
+    { "versao": "20261118194259", "nome": "deposito_nao_vende", "md5": "e4f1b23b17eb0a186fd261bde537a816", "aplicada_em": "2026-11-18" }
   ]
 }

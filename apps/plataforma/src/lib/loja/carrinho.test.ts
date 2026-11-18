@@ -51,7 +51,7 @@ describe("o pedido do site", () => {
 
   it("cada recusa do banco ao pedido vira uma mensagem que existe", () => {
     const casos = [["22023", "dados"], ["OR034", "limite_whatsapp"], ["OR035", "limite_loja"], ["OR001", "sem_estoque"], ["OR036", "indisponivel"],
-      ["OR038", "loja_fechada"], ["OR004", "repetido"], ["PGRST202", "sem_pedido"], ["42883", "sem_pedido"], ["57014", "falha"]] as const;
+      ["OR038", "loja_fechada"], ["OR043", "loja_fechada"], ["OR004", "repetido"], ["PGRST202", "sem_pedido"], ["42883", "sem_pedido"], ["57014", "falha"]] as const;
     for (const [code, erro] of casos) {
       expect(erroDoPedido({ code }), code).toBe(erro);
       expect(Object.hasOwn(ERROS_DO_PEDIDO, erro)).toBe(true);

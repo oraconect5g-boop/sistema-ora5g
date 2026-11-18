@@ -10,7 +10,7 @@ import { FalhaDoServico, obterSessao } from "../../lib/acesso/sessao";
 import { dataCurta } from "../../lib/formato";
 import {
   DIAS_DA_SEMANA, ERROS_DE_LOJAS, PENDENCIAS, TIPOS_DE_LOJA, ehPendencia, ehTipoDeLoja, formatarCnpj, formatarTelefone,
-  isoParaHoraDeSaoPaulo, lacunasDaLoja, textoDoEndereco, textoDosHorarios, type Horario, vendeNaLoja,
+  isoParaHoraDeSaoPaulo, lacunasDaLoja, textoDoEndereco, textoDosHorarios, type Horario, porQueNaoVende,
 } from "../../lib/lojas/regras";
 import { lerRegioesDoPainel } from "../../lib/lojas/regioes";
 import { chaveDoCatalogo, textoDoParametro, type ValorDeParametro } from "../../lib/parametros";
@@ -180,7 +180,7 @@ export default async function Lojas({ searchParams }: {
           return (
             <li key={l.id} id={`loja-${l.id}`} className="scroll-mt-24">
               <Cartao
-                titulo={<span className="flex flex-wrap items-center gap-2">{l.nome}<Selo tom={ativa ? "sucesso" : "neutro"} ponto>{ativa ? "ativa" : "inativa"}</Selo>{!vendeNaLoja(l) && <Selo tom="aviso">não vende: falta o CNPJ</Selo>}</span>}
+                titulo={<span className="flex flex-wrap items-center gap-2">{l.nome}<Selo tom={ativa ? "sucesso" : "neutro"} ponto>{ativa ? "ativa" : "inativa"}</Selo>{porQueNaoVende(l) && <Selo tom="aviso">{porQueNaoVende(l)}</Selo>}</span>}
                 subtitulo={[tipo, l.codigo, l.cnpj ? `CNPJ ${formatarCnpj(l.cnpj)}` : l.unidade_emissora_id ? `notas pela ${nomeDaLoja(l.unidade_emissora_id)}` : "sem CNPJ", [l.cidade, l.uf].filter(Boolean).join("/")].filter(Boolean).join(" · ")}
                 icone={Building2}
                 className={emFoco ? "ring-2 ring-acao/40" : ""}

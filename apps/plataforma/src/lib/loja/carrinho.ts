@@ -116,7 +116,7 @@ export function erroDoPedido(erro: { code?: string } | null | undefined): ErroDo
     case "OR035": return "limite_loja";
     case "OR001": return "sem_estoque";
     case "OR036": return "indisponivel";
-    case "OR038": return "loja_fechada";
+    case "OR038": case "OR043": return "loja_fechada";
     case "OR004": return "repetido";
     case "PGRST202": case "42883": return "sem_pedido";
     default: return "falha";

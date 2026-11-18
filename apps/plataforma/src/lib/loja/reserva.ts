@@ -32,8 +32,9 @@ export function erroDaReserva(erro: { code?: string } | null | undefined): ErroD
     case "OR001": return "sem_estoque";
     // "Não está à venda na loja online": OR036 desde o ONLINE-c; P0002 é o código antigo (banco sem a migration).
     case "OR036": case "P0002": return "indisponivel";
-    // A loja sem o CNPJ da filial não vende (OR038, desde o ORG-a); a vitrine nem a oferece, mas a recusa tem nome.
-    case "OR038": return "loja_fechada";
+    // A loja sem o CNPJ da filial não vende (OR038, desde o ORG-a), nem o depósito (OR043, desde o CD-a); a vitrine nem os
+    // oferece, mas a recusa tem nome.
+    case "OR038": case "OR043": return "loja_fechada";
     case "OR004": return "repetida";
     // A função ainda não existe no banco (migration do ONLINE-b não aplicada).
     case "PGRST202": case "42883": return "sem_reserva";

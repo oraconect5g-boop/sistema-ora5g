@@ -314,6 +314,35 @@ describe("centro de distribuição (o depósito; INV-012)", () => {
     ]);
     expect(await divergencias()).toEqual([]);
   });
+
+  // D-043 (o padrão reversível do lote CD-a, 18/11): o depósito guarda e abastece as lojas; não vende (OR043).
+  it("o depósito não vende nem reserva para venda (OR043), por nenhum caminho; o pedido de transferência que sai dele continua", async () => {
+    const cd = "4e000000-0000-4000-8000-0000000000c2";
+    await db.query("insert into public.unidades (id, organizacao_id, empresa_id, codigo, nome, tipo) values ($1, $2, $3, 'cd-2', 'Centro de distribuição 2', 'deposito')",
+      [cd, ids.organizacao, ids.empresa]);
+    await db.query("select privado.lancar_movimento($1, $2, 5, 'entrada_importacao', null, null, null, null, 'teste:capa-cd-2')", [cd, cat.capa]);
+    const noCd = await naLoja(ids.dono, cd);
+    await valor(noCd, "select public.abrir_caixa(50000, $1) as v", [chave("caixa")]);
+    expect(await errou(noCd, "select public.criar_venda($1)", [chave("venda")])).toBe("OR043");
+    // Nem pelo dono das tabelas: a venda e a reserva de venda (do PDV e do site) no depósito.
+    expect(await erroDe(() => db.query("insert into public.vendas (organizacao_id, unidade_id, vendedor_id, chave_criacao) values ($1, $2, $3, $4)",
+      [ids.organizacao, cd, ids.dono, chave("venda-direta")]))).toBe("OR043");
+    for (const origem of ["pdv", "online"]) {
+      expect(await erroDe(() => db.query("insert into public.estoque_reservas (organizacao_id, unidade_id, variante_id, quantidade, origem, chave_idempotencia, expira_em) values ($1, $2, $3, 1, $4, $5, now() + interval '30 minutes')",
+        [ids.organizacao, cd, cat.capa, origem, chave("reserva-direta")]))).toBe("OR043");
+    }
+    expect(await saldo(cd, cat.capa)).toEqual({ quantidade: 5, reservado: 0 });
+
+    // O pedido de transferência reserva no depósito (TRF-c) e segue até a loja.
+    const lojaB = await naLoja(ids.gerenteB, ids.lojaB);
+    const t = await solicitar(lojaB, cd, ids.lojaB, cat.capa, 2);
+    expect(await saldo(cd, cat.capa)).toEqual({ quantidade: 5, reservado: 2 });
+    expect(await separar(noCd, t)).toBe("separada");
+    expect(await enviar(noCd, t)).toBe("enviada");
+    expect(await receber(lojaB, t, [], 2)).toBe("recebida");
+    expect(await saldo(cd, cat.capa)).toEqual({ quantidade: 3, reservado: 0 });
+    expect(await divergencias()).toEqual([]);
+  });
 });
 
 describe("leitura dos pedidos", () => {

@@ -15,7 +15,7 @@ describe("a reserva do site: o formulário e as mensagens (ONLINE-b)", () => {
   });
 
   it("cada recusa do banco vira uma mensagem que existe; o PDV só aceita números", () => {
-    const casos = [["22023", "dados"], ["OR034", "limite_whatsapp"], ["OR035", "limite_loja"], ["OR001", "sem_estoque"], ["OR036", "indisponivel"], ["P0002", "indisponivel"], ["OR038", "loja_fechada"], ["OR004", "repetida"],
+    const casos = [["22023", "dados"], ["OR034", "limite_whatsapp"], ["OR035", "limite_loja"], ["OR001", "sem_estoque"], ["OR036", "indisponivel"], ["P0002", "indisponivel"], ["OR038", "loja_fechada"], ["OR043", "loja_fechada"], ["OR004", "repetida"],
       ["PGRST202", "sem_reserva"], ["42883", "sem_reserva"], ["57014", "falha"]] as const;
     for (const [code, erro] of casos) {
       expect(erroDaReserva({ code })).toBe(erro);
