@@ -83,6 +83,8 @@ export default async function Relatorios({ searchParams }: { searchParams: Promi
           <Link href="/relatorios/anuncios" className="font-semibold text-acao">Anúncios (Meta): custo e retorno por campanha</Link>
           <span aria-hidden>·</span>
           <Link href="/relatorios/marketplaces" className="font-semibold text-acao">Marketplaces: pedidos, tarifas e lucro por canal</Link>
+          <span aria-hidden>·</span>
+          <Link href="/relatorios/canais" className="font-semibold text-acao">Canais de venda lado a lado</Link>
         </p>
       )}
       <ConteudoRelatorios relatorios={relatorios} turno={turno} regioes={regioes} />

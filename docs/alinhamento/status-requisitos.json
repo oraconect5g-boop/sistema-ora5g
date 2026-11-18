@@ -785,6 +785,11 @@
       "status": "testado",
       "nota": "Lote MKTPL-a (17/11; ADR-018): por canal, por anúncio e produto e por pedido, as unidades, o bruto, o líquido, o custo e o lucro estimado e a margem sobre o bruto; a receita bruta e a líquida ficam separadas, e o pedido sem custo fica fora do lucro e é contado.",
       "evidencia": "packages/banco/supabase/migrations/20261118010000_marketplaces_por_arquivo.sql; packages/banco/src/marketplaces.test.ts; apps/plataforma/src/lib/marketplaces; apps/plataforma/src/app/relatorios/marketplaces; apps/worker/src/marketplaces; docs/adr/ADR-018-marketplaces-por-arquivo.md; docs/aceite/MKTPL-a.md"
+    },
+    "ORA-REPORT-008": {
+      "status": "testado",
+      "nota": "Lote CANAIS-a (17/11; ADR-019): a tela /relatorios/canais (Gestão → Relatórios → Canais de venda lado a lado, só para o dono) mostra, no mesmo período, as lojas físicas (o vendido, as devoluções e os cancelamentos, a receita, as taxas dos meios já observadas na conciliação e a margem bruta; e, delas, o que veio do site), cada marketplace (o bruto, as tarifas, o frete e os reembolsos, o líquido e o lucro estimado) e os anúncios (o valor usado e as vendas das campanhas), sem contar duas vezes, e o resultado dos canais estimado. Cada número vem do painel do próprio canal, com a permissão de quem pede.",
+      "evidencia": "apps/plataforma/src/lib/canais; apps/plataforma/src/app/relatorios/canais; docs/adr/ADR-019-canais-lado-a-lado.md; docs/aceite/CANAIS-a.md"
     }
   }
 }

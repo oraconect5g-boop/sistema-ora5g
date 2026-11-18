@@ -1773,3 +1773,12 @@ Programa de execução integral (PR #67; checkpoint em `docs/alinhamento/EXECUCA
   1. que o mesmo pedido não se repete entre arquivos e que o arquivo novo troca os itens só dos pedidos que traz;
   2. o lucro estimado (o custo na data do pedido, o reembolso inteiro e o pedido sem custo fora do lucro);
   3. que os adaptadores não falam com canal nenhum.
+- **CI, merge e publicação (17/11):** CI verde em `a541729` (2.879 testes e 1 TODO, 309 E2E, com 13 pulados); merge `93f3a6d`, com a árvore da branch testada; a migration entrou pela integração GitHub × Supabase no merge (21:25); no GitHub, os checks de `93f3a6d` terminaram com sucesso: "Verificações" e "Supabase Preview"; no ar desde 21:35, depois de conferido pela API que as funções novas existem (o visitante recebe 42501).
+
+## 17/11/2026 — Lote CANAIS-a: os canais de venda lado a lado (ORA-REPORT-008)
+
+- **Origem:** o plano do proprietário de 16/11, Onda 3. A decisão está no [ADR-019](../adr/ADR-019-canais-lado-a-lado.md).
+- **Sem banco novo:** `lib/canais/painel.ts` junta os painéis que já existem (o financeiro, a margem, as reservas do site, os marketplaces e os anúncios), e a tela `/relatorios/canais` os mostra no mesmo período, só para `resultado.ver`.
+- **Testes:** `lib/canais` (2: a composição, o site e os anúncios fora da soma, o resultado só com a margem), `app/relatorios/canais` (2) e o E2E da tela sem login.
+- **Limite declarado:** só as taxas dos meios já conciliadas entram; o resultado é estimado e não é o lucro da empresa.
+- **Pedido ao Codex:** conferir que nada conta duas vezes (o site e os anúncios dentro das lojas) e que a tela não mostra nada a quem não tem `resultado.ver`.
