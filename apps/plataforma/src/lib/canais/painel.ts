@@ -64,5 +64,25 @@ export function resultadoDosCanais(c: Canais): number | null {
   return c.lojas.margem - c.lojas.taxas + c.marketplaces.reduce((s, m) => s + m.lucro, 0) - (c.anuncios?.gasto ?? 0);
 }
 
+/**
+ * GRAF-a (a orientação do proprietário de 18/11: "estado vazio não pode mascarar falha de consulta"): por que a margem das
+ * lojas ou as reservas do site faltam. "falha": a leitura não respondeu agora (tentar de novo); "indisponivel": o banco ainda
+ * não tem a função. Nulo: a leitura veio. Nenhum dos dois é "sem o custo" nem zero.
+ */
+export type FaltaDaLeitura = "falha" | "indisponivel" | null;
+export const faltaDaLeitura = (leitura: { estado: "ok" | "indisponivel" | "falha" }): FaltaDaLeitura => (leitura.estado === "ok" ? null : leitura.estado);
+
+/** A margem bruta das lojas como a tela mostra: o valor, ou o motivo de faltar (nunca "sem o custo" por engano). */
+export function textoDaMargemDasLojas(margem: number | null, falta: FaltaDaLeitura, comSinal: (centavos: number) => string): string {
+  if (margem !== null) return comSinal(margem);
+  return falta === "indisponivel" ? "— (ainda não disponível neste banco)" : "— (não deu para ler agora)";
+}
+
+/** O detalhe do resultado estimado: o que entra na conta, ou por que ele falta. */
+export function detalheDoResultado(resultado: number | null, falta: FaltaDaLeitura): string {
+  if (resultado !== null) return "margem das lojas − taxas + lucro dos marketplaces − anúncios";
+  return falta === "indisponivel" ? "a margem das lojas ainda não está disponível neste banco" : "não deu para ler a margem das lojas agora: tente de novo";
+}
+
 /** A receita da rede: a das lojas (líquida de devoluções e cancelamentos) e o bruto de cada marketplace. */
 export const receitaDaRede = (c: Canais) => c.lojas.receita + c.marketplaces.reduce((s, m) => s + m.bruto, 0);

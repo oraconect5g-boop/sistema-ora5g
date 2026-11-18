@@ -8,7 +8,10 @@ import { Aviso, Botao, Cartao, Indicador, TituloPagina } from "../../../componen
 import { FalhaDoServico, obterSessao } from "../../../lib/acesso/sessao";
 import { lerPainelDosAnuncios } from "../../../lib/anuncios/painel";
 import { periodoDosAnuncios } from "../../../lib/anuncios/regras";
-import { anunciosNosCanais, lojasNosCanais, marketplacesNosCanais, receitaDaRede, resultadoDosCanais, type Canais } from "../../../lib/canais/painel";
+import {
+  anunciosNosCanais, detalheDoResultado, faltaDaLeitura, lojasNosCanais, marketplacesNosCanais, receitaDaRede, resultadoDosCanais, textoDaMargemDasLojas,
+  type Canais,
+} from "../../../lib/canais/painel";
 import { consultarPainel } from "../../../lib/financeiro/consulta";
 import { brl, brlComSinal, numero } from "../../../lib/formato";
 import { consultarReservasDoSite } from "../../../lib/loja/painel-das-reservas";
@@ -59,6 +62,10 @@ export default async function CanaisDeVenda({ searchParams }: { searchParams: Pr
   };
   const resultado = resultadoDosCanais(canais);
   const { lojas } = canais;
+  // GRAF-a: a margem e as reservas do site que não vieram aparecem como falha, nunca como "sem o custo" ou como nada.
+  const faltaDaMargem = faltaDaLeitura(margem);
+  const faltaDoSite = faltaDaLeitura(reservas);
+  const aqui = `/relatorios/canais?inicio=${inicio}&fim=${fim}`;
 
   return (
     <MoldeReal sessao={sessao} largura="max-w-6xl">
@@ -70,12 +77,20 @@ export default async function CanaisDeVenda({ searchParams }: { searchParams: Pr
         <Botao type="submit" tamanho="sm" variante="secundario" enquanto="Carregando…">Ver</Botao>
       </Form>
 
+      {(faltaDaMargem === "falha" || faltaDoSite === "falha") && (
+        <Aviso tom="aviso" className="mt-4" titulo="Parte dos números não pôde ser lida agora">
+          {faltaDaMargem === "falha" ? "A margem das lojas não respondeu, e sem ela o resultado estimado fica sem valor. " : ""}
+          {faltaDoSite === "falha" ? "As reservas do site não responderam, e a parte das vendas que veio do site não aparece. " : ""}
+          Os outros números estão certos. <Link href={aqui} prefetch={false} className="font-semibold text-acao underline">Tentar de novo</Link>
+        </Aviso>
+      )}
+
       <section aria-label="Resumo dos canais" className="mt-4 grid grid-cols-2 gap-3 lg:grid-cols-3">
         <Indicador rotulo="Receita da rede" valor={brl(receitaDaRede(canais))} detalhe="as lojas (sem devoluções e cancelamentos) e o bruto dos marketplaces" icone={Layers} />
         <Indicador rotulo="O que os canais cobraram" valor={brl(lojas.taxas + canais.marketplaces.reduce((s, m) => s + m.taxas, 0) + (canais.anuncios?.gasto ?? 0))}
           detalhe="taxas dos meios (conciliadas), tarifas, frete e reembolsos dos marketplaces e o valor usado nos anúncios" />
         <Indicador rotulo="Resultado dos canais (estimado)" valor={resultado === null ? "—" : brlComSinal(resultado)}
-          detalhe={resultado === null ? "sem o custo dos produtos não há como estimar" : "margem das lojas − taxas + lucro dos marketplaces − anúncios"} tom={resultado !== null && resultado < 0 ? "ruim" : "neutro"} />
+          detalhe={detalheDoResultado(resultado, faltaDaMargem)} tom={resultado !== null && resultado < 0 ? "ruim" : "neutro"} />
       </section>
 
       <Cartao className="mt-4" titulo="Por canal" icone={Layers}>
@@ -83,8 +98,9 @@ export default async function CanaisDeVenda({ searchParams }: { searchParams: Pr
           <li className="space-y-1 py-3">
             <p className="font-semibold">Lojas físicas · {plural(lojas.vendas, "venda", "vendas")}</p>
             <p className="numeros text-xs text-suave">Vendido {brl(lojas.vendido)} · devoluções e cancelamentos {brl(lojas.devolvidoECancelado)} · receita {brl(lojas.receita)}</p>
-            <p className="numeros text-xs">Taxas dos meios {brl(lojas.taxas)} (observadas em {brl(lojas.conciliado)} conciliados) · margem bruta {lojas.margem === null ? "— (sem o custo)" : brlComSinal(lojas.margem)}</p>
+            <p className="numeros text-xs">Taxas dos meios {brl(lojas.taxas)} (observadas em {brl(lojas.conciliado)} conciliados) · margem bruta {textoDaMargemDasLojas(lojas.margem, faltaDaMargem, brlComSinal)}</p>
             {lojas.doSite && lojas.doSite.vendas > 0 && <p className="numeros text-xs text-suave">Das vendas das lojas, {plural(lojas.doSite.vendas, "veio", "vieram")} de reserva do site: {brl(lojas.doSite.valor)} (já dentro da receita das lojas).</p>}
+            {faltaDoSite === "falha" && <p className="text-xs text-aviso">Não deu para ler as reservas do site agora: a parte das vendas que veio do site não aparece.</p>}
           </li>
           {canais.marketplaces.map((m) => (
             <li key={m.canal} className="space-y-1 py-3">

@@ -498,6 +498,20 @@
         "ORA-PAY-002"
       ],
       "entrega": "as formas de pagamento por botão; a PayJoy e a Aiva com as parcelas e só sobre o celular; a entrada à parte; o cartão com as parcelas; o chip pago à parte na mesma venda; o link de pagamento só na compra online",
+      "commit": "b8760d2",
+      "publicado_em": "2026-11-18",
+      "pedido_em": null,
+      "resposta": null,
+      "respondido_em": null
+    },
+    {
+      "lote": "GRAF-a",
+      "roteiro": "docs/aceite/GRAF-a.md",
+      "requisitos": [
+        "ORA-REPORT-001",
+        "ORA-REPORT-008"
+      ],
+      "entrega": "os gráficos reais conferidos tela a tela: a falha da leitura nunca aparece como vazio, o custo e a margem só com a permissão, as exportações sem arquivo pela metade e a demonstração fora dos relatórios reais; a correção dos canais de venda",
       "commit": null,
       "publicado_em": null,
       "pedido_em": null,

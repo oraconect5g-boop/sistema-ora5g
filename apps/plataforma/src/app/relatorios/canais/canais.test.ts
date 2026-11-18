@@ -87,4 +87,27 @@ describe("a tela dos canais de venda", () => {
     expect(cenario.chamadas.find((c) => c.nome === "marketplace_painel")?.argumentos).toEqual({ p_inicio: "2026-11-17", p_fim: "2026-11-17" });
     expect(cenario.chamadas.find((c) => c.nome === "financeiro_painel")?.argumentos).toMatchObject({ p_inicio: "2026-11-17T03:00:00.000Z", p_fim: "2026-11-18T03:00:00.000Z" });
   });
+
+  // GRAF-a (a orientação de 18/11: "estado vazio não pode mascarar falha de consulta").
+  it("GRAF-a: a margem e as reservas do site que falham aparecem como falha, com o tentar de novo; nunca como \"sem o custo\" ou nada", async () => {
+    cenario.respostas.margem_painel = { data: null, error: { code: "57014", message: "canceling statement due to statement timeout" } };
+    cenario.respostas.reservas_do_site_painel = { data: null, error: { code: "57014" } };
+    const tela = limpar(await CanaisDeVenda(params({ inicio: "2026-11-17", fim: "2026-11-17" })));
+    for (const trecho of ["Parte dos números não pôde ser lida agora", "A margem das lojas não respondeu", "As reservas do site não responderam",
+      "Os outros números estão certos.", "Tentar de novo", "margem bruta — (não deu para ler agora)", "não deu para ler a margem das lojas agora: tente de novo",
+      "Não deu para ler as reservas do site agora", "Vendido R$ 800,00", "Shopee · 3 pedidos"]) {
+      expect(tela, trecho).toContain(trecho);
+    }
+    expect(tela).not.toContain("sem o custo");
+    expect(tela).not.toContain("vieram de reserva do site");
+  });
+
+  it("GRAF-a: o banco sem a função da margem diz isso, sem o aviso de falha", async () => {
+    cenario.respostas.margem_painel = { data: null, error: { code: "PGRST202" } };
+    const tela = limpar(await CanaisDeVenda(params({ inicio: "2026-11-17", fim: "2026-11-17" })));
+    expect(tela).toContain("margem bruta — (ainda não disponível neste banco)");
+    expect(tela).toContain("a margem das lojas ainda não está disponível neste banco");
+    expect(tela).not.toContain("Parte dos números não pôde ser lida agora");
+  });
 });
+
