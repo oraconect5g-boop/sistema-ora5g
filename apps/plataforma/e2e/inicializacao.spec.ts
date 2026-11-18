@@ -57,17 +57,27 @@ test("CONFIG-001: com só o par público, o sistema sobe e oferece o login, sem 
   }
 });
 
-test("em produção a demonstração não existe", async () => {
+// DEMO-a (ADR-022): a demonstração fica no ar em todo ambiente, inclusive em produção, isolada da aplicação real; a
+// chave ORA_DEMO_DESLIGADA=1 a tira do ar (a página, a troca de perfil e o botão da página inicial).
+test("em produção a demonstração fica no ar; com ORA_DEMO_DESLIGADA=1, ela sai", async () => {
   test.skip(test.info().project.name !== "computador", "basta rodar uma vez");
 
-  const servidor = iniciarServidor({ APP_ENV: "producao", NEXT_PUBLIC_APP_URL: "http://127.0.0.1:3199" });
+  const noAr = iniciarServidor({ APP_ENV: "producao", NEXT_PUBLIC_APP_URL: "http://127.0.0.1:3199" });
   try {
-    await servidor.esperarNoAr();
-    expect((await fetch(`${servidor.url}/demo`)).status).toBe(404);
-    expect((await fetch(`${servidor.url}/demo/vender`)).status).toBe(404);
-    expect((await fetch(`${servidor.url}/demo/perfil/usar?p=dono`, { redirect: "manual" })).status).toBe(404);
-    expect(await (await fetch(servidor.url)).text()).not.toContain("Ver demonstração");
+    await noAr.esperarNoAr();
+    expect((await fetch(`${noAr.url}/demo`)).status).toBe(200);
+    expect(await (await fetch(noAr.url)).text()).toContain("Ver demonstração");
   } finally {
-    await servidor.parar();
+    await noAr.parar();
+  }
+  const desligada = iniciarServidor({ APP_ENV: "producao", NEXT_PUBLIC_APP_URL: "http://127.0.0.1:3199", ORA_DEMO_DESLIGADA: "1" });
+  try {
+    await desligada.esperarNoAr();
+    expect((await fetch(`${desligada.url}/demo`)).status).toBe(404);
+    expect((await fetch(`${desligada.url}/demo/vender`)).status).toBe(404);
+    expect((await fetch(`${desligada.url}/demo/perfil/usar?p=dono`, { redirect: "manual" })).status).toBe(404);
+    expect(await (await fetch(desligada.url)).text()).not.toContain("Ver demonstração");
+  } finally {
+    await desligada.parar();
   }
 });

@@ -352,11 +352,11 @@ test("vendedor vê só as próprias vendas e metas; gerente vê todos os vendedo
 test("vendedor com duas lojas troca a loja da sessão; loja sem vínculo é ignorada", async ({ page, context, request, baseURL }) => {
   await usarPerfil(page, "vendedor");
   await page.getByRole("button", { name: /^Loja da sessão: Santa Cândida/ }).click();
-  await page.getByRole("link", { name: /^Loja 03/ }).click();
+  await page.getByRole("link", { name: /^Água Verde/ }).click();
   await expect(page).toHaveURL(/\/demo$/);
-  await expect(page.getByRole("button", { name: /^Loja da sessão: Loja 03/ })).toBeVisible();
+  await expect(page.getByRole("button", { name: /^Loja da sessão: Água Verde/ })).toBeVisible();
   await page.goto("/demo/vender");
-  await expect(page.getByText("Loja da sessão · Loja 03")).toBeVisible();
+  await expect(page.getByText("Loja da sessão · Água Verde")).toBeVisible();
 
   // Loja sem vínculo (cookie forjado ou endereço digitado): volta para a loja padrão.
   await context.addCookies([{ name: "ora_demo_loja", value: "loja-07", url: baseURL }]);
