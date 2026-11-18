@@ -7,7 +7,10 @@ import type { PainelDoBanco } from "../financeiro/painel";
 import type { PainelDasReservas } from "../loja/painel-das-reservas";
 import type { MargemDoBanco } from "../margem/painel";
 import { lerPainelDosMarketplaces } from "../marketplaces/regras";
-import { anunciosNosCanais, lojasNosCanais, marketplacesNosCanais, receitaDaRede, resultadoDosCanais, type Canais } from "./painel";
+import {
+  anunciosNosCanais, detalheDoResultado, faltaDaLeitura, lojasNosCanais, marketplacesNosCanais, receitaDaRede, resultadoDosCanais, textoDaMargemDasLojas,
+  type Canais,
+} from "./painel";
 
 const financeiro = {
   periodos: [{ periodo: "2026-11-16", vendas: 3, vendido: 50_000, cancelamentos: 0, cancelado: 0, devolucoes: 1, devolvido: 5_000 },
@@ -46,5 +49,29 @@ describe("os canais lado a lado", () => {
     expect(receitaDaRede(canais)).toBe(73_000 + 28_700);
     expect(resultadoDosCanais(canais)).toBe(20_000 - 900 + 6_500 - 15_000);
     expect(resultadoDosCanais({ ...canais, lojas: { ...canais.lojas, margem: null } })).toBeNull();
+  });
+});
+
+// GRAF-a (a orientação de 18/11): a leitura que falhou nunca aparece como "sem o custo", zero ou nada.
+describe("GRAF-a — a margem e o site que não vieram são falha, não vazio", () => {
+  const comSinal = (c: number) => `R$ ${(c / 100).toFixed(2)}`;
+  it("o estado de cada leitura vira o motivo da falta", () => {
+    expect(faltaDaLeitura({ estado: "ok" })).toBeNull();
+    expect(faltaDaLeitura({ estado: "falha" })).toBe("falha");
+    expect(faltaDaLeitura({ estado: "indisponivel" })).toBe("indisponivel");
+  });
+  it("a margem: o valor quando veio; a falha e a função ausente com o próprio texto, nunca \"sem o custo\"", () => {
+    expect(textoDaMargemDasLojas(20_000, null, comSinal)).toBe("R$ 200.00");
+    expect(textoDaMargemDasLojas(0, null, comSinal)).toBe("R$ 0.00");
+    expect(textoDaMargemDasLojas(null, "falha", comSinal)).toBe("— (não deu para ler agora)");
+    expect(textoDaMargemDasLojas(null, "indisponivel", comSinal)).toBe("— (ainda não disponível neste banco)");
+    for (const falta of ["falha", "indisponivel"] as const) expect(textoDaMargemDasLojas(null, falta, comSinal)).not.toMatch(/sem o custo|0,00|0\.00/);
+  });
+  it("o resultado estimado: sem a margem, diz por quê; com a margem, a conta", () => {
+    const semMargem = { lojas: lojasNosCanais(financeiro, null, null), marketplaces: [], anuncios: null } satisfies Canais;
+    expect(resultadoDosCanais(semMargem)).toBeNull();
+    expect(detalheDoResultado(null, "falha")).toBe("não deu para ler a margem das lojas agora: tente de novo");
+    expect(detalheDoResultado(null, "indisponivel")).toBe("a margem das lojas ainda não está disponível neste banco");
+    expect(detalheDoResultado(1_000, null)).toBe("margem das lojas − taxas + lucro dos marketplaces − anúncios");
   });
 });
