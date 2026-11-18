@@ -5,3 +5,4 @@ export * from "./estoque";
 export * from "./operacao";
 export * from "./organizacao";
 export * from "./vendas";
+export * from "./fluxos-novos";

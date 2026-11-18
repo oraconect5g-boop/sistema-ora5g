@@ -16,6 +16,7 @@ import { AtendimentoConnect } from "./_abas/AtendimentoConnect";
 import { AtivarChip } from "./_abas/AtivarChip";
 import { Carteira } from "./_abas/Carteira";
 import { ChipsConnect } from "./_abas/ChipsConnect";
+import { ConciliacaoNogle } from "./_abas/ConciliacaoNogle";
 import { ConsultarLinha } from "./_abas/ConsultarLinha";
 import { Integracao } from "./_abas/Integracao";
 import { FILTROS_OPERACOES, Operacoes, operacoesVisiveis, type FiltroOperacoes } from "./_abas/Operacoes";
@@ -82,7 +83,12 @@ export default async function OraConnect({ searchParams }: { searchParams: Promi
           <ChipsConnect loja={nomeDaLoja(loja)} fisicosDaLoja={CHIPS_POR_LOJA[loja] ?? []} esimDaLoja={pdv?.esim ?? 0} estoqueMinimo={pdv?.estoqueMinimo ?? 8}
             estoqueVirgem={ESTOQUE_VIRGEM} podeTransferir={gestao} compras={COMPRAS_CHIP} planos={PLANOS_CONNECT} logistica={LOGISTICA} />
         )}
-        {aba === "carteira" && <Carteira operacoes={operacoes} agora={instante} />}
+        {aba === "carteira" && (
+          <div className="space-y-4">
+            <Carteira operacoes={operacoes} agora={instante} />
+            <ConciliacaoNogle />
+          </div>
+        )}
         {aba === "integracao" && <Integracao />}
       </div>
 
