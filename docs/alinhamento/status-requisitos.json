@@ -745,6 +745,46 @@
       "status": "testado",
       "nota": "Lote META-a (17/11; ADR-017): por campanha, a margem das vendas (dos itens com custo gravado; a venda com item sem custo é contada à parte), o ROAS da margem e o CAC (valor ÷ clientes novos, a primeira compra concluída do cliente). A receita é estimativa de venda; o \"recebido de fato\" é o dinheiro no caixa e o cartão ou Pix já conciliado, pelo líquido.",
       "evidencia": "packages/banco/supabase/migrations/20261117232910_custo_dos_anuncios.sql; packages/banco/src/anuncios.test.ts; apps/plataforma/src/lib/anuncios; apps/plataforma/src/app/relatorios/anuncios; docs/adr/ADR-017-custo-dos-anuncios.md; docs/aceite/META-a.md"
+    },
+    "ORA-MKTPL-001": {
+      "status": "bloqueado",
+      "nota": "Lote MKTPL-a (17/11; ADR-018): os adaptadores do Mercado Livre, da Shopee e do TikTok Shop ficam separados, um por canal, no worker (marketplaces/adaptadores.ts), com a interface, o formato comum do pedido conferido antes do banco e o que falta para ligar pelos nomes já documentados; nenhum fala com o canal. BLOQUEADO até o contrato de cada canal (o aplicativo aprovado no portal, a autorização da conta do vendedor e a documentação oficial conferida). Enquanto isso, os pedidos entram por arquivo.",
+      "evidencia": "packages/banco/supabase/migrations/20261118010000_marketplaces_por_arquivo.sql; packages/banco/src/marketplaces.test.ts; apps/plataforma/src/lib/marketplaces; apps/plataforma/src/app/relatorios/marketplaces; apps/worker/src/marketplaces; docs/adr/ADR-018-marketplaces-por-arquivo.md; docs/aceite/MKTPL-a.md"
+    },
+    "ORA-MKTPL-002": {
+      "status": "bloqueado",
+      "nota": "Lote MKTPL-a (17/11; ADR-018): o item do pedido do canal se liga à variação pelo código do anúncio (CAT-009) ou pelo SKU, e o item sem produto ligado é contado. BLOQUEADO: a sincronização de preço, estoque e anúncio depende da conexão com cada canal (contrato), e a baixa do estoque pelo pedido do canal é uma decisão do proprietário.",
+      "evidencia": "packages/banco/supabase/migrations/20261118010000_marketplaces_por_arquivo.sql; packages/banco/src/marketplaces.test.ts; apps/plataforma/src/lib/marketplaces; apps/plataforma/src/app/relatorios/marketplaces; apps/worker/src/marketplaces; docs/adr/ADR-018-marketplaces-por-arquivo.md; docs/aceite/MKTPL-a.md"
+    },
+    "ORA-MKTPL-003": {
+      "status": "parcial",
+      "nota": "Lote MKTPL-a (17/11; ADR-018): o pedido entra por arquivo (o relatório de vendas do painel do vendedor), com o número do canal único por canal e rede: o arquivo novo com o mesmo pedido atualiza a situação, os valores e os itens, e o mesmo arquivo devolve a mesma importação. FALTA: o webhook de cada canal (contrato), a revisão do Codex e a homologação.",
+      "evidencia": "packages/banco/supabase/migrations/20261118010000_marketplaces_por_arquivo.sql; packages/banco/src/marketplaces.test.ts; apps/plataforma/src/lib/marketplaces; apps/plataforma/src/app/relatorios/marketplaces; apps/worker/src/marketplaces; docs/adr/ADR-018-marketplaces-por-arquivo.md; docs/aceite/MKTPL-a.md"
+    },
+    "ORA-MKTPL-004": {
+      "status": "parcial",
+      "nota": "Lote MKTPL-a (17/11; ADR-018): o frete pago pelo vendedor entra no pedido e no lucro, e a situação do pedido é a que o canal escreve, sem tradução nem estado inventado. FALTA: a etiqueta e o rastreio, que dependem da conexão com cada canal.",
+      "evidencia": "packages/banco/supabase/migrations/20261118010000_marketplaces_por_arquivo.sql; packages/banco/src/marketplaces.test.ts; apps/plataforma/src/lib/marketplaces; apps/plataforma/src/app/relatorios/marketplaces; apps/worker/src/marketplaces; docs/adr/ADR-018-marketplaces-por-arquivo.md; docs/aceite/MKTPL-a.md"
+    },
+    "ORA-MKTPL-005": {
+      "status": "testado",
+      "nota": "Lote MKTPL-a (17/11; ADR-018): por pedido e por canal, o bruto, as tarifas e a comissão, o frete, os reembolsos, o líquido do repasse (do arquivo, ou o bruto menos o resto, marcado como estimado), a data do repasse, o custo do cadastro no dia do pedido e o lucro estimado, com as fórmulas na tela.",
+      "evidencia": "packages/banco/supabase/migrations/20261118010000_marketplaces_por_arquivo.sql; packages/banco/src/marketplaces.test.ts; apps/plataforma/src/lib/marketplaces; apps/plataforma/src/app/relatorios/marketplaces; apps/worker/src/marketplaces; docs/adr/ADR-018-marketplaces-por-arquivo.md; docs/aceite/MKTPL-a.md"
+    },
+    "ORA-MKTPL-006": {
+      "status": "parcial",
+      "nota": "Lote MKTPL-a (17/11; ADR-018): o reembolso e o cancelamento do canal aparecem no pedido (a situação e o valor) e no lucro; o pedido reembolsado por inteiro não leva o custo. FALTA: o estorno no estoque, no fiscal e na comissão, que depende de o pedido do canal mexer no estoque (decisão do proprietário) e da conexão com cada canal.",
+      "evidencia": "packages/banco/supabase/migrations/20261118010000_marketplaces_por_arquivo.sql; packages/banco/src/marketplaces.test.ts; apps/plataforma/src/lib/marketplaces; apps/plataforma/src/app/relatorios/marketplaces; apps/worker/src/marketplaces; docs/adr/ADR-018-marketplaces-por-arquivo.md; docs/aceite/MKTPL-a.md"
+    },
+    "ORA-MKTPL-007": {
+      "status": "bloqueado",
+      "nota": "Lote MKTPL-a (17/11; ADR-018): os adaptadores estão separados e desligados. BLOQUEADO: a sincronização quase em tempo real (webhooks, limites de chamada e novas tentativas monitoradas) depende do contrato de cada canal.",
+      "evidencia": "packages/banco/supabase/migrations/20261118010000_marketplaces_por_arquivo.sql; packages/banco/src/marketplaces.test.ts; apps/plataforma/src/lib/marketplaces; apps/plataforma/src/app/relatorios/marketplaces; apps/worker/src/marketplaces; docs/adr/ADR-018-marketplaces-por-arquivo.md; docs/aceite/MKTPL-a.md"
+    },
+    "ORA-MKTPL-008": {
+      "status": "testado",
+      "nota": "Lote MKTPL-a (17/11; ADR-018): por canal, por anúncio e produto e por pedido, as unidades, o bruto, o líquido, o custo e o lucro estimado e a margem sobre o bruto; a receita bruta e a líquida ficam separadas, e o pedido sem custo fica fora do lucro e é contado.",
+      "evidencia": "packages/banco/supabase/migrations/20261118010000_marketplaces_por_arquivo.sql; packages/banco/src/marketplaces.test.ts; apps/plataforma/src/lib/marketplaces; apps/plataforma/src/app/relatorios/marketplaces; apps/worker/src/marketplaces; docs/adr/ADR-018-marketplaces-por-arquivo.md; docs/aceite/MKTPL-a.md"
     }
   }
 }

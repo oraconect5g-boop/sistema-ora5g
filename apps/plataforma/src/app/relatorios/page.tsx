@@ -75,12 +75,14 @@ export default async function Relatorios({ searchParams }: { searchParams: Promi
         )}
       </div>
 
-      {/* META-a: o custo dos anúncios por campanha (ADR-017), só para quem vê o resultado da rede (o dono). */}
+      {/* META-a e MKTPL-a: o custo dos anúncios por campanha (ADR-017) e os pedidos dos marketplaces (ADR-018), só para quem vê o resultado da rede (o dono). */}
       {permissoes.has("resultado.ver") && (
         <p className="mb-4 flex flex-wrap items-center gap-x-2 text-sm">
           <Megaphone className="size-4 text-acao" aria-hidden />
-          Quanto custou cada contato e cada venda dos anúncios?
+          Os anúncios e os canais de venda de fora:
           <Link href="/relatorios/anuncios" className="font-semibold text-acao">Anúncios (Meta): custo e retorno por campanha</Link>
+          <span aria-hidden>·</span>
+          <Link href="/relatorios/marketplaces" className="font-semibold text-acao">Marketplaces: pedidos, tarifas e lucro por canal</Link>
         </p>
       )}
       <ConteudoRelatorios relatorios={relatorios} turno={turno} regioes={regioes} />

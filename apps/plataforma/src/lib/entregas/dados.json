@@ -4,10 +4,10 @@
   "total": 179,
   "homologados": 0,
   "contagem": {
-    "nao_iniciado": 33,
-    "parcial": 73,
-    "testado": 68,
-    "bloqueado": 3,
+    "nao_iniciado": 25,
+    "parcial": 76,
+    "testado": 70,
+    "bloqueado": 6,
     "respeitado": 2
   },
   "lotes": [
@@ -269,6 +269,26 @@
         "ORA-META-006"
       ],
       "entrega": "o custo dos anúncios da Meta por arquivo (o relatório do Gerenciador de Anúncios, por dia), junto aos contatos e às vendas de cada campanha: CTR, CPC, CPL, CPA, ROAS, margem, CAC e o recebido de fato, e o funil por loja e por vendedor (Onda 3, item \"Meta Ads\"; ADR-017)",
+      "commit": "475ad3e",
+      "publicado_em": "2026-11-17",
+      "pedido_em": null,
+      "resposta": null,
+      "respondido_em": null
+    },
+    {
+      "lote": "MKTPL-a",
+      "roteiro": "docs/aceite/MKTPL-a.md",
+      "requisitos": [
+        "ORA-MKTPL-001",
+        "ORA-MKTPL-002",
+        "ORA-MKTPL-003",
+        "ORA-MKTPL-004",
+        "ORA-MKTPL-005",
+        "ORA-MKTPL-006",
+        "ORA-MKTPL-007",
+        "ORA-MKTPL-008"
+      ],
+      "entrega": "os pedidos do Mercado Livre, da Shopee e do TikTok Shop por arquivo (o relatório de vendas de cada canal), sem repetir pedido, com o bruto, as tarifas, o frete, os reembolsos, o líquido, o custo e o lucro estimado por canal, anúncio e pedido; os adaptadores de cada canal separados e desligados até o contrato (Onda 3, item \"Marketplaces\"; ADR-018)",
       "commit": null,
       "publicado_em": null,
       "pedido_em": null,

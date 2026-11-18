@@ -3,7 +3,7 @@ import { expect, test } from "@playwright/test";
 // Sistema real (ORA-006): sem login, nenhuma página real abre; saída forçada só mostra motivos
 // conhecidos. Roda com ou sem a configuração pública do Supabase no ambiente de teste.
 // Telas reais e exportações: sem login, nenhuma abre (nem o esqueleto de carregamento).
-const PROTEGIDAS = ["/inicio", "/escolher-loja", "/equipe", "/catalogo", "/catalogo/lote", "/vender", "/caixa", "/aprovacoes", "/estoque", "/transferencias", "/transferencias/remessa", "/connect", "/notas", "/notas/conciliacao", "/vendas", "/auditoria", "/financeiro", "/financeiro/exportar", "/relatorios", "/relatorios/exportar", "/metas", "/metas/bonus", "/metas/extrato", "/metas/fechamento", "/lojas", "/produtos", "/produtos/precos", "/produtos/importar", "/estoque/entrada", "/estoque/pedidos", "/estoque/inventario", "/clientes", "/clientes/novo", "/clientes/00000000-0000-4000-8000-000000000001", "/clientes/00000000-0000-4000-8000-000000000001/titular", "/reservas-do-site", "/crm", "/crm/agenda", "/crm/00000000-0000-4000-8000-000000000001", "/pagamentos/conciliacao", "/pagamentos/recebiveis", "/pagamentos/extratos", "/pagamentos/extratos/importar", "/pagamentos/extratos/00000000-0000-4000-8000-000000000001", "/relatorios/anuncios", "/assistencia", "/assistencia/nova", "/assistencia/relatorios", "/pagamentos/financeiras", "/pagamentos/maquininhas", "/contas-a-pagar", "/contas-a-pagar/00000000-0000-4000-8000-000000000001/documentos/00000000-0000-4000-8000-000000000002", "/resultado", "/previsao", "/vendas/00000000-0000-4000-8000-000000000001", "/conta/senha", "/conta/seguranca", "/conta/confirmar", "/entrar/codigo", "/api/pendencias", "/operacao", "/entregas"];
+const PROTEGIDAS = ["/inicio", "/escolher-loja", "/equipe", "/catalogo", "/catalogo/lote", "/vender", "/caixa", "/aprovacoes", "/estoque", "/transferencias", "/transferencias/remessa", "/connect", "/notas", "/notas/conciliacao", "/vendas", "/auditoria", "/financeiro", "/financeiro/exportar", "/relatorios", "/relatorios/exportar", "/metas", "/metas/bonus", "/metas/extrato", "/metas/fechamento", "/lojas", "/produtos", "/produtos/precos", "/produtos/importar", "/estoque/entrada", "/estoque/pedidos", "/estoque/inventario", "/clientes", "/clientes/novo", "/clientes/00000000-0000-4000-8000-000000000001", "/clientes/00000000-0000-4000-8000-000000000001/titular", "/reservas-do-site", "/crm", "/crm/agenda", "/crm/00000000-0000-4000-8000-000000000001", "/pagamentos/conciliacao", "/pagamentos/recebiveis", "/pagamentos/extratos", "/pagamentos/extratos/importar", "/pagamentos/extratos/00000000-0000-4000-8000-000000000001", "/relatorios/anuncios", "/relatorios/marketplaces", "/assistencia", "/assistencia/nova", "/assistencia/relatorios", "/pagamentos/financeiras", "/pagamentos/maquininhas", "/contas-a-pagar", "/contas-a-pagar/00000000-0000-4000-8000-000000000001/documentos/00000000-0000-4000-8000-000000000002", "/resultado", "/previsao", "/vendas/00000000-0000-4000-8000-000000000001", "/conta/senha", "/conta/seguranca", "/conta/confirmar", "/entrar/codigo", "/api/pendencias", "/operacao", "/entregas"];
 
 for (const caminho of PROTEGIDAS) {
   test(`${caminho} sem login volta para /entrar`, async ({ page }) => {
@@ -38,6 +38,16 @@ test("o envio do extrato sem login volta para /entrar", async ({ request }) => {
 test("o envio do custo dos anúncios sem login volta para /entrar", async ({ request }) => {
   const resposta = await request.post("/relatorios/anuncios/enviar", {
     multipart: { coluna_dia: "0", coluna_campanha: "1", coluna_gasto: "2", arquivo: { name: "anuncios.csv", mimeType: "text/csv", buffer: Buffer.from("Dia;Campanha;Valor usado\n2026-11-17;Teste;1,00\n") } },
+    maxRedirects: 0,
+  });
+  expect([303, 307]).toContain(resposta.status());
+  expect(resposta.headers()["location"] ?? "").toMatch(/\/entrar/);
+});
+
+// MKTPL-a: o envio dos pedidos de um marketplace, sem login, também volta para /entrar antes de ler o arquivo.
+test("o envio dos pedidos dos marketplaces sem login volta para /entrar", async ({ request }) => {
+  const resposta = await request.post("/relatorios/marketplaces/enviar", {
+    multipart: { canal: "mercado_livre", modo: "em_cada_linha", coluna_pedido: "0", coluna_data: "1", coluna_valor: "2", arquivo: { name: "vendas.csv", mimeType: "text/csv", buffer: Buffer.from("Pedido;Data;Valor\nA1;2026-11-17;1,00\n") } },
     maxRedirects: 0,
   });
   expect([303, 307]).toContain(resposta.status());

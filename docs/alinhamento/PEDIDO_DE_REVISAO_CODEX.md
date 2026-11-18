@@ -1757,3 +1757,19 @@ Programa de execução integral (PR #67; checkpoint em `docs/alinhamento/EXECUCA
   1. que o mesmo dia de uma campanha não conta duas vezes, com arquivos por campanha, por conjunto e por anúncio;
   2. que a venda não conta duas vezes entre campanhas, e que o painel só mostra o que o RLS de quem pede deixa ler;
   3. as fórmulas da tela contra o ADR-017.
+- **CI, merge e publicação (17/11):** CI verde em `2f27dd1` (2.860 testes e 1 TODO, 305 E2E, com 13 pulados); merge `475ad3e`, com a árvore da branch testada; no GitHub, os checks de `475ad3e` terminaram com sucesso: "Verificações" e "Supabase Preview"; no ar desde 20:45. Conferido pela API, no ar, que o visitante recebe 42501 nas funções novas.
+
+## 17/11/2026 — Lote MKTPL-a: os pedidos dos marketplaces por arquivo, com o lucro de cada pedido (ORA-MKTPL-001 a ORA-MKTPL-008)
+
+- **Origem:** o plano do proprietário de 16/11, Onda 3, item "Marketplaces", a parte que não depende do contrato com os canais. A decisão está no [ADR-018](../adr/ADR-018-marketplaces-por-arquivo.md).
+- **Banco:** a migration `20261118010000_marketplaces_por_arquivo` entra no `ora5g-dev` pela integração GitHub × Supabase no merge (o conector do Supabase ficou fora do ar, desde as 20:52; o mesmo caminho do #95: o histórico guarda o texto dividido em comandos, e o md5 do histórico não é o do arquivo), depois do merge do META-a e do check "Supabase Preview" dele. Nenhuma função em vigor mudou. Os tipos dos marketplaces foram escritos à mão, no formato do gerador; a comparação com o gerador fica para quando o conector voltar.
+  1. `public.marketplace_importacoes`, `public.marketplace_pedidos` (único por rede, canal e número) e `public.marketplace_pedido_itens`, com RLS só para `resultado.ver` pela rede.
+  2. `marketplace_importar` (definer): as regras de cada pedido e item, a impressão digital por rede, o `on conflict` que atualiza o pedido e conta os novos e os atualizados, e a troca dos itens do pedido atualizado, ligados pelo código do anúncio (CAT-009) ou pelo SKU.
+  3. `marketplace_painel` (invoker): o líquido do arquivo ou estimado, o custo do cadastro no dia do pedido, o pedido reembolsado por inteiro sem custo e o lucro só quando todo item tem custo.
+- **Aplicação:** `lib/marketplaces` (a leitura do relatório de vendas, com os dois modos dos valores do pedido), a rota `/relatorios/marketplaces/enviar` e a tela `/relatorios/marketplaces`. **Worker:** `marketplaces/adaptadores.ts`, um adaptador por canal, desligado, com o formato comum conferido antes do banco.
+- **Testes:** `marketplaces.test.ts` do banco (3: a importação sem repetir pedido, as recusas e o painel), o inventário (192 funções), `lib/marketplaces` (7), `app/relatorios/marketplaces` (5), os adaptadores (2) e o E2E da tela e do envio sem login.
+- **Limite declarado:** a conexão com os canais, a baixa do estoque pelo pedido do canal, a etiqueta e o rastreio ficam de fora (ADR-018); nada é suposto do formato de um canal.
+- **Pedido ao Codex:** conferir:
+  1. que o mesmo pedido não se repete entre arquivos e que o arquivo novo troca os itens só dos pedidos que traz;
+  2. o lucro estimado (o custo na data do pedido, o reembolso inteiro e o pedido sem custo fora do lucro);
+  3. que os adaptadores não falam com canal nenhum.
