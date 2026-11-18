@@ -99,11 +99,11 @@
    - os negativos e os aparelhos com IMEI apontados, sem inventar número de série;
    - a aplicação pelo livro de movimentos, idempotente e aprovada pelo dono.
    - Testado com planilha fictícia no desenho do relatório. A prova com o arquivo original espera a transferência dele para o servidor.
-3. **DEMO-a:**
+3. **DEMO-a** (feito em 18/11; ADR-022):
    - os nomes das 11 lojas e do DEFEITOS na demonstração;
    - a regra da demonstração em produção;
    - os fluxos novos com dados fictícios (A16);
    - a matriz demonstração × real.
-4. **TRF-b:** o físico, o reservado, o disponível e o em trânsito à vista na origem e no destino, até a resposta da D-049.
+4. **TRF-b** (feito em 18/11, junto com o DEMO-a): o físico, o reservado, o disponível e o em trânsito à vista na origem e no destino, até a resposta da D-049.
 5. **ONLINE-d:** o carrinho e o pedido do site com estados (A03). O pagamento online espera o provedor (E1).
 6. **O resto da matriz**, na ordem do relatório: a operação central com os três perfis (depende das contas), a Nogle e o fiscal oficiais (dependem de contrato), o WhatsApp e as financeiras (idem), os canais com API e as demais áreas.

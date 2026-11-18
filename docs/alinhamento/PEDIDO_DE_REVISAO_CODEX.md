@@ -1810,3 +1810,17 @@ Programa de execução integral (PR #67; checkpoint em `docs/alinhamento/EXECUCA
 - **Tela:** `/estoque/carga` e `/estoque/carga/<carga>`, com o atalho "Estoque de cada loja" na importação de planilha.
 - **Testes:** o banco (7), a leitura (4), as telas, a rota e as ações (5), e o inventário de autorização (196 funções).
 - **Pedido ao Codex:** conferir que a carga nunca soma duas vezes (o mesmo arquivo, outro arquivo na mesma loja, a movimentação depois da data de corte) e que nenhum aparelho entra sem o IMEI.
+- **CI, merge e publicação (18/11):** CI verde em `6d57f1a` (2.918 testes e 1 TODO, 311 E2E, com 13 pulados); merge `c330d0d`, com a árvore da branch testada; no GitHub, os checks de `c330d0d` terminaram com sucesso: "Verificações" e "Supabase Preview"; no ar desde 23:31.
+
+## 18/11/2026 — Lote DEMO-a: a demonstração com as lojas de verdade e os canais
+
+- **Origem:** o achado F06 da auditoria de 17/11 (PR #104) e o aceite A16 do adendo de 16/11 (PR #100). Decisão: [ADR-022](../adr/ADR-022-demonstracao-no-ar-e-isolada.md).
+- **Demonstração:** os nomes das 11 lojas (o endereço "a confirmar"), os próximos passos do administrador e `/demo/canais` (o que entra por arquivo, o que falta para conectar direto e os canais lado a lado com números fictícios).
+- **Regra:** a demonstração fica no ar em todo ambiente; `ORA_DEMO_DESLIGADA=1` a tira do ar (na lista de permissão do web). O isolamento é provado por `src/demo/isolamento.test.ts`.
+- **Pedido ao Codex:** conferir que nenhuma tela real usa dado da demonstração e que a demonstração não lê o banco.
+
+## 18/11/2026 — Lote TRF-b: o que cada passo da transferência faz no estoque (junto com o DEMO-a)
+
+- **Origem:** o achado F10 da auditoria de 17/11. O contrato não muda; a regra de reservar já no pedido é a decisão D-049.
+- **Tela:** `/transferencias` com o efeito de cada passo e o saldo de agora da origem e do destino (o que a RLS mostra).
+- **Pedido ao Codex:** conferir que a tela não mostra saldo de loja que a pessoa não vê e que o texto bate com o que o banco faz.

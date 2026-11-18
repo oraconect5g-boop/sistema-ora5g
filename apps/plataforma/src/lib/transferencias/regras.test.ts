@@ -1,7 +1,8 @@
 import { describe, expect, it } from "vitest";
 
 import {
-  comALinha, erroDaTransferencia, escreverLinhasDaRemessa, lerIdentificadores, lerLinhasDaRemessa, lerQuantidade, linhasDoFormulario, MAXIMO_DE_LINHAS_DA_REMESSA, nomeDaSituacao, semALinha,
+  comALinha, efeitoNoEstoque, erroDaTransferencia, escreverLinhasDaRemessa, lerIdentificadores, lerLinhasDaRemessa, lerQuantidade, linhasDoFormulario, MAXIMO_DE_LINHAS_DA_REMESSA, nomeDaSituacao,
+  saldoDaLoja, semALinha, SITUACOES_DA_TRANSFERENCIA,
 } from "./regras";
 
 describe("regras da tela de transferência", () => {
@@ -52,5 +53,24 @@ describe("as linhas da remessa", () => {
     expect(linhasDoFormulario([A], ["0"])).toBeNull();
     expect(linhasDoFormulario([A], ["10000"])).toBeNull();
     expect(linhasDoFormulario([], [])).toBeNull();
+  });
+});
+
+// TRF-b (18/11; achado F10 da auditoria do Codex de 17/11): o que cada passo faz no estoque e o saldo de cada lado.
+describe("o efeito de cada passo no estoque", () => {
+  it("toda situação tem o texto; pedir não reserva, separar reserva, enviar baixa o físico, receber põe no destino", () => {
+    for (const s of Object.keys(SITUACOES_DA_TRANSFERENCIA)) expect(efeitoNoEstoque(s), s).toBeTruthy();
+    expect(efeitoNoEstoque("solicitada")).toContain("o pedido não reserva");
+    expect(efeitoNoEstoque("separada")).toContain("Saiu do disponível; o físico continua lá até o envio");
+    expect(efeitoNoEstoque("enviada")).toContain("saiu do físico da origem");
+    expect(efeitoNoEstoque("recebida")).toContain("entrou no físico do destino");
+    expect(efeitoNoEstoque("constructor")).toBeNull();
+  });
+
+  it("o saldo de uma loja: físico, reservado e disponível; sem a linha (a RLS não mostra) ou com número estranho, nulo", () => {
+    const linhas = [{ unidade_id: "a", variante_id: "v", quantidade: 10, reservado: 2 }, { unidade_id: "b", variante_id: "v", quantidade: "x", reservado: 0 }];
+    expect(saldoDaLoja(linhas, "a", "v")).toEqual({ fisico: 10, reservado: 2, disponivel: 8 });
+    expect(saldoDaLoja(linhas, "b", "v")).toBeNull();
+    expect(saldoDaLoja(linhas, "c", "v")).toBeNull();
   });
 });

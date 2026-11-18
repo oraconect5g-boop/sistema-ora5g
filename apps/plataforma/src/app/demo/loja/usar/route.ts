@@ -8,7 +8,7 @@ import { lojasPermitidas } from "../../../../demo/sessao";
 // O retorno só aceita caminhos da própria demonstração (nada de redirecionar para outro site).
 
 export function GET(requisicao: NextRequest) {
-  if (process.env.APP_ENV === "producao") return new NextResponse(null, { status: 404 });
+  if (process.env.ORA_DEMO_DESLIGADA === "1") return new NextResponse(null, { status: 404 });
   const pedida = requisicao.nextUrl.searchParams.get("l");
   const voltar = requisicao.nextUrl.searchParams.get("voltar") ?? "/demo";
   const destino = /^\/demo(\/[a-z0-9-]+)*$/.test(voltar) ? voltar : "/demo";

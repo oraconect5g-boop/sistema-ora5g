@@ -8,7 +8,7 @@ import { MoldeReal } from "../../componentes/MoldeReal";
 import { Aviso, Botao, Cartao, Selo, TituloPagina } from "../../componentes/ui";
 import { FalhaDoServico, obterSessao } from "../../lib/acesso/sessao";
 import { chaveDoCatalogo, textoDoParametro, type ValorDeParametro } from "../../lib/parametros";
-import { ERROS_DA_TRANSFERENCIA, nomeDaSituacao } from "../../lib/transferencias/regras";
+import { efeitoNoEstoque, ERROS_DA_TRANSFERENCIA, nomeDaSituacao, saldoDaLoja } from "../../lib/transferencias/regras";
 import { encerrarTransferencia, enviarRemessa, enviarTransferencia, receberTransferencia, separarTransferencia } from "./acoes";
 
 export const metadata: Metadata = { title: "Transferências entre lojas" };
@@ -44,13 +44,20 @@ export default async function Transferencias({ searchParams }: { searchParams: P
   const unidadeIds = [...new Set(lista.data.flatMap((t) => [t.origem_id, t.destino_id]))];
   // As remessas (TRF-a) das transferências da lista: o número e a origem, para agrupar e enviar de uma vez.
   const remessaIds = [...new Set(lista.data.flatMap((t) => (t.remessa_id ? [t.remessa_id] : [])))];
-  const [variantes, unidades, itensDasTransferencias, remessas] = await Promise.all([
+  // TRF-b: o saldo de agora de cada lado (o que a pessoa vê pela RLS), para mostrar o físico, o reservado e o disponível.
+  const [variantes, unidades, itensDasTransferencias, remessas, saldos] = await Promise.all([
     varianteIds.length ? supabase.from("variantes").select("id, nome, sku, produtos(tipo)").in("id", varianteIds) : Promise.resolve({ data: [], error: null }),
     unidadeIds.length ? supabase.from("unidades").select("id, nome, tipo").in("id", unidadeIds) : Promise.resolve({ data: [], error: null }),
     lista.data.length ? supabase.from("transferencia_itens").select("transferencia_id, item_serializado_id, recebido").in("transferencia_id", lista.data.map((t) => t.id)) : Promise.resolve({ data: [], error: null }),
     remessaIds.length ? supabase.from("transferencia_remessas").select("id, numero, origem_id").in("id", remessaIds) : Promise.resolve({ data: [], error: null }),
+    varianteIds.length ? supabase.from("estoque_saldos").select("unidade_id, variante_id, quantidade, reservado").in("unidade_id", unidadeIds).in("variante_id", varianteIds)
+      : Promise.resolve({ data: [], error: null }),
   ]);
-  if (variantes.error || unidades.error || itensDasTransferencias.error || remessas.error) throw new FalhaDoServico("transferencias_detalhes");
+  if (variantes.error || unidades.error || itensDasTransferencias.error || remessas.error || saldos.error) throw new FalhaDoServico("transferencias_detalhes");
+  const saldoAgora = (loja: string, varianteId: string) => {
+    const s = saldoDaLoja(saldos.data, loja, varianteId);
+    return s ? `físico ${s.fisico} · reservado ${s.reservado} · disponível ${s.disponivel}` : null;
+  };
   const remessa = (id: string | null) => (id ? remessas.data.find((r) => r.id === id) : undefined);
   // Remessas que saem desta loja com transferência já separada: a origem envia todas de uma vez.
   const remessasParaEnviar = remessas.data.filter((r) => r.origem_id === unidade)
@@ -97,6 +104,13 @@ export default async function Transferencias({ searchParams }: { searchParams: P
             </p>
             {t.quantidade_recebida !== null && t.quantidade_recebida < t.quantidade && <p className="mt-1 text-xs text-aviso">Recebidos {t.quantidade_recebida} de {t.quantidade}: {t.observacao}</p>}
             {itens.length > 0 && <p className="numeros mt-1 text-xs text-suave">{itens.length} IMEI/ICCID separado(s){itens.some((i) => i.recebido === false) ? " · algum não chegou" : ""}</p>}
+            {efeitoNoEstoque(t.situacao) && <p className="mt-1 text-xs">{efeitoNoEstoque(t.situacao)}</p>}
+            {(saldoAgora(t.origem_id, t.variante_id) || saldoAgora(t.destino_id, t.variante_id)) && (
+              <p className="numeros mt-1 text-xs text-suave">
+                {[saldoAgora(t.origem_id, t.variante_id) && `Agora na origem (${local(t.origem_id)?.nome ?? "origem"}): ${saldoAgora(t.origem_id, t.variante_id)}`,
+                  saldoAgora(t.destino_id, t.variante_id) && `no destino (${local(t.destino_id)?.nome ?? "destino"}): ${saldoAgora(t.destino_id, t.variante_id)}`].filter(Boolean).join(" · ")}
+              </p>
+            )}
 
             {t.situacao === "solicitada" && saindo && podeNaOrigem(t.origem_id) && (
               <form action={separarTransferencia} className="mt-3 space-y-2">

@@ -21,7 +21,8 @@ const AMBIENTES: Record<string, string> = { development: "desenvolvimento", homo
 
 export default function Inicio() {
   const ambiente = process.env.APP_ENV;
-  const demonstracao = ambiente !== "producao";
+  // A demonstração fica no ar em todo ambiente, isolada (DEMO-a, ADR-022); ORA_DEMO_DESLIGADA=1 a tira do ar.
+  const demonstracao = process.env.ORA_DEMO_DESLIGADA !== "1";
   return (
     <main className="relative min-h-dvh overflow-hidden bg-navegacao text-white">
       <div aria-hidden className="pointer-events-none absolute inset-0 bg-[radial-gradient(60rem_40rem_at_80%_-10%,rgba(19,217,199,0.18),transparent),radial-gradient(40rem_30rem_at_0%_110%,rgba(42,120,214,0.18),transparent)]" />
