@@ -1,0 +1,52 @@
+# ADR-023: O pedido do site com carrinho, reservado de uma vez para retirar e pagar na loja
+
+**Situação:** proposta (18/11/2026), reversível; aplicada no lote ONLINE-d. **Por:** Claude Code. **Revisor:** Codex. **Aceite:** proprietário.
+
+**Pedida por:**
+
+- os aceites A03 (o carrinho e o checkout) e A06 (o estoque compartilhado) do adendo do Codex de 16/11 (PR #100);
+- a orientação da auditoria do Codex de 17/11 (PR #104), "Loja online": o carrinho, o pedido persistente e a reserva que aguenta concorrência;
+- ORA-ONLINE-002 (não iniciado até aqui) e ORA-ONLINE-006 (parcial).
+
+Amplia a [ADR-009](ADR-009-loja-online.md) (reserve no site e pague na loja), sem o pagamento online.
+
+## Contexto
+
+1. Até aqui o visitante reservava **uma unidade** por vez (ONLINE-b): até 2 reservas ativas por WhatsApp, 20 por loja por hora, 24 horas, e a loja abria a venda no PDV com a unidade reservada.
+2. O pedido mais recente é a compra completa: carrinho, pedido persistente, pagamento verificado, retirada ou entrega e pós-venda. O pagamento online depende do provedor (E1; ORA-PAY-014, bloqueado). A entrega depende do frete (P10).
+3. O #87 mostrou o risco de dois escritores da mesma tabela com regras diferentes.
+
+## Decisões
+
+1. **O carrinho fica no aparelho do visitante.** É um cookie sem dado pessoal: o produto, a variação e a loja. Leva até 3 unidades de uma loja só. Nada vai ao banco até "Reservar o pedido".
+2. **O pedido reserva tudo de uma vez ou nada**, numa transação só. Cada unidade vira uma reserva do site ligada ao pedido, pela mesma regra da reserva avulsa. Se faltar uma unidade, nada fica preso (OR001).
+3. **Um escritor só.** A regra de reservar uma unidade passa para `privado.reservar_unidade_do_site`:
+   - o aparelho com IMEI escolhido pelo banco, sem esperar trava;
+   - o acessório pelo saldo;
+   - a reserva de estoque de origem "online".
+
+   A reserva avulsa e o pedido usam a mesma função. As travas seguem na mesma ordem: o WhatsApp, depois a loja (#102).
+4. **Os limites:**
+   - o WhatsApp tem até 2 compromissos ativos: cada pedido conta um, e cada reserva avulsa também;
+   - a loja aceita até 20 unidades reservadas por hora, e cada unidade do pedido conta.
+5. **Os estados do pedido:** reservado, depois atendido ou cancelado.
+   - **Atendido:** no balcão, **numa venda só, com todas as unidades**.
+   - **Vencido:** o reservado que passou de 24 horas aparece assim. A rotina que já existe libera o estoque (ADR-011).
+6. **A oferta anunciada vale.** Ao atender, o banco devolve o total anunciado no pedido e o de hoje. O total de hoje usa o preço do balcão de agora e, sem ele, o anunciado. Se o de hoje for maior, o PDV diz o desconto a dar na venda, como na reserva avulsa.
+7. **A reserva de um pedido não se atende nem se cancela sozinha.** A loja atende ou cancela o pedido inteiro, e o banco recusa a unidade solta.
+8. **O visitante acompanha o pedido** pelo código e pelo WhatsApp, sem conta. Sem o par certo, a consulta não diz nada e não dá erro de servidor.
+9. **O pagamento é na loja, ao retirar.** A tela diz isso. O pagamento online entra quando o provedor for escolhido (E1), sem mudar o pedido.
+
+## O que fica de fora
+
+1. O pagamento online e a confirmação pelo provedor (E1).
+2. A entrega, o frete e o rastreio (P10, ORA-ONLINE-004).
+3. A devolução e o arrependimento do pedido online (ORA-ONLINE-005, D-026).
+4. A conta do comprador: o pedido é acompanhado pelo código e pelo WhatsApp.
+5. A recuperação do carrinho (ORA-WHATS-008): o carrinho não guarda contato.
+
+## Consequências
+
+1. O cliente junta até 3 itens e reserva de uma vez; a loja atende num balcão só.
+2. As reservas do pedido contam nos painéis das reservas do site (uma por unidade), com a origem e a campanha do link (ADR-013).
+3. **Reverter:** primeiro volte a plataforma para a versão anterior ao lote ONLINE-d. Depois aplique a reversão da migration (`supabase/reversao/20261118031404_pedido_do_site.sql`): ela devolve as três funções da reserva como estavam e tira o pedido. As reservas que eram de um pedido ficam como reservas avulsas.
