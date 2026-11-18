@@ -95,7 +95,7 @@ Esta tabela é o resumo de tudo o que depende de fora (aceite A19 do adendo do C
 | Teste | Sandbox do PagBank; PicPay a confirmar no painel. Nenhuma cobrança real sem sua autorização |
 | Webhooks | Rota a criar: `https://<domínio>/api/webhooks/pagamentos/<provedor>`. Regras: conferir a origem (assinatura/segredo do provedor), gravar o aviso antes de processar, ignorar repetido, aceitar fora de ordem, **reconsultar o provedor** antes de marcar pago |
 | Idempotência e reconciliação | Um pedido de cobrança por pagamento, com chave própria; tempo esgotado com resultado desconhecido gera reconsulta, nunca nova cobrança. Pago só com confirmação do provedor, nunca pelo retorno do navegador. Conciliação com o extrato do provedor |
-| Situação | **A desenvolver:** contrato do adaptador, estados e testes com avisos simulados (sem credencial). **Aguardando:** sua escolha e as credenciais |
+| Situação | **Feito (ADAPT-a e PAY-b, 18/11):** a interface, o formato comum do aviso e da reconsulta e as regras, testadas com avisos fictícios: o aviso nunca confirma; só a reconsulta, com a cobrança, o valor, a moeda e a ordem; o estorno; o tempo esgotado sem cobrar duas vezes. **A desenvolver com o provedor escolhido:** o adaptador oficial, a rota do aviso, a tabela das cobranças com a fila e a conciliação com o extrato do provedor. **Aguardando:** sua escolha (E1) e as credenciais |
 | Pix na loja | Pix na maquininha e Pix direto na conta: registro do comprovante e conferência pelo extrato (manual). Automatizar o Pix direto exige a API Pix do banco (certificado próprio) ou um intermediário: decisão D-011, posterior |
 
 ### A4. Emissor fiscal por API
