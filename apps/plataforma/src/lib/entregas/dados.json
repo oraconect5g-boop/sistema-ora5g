@@ -549,6 +549,19 @@
         "ORA-PERF-001"
       ],
       "entrega": "os chips como a quinta medida das metas e do bônus (unidades), por vendedor e por loja, com o extrato e a planilha; o teto do valor aprovado no fechamento em R$ 500.000,00",
+      "commit": "bfb3125",
+      "publicado_em": "2026-11-18",
+      "pedido_em": null,
+      "resposta": null,
+      "respondido_em": null
+    },
+    {
+      "lote": "CD-a",
+      "roteiro": "docs/aceite/CD-a.md",
+      "requisitos": [
+        "ORA-INV-012"
+      ],
+      "entrega": "o depósito não vende (o padrão reversível da D-043): a venda e a reserva de venda recusadas no banco com OR043; a transferência que sai do depósito segue igual; a tela Lojas diz por que cada local não vende",
       "commit": null,
       "publicado_em": null,
       "pedido_em": null,

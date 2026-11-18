@@ -36,6 +36,14 @@
 
 **O risco que fica, para o proprietário e o Codex:** quem pede pela loja de destino (com `estoque.consultar`) agora prende o estoque da origem até a origem separar, recusar ou alguém cancelar. A origem vê o pedido na hora, com o reservado. Mudar quem pode pedir é mudança de permissão e fica para a sua decisão.
 
+## Atualização de 18/11/2026: o depósito não vende (lote CD-a; o padrão da D-043)
+
+O centro de distribuição é um local do tipo depósito: recebe a mercadoria e abastece as lojas pelo mesmo pedido de transferência. Até a resposta do proprietário à D-043, vale o padrão que ela propôs: **o depósito não vende**.
+
+- O banco recusa a venda e a reserva de venda (do PDV e do site) num depósito, com o código OR043. Os gatilhos ficam na tabela, como os do DEFEITOS, então nenhum caminho passa por fora.
+- A reserva do pedido de transferência continua: o depósito separa, envia e recebe como uma loja.
+- **Reversão:** se o depósito passar a vender, a reversão tira os gatilhos, e os painéis do estoque passam a contá-lo entre os locais que vendem, num lote próprio.
+
 ## Provas
 
 TRF-c (18/11): `transferencias.test.ts` (a reserva no pedido, a venda que não leva o reservado e o pedido que não leva o reservado da venda, o aparelho que troca a reserva pela do IMEI sem contar duas vezes, o cancelamento antes e depois da separação, o pedido antigo sem reserva), `transferencia-remessa.test.ts` (a remessa tudo ou nada) e `concorrencia.test.ts` (o pedido e a venda disputando a última capa, nas duas ordens; a mesma remessa duas vezes ao mesmo tempo). Antes: `packages/banco/src/transferencias.test.ts` (8): ciclo completo de acessório e de aparelho, cada passo repetido, divergência, cancelamento antes e depois do envio, recusa, permissão e leitura entre lojas e redes, DEFEITOS sem venda e regularização. `concorrencia.test.ts` (2, PostgreSQL 17 com duas conexões): separação × reserva de venda do mesmo aparelho (uma fica com ele, a outra recebe OR002) e o mesmo envio duas vezes (uma saída no livro).
@@ -50,3 +58,4 @@ TRF-c (18/11): `transferencias.test.ts` (a reserva no pedido, a venda que não l
 
 1. Quem autoriza tirar um item de DEFEITOS e voltar a vender? Hoje: quem tem `estoque.ajustar` (dono).
 2. Pedido entre lojas precisa de autorização de alguém além da loja de origem (por exemplo, do dono para valores altos)? Hoje: a origem separa e envia.
+3. O depósito vende direto ao cliente (D-043)? Hoje: não vende (o padrão do lote CD-a).

@@ -86,9 +86,9 @@ Os lotes que não dependem de ninguém, um por vez. Cada um tem teste, publicaç
 
 | Lote | O que fecha | Situação |
 |---|---|---|
-| PERF-a | Os chips como medida própria nas metas e no bônus (ORA-PERF-001). O seu pedido de 18/11: "o chip é vendido separado do celular. Eles têm que contar como separado" | **Feito** (roteiro `docs/aceite/PERF-a.md`) |
+| PERF-a | Os chips como medida própria nas metas e no bônus (ORA-PERF-001). O seu pedido de 18/11: "o chip é vendido separado do celular. Eles têm que contar como separado" | **No ar** desde 16:39 de 18/11 (roteiro `docs/aceite/PERF-a.md`) |
 | QUAL-001 | A nota do CI: as runs do GitHub na `main` terminam verdes desde 17/11 (ORA-QUAL-001) | **Feito** junto com o PERF-a, só a nota; a proteção da `main` continua sendo sua (pendência 5.5) |
-| B | O depósito não vende (D-043, ORA-INV-012), como padrão que se muda fácil | A fazer |
+| CD-a | O depósito não vende (D-043, ORA-INV-012), como padrão que se muda fácil: o banco recusa a venda e a reserva de venda no depósito (OR043); a transferência que sai dele segue igual | **Feito** (roteiro `docs/aceite/CD-a.md`); a decisão continua sua: se o depósito vender, diga |
 | D | Os erros do servidor (as respostas 5xx e as lentas) na tela Saúde da operação (ORA-QUAL-006 e ORA-QUAL-013) | A fazer |
 | E | As contas bancárias de cada empresa, com o saldo pelo extrato (ORA-FIN-006) | A fazer |
 | F | O repasse do marketplace casado com a linha do extrato do banco (ORA-MKTPL-005 e ORA-MKTPL-008) | A fazer |

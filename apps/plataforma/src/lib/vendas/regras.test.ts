@@ -45,6 +45,9 @@ describe("erros e busca", () => {
     expect(erroDaVenda({ code: "OR008" })).toBe("sem_caixa");
     expect(erroDaVenda({ code: "OR013" })).toBe("connect");
     expect(erroDaVenda({ code: "OR015" })).toBe("nota_emitida");
+    // D-043 (CD-a): o depósito não vende; a recusa do banco tem mensagem própria.
+    expect(erroDaVenda({ code: "OR043" })).toBe("deposito");
+    expect(ERROS_DA_VENDA.deposito).toContain("Trocar de loja");
     expect(erroDaVenda({ code: "toString" })).toBe("falha");
   });
   it("INV-006: IMEI/ICCID reservado, vendido ou de outra loja vira mensagem clara na tela, nunca falha genérica", () => {

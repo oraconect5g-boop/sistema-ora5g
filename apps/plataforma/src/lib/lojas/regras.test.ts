@@ -1,7 +1,7 @@
 import { describe, expect, it } from "vitest";
 
 import {
-  erroDeLojas, horaDeSaoPauloParaIso, isoParaHoraDeSaoPaulo, lacunasDaLoja, pendenciasDaMensagem, textoDoEndereco, textoDosHorarios, vendeNaLoja,
+  erroDeLojas, horaDeSaoPauloParaIso, isoParaHoraDeSaoPaulo, lacunasDaLoja, pendenciasDaMensagem, porQueNaoVende, textoDoEndereco, textoDosHorarios, vendeNaLoja,
   validarConfiguracao, validarEdicao, validarNovaLoja, formatarTelefone,
 } from "./regras";
 
@@ -154,5 +154,11 @@ describe("apresentação", () => {
     expect(vendeNaLoja({ tipo: "loja_fisica", cnpj: null })).toBe(false);
     expect(vendeNaLoja({ tipo: "loja_fisica", cnpj: "11222333000181" })).toBe(true);
     expect(vendeNaLoja({ tipo: "online", cnpj: null })).toBe(true);
+    // D-043 (CD-a): o depósito não vende, como o DEFEITOS; o selo diz por quê.
+    expect(vendeNaLoja({ tipo: "deposito", cnpj: null })).toBe(false);
+    expect(vendeNaLoja({ tipo: "excecao", cnpj: null })).toBe(false);
+    const locais: [string, string | null][] = [["loja_fisica", null], ["loja_fisica", "11222333000181"], ["deposito", null], ["excecao", null], ["online", null], ["assistencia", null]];
+    expect(locais.map(([tipo, cnpj]) => porQueNaoVende({ tipo, cnpj })))
+      .toEqual(["não vende: falta o CNPJ", null, "não vende: depósito", "não vende: local de exceção", null, null]);
   });
 });
