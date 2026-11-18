@@ -3,6 +3,7 @@ import type { Metadata } from "next";
 
 import { MoldeReal } from "../../componentes/MoldeReal";
 import { Aviso, Botao, Cartao, Selo, TituloPagina } from "../../componentes/ui";
+import { permite } from "../../lib/acesso/molde";
 import { FalhaDoServico, obterSessao } from "../../lib/acesso/sessao";
 import { centavosDoBanco } from "../../lib/dinheiro";
 import { brl } from "../../lib/formato";
@@ -24,9 +25,8 @@ export default async function Aprovacoes({ searchParams }: { searchParams: Promi
   const sessao = await obterSessao({ exigirLoja: true });
   const { supabase, usuario, situacao } = sessao;
   const unidade = situacao.unidade_id as string;
-  const pode = await supabase.rpc("tem_permissao", { p_permissao: "desconto.aprovar", p_unidade: unidade });
-  if (pode.error) throw new FalhaDoServico("tem_permissao");
-  const pedidos = pode.data
+  const pode = permite(sessao, "desconto.aprovar");
+  const pedidos = pode
     ? await supabase.from("aprovacoes_desconto").select("id, solicitado_por, preco_centavos, desconto_centavos, maximo_sem_aprovacao_centavos, abaixo_do_custo, motivo, expira_em, venda_id")
         .eq("unidade_id", unidade).eq("situacao", "pendente").order("solicitado_em")
     : { data: [], error: null };
@@ -36,7 +36,7 @@ export default async function Aprovacoes({ searchParams }: { searchParams: Promi
       <TituloPagina sobretitulo={situacao.unidade_nome} titulo="Aprovações de desconto" />
       {erro && <Aviso tom="perigo">{ERROS_DA_VENDA[erro]}</Aviso>}
       {ok && <Aviso tom={ok === "vencido" ? "aviso" : "sucesso"}>{OK[ok]}</Aviso>}
-      {!pode.data ? <Aviso tom="aviso">Só o gerente ou o dono da loja aprovam desconto.</Aviso> : (
+      {!pode ? <Aviso tom="aviso">Só o gerente ou o dono da loja aprovam desconto.</Aviso> : (
         <Cartao titulo={`${pedidos.data.length} pedido(s) pendente(s)`} icone={BadgePercent}>
           {pedidos.data.length === 0 ? <p className="text-sm text-suave">Nada esperando aprovação.</p> : (
             <ul className="divide-y divide-borda">

@@ -4,7 +4,8 @@ import Link from "next/link";
 
 import { MoldeReal } from "../../../componentes/MoldeReal";
 import { Aviso, Botao, Cartao, TituloPagina } from "../../../componentes/ui";
-import { FalhaDoServico, obterSessao } from "../../../lib/acesso/sessao";
+import { permite } from "../../../lib/acesso/molde";
+import { obterSessao } from "../../../lib/acesso/sessao";
 import { AVISOS_DA_LIMPEZA, lerFotosSemRegistro, tamanhoDosArquivos } from "../../../lib/catalogo/fotos-sem-registro";
 import { MAXIMO_DO_LOTE } from "../../../lib/catalogo/lote-de-fotos";
 import { chaveDoCatalogo, textoDoParametro, type ValorDeParametro } from "../../../lib/parametros";
@@ -21,11 +22,10 @@ export const dynamic = "force-dynamic";
 export default async function FotosEmLotePagina({ searchParams }: { searchParams?: Promise<{ limpeza?: ValorDeParametro; apagados?: ValorDeParametro; de?: ValorDeParametro }> }) {
   const parametros = (await searchParams) ?? {};
   const sessao = await obterSessao({ exigirLoja: true });
-  const { supabase, situacao } = sessao;
-  const pode = await supabase.rpc("tem_permissao", { p_permissao: "catalogo.fotos", p_unidade: situacao.unidade_id as string });
-  if (pode.error) throw new FalhaDoServico("tem_permissao");
+  const { supabase } = sessao;
+  const pode = permite(sessao, "catalogo.fotos");
   const voltar = <Link href="/catalogo" className="inline-flex min-h-10 items-center gap-1 text-sm font-semibold text-acao"><ArrowLeft aria-hidden className="size-4" /> Catálogo e fotos</Link>;
-  if (!pode.data) {
+  if (!pode) {
     return (
       <MoldeReal sessao={sessao}>
         {voltar}

@@ -9,6 +9,7 @@ import { MoldeReal } from "../../../componentes/MoldeReal";
 import { Aviso, Botao, Cartao, Selo, TituloPagina, classeBotao } from "../../../componentes/ui";
 import { ehUuid } from "../../../lib/acesso/regras";
 import { lerContasDasEntradas, type ContaDaEntrada } from "../../../lib/contas-a-pagar/entradas";
+import { permite } from "../../../lib/acesso/molde";
 import { FalhaDoServico, obterSessao } from "../../../lib/acesso/sessao";
 import { CONDICOES, ERROS_DA_ENTRADA, TIPOS_DE_ENTRADA, detalheDoEndereco, type ErroDaEntrada } from "../../../lib/estoque/entrada";
 import {
@@ -323,9 +324,8 @@ export default async function EntradaDeMercadoria({ searchParams }: { searchPara
   const { supabase, situacao } = sessao;
   const unidade = situacao.unidade_id as string;
 
-  const permitido = await supabase.rpc("tem_permissao", { p_permissao: "estoque.receber", p_unidade: unidade });
-  if (permitido.error) throw new FalhaDoServico("tem_permissao");
-  if (!permitido.data) {
+  const permitido = permite(sessao, "estoque.receber");
+  if (!permitido) {
     return (
       <MoldeReal sessao={sessao}>
         <Aviso tom="aviso" className="mt-6">Receber mercadoria é da gerência da loja (dono e gerente). O banco também recusa, mesmo que alguém digite o endereço.</Aviso>
@@ -362,9 +362,9 @@ export default async function EntradaDeMercadoria({ searchParams }: { searchPara
   }
 
   // FIN-004a: a conta a pagar de cada compra mostrada, para quem gere as contas desta loja (à parte: sem a ligação no banco, some).
-  const geraContas = await supabase.rpc("tem_permissao", { p_permissao: "conta_pagar.gerir", p_unidade: unidade });
+  const geraContas = permite(sessao, "conta_pagar.gerir");
   const compras = [...(h?.entradas ?? []), ...(aberta ? [aberta] : [])].filter((e) => e.tipo === "compra").map((e) => e.id);
-  const lidas = geraContas.data === true && compras.length > 0 ? await lerContasDasEntradas(supabase, compras) : null;
+  const lidas = geraContas && compras.length > 0 ? await lerContasDasEntradas(supabase, compras) : null;
   const contas: ContasDasEntradas = lidas === null ? null : lidas.estado !== "ok" ? "falha"
     : { porEntrada: lidas.dados, lancar: (entrada) => `/contas-a-pagar?${new URLSearchParams({ loja: unidade, entrada })}#lancar` };
 

@@ -6,6 +6,7 @@ import { notFound } from "next/navigation";
 import { MoldeReal } from "../../../../componentes/MoldeReal";
 import { Aviso, TituloPagina } from "../../../../componentes/ui";
 import { ehUuid } from "../../../../lib/acesso/regras";
+import { permite } from "../../../../lib/acesso/molde";
 import { FalhaDoServico, obterSessao } from "../../../../lib/acesso/sessao";
 import { RelatorioDoTitular } from "./RelatorioDoTitular";
 
@@ -18,11 +19,10 @@ export default async function DadosDoTitular({ params }: { params: Promise<{ id:
   const { id } = await params;
   if (!ehUuid(id)) notFound();
   const sessao = await obterSessao({ exigirLoja: true });
-  const { supabase, situacao } = sessao;
-  const exporta = await supabase.rpc("tem_permissao", { p_permissao: "cliente.exportar", p_unidade: situacao.unidade_id as string });
-  if (exporta.error) throw new FalhaDoServico("tem_permissao");
+  const { supabase } = sessao;
+  const exporta = permite(sessao, "cliente.exportar");
   const voltar = <Link href={`/clientes/${id}`} className="inline-flex min-h-10 items-center gap-1 text-sm font-semibold text-acao"><ArrowLeft aria-hidden className="size-4" /> Ficha do cliente</Link>;
-  if (!exporta.data) return <MoldeReal sessao={sessao}>{voltar}<Aviso tom="aviso" className="mt-6">Só o dono gera o relatório dos dados do titular.</Aviso></MoldeReal>;
+  if (!exporta) return <MoldeReal sessao={sessao}>{voltar}<Aviso tom="aviso" className="mt-6">Só o dono gera o relatório dos dados do titular.</Aviso></MoldeReal>;
   const ficha = await supabase.rpc("cliente_ficha", { p_cliente: id });
   if (ficha.error?.code === "P0002") notFound();
   if (ficha.error) throw new FalhaDoServico("cliente_ficha");

@@ -6,6 +6,7 @@ import { chaveEmGrupos, MODELOS_DE_NOTA, SITUACOES_DA_NOTA, tempoNaFila, type Si
 
 import { MoldeReal } from "../../componentes/MoldeReal";
 import { Aviso, Botao, BotaoLink, Cartao, Selo, TituloPagina } from "../../componentes/ui";
+import { permite } from "../../lib/acesso/molde";
 import { FalhaDoServico, obterSessao } from "../../lib/acesso/sessao";
 import { centavosDoBanco } from "../../lib/dinheiro";
 import { brl } from "../../lib/formato";
@@ -35,17 +36,17 @@ export default async function Notas({ searchParams }: { searchParams: Promise<{ 
   const sessao = await obterSessao({ exigirLoja: true });
   const { supabase, situacao } = sessao;
   const unidade = situacao.unidade_id as string;
-  const [aprova, gereLojas, politica, abertos, emitidos] = await Promise.all([
-    supabase.rpc("tem_permissao", { p_permissao: "nota.aprovar", p_unidade: unidade }),
-    supabase.rpc("tem_permissao", { p_permissao: "unidades.gerir", p_unidade: unidade }),
+  const aprova = permite(sessao, "nota.aprovar");
+  const gereLojas = permite(sessao, "unidades.gerir");
+  const [politica, abertos, emitidos] = await Promise.all([
     supabase.from("fiscal_politicas").select("alerta_minutos, fonte").maybeSingle(),
     supabase.from("notas_pedidos").select("id, numero, venda_id, tipo, situacao, venda_concluida_em, destinatario_nome, destinatario_mascarado, observacao")
       .eq("unidade_id", unidade).in("situacao", ["aguardando_aprovacao", "correcao_solicitada", "aprovada"]).order("venda_concluida_em").limit(50),
     supabase.from("notas_pedidos").select("id, numero, venda_id, chave_acesso, modelo, serie, numero_documento, emitida_em")
       .eq("unidade_id", unidade).eq("situacao", "emitida").order("emitida_em", { ascending: false }).limit(20),
   ]);
-  if (aprova.error || gereLojas.error || politica.error || abertos.error || emitidos.error) throw new FalhaDoServico("notas");
-  if (!aprova.data) {
+  if (politica.error || abertos.error || emitidos.error) throw new FalhaDoServico("notas");
+  if (!aprova) {
     return <MoldeReal sessao={sessao}><Aviso tom="aviso" className="mt-6">A fila de notas é do dono e do gerente da loja.</Aviso></MoldeReal>;
   }
   const vendas = abertos.data.length
@@ -126,7 +127,7 @@ export default async function Notas({ searchParams }: { searchParams: Promise<{ 
         )}
       </Cartao>
 
-      {gereLojas.data && (
+      {gereLojas && (
         <Cartao titulo="Prazo de alerta da fila" subtitulo="Use o prazo que o contador orientar; a fonte fica na auditoria" icone={AlarmClock}>
           <form action={definirPrazo} className="grid gap-2 sm:grid-cols-3">
             <label className="text-sm font-medium">Minutos desde a venda (vazio = sem alerta)<input name="alerta_minutos" inputMode="numeric" defaultValue={alerta ?? ""} className={campo} /></label>

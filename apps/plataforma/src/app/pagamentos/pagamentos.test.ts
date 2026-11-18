@@ -26,6 +26,8 @@ class Consulta {
   then(resolver: (r: { data: Record<string, unknown>[]; error: null }) => unknown) { return Promise.resolve({ data: this.linhas, error: null }).then(resolver); }
 }
 const sessaoFicticia = {
+  // VEL-b: as permissões vêm no molde da sessão, pela mesma regra do rpc simulado.
+  get molde() { return { permissoes: { has: (p: string) => Boolean(cenario.permissoes.has(p)) }, nome: null, vinculos: [], pendencias: { aprovacoes: 0, notas: 0 } }; },
   usuario: { id: "eu" },
   situacao: { usuario_ativo: true, sessao_no_turno: true, unidade_id: LOJA, unidade_nome: "Santa Cândida (teste)", turno_termina_em: "2026-11-11T23:00:00Z" },
   supabase: {

@@ -39,7 +39,7 @@ const supabase = {
 };
 vi.mock("../../lib/acesso/sessao", () => ({
   FalhaDoServico: class FalhaDoServico extends Error {},
-  obterSessao: async () => ({ usuario: { id: "u1" }, situacao: { usuario_ativo: true, sessao_no_turno: true, unidade_id: LOJA, unidade_nome: "Santa Cândida (teste)" }, supabase }),
+  obterSessao: async () => ({ molde: { permissoes: { has: () => Boolean(cenario.vende) }, nome: null, vinculos: [], pendencias: { aprovacoes: 0, notas: 0 } }, usuario: { id: "u1" }, situacao: { usuario_ativo: true, sessao_no_turno: true, unidade_id: LOJA, unidade_nome: "Santa Cândida (teste)" }, supabase }),
 }));
 
 import { atenderPedido, atenderReserva, cancelarPedido, cancelarReserva, revelarContato } from "./acoes";
@@ -99,8 +99,9 @@ afterEach(() => vi.useRealTimers());
 describe("a tela Reservas do site (ONLINE-b)", () => {
   it("lê as reservas da loja do turno nos últimos 3 dias; as ativas no prazo vêm com atender, cancelar e ver o WhatsApp", async () => {
     const arvore = await tela();
-    // Antes de ler, as vencidas desta loja saem de vez do estoque reservado.
-    expect(cenario.chamadas.map((c) => c.nome)).toEqual(["tem_permissao", "loja_reservas_liberar_vencidas"]);
+    // Antes de ler, as vencidas desta loja saem de vez do estoque reservado. A permissão veio no molde da sessão (VEL-b):
+    // nenhuma pergunta a mais ao banco.
+    expect(cenario.chamadas.map((c) => c.nome)).toEqual(["loja_reservas_liberar_vencidas"]);
     const consulta = cenario.consultas.find((c) => c.tabela === "loja_reservas");
     expect(consulta?.filtros).toEqual(expect.arrayContaining([["eq", "unidade_id", LOJA], ["gte", "criada_em", "2026-11-12T15:00:00.000Z"], ["limit", 100]]));
     const t = texto(arvore);

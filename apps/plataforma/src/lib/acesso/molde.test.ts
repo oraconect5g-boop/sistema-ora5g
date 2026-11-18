@@ -37,7 +37,8 @@ describe("as permissões pedidas ao banco numa ida só", () => {
   });
 
   it("cabem com folga no limite de 80 por chamada que o banco impõe", () => {
-    expect(PERMISSOES_DA_LOJA_NO_MOLDE.length + PERMISSOES_DA_REDE_NO_MOLDE.length).toBeLessThanOrEqual(40);
+    // 45 desde o VEL-b (18/11): as que as telas perguntavam uma a uma vieram para o molde.
+    expect(PERMISSOES_DA_LOJA_NO_MOLDE.length + PERMISSOES_DA_REDE_NO_MOLDE.length).toBeLessThanOrEqual(60);
   });
 });
 

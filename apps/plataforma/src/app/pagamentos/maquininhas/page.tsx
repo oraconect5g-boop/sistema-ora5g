@@ -3,6 +3,7 @@ import type { Metadata } from "next";
 
 import { MoldeReal } from "../../../componentes/MoldeReal";
 import { Aviso, Botao, Cartao, Selo, TituloPagina } from "../../../componentes/ui";
+import { permite } from "../../../lib/acesso/molde";
 import { FalhaDoServico, obterSessao } from "../../../lib/acesso/sessao";
 import { ERROS_DOS_PAGAMENTOS, PROVEDORES } from "../../../lib/pagamentos/regras";
 import { chaveDoCatalogo, type ValorDeParametro } from "../../../lib/parametros";
@@ -23,9 +24,8 @@ export default async function Maquininhas({ searchParams }: { searchParams: Prom
   const sessao = await obterSessao({ exigirLoja: true });
   const { supabase, situacao } = sessao;
   const unidade = situacao.unidade_id as string;
-  const pode = await supabase.rpc("tem_permissao", { p_permissao: "terminal.gerir", p_unidade: unidade });
-  if (pode.error) throw new FalhaDoServico("tem_permissao");
-  if (!pode.data) return <MoldeReal sessao={sessao}><Aviso tom="aviso" className="mt-6">Cadastrar maquininhas é da gerência da loja.</Aviso></MoldeReal>;
+  const pode = permite(sessao, "terminal.gerir");
+  if (!pode) return <MoldeReal sessao={sessao}><Aviso tom="aviso" className="mt-6">Cadastrar maquininhas é da gerência da loja.</Aviso></MoldeReal>;
   const lista = await supabase.from("terminais").select("id, provedor, identificador, apelido, ativo, criado_em").eq("unidade_id", unidade).order("ativo", { ascending: false }).order("apelido");
   if (lista.error) throw new FalhaDoServico("terminais");
 

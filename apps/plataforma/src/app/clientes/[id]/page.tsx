@@ -10,6 +10,7 @@ import { NOMES_DAS_OPERACOES, SITUACOES_OPERACAO, ehTipoOperacao, type SituacaoO
 import { MoldeReal } from "../../../componentes/MoldeReal";
 import { Aviso, Botao, BotaoLink, Cartao, ListaDados, Selo, TituloPagina } from "../../../componentes/ui";
 import { ehUuid } from "../../../lib/acesso/regras";
+import { permite } from "../../../lib/acesso/molde";
 import { FalhaDoServico, obterSessao } from "../../../lib/acesso/sessao";
 import { SERVICOS, SITUACOES as SITUACOES_DA_OS, ehServico } from "../../../lib/assistencia/regras";
 import { lerHistoricoDoCliente, type Bloco } from "../../../lib/clientes/historico";
@@ -58,18 +59,14 @@ export default async function FichaDoCliente({ params, searchParams }: { params:
   const ok = chaveDoCatalogo(OK, parametros.ok);
   const erro = chaveDoCatalogo(ERROS_DO_CLIENTE, parametros.erro);
   const sessao = await obterSessao({ exigirLoja: true });
-  const { supabase, situacao } = sessao;
-  const unidade = situacao.unidade_id as string;
-  const [busca, cadastro, auditoria, abreOs, exporta] = await Promise.all([
-    supabase.rpc("tem_permissao", { p_permissao: "cliente.buscar", p_unidade: unidade }),
-    supabase.rpc("tem_permissao", { p_permissao: "cliente.cadastrar", p_unidade: unidade }),
-    supabase.rpc("tem_permissao", { p_permissao: "auditoria.ver", p_unidade: unidade }),
-    supabase.rpc("tem_permissao", { p_permissao: "os.abrir", p_unidade: unidade }),
-    // QUAL-011a: o relatório dos dados do titular é do dono (cliente.exportar).
-    supabase.rpc("tem_permissao", { p_permissao: "cliente.exportar", p_unidade: unidade }),
-  ]);
-  if (busca.error || cadastro.error || auditoria.error) throw new FalhaDoServico("tem_permissao");
-  if (!busca.data) return <MoldeReal sessao={sessao}><Aviso tom="aviso" className="mt-6">Seu papel não consulta clientes.</Aviso></MoldeReal>;
+  const { supabase } = sessao;
+  const busca = permite(sessao, "cliente.buscar");
+  const cadastro = permite(sessao, "cliente.cadastrar");
+  const auditoria = permite(sessao, "auditoria.ver");
+  const abreOs = permite(sessao, "os.abrir");
+  // QUAL-011a: o relatório dos dados do titular é do dono (cliente.exportar).
+  const exporta = permite(sessao, "cliente.exportar");
+  if (!busca) return <MoldeReal sessao={sessao}><Aviso tom="aviso" className="mt-6">Seu papel não consulta clientes.</Aviso></MoldeReal>;
 
   const ficha = await supabase.rpc("cliente_ficha", { p_cliente: id });
   if (ficha.error?.code === "P0002") notFound();
@@ -77,7 +74,7 @@ export default async function FichaDoCliente({ params, searchParams }: { params:
   const f = ficha.data as unknown as Ficha;
   const [compras, acessos] = await Promise.all([
     supabase.from("vendas").select("id, numero, concluida_em, total_centavos, situacao, canal").eq("cliente_id", id).order("concluida_em", { ascending: false }).limit(20),
-    auditoria.data
+    auditoria
       ? supabase.from("auditoria").select("id, ocorrido_em, acao, usuario_id, depois").eq("alvo_tipo", "cliente").eq("alvo_id", id).order("ocorrido_em", { ascending: false }).limit(20)
       : Promise.resolve(null),
   ]);
@@ -95,7 +92,7 @@ export default async function FichaDoCliente({ params, searchParams }: { params:
   return (
     <MoldeReal sessao={sessao}>
       <Link href="/clientes" className="inline-flex min-h-10 items-center gap-1 text-sm font-semibold text-acao"><ArrowLeft aria-hidden className="size-4" /> Clientes</Link>
-      <TituloPagina titulo={f.nome} acao={abreOs.data && f.situacao === "ativo" && !f.mesclado_em
+      <TituloPagina titulo={f.nome} acao={abreOs && f.situacao === "ativo" && !f.mesclado_em
         ? <BotaoLink href={`/assistencia/nova?cliente=${f.id}`} variante="secundario"><Wrench aria-hidden className="size-4" /> Abrir ordem de serviço</BotaoLink> : undefined}
         subtitulo={<span className="flex flex-wrap items-center gap-2">
         <span className="numeros">nº {f.numero}</span> · {f.tipo === "pessoa_juridica" ? "empresa" : "pessoa física"} · cliente desde {quando(f.criado_em)}{f.loja_de_origem ? ` (${f.loja_de_origem})` : ""}
@@ -120,7 +117,7 @@ export default async function FichaDoCliente({ params, searchParams }: { params:
             ...(f.endereco_informado ? [[CAMPOS_REVELAVEIS.endereco, <Revelar key="en" cliente={f.id} campo="endereco" mascara="informado" />] as const] : []),
           ]} />
           <p className="mt-3 text-xs text-suave">Usado para: compra, garantia e histórico{f.finalidades.filter(ehFinalidade).map((x) => `; ${FINALIDADES[x].nome.toLowerCase()}`).join("")}.</p>
-          {exporta.data === true && !f.mesclado_em && (
+          {exporta && !f.mesclado_em && (
             <p className="mt-2 text-xs"><Link href={`/clientes/${f.id}/titular`} className="font-semibold text-acao">Relatório dos dados do titular (LGPD)</Link>: para responder quando o cliente pede os dados dele.</p>
           )}
         </Cartao>
@@ -139,7 +136,7 @@ export default async function FichaDoCliente({ params, searchParams }: { params:
         </Cartao>
       </div>
 
-      <HistoricoDaFicha historico={historico} podeAbrirOs={Boolean(abreOs.data) && ativo && !f.mesclado_em} cliente={f.id} />
+      <HistoricoDaFicha historico={historico} podeAbrirOs={Boolean(abreOs) && ativo && !f.mesclado_em} cliente={f.id} />
 
       <Cartao className="mt-4" titulo="Contato e consentimento" subtitulo="Ofertas e pós-venda só com consentimento; retirar vale na hora para as mensagens automáticas. Avisos do próprio serviço (nota, assistência) não dependem disto." icone={MessageSquareHeart}>
         <ul className="divide-y divide-borda text-sm">
@@ -151,7 +148,7 @@ export default async function FichaDoCliente({ params, searchParams }: { params:
           ))}
           {f.consentimentos.length === 0 && <li className="py-2 text-suave">Nenhum consentimento registrado: o cliente não recebe ofertas nem pós-venda.</li>}
         </ul>
-        {cadastro.data && ativo && (
+        {cadastro && ativo && (
           <form action={registrarConsentimento} className="mt-3 grid gap-2 sm:grid-cols-5">
             <input type="hidden" name="cliente" value={f.id} />
             <label className="text-xs font-medium">Canal<select name="canal" className={campo}>{Object.entries(CANAIS).map(([k, v]) => <option key={k} value={k}>{v}</option>)}</select></label>
@@ -163,7 +160,7 @@ export default async function FichaDoCliente({ params, searchParams }: { params:
         )}
       </Cartao>
 
-      {cadastro.data && ativo && (
+      {cadastro && ativo && (
         <details className="mt-4 rounded-xl border border-borda bg-white px-3 py-2">
           <summary className="flex min-h-10 cursor-pointer items-center gap-2 text-sm font-semibold text-acao"><PencilLine aria-hidden className="size-4" /> Corrigir cadastro</summary>
           <div className="mt-2">

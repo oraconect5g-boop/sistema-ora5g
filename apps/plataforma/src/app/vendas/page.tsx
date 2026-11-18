@@ -4,6 +4,7 @@ import Link from "next/link";
 
 import { MoldeReal } from "../../componentes/MoldeReal";
 import { Aviso, BotaoLink, Cartao, EstadoVazio, FiltroSegmentado, FormBusca, Indicador, Selo, TituloPagina } from "../../componentes/ui";
+import { permite } from "../../lib/acesso/molde";
 import { FalhaDoServico, obterSessao } from "../../lib/acesso/sessao";
 import { centavosDoBanco } from "../../lib/dinheiro";
 import { brl, numero } from "../../lib/formato";
@@ -29,15 +30,14 @@ export default async function Vendas({ searchParams }: { searchParams: Promise<{
   const { supabase, usuario, situacao } = sessao;
   const unidade = situacao.unidade_id as string;
 
-  const daLoja = await supabase.rpc("tem_permissao", { p_permissao: "venda.ver_unidade", p_unidade: unidade });
-  if (daLoja.error) throw new FalhaDoServico("vendas_permissao");
+  const daLoja = permite(sessao, "venda.ver_unidade");
   const desde = inicioDoPeriodo(periodo);
   // Venda do período: concluída no período ou, sem conclusão, criada nele.
   const doPeriodo = `concluida_em.gte.${desde},and(concluida_em.is.null,criado_em.gte.${desde})`;
   const base = () => {
     const consulta = supabase.from("vendas").select("id, numero, situacao, vendedor_id, total_centavos, devolvido_centavos, criado_em, concluida_em, cliente_nome")
       .eq("unidade_id", unidade).or(doPeriodo);
-    return daLoja.data ? consulta : consulta.eq("vendedor_id", usuario.id);
+    return daLoja ? consulta : consulta.eq("vendedor_id", usuario.id);
   };
   const situacoes = FILTROS_DA_LISTA[filtro].situacoes;
   const filtrada = situacoes ? base().in("situacao", [...situacoes]) : base();
@@ -74,8 +74,8 @@ export default async function Vendas({ searchParams }: { searchParams: Promise<{
     <MoldeReal sessao={sessao} largura="max-w-5xl">
       <TituloPagina
         sobretitulo={situacao.unidade_nome}
-        titulo={daLoja.data ? "Vendas da loja" : "Minhas vendas"}
-        subtitulo={daLoja.data ? "Todos os vendedores desta loja. Abra a venda para ver o comprovante, pedir nota, devolver ou trocar." : "Só as suas vendas nesta loja. Abra a venda para ver o comprovante, pedir nota ou acompanhar a devolução."}
+        titulo={daLoja ? "Vendas da loja" : "Minhas vendas"}
+        subtitulo={daLoja ? "Todos os vendedores desta loja. Abra a venda para ver o comprovante, pedir nota, devolver ou trocar." : "Só as suas vendas nesta loja. Abra a venda para ver o comprovante, pedir nota ou acompanhar a devolução."}
         acao={<BotaoLink href="/vender" tamanho="sm">Nova venda</BotaoLink>}
       />
       <Pendencias sessao={sessao} unidade={unidade} />
@@ -106,7 +106,7 @@ export default async function Vendas({ searchParams }: { searchParams: Promise<{
                   <Link href={`/vendas/${v.id}`} className="grid grid-cols-[minmax(0,1fr)_auto] items-center gap-x-4 gap-y-1 px-4 py-3 hover:bg-slate-50/80 sm:px-5">
                     <span className="min-w-0 text-sm">
                       <span className="numeros font-semibold">Nº {v.numero}</span>
-                      <span className="block truncate text-xs text-suave">{quando(v.concluida_em ?? v.criado_em)}{daLoja.data ? ` · ${vendedorDa(v.vendedor_id)}` : ""}{v.cliente_nome ? ` · ${v.cliente_nome}` : ""}</span>
+                      <span className="block truncate text-xs text-suave">{quando(v.concluida_em ?? v.criado_em)}{daLoja ? ` · ${vendedorDa(v.vendedor_id)}` : ""}{v.cliente_nome ? ` · ${v.cliente_nome}` : ""}</span>
                     </span>
                     <span className="numeros text-right text-sm font-semibold">{v.total_centavos === null ? "—" : brl(centavosDoBanco(v.total_centavos))}</span>
                     <span className="col-span-2 flex flex-wrap gap-1">

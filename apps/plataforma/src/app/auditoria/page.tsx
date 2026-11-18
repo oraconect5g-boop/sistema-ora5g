@@ -4,6 +4,7 @@ import type { Metadata } from "next";
 import { BaixarPlanilha } from "../../componentes/BaixarPlanilha";
 import { MoldeReal } from "../../componentes/MoldeReal";
 import { Aviso, Cartao, EstadoVazio, FiltroSegmentado, Selo, TituloPagina } from "../../componentes/ui";
+import { permite } from "../../lib/acesso/molde";
 import { FalhaDoServico, obterSessao } from "../../lib/acesso/sessao";
 import { acaoDeAlerta, nomeDaAcao, PERIODOS_DA_AUDITORIA } from "../../lib/auditoria/regras";
 import { inicioDoPeriodo } from "../../lib/vendas/lista";
@@ -25,9 +26,8 @@ export default async function Auditoria({ searchParams }: { searchParams: Promis
   const { supabase, situacao } = sessao;
   const unidade = situacao.unidade_id as string;
 
-  const pode = await supabase.rpc("tem_permissao", { p_permissao: "auditoria.ver", p_unidade: unidade });
-  if (pode.error) throw new FalhaDoServico("auditoria_permissao");
-  if (!pode.data) {
+  const pode = permite(sessao, "auditoria.ver");
+  if (!pode) {
     return (
       <MoldeReal sessao={sessao}>
         <TituloPagina titulo="Auditoria" />

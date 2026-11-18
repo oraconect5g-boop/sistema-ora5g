@@ -25,7 +25,7 @@ const supabase = {
 };
 vi.mock("../../../../lib/acesso/sessao", () => ({
   FalhaDoServico: class FalhaDoServico extends Error {},
-  obterSessao: async () => ({ usuario: { id: "u1" }, situacao: { usuario_ativo: true, sessao_no_turno: true, unidade_id: "loja-1", unidade_nome: "Santa Cândida (teste)" }, supabase }),
+  obterSessao: async () => ({ molde: { permissoes: { has: (p: string) => Boolean(p === "cliente.exportar" ? cenario.exporta : true) }, nome: null, vinculos: [], pendencias: { aprovacoes: 0, notas: 0 } }, usuario: { id: "u1" }, situacao: { usuario_ativo: true, sessao_no_turno: true, unidade_id: "loja-1", unidade_nome: "Santa Cândida (teste)" }, supabase }),
 }));
 
 import type { RelatorioDoTitular } from "../../../../lib/clientes/titular";
@@ -87,12 +87,12 @@ describe("a tela do relatório do titular (QUAL-011a)", () => {
     let t = texto(await tela());
     expect(t).toContain("Dados do titular");
     expect(t).toContain("Maria Titular · nº 42");
-    // Quem não é dono vê o aviso, e a tela nem lê o cliente.
+    // Quem não é dono vê o aviso, e a tela nem lê o cliente (a permissão veio no molde da sessão: VEL-b).
     cenario.exporta = false;
     cenario.chamadas = [];
     t = texto(await tela());
     expect(t).toContain("Só o dono gera o relatório dos dados do titular.");
-    expect(cenario.chamadas.map((c) => c.nome)).toEqual(["tem_permissao"]);
+    expect(cenario.chamadas.map((c) => c.nome)).toEqual([]);
     cenario.exporta = true;
     cenario.ficha = { data: { id: CLIENTE, numero: 42, nome: "Maria Titular", mesclado_em: { id: OUTRO, nome: "Maria", numero: 41 } }, error: null };
     expect(texto(await tela())).toContain("Este cadastro foi mesclado em outro: gere o relatório do cliente que ficou");

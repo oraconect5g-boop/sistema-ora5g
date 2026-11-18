@@ -8,6 +8,7 @@ import Link from "next/link";
 import { MoldeReal } from "../../componentes/MoldeReal";
 import { Aviso, Botao, Cartao, FiltroSegmentado, Selo, TituloPagina } from "../../componentes/ui";
 import { ehUuid } from "../../lib/acesso/regras";
+import { permite } from "../../lib/acesso/molde";
 import { FalhaDoServico, obterSessao } from "../../lib/acesso/sessao";
 import { SERVICOS, SITUACOES as SITUACOES_DA_OS, ehServico } from "../../lib/assistencia/regras";
 import { tabelaAusente } from "../../lib/caixa/saidas";
@@ -53,13 +54,10 @@ export default async function Estoque({ searchParams }: { searchParams: Promise<
   const { supabase, situacao } = sessao;
   const unidade = situacao.unidade_id as string;
 
-  const [consulta, confere, recebe] = await Promise.all([
-    supabase.rpc("tem_permissao", { p_permissao: "estoque.consultar", p_unidade: unidade }),
-    supabase.rpc("tem_permissao", { p_permissao: "estoque.conferir", p_unidade: unidade }),
-    supabase.rpc("tem_permissao", { p_permissao: "estoque.receber", p_unidade: unidade }),
-  ]);
-  if (consulta.error || confere.error || recebe.error) throw new FalhaDoServico("estoque");
-  if (!consulta.data) {
+  const consulta = permite(sessao, "estoque.consultar");
+  const confere = permite(sessao, "estoque.conferir");
+  const recebe = permite(sessao, "estoque.receber");
+  if (!consulta) {
     return <MoldeReal sessao={sessao}><Aviso tom="aviso" className="mt-6">Seu papel não consulta estoque nesta loja.</Aviso></MoldeReal>;
   }
 
@@ -68,9 +66,9 @@ export default async function Estoque({ searchParams }: { searchParams: Promise<
       <Link href="/estoque" aria-current={!conferencia && !painel ? "page" : undefined} className={`rounded-botao px-3 py-2 font-semibold ${!conferencia && !painel ? "bg-acao text-white" : "bg-white text-acao ring-1 ring-borda"}`}>Saldo e busca</Link>
       <Link href="/estoque?aba=painel" aria-current={painel ? "page" : undefined} className={`rounded-botao px-3 py-2 font-semibold ${painel ? "bg-acao text-white" : "bg-white text-acao ring-1 ring-borda"}`}>Painel</Link>
       <Link href="/estoque?aba=conferencia" aria-current={conferencia ? "page" : undefined} className={`rounded-botao px-3 py-2 font-semibold ${conferencia ? "bg-acao text-white" : "bg-white text-acao ring-1 ring-borda"}`}>Conferência do dia</Link>
-      {recebe.data && <Link href="/estoque/entrada" className="rounded-botao bg-white px-3 py-2 font-semibold text-acao ring-1 ring-borda">Entrada de mercadoria</Link>}
-      {recebe.data && <Link href="/estoque/pedidos" className="rounded-botao bg-white px-3 py-2 font-semibold text-acao ring-1 ring-borda">Pedidos de compra</Link>}
-      {confere.data && <Link href="/estoque/inventario" className="rounded-botao bg-white px-3 py-2 font-semibold text-acao ring-1 ring-borda">Inventário</Link>}
+      {recebe && <Link href="/estoque/entrada" className="rounded-botao bg-white px-3 py-2 font-semibold text-acao ring-1 ring-borda">Entrada de mercadoria</Link>}
+      {recebe && <Link href="/estoque/pedidos" className="rounded-botao bg-white px-3 py-2 font-semibold text-acao ring-1 ring-borda">Pedidos de compra</Link>}
+      {confere && <Link href="/estoque/inventario" className="rounded-botao bg-white px-3 py-2 font-semibold text-acao ring-1 ring-borda">Inventário</Link>}
     </nav>
   );
 
@@ -146,7 +144,7 @@ export default async function Estoque({ searchParams }: { searchParams: Promise<
               <div className="h-full bg-acao" style={{ width: `${numeros.total ? Math.floor((numeros.conferidos / numeros.total) * 100) : 0}%` }} />
             </div>
           )}
-          {confere.data ? (
+          {confere ? (
             <form action={conferirPorIdentificador} className="mt-3 flex flex-wrap items-end gap-2">
               <label className="min-w-0 flex-1 text-sm font-medium">IMEI ou ICCID do item na mão<input name="identificador" inputMode="numeric" autoComplete="off" required className={campo} /></label>
               <Botao type="submit">Conferir</Botao>
@@ -164,7 +162,7 @@ export default async function Estoque({ searchParams }: { searchParams: Promise<
                     return (
                       <li key={i.id} className="flex flex-wrap items-center justify-between gap-2 py-2">
                         <span>{v?.nome ?? "—"}<span className="numeros block text-xs text-suave">{v?.sku} · {i.imei ? `IMEI ${i.imei}` : `ICCID ${final(i.iccid)}`}{i.situacao === "reservado" ? " · numa venda" : ""}</span></span>
-                        {confere.data && <form action={conferirItem}><input type="hidden" name="item" value={i.id} /><Botao type="submit" tamanho="sm" variante="secundario">Conferido</Botao></form>}
+                        {confere && <form action={conferirItem}><input type="hidden" name="item" value={i.id} /><Botao type="submit" tamanho="sm" variante="secundario">Conferido</Botao></form>}
                       </li>
                     );
                   })}

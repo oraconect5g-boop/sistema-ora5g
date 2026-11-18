@@ -5,6 +5,7 @@ import Link from "next/link";
 import { MoldeReal } from "../../componentes/MoldeReal";
 import { Aviso, Botao, Cartao, ListaDados, Selo, TituloPagina } from "../../componentes/ui";
 import { ehUuid } from "../../lib/acesso/regras";
+import { permite } from "../../lib/acesso/molde";
 import { FalhaDoServico, obterSessao } from "../../lib/acesso/sessao";
 import { dataCurta } from "../../lib/formato";
 import {
@@ -74,9 +75,8 @@ export default async function Lojas({ searchParams }: {
   const sessao = await obterSessao({ exigirLoja: true });
   const { supabase } = sessao;
 
-  const permitido = await supabase.rpc("tem_permissao", { p_permissao: "unidades.gerir" });
-  if (permitido.error) throw new FalhaDoServico("tem_permissao");
-  if (!permitido.data) {
+  const permitido = permite(sessao, "unidades.gerir");
+  if (!permitido) {
     return (
       <MoldeReal sessao={sessao}>
         <Cartao titulo="Sem permissão" icone={ShieldAlert}>

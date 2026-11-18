@@ -4,7 +4,8 @@ import { BaixarPlanilha } from "../../componentes/BaixarPlanilha";
 import { BotaoImprimir, CarimboDaImpressao } from "../../componentes/BotaoImprimir";
 import { MoldeReal } from "../../componentes/MoldeReal";
 import { Aviso, TituloPagina } from "../../componentes/ui";
-import { FalhaDoServico, obterSessao } from "../../lib/acesso/sessao";
+import { permite } from "../../lib/acesso/molde";
+import { obterSessao } from "../../lib/acesso/sessao";
 import { consultarCategorias, consultarContas, consultarFornecedores, consultarResumo, type ResumoDasContas } from "../../lib/contas-a-pagar/consulta";
 import { lerDocumentos } from "../../lib/contas-a-pagar/documentos";
 import { lerEntradaParaLancar, lerLigacoes } from "../../lib/contas-a-pagar/entradas";
@@ -35,9 +36,8 @@ export default async function ContasAPagar({ searchParams }: { searchParams: Pro
   const sessao = await obterSessao({ exigirLoja: true });
   const { supabase, situacao } = sessao;
   const lojaDoTurno = { id: situacao.unidade_id as string, nome: situacao.unidade_nome ?? "Loja do turno" };
-  const pode = await supabase.rpc("tem_permissao", { p_permissao: "conta_pagar.gerir", p_unidade: lojaDoTurno.id });
-  if (pode.error) throw new FalhaDoServico("tem_permissao");
-  if (!pode.data) return <MoldeReal sessao={sessao}><Aviso tom="aviso" className="mt-6">As contas a pagar são do dono e da gerência da loja.</Aviso></MoldeReal>;
+  const pode = permite(sessao, "conta_pagar.gerir");
+  if (!pode) return <MoldeReal sessao={sessao}><Aviso tom="aviso" className="mt-6">As contas a pagar são do dono e da gerência da loja.</Aviso></MoldeReal>;
 
   // O filtro do endereço vale se o banco aceitar (a loja está no escopo de quem pede); senão, tudo o que a pessoa lê.
   let filtro: FiltroDasContas = filtroDasContas(textoDoParametro(parametros.loja));

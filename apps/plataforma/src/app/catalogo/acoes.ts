@@ -4,6 +4,7 @@ import { revalidatePath } from "next/cache";
 import { redirect } from "next/navigation";
 
 import { ehUuid } from "../../lib/acesso/regras";
+import { permite } from "../../lib/acesso/molde";
 import { obterSessao } from "../../lib/acesso/sessao";
 import type { ErroDeFoto } from "../../lib/catalogo/fotos";
 import { APAGAR_DE_CADA_VEZ } from "../../lib/catalogo/fotos-sem-registro";
@@ -17,7 +18,8 @@ export async function registrarFoto(dados: { produto: string; variante: string |
       || !Number.isInteger(dados.largura) || !Number.isInteger(dados.altura)) {
     return { ok: false, erro: "registro" };
   }
-  const { supabase } = await obterSessao({ exigirLoja: true });
+  const sessao = await obterSessao({ exigirLoja: true });
+  const { supabase } = sessao;
   const { error } = await supabase.rpc("registrar_foto", {
     p_produto: dados.produto,
     // Foto do produto inteiro vai sem variante (null); o tipo gerado não marca o parâmetro como opcional.
@@ -38,10 +40,10 @@ export async function localizarDestinos(skus: string[]): Promise<{ ok: true; des
   if (!Array.isArray(skus) || skus.length === 0 || skus.length > MAXIMO_DO_LOTE || !skus.every((s) => typeof s === "string" && skuDoArquivo(s) === s)) {
     return { ok: false, erro: "dados" };
   }
-  const { supabase, situacao } = await obterSessao({ exigirLoja: true });
-  const pode = await supabase.rpc("tem_permissao", { p_permissao: "catalogo.fotos", p_unidade: situacao.unidade_id as string });
-  if (pode.error) return { ok: false, erro: "falha" };
-  if (!pode.data) return { ok: false, erro: "permissao" };
+  const sessao = await obterSessao({ exigirLoja: true });
+  const { supabase } = sessao;
+  const pode = permite(sessao, "catalogo.fotos");
+  if (!pode) return { ok: false, erro: "permissao" };
   const procurados = new Set(skus.map((s) => s.toLowerCase()));
   // ilike sem curinga do nome (o nome só tem letras, números, ponto, hífen e sublinhado): o sublinhado pode trazer a
   // mais, nunca a menos; a igualdade sem diferença de maiúsculas é conferida aqui.

@@ -5,6 +5,7 @@ import { BaixarPlanilha } from "../../componentes/BaixarPlanilha";
 import { MoldeReal } from "../../componentes/MoldeReal";
 import { Aviso, Avatar, Botao, Cartao, Selo, TituloPagina } from "../../componentes/ui";
 import { ERROS_DA_EQUIPE, PAPEIS, papeisQuePodeConceder, type Papel } from "../../lib/acesso/regras";
+import { permite } from "../../lib/acesso/molde";
 import { FalhaDoServico, obterSessao } from "../../lib/acesso/sessao";
 import { consultarEquipePorPapel } from "../../lib/equipe/consulta";
 import { SITUACOES_DO_CONVITE } from "../../lib/equipe/planilha";
@@ -51,9 +52,8 @@ export default async function Equipe({ searchParams }: { searchParams: Promise<{
   const sessao = await obterSessao({ exigirLoja: true });
   const { supabase, usuario } = sessao;
 
-  const permitido = await supabase.rpc("tem_permissao", { p_permissao: "usuarios.gerir" });
-  if (permitido.error) throw new FalhaDoServico("tem_permissao");
-  if (!permitido.data) {
+  const permitido = permite(sessao, "usuarios.gerir");
+  if (!permitido) {
     return (
       <MoldeReal sessao={sessao}>
         <Cartao titulo="Sem permissão" icone={ShieldAlert}>

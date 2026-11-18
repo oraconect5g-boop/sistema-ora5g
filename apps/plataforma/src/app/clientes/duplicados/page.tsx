@@ -4,6 +4,7 @@ import Link from "next/link";
 
 import { MoldeReal } from "../../../componentes/MoldeReal";
 import { Aviso, Botao, Cartao, TituloPagina } from "../../../componentes/ui";
+import { permite } from "../../../lib/acesso/molde";
 import { FalhaDoServico, obterSessao } from "../../../lib/acesso/sessao";
 import { ERROS_DO_CLIENTE } from "../../../lib/clientes/regras";
 import { chaveDoCatalogo, type ValorDeParametro } from "../../../lib/parametros";
@@ -25,10 +26,9 @@ export default async function Duplicados({ searchParams }: { searchParams: Promi
   const ok = chaveDoCatalogo(OK, parametros.ok);
   const erro = chaveDoCatalogo(ERROS_DO_CLIENTE, parametros.erro);
   const sessao = await obterSessao({ exigirLoja: true });
-  const { supabase, situacao } = sessao;
-  const pode = await supabase.rpc("tem_permissao", { p_permissao: "cliente.mesclar", p_unidade: situacao.unidade_id as string });
-  if (pode.error) throw new FalhaDoServico("tem_permissao");
-  if (!pode.data) return <MoldeReal sessao={sessao}><Aviso tom="aviso" className="mt-6">Mesclar cadastros é do dono.</Aviso></MoldeReal>;
+  const { supabase } = sessao;
+  const pode = permite(sessao, "cliente.mesclar");
+  if (!pode) return <MoldeReal sessao={sessao}><Aviso tom="aviso" className="mt-6">Mesclar cadastros é do dono.</Aviso></MoldeReal>;
   const lista = await supabase.rpc("clientes_duplicados");
   if (lista.error) throw new FalhaDoServico("clientes_duplicados");
   const pares = lista.data as unknown as Par[];

@@ -6,6 +6,7 @@ import Link from "next/link";
 
 import { MoldeReal } from "../../componentes/MoldeReal";
 import { Aviso, Botao, Cartao, Selo, TituloPagina } from "../../componentes/ui";
+import { permite } from "../../lib/acesso/molde";
 import { FalhaDoServico, obterSessao } from "../../lib/acesso/sessao";
 import { chaveDoCatalogo, textoDoParametro, type ValorDeParametro } from "../../lib/parametros";
 import { efeitoNoEstoque, ERROS_DA_TRANSFERENCIA, nomeDaSituacao, saldoDaLoja } from "../../lib/transferencias/regras";
@@ -33,13 +34,11 @@ export default async function Transferencias({ searchParams }: { searchParams: P
   const sessao = await obterSessao({ exigirLoja: true });
   const { supabase, usuario, situacao } = sessao;
   const unidade = situacao.unidade_id as string;
-  const [lista, transfere, ajusta] = await Promise.all([
-    supabase.from("transferencias").select("id, numero, origem_id, destino_id, variante_id, quantidade, motivo, situacao, solicitado_por, quantidade_recebida, observacao, solicitado_em, remessa_id")
-      .or(`origem_id.eq.${unidade},destino_id.eq.${unidade}`).order("numero", { ascending: false }).limit(50),
-    supabase.rpc("tem_permissao", { p_permissao: "estoque.transferir", p_unidade: unidade }),
-    supabase.rpc("tem_permissao", { p_permissao: "estoque.ajustar", p_unidade: unidade }),
-  ]);
-  if (lista.error || transfere.error || ajusta.error) throw new FalhaDoServico("transferencias");
+  const transfere = permite(sessao, "estoque.transferir");
+  const ajusta = permite(sessao, "estoque.ajustar");
+  const lista = await supabase.from("transferencias").select("id, numero, origem_id, destino_id, variante_id, quantidade, motivo, situacao, solicitado_por, quantidade_recebida, observacao, solicitado_em, remessa_id")
+    .or(`origem_id.eq.${unidade},destino_id.eq.${unidade}`).order("numero", { ascending: false }).limit(50);
+  if (lista.error) throw new FalhaDoServico("transferencias");
   const varianteIds = [...new Set(lista.data.map((t) => t.variante_id))];
   const unidadeIds = [...new Set(lista.data.flatMap((t) => [t.origem_id, t.destino_id]))];
   // As remessas (TRF-a) das transferências da lista: o número e a origem, para agrupar e enviar de uma vez.
@@ -73,7 +72,7 @@ export default async function Transferencias({ searchParams }: { searchParams: P
       .in("variante_id", [...new Set(aSeparar.map((t) => t.variante_id))]).limit(100)
     : { data: [], error: null };
   if (disponiveis.error) throw new FalhaDoServico("transferencias_itens");
-  const podeNaOrigem = (origem: string) => (local(origem)?.tipo === "excecao" ? ajusta.data : transfere.data) === true;
+  const podeNaOrigem = (origem: string) => (local(origem)?.tipo === "excecao" ? ajusta : transfere);
   const final = (n: string | null) => (n ? `…${n.slice(-6)}` : "");
 
   return (
@@ -129,7 +128,7 @@ export default async function Transferencias({ searchParams }: { searchParams: P
             {t.situacao === "separada" && saindo && podeNaOrigem(t.origem_id) && (
               <form action={enviarTransferencia} className="mt-3"><input type="hidden" name="transferencia" value={t.id} /><Botao type="submit" tamanho="sm">Enviar (sai do estoque desta loja)</Botao></form>
             )}
-            {t.situacao === "enviada" && !saindo && transfere.data && (
+            {t.situacao === "enviada" && !saindo && transfere && (
               <form action={receberTransferencia} className="mt-3 grid gap-2">
                 <input type="hidden" name="transferencia" value={t.id} /><input type="hidden" name="serializado" value={serializado(t.variante_id) ? "sim" : "nao"} />
                 {serializado(t.variante_id)

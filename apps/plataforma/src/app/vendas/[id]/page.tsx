@@ -12,6 +12,7 @@ import { FormularioDeArquivo } from "../../../componentes/FormularioDeArquivo";
 import { MoldeReal } from "../../../componentes/MoldeReal";
 import { Aviso, Botao, Cartao, Selo } from "../../../componentes/ui";
 import { ehUuid } from "../../../lib/acesso/regras";
+import { permite } from "../../../lib/acesso/molde";
 import { FalhaDoServico, obterSessao } from "../../../lib/acesso/sessao";
 import { centavosDoBanco } from "../../../lib/dinheiro";
 import { brl } from "../../../lib/formato";
@@ -48,7 +49,7 @@ export default async function Comprovante({ params, searchParams }: { params: Pr
   const venda = await supabase.from("vendas").select("id, numero, situacao, unidade_id, vendedor_id, cliente_nome, cliente_id, total_centavos, subtotal_centavos, desconto_centavos, troco_centavos, recebido_centavos, a_receber_centavos, devolvido_centavos, concluida_em, cancelada_em, motivo_cancelamento").eq("id", id).maybeSingle();
   if (venda.error) throw new FalhaDoServico("venda");
   if (!venda.data) notFound();
-  const [itens, pagamentos, loja, vendedor, podeCancelar, podePedirNota, aprovaNota, nota, devolucoes, notasDeDevolucao, estornos, retornos, buscaCliente] = await Promise.all([
+  const [itens, pagamentos, loja, vendedor, podeCancelar, podePedirNota, aprovaNota, nota, devolucoes, notasDeDevolucao, estornos, retornos] = await Promise.all([
     supabase.from("venda_itens").select("id, variante_id, item_serializado_id, tipo, quantidade, preco_unitario_centavos, desconto_centavos").eq("venda_id", id).order("criado_em"),
     supabase.from("venda_pagamentos").select("ordem, meio, valor_centavos, entrada_centavos, comprovante, situacao").eq("venda_id", id).order("ordem"),
     supabase.from("unidades").select("nome, cnpj").eq("id", venda.data.unidade_id).maybeSingle(),
@@ -64,10 +65,10 @@ export default async function Comprovante({ params, searchParams }: { params: Pr
     // Estorno de Pix, cartão e financeira a confirmar com o comprovante (#50) e retorno físico a conferir (#51).
     supabase.from("estornos_externos").select("id, numero, meio, valor_centavos, situacao, devolucao_id, comprovante, confirmado_em").eq("venda_id", id).order("numero"),
     supabase.from("venda_retornos").select("id, venda_item_id, quantidade, situacao, condicao, observacao").eq("venda_id", id).order("solicitado_em"),
-    // Cliente da rede (L5a): quem busca cliente na loja do turno vê a ficha e liga a venda a um cadastro.
-    supabase.rpc("tem_permissao", { p_permissao: "cliente.buscar", p_unidade: situacao.unidade_id as string }),
   ]);
-  if (itens.error || pagamentos.error || loja.error || vendedor.error || podeCancelar.error || podePedirNota.error || aprovaNota.error || nota.error || devolucoes.error || notasDeDevolucao.error || estornos.error || retornos.error || buscaCliente.error) throw new FalhaDoServico("comprovante");
+  // Cliente da rede (L5a): quem busca cliente na loja do turno vê a ficha e liga a venda a um cadastro (vem no molde).
+  const buscaCliente = permite(sessao, "cliente.buscar");
+  if (itens.error || pagamentos.error || loja.error || vendedor.error || podeCancelar.error || podePedirNota.error || aprovaNota.error || nota.error || devolucoes.error || notasDeDevolucao.error || estornos.error || retornos.error) throw new FalhaDoServico("comprovante");
   const variantes = itens.data.length ? await supabase.from("variantes").select("id, sku, nome").in("id", itens.data.map((i) => i.variante_id)) : { data: [], error: null };
   const serializados = itens.data.some((i) => i.item_serializado_id) ? await supabase.from("itens_serializados").select("id, imei, iccid").in("id", itens.data.flatMap((i) => (i.item_serializado_id ? [i.item_serializado_id] : []))) : { data: [], error: null };
   if (variantes.error || serializados.error) throw new FalhaDoServico("comprovante_itens");
@@ -187,7 +188,7 @@ export default async function Comprovante({ params, searchParams }: { params: Pr
       {textoDoParametro(parametros.nota) === "carta_repetida" && <Aviso tom="info">Nada mudou: esta carta de correção já estava registrada.</Aviso>}
       <Cartao titulo={`Venda nº ${v.numero}`} subtitulo={`${loja.data?.nome ?? situacao.unidade_nome}${quando ? ` · ${quando}` : ""}`} icone={Receipt}>
         <p className="text-sm">Vendedor: {vendedor.data?.nome ?? "—"}{v.cliente_nome ? ` · Cliente: ${v.cliente_nome}` : ""}
-          {v.cliente_id && buscaCliente.data && <> · <Link href={`/clientes/${v.cliente_id}`} className="font-semibold text-acao">ficha do cliente</Link></>}</p>
+          {v.cliente_id && buscaCliente && <> · <Link href={`/clientes/${v.cliente_id}`} className="font-semibold text-acao">ficha do cliente</Link></>}</p>
         <p className="mt-1">{v.situacao === "concluida" ? <Selo tom="sucesso" ponto>concluída</Selo> : v.situacao === "cancelada" ? <Selo tom="perigo" ponto>cancelada</Selo> : <Selo tom="aviso" ponto>em aberto</Selo>}</p>
         {v.situacao === "cancelada" && v.motivo_cancelamento && <p className="mt-1 text-xs text-suave">Motivo: {v.motivo_cancelamento}</p>}
         <ul className="mt-3 divide-y divide-borda text-sm">
@@ -222,7 +223,7 @@ export default async function Comprovante({ params, searchParams }: { params: Pr
         <p className="mt-3 text-xs text-suave">Comprovante interno, sem valor fiscal. A nota fiscal é pedida abaixo e segue o fluxo combinado com o contador.</p>
       </Cartao>
       {textoDoParametro(parametros.cliente) === "1" && <Aviso tom="sucesso">Cliente da venda atualizado; o motivo ficou na auditoria.</Aviso>}
-      {v.situacao === "concluida" && buscaCliente.data && (
+      {v.situacao === "concluida" && buscaCliente && (
         <details className="rounded-xl border border-borda bg-white px-3 py-2">
           <summary className="flex min-h-10 cursor-pointer items-center gap-2 text-sm font-semibold text-acao"><UserRound aria-hidden className="size-4" /> {v.cliente_id ? "Trocar ou tirar o cliente da venda" : "Ligar a venda a um cliente da rede"}</summary>
           <form action={vincularClienteNaVenda} className="mt-2 space-y-2">
@@ -359,7 +360,7 @@ export default async function Comprovante({ params, searchParams }: { params: Pr
           ) : podePedirNota.data ? (
             <form action={pedirNota} className="grid gap-2 sm:grid-cols-2">
               <input type="hidden" name="venda" value={v.id} /><input type="hidden" name="chave" value={randomUUID()} />
-              {v.cliente_id && buscaCliente.data && (
+              {v.cliente_id && buscaCliente && (
                 <label className="flex min-h-10 items-center gap-2 text-sm sm:col-span-2"><input type="hidden" name="cliente" value={v.cliente_id} />
                   <input type="checkbox" name="usar_cliente" value="sim" defaultChecked className="size-4 accent-acao" /> No nome do cliente da venda (o sistema copia nome, CPF/CNPJ e endereço do cadastro)</label>
               )}

@@ -2,6 +2,7 @@ import type { Metadata } from "next";
 
 import { MoldeReal } from "../../componentes/MoldeReal";
 import { Aviso, TituloPagina } from "../../componentes/ui";
+import { permite } from "../../lib/acesso/molde";
 import { FalhaDoServico, obterSessao } from "../../lib/acesso/sessao";
 import { agora as agoraDoServidor } from "../../lib/formato";
 import { ERROS_DA_LOJA, reservasAusentes } from "../../lib/loja/reserva";
@@ -28,9 +29,8 @@ export default async function ReservasDoSite({ searchParams }: { searchParams: P
   const sessao = await obterSessao({ exigirLoja: true });
   const { supabase, situacao } = sessao;
   const unidade = situacao.unidade_id as string;
-  const pode = await supabase.rpc("tem_permissao", { p_permissao: "venda.registrar", p_unidade: unidade });
-  if (pode.error) throw new FalhaDoServico("tem_permissao");
-  if (!pode.data) return <MoldeReal sessao={sessao}><Aviso tom="aviso" className="mt-6">Só quem vende nesta loja atende as reservas do site.</Aviso></MoldeReal>;
+  const pode = permite(sessao, "venda.registrar");
+  if (!pode) return <MoldeReal sessao={sessao}><Aviso tom="aviso" className="mt-6">Só quem vende nesta loja atende as reservas do site.</Aviso></MoldeReal>;
   // As vencidas desta loja saem de vez do estoque reservado (continuam na lista, como "Vencida").
   await soltarReservasDoSiteVencidas(supabase);
   const instante = agoraDoServidor().getTime();

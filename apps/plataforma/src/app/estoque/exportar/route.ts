@@ -5,6 +5,7 @@
 // dá 403, em vez de um arquivo de outro lugar com o nome dele. O banco confere cada linha de novo (RLS:
 // estoque.consultar no local). Tudo vem em páginas abaixo do teto da API, até o limite, com aviso no fim; uma
 // leitura que falha ou um nome que não se leu derruba o arquivo inteiro (nada pela metade). Custo não entra.
+import { permite } from "../../../lib/acesso/molde";
 import { FalhaDoServico, obterSessao } from "../../../lib/acesso/sessao";
 import { geradoEm, parteDoNome, type SecaoCsv } from "../../../lib/csv";
 import { consultarEstoque } from "../../../lib/estoque/consulta-painel";
@@ -32,9 +33,8 @@ export async function GET(pedido: Request) {
   const sessao = await obterSessao({ exigirLoja: true });
   const { supabase, situacao } = sessao;
   const turno = situacao.unidade_id as string;
-  const pode = await supabase.rpc("tem_permissao", { p_permissao: "estoque.consultar", p_unidade: turno });
-  if (pode.error) throw new FalhaDoServico("tem_permissao");
-  if (!pode.data) return texto("Sem permissão para exportar o estoque.", 403);
+  const pode = permite(sessao, "estoque.consultar");
+  if (!pode) return texto("Sem permissão para exportar o estoque.", 403);
 
   const parte = parteDaPlanilha(url.searchParams.get("parte"));
   const formato = formatoDaPlanilha(url.searchParams.get("formato"));

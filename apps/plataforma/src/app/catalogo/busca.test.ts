@@ -40,6 +40,8 @@ class Consulta {
 vi.mock("../../lib/acesso/sessao", () => ({
   FalhaDoServico: class extends Error {},
   obterSessao: async () => ({
+    // VEL-b: as permissões vêm no molde da sessão, pela mesma regra do rpc simulado.
+    molde: { permissoes: { has: () => Boolean(false) }, nome: null, vinculos: [], pendencias: { aprovacoes: 0, notas: 0 } },
     situacao: { unidade_id: "loja", unidade_nome: "Loja de teste" },
     supabase: {
       from: (nome: string) => new Consulta(nome),
