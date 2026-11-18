@@ -29,6 +29,12 @@ export type Planilha = {
   codificacao?: "utf-8" | "windows-1252";
   /** Só no Excel: a aba lida (a primeira visível). */
   aba?: string;
+  /**
+   * Só no Excel: em cada linha de dados, as colunas cuja célula era NÚMERO na folha (não texto). O leitor escreve o
+   * número com ponto decimal ("0.625"); quem lê quantidade ou dinheiro precisa saber a origem, porque no texto da
+   * planilha brasileira "1.234" é mil duzentos e trinta e quatro (achado F18-01 da reanálise de 18/11).
+   */
+  numericas?: number[][];
 };
 export type FalhaDaPlanilha =
   | "vazio" | "grande" | "linhas" | "colunas" | "celula" | "aspas" | "cabecalho"

@@ -56,7 +56,7 @@ export async function POST(requisicao: NextRequest) {
   if (lojas === null) return voltar({ erro: "falha" });
   const mapa = lerMapaDaCarga((n) => dados.get(n), planilha.cabecalho.length, lojas);
   if (!mapa) return voltar({ erro: "mapeamento" });
-  const { porLoja, deFora } = linhasDaCarga(planilha, mapa);
+  const { porLoja, deFora, candidato } = linhasDaCarga(planilha, mapa);
   const comLinhas = Object.entries(porLoja).filter(([, linhas]) => linhas.length > 0);
   if (comLinhas.length === 0) return voltar({ erro: "nenhuma" });
   if (comLinhas.some(([, linhas]) => linhas.length > LINHAS_POR_LOJA)) return voltar({ erro: "linhas" });
@@ -70,6 +70,8 @@ export async function POST(requisicao: NextRequest) {
   for (const [loja, linhas] of comLinhas) {
     const mapeamento: { [chave: string]: Json } = { formato: planilha.formato, colunas: mapaDaCargaParaGravar(planilha.cabecalho, mapa, loja) };
     if (deFora !== null) mapeamento.fora = { linha: planilha.numeros[deFora.posicao] ?? deFora.posicao + 2, motivo: deFora.motivo };
+    // F18-02: a última linha que pode ser rodapé, sem prova, vai à prévia (sem o código, fica para conferir), com o aviso.
+    if (candidato !== null) mapeamento.candidato = { linha: planilha.numeros[candidato.posicao] ?? candidato.posicao + 2, motivo: candidato.motivo };
     const { data, error } = await supabase.rpc("estoque_carga_previa", {
       p_organizacao: unidade.data.organizacao_id, p_unidade: loja, p_arquivo_nome: nomeDoArquivo, p_sha256: impressao, p_corte: corte,
       p_mapeamento: mapeamento, p_linhas: linhas as unknown as Json,

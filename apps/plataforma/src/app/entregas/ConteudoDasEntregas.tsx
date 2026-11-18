@@ -9,7 +9,7 @@ import { textoDaVersao, type DadosDaVersao } from "../../lib/versao";
 // O conteúdo das entregas do projeto (lote ENTREGAS-a), à parte da página: recebe os dados gerados e a versão no ar.
 export function ConteudoDasEntregas({ dados, versao }: { dados: DadosDasEntregas; versao: DadosDaVersao }) {
   const lotes = [...dados.lotes].reverse();
-  const esperando = lotes.filter((l) => situacaoDoLote(l).chave === "esperando");
+  const esperando = lotes.filter((l) => situacaoDoLote(l, versao.commit).chave === "esperando");
   const testados = dados.contagem.testado ?? 0;
   const barras = ESTADOS_DOS_REQUISITOS.map((e) => ({ rotulo: e.rotulo, valor: dados.contagem[e.chave] ?? 0 }));
 
@@ -31,7 +31,7 @@ export function ConteudoDasEntregas({ dados, versao }: { dados: DadosDasEntregas
       <Cartao className="mt-4" titulo="Lotes com roteiro de aceite" subtitulo="O mais novo primeiro" icone={Rocket}>
         <ul className="divide-y divide-borda text-sm">
           {lotes.map((l) => {
-            const s = situacaoDoLote(l);
+            const s = situacaoDoLote(l, versao.commit);
             return (
               <li key={l.lote} className="space-y-1 py-3">
                 <div className="flex flex-wrap items-center justify-between gap-2">

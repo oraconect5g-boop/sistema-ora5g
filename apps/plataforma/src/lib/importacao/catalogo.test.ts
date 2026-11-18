@@ -1,6 +1,9 @@
 import { describe, expect, it } from "vitest";
 
-import { dividirEmPartes, lerMapeamento, linhaDeTotal, montarLinhas, numeroDoRodape, rodapeDaPlanilha, sugerirMapeamento } from "./catalogo";
+import { gerarXlsx } from "../xlsx-servidor";
+import { descomprimirNoServidor } from "./descomprimir-servidor";
+import { lerPlanilha } from "./planilha";
+import { candidatoARodape, dividirEmPartes, lerMapeamento, linhaDeTotal, montarLinhas, numeroDaCelula, numeroDoRodape, rodapeDaPlanilha, sugerirMapeamento } from "./catalogo";
 import { lerCsv, LIMITES_DA_PLANILHA } from "./csv";
 
 // Planilha FICTÍCIA (o formato real da Rein chega com a pendência B1; nada aqui o supõe).
@@ -104,8 +107,49 @@ describe("a planilha inteira (REIN-a)", () => {
     // A mesma linha como vem do Excel (número cru, com a notação do Excel) também é rodapé; o que não soma fica sem a conferência.
     const doExcel = lerCsv(new TextEncoder().encode(cabecalhoRein + "APA-1;Galaxy;Samsung;1299.9;2;1;1;1;3;1000\n;;;;2;1;1;1;3.0000000000000004;1.0E+3\n"));
     expect(rodapeDaPlanilha(doExcel, REIN)?.motivo).toBe("rodapé de totais no fim da planilha (sem código e sem nome, só números em 6 colunas; em 6 delas o número é a soma das linhas de cima)");
+    // F18-02 (reanálise de 18/11): só números, mas nenhum é a soma das linhas de cima: não há prova de rodapé. A linha vai à
+    // prévia, com o aviso, e só sai por decisão registrada de quem envia (antes, saía sozinha).
     const naoSoma = lerCsv(new TextEncoder().encode(cabecalhoRein + "APA-1;Galaxy;Samsung;1.299,90;2;1;1;1;3;1000\n;;;;7;7;7;7;7;7\n"));
-    expect(rodapeDaPlanilha(naoSoma, REIN)?.motivo).toBe("rodapé de totais no fim da planilha (sem código e sem nome, só números em 6 colunas)");
+    expect(rodapeDaPlanilha(naoSoma, REIN)).toBeNull();
+    expect(linhaDeTotal(naoSoma, REIN)).toBeNull();
+    expect(candidatoARodape(naoSoma, REIN)).toEqual({
+      posicao: 1,
+      motivo: "a última linha pode ser um rodapé ou um item sem cadastro (sem código e sem nome, só números em 6 colunas, e nenhum deles é a soma das linhas de cima)",
+    });
+    // O rodapé comprovado não é candidato.
+    expect(candidatoARodape(comRodape, REIN)).toBeNull();
+  });
+
+  it("F18-02: a última linha com o EAN (ou outro campo do item) preenchido é candidata, mesmo que um número some", () => {
+    const comEan = { ...REIN, codigo_barras: 10 } as const;
+    const cabecalho = "Código;Descrição;Marca;Preço;Loja A Qtd.;Loja A Qtd. Disponivel;Loja B Qtd.;Loja B Qtd. Disponivel;Quantidade;Custo total;EAN\n";
+    const planilha = lerCsv(new TextEncoder().encode(cabecalho +
+      "ACE-1;Capa de silicone;;79,90;10;8;5;5;15;150,50;7890000000001\n" +
+      ";;;;10;8;5;5;15;150,50;7890000000002\n"));
+    expect(rodapeDaPlanilha(planilha, comEan)).toBeNull();
+    expect(candidatoARodape(planilha, comEan)?.motivo).toBe(
+      "a última linha pode ser um rodapé ou um item sem cadastro (sem código e sem nome, só números em 7 colunas, com código de barras preenchido)");
+    // A mesma linha sem o EAN, com as somas conferindo, é rodapé comprovado.
+    const semEan = lerCsv(new TextEncoder().encode(cabecalho + "ACE-1;Capa de silicone;;79,90;10;8;5;5;15;150,50;7890000000001\n;;;;10;8;5;5;15;150,50;\n"));
+    expect(rodapeDaPlanilha(semEan, comEan)?.motivo).toBe("rodapé de totais no fim da planilha (sem código e sem nome, só números em 6 colunas; em 6 delas o número é a soma das linhas de cima)");
+  });
+
+  it("F18-01: o número pela origem da célula — o do Excel é o próprio número; o texto segue a planilha brasileira", async () => {
+    const bytes = gerarXlsx([{ nome: "Produtos", secoes: [{
+      colunas: ["SKU", "Nome", "Preço", "Custo"],
+      linhas: [["ACE-1", "Capa", 79.9, 1.299], ["ACE-2", "Película", 1.5, "1.299"], ["ACE-3", "Cabo", "1.299,90", 12.345]],
+    }] }]);
+    const planilha = await lerPlanilha(bytes, descomprimirNoServidor);
+    expect(planilha.linhas.map((l) => l.slice(2))).toEqual([["79.9", "1.299"], ["1.5", "1.299"], ["1.299,90", "12.345"]]);
+    expect(planilha.numericas).toEqual([[2, 3], [2], [3]]);
+    // O mesmo "1.299": do Excel, um real e trinta (três casas: confira); como texto, mil duzentos e noventa e nove reais.
+    expect([numeroDaCelula(planilha, 0, 3), numeroDaCelula(planilha, 1, 3), numeroDaCelula(planilha, 2, 3)]).toEqual([1.299, 1299, 12.345]);
+    const linhas = montarLinhas(planilha, { sku: 0, nome: 1, preco: 2, custo: 3 }, PADROES);
+    expect(linhas.map((l) => [l.preco, l.custo, l.erros])).toEqual([
+      [7_990, null, ['Custo com mais de duas casas decimais: "1.299" (confira na planilha; nada é arredondado)']],
+      [150, 129_900, []],
+      [129_990, null, ['Custo com mais de duas casas decimais: "12.345" (confira na planilha; nada é arredondado)']],
+    ]);
   });
 
   it("F01: nada some calado — a última linha com texto, com um número só ou com código continua indo à prévia", () => {

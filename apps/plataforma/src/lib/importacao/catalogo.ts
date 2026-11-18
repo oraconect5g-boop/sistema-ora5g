@@ -66,12 +66,16 @@ export function montarLinhas(planilha: Planilha, mapa: Mapeamento, padroes: { ti
     const dinheiro = (campo: "preco" | "custo") => {
       const texto = celula(linha, campo);
       if (texto === null) return null;
+      const rotulo = campo === "preco" ? "Preço" : "Custo";
       try {
-        const c = lerReais(texto);
+        // F18-01: o número do Excel vale pelo que é (o ponto é decimal); o texto segue a planilha brasileira (lerReais).
+        const c = celulaNumerica(planilha, i, mapa[campo] as number) ? centavosDoNumero(Number(texto)) : lerReais(texto);
         if (c > 100_000_000) throw new RangeError("grande");
         return c;
-      } catch {
-        erros.push(`${campo === "preco" ? "Preço" : "Custo"} inválido: "${texto.slice(0, 30)}"`);
+      } catch (e) {
+        erros.push(e instanceof RangeError && e.message === "casas"
+          ? `${rotulo} com mais de duas casas decimais: "${texto.slice(0, 30)}" (confira na planilha; nada é arredondado)`
+          : `${rotulo} inválido: "${texto.slice(0, 30)}"`);
         return null;
       }
     };
@@ -122,6 +126,36 @@ export function lerMapeamento(campo: (nome: string) => unknown, colunas: number)
 }
 
 // ---------------------------------------------------------------------------------------------
+// O número de uma célula pela origem (achado F18-01 da reanálise do Codex de 18/11)
+// ---------------------------------------------------------------------------------------------
+/** A célula veio como NÚMERO do Excel (e não como texto)? Aí o ponto é decimal, nunca separador de milhar. */
+export const celulaNumerica = (planilha: Planilha, linha: number, coluna: number) => planilha.numericas?.[linha]?.includes(coluna) === true;
+
+/**
+ * O número de uma célula, pela origem: a célula numérica do Excel é o próprio número (o leitor a escreve com ponto
+ * decimal: "0.625" é zero vírgula seiscentos e vinte e cinco, e "1.234" é um vírgula duzentos e trinta e quatro); o texto
+ * segue numeroDoRodape (a planilha brasileira, a inglesa e a notação do Excel). Vazio ou não número: nulo.
+ */
+export function numeroDaCelula(planilha: Planilha, linha: number, coluna: number): number | null {
+  const texto = (planilha.linhas[linha]?.[coluna] ?? "").trim();
+  if (texto === "") return null;
+  if (celulaNumerica(planilha, linha, coluna)) {
+    const n = Number(texto);
+    return Number.isFinite(n) ? n : null;
+  }
+  return numeroDoRodape(texto);
+}
+
+/** Os centavos de um valor em reais que veio como número do Excel: até duas casas; mais casas, negativo ou não número é erro. */
+function centavosDoNumero(n: number): number {
+  if (!Number.isFinite(n) || n < 0) throw new RangeError("invalido");
+  const c = n * 100;
+  const inteiro = Math.round(c);
+  if (Math.abs(c - inteiro) > 1e-6) throw new RangeError("casas");
+  return inteiro;
+}
+
+// ---------------------------------------------------------------------------------------------
 // A planilha inteira da Rein (lote REIN-a; plano de 16/11, Onda 1, item 3): a linha de total no fim e as partes.
 // ---------------------------------------------------------------------------------------------
 const COMECA_COM_TOTAL = /^\s*total\b/i;
@@ -143,46 +177,66 @@ export function numeroDoRodape(celula: string): number | null {
 /** A linha que fica de fora da importação, com o motivo que a prévia mostra. */
 export type LinhaDeFora = { posicao: number; motivo: string };
 
+/** Os campos que identificam o item: num rodapé de totais nenhum vem preenchido (o preço e o custo podem ser somas). */
+const CAMPOS_DE_IDENTIDADE: readonly CampoDoCatalogo[] = ["produto", "tipo", "categoria", "marca", "codigo_barras", "cor", "capacidade"];
+
 /**
- * O rodapé no fim da planilha, que não é produto: mandá-lo ao banco travaria a prévia inteira (linha com erro). Só a
- * ÚLTIMA linha, e só sem SKU e sem nome (ou com "Total" no nome), em dois casos:
- *  - alguma célula começa por "Total" (o rodapé com rótulo);
- *  - as células preenchidas são todas números, pelo menos duas (o rodapé de totais sem rótulo). O relatório de produtos
- *    da Rein termina assim: a linha 2.273 do arquivo de 10/11, que a auditoria do Codex de 17/11 achou entrando como
- *    produto (achado F01). O motivo diz em quantas colunas o número é igual à soma das linhas de cima.
- * A linha do meio sem código continua sendo erro, e a última com algum texto também (pode ser produto com defeito): nada
- * some calado. Devolve a posição e o motivo, ou nulo.
+ * A última linha da planilha, quando não tem SKU nem nome (ou tem "Total" no nome), em duas classes (achados F01 de 17/11
+ * e F18-02 de 18/11):
+ *  - **comprovado:** alguma célula começa por "Total" (o rótulo), ou as células preenchidas são todas números, pelo menos
+ *    duas, nenhum campo de identificação (EAN, marca, categoria...) preenchido, e em pelo menos uma coluna o número é a
+ *    soma das linhas de cima. O relatório de produtos da Rein termina assim (a linha 2.273 do arquivo de 10/11). Fica de
+ *    fora da importação, com o motivo.
+ *  - **candidato:** só números, mas sem soma que confira ou com um campo de identificação preenchido (a linha incompleta
+ *    com o EAN e o preço do F18-02). Não some: vai à prévia como está (o banco a marca, pela falta do SKU e do nome), e a
+ *    prévia avisa; só sai por decisão de quem envia, registrada (ver o envio da importação).
+ * A linha com algum texto, com um número só, ou no meio da planilha, vai à prévia como está: nada some calado.
  */
-export function rodapeDaPlanilha(planilha: Planilha, mapa: Mapeamento): LinhaDeFora | null {
+function avaliarUltimaLinha(planilha: Planilha, mapa: Mapeamento): (LinhaDeFora & { tipo: "comprovado" | "candidato" }) | null {
   const posicao = planilha.linhas.length - 1;
   const linha = planilha.linhas[posicao];
   if (!linha || mapa.sku === undefined || mapa.nome === undefined) return null;
   const sku = (linha[mapa.sku] ?? "").trim();
   const nome = (linha[mapa.nome] ?? "").trim();
   if (sku !== "" || (nome !== "" && !COMECA_COM_TOTAL.test(nome))) return null;
-  if (linha.some((celula) => COMECA_COM_TOTAL.test(celula))) return { posicao, motivo: "linha de total no fim da planilha" };
+  if (linha.some((celula) => COMECA_COM_TOTAL.test(celula))) return { tipo: "comprovado", posicao, motivo: "linha de total no fim da planilha" };
   const preenchidas = linha.map((celula, coluna) => ({ coluna, texto: celula.trim() })).filter((c) => c.texto !== "");
   if (preenchidas.length < 2) return null;
-  const numeros = preenchidas.map((c) => ({ coluna: c.coluna, valor: numeroDoRodape(c.texto) }));
+  const numeros = preenchidas.map((c) => ({ coluna: c.coluna, valor: numeroDaCelula(planilha, posicao, c.coluna) }));
   if (numeros.some((n) => n.valor === null)) return null;
-  // A conferência que a prévia mostra: a coluna em que o rodapé é a soma das linhas de cima (com os centavos).
+  // A conferência: a coluna em que o número da última linha é a soma das linhas de cima (com os centavos).
   const somaConfere = (coluna: number, valor: number) => {
     let soma = 0;
-    for (const l of planilha.linhas.slice(0, posicao)) {
-      const texto = (l[coluna] ?? "").trim();
-      if (texto === "") continue;
-      const n = numeroDoRodape(texto);
+    for (let i = 0; i < posicao; i += 1) {
+      if ((planilha.linhas[i]?.[coluna] ?? "").trim() === "") continue;
+      const n = numeroDaCelula(planilha, i, coluna);
       if (n === null) return false;
       soma += n;
     }
     return Math.abs(soma - valor) < 0.005;
   };
   const conferem = numeros.filter((n) => somaConfere(n.coluna, n.valor as number)).length;
-  return {
-    posicao,
-    motivo: `rodapé de totais no fim da planilha (sem código e sem nome, só números em ${numeros.length} colunas${
-      conferem > 0 ? `; em ${conferem} delas o número é a soma das linhas de cima` : ""})`,
-  };
+  const identidade = CAMPOS_DE_IDENTIDADE.filter((campo) => mapa[campo] !== undefined && (linha[mapa[campo] as number] ?? "").trim() !== "");
+  const descricao = `sem código e sem nome, só números em ${numeros.length} colunas`;
+  if (conferem > 0 && identidade.length === 0) {
+    return { tipo: "comprovado", posicao, motivo: `rodapé de totais no fim da planilha (${descricao}; em ${conferem} delas o número é a soma das linhas de cima)` };
+  }
+  const porque = identidade.length > 0
+    ? `com ${identidade.map((c) => CAMPOS_DO_CATALOGO[c].rotulo.replace(/ \(.*\)$/, "").toLowerCase()).join(", ")} preenchido`
+    : "e nenhum deles é a soma das linhas de cima";
+  return { tipo: "candidato", posicao, motivo: `a última linha pode ser um rodapé ou um item sem cadastro (${descricao}, ${porque})` };
+}
+
+/** O rodapé COMPROVADO no fim da planilha, que fica de fora da importação (ver avaliarUltimaLinha), ou nulo. */
+export function rodapeDaPlanilha(planilha: Planilha, mapa: Mapeamento): LinhaDeFora | null {
+  const v = avaliarUltimaLinha(planilha, mapa);
+  return v?.tipo === "comprovado" ? { posicao: v.posicao, motivo: v.motivo } : null;
+}
+
+/** A última linha CANDIDATA a rodapé, que vai à prévia e só sai por decisão registrada de quem envia, ou nulo. */
+export function candidatoARodape(planilha: Planilha, mapa: Mapeamento): LinhaDeFora | null {
+  const v = avaliarUltimaLinha(planilha, mapa);
+  return v?.tipo === "candidato" ? { posicao: v.posicao, motivo: v.motivo } : null;
 }
 
 /** A posição do rodapé no fim da planilha (ver rodapeDaPlanilha), ou nulo. */

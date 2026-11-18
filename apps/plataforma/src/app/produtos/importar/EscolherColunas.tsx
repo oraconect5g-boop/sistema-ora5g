@@ -15,7 +15,10 @@ const TIPOS_ACEITOS = ".xlsx,application/vnd.openxmlformats-officedocument.sprea
 // Lê só o cabeçalho do arquivo no aparelho, para a pessoa dizer qual coluna é cada campo (com sugestão pelo nome da
 // coluna e a letra da coluna no Excel). O arquivo inteiro vai para o servidor, que relê e confere tudo de novo. Desde o
 // CAT-002b, também a planilha do Excel (.xlsx), lida da primeira aba.
-export function EscolherColunas() {
+export function EscolherColunas({ candidato = null }: {
+  /** F18-02: a última linha que a prévia anterior apontou como possível rodapé; com ela, a escolha de deixá-la de fora. */
+  candidato?: { linha: number } | null;
+}) {
   const [colunas, setColunas] = useState<string[] | null>(null);
   const [aba, setAba] = useState<string | null>(null);
   const [mapa, setMapa] = useState<Mapeamento>({});
@@ -58,6 +61,12 @@ export function EscolherColunas() {
               </select>
             </label>
           ))}
+          {candidato && (
+            <label className="flex items-start gap-2 text-sm sm:col-span-2">
+              <input type="checkbox" name="ultima_linha_de_fora" value="sim" className="mt-1 size-4 accent-acao" />
+              <span>{`Deixar de fora a última linha (na prévia anterior, a linha ${candidato.linha}): é um rodapé, não um item. A decisão fica registrada na prévia.`}</span>
+            </label>
+          )}
         </fieldset>
       )}
     </div>
