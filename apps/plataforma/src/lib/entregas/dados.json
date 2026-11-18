@@ -4,8 +4,8 @@
   "total": 179,
   "homologados": 0,
   "contagem": {
-    "nao_iniciado": 16,
-    "parcial": 79,
+    "nao_iniciado": 15,
+    "parcial": 80,
     "testado": 69,
     "bloqueado": 13,
     "respeitado": 2
@@ -470,6 +470,19 @@
       "roteiro": "docs/aceite/INTEG-d.md",
       "requisitos": [],
       "entrega": "a seção 4 da orientação de 18/11: a matriz das APIs, uma linha por integração, com as 15 colunas, quem fornece o que falta e o que pode andar sem isso; a leitura da PR #97",
+      "commit": "5334b6a",
+      "publicado_em": "2026-11-18",
+      "pedido_em": null,
+      "resposta": null,
+      "respondido_em": null
+    },
+    {
+      "lote": "CONNECT-c",
+      "roteiro": "docs/aceite/CONNECT-c.md",
+      "requisitos": [
+        "ORA-CONNECT-009"
+      ],
+      "entrega": "a conciliação da produção da Ora Connect com os relatórios oficiais de ativações e de recargas da Nogle: o que confere, o valor diferente, o que só a Nogle tem e o que só a Ora tem",
       "commit": null,
       "publicado_em": null,
       "pedido_em": null,

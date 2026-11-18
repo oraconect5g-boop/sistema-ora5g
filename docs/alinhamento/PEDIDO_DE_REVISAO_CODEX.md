@@ -1883,3 +1883,11 @@ Programa de execução integral (PR #67; checkpoint em `docs/alinhamento/EXECUCA
 - **Origem:** a seção 4 da orientação do proprietário de 18/11 (uma linha por API, com as 15 colunas) e a leitura da PR #97, pendente desde 17/11.
 - **Entrega:** `docs/integracoes/MATRIZ_DAS_APIS.json` (a fonte) e `MATRIZ_DAS_APIS.md` (a leitura), com 23 integrações; `packages/config/src/matriz-das-apis.test.ts` confere a forma. Só fatos já registrados; o que não se sabe fica "a confirmar", com quem confirma.
 - **Pedido ao Codex:** conferir se alguma integração pedida ficou fora da matriz e se a situação de cada uma confere com o código (em especial a Nogle, o fiscal e as financeiras).
+- **CI, merge e publicação (18/11):** CI verde em `f411ac6` (2.991 testes, 1 ignorado que pede a planilha privada e 1 TODO; 313 E2E, com 13 pulados); merge `5334b6a`, com a árvore da branch testada; os checks do GitHub de `5334b6a` rodavam neste registro e entram no registro do lote seguinte; no ar desde 12:23. Do PAY-b: no GitHub, os checks de `ddb6cd6` terminaram com sucesso: "Verificações" e "Supabase Preview" (a árvore do TRF-c está contida nele).
+
+## 18/11/2026 — Lote CONNECT-c: a conciliação da Ora Connect com os relatórios oficiais da Nogle (ORA-CONNECT-009)
+
+- **Origem:** a orientação do proprietário de 18/11 ("ORA-CONNECT-009 não pode ficar esquecido"; o movimento externo se liga ao registro interno, com confirmação e reconciliação; a limitação da comissão registrada com a fonte necessária).
+- **Domínio, worker e banco:** `montarPedidoDoRelatorio` e `lerRelatorio` (só os campos dos exemplos oficiais de `/relatorios/ativacoes` e `/relatorios/recargas`; sem o nome do cliente); `conciliarRelatorios` (página por página até a vazia, máximo de 50; nada gravado se uma página falhar); `20261118151653_conciliacao_da_nogle` (as três tabelas, a RLS de `connect.gerir` na rede e `connect_worker_registrar_conciliacao`, só do worker: a ligação pelo ICCID ou pela linha, no mesmo dia ou no vizinho, uma operação por linha).
+- **Tela:** `/connect/conciliacao`, com os totais e o que não fecha, só o final da linha e do ICCID.
+- **Pedido ao Codex:** conferir a tolerância de um dia (o fuso do relatório não é documentado), a ordem da escolha quando há duas operações candidatas e se a parada na página vazia basta para a paginação não documentada.

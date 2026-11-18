@@ -11,7 +11,7 @@
 | API | Situação | O que falta (o mínimo) | Quem fornece | O que pode andar sem isso |
 |---|---|---|---|---|
 | **Supabase: login, banco e arquivos** | configuração pendente | A SUPABASE_SECRET_KEY no servidor (só o worker a lê); o SMTP próprio e os dois modelos de e-mail no painel; para a produção, outro projeto com backup (D-027) | O proprietário (a chave pelo definir-chave.sh; o SMTP no painel) | Tudo o que não depende de outra pessoa logada: o código e os testes seguem; a prova autenticada por perfil espera a chave |
-| **Nogle: Ora Connect (chips, ativação, recarga, portabilidade, carteira)** | bloqueio externo | O tipo da chave (P9) e as três chaves no servidor; as respostas às perguntas 6, 7, 11 e 12 e, da 10, o nome do uuid e a liberação de /consultaPagamento; uma linha e um chip de teste autorizados. Comissões e bonificações: a Nogle respondeu que não há na API; a fonte oficial (relatório ou extrato da Nogle) precisa ser indicada (D-016, #54) | A Nogle (chaves, respostas, linha de teste e a fonte das comissões), pelo proprietário | A conciliação do ORA-CONNECT-009 com os campos documentados do extrato e dos relatórios, provada com os exemplos oficiais, sem chamada real |
+| **Nogle: Ora Connect (chips, ativação, recarga, portabilidade, carteira)** | bloqueio externo | O tipo da chave (P9) e as três chaves no servidor; as respostas às perguntas 6, 7, 11 e 12 e, da 10, o nome do uuid e a liberação de /consultaPagamento; uma linha e um chip de teste autorizados. Comissões e bonificações: a Nogle respondeu que não há na API; a fonte oficial (relatório ou extrato da Nogle) precisa ser indicada (D-016, #54) | A Nogle (chaves, respostas, linha de teste e a fonte das comissões), pelo proprietário | Feito no CONNECT-c: a conciliação com os relatórios, provada com os exemplos oficiais; a conferência real espera a Nogle ligada |
 | **Emissor fiscal (NFC-e, NF-e, NFS-e)** | bloqueio externo | O contador (o regime e o documento de cada operação por filial; CFOP, CST, CSOSN e NCM); o emissor contratado; o certificado A1 de cada CNPJ; os CNPJs das 11 filiais | O contador e o proprietário | A preparação por filial na tela (sem inventar CNPJ) e a fila, que já existe; a emissão espera o emissor |
 | **WhatsApp Business Platform (Cloud API)** | bloqueio externo | A verificação da empresa na Meta, o número habilitado, o token de usuário do sistema, o segredo do app e um modelo de utilidade aprovado | O proprietário, no Meta for Developers | A caixa de entrada e o atendimento no sistema (histórico, etiquetas, distribuição), sem envio real; o e-mail continua opcional |
 | **Link de pagamento e Pix online (PicPay ou PagBank)** | bloqueio externo | A escolha do provedor (E1) e a credencial do escolhido | O proprietário | A tabela das cobranças e a tela da conciliação, sem provedor; o checkout pago espera a escolha |
@@ -60,14 +60,14 @@
 
 ### Nogle: Ora Connect (chips, ativação, recarga, portabilidade, carteira)
 
-**Situação:** bloqueio externo · **Requisitos:** ORA-CONNECT-001 a 011 (o 009, a conciliação dos repasses, não iniciado)
+**Situação:** bloqueio externo · **Requisitos:** ORA-CONNECT-001 a 011 (o 009, parcial desde o CONNECT-c: a produção conciliada; as comissões sem fonte na API)
 
 | Coluna | Detalhe |
 |---|---|
 | Documentação oficial e revisão | Oficial: docs.nogle.tech, lida por inteiro em 07/11 (62 funções; cópia com SHA-256 no repositório e o catálogo conferido no CI). Respostas da Nogle de 10/11 aos itens 5 a 7 (docs/integracoes/NOGLE_API_REFERENCIA.md, 3.1) |
 | Operações necessárias | Ativação de chip físico e eSIM, recarga, portabilidade, consulta de linha, plano e saldo; estoque de chips do PDV e da MVNO; transferência de chips entre PDVs; o extrato do saldo (GET /saldo/extrato) e os relatórios de ativações, recargas e transações (GET /relatorios/*); a consulta do pagamento pelo uuid, prometida pela Nogle e fora da coleção oficial |
-| O que já existe | As regras em packages/dominio/src/nogle.ts (só campos documentados; resposta, evidência e listas oficiais); o worker em apps/worker/src/connect (token, envio, consulta e listas; resultado desconhecido nunca é reenviado); as operações persistentes no banco (ADR-005); as telas /connect e /demo/connect |
-| Código que falta | ORA-CONNECT-009: ligar cada uso do extrato do saldo e cada linha dos relatórios à operação local, com o que sobra dos dois lados; a compra com entrega, o bloqueio, o consumo e a transferência de chips no PDV da Nogle; o agendamento do worker (com autorização) |
+| O que já existe | As regras em packages/dominio/src/nogle.ts (só campos documentados; resposta, evidência e listas oficiais); o worker em apps/worker/src/connect (token, envio, consulta e listas; resultado desconhecido nunca é reenviado); as operações persistentes no banco (ADR-005); as telas /connect e /demo/connect; desde o CONNECT-c (18/11), a conciliação com os relatórios oficiais de ativações e de recargas (o comando --conciliar do worker e a tela /connect/conciliacao) |
+| Código que falta | O extrato do saldo na conciliação (espera a primeira resposta real, porque o exemplo oficial não traz os campos); a compra com entrega, o bloqueio, o consumo e a transferência de chips no PDV da Nogle; o agendamento do worker (com autorização) |
 | Acesso ou contrato que falta | O tipo da chave (P9) e as três chaves no servidor; as respostas às perguntas 6, 7, 11 e 12 e, da 10, o nome do uuid e a liberação de /consultaPagamento; uma linha e um chip de teste autorizados. Comissões e bonificações: a Nogle respondeu que não há na API; a fonte oficial (relatório ou extrato da Nogle) precisa ser indicada (D-016, #54) |
 | Variáveis (só os nomes) | `NOGLE_API_BASE_URL`, `NOGLE_AUTH_KEY_TYPE`, `NOGLE_ACCESS_KEY`, `NOGLE_SECONDARY_KEY`, `NOGLE_OPERACOES_HABILITADAS`, `NOGLE_GET_COM_CORPO`, `NOGLE_CONSULTA_PAGAMENTO` |
 | Ambiente de teste | Sem sandbox documentado: pedido à Nogle um ambiente ou uma linha e um chip de teste; nenhuma operação real sem essa autorização |
@@ -75,8 +75,8 @@
 | Limites | Não documentados (perguntado à Nogle) |
 | Idempotência | Cada operação é um registro com chave própria e estado; resultado desconhecido não reenvia: consulta, e a gerência decide. A Nogle diz validar a duplicidade de pagamentos |
 | Aviso (webhook) ou reconsulta | Nenhum aviso documentado; o worker reconsulta o estado (ativação, recarga, portabilidade) |
-| Conciliação | Fonte: o extrato do saldo e os relatórios oficiais. O código da conciliação ainda não existe (ORA-CONNECT-009); o custo da carteira por linha (#56) entra nela |
-| Testes | packages/dominio/src/nogle.test.ts; apps/worker/src/connect/*.test.ts (ponta a ponta contra um servidor local com os exemplos oficiais); o catálogo das 62 funções no CI |
+| Conciliação | Os relatórios oficiais de ativações e de recargas, ligados à operação confirmada (CONNECT-c: conferida, valor diferente, só na Nogle, só na Ora); o extrato do saldo e o custo da carteira por linha (#56) esperam a primeira resposta real; as comissões não têm fonte na API |
+| Testes | packages/dominio/src/nogle.test.ts; apps/worker/src/connect/*.test.ts (ponta a ponta contra um servidor local com os exemplos oficiais, inclusive a conciliação); packages/banco/src/connect-conciliacao.test.ts; o catálogo das 62 funções no CI |
 | Publicação | As telas estão no ar; o worker não está agendado nem tem as chaves: nenhuma chamada real |
 | Homologação | Não homologado |
 
