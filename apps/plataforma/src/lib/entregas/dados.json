@@ -523,6 +523,19 @@
       "roteiro": "docs/aceite/DEMO-b.md",
       "requisitos": [],
       "entrega": "os fluxos novos na demonstração, com dados fictícios: os extratos da maquininha e do banco, a carga do estoque pelo relatório da Rein, a origem das reservas do site e a conciliação da Ora Connect com a Nogle",
+      "commit": "aaedf0d",
+      "publicado_em": "2026-11-18",
+      "pedido_em": null,
+      "resposta": null,
+      "respondido_em": null
+    },
+    {
+      "lote": "VEL-c",
+      "roteiro": "docs/aceite/VEL-c.md",
+      "requisitos": [
+        "ORA-QUAL-010"
+      ],
+      "entrega": "o sino de avisos e o Início com as pendências da loja numa ida só ao banco (antes, de 17 a 29 pedidos por abertura), com a mesma permissão e o mesmo RLS",
       "commit": null,
       "publicado_em": null,
       "pedido_em": null,

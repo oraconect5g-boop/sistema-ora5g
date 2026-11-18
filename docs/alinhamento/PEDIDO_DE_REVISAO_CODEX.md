@@ -1907,10 +1907,18 @@ Programa de execução integral (PR #67; checkpoint em `docs/alinhamento/EXECUCA
 - **Conferido tela a tela** (a tabela em `docs/aceite/GRAF-a.md`): o financeiro, o resultado, os recebíveis, o caixa, as vendas, o estoque, os relatórios e os canais; as exportações de cada um.
 - **Corrigido:** `/relatorios/canais` mostrava a margem das lojas que falhou como "sem o custo" e tirava as reservas do site sem aviso; agora `faltaDaLeitura`, `textoDaMargemDasLojas` e `detalheDoResultado` (em `lib/canais/painel.ts`) separam a falha da função ausente, com o aviso e o tentar de novo.
 - **Pedido ao Codex:** procurar outra tela real em que uma leitura com `estado !== "ok"` vire nulo, zero ou lista vazia sem aviso (o padrão `estado === "ok" ? dados : null`), além das conferidas.
-- **CI, merge e publicação (18/11):** CI verde em `8de435e` (3.031 testes, 1 ignorado que pede a planilha privada e 1 TODO; 315 E2E, com 13 pulados); merge `d27dd1a`, com a árvore da branch testada; os checks do GitHub de `d27dd1a` rodavam neste registro e entram no registro do lote seguinte; no ar desde 13:39.
+- **CI, merge e publicação (18/11):** CI verde em `8de435e` (3.031 testes, 1 ignorado que pede a planilha privada e 1 TODO; 315 E2E, com 13 pulados); merge `d27dd1a`, com a árvore da branch testada; no GitHub, os checks de `d27dd1a` terminaram com sucesso: "Verificações" e "Supabase Preview"; no ar desde 13:39.
 
 ## 18/11/2026 — Lote DEMO-b: os fluxos novos na demonstração
 
 - **Origem:** a seção 5 da orientação do proprietário de 18/11 ("atualizar a demo dos fluxos novos com dados fictícios isolados"; "extratos, origem das reservas, carga de estoque e novas jornadas não podem ser omitidos"; "paridade visual não é homologação funcional").
 - **Telas:** `/demo/financeiro/extratos` (EXT-a), `/demo/estoque/carga` (REIN-b, REIN-c e AUD-b, com os rótulos e as resoluções de `lib/estoque/carga-regras.ts`), a origem das reservas em `/demo/canais` (MKT-a) e a conciliação da Nogle na carteira de `/demo/connect` (CONNECT-c, com os rótulos de `lib/connect/conciliacao.ts`). Os dados ficam em `src/demo/dados/fluxos-novos.ts`; o isolamento segue provado por `src/demo/isolamento.test.ts`.
 - **Pedido ao Codex:** conferir se a demonstração promete algo que a tela real não faz (o motivo de 3 a 200 letras, a decisão em bloco só com o disponível ou de fora, o aparelho pelo IMEI) e se algum fluxo novo de 14 a 18/11 ficou sem linha na matriz demonstração × real.
+- **CI, merge e publicação (18/11):** CI verde em `8763689` (3.035 testes, 1 ignorado que pede a planilha privada e 1 TODO; 325 E2E, com 13 pulados); merge `aaedf0d`, com a árvore da branch testada; os checks do GitHub de `aaedf0d` rodavam neste registro e entram no registro do lote seguinte; no ar desde 13:56.
+
+## 18/11/2026 — Lote VEL-c: o sino de avisos e o Início numa ida só ao banco
+
+- **Origem:** a seção 5 da orientação do proprietário de 18/11 ("continuar VEL-c onde independente; medir antes/depois em celular autenticado; não remover RLS ou cachear permissões entre usuários") e a ADR-010 ("O que fica para depois": o sino e o Início eram o maior ganho que sobrava).
+- **Banco:** `20261118165816_pendencias_numa_ida`: `public.pendencias_da_loja()`, SECURITY INVOKER e STABLE, com as 16 contagens de `lib/inicio/pendencias.ts`, cada uma só para quem tem a permissão da fila pela mesma `tem_permissao`, com o RLS de quem chama; sem loja ou sem login, nada; sem grant para anon.
+- **Plataforma:** `lerPendencias` usa a função numa ida (com as divergências das notas ao mesmo tempo); a resposta é conferida (`lerContagens`); o banco sem a função usa as contagens uma a uma, como antes.
+- **Pedido ao Codex:** conferir a equivalência das 16 contagens com o caminho antigo (o teste compara as duas para o dono, o gerente, o vendedor e o técnico) e se o dia de hoje e as janelas no banco (`now()` e o fuso de São Paulo) batem com as da tela em todos os casos de borda (a virada do dia).

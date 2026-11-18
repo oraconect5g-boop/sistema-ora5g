@@ -317,6 +317,21 @@ node scripts/idas-por-tela.mjs --desde 3563
 
 A conta das rodadas, pelo código, está na ADR-010 ("O que veio no VEL-b").
 
+### 4.8 O VEL-c (18/11): o sino de avisos e o Início numa ida só
+
+**Antes** (o log de tempos da homologação, das linhas 3563 a 4329, em 18/11):
+
+| Tela | Aberturas | Pedidos ao banco | Tempo no banco |
+|---|---|---|---|
+| O sino (`/api/pendencias`) | 5 | 17 | 0,72 s |
+| O Início | 9 | de 18 a 29 | de 0,93 a 1,47 s |
+
+**Depois** (a migration `20261118165816_pendencias_numa_ida`, publicada com o log na linha 4335): pela conta do código, o sino passa a 2 pedidos ao mesmo tempo (as contagens e as divergências das notas) e o Início faz 15 pedidos a menos. Para medir com login:
+
+```bash
+node scripts/idas-por-tela.mjs --desde 4335
+```
+
 ## O que falta
 
 - O proprietário aprovar (ou mudar) as metas, inclusive as das telas com login.
@@ -325,4 +340,4 @@ A conta das rodadas, pelo código, está na ADR-010 ("O que veio no VEL-b").
 - Confirmar com um login qual chave assina os tokens de hoje (o log de tempos mostra).
 - O teste de ponta a ponta no celular que adiciona, tira e conclui uma venda: depende do usuário de teste (J1).
 - O teste no celular e na internet da loja piloto, com o vendedor.
-- A medida do "depois" do VEL-b, com login (seção 4.7), e o VEL-c: a ação do carrinho, a leitura única do Catálogo e do Estoque, o sino e o Início (ADR-010, "O que fica para depois").
+- A medida do "depois" do VEL-b e do VEL-c, com login (seções 4.7 e 4.8), e o resto do VEL-c: a ação do carrinho e a leitura única do Catálogo e do Estoque (ADR-010, "O que fica para depois").

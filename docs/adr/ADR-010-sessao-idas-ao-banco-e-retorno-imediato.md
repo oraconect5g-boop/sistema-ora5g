@@ -106,3 +106,8 @@ Medido no servidor da homologação, as causas são quatro:
   - **O sino de avisos (`/api/pendencias`) e o Início.** São 17 a 28 pedidos ao mesmo tempo a cada abertura, de 0,7 a 1,5 s pelo log: é o maior ganho que sobra.
   - **A conexão parada.** Medir se um pedido leve periódico mantém a ida rápida depois de um minuto parado (não foi feito).
   - **A navegação instantânea do Next.** Avaliar.
+- O que veio no VEL-c (18/11/2026; a orientação do proprietário de 18/11):
+  - **O sino e o Início numa ida.** A migration `20261118165816_pendencias_numa_ida` cria `public.pendencias_da_loja()`: as 16 contagens das pendências da loja do turno numa ida só, cada uma só para quem tem a permissão da fila (a mesma `tem_permissao`) e com o RLS de quem chama (SECURITY INVOKER). Nada fica guardado entre chamadas nem entre pessoas.
+  - **O efeito, pela conta dos pedidos:** o sino, de 17 pedidos para 2 ao mesmo tempo (as contagens e as divergências das notas); o Início, 15 pedidos a menos. O antes, pelo log de 18/11: de 17 a 29 pedidos por abertura, de 0,72 a 1,47 s. O depois se mede pelo mesmo log (seção 4.8 do documento de desempenho).
+  - **Banco sem a função:** a tela usa as contagens uma a uma, como antes.
+  - **Segue para depois:** a ação do carrinho (espera a revisão e o sim do proprietário), a leitura única do Catálogo e do Estoque, a conexão parada e a navegação instantânea.
