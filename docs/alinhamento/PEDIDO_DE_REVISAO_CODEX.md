@@ -1964,7 +1964,7 @@ Programa de execução integral (PR #67; checkpoint em `docs/alinhamento/EXECUCA
 - **Telas:** a mensagem própria da recusa na venda; a tela Lojas diz por que cada local não vende; a troca de loja mostra o depósito com "não vende"; a loja online trata o OR043 como a loja fechada (a vitrine não oferece o depósito).
 - **Testes:** `transferencias.test.ts` (o depósito recusa a venda e as reservas de venda, mesmo direto nas tabelas, e a transferência que sai dele chega à loja sem divergência no livro); `lib/vendas`, `lib/lojas` e `lib/loja` nas telas.
 - **Pedido ao Codex:** conferir se algum caminho de venda insere a venda ou a reserva sem passar pelos dois gatilhos (por exemplo, um `copy` ou uma função que desliga gatilhos).
-- **CI, merge e publicação (18/11):** CI verde em `317b236` (3.049 testes, 1 ignorado que pede a planilha privada e 1 TODO; 325 E2E, com 13 pulados); merge `3839819`, com a árvore da branch testada; os checks do GitHub de `3839819` rodavam neste registro e entram no registro do lote seguinte; no ar desde 16:54.
+- **CI, merge e publicação (18/11):** CI verde em `317b236` (3.049 testes, 1 ignorado que pede a planilha privada e 1 TODO; 325 E2E, com 13 pulados); merge `3839819`, com a árvore da branch testada; os checks do GitHub de `3839819` terminaram verdes ("Verificações" e "Supabase Preview"); no ar desde 16:54.
 
 ## 18/11/2026 — Lote OBS-a: os erros do servidor na Saúde da operação
 
@@ -1973,3 +1973,13 @@ Programa de execução integral (PR #67; checkpoint em `docs/alinhamento/EXECUCA
 - **Tela:** o cartão "Erros do servidor" na Saúde da operação, só para quem gere a rede (`unidades.gerir`), e o aviso no topo quando houve erro na última hora. Sem migration.
 - **Testes:** `lib/saude/erros-do-servidor.test.ts` (o que entra e o que nunca entra: o texto do erro, o CPF, os valores do endereço), `instrumentation.test.ts` (a falha do banco numa tela vira a linha e entra no resumo) e `app/operacao/operacao.test.ts` (o cartão, o aviso e a gerência sem o cartão).
 - **Pedido ao Codex:** conferir se algum erro sensível chega ao `digest` (o Next gera o código a partir do erro), e se a lista em memória deveria ficar no banco quando houver mais de um processo servindo o site.
+- **CI, merge e publicação (18/11):** CI verde em `6754b01` (3.059 testes, 1 ignorado que pede a planilha privada e 1 TODO; 325 E2E, com 13 pulados); merge `52d0fff`, com a árvore da branch testada; os checks do GitHub de `52d0fff` rodavam neste registro e entram no registro do lote seguinte; no ar desde 17:14.
+
+## 18/11/2026 — Lotes CONTAS-a e REPASSE-a: as contas bancárias e os repasses dos marketplaces (juntos na main)
+
+- **Origem:** ORA-FIN-006 (as contas bancárias de cada empresa, com o saldo) e ORA-MKTPL-005 e ORA-MKTPL-008 (o líquido recebido conferido com o extrato do banco); o quarto e o quinto dos outros setores (o pedido do proprietário de 18/11).
+- **Banco, CONTAS-a:** a migration `20261118201911_contas_bancarias` (com reversão): `public.contas_bancarias` (RLS para quem concilia pela rede), `extratos.conta_id` (só no extrato do banco), `conta_bancaria_criar`, `conta_bancaria_atualizar` (o motivo vai para a auditoria), `extrato_da_conta` (o período que cruza com outro extrato da mesma conta é recusado com OR044) e `contas_bancarias_saldos` (SECURITY INVOKER).
+- **Banco, REPASSE-a:** a migration `20261118202002_repasses_dos_marketplaces` (com reversão): `public.marketplace_repasses` (RLS para quem vê o resultado; uma linha por repasse e um repasse por linha), `marketplace_repasse_casar` (recalcula o esperado, pede o motivo quando o valor difere, OR045 para a linha ou o repasse já casados), `marketplace_repasse_desfazer` (sempre com o motivo) e `marketplace_repasses_painel` (SECURITY INVOKER; as sugestões do dia do repasse até 5 dias depois). A linha do extrato não muda de situação.
+- **Telas:** `/pagamentos/contas-bancarias` (a partir dos Extratos) e `/relatorios/marketplaces/repasses` (a partir dos Marketplaces), com a leitura estrita (forma inesperada é falha, nunca zero).
+- **Testes:** `contas-bancarias.test.ts` e `marketplace-repasses.test.ts` no banco; `lib/contas-bancarias`, `lib/marketplaces/repasses.test.ts` e as duas telas na plataforma.
+- **Pedido ao Codex:** conferir se o saldo deve contar a linha do próprio dia do saldo inicial (hoje não conta: o saldo é do fim daquele dia), se 5 dias bastam para as sugestões do repasse, e se casar o repasse deveria marcar a linha do extrato (hoje fica pendente, porque a situação dela é a da conciliação de vendas).

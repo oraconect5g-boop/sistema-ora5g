@@ -49,6 +49,14 @@
 4. **O chargeback ligado ao estorno da venda** (ORA-PAY-011): hoje a linha sai da conta com o motivo.
 5. **A busca do extrato pela API do provedor** (ORA-PAY-013): sem contrato verificado.
 
+## Atualização de 18/11/2026: as contas bancárias (lote CONTAS-a)
+
+- **A conta:** cada empresa da rede tem as suas contas (o apelido, o banco e, se quiser, a agência e a conta), com o saldo inicial no fim de um dia.
+- **O extrato do banco vai para a conta:** só o do banco. Dois extratos da mesma conta não podem cruzar o período (a mesma linha contaria duas vezes): o banco recusa com OR044.
+- **O saldo é o do extrato:** o saldo inicial mais todas as linhas dos extratos ligados depois daquele dia, conciliadas com uma venda ou não. Ele vale até o último dia coberto, e a tela diz que dia é esse.
+- **Quem:** quem concilia pela rede inteira (o dono). A mudança da conta e tirar um extrato dela pedem o motivo, que vai para a auditoria.
+- **Fica de fora:** a conferência com o saldo final que o arquivo do banco traz (o OFX real) e o depósito agrupado da maquininha.
+
 ## Consequências
 
 1. **Quem concilia confere só o que não casou,** em vez de digitar cada pagamento.

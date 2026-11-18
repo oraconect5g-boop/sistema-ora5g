@@ -44,6 +44,14 @@
 4. **O estorno no estoque, no fiscal e na comissão do pedido cancelado** (ORA-MKTPL-006): o reembolso aparece no pedido e no lucro, e nada mais muda.
 5. **A conciliação do repasse do canal com o extrato do banco** (EXT-a): o valor e a data do repasse ficam no pedido, para a conferência manual.
 
+## Atualização de 18/11/2026: o repasse casado com o extrato do banco (lote REPASSE-a)
+
+- **O repasse:** os pedidos do mesmo canal com a mesma data de repasse. O esperado é a soma do líquido deles (o do arquivo ou o estimado, como no painel).
+- **Casar:** dizer qual linha de crédito do extrato do banco da rede é o repasse. A tela sugere as linhas do dia do repasse até 5 dias depois, o mesmo valor primeiro. Quando o valor difere, o motivo é obrigatório e fica registrado.
+- **Um para um:** uma linha casa com um repasse só, e um repasse com uma linha só (OR045). Desfazer pede o motivo, e a auditoria guarda o que era.
+- **Os pedidos que mudam depois:** um arquivo novo do canal pode mudar o líquido ou os pedidos de um repasse já casado. O casamento guarda o esperado e os pedidos daquele momento, e a tela avisa quando mudaram.
+- **A linha do extrato não muda de situação:** casar o repasse não é conciliar uma venda.
+
 ## Consequências
 
 1. **O dono vê, por canal, por anúncio e por pedido,** o bruto, o que ficou com o canal (tarifas, frete e reembolsos), o líquido, o custo e o lucro estimado. A receita bruta e a líquida aparecem separadas.
