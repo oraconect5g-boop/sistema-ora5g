@@ -432,6 +432,19 @@
         "ORA-INV-004"
       ],
       "entrega": "o achado F18-03 da reanálise do Codex de 18/11: a linha com o físico maior que o disponível espera uma decisão registrada (lançar só o disponível, lançar o físico ou deixar de fora), e a carga não se aplica sem ela",
+      "commit": "488844b",
+      "publicado_em": "2026-11-18",
+      "pedido_em": null,
+      "resposta": null,
+      "respondido_em": null
+    },
+    {
+      "lote": "TRF-c",
+      "roteiro": "docs/aceite/TRF-c.md",
+      "requisitos": [
+        "ORA-INV-007"
+      ],
+      "entrega": "o achado F18-05 da reanálise do Codex de 18/11 e a D-049 (decidida pela orientação do proprietário de 18/11): o pedido de transferência reserva na origem, sem baixa dupla; a remessa é tudo ou nada",
       "commit": null,
       "publicado_em": null,
       "pedido_em": null,
