@@ -1922,10 +1922,18 @@ Programa de execução integral (PR #67; checkpoint em `docs/alinhamento/EXECUCA
 - **Banco:** `20261118165816_pendencias_numa_ida`: `public.pendencias_da_loja()`, SECURITY INVOKER e STABLE, com as 16 contagens de `lib/inicio/pendencias.ts`, cada uma só para quem tem a permissão da fila pela mesma `tem_permissao`, com o RLS de quem chama; sem loja ou sem login, nada; sem grant para anon.
 - **Plataforma:** `lerPendencias` usa a função numa ida (com as divergências das notas ao mesmo tempo); a resposta é conferida (`lerContagens`); o banco sem a função usa as contagens uma a uma, como antes.
 - **Pedido ao Codex:** conferir a equivalência das 16 contagens com o caminho antigo (o teste compara as duas para o dono, o gerente, o vendedor e o técnico) e se o dia de hoje e as janelas no banco (`now()` e o fuso de São Paulo) batem com as da tela em todos os casos de borda (a virada do dia).
-- **CI, merge e publicação (18/11):** CI verde em `4d10032` (3.044 testes, 1 ignorado que pede a planilha privada e 1 TODO; 325 E2E, com 13 pulados); merge `3fd64b6`, com a árvore da branch testada; os checks do GitHub de `3fd64b6` rodavam neste registro e entram no registro do lote seguinte; no ar desde 14:14.
+- **CI, merge e publicação (18/11):** CI verde em `4d10032` (3.044 testes, 1 ignorado que pede a planilha privada e 1 TODO; 325 E2E, com 13 pulados); merge `3fd64b6`, com a árvore da branch testada; no GitHub, os checks de `3fd64b6` terminaram com sucesso: "Verificações" e "Supabase Preview"; no ar desde 14:14.
 
 ## 18/11/2026 — Lote DOC-a: o servidor principal e a demonstração (D-051)
 
 - **Origem:** o proprietário, em 18/11: "Todas as atualizações devem ser direcionadas ao servidor principal", com o link https://ora5g.com.br/ ("nesse endereço"), e "a versão demo já não é mais necessária".
 - **Só documentos:** a D-051; o adendo da ADR-022 (a demonstração sem lotes novos; desligar espera a resposta); o roteiro do PDV-c no sistema real (a loja de teste Santa Cândida (teste)); os roteiros do DEMO-a e do DEMO-b que não serão pedidos; o aviso na matriz demonstração × real.
 - **Pedido ao Codex:** conferir se algum roteiro ainda manda o proprietário à demonstração sem dizer que ela foi dispensada.
+- **CI, merge e publicação (18/11):** CI verde em `cfe2726` (3.044 testes, 1 ignorado que pede a planilha privada e 1 TODO; 325 E2E, com 13 pulados); merge `a0ac5c5`, com a árvore da branch testada; os checks do GitHub de `a0ac5c5` rodavam neste registro e entram no registro do lote seguinte; no ar desde 14:31.
+
+## 18/11/2026 — Lote DEMO-c: a demonstração desligada em ora5g.com.br (D-051)
+
+- **Origem:** a resposta do proprietário em 18/11 à pergunta "Desligo a demonstração (/demo) do site?": "Sim, desligar".
+- **Código:** a tela de entrada passa a esconder o link com `ORA_DEMO_DESLIGADA=1`, como a tela inicial; `e2e/inicializacao.spec.ts` sobe a homologação com a chave e confere o 404 das páginas e das trocas de perfil e de loja e a falta dos dois links.
+- **Servidor:** a chave no ambiente da homologação (o arquivo de ambiente do servidor; o valor não é segredo).
+- **Pedido ao Codex:** conferir se alguma rota da demonstração ficou fora do 404 com a chave.

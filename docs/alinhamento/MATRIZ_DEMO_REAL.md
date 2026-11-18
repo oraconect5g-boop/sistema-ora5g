@@ -275,7 +275,7 @@ O painel mantém o título e o espaço em qualquer estado; só muda o conteúdo.
 
 ## 6. Paridade dos lotes de 14 a 18/11 (DEMO-a, 18/11)
 
-> **Desde 18/11 (D-051), a demonstração não recebe lotes novos.** O proprietário: "Todas as atualizações devem ser direcionadas ao servidor principal", com o link https://ora5g.com.br/ ("nesse endereço"), e "a versão demo já não é mais necessária". Esta tabela fica como registro do que a demonstração mostra; os roteiros de aceite usam o sistema real.
+> **Desde 18/11 (D-051), a demonstração está desligada em ora5g.com.br ("Sim, desligar", lote DEMO-c) e não recebe lotes novos.** O proprietário: "Todas as atualizações devem ser direcionadas ao servidor principal", com o link https://ora5g.com.br/ ("nesse endereço"), e "a versão demo já não é mais necessária". Esta tabela fica como registro do que a demonstração mostra; os roteiros de aceite usam o sistema real.
 
 A demonstração usa só dados fictícios e não lê o banco nem a sessão de verdade (`src/demo/isolamento.test.ts`). "Tem par" quer dizer que a demonstração mostra o mesmo fluxo com números inventados e o selo de demonstração.
 

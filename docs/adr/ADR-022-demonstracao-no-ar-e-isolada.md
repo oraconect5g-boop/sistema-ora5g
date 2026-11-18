@@ -50,5 +50,5 @@ O proprietário, em 18/11: "Todas as atualizações devem ser direcionadas ao se
 
 1. **A demonstração não recebe lotes novos.** O DEMO-b foi o último. A matriz demonstração × real fica como registro.
 2. **Os roteiros de aceite usam o sistema real,** em ora5g.com.br. O do PDV-c foi reescrito para a loja de teste Santa Cândida (teste). Os do DEMO-a e do DEMO-b não serão pedidos.
-3. **Desligar a demonstração** espera a resposta do proprietário. Até lá, ela fica no ar como estava. Para desligar: `ORA_DEMO_DESLIGADA=1` no ambiente do servidor; a tela inicial já esconde o botão, e o link da tela de entrada precisa passar a respeitar a mesma chave.
+3. **A demonstração foi desligada em 18/11** (o proprietário: "Sim, desligar"; lote DEMO-c): `ORA_DEMO_DESLIGADA=1` no ambiente do servidor de ora5g.com.br. A tela inicial e a tela de entrada escondem o link, e toda página e troca de perfil ou de loja da demonstração responde 404 (`e2e/inicializacao.spec.ts`). Religar: tirar a chave e publicar de novo.
 4. **O isolamento continua provado** por `src/demo/isolamento.test.ts` enquanto o código da demonstração existir.
