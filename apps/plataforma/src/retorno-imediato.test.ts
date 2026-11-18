@@ -187,6 +187,8 @@ describe("envio de arquivo: <FormularioDeArquivo>", () => {
     "app/relatorios/anuncios/page.tsx": { componente: "EscolherColunasDosAnuncios", arquivo: "app/relatorios/anuncios/EscolherColunasDosAnuncios.tsx" },
     // MKTPL-a: o relatório de vendas de um marketplace; o componente lê as colunas no aparelho.
     "app/relatorios/marketplaces/page.tsx": { componente: "EscolherColunasDoMarketplace", arquivo: "app/relatorios/marketplaces/EscolherColunasDoMarketplace.tsx" },
+    // REIN-b: o relatório de produtos com a quantidade de cada local; o componente lê as colunas no aparelho.
+    "app/estoque/carga/page.tsx": { componente: "EscolherColunasDaCarga", arquivo: "app/estoque/carga/EscolherColunasDaCarga.tsx" },
   };
   const temCampoDeArquivo = (trecho: string) => aberturas(trecho, "input").some(({ etiqueta }) => etiqueta.includes('type="file"'));
 

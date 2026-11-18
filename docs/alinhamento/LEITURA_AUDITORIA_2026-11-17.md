@@ -94,7 +94,7 @@
    - os estados honestos e as 16 entradas que faltavam;
    - o `.env.example`;
    - as pendências novas: D-049, a proteção da `main` e a senha vazada.
-2. **REIN-b, o estoque inicial por loja:**
+2. **REIN-b, o estoque inicial por loja** (feito em 18/11; ADR-021):
    - a prévia por local, com o físico e o disponível;
    - os negativos e os aparelhos com IMEI apontados, sem inventar número de série;
    - a aplicação pelo livro de movimentos, idempotente e aprovada pelo dono.

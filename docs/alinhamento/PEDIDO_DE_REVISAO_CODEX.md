@@ -1801,3 +1801,12 @@ Programa de execução integral (PR #67; checkpoint em `docs/alinhamento/EXECUCA
 - **Estados:** ORA-MKTPL-005 e ORA-MKTPL-008 voltam a parcial (A13); os 16 IDs sem linha ganham a sua (não iniciado, com o que falta).
 - **Pendências novas do proprietário:** D-049 (a transferência reserva no pedido?), a proteção da `main` (5.5) e a senha vazada (5.8).
 - **Pedido ao Codex:** conferir que o rodapé nunca tira uma linha de produto (a última com texto, a do meio sem código) e que o painel dos anúncios não desconta a mesma devolução duas vezes (a margem e a receita).
+- **CI, merge e publicação (17/11):** CI verde em `262b2ac` (2.897 testes e 1 TODO, 311 E2E, com 13 pulados); merge `3135435`, com a árvore da branch testada; no GitHub, os checks de `3135435` terminaram com sucesso: "Verificações" e "Supabase Preview"; no ar desde 23:02.
+
+## 18/11/2026 — Lote REIN-b: o estoque de cada loja pelo relatório da Rein
+
+- **Origem:** a orientação "Primeiro lote" da auditoria de 17/11 (PR #104) e o plano do proprietário de 16/11 (Onda 1, item 3). Decisão: [ADR-021](../adr/ADR-021-estoque-inicial-por-arquivo.md).
+- **Banco:** a migration `20261118021151_estoque_inicial_por_arquivo`: as cargas e as linhas, a prévia por loja que classifica cada produto, e aplicar, descartar e desfazer, com os papéis da importação do catálogo (OR024: quem gerou não aplica) e uma carga aplicada por loja (OR041).
+- **Tela:** `/estoque/carga` e `/estoque/carga/<carga>`, com o atalho "Estoque de cada loja" na importação de planilha.
+- **Testes:** o banco (7), a leitura (4), as telas, a rota e as ações (5), e o inventário de autorização (196 funções).
+- **Pedido ao Codex:** conferir que a carga nunca soma duas vezes (o mesmo arquivo, outro arquivo na mesma loja, a movimentação depois da data de corte) e que nenhum aparelho entra sem o IMEI.

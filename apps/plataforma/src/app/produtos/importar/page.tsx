@@ -159,7 +159,8 @@ export default async function Importar({ searchParams }: {
   return (
     <MoldeReal sessao={sessao}>
       <Link href="/produtos" className="inline-flex min-h-10 items-center gap-1 text-sm font-semibold text-acao"><ArrowLeft aria-hidden className="size-4" /> Cadastro de produtos</Link>
-      <TituloPagina titulo="Importar planilha" subtitulo="Produtos, variações, preços e custos por planilha (Excel ou CSV). Primeiro uma prévia, sem mexer no catálogo; outra pessoa confere e aplica tudo de uma vez." />
+      <TituloPagina titulo="Importar planilha" subtitulo="Produtos, variações, preços e custos por planilha (Excel ou CSV). Primeiro uma prévia, sem mexer no catálogo; outra pessoa confere e aplica tudo de uma vez."
+        acao={<BotaoLink href="/estoque/carga" tamanho="sm" variante="secundario">Estoque de cada loja</BotaoLink>} />
       {ok && <Aviso tom="sucesso" className="mt-4">{OK[ok]}</Aviso>}
       {erro && <Aviso tom="perigo" className="mt-4">{ERROS_DA_IMPORTACAO[erro]}</Aviso>}
 
