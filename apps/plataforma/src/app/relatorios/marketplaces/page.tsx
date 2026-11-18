@@ -1,11 +1,11 @@
-import { ArrowLeft, FileUp, ShoppingBag, Sigma } from "lucide-react";
+import { ArrowLeft, Banknote, FileUp, ShoppingBag, Sigma } from "lucide-react";
 import type { Metadata } from "next";
 import Form from "next/form";
 import Link from "next/link";
 
 import { FormularioDeArquivo } from "../../../componentes/FormularioDeArquivo";
 import { MoldeReal } from "../../../componentes/MoldeReal";
-import { Aviso, Botao, Cartao, Indicador, Selo, TituloPagina } from "../../../componentes/ui";
+import { Aviso, Botao, BotaoLink, Cartao, Indicador, Selo, TituloPagina } from "../../../componentes/ui";
 import { FalhaDoServico, obterSessao } from "../../../lib/acesso/sessao";
 import { brl, numero, percentualComSinal } from "../../../lib/formato";
 import { CANAIS_DOS_MARKETPLACES } from "../../../lib/marketplaces/leitura";
@@ -56,7 +56,8 @@ export default async function Marketplaces({ searchParams }: {
   return (
     <MoldeReal sessao={sessao} largura="max-w-6xl">
       <Link href="/relatorios" className="inline-flex min-h-11 items-center gap-1 text-sm font-semibold text-acao"><ArrowLeft className="size-4" aria-hidden />Relatórios</Link>
-      <TituloPagina titulo="Marketplaces" subtitulo={`De ${dataCurta(inicio)} a ${dataCurta(fim)}: os pedidos do Mercado Livre, da Shopee e do TikTok Shop, com o bruto, o que o canal cobrou, o líquido e o lucro estimado.`} />
+      <TituloPagina titulo="Marketplaces" subtitulo={`De ${dataCurta(inicio)} a ${dataCurta(fim)}: os pedidos do Mercado Livre, da Shopee e do TikTok Shop, com o bruto, o que o canal cobrou, o líquido e o lucro estimado.`} 
+        acao={<BotaoLink href="/relatorios/marketplaces/repasses" tamanho="sm" variante="secundario"><Banknote className="size-4" aria-hidden />Repasses no banco</BotaoLink>} />
       {ok === "importado" && <Aviso tom="sucesso" className="mt-4">Pedidos importados: {plural(contagemDoParametro(parametros.novos), "novo", "novos")} e {plural(contagemDoParametro(parametros.atualizados), "atualizado", "atualizados")} (o mesmo pedido nunca se repete).</Aviso>}
       {ok === "repetido" && <Aviso tom="info" className="mt-4">Este arquivo já tinha sido importado: nada mudou.</Aviso>}
       {erro && <Aviso tom="perigo" className="mt-4">{problema ?? ERROS_DOS_MARKETPLACES[erro]}</Aviso>}

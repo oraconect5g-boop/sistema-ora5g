@@ -1,4 +1,4 @@
-import { ArrowLeft, FileSpreadsheet, FileUp } from "lucide-react";
+import { ArrowLeft, FileSpreadsheet, FileUp, Landmark } from "lucide-react";
 import type { Metadata } from "next";
 import Link from "next/link";
 
@@ -35,7 +35,10 @@ export default async function Extratos({ searchParams }: { searchParams: Promise
     <MoldeReal sessao={sessao} largura="max-w-5xl">
       <Link href="/pagamentos/conciliacao" className="inline-flex min-h-11 items-center gap-1 text-sm font-semibold text-acao"><ArrowLeft className="size-4" aria-hidden />Conciliação</Link>
       <TituloPagina titulo="Extratos" subtitulo="O extrato da maquininha ou do banco, por arquivo: o sistema sugere a venda de cada linha, e você concilia. Venda não é dinheiro recebido."
-        acao={<BotaoLink href="/pagamentos/extratos/importar" tamanho="sm"><FileUp className="size-4" aria-hidden />Importar extrato</BotaoLink>} />
+        acao={<span className="flex flex-wrap gap-2">
+          <BotaoLink href="/pagamentos/contas-bancarias" tamanho="sm" variante="secundario"><Landmark className="size-4" aria-hidden />Contas bancárias</BotaoLink>
+          <BotaoLink href="/pagamentos/extratos/importar" tamanho="sm"><FileUp className="size-4" aria-hidden />Importar extrato</BotaoLink>
+        </span>} />
       {erro && <Aviso tom="perigo" className="mt-4">{ERROS_DOS_EXTRATOS[erro]}</Aviso>}
       <Cartao className="mt-4" titulo="Importados" subtitulo="Os 50 mais recentes." icone={FileSpreadsheet}>
         {extratos.length === 0 ? (
