@@ -1,5 +1,5 @@
 // ARQUIVO GERADO pelo Supabase (generate_typescript_types do projeto ora5g-dev) depois da
-// migration 20261118194259_deposito_nao_vende. Não edite à mão: gere de novo a cada
+// migration 20261118202002_repasses_dos_marketplaces. Não edite à mão: gere de novo a cada
 // migration aplicada (auditoria do Codex de 08/11, §7.2). O teste tipos-banco.test.ts confere
 // que funções e tabelas públicas daqui são as mesmas das migrations.
 export type Json =
@@ -2001,6 +2001,76 @@ export type Database = {
           },
         ]
       }
+      contas_bancarias: {
+        Row: {
+          agencia: string | null
+          apelido: string
+          ativa: boolean
+          banco: string
+          conta: string | null
+          criada_em: string
+          criada_por: string
+          empresa_id: string
+          id: string
+          numero: number
+          organizacao_id: string
+          saldo_inicial_centavos: number
+          saldo_inicial_em: string
+        }
+        Insert: {
+          agencia?: string | null
+          apelido: string
+          ativa?: boolean
+          banco: string
+          conta?: string | null
+          criada_em?: string
+          criada_por: string
+          empresa_id: string
+          id?: string
+          numero?: never
+          organizacao_id: string
+          saldo_inicial_centavos: number
+          saldo_inicial_em: string
+        }
+        Update: {
+          agencia?: string | null
+          apelido?: string
+          ativa?: boolean
+          banco?: string
+          conta?: string | null
+          criada_em?: string
+          criada_por?: string
+          empresa_id?: string
+          id?: string
+          numero?: never
+          organizacao_id?: string
+          saldo_inicial_centavos?: number
+          saldo_inicial_em?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "contas_bancarias_criada_por_fkey"
+            columns: ["criada_por"]
+            isOneToOne: false
+            referencedRelation: "perfis_usuario"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "contas_bancarias_empresa_id_organizacao_id_fkey"
+            columns: ["empresa_id", "organizacao_id"]
+            isOneToOne: false
+            referencedRelation: "empresas"
+            referencedColumns: ["id", "organizacao_id"]
+          },
+          {
+            foreignKeyName: "contas_bancarias_organizacao_id_fkey"
+            columns: ["organizacao_id"]
+            isOneToOne: false
+            referencedRelation: "organizacoes"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       contas_pagar_categorias: {
         Row: {
           ativa: boolean
@@ -2983,6 +3053,7 @@ export type Database = {
       extratos: {
         Row: {
           arquivo: string
+          conta_id: string | null
           fonte: string
           id: string
           importado_em: string
@@ -3000,6 +3071,7 @@ export type Database = {
         }
         Insert: {
           arquivo: string
+          conta_id?: string | null
           fonte: string
           id?: string
           importado_em?: string
@@ -3017,6 +3089,7 @@ export type Database = {
         }
         Update: {
           arquivo?: string
+          conta_id?: string | null
           fonte?: string
           id?: string
           importado_em?: string
@@ -3033,6 +3106,13 @@ export type Database = {
           unidade_id?: string | null
         }
         Relationships: [
+          {
+            foreignKeyName: "extratos_conta_fk"
+            columns: ["conta_id", "organizacao_id"]
+            isOneToOne: false
+            referencedRelation: "contas_bancarias"
+            referencedColumns: ["id", "organizacao_id"]
+          },
           {
             foreignKeyName: "extratos_importado_por_fkey"
             columns: ["importado_por"]
@@ -4162,6 +4242,70 @@ export type Database = {
           },
           {
             foreignKeyName: "marketplace_pedidos_organizacao_id_fkey"
+            columns: ["organizacao_id"]
+            isOneToOne: false
+            referencedRelation: "organizacoes"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      marketplace_repasses: {
+        Row: {
+          canal: string
+          casado_em: string
+          casado_por: string
+          data_repasse: string
+          esperado_centavos: number
+          id: string
+          linha_id: string
+          motivo: string | null
+          organizacao_id: string
+          pedidos: number
+          recebido_centavos: number
+        }
+        Insert: {
+          canal: string
+          casado_em?: string
+          casado_por: string
+          data_repasse: string
+          esperado_centavos: number
+          id?: string
+          linha_id: string
+          motivo?: string | null
+          organizacao_id: string
+          pedidos: number
+          recebido_centavos: number
+        }
+        Update: {
+          canal?: string
+          casado_em?: string
+          casado_por?: string
+          data_repasse?: string
+          esperado_centavos?: number
+          id?: string
+          linha_id?: string
+          motivo?: string | null
+          organizacao_id?: string
+          pedidos?: number
+          recebido_centavos?: number
+        }
+        Relationships: [
+          {
+            foreignKeyName: "marketplace_repasses_casado_por_fkey"
+            columns: ["casado_por"]
+            isOneToOne: false
+            referencedRelation: "perfis_usuario"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "marketplace_repasses_linha_id_fkey"
+            columns: ["linha_id"]
+            isOneToOne: true
+            referencedRelation: "extrato_linhas"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "marketplace_repasses_organizacao_id_fkey"
             columns: ["organizacao_id"]
             isOneToOne: false
             referencedRelation: "organizacoes"
@@ -7622,6 +7766,32 @@ export type Database = {
           tipo: string
         }[]
       }
+      conta_bancaria_atualizar: {
+        Args: {
+          p_agencia: string
+          p_apelido: string
+          p_ativa: boolean
+          p_banco: string
+          p_conta: string
+          p_conta_bancaria: string
+          p_motivo: string
+          p_saldo_em: string
+          p_saldo_inicial: number
+        }
+        Returns: boolean
+      }
+      conta_bancaria_criar: {
+        Args: {
+          p_agencia: string
+          p_apelido: string
+          p_banco: string
+          p_conta: string
+          p_empresa: string
+          p_saldo_em: string
+          p_saldo_inicial: number
+        }
+        Returns: string
+      }
       conta_pagar_anexar: {
         Args: {
           p_caminho: string
@@ -7677,6 +7847,27 @@ export type Database = {
       contas_a_pagar_resumo: {
         Args: { p_rede?: boolean; p_unidade?: string }
         Returns: Json
+      }
+      contas_bancarias_saldos: {
+        Args: never
+        Returns: {
+          agencia: string
+          apelido: string
+          ativa: boolean
+          banco: string
+          conta: string
+          empresa: string
+          empresa_id: string
+          entradas_centavos: number
+          extratos: number
+          id: string
+          numero: number
+          saidas_centavos: number
+          saldo_centavos: number
+          saldo_em: string
+          saldo_inicial_centavos: number
+          saldo_inicial_em: string
+        }[]
       }
       convidar_pessoa: {
         Args: {
@@ -7800,6 +7991,10 @@ export type Database = {
         Returns: Json
       }
       extrato_conciliar_certas: { Args: { p_extrato: string }; Returns: Json }
+      extrato_da_conta: {
+        Args: { p_conta_bancaria: string; p_extrato: string; p_motivo: string }
+        Returns: boolean
+      }
       extrato_desfazer: {
         Args: { p_linha: string; p_motivo: string }
         Returns: boolean
@@ -8195,6 +8390,23 @@ export type Database = {
         Returns: Json
       }
       marketplace_painel: {
+        Args: { p_fim: string; p_inicio: string }
+        Returns: Json
+      }
+      marketplace_repasse_casar: {
+        Args: {
+          p_canal: string
+          p_data_repasse: string
+          p_linha: string
+          p_motivo: string
+        }
+        Returns: Json
+      }
+      marketplace_repasse_desfazer: {
+        Args: { p_canal: string; p_data_repasse: string; p_motivo: string }
+        Returns: boolean
+      }
+      marketplace_repasses_painel: {
         Args: { p_fim: string; p_inicio: string }
         Returns: Json
       }

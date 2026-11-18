@@ -576,6 +576,33 @@
         "ORA-QUAL-013"
       ],
       "entrega": "os erros do servidor na Saúde da operação: quantos, em que tela, quando e o código que a página de erro mostra à loja; o aviso no topo quando houve erro na última hora; nunca o texto do erro nem os valores do endereço",
+      "commit": "52d0fff",
+      "publicado_em": "2026-11-18",
+      "pedido_em": null,
+      "resposta": null,
+      "respondido_em": null
+    },
+    {
+      "lote": "CONTAS-a",
+      "roteiro": "docs/aceite/CONTAS-a.md",
+      "requisitos": [
+        "ORA-FIN-006"
+      ],
+      "entrega": "as contas bancárias de cada empresa, com o saldo pelo extrato (o saldo inicial num dia mais as linhas dos extratos do banco ligados à conta), só para quem concilia pela rede",
+      "commit": null,
+      "publicado_em": null,
+      "pedido_em": null,
+      "resposta": null,
+      "respondido_em": null
+    },
+    {
+      "lote": "REPASSE-a",
+      "roteiro": "docs/aceite/REPASSE-a.md",
+      "requisitos": [
+        "ORA-MKTPL-005",
+        "ORA-MKTPL-008"
+      ],
+      "entrega": "o repasse de cada canal (os pedidos com a mesma data de repasse) casado com a linha de crédito do extrato do banco, com a diferença e o motivo registrados",
       "commit": null,
       "publicado_em": null,
       "pedido_em": null,
