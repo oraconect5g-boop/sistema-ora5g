@@ -7,7 +7,7 @@ import { erroDoBonus, faixasParaOBanco, validarRegras } from "../../../lib/bonus
 
 // Uma ação, uma chamada ao banco como a pessoa logada (sem chave secreta): public.bonus_definir confere
 // bonus.definir em papel de organização (só o dono), o mês (este ou até 12 à frente), as faixas e o
-// motivo para mudar ou retirar uma regra que já vale; grava as versões das quatro medidas, tudo ou
+// motivo para mudar ou retirar uma regra que já vale; grava as versões das cinco medidas, tudo ou
 // nada, e a auditoria. O mês que já terminou não muda.
 
 const MES = /^\d{4}-(0[1-9]|1[0-2])-01$/;

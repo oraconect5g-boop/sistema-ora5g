@@ -97,7 +97,7 @@ async function produzir() {
   const numero = (id: string) => Number(numeros.find((n) => n.id === id)?.numero);
   return { dono, venda1: numero(venda1), venda2: numero(venda2) };
 }
-const REALIZADO = { vendido_liquido: 157_800, aparelhos: 1, connect: 1, acessorios: 7_900 };
+const REALIZADO = { vendido_liquido: 157_800, aparelhos: 1, connect: 1, acessorios: 7_900, chips: 0 };
 
 type Conta = { meta: number | null; realizado: number; faixa: number | null; bonus: number; proxima: { faixa: number; a_partir_de: number; valor: number; falta: number } | null };
 type Bonus = {
@@ -261,7 +261,7 @@ describe("bônus por meta: o bônus do mês (L9a)", () => {
 });
 
 describe("bônus por meta: o extrato do vendedor (L9a)", () => {
-  type Linha = { tipo: string; quando: string; venda: number | null; devolucao: number | null; operacao: number | null; servico: string | null; vendido_liquido: number; aparelhos: number; acessorios: number; connect: number };
+  type Linha = { tipo: string; quando: string; venda: number | null; devolucao: number | null; operacao: number | null; servico: string | null; vendido_liquido: number; aparelhos: number; acessorios: number; connect: number; chips: number };
   type Extrato = { mes: string; regra_contagem: number; unidade_id: string; vendedor_id: string; quantidade: number; totais: typeof REALIZADO; linhas: Linha[] };
   const extrato = async (s: Sessao, unidade: string, vendedor: string, mes = esteMes()) => inteiros(await valor<Extrato>(s, EXTRATO, [mes, unidade, vendedor]));
   const efeito = (l: Linha) => [l.tipo, l.venda, l.vendido_liquido, l.aparelhos, l.acessorios, l.connect];
@@ -297,7 +297,7 @@ describe("bônus por meta: o extrato do vendedor (L9a)", () => {
     await db.exec("set session_replication_role = origin");
     const e = await extrato(dono, ids.lojaA, ids.vendedorA);
     expect(e.linhas.map((l) => [l.tipo, l.venda])).toEqual([["cancelamento", expect.any(Number)], ["connect", null], ["devolucao", venda1], ["venda", expect.any(Number)]]);
-    expect(e.totais).toEqual({ vendido_liquido: -7_900, aparelhos: 0, acessorios: -7_900, connect: 1 });
+    expect(e.totais).toEqual({ vendido_liquido: -7_900, aparelhos: 0, acessorios: -7_900, connect: 1, chips: 0 });
     const painel = inteiros(await valor<{ vendedores: { vendedor_id: string; realizado: typeof REALIZADO }[] }>(dono, "select public.metas_painel($1::date, $2) as v", [esteMes(), ids.lojaA]));
     expect(painel.vendedores.find((v) => v.vendedor_id === ids.vendedorA)?.realizado).toEqual(e.totais);
   });
@@ -319,5 +319,25 @@ describe("bônus por meta: o extrato do vendedor (L9a)", () => {
   it("mês sem fato: nenhuma linha e totais zerados", async () => {
     const e = await extrato(await naLoja(ids.dono, ids.lojaA), ids.lojaA, ids.vendedorA, somarMeses(1));
     expect(e).toMatchObject({ quantidade: 0, linhas: [], totais: { vendido_liquido: 0, aparelhos: 0, acessorios: 0, connect: 0 } });
+  });
+
+  // PERF-a (ORA-PERF-001; o proprietário, 18/11): o chip como medida própria também no bônus e no extrato.
+  it("PERF-a: a regra do bônus dos chips, a faixa alcançada e o chip no extrato do vendedor, igual ao painel", async () => {
+    await db.query("insert into public.precos (organizacao_id, variante_id, unidade_id, valor_centavos, inicio, origem) values ($1, $2, null, 1000, now() - interval '1 day', 'manual')",
+      [ids.organizacao, cat.chip]);
+    const ana = await naLoja(ids.vendedorA, ids.lojaA);
+    await valor(ana, "select public.abrir_caixa(10000, $1) as v", [chave("caixa")]);
+    const venda = await valor<string>(ana, "select public.criar_venda($1) as v", [chave("venda")]);
+    await valor(ana, "select public.adicionar_item($1, $2, $3, 1, $4) as v", [venda, cat.chip, itens.chipA, chave("item")]);
+    await valor(ana, "select public.concluir_venda($1, $2::jsonb, '{}'::jsonb, $3) as v", [venda, json([{ meio: "dinheiro", valor: 1_000 }]), chave("concluir")]);
+    const dono = await naLoja(ids.dono, ids.lojaA);
+    await valor(dono, METAS, [ids.lojaA, ids.vendedorA, esteMes(), json({ chips: 1 }), null]);
+    await valor(dono, DEFINIR, [esteMes(), json({ chips: [faixa(100, 2_500)] }), null]);
+    const b = await bonus(dono, ids.lojaA);
+    expect(Object.keys(b.regras)).toEqual(["chips"]);
+    expect(b.vendedores).toEqual([{ vendedor_id: ids.vendedorA, total: 2_500, medidas: { chips: { meta: 1, realizado: 1, faixa: 1, bonus: 2_500, proxima: null } } }]);
+    const e = await extrato(dono, ids.lojaA, ids.vendedorA);
+    expect(e.totais).toEqual({ vendido_liquido: 1_000, aparelhos: 0, acessorios: 0, connect: 0, chips: 1 });
+    expect(e.linhas.map((l) => [l.tipo, l.chips])).toEqual([["venda", 1]]);
   });
 });

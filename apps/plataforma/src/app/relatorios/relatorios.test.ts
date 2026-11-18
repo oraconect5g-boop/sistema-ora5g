@@ -1433,7 +1433,7 @@ describe("Relatórios: reservas do site por origem (MKT-a)", () => {
 // 10/11: outubro (31 dias) e novembro (30 dias), uma pergunta por mês.
 describe("Relatórios: a meta do dia na linha das vendas (G4c)", () => {
   const acompanhar = (...extras: string[]) => { for (const p of extras) cenario.permissoes.add(p); };
-  const ZERO = { vendido_liquido: 0, aparelhos: 0, acessorios: 0, connect: 0 };
+  const ZERO = { vendido_liquido: 0, aparelhos: 0, chips: 0, acessorios: 0, connect: 0 };
   const mes = (chave: string, dias: number, lojas: { id: string; meta?: number }[]) => ({
     mes: chave, dias_no_mes: dias, dias_decorridos: chave === "2026-11-01" ? 10 : dias, regra_contagem: 1,
     lojas: lojas.map((l) => ({ unidade_id: l.id, metas: l.meta === undefined ? {} : { vendido_liquido: l.meta }, realizado: ZERO })),

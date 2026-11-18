@@ -180,7 +180,7 @@ describe("formulários do fechamento", () => {
     expect(erro({})).toBe("decidir");
     expect(erro({ [`decisao_${BETO}`]: "ajustar", [`valor_${BETO}`]: "abc", [`motivo_${BETO}`]: AJUSTE })).toBe("valor");
     expect(erro({ [`decisao_${BETO}`]: "ajustar", [`valor_${BETO}`]: "", [`motivo_${BETO}`]: AJUSTE })).toBe("valor");
-    expect(erro({ [`decisao_${BETO}`]: "ajustar", [`valor_${BETO}`]: "400.000,01", [`motivo_${BETO}`]: AJUSTE })).toBe("valor");
+    expect(erro({ [`decisao_${BETO}`]: "ajustar", [`valor_${BETO}`]: "500.000,01", [`motivo_${BETO}`]: AJUSTE })).toBe("valor");
     expect(erro({ [`decisao_${BETO}`]: "ajustar", [`valor_${BETO}`]: "-1,00", [`motivo_${BETO}`]: AJUSTE })).toBe("valor");
     expect(erro({ [`decisao_${BETO}`]: "ajustar", [`valor_${BETO}`]: "300,00" })).toBe("motivo");
     expect(erro({ [`decisao_${BETO}`]: "manter", [`motivo_${BETO}`]: "x" })).toBe("motivo");
@@ -200,7 +200,7 @@ describe("formulários do fechamento", () => {
     expect(de("Ninguém teve meta ou venda neste mês: não há o que fechar")).toBe("nada");
     expect(de("Decida cada contestação: manter o valor ou pagar outro")).toBe("decidir");
     expect(de("Para pagar o valor calculado, escolha manter")).toBe("igual");
-    expect(de("O valor a pagar vai de R$ 0,00 a R$ 400.000,00")).toBe("valor");
+    expect(de("O valor a pagar vai de R$ 0,00 a R$ 500.000,00")).toBe("valor");
     expect(de("Diga o motivo de pagar outro valor: o vendedor vê")).toBe("motivo");
     expect(de("Cada contestação tem um motivo de 3 a 300 letras")).toBe("motivo");
     expect(de("Contestação de quem não está no fechamento")).toBe("dados");

@@ -134,10 +134,10 @@ describe("/metas/bonus (L9a)", () => {
     expect(campos.filter(([, v]) => v !== "" && v !== undefined)).toEqual([
       ["desde", "2026-11-01"], ["pct_vendido_liquido_1", "100"], ["valor_vendido_liquido_1", "300,00"], ["pct_vendido_liquido_2", "120"], ["valor_vendido_liquido_2", "500,00"],
     ]);
-    // As faixas que valem e mais uma linha livre (no mínimo duas): 3 + 2 + 2 + 2, e o motivo.
+    // As faixas que valem e mais uma linha livre (no mínimo duas): 3 + 2 + 2 + 2 + 2, e o motivo.
     expect(campos.filter(([nome]) => /^pct_/.test(String(nome))).map(([nome]) => nome)).toEqual([
       "pct_vendido_liquido_1", "pct_vendido_liquido_2", "pct_vendido_liquido_3", "pct_aparelhos_1", "pct_aparelhos_2",
-      "pct_acessorios_1", "pct_acessorios_2", "pct_connect_1", "pct_connect_2",
+      "pct_chips_1", "pct_chips_2", "pct_acessorios_1", "pct_acessorios_2", "pct_connect_1", "pct_connect_2",
     ]);
     expect(campos.at(-1)?.[0]).toBe("motivo");
     expect(p.texto).toContain("Valendo: 100%: R$ 300,00 · 120%: R$ 500,00");
@@ -188,12 +188,12 @@ describe("ação: definir as regras do bônus (L9a)", () => {
     throw new Error("a ação não redirecionou");
   }
 
-  it("manda as quatro medidas numa chamada só (tudo ou nada) e volta com o resultado", async () => {
+  it("manda as cinco medidas numa chamada só (tudo ou nada) e volta com o resultado", async () => {
     cenario.respostas.bonus_definir = { data: 1, error: null };
     expect(await destinoDe(definirBonus(formulario({ pct_connect_2: "50", valor_connect_2: "50,00" })))).toBe("/metas/bonus?desde=2026-11&ok=salvas");
     expect(cenario.chamadas).toEqual([{ nome: "bonus_definir", argumentos: {
       p_vigente_desde: "2026-11-01", p_motivo: null,
-      p_faixas: { vendido_liquido: [fb(100, 30_000)], aparelhos: null, acessorios: null, connect: [fb(50, 5_000)] },
+      p_faixas: { vendido_liquido: [fb(100, 30_000)], aparelhos: null, chips: null, acessorios: null, connect: [fb(50, 5_000)] },
     } }]);
     cenario.respostas.bonus_definir = { data: 0, error: null };
     expect(await destinoDe(definirBonus(formulario({ desde: "2026-12-01", motivo: "Natal" })))).toBe("/metas/bonus?desde=2026-12&ok=sem_mudanca");

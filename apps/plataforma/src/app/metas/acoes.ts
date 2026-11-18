@@ -8,7 +8,7 @@ import { erroDasMetas, validarDefinicao } from "../../lib/metas/painel";
 
 // Uma ação, uma chamada ao banco como a pessoa logada (sem chave secreta): public.metas_definir confere
 // metas.gerir na loja (o dono em todas; o gerente, na dele), o mês (este ou até 12 à frente), quem pode
-// receber meta nova e o motivo para mudar ou retirar; grava as versões das quatro medidas, tudo ou
+// receber meta nova e o motivo para mudar ou retirar; grava as versões das cinco medidas, tudo ou
 // nada, e a auditoria. O mês que já terminou não muda.
 
 function voltar(campo: (nome: string) => unknown, parametros: Record<string, string | null>): never {

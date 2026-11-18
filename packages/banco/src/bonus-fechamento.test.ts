@@ -216,8 +216,9 @@ describe("fechamento do bônus (L9b): a gerência confere e contesta, o dono apr
     expect(await aprovar({ [ids.vendedorAB]: { decisao: "ajustar", valor: 0, motivo: "O mesmo valor" } })).toBe("22023: Para pagar o valor calculado, escolha manter");
     expect(await aprovar({ [ids.vendedorAB]: { decisao: "ajustar", valor: 30_000 } })).toBe("22023: Diga o motivo de pagar outro valor: o vendedor vê");
     expect(await aprovar({ [ids.vendedorAB]: { decisao: "ajustar", valor: 30_000, motivo: "   " } })).toBe("22023: Diga o motivo de pagar outro valor: o vendedor vê");
-    const VALOR = "22023: O valor a pagar vai de R$ 0,00 a R$ 400.000,00";
-    for (const valorErrado of [40_000_001, -1, 1.5, "30000", null]) {
+    const VALOR = "22023: O valor a pagar vai de R$ 0,00 a R$ 500.000,00";
+    // PERF-a (18/11): o teto subiu de R$ 400.000,00 para R$ 500.000,00, as cinco medidas (com os chips) na faixa mais alta.
+    for (const valorErrado of [50_000_001, -1, 1.5, "30000", null]) {
       expect(await aprovar({ [ids.vendedorAB]: { decisao: "ajustar", valor: valorErrado, motivo: "Valor errado" } })).toBe(VALOR);
     }
     const DECISAO = "22023: Cada decisão é manter o valor ou pagar outro";

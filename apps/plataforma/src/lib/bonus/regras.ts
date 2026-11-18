@@ -160,14 +160,14 @@ function lerFato(l: Linha, mes: string): FatoDoExtrato {
   if (!TIPOS.includes(tipo)) throw new RespostaInesperada("tipo");
   const quando = t(l, "quando");
   if (Number.isNaN(Date.parse(quando)) || `${mesDeSaoPaulo(quando)}-01` !== mes) throw new RespostaInesperada("quando");
-  const efeito: Efeito = { vendido_liquido: n(l, "vendido_liquido"), aparelhos: n(l, "aparelhos"), acessorios: n(l, "acessorios"), connect: n(l, "connect") };
+  const efeito: Efeito = { vendido_liquido: n(l, "vendido_liquido"), aparelhos: n(l, "aparelhos"), chips: n(l, "chips"), acessorios: n(l, "acessorios"), connect: n(l, "connect") };
   const venda = nOuNulo(l, "venda");
   const devolucao = nOuNulo(l, "devolucao");
   const operacao = nOuNulo(l, "operacao");
   const servicoBruto = l.servico;
   if (servicoBruto !== null && !SERVICOS.includes(servicoBruto as ServicoDoConnect)) throw new RespostaInesperada("servico");
   const servico = servicoBruto as ServicoDoConnect | null;
-  const valores = [efeito.vendido_liquido, efeito.aparelhos, efeito.acessorios];
+  const valores = [efeito.vendido_liquido, efeito.aparelhos, efeito.chips, efeito.acessorios];
   // Cada tipo tem a sua forma: a venda soma, o cancelamento e a devolução descontam, o Connect conta um.
   const forma = {
     venda: venda !== null && devolucao === null && operacao === null && servico === null && valores.every((v) => v >= 0) && efeito.connect === 0,
@@ -187,7 +187,7 @@ export function lerExtrato(dado: unknown, pedido: { mes: string; unidade: string
   if (mes !== pedido.mes || t(dado, "unidade_id") !== pedido.unidade || t(dado, "vendedor_id") !== pedido.vendedor) throw new RespostaInesperada("pedido");
   const quantidade = n(dado, "quantidade");
   const tot = objeto(dado, "totais");
-  const totais: Efeito = { vendido_liquido: n(tot, "vendido_liquido"), aparelhos: n(tot, "aparelhos"), acessorios: n(tot, "acessorios"), connect: n(tot, "connect") };
+  const totais: Efeito = { vendido_liquido: n(tot, "vendido_liquido"), aparelhos: n(tot, "aparelhos"), chips: n(tot, "chips"), acessorios: n(tot, "acessorios"), connect: n(tot, "connect") };
   const linhas = lista(dado, "linhas").map((l) => lerFato(l, mes));
   if (linhas.length > LINHAS_DO_EXTRATO || quantidade < linhas.length || (quantidade > linhas.length && linhas.length < LINHAS_DO_EXTRATO)) {
     throw new RespostaInesperada("quantidade");
@@ -300,7 +300,7 @@ type Resultado<T> = { ok: true; dados: T } | { ok: false; erro: ErroDoBonus };
  * Confere o formulário: "desde" (o mês em que passa a valer) e, em cada medida, até 5 linhas de
  * porcentagem (pct_<medida>_<n>) e bônus (valor_<medida>_<n>). Linha inteira vazia é ignorada; medida
  * sem nenhuma linha fica sem bônus (retira a regra que valesse). As linhas são postas em ordem de
- * porcentagem; o bônus tem de crescer junto. As quatro medidas vão sempre: a que não mudou não vira versão.
+ * porcentagem; o bônus tem de crescer junto. As cinco medidas vão sempre: a que não mudou não vira versão.
  */
 export function validarRegras(campo: (nome: string) => unknown): Resultado<DefinicaoDoBonus> {
   const desde = campo("desde");

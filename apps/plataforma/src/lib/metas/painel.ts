@@ -2,8 +2,9 @@
 // public.metas_painel e public.metas_equipe, o ritmo do mês e a validação do formulário. A soma no
 // banco está provada em packages/banco/src/metas.test.ts; aqui não há acesso a dados.
 //   * A meta é do mês, com o ritmo esperado do dia: meta × dias decorridos ÷ dias do mês (hoje conta).
-//   * Quatro medidas, pela regra de contagem 1 (a única que a tela sabe explicar): valor vendido
-//     líquido, aparelhos, acessórios e Ora Connect confirmado.
+//   * Cinco medidas, pela regra de contagem 1 (a única que a tela sabe explicar): valor vendido
+//     líquido, aparelhos, chips (desde o PERF-a, 18/11: o chip conta à parte, D-050), acessórios e
+//     Ora Connect confirmado.
 //   * Têm meta a loja e cada vendedor. Meta não definida é ausência ("meta não definida"), nunca zero.
 //   * Bonificação e comissão continuam fora (D-014 e P8).
 import { lerReais } from "@ora5g/dominio";
@@ -13,7 +14,8 @@ import { RespostaInesperada, type Janela } from "../financeiro/painel";
 import { brl, numero } from "../formato";
 import { ehObjeto, inteiro as n, lista, objeto, texto as t, type Linha } from "../leitura-do-banco";
 
-export type Medida = "vendido_liquido" | "aparelhos" | "acessorios" | "connect";
+// PERF-a (o proprietário, 18/11: "o chip ... tem que contar separado"): os chips são a quinta medida.
+export type Medida = "vendido_liquido" | "aparelhos" | "chips" | "acessorios" | "connect";
 type DescricaoDaMedida = {
   nome: string;
   curto: string;
@@ -35,6 +37,10 @@ export const MEDIDAS: Record<Medida, DescricaoDaMedida> = {
     nome: "Aparelhos", curto: "Aparelhos", dinheiro: false, campo: "Aparelhos (unidades)", unidade: ["aparelho", "aparelhos"],
     conta: "Unidades de aparelho vendidas no mês, menos as devolvidas e as das vendas canceladas no mês.",
   },
+  chips: {
+    nome: "Chips", curto: "Chips", dinheiro: false, campo: "Chips (unidades)", unidade: ["chip", "chips"],
+    conta: "Chips vendidos no mês, menos os devolvidos e os das vendas canceladas no mês. A ativação na operadora conta à parte, no Ora Connect.",
+  },
   acessorios: {
     nome: "Acessórios", curto: "Acessórios", dinheiro: true, campo: "Acessórios (R$)",
     conta: "Valor dos acessórios vendidos no mês (com o desconto do item), menos os devolvidos e cancelados no mês.",
@@ -44,7 +50,7 @@ export const MEDIDAS: Record<Medida, DescricaoDaMedida> = {
     conta: "Ativações, portabilidades e recargas confirmadas no mês, do vendedor de origem. Registrada não conta.",
   },
 };
-export const ORDEM_DAS_MEDIDAS: readonly Medida[] = ["vendido_liquido", "aparelhos", "acessorios", "connect"];
+export const ORDEM_DAS_MEDIDAS: readonly Medida[] = ["vendido_liquido", "aparelhos", "chips", "acessorios", "connect"];
 export const ehMedida = (v: unknown): v is Medida => typeof v === "string" && Object.hasOwn(MEDIDAS, v);
 export const formatarMedida = (medida: Medida, valor: number) => (MEDIDAS[medida].dinheiro ? brl(valor) : numero(valor));
 /** Para frases: "R$ 1.234,00", "3 aparelhos", "1 operação". */
@@ -84,7 +90,7 @@ function metasDoAlvo(l: Linha): MetasDoAlvo {
 }
 function realizadoDoAlvo(l: Linha): Realizado {
   const r = objeto(l, "realizado");
-  const realizado = { vendido_liquido: n(r, "vendido_liquido"), aparelhos: n(r, "aparelhos"), acessorios: n(r, "acessorios"), connect: n(r, "connect") };
+  const realizado = { vendido_liquido: n(r, "vendido_liquido"), aparelhos: n(r, "aparelhos"), chips: n(r, "chips"), acessorios: n(r, "acessorios"), connect: n(r, "connect") };
   // Devolução no mês de venda de outro mês pode deixar o líquido negativo; operação confirmada, nunca.
   if (realizado.connect < 0) throw new RespostaInesperada("connect");
   return realizado;
@@ -244,11 +250,11 @@ export function progresso(medida: Medida, realizado: number, meta: number | unde
   return { medida, realizado, meta, atingido: realizado / meta, esperado, falta, restam, porDia: falta > 0 && restam > 0 ? Math.ceil(falta / restam) : null, situacao };
 }
 
-/** As quatro medidas de um alvo, na ordem da tela. */
+/** As cinco medidas de um alvo, na ordem da tela. */
 export const progressoDoAlvo = (alvo: { metas: MetasDoAlvo; realizado: Realizado }, dias: { diasNoMes: number; diasDecorridos: number }, fase: FaseDoMes) =>
   ORDEM_DAS_MEDIDAS.map((m) => progresso(m, alvo.realizado[m], alvo.metas[m], dias, fase));
 
-export const REALIZADO_ZERO: Realizado = { vendido_liquido: 0, aparelhos: 0, acessorios: 0, connect: 0 };
+export const REALIZADO_ZERO: Realizado = { vendido_liquido: 0, aparelhos: 0, chips: 0, acessorios: 0, connect: 0 };
 
 // ---------------------------------------------------------------------------------------------
 // Formulário: definir (ou retirar) as metas de um alvo no mês; o banco confere tudo de novo
@@ -306,7 +312,7 @@ export function valorNoCampo(medida: Medida, valor: number | undefined): string 
 export type DefinicaoDeMetas = { unidade: string; vendedor: string | null; mes: string; valores: Record<Medida, number | null>; motivo: string | null };
 type Resultado<T> = { ok: true; dados: T } | { ok: false; erro: ErroDasMetas };
 
-/** Confere o formulário de um alvo ("loja" ou o id do vendedor): as quatro medidas vão sempre; a que não mudou não vira versão. */
+/** Confere o formulário de um alvo ("loja" ou o id do vendedor): as cinco medidas vão sempre; a que não mudou não vira versão. */
 export function validarDefinicao(campo: (nome: string) => unknown): Resultado<DefinicaoDeMetas> {
   const unidade = campo("unidade");
   const alvo = campo("alvo");
@@ -386,7 +392,7 @@ export function somaDasLojas(d: MetasDasLojas, medida: Medida): SomaDasLojas {
     total: d.lojas.length,
   };
 }
-/** As quatro medidas de uma loja, ou da soma das lojas com meta (a rede), com o ritmo do mês. */
+/** As cinco medidas de uma loja, ou da soma das lojas com meta (a rede), com o ritmo do mês. */
 export function progressoDasLojas(d: MetasDasLojas, fase: FaseDoMes) {
   return ORDEM_DAS_MEDIDAS.map((m) => {
     const soma = somaDasLojas(d, m);

@@ -14,10 +14,10 @@ const CAIO = "00000000-0000-4000-8000-00000000a003";
 const LOJA = "00000000-0000-4000-8000-0000000000cc";
 const RESPOSTA = {
   mes: "2026-11-01", dias_no_mes: 30, dias_decorridos: 13, regra_contagem: 1,
-  loja: { metas: { vendido_liquido: "5000000", aparelhos: 40 }, realizado: { vendido_liquido: "2600000", aparelhos: 12, acessorios: 150000, connect: 9 } },
+  loja: { metas: { vendido_liquido: "5000000", aparelhos: 40 }, realizado: { vendido_liquido: "2600000", aparelhos: 12, chips: 0, acessorios: 150000, connect: 9 } },
   vendedores: [
-    { vendedor_id: ANA, metas: { vendido_liquido: 2000000, connect: 10 }, realizado: { vendido_liquido: 1200000, aparelhos: 7, acessorios: 90000, connect: 6 } },
-    { vendedor_id: BETO, metas: {}, realizado: { vendido_liquido: -30000, aparelhos: 0, acessorios: 0, connect: 0 } },
+    { vendedor_id: ANA, metas: { vendido_liquido: 2000000, connect: 10 }, realizado: { vendido_liquido: 1200000, aparelhos: 7, chips: 0, acessorios: 90000, connect: 6 } },
+    { vendedor_id: BETO, metas: {}, realizado: { vendido_liquido: -30000, aparelhos: 0, chips: 0, acessorios: 0, connect: 0 } },
   ],
 };
 const com = (mudanca: (r: typeof RESPOSTA) => unknown) => mudanca(JSON.parse(JSON.stringify(RESPOSTA)) as typeof RESPOSTA);
@@ -28,10 +28,10 @@ describe("leitura estrita de metas_painel e metas_equipe", () => {
     const m = lerMetas(RESPOSTA);
     expect(m).toEqual({
       mes: "2026-11-01", diasNoMes: 30, diasDecorridos: 13,
-      loja: { metas: { vendido_liquido: 5_000_000, aparelhos: 40 }, realizado: { vendido_liquido: 2_600_000, aparelhos: 12, acessorios: 150_000, connect: 9 } },
+      loja: { metas: { vendido_liquido: 5_000_000, aparelhos: 40 }, realizado: { vendido_liquido: 2_600_000, aparelhos: 12, chips: 0, acessorios: 150_000, connect: 9 } },
       vendedores: [
-        { vendedorId: ANA, metas: { vendido_liquido: 2_000_000, connect: 10 }, realizado: { vendido_liquido: 1_200_000, aparelhos: 7, acessorios: 90_000, connect: 6 } },
-        { vendedorId: BETO, metas: {}, realizado: { vendido_liquido: -30_000, aparelhos: 0, acessorios: 0, connect: 0 } },
+        { vendedorId: ANA, metas: { vendido_liquido: 2_000_000, connect: 10 }, realizado: { vendido_liquido: 1_200_000, aparelhos: 7, chips: 0, acessorios: 90_000, connect: 6 } },
+        { vendedorId: BETO, metas: {}, realizado: { vendido_liquido: -30_000, aparelhos: 0, chips: 0, acessorios: 0, connect: 0 } },
       ],
     });
     expect(lerMetas({ ...RESPOSTA, loja: null }).loja).toBeNull();
@@ -138,11 +138,11 @@ describe("formulário das metas", () => {
     }
   });
 
-  it("confere o alvo, o mês, as quatro medidas e o motivo", () => {
+  it("confere o alvo, o mês, as cinco medidas e o motivo", () => {
     const campos = (extra: Record<string, string> = {}) => (nome: string) =>
       ({ unidade: LOJA, alvo: "loja", mes: "2026-11-01", meta_vendido_liquido: "50.000,00", meta_aparelhos: "40", meta_acessorios: "", meta_connect: "", motivo: "  Campanha   de natal ", ...extra })[nome] ?? null;
     expect(validarDefinicao(campos())).toEqual({
-      ok: true, dados: { unidade: LOJA, vendedor: null, mes: "2026-11-01", valores: { vendido_liquido: 5_000_000, aparelhos: 40, acessorios: null, connect: null }, motivo: "Campanha de natal" },
+      ok: true, dados: { unidade: LOJA, vendedor: null, mes: "2026-11-01", valores: { vendido_liquido: 5_000_000, aparelhos: 40, chips: null, acessorios: null, connect: null }, motivo: "Campanha de natal" },
     });
     expect(validarDefinicao(campos({ alvo: ANA, motivo: "" }))).toMatchObject({ ok: true, dados: { vendedor: ANA, motivo: null } });
     expect(validarDefinicao(campos({ alvo: "ana" }))).toEqual({ ok: false, erro: "dados" });
@@ -171,7 +171,7 @@ describe("a equipe na tela da gestão", () => {
   it("quem tem meta ou fato e quem está na equipe sem nada ainda, em ordem de nome; id sem nome não some", () => {
     const linhas = linhasDaEquipe(dados, pessoas, "atual");
     expect(linhas.map((l) => [l.pessoa.nome, l.progresso.map((p) => p.realizado)])).toEqual([
-      ["Ana", [1_200_000, 7, 90_000, 6]], ["Beto", [-30_000, 0, 0, 0]], ["Caio", [0, 0, 0, 0]],
+      ["Ana", [1_200_000, 7, 0, 90_000, 6]], ["Beto", [-30_000, 0, 0, 0, 0]], ["Caio", [0, 0, 0, 0, 0]],
     ]);
     expect(linhasDaEquipe(dados, [], "atual").map((l) => l.pessoa.nome)).toEqual(["Pessoa sem nome lido", "Pessoa sem nome lido"]);
   });
@@ -192,7 +192,7 @@ describe("a equipe na tela da gestão", () => {
 describe("as lojas no mês: Início e Relatórios (G4c)", () => {
   const OUTRA = "00000000-0000-4000-8000-0000000000dd";
   const TERCEIRA = "00000000-0000-4000-8000-0000000000ee";
-  const R = (vendido_liquido: number, aparelhos: number) => ({ vendido_liquido, aparelhos, acessorios: 0, connect: 0 });
+  const R = (vendido_liquido: number, aparelhos: number) => ({ vendido_liquido, aparelhos, chips: 0, acessorios: 0, connect: 0 });
   const LOJAS = {
     mes: "2026-11-01", dias_no_mes: 30, dias_decorridos: 10, regra_contagem: 1,
     lojas: [
@@ -220,7 +220,7 @@ describe("as lojas no mês: Início e Relatórios (G4c)", () => {
     const lista = progressoDasLojas(d, "atual");
     expect(lista.map((p) => [p.medida, p.realizado, p.meta, p.atingido, p.situacao, p.comMeta])).toEqual([
       ["vendido_liquido", 1_700_000, 5_000_000, 0.34, "no_ritmo", 2], ["aparelhos", 8, 30, 8 / 30, "abaixo", 1],
-      ["acessorios", 0, null, null, "sem_meta", 0], ["connect", 0, null, null, "sem_meta", 0],
+      ["chips", 0, null, null, "sem_meta", 0], ["acessorios", 0, null, null, "sem_meta", 0], ["connect", 0, null, null, "sem_meta", 0],
     ]);
     // Sem meta, o realizado é o de todas as lojas (o que aconteceu), sem comparação.
     expect(progressoDasLojas({ ...d, lojas: d.lojas.map((l) => ({ ...l, metas: {} })) }, "atual")[0]).toMatchObject({ realizado: 1_790_000, meta: null, situacao: "sem_meta" });
