@@ -57,3 +57,26 @@ Migrations `20261109150526_correcoes_acesso_lote1` (#56) e `20261109190400_conne
 2. **LINK × serviço pago (#57):** serviço já recebido no caixa vai só pelo SALDO. O LINK cobraria o cliente de novo; o banco e a tela recusam.
 3. **Titular na chave (#58):** o conteúdo da chave inclui um resumo do titular (nome, documento, nascimento, contatos e endereço normalizados), calculado com um segredo por organização (`privado.connect_segredos`, que ninguém de fora lê). A mesma chave com outro titular dá OR004, também depois do descarte do pedido enviado. O CPF não fica no resumo.
 4. **Uma evidência, uma recarga (#59):** o histórico da linha não traz o id da recarga (pergunta 10 à Nogle), e a data de cadastro sozinha não é chave única garantida. Três situações vão para a **conferência da gerência** (resultado desconhecido, resolvido em `connect_resolver` com a evidência): duas recargas com a mesma data no histórico, outra operação da linha com a mesma data, ou recarga do histórico que já confirmou outra operação (`evidencia_chave`, única por organização). Confirmação sem as datas de cadastro e de realização não confirma.
+
+## Adendo de 18/11/2026 — A conciliação com os relatórios oficiais (lote CONNECT-c; ORA-CONNECT-009)
+
+**Pedida por:** a orientação do proprietário de 18/11 ("ORA-CONNECT-009 não pode ficar esquecido"; o movimento externo se liga ao registro interno, com confirmação e reconciliação; quando uma informação, como a comissão, não vem da API, registrar a limitação e a fonte oficial necessária).
+
+**As decisões:**
+
+1. **A fonte é o relatório oficial.** A coleção oficial de 07/11 documenta `GET /relatorios/ativacoes` e `GET /relatorios/recargas`, com `{ data_de, data_ate, page }` no corpo. A resposta traz a linha, o ICCID, o dia da operação, o plano e o valor. O domínio lê só esses campos (`lerRelatorio`, em `packages/dominio/src/nogle.ts`); o nome e o apelido do cliente não são guardados.
+2. **O worker lê página por página, até a primeira vazia** (o tamanho da página não é documentado), com o máximo de 50 páginas. Se uma página falha, não se entende ou passa do máximo, **nada daquele relatório é gravado**: a conciliação pela metade esconderia diferença. O comando é `executar-connect.ts --conciliar`, com o período (`--de` e `--ate`) ou, sem ele, os 7 dias até ontem, no horário de Brasília. Ele pede o GET com corpo, que a Nogle confirmou em 10/11 (`NOGLE_GET_COM_CORPO=documentado`).
+3. **O banco liga cada linha à operação local** (`connect_worker_registrar_conciliacao`, só o worker chama). Ele procura a operação do mesmo tipo, confirmada e da mesma rede, pelo ICCID ou pela linha (a do pedido ou a ativada), no mesmo dia ou no dia vizinho, porque o fuso do relatório não é documentado. Cada operação se liga a uma linha só.
+4. **Os resultados:**
+   - **conferida**;
+   - **com valor diferente** (ligada, com outro valor);
+   - **só na Nogle** (pode ser a renovação feita pelo cliente, ou uma operação fora da Ora);
+   - **sem linha e sem ICCID**;
+   - **só na Ora** (confirmada aqui no período e ausente do relatório).
+   Nada na operação muda: a conciliação só registra.
+5. **Quem vê:** quem gere a Ora Connect na rede (`connect.gerir`), em `/connect/conciliacao`. A tela mostra só o final da linha e do ICCID.
+
+**O que fica de fora, com a dependência registrada:**
+
+- **O extrato do saldo** (`GET /saldo/extrato`): o exemplo oficial da resposta é só o eco do pedido. Os campos que a Nogle descreveu em 10/11 entram quando a primeira resposta real os confirmar.
+- **As comissões e as bonificações (os repasses):** a Nogle respondeu em 10/11 que não há na API. A fonte oficial (um relatório ou um extrato da Nogle, com o formato) precisa ser indicada pela Nogle ou pelo proprietário (D-016, #54). Nenhum valor é calculado aqui e apresentado como repasse oficial.

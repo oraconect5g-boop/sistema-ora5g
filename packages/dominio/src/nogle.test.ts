@@ -6,8 +6,8 @@ import { fileURLToPath } from "node:url";
 import { describe, expect, it } from "vitest";
 
 import {
-  centavosDeValorNogle, interpretarConsulta, interpretarConsultaPagamento, interpretarEnvio, lerReferencias, montarConsulta, montarPedido,
-  type OperacaoParaConsultar, type OperacaoParaEnviar,
+  centavosDeValorNogle, diaDoRelatorio, interpretarConsulta, interpretarConsultaPagamento, interpretarEnvio, lerReferencias, lerRelatorio, montarConsulta,
+  montarPedido, montarPedidoDoRelatorio, type OperacaoParaConsultar, type OperacaoParaEnviar,
 } from "./nogle";
 
 type Resposta = { name?: string; code?: number; body?: string };
@@ -219,5 +219,43 @@ describe("consulta pelo uuid (resposta da Nogle de 10/11/2026)", () => {
     expect(interpretarConsultaPagamento(recarga, 200, { status: true, data_pagamento: "" }).evidencia).toBe("em_andamento");
     expect(interpretarConsultaPagamento(recarga, 200, { status: false }).evidencia).toBe("sem_evidencia");
     expect(interpretarConsultaPagamento(recarga, 500, null).evidencia).toBe("falha_consulta");
+  });
+});
+
+// CONNECT-c (ORA-CONNECT-009): os relatórios oficiais de ativações e recargas, lidos com os exemplos da própria coleção.
+describe("os relatórios da Nogle para a conciliação", () => {
+  it("o pedido de cada página tem só os campos do corpo do exemplo oficial, no GET com corpo da coleção", () => {
+    for (const relatorio of ["ativacoes", "recargas"] as const) {
+      const pedido = montarPedidoDoRelatorio(relatorio, "2026-11-01", "2026-11-18", 2);
+      expect(pedido).toEqual({ metodo: "GET", caminho: `/relatorios/${relatorio}`, corpo: { data_de: "2026-11-01", data_ate: "2026-11-18", page: 2 } });
+      const doExemplo = JSON.parse(rota(`/relatorios/${relatorio}`).request.body?.raw ?? "{}") as Record<string, unknown>;
+      expect(Object.keys(pedido?.corpo ?? {}).sort()).toEqual(Object.keys(doExemplo).sort());
+      expect(rota(`/relatorios/${relatorio}`).request.method).toBe("GET");
+    }
+    expect(montarPedidoDoRelatorio("ativacoes", "2026-11-18", "2026-11-01", 1)).toBeNull();
+    expect(montarPedidoDoRelatorio("ativacoes", "2026-02-30", "2026-03-01", 1)).toBeNull();
+    expect(montarPedidoDoRelatorio("ativacoes", "2026-11-01", "2026-11-18", 0)).toBeNull();
+    expect(montarPedidoDoRelatorio("transacoes" as never, "2026-11-01", "2026-11-18", 1)).toBeNull();
+  });
+
+  it("o exemplo oficial vira uma linha com a linha, o dia, o plano e o valor; o nome do cliente não é guardado; o ICCID de exemplo não passa", () => {
+    for (const relatorio of ["ativacoes", "recargas"] as const) {
+      const { linhas, problema } = lerRelatorio(exemplo(`/relatorios/${relatorio}`), 5);
+      expect(problema).toBeNull();
+      expect(linhas).toEqual([{ ordem: 5, linha: "51900000000", iccid: null, dia: "2023-05-30", plano: "7 GB", valor_centavos: 4490, tipo_linha: "PRÉ PAGO", forma_pagto: "PIX" }]);
+      expect(JSON.stringify(linhas)).not.toContain("Nome do Cliente");
+    }
+  });
+
+  it("o relatório sem a lista não se entende; o dia que não existe ou noutra forma fica nulo", () => {
+    expect(lerRelatorio({ mensagem: "erro" })).toEqual({ linhas: [], problema: "o relatório não trouxe a lista \"data\"" });
+    expect(lerRelatorio(null).problema).not.toBeNull();
+    expect(lerRelatorio({ data: [] })).toEqual({ linhas: [], problema: null });
+    expect(diaDoRelatorio("2023-05-30 15:20:50.000")).toBe("2023-05-30");
+    expect(diaDoRelatorio("2023-05-30")).toBe("2023-05-30");
+    expect(diaDoRelatorio("2023-02-30 10:00:00")).toBeNull();
+    expect(diaDoRelatorio("30/05/2023")).toBeNull();
+    const { linhas } = lerRelatorio({ data: [{ linha: "(41) 99999-0000", iccid: "8955 0000 0000 0000 001", data_ativacao: "2026-11-10 10:00:00", plano_valor: "abc" }] });
+    expect(linhas[0]).toMatchObject({ linha: "41999990000", iccid: "8955000000000000001", dia: "2026-11-10", valor_centavos: null, plano: null });
   });
 });

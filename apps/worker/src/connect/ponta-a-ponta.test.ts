@@ -15,7 +15,7 @@ import type { OperacaoParaConsultar, OperacaoParaEnviar, TipoOperacao } from "@o
 import { afterAll, beforeAll, describe, expect, it } from "vitest";
 
 import { ClienteNogle } from "./cliente-nogle.ts";
-import { consultarPendentes, enviarPendentes, sincronizarReferencias, type BancoConnect } from "./processar.ts";
+import { conciliarRelatorios, consultarPendentes, enviarPendentes, sincronizarReferencias, type BancoConnect } from "./processar.ts";
 import { transporteHttp } from "./transporte.ts";
 
 type Funcao = { request: { method: string; url: string | { raw?: string } }; response?: { body?: string }[] };
@@ -63,6 +63,11 @@ beforeAll(async () => {
       if (caminho === "/ddds") return json(200, exemplo("/ddds"));
       if (caminho === "/portabilidade/operadorasDisponiveis") return json(200, exemplo("/portabilidade/operadorasDisponiveis"));
       if (caminho === "/cidades/RS") return json(200, exemplo("/cidades/UF"));
+      // CONNECT-c: o relatório oficial na primeira página; a segunda vem vazia (o fim).
+      if (caminho === "/relatorios/ativacoes" || caminho === "/relatorios/recargas") {
+        const pagina = (JSON.parse(corpo || "{}") as { page?: number }).page;
+        return json(200, pagina === 1 ? exemplo(caminho) : { data: [] });
+      }
       return json(404, { erro: "Endpoint inexistente ou recurso não encontrato." });
     });
   });
@@ -91,6 +96,9 @@ const banco: BancoConnect = {
     "select public.connect_worker_registrar_consulta($1, $2::jsonb) as v", [op, JSON.stringify(e)])).rows[0]?.v ?? ""),
   atualizarReferencias: (tipo, lista) => comoServico(async () => (await db.query<{ v: number }>(
     "select public.connect_worker_atualizar_referencias($1, $2, $3::jsonb) as v", [ids.organizacao, tipo, JSON.stringify(lista)])).rows[0]?.v ?? 0),
+  registrarConciliacao: (relatorio, de, ate, linhas) => comoServico(async () => (await db.query<{ v: { numero: number; totais: Record<string, number> } }>(
+    "select public.connect_worker_registrar_conciliacao($1, $2, $3, $4, $5::jsonb) as v", [ids.organizacao, relatorio, de, ate, JSON.stringify(linhas)])).rows[0]?.v
+    ?? { numero: 0, totais: {} }),
 };
 
 let sessoes = 0;
@@ -171,3 +179,40 @@ describe("Ora Connect de ponta a ponta com o formato oficial (sem credencial rea
     expect((await db.query("select 1 from privado.connect_dados_envio")).rows).toEqual([]);
   });
 });
+
+// CONNECT-c (ORA-CONNECT-009): a conciliação com os relatórios oficiais, pelo worker de verdade e o formato oficial.
+describe("a conciliação com os relatórios oficiais da Nogle (CONNECT-c)", () => {
+  it("lê cada relatório página por página, no GET com corpo, até a página vazia, e registra no banco só com as linhas que liga ou não", async () => {
+    const nogle = new ClienteNogle({ tipo: "pdv", chaveAcesso: "chave-ficticia", chaveSecundaria: "pdv-ficticio" }, transporteHttp(base), { getComCorpo: true });
+    const antes = recebidos.length;
+    const r = await conciliarRelatorios(banco, nogle, "2023-05-01", "2023-05-31");
+    expect(r).toMatchObject({ conciliadas: 2, linhas: 2, falhas: 0 });
+    const pedidos = recebidos.slice(antes).filter((p) => p.caminho.startsWith("/relatorios/"));
+    expect(pedidos.map((p) => [p.metodo, p.caminho, JSON.parse(p.corpo) as unknown])).toEqual([
+      ["GET", "/relatorios/ativacoes", { data_de: "2023-05-01", data_ate: "2023-05-31", page: 1 }],
+      ["GET", "/relatorios/ativacoes", { data_de: "2023-05-01", data_ate: "2023-05-31", page: 2 }],
+      ["GET", "/relatorios/recargas", { data_de: "2023-05-01", data_ate: "2023-05-31", page: 1 }],
+      ["GET", "/relatorios/recargas", { data_de: "2023-05-01", data_ate: "2023-05-31", page: 2 }],
+    ]);
+    // O exemplo oficial é de 2023: nenhuma operação deste banco é daquele dia; a linha fica "só na Nogle", sem o nome do cliente.
+    const gravadas = (await db.query<{ relatorio: string; linha: string; resultado: string; plano: string; valor_centavos: number }>(
+      `select c.relatorio, l.linha, l.resultado, l.plano, l.valor_centavos from public.connect_conciliacao_linhas l
+       join public.connect_conciliacoes c on c.id = l.conciliacao_id where c.de = '2023-05-01' order by c.relatorio`)).rows;
+    expect(gravadas).toEqual([
+      { relatorio: "ativacoes", linha: "51900000000", resultado: "so_na_nogle", plano: "7 GB", valor_centavos: 4490 },
+      { relatorio: "recargas", linha: "51900000000", resultado: "so_na_nogle", plano: "7 GB", valor_centavos: 4490 },
+    ]);
+    expect(JSON.stringify(await db.query("select * from public.connect_conciliacao_linhas"))).not.toContain("Nome do Cliente");
+  });
+
+  it("sem o GET com corpo ligado no worker, nada é pedido nem gravado", async () => {
+    const nogle = new ClienteNogle({ tipo: "pdv", chaveAcesso: "chave-ficticia", chaveSecundaria: "pdv-ficticio" }, transporteHttp(base), { getComCorpo: false });
+    const conciliacoes = async () => (await db.query<{ n: number }>("select count(*)::int as n from public.connect_conciliacoes")).rows[0]?.n;
+    const antes = await conciliacoes();
+    const r = await conciliarRelatorios(banco, nogle, "2023-05-01", "2023-05-31");
+    expect(r).toMatchObject({ conciliadas: 0, falhas: 2 });
+    expect(r.detalhes[0]?.falha).toContain("NOGLE_GET_COM_CORPO");
+    expect(await conciliacoes()).toBe(antes);
+  });
+});
+
