@@ -14,6 +14,33 @@ export type SituacaoDaTransferencia = keyof typeof SITUACOES_DA_TRANSFERENCIA;
 export const nomeDaSituacao = (s: string) =>
   Object.hasOwn(SITUACOES_DA_TRANSFERENCIA, s) ? SITUACOES_DA_TRANSFERENCIA[s as SituacaoDaTransferencia] : s;
 
+/**
+ * O que cada passo faz no estoque (TRF-b, 18/11; achado F10 da auditoria do Codex de 17/11 e a decisão D-049, pendente).
+ * O contrato não muda: pedir não reserva; separar reserva na origem (sai do disponível, o físico fica); enviar baixa o
+ * físico da origem uma vez (em trânsito); receber põe no físico do destino. A tela só diz isso em cada transferência.
+ */
+export const EFEITO_NO_ESTOQUE: Record<SituacaoDaTransferencia, string> = {
+  solicitada: "Pedida: o estoque da origem ainda não mudou (o pedido não reserva; decisão D-049 do proprietário).",
+  separada: "Separada: reservada na origem. Saiu do disponível; o físico continua lá até o envio.",
+  enviada: "Em trânsito: saiu do físico da origem. Entra no destino quando a loja receber e conferir.",
+  recebida: "Recebida: entrou no físico do destino.",
+  recebida_com_divergencia: "Recebida com divergência: entrou no destino só o que chegou; a diferença fica registrada.",
+  recusada: "Recusada: nada mudou no estoque.",
+  cancelada: "Cancelada: a reserva, se havia, voltou ao disponível da origem.",
+};
+export const efeitoNoEstoque = (s: string) => (Object.hasOwn(EFEITO_NO_ESTOQUE, s) ? EFEITO_NO_ESTOQUE[s as SituacaoDaTransferencia] : null);
+
+export type SaldoDaLoja = { fisico: number; reservado: number; disponivel: number };
+/** O saldo de uma loja e uma variação, lido de estoque_saldos (o que a pessoa vê pela RLS); forma estranha é nula. */
+export function saldoDaLoja(linhas: readonly { unidade_id: string; variante_id: string; quantidade: unknown; reservado: unknown }[], unidade: string, variante: string): SaldoDaLoja | null {
+  const l = linhas.find((x) => x.unidade_id === unidade && x.variante_id === variante);
+  if (!l) return null;
+  const q = Number(l.quantidade);
+  const r = Number(l.reservado);
+  if (!Number.isSafeInteger(q) || !Number.isSafeInteger(r)) return null;
+  return { fisico: q, reservado: r, disponivel: q - r };
+}
+
 export const ERROS_DA_TRANSFERENCIA = {
   sem_permissao: "Seu papel não faz este passo nesta loja (separar e enviar: origem; receber: destino; sair de DEFEITOS: só quem ajusta estoque).",
   nao_encontrada: "Transferência não encontrada nesta loja.",
