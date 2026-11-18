@@ -1,5 +1,6 @@
 // As regras da tela da carga do estoque inicial por loja (lote REIN-b; ADR-021): as mensagens, o erro do banco → chave do
 // catálogo, a data de corte do formulário e a leitura estrita dos totais e das linhas. O banco decide de novo.
+// REIN-c (F18-03): as resoluções da linha com o físico maior que o disponível.
 import type { FalhaDaPlanilha } from "../importacao/csv";
 
 export const ERROS_DA_CARGA = {
@@ -22,6 +23,10 @@ export const ERROS_DA_CARGA = {
   propria: "Quem gerou a prévia não aplica: peça a outra pessoa com a aprovação (o dono).",
   outra_aplicada: "A loja já tem uma carga aplicada: desfaça a outra antes de aplicar esta.",
   situacao: "Esta carga não está mais na situação de antes (alguém aplicou, descartou ou desfez): veja abaixo.",
+  pendente: "Há linhas com o físico maior que o disponível sem resolução: resolva cada uma em \"Físico maior que o disponível\" antes de aplicar.",
+  resolucao: "Escolha o que fazer com a diferença: lançar só o disponível, lançar o físico (conferido na loja) ou deixar de fora.",
+  sem_diferenca: "Esta linha não tem diferença a resolver, ou não há mais linha sem resolução.",
+  fisico_em_bloco: "O físico se lança linha a linha, depois de conferir na loja que a diferença está livre.",
   inativo: "Um produto foi inativado depois da prévia: gere a prévia de novo.",
   motivo: "Diga o motivo (de 3 a 200 letras).",
   permissao: "A carga do estoque inicial é de quem importa (o administrador) e de quem aprova (o dono).",
@@ -39,6 +44,7 @@ export function erroDaCarga(erro: { code?: string; message?: string } | null | u
   if (codigo === "OR023") return "aplicado";
   if (codigo === "OR024") return "propria";
   if (codigo === "OR041") return "outra_aplicada";
+  if (codigo === "OR042") return "pendente";
   if (codigo !== "22023") return "falha";
   if (m.includes("data de corte")) return "corte";
   if (m.includes("3.000")) return "linhas";
@@ -46,6 +52,9 @@ export function erroDaCarga(erro: { code?: string; message?: string } | null | u
   if (m.includes("inativado")) return "inativo";
   if (m.includes("motivo")) return "motivo";
   if (m.includes("só a prévia") || m.includes("só a carga")) return "situacao";
+  if (m.includes("resolução desconhecida")) return "resolucao";
+  if (m.includes("diferença a resolver") || m.includes("diferença sem resolução")) return "sem_diferenca";
+  if (m.includes("linha a linha")) return "fisico_em_bloco";
   return "dados";
 }
 
@@ -66,7 +75,8 @@ export const acaoDaLinha = (v: unknown): AcaoDaLinha => (typeof v === "string" &
 
 export type TotaisDaCarga = {
   linhas: number; entrar: number; unidadesEntrar: number; serializado: number; unidadesSerializado: number;
-  semProduto: number; conferir: number; nada: number; foraDoDisponivel: number; desfeitas: number | null; ficaram: number | null;
+  semProduto: number; conferir: number; nada: number; foraDoDisponivel: number; aResolver: number; resolvidas: number;
+  desfeitas: number | null; ficaram: number | null;
 };
 const contagem = (o: Record<string, unknown>, k: string) => {
   const v = o[k];
@@ -79,8 +89,22 @@ export function totaisDaCarga(v: unknown): TotaisDaCarga {
   return {
     linhas: contagem(o, "linhas"), entrar: contagem(o, "entrar"), unidadesEntrar: contagem(o, "unidades_entrar"), serializado: contagem(o, "serializado"),
     unidadesSerializado: contagem(o, "unidades_serializado"), semProduto: contagem(o, "sem_produto"), conferir: contagem(o, "conferir"), nada: contagem(o, "nada"),
-    foraDoDisponivel: contagem(o, "fora_do_disponivel"), desfeitas: talvez("desfeitas"), ficaram: talvez("ficaram"),
+    foraDoDisponivel: contagem(o, "fora_do_disponivel"), aResolver: contagem(o, "a_resolver"), resolvidas: contagem(o, "resolvidas"),
+    desfeitas: talvez("desfeitas"), ficaram: talvez("ficaram"),
   };
 }
+
+// REIN-c (F18-03): o que fazer com a linha do acessório que tem o físico maior que o disponível na data de corte. A
+// diferença pode estar reservada, a caminho ou com erro na origem: nada se presume, e quem importa ou aprova decide.
+export const RESOLUCOES = ["disponivel", "fisico", "fora"] as const;
+export type Resolucao = (typeof RESOLUCOES)[number];
+export const ROTULOS_DAS_RESOLUCOES: Record<Resolucao, { titulo: string; detalhe: string }> = {
+  disponivel: { titulo: "Lançar só o disponível", detalhe: "a diferença fica fora do estoque até a contagem (pelo inventário)" },
+  fisico: { titulo: "Lançar o físico", detalhe: "conferido na loja: a diferença está lá e livre para vender" },
+  fora: { titulo: "Deixar a linha de fora", detalhe: "nada entra desta linha; conte e lance depois, pelo inventário" },
+};
+export const ehResolucao = (v: unknown): v is Resolucao => typeof v === "string" && (RESOLUCOES as readonly string[]).includes(v);
+/** Só as decisões que não liberam o que pode estar comprometido valem para todas as linhas de uma vez. */
+export const RESOLUCOES_EM_BLOCO = ["disponivel", "fora"] as const satisfies readonly Resolucao[];
 
 export const SITUACOES_DA_CARGA: Record<string, string> = { previa: "prévia", aplicada: "aplicada", descartada: "descartada", desfeita: "desfeita" };

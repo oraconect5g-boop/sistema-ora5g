@@ -29,6 +29,7 @@ class Consulta {
   range() { return this; }
   in() { return this; }
   eq(campo: string, valor: unknown) { this.linhas = this.linhas.filter((l) => !(campo in l) || l[campo] === valor); return this; }
+  not(campo: string) { this.linhas = this.linhas.filter((l) => l[campo] !== null && l[campo] !== undefined); return this; }
   maybeSingle() { return Promise.resolve({ data: this.linhas[0] ?? null, error: null }); }
   then(resolver: (r: Resposta) => unknown) { return Promise.resolve({ data: this.linhas, error: null }).then(resolver); }
 }
@@ -49,7 +50,7 @@ const sessaoFicticia = {
 };
 vi.mock("../../../lib/acesso/sessao", () => ({ FalhaDoServico: class extends Error {}, obterSessao: async () => sessaoFicticia }));
 
-import { aplicarCarga, desfazerCarga } from "./acoes";
+import { aplicarCarga, desfazerCarga, resolverDiferenca } from "./acoes";
 import { POST } from "./enviar/route";
 import UmaCarga from "./[id]/page";
 import CargaDoEstoque from "./page";
@@ -169,6 +170,85 @@ describe("as telas da carga", () => {
     expect(aplicada).toContain("Carga aplicada: 2 produtos e 15 unidades entraram no estoque.");
     expect(aplicada).toContain("Desfazer a carga");
     expect(aplicada).not.toContain("Aplicar a carga");
+  });
+});
+
+describe("a diferença entre o físico e o disponível (REIN-c, achado F18-03 da reanálise de 18/11)", () => {
+  const linhaSemDecisao = { numero: 3, sku: "ACE-2", fisico: 5, disponivel: 2, saldo_no_corte: 0, acao: "conferir", lancar: null, pendencia: "fisico_maior_que_disponivel",
+    resolucao: null, resolvido_por: null, resolvido_em: null, motivo_resolucao: null, desfeita_em: null, variantes: { nome: "Película" },
+    motivo: "O físico (5) é maior que o disponível (2) na data de corte: a diferença pode estar reservada, a caminho ou com erro. Resolva antes de aplicar" };
+  const linhaDecidida = { numero: 2, sku: "ACE-1", fisico: 10, disponivel: 8, saldo_no_corte: 0, acao: "entrar", lancar: 8, pendencia: "fisico_maior_que_disponivel",
+    resolucao: "disponivel", resolvido_por: "outra", resolvido_em: "2026-11-18T13:00:00Z", motivo_resolucao: "Duas estão reservadas para clientes", desfeita_em: null,
+    variantes: { nome: "Capa" }, motivo: "O físico (10) é maior que o disponível (8) na data de corte: a diferença pode estar reservada, a caminho ou com erro. Resolva antes de aplicar" };
+  const totais = { linhas: 5, entrar: 1, unidades_entrar: 8, serializado: 1, unidades_serializado: 2, sem_produto: 1, conferir: 2, nada: 0, fora_do_disponivel: 5, a_resolver: 1, resolvidas: 1 };
+  const abrir = async (busca: Record<string, string> = {}) => limpar(await UmaCarga({ params: Promise.resolve({ id: CARGA }), searchParams: Promise.resolve(busca) } as never));
+
+  it("com linha sem decisão, a carga abre nas diferenças: cada linha com a decisão (quem, quando e o motivo) ou o formulário, e aplicar espera", async () => {
+    cenario.permissoes = new Set(["importacao.aprovar"]);
+    cenario.tabelas.estoque_cargas = [carga({ totais })];
+    cenario.tabelas.estoque_carga_linhas = [linhaDecidida, linhaSemDecisao, { ...linhaSemDecisao, numero: 4, sku: "SEM-DIF", pendencia: null, motivo: "Linha sem o código do produto" }];
+    cenario.tabelas.perfis_usuario = [{ id: "outra", nome: "Ana (teste)" }];
+    const tela = await abrir();
+    for (const trecho of ["Físico maior que o disponível (2; 1 sem decisão)", "1 linha sem decisão: resolva antes de aplicar", "o sistema não presume nada",
+      "Linha 2 · ACE-1 · Capa", "físico 10 · disponível 8 · entram 8", "Decisão: Lançar só o disponível (8), por Ana (teste) em 18/11/2026 10:00: Duas estão reservadas para clientes",
+      "Linha 3 · ACE-2 · Película", "Sem decisão: a carga não se aplica até resolver esta linha.", "Lançar o físico (5)", "Lançar só o disponível (2)", "Deixar a linha de fora",
+      "Registrar a decisão", "Mudar a decisão", "Antes de aplicar, decida a linha com o físico maior que o disponível."]) {
+      expect(tela, trecho).toContain(trecho);
+    }
+    expect(tela).not.toContain("SEM-DIF");
+    expect(tela).not.toContain("Aplicar a carga");
+    // Uma só sem decisão: o bloco não aparece (é para duas ou mais).
+    expect(tela).not.toContain("Registrar para todas");
+    cenario.tabelas.estoque_cargas = [carga({ totais: { ...totais, a_resolver: 3, resolvidas: 0 } })];
+    const varias = await abrir({ ver: "diferenca" });
+    expect(varias).toContain("Decidir de uma vez as 3 linhas sem decisão");
+    expect(varias).toContain("Antes de aplicar, decida as 3 linhas com o físico maior que o disponível.");
+    // Todas decididas: aplicar volta, e a vista de entrada mostra quantas entram.
+    cenario.tabelas.estoque_cargas = [carga({ totais: { ...totais, a_resolver: 0, resolvidas: 2 } })];
+    const decidida = await abrir({ ver: "entrar" });
+    expect(decidida).toContain("Aplicar a carga");
+    expect(decidida).toContain("2 linhas com a decisão registrada");
+  });
+
+  it("quem vê a carga aplicada lê as decisões, sem formulário; a carga antiga sem os totais novos abre como antes", async () => {
+    cenario.permissoes = new Set(["importacao.aprovar"]);
+    cenario.tabelas.estoque_cargas = [carga({ situacao: "aplicada", aplicado_em: "2026-11-18T14:00:00Z", totais: { ...totais, a_resolver: 0, resolvidas: 1 } })];
+    cenario.tabelas.estoque_carga_linhas = [linhaDecidida];
+    cenario.tabelas.perfis_usuario = [];
+    const tela = await abrir({ ver: "diferenca" });
+    expect(tela).toContain("Decisão: Lançar só o disponível (8), por quem importa ou aprova em 18/11/2026 10:00");
+    expect(tela).not.toContain("Registrar a decisão");
+    cenario.tabelas.estoque_cargas = [carga()];
+    cenario.tabelas.estoque_carga_linhas = [];
+    const antiga = await abrir({ ver: "diferenca" });
+    expect(antiga).not.toContain("Físico maior que o disponível (");
+    expect(antiga).toContain("Aplicar a carga");
+  });
+
+  const form = (campos: Record<string, string>) => { const f = new FormData(); for (const [k, v] of Object.entries(campos)) f.set(k, v); return f; };
+  it("a decisão de uma linha e a de todas vão ao banco com o motivo; o físico em bloco e a decisão desconhecida não saem daqui", async () => {
+    cenario.respostas.estoque_carga_resolver = { data: { id: CARGA, numero: 2, acao: "entrar", lancar: 10 }, error: null };
+    await expect(resolverDiferenca(form({ carga: CARGA, linha: "2", resolucao: "fisico", motivo: "Contei na loja: livres" })))
+      .rejects.toThrow(`redirecionou para /estoque/carga/${CARGA}?ver=diferenca&ok=resolvida&linha=2`);
+    expect(chamadas("estoque_carga_resolver")).toEqual([{ p_carga: CARGA, p_resolucao: "fisico", p_motivo: "Contei na loja: livres", p_numero: 2 }]);
+    cenario.respostas.estoque_carga_resolver = { data: { id: CARGA, linhas: 3 }, error: null };
+    await expect(resolverDiferenca(form({ carga: CARGA, resolucao: "disponivel", motivo: "Só o livre, até contar" })))
+      .rejects.toThrow(`redirecionou para /estoque/carga/${CARGA}?ver=diferenca&ok=resolvidas&linhas=3`);
+    expect(chamadas("estoque_carga_resolver")[1]).toEqual({ p_carga: CARGA, p_resolucao: "disponivel", p_motivo: "Só o livre, até contar" });
+    await expect(resolverDiferenca(form({ carga: CARGA, resolucao: "fisico", motivo: "Tudo livre" }))).rejects.toThrow(`?ver=diferenca&erro=fisico_em_bloco`);
+    await expect(resolverDiferenca(form({ carga: CARGA, linha: "2", resolucao: "metade", motivo: "Metade" }))).rejects.toThrow(`?ver=diferenca&erro=resolucao`);
+    await expect(resolverDiferenca(form({ carga: CARGA, linha: "2 or 1", resolucao: "fora", motivo: "Fora" }))).rejects.toThrow(`?ver=diferenca&erro=dados`);
+    await expect(resolverDiferenca(form({ carga: CARGA, linha: "2", resolucao: "fora", motivo: "x" }))).rejects.toThrow(`?ver=diferenca&erro=motivo`);
+    expect(chamadas("estoque_carga_resolver")).toHaveLength(2);
+    // As recusas do banco viram a mensagem certa.
+    cenario.respostas.estoque_carga_resolver = { data: null, error: { code: "22023", message: "Esta linha não tem diferença a resolver" } };
+    await expect(resolverDiferenca(form({ carga: CARGA, linha: "9", resolucao: "fora", motivo: "Fora" }))).rejects.toThrow(`?ver=diferenca&erro=sem_diferenca`);
+    cenario.respostas.estoque_carga_resolver = { data: null, error: { code: "22023", message: "O físico se lança linha a linha, conferido na loja" } };
+    await expect(resolverDiferenca(form({ carga: CARGA, linha: "", resolucao: "fora", motivo: "Fora" }))).rejects.toThrow(`?ver=diferenca&erro=fisico_em_bloco`);
+    cenario.respostas.estoque_carga_resolver = { data: null, error: { code: "42501", message: "Sem permissão para resolver a linha da carga" } };
+    await expect(resolverDiferenca(form({ carga: CARGA, linha: "2", resolucao: "fora", motivo: "Fora" }))).rejects.toThrow(`?ver=diferenca&erro=permissao`);
+    cenario.respostas.estoque_carga_aplicar = { data: null, error: { code: "OR042", message: "Há linhas com o físico maior que o disponível sem resolução" } };
+    await expect(aplicarCarga(form({ carga: CARGA, motivo: "Aplicando" }))).rejects.toThrow(`redirecionou para /estoque/carga/${CARGA}?erro=pendente`);
   });
 });
 
