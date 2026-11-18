@@ -1,0 +1,70 @@
+
+> @ora5g/plataforma@0.1.0 test
+> vitest run
+
+
+ RUN  v5.1.0 /workspace/work/auditoria-20261117/snapshot/apps/plataforma
+
+
+ Test Files  161 passed (161)
+      Tests  1575 passed (1575)
+   Start at  17:49:00
+   Duration  111.89s (import 47%, tests 36%, transform 16%, worker 1%)
+
+     Import  519 modules were evaluated 2316 times · 37.72s total, 47% of tracked time
+             ~29.27s faster with isolate: false — shared modules are evaluated once per worker instead of once per file
+             learn more: https://vitest.dev/guide/improving-performance#test-isolation
+
+
+> @ora5g/worker@0.1.0 test
+> vitest run
+
+
+ RUN  v5.1.0 /workspace/work/auditoria-20261117/snapshot/apps/worker
+
+
+ Test Files  6 passed (6)
+      Tests  20 passed (20)
+   Start at  17:50:52
+   Duration  12.28s (tests 93%, transform 4%, import 3%)
+
+    Isolate  6 workers spawned · ~200ms startup each (spawn + environment, per file)
+             at least ~999ms faster with isolate: false — reuses workers across files instead of one per file
+
+
+> @ora5g/config@0.1.0 test
+> vitest run
+
+
+ RUN  v5.1.0 /workspace/work/auditoria-20261117/snapshot/packages/config
+
+
+ Test Files  6 passed (6)
+      Tests  60 passed (60)
+   Start at  17:51:05
+   Duration  6.85s (tests 75%, transform 11%, import 11%, worker 3%)
+
+    Isolate  6 workers spawned · ~263ms startup each (spawn + environment, per file)
+             at least ~1.31s faster with isolate: false — reuses workers across files instead of one per file
+
+
+> @ora5g/dominio@0.1.0 test
+> vitest run
+
+
+ RUN  v5.1.0 /workspace/work/auditoria-20261117/snapshot/packages/dominio
+
+
+ Test Files  9 passed (9)
+      Tests  112 passed (112)
+   Start at  17:51:13
+   Duration  3.74s (transform 44%, import 32%, tests 20%, worker 4%)
+
+    Isolate  9 workers spawned · ~221ms startup each (spawn + environment, per file)
+             at least ~1.77s faster with isolate: false — reuses workers across files instead of one per file
+
+npm notice
+npm notice New major version of npm available! 11.9.0 -> 12.2.2
+npm notice Changelog: https://github.com/npm/cli/releases/tag/v12.2.2
+npm notice To update run: npm install -g npm@12.2.2
+npm notice

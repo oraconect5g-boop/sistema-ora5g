@@ -1,0 +1,29 @@
+{
+  "metadata": {
+    "vulnerabilities": {
+      "info": 0,
+      "low": 0,
+      "moderate": 0,
+      "high": 17,
+      "critical": 0,
+      "total": 17
+    },
+    "dependencies": {
+      "prod": 49,
+      "dev": 462,
+      "optional": 121,
+      "peer": 33,
+      "peerOptional": 0,
+      "total": 548
+    }
+  },
+  "advisories": [
+    {
+      "name": "picomatch",
+      "title": "picomatch vulnerable to ReDoS through single-branch repeated extglobs",
+      "severity": "high",
+      "url": "https://github.com/advisories/GHSA-fc5q-39xc-vjpf",
+      "range": "<=4.0.7"
+    }
+  ]
+}

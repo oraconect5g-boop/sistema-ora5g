@@ -1,0 +1,29 @@
+{
+  "iguais": 361,
+  "ausentes": [
+    [
+      "privado",
+      "campo_de_campanha"
+    ],
+    [
+      "public",
+      "reservas_do_site_painel"
+    ]
+  ],
+  "diferentes": [
+    [
+      "privado",
+      "importacao_comparar",
+      "20261112163333_importador_correcoes.sql",
+      "ee5d73ddea462ed11f708af9e4e46dda",
+      "f7250549f283d83c26df77fb415f81ea"
+    ],
+    [
+      "public",
+      "loja_reservar",
+      "20261117135133_identidade_da_nota_e_cota_da_loja.sql",
+      "5ab35541273da0850cfa48af4bc1dc62",
+      "cee4fda049e39341eae5bacf40fa774e"
+    ]
+  ]
+}

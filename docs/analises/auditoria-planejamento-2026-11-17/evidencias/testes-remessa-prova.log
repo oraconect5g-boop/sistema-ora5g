@@ -1,0 +1,18 @@
+
+> @ora5g/banco@0.1.0 test
+> vitest run src/auditoria-remessa-saldo.test.ts
+
+
+ RUN  v5.1.0 /workspace/work/auditoria-20261117/snapshot/packages/banco
+
+
+ Test Files  1 passed (1)
+      Tests  1 passed (1)
+   Start at  17:57:26
+   Duration  7.91s (tests 98%, import 1%, transform 1%)
+
+npm notice
+npm notice New major version of npm available! 11.9.0 -> 12.2.2
+npm notice Changelog: https://github.com/npm/cli/releases/tag/v12.2.2
+npm notice To update run: npm install -g npm@12.2.2
+npm notice

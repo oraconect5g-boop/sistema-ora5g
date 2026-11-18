@@ -1,0 +1,17 @@
+
+> @ora5g/plataforma@0.1.0 test
+> vitest run src/lib/importacao/auditoria-planilha-real.test.ts src/lib/importacao/catalogo.test.ts src/lib/estoque/carga.test.ts src/app/estoque/carga/carga.test.ts src/app/loja/carrinho/carrinho.test.ts src/lib/loja/carrinho.test.ts src/permissoes-do-molde.test.ts src/app/caixa/caixa.test.ts src/app/vender/vender.test.ts src/demo/dados/dados.test.ts
+
+
+ RUN  v5.1.0 <snapshot>/apps/plataforma
+
+
+ Test Files  10 passed (10)
+      Tests  101 passed (101)
+   Start at  12:25:24
+   Duration  7.75s (import 41%, tests 29%, transform 28%, worker 2%)
+
+     Import  115 modules were evaluated 213 times · 2.50s total, 41% of tracked time
+             ~1.15s faster with isolate: false — shared modules are evaluated once per worker instead of once per file
+             learn more: https://vitest.dev/guide/improving-performance#test-isolation
+
