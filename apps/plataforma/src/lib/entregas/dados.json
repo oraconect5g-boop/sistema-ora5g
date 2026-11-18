@@ -353,6 +353,30 @@
         "ORA-CAT-002"
       ],
       "entrega": "o estoque de cada loja pelo relatório da Rein: a prévia por loja, a aprovação do dono e o livro (ADR-021)",
+      "commit": "c330d0d",
+      "publicado_em": "2026-11-18",
+      "pedido_em": null,
+      "resposta": null,
+      "respondido_em": null
+    },
+    {
+      "lote": "DEMO-a",
+      "roteiro": "docs/aceite/DEMO-a.md",
+      "requisitos": [],
+      "entrega": "a demonstração com os nomes das 11 lojas, os canais por arquivo e lado a lado, e no ar em todo ambiente, isolada (ADR-022; F06 e A16)",
+      "commit": null,
+      "publicado_em": null,
+      "pedido_em": null,
+      "resposta": null,
+      "respondido_em": null
+    },
+    {
+      "lote": "TRF-b",
+      "roteiro": "docs/aceite/TRF-b.md",
+      "requisitos": [
+        "ORA-INV-007"
+      ],
+      "entrega": "o que cada passo da transferência faz no estoque e o saldo de cada lado (o achado F10 da auditoria de 17/11; a decisão D-049 segue do proprietário)",
       "commit": null,
       "publicado_em": null,
       "pedido_em": null,

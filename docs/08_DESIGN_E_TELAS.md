@@ -129,6 +129,6 @@
 ## Ordem recomendada de UI
 1. Definir design tokens/componentes e auth/loja/perfil.
 2. Implementar UI com **mocks tipados explicitamente identificados**, testando estados e acessibilidade.
-3. Conectar somente contratos reais do backend aprovados; impedir mocks em produção.
+3. Conectar somente contratos reais do backend aprovados; impedir mocks em produção. (A demonstração isolada, com dados fictícios e o selo, fica no ar em todo ambiente: ADR-022, 18/11. Nenhuma tela real usa dado dela.)
 4. Fazer teste prático em celulares das lojas e sessão com vendedor/gerente.
 5. Atualizar protótipos por revisão e registrar divergências UX antes de ampliar módulos.
