@@ -2,7 +2,9 @@
 
 **Pedido do proprietário (18/11):** "reanalise toda a documentação que o Codex preparou, reveja todos os pontos que estão em aberto e vamos fazendo um a um, principalmente com a parte de transferências, com o Ora Connect, com a parte de lançamento de vendas e estoque, para que a gente tenha um sistema funcional."
 
-**Onde:** tudo no servidor principal, `ora5g.com.br` (D-051). A demonstração está sendo desligada (lote DEMO-c).
+**Onde:** tudo no servidor principal, `ora5g.com.br` (D-051). A demonstração está desligada desde 18/11 (lote DEMO-c, `324d7b8`, build 14:51).
+
+**Primeira passagem (18/11, à tarde):** o CNPJ das lojas pode ser cadastrado pelo próprio proprietário na tela Lojas; a Nogle ficou com as configurações públicas prontas no servidor; as transferências já têm teste para os seis casos que o Codex pediu. O que segue em aberto depende dos itens 1 a 4 da seção 2.
 
 ## 1. O que foi relido e como
 
@@ -18,9 +20,9 @@
 | # | O que trava | O que o banco mostra hoje | Quem resolve | Como |
 |---|---|---|---|---|
 | 1 | **As contas da equipe.** Só existe 1 usuário (o dono). Sem a chave secreta do Supabase no servidor, a tela **Equipe** não cria ninguém. Sem conta, vendedor, gerente e administrador não entram. E a carga do estoque exige duas pessoas: uma prepara, outra aprova (OR024) | 1 usuário, 1 papel (dono) | O proprietário (5 minutos) | `docs/PENDENCIAS_DO_PROPRIETARIO.md`, item 1.2: `bash ~/homologacao/plataforma/deploy/homologacao/definir-chave.sh SUPABASE_SECRET_KEY`. Nunca colar a chave no chat |
-| 2 | **O CNPJ das lojas.** Loja sem CNPJ recusa a venda (OR038) | 11 lojas de verdade sem CNPJ; só as 2 lojas de teste têm | O proprietário manda os dados; eu cadastro sem inventar nada | CNPJ, endereço e telefone de cada loja, começando pela Santa Cândida |
+| 2 | **O CNPJ das lojas.** Loja sem CNPJ recusa a venda (OR038) | 11 lojas de verdade sem CNPJ; só as 2 lojas de teste têm | O proprietário, na tela **Lojas** (editar a loja: CNPJ da filial, UF e cidade, com o motivo; o banco confere o CNPJ), ou manda os dados para o Claude Code cadastrar, sem inventar nada | Começar pela Santa Cândida. Se alguma loja for de outra empresa (outro CNPJ raiz), a empresa entra antes |
 | 3 | **A planilha da Rein no servidor.** Sem ela não há catálogo nem estoque de verdade | 6 produtos de teste; nenhuma carga | O proprietário | Copiar `relatorioProdutos131258.xlsx` para `~/entrada/rein/` (nunca para o GitHub) |
-| 4 | **As chaves da Nogle.** Sem elas, a Ora Connect não fala com a operadora | 0 operações | O proprietário | As chaves pelo mesmo `definir-chave.sh` e a confirmação do tipo da chave (P9) |
+| 4 | **As chaves da Nogle.** Sem elas, a Ora Connect não fala com a operadora | 0 operações | O proprietário | As configurações públicas já estão no servidor desde 18/11: o endereço oficial (`NOGLE_API_BASE_URL`), o GET com corpo (`NOGLE_GET_COM_CORPO=documentado`) e o id da organização (`ORA_ORGANIZACAO_ID`). Faltam: a chave secreta do Supabase (o worker grava as operações no banco), `NOGLE_ACCESS_KEY`, `NOGLE_SECONDARY_KEY` e o tipo da chave (franquia, marca ou ponto de venda, P9), pelo mesmo `definir-chave.sh`. Com elas, o primeiro passo é só leitura (`executar-connect.ts --listas`: os planos, os DDDs, as operadoras e as cidades). As operações reais ficam desligadas até o proprietário dizer quais ligar (`NOGLE_OPERACOES_HABILITADAS`) |
 
 ## 3. Por área, um a um
 
@@ -32,6 +34,7 @@
 | T2 | A regra pedida ("ao colocar em transferência, sai do disponível") | **Feito** (TRF-c, D-049): o pedido já reserva na origem | Conferir no aceite do TRF-c |
 | T3 | Vários produtos na mesma operação e as 11 lojas e DEFEITOS (issue #60) | **Feito** (TRF-a e ORG-a) | Fechar a issue #60 com o seu sim |
 | T4 | A jornada com pessoas diferentes (pedir, separar, enviar e receber em lojas diferentes) | Pronta no sistema; falta gente para testar | Depende do item 1 (as contas) |
+| T5 | Os seis casos que o Codex pediu testar (F18-05) | **Todos cobertos** por testes do banco: a venda concorrente, nas duas ordens; o pedido além do disponível (OR001, nada gravado); a remessa que envia só as separadas; o cancelamento antes do envio; o mesmo envio duas vezes (uma saída só no livro); a ida e a volta pelo depósito | — |
 
 ### Estoque
 
@@ -65,7 +68,7 @@
 
 ## 4. O que o Claude Code faz agora, sem esperar ninguém
 
-1. Termina o desligamento da demonstração (DEMO-c) e publica.
+1. ~~Termina o desligamento da demonstração (DEMO-c) e publica.~~ **Feito:** no ar desde 14:51 de 18/11 (`324d7b8`). `/demo` e as trocas de perfil e de loja respondem 404, e a tela inicial e a de entrada não mostram o link.
 2. Prepara o caminho de cada item do caminho crítico, para valer no mesmo dia em que o proprietário entregar:
    - as contas da equipe: o roteiro da tela Equipe e os papéis de cada pessoa;
    - a carga da Rein, com a conferência do arquivo;
