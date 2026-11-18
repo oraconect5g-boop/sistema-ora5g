@@ -29,6 +29,16 @@ test("a página de reservar responde sem login; desligada, avisa; sem a loja no 
   expect(semLoja?.status()).toBe(404);
 });
 
+// ONLINE-d: o carrinho e o acompanhamento do pedido também são públicos; com a loja desligada, avisam.
+test("o carrinho e o acompanhamento do pedido respondem sem login e, desligada a loja, avisam", async ({ page }) => {
+  for (const caminho of ["/loja/carrinho", "/loja/pedido"]) {
+    const resposta = await page.goto(caminho);
+    expect(resposta?.status(), caminho).toBe(200);
+    expect(new URL(page.url()).pathname).toBe(caminho);
+    await expect(page.getByText("A loja online ainda não está no ar")).toBeVisible();
+  }
+});
+
 test("a vitrine cabe na tela do celular, sem rolagem lateral", async ({ page }) => {
   await page.setViewportSize({ width: 360, height: 780 });
   await page.goto("/loja");

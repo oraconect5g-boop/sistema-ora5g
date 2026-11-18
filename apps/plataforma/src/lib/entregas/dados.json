@@ -4,8 +4,8 @@
   "total": 179,
   "homologados": 0,
   "contagem": {
-    "nao_iniciado": 17,
-    "parcial": 78,
+    "nao_iniciado": 16,
+    "parcial": 79,
     "testado": 69,
     "bloqueado": 13,
     "respeitado": 2
@@ -354,7 +354,7 @@
       ],
       "entrega": "o estoque de cada loja pelo relatório da Rein: a prévia por loja, a aprovação do dono e o livro (ADR-021)",
       "commit": "c330d0d",
-      "publicado_em": "2026-11-18",
+      "publicado_em": "2026-11-17",
       "pedido_em": null,
       "resposta": null,
       "respondido_em": null
@@ -364,8 +364,8 @@
       "roteiro": "docs/aceite/DEMO-a.md",
       "requisitos": [],
       "entrega": "a demonstração com os nomes das 11 lojas, os canais por arquivo e lado a lado, e no ar em todo ambiente, isolada (ADR-022; F06 e A16)",
-      "commit": null,
-      "publicado_em": null,
+      "commit": "bdbd8b6",
+      "publicado_em": "2026-11-18",
       "pedido_em": null,
       "resposta": null,
       "respondido_em": null
@@ -377,6 +377,20 @@
         "ORA-INV-007"
       ],
       "entrega": "o que cada passo da transferência faz no estoque e o saldo de cada lado (o achado F10 da auditoria de 17/11; a decisão D-049 segue do proprietário)",
+      "commit": "bdbd8b6",
+      "publicado_em": "2026-11-18",
+      "pedido_em": null,
+      "resposta": null,
+      "respondido_em": null
+    },
+    {
+      "lote": "ONLINE-d",
+      "roteiro": "docs/aceite/ONLINE-d.md",
+      "requisitos": [
+        "ORA-ONLINE-002",
+        "ORA-ONLINE-006"
+      ],
+      "entrega": "o carrinho e o pedido do site, reservado de uma vez para retirar e pagar na loja (ADR-023; aceites A03 e A06 do adendo de 16/11)",
       "commit": null,
       "publicado_em": null,
       "pedido_em": null,

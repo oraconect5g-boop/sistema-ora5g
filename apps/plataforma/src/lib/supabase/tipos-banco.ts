@@ -1,5 +1,5 @@
 // ARQUIVO GERADO pelo Supabase (generate_typescript_types do projeto ora5g-dev) depois da
-// migration 20261118021151_estoque_inicial_por_arquivo. Não edite à mão: gere de novo a cada
+// migration 20261118034536_comentario_do_contato_do_pedido. Não edite à mão: gere de novo a cada
 // migration aplicada (auditoria do Codex de 08/11, §7.2). O teste tipos-banco.test.ts confere
 // que funções e tabelas públicas daqui são as mesmas das migrations.
 export type Json =
@@ -3543,6 +3543,101 @@ export type Database = {
           },
         ]
       }
+      loja_pedidos: {
+        Row: {
+          atendido_em: string | null
+          atendido_por: string | null
+          cancelado_em: string | null
+          cancelado_por: string | null
+          chave: string
+          codigo: string
+          criado_em: string
+          expira_em: string
+          id: string
+          motivo_cancelamento: string | null
+          nome: string
+          numero: number
+          organizacao_id: string
+          situacao: string
+          total_centavos: number
+          unidade_id: string
+          unidades: number
+          venda_id: string | null
+          whatsapp_mascarado: string
+        }
+        Insert: {
+          atendido_em?: string | null
+          atendido_por?: string | null
+          cancelado_em?: string | null
+          cancelado_por?: string | null
+          chave: string
+          codigo: string
+          criado_em?: string
+          expira_em: string
+          id?: string
+          motivo_cancelamento?: string | null
+          nome: string
+          numero?: never
+          organizacao_id: string
+          situacao?: string
+          total_centavos: number
+          unidade_id: string
+          unidades: number
+          venda_id?: string | null
+          whatsapp_mascarado: string
+        }
+        Update: {
+          atendido_em?: string | null
+          atendido_por?: string | null
+          cancelado_em?: string | null
+          cancelado_por?: string | null
+          chave?: string
+          codigo?: string
+          criado_em?: string
+          expira_em?: string
+          id?: string
+          motivo_cancelamento?: string | null
+          nome?: string
+          numero?: never
+          organizacao_id?: string
+          situacao?: string
+          total_centavos?: number
+          unidade_id?: string
+          unidades?: number
+          venda_id?: string | null
+          whatsapp_mascarado?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "loja_pedidos_atendido_por_fkey"
+            columns: ["atendido_por"]
+            isOneToOne: false
+            referencedRelation: "perfis_usuario"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "loja_pedidos_cancelado_por_fkey"
+            columns: ["cancelado_por"]
+            isOneToOne: false
+            referencedRelation: "perfis_usuario"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "loja_pedidos_unidade_id_organizacao_id_fkey"
+            columns: ["unidade_id", "organizacao_id"]
+            isOneToOne: false
+            referencedRelation: "unidades"
+            referencedColumns: ["id", "organizacao_id"]
+          },
+          {
+            foreignKeyName: "loja_pedidos_venda_id_fkey"
+            columns: ["venda_id"]
+            isOneToOne: false
+            referencedRelation: "vendas"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       loja_reservas: {
         Row: {
           atendida_em: string | null
@@ -3561,6 +3656,7 @@ export type Database = {
           numero: number
           organizacao_id: string
           origem: string | null
+          pedido_id: string | null
           preco_centavos: number
           referencia: string | null
           situacao: string
@@ -3591,6 +3687,7 @@ export type Database = {
           numero?: never
           organizacao_id: string
           origem?: string | null
+          pedido_id?: string | null
           preco_centavos: number
           referencia?: string | null
           situacao?: string
@@ -3621,6 +3718,7 @@ export type Database = {
           numero?: never
           organizacao_id?: string
           origem?: string | null
+          pedido_id?: string | null
           preco_centavos?: number
           referencia?: string | null
           situacao?: string
@@ -3661,6 +3759,13 @@ export type Database = {
             columns: ["item_serializado_id"]
             isOneToOne: false
             referencedRelation: "itens_serializados"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "loja_reservas_pedido_id_fkey"
+            columns: ["pedido_id"]
+            isOneToOne: false
+            referencedRelation: "loja_pedidos"
             referencedColumns: ["id"]
           },
           {
@@ -7797,6 +7902,30 @@ export type Database = {
           telefone: string
           vigente_desde: string
         }[]
+      }
+      loja_pedido_atender: {
+        Args: { p_chave: string; p_pedido: string }
+        Returns: Json
+      }
+      loja_pedido_cancelar: {
+        Args: { p_motivo: string; p_pedido: string }
+        Returns: boolean
+      }
+      loja_pedido_consultar: {
+        Args: { p_codigo: string; p_organizacao: string; p_whatsapp: string }
+        Returns: Json
+      }
+      loja_pedir: {
+        Args: {
+          p_chave: string
+          p_itens: Json
+          p_nome: string
+          p_organizacao: string
+          p_origem?: Json
+          p_unidade: string
+          p_whatsapp: string
+        }
+        Returns: Json
       }
       loja_produto: {
         Args: { p_organizacao: string; p_produto: string }

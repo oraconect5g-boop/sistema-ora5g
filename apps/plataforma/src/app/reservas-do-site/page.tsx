@@ -7,7 +7,7 @@ import { agora as agoraDoServidor } from "../../lib/formato";
 import { ERROS_DA_LOJA, reservasAusentes } from "../../lib/loja/reserva";
 import { soltarReservasDoSiteVencidas } from "../../lib/loja/reservas-vencidas";
 import { chaveDoCatalogo, type ValorDeParametro } from "../../lib/parametros";
-import { ListaDeReservas, type ReservaDaLoja } from "./ListaDeReservas";
+import { ListaDeReservas, type PedidoDaLoja, type ReservaDaLoja } from "./ListaDeReservas";
 
 export const metadata: Metadata = { title: "Reservas do site" };
 export const dynamic = "force-dynamic";
@@ -15,6 +15,8 @@ export const dynamic = "force-dynamic";
 const OK = {
   cancelada: "Reserva cancelada: a unidade voltou para o estoque da loja.",
   ja_cancelada: "Nada mudou: esta reserva já estava cancelada.",
+  pedido_cancelado: "Pedido cancelado: as unidades voltaram para o estoque da loja.",
+  pedido_ja_cancelado: "Nada mudou: este pedido já estava cancelado.",
 } as const;
 
 // ONLINE-b (ORA-ONLINE-006; ADR-009): as reservas do site na loja do turno, para quem vende nela. Atender abre a venda
@@ -34,13 +36,19 @@ export default async function ReservasDoSite({ searchParams }: { searchParams: P
   const instante = agoraDoServidor().getTime();
   const desde = new Date(instante - 3 * 86_400_000).toISOString();
   const lidas = await supabase.from("loja_reservas")
-    .select("id, codigo, nome, whatsapp_mascarado, preco_centavos, situacao, expira_em, criada_em, variante_id, item_serializado_id, cancelada_em, motivo_cancelamento, atendida_em, origem, utm_source, utm_campaign")
+    .select("id, codigo, nome, whatsapp_mascarado, preco_centavos, situacao, expira_em, criada_em, variante_id, item_serializado_id, cancelada_em, motivo_cancelamento, atendida_em, origem, utm_source, utm_campaign, pedido_id")
     .eq("unidade_id", unidade).gte("criada_em", desde).order("expira_em").limit(100);
   if (lidas.error) {
     if (!reservasAusentes(lidas.error)) throw new FalhaDoServico("loja_reservas");
     return <MoldeReal sessao={sessao}><TituloPagina titulo="Reservas do site" /><Aviso tom="info" className="mt-4">As reservas do site ainda não estão disponíveis neste ambiente.</Aviso></MoldeReal>;
   }
-  const reservas = lidas.data as ReservaDaLoja[];
+  const reservas = lidas.data as unknown as ReservaDaLoja[];
+  // ONLINE-d: os pedidos do site desta loja (o carrinho reservado de uma vez). Banco sem a migration: sem pedidos.
+  const pedidosLidos = await supabase.from("loja_pedidos")
+    .select("id, codigo, nome, whatsapp_mascarado, total_centavos, unidades, situacao, expira_em, criado_em, motivo_cancelamento")
+    .eq("unidade_id", unidade).gte("criado_em", desde).order("expira_em").limit(50);
+  if (pedidosLidos.error && !reservasAusentes(pedidosLidos.error)) throw new FalhaDoServico("loja_pedidos");
+  const pedidos = (pedidosLidos.error ? [] : pedidosLidos.data) as unknown as PedidoDaLoja[];
   const [variantes, aparelhos] = await Promise.all([
     reservas.length ? supabase.from("variantes").select("id, nome").in("id", [...new Set(reservas.map((r) => r.variante_id))]) : Promise.resolve({ data: [], error: null }),
     reservas.some((r) => r.item_serializado_id)
@@ -56,7 +64,7 @@ export default async function ReservasDoSite({ searchParams }: { searchParams: P
       <TituloPagina titulo="Reservas do site" subtitulo="Clientes que reservaram na loja online para retirar aqui. A reserva vale 24 horas." />
       {ok && <Aviso tom="sucesso" className="mt-4">{OK[ok]}</Aviso>}
       {erro && <Aviso tom="perigo" className="mt-4">{ERROS_DA_LOJA[erro]}</Aviso>}
-      <ListaDeReservas reservas={reservas} produtos={produtos} imeis={imeis} instante={instante} />
+      <ListaDeReservas reservas={reservas} pedidos={pedidos} produtos={produtos} imeis={imeis} instante={instante} />
     </MoldeReal>
   );
 }

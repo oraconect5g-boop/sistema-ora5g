@@ -1810,7 +1810,7 @@ Programa de execução integral (PR #67; checkpoint em `docs/alinhamento/EXECUCA
 - **Tela:** `/estoque/carga` e `/estoque/carga/<carga>`, com o atalho "Estoque de cada loja" na importação de planilha.
 - **Testes:** o banco (7), a leitura (4), as telas, a rota e as ações (5), e o inventário de autorização (196 funções).
 - **Pedido ao Codex:** conferir que a carga nunca soma duas vezes (o mesmo arquivo, outro arquivo na mesma loja, a movimentação depois da data de corte) e que nenhum aparelho entra sem o IMEI.
-- **CI, merge e publicação (18/11):** CI verde em `6d57f1a` (2.918 testes e 1 TODO, 311 E2E, com 13 pulados); merge `c330d0d`, com a árvore da branch testada; no GitHub, os checks de `c330d0d` terminaram com sucesso: "Verificações" e "Supabase Preview"; no ar desde 23:31.
+- **CI, merge e publicação (17/11):** CI verde em `6d57f1a` (2.918 testes e 1 TODO, 311 E2E, com 13 pulados); merge `c330d0d`, com a árvore da branch testada; no GitHub, os checks de `c330d0d` terminaram com sucesso: "Verificações" e "Supabase Preview"; no ar desde 23:31 de 17/11.
 
 ## 18/11/2026 — Lote DEMO-a: a demonstração com as lojas de verdade e os canais
 
@@ -1818,9 +1818,19 @@ Programa de execução integral (PR #67; checkpoint em `docs/alinhamento/EXECUCA
 - **Demonstração:** os nomes das 11 lojas (o endereço "a confirmar"), os próximos passos do administrador e `/demo/canais` (o que entra por arquivo, o que falta para conectar direto e os canais lado a lado com números fictícios).
 - **Regra:** a demonstração fica no ar em todo ambiente; `ORA_DEMO_DESLIGADA=1` a tira do ar (na lista de permissão do web). O isolamento é provado por `src/demo/isolamento.test.ts`.
 - **Pedido ao Codex:** conferir que nenhuma tela real usa dado da demonstração e que a demonstração não lê o banco.
+- **CI, merge e publicação (18/11, junto com o TRF-b):** o primeiro CI (em `bbe8942`) caiu em 3 testes de navegação que ainda esperavam os nomes antigos e a demonstração fora do ar em produção; a página inicial e os testes foram acertados em `f62bf8f`. CI verde em `4819130` (2.923 testes e 1 TODO, 311 E2E, com 13 pulados); merge `bdbd8b6`, com a árvore da branch testada; no GitHub, os checks de `bdbd8b6` terminaram com sucesso: "Verificações" e "Supabase Preview"; no ar desde 00:08 de 18/11.
 
 ## 18/11/2026 — Lote TRF-b: o que cada passo da transferência faz no estoque (junto com o DEMO-a)
 
 - **Origem:** o achado F10 da auditoria de 17/11. O contrato não muda; a regra de reservar já no pedido é a decisão D-049.
 - **Tela:** `/transferencias` com o efeito de cada passo e o saldo de agora da origem e do destino (o que a RLS mostra).
 - **Pedido ao Codex:** conferir que a tela não mostra saldo de loja que a pessoa não vê e que o texto bate com o que o banco faz.
+- **CI, merge e publicação:** junto com o DEMO-a (acima).
+
+## 18/11/2026 — Lote ONLINE-d: o carrinho e o pedido do site, para retirar e pagar na loja
+
+- **Origem:** os aceites A03 e A06 do adendo de 16/11 (PR #100) e a orientação "Loja online" da auditoria de 17/11 (PR #104). Decisão: [ADR-023](../adr/ADR-023-pedido-do-site.md), que amplia a ADR-009 sem o pagamento online (E1).
+- **Banco:** a migration `20261118031404_pedido_do_site`, aplicada no `ora5g-dev` em 18/11 antes do merge, com o texto idêntico ao arquivo, e a `20261118034536_comentario_do_contato_do_pedido`, só com o comentário de acesso da tabela do contato (o primeiro CI do lote caiu no teste da higiene do esquema por falta dele). `public.loja_pedir` reserva o carrinho de uma vez ou nada; a regra de uma unidade saiu do `loja_reservar` para `privado.reservar_unidade_do_site`, sem mudança, e as duas funções a usam; o limite do WhatsApp conta os compromissos (o pedido conta um). `loja_pedido_atender` abre uma venda só, com todas as unidades, e devolve o total anunciado e o de hoje; `loja_pedido_cancelar` devolve as unidades; `loja_reserva_atender` e `loja_reserva_cancelar` recusam a unidade de um pedido. As três funções em vigor foram conferidas pelo md5 do corpo antes da cópia.
+- **Telas:** "Pôr no carrinho" no produto, `/loja/carrinho`, `/loja/pedido` e o cartão do pedido em `/reservas-do-site`; o aviso do PDV diz o desconto a dar na venda quando o total de hoje passa do anunciado.
+- **Testes:** o banco (`loja-online-pedido.test.ts`: tudo ou nada, a mesma chave, o WhatsApp, as recusas, a loja sem CNPJ, a venda única com os dois totais, o cancelamento e a outra loja), o inventário de autorização (200 funções; o visitante executa `loja_pedir` e `loja_pedido_consultar`), as regras do carrinho, as ações e a tela, as reservas da loja e a navegação sem login.
+- **Pedido ao Codex:** conferir que o pedido nunca deixa unidade presa quando falha, que nenhuma unidade de um pedido sai sozinha, que a concorrência entre o pedido, a reserva avulsa e o PDV segue a mesma ordem de travas, e que a consulta pelo código não revela nada sem o WhatsApp certo.

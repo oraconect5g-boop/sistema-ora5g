@@ -17,7 +17,11 @@ export default function LayoutDaLoja({ children }: { children: ReactNode }) {
             <Marca tamanho="text-xl" />
             <span className="rounded-full bg-acao/10 px-2 py-0.5 text-xs font-semibold text-acao">Loja online</span>
           </Link>
-          <span className="hidden text-sm text-suave sm:inline">Escolha no site, retire na loja</span>
+          <nav aria-label="Compra" className="flex items-center gap-3 text-sm">
+            <span className="hidden text-suave sm:inline">Escolha no site, retire na loja</span>
+            <Link href="/loja/carrinho" className="font-semibold text-acao">Carrinho</Link>
+            <Link href="/loja/pedido" className="font-semibold text-acao">Meu pedido</Link>
+          </nav>
         </div>
       </header>
       <main className="mx-auto w-full max-w-6xl flex-1 px-4 py-6">{children}</main>

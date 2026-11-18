@@ -37,7 +37,7 @@ const MEIOS_DA_LOJA = (Object.keys(MEIOS) as (keyof typeof MEIOS)[]).filter((m) 
 // VEL-a (ORA-QUAL-010, ORA-POS-002): a tela abre com duas idas ao banco: a sessão, que já traz as permissões
 // (public.molde_da_sessao), e a tela inteira (public.pdv_tela: caixa, venda, carrinho e maquininhas). Antes eram até
 // nove idas seguidas. Só a busca de produto faz mais idas, e só quando há venda aberta e algo digitado.
-export default async function Vender({ searchParams }: { searchParams: Promise<{ q?: ValorDeParametro; erro?: ValorDeParametro; desconto?: ValorDeParametro; cancelada?: ValorDeParametro; os?: ValorDeParametro; reserva?: ValorDeParametro; anunciado?: ValorDeParametro; atual?: ValorDeParametro }> }) {
+export default async function Vender({ searchParams }: { searchParams: Promise<{ q?: ValorDeParametro; erro?: ValorDeParametro; desconto?: ValorDeParametro; cancelada?: ValorDeParametro; os?: ValorDeParametro; reserva?: ValorDeParametro; anunciado?: ValorDeParametro; atual?: ValorDeParametro; pedido?: ValorDeParametro }> }) {
   const parametros = await searchParams;
   const erro = chaveDoCatalogo(ERROS_DA_VENDA, parametros.erro);
   const busca = termoDaBusca(textoDoParametro(parametros.q)).slice(0, 40);
@@ -121,7 +121,7 @@ export default async function Vender({ searchParams }: { searchParams: Promise<{
       {textoDoParametro(parametros.cancelada) === "1" && <Aviso tom="info">Venda cancelada. Os itens voltaram para o estoque da loja.</Aviso>}
       {/* ONLINE-b: a reserva do site atendida abre a venda com a unidade reservada; a oferta anunciada obriga. */}
       {textoDoParametro(parametros.reserva) === "atendida" && (() => {
-        const aviso = avisoDaReservaAtendida(textoDoParametro(parametros.anunciado), textoDoParametro(parametros.atual));
+        const aviso = avisoDaReservaAtendida(textoDoParametro(parametros.anunciado), textoDoParametro(parametros.atual), textoDoParametro(parametros.pedido) === "sim");
         return <Aviso tom={aviso.tom}>{aviso.texto}</Aviso>;
       })()}
       {textoDoParametro(parametros.os) === "no_carrinho" && <Aviso tom="sucesso">O conserto da OS entrou no carrinho pelo valor do orçamento aprovado. Conclua a venda; depois registre a entrega na OS.</Aviso>}

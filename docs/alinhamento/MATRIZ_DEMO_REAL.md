@@ -271,7 +271,7 @@ O painel mantém o título e o espaço em qualquer estado; só muda o conteúdo.
 | CRM | Clientes, funil, agenda, duplicados e segmentos | `/clientes`, `/clientes/duplicados`, `/clientes/segmentos`, `/crm`, `/crm/agenda` | `clientes`, `oportunidades`, `atividades`, `cliente_consentimentos` | `cliente.*`, `crm.atender`, `crm.gerir` | `clientes.test.ts`, `clientes-mesclagem.test.ts`, `crm.test.ts` | Parcial (L5a, L5b, L5c) |
 | WhatsApp | Conversas e campanhas | — | — | — | — | Não iniciado (depende de contrato oficial) |
 | Assistência | Ordens de serviço | `/assistencia` (L12a a L12e) | `ordens_servico`, `os_eventos`, `os_orcamentos`, `os_pecas` | `os.*` | `ordem-de-servico.test.ts` e os testes das telas | Parcial (a demonstração tem a assistência desde o lote 4) |
-| Canais online | Loja, marketplaces, anúncios e os canais lado a lado | `/loja` (ONLINE-a a c), `/relatorios/marketplaces` (MKTPL-a), `/relatorios/anuncios` (META-a, AUD-a), `/relatorios/canais` (CANAIS-a) | `loja_reservas`, `marketplace_*`, `anuncios_*` e os painéis de cada canal | `resultado.ver` (o dono) nos relatórios; a vitrine é pública | `marketplaces.test.ts`, `anuncios.test.ts` e os testes das telas | Parcial: tudo por arquivo; a conexão direta espera o contrato de cada canal. Na demonstração, `/demo/canais` (DEMO-a) |
+| Canais online | Loja, marketplaces, anúncios e os canais lado a lado | `/loja` (ONLINE-a a c), `/loja/carrinho` e `/loja/pedido` (ONLINE-d), `/relatorios/marketplaces` (MKTPL-a), `/relatorios/anuncios` (META-a, AUD-a), `/relatorios/canais` (CANAIS-a) | `loja_reservas`, `loja_pedidos` (ONLINE-d), `marketplace_*`, `anuncios_*` e os painéis de cada canal | `resultado.ver` (o dono) nos relatórios; a vitrine é pública | `marketplaces.test.ts`, `anuncios.test.ts` e os testes das telas | Parcial: tudo por arquivo; a conexão direta espera o contrato de cada canal. Na demonstração, `/demo/canais` (DEMO-a) |
 
 ## 6. Paridade dos lotes de 14 a 18/11 (DEMO-a, 18/11)
 
@@ -291,3 +291,4 @@ A demonstração usa só dados fictícios e não lê o banco nem a sessão de ve
 | MKTPL-a | Os pedidos dos marketplaces por arquivo, com o lucro | `/relatorios/marketplaces` | Sim, resumido: as linhas dos marketplaces em `/demo/canais` |
 | CANAIS-a | Os canais lado a lado | `/relatorios/canais` | Sim: `/demo/canais`, com o mesmo cálculo |
 | ADAPT-a | As integrações que esperam contrato | — (só o worker) | Sim: os cartões "Para conectar direto" em `/demo/canais` |
+| ONLINE-d | O carrinho e o pedido do site, para retirar e pagar na loja | `/loja/carrinho`, `/loja/pedido` e `/reservas-do-site` | Não se aplica: a loja online já é pública, sem login; a demonstração não tem loja |
