@@ -405,6 +405,20 @@
         "ORA-POS-002"
       ],
       "entrega": "as permissões do molde da sessão em 46 arquivos, o preço em lote na busca do PDV e o Caixa em três rodadas (ADR-010, \"O que veio no VEL-b\")",
+      "commit": "27b4f6e",
+      "publicado_em": "2026-11-18",
+      "pedido_em": null,
+      "resposta": null,
+      "respondido_em": null
+    },
+    {
+      "lote": "AUD-b",
+      "roteiro": "docs/aceite/AUD-b.md",
+      "requisitos": [
+        "ORA-CAT-002",
+        "ORA-INV-004"
+      ],
+      "entrega": "os achados F18-01, F18-02 e F18-04 da reanálise do Codex de 18/11: a quantidade e o dinheiro do Excel pela origem, o rodapé comprovado ou candidato com a decisão registrada, a tela de entregas e a lista de dependências",
       "commit": null,
       "publicado_em": null,
       "pedido_em": null,

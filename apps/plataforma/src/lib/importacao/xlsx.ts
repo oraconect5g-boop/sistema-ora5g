@@ -323,12 +323,15 @@ function valorDaCelula(tipo: string, valor: string, textoEmLinha: string, textos
   }
 }
 
-type Folha = Pick<Planilha, "cabecalho" | "linhas" | "numeros">;
+type Folha = Pick<Planilha, "cabecalho" | "linhas" | "numeros" | "numericas">;
+
+/** Os tipos de célula que guardam texto (ou verdadeiro e falso); o resto é número, como o Excel o guarda (F18-01). */
+const TIPOS_DE_TEXTO = new Set(["s", "inlineStr", "b", "str", "e", "d"]);
 
 function lerFolha(xml: string, textos: readonly string[], soCabecalho: boolean): Folha {
-  const lidas: { numero: number; celulas: string[] }[] = [];
+  const lidas: { numero: number; celulas: string[]; numericas: number[] }[] = [];
   let nosDados = false;
-  let linha: { numero: number; celulas: string[] } | null = null;
+  let linha: { numero: number; celulas: string[]; numericas: number[] } | null = null;
   let ultimaLinha = 0;
   let celula: { coluna: number; tipo: string } | null = null;
   let ultimaColuna = -1;
@@ -348,7 +351,7 @@ function lerFolha(xml: string, textos: readonly string[], soCabecalho: boolean):
         if (!(numero > ultimaLinha) || numero > MAIOR_LINHA_DO_EXCEL) throw quebrada();
         ultimaLinha = numero;
         ultimaColuna = -1;
-        linha = { numero, celulas: [] };
+        linha = { numero, celulas: [], numericas: [] };
         return;
       }
       if (nome === "c" && linha) {
@@ -383,6 +386,7 @@ function lerFolha(xml: string, textos: readonly string[], soCabecalho: boolean):
           if (celula.coluna >= LIMITES_DA_PLANILHA.colunas) throw new ErroDaPlanilha("colunas", linha.numero);
           if (texto.length > LIMITES_DA_PLANILHA.celula) throw new ErroDaPlanilha("celula", linha.numero);
           linha.celulas[celula.coluna] = texto;
+          if (!TIPOS_DE_TEXTO.has(celula.tipo)) linha.numericas.push(celula.coluna);
         }
         celula = null;
         destino = null;
@@ -391,7 +395,7 @@ function lerFolha(xml: string, textos: readonly string[], soCabecalho: boolean):
       if (nome === "row" && linha) {
         // Linha sem nenhuma célula preenchida (só formatação, por exemplo) não conta, como a linha vazia do CSV.
         if (linha.celulas.length > 0) {
-          lidas.push({ numero: linha.numero, celulas: Array.from(linha.celulas, (c) => c ?? "") });
+          lidas.push({ numero: linha.numero, celulas: Array.from(linha.celulas, (c) => c ?? ""), numericas: linha.numericas });
           if (lidas.length > LIMITES_DA_PLANILHA.linhas + 1) throw new ErroDaPlanilha("linhas");
           if (soCabecalho) throw PARAR;
         }
@@ -407,7 +411,7 @@ function lerFolha(xml: string, textos: readonly string[], soCabecalho: boolean):
   if (!cabecalho) throw new ErroDaPlanilha("vazio");
   conferirCabecalho(cabecalho.celulas);
   if (dados.some((l) => l.numero > MAIOR_NUMERO_DE_LINHA)) throw new ErroDaPlanilha("linhas");
-  return { cabecalho: cabecalho.celulas, linhas: dados.map((l) => l.celulas), numeros: dados.map((l) => l.numero) };
+  return { cabecalho: cabecalho.celulas, linhas: dados.map((l) => l.celulas), numeros: dados.map((l) => l.numero), numericas: dados.map((l) => l.numericas) };
 }
 
 // ---------------------------------------------------------------------------------------------

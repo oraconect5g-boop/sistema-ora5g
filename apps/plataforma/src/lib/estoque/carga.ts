@@ -3,7 +3,7 @@
 // separadas. Nada do formato da Rein é suposto: a pessoa confirma a coluna do código do produto e, de cada loja, a coluna
 // do físico e a do disponível; a sugestão vem do nome da loja no cabeçalho. Aqui só se montam as linhas de cada loja no
 // formato do banco (public.estoque_carga_previa), que classifica e confere tudo de novo.
-import { numeroDoRodape, rodapeDaPlanilha, sugerirMapeamento, type LinhaDeFora } from "../importacao/catalogo";
+import { candidatoARodape, celulaNumerica, rodapeDaPlanilha, sugerirMapeamento, type LinhaDeFora } from "../importacao/catalogo";
 import { semAcento, type Planilha } from "../importacao/csv";
 
 /** O banco aceita até 3.000 linhas por loja numa carga (o relatório de 10/11 tem 2.271 produtos). */
@@ -97,12 +97,32 @@ export function mapaDaCargaParaGravar(cabecalho: readonly string[], mapa: MapaDa
   };
 }
 
-/** A quantidade de uma célula: número inteiro (com separador de milhar, o "12.0" do Excel); vazio é nulo. */
-export function quantidadeDaCelula(texto: string): { valor: number | null } | { problema: string } {
+/**
+ * O inteiro de uma quantidade escrita como texto, na planilha brasileira: "12", "-3", "1.234" (mil duzentos e trinta e
+ * quatro), "12,0", "1.234,00" e o "12.0" do Excel exportado. "0,625", "0.625", "12.5", "1,5" e "1.234,5" são frações
+ * (o "0.625" não é milhar: o milhar não começa por zero); o resto ("1e3", "dez") não é número.
+ */
+function inteiroDoTexto(t: string): number | "fracao" | null {
+  const s = t.replace(/\s/g, "");
+  if (/^[-+]?\d{1,9}$/.test(s)) return Number(s);
+  if (/^[-+]?[1-9]\d{0,2}(\.\d{3})+$/.test(s)) return Number(s.replace(/\./g, ""));
+  if (/^[-+]?(\d{1,9}|[1-9]\d{0,2}(\.\d{3})+),0+$/.test(s)) return Number(s.replace(/,0+$/, "").replace(/\./g, ""));
+  if (/^[-+]?\d{1,9}\.0+$/.test(s)) return Number(s);
+  if (/^[-+]?(\d{1,9}|[1-9]\d{0,2}(\.\d{3})+),\d+$/.test(s) || /^[-+]?\d{1,9}\.\d+$/.test(s)) return "fracao";
+  return null;
+}
+
+/**
+ * A quantidade de uma célula: número inteiro; vazio é nulo. A origem decide a leitura (achado F18-01 da reanálise do
+ * Codex de 18/11): a célula numérica do Excel é o próprio número, com ponto decimal ("0.625" é uma fração, nunca 625); o
+ * texto segue a planilha brasileira (inteiroDoTexto). A fração e o que não é número voltam com o problema, e a linha vai
+ * à prévia para conferir: o estoque é contado em unidades, e nada é arredondado.
+ */
+export function quantidadeDaCelula(texto: string, origem: { numerica?: boolean } = {}): { valor: number | null } | { problema: string } {
   const t = texto.trim();
   if (t === "") return { valor: null };
-  const n = numeroDoRodape(t);
-  if (n === null || !Number.isInteger(n) || Math.abs(n) > 9_999_999) return { problema: `Quantidade que não é número inteiro: "${t.slice(0, 30)}"` };
+  const n = origem.numerica === true ? Number(t) : inteiroDoTexto(t);
+  if (typeof n !== "number" || !Number.isSafeInteger(n) || Math.abs(n) > 9_999_999) return { problema: `Quantidade que não é número inteiro: "${t.slice(0, 30)}"` };
   return { valor: n };
 }
 
@@ -111,16 +131,23 @@ export function quantidadeDaCelula(texto: string): { valor: number | null } | { 
  * linha em que a loja tem o físico e o disponível vazios ou zero não vai (nada a fazer naquela loja). A quantidade que
  * não é número inteiro vai com o problema escrito, para a prévia mostrar.
  */
-export function linhasDaCarga(planilha: Planilha, mapa: MapaDaCarga): { porLoja: Record<string, LinhaDaCarga[]>; deFora: LinhaDeFora | null } {
+export function linhasDaCarga(planilha: Planilha, mapa: MapaDaCarga): {
+  porLoja: Record<string, LinhaDaCarga[]>; deFora: LinhaDeFora | null; candidato: LinhaDeFora | null;
+} {
   const deFora = rodapeDaPlanilha(planilha, { sku: mapa.sku, nome: mapa.nome ?? mapa.sku });
+  // A última linha que pode ser rodapé, sem prova (F18-02): vai à prévia (sem o código, a linha fica para conferir) e a
+  // carga guarda o aviso.
+  const candidato = candidatoARodape(planilha, { sku: mapa.sku, nome: mapa.nome ?? mapa.sku });
   const porLoja: Record<string, LinhaDaCarga[]> = Object.fromEntries(Object.keys(mapa.lojas).map((id) => [id, [] as LinhaDaCarga[]]));
   planilha.linhas.forEach((celulas, i) => {
     if (deFora !== null && i === deFora.posicao) return;
     const numero = planilha.numeros[i] ?? i + 2;
     const sku = (celulas[mapa.sku] ?? "").trim().replace(/\s+/g, " ");
     for (const [loja, colunas] of Object.entries(mapa.lojas)) {
-      const fisico = quantidadeDaCelula(celulas[colunas.fisico] ?? "");
-      const disponivel = colunas.disponivel === undefined ? { valor: null } : quantidadeDaCelula(celulas[colunas.disponivel] ?? "");
+      const fisico = quantidadeDaCelula(celulas[colunas.fisico] ?? "", { numerica: celulaNumerica(planilha, i, colunas.fisico) });
+      const disponivel = colunas.disponivel === undefined
+        ? { valor: null }
+        : quantidadeDaCelula(celulas[colunas.disponivel] ?? "", { numerica: celulaNumerica(planilha, i, colunas.disponivel) });
       const valorF = "valor" in fisico ? fisico.valor : null;
       const valorD = "valor" in disponivel ? disponivel.valor : null;
       const problema = "problema" in fisico ? fisico.problema : "problema" in disponivel ? disponivel.problema : undefined;
@@ -128,5 +155,5 @@ export function linhasDaCarga(planilha: Planilha, mapa: MapaDaCarga): { porLoja:
       porLoja[loja]?.push({ numero, sku: sku.slice(0, 60), fisico: valorF, disponivel: valorD, ...(problema ? { problema } : {}) });
     }
   });
-  return { porLoja, deFora };
+  return { porLoja, deFora, candidato };
 }

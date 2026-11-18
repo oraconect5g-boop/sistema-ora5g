@@ -5,7 +5,7 @@ import type { NextRequest } from "next/server";
 import { redirecionar } from "../../../../lib/acesso/redirecionar";
 import { permite } from "../../../../lib/acesso/molde";
 import { obterSessao } from "../../../../lib/acesso/sessao";
-import { dividirEmPartes, montarLinhas, rodapeDaPlanilha } from "../../../../lib/importacao/catalogo";
+import { candidatoARodape, dividirEmPartes, montarLinhas, rodapeDaPlanilha } from "../../../../lib/importacao/catalogo";
 import type { Json } from "../../../../lib/supabase/tipos-banco";
 import { ErroDaPlanilha, LIMITES_DA_PLANILHA } from "../../../../lib/importacao/csv";
 import { descomprimirNoServidor } from "../../../../lib/importacao/descomprimir-servidor";
@@ -59,15 +59,24 @@ export async function POST(requisicao: NextRequest) {
   if (unidade.error || !unidade.data) return voltar({ erro: "falha" });
   // A linha de total no fim da planilha (a da Rein) fica de fora, à vista na prévia; o resto vai em partes de até 2.000
   // linhas, uma prévia por parte (o banco aceita até 2.000 por chamada). Arquivo de uma parte só fica como antes.
-  const rodape = rodapeDaPlanilha(planilha, lido.envio.mapa);
+  // F18-02: só o rodapé comprovado sai sozinho. A última linha que só pode ser rodapé (sem soma que confira, ou com o
+  // EAN) vai à prévia, com o aviso, e só sai quando quem envia marca "deixar de fora a última linha": a decisão fica
+  // gravada com a prévia (e muda a impressão digital, para não ser confundida com a prévia sem a decisão).
+  const candidato = candidatoARodape(planilha, lido.envio.mapa);
+  const decidiuTirar = candidato !== null && dados.get("ultima_linha_de_fora") === "sim";
+  const rodape = rodapeDaPlanilha(planilha, lido.envio.mapa) ?? (decidiuTirar ? candidato : null);
   const total = rodape?.posicao ?? null;
   const todas = montarLinhas(planilha, lido.envio.mapa, lido.envio.padroes);
-  const ignoradas = rodape === null ? [] : [{ linha: todas[rodape.posicao]?.numero ?? rodape.posicao + 2, motivo: rodape.motivo }];
+  const ignoradas = rodape === null ? [] : [{
+    linha: todas[rodape.posicao]?.numero ?? rodape.posicao + 2,
+    ...(decidiuTirar ? { motivo: `${rodape.motivo}; deixada de fora por decisão de quem enviou`, decisao: "manual" } : { motivo: rodape.motivo }),
+  }];
   const linhas = total === null ? todas : todas.filter((_, i) => i !== total);
   if (linhas.length === 0) return voltar({ erro: "vazio" });
   const partes = dividirEmPartes(linhas);
   const impressao = (parte: number) => {
     const hash = createHash("sha256").update(bytes);
+    if (decidiuTirar) hash.update(":ultima-linha-de-fora");
     // Cada parte tem a própria impressão digital: o banco recusa aplicar duas vezes o mesmo arquivo (OR023).
     if (partes.length > 1) hash.update(`:parte:${parte}:de:${partes.length}`);
     return hash.digest("hex");
@@ -78,6 +87,7 @@ export async function POST(requisicao: NextRequest) {
   const extrasDoMapeamento = (numero: number, parte: readonly { numero: number }[]) => {
     const extras: { [chave: string]: Json } = {};
     if (ignoradas.length > 0) extras.ignoradas = ignoradas;
+    if (candidato !== null && !decidiuTirar) extras.candidato = { linha: todas[candidato.posicao]?.numero ?? candidato.posicao + 2, motivo: candidato.motivo };
     if (partes.length > 1) extras.parte = { numero, de: partes.length, linhas: [parte[0]?.numero ?? 0, parte.at(-1)?.numero ?? 0] };
     return extras;
   };

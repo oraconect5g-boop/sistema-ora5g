@@ -4,6 +4,9 @@
 import { describe, expect, it } from "vitest";
 
 import { lerCsv } from "../importacao/csv";
+import { descomprimirNoServidor } from "../importacao/descomprimir-servidor";
+import { lerPlanilha } from "../importacao/planilha";
+import { gerarXlsx } from "../xlsx-servidor";
 import { lerMapaDaCarga, linhasDaCarga, mapaDaCargaParaGravar, quantidadeDaCelula, sugerirMapaDaCarga, type LojaDaCarga } from "./carga";
 
 const LOJAS: LojaDaCarga[] = [
@@ -68,10 +71,52 @@ describe("as linhas de cada loja", () => {
   });
 
   it("a quantidade: inteiro com separador de milhar ou o 12.0 do Excel; vazio é nulo; o resto, problema", () => {
-    expect(["12", "-3", "1.234", "12.0", "", " 0 "].map(quantidadeDaCelula)).toEqual([
+    expect(["12", "-3", "1.234", "12.0", "", " 0 "].map((t) => quantidadeDaCelula(t))).toEqual([
       { valor: 12 }, { valor: -3 }, { valor: 1234 }, { valor: 12 }, { valor: null }, { valor: 0 },
     ]);
     expect(quantidadeDaCelula("2,5")).toEqual({ problema: 'Quantidade que não é número inteiro: "2,5"' });
     expect(quantidadeDaCelula("dez")).toEqual({ problema: 'Quantidade que não é número inteiro: "dez"' });
+  });
+
+  // Achado F18-01 da reanálise do Codex de 18/11: o número do Excel chegava como "0.625" e virava 625 (o ponto lido como
+  // milhar). Cada origem tem o seu contrato; a fração e o que não é número vão à prévia para conferir, nunca arredondados.
+  it("F18-01: a quantidade pela origem — o número do Excel é o próprio número; o texto, a planilha brasileira", () => {
+    const n = (t: string) => quantidadeDaCelula(t, { numerica: true });
+    expect(["0.625", "1.234", "1234", "-3", "0", "1.5E+21"].map(n)).toEqual([
+      { problema: 'Quantidade que não é número inteiro: "0.625"' }, { problema: 'Quantidade que não é número inteiro: "1.234"' },
+      { valor: 1234 }, { valor: -3 }, { valor: 0 }, { problema: 'Quantidade que não é número inteiro: "1.5E+21"' },
+    ]);
+    const t = (x: string) => quantidadeDaCelula(x);
+    expect(["1.234", "12.345", "12,0", "1.234,00", "12.0", "00012", "1 234", "+5"].map(t)).toEqual([
+      { valor: 1234 }, { valor: 12345 }, { valor: 12 }, { valor: 1234 }, { valor: 12 }, { valor: 12 }, { valor: 1234 }, { valor: 5 },
+    ]);
+    for (const fracao of ["0.625", "0,625", "12.5", "1,5", "1.234,5"]) expect(t(fracao), fracao).toEqual({ problema: `Quantidade que não é número inteiro: "${fracao}"` });
+    for (const estranho of ["1e3", "R$ 10", "--3", "1.2.3"]) expect(t(estranho), estranho).toEqual({ problema: `Quantidade que não é número inteiro: "${estranho}"` });
+  });
+
+  it("F18-01: no Excel, a célula numérica 0,625 vai para conferir (antes entrava 625); o texto 1.234 segue mil e duzentos", async () => {
+    const bytes = gerarXlsx([{ nome: "Produtos", secoes: [{
+      colunas: ["Código", "Descrição", "Santa Cândida Qtd.", "Santa Cândida Qtd. Disponível"],
+      linhas: [["ACE-1", "Cabo", 0.625, 0.625], ["ACE-2", "Capa", "1.234", 1234], ["ACE-3", "Película", 1.234, 1]],
+    }] }]);
+    const planilha = await lerPlanilha(bytes, descomprimirNoServidor);
+    const { porLoja } = linhasDaCarga(planilha, { sku: 0, nome: 1, lojas: { [SC]: { fisico: 2, disponivel: 3 } } });
+    expect(porLoja[SC]).toEqual([
+      { numero: 2, sku: "ACE-1", fisico: null, disponivel: null, problema: 'Quantidade que não é número inteiro: "0.625"' },
+      { numero: 3, sku: "ACE-2", fisico: 1234, disponivel: 1234 },
+      { numero: 4, sku: "ACE-3", fisico: null, disponivel: 1, problema: 'Quantidade que não é número inteiro: "1.234"' },
+    ]);
+  });
+
+  it("F18-02: a última linha só com números que não somam vai à prévia (sem o código, para conferir), com o aviso", () => {
+    const p = lerCsv(new TextEncoder().encode("Código;Descrição;Santa Cândida Qtd.;Santa Cândida Qtd. Disponível\nACE-1;Capa;10;8\n;;7;3\n"));
+    const { porLoja, deFora, candidato } = linhasDaCarga(p, { sku: 0, nome: 1, lojas: { [SC]: { fisico: 2, disponivel: 3 } } });
+    expect(deFora).toBeNull();
+    expect(candidato?.posicao).toBe(1);
+    expect(porLoja[SC]).toEqual([{ numero: 2, sku: "ACE-1", fisico: 10, disponivel: 8 }, { numero: 3, sku: "", fisico: 7, disponivel: 3 }]);
+    // O rodapé que soma continua de fora, sem candidato.
+    const comTotal = lerCsv(new TextEncoder().encode("Código;Descrição;Santa Cândida Qtd.;Santa Cândida Qtd. Disponível\nACE-1;Capa;10;8\nACE-2;Cabo;2;2\n;;12;10\n"));
+    const lida = linhasDaCarga(comTotal, { sku: 0, nome: 1, lojas: { [SC]: { fisico: 2, disponivel: 3 } } });
+    expect([lida.deFora?.posicao, lida.candidato, lida.porLoja[SC]?.length]).toEqual([2, null, 2]);
   });
 });

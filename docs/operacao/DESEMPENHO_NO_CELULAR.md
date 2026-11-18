@@ -309,10 +309,10 @@ O log de tempos ficou ligado na homologação desde o VEL-a, e as telas foram us
 | PDV, sem busca | 3 | 2 | 0,5 s | nenhuma (VEL-a) |
 | O sino de avisos e o Início | 17 a 28 | 2 | 0,7 a 1,5 s | nenhuma; o peso são os pedidos ao mesmo tempo |
 
-**Depois do VEL-b:** depois da publicação, rodar com `--desde` igual ao número de linhas do log naquele momento:
+**Depois do VEL-b** (no ar desde 18/11, 07:11; o log tinha 3.563 linhas na publicação): até as 10:15 de 18/11, 19 telas com login. A tela Vendas, aberta uma vez, fez **7 idas em 3 rodadas, 0,63 s no banco**, sem a pergunta de permissão (antes, 8 a 9 idas em 4 a 5 rodadas e 0,93 a 1,15 s). É uma abertura só, então não basta para concluir. O sino e o Início seguem com 17 a 28 pedidos ao mesmo tempo (0,72 a 0,93 s): é o VEL-c. Para medir de novo:
 
 ```bash
-node scripts/idas-por-tela.mjs --desde <número da linha>
+node scripts/idas-por-tela.mjs --desde 3563
 ```
 
 A conta das rodadas, pelo código, está na ADR-010 ("O que veio no VEL-b").

@@ -184,6 +184,32 @@ describe("envio da planilha", () => {
     expect(chamadas.flatMap((c) => c.argumentos.p_linhas as { nome: string | null }[]).some((l) => l.nome === "TOTAL")).toBe(false);
   });
 
+  // F18-02 (reanálise do Codex de 18/11): a última linha só com números que não somam não sai sozinha. Vai à prévia, com o
+  // aviso gravado; com "deixar de fora a última linha", sai com a decisão registrada e outra impressão digital.
+  it("F18-02: a última linha candidata a rodapé vai à prévia com o aviso; só sai por decisão marcada, registrada", async () => {
+    cenario.respostas.importacao_catalogo_previa = { data: { id: IMPORTACAO, repetida: false }, error: null };
+    // Dois números (o preço e a quantidade), e nenhum é a soma das linhas de cima.
+    const conteudo = "SKU;Descrição;Preço;Qtd\nACE-9;Capa teste;79,90;2\nACE-10;Película teste;29,90;3\n;;49,00;7\n";
+    await POST(envio(MAPA, conteudo) as never);
+    const sem = cenario.chamadas[0]?.argumentos ?? {};
+    expect((sem.p_linhas as unknown[]).length).toBe(3);
+    expect(sem.p_mapeamento).not.toHaveProperty("ignoradas");
+    expect(sem.p_mapeamento).toMatchObject({ candidato: { linha: 4 } });
+    expect(sem.p_sha256).toBe(createHash("sha256").update(conteudo).digest("hex"));
+    cenario.chamadas = [];
+    await POST(envio({ ...MAPA, ultima_linha_de_fora: "sim" }, conteudo) as never);
+    const com = cenario.chamadas[0]?.argumentos ?? {};
+    expect((com.p_linhas as unknown[]).length).toBe(2);
+    expect(com.p_mapeamento).not.toHaveProperty("candidato");
+    expect(com.p_mapeamento).toMatchObject({ ignoradas: [{ linha: 4, decisao: "manual" }] });
+    expect(String((com.p_mapeamento as { ignoradas: { motivo: string }[] }).ignoradas[0]?.motivo)).toContain("deixada de fora por decisão de quem enviou");
+    expect(com.p_sha256).toBe(createHash("sha256").update(conteudo).update(":ultima-linha-de-fora").digest("hex"));
+    // A marca não tira linha de produto: com o código, a última linha segue na prévia.
+    cenario.chamadas = [];
+    await POST(envio({ ...MAPA, ultima_linha_de_fora: "sim" }, "SKU;Descrição;Preço;Qtd\nACE-9;Capa teste;79,90;2\nACE-11;Cabo;49,00;7\n") as never);
+    expect(cenario.chamadas[0]?.argumentos.p_mapeamento).not.toHaveProperty("ignoradas");
+  });
+
   it("REIN-a: arquivo de uma parte só com a linha de total grava uma prévia, com a total à vista, e a impressão digital de sempre", async () => {
     cenario.respostas.importacao_catalogo_previa = { data: { id: IMPORTACAO, repetida: false }, error: null };
     const conteudo = `${CSV};TOTAL;109,80\n`;
@@ -334,6 +360,25 @@ describe("/produtos/importar", () => {
     expect(t).toContain("Parte 2 de 2 (linhas 2002 a 2272 da planilha)");
     expect(t).toContain("cada parte se confere e se aplica à parte.");
     expect(t).toContain("Ficou de fora a linha 2273 da planilha: linha de total no fim da planilha");
+  });
+
+  it("F18-02: a prévia avisa a linha candidata a rodapé e diz como deixá-la de fora, com a decisão registrada", async () => {
+    cenario.usuario = DONO;
+    cenario.permissoes = new Set(["importacao.aprovar"]);
+    mudarImportacao({ mapeamento: {
+      colunas: { sku: "SKU", nome: "Descrição", preco: "Preço" }, padroes: { tipo: "acessorio", categoria: "Acessórios" },
+      candidato: { linha: 4, motivo: "a última linha pode ser um rodapé ou um item sem cadastro (sem código e sem nome, só números em 2 colunas, e nenhum deles é a soma das linhas de cima)" },
+    } });
+    const t = await tela({ importacao: IMPORTACAO, ok: "previa" });
+    expect(t).toContain("Confira a linha 4 da planilha");
+    expect(t).toContain("nenhum deles é a soma das linhas de cima");
+    expect(t).toContain("deixar de fora a última linha");
+    // A linha que saiu por decisão aparece como as outras de fora, com o motivo da decisão.
+    mudarImportacao({ mapeamento: {
+      colunas: { sku: "SKU", nome: "Descrição", preco: "Preço" }, padroes: { tipo: "acessorio", categoria: "Acessórios" },
+      ignoradas: [{ linha: 4, motivo: "a última linha pode ser um rodapé; deixada de fora por decisão de quem enviou", decisao: "manual" }],
+    } });
+    expect(await tela({ importacao: IMPORTACAO, ok: "previa" })).toContain("Ficou de fora a linha 4 da planilha: a última linha pode ser um rodapé; deixada de fora por decisão de quem enviou");
   });
 
   it("conferência integral: o arquivo inteiro por filtro e por página, sem teto de linhas", async () => {
