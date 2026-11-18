@@ -1929,7 +1929,7 @@ Programa de execução integral (PR #67; checkpoint em `docs/alinhamento/EXECUCA
 - **Origem:** o proprietário, em 18/11: "Todas as atualizações devem ser direcionadas ao servidor principal", com o link https://ora5g.com.br/ ("nesse endereço"), e "a versão demo já não é mais necessária".
 - **Só documentos:** a D-051; o adendo da ADR-022 (a demonstração sem lotes novos; desligar espera a resposta); o roteiro do PDV-c no sistema real (a loja de teste Santa Cândida (teste)); os roteiros do DEMO-a e do DEMO-b que não serão pedidos; o aviso na matriz demonstração × real.
 - **Pedido ao Codex:** conferir se algum roteiro ainda manda o proprietário à demonstração sem dizer que ela foi dispensada.
-- **CI, merge e publicação (18/11):** CI verde em `cfe2726` (3.044 testes, 1 ignorado que pede a planilha privada e 1 TODO; 325 E2E, com 13 pulados); merge `a0ac5c5`, com a árvore da branch testada; os checks do GitHub de `a0ac5c5` rodavam neste registro e entram no registro do lote seguinte; no ar desde 14:31.
+- **CI, merge e publicação (18/11):** CI verde em `cfe2726` (3.044 testes, 1 ignorado que pede a planilha privada e 1 TODO; 325 E2E, com 13 pulados); merge `a0ac5c5`, com a árvore da branch testada; no GitHub, os checks de `a0ac5c5` terminaram com sucesso: "Verificações" e "Supabase Preview"; no ar desde 14:31.
 
 ## 18/11/2026 — Lote DEMO-c: a demonstração desligada em ora5g.com.br (D-051)
 
@@ -1937,3 +1937,10 @@ Programa de execução integral (PR #67; checkpoint em `docs/alinhamento/EXECUCA
 - **Código:** a tela de entrada passa a esconder o link com `ORA_DEMO_DESLIGADA=1`, como a tela inicial; `e2e/inicializacao.spec.ts` sobe a homologação com a chave e confere o 404 das páginas e das trocas de perfil e de loja e a falta dos dois links.
 - **Servidor:** a chave no ambiente da homologação (o arquivo de ambiente do servidor; o valor não é segredo).
 - **Pedido ao Codex:** conferir se alguma rota da demonstração ficou fora do 404 com a chave.
+- **CI, merge e publicação (18/11):** CI verde em `c950629` (3.044 testes, 1 ignorado que pede a planilha privada e 1 TODO; 325 E2E, com 13 pulados); merge `324d7b8`, com a árvore da branch testada; os checks do GitHub de `324d7b8` rodavam neste registro e entram no registro do lote seguinte; no ar desde 14:51, com a demonstração desligada (404 em `/demo` e nas trocas de perfil e de loja; sem o link em `/` e em `/entrar`).
+
+## 18/11/2026 — Lote ABERTO-a: os pontos em aberto atualizados
+
+- **Origem:** o pedido do proprietário de 18/11 (reler a documentação do Codex e seguir um a um os pontos em aberto, com as transferências, a Ora Connect, as vendas e o estoque primeiro).
+- **Só documentos:** a primeira passagem em `PONTOS_EM_ABERTO_2026-11-18.md` (o CNPJ pela tela Lojas; a Nogle com as configurações públicas; os seis casos do F18-05 já cobertos por testes) e a linha do banco no quadro corrigida (114 migrations, até a do VEL-c).
+- **Pedido ao Codex:** conferir se algum caso de transferência do F18-05 ficou sem teste, e se o primeiro passo da Nogle (`--listas`) é mesmo só leitura do lado da operadora.
