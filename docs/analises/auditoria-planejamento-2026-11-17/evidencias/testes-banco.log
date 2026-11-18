@@ -1,0 +1,9 @@
+
+ RUN  v5.1.0 /workspace/work/auditoria-20261117/snapshot/packages/banco
+
+
+ Test Files  12 passed (12)
+      Tests  242 passed (242)
+   Start at  17:48:57
+   Duration  157.26s (tests 99%, transform 1%)
+
