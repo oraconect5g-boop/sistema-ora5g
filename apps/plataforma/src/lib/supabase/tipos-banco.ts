@@ -1,5 +1,5 @@
 // ARQUIVO GERADO pelo Supabase (generate_typescript_types do projeto ora5g-dev) depois da
-// migration 20261118014003_anuncios_com_devolucoes. Não edite à mão: gere de novo a cada
+// migration 20261118021151_estoque_inicial_por_arquivo. Não edite à mão: gere de novo a cada
 // migration aplicada (auditoria do Codex de 08/11, §7.2). O teste tipos-banco.test.ts confere
 // que funções e tabelas públicas daqui são as mesmas das migrations.
 export type Json =
@@ -2275,6 +2275,166 @@ export type Database = {
           },
           {
             foreignKeyName: "entradas_estoque_unidade_id_organizacao_id_fkey"
+            columns: ["unidade_id", "organizacao_id"]
+            isOneToOne: false
+            referencedRelation: "unidades"
+            referencedColumns: ["id", "organizacao_id"]
+          },
+        ]
+      }
+      estoque_carga_linhas: {
+        Row: {
+          acao: string
+          carga_id: string
+          desfeita_em: string | null
+          disponivel: number | null
+          fisico: number | null
+          motivo: string | null
+          movimento_id: number | null
+          numero: number
+          saldo_no_corte: number
+          sku: string
+          variante_id: string | null
+        }
+        Insert: {
+          acao: string
+          carga_id: string
+          desfeita_em?: string | null
+          disponivel?: number | null
+          fisico?: number | null
+          motivo?: string | null
+          movimento_id?: number | null
+          numero: number
+          saldo_no_corte?: number
+          sku: string
+          variante_id?: string | null
+        }
+        Update: {
+          acao?: string
+          carga_id?: string
+          desfeita_em?: string | null
+          disponivel?: number | null
+          fisico?: number | null
+          motivo?: string | null
+          movimento_id?: number | null
+          numero?: number
+          saldo_no_corte?: number
+          sku?: string
+          variante_id?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "estoque_carga_linhas_carga_id_fkey"
+            columns: ["carga_id"]
+            isOneToOne: false
+            referencedRelation: "estoque_cargas"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "estoque_carga_linhas_movimento_id_fkey"
+            columns: ["movimento_id"]
+            isOneToOne: false
+            referencedRelation: "estoque_movimentos"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "estoque_carga_linhas_variante_id_fkey"
+            columns: ["variante_id"]
+            isOneToOne: false
+            referencedRelation: "variantes"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      estoque_cargas: {
+        Row: {
+          aplicado_em: string | null
+          aplicado_por: string | null
+          arquivo_nome: string
+          arquivo_sha256: string
+          corte: string
+          criado_em: string
+          criado_por: string
+          encerrado_em: string | null
+          encerrado_por: string | null
+          id: string
+          mapeamento: Json
+          motivo: string | null
+          numero: number
+          organizacao_id: string
+          situacao: string
+          totais: Json
+          unidade_id: string
+        }
+        Insert: {
+          aplicado_em?: string | null
+          aplicado_por?: string | null
+          arquivo_nome: string
+          arquivo_sha256: string
+          corte: string
+          criado_em?: string
+          criado_por: string
+          encerrado_em?: string | null
+          encerrado_por?: string | null
+          id?: string
+          mapeamento: Json
+          motivo?: string | null
+          numero?: never
+          organizacao_id: string
+          situacao?: string
+          totais?: Json
+          unidade_id: string
+        }
+        Update: {
+          aplicado_em?: string | null
+          aplicado_por?: string | null
+          arquivo_nome?: string
+          arquivo_sha256?: string
+          corte?: string
+          criado_em?: string
+          criado_por?: string
+          encerrado_em?: string | null
+          encerrado_por?: string | null
+          id?: string
+          mapeamento?: Json
+          motivo?: string | null
+          numero?: never
+          organizacao_id?: string
+          situacao?: string
+          totais?: Json
+          unidade_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "estoque_cargas_aplicado_por_fkey"
+            columns: ["aplicado_por"]
+            isOneToOne: false
+            referencedRelation: "perfis_usuario"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "estoque_cargas_criado_por_fkey"
+            columns: ["criado_por"]
+            isOneToOne: false
+            referencedRelation: "perfis_usuario"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "estoque_cargas_encerrado_por_fkey"
+            columns: ["encerrado_por"]
+            isOneToOne: false
+            referencedRelation: "perfis_usuario"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "estoque_cargas_organizacao_id_fkey"
+            columns: ["organizacao_id"]
+            isOneToOne: false
+            referencedRelation: "organizacoes"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "estoque_cargas_unidade_id_organizacao_id_fkey"
             columns: ["unidade_id", "organizacao_id"]
             isOneToOne: false
             referencedRelation: "unidades"
@@ -7289,6 +7449,30 @@ export type Database = {
         Returns: boolean
       }
       equipe_por_papel: { Args: { p_organizacao: string }; Returns: Json }
+      estoque_carga_aplicar: {
+        Args: { p_carga: string; p_motivo: string }
+        Returns: Json
+      }
+      estoque_carga_descartar: {
+        Args: { p_carga: string; p_motivo: string }
+        Returns: boolean
+      }
+      estoque_carga_desfazer: {
+        Args: { p_carga: string; p_motivo: string }
+        Returns: Json
+      }
+      estoque_carga_previa: {
+        Args: {
+          p_arquivo_nome: string
+          p_corte: string
+          p_linhas: Json
+          p_mapeamento: Json
+          p_organizacao: string
+          p_sha256: string
+          p_unidade: string
+        }
+        Returns: Json
+      }
       estoque_entrada: {
         Args: { p_entrada: string; p_numero: number; p_unidade: string }
         Returns: Json

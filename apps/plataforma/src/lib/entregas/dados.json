@@ -339,6 +339,20 @@
         "ORA-MKTPL-008"
       ],
       "entrega": "o que a auditoria do Codex de 17/11 (PR #104) pediu: o rodapé da planilha da Rein (F01), os anúncios com as devoluções, a moeda e o fuso (A14) e os estados honestos (A13)",
+      "commit": "3135435",
+      "publicado_em": "2026-11-17",
+      "pedido_em": null,
+      "resposta": null,
+      "respondido_em": null
+    },
+    {
+      "lote": "REIN-b",
+      "roteiro": "docs/aceite/REIN-b.md",
+      "requisitos": [
+        "ORA-INV-004",
+        "ORA-CAT-002"
+      ],
+      "entrega": "o estoque de cada loja pelo relatório da Rein: a prévia por loja, a aprovação do dono e o livro (ADR-021)",
       "commit": null,
       "publicado_em": null,
       "pedido_em": null,

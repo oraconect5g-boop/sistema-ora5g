@@ -26,7 +26,7 @@ Em 16/11, a leitura da planilha `relatorioProdutos131258.xlsx` parava por três 
 ## O que ainda falta (depende de você)
 
 - **O arquivo no servidor.** Ele precisa estar em `~/entrada/rein/` para eu conferir a importação de verdade, coluna por coluna.
-- **A carga do estoque por loja.** As colunas de estoque de cada local viram a entrada inicial de cada uma das 11 lojas e do DEFEITOS, com a data de corte. Isso só se faz com o arquivo em mãos, para não supor o formato.
+- **A carga do estoque por loja.** As colunas de estoque de cada local viram a entrada inicial de cada uma das 11 lojas e do DEFEITOS, com a data de corte. A ferramenta existe desde o REIN-b (18/11): "Estoque de cada loja", na importação de planilha, sem supor o formato (você confirma as colunas de cada loja). Falta o arquivo no servidor para a carga de verdade. Roteiro: [REIN-b.md](REIN-b.md).
 - **Quem importa.** Só o papel de administrador envia a planilha, e o dono aprova. Hoje não há administrador cadastrado: a conta de teste depende da chave do servidor (`SUPABASE_SECRET_KEY`).
 
 ## O que você confere
