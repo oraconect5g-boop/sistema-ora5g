@@ -2,9 +2,9 @@
 -- Velocidade das telas com login, lote VEL-c (ORA-QUAL-010, D-047; ADR-010, "O que fica para depois")
 --
 -- O sino do topo (/api/pendencias, em toda tela com login) e o Início liam as pendências da loja do turno em 16
--- contagens separadas, pedidas ao mesmo tempo: pelo log de tempos da homologação, de 17 a 28 pedidos por abertura, de
--- 0,7 a 1,5 s no banco. A orientação do proprietário de 18/11 pede continuar o VEL-c "sem remover RLS ou cachear
--- permissões entre usuários para reduzir chamadas".
+-- contagens separadas, pedidas ao mesmo tempo: pelo log de tempos da homologação de 18/11, de 17 a 29 pedidos por
+-- abertura, de 0,72 a 1,47 s no banco. A orientação do proprietário de 18/11 pede continuar o VEL-c "sem remover RLS
+-- ou cachear permissões entre usuários para reduzir chamadas".
 --
 -- public.pendencias_da_loja: as mesmas 16 contagens numa ida só. Não decide nada por conta própria:
 --   * a loja é a do turno (public.unidade_atual(), a mesma das ações);
