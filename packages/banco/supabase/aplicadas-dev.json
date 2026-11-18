@@ -109,6 +109,7 @@
     { "versao": "20261118010000", "nome": "marketplaces_por_arquivo", "md5": "8dd7d3e70b88e52fdf028a32d3ac9fa3", "aplicada_em": "2026-11-17" },
     { "versao": "20261118014003", "nome": "anuncios_com_devolucoes", "md5": "2c2cc4080828fe40d108f5e527d57e10", "aplicada_em": "2026-11-18" },
     { "versao": "20261118021151", "nome": "estoque_inicial_por_arquivo", "md5": "b36bad94c782d4bcfe8e541c1dea095f", "aplicada_em": "2026-11-18" },
-    { "versao": "20261118031404", "nome": "pedido_do_site", "md5": "64689941adc5ab942ce8c6e708e159b4", "aplicada_em": "2026-11-18" }
+    { "versao": "20261118031404", "nome": "pedido_do_site", "md5": "64689941adc5ab942ce8c6e708e159b4", "aplicada_em": "2026-11-18" },
+    { "versao": "20261118034536", "nome": "comentario_do_contato_do_pedido", "md5": "4a7147808071d00d01970d259e0308e8", "aplicada_em": "2026-11-18" }
   ]
 }
