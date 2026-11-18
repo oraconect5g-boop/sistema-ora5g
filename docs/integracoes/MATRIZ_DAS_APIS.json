@@ -60,11 +60,11 @@
     {
       "id": "nogle",
       "api": "Nogle: Ora Connect (chips, ativação, recarga, portabilidade, carteira)",
-      "requisitos": "ORA-CONNECT-001 a 011 (o 009, a conciliação dos repasses, não iniciado)",
+      "requisitos": "ORA-CONNECT-001 a 011 (o 009, parcial desde o CONNECT-c: a produção conciliada; as comissões sem fonte na API)",
       "documentacao": "Oficial: docs.nogle.tech, lida por inteiro em 07/11 (62 funções; cópia com SHA-256 no repositório e o catálogo conferido no CI). Respostas da Nogle de 10/11 aos itens 5 a 7 (docs/integracoes/NOGLE_API_REFERENCIA.md, 3.1)",
       "operacoes": "Ativação de chip físico e eSIM, recarga, portabilidade, consulta de linha, plano e saldo; estoque de chips do PDV e da MVNO; transferência de chips entre PDVs; o extrato do saldo (GET /saldo/extrato) e os relatórios de ativações, recargas e transações (GET /relatorios/*); a consulta do pagamento pelo uuid, prometida pela Nogle e fora da coleção oficial",
-      "implementado": "As regras em packages/dominio/src/nogle.ts (só campos documentados; resposta, evidência e listas oficiais); o worker em apps/worker/src/connect (token, envio, consulta e listas; resultado desconhecido nunca é reenviado); as operações persistentes no banco (ADR-005); as telas /connect e /demo/connect",
-      "falta_codigo": "ORA-CONNECT-009: ligar cada uso do extrato do saldo e cada linha dos relatórios à operação local, com o que sobra dos dois lados; a compra com entrega, o bloqueio, o consumo e a transferência de chips no PDV da Nogle; o agendamento do worker (com autorização)",
+      "implementado": "As regras em packages/dominio/src/nogle.ts (só campos documentados; resposta, evidência e listas oficiais); o worker em apps/worker/src/connect (token, envio, consulta e listas; resultado desconhecido nunca é reenviado); as operações persistentes no banco (ADR-005); as telas /connect e /demo/connect; desde o CONNECT-c (18/11), a conciliação com os relatórios oficiais de ativações e de recargas (o comando --conciliar do worker e a tela /connect/conciliacao)",
+      "falta_codigo": "O extrato do saldo na conciliação (espera a primeira resposta real, porque o exemplo oficial não traz os campos); a compra com entrega, o bloqueio, o consumo e a transferência de chips no PDV da Nogle; o agendamento do worker (com autorização)",
       "falta_acesso": "O tipo da chave (P9) e as três chaves no servidor; as respostas às perguntas 6, 7, 11 e 12 e, da 10, o nome do uuid e a liberação de /consultaPagamento; uma linha e um chip de teste autorizados. Comissões e bonificações: a Nogle respondeu que não há na API; a fonte oficial (relatório ou extrato da Nogle) precisa ser indicada (D-016, #54)",
       "quem_fornece": "A Nogle (chaves, respostas, linha de teste e a fonte das comissões), pelo proprietário",
       "variaveis": [
@@ -81,11 +81,11 @@
       "limites": "Não documentados (perguntado à Nogle)",
       "idempotencia": "Cada operação é um registro com chave própria e estado; resultado desconhecido não reenvia: consulta, e a gerência decide. A Nogle diz validar a duplicidade de pagamentos",
       "aviso_ou_reconsulta": "Nenhum aviso documentado; o worker reconsulta o estado (ativação, recarga, portabilidade)",
-      "conciliacao": "Fonte: o extrato do saldo e os relatórios oficiais. O código da conciliação ainda não existe (ORA-CONNECT-009); o custo da carteira por linha (#56) entra nela",
-      "testes": "packages/dominio/src/nogle.test.ts; apps/worker/src/connect/*.test.ts (ponta a ponta contra um servidor local com os exemplos oficiais); o catálogo das 62 funções no CI",
+      "conciliacao": "Os relatórios oficiais de ativações e de recargas, ligados à operação confirmada (CONNECT-c: conferida, valor diferente, só na Nogle, só na Ora); o extrato do saldo e o custo da carteira por linha (#56) esperam a primeira resposta real; as comissões não têm fonte na API",
+      "testes": "packages/dominio/src/nogle.test.ts; apps/worker/src/connect/*.test.ts (ponta a ponta contra um servidor local com os exemplos oficiais, inclusive a conciliação); packages/banco/src/connect-conciliacao.test.ts; o catálogo das 62 funções no CI",
       "publicacao": "As telas estão no ar; o worker não está agendado nem tem as chaves: nenhuma chamada real",
       "homologacao": "Não homologado",
-      "pode_prosseguir": "A conciliação do ORA-CONNECT-009 com os campos documentados do extrato e dos relatórios, provada com os exemplos oficiais, sem chamada real",
+      "pode_prosseguir": "Feito no CONNECT-c: a conciliação com os relatórios, provada com os exemplos oficiais; a conferência real espera a Nogle ligada",
       "situacao": "bloqueio externo"
     },
     {

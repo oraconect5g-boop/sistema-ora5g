@@ -2,6 +2,7 @@ import { randomUUID } from "node:crypto";
 
 import { ArrowLeftRight, RadioTower, ShieldCheck, Smartphone, Zap } from "lucide-react";
 import type { Metadata } from "next";
+import Link from "next/link";
 
 import { NOMES_DAS_OPERACOES, SITUACOES_OPERACAO, TIPOS_OPERACAO, type SituacaoOperacao, type TipoOperacao } from "@ora5g/dominio/nogle";
 
@@ -123,6 +124,7 @@ export default async function Connect({ searchParams }: { searchParams: Promise<
           <p className="mt-3 text-sm text-suave">A Nogle ainda não foi ligada: faltam as credenciais no servidor, o tipo da chave (P9) e o teste com uma linha autorizada. Até lá nada é enviado e nada aparece como feito.</p>
         )}
         {habilitada.size > 0 && semListas && <p className="mt-3 text-sm text-suave">Os planos da Nogle ainda não foram carregados pelo servidor.</p>}
+        {gere && <p className="mt-3 text-sm"><Link href="/connect/conciliacao" className="font-semibold text-acao">Conciliação com os relatórios da Nogle</Link></p>}
       </Cartao>
 
       {!opera && <Aviso tom="aviso">Seu papel não registra operações da Ora Connect nesta loja.</Aviso>}

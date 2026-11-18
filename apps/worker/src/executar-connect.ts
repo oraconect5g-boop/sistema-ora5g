@@ -1,6 +1,9 @@
 // Uso (no servidor, pela rotina agendada):
 //   node apps/worker/src/executar-connect.ts            → envia as operações registradas e consulta as pendentes
 //   node apps/worker/src/executar-connect.ts --listas   → atualiza planos, DDDs, operadoras e cidades (CONNECT_UFS)
+//   node apps/worker/src/executar-connect.ts --conciliar [--de AAAA-MM-DD --ate AAAA-MM-DD]
+//        → concilia a produção com os relatórios oficiais de ativações e recargas (CONNECT-c; ORA-CONNECT-009); sem o
+//          período, os 7 dias até ontem, no horário de Brasília. Pede o GET com corpo (NOGLE_GET_COM_CORPO=documentado)
 // Lê o .env.local da pasta do worker (ORA_PASTA_AMBIENTE muda a pasta). Sem credencial ou sem
 // operação habilitada, fica desligado e diz isso, sem erro. Log só com contagens (ADR-005).
 import { createRequire } from "node:module";
@@ -10,7 +13,7 @@ import { fileURLToPath } from "node:url";
 import { ehTipoOperacao, type TipoOperacao } from "@ora5g/dominio/nogle";
 
 import { ClienteNogle, ehTipoDeChave } from "./connect/cliente-nogle.ts";
-import { consultarPendentes, enviarPendentes, mensagemSegura, sincronizarReferencias } from "./connect/processar.ts";
+import { conciliarRelatorios, consultarPendentes, enviarPendentes, mensagemSegura, sincronizarReferencias } from "./connect/processar.ts";
 import { transporteHttp } from "./connect/transporte.ts";
 import { bancoConnect, clienteAdministrativo } from "./supabase.ts";
 
@@ -24,6 +27,10 @@ loadEnvConfig(pasta, false, { info: () => {}, error: () => {} });
 const ler = (nome: string) => process.env[nome]?.trim() ?? "";
 const agora = new Date().toISOString();
 const listas = process.argv.includes("--listas");
+const conciliar = process.argv.includes("--conciliar");
+const argumento = (nome: string) => { const i = process.argv.indexOf(nome); return i > 0 ? process.argv[i + 1] ?? "" : ""; };
+/** O dia em Brasília, deslocado em dias (AAAA-MM-DD). */
+const diaEmBrasilia = (dias: number) => new Intl.DateTimeFormat("en-CA", { timeZone: "America/Sao_Paulo" }).format(new Date(Date.now() + dias * 86_400_000));
 const tipos = ler("NOGLE_OPERACOES_HABILITADAS").split(",").map((t) => t.trim()).filter(ehTipoOperacao) as TipoOperacao[];
 const tipoDaChave = ler("NOGLE_AUTH_KEY_TYPE");
 const faltando = [
@@ -34,7 +41,7 @@ const faltando = [
   !ehTipoDeChave(tipoDaChave) && "NOGLE_AUTH_KEY_TYPE",
   !ler("NOGLE_ACCESS_KEY") && "NOGLE_ACCESS_KEY",
   tipoDaChave !== "marca" && !ler("NOGLE_SECONDARY_KEY") && "NOGLE_SECONDARY_KEY",
-  !listas && tipos.length === 0 && "NOGLE_OPERACOES_HABILITADAS",
+  !listas && !conciliar && tipos.length === 0 && "NOGLE_OPERACOES_HABILITADAS",
 ].filter(Boolean);
 
 if (faltando.length > 0) {
@@ -58,6 +65,14 @@ try {
   if (listas) {
     const r = await sincronizarReferencias(banco, nogle, ler("CONNECT_UFS").split(",").map((u) => u.trim().toUpperCase()).filter(Boolean));
     console.log(`${agora} listas da Nogle: ${r.listas} atualizadas, ${r.itens} itens, ${r.falhas} falhas`);
+    process.exit(r.falhas > 0 ? 1 : 0);
+  }
+  if (conciliar) {
+    const de = argumento("--de") || diaEmBrasilia(-7);
+    const ate = argumento("--ate") || diaEmBrasilia(-1);
+    const r = await conciliarRelatorios(banco, nogle, de, ate);
+    const falhas = r.detalhes.filter((d) => d.falha).map((d) => `; ${d.relatorio}: ${d.falha}`).join("");
+    console.log(`${agora} conciliação com a Nogle de ${de} a ${ate}: ${r.conciliadas} relatórios, ${r.linhas} linhas, ${r.falhas} falhas${falhas}`);
     process.exit(r.falhas > 0 ? 1 : 0);
   }
   const envio = await enviarPendentes(banco, nogle, tipos);

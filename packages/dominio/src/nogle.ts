@@ -436,3 +436,78 @@ export function lerReferencias(tipo: TipoDeReferencia, corpo: unknown): ItemDeRe
   }
   return itens;
 }
+
+// -----------------------------------------------------------------------------------------------------------------------
+// A conciliação da produção com os relatórios oficiais (lote CONNECT-c; ORA-CONNECT-009). Só os campos dos exemplos da
+// coleção oficial de 07/11: GET /relatorios/ativacoes e GET /relatorios/recargas recebem no corpo { data_de, data_ate,
+// page } e devolvem { data: [{ cliente_nome, cliente_apelido, iccid, linha, data_ativacao, plano_ativacao, plano_inicio,
+// plano_fim, plano_valor, tipo_linha, forma_pagto }] }. O nome e o apelido do cliente NÃO são guardados (minimização,
+// LGPD): a conciliação liga a linha da Nogle à operação local pela linha, pelo ICCID, pelo dia e pelo valor. O fuso de
+// data_ativacao e o tamanho da página não são documentados: fica o dia como veio, e a leitura para na página vazia.
+// O extrato do saldo (GET /saldo/extrato) fica de fora: o exemplo oficial não traz os campos da resposta.
+// -----------------------------------------------------------------------------------------------------------------------
+
+export const RELATORIOS_DA_CONCILIACAO = ["ativacoes", "recargas"] as const;
+export type RelatorioDaConciliacao = (typeof RELATORIOS_DA_CONCILIACAO)[number];
+export const ehRelatorioDaConciliacao = (v: unknown): v is RelatorioDaConciliacao =>
+  typeof v === "string" && (RELATORIOS_DA_CONCILIACAO as readonly string[]).includes(v);
+
+/** O dia "AAAA-MM-DD" que existe no calendário; outra forma é nula. */
+export function diaValido(v: unknown): string | null {
+  const t = typeof v === "string" ? v.trim() : "";
+  const m = /^(\d{4})-(\d{2})-(\d{2})$/.exec(t);
+  if (!m) return null;
+  const data = new Date(`${t}T12:00:00Z`);
+  return !Number.isNaN(data.getTime()) && data.toISOString().slice(0, 10) === t ? t : null;
+}
+
+/** O pedido de uma página do relatório, só com os campos do corpo do exemplo oficial (GET com corpo, como a coleção). */
+export function montarPedidoDoRelatorio(relatorio: RelatorioDaConciliacao, de: string, ate: string, pagina: number): PedidoNogle | null {
+  if (!ehRelatorioDaConciliacao(relatorio) || !diaValido(de) || !diaValido(ate) || de > ate || !Number.isSafeInteger(pagina) || pagina < 1) return null;
+  return { metodo: "GET", caminho: `/relatorios/${relatorio}`, corpo: { data_de: de, data_ate: ate, page: pagina } };
+}
+
+export type LinhaDoRelatorio = {
+  /** A posição na leitura (1, 2, ...), somando as páginas. */
+  ordem: number;
+  linha: string | null;
+  iccid: string | null;
+  /** O dia da operação como veio (AAAA-MM-DD); o fuso não é documentado. */
+  dia: string | null;
+  plano: string | null;
+  valor_centavos: number | null;
+  tipo_linha: string | null;
+  forma_pagto: string | null;
+};
+
+/** "2023-05-30 15:20:50.000" → "2023-05-30"; outra forma é nula (nada é adivinhado). */
+export function diaDoRelatorio(v: unknown): string | null {
+  const t = typeof v === "string" ? v.trim() : "";
+  const m = /^(\d{4}-\d{2}-\d{2})(?:[ T]\d{2}:\d{2}(?::\d{2}(?:\.\d{1,6})?)?)?$/.exec(t);
+  return m ? diaValido(m[1]) : null;
+}
+
+/**
+ * Uma página do relatório oficial → as linhas que a conciliação usa, a partir da ordem `primeira`. O corpo sem a lista
+ * "data" é um problema: a conciliação não começa com o relatório que não se entende, e o conteúdo não é exposto.
+ */
+export function lerRelatorio(corpo: unknown, primeira = 1): { linhas: LinhaDoRelatorio[]; problema: string | null } {
+  const dados = objeto(corpo)?.data;
+  if (!Array.isArray(dados)) return { linhas: [], problema: "o relatório não trouxe a lista \"data\"" };
+  const linhas = dados.map((bruto, i): LinhaDoRelatorio => {
+    const o = objeto(bruto) ?? {};
+    const linha = typeof o.linha === "string" || typeof o.linha === "number" ? String(o.linha).replace(/\D/g, "") : "";
+    const iccid = typeof o.iccid === "string" || typeof o.iccid === "number" ? String(o.iccid).replace(/\D/g, "") : "";
+    return {
+      ordem: primeira + i,
+      linha: linhaValida(linha) ? linha : null,
+      iccid: iccidNoFormatoNogle(iccid) ? iccid : null,
+      dia: diaDoRelatorio(o.data_ativacao),
+      plano: textoOuNada(o.plano_ativacao)?.slice(0, 120) ?? null,
+      valor_centavos: centavosDeValorNogle(o.plano_valor),
+      tipo_linha: textoOuNada(o.tipo_linha)?.slice(0, 40) ?? null,
+      forma_pagto: textoOuNada(o.forma_pagto)?.slice(0, 40) ?? null,
+    };
+  });
+  return { linhas, problema: null };
+}

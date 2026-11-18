@@ -1,12 +1,13 @@
 // Rotina do worker da Ora Connect (ADR-005): envia as operações registradas pelas lojas, grava a
-// resposta, consulta a evidência das pendentes e atualiza as listas oficiais. Regras:
+// resposta, consulta a evidência das pendentes, atualiza as listas oficiais e concilia a produção com os
+// relatórios oficiais (CONNECT-c; ORA-CONNECT-009). Regras:
 // - nada saiu (sem conexão, sem login, consulta bloqueada) → a operação volta para a fila;
 // - saiu e não voltou resposta clara → resultado desconhecido: NUNCA reenvia; consulta e a gerência decide;
 // - log só com contagens: nada de CPF, nome, linha, token ou chave.
 import {
-  interpretarConsulta, interpretarConsultaPagamento, interpretarEnvio, lerReferencias, montarConsulta, montarPedido,
-  type Evidencia, type ItemDeReferencia, type OperacaoParaConsultar, type OperacaoParaEnviar, type PedidoNogle,
-  type ResultadoEnvio, type TipoDeReferencia, type TipoOperacao,
+  RELATORIOS_DA_CONCILIACAO, interpretarConsulta, interpretarConsultaPagamento, interpretarEnvio, lerReferencias, lerRelatorio, montarConsulta,
+  montarPedido, montarPedidoDoRelatorio, type Evidencia, type ItemDeReferencia, type LinhaDoRelatorio, type OperacaoParaConsultar,
+  type OperacaoParaEnviar, type PedidoNogle, type RelatorioDaConciliacao, type ResultadoEnvio, type TipoDeReferencia, type TipoOperacao,
 } from "@ora5g/dominio/nogle";
 
 import type { ResultadoChamada } from "./cliente-nogle.ts";
@@ -17,6 +18,7 @@ export interface BancoConnect {
   operacoesAConsultar(tipos: TipoOperacao[], limite: number): Promise<OperacaoParaConsultar[]>;
   registrarConsulta(operacao: string, evidencia: Evidencia): Promise<string>;
   atualizarReferencias(tipo: TipoDeReferencia, itens: ItemDeReferencia[]): Promise<number>;
+  registrarConciliacao(relatorio: RelatorioDaConciliacao, de: string, ate: string, linhas: LinhaDoRelatorio[]): Promise<{ numero: number; totais: Record<string, number> }>;
 }
 
 export interface Nogle {
@@ -108,3 +110,51 @@ export async function sincronizarReferencias(banco: BancoConnect, nogle: Nogle, 
   }
   return resumo;
 }
+
+/** O máximo de páginas de um relatório numa conciliação (o tamanho da página não é documentado). */
+export const PAGINAS_DA_CONCILIACAO = 50;
+
+/**
+ * A conciliação (CONNECT-c; ORA-CONNECT-009): lê o relatório oficial de ativações e o de recargas do período, página por
+ * página (a primeira página vazia encerra), e entrega as linhas ao banco, que liga cada uma à operação local confirmada.
+ * Nada é gravado do relatório que falhou numa página, que não se entende ou que passou do máximo de páginas: a
+ * conciliação pela metade esconderia diferença. O resumo só tem contagens e o motivo, sem linha, ICCID ou cliente.
+ */
+export async function conciliarRelatorios(banco: BancoConnect, nogle: Nogle, de: string, ate: string,
+  opcoes: { relatorios?: readonly RelatorioDaConciliacao[]; paginas?: number } = {}) {
+  const maximo = opcoes.paginas ?? PAGINAS_DA_CONCILIACAO;
+  const resumo = { conciliadas: 0, linhas: 0, falhas: 0, detalhes: [] as { relatorio: RelatorioDaConciliacao; numero?: number; totais?: Record<string, number>; falha?: string }[] };
+  for (const relatorio of opcoes.relatorios ?? RELATORIOS_DA_CONCILIACAO) {
+    const linhas: LinhaDoRelatorio[] = [];
+    let falha: string | null = null;
+    let fim = false;
+    for (let pagina = 1; pagina <= maximo && !fim && !falha; pagina++) {
+      const pedido = montarPedidoDoRelatorio(relatorio, de, ate, pagina);
+      if (!pedido) {
+        falha = "período inválido";
+        break;
+      }
+      const r = await nogle.chamar(pedido);
+      if (r.tipo !== "resposta") falha = r.tipo === "falha" ? "sem resposta da Nogle" : r.motivo;
+      else if (r.status !== 200) falha = `a Nogle respondeu HTTP ${r.status}`;
+      else {
+        const lido = lerRelatorio(r.corpo, linhas.length + 1);
+        if (lido.problema) falha = lido.problema;
+        else if (lido.linhas.length === 0) fim = true;
+        else linhas.push(...lido.linhas);
+      }
+    }
+    if (!falha && !fim) falha = `o relatório passou de ${maximo} páginas`;
+    if (falha) {
+      resumo.falhas++;
+      resumo.detalhes.push({ relatorio, falha: `${falha}: nada gravado` });
+      continue;
+    }
+    const registro = await banco.registrarConciliacao(relatorio, de, ate, linhas);
+    resumo.conciliadas++;
+    resumo.linhas += linhas.length;
+    resumo.detalhes.push({ relatorio, numero: registro.numero, totais: registro.totais });
+  }
+  return resumo;
+}
+

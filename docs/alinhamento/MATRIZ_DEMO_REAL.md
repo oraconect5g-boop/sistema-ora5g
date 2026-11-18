@@ -293,5 +293,6 @@ A demonstração usa só dados fictícios e não lê o banco nem a sessão de ve
 | AUD-b | A quantidade e o dinheiro do Excel pela origem e o rodapé comprovado ou candidato | `/produtos/importar` e `/estoque/carga` | Não: a prévia da demonstração (`/demo/importacao`) não reproduz a leitura do Excel |
 | REIN-c | A decisão de cada linha com o físico maior que o disponível na carga do estoque | `/estoque/carga/[id]` | Não: a demonstração não tem a carga do estoque (REIN-b); fica para o mesmo lote da demonstração da carga |
 | TRF-c | O pedido de transferência reserva na origem | `/transferencias` e `/transferencias/remessa` | Parcial: `/demo/estoque` (aba "Transferências") diz que o pedido já reserva; a demonstração não simula o saldo de cada lado |
+| CONNECT-c | A conciliação da Ora Connect com os relatórios da Nogle | `/connect/conciliacao` | Não: a demonstração da Ora Connect (`/demo/connect`) não tem a conciliação; fica para o lote da demonstração |
 | ADAPT-a | As integrações que esperam contrato | — (só o worker) | Sim: os cartões "Para conectar direto" em `/demo/canais` |
 | ONLINE-d | O carrinho e o pedido do site, para retirar e pagar na loja | `/loja/carrinho`, `/loja/pedido` e `/reservas-do-site` | Não se aplica: a loja online já é pública, sem login; a demonstração não tem loja |

@@ -79,6 +79,8 @@ export function bancoConnect(cliente: SupabaseClient, organizacao: string): Banc
     operacoesAConsultar: (tipos, limite) => rpc("connect_worker_operacoes_a_consultar", { p_organizacao: organizacao, p_tipos: tipos, p_limite: limite }),
     registrarConsulta: (operacao, evidencia) => rpc("connect_worker_registrar_consulta", { p_operacao: operacao, p_evidencia: evidencia }),
     atualizarReferencias: (tipo, itens) => rpc("connect_worker_atualizar_referencias", { p_organizacao: organizacao, p_tipo: tipo, p_itens: itens }),
+    registrarConciliacao: (relatorio, de, ate, linhas) => rpc("connect_worker_registrar_conciliacao",
+      { p_organizacao: organizacao, p_relatorio: relatorio, p_de: de, p_ate: ate, p_linhas: linhas }),
   };
 }
 

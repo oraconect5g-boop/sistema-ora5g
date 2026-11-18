@@ -1,5 +1,5 @@
 // ARQUIVO GERADO pelo Supabase (generate_typescript_types do projeto ora5g-dev) depois da
-// migration 20261118142358_transferencia_reserva_no_pedido. Não edite à mão: gere de novo a cada
+// migration 20261118151653_conciliacao_da_nogle. Não edite à mão: gere de novo a cada
 // migration aplicada (auditoria do Codex de 08/11, §7.2). O teste tipos-banco.test.ts confere
 // que funções e tabelas públicas daqui são as mesmas das migrations.
 export type Json =
@@ -1136,6 +1136,134 @@ export type Database = {
             isOneToOne: false
             referencedRelation: "unidades"
             referencedColumns: ["id", "organizacao_id"]
+          },
+        ]
+      }
+      connect_conciliacao_linhas: {
+        Row: {
+          conciliacao_id: string
+          dia: string | null
+          forma_pagto: string | null
+          iccid: string | null
+          linha: string | null
+          operacao_id: string | null
+          ordem: number
+          plano: string | null
+          resultado: string
+          tipo_linha: string | null
+          valor_centavos: number | null
+        }
+        Insert: {
+          conciliacao_id: string
+          dia?: string | null
+          forma_pagto?: string | null
+          iccid?: string | null
+          linha?: string | null
+          operacao_id?: string | null
+          ordem: number
+          plano?: string | null
+          resultado: string
+          tipo_linha?: string | null
+          valor_centavos?: number | null
+        }
+        Update: {
+          conciliacao_id?: string
+          dia?: string | null
+          forma_pagto?: string | null
+          iccid?: string | null
+          linha?: string | null
+          operacao_id?: string | null
+          ordem?: number
+          plano?: string | null
+          resultado?: string
+          tipo_linha?: string | null
+          valor_centavos?: number | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "connect_conciliacao_linhas_conciliacao_id_fkey"
+            columns: ["conciliacao_id"]
+            isOneToOne: false
+            referencedRelation: "connect_conciliacoes"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "connect_conciliacao_linhas_operacao_id_fkey"
+            columns: ["operacao_id"]
+            isOneToOne: false
+            referencedRelation: "connect_operacoes"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      connect_conciliacao_so_aqui: {
+        Row: {
+          conciliacao_id: string
+          operacao_id: string
+        }
+        Insert: {
+          conciliacao_id: string
+          operacao_id: string
+        }
+        Update: {
+          conciliacao_id?: string
+          operacao_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "connect_conciliacao_so_aqui_conciliacao_id_fkey"
+            columns: ["conciliacao_id"]
+            isOneToOne: false
+            referencedRelation: "connect_conciliacoes"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "connect_conciliacao_so_aqui_operacao_id_fkey"
+            columns: ["operacao_id"]
+            isOneToOne: false
+            referencedRelation: "connect_operacoes"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      connect_conciliacoes: {
+        Row: {
+          ate: string
+          de: string
+          id: string
+          numero: number
+          organizacao_id: string
+          recebida_em: string
+          relatorio: string
+          totais: Json
+        }
+        Insert: {
+          ate: string
+          de: string
+          id?: string
+          numero?: never
+          organizacao_id: string
+          recebida_em?: string
+          relatorio: string
+          totais?: Json
+        }
+        Update: {
+          ate?: string
+          de?: string
+          id?: string
+          numero?: never
+          organizacao_id?: string
+          recebida_em?: string
+          relatorio?: string
+          totais?: Json
+        }
+        Relationships: [
+          {
+            foreignKeyName: "connect_conciliacoes_organizacao_id_fkey"
+            columns: ["organizacao_id"]
+            isOneToOne: false
+            referencedRelation: "organizacoes"
+            referencedColumns: ["id"]
           },
         ]
       }
@@ -7453,6 +7581,16 @@ export type Database = {
           tipo: string
           uuid_externo: string
         }[]
+      }
+      connect_worker_registrar_conciliacao: {
+        Args: {
+          p_ate: string
+          p_de: string
+          p_linhas: Json
+          p_organizacao: string
+          p_relatorio: string
+        }
+        Returns: Json
       }
       connect_worker_registrar_consulta: {
         Args: { p_evidencia: Json; p_operacao: string }
