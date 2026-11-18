@@ -1973,7 +1973,7 @@ Programa de execução integral (PR #67; checkpoint em `docs/alinhamento/EXECUCA
 - **Tela:** o cartão "Erros do servidor" na Saúde da operação, só para quem gere a rede (`unidades.gerir`), e o aviso no topo quando houve erro na última hora. Sem migration.
 - **Testes:** `lib/saude/erros-do-servidor.test.ts` (o que entra e o que nunca entra: o texto do erro, o CPF, os valores do endereço), `instrumentation.test.ts` (a falha do banco numa tela vira a linha e entra no resumo) e `app/operacao/operacao.test.ts` (o cartão, o aviso e a gerência sem o cartão).
 - **Pedido ao Codex:** conferir se algum erro sensível chega ao `digest` (o Next gera o código a partir do erro), e se a lista em memória deveria ficar no banco quando houver mais de um processo servindo o site.
-- **CI, merge e publicação (18/11):** CI verde em `6754b01` (3.059 testes, 1 ignorado que pede a planilha privada e 1 TODO; 325 E2E, com 13 pulados); merge `52d0fff`, com a árvore da branch testada; os checks do GitHub de `52d0fff` rodavam neste registro e entram no registro do lote seguinte; no ar desde 17:14.
+- **CI, merge e publicação (18/11):** CI verde em `6754b01` (3.059 testes, 1 ignorado que pede a planilha privada e 1 TODO; 325 E2E, com 13 pulados); merge `52d0fff`, com a árvore da branch testada; os checks do GitHub de `52d0fff` terminaram verdes ("Verificações" e "Supabase Preview"); no ar desde 17:14.
 
 ## 18/11/2026 — Lotes CONTAS-a e REPASSE-a: as contas bancárias e os repasses dos marketplaces (juntos na main)
 
@@ -1983,3 +1983,10 @@ Programa de execução integral (PR #67; checkpoint em `docs/alinhamento/EXECUCA
 - **Telas:** `/pagamentos/contas-bancarias` (a partir dos Extratos) e `/relatorios/marketplaces/repasses` (a partir dos Marketplaces), com a leitura estrita (forma inesperada é falha, nunca zero).
 - **Testes:** `contas-bancarias.test.ts` e `marketplace-repasses.test.ts` no banco; `lib/contas-bancarias`, `lib/marketplaces/repasses.test.ts` e as duas telas na plataforma.
 - **Pedido ao Codex:** conferir se o saldo deve contar a linha do próprio dia do saldo inicial (hoje não conta: o saldo é do fim daquele dia), se 5 dias bastam para as sugestões do repasse, e se casar o repasse deveria marcar a linha do extrato (hoje fica pendente, porque a situação dela é a da conciliação de vendas).
+- **CI, merge e publicação (18/11):** CI verde em `65af02e` (3.103 testes, 1 ignorado que pede a planilha privada e 1 TODO; 329 E2E, com 13 pulados); merge `42bd4a0`, com a árvore da branch testada; os checks do GitHub de `42bd4a0` terminaram verdes ("Verificações" e "Supabase Preview"); no ar desde 17:37, e de novo às 17:56, com o endereço do site corrigido.
+
+## 18/11/2026 — Registro de 18/11 à noite: os convites ligados (só documentos)
+
+- **O que mudou no servidor, fora do código:** a rotina do worker das identidades entrou no crontab do `dev`, a cada minuto, com o sim do proprietário; o `NEXT_PUBLIC_APP_URL` passou a https://ora5g.com.br (o antigo, hml-app, não respondia); a `SUPABASE_SECRET_KEY` e a `NOGLE_ACCESS_KEY` foram gravadas no ambiente, só para os workers.
+- **Conferido:** o worker das identidades roda sozinho (0 convites e 0 bloqueios, sem falha); o ambiente do site sai sem as duas chaves; o worker da Nogle diz que falta só o tipo da chave e a secundária.
+- **Pedido ao Codex:** conferir se o worker das identidades deveria recusar o convite para um e-mail de domínio de teste (`example.com`) em vez de mandá-lo ao Supabase, e se a recuperação de senha precisa de outro ajuste com o endereço novo.

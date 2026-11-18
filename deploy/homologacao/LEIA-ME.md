@@ -103,8 +103,8 @@ Não é preciso registro AAAA (o servidor é só IPv4). Se o painel criar um, ap
 Desde 08/11 (ORA-006): a tela da equipe só grava o convite no banco; o worker, que é o único que
 recebe a `SUPABASE_SECRET_KEY` (o `.env.local` do aplicativo web sai sem ela e sem a
 `DATABASE_URL`, ADR-002 §2.5), cria a pessoa no Auth, manda o e-mail de convite e reflete no
-login os bloqueios feitos no banco. Ligar depois de publicar uma versão que tenha `apps/worker`
-(crontab do usuário `dev`, uma linha):
+login os bloqueios feitos no banco. **Ligado em 18/11/2026**, com o sim do proprietário, depois de gravar a chave
+secreta (crontab do usuário `dev`, uma linha; o endereço do convite é o `NEXT_PUBLIC_APP_URL`, https://ora5g.com.br):
 
 ```
 * * * * * bash $HOME/homologacao/plataforma/deploy/homologacao/worker-identidade.sh

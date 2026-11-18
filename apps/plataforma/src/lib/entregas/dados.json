@@ -589,8 +589,8 @@
         "ORA-FIN-006"
       ],
       "entrega": "as contas bancárias de cada empresa, com o saldo pelo extrato (o saldo inicial num dia mais as linhas dos extratos do banco ligados à conta), só para quem concilia pela rede",
-      "commit": null,
-      "publicado_em": null,
+      "commit": "42bd4a0",
+      "publicado_em": "2026-11-18",
       "pedido_em": null,
       "resposta": null,
       "respondido_em": null
@@ -603,8 +603,8 @@
         "ORA-MKTPL-008"
       ],
       "entrega": "o repasse de cada canal (os pedidos com a mesma data de repasse) casado com a linha de crédito do extrato do banco, com a diferença e o motivo registrados",
-      "commit": null,
-      "publicado_em": null,
+      "commit": "42bd4a0",
+      "publicado_em": "2026-11-18",
       "pedido_em": null,
       "resposta": null,
       "respondido_em": null
