@@ -85,7 +85,7 @@ async function diaDaRede() {
   await concluir(ana, v2, [{ meio: "pix_picpay", valor: 5_700, comprovante: "123456" }, { meio: "dinheiro", valor: 10_000 }]);
   const v3 = await novaVenda(ana);
   await adicionar(ana, v3, cat.aparelho, itens.a1);
-  await concluir(ana, v3, [{ meio: "payjoy", valor: 149_900, entrada: 20_000, meio_entrada: "dinheiro" }], { nome: "Cliente Teste", email: "cliente@teste.invalid" });
+  await concluir(ana, v3, [{ meio: "payjoy", valor: 149_900, entrada: 20_000, meio_entrada: "dinheiro", parcelas: 12 }], { nome: "Cliente Teste", email: "cliente@teste.invalid" });
   const v5 = await novaVenda(ana);
   await adicionar(ana, v5, cat.aparelho, itens.a2);
   await adicionar(ana, v5, cat.capa, null);

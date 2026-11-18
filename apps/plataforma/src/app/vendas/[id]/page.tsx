@@ -5,7 +5,7 @@ import type { Metadata } from "next";
 import Link from "next/link";
 import { notFound } from "next/navigation";
 
-import { MEIOS } from "@ora5g/dominio";
+import { MEIOS, nomeDoPagamento, textoDasParcelas } from "@ora5g/dominio";
 import { chaveEmGrupos, MODELOS_DE_NOTA, SITUACOES_DA_NOTA, type SituacaoDaNota } from "@ora5g/dominio/fiscal";
 
 import { FormularioDeArquivo } from "../../../componentes/FormularioDeArquivo";
@@ -51,7 +51,7 @@ export default async function Comprovante({ params, searchParams }: { params: Pr
   if (!venda.data) notFound();
   const [itens, pagamentos, loja, vendedor, podeCancelar, podePedirNota, aprovaNota, nota, devolucoes, notasDeDevolucao, estornos, retornos] = await Promise.all([
     supabase.from("venda_itens").select("id, variante_id, item_serializado_id, tipo, quantidade, preco_unitario_centavos, desconto_centavos").eq("venda_id", id).order("criado_em"),
-    supabase.from("venda_pagamentos").select("ordem, meio, valor_centavos, entrada_centavos, comprovante, situacao").eq("venda_id", id).order("ordem"),
+    supabase.from("venda_pagamentos").select("ordem, meio, valor_centavos, entrada_centavos, comprovante, situacao, parcelas, entrada_do_financiamento").eq("venda_id", id).order("ordem"),
     supabase.from("unidades").select("nome, cnpj").eq("id", venda.data.unidade_id).maybeSingle(),
     supabase.from("perfis_usuario").select("nome").eq("id", venda.data.vendedor_id).maybeSingle(),
     supabase.rpc("tem_permissao", { p_permissao: "venda.cancelar", p_unidade: venda.data.unidade_id }),
@@ -217,7 +217,7 @@ export default async function Comprovante({ params, searchParams }: { params: Pr
         </dl>
         <ul className="mt-2 space-y-1 text-xs">
           {pagamentos.data.map((p) => (
-            <li key={p.ordem} className="numeros">{nomeDoMeio(p.meio)}: {brl(centavosDoBanco(p.valor_centavos))}{centavosDoBanco(p.entrada_centavos) > 0 ? ` (entrada ${brl(centavosDoBanco(p.entrada_centavos))})` : ""}{p.comprovante ? ` · comprovante ${p.comprovante}` : ""}{p.situacao === "estornado" ? " · estornado" : p.situacao === "estorno_pendente" ? " · estorno a confirmar" : ""}</li>
+            <li key={p.ordem} className="numeros">{nomeDoPagamento({ meio: p.meio, entradaDoFinanciamento: p.entrada_do_financiamento })}: {brl(centavosDoBanco(p.valor_centavos))}{textoDasParcelas(p.meio, p.parcelas)}{centavosDoBanco(p.entrada_centavos) > 0 ? ` (entrada ${brl(centavosDoBanco(p.entrada_centavos))})` : ""}{p.comprovante ? ` · comprovante ${p.comprovante}` : ""}{p.situacao === "estornado" ? " · estornado" : p.situacao === "estorno_pendente" ? " · estorno a confirmar" : ""}</li>
           ))}
         </ul>
         <p className="mt-3 text-xs text-suave">Comprovante interno, sem valor fiscal. A nota fiscal é pedida abaixo e segue o fluxo combinado com o contador.</p>

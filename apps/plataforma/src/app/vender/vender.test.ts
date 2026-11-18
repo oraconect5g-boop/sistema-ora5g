@@ -173,6 +173,7 @@ import { BotaoConfirmar } from "../../componentes/BotaoConfirmar";
 import { FotoAmpliavel } from "../catalogo/FotoAmpliavel";
 import { BuscaDeCliente } from "../clientes/BuscaDeCliente";
 import { abrirCaixa, adicionarItem, aplicarDesconto, cancelarVenda, concluirVenda, novaVenda, pedirAprovacao, removerItem } from "./acoes";
+import { FormasDePagamento } from "./FormasDePagamento";
 import Vender from "./page";
 
 type Elemento = ReactElement<Linha>;
@@ -431,24 +432,29 @@ describe("o que o PDV mostra", () => {
     expect(descontos).toEqual(["0,00", "50,00", "0,00"]);
   });
 
-  it("pagamento: o total já vem no primeiro pagamento, com a venda, a chave e as maquininhas da loja", async () => {
+  // PDV-c (pedido do proprietário de 18/11): as formas de pagamento por botão. O componente recebe o total, o valor dos
+  // celulares (o único que a PayJoy e a Aiva financiam), as formas da loja (sem o link de pagamento) e as maquininhas.
+  it("pagamento: o botão das formas recebe o total, o valor dos celulares, as formas da loja sem o link e as maquininhas", async () => {
     cenario.pdv = tela({ itens: CARRINHO, terminais: [{ id: MAQUININHA, provedor: "picpay", apelido: "Balcão", identificador: "PP-0001" }, { id: id("702"), provedor: "pagbank", apelido: "Vitrine", identificador: "PB-0002" }] });
     const arvore = await abrir();
     const [pagamento] = formularios(arvore, concluirVenda);
     expect(pagamento?.escondidos.venda).toBe(VENDA);
     expect(pagamento?.escondidos.chave).toMatch(UUID);
-    const campoDe = (nome: string) => pagamento?.elementos.find((e) => e.props.name === nome);
-    expect(campoDe("pagamento_1_valor")?.props.defaultValue).toBe("1717,00");
-    expect(campoDe("pagamento_2_valor")?.props.defaultValue).toBe("");
-    expect(texto(campoDe("pagamento_1_terminal"))).toBe("nenhuma Balcão · PicPay PP-0001 Vitrine · PagBank PB-0002");
-    expect(elementos(campoDe("pagamento_1_terminal")?.props.children).filter((e) => e.type === "option").map((e) => e.props.value)).toEqual(["", MAQUININHA, id("702")]);
+    const formas = elementos(arvore).find((e) => e.type === FormasDePagamento);
+    expect(formas?.props.total).toBe(171_700);
+    expect(formas?.props.valorDosCelulares).toBe(124_900);
+    const opcoes = formas?.props.opcoes as { meio: string; maximoDeParcelas: number | null; podeSerEntrada: boolean }[];
+    expect(opcoes.map((o) => o.meio)).not.toContain("link_pagamento");
+    expect(Object.fromEntries(opcoes.map((o) => [o.meio, o.maximoDeParcelas]))).toMatchObject({ payjoy: 48, aiva: 48, cartao_picpay: 24, cartao_pagseguro: 24, dinheiro: null, pix_direto: null });
+    expect(opcoes.filter((o) => o.podeSerEntrada).map((o) => o.meio)).toEqual(["dinheiro", "pix_direto", "pix_picpay", "cartao_picpay", "cartao_pagseguro"]);
+    expect(formas?.props.terminais).toEqual([
+      { id: MAQUININHA, provedor: "picpay", rotulo: "Balcão · PicPay PP-0001" }, { id: id("702"), provedor: "pagbank", rotulo: "Vitrine · PagBank PB-0002" }]);
   });
 
-  it("sem maquininha ativa na loja: o pagamento não oferece o campo", async () => {
+  it("sem maquininha ativa na loja: o botão das formas recebe a lista vazia", async () => {
     cenario.pdv = tela({ itens: CARRINHO });
-    const [pagamento] = formularios(await abrir(), concluirVenda);
-    expect(pagamento?.elementos.some((e) => e.props.name === "pagamento_1_terminal")).toBe(false);
-    expect(pagamento?.texto).not.toContain("Maquininha");
+    const formas = elementos(await abrir()).find((e) => e.type === FormasDePagamento);
+    expect(formas?.props.terminais).toEqual([]);
   });
 
   it.each([

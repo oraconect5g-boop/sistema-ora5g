@@ -132,7 +132,7 @@
 |---|---|
 | Documentação oficial e revisão | Oficial, parcial: PicPay Link de Pagamento (introdução, autenticação e aviso) e PagBank (token e criação de checkout), conferidas em 06/11; o formato e a assinatura do aviso a confirmar ao gerar a credencial |
 | Operações necessárias | Criar a cobrança, consultar (a reconsulta), receber o aviso, cancelar, estornar e conciliar com o extrato do provedor |
-| O que já existe | O meio "link" é recusado no PDV; no worker (cobranca/cobranca.ts): a interface, o formato comum do aviso e da reconsulta e as regras do PAY-b: o aviso nunca confirma, só a reconsulta, conferindo a cobrança, o valor, a moeda e a ordem; o tempo esgotado não cobra duas vezes |
+| O que já existe | O meio "link" é recusado no PDV e na Ora Connect da loja (D-050, decisão do proprietário de 18/11: o link é só da compra online); no worker (cobranca/cobranca.ts): a interface, o formato comum do aviso e da reconsulta e as regras do PAY-b: o aviso nunca confirma, só a reconsulta, conferindo a cobrança, o valor, a moeda e a ordem; o tempo esgotado não cobra duas vezes |
 | Código que falta | O adaptador oficial do provedor escolhido, a rota do aviso, a tabela das cobranças com a fila, o checkout pago da loja online e a conciliação com o extrato do provedor |
 | Acesso ou contrato que falta | A escolha do provedor (E1) e a credencial do escolhido |
 | Variáveis (só os nomes) | `PICPAY_CLIENT_ID`, `PICPAY_CLIENT_SECRET`, `PICPAY_WEBHOOK_SECRET`, `PAGBANK_ENVIRONMENT`, `PAGBANK_API_TOKEN` |

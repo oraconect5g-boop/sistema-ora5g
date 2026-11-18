@@ -8,7 +8,7 @@ import { ehUuid } from "../../lib/acesso/regras";
 import { obterSessao } from "../../lib/acesso/sessao";
 import type { Json } from "../../lib/supabase/tipos-banco";
 import { erroDosAnexos } from "../../lib/vendas/anexos";
-import { CONDICOES_DE_RETORNO, erroDaVenda, lerDevolucao, lerPagamentos, lerValor } from "../../lib/vendas/regras";
+import { CONDICOES_DE_RETORNO, erroDaVenda, erroDoPagamento, lerDevolucao, lerPagamentos, lerValor } from "../../lib/vendas/regras";
 
 // Cada ação chama UMA função do banco como a pessoa logada (ADR-004). As chaves de idempotência
 // vêm do formulário (geradas quando a tela foi montada): clique duplo ou reenvio repetem a mesma
@@ -102,7 +102,9 @@ export async function concluirVenda(dados: FormData) {
     p_cliente: { ...(ehUuid(cliente) ? { id: cliente } : {}), ...(nome ? { nome } : {}), ...(email ? { email } : {}) },
   });
   if (error?.code === "22023" && /cliente/i.test((error as { message?: string }).message ?? "")) redirect("/vender?erro=cliente");
-  if (error?.code === "OR009" && /maquininha/i.test((error as { message?: string }).message ?? "")) redirect("/vender?erro=maquininha");
+  // PDV-c: a regra do pagamento que o banco recusou (a maquininha, as parcelas, o financiamento só do celular, a entrada).
+  const doPagamento = error?.code === "OR009" ? erroDoPagamento((error as { message?: string }).message ?? "") : null;
+  if (doPagamento) redirect(`/vender?erro=${doPagamento}`);
   if (error) voltar("/vender", error);
   const resultado = data as { venda?: string } | null;
   redirect(`/vendas/${resultado?.venda ?? venda}?concluida=1`);

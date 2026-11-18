@@ -49,11 +49,11 @@ describe("REV-008 — valores inválidos nunca passam", () => {
 
   it("entrada fracionada, negativa ou maior que o financiado é recusada sem valores negativos", () => {
     for (const entrada of [0.5, -100, Number.NaN]) {
-      const r = conferirPagamentos(100_000, [{ meio: "aiva", valor: 100_000, entrada }]);
+      const r = conferirPagamentos(100_000, [{ meio: "aiva", valor: 100_000, entrada, parcelas: 10 }]);
       expect(r.valido).toBe(false);
       expect(r.erros.join(" ")).toMatch(/entrada inválida/);
     }
-    const maior = conferirPagamentos(100_000, [{ meio: "aiva", valor: 100_000, entrada: 100_001 }]);
+    const maior = conferirPagamentos(100_000, [{ meio: "aiva", valor: 100_000, entrada: 100_001, parcelas: 10 }]);
     expect(maior.valido).toBe(false);
     expect(maior.aReceberDeFinanceiras).toBe(0);
   });

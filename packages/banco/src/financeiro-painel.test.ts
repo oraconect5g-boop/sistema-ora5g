@@ -96,7 +96,7 @@ async function diaDaLojaA() {
   // V3: aparelho financiado na PayJoy, entrada de R$ 200,00 em dinheiro.
   const v3 = await novaVenda(ana);
   await adicionar(ana, v3, cat.aparelho, itens.a1);
-  await concluir(ana, v3, [{ meio: "payjoy", valor: 149_900, entrada: 20_000, meio_entrada: "dinheiro" }], { nome: "Cliente Teste", email: "cliente@teste.invalid" });
+  await concluir(ana, v3, [{ meio: "payjoy", valor: 149_900, entrada: 20_000, meio_entrada: "dinheiro", parcelas: 12 }], { nome: "Cliente Teste", email: "cliente@teste.invalid" });
   // Devolução parcial da V2: uma capa, reembolso em dinheiro (sai da gaveta do dono).
   const dono = await naLoja(ids.dono, ids.lojaA);
   await abrirCaixa(dono, 10_000);

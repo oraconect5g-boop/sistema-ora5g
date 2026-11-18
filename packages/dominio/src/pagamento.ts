@@ -22,7 +22,40 @@ export const MEIOS = {
 
 export type MeioPagamento = keyof typeof MEIOS;
 
-export type Pagamento = { meio: MeioPagamento; valor: Centavos; entrada?: Centavos };
+export type Pagamento = {
+  meio: MeioPagamento;
+  valor: Centavos;
+  entrada?: Centavos;
+  /** PDV-c (o proprietário, 18/11): em quantas parcelas (a PayJoy e a Aiva, 1 a 48; o cartão, 1 a 24). */
+  parcelas?: number;
+  /** PDV-c: este pagamento é a entrada da PayJoy ou da Aiva, à parte (dinheiro, Pix ou cartão). */
+  entradaDoFinanciamento?: boolean;
+};
+
+/** PDV-c: o máximo de parcelas de cada meio que parcela (a mesma regra da concluir_venda). */
+export const MAXIMO_DE_PARCELAS: Partial<Record<MeioPagamento, number>> = { payjoy: 48, aiva: 48, cartao_picpay: 24, cartao_pagseguro: 24 };
+
+/** PDV-c: a entrada da PayJoy e da Aiva é paga num destes meios (dinheiro, Pix ou cartão). */
+export const ehMeioDaEntrada = (m: MeioPagamento) => !MEIOS[m].financeira && m !== "vale_troca" && m !== "link_pagamento";
+
+/**
+ * PDV-c (o proprietário, 18/11): o nome do pagamento na tela e no comprovante. A PayJoy e a Aiva aparecem como o
+ * recebimento via a financeira; a entrada aparece à parte, com o meio em que foi paga.
+ */
+export function nomeDoPagamento(p: { meio: string; entradaDoFinanciamento?: boolean | null }): string {
+  if (!Object.hasOwn(MEIOS, p.meio)) return p.meio;
+  const meio = p.meio as MeioPagamento;
+  if (meio === "payjoy") return "Recebimento via PayJoy";
+  if (meio === "aiva") return "Recebimento via Aiva";
+  return p.entradaDoFinanciamento ? `Entrada do financiamento (${MEIOS[meio].nome})` : MEIOS[meio].nome;
+}
+
+/** PDV-c: as parcelas como o comprovante mostra: " em 12x"; " (1x)" no meio que parcela; vazio no resto. */
+export function textoDasParcelas(meio: string, parcelas: number | null | undefined): string {
+  if (parcelas === null || parcelas === undefined || !Number.isSafeInteger(parcelas) || parcelas < 1) return "";
+  if (parcelas > 1) return ` em ${parcelas}x`;
+  return Object.hasOwn(MAXIMO_DE_PARCELAS, meio) ? " (1x)" : "";
+}
 
 export type ResultadoPagamento = {
   valido: boolean;
@@ -33,7 +66,11 @@ export type ResultadoPagamento = {
   erros: string[];
 };
 
-export function conferirPagamentos(total: Centavos, pagamentos: readonly Pagamento[]): ResultadoPagamento {
+/**
+ * A conferência do pagamento misto, a mesma regra da concluir_venda. Com `valorDosCelulares` (PDV-c), a PayJoy e a Aiva
+ * financiam no máximo o valor dos celulares da venda: o chip, os acessórios e os serviços são pagos à parte.
+ */
+export function conferirPagamentos(total: Centavos, pagamentos: readonly Pagamento[], opcoes: { valorDosCelulares?: Centavos } = {}): ResultadoPagamento {
   exigirCentavos(total, "total da venda");
   const erros: string[] = [];
   let recebidoNaLoja = 0;
@@ -47,6 +84,19 @@ export function conferirPagamentos(total: Centavos, pagamentos: readonly Pagamen
     }
     if (!Number.isSafeInteger(p.valor) || p.valor <= 0) {
       erros.push(`${MEIOS[p.meio].nome}: valor precisa ser maior que zero`);
+      continue;
+    }
+    const maximo = MAXIMO_DE_PARCELAS[p.meio];
+    if (MEIOS[p.meio].financeira && (p.parcelas === undefined || !Number.isSafeInteger(p.parcelas) || p.parcelas < 1 || p.parcelas > (maximo ?? 0))) {
+      erros.push(`${MEIOS[p.meio].nome}: informe as parcelas (de 1 a ${maximo})`);
+      continue;
+    }
+    if (!MEIOS[p.meio].financeira && p.parcelas !== undefined && (maximo === undefined ? p.parcelas !== 1 : !Number.isSafeInteger(p.parcelas) || p.parcelas < 1 || p.parcelas > maximo)) {
+      erros.push(maximo === undefined ? `${MEIOS[p.meio].nome} não tem parcelas` : `${MEIOS[p.meio].nome}: de 1 a ${maximo} parcelas`);
+      continue;
+    }
+    if (p.entradaDoFinanciamento && !ehMeioDaEntrada(p.meio)) {
+      erros.push("A entrada do financiamento é paga em dinheiro, Pix ou cartão");
       continue;
     }
     if (MEIOS[p.meio].financeira) {
@@ -67,6 +117,14 @@ export function conferirPagamentos(total: Centavos, pagamentos: readonly Pagamen
     }
   }
 
+  if (pagamentos.some((p) => p.entradaDoFinanciamento) && !pagamentos.some((p) => Object.hasOwn(MEIOS, p.meio) && MEIOS[p.meio].financeira)) {
+    erros.push("A entrada só existe numa venda com a PayJoy ou a Aiva");
+  }
+  if (opcoes.valorDosCelulares !== undefined && aReceberDeFinanceiras > opcoes.valorDosCelulares) {
+    erros.push(opcoes.valorDosCelulares === 0
+      ? "A PayJoy e a Aiva financiam só o celular: esta venda não tem celular"
+      : "A PayJoy e a Aiva financiam só o valor do celular: o chip, os acessórios e os serviços são pagos à parte");
+  }
   const pago = recebidoNaLoja + aReceberDeFinanceiras;
   if (!Number.isSafeInteger(pago)) erros.push("Soma dos pagamentos grande demais");
   const excedente = Math.max(0, pago - total);

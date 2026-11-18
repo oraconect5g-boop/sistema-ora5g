@@ -64,3 +64,15 @@ Migration `20261109190240_integridade_vendas_lote2`, aplicada no `ora5g-dev` com
 6. **Ordem das travas (#53):** `decidir_aprovacao` trava a venda antes da aprovação, a mesma ordem das demais funções.
 7. **Valor ilegível (#52):** fundo de troco e desconto vazios ou ilegíveis voltam com erro, sem chamar o banco. Zero se digita (0,00).
 8. **Fica para o #60:** item devolvido como avariado volta à loja com a condição registrada. A passagem para o local DEFEITOS, fora do estoque vendável, vem com as transferências.
+
+## Adendo de 18/11/2026 — As formas de pagamento como o proprietário descreveu (lote PDV-c; D-050)
+
+Migration `20261118155834_pagamentos_por_linha` (aplicada no `ora5g-dev`, com o md5 conferido; com reversão). Testes: `packages/banco/src/vendas.test.ts` (o bloco PDV-c), `packages/dominio/src/pagamento.test.ts`, `apps/plataforma/src/lib/vendas/*.test.ts`, `apps/plataforma/src/app/vender/vender.test.ts` e os E2E da demonstração.
+
+1. **A tela:** nenhuma forma aparece até a pessoa tocar em "Adicionar forma de pagamento" e escolher; cada forma mostra só os seus campos; até 8 formas por venda.
+2. **PayJoy e Aiva:** o lançamento é o recebimento via a financeira, com o valor financiado e as parcelas (obrigatórias, de 1 a 48). O que elas financiam não passa do valor líquido dos celulares da venda (OR009): o chip, os acessórios e os serviços entram na mesma venda e são pagos à parte. O item 2 do adendo de 09/11 (2) (o financiamento acima do preço é recusado) fica mais estrito: acima do celular.
+3. **A entrada:** um lançamento à parte, na mesma venda, em dinheiro, Pix ou cartão, marcado como a entrada (`venda_pagamentos.entrada_do_financiamento`); só existe numa venda com a PayJoy ou a Aiva. O dinheiro dela entra no caixa como qualquer dinheiro, e o Pix e o cartão pedem o comprovante, como sempre. A forma antiga (a entrada dentro do pagamento da financeira, DEC-U38) continua aceita pelo banco.
+4. **As parcelas** ficam gravadas em todos os meios que parcelam (`venda_pagamentos.parcelas`): a PayJoy e a Aiva, de 1 a 48; o cartão, de 1 a 24 (sem informar, 1, à vista); nos outros meios, nula. Os máximos são um padrão reversível (D-050).
+5. **O link de pagamento** continua recusado no PDV (no banco e na tela). A Ora Connect da loja também não oferece mais o LINK, e a ação do servidor o recusa; o banco ainda o aceita, para a compra online, o único lugar do link. Isso substitui, só na loja, a escolha entre o SALDO e o LINK do REV-025.
+6. **O comprovante:** "Recebimento via PayJoy: R$ X em 12x", "Entrada do financiamento (Dinheiro): R$ Y" e "Cartão na maquininha PicPay: R$ Z em 3x" (`nomeDoPagamento` e `textoDasParcelas`, no domínio, usados pela tela real e pela demonstração).
+7. **O chip contado à parte:** o chip é um item próprio da venda e não entra no financiamento; os relatórios já o separam do celular, no grupo da Ora Connect. Uma meta só de chips ainda não existe (a oferecer ao proprietário).

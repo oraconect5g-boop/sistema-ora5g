@@ -185,7 +185,7 @@ describe("E — financiamento", () => {
     const caixa = await abrirCaixa(ana);
     const venda = await novaVenda(ana);
     await adicionar(ana, venda, cat.aparelho, itens.a1);
-    const payjoy = [{ meio: "payjoy", valor: 149_900, entrada: 30_000, meio_entrada: "dinheiro" }];
+    const payjoy = [{ meio: "payjoy", valor: 149_900, entrada: 30_000, meio_entrada: "dinheiro", parcelas: 12 }];
     // Sem e-mail a venda fecha (antes: OR009 "PayJoy exige o e-mail do cliente"); o e-mail digitado continua conferido.
     expect(await errou(ana, CONCLUIR, [venda, JSON.stringify(payjoy), JSON.stringify({ email: "sem-arroba" }), chave("c")])).toBe("22023");
     const r = await concluir(ana, venda, payjoy, { nome: "Cliente Teste" });
@@ -283,3 +283,99 @@ describe("I — papel, loja e organização", () => {
     expect(await linhas(ana, "select id from public.vendas")).toHaveLength(1);
   });
 });
+
+// PDV-c (pedido do proprietário de 18/11): a PayJoy e a Aiva financiam o celular; a entrada é um lançamento à parte, na
+// mesma venda; as parcelas contam em todos os casos que parcelam; o chip e os acessórios entram na mesma venda, pagos à parte.
+describe("PDV-c — a entrada à parte, as parcelas e o financiamento só do celular", () => {
+  const pagamentos = async (venda: string) => (await db.query<{ meio: string; valor_centavos: number; parcelas: number | null; entrada_do_financiamento: boolean }>(
+    "select meio, valor_centavos, parcelas, entrada_do_financiamento from public.venda_pagamentos where venda_id = $1 order by ordem", [venda])).rows;
+  const comChip = async () => {
+    await db.query("insert into public.precos (organizacao_id, variante_id, unidade_id, valor_centavos, inicio, origem) values ($1, $2, null, 1000, now() - interval '1 day', 'manual')",
+      [ids.organizacao, cat.chip]);
+  };
+
+  it("celular pela PayJoy em 12 parcelas, a entrada em dinheiro à parte e o chip no Pix: tudo na mesma venda, cada um no seu lançamento", async () => {
+    await comChip();
+    const ana = await naLoja(ids.vendedorA, ids.lojaA);
+    const caixa = await abrirCaixa(ana);
+    const venda = await novaVenda(ana);
+    await adicionar(ana, venda, cat.aparelho, itens.a1);
+    await adicionar(ana, venda, cat.chip, itens.chipA);
+    const r = await concluir(ana, venda, [
+      { meio: "payjoy", valor: 119_900, parcelas: 12, comprovante: "CONTRATO-FICTICIO-1" },
+      { meio: "dinheiro", valor: 30_000, entrada_do_financiamento: true },
+      { meio: "pix_direto", valor: 1_000, comprovante: "PIX-FICTICIO-1" },
+    ]);
+    expect(r).toMatchObject({ total: 149_900 + 1_000, recebido: 31_000, a_receber: 119_900, troco: 0 });
+    expect(await pagamentos(venda)).toEqual([
+      { meio: "payjoy", valor_centavos: 119_900, parcelas: 12, entrada_do_financiamento: false },
+      { meio: "dinheiro", valor_centavos: 30_000, parcelas: null, entrada_do_financiamento: true },
+      { meio: "pix_direto", valor_centavos: 1_000, parcelas: null, entrada_do_financiamento: false },
+    ]);
+    expect((await db.query("select devedor, valor_centavos from public.contas_a_receber where venda_id = $1", [venda])).rows)
+      .toEqual([{ devedor: "payjoy", valor_centavos: 119_900 }]);
+    expect(await dinheiroNoCaixa(caixa)).toBe(10_000 + 30_000);
+    expect(await divergencias()).toEqual([]);
+  });
+
+  it("a PayJoy e a Aiva financiam só o celular: acima do valor dele, ou numa venda sem celular, é recusado", async () => {
+    const ana = await naLoja(ids.vendedorA, ids.lojaA);
+    await abrirCaixa(ana);
+    const venda = await novaVenda(ana);
+    await adicionar(ana, venda, cat.aparelho, itens.a1);
+    await adicionar(ana, venda, cat.capa, null, 2);
+    // A capa (15.800) não entra no financiamento: financiar o total é recusado.
+    expect(await errou(ana, CONCLUIR, [venda, JSON.stringify([{ meio: "aiva", valor: 165_700, parcelas: 10 }]), "{}", chave("c")])).toBe("OR009");
+    expect(await errou(ana, CONCLUIR, [venda, JSON.stringify([
+      { meio: "aiva", valor: 149_901, parcelas: 10 }, { meio: "dinheiro", valor: 15_799 }]), "{}", chave("c")])).toBe("OR009");
+    // Até o valor do celular, com a capa paga à parte, passa.
+    const r = await concluir(ana, venda, [{ meio: "aiva", valor: 149_900, parcelas: 10 }, { meio: "cartao_picpay", valor: 15_800, parcelas: 3, comprovante: "NSU-FICTICIO-1" }]);
+    expect(r).toMatchObject({ a_receber: 149_900, recebido: 15_800 });
+    expect((await pagamentos(venda)).map((p) => [p.meio, p.parcelas])).toEqual([["aiva", 10], ["cartao_picpay", 3]]);
+    const semCelular = await novaVenda(ana);
+    await adicionar(ana, semCelular, cat.capa, null, 1);
+    expect(await errou(ana, CONCLUIR, [semCelular, JSON.stringify([{ meio: "payjoy", valor: 7_900, parcelas: 2 }]), "{}", chave("c")])).toBe("OR009");
+  });
+
+  it("as parcelas: obrigatórias na PayJoy e na Aiva (1 a 48); no cartão, de 1 a 24 (sem informar, à vista); nos outros meios, nenhuma", async () => {
+    const ana = await naLoja(ids.vendedorA, ids.lojaA);
+    await abrirCaixa(ana);
+    const venda = await novaVenda(ana);
+    await adicionar(ana, venda, cat.aparelho, itens.a1);
+    for (const errado of [
+      [{ meio: "payjoy", valor: 149_900 }],
+      [{ meio: "payjoy", valor: 149_900, parcelas: 0 }],
+      [{ meio: "payjoy", valor: 149_900, parcelas: 49 }],
+      [{ meio: "payjoy", valor: 149_900, parcelas: "12" }],
+      [{ meio: "cartao_pagseguro", valor: 149_900, parcelas: 25, comprovante: "NSU-FICTICIO-2" }],
+      [{ meio: "dinheiro", valor: 149_900, parcelas: 3 }],
+      [{ meio: "pix_direto", valor: 149_900, parcelas: 2, comprovante: "PIX-FICTICIO-2" }],
+    ]) {
+      expect(await errou(ana, CONCLUIR, [venda, JSON.stringify(errado), "{}", chave("c")]), JSON.stringify(errado)).toBe("OR009");
+    }
+    await concluir(ana, venda, [{ meio: "cartao_pagseguro", valor: 149_900, comprovante: "NSU-FICTICIO-3" }]);
+    expect((await pagamentos(venda)).map((p) => p.parcelas)).toEqual([1]);
+  });
+
+  it("a entrada é paga em dinheiro, Pix ou cartão, e só existe numa venda com a PayJoy ou a Aiva", async () => {
+    const ana = await naLoja(ids.vendedorA, ids.lojaA);
+    await abrirCaixa(ana);
+    const venda = await novaVenda(ana);
+    await adicionar(ana, venda, cat.aparelho, itens.a1);
+    for (const errado of [
+      [{ meio: "payjoy", valor: 149_900, parcelas: 12, entrada_do_financiamento: true }],
+      [{ meio: "payjoy", valor: 119_900, parcelas: 12 }, { meio: "vale_troca", valor: 30_000, comprovante: "VALE-0001", entrada_do_financiamento: true }],
+      [{ meio: "dinheiro", valor: 149_900, entrada_do_financiamento: true }],
+      [{ meio: "payjoy", valor: 119_900, parcelas: 12 }, { meio: "dinheiro", valor: 30_000, entrada_do_financiamento: "sim" }],
+    ]) {
+      expect(await errou(ana, CONCLUIR, [venda, JSON.stringify(errado), "{}", chave("c")]), JSON.stringify(errado)).toBe("OR009");
+    }
+    const r = await concluir(ana, venda, [
+      { meio: "payjoy", valor: 119_900, parcelas: 18 },
+      { meio: "cartao_picpay", valor: 30_000, parcelas: 2, comprovante: "NSU-FICTICIO-4", entrada_do_financiamento: true },
+    ]);
+    expect(r).toMatchObject({ a_receber: 119_900, recebido: 30_000 });
+    expect((await pagamentos(venda)).map((p) => [p.meio, p.parcelas, p.entrada_do_financiamento])).toEqual([["payjoy", 18, false], ["cartao_picpay", 2, true]]);
+  });
+});
+

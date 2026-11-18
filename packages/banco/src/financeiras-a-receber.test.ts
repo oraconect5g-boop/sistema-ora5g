@@ -62,7 +62,7 @@ async function financiada(s: Sessao, aparelho: string, meio: "payjoy" | "aiva", 
   const venda = await valor<string>(s, "select public.criar_venda($1) as v", [chave("venda")]);
   await valor(s, "select public.adicionar_item($1, $2, $3, 1, $4) as v", [venda, cat.aparelho, aparelho, chave("item")]);
   await valor(s, "select public.concluir_venda($1, $2::jsonb, $3::jsonb, $4) as v",
-    [venda, JSON.stringify([{ meio, valor: valorTotal, entrada: 20_000, meio_entrada: "dinheiro" }]), JSON.stringify({ nome: "Cliente Teste", email: "cliente@teste.invalid" }), chave("concluir")]);
+    [venda, JSON.stringify([{ meio, valor: valorTotal, entrada: 20_000, meio_entrada: "dinheiro", parcelas: 12 }]), JSON.stringify({ nome: "Cliente Teste", email: "cliente@teste.invalid" }), chave("concluir")]);
   const conta = (await db.query<{ id: string; valor: string }>("select id, valor_centavos::text as valor from public.contas_a_receber where venda_id = $1", [venda])).rows[0];
   return { venda, conta: conta?.id ?? "", valor: Number(conta?.valor) };
 }

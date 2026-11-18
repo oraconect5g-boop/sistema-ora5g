@@ -1,6 +1,6 @@
 "use client";
 
-import { MEIOS, producaoDaVenda, TIPOS_DE_ITEM, type ItemVenda, type Pagamento, type ResultadoPagamento } from "@ora5g/dominio";
+import { nomeDoPagamento, producaoDaVenda, textoDasParcelas, TIPOS_DE_ITEM, type ItemVenda, type Pagamento, type ResultadoPagamento } from "@ora5g/dominio";
 import { CircleCheck, FileText, Mail, MessageCircle, Plus, Printer } from "lucide-react";
 import { useState } from "react";
 
@@ -51,7 +51,7 @@ export function Comprovante({ numero, dados, cliente, itens, totais, conferencia
           ))}
         </ul>
         <ListaDados className="mt-3 border-t border-borda pt-3" itens={[
-          ...pagamentos.map((p) => [MEIOS[p.meio].nome, brl(Math.max(0, p.valor))] as const),
+          ...pagamentos.map((p) => [nomeDoPagamento(p), `${brl(Math.max(0, p.valor))}${textoDasParcelas(p.meio, p.parcelas)}`] as const),
           ["Recebido na loja", brl(conferencia.recebidoNaLoja)],
           ...(conferencia.aReceberDeFinanceiras > 0 ? [["A receber de financeiras", brl(conferencia.aReceberDeFinanceiras)] as const] : []),
           ...(conferencia.troco > 0 ? [["Troco", brl(conferencia.troco)] as const] : []),

@@ -423,8 +423,8 @@
     },
     "ORA-PAY-002": {
       "status": "parcial",
-      "nota": "Regra da venda financiada PayJoy/Aiva (DEC-U38) testada; o e-mail obrigatório na PayJoy (DEC-U30) caiu em 16/11 (INTEG-a): a regra do proprietário de 12/11 (#76) deixa o e-mail sempre opcional, e nenhum contrato da PayJoy o exige. Registro real da venda financiada e conta a receber pela ADR-004; #46 a #49 corrigidos no lote 2 (c071968). Falta o repasse (P8, E2) e os termos da financeira. R4 (14/11, revisão do estado): FALTA: o repasse e as taxas das financeiras (P8, E2), os termos de cada financeira, o boleto e o pagamento online (dependem do provedor a contratar, PAY-013) e a conferência do Codex das correções #46 a #49.",
-      "evidencia": "packages/dominio/src/pagamento.test.ts"
+      "nota": "Regra da venda financiada PayJoy/Aiva (DEC-U38) testada; o e-mail obrigatório na PayJoy (DEC-U30) caiu em 16/11 (INTEG-a): a regra do proprietário de 12/11 (#76) deixa o e-mail sempre opcional, e nenhum contrato da PayJoy o exige. Registro real da venda financiada e conta a receber pela ADR-004; #46 a #49 corrigidos no lote 2 (c071968). Falta o repasse (P8, E2) e os termos da financeira. R4 (14/11, revisão do estado): FALTA: o repasse e as taxas das financeiras (P8, E2), os termos de cada financeira, o boleto e o pagamento online (dependem do provedor a contratar, PAY-013) e a conferência do Codex das correções #46 a #49. PDV-c (18/11; D-050): a quantidade de parcelas gravada em todos os casos que parcelam (a PayJoy e a Aiva, de 1 a 48; o cartão, de 1 a 24); o link de pagamento só na compra online (recusado no PDV e na Ora Connect da loja). Segue parcial: o provedor do link (E1), o repasse das financeiras (P8) e o boleto.",
+      "evidencia": "packages/dominio/src/pagamento.test.ts; packages/banco/src/vendas.test.ts; apps/plataforma/src/lib/connect/regras.test.ts; packages/banco/supabase/migrations/20261118155834_pagamentos_por_linha.sql; apps/plataforma/src/lib/vendas/formas-de-pagamento.test.ts; docs/aceite/PDV-c.md"
     },
     "ORA-PAY-003": {
       "status": "parcial",
@@ -543,8 +543,8 @@
     },
     "ORA-POS-007": {
       "status": "testado",
-      "nota": "Pagamento misto com os 8 meios: soma, troco só de linha em dinheiro (banco = domínio, #48), comprovante em cartão e Pix também na entrada de financiamento (#46). Estorno no cancelamento: dinheiro líquido do troco com saldo conferido (#47/#49); cartão, Pix e financeira ficam a confirmar com o comprovante (#50). Link bloqueado até o provedor. Aguardando revisão do Codex. Revisão do Codex (PR #33, trazida em 10/11): 371cef0 rebaixou para parcial por #46 a #50; corrigidos no lote 2 (c071968), aguardando a conferência do Codex.",
-      "evidencia": "packages/banco/supabase/migrations/20261108233546_vendas_pagamentos_e_caixa.sql; packages/banco/src/vendas.test.ts; packages/banco/src/concorrencia.test.ts; packages/banco/src/integridade-lote2.test.ts"
+      "nota": "Pagamento misto com os 8 meios: soma, troco só de linha em dinheiro (banco = domínio, #48), comprovante em cartão e Pix também na entrada de financiamento (#46). Estorno no cancelamento: dinheiro líquido do troco com saldo conferido (#47/#49); cartão, Pix e financeira ficam a confirmar com o comprovante (#50). Link bloqueado até o provedor. Aguardando revisão do Codex. Revisão do Codex (PR #33, trazida em 10/11): 371cef0 rebaixou para parcial por #46 a #50; corrigidos no lote 2 (c071968), aguardando a conferência do Codex. PDV-c (18/11; D-050, o pedido do proprietário): as formas aparecem por um botão de adicionar, cada uma só com os seus campos (até 8 por venda); as parcelas ficam gravadas na PayJoy, na Aiva e no cartão; a entrada da PayJoy e da Aiva é um lançamento à parte; a mesma regra no domínio, na tela e na concluir_venda.",
+      "evidencia": "packages/banco/supabase/migrations/20261108233546_vendas_pagamentos_e_caixa.sql; packages/banco/src/vendas.test.ts; packages/banco/src/concorrencia.test.ts; packages/banco/src/integridade-lote2.test.ts; packages/banco/supabase/migrations/20261118155834_pagamentos_por_linha.sql; apps/plataforma/src/lib/vendas/formas-de-pagamento.test.ts; docs/aceite/PDV-c.md"
     },
     "ORA-POS-008": {
       "status": "testado",
@@ -573,8 +573,8 @@
     },
     "ORA-POS-013": {
       "status": "parcial",
-      "nota": "PayJoy/Aiva: preço, entrada (com o meio) e restante a receber da financeira, sem juros; e-mail opcional também na PayJoy desde 16/11 (INTEG-a). FALTA: prazo/taxa do repasse (P8) e termos da financeira. Revisão do Codex (PR #33, trazida em 10/11): #46 (entrada sem comprovante) e #48 (financiamento acima do preço) corrigidos no lote 2 (c071968), aguardando a conferência do Codex.",
-      "evidencia": "packages/banco/supabase/migrations/20261108233546_vendas_pagamentos_e_caixa.sql; packages/banco/src/vendas.test.ts; packages/banco/src/concorrencia.test.ts"
+      "nota": "PayJoy/Aiva: preço, entrada (com o meio) e restante a receber da financeira, sem juros; e-mail opcional também na PayJoy desde 16/11 (INTEG-a). FALTA: prazo/taxa do repasse (P8) e termos da financeira. Revisão do Codex (PR #33, trazida em 10/11): #46 (entrada sem comprovante) e #48 (financiamento acima do preço) corrigidos no lote 2 (c071968), aguardando a conferência do Codex. PDV-c (18/11; D-050): a PayJoy e a Aiva financiam só o valor líquido dos celulares (o chip, os acessórios e os serviços entram na mesma venda, pagos à parte); a entrada é um lançamento à parte, em dinheiro, Pix ou cartão, marcado como a entrada; as parcelas (1 a 48) são obrigatórias; o comprovante mostra o recebimento via a financeira e a entrada. Segue parcial: o prazo e a taxa do repasse (P8) e os termos da financeira.",
+      "evidencia": "packages/banco/supabase/migrations/20261108233546_vendas_pagamentos_e_caixa.sql; packages/banco/src/vendas.test.ts; packages/banco/src/concorrencia.test.ts; packages/banco/src/vendas.test.ts; packages/banco/supabase/migrations/20261118155834_pagamentos_por_linha.sql; apps/plataforma/src/lib/vendas/formas-de-pagamento.test.ts; docs/aceite/PDV-c.md"
     },
     "ORA-POS-014": {
       "status": "parcial",

@@ -1174,7 +1174,7 @@ describe("repasse da financeira e cancelamento da venda ao mesmo tempo no Postgr
     const venda = await confirmada<string>(ana, "select public.criar_venda($1) as v", [`conc:83:venda:${k}`]);
     await confirmada(ana, "select public.adicionar_item($1, $2, $3, 1, $4) as v", [venda, cat.aparelho, item, `conc:83:item:${k}`]);
     await confirmada(ana, "select public.concluir_venda($1, $2::jsonb, $3::jsonb, $4) as v", [venda,
-      JSON.stringify([{ meio: "payjoy", valor: 149_900, entrada: 20_000, meio_entrada: "pix_direto", comprovante: `E2E-FICTICIO-83-${k}` }]),
+      JSON.stringify([{ meio: "payjoy", valor: 149_900, entrada: 20_000, meio_entrada: "pix_direto", comprovante: `E2E-FICTICIO-83-${k}`, parcelas: 12 }]),
       JSON.stringify({ nome: "Cliente Teste", email: "cliente@teste.invalid" }), `conc:83:concluir:${k}`]);
     const conta = await valor<string>(admin, "select id as v from public.contas_a_receber where venda_id = $1", [venda]);
     return { venda, conta: conta as string };
