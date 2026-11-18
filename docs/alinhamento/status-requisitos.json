@@ -453,8 +453,8 @@
     },
     "ORA-PAY-008": {
       "status": "parcial",
-      "nota": "Conclusão da venda idempotente (mesma chave, mesmo resultado; repetição simultânea testada em PostgreSQL real). Webhooks ainda não existem (link bloqueado). R4 (14/11, revisão do estado): a idempotência da conclusão da venda está provada, inclusive com repetição simultânea. FALTA: os webhooks e os eventos externos dos provedores (o link de pagamento está bloqueado até o contrato, PAY-013).",
-      "evidencia": "packages/banco/supabase/migrations/20261108233546_vendas_pagamentos_e_caixa.sql; packages/banco/src/vendas.test.ts; packages/banco/src/concorrencia.test.ts"
+      "nota": "Conclusão da venda idempotente (mesma chave, mesmo resultado; repetição simultânea testada em PostgreSQL real). Webhooks ainda não existem (link bloqueado). R4 (14/11, revisão do estado): a idempotência da conclusão da venda está provada, inclusive com repetição simultânea. FALTA: os webhooks e os eventos externos dos provedores (o link de pagamento está bloqueado até o contrato, PAY-013). ADAPT-a (17/11; ADR-020): a regra do aviso do provedor do link está pronta e testada no worker (o mesmo aviso, repetido, nunca confirma duas vezes; sem assinatura conferida, nada muda), desligada até o provedor (E1).",
+      "evidencia": "packages/banco/supabase/migrations/20261108233546_vendas_pagamentos_e_caixa.sql; packages/banco/src/vendas.test.ts; packages/banco/src/concorrencia.test.ts; apps/worker/src/cobranca/cobranca.ts"
     },
     "ORA-PAY-011": {
       "status": "parcial",
@@ -790,6 +790,41 @@
       "status": "testado",
       "nota": "Lote CANAIS-a (17/11; ADR-019): a tela /relatorios/canais (Gestão → Relatórios → Canais de venda lado a lado, só para o dono) mostra, no mesmo período, as lojas físicas (o vendido, as devoluções e os cancelamentos, a receita, as taxas dos meios já observadas na conciliação e a margem bruta; e, delas, o que veio do site), cada marketplace (o bruto, as tarifas, o frete e os reembolsos, o líquido e o lucro estimado) e os anúncios (o valor usado e as vendas das campanhas), sem contar duas vezes, e o resultado dos canais estimado. Cada número vem do painel do próprio canal, com a permissão de quem pede.",
       "evidencia": "apps/plataforma/src/lib/canais; apps/plataforma/src/app/relatorios/canais; docs/adr/ADR-019-canais-lado-a-lado.md; docs/aceite/CANAIS-a.md"
+    },
+    "ORA-PAY-013": {
+      "status": "bloqueado",
+      "nota": "BLOQUEADO (ADAPT-a, 17/11; ADR-020): sem API da PicPay POS por decisão do projeto. O pagamento na maquininha é confirmado com o comprovante (L7a) e conciliado pelo extrato por arquivo (EXT-a). Fica bloqueado até uma API confirmada em contrato.",
+      "evidencia": "docs/adr/ADR-020-integracoes-que-esperam-contrato.md; docs/aceite/ADAPT-a.md; docs/integracoes/APIS_E_HABILITACOES_NECESSARIAS.md"
+    },
+    "ORA-PAY-014": {
+      "status": "bloqueado",
+      "nota": "BLOQUEADO (ADAPT-a, 17/11; ADR-020): o worker tem o adaptador do link de pagamento e do Pix online (cobranca/cobranca.ts), desligado: a interface do provedor, o formato comum do aviso e a regra de cada aviso (só confirma com a assinatura conferida, de uma cobrança nossa, do mesmo valor e uma vez só; no resto, consulta o provedor). No PDV, o meio \"link\" segue recusado. Falta: a escolha do provedor (PicPay, PagBank ou os dois; E1), a credencial e o formato do aviso confirmado.",
+      "evidencia": "apps/worker/src/cobranca/cobranca.ts; apps/worker/src/cobranca/cobranca.test.ts; docs/adr/ADR-020-integracoes-que-esperam-contrato.md; docs/aceite/ADAPT-a.md; docs/integracoes/APIS_E_HABILITACOES_NECESSARIAS.md"
+    },
+    "ORA-META-005": {
+      "status": "bloqueado",
+      "nota": "BLOQUEADO (ADAPT-a, 17/11; ADR-020): o worker tem o envio dos eventos de conversão (meta/conversoes.ts), desligado: o formato comum do evento, sem dado que identifique o cliente, e a regra de quais saem (só com o consentimento do cliente e sem repetir o identificador). Falta: a conta de anúncios, a autorização e a base legal (D-022 e D-048).",
+      "evidencia": "apps/worker/src/meta/conversoes.ts; apps/worker/src/meta/conversoes.test.ts; docs/adr/ADR-020-integracoes-que-esperam-contrato.md; docs/aceite/ADAPT-a.md; docs/integracoes/APIS_E_HABILITACOES_NECESSARIAS.md"
+    },
+    "ORA-ONLINE-007": {
+      "status": "bloqueado",
+      "nota": "BLOQUEADO (ADAPT-a, 17/11; ADR-020): a contratação online de planos, chips e eSIM depende da Nogle confirmar a operação (pergunta 11) e da escolha da validação de identidade, do antifraude e do contrato digital.",
+      "evidencia": "docs/adr/ADR-020-integracoes-que-esperam-contrato.md; docs/aceite/ADAPT-a.md; docs/integracoes/APIS_E_HABILITACOES_NECESSARIAS.md"
+    },
+    "ORA-ONLINE-008": {
+      "status": "bloqueado",
+      "nota": "BLOQUEADO (ADAPT-a, 17/11; ADR-020): a venda para outros estados depende do frete (D-025, P10) e das regras fiscais de cada estado, com o contador.",
+      "evidencia": "docs/adr/ADR-020-integracoes-que-esperam-contrato.md; docs/aceite/ADAPT-a.md; docs/integracoes/APIS_E_HABILITACOES_NECESSARIAS.md"
+    },
+    "ORA-FISC-007": {
+      "status": "bloqueado",
+      "nota": "BLOQUEADO (ADAPT-a, 17/11; ADR-020): os cenários de NF-e, NFC-e, NFS-e e NFCom por natureza da operação dependem da matriz validada pelo contador (D1). Nada fiscal é decidido sem ele.",
+      "evidencia": "docs/adr/ADR-020-integracoes-que-esperam-contrato.md; docs/aceite/ADAPT-a.md; docs/integracoes/APIS_E_HABILITACOES_NECESSARIAS.md"
+    },
+    "ORA-FISC-010": {
+      "status": "bloqueado",
+      "nota": "BLOQUEADO (ADAPT-a, 17/11; ADR-020): vários estados, vários CNPJs e a reforma tributária dependem do contador (D1). A rede já guarda o CNPJ e o estado de cada loja (L2), e a nota guarda a identidade da loja que emite (INTEG-c).",
+      "evidencia": "docs/adr/ADR-020-integracoes-que-esperam-contrato.md; docs/aceite/ADAPT-a.md; docs/integracoes/APIS_E_HABILITACOES_NECESSARIAS.md"
     }
   }
 }

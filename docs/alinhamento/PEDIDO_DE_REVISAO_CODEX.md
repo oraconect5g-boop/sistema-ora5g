@@ -1782,3 +1782,12 @@ Programa de execução integral (PR #67; checkpoint em `docs/alinhamento/EXECUCA
 - **Testes:** `lib/canais` (2: a composição, o site e os anúncios fora da soma, o resultado só com a margem), `app/relatorios/canais` (2) e o E2E da tela sem login.
 - **Limite declarado:** só as taxas dos meios já conciliadas entram; o resultado é estimado e não é o lucro da empresa.
 - **Pedido ao Codex:** conferir que nada conta duas vezes (o site e os anúncios dentro das lojas) e que a tela não mostra nada a quem não tem `resultado.ver`.
+- **CI, merge e publicação (17/11):** CI verde em `0dc0167` (2.883 testes e 1 TODO, 311 E2E, com 13 pulados); merge `47f2c4f`, com a árvore da branch testada; no GitHub, os checks de `47f2c4f` terminaram com sucesso: "Verificações" e "Supabase Preview"; no ar desde 21:52.
+
+## 17/11/2026 — Lote ADAPT-a: as integrações que esperam contrato (sete requisitos passam a bloqueado)
+
+- **Origem:** o pedido do proprietário de 17/11 (terminar as 179 e mandar no fim o que faltar) e a regra permanente: integração sem contrato vira adaptador com interface, fixtures e testes, marcado como bloqueado. A decisão está no [ADR-020](../adr/ADR-020-integracoes-que-esperam-contrato.md).
+- **Worker:** `cobranca/cobranca.ts` (o link de pagamento: a interface, o aviso comum e a regra `decidirAviso`) e `meta/conversoes.ts` (os eventos de conversão: `eventosQuePodemSair`, só com consentimento e sem repetir), desligados, com o que falta pelos nomes já documentados.
+- **Bloqueados com o que falta:** ORA-PAY-013, ORA-PAY-014, ORA-META-005, ORA-ONLINE-007, ORA-ONLINE-008, ORA-FISC-007 e ORA-FISC-010.
+- **Testes:** os adaptadores no worker (4).
+- **Pedido ao Codex:** conferir que nenhum adaptador fala com provedor nenhum e que nada do contrato de um provedor foi suposto.
