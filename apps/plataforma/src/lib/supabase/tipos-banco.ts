@@ -1,5 +1,5 @@
 // ARQUIVO GERADO pelo Supabase (generate_typescript_types do projeto ora5g-dev) depois da
-// migration 20261118095048_precos_em_lote. Não edite à mão: gere de novo a cada
+// migration 20261118135333_reconciliacao_da_carga. Não edite à mão: gere de novo a cada
 // migration aplicada (auditoria do Codex de 08/11, §7.2). O teste tipos-banco.test.ts confere
 // que funções e tabelas públicas daqui são as mesmas das migrations.
 export type Json =
@@ -2289,9 +2289,15 @@ export type Database = {
           desfeita_em: string | null
           disponivel: number | null
           fisico: number | null
+          lancar: number | null
           motivo: string | null
+          motivo_resolucao: string | null
           movimento_id: number | null
           numero: number
+          pendencia: string | null
+          resolucao: string | null
+          resolvido_em: string | null
+          resolvido_por: string | null
           saldo_no_corte: number
           sku: string
           variante_id: string | null
@@ -2302,9 +2308,15 @@ export type Database = {
           desfeita_em?: string | null
           disponivel?: number | null
           fisico?: number | null
+          lancar?: number | null
           motivo?: string | null
+          motivo_resolucao?: string | null
           movimento_id?: number | null
           numero: number
+          pendencia?: string | null
+          resolucao?: string | null
+          resolvido_em?: string | null
+          resolvido_por?: string | null
           saldo_no_corte?: number
           sku: string
           variante_id?: string | null
@@ -2315,9 +2327,15 @@ export type Database = {
           desfeita_em?: string | null
           disponivel?: number | null
           fisico?: number | null
+          lancar?: number | null
           motivo?: string | null
+          motivo_resolucao?: string | null
           movimento_id?: number | null
           numero?: number
+          pendencia?: string | null
+          resolucao?: string | null
+          resolvido_em?: string | null
+          resolvido_por?: string | null
           saldo_no_corte?: number
           sku?: string
           variante_id?: string | null
@@ -2335,6 +2353,13 @@ export type Database = {
             columns: ["movimento_id"]
             isOneToOne: false
             referencedRelation: "estoque_movimentos"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "estoque_carga_linhas_resolvido_por_fkey"
+            columns: ["resolvido_por"]
+            isOneToOne: false
+            referencedRelation: "perfis_usuario"
             referencedColumns: ["id"]
           },
           {
@@ -7575,6 +7600,15 @@ export type Database = {
           p_organizacao: string
           p_sha256: string
           p_unidade: string
+        }
+        Returns: Json
+      }
+      estoque_carga_resolver: {
+        Args: {
+          p_carga: string
+          p_motivo: string
+          p_numero?: number
+          p_resolucao: string
         }
         Returns: Json
       }

@@ -46,6 +46,7 @@ const PREVIA = "select public.estoque_carga_previa($1, $2, 'relatorioProdutos.xl
 const APLICAR = "select public.estoque_carga_aplicar($1, $2) as v";
 const DESFAZER = "select public.estoque_carga_desfazer($1, $2) as v";
 const DESCARTAR = "select public.estoque_carga_descartar($1, $2) as v";
+const RESOLVER = "select public.estoque_carga_resolver(p_carga => $1, p_numero => $2, p_resolucao => $3, p_motivo => $4) as v";
 type Previa = { id: string; numero: number; repetida: boolean; totais: Record<string, number> };
 const previa = async (s: Sessao, unidade: string, linhas: unknown[], arquivo = sha(), corte?: string) =>
   valor<Previa>(s, PREVIA, [ids.organizacao, unidade, arquivo, corte ?? await agora(), JSON.stringify(linhas)]);
@@ -68,9 +69,13 @@ describe("a prévia da carga de uma loja (REIN-b)", () => {
       { numero: 8, sku: "", fisico: 4, disponivel: 4 },
       { numero: 9, sku: "OUT-1", fisico: null, disponivel: 1, problema: 'Quantidade que não é número inteiro: "1,5"' },
     ]);
-    expect(p).toMatchObject({ repetida: false, totais: { linhas: 8, entrar: 1, unidades_entrar: 10, serializado: 2, unidades_serializado: 7, sem_produto: 1, conferir: 4, nada: 0, fora_do_disponivel: 2 } });
+    // REIN-c (F18-03): o físico 10 com o disponível 8 não entra mais por padrão; fica para conferir, com a pendência.
+    expect(p).toMatchObject({ repetida: false, totais: {
+      linhas: 8, entrar: 0, unidades_entrar: 0, serializado: 2, unidades_serializado: 7, sem_produto: 1, conferir: 5, nada: 0,
+      a_resolver: 1, resolvidas: 0, fora_do_disponivel: 2 } });
     expect(await linhasDa(p.id)).toEqual([
-      { numero: 2, sku: "ACE-0001", acao: "entrar", motivo: null, saldo_no_corte: 0 },
+      { numero: 2, sku: "ACE-0001", acao: "conferir", saldo_no_corte: 0,
+        motivo: "O físico (10) é maior que o disponível (8) na data de corte: a diferença pode estar reservada, a caminho ou com erro. Resolva antes de aplicar" },
       { numero: 3, sku: "APA-0001", acao: "serializado", motivo: "Entra pela Entrada de estoque, com o IMEI ou o ICCID de cada unidade", saldo_no_corte: 0 },
       { numero: 4, sku: "CHI-0001", acao: "serializado", motivo: "Entra pela Entrada de estoque, com o IMEI ou o ICCID de cada unidade", saldo_no_corte: 0 },
       { numero: 5, sku: "XYZ-9999", acao: "sem_produto", motivo: "O código não está no catálogo: importe o catálogo antes", saldo_no_corte: 0 },
@@ -127,6 +132,9 @@ describe("aplicar, descartar e desfazer (REIN-b)", () => {
     const p = await previa(admin, ids.lojaC, [{ numero: 2, sku: "ACE-0001", fisico: 10, disponivel: 8 }, { numero: 3, sku: "APA-0001", fisico: 2 }], arquivo);
     expect(await recusa(admin, APLICAR, [p.id, "Carga da Loja C"])).toBe("42501");
     expect(await recusa(dono, APLICAR, [p.id, "x"])).toBe("22023");
+    // REIN-c: com a diferença sem resolução, nada se aplica (OR042); conferido na loja, o físico entra.
+    expect(await recusa(dono, APLICAR, [p.id, "Carga da Loja C"])).toBe("OR042");
+    await valor(admin, RESOLVER, [p.id, 2, "fisico", "Contei as 10 na loja: estão livres"]);
     expect(await valor(dono, APLICAR, [p.id, "Carga da Loja C"])).toMatchObject({ id: p.id, entradas: 1, unidades: 10 });
     expect(await saldo(ids.lojaC, cat.capa)).toBe(10);
     expect(await saldo(ids.lojaC, cat.aparelho)).toBe(0);
@@ -136,6 +144,78 @@ describe("aplicar, descartar e desfazer (REIN-b)", () => {
     expect(await recusa(admin, PREVIA, [ids.organizacao, ids.lojaC, arquivo, await agora(), JSON.stringify([{ numero: 2, sku: "ACE-0001", fisico: 1 }])])).toBe("OR023");
     const outra = await previa(admin, ids.lojaC, [{ numero: 2, sku: "CHI-0001", fisico: 1 }]);
     expect(await recusa(dono, APLICAR, [outra.id, "Outra carga"])).toBe("OR041");
+  });
+
+  // Achado F18-03 da reanálise do Codex de 18/11: o físico maior que o disponível não libera para venda o que a origem
+  // considerava comprometido. Cada linha é resolvida com o motivo, e nada se inventa (nem reserva, nem trânsito).
+  it("F18-03: cada resolução lança o que foi decidido (o disponível, o físico ou nada), registrada na linha e na auditoria", async () => {
+    const admin = sessao(ids.administrador);
+    const dono = sessao(ids.dono);
+    const p = await previa(admin, ids.lojaC, [
+      { numero: 2, sku: "ACE-0001", fisico: 10, disponivel: 8 },
+      { numero: 3, sku: "ACE-0001", fisico: 1, disponivel: 1 },
+    ]);
+    // A segunda linha é código repetido; a primeira tem a diferença.
+    expect(p.totais).toMatchObject({ a_resolver: 1, entrar: 0 });
+    const r = await valor<{ acao: string; lancar: number; totais: Record<string, number> }>(admin, RESOLVER, [p.id, 2, "disponivel", "Duas estão reservadas na Rein"]);
+    expect(r).toMatchObject({ acao: "entrar", lancar: 8, totais: { entrar: 1, unidades_entrar: 8, a_resolver: 0, resolvidas: 1 } });
+    const linha = (await db.query<Record<string, unknown>>(
+      "select acao, lancar, resolucao, resolvido_por, motivo_resolucao, resolvido_em is not null as resolvida from public.estoque_carga_linhas where carga_id = $1 and numero = 2", [p.id])).rows[0];
+    expect(linha).toEqual({ acao: "entrar", lancar: 8, resolucao: "disponivel", resolvido_por: ids.administrador, motivo_resolucao: "Duas estão reservadas na Rein", resolvida: true });
+    // A decisão pode mudar enquanto é prévia; cada uma fica na auditoria da carga, com o texto.
+    expect(await valor(dono, RESOLVER, [p.id, 2, "fora", "Prefiro contar na loja antes"])).toMatchObject({ acao: "nada", lancar: null, totais: { entrar: 0, a_resolver: 0 } });
+    expect(await valor(admin, RESOLVER, [p.id, 2, "disponivel", "Contado: oito livres"])).toMatchObject({ lancar: 8 });
+    const auditoria = (await db.query<{ motivo: string }>(
+      "select motivo from public.auditoria where alvo_tipo = 'estoque_cargas' and alvo_id = $1 and motivo like 'Carga nº%' order by id", [p.id])).rows.map((a) => a.motivo);
+    expect(auditoria).toEqual([
+      expect.stringContaining("linha 2 (ACE-0001): lançar o disponível (8 de 10). Duas estão reservadas na Rein"),
+      expect.stringContaining("linha 2 (ACE-0001): deixar de fora. Prefiro contar na loja antes"),
+      expect.stringContaining("linha 2 (ACE-0001): lançar o disponível (8 de 10). Contado: oito livres"),
+    ]);
+    // Aplicada, entram as 8 resolvidas, e não as 10; desfazer devolve as 8.
+    expect(await valor(dono, APLICAR, [p.id, "Carga da Loja C"])).toMatchObject({ entradas: 1, unidades: 8 });
+    expect(await saldo(ids.lojaC, cat.capa)).toBe(8);
+    expect(await recusa(admin, RESOLVER, [p.id, 2, "fisico", "Depois de aplicada"])).toBe("22023");
+    expect(await valor(dono, DESFAZER, [p.id, "Carga errada"])).toMatchObject({ desfeitas: 1, ficaram: 0 });
+    expect(await saldo(ids.lojaC, cat.capa)).toBe(0);
+  });
+
+  it("F18-03: resolver é de quem importa ou aprova, só na linha com a diferença, com resolução conhecida; disponível zero não entra", async () => {
+    const admin = sessao(ids.administrador);
+    const p = await previa(admin, ids.lojaC, [{ numero: 2, sku: "ACE-0001", fisico: 3, disponivel: 0 }, { numero: 3, sku: "CHI-0001", fisico: 1 }]);
+    expect(await recusa(sessao(ids.vendedorA), RESOLVER, [p.id, 2, "fisico", "Vendedor"])).toBe("42501");
+    expect(await recusa(sessao(ids.donoOutraOrg), RESOLVER, [p.id, 2, "fisico", "Outra rede"])).toBe("42501");
+    expect(await recusa(admin, RESOLVER, [p.id, 3, "fisico", "Linha sem diferença"])).toBe("22023");
+    expect(await recusa(admin, RESOLVER, [p.id, 2, "metade", "Resolução estranha"])).toBe("22023");
+    expect(await recusa(admin, RESOLVER, [p.id, 2, "fisico", "x"])).toBe("22023");
+    expect(await valor(admin, RESOLVER, [p.id, 2, "disponivel", "Nada livre na Rein"])).toMatchObject({ acao: "nada", lancar: null, totais: { a_resolver: 0, entrar: 0 } });
+  });
+
+  it("F18-03: de uma vez, só lançar o disponível ou deixar de fora (o físico é linha a linha); o serializado leva o aviso", async () => {
+    const admin = sessao(ids.administrador);
+    const dono = sessao(ids.dono);
+    await db.query("insert into public.variantes (organizacao_id, produto_id, sku, nome) select organizacao_id, produto_id, 'ACE-0002', 'Capa azul' from public.variantes where id = $1", [cat.capa]);
+    const p = await previa(admin, ids.lojaC, [
+      { numero: 2, sku: "ACE-0001", fisico: 10, disponivel: 8 },
+      { numero: 3, sku: "ACE-0002", fisico: 2, disponivel: 0 },
+      { numero: 4, sku: "APA-0001", fisico: 5, disponivel: 3 },
+    ]);
+    expect(p.totais).toMatchObject({ a_resolver: 2, conferir: 2, serializado: 1, fora_do_disponivel: 6 });
+    expect((await linhasDa(p.id)).find((l) => l.numero === 4)?.motivo).toBe("Entra pela Entrada de estoque, com o IMEI ou o ICCID de cada unidade; "
+      + "o físico (5) é maior que o disponível (3): confira quais unidades estão reservadas ou a caminho antes de dar entrada");
+    expect(await recusa(admin, RESOLVER, [p.id, null, "fisico", "Tudo livre"])).toBe("22023");
+    expect(await valor(admin, RESOLVER, [p.id, null, "disponivel", "Só o livre na Rein, até contar"])).toMatchObject({
+      linhas: 2, totais: { a_resolver: 0, resolvidas: 2, entrar: 1, unidades_entrar: 8, nada: 1 } });
+    // A linha resolvida de uma vez ainda muda sozinha; sem nada a resolver, o bloco não tem o que fazer.
+    expect(await recusa(admin, RESOLVER, [p.id, null, "fora", "De novo"])).toBe("22023");
+    expect(await valor(dono, RESOLVER, [p.id, 3, "fisico", "As duas estão na loja, livres"])).toMatchObject({ acao: "entrar", lancar: 2 });
+    const auditoria = (await db.query<{ motivo: string }>(
+      "select motivo from public.auditoria where alvo_tipo = 'estoque_cargas' and alvo_id = $1 and motivo like 'Carga nº%' order by id", [p.id])).rows.map((a) => a.motivo);
+    expect(auditoria).toEqual([
+      expect.stringContaining("2 linhas sem resolução, de uma vez: lançar só o disponível. Só o livre na Rein, até contar"),
+      expect.stringContaining("linha 3 (ACE-0002): lançar o físico (2), conferido na loja. As duas estão na loja, livres"),
+    ]);
+    expect(await valor(dono, APLICAR, [p.id, "Carga conferida"])).toMatchObject({ entradas: 2, unidades: 10 });
   });
 
   it("quem gerou a prévia não aplica, mesmo com as duas permissões (OR024); a prévia descartada não se aplica", async () => {
