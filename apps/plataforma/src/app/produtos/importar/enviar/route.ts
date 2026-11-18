@@ -4,7 +4,7 @@ import type { NextRequest } from "next/server";
 
 import { redirecionar } from "../../../../lib/acesso/redirecionar";
 import { obterSessao } from "../../../../lib/acesso/sessao";
-import { dividirEmPartes, linhaDeTotal, montarLinhas } from "../../../../lib/importacao/catalogo";
+import { dividirEmPartes, montarLinhas, rodapeDaPlanilha } from "../../../../lib/importacao/catalogo";
 import type { Json } from "../../../../lib/supabase/tipos-banco";
 import { ErroDaPlanilha, LIMITES_DA_PLANILHA } from "../../../../lib/importacao/csv";
 import { descomprimirNoServidor } from "../../../../lib/importacao/descomprimir-servidor";
@@ -58,9 +58,10 @@ export async function POST(requisicao: NextRequest) {
   if (unidade.error || !unidade.data) return voltar({ erro: "falha" });
   // A linha de total no fim da planilha (a da Rein) fica de fora, à vista na prévia; o resto vai em partes de até 2.000
   // linhas, uma prévia por parte (o banco aceita até 2.000 por chamada). Arquivo de uma parte só fica como antes.
-  const total = linhaDeTotal(planilha, lido.envio.mapa);
+  const rodape = rodapeDaPlanilha(planilha, lido.envio.mapa);
+  const total = rodape?.posicao ?? null;
   const todas = montarLinhas(planilha, lido.envio.mapa, lido.envio.padroes);
-  const ignoradas = total === null ? [] : [{ linha: todas[total]?.numero ?? total + 2, motivo: "linha de total no fim da planilha" }];
+  const ignoradas = rodape === null ? [] : [{ linha: todas[rodape.posicao]?.numero ?? rodape.posicao + 2, motivo: rodape.motivo }];
   const linhas = total === null ? todas : todas.filter((_, i) => i !== total);
   if (linhas.length === 0) return voltar({ erro: "vazio" });
   const partes = dividirEmPartes(linhas);

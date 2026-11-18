@@ -1,6 +1,6 @@
 import { describe, expect, it } from "vitest";
 
-import { dividirEmPartes, lerMapeamento, linhaDeTotal, montarLinhas, sugerirMapeamento } from "./catalogo";
+import { dividirEmPartes, lerMapeamento, linhaDeTotal, montarLinhas, numeroDoRodape, rodapeDaPlanilha, sugerirMapeamento } from "./catalogo";
 import { lerCsv, LIMITES_DA_PLANILHA } from "./csv";
 
 // Planilha FICTÍCIA (o formato real da Rein chega com a pendência B1; nada aqui o supõe).
@@ -83,6 +83,49 @@ describe("a planilha inteira (REIN-a)", () => {
     expect(linhaDeTotal(produto, MAPA)).toBeNull();
     const semTotal = lerCsv(new TextEncoder().encode("SKU;Descrição;Preço\nACE-1;Capa;79,90\n;;\n"));
     expect(linhaDeTotal(semTotal, MAPA)).toBeNull();
+  });
+
+  // Achado F01 da auditoria do Codex de 17/11 (PR #104): o relatório de produtos da Rein termina com uma linha de totais
+  // SEM a palavra "Total" (código e nome vazios, só números). Planilha FICTÍCIA no mesmo desenho: duas lojas com o físico
+  // e o disponível, a quantidade e o custo total; o rodapé soma as colunas.
+  const REIN = { sku: 0, nome: 1, marca: 2, preco: 3 } as const;
+  const cabecalhoRein = "Código;Descrição;Marca;Preço;Loja A Qtd.;Loja A Qtd. Disponivel;Loja B Qtd.;Loja B Qtd. Disponivel;Quantidade;Custo total;Observação\n";
+
+  it("F01: o rodapé de totais sem a palavra Total fica de fora, com o motivo e a conferência das somas", () => {
+    const comRodape = lerCsv(new TextEncoder().encode(cabecalhoRein +
+      "APA-1;Galaxy A15 128 GB;Samsung;1.299,90;2;1;-1;0;1;1.000,00;\n" +
+      "ACE-1;Capa de silicone;;79,90;10;8;5;5;15;150,50;cliente pediu na cor azul\n" +
+      ";;;;12;9;4;5;16;1.150,50;\n"));
+    expect(linhaDeTotal(comRodape, REIN)).toBe(2);
+    expect(rodapeDaPlanilha(comRodape, REIN)).toEqual({
+      posicao: 2,
+      motivo: "rodapé de totais no fim da planilha (sem código e sem nome, só números em 6 colunas; em 6 delas o número é a soma das linhas de cima)",
+    });
+    // A mesma linha como vem do Excel (número cru, com a notação do Excel) também é rodapé; o que não soma fica sem a conferência.
+    const doExcel = lerCsv(new TextEncoder().encode(cabecalhoRein + "APA-1;Galaxy;Samsung;1299.9;2;1;1;1;3;1000\n;;;;2;1;1;1;3.0000000000000004;1.0E+3\n"));
+    expect(rodapeDaPlanilha(doExcel, REIN)?.motivo).toBe("rodapé de totais no fim da planilha (sem código e sem nome, só números em 6 colunas; em 6 delas o número é a soma das linhas de cima)");
+    const naoSoma = lerCsv(new TextEncoder().encode(cabecalhoRein + "APA-1;Galaxy;Samsung;1.299,90;2;1;1;1;3;1000\n;;;;7;7;7;7;7;7\n"));
+    expect(rodapeDaPlanilha(naoSoma, REIN)?.motivo).toBe("rodapé de totais no fim da planilha (sem código e sem nome, só números em 6 colunas)");
+  });
+
+  it("F01: nada some calado — a última linha com texto, com um número só ou com código continua indo à prévia", () => {
+    const comTexto = lerCsv(new TextEncoder().encode(cabecalhoRein + "APA-1;Galaxy;Samsung;1.299,90;2;1;1;1;3;1000\n;;Samsung;;2;1;1;1;3;1000\n"));
+    expect(linhaDeTotal(comTexto, REIN)).toBeNull();
+    const umNumero = lerCsv(new TextEncoder().encode(cabecalhoRein + "APA-1;Galaxy;Samsung;1.299,90;2;1;1;1;3;1000\n;;;79,90;;;;;;\n"));
+    expect(linhaDeTotal(umNumero, REIN)).toBeNull();
+    const comCodigo = lerCsv(new TextEncoder().encode(cabecalhoRein + "APA-1;Galaxy;Samsung;1.299,90;2;1;1;1;3;1000\nAPA-2;;;;2;1;1;1;3;1000\n"));
+    expect(linhaDeTotal(comCodigo, REIN)).toBeNull();
+    // A linha do meio sem código e sem nome, só com números, não é rodapé: vai à prévia como está (o banco a marca como
+    // erro, à vista, pela falta do SKU e do nome).
+    const noMeio = lerCsv(new TextEncoder().encode(cabecalhoRein + ";;;;2;1;1;1;3;1000\nAPA-1;Galaxy;Samsung;1.299,90;2;1;1;1;3;1000\n"));
+    expect(linhaDeTotal(noMeio, REIN)).toBeNull();
+    expect(montarLinhas(noMeio, REIN, PADROES).map((l) => [l.numero, l.sku, l.nome])).toEqual([[2, null, null], [3, "APA-1", "Galaxy"]]);
+  });
+
+  it("F01: os números do rodapé (planilha brasileira, inglesa e o número cru do Excel)", () => {
+    expect(["12", "-3", "1.234", "1.234,56", "1234,5", "R$ 1.299,90", "-R$ 10,00", "1,234.56", "12.5", "1.5E+20", "1 234", "0"].map(numeroDoRodape))
+      .toEqual([12, -3, 1234, 1234.56, 1234.5, 1299.9, -10, 1234.56, 12.5, 1.5e20, 1234, 0]);
+    expect(["", "abc", "12/11/2026", "1.2.3,4,5", "Total", "--3"].map(numeroDoRodape)).toEqual([null, null, null, null, null, null]);
   });
 
   it("2.271 linhas viram duas partes, na ordem do arquivo: 2.000 e 271", () => {

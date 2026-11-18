@@ -21,6 +21,7 @@ Em 16/11, a leitura da planilha `relatorioProdutos131258.xlsx` parava por três 
 3. **A linha de total no fim fica de fora, à vista.**
    - **O problema:** a última linha da planilha é um total, não um produto. Ela entraria como erro e travaria a importação inteira.
    - **Agora:** ela fica de fora, e a prévia diz "Ficou de fora a linha N da planilha: linha de total no fim da planilha".
+   - **Corrigido no AUD-a (18/11):** a auditoria do Codex de 17/11 (achado F01) mostrou que o rodapé do seu arquivo não tem a palavra "Total": só números. Agora o rodapé de totais sem rótulo também fica de fora, e a prévia diz o motivo e em quantas colunas o número é a soma das linhas de cima. Roteiro: [AUD-a.md](AUD-a.md).
 
 ## O que ainda falta (depende de você)
 

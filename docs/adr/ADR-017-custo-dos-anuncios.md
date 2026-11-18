@@ -44,3 +44,18 @@
 1. **O dono vê quanto custou cada contato, cada venda e cada cliente novo** de cada campanha, e o retorno sobre o gasto, com o que já é dinheiro separado do que é estimativa.
 2. **O número depende de o link do anúncio levar o nome da campanha.** A campanha com custo e sem contato aparece marcada, para corrigir o link.
 3. **Reverter:** a reversão da migration tira as importações, os custos e as funções; nada mais muda.
+
+## Atualização (AUD-a, 18/11/2026): as devoluções, a moeda e o fuso
+
+A auditoria do Codex de 17/11 e o aceite A14 do adendo de 16/11 pedem o CPA, o ROAS e o CAC com as devoluções e o custo, a moeda e o fuso, e o aviso de que atribuição não é prova de causa.
+
+1. **As devoluções** (migration `20261118014003_anuncios_com_devolucoes`):
+   - a devolução de uma venda da campanha conta em qualquer data: a venda é da campanha, a devolução dela também;
+   - a receita líquida é o valor das vendas menos o devolvido, e o ROAS usa ela;
+   - a margem desconta a das unidades devolvidas (o valor devolvido menos o custo delas, a regra do `margem_painel`);
+   - o CPA divide pelas vendas que ficaram (sem as devolvidas por inteiro), e o CAC não conta o cliente cuja primeira compra foi devolvida por inteiro;
+   - o "recebido de fato" desconta o que voltou ao cliente em dinheiro, Pix ou cartão (o vale-troca fica com a loja).
+2. **A moeda:** só real (BRL) entra. A moeda vem da coluna Moeda, quando escolhida, ou do nome da coluna do valor ("Amount spent (USD)" recusa o arquivo). A importação registra de onde veio a moeda.
+3. **O fuso:** o dia do arquivo é o do fuso da conta de anúncios; os contatos e as vendas contam pelo dia de São Paulo. A tela avisa que, com a conta em outro fuso, o custo de um dia pode cair no dia vizinho.
+4. **A causa:** a tela diz que a venda aparece na campanha porque o contato chegou por ela, não porque o anúncio a causou.
+5. **Reverter:** a reversão da migration devolve o painel anterior; antes, volte a plataforma para a versão anterior ao lote AUD-a.

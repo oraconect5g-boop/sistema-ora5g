@@ -27,7 +27,7 @@ const marketplaces = lerPainelDosMarketplaces({
 });
 const anuncios = lerPainelDosAnuncios({
   campanhas: [{ chave: "natal", campanha: "Natal", gasto: 15_000, impressoes: null, cliques: null, resultados: null, dias: 2, reservas: 2, oportunidades: 0,
-    vendas: 2, receita: 15_800, margem: 7_000, vendas_sem_custo: 0, recebido: 15_800, clientes_novos: 1 }],
+    vendas: 2, vendas_devolvidas: 0, receita: 15_800, devolvido: 0, margem: 7_000, vendas_sem_custo: 0, recebido: 15_800, reembolsado: 0, clientes_novos: 1 }],
   por_loja: [], por_vendedor: [], contatos_sem_campanha: 0, importado_ate: "2026-11-17",
 });
 

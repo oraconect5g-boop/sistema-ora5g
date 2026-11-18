@@ -37,6 +37,11 @@ export const CAMPOS_DOS_ANUNCIOS = {
     rotulo: "Resultados (o que a campanha busca: mensagens, cadastros…)", obrigatorio: false,
     sugestoes: ["resultados", "results", "leads", "conversas por mensagem iniciadas", "messaging conversations started"],
   },
+  // Lote AUD-a (aceite A14): a moeda da conta, quando o arquivo traz a coluna. Só real (BRL) entra.
+  moeda: {
+    rotulo: "Moeda (se o arquivo tiver a coluna; só real, BRL)", obrigatorio: false,
+    sugestoes: ["moeda", "currency", "moeda da conta", "account currency"],
+  },
 } as const;
 export type CampoDosAnuncios = keyof typeof CAMPOS_DOS_ANUNCIOS;
 export const NOMES_DOS_CAMPOS_DOS_ANUNCIOS = Object.keys(CAMPOS_DOS_ANUNCIOS) as CampoDosAnuncios[];
@@ -50,7 +55,9 @@ export function sugerirMapaDosAnuncios(cabecalho: readonly string[]): MapaDosAnu
     const sugestoes = CAMPOS_DOS_ANUNCIOS[campo].sugestoes as readonly string[];
     // A ordem das sugestões vale: "dia" antes de "início dos relatórios", "cliques no link" antes de "cliques".
     for (const sugestao of sugestoes) {
-      const indice = cabecalho.findIndex((c, i) => !usados.has(i) && semAcento(c) === sugestao);
+      // A moeda no fim do nome ("Amount spent (USD)") não impede a sugestão: a conferência da moeda recusa depois, com a
+      // mensagem certa (lote AUD-a).
+      const indice = cabecalho.findIndex((c, i) => !usados.has(i) && (semAcento(c) === sugestao || semAcento(c).replace(/\s*\([a-z]{3}\)$/, "") === sugestao));
       if (indice >= 0) {
         mapa[campo] = indice;
         usados.add(indice);
@@ -79,6 +86,19 @@ export function lerMapaDosAnuncios(campo: (nome: string) => unknown, colunas: nu
 
 export const mapaDosAnunciosParaGravar = (cabecalho: readonly string[], mapa: MapaDosAnuncios) =>
   ({ colunas: Object.fromEntries(NOMES_DOS_CAMPOS_DOS_ANUNCIOS.filter((c) => mapa[c] !== undefined).map((c) => [c, cabecalho[mapa[c] as number] ?? ""])) });
+
+/**
+ * A moeda do valor usado (lote AUD-a, aceite A14): a da coluna "Moeda", quando escolhida, ou a que o Gerenciador põe no
+ * nome da coluna do valor ("Valor usado (BRL)", "Amount spent (USD)"). A plataforma soma só reais: "outra" é a moeda que
+ * não é BRL (o arquivo é recusado); sem coluna nem moeda no nome, o valor é lido como real e isso fica registrado.
+ */
+export function moedaDosAnuncios(cabecalho: readonly string[], mapa: MapaDosAnuncios): { de: "coluna" | "cabecalho" | "nao_informada"; outra: string | null } {
+  if (mapa.moeda !== undefined) return { de: "coluna", outra: null };
+  const nome = mapa.gasto === undefined ? "" : (cabecalho[mapa.gasto] ?? "");
+  const codigo = /\(\s*([A-Za-z]{3})\s*\)\s*$/.exec(nome)?.[1]?.toUpperCase();
+  if (codigo === undefined) return { de: "nao_informada", outra: null };
+  return { de: "cabecalho", outra: codigo === "BRL" ? null : codigo };
+}
 
 /** Uma contagem (impressões, cliques, resultados): o número inteiro, com ou sem separador de milhar. */
 export function lerContagem(texto: string): number {
@@ -150,6 +170,9 @@ export function montarLinhasDosAnuncios(planilha: Planilha, mapa: MapaDosAnuncio
     const impressoes = contagem("impressoes");
     const cliques = contagem("cliques");
     const resultados = contagem("resultados");
+    // A moeda da linha, quando o arquivo traz a coluna: só real (BRL) entra; a linha em outra moeda volta como problema.
+    const moeda = celula("moeda");
+    if (mapa.moeda !== undefined && !/^(brl|r\$)$/i.test(moeda)) problemas.push({ numero, campo: "moeda", texto: moeda.slice(0, 40) });
     if (problemas.length > antes || dia === undefined || gasto === undefined) return;
     const linha: LinhaDosAnuncios = { numero, dia, campanha, gasto };
     if (impressoes !== undefined) linha.impressoes = impressoes;

@@ -1791,3 +1791,13 @@ Programa de execução integral (PR #67; checkpoint em `docs/alinhamento/EXECUCA
 - **Bloqueados com o que falta:** ORA-PAY-013, ORA-PAY-014, ORA-META-005, ORA-ONLINE-007, ORA-ONLINE-008, ORA-FISC-007 e ORA-FISC-010.
 - **Testes:** os adaptadores no worker (4).
 - **Pedido ao Codex:** conferir que nenhum adaptador fala com provedor nenhum e que nada do contrato de um provedor foi suposto.
+- **CI, merge e publicação (17/11):** CI verde em `d9dcd73` (2.887 testes e 1 TODO, 311 E2E, com 13 pulados); merge `7c7bdf1`, com a árvore da branch testada; no GitHub, os checks de `7c7bdf1` terminaram com sucesso: "Verificações" e "Supabase Preview"; no ar desde 22:19.
+
+## 18/11/2026 — Lote AUD-a: o que a auditoria do Codex de 17/11 (PR #104) pediu
+
+- **Leitura:** os 33 arquivos do PR #104, comparados com a `main` em `7c7bdf1`, o `ora5g-dev` e o domínio: [`LEITURA_AUDITORIA_2026-11-17.md`](LEITURA_AUDITORIA_2026-11-17.md). O F02 já estava corrigido (MKT-a).
+- **F01 (a planilha da Rein):** `rodapeDaPlanilha` tira o rodapé de totais sem rótulo (última linha, sem código e sem nome, números em duas colunas ou mais), com o motivo e a conferência das somas; a linha do meio sem código e a última com texto continuam indo à prévia.
+- **A14 (os anúncios):** a migration `20261118014003_anuncios_com_devolucoes` (o devolvido, a margem sem as unidades devolvidas, a venda devolvida por inteiro e o reembolso); o CPA pelas vendas que ficaram, o ROAS pela receita líquida; só real (BRL) na importação; o fuso e a causa explicados na tela.
+- **Estados:** ORA-MKTPL-005 e ORA-MKTPL-008 voltam a parcial (A13); os 16 IDs sem linha ganham a sua (não iniciado, com o que falta).
+- **Pendências novas do proprietário:** D-049 (a transferência reserva no pedido?), a proteção da `main` (5.5) e a senha vazada (5.8).
+- **Pedido ao Codex:** conferir que o rodapé nunca tira uma linha de produto (a última com texto, a do meio sem código) e que o painel dos anúncios não desconta a mesma devolução duas vezes (a margem e a receita).

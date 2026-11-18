@@ -127,18 +127,67 @@ export function lerMapeamento(campo: (nome: string) => unknown, colunas: number)
 const COMECA_COM_TOTAL = /^\s*total\b/i;
 
 /**
- * A linha de total no fim da planilha (o relatório de produtos da Rein termina com uma): a última linha sem SKU, sem
- * nome (ou com "Total" no nome) e com alguma célula começando por "Total". Ela não é produto, e mandá-la ao banco
- * travaria a prévia inteira (linha com erro); a tela mostra que ela ficou de fora. Devolve a posição dela ou nulo.
+ * Um número do rodapé: inteiro ou decimal, com sinal, separador de milhar, "R$" ou a notação do Excel (1.5E+20). Devolve
+ * o valor, ou nulo quando a célula não é número. "1.234,56" e "1234.56" valem o mesmo; "1.234" (com um ponto e três
+ * casas) é mil duzentos e trinta e quatro, como na planilha brasileira.
  */
-export function linhaDeTotal(planilha: Planilha, mapa: Mapeamento): number | null {
+export function numeroDoRodape(celula: string): number | null {
+  // O \s do JavaScript já pega o espaço sem quebra (U+00A0), que o Excel usa como separador de milhar.
+  const t = celula.trim().replace(/^([-+]?)R\$\s?/, "$1").replace(/\s/g, "");
+  if (/^[-+]?\d+(\.\d+)?([eE][-+]?\d+)?$/.test(t) && !/^[-+]?\d{1,3}\.\d{3}$/.test(t)) return Number(t);
+  if (/^[-+]?\d{1,3}(\.\d{3})+(,\d+)?$/.test(t) || /^[-+]?\d+,\d+$/.test(t)) return Number(t.replace(/\./g, "").replace(",", "."));
+  if (/^[-+]?\d{1,3}(,\d{3})+(\.\d+)?$/.test(t)) return Number(t.replace(/,/g, ""));
+  return null;
+}
+
+/** A linha que fica de fora da importação, com o motivo que a prévia mostra. */
+export type LinhaDeFora = { posicao: number; motivo: string };
+
+/**
+ * O rodapé no fim da planilha, que não é produto: mandá-lo ao banco travaria a prévia inteira (linha com erro). Só a
+ * ÚLTIMA linha, e só sem SKU e sem nome (ou com "Total" no nome), em dois casos:
+ *  - alguma célula começa por "Total" (o rodapé com rótulo);
+ *  - as células preenchidas são todas números, pelo menos duas (o rodapé de totais sem rótulo). O relatório de produtos
+ *    da Rein termina assim: a linha 2.273 do arquivo de 10/11, que a auditoria do Codex de 17/11 achou entrando como
+ *    produto (achado F01). O motivo diz em quantas colunas o número é igual à soma das linhas de cima.
+ * A linha do meio sem código continua sendo erro, e a última com algum texto também (pode ser produto com defeito): nada
+ * some calado. Devolve a posição e o motivo, ou nulo.
+ */
+export function rodapeDaPlanilha(planilha: Planilha, mapa: Mapeamento): LinhaDeFora | null {
   const posicao = planilha.linhas.length - 1;
   const linha = planilha.linhas[posicao];
   if (!linha || mapa.sku === undefined || mapa.nome === undefined) return null;
   const sku = (linha[mapa.sku] ?? "").trim();
   const nome = (linha[mapa.nome] ?? "").trim();
   if (sku !== "" || (nome !== "" && !COMECA_COM_TOTAL.test(nome))) return null;
-  return linha.some((celula) => COMECA_COM_TOTAL.test(celula)) ? posicao : null;
+  if (linha.some((celula) => COMECA_COM_TOTAL.test(celula))) return { posicao, motivo: "linha de total no fim da planilha" };
+  const preenchidas = linha.map((celula, coluna) => ({ coluna, texto: celula.trim() })).filter((c) => c.texto !== "");
+  if (preenchidas.length < 2) return null;
+  const numeros = preenchidas.map((c) => ({ coluna: c.coluna, valor: numeroDoRodape(c.texto) }));
+  if (numeros.some((n) => n.valor === null)) return null;
+  // A conferência que a prévia mostra: a coluna em que o rodapé é a soma das linhas de cima (com os centavos).
+  const somaConfere = (coluna: number, valor: number) => {
+    let soma = 0;
+    for (const l of planilha.linhas.slice(0, posicao)) {
+      const texto = (l[coluna] ?? "").trim();
+      if (texto === "") continue;
+      const n = numeroDoRodape(texto);
+      if (n === null) return false;
+      soma += n;
+    }
+    return Math.abs(soma - valor) < 0.005;
+  };
+  const conferem = numeros.filter((n) => somaConfere(n.coluna, n.valor as number)).length;
+  return {
+    posicao,
+    motivo: `rodapé de totais no fim da planilha (sem código e sem nome, só números em ${numeros.length} colunas${
+      conferem > 0 ? `; em ${conferem} delas o número é a soma das linhas de cima` : ""})`,
+  };
+}
+
+/** A posição do rodapé no fim da planilha (ver rodapeDaPlanilha), ou nulo. */
+export function linhaDeTotal(planilha: Planilha, mapa: Mapeamento): number | null {
+  return rodapeDaPlanilha(planilha, mapa)?.posicao ?? null;
 }
 
 /** As partes da importação: até 2.000 linhas cada, na ordem do arquivo (uma prévia por parte). */

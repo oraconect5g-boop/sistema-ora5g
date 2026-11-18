@@ -74,7 +74,7 @@ export default async function Anuncios({ searchParams }: {
       <section aria-label="Resumo dos anúncios" className="mt-4 grid grid-cols-2 gap-3 lg:grid-cols-4">
         <Indicador rotulo="Valor usado" valor={brl(total.gasto)} detalhe={painel.importadoAte ? `custo importado até ${dataCurta(painel.importadoAte)}` : "nenhum custo importado ainda"} icone={Megaphone} />
         <Indicador rotulo="Custo por contato (CPL)" valor={ou(t.cpl, brl)} detalhe={plural(t.contatos, "contato", "contatos")} />
-        <Indicador rotulo="Custo por venda (CPA)" valor={ou(t.cpa, brl)} detalhe={`${plural(total.vendas, "venda", "vendas")} · ${brl(total.receita)}`} />
+        <Indicador rotulo="Custo por venda (CPA)" valor={ou(t.cpa, brl)} detalhe={`${plural(t.vendasQueFicaram, "venda", "vendas")} · ${brl(t.receitaLiquida)}${total.devolvido > 0 ? " sem as devoluções" : ""}`} />
         <Indicador rotulo="Retorno (ROAS)" valor={ou(t.roas, vezes)} detalhe={`CAC ${ou(t.cac, brl)} · ${plural(total.clientesNovos, "cliente novo", "clientes novos")}`} />
       </section>
 
@@ -95,12 +95,14 @@ export default async function Anuncios({ searchParams }: {
                   {c.resultados !== null ? ` · ${numero(c.resultados)} resultados (Meta), ${ou(m.custoPorResultado, brl)} cada` : ""}
                 </p>
                 <p className="numeros text-xs">
-                  {plural(m.contatos, "contato", "contatos")} ({numero(c.reservas)} do site, {numero(c.oportunidades)} do CRM) · CPL {ou(m.cpl, brl)} ·{" "}
-                  {plural(c.vendas, "venda", "vendas")} · CPA {ou(m.cpa, brl)} · receita {brl(c.receita)} · ROAS {ou(m.roas, vezes)}
+                  {`${plural(m.contatos, "contato", "contatos")} (${numero(c.reservas)} do site, ${numero(c.oportunidades)} do CRM) · CPL ${ou(m.cpl, brl)} · `}
+                  {`${plural(c.vendas, "venda", "vendas")}${c.vendasDevolvidas > 0 ? ` (${plural(c.vendasDevolvidas, "devolvida", "devolvidas")} por inteiro)` : ""} · CPA ${ou(m.cpa, brl)} · `}
+                  {`receita ${brl(c.receita)}${c.devolvido > 0 ? ` − devolvido ${brl(c.devolvido)} = ${brl(m.receitaLiquida)}` : ""} · ROAS ${ou(m.roas, vezes)}`}
                 </p>
                 <p className="numeros text-xs">
-                  Margem {brl(c.margem)}{c.vendasSemCusto > 0 ? ` (${plural(c.vendasSemCusto, "venda", "vendas")} com item sem custo)` : ""} · ROAS da margem {ou(m.roasDaMargem, vezes)} ·{" "}
-                  {plural(c.clientesNovos, "cliente novo", "clientes novos")} · CAC {ou(m.cac, brl)} · recebido de fato {brl(c.recebido)}
+                  {`Margem ${brl(c.margem)}${c.vendasSemCusto > 0 ? ` (${plural(c.vendasSemCusto, "venda", "vendas")} com item sem custo)` : ""} · ROAS da margem ${ou(m.roasDaMargem, vezes)} · `}
+                  {`${plural(c.clientesNovos, "cliente novo", "clientes novos")} · CAC ${ou(m.cac, brl)} · recebido de fato ${brl(m.recebidoLiquido)}`}
+                  {c.reembolsado > 0 ? ` (já sem ${brl(c.reembolsado)} devolvidos ao cliente)` : ""}
                 </p>
               </li>
             ))}
@@ -113,19 +115,19 @@ export default async function Anuncios({ searchParams }: {
         <Cartao className="mt-4" titulo="O funil por loja e por vendedor">
           {painel.porLoja.length > 0 && (
             <ListaDados itens={painel.porLoja.map((l) => [`${l.loja} · ${painel.campanhas.find((c) => c.chave === l.chave)?.campanha ?? l.chave}`,
-              `${plural(l.contatos, "contato", "contatos")} · ${plural(l.vendas, "venda", "vendas")} · ${brl(l.receita)}`] as const)} />
+              `${plural(l.contatos, "contato", "contatos")} · ${plural(l.vendas, "venda", "vendas")} · ${brl(l.receita - l.devolvido)}${l.devolvido > 0 ? ` (sem ${brl(l.devolvido)} devolvidos)` : ""}`] as const)} />
           )}
           {painel.porVendedor.length > 0 && (
             <div className="mt-3">
               <p className="mb-2 text-sm font-semibold">Quem vendeu</p>
               <ListaDados itens={painel.porVendedor.map((v) => [`${nomes.get(v.vendedor) ?? "Vendedor"} · ${painel.campanhas.find((c) => c.chave === v.chave)?.campanha ?? v.chave}`,
-                `${plural(v.vendas, "venda", "vendas")} · ${brl(v.receita)}`] as const)} />
+                `${plural(v.vendas, "venda", "vendas")} · ${brl(v.receita - v.devolvido)}${v.devolvido > 0 ? ` (sem ${brl(v.devolvido)} devolvidos)` : ""}`] as const)} />
             </div>
           )}
         </Cartao>
       )}
 
-      <Cartao className="mt-4" titulo="Importar o custo" subtitulo="No Gerenciador de Anúncios: Relatórios → exportar, com o detalhamento por dia (Por tempo → Dia), em CSV ou Excel." icone={FileUp}>
+      <Cartao className="mt-4" titulo="Importar o custo" subtitulo="No Gerenciador de Anúncios: Relatórios → exportar, com o detalhamento por dia (Por tempo → Dia), em CSV ou Excel, de uma conta de anúncios em reais (BRL)." icone={FileUp}>
         <FormularioDeArquivo action="/relatorios/anuncios/enviar" className="space-y-3">
           <EscolherColunasDosAnuncios />
           <Botao type="submit" enquanto="Enviando o arquivo…">Importar o custo</Botao>
@@ -146,10 +148,14 @@ export default async function Anuncios({ searchParams }: {
         <ul className="list-disc space-y-1 pl-5 text-xs text-suave">
           <li>CTR = cliques ÷ impressões; CPC = valor usado ÷ cliques (do arquivo da Meta).</li>
           <li>CPL = valor usado ÷ contatos no sistema: as reservas do site com a campanha no link e as oportunidades do CRM com a campanha digitada.</li>
-          <li>CPA = valor usado ÷ vendas concluídas que vieram desses contatos; ROAS = receita dessas vendas ÷ valor usado; ROAS da margem = margem ÷ valor usado.</li>
-          <li>CAC = valor usado ÷ clientes novos (a venda da campanha é a primeira compra concluída do cliente).</li>
+          <li>CPA = valor usado ÷ vendas que ficaram (as vendas concluídas que vieram desses contatos, menos as devolvidas por inteiro).</li>
+          <li>ROAS = receita líquida ÷ valor usado, em que a receita líquida é o valor dessas vendas menos o que foi devolvido; ROAS da margem = margem ÷ valor usado.</li>
+          <li>CAC = valor usado ÷ clientes novos (a venda da campanha é a primeira compra concluída do cliente e não foi devolvida por inteiro).</li>
           <li>Contam os contatos do período e as vendas que vieram deles, mesmo concluídas depois. Uma venda conta uma vez: se veio da reserva e da oportunidade, vale a reserva.</li>
-          <li>A receita é estimativa de venda; “recebido de fato” é o dinheiro no caixa e o cartão ou Pix já conciliado (pelo líquido). A margem é a dos itens com custo gravado.</li>
+          <li>A devolução de uma venda da campanha conta em qualquer data, mesmo depois do período: a venda é da campanha, a devolução dela também. A margem é a dos itens com custo gravado, sem a das unidades devolvidas (o valor devolvido menos o custo delas).</li>
+          <li>A receita é estimativa de venda; “recebido de fato” é o dinheiro no caixa e o cartão ou Pix já conciliado (pelo líquido), menos o que voltou ao cliente em dinheiro, Pix ou cartão (o vale-troca fica com a loja).</li>
+          <li>Atribuição não é prova de causa: a venda aparece na campanha porque o contato chegou por ela (o link ou a campanha digitada no CRM), não porque o anúncio a causou; o cliente poderia ter comprado sem o anúncio.</li>
+          <li>Moeda e fuso: o valor usado é lido em reais (BRL), e o arquivo em outra moeda é recusado. O dia do arquivo é o do fuso da conta de anúncios; os contatos e as vendas contam pelo dia de São Paulo: com a conta em outro fuso, o custo de um dia pode cair no dia vizinho.</li>
           <li>A campanha do arquivo casa com a do link pelo nome (sem diferença de maiúsculas, acentos e espaços): no anúncio, use utm_campaign={"{{campaign.name}}"}.</li>
           <li>Quando o divisor é zero, a métrica aparece como “—”.</li>
         </ul>
