@@ -48,7 +48,7 @@ export function PainelAdministrador({ contexto }: { contexto: ContextoDemo }) {
       <div className="mt-4 grid gap-4 xl:grid-cols-2">
         <Cartao titulo="Próximos passos para ligar a operação" icone={ClipboardList}>
           <ol className="space-y-2 text-sm">
-            {["Importar e conferir o CSV de estoque da Santa Cândida", "Cadastrar os vendedores e os vínculos com as lojas", "Cadastrar as 13 lojas restantes com CNPJ (lista oficial pendente)", "Cadastrar a chave da Nogle e o emissor fiscal quando contratados"].map((t, i) => (
+            {["Importar o catálogo e o estoque de cada loja pelo relatório da Rein (prévia por loja, o dono aplica)", "Cadastrar os vendedores e os vínculos com as 11 lojas", "Completar o CNPJ, o endereço e o horário das 11 lojas (o DEFEITOS não vende)", "Cadastrar a chave da Nogle e o emissor fiscal quando contratados"].map((t, i) => (
               <li key={t} className="flex gap-3"><span className="grid size-6 shrink-0 place-items-center rounded-full bg-acao-clara text-xs font-bold text-acao">{i + 1}</span>{t}</li>
             ))}
           </ol>

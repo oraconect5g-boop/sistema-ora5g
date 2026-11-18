@@ -152,7 +152,7 @@ export type Conta = { descricao: string; tipo: "pagar" | "receber"; vencimento: 
 export const CONTAS: readonly Conta[] = [
   { descricao: "Fornecedor de aparelhos (boleto)", tipo: "pagar", vencimento: 2, valor: 4_820_000, loja: "rede", situacao: "A vencer" },
   { descricao: "Aluguel · Santa Cândida", tipo: "pagar", vencimento: 3, valor: 650_000, loja: "santa-candida", situacao: "A vencer" },
-  { descricao: "Energia · Loja 03", tipo: "pagar", vencimento: -1, valor: 48_000, loja: "loja-03", situacao: "Vencida" },
+  { descricao: "Energia · Água Verde", tipo: "pagar", vencimento: -1, valor: 48_000, loja: "loja-03", situacao: "Vencida" },
   { descricao: "Repasse PayJoy (vendas da semana)", tipo: "receber", vencimento: 1, valor: 1_284_000, loja: "rede", situacao: "A receber" },
   { descricao: "Liquidação cartões PicPay", tipo: "receber", vencimento: 1, valor: 2_960_000, loja: "rede", situacao: "A receber" },
   { descricao: "Repasse Aiva (Flexphone)", tipo: "receber", vencimento: 6, valor: 412_000, loja: "rede", situacao: "A receber" },
@@ -217,14 +217,26 @@ export const SUGESTOES_IA: Readonly<Record<string, string>> = {
 
 // ---------- Canais online ----------
 
+// Os canais (DEMO-a, 18/11): o que já entra por arquivo na aplicação real (MKTPL-a, META-a, ONLINE-a/b) e o que falta
+// para ligar cada um direto (contrato e autorização; ADR-018, ADR-017, ADR-020).
 export const CANAIS = [
-  { nome: "Loja online Ora 5G", situacao: "Planejada (mês 5)", precisa: ["CNPJ emissor (P10)", "Estoque reservado por canal", "Transportadora"] },
-  { nome: "Mercado Livre", situacao: "Não conectado", precisa: ["Conta de vendedor", "App no portal de desenvolvedores", "Autorização da loja"] },
-  { nome: "TikTok Shop", situacao: "Não conectado", precisa: ["App no Partner Center", "Autorização da loja"] },
-  { nome: "Shopee", situacao: "Depois do mês 6", precisa: ["Aprovação como parceiro na Open Platform"] },
-  { nome: "Meta Ads", situacao: "Não conectado", precisa: ["Verificação da empresa na Meta", "Token de usuário do sistema"] },
+  { nome: "Loja online Ora 5G", situacao: "No ar: vitrine e reserva", precisa: ["Produtos publicados com foto e preço", "Provedor do pagamento online (E1)", "Frete e transportadora (P10)"] },
+  { nome: "Mercado Livre", situacao: "Por arquivo", precisa: ["App no portal de desenvolvedores", "Autorização da conta de vendedor (conexão direta)"] },
+  { nome: "TikTok Shop", situacao: "Por arquivo", precisa: ["App no Partner Center", "Autorização da loja (conexão direta)"] },
+  { nome: "Shopee", situacao: "Por arquivo", precisa: ["Aprovação como parceiro na Open Platform (conexão direta)"] },
+  { nome: "Meta Ads", situacao: "Por arquivo", precisa: ["Verificação da empresa na Meta", "Conexão com a conta de anúncios (D-022)"] },
   { nome: "WhatsApp oficial", situacao: "Não conectado", precisa: ["Número aprovado na API oficial da Meta", "Modelos de mensagem aprovados"] },
 ] as const;
+
+// Os canais lado a lado num mês (DEMO-a): números FICTÍCIOS, no mesmo cálculo da tela real /relatorios/canais (ADR-019).
+export const CANAIS_NO_MES = {
+  lojas: { vendas: 312, vendido: 48_250_000, devolvidoECancelado: 1_150_000, taxas: 640_000, conciliado: 21_800_000, margem: 9_400_000, doSite: { vendas: 18, valor: 2_310_000 } },
+  marketplaces: [
+    { nome: "Mercado Livre", pedidos: 42, bruto: 3_180_000, taxas: 540_000, liquido: 2_640_000, lucro: 420_000, semCusto: 3 },
+    { nome: "Shopee", pedidos: 15, bruto: 690_000, taxas: 118_000, liquido: 572_000, lucro: 96_000, semCusto: 0 },
+  ],
+  anuncios: { gasto: 450_000, vendas: 21, devolvidas: 1, receita: 2_740_000, devolvido: 129_900, clientesNovos: 14 },
+} as const;
 
 // ---------- Auditoria (amostra da trilha imutável) ----------
 

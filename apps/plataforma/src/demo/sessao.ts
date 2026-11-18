@@ -4,9 +4,12 @@ import { notFound } from "next/navigation";
 import { LOJAS } from "./dados";
 import { COOKIE_LOJA, COOKIE_PERFIL, ehPerfil, LOJAS_DO_PERFIL, PERFIL_PADRAO, PERFIS, podeAcessar, REDE, type Pagina, type Perfil } from "./perfis";
 
-// A demonstração nunca roda em produção (docs/08: "impedir mocks em produção").
+// A demonstração fica no ar em todo ambiente, isolada (DEMO-a, 18/11; ADR-022): o pedido mais recente do proprietário
+// (adendo do Codex de 16/11, A16, e a auditoria de 17/11) é mantê-la acessível e atualizada. O "impedir mocks em produção"
+// do docs/08 continua valendo para a aplicação real: nenhuma tela real usa dado da demonstração, e a demonstração não lê o
+// banco nem a sessão de verdade (src/demo/isolamento.test.ts). A função fica como o lugar único da regra, se ela voltar.
 export function garantirDemonstracaoLigada() {
-  if (process.env.APP_ENV === "producao") notFound();
+  if (process.env.ORA_DEMO_DESLIGADA === "1") notFound();
 }
 
 /** Lojas que o perfil pode escolher. Dono e administrador: a rede inteira ou qualquer loja. */

@@ -64,7 +64,7 @@ describe("identificadores fictícios são válidos e não se repetem", () => {
     }
   });
 
-  it("a loja piloto e a Loja 03 têm aparelho de todo modelo para vender", () => {
+  it("a loja piloto e a Água Verde (loja-03) têm aparelho de todo modelo para vender", () => {
     for (const loja of ["santa-candida", "loja-03"]) {
       const skus = new Set(UNIDADES_ESTOQUE.filter((u) => u.loja === loja && (u.situacao === "Disponível" || u.situacao === "Conferido")).map((u) => u.sku));
       expect(skus.size, loja).toBeGreaterThanOrEqual(6);

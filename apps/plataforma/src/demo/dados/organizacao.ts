@@ -1,10 +1,12 @@
-// ⚠️ DADOS FICTÍCIOS DA DEMONSTRAÇÃO. Nomes de pessoas, metas e lojas 02–11 são inventados. A rede
-// tem 11 lojas comerciais e o local DEFEITOS, que não vende (decisão do proprietário de 09/11/2026;
-// meta de 14 lojas). Nunca copiar para o banco real.
+// ⚠️ DADOS FICTÍCIOS DA DEMONSTRAÇÃO. Nomes de pessoas e metas são inventados. As lojas têm os nomes das 11 lojas
+// comerciais confirmadas pelo proprietário em 09/11/2026 (o DEFEITOS é local de exceção e não vende; meta de 14 lojas);
+// o endereço de cada uma fica "a confirmar" até o cadastro real (lista B2), sem bairro inventado (auditoria do Codex de
+// 17/11, achado F06). Os códigos internos (loja-02…loja-11) são só da demonstração. Nunca copiar para o banco real.
 
 export type Loja = { codigo: string; nome: string; piloto: boolean; bairro: string; metaDia: number };
 
-const BAIRROS = ["Centro", "Boa Vista", "Portão", "Água Verde", "Batel", "Cajuru", "Pinheirinho", "Xaxim", "Bacacheri", "CIC", "Boqueirão", "Hauer", "Cabral"];
+// Os nomes das outras 10 lojas confirmadas, na ordem da lista do proprietário (docs/cadastros/LOJAS_CONFIRMADAS_2026-11-09.json).
+const NOMES_DAS_LOJAS = ["Santa Felicidade", "Água Verde", "Colônia", "Almirante Tamandaré", "Dubai", "Colombo", "Muffato Santa", "Butiatuvinha", "Ventania", "Balneário"];
 
 export const LOJAS: readonly Loja[] = [
   { codigo: "santa-candida", nome: "Santa Cândida", piloto: true, bairro: "Santa Cândida", metaDia: 2_400_000 },
@@ -12,9 +14,9 @@ export const LOJAS: readonly Loja[] = [
     const n = i + 2;
     return {
       codigo: `loja-${String(n).padStart(2, "0")}`,
-      nome: `Loja ${String(n).padStart(2, "0")}`,
+      nome: NOMES_DAS_LOJAS[i] ?? `Loja ${String(n).padStart(2, "0")}`,
       piloto: false,
-      bairro: BAIRROS[i] ?? "—",
+      bairro: "endereço a confirmar",
       metaDia: 1_800_000 + ((n * 97_531) % 600_000),
     };
   }),

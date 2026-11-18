@@ -6,7 +6,7 @@ import { COOKIE_LOJA, COOKIE_PERFIL, ehPerfil } from "../../../../demo/perfis";
 // A loja escolhida antes é esquecida: cada perfil começa na sua loja padrão.
 // Redireciona com caminho relativo: atrás do proxy do Apache o host interno é 127.0.0.1.
 export function GET(requisicao: NextRequest) {
-  if (process.env.APP_ENV === "producao") return new NextResponse(null, { status: 404 });
+  if (process.env.ORA_DEMO_DESLIGADA === "1") return new NextResponse(null, { status: 404 });
   const perfil = requisicao.nextUrl.searchParams.get("p");
   const resposta = new NextResponse(null, { status: 303, headers: { Location: "/demo" } });
   if (ehPerfil(perfil)) {
