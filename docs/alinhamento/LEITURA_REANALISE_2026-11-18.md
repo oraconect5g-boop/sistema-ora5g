@@ -29,7 +29,7 @@ Os registros `LEITURA_DIAGNOSTICO_INTEGRAL_2026-11-16.md` (seção 3) e `LEITURA
 
 | Fonte | Tamanho | Quando |
 |---|---:|---|
-| PR #97: as matrizes da execução do prompt 86, a verificação e as versões do PR de `APIS_E_HABILITACOES_NECESSARIAS.md` e `VARIAVEIS_DE_AMBIENTE.md` | cerca de 450 KB | antes do lote das integrações (a tabela por API) e do lote da base operacional |
+| ~~PR #97~~ | cerca de 450 KB | **Lida no INTEG-d (18/11):** ver a seção 6 |
 | `INVENTARIO_ARQUIVOS_E_FUNCOES.md` (pacote de 16/11) | 312 KB | por diretório, no lote que mexer nele |
 | PR #85, #81, #77, #68, #66, #67 e #33 | cerca de 1,6 MB | por tema, conferindo contra a `main` (muitos são versões antigas de arquivos vivos) |
 
@@ -52,3 +52,21 @@ Os registros `LEITURA_DIAGNOSTICO_INTEGRAL_2026-11-16.md` (seção 3) e `LEITURA
 4. **PAY-b:** F18-06, o contrato do pagamento antes de ligar.
 5. **INTEG-d:** a tabela de uma linha por API, com todas as colunas que a orientação pede, depois da leitura da PR #97.
 6. **Na sequência:** a base operacional e as jornadas, que dependem da chave secreta do Supabase, da cópia da planilha ao servidor e dos CNPJs. Depois as integrações por contrato, a loja, os gráficos, a demonstração e o VEL-c, cada uma no ponto em que não depende de terceiros.
+
+## 6. A leitura da PR #97 (18/11, no lote INTEG-d)
+
+**Como:** a branch da PR trazida para leitura local (`git fetch origin pull/97/head`), sem merge. Pontas: `d720570`, `8c58090` e `a7ff0f5`.
+
+| Arquivo | Como | O que muda hoje |
+|---|---|---|
+| `docs/alinhamento/PRIORIDADES_BASE_REAL_E_APIS_FINANCEIRAS_2026-11-14.md` | por inteiro | PayJoy e Aiva por API no escopo final; QI Tech e J7 preparadas, sem confundir a J7 com a J17; as 14 perguntas aos parceiros financeiros; a implementação independente de credenciais. Entrou na matriz das APIs |
+| `docs/analises/VERIFICACAO_EXECUCAO_PROMPT_86_2026-11-14.md` | por inteiro | Os defeitos #87, #88, #95 e #96 e a transferência que reserva na confirmação. Os quatro foram corrigidos nos lotes INTEG-a e INTEG-b (16/11); a reserva no pedido é o TRF-c |
+| `docs/analises/CONTINUACAO_REVISAO_2026-11-15.md` | por inteiro | O #98 (a limpeza concorrente das fotos), corrigido no INTEG-b. O resto é a contagem de 15/11, superada |
+| `docs/analises/PUBLICACAO_DOMINIO_2026-11-15.md` | por inteiro | O #99 (o verificador da publicação), corrigido no INTEG-a; a conferência ao fim de cada lote, que segue em uso |
+| As mudanças da PR em `APIS_E_HABILITACOES_NECESSARIAS.md`, `VARIAVEIS_DE_AMBIENTE.md`, `REVISOES_CODEX.md`, `ESTADO_ATUAL_E_PASSAGEM.md` e `deploy/homologacao/LEIA-ME.md` | por inteiro (o diff) | A seção A5 das financeiras e a linha 14 das variáveis (os nomes só com o contrato) entraram na matriz das APIs; o resto já estava na `main` por outros lotes |
+| Os três `LEIA-ME.md` das evidências (14/11, 15/11 e a publicação) | por inteiro | Os índices das provas; as provas observacionais passavam quando o defeito existia |
+| `MATRIZ_EXECUCAO_PROMPT_86_179_2026-11-14.md` (1.623 linhas) e `MATRIZ_CONTINUACAO_179_2026-11-15.md` (245 linhas) | por programa | Os 179 IDs de cada uma são os mesmos do `status-requisitos.json` de hoje; os estados de 14 e 15/11 estão superados pelo de 18/11 |
+| `INVENTARIO.md` (350 linhas) e as evidências em JSON | por programa (a lista de arquivos e as contagens) | Os cortes de 14 e 15/11; nada novo para o código de hoje |
+
+**Issues abertas que já foram corrigidas:** #87, #88, #96 e #99 (INTEG-a, 16/11) e #95 e #98 (INTEG-b, 16/11) continuam abertas no GitHub em 18/11. O conector do GitHub pede a confirmação do proprietário para fechar cada uma; a da #98 foi aberta em 18/11 e espera a resposta dele. A #89 (a base real) e a #90 (as financeiras por API) seguem abertas de verdade.
+
