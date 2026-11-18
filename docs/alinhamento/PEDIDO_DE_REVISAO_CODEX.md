@@ -1954,3 +1954,13 @@ Programa de execução integral (PR #67; checkpoint em `docs/alinhamento/EXECUCA
 - **Telas:** o campo **Chips (unidades)** nas metas; a coluna dos chips na equipe do mês e no extrato ("+1 chip" e a planilha); as faixas dos chips nas regras do bônus.
 - **Testes:** no banco (`metas.test.ts`: o chip conta 1, a meta da loja e do vendedor, o cancelamento no mês tira; `bonus.test.ts`: a regra dos chips paga a faixa e o extrato bate; `bonus-fechamento.test.ts`: o teto novo) e nas telas (`app/metas`, `lib/metas` e `lib/bonus`).
 - **Pedido ao Codex:** conferir se o chip devolvido numa troca (devolução com troca no mesmo dia) conta uma vez só, e se o teto de R$ 500.000,00 deve seguir o número de medidas ou virar uma constante própria.
+- **CI, merge e publicação (18/11):** CI verde em `c700692` (3.047 testes, 1 ignorado que pede a planilha privada e 1 TODO; 325 E2E, com 13 pulados); merge `bfb3125`, com a árvore da branch testada; os checks do GitHub de `bfb3125` rodavam neste registro e entram no registro do lote seguinte; no ar desde 16:39.
+
+## 18/11/2026 — Lote CD-a: o depósito não vende (o padrão da D-043)
+
+- **Origem:** a D-043, em aberto desde 14/11, e o segundo lote dos outros setores (o pedido do proprietário de 18/11).
+  Requisito: ORA-INV-012.
+- **Banco:** a migration `20261118194259_deposito_nao_vende` (com reversão): `privado.deposito_nao_vende` e dois gatilhos, na venda e na reserva de venda (do PDV e do site), que recusam o local do tipo depósito com OR043, como o DEFEITOS (42501) e a loja sem CNPJ (OR038). A reserva da transferência (origem `transferencia`) segue.
+- **Telas:** a mensagem própria da recusa na venda; a tela Lojas diz por que cada local não vende; a troca de loja mostra o depósito com "não vende"; a loja online trata o OR043 como a loja fechada (a vitrine não oferece o depósito).
+- **Testes:** `transferencias.test.ts` (o depósito recusa a venda e as reservas de venda, mesmo direto nas tabelas, e a transferência que sai dele chega à loja sem divergência no livro); `lib/vendas`, `lib/lojas` e `lib/loja` nas telas.
+- **Pedido ao Codex:** conferir se algum caminho de venda insere a venda ou a reserva sem passar pelos dois gatilhos (por exemplo, um `copy` ou uma função que desliga gatilhos).
