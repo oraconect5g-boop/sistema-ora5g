@@ -462,7 +462,7 @@ PAUSA_MS=200000 node scripts/medir-com-login.mjs https://ora5g.com.br ~/homologa
 - Medir o "depois" das telas com login: seção 4.6, com o roteiro de aceite do VEL-a.
 - ~~Medir as telas com login pelo script~~ **Feito em 19/11** com as contas de teste (seção 4.9, `scripts/medir-com-login.mjs`).
 - Confirmar com um login qual chave assina os tokens de hoje (o log de tempos mostra).
-- O teste de ponta a ponta no celular que adiciona, tira e conclui uma venda: possível desde as contas de teste (18/11); falta escrever, na loja de teste.
+- ~~O teste de ponta a ponta no celular que adiciona, tira e conclui uma venda~~ **Feito em 19/11 (J1-b):** `e2e/venda-real.spec.ts`, contra o site no ar, na loja de teste (cerca de 18 s; roteiro `docs/aceite/J1-b.md`).
 - O teste no celular e na internet da loja piloto, com o vendedor.
 - A ação do carrinho, o que sobra do VEL-c (ADR-010, "O que fica para depois"): espera a revisão do Codex e o sim do proprietário. A medida com login das versões com o VEL-b e o VEL-c está na seção 4.9.
 - ~~Ver no banco por que o sino não ficou mais rápido~~ **Feito em 19/11 (VEL-e, seção 4.10):** as perguntas de permissão uma a uma. Seguem: os painéis do Início e dos Relatórios (de 0,3 a 0,4 s por ida) e a pré-carga do menu, que abre o molde de cada link. **VEL-f (seção 4.11):** os painéis levam de 25 a 50 ms no banco; o que pesava era a ida que abria conexão nova (0,26 s a mais). A pré-carga fica: de 12 a 18 por tela, de 21 a 30 KB.

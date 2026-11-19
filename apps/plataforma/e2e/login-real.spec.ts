@@ -2,24 +2,11 @@
 // teste fictícia (e-mail @example.com) no site no ar. Entra, escolhe a loja, renova a sessão quando o acesso vence, sai,
 // a sessão encerrada não volta com os cookies antigos e a segunda visita entra de novo.
 //
-// Só roda no servidor: ORA_E2E_URL (o site, por exemplo https://ora5g.com.br) e ORA_E2E_CONTAS (o arquivo protegido das
-// contas de teste, ~/homologacao/contas-de-teste.txt). No CI os dois ficam vazios e o teste é pulado. A senha nunca vai
-// para o log: o Playwright só mostra o nome do passo.
-import { readFileSync } from "node:fs";
+// Só roda no servidor: ORA_E2E_URL e ORA_E2E_CONTAS (e2e/contas-de-teste.ts). No CI os dois ficam vazios e o teste é
+// pulado. A senha nunca vai para o log: o Playwright só mostra o nome do passo.
+import { expect, test, type BrowserContext } from "@playwright/test";
 
-import { expect, test, type BrowserContext, type Page } from "@playwright/test";
-
-const arquivo = process.env.ORA_E2E_CONTAS?.trim();
-const noAr = Boolean(process.env.ORA_E2E_URL?.trim());
-
-type Conta = { nome: string; email: string; senha: string; onde: string };
-function contaDeTeste(nome: string): Conta {
-  const linha = readFileSync(arquivo as string, "utf8").split("\n").filter((l) => l && !l.startsWith("#"))
-    .map((l) => l.split(" | ")).find(([n]) => n === nome);
-  if (!linha || linha.length < 4) throw new Error(`a conta ${nome} não está no arquivo das contas de teste`);
-  const [n, email, senha, onde] = linha as [string, string, string, string];
-  return { nome: n, email, senha, onde };
-}
+import { arquivoDasContas as arquivo, contaDeTeste, entrar, noAr } from "./contas-de-teste";
 
 // O cookie da sessão do Supabase (@supabase/ssr): "base64-" + o JSON da sessão em base64url, às vezes em pedaços (.0, .1).
 const PEDACO = 3180;
@@ -49,20 +36,6 @@ async function vencerOAcesso(contexto: BrowserContext) {
     expires: base.expires, httpOnly: base.httpOnly, secure: base.secure, sameSite: base.sameSite,
   })));
 }
-async function entrar(pagina: Page, conta: Conta) {
-  await pagina.goto("/entrar");
-  await pagina.getByLabel("E-mail", { exact: true }).fill(conta.email);
-  await pagina.getByLabel("Senha", { exact: true }).fill(conta.senha);
-  await pagina.getByRole("button", { name: "Entrar na plataforma" }).click();
-  // Com uma loja só, o sistema escolhe sozinho e abre o Início; com mais de uma, a pessoa escolhe.
-  const inicio = pagina.getByRole("heading", { level: 1, name: `Olá, ${conta.nome}` });
-  const loja = pagina.getByRole("button", { name: new RegExp(conta.onde.replace(/[()]/g, "\\$&")) });
-  await expect(inicio.or(loja).first()).toBeVisible();
-  if (!(await inicio.isVisible())) await loja.click();
-  await expect(pagina).toHaveURL(/\/inicio/);
-  await expect(inicio).toBeVisible();
-}
-
 test.describe("o login de verdade com a conta de teste (J1-a, prova #11)", () => {
   test.skip(!arquivo || !noAr, "só no servidor, contra o site no ar (ORA_E2E_URL e ORA_E2E_CONTAS)");
 
