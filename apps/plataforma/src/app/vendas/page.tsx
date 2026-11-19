@@ -8,6 +8,7 @@ import { permite } from "../../lib/acesso/molde";
 import { FalhaDoServico, obterSessao } from "../../lib/acesso/sessao";
 import { centavosDoBanco } from "../../lib/dinheiro";
 import { brl, numero } from "../../lib/formato";
+import { nomesDoRanking } from "../../lib/inicio/consulta";
 import { chaveDoCatalogo, textoDoParametro, type ValorDeParametro } from "../../lib/parametros";
 import { FILTROS_DA_LISTA, inicioDoPeriodo, NOMES_DA_NOTA, PERIODOS, resumoDasVendas, situacaoDaVenda, type FiltroDaLista, type Periodo } from "../../lib/vendas/lista";
 import { Pendencias } from "./Pendencias";
@@ -20,7 +21,8 @@ const LIMITE_DO_RESUMO = 5000;
 const quando = (iso: string) => new Intl.DateTimeFormat("pt-BR", { timeZone: "America/Sao_Paulo", day: "2-digit", month: "2-digit", hour: "2-digit", minute: "2-digit" }).format(new Date(iso));
 
 // Vendas reais da loja do turno (revisão de 10/11/2026). O vendedor vê as próprias; quem tem
-// venda.ver_unidade vê a loja inteira (o RLS decide de novo). Sem custo nem margem nesta tela.
+// venda.ver_unidade (a gerência) ou venda.ver_todas (a rede: o dono e o administrador) vê a loja inteira (o RLS decide de
+// novo). Sem custo nem margem nesta tela.
 export default async function Vendas({ searchParams }: { searchParams: Promise<{ periodo?: ValorDeParametro; situacao?: ValorDeParametro; numero?: ValorDeParametro }> }) {
   const parametros = await searchParams;
   const periodo: Periodo = chaveDoCatalogo(PERIODOS, parametros.periodo) ?? "hoje";
@@ -30,7 +32,9 @@ export default async function Vendas({ searchParams }: { searchParams: Promise<{
   const { supabase, usuario, situacao } = sessao;
   const unidade = situacao.unidade_id as string;
 
-  const daLoja = permite(sessao, "venda.ver_unidade");
+  // J2-b (19/11): quem vê a rede (venda.ver_todas, sem venda.ver_unidade, como o administrador) recebia "Minhas vendas",
+  // vazia, embora o menu mostre Vendas e o banco entregue as vendas da loja.
+  const daLoja = permite(sessao, "venda.ver_unidade") || permite(sessao, "venda.ver_todas");
   const desde = inicioDoPeriodo(periodo);
   // Venda do período: concluída no período ou, sem conclusão, criada nele.
   const doPeriodo = `concluida_em.gte.${desde},and(concluida_em.is.null,criado_em.gte.${desde})`;
@@ -54,13 +58,20 @@ export default async function Vendas({ searchParams }: { searchParams: Promise<{
 
   const vendaIds = lista.data.map((v) => v.id);
   const vendedorIds = [...new Set(lista.data.map((v) => v.vendedor_id))].filter((id) => id !== usuario.id);
-  const [notas, pessoas] = await Promise.all([
+  // O nome de quem vendeu (J2-b, 19/11): o perfil de outra pessoa só se lê com usuarios.gerir (o dono e o administrador),
+  // e a gerência via "Outro vendedor" em todas as vendas. Com ranking.ver, os nomes vêm de public.ranking_nomes, como no
+  // Início (só de quem tem venda concluída nas lojas em que a pessoa vê o ranking). Na mesma rodada das outras leituras; a
+  // falha dela não derruba a lista (fica "Outro vendedor").
+  const comRanking = daLoja && vendedorIds.length > 0 && permite(sessao, "ranking.ver");
+  const [notas, pessoas, doRanking] = await Promise.all([
     vendaIds.length ? supabase.from("notas_pedidos").select("venda_id, situacao").in("venda_id", vendaIds).neq("situacao", "cancelada") : Promise.resolve({ data: [], error: null }),
     vendedorIds.length ? supabase.from("perfis_usuario").select("id, nome").in("id", vendedorIds) : Promise.resolve({ data: [], error: null }),
+    comRanking ? nomesDoRanking(supabase, vendedorIds) : Promise.resolve(null),
   ]);
   if (notas.error || pessoas.error) throw new FalhaDoServico("vendas_detalhes");
   const notaDa = (id: string) => notas.data.find((n) => n.venda_id === id)?.situacao;
-  const vendedorDa = (id: string) => (id === usuario.id ? "Você" : pessoas.data.find((p) => p.id === id)?.nome ?? "Outro vendedor");
+  const nomesDoRankingLidos = doRanking?.estado === "ok" ? doRanking.dados : new Map<string, string>();
+  const vendedorDa = (id: string) => (id === usuario.id ? "Você" : pessoas.data.find((p) => p.id === id)?.nome ?? nomesDoRankingLidos.get(id) ?? "Outro vendedor");
 
   const href = (mudanca: Record<string, string | undefined>) => {
     const p = new URLSearchParams();
@@ -76,7 +87,7 @@ export default async function Vendas({ searchParams }: { searchParams: Promise<{
         sobretitulo={situacao.unidade_nome}
         titulo={daLoja ? "Vendas da loja" : "Minhas vendas"}
         subtitulo={daLoja ? "Todos os vendedores desta loja. Abra a venda para ver o comprovante, pedir nota, devolver ou trocar." : "Só as suas vendas nesta loja. Abra a venda para ver o comprovante, pedir nota ou acompanhar a devolução."}
-        acao={<BotaoLink href="/vender" tamanho="sm">Nova venda</BotaoLink>}
+        acao={permite(sessao, "venda.registrar") ? <BotaoLink href="/vender" tamanho="sm">Nova venda</BotaoLink> : undefined}
       />
       <Pendencias sessao={sessao} unidade={unidade} />
       <FiltroSegmentado rotulo="Período" opcoes={(Object.keys(PERIODOS) as Periodo[]).map((p) => ({ href: href({ periodo: p === "hoje" ? undefined : p }), rotulo: PERIODOS[p].rotulo, ativo: p === periodo }))} />
