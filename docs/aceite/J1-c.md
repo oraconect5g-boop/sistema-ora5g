@@ -50,5 +50,6 @@ cd apps/plataforma && ORA_E2E_URL=https://ora5g.com.br ORA_E2E_CONTAS=$HOME/homo
 
 ## O que fica de fora
 
-- **Aparelho com IMEI** (separar escolhendo o número e receber lendo o número), **a remessa com vários produtos** e **o recebimento com divergência:** ficam para um próximo teste, se você quiser.
+- **Aparelho com IMEI:** coberto no lote seguinte, o J1-d (`docs/aceite/J1-d.md`).
+- **A remessa com vários produtos** e **o recebimento com divergência:** ficam para um próximo teste, se você quiser.
 - **No CI:** o teste precisa do arquivo das contas de teste, que só existe no servidor; no CI, ele fica pulado.
