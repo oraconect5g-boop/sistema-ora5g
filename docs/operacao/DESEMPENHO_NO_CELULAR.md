@@ -469,10 +469,22 @@ A tela está no nível das outras (Vendas, na mesma medida: 0,78 s). A abertura 
 
 **O que mudou** (a migration `20261119184550_transferencias_numa_ida`, no `ora5g-dev` desde 19/11, 15:45): `public.transferencias_tela`, só leitura, com o RLS de quem pede (SECURITY INVOKER), traz a lista e tudo o que a tela mostra dela. Pela conta do código, a tela passa a 2 idas em 2 rodadas: a sessão e a leitura única.
 
-**Depois:** medido logo depois da publicação, com o mesmo comando:
+**Depois** (a versão `5711cab`, publicada às 16:04 de 19/11; os mesmos gerentes de teste, 5 aberturas em uso contínuo; o log de tempos das linhas 21048 a 21493, com 1,5 s entre as aberturas, como no antes; e das linhas 21772 a 22063, com 6 s):
+
+| Quem | Idas ao banco | Rodadas | Tempo no banco | Até o servidor responder | Até a tela carregar |
+|---|---:|---:|---:|---:|---:|
+| Gerente (teste), com 1,5 s entre as aberturas (como no antes) | 2 | 2 | 0,61 s | 0,19 s | 0,63 s |
+| Gerente 2 (teste), com 1,5 s entre as aberturas (como no antes) | 2 | 2 | 0,42 s | 0,20 s | 0,44 s |
+| Gerente (teste), com 6 s entre as aberturas | 2 | 2 | 0,41 s | 0,20 s | 0,43 s |
+| Gerente 2 (teste), com 6 s entre as aberturas | 2 | 2 | 0,39 s | 0,20 s | 0,41 s |
+
+Pela conta do código, 2 idas em 2 rodadas: confirmado nas 20 aberturas. Na mesma medida do antes, o ganho foi de 8% para o Gerente (teste) e de 26% para o Gerente 2 (teste); a tela de Vendas, que não mudou, ficou igual (0,78 → 0,77 s). O ganho menor do Gerente (teste) não vem da função: pelo registro do Supabase (`edge_logs`), a ida e volta entre o nosso servidor e ele ficou em 0,14 s em todas as leituras, e o tempo lá dentro foi de 0,07 a 0,14 s em metade delas e de 0,26 a 0,47 s na outra metade (3 das 5 do Gerente (teste) e 2 das 5 do Gerente 2 (teste)), sem outro pedido nosso no Supabase ao mesmo tempo (a pré-carga do menu da abertura anterior já tinha terminado mais de 1 s antes). Medida no banco com a sessão de teste do Gerente (teste), a função leva 0,045 s (0,09 s na primeira vez de cada conexão), mesmo preparada de novo a cada chamada; as leituras de antes somavam 0,04 s. Na segunda medida (16:14, 6 s entre as aberturas), o tempo lá dentro foi de 0,06 a 0,13 s nas 10 leituras. Entre as duas, às 16:11, um pico do lado do Supabase (até 1,8 s lá dentro para a mesma leitura, e o molde da sessão em 3,4 s) atingiu todas as telas, como o visto no J1-d; no mesmo minuto, o registro do banco só mostra uma gravação de rotina (99 páginas em 10 s), e as rotinas agendadas levaram menos de 0,06 s. A causa da variação não está provada: as conexões do Supabase com o banco que atendem o site são renovadas a cada um ou dois minutos (9 de 10 tinham menos de 2 minutos), e a primeira chamada da função numa conexão nova leva o dobro, o que não basta para explicar a diferença.
+
+Para medir de novo:
 
 ```bash
 VEZES=5 node scripts/medir-com-login.mjs https://ora5g.com.br ~/homologacao/contas-de-teste.txt "Gerente (teste)=/transferencias,/vendas" "Gerente 2 (teste)=/transferencias"
+VEZES=5 PAUSA_MS=6000 node scripts/medir-com-login.mjs https://ora5g.com.br ~/homologacao/contas-de-teste.txt "Gerente (teste)=/transferencias" "Gerente 2 (teste)=/transferencias"
 ```
 
 ## O que falta
@@ -487,3 +499,4 @@ VEZES=5 node scripts/medir-com-login.mjs https://ora5g.com.br ~/homologacao/cont
 - ~~Ver no banco por que o sino não ficou mais rápido~~ **Feito em 19/11 (VEL-e, seção 4.10):** as perguntas de permissão uma a uma. Seguem: os painéis do Início e dos Relatórios (de 0,3 a 0,4 s por ida) e a pré-carga do menu, que abre o molde de cada link. **VEL-f (seção 4.11):** os painéis levam de 25 a 50 ms no banco; o que pesava era a ida que abria conexão nova (0,26 s a mais). A pré-carga fica: de 12 a 18 por tela, de 21 a 30 KB.
 - O servidor da produção perto do banco (D-027 e D-044): o da homologação está a 0,124 s de ida e volta do banco (`sa-east-1`), e cada rodada de idas paga isso.
 - Depois de parado, as idas ainda levam de 0,3 a 0,6 s (VEL-f, seção 4.11): conferir a hipótese do lado do Supabase.
+- A variação do lado do Supabase em uso contínuo (VEL-g, seção 4.12): a mesma leitura levou de 0,07 a 0,14 s lá dentro em metade das vezes e de 0,26 a 0,47 s na outra metade, e os picos de até 3 s atingem todas as telas (J1-d e VEL-g); a causa não está provada.

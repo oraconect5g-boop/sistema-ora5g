@@ -72,4 +72,4 @@ Um lote aceito que entrega só uma parte do requisito fica registrado em `aceite
 | J1-b (a venda de ponta a ponta no celular, na loja de teste) | [J1-b.md](J1-b.md) | ORA-POS-002 e ORA-QUAL-010 (seguem parciais: o aceite e a piloto) | a pedir agora, no sistema real (no ar em `a7e3501`) |
 | J1-c (a transferência de ponta a ponta, com duas pessoas, entre as lojas de teste) | [J1-c.md](J1-c.md) | ORA-INV-007 (segue parcial: o estoque das lojas e a homologação) e o ponto T4 | a pedir agora, no sistema real (no ar em `41d69f2`) |
 | J1-d (a transferência de um aparelho pelo IMEI, com duas pessoas, entre as lojas de teste) | [J1-d.md](J1-d.md) | ORA-INV-007 (segue parcial: o estoque das lojas e a homologação) | a pedir agora, no sistema real (no ar em `ee9604b`) |
-| VEL-g (a tela de Transferências numa ida só ao banco) | [VEL-g.md](VEL-g.md) | ORA-QUAL-010 e ORA-INV-007 (seguem parciais) | a pedir agora, no sistema real |
+| VEL-g (a tela de Transferências numa ida só ao banco) | [VEL-g.md](VEL-g.md) | ORA-QUAL-010 e ORA-INV-007 (seguem parciais) | a pedir agora, no sistema real (no ar em `5711cab`) |
