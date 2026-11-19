@@ -10,6 +10,7 @@ const cenario = vi.hoisted(() => ({
   tabelas: {} as Record<string, Record<string, unknown>[]>,
   pendencias: { aprovacoes: 0, notas: 0 },
   idasAoBanco: 0,
+  rankingFalha: false,
 }));
 
 vi.mock("next/headers", () => ({ cookies: async () => ({ getAll: () => [], set: () => undefined }) }));
@@ -18,7 +19,13 @@ vi.mock("next/navigation", () => ({ redirect: (destino: string) => { throw new E
 class Consulta {
   linhas: Record<string, unknown>[];
   cabeca = false;
-  constructor(nome: string) { cenario.idasAoBanco += 1; this.linhas = [...(cenario.tabelas[nome] ?? [])]; }
+  constructor(nome: string) {
+    cenario.idasAoBanco += 1;
+    this.linhas = [...(cenario.tabelas[nome] ?? [])];
+    // O RLS de perfis_usuario (perfis_ler): o próprio perfil e, com usuarios.gerir, os de quem a pessoa gere. Antes do J2-b o
+    // simulador devolvia todos, e a lista da gerência parecia mostrar o nome do colega (no banco, era "Outro vendedor").
+    if (nome === "perfis_usuario" && !cenario.permissoes.has("usuarios.gerir")) this.linhas = this.linhas.filter((l) => l.id === EU);
+  }
   select(_colunas?: string, opcoes?: { head?: boolean }) { this.cabeca = Boolean(opcoes?.head); return this; }
   eq(coluna: string, valor: unknown) { this.linhas = this.linhas.filter((l) => l[coluna] === valor); return this; }
   neq(coluna: string, valor: unknown) { this.linhas = this.linhas.filter((l) => l[coluna] !== valor); return this; }
@@ -54,8 +61,18 @@ const sessaoFicticia = {
   },
   supabase: {
     from: (nome: string) => new Consulta(nome),
-    rpc: async (nome: string, argumentos: { p_permissao?: string }) => {
+    rpc: async (nome: string, argumentos: { p_permissao?: string; p_vendedores?: string[] }) => {
       cenario.idasAoBanco += 1;
+      if (nome === "ranking_nomes") {
+        // public.ranking_nomes: com ranking.ver, o nome de quem tem venda concluída; sem, nada.
+        if (cenario.rankingFalha) return { data: null, error: { code: "XX000", message: "falha simulada" } };
+        const pedidos = argumentos.p_vendedores ?? [];
+        const comVenda = (id: unknown) => (cenario.tabelas.vendas ?? []).some((v) => v.vendedor_id === id && v.situacao === "concluida");
+        const nomes = cenario.permissoes.has("ranking.ver")
+          ? (cenario.tabelas.perfis_usuario ?? []).filter((p) => pedidos.includes(p.id as string) && comVenda(p.id)).map((p) => ({ id: p.id, nome: p.nome }))
+          : [];
+        return { data: nomes, error: null };
+      }
       return { data: nome === "tem_permissao" ? cenario.permissoes.has(argumentos.p_permissao ?? "") : null, error: null };
     },
   },
@@ -77,6 +94,19 @@ function texto(v: unknown): string {
   return "";
 }
 const telaDeVendas = async (q: Record<string, string> = {}) => texto(await Vendas({ searchParams: Promise.resolve(q) })).replace(/\s+/g, " ");
+/** Os endereços dos links e botões da tela (o "Nova venda" fica na ação do título, fora do texto). */
+async function enderecosDaTela(q: Record<string, string> = {}): Promise<string[]> {
+  const achados: string[] = [];
+  const colher = (v: unknown): void => {
+    if (Array.isArray(v)) return v.forEach(colher);
+    if (!v || typeof v !== "object") return;
+    const o = (isValidElement<Record<string, unknown>>(v) ? v.props : v) as Record<string, unknown>;
+    if (typeof o.href === "string") achados.push(o.href);
+    Object.values(o).forEach(colher);
+  };
+  colher(await Vendas({ searchParams: Promise.resolve(q) }));
+  return achados;
+}
 
 const venda = (numero: number, vendedor: string, situacao: string, total: number | null, devolvido = 0) => ({
   id: `00000000-0000-4000-8000-${String(numero).padStart(12, "0")}`, numero, situacao, vendedor_id: vendedor, unidade_id: LOJA,
@@ -91,6 +121,7 @@ beforeEach(() => {
   };
   cenario.pendencias = { aprovacoes: 0, notas: 0 };
   cenario.idasAoBanco = 0;
+  cenario.rankingFalha = false;
 });
 
 describe("lista real de vendas", () => {
@@ -107,15 +138,62 @@ describe("lista real de vendas", () => {
     expect(tela).not.toMatch(/custo|margem/i);
   });
 
-  it("gerência: a loja inteira, com o nome de quem vendeu, devolução e cancelada", async () => {
-    cenario.permissoes = new Set(["venda.registrar", "venda.ver_unidade", "desconto.aprovar"]);
+  it("gerência: a loja inteira, com o nome de quem vendeu (pelo ranking: o perfil do colega não se lê), devolução e cancelada", async () => {
+    cenario.permissoes = new Set(["venda.registrar", "venda.ver_unidade", "desconto.aprovar", "ranking.ver"]);
     const tela = await telaDeVendas();
     expect(tela).toContain("Vendas da loja");
     expect(tela).toContain("Bruno (fictício)");
+    expect(tela).not.toContain("Outro vendedor");
     expect(tela).toContain("Você");
     expect(tela).toMatch(/devolvido R\$\s79,00/);
     expect(tela).toMatch(/Vendido \(concluídas\) R\$\s1\.578,00/);
     expect(tela).toMatch(/Líquido R\$\s1\.499,00/);
+  });
+
+  it("gerência sem ranking.ver: nenhum nome de colega, só \"Outro vendedor\"", async () => {
+    cenario.permissoes = new Set(["venda.ver_unidade"]);
+    const tela = await telaDeVendas();
+    expect(tela).toContain("Outro vendedor");
+    expect(tela).not.toContain("Bruno");
+  });
+
+  it("a falha da leitura dos nomes não derruba a lista: fica \"Outro vendedor\"", async () => {
+    cenario.permissoes = new Set(["venda.ver_unidade", "ranking.ver"]);
+    cenario.rankingFalha = true;
+    const tela = await telaDeVendas();
+    expect(tela).toContain("Nº 2");
+    expect(tela).toContain("Outro vendedor");
+    expect(tela).not.toContain("Bruno");
+  });
+
+  it("os nomes vêm na mesma rodada das notas, numa ida a mais só com ranking.ver", async () => {
+    cenario.permissoes = new Set(["venda.ver_unidade"]);
+    await telaDeVendas();
+    const semRanking = cenario.idasAoBanco;
+    cenario.idasAoBanco = 0;
+    cenario.permissoes = new Set(["venda.ver_unidade", "ranking.ver"]);
+    await telaDeVendas();
+    expect(cenario.idasAoBanco).toBe(semRanking + 1);
+  });
+
+  it("a rede (venda.ver_todas, sem venda.ver_unidade, como o administrador): a loja inteira, sem o botão de nova venda", async () => {
+    cenario.permissoes = new Set(["venda.ver_todas", "ranking.ver"]);
+    const tela = await telaDeVendas();
+    expect(tela).toContain("Vendas da loja");
+    expect(tela).not.toContain("Minhas vendas");
+    expect(tela).toContain("Nº 2");
+    expect(tela).toContain("Bruno (fictício)");
+    expect(await enderecosDaTela()).not.toContain("/vender");
+  });
+
+  it("quem cuida da equipe (usuarios.gerir) lê o nome pelo perfil, mesmo sem ranking.ver", async () => {
+    cenario.permissoes = new Set(["venda.ver_todas", "usuarios.gerir"]);
+    expect(await telaDeVendas()).toContain("Bruno (fictício)");
+  });
+
+  it("quem vende tem o botão de nova venda", async () => {
+    cenario.permissoes = new Set(["venda.registrar"]);
+    expect(await enderecosDaTela()).toContain("/vender");
   });
 
   it("filtro de situação e busca pelo número", async () => {

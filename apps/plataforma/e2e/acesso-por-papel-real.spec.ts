@@ -66,9 +66,9 @@ async function menuDoInicio(pagina: Page): Promise<string[]> {
 const ordenadas = (telas: readonly string[]) => [...telas].sort((a, b) => a.localeCompare(b, "pt-BR"));
 
 /**
- * Os endereços das vendas de 30 dias na lista de Vendas de quem pede (a lista abre em "Hoje"): a gerência vê as da loja; o
- * vendedor, só as dele. A lista da gerência ainda não mostra o nome de quem vendeu ("Outro vendedor", achado do J2-b): a
- * prova separa as vendas pela lista do próprio vendedor.
+ * Os endereços das vendas de 30 dias na lista de Vendas de quem pede (a lista abre em "Hoje"): a gerência e a rede veem as
+ * da loja; o vendedor, só as dele. A prova separa as vendas pela lista do próprio vendedor (o nome de quem vendeu só aparece
+ * a quem tem ranking.ver ou cuida da equipe, e só de quem tem venda concluída).
  */
 async function vendasDaLista(pagina: Page): Promise<string[]> {
   await pagina.goto("/vendas?periodo=30");
@@ -169,6 +169,17 @@ test.describe("as provas de acesso por papel e por loja, só lendo (J2-b)", () =
       await test.step("o administrador, que vê a rede, abre as duas", async () => {
         expect(await comprovanteAbre(r, doVendedor)).toBe(true);
         expect(await comprovanteAbre(r, deOutro)).toBe(true);
+      });
+
+      await test.step("a lista da gerência e a da rede mostram as vendas da loja, com o nome de quem vendeu (VND-a)", async () => {
+        await a.goto("/vendas?periodo=30");
+        await expect(a.locator(`a[href="${doVendedor}"]`)).toContainText(`· ${VENDEDOR}`);
+        await r.goto("/vendas?periodo=30");
+        await expect(r.getByRole("heading", { level: 1, name: "Vendas da loja" })).toBeVisible();
+        await expect(r.locator(`a[href="${doVendedor}"]`)).toContainText(`· ${VENDEDOR}`);
+        await expect(r.locator(`a[href="${deOutro}"]`)).toBeVisible();
+        // A rede não vende: sem o botão de nova venda.
+        await expect(r.getByRole("link", { name: "Nova venda" })).toHaveCount(0);
       });
     });
   });
