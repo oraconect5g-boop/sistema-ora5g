@@ -514,10 +514,32 @@ Medido com a conta do Gerente (teste) e `scripts/medir-pre-carga.mjs` (as pré-c
 
 **A pré-carga:** cada link à vista pré-carregava a tela dele (dois pedidos, a árvore e o conteúdo), e cada pré-carga montava o molde no banco. Agora só os 4 atalhos pré-carregam; o resto carrega no toque (`prefetch={false}`). O toque não ficou mais lento: o tempo é o da tela que se abre. O comprovante da venda, com 1,86 s, é o próximo candidato: a tela lê a venda e depois uma dúzia de detalhes.
 
+No site, depois da publicação (`538e9a0`, 19:30), a medida deu os mesmos números: pré-cargas do Início, de Vendas e do Estoque em 6, 7 e 8 no celular, a página com 360 px e a barra à vista, e os toques em 1,36 s (o atalho Início), 1,86 s (o comprovante) e 0,84 s (o "Mais" até o Estoque). A primeira rodada pegou um pico do Supabase (até 5 s num pedido, com pouca carga nossa) e foi repetida.
+
 Para medir de novo (o antes no site e o depois na versão nova, como acima):
 
 ```bash
 node scripts/medir-pre-carga.mjs https://ora5g.com.br ~/homologacao/contas-de-teste.txt "Gerente (teste)"
+```
+
+### 4.15 O VEL-i (19/11): o comprovante da venda em três rodadas
+
+Medido com o Gerente (teste) na Santa Cândida (teste), 5 aberturas de cada comprovante (`scripts/medir-com-login.mjs` e `scripts/idas-por-tela.mjs`) e o toque numa venda da lista (`scripts/medir-pre-carga.mjs`). O antes no site (`538e9a0`, o log de tempos desde a linha 36232); o depois na versão nova montada no servidor, ligada ao mesmo banco.
+
+| Medida | Antes | Depois |
+|---|---:|---:|
+| O comprovante de uma capa: idas, rodadas e tempo no banco | 19 em 8, 1,44 s | 20 em 3, 0,66 s |
+| Até a tela carregar | 1,46 s | 0,69 s |
+| O comprovante de um aparelho: idas, rodadas e tempo no banco | 20 em 9, 1,62 s | 21 em 3, 0,74 s |
+| Até a tela carregar | 1,64 s | 0,77 s |
+| O toque numa venda da lista até o comprovante | 1,86 s | 0,86 s |
+
+A ida a mais é o nome de quem vendeu, pelo ranking (`public.ranking_nomes`), para a gerência. As rodadas: a sessão; a venda com tudo o que só depende do número dela (a regra de preço começa aqui, e a segunda leitura dela corre junto da rodada seguinte); e o que depende da venda, dos itens, da nota emitida e da situação. Os links dos arquivos, quando há, vêm numa quarta. O script das idas conta 2 rodadas quando a segunda leitura da regra de preço emenda as duas últimas.
+
+Para medir de novo:
+
+```bash
+VEZES=5 node scripts/medir-com-login.mjs https://ora5g.com.br ~/homologacao/contas-de-teste.txt "Gerente (teste)=/vendas/13387c87-baeb-4aa9-85d7-5de0ee36230b,/vendas/b489304d-f1d9-4028-9467-c5ade1d0b7c2"
 ```
 
 ## O que falta
@@ -534,4 +556,4 @@ node scripts/medir-pre-carga.mjs https://ora5g.com.br ~/homologacao/contas-de-te
 - Depois de parado, as idas ainda levam de 0,3 a 0,6 s (VEL-f, seção 4.11): conferir a hipótese do lado do Supabase.
 - A variação do lado do Supabase em uso contínuo (VEL-g, seção 4.12): a mesma leitura levou de 0,07 a 0,14 s lá dentro em metade das vezes e de 0,26 a 0,47 s na outra metade, e os picos de até 3 s atingem todas as telas (J1-d e VEL-g); a causa não está provada.
 - A pré-carga do menu e o banco da produção (J2-b, seção 4.13): no plano Micro, umas 20 telas por minuto com quatro pessoas pararam o banco de teste por dois minutos; falta escolher o plano da produção (a pré-carga mais leve veio no VEL-h, seção 4.14).
-- O comprovante da venda: 1,86 s do toque até abrir, com ou sem pré-carga (VEL-h, seção 4.14).
+- ~~O comprovante da venda: 1,86 s do toque até abrir~~ **Feito em 19/11 (VEL-i, seção 4.15):** 0,86 s, com 3 rodadas em vez de 7 a 8.
