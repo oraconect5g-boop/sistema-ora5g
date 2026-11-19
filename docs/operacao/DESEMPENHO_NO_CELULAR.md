@@ -495,6 +495,31 @@ A maior parte dos pedidos é da pré-carga do menu: cada tela aberta pré-carreg
 
 O que isso pede (decisões do proprietário): o banco da produção num plano com processador próprio; e uma pré-carga do menu mais leve (por exemplo, só os atalhos da barra de baixo), medida antes e depois, como as outras.
 
+### 4.14 O VEL-h (19/11): a pré-carga só nos atalhos e a barra de baixo à vista
+
+Medido com a conta do Gerente (teste) e `scripts/medir-pre-carga.mjs` (as pré-cargas de cada tela nos 4 s depois de abrir, num celular de 360 px e num computador de 1280 px, e o toque até a tela nova aparecer, 5 vezes, depois de 4 s parado). O antes, no site (`bfeff44`); o depois, na versão nova montada no servidor (`next build` e `next start`), ligada ao mesmo banco de teste.
+
+| Medida | Antes | Depois |
+|---|---:|---:|
+| Pré-cargas do Início (celular · computador) | 22 · 35 | 6 · 4 |
+| Pré-cargas de Vendas, 30 dias | 18 · 39 | 7 · 5 |
+| Pré-cargas do Estoque | 21 · 37 | 8 · 6 |
+| Largura da página no celular | 406 px (a barra de baixo fora da vista) | 360 px (à vista nas 20 telas principais) |
+| Toque numa venda da lista até o comprovante | 1,89 s (com pré-carga) | 1,86 s (sem pré-carga) |
+| Toque no atalho Início, a partir de Vendas | sem como tocar | 1,35 s |
+| Toque no "Mais" até o Estoque | sem como tocar | 0,83 s |
+| Pedidos ao banco na medida inteira | 1.229 | 899 (com 10 toques a mais) |
+
+**A barra de baixo fora da vista** (achado da medida): no topo de toda tela ficam a logo, o nome da loja, o sino e o menu da pessoa. O botão da loja não encolhia abaixo do nome: com "Santa Cândida (teste)", o topo passava de 360 px, e o navegador do celular alargava a página para 406 px. A barra de baixo, presa ao fim dessa página mais larga, ficava abaixo da área visível, e o menu da pessoa ficava fora da tela. Agora o nome encolhe (`min-w-0`) e termina em reticências.
+
+**A pré-carga:** cada link à vista pré-carregava a tela dele (dois pedidos, a árvore e o conteúdo), e cada pré-carga montava o molde no banco. Agora só os 4 atalhos pré-carregam; o resto carrega no toque (`prefetch={false}`). O toque não ficou mais lento: o tempo é o da tela que se abre. O comprovante da venda, com 1,86 s, é o próximo candidato: a tela lê a venda e depois uma dúzia de detalhes.
+
+Para medir de novo (o antes no site e o depois na versão nova, como acima):
+
+```bash
+node scripts/medir-pre-carga.mjs https://ora5g.com.br ~/homologacao/contas-de-teste.txt "Gerente (teste)"
+```
+
 ## O que falta
 
 - O proprietário aprovar (ou mudar) as metas, inclusive as das telas com login.
@@ -508,4 +533,5 @@ O que isso pede (decisões do proprietário): o banco da produção num plano co
 - O servidor da produção perto do banco (D-027 e D-044): o da homologação está a 0,124 s de ida e volta do banco (`sa-east-1`), e cada rodada de idas paga isso.
 - Depois de parado, as idas ainda levam de 0,3 a 0,6 s (VEL-f, seção 4.11): conferir a hipótese do lado do Supabase.
 - A variação do lado do Supabase em uso contínuo (VEL-g, seção 4.12): a mesma leitura levou de 0,07 a 0,14 s lá dentro em metade das vezes e de 0,26 a 0,47 s na outra metade, e os picos de até 3 s atingem todas as telas (J1-d e VEL-g); a causa não está provada.
-- A pré-carga do menu e o banco da produção (J2-b, seção 4.13): no plano Micro, umas 20 telas por minuto com quatro pessoas pararam o banco de teste por dois minutos; falta escolher o plano da produção e medir uma pré-carga mais leve.
+- A pré-carga do menu e o banco da produção (J2-b, seção 4.13): no plano Micro, umas 20 telas por minuto com quatro pessoas pararam o banco de teste por dois minutos; falta escolher o plano da produção (a pré-carga mais leve veio no VEL-h, seção 4.14).
+- O comprovante da venda: 1,86 s do toque até abrir, com ou sem pré-carga (VEL-h, seção 4.14).
