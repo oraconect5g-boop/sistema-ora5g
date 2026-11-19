@@ -3,7 +3,7 @@
 // ilike/in/eq/limit NA ORDEM das chamadas, como o PostgREST: se a busca viesse depois do limite,
 // o produto 201 sumiria (era o defeito).
 import { isValidElement } from "react";
-import { describe, expect, it, vi } from "vitest";
+import { beforeEach, describe, expect, it, vi } from "vitest";
 
 const produtos = Array.from({ length: 201 }, (_, i) => ({
   id: `p${i}`, nome: i === 200 ? "ZZ Produto alvo" : `Produto ${String(i + 1).padStart(3, "0")}`, tipo: "acessorio", organizacao_id: "org", ativo: true,
@@ -37,6 +37,23 @@ class Consulta {
   limit(n: number) { this.linhas = this.linhas.slice(0, n); return this; }
   then(resolver: (r: { data: Record<string, unknown>[]; error: null }) => unknown) { return Promise.resolve({ data: this.linhas.slice(0, TETO), error: null }).then(resolver); }
 }
+// VEL-d: a mesma tela com as leituras de antes (o banco sem public.catalogo_tela) e com a leitura única. A função
+// simulada faz o que a do banco faz (packages/banco/src/catalogo-estoque-numa-ida.test.ts prova a de verdade): os produtos
+// ativos (os achados, se houver), em ordem de nome, até o limite, e as variações ativas deles, numa resposta só, sem o
+// teto de linhas de uma tabela.
+const modo = { comFuncao: false, chamadas: 0 };
+function catalogoTela(argumentos: { p_produtos: string[] | null; p_so_pendentes: boolean; p_limite: number }) {
+  modo.chamadas += 1;
+  const achados = tabelas.produtos!.filter((p) => p.ativo !== false && (!argumentos.p_produtos || argumentos.p_produtos.includes(String(p.id))))
+    .sort((a, b) => comoTexto(a.nome).localeCompare(comoTexto(b.nome)) || String(a.id).localeCompare(String(b.id)));
+  const lista = achados.slice(0, argumentos.p_limite);
+  const ids = new Set(lista.map((p) => p.id));
+  return {
+    pendencias: [], mais: achados.length > lista.length, fotos: [], saldos: [],
+    produtos: lista.map(({ id, nome, tipo, organizacao_id }) => ({ id, nome, tipo, organizacao_id })),
+    variantes: tabelas.variantes!.filter((v) => v.ativa !== false && ids.has(v.produto_id)).map(({ id, produto_id, sku, nome, cor }) => ({ id, produto_id, sku, nome, cor })),
+  };
+}
 vi.mock("../../lib/acesso/sessao", () => ({
   FalhaDoServico: class extends Error {},
   obterSessao: async () => ({
@@ -45,7 +62,12 @@ vi.mock("../../lib/acesso/sessao", () => ({
     situacao: { unidade_id: "loja", unidade_nome: "Loja de teste" },
     supabase: {
       from: (nome: string) => new Consulta(nome),
-      rpc: async (nome: string) => ({ data: nome === "tem_permissao" ? false : [], error: null }),
+      rpc: async (nome: string, argumentos: Record<string, unknown> = {}) => {
+        if (nome === "catalogo_tela") {
+          return modo.comFuncao ? { data: catalogoTela(argumentos as Parameters<typeof catalogoTela>[0]), error: null } : { data: null, error: { code: "PGRST202" } };
+        }
+        return { data: nome === "tem_permissao" ? false : [], error: null };
+      },
       storage: { from: () => ({ createSignedUrls: async () => ({ data: [], error: null }) }) },
     },
   }),
@@ -61,7 +83,8 @@ function texto(v: unknown): string {
 }
 const tela = async (q?: string) => texto(await Catalogo({ searchParams: Promise.resolve(q === undefined ? {} : { q }) }));
 
-describe("busca do catálogo na fonte (#40)", () => {
+describe.each([["as leituras de antes", false], ["a leitura única do VEL-d", true]] as const)("busca do catálogo na fonte (#40), com %s", (_, comFuncao) => {
+  beforeEach(() => { modo.comFuncao = comFuncao; modo.chamadas = 0; });
   it("controle: produto dentro das primeiras 200 linhas aparece pela busca", async () => {
     expect(await tela("SKU-1")).toContain("Produto 001");
   });
@@ -91,5 +114,9 @@ describe("busca do catálogo na fonte (#40)", () => {
     // Com o % passando, "1%0" acharia "Produto 100"; limpo, procura "1 0" e não acha nada.
     expect(await tela("1%0")).not.toContain("Produto 100");
     expect(await tela("100")).toContain("Produto 100");
+  });
+  it("a tela pede a função uma vez por abertura (VEL-d), ou nenhuma, sem ela", async () => {
+    await tela("SKU-1");
+    expect(modo.chamadas).toBe(comFuncao ? 1 : 0);
   });
 });

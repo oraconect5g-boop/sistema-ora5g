@@ -12,6 +12,10 @@ const cenario = vi.hoisted(() => ({
   variantes: [] as Record<string, unknown>[],
   semNumero: false,
   pedidos: [] as { tabela: string; cabeca: boolean; de: number | null; ate: number | null }[],
+  // VEL-d: com a função public.estoque_lista (a leitura única) ou sem ela (as leituras de antes).
+  comFuncao: false,
+  listaRuim: false,
+  chamadasDaLista: [] as Record<string, unknown>[],
 }));
 
 vi.mock("next/headers", () => ({ cookies: async () => ({ getAll: () => [], set: () => undefined }) }));
@@ -62,6 +66,18 @@ const supabase = {
   from: (tabela: string) => new Consulta(tabela),
   rpc: async (nome: string, argumentos: Record<string, unknown> = {}) => {
     if (nome === "tem_permissao") return { data: ["estoque.consultar", "estoque.conferir"].includes(String(argumentos.p_permissao)), error: null };
+    if (nome === "estoque_lista" && cenario.comFuncao) {
+      cenario.chamadasDaLista.push(argumentos);
+      if (cenario.listaRuim) return { data: { total: "250", pagina: 1, linhas: [], fotos: [] }, error: null };
+      // A função do banco simulada: as variações com saldo na loja do turno, em ordem de nome, o total e a página.
+      const todas = cenario.variantes.filter((v) => (v.saldos as Record<string, Linha>)[LOJA])
+        .sort((a, b) => comparar(a.nome, b.nome) || comparar(a.id, b.id));
+      const por = Number(argumentos.p_por_pagina);
+      const pagina = Math.min(Math.max(Number(argumentos.p_pagina), 1), Math.max(1, Math.ceil(todas.length / por)));
+      const linhas = todas.slice((pagina - 1) * por, pagina * por)
+        .map((v) => ({ id: v.id, nome: v.nome, sku: v.sku, estoque_minimo: v.estoque_minimo, produto_id: v.produto_id, ...(v.saldos as Record<string, Linha>)[LOJA] }));
+      return { data: { total: todas.length, pagina, linhas, fotos: [] }, error: null };
+    }
     return { data: null, error: { code: "PGRST202" } };
   },
   storage: { from: () => ({ createSignedUrls: async () => ({ data: [], error: null }) }) },
@@ -103,6 +119,8 @@ const variante = (n: number, saldos: Record<string, Linha>) => ({
 
 beforeEach(() => {
   cenario.semNumero = false;
+  cenario.listaRuim = false;
+  cenario.chamadasDaLista = [];
   cenario.pedidos = [];
   cenario.variantes = [
     ...Array.from({ length: 250 }, (_, n) => variante(n + 1, { [LOJA]: { quantidade: 3, reservado: 1 } })),
@@ -110,7 +128,8 @@ beforeEach(() => {
   ];
 });
 
-describe("saldo da loja (B5)", () => {
+describe.each([["as leituras de antes", false], ["a leitura única do VEL-d", true]] as const)("saldo da loja (B5), com %s", (_, comFuncao) => {
+  beforeEach(() => { cenario.comFuncao = comFuncao; });
   it("250 produtos com saldo nesta loja: o total vem do banco e a lista vem em páginas de 100, pelo nome", async () => {
     let t = await tela();
     expect(t).toContain("250 produto(s) · mostrando 1 a 100");
@@ -119,10 +138,16 @@ describe("saldo da loja (B5)", () => {
     expect(t).toContain("Capa modelo 0100");
     expect(t).not.toContain("Capa modelo 0101");
     expect(t).not.toContain("Capa modelo 1000"); // só tem saldo em outra loja
-    // A contagem foi no banco (sem trazer linhas) e a página pedida ficou abaixo do teto.
-    expect(cenario.pedidos.filter((p) => p.tabela === "variantes")).toEqual([
-      { tabela: "variantes", cabeca: true, de: null, ate: null }, { tabela: "variantes", cabeca: false, de: 0, ate: 99 },
-    ]);
+    if (comFuncao) {
+      // VEL-d: a lista, o total e as fotos numa ida só; nenhuma leitura das tabelas para a lista.
+      expect(cenario.chamadasDaLista).toEqual([{ p_pagina: 1, p_por_pagina: 100 }]);
+      expect(cenario.pedidos.filter((p) => p.tabela === "variantes" || p.tabela === "fotos_produto")).toEqual([]);
+    } else {
+      // A contagem foi no banco (sem trazer linhas) e a página pedida ficou abaixo do teto.
+      expect(cenario.pedidos.filter((p) => p.tabela === "variantes")).toEqual([
+        { tabela: "variantes", cabeca: true, de: null, ate: null }, { tabela: "variantes", cabeca: false, de: 0, ate: 99 },
+      ]);
+    }
     t = await tela({ pagina: "3" });
     expect(t).toContain("250 produto(s) · mostrando 201 a 250");
     expect(t).toContain("Capa modelo 0250");
@@ -143,6 +168,7 @@ describe("saldo da loja (B5)", () => {
 
   it("contagem sem número é falha, não zero", async () => {
     cenario.semNumero = true;
+    cenario.listaRuim = true;
     await expect(tela()).rejects.toThrow();
   });
 
