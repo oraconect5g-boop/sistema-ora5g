@@ -20,6 +20,9 @@ const urlExterna = process.env.ORA_E2E_URL?.trim().replace(/\/+$/, "") || undefi
 export default defineConfig({
   testDir: "./e2e",
   forbidOnly: true,
+  // Contra o site no ar (lote J1-d), cada conferência espera até 15 s, em vez de 5: o banco fica a 0,124 s do servidor e, num
+  // pico medido em 19/11, idas que levam 0,2 s levaram de 3 a 4,5 s. Contra o servidor local (o CI), segue o padrão de 5 s.
+  ...(urlExterna ? { expect: { timeout: 15_000 } } : {}),
   use: { baseURL: urlExterna ?? enderecoBase },
   projects: [
     {
