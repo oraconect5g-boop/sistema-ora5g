@@ -354,6 +354,8 @@ export function ListaDados({ itens, className = "" }: { itens: readonly (readonl
 }
 
 /** Filtro em botões (links): funciona sem JavaScript e o endereço pode ser compartilhado. */
+// Os filtros abrem a mesma tela com outro recorte: carregam no toque, sem pré-carga (VEL-h). Antes, cada opção à vista
+// pré-carregava a tela (a rede, com o filtro de 14 lojas, pré-carregava 14 vezes a mesma tela a cada abertura).
 export function FiltroSegmentado({ opcoes, rotulo }: { opcoes: readonly { href: string; rotulo: string; ativo: boolean; contagem?: number }[]; rotulo: string }) {
   return (
     <nav aria-label={rotulo} className="sem-barra -mx-1 overflow-x-auto px-1 pb-1">
@@ -362,6 +364,7 @@ export function FiltroSegmentado({ opcoes, rotulo }: { opcoes: readonly { href: 
           <li key={o.href}>
             <Link
               href={o.href}
+              prefetch={false}
               scroll={false}
               aria-current={o.ativo ? "true" : undefined}
               className={`flex min-h-10 items-center gap-2 whitespace-nowrap rounded-full border px-4 text-[13px] font-semibold transition ${o.ativo ? "border-navegacao bg-navegacao text-white" : "border-borda bg-white text-texto hover:border-borda-forte"}`}

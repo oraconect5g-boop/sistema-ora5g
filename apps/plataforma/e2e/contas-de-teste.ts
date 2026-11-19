@@ -1,7 +1,8 @@
 // As contas de teste fictícias (e-mail @example.com) para as provas que rodam contra o site no ar: a prova #11 (J1-a,
 // login-real.spec.ts), a venda de ponta a ponta (J1-b, venda-real.spec.ts), a transferência entre as lojas de teste (J1-c
 // e J1-d, transferencia-real.spec.ts) e as provas que só leem: os relatórios e o estoque (J2-a,
-// relatorios-e-estoque-real.spec.ts) e o acesso por papel e por loja (J2-b, acesso-por-papel-real.spec.ts). Só no servidor: ORA_E2E_URL (o site, por
+// relatorios-e-estoque-real.spec.ts), o acesso por papel e por loja (J2-b, acesso-por-papel-real.spec.ts) e a navegação no
+// celular (VEL-h, navegacao-real.spec.ts). Só no servidor: ORA_E2E_URL (o site, por
 // exemplo https://ora5g.com.br) e ORA_E2E_CONTAS (o arquivo protegido das contas, ~/homologacao/contas-de-teste.txt). No CI os
 // dois ficam vazios e as provas são puladas. A senha nunca vai para o log: o Playwright só mostra o nome do passo.
 import { readFileSync } from "node:fs";

@@ -14,9 +14,14 @@ import { caminhoAtivo, Emblema } from "./LinkNavegacao";
 
 export type ItemNavegacao = { href: string; titulo: string; curto: string; icone: string; emblema?: number };
 
-export function NavegacaoCelular({ atalhos, grupos, pessoa, papel, loja, rodape, versao }: {
+export function NavegacaoCelular({ atalhos, grupos, preCarregarMais = true, pessoa, papel, loja, rodape, versao }: {
   atalhos: readonly ItemNavegacao[];
   grupos: readonly { grupo: string; itens: readonly ItemNavegacao[] }[];
+  /**
+   * As telas do "Mais" pré-carregam quando a lista abre (todas de uma vez). Nas telas reais (VEL-h), não: carregam no toque;
+   * só os atalhos da barra pré-carregam.
+   */
+  preCarregarMais?: boolean;
   pessoa: string;
   papel: string;
   loja: string;
@@ -107,6 +112,7 @@ export function NavegacaoCelular({ atalhos, grupos, pessoa, papel, loja, rodape,
                     <li key={i.href}>
                       <Link
                         href={i.href}
+                        prefetch={preCarregarMais ? undefined : false}
                         aria-current={ativo ? "page" : undefined}
                         className={`relative flex h-full min-h-[92px] flex-col items-center justify-center gap-2 rounded-[20px] border p-2 text-center text-[12.5px] font-semibold leading-tight ${ativo ? "border-acao bg-acao-clara text-acao-escura" : "border-borda bg-white text-texto"}`}
                       >

@@ -229,6 +229,31 @@ describe("molde comum das telas reais", () => {
     expect(await menu()).toContain("Equipe e acessos");
   });
 
+  it("pré-carga só dos atalhos e o botão da loja que encolhe (VEL-h)", async () => {
+    cenario.permissoes = new Set(["venda.registrar", "venda.ver_unidade", "desconto.aprovar", "nota.aprovar", "auditoria.ver"]);
+    const molde = MoldeReal({ sessao: sessaoFicticia as never, children: null }) as ReactElement;
+    const elementos: ReactElement<Record<string, unknown>>[] = [];
+    const colher = (v: unknown): void => {
+      if (Array.isArray(v)) return v.forEach(colher);
+      if (!v || typeof v !== "object") return;
+      if (isValidElement<Record<string, unknown>>(v)) elementos.push(v);
+      const o = (isValidElement<Record<string, unknown>>(v) ? v.props : v) as Record<string, unknown>;
+      Object.values(o).forEach(colher);
+    };
+    colher(molde);
+    const nomeDe = (e: ReactElement) => (typeof e.type === "function" ? e.type.name : String(e.type));
+    // O botão da loja no topo encolhe (min-w-0): sem isso, um nome longo alargava a página no celular.
+    const daLoja = elementos.find((e) => e.props.href === "/escolher-loja" && e.props.title === "Trocar de loja");
+    expect(daLoja?.props.className).toContain("min-w-0");
+    expect(daLoja?.props.prefetch).toBe(false);
+    // Nenhum link do molde pré-carrega por conta própria; só os atalhos, nos dois menus.
+    for (const e of elementos.filter((x) => typeof x.props.href === "string" && nomeDe(x) !== "a")) expect(e.props.prefetch, String(e.props.href)).toBe(false);
+    const trilho = elementos.find((e) => nomeDe(e) === "Trilho");
+    expect(trilho?.props.preCarregar).toEqual(["/inicio", "/vender", "/aprovacoes", "/vendas"]);
+    const barra = elementos.find((e) => nomeDe(e) === "NavegacaoCelular");
+    expect(barra?.props.preCarregarMais).toBe(false);
+  });
+
   it("não vai ao banco: menu, nome, papel e emblemas chegam com a sessão (VEL-a)", async () => {
     cenario.permissoes = new Set(["venda.registrar", "venda.ver_unidade", "desconto.aprovar", "nota.aprovar"]);
     cenario.pendencias = { aprovacoes: 3, notas: 14 };
