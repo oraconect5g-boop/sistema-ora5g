@@ -353,7 +353,18 @@ O servidor começa a responder quase no mesmo tempo em todas as telas (de 0,36 a
 
 **O que mudou** (a migration `20261119131724_catalogo_e_estoque_numa_ida`, no `ora5g-dev` desde 19/11, 10:17): `public.catalogo_tela` e `public.estoque_lista`, só leituras, com o RLS de quem pede (SECURITY INVOKER). Pela conta do código, o Catálogo e a lista do Estoque passam a 2 idas em 2 rodadas cada: o molde da sessão e a leitura única. A busca do Catálogo com um termo continua com a sua leitura antes da leitura única.
 
-**Depois:** medido logo depois da publicação, com os mesmos comandos (no `--desde`, a linha do log na publicação):
+**Depois** (19/11, a versão `5d3a8ce`, publicada às 10:38; o log a partir da linha 6362, com 58 telas montadas; as mesmas contas e as mesmas telas):
+
+| Tela | Idas ao banco | Rodadas | Tempo no banco | Até o servidor responder | Até a tela carregar |
+|---|---:|---:|---:|---:|---:|
+| Catálogo | 2 (antes 9) | 2 (antes 8) | 0,56 s (antes 1,52 s) | 0,36 a 0,38 s | 0,56 a 0,59 s (antes 1,54 a 1,55 s) |
+| Lista do Estoque | 2 (antes 4) | 2 (antes 4) | 0,55 s (antes 1,20 s) | 0,36 a 0,37 s | 0,54 a 0,58 s (antes 1,20 a 1,24 s) |
+| Vendas, para comparar | 7 | 3 | 0,90 s | 0,39 a 0,40 s | 0,90 a 0,92 s |
+| Transferências, para comparar | 7 | 3 | 0,78 s | 0,38 s | 0,77 a 0,82 s |
+
+O Catálogo passou a abrir em pouco mais de um terço do tempo e a lista do Estoque, em menos da metade. A leitura única leva 0,19 s por ida (a mediana de 6 em cada tela, como uma leitura simples). O que sobra nas duas telas é o molde da sessão: 0,54 s de mediana nas 309 idas desta medida, porque o menu pré-carrega as telas dos links e cada uma abre o seu molde (seção 4.10). Vendas e Transferências não mudaram de código; a diferença para o antes (Vendas de 0,73 para 0,90 s no banco, com as mesmas idas) fica como variação entre medidas, a conferir na próxima.
+
+Para medir de novo (no `--desde`, a linha do log antes da medida):
 
 ```bash
 node scripts/medir-com-login.mjs https://ora5g.com.br ~/homologacao/contas-de-teste.txt \
@@ -362,8 +373,43 @@ node scripts/medir-com-login.mjs https://ora5g.com.br ~/homologacao/contas-de-te
 ```
 
 ```bash
-node scripts/idas-por-tela.mjs --desde <a linha do log na publicação>
+node scripts/idas-por-tela.mjs --desde <a linha do log antes da medida>
 ```
+
+### 4.10 O VEL-e (19/11): as permissões da sessão numa conta só
+
+**O que a medida mostrou:** toda tela com login começa pelo molde da sessão, e o menu pré-carrega as telas dos links, cada uma com o seu molde: nas medidas de 19/11, cerca de 8 idas ao molde por tela aberta, com mediana de 0,53 a 0,54 s por ida, contra cerca de 0,17 s de uma leitura simples. No banco, com a sessão do vendedor de teste, o molde levava 0,19 s; 0,155 s disso eram as 42 perguntas de permissão da loja, uma a uma, cada uma conferindo a sessão inteira de novo.
+
+**O que mudou** (a migration `20261119134800_permissoes_numa_conta`, no `ora5g-dev` desde 19/11, 10:48): `privado.permissoes_vigentes` aplica a regra de `tem_permissao` a um conjunto, com os vínculos vigentes e a loja do turno lidos uma vez; o molde e o sino passam a usá-la. A plataforma não mudou: a versão no ar (`5d3a8ce`) passou a usar a conta só no momento da aplicação.
+
+**No banco** (a sessão do vendedor de teste; a mediana de 3 chamadas seguidas):
+
+| Leitura | Antes | Depois |
+|---|---:|---:|
+| O molde da sessão | 0,19 s | 0,023 s |
+| O sino | 0,052 s | 0,016 s |
+
+**No site** (as mesmas contas e telas da seção 4.9; antes, o log das linhas 6362 a 7826; depois, a partir da linha 8000):
+
+| Medida | Antes (só o VEL-d) | Depois (com o VEL-e) |
+|---|---:|---:|
+| Uma ida ao molde (mediana) | 0,54 s (309 idas) | 0,18 s (308 idas) |
+| Uma ida ao sino (mediana) | 0,26 s | 0,21 s |
+| Até o servidor responder, em todas as telas | de 0,36 a 0,40 s | de 0,18 a 0,23 s |
+
+| Tela | Até carregar, antes | Até carregar, depois | Tempo no banco, antes → depois |
+|---|---:|---:|---:|
+| PDV (Vender) | 0,59 s | 0,37 s | 0,57 → 0,35 s |
+| Início do vendedor | 0,68 s | 0,48 s | 0,65 → 0,46 s |
+| Início do gerente | 0,79 s | 0,62 s | 0,84 → 0,65 s |
+| Vendas | 0,90 a 0,92 s | 0,52 a 0,58 s | 0,90 → 0,54 s |
+| Catálogo | 0,56 a 0,59 s | 0,39 a 0,45 s | 0,56 → 0,39 s |
+| Lista do Estoque | 0,54 a 0,58 s | 0,39 a 0,44 s | 0,55 → 0,40 s |
+| Caixa | 0,61 s | 0,38 s | 0,59 → 0,36 s |
+| Transferências | 0,77 a 0,82 s | 0,56 a 0,66 s | 0,78 → 0,56 s |
+| Relatórios (gerente) | 1,09 s | 0,81 s | 1,04 → 0,77 s |
+
+O molde passou a custar o mesmo que uma leitura simples, e o servidor começa a responder na metade do tempo em todas as telas. As telas medidas ficaram entre 0,25 e 0,81 s até carregar (antes do VEL-d, o Catálogo levava 1,55 s). A Saúde da operação, com 17 idas ao mesmo tempo, variou entre as medidas (de 0,68 a 1,11 s no banco) e fica com os painéis. Desde a aplicação, as 699 idas ao banco do log responderam com sucesso.
 
 ## O que falta
 
@@ -374,4 +420,4 @@ node scripts/idas-por-tela.mjs --desde <a linha do log na publicação>
 - O teste de ponta a ponta no celular que adiciona, tira e conclui uma venda: possível desde as contas de teste (18/11); falta escrever, na loja de teste.
 - O teste no celular e na internet da loja piloto, com o vendedor.
 - A ação do carrinho, o que sobra do VEL-c (ADR-010, "O que fica para depois"): espera a revisão do Codex e o sim do proprietário. A medida com login das versões com o VEL-b e o VEL-c está na seção 4.9.
-- Ver no banco por que o sino não ficou mais rápido no tempo (de 0,80 a 0,88 s com 2 idas): medir a função `pendencias_da_loja` com uma sessão de teste.
+- ~~Ver no banco por que o sino não ficou mais rápido~~ **Feito em 19/11 (VEL-e, seção 4.10):** as perguntas de permissão uma a uma. Seguem: os painéis do Início e dos Relatórios (de 0,3 a 0,4 s por ida) e a pré-carga do menu, que abre o molde de cada link.
