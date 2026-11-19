@@ -11,6 +11,9 @@ type Resposta = { data: unknown; error: null | { code: string; message?: string 
 const cenario = vi.hoisted(() => ({
   permissoes: new Set<string>(),
   tabelas: {} as Record<string, Record<string, unknown>[]>,
+  // VEL-g: com a função public.transferencias_tela (a leitura única) ou sem ela (as leituras de antes).
+  comFuncao: false,
+  leiturasSeparadas: 0,
 }));
 vi.mock("next/headers", () => ({ cookies: async () => ({ getAll: () => [], set: () => undefined }) }));
 vi.mock("next/navigation", () => ({ redirect: (destino: string) => { throw new Error(`redirecionou para ${destino}`); } }));
@@ -31,9 +34,19 @@ const sessaoFicticia = {
   situacao: { usuario_ativo: true, sessao_no_turno: true, unidade_id: ORIGEM, unidade_nome: "Santa Cândida", turno_termina_em: "2026-11-18T23:00:00Z" },
   get molde() { return { permissoes: cenario.permissoes, nome: "Gerente (fictício)", vinculos: [], pendencias: { aprovacoes: 0, notas: 0 } }; },
   supabase: {
-    from: (nome: string) => new Consulta(cenario.tabelas[nome] ?? []),
-    rpc: async (nome: string, argumentos: Record<string, unknown> = {}) =>
-      (nome === "tem_permissao" ? { data: cenario.permissoes.has(argumentos.p_permissao as string), error: null } : { data: null, error: null }),
+    from: (nome: string) => { cenario.leiturasSeparadas += 1; return new Consulta(cenario.tabelas[nome] ?? []); },
+    rpc: async (nome: string, argumentos: Record<string, unknown> = {}) => {
+      if (nome === "tem_permissao") return { data: cenario.permissoes.has(argumentos.p_permissao as string), error: null };
+      if (nome !== "transferencias_tela") return { data: null, error: null };
+      if (!cenario.comFuncao) return { data: null, error: { code: "PGRST202" } };
+      // A função do banco simulada: o que as tabelas do cenário têm (o RLS simulado é o próprio cenário).
+      const t = cenario.tabelas;
+      return { data: {
+        transferencias: t.transferencias ?? [],
+        variantes: (t.variantes ?? []).map((v) => ({ id: v.id, nome: v.nome, sku: v.sku, tipo: (v.produtos as { tipo?: string } | null)?.tipo ?? null })),
+        unidades: t.unidades ?? [], itens: t.transferencia_itens ?? [], remessas: t.transferencia_remessas ?? [], saldos: t.estoque_saldos ?? [], disponiveis: [],
+      }, error: null };
+    },
   },
 };
 vi.mock("../../lib/acesso/sessao", () => ({ FalhaDoServico: class extends Error {}, obterSessao: async () => sessaoFicticia }));
@@ -59,6 +72,7 @@ const transferencia = (numero: number, situacao: string) => ({
 });
 
 beforeEach(() => {
+  cenario.leiturasSeparadas = 0;
   cenario.permissoes = new Set(["estoque.transferir"]);
   cenario.tabelas = {
     transferencias: [transferencia(3, "enviada"), transferencia(2, "separada"), transferencia(1, "solicitada")],
@@ -69,7 +83,12 @@ beforeEach(() => {
   };
 });
 
-describe("a tela das transferências (TRF-b)", () => {
+describe.each([
+  { comFuncao: true, caminho: "com a leitura única (VEL-g)" },
+  { comFuncao: false, caminho: "sem a função (as leituras de antes)" },
+])("a tela das transferências (TRF-b), $caminho", ({ comFuncao }) => {
+  beforeEach(() => { cenario.comFuncao = comFuncao; });
+
   it("cada transferência diz o que o passo fez no estoque e o saldo de agora de cada lado que a pessoa vê", async () => {
     const tela = limpar(await Transferencias({ searchParams: Promise.resolve({}) }));
     for (const trecho of [
@@ -84,5 +103,8 @@ describe("a tela das transferências (TRF-b)", () => {
     expect(tela).not.toContain("no destino (Muffato Santa)");
     cenario.tabelas.estoque_saldos = [...(cenario.tabelas.estoque_saldos ?? []), { unidade_id: DESTINO, variante_id: CAPA, quantidade: 1, reservado: 0 }];
     expect(limpar(await Transferencias({ searchParams: Promise.resolve({}) }))).toContain("no destino (Muffato Santa): físico 1 · reservado 0 · disponível 1");
+    // Com a função, a tela não lê nenhuma tabela em separado: uma ida só, depois da sessão.
+    if (comFuncao) expect(cenario.leiturasSeparadas).toBe(0);
+    else expect(cenario.leiturasSeparadas).toBeGreaterThan(0);
   });
 });
