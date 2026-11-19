@@ -411,6 +411,36 @@ node scripts/idas-por-tela.mjs --desde <a linha do log antes da medida>
 
 O molde passou a custar o mesmo que uma leitura simples, e o servidor começa a responder na metade do tempo em todas as telas. As telas medidas ficaram entre 0,25 e 0,81 s até carregar (antes do VEL-d, o Catálogo levava 1,55 s). A Saúde da operação, com 17 idas ao mesmo tempo, variou entre as medidas (de 0,68 a 1,11 s no banco) e fica com os painéis. Desde a aplicação, as 699 idas ao banco do log responderam com sucesso.
 
+### 4.11 O VEL-f (19/11): as conexões com o banco aquecidas
+
+**O que a medida mostrou** (depois do VEL-e): os painéis levam de 25 a 50 ms no banco (com a conta de teste do gerente). O que pesava nas telas com várias idas ao mesmo tempo era a ida que não achava conexão aberta: ela abria outra no meio da tela, e a tela esperava por ela. O banco fica em São Paulo (`sa-east-1`), e o servidor da homologação está a 0,124 s de ida e volta dele (ping); abrir uma conexão custa mais duas idas e voltas (a conexão e o TLS), cerca de 0,26 s. Num teste do servidor, com pedidos sem chave, 10 pedidos ao mesmo tempo levaram 0,39 s de mediana (até 0,79 s) quando faltavam conexões, e 0,14 s com as 10 já abertas. Com pouco movimento, a conexão parada se fecha aos 180 s (VEL-a), e toda tela com várias idas paga isso.
+
+**Antes** (a versão `92fe105`, com o VEL-e; `scripts/medir-com-login.mjs`, 3 aberturas de cada tela):
+
+| Medida | Em uso contínuo (as duas contas de teste; log das linhas 8000 a 9935) | Com 200 s parado entre as aberturas (o gerente; `PAUSA_MS=200000`; log das linhas 9935 a 10362) |
+|---|---:|---:|
+| Idas feitas ao mesmo tempo acima de 0,4 s | 17% (50 de 300) | 74% (87 de 117) |
+| A ida mais lenta de cada rajada (mediana) | 0,29 s | 0,75 s |
+| A leitura da sessão (mediana) | 0,18 s | 0,41 s |
+| Início do gerente, até a tela carregar | 0,62 s | 1,29 s |
+| Relatórios | 0,81 s | 1,61 s |
+| Saúde da operação | 0,80 s | 1,42 s |
+| Até o servidor começar a responder | 0,19 a 0,20 s | 0,56 a 0,61 s |
+
+Depois de parado, só 1 a 3 idas de cada tela achavam conexão aberta (cerca de 0,2 s); as outras abriam a sua (de 0,5 a 0,9 s).
+
+**O que mudou** (sem migration; `apps/plataforma/src/lib/supabase/conexao-mantida.ts`): o servidor abre 20 conexões ao subir e as usa de novo a cada 120 s, com um pedido à saúde do serviço de login (107 bytes, com a chave pública, sem dado de ninguém). O HTTP/2, que faria todos os pedidos passarem por uma conexão só, ficou de fora: no Node 22 ele ainda é experimental, e no teste a primeira rajada não aproveitou a conexão aberta. As pré-cargas do menu ficaram como estão: de 12 a 18 por tela, de 21 a 30 KB, e desde o VEL-e cada uma custa pouco.
+
+**Depois:** medido logo depois da publicação, com os mesmos comandos:
+
+```bash
+node scripts/medir-com-login.mjs https://ora5g.com.br ~/homologacao/contas-de-teste.txt "Gerente (teste)=/inicio,/relatorios,/operacao"
+```
+
+```bash
+PAUSA_MS=200000 node scripts/medir-com-login.mjs https://ora5g.com.br ~/homologacao/contas-de-teste.txt "Gerente (teste)=/inicio,/relatorios,/operacao"
+```
+
 ## O que falta
 
 - O proprietário aprovar (ou mudar) as metas, inclusive as das telas com login.
@@ -420,4 +450,5 @@ O molde passou a custar o mesmo que uma leitura simples, e o servidor começa a 
 - O teste de ponta a ponta no celular que adiciona, tira e conclui uma venda: possível desde as contas de teste (18/11); falta escrever, na loja de teste.
 - O teste no celular e na internet da loja piloto, com o vendedor.
 - A ação do carrinho, o que sobra do VEL-c (ADR-010, "O que fica para depois"): espera a revisão do Codex e o sim do proprietário. A medida com login das versões com o VEL-b e o VEL-c está na seção 4.9.
-- ~~Ver no banco por que o sino não ficou mais rápido~~ **Feito em 19/11 (VEL-e, seção 4.10):** as perguntas de permissão uma a uma. Seguem: os painéis do Início e dos Relatórios (de 0,3 a 0,4 s por ida) e a pré-carga do menu, que abre o molde de cada link.
+- ~~Ver no banco por que o sino não ficou mais rápido~~ **Feito em 19/11 (VEL-e, seção 4.10):** as perguntas de permissão uma a uma. Seguem: os painéis do Início e dos Relatórios (de 0,3 a 0,4 s por ida) e a pré-carga do menu, que abre o molde de cada link. **VEL-f (seção 4.11):** os painéis levam de 25 a 50 ms no banco; o que pesava era a ida que abria conexão nova (0,26 s a mais). A pré-carga fica: de 12 a 18 por tela, de 21 a 30 KB.
+- O servidor da produção perto do banco (D-027 e D-044): o da homologação está a 0,124 s de ida e volta do banco (`sa-east-1`), e cada rodada de idas paga isso.

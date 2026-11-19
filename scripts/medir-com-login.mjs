@@ -11,6 +11,9 @@
 // Uso (da raiz): node scripts/medir-com-login.mjs https://ora5g.com.br ~/homologacao/contas-de-teste.txt \
 //                  "Vendedor (teste)=/catalogo,/estoque" "Gerente (teste)=/inicio"
 //                VEZES=5 node scripts/medir-com-login.mjs ...   (padrão: 3)
+//                PAUSA_MS=200000 node scripts/medir-com-login.mjs ...   (a pausa entre uma abertura e a seguinte; padrão:
+//                1500. Acima dos 180 s em que a conexão parada se fecha, mede a tela aberta depois de o sistema ficar
+//                parado, como numa loja entre um atendimento e outro: lote VEL-f)
 import { readFileSync } from "node:fs";
 import { createRequire } from "node:module";
 
@@ -24,6 +27,7 @@ if (!base || !arquivo || pedidos.length === 0) {
 }
 const url = base.replace(/\/+$/, "");
 const VEZES = Math.max(1, Number(process.env.VEZES ?? 3));
+const PAUSA_MS = Math.max(0, Number(process.env.PAUSA_MS ?? 1500));
 const contas = new Map(readFileSync(arquivo, "utf8").split("\n").filter((l) => l.trim() && !l.startsWith("#"))
   .map((l) => l.split(" | ").map((c) => c.trim())).map(([nome, email, senha]) => [nome, { email, senha }]));
 const espera = (ms) => new Promise((r) => setTimeout(r, ms));
@@ -68,7 +72,7 @@ try {
           return { servidor: n.responseStart - n.requestStart, tela: n.loadEventEnd - n.startTime };
         });
         medidas.push({ ...tempos, status: resposta?.status(), final: new URL(pagina.url()).pathname });
-        await espera(1500);
+        await espera(PAUSA_MS);
       }
       const finais = [...new Set(medidas.map((m) => m.final))].join(",");
       const status = [...new Set(medidas.map((m) => m.status))].join(",");
