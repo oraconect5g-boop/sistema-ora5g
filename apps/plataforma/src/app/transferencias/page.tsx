@@ -7,9 +7,10 @@ import Link from "next/link";
 import { MoldeReal } from "../../componentes/MoldeReal";
 import { Aviso, Botao, Cartao, Selo, TituloPagina } from "../../componentes/ui";
 import { permite } from "../../lib/acesso/molde";
-import { FalhaDoServico, obterSessao } from "../../lib/acesso/sessao";
+import { obterSessao } from "../../lib/acesso/sessao";
 import { chaveDoCatalogo, textoDoParametro, type ValorDeParametro } from "../../lib/parametros";
 import { efeitoNoEstoque, ERROS_DA_TRANSFERENCIA, nomeDaSituacao, saldoDaLoja } from "../../lib/transferencias/regras";
+import { consultarTelaDasTransferencias } from "../../lib/transferencias/tela";
 import { encerrarTransferencia, enviarRemessa, enviarTransferencia, receberTransferencia, separarTransferencia } from "./acoes";
 
 export const metadata: Metadata = { title: "Transferências entre lojas" };
@@ -36,42 +37,25 @@ export default async function Transferencias({ searchParams }: { searchParams: P
   const unidade = situacao.unidade_id as string;
   const transfere = permite(sessao, "estoque.transferir");
   const ajusta = permite(sessao, "estoque.ajustar");
-  const lista = await supabase.from("transferencias").select("id, numero, origem_id, destino_id, variante_id, quantidade, motivo, situacao, solicitado_por, quantidade_recebida, observacao, solicitado_em, remessa_id")
-    .or(`origem_id.eq.${unidade},destino_id.eq.${unidade}`).order("numero", { ascending: false }).limit(50);
-  if (lista.error) throw new FalhaDoServico("transferencias");
-  const varianteIds = [...new Set(lista.data.map((t) => t.variante_id))];
-  const unidadeIds = [...new Set(lista.data.flatMap((t) => [t.origem_id, t.destino_id]))];
-  // As remessas (TRF-a) das transferências da lista: o número e a origem, para agrupar e enviar de uma vez.
-  const remessaIds = [...new Set(lista.data.flatMap((t) => (t.remessa_id ? [t.remessa_id] : [])))];
-  // TRF-b: o saldo de agora de cada lado (o que a pessoa vê pela RLS), para mostrar o físico, o reservado e o disponível.
-  const [variantes, unidades, itensDasTransferencias, remessas, saldos] = await Promise.all([
-    varianteIds.length ? supabase.from("variantes").select("id, nome, sku, produtos(tipo)").in("id", varianteIds) : Promise.resolve({ data: [], error: null }),
-    unidadeIds.length ? supabase.from("unidades").select("id, nome, tipo").in("id", unidadeIds) : Promise.resolve({ data: [], error: null }),
-    lista.data.length ? supabase.from("transferencia_itens").select("transferencia_id, item_serializado_id, recebido").in("transferencia_id", lista.data.map((t) => t.id)) : Promise.resolve({ data: [], error: null }),
-    remessaIds.length ? supabase.from("transferencia_remessas").select("id, numero, origem_id").in("id", remessaIds) : Promise.resolve({ data: [], error: null }),
-    varianteIds.length ? supabase.from("estoque_saldos").select("unidade_id, variante_id, quantidade, reservado").in("unidade_id", unidadeIds).in("variante_id", varianteIds)
-      : Promise.resolve({ data: [], error: null }),
-  ]);
-  if (variantes.error || unidades.error || itensDasTransferencias.error || remessas.error || saldos.error) throw new FalhaDoServico("transferencias_detalhes");
+  // VEL-g (ADR-010): a lista e tudo o que a tela mostra dela numa ida ao banco (lib/transferencias/tela.ts): os produtos,
+  // as lojas, os aparelhos separados, as remessas, o saldo de agora de cada lado (o que a pessoa vê pela RLS) e os
+  // aparelhos livres na loja do turno para os pedidos de aparelho e chip que ela tem a separar.
+  const tela = await consultarTelaDasTransferencias(supabase, unidade);
+  const lista = { data: tela.transferencias };
   const saldoAgora = (loja: string, varianteId: string) => {
-    const s = saldoDaLoja(saldos.data, loja, varianteId);
+    const s = saldoDaLoja(tela.saldos, loja, varianteId);
     return s ? `físico ${s.fisico} · reservado ${s.reservado} · disponível ${s.disponivel}` : null;
   };
-  const remessa = (id: string | null) => (id ? remessas.data.find((r) => r.id === id) : undefined);
+  const remessa = (id: string | null) => (id ? tela.remessas.find((r) => r.id === id) : undefined);
   // Remessas que saem desta loja com transferência já separada: a origem envia todas de uma vez.
-  const remessasParaEnviar = remessas.data.filter((r) => r.origem_id === unidade)
+  const remessasParaEnviar = tela.remessas.filter((r) => r.origem_id === unidade)
     .map((r) => ({ ...r, separadas: lista.data.filter((t) => t.remessa_id === r.id && t.situacao === "separada").length }))
     .filter((r) => r.separadas > 0);
-  const variante = (id: string) => variantes.data.find((v) => v.id === id);
-  const serializado = (id: string) => { const t = variante(id)?.produtos?.tipo; return t === "aparelho" || t === "chip"; };
-  const local = (id: string) => unidades.data.find((u) => u.id === id);
-  // IMEI/ICCID disponíveis na loja do turno para separar os pedidos de aparelho e chip.
-  const aSeparar = lista.data.filter((t) => t.situacao === "solicitada" && t.origem_id === unidade && serializado(t.variante_id));
-  const disponiveis = aSeparar.length
-    ? await supabase.from("itens_serializados").select("id, variante_id, imei, iccid").eq("unidade_id", unidade).eq("em_estoque", true).eq("situacao", "disponivel")
-      .in("variante_id", [...new Set(aSeparar.map((t) => t.variante_id))]).limit(100)
-    : { data: [], error: null };
-  if (disponiveis.error) throw new FalhaDoServico("transferencias_itens");
+  const variante = (id: string) => tela.variantes.find((v) => v.id === id);
+  const serializado = (id: string) => { const tipo = variante(id)?.tipo; return tipo === "aparelho" || tipo === "chip"; };
+  const local = (id: string) => tela.unidades.find((u) => u.id === id);
+  const disponiveis = { data: tela.disponiveis };
+  const itensDasTransferencias = { data: tela.itens };
   const podeNaOrigem = (origem: string) => (local(origem)?.tipo === "excecao" ? ajusta : transfere);
   const final = (n: string | null) => (n ? `…${n.slice(-6)}` : "");
 

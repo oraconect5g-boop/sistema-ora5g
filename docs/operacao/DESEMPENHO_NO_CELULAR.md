@@ -456,6 +456,25 @@ node scripts/medir-com-login.mjs https://ora5g.com.br ~/homologacao/contas-de-te
 PAUSA_MS=200000 node scripts/medir-com-login.mjs https://ora5g.com.br ~/homologacao/contas-de-teste.txt "Gerente (teste)=/inicio,/relatorios,/operacao"
 ```
 
+### 4.12 O VEL-g (19/11): a tela de Transferências numa ida só
+
+**Antes** (a versão `ee9604b`; os gerentes de teste, 5 aberturas em uso contínuo; o log de tempos a partir da linha 20305):
+
+| Quem | Idas ao banco | Rodadas | Tempo no banco | Até o servidor responder | Até a tela carregar |
+|---|---:|---:|---:|---:|---:|
+| Gerente (teste), na Santa Cândida (teste), com remessa na lista | 7 | 3 | 0,66 s | 0,20 s | 0,69 s |
+| Gerente 2 (teste), na Loja de teste 2 | 6 | 3 | 0,57 s | 0,19 s | 0,60 s |
+
+A tela está no nível das outras (Vendas, na mesma medida: 0,78 s). A abertura de 1,1 s vista antes era a primeira depois de o servidor reiniciar. Com aparelho a separar, há uma quarta rodada (os aparelhos livres).
+
+**O que mudou** (a migration `20261119184550_transferencias_numa_ida`, no `ora5g-dev` desde 19/11, 15:45): `public.transferencias_tela`, só leitura, com o RLS de quem pede (SECURITY INVOKER), traz a lista e tudo o que a tela mostra dela. Pela conta do código, a tela passa a 2 idas em 2 rodadas: a sessão e a leitura única.
+
+**Depois:** medido logo depois da publicação, com o mesmo comando:
+
+```bash
+VEZES=5 node scripts/medir-com-login.mjs https://ora5g.com.br ~/homologacao/contas-de-teste.txt "Gerente (teste)=/transferencias,/vendas" "Gerente 2 (teste)=/transferencias"
+```
+
 ## O que falta
 
 - O proprietário aprovar (ou mudar) as metas, inclusive as das telas com login.

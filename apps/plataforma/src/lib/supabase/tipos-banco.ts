@@ -1,5 +1,5 @@
 // ARQUIVO GERADO pelo Supabase (generate_typescript_types do projeto ora5g-dev) depois da
-// migration 20261119134800_permissoes_numa_conta. Não edite à mão: gere de novo a cada
+// migration 20261119184550_transferencias_numa_ida. Não edite à mão: gere de novo a cada
 // migration aplicada (auditoria do Codex de 08/11, §7.2). O teste tipos-banco.test.ts confere
 // que funções e tabelas públicas daqui são as mesmas das migrations.
 export type Json =
@@ -8877,6 +8877,7 @@ export type Database = {
         }
         Returns: Json
       }
+      transferencias_tela: { Args: { p_limite?: number }; Returns: Json }
       unidade_atual: { Args: never; Returns: string }
       venda_anexar_documento: {
         Args: {
