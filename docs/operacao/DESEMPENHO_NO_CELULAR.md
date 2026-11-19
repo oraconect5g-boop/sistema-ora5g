@@ -431,7 +431,22 @@ Depois de parado, só 1 a 3 idas de cada tela achavam conexão aberta (cerca de 
 
 **O que mudou** (sem migration; `apps/plataforma/src/lib/supabase/conexao-mantida.ts`): o servidor abre 20 conexões ao subir e as usa de novo a cada 120 s, com um pedido à saúde do serviço de login (107 bytes, com a chave pública, sem dado de ninguém). O HTTP/2, que faria todos os pedidos passarem por uma conexão só, ficou de fora: no Node 22 ele ainda é experimental, e no teste a primeira rajada não aproveitou a conexão aberta. As pré-cargas do menu ficaram como estão: de 12 a 18 por tela, de 21 a 30 KB, e desde o VEL-e cada uma custa pouco.
 
-**Depois:** medido logo depois da publicação, com os mesmos comandos:
+**Depois** (a versão `ce8b5db`, publicada às 12:15 de 19/11; na subida, o log mostrou "20 de 20 conexões aquecidas, usadas de novo a cada 120 s"; em uso contínuo, 5 aberturas de cada tela, log das linhas 11028 a 11631; com 200 s parado, 3 aberturas, log das linhas 11631 a 12204):
+
+| Medida | Em uso contínuo, antes → depois | Com 200 s parado, antes → depois |
+|---|---:|---:|
+| Idas feitas ao mesmo tempo acima de 0,4 s | — | 74% → 38% (52 de 138) |
+| A ida mais lenta de cada rajada (mediana) | — | 0,75 → 0,54 s |
+| A leitura da sessão (mediana) | 0,18 → 0,19 s | 0,41 → 0,28 s |
+| Início do gerente, até a tela carregar | 0,62 → 0,60 s | 1,29 → 0,86 s |
+| Relatórios | 0,81 → 0,95 s | 1,61 → 1,47 s |
+| Saúde da operação | 0,80 → 0,53 s | 1,42 → 0,93 s |
+| Tempo no banco pelo log: Início, Relatórios e Saúde | 0,62, 0,92 e 0,53 s → 0,59, 0,90 e 0,51 s | — |
+| Até o servidor começar a responder | 0,19 a 0,20 → 0,19 a 0,23 s | 0,56 a 0,61 → 0,33 a 0,50 s |
+
+Em uso contínuo, nada muda, como esperado: com movimento, as conexões já ficam abertas (o tempo no banco pelo log, com mais aberturas, é o número mais firme; a diferença nos Relatórios até a tela carregar fica como variação). Depois de parado, o ganho é de um terço no Início e na Saúde da operação; nos Relatórios, de 9%. O que sobra depois de parado (idas de 0,3 a 0,6 s, em vez de 0,2 s) não é mais a conexão do nosso servidor; a hipótese, não provada, é o lado do Supabase, que também fecha as próprias conexões com o banco quando fica parado e, na volta, prepara de novo as funções mais pesadas (as dos Relatórios são as maiores). A primeira abertura dos Relatórios logo depois de entrar, mesmo em uso contínuo, teve todas as idas entre 1,2 e 2,0 s, o que combina com essa hipótese. Isso não se controla do nosso servidor; fica para medir de novo com o servidor da produção perto do banco.
+
+Para medir de novo:
 
 ```bash
 node scripts/medir-com-login.mjs https://ora5g.com.br ~/homologacao/contas-de-teste.txt "Gerente (teste)=/inicio,/relatorios,/operacao"
@@ -452,3 +467,4 @@ PAUSA_MS=200000 node scripts/medir-com-login.mjs https://ora5g.com.br ~/homologa
 - A ação do carrinho, o que sobra do VEL-c (ADR-010, "O que fica para depois"): espera a revisão do Codex e o sim do proprietário. A medida com login das versões com o VEL-b e o VEL-c está na seção 4.9.
 - ~~Ver no banco por que o sino não ficou mais rápido~~ **Feito em 19/11 (VEL-e, seção 4.10):** as perguntas de permissão uma a uma. Seguem: os painéis do Início e dos Relatórios (de 0,3 a 0,4 s por ida) e a pré-carga do menu, que abre o molde de cada link. **VEL-f (seção 4.11):** os painéis levam de 25 a 50 ms no banco; o que pesava era a ida que abria conexão nova (0,26 s a mais). A pré-carga fica: de 12 a 18 por tela, de 21 a 30 KB.
 - O servidor da produção perto do banco (D-027 e D-044): o da homologação está a 0,124 s de ida e volta do banco (`sa-east-1`), e cada rodada de idas paga isso.
+- Depois de parado, as idas ainda levam de 0,3 a 0,6 s (VEL-f, seção 4.11): conferir a hipótese do lado do Supabase.

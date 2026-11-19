@@ -18,10 +18,12 @@ Medido com a conta de teste do gerente, num celular simulado, em duas situaçõe
 
 | Medida (a conta de teste do gerente) | Antes, em uso contínuo | Antes, depois de 200 s parado | Depois |
 |---|---|---|---|
-| Início, até a tela carregar | 0,62 s | 1,29 s | medido logo depois da publicação |
-| Relatórios | 0,81 s | 1,61 s | medido logo depois da publicação |
-| Saúde da operação | 0,80 s | 1,42 s | medido logo depois da publicação |
-| Pedidos feitos ao mesmo tempo que passaram de 0,4 s | 17% | 74% | medido logo depois da publicação |
+| Início, até a tela carregar | 0,62 s | 1,29 s | 0,60 s em uso contínuo; 0,86 s depois de parado |
+| Relatórios | 0,81 s | 1,61 s | 0,95 s em uso contínuo; 1,47 s depois de parado |
+| Saúde da operação | 0,80 s | 1,42 s | 0,53 s em uso contínuo; 0,93 s depois de parado |
+| Pedidos feitos ao mesmo tempo que passaram de 0,4 s | 17% | 74% | 38% depois de parado |
+
+O depois foi medido em 19/11, na versão `ce8b5db` (no ar desde 12:15). Em uso contínuo, quase nada muda: com movimento, as conexões já ficavam abertas. O ganho é depois de o sistema ficar parado: um terço a menos no Início e na Saúde da operação. Nos Relatórios, o ganho foi pequeno (9%): o que sobra não é mais a conexão do nosso servidor e parece vir do lado do Supabase, que também "esfria" quando o sistema fica parado (é uma hipótese, ainda não provada).
 
 ## Os passos
 
