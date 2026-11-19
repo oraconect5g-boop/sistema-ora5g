@@ -6,112 +6,17 @@
 //
 // Rode sozinho, sem as provas que gravam (J1-b, J1-c e J1-d) ao mesmo tempo: elas mudam as vendas e o estoque no meio da
 // conferência. Só no servidor: ORA_E2E_URL e ORA_E2E_CONTAS (e2e/contas-de-teste.ts); no CI, fica pulado.
-import { expect, test, type Browser, type BrowserContext, type Page } from "@playwright/test";
+import { expect, test, type Page } from "@playwright/test";
 
-import { arquivoDasContas, contaDeTeste, entrar, noAr } from "./contas-de-teste";
+import { arquivoDasContas, noAr } from "./contas-de-teste";
+import {
+  abrirInicio, ADMINISTRADOR, CAPA, comPessoas, disponivelNaLista, escolher, GERENTE_A, GERENTE_B, indicador, inteiro, LOJA_A, LOJA_B,
+  resumoDasVendas, tabelaDoCartao, VENDEDOR,
+} from "./telas-reais";
 
-const LOJA_A = "Santa Cândida (teste)";
-const LOJA_B = "Loja de teste 2";
-const CAPA = { sku: "ACE-0001", nome: "Capa de proteção" };
 // Um Galaxy A15 da semente de desenvolvimento (packages/banco/supabase/semente/desenvolvimento.sql) que fica na Santa
 // Cândida (teste): nenhuma outra prova o vende nem o transfere.
 const GALAXY = { imei: "352099001800032", sku: "APA-0001", nome: "Galaxy A15 128 GB Azul" };
-
-const GERENTE_A = "Gerente (teste)";
-const GERENTE_B = "Gerente 2 (teste)";
-const VENDEDOR = "Vendedor (teste)";
-const ADMINISTRADOR = "Administrador (teste)";
-
-type Pessoas = Record<string, Page>;
-
-/** Abre um celular para cada conta, já na loja (a do arquivo, ou a dada); no fim, sai de todas e fecha. */
-async function comPessoas(browser: Browser, contas: readonly (readonly [string, string?])[], corpo: (p: Pessoas) => Promise<void>) {
-  const contextos: BrowserContext[] = [];
-  const pessoas: Pessoas = {};
-  try {
-    for (const [nome, loja] of contas) {
-      const contexto = await browser.newContext({ ...test.info().project.use });
-      contextos.push(contexto);
-      const pagina = await contexto.newPage();
-      await test.step(`${nome} entra${loja ? ` na ${loja}` : ""}`, () => entrar(pagina, contaDeTeste(nome), loja));
-      pessoas[nome] = pagina;
-    }
-    await corpo(pessoas);
-  } finally {
-    // O /sair encerra as sessões da conta: nada fica aberto depois da prova.
-    for (const pagina of Object.values(pessoas)) await pagina.goto("/sair").catch(() => undefined);
-    for (const contexto of contextos) await contexto.close();
-  }
-}
-
-/** O número inteiro do começo de um texto ("1.234 vendas" → 1234). */
-function inteiro(texto: string): number {
-  const achado = /^\s*([\d.]+)/.exec(texto);
-  if (!achado) throw new Error(`sem número em "${texto}"`);
-  return Number((achado[1] as string).replace(/\./g, ""));
-}
-
-/** Escolhe a opção de um filtro da tela (Período ou Loja) e espera a tela mudar. */
-async function escolher(pagina: Page, filtro: string, opcao: string) {
-  const link = pagina.getByRole("navigation", { name: filtro, exact: true }).getByRole("link", { name: opcao, exact: true });
-  if ((await link.getAttribute("aria-current")) !== "true") {
-    await link.click();
-    await expect(link).toHaveAttribute("aria-current", "true");
-  }
-}
-
-/** Um indicador do resumo do período (Início, Relatórios e Financeiro): o valor e o detalhe, como a tela mostra. */
-async function indicador(pagina: Page, rotulo: string) {
-  const cartao = pagina.getByRole("region", { name: "Resumo do período" }).locator(":scope > div")
-    .filter({ has: pagina.getByText(rotulo, { exact: true }) });
-  await expect(cartao).toHaveCount(1);
-  const textos = cartao.locator("p");
-  return { valor: (await textos.nth(1).innerText()).trim(), detalhe: (await textos.last().innerText()).trim() };
-}
-
-/** O resumo das vendas como a tela mostra: a quantidade, o vendido, os descontos e o devolvido ou cancelado. */
-async function resumoDasVendas(pagina: Page, rotuloDasVendas = "Vendas realizadas") {
-  const vendas = await indicador(pagina, rotuloDasVendas);
-  return {
-    vendas: inteiro(vendas.valor),
-    // "R$ 237 vendidos", sem o aviso da comparação que pode vir depois do " · ".
-    vendido: vendas.detalhe.split(" · ")[0],
-    descontos: (await indicador(pagina, "Descontos concedidos")).valor,
-    desfeito: (await indicador(pagina, "Devoluções e cancelamentos")).valor,
-  };
-}
-
-/** A tabela de um cartão (o "Ver dados em tabela"), linha a linha: a primeira coluna e as outras. */
-async function tabelaDoCartao(pagina: Page, titulo: string, resumo: string | RegExp = "Ver dados em tabela") {
-  const cartao = pagina.getByRole("heading", { level: 2, name: titulo, exact: true }).locator("xpath=ancestor::section[1]");
-  const detalhes = cartao.locator("details").filter({ has: pagina.locator("summary").filter({ hasText: resumo }) });
-  await detalhes.locator("summary").click();
-  await expect(detalhes.locator("tbody tr").first()).toBeVisible();
-  const linhas = new Map<string, string[]>();
-  for (const tr of await detalhes.locator("tbody tr").all()) {
-    const [primeira, ...outras] = (await tr.locator("td").allInnerTexts()).map((c) => c.trim());
-    linhas.set(primeira as string, outras);
-  }
-  return linhas;
-}
-
-/** O Início no período (e, para quem vê a rede, na loja do filtro), já com os painéis na tela. */
-async function abrirInicio(pagina: Page, periodo: "Hoje" | "7 dias" | "30 dias", loja?: string) {
-  await pagina.goto("/inicio");
-  await expect(pagina.getByRole("heading", { level: 2, name: /^(Acompanhamento das vendas|Meus resultados)$/ })).toBeVisible();
-  await escolher(pagina, "Período", periodo);
-  if (loja) await escolher(pagina, "Loja", loja);
-}
-
-/** O disponível do produto na lista do Estoque da loja do turno (o número antes do "na rede"). */
-async function disponivelNaLista(pagina: Page, sku: string): Promise<number> {
-  await pagina.goto(`/estoque?q=${sku}`);
-  const linha = pagina.getByRole("listitem").filter({ hasText: sku }).filter({ hasText: "na rede" }).first();
-  await expect(linha).toBeVisible();
-  const achado = /(\d+)\s*na rede/.exec(await linha.innerText());
-  if (!achado) throw new Error(`a linha de ${sku} no Estoque não mostrou o disponível`);
-  return Number(achado[1]);
-}
 
 /** O "Onde tem" do produto (aberto pelo "na rede" da lista): o disponível de cada local, como a pessoa vê. */
 async function ondeTem(pagina: Page, sku: string, nome: string): Promise<Map<string, number>> {
