@@ -76,4 +76,5 @@ Um lote aceito que entrega só uma parte do requisito fica registrado em `aceite
 | J2-a (as provas com login dos relatórios e do estoque, só lendo) | [J2-a.md](J2-a.md) | ORA-REPORT-001, ORA-REPORT-002, ORA-REPORT-005 e ORA-INV-001 (seguem parciais) | a pedir agora, no sistema real (no ar em `0434cb5`) |
 | J2-b (as provas de acesso por papel e por loja, só lendo) | [J2-b.md](J2-b.md) | ORA-ORG-004 e ORA-QUAL-002 (seguem parciais) | a pedir agora, no sistema real (no ar em `bfeff44`) |
 | VND-a (o nome de quem vendeu e as vendas da loja para a rede, na lista de Vendas) | [VND-a.md](VND-a.md) | ORA-POS-008 (segue testado) | a pedir agora, no sistema real (no ar em `01f3587`) |
-| VEL-h (a pré-carga mais leve e a barra de baixo à vista no celular) | [VEL-h.md](VEL-h.md) | ORA-QUAL-010 (segue parcial) | a pedir agora, no sistema real |
+| VEL-h (a pré-carga mais leve e a barra de baixo à vista no celular) | [VEL-h.md](VEL-h.md) | ORA-QUAL-010 (segue parcial) | a pedir agora, no sistema real (no ar em `538e9a0`) |
+| VEL-i (o comprovante da venda em três rodadas) | [VEL-i.md](VEL-i.md) | ORA-QUAL-010 (segue parcial) e ORA-POS-008 | a pedir agora, no sistema real |
