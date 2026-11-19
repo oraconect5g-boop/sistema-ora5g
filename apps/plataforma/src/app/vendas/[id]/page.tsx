@@ -16,6 +16,7 @@ import { permite } from "../../../lib/acesso/molde";
 import { FalhaDoServico, obterSessao } from "../../../lib/acesso/sessao";
 import { centavosDoBanco } from "../../../lib/dinheiro";
 import { brl } from "../../../lib/formato";
+import { nomesDoRanking } from "../../../lib/inicio/consulta";
 import { dataEHoraDoEnvio, ERROS_DAS_NOTAS, SITUACOES_DO_ENVIO } from "../../../lib/notas/regras";
 import { chaveDoCatalogo, textoDoParametro, type ValorDeParametro } from "../../../lib/parametros";
 import { ERROS_DOS_ANEXOS, tamanhoDoAnexo, TIPOS_DE_ANEXO } from "../../../lib/vendas/anexos";
@@ -46,17 +47,21 @@ export default async function Comprovante({ params, searchParams }: { params: Pr
   const erroAnexo = chaveDoCatalogo(ERROS_DOS_ANEXOS, parametros.erro_anexo);
   const sessao = await obterSessao({ exigirLoja: true });
   const { supabase, usuario, situacao } = sessao;
-  const venda = await supabase.from("vendas").select("id, numero, situacao, unidade_id, vendedor_id, cliente_nome, cliente_id, total_centavos, subtotal_centavos, desconto_centavos, troco_centavos, recebido_centavos, a_receber_centavos, devolvido_centavos, concluida_em, cancelada_em, motivo_cancelamento").eq("id", id).maybeSingle();
-  if (venda.error) throw new FalhaDoServico("venda");
-  if (!venda.data) notFound();
-  const [itens, pagamentos, loja, vendedor, podeCancelar, podePedirNota, aprovaNota, nota, devolucoes, notasDeDevolucao, estornos, retornos] = await Promise.all([
+  // VEL-i (19/11): as leituras em 3 rodadas, contando a sessão, em vez de 7 a 8 em fila (o toque numa venda levava 1,86 s
+  // até o comprovante).
+  // Rodada 1: a sessão (o molde). Rodada 2: a venda e o que só depende do número dela (a regra de preço dos itens começa aqui).
+  // Rodada 3: o que depende da venda (a loja, o vendedor e as permissões na loja da venda), dos itens (os produtos, os
+  // aparelhos e o conserto da OS), da nota emitida (os documentos, o protocolo, a origem do cliente, os envios e as cartas)
+  // e da situação (as notas canceladas no fisco e os documentos da venda). Os links assinados, juntos, por último. As mesmas
+  // leituras, nas mesmas condições: só a ordem mudou.
+  // A regra de preço de cada item (L6b): campanha, preço da loja ou da rede, lida à parte. Banco sem a migration ou falha de
+  // leitura não derrubam a venda. São duas leituras em fila: começam aqui e são esperadas junto da rodada 3.
+  const regrasEmCurso = regrasDosItens(supabase, id);
+  regrasEmCurso.catch(() => undefined); // a venda que não existe sai antes de esperar as regras
+  const [venda, itens, pagamentos, nota, devolucoes, notasDeDevolucao, estornos, retornos] = await Promise.all([
+    supabase.from("vendas").select("id, numero, situacao, unidade_id, vendedor_id, cliente_nome, cliente_id, total_centavos, subtotal_centavos, desconto_centavos, troco_centavos, recebido_centavos, a_receber_centavos, devolvido_centavos, concluida_em, cancelada_em, motivo_cancelamento").eq("id", id).maybeSingle(),
     supabase.from("venda_itens").select("id, variante_id, item_serializado_id, tipo, quantidade, preco_unitario_centavos, desconto_centavos").eq("venda_id", id).order("criado_em"),
     supabase.from("venda_pagamentos").select("ordem, meio, valor_centavos, entrada_centavos, comprovante, situacao, parcelas, entrada_do_financiamento").eq("venda_id", id).order("ordem"),
-    supabase.from("unidades").select("nome, cnpj").eq("id", venda.data.unidade_id).maybeSingle(),
-    supabase.from("perfis_usuario").select("nome").eq("id", venda.data.vendedor_id).maybeSingle(),
-    supabase.rpc("tem_permissao", { p_permissao: "venda.cancelar", p_unidade: venda.data.unidade_id }),
-    supabase.rpc("tem_permissao", { p_permissao: "nota.solicitar", p_unidade: venda.data.unidade_id }),
-    supabase.rpc("tem_permissao", { p_permissao: "nota.aprovar", p_unidade: venda.data.unidade_id }),
     supabase.from("notas_pedidos").select("id, situacao, solicitado_por, destinatario_nome, destinatario_mascarado, observacao, chave_acesso, modelo, serie, numero_documento, cliente_id")
       .eq("venda_id", id).eq("tipo", "venda").neq("situacao", "cancelada").maybeSingle(),
     supabase.from("venda_devolucoes").select("id, numero, valor_centavos, motivo, criado_em, venda_devolucao_itens(venda_item_id, quantidade, valor_centavos, condicao), venda_devolucao_reembolsos(meio, valor_centavos), vales_troca(numero, saldo_centavos)")
@@ -66,69 +71,81 @@ export default async function Comprovante({ params, searchParams }: { params: Pr
     supabase.from("estornos_externos").select("id, numero, meio, valor_centavos, situacao, devolucao_id, comprovante, confirmado_em").eq("venda_id", id).order("numero"),
     supabase.from("venda_retornos").select("id, venda_item_id, quantidade, situacao, condicao, observacao").eq("venda_id", id).order("solicitado_em"),
   ]);
+  if (venda.error) throw new FalhaDoServico("venda");
+  if (!venda.data) notFound();
   // Cliente da rede (L5a): quem busca cliente na loja do turno vê a ficha e liga a venda a um cadastro (vem no molde).
   const buscaCliente = permite(sessao, "cliente.buscar");
-  if (itens.error || pagamentos.error || loja.error || vendedor.error || podeCancelar.error || podePedirNota.error || aprovaNota.error || nota.error || devolucoes.error || notasDeDevolucao.error || estornos.error || retornos.error) throw new FalhaDoServico("comprovante");
-  const variantes = itens.data.length ? await supabase.from("variantes").select("id, sku, nome").in("id", itens.data.map((i) => i.variante_id)) : { data: [], error: null };
-  const serializados = itens.data.some((i) => i.item_serializado_id) ? await supabase.from("itens_serializados").select("id, imei, iccid").in("id", itens.data.flatMap((i) => (i.item_serializado_id ? [i.item_serializado_id] : []))) : { data: [], error: null };
-  if (variantes.error || serializados.error) throw new FalhaDoServico("comprovante_itens");
-  // L10a (FISC-005): o PDF e o XML da nota emitida e o protocolo, lidos à parte. Banco sem a migration (sem a
-  // tabela ou a coluna) ou falha de leitura não derrubam a venda: o bloco só não aparece.
+  if (itens.error || pagamentos.error || nota.error || devolucoes.error || notasDeDevolucao.error || estornos.error || retornos.error) throw new FalhaDoServico("comprovante");
   const notaEmitida = nota.data?.situacao === "emitida" ? nota.data : null;
-  const [documentosDaNota, protocoloDaNota, origemDaNota] = notaEmitida
-    ? await Promise.all([
-      supabase.from("notas_documentos").select("id, tipo, caminho, bytes, enviado_em").eq("pedido_id", notaEmitida.id).is("substituido_em", null).order("tipo"),
-      supabase.from("notas_pedidos").select("protocolo").eq("id", notaEmitida.id).maybeSingle(),
-      // INTEG-c (#101): de onde vem a identidade do cliente da nota, também à parte.
-      supabase.from("notas_pedidos").select("cliente_origem").eq("id", notaEmitida.id).maybeSingle(),
-    ])
-    : [null, null, null];
+  const fechada = venda.data.situacao === "concluida" || venda.data.situacao === "cancelada";
+  // O nome de quem vendeu (como na lista de Vendas, VND-a): o perfil de outra pessoa só se lê com usuarios.gerir; com
+  // ranking.ver, o nome vem de public.ranking_nomes. Sem nenhum dos dois, "—".
+  const comRanking = venda.data.vendedor_id !== usuario.id && permite(sessao, "ranking.ver");
+  const [loja, vendedor, nomesDoVendedor, podeCancelar, podePedirNota, aprovaNota, variantes, serializados, documentosDaNota, protocoloDaNota, origemDaNota,
+    enviosDaNota, cartasDaNota, daOs, canceladasDoBanco, anexosLidos, regras] = await Promise.all([
+    supabase.from("unidades").select("nome, cnpj").eq("id", venda.data.unidade_id).maybeSingle(),
+    supabase.from("perfis_usuario").select("nome").eq("id", venda.data.vendedor_id).maybeSingle(),
+    comRanking ? nomesDoRanking(supabase, [venda.data.vendedor_id]) : Promise.resolve(null),
+    supabase.rpc("tem_permissao", { p_permissao: "venda.cancelar", p_unidade: venda.data.unidade_id }),
+    supabase.rpc("tem_permissao", { p_permissao: "nota.solicitar", p_unidade: venda.data.unidade_id }),
+    supabase.rpc("tem_permissao", { p_permissao: "nota.aprovar", p_unidade: venda.data.unidade_id }),
+    itens.data.length ? supabase.from("variantes").select("id, sku, nome").in("id", itens.data.map((i) => i.variante_id)) : Promise.resolve({ data: [], error: null }),
+    itens.data.some((i) => i.item_serializado_id)
+      ? supabase.from("itens_serializados").select("id, imei, iccid").in("id", itens.data.flatMap((i) => (i.item_serializado_id ? [i.item_serializado_id] : [])))
+      : Promise.resolve({ data: [], error: null }),
+    // L10a (FISC-005): o PDF e o XML da nota emitida e o protocolo, lidos à parte. Banco sem a migration (sem a
+    // tabela ou a coluna) ou falha de leitura não derrubam a venda: o bloco só não aparece.
+    notaEmitida ? supabase.from("notas_documentos").select("id, tipo, caminho, bytes, enviado_em").eq("pedido_id", notaEmitida.id).is("substituido_em", null).order("tipo") : Promise.resolve(null),
+    notaEmitida ? supabase.from("notas_pedidos").select("protocolo").eq("id", notaEmitida.id).maybeSingle() : Promise.resolve(null),
+    // INTEG-c (#101): de onde vem a identidade do cliente da nota, também à parte.
+    notaEmitida ? supabase.from("notas_pedidos").select("cliente_origem").eq("id", notaEmitida.id).maybeSingle() : Promise.resolve(null),
+    // K1c (#76): os envios da nota pelo WhatsApp, lidos à parte (banco sem a migration: o bloco do envio não aparece).
+    notaEmitida
+      ? supabase.from("whatsapp_envios").select("id, numero, situacao, destino_mascarado, motivo, erro, pedido_em, atualizado_em")
+        .eq("pedido_id", notaEmitida.id).order("pedido_em", { ascending: false }).limit(10)
+      : Promise.resolve(null),
+    // FISC-009b (FISC-009): as cartas de correção da NF-e emitida (só a NF-e, modelo 55, tem carta), lidas à parte. Banco
+    // sem a migration (sem a tabela) ou falha de leitura: a lista e o formulário não aparecem; a venda segue.
+    notaEmitida?.modelo === "55" ? supabase.from("notas_cartas_de_correcao").select("id, numero, protocolo, correcao, registrada_em").eq("pedido_id", notaEmitida.id).order("numero") : Promise.resolve(null),
+    // O conserto da OS cobrado nesta venda (L12c), lido à parte do mesmo jeito.
+    itens.data.some((i) => i.tipo === "servico") ? osDosItens(supabase, id) : Promise.resolve(new Map<string, OsDoItem>()),
+    // L10c (FISC-009): as notas desta venda canceladas no fisco, lidas à parte. Banco sem a migration (sem as colunas):
+    // o histórico e os formulários do cancelamento e da correção da chave não aparecem; a venda segue.
+    fechada
+      ? supabase.from("notas_pedidos").select("id, modelo, serie, numero_documento, cancelada_no_fisco_em, protocolo_cancelamento")
+        .eq("venda_id", id).eq("tipo", "venda").eq("situacao", "cancelada")
+      : Promise.resolve(null),
+    // Documentos da venda (L5d), lidos à parte: num banco sem a migration (sem a tabela), o bloco não aparece.
+    fechada ? supabase.from("venda_anexos").select("id, tipo, descricao, caminho, formato, bytes, enviado_em, retirado_em, motivo_retirada").eq("venda_id", id).order("enviado_em") : Promise.resolve(null),
+    regrasEmCurso,
+  ]);
+  if (loja.error || vendedor.error || podeCancelar.error || podePedirNota.error || aprovaNota.error) throw new FalhaDoServico("comprovante");
+  if (variantes.error || serializados.error) throw new FalhaDoServico("comprovante_itens");
+  const nomeDoVendedor = vendedor.data?.nome ?? (nomesDoVendedor?.estado === "ok" ? nomesDoVendedor.dados.get(venda.data.vendedor_id) : undefined);
   const documentosLidos = documentosDaNota && !documentosDaNota.error ? documentosDaNota.data : null;
-  const linksDosDocumentos = documentosLidos && documentosLidos.length
-    ? await supabase.storage.from("notas").createSignedUrls(documentosLidos.map((d) => d.caminho), 600)
-    : { data: [], error: null };
-  const linkDe = new Map((linksDosDocumentos.data ?? []).map((l) => [l.path, l.error ? null : l.signedUrl]));
   const protocolo = protocoloDaNota && !protocoloDaNota.error ? (protocoloDaNota.data as { protocolo?: string | null } | null)?.protocolo ?? null : null;
   // Sem a coluna (banco sem a migration do INTEG-c) ou falha de leitura, vale a regra do INTEG-a; quem decide é o banco.
   const identidadeComprovada = !origemDaNota || origemDaNota.error ? true : Boolean((origemDaNota.data as { cliente_origem?: string | null } | null)?.cliente_origem);
-  // K1c (#76): os envios da nota pelo WhatsApp, lidos à parte (banco sem a migration: o bloco do envio não aparece).
-  const enviosDaNota = notaEmitida
-    ? await supabase.from("whatsapp_envios").select("id, numero, situacao, destino_mascarado, motivo, erro, pedido_em, atualizado_em")
-      .eq("pedido_id", notaEmitida.id).order("pedido_em", { ascending: false }).limit(10)
-    : null;
   const envios = enviosDaNota && !enviosDaNota.error ? enviosDaNota.data : null;
   const ultimoEnvio = envios?.[0] ?? null;
   const temPdf = Boolean(documentosLidos?.some((d) => d.tipo === "pdf"));
-  // FISC-009b (FISC-009): as cartas de correção da NF-e emitida (só a NF-e, modelo 55, tem carta), lidas à parte. Banco
-  // sem a migration (sem a tabela) ou falha de leitura: a lista e o formulário não aparecem; a venda segue.
-  const cartasDaNota = notaEmitida?.modelo === "55"
-    ? await supabase.from("notas_cartas_de_correcao").select("id, numero, protocolo, correcao, registrada_em").eq("pedido_id", notaEmitida.id).order("numero")
-    : null;
   const cartas = cartasDaNota && !cartasDaNota.error ? cartasDaNota.data : null;
-  // A regra de preço de cada item (L6b): campanha, preço da loja ou da rede, lida à parte. Banco sem a
-  // migration ou falha de leitura não derrubam a venda.
-  const regras = await regrasDosItens(supabase, id);
-  // O conserto da OS cobrado nesta venda (L12c), lido à parte do mesmo jeito.
-  const daOs = itens.data.some((i) => i.tipo === "servico") ? await osDosItens(supabase, id) : new Map<string, OsDoItem>();
   const osAEntregar = [...daOs.values()].filter((o) => o.situacao === "aberta");
-  // L10c (FISC-009): as notas desta venda canceladas no fisco, lidas à parte. Banco sem a migration (sem as colunas):
-  // o histórico e os formulários do cancelamento e da correção da chave não aparecem; a venda segue.
-  const canceladasDoBanco = venda.data.situacao === "concluida" || venda.data.situacao === "cancelada"
-    ? await supabase.from("notas_pedidos").select("id, modelo, serie, numero_documento, cancelada_no_fisco_em, protocolo_cancelamento")
-      .eq("venda_id", id).eq("tipo", "venda").eq("situacao", "cancelada")
-    : null;
   const comCancelamentoNoFisco = Boolean(canceladasDoBanco && !canceladasDoBanco.error);
   const canceladasNoFisco = (canceladasDoBanco && !canceladasDoBanco.error ? canceladasDoBanco.data : [])
     .flatMap((c) => (c.cancelada_no_fisco_em ? [{ ...c, cancelada_no_fisco_em: c.cancelada_no_fisco_em }] : []))
     .sort((a, b) => a.cancelada_no_fisco_em.localeCompare(b.cancelada_no_fisco_em));
-  // Documentos da venda (L5d), lidos à parte: num banco sem a migration (sem a tabela), o bloco não aparece.
-  const anexosLidos = venda.data.situacao === "concluida" || venda.data.situacao === "cancelada"
-    ? await supabase.from("venda_anexos").select("id, tipo, descricao, caminho, formato, bytes, enviado_em, retirado_em, motivo_retirada").eq("venda_id", id).order("enviado_em")
-    : null;
   const anexos = anexosLidos && !anexosLidos.error ? anexosLidos.data : null;
-  const linksDosAnexos = anexos && anexos.some((a) => !a.retirado_em)
-    ? await supabase.storage.from("anexos").createSignedUrls(anexos.filter((a) => !a.retirado_em).map((a) => a.caminho), 600)
-    : { data: [], error: null };
+  // Os links assinados dos documentos da nota e dos da venda, juntos, por último.
+  const [linksDosDocumentos, linksDosAnexos] = await Promise.all([
+    documentosLidos && documentosLidos.length
+      ? supabase.storage.from("notas").createSignedUrls(documentosLidos.map((d) => d.caminho), 600)
+      : Promise.resolve({ data: [], error: null }),
+    anexos && anexos.some((a) => !a.retirado_em)
+      ? supabase.storage.from("anexos").createSignedUrls(anexos.filter((a) => !a.retirado_em).map((a) => a.caminho), 600)
+      : Promise.resolve({ data: [], error: null }),
+  ]);
+  const linkDe = new Map((linksDosDocumentos.data ?? []).map((l) => [l.path, l.error ? null : l.signedUrl]));
   const linkDoAnexo = (caminho: string) => (linksDosAnexos.error ? null : linksDosAnexos.data?.find((l) => l.path === caminho && !l.error)?.signedUrl ?? null);
   const dataHora = (iso: string) => new Intl.DateTimeFormat("pt-BR", { timeZone: "America/Sao_Paulo", dateStyle: "short", timeStyle: "short" }).format(new Date(iso));
   const v = venda.data;
@@ -187,7 +204,7 @@ export default async function Comprovante({ params, searchParams }: { params: Pr
       {textoDoParametro(parametros.nota) === "carta_registrada" && <Aviso tom="sucesso">Carta de correção registrada no bloco “Nota fiscal”: a mais recente substitui as anteriores.</Aviso>}
       {textoDoParametro(parametros.nota) === "carta_repetida" && <Aviso tom="info">Nada mudou: esta carta de correção já estava registrada.</Aviso>}
       <Cartao titulo={`Venda nº ${v.numero}`} subtitulo={`${loja.data?.nome ?? situacao.unidade_nome}${quando ? ` · ${quando}` : ""}`} icone={Receipt}>
-        <p className="text-sm">Vendedor: {vendedor.data?.nome ?? "—"}{v.cliente_nome ? ` · Cliente: ${v.cliente_nome}` : ""}
+        <p className="text-sm">Vendedor: {nomeDoVendedor ?? "—"}{v.cliente_nome ? ` · Cliente: ${v.cliente_nome}` : ""}
           {v.cliente_id && buscaCliente && <> · <Link href={`/clientes/${v.cliente_id}`} className="font-semibold text-acao">ficha do cliente</Link></>}</p>
         <p className="mt-1">{v.situacao === "concluida" ? <Selo tom="sucesso" ponto>concluída</Selo> : v.situacao === "cancelada" ? <Selo tom="perigo" ponto>cancelada</Selo> : <Selo tom="aviso" ponto>em aberto</Selo>}</p>
         {v.situacao === "cancelada" && v.motivo_cancelamento && <p className="mt-1 text-xs text-suave">Motivo: {v.motivo_cancelamento}</p>}
