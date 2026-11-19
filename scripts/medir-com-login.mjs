@@ -49,10 +49,11 @@ try {
     await pagina.getByLabel("E-mail", { exact: true }).fill(conta.email);
     await pagina.getByLabel("Senha", { exact: true }).fill(conta.senha);
     await pagina.getByRole("button", { name: "Entrar na plataforma" }).click();
-    await pagina.waitForURL(/\/(inicio|escolher-loja)/);
-    if (new URL(pagina.url()).pathname.startsWith("/escolher-loja")) {
+    // Com uma loja só, o sistema passa pela escolha da loja, escolhe sozinho e abre o Início.
+    await pagina.waitForURL(/\/inicio/, { timeout: 20_000 }).catch(() => undefined);
+    if (!new URL(pagina.url()).pathname.startsWith("/inicio")) {
       // Mais de uma loja: a medida não escolhe por ninguém. Use uma conta de uma loja só.
-      console.log(`${nome}: a conta pede a escolha da loja; não medida`);
+      console.log(`${nome}: a conta não chegou ao Início (pede a escolha da loja?); não medida`);
       await pagina.goto(`${url}/sair`);
       await contexto.close();
       continue;
