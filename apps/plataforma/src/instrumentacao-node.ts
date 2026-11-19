@@ -24,11 +24,24 @@ const SEM_CONEXAO_MANTIDA = "conexão com o banco: não foi possível manter abe
 // A conexão do servidor com o Supabase fica aberta entre um pedido e outro (lote VEL-a: ORA-QUAL-010; ADR-010).
 // É só ganho de tempo: se não der para ligar, o servidor sobe do mesmo jeito. Uma linha na saída diz o que valeu,
 // para quem lê o log da homologação saber em qual das duas situações o servidor está.
+// VEL-f: com a conexão mantida, um conjunto de conexões fica aquecido (lib/supabase/conexao-mantida.ts), para as telas
+// com várias idas ao mesmo tempo não abrirem conexão no meio. Não roda no build, nem sem o endereço e a chave pública.
 export async function manterConexaoComOBanco() {
   try {
-    const { CONEXAO_PARADA_MS, manterConexoesAbertas } = await import("./lib/supabase/conexao-mantida");
-    if (await manterConexoesAbertas()) console.info(`conexão com o banco: fica aberta por até ${CONEXAO_PARADA_MS / 1000} s parada`);
-    else console.warn(SEM_CONEXAO_MANTIDA);
+    const { AQUECER_A_CADA_MS, CONEXAO_PARADA_MS, CONEXOES_AQUECIDAS, manterConexoesAbertas, manterConexoesAquecidas } =
+      await import("./lib/supabase/conexao-mantida");
+    if (!(await manterConexoesAbertas())) {
+      console.warn(SEM_CONEXAO_MANTIDA);
+      return;
+    }
+    console.info(`conexão com o banco: fica aberta por até ${CONEXAO_PARADA_MS / 1000} s parada`);
+    const endereco = process.env["NEXT_PUBLIC_SUPABASE_URL"]?.trim();
+    const chave = process.env["NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY"]?.trim();
+    if (!endereco || !chave || process.env["NEXT_PHASE"] === "phase-production-build") return;
+    const { primeira } = manterConexoesAquecidas(endereco, chave);
+    // Não espera: o servidor sobe enquanto as conexões abrem. A linha diz quantas abriram da primeira vez.
+    void primeira.then((abertas) => console.info(
+      `conexão com o banco: ${abertas} de ${CONEXOES_AQUECIDAS} conexões aquecidas, usadas de novo a cada ${AQUECER_A_CADA_MS / 1000} s`));
   } catch {
     console.warn(SEM_CONEXAO_MANTIDA);
   }
