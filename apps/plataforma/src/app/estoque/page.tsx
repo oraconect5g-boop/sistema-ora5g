@@ -64,13 +64,14 @@ export default async function Estoque({ searchParams }: { searchParams: Promise<
   }
 
   const abas = (
+    // As seções carregam no toque, sem pré-carga (VEL-h).
     <nav aria-label="Seções do estoque" className="flex flex-wrap gap-2 text-sm">
-      <Link href="/estoque" aria-current={!conferencia && !painel ? "page" : undefined} className={`rounded-botao px-3 py-2 font-semibold ${!conferencia && !painel ? "bg-acao text-white" : "bg-white text-acao ring-1 ring-borda"}`}>Saldo e busca</Link>
-      <Link href="/estoque?aba=painel" aria-current={painel ? "page" : undefined} className={`rounded-botao px-3 py-2 font-semibold ${painel ? "bg-acao text-white" : "bg-white text-acao ring-1 ring-borda"}`}>Painel</Link>
-      <Link href="/estoque?aba=conferencia" aria-current={conferencia ? "page" : undefined} className={`rounded-botao px-3 py-2 font-semibold ${conferencia ? "bg-acao text-white" : "bg-white text-acao ring-1 ring-borda"}`}>Conferência do dia</Link>
-      {recebe && <Link href="/estoque/entrada" className="rounded-botao bg-white px-3 py-2 font-semibold text-acao ring-1 ring-borda">Entrada de mercadoria</Link>}
-      {recebe && <Link href="/estoque/pedidos" className="rounded-botao bg-white px-3 py-2 font-semibold text-acao ring-1 ring-borda">Pedidos de compra</Link>}
-      {confere && <Link href="/estoque/inventario" className="rounded-botao bg-white px-3 py-2 font-semibold text-acao ring-1 ring-borda">Inventário</Link>}
+      <Link prefetch={false} href="/estoque" aria-current={!conferencia && !painel ? "page" : undefined} className={`rounded-botao px-3 py-2 font-semibold ${!conferencia && !painel ? "bg-acao text-white" : "bg-white text-acao ring-1 ring-borda"}`}>Saldo e busca</Link>
+      <Link prefetch={false} href="/estoque?aba=painel" aria-current={painel ? "page" : undefined} className={`rounded-botao px-3 py-2 font-semibold ${painel ? "bg-acao text-white" : "bg-white text-acao ring-1 ring-borda"}`}>Painel</Link>
+      <Link prefetch={false} href="/estoque?aba=conferencia" aria-current={conferencia ? "page" : undefined} className={`rounded-botao px-3 py-2 font-semibold ${conferencia ? "bg-acao text-white" : "bg-white text-acao ring-1 ring-borda"}`}>Conferência do dia</Link>
+      {recebe && <Link prefetch={false} href="/estoque/entrada" className="rounded-botao bg-white px-3 py-2 font-semibold text-acao ring-1 ring-borda">Entrada de mercadoria</Link>}
+      {recebe && <Link prefetch={false} href="/estoque/pedidos" className="rounded-botao bg-white px-3 py-2 font-semibold text-acao ring-1 ring-borda">Pedidos de compra</Link>}
+      {confere && <Link prefetch={false} href="/estoque/inventario" className="rounded-botao bg-white px-3 py-2 font-semibold text-acao ring-1 ring-borda">Inventário</Link>}
     </nav>
   );
 
@@ -377,7 +378,7 @@ export default async function Estoque({ searchParams }: { searchParams: Promise<
                     <span className="flex items-center gap-2">
                       {disponivel < l.estoque_minimo && <Selo tom="aviso">abaixo do mínimo</Selo>}
                       <span className="numeros text-base font-bold">{disponivel}</span>
-                      <Link href={`/estoque?variante=${l.id}`} className="text-xs font-semibold text-acao">na rede</Link>
+                      <Link href={`/estoque?variante=${l.id}`} prefetch={false} className="text-xs font-semibold text-acao">na rede</Link>
                     </span>
                   </li>
                 );

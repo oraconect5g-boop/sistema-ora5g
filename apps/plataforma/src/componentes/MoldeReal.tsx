@@ -38,6 +38,10 @@ const classeDoItemDoMenu = "flex min-h-11 w-full items-center gap-3 rounded-xl p
  *
  * Não vai ao banco (lote VEL-a): as permissões do menu, o nome, os vínculos e as contagens dos emblemas chegam com a
  * sessão (sessao.molde), lidos na mesma ida em que o banco decide a sessão (public.molde_da_sessao).
+ *
+ * Pré-carga (lote VEL-h): só os 4 atalhos (a barra de baixo no celular e os mesmos no menu lateral) pré-carregam a tela ao
+ * aparecer; o resto do menu, a logo, a loja e a conta carregam no toque. Cada pré-carga monta o molde no banco: antes, cada
+ * tela aberta disparava de 17 a 22 no celular e de 35 a 39 no computador.
  */
 export function MoldeReal({ sessao, children, largura = "max-w-3xl" }: {
   sessao: Sessao;
@@ -63,18 +67,18 @@ export function MoldeReal({ sessao, children, largura = "max-w-3xl" }: {
   const versao = textoDaVersao();
   const acoesDoTrilho = (
     <>
-      <Link href="/escolher-loja" className={classeDaAcaoDoTrilho}><Store aria-hidden className="size-4" /> Trocar de loja</Link>
+      <Link href="/escolher-loja" prefetch={false} className={classeDaAcaoDoTrilho}><Store aria-hidden className="size-4" /> Trocar de loja</Link>
       {/* PWA-b: ligar os avisos no celular fica a um toque, em qualquer tela. */}
-      <Link href="/conta/avisos" className={classeDaAcaoDoTrilho}><BellRing aria-hidden className="size-4" /> Avisos no celular</Link>
-      <Link href="/conta/senha" className={classeDaAcaoDoTrilho}><KeyRound aria-hidden className="size-4" /> Trocar minha senha</Link>
+      <Link href="/conta/avisos" prefetch={false} className={classeDaAcaoDoTrilho}><BellRing aria-hidden className="size-4" /> Avisos no celular</Link>
+      <Link href="/conta/senha" prefetch={false} className={classeDaAcaoDoTrilho}><KeyRound aria-hidden className="size-4" /> Trocar minha senha</Link>
       <form action={sair}><BotaoDeEnvio className={`${classeDaAcaoDoTrilho} disabled:opacity-60`} enquanto={<><LogOut aria-hidden className="size-4" /> Saindo…</>}><LogOut aria-hidden className="size-4" /> Sair</BotaoDeEnvio></form>
     </>
   );
   const contaESaida = (
     <div className="space-y-1 border-t border-borda pt-2">
-      <Link href="/escolher-loja" className={classeDoItemDoMenu}><Store aria-hidden className="size-4 text-suave" /> Trocar de loja</Link>
-      <Link href="/conta/avisos" className={classeDoItemDoMenu}><BellRing aria-hidden className="size-4 text-suave" /> Avisos no celular</Link>
-      <Link href="/conta/senha" className={classeDoItemDoMenu}><KeyRound aria-hidden className="size-4 text-suave" /> Trocar minha senha</Link>
+      <Link href="/escolher-loja" prefetch={false} className={classeDoItemDoMenu}><Store aria-hidden className="size-4 text-suave" /> Trocar de loja</Link>
+      <Link href="/conta/avisos" prefetch={false} className={classeDoItemDoMenu}><BellRing aria-hidden className="size-4 text-suave" /> Avisos no celular</Link>
+      <Link href="/conta/senha" prefetch={false} className={classeDoItemDoMenu}><KeyRound aria-hidden className="size-4 text-suave" /> Trocar minha senha</Link>
       <form action={sair}><BotaoDeEnvio className={`${classeDoItemDoMenu} disabled:opacity-60`} enquanto={<><LogOut aria-hidden className="size-4 text-suave" /> Saindo…</>}><LogOut aria-hidden className="size-4 text-suave" /> Sair</BotaoDeEnvio></form>
     </div>
   );
@@ -89,6 +93,7 @@ export function MoldeReal({ sessao, children, largura = "max-w-3xl" }: {
       <Trilho
         inicio="/inicio"
         grupos={menu.grupos.map((g) => ({ grupo: g.grupo, itens: g.paginas.map(item) }))}
+        preCarregar={menu.atalhos.map((p) => PAGINAS_REAIS[p].caminho)}
         pessoa={pessoa}
         papel={papel}
         versao={versao}
@@ -97,8 +102,10 @@ export function MoldeReal({ sessao, children, largura = "max-w-3xl" }: {
 
       <header className="nao-imprimir sticky top-0 z-30 bg-fundo/90 backdrop-blur">
         <div className="mx-auto flex min-h-16 max-w-[1400px] items-center gap-2 px-4 py-2 sm:gap-3 sm:px-6 lg:px-8 lg:py-3">
-          <Link href="/inicio" aria-label="Início" className="mr-auto shrink-0 lg:hidden"><Marca tamanho="text-[22px]" /></Link>
-          <Link href="/escolher-loja" title="Trocar de loja" className="flex min-h-11 max-w-[14rem] items-center gap-2 rounded-full border border-borda bg-white px-3.5 py-1 hover:border-borda-forte">
+          <Link href="/inicio" prefetch={false} aria-label="Início" className="mr-auto shrink-0 lg:hidden"><Marca tamanho="text-[22px]" /></Link>
+          {/* min-w-0 (VEL-h): sem ele, o botão não encolhia abaixo do nome da loja; com um nome longo ("Santa Cândida (teste)"), o
+              topo passava de 360 px, o celular alargava a página (406 px) e a barra de baixo saía da vista em todas as telas. */}
+          <Link href="/escolher-loja" prefetch={false} title="Trocar de loja" className="flex min-h-11 min-w-0 max-w-[14rem] items-center gap-2 rounded-full border border-borda bg-white px-3.5 py-1 hover:border-borda-forte">
             <MapPin aria-hidden className="size-4 shrink-0 text-acao" />
             <span className="min-w-0 text-left">
               <span className="hidden text-[11px] font-medium leading-3 text-suave sm:block">Loja do turno</span>
@@ -139,7 +146,7 @@ export function MoldeReal({ sessao, children, largura = "max-w-3xl" }: {
         <IrParaAncora />
       </main>
 
-      <NavegacaoCelular atalhos={menu.atalhos.map(item)} grupos={gruposDoMais} pessoa={pessoa} papel={papel} loja={loja} rodape={contaESaida} versao={versao} />
+      <NavegacaoCelular atalhos={menu.atalhos.map(item)} grupos={gruposDoMais} preCarregarMais={false} pessoa={pessoa} papel={papel} loja={loja} rodape={contaESaida} versao={versao} />
     </div>
   );
 }

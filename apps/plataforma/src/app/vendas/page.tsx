@@ -114,7 +114,8 @@ export default async function Vendas({ searchParams }: { searchParams: Promise<{
               const devolvido = centavosDoBanco(v.devolvido_centavos ?? 0);
               return (
                 <li key={v.id}>
-                  <Link href={`/vendas/${v.id}`} className="grid grid-cols-[minmax(0,1fr)_auto] items-center gap-x-4 gap-y-1 px-4 py-3 hover:bg-slate-50/80 sm:px-5">
+                  {/* Sem pré-carga (VEL-h): a venda carrega no toque; antes, cada linha à vista pré-carregava o comprovante. */}
+                  <Link href={`/vendas/${v.id}`} prefetch={false} className="grid grid-cols-[minmax(0,1fr)_auto] items-center gap-x-4 gap-y-1 px-4 py-3 hover:bg-slate-50/80 sm:px-5">
                     <span className="min-w-0 text-sm">
                       <span className="numeros font-semibold">Nº {v.numero}</span>
                       <span className="block truncate text-xs text-suave">{quando(v.concluida_em ?? v.criado_em)}{daLoja ? ` · ${vendedorDa(v.vendedor_id)}` : ""}{v.cliente_nome ? ` · ${v.cliente_nome}` : ""}</span>

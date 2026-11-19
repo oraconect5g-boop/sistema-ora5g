@@ -45,9 +45,14 @@ function assinar(avisar: () => void) {
   };
 }
 
-export function Trilho({ inicio, grupos, pessoa, papel, acoes, versao }: {
+export function Trilho({ inicio, grupos, pessoa, papel, acoes, versao, preCarregar }: {
   inicio: string;
   grupos: readonly { grupo: string; itens: readonly ItemNavegacao[] }[];
+  /**
+   * As telas que pré-carregam ao aparecer (VEL-h: só os atalhos nas telas reais); as outras carregam no clique. Sem a lista,
+   * todas pré-carregam (a demonstração).
+   */
+  preCarregar?: readonly string[];
   pessoa: string;
   papel: string;
   /** Ações da pessoa no fim do menu aberto (trocar perfil ou loja, senha, sair). */
@@ -68,7 +73,7 @@ export function Trilho({ inicio, grupos, pessoa, papel, acoes, versao }: {
       className="trilho nao-imprimir fixed bottom-4 left-4 top-4 z-50 hidden w-[76px] flex-col rounded-[38px] bg-navegacao py-3.5 text-white transition-[width,box-shadow] duration-200 hover:w-[264px] hover:shadow-flutuante has-[:focus-visible]:w-[264px] data-[fixo=true]:w-[264px] lg:flex"
     >
       <div className="flex items-center gap-3 px-3.5">
-        <Link href={inicio} aria-label="Início" className="shrink-0 rounded-2xl">
+        <Link href={inicio} prefetch={preCarregar ? false : undefined} aria-label="Início" className="shrink-0 rounded-2xl">
           <SeloMarca />
         </Link>
         <span className="min-w-0 whitespace-nowrap opacity-0 transition-opacity trilho-aberto:opacity-100">
@@ -101,6 +106,7 @@ export function Trilho({ inicio, grupos, pessoa, papel, acoes, versao }: {
                   <li key={item.href}>
                     <Link
                       href={item.href}
+                      prefetch={!preCarregar || preCarregar.includes(item.href) ? undefined : false}
                       aria-current={ativo ? "page" : undefined}
                       className={`relative flex h-11 items-center gap-3 rounded-full pr-3 text-sm font-semibold transition-colors ${ativo ? "text-white trilho-aberto:bg-acao" : "text-white/60 hover:text-white trilho-aberto:hover:bg-white/10"}`}
                     >

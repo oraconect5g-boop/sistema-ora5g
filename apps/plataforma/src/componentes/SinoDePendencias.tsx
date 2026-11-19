@@ -85,7 +85,7 @@ export function SinoDePendencias({ unidade, usuario }: { unidade: string; usuari
               const IconeDoItem = ICONES_DAS_PENDENCIAS[item.icone];
               return (
                 <li key={item.rotulo}>
-                  <Link href={item.href} className="flex min-h-12 items-center gap-3 px-3 py-2 text-sm hover:bg-slate-50">
+                  <Link href={item.href} prefetch={false} className="flex min-h-12 items-center gap-3 px-3 py-2 text-sm hover:bg-slate-50">
                     <IconeDoItem aria-hidden className={`size-4 shrink-0 ${item.alerta ? "text-perigo" : "text-acao"}`} />
                     <span className="min-w-0 flex-1">
                       <span className="block truncate font-medium">{item.rotulo}</span>
@@ -99,7 +99,7 @@ export function SinoDePendencias({ unidade, usuario }: { unidade: string; usuari
           </ul>
         )}
         <div className="border-t border-borda px-3 py-2">
-          <Link href="/inicio" className="text-sm font-semibold text-acao">Abrir o Início</Link>
+          <Link href="/inicio" prefetch={false} className="text-sm font-semibold text-acao">Abrir o Início</Link>
         </div>
       </MenuSuspenso>
     </div>

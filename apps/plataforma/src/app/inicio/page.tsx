@@ -64,7 +64,8 @@ export default async function Inicio({ searchParams }: { searchParams: Promise<P
           {pendencias.map((p) => {
             const IconeDaPendencia = ICONES_DAS_PENDENCIAS[p.icone];
             return (
-              <Link key={p.rotulo} href={p.href} className={`rounded-cartao border bg-superficie p-4 shadow-cartao hover:border-borda-forte ${p.quantidade > 0 ? "border-aviso/40" : "border-borda"}`}>
+              // Os cartões e os atalhos carregam a tela no toque, sem pré-carga (VEL-h): só a barra de baixo pré-carrega.
+              <Link key={p.rotulo} href={p.href} prefetch={false} className={`rounded-cartao border bg-superficie p-4 shadow-cartao hover:border-borda-forte ${p.quantidade > 0 ? "border-aviso/40" : "border-borda"}`}>
                 <span className="flex items-start justify-between gap-2">
                   <span className="text-[13px] font-medium text-suave">{p.rotulo}</span>
                   <IconeDaPendencia aria-hidden className="size-4 shrink-0 text-acao" />
@@ -81,7 +82,7 @@ export default async function Inicio({ searchParams }: { searchParams: Promise<P
       <Cartao titulo="Atalhos">
         <div className="grid grid-cols-2 gap-2 sm:grid-cols-3 lg:grid-cols-4">
           {atalhos.map((p) => (
-            <Link key={p} href={PAGINAS_REAIS[p].caminho} className="flex min-h-12 items-center gap-3 rounded-xl border border-borda px-3 text-sm font-medium hover:bg-slate-50">
+            <Link key={p} href={PAGINAS_REAIS[p].caminho} prefetch={false} className="flex min-h-12 items-center gap-3 rounded-xl border border-borda px-3 text-sm font-medium hover:bg-slate-50">
               <Icone nome={PAGINAS_REAIS[p].icone} className="size-5 text-acao" /> {PAGINAS_REAIS[p].titulo}
             </Link>
           ))}
