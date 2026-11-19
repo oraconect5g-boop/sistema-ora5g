@@ -13,7 +13,9 @@ import { FalhaDoServico, obterSessao } from "../../lib/acesso/sessao";
 import { SERVICOS, SITUACOES as SITUACOES_DA_OS, ehServico } from "../../lib/assistencia/regras";
 import { tabelaAusente } from "../../lib/caixa/saidas";
 import { buscarNoCatalogo, filtroDoIdentificador, identificadorDigitado, termoDaBusca } from "../../lib/catalogo/busca";
+import type { FotoDaTela } from "../../lib/catalogo/tela";
 import { consultarEstoque } from "../../lib/estoque/consulta-painel";
+import { consultarListaDoEstoque } from "../../lib/estoque/lista";
 import { lerValorDoEstoque } from "../../lib/estoque/valor";
 import { filtroDosPendentes, numerosDaConferencia, paginaDoEndereco, paginasDaConferencia, POR_PAGINA_DA_CONFERENCIA, resumoDosPendentes } from "../../lib/estoque/conferencia";
 import { lerPorIds } from "../../lib/leitura-completa";
@@ -216,6 +218,7 @@ export default async function Estoque({ searchParams }: { searchParams: Promise<
   let totalDoSaldo = 0;
   let buscaCortada = false;
   let paginaDoSaldo = 1;
+  let fotosDaLista: FotoDaTela[] | null = null;
   if (termo) {
     const achados = await buscarNoCatalogo(supabase, termo, { limite: 100, ativos: false });
     buscaCortada = achados.cortada;
@@ -232,17 +235,12 @@ export default async function Estoque({ searchParams }: { searchParams: Promise<
     paginaDoSaldo = Math.min(paginaPedida, Math.max(1, Math.ceil(totalDoSaldo / POR_PAGINA_DO_SALDO)));
     linhas = todas.slice((paginaDoSaldo - 1) * POR_PAGINA_DO_SALDO, paginaDoSaldo * POR_PAGINA_DO_SALDO);
   } else {
-    const total = await supabase.from("variantes").select("id, estoque_saldos!inner(variante_id)", { count: "exact", head: true }).eq("estoque_saldos.unidade_id", unidade);
-    if (total.error || total.count === null) throw new FalhaDoServico("estoque_saldos");
-    totalDoSaldo = total.count;
-    paginaDoSaldo = Math.min(paginaPedida, Math.max(1, Math.ceil(totalDoSaldo / POR_PAGINA_DO_SALDO)));
-    if (totalDoSaldo > 0) {
-      const de = (paginaDoSaldo - 1) * POR_PAGINA_DO_SALDO;
-      const pagina = await supabase.from("variantes").select("id, nome, sku, estoque_minimo, produto_id, estoque_saldos!inner(quantidade, reservado)")
-        .eq("estoque_saldos.unidade_id", unidade).order("nome").order("id").range(de, de + POR_PAGINA_DO_SALDO - 1);
-      if (pagina.error) throw new FalhaDoServico("estoque_saldos");
-      linhas = pagina.data.map(({ estoque_saldos: saldo, ...v }) => ({ ...v, quantidade: saldo[0]?.quantidade ?? 0, reservado: saldo[0]?.reservado ?? 0 }));
-    }
+    // VEL-d (ADR-010): a página, o total e as fotos dos produtos dela numa ida ao banco (lib/estoque/lista.ts).
+    const lista = await consultarListaDoEstoque(supabase, unidade, paginaPedida, POR_PAGINA_DO_SALDO);
+    totalDoSaldo = lista.total;
+    paginaDoSaldo = lista.pagina;
+    linhas = lista.linhas;
+    fotosDaLista = lista.fotos;
   }
   const paginasDoSaldo = Math.max(1, Math.ceil(totalDoSaldo / POR_PAGINA_DO_SALDO));
   const enderecoDoSaldo = (n: number) => {
@@ -254,10 +252,14 @@ export default async function Estoque({ searchParams }: { searchParams: Promise<
   // Fotos (ORA-CAT-011): a da variante ou a principal do produto; URL assinada e temporária.
   const comFoto = [...linhas.map((l) => ({ id: l.id, produto_id: l.produto_id })), ...(varianteDoItem.data ? [varianteDoItem.data] : [])];
   const produtoIds = [...new Set(comFoto.map((v) => v.produto_id))];
-  const lidas = await lerPorIds(produtoIds, (lote, de, ate) => supabase.from("fotos_produto").select("id, produto_id, variante_id, caminho, ilustracao")
-    .in("produto_id", lote).is("substituida_em", null).order("id").range(de, ate));
+  // Sem busca, as fotos da página vieram junto com a lista (VEL-d): só falta ler as do aparelho aberto, se for de outro produto.
+  const faltam = fotosDaLista ? produtoIds.filter((id) => !linhas.some((l) => l.produto_id === id)) : produtoIds;
+  const lidas = faltam.length
+    ? await lerPorIds(faltam, (lote, de, ate) => supabase.from("fotos_produto").select("id, produto_id, variante_id, caminho, ilustracao")
+      .in("produto_id", lote).is("substituida_em", null).order("id").range(de, ate))
+    : { ok: true as const, mais: false, linhas: [] };
   if (!lidas.ok || lidas.mais) throw new FalhaDoServico("estoque_fotos");
-  const fotos = { data: lidas.linhas };
+  const fotos = { data: [...(fotosDaLista ?? []), ...lidas.linhas] };
   const assinadas = fotos.data.length ? await supabase.storage.from("produtos").createSignedUrls(fotos.data.map((f) => f.caminho), 3600) : { data: [], error: null };
   const urlDe = new Map((assinadas.data ?? []).map((a) => [a.path, a.error ? null : a.signedUrl]));
   const fotoDe = (variante: { id: string; produto_id: string }) => {

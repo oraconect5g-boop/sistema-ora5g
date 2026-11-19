@@ -1,5 +1,5 @@
 // ARQUIVO GERADO pelo Supabase (generate_typescript_types do projeto ora5g-dev) depois da
-// migration 20261118202002_repasses_dos_marketplaces. Não edite à mão: gere de novo a cada
+// migration 20261119131724_catalogo_e_estoque_numa_ida. Não edite à mão: gere de novo a cada
 // migration aplicada (auditoria do Codex de 08/11, §7.2). O teste tipos-banco.test.ts confere
 // que funções e tabelas públicas daqui são as mesmas das migrations.
 export type Json =
@@ -7612,6 +7612,14 @@ export type Database = {
         }
         Returns: Json
       }
+      catalogo_tela: {
+        Args: {
+          p_limite: number
+          p_produtos: string[]
+          p_so_pendentes: boolean
+        }
+        Returns: Json
+      }
       catalogo_variante_por_codigo: {
         Args: { p_canal: string; p_codigo: string }
         Returns: string
@@ -7958,6 +7966,10 @@ export type Database = {
       estoque_estornar_entrada: {
         Args: { p_entrada: string; p_motivo: string }
         Returns: string
+      }
+      estoque_lista: {
+        Args: { p_pagina: number; p_por_pagina: number }
+        Returns: Json
       }
       estoque_na_rede: {
         Args: { p_variante: string }

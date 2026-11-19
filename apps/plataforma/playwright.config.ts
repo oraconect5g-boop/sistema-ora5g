@@ -13,11 +13,14 @@ try {
 // ORA_PORTA_E2E permite rodar duas suítes ao mesmo tempo no servidor (ex.: duas sessões), sem disputar a porta.
 const porta = process.env.ORA_PORTA_E2E ?? "3180";
 const enderecoBase = `http://127.0.0.1:${porta}`;
+// ORA_E2E_URL (lote J1-a): roda contra um site já no ar (a prova com login de verdade, #11), sem subir o servidor local.
+// Só no servidor e só com o arquivo das contas de teste (ORA_E2E_CONTAS); no CI fica vazio e tudo segue como antes.
+const urlExterna = process.env.ORA_E2E_URL?.trim().replace(/\/+$/, "") || undefined;
 
 export default defineConfig({
   testDir: "./e2e",
   forbidOnly: true,
-  use: { baseURL: enderecoBase },
+  use: { baseURL: urlExterna ?? enderecoBase },
   projects: [
     {
       name: "celular-360",
@@ -33,7 +36,7 @@ export default defineConfig({
       use: { ...devices["Desktop Chrome"], viewport: { width: 1280, height: 800 } },
     },
   ],
-  webServer: {
+  webServer: urlExterna ? undefined : {
     command: `npx next start -H 127.0.0.1 -p ${porta}`,
     url: `${enderecoBase}/saude`,
     reuseExistingServer: false,

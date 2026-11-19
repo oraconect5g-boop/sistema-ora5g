@@ -120,6 +120,7 @@
     { "versao": "20261118192056", "nome": "chips_nas_metas", "md5": "370975452f899308637b20146ef78fe7", "aplicada_em": "2026-11-18" },
     { "versao": "20261118194259", "nome": "deposito_nao_vende", "md5": "e4f1b23b17eb0a186fd261bde537a816", "aplicada_em": "2026-11-18" },
     { "versao": "20261118201911", "nome": "contas_bancarias", "md5": "bf9b30fc5e9dcb6a51afa9e9aeeb22ff", "aplicada_em": "2026-11-18" },
-    { "versao": "20261118202002", "nome": "repasses_dos_marketplaces", "md5": "ac1b1d4c89ce441766b7c57d35009adc", "aplicada_em": "2026-11-18" }
+    { "versao": "20261118202002", "nome": "repasses_dos_marketplaces", "md5": "ac1b1d4c89ce441766b7c57d35009adc", "aplicada_em": "2026-11-18" },
+    { "versao": "20261119131724", "nome": "catalogo_e_estoque_numa_ida", "md5": "5e00d9651c79943dd88d93b240de8da7", "aplicada_em": "2026-11-19" }
   ]
 }

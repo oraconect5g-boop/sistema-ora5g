@@ -9,8 +9,8 @@ import { permite } from "../../lib/acesso/molde";
 import { FalhaDoServico, obterSessao } from "../../lib/acesso/sessao";
 import { buscarNoCatalogo, termoDaBusca } from "../../lib/catalogo/busca";
 import { nomeCurtoDoTipo } from "../../lib/catalogo/cadastro";
+import { consultarTelaDoCatalogo } from "../../lib/catalogo/tela";
 import { inteiroDoBanco } from "../../lib/dinheiro";
-import { lerEmPaginas, lerPorIds } from "../../lib/leitura-completa";
 import { textoDoParametro, type ValorDeParametro } from "../../lib/parametros";
 import { configuracaoSupabase } from "../../lib/supabase/configuracao";
 import { EnviarFoto } from "./EnviarFoto";
@@ -36,37 +36,16 @@ export default async function Catalogo({ searchParams }: { searchParams: Promise
   // mesma do estoque e do PDV (lib/catalogo/busca.ts).
   const termo = termoDaBusca(busca);
   const podeEnviar = permite(sessao, "catalogo.fotos");
-  const [pendencias, achados] = await Promise.all([
-    supabase.rpc("pendencias_de_foto"),
-    termo ? buscarNoCatalogo(supabase, termo, { limite: LIMITE }) : Promise.resolve(null),
-  ]);
-  if (pendencias.error) throw new FalhaDoServico("catalogo");
-  const pendentesPorProduto = new Set(pendencias.data.map((p) => p.produto_id));
-  let ids: string[] | null = achados ? achados.produtos : null;
-  if (soPendentes) ids = (ids ?? [...pendentesPorProduto]).filter((id) => pendentesPorProduto.has(id));
-  // B5 (REV-PLAN-003): os produtos achados vêm em lotes de ids (endereço curto) e as variações, as fotos e os
-  // saldos deles vêm completos, lote a lote e página a página: antes cada uma era um pedido só, que o teto de
-  // linhas da API cortaria em silêncio (200 produtos com mais de mil variações ficariam sem algumas).
-  type Produto = { id: string; nome: string; tipo: string; organizacao_id: string };
-  const lidos = ids
-    ? await lerPorIds(ids, (lote, de, ate) => supabase.from("produtos").select("id, nome, tipo, organizacao_id").eq("ativo", true).in("id", lote).order("id").range(de, ate))
-    : await lerEmPaginas((de, ate) => supabase.from("produtos").select("id, nome, tipo, organizacao_id").eq("ativo", true).order("nome").order("id").range(de, ate), LIMITE);
-  if (!lidos.ok || (ids && lidos.mais)) throw new FalhaDoServico("catalogo");
-  const ordenados = [...lidos.linhas].sort((a, b) => a.nome.localeCompare(b.nome, "pt-BR") || a.id.localeCompare(b.id));
-  const produtos = { data: ordenados.slice(0, LIMITE) as Produto[] };
-  const maisProdutos = lidos.mais || ordenados.length > LIMITE || Boolean(achados?.cortada);
-  const produtoIds = produtos.data.map((p) => p.id);
-  const [lidasVariantes, lidasFotos] = await Promise.all([
-    lerPorIds(produtoIds, (lote, de, ate) => supabase.from("variantes").select("id, produto_id, sku, nome, cor").eq("ativa", true).in("produto_id", lote).order("sku").order("id").range(de, ate)),
-    lerPorIds(produtoIds, (lote, de, ate) => supabase.from("fotos_produto").select("id, produto_id, variante_id, caminho, ilustracao").in("produto_id", lote).is("substituida_em", null).order("id").range(de, ate)),
-  ]);
-  if (!lidasVariantes.ok || lidasVariantes.mais || !lidasFotos.ok || lidasFotos.mais) throw new FalhaDoServico("catalogo");
-  const variantes = { data: [...lidasVariantes.linhas].sort((a, b) => a.sku.localeCompare(b.sku) || a.id.localeCompare(b.id)) };
-  const fotos = { data: lidasFotos.linhas };
-  const lidosSaldos = await lerPorIds(variantes.data.map((v) => v.id), (lote, de, ate) => supabase.from("estoque_saldos").select("variante_id, quantidade, reservado")
-    .eq("unidade_id", unidade).in("variante_id", lote).order("variante_id").range(de, ate));
-  if (!lidosSaldos.ok || lidosSaldos.mais) throw new FalhaDoServico("catalogo");
-  const saldos = { data: lidosSaldos.linhas };
+  // VEL-d (ADR-010): a busca, quando há termo, e depois a tela inteira numa ida ao banco: as pendências de foto, os
+  // produtos, as variações, as fotos e os saldos da loja do turno, com o RLS de quem pede (lib/catalogo/tela.ts).
+  const achados = termo ? await buscarNoCatalogo(supabase, termo, { limite: LIMITE }) : null;
+  const tela = await consultarTelaDoCatalogo(supabase, { ids: achados ? achados.produtos : null, soPendentes, unidade, limite: LIMITE });
+  const pendencias = { data: tela.pendencias };
+  const produtos = { data: tela.produtos };
+  const maisProdutos = tela.mais || Boolean(achados?.cortada);
+  const variantes = { data: tela.variantes };
+  const fotos = { data: tela.fotos };
+  const saldos = { data: tela.saldos };
 
   const assinadas = fotos.data.length
     ? await supabase.storage.from("produtos").createSignedUrls(fotos.data.map((f) => f.caminho), 3600)
