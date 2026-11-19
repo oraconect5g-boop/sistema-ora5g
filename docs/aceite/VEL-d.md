@@ -17,10 +17,10 @@
 
 Medido com a conta de teste do vendedor, num celular simulado (tela de 360 px), no site no ar, 3 aberturas de cada tela. O passo a passo da medida está em `docs/operacao/DESEMPENHO_NO_CELULAR.md`, seção 4.9.
 
-| Tela | Antes (19/11, a versão `4063f39`) | Depois |
+| Tela | Antes (19/11, a versão `4063f39`) | Depois (19/11, a versão `5d3a8ce`, no ar desde 10:38) |
 |---|---|---|
-| Catálogo | 9 pedidos ao banco em 8 rodadas, 1,52 s no banco; a tela carregada em 1,55 s | Pela conta do código: 2 pedidos em 2 rodadas. A medida entra na seção 4.9 depois da publicação |
-| Lista do Estoque | 4 pedidos em 4 rodadas, 1,20 s no banco; a tela carregada em 1,20 s | Pela conta do código: 2 pedidos em 2 rodadas. A medida entra na seção 4.9 depois da publicação |
+| Catálogo | 9 pedidos ao banco em 8 rodadas, 1,52 s no banco; a tela carregada em 1,55 s | 2 pedidos em 2 rodadas, 0,56 s no banco; a tela carregada em 0,56 s |
+| Lista do Estoque | 4 pedidos em 4 rodadas, 1,20 s no banco; a tela carregada em 1,20 s | 2 pedidos em 2 rodadas, 0,55 s no banco; a tela carregada em 0,54 s |
 
 ## Os passos
 
