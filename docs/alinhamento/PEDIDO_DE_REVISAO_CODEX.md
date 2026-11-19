@@ -2059,3 +2059,13 @@ Programa de execução integral (PR #67; checkpoint em `docs/alinhamento/EXECUCA
 - **`playwright.config.ts`:** com `ORA_E2E_URL`, a espera das conferências passa de 5 para 15 s; contra o servidor local (o CI), nada muda.
 - **Sem mudança no sistema:** só o teste e a configuração dele.
 - **Pedido ao Codex:** conferir se o fim que arruma (cancelar a ida que não saiu, ou terminar a volta) cobre os casos de falha, e se o aparelho em trânsito de uma vez anterior deveria ser recebido pelo teste (hoje ele para e pede a leitura do IMEI na mão).
+- **CI, merge e publicação (19/11):** CI verde em `e3b6571` (3.145 testes, 1 ignorado que pede a planilha privada e 1 TODO; 329 E2E, com 21 pulados); merge `ee9604b`, com a árvore da branch testada; os checks do GitHub de `ee9604b` terminaram verdes ("Verificações" e "Supabase Preview"); no ar desde 14:51.
+
+## 19/11/2026 — Lote VEL-g: a tela de Transferências numa ida só ao banco
+
+- **Origem:** ORA-QUAL-010 e ORA-INV-007, com a orientação de 18/11; o sim do proprietário de 19/11 para medir e acelerar a tela de Transferências.
+- **A medida antes:** em uso contínuo, com os gerentes de teste (5 aberturas), 6 a 7 idas ao banco em 3 rodadas, de 0,57 a 0,66 s no banco, e a tela carregada em 0,60 a 0,69 s (no nível das outras telas: Vendas, 0,78 s); com aparelho a separar, uma quarta rodada. A abertura de 1,1 s vista antes era a primeira depois de o servidor reiniciar.
+- **Banco:** a migration `20261119184550_transferencias_numa_ida` (com reversão): `public.transferencias_tela(p_limite)`, SECURITY INVOKER, `search_path` vazio, só para `authenticated`: a lista da loja do turno (as mais novas primeiro, até 50; o teto é 200), os produtos (com o tipo), as lojas, os aparelhos separados, as remessas, o saldo de agora de cada lado e os aparelhos livres (até 100) só dos produtos que a loja tem a separar.
+- **Plataforma:** `lib/transferencias/tela.ts` (a leitura estrita; PGRST202 ou 42883 usam as leituras de antes, que foram para lá; outro erro vira a página de erro); a tela passa a ler o tipo do produto da resposta.
+- **Testes:** `transferencias-tela.test.ts` no banco (igual às leituras de antes para a mesma pessoa, na origem e no destino, com acessório e aparelho em todas as situações; o aparelho separado; o limite; quem não escolheu a loja e a outra rede); `lib/transferencias/tela.test.ts`; `app/transferencias/transferencias.test.ts` pelos dois caminhos.
+- **Pedido ao Codex:** conferir se o limite de 50 transferências serve com 14 lojas (as abertas mais antigas podem sair da lista) e se os aparelhos livres deveriam vir em outra ordem (hoje, pelo produto e pelo número interno).
