@@ -487,6 +487,14 @@ VEZES=5 node scripts/medir-com-login.mjs https://ora5g.com.br ~/homologacao/cont
 VEZES=5 PAUSA_MS=6000 node scripts/medir-com-login.mjs https://ora5g.com.br ~/homologacao/contas-de-teste.txt "Gerente (teste)=/transferencias" "Gerente 2 (teste)=/transferencias"
 ```
 
+### 4.13 O J2-b (19/11): a pré-carga do menu pesa no banco de teste
+
+Na primeira rodada das provas de acesso (J2-b), com quatro pessoas abrindo umas 20 telas em um minuto, o site fez 702 pedidos ao Supabase de teste num só minuto (17:09). O banco de teste está no plano Micro (1 GB de memória e processador compartilhado; `max_connections` 60 e `shared_buffers` 224 MB) e parou por dois minutos: às 17:11, o tempo lá dentro chegou a 17 s, e 6 leituras dos painéis deram erro 500 (pelo registro `edge_logs`); até a rotina das identidades e a saída das contas levaram de 5 a 9 s. No registro do banco, as 6 leituras foram canceladas pelo limite de 8 s de cada consulta, e até uma consulta de monitoramento do próprio Supabase levou 15 s: o banco estava sem fôlego, não travado por uma consulta nossa.
+
+A maior parte dos pedidos é da pré-carga do menu: cada tela aberta pré-carrega as telas do menu (até 17), e cada pré-carga monta o molde e lê a sessão no banco. Com o navegador das provas recusando só os pedidos de pré-carga (`Next-Router-Prefetch`), as mesmas provas ficaram entre 290 e 460 pedidos por minuto, sem erro, com o tempo lá dentro de 0,06 a 0,13 s na mediana. Nem todo pico se explica assim: o de 16:11 (VEL-g, seção 4.12) aconteceu com pouca carga nossa (104 pedidos no minuto).
+
+O que isso pede (decisões do proprietário): o banco da produção num plano com processador próprio; e uma pré-carga do menu mais leve (por exemplo, só os atalhos da barra de baixo), medida antes e depois, como as outras.
+
 ## O que falta
 
 - O proprietário aprovar (ou mudar) as metas, inclusive as das telas com login.
@@ -500,3 +508,4 @@ VEZES=5 PAUSA_MS=6000 node scripts/medir-com-login.mjs https://ora5g.com.br ~/ho
 - O servidor da produção perto do banco (D-027 e D-044): o da homologação está a 0,124 s de ida e volta do banco (`sa-east-1`), e cada rodada de idas paga isso.
 - Depois de parado, as idas ainda levam de 0,3 a 0,6 s (VEL-f, seção 4.11): conferir a hipótese do lado do Supabase.
 - A variação do lado do Supabase em uso contínuo (VEL-g, seção 4.12): a mesma leitura levou de 0,07 a 0,14 s lá dentro em metade das vezes e de 0,26 a 0,47 s na outra metade, e os picos de até 3 s atingem todas as telas (J1-d e VEL-g); a causa não está provada.
+- A pré-carga do menu e o banco da produção (J2-b, seção 4.13): no plano Micro, umas 20 telas por minuto com quatro pessoas pararam o banco de teste por dois minutos; falta escolher o plano da produção e medir uma pré-carga mais leve.
