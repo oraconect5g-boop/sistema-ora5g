@@ -378,7 +378,7 @@ node scripts/idas-por-tela.mjs --desde <a linha do log antes da medida>
 
 ### 4.10 O VEL-e (19/11): as permissões da sessão numa conta só
 
-**O que a medida mostrou:** toda tela com login começa pelo molde da sessão, e o menu pré-carrega as telas dos links, cada uma com o seu molde: nas medidas de 19/11, cerca de 8 idas ao molde por tela aberta, com mediana de 0,53 a 0,54 s por ida, contra cerca de 0,17 s de uma leitura simples. No banco, com a sessão do vendedor de teste, o molde levava 0,19 s; 0,155 s disso eram as 42 perguntas de permissão da loja, uma a uma, cada uma conferindo a sessão inteira de novo.
+**O que a medida mostrou:** toda tela com login começa pelo molde da sessão, e o menu pré-carrega as telas dos links, cada uma com o seu molde: nas medidas de 19/11, mais de 300 idas ao molde em cerca de 60 telas abertas (umas 5 por tela), com mediana de 0,53 a 0,54 s por ida, contra cerca de 0,17 s de uma leitura simples. No banco, com a sessão do vendedor de teste, o molde levava 0,19 s; 0,155 s disso eram as 42 perguntas de permissão da loja, uma a uma, cada uma conferindo a sessão inteira de novo.
 
 **O que mudou** (a migration `20261119134800_permissoes_numa_conta`, no `ora5g-dev` desde 19/11, 10:48): `privado.permissoes_vigentes` aplica a regra de `tem_permissao` a um conjunto, com os vínculos vigentes e a loja do turno lidos uma vez; o molde e o sino passam a usá-la. A plataforma não mudou: a versão no ar (`5d3a8ce`) passou a usar a conta só no momento da aplicação.
 
