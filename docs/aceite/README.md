@@ -73,4 +73,5 @@ Um lote aceito que entrega só uma parte do requisito fica registrado em `aceite
 | J1-c (a transferência de ponta a ponta, com duas pessoas, entre as lojas de teste) | [J1-c.md](J1-c.md) | ORA-INV-007 (segue parcial: o estoque das lojas e a homologação) e o ponto T4 | a pedir agora, no sistema real (no ar em `41d69f2`) |
 | J1-d (a transferência de um aparelho pelo IMEI, com duas pessoas, entre as lojas de teste) | [J1-d.md](J1-d.md) | ORA-INV-007 (segue parcial: o estoque das lojas e a homologação) | a pedir agora, no sistema real (no ar em `ee9604b`) |
 | VEL-g (a tela de Transferências numa ida só ao banco) | [VEL-g.md](VEL-g.md) | ORA-QUAL-010 e ORA-INV-007 (seguem parciais) | a pedir agora, no sistema real (no ar em `5711cab`) |
-| J2-a (as provas com login dos relatórios e do estoque, só lendo) | [J2-a.md](J2-a.md) | ORA-REPORT-001, ORA-REPORT-002, ORA-REPORT-005 e ORA-INV-001 (seguem parciais) | a pedir agora, no sistema real |
+| J2-a (as provas com login dos relatórios e do estoque, só lendo) | [J2-a.md](J2-a.md) | ORA-REPORT-001, ORA-REPORT-002, ORA-REPORT-005 e ORA-INV-001 (seguem parciais) | a pedir agora, no sistema real (no ar em `0434cb5`) |
+| J2-b (as provas de acesso por papel e por loja, só lendo) | [J2-b.md](J2-b.md) | ORA-ORG-004 e ORA-QUAL-002 (seguem parciais) | a pedir agora, no sistema real |
