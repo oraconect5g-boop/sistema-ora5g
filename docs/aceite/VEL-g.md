@@ -28,9 +28,11 @@ Quando havia aparelho a separar, havia uma quarta rodada, para os aparelhos livr
 
 | Medida (os gerentes de teste, 5 aberturas) | Antes (19/11) | Depois |
 |---|---|---|
-| Idas ao banco | 6 a 7, em 3 rodadas | medido logo depois da publicação |
-| Tempo no banco | de 0,57 a 0,66 s | medido logo depois da publicação |
-| Até a tela carregar | de 0,60 a 0,69 s | medido logo depois da publicação |
+| Idas ao banco | 6 a 7, em 3 rodadas | 2, em 2 rodadas |
+| Tempo no banco | de 0,57 a 0,66 s | de 0,42 a 0,61 s (0,39 e 0,41 s na segunda medida) |
+| Até a tela carregar | de 0,60 a 0,69 s | de 0,44 a 0,63 s (0,41 e 0,43 s na segunda medida) |
+
+O depois foi medido em 19/11, na versão `5711cab` (no ar desde 16:04). Na mesma medida do antes (1,5 s entre uma abertura e a seguinte), a tela ficou 8% mais rápida para o Gerente (teste) e 26% para o Gerente 2 (teste). A diferença entre os dois não é da tela: em metade das leituras dessa medida, o Supabase demorou mais lá dentro, por um motivo que não é a função (ela leva 0,045 s no banco). Numa segunda medida, com 6 s entre as aberturas e sem essa demora, a tela carregou em 0,43 s e 0,41 s. Para ficar bem mais rápido, falta o servidor da produção perto do banco: cada ida ainda paga 0,14 s de ida e volta até o Supabase.
 
 ## Os passos
 
