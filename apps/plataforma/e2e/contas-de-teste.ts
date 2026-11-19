@@ -1,5 +1,7 @@
 // As contas de teste fictícias (e-mail @example.com) para as provas que rodam contra o site no ar: a prova #11 (J1-a,
-// login-real.spec.ts) e a venda de ponta a ponta (J1-b, venda-real.spec.ts). Só no servidor: ORA_E2E_URL (o site, por
+// login-real.spec.ts), a venda de ponta a ponta (J1-b, venda-real.spec.ts), a transferência entre as lojas de teste (J1-c
+// e J1-d, transferencia-real.spec.ts) e as provas dos relatórios e do estoque, só lendo (J2-a,
+// relatorios-e-estoque-real.spec.ts). Só no servidor: ORA_E2E_URL (o site, por
 // exemplo https://ora5g.com.br) e ORA_E2E_CONTAS (o arquivo protegido das contas, ~/homologacao/contas-de-teste.txt). No CI os
 // dois ficam vazios e as provas são puladas. A senha nunca vai para o log: o Playwright só mostra o nome do passo.
 import { readFileSync } from "node:fs";
@@ -20,15 +22,18 @@ export function contaDeTeste(nome: string): Conta {
   return { nome: n, email, senha, onde };
 }
 
-/** Entra com a conta e chega ao Início da loja dela (com uma loja só, o sistema escolhe sozinho). */
-export async function entrar(pagina: Page, conta: Conta) {
+/**
+ * Entra com a conta e chega ao Início da loja dela (com uma loja só, o sistema escolhe sozinho). Quem tem mais de uma loja (o
+ * Administrador (teste), na rede inteira) escolhe a loja dada.
+ */
+export async function entrar(pagina: Page, conta: Conta, naLoja: string = conta.onde) {
   await pagina.goto("/entrar");
   await pagina.getByLabel("E-mail", { exact: true }).fill(conta.email);
   await pagina.getByLabel("Senha", { exact: true }).fill(conta.senha);
   await pagina.getByRole("button", { name: "Entrar na plataforma" }).click();
   // Com uma loja só, o sistema escolhe sozinho e abre o Início; com mais de uma, a pessoa escolhe.
   const inicio = pagina.getByRole("heading", { level: 1, name: `Olá, ${conta.nome}` });
-  const loja = pagina.getByRole("button", { name: new RegExp(conta.onde.replace(/[()]/g, "\\$&")) });
+  const loja = pagina.getByRole("button", { name: new RegExp(naLoja.replace(/[()]/g, "\\$&")) });
   await expect(inicio.or(loja).first()).toBeVisible();
   if (!(await inicio.isVisible())) await loja.click();
   await expect(pagina).toHaveURL(/\/inicio/);
