@@ -69,3 +69,4 @@ Um lote aceito que entrega só uma parte do requisito fica registrado em `aceite
 | VEL-d (o Catálogo e a lista do Estoque numa ida só ao banco) | [VEL-d.md](VEL-d.md) | ORA-QUAL-010 (segue parcial: a ação do carrinho, o E2E que conclui uma venda e a piloto) | a pedir agora, no sistema real (no ar em `5d3a8ce`) |
 | VEL-e (a sessão e o sino com as permissões numa conta só) | [VEL-e.md](VEL-e.md) | ORA-QUAL-010 (segue parcial: os painéis, a pré-carga do menu, a ação do carrinho e a piloto) | a pedir agora, no sistema real (no ar em `92fe105`) |
 | VEL-f (as conexões com o banco aquecidas) | [VEL-f.md](VEL-f.md) | ORA-QUAL-010 (segue parcial: o servidor da produção perto do banco, os painéis, a ação do carrinho e a piloto) | a pedir agora, no sistema real (no ar em `ce8b5db`) |
+| J1-b (a venda de ponta a ponta no celular, na loja de teste) | [J1-b.md](J1-b.md) | ORA-POS-002 e ORA-QUAL-010 (seguem parciais: o aceite e a piloto) | a pedir agora, no sistema real |
