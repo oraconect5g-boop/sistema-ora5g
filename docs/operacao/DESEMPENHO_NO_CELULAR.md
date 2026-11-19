@@ -332,12 +332,46 @@ A conta das rodadas, pelo código, está na ADR-010 ("O que veio no VEL-b").
 node scripts/idas-por-tela.mjs --desde 4335
 ```
 
+A medida com login de 19/11 (seção 4.9) já roda numa versão com o VEL-c.
+
+### 4.9 O VEL-d (19/11): o Catálogo e a lista do Estoque numa ida só, medidos com login
+
+Desde 18/11 há contas de teste (J1), e a medida com login virou script: `scripts/medir-com-login.mjs` entra com a conta de teste num celular simulado (tela de 360 px, toque, sem limitar a rede), abre cada tela 3 vezes, só lendo, e anota a mediana de dois tempos: até o servidor começar a responder e até a tela terminar de carregar. As idas ao banco de cada abertura vêm do log de tempos (`scripts/idas-por-tela.mjs`). As senhas ficam só em `~/homologacao/contas-de-teste.txt` (permissão 600); o script não imprime e-mail nem senha.
+
+**Antes** (19/11, a versão `4063f39`; o log de tempos a partir da linha 4734, com 59 telas montadas; as contas de teste do vendedor e do gerente, 3 aberturas de cada tela por conta):
+
+| Tela | Idas ao banco | Rodadas | Tempo no banco | Até o servidor responder | Até a tela carregar |
+|---|---:|---:|---:|---:|---:|
+| Catálogo | 9 | 8 | 1,52 s | 0,38 a 0,39 s | 1,54 a 1,55 s |
+| Lista do Estoque | 4 | 4 | 1,20 s | 0,38 a 0,42 s | 1,20 a 1,24 s |
+| Vendas, para comparar | 7 | 3 | 0,73 s | 0,38 a 0,40 s | 0,73 a 0,75 s |
+| Transferências, para comparar | 7 | 3 | 0,74 s | 0,36 a 0,38 s | 0,73 a 0,83 s |
+
+O servidor começa a responder quase no mesmo tempo em todas as telas (de 0,36 a 0,42 s): a tela chega primeiro com o esqueleto, e o resto depois. O que separa uma tela da outra é o tempo até carregar, que acompanha o tempo no banco: no Catálogo, 8 rodadas, uma depois da outra.
+
+**As outras telas, já com o VEL-b e o VEL-c** (a mesma medida): o Início do vendedor fez 6 idas em 2 rodadas (0,65 s no banco) e o do gerente, 10 idas em 2 rodadas (0,88 s); o sino de avisos, 2 idas em 2 rodadas (de 0,80 a 0,88 s). Antes do VEL-c, com a conta do dono, o Início fazia de 18 a 29 pedidos (de 0,93 a 1,47 s) e o sino, 17 (0,72 s). No sino, o ganho é na quantidade de pedidos, não no tempo: as 16 contagens já iam ao mesmo tempo. As contas e o número de aberturas são outros, então a comparação é só indicativa.
+
+**O que mudou** (a migration `20261119131724_catalogo_e_estoque_numa_ida`, no `ora5g-dev` desde 19/11, 10:17): `public.catalogo_tela` e `public.estoque_lista`, só leituras, com o RLS de quem pede (SECURITY INVOKER). Pela conta do código, o Catálogo e a lista do Estoque passam a 2 idas em 2 rodadas cada: o molde da sessão e a leitura única. A busca do Catálogo com um termo continua com a sua leitura antes da leitura única.
+
+**Depois:** medido logo depois da publicação, com os mesmos comandos (no `--desde`, a linha do log na publicação):
+
+```bash
+node scripts/medir-com-login.mjs https://ora5g.com.br ~/homologacao/contas-de-teste.txt \
+  "Vendedor (teste)=/inicio,/vender,/vendas,/catalogo,/estoque,/clientes,/caixa,/transferencias,/connect,/metas" \
+  "Gerente (teste)=/inicio,/vendas,/catalogo,/estoque,/transferencias,/financeiro,/relatorios,/operacao"
+```
+
+```bash
+node scripts/idas-por-tela.mjs --desde <a linha do log na publicação>
+```
+
 ## O que falta
 
 - O proprietário aprovar (ou mudar) as metas, inclusive as das telas com login.
 - Medir o "depois" das telas com login: seção 4.6, com o roteiro de aceite do VEL-a.
-- Medir as telas com login (PDV, caixa, início) pelo script: depende do usuário de teste (J1). Até lá, a medida com login é a do proprietário no navegador (seção 4.6).
+- ~~Medir as telas com login pelo script~~ **Feito em 19/11** com as contas de teste (seção 4.9, `scripts/medir-com-login.mjs`).
 - Confirmar com um login qual chave assina os tokens de hoje (o log de tempos mostra).
-- O teste de ponta a ponta no celular que adiciona, tira e conclui uma venda: depende do usuário de teste (J1).
+- O teste de ponta a ponta no celular que adiciona, tira e conclui uma venda: possível desde as contas de teste (18/11); falta escrever, na loja de teste.
 - O teste no celular e na internet da loja piloto, com o vendedor.
-- A medida do "depois" do VEL-b e do VEL-c, com login (seções 4.7 e 4.8), e o resto do VEL-c: a ação do carrinho e a leitura única do Catálogo e do Estoque (ADR-010, "O que fica para depois").
+- A ação do carrinho, o que sobra do VEL-c (ADR-010, "O que fica para depois"): espera a revisão do Codex e o sim do proprietário. A medida com login das versões com o VEL-b e o VEL-c está na seção 4.9.
+- Ver no banco por que o sino não ficou mais rápido no tempo (de 0,80 a 0,88 s com 2 idas): medir a função `pendencias_da_loja` com uma sessão de teste.
