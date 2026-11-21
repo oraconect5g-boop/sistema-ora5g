@@ -2,7 +2,7 @@
   "_leia": "Checkpoint do programa de execução integral (PR #67). Carregar ao retomar e seguir para o próximo item executável da fila; não reiniciar o projeto. Estados vêm de status-requisitos.json (fonte da rastreabilidade); este arquivo acrescenta lote, bloqueio externo e revisão. Desde 16/11/2026 a medida de avanço é o requisito homologado pelo proprietário: a chave aceites guarda a resposta dele a cada roteiro de aceite (docs/aceite/); um requisito só recebe homologado: true com todos os lotes dele aceitos e sem nada em FALTA na nota de status-requisitos.json.",
   "atualizado_em": "2026-11-21",
   "base": {
-    "main": "9652e20",
+    "main": "75fc23a",
     "pacote": {
       "pr": 67,
       "branch": "docs/execucao-integral-20261110",
@@ -35,12 +35,12 @@
   },
   "publicado": {
     "homologacao": {
-      "commit": "9652e20",
+      "commit": "75fc23a",
       "quando": "2026-11-21",
-      "conferido": "publicar.sh com a conferência completa (#99): a pasta ativa, o serviço local e o domínio ora5g.com.br servindo o commit inteiro de 9652e20 e o ambiente homologacao em /saude/versao; build 21/11/2026 09:44 (o J3-a e o J3-b (as provas do caixa e da venda com desconto e pagamento misto), sem mudança nas telas); antes, em 069d614, build 07:28 (o ROB-a (a varredura de todas as telas e o Início que não cai): depois da publicação, a varredura passou de novo por 339 telas com as cinco contas de teste (de 07:29 a 07:43 de 21/11): nenhuma \"não encontrada\" nem erro do servidor; só os avisos esperados (o cartão \"Ainda não está no financeiro real\" do Financeiro, proposital, e uma frase da tela Entregas do projeto que fala em \"falha da leitura\")); antes, em c76631a, build 19/11 20:16 (o VEL-i: depois da publicação, no site: o comprovante de uma capa abriu em 0,80 s e o de um aparelho em 0,70 s (5 aberturas de cada), e o toque numa venda da lista até o comprovante em 0,85 s); antes, em 538e9a0, build 19:30 (o VEL-h: depois da publicação, a prova da navegação passou no site (19:31), e a medida no site deu os mesmos números da versão montada no servidor: pré-cargas do Início, de Vendas e do Estoque em 6, 7 e 8 no celular, a página com 360 px e a barra à vista, e os toques em 1,36 s (o atalho Início), 1,86 s (o comprovante) e 0,84 s (o \"Mais\" até o Estoque) (a segunda rodada; a primeira pegou um pico do Supabase, de até 5 s num pedido)); antes, em 01f3587, build 18:26 (o VND-a: a lista de Vendas com o nome de quem vendeu; depois da publicação, as 4 provas de acesso passaram no site (19/11, 18:28), com o passo novo da lista de Vendas); antes, em bfeff44, build 17:35 (o J2-b: só as provas de acesso e os documentos); antes, em 0434cb5, build 16:58 (o J2-a: só as provas com login e os documentos); antes, em ed1c7b0, build 16:30 (o registro do VEL-g: só documentos); antes, em 5711cab, build 16:04 (o VEL-g: a tela de Transferências numa ida, abrindo com os dois gerentes de teste); antes, em ee9604b, build 14:51 (o J1-d: só o teste e a configuração dele; /transferencias e /inicio abrindo com os gerentes de teste); antes, em 41d69f2, build 14:22 (o J1-c: só o teste novo; /transferencias e /estoque abrindo com os dois gerentes de teste); antes, em a7e3501, build 13:32 (o J1-b: só os testes novos; \"20 de 20 conexões aquecidas\" na subida; /vender e /vendas abrindo com a conta de teste); antes, em 9e47f60, build 13:06 (o registro do VEL-f: só documentos; \"20 de 20 conexões aquecidas\" de novo na subida); antes, em ce8b5db, build 12:15 (o VEL-f: \"20 de 20 conexões aquecidas\" no log da subida; /inicio e /relatorios levando à entrada sem login); antes, em 92fe105, build 11:05 (o VEL-e: /inicio e /catalogo levando à entrada sem login e, com as contas de teste, abrindo com 200); antes, em 5d3a8ce, build 10:38 (o J1-a e o VEL-d: /catalogo e /estoque levando à entrada sem login e, com a conta de teste, abrindo com 200 pela leitura única); antes, em 4063f39, build 18/11 18:48 (o registro das contas de teste: só documentos); antes, em 38fd013, build 18:11 (o registro dos convites: só documentos); antes, em 42bd4a0, build 17:56 (o CONTAS-a e o REPASSE-a, publicados às 17:37 e de novo às 17:56 com o NEXT_PUBLIC_APP_URL em https://ora5g.com.br: /pagamentos/contas-bancarias e /relatorios/marketplaces/repasses levando à entrada sem login); antes, o OBS-a em 52d0fff (build 17:14); antes, o CD-a em 3839819 (build 16:54: o depósito que não vende); antes, o PERF-a em bfb3125 (build 16:39: os chips nas metas e no bônus); antes, o ABERTO-a em 235c56c (build 15:08, só documentos); antes, o DEMO-c em 324d7b8 (build 14:51: /demo e as trocas de perfil e de loja respondendo 404; / e /entrar com 200 e sem o link da demonstração); antes, o DOC-a em a0ac5c5 (build 14:31, só documentos); antes, o VEL-c em 3fd64b6 (build 14:14: /inicio, /api/pendencias e /vender respondendo 307 para a entrada, sem login); antes, o DEMO-b em aaedf0d (build 13:56: /demo/financeiro/extratos, /demo/estoque/carga, /demo/canais e /demo/connect abrindo com 200); antes, o GRAF-a em d27dd1a (build 13:39), o PDV-c em b8760d2 (build 13:23, com a venda da demonstração mostrando o botão de adicionar a forma de pagamento e sem o link), o CONNECT-c em 2efe8cc (build 12:41, com os checks do GitHub verdes), o INTEG-d em 5334b6a (build 12:23), o PAY-b em ddb6cd6 (build 11:58, com os checks do GitHub verdes), o TRF-c em 37a2b03 (build 11:46), o REIN-c em 488844b (build 11:14), o AUD-b em bf5eaf5 (build 10:31) e o VEL-b em 27b4f6e (build 07:11); o worker dos avisos roda a cada minuto desde 16:32 de 17/11 e a tarefa dos alertas a cada 10 minutos desde 19:13 de 17/11; o log de tempos está ligado (ORA_MEDIR_TEMPOS=1) até o roteiro de aceite do VEL-a"
+      "conferido": "publicar.sh com a conferência completa (#99): a pasta ativa, o serviço local e o domínio ora5g.com.br servindo o commit inteiro de 75fc23a e o ambiente homologacao em /saude/versao; build 21/11/2026 10:08 (o J3-c e o J3-d (as provas de cancelar e devolver e do estoque), sem mudança nas telas); antes, em 9652e20, build 09:44 (o J3-a e o J3-b (as provas do caixa e da venda com desconto e pagamento misto), sem mudança nas telas); antes, em 069d614, build 07:28 (o ROB-a (a varredura de todas as telas e o Início que não cai): depois da publicação, a varredura passou de novo por 339 telas com as cinco contas de teste (de 07:29 a 07:43 de 21/11): nenhuma \"não encontrada\" nem erro do servidor; só os avisos esperados (o cartão \"Ainda não está no financeiro real\" do Financeiro, proposital, e uma frase da tela Entregas do projeto que fala em \"falha da leitura\")); antes, em c76631a, build 19/11 20:16 (o VEL-i: depois da publicação, no site: o comprovante de uma capa abriu em 0,80 s e o de um aparelho em 0,70 s (5 aberturas de cada), e o toque numa venda da lista até o comprovante em 0,85 s); antes, em 538e9a0, build 19:30 (o VEL-h: depois da publicação, a prova da navegação passou no site (19:31), e a medida no site deu os mesmos números da versão montada no servidor: pré-cargas do Início, de Vendas e do Estoque em 6, 7 e 8 no celular, a página com 360 px e a barra à vista, e os toques em 1,36 s (o atalho Início), 1,86 s (o comprovante) e 0,84 s (o \"Mais\" até o Estoque) (a segunda rodada; a primeira pegou um pico do Supabase, de até 5 s num pedido)); antes, em 01f3587, build 18:26 (o VND-a: a lista de Vendas com o nome de quem vendeu; depois da publicação, as 4 provas de acesso passaram no site (19/11, 18:28), com o passo novo da lista de Vendas); antes, em bfeff44, build 17:35 (o J2-b: só as provas de acesso e os documentos); antes, em 0434cb5, build 16:58 (o J2-a: só as provas com login e os documentos); antes, em ed1c7b0, build 16:30 (o registro do VEL-g: só documentos); antes, em 5711cab, build 16:04 (o VEL-g: a tela de Transferências numa ida, abrindo com os dois gerentes de teste); antes, em ee9604b, build 14:51 (o J1-d: só o teste e a configuração dele; /transferencias e /inicio abrindo com os gerentes de teste); antes, em 41d69f2, build 14:22 (o J1-c: só o teste novo; /transferencias e /estoque abrindo com os dois gerentes de teste); antes, em a7e3501, build 13:32 (o J1-b: só os testes novos; \"20 de 20 conexões aquecidas\" na subida; /vender e /vendas abrindo com a conta de teste); antes, em 9e47f60, build 13:06 (o registro do VEL-f: só documentos; \"20 de 20 conexões aquecidas\" de novo na subida); antes, em ce8b5db, build 12:15 (o VEL-f: \"20 de 20 conexões aquecidas\" no log da subida; /inicio e /relatorios levando à entrada sem login); antes, em 92fe105, build 11:05 (o VEL-e: /inicio e /catalogo levando à entrada sem login e, com as contas de teste, abrindo com 200); antes, em 5d3a8ce, build 10:38 (o J1-a e o VEL-d: /catalogo e /estoque levando à entrada sem login e, com a conta de teste, abrindo com 200 pela leitura única); antes, em 4063f39, build 18/11 18:48 (o registro das contas de teste: só documentos); antes, em 38fd013, build 18:11 (o registro dos convites: só documentos); antes, em 42bd4a0, build 17:56 (o CONTAS-a e o REPASSE-a, publicados às 17:37 e de novo às 17:56 com o NEXT_PUBLIC_APP_URL em https://ora5g.com.br: /pagamentos/contas-bancarias e /relatorios/marketplaces/repasses levando à entrada sem login); antes, o OBS-a em 52d0fff (build 17:14); antes, o CD-a em 3839819 (build 16:54: o depósito que não vende); antes, o PERF-a em bfb3125 (build 16:39: os chips nas metas e no bônus); antes, o ABERTO-a em 235c56c (build 15:08, só documentos); antes, o DEMO-c em 324d7b8 (build 14:51: /demo e as trocas de perfil e de loja respondendo 404; / e /entrar com 200 e sem o link da demonstração); antes, o DOC-a em a0ac5c5 (build 14:31, só documentos); antes, o VEL-c em 3fd64b6 (build 14:14: /inicio, /api/pendencias e /vender respondendo 307 para a entrada, sem login); antes, o DEMO-b em aaedf0d (build 13:56: /demo/financeiro/extratos, /demo/estoque/carga, /demo/canais e /demo/connect abrindo com 200); antes, o GRAF-a em d27dd1a (build 13:39), o PDV-c em b8760d2 (build 13:23, com a venda da demonstração mostrando o botão de adicionar a forma de pagamento e sem o link), o CONNECT-c em 2efe8cc (build 12:41, com os checks do GitHub verdes), o INTEG-d em 5334b6a (build 12:23), o PAY-b em ddb6cd6 (build 11:58, com os checks do GitHub verdes), o TRF-c em 37a2b03 (build 11:46), o REIN-c em 488844b (build 11:14), o AUD-b em bf5eaf5 (build 10:31) e o VEL-b em 27b4f6e (build 07:11); o worker dos avisos roda a cada minuto desde 16:32 de 17/11 e a tarefa dos alertas a cada 10 minutos desde 19:13 de 17/11; o log de tempos está ligado (ORA_MEDIR_TEMPOS=1) até o roteiro de aceite do VEL-a"
     },
     "falta_publicar": [
-      "J3-c e J3-d (sem migration e sem mudança nas telas: só as provas no site, cancelar e devolver, com três pessoas, na loja de teste, e o estoque de ponta a ponta, com três pessoas, na loja de teste)",
+      "J3-e (sem migration e sem mudança nas telas: só as provas no site, o cliente, o funil, a ordem de serviço, o pedido de nota sem emitir e as metas, na loja de teste)",
       "o log de tempos está ligado na homologação até o roteiro de aceite do VEL-a: depois ele é desligado e a plataforma é publicada de novo, sem mudança de código"
     ]
   },
@@ -953,7 +953,7 @@
       "titulo": "Cadastro de cliente com dados mínimos e finalidade",
       "prioridade": "P0",
       "estado": "testado",
-      "lote": "L5a clientes; K1a cadastro rápido com WhatsApp (14/11); INTEG-a (16/11): e-mail opcional na PayJoy",
+      "lote": "L5a clientes; K1a cadastro rápido com WhatsApp (14/11); INTEG-a (16/11): e-mail opcional na PayJoy; J3-e (21/11): o cliente, o funil, a ordem de serviço, o pedido de nota sem emitir e as metas, na loja de teste",
       "bloqueio_externo": null,
       "revisado_codex": false,
       "homologado": false
@@ -971,7 +971,7 @@
       "titulo": "Pesquisar cliente por identificadores protegidos",
       "prioridade": "P0",
       "estado": "testado",
-      "lote": "L5a clientes",
+      "lote": "L5a clientes; J3-e (21/11): o cliente, o funil, a ordem de serviço, o pedido de nota sem emitir e as metas, na loja de teste",
       "bloqueio_externo": null,
       "revisado_codex": false,
       "homologado": false
@@ -980,7 +980,7 @@
       "titulo": "Registrar lead, origem, atendente, vendedor responsável e etapa",
       "prioridade": "P0",
       "estado": "testado",
-      "lote": "L5b funil e agenda",
+      "lote": "L5b funil e agenda; J3-e (21/11): o cliente, o funil, a ordem de serviço, o pedido de nota sem emitir e as metas, na loja de teste",
       "bloqueio_externo": null,
       "revisado_codex": false,
       "homologado": false
@@ -989,7 +989,7 @@
       "titulo": "Atividades, lembretes, follow-up e motivos de perda",
       "prioridade": "P1",
       "estado": "testado",
-      "lote": "L5b funil e agenda",
+      "lote": "L5b funil e agenda; J3-e (21/11): o cliente, o funil, a ordem de serviço, o pedido de nota sem emitir e as metas, na loja de teste",
       "bloqueio_externo": null,
       "revisado_codex": false,
       "homologado": false
@@ -1133,7 +1133,7 @@
       "titulo": "Gerar solicitação fiscal a partir da venda em poucos toques",
       "prioridade": "P0",
       "estado": "testado",
-      "lote": "L6a PDV; K1b destinatário completo (14/11)",
+      "lote": "L6a PDV; K1b destinatário completo (14/11); J3-e (21/11): o cliente, o funil, a ordem de serviço, o pedido de nota sem emitir e as metas, na loja de teste",
       "bloqueio_externo": null,
       "revisado_codex": false,
       "homologado": false
@@ -1421,7 +1421,7 @@
       "titulo": "Distinguir quantidade, valor bruto, margem, receita elegível e comissão",
       "prioridade": "P0",
       "estado": "testado",
-      "lote": "L9 metas/comissões; G4 metas e Ora Connect; L9a em 13/11: o extrato e a conta do bônus por medida (D-014); L9b em 14/11: o calculado e o aprovado no fechamento, com o motivo do ajuste; R4 (14/11): revisão do estado; PERF-003b (15/11): margem por vendedor para a gestão; migration aplicada no ora5g-dev em 15/11",
+      "lote": "L9 metas/comissões; G4 metas e Ora Connect; L9a em 13/11: o extrato e a conta do bônus por medida (D-014); L9b em 14/11: o calculado e o aprovado no fechamento, com o motivo do ajuste; R4 (14/11): revisão do estado; PERF-003b (15/11): margem por vendedor para a gestão; migration aplicada no ora5g-dev em 15/11; J3-e (21/11): o cliente, o funil, a ordem de serviço, o pedido de nota sem emitir e as metas, na loja de teste",
       "bloqueio_externo": null,
       "revisado_codex": false,
       "homologado": false
@@ -1430,7 +1430,7 @@
       "titulo": "Definir meta por vendedor, loja, categoria e período",
       "prioridade": "P0",
       "estado": "parcial",
-      "lote": "L9 metas/comissões; G4 metas e Ora Connect (G4b entregue em 13/11: metas mensais da loja e de cada vendedor); L9a: o bônus usa a meta individual",
+      "lote": "L9 metas/comissões; G4 metas e Ora Connect (G4b entregue em 13/11: metas mensais da loja e de cada vendedor); L9a: o bônus usa a meta individual; J3-e (21/11): o cliente, o funil, a ordem de serviço, o pedido de nota sem emitir e as metas, na loja de teste",
       "bloqueio_externo": null,
       "revisado_codex": false,
       "homologado": false
@@ -1439,7 +1439,7 @@
       "titulo": "Painel do gestor mostra metas e resultados da equipe",
       "prioridade": "P0",
       "estado": "parcial",
-      "lote": "L9 metas/comissões; G4 metas e Ora Connect (G4a: produção no Início; metas no G4b); G4b: metas e resultados da equipe no /metas; G4c: a meta no Início; L9a: o bônus de cada vendedor no /metas; L9b: o fechamento no cartão do bônus; PERF-003b (15/11): margem por vendedor para a gestão; migration aplicada no ora5g-dev em 15/11",
+      "lote": "L9 metas/comissões; G4 metas e Ora Connect (G4a: produção no Início; metas no G4b); G4b: metas e resultados da equipe no /metas; G4c: a meta no Início; L9a: o bônus de cada vendedor no /metas; L9b: o fechamento no cartão do bônus; PERF-003b (15/11): margem por vendedor para a gestão; migration aplicada no ora5g-dev em 15/11; J3-e (21/11): o cliente, o funil, a ordem de serviço, o pedido de nota sem emitir e as metas, na loja de teste",
       "bloqueio_externo": null,
       "revisado_codex": false,
       "homologado": false
@@ -1493,7 +1493,7 @@
       "titulo": "Solicitar nota diretamente da venda no celular",
       "prioridade": "P0",
       "estado": "testado",
-      "lote": "L10 fiscal; INTEG-a (16/11): #87; INTEG-c (17/11, #101): a identidade do destinatário da nota com origem registrada, e o envio pelo WhatsApp só com ela comprovada",
+      "lote": "L10 fiscal; INTEG-a (16/11): #87; INTEG-c (17/11, #101): a identidade do destinatário da nota com origem registrada, e o envio pelo WhatsApp só com ela comprovada; J3-e (21/11): o cliente, o funil, a ordem de serviço, o pedido de nota sem emitir e as metas, na loja de teste",
       "bloqueio_externo": null,
       "revisado_codex": false,
       "homologado": false
@@ -1502,7 +1502,7 @@
       "titulo": "Fluxo interno de aprovação de solicitações pelo gestor conforme política",
       "prioridade": "P0",
       "estado": "testado",
-      "lote": "L10 fiscal",
+      "lote": "L10 fiscal; J3-e (21/11): o cliente, o funil, a ordem de serviço, o pedido de nota sem emitir e as metas, na loja de teste",
       "bloqueio_externo": null,
       "revisado_codex": false,
       "homologado": false
@@ -2213,7 +2213,7 @@
       "titulo": "Abrir OS obrigatória para todo aparelho de cliente que entra (até limpeza), com cliente, IMEI, defeito, estado, fotos e acessórios deixados (custódia)",
       "prioridade": "P1",
       "estado": "testado",
-      "lote": "L12a ordem de serviço da assistência (14/11)",
+      "lote": "L12a ordem de serviço da assistência (14/11); J3-e (21/11): o cliente, o funil, a ordem de serviço, o pedido de nota sem emitir e as metas, na loja de teste",
       "bloqueio_externo": "P5 só para o acesso do técnico (login próprio ou registro pela gerência)",
       "revisado_codex": false,
       "homologado": false
@@ -2222,7 +2222,7 @@
       "titulo": "Registrar saída para o técnico central e retorno à loja (custódia em trânsito)",
       "prioridade": "P1",
       "estado": "parcial",
-      "lote": "L12a ordem de serviço da assistência (14/11)",
+      "lote": "L12a ordem de serviço da assistência (14/11); J3-e (21/11): o cliente, o funil, a ordem de serviço, o pedido de nota sem emitir e as metas, na loja de teste",
       "bloqueio_externo": null,
       "revisado_codex": false,
       "homologado": false
@@ -2231,7 +2231,7 @@
       "titulo": "Orçamento do técnico dentro da OS (diagnóstico, peças, valor), com histórico",
       "prioridade": "P1",
       "estado": "testado",
-      "lote": "L12b orçamento da OS (14/11)",
+      "lote": "L12b orçamento da OS (14/11); J3-e (21/11): o cliente, o funil, a ordem de serviço, o pedido de nota sem emitir e as metas, na loja de teste",
       "bloqueio_externo": "P5 só para o técnico orçar no próprio celular (a gerência registra em nome dele)",
       "revisado_codex": false,
       "homologado": false
@@ -2240,7 +2240,7 @@
       "titulo": "Aprovação ou recusa do orçamento pelo cliente, registrada",
       "prioridade": "P1",
       "estado": "testado",
-      "lote": "L12b orçamento da OS (14/11)",
+      "lote": "L12b orçamento da OS (14/11); J3-e (21/11): o cliente, o funil, a ordem de serviço, o pedido de nota sem emitir e as metas, na loja de teste",
       "bloqueio_externo": null,
       "revisado_codex": false,
       "homologado": false
@@ -2258,7 +2258,7 @@
       "titulo": "Entrega com cobrança pelo PDV e produção do vendedor; peças só saem do estoque ligadas a uma OS",
       "prioridade": "P1",
       "estado": "testado",
-      "lote": "L12c entrega, L12d peças e L12e relatórios (14/11)",
+      "lote": "L12c entrega, L12d peças e L12e relatórios (14/11); J3-e (21/11): o cliente, o funil, a ordem de serviço, o pedido de nota sem emitir e as metas, na loja de teste",
       "bloqueio_externo": null,
       "revisado_codex": false,
       "homologado": false
