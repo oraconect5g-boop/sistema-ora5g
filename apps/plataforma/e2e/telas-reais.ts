@@ -12,6 +12,8 @@ export const GERENTE_A = "Gerente (teste)";
 export const GERENTE_B = "Gerente 2 (teste)";
 export const VENDEDOR = "Vendedor (teste)";
 export const ADMINISTRADOR = "Administrador (teste)";
+/** O papel de dono na rede inteira (criada em 21/11, com o sim do proprietário): entra escolhendo a loja. */
+export const DONO = "Dono (teste)";
 
 export type Pessoas = Record<string, Page>;
 
