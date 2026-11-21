@@ -78,4 +78,6 @@ Um lote aceito que entrega só uma parte do requisito fica registrado em `aceite
 | VND-a (o nome de quem vendeu e as vendas da loja para a rede, na lista de Vendas) | [VND-a.md](VND-a.md) | ORA-POS-008 (segue testado) | a pedir agora, no sistema real (no ar em `01f3587`) |
 | VEL-h (a pré-carga mais leve e a barra de baixo à vista no celular) | [VEL-h.md](VEL-h.md) | ORA-QUAL-010 (segue parcial) | a pedir agora, no sistema real (no ar em `538e9a0`) |
 | VEL-i (o comprovante da venda em três rodadas) | [VEL-i.md](VEL-i.md) | ORA-QUAL-010 (segue parcial) e ORA-POS-008 | a pedir agora, no sistema real (no ar em `c76631a`) |
-| ROB-a (a varredura de todas as telas e o Início que não cai) | [ROB-a.md](ROB-a.md) | ORA-QUAL-008 e ORA-REPORT-003 (seguem parciais) | a pedir agora, no sistema real |
+| ROB-a (a varredura de todas as telas e o Início que não cai) | [ROB-a.md](ROB-a.md) | ORA-QUAL-008 e ORA-REPORT-003 (seguem parciais) | a pedir agora, no sistema real (no ar em `069d614`) |
+| J3-a (o caixa de ponta a ponta, com duas pessoas, na loja de teste) | [J3-a.md](J3-a.md) | ORA-PAY-004, ORA-PAY-005 e ORA-PAY-006 (seguem testados) | a pedir agora, no sistema real |
+| J3-b (a venda com desconto aprovado e pagamento misto, na loja de teste) | [J3-b.md](J3-b.md) | ORA-POS-005, ORA-POS-006, ORA-POS-007 e ORA-PAY-001 (seguem testados; o PAY-001, parcial) | a pedir agora, no sistema real |

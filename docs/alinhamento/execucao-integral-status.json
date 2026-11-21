@@ -1,8 +1,8 @@
 {
   "_leia": "Checkpoint do programa de execução integral (PR #67). Carregar ao retomar e seguir para o próximo item executável da fila; não reiniciar o projeto. Estados vêm de status-requisitos.json (fonte da rastreabilidade); este arquivo acrescenta lote, bloqueio externo e revisão. Desde 16/11/2026 a medida de avanço é o requisito homologado pelo proprietário: a chave aceites guarda a resposta dele a cada roteiro de aceite (docs/aceite/); um requisito só recebe homologado: true com todos os lotes dele aceitos e sem nada em FALTA na nota de status-requisitos.json.",
-  "atualizado_em": "2026-11-17",
+  "atualizado_em": "2026-11-21",
   "base": {
-    "main": "c76631a",
+    "main": "069d614",
     "pacote": {
       "pr": 67,
       "branch": "docs/execucao-integral-20261110",
@@ -35,12 +35,12 @@
   },
   "publicado": {
     "homologacao": {
-      "commit": "c76631a",
-      "quando": "2026-11-19",
-      "conferido": "publicar.sh com a conferência completa (#99): a pasta ativa, o serviço local e o domínio ora5g.com.br servindo o commit inteiro de c76631a e o ambiente homologacao em /saude/versao; build 19/11/2026 20:16 (o VEL-i: depois da publicação, no site: o comprovante de uma capa abriu em 0,80 s e o de um aparelho em 0,70 s (5 aberturas de cada), e o toque numa venda da lista até o comprovante em 0,85 s); antes, em 538e9a0, build 19:30 (o VEL-h: depois da publicação, a prova da navegação passou no site (19:31), e a medida no site deu os mesmos números da versão montada no servidor: pré-cargas do Início, de Vendas e do Estoque em 6, 7 e 8 no celular, a página com 360 px e a barra à vista, e os toques em 1,36 s (o atalho Início), 1,86 s (o comprovante) e 0,84 s (o \"Mais\" até o Estoque) (a segunda rodada; a primeira pegou um pico do Supabase, de até 5 s num pedido)); antes, em 01f3587, build 18:26 (o VND-a: a lista de Vendas com o nome de quem vendeu; depois da publicação, as 4 provas de acesso passaram no site (19/11, 18:28), com o passo novo da lista de Vendas); antes, em bfeff44, build 17:35 (o J2-b: só as provas de acesso e os documentos); antes, em 0434cb5, build 16:58 (o J2-a: só as provas com login e os documentos); antes, em ed1c7b0, build 16:30 (o registro do VEL-g: só documentos); antes, em 5711cab, build 16:04 (o VEL-g: a tela de Transferências numa ida, abrindo com os dois gerentes de teste); antes, em ee9604b, build 14:51 (o J1-d: só o teste e a configuração dele; /transferencias e /inicio abrindo com os gerentes de teste); antes, em 41d69f2, build 14:22 (o J1-c: só o teste novo; /transferencias e /estoque abrindo com os dois gerentes de teste); antes, em a7e3501, build 13:32 (o J1-b: só os testes novos; \"20 de 20 conexões aquecidas\" na subida; /vender e /vendas abrindo com a conta de teste); antes, em 9e47f60, build 13:06 (o registro do VEL-f: só documentos; \"20 de 20 conexões aquecidas\" de novo na subida); antes, em ce8b5db, build 12:15 (o VEL-f: \"20 de 20 conexões aquecidas\" no log da subida; /inicio e /relatorios levando à entrada sem login); antes, em 92fe105, build 11:05 (o VEL-e: /inicio e /catalogo levando à entrada sem login e, com as contas de teste, abrindo com 200); antes, em 5d3a8ce, build 10:38 (o J1-a e o VEL-d: /catalogo e /estoque levando à entrada sem login e, com a conta de teste, abrindo com 200 pela leitura única); antes, em 4063f39, build 18/11 18:48 (o registro das contas de teste: só documentos); antes, em 38fd013, build 18:11 (o registro dos convites: só documentos); antes, em 42bd4a0, build 17:56 (o CONTAS-a e o REPASSE-a, publicados às 17:37 e de novo às 17:56 com o NEXT_PUBLIC_APP_URL em https://ora5g.com.br: /pagamentos/contas-bancarias e /relatorios/marketplaces/repasses levando à entrada sem login); antes, o OBS-a em 52d0fff (build 17:14); antes, o CD-a em 3839819 (build 16:54: o depósito que não vende); antes, o PERF-a em bfb3125 (build 16:39: os chips nas metas e no bônus); antes, o ABERTO-a em 235c56c (build 15:08, só documentos); antes, o DEMO-c em 324d7b8 (build 14:51: /demo e as trocas de perfil e de loja respondendo 404; / e /entrar com 200 e sem o link da demonstração); antes, o DOC-a em a0ac5c5 (build 14:31, só documentos); antes, o VEL-c em 3fd64b6 (build 14:14: /inicio, /api/pendencias e /vender respondendo 307 para a entrada, sem login); antes, o DEMO-b em aaedf0d (build 13:56: /demo/financeiro/extratos, /demo/estoque/carga, /demo/canais e /demo/connect abrindo com 200); antes, o GRAF-a em d27dd1a (build 13:39), o PDV-c em b8760d2 (build 13:23, com a venda da demonstração mostrando o botão de adicionar a forma de pagamento e sem o link), o CONNECT-c em 2efe8cc (build 12:41, com os checks do GitHub verdes), o INTEG-d em 5334b6a (build 12:23), o PAY-b em ddb6cd6 (build 11:58, com os checks do GitHub verdes), o TRF-c em 37a2b03 (build 11:46), o REIN-c em 488844b (build 11:14), o AUD-b em bf5eaf5 (build 10:31) e o VEL-b em 27b4f6e (build 07:11); o worker dos avisos roda a cada minuto desde 16:32 de 17/11 e a tarefa dos alertas a cada 10 minutos desde 19:13 de 17/11; o log de tempos está ligado (ORA_MEDIR_TEMPOS=1) até o roteiro de aceite do VEL-a"
+      "commit": "069d614",
+      "quando": "2026-11-21",
+      "conferido": "publicar.sh com a conferência completa (#99): a pasta ativa, o serviço local e o domínio ora5g.com.br servindo o commit inteiro de 069d614 e o ambiente homologacao em /saude/versao; build 21/11/2026 07:28 (o ROB-a (a varredura de todas as telas e o Início que não cai): depois da publicação, a varredura passou de novo por 339 telas com as cinco contas de teste (de 07:29 a 07:43 de 21/11): nenhuma \"não encontrada\" nem erro do servidor; só os avisos esperados (o cartão \"Ainda não está no financeiro real\" do Financeiro, proposital, e uma frase da tela Entregas do projeto que fala em \"falha da leitura\")); antes, em c76631a, build 19/11 20:16 (o VEL-i: depois da publicação, no site: o comprovante de uma capa abriu em 0,80 s e o de um aparelho em 0,70 s (5 aberturas de cada), e o toque numa venda da lista até o comprovante em 0,85 s); antes, em 538e9a0, build 19:30 (o VEL-h: depois da publicação, a prova da navegação passou no site (19:31), e a medida no site deu os mesmos números da versão montada no servidor: pré-cargas do Início, de Vendas e do Estoque em 6, 7 e 8 no celular, a página com 360 px e a barra à vista, e os toques em 1,36 s (o atalho Início), 1,86 s (o comprovante) e 0,84 s (o \"Mais\" até o Estoque) (a segunda rodada; a primeira pegou um pico do Supabase, de até 5 s num pedido)); antes, em 01f3587, build 18:26 (o VND-a: a lista de Vendas com o nome de quem vendeu; depois da publicação, as 4 provas de acesso passaram no site (19/11, 18:28), com o passo novo da lista de Vendas); antes, em bfeff44, build 17:35 (o J2-b: só as provas de acesso e os documentos); antes, em 0434cb5, build 16:58 (o J2-a: só as provas com login e os documentos); antes, em ed1c7b0, build 16:30 (o registro do VEL-g: só documentos); antes, em 5711cab, build 16:04 (o VEL-g: a tela de Transferências numa ida, abrindo com os dois gerentes de teste); antes, em ee9604b, build 14:51 (o J1-d: só o teste e a configuração dele; /transferencias e /inicio abrindo com os gerentes de teste); antes, em 41d69f2, build 14:22 (o J1-c: só o teste novo; /transferencias e /estoque abrindo com os dois gerentes de teste); antes, em a7e3501, build 13:32 (o J1-b: só os testes novos; \"20 de 20 conexões aquecidas\" na subida; /vender e /vendas abrindo com a conta de teste); antes, em 9e47f60, build 13:06 (o registro do VEL-f: só documentos; \"20 de 20 conexões aquecidas\" de novo na subida); antes, em ce8b5db, build 12:15 (o VEL-f: \"20 de 20 conexões aquecidas\" no log da subida; /inicio e /relatorios levando à entrada sem login); antes, em 92fe105, build 11:05 (o VEL-e: /inicio e /catalogo levando à entrada sem login e, com as contas de teste, abrindo com 200); antes, em 5d3a8ce, build 10:38 (o J1-a e o VEL-d: /catalogo e /estoque levando à entrada sem login e, com a conta de teste, abrindo com 200 pela leitura única); antes, em 4063f39, build 18/11 18:48 (o registro das contas de teste: só documentos); antes, em 38fd013, build 18:11 (o registro dos convites: só documentos); antes, em 42bd4a0, build 17:56 (o CONTAS-a e o REPASSE-a, publicados às 17:37 e de novo às 17:56 com o NEXT_PUBLIC_APP_URL em https://ora5g.com.br: /pagamentos/contas-bancarias e /relatorios/marketplaces/repasses levando à entrada sem login); antes, o OBS-a em 52d0fff (build 17:14); antes, o CD-a em 3839819 (build 16:54: o depósito que não vende); antes, o PERF-a em bfb3125 (build 16:39: os chips nas metas e no bônus); antes, o ABERTO-a em 235c56c (build 15:08, só documentos); antes, o DEMO-c em 324d7b8 (build 14:51: /demo e as trocas de perfil e de loja respondendo 404; / e /entrar com 200 e sem o link da demonstração); antes, o DOC-a em a0ac5c5 (build 14:31, só documentos); antes, o VEL-c em 3fd64b6 (build 14:14: /inicio, /api/pendencias e /vender respondendo 307 para a entrada, sem login); antes, o DEMO-b em aaedf0d (build 13:56: /demo/financeiro/extratos, /demo/estoque/carga, /demo/canais e /demo/connect abrindo com 200); antes, o GRAF-a em d27dd1a (build 13:39), o PDV-c em b8760d2 (build 13:23, com a venda da demonstração mostrando o botão de adicionar a forma de pagamento e sem o link), o CONNECT-c em 2efe8cc (build 12:41, com os checks do GitHub verdes), o INTEG-d em 5334b6a (build 12:23), o PAY-b em ddb6cd6 (build 11:58, com os checks do GitHub verdes), o TRF-c em 37a2b03 (build 11:46), o REIN-c em 488844b (build 11:14), o AUD-b em bf5eaf5 (build 10:31) e o VEL-b em 27b4f6e (build 07:11); o worker dos avisos roda a cada minuto desde 16:32 de 17/11 e a tarefa dos alertas a cada 10 minutos desde 19:13 de 17/11; o log de tempos está ligado (ORA_MEDIR_TEMPOS=1) até o roteiro de aceite do VEL-a"
     },
     "falta_publicar": [
-      "ROB-a (sem migration: a varredura de todas as telas e o Início que não cai)",
+      "J3-a e J3-b (sem migration e sem mudança nas telas: só as provas no site, o caixa de ponta a ponta, com duas pessoas, na loja de teste, e a venda com desconto aprovado e pagamento misto, na loja de teste)",
       "o log de tempos está ligado na homologação até o roteiro de aceite do VEL-a: depois ele é desligado e a plataforma é publicada de novo, sem mudança de código"
     ]
   },
@@ -1079,7 +1079,7 @@
       "titulo": "Calcular preço/desconto e totais server-side",
       "prioridade": "P0",
       "estado": "testado",
-      "lote": "L6 PDV",
+      "lote": "L6 PDV; J3-b (21/11): a venda com desconto aprovado e pagamento misto, na loja de teste",
       "bloqueio_externo": null,
       "revisado_codex": false,
       "homologado": false
@@ -1088,7 +1088,7 @@
       "titulo": "Solicitar aprovação do gerente para desconto acima do limite",
       "prioridade": "P0",
       "estado": "testado",
-      "lote": "L6 PDV",
+      "lote": "L6 PDV; J3-b (21/11): a venda com desconto aprovado e pagamento misto, na loja de teste",
       "bloqueio_externo": null,
       "revisado_codex": false,
       "homologado": false
@@ -1097,7 +1097,7 @@
       "titulo": "Suportar múltiplos pagamentos na mesma venda",
       "prioridade": "P0",
       "estado": "testado",
-      "lote": "L6 PDV",
+      "lote": "L6 PDV; J3-b (21/11): a venda com desconto aprovado e pagamento misto, na loja de teste",
       "bloqueio_externo": null,
       "revisado_codex": false,
       "homologado": false
@@ -1187,7 +1187,7 @@
       "titulo": "Registrar dinheiro, Pix direto, Pix PicPay POS e cartões",
       "prioridade": "P0",
       "estado": "parcial",
-      "lote": "L7a pagamentos",
+      "lote": "L7a pagamentos; J3-b (21/11): a venda com desconto aprovado e pagamento misto, na loja de teste",
       "bloqueio_externo": null,
       "revisado_codex": false,
       "homologado": false
@@ -1214,7 +1214,7 @@
       "titulo": "Abrir caixa com saldo inicial e responsável",
       "prioridade": "P0",
       "estado": "testado",
-      "lote": "L7 pagamentos/caixa",
+      "lote": "L7 pagamentos/caixa; J3-a (21/11): o caixa de ponta a ponta, com duas pessoas, na loja de teste",
       "bloqueio_externo": null,
       "revisado_codex": false,
       "homologado": false
@@ -1223,7 +1223,7 @@
       "titulo": "Registrar sangria, suprimento, reforço, devolução e saída autorizada",
       "prioridade": "P0",
       "estado": "testado",
-      "lote": "L7 pagamentos/caixa (L7c em 13/11: saída autorizada pela decisão D-017 do proprietário, gerente ou dono)",
+      "lote": "L7 pagamentos/caixa (L7c em 13/11: saída autorizada pela decisão D-017 do proprietário, gerente ou dono); J3-a (21/11): o caixa de ponta a ponta, com duas pessoas, na loja de teste",
       "bloqueio_externo": null,
       "revisado_codex": false,
       "homologado": false
@@ -1232,7 +1232,7 @@
       "titulo": "Fechar caixa com valor contado e diferença",
       "prioridade": "P0",
       "estado": "testado",
-      "lote": "L7 pagamentos/caixa",
+      "lote": "L7 pagamentos/caixa; J3-a (21/11): o caixa de ponta a ponta, com duas pessoas, na loja de teste",
       "bloqueio_externo": null,
       "revisado_codex": false,
       "homologado": false
