@@ -6,7 +6,7 @@ import { MoldeReal } from "../../componentes/MoldeReal";
 import { Aviso, Cartao, TituloPagina } from "../../componentes/ui";
 import { montarMenu, PAGINAS_REAIS } from "../../lib/acesso/menu";
 import { horaDoFimDoTurno } from "../../lib/acesso/regras";
-import { obterSessao } from "../../lib/acesso/sessao";
+import { FalhaDoServico, obterSessao } from "../../lib/acesso/sessao";
 import type { LojaDoFiltro } from "../../lib/financeiro/escopo";
 import { periodoFinanceiro } from "../../lib/financeiro/painel";
 import { lerPaineisDoInicio } from "../../lib/inicio/consulta";
@@ -42,17 +42,24 @@ export default async function Inicio({ searchParams }: { searchParams: Promise<P
   const gestao = permissoes.has("venda.ver_unidade");
   const visao = visaoDoInicio({ verTodas: permissoes.has("venda.ver_todas"), verUnidade: gestao, verPropria: inicio.propria });
   // O que espera a pessoa (lib/inicio/pendencias.ts: a mesma leitura do sino do topo, G6) e os painéis, em paralelo.
-  // Erro nas pendências derruba a página; os painéis não: cada leitura volta com o próprio estado (ok, indisponível ou falha).
+  // A falha das pendências vira um aviso no lugar dos cartões (ROB-a, 21/11): antes derrubava a tela inteira, e a página de
+  // erro não tinha o menu, então quem entrava num momento de banco lento ficava preso nela. Zero inventado continua
+  // proibido: sem a leitura, nenhum cartão aparece, só o aviso. Os painéis voltam cada um com o próprio estado.
   // ORG-009: as regiões só servem a quem vê a rede (a soma por região na rede inteira).
   // REPORT-001b: o estoque abaixo do mínimo, só aqui (o sino não lê o painel do estoque).
   const [pendenciasLidas, paineis, regioes, alertaDoEstoque] = await Promise.all([
-    lerPendencias(supabase, { usuario: usuario.id, unidade, permissoes }),
+    lerPendencias(supabase, { usuario: usuario.id, unidade, permissoes }).catch((erro: unknown) => {
+      if (!(erro instanceof FalhaDoServico)) throw erro;
+      console.error("inicio: falha ao ler as pendências", { etapa: erro.etapa });
+      return null;
+    }),
     lerPaineisDoInicio(supabase, { visao, periodo: periodoFinanceiro(textoDoParametro(parametros.periodo)), loja: textoDoParametro(parametros.loja), turno, usuario: usuario.id, ranking: inicio.ranking, custo: inicio.custo,
       metas: { gestao: permissoes.has("metas.gerir") || permissoes.has("metas.ver_unidade"), propria: permissoes.has("metas.ver_propria") } }),
     visao === "rede" ? lerRegioesDoPainel(supabase) : Promise.resolve(null),
     lerAlertaDoEstoque(supabase, { rede: visao === "rede", unidade, permissoes }),
   ]);
-  const pendencias = alertaDoEstoque?.estado === "ok" && alertaDoEstoque.pendencia ? [...pendenciasLidas, alertaDoEstoque.pendencia] : pendenciasLidas;
+  const pendencias = pendenciasLidas === null ? []
+    : alertaDoEstoque?.estado === "ok" && alertaDoEstoque.pendencia ? [...pendenciasLidas, alertaDoEstoque.pendencia] : pendenciasLidas;
   const fim = horaDoFimDoTurno(situacao.turno_termina_em);
   const atalhos = montarMenu(permissoes).visiveis.filter((p) => p !== "inicio");
 
@@ -76,6 +83,9 @@ export default async function Inicio({ searchParams }: { searchParams: Promise<P
             );
           })}
         </section>
+      )}
+      {pendenciasLidas === null && (
+        <Aviso tom="aviso">Não deu para ler agora o que espera você nesta loja (aprovações, notas, caixas, transferências). Os painéis abaixo continuam; <Link href="/inicio" className="font-semibold underline">tente de novo</Link> daqui a pouco.</Aviso>
       )}
       {alertaDoEstoque?.estado === "falha" && <Aviso tom="aviso">Não deu para ler o estoque abaixo do mínimo agora; o painel do estoque mostra quando o banco responder.</Aviso>}
       <ConteudoInicio paineis={paineis} usuario={usuario.id} turno={turno} conferenteDeCaixa={permissoes.has("caixa.conferir")} regioes={regioes} />
