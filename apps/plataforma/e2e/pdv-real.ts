@@ -9,6 +9,16 @@ export const CAPA = { sku: "ACE-0001", nome: "Capa de proteção", preco: "R$ 79
 /** A data e a hora de agora em Brasília ("2026-11-21 09:15"), para marcar o que a prova grava (a observação, o motivo). */
 export const horaDeBrasilia = () => new Date().toLocaleString("sv-SE", { timeZone: "America/Sao_Paulo" }).slice(0, 16);
 
+/** Um IMEI de teste válido (o último dígito confere os outros 14, como o banco exige), diferente a cada vez. */
+export function imeiDeTeste(agora = Date.now()): string {
+  const corpo = `3520997${String(Math.floor(agora / 1000) % 10_000_000).padStart(7, "0")}`;
+  const soma = [...corpo].reverse().reduce((total, digito, i) => {
+    const n = Number(digito) * (i % 2 === 0 ? 2 : 1);
+    return total + (n > 9 ? n - 9 : n);
+  }, 0);
+  return `${corpo}${(10 - (soma % 10)) % 10}`;
+}
+
 /** Um cartão da tela pelo título. */
 export const cartao = (p: Page, titulo: string | RegExp) =>
   p.getByRole("heading", { level: 2, name: titulo, exact: typeof titulo === "string" }).locator("xpath=ancestor::section[1]");

@@ -17,22 +17,12 @@
 import { expect, test, type Page } from "@playwright/test";
 
 import { arquivoDasContas, noAr } from "./contas-de-teste";
-import { CAPA, cartao, horaDeBrasilia } from "./pdv-real";
+import { CAPA, cartao, horaDeBrasilia, imeiDeTeste } from "./pdv-real";
 import { comPessoas, disponivelNaLista, DONO, GERENTE_A, LOJA_A, VENDEDOR } from "./telas-reais";
 
 const MARCA = "teste automático do estoque";
 const FORNECEDOR = "Fornecedor (teste)";
 const APARELHO = { sku: "APA-0001", nome: "Galaxy A15 128 GB Azul" };
-
-/** Um IMEI de teste válido (o último dígito confere os outros 14, como o banco exige), diferente a cada vez. */
-export function imeiDeTeste(agora = Date.now()): string {
-  const corpo = `3520997${String(Math.floor(agora / 1000) % 10_000_000).padStart(7, "0")}`;
-  const soma = [...corpo].reverse().reduce((total, digito, i) => {
-    const n = Number(digito) * (i % 2 === 0 ? 2 : 1);
-    return total + (n > 9 ? n - 9 : n);
-  }, 0);
-  return `${corpo}${(10 - (soma % 10)) % 10}`;
-}
 
 /** O físico da capa na loja: o disponível da lista do Estoque mais o que está "em venda" (reservado). */
 async function fisicoNaLoja(p: Page, sku: string): Promise<number> {
