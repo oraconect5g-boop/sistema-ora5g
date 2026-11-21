@@ -79,5 +79,7 @@ Um lote aceito que entrega só uma parte do requisito fica registrado em `aceite
 | VEL-h (a pré-carga mais leve e a barra de baixo à vista no celular) | [VEL-h.md](VEL-h.md) | ORA-QUAL-010 (segue parcial) | a pedir agora, no sistema real (no ar em `538e9a0`) |
 | VEL-i (o comprovante da venda em três rodadas) | [VEL-i.md](VEL-i.md) | ORA-QUAL-010 (segue parcial) e ORA-POS-008 | a pedir agora, no sistema real (no ar em `c76631a`) |
 | ROB-a (a varredura de todas as telas e o Início que não cai) | [ROB-a.md](ROB-a.md) | ORA-QUAL-008 e ORA-REPORT-003 (seguem parciais) | a pedir agora, no sistema real (no ar em `069d614`) |
-| J3-a (o caixa de ponta a ponta, com duas pessoas, na loja de teste) | [J3-a.md](J3-a.md) | ORA-PAY-004, ORA-PAY-005 e ORA-PAY-006 (seguem testados) | a pedir agora, no sistema real |
-| J3-b (a venda com desconto aprovado e pagamento misto, na loja de teste) | [J3-b.md](J3-b.md) | ORA-POS-005, ORA-POS-006, ORA-POS-007 e ORA-PAY-001 (seguem testados; o PAY-001, parcial) | a pedir agora, no sistema real |
+| J3-a (o caixa de ponta a ponta, com duas pessoas, na loja de teste) | [J3-a.md](J3-a.md) | ORA-PAY-004, ORA-PAY-005 e ORA-PAY-006 (seguem testados) | a pedir agora, no sistema real (no ar em `9652e20`) |
+| J3-b (a venda com desconto aprovado e pagamento misto, na loja de teste) | [J3-b.md](J3-b.md) | ORA-POS-005, ORA-POS-006, ORA-POS-007 e ORA-PAY-001 (seguem testados; o PAY-001, parcial) | a pedir agora, no sistema real (no ar em `9652e20`) |
+| J3-c (cancelar e devolver, com três pessoas, na loja de teste) | [J3-c.md](J3-c.md) | ORA-POS-010, ORA-PAY-003 e ORA-PAY-005 (o POS-010 e o PAY-003 seguem parciais; o PAY-005, testado) | a pedir agora, no sistema real |
+| J3-d (o estoque de ponta a ponta, com três pessoas, na loja de teste) | [J3-d.md](J3-d.md) | ORA-INV-003, ORA-INV-004, ORA-INV-008 e ORA-INV-009 (o INV-004 segue parcial; os outros, testados) | a pedir agora, no sistema real |

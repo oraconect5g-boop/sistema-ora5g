@@ -12,48 +12,10 @@
 import { expect, test, type Page } from "@playwright/test";
 
 import { arquivoDasContas, noAr } from "./contas-de-teste";
-import { cartao, horaDeBrasilia } from "./pdv-real";
+import { abrirCaixaCom, abrirTelaDoCaixa, cartao, conferirCaixa, dinheiroNaGaveta, fecharSemDiferenca, horaDeBrasilia } from "./pdv-real";
 import { comPessoas, GERENTE_A, VENDEDOR } from "./telas-reais";
 
 const MARCA = "teste automático do caixa";
-
-/** A tela do caixa chega em partes: espera o caixa aberto ou o cartão de abrir. */
-async function abrirTelaDoCaixa(p: Page) {
-  await p.goto("/caixa");
-  await expect(p.getByRole("heading", { level: 2, name: /^(Abrir caixa|Meu caixa aberto)$/ })).toBeVisible();
-}
-
-/** O dinheiro que deve estar na gaveta, como o caixa aberto mostra ("Dinheiro"), em reais com vírgula. */
-async function dinheiroNaGaveta(p: Page): Promise<string> {
-  const linha = cartao(p, "Meu caixa aberto").locator("dt", { hasText: /^Dinheiro$/ });
-  await expect(linha).toBeVisible();
-  const valor = (await linha.locator("xpath=following-sibling::dd[1]").innerText()).trim();
-  const achado = /R\$\s*([\d.]+,\d{2})/.exec(valor);
-  if (!achado) throw new Error(`o caixa não mostrou o dinheiro da gaveta: "${valor}"`);
-  return achado[1] as string;
-}
-
-/** Fecha o caixa aberto contando o dinheiro esperado, com a observação dada. */
-async function fecharSemDiferenca(p: Page, observacao: string) {
-  const contado = await dinheiroNaGaveta(p);
-  const fechar = cartao(p, "Fechar caixa");
-  await fechar.getByLabel("Dinheiro contado (R$)").fill(contado);
-  await fechar.getByLabel("Observação").fill(observacao);
-  await fechar.getByRole("button", { name: "Fechar caixa" }).click();
-  await expect(p.getByText("Caixa fechado.")).toBeVisible();
-  return contado;
-}
-
-/** O gerente confere, entre os caixas fechados, o que tem a observação dada; confere que ficou sem diferença. */
-async function conferir(p: Page, observacao: string) {
-  await abrirTelaDoCaixa(p);
-  const item = cartao(p, "Caixas fechados para conferir").getByRole("listitem").filter({ hasText: observacao });
-  await expect(item).toHaveCount(1);
-  await expect(item).toContainText("sem diferença");
-  await item.getByLabel("Observação").fill(`${MARCA}: conferido`);
-  await item.getByRole("button", { name: "Conferir" }).click();
-  await expect(p.getByText("Caixa conferido.")).toBeVisible();
-}
 
 test.describe("o caixa de ponta a ponta na loja de teste (J3-a)", () => {
   test.skip(!arquivoDasContas || !noAr, "só no servidor, contra o site no ar (ORA_E2E_URL e ORA_E2E_CONTAS)");
@@ -71,18 +33,12 @@ test.describe("o caixa de ponta a ponta na loja de teste (J3-a)", () => {
         if (await cartao(v, "Meu caixa aberto").isVisible()) {
           const marca = `${MARCA}: fecha o caixa que ficou aberto (${vez})`;
           await fecharSemDiferenca(v, marca);
-          await conferir(g, marca);
+          await conferirCaixa(g, marca, `${MARCA}: conferido`);
           await abrirTelaDoCaixa(v);
         }
       });
 
-      await test.step("o vendedor abre o caixa com R$ 50,00 de troco", async () => {
-        const abrir = cartao(v, "Abrir caixa");
-        await abrir.getByLabel("Fundo de troco (R$)").fill("50,00");
-        await abrir.getByRole("button", { name: "Abrir caixa" }).click();
-        await expect(cartao(v, "Meu caixa aberto")).toBeVisible();
-        expect(await dinheiroNaGaveta(v)).toBe("50,00");
-      });
+      await test.step("o vendedor abre o caixa com R$ 50,00 de troco", () => abrirCaixaCom(v, "50,00"));
 
       await test.step("lança R$ 10,00 de suprimento e R$ 20,00 de sangria", async () => {
         for (const [tipo, valor, aviso] of [["suprimento", "10,00", "Suprimento lançado."], ["sangria", "20,00", "Sangria lançada."]] as const) {
@@ -115,7 +71,7 @@ test.describe("o caixa de ponta a ponta na loja de teste (J3-a)", () => {
       await test.step("o vendedor fecha contando R$ 35,00, sem diferença, e o gerente confere", async () => {
         const marca = `${MARCA}: fecha o caixa da prova (${vez})`;
         expect(await fecharSemDiferenca(v, marca)).toBe("35,00");
-        await conferir(g, marca);
+        await conferirCaixa(g, marca, `${MARCA}: conferido`);
       });
     });
   });
