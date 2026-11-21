@@ -158,7 +158,6 @@ vi.mock("../../lib/acesso/sessao", () => ({
   },
 }));
 
-import { FalhaDoServico } from "../../lib/acesso/sessao";
 import LayoutInicio from "./layout";
 import CarregandoInicio from "./loading";
 import Inicio from "./page";
@@ -226,6 +225,13 @@ async function pagina(parametros: Record<string, string> = {}) {
       return [trechos.find((c) => typeof c === "string"), trechos.find((c) => typeof c === "number")];
     })),
   };
+}
+
+/** ROB-a (21/11): a falha das pendências não derruba mais a tela; nenhum cartão de pendência aparece (zero inventado não), só o aviso. */
+async function semPendenciasComAviso() {
+  const p = await pagina();
+  expect(p.pendencias).toEqual({});
+  expect(p.texto).toContain("Não deu para ler agora o que espera você nesta loja");
 }
 
 // ---------------------------------------------------------------------------------------------
@@ -643,10 +649,14 @@ describe("Início: o gerente acompanha a loja do turno", () => {
     cenario.errosDasTabelas = {};
     cenario.semContagem = ["contas_a_pagar"];
     expect((await pagina()).pendencias).toEqual(semContas);
-    // Erro de outra natureza para a página: zero pendência inventado não.
+    // Erro de outra natureza (o banco lento, 57014): zero pendência inventado não. Desde o ROB-a (21/11), a tela continua de
+    // pé, sem nenhum cartão de pendência e com o aviso; antes ela caía inteira, numa página de erro sem o menu.
     cenario.semContagem = [];
     cenario.errosDasTabelas.contas_a_pagar = { code: "57014" };
-    await expect(pagina()).rejects.toBeInstanceOf(FalhaDoServico);
+    const comFalha = await pagina();
+    expect(comFalha.pendencias).toEqual({});
+    expect(comFalha.texto).toContain("Não deu para ler agora o que espera você nesta loja");
+    expect(comFalha.cartoes).toContain("Atalhos");
   });
 });
 
@@ -1192,10 +1202,10 @@ describe("Início: o que para a página inteira", () => {
 
   it("contagem de pendência com erro não vira zero pendências", async () => {
     cenario.errosDasTabelas.caixas = { code: "57014" };
-    await expect(pagina()).rejects.toBeInstanceOf(FalhaDoServico);
+    await semPendenciasComAviso();
     // Nas saídas do caixa também: só a tabela ausente (migration não aplicada) tira a pendência.
     cenario.errosDasTabelas = { caixa_saidas: { code: "57014" } };
-    await expect(pagina()).rejects.toBeInstanceOf(FalhaDoServico);
+    await semPendenciasComAviso();
   });
 
   it("sessão sem o nome de quem entrou: a saudação fica neutra, sem nome inventado", async () => {
@@ -1398,7 +1408,7 @@ describe("Início: alertas da assistência (L12f)", () => {
     expect(p.enderecos).toContain("/assistencia?ver=fora");
   });
 
-  it("banco sem o andamento do serviço: some só a das prontas; sem a OS: somem as duas; outro erro derruba a página, sem zero inventado", async () => {
+  it("banco sem o andamento do serviço: some só a das prontas; sem a OS: somem as duas; outro erro vira o aviso, sem zero inventado", async () => {
     entrar("vendedor");
     cenario.permissoes.add("os.abrir");
     cenario.tabelas.ordens_servico = OS_DO_CENARIO;
@@ -1412,7 +1422,7 @@ describe("Início: alertas da assistência (L12f)", () => {
     expect(p.pendencias["OS atrasadas"]).toBeUndefined();
     expect(p.pendencias["OS prontas"]).toBeUndefined();
     cenario.errosDasTabelas.ordens_servico = { code: "57014" };
-    await expect(pagina()).rejects.toBeInstanceOf(FalhaDoServico);
+    await semPendenciasComAviso();
   });
 });
 
@@ -1461,7 +1471,7 @@ describe("Início: alertas da loja do turno (REPORT-007, L12f)", () => {
     expect(cenario.lidas.filter((nome) => ["caixas", "notas_pedidos", "connect_operacoes"].includes(nome))).toEqual([]);
   });
 
-  it("notas com divergência (L10b): as não conferidas da loja do turno em 90 dias levam à conciliação; sem a função, somem; falha derruba", async () => {
+  it("notas com divergência (L10b): as não conferidas da loja do turno em 90 dias levam à conciliação; sem a função, somem; falha vira o aviso", async () => {
     entrar("dono");
     Object.assign(cenario, { erroDaConciliacao: null, conciliacao: { resumo: { divergencias_abertas: 2 } } });
     const p = await pagina();
@@ -1473,9 +1483,9 @@ describe("Início: alertas da loja do turno (REPORT-007, L12f)", () => {
     expect((await pagina()).pendencias["Notas com divergência"]).toBeUndefined();
     cenario.erroDaConciliacao = { code: "PGRST202" };
     expect((await pagina()).pendencias["Notas com divergência"]).toBeUndefined();
-    // Outra falha derruba a página, como nas outras pendências (zero inventado não).
+    // Outra falha vira o aviso, como nas outras pendências (zero inventado não; ROB-a).
     cenario.erroDaConciliacao = { code: "57014" };
-    await expect(pagina()).rejects.toBeInstanceOf(FalhaDoServico);
+    await semPendenciasComAviso();
     // Quem não aprova nota nem pergunta.
     entrar("vendedor");
     Object.assign(cenario, { erroDaConciliacao: null, chamadas: {} });
