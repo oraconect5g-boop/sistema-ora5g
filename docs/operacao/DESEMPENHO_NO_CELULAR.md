@@ -536,6 +536,10 @@ Medido com o Gerente (teste) na Santa Cândida (teste), 5 aberturas de cada comp
 
 A ida a mais é o nome de quem vendeu, pelo ranking (`public.ranking_nomes`), para a gerência. As rodadas: a sessão; a venda com tudo o que só depende do número dela (a regra de preço começa aqui, e a segunda leitura dela corre junto da rodada seguinte); e o que depende da venda, dos itens, da nota emitida e da situação. Os links dos arquivos, quando há, vêm numa quarta. O script das idas conta 2 rodadas quando a segunda leitura da regra de preço emenda as duas últimas.
 
+No site, depois da publicação (`c76631a`, 20:16): o comprovante de uma capa abriu em 0,80 s e o de um aparelho em 0,70 s (5 aberturas de cada), e o toque numa venda da lista até o comprovante em 0,85 s.
+
+**A frente de velocidade parou aqui** (20/11), a pedido do proprietário: "quero que todas as funcionalidades do sistema funcionem depois aceleramos a velocidade" (20/11).
+
 Para medir de novo:
 
 ```bash
