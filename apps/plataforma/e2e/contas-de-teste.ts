@@ -2,7 +2,9 @@
 // login-real.spec.ts), a venda de ponta a ponta (J1-b, venda-real.spec.ts), a transferência entre as lojas de teste (J1-c
 // e J1-d, transferencia-real.spec.ts) e as provas que só leem: os relatórios e o estoque (J2-a,
 // relatorios-e-estoque-real.spec.ts), o acesso por papel e por loja (J2-b, acesso-por-papel-real.spec.ts) e a navegação no
-// celular (VEL-h, navegacao-real.spec.ts). Só no servidor: ORA_E2E_URL (o site, por
+// celular (VEL-h, navegacao-real.spec.ts); e as que gravam só nas lojas de teste, com o sim do proprietário de 21/11: o caixa
+// (J3-a, caixa-real.spec.ts) e a venda com desconto e pagamento misto (J3-b, venda-com-desconto-real.spec.ts), com as peças
+// comuns em pdv-real.ts. Só no servidor: ORA_E2E_URL (o site, por
 // exemplo https://ora5g.com.br) e ORA_E2E_CONTAS (o arquivo protegido das contas, ~/homologacao/contas-de-teste.txt). No CI os
 // dois ficam vazios e as provas são puladas. A senha nunca vai para o log: o Playwright só mostra o nome do passo.
 import { readFileSync } from "node:fs";
