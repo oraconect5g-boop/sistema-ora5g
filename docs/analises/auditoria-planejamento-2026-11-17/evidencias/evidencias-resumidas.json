@@ -1,0 +1,238 @@
+{
+  "corte": "03123d042f0d51493a17eec449967a5a48124a59",
+  "data": "2026-11-17",
+  "ci": {
+    "url": "https://github.com/oraconect5g-boop/sistema-ora5g/actions/runs/44139567980",
+    "resumo": [
+      "2026-11-17T17:41:46.3155662Z 16 high severity vulnerabilities",
+      "2026-11-17T17:42:58.4567627Z  Test Files  161 passed (161)",
+      "2026-11-17T17:42:58.4578084Z       Tests  1582 passed (1582)",
+      "2026-11-17T17:43:01.9189112Z  Test Files  6 passed (6)",
+      "2026-11-17T17:43:01.9189974Z       Tests  20 passed (20)",
+      "2026-11-17T17:50:09.8049210Z  Test Files  84 passed (84)",
+      "2026-11-17T17:50:09.8049751Z       Tests  946 passed | 1 todo (947)",
+      "2026-11-17T17:50:11.2925134Z  Test Files  6 passed (6)",
+      "2026-11-17T17:50:11.2926300Z       Tests  60 passed (60)",
+      "2026-11-17T17:50:12.0074723Z  Test Files  9 passed (9)",
+      "2026-11-17T17:50:12.0075363Z       Tests  112 passed (112)",
+      "2026-11-17T17:50:39.8562493Z found 0 vulnerabilities",
+      "2026-11-17T17:52:44.8349395Z   13 skipped",
+      "2026-11-17T17:52:44.8349686Z   293 passed (1.4m)"
+    ]
+  },
+  "logs24h": {
+    "result": [
+      {
+        "http_status": "",
+        "level": "info",
+        "pg_severity": "",
+        "source": "auth_logs",
+        "sqlstate": "",
+        "storage_status": "",
+        "total": 125
+      },
+      {
+        "http_status": "",
+        "level": "warning",
+        "pg_severity": "",
+        "source": "auth_logs",
+        "sqlstate": "",
+        "storage_status": "",
+        "total": 9
+      },
+      {
+        "http_status": "200",
+        "level": "",
+        "pg_severity": "",
+        "source": "edge_logs",
+        "sqlstate": "",
+        "storage_status": "",
+        "total": 1966
+      },
+      {
+        "http_status": "500",
+        "level": "",
+        "pg_severity": "",
+        "source": "edge_logs",
+        "sqlstate": "",
+        "storage_status": "",
+        "total": 9
+      },
+      {
+        "http_status": "401",
+        "level": "",
+        "pg_severity": "",
+        "source": "edge_logs",
+        "sqlstate": "",
+        "storage_status": "",
+        "total": 7
+      },
+      {
+        "http_status": "403",
+        "level": "",
+        "pg_severity": "",
+        "source": "edge_logs",
+        "sqlstate": "",
+        "storage_status": "",
+        "total": 4
+      },
+      {
+        "http_status": "400",
+        "level": "",
+        "pg_severity": "",
+        "source": "edge_logs",
+        "sqlstate": "",
+        "storage_status": "",
+        "total": 4
+      },
+      {
+        "http_status": "404",
+        "level": "",
+        "pg_severity": "",
+        "source": "edge_logs",
+        "sqlstate": "",
+        "storage_status": "",
+        "total": 1
+      },
+      {
+        "http_status": "204",
+        "level": "",
+        "pg_severity": "",
+        "source": "edge_logs",
+        "sqlstate": "",
+        "storage_status": "",
+        "total": 1
+      },
+      {
+        "http_status": "",
+        "level": "",
+        "pg_severity": "LOG",
+        "source": "postgres_logs",
+        "sqlstate": "00000",
+        "storage_status": "",
+        "total": 267
+      },
+      {
+        "http_status": "",
+        "level": "",
+        "pg_severity": "ERROR",
+        "source": "postgres_logs",
+        "sqlstate": "P0002",
+        "storage_status": "",
+        "total": 9
+      },
+      {
+        "http_status": "",
+        "level": "",
+        "pg_severity": "ERROR",
+        "source": "postgres_logs",
+        "sqlstate": "42501",
+        "storage_status": "",
+        "total": 4
+      },
+      {
+        "http_status": "",
+        "level": "",
+        "pg_severity": "ERROR",
+        "source": "postgres_logs",
+        "sqlstate": "42P01",
+        "storage_status": "",
+        "total": 1
+      },
+      {
+        "http_status": "",
+        "level": "",
+        "pg_severity": "ERROR",
+        "source": "postgres_logs",
+        "sqlstate": "OR036",
+        "storage_status": "",
+        "total": 1
+      },
+      {
+        "http_status": "",
+        "level": "",
+        "pg_severity": "LOG",
+        "source": "postgres_logs",
+        "sqlstate": "08006",
+        "storage_status": "",
+        "total": 1
+      },
+      {
+        "http_status": "",
+        "level": "info",
+        "pg_severity": "",
+        "source": "realtime_logs",
+        "sqlstate": "",
+        "storage_status": "",
+        "total": 14
+      },
+      {
+        "http_status": "",
+        "level": "info",
+        "pg_severity": "",
+        "source": "storage_logs",
+        "sqlstate": "",
+        "storage_status": "200",
+        "total": 18
+      }
+    ]
+  },
+  "logsErros": {
+    "result": [
+      {
+        "path": "",
+        "primeiro": "2026-11-17T02:11:19.310000",
+        "source": "postgres_logs",
+        "sqlstate": "42P01",
+        "status": "",
+        "total": 1,
+        "ultimo": "2026-11-17T02:11:19.310000"
+      },
+      {
+        "path": "",
+        "primeiro": "2026-11-16T22:00:50.191000",
+        "source": "postgres_logs",
+        "sqlstate": "42501",
+        "status": "",
+        "total": 4,
+        "ultimo": "2026-11-17T03:06:13.519000"
+      },
+      {
+        "path": "/rest/v1/rpc/loja_reservar",
+        "primeiro": "2026-11-17T04:06:10.994000",
+        "source": "edge_logs",
+        "sqlstate": "",
+        "status": "500",
+        "total": 1,
+        "ultimo": "2026-11-17T04:06:10.994000"
+      },
+      {
+        "path": "/rest/v1/rpc/loja_produto",
+        "primeiro": "2026-11-17T03:55:36.991000",
+        "source": "edge_logs",
+        "sqlstate": "",
+        "status": "500",
+        "total": 8,
+        "ultimo": "2026-11-17T06:50:03.471000"
+      },
+      {
+        "path": "",
+        "primeiro": "2026-11-17T03:55:37.298000",
+        "source": "postgres_logs",
+        "sqlstate": "P0002",
+        "status": "",
+        "total": 9,
+        "ultimo": "2026-11-17T06:50:03.494000"
+      },
+      {
+        "path": "",
+        "primeiro": "2026-11-17T07:16:38.102000",
+        "source": "postgres_logs",
+        "sqlstate": "OR036",
+        "status": "",
+        "total": 1,
+        "ultimo": "2026-11-17T07:16:38.102000"
+      }
+    ]
+  }
+}

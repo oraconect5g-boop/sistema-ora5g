@@ -1,0 +1,13 @@
+
+> @ora5g/banco@0.1.0 test
+> vitest run src/estoque-carga.test.ts src/loja-online-pedido.test.ts src/precos-em-lote.test.ts src/marketplaces.test.ts src/anuncios.test.ts src/extratos.test.ts src/avisos-no-celular.test.ts src/alertas-das-filas.test.ts src/autorizacao-funcoes.test.ts
+
+
+ RUN  v5.1.0 <snapshot>/packages/banco
+
+
+ Test Files  9 passed (9)
+      Tests  246 passed (246)
+   Start at  12:25:26
+   Duration  86.58s (tests 99%, transform 1%)
+

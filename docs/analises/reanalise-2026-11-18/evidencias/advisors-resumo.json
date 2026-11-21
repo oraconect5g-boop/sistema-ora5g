@@ -1,0 +1,26 @@
+[
+  {
+    "nome": "rls_enabled_no_policy",
+    "nivel": "INFO",
+    "quantidade": 18,
+    "remediacao": "https://supabase.com/docs/guides/database/database-linter?lint=0008_rls_enabled_no_policy"
+  },
+  {
+    "nome": "anon_security_definer_function_executable",
+    "nivel": "WARN",
+    "quantidade": 8,
+    "remediacao": "https://supabase.com/docs/guides/database/database-linter?lint=0028_anon_security_definer_function_executable"
+  },
+  {
+    "nome": "authenticated_security_definer_function_executable",
+    "nivel": "WARN",
+    "quantidade": 200,
+    "remediacao": "https://supabase.com/docs/guides/database/database-linter?lint=0029_authenticated_security_definer_function_executable"
+  },
+  {
+    "nome": "auth_leaked_password_protection",
+    "nivel": "WARN",
+    "quantidade": 1,
+    "remediacao": "https://supabase.com/docs/guides/auth/password-security#password-strength-and-leaked-password-protection"
+  }
+]

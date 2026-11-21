@@ -1,0 +1,67 @@
+
+> @ora5g/plataforma@0.1.0 test
+> vitest run src/lib/importacao/auditoria-20261118.test.ts
+
+
+ RUN  v5.1.0 <snapshot>/apps/plataforma
+
+ ❯ src/lib/importacao/auditoria-20261118.test.ts (2 tests | 2 failed) 21ms
+   × F18-01: quantidade numérica fracionária do XLSX deve exigir conferência 14ms
+   × F18-02: última linha incompleta com EAN e preço não pode desaparecer como total 5ms
+
+⎯⎯⎯⎯⎯⎯⎯ Failed Tests 2 ⎯⎯⎯⎯⎯⎯⎯
+
+ FAIL  src/lib/importacao/auditoria-20261118.test.ts > F18-01: quantidade numérica fracionária do XLSX deve exigir conferência
+AssertionError: expected 625 to be null
+
+- Expected:
+null
+
++ Received:
+625
+
+ ❯ src/lib/importacao/auditoria-20261118.test.ts:18:43
+     16|   expect(planilha.linhas[0]?.[2]).toBe('0.625');
+     17|   const carga = linhasDaCarga(planilha, { sku: 0, nome: 1, lojas: { lo…
+     18|   expect(carga.porLoja.loja?.[0]?.fisico).toBeNull();
+       |                                           ^
+     19|   expect(carga.porLoja.loja?.[0]?.problema).toBeTruthy();
+     20| });
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[1/2]⎯
+
+ FAIL  src/lib/importacao/auditoria-20261118.test.ts > F18-02: última linha incompleta com EAN e preço não pode desaparecer como total
+AssertionError: expected { posicao: 1, …(1) } to be null
+
+- Expected:
+null
+
++ Received:
+{
+  "motivo": "rodapé de totais no fim da planilha (sem código e sem nome, só números em 2 colunas)",
+  "posicao": 1,
+}
+
+ ❯ src/lib/importacao/auditoria-20261118.test.ts:28:87
+     26|   }] }]);
+     27|   const planilha = await lerPlanilha(bytes, descomprimirNoServidor);
+     28|   expect(rodapeDaPlanilha(planilha, { sku: 0, nome: 1, codigo_barras: …
+       |                                                                                       ^
+     29| });
+     30|
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[2/2]⎯
+
+
+ Test Files  1 failed (1)
+      Tests  2 failed (2)
+   Start at  12:31:37
+   Duration  372ms (transform 44%, import 39%, tests 14%, worker 3%)
+
+npm error Lifecycle script `test` failed with error:
+npm error code 1
+npm error path <snapshot>/apps/plataforma
+npm error workspace @ora5g/plataforma@0.1.0
+npm error location <snapshot>/apps/plataforma
+npm error command failed
+npm error command sh -c vitest run src/lib/importacao/auditoria-20261118.test.ts

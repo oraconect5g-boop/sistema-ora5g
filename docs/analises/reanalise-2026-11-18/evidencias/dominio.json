@@ -1,0 +1,38 @@
+{
+  "https://ora5g.com.br/saude/versao": {
+    "status": 200,
+    "bytes": 130,
+    "body": {
+      "commit": "27b4f6eeb9b4b456b2283d9b365ebecc0901f6ef",
+      "versao": "0.1.0",
+      "build": "2026-11-18T10:11:40.269Z",
+      "ambiente": "homologacao"
+    }
+  },
+  "https://ora5g.com.br/loja": {
+    "status": 200,
+    "bytes": 15949
+  },
+  "https://ora5g.com.br/loja/carrinho": {
+    "status": 200,
+    "bytes": 14191
+  },
+  "https://ora5g.com.br/demo": {
+    "status": 200,
+    "bytes": 245815
+  },
+  "https://supabase.com/changelog.md": {
+    "status": 200,
+    "bytes": 104342,
+    "breaking": [
+      "2026-09-25 · Breaking Change · Database · [supabase.com/changelog/postgres-15-19-17-11-breaking-changes](https://supabase.com/changelog/postgres-15-19-17-11-breaking-changes)",
+      "2026-05-25 · Breaking Change · Database · [supabase.com/changelog/46320-breaking-change-in-pg-graphql-1-6-0-graphql-introspection-disabled-by-default](https://supabase.com/changelog/46320-breaking-change-in-pg-graphql-1-6-0-graphql-introspection-disa",
+      "2026-05-18 · Breaking Change · Database · [supabase.com/changelog/46081-self-hosted-supabase-switching-studio-from-supabase-admin-to-postgres-breaking-change](https://supabase.com/changelog/46081-self-hosted-supabase-switching-studio-from-supabase-ad",
+      "2026-05-18 · Breaking Change · Database · [supabase.com/changelog/46080-self-hosted-supabase-upgrading-from-pg-15-to-17-breaking-change](https://supabase.com/changelog/46080-self-hosted-supabase-upgrading-from-pg-15-to-17-breaking-change)",
+      "2026-05-01 · Breaking Change · Platform · [supabase.com/changelog/45468-breaking-change-oauth-token-endpoint-will-return-http-200-instead-of-201](https://supabase.com/changelog/45468-breaking-change-oauth-token-endpoint-will-return-http-200-instead-o",
+      "2026-04-28 · Breaking Change · Data APIs, Database · [supabase.com/changelog/45329-breaking-change-tables-not-exposed-to-data-and-graphql-api-automatically](https://supabase.com/changelog/45329-breaking-change-tables-not-exposed-to-data-and-graphql-a",
+      "2026-02-17 · Breaking Change · Data APIs · [supabase.com/changelog/42949-breaking-change-removing-access-to-openapi-spec-via-the-anon-key](https://supabase.com/changelog/42949-breaking-change-removing-access-to-openapi-spec-via-the-anon-key)",
+      "2026-01-26 · Breaking Change · Platform · [supabase.com/changelog/42180-breaking-change-pg-graphql-no-longer-enabled-automatically-within-approx-3-weeks-from-today](https://supabase.com/changelog/42180-breaking-change-pg-graphql-no-longer-enabled-aut"
+    ]
+  }
+}
