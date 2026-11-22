@@ -1,0 +1,19 @@
+{
+  "momento": "2026-11-21, após 23:35 (America/Sao_Paulo)",
+  "resultado": [
+    {
+      "usuarios": 6,
+      "produtos": 7,
+      "fotos": 0,
+      "importacoes": 0,
+      "cargas": 0,
+      "vendas": 23,
+      "extratos": 0,
+      "connect_operacoes": 0,
+      "pedidos_online": 0,
+      "documentos_fiscais": 0,
+      "transferencias_em_transito": 2,
+      "migrations": 121
+    }
+  ]
+}

@@ -1,0 +1,22 @@
+{
+  "verified": 1449,
+  "errors": [],
+  "excluded_binary_assets": [
+    "apps/plataforma/public/icones/icone-192.png",
+    "apps/plataforma/public/icones/icone-512.png",
+    "apps/plataforma/public/icones/icone-mascaravel-512.png",
+    "apps/plataforma/src/app/apple-icon.png",
+    "referencias_visuais/ora5g_previa_telas.mp4",
+    "referencias_visuais/ora5g_visao_geral_telas.png",
+    "referencias_visuais/tela_01.png",
+    "referencias_visuais/tela_02.png",
+    "referencias_visuais/tela_03.png",
+    "referencias_visuais/tela_04.png",
+    "referencias_visuais/tela_05.png",
+    "referencias_visuais/tela_06.png",
+    "referencias_visuais/tela_07.png",
+    "referencias_visuais/tela_08.png",
+    "referencias_visuais/tela_09.png",
+    "referencias_visuais/tela_10.png"
+  ]
+}

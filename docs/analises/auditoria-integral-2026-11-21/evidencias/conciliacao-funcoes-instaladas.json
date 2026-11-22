@@ -1,0 +1,12 @@
+[
+  {
+    "proname": "extrato_conciliar",
+    "menciona_repasses": false,
+    "confere_situacao": true
+  },
+  {
+    "proname": "marketplace_repasse_casar",
+    "menciona_repasses": true,
+    "confere_situacao": false
+  }
+]

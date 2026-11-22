@@ -1,0 +1,60 @@
+{
+  "/saude/versao": {
+    "status": 200,
+    "url_final": "https://ora5g.com.br/saude/versao",
+    "bytes": 130,
+    "cache_control": "no-store, max-age=0",
+    "body": {
+      "commit": "c1b8e6086d509f388e6080eb829af7a8b6ac316b",
+      "versao": "0.1.0",
+      "build": "2026-11-21T13:45:36.872Z",
+      "ambiente": "homologacao"
+    }
+  },
+  "/saude": {
+    "status": 200,
+    "url_final": "https://ora5g.com.br/saude",
+    "bytes": 11651,
+    "cache_control": "private, no-cache, no-store, max-age=0, must-revalidate"
+  },
+  "/entrar": {
+    "status": 200,
+    "url_final": "https://ora5g.com.br/entrar",
+    "bytes": 24200,
+    "cache_control": "private, no-cache, no-store, max-age=0, must-revalidate"
+  },
+  "/loja": {
+    "status": 200,
+    "url_final": "https://ora5g.com.br/loja",
+    "bytes": 15971,
+    "cache_control": "private, no-cache, no-store, max-age=0, must-revalidate"
+  },
+  "/loja/carrinho": {
+    "status": 200,
+    "url_final": "https://ora5g.com.br/loja/carrinho",
+    "bytes": 14213,
+    "cache_control": "private, no-cache, no-store, max-age=0, must-revalidate"
+  },
+  "/demo": {
+    "error": "HTTP Error 404: Not Found"
+  },
+  "/financeiro": {
+    "status": 200,
+    "url_final": "https://ora5g.com.br/entrar",
+    "bytes": 24200,
+    "cache_control": "private, no-cache, no-store, max-age=0, must-revalidate"
+  },
+  "supabase_changelog": {
+    "status": 200,
+    "breaking": [
+      "2026-09-25 · Breaking Change · Database · [supabase.com/changelog/postgres-15-19-17-11-breaking-changes](https://supabase.com/changelog/postgres-15-19-17-11-breaking-changes)",
+      "2026-05-25 · Breaking Change · Database · [supabase.com/changelog/46320-breaking-change-in-pg-graphql-1-6-0-graphql-introspection-disabled-by-default](https://supabase.com/changelog/46320-breaking-change-in-pg-graphql-1-6-0-graphql-introspection-disabled-by-default)",
+      "2026-05-18 · Breaking Change · Database · [supabase.com/changelog/46081-self-hosted-supabase-switching-studio-from-supabase-admin-to-postgres-breaking-change](https://supabase.com/changelog/46081-self-hosted-supabase-switching-studio-from-supabase-admin-to-postgres-breaking-change)",
+      "2026-05-18 · Breaking Change · Database · [supabase.com/changelog/46080-self-hosted-supabase-upgrading-from-pg-15-to-17-breaking-change](https://supabase.com/changelog/46080-self-hosted-supabase-upgrading-from-pg-15-to-17-breaking-change)",
+      "2026-05-01 · Breaking Change · Platform · [supabase.com/changelog/45468-breaking-change-oauth-token-endpoint-will-return-http-200-instead-of-201](https://supabase.com/changelog/45468-breaking-change-oauth-token-endpoint-will-return-http-200-instead-of-201)",
+      "2026-04-28 · Breaking Change · Data APIs, Database · [supabase.com/changelog/45329-breaking-change-tables-not-exposed-to-data-and-graphql-api-automatically](https://supabase.com/changelog/45329-breaking-change-tables-not-exposed-to-data-and-graphql-api-automatically)",
+      "2026-02-17 · Breaking Change · Data APIs · [supabase.com/changelog/42949-breaking-change-removing-access-to-openapi-spec-via-the-anon-key](https://supabase.com/changelog/42949-breaking-change-removing-access-to-openapi-spec-via-the-anon-key)",
+      "2026-01-26 · Breaking Change · Platform · [supabase.com/changelog/42180-breaking-change-pg-graphql-no-longer-enabled-automatically-within-approx-3-weeks-from-today](https://supabase.com/changelog/42180-breaking-change-pg-graphql-no-longer-enabled-automatically-within-approx-3-weeks-from-today)"
+    ]
+  }
+}

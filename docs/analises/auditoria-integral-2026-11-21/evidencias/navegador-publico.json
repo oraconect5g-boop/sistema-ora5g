@@ -1,0 +1,191 @@
+[
+  {
+    "perfil": "desktop",
+    "rota": "/",
+    "status": 200,
+    "final": "https://ora5g.com.br/",
+    "titulo": "Ora 5G",
+    "texto": "ora5G\nComprar\nEntrar\n\nPLATAFORMA PRÓPRIA · 11 LOJAS\n\nPlataforma de gestão integrada\n\nVendas, estoque, clientes, financeiro e Ora Connect em um só lugar, do celular do vendedor ao painel da diretoria.\n\nEntrar na plataforma\n\nVendas e PDV\n\nVenda pelo celular, com IMEI, desconto dentro da regra e pagamento misto.\n\nEstoque e IMEI\n\nCada aparelho rastreado por loja, com reserva, transferência e contagem.\n\nOra Connect\n\nChips, ativações, portabilidades e recargas por vendedor.\n\nCaixa e financeiro\n\nRecebimentos por meio, conciliação, financeiras e notas.\n\nMetas e desempenho\n\nProdução de cada vendedor, metas do dia e da loja.\n\nClientes e WhatsApp\n\nBusca exata, histórico e atendimento com IA supervisionada.\n\nAssistência técnica\n\nOrdens de serviço com etapas, orçamento e entrega.\n\nRelatórios\n\nPainéis da rede, da loja e do vendedor, com gráficos.\n\nSistema em desenvolvimento · ambiente homologação",
+    "overflow": false,
+    "links": [
+      {
+        "texto": "Comprar",
+        "href": "/loja"
+      },
+      {
+        "texto": "Entrar",
+        "href": "/entrar"
+      },
+      {
+        "texto": "Entrar na plataforma",
+        "href": "/entrar"
+      }
+    ],
+    "erros": [],
+    "respostas": []
+  },
+  {
+    "perfil": "desktop",
+    "rota": "/loja",
+    "status": 200,
+    "final": "https://ora5g.com.br/loja",
+    "titulo": "Celulares e acessórios | Ora 5G",
+    "texto": "ora5G\nLoja online\nEscolha no site, retire na loja\nCarrinho\nMeu pedido\nCelulares e acessórios, com retirada na loja\n\nEscolha aqui, confira o preço e o estoque de cada loja e retire pessoalmente.\n\nBuscar produto\n\nEm breve\n\nOs produtos da loja online aparecem aqui assim que forem publicados.\n\nOs preços são os do balcão de cada loja hoje e podem mudar. A compra e o pagamento são feitos na loja.\n\nImagens ilustrativas. Ora 5G.",
+    "overflow": false,
+    "links": [
+      {
+        "texto": "ora5G\nLoja online",
+        "href": "/loja"
+      },
+      {
+        "texto": "Carrinho",
+        "href": "/loja/carrinho"
+      },
+      {
+        "texto": "Meu pedido",
+        "href": "/loja/pedido"
+      }
+    ],
+    "erros": [],
+    "respostas": []
+  },
+  {
+    "perfil": "desktop",
+    "rota": "/loja/carrinho",
+    "status": 200,
+    "final": "https://ora5g.com.br/loja/carrinho",
+    "titulo": "Carrinho · Loja online Ora 5G",
+    "texto": "ora5G\nLoja online\nEscolha no site, retire na loja\nCarrinho\nMeu pedido\n\nO carrinho está vazio\n\nEscolha um produto na loja e toque em \"Pôr no carrinho\" na loja de retirada.\n\nOs preços são os do balcão de cada loja hoje e podem mudar. A compra e o pagamento são feitos na loja.\n\nImagens ilustrativas. Ora 5G.",
+    "overflow": false,
+    "links": [
+      {
+        "texto": "ora5G\nLoja online",
+        "href": "/loja"
+      },
+      {
+        "texto": "Carrinho",
+        "href": "/loja/carrinho"
+      },
+      {
+        "texto": "Meu pedido",
+        "href": "/loja/pedido"
+      },
+      {
+        "texto": "loja",
+        "href": "/loja"
+      }
+    ],
+    "erros": [],
+    "respostas": []
+  },
+  {
+    "perfil": "desktop",
+    "rota": "/entrar",
+    "status": 200,
+    "final": "https://ora5g.com.br/entrar",
+    "titulo": "Entrar | Ora 5G",
+    "texto": "ora5G\nBem-vindo à Ora\n\nAcesse a plataforma de gestão integrada.\n\nE-mail\nSenha\n\nEsqueci minha senha\n\nEntrar na plataforma\n\nAcesso protegido por loja e perfil. Cada pessoa vê só o que o papel dela permite.\n\nora5G · v0.1.0 · c1b8e60 · build 21/11/2026 10:45\n\nTECNOLOGIA PARA CRESCER\n\nToda a operação da rede, em tempo real.\n\nVendas, estoque por IMEI, clientes, caixa e Ora Connect no mesmo sistema, do celular do vendedor ao painel da diretoria.\n\nVendas da rede · 8 dias\nilustrativo\n\n11 lojas\n\nOra Connect\n\nAuditoria",
+    "overflow": false,
+    "links": [
+      {
+        "texto": "ora5G",
+        "href": "/"
+      },
+      {
+        "texto": "Esqueci minha senha",
+        "href": "/entrar/recuperar"
+      }
+    ],
+    "erros": [],
+    "respostas": []
+  },
+  {
+    "perfil": "desktop",
+    "rota": "/financeiro",
+    "status": 200,
+    "final": "https://ora5g.com.br/entrar",
+    "titulo": "Entrar | Ora 5G",
+    "texto": "ora5G\nBem-vindo à Ora\n\nAcesse a plataforma de gestão integrada.\n\nE-mail\nSenha\n\nEsqueci minha senha\n\nEntrar na plataforma\n\nAcesso protegido por loja e perfil. Cada pessoa vê só o que o papel dela permite.\n\nora5G · v0.1.0 · c1b8e60 · build 21/11/2026 10:45\n\nTECNOLOGIA PARA CRESCER\n\nToda a operação da rede, em tempo real.\n\nVendas, estoque por IMEI, clientes, caixa e Ora Connect no mesmo sistema, do celular do vendedor ao painel da diretoria.\n\nVendas da rede · 8 dias\nilustrativo\n\n11 lojas\n\nOra Connect\n\nAuditoria",
+    "overflow": false,
+    "links": [
+      {
+        "texto": "ora5G",
+        "href": "/"
+      },
+      {
+        "texto": "Esqueci minha senha",
+        "href": "/entrar/recuperar"
+      }
+    ],
+    "erros": [],
+    "respostas": []
+  },
+  {
+    "perfil": "desktop",
+    "rota": "/demo",
+    "status": 404,
+    "final": "https://ora5g.com.br/demo",
+    "titulo": "Início | Ora 5G",
+    "texto": "ora5G\n\n404\n\nPágina não encontrada\n\nO endereço pode ter sido digitado errado ou a página não existe neste ambiente.\n\nIr para a página inicial",
+    "overflow": false,
+    "links": [
+      {
+        "texto": "Ir para a página inicial",
+        "href": "/"
+      }
+    ],
+    "erros": [],
+    "respostas": [
+      {
+        "url": "https://ora5g.com.br/demo",
+        "status": 404
+      }
+    ]
+  },
+  {
+    "perfil": "mobile",
+    "rota": "/loja",
+    "status": 200,
+    "final": "https://ora5g.com.br/loja",
+    "titulo": "Celulares e acessórios | Ora 5G",
+    "texto": "ora5G\nLoja online\nCarrinho\nMeu pedido\nCelulares e acessórios, com retirada na loja\n\nEscolha aqui, confira o preço e o estoque de cada loja e retire pessoalmente.\n\nBuscar produto\n\nEm breve\n\nOs produtos da loja online aparecem aqui assim que forem publicados.\n\nOs preços são os do balcão de cada loja hoje e podem mudar. A compra e o pagamento são feitos na loja.\n\nImagens ilustrativas. Ora 5G.",
+    "overflow": false,
+    "links": [
+      {
+        "texto": "ora5G\nLoja online",
+        "href": "/loja"
+      },
+      {
+        "texto": "Carrinho",
+        "href": "/loja/carrinho"
+      },
+      {
+        "texto": "Meu pedido",
+        "href": "/loja/pedido"
+      }
+    ],
+    "erros": [],
+    "respostas": []
+  },
+  {
+    "perfil": "mobile",
+    "rota": "/entrar",
+    "status": 200,
+    "final": "https://ora5g.com.br/entrar",
+    "titulo": "Entrar | Ora 5G",
+    "texto": "ora5G\nBem-vindo à Ora\n\nAcesse a plataforma de gestão integrada.\n\nE-mail\nSenha\n\nEsqueci minha senha\n\nEntrar na plataforma\n\nAcesso protegido por loja e perfil. Cada pessoa vê só o que o papel dela permite.\n\nora5G · v0.1.0 · c1b8e60 · build 21/11/2026 10:45",
+    "overflow": false,
+    "links": [
+      {
+        "texto": "ora5G",
+        "href": "/"
+      },
+      {
+        "texto": "Esqueci minha senha",
+        "href": "/entrar/recuperar"
+      }
+    ],
+    "erros": [],
+    "respostas": []
+  }
+]

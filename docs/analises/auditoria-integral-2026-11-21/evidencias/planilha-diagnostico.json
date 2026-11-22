@@ -1,0 +1,139 @@
+{
+  "linhas": 2272,
+  "colunas": 83,
+  "mapa": {
+    "sku": 0,
+    "nome": 3,
+    "marca": 9
+  },
+  "rodape": null,
+  "candidato": null,
+  "ultima": [
+    {
+      "coluna": 38,
+      "cabecalho": "Qtd. Disponivel SANTA FELICIDADE",
+      "tipo": "texto",
+      "somaConfere": false,
+      "invalidas": 0
+    },
+    {
+      "coluna": 39,
+      "cabecalho": "Qtd. Disponivel ÁGUA VERDE",
+      "tipo": "texto",
+      "somaConfere": false,
+      "invalidas": 0
+    },
+    {
+      "coluna": 40,
+      "cabecalho": "Qtd. Disponivel COLÔNIA",
+      "tipo": "texto",
+      "somaConfere": false,
+      "invalidas": 0
+    },
+    {
+      "coluna": 41,
+      "cabecalho": "Qtd. Disponivel ALMIRANTE TAMANDARÉ",
+      "tipo": "texto",
+      "somaConfere": false,
+      "invalidas": 0
+    },
+    {
+      "coluna": 42,
+      "cabecalho": "Qtd. Disponivel DEFEITOS",
+      "tipo": "texto",
+      "somaConfere": false,
+      "invalidas": 0
+    },
+    {
+      "coluna": 43,
+      "cabecalho": "Qtd. Disponivel DUBAI",
+      "tipo": "texto",
+      "somaConfere": false,
+      "invalidas": 0
+    },
+    {
+      "coluna": 44,
+      "cabecalho": "Qtd. Disponivel COLOMBO",
+      "tipo": "texto",
+      "somaConfere": false,
+      "invalidas": 0
+    },
+    {
+      "coluna": 45,
+      "cabecalho": "Qtd. Disponivel MUFFATO SANTA",
+      "tipo": "texto",
+      "somaConfere": false,
+      "invalidas": 0
+    },
+    {
+      "coluna": 46,
+      "cabecalho": "Qtd. Disponivel BUTIATUVINHA",
+      "tipo": "texto",
+      "somaConfere": false,
+      "invalidas": 0
+    },
+    {
+      "coluna": 47,
+      "cabecalho": "Qtd. Disponivel VENTANIA",
+      "tipo": "texto",
+      "somaConfere": false,
+      "invalidas": 0
+    },
+    {
+      "coluna": 48,
+      "cabecalho": "Qtd. Disponivel BALNEARIO",
+      "tipo": "texto",
+      "somaConfere": false,
+      "invalidas": 0
+    },
+    {
+      "coluna": 49,
+      "cabecalho": "Qtd. Disponivel SANTA CANDIDA",
+      "tipo": "texto",
+      "somaConfere": false,
+      "invalidas": 0
+    },
+    {
+      "coluna": 51,
+      "cabecalho": "Custo do Estoque ÁGUA VERDE",
+      "tipo": "texto",
+      "somaConfere": false,
+      "invalidas": 0
+    },
+    {
+      "coluna": 52,
+      "cabecalho": "Custo do Estoque COLÔNIA",
+      "tipo": "texto",
+      "somaConfere": false,
+      "invalidas": 0
+    },
+    {
+      "coluna": 54,
+      "cabecalho": "Custo do Estoque DEFEITOS",
+      "tipo": "texto",
+      "somaConfere": false,
+      "invalidas": 0
+    },
+    {
+      "coluna": 55,
+      "cabecalho": "Custo do Estoque DUBAI",
+      "tipo": "texto",
+      "somaConfere": false,
+      "invalidas": 0
+    },
+    {
+      "coluna": 57,
+      "cabecalho": "Custo do Estoque MUFFATO SANTA",
+      "tipo": "texto",
+      "somaConfere": false,
+      "invalidas": 0
+    },
+    {
+      "coluna": 58,
+      "cabecalho": "Custo do Estoque BUTIATUVINHA",
+      "tipo": "texto",
+      "somaConfere": false,
+      "invalidas": 0
+    }
+  ]
+}

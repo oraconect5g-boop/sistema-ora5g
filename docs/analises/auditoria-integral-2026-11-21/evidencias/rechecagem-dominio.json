@@ -1,0 +1,9 @@
+{
+  "momento_utc": "2026-11-22T02:36:26.298482+00:00",
+  "dominio": {
+    "commit": "c1b8e6086d509f388e6080eb829af7a8b6ac316b",
+    "versao": "0.1.0",
+    "build": "2026-11-21T13:45:36.872Z",
+    "ambiente": "homologacao"
+  }
+}
