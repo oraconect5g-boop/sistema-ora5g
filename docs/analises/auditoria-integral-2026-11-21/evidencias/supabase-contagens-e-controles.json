@@ -1,0 +1,1844 @@
+{
+  "a21_sql_counts": [
+    {
+      "entidade": "auth.users",
+      "total": 6
+    },
+    {
+      "entidade": "produtos",
+      "total": 7
+    },
+    {
+      "entidade": "variantes",
+      "total": 7
+    },
+    {
+      "entidade": "importacoes",
+      "total": 0
+    },
+    {
+      "entidade": "estoque_cargas",
+      "total": 0
+    },
+    {
+      "entidade": "estoque_carga_linhas",
+      "total": 0
+    },
+    {
+      "entidade": "entradas_estoque",
+      "total": 2
+    },
+    {
+      "entidade": "fotos_produto",
+      "total": 0
+    },
+    {
+      "entidade": "clientes",
+      "total": 1
+    },
+    {
+      "entidade": "vendas",
+      "total": 23
+    },
+    {
+      "entidade": "transferencias",
+      "total": 20
+    },
+    {
+      "entidade": "connect_operacoes",
+      "total": 0
+    },
+    {
+      "entidade": "connect_habilitacoes",
+      "total": 0
+    },
+    {
+      "entidade": "notas_pedidos",
+      "total": 2
+    },
+    {
+      "entidade": "notas_documentos",
+      "total": 0
+    },
+    {
+      "entidade": "extratos",
+      "total": 0
+    },
+    {
+      "entidade": "anuncios_importacoes",
+      "total": 0
+    },
+    {
+      "entidade": "marketplace_importacoes",
+      "total": 0
+    },
+    {
+      "entidade": "loja_pedidos",
+      "total": 0
+    },
+    {
+      "entidade": "publicados_online",
+      "total": 0
+    },
+    {
+      "entidade": "storage.objects",
+      "total": 0
+    },
+    {
+      "entidade": "avisos_inscricoes",
+      "total": 1
+    }
+  ],
+  "a21_sql_roles": [
+    {
+      "papel": "administrador",
+      "classe": "conta_de_teste",
+      "usuarios": 1,
+      "vinculos": 1
+    },
+    {
+      "papel": "dono",
+      "classe": "conta_de_teste",
+      "usuarios": 1,
+      "vinculos": 1
+    },
+    {
+      "papel": "dono",
+      "classe": "outra_conta",
+      "usuarios": 1,
+      "vinculos": 1
+    },
+    {
+      "papel": "gerente",
+      "classe": "conta_de_teste",
+      "usuarios": 2,
+      "vinculos": 2
+    },
+    {
+      "papel": "vendedor",
+      "classe": "conta_de_teste",
+      "usuarios": 1,
+      "vinculos": 1
+    }
+  ],
+  "a21_sql_stock": [
+    {
+      "codigo": "loja-agua-verde",
+      "nome": "Água Verde",
+      "tipo": "loja_fisica",
+      "status": "ativa",
+      "tem_cnpj": false,
+      "variantes": 0,
+      "fisico": 0,
+      "reservado": 0
+    },
+    {
+      "codigo": "loja-almirante-tamandare",
+      "nome": "Almirante Tamandaré",
+      "tipo": "loja_fisica",
+      "status": "ativa",
+      "tem_cnpj": false,
+      "variantes": 0,
+      "fisico": 0,
+      "reservado": 0
+    },
+    {
+      "codigo": "assistencia",
+      "nome": "Assistência (teste)",
+      "tipo": "assistencia",
+      "status": "ativa",
+      "tem_cnpj": false,
+      "variantes": 0,
+      "fisico": 0,
+      "reservado": 0
+    },
+    {
+      "codigo": "loja-balneario",
+      "nome": "Balneário",
+      "tipo": "loja_fisica",
+      "status": "ativa",
+      "tem_cnpj": false,
+      "variantes": 0,
+      "fisico": 0,
+      "reservado": 0
+    },
+    {
+      "codigo": "loja-butiatuvinha",
+      "nome": "Butiatuvinha",
+      "tipo": "loja_fisica",
+      "status": "ativa",
+      "tem_cnpj": false,
+      "variantes": 0,
+      "fisico": 0,
+      "reservado": 0
+    },
+    {
+      "codigo": "loja-colombo",
+      "nome": "Colombo",
+      "tipo": "loja_fisica",
+      "status": "ativa",
+      "tem_cnpj": false,
+      "variantes": 0,
+      "fisico": 0,
+      "reservado": 0
+    },
+    {
+      "codigo": "loja-colonia",
+      "nome": "Colônia",
+      "tipo": "loja_fisica",
+      "status": "ativa",
+      "tem_cnpj": false,
+      "variantes": 0,
+      "fisico": 0,
+      "reservado": 0
+    },
+    {
+      "codigo": "defeitos",
+      "nome": "DEFEITOS",
+      "tipo": "excecao",
+      "status": "ativa",
+      "tem_cnpj": false,
+      "variantes": 0,
+      "fisico": 0,
+      "reservado": 0
+    },
+    {
+      "codigo": "loja-dubai",
+      "nome": "Dubai",
+      "tipo": "loja_fisica",
+      "status": "ativa",
+      "tem_cnpj": false,
+      "variantes": 0,
+      "fisico": 0,
+      "reservado": 0
+    },
+    {
+      "codigo": "loja-teste-2",
+      "nome": "Loja de teste 2",
+      "tipo": "loja_fisica",
+      "status": "ativa",
+      "tem_cnpj": true,
+      "variantes": 5,
+      "fisico": 30,
+      "reservado": 0
+    },
+    {
+      "codigo": "loja-muffato-santa",
+      "nome": "Muffato Santa",
+      "tipo": "loja_fisica",
+      "status": "ativa",
+      "tem_cnpj": false,
+      "variantes": 0,
+      "fisico": 0,
+      "reservado": 0
+    },
+    {
+      "codigo": "loja-santa-candida",
+      "nome": "Santa Cândida",
+      "tipo": "loja_fisica",
+      "status": "ativa",
+      "tem_cnpj": false,
+      "variantes": 0,
+      "fisico": 0,
+      "reservado": 0
+    },
+    {
+      "codigo": "santa-candida",
+      "nome": "Santa Cândida (teste)",
+      "tipo": "loja_fisica",
+      "status": "ativa",
+      "tem_cnpj": true,
+      "variantes": 5,
+      "fisico": 23,
+      "reservado": 0
+    },
+    {
+      "codigo": "loja-santa-felicidade",
+      "nome": "Santa Felicidade",
+      "tipo": "loja_fisica",
+      "status": "ativa",
+      "tem_cnpj": false,
+      "variantes": 0,
+      "fisico": 0,
+      "reservado": 0
+    },
+    {
+      "codigo": "loja-ventania",
+      "nome": "Ventania",
+      "tipo": "loja_fisica",
+      "status": "ativa",
+      "tem_cnpj": false,
+      "variantes": 0,
+      "fisico": 0,
+      "reservado": 0
+    }
+  ],
+  "a21_sql_cron": [
+    {
+      "jobname": "ora5g-alertas-das-filas",
+      "active": true,
+      "schedule": "*/10 * * * *",
+      "execucoes_24h": 144,
+      "falhas_24h": 0,
+      "ultima_fim": "2026-11-21 19:10:00.263507+00"
+    },
+    {
+      "jobname": "ora5g-limpeza-dos-registros",
+      "active": true,
+      "schedule": "30 6 * * *",
+      "execucoes_24h": 1,
+      "falhas_24h": 0,
+      "ultima_fim": "2026-11-21 06:30:00.196559+00"
+    },
+    {
+      "jobname": "ora5g-reservas-vencidas",
+      "active": true,
+      "schedule": "*/5 * * * *",
+      "execucoes_24h": 288,
+      "falhas_24h": 0,
+      "ultima_fim": "2026-11-21 19:15:00.37124+00"
+    }
+  ],
+  "a21_sql_rls": [
+    {
+      "esquema": "privado",
+      "objeto": "avisos",
+      "relkind": "r",
+      "rls": true,
+      "anon_select": false,
+      "autenticado_select": false,
+      "reloptions": null
+    },
+    {
+      "esquema": "privado",
+      "objeto": "avisos_inscricoes",
+      "relkind": "r",
+      "rls": true,
+      "anon_select": false,
+      "autenticado_select": false,
+      "reloptions": null
+    },
+    {
+      "esquema": "privado",
+      "objeto": "cliente_dados",
+      "relkind": "r",
+      "rls": true,
+      "anon_select": false,
+      "autenticado_select": false,
+      "reloptions": null
+    },
+    {
+      "esquema": "privado",
+      "objeto": "connect_dados_envio",
+      "relkind": "r",
+      "rls": true,
+      "anon_select": false,
+      "autenticado_select": false,
+      "reloptions": null
+    },
+    {
+      "esquema": "privado",
+      "objeto": "connect_segredos",
+      "relkind": "r",
+      "rls": true,
+      "anon_select": false,
+      "autenticado_select": false,
+      "reloptions": null
+    },
+    {
+      "esquema": "privado",
+      "objeto": "crm_segredos",
+      "relkind": "r",
+      "rls": true,
+      "anon_select": false,
+      "autenticado_select": false,
+      "reloptions": null
+    },
+    {
+      "esquema": "privado",
+      "objeto": "fotos_em_limpeza",
+      "relkind": "r",
+      "rls": true,
+      "anon_select": false,
+      "autenticado_select": false,
+      "reloptions": null
+    },
+    {
+      "esquema": "privado",
+      "objeto": "identificadores_itens",
+      "relkind": "r",
+      "rls": true,
+      "anon_select": false,
+      "autenticado_select": false,
+      "reloptions": null
+    },
+    {
+      "esquema": "privado",
+      "objeto": "limites_dos_alertas",
+      "relkind": "r",
+      "rls": true,
+      "anon_select": false,
+      "autenticado_select": false,
+      "reloptions": null
+    },
+    {
+      "esquema": "privado",
+      "objeto": "loja_pedidos_contato",
+      "relkind": "r",
+      "rls": true,
+      "anon_select": false,
+      "autenticado_select": false,
+      "reloptions": null
+    },
+    {
+      "esquema": "privado",
+      "objeto": "loja_reservas_contato",
+      "relkind": "r",
+      "rls": true,
+      "anon_select": false,
+      "autenticado_select": false,
+      "reloptions": null
+    },
+    {
+      "esquema": "privado",
+      "objeto": "notas_destinatarios",
+      "relkind": "r",
+      "rls": true,
+      "anon_select": false,
+      "autenticado_select": false,
+      "reloptions": null
+    },
+    {
+      "esquema": "privado",
+      "objeto": "rotinas",
+      "relkind": "r",
+      "rls": true,
+      "anon_select": false,
+      "autenticado_select": false,
+      "reloptions": null
+    },
+    {
+      "esquema": "privado",
+      "objeto": "rotinas_execucoes",
+      "relkind": "r",
+      "rls": true,
+      "anon_select": false,
+      "autenticado_select": false,
+      "reloptions": null
+    },
+    {
+      "esquema": "privado",
+      "objeto": "segredos_de_rotina",
+      "relkind": "r",
+      "rls": true,
+      "anon_select": false,
+      "autenticado_select": false,
+      "reloptions": null
+    },
+    {
+      "esquema": "privado",
+      "objeto": "whatsapp_destinos",
+      "relkind": "r",
+      "rls": true,
+      "anon_select": false,
+      "autenticado_select": false,
+      "reloptions": null
+    },
+    {
+      "esquema": "public",
+      "objeto": "anuncios_custos",
+      "relkind": "r",
+      "rls": true,
+      "anon_select": false,
+      "autenticado_select": true,
+      "reloptions": null
+    },
+    {
+      "esquema": "public",
+      "objeto": "anuncios_importacoes",
+      "relkind": "r",
+      "rls": true,
+      "anon_select": false,
+      "autenticado_select": true,
+      "reloptions": null
+    },
+    {
+      "esquema": "public",
+      "objeto": "aprovacoes_desconto",
+      "relkind": "r",
+      "rls": true,
+      "anon_select": false,
+      "autenticado_select": true,
+      "reloptions": null
+    },
+    {
+      "esquema": "public",
+      "objeto": "atividades",
+      "relkind": "r",
+      "rls": true,
+      "anon_select": false,
+      "autenticado_select": true,
+      "reloptions": null
+    },
+    {
+      "esquema": "public",
+      "objeto": "auditoria",
+      "relkind": "r",
+      "rls": true,
+      "anon_select": false,
+      "autenticado_select": true,
+      "reloptions": null
+    },
+    {
+      "esquema": "public",
+      "objeto": "bonus_contestacoes",
+      "relkind": "r",
+      "rls": true,
+      "anon_select": false,
+      "autenticado_select": true,
+      "reloptions": null
+    },
+    {
+      "esquema": "public",
+      "objeto": "bonus_fechamento_linhas",
+      "relkind": "r",
+      "rls": true,
+      "anon_select": false,
+      "autenticado_select": true,
+      "reloptions": null
+    },
+    {
+      "esquema": "public",
+      "objeto": "bonus_fechamentos",
+      "relkind": "r",
+      "rls": true,
+      "anon_select": false,
+      "autenticado_select": true,
+      "reloptions": null
+    },
+    {
+      "esquema": "public",
+      "objeto": "bonus_regras",
+      "relkind": "r",
+      "rls": true,
+      "anon_select": false,
+      "autenticado_select": true,
+      "reloptions": null
+    },
+    {
+      "esquema": "public",
+      "objeto": "caixa_movimentos",
+      "relkind": "r",
+      "rls": true,
+      "anon_select": false,
+      "autenticado_select": true,
+      "reloptions": null
+    },
+    {
+      "esquema": "public",
+      "objeto": "caixa_saidas",
+      "relkind": "r",
+      "rls": true,
+      "anon_select": false,
+      "autenticado_select": true,
+      "reloptions": null
+    },
+    {
+      "esquema": "public",
+      "objeto": "caixas",
+      "relkind": "r",
+      "rls": true,
+      "anon_select": false,
+      "autenticado_select": true,
+      "reloptions": null
+    },
+    {
+      "esquema": "public",
+      "objeto": "categorias",
+      "relkind": "r",
+      "rls": true,
+      "anon_select": false,
+      "autenticado_select": true,
+      "reloptions": null
+    },
+    {
+      "esquema": "public",
+      "objeto": "cliente_consentimentos",
+      "relkind": "r",
+      "rls": true,
+      "anon_select": false,
+      "autenticado_select": true,
+      "reloptions": null
+    },
+    {
+      "esquema": "public",
+      "objeto": "cliente_nao_duplicados",
+      "relkind": "r",
+      "rls": true,
+      "anon_select": false,
+      "autenticado_select": true,
+      "reloptions": null
+    },
+    {
+      "esquema": "public",
+      "objeto": "clientes",
+      "relkind": "r",
+      "rls": true,
+      "anon_select": false,
+      "autenticado_select": true,
+      "reloptions": null
+    },
+    {
+      "esquema": "public",
+      "objeto": "connect_conciliacao_linhas",
+      "relkind": "r",
+      "rls": true,
+      "anon_select": false,
+      "autenticado_select": true,
+      "reloptions": null
+    },
+    {
+      "esquema": "public",
+      "objeto": "connect_conciliacao_so_aqui",
+      "relkind": "r",
+      "rls": true,
+      "anon_select": false,
+      "autenticado_select": true,
+      "reloptions": null
+    },
+    {
+      "esquema": "public",
+      "objeto": "connect_conciliacoes",
+      "relkind": "r",
+      "rls": true,
+      "anon_select": false,
+      "autenticado_select": true,
+      "reloptions": null
+    },
+    {
+      "esquema": "public",
+      "objeto": "connect_eventos",
+      "relkind": "r",
+      "rls": true,
+      "anon_select": false,
+      "autenticado_select": true,
+      "reloptions": null
+    },
+    {
+      "esquema": "public",
+      "objeto": "connect_habilitacoes",
+      "relkind": "r",
+      "rls": true,
+      "anon_select": false,
+      "autenticado_select": true,
+      "reloptions": null
+    },
+    {
+      "esquema": "public",
+      "objeto": "connect_operacoes",
+      "relkind": "r",
+      "rls": true,
+      "anon_select": false,
+      "autenticado_select": true,
+      "reloptions": null
+    },
+    {
+      "esquema": "public",
+      "objeto": "connect_operacoes_custos",
+      "relkind": "r",
+      "rls": true,
+      "anon_select": false,
+      "autenticado_select": true,
+      "reloptions": null
+    },
+    {
+      "esquema": "public",
+      "objeto": "connect_producao",
+      "relkind": "r",
+      "rls": true,
+      "anon_select": false,
+      "autenticado_select": true,
+      "reloptions": null
+    },
+    {
+      "esquema": "public",
+      "objeto": "connect_referencias",
+      "relkind": "r",
+      "rls": true,
+      "anon_select": false,
+      "autenticado_select": true,
+      "reloptions": null
+    },
+    {
+      "esquema": "public",
+      "objeto": "conta_pagar_anexos",
+      "relkind": "r",
+      "rls": true,
+      "anon_select": false,
+      "autenticado_select": true,
+      "reloptions": null
+    },
+    {
+      "esquema": "public",
+      "objeto": "contas_a_pagar",
+      "relkind": "r",
+      "rls": true,
+      "anon_select": false,
+      "autenticado_select": true,
+      "reloptions": null
+    },
+    {
+      "esquema": "public",
+      "objeto": "contas_a_receber",
+      "relkind": "r",
+      "rls": true,
+      "anon_select": false,
+      "autenticado_select": true,
+      "reloptions": null
+    },
+    {
+      "esquema": "public",
+      "objeto": "contas_bancarias",
+      "relkind": "r",
+      "rls": true,
+      "anon_select": false,
+      "autenticado_select": true,
+      "reloptions": null
+    },
+    {
+      "esquema": "public",
+      "objeto": "contas_pagar_categorias",
+      "relkind": "r",
+      "rls": true,
+      "anon_select": false,
+      "autenticado_select": true,
+      "reloptions": null
+    },
+    {
+      "esquema": "public",
+      "objeto": "contexto_sessao",
+      "relkind": "r",
+      "rls": true,
+      "anon_select": false,
+      "autenticado_select": true,
+      "reloptions": null
+    },
+    {
+      "esquema": "public",
+      "objeto": "convites",
+      "relkind": "r",
+      "rls": true,
+      "anon_select": false,
+      "autenticado_select": true,
+      "reloptions": null
+    },
+    {
+      "esquema": "public",
+      "objeto": "custos",
+      "relkind": "r",
+      "rls": true,
+      "anon_select": false,
+      "autenticado_select": true,
+      "reloptions": null
+    },
+    {
+      "esquema": "public",
+      "objeto": "empresas",
+      "relkind": "r",
+      "rls": true,
+      "anon_select": false,
+      "autenticado_select": true,
+      "reloptions": null
+    },
+    {
+      "esquema": "public",
+      "objeto": "entrada_itens",
+      "relkind": "r",
+      "rls": true,
+      "anon_select": false,
+      "autenticado_select": false,
+      "reloptions": null
+    },
+    {
+      "esquema": "public",
+      "objeto": "entradas_estoque",
+      "relkind": "r",
+      "rls": true,
+      "anon_select": false,
+      "autenticado_select": false,
+      "reloptions": null
+    },
+    {
+      "esquema": "public",
+      "objeto": "estoque_carga_linhas",
+      "relkind": "r",
+      "rls": true,
+      "anon_select": false,
+      "autenticado_select": true,
+      "reloptions": null
+    },
+    {
+      "esquema": "public",
+      "objeto": "estoque_cargas",
+      "relkind": "r",
+      "rls": true,
+      "anon_select": false,
+      "autenticado_select": true,
+      "reloptions": null
+    },
+    {
+      "esquema": "public",
+      "objeto": "estoque_movimentos",
+      "relkind": "r",
+      "rls": true,
+      "anon_select": false,
+      "autenticado_select": true,
+      "reloptions": null
+    },
+    {
+      "esquema": "public",
+      "objeto": "estoque_reservas",
+      "relkind": "r",
+      "rls": true,
+      "anon_select": false,
+      "autenticado_select": true,
+      "reloptions": null
+    },
+    {
+      "esquema": "public",
+      "objeto": "estoque_saldos",
+      "relkind": "r",
+      "rls": true,
+      "anon_select": false,
+      "autenticado_select": true,
+      "reloptions": null
+    },
+    {
+      "esquema": "public",
+      "objeto": "estornos_externos",
+      "relkind": "r",
+      "rls": true,
+      "anon_select": false,
+      "autenticado_select": true,
+      "reloptions": null
+    },
+    {
+      "esquema": "public",
+      "objeto": "extrato_linhas",
+      "relkind": "r",
+      "rls": true,
+      "anon_select": false,
+      "autenticado_select": true,
+      "reloptions": null
+    },
+    {
+      "esquema": "public",
+      "objeto": "extratos",
+      "relkind": "r",
+      "rls": true,
+      "anon_select": false,
+      "autenticado_select": true,
+      "reloptions": null
+    },
+    {
+      "esquema": "public",
+      "objeto": "fiscal_politicas",
+      "relkind": "r",
+      "rls": true,
+      "anon_select": false,
+      "autenticado_select": true,
+      "reloptions": null
+    },
+    {
+      "esquema": "public",
+      "objeto": "fornecedores",
+      "relkind": "r",
+      "rls": true,
+      "anon_select": false,
+      "autenticado_select": true,
+      "reloptions": null
+    },
+    {
+      "esquema": "public",
+      "objeto": "fotos_produto",
+      "relkind": "r",
+      "rls": true,
+      "anon_select": false,
+      "autenticado_select": true,
+      "reloptions": null
+    },
+    {
+      "esquema": "public",
+      "objeto": "importacao_linhas",
+      "relkind": "r",
+      "rls": true,
+      "anon_select": false,
+      "autenticado_select": true,
+      "reloptions": null
+    },
+    {
+      "esquema": "public",
+      "objeto": "importacoes",
+      "relkind": "r",
+      "rls": true,
+      "anon_select": false,
+      "autenticado_select": true,
+      "reloptions": null
+    },
+    {
+      "esquema": "public",
+      "objeto": "inventario_contagens",
+      "relkind": "r",
+      "rls": true,
+      "anon_select": false,
+      "autenticado_select": true,
+      "reloptions": null
+    },
+    {
+      "esquema": "public",
+      "objeto": "inventario_itens",
+      "relkind": "r",
+      "rls": true,
+      "anon_select": false,
+      "autenticado_select": true,
+      "reloptions": null
+    },
+    {
+      "esquema": "public",
+      "objeto": "inventarios",
+      "relkind": "r",
+      "rls": true,
+      "anon_select": false,
+      "autenticado_select": true,
+      "reloptions": null
+    },
+    {
+      "esquema": "public",
+      "objeto": "itens_serializados",
+      "relkind": "r",
+      "rls": true,
+      "anon_select": false,
+      "autenticado_select": true,
+      "reloptions": null
+    },
+    {
+      "esquema": "public",
+      "objeto": "loja_pedidos",
+      "relkind": "r",
+      "rls": true,
+      "anon_select": false,
+      "autenticado_select": true,
+      "reloptions": null
+    },
+    {
+      "esquema": "public",
+      "objeto": "loja_reservas",
+      "relkind": "r",
+      "rls": true,
+      "anon_select": false,
+      "autenticado_select": true,
+      "reloptions": null
+    },
+    {
+      "esquema": "public",
+      "objeto": "marcas",
+      "relkind": "r",
+      "rls": true,
+      "anon_select": false,
+      "autenticado_select": true,
+      "reloptions": null
+    },
+    {
+      "esquema": "public",
+      "objeto": "marketplace_importacoes",
+      "relkind": "r",
+      "rls": true,
+      "anon_select": false,
+      "autenticado_select": true,
+      "reloptions": null
+    },
+    {
+      "esquema": "public",
+      "objeto": "marketplace_pedido_itens",
+      "relkind": "r",
+      "rls": true,
+      "anon_select": false,
+      "autenticado_select": true,
+      "reloptions": null
+    },
+    {
+      "esquema": "public",
+      "objeto": "marketplace_pedidos",
+      "relkind": "r",
+      "rls": true,
+      "anon_select": false,
+      "autenticado_select": true,
+      "reloptions": null
+    },
+    {
+      "esquema": "public",
+      "objeto": "marketplace_repasses",
+      "relkind": "r",
+      "rls": true,
+      "anon_select": false,
+      "autenticado_select": true,
+      "reloptions": null
+    },
+    {
+      "esquema": "public",
+      "objeto": "metas",
+      "relkind": "r",
+      "rls": true,
+      "anon_select": false,
+      "autenticado_select": true,
+      "reloptions": null
+    },
+    {
+      "esquema": "public",
+      "objeto": "notas_cartas_de_correcao",
+      "relkind": "r",
+      "rls": true,
+      "anon_select": false,
+      "autenticado_select": true,
+      "reloptions": null
+    },
+    {
+      "esquema": "public",
+      "objeto": "notas_divergencias_conferidas",
+      "relkind": "r",
+      "rls": true,
+      "anon_select": false,
+      "autenticado_select": true,
+      "reloptions": null
+    },
+    {
+      "esquema": "public",
+      "objeto": "notas_documentos",
+      "relkind": "r",
+      "rls": true,
+      "anon_select": false,
+      "autenticado_select": true,
+      "reloptions": null
+    },
+    {
+      "esquema": "public",
+      "objeto": "notas_eventos",
+      "relkind": "r",
+      "rls": true,
+      "anon_select": false,
+      "autenticado_select": true,
+      "reloptions": null
+    },
+    {
+      "esquema": "public",
+      "objeto": "notas_pedidos",
+      "relkind": "r",
+      "rls": true,
+      "anon_select": false,
+      "autenticado_select": true,
+      "reloptions": null
+    },
+    {
+      "esquema": "public",
+      "objeto": "oportunidade_eventos",
+      "relkind": "r",
+      "rls": true,
+      "anon_select": false,
+      "autenticado_select": true,
+      "reloptions": null
+    },
+    {
+      "esquema": "public",
+      "objeto": "oportunidades",
+      "relkind": "r",
+      "rls": true,
+      "anon_select": false,
+      "autenticado_select": true,
+      "reloptions": null
+    },
+    {
+      "esquema": "public",
+      "objeto": "ordens_servico",
+      "relkind": "r",
+      "rls": true,
+      "anon_select": false,
+      "autenticado_select": true,
+      "reloptions": null
+    },
+    {
+      "esquema": "public",
+      "objeto": "organizacoes",
+      "relkind": "r",
+      "rls": true,
+      "anon_select": false,
+      "autenticado_select": true,
+      "reloptions": null
+    },
+    {
+      "esquema": "public",
+      "objeto": "os_eventos",
+      "relkind": "r",
+      "rls": true,
+      "anon_select": false,
+      "autenticado_select": true,
+      "reloptions": null
+    },
+    {
+      "esquema": "public",
+      "objeto": "os_fotos",
+      "relkind": "r",
+      "rls": true,
+      "anon_select": false,
+      "autenticado_select": true,
+      "reloptions": null
+    },
+    {
+      "esquema": "public",
+      "objeto": "os_orcamentos",
+      "relkind": "r",
+      "rls": true,
+      "anon_select": false,
+      "autenticado_select": true,
+      "reloptions": null
+    },
+    {
+      "esquema": "public",
+      "objeto": "os_pecas",
+      "relkind": "r",
+      "rls": true,
+      "anon_select": false,
+      "autenticado_select": true,
+      "reloptions": null
+    },
+    {
+      "esquema": "public",
+      "objeto": "papeis",
+      "relkind": "r",
+      "rls": true,
+      "anon_select": false,
+      "autenticado_select": true,
+      "reloptions": null
+    },
+    {
+      "esquema": "public",
+      "objeto": "papel_permissoes",
+      "relkind": "r",
+      "rls": true,
+      "anon_select": false,
+      "autenticado_select": true,
+      "reloptions": null
+    },
+    {
+      "esquema": "public",
+      "objeto": "pedido_compra_itens",
+      "relkind": "r",
+      "rls": true,
+      "anon_select": false,
+      "autenticado_select": false,
+      "reloptions": null
+    },
+    {
+      "esquema": "public",
+      "objeto": "pedidos_compra",
+      "relkind": "r",
+      "rls": true,
+      "anon_select": false,
+      "autenticado_select": false,
+      "reloptions": null
+    },
+    {
+      "esquema": "public",
+      "objeto": "perfis_usuario",
+      "relkind": "r",
+      "rls": true,
+      "anon_select": false,
+      "autenticado_select": true,
+      "reloptions": null
+    },
+    {
+      "esquema": "public",
+      "objeto": "permissoes",
+      "relkind": "r",
+      "rls": true,
+      "anon_select": false,
+      "autenticado_select": true,
+      "reloptions": null
+    },
+    {
+      "esquema": "public",
+      "objeto": "precos",
+      "relkind": "r",
+      "rls": true,
+      "anon_select": false,
+      "autenticado_select": true,
+      "reloptions": null
+    },
+    {
+      "esquema": "public",
+      "objeto": "produtos",
+      "relkind": "r",
+      "rls": true,
+      "anon_select": false,
+      "autenticado_select": true,
+      "reloptions": null
+    },
+    {
+      "esquema": "public",
+      "objeto": "regioes",
+      "relkind": "r",
+      "rls": true,
+      "anon_select": false,
+      "autenticado_select": true,
+      "reloptions": null
+    },
+    {
+      "esquema": "public",
+      "objeto": "terminais",
+      "relkind": "r",
+      "rls": true,
+      "anon_select": false,
+      "autenticado_select": true,
+      "reloptions": null
+    },
+    {
+      "esquema": "public",
+      "objeto": "transferencia_itens",
+      "relkind": "r",
+      "rls": true,
+      "anon_select": false,
+      "autenticado_select": true,
+      "reloptions": null
+    },
+    {
+      "esquema": "public",
+      "objeto": "transferencia_remessas",
+      "relkind": "r",
+      "rls": true,
+      "anon_select": false,
+      "autenticado_select": true,
+      "reloptions": null
+    },
+    {
+      "esquema": "public",
+      "objeto": "transferencias",
+      "relkind": "r",
+      "rls": true,
+      "anon_select": false,
+      "autenticado_select": true,
+      "reloptions": null
+    },
+    {
+      "esquema": "public",
+      "objeto": "unidade_configuracoes",
+      "relkind": "r",
+      "rls": true,
+      "anon_select": false,
+      "autenticado_select": true,
+      "reloptions": null
+    },
+    {
+      "esquema": "public",
+      "objeto": "unidades",
+      "relkind": "r",
+      "rls": true,
+      "anon_select": false,
+      "autenticado_select": true,
+      "reloptions": null
+    },
+    {
+      "esquema": "public",
+      "objeto": "vales_troca",
+      "relkind": "r",
+      "rls": true,
+      "anon_select": false,
+      "autenticado_select": true,
+      "reloptions": null
+    },
+    {
+      "esquema": "public",
+      "objeto": "vales_troca_usos",
+      "relkind": "r",
+      "rls": true,
+      "anon_select": false,
+      "autenticado_select": true,
+      "reloptions": null
+    },
+    {
+      "esquema": "public",
+      "objeto": "variante_codigos_externos",
+      "relkind": "r",
+      "rls": true,
+      "anon_select": false,
+      "autenticado_select": true,
+      "reloptions": null
+    },
+    {
+      "esquema": "public",
+      "objeto": "variantes",
+      "relkind": "r",
+      "rls": true,
+      "anon_select": false,
+      "autenticado_select": true,
+      "reloptions": null
+    },
+    {
+      "esquema": "public",
+      "objeto": "venda_anexos",
+      "relkind": "r",
+      "rls": true,
+      "anon_select": false,
+      "autenticado_select": true,
+      "reloptions": null
+    },
+    {
+      "esquema": "public",
+      "objeto": "venda_devolucao_itens",
+      "relkind": "r",
+      "rls": true,
+      "anon_select": false,
+      "autenticado_select": true,
+      "reloptions": null
+    },
+    {
+      "esquema": "public",
+      "objeto": "venda_devolucao_reembolsos",
+      "relkind": "r",
+      "rls": true,
+      "anon_select": false,
+      "autenticado_select": true,
+      "reloptions": null
+    },
+    {
+      "esquema": "public",
+      "objeto": "venda_devolucoes",
+      "relkind": "r",
+      "rls": true,
+      "anon_select": false,
+      "autenticado_select": true,
+      "reloptions": null
+    },
+    {
+      "esquema": "public",
+      "objeto": "venda_itens",
+      "relkind": "r",
+      "rls": true,
+      "anon_select": false,
+      "autenticado_select": true,
+      "reloptions": null
+    },
+    {
+      "esquema": "public",
+      "objeto": "venda_itens_custos",
+      "relkind": "r",
+      "rls": true,
+      "anon_select": false,
+      "autenticado_select": true,
+      "reloptions": null
+    },
+    {
+      "esquema": "public",
+      "objeto": "venda_pagamentos",
+      "relkind": "r",
+      "rls": true,
+      "anon_select": false,
+      "autenticado_select": true,
+      "reloptions": null
+    },
+    {
+      "esquema": "public",
+      "objeto": "venda_retornos",
+      "relkind": "r",
+      "rls": true,
+      "anon_select": false,
+      "autenticado_select": true,
+      "reloptions": null
+    },
+    {
+      "esquema": "public",
+      "objeto": "vendas",
+      "relkind": "r",
+      "rls": true,
+      "anon_select": false,
+      "autenticado_select": true,
+      "reloptions": null
+    },
+    {
+      "esquema": "public",
+      "objeto": "vinculos",
+      "relkind": "r",
+      "rls": true,
+      "anon_select": false,
+      "autenticado_select": true,
+      "reloptions": null
+    },
+    {
+      "esquema": "public",
+      "objeto": "whatsapp_envio_eventos",
+      "relkind": "r",
+      "rls": true,
+      "anon_select": false,
+      "autenticado_select": true,
+      "reloptions": null
+    },
+    {
+      "esquema": "public",
+      "objeto": "whatsapp_envios",
+      "relkind": "r",
+      "rls": true,
+      "anon_select": false,
+      "autenticado_select": true,
+      "reloptions": null
+    }
+  ],
+  "a21_sql_storage": [
+    {
+      "id": "anexos",
+      "public": false,
+      "file_size_limit": 5242880,
+      "allowed_mime_types": [
+        "application/pdf",
+        "image/jpeg",
+        "image/png",
+        "image/webp"
+      ],
+      "objetos": 0
+    },
+    {
+      "id": "contas",
+      "public": false,
+      "file_size_limit": 5242880,
+      "allowed_mime_types": [
+        "application/pdf",
+        "image/jpeg",
+        "image/png",
+        "image/webp"
+      ],
+      "objetos": 0
+    },
+    {
+      "id": "notas",
+      "public": false,
+      "file_size_limit": 5242880,
+      "allowed_mime_types": [
+        "application/pdf",
+        "application/xml",
+        "text/xml"
+      ],
+      "objetos": 0
+    },
+    {
+      "id": "os",
+      "public": false,
+      "file_size_limit": 5242880,
+      "allowed_mime_types": [
+        "image/jpeg",
+        "image/png",
+        "image/webp"
+      ],
+      "objetos": 0
+    },
+    {
+      "id": "produtos",
+      "public": false,
+      "file_size_limit": 5242880,
+      "allowed_mime_types": [
+        "image/jpeg",
+        "image/png",
+        "image/webp"
+      ],
+      "objetos": 0
+    }
+  ],
+  "a21_logs": {
+    "result": [
+      {
+        "http_status": "",
+        "level": "info",
+        "severity": "",
+        "source": "auth_logs",
+        "sqlstate": "",
+        "total": 256
+      },
+      {
+        "http_status": "",
+        "level": "warning",
+        "severity": "",
+        "source": "auth_logs",
+        "sqlstate": "",
+        "total": 1
+      },
+      {
+        "http_status": "200",
+        "level": "",
+        "severity": "",
+        "source": "edge_logs",
+        "sqlstate": "",
+        "total": 28388
+      },
+      {
+        "http_status": "204",
+        "level": "",
+        "severity": "",
+        "source": "edge_logs",
+        "sqlstate": "",
+        "total": 59
+      },
+      {
+        "http_status": "206",
+        "level": "",
+        "severity": "",
+        "source": "edge_logs",
+        "sqlstate": "",
+        "total": 12
+      },
+      {
+        "http_status": "500",
+        "level": "",
+        "severity": "",
+        "source": "edge_logs",
+        "sqlstate": "",
+        "total": 7
+      },
+      {
+        "http_status": "403",
+        "level": "",
+        "severity": "",
+        "source": "edge_logs",
+        "sqlstate": "",
+        "total": 2
+      },
+      {
+        "http_status": "422",
+        "level": "",
+        "severity": "",
+        "source": "edge_logs",
+        "sqlstate": "",
+        "total": 1
+      },
+      {
+        "http_status": "",
+        "level": "",
+        "severity": "LOG",
+        "source": "postgres_logs",
+        "sqlstate": "00000",
+        "total": 1443
+      },
+      {
+        "http_status": "",
+        "level": "",
+        "severity": "ERROR",
+        "source": "postgres_logs",
+        "sqlstate": "57014",
+        "total": 7
+      },
+      {
+        "http_status": "",
+        "level": "",
+        "severity": "ERROR",
+        "source": "postgres_logs",
+        "sqlstate": "42703",
+        "total": 6
+      },
+      {
+        "http_status": "",
+        "level": "",
+        "severity": "ERROR",
+        "source": "postgres_logs",
+        "sqlstate": "42P01",
+        "total": 3
+      },
+      {
+        "http_status": "",
+        "level": "",
+        "severity": "ERROR",
+        "source": "postgres_logs",
+        "sqlstate": "42501",
+        "total": 2
+      },
+      {
+        "http_status": "",
+        "level": "",
+        "severity": "LOG",
+        "source": "postgres_logs",
+        "sqlstate": "08006",
+        "total": 1
+      },
+      {
+        "http_status": "",
+        "level": "info",
+        "severity": "",
+        "source": "storage_logs",
+        "sqlstate": "",
+        "total": 8
+      }
+    ]
+  },
+  "a21_log_errors": {
+    "result": [
+      {
+        "caminho": "/rest/v1/rpc/estoque_valor_em_custo",
+        "primeiro": "2026-11-21T02:22:55.734000",
+        "status": "403",
+        "total": 2,
+        "ultimo": "2026-11-21T10:30:52.204000"
+      },
+      {
+        "caminho": "/auth/v1/invite",
+        "primeiro": "2026-11-21T09:57:02.256000",
+        "status": "422",
+        "total": 1,
+        "ultimo": "2026-11-21T09:57:02.256000"
+      },
+      {
+        "caminho": "/rest/v1/rpc/estoque_painel",
+        "primeiro": "2026-11-21T10:03:57.876000",
+        "status": "500",
+        "total": 2,
+        "ultimo": "2026-11-21T10:04:00.997000"
+      },
+      {
+        "caminho": "/rest/v1/rpc/metas_painel",
+        "primeiro": "2026-11-21T10:03:57.870000",
+        "status": "500",
+        "total": 2,
+        "ultimo": "2026-11-21T10:04:00.997000"
+      },
+      {
+        "caminho": "/rest/v1/rpc/pendencias_da_loja",
+        "primeiro": "2026-11-21T10:04:00.998000",
+        "status": "500",
+        "total": 1,
+        "ultimo": "2026-11-21T10:04:00.998000"
+      },
+      {
+        "caminho": "/rest/v1/rpc/financeiro_painel",
+        "primeiro": "2026-11-21T10:03:58.751000",
+        "status": "500",
+        "total": 1,
+        "ultimo": "2026-11-21T10:03:58.751000"
+      },
+      {
+        "caminho": "/rest/v1/rpc/vendas_painel",
+        "primeiro": "2026-11-21T10:04:01.007000",
+        "status": "500",
+        "total": 1,
+        "ultimo": "2026-11-21T10:04:01.007000"
+      }
+    ]
+  },
+  "a21_checks": {
+    "total_count": 2,
+    "check_runs": [
+      {
+        "id": 136864927015,
+        "name": "Supabase Preview",
+        "node_id": "CR_kwDOVgEj7M8AAAAf3ckNJw",
+        "head_sha": "c1b8e6086d509f388e6080eb829af7a8b6ac316b",
+        "external_id": "",
+        "url": "https://api.github.com/repos/oraconect5g-boop/sistema-ora5g/check-runs/136864927015",
+        "html_url": "https://github.com/oraconect5g-boop/sistema-ora5g/runs/136864927015",
+        "details_url": "https://supabase.com/dashboard/project/qgnbeuugklzzcevdzrvg",
+        "status": "completed",
+        "conclusion": "success",
+        "started_at": "2026-11-21T13:45:21Z",
+        "completed_at": "2026-11-21T13:45:28Z",
+        "output": {
+          "title": null,
+          "summary": null,
+          "text": null,
+          "annotations_count": 0,
+          "annotations_url": "https://api.github.com/repos/oraconect5g-boop/sistema-ora5g/check-runs/136864927015/annotations"
+        },
+        "check_suite": {
+          "id": 121550707822
+        },
+        "app": {
+          "id": 330661,
+          "client_id": "Iv1.b91a6d8eaa272168",
+          "slug": "supabase",
+          "node_id": "A_kwHOAz8kpM4ABQul",
+          "owner": {
+            "login": "supabase",
+            "id": 54469796,
+            "node_id": "MDEyOk9yZ2FuaXphdGlvbjU0NDY5Nzk2",
+            "avatar_url": "https://avatars.githubusercontent.com/u/54469796?v=4",
+            "gravatar_id": "",
+            "url": "https://api.github.com/users/supabase",
+            "html_url": "https://github.com/supabase",
+            "followers_url": "https://api.github.com/users/supabase/followers",
+            "following_url": "https://api.github.com/users/supabase/following{/other_user}",
+            "gists_url": "https://api.github.com/users/supabase/gists{/gist_id}",
+            "starred_url": "https://api.github.com/users/supabase/starred{/owner}{/repo}",
+            "subscriptions_url": "https://api.github.com/users/supabase/subscriptions",
+            "organizations_url": "https://api.github.com/users/supabase/orgs",
+            "repos_url": "https://api.github.com/users/supabase/repos",
+            "events_url": "https://api.github.com/users/supabase/events{/privacy}",
+            "received_events_url": "https://api.github.com/users/supabase/received_events",
+            "type": "Organization",
+            "user_view_type": "public",
+            "site_admin": false
+          },
+          "name": "Supabase",
+          "description": "Supabase for GitHub automatically runs your migrations when pull requests are merged and launches preview databases for new pull requests.\r\n\r\nFor more information, see our [documentation](https://supabase.com/docs/guides/platform/branching).",
+          "external_url": "https://supabase.com/docs/guides/platform/branching",
+          "html_url": "https://github.com/apps/supabase",
+          "created_at": "2023-05-08T02:39:16Z",
+          "updated_at": "2026-10-27T16:17:40Z",
+          "permissions": {
+            "actions": "write",
+            "checks": "write",
+            "contents": "read",
+            "metadata": "read",
+            "pull_requests": "write",
+            "workflows": "write"
+          },
+          "events": [
+            "pull_request",
+            "push",
+            "repository"
+          ]
+        },
+        "pull_requests": []
+      },
+      {
+        "id": 136864784882,
+        "name": "Verificações",
+        "node_id": "CR_kwDOVgEj7M8AAAAf3cbh8g",
+        "head_sha": "c1b8e6086d509f388e6080eb829af7a8b6ac316b",
+        "external_id": "b8bb0e6c-e7a6-5797-8c0b-d1f8caff6efb",
+        "url": "https://api.github.com/repos/oraconect5g-boop/sistema-ora5g/check-runs/136864784882",
+        "html_url": "https://github.com/oraconect5g-boop/sistema-ora5g/actions/runs/44910397289/job/136864784882",
+        "details_url": "https://github.com/oraconect5g-boop/sistema-ora5g/actions/runs/44910397289/job/136864784882",
+        "status": "completed",
+        "conclusion": "success",
+        "started_at": "2026-11-21T13:44:59Z",
+        "completed_at": "2026-11-21T13:59:43Z",
+        "output": {
+          "title": null,
+          "summary": null,
+          "text": null,
+          "annotations_count": 0,
+          "annotations_url": "https://api.github.com/repos/oraconect5g-boop/sistema-ora5g/check-runs/136864784882/annotations"
+        },
+        "check_suite": {
+          "id": 121550709621
+        },
+        "app": {
+          "id": 15368,
+          "client_id": "Iv1.05c79e9ad1f6bdfa",
+          "slug": "github-actions",
+          "node_id": "MDM6QXBwMTUzNjg=",
+          "owner": {
+            "login": "github",
+            "id": 9919,
+            "node_id": "MDEyOk9yZ2FuaXphdGlvbjk5MTk=",
+            "avatar_url": "https://avatars.githubusercontent.com/u/9919?v=4",
+            "gravatar_id": "",
+            "url": "https://api.github.com/users/github",
+            "html_url": "https://github.com/github",
+            "followers_url": "https://api.github.com/users/github/followers",
+            "following_url": "https://api.github.com/users/github/following{/other_user}",
+            "gists_url": "https://api.github.com/users/github/gists{/gist_id}",
+            "starred_url": "https://api.github.com/users/github/starred{/owner}{/repo}",
+            "subscriptions_url": "https://api.github.com/users/github/subscriptions",
+            "organizations_url": "https://api.github.com/users/github/orgs",
+            "repos_url": "https://api.github.com/users/github/repos",
+            "events_url": "https://api.github.com/users/github/events{/privacy}",
+            "received_events_url": "https://api.github.com/users/github/received_events",
+            "type": "Organization",
+            "user_view_type": "public",
+            "site_admin": false
+          },
+          "name": "GitHub Actions",
+          "description": "Automate your workflow from idea to production",
+          "external_url": "https://help.github.com/en/actions",
+          "html_url": "https://github.com/apps/github-actions",
+          "created_at": "2018-07-30T09:30:17Z",
+          "updated_at": "2026-06-18T16:17:48Z",
+          "permissions": {
+            "actions": "write",
+            "administration": "read",
+            "artifact_metadata": "write",
+            "attestations": "write",
+            "checks": "write",
+            "code_quality": "write",
+            "contents": "write",
+            "copilot_requests": "write",
+            "deployments": "write",
+            "discussions": "write",
+            "drives": "write",
+            "issues": "write",
+            "merge_queues": "write",
+            "metadata": "read",
+            "models": "read",
+            "packages": "write",
+            "pages": "write",
+            "pull_requests": "write",
+            "repository_hooks": "write",
+            "repository_projects": "write",
+            "security_events": "write",
+            "statuses": "write",
+            "vulnerability_alerts": "read"
+          },
+          "events": [
+            "branch_protection_rule",
+            "check_run",
+            "check_suite",
+            "create",
+            "delete",
+            "deployment",
+            "deployment_status",
+            "discussion",
+            "discussion_comment",
+            "fork",
+            "gollum",
+            "issues",
+            "issue_comment",
+            "label",
+            "merge_group",
+            "milestone",
+            "page_build",
+            "public",
+            "pull_request",
+            "pull_request_review",
+            "pull_request_review_comment",
+            "push",
+            "registry_package",
+            "release",
+            "repository",
+            "repository_dispatch",
+            "status",
+            "watch",
+            "workflow_dispatch",
+            "workflow_run"
+          ]
+        },
+        "pull_requests": []
+      }
+    ]
+  },
+  "a21_rulesets": [],
+  "a21_sql_transfers": [
+    {
+      "origem": "Loja de teste 2",
+      "destino": "Santa Cândida (teste)",
+      "situacao": "recebida",
+      "transferencias": 9,
+      "unidades": 9
+    },
+    {
+      "origem": "Santa Cândida (teste)",
+      "destino": "Loja de teste 2",
+      "situacao": "recebida",
+      "transferencias": 9,
+      "unidades": 9
+    },
+    {
+      "origem": "Santa Cândida (teste)",
+      "destino": "Muffato Santa",
+      "situacao": "enviada",
+      "transferencias": 2,
+      "unidades": 2
+    }
+  ]
+}

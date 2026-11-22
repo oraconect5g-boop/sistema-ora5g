@@ -1,0 +1,17 @@
+> @ora5g/banco@0.1.0 test
+> vitest run src/estoque-carga.test.ts src/transferencias.test.ts src/transferencia-remessa.test.ts src/transferencias-tela.test.ts src/connect-conciliacao.test.ts src/contas-bancarias.test.ts src/marketplace-repasses.test.ts src/catalogo-estoque-numa-ida.test.ts src/permissoes-numa-conta.test.ts src/pendencias-numa-ida.test.ts
+
+
+ RUN  v5.1.0 <checkout>/packages/banco
+
+
+ Test Files  10 passed (10)
+      Tests  58 passed (58)
+   Start at  19:20:48
+   Duration  46.28s (tests 98%, transform 1%, import 1%)
+
+npm notice
+npm notice New major version of npm available! 11.9.0 -> 12.2.3
+npm notice Changelog: https://github.com/npm/cli/releases/tag/v12.2.3
+npm notice To update run: npm install -g npm@12.2.3
+npm notice

@@ -1,0 +1,85 @@
+{
+  "roots": {
+    ".claude": 11,
+    ".env.example": 1,
+    ".github": 5,
+    ".gitignore": 1,
+    ".npmrc": 1,
+    ".nvmrc": 1,
+    "AGENTS.md": 1,
+    "CLAUDE.md": 1,
+    "PARA_COLAR_NO_CLAUDE.md": 1,
+    "README.md": 1,
+    "apps": 789,
+    "backlog.json": 1,
+    "deploy": 12,
+    "docs": 211,
+    "originais": 4,
+    "package-lock.json": 1,
+    "package.json": 1,
+    "packages": 397,
+    "referencias_visuais": 14,
+    "scripts": 9,
+    "templates": 2
+  },
+  "excluded": [
+    "apps/plataforma/public/icones/icone-192.png",
+    "apps/plataforma/public/icones/icone-512.png",
+    "apps/plataforma/public/icones/icone-mascaravel-512.png",
+    "apps/plataforma/src/app/apple-icon.png",
+    "referencias_visuais/ora5g_previa_telas.mp4",
+    "referencias_visuais/ora5g_visao_geral_telas.png",
+    "referencias_visuais/tela_01.png",
+    "referencias_visuais/tela_02.png",
+    "referencias_visuais/tela_03.png",
+    "referencias_visuais/tela_04.png",
+    "referencias_visuais/tela_05.png",
+    "referencias_visuais/tela_06.png",
+    "referencias_visuais/tela_07.png",
+    "referencias_visuais/tela_08.png",
+    "referencias_visuais/tela_09.png",
+    "referencias_visuais/tela_10.png"
+  ],
+  "merge_markers": [],
+  "duplicate_groups": [
+    [
+      ".claude/skills/engenheiro-senior-ora5g/references/auditoria/github-2026-11-09.md",
+      "docs/skills/engenheiro-senior-ora5g/AUDITORIA_GITHUB_2026-11-09.md"
+    ],
+    [
+      ".claude/skills/engenheiro-senior-ora5g/references/historico/originais/conversa_inicial_colada.md",
+      "originais/historico/conversa_inicial_colada.md"
+    ],
+    [
+      ".claude/skills/engenheiro-senior-ora5g/references/historico/originais/pesquisa_1_plano_mestre.md",
+      "originais/research/pesquisa_1_plano_mestre.md"
+    ],
+    [
+      ".claude/skills/engenheiro-senior-ora5g/references/historico/originais/pesquisa_2_plano_mestre.md",
+      "originais/research/pesquisa_2_plano_mestre.md"
+    ],
+    [
+      ".claude/skills/engenheiro-senior-ora5g/references/historico/originais/pesquisa_3_plano_mestre.md",
+      "originais/research/pesquisa_3_plano_mestre.md"
+    ],
+    [
+      ".github/ISSUE_TEMPLATE.md",
+      "templates/ISSUE_TEMPLATE.md"
+    ],
+    [
+      ".github/PULL_REQUEST_TEMPLATE.md",
+      "templates/PULL_REQUEST_TEMPLATE.md"
+    ],
+    [
+      "apps/plataforma/eslint.config.mjs",
+      "apps/worker/eslint.config.mjs",
+      "packages/banco/eslint.config.mjs",
+      "packages/dominio/eslint.config.mjs"
+    ],
+    [
+      "apps/worker/vitest.config.ts",
+      "packages/config/vitest.config.ts",
+      "packages/dominio/vitest.config.ts"
+    ]
+  ]
+}

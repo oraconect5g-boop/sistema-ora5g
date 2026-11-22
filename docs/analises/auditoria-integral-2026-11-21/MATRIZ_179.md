@@ -1,0 +1,185 @@
+# Os 179 requisitos, sem reduzir o escopo
+
+Corte: `c1b8e6086d509f388e6080eb829af7a8b6ac316b`. O estado é **declarado pelo projeto**. A nota integral, os critérios, prioridades e caminhos das evidências estão em [MATRIZ_179.json](MATRIZ_179.json). Nenhum status `testado` equivale automaticamente a aceite operacional.
+
+| ID | Requisito | Estado declarado | Em 18/11 | Prioridade |
+|---|---|---|---|---|
+| ORA-ORG-001 | Cadastrar empresa, organização, 11 lojas comerciais, o local DEFEITOS e a loja piloto (meta de 14 lojas) | parcial | parcial | P0 |
+| ORA-ORG-002 | Associar usuários a uma ou múltiplas lojas com função e vigência | parcial | parcial | P0 |
+| ORA-ORG-003 | Gerir perfis diretoria, regional, gerente, vendedor, financeiro, fiscal, marketing e atendimento | parcial | parcial | P0 |
+| ORA-ORG-004 | Isolar dados por loja na API e PostgreSQL/RLS | parcial | parcial | P0 |
+| ORA-ORG-005 | Histórico de alterações de papéis, políticas e configurações | testado | testado | P0 |
+| ORA-ORG-006 | Login, recuperação de conta e revogação de sessão | parcial | parcial | P0 |
+| ORA-ORG-007 | Autenticação reforçada para perfis privilegiados | parcial | parcial | P1 |
+| ORA-ORG-008 | Configurar horários, endereços, caixas e dados fiscais por loja | testado | testado | P1 |
+| ORA-ORG-009 | Gerir unidades regionais, grupos e metas agregadas | testado | testado | P1 |
+| ORA-ORG-010 | Preparar multi-CNPJ/UF para expansão física nacional | parcial | parcial | P2 |
+| ORA-CAT-001 | Cadastrar categorias, marcas, produtos, variantes e SKUs | testado | testado | P0 |
+| ORA-CAT-002 | Importar produtos e preços da Rein somente por CSV/XLSX | parcial | parcial | P0 |
+| ORA-CAT-003 | Não consumir API Rein em nenhuma operação diária | respeitado | respeitado | P0 |
+| ORA-CAT-004 | Cadastrar preços vigentes por loja/canal conforme regra | testado | testado | P0 |
+| ORA-CAT-005 | Diferenciar smartphone, acessório, chip e serviço comercial | testado | testado | P0 |
+| ORA-CAT-006 | Pesquisar por nome, SKU e, quando aplicável, IMEI/ICCID | testado | testado | P0 |
+| ORA-CAT-007 | Programar vigência de promoções e campanhas comerciais | testado | testado | P1 |
+| ORA-CAT-008 | Custo de produto/lote/entrada e margem gerencial | testado | testado | P1 |
+| ORA-CAT-009 | Canais externos usam mapeamento de SKU e IDs próprios | testado | testado | P1 |
+| ORA-CAT-010 | Permitir importação assistida em lote de fotos/atributos | testado | testado | P2 |
+| ORA-CAT-011 | Exigir foto principal por produto e imagem própria para variantes visualmente diferentes | parcial | parcial | P0 |
+| ORA-INV-001 | Manter disponibilidade por loja e localização física | parcial | parcial | P0 |
+| ORA-INV-002 | Identificar aparelho por IMEI/serial e impedir venda duplicada | testado | testado | P0 |
+| ORA-INV-003 | Registrar cada entrada/saída em livro auditável de estoque | testado | testado | P0 |
+| ORA-INV-004 | Receber estoque inicial validado por contagem real | parcial | parcial | P0 |
+| ORA-INV-005 | Reservar estoque durante checkout e liberar em expiração/cancelamento | testado | testado | P0 |
+| ORA-INV-006 | Bloquear venda de IMEI indisponível/transferido/reservado | testado | testado | P0 |
+| ORA-INV-007 | Transferência entre lojas com trânsito/recebimento | testado | testado | P1 |
+| ORA-INV-008 | Inventário cíclico e ajuste com aprovação | testado | testado | P1 |
+| ORA-INV-009 | Compras e recebimento de fornecedores | testado | testado | P1 |
+| ORA-INV-010 | Histórico de reparo/devolução e condição de unidade | testado | testado | P1 |
+| ORA-INV-011 | Controle de ICCID de chip físico quando exigido | parcial | parcial | P1 |
+| ORA-INV-012 | Transferência para CD e alocação futura a canais nacionais | parcial | parcial | P2 |
+| ORA-CRM-001 | Cadastro de cliente com dados mínimos e finalidade | testado | testado | P0 |
+| ORA-CRM-002 | Relacionar cliente às compras/IMEIs/chips/linhas e atendimentos | parcial | parcial | P0 |
+| ORA-CRM-003 | Pesquisar cliente por identificadores protegidos | testado | testado | P0 |
+| ORA-CRM-004 | Registrar lead, origem, atendente, vendedor responsável e etapa | testado | testado | P0 |
+| ORA-CRM-005 | Atividades, lembretes, follow-up e motivos de perda | testado | testado | P1 |
+| ORA-CRM-006 | Detecção e mesclagem controlada de cadastros duplicados | testado | testado | P1 |
+| ORA-CRM-007 | Registros de consentimento/preferência de comunicação | parcial | parcial | P1 |
+| ORA-CRM-008 | Contratos/anexos de venda, garantia, financiamento e telecom | parcial | parcial | P1 |
+| ORA-CRM-009 | Histórico omnichannel de compras físicas/online | parcial | parcial | P1 |
+| ORA-CRM-010 | Segmentação comercial e valor de vida do cliente | testado | testado | P2 |
+| ORA-POS-001 | Efetuar venda completa em celular sem notebook | parcial | parcial | P0 |
+| ORA-POS-002 | Busca rápida por nome/SKU/IMEI e carrinho responsivo | parcial | parcial | P0 |
+| ORA-POS-003 | Itens mistos em venda: aparelho, acessório, chip, ativação, recarga | parcial | parcial | P0 |
+| ORA-POS-004 | Selecionar IMEI físico disponível antes de concluir | testado | testado | P0 |
+| ORA-POS-005 | Calcular preço/desconto e totais server-side | testado | testado | P0 |
+| ORA-POS-006 | Solicitar aprovação do gerente para desconto acima do limite | testado | testado | P0 |
+| ORA-POS-007 | Suportar múltiplos pagamentos na mesma venda | testado | testado | P0 |
+| ORA-POS-008 | Vincular venda a vendedor, loja, cliente quando aplicável e canal | testado | testado | P0 |
+| ORA-POS-009 | Consultar status e comprovantes sem concluir pagamento pendente | parcial | parcial | P0 |
+| ORA-POS-010 | Cancelar e devolver sem apagar origem | parcial | parcial | P0 |
+| ORA-POS-011 | Gerar solicitação fiscal a partir da venda em poucos toques | testado | testado | P0 |
+| ORA-POS-012 | Troca com diferença de preço e meios de pagamento | testado | testado | P1 |
+| ORA-POS-013 | Venda parcelada/PayJoy/boleto por fluxo homologado | parcial | parcial | P1 |
+| ORA-POS-014 | Aplicar campanhas, combos e regras por loja | parcial | parcial | P1 |
+| ORA-POS-015 | Atalhos para supervisor e estados offline/sem rede | parcial | parcial | P1 |
+| ORA-POS-016 | Entrada por leitor USB/Bluetooth ou câmera | parcial | parcial | P2 |
+| ORA-PAY-001 | Registrar dinheiro, Pix direto, Pix PicPay POS e cartões | parcial | parcial | P0 |
+| ORA-PAY-002 | Suportar financiamento, boleto, parcelamento e pagamentos online | parcial | parcial | P0 |
+| ORA-PAY-003 | Diferenciar autorizado, pago, liquidado, estornado e conciliado | parcial | parcial | P0 |
+| ORA-PAY-004 | Abrir caixa com saldo inicial e responsável | testado | testado | P0 |
+| ORA-PAY-005 | Registrar sangria, suprimento, reforço, devolução e saída autorizada | testado | testado | P0 |
+| ORA-PAY-006 | Fechar caixa com valor contado e diferença | testado | testado | P0 |
+| ORA-PAY-007 | Conciliação manual PicPay POS usando referência/comprovante | parcial | parcial | P0 |
+| ORA-PAY-008 | Evitar confirmação duplicada via webhook/retry | parcial | parcial | P0 |
+| ORA-PAY-009 | Importar extratos de adquirente/banco por arquivo validado | testado | testado | P1 |
+| ORA-PAY-010 | Reconciliar taxas, parcelas e datas de repasse | parcial | parcial | P1 |
+| ORA-PAY-011 | Gerir chargebacks, estornos, antecipação e ajustes | parcial | parcial | P1 |
+| ORA-PAY-012 | Permitir múltiplas maquininhas/provedores por loja | testado | testado | P1 |
+| ORA-PAY-013 | Integração automática com PicPay POS se API contratual confirmada | bloqueado | bloqueado | P2 |
+| ORA-PAY-014 | Pix/checkout web e links por provedores validados | bloqueado | bloqueado | P2 |
+| ORA-FIN-001 | Resumo diário de vendas x recebimentos x produção comercial | parcial | parcial | P0 |
+| ORA-FIN-002 | DRE/margem gerencial com custo, taxa e desconto | parcial | parcial | P0 |
+| ORA-FIN-003 | Contas a receber ligadas a venda, vencimento e meio | parcial | parcial | P0 |
+| ORA-FIN-004 | Contas a pagar ligadas a fornecedor/origem | testado | testado | P0 |
+| ORA-FIN-005 | Rastrear recebíveis e repasses por loja/adquirente | testado | testado | P0 |
+| ORA-FIN-006 | Conciliação bancária e contas multiempresa | parcial | parcial | P1 |
+| ORA-FIN-007 | Gestão de inadimplência e cobranças autorizadas | nao_iniciado | nao_iniciado | P1 |
+| ORA-FIN-008 | Relatório financeiro consolidado por loja/região/rede | testado | testado | P1 |
+| ORA-FIN-009 | Exportações CSV/XLSX/PDF de relatórios autorizados | testado | testado | P1 |
+| ORA-FIN-010 | Previsão de fluxo de caixa e simulações | testado | testado | P2 |
+| ORA-PERF-001 | Contar individualmente aparelhos, acessórios, chips, ativações e recargas | parcial | parcial | P0 |
+| ORA-PERF-002 | Registrar performance_event único por origem/ação confirmada | testado | testado | P0 |
+| ORA-PERF-003 | Distinguir quantidade, valor bruto, margem, receita elegível e comissão | testado | testado | P0 |
+| ORA-PERF-004 | Definir meta por vendedor, loja, categoria e período | parcial | parcial | P0 |
+| ORA-PERF-005 | Painel do gestor mostra metas e resultados da equipe | parcial | parcial | P0 |
+| ORA-PERF-006 | Regras de bonificação por categoria/campanha/margem/escala | testado | testado | P1 |
+| ORA-PERF-007 | Ajustar comissão por cancelamento/devolução conforme regra | testado | testado | P1 |
+| ORA-PERF-008 | Apurar e aprovar fechamento de bonificação | testado | testado | P1 |
+| ORA-PERF-009 | Metas coletivas/regional e rankings configuráveis | parcial | parcial | P1 |
+| ORA-PERF-010 | IA recomenda campanhas/metas com aprovação humana | nao_iniciado | nao_iniciado | P2 |
+| ORA-FISC-001 | Solicitar nota diretamente da venda no celular | testado | testado | P0 |
+| ORA-FISC-002 | Fluxo interno de aprovação de solicitações pelo gestor conforme política | testado | testado | P0 |
+| ORA-FISC-003 | Identificar perfil fiscal por produto/serviço/UF/CNPJ | bloqueado | bloqueado | P0 |
+| ORA-FISC-004 | Integrar provedor fiscal homologado para documento correto | bloqueado | bloqueado | P0 |
+| ORA-FISC-005 | Guardar chave, protocolo, referência e evidências legais com segurança | parcial | parcial | P0 |
+| ORA-FISC-006 | Tratar falha fiscal, reprocesso, contingência e cancelamento | parcial | parcial | P0 |
+| ORA-FISC-007 | Mapear cenários NF-e/NFC-e/NFS-e/NFCom conforme natureza | bloqueado | bloqueado | P1 |
+| ORA-FISC-008 | Conciliação fiscal de vendas, tributos e documentos | parcial | parcial | P1 |
+| ORA-FISC-009 | Devolução, troca, cancelamento e correção fiscal | parcial | parcial | P1 |
+| ORA-FISC-010 | Multi-UF/multi-CNPJ e reforma tributária preparada | bloqueado | bloqueado | P2 |
+| ORA-CONNECT-001 | Cadastrar e vender chip físico ligado ao estoque e vendedor | testado | testado | P0 |
+| ORA-CONNECT-002 | Separar evento de venda de chip do evento de ativação | testado | testado | P0 |
+| ORA-CONNECT-003 | Separar recarga como operação telecom com status próprio | parcial | parcial | P0 |
+| ORA-CONNECT-004 | Registrar Nogle como integração externa por adapter | testado | testado | P0 |
+| ORA-CONNECT-005 | Refletir ativação somente após resposta verificada da Nogle | testado | testado | P0 |
+| ORA-CONNECT-006 | Atribuir performance de ativação/recarga ao vendedor de origem | testado | testado | P0 |
+| ORA-CONNECT-007 | Consulta/atualização de linha e plano conforme API disponível | parcial | parcial | P1 |
+| ORA-CONNECT-008 | Portabilidade, contrato e venda de plano conforme contrato | parcial | parcial | P1 |
+| ORA-CONNECT-009 | Reconciliar repasses/bonificações Nogle e operação local | parcial | nao_iniciado | P1 |
+| ORA-CONNECT-010 | Recuperar falha de rede com reconsulta sem reativação duplicada | testado | testado | P1 |
+| ORA-CONNECT-011 | eSIM, contratação digital e entrega de chip nacional | parcial | parcial | P2 |
+| ORA-ONLINE-001 | Site de aparelhos, acessórios e planos Ora Connect | parcial | parcial | P1 |
+| ORA-ONLINE-002 | Carrinho/checkout online e pedido com status | parcial | parcial | P1 |
+| ORA-ONLINE-003 | Atribuir origem online, campanhas e vendedor quando aplicável | testado | testado | P1 |
+| ORA-ONLINE-004 | Frete, CEP, retirada em loja e entrega com rastreio | parcial | parcial | P1 |
+| ORA-ONLINE-005 | Devolução, arrependimento e reembolso de venda online | nao_iniciado | nao_iniciado | P1 |
+| ORA-ONLINE-006 | Reserva de IMEI por pedido/canal anti-overselling | parcial | parcial | P1 |
+| ORA-ONLINE-007 | Contratação online de planos/chips/eSIM se habilitado | bloqueado | bloqueado | P2 |
+| ORA-ONLINE-008 | Expansão interestadual com parâmetros fiscais e logísticos | bloqueado | bloqueado | P2 |
+| ORA-MKTPL-001 | Preparar adaptadores separados Mercado Livre/Shopee/TikTok Shop | bloqueado | bloqueado | P1 |
+| ORA-MKTPL-002 | Sincronizar SKU/preço/estoque/anúncio conforme recursos | bloqueado | bloqueado | P1 |
+| ORA-MKTPL-003 | Importar pedido marketplace com ID externo e dedupe | parcial | parcial | P1 |
+| ORA-MKTPL-004 | Tratar entrega/frete/etiquetas/rastreio por canal | parcial | parcial | P1 |
+| ORA-MKTPL-005 | Conciliação de tarifas, comissões e repasses por marketplace | parcial | parcial | P1 |
+| ORA-MKTPL-006 | Cancelamentos, devoluções e reembolsos por canal | parcial | parcial | P1 |
+| ORA-MKTPL-007 | Sincronização near-real-time por webhooks/adapters | bloqueado | bloqueado | P2 |
+| ORA-MKTPL-008 | Métricas por anúncio/canal/produto e margem | parcial | parcial | P2 |
+| ORA-WHATS-001 | WhatsApp Business Platform oficial conectado ao CRM | bloqueado | bloqueado | P1 |
+| ORA-WHATS-002 | Caixa de entrada multiatendente com atribuição à loja/vendedor | nao_iniciado | nao_iniciado | P1 |
+| ORA-WHATS-003 | Leads orgânicos e pagos identificados por origem consentida | nao_iniciado | nao_iniciado | P1 |
+| ORA-WHATS-004 | Histórico 360 de conversas/negócios por cliente | nao_iniciado | nao_iniciado | P1 |
+| ORA-WHATS-005 | Respostas rápidas, etiquetas, SLA e repasse para humano | nao_iniciado | nao_iniciado | P1 |
+| ORA-WHATS-006 | Templates e mensagens proativas em conformidade Meta | parcial | parcial | P1 |
+| ORA-WHATS-007 | IA supervisionada para qualificação e sugestão de respostas | nao_iniciado | nao_iniciado | P2 |
+| ORA-WHATS-008 | Recuperação de carrinho e pós-venda sob consentimento | nao_iniciado | nao_iniciado | P2 |
+| ORA-META-001 | Importar insights autorizados de Meta Ads por conta/campanha | parcial | parcial | P1 |
+| ORA-META-002 | Capturar UTM e origem de leads de site/WhatsApp | parcial | parcial | P1 |
+| ORA-META-003 | Mostrar gasto, CTR, CPC, CPL, CPA e ROAS quando calculáveis | testado | testado | P1 |
+| ORA-META-004 | Funil por vendedor/loja/campanha e atribuição | testado | testado | P1 |
+| ORA-META-005 | Conversions API/eventos com consentimento e dedupe | bloqueado | bloqueado | P2 |
+| ORA-META-006 | Analisar margem e CAC por campanha | testado | testado | P2 |
+| ORA-AI-001 | Painéis básicos e alertas desde o MVP | testado | testado | P1 |
+| ORA-AI-002 | IA auxilia atendimento e qualificação de leads | nao_iniciado | nao_iniciado | P2 |
+| ORA-AI-003 | IA sugere produtos, respostas e roteamento de cliente | nao_iniciado | nao_iniciado | P2 |
+| ORA-AI-004 | IA resume campanhas, metas e falhas operacionais | nao_iniciado | nao_iniciado | P2 |
+| ORA-AI-005 | Autorização humana obrigatória para operações financeiras/fiscais | respeitado | respeitado | P2 |
+| ORA-AI-006 | Controle de custo por chamada de modelo e retenção | nao_iniciado | nao_iniciado | P2 |
+| ORA-AI-007 | Avaliação de qualidade e red-team de agentes | nao_iniciado | nao_iniciado | P2 |
+| ORA-REPORT-001 | Dashboard diretoria consolidado de todas as lojas (11 hoje; meta de 14) | parcial | parcial | P0 |
+| ORA-REPORT-002 | Dashboard gerente de loja: caixa, metas, aprovação de desconto/NF | parcial | parcial | P0 |
+| ORA-REPORT-003 | Dashboard vendedor mobile: produção do dia, metas e atalhos | parcial | parcial | P0 |
+| ORA-REPORT-004 | Relatório de chips vendidos, ativações e recargas separadamente | testado | testado | P0 |
+| ORA-REPORT-005 | Relatório por método de pagamento e terminal PicPay | parcial | parcial | P0 |
+| ORA-REPORT-006 | Relatórios de margem, vendedor e ranking configurável | parcial | parcial | P1 |
+| ORA-REPORT-007 | Alertas de estoque mínimo/IMEI/caixa divergente/fiscal pendente | testado | testado | P1 |
+| ORA-REPORT-008 | Dashboard expansão nacional por marketplace, ads e canais | testado | testado | P2 |
+| ORA-QUAL-001 | CI, lint, typecheck, testes e code review obrigatórios | parcial | parcial | P0 |
+| ORA-QUAL-002 | RLS e autorização negada por padrão, testadas por loja | parcial | parcial | P0 |
+| ORA-QUAL-003 | Auditoria imutável de operações e aprovações críticas | testado | testado | P0 |
+| ORA-QUAL-004 | Segredos em ambientes seguros sem exposição no Git/cliente | parcial | parcial | P0 |
+| ORA-QUAL-005 | Backups e ensaio de restauração de banco e anexos | parcial | parcial | P0 |
+| ORA-QUAL-006 | Observabilidade de erros, latência, filas e conciliação | parcial | parcial | P0 |
+| ORA-QUAL-007 | Migrations versionadas, não destrutivas, testadas | testado | testado | P0 |
+| ORA-QUAL-008 | Plano de contingência para internet, pagamentos e fiscal | parcial | parcial | P0 |
+| ORA-QUAL-009 | Piloto com testes de usuário, caixa e fechamento diário | nao_iniciado | nao_iniciado | P0 |
+| ORA-QUAL-010 | Performance mobile e testes em dispositivos/internet reais | parcial | parcial | P1 |
+| ORA-QUAL-011 | LGPD: bases legais, retenção, direitos do titular e minimização | parcial | parcial | P1 |
+| ORA-QUAL-012 | Testes de carga, concorrência e disaster recovery | parcial | parcial | P1 |
+| ORA-QUAL-013 | Processo de resposta a incidentes e suporte às lojas | parcial | parcial | P1 |
+| ORA-QUAL-014 | Análise de segurança periódica e monitoramento de dependências | parcial | parcial | P2 |
+| ORA-OS-001 | Abrir OS obrigatória para todo aparelho de cliente que entra (até limpeza), com cliente, IMEI, defeito, estado, fotos e acessórios deixados (custódia) | testado | testado | P1 |
+| ORA-OS-002 | Registrar saída para o técnico central e retorno à loja (custódia em trânsito) | parcial | parcial | P1 |
+| ORA-OS-003 | Orçamento do técnico dentro da OS (diagnóstico, peças, valor), com histórico | testado | testado | P1 |
+| ORA-OS-004 | Aprovação ou recusa do orçamento pelo cliente, registrada | testado | testado | P1 |
+| ORA-OS-005 | Avisos ao cliente e ao técnico (comprovante, orçamento, aparelho pronto, entrega) | parcial | parcial | P1 |
+| ORA-OS-006 | Entrega com cobrança pelo PDV e produção do vendedor; peças só saem do estoque ligadas a uma OS | testado | testado | P1 |
