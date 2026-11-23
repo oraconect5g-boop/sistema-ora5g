@@ -53,7 +53,8 @@ O centro de distribuição é um local do tipo depósito: recebe a mercadoria e 
 - **Cada resolução é um registro que não muda** (`transferencia_resolucoes`, só de inserção): quem, quando, quanto, o destino e o motivo. O aparelho é resolvido uma vez; na quantidade, a chave identifica a chamada e a repetição devolve o que já estava.
 - **O livro manda:** nenhuma situação muda por fora dele. O que chegou depois ou voltou entra como entrada por transferência na loja certa. A baixa lança, na origem, a volta e a perda, uma depois da outra: o saldo não muda, a perda aparece como perda, e o aparelho vai de "em trânsito" a "baixado" pela regra do próprio livro.
 - **A mesma trava:** a da transferência, como em todos os passos dela. Duas resoluções ao mesmo tempo esperam uma pela outra.
-- **Fica de fora:** um tipo próprio de movimento para a perda em trânsito, a baixa aprovada pelo gerente (hoje só o dono ajusta estoque; mudar é decisão de permissão do proprietário) e o aviso ao dono quando uma divergência fica parada.
+- **Fica de fora:** um tipo próprio de movimento para a perda em trânsito e a baixa aprovada pelo gerente (hoje só o dono ajusta estoque; mudar é decisão de permissão do proprietário).
+- **A falta sem destino não some das pendências (lote TRF-e, no mesmo dia):** a transferência recebida com falta continua contando para a loja de origem e para a de destino (o cartão Transferências do Início e o sino, pela mesma função das pendências, com uma condição a mais) e é uma fila da Saúde da operação, "Transferências com falta", desde o recebimento. Sai quando tudo o que faltou tem destino.
 - **Reverter:** a reversão da migration `20261123133323_transferencia_resolver_divergencia` tira a função e a tabela e volta a tela à definição anterior; os movimentos que as resoluções lançaram ficam no livro.
 
 ## Provas

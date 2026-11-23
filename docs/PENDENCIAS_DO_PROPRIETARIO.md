@@ -32,7 +32,7 @@ Tudo o que não está aqui o Claude Code faz sozinho: programação, testes, mig
 | F3 | Meta Ads: o acesso à conta de anúncios | O gasto dos anúncios automático e o aviso das vendas à Meta (ORA-META-001, ORA-META-005) | Você: o mesmo cadastro da Meta | Nada | O acesso | O gasto por arquivo e o painel de CPL, CPA e ROAS já funcionam |
 | G | As decisões da seção 3 | Cada uma destrava a regra dela | Você | As de 18 a 21/11 (seção 3) | As que estão marcadas como abertas | O sistema usa o padrão reversível escrito em cada uma |
 | H | Produção: o servidor perto do banco, o banco com processador próprio e backup, e o plano do banco de teste | A operação comercial, com backup e restauração ensaiados (ORA-QUAL-005, ORA-QUAL-012), e o fim das travadas do banco de teste | Você: decisão de custo | Nada | A decisão | Tudo segue na homologação |
-| I | Os aceites: "aceito" ou "não aceito" em cada roteiro de `docs/aceite/` | Fechar cada lote: só o seu "aceito" faz um requisito virar homologado | Você: seguir o roteiro e responder na conversa (a tela **Entregas do projeto** mostra a lista e o que cada lote entregou) | 1 aceito (PWA-b) | 65 roteiros sem resposta | Nenhum lote para por falta de aceite |
+| I | Os aceites: "aceito" ou "não aceito" em cada roteiro de `docs/aceite/` | Fechar cada lote: só o seu "aceito" faz um requisito virar homologado | Você: seguir o roteiro e responder na conversa (a tela **Entregas do projeto** mostra a lista e o que cada lote entregou) | 1 aceito (PWA-b) | 66 roteiros sem resposta | Nenhum lote para por falta de aceite |
 
 **Não é pendência:** as 11 lojas e DEFEITOS (decididas), Supabase e PostgreSQL (decididos), a publicação na homologação ao fim de cada lote (autorizada), as contas de teste (criadas) e a chave secreta do Supabase (gravada).
 
@@ -95,7 +95,6 @@ A Nogle já respondeu parte das perguntas em 10/11: o GET com os dados no corpo,
 | D-026 | **Troca e devolução:** em quantos dias, em que estado o aparelho é aceito, devolve dinheiro ou só vale-troca? | O sistema registra e controla (a gerência decide caso a caso) |
 | P8 | **Financeiras:** em quantos dias a PayJoy e a Aiva repassam, e com que taxa? | O repasse é registrado à mão, e a taxa é a diferença para o valor a receber |
 | MAQ | **As maquininhas de verdade de cada loja** (qual maquininha, de qual provedor) | Nenhuma cadastrada: o PDV não pergunta qual foi usada |
-| PRV | **A prova no site da transferência com falta**, entre as duas lojas de teste (uma capa pedida, recebida a menos e resolvida; grava só nas lojas de teste): posso fazer? | Provado no banco do site numa operação desfeita no fim, sem gravar. Na tela, "receber com zero" e "voltou para esta loja" já foram usados de verdade (as duas da Muffato Santa); faltam "chegou depois" e "baixa" |
 | APT | **Os aparelhos da loja de teste:** a prova do financeiro pode trazer o próprio aparelho, com uma compra fictícia que não é desfeita? | A prova gasta um Galaxy A15 de teste a cada vez; sobrou um |
 
 **Abertas, sem pressa:**
@@ -114,7 +113,7 @@ A Nogle já respondeu parte das perguntas em 10/11: o GET com os dados no corpo,
 | D-047 | As metas de tempo no celular | [Desempenho no celular](operacao/DESEMPENHO_NO_CELULAR.md); a frente de velocidade está parada a seu pedido (20/11) |
 | D-048 | LGPD com o jurídico: base legal, prazo de guarda, quem atende o titular | O relatório dos dados do titular já existe |
 
-**Respondidas (não são pedidas de novo):** as duas transferências de teste da Muffato Santa, regularizadas em 23/11 com o seu "Sim, registrar" (recebidas com zero lá e devolvidas à loja de teste; lote AUD-d); as 11 lojas e DEFEITOS (09/11); o cadastro rápido do cliente com nome e WhatsApp, e-mail opcional (12/11); a transferência reserva no pedido, D-049 (18/11); o celular financiado, o chip e a entrada separados, D-050 (18/11); a demonstração dispensada e desligada, D-051 (18/11); as funcionalidades antes da velocidade (20/11); as provas que gravam, só nas lojas de teste e uma a uma (21/11).
+**Respondidas (não são pedidas de novo):** a prova no site da transferência com falta, entre as duas lojas de teste ("Sim, provar", 23/11; lote TRF-e); as duas transferências de teste da Muffato Santa, regularizadas em 23/11 com o seu "Sim, registrar" (recebidas com zero lá e devolvidas à loja de teste; lote AUD-d); as 11 lojas e DEFEITOS (09/11); o cadastro rápido do cliente com nome e WhatsApp, e-mail opcional (12/11); a transferência reserva no pedido, D-049 (18/11); o celular financiado, o chip e a entrada separados, D-050 (18/11); a demonstração dispensada e desligada, D-051 (18/11); as funcionalidades antes da velocidade (20/11); as provas que gravam, só nas lojas de teste e uma a uma (21/11).
 
 ## 4. Chaves e senhas: como gravar no servidor sem passar pelo chat
 
