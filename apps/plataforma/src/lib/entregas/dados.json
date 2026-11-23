@@ -5,8 +5,8 @@
   "homologados": 0,
   "contagem": {
     "nao_iniciado": 15,
-    "parcial": 81,
-    "testado": 68,
+    "parcial": 80,
+    "testado": 69,
     "bloqueado": 13,
     "respeitado": 2
   },
@@ -916,6 +916,19 @@
         "ORA-INV-004"
       ],
       "entrega": "os achados F21-01 a F21-03 da auditoria integral do Codex de 21/11 (PR #105): a linha do extrato com um uso só (o mesmo crédito não concilia uma venda e um repasse de marketplace), o rodapé da planilha da Rein escrito com vírgula reconhecido e o registro de cada publicação gravado depois dela, fora dos commits do aplicativo",
+      "commit": "5617351",
+      "publicado_em": "2026-11-23",
+      "pedido_em": "2026-11-23",
+      "resposta": null,
+      "respondido_em": null
+    },
+    {
+      "lote": "TRF-d",
+      "roteiro": "docs/aceite/TRF-d.md",
+      "requisitos": [
+        "ORA-INV-007"
+      ],
+      "entrega": "o que faltou no recebimento da transferência tem destino: chegou depois (o destino confere), voltou para a origem (a origem confere) ou baixa (quem ajusta estoque na origem), em partes, com o motivo e sem lançar duas vezes (o que faltava para o achado F21-04 da auditoria do Codex de 21/11)",
       "commit": null,
       "publicado_em": null,
       "pedido_em": "2026-11-23",
