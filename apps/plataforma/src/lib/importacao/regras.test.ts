@@ -1,8 +1,8 @@
 import { describe, expect, it } from "vitest";
 
 import {
-  ERROS_DA_IMPORTACAO, FILTROS_DA_CONFERENCIA, LINHAS_POR_PAGINA, erroDoBancoNaImportacao, lerEnvio, linhasDoFiltro, mapeamentoParaGravar,
-  paginaDaConferencia, resumoDoDesfeito, rotuloDoCampo,
+  ERROS_DA_IMPORTACAO, FILTROS_DA_CONFERENCIA, LINHAS_POR_PAGINA, MAXIMO_DE_TIPOS_POR_CATEGORIA, erroDoBancoNaImportacao, lerEnvio, lerTiposPorCategoria, linhasDoFiltro,
+  mapeamentoParaGravar, paginaDaConferencia, resumoDoDesfeito, rotuloDoCampo,
 } from "./regras";
 
 // Regras puras da tela de importação (L3c e R2). As mensagens do banco usadas aqui são as que as migrations
@@ -84,6 +84,40 @@ describe("formulário de envio", () => {
     expect(mapeamentoParaGravar(["Código", "Descrição", "Preço", "Sobra"], { sku: 0, nome: 1, preco: 2 }, { tipo: "chip", categoria: "Chips" })).toEqual({
       colunas: { sku: "Código", nome: "Descrição", preco: "Preço" }, padroes: { tipo: "chip", categoria: "Chips" },
     });
+  });
+
+  // REIN-d: no relatório da Rein não há coluna de tipo; quem importa diz o tipo de cada categoria (a família).
+  it("REIN-d: lê o tipo de cada categoria, em ordem, sem a que repete o padrão; grava junto com o mapeamento", () => {
+    const tipos = JSON.stringify({ "  CELULARES ": "aparelho", "Chips": "chip", "CAPINHAS": "acessorio" });
+    expect(lerTiposPorCategoria(tipos, "acessorio")).toEqual({ CELULARES: "aparelho", Chips: "chip" });
+    expect(Object.keys(lerTiposPorCategoria(JSON.stringify({ Zebra: "chip", "Água": "aparelho", Bola: "servico" }), "acessorio") ?? {})).toEqual(["Água", "Bola", "Zebra"]);
+    // A mesma categoria escrita de dois jeitos com o mesmo tipo vale uma vez; sem nada, vazio.
+    expect(lerTiposPorCategoria(JSON.stringify({ CELULARES: "aparelho", celulares: "aparelho" }), "acessorio")).toEqual({ CELULARES: "aparelho" });
+    for (const vazio of [null, undefined, "", "{}"]) expect(lerTiposPorCategoria(vazio, "acessorio")).toEqual({});
+    const comCategoria = formulario({ ...base, coluna_categoria: "2", tipos_por_categoria: tipos });
+    expect(lerEnvio(comCategoria, 3)).toEqual({
+      ok: true, envio: { mapa: { sku: 0, nome: 1, categoria: 2 }, padroes: { tipo: "acessorio", categoria: "Capas e películas", tiposPorCategoria: { CELULARES: "aparelho", Chips: "chip" } } },
+    });
+    // Sem a coluna da categoria, não há categoria para olhar: a escolha é ignorada.
+    expect(lerEnvio(formulario({ ...base, tipos_por_categoria: tipos }), 3)).toEqual({
+      ok: true, envio: { mapa: { sku: 0, nome: 1 }, padroes: { tipo: "acessorio", categoria: "Capas e películas" } },
+    });
+    expect(mapeamentoParaGravar(["Codigo", "Produto", "Familia"], { sku: 0, nome: 1, categoria: 2 }, { tipo: "acessorio", categoria: "Acessórios", tiposPorCategoria: { CELULARES: "aparelho" } })).toEqual({
+      colunas: { sku: "Codigo", nome: "Produto", categoria: "Familia" }, padroes: { tipo: "acessorio", categoria: "Acessórios" }, tipos_por_categoria: { CELULARES: "aparelho" },
+    });
+  });
+
+  it("REIN-d: o tipo por categoria em formato que não se entende é recusado, nunca adivinhado", () => {
+    for (const ruim of [
+      "{", "[]", "\"aparelho\"", "7", JSON.stringify({ CELULARES: "geladeira" }), JSON.stringify({ CELULARES: "constructor" }), JSON.stringify({ CELULARES: 1 }),
+      JSON.stringify({ "": "aparelho" }), JSON.stringify({ ["c".repeat(121)]: "aparelho" }), JSON.stringify({ CELULARES: "aparelho", celulares: "chip" }),
+      JSON.stringify(Object.fromEntries(Array.from({ length: MAXIMO_DE_TIPOS_POR_CATEGORIA + 1 }, (_, i) => [`Categoria ${i}`, "chip"]))), "x".repeat(40_001),
+    ]) {
+      expect(lerTiposPorCategoria(ruim, "acessorio"), ruim.slice(0, 40)).toBeNull();
+      expect(lerEnvio(formulario({ ...base, coluna_categoria: "2", tipos_por_categoria: ruim }), 3), ruim.slice(0, 40)).toEqual({ ok: false, erro: "tipos" });
+    }
+    expect(lerTiposPorCategoria(7, "acessorio")).toBeNull();
+    expect(ERROS_DA_IMPORTACAO.tipos).toContain("tipo de cada categoria");
   });
 });
 

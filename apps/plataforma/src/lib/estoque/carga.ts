@@ -17,6 +17,9 @@ export type LinhaDaCarga = { numero: number; sku: string; fisico: number | null;
 
 const PALAVRAS_DO_DISPONIVEL = /\b(disponivel|disp)\b/;
 const PALAVRAS_DE_QUANTIDADE = /\b(qtd|qtde|quant|quantidade|estoque|saldo|fisico)\b/;
+// REIN-d: no relatório da Rein, cada loja tem também "Custo do Estoque <loja>" e "Localizacao do Estoque <loja>". Falam em
+// estoque, mas não são quantidade: ficam fora da sugestão (senão eram três candidatas ao físico, e nenhuma era sugerida).
+const PALAVRAS_QUE_NAO_SAO_QUANTIDADE = /\b(custo|valor|preco|margem|localizacao|local|endereco)\b/;
 
 /**
  * A sugestão das colunas: o código e o nome do produto pela regra da importação do catálogo; e, de cada loja, as colunas
@@ -41,8 +44,9 @@ export function sugerirMapaDaCarga(cabecalho: readonly string[], lojas: readonly
   for (const loja of nomes) {
     const nome = loja.nome;
     const daLoja = normal.map((c, i) => ({ c, i })).filter(({ i }) => donoDaColuna[i] === loja.id);
-    const disponiveis = daLoja.filter(({ c }) => PALAVRAS_DO_DISPONIVEL.test(c));
-    const fisicos = daLoja.filter(({ c }) => !PALAVRAS_DO_DISPONIVEL.test(c) && (PALAVRAS_DE_QUANTIDADE.test(c) || c.trim() === nome));
+    const deQuantidade = daLoja.filter(({ c }) => !PALAVRAS_QUE_NAO_SAO_QUANTIDADE.test(c));
+    const disponiveis = deQuantidade.filter(({ c }) => PALAVRAS_DO_DISPONIVEL.test(c));
+    const fisicos = deQuantidade.filter(({ c }) => !PALAVRAS_DO_DISPONIVEL.test(c) && (PALAVRAS_DE_QUANTIDADE.test(c) || c.trim() === nome));
     const colunas: Partial<ColunasDaLoja> = {};
     if (fisicos.length === 1) colunas.fisico = fisicos[0]?.i;
     if (disponiveis.length === 1) colunas.disponivel = disponiveis[0]?.i;

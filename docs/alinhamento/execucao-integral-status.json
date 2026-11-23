@@ -2,7 +2,7 @@
   "_leia": "Checkpoint do programa de execução integral (PR #67). Carregar ao retomar e seguir para o próximo item executável da fila; não reiniciar o projeto. Estados vêm de status-requisitos.json (fonte da rastreabilidade); este arquivo acrescenta lote, bloqueio externo e revisão. Desde 16/11/2026 a medida de avanço é o requisito homologado pelo proprietário: a chave aceites guarda a resposta dele a cada roteiro de aceite (docs/aceite/); um requisito só recebe homologado: true com todos os lotes dele aceitos e sem nada em FALTA na nota de status-requisitos.json.",
   "atualizado_em": "2026-11-23",
   "base": {
-    "main": "d2a6e4f",
+    "main": "d2a4b75",
     "pacote": {
       "pr": 67,
       "branch": "docs/execucao-integral-20261110",
@@ -1010,12 +1010,26 @@
         "ORA-FIN-001"
       ],
       "entrega": "o cartão \"A conta do período\" no Financeiro: as vendas concluídas no período, conferidas uma a uma com os pagamentos, o livro do caixa e o livro do estoque; quando não fecha, diz em que lado, de quanto e quais vendas abrir",
+      "commit": "d2a4b75",
+      "publicado_em": "2026-11-23",
+      "pedido_em": "2026-11-23",
+      "resposta": null,
+      "respondido_em": null,
+      "nota": "no ar em d2a4b75 (build 23/11 16:08; copiado do registro das publicações, a branch registro/publicacoes); a prova de leitura passou no site em 23/11 às 16:09; o requisito segue parcial: a conferência do que foi desfeito depois (cancelamento e devolução) é o lote FIN-001b"
+    },
+    "REIN-d": {
+      "roteiro": "docs/aceite/REIN-d.md",
+      "requisitos": [
+        "ORA-CAT-002",
+        "ORA-INV-004"
+      ],
+      "entrega": "a planilha de verdade da Rein (a que o proprietário mandou em 23/11) lida sem erro do começo ao fim: o rodapé com os totais deslocados fica de fora, a tela sugere as colunas do relatório, o custo e o preço com mais casas são arredondados com aviso, \"SEM GTIN\" não é código de barras, e quem importa diz o tipo de cada família (CELULARES é aparelho)",
       "commit": null,
       "publicado_em": null,
       "pedido_em": "2026-11-23",
       "resposta": null,
       "respondido_em": null,
-      "nota": "o commit, a publicação e a prova de leitura ficam no registro (a branch registro/publicacoes); o requisito segue parcial: a conferência do que foi desfeito depois (cancelamento e devolução) é o lote FIN-001b"
+      "nota": "o commit, a publicação e a prova de leitura ficam no registro (a branch registro/publicacoes); sem migration; a importação de verdade espera as decisões do proprietário (a tabela de preço, o tipo das famílias e o código) e o sim dele para a prévia, que ele confere e aplica"
     }
   },
   "contagem_dos_estados": {
@@ -1129,7 +1143,7 @@
       "titulo": "Importar produtos e preços da Rein somente por CSV/XLSX",
       "prioridade": "P0",
       "estado": "parcial",
-      "lote": "L3c importação; R2 correções do importador; CAT-002b (15/11): a planilha do Excel (.xlsx) direto; INTEG-b (16/11): #95, a importação de 2.000 linhas no orçamento; registro do #95 (16/11): aplicada pela integração GitHub × Supabase no merge; REIN-a (17/11): a planilha inteira (a observação longa, as partes de até 2.000 linhas e a linha de total de fora); AUD-a (18/11): o rodapé de totais sem rótulo fica de fora (F01); REIN-b (18/11): a carga do estoque por loja pelo relatório, com prévia, aprovação e o livro (ADR-021); AUD-c (23/11): o rodapé da Rein escrito com vírgula reconhecido (F21-01)",
+      "lote": "L3c importação; R2 correções do importador; CAT-002b (15/11): a planilha do Excel (.xlsx) direto; INTEG-b (16/11): #95, a importação de 2.000 linhas no orçamento; registro do #95 (16/11): aplicada pela integração GitHub × Supabase no merge; REIN-a (17/11): a planilha inteira (a observação longa, as partes de até 2.000 linhas e a linha de total de fora); AUD-a (18/11): o rodapé de totais sem rótulo fica de fora (F01); REIN-b (18/11): a carga do estoque por loja pelo relatório, com prévia, aprovação e o livro (ADR-021); AUD-c (23/11): o rodapé da Rein escrito com vírgula reconhecido (F21-01); REIN-d (23/11): o relatório de verdade da Rein lido de ponta a ponta (o rodapé com os totais deslocados, as sugestões, o arredondamento com aviso, o SEM GTIN e o tipo de cada categoria)",
       "bloqueio_externo": "B1: arquivo real da Rein para testar o mapeamento (o importador não supõe o formato)",
       "revisado_codex": false,
       "homologado": false
@@ -1246,7 +1260,7 @@
       "titulo": "Receber estoque inicial validado por contagem real",
       "prioridade": "P0",
       "estado": "parcial",
-      "lote": "L4a entrada de mercadoria; R1 correções do recebimento; B2 correção #80 (14/11); R4 (14/11): revisão do estado; REIN-b (18/11): a carga do estoque por loja pelo relatório, com prévia, aprovação e o livro (ADR-021); J3-d (21/11): o estoque de ponta a ponta, com três pessoas, na loja de teste; AUD-c (23/11): a quantidade escrita com vírgula lida pelo texto na carga (F21-01)",
+      "lote": "L4a entrada de mercadoria; R1 correções do recebimento; B2 correção #80 (14/11); R4 (14/11): revisão do estado; REIN-b (18/11): a carga do estoque por loja pelo relatório, com prévia, aprovação e o livro (ADR-021); J3-d (21/11): o estoque de ponta a ponta, com três pessoas, na loja de teste; AUD-c (23/11): a quantidade escrita com vírgula lida pelo texto na carga (F21-01); REIN-d (23/11): a carga do estoque com o relatório de verdade (o rodapé de fora e as colunas de cada loja sugeridas)",
       "bloqueio_externo": null,
       "revisado_codex": false,
       "homologado": false
@@ -2638,5 +2652,5 @@
       "homologado": false
     }
   },
-  "proximo_passo": "Seguir a ordem de 23/11 (a continuação pedida pelo proprietário com a auditoria integral do Codex de 21/11, PR #105; a leitura está em docs/alinhamento/LEITURA_AUDITORIA_2026-11-21.md): (1) publicar o FIN-001a depois do merge, rodar no site a prova de leitura da conta do período (apps/plataforma/e2e/conta-do-periodo-real.spec.ts) e registrar a publicação (deploy/homologacao/registrar-publicacao.sh; a branch registro/publicacoes); o AUD-c (5617351), o TRF-d (4131453), o AUD-d (363f844) e o TRF-e (d2a6e4f) estão no ar desde 23/11, e os quatro achados da auditoria de 21/11 estão tratados; (2) o FIN-001b: a conferência do que foi desfeito depois (o estoque que volta e o dinheiro devolvido no cancelamento e na devolução), que é o que falta para o ORA-FIN-001 passar a testado; depois, a inadimplência (ORA-FIN-007: a lista do que está atrasado, sem a mensagem ao cliente, que depende do WhatsApp oficial); (3) seguir a fila integral pelas áreas que faltam funcionar, um lote por vez, com teste, publicação, prova no domínio, roteiro de aceite e relato; (4) quando a planilha da Rein estiver em ~/entrada/rein/, rodar a prova com o arquivo original (ARQUIVO_ESTOQUE_AUDITORIA) e preparar a carga da loja piloto. O que depende do proprietário está em docs/PENDENCIAS_DO_PROPRIETARIO.md (a lista única). A narrativa anterior deste campo (os passos de 17 a 21/11) fica no histórico do Git e em docs/alinhamento/EXECUCAO_INTEGRAL_STATUS.md."
+  "proximo_passo": "Seguir a ordem de 23/11 (a continuação pedida pelo proprietário com a auditoria integral do Codex de 21/11, PR #105; a leitura está em docs/alinhamento/LEITURA_AUDITORIA_2026-11-21.md): (1) publicar o REIN-d depois do merge, rodar no site a prova de leitura das telas de importação com o arquivo original (apps/plataforma/e2e/importar-planilha-leitura-real.spec.ts, que não envia nada) e registrar a publicação (deploy/homologacao/registrar-publicacao.sh; a branch registro/publicacoes); o AUD-c (5617351), o TRF-d (4131453), o AUD-d (363f844), o TRF-e (d2a6e4f) e o FIN-001a (d2a4b75) estão no ar desde 23/11; (2) com as decisões do proprietário (qual das três tabelas de preço vale na loja, o tipo das outras famílias e o código do produto) e o sim dele, gerar a prévia do catálogo de verdade com a conta de administrador de teste; ele confere e aplica; o estoque de cada loja se carrega com um relatório do dia da virada; (3) o FIN-001b: a conferência do que foi desfeito depois (o estoque que volta e o dinheiro devolvido no cancelamento e na devolução), que é o que falta para o ORA-FIN-001 passar a testado (o rascunho da função fechou com os dados de teste do site, só lendo); depois, a inadimplência (ORA-FIN-007: a lista do que está atrasado, sem a mensagem ao cliente, que depende do WhatsApp oficial); (4) seguir a fila integral pelas áreas que faltam funcionar, um lote por vez, com teste, publicação, prova no domínio, roteiro de aceite e relato. O que depende do proprietário está em docs/PENDENCIAS_DO_PROPRIETARIO.md (a lista única). A narrativa anterior deste campo (os passos de 17 a 21/11) fica no histórico do Git e em docs/alinhamento/EXECUCAO_INTEGRAL_STATUS.md."
 }

@@ -8,7 +8,7 @@ import { Aviso, Botao, BotaoLink, Cartao, FiltroSegmentado, Selo, TituloPagina, 
 import { ehUuid } from "../../../lib/acesso/regras";
 import { permite } from "../../../lib/acesso/molde";
 import { FalhaDoServico, obterSessao } from "../../../lib/acesso/sessao";
-import { TIPOS_DE_PRODUTO } from "../../../lib/catalogo/cadastro";
+import { nomeCurtoDoTipo, TIPOS_DE_PRODUTO } from "../../../lib/catalogo/cadastro";
 import { centavosDoBanco } from "../../../lib/dinheiro";
 import { brl, numero } from "../../../lib/formato";
 import {
@@ -60,15 +60,32 @@ const quando = (iso: string | null) =>
 const dinheiro = (v: unknown) => (v === null || v === undefined ? "—" : brl(centavosDoBanco(v)));
 const valorDoCampo = (campo: string, v: unknown) => (campo === "preco" || campo === "custo" ? dinheiro(v) : v === null || v === undefined ? "—" : String(v));
 
+type Ajuste = { celulas?: number; linhas?: number[] };
+/** "Confira a linha 7" ou "Confira as linhas 2, 5, 9 (as 20 primeiras)", como os outros avisos da leitura. */
+const ondeConferir = (a: Ajuste) => {
+  const linhas = a.linhas ?? [];
+  return `Confira ${linhas.length === 1 ? "a linha" : "as linhas"} ${linhas.join(", ")} da planilha${(a.celulas ?? 0) > linhas.length && linhas.length >= 20 ? " (as 20 primeiras)" : ""}.`;
+};
+const AJUSTES_DA_LEITURA: readonly (readonly ["custos_arredondados" | "precos_arredondados" | "codigos_de_barras_em_branco", (n: number) => string])[] = [
+  ["custos_arredondados", (n) => `${numero(n)} custo(s) do arquivo tinham mais de duas casas decimais (o custo médio) e foram arredondados para o centavo mais próximo.`],
+  ["precos_arredondados", (n) => `${numero(n)} preço(s) do arquivo tinham mais de duas casas decimais (como 368,9999) e foram arredondados para o centavo mais próximo.`],
+  ["codigos_de_barras_em_branco", (n) => `${numero(n)} código(s) de barras do arquivo não têm de 8 a 14 dígitos e ficaram em branco (o item entra sem o código de barras; um número de 15 dígitos costuma ser o IMEI de um aparelho).`],
+];
+
 type Importacao = {
   id: string; numero: number; arquivo_nome: string; situacao: string; totais: Record<string, number>; mapeamento: {
     colunas?: Record<string, string>; padroes?: { tipo?: string; categoria?: string };
+    // REIN-d: o tipo que quem enviou escolheu para cada categoria do arquivo (as outras ficam com o tipo padrão).
+    tipos_por_categoria?: Record<string, string>;
     // REIN-a: a parte da planilha grande e as linhas que ficaram de fora (a de total), gravadas junto com a prévia.
     parte?: { numero?: number; de?: number; linhas?: [number, number] }; ignoradas?: { linha?: number; motivo?: string; decisao?: string }[];
     // F18-02: a última linha que pode ser rodapé, sem prova: foi à prévia, e só sai por decisão de quem envia.
     candidato?: { linha?: number; motivo?: string };
     // F21-01: as células marcadas como número no Excel, mas escritas com vírgula, lidas pelo texto (fora o rodapé).
     fora_do_padrao?: { celulas?: number; linhas?: number[] };
+    // REIN-d: os ajustes da leitura: os custos e os preços com mais de duas casas, arredondados ao centavo, e os códigos
+    // de barras fora do padrão, que ficaram em branco.
+    custos_arredondados?: Ajuste; precos_arredondados?: Ajuste; codigos_de_barras_em_branco?: Ajuste;
   };
   criado_por: string; criado_em: string; aplicado_em: string | null; encerrado_em: string | null; motivo: string | null;
   comparacao: number; comparado_em: string | null; desfazer: { desfeitas?: number; parciais?: number; mantidas?: number } | null;
@@ -186,6 +203,12 @@ export default async function Importar({ searchParams }: {
             {imp.totais.categorias_novas ? `${imp.totais.categorias_novas} categoria(s) nova(s) · ` : ""}{imp.totais.marcas_novas ? `${imp.totais.marcas_novas} marca(s) nova(s) · ` : ""}
             Colunas: {Object.entries(imp.mapeamento.colunas ?? {}).map(([c, nome]) => `${rotuloDoCampo(c)} = "${nome}"`).join("; ")}
           </p>
+          {Object.keys(imp.mapeamento.tipos_por_categoria ?? {}).length > 0 && (
+            <p className="mt-1 text-xs text-suave">
+              {`Tipo por categoria: ${Object.entries(imp.mapeamento.tipos_por_categoria ?? {}).map(([categoria, tipo]) => `${categoria} = ${nomeCurtoDoTipo(String(tipo))}`).join("; ")}; as outras linhas, ${
+                nomeCurtoDoTipo(imp.mapeamento.padroes?.tipo ?? "acessorio")}.`}
+            </p>
+          )}
           {imp.mapeamento.parte?.numero && imp.mapeamento.parte.de && (
             <p className="mt-1 text-xs font-medium">Parte {imp.mapeamento.parte.numero} de {imp.mapeamento.parte.de}{imp.mapeamento.parte.linhas ? ` (linhas ${imp.mapeamento.parte.linhas[0]} a ${imp.mapeamento.parte.linhas[1]} da planilha)` : ""}: cada parte se confere e se aplica à parte.</p>
           )}
@@ -199,6 +222,12 @@ export default async function Importar({ searchParams }: {
                 imp.mapeamento.fora_do_padrao.celulas > (imp.mapeamento.fora_do_padrao.linhas ?? []).length && (imp.mapeamento.fora_do_padrao.linhas ?? []).length >= 20 ? " (as 20 primeiras)" : ""}.`}
             </p>
           )}
+          {AJUSTES_DA_LEITURA.map(([chave, frase]) => {
+            const ajuste = imp.mapeamento[chave];
+            return typeof ajuste?.celulas === "number" && ajuste.celulas > 0
+              ? <p key={chave} className="mt-1 text-xs text-aviso">{`${frase(ajuste.celulas)} ${ondeConferir(ajuste)}`}</p>
+              : null;
+          })}
           {typeof imp.mapeamento.candidato?.linha === "number" && (
             <Aviso tom="aviso" className="mt-3" titulo={`Confira a linha ${imp.mapeamento.candidato.linha} da planilha`}>
               {`${imp.mapeamento.candidato.motivo ?? "a última linha pode ser um rodapé"}. Ela está na prévia como linha com erro (sem código e sem nome). Se for um item, complete a planilha; se for rodapé, envie o arquivo de novo marcando "deixar de fora a última linha": a decisão fica registrada na prévia.`}

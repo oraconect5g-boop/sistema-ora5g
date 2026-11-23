@@ -237,6 +237,67 @@ describe("envio da planilha", () => {
     expect(cenario.chamadas[0]?.argumentos.p_mapeamento).not.toHaveProperty("fora_do_padrao");
   });
 
+  // REIN-d (23/11): o relatório da Rein como ele é (o arquivo original chegou ao servidor): os totais do rodapé deslocados
+  // (o total de uma coluna debaixo de outra), o custo médio com mais de duas casas e "SEM GTIN" no código de barras.
+  it("REIN-d: o rodapé com os totais deslocados fica de fora; o custo e o preço com mais casas são arredondados e o código de barras fora do padrão fica em branco, com as notas", async () => {
+    cenario.respostas.importacao_catalogo_previa = { data: { id: IMPORTACAO, repetida: false }, error: null };
+    const xlsx = xlsxMontadoAMao([
+      ["Codigo", "Produto", "Codigo Barras", "Custo Unit. (R$)", "Qtd. Disponivel LOJA", "Custo do Estoque LOJA", "Valor de Mercado", "Preco Original (R$) TABELA NORMAL"],
+      [{ n: "1001" }, "Capa fictícia", "SEM GTIN", { n: "12.5" }, { n: "2" }, { n: "25" }, { n: "80" }, { n: "49.9" }],
+      [{ n: "1002" }, "Película fictícia", "7890000000011", { n: "31.1823" }, { n: "3" }, { n: "93.55" }, { n: "150" }, { n: "368.9999" }],
+      [{ n: "1003" }, "Celular fictício", { n: "350000000000019" }, { n: "321.937" }, { n: "1" }, { n: "321.94" }, { n: "600" }, { n: "899" }],
+      // O rodapé: o total do custo do estoque (440,49) debaixo da quantidade, e o do valor de mercado (830,00) debaixo do custo.
+      [null, null, null, null, { n: "440,49" }, { n: "830,00" }, null, null],
+    ]);
+    const r = await POST(envio({ coluna_sku: "0", coluna_nome: "1", coluna_codigo_barras: "2", coluna_custo: "3", coluna_preco: "7", tipo_padrao: "acessorio", categoria_padrao: "Acessórios" },
+      new File([xlsx], "relatorioProdutos.xlsx", { type: TIPO_XLSX })) as never);
+    expect(r.headers.get("location")).toBe(`/produtos/importar?importacao=${IMPORTACAO}&ok=previa`);
+    const argumentos = cenario.chamadas[0]?.argumentos ?? {};
+    expect(argumentos.p_linhas).toMatchObject([
+      { numero: 2, sku: "1001", codigo_barras: null, custo: 1_250, preco: 4_990, erros: [] },
+      { numero: 3, sku: "1002", codigo_barras: "7890000000011", custo: 3_118, preco: 36_900, erros: [] },
+      // A cara de milhar ("321.937") vale como decimal porque a coluna prova o ponto decimal ("12.5" e "31.1823"); os 15
+      // dígitos no código de barras (o tamanho de um IMEI) ficam em branco, e o item entra.
+      { numero: 4, sku: "1003", codigo_barras: null, custo: 32_194, preco: 89_900, erros: [] },
+    ]);
+    expect(argumentos.p_mapeamento).toMatchObject({
+      ignoradas: [{ linha: 5, motivo: "rodapé de totais no fim da planilha (sem código e sem nome, só números em 2 colunas, 2 delas escritas com vírgula numa célula de número e lidas como estão; "
+        + "em 2 delas o número é a soma de outra coluna (o relatório escreve os totais deslocados))" }],
+      custos_arredondados: { celulas: 2, linhas: [3, 4] },
+      precos_arredondados: { celulas: 1, linhas: [3] },
+      codigos_de_barras_em_branco: { celulas: 1, linhas: [4] },
+    });
+    expect(argumentos.p_mapeamento).not.toHaveProperty("candidato");
+    // Sem nenhum ajuste, a prévia não leva as notas.
+    cenario.chamadas = [];
+    await POST(envio(MAPA) as never);
+    for (const chave of ["custos_arredondados", "precos_arredondados", "codigos_de_barras_em_branco"]) expect(cenario.chamadas[0]?.argumentos.p_mapeamento).not.toHaveProperty(chave);
+  });
+
+  it("REIN-d: o tipo de cada categoria vai na linha e fica gravado com a prévia; o formato que não se entende é recusado", async () => {
+    cenario.respostas.importacao_catalogo_previa = { data: { id: IMPORTACAO, repetida: false }, error: null };
+    const arquivo = "Codigo;Produto;Familia\n1001;Celular fictício;CELULARES\n1002;Capa fictícia;CAPINHAS\n1003;Chip fictício;Chips\n";
+    const campos = { coluna_sku: "0", coluna_nome: "1", coluna_categoria: "2", tipo_padrao: "acessorio", categoria_padrao: "Acessórios" };
+    const r = await POST(envio({ ...campos, tipos_por_categoria: JSON.stringify({ CELULARES: "aparelho", CHIPS: "chip", CAPINHAS: "acessorio" }) }, arquivo) as never);
+    expect(r.headers.get("location")).toBe(`/produtos/importar?importacao=${IMPORTACAO}&ok=previa`);
+    const argumentos = cenario.chamadas[0]?.argumentos ?? {};
+    expect(argumentos.p_linhas).toMatchObject([
+      { numero: 2, sku: "1001", tipo: "aparelho", categoria: "CELULARES" }, { numero: 3, sku: "1002", tipo: "acessorio", categoria: "CAPINHAS" },
+      { numero: 4, sku: "1003", tipo: "chip", categoria: "Chips" },
+    ]);
+    // Gravado em ordem e sem a categoria que repete o padrão: o mesmo arquivo com outra escolha de tipos é outra prévia.
+    expect(argumentos.p_mapeamento).toMatchObject({ padroes: { tipo: "acessorio", categoria: "Acessórios" }, tipos_por_categoria: { CELULARES: "aparelho", CHIPS: "chip" } });
+    expect(Object.keys((argumentos.p_mapeamento as { tipos_por_categoria: object }).tipos_por_categoria)).toEqual(["CELULARES", "CHIPS"]);
+    // Sem escolha, nada é gravado; com o campo estragado, o envio é recusado e nada vai ao banco.
+    cenario.chamadas = [];
+    await POST(envio(campos, arquivo) as never);
+    expect(cenario.chamadas[0]?.argumentos.p_mapeamento).not.toHaveProperty("tipos_por_categoria");
+    cenario.chamadas = [];
+    const ruim = await POST(envio({ ...campos, tipos_por_categoria: JSON.stringify({ CELULARES: "geladeira" }) }, arquivo) as never);
+    expect(ruim.headers.get("location")).toBe("/produtos/importar?erro=tipos");
+    expect(cenario.chamadas).toEqual([]);
+  });
+
   it("REIN-a: arquivo de uma parte só com a linha de total grava uma prévia, com a total à vista, e a impressão digital de sempre", async () => {
     cenario.respostas.importacao_catalogo_previa = { data: { id: IMPORTACAO, repetida: false }, error: null };
     const conteudo = `${CSV};TOTAL;109,80\n`;
@@ -400,6 +461,31 @@ describe("/produtos/importar", () => {
       "3 célula(s) do arquivo vieram marcadas como número no Excel, mas escritas com vírgula (o formato da exportação): foram lidas como estão escritas, pelas regras do texto. Confira as linhas 2, 7 da planilha.");
     mudarImportacao({ mapeamento: { colunas: { sku: "SKU", nome: "Descrição", preco: "Preço" }, padroes: { tipo: "acessorio", categoria: "Acessórios" } } });
     expect(await tela({ importacao: IMPORTACAO, ok: "previa" })).not.toContain("escritas com vírgula");
+  });
+
+  it("REIN-d: a prévia diz os ajustes da leitura (custos e preços arredondados, códigos de barras em branco), e em que linhas", async () => {
+    cenario.usuario = DONO;
+    cenario.permissoes = new Set(["importacao.aprovar"]);
+    const base = { colunas: { sku: "Codigo", nome: "Produto", custo: "Custo Unit. (R$)" }, padroes: { tipo: "acessorio", categoria: "Acessórios" } };
+    mudarImportacao({ mapeamento: {
+      ...base,
+      custos_arredondados: { celulas: 38, linhas: Array.from({ length: 20 }, (_, i) => 10 + i * 3) },
+      precos_arredondados: { celulas: 5, linhas: [12, 40, 41, 77, 90] },
+      codigos_de_barras_em_branco: { celulas: 1, linhas: [7] },
+    } });
+    const t = await tela({ importacao: IMPORTACAO, ok: "previa" });
+    expect(t).toContain("38 custo(s) do arquivo tinham mais de duas casas decimais (o custo médio) e foram arredondados para o centavo mais próximo. Confira as linhas 10, 13, 16,");
+    expect(t).toContain("64, 67 da planilha (as 20 primeiras).");
+    expect(t).toContain("5 preço(s) do arquivo tinham mais de duas casas decimais (como 368,9999) e foram arredondados para o centavo mais próximo. Confira as linhas 12, 40, 41, 77, 90 da planilha.");
+    expect(t).toContain("1 código(s) de barras do arquivo não têm de 8 a 14 dígitos e ficaram em branco (o item entra sem o código de barras; um número de 15 dígitos costuma ser o IMEI de um aparelho). Confira a linha 7 da planilha.");
+    mudarImportacao({ mapeamento: base });
+    const sem = await tela({ importacao: IMPORTACAO, ok: "previa" });
+    expect(sem).not.toContain("arredondados");
+    expect(sem).not.toContain("ficaram em branco");
+    expect(sem).not.toContain("Tipo por categoria");
+    // O tipo que quem enviou escolheu para cada categoria fica à vista de quem aprova.
+    mudarImportacao({ mapeamento: { ...base, tipos_por_categoria: { CELULARES: "aparelho", CHIPS: "chip" } } });
+    expect(await tela({ importacao: IMPORTACAO, ok: "previa" })).toContain("Tipo por categoria: CELULARES = Aparelho; CHIPS = Chip; as outras linhas, Acessório.");
   });
 
   it("F18-02: a prévia avisa a linha candidata a rodapé e diz como deixá-la de fora, com a decisão registrada", async () => {

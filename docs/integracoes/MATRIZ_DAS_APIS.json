@@ -565,9 +565,9 @@
       "requisitos": "ORA-CAT-002 e ORA-INV-004",
       "documentacao": "Sem API por decisão do projeto: só o arquivo de importação",
       "operacoes": "Importar produtos, preços e o estoque de cada loja pela planilha",
-      "implementado": "A importação do catálogo (REIN-a, AUD-b) e a carga do estoque por loja com prévia, decisão e aprovação (REIN-b, REIN-c)",
-      "falta_codigo": "Nada para a carga; a carga real espera o arquivo",
-      "falta_acesso": "A cópia privada da planilha relatorioProdutos131258.xlsx no servidor (~/entrada/rein/), nunca pelo GitHub",
+      "implementado": "A importação do catálogo (REIN-a, AUD-b) e a carga do estoque por loja com prévia, decisão e aprovação (REIN-b, REIN-c); a leitura do relatório de verdade, provada com o arquivo original (REIN-d)",
+      "falta_codigo": "Nada para a importação nem para a carga",
+      "falta_acesso": "As decisões do proprietário (a tabela de preço, o tipo das famílias e o código do produto) e o sim dele para a prévia; a planilha chegou em 23/11 e fica em ~/entrada/rein/, fora do GitHub",
       "quem_fornece": "O proprietário",
       "variaveis": [],
       "ambiente_de_teste": "A própria planilha, primeiro na prévia",
@@ -576,11 +576,11 @@
       "idempotencia": "O mesmo arquivo da mesma loja devolve a mesma prévia; o aplicado não se aplica de novo",
       "aviso_ou_reconsulta": "Não se aplica",
       "conciliacao": "A data de corte, o saldo no sistema na data e a decisão de cada diferença",
-      "testes": "apps/plataforma/src/lib/importacao e lib/estoque; packages/banco/src/estoque-carga.test.ts",
+      "testes": "apps/plataforma/src/lib/importacao (com a prova do arquivo original, só no servidor) e lib/estoque; packages/banco/src/estoque-carga.test.ts",
       "publicacao": "No ar",
-      "homologacao": "Não homologado (falta o arquivo no servidor)",
-      "pode_prosseguir": "Nada: espera o arquivo",
-      "situacao": "configuração pendente"
+      "homologacao": "Não homologado (falta a importação de verdade e o aceite)",
+      "pode_prosseguir": "Tudo o que não usa o catálogo de verdade",
+      "situacao": "publicado"
     },
     {
       "id": "ia",
