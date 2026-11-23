@@ -59,6 +59,9 @@ describe("os formulários e as mensagens", () => {
   it("cada recusa do banco vira uma mensagem que existe", () => {
     const casos: [{ code: string; message?: string }, string][] = [
       [{ code: "42501" }, "permissao"], [{ code: "OR045" }, "ocupado"], [{ code: "P0002", message: "Nenhum pedido deste canal com esta data de repasse" }, "sem_pedidos"],
+      // AUD-c (F21-02): a linha conciliada com uma venda ou fora da conta não recebe repasse.
+      [{ code: "OR046", message: "Esta linha já está conciliada com o pagamento de uma venda: desfaça a conciliação antes" }, "linha_em_uso"],
+      [{ code: "OR046", message: "Esta linha está fora da conta: volte a linha para a conta antes" }, "linha_em_uso"],
       [{ code: "P0002", message: "Linha do extrato não encontrada" }, "linha"],
       [{ code: "22023", message: "O valor da linha não é o esperado do repasse: diga o motivo da diferença" }, "diferenca"],
       [{ code: "22023", message: "Informe o motivo de desfazer (de 3 a 200 letras)" }, "motivo"],

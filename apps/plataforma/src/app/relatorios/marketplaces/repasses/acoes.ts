@@ -30,7 +30,10 @@ export async function casarRepasse(dados: FormData) {
     p_canal: r.dados.canal, p_data_repasse: r.dados.data, p_linha: r.dados.linha, p_motivo: r.dados.motivo as string,
   });
   if (error) voltar(dados, { erro: erroDosRepasses(error) });
-  const diferenca = Number((data as { diferenca?: unknown } | null)?.diferenca);
+  const resultado = data as { diferenca?: unknown; repetida?: unknown } | null;
+  // AUD-c: o mesmo pedido de novo (o toque repetido) não grava de novo; a tela diz que já estava.
+  if (resultado?.repetida === true) voltar(dados, { ok: "ja_casado" });
+  const diferenca = Number(resultado?.diferenca);
   voltar(dados, { ok: Number.isFinite(diferenca) && diferenca !== 0 ? "casado_com_diferenca" : "casado" });
 }
 

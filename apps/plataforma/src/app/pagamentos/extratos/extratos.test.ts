@@ -227,6 +227,38 @@ describe("as telas", () => {
     expect(chamadas("extrato_sugestoes")).toEqual([{ p_extrato: EXTRATO }]);
   });
 
+  it("AUD-c (F21-02): a linha que é o recebimento de um repasse diz de qual repasse é, não oferece conciliar nem desfazer, e conta à parte", async () => {
+    cenario.vinculos = [{ papel: "dono", escopo: "organizacao", unidade_id: null }];
+    cenario.tabelas = {
+      extratos: [{ id: EXTRATO, numero: 9, unidade_id: null, tipo: "banco", fonte: "Banco da rede", meios: ["pix_direto"], arquivo: "extrato.ofx",
+        periodo_inicio: "2026-11-10", periodo_fim: "2026-11-12", linhas: 1, importado_em: "2026-11-12T20:00:00Z" }],
+      extrato_linhas: [{ id: LINHA, numero: 1, data: "2026-11-12", valor_centavos: 26_100, taxa_centavos: null, liquido_centavos: null, data_liquidacao: null,
+        referencia: null, terminal: null, descricao: "TED MERCADO PAGO", situacao: "repasse", motivo: null, pagamento: null }],
+      marketplace_repasses: [{ linha_id: LINHA, canal: "mercado_livre", data_repasse: "2026-11-10" }],
+      venda_pagamentos: [],
+    };
+    cenario.respostas.extrato_resumo = { data: { creditos: 1, creditos_centavos: 26_100, debitos: 0, debitos_centavos: 0, taxas_centavos: 0, liquido_centavos: 26_100,
+      a_cair_centavos: 0, pendentes: 0, conciliadas: 0, ignoradas: 0, repasses: 1 }, error: null };
+    const tela = limpar(await ExtratoImportado({ params: Promise.resolve({ id: EXTRATO }), searchParams: Promise.resolve({ ver: "repasse" }) }));
+    for (const trecho of ["Extrato nº 9 · Banco da rede", "De repasse", "Linha 1", "repasse de marketplace",
+      "É o recebimento do repasse do Mercado Livre de 10/11/2026.", "desfaça o repasse em", "Repasses dos marketplaces"]) {
+      expect(tela, trecho).toContain(trecho);
+    }
+    // Nada de tirar da conta nem de desfazer por aqui, e nenhuma venda sugerida: a linha só se solta desfazendo o repasse.
+    for (const ausente of ["Tirar da conta", "Desfazer a conciliação", "Voltar para a conta", "Venda nº"]) expect(tela, ausente).not.toContain(ausente);
+    expect(chamadas("extrato_sugestoes")).toEqual([]);
+    // Quem não vê os repasses (a leitura deles volta vazia) lê a linha, sem o canal e a data.
+    cenario.tabelas.marketplace_repasses = [];
+    expect(limpar(await ExtratoImportado({ params: Promise.resolve({ id: EXTRATO }), searchParams: Promise.resolve({ ver: "repasse" }) })))
+      .toContain("É o recebimento de um repasse de marketplace.");
+    // A lista dos extratos conta as linhas de repasse à parte; a recusa do banco tem a mensagem dela.
+    cenario.respostas.extratos_recentes = { data: [{ id: EXTRATO, numero: 9, unidade_id: null, loja: null, tipo: "banco", fonte: "Banco da rede", arquivo: "extrato.ofx",
+      periodo_inicio: "2026-11-10", periodo_fim: "2026-11-12", linhas: 1, importado_em: "2026-11-12T20:00:00Z", pendentes: 0, conciliadas: 0, ignoradas: 0, repasses: 1 }], error: null };
+    expect(limpar(await Extratos({ searchParams: Promise.resolve({}) }))).toContain("1 de repasse");
+    cenario.respostas.extrato_conciliar = { data: null, error: { code: "OR046", message: "Esta linha é o recebimento de um repasse de marketplace: desfaça o repasse antes" } };
+    expect(await destinoDe(conciliarLinha(formulario({ extrato: EXTRATO, linha: LINHA, pagamento: PAG })))).toBe(`/pagamentos/extratos/${EXTRATO}?erro=de_repasse`);
+  });
+
   it("extrato de outra loja (ou que não existe) não abre; endereço adulterado nem consulta", async () => {
     expect(limpar(await ExtratoImportado({ params: Promise.resolve({ id: EXTRATO }), searchParams: Promise.resolve({}) }))).toContain("Extrato não encontrado");
     expect(limpar(await ExtratoImportado({ params: Promise.resolve({ id: "x' or 1=1" }), searchParams: Promise.resolve({}) }))).toContain("Extrato não encontrado");

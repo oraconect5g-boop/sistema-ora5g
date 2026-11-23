@@ -13,6 +13,7 @@ import {
   type FiltroDoExtrato, type MeioDoExtrato,
 } from "../../../../lib/extratos/regras";
 import { brl } from "../../../../lib/formato";
+import { CANAIS_DOS_MARKETPLACES } from "../../../../lib/marketplaces/leitura";
 import { chaveDoCatalogo, textoDoParametro, type ValorDeParametro } from "../../../../lib/parametros";
 import { conciliarCertas, conciliarLinha, desfazerLinha, ignorarLinha } from "../acoes";
 
@@ -39,7 +40,11 @@ const OK = {
   desfeita: "Linha de volta à conta; o motivo ficou na auditoria.",
   sem_mudanca: "Nada mudou: a linha já estava assim.",
 } as const;
-const SITUACOES = { pendente: { nome: "a conferir", tom: "aviso" }, conciliada: { nome: "conciliada", tom: "sucesso" }, ignorada: { nome: "fora da conta", tom: "neutro" } } as const;
+// AUD-c (F21-02): a linha tem um uso só; "repasse" é o recebimento de um repasse de marketplace.
+const SITUACOES = {
+  pendente: { nome: "a conferir", tom: "aviso" }, conciliada: { nome: "conciliada", tom: "sucesso" },
+  repasse: { nome: "repasse de marketplace", tom: "info" }, ignorada: { nome: "fora da conta", tom: "neutro" },
+} as const;
 
 type Extrato = { id: string; numero: number; unidade_id: string | null; tipo: string; fonte: string; meios: string[]; arquivo: string; periodo_inicio: string; periodo_fim: string; linhas: number; importado_em: string };
 type Linha = {
@@ -47,6 +52,7 @@ type Linha = {
   referencia: string | null; terminal: string | null; descricao: string | null; situacao: keyof typeof SITUACOES; motivo: string | null;
   pagamento: { meio: string; venda: { id: string; numero: number } | null } | null;
 };
+type RepasseDaLinha = { linha_id: string; canal: string; data_repasse: string };
 type SemLinha = { id: string; meio: string; valor_centavos: number; comprovante: string | null; vendas: { id: string; numero: number; concluida_em: string } };
 type Sugestao = { linha_id: string; pagamento_id: string; venda_numero: number; meio: string; valor_centavos: number; concluida_em: string; loja: string; terminal: string | null; pela_referencia: boolean };
 
@@ -80,7 +86,10 @@ export default async function ExtratoImportado({ params, searchParams }: {
   if (resumoLido.error) throw new FalhaDoServico("extrato_resumo");
   const resumo = lerResumoDoExtrato(resumoLido.data);
   if (!resumo) throw new FalhaDoServico("extrato_resumo");
-  const quantas: Record<FiltroDoExtrato, number> = { pendente: resumo.pendentes, conciliada: resumo.conciliadas, ignorada: resumo.ignoradas, todas: resumo.pendentes + resumo.conciliadas + resumo.ignoradas };
+  const quantas: Record<FiltroDoExtrato, number> = {
+    pendente: resumo.pendentes, conciliada: resumo.conciliadas, repasse: resumo.repasses, ignorada: resumo.ignoradas,
+    todas: resumo.pendentes + resumo.conciliadas + resumo.repasses + resumo.ignoradas,
+  };
   const { pagina, paginas, de } = paginaDoExtrato(textoDoParametro(parametros.pagina), quantas[ver]);
 
   let consulta = supabase.from("extrato_linhas")
@@ -94,6 +103,11 @@ export default async function ExtratoImportado({ params, searchParams }: {
   const esperando = linhas.filter((l) => l.situacao === "pendente" && l.valor_centavos > 0).map((l) => l.id);
   const sugestoesLidas = esperando.length > 0 ? await supabase.rpc("extrato_sugestoes", { p_extrato: extrato.id }).in("linha_id", esperando) : { data: [], error: null };
   if (sugestoesLidas.error) throw new FalhaDoServico("extrato_sugestoes");
+  // De qual repasse é cada linha de repasse desta página (quem não vê os repasses lê a linha, sem o canal e a data).
+  const deRepasse = linhas.filter((l) => l.situacao === "repasse").map((l) => l.id);
+  const repassesLidos = deRepasse.length > 0 ? await supabase.from("marketplace_repasses").select("linha_id, canal, data_repasse").in("linha_id", deRepasse) : { data: [], error: null };
+  if (repassesLidos.error) throw new FalhaDoServico("marketplace_repasses");
+  const repasseDaLinha = new Map(((repassesLidos.data ?? []) as RepasseDaLinha[]).map((r) => [r.linha_id, r]));
   // A diferença no outro sentido (PAY-009): os pagamentos do período, da loja e dos meios do extrato, ainda sem conciliação.
   // Depois de conciliar o que casa, o que sobra aqui é venda que o extrato não confirmou.
   let semLinhaConsulta = supabase.from("venda_pagamentos")
@@ -156,7 +170,7 @@ export default async function ExtratoImportado({ params, searchParams }: {
                     {l.data_liquidacao ? ` · cai em ${dataCurta(l.data_liquidacao)}` : ""}
                     {l.referencia ? ` · ${l.referencia}` : ""}{l.terminal ? ` · ${l.terminal}` : ""}{l.descricao ? ` · ${l.descricao}` : ""}
                   </span>
-                  <Selo tom={SITUACOES[l.situacao].tom}>{SITUACOES[l.situacao].nome}</Selo>
+                  <Selo tom={SITUACOES[l.situacao]?.tom ?? "neutro"}>{SITUACOES[l.situacao]?.nome ?? l.situacao}</Selo>
                 </p>
                 {l.situacao === "pendente" && l.valor_centavos > 0 && dela.map((s) => (
                   <form key={s.pagamento_id} action={conciliarLinha} className="flex flex-wrap items-center justify-between gap-2 rounded-xl border border-borda px-3 py-2">
@@ -186,7 +200,18 @@ export default async function ExtratoImportado({ params, searchParams }: {
                   <p className="text-xs">Conciliada com {l.pagamento?.venda ? <Link href={`/vendas/${l.pagamento.venda.id}`} className="font-semibold text-acao">a venda nº {l.pagamento.venda.numero}</Link> : "o pagamento"}{l.pagamento ? ` (${nomeDoMeio(l.pagamento.meio)})` : ""}.</p>
                 )}
                 {l.situacao === "ignorada" && <p className="text-xs text-suave">Fora da conta: {l.motivo}</p>}
-                {l.situacao !== "pendente" && (
+                {l.situacao === "repasse" && (() => {
+                  const r = repasseDaLinha.get(l.id);
+                  const canal = r && Object.hasOwn(CANAIS_DOS_MARKETPLACES, r.canal) ? CANAIS_DOS_MARKETPLACES[r.canal as keyof typeof CANAIS_DOS_MARKETPLACES] : null;
+                  return (
+                    <p className="text-xs">
+                      {r ? `É o recebimento do repasse ${canal ? `do ${canal}` : "de marketplace"} de ${dataCurta(r.data_repasse)}.` : "É o recebimento de um repasse de marketplace."}
+                      {" "}Esta linha não concilia venda nem sai da conta; para soltá-la, desfaça o repasse em{" "}
+                      <Link href={r ? `/relatorios/marketplaces/repasses?${new URLSearchParams({ inicio: r.data_repasse, fim: r.data_repasse })}` : "/relatorios/marketplaces/repasses"} className="font-semibold text-acao">Repasses dos marketplaces</Link>.
+                    </p>
+                  );
+                })()}
+                {(l.situacao === "conciliada" || l.situacao === "ignorada") && (
                   <details>
                     <summary className="cursor-pointer text-xs font-semibold text-acao">{l.situacao === "conciliada" ? "Desfazer a conciliação" : "Voltar para a conta"}</summary>
                     <form action={desfazerLinha} className="mt-2 flex flex-wrap items-end gap-2">

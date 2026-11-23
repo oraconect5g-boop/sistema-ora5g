@@ -70,6 +70,7 @@ export const mudouDepoisDeCasar = (r: Repasse) => r.casado !== null && (r.casado
 export const OK_DOS_REPASSES = {
   casado: "Repasse casado com a linha do extrato.",
   casado_com_diferenca: "Repasse casado, com a diferença e o motivo registrados.",
+  ja_casado: "Este repasse já estava casado com esta linha: nada foi gravado de novo.",
   desfeito: "Repasse desfeito: a linha voltou a ficar livre.",
   sem_mudanca: "Nada mudou: o repasse já não estava casado.",
 } as const;
@@ -82,6 +83,7 @@ export const ERROS_DOS_REPASSES = {
   diferenca: "O valor da linha não é o esperado do repasse: diga o motivo da diferença.",
   linha: "Escolha uma linha de crédito do extrato do banco da rede.",
   ocupado: "Esta linha já é de outro repasse, ou este repasse já tem linha: desfaça antes.",
+  linha_em_uso: "Esta linha do extrato já tem outro uso (conciliada com uma venda ou fora da conta): desfaça no extrato antes.",
   sem_pedidos: "Nenhum pedido deste canal com esta data de repasse.",
   falha: "Não foi possível agora. Tente de novo em instantes.",
 } as const;
@@ -93,6 +95,8 @@ export function erroDosRepasses(erro: { code?: string; message?: string } | null
   const m = (erro?.message ?? "").toLowerCase();
   if (codigo === "42501") return "permissao";
   if (codigo === "OR045") return "ocupado";
+  // AUD-c (F21-02): a linha do extrato tem um uso só; a conciliada com uma venda ou fora da conta não recebe repasse.
+  if (codigo === "OR046") return "linha_em_uso";
   if (codigo === "P0002") return m.includes("linha") ? "linha" : "sem_pedidos";
   if (codigo !== "22023") return "falha";
   if (m.includes("diferença")) return "diferenca";

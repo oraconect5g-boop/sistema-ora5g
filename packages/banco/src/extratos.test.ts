@@ -186,7 +186,7 @@ describe("as sugestões e a conciliação (EXT-a)", () => {
     await valor(dono, "select public.extrato_ignorar($1, 'Chargeback contestado') as v", [(await linhaDe(extrato, 3)).id]);
     expect(await valor(dono, "select public.extrato_resumo($1) as v", [extrato])).toEqual({
       creditos: 2, creditos_centavos: 15000, debitos: 1, debitos_centavos: 3000, taxas_centavos: 300,
-      liquido_centavos: 9800 + 4900 - 3000, a_cair_centavos: 4900, pendentes: 2, conciliadas: 0, ignoradas: 1,
+      liquido_centavos: 9800 + 4900 - 3000, a_cair_centavos: 4900, pendentes: 2, conciliadas: 0, ignoradas: 1, repasses: 0,
     });
   });
 

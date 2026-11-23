@@ -8062,6 +8062,7 @@ export type Database = {
           pendentes: number
           periodo_fim: string
           periodo_inicio: string
+          repasses: number
           tipo: string
           unidade_id: string
         }[]
