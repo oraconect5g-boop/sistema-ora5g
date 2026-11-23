@@ -6,7 +6,10 @@ import { redirect } from "next/navigation";
 
 import { ehUuid } from "../../lib/acesso/regras";
 import { obterSessao } from "../../lib/acesso/sessao";
-import { erroDaTransferencia, escreverLinhasDaRemessa, lerIdentificadores, lerQuantidade, linhasDoFormulario } from "../../lib/transferencias/regras";
+import {
+  ehDecisaoDaDivergencia, erroDaTransferencia, escreverLinhasDaRemessa, lerIdentificadores, lerQuantidade, linhasDoFormulario,
+  MOTIVO_MINIMO_DA_DIVERGENCIA,
+} from "../../lib/transferencias/regras";
 
 // Pedidos internos de transferência (ADR-007, #60). Cada ação chama UMA função do banco como a
 // pessoa logada; o banco confere loja, permissão, situação, saldo, IMEI/ICCID e idempotência.
@@ -67,6 +70,33 @@ export async function receberTransferencia(dados: FormData) {
     p_quantidade: quantidade as number, p_observacao: (observacao || null) as string,
   });
   voltar(error, "recebida");
+}
+
+/**
+ * O que faltou no recebimento tem destino (lote TRF-d): chegou depois (o destino confere), voltou para a origem (a origem
+ * confere) ou baixa (quem ajusta estoque na origem; vale para tudo o que ainda falta). O banco confere o lado, a permissão,
+ * o que ainda falta e a chave (o segundo toque devolve o que já estava).
+ */
+export async function resolverDivergencia(dados: FormData) {
+  const transferencia = dados.get("transferencia");
+  const decisao = dados.get("decisao");
+  if (!ehUuid(transferencia) || !ehDecisaoDaDivergencia(decisao)) redirect("/transferencias?erro=dados");
+  const serializado = dados.get("serializado") === "sim";
+  const baixa = decisao === "baixada";
+  const identificadores = !baixa && serializado ? lerIdentificadores(dados.get("identificadores")) : [];
+  const quantidade = !baixa && !serializado ? lerQuantidade(dados.get("quantidade")) : null;
+  if (identificadores === null || (!baixa && serializado && identificadores.length === 0) || (!baixa && !serializado && quantidade === null)) {
+    redirect("/transferencias?erro=dados");
+  }
+  const motivo = texto(dados, "motivo");
+  if (motivo.length < MOTIVO_MINIMO_DA_DIVERGENCIA) redirect("/transferencias?erro=explicacao");
+  const { supabase } = await obterSessao({ exigirLoja: true });
+  const { error } = await supabase.rpc("transferencia_resolver_divergencia", {
+    p_transferencia: transferencia, p_decisao: decisao, p_identificadores: identificadores,
+    // Aparelho e chip vão pelos números lidos, e a baixa vale para tudo: a quantidade vai nula.
+    p_quantidade: quantidade as number, p_motivo: motivo, p_chave: chaveDe(dados),
+  });
+  voltar(error, "divergencia");
 }
 
 export async function encerrarTransferencia(dados: FormData) {

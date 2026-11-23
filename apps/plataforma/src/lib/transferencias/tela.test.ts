@@ -28,6 +28,28 @@ describe("a leitura da resposta", () => {
     expect(t.disponiveis[0]?.iccid).toBeNull();
   });
 
+  // TRF-d (o achado F21-04 da auditoria do Codex de 21/11): o destino do que faltou no recebimento.
+  it("lê as resoluções da divergência e quando ela ficou resolvida; o banco sem a migration do TRF-d não as traz, e a tela segue", () => {
+    // Antes da migration: sem a chave das resoluções e sem o campo da transferência.
+    const antes = lerTelaDasTransferencias(RESPOSTA);
+    expect(antes.resolucoes).toEqual([]);
+    expect(antes.transferencias[0]?.divergencia_resolvida_em).toBeNull();
+    const depois = lerTelaDasTransferencias({
+      ...RESPOSTA,
+      transferencias: [{ ...RESPOSTA.transferencias[0], situacao: "recebida_com_divergencia", quantidade: 3, quantidade_recebida: 1,
+        divergencia_resolvida_em: "2026-11-23T14:00:00+00:00" }],
+      resolucoes: [
+        { transferencia_id: T, decisao: "voltou_a_origem", quantidade: 1, item_serializado_id: null, motivo: "Ficou na prateleira da origem", criado_em: "2026-11-23T13:50:00+00:00" },
+        { transferencia_id: T, decisao: "baixada", quantidade: 1, item_serializado_id: "i", motivo: "Não apareceu em nenhuma loja", criado_em: "2026-11-23T14:00:00+00:00" },
+      ],
+    });
+    expect(depois.transferencias[0]?.divergencia_resolvida_em).toBe("2026-11-23T14:00:00+00:00");
+    expect(depois.resolucoes.map((r) => [r.decisao, r.quantidade, r.item_serializado_id])).toEqual([["voltou_a_origem", 1, null], ["baixada", 1, "i"]]);
+    // A resolução fora da forma é erro, como o resto.
+    expect(() => lerTelaDasTransferencias({ ...RESPOSTA, resolucoes: [{ transferencia_id: T, decisao: "baixada", quantidade: "uma" }] })).toThrow();
+    expect(() => lerTelaDasTransferencias({ ...RESPOSTA, resolucoes: "nenhuma" })).toThrow();
+  });
+
   it("forma inesperada é erro, nunca a tela vazia", () => {
     for (const ruim of [null, [], { ...RESPOSTA, transferencias: undefined }, { ...RESPOSTA, saldos: [{ unidade_id: "a", variante_id: "v", quantidade: 1.5, reservado: 0 }] },
       { ...RESPOSTA, itens: [{ transferencia_id: T, item_serializado_id: "i", recebido: "sim" }] }, { ...RESPOSTA, variantes: [{ id: "v" }] }]) {
@@ -59,7 +81,7 @@ describe("o que a tela faz com a resposta do banco", () => {
   it("o banco sem a função (PGRST202 ou 42883): as leituras de antes", async () => {
     for (const code of ["PGRST202", "42883"]) {
       const { supabase, chamadas } = banco({ data: null, error: { code } });
-      expect(await consultarTelaDasTransferencias(supabase, "a")).toEqual({ transferencias: [], variantes: [], unidades: [], itens: [], remessas: [], saldos: [], disponiveis: [] });
+      expect(await consultarTelaDasTransferencias(supabase, "a")).toEqual({ transferencias: [], variantes: [], unidades: [], itens: [], remessas: [], saldos: [], disponiveis: [], resolucoes: [] });
       expect(chamadas).toEqual(["transferencias_tela", "transferencias"]);
     }
   });

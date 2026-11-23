@@ -9,9 +9,12 @@ import { Aviso, Botao, Cartao, Selo, TituloPagina } from "../../componentes/ui";
 import { permite } from "../../lib/acesso/molde";
 import { obterSessao } from "../../lib/acesso/sessao";
 import { chaveDoCatalogo, textoDoParametro, type ValorDeParametro } from "../../lib/parametros";
-import { efeitoNoEstoque, ERROS_DA_TRANSFERENCIA, nomeDaSituacao, saldoDaLoja } from "../../lib/transferencias/regras";
+import {
+  divergenciaDaTransferencia, efeitoNoEstoque, ERROS_DA_TRANSFERENCIA, MOTIVO_MINIMO_DA_DIVERGENCIA, nomeDaDecisao, nomeDaSituacao, saldoDaLoja,
+  textoDaDivergencia,
+} from "../../lib/transferencias/regras";
 import { consultarTelaDasTransferencias } from "../../lib/transferencias/tela";
-import { encerrarTransferencia, enviarRemessa, enviarTransferencia, receberTransferencia, separarTransferencia } from "./acoes";
+import { encerrarTransferencia, enviarRemessa, enviarTransferencia, receberTransferencia, resolverDivergencia, separarTransferencia } from "./acoes";
 
 export const metadata: Metadata = { title: "Transferências entre lojas" };
 export const dynamic = "force-dynamic";
@@ -23,6 +26,7 @@ const OK: Record<string, string> = {
   enviada: "Enviado: saiu do estoque da origem e está em trânsito.", recebida: "Recebido e conferido.",
   recusada: "Pedido recusado; a reserva voltou ao disponível.", cancelada: "Pedido cancelado; a reserva voltou ao disponível.",
   remessa: "Remessa pedida e reservada na origem, produto por produto.",
+  divergencia: "Registrado: o que faltou teve destino, e o estoque foi acertado pelo livro.",
   remessa_enviada: "Remessa enviada: o que já estava separado saiu do estoque desta loja; o resto espera a separação.",
 };
 
@@ -78,6 +82,9 @@ export default async function Transferencias({ searchParams }: { searchParams: P
         const v = variante(t.variante_id);
         const saindo = t.origem_id === unidade;
         const itens = itensDasTransferencias.data.filter((i) => i.transferencia_id === t.id);
+        // TRF-d: o que faltou no recebimento, o destino que cada parte já teve e o que ainda falta resolver.
+        const divergencia = divergenciaDaTransferencia(t, tela.resolucoes);
+        const resolucoesDela = tela.resolucoes.filter((r) => r.transferencia_id === t.id);
         return (
           <Cartao key={t.id} titulo={`${remessa(t.remessa_id) ? `Remessa Nº ${remessa(t.remessa_id)?.numero} · ` : ""}Nº ${t.numero} · ${v?.nome ?? "Produto"} × ${t.quantidade}`} subtitulo={`${local(t.origem_id)?.nome ?? "origem"} → ${local(t.destino_id)?.nome ?? "destino"} · ${saindo ? "saindo daqui" : "chegando aqui"}`} icone={ArrowRightLeft}>
             <p className="flex flex-wrap items-center gap-2 text-sm">
@@ -88,6 +95,58 @@ export default async function Transferencias({ searchParams }: { searchParams: P
             {t.quantidade_recebida !== null && t.quantidade_recebida < t.quantidade && <p className="mt-1 text-xs text-aviso">Recebidos {t.quantidade_recebida} de {t.quantidade}: {t.observacao}</p>}
             {itens.length > 0 && <p className="numeros mt-1 text-xs text-suave">{itens.length} IMEI/ICCID separado(s){itens.some((i) => i.recebido === false) ? " · algum não chegou" : ""}</p>}
             {efeitoNoEstoque(t.situacao) && <p className="mt-1 text-xs">{efeitoNoEstoque(t.situacao)}</p>}
+            {divergencia && (
+              <div className="mt-2 rounded-lg border border-borda p-3 text-sm">
+                <p className="font-semibold">{textoDaDivergencia(divergencia)}</p>
+                {resolucoesDela.length > 0 && (
+                  <ul className="mt-1 space-y-0.5 text-xs text-suave">
+                    {resolucoesDela.map((r, i) => (
+                      <li key={`${r.criado_em}-${r.item_serializado_id ?? i}`}>{`${r.quantidade} · ${nomeDaDecisao(r.decisao)}: ${r.motivo}`}</li>
+                    ))}
+                  </ul>
+                )}
+                {divergencia.pendentes > 0 && !saindo && transfere && (
+                  <details className="mt-2"><summary className="cursor-pointer font-semibold text-acao">Chegou depois nesta loja</summary>
+                    <form action={resolverDivergencia} className="mt-2 grid gap-2">
+                      <input type="hidden" name="transferencia" value={t.id} /><input type="hidden" name="decisao" value="chegou_depois" />
+                      <input type="hidden" name="serializado" value={serializado(t.variante_id) ? "sim" : "nao"} /><input type="hidden" name="chave" value={randomUUID()} />
+                      {serializado(t.variante_id)
+                        ? <label className="text-xs font-medium">IMEI/ICCID lidos nos itens que chegaram (um por linha)<textarea name="identificadores" rows={2} inputMode="numeric" required className={`${campo} py-2`} /></label>
+                        : <label className="text-xs font-medium">{`Quantas chegaram (até ${divergencia.pendentes})`}<input name="quantidade" inputMode="numeric" defaultValue={String(divergencia.pendentes)} required className={campo} /></label>}
+                      <label className="text-xs font-medium">O que houve<input name="motivo" required minLength={MOTIVO_MINIMO_DA_DIVERGENCIA} maxLength={500} className={campo} /></label>
+                      <div><Botao type="submit" tamanho="sm">Dar a entrada do que chegou</Botao></div>
+                    </form>
+                  </details>
+                )}
+                {divergencia.pendentes > 0 && saindo && podeNaOrigem(t.origem_id) && (
+                  <details className="mt-2"><summary className="cursor-pointer font-semibold text-acao">Voltou para esta loja</summary>
+                    <form action={resolverDivergencia} className="mt-2 grid gap-2">
+                      <input type="hidden" name="transferencia" value={t.id} /><input type="hidden" name="decisao" value="voltou_a_origem" />
+                      <input type="hidden" name="serializado" value={serializado(t.variante_id) ? "sim" : "nao"} /><input type="hidden" name="chave" value={randomUUID()} />
+                      {serializado(t.variante_id)
+                        ? <label className="text-xs font-medium">IMEI/ICCID lidos nos itens que estão aqui (um por linha)<textarea name="identificadores" rows={2} inputMode="numeric" required className={`${campo} py-2`} /></label>
+                        : <label className="text-xs font-medium">{`Quantas estão aqui (até ${divergencia.pendentes})`}<input name="quantidade" inputMode="numeric" defaultValue={String(divergencia.pendentes)} required className={campo} /></label>}
+                      <label className="text-xs font-medium">O que houve<input name="motivo" required minLength={MOTIVO_MINIMO_DA_DIVERGENCIA} maxLength={500} className={campo} /></label>
+                      <div><Botao type="submit" tamanho="sm">Dar a entrada de volta</Botao></div>
+                    </form>
+                  </details>
+                )}
+                {divergencia.pendentes > 0 && saindo && ajusta && (
+                  <details className="mt-2"><summary className="cursor-pointer font-semibold text-perigo">Dar baixa no que não apareceu</summary>
+                    <form action={resolverDivergencia} className="mt-2 grid gap-2">
+                      <input type="hidden" name="transferencia" value={t.id} /><input type="hidden" name="decisao" value="baixada" />
+                      <input type="hidden" name="serializado" value={serializado(t.variante_id) ? "sim" : "nao"} /><input type="hidden" name="chave" value={randomUUID()} />
+                      <p className="text-xs text-suave">{`A baixa vale para tudo o que ainda falta (${divergencia.pendentes}). No estoque desta loja ficam registradas a volta e a perda, com o seu nome e o motivo.`}</p>
+                      <label className="text-xs font-medium">Motivo da baixa<input name="motivo" required minLength={MOTIVO_MINIMO_DA_DIVERGENCIA} maxLength={500} className={campo} /></label>
+                      <div><Botao type="submit" tamanho="sm" variante="perigo">Confirmar a baixa</Botao></div>
+                    </form>
+                  </details>
+                )}
+                {divergencia.pendentes > 0 && (
+                  <p className="mt-2 text-xs text-suave">Quem resolve: a loja de destino, se chegou depois; a de origem, se voltou para ela; e quem ajusta estoque na origem dá a baixa do que não apareceu.</p>
+                )}
+              </div>
+            )}
             {(saldoAgora(t.origem_id, t.variante_id) || saldoAgora(t.destino_id, t.variante_id)) && (
               <p className="numeros mt-1 text-xs text-suave">
                 {[saldoAgora(t.origem_id, t.variante_id) && `Agora na origem (${local(t.origem_id)?.nome ?? "origem"}): ${saldoAgora(t.origem_id, t.variante_id)}`,
