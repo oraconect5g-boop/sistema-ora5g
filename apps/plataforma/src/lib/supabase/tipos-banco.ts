@@ -5992,12 +5992,84 @@ export type Database = {
           },
         ]
       }
+      transferencia_resolucoes: {
+        Row: {
+          chave: string
+          conteudo: string
+          criado_em: string
+          criado_por: string
+          decisao: string
+          id: string
+          item_serializado_id: string | null
+          motivo: string
+          organizacao_id: string
+          quantidade: number
+          transferencia_id: string
+        }
+        Insert: {
+          chave: string
+          conteudo: string
+          criado_em?: string
+          criado_por: string
+          decisao: string
+          id?: string
+          item_serializado_id?: string | null
+          motivo: string
+          organizacao_id: string
+          quantidade: number
+          transferencia_id: string
+        }
+        Update: {
+          chave?: string
+          conteudo?: string
+          criado_em?: string
+          criado_por?: string
+          decisao?: string
+          id?: string
+          item_serializado_id?: string | null
+          motivo?: string
+          organizacao_id?: string
+          quantidade?: number
+          transferencia_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "transferencia_resolucoes_criado_por_fkey"
+            columns: ["criado_por"]
+            isOneToOne: false
+            referencedRelation: "perfis_usuario"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "transferencia_resolucoes_item_serializado_id_fkey"
+            columns: ["item_serializado_id"]
+            isOneToOne: false
+            referencedRelation: "itens_serializados"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "transferencia_resolucoes_organizacao_id_fkey"
+            columns: ["organizacao_id"]
+            isOneToOne: false
+            referencedRelation: "organizacoes"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "transferencia_resolucoes_transferencia_id_fkey"
+            columns: ["transferencia_id"]
+            isOneToOne: false
+            referencedRelation: "transferencias"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       transferencias: {
         Row: {
           atualizado_em: string
           chave: string
           conteudo: string
           destino_id: string
+          divergencia_resolvida_em: string | null
           encerrado_em: string | null
           encerrado_por: string | null
           enviado_em: string | null
@@ -6026,6 +6098,7 @@ export type Database = {
           chave: string
           conteudo: string
           destino_id: string
+          divergencia_resolvida_em?: string | null
           encerrado_em?: string | null
           encerrado_por?: string | null
           enviado_em?: string | null
@@ -6054,6 +6127,7 @@ export type Database = {
           chave?: string
           conteudo?: string
           destino_id?: string
+          divergencia_resolvida_em?: string | null
           encerrado_em?: string | null
           encerrado_por?: string | null
           enviado_em?: string | null
@@ -8851,6 +8925,17 @@ export type Database = {
       }
       transferencia_remessa_enviar: {
         Args: { p_remessa: string }
+        Returns: Json
+      }
+      transferencia_resolver_divergencia: {
+        Args: {
+          p_chave: string
+          p_decisao: string
+          p_identificadores: string[]
+          p_motivo: string
+          p_quantidade: number
+          p_transferencia: string
+        }
         Returns: Json
       }
       transferencia_separar: {

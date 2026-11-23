@@ -17,6 +17,12 @@ export const LIMITE_DA_LISTA = 50;
 export type TransferenciaDaTela = {
   id: string; numero: number; origem_id: string; destino_id: string; variante_id: string; quantidade: number; motivo: string;
   situacao: string; solicitado_por: string; quantidade_recebida: number | null; observacao: string | null; remessa_id: string | null;
+  /** TRF-d: quando tudo o que faltou no recebimento teve destino; nulo enquanto houver o que resolver (ou sem divergência). */
+  divergencia_resolvida_em: string | null;
+};
+/** TRF-d: o destino de uma parte do que faltou no recebimento (no aparelho e no chip, um registro por IMEI/ICCID). */
+export type ResolucaoDaTransferencia = {
+  transferencia_id: string; decisao: string; quantidade: number; item_serializado_id: string | null; motivo: string; criado_em: string;
 };
 export type ProdutoDaTransferencia = { id: string; nome: string; sku: string; tipo: string | null };
 export type LojaDaTransferencia = { id: string; nome: string; tipo: string };
@@ -34,6 +40,8 @@ export type TelaDasTransferencias = {
   saldos: SaldoDaTransferencia[];
   /** Os aparelhos e chips livres na loja do turno, só dos produtos que ela tem a separar. */
   disponiveis: AparelhoLivre[];
+  /** TRF-d: as resoluções do que faltou, na ordem em que foram feitas. O banco sem a migration do TRF-d não as traz. */
+  resolucoes: ResolucaoDaTransferencia[];
 };
 
 const booleanoOuNulo = (l: Linha, campo: string) => (l[campo] === null ? null : booleano(l, campo));
@@ -47,6 +55,8 @@ export function lerTelaDasTransferencias(dado: unknown): TelaDasTransferencias {
       variante_id: texto(l, "variante_id"), quantidade: inteiro(l, "quantidade"), motivo: texto(l, "motivo"), situacao: texto(l, "situacao"),
       solicitado_por: texto(l, "solicitado_por"), quantidade_recebida: inteiroOuNulo(l, "quantidade_recebida"),
       observacao: textoOuNulo(l, "observacao"), remessa_id: textoOuNulo(l, "remessa_id"),
+      // O banco sem a migration do TRF-d não traz o campo: sem ele, a divergência conta como não resolvida.
+      divergencia_resolvida_em: "divergencia_resolvida_em" in l ? textoOuNulo(l, "divergencia_resolvida_em") : null,
     })),
     variantes: lista(dado, "variantes").map((l) => ({ id: texto(l, "id"), nome: texto(l, "nome"), sku: texto(l, "sku"), tipo: textoOuNulo(l, "tipo") })),
     unidades: lista(dado, "unidades").map((l) => ({ id: texto(l, "id"), nome: texto(l, "nome"), tipo: texto(l, "tipo") })),
@@ -60,6 +70,10 @@ export function lerTelaDasTransferencias(dado: unknown): TelaDasTransferencias {
     disponiveis: lista(dado, "disponiveis").map((l) => ({
       id: texto(l, "id"), variante_id: texto(l, "variante_id"), imei: textoOuNulo(l, "imei"), iccid: textoOuNulo(l, "iccid"),
     })),
+    resolucoes: "resolucoes" in dado ? lista(dado, "resolucoes").map((l) => ({
+      transferencia_id: texto(l, "transferencia_id"), decisao: texto(l, "decisao"), quantidade: inteiro(l, "quantidade"),
+      item_serializado_id: textoOuNulo(l, "item_serializado_id"), motivo: texto(l, "motivo"), criado_em: texto(l, "criado_em"),
+    })) : [],
   };
 }
 
@@ -89,7 +103,7 @@ async function leiturasDeAntes(supabase: Cliente, unidade: string): Promise<Tela
   const transferencias: TransferenciaDaTela[] = lidas.data.map((t) => ({
     id: t.id, numero: Number(t.numero), origem_id: t.origem_id, destino_id: t.destino_id, variante_id: t.variante_id, quantidade: t.quantidade,
     motivo: t.motivo, situacao: t.situacao, solicitado_por: t.solicitado_por, quantidade_recebida: t.quantidade_recebida, observacao: t.observacao,
-    remessa_id: t.remessa_id,
+    remessa_id: t.remessa_id, divergencia_resolvida_em: null,
   }));
   const varianteIds = [...new Set(transferencias.map((t) => t.variante_id))];
   const unidadeIds = [...new Set(transferencias.flatMap((t) => [t.origem_id, t.destino_id]))];
@@ -120,5 +134,7 @@ async function leiturasDeAntes(supabase: Cliente, unidade: string): Promise<Tela
     remessas: remessas.data.map((r) => ({ id: r.id, numero: Number(r.numero), origem_id: r.origem_id })),
     saldos: saldos.data.map((s) => ({ unidade_id: s.unidade_id, variante_id: s.variante_id, quantidade: Number(s.quantidade), reservado: Number(s.reservado) })),
     disponiveis: disponiveis.data,
+    // O banco sem a função da tela (anterior ao VEL-g) também não tem as resoluções (TRF-d).
+    resolucoes: [],
   };
 }

@@ -124,6 +124,7 @@
     { "versao": "20261119131724", "nome": "catalogo_e_estoque_numa_ida", "md5": "5e00d9651c79943dd88d93b240de8da7", "aplicada_em": "2026-11-19" },
     { "versao": "20261119134800", "nome": "permissoes_numa_conta", "md5": "6bfe31e5629416df18c0d4ce2c00e26f", "aplicada_em": "2026-11-19" },
     { "versao": "20261119184550", "nome": "transferencias_numa_ida", "md5": "2ad568244ae0545250eeb87f6d9f7baa", "aplicada_em": "2026-11-19" },
-    { "versao": "20261123121828", "nome": "linha_do_extrato_um_uso", "md5": "8c8c29e91cb36a07db8a6295b0f3ec43", "aplicada_em": "2026-11-23" }
+    { "versao": "20261123121828", "nome": "linha_do_extrato_um_uso", "md5": "8c8c29e91cb36a07db8a6295b0f3ec43", "aplicada_em": "2026-11-23" },
+    { "versao": "20261123133323", "nome": "transferencia_resolver_divergencia", "md5": "d4b12176771727af8cc84499ffef1157", "aplicada_em": "2026-11-23" }
   ]
 }

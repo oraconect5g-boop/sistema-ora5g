@@ -2,7 +2,7 @@
   "_leia": "Checkpoint do programa de execução integral (PR #67). Carregar ao retomar e seguir para o próximo item executável da fila; não reiniciar o projeto. Estados vêm de status-requisitos.json (fonte da rastreabilidade); este arquivo acrescenta lote, bloqueio externo e revisão. Desde 16/11/2026 a medida de avanço é o requisito homologado pelo proprietário: a chave aceites guarda a resposta dele a cada roteiro de aceite (docs/aceite/); um requisito só recebe homologado: true com todos os lotes dele aceitos e sem nada em FALTA na nota de status-requisitos.json.",
   "atualizado_em": "2026-11-23",
   "base": {
-    "main": "c1b8e60",
+    "main": "5617351",
     "pacote": {
       "pr": 67,
       "branch": "docs/execucao-integral-20261110",
@@ -957,18 +957,31 @@
         "ORA-INV-004"
       ],
       "entrega": "os achados F21-01 a F21-03 da auditoria integral do Codex de 21/11 (PR #105): a linha do extrato com um uso só (o mesmo crédito não concilia uma venda e um repasse de marketplace), o rodapé da planilha da Rein escrito com vírgula reconhecido e o registro de cada publicação gravado depois dela, fora dos commits do aplicativo",
+      "commit": "5617351",
+      "publicado_em": "2026-11-23",
+      "pedido_em": "2026-11-23",
+      "resposta": null,
+      "respondido_em": null,
+      "nota": "no ar em 5617351 (build 23/11 10:12; copiado do registro das publicações, a branch registro/publicacoes); a parte A do roteiro espera o primeiro extrato e o primeiro relatório de marketplace de verdade, e a parte B, a planilha da Rein no servidor; o F21-04 (as duas transferências de teste para a Muffato Santa) não foi executado: espera o lote TRF-d e o sim do proprietário"
+    },
+    "TRF-d": {
+      "roteiro": "docs/aceite/TRF-d.md",
+      "requisitos": [
+        "ORA-INV-007"
+      ],
+      "entrega": "o que faltou no recebimento da transferência tem destino: chegou depois (o destino confere), voltou para a origem (a origem confere) ou baixa (quem ajusta estoque na origem), em partes, com o motivo e sem lançar duas vezes (o que faltava para o achado F21-04 da auditoria do Codex de 21/11)",
       "commit": null,
       "publicado_em": null,
       "pedido_em": "2026-11-23",
       "resposta": null,
       "respondido_em": null,
-      "nota": "o commit e a publicação ficam no registro (a branch registro/publicacoes), não aqui (F21-03); a parte A do roteiro espera o primeiro extrato e o primeiro relatório de marketplace de verdade, e a parte B, a planilha da Rein no servidor; o F21-04 (as duas transferências de teste para a Muffato Santa) não foi executado: espera o lote TRF-d e o sim do proprietário"
+      "nota": "o commit e a publicação ficam no registro (a branch registro/publicacoes); os passos do roteiro pedem uma transferência recebida com falta: esperam o sim do proprietário para a prova entre as duas lojas de teste ou para a regularização das duas transferências de teste da Muffato Santa"
     }
   },
   "contagem_dos_estados": {
     "nao_iniciado": 15,
-    "parcial": 81,
-    "testado": 68,
+    "parcial": 80,
+    "testado": 69,
     "bloqueado": 13,
     "respeitado": 2
   },
@@ -1219,8 +1232,8 @@
     "ORA-INV-007": {
       "titulo": "Transferência entre lojas com trânsito/recebimento",
       "prioridade": "P1",
-      "estado": "parcial",
-      "lote": "L4 estoque/compras; TRF-a (17/11): a remessa, vários produtos na mesma transferência (#60); J1-c (19/11): a transferência de ponta a ponta com duas pessoas, contra o site no ar, entre as lojas de teste; J1-d (19/11): a transferência de um aparelho pelo IMEI, ida e volta, contra o site no ar; VEL-g (19/11): a tela de Transferências numa ida (migration aplicada no ora5g-dev em 19/11); AUD-c (23/11): volta a parcial: falta resolver a divergência do recebimento (F21-04; o lote TRF-d)",
+      "estado": "testado",
+      "lote": "L4 estoque/compras; TRF-a (17/11): a remessa, vários produtos na mesma transferência (#60); J1-c (19/11): a transferência de ponta a ponta com duas pessoas, contra o site no ar, entre as lojas de teste; J1-d (19/11): a transferência de um aparelho pelo IMEI, ida e volta, contra o site no ar; VEL-g (19/11): a tela de Transferências numa ida (migration aplicada no ora5g-dev em 19/11); AUD-c (23/11): volta a parcial: falta resolver a divergência do recebimento (F21-04; o lote TRF-d); TRF-d (23/11): o que faltou no recebimento tem destino (chegou depois, voltou para a origem ou baixa); volta a testado",
       "bloqueio_externo": null,
       "revisado_codex": false,
       "homologado": false
@@ -2585,5 +2598,5 @@
       "homologado": false
     }
   },
-  "proximo_passo": "Seguir a ordem de 23/11 (a continuação pedida pelo proprietário com a auditoria integral do Codex de 21/11, PR #105; a leitura está em docs/alinhamento/LEITURA_AUDITORIA_2026-11-21.md): (1) publicar o AUD-c depois do merge, provar no domínio e registrar a publicação (deploy/homologacao/registrar-publicacao.sh; a branch registro/publicacoes); (2) TRF-d: resolver a divergência do recebimento da transferência (devolver à origem ou dar baixa, com motivo e auditoria) e, com o sim do proprietário, regularizar as duas transferências de teste para a Muffato Santa (F21-04); (3) seguir a fila integral pelas áreas que faltam funcionar, um lote por vez, com teste, publicação, prova no domínio, roteiro de aceite e relato; (4) quando a planilha da Rein estiver em ~/entrada/rein/, rodar a prova com o arquivo original (ARQUIVO_ESTOQUE_AUDITORIA) e preparar a carga da loja piloto. O que depende do proprietário está em docs/PENDENCIAS_DO_PROPRIETARIO.md (a lista única). A narrativa anterior deste campo (os passos de 17 a 21/11) fica no histórico do Git e em docs/alinhamento/EXECUCAO_INTEGRAL_STATUS.md."
+  "proximo_passo": "Seguir a ordem de 23/11 (a continuação pedida pelo proprietário com a auditoria integral do Codex de 21/11, PR #105; a leitura está em docs/alinhamento/LEITURA_AUDITORIA_2026-11-21.md): (1) publicar o TRF-d depois do merge, provar no domínio e registrar a publicação (deploy/homologacao/registrar-publicacao.sh; a branch registro/publicacoes); o AUD-c está no ar desde 23/11 (5617351); (2) com o sim do proprietário, regularizar as duas transferências de teste para a Muffato Santa (F21-04: receber com zero lá e dizer que voltaram para a Santa Cândida (teste)) e provar no site a divergência entre as duas lojas de teste; (3) seguir a fila integral pelas áreas que faltam funcionar, um lote por vez, com teste, publicação, prova no domínio, roteiro de aceite e relato; (4) quando a planilha da Rein estiver em ~/entrada/rein/, rodar a prova com o arquivo original (ARQUIVO_ESTOQUE_AUDITORIA) e preparar a carga da loja piloto. O que depende do proprietário está em docs/PENDENCIAS_DO_PROPRIETARIO.md (a lista única). A narrativa anterior deste campo (os passos de 17 a 21/11) fica no histórico do Git e em docs/alinhamento/EXECUCAO_INTEGRAL_STATUS.md."
 }

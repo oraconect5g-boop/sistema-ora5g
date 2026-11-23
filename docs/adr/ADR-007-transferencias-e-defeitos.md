@@ -44,6 +44,18 @@ O centro de distribuição é um local do tipo depósito: recebe a mercadoria e 
 - A reserva do pedido de transferência continua: o depósito separa, envia e recebe como uma loja.
 - **Reversão:** se o depósito passar a vender, a reversão tira os gatilhos, e os painéis do estoque passam a contá-lo entre os locais que vendem, num lote próprio.
 
+## Atualização de 23/11/2026: o que faltou no recebimento tem destino (lote TRF-d; o achado F21-04 do Codex)
+
+- **O defeito:** o item 5 do resumo dizia que o aparelho que não chegou ficava em trânsito "até a regularização", mas a regularização não existia. O aparelho ficava em trânsito para sempre (a entrada de mercadoria o recusa), e a quantidade do acessório tinha saído da origem e não entrava em lugar nenhum.
+- **Três destinos, e só eles:** chegou depois (a loja de destino confere e dá a entrada), voltou para a origem (a loja de origem confere e dá a entrada de volta) ou baixa (quem ajusta estoque na origem dá baixa em tudo o que ainda falta).
+- **Quem prova é quem tem o item na mão:** o destino lê o IMEI/ICCID ou conta o que chegou; a origem, o que voltou. A baixa não pede leitura (o item não apareceu) e por isso é de quem ajusta estoque, com o motivo.
+- **Em partes:** cada chamada resolve uma parte do que faltou; a soma nunca passa do total. A transferência continua "recebida com divergência" (é o que aconteceu) e ganha a data em que tudo ficou resolvido.
+- **Cada resolução é um registro que não muda** (`transferencia_resolucoes`, só de inserção): quem, quando, quanto, o destino e o motivo. O aparelho é resolvido uma vez; na quantidade, a chave identifica a chamada e a repetição devolve o que já estava.
+- **O livro manda:** nenhuma situação muda por fora dele. O que chegou depois ou voltou entra como entrada por transferência na loja certa. A baixa lança, na origem, a volta e a perda, uma depois da outra: o saldo não muda, a perda aparece como perda, e o aparelho vai de "em trânsito" a "baixado" pela regra do próprio livro.
+- **A mesma trava:** a da transferência, como em todos os passos dela. Duas resoluções ao mesmo tempo esperam uma pela outra.
+- **Fica de fora:** um tipo próprio de movimento para a perda em trânsito, a baixa aprovada pelo gerente (hoje só o dono ajusta estoque; mudar é decisão de permissão do proprietário) e o aviso ao dono quando uma divergência fica parada.
+- **Reverter:** a reversão da migration `20261123133323_transferencia_resolver_divergencia` tira a função e a tabela e volta a tela à definição anterior; os movimentos que as resoluções lançaram ficam no livro.
+
 ## Provas
 
 TRF-c (18/11): `transferencias.test.ts` (a reserva no pedido, a venda que não leva o reservado e o pedido que não leva o reservado da venda, o aparelho que troca a reserva pela do IMEI sem contar duas vezes, o cancelamento antes e depois da separação, o pedido antigo sem reserva), `transferencia-remessa.test.ts` (a remessa tudo ou nada) e `concorrencia.test.ts` (o pedido e a venda disputando a última capa, nas duas ordens; a mesma remessa duas vezes ao mesmo tempo). Antes: `packages/banco/src/transferencias.test.ts` (8): ciclo completo de acessório e de aparelho, cada passo repetido, divergência, cancelamento antes e depois do envio, recusa, permissão e leitura entre lojas e redes, DEFEITOS sem venda e regularização. `concorrencia.test.ts` (2, PostgreSQL 17 com duas conexões): separação × reserva de venda do mesmo aparelho (uma fica com ele, a outra recebe OR002) e o mesmo envio duas vezes (uma saída no livro).

@@ -14,6 +14,9 @@ const cenario = vi.hoisted(() => ({
   // VEL-g: com a função public.transferencias_tela (a leitura única) ou sem ela (as leituras de antes).
   comFuncao: false,
   leiturasSeparadas: 0,
+  // TRF-d: as chamadas das ações ao banco (o nome e os argumentos) e a resposta da função que resolve a divergência.
+  chamadas: [] as [string, Record<string, unknown>][],
+  erroDaResolucao: null as null | { code: string },
 }));
 vi.mock("next/headers", () => ({ cookies: async () => ({ getAll: () => [], set: () => undefined }) }));
 vi.mock("next/navigation", () => ({ redirect: (destino: string) => { throw new Error(`redirecionou para ${destino}`); } }));
@@ -37,6 +40,7 @@ const sessaoFicticia = {
     from: (nome: string) => { cenario.leiturasSeparadas += 1; return new Consulta(cenario.tabelas[nome] ?? []); },
     rpc: async (nome: string, argumentos: Record<string, unknown> = {}) => {
       if (nome === "tem_permissao") return { data: cenario.permissoes.has(argumentos.p_permissao as string), error: null };
+      if (nome === "transferencia_resolver_divergencia") { cenario.chamadas.push([nome, argumentos]); return { data: null, error: cenario.erroDaResolucao }; }
       if (nome !== "transferencias_tela") return { data: null, error: null };
       if (!cenario.comFuncao) return { data: null, error: { code: "PGRST202" } };
       // A função do banco simulada: o que as tabelas do cenário têm (o RLS simulado é o próprio cenário).
@@ -45,12 +49,15 @@ const sessaoFicticia = {
         transferencias: t.transferencias ?? [],
         variantes: (t.variantes ?? []).map((v) => ({ id: v.id, nome: v.nome, sku: v.sku, tipo: (v.produtos as { tipo?: string } | null)?.tipo ?? null })),
         unidades: t.unidades ?? [], itens: t.transferencia_itens ?? [], remessas: t.transferencia_remessas ?? [], saldos: t.estoque_saldos ?? [], disponiveis: [],
+        // O banco com a migration do TRF-d traz as resoluções; o cenário sem a tabela simula o banco de antes.
+        ...(t.transferencia_resolucoes ? { resolucoes: t.transferencia_resolucoes } : {}),
       }, error: null };
     },
   },
 };
 vi.mock("../../lib/acesso/sessao", () => ({ FalhaDoServico: class extends Error {}, obterSessao: async () => sessaoFicticia }));
 
+import { resolverDivergencia } from "./acoes";
 import Transferencias from "./page";
 
 function texto(v: unknown): string {
@@ -73,6 +80,8 @@ const transferencia = (numero: number, situacao: string) => ({
 
 beforeEach(() => {
   cenario.leiturasSeparadas = 0;
+  cenario.chamadas = [];
+  cenario.erroDaResolucao = null;
   cenario.permissoes = new Set(["estoque.transferir"]);
   cenario.tabelas = {
     transferencias: [transferencia(3, "enviada"), transferencia(2, "separada"), transferencia(1, "solicitada")],
@@ -106,5 +115,114 @@ describe.each([
     // Com a função, a tela não lê nenhuma tabela em separado: uma ida só, depois da sessão.
     if (comFuncao) expect(cenario.leiturasSeparadas).toBe(0);
     else expect(cenario.leiturasSeparadas).toBeGreaterThan(0);
+  });
+});
+
+// TRF-d (ORA-INV-007; o achado F21-04 da auditoria do Codex de 21/11/2026): o que faltou no recebimento tem destino.
+describe("a divergência do recebimento (TRF-d)", () => {
+  const T = "00000000-0000-4000-9000-000000000009";
+  const APARELHO = "00000000-0000-4000-8000-0000000000c2";
+  const comFalta = (extra: Record<string, unknown> = {}) => ({ ...transferencia(9, "recebida_com_divergencia"), quantidade: 5, quantidade_recebida: 2,
+    observacao: "A caixa chegou com três capas a menos", divergencia_resolvida_em: null, ...extra });
+  const resolucao = (decisao: string, quantidade: number, motivo: string, i = 0) => ({
+    transferencia_id: T, decisao, quantidade, item_serializado_id: null, motivo, criado_em: `2026-11-23T13:0${i}:00+00:00` });
+  beforeEach(() => {
+    cenario.comFuncao = true;
+    cenario.tabelas.transferencias = [comFalta()];
+    cenario.tabelas.transferencia_resolucoes = [];
+  });
+  const abrir = async () => limpar(await Transferencias({ searchParams: Promise.resolve({}) }));
+  const formulario = (campos: Record<string, string>) => { const f = new FormData(); for (const [k, v] of Object.entries(campos)) f.set(k, v); return f; };
+  const destinoDe = (acao: Promise<unknown>) => acao.then(() => "não redirecionou", (e: Error) => e.message.replace("redirecionou para ", ""));
+
+  it("a origem vê quanto faltou e pode dizer que voltou; a baixa só aparece para quem ajusta estoque; o destino diz que chegou depois", async () => {
+    let tela = await abrir();
+    for (const trecho of ["A caixa chegou com três capas a menos", "Faltaram 3: 3 ainda sem destino.", "Voltou para esta loja", "Dar a entrada de volta",
+      "Quantas estão aqui (até 3)", "Quem resolve: a loja de destino, se chegou depois; a de origem, se voltou para ela"]) expect(tela, trecho).toContain(trecho);
+    expect(tela).not.toContain("Chegou depois nesta loja");
+    expect(tela).not.toContain("Dar baixa no que não apareceu");
+
+    cenario.permissoes = new Set(["estoque.transferir", "estoque.ajustar"]);
+    tela = await abrir();
+    for (const trecho of ["Dar baixa no que não apareceu", "A baixa vale para tudo o que ainda falta (3).", "Confirmar a baixa"]) expect(tela, trecho).toContain(trecho);
+
+    // A loja do turno como destino: confirma o que chegou depois, e não o que voltou nem a baixa.
+    cenario.tabelas.transferencias = [comFalta({ origem_id: DESTINO, destino_id: ORIGEM })];
+    tela = await abrir();
+    for (const trecho of ["Chegou depois nesta loja", "Quantas chegaram (até 3)", "Dar a entrada do que chegou"]) expect(tela, trecho).toContain(trecho);
+    expect(tela).not.toContain("Voltou para esta loja");
+    expect(tela).not.toContain("Dar baixa no que não apareceu");
+
+    // Quem só consulta não resolve: lê o que faltou e quem resolve.
+    cenario.permissoes = new Set();
+    tela = await abrir();
+    expect(tela).toContain("Faltaram 3: 3 ainda sem destino.");
+    expect(tela).not.toContain("Chegou depois nesta loja");
+  });
+
+  it("cada resolução aparece com a quantidade, o destino e o motivo; com tudo resolvido, não há mais o que fazer", async () => {
+    cenario.permissoes = new Set(["estoque.transferir", "estoque.ajustar"]);
+    cenario.tabelas.transferencia_resolucoes = [resolucao("chegou_depois", 1, "Estava no fundo da caixa", 1), resolucao("voltou_a_origem", 1, "Ficou na prateleira da origem", 2)];
+    let tela = await abrir();
+    for (const trecho of ["Faltaram 3: 1 chegou depois, 1 voltou para a origem e 1 ainda sem destino.", "1 · Chegou depois no destino: Estava no fundo da caixa",
+      "1 · Voltou para a origem: Ficou na prateleira da origem", "Quantas estão aqui (até 1)"]) expect(tela, trecho).toContain(trecho);
+
+    cenario.tabelas.transferencia_resolucoes = [...(cenario.tabelas.transferencia_resolucoes ?? []), resolucao("baixada", 1, "Não apareceu em nenhuma das lojas", 3)];
+    cenario.tabelas.transferencias = [comFalta({ divergencia_resolvida_em: "2026-11-23T13:03:00+00:00" })];
+    tela = await abrir();
+    expect(tela).toContain("Faltaram 3: 1 chegou depois, 1 voltou para a origem e 1 com baixa.");
+    expect(tela).toContain("1 · Baixa (não apareceu): Não apareceu em nenhuma das lojas");
+    for (const trecho of ["Voltou para esta loja", "Dar baixa no que não apareceu", "Quem resolve:"]) expect(tela, trecho).not.toContain(trecho);
+  });
+
+  it("no aparelho, o destino é dado pelo IMEI lido; o banco de antes do TRF-d mostra o que faltou sem as resoluções", async () => {
+    cenario.tabelas.variantes = [...(cenario.tabelas.variantes ?? []), { id: APARELHO, nome: "Galaxy A15", sku: "APA-1", produtos: { tipo: "aparelho" } }];
+    cenario.tabelas.transferencias = [comFalta({ variante_id: APARELHO, quantidade: 1, quantidade_recebida: 0, observacao: "A caixa chegou sem o aparelho" })];
+    cenario.tabelas.transferencia_itens = [{ transferencia_id: T, item_serializado_id: "i1", recebido: false }];
+    let tela = await abrir();
+    for (const trecho of ["Faltou 1: 1 ainda sem destino.", "IMEI/ICCID lidos nos itens que estão aqui (um por linha)", "algum não chegou"]) expect(tela, trecho).toContain(trecho);
+    expect(tela).not.toContain("Quantas estão aqui");
+    // O banco sem a migration: a função não traz as resoluções nem o campo; a tela mostra o que faltou e segue.
+    delete cenario.tabelas.transferencia_resolucoes;
+    cenario.tabelas.transferencias = [{ ...transferencia(9, "recebida_com_divergencia"), quantidade: 5, quantidade_recebida: 2, observacao: "A caixa chegou com três capas a menos" }];
+    tela = await abrir();
+    expect(tela).toContain("Faltaram 3: 3 ainda sem destino.");
+  });
+
+  it("a ação manda ao banco a decisão, o que foi contado ou lido, o motivo e a chave; os dados errados nem chegam lá", async () => {
+    const CHAVE = "11111111-1111-4111-8111-111111111111";
+    const base = { transferencia: T, serializado: "nao", chave: CHAVE, motivo: "Ficou na prateleira da origem" };
+    expect(await destinoDe(resolverDivergencia(formulario({ ...base, decisao: "voltou_a_origem", quantidade: "2" })))).toBe("/transferencias?ok=divergencia");
+    expect(cenario.chamadas).toEqual([["transferencia_resolver_divergencia", {
+      p_transferencia: T, p_decisao: "voltou_a_origem", p_identificadores: [], p_quantidade: 2, p_motivo: "Ficou na prateleira da origem", p_chave: CHAVE }]]);
+
+    // Aparelho: os números lidos, sem a quantidade. A baixa: nem números nem quantidade (vale para tudo o que falta).
+    cenario.chamadas = [];
+    await destinoDe(resolverDivergencia(formulario({ ...base, serializado: "sim", decisao: "chegou_depois", identificadores: "35-209900-176148-7" })));
+    await destinoDe(resolverDivergencia(formulario({ ...base, serializado: "sim", decisao: "baixada", identificadores: "352099001761487", quantidade: "9" })));
+    expect(cenario.chamadas.map(([, a]) => [a.p_decisao, a.p_identificadores, a.p_quantidade])).toEqual([
+      ["chegou_depois", ["352099001761487"], null], ["baixada", [], null]]);
+
+    // Nada chega ao banco: decisão desconhecida, transferência que não é um identificador, sem quantidade, sem IMEI, motivo curto.
+    cenario.chamadas = [];
+    for (const [campos, esperado] of [
+      [{ ...base, decisao: "sumiu", quantidade: "1" }, "dados"], [{ ...base, transferencia: "9", decisao: "voltou_a_origem", quantidade: "1" }, "dados"],
+      [{ ...base, decisao: "voltou_a_origem", quantidade: "0" }, "dados"], [{ ...base, decisao: "voltou_a_origem" }, "dados"],
+      [{ ...base, serializado: "sim", decisao: "chegou_depois", identificadores: "" }, "dados"],
+      [{ ...base, serializado: "sim", decisao: "chegou_depois", identificadores: "1234" }, "dados"],
+      [{ ...base, decisao: "voltou_a_origem", quantidade: "1", motivo: "curto" }, "explicacao"],
+    ] as const) {
+      expect(await destinoDe(resolverDivergencia(formulario(campos))), JSON.stringify(campos)).toBe(`/transferencias?erro=${esperado}`);
+    }
+    expect(cenario.chamadas).toEqual([]);
+
+    // A recusa do banco vira a mensagem do catálogo: outro lado ou sem permissão; a chave repetida com outros dados.
+    for (const [code, esperado] of [["42501", "sem_permissao"], ["OR004", "repetida"], ["22023", "dados"], ["P0002", "nao_encontrada"]] as const) {
+      cenario.erroDaResolucao = { code };
+      expect(await destinoDe(resolverDivergencia(formulario({ ...base, decisao: "voltou_a_origem", quantidade: "1" })))).toBe(`/transferencias?erro=${esperado}`);
+    }
+    const tela = limpar(await Transferencias({ searchParams: Promise.resolve({ ok: "divergencia" }) }));
+    expect(tela).toContain("Registrado: o que faltou teve destino, e o estoque foi acertado pelo livro.");
+    expect(limpar(await Transferencias({ searchParams: Promise.resolve({ erro: "explicacao" }) }))).toContain("Explique o que houve com o que faltou, com pelo menos 10 letras");
   });
 });

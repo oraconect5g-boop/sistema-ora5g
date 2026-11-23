@@ -1,8 +1,9 @@
 import { describe, expect, it } from "vitest";
 
 import {
-  comALinha, efeitoNoEstoque, erroDaTransferencia, escreverLinhasDaRemessa, lerIdentificadores, lerLinhasDaRemessa, lerQuantidade, linhasDoFormulario, MAXIMO_DE_LINHAS_DA_REMESSA, nomeDaSituacao,
-  saldoDaLoja, semALinha, SITUACOES_DA_TRANSFERENCIA,
+  comALinha, divergenciaDaTransferencia, efeitoNoEstoque, ehDecisaoDaDivergencia, erroDaTransferencia, escreverLinhasDaRemessa, lerIdentificadores, lerLinhasDaRemessa,
+  lerQuantidade, linhasDoFormulario, MAXIMO_DE_LINHAS_DA_REMESSA, nomeDaDecisao, nomeDaSituacao, saldoDaLoja, semALinha, SITUACOES_DA_TRANSFERENCIA,
+  textoDaDivergencia,
 } from "./regras";
 
 describe("regras da tela de transferência", () => {
@@ -74,5 +75,38 @@ describe("o efeito de cada passo no estoque", () => {
     expect(saldoDaLoja(linhas, "a", "v")).toEqual({ fisico: 10, reservado: 2, disponivel: 8 });
     expect(saldoDaLoja(linhas, "b", "v")).toBeNull();
     expect(saldoDaLoja(linhas, "c", "v")).toBeNull();
+  });
+});
+
+// TRF-d (o achado F21-04 da auditoria do Codex de 21/11/2026): o que faltou no recebimento e o destino de cada parte.
+describe("a divergência do recebimento", () => {
+  const t = { id: "t1", situacao: "recebida_com_divergencia", quantidade: 5, quantidade_recebida: 2 };
+  const r = (decisao: string, quantidade: number, transferencia_id = "t1") => ({ transferencia_id, decisao, quantidade });
+
+  it("soma o destino de cada parte e o que ainda falta; só a recebida com divergência tem o que resolver", () => {
+    expect(divergenciaDaTransferencia(t, [])).toEqual({ faltaram: 3, chegaram: 0, voltaram: 0, baixadas: 0, pendentes: 3 });
+    expect(divergenciaDaTransferencia(t, [r("chegou_depois", 1), r("voltou_a_origem", 1), r("baixada", 1), r("voltou_a_origem", 9, "outra")]))
+      .toEqual({ faltaram: 3, chegaram: 1, voltaram: 1, baixadas: 1, pendentes: 0 });
+    // A decisão que a tela não conhece não entra na conta, e o que falta nunca fica negativo.
+    expect(divergenciaDaTransferencia(t, [r("toString", 2), r("voltou_a_origem", 4)])).toMatchObject({ voltaram: 4, pendentes: 0 });
+    for (const outra of [{ ...t, situacao: "recebida" }, { ...t, situacao: "enviada", quantidade_recebida: null }, { ...t, quantidade_recebida: 5 }]) {
+      expect(divergenciaDaTransferencia(outra, [])).toBeNull();
+    }
+  });
+
+  it("diz em uma frase o que faltou e o que houve com cada parte", () => {
+    const frase = (resolucoes: ReturnType<typeof r>[], base = t) => textoDaDivergencia(divergenciaDaTransferencia(base, resolucoes) as NonNullable<ReturnType<typeof divergenciaDaTransferencia>>);
+    expect(frase([])).toBe("Faltaram 3: 3 ainda sem destino.");
+    expect(frase([r("chegou_depois", 2)])).toBe("Faltaram 3: 2 chegaram depois e 1 ainda sem destino.");
+    expect(frase([r("chegou_depois", 1), r("voltou_a_origem", 1), r("baixada", 1)])).toBe("Faltaram 3: 1 chegou depois, 1 voltou para a origem e 1 com baixa.");
+    expect(frase([r("voltou_a_origem", 3)])).toBe("Faltaram 3: 3 voltaram para a origem.");
+    expect(frase([], { ...t, quantidade: 1, quantidade_recebida: 0 })).toBe("Faltou 1: 1 ainda sem destino.");
+  });
+
+  it("as três decisões têm nome; o que vem do formulário fora delas não é decisão", () => {
+    expect(["chegou_depois", "voltou_a_origem", "baixada"].map(nomeDaDecisao)).toEqual(["Chegou depois no destino", "Voltou para a origem", "Baixa (não apareceu)"]);
+    expect(nomeDaDecisao("sumiu")).toBe("sumiu");
+    for (const ruim of ["sumiu", "toString", "", null, undefined, 1]) expect(ehDecisaoDaDivergencia(ruim)).toBe(false);
+    expect(efeitoNoEstoque("recebida_com_divergencia")).toContain("O que faltou espera um destino");
   });
 });

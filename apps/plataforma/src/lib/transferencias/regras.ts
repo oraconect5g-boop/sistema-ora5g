@@ -26,7 +26,7 @@ export const EFEITO_NO_ESTOQUE: Record<SituacaoDaTransferencia, string> = {
   separada: "Separada: os itens foram escolhidos e seguem reservados na origem; o físico continua lá até o envio.",
   enviada: "Em trânsito: saiu do físico da origem. Entra no destino quando a loja receber e conferir.",
   recebida: "Recebida: entrou no físico do destino.",
-  recebida_com_divergencia: "Recebida com divergência: entrou no destino só o que chegou; a diferença fica registrada.",
+  recebida_com_divergencia: "Recebida com divergência: entrou no destino só o que chegou. O que faltou espera um destino: chegou depois, voltou para a origem ou baixa.",
   recusada: "Recusada: a reserva do pedido voltou ao disponível da origem.",
   cancelada: "Cancelada: a reserva voltou ao disponível da origem.",
 };
@@ -52,6 +52,7 @@ export const ERROS_DA_TRANSFERENCIA = {
   repetida: "Este passo já foi feito de outro jeito. Recarregue a tela.",
   dados: "Confira os dados: quantidade, IMEI/ICCID (um por linha) e a explicação quando faltar item.",
   motivo: "Informe o motivo (fica na auditoria).",
+  explicacao: "Explique o que houve com o que faltou, com pelo menos 10 letras (fica na auditoria).",
   falha: "Não foi possível concluir agora. Tente de novo em instantes.",
 } as const;
 export type ErroDaTransferencia = keyof typeof ERROS_DA_TRANSFERENCIA;
@@ -62,6 +63,49 @@ export function erroDaTransferencia(erro: { code?: string } | null | undefined):
   const codigo = erro?.code;
   return codigo && Object.hasOwn(DO_BANCO, codigo) ? (DO_BANCO[codigo] as ErroDaTransferencia) : "falha";
 }
+
+// ---------------------------------------------------------------------------------------------
+// A divergência do recebimento (lote TRF-d; ORA-INV-007; o achado F21-04 da auditoria do Codex de 21/11/2026): o que faltou
+// tem três destinos, e só eles. O banco decide tudo de novo (public.transferencia_resolver_divergencia).
+// ---------------------------------------------------------------------------------------------
+export const DECISOES_DA_DIVERGENCIA = {
+  chegou_depois: "Chegou depois no destino",
+  voltou_a_origem: "Voltou para a origem",
+  baixada: "Baixa (não apareceu)",
+} as const;
+export type DecisaoDaDivergencia = keyof typeof DECISOES_DA_DIVERGENCIA;
+export const ehDecisaoDaDivergencia = (d: unknown): d is DecisaoDaDivergencia => typeof d === "string" && Object.hasOwn(DECISOES_DA_DIVERGENCIA, d);
+export const nomeDaDecisao = (d: string) => (ehDecisaoDaDivergencia(d) ? DECISOES_DA_DIVERGENCIA[d] : d);
+
+export type DivergenciaDaTransferencia = { faltaram: number; chegaram: number; voltaram: number; baixadas: number; pendentes: number };
+/** Quanto faltou no recebimento, que destino cada parte já teve e quanto ainda falta resolver; nulo se não há divergência. */
+export function divergenciaDaTransferencia(
+  t: { id: string; situacao: string; quantidade: number; quantidade_recebida: number | null },
+  resolucoes: readonly { transferencia_id: string; decisao: string; quantidade: number }[],
+): DivergenciaDaTransferencia | null {
+  if (t.situacao !== "recebida_com_divergencia" || t.quantidade_recebida === null) return null;
+  const faltaram = t.quantidade - t.quantidade_recebida;
+  if (faltaram <= 0) return null;
+  const soma = (decisao: DecisaoDaDivergencia) =>
+    resolucoes.filter((r) => r.transferencia_id === t.id && r.decisao === decisao).reduce((s, r) => s + r.quantidade, 0);
+  const chegaram = soma("chegou_depois");
+  const voltaram = soma("voltou_a_origem");
+  const baixadas = soma("baixada");
+  return { faltaram, chegaram, voltaram, baixadas, pendentes: Math.max(0, faltaram - chegaram - voltaram - baixadas) };
+}
+/** "Faltaram 3: 1 chegou depois, 1 voltou para a origem e 1 ainda sem destino." */
+export function textoDaDivergencia(d: DivergenciaDaTransferencia): string {
+  const partes = [
+    d.chegaram > 0 ? `${d.chegaram} ${d.chegaram === 1 ? "chegou" : "chegaram"} depois` : "",
+    d.voltaram > 0 ? `${d.voltaram} ${d.voltaram === 1 ? "voltou" : "voltaram"} para a origem` : "",
+    d.baixadas > 0 ? `${d.baixadas} com baixa` : "",
+    d.pendentes > 0 ? `${d.pendentes} ainda sem destino` : "",
+  ].filter(Boolean);
+  const lista = partes.length > 1 ? `${partes.slice(0, -1).join(", ")} e ${partes.at(-1)}` : partes[0] ?? "";
+  return `${d.faltaram === 1 ? "Faltou 1" : `Faltaram ${d.faltaram}`}: ${lista}.`;
+}
+/** O motivo da resolução: o banco pede pelo menos 10 caracteres. */
+export const MOTIVO_MINIMO_DA_DIVERGENCIA = 10;
 
 /** IMEI/ICCID lidos na conferência: um por linha (ou separados por vírgula/espaço), só dígitos, sem repetir. */
 export function lerIdentificadores(texto: unknown): string[] | null {
