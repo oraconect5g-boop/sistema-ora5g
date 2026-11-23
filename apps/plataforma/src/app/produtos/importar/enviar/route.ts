@@ -5,7 +5,7 @@ import type { NextRequest } from "next/server";
 import { redirecionar } from "../../../../lib/acesso/redirecionar";
 import { permite } from "../../../../lib/acesso/molde";
 import { obterSessao } from "../../../../lib/acesso/sessao";
-import { candidatoARodape, dividirEmPartes, montarLinhas, rodapeDaPlanilha } from "../../../../lib/importacao/catalogo";
+import { candidatoARodape, celulasForaDoPadrao, dividirEmPartes, montarLinhas, rodapeDaPlanilha } from "../../../../lib/importacao/catalogo";
 import type { Json } from "../../../../lib/supabase/tipos-banco";
 import { ErroDaPlanilha, LIMITES_DA_PLANILHA } from "../../../../lib/importacao/csv";
 import { descomprimirNoServidor } from "../../../../lib/importacao/descomprimir-servidor";
@@ -73,6 +73,9 @@ export async function POST(requisicao: NextRequest) {
   }];
   const linhas = total === null ? todas : todas.filter((_, i) => i !== total);
   if (linhas.length === 0) return voltar({ erro: "vazio" });
+  // F21-01: as células marcadas como número no Excel, mas escritas com vírgula (fora o rodapé, que diz isso no motivo
+  // dele): foram lidas pelo texto, e a prévia guarda quantas são e em que linhas, para ninguém ler sem saber.
+  const foraDoPadrao = celulasForaDoPadrao(planilha, total);
   const partes = dividirEmPartes(linhas);
   const impressao = (parte: number) => {
     const hash = createHash("sha256").update(bytes);
@@ -88,6 +91,7 @@ export async function POST(requisicao: NextRequest) {
     const extras: { [chave: string]: Json } = {};
     if (ignoradas.length > 0) extras.ignoradas = ignoradas;
     if (candidato !== null && !decidiuTirar) extras.candidato = { linha: todas[candidato.posicao]?.numero ?? candidato.posicao + 2, motivo: candidato.motivo };
+    if (foraDoPadrao !== null) extras.fora_do_padrao = foraDoPadrao;
     if (partes.length > 1) extras.parte = { numero, de: partes.length, linhas: [parte[0]?.numero ?? 0, parte.at(-1)?.numero ?? 0] };
     return extras;
   };

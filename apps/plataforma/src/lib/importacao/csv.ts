@@ -35,6 +35,13 @@ export type Planilha = {
    * planilha brasileira "1.234" é mil duzentos e trinta e quatro (achado F18-01 da reanálise de 18/11).
    */
   numericas?: number[][];
+  /**
+   * Só no Excel: em cada linha de dados, as colunas cuja célula estava MARCADA como número na folha, mas escrita fora do
+   * padrão do Excel (achado F21-01 da auditoria de 21/11: o relatório da Rein escreve os totais do rodapé como "1.234,00",
+   * com a vírgula brasileira, numa célula de número). Essas células valem pelo TEXTO que trazem (não entram em
+   * `numericas`: quem lê segue as regras do texto da planilha brasileira), e a origem fica aqui, para a prévia dizer.
+   */
+  foraDoPadrao?: number[][];
 };
 export type FalhaDaPlanilha =
   | "vazio" | "grande" | "linhas" | "colunas" | "celula" | "aspas" | "cabecalho"

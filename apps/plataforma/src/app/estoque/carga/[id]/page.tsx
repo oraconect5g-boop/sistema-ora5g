@@ -22,7 +22,7 @@ const POR_PAGINA = 100;
 const campo = "mt-1 min-h-11 w-full rounded-botao border border-borda bg-white px-3 text-sm outline-none focus:border-acao focus:ring-2 focus:ring-acao/20";
 const quando = (iso: string) => new Intl.DateTimeFormat("pt-BR", { timeZone: "America/Sao_Paulo", dateStyle: "short", timeStyle: "short" }).format(new Date(iso)).replace(",", "");
 type Carga = {
-  id: string; numero: number; arquivo_nome: string; corte: string; situacao: string; totais: unknown; mapeamento: { fora?: { linha?: unknown; motivo?: unknown }; candidato?: { linha?: unknown; motivo?: unknown } } | null;
+  id: string; numero: number; arquivo_nome: string; corte: string; situacao: string; totais: unknown; mapeamento: { fora?: { linha?: unknown; motivo?: unknown }; candidato?: { linha?: unknown; motivo?: unknown }; fora_do_padrao?: { celulas?: unknown; linhas?: unknown } } | null;
   criado_por: string; criado_em: string; aplicado_em: string | null; encerrado_em: string | null; motivo: string | null; unidades: { nome: string } | null;
 };
 type Linha = {
@@ -100,6 +100,9 @@ export default async function UmaCarga({ params, searchParams }: {
   const linhaResolvida = contagem(parametros.linha);
   const fora = carga.mapeamento?.fora;
   const candidato = carga.mapeamento?.candidato;
+  // F21-01: as quantidades marcadas como número no Excel, mas escritas com vírgula, lidas pelo texto.
+  const escritas = carga.mapeamento?.fora_do_padrao;
+  const linhasEscritas = Array.isArray(escritas?.linhas) ? escritas.linhas.filter((n): n is number => typeof n === "number") : [];
   const minha = carga.criado_por === usuario.id;
   const motivo = (rotulo: string) => (
     <label className="block text-xs font-medium">{rotulo}<input name="motivo" required minLength={3} maxLength={200} className={campo} /></label>
@@ -132,6 +135,9 @@ export default async function UmaCarga({ params, searchParams }: {
       </section>
       {typeof fora?.linha === "number" && typeof fora.motivo === "string" && (
         <p className="mt-2 text-xs text-aviso">{`Ficou de fora a linha ${fora.linha} do arquivo: ${fora.motivo}.`}</p>
+      )}
+      {typeof escritas?.celulas === "number" && escritas.celulas > 0 && (
+        <p className="mt-2 text-xs text-aviso">{`${escritas.celulas} quantidade(s) desta loja vieram marcadas como número no Excel, mas escritas com vírgula (o formato da exportação): foram lidas como estão escritas. Confira ${linhasEscritas.length === 1 ? "a linha" : "as linhas"} ${linhasEscritas.join(", ")} do arquivo.`}</p>
       )}
       {typeof candidato?.linha === "number" && typeof candidato.motivo === "string" && (
         <p className="mt-2 text-xs text-aviso">{`Confira a linha ${candidato.linha} do arquivo: ${candidato.motivo}. Ela está na prévia, sem o código, para conferir; nada dela entra no estoque.`}</p>
