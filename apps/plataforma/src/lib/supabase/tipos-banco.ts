@@ -8173,6 +8173,10 @@ export type Database = {
         Returns: boolean
       }
       financeiras_a_receber: { Args: never; Returns: Json }
+      financeiro_conferencia: {
+        Args: { p_fim: string; p_inicio: string; p_unidade?: string }
+        Returns: Json
+      }
       financeiro_painel: {
         Args: {
           p_fim: string

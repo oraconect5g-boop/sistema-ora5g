@@ -18,6 +18,10 @@ const cenario = vi.hoisted(() => ({
   /** REPORT-005b: a resposta de pagamentos_por_terminal (o padrão é a função ausente). */
   maquininhas: null as unknown,
   erroDasMaquininhas: { code: "PGRST202" } as null | { code: string },
+  /** FIN-001a: a resposta de financeiro_conferencia (o padrão é a função ausente) e os argumentos de cada chamada. */
+  conferencia: null as unknown,
+  erroDaConferencia: { code: "PGRST202" } as null | { code: string },
+  chamadasDaConferencia: [] as Record<string, unknown>[],
 }));
 
 vi.mock("next/headers", () => ({ cookies: async () => ({ getAll: () => [], set: () => undefined }) }));
@@ -54,6 +58,10 @@ const sessaoFicticia = {
     rpc: async (nome: string, argumentos: Record<string, unknown>) => {
       if (nome === "tem_permissao") throw new Error("a tela não pergunta permissão do menu ao banco: ela chega com a sessão (molde)");
       if (nome === "pagamentos_por_terminal") return cenario.erroDasMaquininhas ? { data: null, error: cenario.erroDasMaquininhas } : { data: cenario.maquininhas, error: null };
+      if (nome === "financeiro_conferencia") {
+        cenario.chamadasDaConferencia.push(argumentos);
+        return cenario.erroDaConferencia ? { data: null, error: cenario.erroDaConferencia } : { data: cenario.conferencia, error: null };
+      }
       if (nome === "financeiro_painel") {
         cenario.chamadas.push(argumentos);
         return cenario.erroDoPainel ? { data: null, error: cenario.erroDoPainel } : { data: cenario.painel, error: null };
@@ -69,7 +77,7 @@ import { GET as exportar } from "./exportar/route";
 
 // Texto de toda a árvore de elementos (todas as props). Executa só os componentes de apresentação
 // desta tela (síncronos, sem estado); os de cliente e o molde ficam como elementos.
-const APRESENTACAO = new Set(["ConteudoFinanceiro", "TabelaDosRegistros", "PainelDaConciliacao", "PainelDasMaquininhas"]);
+const APRESENTACAO = new Set(["ConteudoFinanceiro", "TabelaDosRegistros", "PainelDaConciliacao", "PainelDasMaquininhas", "ContaDoPeriodo", "Lado", "VendasComDiferenca"]);
 function texto(v: unknown): string {
   if (Array.isArray(v)) return v.map(texto).join(" ");
   if (typeof v === "string" || typeof v === "number") return String(v);
@@ -103,6 +111,9 @@ beforeEach(() => {
   cenario.chamadas = [];
   cenario.maquininhas = null;
   cenario.erroDasMaquininhas = { code: "PGRST202" };
+  cenario.conferencia = null;
+  cenario.erroDaConferencia = { code: "PGRST202" };
+  cenario.chamadasDaConferencia = [];
   cenario.tabelas = {
     vendas: [{ id: "v1", numero: 101, unidade_id: LOJA, vendedor_id: VENDEDOR, situacao: "concluida", total_centavos: 15_800, devolvido_centavos: 7_900, concluida_em: "2026-11-10T17:00:00Z" }],
     perfis_usuario: [{ id: VENDEDOR, nome: "Ana Teste" }],
@@ -300,5 +311,101 @@ describe("pagamentos por maquininha (REPORT-005b)", () => {
     expect(t).toContain("Pagamentos por maquininha");
     expect(t).not.toContain("PicPay PP-101");
     vi.restoreAllMocks();
+  });
+});
+
+// FIN-001a (ORA-FIN-001; a ordem recomendada da auditoria do Codex de 21/11, item 6): a conta do período.
+describe("/financeiro: a conta do período (FIN-001a)", () => {
+  const SEM_DIFERENCA = { diferenca: 0, vendas_com_diferenca: 0, exemplos: [] };
+  const FECHA = {
+    vendas: 20, vendido: 428_100,
+    pagamentos: { recebido_na_loja: 302_400, financiado: 109_900, vale_troca: 0, desfeitos: 15_800, ...SEM_DIFERENCA },
+    caixa: { esperado: 318_200, no_livro: 318_200, ...SEM_DIFERENCA },
+    estoque: { unidades: 19, no_livro: 19, ...SEM_DIFERENCA },
+  };
+  beforeEach(() => {
+    cenario.permissoes = new Set(["venda.ver_unidade", "caixa.conferir"]);
+    cenario.erroDaConferencia = null;
+    cenario.conferencia = FECHA;
+  });
+
+  it("quando fecha, diz que fecha e mostra de onde vem cada lado; pede a mesma loja e o mesmo período do painel", async () => {
+    const t = await tela();
+    for (const trecho of [
+      "A conta do período", "A conta fecha: 20 vendas, R$ 4.281,00 vendidos.",
+      "O vendido (R$ 4.281,00) é a soma de: R$ 3.024,00 recebidos na loja + R$ 1.099,00 a receber das financeiras + R$ 158,00 de pagamentos de vendas canceladas depois.",
+      "O que essas vendas lançaram no caixa ao serem concluídas (dinheiro, Pix, cartão, entrada do financiamento e vale-troca, com o troco descontado): R$ 3.182,00. No livro dos caixas: R$ 3.182,00.",
+      "Aparelhos, chips e acessórios vendidos: 19 unidades. Saídas por venda no livro do estoque: 19 unidades. Serviço e recarga não têm estoque.",
+      // O limite da conta fica dito: "fecha" não é "tudo conferido".
+      "Esta conta confere o que cada venda gravou ao ser concluída.", "o estoque que voltou e o dinheiro devolvido ainda não são conferidos aqui.",
+    ]) expect(t, trecho).toContain(trecho);
+    expect(t).not.toContain("não fecha");
+    expect(t).not.toContain("em vale-troca"); // parcela zerada não entra na frase
+    expect(t).not.toContain("Isto não deveria acontecer");
+    expect(cenario.chamadasDaConferencia).toHaveLength(1);
+    const pedido = cenario.chamadasDaConferencia[0] ?? {};
+    expect(pedido.p_unidade).toBe(LOJA);
+    expect([pedido.p_inicio, pedido.p_fim]).toEqual([cenario.chamadas[0]?.p_inicio, cenario.chamadas[0]?.p_fim]);
+  });
+
+  it("quando não fecha, diz em que lado, de quanto é a diferença e quais vendas abrir; nada é corrigido sozinho", async () => {
+    cenario.conferencia = {
+      ...FECHA,
+      pagamentos: { ...FECHA.pagamentos, diferenca: 0, vendas_com_diferenca: 2, exemplos: [{ id: "v-12", numero: 12 }, { id: "v-15", numero: 15 }] },
+      estoque: { unidades: 19, no_livro: 20, diferenca: 1, vendas_com_diferenca: 1, exemplos: [{ id: "v-12", numero: 12 }] },
+    };
+    const t = await tela();
+    for (const trecho of [
+      "A conta não fecha em 2 vendas, de 20.", "Diferença de R$ 0,00 em 2 vendas.", "As vendas que não fecham:", "Diferença de 1 unidade em 1 venda.",
+      "A venda que não fecha:", "Isto não deveria acontecer", "nada foi corrigido sozinho",
+    ]) expect(t, trecho).toContain(trecho);
+    expect(t).toMatch(/\/vendas\/v-12/);
+    expect(t).toMatch(/\/vendas\/v-15/);
+    expect(t).not.toContain("A conta fecha:");
+  });
+
+  it("mais vendas com diferença do que os exemplos: diz quantas faltam na lista", async () => {
+    cenario.conferencia = { ...FECHA, caixa: { esperado: 318_200, no_livro: 318_000, diferenca: -200, vendas_com_diferenca: 23, exemplos: [{ id: "v-1", numero: 1 }, { id: "v-2", numero: 2 }] } };
+    const t = await tela();
+    expect(t).toContain("Diferença de R$ 2,00 em 23 vendas.");
+    expect(t).toContain("e mais 21");
+  });
+
+  it("sem venda no período: nada a conferir; falha de leitura nunca vira \"fecha\"; o banco sem a função não mostra o cartão", async () => {
+    cenario.conferencia = { vendas: 0, vendido: 0, pagamentos: { recebido_na_loja: 0, financiado: 0, vale_troca: 0, desfeitos: 0, ...SEM_DIFERENCA },
+      caixa: { esperado: 0, no_livro: 0, ...SEM_DIFERENCA }, estoque: { unidades: 0, no_livro: 0, ...SEM_DIFERENCA } };
+    const semVenda = await tela();
+    expect(semVenda).toContain("Nenhuma venda concluída no período: não há o que conferir.");
+    expect(semVenda).not.toContain("Esta conta confere o que cada venda gravou");
+
+    for (const quebrado of [{ code: "57014" }, { code: "42501" }]) {
+      cenario.erroDaConferencia = quebrado;
+      const t = await tela();
+      expect(t).toContain("Não deu para conferir a conta do período agora.");
+      expect(t).not.toContain("A conta fecha");
+      expect(t).toContain("Vendas concluídas"); // o resto da tela continua
+    }
+    cenario.erroDaConferencia = null;
+    cenario.conferencia = { ...FECHA, estoque: { unidades: "19" } };
+    expect(await tela()).toContain("Não deu para conferir a conta do período agora.");
+
+    cenario.erroDaConferencia = { code: "PGRST202" };
+    const semFuncao = await tela();
+    expect(semFuncao).not.toContain("A conta do período");
+    expect(semFuncao).toContain("Vendas concluídas");
+  });
+
+  it("o dono que escolhe a rede confere a rede inteira (sem a loja no pedido)", async () => {
+    cenario.permissoes = new Set(["venda.ver_unidade", "venda.ver_todas", "caixa.conferir"]);
+    await tela({ loja: "rede" });
+    expect(cenario.chamadasDaConferencia).toHaveLength(1);
+    expect("p_unidade" in (cenario.chamadasDaConferencia[0] ?? {})).toBe(false);
+  });
+
+  it("o cartão do que ainda não é real não diz mais que a conciliação por arquivo não existe", async () => {
+    const t = await tela();
+    expect(t).toContain("Conciliação sem arquivo (direto do banco e da maquininha)");
+    expect(t).toContain("a conciliação pelo arquivo do extrato já existe");
+    expect(t).not.toContain("Conciliação automática com extratos");
   });
 });

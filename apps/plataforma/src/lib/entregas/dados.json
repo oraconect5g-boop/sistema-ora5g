@@ -956,6 +956,19 @@
         "ORA-QUAL-006"
       ],
       "entrega": "a transferência recebida com falta continua nas pendências (o Início e o sino das duas lojas, e a fila \"Transferências com falta\" da Saúde da operação) até tudo o que faltou ter destino; e a prova no site, entre as duas lojas de teste, dos destinos \"chegou depois\" e \"baixa\", autorizada pelo proprietário em 23/11",
+      "commit": "d2a6e4f",
+      "publicado_em": "2026-11-23",
+      "pedido_em": "2026-11-23",
+      "resposta": null,
+      "respondido_em": null
+    },
+    {
+      "lote": "FIN-001a",
+      "roteiro": "docs/aceite/FIN-001a.md",
+      "requisitos": [
+        "ORA-FIN-001"
+      ],
+      "entrega": "o cartão \"A conta do período\" no Financeiro: as vendas concluídas no período, conferidas uma a uma com os pagamentos, o livro do caixa e o livro do estoque; quando não fecha, diz em que lado, de quanto e quais vendas abrir",
       "commit": null,
       "publicado_em": null,
       "pedido_em": "2026-11-23",

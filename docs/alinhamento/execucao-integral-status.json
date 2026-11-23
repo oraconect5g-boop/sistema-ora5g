@@ -2,7 +2,7 @@
   "_leia": "Checkpoint do programa de execução integral (PR #67). Carregar ao retomar e seguir para o próximo item executável da fila; não reiniciar o projeto. Estados vêm de status-requisitos.json (fonte da rastreabilidade); este arquivo acrescenta lote, bloqueio externo e revisão. Desde 16/11/2026 a medida de avanço é o requisito homologado pelo proprietário: a chave aceites guarda a resposta dele a cada roteiro de aceite (docs/aceite/); um requisito só recebe homologado: true com todos os lotes dele aceitos e sem nada em FALTA na nota de status-requisitos.json.",
   "atualizado_em": "2026-11-23",
   "base": {
-    "main": "363f844",
+    "main": "d2a6e4f",
     "pacote": {
       "pr": 67,
       "branch": "docs/execucao-integral-20261110",
@@ -997,12 +997,25 @@
         "ORA-QUAL-006"
       ],
       "entrega": "a transferência recebida com falta continua nas pendências (o Início e o sino das duas lojas, e a fila \"Transferências com falta\" da Saúde da operação) até tudo o que faltou ter destino; e a prova no site, entre as duas lojas de teste, dos destinos \"chegou depois\" e \"baixa\", autorizada pelo proprietário em 23/11",
+      "commit": "d2a6e4f",
+      "publicado_em": "2026-11-23",
+      "pedido_em": "2026-11-23",
+      "resposta": null,
+      "respondido_em": null,
+      "nota": "no ar em d2a6e4f (build 23/11 15:02; copiado do registro das publicações, a branch registro/publicacoes); a prova que grava passou no site em 23/11, das 15:02 às 15:03, só entre as duas lojas de teste (a transferência nº 21, de 3 capas, com 1 capa baixada como perda na Santa Cândida (teste))"
+    },
+    "FIN-001a": {
+      "roteiro": "docs/aceite/FIN-001a.md",
+      "requisitos": [
+        "ORA-FIN-001"
+      ],
+      "entrega": "o cartão \"A conta do período\" no Financeiro: as vendas concluídas no período, conferidas uma a uma com os pagamentos, o livro do caixa e o livro do estoque; quando não fecha, diz em que lado, de quanto e quais vendas abrir",
       "commit": null,
       "publicado_em": null,
       "pedido_em": "2026-11-23",
       "resposta": null,
       "respondido_em": null,
-      "nota": "o commit, a publicação e o resultado da prova que grava ficam no registro (a branch registro/publicacoes); a prova grava só nas duas lojas de teste (uma transferência de 3 capas, com 1 capa baixada como perda na Santa Cândida (teste))"
+      "nota": "o commit, a publicação e a prova de leitura ficam no registro (a branch registro/publicacoes); o requisito segue parcial: a conferência do que foi desfeito depois (cancelamento e devolução) é o lote FIN-001b"
     }
   },
   "contagem_dos_estados": {
@@ -1674,7 +1687,7 @@
       "titulo": "Resumo diário de vendas x recebimentos x produção comercial",
       "prioridade": "P0",
       "estado": "parcial",
-      "lote": "L8 financeiro; G1 Início",
+      "lote": "L8 financeiro; G1 Início; FIN-001a (23/11): a conta do período (as vendas conferidas com os pagamentos, o livro do caixa e o livro do estoque)",
       "bloqueio_externo": null,
       "revisado_codex": false,
       "homologado": false
@@ -2625,5 +2638,5 @@
       "homologado": false
     }
   },
-  "proximo_passo": "Seguir a ordem de 23/11 (a continuação pedida pelo proprietário com a auditoria integral do Codex de 21/11, PR #105; a leitura está em docs/alinhamento/LEITURA_AUDITORIA_2026-11-21.md): (1) publicar o TRF-e depois do merge, rodar no site a prova da transferência com falta entre as duas lojas de teste (autorizada pelo proprietário em 23/11) e registrar a publicação com o resultado dela (deploy/homologacao/registrar-publicacao.sh; a branch registro/publicacoes); o AUD-c (5617351), o TRF-d (4131453) e o AUD-d (363f844) estão no ar desde 23/11, e os quatro achados da auditoria de 21/11 estão tratados; (2) o fechamento do dia conferido com o livro (ORA-FIN-001: conferir antes o que o Financeiro já mostra, porque a nota do requisito está velha) e o cartão do Financeiro que ainda diz que a conciliação por arquivo não existe; (3) seguir a fila integral pelas áreas que faltam funcionar, um lote por vez, com teste, publicação, prova no domínio, roteiro de aceite e relato; (4) quando a planilha da Rein estiver em ~/entrada/rein/, rodar a prova com o arquivo original (ARQUIVO_ESTOQUE_AUDITORIA) e preparar a carga da loja piloto. O que depende do proprietário está em docs/PENDENCIAS_DO_PROPRIETARIO.md (a lista única). A narrativa anterior deste campo (os passos de 17 a 21/11) fica no histórico do Git e em docs/alinhamento/EXECUCAO_INTEGRAL_STATUS.md."
+  "proximo_passo": "Seguir a ordem de 23/11 (a continuação pedida pelo proprietário com a auditoria integral do Codex de 21/11, PR #105; a leitura está em docs/alinhamento/LEITURA_AUDITORIA_2026-11-21.md): (1) publicar o FIN-001a depois do merge, rodar no site a prova de leitura da conta do período (apps/plataforma/e2e/conta-do-periodo-real.spec.ts) e registrar a publicação (deploy/homologacao/registrar-publicacao.sh; a branch registro/publicacoes); o AUD-c (5617351), o TRF-d (4131453), o AUD-d (363f844) e o TRF-e (d2a6e4f) estão no ar desde 23/11, e os quatro achados da auditoria de 21/11 estão tratados; (2) o FIN-001b: a conferência do que foi desfeito depois (o estoque que volta e o dinheiro devolvido no cancelamento e na devolução), que é o que falta para o ORA-FIN-001 passar a testado; depois, a inadimplência (ORA-FIN-007: a lista do que está atrasado, sem a mensagem ao cliente, que depende do WhatsApp oficial); (3) seguir a fila integral pelas áreas que faltam funcionar, um lote por vez, com teste, publicação, prova no domínio, roteiro de aceite e relato; (4) quando a planilha da Rein estiver em ~/entrada/rein/, rodar a prova com o arquivo original (ARQUIVO_ESTOQUE_AUDITORIA) e preparar a carga da loja piloto. O que depende do proprietário está em docs/PENDENCIAS_DO_PROPRIETARIO.md (a lista única). A narrativa anterior deste campo (os passos de 17 a 21/11) fica no histórico do Git e em docs/alinhamento/EXECUCAO_INTEGRAL_STATUS.md."
 }

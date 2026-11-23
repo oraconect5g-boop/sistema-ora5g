@@ -6,9 +6,11 @@ import { plural } from "../../componentes/paineis-de-vendas";
 import { Aviso, BotaoLink, Cartao, Celula, EstadoVazio, FiltroSegmentado, Indicador, ListaDados, Selo, Tabela, type Tom } from "../../componentes/ui";
 import { PERIODOS_FINANCEIROS, variacaoFinanceira, type ConciliacaoDoPeriodo, type PeriodoFinanceiro, type ResumoFinanceiro, type seriesDoPainel } from "../../lib/financeiro/painel";
 import { nomeDoMeio, ORDEM_DAS_VISOES, POR_PAGINA, VISOES, type Registros, type Visao } from "../../lib/financeiro/registros";
+import type { Conferencia } from "../../lib/financeiro/conferencia";
 import type { PagamentosDoTerminal } from "../../lib/financeiro/terminais";
 import { brl, brlCompacto, brlEixo, numero, percentual } from "../../lib/formato";
 import type { Leitura } from "../../lib/leitura-do-banco";
+import { ContaDoPeriodo } from "./ContaDoPeriodo";
 import { PainelDasMaquininhas } from "./PainelDasMaquininhas";
 
 // Apresentação do financeiro real (#65), separada da leitura: recebe os números já somados no banco
@@ -30,7 +32,7 @@ const diaDaData = (dia: string) => `${dia.slice(8, 10)}/${dia.slice(5, 7)}`;
 export type Nomes = { pessoa: (id: string) => string; loja: (id: string) => string };
 export type Ligacao = (mudanca: Partial<Record<"periodo" | "loja" | "ver" | "situacao" | "pagina", string | undefined>>) => string;
 
-export function ConteudoFinanceiro({ resumo: r, anterior: ra, series, porHora, periodo, conferenteDeCaixa, podeConciliar, visao, filtroSituacao, pagina, lista, nomes, daRede, href, maquininhas = null, nomeDaLoja }: {
+export function ConteudoFinanceiro({ resumo: r, anterior: ra, series, porHora, periodo, conferenteDeCaixa, podeConciliar, visao, filtroSituacao, pagina, lista, nomes, daRede, href, maquininhas = null, conferencia = null, nomeDaLoja }: {
   resumo: ResumoFinanceiro;
   anterior: ResumoFinanceiro;
   series: ReturnType<typeof seriesDoPainel>;
@@ -48,6 +50,8 @@ export function ConteudoFinanceiro({ resumo: r, anterior: ra, series, porHora, p
   href: Ligacao;
   /** REPORT-005b: os pagamentos por maquininha (nulo: o banco ainda não tem a leitura; o cartão não aparece). */
   maquininhas?: Leitura<PagamentosDoTerminal[]> | null;
+  /** FIN-001a: a conferência do período (nulo: o banco ainda não tem a função; o cartão não aparece). */
+  conferencia?: Leitura<Conferencia> | null;
   nomeDaLoja?: (id: string) => string;
 }) {
   const comparacao = PERIODOS_FINANCEIROS[periodo].comparacao;
@@ -68,6 +72,9 @@ export function ConteudoFinanceiro({ resumo: r, anterior: ra, series, porHora, p
       <Indicador className="w-[78%] shrink-0 snap-start sm:w-auto" rotulo="A receber das financeiras" valor={brl(r.aReceberAberto)} icone={Landmark} detalhe="PayJoy e Aiva, registrado no período; prazo e taxa ainda sem contrato" />
       <Indicador className="w-[78%] shrink-0 snap-start sm:w-auto" rotulo="Estornos externos pendentes" valor={brl(r.estornoPendente.valor)} icone={RotateCcw} tom={r.estornoPendente.quantidade > 0 ? "atencao" : "neutro"} detalhe={r.estornoPendente.quantidade > 0 ? `${r.estornoPendente.quantidade} aguardando o comprovante` : "Nenhum aguardando comprovante"} />
     </section>
+
+    {/* FIN-001a: a conta do período, logo depois do resumo: se as vendas fecham com os pagamentos, o caixa e o estoque. */}
+    {conferencia && <div className="mb-4"><ContaDoPeriodo leitura={conferencia} /></div>}
 
     <div className="grid gap-4 xl:grid-cols-3">
       <Cartao titulo="Vendas e devoluções" subtitulo={`${porHora ? "Por hora" : "Por dia"} · devoluções e cancelamentos para baixo`} className="xl:col-span-2">
@@ -188,9 +195,9 @@ export function ConteudoFinanceiro({ resumo: r, anterior: ra, series, porHora, p
     <Cartao titulo="Ainda não está no financeiro real" subtitulo="Mostrado como indisponível, sem número inventado">
       <ul className="grid gap-2 text-sm sm:grid-cols-2">
         {[
-          ["Conciliação automática com extratos", "hoje a conciliação é manual, em Pagamentos › Conciliação; a automática depende dos arquivos das maquininhas e do banco (PAY-009/010)"],
+          ["Conciliação sem arquivo (direto do banco e da maquininha)", "a conciliação pelo arquivo do extrato já existe, em Gestão › Conciliação de pagamentos › Extratos por arquivo, e a manual, em Gestão › Conciliação de pagamentos; a ligação direta, sem arquivo, depende de contrato com o banco e com a maquininha"],
           ["Demonstrativo contábil (DRE)", "o resultado gerencial do mês está em Resultado e as contas em Contas a pagar; a DRE contábil depende do contador"],
-          ["Prazo e taxa dos repasses", "o repasse das financeiras é registrado à mão em Pagamentos › Financeiras; o prazo e a taxa de cada financeira e da Nogle dependem do contrato (P8)"],
+          ["Prazo e taxa dos repasses", "o repasse das financeiras é registrado à mão em Gestão › A receber das financeiras; o prazo e a taxa de cada financeira e da Nogle dependem do contrato (P8)"],
         ].map(([titulo, motivo]) => (
           <li key={titulo} className="flex items-start gap-2 rounded-2xl bg-fundo/70 px-3 py-2.5">
             <Selo tom="neutro">indisponível</Selo>
