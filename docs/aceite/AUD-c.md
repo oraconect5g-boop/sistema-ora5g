@@ -71,6 +71,11 @@
   - a prova do Codex, que antes falhava;
   - uma planilha fictícia no formato da Rein (83 colunas, 2.271 produtos, o rodapé com 18 totais escritos com vírgula), dividida em 2.000 e 271 linhas, como a tela faz;
   - quatro contratos: o número do Excel vale pelo que é (0.625 é fração); o último produto incompleto, com o código de barras, não some como rodapé; o rodapé cuja soma não confere não sai sozinho (fica à vista na prévia, para decidir); e, numa linha de produto, a célula escrita com vírgula vale pelo texto, sem arredondar o dinheiro, e a prévia diz onde.
+- **No site, só lendo** (`apps/plataforma/e2e/extratos-e-entregas-real.spec.ts`, num celular de 360 px, com as contas de teste):
+  - o Dono (teste) abre os extratos e os repasses dos marketplaces (as duas telas leem funções que a migration refez), a importação da planilha, a carga do estoque e as entregas do projeto, com o AUD-c e os lotes que faltavam;
+  - o Gerente (teste) abre os extratos da loja dele, e o Vendedor (teste) lê o aviso, sem os dados;
+  - a mesma prova, rodada no site antes da publicação, reprova nas entregas (43 lotes em vez de 64): ela distingue a versão;
+  - ela não importa extrato nem casa repasse no site: isso grava, e pede o seu sim.
 - **O que falta provar:** a leitura com o **arquivo original** (`auditoria-planilha-real.test.ts`). Ele não está neste servidor e não pode ir para o GitHub. A prova roda quando o arquivo estiver em `~/entrada/rein/`.
 - **Migration:** `20261123121828_linha_do_extrato_um_uso` (aplicada no banco da homologação em 23/11, com a reversão guardada).
 
