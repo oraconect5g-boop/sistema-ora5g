@@ -88,3 +88,15 @@ Migration `20261123182645_financeiro_conferencia` (aplicada no `ora5g-dev`, com 
 5. **Só mostra:** nada é corrigido sozinho. Uma diferença é um defeito do sistema ou um lançamento por fora, e pede alguém olhando.
 6. **Quem lê e por que SECURITY DEFINER:** quem vê as vendas da loja ou da rede (as permissões do Financeiro), só nas lojas em que tem a permissão; a conferência é feita dentro da função. Com as regras de leitura de cada tabela (RLS), quem não lê um dos livros veria uma diferença que não existe. A função só devolve somas, contagens e os números das vendas.
 7. **Fica de fora (lote FIN-001b):** a conferência do que foi desfeito depois (o estoque que volta e o dinheiro devolvido no cancelamento e na devolução). O cartão diz isso. O que o banco pagou é outra conta: a conciliação com o extrato (ADR-016).
+
+## Adendo de 23/11/2026 (2) — A conta do que foi desfeito (lote FIN-001b; ORA-FIN-001)
+
+Migration `20261123221242_financeiro_conferencia_do_desfeito` (aplicada no `ora5g-dev`, com o md5 conferido; com reversão). Testes: `packages/banco/src/financeiro-conferencia-do-desfeito.test.ts`, `apps/plataforma/src/lib/financeiro/conferencia.test.ts` e `apps/plataforma/src/app/financeiro/financeiro.test.ts`. Fecha o item 7 do adendo anterior.
+
+1. **O que se confere:** cada cancelamento de venda concluída e cada devolução, na data do fato (como o `financeiro_painel`). A venda cancelada ainda no rascunho não gravou nada e fica fora.
+2. **O destino do valor:** o total da venda cancelada, ou o valor da devolução, é a soma do dinheiro devolvido, do estorno por fora (Pix, cartão e financeira) e do vale-troca. No cancelamento, o dinheiro devolvido é o que a venda recebeu em dinheiro (o pagamento e a entrada em dinheiro lançada dentro da financeira), com o troco descontado.
+3. **O livro do caixa:** o dinheiro devolvido está no livro como estorno, ligado à venda. O estorno da devolução é achado pela chave do próprio lançamento, porque o livro não guarda a devolução.
+4. **O livro do estoque:** na devolução, a unidade volta na hora, ligada à devolução. No cancelamento, nada volta sozinho (adendo de 09/11 (2), item 5): cada unidade tem um retorno a conferir, e só o recebido está no livro, ligado à venda. A unidade sem o registro do retorno é acusada, mesmo com a soma do livro certa.
+5. **O que espera alguém não é diferença:** o estorno por fora que espera o comprovante, o item que espera a conferência e o que não voltou (com a explicação) aparecem à parte, com o atalho para as vendas canceladas.
+6. **O índice:** `estoque_movimentos_referencia` (`referencia_tipo`, `referencia_id`). As duas conferências procuram no livro do estoque pela referência, e o livro cresce com cada venda.
+7. **Fica de fora:** o que caiu no banco (a conciliação com o extrato, ADR-016).

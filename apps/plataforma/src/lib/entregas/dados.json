@@ -5,8 +5,8 @@
   "homologados": 0,
   "contagem": {
     "nao_iniciado": 15,
-    "parcial": 80,
-    "testado": 69,
+    "parcial": 79,
+    "testado": 70,
     "bloqueado": 13,
     "respeitado": 2
   },
@@ -983,6 +983,19 @@
         "ORA-INV-004"
       ],
       "entrega": "a planilha de verdade da Rein (a que o proprietário mandou em 23/11) lida sem erro do começo ao fim: o rodapé com os totais deslocados fica de fora, a tela sugere as colunas do relatório, o custo e o preço com mais casas são arredondados com aviso, \"SEM GTIN\" não é código de barras, e quem importa diz o tipo de cada família (CELULARES é aparelho)",
+      "commit": "329e736",
+      "publicado_em": "2026-11-23",
+      "pedido_em": "2026-11-23",
+      "resposta": null,
+      "respondido_em": null
+    },
+    {
+      "lote": "FIN-001b",
+      "roteiro": "docs/aceite/FIN-001b.md",
+      "requisitos": [
+        "ORA-FIN-001"
+      ],
+      "entrega": "a parte \"O que foi desfeito no período\" no cartão \"A conta do período\" do Financeiro: cada cancelamento e cada devolução conferidos com o destino do valor, o livro do caixa e o livro do estoque; o que espera alguém (o estorno a confirmar, o item a conferir) aparece à parte, com o atalho",
       "commit": null,
       "publicado_em": null,
       "pedido_em": "2026-11-23",
