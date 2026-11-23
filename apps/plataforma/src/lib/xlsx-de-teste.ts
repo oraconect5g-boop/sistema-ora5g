@@ -1,8 +1,8 @@
 // Só para os testes (lote FIN-009b): abre o .xlsx que lib/xlsx gera e confere o pacote (a soma CRC-32 e o tamanho
 // de cada arquivo do ZIP e o XML bem formado). Não é um leitor de planilhas: entende só o que lib/xlsx escreve.
-import { inflateRawSync } from "node:zlib";
+import { deflateRawSync, inflateRawSync } from "node:zlib";
 
-import { crc32 } from "./xlsx";
+import { crc32, gerarZip } from "./xlsx";
 
 const ENTIDADE_SOLTA = /&(?!(?:amp|lt|gt|quot|apos|#\d+|#x[0-9a-fA-F]+);)/;
 
@@ -78,4 +78,38 @@ export function linhasDaFolha(xml: string): (string | number | null)[][] {
     linhas[n] = linha;
   }
   return linhas;
+}
+
+// ---------------------------------------------------------------------------------------------
+// AUD-c (F21-01): um .xlsx montado à mão, para o que lib/xlsx não escreve: a célula MARCADA como número (t="n") com um
+// conteúdo qualquer, como o "1.234,00" (a vírgula brasileira) do rodapé do relatório da Rein. Só para os testes.
+// ---------------------------------------------------------------------------------------------
+/** O texto vai em linha (inlineStr); `{ n }` é a célula marcada como número, com o conteúdo como dado; nulo, sem célula. */
+export type CelulaDeTeste = string | { n: string } | null;
+
+/** A letra da coluna (0 → A, 26 → AA). */
+function letraDaColuna(coluna: number): string {
+  let n = coluna + 1;
+  let s = "";
+  while (n > 0) { s = String.fromCharCode(65 + ((n - 1) % 26)) + s; n = Math.floor((n - 1) / 26); }
+  return s;
+}
+const noXml = (t: string) => t.replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;");
+
+/** O .xlsx com uma aba, a primeira linha como cabeçalho; cada linha da folha é uma lista de células (ver CelulaDeTeste). */
+export function xlsxMontadoAMao(linhas: readonly (readonly CelulaDeTeste[])[], aba = "Produtos"): Uint8Array<ArrayBuffer> {
+  const NS = 'xmlns="http://schemas.openxmlformats.org/spreadsheetml/2006/main" xmlns:r="http://schemas.openxmlformats.org/officeDocument/2006/relationships"';
+  const NS_REL = 'xmlns="http://schemas.openxmlformats.org/package/2006/relationships"';
+  const TIPO = "http://schemas.openxmlformats.org/officeDocument/2006/relationships";
+  const dados = linhas.map((celulas, i) => `<row r="${i + 1}">${celulas.map((c, j) => c === null ? ""
+    : typeof c === "string" ? `<c r="${letraDaColuna(j)}${i + 1}" t="inlineStr"><is><t>${noXml(c)}</t></is></c>`
+    : `<c r="${letraDaColuna(j)}${i + 1}" t="n"><v>${noXml(c.n)}</v></c>`).join("")}</row>`).join("");
+  const arquivos: [string, string][] = [
+    ["[Content_Types].xml", '<?xml version="1.0"?><Types xmlns="http://schemas.openxmlformats.org/package/2006/content-types"/>'],
+    ["_rels/.rels", `<?xml version="1.0"?><Relationships ${NS_REL}><Relationship Id="rId1" Type="${TIPO}/officeDocument" Target="xl/workbook.xml"/></Relationships>`],
+    ["xl/workbook.xml", `<?xml version="1.0"?><workbook ${NS}><sheets><sheet name="${noXml(aba)}" sheetId="1" r:id="rId1"/></sheets></workbook>`],
+    ["xl/_rels/workbook.xml.rels", `<?xml version="1.0"?><Relationships ${NS_REL}><Relationship Id="rId1" Type="${TIPO}/worksheet" Target="worksheets/sheet1.xml"/></Relationships>`],
+    ["xl/worksheets/sheet1.xml", `<?xml version="1.0"?><worksheet ${NS}><dimension ref="A1"/><sheetData>${dados}</sheetData></worksheet>`],
+  ];
+  return gerarZip(arquivos.map(([nome, xml]) => ({ nome, dados: new TextEncoder().encode(xml) })), (d) => deflateRawSync(d));
 }

@@ -37,6 +37,7 @@ export const ERROS_DOS_EXTRATOS = {
   outro_lugar: "Este arquivo já foi importado em outra loja ou na rede.",
   rede: "Só quem concilia pela rede inteira importa o extrato da rede.",
   decidida: "Esta linha do extrato já foi decidida: desfaça antes.",
+  de_repasse: "Esta linha é o recebimento de um repasse de marketplace: desfaça o repasse antes, em Repasses dos marketplaces.",
   valor: "O valor da linha não é o do pagamento.",
   meio: "Este pagamento não é de um meio deste extrato.",
   outra_linha: "Este pagamento já está conciliado com outra linha de extrato.",
@@ -60,6 +61,8 @@ export function erroDosExtratos(erro: { code?: string; message?: string } | null
   const m = (erro?.message ?? "").toLowerCase();
   if (codigo === "42501" || codigo === "P0002") return "permissao";
   if (codigo === "OR030") return "ja_conciliado";
+  // AUD-c (F21-02): a linha do extrato tem um uso só; a de um repasse não concilia venda, não sai da conta nem se desfaz por aqui.
+  if (codigo === "OR046") return "de_repasse";
   if (codigo === "23505" || codigo === "40001" || codigo === "40P01") return "instante";
   if (codigo !== "22023") return "falha";
   const regras: [string, ErroDosExtratos][] = [
@@ -103,7 +106,7 @@ export function lerEnvioDoExtrato(dados: Formulario): { ok: true; envio: EnvioDo
 
 // A tela do extrato: as linhas por situação e por página.
 export const LINHAS_POR_PAGINA_DO_EXTRATO = 100;
-export const FILTROS_DO_EXTRATO = { pendente: "Pendentes", conciliada: "Conciliadas", ignorada: "Fora da conta", todas: "Todas" } as const;
+export const FILTROS_DO_EXTRATO = { pendente: "Pendentes", conciliada: "Conciliadas", repasse: "De repasse", ignorada: "Fora da conta", todas: "Todas" } as const;
 export type FiltroDoExtrato = keyof typeof FILTROS_DO_EXTRATO;
 export const filtroDoExtrato = (pedido: unknown): FiltroDoExtrato =>
   typeof pedido === "string" && Object.hasOwn(FILTROS_DO_EXTRATO, pedido) ? (pedido as FiltroDoExtrato) : "pendente";
@@ -116,17 +119,22 @@ export function paginaDoExtrato(pedida: unknown, linhas: number): { pagina: numb
   return { pagina, paginas, de: (pagina - 1) * LINHAS_POR_PAGINA_DO_EXTRATO };
 }
 
-/** O resumo do extrato (public.extrato_resumo), lido com rigor: forma inesperada vira nulo, e a tela mostra a falha. */
+/**
+ * O resumo do extrato (public.extrato_resumo), lido com rigor: forma inesperada vira nulo, e a tela mostra a falha.
+ * `repasses` (AUD-c) são as linhas que são o recebimento de um repasse de marketplace; o banco de antes da migration não
+ * manda a chave (lá essas linhas contavam como pendentes), e isso é lido como zero, não como falha.
+ */
 export type ResumoDoExtrato = {
   creditos: number; creditos_centavos: number; debitos: number; debitos_centavos: number; taxas_centavos: number;
-  liquido_centavos: number; a_cair_centavos: number; pendentes: number; conciliadas: number; ignoradas: number;
+  liquido_centavos: number; a_cair_centavos: number; pendentes: number; conciliadas: number; ignoradas: number; repasses: number;
 };
 const CHAVES_DO_RESUMO: (keyof ResumoDoExtrato)[] = [
-  "creditos", "creditos_centavos", "debitos", "debitos_centavos", "taxas_centavos", "liquido_centavos", "a_cair_centavos", "pendentes", "conciliadas", "ignoradas",
+  "creditos", "creditos_centavos", "debitos", "debitos_centavos", "taxas_centavos", "liquido_centavos", "a_cair_centavos", "pendentes", "conciliadas", "ignoradas", "repasses",
 ];
+const inteiro = (v: unknown) => typeof v === "number" && Number.isSafeInteger(v);
 export function lerResumoDoExtrato(dado: unknown): ResumoDoExtrato | null {
   if (!dado || typeof dado !== "object" || Array.isArray(dado)) return null;
-  const r = dado as Record<string, unknown>;
-  if (!CHAVES_DO_RESUMO.every((c) => typeof r[c] === "number" && Number.isSafeInteger(r[c]))) return null;
+  const r: Record<string, unknown> = { repasses: 0, ...(dado as Record<string, unknown>) };
+  if (!CHAVES_DO_RESUMO.every((c) => inteiro(r[c]))) return null;
   return Object.fromEntries(CHAVES_DO_RESUMO.map((c) => [c, r[c]])) as ResumoDoExtrato;
 }

@@ -77,11 +77,12 @@ describe("o repasse dos marketplaces casado com o extrato do banco (REPASSE-a)",
     expect(p.repasses[0]?.sugestoes.map((s) => s.linha)).toEqual([certa, quase]);
     expect(p.repasses[0]?.sugestoes.map((s) => s.linha)).not.toContain(antes);
 
-    expect(await valor(dono, CASAR, ["mercado_livre", "2026-11-10", certa, null])).toEqual({ pedidos: 2, esperado: 26_100, recebido: 26_100, diferenca: 0, estimados: 1 });
+    expect(await valor(dono, CASAR, ["mercado_livre", "2026-11-10", certa, null])).toEqual({ pedidos: 2, esperado: 26_100, recebido: 26_100, diferenca: 0, estimados: 1, repetida: false });
     const depois = (await painel(dono)).repasses[0];
     expect(depois?.casado).toMatchObject({ linha: certa, recebido: 26_100, esperado_ao_casar: 26_100, motivo: null });
-    // A linha casada sai das sugestões dos outros; a situação dela no extrato não muda (casar repasse não é conciliar venda).
-    expect((await db.query<{ situacao: string }>("select situacao from public.extrato_linhas where id = $1", [certa])).rows[0]?.situacao).toBe("pendente");
+    // A linha casada sai das sugestões dos outros e passa a dizer o uso dela no extrato (AUD-c, F21-02: antes ela ficava
+    // "pendente", e a mesma linha ainda conciliava uma venda; as provas estão em linha-do-extrato-um-uso.test.ts).
+    expect((await db.query<{ situacao: string }>("select situacao from public.extrato_linhas where id = $1", [certa])).rows[0]?.situacao).toBe("repasse");
   });
 
   it("valor diferente pede o motivo (a divergência fica registrada); a mesma linha ou o mesmo repasse não casa duas vezes", async () => {

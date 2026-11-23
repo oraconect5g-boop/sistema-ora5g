@@ -85,6 +85,7 @@ describe("planilha do Excel: o conteúdo", () => {
       linhas: [["007", "Capa", "79.9", "351234567890123"], ["APA-1", "Galaxy & A15 <128 GB>", "1299.9"]], numeros: [2, 3],
       // F18-01: o preço é célula numérica (o IMEI e o "007" são texto): quem lê quantidade ou dinheiro sabe a origem.
       numericas: [[2], [2]],
+      foraDoPadrao: [[], []],
     });
     // E chega à prévia como no CSV: o preço em centavos e o número da linha da folha.
     const linhas = montarLinhas(await ler(bytes), { sku: 0, nome: 1, preco: 2 }, { tipo: "acessorio", categoria: "Acessórios" });
@@ -159,7 +160,7 @@ describe("planilha do Excel: o conteúdo", () => {
   it("só o cabeçalho: para na primeira linha preenchida, mesmo com o arquivo além do limite de linhas", async () => {
     const dados = CABECALHO + Array.from({ length: LIMITES_DA_PLANILHA.linhas + 5 }, (_, i) => linha(i + 2, t(`A${i + 2}`, `S${i}`))).join("");
     expect(await falha(ler(pacote({ abas: [{ nome: "Plan1", dados }] })))).toBe("linhas");
-    expect(await ler(pacote({ abas: [{ nome: "Plan1", dados }] }), { soCabecalho: true })).toEqual({ formato: "xlsx", aba: "Plan1", cabecalho: ["SKU", "Nome"], linhas: [], numeros: [], numericas: [] });
+    expect(await ler(pacote({ abas: [{ nome: "Plan1", dados }] }), { soCabecalho: true })).toEqual({ formato: "xlsx", aba: "Plan1", cabecalho: ["SKU", "Nome"], linhas: [], numeros: [], numericas: [], foraDoPadrao: [] });
   });
 });
 

@@ -127,6 +127,15 @@ describe("as ações", () => {
     expect(chamadas("marketplace_repasse_casar")).toHaveLength(1);
   });
 
+  it("AUD-c (F21-02): a linha que já tem outro uso é recusada com a mensagem dela; o toque repetido diz que já estava casado", async () => {
+    cenario.respostas.marketplace_repasse_casar = { data: null, error: { code: "OR046", message: "Esta linha já está conciliada com o pagamento de uma venda: desfaça a conciliação antes" } };
+    expect(await destinoDe(casarRepasse(formulario({ ...repasse, linha: LINHA })))).toBe("/relatorios/marketplaces/repasses?inicio=2026-11-01&fim=2026-11-30&erro=linha_em_uso");
+    cenario.respostas.marketplace_repasse_casar = { data: { diferenca: -50, repetida: true }, error: null };
+    expect(await destinoDe(casarRepasse(formulario({ ...repasse, linha: LINHA })))).toBe("/relatorios/marketplaces/repasses?inicio=2026-11-01&fim=2026-11-30&ok=ja_casado");
+    expect(await tela({ inicio: "2026-11-01", fim: "2026-11-30", erro: "linha_em_uso" })).toContain("Esta linha do extrato já tem outro uso (conciliada com uma venda ou fora da conta): desfaça no extrato antes.");
+    expect(await tela({ inicio: "2026-11-01", fim: "2026-11-30", ok: "ja_casado" })).toContain("Este repasse já estava casado com esta linha: nada foi gravado de novo.");
+  });
+
   it("desfazer pede o motivo; o que já não estava casado diz que nada mudou", async () => {
     expect(await destinoDe(desfazerRepasse(formulario(repasse)))).toBe("/relatorios/marketplaces/repasses?inicio=2026-11-01&fim=2026-11-30&erro=motivo");
     cenario.respostas.marketplace_repasse_desfazer = { data: true, error: null };

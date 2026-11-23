@@ -50,6 +50,7 @@ const sessaoFicticia = {
 };
 vi.mock("../../../lib/acesso/sessao", () => ({ FalhaDoServico: class extends Error {}, obterSessao: async () => sessaoFicticia }));
 
+import { xlsxMontadoAMao } from "../../../lib/xlsx-de-teste";
 import { aplicarCarga, desfazerCarga, resolverDiferenca } from "./acoes";
 import { POST } from "./enviar/route";
 import UmaCarga from "./[id]/page";
@@ -112,6 +113,31 @@ describe("o envio do relatório (rota)", () => {
     ]);
   });
 
+  it("F21-01: o rodapé do Excel escrito com vírgula em células de número fica de fora, e a quantidade escrita assim vai com a nota de como foi lida", async () => {
+    cenario.respostas.estoque_carga_previa = [{ data: { id: CARGA, numero: 1, repetida: false }, error: null }, { data: { id: CARGA, numero: 2, repetida: false }, error: null }];
+    // O relatório no formato da Rein: os produtos com números do Excel; uma quantidade e o rodapé escritos com vírgula.
+    const xlsx = xlsxMontadoAMao([
+      ["Código", "Descrição", "Santa Cândida Qtd.", "Santa Cândida Qtd. Disponível", "Muffato Santa Qtd."],
+      ["ACE-1", "Capa", { n: "1.000,00" }, { n: "998" }, { n: "5" }],
+      ["APA-1", "Galaxy", { n: "2" }, { n: "2" }, { n: "0.5" }],
+      [null, null, { n: "1.002,00" }, { n: "1.000,00" }, { n: "5,50" }],
+    ]);
+    const f = new FormData();
+    for (const [k, v] of Object.entries(campos)) f.set(k, v);
+    f.set("arquivo", new File([xlsx], "relatorioProdutos.xlsx"));
+    const resposta = await POST(new Request("http://localhost/estoque/carga/enviar", { method: "POST", body: f }) as never);
+    expect(destino(resposta)).toBe("/estoque/carga?ok=previa&cargas=2&repetidas=0");
+    const [sc, ms] = chamadas("estoque_carga_previa") as { p_mapeamento: Record<string, unknown>; p_linhas: unknown[] }[];
+    const fora = { linha: 4, motivo: "rodapé de totais no fim da planilha (sem código e sem nome, só números em 3 colunas, 3 delas escritas com vírgula numa célula de número e lidas como estão; em 3 delas o número é a soma das linhas de cima)" };
+    expect(sc?.p_mapeamento).toMatchObject({ formato: "xlsx", fora, fora_do_padrao: { celulas: 1, linhas: [2] } });
+    expect(sc?.p_linhas).toEqual([{ numero: 2, sku: "ACE-1", fisico: 1000, disponivel: 998 }, { numero: 3, sku: "APA-1", fisico: 2, disponivel: 2 }]);
+    // Na outra loja nenhuma quantidade veio fora do padrão (não há a nota), e a fração do Excel continua sem virar inteiro (F18-01).
+    expect(ms?.p_mapeamento).toMatchObject({ fora });
+    expect(ms?.p_mapeamento).not.toHaveProperty("fora_do_padrao");
+    expect(ms?.p_linhas).toEqual([{ numero: 2, sku: "ACE-1", fisico: 5, disponivel: null },
+      { numero: 3, sku: "APA-1", fisico: null, disponivel: null, problema: 'Quantidade que não é número inteiro: "0.5"' }]);
+  });
+
   it("sem permissão, sem data de corte, sem mapeamento ou sem quantidade: volta apontado, sem ir ao banco; a recusa do banco vira a mensagem", async () => {
     expect(destino(await enviar({ ...campos, corte: "10/11/2026" }))).toBe("/estoque/carga?erro=corte");
     expect(destino(await enviar({ corte: "2026-11-10T13:20", coluna_sku: "0" }))).toBe("/estoque/carga?erro=mapeamento");
@@ -161,6 +187,11 @@ describe("as telas da carga", () => {
       expect(tela, trecho).toContain(trecho);
     }
     expect(tela).not.toContain("XYZ-9");
+    // F21-01: a prévia diz as quantidades que vieram escritas com vírgula numa célula de número, e como foram lidas.
+    expect(tela).not.toContain("escritas com vírgula");
+    cenario.tabelas.estoque_cargas = [carga({ mapeamento: { fora_do_padrao: { celulas: 2, linhas: [2, 9] } } })];
+    expect(limpar(await UmaCarga({ params: Promise.resolve({ id: CARGA }), searchParams: Promise.resolve({ ver: "entrar" }) } as never)))
+      .toContain("2 quantidade(s) desta loja vieram marcadas como número no Excel, mas escritas com vírgula (o formato da exportação): foram lidas como estão escritas. Confira as linhas 2, 9 do arquivo.");
     cenario.tabelas.estoque_cargas = [carga({ criado_por: "eu" })];
     const minha = limpar(await UmaCarga({ params: Promise.resolve({ id: CARGA }), searchParams: Promise.resolve({}) } as never));
     expect(minha).toContain("Você gerou esta prévia");

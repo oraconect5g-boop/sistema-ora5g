@@ -67,6 +67,8 @@ type Importacao = {
     parte?: { numero?: number; de?: number; linhas?: [number, number] }; ignoradas?: { linha?: number; motivo?: string; decisao?: string }[];
     // F18-02: a última linha que pode ser rodapé, sem prova: foi à prévia, e só sai por decisão de quem envia.
     candidato?: { linha?: number; motivo?: string };
+    // F21-01: as células marcadas como número no Excel, mas escritas com vírgula, lidas pelo texto (fora o rodapé).
+    fora_do_padrao?: { celulas?: number; linhas?: number[] };
   };
   criado_por: string; criado_em: string; aplicado_em: string | null; encerrado_em: string | null; motivo: string | null;
   comparacao: number; comparado_em: string | null; desfazer: { desfeitas?: number; parciais?: number; mantidas?: number } | null;
@@ -190,6 +192,13 @@ export default async function Importar({ searchParams }: {
           {(imp.mapeamento.ignoradas ?? []).map((ig) => (
             <p key={`${ig.linha}`} className="mt-1 text-xs text-aviso">Ficou de fora a linha {ig.linha} da planilha: {ig.motivo}.</p>
           ))}
+          {typeof imp.mapeamento.fora_do_padrao?.celulas === "number" && imp.mapeamento.fora_do_padrao.celulas > 0 && (
+            <p className="mt-1 text-xs text-aviso">
+              {`${numero(imp.mapeamento.fora_do_padrao.celulas)} célula(s) do arquivo vieram marcadas como número no Excel, mas escritas com vírgula (o formato da exportação): foram lidas como estão escritas, pelas regras do texto. Confira ${
+                (imp.mapeamento.fora_do_padrao.linhas ?? []).length === 1 ? "a linha" : "as linhas"} ${(imp.mapeamento.fora_do_padrao.linhas ?? []).join(", ")} da planilha${
+                imp.mapeamento.fora_do_padrao.celulas > (imp.mapeamento.fora_do_padrao.linhas ?? []).length && (imp.mapeamento.fora_do_padrao.linhas ?? []).length >= 20 ? " (as 20 primeiras)" : ""}.`}
+            </p>
+          )}
           {typeof imp.mapeamento.candidato?.linha === "number" && (
             <Aviso tom="aviso" className="mt-3" titulo={`Confira a linha ${imp.mapeamento.candidato.linha} da planilha`}>
               {`${imp.mapeamento.candidato.motivo ?? "a última linha pode ser um rodapé"}. Ela está na prévia como linha com erro (sem código e sem nome). Se for um item, complete a planilha; se for rodapé, envie o arquivo de novo marcando "deixar de fora a última linha": a decisão fica registrada na prévia.`}

@@ -1,7 +1,7 @@
 {
   "projeto": "ora5g-dev (qgnbeuugklzzcevdzrvg)",
   "regra": "REV-018 / #17: o nome do arquivo usa a versão que o Supabase gravou no histórico (supabase_migrations.schema_migrations). Migration aplicada não muda mais: o teste src/migrations.test.ts compara o md5 do arquivo com o registrado aqui. Correção = migration nova.",
-  "conferido_em": "2026-11-18",
+  "conferido_em": "2026-11-23",
   "migrations": [
     { "versao": "20261107140352", "nome": "fundacao_acesso", "md5": "a8f160b848c860269fed9b3dced6aae5", "aplicada_em": "2026-11-07" },
     { "versao": "20261107140448", "nome": "indices_chaves_estrangeiras", "md5": "04fa57c5f31bc5cb8beb99ebfac7297e", "aplicada_em": "2026-11-07" },
@@ -123,6 +123,7 @@
     { "versao": "20261118202002", "nome": "repasses_dos_marketplaces", "md5": "ac1b1d4c89ce441766b7c57d35009adc", "aplicada_em": "2026-11-18" },
     { "versao": "20261119131724", "nome": "catalogo_e_estoque_numa_ida", "md5": "5e00d9651c79943dd88d93b240de8da7", "aplicada_em": "2026-11-19" },
     { "versao": "20261119134800", "nome": "permissoes_numa_conta", "md5": "6bfe31e5629416df18c0d4ce2c00e26f", "aplicada_em": "2026-11-19" },
-    { "versao": "20261119184550", "nome": "transferencias_numa_ida", "md5": "2ad568244ae0545250eeb87f6d9f7baa", "aplicada_em": "2026-11-19" }
+    { "versao": "20261119184550", "nome": "transferencias_numa_ida", "md5": "2ad568244ae0545250eeb87f6d9f7baa", "aplicada_em": "2026-11-19" },
+    { "versao": "20261123121828", "nome": "linha_do_extrato_um_uso", "md5": "8c8c29e91cb36a07db8a6295b0f3ec43", "aplicada_em": "2026-11-23" }
   ]
 }

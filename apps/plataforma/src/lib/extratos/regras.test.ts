@@ -17,6 +17,9 @@ describe("o erro do banco vira uma mensagem do catálogo", () => {
       [{ code: "42501", message: "Sem permissão para conciliar pagamentos aqui" }, "permissao"],
       [{ code: "P0002", message: "Pagamento não encontrado para você" }, "permissao"],
       [{ code: "OR030", message: "Pagamento já conciliado: desfaça a conciliação antes de mudar" }, "ja_conciliado"],
+      // AUD-c (F21-02): a linha que é o recebimento de um repasse não concilia venda, não sai da conta nem se desfaz pelo extrato.
+      [{ code: "OR046", message: "Esta linha é o recebimento de um repasse de marketplace: desfaça o repasse antes" }, "de_repasse"],
+      [{ code: "OR046", message: "Esta linha é o recebimento de um repasse de marketplace: desfaça o repasse na tela dos repasses" }, "de_repasse"],
       [{ code: "23505", message: "duplicate key" }, "instante"],
       [{ code: "22023", message: "Este arquivo já foi importado em outro lugar (outra loja ou a rede)" }, "outro_lugar"],
       [{ code: "22023", message: "Esta linha do extrato já foi decidida: desfaça antes" }, "decidida"],
@@ -72,6 +75,7 @@ describe("o formulário de envio", () => {
 describe("a tela do extrato", () => {
   it("o filtro e a página vêm do endereço, presos ao que existe", () => {
     expect(filtroDoExtrato("conciliada")).toBe("conciliada");
+    expect(filtroDoExtrato("repasse")).toBe("repasse");
     expect(filtroDoExtrato("hasOwnProperty")).toBe("pendente");
     expect(filtroDoExtrato(undefined)).toBe("pendente");
     expect(paginaDoExtrato("3", 250)).toEqual({ pagina: 3, paginas: 3, de: 200 });
@@ -81,9 +85,16 @@ describe("a tela do extrato", () => {
 
   it("o resumo do banco, lido com rigor", () => {
     const resumo = { creditos: 2, creditos_centavos: 15_000, debitos: 1, debitos_centavos: 3_000, taxas_centavos: 300, liquido_centavos: 11_700,
-      a_cair_centavos: 4_900, pendentes: 2, conciliadas: 0, ignoradas: 1 };
+      a_cair_centavos: 4_900, pendentes: 2, conciliadas: 0, ignoradas: 1, repasses: 1 };
     expect(lerResumoDoExtrato({ ...resumo, extra: "x" })).toEqual(resumo);
     expect(lerResumoDoExtrato({ ...resumo, taxas_centavos: "300" })).toBeNull();
+    // AUD-c: as linhas de repasse. O banco de antes da migration não manda a chave (lá elas contavam como pendentes): é
+    // zero, não falha; a chave com outro tipo é falha.
+    const deAntes: Record<string, number> = { ...resumo };
+    delete deAntes.repasses;
+    expect(lerResumoDoExtrato(deAntes)).toEqual({ ...resumo, repasses: 0 });
+    expect(lerResumoDoExtrato({ ...resumo, repasses: "1" })).toBeNull();
+    expect(lerResumoDoExtrato({ ...resumo, repasses: null })).toBeNull();
     expect(lerResumoDoExtrato([resumo])).toBeNull();
     expect(lerResumoDoExtrato(null)).toBeNull();
   });

@@ -74,6 +74,7 @@ const sessaoFicticia = {
 vi.mock("../../../lib/acesso/sessao", () => ({ FalhaDoServico: class extends Error {}, obterSessao: async () => sessaoFicticia }));
 
 import { colunaExcel, TIPO_XLSX } from "../../../lib/xlsx";
+import { xlsxMontadoAMao } from "../../../lib/xlsx-de-teste";
 import { gerarXlsx } from "../../../lib/xlsx-servidor";
 import { aplicarImportacao, descartarImportacao, desfazerImportacao } from "./acoes";
 import { POST } from "./enviar/route";
@@ -208,6 +209,32 @@ describe("envio da planilha", () => {
     cenario.chamadas = [];
     await POST(envio({ ...MAPA, ultima_linha_de_fora: "sim" }, "SKU;Descrição;Preço;Qtd\nACE-9;Capa teste;79,90;2\nACE-11;Cabo;49,00;7\n") as never);
     expect(cenario.chamadas[0]?.argumentos.p_mapeamento).not.toHaveProperty("ignoradas");
+  });
+
+  // F21-01 (auditoria do Codex de 21/11): o rodapé do relatório da Rein vem com os totais escritos com vírgula em células
+  // marcadas como número. Ele fica de fora, com a leitura dita no motivo; e a célula assim numa linha de produto vale pelo
+  // texto, com a nota gravada na prévia.
+  it("F21-01: o rodapé do Excel escrito com vírgula fica de fora, e o preço escrito assim vai com a nota de como foi lido", async () => {
+    cenario.respostas.importacao_catalogo_previa = { data: { id: IMPORTACAO, repetida: false }, error: null };
+    const xlsx = xlsxMontadoAMao([
+      ["SKU", "Descrição", "Preço", "Qtd"],
+      ["ACE-9", "Capa teste", { n: "1.234,56" }, { n: "2" }],
+      ["ACE-10", "Película teste", { n: "29.9" }, { n: "3" }],
+      [null, null, { n: "1.264,46" }, { n: "5,00" }],
+    ]);
+    const r = await POST(envio(MAPA, new File([xlsx], "Relatório de produtos.xlsx", { type: TIPO_XLSX })) as never);
+    expect(r.headers.get("location")).toBe(`/produtos/importar?importacao=${IMPORTACAO}&ok=previa`);
+    const argumentos = cenario.chamadas[0]?.argumentos ?? {};
+    expect(argumentos.p_linhas).toMatchObject([{ numero: 2, sku: "ACE-9", preco: 123_456, erros: [] }, { numero: 3, sku: "ACE-10", preco: 2_990, erros: [] }]);
+    expect(argumentos.p_mapeamento).toMatchObject({
+      ignoradas: [{ linha: 4, motivo: "rodapé de totais no fim da planilha (sem código e sem nome, só números em 2 colunas, 2 delas escritas com vírgula numa célula de número e lidas como estão; em 2 delas o número é a soma das linhas de cima)" }],
+      fora_do_padrao: { celulas: 1, linhas: [2] },
+    });
+    expect(argumentos.p_mapeamento).not.toHaveProperty("candidato");
+    // Sem nenhuma célula assim, a prévia não leva a nota.
+    cenario.chamadas = [];
+    await POST(envio(MAPA) as never);
+    expect(cenario.chamadas[0]?.argumentos.p_mapeamento).not.toHaveProperty("fora_do_padrao");
   });
 
   it("REIN-a: arquivo de uma parte só com a linha de total grava uma prévia, com a total à vista, e a impressão digital de sempre", async () => {
@@ -360,6 +387,19 @@ describe("/produtos/importar", () => {
     expect(t).toContain("Parte 2 de 2 (linhas 2002 a 2272 da planilha)");
     expect(t).toContain("cada parte se confere e se aplica à parte.");
     expect(t).toContain("Ficou de fora a linha 2273 da planilha: linha de total no fim da planilha");
+  });
+
+  it("F21-01: a prévia diz as células que vieram escritas com vírgula numa célula de número, e em que linhas", async () => {
+    cenario.usuario = DONO;
+    cenario.permissoes = new Set(["importacao.aprovar"]);
+    mudarImportacao({ mapeamento: {
+      colunas: { sku: "SKU", nome: "Descrição", preco: "Preço" }, padroes: { tipo: "acessorio", categoria: "Acessórios" },
+      fora_do_padrao: { celulas: 3, linhas: [2, 7] },
+    } });
+    expect(await tela({ importacao: IMPORTACAO, ok: "previa" })).toContain(
+      "3 célula(s) do arquivo vieram marcadas como número no Excel, mas escritas com vírgula (o formato da exportação): foram lidas como estão escritas, pelas regras do texto. Confira as linhas 2, 7 da planilha.");
+    mudarImportacao({ mapeamento: { colunas: { sku: "SKU", nome: "Descrição", preco: "Preço" }, padroes: { tipo: "acessorio", categoria: "Acessórios" } } });
+    expect(await tela({ importacao: IMPORTACAO, ok: "previa" })).not.toContain("escritas com vírgula");
   });
 
   it("F18-02: a prévia avisa a linha candidata a rodapé e diz como deixá-la de fora, com a decisão registrada", async () => {

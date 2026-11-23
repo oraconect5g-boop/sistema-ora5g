@@ -1,12 +1,12 @@
 {
   "_leia": "Gerado por scripts/gerar-rastreabilidade.mjs a partir de docs/alinhamento/execucao-integral-status.json; não editar à mão.",
-  "atualizado_em": "2026-11-21",
+  "atualizado_em": "2026-11-23",
   "total": 179,
   "homologados": 0,
   "contagem": {
     "nao_iniciado": 15,
-    "parcial": 80,
-    "testado": 69,
+    "parcial": 81,
+    "testado": 68,
     "bloqueado": 13,
     "respeitado": 2
   },
@@ -606,6 +606,319 @@
       "commit": "42bd4a0",
       "publicado_em": "2026-11-18",
       "pedido_em": null,
+      "resposta": null,
+      "respondido_em": null
+    },
+    {
+      "lote": "J1-a",
+      "roteiro": "docs/aceite/J1-a.md",
+      "requisitos": [
+        "ORA-ORG-006"
+      ],
+      "entrega": "a prova #11: o login de verdade no site no ar",
+      "commit": "5d3a8ce",
+      "publicado_em": "2026-11-19",
+      "pedido_em": "2026-11-19",
+      "resposta": null,
+      "respondido_em": null
+    },
+    {
+      "lote": "VEL-d",
+      "roteiro": "docs/aceite/VEL-d.md",
+      "requisitos": [
+        "ORA-QUAL-010"
+      ],
+      "entrega": "o Catálogo e a lista do Estoque numa ida só ao banco",
+      "commit": "5d3a8ce",
+      "publicado_em": "2026-11-19",
+      "pedido_em": "2026-11-19",
+      "resposta": null,
+      "respondido_em": null
+    },
+    {
+      "lote": "VEL-e",
+      "roteiro": "docs/aceite/VEL-e.md",
+      "requisitos": [
+        "ORA-QUAL-010"
+      ],
+      "entrega": "a sessão e o sino com as permissões numa conta só",
+      "commit": "92fe105",
+      "publicado_em": "2026-11-19",
+      "pedido_em": "2026-11-19",
+      "resposta": null,
+      "respondido_em": null
+    },
+    {
+      "lote": "VEL-f",
+      "roteiro": "docs/aceite/VEL-f.md",
+      "requisitos": [
+        "ORA-QUAL-010"
+      ],
+      "entrega": "as conexões com o banco aquecidas",
+      "commit": "ce8b5db",
+      "publicado_em": "2026-11-19",
+      "pedido_em": "2026-11-19",
+      "resposta": null,
+      "respondido_em": null
+    },
+    {
+      "lote": "J1-b",
+      "roteiro": "docs/aceite/J1-b.md",
+      "requisitos": [
+        "ORA-POS-002",
+        "ORA-QUAL-010"
+      ],
+      "entrega": "a venda de ponta a ponta no celular, na loja de teste",
+      "commit": "a7e3501",
+      "publicado_em": "2026-11-19",
+      "pedido_em": "2026-11-19",
+      "resposta": null,
+      "respondido_em": null
+    },
+    {
+      "lote": "J1-c",
+      "roteiro": "docs/aceite/J1-c.md",
+      "requisitos": [
+        "ORA-INV-007"
+      ],
+      "entrega": "a transferência de ponta a ponta, com duas pessoas, entre as lojas de teste",
+      "commit": "41d69f2",
+      "publicado_em": "2026-11-19",
+      "pedido_em": "2026-11-19",
+      "resposta": null,
+      "respondido_em": null
+    },
+    {
+      "lote": "J1-d",
+      "roteiro": "docs/aceite/J1-d.md",
+      "requisitos": [
+        "ORA-INV-007"
+      ],
+      "entrega": "a transferência de um aparelho pelo IMEI, com duas pessoas, entre as lojas de teste",
+      "commit": "ee9604b",
+      "publicado_em": "2026-11-19",
+      "pedido_em": "2026-11-19",
+      "resposta": null,
+      "respondido_em": null
+    },
+    {
+      "lote": "VEL-g",
+      "roteiro": "docs/aceite/VEL-g.md",
+      "requisitos": [
+        "ORA-QUAL-010",
+        "ORA-INV-007"
+      ],
+      "entrega": "a tela de Transferências numa ida só ao banco",
+      "commit": "5711cab",
+      "publicado_em": "2026-11-19",
+      "pedido_em": "2026-11-19",
+      "resposta": null,
+      "respondido_em": null
+    },
+    {
+      "lote": "J2-a",
+      "roteiro": "docs/aceite/J2-a.md",
+      "requisitos": [
+        "ORA-REPORT-001",
+        "ORA-REPORT-002",
+        "ORA-REPORT-005",
+        "ORA-INV-001"
+      ],
+      "entrega": "as provas com login dos relatórios e do estoque, só lendo",
+      "commit": "0434cb5",
+      "publicado_em": "2026-11-19",
+      "pedido_em": "2026-11-19",
+      "resposta": null,
+      "respondido_em": null
+    },
+    {
+      "lote": "J2-b",
+      "roteiro": "docs/aceite/J2-b.md",
+      "requisitos": [
+        "ORA-ORG-004",
+        "ORA-QUAL-002"
+      ],
+      "entrega": "as provas de acesso por papel e por loja, só lendo",
+      "commit": "bfeff44",
+      "publicado_em": "2026-11-19",
+      "pedido_em": "2026-11-19",
+      "resposta": null,
+      "respondido_em": null
+    },
+    {
+      "lote": "VND-a",
+      "roteiro": "docs/aceite/VND-a.md",
+      "requisitos": [
+        "ORA-POS-008"
+      ],
+      "entrega": "o nome de quem vendeu e as vendas da loja para a rede, na lista de Vendas",
+      "commit": "01f3587",
+      "publicado_em": "2026-11-19",
+      "pedido_em": "2026-11-19",
+      "resposta": null,
+      "respondido_em": null
+    },
+    {
+      "lote": "VEL-h",
+      "roteiro": "docs/aceite/VEL-h.md",
+      "requisitos": [
+        "ORA-QUAL-010"
+      ],
+      "entrega": "a pré-carga mais leve e a barra de baixo à vista no celular",
+      "commit": "538e9a0",
+      "publicado_em": "2026-11-19",
+      "pedido_em": "2026-11-19",
+      "resposta": null,
+      "respondido_em": null
+    },
+    {
+      "lote": "VEL-i",
+      "roteiro": "docs/aceite/VEL-i.md",
+      "requisitos": [
+        "ORA-QUAL-010",
+        "ORA-POS-008"
+      ],
+      "entrega": "o comprovante da venda em três rodadas",
+      "commit": "c76631a",
+      "publicado_em": "2026-11-19",
+      "pedido_em": "2026-11-19",
+      "resposta": null,
+      "respondido_em": null
+    },
+    {
+      "lote": "ROB-a",
+      "roteiro": "docs/aceite/ROB-a.md",
+      "requisitos": [
+        "ORA-QUAL-008",
+        "ORA-REPORT-003"
+      ],
+      "entrega": "a varredura de todas as telas e o Início que não cai",
+      "commit": "069d614",
+      "publicado_em": "2026-11-21",
+      "pedido_em": "2026-11-21",
+      "resposta": null,
+      "respondido_em": null
+    },
+    {
+      "lote": "J3-a",
+      "roteiro": "docs/aceite/J3-a.md",
+      "requisitos": [
+        "ORA-PAY-004",
+        "ORA-PAY-005",
+        "ORA-PAY-006"
+      ],
+      "entrega": "o caixa de ponta a ponta, com duas pessoas, na loja de teste",
+      "commit": "9652e20",
+      "publicado_em": "2026-11-21",
+      "pedido_em": "2026-11-21",
+      "resposta": null,
+      "respondido_em": null
+    },
+    {
+      "lote": "J3-b",
+      "roteiro": "docs/aceite/J3-b.md",
+      "requisitos": [
+        "ORA-POS-005",
+        "ORA-POS-006",
+        "ORA-POS-007",
+        "ORA-PAY-001"
+      ],
+      "entrega": "a venda com desconto aprovado e pagamento misto, na loja de teste",
+      "commit": "9652e20",
+      "publicado_em": "2026-11-21",
+      "pedido_em": "2026-11-21",
+      "resposta": null,
+      "respondido_em": null
+    },
+    {
+      "lote": "J3-c",
+      "roteiro": "docs/aceite/J3-c.md",
+      "requisitos": [
+        "ORA-POS-010",
+        "ORA-PAY-003",
+        "ORA-PAY-005"
+      ],
+      "entrega": "cancelar e devolver, com três pessoas, na loja de teste",
+      "commit": "75fc23a",
+      "publicado_em": "2026-11-21",
+      "pedido_em": "2026-11-21",
+      "resposta": null,
+      "respondido_em": null
+    },
+    {
+      "lote": "J3-d",
+      "roteiro": "docs/aceite/J3-d.md",
+      "requisitos": [
+        "ORA-INV-003",
+        "ORA-INV-004",
+        "ORA-INV-008",
+        "ORA-INV-009"
+      ],
+      "entrega": "o estoque de ponta a ponta, com três pessoas, na loja de teste",
+      "commit": "75fc23a",
+      "publicado_em": "2026-11-21",
+      "pedido_em": "2026-11-21",
+      "resposta": null,
+      "respondido_em": null
+    },
+    {
+      "lote": "J3-e",
+      "roteiro": "docs/aceite/J3-e.md",
+      "requisitos": [
+        "ORA-CRM-001",
+        "ORA-CRM-003",
+        "ORA-CRM-004",
+        "ORA-CRM-005",
+        "ORA-OS-001",
+        "ORA-OS-002",
+        "ORA-OS-003",
+        "ORA-OS-004",
+        "ORA-OS-006",
+        "ORA-POS-011",
+        "ORA-FISC-001",
+        "ORA-FISC-002",
+        "ORA-PERF-003",
+        "ORA-PERF-004",
+        "ORA-PERF-005"
+      ],
+      "entrega": "o cliente, o funil, a ordem de serviço, o pedido de nota sem emitir e as metas, na loja de teste",
+      "commit": "b061e86",
+      "publicado_em": "2026-11-21",
+      "pedido_em": "2026-11-21",
+      "resposta": null,
+      "respondido_em": null
+    },
+    {
+      "lote": "J3-f",
+      "roteiro": "docs/aceite/J3-f.md",
+      "requisitos": [
+        "ORA-FIN-003",
+        "ORA-FIN-004",
+        "ORA-FIN-005",
+        "ORA-PAY-002",
+        "ORA-PAY-007"
+      ],
+      "entrega": "o financeiro da loja de teste: contas a pagar, conciliação e repasse da financeira",
+      "commit": "c1b8e60",
+      "publicado_em": "2026-11-21",
+      "pedido_em": "2026-11-21",
+      "resposta": null,
+      "respondido_em": null
+    },
+    {
+      "lote": "AUD-c",
+      "roteiro": "docs/aceite/AUD-c.md",
+      "requisitos": [
+        "ORA-PAY-009",
+        "ORA-FIN-006",
+        "ORA-MKTPL-005",
+        "ORA-CAT-002",
+        "ORA-INV-004"
+      ],
+      "entrega": "os achados F21-01 a F21-03 da auditoria integral do Codex de 21/11 (PR #105): a linha do extrato com um uso só (o mesmo crédito não concilia uma venda e um repasse de marketplace), o rodapé da planilha da Rein escrito com vírgula reconhecido e o registro de cada publicação gravado depois dela, fora dos commits do aplicativo",
+      "commit": null,
+      "publicado_em": null,
+      "pedido_em": "2026-11-23",
       "resposta": null,
       "respondido_em": null
     }

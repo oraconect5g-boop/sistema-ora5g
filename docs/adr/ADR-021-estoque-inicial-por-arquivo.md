@@ -71,6 +71,17 @@
 
 **Reverter:** a migration do lote tem reversão, que volta as três funções à versão do REIN-b e tira a função da decisão e as colunas novas. As cargas aplicadas com uma decisão são desfeitas antes, pela tela.
 
+## Atualização de 23/11/2026: a célula de número escrita com vírgula (lote AUD-c, achado F21-01 do Codex)
+
+Vale para a importação do catálogo e para a carga do estoque, que usam o mesmo leitor.
+
+- **O defeito:** a Rein grava os 18 totais do rodapé em células marcadas como número, mas escritas com vírgula ("1.234,56"), o que não é número para o Excel. O leitor não reconhecia o rodapé: 2.272 linhas em vez de 2.271 produtos.
+- **A regra:** o que a célula declara e o que ela traz são coisas diferentes. A célula marcada como número só é tratada como número quando o conteúdo é um número do Excel (dígitos, ponto decimal e expoente). Quando não é, ela vale pelo texto, pelas mesmas regras de uma célula de texto, e o leitor guarda que ela veio assim.
+- **Nada é convertido na leitura:** "0.625" numa célula de número segue sendo fração (F18-01), e o dinheiro escrito com vírgula não é arredondado.
+- **O rodapé continua tendo de provar que é rodapé:** as somas conferem e a linha não tem código, nome nem código de barras. O último produto incompleto com código de barras não sai como rodapé (F18-02), e o rodapé cuja soma não confere fica à vista na prévia, para decidir.
+- **A prévia diz o que veio assim:** quantos totais do rodapé e, nas linhas de produto, quantas células e em que linhas.
+- **A prova:** uma planilha fictícia no formato da Rein (83 colunas, 2.271 produtos, o rodapé com 18 totais, as partes de 2.000 e 271) roda no CI. A prova com o arquivo original é privada e roda fora do GitHub.
+
 ## O que fica de fora
 
 1. **Os aparelhos e os chips:** o arquivo não traz o IMEI nem o ICCID de cada unidade. Eles entram pela Entrada de mercadoria (carga inicial), um a um.

@@ -1,6 +1,6 @@
 # A matriz das APIs: uma linha por integração
 
-**Atualizada em:** 18/11/2026 (lote INTEG-d) · **Por:** Claude Code · **Revisor:** Codex · **Para:** o proprietário
+**Atualizada em:** 23/11/2026 (lote AUD-c: as linhas do Supabase, da Nogle e dos extratos do banco, conferidas no servidor só pelos nomes; antes, 18/11, lote INTEG-d) · **Por:** Claude Code · **Revisor:** Codex · **Para:** o proprietário
 
 **A fonte é o arquivo [`MATRIZ_DAS_APIS.json`](MATRIZ_DAS_APIS.json):** um teste confere que cada linha tem todas as colunas, que a situação é uma das sete da orientação de 18/11 e que cada variável existe no `.env.example`. Aqui aparecem só os **nomes** das variáveis, nunca os valores. Os fatos vêm da [lista de APIs](APIS_E_HABILITACOES_NECESSARIAS.md), da [referência da Nogle](NOGLE_API_REFERENCIA.md), do [ADR-020](../adr/ADR-020-integracoes-que-esperam-contrato.md), do código do worker e da PR #97. O que não se sabe fica "a confirmar", com quem confirma.
 
@@ -10,8 +10,8 @@
 
 | API | Situação | O que falta (o mínimo) | Quem fornece | O que pode andar sem isso |
 |---|---|---|---|---|
-| **Supabase: login, banco e arquivos** | configuração pendente | A SUPABASE_SECRET_KEY no servidor (só o worker a lê); o SMTP próprio e os dois modelos de e-mail no painel; para a produção, outro projeto com backup (D-027) | O proprietário (a chave pelo definir-chave.sh; o SMTP no painel) | Tudo o que não depende de outra pessoa logada: o código e os testes seguem; a prova autenticada por perfil espera a chave |
-| **Nogle: Ora Connect (chips, ativação, recarga, portabilidade, carteira)** | bloqueio externo | O tipo da chave (P9) e as três chaves no servidor; as respostas às perguntas 6, 7, 11 e 12 e, da 10, o nome do uuid e a liberação de /consultaPagamento; uma linha e um chip de teste autorizados. Comissões e bonificações: a Nogle respondeu que não há na API; a fonte oficial (relatório ou extrato da Nogle) precisa ser indicada (D-016, #54) | A Nogle (chaves, respostas, linha de teste e a fonte das comissões), pelo proprietário | Feito no CONNECT-c: a conciliação com os relatórios, provada com os exemplos oficiais; a conferência real espera a Nogle ligada |
+| **Supabase: login, banco e arquivos** | configuração pendente | O SMTP próprio, os dois modelos de e-mail e a Site URL no painel; para a produção, outro projeto com backup (D-027). A SUPABASE_SECRET_KEY está no servidor desde 18/11 (só os workers a leem) | O proprietário (o SMTP, os modelos e a Site URL, no painel) | Tudo: o código, os testes e as provas autenticadas por perfil seguem; só o e-mail do convite e o da recuperação de senha esperam o SMTP |
+| **Nogle: Ora Connect (chips, ativação, recarga, portabilidade, carteira)** | bloqueio externo | O tipo da chave (P9) e, se ele pedir, a segunda chave (a de acesso está no servidor desde 18/11, só no worker); quais operações ligar; as respostas às perguntas 6, 7, 11 e 12 e, da 10, o nome do uuid e a liberação de /consultaPagamento; uma linha e um chip de teste autorizados. Comissões e bonificações: a Nogle respondeu que não há na API; a fonte oficial (relatório ou extrato da Nogle) precisa ser indicada (D-016, #54) | A Nogle (chaves, respostas, linha de teste e a fonte das comissões), pelo proprietário | Feito no CONNECT-c: a conciliação com os relatórios, provada com os exemplos oficiais; a conferência real espera a Nogle ligada |
 | **Emissor fiscal (NFC-e, NF-e, NFS-e)** | bloqueio externo | O contador (o regime e o documento de cada operação por filial; CFOP, CST, CSOSN e NCM); o emissor contratado; o certificado A1 de cada CNPJ; os CNPJs das 11 filiais | O contador e o proprietário | A preparação por filial na tela (sem inventar CNPJ) e a fila, que já existe; a emissão espera o emissor |
 | **WhatsApp Business Platform (Cloud API)** | bloqueio externo | A verificação da empresa na Meta, o número habilitado, o token de usuário do sistema, o segredo do app e um modelo de utilidade aprovado | O proprietário, no Meta for Developers | A caixa de entrada e o atendimento no sistema (histórico, etiquetas, distribuição), sem envio real; o e-mail continua opcional |
 | **Link de pagamento e Pix online (PicPay ou PagBank)** | bloqueio externo | A escolha do provedor (E1) e a credencial do escolhido | O proprietário | A tabela das cobranças e a tela da conciliação, sem provedor; o checkout pago espera a escolha |
@@ -45,8 +45,8 @@
 | Documentação oficial e revisão | Oficial: Admin API de usuários (createUser, generateLink), login no servidor (SSR), SMTP próprio e controle de acesso do Storage, em supabase.com/docs. Conferida em 06/11 e 14/11 (lista de APIs, A1) |
 | Operações necessárias | Login por senha e sessão por turno; Admin API para convidar, criar as contas de teste e bloquear; banco PostgreSQL com RLS; Storage privado (fotos, documentos e notas) |
 | O que já existe | O banco com RLS, auditoria e as funções de cada módulo (as migrations em packages/banco); o login SSR, a escolha da loja e a sessão por turno; a tela da equipe; o Storage privado; o worker de identidade (apps/worker/src/identidade.ts), que convida pela Admin API |
-| Código que falta | Nada para o piloto. A jornada por perfil só se prova com as contas de teste |
-| Acesso ou contrato que falta | A SUPABASE_SECRET_KEY no servidor (só o worker a lê); o SMTP próprio e os dois modelos de e-mail no painel; para a produção, outro projeto com backup (D-027) |
+| Código que falta | Nada para o piloto. A jornada por perfil foi provada no domínio com as contas de teste (lotes J1 a J3, de 19 a 21/11) |
+| Acesso ou contrato que falta | O SMTP próprio, os dois modelos de e-mail e a Site URL no painel; para a produção, outro projeto com backup (D-027). A SUPABASE_SECRET_KEY está no servidor desde 18/11 (só os workers a leem) |
 | Variáveis (só os nomes) | `NEXT_PUBLIC_SUPABASE_URL`, `NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY`, `SUPABASE_SECRET_KEY`, `SUPABASE_STORAGE_BUCKET_DOCUMENTOS` |
 | Ambiente de teste | O projeto ora5g-dev, com dados fictícios; é o banco da homologação ora5g.com.br |
 | Autenticação | O par público no navegador e no servidor web (a RLS decide); a chave secreta só no worker (ADR-002, 2.5) |
@@ -56,7 +56,7 @@
 | Conciliação | Não se aplica: é a própria base. As divergências do estoque têm a função privado.divergencias_estoque |
 | Testes | packages/banco (PGlite e PostgreSQL 17 com duas conexões); apps/worker/src/identidade.test.ts |
 | Publicação | No ar na homologação, com as migrations aplicadas no ora5g-dev |
-| Homologação | O login do dono em uso; as contas de teste do dono, do gerente e do vendedor esperam a chave secreta (J1) |
+| Homologação | O login do dono em uso; as cinco contas de teste (vendedor, dois gerentes, administrador e dono) criadas em 18, 19 e 21/11, com as provas J1 a J3 passando no domínio; nenhum desses roteiros aceito ainda pelo proprietário |
 
 ### Nogle: Ora Connect (chips, ativação, recarga, portabilidade, carteira)
 
@@ -68,7 +68,7 @@
 | Operações necessárias | Ativação de chip físico e eSIM, recarga, portabilidade, consulta de linha, plano e saldo; estoque de chips do PDV e da MVNO; transferência de chips entre PDVs; o extrato do saldo (GET /saldo/extrato) e os relatórios de ativações, recargas e transações (GET /relatorios/*); a consulta do pagamento pelo uuid, prometida pela Nogle e fora da coleção oficial |
 | O que já existe | As regras em packages/dominio/src/nogle.ts (só campos documentados; resposta, evidência e listas oficiais); o worker em apps/worker/src/connect (token, envio, consulta e listas; resultado desconhecido nunca é reenviado); as operações persistentes no banco (ADR-005); as telas /connect e /demo/connect; desde o CONNECT-c (18/11), a conciliação com os relatórios oficiais de ativações e de recargas (o comando --conciliar do worker e a tela /connect/conciliacao) |
 | Código que falta | O extrato do saldo na conciliação (espera a primeira resposta real, porque o exemplo oficial não traz os campos); a compra com entrega, o bloqueio, o consumo e a transferência de chips no PDV da Nogle; o agendamento do worker (com autorização) |
-| Acesso ou contrato que falta | O tipo da chave (P9) e as três chaves no servidor; as respostas às perguntas 6, 7, 11 e 12 e, da 10, o nome do uuid e a liberação de /consultaPagamento; uma linha e um chip de teste autorizados. Comissões e bonificações: a Nogle respondeu que não há na API; a fonte oficial (relatório ou extrato da Nogle) precisa ser indicada (D-016, #54) |
+| Acesso ou contrato que falta | O tipo da chave (P9) e, se ele pedir, a segunda chave (a de acesso está no servidor desde 18/11, só no worker); quais operações ligar; as respostas às perguntas 6, 7, 11 e 12 e, da 10, o nome do uuid e a liberação de /consultaPagamento; uma linha e um chip de teste autorizados. Comissões e bonificações: a Nogle respondeu que não há na API; a fonte oficial (relatório ou extrato da Nogle) precisa ser indicada (D-016, #54) |
 | Variáveis (só os nomes) | `NOGLE_API_BASE_URL`, `NOGLE_AUTH_KEY_TYPE`, `NOGLE_ACCESS_KEY`, `NOGLE_SECONDARY_KEY`, `NOGLE_OPERACOES_HABILITADAS`, `NOGLE_GET_COM_CORPO`, `NOGLE_CONSULTA_PAGAMENTO` |
 | Ambiente de teste | Sem sandbox documentado: pedido à Nogle um ambiente ou uma linha e um chip de teste; nenhuma operação real sem essa autorização |
 | Autenticação | POST /auth/token com a chave de acesso (e a secundária, de franquia ou PDV); o token temporário fica só na memória do worker e é pedido de novo no 401 (validade não documentada) |
@@ -77,7 +77,7 @@
 | Aviso (webhook) ou reconsulta | Nenhum aviso documentado; o worker reconsulta o estado (ativação, recarga, portabilidade) |
 | Conciliação | Os relatórios oficiais de ativações e de recargas, ligados à operação confirmada (CONNECT-c: conferida, valor diferente, só na Nogle, só na Ora); o extrato do saldo e o custo da carteira por linha (#56) esperam a primeira resposta real; as comissões não têm fonte na API |
 | Testes | packages/dominio/src/nogle.test.ts; apps/worker/src/connect/*.test.ts (ponta a ponta contra um servidor local com os exemplos oficiais, inclusive a conciliação); packages/banco/src/connect-conciliacao.test.ts; o catálogo das 62 funções no CI |
-| Publicação | As telas estão no ar; o worker não está agendado nem tem as chaves: nenhuma chamada real |
+| Publicação | As telas estão no ar; o worker da Ora Connect não está agendado e falta o tipo da chave (a de acesso está gravada desde 18/11): nenhuma operação real |
 | Homologação | Não homologado |
 
 ### Emissor fiscal (NFC-e, NF-e, NFS-e)
@@ -440,17 +440,17 @@
 |---|---|
 | Documentação oficial e revisão | O extrato por arquivo (CSV, Excel ou OFX); a API Pix do banco só com a decisão D-011 |
 | Operações necessárias | Conciliar o que caiu na conta |
-| O que já existe | O extrato por arquivo e a conciliação assistida (EXT-a) |
+| O que já existe | O extrato por arquivo e a conciliação assistida (EXT-a); cada linha com um uso só: uma venda, um repasse de marketplace ou fora da conta (AUD-c) |
 | Código que falta | Nada por arquivo; a API Pix, só com a D-011 |
 | Acesso ou contrato que falta | Um extrato real do banco; a decisão D-011 para a API |
 | Variáveis (só os nomes) | Nenhuma ainda: os nomes entram com o contrato e o adaptador (nada inventado) |
 | Ambiente de teste | Um extrato real |
 | Autenticação | Não se aplica (arquivo); a API Pix pede certificado próprio |
 | Limites | Não se aplica |
-| Idempotência | A mesma linha do extrato entra uma vez |
+| Idempotência | A mesma linha do extrato entra uma vez e tem um uso só (AUD-c); repetir a conciliação ou o repasse devolve o que já estava gravado |
 | Aviso (webhook) ou reconsulta | Não se aplica |
 | Conciliação | Por linha do extrato (EXT-a) |
-| Testes | Os testes dos extratos |
+| Testes | Os testes dos extratos e os da linha com um uso só, inclusive com duas conexões num PostgreSQL de verdade (packages/banco/src/extratos.test.ts e linha-do-extrato-um-uso*.test.ts) |
 | Publicação | No ar (/pagamentos/extratos) |
 | Homologação | Não homologado |
 

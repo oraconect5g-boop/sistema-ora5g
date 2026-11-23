@@ -132,9 +132,31 @@ export function lerMapeamento(campo: (nome: string) => unknown, colunas: number)
 export const celulaNumerica = (planilha: Planilha, linha: number, coluna: number) => planilha.numericas?.[linha]?.includes(coluna) === true;
 
 /**
+ * A célula estava MARCADA como número na folha, mas escrita fora do padrão do Excel (F21-01 da auditoria de 21/11: os
+ * totais do rodapé da Rein, "1.234,00")? Ela vale pelo texto que traz, e a prévia diz que foi lida assim.
+ */
+export const celulaForaDoPadrao = (planilha: Planilha, linha: number, coluna: number) => planilha.foraDoPadrao?.[linha]?.includes(coluna) === true;
+
+/**
+ * As células fora do padrão da planilha (ver celulaForaDoPadrao), sem contar a linha `exceto` (o rodapé, que tem o
+ * próprio motivo): quantas são e o número, na planilha, de cada linha que tem alguma (as 20 primeiras).
+ */
+export function celulasForaDoPadrao(planilha: Planilha, exceto: number | null = null): { celulas: number; linhas: number[] } | null {
+  let celulas = 0;
+  const linhas: number[] = [];
+  (planilha.foraDoPadrao ?? []).forEach((colunas, i) => {
+    if (i === exceto || colunas.length === 0) return;
+    celulas += colunas.length;
+    if (linhas.length < 20) linhas.push(planilha.numeros[i] ?? i + 2);
+  });
+  return celulas === 0 ? null : { celulas, linhas };
+}
+
+/**
  * O número de uma célula, pela origem: a célula numérica do Excel é o próprio número (o leitor a escreve com ponto
  * decimal: "0.625" é zero vírgula seiscentos e vinte e cinco, e "1.234" é um vírgula duzentos e trinta e quatro); o texto
- * segue numeroDoRodape (a planilha brasileira, a inglesa e a notação do Excel). Vazio ou não número: nulo.
+ * segue numeroDoRodape (a planilha brasileira, a inglesa e a notação do Excel), e também a célula de número escrita fora
+ * do padrão do Excel, que não é "numérica" (F21-01: "1.234,00" é mil duzentos e trinta e quatro). Vazio ou não número: nulo.
  */
 export function numeroDaCelula(planilha: Planilha, linha: number, coluna: number): number | null {
   const texto = (planilha.linhas[linha]?.[coluna] ?? "").trim();
@@ -217,7 +239,11 @@ function avaliarUltimaLinha(planilha: Planilha, mapa: Mapeamento): (LinhaDeFora 
   };
   const conferem = numeros.filter((n) => somaConfere(n.coluna, n.valor as number)).length;
   const identidade = CAMPOS_DE_IDENTIDADE.filter((campo) => mapa[campo] !== undefined && (linha[mapa[campo] as number] ?? "").trim() !== "");
-  const descricao = `sem código e sem nome, só números em ${numeros.length} colunas`;
+  // F21-01: os números do rodapé que vieram escritos fora do padrão do Excel (a vírgula brasileira numa célula de número)
+  // foram lidos como estão escritos; o motivo diz quantos, para a prévia não esconder a leitura.
+  const escritos = numeros.filter((n) => celulaForaDoPadrao(planilha, posicao, n.coluna)).length;
+  const descricao = `sem código e sem nome, só números em ${numeros.length} colunas${escritos > 0
+    ? `, ${escritos} ${escritos === 1 ? "delas escrita" : "delas escritas"} com vírgula numa célula de número e ${escritos === 1 ? "lida" : "lidas"} como ${escritos === 1 ? "está" : "estão"}` : ""}`;
   if (conferem > 0 && identidade.length === 0) {
     return { tipo: "comprovado", posicao, motivo: `rodapé de totais no fim da planilha (${descricao}; em ${conferem} delas o número é a soma das linhas de cima)` };
   }

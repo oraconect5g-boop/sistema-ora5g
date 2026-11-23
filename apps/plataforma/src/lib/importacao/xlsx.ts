@@ -299,6 +299,13 @@ export function numeroComoNoExcel(bruto: string): string {
   return expoente === undefined ? limpa : `${limpa}E${expoente.startsWith("-") ? "-" : "+"}${expoente.replace(/^[+-]/, "")}`;
 }
 
+/**
+ * O número como o padrão do Excel o escreve no XML da folha: algarismos, ponto decimal e expoente, sem separador de
+ * milhar. "1.234,00" (a vírgula brasileira) não é: a célula de número que traz isso está fora do padrão (F21-01).
+ */
+const NUMERO_DO_XML = /^[+-]?(?:\d+(?:\.\d*)?|\.\d+)(?:[eE][+-]?\d+)?$/;
+export const ehNumeroDoXml = (bruto: string) => NUMERO_DO_XML.test(bruto.trim());
+
 /** "AB12" → 27 (a coluna, a partir de 0). */
 function colunaDaReferencia(referencia: string): number {
   const m = /^([A-Za-z]{1,3})\d*$/.exec(referencia);
@@ -319,19 +326,23 @@ function valorDaCelula(tipo: string, valor: string, textoEmLinha: string, textos
     case "inlineStr": return textoDoXml(textoEmLinha);
     case "b": return valor.trim() === "1" ? "VERDADEIRO" : valor.trim() === "0" ? "FALSO" : textoDoXml(valor);
     case "str": case "e": case "d": return textoDoXml(valor);
-    default: return numeroComoNoExcel(textoDoXml(valor));
+    default: {
+      // F21-01: a célula de número fora do padrão do Excel fica como veio escrita (nada é adivinhado nem convertido aqui).
+      const bruto = textoDoXml(valor);
+      return ehNumeroDoXml(bruto) ? numeroComoNoExcel(bruto) : bruto;
+    }
   }
 }
 
-type Folha = Pick<Planilha, "cabecalho" | "linhas" | "numeros" | "numericas">;
+type Folha = Pick<Planilha, "cabecalho" | "linhas" | "numeros" | "numericas" | "foraDoPadrao">;
 
 /** Os tipos de célula que guardam texto (ou verdadeiro e falso); o resto é número, como o Excel o guarda (F18-01). */
 const TIPOS_DE_TEXTO = new Set(["s", "inlineStr", "b", "str", "e", "d"]);
 
 function lerFolha(xml: string, textos: readonly string[], soCabecalho: boolean): Folha {
-  const lidas: { numero: number; celulas: string[]; numericas: number[] }[] = [];
+  const lidas: { numero: number; celulas: string[]; numericas: number[]; foraDoPadrao: number[] }[] = [];
   let nosDados = false;
-  let linha: { numero: number; celulas: string[]; numericas: number[] } | null = null;
+  let linha: { numero: number; celulas: string[]; numericas: number[]; foraDoPadrao: number[] } | null = null;
   let ultimaLinha = 0;
   let celula: { coluna: number; tipo: string } | null = null;
   let ultimaColuna = -1;
@@ -351,7 +362,7 @@ function lerFolha(xml: string, textos: readonly string[], soCabecalho: boolean):
         if (!(numero > ultimaLinha) || numero > MAIOR_LINHA_DO_EXCEL) throw quebrada();
         ultimaLinha = numero;
         ultimaColuna = -1;
-        linha = { numero, celulas: [], numericas: [] };
+        linha = { numero, celulas: [], numericas: [], foraDoPadrao: [] };
         return;
       }
       if (nome === "c" && linha) {
@@ -386,7 +397,9 @@ function lerFolha(xml: string, textos: readonly string[], soCabecalho: boolean):
           if (celula.coluna >= LIMITES_DA_PLANILHA.colunas) throw new ErroDaPlanilha("colunas", linha.numero);
           if (texto.length > LIMITES_DA_PLANILHA.celula) throw new ErroDaPlanilha("celula", linha.numero);
           linha.celulas[celula.coluna] = texto;
-          if (!TIPOS_DE_TEXTO.has(celula.tipo)) linha.numericas.push(celula.coluna);
+          // F18-01: a célula de número vale pelo que é (o ponto é decimal). F21-01: só quando o conteúdo é mesmo um número
+          // do Excel; a que veio escrita de outro jeito ("1.234,00") vale pelo texto, com a origem registrada.
+          if (!TIPOS_DE_TEXTO.has(celula.tipo)) (ehNumeroDoXml(textoDoXml(valor)) ? linha.numericas : linha.foraDoPadrao).push(celula.coluna);
         }
         celula = null;
         destino = null;
@@ -395,7 +408,7 @@ function lerFolha(xml: string, textos: readonly string[], soCabecalho: boolean):
       if (nome === "row" && linha) {
         // Linha sem nenhuma célula preenchida (só formatação, por exemplo) não conta, como a linha vazia do CSV.
         if (linha.celulas.length > 0) {
-          lidas.push({ numero: linha.numero, celulas: Array.from(linha.celulas, (c) => c ?? ""), numericas: linha.numericas });
+          lidas.push({ numero: linha.numero, celulas: Array.from(linha.celulas, (c) => c ?? ""), numericas: linha.numericas, foraDoPadrao: linha.foraDoPadrao });
           if (lidas.length > LIMITES_DA_PLANILHA.linhas + 1) throw new ErroDaPlanilha("linhas");
           if (soCabecalho) throw PARAR;
         }
@@ -411,7 +424,10 @@ function lerFolha(xml: string, textos: readonly string[], soCabecalho: boolean):
   if (!cabecalho) throw new ErroDaPlanilha("vazio");
   conferirCabecalho(cabecalho.celulas);
   if (dados.some((l) => l.numero > MAIOR_NUMERO_DE_LINHA)) throw new ErroDaPlanilha("linhas");
-  return { cabecalho: cabecalho.celulas, linhas: dados.map((l) => l.celulas), numeros: dados.map((l) => l.numero), numericas: dados.map((l) => l.numericas) };
+  return {
+    cabecalho: cabecalho.celulas, linhas: dados.map((l) => l.celulas), numeros: dados.map((l) => l.numero), numericas: dados.map((l) => l.numericas),
+    foraDoPadrao: dados.map((l) => l.foraDoPadrao),
+  };
 }
 
 // ---------------------------------------------------------------------------------------------

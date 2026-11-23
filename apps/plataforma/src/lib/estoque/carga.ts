@@ -3,7 +3,7 @@
 // separadas. Nada do formato da Rein é suposto: a pessoa confirma a coluna do código do produto e, de cada loja, a coluna
 // do físico e a do disponível; a sugestão vem do nome da loja no cabeçalho. Aqui só se montam as linhas de cada loja no
 // formato do banco (public.estoque_carga_previa), que classifica e confere tudo de novo.
-import { candidatoARodape, celulaNumerica, rodapeDaPlanilha, sugerirMapeamento, type LinhaDeFora } from "../importacao/catalogo";
+import { candidatoARodape, celulaForaDoPadrao, celulaNumerica, rodapeDaPlanilha, sugerirMapeamento, type LinhaDeFora } from "../importacao/catalogo";
 import { semAcento, type Planilha } from "../importacao/csv";
 
 /** O banco aceita até 3.000 linhas por loja numa carga (o relatório de 10/11 tem 2.271 produtos). */
@@ -133,12 +133,18 @@ export function quantidadeDaCelula(texto: string, origem: { numerica?: boolean }
  */
 export function linhasDaCarga(planilha: Planilha, mapa: MapaDaCarga): {
   porLoja: Record<string, LinhaDaCarga[]>; deFora: LinhaDeFora | null; candidato: LinhaDeFora | null;
+  /**
+   * F21-01: por loja, as quantidades que vieram marcadas como número no Excel, mas escritas com vírgula, e foram lidas
+   * pelo texto (quantas células e as 20 primeiras linhas da planilha); a prévia da carga diz isso. Sem nenhuma, vazio.
+   */
+  foraDoPadrao: Record<string, { celulas: number; linhas: number[] }>;
 } {
   const deFora = rodapeDaPlanilha(planilha, { sku: mapa.sku, nome: mapa.nome ?? mapa.sku });
   // A última linha que pode ser rodapé, sem prova (F18-02): vai à prévia (sem o código, a linha fica para conferir) e a
   // carga guarda o aviso.
   const candidato = candidatoARodape(planilha, { sku: mapa.sku, nome: mapa.nome ?? mapa.sku });
   const porLoja: Record<string, LinhaDaCarga[]> = Object.fromEntries(Object.keys(mapa.lojas).map((id) => [id, [] as LinhaDaCarga[]]));
+  const foraDoPadrao: Record<string, { celulas: number; linhas: number[] }> = {};
   planilha.linhas.forEach((celulas, i) => {
     if (deFora !== null && i === deFora.posicao) return;
     const numero = planilha.numeros[i] ?? i + 2;
@@ -153,7 +159,13 @@ export function linhasDaCarga(planilha: Planilha, mapa: MapaDaCarga): {
       const problema = "problema" in fisico ? fisico.problema : "problema" in disponivel ? disponivel.problema : undefined;
       if (problema === undefined && (valorF ?? 0) === 0 && (valorD ?? 0) === 0) continue;
       porLoja[loja]?.push({ numero, sku: sku.slice(0, 60), fisico: valorF, disponivel: valorD, ...(problema ? { problema } : {}) });
+      const escritas = [colunas.fisico, ...(colunas.disponivel === undefined ? [] : [colunas.disponivel])].filter((c) => celulaForaDoPadrao(planilha, i, c)).length;
+      if (escritas > 0) {
+        const nota = (foraDoPadrao[loja] ??= { celulas: 0, linhas: [] });
+        nota.celulas += escritas;
+        if (nota.linhas.length < 20) nota.linhas.push(numero);
+      }
     }
   });
-  return { porLoja, deFora, candidato };
+  return { porLoja, deFora, candidato, foraDoPadrao };
 }

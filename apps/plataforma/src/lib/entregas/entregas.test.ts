@@ -12,8 +12,8 @@ describe("situação de cada lote", () => {
   it("a resposta do proprietário manda; sem ela, o pedido do aceite; sem pedido, se está no ar", () => {
     // F18-04: o lote sem a publicação registrada está na versão desta tela (os dados vêm do checkpoint do mesmo commit).
     expect(situacaoDoLote(lote(), "27b4f6eeb9b4b456b2283d9b365ebecc0901f6ef")).toEqual({
-      chave: "nesta_versao", rotulo: "Nesta versão (27b4f6e); o registro da publicação entra no próximo lote", tom: "info" });
-    expect(situacaoDoLote(lote(), "local").rotulo).toBe("Nesta versão; o registro da publicação entra no próximo lote");
+      chave: "nesta_versao", rotulo: "Nesta versão (27b4f6e), a que você está usando; o aceite ainda vai ser pedido", tom: "info" });
+    expect(situacaoDoLote(lote(), "local").rotulo).toBe("Nesta versão, a que você está usando; o aceite ainda vai ser pedido");
     expect(situacaoDoLote(lote({ commit: "abc1234", publicado_em: "2026-11-17" })).chave).toBe("no_ar");
     expect(situacaoDoLote(lote({ commit: "abc1234", publicado_em: "2026-11-17", pedido_em: "2026-11-17" })).rotulo).toBe("Esperando o seu aceite");
     expect(situacaoDoLote(lote({ pedido_em: "2026-11-17", resposta: "aceito", respondido_em: "2026-11-18" }))).toEqual({ chave: "aceito", rotulo: "Aceito em 18/11/2026", tom: "sucesso" });
