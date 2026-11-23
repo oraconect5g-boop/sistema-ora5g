@@ -86,3 +86,4 @@ Em 17/11, pela sua conta, saíram da **Santa Cândida (teste)** para a **Muffato
 - **O que não foi feito:** receber as duas na Muffato e devolver. Isso poria mercadoria de teste no livro de uma loja de verdade.
 - **O caminho proposto:** registrar na Muffato Santa que **não chegaram** (nada entra no estoque dela) e devolver os dois à loja de teste. O segundo passo (devolver à origem o que não chegou) ainda não existe no sistema e é o próximo lote (TRF-d).
 - **O que preciso:** o seu "sim" para registrar o "não chegou" na Muffato Santa, quando o TRF-d estiver no ar. Sem o sim, nada é mexido.
+- **Respondido em 23/11: "Sim, registrar".** Feito no mesmo dia, pelas telas do site: as duas recebidas com zero na Muffato Santa e devolvidas à Santa Cândida (teste). O roteiro é o `AUD-d.md`.

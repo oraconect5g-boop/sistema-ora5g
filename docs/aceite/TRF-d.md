@@ -1,7 +1,7 @@
 # Roteiro de aceite: lote TRF-d (o que faltou no recebimento da transferência tem destino)
 
 - **Quem faz:** o proprietário.
-- **Quando:** a leitura, quando quiser. Os passos pedem uma transferência recebida com falta, o que hoje só existe se você autorizar a prova entre as duas lojas de teste ou a regularização das duas transferências da Muffato Santa (veja o fim deste roteiro).
+- **Quando:** quando quiser. As duas transferências de teste da Muffato Santa (nº 1 e nº 2), regularizadas em 23/11, já mostram a tela nova: abra **Transferências entre lojas** na Santa Cândida (teste) ou na Muffato Santa. Os passos abaixo, com uma transferência nova, pedem o seu sim para a prova entre as duas lojas de teste.
 - **Quanto tempo leva:** uns 5 minutos de leitura; uns 10 minutos com os passos.
 - **O que o lote entrega:** o que faltava para o achado F21-04 da auditoria integral do Codex de 21/11 (PR #105), no item ORA-INV-007 (transferência entre lojas, com trânsito e recebimento).
 - **Resposta:** "aceito" ou "não aceito". No "não aceito", diga o passo e o que aconteceu.
@@ -50,8 +50,8 @@
 
 ## O que preciso de você
 
-1. **As duas transferências de teste para a Muffato Santa** (nº 1, uma capa; nº 2, um Galaxy A15 de teste; enviadas pela sua conta em 17/11). Com o seu "sim", faço assim:
-   - na **Muffato Santa**, com o Dono (teste), recebo as duas com **zero** e a explicação "transferência de teste: nada foi enviado de verdade" (nada entra no estoque da Muffato Santa);
-   - na **Santa Cândida (teste)**, digo que os dois **voltaram para a origem** (a capa e o Galaxy voltam ao estoque da loja de teste).
+1. **As duas transferências de teste para a Muffato Santa** (nº 1, uma capa; nº 2, um Galaxy A15 de teste; enviadas pela sua conta em 17/11). **Feito em 23/11, com o seu "Sim, registrar" (lote AUD-d, roteiro `AUD-d.md`).** Foi assim:
+   - na **Muffato Santa**, com o Dono (teste), as duas foram recebidas com **zero** e a explicação "Transferência de teste de 17/11: nada foi enviado de verdade" (nada entra no estoque da Muffato Santa);
+   - na **Santa Cândida (teste)**, o Gerente (teste) registrou que os dois **voltaram para a origem** (a capa e o Galaxy voltaram ao estoque da loja de teste).
    - Fica no histórico da Muffato Santa que duas transferências de teste chegaram sem nada. O estoque dela não muda.
 2. **A prova no site entre as duas lojas de teste** (uma transferência com falta e a resolução dela, gravando só nas lojas de teste): posso fazer?
