@@ -5,7 +5,7 @@ import { MoldeReal } from "../../componentes/MoldeReal";
 import { Aviso, FiltroSegmentado, TituloPagina } from "../../componentes/ui";
 import { podeVerFinanceiro } from "../../lib/acesso/menu";
 import { FalhaDoServico, obterSessao } from "../../lib/acesso/sessao";
-import { consultarConferencia } from "../../lib/financeiro/conferencia";
+import { consultarConferencia, consultarDesfeito } from "../../lib/financeiro/conferencia";
 import { consultarPainel } from "../../lib/financeiro/consulta";
 import { escolherEscopo, opcoesDeLoja, type LojaDoFiltro } from "../../lib/financeiro/escopo";
 import { janelasDoPeriodo, ORDEM_DOS_PERIODOS, PERIODOS_FINANCEIROS, periodoFinanceiro, resumoDoPainel, seriesDoPainel, type PeriodoFinanceiro } from "../../lib/financeiro/painel";
@@ -64,11 +64,13 @@ export default async function Financeiro({ searchParams }: { searchParams: Promi
 
   // REPORT-005b: os pagamentos por maquininha, lidos à parte (sem a função no banco, nulo: o cartão não aparece).
   // FIN-001a: a conferência do período (as vendas com os pagamentos, o caixa e o estoque), lida à parte do mesmo jeito.
-  const [atual, anterior, maquininhas, conferencia] = await Promise.all([
+  const [atual, anterior, maquininhas, conferencia, desfeito] = await Promise.all([
     consultarPainel(supabase, janelas.atual, escopo.unidade, janelas.porHora),
     consultarPainel(supabase, janelas.anterior, escopo.unidade, false),
     lerPagamentosPorMaquininha(supabase, janelas.atual, escopo.unidade),
     consultarConferencia(supabase, janelas.atual, escopo.unidade),
+    // FIN-001b: a conferência do que foi desfeito no mesmo período (cancelamentos e devoluções), lida à parte do mesmo jeito.
+    consultarDesfeito(supabase, janelas.atual, escopo.unidade),
   ]);
 
   const cabecalho = (
@@ -129,6 +131,7 @@ export default async function Financeiro({ searchParams }: { searchParams: Promi
         href={href}
         maquininhas={maquininhas}
         conferencia={conferencia}
+        desfeito={desfeito}
         nomeDaLoja={(id) => [...lojas, turno].find((l) => l.id === id)?.nome ?? "Loja"}
       />
     </MoldeReal>
