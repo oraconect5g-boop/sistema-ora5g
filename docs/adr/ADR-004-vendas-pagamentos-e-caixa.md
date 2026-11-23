@@ -76,3 +76,15 @@ Migration `20261118155834_pagamentos_por_linha` (aplicada no `ora5g-dev`, com o 
 5. **O link de pagamento** continua recusado no PDV (no banco e na tela). A Ora Connect da loja também não oferece mais o LINK, e a ação do servidor o recusa; o banco ainda o aceita, para a compra online, o único lugar do link. Isso substitui, só na loja, a escolha entre o SALDO e o LINK do REV-025.
 6. **O comprovante:** "Recebimento via PayJoy: R$ X em 12x", "Entrada do financiamento (Dinheiro): R$ Y" e "Cartão na maquininha PicPay: R$ Z em 3x" (`nomeDoPagamento` e `textoDasParcelas`, no domínio, usados pela tela real e pela demonstração).
 7. **O chip contado à parte:** o chip é um item próprio da venda e não entra no financiamento; os relatórios já o separam do celular, no grupo da Ora Connect. Uma meta só de chips ainda não existe (a oferecer ao proprietário).
+
+## Adendo de 23/11/2026 — A conta do período (lote FIN-001a; ORA-FIN-001)
+
+Migration `20261123182645_financeiro_conferencia` (aplicada no `ora5g-dev`, com o md5 conferido; com reversão). Testes: `packages/banco/src/financeiro-conferencia.test.ts`, `apps/plataforma/src/lib/financeiro/conferencia.test.ts` e `apps/plataforma/src/app/financeiro/financeiro.test.ts`.
+
+1. **O problema:** a venda concluída grava, numa transação só, o pagamento, o lançamento no caixa e a saída do estoque. O Financeiro somava cada coisa por si, e nada conferia se as três fecham entre si. Um defeito ou um lançamento feito por fora só apareceria por acaso.
+2. **A conta, venda a venda** (`public.financeiro_conferencia`, para as vendas concluídas no período): (a) o pago menos o troco é o total da venda; (b) o que a venda recebeu na loja, com o troco descontado, é o que o livro dos caixas tem lançado para ela; (c) cada unidade de aparelho, chip e acessório tem uma saída por venda no livro do estoque, ligada a ela. Serviço e recarga não têm estoque.
+3. **Vale a contagem, não só a soma:** duas vendas erradas em sentidos opostos somam zero. Cada lado devolve a diferença somada, quantas vendas não fecham e até 20 delas, para alguém abrir.
+4. **A venda cancelada depois continua na conta** do período em que foi concluída (como no `financeiro_painel`); o pagamento dela aparece como desfeito.
+5. **Só mostra:** nada é corrigido sozinho. Uma diferença é um defeito do sistema ou um lançamento por fora, e pede alguém olhando.
+6. **Quem lê e por que SECURITY DEFINER:** quem vê as vendas da loja ou da rede (as permissões do Financeiro), só nas lojas em que tem a permissão; a conferência é feita dentro da função. Com as regras de leitura de cada tabela (RLS), quem não lê um dos livros veria uma diferença que não existe. A função só devolve somas, contagens e os números das vendas.
+7. **Fica de fora (lote FIN-001b):** a conferência do que foi desfeito depois (o estoque que volta e o dinheiro devolvido no cancelamento e na devolução). O cartão diz isso. O que o banco pagou é outra conta: a conciliação com o extrato (ADR-016).
