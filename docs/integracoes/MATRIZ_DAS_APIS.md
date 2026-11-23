@@ -1,6 +1,6 @@
 # A matriz das APIs: uma linha por integração
 
-**Atualizada em:** 23/11/2026 (lote AUD-c: as linhas do Supabase, da Nogle e dos extratos do banco, conferidas no servidor só pelos nomes; antes, 18/11, lote INTEG-d) · **Por:** Claude Code · **Revisor:** Codex · **Para:** o proprietário
+**Atualizada em:** 23/11/2026 (lote REIN-d: a linha da Rein, com a planilha no servidor; antes, lote AUD-c: as linhas do Supabase, da Nogle e dos extratos do banco, conferidas no servidor só pelos nomes; antes, 18/11, lote INTEG-d) · **Por:** Claude Code · **Revisor:** Codex · **Para:** o proprietário
 
 **A fonte é o arquivo [`MATRIZ_DAS_APIS.json`](MATRIZ_DAS_APIS.json):** um teste confere que cada linha tem todas as colunas, que a situação é uma das sete da orientação de 18/11 e que cada variável existe no `.env.example`. Aqui aparecem só os **nomes** das variáveis, nunca os valores. Os fatos vêm da [lista de APIs](APIS_E_HABILITACOES_NECESSARIAS.md), da [referência da Nogle](NOGLE_API_REFERENCIA.md), do [ADR-020](../adr/ADR-020-integracoes-que-esperam-contrato.md), do código do worker e da PR #97. O que não se sabe fica "a confirmar", com quem confirma.
 
@@ -30,7 +30,7 @@
 | **Maquininhas PicPay POS e PagSeguro** | configuração pendente | Um extrato real de cada maquininha, como arquivo (18/11: nenhum carregado) | O proprietário | Nada: espera o arquivo |
 | **Extratos do banco e Pix** | configuração pendente | Um extrato real do banco; a decisão D-011 para a API | O proprietário | Nada: espera o arquivo |
 | **Frete, etiqueta e rastreio da loja online** | bloqueio externo | As decisões P10 e D-025 (o CNPJ da nota online, de onde sai o estoque, a transportadora) | O proprietário | A disponibilidade por loja e a retirada |
-| **Rein (sistema atual)** | configuração pendente | A cópia privada da planilha relatorioProdutos131258.xlsx no servidor (~/entrada/rein/), nunca pelo GitHub | O proprietário | Nada: espera o arquivo |
+| **Rein (sistema atual)** | publicado | As decisões do proprietário (a tabela de preço, o tipo das famílias e o código do produto) e o sim dele para a prévia; a planilha chegou em 23/11 e fica em ~/entrada/rein/, fora do GitHub | O proprietário | Tudo o que não usa o catálogo de verdade |
 | **IA (atendimento e análises)** | não iniciado | O fornecedor e o orçamento (D-030) | O proprietário | Nada até a decisão |
 | **Monitoramento de erros** | não iniciado | A escolha (opcional) | O proprietário | Nada |
 
@@ -478,15 +478,15 @@
 
 ### Rein (sistema atual)
 
-**Situação:** configuração pendente · **Requisitos:** ORA-CAT-002 e ORA-INV-004
+**Situação:** publicado · **Requisitos:** ORA-CAT-002 e ORA-INV-004
 
 | Coluna | Detalhe |
 |---|---|
 | Documentação oficial e revisão | Sem API por decisão do projeto: só o arquivo de importação |
 | Operações necessárias | Importar produtos, preços e o estoque de cada loja pela planilha |
-| O que já existe | A importação do catálogo (REIN-a, AUD-b) e a carga do estoque por loja com prévia, decisão e aprovação (REIN-b, REIN-c) |
-| Código que falta | Nada para a carga; a carga real espera o arquivo |
-| Acesso ou contrato que falta | A cópia privada da planilha relatorioProdutos131258.xlsx no servidor (~/entrada/rein/), nunca pelo GitHub |
+| O que já existe | A importação do catálogo (REIN-a, AUD-b) e a carga do estoque por loja com prévia, decisão e aprovação (REIN-b, REIN-c); a leitura do relatório de verdade, provada com o arquivo original (REIN-d) |
+| Código que falta | Nada para a importação nem para a carga |
+| Acesso ou contrato que falta | As decisões do proprietário (a tabela de preço, o tipo das famílias e o código do produto) e o sim dele para a prévia; a planilha chegou em 23/11 e fica em ~/entrada/rein/, fora do GitHub |
 | Variáveis (só os nomes) | Nenhuma ainda: os nomes entram com o contrato e o adaptador (nada inventado) |
 | Ambiente de teste | A própria planilha, primeiro na prévia |
 | Autenticação | Não se aplica |
@@ -494,9 +494,9 @@
 | Idempotência | O mesmo arquivo da mesma loja devolve a mesma prévia; o aplicado não se aplica de novo |
 | Aviso (webhook) ou reconsulta | Não se aplica |
 | Conciliação | A data de corte, o saldo no sistema na data e a decisão de cada diferença |
-| Testes | apps/plataforma/src/lib/importacao e lib/estoque; packages/banco/src/estoque-carga.test.ts |
+| Testes | apps/plataforma/src/lib/importacao (com a prova do arquivo original, só no servidor) e lib/estoque; packages/banco/src/estoque-carga.test.ts |
 | Publicação | No ar |
-| Homologação | Não homologado (falta o arquivo no servidor) |
+| Homologação | Não homologado (falta a importação de verdade e o aceite) |
 
 ### IA (atendimento e análises)
 

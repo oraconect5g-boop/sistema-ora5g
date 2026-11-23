@@ -969,6 +969,20 @@
         "ORA-FIN-001"
       ],
       "entrega": "o cartão \"A conta do período\" no Financeiro: as vendas concluídas no período, conferidas uma a uma com os pagamentos, o livro do caixa e o livro do estoque; quando não fecha, diz em que lado, de quanto e quais vendas abrir",
+      "commit": "d2a4b75",
+      "publicado_em": "2026-11-23",
+      "pedido_em": "2026-11-23",
+      "resposta": null,
+      "respondido_em": null
+    },
+    {
+      "lote": "REIN-d",
+      "roteiro": "docs/aceite/REIN-d.md",
+      "requisitos": [
+        "ORA-CAT-002",
+        "ORA-INV-004"
+      ],
+      "entrega": "a planilha de verdade da Rein (a que o proprietário mandou em 23/11) lida sem erro do começo ao fim: o rodapé com os totais deslocados fica de fora, a tela sugere as colunas do relatório, o custo e o preço com mais casas são arredondados com aviso, \"SEM GTIN\" não é código de barras, e quem importa diz o tipo de cada família (CELULARES é aparelho)",
       "commit": null,
       "publicado_em": null,
       "pedido_em": "2026-11-23",

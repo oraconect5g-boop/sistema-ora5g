@@ -97,3 +97,15 @@ Vale para a importação do catálogo e para a carga do estoque, que usam o mesm
    - voltar a plataforma para a versão anterior ao lote REIN-b;
    - aplicar a reversão da migration, que tira as tabelas e as funções.
    O que as cargas lançaram no livro fica, porque o livro só aceita inserção. Por isso as cargas são desfeitas antes.
+
+## Adendo de 23/11/2026 — O relatório de verdade (lote REIN-d)
+
+O arquivo original chegou ao servidor em 23/11 (`~/entrada/rein/`, fora do repositório). A prova com ele reprovou, e a leitura mudou em cinco pontos, que valem para o catálogo e para a carga:
+
+1. **O rodapé com os totais deslocados.** No relatório, o total de uma coluna está debaixo de outra (o do "Custo do Estoque" de cada loja debaixo da "Qtd. Disponivel" da mesma loja). A linha sem código e sem nome, só com números e sem campo de identidade, é rodapé comprovado quando um número é a soma da própria coluna (como antes) **ou** quando pelo menos dois números são, cada um, a soma de outra coluna. Para a soma de outra coluna não vale o zero nem a coluna com uma célula só. Uma coincidência só deixa a linha como candidata, à vista na prévia (F18-02 continua valendo).
+2. **As colunas sugeridas** seguem os nomes do relatório. Na carga, a coluna que fala em custo, valor, preço, margem ou localização não é quantidade, mesmo com "estoque" no nome. O preço não é sugerido: o relatório traz três tabelas, e a escolha é de quem importa.
+3. **O valor com mais de duas casas.** O custo e o preço que vieram como número do Excel com mais de duas casas (o custo médio, o preço calculado) são arredondados ao centavo mais próximo, e a prévia guarda quantos e em que linhas. O valor com cara de milhar ("1.299") só é lido como decimal quando a própria coluna prova o ponto decimal (tem "12.5" ou "31.1823"); sem a prova, a linha para, como no F18-01. O texto (CSV, ou a célula fora do padrão) não muda: segue a planilha brasileira, sem arredondar.
+4. **O código de barras.** "SEM GTIN" é o produto sem código de barras. O que não tem de 8 a 14 dígitos fica em branco, o item entra, e a prévia guarda quantos e em que linhas (no relatório, quatro celulares com 15 dígitos, o tamanho de um IMEI). Antes, a linha virava erro, e uma linha com erro impede aplicar a parte inteira.
+5. **O tipo de cada categoria.** O relatório não tem coluna de tipo. A tela lista as categorias do arquivo (lidas no aparelho) e quem importa diz o tipo de cada uma; a escolha vai na linha, fica gravada com a prévia e faz parte da identidade dela. A coluna do tipo, quando o arquivo tem, vale mais. A sugestão só existe para a família dos celulares (aparelho) e a dos chips: o resto fica com o tipo padrão até a pessoa dizer.
+
+**Sem migration.** As notas vão no `mapeamento` da prévia. **Reverter:** voltar a plataforma para a versão anterior ao lote; as prévias já gravadas continuam legíveis (as notas são campos a mais).
