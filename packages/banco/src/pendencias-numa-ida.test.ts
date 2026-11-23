@@ -40,7 +40,8 @@ const CONTAGENS: Record<string, { permissoes: string[]; sql: string }> = {
   caixas_com_diferenca: { permissoes: ["caixa.conferir"], sql: "select count(*) from public.caixas where unidade_id = $1 and diferenca_centavos <> 0 and fechado_em >= now() - interval '7 days'" },
   contas_a_pagar: { permissoes: ["conta_pagar.gerir"], sql: `select count(*) from public.contas_a_pagar where situacao = 'aberta' and vencimento <= ${HOJE}` },
   fechamentos: { permissoes: ["bonus.aprovar"], sql: "select count(*) from public.bonus_fechamentos where situacao = 'enviado'" },
-  transferencias: { permissoes: ["estoque.consultar"], sql: "select count(*) from public.transferencias where (origem_id = $1 and situacao in ('solicitada', 'separada')) or (destino_id = $1 and situacao = 'enviada')" },
+  // TRF-e: conta também a recebida com falta sem o destino do que faltou, para a origem e para o destino.
+  transferencias: { permissoes: ["estoque.consultar"], sql: "select count(*) from public.transferencias where (origem_id = $1 and situacao in ('solicitada', 'separada')) or (destino_id = $1 and situacao = 'enviada') or (situacao = 'recebida_com_divergencia' and divergencia_resolvida_em is null and $1 in (origem_id, destino_id))" },
   connect: { permissoes: ["connect.gerir"], sql: "select count(*) from public.connect_operacoes where unidade_id = $1 and situacao = 'resultado_desconhecido'" },
   ativacoes_com_falha: { permissoes: ["connect.gerir"], sql: "select count(*) from public.connect_operacoes where unidade_id = $1 and tipo in ('ativacao', 'portabilidade') and situacao in ('recusada', 'negada', 'erro_operadora') and atualizado_em >= now() - interval '7 days'" },
   estornos: { permissoes: ["venda.ver_unidade"], sql: "select count(*) from public.estornos_externos where unidade_id = $1 and situacao = 'pendente'" },
@@ -74,6 +75,17 @@ describe("VEL-c — as pendências da loja numa ida só", () => {
     await transferencia(ids.lojaA, ids.lojaB, "solicitada", "teste:pend-1");
     await transferencia(ids.lojaB, ids.lojaA, "enviada", "teste:pend-2");
     await transferencia(ids.lojaB, ids.lojaC, "solicitada", "teste:pend-3");
+    // TRF-e: recebidas com falta. A sem destino conta para a origem (A) e para o destino (B); a resolvida não conta; a
+    // de outras lojas (B para C) não conta para a loja A.
+    const comFalta = (origem: string, destino: string, resolvida: boolean, chave: string) => db.query(
+      `insert into public.transferencias (organizacao_id, origem_id, destino_id, variante_id, quantidade, motivo, chave, conteudo, situacao, solicitado_por, enviado_em,
+         quantidade_recebida, observacao, recebido_por, recebido_em, divergencia_resolvida_em)
+       values ($1, $2, $3, $4, 2, 'Reposição (teste)', $5, 'teste', 'recebida_com_divergencia', $6, now(), 1, 'A caixa chegou com uma a menos', $6, now(),
+         case when $7 then now() end)`,
+      [ids.organizacao, origem, destino, cat.capa, chave, ids.dono, resolvida]);
+    await comFalta(ids.lojaA, ids.lojaB, false, "teste:pend-falta-1");
+    await comFalta(ids.lojaA, ids.lojaB, true, "teste:pend-falta-2");
+    await comFalta(ids.lojaB, ids.lojaC, false, "teste:pend-falta-3");
 
     const casos: [string, string, string][] = [
       ["o dono na loja A", ids.dono, ids.lojaA],
@@ -92,7 +104,11 @@ describe("VEL-c — as pendências da loja numa ida só", () => {
     expect(await valor<boolean>(dono, "select public.tem_permissao('os.orcar', $1) as v", [ids.lojaA])).toBe(false);
     expect(Object.keys(await valor<Record<string, number>>(dono, "select public.pendencias_da_loja() as v")).sort())
       .toEqual(Object.keys(CONTAGENS).filter((k) => k !== "os_do_tecnico").sort());
-    expect((await valor<Record<string, number>>(dono, "select public.pendencias_da_loja() as v")).transferencias).toBe(2);
+    // Na loja A: a pedida (a separar), a enviada (a receber) e a recebida com falta sem destino. A resolvida não conta.
+    expect((await valor<Record<string, number>>(dono, "select public.pendencias_da_loja() as v")).transferencias).toBe(3);
+    // Na loja B, o destino da que tem falta e a origem de outra com falta: as duas contam, além da que ela tem a separar.
+    const gerenteB = await naLoja(ids.gerenteB, ids.lojaB);
+    expect((await valor<Record<string, number>>(gerenteB, "select public.pendencias_da_loja() as v")).transferencias).toBe(3);
   });
 
   it("quem não escolheu a loja ou não entrou não recebe contagem nenhuma; quem não entrou nem executa", async () => {

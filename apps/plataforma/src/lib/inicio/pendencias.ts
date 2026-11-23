@@ -87,7 +87,8 @@ export function montarPendencias(c: Contagens, divergenciasDasNotas: number | nu
     pendencia("contas_a_pagar", "Contas a pagar", "vencidas ou para hoje", "/contas-a-pagar", "conta_a_pagar"),
     pendencia("fechamentos", "Bônus para aprovar", "fechamentos enviados pela gerência", "/metas/fechamento", "bonus"),
     pendencia("caixas", "Caixas para conferir", "fechados, à espera de outra pessoa", "/caixa", "caixa"),
-    pendencia("transferencias", "Transferências", "separar, enviar ou receber", "/transferencias", "transferencia"),
+    // TRF-e: a conta do banco inclui a recebida com falta sem o destino do que faltou (para a origem e para o destino).
+    pendencia("transferencias", "Transferências", "separar, enviar, receber ou dar destino ao que faltou", "/transferencias", "transferencia"),
     pendencia("connect", "Ora Connect a decidir", "resultado desconhecido da operadora", "/connect", "operadora"),
     pendencia("estornos", "Estornos a confirmar", "cartão, Pix ou financeira", "/vendas?situacao=canceladas&periodo=30", "estorno"),
     pendencia("retornos", "Itens a conferir", "voltaram de venda cancelada", "/vendas?situacao=canceladas&periodo=30", "retorno"),

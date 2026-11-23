@@ -7,7 +7,8 @@ import { diasDesde, FILAS, lerFilas } from "./filas";
 
 type Resposta = { data: unknown; count: number | null; error: { code: string } | null };
 type RespostaRpc = { data: unknown; error: { code: string } | null };
-function supabaseSimulado(respostas: Record<string, Resposta>, rpc: Record<string, RespostaRpc> = {}) {
+// A resposta de uma tabela pode depender dos filtros: duas filas leem a mesma tabela (as transferências, TRF-e).
+function supabaseSimulado(respostas: Record<string, Resposta | ((filtros: unknown[]) => Resposta)>, rpc: Record<string, RespostaRpc> = {}) {
   const pedidos: { tabela: string; filtros: unknown[] }[] = [];
   const cliente = {
     rpc(nome: string) {
@@ -25,7 +26,10 @@ function supabaseSimulado(respostas: Record<string, Resposta>, rpc: Record<strin
         lt: (c: string, v: unknown) => { filtros.push(["lt", c, v]); return consulta; },
         order: (c: string) => { filtros.push(["order", c]); return consulta; },
         limit: (n: number) => { filtros.push(["limit", n]); return consulta; },
-        then: (resolver: (r: Resposta) => unknown) => Promise.resolve(respostas[tabela] ?? { data: [], count: 0, error: null }).then(resolver),
+        then: (resolver: (r: Resposta) => unknown) => {
+          const r = respostas[tabela];
+          return Promise.resolve(typeof r === "function" ? r(filtros) : r ?? { data: [], count: 0, error: null }).then(resolver);
+        },
       };
       return consulta;
     },
@@ -59,8 +63,40 @@ describe("filas da operação", () => {
     expect(vendedor.pedidos).toEqual([]);
     const gerente = supabaseSimulado({});
     await lerFilas(gerente.cliente, new Set(["venda.ver_unidade", "conta_pagar.gerir", "os.gerir", "estoque.consultar"]), "2026-11-14");
-    expect(gerente.pedidos.map((p) => p.tabela)).toEqual(["estornos_externos", "venda_retornos", "transferencias", "ordens_servico", "ordens_servico", "contas_a_pagar"]);
+    expect(gerente.pedidos.map((p) => p.tabela)).toEqual(["estornos_externos", "venda_retornos", "transferencias", "transferencias", "ordens_servico", "ordens_servico", "contas_a_pagar"]);
+    // TRF-e: as transferências em aberto e, à parte, as recebidas com falta que ainda esperam o destino do que faltou.
+    const [emAberto, comFalta] = gerente.pedidos.filter((p) => p.tabela === "transferencias");
+    expect(emAberto?.filtros).toContainEqual(["in", "situacao", ["solicitada", "separada", "enviada"]]);
+    expect(comFalta?.filtros).toEqual([
+      ["select", "recebido_em", { count: "exact" }], ["eq", "situacao", "recebida_com_divergencia"], ["is", "divergencia_resolvida_em", null],
+      ["order", "recebido_em"], ["limit", 1],
+    ]);
     expect(gerente.pedidos.find((p) => p.tabela === "contas_a_pagar")?.filtros).toContainEqual(["lt", "vencimento", "2026-11-14"]);
+  });
+
+  // TRF-e (o complemento do TRF-d): a transferência recebida com falta não some das filas enquanto o que faltou não tem destino.
+  it("a transferência recebida com falta é uma fila à parte, desde o recebimento; num banco sem a coluna do TRF-d, some sem derrubar as outras", async () => {
+    const comFalta = (filtros: unknown[]) => JSON.stringify(filtros).includes("recebida_com_divergencia");
+    const { cliente } = supabaseSimulado({
+      transferencias: (filtros) => (comFalta(filtros)
+        ? { data: [{ recebido_em: "2026-11-20T15:00:00Z" }], count: 2, error: null }
+        : { data: [{ solicitado_em: "2026-11-22T12:00:00Z" }], count: 1, error: null }),
+    });
+    const filas = await lerFilas(cliente, new Set(["venda.ver_unidade", "estoque.consultar"]), "2026-11-23");
+    expect(filas.filter((f) => f.href === "/transferencias")).toEqual([
+      expect.objectContaining({ estado: "ok", chave: "transferencias", rotulo: "Transferências em aberto", quantidade: 1, desde: "2026-11-22T12:00:00Z" }),
+      expect.objectContaining({ estado: "ok", chave: "faltas_de_transferencia", rotulo: "Transferências com falta", quantidade: 2, desde: "2026-11-20T15:00:00Z",
+        detalhe: "recebidas a menos, sem o destino do que faltou" }),
+    ]);
+    // O banco de antes do TRF-d não tem a coluna (42703): a fila nova some, e a das transferências em aberto continua.
+    const antigo = supabaseSimulado({
+      transferencias: (filtros) => (comFalta(filtros) ? { data: null, count: null, error: { code: "42703" } } : { data: [], count: 0, error: null }),
+    });
+    expect((await lerFilas(antigo.cliente, new Set(["venda.ver_unidade", "estoque.consultar"]), "2026-11-23")).map((f) => f.chave))
+      .toEqual(["estornos", "retornos", "transferencias"]);
+    // Quem só consulta o estoque, sem gerir a loja, não lê nenhuma das duas.
+    const vendedor = supabaseSimulado({});
+    expect(await lerFilas(vendedor.cliente, new Set(["estoque.consultar"]), "2026-11-23")).toEqual([]);
   });
 
   it("fila que o banco ainda não tem some; outra falha aparece como falha (nunca zero); contagem sem número some", async () => {
