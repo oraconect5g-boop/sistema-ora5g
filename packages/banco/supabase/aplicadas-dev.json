@@ -127,6 +127,7 @@
     { "versao": "20261123121828", "nome": "linha_do_extrato_um_uso", "md5": "8c8c29e91cb36a07db8a6295b0f3ec43", "aplicada_em": "2026-11-23" },
     { "versao": "20261123133323", "nome": "transferencia_resolver_divergencia", "md5": "d4b12176771727af8cc84499ffef1157", "aplicada_em": "2026-11-23" },
     { "versao": "20261123174000", "nome": "pendencia_da_falta_na_transferencia", "md5": "5e1aa5bc970537c981c14a4ed73f4988", "aplicada_em": "2026-11-23" },
-    { "versao": "20261123182645", "nome": "financeiro_conferencia", "md5": "cfe0b85611d370fa81a6ae35c7b657a3", "aplicada_em": "2026-11-23" }
+    { "versao": "20261123182645", "nome": "financeiro_conferencia", "md5": "cfe0b85611d370fa81a6ae35c7b657a3", "aplicada_em": "2026-11-23" },
+    { "versao": "20261123221242", "nome": "financeiro_conferencia_do_desfeito", "md5": "f799a2f41ca73ace59cc1b81d2bdcfa8", "aplicada_em": "2026-11-23" }
   ]
 }

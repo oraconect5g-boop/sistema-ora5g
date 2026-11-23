@@ -8177,6 +8177,10 @@ export type Database = {
         Args: { p_fim: string; p_inicio: string; p_unidade?: string }
         Returns: Json
       }
+      financeiro_conferencia_do_desfeito: {
+        Args: { p_fim: string; p_inicio: string; p_unidade?: string }
+        Returns: Json
+      }
       financeiro_painel: {
         Args: {
           p_fim: string

@@ -22,6 +22,10 @@ const cenario = vi.hoisted(() => ({
   conferencia: null as unknown,
   erroDaConferencia: { code: "PGRST202" } as null | { code: string },
   chamadasDaConferencia: [] as Record<string, unknown>[],
+  /** FIN-001b: a resposta de financeiro_conferencia_do_desfeito (o padrão é a função ausente) e os argumentos de cada chamada. */
+  desfeito: null as unknown,
+  erroDoDesfeito: { code: "PGRST202" } as null | { code: string },
+  chamadasDoDesfeito: [] as Record<string, unknown>[],
 }));
 
 vi.mock("next/headers", () => ({ cookies: async () => ({ getAll: () => [], set: () => undefined }) }));
@@ -62,6 +66,10 @@ const sessaoFicticia = {
         cenario.chamadasDaConferencia.push(argumentos);
         return cenario.erroDaConferencia ? { data: null, error: cenario.erroDaConferencia } : { data: cenario.conferencia, error: null };
       }
+      if (nome === "financeiro_conferencia_do_desfeito") {
+        cenario.chamadasDoDesfeito.push(argumentos);
+        return cenario.erroDoDesfeito ? { data: null, error: cenario.erroDoDesfeito } : { data: cenario.desfeito, error: null };
+      }
       if (nome === "financeiro_painel") {
         cenario.chamadas.push(argumentos);
         return cenario.erroDoPainel ? { data: null, error: cenario.erroDoPainel } : { data: cenario.painel, error: null };
@@ -77,7 +85,7 @@ import { GET as exportar } from "./exportar/route";
 
 // Texto de toda a árvore de elementos (todas as props). Executa só os componentes de apresentação
 // desta tela (síncronos, sem estado); os de cliente e o molde ficam como elementos.
-const APRESENTACAO = new Set(["ConteudoFinanceiro", "TabelaDosRegistros", "PainelDaConciliacao", "PainelDasMaquininhas", "ContaDoPeriodo", "Lado", "VendasComDiferenca"]);
+const APRESENTACAO = new Set(["ConteudoFinanceiro", "TabelaDosRegistros", "PainelDaConciliacao", "PainelDasMaquininhas", "ContaDoPeriodo", "Lado", "VendasComDiferenca", "ContaDasVendas", "ContaDoDesfeito", "Veredito"]);
 function texto(v: unknown): string {
   if (Array.isArray(v)) return v.map(texto).join(" ");
   if (typeof v === "string" || typeof v === "number") return String(v);
@@ -114,6 +122,9 @@ beforeEach(() => {
   cenario.conferencia = null;
   cenario.erroDaConferencia = { code: "PGRST202" };
   cenario.chamadasDaConferencia = [];
+  cenario.desfeito = null;
+  cenario.erroDoDesfeito = { code: "PGRST202" };
+  cenario.chamadasDoDesfeito = [];
   cenario.tabelas = {
     vendas: [{ id: "v1", numero: 101, unidade_id: LOJA, vendedor_id: VENDEDOR, situacao: "concluida", total_centavos: 15_800, devolvido_centavos: 7_900, concluida_em: "2026-11-10T17:00:00Z" }],
     perfis_usuario: [{ id: VENDEDOR, nome: "Ana Teste" }],
@@ -407,5 +418,120 @@ describe("/financeiro: a conta do período (FIN-001a)", () => {
     expect(t).toContain("Conciliação sem arquivo (direto do banco e da maquininha)");
     expect(t).toContain("a conciliação pelo arquivo do extrato já existe");
     expect(t).not.toContain("Conciliação automática com extratos");
+  });
+});
+
+describe("/financeiro: o que foi desfeito no período (FIN-001b)", () => {
+  const SEM_DIFERENCA = { diferenca: 0, vendas_com_diferenca: 0, exemplos: [] };
+  const VENDAS = {
+    vendas: 20, vendido: 428_100,
+    pagamentos: { recebido_na_loja: 302_400, financiado: 109_900, vale_troca: 0, desfeitos: 15_800, ...SEM_DIFERENCA },
+    caixa: { esperado: 318_200, no_livro: 318_200, ...SEM_DIFERENCA },
+    estoque: { unidades: 19, no_livro: 19, ...SEM_DIFERENCA },
+  };
+  // Como na loja de teste em 23/11: 2 cancelamentos e 2 devoluções de R$ 79,00 cada.
+  const DESFEITO = {
+    cancelamentos: 2, cancelado: 15_800, devolucoes: 2, devolvido: 15_800,
+    destino: { em_dinheiro: 25_800, por_fora: 5_800, a_confirmar: 0, vale_troca: 0, ...SEM_DIFERENCA },
+    caixa: { esperado: 25_800, no_livro: 25_800, ...SEM_DIFERENCA },
+    estoque: { unidades: 4, voltaram: 4, esperando: 0, nao_voltaram: 0, no_livro: 4, ...SEM_DIFERENCA },
+  };
+  beforeEach(() => {
+    cenario.permissoes = new Set(["venda.ver_unidade", "caixa.conferir"]);
+    cenario.erroDaConferencia = null;
+    cenario.conferencia = VENDAS;
+    cenario.erroDoDesfeito = null;
+    cenario.desfeito = DESFEITO;
+  });
+
+  it("quando fecha, diz que fecha e para onde foi o valor; pede a mesma loja e o mesmo período; o limite antigo some", async () => {
+    const t = await tela();
+    for (const trecho of [
+      "A conta fecha: 20 vendas, R$ 4.281,00 vendidos.", "O que foi desfeito no período", "O desfeito fecha: 2 cancelamentos e 2 devoluções, R$ 316,00.",
+      "O desfeito (R$ 316,00) é a soma de: R$ 258,00 devolvidos em dinheiro + R$ 58,00 em estorno de Pix, cartão ou financeira.",
+      "Dinheiro devolvido nesses cancelamentos e devoluções: R$ 258,00. No livro dos caixas, como estorno: R$ 258,00.",
+      "Aparelhos, chips e acessórios desfeitos: 4 unidades. Voltaram ao estoque: 4 unidades (no livro do estoque: 4 unidades).",
+      "As duas contas conferem o que o sistema registrou", "a conciliação com o extrato, em Gestão › Conciliação de pagamentos.",
+    ]) expect(t, trecho).toContain(trecho);
+    for (const fora of ["não fecha", "ainda não são conferidos aqui", "ainda esperam o comprovante", "Esperam a conferência do retorno", "Não voltaram", "Isto não deveria acontecer"]) expect(t, fora).not.toContain(fora);
+    expect(cenario.chamadasDoDesfeito).toHaveLength(1);
+    expect(cenario.chamadasDoDesfeito[0]).toEqual(cenario.chamadasDaConferencia[0]);
+    expect(cenario.chamadasDoDesfeito[0]?.p_unidade).toBe(LOJA);
+  });
+
+  it("o estorno que espera o comprovante e o item que espera a conferência ou não voltou são ditos, com o atalho, e não são diferença", async () => {
+    cenario.desfeito = {
+      ...DESFEITO,
+      destino: { ...DESFEITO.destino, a_confirmar: 2_900, vale_troca: 7_900, em_dinheiro: 17_900 },
+      estoque: { unidades: 9, voltaram: 5, esperando: 3, nao_voltaram: 1, no_livro: 5, ...SEM_DIFERENCA },
+    };
+    const t = await tela();
+    for (const trecho of [
+      "O desfeito fecha: 2 cancelamentos e 2 devoluções, R$ 316,00.",
+      "R$ 179,00 devolvidos em dinheiro + R$ 58,00 em estorno de Pix, cartão ou financeira + R$ 79,00 em vale-troca.",
+      "Dos estornos, R$ 29,00 ainda esperam o comprovante.", "Ver as vendas canceladas",
+      "Aparelhos, chips e acessórios desfeitos: 9 unidades. Voltaram ao estoque: 5 unidades (no livro do estoque: 5 unidades). Esperam a conferência do retorno: 3 unidades. Não voltaram, com a explicação registrada: 1 unidade.",
+      "O item de venda cancelada só volta ao estoque depois de conferido.",
+    ]) expect(t, trecho).toContain(trecho);
+    expect(t).toContain("/vendas?situacao=canceladas&periodo=30");
+    expect(t).not.toContain("não fecha");
+  });
+
+  it("quando não fecha, diz em que lado, de quanto e quais vendas abrir; a conta das vendas segue com o veredito dela", async () => {
+    cenario.desfeito = {
+      ...DESFEITO,
+      destino: { ...DESFEITO.destino, diferenca: 100, vendas_com_diferenca: 1, exemplos: [{ id: "v-13", numero: 13 }] },
+      caixa: { esperado: 25_800, no_livro: 25_300, diferenca: -500, vendas_com_diferenca: 2, exemplos: [{ id: "v-12", numero: 12 }, { id: "v-14", numero: 14 }] },
+      estoque: { ...DESFEITO.estoque, diferenca: 0, vendas_com_diferenca: 1, exemplos: [{ id: "v-12", numero: 12 }] },
+    };
+    const t = await tela();
+    for (const trecho of [
+      "A conta fecha: 20 vendas, R$ 4.281,00 vendidos.", "O desfeito não fecha em 2 vendas.", "Diferença de R$ 1,00 em 1 venda.", "Diferença de R$ 5,00 em 2 vendas.",
+      "Diferença de 0 unidades em 1 venda.", "Todo cancelamento e toda devolução gravam o destino do valor, o estorno no caixa e a volta ao estoque de uma vez.", "nada foi corrigido sozinho",
+    ]) expect(t, trecho).toContain(trecho);
+    for (const venda of ["v-12", "v-13", "v-14"]) expect(t).toContain(`/vendas/${venda}`);
+    expect(t).not.toContain("O desfeito fecha:");
+  });
+
+  it("sem nada desfeito, diz isso; um cancelamento só não fala em devolução; a venda concluída antes e cancelada no período aparece sem venda no período", async () => {
+    const ZERO = { cancelamentos: 0, cancelado: 0, devolucoes: 0, devolvido: 0, destino: { em_dinheiro: 0, por_fora: 0, a_confirmar: 0, vale_troca: 0, ...SEM_DIFERENCA },
+      caixa: { esperado: 0, no_livro: 0, ...SEM_DIFERENCA }, estoque: { unidades: 0, voltaram: 0, esperando: 0, nao_voltaram: 0, no_livro: 0, ...SEM_DIFERENCA } };
+    cenario.desfeito = ZERO;
+    const nada = await tela();
+    expect(nada).toContain("Nenhum cancelamento nem devolução no período.");
+    expect(nada).not.toContain("O desfeito fecha");
+    cenario.desfeito = { ...ZERO, cancelamentos: 1, cancelado: 7_900, destino: { ...ZERO.destino, em_dinheiro: 7_900 }, caixa: { esperado: 7_900, no_livro: 7_900, ...SEM_DIFERENCA },
+      estoque: { ...ZERO.estoque, unidades: 1, esperando: 1 } };
+    cenario.conferencia = { vendas: 0, vendido: 0, pagamentos: { recebido_na_loja: 0, financiado: 0, vale_troca: 0, desfeitos: 0, ...SEM_DIFERENCA },
+      caixa: { esperado: 0, no_livro: 0, ...SEM_DIFERENCA }, estoque: { unidades: 0, no_livro: 0, ...SEM_DIFERENCA } };
+    const um = await tela();
+    expect(um).toContain("Nenhuma venda concluída no período: não há o que conferir.");
+    expect(um).toContain("O desfeito fecha: 1 cancelamento, R$ 79,00.");
+    expect(um).toContain("O desfeito (R$ 79,00) é a soma de: R$ 79,00 devolvidos em dinheiro.");
+    expect(um).toContain("Aparelhos, chips e acessórios desfeitos: 1 unidade. Voltaram ao estoque: 0 unidades (no livro do estoque: 0 unidades). Esperam a conferência do retorno: 1 unidade.");
+  });
+
+  it("falha de leitura do desfeito nunca vira \"fecha\", e a conta das vendas continua; o banco sem a função mostra o limite antigo", async () => {
+    for (const quebrado of [{ code: "57014" }, { code: "42501" }]) {
+      cenario.erroDoDesfeito = quebrado;
+      const t = await tela();
+      expect(t).toContain("Não deu para conferir o que foi desfeito agora.");
+      expect(t).toContain("A conta fecha: 20 vendas");
+      expect(t).not.toContain("O desfeito fecha");
+    }
+    cenario.erroDoDesfeito = null;
+    cenario.desfeito = { ...DESFEITO, estoque: { ...DESFEITO.estoque, voltaram: "4" } };
+    expect(await tela()).toContain("Não deu para conferir o que foi desfeito agora.");
+    cenario.erroDoDesfeito = { code: "PGRST202" };
+    const semFuncao = await tela();
+    expect(semFuncao).not.toContain("O que foi desfeito no período");
+    expect(semFuncao).toContain("o estoque que voltou e o dinheiro devolvido ainda não são conferidos aqui.");
+  });
+
+  it("o dono que escolhe a rede confere o desfeito da rede inteira (sem a loja no pedido)", async () => {
+    cenario.permissoes = new Set(["venda.ver_unidade", "venda.ver_todas", "caixa.conferir"]);
+    await tela({ loja: "rede" });
+    expect(cenario.chamadasDoDesfeito).toHaveLength(1);
+    expect("p_unidade" in (cenario.chamadasDoDesfeito[0] ?? {})).toBe(false);
   });
 });

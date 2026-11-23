@@ -2,7 +2,7 @@
   "_leia": "Checkpoint do programa de execução integral (PR #67). Carregar ao retomar e seguir para o próximo item executável da fila; não reiniciar o projeto. Estados vêm de status-requisitos.json (fonte da rastreabilidade); este arquivo acrescenta lote, bloqueio externo e revisão. Desde 16/11/2026 a medida de avanço é o requisito homologado pelo proprietário: a chave aceites guarda a resposta dele a cada roteiro de aceite (docs/aceite/); um requisito só recebe homologado: true com todos os lotes dele aceitos e sem nada em FALTA na nota de status-requisitos.json.",
   "atualizado_em": "2026-11-23",
   "base": {
-    "main": "d2a4b75",
+    "main": "329e736",
     "pacote": {
       "pr": 67,
       "branch": "docs/execucao-integral-20261110",
@@ -1024,18 +1024,31 @@
         "ORA-INV-004"
       ],
       "entrega": "a planilha de verdade da Rein (a que o proprietário mandou em 23/11) lida sem erro do começo ao fim: o rodapé com os totais deslocados fica de fora, a tela sugere as colunas do relatório, o custo e o preço com mais casas são arredondados com aviso, \"SEM GTIN\" não é código de barras, e quem importa diz o tipo de cada família (CELULARES é aparelho)",
+      "commit": "329e736",
+      "publicado_em": "2026-11-23",
+      "pedido_em": "2026-11-23",
+      "resposta": null,
+      "respondido_em": null,
+      "nota": "no ar em 329e736 (build 23/11 18:57; copiado do registro das publicações, a branch registro/publicacoes); a prova de leitura com o arquivo original passou no site em 23/11 às 18:58, sem enviar nada; sem migration; a importação de verdade espera as decisões do proprietário (a tabela de preço, o tipo das famílias e o código) e o sim dele para a prévia, que ele confere e aplica"
+    },
+    "FIN-001b": {
+      "roteiro": "docs/aceite/FIN-001b.md",
+      "requisitos": [
+        "ORA-FIN-001"
+      ],
+      "entrega": "a parte \"O que foi desfeito no período\" no cartão \"A conta do período\" do Financeiro: cada cancelamento e cada devolução conferidos com o destino do valor, o livro do caixa e o livro do estoque; o que espera alguém (o estorno a confirmar, o item a conferir) aparece à parte, com o atalho",
       "commit": null,
       "publicado_em": null,
       "pedido_em": "2026-11-23",
       "resposta": null,
       "respondido_em": null,
-      "nota": "o commit, a publicação e a prova de leitura ficam no registro (a branch registro/publicacoes); sem migration; a importação de verdade espera as decisões do proprietário (a tabela de preço, o tipo das famílias e o código) e o sim dele para a prévia, que ele confere e aplica"
+      "nota": "o commit, a publicação e a prova de leitura ficam no registro (a branch registro/publicacoes); com este lote o ORA-FIN-001 passa a testado"
     }
   },
   "contagem_dos_estados": {
     "nao_iniciado": 15,
-    "parcial": 80,
-    "testado": 69,
+    "parcial": 79,
+    "testado": 70,
     "bloqueado": 13,
     "respeitado": 2
   },
@@ -1700,8 +1713,8 @@
     "ORA-FIN-001": {
       "titulo": "Resumo diário de vendas x recebimentos x produção comercial",
       "prioridade": "P0",
-      "estado": "parcial",
-      "lote": "L8 financeiro; G1 Início; FIN-001a (23/11): a conta do período (as vendas conferidas com os pagamentos, o livro do caixa e o livro do estoque)",
+      "estado": "testado",
+      "lote": "L8 financeiro; G1 Início; FIN-001a (23/11): a conta do período (as vendas conferidas com os pagamentos, o livro do caixa e o livro do estoque); FIN-001b (23/11): a conta do que foi desfeito (cada cancelamento e cada devolução com o destino do valor, o livro do caixa e o livro do estoque)",
       "bloqueio_externo": null,
       "revisado_codex": false,
       "homologado": false
@@ -2652,5 +2665,5 @@
       "homologado": false
     }
   },
-  "proximo_passo": "Seguir a ordem de 23/11 (a continuação pedida pelo proprietário com a auditoria integral do Codex de 21/11, PR #105; a leitura está em docs/alinhamento/LEITURA_AUDITORIA_2026-11-21.md): (1) publicar o REIN-d depois do merge, rodar no site a prova de leitura das telas de importação com o arquivo original (apps/plataforma/e2e/importar-planilha-leitura-real.spec.ts, que não envia nada) e registrar a publicação (deploy/homologacao/registrar-publicacao.sh; a branch registro/publicacoes); o AUD-c (5617351), o TRF-d (4131453), o AUD-d (363f844), o TRF-e (d2a6e4f) e o FIN-001a (d2a4b75) estão no ar desde 23/11; (2) com as decisões do proprietário (qual das três tabelas de preço vale na loja, o tipo das outras famílias e o código do produto) e o sim dele, gerar a prévia do catálogo de verdade com a conta de administrador de teste; ele confere e aplica; o estoque de cada loja se carrega com um relatório do dia da virada; (3) o FIN-001b: a conferência do que foi desfeito depois (o estoque que volta e o dinheiro devolvido no cancelamento e na devolução), que é o que falta para o ORA-FIN-001 passar a testado (o rascunho da função fechou com os dados de teste do site, só lendo); depois, a inadimplência (ORA-FIN-007: a lista do que está atrasado, sem a mensagem ao cliente, que depende do WhatsApp oficial); (4) seguir a fila integral pelas áreas que faltam funcionar, um lote por vez, com teste, publicação, prova no domínio, roteiro de aceite e relato. O que depende do proprietário está em docs/PENDENCIAS_DO_PROPRIETARIO.md (a lista única). A narrativa anterior deste campo (os passos de 17 a 21/11) fica no histórico do Git e em docs/alinhamento/EXECUCAO_INTEGRAL_STATUS.md."
+  "proximo_passo": "Seguir a ordem de 23/11 (a continuação pedida pelo proprietário com a auditoria integral do Codex de 21/11, PR #105; a leitura está em docs/alinhamento/LEITURA_AUDITORIA_2026-11-21.md): (1) publicar o FIN-001b depois do merge, rodar no site a prova de leitura da conta do período, agora com o desfeito (apps/plataforma/e2e/conta-do-periodo-real.spec.ts), e registrar a publicação (deploy/homologacao/registrar-publicacao.sh; a branch registro/publicacoes); o AUD-c (5617351), o TRF-d (4131453), o AUD-d (363f844), o TRF-e (d2a6e4f), o FIN-001a (d2a4b75) e o REIN-d (329e736) estão no ar desde 23/11; (2) com as decisões do proprietário (qual das três tabelas de preço vale na loja, o tipo das outras famílias e o código do produto) e o sim dele, gerar a prévia do catálogo de verdade com a conta de administrador de teste; ele confere e aplica; o estoque de cada loja se carrega com um relatório do dia da virada; (3) a inadimplência (ORA-FIN-007: a lista do que está atrasado, sem a mensagem ao cliente, que depende do WhatsApp oficial); (4) seguir a fila integral pelas áreas que faltam funcionar, um lote por vez, com teste, publicação, prova no domínio, roteiro de aceite e relato. O que depende do proprietário está em docs/PENDENCIAS_DO_PROPRIETARIO.md (a lista única). A narrativa anterior deste campo (os passos de 17 a 21/11) fica no histórico do Git e em docs/alinhamento/EXECUCAO_INTEGRAL_STATUS.md."
 }

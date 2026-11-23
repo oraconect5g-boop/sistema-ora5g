@@ -6,7 +6,7 @@ import { plural } from "../../componentes/paineis-de-vendas";
 import { Aviso, BotaoLink, Cartao, Celula, EstadoVazio, FiltroSegmentado, Indicador, ListaDados, Selo, Tabela, type Tom } from "../../componentes/ui";
 import { PERIODOS_FINANCEIROS, variacaoFinanceira, type ConciliacaoDoPeriodo, type PeriodoFinanceiro, type ResumoFinanceiro, type seriesDoPainel } from "../../lib/financeiro/painel";
 import { nomeDoMeio, ORDEM_DAS_VISOES, POR_PAGINA, VISOES, type Registros, type Visao } from "../../lib/financeiro/registros";
-import type { Conferencia } from "../../lib/financeiro/conferencia";
+import type { Conferencia, Desfeito } from "../../lib/financeiro/conferencia";
 import type { PagamentosDoTerminal } from "../../lib/financeiro/terminais";
 import { brl, brlCompacto, brlEixo, numero, percentual } from "../../lib/formato";
 import type { Leitura } from "../../lib/leitura-do-banco";
@@ -32,7 +32,7 @@ const diaDaData = (dia: string) => `${dia.slice(8, 10)}/${dia.slice(5, 7)}`;
 export type Nomes = { pessoa: (id: string) => string; loja: (id: string) => string };
 export type Ligacao = (mudanca: Partial<Record<"periodo" | "loja" | "ver" | "situacao" | "pagina", string | undefined>>) => string;
 
-export function ConteudoFinanceiro({ resumo: r, anterior: ra, series, porHora, periodo, conferenteDeCaixa, podeConciliar, visao, filtroSituacao, pagina, lista, nomes, daRede, href, maquininhas = null, conferencia = null, nomeDaLoja }: {
+export function ConteudoFinanceiro({ resumo: r, anterior: ra, series, porHora, periodo, conferenteDeCaixa, podeConciliar, visao, filtroSituacao, pagina, lista, nomes, daRede, href, maquininhas = null, conferencia = null, desfeito = null, nomeDaLoja }: {
   resumo: ResumoFinanceiro;
   anterior: ResumoFinanceiro;
   series: ReturnType<typeof seriesDoPainel>;
@@ -52,6 +52,8 @@ export function ConteudoFinanceiro({ resumo: r, anterior: ra, series, porHora, p
   maquininhas?: Leitura<PagamentosDoTerminal[]> | null;
   /** FIN-001a: a conferência do período (nulo: o banco ainda não tem a função; o cartão não aparece). */
   conferencia?: Leitura<Conferencia> | null;
+  /** FIN-001b: a conferência do que foi desfeito (nulo: o banco ainda não tem a função; o cartão diz que ainda não confere). */
+  desfeito?: Leitura<Desfeito> | null;
   nomeDaLoja?: (id: string) => string;
 }) {
   const comparacao = PERIODOS_FINANCEIROS[periodo].comparacao;
@@ -74,7 +76,7 @@ export function ConteudoFinanceiro({ resumo: r, anterior: ra, series, porHora, p
     </section>
 
     {/* FIN-001a: a conta do período, logo depois do resumo: se as vendas fecham com os pagamentos, o caixa e o estoque. */}
-    {conferencia && <div className="mb-4"><ContaDoPeriodo leitura={conferencia} /></div>}
+    {conferencia && <div className="mb-4"><ContaDoPeriodo leitura={conferencia} desfeito={desfeito} /></div>}
 
     <div className="grid gap-4 xl:grid-cols-3">
       <Cartao titulo="Vendas e devoluções" subtitulo={`${porHora ? "Por hora" : "Por dia"} · devoluções e cancelamentos para baixo`} className="xl:col-span-2">
