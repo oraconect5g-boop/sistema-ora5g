@@ -5,7 +5,9 @@ import type { NextRequest } from "next/server";
 import { redirecionar } from "../../../../lib/acesso/redirecionar";
 import { permite } from "../../../../lib/acesso/molde";
 import { obterSessao } from "../../../../lib/acesso/sessao";
-import { candidatoARodape, celulasForaDoPadrao, dividirEmPartes, montarLinhas, rodapeDaPlanilha } from "../../../../lib/importacao/catalogo";
+import {
+  candidatoARodape, celulasForaDoPadrao, codigosDeBarrasEmBranco, dividirEmPartes, montarLinhas, rodapeDaPlanilha, valoresArredondados,
+} from "../../../../lib/importacao/catalogo";
 import type { Json } from "../../../../lib/supabase/tipos-banco";
 import { ErroDaPlanilha, LIMITES_DA_PLANILHA } from "../../../../lib/importacao/csv";
 import { descomprimirNoServidor } from "../../../../lib/importacao/descomprimir-servidor";
@@ -76,6 +78,13 @@ export async function POST(requisicao: NextRequest) {
   // F21-01: as células marcadas como número no Excel, mas escritas com vírgula (fora o rodapé, que diz isso no motivo
   // dele): foram lidas pelo texto, e a prévia guarda quantas são e em que linhas, para ninguém ler sem saber.
   const foraDoPadrao = celulasForaDoPadrao(planilha, total);
+  // REIN-d: os ajustes da leitura que a prévia guarda e mostra (quantos e em que linhas): os custos e os preços com mais
+  // de duas casas, arredondados ao centavo, e os códigos de barras fora do padrão, que ficaram em branco.
+  const ajustes = {
+    custos_arredondados: valoresArredondados(planilha, lido.envio.mapa, "custo", total),
+    precos_arredondados: valoresArredondados(planilha, lido.envio.mapa, "preco", total),
+    codigos_de_barras_em_branco: codigosDeBarrasEmBranco(planilha, lido.envio.mapa, total),
+  };
   const partes = dividirEmPartes(linhas);
   const impressao = (parte: number) => {
     const hash = createHash("sha256").update(bytes);
@@ -92,6 +101,7 @@ export async function POST(requisicao: NextRequest) {
     if (ignoradas.length > 0) extras.ignoradas = ignoradas;
     if (candidato !== null && !decidiuTirar) extras.candidato = { linha: todas[candidato.posicao]?.numero ?? candidato.posicao + 2, motivo: candidato.motivo };
     if (foraDoPadrao !== null) extras.fora_do_padrao = foraDoPadrao;
+    for (const [chave, ajuste] of Object.entries(ajustes)) if (ajuste !== null) extras[chave] = ajuste;
     if (partes.length > 1) extras.parte = { numero, de: partes.length, linhas: [parte[0]?.numero ?? 0, parte.at(-1)?.numero ?? 0] };
     return extras;
   };
