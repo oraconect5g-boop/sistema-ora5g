@@ -57,6 +57,17 @@
 - **Quem:** quem concilia pela rede inteira (o dono). A mudança da conta e tirar um extrato dela pedem o motivo, que vai para a auditoria.
 - **Fica de fora:** a conferência com o saldo final que o arquivo do banco traz (o OFX real) e o depósito agrupado da maquininha.
 
+## Atualização de 23/11/2026: a linha do extrato tem um uso só (lote AUD-c, achado F21-02 do Codex)
+
+- **O defeito:** a mesma linha de crédito conciliava uma venda (aqui) e era o recebimento de um repasse de marketplace (ADR-018), nas duas ordens. Os dois caminhos não se viam.
+- **Um uso só, e ele é a situação da linha:** pendente, conciliada (com uma venda), repasse (o recebimento de um repasse de marketplace) ou ignorada (fora da conta). Nenhuma tabela nova: a linha já tinha a situação.
+- **A mesma trava nos dois caminhos:** conciliar, tirar da conta, desfazer, casar o repasse e desfazer o repasse travam a linha antes de decidir. A ordem é fixa, para ninguém esperar em círculo: nos repasses, a trava do repasse e depois a da linha; nos extratos, a da linha e depois a do pagamento.
+- **A regra está nas tabelas, não só nas funções:** gatilhos na linha e no repasse recusam qualquer escrita que deixe a linha com dois usos (OR046) ou o repasse mudar de linha (OR045).
+- **Repetir não grava de novo:** o mesmo pedido devolve o que já estava, marcado como repetido.
+- **Desfazer libera a linha,** dos dois lados, com o motivo na auditoria.
+- **Fica de fora o rateio:** um crédito dividido entre várias obrigações (parte de uma venda, parte de um repasse) pede um modelo próprio, com a soma das partes limitada ao valor da linha. Só quando houver o caso de verdade.
+- **Reverter:** a reversão da migration `20261123121828_linha_do_extrato_um_uso` volta as funções à versão anterior e tira os gatilhos; as linhas de repasse voltam a pendentes.
+
 ## Consequências
 
 1. **Quem concilia confere só o que não casou,** em vez de digitar cada pagamento.

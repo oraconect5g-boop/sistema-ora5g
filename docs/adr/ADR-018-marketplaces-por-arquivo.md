@@ -50,7 +50,16 @@
 - **Casar:** dizer qual linha de crédito do extrato do banco da rede é o repasse. A tela sugere as linhas do dia do repasse até 5 dias depois, o mesmo valor primeiro. Quando o valor difere, o motivo é obrigatório e fica registrado.
 - **Um para um:** uma linha casa com um repasse só, e um repasse com uma linha só (OR045). Desfazer pede o motivo, e a auditoria guarda o que era.
 - **Os pedidos que mudam depois:** um arquivo novo do canal pode mudar o líquido ou os pedidos de um repasse já casado. O casamento guarda o esperado e os pedidos daquele momento, e a tela avisa quando mudaram.
-- **A linha do extrato não muda de situação:** casar o repasse não é conciliar uma venda.
+- **A linha do extrato não muda de situação:** casar o repasse não é conciliar uma venda. **(Substituído em 23/11: a linha passa a ter a situação "repasse"; ver a atualização abaixo.)**
+
+## Atualização de 23/11/2026: o repasse ocupa a linha do extrato (lote AUD-c, achado F21-02 do Codex)
+
+- **O defeito:** como a linha não mudava de situação, a conciliação das vendas (ADR-016) continuava oferecendo e aceitando a linha que já era de um repasse, e o repasse aceitava a linha já conciliada com uma venda.
+- **Agora casar o repasse ocupa a linha:** ela passa à situação "repasse" e não serve a mais nada. A linha conciliada com uma venda ou fora da conta não recebe repasse (OR046).
+- **O painel só oferece linha pendente,** e o extrato mostra a linha de repasse com o canal e a data, sem o botão de conciliar.
+- **Casar de novo o mesmo repasse na mesma linha** devolve o que já estava gravado, marcado como repetido.
+- **Desfazer o repasse** devolve a linha a pendente. Pelo extrato não se desfaz um repasse: a tela manda para os repasses.
+- **O resto da decisão está na ADR-016** (a mesma trava, a ordem dela e os gatilhos).
 
 ## Consequências
 

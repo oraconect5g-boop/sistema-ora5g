@@ -1,8 +1,8 @@
 {
   "_leia": "Checkpoint do programa de execução integral (PR #67). Carregar ao retomar e seguir para o próximo item executável da fila; não reiniciar o projeto. Estados vêm de status-requisitos.json (fonte da rastreabilidade); este arquivo acrescenta lote, bloqueio externo e revisão. Desde 16/11/2026 a medida de avanço é o requisito homologado pelo proprietário: a chave aceites guarda a resposta dele a cada roteiro de aceite (docs/aceite/); um requisito só recebe homologado: true com todos os lotes dele aceitos e sem nada em FALTA na nota de status-requisitos.json.",
-  "atualizado_em": "2026-11-21",
+  "atualizado_em": "2026-11-23",
   "base": {
-    "main": "b061e86",
+    "main": "c1b8e60",
     "pacote": {
       "pr": 67,
       "branch": "docs/execucao-integral-20261110",
@@ -31,18 +31,26 @@
       "origem": "reanálise do Codex de 18/11/2026, na branch docs/auditoria-planejamento-20261117 da PR #104 (commits d0eea97 e b5ab7b8), sem merge",
       "corte": "27b4f6eeb9b4b456b2283d9b365ebecc0901f6ef",
       "lido": "ver docs/alinhamento/LEITURA_REANALISE_2026-11-18.md (o que foi lido por inteiro, o que foi conferido por programa e o que falta)"
-    }
+    },
+    "main_leia": "o topo da main ANTES do lote que traz este arquivo. O commit do próprio merge não cabe aqui (F21-03): ver git log origin/main e a branch registro/publicacoes"
   },
   "publicado": {
-    "homologacao": {
-      "commit": "b061e86",
-      "quando": "2026-11-21",
-      "conferido": "publicar.sh com a conferência completa (#99): a pasta ativa, o serviço local e o domínio ora5g.com.br servindo o commit inteiro de b061e86 e o ambiente homologacao em /saude/versao; build 21/11/2026 10:24 (o J3-e (as provas do cliente, do funil, da ordem de serviço, do pedido de nota sem emitir e das metas), sem mudança nas telas); antes, em 75fc23a, build 10:08 (o J3-c e o J3-d (as provas de cancelar e devolver e do estoque), sem mudança nas telas); antes, em 9652e20, build 09:44 (o J3-a e o J3-b (as provas do caixa e da venda com desconto e pagamento misto), sem mudança nas telas); antes, em 069d614, build 07:28 (o ROB-a (a varredura de todas as telas e o Início que não cai): depois da publicação, a varredura passou de novo por 339 telas com as cinco contas de teste (de 07:29 a 07:43 de 21/11): nenhuma \"não encontrada\" nem erro do servidor; só os avisos esperados (o cartão \"Ainda não está no financeiro real\" do Financeiro, proposital, e uma frase da tela Entregas do projeto que fala em \"falha da leitura\")); antes, em c76631a, build 19/11 20:16 (o VEL-i: depois da publicação, no site: o comprovante de uma capa abriu em 0,80 s e o de um aparelho em 0,70 s (5 aberturas de cada), e o toque numa venda da lista até o comprovante em 0,85 s); antes, em 538e9a0, build 19:30 (o VEL-h: depois da publicação, a prova da navegação passou no site (19:31), e a medida no site deu os mesmos números da versão montada no servidor: pré-cargas do Início, de Vendas e do Estoque em 6, 7 e 8 no celular, a página com 360 px e a barra à vista, e os toques em 1,36 s (o atalho Início), 1,86 s (o comprovante) e 0,84 s (o \"Mais\" até o Estoque) (a segunda rodada; a primeira pegou um pico do Supabase, de até 5 s num pedido)); antes, em 01f3587, build 18:26 (o VND-a: a lista de Vendas com o nome de quem vendeu; depois da publicação, as 4 provas de acesso passaram no site (19/11, 18:28), com o passo novo da lista de Vendas); antes, em bfeff44, build 17:35 (o J2-b: só as provas de acesso e os documentos); antes, em 0434cb5, build 16:58 (o J2-a: só as provas com login e os documentos); antes, em ed1c7b0, build 16:30 (o registro do VEL-g: só documentos); antes, em 5711cab, build 16:04 (o VEL-g: a tela de Transferências numa ida, abrindo com os dois gerentes de teste); antes, em ee9604b, build 14:51 (o J1-d: só o teste e a configuração dele; /transferencias e /inicio abrindo com os gerentes de teste); antes, em 41d69f2, build 14:22 (o J1-c: só o teste novo; /transferencias e /estoque abrindo com os dois gerentes de teste); antes, em a7e3501, build 13:32 (o J1-b: só os testes novos; \"20 de 20 conexões aquecidas\" na subida; /vender e /vendas abrindo com a conta de teste); antes, em 9e47f60, build 13:06 (o registro do VEL-f: só documentos; \"20 de 20 conexões aquecidas\" de novo na subida); antes, em ce8b5db, build 12:15 (o VEL-f: \"20 de 20 conexões aquecidas\" no log da subida; /inicio e /relatorios levando à entrada sem login); antes, em 92fe105, build 11:05 (o VEL-e: /inicio e /catalogo levando à entrada sem login e, com as contas de teste, abrindo com 200); antes, em 5d3a8ce, build 10:38 (o J1-a e o VEL-d: /catalogo e /estoque levando à entrada sem login e, com a conta de teste, abrindo com 200 pela leitura única); antes, em 4063f39, build 18/11 18:48 (o registro das contas de teste: só documentos); antes, em 38fd013, build 18:11 (o registro dos convites: só documentos); antes, em 42bd4a0, build 17:56 (o CONTAS-a e o REPASSE-a, publicados às 17:37 e de novo às 17:56 com o NEXT_PUBLIC_APP_URL em https://ora5g.com.br: /pagamentos/contas-bancarias e /relatorios/marketplaces/repasses levando à entrada sem login); antes, o OBS-a em 52d0fff (build 17:14); antes, o CD-a em 3839819 (build 16:54: o depósito que não vende); antes, o PERF-a em bfb3125 (build 16:39: os chips nas metas e no bônus); antes, o ABERTO-a em 235c56c (build 15:08, só documentos); antes, o DEMO-c em 324d7b8 (build 14:51: /demo e as trocas de perfil e de loja respondendo 404; / e /entrar com 200 e sem o link da demonstração); antes, o DOC-a em a0ac5c5 (build 14:31, só documentos); antes, o VEL-c em 3fd64b6 (build 14:14: /inicio, /api/pendencias e /vender respondendo 307 para a entrada, sem login); antes, o DEMO-b em aaedf0d (build 13:56: /demo/financeiro/extratos, /demo/estoque/carga, /demo/canais e /demo/connect abrindo com 200); antes, o GRAF-a em d27dd1a (build 13:39), o PDV-c em b8760d2 (build 13:23, com a venda da demonstração mostrando o botão de adicionar a forma de pagamento e sem o link), o CONNECT-c em 2efe8cc (build 12:41, com os checks do GitHub verdes), o INTEG-d em 5334b6a (build 12:23), o PAY-b em ddb6cd6 (build 11:58, com os checks do GitHub verdes), o TRF-c em 37a2b03 (build 11:46), o REIN-c em 488844b (build 11:14), o AUD-b em bf5eaf5 (build 10:31) e o VEL-b em 27b4f6e (build 07:11); o worker dos avisos roda a cada minuto desde 16:32 de 17/11 e a tarefa dos alertas a cada 10 minutos desde 19:13 de 17/11; o log de tempos está ligado (ORA_MEDIR_TEMPOS=1) até o roteiro de aceite do VEL-a"
+    "_leia": "Desde o AUD-c (23/11; achados F18-04 e F21-03 do Codex), este arquivo não diz mais qual commit está no ar nem o que falta publicar: escrito antes da publicação, ficava sempre um lote atrás. O que está no ar AGORA é o que https://ora5g.com.br/saude/versao responde (commit, build e ambiente). Cada publicação conferida fica registrada, depois de feita, na branch registro/publicacoes (PUBLICACOES.md e publicacoes.jsonl), por deploy/homologacao/registrar-publicacao.sh (ADR-024).",
+    "agora": "https://ora5g.com.br/saude/versao",
+    "registro": {
+      "branch": "registro/publicacoes",
+      "arquivos": [
+        "PUBLICACOES.md",
+        "publicacoes.jsonl"
+      ],
+      "comando": "deploy/homologacao/registrar-publicacao.sh"
     },
-    "falta_publicar": [
-      "J3-f (sem migration e sem mudança nas telas: só a prova no site, o financeiro da loja de teste: contas a pagar, conciliação e repasse da financeira)",
-      "o log de tempos está ligado na homologação até o roteiro de aceite do VEL-a: depois ele é desligado e a plataforma é publicada de novo, sem mudança de código"
-    ]
+    "historico_ate_21_11": {
+      "commit": "c1b8e60",
+      "quando": "2026-11-21",
+      "conferido": "publicar.sh com a conferência completa (#99): a pasta ativa, o serviço local e o domínio ora5g.com.br servindo o commit inteiro de c1b8e60 e o ambiente homologacao em /saude/versao; build 21/11/2026 10:45 (o J3-f (o financeiro da loja de teste: contas a pagar, conciliação e repasse da financeira), sem mudança nas telas); antes, em b061e86, build 10:24 (o J3-e (as provas do cliente, do funil, da ordem de serviço, do pedido de nota sem emitir e das metas), sem mudança nas telas); antes, em 75fc23a, build 10:08 (o J3-c e o J3-d (as provas de cancelar e devolver e do estoque), sem mudança nas telas); antes, em 9652e20, build 09:44 (o J3-a e o J3-b (as provas do caixa e da venda com desconto e pagamento misto), sem mudança nas telas); antes, em 069d614, build 07:28 (o ROB-a (a varredura de todas as telas e o Início que não cai): depois da publicação, a varredura passou de novo por 339 telas com as cinco contas de teste (de 07:29 a 07:43 de 21/11): nenhuma \"não encontrada\" nem erro do servidor; só os avisos esperados (o cartão \"Ainda não está no financeiro real\" do Financeiro, proposital, e uma frase da tela Entregas do projeto que fala em \"falha da leitura\")); antes, em c76631a, build 19/11 20:16 (o VEL-i: depois da publicação, no site: o comprovante de uma capa abriu em 0,80 s e o de um aparelho em 0,70 s (5 aberturas de cada), e o toque numa venda da lista até o comprovante em 0,85 s); antes, em 538e9a0, build 19:30 (o VEL-h: depois da publicação, a prova da navegação passou no site (19:31), e a medida no site deu os mesmos números da versão montada no servidor: pré-cargas do Início, de Vendas e do Estoque em 6, 7 e 8 no celular, a página com 360 px e a barra à vista, e os toques em 1,36 s (o atalho Início), 1,86 s (o comprovante) e 0,84 s (o \"Mais\" até o Estoque) (a segunda rodada; a primeira pegou um pico do Supabase, de até 5 s num pedido)); antes, em 01f3587, build 18:26 (o VND-a: a lista de Vendas com o nome de quem vendeu; depois da publicação, as 4 provas de acesso passaram no site (19/11, 18:28), com o passo novo da lista de Vendas); antes, em bfeff44, build 17:35 (o J2-b: só as provas de acesso e os documentos); antes, em 0434cb5, build 16:58 (o J2-a: só as provas com login e os documentos); antes, em ed1c7b0, build 16:30 (o registro do VEL-g: só documentos); antes, em 5711cab, build 16:04 (o VEL-g: a tela de Transferências numa ida, abrindo com os dois gerentes de teste); antes, em ee9604b, build 14:51 (o J1-d: só o teste e a configuração dele; /transferencias e /inicio abrindo com os gerentes de teste); antes, em 41d69f2, build 14:22 (o J1-c: só o teste novo; /transferencias e /estoque abrindo com os dois gerentes de teste); antes, em a7e3501, build 13:32 (o J1-b: só os testes novos; \"20 de 20 conexões aquecidas\" na subida; /vender e /vendas abrindo com a conta de teste); antes, em 9e47f60, build 13:06 (o registro do VEL-f: só documentos; \"20 de 20 conexões aquecidas\" de novo na subida); antes, em ce8b5db, build 12:15 (o VEL-f: \"20 de 20 conexões aquecidas\" no log da subida; /inicio e /relatorios levando à entrada sem login); antes, em 92fe105, build 11:05 (o VEL-e: /inicio e /catalogo levando à entrada sem login e, com as contas de teste, abrindo com 200); antes, em 5d3a8ce, build 10:38 (o J1-a e o VEL-d: /catalogo e /estoque levando à entrada sem login e, com a conta de teste, abrindo com 200 pela leitura única); antes, em 4063f39, build 18/11 18:48 (o registro das contas de teste: só documentos); antes, em 38fd013, build 18:11 (o registro dos convites: só documentos); antes, em 42bd4a0, build 17:56 (o CONTAS-a e o REPASSE-a, publicados às 17:37 e de novo às 17:56 com o NEXT_PUBLIC_APP_URL em https://ora5g.com.br: /pagamentos/contas-bancarias e /relatorios/marketplaces/repasses levando à entrada sem login); antes, o OBS-a em 52d0fff (build 17:14); antes, o CD-a em 3839819 (build 16:54: o depósito que não vende); antes, o PERF-a em bfb3125 (build 16:39: os chips nas metas e no bônus); antes, o ABERTO-a em 235c56c (build 15:08, só documentos); antes, o DEMO-c em 324d7b8 (build 14:51: /demo e as trocas de perfil e de loja respondendo 404; / e /entrar com 200 e sem o link da demonstração); antes, o DOC-a em a0ac5c5 (build 14:31, só documentos); antes, o VEL-c em 3fd64b6 (build 14:14: /inicio, /api/pendencias e /vender respondendo 307 para a entrada, sem login); antes, o DEMO-b em aaedf0d (build 13:56: /demo/financeiro/extratos, /demo/estoque/carga, /demo/canais e /demo/connect abrindo com 200); antes, o GRAF-a em d27dd1a (build 13:39), o PDV-c em b8760d2 (build 13:23, com a venda da demonstração mostrando o botão de adicionar a forma de pagamento e sem o link), o CONNECT-c em 2efe8cc (build 12:41, com os checks do GitHub verdes), o INTEG-d em 5334b6a (build 12:23), o PAY-b em ddb6cd6 (build 11:58, com os checks do GitHub verdes), o TRF-c em 37a2b03 (build 11:46), o REIN-c em 488844b (build 11:14), o AUD-b em bf5eaf5 (build 10:31) e o VEL-b em 27b4f6e (build 07:11); o worker dos avisos roda a cada minuto desde 16:32 de 17/11 e a tarefa dos alertas a cada 10 minutos desde 19:13 de 17/11; o log de tempos está ligado (ORA_MEDIR_TEMPOS=1) até o roteiro de aceite do VEL-a"
+    },
+    "pendencia_operacional": "o log de tempos está ligado na homologação até o roteiro de aceite do VEL-a: depois ele é desligado e a plataforma é publicada de novo, sem mudança de código"
   },
   "aceites": {
     "VEL-a": {
@@ -642,12 +650,325 @@
       "resposta": null,
       "respondido_em": null,
       "nota": "no ar em 42bd4a0 (build 17:37); testável com o relatório de vendas de um canal e o extrato do banco dos mesmos dias; a importação automática dos pedidos segue bloqueada (ORA-MKTPL-001); no GitHub, os checks de 42bd4a0 terminaram com sucesso: \"Verificações\" e \"Supabase Preview\""
+    },
+    "J1-a": {
+      "roteiro": "docs/aceite/J1-a.md",
+      "requisitos": [
+        "ORA-ORG-006"
+      ],
+      "entrega": "a prova #11: o login de verdade no site no ar",
+      "commit": "5d3a8ce",
+      "publicado_em": "2026-11-19",
+      "pedido_em": "2026-11-19",
+      "resposta": null,
+      "respondido_em": null,
+      "nota": "no ar em 5d3a8ce (build 19/11 10:38); o aceite foi pedido no relato do lote; requisitos: ORA-ORG-006 (segue parcial: o SMTP e os modelos de e-mail no Supabase)"
+    },
+    "VEL-d": {
+      "roteiro": "docs/aceite/VEL-d.md",
+      "requisitos": [
+        "ORA-QUAL-010"
+      ],
+      "entrega": "o Catálogo e a lista do Estoque numa ida só ao banco",
+      "commit": "5d3a8ce",
+      "publicado_em": "2026-11-19",
+      "pedido_em": "2026-11-19",
+      "resposta": null,
+      "respondido_em": null,
+      "nota": "no ar em 5d3a8ce (build 19/11 10:38); o aceite foi pedido no relato do lote; requisitos: ORA-QUAL-010 (segue parcial: a ação do carrinho, o E2E que conclui uma venda e a piloto)"
+    },
+    "VEL-e": {
+      "roteiro": "docs/aceite/VEL-e.md",
+      "requisitos": [
+        "ORA-QUAL-010"
+      ],
+      "entrega": "a sessão e o sino com as permissões numa conta só",
+      "commit": "92fe105",
+      "publicado_em": "2026-11-19",
+      "pedido_em": "2026-11-19",
+      "resposta": null,
+      "respondido_em": null,
+      "nota": "no ar em 92fe105 (build 19/11 11:05); o aceite foi pedido no relato do lote; requisitos: ORA-QUAL-010 (segue parcial: os painéis, a pré-carga do menu, a ação do carrinho e a piloto)"
+    },
+    "VEL-f": {
+      "roteiro": "docs/aceite/VEL-f.md",
+      "requisitos": [
+        "ORA-QUAL-010"
+      ],
+      "entrega": "as conexões com o banco aquecidas",
+      "commit": "ce8b5db",
+      "publicado_em": "2026-11-19",
+      "pedido_em": "2026-11-19",
+      "resposta": null,
+      "respondido_em": null,
+      "nota": "no ar em ce8b5db (build 19/11 12:15); o aceite foi pedido no relato do lote; requisitos: ORA-QUAL-010 (segue parcial: o servidor da produção perto do banco, os painéis, a ação do carrinho e a piloto)"
+    },
+    "J1-b": {
+      "roteiro": "docs/aceite/J1-b.md",
+      "requisitos": [
+        "ORA-POS-002",
+        "ORA-QUAL-010"
+      ],
+      "entrega": "a venda de ponta a ponta no celular, na loja de teste",
+      "commit": "a7e3501",
+      "publicado_em": "2026-11-19",
+      "pedido_em": "2026-11-19",
+      "resposta": null,
+      "respondido_em": null,
+      "nota": "no ar em a7e3501 (build 19/11 13:32); o aceite foi pedido no relato do lote; requisitos: ORA-POS-002 e ORA-QUAL-010 (seguem parciais: o aceite e a piloto)"
+    },
+    "J1-c": {
+      "roteiro": "docs/aceite/J1-c.md",
+      "requisitos": [
+        "ORA-INV-007"
+      ],
+      "entrega": "a transferência de ponta a ponta, com duas pessoas, entre as lojas de teste",
+      "commit": "41d69f2",
+      "publicado_em": "2026-11-19",
+      "pedido_em": "2026-11-19",
+      "resposta": null,
+      "respondido_em": null,
+      "nota": "no ar em 41d69f2 (build 19/11 14:22); o aceite foi pedido no relato do lote; requisitos: ORA-INV-007 (segue parcial: o estoque das lojas e a homologação) e o ponto T4"
+    },
+    "J1-d": {
+      "roteiro": "docs/aceite/J1-d.md",
+      "requisitos": [
+        "ORA-INV-007"
+      ],
+      "entrega": "a transferência de um aparelho pelo IMEI, com duas pessoas, entre as lojas de teste",
+      "commit": "ee9604b",
+      "publicado_em": "2026-11-19",
+      "pedido_em": "2026-11-19",
+      "resposta": null,
+      "respondido_em": null,
+      "nota": "no ar em ee9604b (build 19/11 14:51); o aceite foi pedido no relato do lote; requisitos: ORA-INV-007 (segue parcial: o estoque das lojas e a homologação)"
+    },
+    "VEL-g": {
+      "roteiro": "docs/aceite/VEL-g.md",
+      "requisitos": [
+        "ORA-QUAL-010",
+        "ORA-INV-007"
+      ],
+      "entrega": "a tela de Transferências numa ida só ao banco",
+      "commit": "5711cab",
+      "publicado_em": "2026-11-19",
+      "pedido_em": "2026-11-19",
+      "resposta": null,
+      "respondido_em": null,
+      "nota": "no ar em 5711cab (build 19/11 16:04); o aceite foi pedido no relato do lote; requisitos: ORA-QUAL-010 e ORA-INV-007 (seguem parciais)"
+    },
+    "J2-a": {
+      "roteiro": "docs/aceite/J2-a.md",
+      "requisitos": [
+        "ORA-REPORT-001",
+        "ORA-REPORT-002",
+        "ORA-REPORT-005",
+        "ORA-INV-001"
+      ],
+      "entrega": "as provas com login dos relatórios e do estoque, só lendo",
+      "commit": "0434cb5",
+      "publicado_em": "2026-11-19",
+      "pedido_em": "2026-11-19",
+      "resposta": null,
+      "respondido_em": null,
+      "nota": "no ar em 0434cb5 (build 19/11 16:58); o aceite foi pedido no relato do lote; requisitos: ORA-REPORT-001, ORA-REPORT-002, ORA-REPORT-005 e ORA-INV-001 (seguem parciais)"
+    },
+    "J2-b": {
+      "roteiro": "docs/aceite/J2-b.md",
+      "requisitos": [
+        "ORA-ORG-004",
+        "ORA-QUAL-002"
+      ],
+      "entrega": "as provas de acesso por papel e por loja, só lendo",
+      "commit": "bfeff44",
+      "publicado_em": "2026-11-19",
+      "pedido_em": "2026-11-19",
+      "resposta": null,
+      "respondido_em": null,
+      "nota": "no ar em bfeff44 (build 19/11 17:35); o aceite foi pedido no relato do lote; requisitos: ORA-ORG-004 e ORA-QUAL-002 (seguem parciais)"
+    },
+    "VND-a": {
+      "roteiro": "docs/aceite/VND-a.md",
+      "requisitos": [
+        "ORA-POS-008"
+      ],
+      "entrega": "o nome de quem vendeu e as vendas da loja para a rede, na lista de Vendas",
+      "commit": "01f3587",
+      "publicado_em": "2026-11-19",
+      "pedido_em": "2026-11-19",
+      "resposta": null,
+      "respondido_em": null,
+      "nota": "no ar em 01f3587 (build 19/11 18:26); o aceite foi pedido no relato do lote; requisitos: ORA-POS-008 (segue testado)"
+    },
+    "VEL-h": {
+      "roteiro": "docs/aceite/VEL-h.md",
+      "requisitos": [
+        "ORA-QUAL-010"
+      ],
+      "entrega": "a pré-carga mais leve e a barra de baixo à vista no celular",
+      "commit": "538e9a0",
+      "publicado_em": "2026-11-19",
+      "pedido_em": "2026-11-19",
+      "resposta": null,
+      "respondido_em": null,
+      "nota": "no ar em 538e9a0 (build 19/11 19:30); o aceite foi pedido no relato do lote; requisitos: ORA-QUAL-010 (segue parcial)"
+    },
+    "VEL-i": {
+      "roteiro": "docs/aceite/VEL-i.md",
+      "requisitos": [
+        "ORA-QUAL-010",
+        "ORA-POS-008"
+      ],
+      "entrega": "o comprovante da venda em três rodadas",
+      "commit": "c76631a",
+      "publicado_em": "2026-11-19",
+      "pedido_em": "2026-11-19",
+      "resposta": null,
+      "respondido_em": null,
+      "nota": "no ar em c76631a (build 19/11 20:16); o aceite foi pedido no relato do lote; requisitos: ORA-QUAL-010 (segue parcial) e ORA-POS-008"
+    },
+    "ROB-a": {
+      "roteiro": "docs/aceite/ROB-a.md",
+      "requisitos": [
+        "ORA-QUAL-008",
+        "ORA-REPORT-003"
+      ],
+      "entrega": "a varredura de todas as telas e o Início que não cai",
+      "commit": "069d614",
+      "publicado_em": "2026-11-21",
+      "pedido_em": "2026-11-21",
+      "resposta": null,
+      "respondido_em": null,
+      "nota": "no ar em 069d614 (build 21/11 07:28); o aceite foi pedido no relato do lote; requisitos: ORA-QUAL-008 e ORA-REPORT-003 (seguem parciais)"
+    },
+    "J3-a": {
+      "roteiro": "docs/aceite/J3-a.md",
+      "requisitos": [
+        "ORA-PAY-004",
+        "ORA-PAY-005",
+        "ORA-PAY-006"
+      ],
+      "entrega": "o caixa de ponta a ponta, com duas pessoas, na loja de teste",
+      "commit": "9652e20",
+      "publicado_em": "2026-11-21",
+      "pedido_em": "2026-11-21",
+      "resposta": null,
+      "respondido_em": null,
+      "nota": "no ar em 9652e20 (build 21/11 09:44); o aceite foi pedido no relato do lote; requisitos: ORA-PAY-004, ORA-PAY-005 e ORA-PAY-006 (seguem testados)"
+    },
+    "J3-b": {
+      "roteiro": "docs/aceite/J3-b.md",
+      "requisitos": [
+        "ORA-POS-005",
+        "ORA-POS-006",
+        "ORA-POS-007",
+        "ORA-PAY-001"
+      ],
+      "entrega": "a venda com desconto aprovado e pagamento misto, na loja de teste",
+      "commit": "9652e20",
+      "publicado_em": "2026-11-21",
+      "pedido_em": "2026-11-21",
+      "resposta": null,
+      "respondido_em": null,
+      "nota": "no ar em 9652e20 (build 21/11 09:44); o aceite foi pedido no relato do lote; requisitos: ORA-POS-005, ORA-POS-006, ORA-POS-007 e ORA-PAY-001 (seguem testados; o PAY-001, parcial)"
+    },
+    "J3-c": {
+      "roteiro": "docs/aceite/J3-c.md",
+      "requisitos": [
+        "ORA-POS-010",
+        "ORA-PAY-003",
+        "ORA-PAY-005"
+      ],
+      "entrega": "cancelar e devolver, com três pessoas, na loja de teste",
+      "commit": "75fc23a",
+      "publicado_em": "2026-11-21",
+      "pedido_em": "2026-11-21",
+      "resposta": null,
+      "respondido_em": null,
+      "nota": "no ar em 75fc23a (build 21/11 10:08); o aceite foi pedido no relato do lote; requisitos: ORA-POS-010, ORA-PAY-003 e ORA-PAY-005 (o POS-010 e o PAY-003 seguem parciais; o PAY-005, testado)"
+    },
+    "J3-d": {
+      "roteiro": "docs/aceite/J3-d.md",
+      "requisitos": [
+        "ORA-INV-003",
+        "ORA-INV-004",
+        "ORA-INV-008",
+        "ORA-INV-009"
+      ],
+      "entrega": "o estoque de ponta a ponta, com três pessoas, na loja de teste",
+      "commit": "75fc23a",
+      "publicado_em": "2026-11-21",
+      "pedido_em": "2026-11-21",
+      "resposta": null,
+      "respondido_em": null,
+      "nota": "no ar em 75fc23a (build 21/11 10:08); o aceite foi pedido no relato do lote; requisitos: ORA-INV-003, ORA-INV-004, ORA-INV-008 e ORA-INV-009 (o INV-004 segue parcial; os outros, testados)"
+    },
+    "J3-e": {
+      "roteiro": "docs/aceite/J3-e.md",
+      "requisitos": [
+        "ORA-CRM-001",
+        "ORA-CRM-003",
+        "ORA-CRM-004",
+        "ORA-CRM-005",
+        "ORA-OS-001",
+        "ORA-OS-002",
+        "ORA-OS-003",
+        "ORA-OS-004",
+        "ORA-OS-006",
+        "ORA-POS-011",
+        "ORA-FISC-001",
+        "ORA-FISC-002",
+        "ORA-PERF-003",
+        "ORA-PERF-004",
+        "ORA-PERF-005"
+      ],
+      "entrega": "o cliente, o funil, a ordem de serviço, o pedido de nota sem emitir e as metas, na loja de teste",
+      "commit": "b061e86",
+      "publicado_em": "2026-11-21",
+      "pedido_em": "2026-11-21",
+      "resposta": null,
+      "respondido_em": null,
+      "nota": "no ar em b061e86 (build 21/11 10:24); o aceite foi pedido no relato do lote; requisitos: ORA-CRM-001, ORA-CRM-003, ORA-CRM-004, ORA-CRM-005, ORA-OS-001 a ORA-OS-004, ORA-OS-006, ORA-POS-011, ORA-FISC-001, ORA-FISC-002, ORA-PERF-003, ORA-PERF-004 e ORA-PERF-005 (o OS-002, o PERF-004 e o PERF-005 seguem parciais; os outros, testados)"
+    },
+    "J3-f": {
+      "roteiro": "docs/aceite/J3-f.md",
+      "requisitos": [
+        "ORA-FIN-003",
+        "ORA-FIN-004",
+        "ORA-FIN-005",
+        "ORA-PAY-002",
+        "ORA-PAY-007"
+      ],
+      "entrega": "o financeiro da loja de teste: contas a pagar, conciliação e repasse da financeira",
+      "commit": "c1b8e60",
+      "publicado_em": "2026-11-21",
+      "pedido_em": "2026-11-21",
+      "resposta": null,
+      "respondido_em": null,
+      "nota": "no ar em c1b8e60 (build 21/11 10:45); o aceite foi pedido no relato do lote; requisitos: ORA-FIN-003, ORA-FIN-004, ORA-FIN-005, ORA-PAY-002 e ORA-PAY-007 (o FIN-003, o PAY-002 e o PAY-007 seguem parciais; os outros, testados)"
+    },
+    "AUD-c": {
+      "roteiro": "docs/aceite/AUD-c.md",
+      "requisitos": [
+        "ORA-PAY-009",
+        "ORA-FIN-006",
+        "ORA-MKTPL-005",
+        "ORA-CAT-002",
+        "ORA-INV-004"
+      ],
+      "entrega": "os achados F21-01 a F21-03 da auditoria integral do Codex de 21/11 (PR #105): a linha do extrato com um uso só (o mesmo crédito não concilia uma venda e um repasse de marketplace), o rodapé da planilha da Rein escrito com vírgula reconhecido e o registro de cada publicação gravado depois dela, fora dos commits do aplicativo",
+      "commit": null,
+      "publicado_em": null,
+      "pedido_em": "2026-11-23",
+      "resposta": null,
+      "respondido_em": null,
+      "nota": "o commit e a publicação ficam no registro (a branch registro/publicacoes), não aqui (F21-03); a parte A do roteiro espera o primeiro extrato e o primeiro relatório de marketplace de verdade, e a parte B, a planilha da Rein no servidor; o F21-04 (as duas transferências de teste para a Muffato Santa) não foi executado: espera o lote TRF-d e o sim do proprietário"
     }
   },
   "contagem_dos_estados": {
     "nao_iniciado": 15,
-    "parcial": 80,
-    "testado": 69,
+    "parcial": 81,
+    "testado": 68,
     "bloqueado": 13,
     "respeitado": 2
   },
@@ -755,7 +1076,7 @@
       "titulo": "Importar produtos e preços da Rein somente por CSV/XLSX",
       "prioridade": "P0",
       "estado": "parcial",
-      "lote": "L3c importação; R2 correções do importador; CAT-002b (15/11): a planilha do Excel (.xlsx) direto; INTEG-b (16/11): #95, a importação de 2.000 linhas no orçamento; registro do #95 (16/11): aplicada pela integração GitHub × Supabase no merge; REIN-a (17/11): a planilha inteira (a observação longa, as partes de até 2.000 linhas e a linha de total de fora); AUD-a (18/11): o rodapé de totais sem rótulo fica de fora (F01); REIN-b (18/11): a carga do estoque por loja pelo relatório, com prévia, aprovação e o livro (ADR-021)",
+      "lote": "L3c importação; R2 correções do importador; CAT-002b (15/11): a planilha do Excel (.xlsx) direto; INTEG-b (16/11): #95, a importação de 2.000 linhas no orçamento; registro do #95 (16/11): aplicada pela integração GitHub × Supabase no merge; REIN-a (17/11): a planilha inteira (a observação longa, as partes de até 2.000 linhas e a linha de total de fora); AUD-a (18/11): o rodapé de totais sem rótulo fica de fora (F01); REIN-b (18/11): a carga do estoque por loja pelo relatório, com prévia, aprovação e o livro (ADR-021); AUD-c (23/11): o rodapé da Rein escrito com vírgula reconhecido (F21-01)",
       "bloqueio_externo": "B1: arquivo real da Rein para testar o mapeamento (o importador não supõe o formato)",
       "revisado_codex": false,
       "homologado": false
@@ -872,7 +1193,7 @@
       "titulo": "Receber estoque inicial validado por contagem real",
       "prioridade": "P0",
       "estado": "parcial",
-      "lote": "L4a entrada de mercadoria; R1 correções do recebimento; B2 correção #80 (14/11); R4 (14/11): revisão do estado; REIN-b (18/11): a carga do estoque por loja pelo relatório, com prévia, aprovação e o livro (ADR-021); J3-d (21/11): o estoque de ponta a ponta, com três pessoas, na loja de teste",
+      "lote": "L4a entrada de mercadoria; R1 correções do recebimento; B2 correção #80 (14/11); R4 (14/11): revisão do estado; REIN-b (18/11): a carga do estoque por loja pelo relatório, com prévia, aprovação e o livro (ADR-021); J3-d (21/11): o estoque de ponta a ponta, com três pessoas, na loja de teste; AUD-c (23/11): a quantidade escrita com vírgula lida pelo texto na carga (F21-01)",
       "bloqueio_externo": null,
       "revisado_codex": false,
       "homologado": false
@@ -898,8 +1219,8 @@
     "ORA-INV-007": {
       "titulo": "Transferência entre lojas com trânsito/recebimento",
       "prioridade": "P1",
-      "estado": "testado",
-      "lote": "L4 estoque/compras; TRF-a (17/11): a remessa, vários produtos na mesma transferência (#60); J1-c (19/11): a transferência de ponta a ponta com duas pessoas, contra o site no ar, entre as lojas de teste; J1-d (19/11): a transferência de um aparelho pelo IMEI, ida e volta, contra o site no ar; VEL-g (19/11): a tela de Transferências numa ida (migration aplicada no ora5g-dev em 19/11)",
+      "estado": "parcial",
+      "lote": "L4 estoque/compras; TRF-a (17/11): a remessa, vários produtos na mesma transferência (#60); J1-c (19/11): a transferência de ponta a ponta com duas pessoas, contra o site no ar, entre as lojas de teste; J1-d (19/11): a transferência de um aparelho pelo IMEI, ida e volta, contra o site no ar; VEL-g (19/11): a tela de Transferências numa ida (migration aplicada no ora5g-dev em 19/11); AUD-c (23/11): volta a parcial: falta resolver a divergência do recebimento (F21-04; o lote TRF-d)",
       "bloqueio_externo": null,
       "revisado_codex": false,
       "homologado": false
@@ -1259,7 +1580,7 @@
       "titulo": "Importar extratos de adquirente/banco por arquivo validado",
       "prioridade": "P1",
       "estado": "testado",
-      "lote": "EXT-a (17/11): o extrato por arquivo, com a venda sugerida para cada linha (ADR-016)",
+      "lote": "EXT-a (17/11): o extrato por arquivo, com a venda sugerida para cada linha (ADR-016); AUD-c (23/11): a linha do extrato com um uso só (F21-02)",
       "bloqueio_externo": "E3 (o arquivo real de cada maquininha e do banco, para o aceite)",
       "revisado_codex": false,
       "homologado": false
@@ -1358,7 +1679,7 @@
       "titulo": "Conciliação bancária e contas multiempresa",
       "prioridade": "P1",
       "estado": "parcial",
-      "lote": "EXT-a (17/11): o extrato do banco da loja ou da rede por arquivo (OFX ou planilha), conciliado linha a linha com aprovação (ADR-016)",
+      "lote": "EXT-a (17/11): o extrato do banco da loja ou da rede por arquivo (OFX ou planilha), conciliado linha a linha com aprovação (ADR-016); AUD-c (23/11): a linha do extrato com um uso só (F21-02)",
       "bloqueio_externo": "as contas bancárias de cada empresa (multiempresa)",
       "revisado_codex": false,
       "homologado": false
@@ -1790,7 +2111,7 @@
       "titulo": "Conciliação de tarifas, comissões e repasses por marketplace",
       "prioridade": "P1",
       "estado": "parcial",
-      "lote": "MKTPL-a (17/11; ADR-018); AUD-a (18/11): volta a parcial (aceite A13: falta o recebido conferido com o extrato e a importação automática)",
+      "lote": "MKTPL-a (17/11; ADR-018); AUD-a (18/11): volta a parcial (aceite A13: falta o recebido conferido com o extrato e a importação automática); AUD-c (23/11): o repasse ocupa a linha do extrato, que não serve a mais nada (F21-02)",
       "bloqueio_externo": null,
       "revisado_codex": false,
       "homologado": false
@@ -2087,7 +2408,7 @@
       "titulo": "CI, lint, typecheck, testes e code review obrigatórios",
       "prioridade": "P0",
       "estado": "parcial",
-      "lote": "transversal; R4 (14/11): revisão do estado; INTEG-a (16/11): #99; INTEG-b (16/11): #95, a causa do CI vermelho do GitHub; registro do #95 (16/11): aplicada pela integração GitHub × Supabase no merge; GIT-a (17/11): a tabela das issues abertas com o commit e o teste de cada correção",
+      "lote": "transversal; R4 (14/11): revisão do estado; INTEG-a (16/11): #99; INTEG-b (16/11): #95, a causa do CI vermelho do GitHub; registro do #95 (16/11): aplicada pela integração GitHub × Supabase no merge; GIT-a (17/11): a tabela das issues abertas com o commit e o teste de cada correção; AUD-c (23/11): o registro de cada publicação fora dos commits do aplicativo (F21-03; ADR-024)",
       "bloqueio_externo": null,
       "revisado_codex": false,
       "homologado": false
@@ -2264,5 +2585,5 @@
       "homologado": false
     }
   },
-  "proximo_passo": "Seguir o plano do proprietário de 16/11 (resumo na seção 5.A de EXECUCAO_INTEGRAL_STATUS.md), um lote por vez, cada um com o roteiro de aceite em docs/aceite/ e a lista do que se precisa do proprietário: (1) fechar o VEL-a, que está no ar desde 17/11 (087ef53, build 00:40, com o log de tempos ligado): esperar a resposta do proprietário ao roteiro docs/aceite/VEL-a.md, pedido em 17/11 (é a primeira vez que a versão publicada roda com uma sessão de verdade: se uma tela com login mostrar a página de erro, publicar de novo o commit 89927dc, sem desfazer a migration, e corrigir); depois do roteiro, ler as linhas [tempos] de ~/homologacao/logs/plataforma.log, preencher a seção 4.6 de docs/operacao/DESEMPENHO_NO_CELULAR.md, confirmar qual chave assina os tokens (uma linha GET /auth/v1/user por pedido quer dizer segredo compartilhado), gravar a resposta em aceites.VEL-a e, por fim, desligar o log e publicar de novo (seção \"Como medir de novo\" do mesmo documento); enquanto a resposta não chega, seguir para o item 3; (2) fechar o ONLINE-c (Onda 0.2: a loja online sem erro 500 para o visitante), que está no ar desde 17/11 (dc12dce, build 09:09; conferido num navegador pelo domínio e no registro da homologação, sem resposta 500): esperar a resposta do proprietário ao roteiro docs/aceite/ONLINE-c.md, pedido em 17/11, e gravá-la em aceites.ONLINE-c; enquanto a resposta não chega, seguir para o item 3; (3) fechar o ROT-a (Onda 0.3: as rotinas agendadas no banco, com o registro de cada rodada e o aviso na Saúde da operação; ADR-011), que está no ar desde 17/11 (a2041b1, build 10:03; as tarefas rodam no ora5g-dev desde 09:45): esperar a resposta do proprietário ao roteiro docs/aceite/ROT-a.md, pedido em 17/11, e gravá-la em aceites.ROT-a; enquanto a resposta não chega, seguir para o item 4; (4) fechar o INTEG-c (as correções do #101 e do #102, da revisão do Codex de 16/11; PR #100, commit e311060, lido em 17/11), que está no ar desde 17/11 (9012f7f, build 11:15): esperar a resposta do proprietário ao roteiro docs/aceite/INTEG-c.md, pedido em 17/11, e, com o aceite, fechar as issues #101 e #102 no GitHub, citando o commit e os testes; (5) fechar o BANCO-a (Onda 0.5: os índices, o RLS e os comentários), que está no ar desde 17/11 (0bfad91, build 11:51): esperar a resposta do proprietário ao roteiro docs/aceite/BANCO-a.md, pedido em 17/11, e gravá-la em aceites.BANCO-a; (6) fechar o ENTREGAS-a (o botão Comprar e a tela de entregas; aceites A01 e A18 do adendo do Codex de 16/11) e o WHATS-a (Onda 0.4: o executável do worker do WhatsApp, desligado sem a Meta), que estão no ar desde 17/11 (69bfab6, build 12:03, um merge só): esperar as respostas do proprietário aos roteiros docs/aceite/ENTREGAS-a.md e docs/aceite/WHATS-a.md, pedidos em 17/11, e gravá-las em aceites; (7) fechar o SAUDE-a (Onda 0.6; ADR-012: a venda sem o pedido da nota como fila, o estoque abaixo do mínimo como aviso e a leitura leve do banco na /saude), que está no ar desde 17/11 (7e1ff5f, build 12:28): esperar a resposta do proprietário ao roteiro docs/aceite/SAUDE-a.md, pedido em 17/11, e gravá-la em aceites.SAUDE-a; (8) fechar o GIT-a (Onda 0.7), que está no ar desde 17/11 (3235772, build 13:01): esperar a resposta do proprietário ao roteiro docs/aceite/GIT-a.md, pedido em 17/11, e as decisões sobre a visibilidade do repositório e as PRs de documentação; com a permissão do conector do GitHub, fechar as 48 issues da seção 1 de docs/alinhamento/ISSUES_E_PRS_2026-11-17.md (e a #92 e a #44), cada uma com o comentário que cita o commit e o teste; (9) fechar o ORG-a (Onda 1, item 2: as 11 lojas e DEFEITOS pelo cadastro operacional), que está no ar desde 17/11 (13fca19, build 13:31): esperar a resposta do proprietário ao roteiro docs/aceite/ORG-a.md, pedido em 17/11, e as correções de nome; (9a) fechar o PWA-a (Onda 1, item 7, primeira parte: o site instalável), que está no ar desde 17/11 (ccdf342, build 13:51): esperar a resposta do proprietário ao roteiro docs/aceite/PWA-a.md, pedido em 17/11; a segunda parte (o Web Push) espera a autorização do proprietário para o par de chaves de envio; (9b) fechar o TRF-a (Onda 1, item 5: a remessa), que está no ar desde 17/11 (e603531, build 14:26): esperar a resposta do proprietário ao roteiro docs/aceite/TRF-a.md, pedido em 17/11; (9c) fechar o REIN-a (Onda 1, item 3, a parte sem o arquivo), que está no ar desde 17/11 (03123d0, build 14:40): esperar a resposta do proprietário ao roteiro docs/aceite/REIN-a.md, pedido em 17/11; com o arquivo da Rein em ~/entrada/rein/, conferir a importação de verdade e fazer a carga do estoque por loja, com a data de corte; (9d) fechar o MKT-a (Onda 2, origem e UTM), que está no ar desde 17/11 (2e3fa24, build 15:02): esperar a resposta do proprietário ao roteiro docs/aceite/MKT-a.md, pedido em 17/11; (9e) fechar o DEP-a (o aceite A19: a lista única do que depende de fora), que está no ar desde 17/11 (569eab8, build 15:20): esperar a resposta do proprietário ao roteiro docs/aceite/DEP-a.md, pedido em 17/11; (9f) o PWA-b (Onda 1, item 7, a segunda parte: o aviso no celular) foi aceito pelo proprietário em 17/11, o primeiro lote aceito, depois do aviso de teste entregue no celular dele; falta o aviso de um pedido de verdade (contas de teste, J1); (9g) o QUAL-a (o alerta de fila e de rotina) está no ar desde 17/11 (87c8dbe, build 19:29); o pedido de aceite pelo roteiro docs/aceite/QUAL-a.md vai na lista final; (9h) o EXT-a (o extrato da maquininha e do banco por arquivo) está no ar desde 17/11 (721e021, build 20:20); o pedido de aceite pelo roteiro docs/aceite/EXT-a.md vai na lista final, com um extrato real da maquininha (E3); (9i) o META-a (o custo dos anúncios por arquivo) está no ar desde 17/11 (475ad3e, build 20:45); o pedido de aceite pelo roteiro docs/aceite/META-a.md vai na lista final, com um relatório real do Gerenciador de Anúncios; (9j) o MKTPL-a (os pedidos dos marketplaces por arquivo) está no ar desde 17/11 (93f3a6d, build 21:35); o pedido de aceite pelo roteiro docs/aceite/MKTPL-a.md vai na lista final, com um relatório real de um canal; (9k) o CANAIS-a (os canais de venda lado a lado) está no ar desde 17/11 (47f2c4f, build 21:52); o pedido de aceite pelo roteiro docs/aceite/CANAIS-a.md vai na lista final; (9l) o ADAPT-a (as integrações que esperam contrato) está no ar desde 17/11 (7c7bdf1, build 22:19); o roteiro docs/aceite/ADAPT-a.md vai na lista final; (9m) o AUD-a (o que a auditoria do Codex de 17/11 pediu) está no ar desde 17/11 (3135435, build 23:02); o roteiro docs/aceite/AUD-a.md vai na lista final; (9o) o REIN-b (o estoque de cada loja pelo relatório da Rein) está no ar desde 17/11 (c330d0d, build 23:31); o roteiro docs/aceite/REIN-b.md espera o arquivo no servidor e a conta de administrador (J1); (9p) o DEMO-a (a demonstração com as lojas de verdade e os canais) e o TRF-b (o que cada passo da transferência faz no estoque) estão no ar desde 18/11 (bdbd8b6, build 00:08); os roteiros docs/aceite/DEMO-a.md e docs/aceite/TRF-b.md vão na lista final; (9q) o ONLINE-d (o carrinho e o pedido do site) está no ar desde 18/11 (cc50523, build 01:01); o roteiro docs/aceite/ONLINE-d.md vai na lista final; (9r) o VEL-b (as telas com login com menos idas ao banco) está no ar desde 18/11 (27b4f6e, build 07:11); o roteiro docs/aceite/VEL-b.md vai na lista final; (9s) a reanálise do Codex de 18/11 (PR #104, corte 27b4f6e): o AUD-b (F18-01, F18-02 e F18-04) está no ar desde 18/11 (bf5eaf5, build 10:31), o REIN-c (F18-03) desde 18/11 (488844b, build 11:14), o TRF-c (F18-05 e a D-049) desde 18/11 (37a2b03, build 11:46), o PAY-b (F18-06) desde 18/11 (ddb6cd6, build 11:58), o INTEG-d (a matriz das APIs) desde 18/11 (5334b6a, build 12:23), o CONNECT-c (ORA-CONNECT-009, parcial) desde 18/11 (2efe8cc, build 12:41), o PDV-c (D-050) desde 18/11 (b8760d2, build 13:23), o GRAF-a (os gráficos reais) desde 18/11 (d27dd1a, build 13:39), o DEMO-b (os fluxos novos na demonstração, o último lote dela) desde 18/11 (aaedf0d, build 13:56) e o VEL-c (o sino e o Início numa ida só) desde 18/11 (3fd64b6, build 14:14); medir o depois do VEL-c pelo log a partir da linha 4335 quando o proprietário usar o sistema; seguir a D-051 (tudo em ora5g.com.br; os roteiros no sistema real; a demonstração desligada desde 18/11, 324d7b8, build 14:51); fechar os outros setores pela seção 5 de docs/alinhamento/PONTOS_EM_ABERTO_2026-11-18.md, um lote por vez (o PERF-a, os chips nas metas e no bônus, no ar desde 18/11, bfb3125, build 16:39; o CD-a, o depósito que não vende, no ar desde 18/11, 3839819, build 16:54; o OBS-a, os erros do servidor na Saúde da operação, no ar desde 18/11, 52d0fff, build 17:14; o CONTAS-a, as contas bancárias com o saldo, e o REPASSE-a, o repasse do marketplace casado com o extrato, no ar desde 18/11, 42bd4a0, build 17:37; a leitura única do Catálogo e do Estoque depois da medida com login); a rotina dos convites ligada em 18/11 com o sim do proprietário: para o e-mail de convite chegar à equipe, o SMTP próprio e a Site URL no Supabase (pendências 5.1 a 5.3); as contas de teste fictícias (Gerente, Vendedor e Administrador, @example.com) criadas em 18/11 com o sim do proprietário, com as senhas só em ~/homologacao/contas-de-teste.txt: com elas, as jornadas de duas pessoas (a carga do estoque, a transferência entre lojas) e as provas com login (J1, #11; a #11 passou em 19/11, no J1-a, e a medida com login virou script no VEL-d); seguir docs/alinhamento/PONTOS_EM_ABERTO_2026-11-18.md um a um: o caminho crítico são as contas da equipe (a SUPABASE_SECRET_KEY no servidor), o CNPJ das lojas (o proprietário, na tela Lojas), a planilha da Rein em ~/entrada/rein/ e as chaves da Nogle com o tipo da chave (P9); com cada um, o passo seguinte do mesmo documento; depois, o relatório consolidado do que falta; (9n) daqui em diante, a ordem da orientação da auditoria (docs/alinhamento/LEITURA_AUDITORIA_2026-11-17.md, seção 4): o resto da matriz (a operação central com os três perfis, que depende das contas de teste; a Nogle, o fiscal, o WhatsApp e as financeiras, que dependem de contrato; os canais com API e as demais áreas); (10) VEL-c: o sino de avisos e o Início numa leitura (17 a 28 pedidos ao mesmo tempo, pelo log), a leitura única do Catálogo e do Estoque, e a ação do carrinho (espera a decisão: ADR-010); (11) Onda 1, a loja piloto: as contas de teste (dependem da SUPABASE_SECRET_KEY no servidor, J1), as 11 lojas e DEFEITOS, a planilha inteira da Rein (depende do arquivo em ~/entrada/rein/), as fotos, a transferência de vários produtos, a jornada autenticada no celular e o aviso no celular (PWA); (12) Onda 2: os requisitos parciais e as decisões do proprietário, mais a lista única de dependências por API (A19); (13) Onda 3: as integrações, cada uma com contrato, documentação e credencial, e a loja online com compra completa (aceites A02 a A17 e A20 do adendo do Codex de 16/11, que amplia a ADR-009; o A01, o botão Comprar no topo do site, veio no ENTREGAS-a). Fora do plano novo e ainda registrado: o lote SUPA-a do diagnóstico de 16/11 (config.toml mínimo em packages/banco/supabase, sem buckets, para o check da integração GitHub × Supabase; docs/alinhamento/LEITURA_DIAGNOSTICO_INTEGRAL_2026-11-16.md); e as 114 funções que o visitante não executa e ainda têm o P0002 no texto (HTTP 500 no registro da API a cada recusa): trocar o código é um lote à parte, a propor ao proprietário."
+  "proximo_passo": "Seguir a ordem de 23/11 (a continuação pedida pelo proprietário com a auditoria integral do Codex de 21/11, PR #105; a leitura está em docs/alinhamento/LEITURA_AUDITORIA_2026-11-21.md): (1) publicar o AUD-c depois do merge, provar no domínio e registrar a publicação (deploy/homologacao/registrar-publicacao.sh; a branch registro/publicacoes); (2) TRF-d: resolver a divergência do recebimento da transferência (devolver à origem ou dar baixa, com motivo e auditoria) e, com o sim do proprietário, regularizar as duas transferências de teste para a Muffato Santa (F21-04); (3) seguir a fila integral pelas áreas que faltam funcionar, um lote por vez, com teste, publicação, prova no domínio, roteiro de aceite e relato; (4) quando a planilha da Rein estiver em ~/entrada/rein/, rodar a prova com o arquivo original (ARQUIVO_ESTOQUE_AUDITORIA) e preparar a carga da loja piloto. O que depende do proprietário está em docs/PENDENCIAS_DO_PROPRIETARIO.md (a lista única). A narrativa anterior deste campo (os passos de 17 a 21/11) fica no histórico do Git e em docs/alinhamento/EXECUCAO_INTEGRAL_STATUS.md."
 }

@@ -1,70 +1,77 @@
-# O que depende do proprietário
+# O que depende do proprietário (a lista única)
 
-**Atualizado em:** 10/11/2026 · **Por:** Claude Code (programador)
-**Lista consolidada de APIs, acessos e habilitações (com documentação oficial e nomes das variáveis): [`docs/integracoes/APIS_E_HABILITACOES_NECESSARIAS.md`](integracoes/APIS_E_HABILITACOES_NECESSARIAS.md).** Esta página continua com os detalhes de cada passo.
-**Para:** o proprietário e o Codex. O Codex usa esta lista para dizer ao proprietário o que falta. **Valores de chaves e senhas nunca passam pelo chat (nem do Claude nem do Codex) e nunca vão para o GitHub**: eles são gravados direto no servidor pelo comando da seção 4, ou ficam no painel do próprio fornecedor. O Codex confere só pelos **nomes**.
+**Atualizado em:** 23/11/2026 (lote AUD-c, achado F21-03 da auditoria do Codex de 21/11) · **Por:** Claude Code (programador) · **Revisor:** Codex
+**Conferido no servidor em 23/11, só pelos nomes** (`definir-chave.sh --situacao`): gravadas a chave secreta do Supabase, as quatro dos avisos no celular e a chave de acesso da Nogle; ausentes todas as outras de fora (e-mail, fiscal, pagamento online, WhatsApp, Meta e marketplaces). As pastas de entrada do servidor (`~/entrada/rein`, `lojas`, `fotos` e `equipe`) estão **vazias**.
 
-Tudo o que não está aqui o Claude Code faz sozinho (programação, migrations no banco de desenvolvimento, publicação na homologação depois da sua autorização, chaves geradas por nós).
+**Esta é a lista única.** Só entra aqui o que é dado, decisão ou acesso que só o proprietário (ou um fornecedor, por ele) pode dar. Erro de código não é pendência do proprietário, e o que já chegou não é pedido de novo. O detalhe técnico de cada integração fica em [`integracoes/APIS_E_HABILITACOES_NECESSARIAS.md`](integracoes/APIS_E_HABILITACOES_NECESSARIAS.md) e na [`matriz das APIs`](integracoes/MATRIZ_DAS_APIS.md).
+
+**Valores de chaves, senhas, tokens e certificados nunca passam pelo chat (Claude ou Codex), pelo GitHub nem por log.** Eles são gravados direto no servidor pelo comando da seção 4, ou ficam no painel do próprio fornecedor. O Codex confere só pelos **nomes**.
+
+Tudo o que não está aqui o Claude Code faz sozinho: programação, testes, migrations no banco da homologação, publicação na homologação (já autorizada ao fim de cada lote) e as chaves geradas por nós.
 
 ---
 
-## 0. Lista única de dependências externas (09/11/2026)
+## 0. A lista única (23/11/2026)
 
-Uma linha por fornecedor ou capacidade. Mostra o que fica bloqueado e o critério para desbloquear. Variáveis aparecem só pelo **nome**; os valores são gravados pelo comando da seção 4. Desde a correção #55, a publicação entrega ao site só `APP_ENV`, `APP_TIMEZONE`, `APP_DEFAULT_CURRENCY` e `NEXT_PUBLIC_*`. Chave secreta do Supabase e chaves Nogle ficam só no worker. O restante do projeto continua andando sem estas dependências.
+| # | O que é preciso | Para quê (o que destrava) | Quem fornece, e por onde | O que já chegou | O que falta | O que anda enquanto isso |
+|---|---|---|---|---|---|---|
+| A1 | Chave secreta do Supabase e contas de teste | Convites pela tela da equipe e as provas com login (ORA-ORG-006, J1 a J3) | — | **Tudo:** a chave gravada em 18/11 (só os workers a leem); 5 contas de teste (vendedor, 2 gerentes, administrador e dono), criadas em 18, 19 e 21/11 com o seu sim; as provas J1, J2 e J3 passaram no domínio | **Nada** | — |
+| A2 | E-mail do sistema: a caixa `nao-responda@ora5g.com.br`, o SMTP e os dois modelos de e-mail no painel do Supabase, e o endereço do site (Site URL) | O convite de gente nova e o "esqueci minha senha" por e-mail (ORA-ORG-006) | Você: cPanel e painel do Supabase (seção 5, itens 5.1 a 5.3) | Nada | Os três passos da seção 5 | A tela **Equipe e acessos** já registra o convite, e a rotina que o envia está ligada desde 18/11; bloquear e tirar acesso funcionam. Sem o SMTP próprio, o e-mail não chega à pessoa |
+| B1 | **A planilha da Rein no servidor** (`relatorioProdutos131258.xlsx`, a posição de 10/11 às 13:20) | A prova da leitura com o arquivo original (F21-01), o catálogo real (2.271 produtos) e a carga do estoque da loja piloto (ORA-CAT-002, ORA-INV-004) | Você: copiar para `~/entrada/rein/` (WinSCP, usuário `dev`, porta 22022). **Nunca pelo GitHub nem pelo chat** | O arquivo existe e foi entregue ao Codex, que o leu nas auditorias de 18 e 21/11 | A cópia no servidor (a pasta está vazia) | A leitura está corrigida e provada com planilha sintética no mesmo formato (83 colunas, 2.271 produtos, o rodapé com vírgula) |
+| B2 | Dados das 11 lojas: CNPJ, endereço, telefone e horário | A venda em cada loja de verdade, a nota e a vitrine do site (sem CNPJ a loja existe para estoque, mas não vende: ORA-ORG-001) | Você: planilha em `~/entrada/lojas/`, ou direto na tela **Lojas da rede** | Os nomes das 11 lojas e de DEFEITOS (09/11), já cadastrados | CNPJ, endereço, telefone e horário de cada uma. Nada é inventado | Estoque, transferência e inventário já funcionam sem o CNPJ |
+| B3 | Fotos dos produtos | Distinguir produtos parecidos na venda, na busca e no site (ORA-CAT-011) | Você: pela tela **Catálogo e fotos** (do celular), ou arquivos em `~/entrada/fotos/` | Nada (0 fotos) | As fotos de verdade de cada produto e variação. Não se usa foto de outra variação | O envio de foto está pronto e testado |
+| B4 | Pessoas da loja piloto | Os logins de verdade da Santa Cândida | Você: pela tela **Equipe e acessos**, ou a lista em `~/entrada/equipe/` | Nada | Nome, loja e função de cada pessoa | As contas de teste cobrem as provas |
+| C1 | Nogle (Ora Connect): o tipo da chave, a segunda chave se houver, e quais operações liberar | Ativação, recarga e portabilidade de verdade (ORA-CONNECT-003, 007, 008 e 011) | A Nogle, por você (o e-mail da seção 2.1). As chaves pelo comando da seção 4 | A chave de acesso (gravada em 18/11), o endereço da API e as respostas da Nogle de 10/11 | Dizer se a chave é de franquia, marca ou PDV (`NOGLE_AUTH_KEY_TYPE`); a segunda chave, se o tipo pedir (`NOGLE_SECONDARY_KEY`); quais operações ligar (`NOGLE_OPERACOES_HABILITADAS`); uma linha e um chip de teste. **Trocar no painel da Nogle as chaves que passaram pelo chat** e gravar as novas pelo comando | O adaptador, a fila, a reconsulta e a conciliação dos relatórios estão prontos e testados com os exemplos oficiais; nenhuma operação real é feita |
+| C2 | Nogle: carteira, extrato, recorrência, repasse e comissões | A conta do telecom fechada com a fonte oficial (ORA-CONNECT-009, #54) | A Nogle, por você | A resposta de que a API não traz comissões | A fonte oficial das comissões (relatório ou extrato da Nogle) e a liberação da consulta de pagamento | A produção já é conciliada com os relatórios oficiais de ativação e recarga |
+| D1 | Contador e emissor fiscal | A nota emitida pelo sistema (ORA-FISC-003 a 010) | Você e o contador (o e-mail da seção 2.2) | Nada | O emissor contratado, o certificado de cada filial e as regras por operação | O pedido, a aprovação, o registro da chave de acesso, o PDF e o XML guardados já funcionam com a emissão feita no portal |
+| E1 | Pagamento online: PicPay, PagBank ou os dois | A compra paga no site e o link de pagamento (ORA-PAY-014, ORA-ONLINE-002) | Você: a escolha e a credencial do escolhido (seção 4) | Nada | A escolha e a credencial. Para a maquininha PicPay avisar o sistema sozinha (ORA-PAY-013), a PicPay precisa oferecer isso em contrato: sem a documentação dela, nada é programado | A reserva no site com pagamento na loja; a regra que só confirma depois de reconsultar o provedor; na loja, a conferência pelo comprovante e pelo extrato |
+| E2 | PayJoy e Aiva: o contrato e a documentação da API de cada uma; o prazo e a taxa do repasse (P8) | A venda financiada pela API (ORA-POS-013, ORA-PAY-002) | Você, com cada financeira | Nada | Contrato, documentação e as respostas de prazo e taxa | A venda financiada à mão, a entrada separada e o repasse registrado já funcionam (prova J3-f) |
+| E3 | Extratos de verdade: um de cada maquininha e um do banco, em arquivo | A conciliação conferida com o arquivo real (ORA-PAY-009, ORA-PAY-010, ORA-FIN-006) | Você: baixar no site ou no app de cada um e importar no sistema, em **Gestão → Conciliação → Extratos por arquivo → Importar extrato** | Nada (0 extratos importados) | Os arquivos | A importação por arquivo e a conciliação assistida estão prontas; o defeito F21-02 foi corrigido antes do primeiro extrato real |
+| F1 | WhatsApp oficial (Meta): a verificação da empresa, o número, o modelo de mensagem | O envio da nota e dos avisos pela API oficial (ORA-WHATS-001 a 008) | Você: Meta Business (seção 5, item 5.6) | Nada | A verificação (demora semanas), o número e o modelo aprovado | A fila do envio da nota está pronta e desligada; na ordem de serviço e na reserva do site, o botão que abre a conversa do WhatsApp já funciona |
+| F2 | Mercado Livre, TikTok Shop e Shopee: contas de desenvolvedor | Pedidos, estoque e repasses automáticos (ORA-MKTPL-001 a 008) | Você: o cadastro em cada portal (seção 5, item 5.7) | Nada | As contas e a autorização de cada loja | Os pedidos por arquivo, o lucro por pedido e o repasse casado com o extrato já funcionam |
+| F3 | Meta Ads: o acesso à conta de anúncios | O gasto dos anúncios automático e o aviso das vendas à Meta (ORA-META-001, ORA-META-005) | Você: o mesmo cadastro da Meta | Nada | O acesso | O gasto por arquivo e o painel de CPL, CPA e ROAS já funcionam |
+| G | As decisões da seção 3 | Cada uma destrava a regra dela | Você | As de 18 a 21/11 (seção 3) | As que estão marcadas como abertas | O sistema usa o padrão reversível escrito em cada uma |
+| H | Produção: o servidor perto do banco, o banco com processador próprio e backup, e o plano do banco de teste | A operação comercial, com backup e restauração ensaiados (ORA-QUAL-005, ORA-QUAL-012), e o fim das travadas do banco de teste | Você: decisão de custo | Nada | A decisão | Tudo segue na homologação |
+| I | Os aceites: "aceito" ou "não aceito" em cada roteiro de `docs/aceite/` | Fechar cada lote: só o seu "aceito" faz um requisito virar homologado | Você: seguir o roteiro e responder na conversa (a tela **Entregas do projeto** mostra a lista e o que cada lote entregou) | 1 aceito (PWA-b) | 63 roteiros sem resposta | Nenhum lote para por falta de aceite |
 
-| # | Fornecedor / capacidade | Função bloqueada | Prioridade | Contrato / habilitação | Ambiente de teste | Variáveis (nomes) | Critério de desbloqueio |
-|---|---|---|---|---|---|---|---|
-| A1 | Supabase Auth: **usuário de teste fictício** | Prova #11: login, renovação da sessão, saída, revogação e segunda visita. Também o cadastro de pessoas pela tela | P0 | Nenhum contrato. A chave secreta foi gravada em 18/11: o Claude cria o usuário fictício (e-mail `@example.com`, sem e-mail de terceiros), com o seu sim | `ora5g-dev` | `SUPABASE_SECRET_KEY` (só no worker; o login usa a chave pública) | Usuário de teste existe (desde 18/11: três contas de teste) e a prova #11 passa (**passou em 19/11**, contra o site no ar: roteiro `docs/aceite/J1-a.md`) |
-| A2 | E-mail do sistema (SMTP próprio no Supabase) | Convite e recuperação de senha por e-mail | P1 | Caixa `nao-responda@ora5g.com.br` (cPanel) e SMTP no painel do Supabase (seção 5) | `ora5g-dev` | No painel do Supabase; `EMAIL_FROM` e `SMTP_*` só quando o sistema mandar e-mail próprio | E-mail de teste chega a uma caixa controlada |
-| B1 | **Arquivo da Rein** (produtos, preços, estoque) | Importador com prévia e aprovação; carga do piloto | P0 | Nenhum (arquivo exportado) | Cópia em `~/entrada/rein/` | — | Arquivo recebido e prévia sem erro bloqueante |
-| B2 | **Dados das 11 lojas e do local DEFEITOS** (nome de origem, código, CNPJ, endereço) | Cadastro real das lojas; transferências e DEFEITOS (#60) | P0 | Decisão já tomada (11 lojas + DEFEITOS). Os nomes dos 12 locais já estão em `docs/cadastros/LOJAS_CONFIRMADAS_2026-11-09.json`; faltam CNPJ e endereço; nada é inventado | `~/entrada/` | — | Arquivo conciliado com o cadastro confirmado |
-| C1 | **Nogle: chaves, tipo de chave (P9) e linha/ICCID de teste** | Ativação, recarga e portabilidade reais (#54); homologação da Ora Connect | P0 | Contrato atual e respostas às 51 perguntas ([`PERGUNTAS_PARA_NOGLE_2026-11-09.md`](integracoes/PERGUNTAS_PARA_NOGLE_2026-11-09.md); respostas de 10/11 na [referência §3.1](integracoes/NOGLE_API_REFERENCIA.md)) | Conta ou linha de teste autorizada | `NOGLE_API_BASE_URL`, `NOGLE_AUTH_KEY_TYPE`, `NOGLE_ACCESS_KEY`, `NOGLE_SECONDARY_KEY`, `NOGLE_OPERACOES_HABILITADAS` (só no worker) | Uma operação de teste confirmada pela evidência oficial |
-| C2 | Nogle: cobrança/gateway, carteira e extrato, recorrência e repasse | Partes 4 a 6 da #54 | P1 | Documentação oficial e habilitação desses recursos | Idem C1 | Idem C1 | Contrato e campos documentados pela Nogle |
-| D1 | **Contador e emissor fiscal** | Emissão automática; nota de devolução por API | P1 | Contrato com o emissor; modelo, tributos e certificado definidos pelo contador | Homologação do emissor | `FISCAL_PROVIDER`, `FISCAL_API_BASE_URL`, `FISCAL_API_TOKEN`, `FISCAL_ENVIRONMENT` | Nota de teste emitida na homologação do emissor |
-| E1 | Link de pagamento PicPay / PagBank | Meio "link" na venda (hoje recusado) | P2 | Habilitação do link nas contas | Sandbox do fornecedor | `PICPAY_*`, `PAGBANK_*` | Cobrança de teste com retorno conferido |
-| E2 | PayJoy / Aiva: relatório de repasse (P8) | Conciliação automática do valor a receber (hoje manual) | P2 | Relatório ou contrato com prazo e taxa (nada é inventado) | — | — | Relatório recebido e conciliado com uma venda de teste |
-| E3 | **Extratos das maquininhas e do banco** (arquivos) | Conciliação de pagamentos, taxas e repasses (PAY-009/010); "liquidado" no financeiro real | P2 | Exportação dos extratos PicPay, PagBank e banco | Cópia em `~/entrada/extratos/` | — | Arquivo de um dia conciliado com as vendas registradas |
-| F1 | WhatsApp oficial (Meta) | Avisos de nota, OS e comprovante | P2 | Verificação da empresa no Meta Business | Número de teste da Meta | `WHATSAPP_*` | Mensagem de teste entregue no número de teste |
-| G1 | Decisões comerciais: D-026 (prazo e estado na troca), D-016, D-006, G1, G2, P14 (limites de desconto) | Aplicar a política (hoje o sistema registra e controla, mas não decide quem tem direito) | P1 | — | — | — | Resposta registrada em `docs/10_DECISOES_PENDENTES.md` |
+**Não é pendência:** as 11 lojas e DEFEITOS (decididas), Supabase e PostgreSQL (decididos), a publicação na homologação ao fim de cada lote (autorizada), as contas de teste (criadas) e a chave secreta do Supabase (gravada).
 
-Maquininhas PicPay POS e PagSeguro continuam com conferência manual por comprovante: não há API verificada e não há desbloqueio previsto.
+## 1. Por onde começar (o que destrava mais)
 
-Financeiro real (#65): a primeira fatia (vendas, pagamentos registrados e caixas) não depende de fornecedor. Seguem bloqueados: conciliação e "liquidado" (E3), repasses das financeiras (E2) e da Nogle (C2), e margem com custo real (custos chegam com o arquivo da Rein, B1).
-
-## 1. Fazer agora (destrava o login real e o mês 1)
-
-| # | O quê | Onde e como | Destrava |
-|---|---|---|---|
-| 1.1 | ~~Criar 2 usuários de teste~~ **Feito em 18/11:** o Claude criou o Gerente (teste) e o Vendedor (teste) na Santa Cândida (teste) e o Administrador (teste) na rede inteira (e-mails `@example.com`); em 19/11, com o seu sim, o Gerente 2 (teste) só na Loja de teste 2, para o teste da transferência; as senhas ficam só em `~/homologacao/contas-de-teste.txt`, no servidor. As pessoas reais você cadastra pela tela da equipe | — |
-| 1.2 | ~~Gravar a chave secreta do Supabase no servidor~~ **Feito em 18/11:** gravada no servidor, só no ambiente dos workers; a rotina dos convites foi ligada no mesmo dia, com o seu sim | Supabase → **Project Settings → API Keys → Secret keys** → copie a chave (`sb_secret_…`). No terminal do servidor: `bash ~/homologacao/plataforma/deploy/homologacao/definir-chave.sh SUPABASE_SECRET_KEY` e cole quando pedir (seção 4) | **Item mais importante agora.** Cadastro de usuários e gestão da equipe pela tela (o sistema cria a pessoa e gera o link de acesso que o gerente manda pelo WhatsApp); usuários de teste fictícios; login real de ponta a ponta (#11) |
-| 1.3 | **Enviar o arquivo da Rein** (produtos, preços e estoque da Santa Cândida) | Exporte da Rein em CSV ou Excel e copie para a pasta `~/entrada/rein/` do servidor (já criada, só você e o sistema leem) (WinSCP ou `scp`, usuário `dev`, porta 22022). **Não envie pelo GitHub nem pelo chat.** Não precisa tirar nada: o arquivo de estoque não tem dados de clientes; se tiver, avise | Importador da Rein (ORA-009) e a primeira consulta de estoque real |
-| 1.4 | **Dados das 11 lojas e do local DEFEITOS** (a rede tem 11 lojas comerciais; DEFEITOS é o local de itens com problema, não uma 12ª loja) | Planilha com o nome de origem, endereço, CNPJ, telefone e horário de cada loja, na mesma pasta do servidor (`~/entrada/`) | Cadastro real das lojas (ORA-ORG-001) e transferências (#60) |
-| 1.5 | **Pessoal da loja piloto** | Cadastre direto na tela da equipe quando ela for publicada (nome, e-mail, lojas e função); se preferir, deixe a lista em `~/entrada/equipe/` | Usuários reais da homologação |
-| 1.6 | **Aceitar o ADR-003** (catálogo e estoque) | Ler o resumo no início de `docs/adr/ADR-003-catalogo-estoque-e-operacao-comercial.md` e responder "aceito" ou o que mudar. O Codex revisa a parte técnica antes | Libera usar catálogo e estoque com dados reais (no banco de desenvolvimento já começou) |
+| Ordem | O quê | Por quê |
+|---|---|---|
+| 1 | Copiar a planilha da Rein para `~/entrada/rein/` (B1) | É o que falta para provar a leitura com o arquivo original e pôr o catálogo de verdade |
+| 2 | Mandar o CNPJ e o endereço das lojas (B2) | Sem o CNPJ a loja de verdade não vende |
+| 3 | Responder as decisões rápidas da seção 3 marcadas com **agora** | São respostas de uma linha |
+| 4 | Ligar o SMTP no painel do Supabase (A2) | Para convidar a equipe da piloto por e-mail |
+| 5 | Nogle: o tipo da chave e trocar as chaves que passaram pelo chat (C1) | Para começar pelas consultas oficiais |
 
 ## 2. E-mails para enviar (textos prontos)
 
-### 2.1 Nogle (API da Nogle) — destrava a P9 e as credenciais
+### 2.1 Nogle (API da Nogle): o tipo da chave e as perguntas que faltam
 
 **Para:** ti@conteltelecom.com.br · **Assunto:** Integração API NOGLE: dúvidas antes da homologação (Ora 5G)
 
-> Olá, equipe Nogle. Somos a Ora 5G, rede de 11 lojas, e estamos integrando a API NOGLE ao nosso sistema, seguindo a documentação de docs.nogle.tech. Antes de homologar, precisamos confirmar:
-> 1. Qual tipo de chave a Ora tem (franquia, marca/MVNO ou PDV) e quais funções cada tipo libera?
-> 2. As consultas GET que levam dados no corpo (ex.: /linhas/detalhes, /cliente/buscar) aceitam esses dados como parâmetros no endereço?
-> 3. Existe ambiente de testes? Se não, podem nos ceder uma linha e um chip de teste?
-> 4. Há proteção contra pedido repetido (chave de idempotência) ou aviso automático (webhook) de ativação, recarga e portabilidade?
-> 5. Qual a validade do token e o limite de chamadas por minuto?
-> 6. Na recarga, o corpo é `numero` + `id_plano` (como na tabela) ou a lista `numeros` (como no exemplo)?
-> 7. O exemplo de portabilidade bem-sucedida vem com `retorno: false`: é engano do exemplo?
-> 8. Como pedir a troca de chip pela API?
-> 9. Além de LINK e SALDO, podemos usar Pix, boleto e cartão?
-> 10. O histórico de recargas não traz o id da recarga. Podemos identificar a recarga pela data de cadastro devolvida na solicitação, ou há consulta pelo id?
-> 11. No eSIM, o `"esim": "SIM"` vai dentro do item de `chips`? O ICCID do eSIM sempre vem na resposta?
-> 12. Quando a ativação responde só `{"mensagem": "Chip já está ativo."}`, qual é o código HTTP?
->
-> Por favor, nos orientem também sobre como receber as credenciais com segurança. Obrigado!
+A Nogle já respondeu parte das perguntas em 10/11: o GET com os dados no corpo, o estoque e a transferência de chips, o extrato do saldo, os relatórios de ativações e recargas, e que a API não traz comissões (a lista inteira está em [`integracoes/PERGUNTAS_PARA_NOGLE_2026-11-09.md`](integracoes/PERGUNTAS_PARA_NOGLE_2026-11-09.md), e as respostas, na [referência, seção 3.1](integracoes/NOGLE_API_REFERENCIA.md)). O que ainda falta perguntar:
 
-### 2.2 Contador — destrava a P7 e a nota automática
+> Olá, equipe Nogle. Somos a Ora 5G. Seguimos a documentação de docs.nogle.tech, já temos a chave de acesso e recebemos as suas respostas de 10/11 (obrigado). Antes de homologar, falta confirmar:
+> 1. Qual tipo de chave a Ora tem (franquia, marca/MVNO ou PDV), quais funções ela libera e se precisamos também de uma segunda chave?
+> 2. Existe ambiente de testes? Se não, podem nos ceder uma linha e um chip de teste?
+> 3. Existe aviso automático (webhook) de ativação, recarga e portabilidade?
+> 4. Qual a validade do token e o limite de chamadas por minuto?
+> 5. Na recarga, o corpo é `numero` + `id_plano` (como na tabela) ou a lista `numeros` (como no exemplo)?
+> 6. O exemplo de portabilidade bem-sucedida vem com `retorno: false`: é engano do exemplo?
+> 7. Como pedir a troca de chip pela API?
+> 8. Além de LINK e SALDO, podemos usar Pix, boleto e cartão?
+> 9. No eSIM, o `"esim": "SIM"` vai dentro do item de `chips`? O ICCID do eSIM sempre vem na resposta?
+> 10. Quando a ativação responde só `{"mensagem": "Chip já está ativo."}`, qual é o código HTTP?
+> 11. Na consulta por `uuid` (`/consultaPagamento`): em que campo da resposta da ativação e da recarga vem o `uuid`, e podem liberar essa consulta para a nossa conta?
+> 12. Como a API não traz comissões, qual é a fonte oficial para conferi-las (relatório, extrato, outro)?
+> 13. Como trocamos as chaves com segurança?
+>
+> Obrigado!
+
+### 2.2 Contador: a nota pelo sistema
 
 **Assunto:** Ora 5G: emissão de notas pelo sistema próprio
 
@@ -78,83 +85,90 @@ Financeiro real (#65): a primeira fatia (vendas, pagamentos registrados e caixas
 
 ## 3. Decisões que só você pode tomar
 
-| # | Pergunta | Opções / observação |
+**Abertas, para responder agora (uma linha cada):**
+
+| # | Pergunta | O que vale enquanto não responde |
 |---|---|---|
-| P3 | No ranking, o vendedor vê o nome dos colegas ou só a própria posição? | Hoje a demonstração mostra os dois jeitos |
-| P5 | O técnico da assistência terá login próprio ou só recebe mensagens? É funcionário ou terceiro? | A demonstração tem o perfil Técnico como opção |
-| P7 | Qual portal emite a nota hoje e qual tipo (NFC-e ou NF-e)? | E-mail 2.2 ao contador |
-| P8 | As financeiras (PayJoy, Aiva) repassam o valor do aparelho menos a entrada, sem taxa? Em quantos dias? | Define o "a receber" do financeiro |
-| P9 | Tipo da chave da Nogle (franquia, marca/MVNO ou PDV) | E-mail 2.1 à Nogle |
-| P10 | Loja online: com qual CNPJ sai a nota, de onde sai o estoque, qual transportadora, qual domínio | Só para o mês 5 |
-| P13 | Resumo da conversa com o ChatGPT | Salvar sem senhas nem dados de clientes |
-| P14 | **Margem e desconto por categoria**: até quantos % o vendedor dá sem pedir, e a margem mínima de cada categoria (aparelhos, acessórios, chips…) | Tabela simples; sem ela o desconto real não liga (mês 2) |
-| D-016 | Recarga/ativação paga pela **carteira da Ora (SALDO)** só depois de o cliente pagar o serviço no caixa? (LINK: o cliente paga direto à Nogle) | Já está assim no sistema (ADR-005), reversível |
-| D-006 | O gerente aprova **toda** nota ou só exceções? Quem pediu a nota pode aprovar a própria? | Hoje: todas passam pela fila, quem pediu pode aprovar, e a aprovação nunca segura a emissão (ADR-006) |
-| D-026 | **Troca e devolução:** em quantos dias o cliente pode trocar ou devolver? Que estado do aparelho é aceito? Devolve dinheiro ou só vale-troca? | O sistema já registra e controla (reembolso nos meios pagos ou vale-troca); falta a regra comercial |
-| G1 | Piloto em paralelo com a Rein: 2 a 4 semanas? Quanto tempo a Rein fica ativa depois do "go" (para poder voltar)? | [Go/no-go](operacao/GO_NO_GO_PILOTO_E_SAIDA_DA_REIN.md) §5 |
-| D-048 | **LGPD com o jurídico**: base legal de cada dado, por quanto tempo fica, anonimização a pedido, quem atende o titular (encarregado) e por qual canal | O relatório dos dados do titular já existe (só o dono gera, na ficha do cliente); o resto espera o jurídico |
-| D-047 | **Metas de desempenho no celular**: aprovar (ou mudar) as metas propostas | [Desempenho no celular](operacao/DESEMPENHO_NO_CELULAR.md); as telas sem login estão dentro delas. Para as telas com login há proposta nova de 16/11 (abrir o PDV em até 1,5 s; buscar, adicionar e tirar em até 2 s cada; concluir a venda em até 3 s), que você confere no [roteiro de aceite do VEL-a](aceite/VEL-a.md) |
-| D-049 | **Transferência:** o estoque da loja de origem sai do disponível já quando a transferência é **pedida**, ou só quando é **separada**? | **Respondida na sua orientação de 18/11** (reduzir o disponível ao colocar em transferência): desde o lote TRF-c, o pedido já reserva na origem; o envio baixa o físico uma vez. Falta só o seu aceite pelo roteiro [TRF-c](aceite/TRF-c.md) |
-| G2 | Se a internet da loja cair: a venda espera ou vai para um formulário em papel? Quem atende problemas no horário da loja? | D-041 e D-042, com a proposta em [contingência e incidentes](operacao/CONTINGENCIA_E_INCIDENTES.md) |
+| T1 | **As duas transferências de teste para a Muffato Santa** (uma capa e um Galaxy A15 de teste, enviadas pela sua conta em 17/11): posso registrar na Muffato que **não chegaram** (nada entra no estoque dela) e devolver os dois à loja de teste? | Ficam "enviadas", e a Muffato Santa fica com duas chegadas pendentes. O segundo passo (devolver à origem o que não chegou) ainda vai ser programado |
+| BON | **A regra do bônus:** quanto paga cada faixa de meta, e de que medida (vendido, aparelhos, chips, acessórios, Ora Connect)? | Não há regra: o bônus aparece zerado e o fechamento do mês não tem o que fechar |
+| AJU | **Quem aprova o ajuste de estoque:** só o dono, ou o gerente também, na loja dele? | Só o dono aprova; o gerente e o vendedor contam e pedem |
+| P14 | **Desconto por categoria:** até quantos % o vendedor dá sem pedir, e a margem mínima de cada categoria? | Todo desconto pede aprovação do gerente ou do dono |
+| D-026 | **Troca e devolução:** em quantos dias, em que estado o aparelho é aceito, devolve dinheiro ou só vale-troca? | O sistema registra e controla (a gerência decide caso a caso) |
+| P8 | **Financeiras:** em quantos dias a PayJoy e a Aiva repassam, e com que taxa? | O repasse é registrado à mão, e a taxa é a diferença para o valor a receber |
+| MAQ | **As maquininhas de verdade de cada loja** (qual maquininha, de qual provedor) | Nenhuma cadastrada: o PDV não pergunta qual foi usada |
+| APT | **Os aparelhos da loja de teste:** a prova do financeiro pode trazer o próprio aparelho, com uma compra fictícia que não é desfeita? | A prova gasta um Galaxy A15 de teste a cada vez; sobrou um |
+
+**Abertas, sem pressa:**
+
+| # | Pergunta | Observação |
+|---|---|---|
+| P3 | No ranking, o vendedor vê o nome dos colegas ou só a própria posição? | Hoje vê os nomes |
+| P5 | O técnico da assistência terá login próprio ou a gerência registra em nome dele? | Hoje a gerência registra em nome dele (prova J3-e) |
+| P7 | Qual portal emite a nota hoje e de que tipo (NFC-e ou NF-e)? | E-mail 2.2 ao contador |
+| P9 | O tipo da chave da Nogle | E-mail 2.1 |
+| P10 | Loja online: com qual CNPJ sai a nota, de onde sai o estoque, qual transportadora | Para a entrega; a retirada na loja já funciona |
+| D-016 | Recarga e ativação pagas pela carteira da Ora só depois de o cliente pagar no caixa? | Já está assim (ADR-005), reversível |
+| D-006 | O gerente aprova toda nota ou só exceções? Quem pediu pode aprovar a própria? | Hoje todas passam pela fila, e a aprovação nunca segura a emissão |
+| G1 | Piloto em paralelo com a Rein: quantas semanas? | [Go/no-go](operacao/GO_NO_GO_PILOTO_E_SAIDA_DA_REIN.md) |
+| G2 | Se a internet da loja cair: a venda espera ou vai para o papel? Quem atende no horário da loja? | [Contingência](operacao/CONTINGENCIA_E_INCIDENTES.md) |
+| D-047 | As metas de tempo no celular | [Desempenho no celular](operacao/DESEMPENHO_NO_CELULAR.md); a frente de velocidade está parada a seu pedido (20/11) |
+| D-048 | LGPD com o jurídico: base legal, prazo de guarda, quem atende o titular | O relatório dos dados do titular já existe |
+
+**Respondidas (não são pedidas de novo):** as 11 lojas e DEFEITOS (09/11); o cadastro rápido do cliente com nome e WhatsApp, e-mail opcional (12/11); a transferência reserva no pedido, D-049 (18/11); o celular financiado, o chip e a entrada separados, D-050 (18/11); a demonstração dispensada e desligada, D-051 (18/11); as funcionalidades antes da velocidade (20/11); as provas que gravam, só nas lojas de teste e uma a uma (21/11).
 
 ## 4. Chaves e senhas: como gravar no servidor sem passar pelo chat
 
-1. Pegue o valor no painel do fornecedor (coluna "Onde obter" abaixo).
-2. Abra um terminal conectado ao servidor (o mesmo acesso SSH do Claude Code, usuário `dev`, porta 22022) e rode, trocando o nome:
+1. Pegue o valor no painel do fornecedor (a coluna "Quem fornece" abaixo).
+2. Abra um terminal conectado ao servidor (usuário `dev`, porta 22022) e rode, trocando o nome:
    ```bash
    bash ~/homologacao/plataforma/deploy/homologacao/definir-chave.sh NOME_DA_CHAVE
    ```
-   Cole o valor quando pedir. **Ele não aparece na tela** e não fica no histórico. O comando recusa nomes fora da lista. Desde 08/11 aceita cifrão, aspas e barra invertida (testado com o leitor do Next); só recusa aspas simples junto de aspas duplas ou de barra invertida, e valor terminado em barra invertida.
-   **Enquanto a homologação não for publicada de novo**, o comando fica em `~/ora5g-connect/deploy/homologacao/definir-chave.sh` (mesmo uso).
-3. Para ver o que já está gravado (só "preenchida", "vazia" ou "ausente", nunca o valor):
+   Cole o valor quando pedir. **Ele não aparece na tela** e não fica no histórico. O comando recusa nomes fora da lista.
+3. Para ver o que já está gravado (só "preenchida" ou "ausente", nunca o valor):
    ```bash
    bash ~/homologacao/plataforma/deploy/homologacao/definir-chave.sh --situacao
    ```
 4. Avise o Claude Code ("gravei a chave X"). Ele confere pelo nome e publica de novo para valer.
 
-Se preferir, peça ao Claude Code: ele abre o comando pronto no terminal do aplicativo e você só cola o valor.
+Se uma chave passar pelo chat por engano, ela é tratada como exposta: troque no painel do fornecedor e grave a nova pelo comando.
 
-### 4.1 Situação de cada chave na homologação (conferida em 08/11, só pelos nomes)
+### 4.1 Situação de cada chave na homologação (conferida em 23/11, só pelos nomes)
 
-| Quando | Nome | Para quê | Quem fornece / onde obter | Hoje |
-|---|---|---|---|---|
-| Já | `APP_ENV`, `NEXT_PUBLIC_APP_URL` | Ambiente e endereço do sistema | Claude | ✅ preenchidas |
-| Já | `NEXT_PUBLIC_SUPABASE_URL`, `NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY` | Login | Claude (são públicas) | ✅ preenchidas |
-| **Mês 1** | `SUPABASE_SECRET_KEY` | Criar e convidar usuários pelo sistema | **Você**: Supabase → Project Settings → API Keys → Secret keys | ✅ gravada em 18/11 |
-| Mês 1 | `DATABASE_URL` | Scripts de banco e importações grandes, se precisar | **Você**: Supabase → botão **Connect** → **Session pooler** (porta 5432; a direta não funciona, é só IPv6) | ⬜ só quando o Claude pedir |
-| Mês 1 | `APP_ENCRYPTION_KEY`, `CRON_SECRET`, `NEXT_PUBLIC_WEB_PUSH_PUBLIC_KEY`, `WEB_PUSH_PRIVATE_KEY` | Criptografia de tokens, rotinas automáticas, avisos no celular | **Claude gera no servidor** quando o código usar; não depende de você | ⬜ ainda não usadas |
-| Mês 1 | `WEB_PUSH_SUBJECT` | Contato dos avisos no celular | Você escolhe o e-mail (ex.: `mailto:contato@ora5g.com.br`) | ⬜ |
-| Mês 2 | `EMAIL_FROM`, `SMTP_HOST`, `SMTP_PORT`, `SMTP_USER`, `SMTP_PASSWORD` | E-mails do sistema (comprovante, nota, OS) | **Você**: caixa `nao-responda@ora5g.com.br` criada no cPanel (seção 5) | ⬜ |
-| Mês 2 | `PICPAY_CLIENT_ID`, `PICPAY_CLIENT_SECRET`, `PICPAY_WEBHOOK_SECRET` | Link de pagamento PicPay | **Você**: PicPay Empresas → Integrações → Link de Pagamento → Gerar token (o segredo aparece uma vez só) | ⬜ |
-| Mês 2 | `PAGBANK_ENVIRONMENT`, `PAGBANK_API_TOKEN` | Link de pagamento PagBank | **Você**: PagBank → Venda online → Integrações → Gerar token | ⬜ |
-| Mês 3 | `NOGLE_API_BASE_URL` | Endereço da API da Nogle | Claude (público, está na documentação) | ⬜ |
-| Mês 3 | `NOGLE_AUTH_KEY_TYPE`, `NOGLE_ACCESS_KEY` | Ora Connect de verdade | **Você**: tipo de chave pela Nogle (P9) e a chave que vocês já têm | ⬜ a `NOGLE_ACCESS_KEY` foi gravada em 18/11; faltam o tipo (P9) e, se o tipo não for marca, a `NOGLE_SECONDARY_KEY` |
-| Mês 3 | `WHATSAPP_GRAPH_API_VERSION`, `WHATSAPP_BUSINESS_ACCOUNT_ID`, `WHATSAPP_PHONE_NUMBER_ID`, `WHATSAPP_ACCESS_TOKEN`, `WHATSAPP_APP_SECRET`, `WHATSAPP_WEBHOOK_VERIFY_TOKEN` | WhatsApp oficial (nota, OS, avisos) | **Você**: Meta for Developers, app com WhatsApp e token de Usuário do Sistema; o token de verificação o Claude gera | ⬜ depende da verificação da empresa na Meta |
-| Mês 3–4 | `FISCAL_PROVIDER`, `FISCAL_API_BASE_URL`, `FISCAL_API_TOKEN`, `FISCAL_ENVIRONMENT` | Nota automática | **Você + contador**: emissor escolhido (e-mail 2.2) | 🔒 bloqueado até o contador |
-| Mês 5 | `MERCADOLIVRE_APP_ID`, `MERCADOLIVRE_CLIENT_SECRET`, `MERCADOLIVRE_REDIRECT_URI`, `MERCADOLIVRE_WEBHOOK_PATH` | Mercado Livre | **Você**: app no portal de desenvolvedores do Mercado Livre | ⬜ |
-| Mês 6 | `TIKTOKSHOP_APP_KEY`, `TIKTOKSHOP_APP_SECRET`, `TIKTOKSHOP_SERVICE_ID`, `TIKTOKSHOP_REDIRECT_URI` | TikTok Shop | **Você**: TikTok Shop Partner Center | ⬜ |
-| Mês 6 | `META_APP_ID`, `META_APP_SECRET`, `META_SYSTEM_USER_TOKEN`, `META_AD_ACCOUNT_IDS`, `META_PIXEL_ID` | Resultado das campanhas | **Você**: o mesmo app Meta, com leitura de anúncios | ⬜ |
-| Depois | `SHOPEE_ENVIRONMENT`, `SHOPEE_PARTNER_ID`, `SHOPEE_PARTNER_KEY`, `SHOPEE_REDIRECT_URI` | Shopee | **Você**: Shopee Open Platform (aprovação demora) | ⬜ |
-| Opcional | `SENTRY_DSN` | Aviso automático de erros | A decidir | ⬜ |
-| Interno | `APP_TIMEZONE`, `APP_DEFAULT_CURRENCY`, `NODE_OPTIONS`, `NEXT_PUBLIC_LOJA_URL`, `PORT_*`, `SUPABASE_STORAGE_BUCKET_DOCUMENTOS` | Configuração do próprio sistema | Claude | padrão ou quando o módulo existir |
+| Nome | Para quê | Quem fornece | Em 23/11 |
+|---|---|---|---|
+| `APP_ENV`, `NEXT_PUBLIC_APP_URL`, `ORA_DEMO_DESLIGADA`, `LOJA_ONLINE_ORGANIZACAO`, `ORA_ORGANIZACAO_ID` | O ambiente, o endereço e a rede | Claude | preenchidas |
+| `NEXT_PUBLIC_SUPABASE_URL`, `NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY` | Login e banco (são públicas) | Claude | preenchidas |
+| `SUPABASE_SECRET_KEY` | Convites e contas (só os workers a leem) | Você (gravada em 18/11) | **preenchida** |
+| `NEXT_PUBLIC_WEB_PUSH_PUBLIC_KEY`, `WEB_PUSH_PRIVATE_KEY`, `WEB_PUSH_SUBJECT`, `WEB_PUSH_SEGREDO_DA_FILA` | Os avisos no celular | Claude gerou no servidor, com o seu sim de 17/11 | **preenchidas** |
+| `NOGLE_API_BASE_URL`, `NOGLE_GET_COM_CORPO` | O endereço da API da Nogle | Claude (públicos, da documentação) | preenchidas |
+| `NOGLE_ACCESS_KEY` | A chave de acesso da Nogle | Você (gravada em 18/11) | **preenchida** (a trocar: passou pelo chat) |
+| `NOGLE_AUTH_KEY_TYPE`, `NOGLE_SECONDARY_KEY`, `NOGLE_OPERACOES_HABILITADAS`, `NOGLE_CONSULTA_PAGAMENTO` | O tipo da chave, a segunda chave e o que fica ligado | Você, com a resposta da Nogle (C1) | ausentes |
+| `EMAIL_FROM`, `SMTP_HOST`, `SMTP_PORT`, `SMTP_USER`, `SMTP_PASSWORD` | E-mails mandados pelo próprio sistema | Você (hoje o e-mail do login é o do painel do Supabase: A2) | ausentes |
+| `FISCAL_PROVIDER`, `FISCAL_API_BASE_URL`, `FISCAL_API_TOKEN`, `FISCAL_ENVIRONMENT` | A nota pelo sistema | Você e o contador (D1) | ausentes |
+| `PICPAY_CLIENT_ID`, `PICPAY_CLIENT_SECRET`, `PICPAY_WEBHOOK_SECRET`, `PAGBANK_ENVIRONMENT`, `PAGBANK_API_TOKEN` | O pagamento online (E1) | Você | ausentes |
+| `WHATSAPP_*` (seis nomes) | O WhatsApp oficial (F1) | Você, depois da verificação na Meta | ausentes |
+| `META_*` (cinco nomes) | Os anúncios (F3) | Você | ausentes |
+| `MERCADOLIVRE_*`, `TIKTOKSHOP_*`, `SHOPEE_*` | Os marketplaces (F2) | Você | ausentes |
+| `APP_ENCRYPTION_KEY`, `CRON_SECRET`, `DATABASE_URL`, `SENTRY_DSN` | Uso interno, só quando o código precisar | Claude gera (com o seu sim) ou pede | ausentes (ainda não usadas) |
 
-Sem chave por decisão do projeto: Rein (só arquivo), PayJoy e Aiva (lançamento manual), maquininhas PicPay e PagSeguro (conferência por comprovante). Tokens de cada loja nos marketplaces ficam no banco, criptografados, e não neste arquivo. Detalhes de cada credencial: `docs/integracoes/VARIAVEIS_DE_AMBIENTE.md`.
+Sem chave por decisão do projeto: a Rein (só arquivo) e as maquininhas PicPay e PagSeguro (conferência pelo comprovante e pelo extrato). Os tokens de cada loja nos marketplaces ficarão no banco, criptografados. Detalhes de cada nome: [`integracoes/VARIAVEIS_DE_AMBIENTE.md`](integracoes/VARIAVEIS_DE_AMBIENTE.md).
 
 ## 5. Configurações em painéis (fora do servidor)
 
-| # | Onde | O quê | Quando |
+| # | Onde | O quê | Situação em 23/11 |
 |---|---|---|---|
-| 5.1 | **cPanel** (conta `wwora5`) | Criar a caixa `nao-responda@ora5g.com.br` (remetente dos e-mails do sistema) | Antes da recuperação de senha |
-| 5.2 | **Supabase → Authentication → Emails → SMTP Settings** | Ligar o SMTP próprio com essa caixa (servidor, porta, usuário e senha **digitados por você no painel**). Na mesma área, nos modelos **Invite user** e **Reset password**, trocar o link pelo texto da seção A1 de `docs/integracoes/APIS_E_HABILITACOES_NECESSARIAS.md` | Antes de convidar pessoas novas e do "esqueci minha senha" (sem SMTP próprio o Supabase só manda e-mail para a equipe do projeto) |
-| 5.3 | **Supabase → Authentication → URL Configuration** | **Site URL** = `https://ora5g.com.br` (a recuperação de senha e o convite já estão prontos) | Junto com o 5.2 |
-| 5.4 | **WHM/DNS** | Subdomínio `hml-app.ora5g.com.br`: registro **A** para `69.6.214.94` (sem AAAA), SSL automático e encaminhamento para `127.0.0.1:3100` (ADR-001 §4A). Depois apagar o `.htaccess` da `public_html` para o domínio principal voltar ao site | Quando quiser tirar a homologação do domínio principal |
-| 5.5 | **GitHub** | Proteger a `main` contra exclusão e push forçado (sem exigir PR, para não travar os merges combinados em 07/11). A auditoria do Codex de 17/11 (F07) achou a `main` sem proteção nenhuma (`protected: false`, sem rulesets). Exigir que os checks passem antes do merge também é possível, mas muda o fluxo: os merges passam a ser por PR. É decisão sua | Quando puder |
-| 5.6 | **Meta Business** | Iniciar a **verificação da empresa** (WhatsApp oficial e anúncios) | Já: a aprovação demora semanas |
-| 5.7 | **Mercado Livre, TikTok Shop, Shopee** | Cadastro de desenvolvedor/parceiro com a conta da empresa | Mês 1, porque a aprovação demora |
-| 5.8 | **Supabase → Authentication → Attack Protection** (ou Password Security) | Ligar a proteção contra senha vazada ("Leaked password protection"): o login recusa a senha que já apareceu em vazamento. O aviso do Supabase continua acusando (auditoria do Codex de 17/11, F09). Pode exigir o plano Pro | Antes da piloto |
+| 5.1 | **cPanel** (conta `wwora5`) | Criar a caixa `nao-responda@ora5g.com.br` (o remetente dos e-mails do sistema) | A fazer |
+| 5.2 | **Supabase → Authentication → Emails → SMTP Settings** | Ligar o SMTP próprio com essa caixa (os dados **digitados por você no painel**). Nos modelos **Invite user** e **Reset password**, trocar o link pelo texto da seção A1 de `integracoes/APIS_E_HABILITACOES_NECESSARIAS.md` | A fazer |
+| 5.3 | **Supabase → Authentication → URL Configuration** | **Site URL** = `https://ora5g.com.br` | A conferir (o Codex não viu o painel; o Claude também não) |
+| 5.4 | **WHM/DNS** | O subdomínio `hml-app.ora5g.com.br`, quando quiser tirar a homologação do domínio principal | Só quando houver produção |
+| 5.5 | **GitHub** | Proteger a `main` contra exclusão e push forçado | A fazer (a auditoria do Codex de 17/11, F07, achou a `main` sem proteção; a de 21/11 ainda lista a política de branches entre o que falta) |
+| 5.6 | **Meta Business** | Iniciar a **verificação da empresa** (WhatsApp oficial e anúncios) | A fazer: a aprovação demora semanas |
+| 5.7 | **Mercado Livre, TikTok Shop, Shopee** | O cadastro de desenvolvedor ou parceiro com a conta da empresa | A fazer: a aprovação demora |
+| 5.8 | **Supabase → Authentication → Attack Protection** | Ligar a proteção contra senha vazada (pode exigir o plano Pro) | A fazer (o aviso do Supabase segue aceso em 21/11) |
 
 ## 6. Para o Codex: como usar esta lista
 
-- Pergunte ao proprietário pelos itens das seções 1 a 3 e 5 na ordem; para as chaves (seção 4), peça só a saída de `definir-chave.sh --situacao`.
+- Pergunte ao proprietário pelos itens da seção 1, na ordem; para as chaves (seção 4), peça só a saída de `definir-chave.sh --situacao`.
 - **Não peça valores**: se o proprietário colar uma chave no chat, oriente a trocar a chave no painel do fornecedor e gravar a nova pelo comando.
-- Item concluído: registre aqui com a data (o Claude também atualiza ao conferir no servidor).
+- O que está publicado: `https://ora5g.com.br/saude/versao` (agora) e a branch `registro/publicacoes` (cada publicação conferida). O que foi aceito: `docs/aceite/` e a tela Entregas do projeto.
+- Item concluído sai da coluna "o que falta" com a data; o Claude atualiza ao conferir no servidor.
