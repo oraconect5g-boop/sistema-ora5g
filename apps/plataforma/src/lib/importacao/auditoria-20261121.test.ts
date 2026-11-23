@@ -6,8 +6,9 @@
 // A primeira prova é a do Codex, copiada sem mudar a expectativa (falhava no commit c1b8e60 e passa com o lote AUD-c). As
 // outras são o contrato inteiro da correção, com arquivos SINTÉTICOS montados aqui (nenhum arquivo real: o original é
 // privado e roda em auditoria-planilha-real.test.ts, só com ARQUIVO_ESTOQUE_AUDITORIA):
-//   * a planilha no formato da Rein: 83 colunas, 2.271 produtos, o rodapé com 18 totais escritos com vírgula, de fora, e
-//     as partes de 2.000 e 271;
+//   * uma planilha de 83 colunas e 2.271 produtos com o rodapé de 18 totais escritos com vírgula, cada um na própria
+//     coluna, de fora, e as partes de 2.000 e 271 (o desenho de verdade do relatório da Rein, com os totais deslocados,
+//     está em rein-relatorio-original.test.ts, lote REIN-d);
 //   * o número do Excel continua valendo pelo que é: 0.625 é fração e 1.234 é um vírgula duzentos e trinta e quatro
 //     (F18-01); só a célula que NÃO é número do Excel vale pelo texto, com a origem registrada;
 //   * o último produto incompleto, com o EAN, não some como rodapé (F18-02), também no formato novo;
@@ -75,7 +76,10 @@ describe("F21-01: o rodapé da Rein escrito com vírgula em células de número 
     const LOJAS = ["SANTA FELICIDADE", "ÁGUA VERDE", "COLÔNIA", "ALMIRANTE TAMANDARÉ", "DEFEITOS", "DUBAI", "COLOMBO", "MUFFATO SANTA", "BUTIATUVINHA", "VENTANIA", "BALNEARIO", "SANTA CANDIDA"];
     const QTD = 38;   // as colunas 38 a 49: "Qtd. Disponivel <loja>"
     const CUSTO = 50; // as colunas 50 a 61: "Custo do Estoque <loja>"
-    // Como no diagnóstico do arquivo de 10/11: o rodapé traz as 12 quantidades e 6 dos custos, os 18 com vírgula.
+    // As posições são as do diagnóstico do arquivo de 10/11: 18 números no rodapé, os 18 com vírgula. Aqui cada número é o
+    // total da PRÓPRIA coluna, como se supôs em 23/11 sem o arquivo. Com o original no servidor (lote REIN-d), viu-se que
+    // esses 18 números são totais de OUTRAS colunas: o desenho de verdade está em rein-relatorio-original.test.ts. Este
+    // teste fica como o caso do rodapé com os totais na própria coluna, que continua valendo.
     const CUSTOS_NO_RODAPE = [51, 52, 54, 55, 57, 58];
     const cabecalho: Celula[] = Array.from({ length: 83 }, (_, i) => `Coluna ${i + 1}`);
     cabecalho[0] = "Código"; cabecalho[3] = "Descrição"; cabecalho[9] = "Marca";

@@ -1,8 +1,8 @@
 // Regras da tela de importação (lotes L3c e R2: ORA-CAT-002, ORA-CAT-010): mensagens, leitura do
 // formulário de envio, filtro e página da conferência e erro do banco → chave do catálogo (a tela nunca repete
 // o texto do banco).
-import { CAMPOS_DO_CATALOGO, NOMES_DOS_CAMPOS, TIPOS_ACEITOS, lerMapeamento, type Mapeamento, type TipoAceito } from "./catalogo";
-import type { FalhaDaPlanilha } from "./csv";
+import { CAMPOS_DO_CATALOGO, NOMES_DOS_CAMPOS, TIPOS_ACEITOS, lerMapeamento, type Mapeamento, type PadroesDaImportacao, type TipoAceito } from "./catalogo";
+import { semAcento, type FalhaDaPlanilha } from "./csv";
 
 export const ERROS_DA_IMPORTACAO = {
   arquivo: "Escolha a planilha: um arquivo do Excel (.xlsx) ou CSV.",
@@ -18,6 +18,7 @@ export const ERROS_DA_IMPORTACAO = {
   navegador: "Este navegador não abre planilha do Excel: atualize o navegador ou salve a planilha como CSV.",
   mapeamento: "Diga qual coluna é o SKU e qual é o nome (cada coluna só pode ser usada uma vez).",
   padrao: "Escolha o tipo e a categoria para as linhas que não trouxerem esses dados.",
+  tipos: "Não deu para ler o tipo de cada categoria. Escolha o arquivo de novo e confira os tipos.",
   ja_aplicado: "Este arquivo já foi aplicado antes. Para mudar algo, gere um arquivo novo.",
   mesma_pessoa: "Quem gerou a prévia não aprova: outra pessoa (com permissão de aprovar) confere e aplica.",
   com_erro: "A prévia tem linhas com erro: corrija a planilha e gere outra prévia.",
@@ -63,8 +64,42 @@ export function erroDoBancoNaImportacao(erro: { code?: string; message?: string 
 /** Cada recusa da leitura da planilha (CSV ou Excel) tem a sua mensagem no catálogo. */
 export const erroDaPlanilhaNaImportacao = (motivo: FalhaDaPlanilha): ErroDaImportacao => motivo;
 
-export type Envio = { arquivo: File; mapa: Mapeamento; padroes: { tipo: TipoAceito; categoria: string } };
-/** Formulário de envio: o arquivo, a coluna de cada campo e os padrões (tipo e categoria). */
+export type Envio = { arquivo: File; mapa: Mapeamento; padroes: PadroesDaImportacao };
+
+/** Até quantas categorias podem ter o tipo escolhido num envio (o relatório da Rein de 10/11 tem 28 famílias). */
+export const MAXIMO_DE_TIPOS_POR_CATEGORIA = 200;
+
+/**
+ * REIN-d: o tipo de cada categoria, como a tela manda (o campo `tipos_por_categoria`, um objeto JSON "categoria" → tipo).
+ * Vazio ou ausente: nenhum. Nulo: o campo veio em formato que não se entende (nada é adivinhado). A categoria com o tipo
+ * igual ao padrão não precisa ficar; duas escritas da mesma categoria (acento, maiúsculas) com tipos diferentes são recusadas.
+ */
+export function lerTiposPorCategoria(campo: unknown, padrao: TipoAceito): Record<string, TipoAceito> | null {
+  if (campo === null || campo === undefined || campo === "") return {};
+  if (typeof campo !== "string" || campo.length > 40_000) return null;
+  let lido: unknown;
+  try {
+    lido = JSON.parse(campo);
+  } catch {
+    return null;
+  }
+  if (typeof lido !== "object" || lido === null || Array.isArray(lido)) return null;
+  const entradas = Object.entries(lido as Record<string, unknown>);
+  if (entradas.length > MAXIMO_DE_TIPOS_POR_CATEGORIA) return null;
+  const porChave = new Map<string, { nome: string; tipo: TipoAceito }>();
+  for (const [bruto, tipo] of entradas) {
+    const nome = bruto.trim().replace(/\s+/g, " ");
+    if (nome.length < 1 || nome.length > 120 || typeof tipo !== "string" || !(TIPOS_ACEITOS as readonly string[]).includes(tipo)) return null;
+    const chave = semAcento(nome);
+    const anterior = porChave.get(chave);
+    if (anterior && anterior.tipo !== tipo) return null;
+    if (!anterior) porChave.set(chave, { nome, tipo: tipo as TipoAceito });
+  }
+  // Em ordem, para o mesmo conjunto de escolhas gravar sempre o mesmo mapeamento (a prévia repetida é reconhecida por ele).
+  return Object.fromEntries([...porChave.values()].filter((c) => c.tipo !== padrao).sort((a, b) => a.nome.localeCompare(b.nome, "pt-BR")).map((c) => [c.nome, c.tipo]));
+}
+
+/** Formulário de envio: o arquivo, a coluna de cada campo, os padrões (tipo e categoria) e o tipo de cada categoria. */
 export function lerEnvio(dados: FormData, colunas: number): { ok: true; envio: Omit<Envio, "arquivo"> } | { ok: false; erro: ErroDaImportacao } {
   const mapa = lerMapeamento((n) => dados.get(n), colunas);
   if (!mapa) return { ok: false, erro: "mapeamento" };
@@ -73,13 +108,20 @@ export function lerEnvio(dados: FormData, colunas: number): { ok: true; envio: O
   if (typeof tipo !== "string" || !(TIPOS_ACEITOS as readonly string[]).includes(tipo) || categoria.length < 1 || categoria.length > 60) {
     return { ok: false, erro: "padrao" };
   }
-  return { ok: true, envio: { mapa, padroes: { tipo: tipo as TipoAceito, categoria } } };
+  // O tipo por categoria só vale com a coluna da categoria escolhida: sem ela, não há categoria para olhar.
+  const tipos = mapa.categoria === undefined ? {} : lerTiposPorCategoria(dados.get("tipos_por_categoria"), tipo as TipoAceito);
+  if (tipos === null) return { ok: false, erro: "tipos" };
+  return { ok: true, envio: { mapa, padroes: { tipo: tipo as TipoAceito, categoria, ...(Object.keys(tipos).length > 0 ? { tiposPorCategoria: tipos } : {}) } } };
 }
 
-/** O que fica gravado do mapeamento: o nome da coluna de cada campo e os padrões (auditoria e repetição). */
+/**
+ * O que fica gravado do mapeamento: o nome da coluna de cada campo, os padrões e, se houver, o tipo de cada categoria
+ * (auditoria e repetição: o mesmo arquivo com outra escolha de tipos é outra prévia).
+ */
 export function mapeamentoParaGravar(cabecalho: readonly string[], mapa: Mapeamento, padroes: Envio["padroes"]) {
   const colunas = Object.fromEntries(NOMES_DOS_CAMPOS.filter((c) => mapa[c] !== undefined).map((c) => [c, cabecalho[mapa[c] as number]]));
-  return { colunas, padroes };
+  const tipos = padroes.tiposPorCategoria ?? {};
+  return { colunas, padroes: { tipo: padroes.tipo, categoria: padroes.categoria }, ...(Object.keys(tipos).length > 0 ? { tipos_por_categoria: { ...tipos } } : {}) };
 }
 
 export const ROTULO_DOS_CAMPOS = Object.fromEntries(NOMES_DOS_CAMPOS.map((c) => [c, CAMPOS_DO_CATALOGO[c].rotulo])) as Record<keyof typeof CAMPOS_DO_CATALOGO, string>;
