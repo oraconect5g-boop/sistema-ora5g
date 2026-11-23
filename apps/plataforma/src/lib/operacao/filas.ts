@@ -71,6 +71,11 @@ export const FILAS: readonly Definicao[] = [
   { chave: "transferencias", rotulo: "Transferências em aberto", detalhe: "pedidas e ainda não recebidas", href: "/transferencias", icone: "transferencia", coluna: "solicitado_em",
     permitida: (p) => p.has("estoque.consultar") && gestao(p),
     consulta: (s, c) => s.from("transferencias").select(c, conta).in("situacao", ["solicitada", "separada", "enviada"]).order(c).limit(1) },
+  // TRF-e: a transferência recebida com falta sai da fila de cima, mas ainda espera alguém: o destino do que faltou (TRF-d:
+  // chegou depois, voltou para a origem ou baixa). Conta desde o recebimento; some quando tudo o que faltou tem destino.
+  { chave: "faltas_de_transferencia", rotulo: "Transferências com falta", detalhe: "recebidas a menos, sem o destino do que faltou", href: "/transferencias", icone: "transferencia", coluna: "recebido_em",
+    permitida: (p) => p.has("estoque.consultar") && gestao(p),
+    consulta: (s, c) => s.from("transferencias").select(c, conta).eq("situacao", "recebida_com_divergencia").is("divergencia_resolvida_em", null).order(c).limit(1) },
   { chave: "os_atrasadas", rotulo: "OS atrasadas", detalhe: "passaram do prazo combinado com o cliente", href: "/assistencia", icone: "os_atrasada", coluna: "prazo",
     permitida: (p) => p.has("os.gerir"),
     consulta: (s, c, hoje) => s.from("ordens_servico").select(c, conta).eq("situacao", "aberta").lt("prazo", hoje).order(c).limit(1) },

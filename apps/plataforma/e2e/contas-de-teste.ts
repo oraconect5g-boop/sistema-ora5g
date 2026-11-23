@@ -8,7 +8,8 @@
 // de serviço (J3-e, clientes-e-os-real.spec.ts), o pedido de nota sem emitir e as metas (J3-e, nota-e-metas-real.spec.ts) e
 // o financeiro (J3-f, financeiro-real.spec.ts), com as peças comuns em pdv-real.ts; e a que só lê as telas do AUD-c (os
 // extratos, os repasses, a importação e as entregas: extratos-e-entregas-real.spec.ts) e a que só lê a tela de
-// Transferências (TRF-d, transferencias-leitura-real.spec.ts). Só no servidor: ORA_E2E_URL (o site, por
+// Transferências (TRF-d, transferencias-leitura-real.spec.ts); e a transferência recebida com falta, com o sim do
+// proprietário de 23/11 (TRF-e, transferencia-com-falta-real.spec.ts). Só no servidor: ORA_E2E_URL (o site, por
 // exemplo https://ora5g.com.br) e ORA_E2E_CONTAS (o arquivo protegido das contas, ~/homologacao/contas-de-teste.txt). No CI os
 // dois ficam vazios e as provas são puladas. A senha nunca vai para o log: o Playwright só mostra o nome do passo.
 import { readFileSync } from "node:fs";
