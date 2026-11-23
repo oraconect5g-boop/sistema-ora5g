@@ -100,3 +100,15 @@ Migration `20261123221242_financeiro_conferencia_do_desfeito` (aplicada no `ora5
 5. **O que espera alguém não é diferença:** o estorno por fora que espera o comprovante, o item que espera a conferência e o que não voltou (com a explicação) aparecem à parte, com o atalho para as vendas canceladas.
 6. **O índice:** `estoque_movimentos_referencia` (`referencia_tipo`, `referencia_id`). As duas conferências procuram no livro do estoque pela referência, e o livro cresce com cada venda.
 7. **Fica de fora:** o que caiu no banco (a conciliação com o extrato, ADR-016).
+
+## Adendo de 23/11/2026 (3) — O prazo de repasse, o que está atrasado e as cobranças (lote FIN-007a; ORA-FIN-007 e ORA-FIN-003)
+
+Migration `20261123230314_repasses_atrasados` (aplicada no `ora5g-dev`, com o md5 conferido; com reversão). Testes: `packages/banco/src/repasses-atrasados.test.ts`, `apps/plataforma/src/lib/pagamentos/atrasados.test.ts` e `apps/plataforma/src/app/pagamentos/financeiras.test.ts`.
+
+1. **Nenhum prazo é inventado.** O prazo de repasse é do contrato de cada financeira (a pendência P8). O dono grava, na tela, os dias corridos desde a venda, com o motivo. Sem prazo gravado, a conta fica "sem prazo" e nada é chamado de atrasado.
+2. **O prazo é por rede e por financeira,** e só quem concilia pela rede inteira define (hoje, o dono). Cada mudança é uma linha nova em `prazos_de_repasse` (só de inserção, auditada); vale a mais nova; a linha sem dias retira o prazo.
+3. **O vencimento é calculado na leitura:** o dia da venda, em São Paulo, mais o prazo em vigor. No dia do vencimento a conta ainda não está atrasada. Não se grava o vencimento em cada conta: assim, corrigir o prazo vale para todas as contas em aberto, e não sobra conta com o vencimento de um prazo errado. A coluna `vencimento` das contas a receber segue sem uso.
+4. **A cobrança é um registro, não uma mensagem.** Quem concilia na loja da venda registra a cobrança feita à financeira (por onde foi, o que foi combinado, o protocolo e a data para voltar ao assunto) em `cobrancas_de_repasse` (só de inserção, auditada, idempotente pela chave). Só em conta em aberto. O sistema não fala com a financeira.
+5. **Quem lê:** quem tem `pagamento.conciliar`, nas lojas dele: o gerente, a loja; o dono, todas, com o resumo loja a loja. As duas tabelas têm RLS com a mesma regra.
+6. **Na tela:** falha de leitura nunca vira "nada atrasado"; a resposta em que o estado, o vencimento e o atraso não concordam, ou em que os totais não são a soma das contas, é tratada como falha.
+7. **Fica de fora:** o aviso no Início e no sino quando um repasse atrasa ou quando chega o dia de voltar ao assunto; a previsão de caixa com o vencimento (hoje ela mostra o que as financeiras devem "sem data"); e a inadimplência do cliente final, que não existe enquanto a loja não vende a prazo próprio (D-013, em aberto) e cuja mensagem depende do WhatsApp oficial (ORA-WHATS-001) e do consentimento.

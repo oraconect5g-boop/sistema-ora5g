@@ -32,7 +32,7 @@ Tudo o que não está aqui o Claude Code faz sozinho: programação, testes, mig
 | F3 | Meta Ads: o acesso à conta de anúncios | O gasto dos anúncios automático e o aviso das vendas à Meta (ORA-META-001, ORA-META-005) | Você: o mesmo cadastro da Meta | Nada | O acesso | O gasto por arquivo e o painel de CPL, CPA e ROAS já funcionam |
 | G | As decisões da seção 3 | Cada uma destrava a regra dela | Você | As de 18 a 21/11 (seção 3) | As que estão marcadas como abertas | O sistema usa o padrão reversível escrito em cada uma |
 | H | Produção: o servidor perto do banco, o banco com processador próprio e backup, e o plano do banco de teste | A operação comercial, com backup e restauração ensaiados (ORA-QUAL-005, ORA-QUAL-012), e o fim das travadas do banco de teste | Você: decisão de custo | Nada | A decisão | Tudo segue na homologação |
-| I | Os aceites: "aceito" ou "não aceito" em cada roteiro de `docs/aceite/` | Fechar cada lote: só o seu "aceito" faz um requisito virar homologado | Você: seguir o roteiro e responder na conversa (a tela **Entregas do projeto** mostra a lista e o que cada lote entregou) | 1 aceito (PWA-b) | 69 roteiros sem resposta | Nenhum lote para por falta de aceite |
+| I | Os aceites: "aceito" ou "não aceito" em cada roteiro de `docs/aceite/` | Fechar cada lote: só o seu "aceito" faz um requisito virar homologado | Você: seguir o roteiro e responder na conversa (a tela **Entregas do projeto** mostra a lista e o que cada lote entregou) | 1 aceito (PWA-b) | 70 roteiros sem resposta | Nenhum lote para por falta de aceite |
 
 **Não é pendência:** as 11 lojas e DEFEITOS (decididas), Supabase e PostgreSQL (decididos), a publicação na homologação ao fim de cada lote (autorizada), as contas de teste (criadas) e a chave secreta do Supabase (gravada).
 
@@ -93,7 +93,7 @@ A Nogle já respondeu parte das perguntas em 10/11: o GET com os dados no corpo,
 | AJU | **Quem aprova o ajuste de estoque:** só o dono, ou o gerente também, na loja dele? | Só o dono aprova; o gerente e o vendedor contam e pedem |
 | P14 | **Desconto por categoria:** até quantos % o vendedor dá sem pedir, e a margem mínima de cada categoria? | Todo desconto pede aprovação do gerente ou do dono |
 | D-026 | **Troca e devolução:** em quantos dias, em que estado o aparelho é aceito, devolve dinheiro ou só vale-troca? | O sistema registra e controla (a gerência decide caso a caso) |
-| P8 | **Financeiras:** em quantos dias a PayJoy e a Aiva repassam, e com que taxa? | O repasse é registrado à mão, e a taxa é a diferença para o valor a receber |
+| P8 | **Financeiras:** em quantos dias a PayJoy e a Aiva repassam, e com que taxa? Desde o lote FIN-007a (23/11), o prazo se grava na própria tela, pelo dono: **Gestão → A receber das financeiras**, em "O prazo de repasse de cada financeira" | O repasse é registrado à mão, e a taxa é a diferença para o valor a receber. Sem o prazo gravado, o sistema não chama nenhuma conta de atrasada |
 | MAQ | **As maquininhas de verdade de cada loja** (qual maquininha, de qual provedor) | Nenhuma cadastrada: o PDV não pergunta qual foi usada |
 | APT | **Os aparelhos da loja de teste:** a prova do financeiro pode trazer o próprio aparelho, com uma compra fictícia que não é desfeita? | A prova gasta um Galaxy A15 de teste a cada vez; sobrou um |
 

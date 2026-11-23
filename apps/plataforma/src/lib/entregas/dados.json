@@ -4,9 +4,9 @@
   "total": 179,
   "homologados": 0,
   "contagem": {
-    "nao_iniciado": 15,
+    "nao_iniciado": 14,
     "parcial": 79,
-    "testado": 70,
+    "testado": 71,
     "bloqueado": 13,
     "respeitado": 2
   },
@@ -996,6 +996,20 @@
         "ORA-FIN-001"
       ],
       "entrega": "a parte \"O que foi desfeito no período\" no cartão \"A conta do período\" do Financeiro: cada cancelamento e cada devolução conferidos com o destino do valor, o livro do caixa e o livro do estoque; o que espera alguém (o estorno a confirmar, o item a conferir) aparece à parte, com o atalho",
+      "commit": "2a1f6ce",
+      "publicado_em": "2026-11-23",
+      "pedido_em": "2026-11-23",
+      "resposta": null,
+      "respondido_em": null
+    },
+    {
+      "lote": "FIN-007a",
+      "roteiro": "docs/aceite/FIN-007a.md",
+      "requisitos": [
+        "ORA-FIN-007",
+        "ORA-FIN-003"
+      ],
+      "entrega": "o cartão \"O que está atrasado\" na tela \"A receber das financeiras\": o dono grava o prazo de repasse de cada financeira, e a tela diz o que venceu, há quantos dias e em que loja; em cada conta em aberto, a gerência registra a cobrança feita à financeira, com o histórico. Sem prazo gravado, nada é chamado de atrasado",
       "commit": null,
       "publicado_em": null,
       "pedido_em": "2026-11-23",
