@@ -1,0 +1,21 @@
+// Prova isolada da auditoria. Dados fictícios em PGlite; nenhuma conexão com o Supabase.
+import { afterAll, beforeAll, expect, it } from 'vitest';
+import type { PGlite } from '@electric-sql/pglite';
+import { criarBanco, comoUsuario } from './banco-de-teste';
+import { ids, montarCenario } from './cenario';
+import { cat, montarCatalogo } from './cenario-catalogo';
+let db: PGlite;
+beforeAll(async()=>{db=await criarBanco();await montarCenario(db);await montarCatalogo(db);});
+afterAll(async()=>{await db?.close();});
+it('não deve esconder uma transferência pendente atrás de 50 canceladas mais recentes',async()=>{
+ const sessao={usuario:ids.gerenteB,sessao:'7a240000-0000-4000-8000-000000000001'};
+ await comoUsuario(db,sessao,()=>db.query('select public.selecionar_unidade($1)',[ids.lojaB]));
+ const query=<T>(sql:string,args:unknown[]=[])=>comoUsuario(db,sessao,()=>db.query<T>(sql,args),{criarSessao:false});
+ const pedir=async(i:number)=>(await query<{id:string}>('select public.transferencia_solicitar($1,$2,$3,1,$4,$5) as id',[ids.lojaA,ids.lojaB,cat.capa,'Reposição para prova da auditoria','audit-24:'+i])).rows[0]!.id;
+ const antiga=await pedir(0);
+ for(let i=1;i<=50;i++){const id=await pedir(i);await query('select public.transferencia_encerrar($1,\'cancelada\',\'Cancelada apenas no teste isolado\')',[id]);}
+ const estado=await query<{situacao:string}>('select situacao from public.transferencias where id=$1',[antiga]);
+ expect(estado.rows[0]!.situacao).toBe('solicitada');
+ const tela=(await query<{tela:{transferencias:{id:string}[]}}>('select public.transferencias_tela(50) as tela')).rows[0]!.tela;
+ expect(tela.transferencias.map(t=>t.id)).toContain(antiga);
+},30000);

@@ -1,0 +1,498 @@
+[
+  {
+    "name": "financeiro",
+    "width": 360,
+    "source": "apps/plataforma/src/app/financeiro/financeiro.audit-render.test.ts",
+    "test": "/financeiro > gerente: loja do turno, período e o anterior, números do banco e o detalhamento",
+    "pageWidth": 360,
+    "pageHeight": 3811,
+    "mainWidth": 360,
+    "headings": [
+      "Financeiro",
+      "Vendas e devoluções",
+      "Pagamentos registrados por meio",
+      "Conciliação de cartão e Pix",
+      "Movimentação dos caixas",
+      "Fechamentos",
+      "Registros do período",
+      "Ainda não está no financeiro real"
+    ],
+    "smallTargets": [
+      {
+        "text": "Pular para o conteúdo",
+        "height": 1,
+        "width": 1
+      },
+      {
+        "text": "Venda 101",
+        "height": 19,
+        "width": 71.28125
+      },
+      {
+        "text": "Relatórios",
+        "height": 17,
+        "width": 61.0625
+      }
+    ]
+  },
+  {
+    "name": "estoque",
+    "width": 360,
+    "source": "apps/plataforma/src/app/estoque/saldo.audit-render.test.ts",
+    "test": "saldo da loja (B5), com as leituras de antes > 250 produtos com saldo nesta loja: o total vem do banco e a lista vem em páginas de 100, pelo nome",
+    "pageWidth": 360,
+    "pageHeight": 8810,
+    "mainWidth": 360,
+    "headings": [
+      "Estoque",
+      "Saldo da loja"
+    ],
+    "smallTargets": [
+      {
+        "text": "Pular para o conteúdo",
+        "height": 1,
+        "width": 1
+      },
+      {
+        "text": "na rede",
+        "height": 16,
+        "width": 45.25
+      },
+      {
+        "text": "na rede",
+        "height": 16,
+        "width": 45.25
+      },
+      {
+        "text": "na rede",
+        "height": 16,
+        "width": 45.25
+      },
+      {
+        "text": "na rede",
+        "height": 16,
+        "width": 45.25
+      },
+      {
+        "text": "na rede",
+        "height": 16,
+        "width": 45.25
+      },
+      {
+        "text": "na rede",
+        "height": 16,
+        "width": 45.25
+      },
+      {
+        "text": "na rede",
+        "height": 16,
+        "width": 45.25
+      },
+      {
+        "text": "na rede",
+        "height": 16,
+        "width": 45.25
+      },
+      {
+        "text": "na rede",
+        "height": 16,
+        "width": 45.25
+      },
+      {
+        "text": "na rede",
+        "height": 16,
+        "width": 45.25
+      },
+      {
+        "text": "na rede",
+        "height": 16,
+        "width": 45.25
+      },
+      {
+        "text": "na rede",
+        "height": 16,
+        "width": 45.25
+      },
+      {
+        "text": "na rede",
+        "height": 16,
+        "width": 45.25
+      },
+      {
+        "text": "na rede",
+        "height": 16,
+        "width": 45.25
+      },
+      {
+        "text": "na rede",
+        "height": 16,
+        "width": 45.25
+      },
+      {
+        "text": "na rede",
+        "height": 16,
+        "width": 45.25
+      },
+      {
+        "text": "na rede",
+        "height": 16,
+        "width": 45.25
+      },
+      {
+        "text": "na rede",
+        "height": 16,
+        "width": 45.25
+      },
+      {
+        "text": "na rede",
+        "height": 16,
+        "width": 45.25
+      }
+    ]
+  },
+  {
+    "name": "produtos",
+    "width": 360,
+    "source": "apps/plataforma/src/app/produtos/produtos.audit-render.test.ts",
+    "test": "/produtos > dono (altera preço): vê a política de desconto de cada categoria",
+    "pageWidth": 360,
+    "pageHeight": 2116,
+    "mainWidth": 360,
+    "headings": [
+      "Cadastro de produtos",
+      "Galaxy Teste",
+      "Categorias",
+      "Marcas"
+    ],
+    "smallTargets": [
+      {
+        "text": "Pular para o conteúdo",
+        "height": 1,
+        "width": 1
+      }
+    ]
+  },
+  {
+    "name": "transferencias",
+    "width": 360,
+    "source": "apps/plataforma/src/app/transferencias/transferencias.audit-render.test.ts",
+    "test": "a tela das transferências (TRF-b), com a leitura única (VEL-g) > cada transferência diz o que o passo fez no estoque e o saldo de agora de cada lado que a pessoa vê",
+    "pageWidth": 360,
+    "pageHeight": 1319,
+    "mainWidth": 360,
+    "headings": [
+      "Transferências",
+      "Nº 3 · Capa de silicone × 2",
+      "Nº 2 · Capa de silicone × 2",
+      "Nº 1 · Capa de silicone × 2"
+    ],
+    "smallTargets": [
+      {
+        "text": "Pular para o conteúdo",
+        "height": 1,
+        "width": 1
+      }
+    ]
+  },
+  {
+    "name": "vender",
+    "width": 360,
+    "source": "apps/plataforma/src/app/vender/vender.audit-render.test.ts",
+    "test": "as idas ao banco para abrir o PDV (VEL-a) > com o carrinho cheio continua uma rodada só: nomes, números, regras de preço, OS e aprovações vieram juntos",
+    "pageWidth": 360,
+    "pageHeight": 2046,
+    "mainWidth": 360,
+    "headings": [
+      "Vender",
+      "Venda nº 43",
+      "Carrinho",
+      "Pagamento"
+    ],
+    "smallTargets": [
+      {
+        "text": "Pular para o conteúdo",
+        "height": 1,
+        "width": 1
+      }
+    ]
+  },
+  {
+    "name": "clientes",
+    "width": 360,
+    "source": "apps/plataforma/src/app/clientes/clientes.audit-render.test.ts",
+    "test": "/clientes > dono: também a lista da rede, com máscaras",
+    "pageWidth": 360,
+    "pageHeight": 900,
+    "mainWidth": 360,
+    "headings": [
+      "Clientes",
+      "Buscar cliente",
+      "Cadastrados por último"
+    ],
+    "smallTargets": [
+      {
+        "text": "Pular para o conteúdo",
+        "height": 1,
+        "width": 1
+      },
+      {
+        "text": "Maria Teste",
+        "height": 20,
+        "width": 81.09375
+      }
+    ]
+  },
+  {
+    "name": "financeiro",
+    "width": 1440,
+    "source": "apps/plataforma/src/app/financeiro/financeiro.audit-render.test.ts",
+    "test": "/financeiro > gerente: loja do turno, período e o anterior, números do banco e o detalhamento",
+    "pageWidth": 1440,
+    "pageHeight": 2636,
+    "mainWidth": 1152,
+    "headings": [
+      "Financeiro",
+      "Vendas e devoluções",
+      "Pagamentos registrados por meio",
+      "Conciliação de cartão e Pix",
+      "Movimentação dos caixas",
+      "Fechamentos",
+      "Registros do período",
+      "Ainda não está no financeiro real"
+    ],
+    "smallTargets": [
+      {
+        "text": "Pular para o conteúdo",
+        "height": 1,
+        "width": 1
+      },
+      {
+        "text": "Venda 101",
+        "height": 19,
+        "width": 71.28125
+      },
+      {
+        "text": "Relatórios",
+        "height": 17,
+        "width": 61.0625
+      }
+    ]
+  },
+  {
+    "name": "estoque",
+    "width": 1440,
+    "source": "apps/plataforma/src/app/estoque/saldo.audit-render.test.ts",
+    "test": "saldo da loja (B5), com as leituras de antes > 250 produtos com saldo nesta loja: o total vem do banco e a lista vem em páginas de 100, pelo nome",
+    "pageWidth": 1440,
+    "pageHeight": 8654,
+    "mainWidth": 768,
+    "headings": [
+      "Estoque",
+      "Saldo da loja"
+    ],
+    "smallTargets": [
+      {
+        "text": "Pular para o conteúdo",
+        "height": 1,
+        "width": 1
+      },
+      {
+        "text": "na rede",
+        "height": 16,
+        "width": 45.25
+      },
+      {
+        "text": "na rede",
+        "height": 16,
+        "width": 45.25
+      },
+      {
+        "text": "na rede",
+        "height": 16,
+        "width": 45.25
+      },
+      {
+        "text": "na rede",
+        "height": 16,
+        "width": 45.25
+      },
+      {
+        "text": "na rede",
+        "height": 16,
+        "width": 45.25
+      },
+      {
+        "text": "na rede",
+        "height": 16,
+        "width": 45.25
+      },
+      {
+        "text": "na rede",
+        "height": 16,
+        "width": 45.25
+      },
+      {
+        "text": "na rede",
+        "height": 16,
+        "width": 45.25
+      },
+      {
+        "text": "na rede",
+        "height": 16,
+        "width": 45.25
+      },
+      {
+        "text": "na rede",
+        "height": 16,
+        "width": 45.25
+      },
+      {
+        "text": "na rede",
+        "height": 16,
+        "width": 45.25
+      },
+      {
+        "text": "na rede",
+        "height": 16,
+        "width": 45.25
+      },
+      {
+        "text": "na rede",
+        "height": 16,
+        "width": 45.25
+      },
+      {
+        "text": "na rede",
+        "height": 16,
+        "width": 45.25
+      },
+      {
+        "text": "na rede",
+        "height": 16,
+        "width": 45.25
+      },
+      {
+        "text": "na rede",
+        "height": 16,
+        "width": 45.25
+      },
+      {
+        "text": "na rede",
+        "height": 16,
+        "width": 45.25
+      },
+      {
+        "text": "na rede",
+        "height": 16,
+        "width": 45.25
+      },
+      {
+        "text": "na rede",
+        "height": 16,
+        "width": 45.25
+      }
+    ]
+  },
+  {
+    "name": "produtos",
+    "width": 1440,
+    "source": "apps/plataforma/src/app/produtos/produtos.audit-render.test.ts",
+    "test": "/produtos > dono (altera preço): vê a política de desconto de cada categoria",
+    "pageWidth": 1440,
+    "pageHeight": 1644,
+    "mainWidth": 768,
+    "headings": [
+      "Cadastro de produtos",
+      "Galaxy Teste",
+      "Categorias",
+      "Marcas"
+    ],
+    "smallTargets": [
+      {
+        "text": "Pular para o conteúdo",
+        "height": 1,
+        "width": 1
+      }
+    ]
+  },
+  {
+    "name": "transferencias",
+    "width": 1440,
+    "source": "apps/plataforma/src/app/transferencias/transferencias.audit-render.test.ts",
+    "test": "a tela das transferências (TRF-b), com a leitura única (VEL-g) > cada transferência diz o que o passo fez no estoque e o saldo de agora de cada lado que a pessoa vê",
+    "pageWidth": 1440,
+    "pageHeight": 1071,
+    "mainWidth": 768,
+    "headings": [
+      "Transferências",
+      "Nº 3 · Capa de silicone × 2",
+      "Nº 2 · Capa de silicone × 2",
+      "Nº 1 · Capa de silicone × 2"
+    ],
+    "smallTargets": [
+      {
+        "text": "Pular para o conteúdo",
+        "height": 1,
+        "width": 1
+      },
+      {
+        "text": "Pedir vários produtos de uma vez (nova remessa)",
+        "height": 19,
+        "width": 341.78125
+      }
+    ]
+  },
+  {
+    "name": "vender",
+    "width": 1440,
+    "source": "apps/plataforma/src/app/vender/vender.audit-render.test.ts",
+    "test": "as idas ao banco para abrir o PDV (VEL-a) > com o carrinho cheio continua uma rodada só: nomes, números, regras de preço, OS e aprovações vieram juntos",
+    "pageWidth": 1440,
+    "pageHeight": 1594,
+    "mainWidth": 768,
+    "headings": [
+      "Vender",
+      "Venda nº 43",
+      "Carrinho",
+      "Pagamento"
+    ],
+    "smallTargets": [
+      {
+        "text": "Pular para o conteúdo",
+        "height": 1,
+        "width": 1
+      },
+      {
+        "text": "ver a OS",
+        "height": 17,
+        "width": 49.03125
+      }
+    ]
+  },
+  {
+    "name": "clientes",
+    "width": 1440,
+    "source": "apps/plataforma/src/app/clientes/clientes.audit-render.test.ts",
+    "test": "/clientes > dono: também a lista da rede, com máscaras",
+    "pageWidth": 1440,
+    "pageHeight": 900,
+    "mainWidth": 768,
+    "headings": [
+      "Clientes",
+      "Buscar cliente",
+      "Cadastrados por último"
+    ],
+    "smallTargets": [
+      {
+        "text": "Pular para o conteúdo",
+        "height": 1,
+        "width": 1
+      },
+      {
+        "text": "Maria Teste",
+        "height": 20,
+        "width": 81.09375
+      }
+    ]
+  }
+]

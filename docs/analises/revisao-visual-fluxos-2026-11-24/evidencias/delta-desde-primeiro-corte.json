@@ -1,0 +1,607 @@
+[
+  {
+    "filename": ".env.example",
+    "status": "modified",
+    "changes": 6
+  },
+  {
+    "filename": "apps/plataforma/e2e/aviso-do-erro-do-servidor-real.spec.ts",
+    "status": "added",
+    "changes": 73
+  },
+  {
+    "filename": "apps/plataforma/e2e/contas-de-teste.ts",
+    "status": "modified",
+    "changes": 8
+  },
+  {
+    "filename": "apps/plataforma/e2e/depositos-das-maquininhas-real.spec.ts",
+    "status": "added",
+    "changes": 73
+  },
+  {
+    "filename": "apps/plataforma/e2e/loja-um-botao-real.spec.ts",
+    "status": "added",
+    "changes": 77
+  },
+  {
+    "filename": "apps/plataforma/e2e/pagamento-pelo-site-real.spec.ts",
+    "status": "added",
+    "changes": 76
+  },
+  {
+    "filename": "apps/plataforma/e2e/taxa-das-financeiras-real.spec.ts",
+    "status": "added",
+    "changes": 79
+  },
+  {
+    "filename": "apps/plataforma/e2e/vitrine-paginas-real.spec.ts",
+    "status": "added",
+    "changes": 71
+  },
+  {
+    "filename": "apps/plataforma/src/app/api/pagamentos/asaas/route.test.ts",
+    "status": "added",
+    "changes": 119
+  },
+  {
+    "filename": "apps/plataforma/src/app/api/pagamentos/asaas/route.ts",
+    "status": "added",
+    "changes": 41
+  },
+  {
+    "filename": "apps/plataforma/src/app/loja/VitrineDaLoja.tsx",
+    "status": "modified",
+    "changes": 25
+  },
+  {
+    "filename": "apps/plataforma/src/app/loja/[produto]/DetalheDaLoja.tsx",
+    "status": "modified",
+    "changes": 26
+  },
+  {
+    "filename": "apps/plataforma/src/app/loja/carrinho/FormularioDoPedido.tsx",
+    "status": "modified",
+    "changes": 23
+  },
+  {
+    "filename": "apps/plataforma/src/app/loja/carrinho/PagamentoDoPedido.tsx",
+    "status": "added",
+    "changes": 128
+  },
+  {
+    "filename": "apps/plataforma/src/app/loja/carrinho/acoes.ts",
+    "status": "modified",
+    "changes": 42
+  },
+  {
+    "filename": "apps/plataforma/src/app/loja/carrinho/carrinho.test.ts",
+    "status": "modified",
+    "changes": 47
+  },
+  {
+    "filename": "apps/plataforma/src/app/loja/carrinho/pagamento.test.ts",
+    "status": "added",
+    "changes": 57
+  },
+  {
+    "filename": "apps/plataforma/src/app/loja/carrinho/page.tsx",
+    "status": "modified",
+    "changes": 9
+  },
+  {
+    "filename": "apps/plataforma/src/app/loja/layout.test.ts",
+    "status": "added",
+    "changes": 51
+  },
+  {
+    "filename": "apps/plataforma/src/app/loja/layout.tsx",
+    "status": "modified",
+    "changes": 21
+  },
+  {
+    "filename": "apps/plataforma/src/app/loja/loja.test.ts",
+    "status": "modified",
+    "changes": 53
+  },
+  {
+    "filename": "apps/plataforma/src/app/loja/page.tsx",
+    "status": "modified",
+    "changes": 10
+  },
+  {
+    "filename": "apps/plataforma/src/app/loja/pedido/ConsultaDoPedido.tsx",
+    "status": "modified",
+    "changes": 6
+  },
+  {
+    "filename": "apps/plataforma/src/app/loja/pedido/page.tsx",
+    "status": "modified",
+    "changes": 8
+  },
+  {
+    "filename": "apps/plataforma/src/app/operacao/ConteudoDaOperacao.tsx",
+    "status": "modified",
+    "changes": 57
+  },
+  {
+    "filename": "apps/plataforma/src/app/operacao/operacao.test.ts",
+    "status": "modified",
+    "changes": 75
+  },
+  {
+    "filename": "apps/plataforma/src/app/operacao/page.tsx",
+    "status": "modified",
+    "changes": 14
+  },
+  {
+    "filename": "apps/plataforma/src/app/pagamentos/depositos/acoes.ts",
+    "status": "added",
+    "changes": 49
+  },
+  {
+    "filename": "apps/plataforma/src/app/pagamentos/depositos/depositos.test.ts",
+    "status": "added",
+    "changes": 149
+  },
+  {
+    "filename": "apps/plataforma/src/app/pagamentos/depositos/page.tsx",
+    "status": "added",
+    "changes": 153
+  },
+  {
+    "filename": "apps/plataforma/src/app/pagamentos/extratos/[id]/page.tsx",
+    "status": "modified",
+    "changes": 28
+  },
+  {
+    "filename": "apps/plataforma/src/app/pagamentos/extratos/extratos.test.ts",
+    "status": "modified",
+    "changes": 35
+  },
+  {
+    "filename": "apps/plataforma/src/app/pagamentos/extratos/page.tsx",
+    "status": "modified",
+    "changes": 6
+  },
+  {
+    "filename": "apps/plataforma/src/app/reservas-do-site/ListaDeReservas.tsx",
+    "status": "modified",
+    "changes": 39
+  },
+  {
+    "filename": "apps/plataforma/src/app/reservas-do-site/page.tsx",
+    "status": "modified",
+    "changes": 11
+  },
+  {
+    "filename": "apps/plataforma/src/app/reservas-do-site/reservas.test.ts",
+    "status": "modified",
+    "changes": 18
+  },
+  {
+    "filename": "apps/plataforma/src/app/resultado/ConteudoResultado.tsx",
+    "status": "modified",
+    "changes": 27
+  },
+  {
+    "filename": "apps/plataforma/src/app/resultado/resultado.test.ts",
+    "status": "modified",
+    "changes": 89
+  },
+  {
+    "filename": "apps/plataforma/src/app/saude/erros/erros.test.ts",
+    "status": "added",
+    "changes": 32
+  },
+  {
+    "filename": "apps/plataforma/src/app/saude/erros/route.ts",
+    "status": "added",
+    "changes": 15
+  },
+  {
+    "filename": "apps/plataforma/src/lib/entregas/dados.json",
+    "status": "modified",
+    "changes": 86
+  },
+  {
+    "filename": "apps/plataforma/src/lib/extratos/depositos.test.ts",
+    "status": "added",
+    "changes": 68
+  },
+  {
+    "filename": "apps/plataforma/src/lib/extratos/depositos.ts",
+    "status": "added",
+    "changes": 153
+  },
+  {
+    "filename": "apps/plataforma/src/lib/extratos/regras.test.ts",
+    "status": "modified",
+    "changes": 11
+  },
+  {
+    "filename": "apps/plataforma/src/lib/extratos/regras.ts",
+    "status": "modified",
+    "changes": 16
+  },
+  {
+    "filename": "apps/plataforma/src/lib/loja/carrinho.test.ts",
+    "status": "modified",
+    "changes": 24
+  },
+  {
+    "filename": "apps/plataforma/src/lib/loja/carrinho.ts",
+    "status": "modified",
+    "changes": 26
+  },
+  {
+    "filename": "apps/plataforma/src/lib/loja/reserva.test.ts",
+    "status": "modified",
+    "changes": 2
+  },
+  {
+    "filename": "apps/plataforma/src/lib/loja/reserva.ts",
+    "status": "modified",
+    "changes": 2
+  },
+  {
+    "filename": "apps/plataforma/src/lib/loja/vitrine.ts",
+    "status": "modified",
+    "changes": 20
+  },
+  {
+    "filename": "apps/plataforma/src/lib/lojas/regioes.test.ts",
+    "status": "modified",
+    "changes": 3
+  },
+  {
+    "filename": "apps/plataforma/src/lib/pagamentos/aviso-da-asaas.ts",
+    "status": "added",
+    "changes": 50
+  },
+  {
+    "filename": "apps/plataforma/src/lib/resultado/consulta.ts",
+    "status": "modified",
+    "changes": 52
+  },
+  {
+    "filename": "apps/plataforma/src/lib/resultado/planilha.ts",
+    "status": "modified",
+    "changes": 12
+  },
+  {
+    "filename": "apps/plataforma/src/lib/saude/erros-do-servidor.test.ts",
+    "status": "modified",
+    "changes": 76
+  },
+  {
+    "filename": "apps/plataforma/src/lib/saude/erros-do-servidor.ts",
+    "status": "modified",
+    "changes": 74
+  },
+  {
+    "filename": "apps/plataforma/src/lib/saude/vigia-dos-erros.ts",
+    "status": "added",
+    "changes": 57
+  },
+  {
+    "filename": "apps/plataforma/src/lib/supabase/tipos-banco.ts",
+    "status": "modified",
+    "changes": 210
+  },
+  {
+    "filename": "apps/worker/src/avisos/erros-do-site.test.ts",
+    "status": "added",
+    "changes": 135
+  },
+  {
+    "filename": "apps/worker/src/avisos/erros-do-site.ts",
+    "status": "added",
+    "changes": 62
+  },
+  {
+    "filename": "apps/worker/src/cobranca/cobranca.test.ts",
+    "status": "modified",
+    "changes": 8
+  },
+  {
+    "filename": "apps/worker/src/cobranca/cobranca.ts",
+    "status": "modified",
+    "changes": 9
+  },
+  {
+    "filename": "apps/worker/src/connect/transporte.ts",
+    "status": "modified",
+    "changes": 16
+  },
+  {
+    "filename": "apps/worker/src/executar-avisos.ts",
+    "status": "modified",
+    "changes": 26
+  },
+  {
+    "filename": "apps/worker/src/executar-pagamentos.ts",
+    "status": "added",
+    "changes": 64
+  },
+  {
+    "filename": "apps/worker/src/pagamentos/asaas.test.ts",
+    "status": "added",
+    "changes": 148
+  },
+  {
+    "filename": "apps/worker/src/pagamentos/asaas.ts",
+    "status": "added",
+    "changes": 131
+  },
+  {
+    "filename": "apps/worker/src/pagamentos/configuracao.ts",
+    "status": "added",
+    "changes": 18
+  },
+  {
+    "filename": "apps/worker/src/pagamentos/ponta-a-ponta.test.ts",
+    "status": "added",
+    "changes": 121
+  },
+  {
+    "filename": "apps/worker/src/pagamentos/processar.test.ts",
+    "status": "added",
+    "changes": 132
+  },
+  {
+    "filename": "apps/worker/src/pagamentos/processar.ts",
+    "status": "added",
+    "changes": 123
+  },
+  {
+    "filename": "apps/worker/src/supabase.ts",
+    "status": "modified",
+    "changes": 38
+  },
+  {
+    "filename": "deploy/homologacao/worker-avisos.sh",
+    "status": "modified",
+    "changes": 7
+  },
+  {
+    "filename": "deploy/homologacao/worker-pagamentos.sh",
+    "status": "added",
+    "changes": 22
+  },
+  {
+    "filename": "docs/10_DECISOES_PENDENTES.md",
+    "status": "modified",
+    "changes": 2
+  },
+  {
+    "filename": "docs/ESTADO_ATUAL_E_PASSAGEM.md",
+    "status": "modified",
+    "changes": 2
+  },
+  {
+    "filename": "docs/PENDENCIAS_DO_PROPRIETARIO.md",
+    "status": "modified",
+    "changes": 19
+  },
+  {
+    "filename": "docs/aceite/FIN-002a.md",
+    "status": "added",
+    "changes": 38
+  },
+  {
+    "filename": "docs/aceite/FIN-006a.md",
+    "status": "added",
+    "changes": 44
+  },
+  {
+    "filename": "docs/aceite/ONLINE-e.md",
+    "status": "added",
+    "changes": 29
+  },
+  {
+    "filename": "docs/aceite/ONLINE-f.md",
+    "status": "added",
+    "changes": 28
+  },
+  {
+    "filename": "docs/aceite/PAY-014a.md",
+    "status": "added",
+    "changes": 34
+  },
+  {
+    "filename": "docs/aceite/QUAL-006a.md",
+    "status": "added",
+    "changes": 47
+  },
+  {
+    "filename": "docs/aceite/README.md",
+    "status": "modified",
+    "changes": 8
+  },
+  {
+    "filename": "docs/adr/ADR-004-vendas-pagamentos-e-caixa.md",
+    "status": "modified",
+    "changes": 11
+  },
+  {
+    "filename": "docs/adr/ADR-015-alertas-das-filas.md",
+    "status": "modified",
+    "changes": 13
+  },
+  {
+    "filename": "docs/adr/ADR-016-extratos-por-arquivo.md",
+    "status": "modified",
+    "changes": 14
+  },
+  {
+    "filename": "docs/adr/ADR-023-pedido-do-site.md",
+    "status": "modified",
+    "changes": 10
+  },
+  {
+    "filename": "docs/adr/ADR-025-pagamento-pelo-site-pela-asaas.md",
+    "status": "added",
+    "changes": 35
+  },
+  {
+    "filename": "docs/alinhamento/EXECUCAO_INTEGRAL_STATUS.md",
+    "status": "modified",
+    "changes": 11
+  },
+  {
+    "filename": "docs/alinhamento/FILA_INTEGRAL_2026-11-23.md",
+    "status": "modified",
+    "changes": 26
+  },
+  {
+    "filename": "docs/alinhamento/PEDIDO_DE_REVISAO_CODEX.md",
+    "status": "modified",
+    "changes": 68
+  },
+  {
+    "filename": "docs/alinhamento/PONTOS_EM_ABERTO_2026-11-18.md",
+    "status": "modified",
+    "changes": 9
+  },
+  {
+    "filename": "docs/alinhamento/RASTREABILIDADE.md",
+    "status": "modified",
+    "changes": 30
+  },
+  {
+    "filename": "docs/alinhamento/execucao-integral-status.json",
+    "status": "modified",
+    "changes": 120
+  },
+  {
+    "filename": "docs/alinhamento/status-requisitos.json",
+    "status": "modified",
+    "changes": 48
+  },
+  {
+    "filename": "docs/integracoes/MATRIZ_DAS_APIS.json",
+    "status": "modified",
+    "changes": 40
+  },
+  {
+    "filename": "docs/integracoes/MATRIZ_DAS_APIS.md",
+    "status": "modified",
+    "changes": 34
+  },
+  {
+    "filename": "docs/integracoes/VARIAVEIS_DE_AMBIENTE.md",
+    "status": "modified",
+    "changes": 5
+  },
+  {
+    "filename": "docs/operacao/CONTINGENCIA_E_INCIDENTES.md",
+    "status": "modified",
+    "changes": 3
+  },
+  {
+    "filename": "packages/banco/src/autorizacao-funcoes.test.ts",
+    "status": "modified",
+    "changes": 43
+  },
+  {
+    "filename": "packages/banco/src/aviso-do-erro-do-servidor.test.ts",
+    "status": "added",
+    "changes": 221
+  },
+  {
+    "filename": "packages/banco/src/deposito-da-maquininha-concorrencia.test.ts",
+    "status": "added",
+    "changes": 166
+  },
+  {
+    "filename": "packages/banco/src/deposito-da-maquininha.test.ts",
+    "status": "added",
+    "changes": 236
+  },
+  {
+    "filename": "packages/banco/src/extratos.test.ts",
+    "status": "modified",
+    "changes": 2
+  },
+  {
+    "filename": "packages/banco/src/loja-online-vitrine.test.ts",
+    "status": "modified",
+    "changes": 43
+  },
+  {
+    "filename": "packages/banco/src/pagamento-pelo-site.test.ts",
+    "status": "added",
+    "changes": 300
+  },
+  {
+    "filename": "packages/banco/src/resultado-do-mes.test.ts",
+    "status": "modified",
+    "changes": 70
+  },
+  {
+    "filename": "packages/banco/supabase/aplicadas-dev.json",
+    "status": "modified",
+    "changes": 7
+  },
+  {
+    "filename": "packages/banco/supabase/migrations/20261124103408_taxa_das_financeiras_no_resultado.sql",
+    "status": "added",
+    "changes": 330
+  },
+  {
+    "filename": "packages/banco/supabase/migrations/20261124111725_deposito_da_maquininha_no_banco.sql",
+    "status": "added",
+    "changes": 667
+  },
+  {
+    "filename": "packages/banco/supabase/migrations/20261124121856_aviso_do_erro_do_servidor.sql",
+    "status": "added",
+    "changes": 200
+  },
+  {
+    "filename": "packages/banco/supabase/migrations/20261124155208_pagamento_pelo_site.sql",
+    "status": "added",
+    "changes": 604
+  },
+  {
+    "filename": "packages/banco/supabase/migrations/20261124171542_vitrine_com_paginas.sql",
+    "status": "added",
+    "changes": 71
+  },
+  {
+    "filename": "packages/banco/supabase/reversao/20261124103408_taxa_das_financeiras_no_resultado.sql",
+    "status": "added",
+    "changes": 281
+  },
+  {
+    "filename": "packages/banco/supabase/reversao/20261124111725_deposito_da_maquininha_no_banco.sql",
+    "status": "added",
+    "changes": 325
+  },
+  {
+    "filename": "packages/banco/supabase/reversao/20261124121856_aviso_do_erro_do_servidor.sql",
+    "status": "added",
+    "changes": 10
+  },
+  {
+    "filename": "packages/banco/supabase/reversao/20261124155208_pagamento_pelo_site.sql",
+    "status": "added",
+    "changes": 74
+  },
+  {
+    "filename": "packages/banco/supabase/reversao/20261124171542_vitrine_com_paginas.sql",
+    "status": "added",
+    "changes": 50
+  },
+  {
+    "filename": "packages/dominio/src/avisos.test.ts",
+    "status": "modified",
+    "changes": 28
+  },
+  {
+    "filename": "packages/dominio/src/avisos.ts",
+    "status": "modified",
+    "changes": 31
+  }
+]

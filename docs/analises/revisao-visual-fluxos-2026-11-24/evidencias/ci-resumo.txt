@@ -1,0 +1,14 @@
+2026-11-24T17:32:01.4629290Z found 0 vulnerabilities
+2026-11-24T17:34:00.5983489Z  Test Files  208 passed | 1 skipped (209)
+2026-11-24T17:34:00.5994576Z       Tests  1984 passed | 2 skipped (1986)
+2026-11-24T17:34:09.0620762Z  Test Files  16 passed (16)
+2026-11-24T17:34:09.0621627Z       Tests  73 passed (73)
+2026-11-24T17:48:17.9840918Z  Test Files  115 passed (115)
+2026-11-24T17:48:17.9841758Z       Tests  1227 passed | 1 todo (1228)
+2026-11-24T17:48:20.0045278Z  Test Files  7 passed (7)
+2026-11-24T17:48:20.0046406Z       Tests  64 passed (64)
+2026-11-24T17:48:21.1151274Z  Test Files  10 passed (10)
+2026-11-24T17:48:21.1152205Z       Tests  126 passed (126)
+2026-11-24T17:49:04.0593394Z found 0 vulnerabilities
+2026-11-24T17:51:38.1801175Z   87 skipped
+2026-11-24T17:51:38.1801658Z   331 passed (1.9m)

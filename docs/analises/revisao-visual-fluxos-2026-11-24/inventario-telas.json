@@ -1,0 +1,2259 @@
+[
+  {
+    "rota": "/aprovacoes",
+    "arquivo": "apps/plataforma/src/app/aprovacoes/page.tsx",
+    "demo": false,
+    "linhas": 69,
+    "titulos": [
+      "Aprovações de desconto",
+      "Aprovações de desconto"
+    ],
+    "links": [],
+    "rpc": [],
+    "tabelas": [
+      "aprovacoes_desconto"
+    ],
+    "acoes": [
+      "decidirAprovacao"
+    ]
+  },
+  {
+    "rota": "/assistencia/[id]",
+    "arquivo": "apps/plataforma/src/app/assistencia/[id]/page.tsx",
+    "demo": false,
+    "linhas": 393,
+    "titulos": [
+      "Ordem de serviço",
+      "Ordem de serviço",
+      "Aparelho",
+      "Onde está e o próximo passo",
+      "Aviso ao cliente pelo WhatsApp",
+      "Abre a conversa no WhatsApp da loja com a mensagem pronta; quem envia é você (sem envio automático até a integração oficial).",
+      "Fotos do aparelho",
+      "Trilha",
+      "Cada passo, quem fez e quando; nada se apaga",
+      "Orçamento",
+      "Cobrança e entrega",
+      "O conserto feito é cobrado no PDV (conta na produção de quem cobra) e só depois é entregue ao cliente",
+      "Peças do estoque",
+      "A peça sai do estoque da assistência só ligada a esta OS; a que faltar na contagem sem OS aparece como divergência"
+    ],
+    "links": [
+      "/assistencia"
+    ],
+    "rpc": [],
+    "tabelas": [],
+    "acoes": [
+      "avisarPeloWhatsApp",
+      "cobrarNoPdv",
+      "concluirServico",
+      "devolverPeca",
+      "entregarOrdem",
+      "orcarOrdem",
+      "passoDaOrdem",
+      "responderOrcamento",
+      "usarPeca"
+    ]
+  },
+  {
+    "rota": "/assistencia/nova",
+    "arquivo": "apps/plataforma/src/app/assistencia/nova/page.tsx",
+    "demo": false,
+    "linhas": 91,
+    "titulos": [
+      "Nova ordem de serviço",
+      "Nova ordem de serviço",
+      "Primeiro, o cliente",
+      "Nova ordem de serviço",
+      "Aparelho",
+      "O que o cliente deixa na loja: vale como a via de papel."
+    ],
+    "links": [
+      "/clientes"
+    ],
+    "rpc": [
+      "cliente_ficha"
+    ],
+    "tabelas": [],
+    "acoes": [
+      "abrirOrdem"
+    ]
+  },
+  {
+    "rota": "/assistencia",
+    "arquivo": "apps/plataforma/src/app/assistencia/page.tsx",
+    "demo": false,
+    "linhas": 107,
+    "titulos": [
+      "Assistência",
+      "Assistência",
+      "Todo aparelho de cliente que entra para assistência, até limpeza, tem ordem de serviço: o número é o comprovante do cliente e a posição do aparelho fica registrada da loja ao técnico e de volta.",
+      "Abrir uma OS",
+      "Nenhuma ordem de serviço aqui"
+    ],
+    "links": [
+      "/assistencia/relatorios",
+      "/clientes"
+    ],
+    "rpc": [],
+    "tabelas": [],
+    "acoes": []
+  },
+  {
+    "rota": "/assistencia/relatorios",
+    "arquivo": "apps/plataforma/src/app/assistencia/relatorios/page.tsx",
+    "demo": false,
+    "linhas": 62,
+    "titulos": [
+      "Relatórios da assistência",
+      "Relatórios da assistência",
+      "Relatório"
+    ],
+    "links": [
+      "/assistencia"
+    ],
+    "rpc": [],
+    "tabelas": [],
+    "acoes": []
+  },
+  {
+    "rota": "/auditoria",
+    "arquivo": "apps/plataforma/src/app/auditoria/page.tsx",
+    "demo": false,
+    "linhas": 85,
+    "titulos": [
+      "Auditoria",
+      "Auditoria",
+      "Sem permissão",
+      "Auditoria",
+      "Quem fez o quê e quando, nesta loja e na rede. O registro não pode ser apagado nem alterado.",
+      "Nada no período"
+    ],
+    "links": [],
+    "rpc": [],
+    "tabelas": [
+      "auditoria",
+      "perfis_usuario"
+    ],
+    "acoes": []
+  },
+  {
+    "rota": "/caixa",
+    "arquivo": "apps/plataforma/src/app/caixa/page.tsx",
+    "demo": false,
+    "linhas": 147,
+    "titulos": [
+      "Caixa",
+      "Caixa",
+      "Abrir caixa",
+      "Meu caixa aberto",
+      "Suprimento ou sangria",
+      "Fechar caixa",
+      "Conte o dinheiro da gaveta; diferença precisa de explicação.",
+      "Caixas fechados para conferir"
+    ],
+    "links": [],
+    "rpc": [],
+    "tabelas": [
+      "caixa_movimentos",
+      "caixas"
+    ],
+    "acoes": [
+      "abrirCaixa",
+      "conferirCaixa",
+      "fecharCaixa",
+      "movimentarCaixa"
+    ]
+  },
+  {
+    "rota": "/catalogo/lote",
+    "arquivo": "apps/plataforma/src/app/catalogo/lote/page.tsx",
+    "demo": false,
+    "linhas": 86,
+    "titulos": [
+      "Fotos em lote",
+      "Sem permissão",
+      "Fotos em lote",
+      "Várias fotos de uma vez: o nome de cada arquivo é o SKU da variação.",
+      "Como funciona",
+      "Escolher e enviar",
+      "Arquivos sem registro",
+      "Fotos que foram ao armazenamento e nunca viraram foto de produto (a rede caiu, a pessoa desistiu). Não aparecem em lugar nenhum."
+    ],
+    "links": [
+      "/catalogo"
+    ],
+    "rpc": [],
+    "tabelas": [],
+    "acoes": [
+      "limparFotosSemRegistro"
+    ]
+  },
+  {
+    "rota": "/catalogo",
+    "arquivo": "apps/plataforma/src/app/catalogo/page.tsx",
+    "demo": false,
+    "linhas": 130,
+    "titulos": [
+      "Catálogo e fotos",
+      "Catálogo e fotos"
+    ],
+    "links": [
+      "/catalogo/lote"
+    ],
+    "rpc": [],
+    "tabelas": [
+      "produtos"
+    ],
+    "acoes": []
+  },
+  {
+    "rota": "/clientes/[id]",
+    "arquivo": "apps/plataforma/src/app/clientes/[id]/page.tsx",
+    "demo": false,
+    "linhas": 280,
+    "titulos": [
+      "Cliente",
+      "Dados",
+      "Protegidos: aparecem só quando você pede, e fica registrado quem viu.",
+      "Compras",
+      "Contato e consentimento",
+      "Ofertas e pós-venda só com consentimento; retirar vale na hora para as mensagens automáticas. Avisos do próprio serviço (nota, assistência) não dependem disto.",
+      "Quem consultou ou mudou este cadastro",
+      "Últimos 20 registros (LGPD)",
+      "Assistência",
+      "Ordens de serviço deste cliente que você acompanha",
+      "Funil e agenda",
+      "Negociações e próximos contatos deste cliente que você acompanha",
+      "Ora Connect",
+      "Ativações, portabilidades e recargas das compras deste cliente que você acompanha"
+    ],
+    "links": [
+      "/clientes"
+    ],
+    "rpc": [
+      "cliente_ficha"
+    ],
+    "tabelas": [
+      "auditoria",
+      "perfis_usuario",
+      "vendas"
+    ],
+    "acoes": [
+      "registrarConsentimento"
+    ]
+  },
+  {
+    "rota": "/clientes/[id]/titular",
+    "arquivo": "apps/plataforma/src/app/clientes/[id]/titular/page.tsx",
+    "demo": false,
+    "linhas": 39,
+    "titulos": [
+      "Dados do titular",
+      "Dados do titular"
+    ],
+    "links": [],
+    "rpc": [
+      "cliente_ficha"
+    ],
+    "tabelas": [],
+    "acoes": []
+  },
+  {
+    "rota": "/clientes/duplicados",
+    "arquivo": "apps/plataforma/src/app/clientes/duplicados/page.tsx",
+    "demo": false,
+    "linhas": 73,
+    "titulos": [
+      "Cadastros duplicados",
+      "Cadastros duplicados",
+      "Candidatos por mesmo telefone ou mesmo nome e nascimento. Mesclar não apaga nada: o cadastro que sai aponta para o que fica."
+    ],
+    "links": [
+      "/clientes"
+    ],
+    "rpc": [
+      "clientes_duplicados"
+    ],
+    "tabelas": [],
+    "acoes": [
+      "marcarDiferentes",
+      "mesclarClientes"
+    ]
+  },
+  {
+    "rota": "/clientes/novo",
+    "arquivo": "apps/plataforma/src/app/clientes/novo/page.tsx",
+    "demo": false,
+    "linhas": 29,
+    "titulos": [
+      "Novo cliente",
+      "Novo cliente",
+      "Só o necessário: nome e CPF/CNPJ ou telefone. Cada finalidade marcada pede o que precisa; nada além disso fica guardado.",
+      "Dados do cliente"
+    ],
+    "links": [
+      "/clientes"
+    ],
+    "rpc": [],
+    "tabelas": [],
+    "acoes": []
+  },
+  {
+    "rota": "/clientes",
+    "arquivo": "apps/plataforma/src/app/clientes/page.tsx",
+    "demo": false,
+    "linhas": 63,
+    "titulos": [
+      "Clientes",
+      "Clientes",
+      "O cliente é da rede, não da loja: encontre pelo CPF/CNPJ ou pelo telefone completos. Cada consulta fica registrada (LGPD).",
+      "Buscar cliente",
+      "Cadastrados por último",
+      "Lista da rede, só para o dono"
+    ],
+    "links": [
+      "/clientes/duplicados",
+      "/clientes/novo",
+      "/clientes/segmentos"
+    ],
+    "rpc": [],
+    "tabelas": [
+      "clientes"
+    ],
+    "acoes": []
+  },
+  {
+    "rota": "/clientes/segmentos",
+    "arquivo": "apps/plataforma/src/app/clientes/segmentos/page.tsx",
+    "demo": false,
+    "linhas": 58,
+    "titulos": [
+      "Segmentos de clientes",
+      "Segmentos de clientes",
+      "Clientes por segmento",
+      "Como cada segmento é definido"
+    ],
+    "links": [
+      "/clientes"
+    ],
+    "rpc": [
+      "clientes_segmentos"
+    ],
+    "tabelas": [],
+    "acoes": []
+  },
+  {
+    "rota": "/connect/conciliacao",
+    "arquivo": "apps/plataforma/src/app/connect/conciliacao/page.tsx",
+    "demo": false,
+    "linhas": 126,
+    "titulos": [
+      "Conciliação com a Nogle",
+      "Conciliação com a Nogle",
+      "As ativações e as recargas da Ora conferidas com os relatórios oficiais da Nogle (ORA-CONNECT-009)",
+      "Nenhuma conciliação ainda",
+      "O que não fecha",
+      "As linhas da Nogle que não conferiram e as operações da Ora que a Nogle não trouxe (até 200 de cada)"
+    ],
+    "links": [
+      "/connect"
+    ],
+    "rpc": [],
+    "tabelas": [
+      "connect_conciliacao_linhas",
+      "connect_conciliacao_so_aqui",
+      "connect_conciliacoes"
+    ],
+    "acoes": []
+  },
+  {
+    "rota": "/connect",
+    "arquivo": "apps/plataforma/src/app/connect/page.tsx",
+    "demo": false,
+    "linhas": 273,
+    "titulos": [
+      "Ora Connect",
+      "Ora Connect",
+      "Situação da integração",
+      "As 30 mais recentes",
+      "Liberar operações (integrações)",
+      "Só depois de homologar com a Nogle; a evidência fica na auditoria"
+    ],
+    "links": [
+      "/connect/conciliacao"
+    ],
+    "rpc": [],
+    "tabelas": [
+      "connect_habilitacoes",
+      "connect_operacoes",
+      "connect_operacoes_custos",
+      "connect_referencias",
+      "venda_itens"
+    ],
+    "acoes": [
+      "cancelarOperacao",
+      "habilitarOperacao",
+      "registrarOperacao",
+      "resolverOperacao"
+    ]
+  },
+  {
+    "rota": "/conta/avisos",
+    "arquivo": "apps/plataforma/src/app/conta/avisos/page.tsx",
+    "demo": false,
+    "linhas": 84,
+    "titulos": [
+      "Avisos no celular",
+      "Avisos no celular"
+    ],
+    "links": [
+      "/conta"
+    ],
+    "rpc": [
+      "aviso_minhas_inscricoes"
+    ],
+    "tabelas": [],
+    "acoes": []
+  },
+  {
+    "rota": "/conta/confirmar",
+    "arquivo": "apps/plataforma/src/app/conta/confirmar/page.tsx",
+    "demo": false,
+    "linhas": 31,
+    "titulos": [
+      "Confirme que é você"
+    ],
+    "links": [],
+    "rpc": [
+      "situacao_da_sessao"
+    ],
+    "tabelas": [],
+    "acoes": []
+  },
+  {
+    "rota": "/conta",
+    "arquivo": "apps/plataforma/src/app/conta/page.tsx",
+    "demo": false,
+    "linhas": 68,
+    "titulos": [
+      "Minha conta",
+      "Minha conta",
+      "Não foi possível carregar seus dados agora",
+      "Minha conta"
+    ],
+    "links": [
+      "/conta/avisos",
+      "/conta/seguranca"
+    ],
+    "rpc": [],
+    "tabelas": [
+      "perfis_usuario",
+      "unidades"
+    ],
+    "acoes": [
+      "sair"
+    ]
+  },
+  {
+    "rota": "/conta/seguranca",
+    "arquivo": "apps/plataforma/src/app/conta/seguranca/page.tsx",
+    "demo": false,
+    "linhas": 48,
+    "titulos": [
+      "Segurança da conta",
+      "Segurança da conta"
+    ],
+    "links": [
+      "/conta"
+    ],
+    "rpc": [],
+    "tabelas": [],
+    "acoes": []
+  },
+  {
+    "rota": "/conta/senha",
+    "arquivo": "apps/plataforma/src/app/conta/senha/page.tsx",
+    "demo": false,
+    "linhas": 42,
+    "titulos": [
+      "Definir senha",
+      "Defina sua senha"
+    ],
+    "links": [],
+    "rpc": [
+      "situacao_da_sessao"
+    ],
+    "tabelas": [],
+    "acoes": [
+      "definirSenha"
+    ]
+  },
+  {
+    "rota": "/contas-a-pagar",
+    "arquivo": "apps/plataforma/src/app/contas-a-pagar/page.tsx",
+    "demo": false,
+    "linhas": 88,
+    "titulos": [
+      "Contas a pagar",
+      "Contas a pagar",
+      "O que a empresa tem a pagar, pelo vencimento: aluguel, luz, fornecedores. O sistema registra a conta e o pagamento feito no banco; não paga nada sozinho."
+    ],
+    "links": [],
+    "rpc": [],
+    "tabelas": [],
+    "acoes": []
+  },
+  {
+    "rota": "/crm/[id]",
+    "arquivo": "apps/plataforma/src/app/crm/[id]/page.tsx",
+    "demo": false,
+    "linhas": 214,
+    "titulos": [
+      "Oportunidade",
+      "Andamento",
+      "Atividades",
+      "Histórico"
+    ],
+    "links": [
+      "/crm"
+    ],
+    "rpc": [
+      "oportunidade_detalhe"
+    ],
+    "tabelas": [
+      "vendas"
+    ],
+    "acoes": [
+      "anotarOportunidade",
+      "atribuirOportunidade",
+      "criarAtividade",
+      "encerrarAtividade",
+      "moverOportunidade"
+    ]
+  },
+  {
+    "rota": "/crm/agenda",
+    "arquivo": "apps/plataforma/src/app/crm/agenda/page.tsx",
+    "demo": false,
+    "linhas": 80,
+    "titulos": [
+      "Agenda",
+      "Em aberto",
+      "Nova tarefa",
+      "Para mim. Atividade com cliente se agenda na oportunidade."
+    ],
+    "links": [
+      "/crm"
+    ],
+    "rpc": [
+      "crm_agenda"
+    ],
+    "tabelas": [],
+    "acoes": [
+      "criarAtividade",
+      "encerrarAtividade"
+    ]
+  },
+  {
+    "rota": "/crm",
+    "arquivo": "apps/plataforma/src/app/crm/page.tsx",
+    "demo": false,
+    "linhas": 123,
+    "titulos": [
+      "Funil",
+      "Funil de oportunidades",
+      "Encerradas nos últimos 30 dias"
+    ],
+    "links": [
+      "/crm/agenda"
+    ],
+    "rpc": [
+      "crm_funil"
+    ],
+    "tabelas": [],
+    "acoes": [
+      "registrarOportunidade"
+    ]
+  },
+  {
+    "rota": "/demo/aprovacoes",
+    "arquivo": "apps/plataforma/src/app/demo/aprovacoes/page.tsx",
+    "demo": true,
+    "linhas": 71,
+    "titulos": [
+      "Aprovações",
+      "Aprovações",
+      "Descontos, notas e cancelamentos. Ninguém aprova o próprio pedido; tudo fica na auditoria."
+    ],
+    "links": [],
+    "rpc": [],
+    "tabelas": [],
+    "acoes": []
+  },
+  {
+    "rota": "/demo/assistencia",
+    "arquivo": "apps/plataforma/src/app/demo/assistencia/page.tsx",
+    "demo": true,
+    "linhas": 31,
+    "titulos": [
+      "Assistência técnica",
+      "Assistência técnica (ordens de serviço)",
+      "Substitui a folha de papel e o grupo de WhatsApp: cada etapa tem dono e horário",
+      "Como o sistema evita o serviço feito por fora"
+    ],
+    "links": [],
+    "rpc": [],
+    "tabelas": [],
+    "acoes": []
+  },
+  {
+    "rota": "/demo/auditoria",
+    "arquivo": "apps/plataforma/src/app/demo/auditoria/page.tsx",
+    "demo": true,
+    "linhas": 53,
+    "titulos": [
+      "Auditoria",
+      "Auditoria",
+      "Quem fez o quê, quando e onde. A trilha só recebe registros novos; ninguém apaga nem altera.",
+      "Linha do tempo",
+      "Amostra fictícia de hoje",
+      "Nenhum evento deste tipo"
+    ],
+    "links": [],
+    "rpc": [],
+    "tabelas": [],
+    "acoes": []
+  },
+  {
+    "rota": "/demo/canais",
+    "arquivo": "apps/plataforma/src/app/demo/canais/page.tsx",
+    "demo": true,
+    "linhas": 109,
+    "titulos": [
+      "Canais online",
+      "Canais online e campanhas",
+      "Mesmo catálogo, preço e estoque do PDV; um canal nunca vende o IMEI reservado em outro",
+      "Os canais lado a lado (dados fictícios)",
+      "O mesmo cálculo da tela real: cada número vem do painel do próprio canal, sem somar duas vezes.",
+      "De onde vêm as reservas do site (dados fictícios)",
+      "A origem e a campanha vêm do link que levou o cliente ao site. A venda conta na loja que atendeu, já dentro da receita das lojas.",
+      "Números fictícios"
+    ],
+    "links": [],
+    "rpc": [],
+    "tabelas": [],
+    "acoes": []
+  },
+  {
+    "rota": "/demo/clientes",
+    "arquivo": "apps/plataforma/src/app/demo/clientes/page.tsx",
+    "demo": true,
+    "linhas": 103,
+    "titulos": [
+      "Clientes e WhatsApp",
+      "Clientes e atendimento",
+      "Clientes são da empresa, não da loja. Busca exata por telefone ou CPF; nada de lista completa para o vendedor.",
+      "Buscar cliente",
+      "Telefone com DDD ou CPF completo. No sistema real cada consulta fica registrada (LGPD).",
+      "Nenhum cliente com esse telefone ou CPF",
+      "Nenhuma conversa atribuída a você agora",
+      "Funil de oportunidades",
+      "A origem do contato fica guardada para medir as campanhas",
+      "WhatsApp oficial ainda não conectado"
+    ],
+    "links": [],
+    "rpc": [],
+    "tabelas": [],
+    "acoes": []
+  },
+  {
+    "rota": "/demo/connect",
+    "arquivo": "apps/plataforma/src/app/demo/connect/page.tsx",
+    "demo": true,
+    "linhas": 102,
+    "titulos": [
+      "Ora Connect",
+      "Ora Connect",
+      "Chips, ativações, recargas, portabilidade e atendimento da operadora, no formato da API NOGLE (Nogle)",
+      "Integração Nogle ainda não ligada"
+    ],
+    "links": [
+      "/demo/vender?item=chip"
+    ],
+    "rpc": [],
+    "tabelas": [],
+    "acoes": []
+  },
+  {
+    "rota": "/demo/estoque/carga",
+    "arquivo": "apps/plataforma/src/app/demo/estoque/carga/page.tsx",
+    "demo": true,
+    "linhas": 30,
+    "titulos": [
+      "Carga do estoque",
+      "Como a carga funciona"
+    ],
+    "links": [
+      "/demo/estoque"
+    ],
+    "rpc": [],
+    "tabelas": [],
+    "acoes": []
+  },
+  {
+    "rota": "/demo/estoque",
+    "arquivo": "apps/plataforma/src/app/demo/estoque/page.tsx",
+    "demo": true,
+    "linhas": 199,
+    "titulos": [
+      "Estoque e IMEI",
+      "Estoque e rastreio por IMEI",
+      "Nenhum aparelho com esse filtro",
+      "Aparelhos por modelo",
+      "Para vender agora · traço = estoque mínimo",
+      "Acessórios e chips (por quantidade)",
+      "Transferências entre lojas",
+      "Ao pedir, o produto já sai do disponível da origem (reservado); sai do físico no envio e só entra na outra loja quando alguém confere o recebimento",
+      "Nenhuma transferência desta loja",
+      "Conferência física (contagem)",
+      "Antes de a Ora assumir o estoque, cada IMEI importado precisa ser conferido na loja",
+      "Disponível em outras lojas",
+      "Consulta para indicar ao cliente: só quantidade, sem custo e sem IMEI"
+    ],
+    "links": [
+      "/demo/estoque/carga"
+    ],
+    "rpc": [],
+    "tabelas": [],
+    "acoes": []
+  },
+  {
+    "rota": "/demo/financeiro/extratos",
+    "arquivo": "apps/plataforma/src/app/demo/financeiro/extratos/page.tsx",
+    "demo": true,
+    "linhas": 32,
+    "titulos": [
+      "Extratos",
+      "Extratos da maquininha e do banco",
+      "O extrato por arquivo: o sistema sugere a venda de cada linha, e a gerência concilia ou tira da conta com o motivo. Venda não é dinheiro recebido.",
+      "Na demonstração nada é gravado"
+    ],
+    "links": [
+      "/demo/financeiro"
+    ],
+    "rpc": [],
+    "tabelas": [],
+    "acoes": []
+  },
+  {
+    "rota": "/demo/financeiro",
+    "arquivo": "apps/plataforma/src/app/demo/financeiro/page.tsx",
+    "demo": true,
+    "linhas": 142,
+    "titulos": [
+      "Caixa e financeiro",
+      "Caixa, financeiro e notas",
+      "Venda, recebimento, liquidação, repasse e conciliação são números diferentes (PAY-003)",
+      "Recebimentos por meio",
+      "Conciliação por terminal e extrato, sem supor API das maquininhas",
+      "Fechamento do caixa (dinheiro)",
+      "Caixas das lojas",
+      "Previsto × contado no fechamento",
+      "Fluxo de caixa da rede · 14 dias",
+      "Entradas para cima, saídas para baixo, na mesma escala",
+      "Financeiras",
+      "Entrada paga na loja + restante a receber",
+      "Notas fiscais da loja",
+      "Solicitadas, aguardando o dono e emitidas",
+      "Contas a pagar e a receber",
+      "Próximos dias (exemplos)",
+      "Emissão automática de nota depende de terceiros"
+    ],
+    "links": [
+      "/demo/financeiro/extratos"
+    ],
+    "rpc": [],
+    "tabelas": [],
+    "acoes": []
+  },
+  {
+    "rota": "/demo/importacao",
+    "arquivo": "apps/plataforma/src/app/demo/importacao/page.tsx",
+    "demo": true,
+    "linhas": 86,
+    "titulos": [
+      "Importar CSV da Rein",
+      "Importar estoque da Rein (prévia)",
+      "Só por arquivo, nunca pela API da Rein. Nada é gravado até o dono aprovar.",
+      "Enviar arquivo",
+      "CSV ou planilha exportada da Rein",
+      "Prévia do arquivo",
+      "Cada linha conferida pelas mesmas regras do sistema"
+    ],
+    "links": [
+      "/demo/estoque/carga"
+    ],
+    "rpc": [],
+    "tabelas": [],
+    "acoes": []
+  },
+  {
+    "rota": "/demo/lojas",
+    "arquivo": "apps/plataforma/src/app/demo/lojas/page.tsx",
+    "demo": true,
+    "linhas": 110,
+    "titulos": [
+      "Lojas e usuários",
+      "Lojas e usuários",
+      "Empresa com CNPJ raiz e uma filial por loja. Um vendedor pode ter vínculo com várias lojas e escolhe em qual está na sessão.",
+      "Unidades",
+      "Nomes das lojas 02 a 14 aguardam a lista oficial",
+      "Usuários e vínculos",
+      "Bloquear tira o acesso na hora, em todas as lojas",
+      "Quem pode fazer o quê",
+      "Matriz de permissões do ADR-002 · ✅ permitido · 🏬 só na loja atual · 👤 só o próprio · ⏳ só solicita · ❌ negado",
+      "Já pronto no banco de desenvolvimento"
+    ],
+    "links": [],
+    "rpc": [],
+    "tabelas": [],
+    "acoes": []
+  },
+  {
+    "rota": "/demo/metas",
+    "arquivo": "apps/plataforma/src/app/demo/metas/page.tsx",
+    "demo": true,
+    "linhas": 131,
+    "titulos": [
+      "Metas e desempenho",
+      "Minhas metas",
+      "Seus números de hoje em todas as lojas onde você trabalhou. O ranking com colegas aguarda a decisão dos donos (P3).",
+      "Meta do dia",
+      "Por loja hoje",
+      "Cada venda conta para a loja onde foi feita",
+      "Minha produção por categoria",
+      "Chips, ativações, portabilidades, recargas e assistências contam (telecom só confirmada)",
+      "Comissão e bônus em definição",
+      "Decisão pendente (P3)",
+      "Metas e desempenho da equipe",
+      "Gestores veem todos os vendedores do seu escopo; o vendedor vê só os próprios números",
+      "Atingimento por vendedor",
+      "Produção por categoria",
+      "Cada fato conta uma vez; telecom só depois da operadora",
+      "Comissões e bônus",
+      "Decisão pendente (P3)"
+    ],
+    "links": [],
+    "rpc": [],
+    "tabelas": [],
+    "acoes": []
+  },
+  {
+    "rota": "/demo",
+    "arquivo": "apps/plataforma/src/app/demo/page.tsx",
+    "demo": true,
+    "linhas": 17,
+    "titulos": [
+      "Início"
+    ],
+    "links": [],
+    "rpc": [],
+    "tabelas": [],
+    "acoes": []
+  },
+  {
+    "rota": "/demo/perfil",
+    "arquivo": "apps/plataforma/src/app/demo/perfil/page.tsx",
+    "demo": true,
+    "linhas": 43,
+    "titulos": [
+      "Escolher perfil",
+      "Escolha o perfil da demonstração",
+      "Cada perfil vê telas, números e permissões diferentes, como no sistema real."
+    ],
+    "links": [],
+    "rpc": [],
+    "tabelas": [],
+    "acoes": []
+  },
+  {
+    "rota": "/demo/produtos",
+    "arquivo": "apps/plataforma/src/app/demo/produtos/page.tsx",
+    "demo": true,
+    "linhas": 103,
+    "titulos": [
+      "Produtos e preços",
+      "Produtos e preços",
+      "Nenhum produto encontrado",
+      "De onde vêm os produtos"
+    ],
+    "links": [],
+    "rpc": [],
+    "tabelas": [],
+    "acoes": []
+  },
+  {
+    "rota": "/demo/relatorios",
+    "arquivo": "apps/plataforma/src/app/demo/relatorios/page.tsx",
+    "demo": true,
+    "linhas": 129,
+    "titulos": [
+      "Relatórios",
+      "Relatórios",
+      "Faturamento, margem, ticket, descontos, meios de pagamento, telecom e estoque parado",
+      "Faturamento por dia e meta diária",
+      "Meios de pagamento hoje",
+      "Por terminal e meio (REPORT-005)",
+      "Mix de vendas hoje",
+      "Faturamento contra a meta do período (traço = meta)",
+      "Margem bruta por dia",
+      "Depois do custo dos produtos; taxas de meio de pagamento à parte",
+      "Ticket médio por dia",
+      "Faturamento dividido pelo número de vendas",
+      "Descontos concedidos por dia",
+      "Acompanhe para não virar hábito",
+      "Chips, ativações e recargas por dia",
+      "Só as confirmadas pela operadora (REPORT-004)",
+      "Estoque parado há mais de 60 dias",
+      "Candidatos a campanha ou transferência (REPORT-007)"
+    ],
+    "links": [],
+    "rpc": [],
+    "tabelas": [],
+    "acoes": []
+  },
+  {
+    "rota": "/demo/vendas",
+    "arquivo": "apps/plataforma/src/app/demo/vendas/page.tsx",
+    "demo": true,
+    "linhas": 154,
+    "titulos": [
+      "Vendas",
+      "Nenhuma venda encontrada"
+    ],
+    "links": [],
+    "rpc": [],
+    "tabelas": [],
+    "acoes": []
+  },
+  {
+    "rota": "/demo/vender",
+    "arquivo": "apps/plataforma/src/app/demo/vender/page.tsx",
+    "demo": true,
+    "linhas": 67,
+    "titulos": [
+      "Nova venda",
+      "Nova venda",
+      "Toda venda pertence a uma loja. Escolha em qual você está vendendo.",
+      "Escolha a loja",
+      "Nova venda",
+      "Cliente, produtos com IMEI, desconto dentro da regra e pagamento misto, tudo pelo celular."
+    ],
+    "links": [],
+    "rpc": [],
+    "tabelas": [],
+    "acoes": []
+  },
+  {
+    "rota": "/entrar/codigo",
+    "arquivo": "apps/plataforma/src/app/entrar/codigo/page.tsx",
+    "demo": false,
+    "linhas": 30,
+    "titulos": [
+      "Código de verificação"
+    ],
+    "links": [],
+    "rpc": [
+      "situacao_da_sessao"
+    ],
+    "tabelas": [],
+    "acoes": []
+  },
+  {
+    "rota": "/entrar",
+    "arquivo": "apps/plataforma/src/app/entrar/page.tsx",
+    "demo": false,
+    "linhas": 91,
+    "titulos": [
+      "Entrar"
+    ],
+    "links": [
+      "/",
+      "/demo",
+      "/entrar/recuperar"
+    ],
+    "rpc": [],
+    "tabelas": [],
+    "acoes": [
+      "entrar"
+    ]
+  },
+  {
+    "rota": "/entrar/recuperar",
+    "arquivo": "apps/plataforma/src/app/entrar/recuperar/page.tsx",
+    "demo": false,
+    "linhas": 41,
+    "titulos": [
+      "Recuperar a senha",
+      "Recuperar a senha"
+    ],
+    "links": [
+      "/entrar"
+    ],
+    "rpc": [],
+    "tabelas": [],
+    "acoes": [
+      "pedirLinkDeSenha"
+    ]
+  },
+  {
+    "rota": "/entregas",
+    "arquivo": "apps/plataforma/src/app/entregas/page.tsx",
+    "demo": false,
+    "linhas": 26,
+    "titulos": [
+      "Entregas do projeto"
+    ],
+    "links": [],
+    "rpc": [],
+    "tabelas": [],
+    "acoes": []
+  },
+  {
+    "rota": "/equipe",
+    "arquivo": "apps/plataforma/src/app/equipe/page.tsx",
+    "demo": false,
+    "linhas": 198,
+    "titulos": [
+      "Equipe e acessos",
+      "Sem permissão",
+      "Equipe e acessos",
+      "Quem entra em cada loja, com qual função. Toda mudança vale na hora e fica na auditoria com o motivo.",
+      "Convidar pessoa",
+      "A pessoa recebe um e-mail e cria a própria senha. Ninguém mais vê a senha.",
+      "Convites em andamento"
+    ],
+    "links": [],
+    "rpc": [],
+    "tabelas": [
+      "convites",
+      "organizacoes",
+      "perfis_usuario",
+      "unidades",
+      "vinculos"
+    ],
+    "acoes": [
+      "alterarSituacao",
+      "cancelarConvite",
+      "convidar",
+      "encerrarVinculo",
+      "repetirConvite",
+      "vincular"
+    ]
+  },
+  {
+    "rota": "/escolher-loja",
+    "arquivo": "apps/plataforma/src/app/escolher-loja/page.tsx",
+    "demo": false,
+    "linhas": 57,
+    "titulos": [
+      "Escolher a loja",
+      "Em qual loja você está?"
+    ],
+    "links": [],
+    "rpc": [
+      "selecionar_unidade"
+    ],
+    "tabelas": [
+      "unidades"
+    ],
+    "acoes": [
+      "escolherLoja"
+    ]
+  },
+  {
+    "rota": "/estoque/carga/[id]",
+    "arquivo": "apps/plataforma/src/app/estoque/carga/[id]/page.tsx",
+    "demo": false,
+    "linhas": 258,
+    "titulos": [
+      "Carga do estoque",
+      "As linhas da loja",
+      "Só as decisões que não liberam o que pode estar comprometido. Lançar o físico é linha a linha, depois de conferir na loja.",
+      "Aplicar",
+      "Descartar a prévia",
+      "Encerra a prévia sem mexer no estoque.",
+      "Desfazer a carga",
+      "Devolve pelo livro o que a carga lançou e ainda está livre na loja; o que já foi vendido, reservado ou transferido fica e é contado."
+    ],
+    "links": [
+      "/estoque/carga"
+    ],
+    "rpc": [],
+    "tabelas": [
+      "estoque_carga_linhas",
+      "estoque_cargas",
+      "perfis_usuario"
+    ],
+    "acoes": [
+      "aplicarCarga",
+      "descartarCarga",
+      "desfazerCarga",
+      "resolverDiferenca"
+    ]
+  },
+  {
+    "rota": "/estoque/carga",
+    "arquivo": "apps/plataforma/src/app/estoque/carga/page.tsx",
+    "demo": false,
+    "linhas": 112,
+    "titulos": [
+      "Carga do estoque por loja",
+      "Carga do estoque por loja",
+      "O relatório de produtos da Rein, com a quantidade de cada local, vira uma prévia por loja. Nada entra no estoque antes de o dono aplicar.",
+      "As cargas",
+      "As 40 mais recentes, uma por loja e por arquivo.",
+      "Nenhuma carga ainda",
+      "Enviar o relatório",
+      "O relatório de produtos com a quantidade de cada local (o físico e, se tiver, o disponível). Uma prévia por loja.",
+      "Como a carga funciona"
+    ],
+    "links": [
+      "/produtos/importar"
+    ],
+    "rpc": [],
+    "tabelas": [
+      "estoque_cargas"
+    ],
+    "acoes": []
+  },
+  {
+    "rota": "/estoque/entrada",
+    "arquivo": "apps/plataforma/src/app/estoque/entrada/page.tsx",
+    "demo": false,
+    "linhas": 425,
+    "titulos": [
+      "Entrada de mercadoria",
+      "Hoje o banco recusaria este estorno",
+      "Entradas desta loja",
+      "Histórico indisponível para o seu perfil",
+      "Entrada de mercadoria",
+      "Compra de fornecedor ou carga inicial. Aparelho e chip entram pelo IMEI/ICCID; acessório por quantidade. Tudo entra numa transação só.",
+      "O custo informado vira o custo atual da variação (último custo). Cada venda guarda o custo que valia quando o item entrou nela."
+    ],
+    "links": [
+      "/contas-a-pagar",
+      "/estoque",
+      "/estoque/entrada#historico",
+      "/estoque/pedidos"
+    ],
+    "rpc": [
+      "estoque_entrada",
+      "estoque_entradas"
+    ],
+    "tabelas": [
+      "fornecedores"
+    ],
+    "acoes": [
+      "estornarEntrada",
+      "ligarPedido",
+      "salvarFornecedor"
+    ]
+  },
+  {
+    "rota": "/estoque/inventario/[id]",
+    "arquivo": "apps/plataforma/src/app/estoque/inventario/[id]/page.tsx",
+    "demo": false,
+    "linhas": 182,
+    "titulos": [
+      "Inventário"
+    ],
+    "links": [
+      "/estoque/inventario"
+    ],
+    "rpc": [
+      "tem_permissao"
+    ],
+    "tabelas": [
+      "inventario_contagens",
+      "inventario_itens",
+      "inventarios"
+    ],
+    "acoes": [
+      "cancelarInventario",
+      "contarItem",
+      "decidirInventario",
+      "enviarInventario"
+    ]
+  },
+  {
+    "rota": "/estoque/inventario",
+    "arquivo": "apps/plataforma/src/app/estoque/inventario/page.tsx",
+    "demo": false,
+    "linhas": 71,
+    "titulos": [
+      "Inventário",
+      "Inventário",
+      "Conte um grupo de itens; a diferença só entra no estoque depois que outra pessoa aprova. Nada se apaga: fica a trilha do antes, do contado e do ajuste.",
+      "Novo inventário",
+      "Inventários desta loja"
+    ],
+    "links": [
+      "/estoque"
+    ],
+    "rpc": [],
+    "tabelas": [
+      "inventarios"
+    ],
+    "acoes": [
+      "abrirInventario"
+    ]
+  },
+  {
+    "rota": "/estoque",
+    "arquivo": "apps/plataforma/src/app/estoque/page.tsx",
+    "demo": false,
+    "linhas": 399,
+    "titulos": [
+      "Estoque",
+      "Estoque",
+      "Posição de agora, somada no banco, nos locais que você consulta. Disponível para vender é o físico menos o reservado.",
+      "Estoque",
+      "Conferência física de hoje",
+      "Ainda não conferidos hoje",
+      "Estoque",
+      "Disponível para vender = físico − reservado (venda e transferência). Sem IMEI de outra loja. Pedir já reserva na origem: sai do disponível de lá na hora.",
+      "Saldo da loja"
+    ],
+    "links": [
+      "/estoque",
+      "/estoque/entrada",
+      "/estoque/inventario",
+      "/estoque/pedidos",
+      "/estoque?aba=conferencia",
+      "/estoque?aba=painel",
+      "/transferencias"
+    ],
+    "rpc": [
+      "estoque_na_rede"
+    ],
+    "tabelas": [
+      "estoque_movimentos",
+      "estoque_saldos",
+      "fotos_produto",
+      "itens_serializados",
+      "ordens_servico",
+      "produtos",
+      "unidades",
+      "variantes"
+    ],
+    "acoes": [
+      "conferirItem",
+      "conferirPorIdentificador",
+      "solicitarTransferencia"
+    ]
+  },
+  {
+    "rota": "/estoque/pedidos",
+    "arquivo": "apps/plataforma/src/app/estoque/pedidos/page.tsx",
+    "demo": false,
+    "linhas": 79,
+    "titulos": [
+      "Pedidos de compra",
+      "Pedidos de compra",
+      "O que a loja pediu ao fornecedor, para conferir com a nota quando a mercadoria chegar. O sistema registra o pedido; não envia nada ao fornecedor.",
+      "Os 200 mais recentes da loja do turno"
+    ],
+    "links": [
+      "/estoque/entrada",
+      "/estoque/entrada?form=fornecedor"
+    ],
+    "rpc": [],
+    "tabelas": [
+      "fornecedores"
+    ],
+    "acoes": []
+  },
+  {
+    "rota": "/financeiro",
+    "arquivo": "apps/plataforma/src/app/financeiro/page.tsx",
+    "demo": false,
+    "linhas": 151,
+    "titulos": [
+      "Financeiro",
+      "Financeiro",
+      "Sem permissão",
+      "Financeiro",
+      "Vendas, pagamentos registrados e movimentação dos caixas, somados no banco. Pagamento registrado não é dinheiro liquidado: só o conciliado com o extrato foi visto cair na conta.",
+      "Financeiro indisponível neste ambiente"
+    ],
+    "links": [],
+    "rpc": [],
+    "tabelas": [
+      "perfis_usuario",
+      "unidades"
+    ],
+    "acoes": []
+  },
+  {
+    "rota": "/inicio",
+    "arquivo": "apps/plataforma/src/app/inicio/page.tsx",
+    "demo": false,
+    "linhas": 104,
+    "titulos": [
+      "Início",
+      "Atalhos"
+    ],
+    "links": [
+      "/inicio"
+    ],
+    "rpc": [],
+    "tabelas": [],
+    "acoes": []
+  },
+  {
+    "rota": "/loja/[produto]",
+    "arquivo": "apps/plataforma/src/app/loja/[produto]/page.tsx",
+    "demo": false,
+    "linhas": 36,
+    "titulos": [
+      "Produto",
+      "A loja online ainda não está no ar",
+      "A loja online está fora do ar agora"
+    ],
+    "links": [],
+    "rpc": [
+      "loja_produto"
+    ],
+    "tabelas": [],
+    "acoes": []
+  },
+  {
+    "rota": "/loja/[produto]/reservar",
+    "arquivo": "apps/plataforma/src/app/loja/[produto]/reservar/page.tsx",
+    "demo": false,
+    "linhas": 44,
+    "titulos": [
+      "Reservar",
+      "A loja online ainda não está no ar",
+      "A loja online está fora do ar agora",
+      "Esta loja não tem este produto agora"
+    ],
+    "links": [],
+    "rpc": [
+      "loja_produto"
+    ],
+    "tabelas": [],
+    "acoes": []
+  },
+  {
+    "rota": "/loja/carrinho",
+    "arquivo": "apps/plataforma/src/app/loja/carrinho/page.tsx",
+    "demo": false,
+    "linhas": 122,
+    "titulos": [
+      "Carrinho",
+      "A loja online ainda não está no ar",
+      "O carrinho está vazio",
+      "A loja online ainda não está no ar",
+      "A loja online está fora do ar agora"
+    ],
+    "links": [
+      "/loja",
+      "/loja/pedido"
+    ],
+    "rpc": [
+      "loja_pagamento_disponivel",
+      "loja_produto"
+    ],
+    "tabelas": [],
+    "acoes": [
+      "adicionarAoCarrinho",
+      "tirarDoCarrinho"
+    ]
+  },
+  {
+    "rota": "/loja",
+    "arquivo": "apps/plataforma/src/app/loja/page.tsx",
+    "demo": false,
+    "linhas": 34,
+    "titulos": [
+      "Celulares e acessórios",
+      "A loja online ainda não está no ar",
+      "A loja online está fora do ar agora"
+    ],
+    "links": [],
+    "rpc": [
+      "loja_vitrine"
+    ],
+    "tabelas": [],
+    "acoes": []
+  },
+  {
+    "rota": "/loja/pedido",
+    "arquivo": "apps/plataforma/src/app/loja/pedido/page.tsx",
+    "demo": false,
+    "linhas": 29,
+    "titulos": [
+      "Meu pedido",
+      "A loja online ainda não está no ar"
+    ],
+    "links": [
+      "/loja"
+    ],
+    "rpc": [],
+    "tabelas": [],
+    "acoes": []
+  },
+  {
+    "rota": "/lojas",
+    "arquivo": "apps/plataforma/src/app/lojas/page.tsx",
+    "demo": false,
+    "linhas": 306,
+    "titulos": [
+      "Lojas da rede",
+      "Sem permissão",
+      "Lojas da rede",
+      "Cadastro, situação e configuração de cada loja. Toda mudança pede motivo e fica na auditoria; nada é apagado."
+    ],
+    "links": [],
+    "rpc": [
+      "loja_historico",
+      "lojas_da_rede"
+    ],
+    "tabelas": [
+      "empresas"
+    ],
+    "acoes": [
+      "atualizarLoja",
+      "criarLoja",
+      "definirConfiguracao",
+      "definirSituacao"
+    ]
+  },
+  {
+    "rota": "/metas/bonus",
+    "arquivo": "apps/plataforma/src/app/metas/bonus/page.tsx",
+    "demo": false,
+    "linhas": 86,
+    "titulos": [
+      "Regras do bônus",
+      "Regras do bônus",
+      "Sem permissão",
+      "Metas e desempenho",
+      "Regras do bônus",
+      "O bônus que cada vendedor ganha ao bater a meta do mês. As faixas valem para toda a rede; cada mudança fica no histórico.",
+      "Faixas do bônus"
+    ],
+    "links": [
+      "/metas"
+    ],
+    "rpc": [],
+    "tabelas": [],
+    "acoes": []
+  },
+  {
+    "rota": "/metas/extrato",
+    "arquivo": "apps/plataforma/src/app/metas/extrato/page.tsx",
+    "demo": false,
+    "linhas": 109,
+    "titulos": [
+      "Extrato do bônus",
+      "Extrato do bônus",
+      "Sem permissão"
+    ],
+    "links": [],
+    "rpc": [],
+    "tabelas": [],
+    "acoes": []
+  },
+  {
+    "rota": "/metas/fechamento",
+    "arquivo": "apps/plataforma/src/app/metas/fechamento/page.tsx",
+    "demo": false,
+    "linhas": 147,
+    "titulos": [
+      "Fechamento do bônus",
+      "Fechamento do bônus",
+      "Sem permissão",
+      "Fechamento do bônus"
+    ],
+    "links": [],
+    "rpc": [],
+    "tabelas": [],
+    "acoes": []
+  },
+  {
+    "rota": "/metas",
+    "arquivo": "apps/plataforma/src/app/metas/page.tsx",
+    "demo": false,
+    "linhas": 136,
+    "titulos": [
+      "Metas e desempenho",
+      "Metas e desempenho",
+      "Sem permissão"
+    ],
+    "links": [],
+    "rpc": [],
+    "tabelas": [],
+    "acoes": []
+  },
+  {
+    "rota": "/notas/[id]/emitir",
+    "arquivo": "apps/plataforma/src/app/notas/[id]/emitir/page.tsx",
+    "demo": false,
+    "linhas": 64,
+    "titulos": [
+      "Dados para emitir a nota",
+      "Digite no emissor exatamente o que está aqui. Abrir esta tela fica na auditoria.",
+      "Destinatário"
+    ],
+    "links": [
+      "/notas"
+    ],
+    "rpc": [
+      "notas_dados_para_emitir"
+    ],
+    "tabelas": [],
+    "acoes": []
+  },
+  {
+    "rota": "/notas/conciliacao",
+    "arquivo": "apps/plataforma/src/app/notas/conciliacao/page.tsx",
+    "demo": false,
+    "linhas": 77,
+    "titulos": [
+      "Conciliação das notas",
+      "Conciliação das notas",
+      "Conciliação"
+    ],
+    "links": [
+      "/notas"
+    ],
+    "rpc": [],
+    "tabelas": [
+      "fiscal_politicas"
+    ],
+    "acoes": []
+  },
+  {
+    "rota": "/notas",
+    "arquivo": "apps/plataforma/src/app/notas/page.tsx",
+    "demo": false,
+    "linhas": 141,
+    "titulos": [
+      "Notas fiscais",
+      "Notas fiscais",
+      "Fila",
+      "Emitidas",
+      "As 20 mais recentes desta loja",
+      "Prazo de alerta da fila",
+      "Use o prazo que o contador orientar; a fonte fica na auditoria"
+    ],
+    "links": [
+      "/notas/conciliacao"
+    ],
+    "rpc": [],
+    "tabelas": [
+      "fiscal_politicas",
+      "notas_pedidos",
+      "vendas"
+    ],
+    "acoes": [
+      "cancelarPedidoDeNota",
+      "decidirNota",
+      "definirPrazo",
+      "registrarEmissao"
+    ]
+  },
+  {
+    "rota": "/operacao",
+    "arquivo": "apps/plataforma/src/app/operacao/page.tsx",
+    "demo": false,
+    "linhas": 49,
+    "titulos": [
+      "Saúde da operação"
+    ],
+    "links": [],
+    "rpc": [],
+    "tabelas": [],
+    "acoes": []
+  },
+  {
+    "rota": "/pagamentos/conciliacao",
+    "arquivo": "apps/plataforma/src/app/pagamentos/conciliacao/page.tsx",
+    "demo": false,
+    "linhas": 115,
+    "titulos": [
+      "Conciliação",
+      "Conciliação de pagamentos",
+      "Onde está o dinheiro",
+      "Cartão e Pix do período"
+    ],
+    "links": [
+      "/pagamentos/extratos"
+    ],
+    "rpc": [
+      "pagamentos_do_periodo"
+    ],
+    "tabelas": [],
+    "acoes": [
+      "conciliarPagamento",
+      "desconciliarPagamento"
+    ]
+  },
+  {
+    "rota": "/pagamentos/contas-bancarias",
+    "arquivo": "apps/plataforma/src/app/pagamentos/contas-bancarias/page.tsx",
+    "demo": false,
+    "linhas": 167,
+    "titulos": [
+      "Contas bancárias",
+      "Contas bancárias",
+      "O saldo de cada conta pelo extrato do banco: o saldo inicial mais as linhas dos extratos ligados a ela. Venda não é dinheiro na conta.",
+      "Nenhuma conta cadastrada",
+      "Cadastre a primeira conta",
+      "Nova conta",
+      "O saldo inicial é o que o banco mostra no fim do dia escolhido. As linhas dos extratos depois desse dia somam."
+    ],
+    "links": [
+      "/pagamentos/extratos"
+    ],
+    "rpc": [
+      "contas_bancarias_saldos"
+    ],
+    "tabelas": [
+      "empresas",
+      "extratos"
+    ],
+    "acoes": [
+      "atualizarConta",
+      "criarConta",
+      "extratoDaConta"
+    ]
+  },
+  {
+    "rota": "/pagamentos/depositos",
+    "arquivo": "apps/plataforma/src/app/pagamentos/depositos/page.tsx",
+    "demo": false,
+    "linhas": 153,
+    "titulos": [
+      "Depósitos das maquininhas",
+      "Depósitos das maquininhas",
+      "Depósitos",
+      "Os mais recentes primeiro. O esperado é a soma do líquido dos pagamentos conciliados com o dinheiro para o dia.",
+      "Nenhum depósito no período"
+    ],
+    "links": [
+      "/pagamentos/extratos"
+    ],
+    "rpc": [
+      "maquininha_depositos_painel"
+    ],
+    "tabelas": [],
+    "acoes": [
+      "casarDeposito",
+      "desfazerDeposito"
+    ]
+  },
+  {
+    "rota": "/pagamentos/extratos/[id]",
+    "arquivo": "apps/plataforma/src/app/pagamentos/extratos/[id]/page.tsx",
+    "demo": false,
+    "linhas": 295,
+    "titulos": [
+      "Extrato",
+      "Linhas do extrato",
+      "Vendas do período ainda sem conciliação"
+    ],
+    "links": [
+      "/pagamentos/extratos"
+    ],
+    "rpc": [
+      "extrato_resumo",
+      "extrato_sugestoes",
+      "extrato_sugestoes_de_estorno"
+    ],
+    "tabelas": [
+      "extrato_linhas",
+      "extratos",
+      "maquininha_depositos",
+      "marketplace_repasses",
+      "unidades",
+      "venda_pagamentos"
+    ],
+    "acoes": [
+      "conciliarCertas",
+      "conciliarLinha",
+      "desfazerLinha",
+      "ignorarLinha"
+    ]
+  },
+  {
+    "rota": "/pagamentos/extratos/importar",
+    "arquivo": "apps/plataforma/src/app/pagamentos/extratos/importar/page.tsx",
+    "demo": false,
+    "linhas": 75,
+    "titulos": [
+      "Importar extrato",
+      "Importar extrato",
+      "Da maquininha, o relatório de vendas (uma linha por venda); do banco, o OFX ou a planilha. Nada é conciliado na importação: você confere cada sugestão depois.",
+      "O arquivo",
+      "Primeira linha com o nome das colunas; no Excel, a primeira aba."
+    ],
+    "links": [
+      "/pagamentos/extratos"
+    ],
+    "rpc": [],
+    "tabelas": [],
+    "acoes": []
+  },
+  {
+    "rota": "/pagamentos/extratos",
+    "arquivo": "apps/plataforma/src/app/pagamentos/extratos/page.tsx",
+    "demo": false,
+    "linhas": 81,
+    "titulos": [
+      "Extratos",
+      "Extratos",
+      "O extrato da maquininha ou do banco, por arquivo: o sistema sugere a venda de cada linha, e você concilia. Venda não é dinheiro recebido.",
+      "Importados",
+      "Os 50 mais recentes.",
+      "Nenhum extrato importado ainda"
+    ],
+    "links": [
+      "/pagamentos/conciliacao",
+      "/pagamentos/contas-bancarias",
+      "/pagamentos/depositos",
+      "/pagamentos/extratos/importar"
+    ],
+    "rpc": [
+      "extratos_recentes"
+    ],
+    "tabelas": [],
+    "acoes": []
+  },
+  {
+    "rota": "/pagamentos/financeiras",
+    "arquivo": "apps/plataforma/src/app/pagamentos/financeiras/page.tsx",
+    "demo": false,
+    "linhas": 59,
+    "titulos": [
+      "A receber das financeiras",
+      "A receber das financeiras",
+      "Vendas financiadas pela PayJoy e pela Aiva: o que cada financeira ainda deve à loja e o que já caiu. Sem integração com as financeiras, o repasse é registrado à mão, conferindo o extrato."
+    ],
+    "links": [],
+    "rpc": [],
+    "tabelas": [],
+    "acoes": []
+  },
+  {
+    "rota": "/pagamentos/maquininhas",
+    "arquivo": "apps/plataforma/src/app/pagamentos/maquininhas/page.tsx",
+    "demo": false,
+    "linhas": 70,
+    "titulos": [
+      "Maquininhas",
+      "Maquininhas",
+      "Cada pagamento por maquininha guarda qual foi usada. Com maquininha ativa do provedor, o PDV pede para escolher.",
+      "Maquininhas desta loja",
+      "Cadastrar maquininha"
+    ],
+    "links": [],
+    "rpc": [],
+    "tabelas": [
+      "terminais"
+    ],
+    "acoes": [
+      "alterarMaquininha",
+      "cadastrarMaquininha"
+    ]
+  },
+  {
+    "rota": "/pagamentos/recebiveis",
+    "arquivo": "apps/plataforma/src/app/pagamentos/recebiveis/page.tsx",
+    "demo": false,
+    "linhas": 36,
+    "titulos": [
+      "Recebíveis",
+      "Financeiro",
+      "Recebíveis",
+      "O que as maquininhas, o Pix direto na conta e as financeiras ainda devem a cada loja e o que já caiu na conta. Sem contrato verificado das maquininhas e das financeiras, a idade é contada desde a venda e a diferença é a que o extrato mostrou, não a taxa contratada."
+    ],
+    "links": [],
+    "rpc": [],
+    "tabelas": [],
+    "acoes": []
+  },
+  {
+    "rota": "/",
+    "arquivo": "apps/plataforma/src/app/page.tsx",
+    "demo": false,
+    "linhas": 71,
+    "titulos": [
+      "Vendas e PDV",
+      "Estoque e IMEI",
+      "Ora Connect",
+      "Caixa e financeiro",
+      "Metas e desempenho",
+      "Clientes e WhatsApp",
+      "Assistência técnica",
+      "Relatórios"
+    ],
+    "links": [
+      "/demo",
+      "/entrar",
+      "/loja"
+    ],
+    "rpc": [],
+    "tabelas": [],
+    "acoes": []
+  },
+  {
+    "rota": "/previsao",
+    "arquivo": "apps/plataforma/src/app/previsao/page.tsx",
+    "demo": false,
+    "linhas": 57,
+    "titulos": [
+      "Previsão de caixa",
+      "A previsão de caixa é só do dono",
+      "Previsão de caixa",
+      "O que vence e o que deve entrar nas próximas semanas. As contas são fatos; a entrada é uma estimativa, que você simula para mais ou para menos."
+    ],
+    "links": [],
+    "rpc": [],
+    "tabelas": [],
+    "acoes": []
+  },
+  {
+    "rota": "/produtos/importar",
+    "arquivo": "apps/plataforma/src/app/produtos/importar/page.tsx",
+    "demo": false,
+    "linhas": 369,
+    "titulos": [
+      "Importar planilha",
+      "Sem permissão",
+      "Importar planilha",
+      "Produtos, variações, preços e custos por planilha (Excel ou CSV). Primeiro uma prévia, sem mexer no catálogo; outra pessoa confere e aplica tudo de uma vez.",
+      "O que o desfazer fez",
+      "A prévia foi comparada de novo enquanto você conferia",
+      "Nova prévia",
+      "Primeira linha com o nome das colunas; no Excel, a primeira aba. Campo vazio na planilha não apaga o valor atual.",
+      "Importações recentes"
+    ],
+    "links": [
+      "/estoque/carga",
+      "/produtos"
+    ],
+    "rpc": [],
+    "tabelas": [
+      "categorias",
+      "importacao_linhas",
+      "importacoes"
+    ],
+    "acoes": [
+      "aplicarImportacao",
+      "descartarImportacao",
+      "desfazerImportacao"
+    ]
+  },
+  {
+    "rota": "/produtos",
+    "arquivo": "apps/plataforma/src/app/produtos/page.tsx",
+    "demo": false,
+    "linhas": 328,
+    "titulos": [
+      "Cadastro de produtos",
+      "Sem permissão",
+      "Cadastro de produtos",
+      "Categorias, marcas, produtos e variações (SKU). Toda mudança pede motivo e fica na auditoria; nada é apagado.",
+      "Categorias",
+      "Marcas"
+    ],
+    "links": [
+      "/catalogo",
+      "/produtos/importar"
+    ],
+    "rpc": [],
+    "tabelas": [
+      "categorias",
+      "marcas",
+      "produtos",
+      "variantes"
+    ],
+    "acoes": [
+      "definirPecaDeAssistencia",
+      "definirPolitica",
+      "salvarCategoria",
+      "salvarMarca",
+      "salvarProduto",
+      "salvarVariante"
+    ]
+  },
+  {
+    "rota": "/produtos/precos",
+    "arquivo": "apps/plataforma/src/app/produtos/precos/page.tsx",
+    "demo": false,
+    "linhas": 238,
+    "titulos": [
+      "Preços da variação",
+      "Sem permissão",
+      "Escolha uma variação",
+      "Vale agora em cada loja",
+      "Agendados e campanhas em curso",
+      "Histórico de preços",
+      "Nada é apagado: o preço de qualquer dia continua consultável."
+    ],
+    "links": [
+      "/produtos",
+      "/vender"
+    ],
+    "rpc": [
+      "precos_por_loja"
+    ],
+    "tabelas": [
+      "precos",
+      "variantes"
+    ],
+    "acoes": [
+      "cancelarPreco",
+      "criarCampanha",
+      "definirPreco"
+    ]
+  },
+  {
+    "rota": "/relatorios/anuncios",
+    "arquivo": "apps/plataforma/src/app/relatorios/anuncios/page.tsx",
+    "demo": false,
+    "linhas": 165,
+    "titulos": [
+      "Anúncios",
+      "Anúncios (Meta)",
+      "Por campanha",
+      "O funil por loja e por vendedor",
+      "Importar o custo",
+      "No Gerenciador de Anúncios: Relatórios → exportar, com o detalhamento por dia (Por tempo → Dia), em CSV ou Excel, de uma conta de anúncios em reais (BRL).",
+      "Como cada número é calculado"
+    ],
+    "links": [
+      "/relatorios"
+    ],
+    "rpc": [
+      "anuncios_painel"
+    ],
+    "tabelas": [
+      "anuncios_importacoes"
+    ],
+    "acoes": []
+  },
+  {
+    "rota": "/relatorios/canais",
+    "arquivo": "apps/plataforma/src/app/relatorios/canais/page.tsx",
+    "demo": false,
+    "linhas": 133,
+    "titulos": [
+      "Canais",
+      "Canais de venda",
+      "Parte dos números não pôde ser lida agora",
+      "Por canal",
+      "Como cada número é calculado"
+    ],
+    "links": [
+      "/relatorios"
+    ],
+    "rpc": [
+      "anuncios_painel",
+      "marketplace_painel"
+    ],
+    "tabelas": [],
+    "acoes": []
+  },
+  {
+    "rota": "/relatorios/marketplaces",
+    "arquivo": "apps/plataforma/src/app/relatorios/marketplaces/page.tsx",
+    "demo": false,
+    "linhas": 165,
+    "titulos": [
+      "Marketplaces",
+      "Marketplaces",
+      "Por canal",
+      "Por anúncio e produto",
+      "Pedidos",
+      "Importar pedidos",
+      "No painel do vendedor de cada canal: exporte o relatório de vendas do período, em CSV ou Excel.",
+      "Como cada número é calculado"
+    ],
+    "links": [
+      "/relatorios",
+      "/relatorios/marketplaces/repasses"
+    ],
+    "rpc": [
+      "marketplace_painel"
+    ],
+    "tabelas": [
+      "marketplace_importacoes"
+    ],
+    "acoes": []
+  },
+  {
+    "rota": "/relatorios/marketplaces/repasses",
+    "arquivo": "apps/plataforma/src/app/relatorios/marketplaces/repasses/page.tsx",
+    "demo": false,
+    "linhas": 145,
+    "titulos": [
+      "Repasses dos marketplaces",
+      "Repasses dos marketplaces",
+      "Repasses",
+      "Os mais recentes primeiro. O esperado é a soma do líquido dos pedidos do repasse.",
+      "Nenhum repasse no período"
+    ],
+    "links": [
+      "/relatorios/marketplaces"
+    ],
+    "rpc": [
+      "marketplace_repasses_painel"
+    ],
+    "tabelas": [],
+    "acoes": [
+      "casarRepasse",
+      "desfazerRepasse"
+    ]
+  },
+  {
+    "rota": "/relatorios",
+    "arquivo": "apps/plataforma/src/app/relatorios/page.tsx",
+    "demo": false,
+    "linhas": 93,
+    "titulos": [
+      "Relatórios",
+      "Relatórios",
+      "Sem permissão",
+      "Relatórios",
+      "Vendas, recebimentos, mix, ticket, descontos e margem bruta, dia a dia, somados no banco. Os registros por trás de cada número ficam no Financeiro."
+    ],
+    "links": [
+      "/relatorios/anuncios",
+      "/relatorios/canais",
+      "/relatorios/marketplaces"
+    ],
+    "rpc": [],
+    "tabelas": [],
+    "acoes": []
+  },
+  {
+    "rota": "/reservas-do-site",
+    "arquivo": "apps/plataforma/src/app/reservas-do-site/page.tsx",
+    "demo": false,
+    "linhas": 75,
+    "titulos": [
+      "Reservas do site",
+      "Reservas do site",
+      "Reservas do site",
+      "Clientes que reservaram na loja online para retirar aqui. A reserva vale 24 horas."
+    ],
+    "links": [],
+    "rpc": [],
+    "tabelas": [
+      "itens_serializados",
+      "loja_pagamentos",
+      "loja_pedidos",
+      "loja_reservas",
+      "variantes"
+    ],
+    "acoes": []
+  },
+  {
+    "rota": "/resultado",
+    "arquivo": "apps/plataforma/src/app/resultado/page.tsx",
+    "demo": false,
+    "linhas": 69,
+    "titulos": [
+      "Resultado do mês",
+      "O resultado do mês é só do dono",
+      "Resultado do mês",
+      "Quanto sobrou: as vendas menos devoluções, custo das mercadorias, taxas e contas. É o resultado gerencial com o que está lançado no sistema, não a contabilidade."
+    ],
+    "links": [],
+    "rpc": [],
+    "tabelas": [],
+    "acoes": []
+  },
+  {
+    "rota": "/saude",
+    "arquivo": "apps/plataforma/src/app/saude/page.tsx",
+    "demo": false,
+    "linhas": 68,
+    "titulos": [
+      "Saúde do sistema"
+    ],
+    "links": [],
+    "rpc": [],
+    "tabelas": [],
+    "acoes": []
+  },
+  {
+    "rota": "/transferencias",
+    "arquivo": "apps/plataforma/src/app/transferencias/page.tsx",
+    "demo": false,
+    "linhas": 201,
+    "titulos": [
+      "Transferências entre lojas",
+      "Transferências"
+    ],
+    "links": [
+      "/transferencias/remessa"
+    ],
+    "rpc": [],
+    "tabelas": [],
+    "acoes": [
+      "encerrarTransferencia",
+      "enviarRemessa",
+      "enviarTransferencia",
+      "receberTransferencia",
+      "resolverDivergencia",
+      "separarTransferencia"
+    ]
+  },
+  {
+    "rota": "/transferencias/remessa",
+    "arquivo": "apps/plataforma/src/app/transferencias/remessa/page.tsx",
+    "demo": false,
+    "linhas": 156,
+    "titulos": [
+      "Nova remessa",
+      "Nova remessa",
+      "Vários produtos de uma vez, entre as mesmas duas lojas. Cada produto segue o caminho de sempre: separar, enviar e receber.",
+      "1. De onde vem e para onde vai",
+      "A sua loja precisa ser a de origem ou a de destino.",
+      "2. Os produtos",
+      "3. Conferir e pedir"
+    ],
+    "links": [
+      "/transferencias"
+    ],
+    "rpc": [
+      "transferencia_lojas"
+    ],
+    "tabelas": [
+      "variantes"
+    ],
+    "acoes": [
+      "solicitarRemessa"
+    ]
+  },
+  {
+    "rota": "/vendas/[id]",
+    "arquivo": "apps/plataforma/src/app/vendas/[id]/page.tsx",
+    "demo": false,
+    "linhas": 592,
+    "titulos": [
+      "Comprovante da venda",
+      "Venda concluída",
+      "Nota fiscal",
+      "Nota fiscal",
+      "Documentos da venda",
+      "Contrato do financiamento, termo de garantia, contrato da linha e comprovantes, guardados em privado; nada se apaga",
+      "Devoluções",
+      "Estornos de cartão, Pix e financeira",
+      "Só ficam confirmados com o código do comprovante do estorno, ou com o débito do extrato importado (em Conciliação, Extratos por arquivo).",
+      "Itens a receber de volta",
+      "O item só volta ao estoque conferido: IMEI/ICCID e condição."
+    ],
+    "links": [],
+    "rpc": [
+      "tem_permissao"
+    ],
+    "tabelas": [
+      "anexos",
+      "estornos_externos",
+      "itens_serializados",
+      "notas",
+      "notas_cartas_de_correcao",
+      "notas_documentos",
+      "notas_pedidos",
+      "perfis_usuario",
+      "unidades",
+      "variantes",
+      "venda_anexos",
+      "venda_devolucoes",
+      "venda_itens",
+      "venda_pagamentos",
+      "venda_retornos",
+      "vendas",
+      "whatsapp_envios"
+    ],
+    "acoes": [
+      "cancelarVenda",
+      "conferirEnvioDesconhecido",
+      "conferirRetorno",
+      "confirmarDestinatarioDaNota",
+      "confirmarEstorno",
+      "corrigirChaveDaNota",
+      "corrigirNota",
+      "devolverItens",
+      "enviarNotaPeloWhatsApp",
+      "pedirNota",
+      "registrarCancelamentoNoFisco",
+      "retirarAnexo",
+      "vincularClienteNaVenda"
+    ]
+  },
+  {
+    "rota": "/vendas",
+    "arquivo": "apps/plataforma/src/app/vendas/page.tsx",
+    "demo": false,
+    "linhas": 139,
+    "titulos": [
+      "Vendas",
+      "Nenhuma venda encontrada"
+    ],
+    "links": [
+      "/vender"
+    ],
+    "rpc": [],
+    "tabelas": [
+      "notas_pedidos",
+      "perfis_usuario",
+      "vendas"
+    ],
+    "acoes": []
+  },
+  {
+    "rota": "/vender",
+    "arquivo": "apps/plataforma/src/app/vender/page.tsx",
+    "demo": false,
+    "linhas": 286,
+    "titulos": [
+      "Vender",
+      "Vender",
+      "Abra o seu caixa",
+      "Sem caixa aberto, a venda não é concluída.",
+      "Carrinho",
+      "Pagamento",
+      "Toque em “Adicionar forma de pagamento” para cada forma que o cliente usar. PayJoy e Aiva: o valor financiado (só o do celular) e as parcelas; a entrada é outra forma, marcada como entrada. Cartão: as parcelas e o comprovante. Troco só sai do dinheiro."
+    ],
+    "links": [],
+    "rpc": [
+      "precos_vigentes"
+    ],
+    "tabelas": [
+      "estoque_saldos",
+      "fotos_produto",
+      "itens_serializados",
+      "produtos",
+      "variantes"
+    ],
+    "acoes": [
+      "abrirCaixa",
+      "adicionarItem",
+      "aplicarDesconto",
+      "cancelarVenda",
+      "concluirVenda",
+      "novaVenda",
+      "pedirAprovacao",
+      "removerItem"
+    ]
+  }
+]

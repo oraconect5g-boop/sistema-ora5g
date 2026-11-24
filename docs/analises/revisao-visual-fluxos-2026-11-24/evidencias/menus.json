@@ -1,0 +1,328 @@
+{
+  "vendedor": {
+    "visiveis": [
+      "inicio",
+      "vender",
+      "vendas",
+      "reservas_site",
+      "clientes",
+      "funil",
+      "agenda",
+      "caixa",
+      "connect",
+      "assistencia",
+      "estoque",
+      "transferencias",
+      "catalogo",
+      "metas"
+    ],
+    "atalhos": [
+      "inicio",
+      "vender",
+      "vendas",
+      "estoque"
+    ],
+    "grupos": [
+      {
+        "grupo": "Operação",
+        "paginas": [
+          "inicio",
+          "vender",
+          "vendas",
+          "reservas_site",
+          "caixa",
+          "connect",
+          "assistencia"
+        ]
+      },
+      {
+        "grupo": "Clientes",
+        "paginas": [
+          "clientes",
+          "funil",
+          "agenda"
+        ]
+      },
+      {
+        "grupo": "Estoque e catálogo",
+        "paginas": [
+          "estoque",
+          "transferencias",
+          "catalogo"
+        ]
+      },
+      {
+        "grupo": "Gestão",
+        "paginas": [
+          "metas"
+        ]
+      }
+    ]
+  },
+  "gerente": {
+    "visiveis": [
+      "inicio",
+      "vender",
+      "vendas",
+      "reservas_site",
+      "clientes",
+      "funil",
+      "agenda",
+      "caixa",
+      "connect",
+      "assistencia",
+      "estoque",
+      "transferencias",
+      "catalogo",
+      "financeiro",
+      "relatorios",
+      "metas",
+      "contas_pagar",
+      "conciliacao",
+      "recebiveis",
+      "financeiras",
+      "maquininhas",
+      "aprovacoes",
+      "notas",
+      "operacao",
+      "auditoria"
+    ],
+    "atalhos": [
+      "inicio",
+      "vender",
+      "aprovacoes",
+      "vendas"
+    ],
+    "grupos": [
+      {
+        "grupo": "Operação",
+        "paginas": [
+          "inicio",
+          "vender",
+          "vendas",
+          "reservas_site",
+          "caixa",
+          "connect",
+          "assistencia"
+        ]
+      },
+      {
+        "grupo": "Clientes",
+        "paginas": [
+          "clientes",
+          "funil",
+          "agenda"
+        ]
+      },
+      {
+        "grupo": "Estoque e catálogo",
+        "paginas": [
+          "estoque",
+          "transferencias",
+          "catalogo"
+        ]
+      },
+      {
+        "grupo": "Gestão",
+        "paginas": [
+          "financeiro",
+          "relatorios",
+          "metas",
+          "contas_pagar",
+          "conciliacao",
+          "recebiveis",
+          "financeiras",
+          "maquininhas",
+          "aprovacoes",
+          "notas",
+          "operacao",
+          "auditoria"
+        ]
+      }
+    ]
+  },
+  "dono": {
+    "visiveis": [
+      "inicio",
+      "vender",
+      "vendas",
+      "reservas_site",
+      "clientes",
+      "funil",
+      "agenda",
+      "caixa",
+      "connect",
+      "assistencia",
+      "estoque",
+      "transferencias",
+      "catalogo",
+      "produtos",
+      "financeiro",
+      "relatorios",
+      "metas",
+      "contas_pagar",
+      "resultado",
+      "previsao",
+      "conciliacao",
+      "recebiveis",
+      "financeiras",
+      "maquininhas",
+      "aprovacoes",
+      "notas",
+      "operacao",
+      "entregas",
+      "auditoria",
+      "equipe",
+      "lojas"
+    ],
+    "atalhos": [
+      "inicio",
+      "vender",
+      "aprovacoes",
+      "vendas"
+    ],
+    "grupos": [
+      {
+        "grupo": "Operação",
+        "paginas": [
+          "inicio",
+          "vender",
+          "vendas",
+          "reservas_site",
+          "caixa",
+          "connect",
+          "assistencia"
+        ]
+      },
+      {
+        "grupo": "Clientes",
+        "paginas": [
+          "clientes",
+          "funil",
+          "agenda"
+        ]
+      },
+      {
+        "grupo": "Estoque e catálogo",
+        "paginas": [
+          "estoque",
+          "transferencias",
+          "catalogo",
+          "produtos"
+        ]
+      },
+      {
+        "grupo": "Gestão",
+        "paginas": [
+          "financeiro",
+          "relatorios",
+          "metas",
+          "contas_pagar",
+          "resultado",
+          "previsao",
+          "conciliacao",
+          "recebiveis",
+          "financeiras",
+          "maquininhas",
+          "aprovacoes",
+          "notas",
+          "operacao",
+          "entregas",
+          "auditoria"
+        ]
+      },
+      {
+        "grupo": "Administração",
+        "paginas": [
+          "equipe",
+          "lojas"
+        ]
+      }
+    ]
+  },
+  "administrador": {
+    "visiveis": [
+      "inicio",
+      "vendas",
+      "estoque",
+      "transferencias",
+      "catalogo",
+      "produtos",
+      "financeiro",
+      "relatorios",
+      "operacao",
+      "entregas",
+      "auditoria",
+      "equipe",
+      "lojas"
+    ],
+    "atalhos": [
+      "inicio",
+      "vendas",
+      "financeiro",
+      "estoque"
+    ],
+    "grupos": [
+      {
+        "grupo": "Operação",
+        "paginas": [
+          "inicio",
+          "vendas"
+        ]
+      },
+      {
+        "grupo": "Estoque e catálogo",
+        "paginas": [
+          "estoque",
+          "transferencias",
+          "catalogo",
+          "produtos"
+        ]
+      },
+      {
+        "grupo": "Gestão",
+        "paginas": [
+          "financeiro",
+          "relatorios",
+          "operacao",
+          "entregas",
+          "auditoria"
+        ]
+      },
+      {
+        "grupo": "Administração",
+        "paginas": [
+          "equipe",
+          "lojas"
+        ]
+      }
+    ]
+  },
+  "tecnico": {
+    "visiveis": [
+      "inicio",
+      "assistencia",
+      "catalogo"
+    ],
+    "atalhos": [
+      "inicio",
+      "assistencia",
+      "catalogo"
+    ],
+    "grupos": [
+      {
+        "grupo": "Operação",
+        "paginas": [
+          "inicio",
+          "assistencia"
+        ]
+      },
+      {
+        "grupo": "Estoque e catálogo",
+        "paginas": [
+          "catalogo"
+        ]
+      }
+    ]
+  }
+}

@@ -1,0 +1,117 @@
+[
+  {
+    "auditoria": {
+      "lojas": [
+        {
+          "nome": "Água Verde",
+          "tipo": "loja_fisica",
+          "status": "ativa",
+          "tem_cnpj": false
+        },
+        {
+          "nome": "Almirante Tamandaré",
+          "tipo": "loja_fisica",
+          "status": "ativa",
+          "tem_cnpj": false
+        },
+        {
+          "nome": "Assistência (teste)",
+          "tipo": "assistencia",
+          "status": "ativa",
+          "tem_cnpj": false
+        },
+        {
+          "nome": "Balneário",
+          "tipo": "loja_fisica",
+          "status": "ativa",
+          "tem_cnpj": false
+        },
+        {
+          "nome": "Butiatuvinha",
+          "tipo": "loja_fisica",
+          "status": "ativa",
+          "tem_cnpj": false
+        },
+        {
+          "nome": "Colombo",
+          "tipo": "loja_fisica",
+          "status": "ativa",
+          "tem_cnpj": false
+        },
+        {
+          "nome": "Colônia",
+          "tipo": "loja_fisica",
+          "status": "ativa",
+          "tem_cnpj": false
+        },
+        {
+          "nome": "DEFEITOS",
+          "tipo": "excecao",
+          "status": "ativa",
+          "tem_cnpj": false
+        },
+        {
+          "nome": "Dubai",
+          "tipo": "loja_fisica",
+          "status": "ativa",
+          "tem_cnpj": false
+        },
+        {
+          "nome": "Loja de teste 2",
+          "tipo": "loja_fisica",
+          "status": "ativa",
+          "tem_cnpj": true
+        },
+        {
+          "nome": "Muffato Santa",
+          "tipo": "loja_fisica",
+          "status": "ativa",
+          "tem_cnpj": false
+        },
+        {
+          "nome": "Santa Cândida",
+          "tipo": "loja_fisica",
+          "status": "ativa",
+          "tem_cnpj": false
+        },
+        {
+          "nome": "Santa Cândida (teste)",
+          "tipo": "loja_fisica",
+          "status": "ativa",
+          "tem_cnpj": true
+        },
+        {
+          "nome": "Santa Felicidade",
+          "tipo": "loja_fisica",
+          "status": "ativa",
+          "tem_cnpj": false
+        },
+        {
+          "nome": "Ventania",
+          "tipo": "loja_fisica",
+          "status": "ativa",
+          "tem_cnpj": false
+        }
+      ],
+      "fotos_ativas": 2269,
+      "pagamento_site": [
+        {
+          "ligado": false,
+          "ambiente": null,
+          "provedor": "asaas"
+        }
+      ],
+      "produtos_total": 2277,
+      "produtos_online": 634,
+      "cargas_por_situacao": [
+        {
+          "situacao": "aplicada",
+          "corte_max": "2026-11-10T16:12:00+00:00",
+          "corte_min": "2026-11-10T16:12:00+00:00",
+          "quantidade": 12
+        }
+      ],
+      "connect_habilitacoes": 0
+    }
+  }
+]
