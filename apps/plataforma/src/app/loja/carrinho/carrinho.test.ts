@@ -30,8 +30,8 @@ vi.mock("../../../lib/supabase/servidor", () => ({
   }),
 }));
 
-import { COOKIE_DO_CARRINHO, escreverCarrinho } from "../../../lib/loja/carrinho";
-import { adicionarAoCarrinho, consultarPedido, pedirNoSite, tirarDoCarrinho } from "./acoes";
+import { COOKIE_DO_CARRINHO, escreverCarrinho, lerPedidoDoSite, type PedidoDoSite } from "../../../lib/loja/carrinho";
+import { acaoDoPagamento, adicionarAoCarrinho, consultarPedido, pedirNoSite, tirarDoCarrinho } from "./acoes";
 import Carrinho from "./page";
 
 const formulario = (campos: Record<string, string>) => { const f = new FormData(); for (const [k, v] of Object.entries(campos)) f.set(k, v); return f; };
@@ -41,7 +41,7 @@ function texto(v: unknown): string {
   if (typeof v === "string" || typeof v === "number") return String(v);
   if (isValidElement<Record<string, unknown>>(v)) {
     const nome = typeof v.type === "function" ? (v.type as { name?: string }).name ?? "" : "";
-    if (nome === "FormularioDoPedido") return "[formulário do pedido]";
+    if (nome === "FormularioDoPedido") return v.props.pagamentoPeloSite ? "[formulário do pedido, com o Pix depois]" : "[formulário do pedido]";
     // Só o que aparece na tela: os filhos, e de um componente o título, o subtítulo e a ação (nada de className).
     return typeof v.type === "string" ? texto(v.props.children) : [v.props.titulo, v.props.subtitulo, v.props.acao, v.props.children].map(texto).join(" ");
   }
@@ -84,7 +84,7 @@ describe("o carrinho (ações)", () => {
     expect(await pedirNoSite({ situacao: "vazio" }, formulario(dados))).toEqual({ situacao: "erro", erro: "sem_estoque", digitado: { nome: "Cliente do Site", whatsapp: "(41) 98765-0001", aceite: true } });
     expect(carrinho()).toBeDefined();
     cenario.respostas.loja_pedir = { data: PEDIDO, error: null };
-    expect(await pedirNoSite({ situacao: "vazio" }, formulario(dados))).toMatchObject({ situacao: "pronto", pedido: { codigo: "PED234", unidades: 2 } });
+    expect(await pedirNoSite({ situacao: "vazio" }, formulario(dados))).toMatchObject({ situacao: "pronto", pedido: { codigo: "PED234", unidades: 2 }, whatsapp: "41987650001" });
     expect(cenario.chamadas.at(-1)).toEqual({ nome: "loja_pedir", argumentos: {
       p_organizacao: ORGANIZACAO, p_unidade: LOJA, p_itens: [{ variante: CAPA }, { variante: CAPA }], p_nome: "Cliente do Site", p_whatsapp: "41987650001",
       p_chave: `pedido:${CHAVE}`, p_origem: { origem: "direto" },
@@ -95,13 +95,47 @@ describe("o carrinho (ações)", () => {
 
   it("a consulta: o código e o WhatsApp juntos; sem o par certo, não achado; dados fora do formato, sem ir ao banco", async () => {
     cenario.respostas.loja_pedido_consultar = { data: PEDIDO, error: null };
-    expect(await consultarPedido({ situacao: "vazio" }, formulario({ codigo: " ped234 ", whatsapp: "41987650001" }))).toMatchObject({ situacao: "achado", pedido: { codigo: "PED234" } });
+    expect(await consultarPedido({ situacao: "vazio" }, formulario({ codigo: " ped234 ", whatsapp: "41987650001" }))).toMatchObject({ situacao: "achado", pedido: { codigo: "PED234" }, whatsapp: "41987650001" });
     expect(cenario.chamadas.at(-1)?.argumentos).toEqual({ p_organizacao: ORGANIZACAO, p_codigo: "PED234", p_whatsapp: "41987650001" });
     cenario.respostas.loja_pedido_consultar = { data: null, error: null };
     expect(await consultarPedido({ situacao: "vazio" }, formulario({ codigo: "PED234", whatsapp: "41987650002" }))).toEqual({ situacao: "nao_achado", codigo: "PED234" });
     const antes = cenario.chamadas.length;
     expect(await consultarPedido({ situacao: "vazio" }, formulario({ codigo: "PE", whatsapp: "41" }))).toEqual({ situacao: "dados", codigo: "PE" });
     expect(cenario.chamadas.length).toBe(antes);
+  });
+
+  it("o Pix do pedido (PAY-014a): pagar e ver com o código e o WhatsApp; a recusa do banco vira a mensagem; dados estranhos, sem ir ao banco", async () => {
+    const inicial = { pedido: lerPedidoDoSite(PEDIDO) as PedidoDoSite, whatsapp: "41987650001", erro: null };
+    const pix = { disponivel: true, situacao: "criando", link: null, valor_centavos: 15_800, pago_em: null };
+    const PAGAR = { codigo: "PED234", whatsapp: "41987650001", acao: "pagar" };
+    cenario.respostas.loja_pagamento_pedir = { data: { ...PEDIDO, pagamento: pix }, error: null };
+    const pedindo = await acaoDoPagamento(inicial, formulario(PAGAR));
+    expect(pedindo).toMatchObject({ erro: null, whatsapp: "41987650001", pedido: { codigo: "PED234", pagamento: { situacao: "criando" } } });
+    expect(cenario.chamadas.at(-1)).toEqual({ nome: "loja_pagamento_pedir", argumentos: { p_organizacao: ORGANIZACAO, p_codigo: "PED234", p_whatsapp: "41987650001" } });
+    cenario.respostas.loja_pedido_consultar = { data: { ...PEDIDO, pagamento: { ...pix, situacao: "aguardando", link: "https://sandbox.asaas.com/c/1" } }, error: null };
+    expect((await acaoDoPagamento(pedindo, formulario({ ...PAGAR, acao: "ver" }))).pedido.pagamento).toMatchObject({ situacao: "aguardando", link: "https://sandbox.asaas.com/c/1" });
+    expect(cenario.chamadas.at(-1)?.nome).toBe("loja_pedido_consultar");
+    for (const [codigo, erro] of [["OR049", "indisponivel"], ["OR050", "nao_pagavel"]] as const) {
+      cenario.respostas.loja_pagamento_pedir = { data: null, error: { code: codigo } };
+      expect(await acaoDoPagamento(inicial, formulario(PAGAR)), codigo).toEqual({ ...inicial, erro });
+    }
+    const silencio = vi.spyOn(console, "error").mockImplementation(() => undefined);
+    cenario.respostas.loja_pagamento_pedir = { data: null, error: { code: "57014" } };
+    expect((await acaoDoPagamento(inicial, formulario(PAGAR))).erro).toBe("falha");
+    silencio.mockRestore();
+    cenario.respostas.loja_pagamento_pedir = { data: null, error: null };
+    expect((await acaoDoPagamento(inicial, formulario(PAGAR))).erro).toBe("nao_achado");
+    const antes = cenario.chamadas.length;
+    expect((await acaoDoPagamento(inicial, formulario({ ...PAGAR, codigo: "PE" }))).erro).toBe("dados");
+    expect(cenario.chamadas.length).toBe(antes);
+  });
+
+  it("o Pix do pedido tem um limite à parte (120 por hora por endereço), maior que o das consultas", async () => {
+    const inicial = { pedido: lerPedidoDoSite(PEDIDO) as PedidoDoSite, whatsapp: "41987650001", erro: null };
+    cenario.respostas.loja_pedido_consultar = { data: PEDIDO, error: null };
+    const VER = formulario({ codigo: "PED234", whatsapp: "41987650001", acao: "ver" });
+    for (let i = 0; i < 120; i++) expect((await acaoDoPagamento(inicial, VER)).erro).toBeNull();
+    expect((await acaoDoPagamento(inicial, VER)).erro).toBe("limite");
   });
 });
 
@@ -116,5 +150,8 @@ describe("a tela do carrinho", () => {
       expect(comItens, trecho).toContain(trecho);
     }
     expect(cenario.chamadas.filter((c) => c.nome === "loja_produto")).toHaveLength(1);
+    // PAY-014a: com o pagamento pelo site ligado, o formulário diz que dá para pagar com Pix depois de reservar.
+    cenario.respostas.loja_pagamento_disponivel = { data: true, error: null };
+    expect(await tela()).toContain("[formulário do pedido, com o Pix depois]");
   });
 });

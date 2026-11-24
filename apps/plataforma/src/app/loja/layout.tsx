@@ -38,7 +38,7 @@ export default async function LayoutDaLoja({ children }: { children: ReactNode }
       <main className="mx-auto w-full max-w-6xl flex-1 px-4 py-6">{children}</main>
       <footer className="border-t border-borda bg-white">
         <div className="mx-auto max-w-6xl space-y-1 px-4 py-5 text-xs text-suave">
-          <p>Os preços são os do balcão de cada loja hoje e podem mudar. A compra e o pagamento são feitos na loja.</p>
+          <p>Os preços são os do balcão de cada loja hoje e podem mudar. A retirada é feita na loja.</p>
           <p>Imagens ilustrativas. Ora 5G.</p>
         </div>
       </footer>

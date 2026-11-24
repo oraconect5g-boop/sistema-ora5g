@@ -192,6 +192,24 @@ describe("as ações da loja (ONLINE-b)", () => {
     expect(t).not.toContain("Atender no PDV");
   });
 
+  it("o Pix do pedido (PAY-014a): o pago pelo site traz o selo, o 'não cobre de novo' e não tem cancelar; o aguardando, o selo dele; cancelar o pago volta com a mensagem (OR048)", async () => {
+    const PAGO = "00000000-0000-4000-8000-0000000000d1";
+    const AGUARDANDO = "00000000-0000-4000-8000-0000000000d2";
+    const futuro = new Date(Date.now() + 3_600_000).toISOString();
+    const pedido = (id: string, codigo: string) => ({ id, codigo, nome: "Cliente do Pedido", whatsapp_mascarado: "(41) 9****-0001", total_centavos: 15_800, unidades: 2,
+      situacao: "reservado", expira_em: futuro, criado_em: new Date().toISOString(), motivo_cancelamento: null });
+    cenario.tabelas.loja_pedidos = { data: [pedido(PAGO, "PAG234"), pedido(AGUARDANDO, "AGU234")], error: null };
+    cenario.tabelas.loja_pagamentos = { data: [{ pedido_id: PAGO, situacao: "pago", pago_em: "2026-11-24T15:00:00Z" }, { pedido_id: AGUARDANDO, situacao: "aguardando", pago_em: null }], error: null };
+    const t = texto(await tela());
+    for (const trecho of ["Pedido PAG234", "Total pago pelo site", "Pago pelo site em 24/11/2026", "Já pago pelo site: não cobre de novo", "Pedido AGU234", "Pix enviado, ainda não pago"]) {
+      expect(t, trecho).toContain(trecho);
+    }
+    expect(t.match(/Cancelar o pedido/g)).toHaveLength(1);
+    expect(cenario.consultas.find((c) => c.tabela === "loja_pagamentos")?.filtros).toContainEqual(["in", "pedido_id", [PAGO, AGUARDANDO]]);
+    cenario.respostas.loja_pedido_cancelar = { data: null, error: { code: "OR048", message: "Este pedido foi pago pelo site" } };
+    await expect(cancelarPedido(formulario({ pedido: PAGO, motivo: "Cliente desistiu" }))).rejects.toThrow("redirecionou para /reservas-do-site?erro=pago_pelo_site");
+  });
+
   it("atender e cancelar o pedido: uma venda só, com o total anunciado; o cancelamento devolve as unidades", async () => {
     const PEDIDO = "00000000-0000-4000-8000-0000000000d1";
     cenario.respostas.loja_pedido_atender = { data: { venda: "v9", total_reservado_centavos: 15_800, total_atual_centavos: 17_800, repetida: false }, error: null };

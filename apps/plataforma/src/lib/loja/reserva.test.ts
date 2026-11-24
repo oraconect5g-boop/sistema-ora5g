@@ -23,7 +23,7 @@ describe("a reserva do site: o formulário e as mensagens (ONLINE-b)", () => {
     }
     const daLoja = [[{ code: "22023", message: "Esta reserva venceu: venda pelo PDV" }, "vencida"], [{ code: "22023", message: "Esta reserva foi cancelada" }, "cancelada"],
       [{ code: "22023", message: "Esta reserva já foi atendida: a venda segue no PDV" }, "atendida"], [{ code: "22023", message: "Informe o motivo" }, "motivo"],
-      [{ code: "P0002" }, "nao_encontrada"], [{ code: "42501" }, "sem_permissao"], [null, "falha"]] as const;
+      [{ code: "P0002" }, "nao_encontrada"], [{ code: "42501" }, "sem_permissao"], [{ code: "OR048" }, "pago_pelo_site"], [null, "falha"]] as const;
     for (const [erro, esperado] of daLoja) {
       expect(erroDaLoja(erro), JSON.stringify(erro)).toBe(esperado);
       expect(Object.hasOwn(ERROS_DA_LOJA, esperado)).toBe(true);

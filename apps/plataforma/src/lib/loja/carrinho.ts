@@ -58,7 +58,32 @@ export type PedidoDoSite = {
   codigo: string; situacao: "reservado" | "vencido" | "atendido" | "cancelado"; expira_em: string; total_centavos: number; unidades: number;
   itens: { produto: string; variacao: string; preco_centavos: number }[];
   loja: { nome: string; endereco: string | null; cidade: string | null };
+  pagamento: PagamentoDoPedido;
 };
+
+// O pagamento pelo site (lote PAY-014a; ADR-025): a situação do Pix do pedido, como o banco diz.
+export const SITUACOES_DO_PAGAMENTO = ["criando", "aguardando", "pago", "cancelado", "estornado", "falhou"] as const;
+export type SituacaoDoPagamento = (typeof SITUACOES_DO_PAGAMENTO)[number];
+export type PagamentoDoPedido = { disponivel: boolean; situacao: SituacaoDoPagamento | null; link: string | null; valor_centavos: number | null; pago_em: string | null };
+export const SEM_PAGAMENTO: PagamentoDoPedido = { disponivel: false, situacao: null, link: null, valor_centavos: null, pago_em: null };
+/**
+ * O bloco do pagamento na visão do pedido, com rigor: forma estranha (ou o banco ainda sem a migration) é "não disponível".
+ * O link só vale com https e com o pagamento aguardando.
+ */
+export function lerPagamentoDoPedido(v: unknown): PagamentoDoPedido {
+  if (!v || typeof v !== "object" || Array.isArray(v)) return SEM_PAGAMENTO;
+  const p = v as Record<string, unknown>;
+  const situacao = (SITUACOES_DO_PAGAMENTO as readonly unknown[]).includes(p.situacao) ? p.situacao as SituacaoDoPagamento : null;
+  return {
+    disponivel: p.disponivel === true, situacao,
+    link: situacao === "aguardando" && typeof p.link === "string" && /^https:\/\/\S{1,490}$/.test(p.link) ? p.link : null,
+    valor_centavos: Number.isSafeInteger(p.valor_centavos) && (p.valor_centavos as number) > 0 ? p.valor_centavos as number : null,
+    pago_em: typeof p.pago_em === "string" && !Number.isNaN(Date.parse(p.pago_em)) ? p.pago_em : null,
+  };
+}
+/** Dá para pedir o Pix agora: o pagamento pelo site ligado, o pedido reservado e no prazo, e nenhum pagamento começado. */
+export const podePagarPeloSite = (pedido: PedidoDoSite, agora: number) =>
+  pedido.pagamento.disponivel && pedido.pagamento.situacao === null && pedido.situacao === "reservado" && Date.parse(pedido.expira_em) > agora;
 const SITUACOES_DO_PEDIDO = ["reservado", "vencido", "atendido", "cancelado"] as const;
 /** A resposta do banco (loja_pedir, loja_pedido_consultar) com rigor: forma estranha é nula. */
 export function lerPedidoDoSite(v: unknown): PedidoDoSite | null {
@@ -79,6 +104,7 @@ export function lerPedidoDoSite(v: unknown): PedidoDoSite | null {
     codigo: p.codigo, situacao: p.situacao as PedidoDoSite["situacao"], expira_em: p.expira_em, total_centavos: p.total_centavos as number,
     unidades: p.unidades as number, itens: lidos as PedidoDoSite["itens"],
     loja: { nome: loja.nome, endereco: typeof loja.endereco === "string" ? loja.endereco : null, cidade: typeof loja.cidade === "string" ? loja.cidade : null },
+    pagamento: lerPagamentoDoPedido(p.pagamento),
   };
 }
 

@@ -47,7 +47,8 @@ export type DigitadoNoPedido = { nome: string; whatsapp: string; aceite: boolean
 export type EstadoDoPedido =
   | { situacao: "vazio" }
   | { situacao: "erro"; erro: ErroDoPedido; digitado: DigitadoNoPedido }
-  | { situacao: "pronto"; pedido: PedidoDoSite };
+  // O WhatsApp (só números) volta ao aparelho de quem pediu, para o Pix do pedido (PAY-014a); nunca vai para log.
+  | { situacao: "pronto"; pedido: PedidoDoSite; whatsapp: string };
 
 const digitado = (dados: FormData): DigitadoNoPedido => {
   const campo = (nome: string, maximo: number) => { const v = dados.get(nome); return typeof v === "string" ? v.slice(0, maximo) : ""; };
@@ -85,13 +86,13 @@ export async function pedirNoSite(_anterior: EstadoDoPedido, dados: FormData): P
     return recusa(erro);
   }
   await gravarCarrinho(CARRINHO_VAZIO);
-  return { situacao: "pronto", pedido };
+  return { situacao: "pronto", pedido, whatsapp };
 }
 
 export type EstadoDaConsulta =
   | { situacao: "vazio" }
   | { situacao: "nao_achado" | "dados" | "limite" | "falha"; codigo: string }
-  | { situacao: "achado"; pedido: PedidoDoSite };
+  | { situacao: "achado"; pedido: PedidoDoSite; whatsapp: string };
 
 /** O visitante acompanha o pedido pelo código e pelo WhatsApp (os dois juntos; sem o par certo, "não achado"). */
 export async function consultarPedido(_anterior: EstadoDaConsulta, dados: FormData): Promise<EstadoDaConsulta> {
@@ -106,5 +107,38 @@ export async function consultarPedido(_anterior: EstadoDaConsulta, dados: FormDa
   const { data, error } = await supabase.rpc("loja_pedido_consultar", { p_organizacao: organizacao, p_codigo: codigo, p_whatsapp: whatsapp });
   if (error) return { situacao: "falha", codigo };
   const pedido = lerPedidoDoSite(data);
-  return pedido ? { situacao: "achado", pedido } : { situacao: "nao_achado", codigo };
+  return pedido ? { situacao: "achado", pedido, whatsapp } : { situacao: "nao_achado", codigo };
+}
+
+export type ErroDoPagamento = "dados" | "limite" | "indisponivel" | "nao_pagavel" | "nao_achado" | "falha";
+export type EstadoDoPagamento = { pedido: PedidoDoSite; whatsapp: string; erro: ErroDoPagamento | null };
+// Pedir o Pix e ver de novo (a tela pergunta a cada poucos segundos enquanto o worker prepara): um limite à parte, maior
+// que o das consultas, para a espera não gastar as consultas do "Meu pedido".
+const limitarPagamentos = criarLimitador(120);
+
+/**
+ * O Pix do pedido (lote PAY-014a; ADR-025), com o mesmo par do "Meu pedido" (o código e o WhatsApp). "pagar": o banco anota
+ * o pagamento a criar (public.loja_pagamento_pedir; o worker cria o link na Asaas); "ver": a visão do pedido de novo. O
+ * site não fala com a Asaas.
+ */
+export async function acaoDoPagamento(anterior: EstadoDoPagamento, dados: FormData): Promise<EstadoDoPagamento> {
+  const comErro = (erro: ErroDoPagamento): EstadoDoPagamento => ({ ...anterior, erro });
+  const codigo = codigoDoPedido(dados.get("codigo"));
+  const whatsapp = whatsappDoFormulario(dados.get("whatsapp"));
+  if (!codigo || !whatsapp) return comErro("dados");
+  const organizacao = organizacaoDaLoja();
+  const supabase = organizacao ? await clienteSupabaseServidor() : null;
+  if (!organizacao || !supabase) return comErro("falha");
+  if (!limitarPagamentos(enderecoDeQuemPede(await headers()))) return comErro("limite");
+  const argumentos = { p_organizacao: organizacao, p_codigo: codigo, p_whatsapp: whatsapp };
+  const { data, error } = dados.get("acao") === "pagar"
+    ? await supabase.rpc("loja_pagamento_pedir", argumentos)
+    : await supabase.rpc("loja_pedido_consultar", argumentos);
+  if (error) {
+    const erro: ErroDoPagamento = error.code === "OR049" ? "indisponivel" : error.code === "OR050" ? "nao_pagavel" : "falha";
+    if (erro === "falha") console.error("loja: falha no pagamento pelo site", { codigo: error.code ?? null });
+    return comErro(erro);
+  }
+  const pedido = lerPedidoDoSite(data);
+  return pedido ? { pedido, whatsapp, erro: null } : comErro("nao_achado");
 }

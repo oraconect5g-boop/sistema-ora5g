@@ -15,14 +15,14 @@ const MENSAGENS: Record<Exclude<EstadoDaConsulta["situacao"], "vazio" | "achado"
 };
 
 /** O visitante acompanha o pedido do site: o código e o WhatsApp do pedido, juntos (ONLINE-d). */
-export function ConsultaDoPedido() {
+export function ConsultaDoPedido({ codigoInicial = null }: { codigoInicial?: string | null }) {
   const [estado, consultar, consultando] = useActionState<EstadoDaConsulta, FormData>(consultarPedido, { situacao: "vazio" });
-  if (estado.situacao === "achado") return <PedidoDoSiteNaTela pedido={estado.pedido} feito={false} />;
+  if (estado.situacao === "achado") return <PedidoDoSiteNaTela pedido={estado.pedido} feito={false} whatsapp={estado.whatsapp} />;
   return (
     <form action={consultar} className="space-y-4 rounded-cartao border border-borda bg-white p-5">
       {estado.situacao !== "vazio" && <Aviso tom={estado.situacao === "nao_achado" ? "aviso" : "perigo"}>{MENSAGENS[estado.situacao]}</Aviso>}
       <label className="block text-sm font-medium">Código do pedido
-        <input name="codigo" required maxLength={10} autoComplete="off" autoCapitalize="characters" defaultValue={estado.situacao !== "vazio" ? estado.codigo : undefined} className={`${campo} numeros uppercase tracking-[0.2em]`} />
+        <input name="codigo" required maxLength={10} autoComplete="off" autoCapitalize="characters" defaultValue={estado.situacao !== "vazio" ? estado.codigo : codigoInicial ?? undefined} className={`${campo} numeros uppercase tracking-[0.2em]`} />
       </label>
       <label className="block text-sm font-medium">WhatsApp do pedido, com DDD
         <input name="whatsapp" required inputMode="tel" autoComplete="tel" placeholder="(41) 99999-0000" maxLength={20} className={campo} />

@@ -8,7 +8,7 @@ import { agora as agoraDoServidor } from "../../lib/formato";
 import { ERROS_DA_LOJA, reservasAusentes } from "../../lib/loja/reserva";
 import { soltarReservasDoSiteVencidas } from "../../lib/loja/reservas-vencidas";
 import { chaveDoCatalogo, type ValorDeParametro } from "../../lib/parametros";
-import { ListaDeReservas, type PedidoDaLoja, type ReservaDaLoja } from "./ListaDeReservas";
+import { ListaDeReservas, type PagamentoNaLoja, type PedidoDaLoja, type ReservaDaLoja } from "./ListaDeReservas";
 
 export const metadata: Metadata = { title: "Reservas do site" };
 export const dynamic = "force-dynamic";
@@ -49,12 +49,17 @@ export default async function ReservasDoSite({ searchParams }: { searchParams: P
     .eq("unidade_id", unidade).gte("criado_em", desde).order("expira_em").limit(50);
   if (pedidosLidos.error && !reservasAusentes(pedidosLidos.error)) throw new FalhaDoServico("loja_pedidos");
   const pedidos = (pedidosLidos.error ? [] : pedidosLidos.data) as unknown as PedidoDaLoja[];
-  const [variantes, aparelhos] = await Promise.all([
+  // PAY-014a: o Pix dos pedidos (a loja vê "pago pelo site" antes de o cliente chegar). Banco sem a migration: sem pagamentos.
+  const [variantes, aparelhos, pagamentosLidos] = await Promise.all([
     reservas.length ? supabase.from("variantes").select("id, nome").in("id", [...new Set(reservas.map((r) => r.variante_id))]) : Promise.resolve({ data: [], error: null }),
     reservas.some((r) => r.item_serializado_id)
       ? supabase.from("itens_serializados").select("id, imei").in("id", reservas.flatMap((r) => (r.item_serializado_id ? [r.item_serializado_id] : [])))
       : Promise.resolve({ data: [], error: null }),
+    pedidos.length ? supabase.from("loja_pagamentos").select("pedido_id, situacao, pago_em").in("pedido_id", pedidos.map((p) => p.id)) : Promise.resolve({ data: [], error: null }),
   ]);
+  if (pagamentosLidos.error && !reservasAusentes(pagamentosLidos.error)) throw new FalhaDoServico("loja_pagamentos");
+  const pagamentos: Record<string, PagamentoNaLoja> = Object.fromEntries(((pagamentosLidos.error ? [] : pagamentosLidos.data) ?? [])
+    .map((g) => [g.pedido_id, { situacao: g.situacao, pago_em: g.pago_em }]));
   // Sem o nome ou o IMEI (falha passageira ou sem leitura), a reserva aparece mesmo assim: "Produto" e sem o IMEI.
   const produtos: Record<string, string> = Object.fromEntries((variantes.data ?? []).map((v) => [v.id, v.nome]));
   const imeis: Record<string, string> = Object.fromEntries((aparelhos.data ?? []).flatMap((a) => (a.imei ? [[a.id, a.imei]] : [])));
@@ -64,7 +69,7 @@ export default async function ReservasDoSite({ searchParams }: { searchParams: P
       <TituloPagina titulo="Reservas do site" subtitulo="Clientes que reservaram na loja online para retirar aqui. A reserva vale 24 horas." />
       {ok && <Aviso tom="sucesso" className="mt-4">{OK[ok]}</Aviso>}
       {erro && <Aviso tom="perigo" className="mt-4">{ERROS_DA_LOJA[erro]}</Aviso>}
-      <ListaDeReservas reservas={reservas} pedidos={pedidos} produtos={produtos} imeis={imeis} instante={instante} />
+      <ListaDeReservas reservas={reservas} pedidos={pedidos} pagamentos={pagamentos} produtos={produtos} imeis={imeis} instante={instante} />
     </MoldeReal>
   );
 }

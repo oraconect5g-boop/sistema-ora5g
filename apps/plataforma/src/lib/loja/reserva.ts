@@ -109,6 +109,7 @@ export const ERROS_DA_LOJA = {
   atendida: "Esta reserva já foi atendida: a venda segue no PDV.",
   do_pedido: "Esta reserva é de um pedido do site: atenda ou cancele o pedido inteiro.",
   sem_permissao: "Você não tem permissão para isso.",
+  pago_pelo_site: "Este pedido foi pago pelo site: só se cancela depois de o dinheiro voltar ao cliente (o estorno, feito na Asaas).",
   falha: "Não deu para concluir agora. Tente de novo em instantes.",
 } as const;
 export type ErroDaLoja = keyof typeof ERROS_DA_LOJA;
@@ -125,6 +126,7 @@ export function erroDaLoja(erro: { code?: string; message?: string } | null | un
     return "motivo";
   }
   if (erro?.code === "P0002") return "nao_encontrada";
+  if (erro?.code === "OR048") return "pago_pelo_site";
   if (erro?.code === "42501") return "sem_permissao";
   return "falha";
 }

@@ -67,7 +67,12 @@ export default async function Carrinho({ searchParams }: { searchParams: Promise
     return <EstadoVazio titulo="A loja online ainda não está no ar" icone={Store}>Enquanto isso, procure uma das lojas da Ora 5G.</EstadoVazio>;
   }
   const produtos = [...new Set(carrinho.itens.map((i) => i.produto))];
-  const lidos = await Promise.all(produtos.map((p) => supabase.rpc("loja_produto", { p_organizacao: organizacao, p_produto: p })));
+  // PAY-014a: se o pagamento pelo site está ligado (sem a função no banco, ou com falha, conta como desligado).
+  const [lidos, pagamento] = await Promise.all([
+    Promise.all(produtos.map((p) => supabase.rpc("loja_produto", { p_organizacao: organizacao, p_produto: p }))),
+    supabase.rpc("loja_pagamento_disponivel"),
+  ]);
+  const pagamentoPeloSite = !pagamento.error && pagamento.data === true;
   if (lidos.some((l) => l.error && l.error.code !== "P0002")) {
     console.error("loja: falha ao ler o carrinho", { codigos: lidos.map((l) => l.error?.code ?? null) });
     return <EstadoVazio titulo="A loja online está fora do ar agora" icone={Store}>Tente de novo em instantes.</EstadoVazio>;
@@ -108,7 +113,7 @@ export default async function Carrinho({ searchParams }: { searchParams: Promise
         </ul>
         <p className="mt-2 text-xs text-suave">{`Até ${UNIDADES_NO_CARRINHO} unidades de uma loja. Os preços são os do balcão hoje.`}</p>
       </section>
-      {linhas.length > 0 && fora.length === 0 ? <FormularioDoPedido chave={randomUUID()} /> : (
+      {linhas.length > 0 && fora.length === 0 ? <FormularioDoPedido chave={randomUUID()} pagamentoPeloSite={pagamentoPeloSite} /> : (
         <Aviso tom="aviso">Tire do carrinho o que não está mais à venda nesta loja para reservar o pedido.</Aviso>
       )}
       <p className="text-sm"><Link href="/loja" className="font-semibold text-acao">Continuar escolhendo</Link> · <Link href="/loja/pedido" className="font-semibold text-acao">Meu pedido</Link></p>

@@ -1,7 +1,10 @@
 // O carrinho do site (lote ONLINE-d; ADR-023): o cookie lido com rigor, uma loja só, até 3 unidades. Identificadores FICTÍCIOS.
 import { describe, expect, it } from "vitest";
 
-import { CARRINHO_VAZIO, codigoDoPedido, comOItem, erroDoPedido, ERROS_DO_PEDIDO, escreverCarrinho, lerCarrinho, lerPedidoDoSite, nomeDoItem, semOItem } from "./carrinho";
+import {
+  CARRINHO_VAZIO, codigoDoPedido, comOItem, erroDoPedido, ERROS_DO_PEDIDO, escreverCarrinho, lerCarrinho, lerPedidoDoSite, nomeDoItem, podePagarPeloSite,
+  SEM_PAGAMENTO, semOItem, type PedidoDoSite,
+} from "./carrinho";
 
 const LOJA_A = "00000000-0000-4000-8000-0000000000a1";
 const LOJA_B = "00000000-0000-4000-8000-0000000000a2";
@@ -47,6 +50,25 @@ describe("o pedido do site", () => {
     expect([codigoDoPedido(" abc234 "), codigoDoPedido("ABC10I"), codigoDoPedido(7)]).toEqual(["ABC234", null, null]);
     // O item no pedido: o produto e a variação, sem repetir o nome quando a variação só repete o produto.
     expect([nomeDoItem("Capa de silicone", "Azul"), nomeDoItem("Capa de proteção", "Capa de proteção"), nomeDoItem("Cabo", "")]).toEqual(["Capa de silicone · Azul", "Capa de proteção", "Cabo"]);
+  });
+
+  it("o pagamento pelo site (PAY-014a): sem o bloco (banco sem a migration), não disponível; o link só com https e aguardando; pagar só reservado, no prazo e sem pagamento começado", () => {
+    expect(lerPedidoDoSite(pedido)?.pagamento).toEqual(SEM_PAGAMENTO);
+    const comPix = (pg: Record<string, unknown>) =>
+      lerPedidoDoSite({ ...pedido, pagamento: { disponivel: true, situacao: null, link: null, valor_centavos: null, pago_em: null, ...pg } })?.pagamento;
+    expect(comPix({ situacao: "aguardando", link: "https://sandbox.asaas.com/c/1", valor_centavos: 165_700 }))
+      .toEqual({ disponivel: true, situacao: "aguardando", link: "https://sandbox.asaas.com/c/1", valor_centavos: 165_700, pago_em: null });
+    expect(comPix({ situacao: "aguardando", link: "http://inseguro.invalid/c/1" })?.link).toBeNull();
+    expect(comPix({ situacao: "pago", link: "https://sandbox.asaas.com/c/1", pago_em: "2026-11-24T15:00:00Z" })).toMatchObject({ situacao: "pago", link: null, pago_em: "2026-11-24T15:00:00Z" });
+    expect(comPix({ situacao: "outra", valor_centavos: -1, pago_em: "ontem" })).toMatchObject({ situacao: null, valor_centavos: null, pago_em: null });
+    expect(comPix({ disponivel: "sim" })?.disponivel).toBe(false);
+    const lido = lerPedidoDoSite({ ...pedido, pagamento: { disponivel: true, situacao: null } }) as PedidoDoSite;
+    const antes = Date.parse(pedido.expira_em) - 1;
+    expect(podePagarPeloSite(lido, antes)).toBe(true);
+    expect(podePagarPeloSite(lido, Date.parse(pedido.expira_em))).toBe(false);
+    expect(podePagarPeloSite({ ...lido, situacao: "atendido" }, antes)).toBe(false);
+    expect(podePagarPeloSite({ ...lido, pagamento: { ...lido.pagamento, situacao: "falhou" } }, antes)).toBe(false);
+    expect(podePagarPeloSite({ ...lido, pagamento: { ...lido.pagamento, disponivel: false } }, antes)).toBe(false);
   });
 
   it("cada recusa do banco ao pedido vira uma mensagem que existe", () => {
