@@ -30,11 +30,12 @@ const MAQUININHA = "00000000-0000-4000-8000-000000000701";
 const item = (mudar: Record<string, unknown> = {}) => ({
   id: ITEM_CAPA, variante_id: CAPA, item_serializado_id: null, tipo: "acessorio", quantidade: 2, preco_unitario_centavos: 3990, desconto_centavos: 0,
   preco_id: null, os_id: null, variante: { sku: "ACE-0001", nome: "Capa de proteção" }, serial: null, preco: null, os: null, aprovacao: null,
+  loja_reserva_id: null,
   ...mudar,
 });
 const resposta = () => ({
   caixa: { id: CAIXA, aberto_em: "2026-11-16T12:00:00+00:00" },
-  venda: { id: VENDA, numero: 43, situacao: "rascunho" },
+  venda: { id: VENDA, numero: 43, situacao: "rascunho", pago_pelo_site_centavos: null as number | null },
   itens: [
     item({ preco_id: CAMPANHA, preco: { id: CAMPANHA, origem: "campanha", unidade_id: LOJA, motivo: "Semana da capa", fim: "2026-11-15T02:59:00+00:00" } }),
     item({
@@ -61,14 +62,21 @@ describe("lerTelaDoPdv", () => {
   it("resposta combinada: o caixa, a venda, o carrinho inteiro e as maquininhas", () => {
     const tela = lerTelaDoPdv(resposta());
     expect(tela.caixa).toEqual({ id: CAIXA, aberto_em: "2026-11-16T12:00:00+00:00" });
-    expect(tela.venda).toEqual({ id: VENDA, numero: 43, situacao: "rascunho" });
+    expect(tela.venda).toEqual({ id: VENDA, numero: 43, situacao: "rascunho", pago_pelo_site_centavos: null });
     expect(tela.terminais).toEqual([{ id: MAQUININHA, provedor: "picpay", apelido: "Balcão", identificador: "PP-0001" }]);
     expect(tela.itens.map((i) => i.id)).toEqual([ITEM_CAPA, ITEM_APARELHO, ITEM_CONSERTO]);
     expect(tela.itens[0]).toEqual({
       id: ITEM_CAPA, variante_id: CAPA, item_serializado_id: null, tipo: "acessorio", quantidade: 2, preco_unitario_centavos: 3990, desconto_centavos: 0,
       variante: { sku: "ACE-0001", nome: "Capa de proteção" }, serial: null, os: null, aprovacao: null,
-      regra: { texto: "Campanha da loja: Semana da capa (até 14/11, 23:59)", campanha: true },
+      regra: { texto: "Campanha da loja: Semana da capa (até 14/11, 23:59)", campanha: true }, pago_pelo_site: false,
     });
+  });
+
+  it("PAY-014b: a venda do pedido pago pelo site traz o que já foi pago e marca os itens pagos", () => {
+    const RESERVA = "00000000-0000-4000-8000-00000000c501";
+    const tela = lerTelaDoPdv(com((r) => { r.venda.pago_pelo_site_centavos = 7980; itemDe(r, 0).loja_reserva_id = RESERVA; }));
+    expect(tela.venda?.pago_pelo_site_centavos).toBe(7980);
+    expect(tela.itens.map((i) => i.pago_pelo_site)).toEqual([true, false, false]);
   });
 
   it("aparelho: o IMEI, o desconto e a situação do pedido de aprovação vêm com o item", () => {
@@ -127,6 +135,9 @@ describe("lerTelaDoPdv", () => {
     ["venda com identificador numérico", (r) => { (r.venda as { id: unknown }).id = 43; }],
     ["número da venda em texto", (r) => { (r.venda as { numero: unknown }).numero = "43"; }],
     ["venda sem situação", (r) => { r.venda.situacao = ""; }],
+    ["venda sem o pago pelo site", (r) => delete (r.venda as Partial<Resposta["venda"]>).pago_pelo_site_centavos],
+    ["pago pelo site quebrado", (r) => { (r.venda as { pago_pelo_site_centavos: unknown }).pago_pelo_site_centavos = 79.8; }],
+    ["item com a reserva do site que não é identificador", (r) => { itemDe(r, 0).loja_reserva_id = "R1"; }],
     ["sem os itens", (r) => delete (r as Partial<Resposta>).itens],
     ["itens que não são lista", (r) => { (r as { itens: unknown }).itens = { [ITEM_CAPA]: item() }; }],
     ["item que não é objeto", (r) => { (r as { itens: unknown[] }).itens = [ITEM_CAPA]; }],

@@ -143,7 +143,11 @@ export function avisoDaReservaNoPdv(anunciado: unknown, atual: unknown): { anunc
  * O aviso do PDV quando a loja atende a reserva: a venda abre com a unidade reservada. Se o preço de hoje subiu, a oferta
  * anunciada no site vale (Código de Defesa do Consumidor, art. 30): o vendedor dá a diferença de desconto no item.
  */
-export function avisoDaReservaAtendida(anunciado: unknown, atual: unknown, doPedido = false): { tom: "aviso" | "sucesso"; texto: string } {
+export function avisoDaReservaAtendida(anunciado: unknown, atual: unknown, doPedido = false, pagoPeloSite = false): { tom: "aviso" | "sucesso"; texto: string } {
+  // PAY-014b: o pedido pago pelo site sai pelo preço pago (o banco grava o pago na conclusão): nada de desconto a dar.
+  if (doPedido && pagoPeloSite) {
+    return { tom: "sucesso", texto: "Venda do pedido pago pelo site aberta com as unidades reservadas, pelo preço pago: não há nada a cobrar delas. Confira o cliente e conclua." };
+  }
   const precos = avisoDaReservaNoPdv(anunciado, atual);
   const inicio = doPedido ? "Venda do pedido do site aberta com as unidades reservadas." : "Venda da reserva do site aberta com a unidade reservada.";
   if (precos && precos.atual > precos.anunciado) {

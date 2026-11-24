@@ -90,7 +90,8 @@ export async function pedirAprovacao(dados: FormData) {
 export async function concluirVenda(dados: FormData) {
   const venda = dados.get("venda");
   if (!ehUuid(venda)) redirect("/vender?erro=dados");
-  const pagamentos = lerPagamentos(dados);
+  // PAY-014b: a venda do pedido pago pelo site pode ir sem outra forma; o banco confere se o pago cobre a venda.
+  const pagamentos = lerPagamentos(dados, 8, dados.get("pago_pelo_site") === "sim");
   if (!pagamentos.ok) redirect(`/vender?erro=${pagamentos.erro}`);
   const nome = String(dados.get("cliente_nome") ?? "").trim().slice(0, 120);
   const email = String(dados.get("cliente_email") ?? "").trim().toLowerCase().slice(0, 200);

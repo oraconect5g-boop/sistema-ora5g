@@ -39,6 +39,7 @@ export const ERROS_DA_VENDA = {
   so_pela_os: "Este item só sai pela ordem de serviço: o conserto entra pela OS e a peça da assistência não se vende no PDV.",
   loja_sem_cnpj: "Esta loja ainda não está liberada para vender: falta o CNPJ da filial no cadastro da loja (Gestão → Lojas).",
   deposito: "O depósito não vende: ele guarda o estoque e abastece as lojas. Para vender, troque para uma loja (Trocar de loja).",
+  pago_pelo_site: "Este pedido foi pago pelo site: os itens dele saem pelo preço pago, sem desconto, e não saem da venda. Conclua a venda; se o cliente desistir, o estorno é pelo painel da Asaas.",
   falha: "Não foi possível concluir agora. Tente de novo em instantes.",
 } as const;
 export type ErroDaVenda = keyof typeof ERROS_DA_VENDA;
@@ -47,7 +48,7 @@ const DO_BANCO: Record<string, ErroDaVenda> = {
   OR001: "sem_estoque", OR002: "indisponivel", OR003: "outra_loja", OR004: "chave", OR005: "indisponivel", OR007: "preco_mudou",
   OR008: "sem_caixa", OR009: "pagamento", OR010: "aprovacao", "42501": "sem_permissao", P0002: "nao_encontrado",
   "22023": "dados", "23505": "ja_aberto", "23514": "limite", OR013: "connect", OR015: "nota_emitida", OR016: "financiada", OR017: "com_devolucao", OR018: "vale",
-  OR032: "os_cobrada", OR038: "loja_sem_cnpj", OR043: "deposito",
+  OR032: "os_cobrada", OR038: "loja_sem_cnpj", OR043: "deposito", OR048: "pago_pelo_site",
 };
 export function erroDaVenda(erro: { code?: string } | null | undefined): ErroDaVenda {
   const codigo = erro?.code;
@@ -79,14 +80,16 @@ export { MAXIMO_DE_PARCELAS, ehMeioDaEntrada };
 export const PROVEDOR_DO_MEIO: Partial<Record<MeioPagamento, "picpay" | "pagbank">> = { pix_picpay: "picpay", cartao_picpay: "picpay", cartao_pagseguro: "pagbank" };
 
 // Lê até N linhas do formulário (pagamento_1_meio, pagamento_1_valor...); linha sem valor é ignorada.
-export function lerPagamentos(dados: { get: (nome: string) => unknown }, linhas = 8): { ok: true; pagamentos: LinhaDePagamento[] } | { ok: false; erro: ErroDaVenda } {
+/** PAY-014b: `pagoPeloSite` (a venda atende um pedido pago pelo site) deixa a lista vazia passar: o banco confere se o pago
+ *  cobre a venda. O link de pagamento nunca vem da tela: só o banco grava a linha do pago pelo site. */
+export function lerPagamentos(dados: { get: (nome: string) => unknown }, linhas = 8, pagoPeloSite = false): { ok: true; pagamentos: LinhaDePagamento[] } | { ok: false; erro: ErroDaVenda } {
   const pagamentos: LinhaDePagamento[] = [];
   for (let i = 1; i <= linhas; i++) {
     const bruto = dados.get(`pagamento_${i}_valor`);
     if (typeof bruto !== "string" || bruto.trim() === "") continue;
     const meio = dados.get(`pagamento_${i}_meio`);
     const valor = lerValor(bruto);
-    if (!ehMeio(meio) || valor === null || valor <= 0) return { ok: false, erro: valor === null ? "valor" : "pagamento" };
+    if (!ehMeio(meio) || meio === "link_pagamento" || valor === null || valor <= 0) return { ok: false, erro: valor === null ? "valor" : "pagamento" };
     const linha: LinhaDePagamento = { meio, valor };
     const comprovante = dados.get(`pagamento_${i}_comprovante`);
     if (typeof comprovante === "string" && comprovante.trim()) linha.comprovante = comprovante.trim().slice(0, 60);
@@ -134,7 +137,7 @@ export function lerPagamentos(dados: { get: (nome: string) => unknown }, linhas 
     pagamentos.push(linha);
   }
   if (pagamentos.some((p) => p.entrada_do_financiamento) && !pagamentos.some((p) => MEIOS[p.meio].financeira)) return { ok: false, erro: "entrada" };
-  return pagamentos.length ? { ok: true, pagamentos } : { ok: false, erro: "pagamento" };
+  return pagamentos.length || pagoPeloSite ? { ok: true, pagamentos } : { ok: false, erro: "pagamento" };
 }
 
 /** PDV-c: a recusa do banco na conclusão (OR009) vira a mensagem da regra que falhou; o texto do banco não vai à tela. */
@@ -143,6 +146,7 @@ export function erroDoPagamento(mensagem: string): ErroDaVenda | null {
   if (/parcela/i.test(mensagem)) return "parcelas";
   if (/financiam só/i.test(mensagem)) return "so_celular";
   if (/entrada/i.test(mensagem)) return "entrada";
+  if (/pago pelo site/i.test(mensagem)) return "pago_pelo_site";
   return null;
 }
 

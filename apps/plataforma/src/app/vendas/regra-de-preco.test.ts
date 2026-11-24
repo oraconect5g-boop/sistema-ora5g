@@ -93,10 +93,10 @@ function texto(v: unknown): string {
 /** Um item do carrinho como public.pdv_tela devolve: todos os campos do combinado, com a linha de preço junto. */
 const itemDoPdv = (mudar: Linha): Linha => ({
   id: ITEM_CAPA, variante_id: CAPA, item_serializado_id: null, tipo: "acessorio", quantidade: 1, preco_unitario_centavos: 6_900, desconto_centavos: 0,
-  preco_id: null, os_id: null, variante: { sku: "ACE-0001", nome: "Capa de proteção" }, serial: null, preco: null, os: null, aprovacao: null, ...mudar,
+  preco_id: null, os_id: null, variante: { sku: "ACE-0001", nome: "Capa de proteção" }, serial: null, preco: null, os: null, aprovacao: null, loja_reserva_id: null, ...mudar,
 });
 const carrinho = async (itens: Linha[]) => {
-  cenario.pdv = { caixa: { id: CAIXA, aberto_em: "2026-11-13T12:00:00+00:00" }, venda: { id: VENDA, numero: 43, situacao: "rascunho" }, itens, terminais: [] };
+  cenario.pdv = { caixa: { id: CAIXA, aberto_em: "2026-11-13T12:00:00+00:00" }, venda: { id: VENDA, numero: 43, situacao: "rascunho", pago_pelo_site_centavos: null }, itens, terminais: [] };
   cenario.rpcs = [];
   return texto(await Vender({ searchParams: Promise.resolve({}) }) as ReactElement);
 };

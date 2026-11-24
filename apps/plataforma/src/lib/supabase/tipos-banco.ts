@@ -7097,6 +7097,7 @@ export type Database = {
           desconto_centavos: number
           id: string
           item_serializado_id: string | null
+          loja_reserva_id: string | null
           organizacao_id: string
           os_id: string | null
           preco_id: string | null
@@ -7113,6 +7114,7 @@ export type Database = {
           desconto_centavos?: number
           id?: string
           item_serializado_id?: string | null
+          loja_reserva_id?: string | null
           organizacao_id: string
           os_id?: string | null
           preco_id?: string | null
@@ -7129,6 +7131,7 @@ export type Database = {
           desconto_centavos?: number
           id?: string
           item_serializado_id?: string | null
+          loja_reserva_id?: string | null
           organizacao_id?: string
           os_id?: string | null
           preco_id?: string | null
@@ -7145,6 +7148,13 @@ export type Database = {
             columns: ["item_serializado_id"]
             isOneToOne: false
             referencedRelation: "itens_serializados"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "venda_itens_loja_reserva_id_fkey"
+            columns: ["loja_reserva_id"]
+            isOneToOne: true
+            referencedRelation: "loja_reservas"
             referencedColumns: ["id"]
           },
           {
@@ -7226,6 +7236,7 @@ export type Database = {
           estornado_em: string | null
           id: string
           liquidado_em: string | null
+          loja_pagamento_id: string | null
           meio: string
           meio_entrada: string | null
           ordem: number
@@ -7250,6 +7261,7 @@ export type Database = {
           estornado_em?: string | null
           id?: string
           liquidado_em?: string | null
+          loja_pagamento_id?: string | null
           meio: string
           meio_entrada?: string | null
           ordem: number
@@ -7274,6 +7286,7 @@ export type Database = {
           estornado_em?: string | null
           id?: string
           liquidado_em?: string | null
+          loja_pagamento_id?: string | null
           meio?: string
           meio_entrada?: string | null
           ordem?: number
@@ -7299,6 +7312,13 @@ export type Database = {
             columns: ["confirmado_por"]
             isOneToOne: false
             referencedRelation: "perfis_usuario"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "venda_pagamentos_loja_pagamento_id_fkey"
+            columns: ["loja_pagamento_id"]
+            isOneToOne: true
+            referencedRelation: "loja_pagamentos"
             referencedColumns: ["id"]
           },
           {

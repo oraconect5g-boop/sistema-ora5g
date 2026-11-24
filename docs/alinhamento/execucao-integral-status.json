@@ -2,7 +2,7 @@
   "_leia": "Checkpoint do programa de execução integral (PR #67). Carregar ao retomar e seguir para o próximo item executável da fila; não reiniciar o projeto. Estados vêm de status-requisitos.json (fonte da rastreabilidade); este arquivo acrescenta lote, bloqueio externo e revisão. Desde 16/11/2026 a medida de avanço é o requisito homologado pelo proprietário: a chave aceites guarda a resposta dele a cada roteiro de aceite (docs/aceite/); um requisito só recebe homologado: true com todos os lotes dele aceitos e sem nada em FALTA na nota de status-requisitos.json.",
   "atualizado_em": "2026-11-24",
   "base": {
-    "main": "e86db02",
+    "main": "09d5a55",
     "pacote": {
       "pr": 67,
       "branch": "docs/execucao-integral-20261110",
@@ -1213,12 +1213,26 @@
         "ORA-ONLINE-002"
       ],
       "entrega": "o endereço do cadastro da loja (a configuração em vigor da tela Lojas da rede) na página do produto, na reserva e no pedido do site",
+      "commit": "09d5a55",
+      "publicado_em": "2026-11-24",
+      "pedido_em": "2026-11-24",
+      "resposta": null,
+      "respondido_em": null,
+      "nota": "no ar em 09d5a55 (build 24/11 18:13; copiado do registro das publicações, a branch registro/publicacoes); a prova desfeita no banco do site passou e, depois de publicar, a vitrine e a página de um produto responderam 200; migration 20261124205119_endereco_da_loja_no_site; os dois requisitos seguem parciais"
+    },
+    "PAY-014b": {
+      "roteiro": "docs/aceite/PAY-014b.md",
+      "requisitos": [
+        "ORA-PAY-014",
+        "ORA-ONLINE-002"
+      ],
+      "entrega": "no balcão, a venda do pedido pago pelo site registra o pago (pelo preço pago) sem cobrar de novo",
       "commit": null,
       "publicado_em": null,
       "pedido_em": "2026-11-24",
       "resposta": null,
       "respondido_em": null,
-      "nota": "um defeito achado em 24/11; o commit e a publicação ficam no registro (a branch registro/publicacoes); migration 20261124205119_endereco_da_loja_no_site; os dois requisitos seguem parciais"
+      "nota": "o item 9 do ADR-025; o commit e a publicação ficam no registro (a branch registro/publicacoes); migration 20261124213514_pedido_pago_no_balcao; o aceite depende de ligar o pagamento pelo site (a chave de teste da Asaas e o sim para o worker); os dois requisitos seguem parciais"
     }
   },
   "contagem_dos_estados": {
@@ -1881,8 +1895,8 @@
       "titulo": "Pix/checkout web e links por provedores validados",
       "prioridade": "P2",
       "estado": "parcial",
-      "lote": "L7 pagamentos/caixa; ADAPT-a (17/11): bloqueado com o que falta (ADR-020); PAY-014a (24/11): o Pix pela Asaas, pronto e desligado",
-      "bloqueio_externo": "E1: a escolha do provedor do link (PicPay, PagBank ou os dois), a credencial e o formato do aviso confirmado",
+      "lote": "L7 pagamentos/caixa; ADAPT-a (17/11): bloqueado com o que falta (ADR-020); PAY-014a (24/11): o Pix pela Asaas, pronto e desligado; PAY-014b (24/11): o pago pelo site no balcão, sem cobrar de novo",
+      "bloqueio_externo": "E1: a escolha foi a Asaas (24/11); faltam a chave de teste (sandbox), o e-mail dos avisos e o sim do proprietário para ligar o worker dos pagamentos",
       "revisado_codex": false,
       "homologado": false
     },
@@ -2268,7 +2282,7 @@
       "titulo": "Carrinho/checkout online e pedido com status",
       "prioridade": "P1",
       "estado": "parcial",
-      "lote": "L13 loja online; ONLINE-e (24/11): o carrinho como o único caminho oferecido, com o número no topo; PAY-014a (24/11): o Pix no pedido do site; ONLINE-h (24/11): o endereço do cadastro no pedido e na reserva",
+      "lote": "L13 loja online; ONLINE-e (24/11): o carrinho como o único caminho oferecido, com o número no topo; PAY-014a (24/11): o Pix no pedido do site; ONLINE-h (24/11): o endereço do cadastro no pedido e na reserva; PAY-014b (24/11): o pedido pago sai no balcão pelo preço pago",
       "bloqueio_externo": null,
       "revisado_codex": false,
       "homologado": false
@@ -2841,5 +2855,5 @@
       "homologado": false
     }
   },
-  "proximo_passo": "Seguir a ordem de 23/11 (o prompt entregue pelo proprietário, escrito pelo Codex, com a auditoria integral de 21/11, PR #105; a leitura está em docs/alinhamento/LEITURA_AUDITORIA_2026-11-21.md). Em 23/11 à noite o proprietário pediu para seguir o planejamento do prompt: a fila, seção por seção, está em docs/alinhamento/FILA_INTEGRAL_2026-11-23.md. (1) Publicar o ONLINE-h depois do merge (sem prova de leitura própria no domínio: nenhuma loja com endereço vende no site ainda; a prova é a desfeita no banco do site) e registrar a publicação (deploy/homologacao/registrar-publicacao.sh; a branch registro/publicacoes); os lotes de 23/11 e 24/11 até o ONLINE-g (e86db02) estão no ar. (2) O PAY-014b (no balcão, a venda do pedido pago registra o \"pago pelo site\" sem cobrar de novo) vem antes de ligar o pagamento pelo site. (3) A seção 4 do prompt (o catálogo e o estoque de verdade) foi feita em 24/11 com as respostas do proprietário (D-053; as peças de ASSISTÊNCIA fora da loja online): falta um relatório novo da Rein (a posição carregada é a de 10/11), o dos IMEIs dos celulares e o CNPJ das lojas (sem ele, a loja online não vende nada de verdade). O que resta depende do proprietário, de contrato ou de terceiro (docs/PENDENCIAS_DO_PROPRIETARIO.md, a lista única). A narrativa anterior deste campo fica no histórico do Git e em docs/alinhamento/EXECUCAO_INTEGRAL_STATUS.md."
+  "proximo_passo": "Seguir a ordem de 23/11 (o prompt entregue pelo proprietário, escrito pelo Codex, com a auditoria integral de 21/11, PR #105; a leitura está em docs/alinhamento/LEITURA_AUDITORIA_2026-11-21.md). Em 23/11 à noite o proprietário pediu para seguir o planejamento do prompt: a fila, seção por seção, está em docs/alinhamento/FILA_INTEGRAL_2026-11-23.md. (1) Publicar o PAY-014b depois do merge (sem prova de leitura no domínio: o pagamento pelo site segue desligado; a prova é a desfeita no banco do site) e registrar a publicação (deploy/homologacao/registrar-publicacao.sh; a branch registro/publicacoes); os lotes de 23/11 e 24/11 até o ONLINE-h (09d5a55) estão no ar. (2) Com o PAY-014b, o pagamento pelo site fica pronto para ligar: falta a chave de teste da Asaas, o e-mail dos avisos e o sim do proprietário para o worker; depois, a vitrine mais rápida. (3) A seção 4 do prompt (o catálogo e o estoque de verdade) foi feita em 24/11 com as respostas do proprietário (D-053; as peças de ASSISTÊNCIA fora da loja online): falta um relatório novo da Rein (a posição carregada é a de 10/11), o dos IMEIs dos celulares e o CNPJ das lojas (sem ele, a loja online não vende nada de verdade). O que resta depende do proprietário, de contrato ou de terceiro (docs/PENDENCIAS_DO_PROPRIETARIO.md, a lista única). A narrativa anterior deste campo fica no histórico do Git e em docs/alinhamento/EXECUCAO_INTEGRAL_STATUS.md."
 }

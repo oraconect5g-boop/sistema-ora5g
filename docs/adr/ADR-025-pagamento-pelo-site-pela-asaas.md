@@ -1,6 +1,6 @@
 # ADR-025 — O pagamento pelo site pela Asaas: o Pix pelo link de pagamento, confirmado pela reconsulta
 
-- **Data:** 24/11/2026 · **Situação:** aceita (lotes PAY-014a e PAY-014b) · **Requisitos:** ORA-PAY-014, ORA-ONLINE-002 e a parte do provedor do ORA-PAY-008
+- **Data:** 24/11/2026 · **Situação:** aceita (lotes PAY-014a e PAY-014b; o PAY-014b no adendo do fim) · **Requisitos:** ORA-PAY-014, ORA-ONLINE-002 e a parte do provedor do ORA-PAY-008
 - **Decisão do proprietário (24/11):** "pagamento pelo site é simples, vai ser usado o gateway de pagamento da Asaas" (a pendência E1).
 - **Contrato:** só a documentação oficial da Asaas (`docs.asaas.com`), lida em 24/11: autenticação (`access_token`, `User-Agent`), sandbox (`https://api-sandbox.asaas.com/v3`) e produção (`https://api.asaas.com/v3`), links de pagamento (`/v3/paymentLinks`), cobranças (`/v3/payments`), webhooks (`/v3/webhooks`, o cabeçalho `asaas-access-token`, o evento com `id` único e a entrega "pelo menos uma vez") e os limites da API. O que a documentação não diz não é suposto: está anotado abaixo.
 
@@ -33,3 +33,15 @@ O pedido do site (ADR-023) reserva para retirar e pagar na loja. O adaptador do 
 2. Nenhum dado de pagamento do cliente (CPF, cartão) passa pelo nosso site.
 3. Se a Asaas não avisar (a fila de avisos parada depois de 15 falhas seguidas), o pedido segue aguardando: o painel da Asaas mostra o pagamento, e o aviso pode ser reenviado por lá.
 4. **Reverter:** a reversão da migration tira as tabelas e as funções novas e volta a função de cancelar o pedido e a visão do pedido às versões do ONLINE-d; o worker e o site sem a migration não oferecem o pagamento.
+
+## Adendo do lote PAY-014b (24/11/2026): o pedido pago no balcão
+
+O item 9 acima, feito. Padrões reversíveis (nenhum pede decisão nova do proprietário: aplicam a regra "a oferta vale", do ONLINE-d, e o "a compra online é que tem link de pagamento", de 18/11):
+
+1. **O preço é o que o cliente pagou.** Ao atender o pedido pago, cada item da venda fica com o preço da reserva do site (`venda_itens.loja_reserva_id`; a linha de preço do item fica nula). Se o preço do balcão subiu ou desceu depois do pagamento, a venda sai pelo preço pago: não há desconto a dar nem diferença a devolver.
+2. **O banco põe a linha "pago pelo site" sozinho, na conclusão:** o meio `link_pagamento`, com o valor pago, o id do pagamento na Asaas como comprovante e a ligação ao pagamento do site (`venda_pagamentos.loja_pagamento_id`, uma venda só por pagamento). A tela não declara esse pagamento, e o link digitado pela tela segue recusado. Sem nada a mais no balcão, a venda conclui sem outra forma; o item a mais se paga pelas formas de sempre.
+3. **No caixa, o pago pelo site entra como recebimento do meio dele, como o cartão:** o fechamento conta só o dinheiro, e o repasse da Asaas fica para a conciliação (a parte do provedor do ORA-PAY-008).
+4. **O pedido pago sai inteiro:** o item pago não sai da venda (OR048); o desconto que deixe o total abaixo do pago é recusado na conclusão; a venda aberta do pedido pago não se cancela enquanto o dinheiro não voltar (OR048, como o pedido). A reserva de estoque da venda dura o que dura o pedido pago (7 dias depois do pagamento), não os 30 minutos do carrinho.
+5. **Desistência e estorno:** o estorno é pelo painel da Asaas. Com a venda aberta, o aviso do estorno solta o item pago (ele sai da venda e a venda se cancela; o que ficou com o preço pago não conclui). Com a venda concluída, o cancelamento põe a linha do link como estorno externo a confirmar com o comprovante, como o Pix e o cartão (a regra do estorno externo passou a aceitar o link). A devolução parcial de um item pago pelo link segue sem reembolso pelo link (o reembolso sai em dinheiro, Pix ou cartão, ou o estorno é pelo painel da Asaas).
+6. **A PayJoy e a Aiva não financiam de novo o celular já pago pelo site.**
+7. **Corrida conhecida:** se o cliente pagar pelo link no instante em que a loja atende o pedido sem pagamento, a venda abre pelo caminho de sempre (o preço do dia) e o pago entra na conclusão como linha do link; se o preço mudou, a conclusão pede o desconto ou recusa o excesso. O pagamento depois do pedido atendido continua virando divergência para a conciliação (PAY-014a).

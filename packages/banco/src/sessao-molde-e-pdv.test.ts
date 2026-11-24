@@ -367,7 +367,8 @@ describe("pdv_tela: o caixa, a venda em andamento, o carrinho e as maquininhas n
     const aparelho = await adicionar(ana, venda, cat.aparelho, itens.a1);
     const t = await tela(ana);
     const numero = (await db.query<{ n: number }>("select numero::int as n from public.vendas where id = $1", [venda])).rows[0]?.n;
-    expect(t.venda).toEqual({ id: venda, numero, situacao: "rascunho" });
+    // PAY-014b: a venda que não atende pedido pago pelo site traz o pago nulo.
+    expect(t.venda).toEqual({ id: venda, numero, situacao: "rascunho", pago_pelo_site_centavos: null });
     expect(new Date(t.caixa?.aberto_em as string).getTime())
       .toBe((await db.query<{ em: Date }>("select aberto_em as em from public.caixas where id = $1", [caixa])).rows[0]?.em.getTime());
     expect(t.itens.map((i) => i.id).sort()).toEqual([capa, aparelho].sort());
@@ -377,6 +378,7 @@ describe("pdv_tela: o caixa, a venda em andamento, o carrinho e as maquininhas n
       id: capa, variante_id: cat.capa, item_serializado_id: null, tipo: "acessorio", quantidade: 2, preco_unitario_centavos: 7_900, desconto_centavos: 0,
       preco_id: await linhaDoPreco(cat.capa), os_id: null, variante: { sku: "ACE-0001", nome: "Capa de proteção" }, serial: null,
       preco: { id: await linhaDoPreco(cat.capa), origem: "importacao", unidade_id: null, motivo: null, fim: null }, os: null, aprovacao: null,
+      loja_reserva_id: null,
     });
     expect(doItem(t, aparelho)).toMatchObject({
       variante_id: cat.aparelho, item_serializado_id: itens.a1, tipo: "aparelho", quantidade: 1, preco_unitario_centavos: 149_900,
