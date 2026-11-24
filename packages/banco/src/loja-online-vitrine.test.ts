@@ -37,7 +37,7 @@ type Vitrine = {
   produtos: { id: string; nome: string; marca: string | null; categoria: string; preco_a_partir_centavos: number; disponivel: boolean; foto: string | null }[];
   total: number; pagina: number; paginas: number;
 };
-type Loja = { id: string; nome: string; preco_centavos: number; disponibilidade: string };
+type Loja = { id: string; nome: string; preco_centavos: number; disponibilidade: string; endereco?: string | null };
 type Detalhe = { id: string; nome: string; marca: string | null; categoria: string; fotos: { caminho: string }[]; variantes: { id: string; nome: string; lojas: Loja[] }[] };
 const VITRINE = "select public.loja_vitrine($1, $2, $3) as v";
 const DETALHE = "select public.loja_produto($1, $2) as v";
@@ -53,6 +53,26 @@ const foto = (produto: string, variante: string | null, nome: string) =>
   db.query<{ caminho: string }>(`insert into public.fotos_produto (organizacao_id, produto_id, variante_id, caminho, largura, altura, bytes, tipo)
     values ($1, $2, $3, $4, 800, 800, 50000, 'image/webp') returning caminho`,
   [ids.organizacao, produto, variante, `${ids.organizacao}/${produto}/${variante ?? "produto"}/${nome}.webp`]).then((r) => r.rows[0]?.caminho as string);
+
+describe("o endereço da loja na página do produto (ONLINE-h)", () => {
+  const configurar = (desde: string, rua: string | null, numero: string | null = null, complemento: string | null = null, bairro: string | null = null) =>
+    db.query(`insert into public.unidade_configuracoes (organizacao_id, unidade_id, vigente_desde, logradouro, numero, complemento, bairro, motivo, criado_por)
+      values ($1, $2, ${desde}, $3, $4, $5, $6, 'Teste do endereço', $7)`, [ids.organizacao, ids.lojaB, rua, numero, complemento, bairro, ids.dono]);
+  const enderecoDaLojaB = async () => (await detalhe(cat.produtoAparelho)).variantes.flatMap((v) => v.lojas).find((l) => l.nome === "Loja B")?.endereco;
+
+  it("vale a configuração em vigor (\"rua, número - complemento - bairro\"); a futura ainda não; a nova sem rua volta ao endereço de antes", async () => {
+    await publicar([cat.produtoAparelho]);
+    expect(await enderecoDaLojaB()).toBeNull();
+    await configurar("now() - interval '2 hours'", "Av. Exemplo", "100", "Quiosque 2", "Centro");
+    await configurar("now() + interval '1 day'", "Rua Futura", "1");
+    expect(await enderecoDaLojaB()).toBe("Av. Exemplo, 100 - Quiosque 2 - Centro");
+    await db.query("update public.unidades set endereco = 'Rua Antiga, 5' where id = $1", [ids.lojaB]);
+    await configurar("now() - interval '1 hour'", null);
+    expect(await enderecoDaLojaB()).toBe("Rua Antiga, 5");
+    await configurar("now() - interval '30 minutes'", "Rua Só", null, null, null);
+    expect(await enderecoDaLojaB()).toBe("Rua Só");
+  });
+});
 
 describe("a vitrine com o catálogo inteiro (ONLINE-f)", () => {
   // Acessórios fictícios marcados para o site, com o preço da rede e sem estoque ("Acessório 001" em diante).
