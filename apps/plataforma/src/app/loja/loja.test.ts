@@ -97,7 +97,7 @@ describe("a página da vitrine (ONLINE-a)", () => {
     for (const trecho of ["Celulares e acessórios, com retirada na loja", "Capa de proteção", "R$ 79,00", "Galaxy A15", "R$ 1.399,00", "Disponível", "Sem estoque", "Acessórios", "Celulares"]) {
       expect(t, trecho).toContain(trecho);
     }
-    expect(cenario.chamadas).toEqual([{ nome: "loja_vitrine", argumentos: { p_organizacao: ORGANIZACAO, p_busca: "galaxy", p_categoria: "00000000-0000-4000-8000-0000000000c2" } }]);
+    expect(cenario.chamadas).toEqual([{ nome: "loja_vitrine", argumentos: { p_organizacao: ORGANIZACAO, p_busca: "galaxy", p_categoria: "00000000-0000-4000-8000-0000000000c2", p_pagina: 1 } }]);
     expect(cenario.assinadas).toEqual([["org/a1/produto/f1.webp"]]);
     expect(elementos(arvore, (p) => typeof p.src === "string").map((p) => p.src)).toEqual(["https://fotos.invalid/org/a1/produto/f1.webp?token=t"]);
     expect(elementos(arvore, (p) => p.href === `/loja/${PRODUTO}`)).toHaveLength(1);
@@ -105,7 +105,7 @@ describe("a página da vitrine (ONLINE-a)", () => {
 
   it("categoria que não é uuid é ignorada; sem configuração, desligada; vazia, \"em breve\"; com busca sem resultado, \"nada encontrado\"; falha, fora do ar", async () => {
     await vitrine({ categoria: "'; drop table x" });
-    expect(cenario.chamadas[0]?.argumentos).toEqual({ p_organizacao: ORGANIZACAO, p_busca: undefined, p_categoria: undefined });
+    expect(cenario.chamadas[0]?.argumentos).toEqual({ p_organizacao: ORGANIZACAO, p_busca: undefined, p_categoria: undefined, p_pagina: 1 });
     vi.stubEnv("LOJA_ONLINE_ORGANIZACAO", "");
     cenario.chamadas = [];
     expect(texto(await vitrine())).toContain("A loja online ainda não está no ar");
@@ -116,6 +116,38 @@ describe("a página da vitrine (ONLINE-a)", () => {
     expect(texto(await vitrine({ busca: "iphone" }))).toContain("Nenhum produto com \"iphone\"");
     cenario.respostas.loja_vitrine = { data: null, error: { code: "PGRST202" } };
     expect(texto(await vitrine())).toContain("A loja online está fora do ar agora");
+  });
+});
+
+describe("a vitrine de 60 em 60 (ONLINE-f)", () => {
+  it("passa a página ao banco; mostra quantos são e o caminho para as outras páginas, guardando a busca e a categoria", async () => {
+    cenario.respostas.loja_vitrine = { data: { ...VITRINE, total: 130, pagina: 2, paginas: 3 }, error: null };
+    const arvore = await vitrine({ busca: "capa", categoria: "00000000-0000-4000-8000-0000000000c1", pagina: "2" });
+    expect(cenario.chamadas[0]?.argumentos).toMatchObject({ p_busca: "capa", p_pagina: 2 });
+    const t = texto(arvore);
+    for (const trecho of ["Mostrando 61–62 de 130 produtos", "Página 2 de 3", "Anteriores", "Próximos"]) expect(t, trecho).toContain(trecho);
+    const paginas = elementos(arvore, (p) => p.rel === "prev" || p.rel === "next").map((p) => [p.rel, p.href]);
+    expect(paginas).toEqual([
+      ["prev", "/loja?busca=capa&categoria=00000000-0000-4000-8000-0000000000c1"],
+      ["next", "/loja?busca=capa&categoria=00000000-0000-4000-8000-0000000000c1&pagina=3"],
+    ]);
+    // As categorias e a busca recomeçam da primeira página.
+    expect(elementos(arvore, (p) => p.href === "/loja?busca=capa&categoria=00000000-0000-4000-8000-0000000000c2")).toHaveLength(1);
+  });
+
+  it("página estranha vale a primeira; na última, sem \"Próximos\"; uma página só (ou o banco de antes, sem as chaves), sem o caminho", async () => {
+    for (const pagina of ["abc", "0", "-1", "99999", "1.5"]) {
+      cenario.chamadas = [];
+      await vitrine({ pagina });
+      expect(cenario.chamadas[0]?.argumentos.p_pagina, pagina).toBe(1);
+    }
+    cenario.respostas.loja_vitrine = { data: { ...VITRINE, total: 130, pagina: 3, paginas: 3 }, error: null };
+    const ultima = await vitrine({ pagina: "3" });
+    expect(elementos(ultima, (p) => p.rel === "prev" || p.rel === "next").map((p) => [p.rel, p.href])).toEqual([["prev", "/loja?pagina=2"]]);
+    cenario.respostas.loja_vitrine = { data: VITRINE, error: null };
+    const t = texto(await vitrine());
+    expect(t).toContain("2 produtos");
+    expect(t).not.toContain("Página");
   });
 });
 
