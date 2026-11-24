@@ -137,6 +137,7 @@
     { "versao": "20261124121856", "nome": "aviso_do_erro_do_servidor", "md5": "1562ec50797a66358772da57fe795ccc", "aplicada_em": "2026-11-24" },
     { "versao": "20261124155208", "nome": "pagamento_pelo_site", "md5": "8fdd6291b391598629d3c43a14c478c7", "aplicada_em": "2026-11-24" },
     { "versao": "20261124171542", "nome": "vitrine_com_paginas", "md5": "8a22cff9d2e6111086a136667232eccc", "aplicada_em": "2026-11-24" },
-    { "versao": "20261124205119", "nome": "endereco_da_loja_no_site", "md5": "89ac1d9138591dad56002827678d4286", "aplicada_em": "2026-11-24" }
+    { "versao": "20261124205119", "nome": "endereco_da_loja_no_site", "md5": "89ac1d9138591dad56002827678d4286", "aplicada_em": "2026-11-24" },
+    { "versao": "20261124213514", "nome": "pedido_pago_no_balcao", "md5": "1f1a1dd01f84128d203faf652a4eee33", "aplicada_em": "2026-11-24" }
   ]
 }
