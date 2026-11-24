@@ -49,3 +49,18 @@ describe("o Carrinho no topo da loja (ONLINE-e)", () => {
     }
   });
 });
+
+describe("o rodapé da loja (ONLINE-g)", () => {
+  it("a marca, como comprar em três passos, o pedido e o carrinho, e o aviso dos preços e das imagens", async () => {
+    cenario.cookie = undefined;
+    const arvore = await LayoutDaLoja({ children: null });
+    const rodape = achar(arvore, (p) => typeof p.className === "string" && p.className.includes("bg-navegacao"));
+    const t = texto(rodape?.children).replace(/\s+/g, " ");
+    for (const trecho of ["Como comprar", "Escolha os produtos e a loja", "Reserve com o seu nome e o WhatsApp", "Retire e pague na loja", "Seu pedido",
+      "Acompanhar o pedido", "Ver o carrinho", "Os preços são os do balcão de cada loja hoje e podem mudar. A retirada é feita na loja.", "Imagens ilustrativas."]) {
+      expect(t, trecho).toContain(trecho);
+    }
+    expect(achar(rodape?.children, (p) => p.href === "/loja/pedido")).not.toBeNull();
+    expect(achar(rodape?.children, (p) => p.href === "/loja/carrinho")).not.toBeNull();
+  });
+});

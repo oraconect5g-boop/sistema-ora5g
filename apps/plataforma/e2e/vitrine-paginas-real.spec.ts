@@ -15,7 +15,8 @@ import { expect, test, type Page } from "@playwright/test";
 import { arquivoDasContas, noAr } from "./contas-de-teste";
 import { comPessoas, DONO, LOJA_A } from "./telas-reais";
 
-const nomesDosProdutos = (p: Page) => p.locator("main ul li a span.line-clamp-2").allInnerTexts();
+// Só a grade dos produtos (desde o ONLINE-g, os atalhos do topo também são uma lista de links).
+const nomesDosProdutos = (p: Page) => p.getByRole("list", { name: "Produtos" }).locator("li a span.line-clamp-2").allInnerTexts();
 
 test.describe("a vitrine de 60 em 60, no site no ar (ONLINE-f)", () => {
   test.skip(!arquivoDasContas || !noAr, "só no servidor, contra o site no ar (ORA_E2E_URL e ORA_E2E_CONTAS)");
