@@ -1,6 +1,6 @@
 # Fila integral pela ordem do prompt de 23/11/2026
 
-> **Estado em 24/11/2026, depois do lote ONLINE-e (um pedido do proprietário, fora da fila).** Este arquivo põe o que falta na ordem do prompt que o proprietário entregou em 23/11 (escrito pelo Codex): a seção 4 (cadastros e estoque da loja piloto), as áreas A a R da seção 5 e a revisão da seção 6. Em 23/11 à noite o proprietário pediu para seguir esse planejamento. A fonte do estado de cada requisito continua sendo `status-requisitos.json`; o que depende do proprietário está, inteiro, em `docs/PENDENCIAS_DO_PROPRIETARIO.md`. Aqui fica só a ordem de trabalho.
+> **Estado em 24/11/2026, depois do lote PAY-014a (a escolha do proprietário: a Asaas) e da carga do catálogo e do estoque de verdade (B1, a seção 4).** Este arquivo põe o que falta na ordem do prompt que o proprietário entregou em 23/11 (escrito pelo Codex): a seção 4 (cadastros e estoque da loja piloto), as áreas A a R da seção 5 e a revisão da seção 6. Em 23/11 à noite o proprietário pediu para seguir esse planejamento. A fonte do estado de cada requisito continua sendo `status-requisitos.json`; o que depende do proprietário está, inteiro, em `docs/PENDENCIAS_DO_PROPRIETARIO.md`. Aqui fica só a ordem de trabalho.
 
 ## Placar
 
@@ -33,18 +33,18 @@ Vem antes das áreas, e hoje espera o proprietário:
 | Área | Não testados | Posso fazer já | Espera quem |
 |---|---|---|---|
 | A. Organização, lojas e acessos | 7 parciais | Nada | Proprietário: dados das lojas (ORG-001), SMTP próprio (ORG-002 e 006), os papéis novos (ORG-003), a verificação em duas etapas obrigatória (ORG-007, D-046). Contador: parâmetros por estado (ORG-010). Codex: conferências |
-| B. Catálogo, fotos e preços | 2 parciais | Nada | Proprietário: as três respostas do catálogo (CAT-002) e as fotos de verdade (CAT-011) |
-| C. Estoque, compras e transferências | 4 parciais | Nada | Proprietário: aceites e a decisão D-043 (INV-012). Nogle: o ICCID na ativação (INV-011) |
+| B. Catálogo, fotos e preços | 1 parcial (o CAT-002 passou a testado: o catálogo de verdade entrou no banco do site em 24/11) | Nada | Proprietário: o aceite do REIN-d e as fotos de verdade (CAT-011) |
+| C. Estoque, compras e transferências | 4 parciais | Nada (o estoque das 12 lojas entrou no banco do site em 24/11, com a posição de 10/11) | Proprietário: aceites, a decisão D-043 (INV-012), um relatório novo da Rein e o dos IMEIs (INV-004). Nogle: o ICCID na ativação (INV-011) |
 | D. Clientes e CRM | 4 parciais | Nada (o **CRM-009a**, de 24/11, pôs o pedido do site na tela da venda e na ficha do cliente) | Nogle (CRM-002), WhatsApp oficial (CRM-007), decisão D-045 (CRM-008). No CRM-009: o contrato de cada marketplace e a decisão de privacidade sobre os pedidos do site que não viraram venda |
 | E. PDV e vendas | 8 parciais | Nada (o **POS-015a**, de 24/11, provou no site, com login, que nada é gravado sem rede: o ORA-POS-015 passou a testado) | Proprietário: aceites, o celular de verdade da loja (POS-015 e POS-016), D-035 (POS-014). Nogle (POS-003). Provedor do link de pagamento (POS-009). Contrato das financeiras (POS-013) |
-| F. Pagamentos e caixa | 7 parciais e 2 bloqueados | Nada (o **PAY-011a**, de 24/11, ligou o débito do extrato ao estorno da venda; o ORA-PAY-011 segue parcial) | Proprietário: aceites. Contrato e arquivo real de cada maquininha (PAY-010 e, no PAY-011, a antecipação e o débito de valor diferente do estorno). Provedor de pagamento (PAY-008, 013 e 014) |
+| F. Pagamentos e caixa | 8 parciais e 1 bloqueado | O **PAY-014b** (no balcão, a venda do pedido pago pelo site registra o "pago pelo site" sem cobrar de novo), antes de ligar o pagamento pelo site (o **PAY-014a**, de 24/11, deixou o Pix pela Asaas pronto e desligado; o PAY-011a ligou o débito do extrato ao estorno) | Proprietário: aceites; a chave de teste da Asaas e o sim para ligar o worker (PAY-014). Contrato e arquivo real de cada maquininha (PAY-010 e, no PAY-011, a antecipação e o débito de valor diferente do estorno). PicPay POS (PAY-013) |
 | G. Financeiro | 3 parciais | Nada (os lotes de 24/11: o **FIN-002a** pôs a taxa observada das financeiras no resultado do mês, e o **FIN-006a** conferiu o depósito agrupado da maquininha com o extrato do banco; os dois requisitos seguem parciais) | Proprietário: a decisão D-013 (FIN-007: vender a prazo próprio), o arquivo OFX de verdade e como as maquininhas depositam (FIN-006). Contador: o imposto (FIN-002). WhatsApp oficial (FIN-007) |
 | H. Gráficos e relatórios | 5 parciais | Nada (24/11: as provas com login de 19/11, J2-a, já fechavam a "jornada com login" de REPORT-001, 003 e 006; as notas do 003 e do 006 foram acertadas no lote QUAL-006a, e a do 001 já dizia) | Proprietário: o ranking (P3), a regra da comissão, o arquivo real de cada maquininha (REPORT-005), o sim para a prova do aviso no celular (REPORT-002) |
 | I. Metas e bônus | 4 parciais e 1 não iniciado | Nada | Proprietário: a regra do bônus, P3 e D-014. Provedor de IA (PERF-010) |
 | J. Fiscal | 4 parciais e 4 bloqueados | Nada | Contador e emissor fiscal |
 | K. Ora Connect / Nogle | 5 parciais | Nada | Nogle: o tipo da chave, as respostas e o contrato de cada operação |
 | L. PayJoy e Aiva | (em POS-013 e PAY-002) | Nada | Contrato e documentação de cada financeira. O prazo de repasse já se grava na tela (FIN-007a) |
-| M. Loja online | 4 parciais, 1 não iniciado e 2 bloqueados | Nada (o **ONLINE-e**, de 24/11, a pedido do proprietário, deixou a compra com um botão só, o carrinho, e o número de itens no topo) | Proprietário: marcar os produtos do site, D-024, D-025 e a transportadora. Provedor de pagamento |
+| M. Loja online | 4 parciais, 1 não iniciado e 2 bloqueados | O **ONLINE-f**: com o catálogo de verdade (664 produtos na vitrine desde 24/11), a vitrine mostra no máximo 60 por vez; falta o "ver mais" e os disponíveis primeiro (o ONLINE-e deixou a compra com um botão só; o PAY-014a, o Pix no pedido, desligado) | Proprietário: o CNPJ das lojas (sem ele, nada aparece disponível), D-024, D-025 e a transportadora; a chave de teste da Asaas |
 | N. Marketplaces | 5 parciais e 3 bloqueados | Nada | Contrato e autorização de cada canal |
 | O. WhatsApp | 1 parcial, 6 não iniciados e 1 bloqueado | Nada | Meta: a conta, o número e o modelo de mensagem aprovado |
 | P. Meta | 2 parciais e 1 bloqueado | Nada | Proprietário: a conta de anúncios e a decisão D-022 |
@@ -61,7 +61,7 @@ Vem antes das áreas, e hoje espera o proprietário:
 6. ~~**REPORT-001, 003 e 006** (área H): as notas da "jornada com login".~~ Feito em 24/11, no lote QUAL-006a (a jornada estava provada desde o J2-a, de 19/11; as notas do 003 e do 006 foram acertadas).
 7. ~~**QUAL-006 e QUAL-013** (área R): o aviso no celular quando o servidor erra.~~ Feito em 24/11 (lote QUAL-006a; o servidor inteiro fora do ar e o tempo de resposta esperam o monitoramento de fora).
 
-Depois deles, o que resta depende de resposta do proprietário, de contrato ou de terceiro. A seção 4 passa à frente de tudo assim que as três respostas do catálogo chegarem.
+Depois deles, o que resta depende de resposta do proprietário, de contrato ou de terceiro. A seção 4 (o catálogo e o estoque de verdade) foi feita em 24/11 com as respostas do proprietário (D-053); falta um relatório novo da Rein, o dos IMEIs e o CNPJ das lojas.
 
 ## Seção 6: revisão de código
 
