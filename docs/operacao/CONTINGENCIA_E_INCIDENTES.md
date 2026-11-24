@@ -72,7 +72,8 @@ Vendedor → gerente da loja → proprietário → desenvolvimento (Claude Code;
 - **Saúde da operação** (`/operacao`, dono e gerência): as filas paradas na rede, com quantos e há quanto tempo está o mais antigo.
 - **Sino** no topo de todas as telas: o que espera a pessoa na loja do turno.
 - **Rodapé** de todas as telas: a versão no ar.
-- **Ainda não existe:** alerta automático de erro do servidor e de servidor de envio parado. Isso depende do monitoramento do servidor, que ainda falta escolher e ligar (critério 13 do go/no-go).
+- **Alerta no celular do erro do servidor** (desde 24/11, lote QUAL-006a): o dono e o administrador recebem "Erro no servidor do site" quando uma tela mostra a página de erro (no máximo um alerta por hora), e "O site não responde" quando o site fica 5 minutos sem responder (e "O site voltou" na volta). A Saúde da operação mostra se esse aviso está ligado.
+- **Ainda não existe:** o aviso quando o servidor inteiro cai e o tempo de resposta do site. Isso depende de um monitoramento de fora, que ainda falta escolher e ligar (critério 13 do go/no-go).
 
 ## 5. Treino da equipe da piloto (lista para conferir)
 

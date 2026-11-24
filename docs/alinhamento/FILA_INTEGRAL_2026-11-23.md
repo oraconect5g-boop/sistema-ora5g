@@ -1,6 +1,6 @@
 # Fila integral pela ordem do prompt de 23/11/2026
 
-> **Estado em 24/11/2026, depois do lote FIN-006a.** Este arquivo põe o que falta na ordem do prompt que o proprietário entregou em 23/11 (escrito pelo Codex): a seção 4 (cadastros e estoque da loja piloto), as áreas A a R da seção 5 e a revisão da seção 6. Em 23/11 à noite o proprietário pediu para seguir esse planejamento. A fonte do estado de cada requisito continua sendo `status-requisitos.json`; o que depende do proprietário está, inteiro, em `docs/PENDENCIAS_DO_PROPRIETARIO.md`. Aqui fica só a ordem de trabalho.
+> **Estado em 24/11/2026, depois do lote QUAL-006a.** Este arquivo põe o que falta na ordem do prompt que o proprietário entregou em 23/11 (escrito pelo Codex): a seção 4 (cadastros e estoque da loja piloto), as áreas A a R da seção 5 e a revisão da seção 6. Em 23/11 à noite o proprietário pediu para seguir esse planejamento. A fonte do estado de cada requisito continua sendo `status-requisitos.json`; o que depende do proprietário está, inteiro, em `docs/PENDENCIAS_DO_PROPRIETARIO.md`. Aqui fica só a ordem de trabalho.
 
 ## Placar
 
@@ -39,7 +39,7 @@ Vem antes das áreas, e hoje espera o proprietário:
 | E. PDV e vendas | 8 parciais | Nada (o **POS-015a**, de 24/11, provou no site, com login, que nada é gravado sem rede: o ORA-POS-015 passou a testado) | Proprietário: aceites, o celular de verdade da loja (POS-015 e POS-016), D-035 (POS-014). Nogle (POS-003). Provedor do link de pagamento (POS-009). Contrato das financeiras (POS-013) |
 | F. Pagamentos e caixa | 7 parciais e 2 bloqueados | Nada (o **PAY-011a**, de 24/11, ligou o débito do extrato ao estorno da venda; o ORA-PAY-011 segue parcial) | Proprietário: aceites. Contrato e arquivo real de cada maquininha (PAY-010 e, no PAY-011, a antecipação e o débito de valor diferente do estorno). Provedor de pagamento (PAY-008, 013 e 014) |
 | G. Financeiro | 3 parciais | Nada (os lotes de 24/11: o **FIN-002a** pôs a taxa observada das financeiras no resultado do mês, e o **FIN-006a** conferiu o depósito agrupado da maquininha com o extrato do banco; os dois requisitos seguem parciais) | Proprietário: a decisão D-013 (FIN-007: vender a prazo próprio), o arquivo OFX de verdade e como as maquininhas depositam (FIN-006). Contador: o imposto (FIN-002). WhatsApp oficial (FIN-007) |
-| H. Gráficos e relatórios | 5 parciais | Conferir se as provas de leitura com login (J2-a e J2-b) já fecham a "jornada com login" de REPORT-001, 003 e 006, e acertar as notas | Proprietário: o ranking (P3), a regra da comissão, o arquivo real de cada maquininha (REPORT-005), o sim para a prova do aviso no celular (REPORT-002) |
+| H. Gráficos e relatórios | 5 parciais | Nada (24/11: as provas com login de 19/11, J2-a, já fechavam a "jornada com login" de REPORT-001, 003 e 006; as notas do 003 e do 006 foram acertadas no lote QUAL-006a, e a do 001 já dizia) | Proprietário: o ranking (P3), a regra da comissão, o arquivo real de cada maquininha (REPORT-005), o sim para a prova do aviso no celular (REPORT-002) |
 | I. Metas e bônus | 4 parciais e 1 não iniciado | Nada | Proprietário: a regra do bônus, P3 e D-014. Provedor de IA (PERF-010) |
 | J. Fiscal | 4 parciais e 4 bloqueados | Nada | Contador e emissor fiscal |
 | K. Ora Connect / Nogle | 5 parciais | Nada | Nogle: o tipo da chave, as respostas e o contrato de cada operação |
@@ -49,7 +49,7 @@ Vem antes das áreas, e hoje espera o proprietário:
 | O. WhatsApp | 1 parcial, 6 não iniciados e 1 bloqueado | Nada | Meta: a conta, o número e o modelo de mensagem aprovado |
 | P. Meta | 2 parciais e 1 bloqueado | Nada | Proprietário: a conta de anúncios e a decisão D-022 |
 | Q. Assistência técnica | 2 parciais | Nada | Proprietário: aceite e P5. WhatsApp oficial (OS-005) |
-| R. Qualidade, operação e IA | 11 parciais e 6 não iniciados | **QUAL-006 e QUAL-013:** o aviso no celular do dono quando o servidor erra | Proprietário: a proteção da `main` e o Dependabot no GitHub, D-041, D-042 e D-044, a infraestrutura de produção, o piloto (QUAL-009). Jurídico: LGPD (QUAL-011). Provedor de IA |
+| R. Qualidade, operação e IA | 11 parciais e 6 não iniciados | Nada (o **QUAL-006a**, de 24/11, pôs o aviso no celular do dono quando o servidor erra; o QUAL-006 e o QUAL-013 seguem parciais) | Proprietário: a proteção da `main` e o Dependabot no GitHub, D-041, D-042 e D-044, a infraestrutura de produção (com ela, o monitoramento de fora: o tempo de resposta e o servidor inteiro fora do ar), o piloto (QUAL-009). Jurídico: LGPD (QUAL-011). Provedor de IA |
 
 ## A ordem dos próximos lotes que não dependem de ninguém
 
@@ -58,8 +58,8 @@ Vem antes das áreas, e hoje espera o proprietário:
 3. ~~**PAY-011** (área F): o chargeback ligado ao estorno da venda.~~ Feito em 24/11 (lote PAY-011a; a antecipação e o débito de valor diferente esperam o arquivo real de cada maquininha).
 4. ~~**FIN-002** (área G): a taxa das financeiras no resultado do mês.~~ Feito em 24/11 (lote FIN-002a; o imposto calculado e a comissão esperam o contador e a D-014).
 5. ~~**FIN-006** (área G): o depósito agrupado da maquininha.~~ Feito em 24/11 (lote FIN-006a; o saldo final do OFX real espera o arquivo).
-6. **REPORT-001, 003 e 006** (área H): as notas da "jornada com login".
-7. **QUAL-006 e QUAL-013** (área R): o aviso no celular quando o servidor erra.
+6. ~~**REPORT-001, 003 e 006** (área H): as notas da "jornada com login".~~ Feito em 24/11, no lote QUAL-006a (a jornada estava provada desde o J2-a, de 19/11; as notas do 003 e do 006 foram acertadas).
+7. ~~**QUAL-006 e QUAL-013** (área R): o aviso no celular quando o servidor erra.~~ Feito em 24/11 (lote QUAL-006a; o servidor inteiro fora do ar e o tempo de resposta esperam o monitoramento de fora).
 
 Depois deles, o que resta depende de resposta do proprietário, de contrato ou de terceiro. A seção 4 passa à frente de tudo assim que as três respostas do catálogo chegarem.
 

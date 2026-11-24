@@ -37,3 +37,34 @@ export function nomeDoDispositivo(userAgent: string): string {
     : /Firefox\/|FxiOS/.test(ua) ? "Firefox" : /Chrome\/|CriOS/.test(ua) ? "Chrome" : /Safari\//.test(ua) ? "Safari" : "navegador";
   return `${sistema} · ${navegador}`;
 }
+
+// O relato dos erros do servidor (lote QUAL-006a; ADR-015, adendo de 24/11): o site o serve em /saude/erros, só dentro
+// do servidor, e o worker dos avisos o leva a cada minuto ao banco (public.erros_do_servidor_relatar), que confere de
+// novo. Só números, instantes e o molde da rota: nunca o texto do erro nem o endereço com os valores.
+
+/** O molde da rota de um erro ("/vendas/[id]"), nunca o endereço com os valores; ou "(rota desconhecida)". */
+export const ROTA_DO_ERRO = /^(\/[\w\-[\]./()@]{0,160}|\(rota desconhecida\))$/;
+const INSTANTE = /^\d{4}-\d{2}-\d{2}T\d{2}:\d{2}:\d{2}\.\d{3}Z$/;
+
+export type RelatoDoSite = {
+  /** Desde quando o processo que serve o site conta (UTC, "2026-11-24T12:00:00.000Z"). */
+  desde: string;
+  /** Os erros do servidor desde então, sem os pedidos estranhos. */
+  erros: number;
+  /** O mais recente deles (nulo quando não houve erro). */
+  ultimo: { quando: string; rota: string } | null;
+};
+
+const instante = (valor: unknown): valor is string => typeof valor === "string" && INSTANTE.test(valor) && !Number.isNaN(Date.parse(valor));
+
+/** O relato que o site serve, conferido; ou null, se veio fora do formato. */
+export function relatoDoSite(dados: unknown): RelatoDoSite | null {
+  if (typeof dados !== "object" || dados === null || Array.isArray(dados)) return null;
+  const d = dados as { desde?: unknown; erros?: unknown; ultimo?: unknown };
+  if (!instante(d.desde) || typeof d.erros !== "number" || !Number.isSafeInteger(d.erros) || d.erros < 0 || d.erros > 2_000_000_000) return null;
+  if (d.ultimo === null) return d.erros === 0 ? { desde: d.desde, erros: 0, ultimo: null } : null;
+  if (typeof d.ultimo !== "object" || d.erros === 0) return null;
+  const u = d.ultimo as { quando?: unknown; rota?: unknown };
+  if (!instante(u.quando) || typeof u.rota !== "string" || !ROTA_DO_ERRO.test(u.rota) || u.quando < d.desde) return null;
+  return { desde: d.desde, erros: d.erros, ultimo: { quando: u.quando, rota: u.rota } };
+}

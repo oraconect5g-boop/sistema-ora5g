@@ -1,5 +1,6 @@
 import { createClient, type SupabaseClient } from "@supabase/supabase-js";
 
+import type { BancoDoRelato } from "./avisos/erros-do-site.ts";
 import type { AvisoParaEnviar, BancoDosAvisos, ResultadoDoAviso } from "./avisos/processar.ts";
 import type { BancoConnect } from "./connect/processar.ts";
 import type { BancoWhatsApp, EnvioParaFazer, ResultadoDoEnvio } from "./whatsapp/processar.ts";
@@ -28,6 +29,19 @@ export function bancoDosAvisos(cliente: SupabaseClient, segredo: string): BancoD
     async registrar(resultados: ResultadoDoAviso[]) {
       const { error } = await cliente.rpc("avisos_resultado", { p_segredo: segredo, p_resultados: resultados });
       if (error) throw error;
+    },
+  };
+}
+
+// O relato dos erros do site (QUAL-006a): public.erros_do_servidor_relatar, com o mesmo segredo dos avisos.
+export function bancoDoRelato(cliente: SupabaseClient, segredo: string): BancoDoRelato {
+  return {
+    async relatar(relato) {
+      const { data, error } = await cliente.rpc("erros_do_servidor_relatar", { p_segredo: segredo, p_relato: relato });
+      if (error) throw error;
+      const alertas = (data as { alertas?: unknown } | null)?.alertas;
+      if (typeof alertas !== "number" || !Number.isInteger(alertas) || alertas < 0) throw new Error("o banco respondeu o relato fora da forma");
+      return { alertas };
     },
   };
 }

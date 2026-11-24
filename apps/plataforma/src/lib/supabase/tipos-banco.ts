@@ -8199,6 +8199,11 @@ export type Database = {
         Returns: boolean
       }
       equipe_por_papel: { Args: { p_organizacao: string }; Returns: Json }
+      erros_do_servidor_relatar: {
+        Args: { p_relato: Json; p_segredo: string }
+        Returns: Json
+      }
+      erros_do_servidor_situacao: { Args: never; Returns: Json }
       estoque_carga_aplicar: {
         Args: { p_carga: string; p_motivo: string }
         Returns: Json

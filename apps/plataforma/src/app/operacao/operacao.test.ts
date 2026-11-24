@@ -1,7 +1,8 @@
 // /operacao (lote Q1: ORA-QUAL-006 em parte) com a sessão, o menu e o Supabase SIMULADOS: nenhuma credencial, dados
 // fictícios. Quem vê, o que está parado (as mais antigas primeiro) e a falha de uma fila sem derrubar as outras; desde
 // o ROT-a (ADR-011), as rotinas automáticas do banco, com o aviso no topo quando uma falha ou atrasa; desde o SAUDE-a
-// (ADR-012), a fila das vendas sem pedido de nota e o estoque abaixo do mínimo à parte, como aviso.
+// (ADR-012), a fila das vendas sem pedido de nota e o estoque abaixo do mínimo à parte, como aviso; desde o QUAL-006a, o
+// aviso no celular dos erros do servidor e os pedidos estranhos fora da conta.
 import { isValidElement, type ReactElement } from "react";
 import { beforeEach, describe, expect, it, vi } from "vitest";
 
@@ -12,6 +13,7 @@ const cenario = vi.hoisted(() => ({
   permissoes: new Set<string>(),
   respostas: {} as Record<string, Resposta>,
   rpc: {} as Record<string, RespostaRpc>,
+  chamadas: [] as string[],
 }));
 vi.mock("next/headers", () => ({ cookies: async () => ({ getAll: () => [], set: () => undefined }) }));
 vi.mock("next/navigation", () => ({ redirect: (destino: string) => { throw new Error(`redirecionou para ${destino}`); } }));
@@ -30,7 +32,7 @@ vi.mock("../../lib/acesso/sessao", () => ({
     // As permissões do menu chegam com a sessão (public.molde_da_sessao, lote VEL-a).
     molde: { permissoes: cenario.permissoes, nome: "Ana (fictícia)", vinculos: [], pendencias: { aprovacoes: 0, notas: 0 } },
     // Sem resposta combinada, a função das rotinas "ainda não existe" no banco (PGRST202): o cartão some.
-    supabase: { from: consulta, rpc: async (nome: string) => cenario.rpc[nome] ?? { data: null, error: { code: "PGRST202" } } },
+    supabase: { from: consulta, rpc: async (nome: string) => { cenario.chamadas.push(nome); return cenario.rpc[nome] ?? { data: null, error: { code: "PGRST202" } }; } },
   }),
 }));
 vi.mock("../../componentes/MoldeReal", () => ({
@@ -60,6 +62,7 @@ beforeEach(() => {
   cenario.permissoes = new Set(["venda.ver_todas", "nota.aprovar", "caixa.conferir", "connect.gerir"]);
   cenario.respostas = {};
   cenario.rpc = {};
+  cenario.chamadas = [];
 });
 
 describe("saúde da operação (Q1)", () => {
@@ -216,5 +219,73 @@ describe("erros do servidor (OBS-a)", () => {
     const t = await tela();
     expect(t).not.toContain("Erros do servidor");
     expect(t).toContain("O tempo de resposta do servidor ainda não aparece aqui");
+  });
+});
+
+// QUAL-006a: o aviso no celular dos erros do servidor (public.erros_do_servidor_situacao) e os pedidos estranhos.
+describe("o aviso no celular dos erros do servidor (QUAL-006a)", () => {
+  const silencio = { escrever: () => undefined };
+  const SITUACAO = (minutos: number | null, extra: Record<string, unknown> = {}) => ({
+    relatado_em: minutos === null ? null : new Date(Date.now() - minutos * 60_000).toISOString(),
+    sem_resposta_desde: null, pendentes: 0, alerta_de_erros_em: null, alerta_de_fora_em: null, alerta_a_cada_minutos: 60, fora_apos_minutos: 5, ...extra,
+  });
+  const SEM_AVISO = /Aviso no celular|O aviso no celular|O worker não consegue|Não deu para ler agora a situação/;
+  beforeEach(() => {
+    cenario.permissoes.add("unidades.gerir");
+    recomecarErrosDoServidor(Date.now() - 60_000);
+  });
+
+  it("ligado: o worker conferiu agora há pouco; sem alerta ainda, e depois com o último alerta e os erros que esperam", async () => {
+    cenario.rpc.erros_do_servidor_situacao = { data: SITUACAO(0), error: null };
+    let t = await tela();
+    expect(t).toContain("Aviso no celular ligado: o worker dos avisos confere o site a cada minuto (a última vez agora há pouco), e ainda não saiu nenhum alerta de erro. No máximo um alerta a cada hora; os erros desse meio vão no seguinte. Vai para o dono e o administrador da rede, nos celulares com os avisos ligados.");
+    cenario.rpc.erros_do_servidor_situacao = { data: SITUACAO(0, { alerta_de_erros_em: "2026-11-24T15:05:00.000Z", pendentes: 2, alerta_a_cada_minutos: 30 }), error: null };
+    t = await tela();
+    expect(t).toContain("e o último alerta de erro saiu às 12:05 de 24/11. No máximo um alerta a cada 30 minutos; os erros desse meio vão no seguinte (2 erros esperando).");
+  });
+
+  it("parado, ainda não começou, o site sem resposta para o worker e a leitura que falha (resposta fora da forma ou erro do banco)", async () => {
+    cenario.rpc.erros_do_servidor_situacao = { data: SITUACAO(12), error: null };
+    let t = await tela();
+    expect(t).toContain("O aviso no celular dos erros está parado");
+    expect(t).toContain("(há 12 min). Enquanto ele não voltar, nenhum alerta de erro sai.");
+    cenario.rpc.erros_do_servidor_situacao = { data: SITUACAO(null), error: null };
+    expect(await tela()).toContain("O aviso no celular dos erros ainda não começou");
+    cenario.rpc.erros_do_servidor_situacao = { data: SITUACAO(1, { sem_resposta_desde: new Date(Date.now() - 120_000).toISOString() }), error: null };
+    t = await tela();
+    expect(t).toContain("O worker não consegue ler os erros do site");
+    expect(t).toContain('Se durar 5 minutos, sai o alerta "O site não responde".');
+    for (const resposta of [{ data: { ...SITUACAO(1), pendentes: -1 }, error: null }, { data: SITUACAO(1, { relatado_em: "ontem" }), error: null }, { data: null, error: { code: "57014" } }]) {
+      cenario.rpc.erros_do_servidor_situacao = resposta;
+      t = await tela();
+      expect(t).toContain("Não deu para ler agora a situação do aviso no celular dos erros do servidor.");
+      expect(t).toContain("Erros do servidor");
+    }
+  });
+
+  it("quem não recebe o alerta (o banco recusa) e o banco sem a função: nada do aviso; quem não gere a rede nem pergunta", async () => {
+    cenario.rpc.erros_do_servidor_situacao = { data: null, error: { code: "42501" } };
+    let t = await tela();
+    expect(t).toContain("Erros do servidor");
+    expect(t).not.toMatch(SEM_AVISO);
+    delete cenario.rpc.erros_do_servidor_situacao;
+    t = await tela();
+    expect(t).toContain("Erros do servidor");
+    expect(t).not.toMatch(SEM_AVISO);
+    cenario.permissoes.delete("unidades.gerir");
+    cenario.chamadas = [];
+    t = await tela();
+    expect(t).not.toContain("Erros do servidor");
+    expect(cenario.chamadas).not.toContain("erros_do_servidor_situacao");
+  });
+
+  it("os pedidos estranhos (robôs) ficam fora da conta, com a linha que explica", async () => {
+    cenario.rpc.erros_do_servidor_situacao = { data: SITUACAO(0), error: null };
+    registrarErroDoServidor(new Error("The router state header was sent but could not be parsed."), { method: "POST" }, { routePath: "/page", routeType: "render" }, silencio);
+    registrarErroDoServidor(new Error("x"), { method: "POST" }, { routePath: "/_not-found/page", routeType: "render" }, silencio);
+    const t = await tela();
+    expect(t).toContain("Nenhum erro do servidor desde então");
+    expect(t).toContain("Fora da conta: 2 pedidos estranhos desde que o servidor subiu (malformados ou para um endereço que não existe: são robôs que testam o site). Não são falha do Ora e não avisam no celular.");
+    expect(t).not.toContain("na última hora");
   });
 });
