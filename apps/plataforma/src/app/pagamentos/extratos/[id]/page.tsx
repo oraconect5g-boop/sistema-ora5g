@@ -6,6 +6,7 @@ import { MoldeReal } from "../../../../componentes/MoldeReal";
 import { Aviso, Botao, Cartao, FiltroSegmentado, Indicador, Selo, TituloPagina } from "../../../../componentes/ui";
 import { ehUuid } from "../../../../lib/acesso/regras";
 import { FalhaDoServico, obterSessao } from "../../../../lib/acesso/sessao";
+import { MAQUININHAS } from "../../../../lib/extratos/depositos";
 import { lerSugestoesDeEstorno, type SugestaoDeEstorno } from "../../../../lib/extratos/estornos";
 import {
   ERROS_DOS_EXTRATOS, FILTROS_DO_EXTRATO, LINHAS_POR_PAGINA_DO_EXTRATO, TIPOS_DE_EXTRATO, filtroDoExtrato, lerResumoDoExtrato, nomeDoMeioDoExtrato as nomeDoMeio,
@@ -46,11 +47,11 @@ const OK = {
   chargeback_desmarcado: "Débito desmarcado como chargeback; o motivo ficou na auditoria.",
 } as const;
 // AUD-c (F21-02): a linha tem um uso só; "repasse" é o recebimento de um repasse de marketplace. PAY-011a: "estorno" é o
-// débito do estorno (ou do chargeback) de uma venda.
+// débito do estorno (ou do chargeback) de uma venda. FIN-006a: "deposito" é o depósito agrupado de uma maquininha.
 const SITUACOES = {
   pendente: { nome: "a conferir", tom: "aviso" }, conciliada: { nome: "conciliada", tom: "sucesso" },
   repasse: { nome: "repasse de marketplace", tom: "info" }, estorno: { nome: "estorno de venda", tom: "info" },
-  ignorada: { nome: "fora da conta", tom: "neutro" },
+  deposito: { nome: "depósito de maquininha", tom: "info" }, ignorada: { nome: "fora da conta", tom: "neutro" },
 } as const;
 
 type Extrato = { id: string; numero: number; unidade_id: string | null; tipo: string; fonte: string; meios: string[]; arquivo: string; periodo_inicio: string; periodo_fim: string; linhas: number; importado_em: string };
@@ -63,6 +64,7 @@ type Linha = {
   estorno?: EstornoDaLinha;
 };
 type RepasseDaLinha = { linha_id: string; canal: string; data_repasse: string };
+type DepositoDaLinha = { linha_id: string; provedor: string; data_liquidacao: string };
 type SemLinha = { id: string; meio: string; valor_centavos: number; comprovante: string | null; vendas: { id: string; numero: number; concluida_em: string } };
 type Sugestao = { linha_id: string; pagamento_id: string; venda_numero: number; meio: string; valor_centavos: number; concluida_em: string; loja: string; terminal: string | null; pela_referencia: boolean };
 
@@ -97,8 +99,8 @@ export default async function ExtratoImportado({ params, searchParams }: {
   const resumo = lerResumoDoExtrato(resumoLido.data);
   if (!resumo) throw new FalhaDoServico("extrato_resumo");
   const quantas: Record<FiltroDoExtrato, number> = {
-    pendente: resumo.pendentes, conciliada: resumo.conciliadas, repasse: resumo.repasses, estorno: resumo.estornos, ignorada: resumo.ignoradas,
-    todas: resumo.pendentes + resumo.conciliadas + resumo.repasses + resumo.estornos + resumo.ignoradas,
+    pendente: resumo.pendentes, conciliada: resumo.conciliadas, repasse: resumo.repasses, estorno: resumo.estornos, deposito: resumo.depositos,
+    ignorada: resumo.ignoradas, todas: resumo.pendentes + resumo.conciliadas + resumo.repasses + resumo.estornos + resumo.depositos + resumo.ignoradas,
   };
   const { pagina, paginas, de } = paginaDoExtrato(textoDoParametro(parametros.pagina), quantas[ver]);
 
@@ -115,15 +117,20 @@ export default async function ExtratoImportado({ params, searchParams }: {
   const esperando = linhas.filter((l) => l.situacao === "pendente" && l.valor_centavos > 0).map((l) => l.id);
   const debitos = linhas.filter((l) => l.situacao === "pendente" && l.valor_centavos < 0).map((l) => l.id);
   const deRepasse = linhas.filter((l) => l.situacao === "repasse").map((l) => l.id);
+  // FIN-006a: de qual depósito é cada linha de depósito desta página.
+  const deDeposito = linhas.filter((l) => l.situacao === "deposito").map((l) => l.id);
   const nada = { data: [], error: null };
-  const [sugestoesLidas, estornosLidos, repassesLidos] = await Promise.all([
+  const [sugestoesLidas, estornosLidos, repassesLidos, depositosLidos] = await Promise.all([
     esperando.length > 0 ? supabase.rpc("extrato_sugestoes", { p_extrato: extrato.id }).in("linha_id", esperando) : nada,
     debitos.length > 0 ? supabase.rpc("extrato_sugestoes_de_estorno", { p_extrato: extrato.id }).in("linha_id", debitos) : nada,
     deRepasse.length > 0 ? supabase.from("marketplace_repasses").select("linha_id, canal, data_repasse").in("linha_id", deRepasse) : nada,
+    deDeposito.length > 0 ? supabase.from("maquininha_depositos").select("linha_id, provedor, data_liquidacao").in("linha_id", deDeposito) : nada,
   ]);
   if (sugestoesLidas.error) throw new FalhaDoServico("extrato_sugestoes");
   if (estornosLidos.error) throw new FalhaDoServico("extrato_sugestoes_de_estorno");
   if (repassesLidos.error) throw new FalhaDoServico("marketplace_repasses");
+  if (depositosLidos.error) throw new FalhaDoServico("maquininha_depositos");
+  const depositoDaLinha = new Map(((depositosLidos.data ?? []) as DepositoDaLinha[]).map((d) => [d.linha_id, d]));
   const estornosSugeridos = lerSugestoesDeEstorno(estornosLidos.data);
   if (!estornosSugeridos) throw new FalhaDoServico("extrato_sugestoes_de_estorno");
   const estornosDaLinha = new Map<string, SugestaoDeEstorno[]>();
@@ -223,6 +230,17 @@ export default async function ExtratoImportado({ params, searchParams }: {
                   <p className="text-xs">Conciliada com {l.pagamento?.venda ? <Link href={`/vendas/${l.pagamento.venda.id}`} className="font-semibold text-acao">a venda nº {l.pagamento.venda.numero}</Link> : "o pagamento"}{l.pagamento ? ` (${nomeDoMeio(l.pagamento.meio)})` : ""}.</p>
                 )}
                 {l.situacao === "ignorada" && <p className="text-xs text-suave">Fora da conta: {l.motivo}</p>}
+                {l.situacao === "deposito" && (() => {
+                  const d = depositoDaLinha.get(l.id);
+                  const maquininha = d && Object.hasOwn(MAQUININHAS, d.provedor) ? MAQUININHAS[d.provedor as keyof typeof MAQUININHAS].nome : null;
+                  return (
+                    <p className="text-xs">
+                      {d ? `É o depósito ${maquininha ? `da ${maquininha}` : "de uma maquininha"} com o dinheiro de ${dataCurta(d.data_liquidacao)}.` : "É o depósito de uma maquininha."}
+                      {" "}Esta linha não concilia venda nem sai da conta; para soltá-la, desfaça o depósito em{" "}
+                      <Link href={d ? `/pagamentos/depositos?${new URLSearchParams({ inicio: d.data_liquidacao, fim: d.data_liquidacao })}` : "/pagamentos/depositos"} className="font-semibold text-acao">Depósitos das maquininhas</Link>.
+                    </p>
+                  );
+                })()}
                 {l.situacao === "estorno" && <DebitoLigado linha={l.id} estorno={l.estorno ?? null} confirmou={l.confirmou_o_estorno === true} chargeback={l.chargeback === true} ocultos={ocultos} />}
                 {l.situacao === "repasse" && (() => {
                   const r = repasseDaLinha.get(l.id);

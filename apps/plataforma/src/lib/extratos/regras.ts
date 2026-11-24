@@ -52,6 +52,8 @@ export const ERROS_DOS_EXTRATOS = {
   estorno_outra_loja: "Para confirmar o estorno, entre na loja da venda (troque de loja no alto da tela) e abra o extrato de novo.",
   estorno_gerencia: "Confirmar o estorno é da gerência da loja da venda.",
   so_debito: "Só um débito do extrato pode ser o estorno de uma venda.",
+  // FIN-006a: o depósito agrupado da maquininha.
+  de_deposito: "Esta linha é o depósito de uma maquininha: desfaça o depósito antes, em Depósitos das maquininhas.",
   valor: "O valor da linha não é o do pagamento.",
   meio: "Este pagamento não é de um meio deste extrato.",
   outra_linha: "Este pagamento já está conciliado com outra linha de extrato.",
@@ -79,7 +81,7 @@ export function erroDosExtratos(erro: { code?: string; message?: string } | null
   if (codigo === "OR030") return "ja_conciliado";
   // AUD-c (F21-02): a linha do extrato tem um uso só; a de um repasse não concilia venda, não sai da conta nem se desfaz por
   // aqui. PAY-011a: o débito que é o estorno de uma venda também já tem o uso dele.
-  if (codigo === "OR046") return m.includes("estorno de uma venda") ? "de_estorno" : "de_repasse";
+  if (codigo === "OR046") return m.includes("estorno de uma venda") ? "de_estorno" : m.includes("depósito de uma maquininha") ? "de_deposito" : "de_repasse";
   // PAY-011a: o débito que confirmou o estorno não se solta.
   if (codigo === "OR047") return "estorno_fixo";
   if (codigo === "23505" || codigo === "40001" || codigo === "40P01") return "instante";
@@ -129,7 +131,9 @@ export function lerEnvioDoExtrato(dados: Formulario): { ok: true; envio: EnvioDo
 
 // A tela do extrato: as linhas por situação e por página.
 export const LINHAS_POR_PAGINA_DO_EXTRATO = 100;
-export const FILTROS_DO_EXTRATO = { pendente: "Pendentes", conciliada: "Conciliadas", repasse: "De repasse", estorno: "De estorno", ignorada: "Fora da conta", todas: "Todas" } as const;
+export const FILTROS_DO_EXTRATO = {
+  pendente: "Pendentes", conciliada: "Conciliadas", repasse: "De repasse", estorno: "De estorno", deposito: "De depósito", ignorada: "Fora da conta", todas: "Todas",
+} as const;
 export type FiltroDoExtrato = keyof typeof FILTROS_DO_EXTRATO;
 export const filtroDoExtrato = (pedido: unknown): FiltroDoExtrato =>
   typeof pedido === "string" && Object.hasOwn(FILTROS_DO_EXTRATO, pedido) ? (pedido as FiltroDoExtrato) : "pendente";
@@ -146,20 +150,22 @@ export function paginaDoExtrato(pedida: unknown, linhas: number): { pagina: numb
  * O resumo do extrato (public.extrato_resumo), lido com rigor: forma inesperada vira nulo, e a tela mostra a falha.
  * `repasses` (AUD-c) são as linhas que são o recebimento de um repasse de marketplace; o banco de antes da migration não
  * manda a chave (lá essas linhas contavam como pendentes), e isso é lido como zero, não como falha. `estornos` (PAY-011a)
- * são os débitos que são o estorno de uma venda; o banco de antes também não manda, e também é lido como zero.
+ * são os débitos que são o estorno de uma venda, e `depositos` (FIN-006a), os créditos que são o depósito agrupado de uma
+ * maquininha; o banco de antes também não manda, e também é lido como zero.
  */
 export type ResumoDoExtrato = {
   creditos: number; creditos_centavos: number; debitos: number; debitos_centavos: number; taxas_centavos: number;
   liquido_centavos: number; a_cair_centavos: number; pendentes: number; conciliadas: number; ignoradas: number; repasses: number; estornos: number;
+  depositos: number;
 };
 const CHAVES_DO_RESUMO: (keyof ResumoDoExtrato)[] = [
   "creditos", "creditos_centavos", "debitos", "debitos_centavos", "taxas_centavos", "liquido_centavos", "a_cair_centavos", "pendentes", "conciliadas", "ignoradas", "repasses",
-  "estornos",
+  "estornos", "depositos",
 ];
 const inteiro = (v: unknown) => typeof v === "number" && Number.isSafeInteger(v);
 export function lerResumoDoExtrato(dado: unknown): ResumoDoExtrato | null {
   if (!dado || typeof dado !== "object" || Array.isArray(dado)) return null;
-  const r: Record<string, unknown> = { repasses: 0, estornos: 0, ...(dado as Record<string, unknown>) };
+  const r: Record<string, unknown> = { repasses: 0, estornos: 0, depositos: 0, ...(dado as Record<string, unknown>) };
   if (!CHAVES_DO_RESUMO.every((c) => inteiro(r[c]))) return null;
   return Object.fromEntries(CHAVES_DO_RESUMO.map((c) => [c, r[c]])) as ResumoDoExtrato;
 }

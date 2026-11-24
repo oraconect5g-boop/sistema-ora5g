@@ -1,4 +1,4 @@
-import { ArrowLeft, FileSpreadsheet, FileUp, Landmark } from "lucide-react";
+import { ArrowLeft, Banknote, FileSpreadsheet, FileUp, Landmark } from "lucide-react";
 import type { Metadata } from "next";
 import Link from "next/link";
 
@@ -20,6 +20,8 @@ type Extrato = {
   repasses?: number;
   /** PAY-011a: os débitos que são o estorno de uma venda (o banco de antes da migration também não manda). */
   estornos?: number;
+  /** FIN-006a: os créditos que são o depósito agrupado de uma maquininha (idem). */
+  depositos?: number;
 };
 
 // Os extratos importados (lote EXT-a: ORA-PAY-009, ORA-PAY-010 e ORA-FIN-006; ADR-016): os das lojas em que a pessoa
@@ -41,6 +43,7 @@ export default async function Extratos({ searchParams }: { searchParams: Promise
       <TituloPagina titulo="Extratos" subtitulo="O extrato da maquininha ou do banco, por arquivo: o sistema sugere a venda de cada linha, e você concilia. Venda não é dinheiro recebido."
         acao={<span className="flex flex-wrap gap-2">
           <BotaoLink href="/pagamentos/contas-bancarias" tamanho="sm" variante="secundario"><Landmark className="size-4" aria-hidden />Contas bancárias</BotaoLink>
+          <BotaoLink href="/pagamentos/depositos" tamanho="sm" variante="secundario"><Banknote className="size-4" aria-hidden />Depósitos das maquininhas</BotaoLink>
           <BotaoLink href="/pagamentos/extratos/importar" tamanho="sm"><FileUp className="size-4" aria-hidden />Importar extrato</BotaoLink>
         </span>} />
       {erro && <Aviso tom="perigo" className="mt-4">{ERROS_DOS_EXTRATOS[erro]}</Aviso>}
@@ -65,6 +68,7 @@ export default async function Extratos({ searchParams }: { searchParams: Promise
                   {e.conciliadas > 0 && <Selo tom="sucesso">{e.conciliadas} conciliadas</Selo>}
                   {(e.repasses ?? 0) > 0 && <Selo tom="info">{e.repasses} de repasse</Selo>}
                   {(e.estornos ?? 0) > 0 && <Selo tom="info">{e.estornos} de estorno</Selo>}
+                  {(e.depositos ?? 0) > 0 && <Selo tom="info">{e.depositos} de depósito</Selo>}
                   {e.ignoradas > 0 && <Selo tom="neutro">{e.ignoradas} fora da conta</Selo>}
                 </span>
               </li>
