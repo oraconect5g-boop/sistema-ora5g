@@ -82,7 +82,8 @@ describe("soma por região", () => {
 
 describe("resultado do mês por região (ORG-009b)", () => {
   const conta = (unidade: string, receita: number, resultado: number) =>
-    ({ unidade, nome: null, receitaLiquida: receita, cmv: receita / 2, margemBruta: receita / 2, taxas: 100, despesas: 1_000, saidasCaixa: 50, rede: 200, resultado });
+    ({ unidade, nome: null, receitaLiquida: receita, cmv: receita / 2, margemBruta: receita / 2, taxas: 100, despesas: 1_000, saidasCaixa: 50, rede: 200, resultado,
+      taxasCartaoPix: 60, taxasFinanceiras: 40 });
 
   it("cada conta da região é a soma das lojas dela (inclusive a parte da rede); a soma das regiões é a da rede", () => {
     const lojas = [conta(A, 10_000, 3_650), conta(B, 4_000, 650), conta(C, 8_000, -1_000)];

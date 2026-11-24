@@ -438,3 +438,92 @@ describe("planilha e impressão do resultado (L8d)", () => {
     await expect(baixar("mes=2026-11")).rejects.toThrow();
   });
 });
+
+// FIN-002a: a taxa das financeiras (PayJoy, Aiva) observada no repasse. O mesmo mês da rede, agora com R$ 49,00 de taxa da
+// PayJoy na loja A (o resultado cai R$ 49,00) e uma conta da Aiva ainda sem repasse (R$ 1.199,00).
+type RespostaComFinanceiras = Omit<typeof REDE, "linhas" | "por_loja"> & { linhas: Record<string, number>; por_loja: Record<string, unknown>[] };
+const COM_FINANCEIRAS = ((): RespostaComFinanceiras => {
+  const r = copia(REDE) as unknown as RespostaComFinanceiras;
+  Object.assign(r.linhas, {
+    taxas: 5_400, taxas_cartao_pix: 500, taxas_financeiras: 4_900, financeiras_recebidas: 1, financeiras_a_receber: 1, financeiras_a_receber_valor: 119_900,
+    resultado: LINHAS_DA_REDE.resultado - 4_900,
+  });
+  r.meses[5] = comResultado({ ...ultimoMes(r.linhas as unknown as typeof LINHAS_DA_REDE), resultado: undefined });
+  r.por_loja = [
+    { ...r.por_loja[0], taxas_cartao_pix: 0, taxas_financeiras: 0 },
+    { ...r.por_loja[1], taxas: 5_400, taxas_cartao_pix: 500, taxas_financeiras: 4_900, resultado: -295_257 - 4_900 },
+  ];
+  return r;
+})();
+
+describe("a taxa das financeiras no resultado (FIN-002a)", () => {
+  const pedido = { mes: "2026-11-01", unidade: null, meses: 6 };
+  it("a tela separa as taxas de cartão e Pix das da PayJoy e da Aiva, avisa da conta sem repasse e explica a regra", async () => {
+    cenario.rede = copia(COM_FINANCEIRAS);
+    const tela = await pagina();
+    const t = visivel(tela);
+    const degraus = doTipo(tela, "Cascata")[0]?.degraus as { rotulo: string; valor: number; total?: boolean; detalhe?: string }[];
+    expect(degraus.map((d) => [d.rotulo, d.valor])).toEqual([
+      ["Vendas concluídas", 479_100], ["Devoluções e cancelamentos", -15_750], ["Receita líquida", 463_350],
+      ["Custo das mercadorias", -335_400], ["Margem bruta", 127_950], ["Taxas de cartão e Pix", -500], ["Taxas da PayJoy e da Aiva", -4_900],
+      ["Contas das lojas", -330_500], ["Dinheiro do caixa", -2_500], ["Contas da rede (central)", -100_000], ["Resultado do mês", -310_450],
+    ]);
+    // A cascata fecha: do zero ao resultado, passo a passo.
+    expect(degraus.filter((d) => !d.total).reduce((s, d) => s + d.valor, 0) + 479_100).toBe(-310_450);
+    expect(degraus[6]?.detalhe).toBe("1 repasse registrado · 1 conta ainda sem repasse");
+    expect(t).toContain("Repasses das financeiras a registrar 1 conta da PayJoy e da Aiva (R$ 1.199,00) ainda sem repasse registrado: a taxa delas só entra quando o repasse for registrado.");
+    expect(enderecos(tela).length).toBeGreaterThan(0);
+    expect(elementos(tela).some((e) => e.props.href === "/pagamentos/financeiras")).toBe(true);
+    expect(t).toContain("Taxas da PayJoy e da Aiva: a diferença entre o valor financiado e o que a financeira repassou");
+    expect(t).not.toContain("A taxa da PayJoy e da Aiva ainda não entra");
+    // O banco de antes (sem a parte das financeiras): a linha de sempre e a regra de antes.
+    cenario.rede = copia(REDE);
+    const antes = visivel(await pagina());
+    expect(antes).toContain("A taxa da PayJoy e da Aiva ainda não entra");
+    expect(antes).not.toContain("Taxas da PayJoy e da Aiva:");
+  });
+
+  it("a leitura confere as partes: as taxas são a soma das duas; as chaves vêm todas ou nenhuma; as lojas somam a rede", () => {
+    const lido = lerResultadoDoMes(copia(COM_FINANCEIRAS), pedido);
+    expect(lido.linhas.financeiras).toEqual({ cartaoPix: 500, taxas: 4_900, recebidas: 1, aReceber: 1, aReceberValor: 119_900 });
+    expect(lido.porLoja.map((x) => [x.nome, x.taxas, x.taxasCartaoPix, x.taxasFinanceiras])).toEqual([["Loja B (teste)", 0, 0, 0], ["Loja A (teste)", 5_400, 500, 4_900]]);
+    expect(lerResultadoDoMes(copia(REDE), pedido).linhas.financeiras).toBeNull();
+    type ComFinanceiras = typeof COM_FINANCEIRAS;
+    const quebras: [string, (r: ComFinanceiras) => void][] = [
+      ["as taxas não são a soma das partes", (r) => { r.linhas.taxas_financeiras = 4_800; }],
+      ["metade das chaves", (r) => { delete r.linhas.financeiras_recebidas; }],
+      ["conta sem valor", (r) => { r.linhas.financeiras_a_receber_valor = 0; }],
+      ["valor sem conta", (r) => { r.linhas.financeiras_a_receber = 0; }],
+      ["taxa negativa", (r) => { r.linhas.taxas_cartao_pix = 5_500; r.linhas.taxas_financeiras = -100; }],
+      ["loja sem as partes", (r) => { delete (r.por_loja[1] as Record<string, unknown>).taxas_financeiras; delete (r.por_loja[1] as Record<string, unknown>).taxas_cartao_pix; }],
+      ["loja com metade das partes", (r) => { delete (r.por_loja[1] as Record<string, unknown>).taxas_cartao_pix; }],
+      ["a loja não soma as partes", (r) => { (r.por_loja[1] as Record<string, unknown>).taxas_financeiras = 4_800; }],
+      ["as lojas não somam a rede", (r) => {
+        Object.assign(r.por_loja[1] as Record<string, unknown>, { taxas_cartao_pix: 600, taxas_financeiras: 4_800 });
+      }],
+    ];
+    for (const [nome, quebrar] of quebras) {
+      const r = copia(COM_FINANCEIRAS);
+      quebrar(r);
+      expect(() => lerResultadoDoMes(r, pedido), nome).toThrow();
+    }
+  });
+
+  it("a planilha: as duas linhas das taxas, com a coluna de cada loja, a conta sem repasse e a regra", async () => {
+    cenario.rede = copia(COM_FINANCEIRAS);
+    const csv = await (await exportar(new Request("http://localhost/resultado/exportar?mes=2026-11"))).text();
+    for (const linha of [
+      "Taxas de cartão e Pix;5,00;5,00;0,00",
+      "Taxas da PayJoy e da Aiva (observadas no repasse);49,00;49,00;0,00",
+      "Resultado do mês;-3104,50;-3001,57;-102,93",
+      "PayJoy e Aiva ainda sem repasse registrado: a taxa delas não entra;1199,00;1 conta",
+      "Taxa da PayJoy e da Aiva;a observada no repasse;o valor financiado menos o repassado, no mês da venda (a conta sem repasse registrado não entra)",
+    ]) expect(csv, linha).toContain(linha);
+    expect(csv).not.toContain("falta o contrato");
+    // O banco de antes: a linha de sempre e a observação de antes.
+    cenario.rede = copia(REDE);
+    const antes = await (await exportar(new Request("http://localhost/resultado/exportar?mes=2026-11"))).text();
+    expect(antes).toContain("Taxas de cartão e Pix;5,00;5,00;0,00");
+    expect(antes).toContain("Taxa da PayJoy e da Aiva;não entra;falta o contrato (prazo e taxa)");
+  });
+});
