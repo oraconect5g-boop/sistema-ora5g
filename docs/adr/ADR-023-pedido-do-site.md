@@ -50,3 +50,13 @@ Amplia a [ADR-009](ADR-009-loja-online.md) (reserve no site e pague na loja), se
 1. O cliente junta até 3 itens e reserva de uma vez; a loja atende num balcão só.
 2. As reservas do pedido contam nos painéis das reservas do site (uma por unidade), com a origem e a campanha do link (ADR-013).
 3. **Reverter:** primeiro volte a plataforma para a versão anterior ao lote ONLINE-d. Depois aplique as reversões, da mais nova para a mais antiga (`supabase/reversao/20261118034536_comentario_do_contato_do_pedido.sql`, que só tira o comentário, e `supabase/reversao/20261118031404_pedido_do_site.sql`): a segunda devolve as três funções da reserva como estavam e tira o pedido. As reservas que eram de um pedido ficam como reservas avulsas.
+
+## Adendo de 24/11/2026 — A compra que nasceu no site, nas telas (lote CRM-009a; ORA-CRM-009)
+
+Sem migration. Testes: `packages/banco/src/venda-do-site-no-historico.test.ts`, `apps/plataforma/src/lib/loja/vendas-do-site.test.ts`, `apps/plataforma/src/app/clientes/clientes.test.ts` e `apps/plataforma/src/app/vendas/comprovante-rodadas.test.ts`.
+
+1. **A venda atendida continua sendo do balcão.** O canal da venda não vira "online": o cliente retirou e pagou na loja, e a venda conta para a loja e para quem atendeu. A origem (o pedido, o código, a data e por onde o visitante chegou) fica no pedido e nas reservas, que apontam para a venda. Nada é copiado para a venda, e nada é sobrescrito.
+2. **As telas leem a ligação pela venda:** as reservas atendidas e o pedido com o `venda_id` dela. A tela da venda mostra o selo e a frase; a ficha do cliente, o pedido do site de cada compra.
+3. **Com as regras de leitura de quem abre a tela,** como os outros blocos da ficha. Quem vende na loja do pedido e o dono leem. O administrador vê a venda e não lê as reservas do site: a anotação não aparece para ele. Abrir essa leitura a quem só vê vendas seria mudar acesso, e não foi feito.
+4. **Falha é falha:** a leitura que não funciona é dita na tela, nunca tratada como "não veio do site". Num banco sem as tabelas, o bloco some.
+5. **Fica de fora:** as compras dos marketplaces no histórico do cliente (o pedido de cada canal chega por arquivo, sem a identidade do comprador, e não vira venda: depende do contrato de cada canal e da decisão do proprietário sobre a baixa do estoque pelo pedido do canal) e os pedidos do site que não viraram venda (o site guarda só o WhatsApp do visitante, à parte; juntá-lo ao cadastro do cliente é uma decisão de privacidade, D-048).

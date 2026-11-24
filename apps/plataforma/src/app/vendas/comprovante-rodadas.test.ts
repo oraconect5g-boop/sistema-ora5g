@@ -145,6 +145,24 @@ describe("o comprovante em poucas rodadas (VEL-i)", () => {
     expect(primeira).toEqual(expect.arrayContaining(["vendas", "venda_itens", "venda_pagamentos", "notas_pedidos", "venda_devolucoes", "estornos_externos", "venda_retornos"]));
   });
 
+  it("CRM-009a: a venda que atendeu um pedido do site diz de onde veio, sem rodada a mais; a venda comum não diz nada", async () => {
+    const comum = await comprovante();
+    expect(comum).not.toContain("veio do site");
+    // As duas leituras do site saem na segunda rodada, com os detalhes da venda.
+    expect(new Set(cenario.relogio.pedidos.filter((p) => p.onde === "loja_reservas" || p.onde === "loja_pedidos").map((p) => p.rodada))).toEqual(new Set([2]));
+    expect(rodadas()).toBe(2);
+    cenario.relogio.rodada = 0;
+    cenario.relogio.pedidos = [];
+    const PEDIDO = "00000000-0000-4000-8000-00000000b001";
+    cenario.tabelas.loja_reservas = [{ venda_id: VENDA, numero: 11, codigo: "UNI234", criada_em: "2026-11-18T12:00:01Z", origem: "google", pedido_id: PEDIDO, situacao: "atendida" }];
+    cenario.tabelas.loja_pedidos = [{ id: PEDIDO, codigo: "ABC234", criado_em: "2026-11-18T12:00:00Z", venda_id: VENDA }];
+    const doSite = await comprovante();
+    expect(doSite).toContain("veio do site");
+    expect(doSite).toContain("Esta venda atendeu o pedido do site ABC234, feito em 18/11/2026 (o visitante chegou por Google).");
+    expect(doSite).toContain("a venda é do balcão, e a origem fica guardada no pedido.");
+    expect(rodadas()).toBe(2);
+  });
+
   it("com um aparelho, também 2 (eram 7): o produto e o IMEI saem juntos", async () => {
     cenario.tabelas.venda_itens = [daCapa, doCelular];
     expect(await comprovante()).toContain("352099001800032");

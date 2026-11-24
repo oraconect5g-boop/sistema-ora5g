@@ -13,7 +13,8 @@
 // (FIN-001a, conta-do-periodo-real.spec.ts) e a que escolhe o relatório original da Rein nas telas de importação, sem
 // enviar (REIN-d, importar-planilha-leitura-real.spec.ts; pede também ORA_E2E_PLANILHA_REIN); e a que só lê os repasses
 // atrasados das financeiras (FIN-007a, repasses-atrasados-real.spec.ts) e o aviso deles no Início, no sino e na previsão de
-// caixa (FIN-007b, aviso-do-repasse-real.spec.ts). Só no servidor: ORA_E2E_URL (o site, por
+// caixa (FIN-007b, aviso-do-repasse-real.spec.ts); e a que só abre as vendas recentes para ler de onde vieram (CRM-009a,
+// venda-do-site-real.spec.ts). Só no servidor: ORA_E2E_URL (o site, por
 // exemplo https://ora5g.com.br) e ORA_E2E_CONTAS (o arquivo protegido das contas, ~/homologacao/contas-de-teste.txt). No CI os
 // dois ficam vazios e as provas são puladas. A senha nunca vai para o log: o Playwright só mostra o nome do passo.
 import { readFileSync } from "node:fs";

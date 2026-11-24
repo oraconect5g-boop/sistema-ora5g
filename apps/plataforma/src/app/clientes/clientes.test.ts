@@ -146,6 +146,37 @@ describe("/clientes/[id]", () => {
     expect(cenario.chamadas).toEqual([{ nome: "cliente_ficha", argumentos: { p_cliente: CLIENTE } }]);
   });
 
+  it("CRM-009a: a compra que nasceu de um pedido do site diz de onde veio; a falha dessa leitura aparece; sem a tabela, a lista segue", async () => {
+    cenario.permissoes = new Set(["cliente.buscar"]);
+    cenario.respostas.cliente_ficha = { data: ficha(), error: null };
+    const PEDIDO = "00000000-0000-4000-8000-00000000b001";
+    cenario.tabelas.loja_reservas = [
+      { venda_id: VENDA, numero: 11, codigo: "UNI234", criada_em: "2026-11-08T12:00:01Z", origem: "instagram", pedido_id: PEDIDO, situacao: "atendida" },
+      { venda_id: VENDA, numero: 12, codigo: "UNI235", criada_em: "2026-11-08T12:00:01Z", origem: "instagram", pedido_id: PEDIDO, situacao: "atendida" },
+    ];
+    cenario.tabelas.loja_pedidos = [{ id: PEDIDO, codigo: "ABC234", criado_em: "2026-11-08T12:00:00Z", venda_id: VENDA }];
+    const comPedido = limpar(await abrir() as ReactElement);
+    // A venda continua sendo do balcão (não vira "loja online"): a linha ganha o pedido do site e a data em que foi feito.
+    expect(comPedido).toContain("Venda nº 77");
+    expect(comPedido).toContain("· pedido do site ABC234, de 08/11/2026");
+    expect(comPedido).not.toContain("loja online");
+    // A reserva avulsa, com o código dela.
+    cenario.tabelas.loja_reservas = [{ venda_id: VENDA, numero: 13, codigo: "RSV777", criada_em: "2026-11-09T18:30:00Z", origem: null, pedido_id: null, situacao: "atendida" }];
+    cenario.tabelas.loja_pedidos = [];
+    expect(limpar(await abrir() as ReactElement)).toContain("· reserva do site RSV777, de 09/11/2026");
+    // Sem reserva nenhuma, nada é dito; a falha da leitura é dita; num banco sem a tabela, a lista segue calada.
+    cenario.tabelas.loja_reservas = [];
+    const semSite = limpar(await abrir() as ReactElement);
+    expect(semSite).toContain("Venda nº 77");
+    expect(semSite).not.toContain("do site");
+    cenario.erros = { loja_reservas: { code: "57014" } };
+    const falha = limpar(await abrir() as ReactElement);
+    expect(falha).toContain("Venda nº 77");
+    expect(falha).toContain("Não deu para ler agora quais destas compras vieram de um pedido do site.");
+    cenario.erros = { loja_reservas: { code: "42P01" } };
+    expect(limpar(await abrir() as ReactElement)).not.toContain("vieram de um pedido do site");
+  });
+
   it("sem auditoria.ver não mostra quem consultou; sem cadastrar não corrige; cliente de outra rede: 404", async () => {
     cenario.permissoes = new Set(["cliente.buscar"]);
     cenario.respostas.cliente_ficha = { data: ficha(), error: null };

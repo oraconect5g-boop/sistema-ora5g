@@ -27,6 +27,7 @@ import { BuscaDeCliente } from "../../clientes/BuscaDeCliente";
 import { conferirEnvioDesconhecido, confirmarDestinatarioDaNota, corrigirChaveDaNota, corrigirNota, enviarNotaPeloWhatsApp, pedirNota, registrarCancelamentoNoFisco } from "../../notas/acoes";
 import { cancelarVenda, conferirRetorno, confirmarEstorno, devolverItens, retirarAnexo } from "../../vender/acoes";
 import { regraNaTela, regrasDosItens } from "../../../lib/vendas/regra-de-preco";
+import { fraseDaVendaDoSite, lerVendasDoSite } from "../../../lib/loja/vendas-do-site";
 import { CartasDeCorrecao } from "./CartasDeCorrecao";
 
 export const metadata: Metadata = { title: "Comprovante da venda" };
@@ -81,6 +82,9 @@ export default async function Comprovante({ params, searchParams }: { params: Pr
   // O nome de quem vendeu (como na lista de Vendas, VND-a): o perfil de outra pessoa só se lê com usuarios.gerir; com
   // ranking.ver, o nome vem de public.ranking_nomes. Sem nenhum dos dois, "—".
   const comRanking = venda.data.vendedor_id !== usuario.id && permite(sessao, "ranking.ver");
+  // CRM-009a: a venda que atendeu um pedido ou uma reserva do site diz de onde veio. Lido à parte, ao mesmo tempo que o
+  // resto (a promessa começa aqui e é esperada depois do bloco): a falha desta leitura não derruba o comprovante.
+  const leituraDoSite = lerVendasDoSite(supabase, [id]);
   const [loja, vendedor, nomesDoVendedor, podeCancelar, podePedirNota, aprovaNota, variantes, serializados, documentosDaNota, protocoloDaNota, origemDaNota,
     enviosDaNota, cartasDaNota, daOs, canceladasDoBanco, anexosLidos, regras] = await Promise.all([
     supabase.from("unidades").select("nome, cnpj").eq("id", venda.data.unidade_id).maybeSingle(),
@@ -119,6 +123,7 @@ export default async function Comprovante({ params, searchParams }: { params: Pr
     fechada ? supabase.from("venda_anexos").select("id, tipo, descricao, caminho, formato, bytes, enviado_em, retirado_em, motivo_retirada").eq("venda_id", id).order("enviado_em") : Promise.resolve(null),
     regrasEmCurso,
   ]);
+  const doSite = await leituraDoSite;
   if (loja.error || vendedor.error || podeCancelar.error || podePedirNota.error || aprovaNota.error) throw new FalhaDoServico("comprovante");
   if (variantes.error || serializados.error) throw new FalhaDoServico("comprovante_itens");
   const nomeDoVendedor = vendedor.data?.nome ?? (nomesDoVendedor?.estado === "ok" ? nomesDoVendedor.dados.get(venda.data.vendedor_id) : undefined);
@@ -207,6 +212,10 @@ export default async function Comprovante({ params, searchParams }: { params: Pr
         <p className="text-sm">Vendedor: {nomeDoVendedor ?? "—"}{v.cliente_nome ? ` · Cliente: ${v.cliente_nome}` : ""}
           {v.cliente_id && buscaCliente && <> · <Link href={`/clientes/${v.cliente_id}`} className="font-semibold text-acao">ficha do cliente</Link></>}</p>
         <p className="mt-1">{v.situacao === "concluida" ? <Selo tom="sucesso" ponto>concluída</Selo> : v.situacao === "cancelada" ? <Selo tom="perigo" ponto>cancelada</Selo> : <Selo tom="aviso" ponto>em aberto</Selo>}</p>
+        {doSite.estado === "ok" && doSite.itens[0] && (
+          <p className="mt-2 flex flex-wrap items-center gap-2 text-xs text-suave"><Selo tom="info">veio do site</Selo> {fraseDaVendaDoSite(doSite.itens[0])}</p>
+        )}
+        {doSite.estado === "falha" && <p className="mt-2 text-xs text-aviso">Não deu para ler agora se esta venda veio de um pedido do site.</p>}
         {v.situacao === "cancelada" && v.motivo_cancelamento && <p className="mt-1 text-xs text-suave">Motivo: {v.motivo_cancelamento}</p>}
         <ul className="mt-3 divide-y divide-borda text-sm">
           {itens.data.map((i) => {
