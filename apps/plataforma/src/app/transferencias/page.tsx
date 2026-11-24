@@ -2,18 +2,20 @@ import { randomUUID } from "node:crypto";
 
 import { ArrowRightLeft } from "lucide-react";
 import type { Metadata } from "next";
+import Form from "next/form";
 import Link from "next/link";
 
 import { MoldeReal } from "../../componentes/MoldeReal";
 import { Aviso, Botao, Cartao, Selo, TituloPagina } from "../../componentes/ui";
 import { permite } from "../../lib/acesso/molde";
 import { obterSessao } from "../../lib/acesso/sessao";
+import { paginaDoEndereco } from "../../lib/estoque/conferencia";
 import { chaveDoCatalogo, textoDoParametro, type ValorDeParametro } from "../../lib/parametros";
 import {
   divergenciaDaTransferencia, efeitoNoEstoque, ERROS_DA_TRANSFERENCIA, MOTIVO_MINIMO_DA_DIVERGENCIA, nomeDaDecisao, nomeDaSituacao, saldoDaLoja,
   textoDaDivergencia,
 } from "../../lib/transferencias/regras";
-import { consultarTelaDasTransferencias } from "../../lib/transferencias/tela";
+import { consultarTelaDasTransferencias, type TransferenciaDaTela } from "../../lib/transferencias/tela";
 import { encerrarTransferencia, enviarRemessa, enviarTransferencia, receberTransferencia, resolverDivergencia, separarTransferencia } from "./acoes";
 
 export const metadata: Metadata = { title: "Transferências entre lojas" };
@@ -32,8 +34,14 @@ const OK: Record<string, string> = {
 
 // Pedidos internos de transferência (ADR-007, #60): os que saem e os que chegam na loja do turno.
 // Lido pelo RLS (lojas envolvidas); cada passo é uma função do banco.
-export default async function Transferencias({ searchParams }: { searchParams: Promise<{ ok?: ValorDeParametro; erro?: ValorDeParametro }> }) {
+// TRF-f (o achado F24-01 do Codex, 24/11): as em andamento sempre aparecem, com páginas próprias, antes do histórico (que
+// também tem páginas); a busca pelo número acha uma transferência que não esteja na página. Antes, as 50 mais novas de
+// tudo escondiam a pedida antiga atrás das canceladas depois dela.
+type Parametros = { ok?: ValorDeParametro; erro?: ValorDeParametro; abertas?: ValorDeParametro; historico?: ValorDeParametro; numero?: ValorDeParametro };
+export default async function Transferencias({ searchParams }: { searchParams: Promise<Parametros> }) {
   const parametros = await searchParams;
+  const numeroDigitado = (textoDoParametro(parametros.numero) ?? "").trim();
+  const numero = /^\d{1,12}$/.test(numeroDigitado) ? Number(numeroDigitado) : null;
   const erro = chaveDoCatalogo(ERROS_DA_TRANSFERENCIA, parametros.erro);
   const ok = textoDoParametro(parametros.ok);
   const sessao = await obterSessao({ exigirLoja: true });
@@ -44,8 +52,33 @@ export default async function Transferencias({ searchParams }: { searchParams: P
   // VEL-g (ADR-010): a lista e tudo o que a tela mostra dela numa ida ao banco (lib/transferencias/tela.ts): os produtos,
   // as lojas, os aparelhos separados, as remessas, o saldo de agora de cada lado (o que a pessoa vê pela RLS) e os
   // aparelhos livres na loja do turno para os pedidos de aparelho e chip que ela tem a separar.
-  const tela = await consultarTelaDasTransferencias(supabase, unidade);
+  const tela = await consultarTelaDasTransferencias(supabase, unidade, {
+    paginaAbertas: paginaDoEndereco(textoDoParametro(parametros.abertas)), pagina: paginaDoEndereco(textoDoParametro(parametros.historico)), numero,
+  });
   const lista = { data: tela.transferencias };
+  const { contas } = tela;
+  const enderecoDaPagina = (mudar: { abertas?: number; historico?: number }) => {
+    const p = new URLSearchParams();
+    const abertas = mudar.abertas ?? contas.paginaAbertas;
+    const historico = mudar.historico ?? contas.pagina;
+    if (abertas > 1) p.set("abertas", String(abertas));
+    if (historico > 1) p.set("historico", String(historico));
+    return p.size ? `/transferencias?${p}` : "/transferencias";
+  };
+  type Navegacao = { rotulo: string; atual: number; total: number; anterior: string; proxima: string };
+  const secoes: { chave: string; titulo: string; itens: TransferenciaDaTela[]; vazia: string | null; nav: Navegacao | null }[] = numero !== null
+    ? [{ chave: "numero", titulo: `Transferência Nº ${numero}`, itens: lista.data,
+        vazia: lista.data.length === 0 ? `Nenhuma transferência Nº ${numero} saindo ou chegando nesta loja.` : null, nav: null }]
+    : [
+        { chave: "abertas", titulo: `Em andamento (${contas.abertas})`, itens: lista.data.filter((t) => t.aberta),
+          vazia: contas.abertas === 0 ? "Nada em andamento: nenhum pedido esperando separar, enviar, receber ou resolver." : null,
+          nav: contas.paginasAbertas > 1 ? { rotulo: "Páginas das em andamento", atual: contas.paginaAbertas, total: contas.paginasAbertas,
+            anterior: enderecoDaPagina({ abertas: contas.paginaAbertas - 1 }), proxima: enderecoDaPagina({ abertas: contas.paginaAbertas + 1 }) } : null },
+        { chave: "historico", titulo: `Histórico (${contas.historico})`, itens: lista.data.filter((t) => !t.aberta),
+          vazia: contas.historico === 0 ? "Nenhuma transferência encerrada ainda." : null,
+          nav: contas.paginas > 1 ? { rotulo: "Páginas do histórico", atual: contas.pagina, total: contas.paginas,
+            anterior: enderecoDaPagina({ historico: contas.pagina - 1 }), proxima: enderecoDaPagina({ historico: contas.pagina + 1 }) } : null },
+      ];
   const saldoAgora = (loja: string, varianteId: string) => {
     const s = saldoDaLoja(tela.saldos, loja, varianteId);
     return s ? `físico ${s.fisico} · reservado ${s.reservado} · disponível ${s.disponivel}` : null;
@@ -67,10 +100,16 @@ export default async function Transferencias({ searchParams }: { searchParams: P
     <MoldeReal sessao={sessao}>
       <TituloPagina sobretitulo={situacao.unidade_nome} titulo="Transferências" />
       <p className="text-sm text-suave">Para pedir, abra o produto no estoque e toque em &quot;na rede&quot;. Aqui a loja de origem separa e envia, e a de destino recebe e confere.</p>
+      {/* F24-04: os passos são etapas diferentes, cada uma com o seu efeito no estoque. */}
+      <p className="mt-1 text-xs text-suave">Os passos: <strong>pedir</strong> (reserva na origem: sai do disponível de lá) → <strong>separar</strong> → <strong>enviar</strong> (sai do físico da origem e fica em trânsito) → <strong>receber</strong> (entra no destino, uma vez só).</p>
       <p className="mt-2 text-sm"><Link href="/transferencias/remessa" className="font-semibold text-acao">Pedir vários produtos de uma vez (nova remessa)</Link></p>
       {ok && Object.hasOwn(OK, ok) && <Aviso tom="sucesso">{OK[ok]}</Aviso>}
       {erro && <Aviso tom="perigo">{ERROS_DA_TRANSFERENCIA[erro]}</Aviso>}
-      {lista.data.length === 0 && <Aviso tom="info">Nenhuma transferência saindo ou chegando nesta loja.</Aviso>}
+      <Form action="/transferencias" prefetch={false} className="mt-3 flex flex-wrap items-end gap-2" role="search">
+        <label className="text-sm font-medium">Achar pelo número<input key={numero ?? ""} name="numero" inputMode="numeric" pattern="[0-9]{1,12}" defaultValue={numero ?? ""} autoComplete="off" className={`${campo} w-40`} /></label>
+        <Botao type="submit" tamanho="sm" variante="secundario">Achar</Botao>
+        {numero !== null && <Link href="/transferencias" className="inline-flex min-h-11 items-center text-sm font-semibold text-acao">Ver todas</Link>}
+      </Form>
       {remessasParaEnviar.map((r) => (
         <form key={r.id} action={enviarRemessa} className="mt-3 flex flex-wrap items-center justify-between gap-2 rounded-xl border border-borda bg-white px-4 py-3">
           <input type="hidden" name="remessa" value={r.id} />
@@ -78,7 +117,13 @@ export default async function Transferencias({ searchParams }: { searchParams: P
           <Botao type="submit" tamanho="sm">Enviar os separados da remessa</Botao>
         </form>
       ))}
-      {lista.data.map((t) => {
+      {secoes.map((s) => (
+        // Cada parte é um bloco com o seu título; o cartão de cada transferência continua sendo a única "section" dela (a
+        // prova de leitura no site acha o cartão pela section que tem o título com o número).
+        <div key={s.chave} className="mt-5">
+          <h2 id={`secao-${s.chave}`} className="text-base font-semibold">{s.titulo}</h2>
+          {s.vazia && <p className="mt-1 text-sm text-suave">{s.vazia}</p>}
+          {s.itens.map((t) => {
         const v = variante(t.variante_id);
         const saindo = t.origem_id === unidade;
         const itens = itensDasTransferencias.data.filter((i) => i.transferencia_id === t.id);
@@ -195,7 +240,16 @@ export default async function Transferencias({ searchParams }: { searchParams: P
             )}
           </Cartao>
         );
-      })}
+          })}
+          {s.nav && (
+            <nav aria-label={s.nav.rotulo} className="mt-3 flex flex-wrap items-center justify-between gap-2 text-sm">
+              {s.nav.atual > 1 ? <Link href={s.nav.anterior} className="rounded-botao px-3 py-2 font-semibold text-acao ring-1 ring-borda">Anteriores</Link> : <span />}
+              <span className="text-suave">{`Página ${s.nav.atual} de ${s.nav.total}`}</span>
+              {s.nav.atual < s.nav.total ? <Link href={s.nav.proxima} className="rounded-botao px-3 py-2 font-semibold text-acao ring-1 ring-borda">Próximas</Link> : <span />}
+            </nav>
+          )}
+        </div>
+      ))}
     </MoldeReal>
   );
 }

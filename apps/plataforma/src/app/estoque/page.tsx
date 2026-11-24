@@ -250,6 +250,19 @@ export default async function Estoque({ searchParams }: { searchParams: Promise<
     if (n > 1) busca2.set("pagina", String(n));
     return busca2.size ? `/estoque?${busca2}` : "/estoque";
   };
+  // F24-03 (revisão do Codex de 24/11): abrir "onde tem" um produto mantém a busca e a página da lista, e "fechar" volta a
+  // ela; antes, o endereço levava só a variação e a lista voltava ao começo, sem a busca.
+  const enderecoNaRede = (varianteId: string) => {
+    const p = new URLSearchParams();
+    if (busca) p.set("q", busca);
+    if (paginaDoSaldo > 1) p.set("pagina", String(paginaDoSaldo));
+    p.set("variante", varianteId);
+    return `/estoque?${p}#onde-tem`;
+  };
+  // O contexto da lista também vai nos pedidos de transferência: o erro volta para a mesma busca e a mesma página.
+  const contextoDaLista = (
+    <>{busca && <input type="hidden" name="q" value={busca} />}{paginaDoSaldo > 1 && <input type="hidden" name="pagina" value={String(paginaDoSaldo)} />}</>
+  );
   // Fotos (ORA-CAT-011): a da variante ou a principal do produto; URL assinada e temporária.
   const comFoto = [...linhas.map((l) => ({ id: l.id, produto_id: l.produto_id })), ...(varianteDoItem.data ? [varianteDoItem.data] : [])];
   const produtoIds = [...new Set(comFoto.map((v) => v.produto_id))];
@@ -325,8 +338,8 @@ export default async function Estoque({ searchParams }: { searchParams: Promise<
 
       {erroTransferencia && <Aviso tom="perigo">{ERROS_DA_TRANSFERENCIA[erroTransferencia]}</Aviso>}
       {nomeNaRede && ehUuid(varianteNaRede) && (
-        <Cartao titulo={`Onde tem: ${nomeNaRede}`} subtitulo="Disponível para vender = físico − reservado (venda e transferência). Sem IMEI de outra loja. Pedir já reserva na origem: sai do disponível de lá na hora." icone={ArrowRightLeft}
-          acao={<Link href="/transferencias" className="text-xs font-semibold text-acao">pedidos</Link>}>
+        <Cartao id="onde-tem" titulo={`Onde tem: ${nomeNaRede}`} subtitulo="Disponível para vender = físico − reservado (venda e transferência). Sem IMEI de outra loja. Pedir já reserva na origem: sai do disponível de lá na hora; o envio é um passo depois, na tela Transferências." icone={ArrowRightLeft}
+          acao={<span className="flex items-center gap-3"><Link href={enderecoDoSaldo(paginaDoSaldo)} className="inline-flex min-h-11 items-center text-xs font-semibold text-acao">fechar</Link><Link href="/transferencias" className="inline-flex min-h-11 items-center text-xs font-semibold text-acao">pedidos</Link></span>}>
           <ul className="divide-y divide-borda text-sm">
             {locaisDaRede.map((r) => {
               const aqui = r.unidade_id === unidade;
@@ -340,7 +353,7 @@ export default async function Estoque({ searchParams }: { searchParams: Promise<
                   {!aqui && !excecao && r.disponivel > 0 && (
                     <form action={solicitarTransferencia} className="grid grid-cols-2 gap-2 sm:grid-cols-4">
                       <input type="hidden" name="origem" value={r.unidade_id} /><input type="hidden" name="destino" value={unidade} />
-                      <input type="hidden" name="variante" value={varianteNaRede} /><input type="hidden" name="chave" value={randomUUID()} />
+                      <input type="hidden" name="variante" value={varianteNaRede} /><input type="hidden" name="chave" value={randomUUID()} />{contextoDaLista}
                       <label className="text-xs font-medium">Quantidade<input name="quantidade" inputMode="numeric" defaultValue="1" required className={campo} /></label>
                       <label className="text-xs font-medium sm:col-span-2">Motivo<input name="motivo" required minLength={3} className={campo} /></label>
                       <div className="self-end"><Botao type="submit" tamanho="sm" variante="secundario">Pedir desta loja</Botao></div>
@@ -348,13 +361,14 @@ export default async function Estoque({ searchParams }: { searchParams: Promise<
                   )}
                   {aqui && r.disponivel > 0 && locaisDaRede.length > 1 && (
                     <form action={solicitarTransferencia} className="grid grid-cols-2 gap-2 sm:grid-cols-4">
-                      <input type="hidden" name="origem" value={unidade} /><input type="hidden" name="variante" value={varianteNaRede} /><input type="hidden" name="chave" value={randomUUID()} />
+                      <input type="hidden" name="origem" value={unidade} /><input type="hidden" name="variante" value={varianteNaRede} /><input type="hidden" name="chave" value={randomUUID()} />{contextoDaLista}
                       <label className="text-xs font-medium">Mandar para<select name="destino" className={campo}>
                         {locaisDaRede.filter((x) => x.unidade_id !== unidade).map((x) => <option key={x.unidade_id} value={x.unidade_id}>{x.unidade}</option>)}
                       </select></label>
                       <label className="text-xs font-medium">Quantidade<input name="quantidade" inputMode="numeric" defaultValue="1" required className={campo} /></label>
                       <label className="text-xs font-medium">Motivo<input name="motivo" required minLength={3} className={campo} /></label>
-                      <div className="self-end"><Botao type="submit" tamanho="sm" variante="secundario">Registrar envio</Botao></div>
+                      {/* F24-04: este botão pede a transferência (reserva aqui); separar e enviar são passos depois, em Transferências. */}
+                      <div className="self-end"><Botao type="submit" tamanho="sm" variante="secundario">Pedir a transferência</Botao></div>
                     </form>
                   )}
                 </li>
@@ -374,11 +388,12 @@ export default async function Estoque({ searchParams }: { searchParams: Promise<
                 const disponivel = l.quantidade - l.reservado;
                 return (
                   <li key={l.id} className="flex flex-wrap items-center justify-between gap-2 py-2">
-                    <span className="flex items-center gap-3"><FotoAmpliavel {...fotoDe(l)} rotulo={`${l.nome} (${l.sku})`} /><span>{l.nome}<span className="numeros block text-xs text-suave">{l.sku}{l.reservado > 0 ? ` · ${l.reservado} em venda` : ""}</span></span></span>
+                    {/* F24-02: o reservado soma a venda e a transferência; F24-03: o nome abre "onde tem", com a busca e a página. */}
+                    <span className="flex items-center gap-3"><FotoAmpliavel {...fotoDe(l)} rotulo={`${l.nome} (${l.sku})`} /><Link href={enderecoNaRede(l.id)} prefetch={false} className="min-h-11 py-1 hover:text-acao">{l.nome}<span className="numeros block text-xs text-suave">{l.sku}{l.reservado > 0 ? ` · ${l.reservado} reservado${l.reservado === 1 ? "" : "s"}` : ""}</span></Link></span>
                     <span className="flex items-center gap-2">
                       {disponivel < l.estoque_minimo && <Selo tom="aviso">abaixo do mínimo</Selo>}
                       <span className="numeros text-base font-bold">{disponivel}</span>
-                      <Link href={`/estoque?variante=${l.id}`} prefetch={false} className="text-xs font-semibold text-acao">na rede</Link>
+                      <Link href={enderecoNaRede(l.id)} prefetch={false} className="inline-flex min-h-11 items-center px-1 text-xs font-semibold text-acao">na rede</Link>
                     </span>
                   </li>
                 );

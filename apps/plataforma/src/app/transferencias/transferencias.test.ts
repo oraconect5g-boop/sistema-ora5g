@@ -17,6 +17,9 @@ const cenario = vi.hoisted(() => ({
   // TRF-d: as chamadas das ações ao banco (o nome e os argumentos) e a resposta da função que resolve a divergência.
   chamadas: [] as [string, Record<string, unknown>][],
   erroDaResolucao: null as null | { code: string },
+  // TRF-f: os argumentos que a tela mandou à função e as contas que a função simulada devolve (vazio: o banco de antes).
+  argumentosDaTela: {} as Record<string, unknown>,
+  contas: {} as Record<string, number>,
 }));
 vi.mock("next/headers", () => ({ cookies: async () => ({ getAll: () => [], set: () => undefined }) }));
 vi.mock("next/navigation", () => ({ redirect: (destino: string) => { throw new Error(`redirecionou para ${destino}`); } }));
@@ -30,6 +33,15 @@ class Consulta {
   limit() { return this; }
   eq() { return this; }
   in(campo: string, valores: unknown[]) { this.linhas = this.linhas.filter((l) => !(campo in l) || valores.includes(l[campo])); return this; }
+  // TRF-f: as em andamento e o histórico em leituras separadas, pelo filtro "in" e pelo "not in" da situação.
+  filter(campo: string, operador: string, valor: string) {
+    if (operador === "in") { const lista = valor.replace(/^\(|\)$/g, "").split(","); this.linhas = this.linhas.filter((l) => lista.includes(String(l[campo]))); }
+    return this;
+  }
+  not(campo: string, operador: string, valor: string) {
+    if (operador === "in") { const lista = valor.replace(/^\(|\)$/g, "").split(","); this.linhas = this.linhas.filter((l) => !lista.includes(String(l[campo]))); }
+    return this;
+  }
   then(resolver: (r: Resposta) => unknown) { return Promise.resolve({ data: this.linhas, error: null }).then(resolver); }
 }
 const sessaoFicticia = {
@@ -45,7 +57,9 @@ const sessaoFicticia = {
       if (!cenario.comFuncao) return { data: null, error: { code: "PGRST202" } };
       // A função do banco simulada: o que as tabelas do cenário têm (o RLS simulado é o próprio cenário).
       const t = cenario.tabelas;
+      cenario.argumentosDaTela = argumentos;
       return { data: {
+        ...cenario.contas,
         transferencias: t.transferencias ?? [],
         variantes: (t.variantes ?? []).map((v) => ({ id: v.id, nome: v.nome, sku: v.sku, tipo: (v.produtos as { tipo?: string } | null)?.tipo ?? null })),
         unidades: t.unidades ?? [], itens: t.transferencia_itens ?? [], remessas: t.transferencia_remessas ?? [], saldos: t.estoque_saldos ?? [], disponiveis: [],
@@ -73,6 +87,17 @@ function texto(v: unknown): string {
   return "";
 }
 const limpar = (v: unknown) => texto(v).replace(/\s+/g, " ");
+/** Os endereços dos links da árvore (TRF-f: a navegação entre as páginas). */
+function enderecos(v: unknown, achados: string[] = [], vistos = new Set<unknown>()): string[] {
+  if (!v || typeof v !== "object" || vistos.has(v)) return achados;
+  vistos.add(v);
+  if (Array.isArray(v)) { for (const x of v) enderecos(x, achados, vistos); return achados; }
+  if (isValidElement<Record<string, unknown>>(v)) {
+    if (typeof v.props.href === "string") achados.push(v.props.href);
+    for (const x of Object.values(v.props)) enderecos(x, achados, vistos);
+  }
+  return achados;
+}
 const transferencia = (numero: number, situacao: string) => ({
   id: `00000000-0000-4000-9000-${String(numero).padStart(12, "0")}`, numero, origem_id: ORIGEM, destino_id: DESTINO, variante_id: CAPA, quantidade: 2,
   motivo: "Reposição", situacao, solicitado_por: "outra", quantidade_recebida: null, observacao: null, solicitado_em: "2026-11-18T03:00:00Z", remessa_id: null,
@@ -80,6 +105,8 @@ const transferencia = (numero: number, situacao: string) => ({
 
 beforeEach(() => {
   cenario.leiturasSeparadas = 0;
+  cenario.argumentosDaTela = {};
+  cenario.contas = {};
   cenario.chamadas = [];
   cenario.erroDaResolucao = null;
   cenario.permissoes = new Set(["estoque.transferir"]);
@@ -224,5 +251,38 @@ describe("a divergência do recebimento (TRF-d)", () => {
     const tela = limpar(await Transferencias({ searchParams: Promise.resolve({ ok: "divergencia" }) }));
     expect(tela).toContain("Registrado: o que faltou teve destino, e o estoque foi acertado pelo livro.");
     expect(limpar(await Transferencias({ searchParams: Promise.resolve({ erro: "explicacao" }) }))).toContain("Explique o que houve com o que faltou, com pelo menos 10 letras");
+  });
+});
+
+// TRF-f (o achado F24-01 da revisão do Codex de 24/11, P1): as em andamento sempre aparecem, cada parte tem as suas páginas,
+// e a busca pelo número acha a que não está na página. F24-04: os passos são etapas diferentes.
+describe("as em andamento, o histórico e a busca pelo número (TRF-f)", () => {
+  beforeEach(() => { cenario.comFuncao = true; });
+
+  it("as duas partes, com a contagem; a página de cada uma vai ao banco e a navegação guarda a da outra parte", async () => {
+    cenario.tabelas.transferencias = [{ ...transferencia(4, "cancelada"), aberta: false }, { ...transferencia(1, "solicitada"), aberta: true }];
+    cenario.contas = { abertas: 51, historico: 120, pagina_abertas: 2, paginas_abertas: 2, pagina: 3, paginas: 3 };
+    const arvore = await Transferencias({ searchParams: Promise.resolve({ abertas: "2", historico: "3" }) });
+    const tela = limpar(arvore);
+    expect(cenario.argumentosDaTela).toMatchObject({ p_pagina_abertas: 2, p_pagina: 3 });
+    for (const trecho of ["Em andamento (51)", "Histórico (120)", "Página 2 de 2", "Página 3 de 3"]) expect(tela, trecho).toContain(trecho);
+    const links = enderecos(arvore);
+    // Voltar uma página nas em andamento mantém o histórico na página 3, e o contrário.
+    expect(links).toContain("/transferencias?historico=3");
+    expect(links).toContain("/transferencias?abertas=2&historico=2");
+    expect(tela).toContain("Os passos: pedir (reserva na origem: sai do disponível de lá) → separar → enviar (sai do físico da origem e fica em trânsito) → receber (entra no destino, uma vez só).");
+  });
+
+  it("a busca pelo número mostra só aquela transferência, ou diz que não há; o número fora da forma é ignorado", async () => {
+    cenario.tabelas.transferencias = [{ ...transferencia(2, "separada"), aberta: true }];
+    const achada = limpar(await Transferencias({ searchParams: Promise.resolve({ numero: "2" }) }));
+    expect(cenario.argumentosDaTela).toMatchObject({ p_numero: 2 });
+    expect(achada).toContain("Transferência Nº 2");
+    expect(achada).toContain("Ver todas");
+    expect(achada).not.toContain("Em andamento (");
+    cenario.tabelas.transferencias = [];
+    expect(limpar(await Transferencias({ searchParams: Promise.resolve({ numero: "99" }) }))).toContain("Nenhuma transferência Nº 99 saindo ou chegando nesta loja.");
+    await Transferencias({ searchParams: Promise.resolve({ numero: "12a" }) });
+    expect(cenario.argumentosDaTela.p_numero).toBeUndefined();
   });
 });

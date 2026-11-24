@@ -139,6 +139,7 @@
     { "versao": "20261124171542", "nome": "vitrine_com_paginas", "md5": "8a22cff9d2e6111086a136667232eccc", "aplicada_em": "2026-11-24" },
     { "versao": "20261124205119", "nome": "endereco_da_loja_no_site", "md5": "89ac1d9138591dad56002827678d4286", "aplicada_em": "2026-11-24" },
     { "versao": "20261124213514", "nome": "pedido_pago_no_balcao", "md5": "1f1a1dd01f84128d203faf652a4eee33", "aplicada_em": "2026-11-24" },
-    { "versao": "20261124220512", "nome": "vitrine_mais_rapida", "md5": "bcc799ea0f6c824c27af54faca13313e", "aplicada_em": "2026-11-24" }
+    { "versao": "20261124220512", "nome": "vitrine_mais_rapida", "md5": "bcc799ea0f6c824c27af54faca13313e", "aplicada_em": "2026-11-24" },
+    { "versao": "20261124230046", "nome": "transferencias_abertas_e_historico", "md5": "c7eb9f8f92f32dadf18d34ef9f5e5ceb", "aplicada_em": "2026-11-24" }
   ]
 }

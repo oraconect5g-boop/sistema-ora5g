@@ -2,7 +2,7 @@
   "_leia": "Checkpoint do programa de execução integral (PR #67). Carregar ao retomar e seguir para o próximo item executável da fila; não reiniciar o projeto. Estados vêm de status-requisitos.json (fonte da rastreabilidade); este arquivo acrescenta lote, bloqueio externo e revisão. Desde 16/11/2026 a medida de avanço é o requisito homologado pelo proprietário: a chave aceites guarda a resposta dele a cada roteiro de aceite (docs/aceite/); um requisito só recebe homologado: true com todos os lotes dele aceitos e sem nada em FALTA na nota de status-requisitos.json.",
   "atualizado_em": "2026-11-24",
   "base": {
-    "main": "5fc91b6",
+    "main": "14fe77d",
     "pacote": {
       "pr": 67,
       "branch": "docs/execucao-integral-20261110",
@@ -1241,12 +1241,25 @@
         "ORA-QUAL-010"
       ],
       "entrega": "a vitrine da loja online de 7 a 8 vezes mais rápida no banco, com as mesmas ofertas",
+      "commit": "14fe77d",
+      "publicado_em": "2026-11-24",
+      "pedido_em": "2026-11-24",
+      "resposta": null,
+      "respondido_em": null,
+      "nota": "no ar em 14fe77d (build 24/11 19:25; copiado do registro das publicações, a branch registro/publicacoes); as provas de leitura da vitrine passaram no site em 24/11 às 19:26, de primeira; migration 20261124220512_vitrine_mais_rapida; o ORA-ONLINE-001 segue parcial"
+    },
+    "TRF-f": {
+      "roteiro": "docs/aceite/TRF-f.md",
+      "requisitos": [
+        "ORA-INV-007"
+      ],
+      "entrega": "a tela de Transferências com as em andamento sempre visíveis, o histórico em páginas e a busca pelo número; o estoque com \"reservado\", o produto aberto sem perder a busca e o botão \"Pedir a transferência\"",
       "commit": null,
       "publicado_em": null,
       "pedido_em": "2026-11-24",
       "resposta": null,
       "respondido_em": null,
-      "nota": "o commit e a publicação ficam no registro (a branch registro/publicacoes); migration 20261124220512_vitrine_mais_rapida; o ORA-ONLINE-001 segue parcial"
+      "nota": "os achados F24-01 a F24-04 da revisão do Codex de 24/11; o commit e a publicação ficam no registro (a branch registro/publicacoes); migration 20261124230046_transferencias_abertas_e_historico"
     }
   },
   "contagem_dos_estados": {
@@ -1504,7 +1517,7 @@
       "titulo": "Transferência entre lojas com trânsito/recebimento",
       "prioridade": "P1",
       "estado": "testado",
-      "lote": "L4 estoque/compras; TRF-a (17/11): a remessa, vários produtos na mesma transferência (#60); J1-c (19/11): a transferência de ponta a ponta com duas pessoas, contra o site no ar, entre as lojas de teste; J1-d (19/11): a transferência de um aparelho pelo IMEI, ida e volta, contra o site no ar; VEL-g (19/11): a tela de Transferências numa ida (migration aplicada no ora5g-dev em 19/11); AUD-c (23/11): volta a parcial: falta resolver a divergência do recebimento (F21-04; o lote TRF-d); TRF-d (23/11): o que faltou no recebimento tem destino (chegou depois, voltou para a origem ou baixa); volta a testado; AUD-d (23/11): as duas transferências de teste da Muffato Santa regularizadas pelas telas do site; TRF-e (23/11): a falta sem destino nas pendências das duas lojas; a prova no site de \"chegou depois\" e \"baixa\"",
+      "lote": "L4 estoque/compras; TRF-a (17/11): a remessa, vários produtos na mesma transferência (#60); J1-c (19/11): a transferência de ponta a ponta com duas pessoas, contra o site no ar, entre as lojas de teste; J1-d (19/11): a transferência de um aparelho pelo IMEI, ida e volta, contra o site no ar; VEL-g (19/11): a tela de Transferências numa ida (migration aplicada no ora5g-dev em 19/11); AUD-c (23/11): volta a parcial: falta resolver a divergência do recebimento (F21-04; o lote TRF-d); TRF-d (23/11): o que faltou no recebimento tem destino (chegou depois, voltou para a origem ou baixa); volta a testado; AUD-d (23/11): as duas transferências de teste da Muffato Santa regularizadas pelas telas do site; TRF-e (23/11): a falta sem destino nas pendências das duas lojas; a prova no site de \"chegou depois\" e \"baixa\"; TRF-f (24/11): a pedida antiga não some da tela (F24-01) e os rótulos e a navegação do estoque (F24-02 a F24-04)",
       "bloqueio_externo": null,
       "revisado_codex": false,
       "homologado": false
@@ -2869,5 +2882,5 @@
       "homologado": false
     }
   },
-  "proximo_passo": "Seguir a ordem de 23/11 (o prompt entregue pelo proprietário, escrito pelo Codex, com a auditoria integral de 21/11, PR #105; a leitura está em docs/alinhamento/LEITURA_AUDITORIA_2026-11-21.md). Em 23/11 à noite o proprietário pediu para seguir o planejamento do prompt: a fila, seção por seção, está em docs/alinhamento/FILA_INTEGRAL_2026-11-23.md. (1) Publicar o ONLINE-i depois do merge, rodar no site as provas de leitura da vitrine (e2e/vitrine-paginas-real.spec.ts e e2e/vitrine-cara-de-loja-real.spec.ts, uma de cada vez) e registrar a publicação (deploy/homologacao/registrar-publicacao.sh; a branch registro/publicacoes); os lotes de 23/11 e 24/11 até o PAY-014b (5fc91b6) estão no ar. (2) A seguir, num lote próprio: os painéis do Início e do Financeiro com o catálogo de verdade (achado de 24/11 à noite: sozinhos, abaixo de 1 s; com várias páginas abertas juntas no banco pequeno, o de estoque chegou a 20 s e houve 31 erros de tempo esgotado entre 18:46 e 18:50; nenhum era função dos lotes do dia). (3) O pagamento pelo site está pronto para ligar: falta a chave de teste da Asaas, o e-mail dos avisos e o sim do proprietário para o worker. (3) A seção 4 do prompt (o catálogo e o estoque de verdade) foi feita em 24/11 com as respostas do proprietário (D-053; as peças de ASSISTÊNCIA fora da loja online): falta um relatório novo da Rein (a posição carregada é a de 10/11), o dos IMEIs dos celulares e o CNPJ das lojas (sem ele, a loja online não vende nada de verdade). O que resta depende do proprietário, de contrato ou de terceiro (docs/PENDENCIAS_DO_PROPRIETARIO.md, a lista única). A narrativa anterior deste campo fica no histórico do Git e em docs/alinhamento/EXECUCAO_INTEGRAL_STATUS.md."
+  "proximo_passo": "Seguir a ordem de 23/11 (o prompt entregue pelo proprietário, escrito pelo Codex, com a auditoria integral de 21/11, PR #105; a leitura está em docs/alinhamento/LEITURA_AUDITORIA_2026-11-21.md). Em 23/11 à noite o proprietário pediu para seguir o planejamento do prompt: a fila, seção por seção, está em docs/alinhamento/FILA_INTEGRAL_2026-11-23.md. (1) Publicar o TRF-f depois do merge, rodar no site as provas de leitura (e2e/transferencias-abertas-real.spec.ts e e2e/transferencias-leitura-real.spec.ts, uma de cada vez) e registrar a publicação (deploy/homologacao/registrar-publicacao.sh; a branch registro/publicacoes); os lotes de 23/11 e 24/11 até o ONLINE-i (14fe77d) estão no ar. (2) A seguir, da revisão do Codex de 24/11: o F24-05 (os placares e a lista única conciliados com as decisões já registradas: D-053, D-052, D-014, D-024 e as 2.269 fotos) com os roteiros agrupados por jornada (J01 a J15), o F24-06 (a disponibilidade comercial explicada) e a triagem do relatório de teste das telas de 24/11 (docs/analises/teste-de-telas-2026-11-24/RELATORIO.md: 18 pontos e 5 a verificar; entre eles, a raiz de teste do CNPJ da empresa, que recusa o CNPJ real das lojas, e a mensagem de erro fora da vista em Lojas da rede); depois, as telas sob carga (A1 e A2 do relatório). (3) O pagamento pelo site está pronto para ligar: falta a chave de teste da Asaas, o e-mail dos avisos e o sim do proprietário para o worker. (4) A seção 4 do prompt (o catálogo e o estoque de verdade) foi feita em 24/11 com as respostas do proprietário (D-053; as peças de ASSISTÊNCIA fora da loja online): falta um relatório novo da Rein (a posição carregada é a de 10/11), o dos IMEIs dos celulares e o CNPJ das lojas (sem ele, a loja online não vende nada de verdade). O que resta depende do proprietário, de contrato ou de terceiro (docs/PENDENCIAS_DO_PROPRIETARIO.md, a lista única). A narrativa anterior deste campo fica no histórico do Git e em docs/alinhamento/EXECUCAO_INTEGRAL_STATUS.md."
 }
