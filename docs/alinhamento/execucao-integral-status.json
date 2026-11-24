@@ -2,7 +2,7 @@
   "_leia": "Checkpoint do programa de execução integral (PR #67). Carregar ao retomar e seguir para o próximo item executável da fila; não reiniciar o projeto. Estados vêm de status-requisitos.json (fonte da rastreabilidade); este arquivo acrescenta lote, bloqueio externo e revisão. Desde 16/11/2026 a medida de avanço é o requisito homologado pelo proprietário: a chave aceites guarda a resposta dele a cada roteiro de aceite (docs/aceite/); um requisito só recebe homologado: true com todos os lotes dele aceitos e sem nada em FALTA na nota de status-requisitos.json.",
   "atualizado_em": "2026-11-24",
   "base": {
-    "main": "947a391",
+    "main": "7594a52",
     "pacote": {
       "pr": 67,
       "branch": "docs/execucao-integral-20261110",
@@ -1117,12 +1117,25 @@
         "ORA-FIN-002"
       ],
       "entrega": "a taxa da PayJoy e da Aiva no resultado do mês: a observada no repasse (o valor financiado menos o repassado), no mês da venda, numa linha própria do demonstrativo e da planilha; a conta sem repasse registrado fica num aviso, com o atalho para registrar",
+      "commit": "7594a52",
+      "publicado_em": "2026-11-24",
+      "pedido_em": "2026-11-24",
+      "resposta": null,
+      "respondido_em": null,
+      "nota": "no ar em 7594a52 (build 24/11 07:53; copiado do registro das publicações, a branch registro/publicacoes); a prova de leitura passou no site em 24/11 às 07:54, de primeira; migration 20261124103408_taxa_das_financeiras_no_resultado; o ORA-FIN-002 segue parcial (o imposto calculado e a comissão)"
+    },
+    "FIN-006a": {
+      "roteiro": "docs/aceite/FIN-006a.md",
+      "requisitos": [
+        "ORA-FIN-006"
+      ],
+      "entrega": "a tela Depósitos das maquininhas: o depósito agrupado da PicPay e da PagBank (os pagamentos com o dinheiro para o mesmo dia, pelo líquido) conferido com a linha de crédito do extrato do banco da rede; a diferença e o desfazer com o motivo; a linha com um uso só",
       "commit": null,
       "publicado_em": null,
       "pedido_em": "2026-11-24",
       "resposta": null,
       "respondido_em": null,
-      "nota": "o commit e a publicação ficam no registro (a branch registro/publicacoes); migration 20261124103408_taxa_das_financeiras_no_resultado, aplicada no ora5g-dev em 24/11; provado no banco do site numa operação desfeita no fim; o ORA-FIN-002 segue parcial (o imposto calculado e a comissão)"
+      "nota": "o commit e a publicação ficam no registro (a branch registro/publicacoes); migration 20261124111725_deposito_da_maquininha_no_banco, aplicada no ora5g-dev em 24/11; provado no banco do site numa operação desfeita no fim; o ORA-FIN-006 segue parcial (o saldo final do OFX real; a regra de um depósito por dia espera a resposta do proprietário)"
     }
   },
   "contagem_dos_estados": {
@@ -1839,7 +1852,7 @@
       "titulo": "Conciliação bancária e contas multiempresa",
       "prioridade": "P1",
       "estado": "parcial",
-      "lote": "EXT-a (17/11): o extrato do banco da loja ou da rede por arquivo (OFX ou planilha), conciliado linha a linha com aprovação (ADR-016); AUD-c (23/11): a linha do extrato com um uso só (F21-02)",
+      "lote": "EXT-a (17/11): o extrato do banco da loja ou da rede por arquivo (OFX ou planilha), conciliado linha a linha com aprovação (ADR-016); AUD-c (23/11): a linha do extrato com um uso só (F21-02); FIN-006a (24/11): o depósito agrupado da maquininha conferido com o extrato do banco",
       "bloqueio_externo": "as contas bancárias de cada empresa (multiempresa)",
       "revisado_codex": false,
       "homologado": false
@@ -2745,5 +2758,5 @@
       "homologado": false
     }
   },
-  "proximo_passo": "Seguir a ordem de 23/11 (o prompt entregue pelo proprietário, escrito pelo Codex, com a auditoria integral de 21/11, PR #105; a leitura está em docs/alinhamento/LEITURA_AUDITORIA_2026-11-21.md). Em 23/11 à noite o proprietário pediu para seguir o planejamento do prompt: a fila, seção por seção, está em docs/alinhamento/FILA_INTEGRAL_2026-11-23.md (o que não depende de ninguém, na ordem das áreas, e o que espera alguém). (1) Publicar o FIN-002a depois do merge, rodar no site a prova (apps/plataforma/e2e/taxa-das-financeiras-real.spec.ts, que não grava nada) e registrar a publicação (deploy/homologacao/registrar-publicacao.sh; a branch registro/publicacoes); os lotes de 23/11, do AUD-c (5617351) ao FIN-007b (a1100f7), e os de 24/11, o CRM-009a (7db5c6c), o POS-015a (19ac570) e o PAY-011a (947a391), estão no ar. (2) A seção 4 do prompt passa à frente de tudo quando o proprietário responder as três perguntas do catálogo (a tabela de preço da loja, o tipo de cada família e o código do produto: a coluna Código ou a coluna SKU; ele recebeu em 23/11 um resumo privado do relatório para responder) e der o sim: aí se gera a prévia do catálogo de verdade com a conta de administrador de teste, e ele confere e aplica; o estoque de cada loja se carrega com um relatório do dia da virada. (3) Enquanto isso, os lotes que não dependem de ninguém, na ordem das áreas: FIN-006 (o depósito agrupado da maquininha), as notas da jornada com login de REPORT-001, 003 e 006, e QUAL-006 e 013 (o aviso no celular quando o servidor erra). Um lote por vez, com teste, publicação, prova no domínio, roteiro de aceite e relato. O que depende do proprietário está em docs/PENDENCIAS_DO_PROPRIETARIO.md (a lista única). A narrativa anterior deste campo fica no histórico do Git e em docs/alinhamento/EXECUCAO_INTEGRAL_STATUS.md."
+  "proximo_passo": "Seguir a ordem de 23/11 (o prompt entregue pelo proprietário, escrito pelo Codex, com a auditoria integral de 21/11, PR #105; a leitura está em docs/alinhamento/LEITURA_AUDITORIA_2026-11-21.md). Em 23/11 à noite o proprietário pediu para seguir o planejamento do prompt: a fila, seção por seção, está em docs/alinhamento/FILA_INTEGRAL_2026-11-23.md (o que não depende de ninguém, na ordem das áreas, e o que espera alguém). (1) Publicar o FIN-006a depois do merge, rodar no site a prova (apps/plataforma/e2e/depositos-das-maquininhas-real.spec.ts, que não grava nada) e registrar a publicação (deploy/homologacao/registrar-publicacao.sh; a branch registro/publicacoes); os lotes de 23/11, do AUD-c (5617351) ao FIN-007b (a1100f7), e os de 24/11, o CRM-009a (7db5c6c), o POS-015a (19ac570), o PAY-011a (947a391) e o FIN-002a (7594a52), estão no ar. (2) A seção 4 do prompt passa à frente de tudo quando o proprietário responder as três perguntas do catálogo (a tabela de preço da loja, o tipo de cada família e o código do produto: a coluna Código ou a coluna SKU; ele recebeu em 23/11 um resumo privado do relatório para responder) e der o sim: aí se gera a prévia do catálogo de verdade com a conta de administrador de teste, e ele confere e aplica; o estoque de cada loja se carrega com um relatório do dia da virada. (3) Enquanto isso, os lotes que não dependem de ninguém, na ordem das áreas: as notas da jornada com login de REPORT-001, 003 e 006, e QUAL-006 e 013 (o aviso no celular quando o servidor erra). Um lote por vez, com teste, publicação, prova no domínio, roteiro de aceite e relato. O que depende do proprietário está em docs/PENDENCIAS_DO_PROPRIETARIO.md (a lista única). A narrativa anterior deste campo fica no histórico do Git e em docs/alinhamento/EXECUCAO_INTEGRAL_STATUS.md."
 }

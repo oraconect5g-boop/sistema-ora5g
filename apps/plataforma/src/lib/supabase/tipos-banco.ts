@@ -4136,6 +4136,70 @@ export type Database = {
           },
         ]
       }
+      maquininha_depositos: {
+        Row: {
+          casado_em: string
+          casado_por: string
+          data_liquidacao: string
+          esperado_centavos: number
+          id: string
+          linha_id: string
+          motivo: string | null
+          organizacao_id: string
+          pagamentos: number
+          provedor: string
+          recebido_centavos: number
+        }
+        Insert: {
+          casado_em?: string
+          casado_por: string
+          data_liquidacao: string
+          esperado_centavos: number
+          id?: string
+          linha_id: string
+          motivo?: string | null
+          organizacao_id: string
+          pagamentos: number
+          provedor: string
+          recebido_centavos: number
+        }
+        Update: {
+          casado_em?: string
+          casado_por?: string
+          data_liquidacao?: string
+          esperado_centavos?: number
+          id?: string
+          linha_id?: string
+          motivo?: string | null
+          organizacao_id?: string
+          pagamentos?: number
+          provedor?: string
+          recebido_centavos?: number
+        }
+        Relationships: [
+          {
+            foreignKeyName: "maquininha_depositos_casado_por_fkey"
+            columns: ["casado_por"]
+            isOneToOne: false
+            referencedRelation: "perfis_usuario"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "maquininha_depositos_linha_id_fkey"
+            columns: ["linha_id"]
+            isOneToOne: true
+            referencedRelation: "extrato_linhas"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "maquininha_depositos_organizacao_id_fkey"
+            columns: ["organizacao_id"]
+            isOneToOne: false
+            referencedRelation: "organizacoes"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       marketplace_importacoes: {
         Row: {
           arquivo: string
@@ -8294,6 +8358,7 @@ export type Database = {
         Returns: {
           arquivo: string
           conciliadas: number
+          depositos: number
           estornos: number
           fonte: string
           id: string
@@ -8623,6 +8688,18 @@ export type Database = {
           versoes: number
           vigente_desde: string
         }[]
+      }
+      maquininha_deposito_casar: {
+        Args: { p_data: string; p_linha: string; p_motivo: string; p_provedor: string }
+        Returns: Json
+      }
+      maquininha_deposito_desfazer: {
+        Args: { p_data: string; p_motivo: string; p_provedor: string }
+        Returns: boolean
+      }
+      maquininha_depositos_painel: {
+        Args: { p_fim: string; p_inicio: string }
+        Returns: Json
       }
       margem_itens: {
         Args: {

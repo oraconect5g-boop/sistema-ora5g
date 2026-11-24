@@ -44,7 +44,7 @@
 ## O que fica de fora
 
 1. **As parcelas.** O extrato com uma linha por parcela (a agenda de recebíveis) não casa com o pagamento: use o relatório de vendas, com uma linha por venda. A regra das parcelas depende dos prazos e das taxas do contrato de cada maquininha (E2).
-2. **O depósito agrupado no banco** (um crédito para vários pagamentos): por enquanto, sai da conta com o motivo, e a conciliação é feita pelo extrato da maquininha.
+2. **O depósito agrupado no banco** (um crédito para vários pagamentos): feito em 24/11, no lote FIN-006a (ver a atualização de 24/11 (2), abaixo). A conciliação de cada venda continua pelo extrato da maquininha.
 3. **As contas bancárias de cada empresa, com o saldo** (a parte multiempresa do ORA-FIN-006).
 4. **O chargeback ligado ao estorno da venda** (ORA-PAY-011): feito em 24/11, no lote PAY-011a (ver a atualização de 24/11, abaixo). O débito de valor diferente do estorno continua saindo da conta com o motivo.
 5. **A busca do extrato pela API do provedor** (ORA-PAY-013): sem contrato verificado.
@@ -80,6 +80,18 @@
 - **A regra está na tabela:** um gatilho só aceita como estorno o débito de um estorno confirmado, do mesmo valor e da mesma rede, e não deixa soltar a linha que confirmou.
 - **Fica de fora:** o débito de valor diferente do estorno (o chargeback de parte da venda, ou com a tarifa junta) e a antecipação como operação própria, que dependem do arquivo real de cada maquininha (E3).
 - **Reverter:** a reversão da migration `20261124082944_debito_do_extrato_confirma_o_estorno` solta os débitos ligados e volta as funções do AUD-c. O estorno que um débito confirmou continua confirmado, com a referência da linha no comprovante e na observação.
+
+## Atualização de 24/11/2026 (2): o depósito agrupado da maquininha (lote FIN-006a, ORA-FIN-006)
+
+- **O depósito é como o repasse dos marketplaces** (ADR-018): o conjunto dos pagamentos da mesma maquininha com o dinheiro para o mesmo dia (a data gravada na conciliação pelo extrato da maquininha), e o esperado é a soma do líquido deles. A PicPay junta o Pix e o cartão da maquininha dela; a PagBank, o cartão da PagSeguro. O Pix direto continua linha a linha.
+- **Casar** é dizer qual linha de crédito do extrato do banco da rede é o depósito. As sugestões vão do dia até 3 dias depois, o mesmo valor primeiro. A diferença pede o motivo, e desfazer também. Repetir não grava de novo.
+- **Um uso só:** a linha casada fica com a situação "deposito" e não concilia venda, não é repasse, não sai da conta e só se solta desfazendo o depósito (OR046). Os gatilhos valem para qualquer caminho, como os dos repasses.
+- **As travas:** a do depósito (por maquininha e dia) e depois a da linha, a ordem dos repasses. Nenhum caminho toma a linha e depois espera o depósito.
+- **O que entra no esperado:** os pagamentos já conciliados, mesmo de venda cancelada depois (o dinheiro caiu; o estorno é um débito à parte). Os pagamentos ainda sem conciliação não têm dia e aparecem contados à parte.
+- **Quem:** quem concilia pela rede inteira (o dono), como o extrato do banco da rede.
+- **A escolha reversível:** um depósito por maquininha e por dia. Se a maquininha juntar vários dias num depósito, casa-se com o dia principal e a diferença vai no motivo, até o proprietário dizer como o dinheiro chega ao banco.
+- **Fica de fora:** a conferência com o saldo final do arquivo do banco (o OFX real).
+- **Reverter:** a reversão da migration `20261124111725_deposito_da_maquininha_no_banco` apaga os depósitos (as linhas voltam a ficar livres) e volta as funções às definições do PAY-011a e do AUD-c.
 
 ## Consequências
 

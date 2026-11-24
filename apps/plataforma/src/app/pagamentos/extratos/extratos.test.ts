@@ -267,6 +267,41 @@ describe("as telas", () => {
 
 // PAY-011a (ORA-PAY-011): o débito do extrato é a prova do estorno da venda. As regras do banco estão em
 // packages/banco/src/debito-do-extrato-e-estorno.test.ts; aqui, a ação e o que a tela mostra e oferece.
+describe("FIN-006a: o depósito da maquininha na tela do extrato", () => {
+  it("a linha de depósito diz de qual maquininha e de que dia é, não oferece conciliar nem tirar da conta, e conta à parte; a lista e o atalho", async () => {
+    cenario.vinculos = [{ papel: "dono", escopo: "organizacao", unidade_id: null }];
+    cenario.tabelas = {
+      extratos: [{ id: EXTRATO, numero: 9, unidade_id: null, tipo: "banco", fonte: "Banco da rede", meios: ["pix_direto"], arquivo: "extrato.ofx",
+        periodo_inicio: "2026-11-21", periodo_fim: "2026-11-21", linhas: 1, importado_em: "2026-11-21T20:00:00Z" }],
+      extrato_linhas: [{ id: LINHA, numero: 1, data: "2026-11-21", valor_centavos: 23_384, taxa_centavos: null, liquido_centavos: null, data_liquidacao: null,
+        referencia: null, terminal: null, descricao: "PICPAY REPASSE", situacao: "deposito", motivo: null, pagamento: null }],
+      maquininha_depositos: [{ linha_id: LINHA, provedor: "picpay", data_liquidacao: "2026-11-21" }],
+      venda_pagamentos: [],
+    };
+    cenario.respostas.extrato_resumo = { data: { creditos: 1, creditos_centavos: 23_384, debitos: 0, debitos_centavos: 0, taxas_centavos: 0, liquido_centavos: 23_384,
+      a_cair_centavos: 0, pendentes: 0, conciliadas: 0, ignoradas: 0, repasses: 0, estornos: 0, depositos: 1 }, error: null };
+    const tela = limpar(await ExtratoImportado({ params: Promise.resolve({ id: EXTRATO }), searchParams: Promise.resolve({ ver: "deposito" }) }));
+    for (const trecho of ["De depósito", "depósito de maquininha", "É o depósito da PicPay com o dinheiro de 21/11/2026.", "desfaça o depósito em", "Depósitos das maquininhas"]) {
+      expect(tela, trecho).toContain(trecho);
+    }
+    for (const ausente of ["Tirar da conta", "Desfazer a conciliação", "Voltar para a conta", "Venda nº"]) expect(tela, ausente).not.toContain(ausente);
+    expect(chamadas("extrato_sugestoes")).toEqual([]);
+    // Quem não lê o depósito (a leitura volta vazia) lê a linha, sem a maquininha e o dia.
+    cenario.tabelas.maquininha_depositos = [];
+    expect(limpar(await ExtratoImportado({ params: Promise.resolve({ id: EXTRATO }), searchParams: Promise.resolve({ ver: "deposito" }) })))
+      .toContain("É o depósito de uma maquininha.");
+    // A lista conta os depósitos e oferece o atalho; a recusa do banco tem a mensagem dela.
+    cenario.respostas.extratos_recentes = { data: [{ id: EXTRATO, numero: 9, unidade_id: null, loja: null, tipo: "banco", fonte: "Banco da rede", arquivo: "extrato.ofx",
+      periodo_inicio: "2026-11-21", periodo_fim: "2026-11-21", linhas: 1, importado_em: "2026-11-21T20:00:00Z", pendentes: 0, conciliadas: 0, ignoradas: 0, repasses: 0,
+      estornos: 0, depositos: 1 }], error: null };
+    const lista = limpar(await Extratos({ searchParams: Promise.resolve({}) }));
+    expect(lista).toContain("1 de depósito");
+    expect(lista).toContain("Depósitos das maquininhas");
+    cenario.respostas.extrato_ignorar = { data: null, error: { code: "OR046", message: "Esta linha é o depósito de uma maquininha: desfaça o depósito antes" } };
+    expect(await destinoDe(ignorarLinha(formulario({ extrato: EXTRATO, linha: LINHA, motivo: "Tarifa" })))).toBe(`/pagamentos/extratos/${EXTRATO}?erro=de_deposito`);
+  });
+});
+
 describe("PAY-011a: o débito do extrato e o estorno da venda", () => {
   const ESTORNO = "00000000-0000-4000-9000-0000000000e5";
   const DEBITO = "00000000-0000-4000-9000-0000000000e6";

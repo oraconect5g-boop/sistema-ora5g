@@ -23,6 +23,9 @@ describe("o erro do banco vira uma mensagem do catálogo", () => {
       // PAY-011a: o débito do extrato e o estorno da venda. Cada recusa do banco com a mensagem dela (as frases são as da
       // migration 20261124082944); as que parecem com as de antes ("outra linha", "valor", "meio") não caem nas de antes.
       [{ code: "OR046", message: "Este débito é o estorno de uma venda: ele já tem o uso dele" }, "de_estorno"],
+      // FIN-006a: a linha que é o depósito de uma maquininha.
+      [{ code: "OR046", message: "Esta linha é o depósito de uma maquininha: desfaça o depósito antes" }, "de_deposito"],
+      [{ code: "OR046", message: "Esta linha é o depósito de uma maquininha: desfaça o depósito na tela dos depósitos" }, "de_deposito"],
       [{ code: "OR047", message: "Este débito confirmou o estorno de uma venda: a confirmação não se desfaz, e a linha fica como a prova dele" }, "estorno_fixo"],
       [{ code: "42501", message: "Confirmar o estorno é da gerência da loja da venda" }, "estorno_gerencia"],
       [{ code: "42501", message: "Estorno não encontrado para você" }, "permissao"],
@@ -90,6 +93,7 @@ describe("a tela do extrato", () => {
     expect(filtroDoExtrato("conciliada")).toBe("conciliada");
     expect(filtroDoExtrato("repasse")).toBe("repasse");
     expect(filtroDoExtrato("estorno")).toBe("estorno");
+    expect(filtroDoExtrato("deposito")).toBe("deposito");
     expect(filtroDoExtrato("hasOwnProperty")).toBe("pendente");
     expect(filtroDoExtrato(undefined)).toBe("pendente");
     expect(paginaDoExtrato("3", 250)).toEqual({ pagina: 3, paginas: 3, de: 200 });
@@ -99,7 +103,7 @@ describe("a tela do extrato", () => {
 
   it("o resumo do banco, lido com rigor", () => {
     const resumo = { creditos: 2, creditos_centavos: 15_000, debitos: 1, debitos_centavos: 3_000, taxas_centavos: 300, liquido_centavos: 11_700,
-      a_cair_centavos: 4_900, pendentes: 2, conciliadas: 0, ignoradas: 1, repasses: 1, estornos: 1 };
+      a_cair_centavos: 4_900, pendentes: 2, conciliadas: 0, ignoradas: 1, repasses: 1, estornos: 1, depositos: 1 };
     expect(lerResumoDoExtrato({ ...resumo, extra: "x" })).toEqual(resumo);
     expect(lerResumoDoExtrato({ ...resumo, taxas_centavos: "300" })).toBeNull();
     // AUD-c: as linhas de repasse. O banco de antes da migration não manda a chave (lá elas contavam como pendentes): é
@@ -114,6 +118,11 @@ describe("a tela do extrato", () => {
     delete semEstornos.estornos;
     expect(lerResumoDoExtrato(semEstornos)).toEqual({ ...resumo, estornos: 0 });
     expect(lerResumoDoExtrato({ ...resumo, estornos: "1" })).toBeNull();
+    // FIN-006a: os depósitos das maquininhas, do mesmo jeito.
+    const semDepositos: Record<string, number> = { ...resumo };
+    delete semDepositos.depositos;
+    expect(lerResumoDoExtrato(semDepositos)).toEqual({ ...resumo, depositos: 0 });
+    expect(lerResumoDoExtrato({ ...resumo, depositos: -1.5 })).toBeNull();
     expect(lerResumoDoExtrato([resumo])).toBeNull();
     expect(lerResumoDoExtrato(null)).toBeNull();
   });
