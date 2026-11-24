@@ -28,6 +28,7 @@ import { conferirEnvioDesconhecido, confirmarDestinatarioDaNota, corrigirChaveDa
 import { cancelarVenda, conferirRetorno, confirmarEstorno, devolverItens, retirarAnexo } from "../../vender/acoes";
 import { regraNaTela, regrasDosItens } from "../../../lib/vendas/regra-de-preco";
 import { fraseDaVendaDoSite, lerVendasDoSite } from "../../../lib/loja/vendas-do-site";
+import { fraseDoDebito, lerDebitosDosEstornos } from "../../../lib/extratos/estornos";
 import { CartasDeCorrecao } from "./CartasDeCorrecao";
 
 export const metadata: Metadata = { title: "Comprovante da venda" };
@@ -85,6 +86,10 @@ export default async function Comprovante({ params, searchParams }: { params: Pr
   // CRM-009a: a venda que atendeu um pedido ou uma reserva do site diz de onde veio. Lido à parte, ao mesmo tempo que o
   // resto (a promessa começa aqui e é esperada depois do bloco): a falha desta leitura não derruba o comprovante.
   const leituraDoSite = lerVendasDoSite(supabase, [id]);
+  // PAY-011a: o débito do extrato que comprova cada estorno confirmado. Quem não concilia não vê o extrato (a leitura volta
+  // vazia, e nada é anotado). Lido como o do site: à parte, junto do resto, sem derrubar o comprovante; sem estorno
+  // confirmado, nada é lido.
+  const leituraDosDebitos = lerDebitosDosEstornos(supabase, estornos.data.filter((e) => e.situacao === "confirmado").map((e) => e.id));
   const [loja, vendedor, nomesDoVendedor, podeCancelar, podePedirNota, aprovaNota, variantes, serializados, documentosDaNota, protocoloDaNota, origemDaNota,
     enviosDaNota, cartasDaNota, daOs, canceladasDoBanco, anexosLidos, regras] = await Promise.all([
     supabase.from("unidades").select("nome, cnpj").eq("id", venda.data.unidade_id).maybeSingle(),
@@ -124,6 +129,8 @@ export default async function Comprovante({ params, searchParams }: { params: Pr
     regrasEmCurso,
   ]);
   const doSite = await leituraDoSite;
+  const debitosLidos = await leituraDosDebitos;
+  const debitoDoEstorno = new Map(debitosLidos.estado === "ok" ? debitosLidos.itens.map((d) => [d.estornoId, d] as const) : []);
   if (loja.error || vendedor.error || podeCancelar.error || podePedirNota.error || aprovaNota.error) throw new FalhaDoServico("comprovante");
   if (variantes.error || serializados.error) throw new FalhaDoServico("comprovante_itens");
   const nomeDoVendedor = vendedor.data?.nome ?? (nomesDoVendedor?.estado === "ok" ? nomesDoVendedor.dados.get(venda.data.vendedor_id) : undefined);
@@ -468,13 +475,25 @@ export default async function Comprovante({ params, searchParams }: { params: Pr
         </Cartao>
       )}
       {estornos.data.length > 0 && (
-        <Cartao titulo="Estornos de cartão, Pix e financeira" subtitulo="Só ficam confirmados com o código do comprovante do estorno." icone={RotateCcw}>
+        <Cartao titulo="Estornos de cartão, Pix e financeira" subtitulo="Só ficam confirmados com o código do comprovante do estorno, ou com o débito do extrato importado (em Conciliação, Extratos por arquivo)." icone={RotateCcw}>
           <ul className="divide-y divide-borda text-sm">
-            {estornos.data.map((e) => (
+            {estornos.data.map((e) => {
+              const debito = debitoDoEstorno.get(e.id);
+              return (
               <li key={e.id} className="space-y-2 py-2">
                 <p className="flex justify-between gap-2"><span>{nomeDoMeio(e.meio)}{e.devolucao_id ? " · devolução" : " · cancelamento"}</span><span className="numeros font-semibold">{brl(centavosDoBanco(e.valor_centavos))}</span></p>
                 {e.situacao === "confirmado"
-                  ? <p className="text-xs"><Selo tom="sucesso" ponto>confirmado</Selo> comprovante {e.comprovante}</p>
+                  ? (
+                    <>
+                      <p className="text-xs"><Selo tom="sucesso" ponto>confirmado</Selo> comprovante {e.comprovante}</p>
+                      {debito && (
+                        <p className="flex flex-wrap items-center gap-2 text-xs text-suave">
+                          {debito.chargeback && <Selo tom="perigo">chargeback</Selo>}
+                          <span>{debito.confirmou ? "Confirmado pelo" : "Comprovado pelo"} <Link href={`/pagamentos/extratos/${debito.extratoId}?ver=estorno`} className="font-semibold text-acao">{fraseDoDebito(debito)}</Link>{debito.chargeback ? ": o cliente contestou a compra no banco." : "."}</span>
+                        </p>
+                      )}
+                    </>
+                  )
                   : podeCancelar.data
                     ? (
                       <form action={confirmarEstorno} className="grid gap-2 sm:grid-cols-2">
@@ -486,8 +505,10 @@ export default async function Comprovante({ params, searchParams }: { params: Pr
                     )
                     : <p className="text-xs"><Selo tom="aviso" ponto>a confirmar</Selo></p>}
               </li>
-            ))}
+              );
+            })}
           </ul>
+          {debitosLidos.estado === "falha" && <p className="mt-2 text-xs text-aviso">Não deu para ler agora se um débito do extrato comprova estes estornos.</p>}
         </Cartao>
       )}
       {retornos.data.length > 0 && (

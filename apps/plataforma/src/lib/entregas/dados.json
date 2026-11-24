@@ -1,6 +1,6 @@
 {
   "_leia": "Gerado por scripts/gerar-rastreabilidade.mjs a partir de docs/alinhamento/execucao-integral-status.json; não editar à mão.",
-  "atualizado_em": "2026-11-23",
+  "atualizado_em": "2026-11-24",
   "total": 179,
   "homologados": 0,
   "contagem": {
@@ -1050,6 +1050,19 @@
         "ORA-POS-015"
       ],
       "entrega": "a prova, com a sessão aberta e no site de verdade, de que nada é presumido nem gravado quando a internet cai: a faixa avisa, o envio é segurado no aparelho, a navegação mostra \"Sem internet agora\" e, na volta, nada mudou. Nenhuma tela mudou; o roteiro é para repetir num celular da loja, sem gravar nada",
+      "commit": "19ac570",
+      "publicado_em": "2026-11-24",
+      "pedido_em": "2026-11-24",
+      "resposta": null,
+      "respondido_em": null
+    },
+    {
+      "lote": "PAY-011a",
+      "roteiro": "docs/aceite/PAY-011a.md",
+      "requisitos": [
+        "ORA-PAY-011"
+      ],
+      "entrega": "o débito do extrato é a prova do estorno da venda, um débito por estorno: na tela do extrato, o débito confirma o estorno que esperava (pela gerência, na loja da venda) ou guarda a prova do que já estava confirmado; o chargeback fica marcado; a venda mostra qual débito confirmou o estorno. Nada é lançado duas vezes",
       "commit": null,
       "publicado_em": null,
       "pedido_em": "2026-11-24",

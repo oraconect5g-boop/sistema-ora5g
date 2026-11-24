@@ -20,6 +20,19 @@ describe("o erro do banco vira uma mensagem do catálogo", () => {
       // AUD-c (F21-02): a linha que é o recebimento de um repasse não concilia venda, não sai da conta nem se desfaz pelo extrato.
       [{ code: "OR046", message: "Esta linha é o recebimento de um repasse de marketplace: desfaça o repasse antes" }, "de_repasse"],
       [{ code: "OR046", message: "Esta linha é o recebimento de um repasse de marketplace: desfaça o repasse na tela dos repasses" }, "de_repasse"],
+      // PAY-011a: o débito do extrato e o estorno da venda. Cada recusa do banco com a mensagem dela (as frases são as da
+      // migration 20261124082944); as que parecem com as de antes ("outra linha", "valor", "meio") não caem nas de antes.
+      [{ code: "OR046", message: "Este débito é o estorno de uma venda: ele já tem o uso dele" }, "de_estorno"],
+      [{ code: "OR047", message: "Este débito confirmou o estorno de uma venda: a confirmação não se desfaz, e a linha fica como a prova dele" }, "estorno_fixo"],
+      [{ code: "42501", message: "Confirmar o estorno é da gerência da loja da venda" }, "estorno_gerencia"],
+      [{ code: "42501", message: "Estorno não encontrado para você" }, "permissao"],
+      [{ code: "22023", message: "Este estorno já tem o débito dele em outra linha de extrato" }, "estorno_outro_debito"],
+      [{ code: "22023", message: "O débito não tem o valor do estorno" }, "estorno_valor"],
+      [{ code: "22023", message: "O meio do estorno não é deste extrato" }, "estorno_meio"],
+      [{ code: "22023", message: "O débito desta linha ainda não aconteceu: ligue no dia dele" }, "estorno_futuro"],
+      [{ code: "22023", message: "O débito é de antes da venda: não é o estorno dela" }, "estorno_antes"],
+      [{ code: "22023", message: "Para confirmar o estorno, entre na loja da venda" }, "estorno_outra_loja"],
+      [{ code: "22023", message: "Só um débito do extrato é o estorno de uma venda" }, "so_debito"],
       [{ code: "23505", message: "duplicate key" }, "instante"],
       [{ code: "22023", message: "Este arquivo já foi importado em outro lugar (outra loja ou a rede)" }, "outro_lugar"],
       [{ code: "22023", message: "Esta linha do extrato já foi decidida: desfaça antes" }, "decidida"],
@@ -76,6 +89,7 @@ describe("a tela do extrato", () => {
   it("o filtro e a página vêm do endereço, presos ao que existe", () => {
     expect(filtroDoExtrato("conciliada")).toBe("conciliada");
     expect(filtroDoExtrato("repasse")).toBe("repasse");
+    expect(filtroDoExtrato("estorno")).toBe("estorno");
     expect(filtroDoExtrato("hasOwnProperty")).toBe("pendente");
     expect(filtroDoExtrato(undefined)).toBe("pendente");
     expect(paginaDoExtrato("3", 250)).toEqual({ pagina: 3, paginas: 3, de: 200 });
@@ -85,7 +99,7 @@ describe("a tela do extrato", () => {
 
   it("o resumo do banco, lido com rigor", () => {
     const resumo = { creditos: 2, creditos_centavos: 15_000, debitos: 1, debitos_centavos: 3_000, taxas_centavos: 300, liquido_centavos: 11_700,
-      a_cair_centavos: 4_900, pendentes: 2, conciliadas: 0, ignoradas: 1, repasses: 1 };
+      a_cair_centavos: 4_900, pendentes: 2, conciliadas: 0, ignoradas: 1, repasses: 1, estornos: 1 };
     expect(lerResumoDoExtrato({ ...resumo, extra: "x" })).toEqual(resumo);
     expect(lerResumoDoExtrato({ ...resumo, taxas_centavos: "300" })).toBeNull();
     // AUD-c: as linhas de repasse. O banco de antes da migration não manda a chave (lá elas contavam como pendentes): é
@@ -95,6 +109,11 @@ describe("a tela do extrato", () => {
     expect(lerResumoDoExtrato(deAntes)).toEqual({ ...resumo, repasses: 0 });
     expect(lerResumoDoExtrato({ ...resumo, repasses: "1" })).toBeNull();
     expect(lerResumoDoExtrato({ ...resumo, repasses: null })).toBeNull();
+    // PAY-011a: os débitos de estorno, do mesmo jeito (o banco de antes não manda; outro tipo é falha).
+    const semEstornos: Record<string, number> = { ...resumo };
+    delete semEstornos.estornos;
+    expect(lerResumoDoExtrato(semEstornos)).toEqual({ ...resumo, estornos: 0 });
+    expect(lerResumoDoExtrato({ ...resumo, estornos: "1" })).toBeNull();
     expect(lerResumoDoExtrato([resumo])).toBeNull();
     expect(lerResumoDoExtrato(null)).toBeNull();
   });

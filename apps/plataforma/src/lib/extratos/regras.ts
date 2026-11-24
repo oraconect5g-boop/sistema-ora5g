@@ -10,6 +10,9 @@ import { CAMPOS_DO_EXTRATO, type CampoDoExtrato } from "./leitura";
 export const MEIOS_DO_EXTRATO = ["pix_picpay", "cartao_picpay", "cartao_pagseguro", "pix_direto"] as const;
 export type MeioDoExtrato = (typeof MEIOS_DO_EXTRATO)[number];
 export const NOME_DO_MEIO: Record<MeioDoExtrato, string> = Object.fromEntries(MEIOS_DO_EXTRATO.map((m) => [m, MEIOS[m].nome])) as Record<MeioDoExtrato, string>;
+/** O nome do meio para as telas do extrato: o dos meios que se conciliam, o de qualquer outro meio conhecido, ou o código como veio. */
+export const nomeDoMeioDoExtrato = (m: string): string =>
+  Object.hasOwn(NOME_DO_MEIO, m) ? NOME_DO_MEIO[m as MeioDoExtrato] : Object.hasOwn(MEIOS, m) ? MEIOS[m as keyof typeof MEIOS].nome : m;
 
 export const TIPOS_DE_EXTRATO = { maquininha: "Da maquininha (PicPay, PagBank)", banco: "Do banco (conta da loja ou da rede)" } as const;
 export type TipoDeExtrato = keyof typeof TIPOS_DE_EXTRATO;
@@ -38,6 +41,17 @@ export const ERROS_DOS_EXTRATOS = {
   rede: "Só quem concilia pela rede inteira importa o extrato da rede.",
   decidida: "Esta linha do extrato já foi decidida: desfaça antes.",
   de_repasse: "Esta linha é o recebimento de um repasse de marketplace: desfaça o repasse antes, em Repasses dos marketplaces.",
+  // PAY-011a: o débito do extrato e o estorno da venda.
+  de_estorno: "Este débito é o estorno de uma venda: ele já tem o uso dele e não sai da conta.",
+  estorno_fixo: "Este débito confirmou o estorno de uma venda: a confirmação não se desfaz, e a linha fica como a prova dele.",
+  estorno_valor: "O débito não tem o valor do estorno.",
+  estorno_meio: "O estorno não é de um meio de pagamento deste extrato.",
+  estorno_outro_debito: "Este estorno já tem o débito dele em outra linha de extrato.",
+  estorno_futuro: "O débito desta linha ainda não aconteceu: ligue no dia dele.",
+  estorno_antes: "O débito é de antes da venda: não pode ser o estorno dela.",
+  estorno_outra_loja: "Para confirmar o estorno, entre na loja da venda (troque de loja no alto da tela) e abra o extrato de novo.",
+  estorno_gerencia: "Confirmar o estorno é da gerência da loja da venda.",
+  so_debito: "Só um débito do extrato pode ser o estorno de uma venda.",
   valor: "O valor da linha não é o do pagamento.",
   meio: "Este pagamento não é de um meio deste extrato.",
   outra_linha: "Este pagamento já está conciliado com outra linha de extrato.",
@@ -59,13 +73,22 @@ export const erroDaPlanilhaNoExtrato = (motivo: FalhaDaPlanilha): ErroDosExtrato
 export function erroDosExtratos(erro: { code?: string; message?: string } | null | undefined): ErroDosExtratos {
   const codigo = erro?.code ?? "";
   const m = (erro?.message ?? "").toLowerCase();
+  // PAY-011a: quem concilia sem ser da gerência liga a prova, mas não confirma o estorno que ainda espera.
+  if (codigo === "42501" && m.includes("gerência da loja da venda")) return "estorno_gerencia";
   if (codigo === "42501" || codigo === "P0002") return "permissao";
   if (codigo === "OR030") return "ja_conciliado";
-  // AUD-c (F21-02): a linha do extrato tem um uso só; a de um repasse não concilia venda, não sai da conta nem se desfaz por aqui.
-  if (codigo === "OR046") return "de_repasse";
+  // AUD-c (F21-02): a linha do extrato tem um uso só; a de um repasse não concilia venda, não sai da conta nem se desfaz por
+  // aqui. PAY-011a: o débito que é o estorno de uma venda também já tem o uso dele.
+  if (codigo === "OR046") return m.includes("estorno de uma venda") ? "de_estorno" : "de_repasse";
+  // PAY-011a: o débito que confirmou o estorno não se solta.
+  if (codigo === "OR047") return "estorno_fixo";
   if (codigo === "23505" || codigo === "40001" || codigo === "40P01") return "instante";
   if (codigo !== "22023") return "falha";
   const regras: [string, ErroDosExtratos][] = [
+    // PAY-011a, antes das outras: "em outra linha de extrato" também está no texto do estorno que já tem o débito dele.
+    ["débito dele", "estorno_outro_debito"], ["valor do estorno", "estorno_valor"], ["meio do estorno", "estorno_meio"],
+    ["ainda não aconteceu", "estorno_futuro"], ["antes da venda", "estorno_antes"], ["entre na loja da venda", "estorno_outra_loja"],
+    ["só um débito", "so_debito"],
     ["outro lugar", "outro_lugar"], ["já foi decidida", "decidida"], ["desfaça antes", "decidida"], ["valor da linha", "valor"],
     ["meio deste extrato", "meio"], ["outra linha", "outra_linha"], ["ainda não caiu", "futuro"], ["valor líquido", "liquido"],
     ["informe o motivo", "motivo"], ["escolha os meios", "meios"], ["5.000", "linhas"],
@@ -106,7 +129,7 @@ export function lerEnvioDoExtrato(dados: Formulario): { ok: true; envio: EnvioDo
 
 // A tela do extrato: as linhas por situação e por página.
 export const LINHAS_POR_PAGINA_DO_EXTRATO = 100;
-export const FILTROS_DO_EXTRATO = { pendente: "Pendentes", conciliada: "Conciliadas", repasse: "De repasse", ignorada: "Fora da conta", todas: "Todas" } as const;
+export const FILTROS_DO_EXTRATO = { pendente: "Pendentes", conciliada: "Conciliadas", repasse: "De repasse", estorno: "De estorno", ignorada: "Fora da conta", todas: "Todas" } as const;
 export type FiltroDoExtrato = keyof typeof FILTROS_DO_EXTRATO;
 export const filtroDoExtrato = (pedido: unknown): FiltroDoExtrato =>
   typeof pedido === "string" && Object.hasOwn(FILTROS_DO_EXTRATO, pedido) ? (pedido as FiltroDoExtrato) : "pendente";
@@ -122,19 +145,21 @@ export function paginaDoExtrato(pedida: unknown, linhas: number): { pagina: numb
 /**
  * O resumo do extrato (public.extrato_resumo), lido com rigor: forma inesperada vira nulo, e a tela mostra a falha.
  * `repasses` (AUD-c) são as linhas que são o recebimento de um repasse de marketplace; o banco de antes da migration não
- * manda a chave (lá essas linhas contavam como pendentes), e isso é lido como zero, não como falha.
+ * manda a chave (lá essas linhas contavam como pendentes), e isso é lido como zero, não como falha. `estornos` (PAY-011a)
+ * são os débitos que são o estorno de uma venda; o banco de antes também não manda, e também é lido como zero.
  */
 export type ResumoDoExtrato = {
   creditos: number; creditos_centavos: number; debitos: number; debitos_centavos: number; taxas_centavos: number;
-  liquido_centavos: number; a_cair_centavos: number; pendentes: number; conciliadas: number; ignoradas: number; repasses: number;
+  liquido_centavos: number; a_cair_centavos: number; pendentes: number; conciliadas: number; ignoradas: number; repasses: number; estornos: number;
 };
 const CHAVES_DO_RESUMO: (keyof ResumoDoExtrato)[] = [
   "creditos", "creditos_centavos", "debitos", "debitos_centavos", "taxas_centavos", "liquido_centavos", "a_cair_centavos", "pendentes", "conciliadas", "ignoradas", "repasses",
+  "estornos",
 ];
 const inteiro = (v: unknown) => typeof v === "number" && Number.isSafeInteger(v);
 export function lerResumoDoExtrato(dado: unknown): ResumoDoExtrato | null {
   if (!dado || typeof dado !== "object" || Array.isArray(dado)) return null;
-  const r: Record<string, unknown> = { repasses: 0, ...(dado as Record<string, unknown>) };
+  const r: Record<string, unknown> = { repasses: 0, estornos: 0, ...(dado as Record<string, unknown>) };
   if (!CHAVES_DO_RESUMO.every((c) => inteiro(r[c]))) return null;
   return Object.fromEntries(CHAVES_DO_RESUMO.map((c) => [c, r[c]])) as ResumoDoExtrato;
 }

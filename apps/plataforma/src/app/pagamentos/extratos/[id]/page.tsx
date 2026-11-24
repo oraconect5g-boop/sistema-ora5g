@@ -2,20 +2,20 @@ import { ArrowLeft, CheckCheck, ListChecks, Scale, TriangleAlert } from "lucide-
 import type { Metadata } from "next";
 import Link from "next/link";
 
-import { MEIOS } from "@ora5g/dominio";
-
 import { MoldeReal } from "../../../../componentes/MoldeReal";
 import { Aviso, Botao, Cartao, FiltroSegmentado, Indicador, Selo, TituloPagina } from "../../../../componentes/ui";
 import { ehUuid } from "../../../../lib/acesso/regras";
 import { FalhaDoServico, obterSessao } from "../../../../lib/acesso/sessao";
+import { lerSugestoesDeEstorno, type SugestaoDeEstorno } from "../../../../lib/extratos/estornos";
 import {
-  ERROS_DOS_EXTRATOS, FILTROS_DO_EXTRATO, LINHAS_POR_PAGINA_DO_EXTRATO, NOME_DO_MEIO, TIPOS_DE_EXTRATO, filtroDoExtrato, lerResumoDoExtrato, paginaDoExtrato,
-  type FiltroDoExtrato, type MeioDoExtrato,
+  ERROS_DOS_EXTRATOS, FILTROS_DO_EXTRATO, LINHAS_POR_PAGINA_DO_EXTRATO, TIPOS_DE_EXTRATO, filtroDoExtrato, lerResumoDoExtrato, nomeDoMeioDoExtrato as nomeDoMeio,
+  paginaDoExtrato, type FiltroDoExtrato,
 } from "../../../../lib/extratos/regras";
 import { brl } from "../../../../lib/formato";
 import { CANAIS_DOS_MARKETPLACES } from "../../../../lib/marketplaces/leitura";
 import { chaveDoCatalogo, textoDoParametro, type ValorDeParametro } from "../../../../lib/parametros";
 import { conciliarCertas, conciliarLinha, desfazerLinha, ignorarLinha } from "../acoes";
+import { DebitoLigado, EstornosDoDebito, type EstornoDaLinha } from "./DebitoDeEstorno";
 
 export const metadata: Metadata = { title: "Extrato" };
 export const dynamic = "force-dynamic";
@@ -29,7 +29,6 @@ const comecoDoDia = (dia: string, somar = 0) => {
   return d.toISOString();
 };
 const quando = (iso: string) => new Intl.DateTimeFormat("pt-BR", { timeZone: "America/Sao_Paulo", dateStyle: "short", timeStyle: "short" }).format(new Date(iso)).replace(",", "");
-const nomeDoMeio = (m: string) => (Object.hasOwn(NOME_DO_MEIO, m) ? NOME_DO_MEIO[m as MeioDoExtrato] : Object.hasOwn(MEIOS, m) ? MEIOS[m as keyof typeof MEIOS].nome : m);
 const OK = {
   importado: "Extrato importado. Nada foi conciliado ainda: confira as sugestões de cada linha.",
   repetido: "Este arquivo já tinha sido importado: é este extrato, com o que já foi conferido.",
@@ -39,11 +38,19 @@ const OK = {
   ignorada: "Linha fora da conta; o motivo ficou na auditoria.",
   desfeita: "Linha de volta à conta; o motivo ficou na auditoria.",
   sem_mudanca: "Nada mudou: a linha já estava assim.",
+  // PAY-011a: o débito do extrato e o estorno da venda.
+  estorno_confirmado: "Estorno confirmado: este débito ficou como o comprovante dele.",
+  estorno_ligado: "Débito ligado ao estorno, que já estava confirmado: ele ficou como a prova.",
+  ja_ligado: "Este débito já estava ligado a este estorno.",
+  chargeback_marcado: "Débito marcado como chargeback; o motivo ficou na auditoria.",
+  chargeback_desmarcado: "Débito desmarcado como chargeback; o motivo ficou na auditoria.",
 } as const;
-// AUD-c (F21-02): a linha tem um uso só; "repasse" é o recebimento de um repasse de marketplace.
+// AUD-c (F21-02): a linha tem um uso só; "repasse" é o recebimento de um repasse de marketplace. PAY-011a: "estorno" é o
+// débito do estorno (ou do chargeback) de uma venda.
 const SITUACOES = {
   pendente: { nome: "a conferir", tom: "aviso" }, conciliada: { nome: "conciliada", tom: "sucesso" },
-  repasse: { nome: "repasse de marketplace", tom: "info" }, ignorada: { nome: "fora da conta", tom: "neutro" },
+  repasse: { nome: "repasse de marketplace", tom: "info" }, estorno: { nome: "estorno de venda", tom: "info" },
+  ignorada: { nome: "fora da conta", tom: "neutro" },
 } as const;
 
 type Extrato = { id: string; numero: number; unidade_id: string | null; tipo: string; fonte: string; meios: string[]; arquivo: string; periodo_inicio: string; periodo_fim: string; linhas: number; importado_em: string };
@@ -51,6 +58,9 @@ type Linha = {
   id: string; numero: number; data: string; valor_centavos: number; taxa_centavos: number | null; liquido_centavos: number | null; data_liquidacao: string | null;
   referencia: string | null; terminal: string | null; descricao: string | null; situacao: keyof typeof SITUACOES; motivo: string | null;
   pagamento: { meio: string; venda: { id: string; numero: number } | null } | null;
+  // PAY-011a: o estorno que este débito comprova (o banco de antes da migration não manda).
+  confirmou_o_estorno?: boolean | null; chargeback?: boolean | null;
+  estorno?: EstornoDaLinha;
 };
 type RepasseDaLinha = { linha_id: string; canal: string; data_repasse: string };
 type SemLinha = { id: string; meio: string; valor_centavos: number; comprovante: string | null; vendas: { id: string; numero: number; concluida_em: string } };
@@ -87,26 +97,37 @@ export default async function ExtratoImportado({ params, searchParams }: {
   const resumo = lerResumoDoExtrato(resumoLido.data);
   if (!resumo) throw new FalhaDoServico("extrato_resumo");
   const quantas: Record<FiltroDoExtrato, number> = {
-    pendente: resumo.pendentes, conciliada: resumo.conciliadas, repasse: resumo.repasses, ignorada: resumo.ignoradas,
-    todas: resumo.pendentes + resumo.conciliadas + resumo.repasses + resumo.ignoradas,
+    pendente: resumo.pendentes, conciliada: resumo.conciliadas, repasse: resumo.repasses, estorno: resumo.estornos, ignorada: resumo.ignoradas,
+    todas: resumo.pendentes + resumo.conciliadas + resumo.repasses + resumo.estornos + resumo.ignoradas,
   };
   const { pagina, paginas, de } = paginaDoExtrato(textoDoParametro(parametros.pagina), quantas[ver]);
 
   let consulta = supabase.from("extrato_linhas")
-    .select("id, numero, data, valor_centavos, taxa_centavos, liquido_centavos, data_liquidacao, referencia, terminal, descricao, situacao, motivo, pagamento:venda_pagamentos(meio, venda:vendas(id, numero))")
+    .select("id, numero, data, valor_centavos, taxa_centavos, liquido_centavos, data_liquidacao, referencia, terminal, descricao, situacao, motivo, confirmou_o_estorno, chargeback, pagamento:venda_pagamentos(meio, venda:vendas(id, numero)), estorno:estornos_externos(numero, venda:vendas(id, numero))")
     .eq("extrato_id", extrato.id);
   if (ver !== "todas") consulta = consulta.eq("situacao", ver);
   const linhasLidas = await consulta.order("numero").range(de, de + LINHAS_POR_PAGINA_DO_EXTRATO - 1);
   if (linhasLidas.error) throw new FalhaDoServico("extrato_linhas");
   const linhas = linhasLidas.data as unknown as Linha[];
-  // As sugestões só das linhas desta página que esperam conferência (crédito pendente).
+  // As sugestões só das linhas desta página que esperam conferência: as vendas de cada crédito pendente e (PAY-011a) os
+  // estornos de cada débito pendente. De qual repasse é cada linha de repasse desta página (quem não vê os repasses lê a
+  // linha, sem o canal e a data). As três leituras saem juntas.
   const esperando = linhas.filter((l) => l.situacao === "pendente" && l.valor_centavos > 0).map((l) => l.id);
-  const sugestoesLidas = esperando.length > 0 ? await supabase.rpc("extrato_sugestoes", { p_extrato: extrato.id }).in("linha_id", esperando) : { data: [], error: null };
-  if (sugestoesLidas.error) throw new FalhaDoServico("extrato_sugestoes");
-  // De qual repasse é cada linha de repasse desta página (quem não vê os repasses lê a linha, sem o canal e a data).
+  const debitos = linhas.filter((l) => l.situacao === "pendente" && l.valor_centavos < 0).map((l) => l.id);
   const deRepasse = linhas.filter((l) => l.situacao === "repasse").map((l) => l.id);
-  const repassesLidos = deRepasse.length > 0 ? await supabase.from("marketplace_repasses").select("linha_id, canal, data_repasse").in("linha_id", deRepasse) : { data: [], error: null };
+  const nada = { data: [], error: null };
+  const [sugestoesLidas, estornosLidos, repassesLidos] = await Promise.all([
+    esperando.length > 0 ? supabase.rpc("extrato_sugestoes", { p_extrato: extrato.id }).in("linha_id", esperando) : nada,
+    debitos.length > 0 ? supabase.rpc("extrato_sugestoes_de_estorno", { p_extrato: extrato.id }).in("linha_id", debitos) : nada,
+    deRepasse.length > 0 ? supabase.from("marketplace_repasses").select("linha_id, canal, data_repasse").in("linha_id", deRepasse) : nada,
+  ]);
+  if (sugestoesLidas.error) throw new FalhaDoServico("extrato_sugestoes");
+  if (estornosLidos.error) throw new FalhaDoServico("extrato_sugestoes_de_estorno");
   if (repassesLidos.error) throw new FalhaDoServico("marketplace_repasses");
+  const estornosSugeridos = lerSugestoesDeEstorno(estornosLidos.data);
+  if (!estornosSugeridos) throw new FalhaDoServico("extrato_sugestoes_de_estorno");
+  const estornosDaLinha = new Map<string, SugestaoDeEstorno[]>();
+  for (const s of estornosSugeridos) estornosDaLinha.set(s.linha_id, [...(estornosDaLinha.get(s.linha_id) ?? []), s]);
   const repasseDaLinha = new Map(((repassesLidos.data ?? []) as RepasseDaLinha[]).map((r) => [r.linha_id, r]));
   // A diferença no outro sentido (PAY-009): os pagamentos do período, da loja e dos meios do extrato, ainda sem conciliação.
   // Depois de conciliar o que casa, o que sobra aqui é venda que o extrato não confirmou.
@@ -153,11 +174,12 @@ export default async function ExtratoImportado({ params, searchParams }: {
             <Botao type="submit" tamanho="sm" variante="secundario" enquanto="Conciliando…"><CheckCheck className="size-4" aria-hidden />Conciliar as certas</Botao>
           </form>
         ) : undefined}>
-        <p className="mb-3 text-xs text-suave">&quot;Conciliar as certas&quot; concilia cada linha que tem uma sugestão só, que não é sugestão de outra linha, e cujo dinheiro já caiu. As outras ficam para você escolher.</p>
+        <p className="mb-3 text-xs text-suave">&quot;Conciliar as certas&quot; concilia cada linha que tem uma sugestão só, que não é sugestão de outra linha, e cujo dinheiro já caiu. As outras ficam para você escolher. O débito de um estorno (ou de um chargeback) é ligado ao estorno da venda, um por um.</p>
         <FiltroSegmentado rotulo="Situação das linhas" opcoes={(Object.keys(FILTROS_DO_EXTRATO) as FiltroDoExtrato[]).map((f) => ({ href: endereco(f), rotulo: FILTROS_DO_EXTRATO[f], ativo: f === ver, contagem: quantas[f] }))} />
         <ul className="mt-3 divide-y divide-borda text-sm">
           {linhas.map((l) => {
             const dela = sugestoes.get(l.id) ?? [];
+            const estornosDela = estornosDaLinha.get(l.id) ?? [];
             return (
               <li key={l.id} className="space-y-2 py-3">
                 <p className="flex flex-wrap items-center gap-2">
@@ -171,6 +193,7 @@ export default async function ExtratoImportado({ params, searchParams }: {
                     {l.referencia ? ` · ${l.referencia}` : ""}{l.terminal ? ` · ${l.terminal}` : ""}{l.descricao ? ` · ${l.descricao}` : ""}
                   </span>
                   <Selo tom={SITUACOES[l.situacao]?.tom ?? "neutro"}>{SITUACOES[l.situacao]?.nome ?? l.situacao}</Selo>
+                  {l.situacao === "estorno" && l.chargeback && <Selo tom="perigo">chargeback</Selo>}
                 </p>
                 {l.situacao === "pendente" && l.valor_centavos > 0 && dela.map((s) => (
                   <form key={s.pagamento_id} action={conciliarLinha} className="flex flex-wrap items-center justify-between gap-2 rounded-xl border border-borda px-3 py-2">
@@ -185,7 +208,7 @@ export default async function ExtratoImportado({ params, searchParams }: {
                 {l.situacao === "pendente" && l.valor_centavos > 0 && dela.length === 0 && (
                   <p className="text-xs text-suave">Nenhuma venda deste valor no mesmo dia (um dia antes ou depois), nesta loja e nestes meios. Confira a venda; se a linha não é de venda, tire da conta.</p>
                 )}
-                {l.situacao === "pendente" && l.valor_centavos < 0 && <p className="text-xs text-suave">Estorno, chargeback, tarifa ou saída: confira e tire da conta, com o motivo.</p>}
+                {l.situacao === "pendente" && l.valor_centavos < 0 && <EstornosDoDebito linha={l.id} sugestoes={estornosDela} ocultos={ocultos} />}
                 {l.situacao === "pendente" && (
                   <details>
                     <summary className="cursor-pointer text-xs font-semibold text-acao">Tirar da conta</summary>
@@ -200,6 +223,7 @@ export default async function ExtratoImportado({ params, searchParams }: {
                   <p className="text-xs">Conciliada com {l.pagamento?.venda ? <Link href={`/vendas/${l.pagamento.venda.id}`} className="font-semibold text-acao">a venda nº {l.pagamento.venda.numero}</Link> : "o pagamento"}{l.pagamento ? ` (${nomeDoMeio(l.pagamento.meio)})` : ""}.</p>
                 )}
                 {l.situacao === "ignorada" && <p className="text-xs text-suave">Fora da conta: {l.motivo}</p>}
+                {l.situacao === "estorno" && <DebitoLigado linha={l.id} estorno={l.estorno ?? null} confirmou={l.confirmou_o_estorno === true} chargeback={l.chargeback === true} ocultos={ocultos} />}
                 {l.situacao === "repasse" && (() => {
                   const r = repasseDaLinha.get(l.id);
                   const canal = r && Object.hasOwn(CANAIS_DOS_MARKETPLACES, r.canal) ? CANAIS_DOS_MARKETPLACES[r.canal as keyof typeof CANAIS_DOS_MARKETPLACES] : null;
@@ -211,9 +235,9 @@ export default async function ExtratoImportado({ params, searchParams }: {
                     </p>
                   );
                 })()}
-                {(l.situacao === "conciliada" || l.situacao === "ignorada") && (
+                {(l.situacao === "conciliada" || l.situacao === "ignorada" || (l.situacao === "estorno" && l.confirmou_o_estorno === false)) && (
                   <details>
-                    <summary className="cursor-pointer text-xs font-semibold text-acao">{l.situacao === "conciliada" ? "Desfazer a conciliação" : "Voltar para a conta"}</summary>
+                    <summary className="cursor-pointer text-xs font-semibold text-acao">{l.situacao === "conciliada" ? "Desfazer a conciliação" : l.situacao === "estorno" ? "Soltar do estorno" : "Voltar para a conta"}</summary>
                     <form action={desfazerLinha} className="mt-2 flex flex-wrap items-end gap-2">
                       {ocultos}<input type="hidden" name="linha" value={l.id} />
                       <label className="text-xs font-medium">Motivo<input name="motivo" required minLength={3} maxLength={200} className={campo} /></label>

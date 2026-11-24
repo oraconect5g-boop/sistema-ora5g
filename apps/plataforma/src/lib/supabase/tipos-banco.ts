@@ -3030,11 +3030,14 @@ export type Database = {
       }
       extrato_linhas: {
         Row: {
+          chargeback: boolean | null
+          confirmou_o_estorno: boolean | null
           data: string
           data_liquidacao: string | null
           decidida_em: string | null
           decidida_por: string | null
           descricao: string | null
+          estorno_id: string | null
           extrato_id: string
           id: string
           liquido_centavos: number | null
@@ -3049,11 +3052,14 @@ export type Database = {
           valor_centavos: number
         }
         Insert: {
+          chargeback?: boolean | null
+          confirmou_o_estorno?: boolean | null
           data: string
           data_liquidacao?: string | null
           decidida_em?: string | null
           decidida_por?: string | null
           descricao?: string | null
+          estorno_id?: string | null
           extrato_id: string
           id?: string
           liquido_centavos?: number | null
@@ -3068,11 +3074,14 @@ export type Database = {
           valor_centavos: number
         }
         Update: {
+          chargeback?: boolean | null
+          confirmou_o_estorno?: boolean | null
           data?: string
           data_liquidacao?: string | null
           decidida_em?: string | null
           decidida_por?: string | null
           descricao?: string | null
+          estorno_id?: string | null
           extrato_id?: string
           id?: string
           liquido_centavos?: number | null
@@ -3092,6 +3101,13 @@ export type Database = {
             columns: ["decidida_por"]
             isOneToOne: false
             referencedRelation: "perfis_usuario"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "extrato_linhas_estorno_id_fkey"
+            columns: ["estorno_id"]
+            isOneToOne: false
+            referencedRelation: "estornos_externos"
             referencedColumns: ["id"]
           },
           {
@@ -8195,6 +8211,10 @@ export type Database = {
         Returns: Json
       }
       estoque_valor_em_custo: { Args: { p_unidade?: string }; Returns: Json }
+      extrato_casar_estorno: {
+        Args: { p_chargeback: boolean; p_estorno: string; p_linha: string }
+        Returns: Json
+      }
       extrato_conciliar: {
         Args: { p_linha: string; p_pagamento: string }
         Returns: Json
@@ -8211,6 +8231,10 @@ export type Database = {
       extrato_do_vendedor: {
         Args: { p_mes: string; p_unidade: string; p_vendedor: string }
         Returns: Json
+      }
+      extrato_estorno_chargeback: {
+        Args: { p_chargeback: boolean; p_linha: string; p_motivo: string }
+        Returns: boolean
       }
       extrato_ignorar: {
         Args: { p_linha: string; p_motivo: string }
@@ -8244,11 +8268,33 @@ export type Database = {
           venda_numero: number
         }[]
       }
+      extrato_sugestoes_de_estorno: {
+        Args: { p_extrato: string }
+        Returns: {
+          comprovante: string
+          confirmado_em: string
+          de_devolucao: boolean
+          estorno_id: string
+          estorno_numero: number
+          linha_id: string
+          loja: string
+          meio: string
+          na_loja_do_turno: boolean
+          pela_referencia: boolean
+          pode_confirmar: boolean
+          situacao: string
+          solicitado_em: string
+          valor_centavos: number
+          venda_id: string
+          venda_numero: number
+        }[]
+      }
       extratos_recentes: {
         Args: { p_limite: number }
         Returns: {
           arquivo: string
           conciliadas: number
+          estornos: number
           fonte: string
           id: string
           ignoradas: number

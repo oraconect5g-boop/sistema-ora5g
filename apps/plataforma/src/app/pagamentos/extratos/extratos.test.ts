@@ -55,7 +55,7 @@ const sessaoFicticia = {
 };
 vi.mock("../../../lib/acesso/sessao", () => ({ FalhaDoServico: class extends Error {}, obterSessao: async () => sessaoFicticia }));
 
-import { conciliarCertas, conciliarLinha, desfazerLinha, ignorarLinha } from "./acoes";
+import { conciliarCertas, conciliarLinha, corrigirChargeback, desfazerLinha, ignorarLinha, ligarEstorno } from "./acoes";
 import { POST } from "./enviar/route";
 import ExtratoImportado from "./[id]/page";
 import ImportarExtrato from "./importar/page";
@@ -262,5 +262,159 @@ describe("as telas", () => {
   it("extrato de outra loja (ou que não existe) não abre; endereço adulterado nem consulta", async () => {
     expect(limpar(await ExtratoImportado({ params: Promise.resolve({ id: EXTRATO }), searchParams: Promise.resolve({}) }))).toContain("Extrato não encontrado");
     expect(limpar(await ExtratoImportado({ params: Promise.resolve({ id: "x' or 1=1" }), searchParams: Promise.resolve({}) }))).toContain("Extrato não encontrado");
+  });
+});
+
+// PAY-011a (ORA-PAY-011): o débito do extrato é a prova do estorno da venda. As regras do banco estão em
+// packages/banco/src/debito-do-extrato-e-estorno.test.ts; aqui, a ação e o que a tela mostra e oferece.
+describe("PAY-011a: o débito do extrato e o estorno da venda", () => {
+  const ESTORNO = "00000000-0000-4000-9000-0000000000e5";
+  const DEBITO = "00000000-0000-4000-9000-0000000000e6";
+  const base = { extrato: EXTRATO, ver: "todas", pagina: "2" };
+  const extratoDaLoja = { id: EXTRATO, numero: 7, unidade_id: LOJA, tipo: "maquininha", fonte: "PicPay da loja", meios: ["cartao_picpay"], arquivo: "extrato.csv",
+    periodo_inicio: "2026-11-20", periodo_fim: "2026-11-20", linhas: 3, importado_em: "2026-11-20T20:00:00Z" };
+  const debito = (extra: Record<string, unknown> = {}) => ({ id: DEBITO, numero: 5, data: "2026-11-20", valor_centavos: -7_900, taxa_centavos: null, liquido_centavos: null,
+    data_liquidacao: null, referencia: "EST-55", terminal: null, descricao: "Estorno", situacao: "pendente", motivo: null, pagamento: null, confirmou_o_estorno: null,
+    chargeback: null, estorno: null, ...extra });
+  const resumo = (extra: Record<string, number> = {}) => ({ creditos: 0, creditos_centavos: 0, debitos: 1, debitos_centavos: 7_900, taxas_centavos: 0, liquido_centavos: -7_900,
+    a_cair_centavos: 0, pendentes: 1, conciliadas: 0, ignoradas: 0, repasses: 0, estornos: 0, ...extra });
+  const sugestao = (extra: Record<string, unknown> = {}) => ({ linha_id: DEBITO, estorno_id: ESTORNO, estorno_numero: 3, venda_id: VENDA, venda_numero: 21, meio: "cartao_picpay",
+    valor_centavos: 7_900, situacao: "pendente", solicitado_em: "2026-11-20T15:00:00Z", confirmado_em: null, comprovante: null, loja: "Santa Cândida (teste)",
+    de_devolucao: false, pela_referencia: false, pode_confirmar: true, na_loja_do_turno: true, ...extra });
+  const abrir = async (ver = "todas") => limpar(await ExtratoImportado({ params: Promise.resolve({ id: EXTRATO }), searchParams: Promise.resolve({ ver }) }));
+
+  it("ligar chama o banco com a linha, o estorno e se foi chargeback; a resposta diz se confirmou, se só guardou a prova ou se já estava ligado", async () => {
+    cenario.respostas.extrato_casar_estorno = { data: { ligada: true, repetida: false, confirmou: true }, error: null };
+    expect(await destinoDe(ligarEstorno(formulario({ ...base, linha: DEBITO, estorno: ESTORNO, chargeback: "sim" })))).toBe(`/pagamentos/extratos/${EXTRATO}?ver=todas&pagina=2&ok=estorno_confirmado`);
+    cenario.respostas.extrato_casar_estorno = { data: { ligada: true, repetida: false, confirmou: false }, error: null };
+    expect(await destinoDe(ligarEstorno(formulario({ extrato: EXTRATO, linha: DEBITO, estorno: ESTORNO })))).toBe(`/pagamentos/extratos/${EXTRATO}?ok=estorno_ligado`);
+    cenario.respostas.extrato_casar_estorno = { data: { ligada: true, repetida: true, confirmou: true }, error: null };
+    expect(await destinoDe(ligarEstorno(formulario({ extrato: EXTRATO, linha: DEBITO, estorno: ESTORNO, chargeback: "talvez" })))).toBe(`/pagamentos/extratos/${EXTRATO}?ok=ja_ligado`);
+    // A caixa do chargeback só vale marcada como a tela manda; qualquer outro valor é "não".
+    expect(chamadas("extrato_casar_estorno")).toEqual([
+      { p_linha: DEBITO, p_estorno: ESTORNO, p_chargeback: true }, { p_linha: DEBITO, p_estorno: ESTORNO, p_chargeback: false }, { p_linha: DEBITO, p_estorno: ESTORNO, p_chargeback: false },
+    ]);
+  });
+
+  it("a recusa do banco vira a mensagem dela; dado adulterado nem chega ao banco; o débito que confirmou não se solta nem sai da conta", async () => {
+    const recusas: [{ code: string; message: string }, string][] = [
+      [{ code: "22023", message: "Para confirmar o estorno, entre na loja da venda" }, "estorno_outra_loja"],
+      [{ code: "42501", message: "Confirmar o estorno é da gerência da loja da venda" }, "estorno_gerencia"],
+      [{ code: "22023", message: "Este estorno já tem o débito dele em outra linha de extrato" }, "estorno_outro_debito"],
+      [{ code: "22023", message: "Esta linha do extrato já foi decidida: desfaça antes" }, "decidida"],
+      [{ code: "42501", message: "Estorno não encontrado para você" }, "permissao"],
+    ];
+    for (const [error, chave] of recusas) {
+      cenario.respostas.extrato_casar_estorno = { data: null, error };
+      expect(await destinoDe(ligarEstorno(formulario({ extrato: EXTRATO, linha: DEBITO, estorno: ESTORNO }))), error.message).toBe(`/pagamentos/extratos/${EXTRATO}?erro=${chave}`);
+    }
+    cenario.chamadas = [];
+    expect(await destinoDe(ligarEstorno(formulario({ extrato: EXTRATO, linha: DEBITO, estorno: "1 or 1=1" })))).toBe(`/pagamentos/extratos/${EXTRATO}?erro=dados`);
+    expect(await destinoDe(ligarEstorno(formulario({ extrato: EXTRATO, linha: "x", estorno: ESTORNO })))).toBe(`/pagamentos/extratos/${EXTRATO}?erro=dados`);
+    expect(await destinoDe(ligarEstorno(formulario({ extrato: "../x", linha: DEBITO, estorno: ESTORNO })))).toBe("/pagamentos/extratos?erro=dados");
+    expect(chamadas("extrato_casar_estorno")).toEqual([]);
+    cenario.respostas.extrato_desfazer = { data: null, error: { code: "OR047", message: "Este débito confirmou o estorno de uma venda: a confirmação não se desfaz, e a linha fica como a prova dele" } };
+    expect(await destinoDe(desfazerLinha(formulario({ extrato: EXTRATO, linha: DEBITO, motivo: "Liguei errado" })))).toBe(`/pagamentos/extratos/${EXTRATO}?erro=estorno_fixo`);
+    cenario.respostas.extrato_ignorar = { data: null, error: { code: "OR046", message: "Este débito é o estorno de uma venda: ele já tem o uso dele" } };
+    expect(await destinoDe(ignorarLinha(formulario({ extrato: EXTRATO, linha: DEBITO, motivo: "Tarifa" })))).toBe(`/pagamentos/extratos/${EXTRATO}?erro=de_estorno`);
+  });
+
+  it("a marca de chargeback do débito já ligado se corrige com o motivo; sem motivo, ou com a marca adulterada, nem chega ao banco", async () => {
+    cenario.respostas.extrato_estorno_chargeback = { data: true, error: null };
+    expect(await destinoDe(corrigirChargeback(formulario({ ...base, linha: DEBITO, chargeback: "sim", motivo: "  O banco   avisou " })))).toBe(`/pagamentos/extratos/${EXTRATO}?ver=todas&pagina=2&ok=chargeback_marcado`);
+    expect(await destinoDe(corrigirChargeback(formulario({ extrato: EXTRATO, linha: DEBITO, chargeback: "nao", motivo: "Foi estorno da loja" })))).toBe(`/pagamentos/extratos/${EXTRATO}?ok=chargeback_desmarcado`);
+    expect(chamadas("extrato_estorno_chargeback")).toEqual([
+      { p_linha: DEBITO, p_chargeback: true, p_motivo: "O banco avisou" }, { p_linha: DEBITO, p_chargeback: false, p_motivo: "Foi estorno da loja" }]);
+    cenario.respostas.extrato_estorno_chargeback = { data: false, error: null };
+    expect(await destinoDe(corrigirChargeback(formulario({ extrato: EXTRATO, linha: DEBITO, chargeback: "sim", motivo: "De novo" })))).toBe(`/pagamentos/extratos/${EXTRATO}?ok=sem_mudanca`);
+    cenario.chamadas = [];
+    expect(await destinoDe(corrigirChargeback(formulario({ extrato: EXTRATO, linha: DEBITO, chargeback: "sim", motivo: "ab" })))).toBe(`/pagamentos/extratos/${EXTRATO}?erro=motivo`);
+    expect(await destinoDe(corrigirChargeback(formulario({ extrato: EXTRATO, linha: DEBITO, chargeback: "true", motivo: "Tentativa" })))).toBe(`/pagamentos/extratos/${EXTRATO}?erro=dados`);
+    expect(await destinoDe(corrigirChargeback(formulario({ extrato: EXTRATO, linha: "x", chargeback: "sim", motivo: "Tentativa" })))).toBe(`/pagamentos/extratos/${EXTRATO}?erro=dados`);
+    expect(chamadas("extrato_estorno_chargeback")).toEqual([]);
+    cenario.respostas.extrato_estorno_chargeback = { data: null, error: { code: "42501", message: "Linha do extrato não encontrada para você" } };
+    expect(await destinoDe(corrigirChargeback(formulario({ extrato: EXTRATO, linha: DEBITO, chargeback: "sim", motivo: "Tentativa" })))).toBe(`/pagamentos/extratos/${EXTRATO}?erro=permissao`);
+  });
+
+  it("a tela: o débito pendente mostra os estornos que ele pode provar e o que dá para fazer em cada um", async () => {
+    cenario.tabelas = { extratos: [extratoDaLoja], unidades: [{ nome: "Santa Cândida (teste)" }], extrato_linhas: [debito()], venda_pagamentos: [] };
+    cenario.respostas.extrato_resumo = { data: resumo(), error: null };
+    // O estorno que espera, com a gerência na loja da venda: confirmar (e o aviso de que não se desfaz).
+    cenario.respostas.extrato_sugestoes_de_estorno = { data: [sugestao()], error: null };
+    let tela = await abrir();
+    for (const trecho of ["Linha 5", "-R$ 79,00", "Estorno nº 3 ·", "venda nº 21", "Cartão na maquininha PicPay", "do cancelamento", "pedido em 20/11/2026",
+      "Confirma o estorno da venda com este débito como comprovante. A confirmação não se desfaz.", "Foi contestação do cliente no banco (chargeback)",
+      "Confirmar o estorno", "Tirar da conta"]) expect(tela, trecho).toContain(trecho);
+    expect(tela).not.toContain("Guardar como a prova");
+    expect(chamadas("extrato_sugestoes_de_estorno")).toEqual([{ p_extrato: EXTRATO }]);
+    // O débito não é crédito: as sugestões de venda não são pedidas para ele.
+    expect(chamadas("extrato_sugestoes")).toEqual([]);
+
+    // O estorno já confirmado à mão: só guardar a prova, dizendo o comprovante; a referência igual é reconhecida.
+    cenario.respostas.extrato_sugestoes_de_estorno = { data: [sugestao({ situacao: "confirmado", confirmado_em: "2026-11-20T16:00:00Z", comprovante: "EST-55", pela_referencia: true, de_devolucao: true })], error: null };
+    tela = await abrir();
+    for (const trecho of ["de uma devolução", "mesma referência", "Já confirmado em 20/11/2026", "com o comprovante EST-55. Este débito fica como a prova dele (dá para soltar depois, com o motivo).",
+      "Guardar como a prova"]) expect(tela, trecho).toContain(trecho);
+    expect(tela).not.toContain("Confirmar o estorno");
+
+    // Quem não é da gerência, ou está em outra loja: a tela explica e não oferece o botão.
+    cenario.respostas.extrato_sugestoes_de_estorno = { data: [sugestao({ pode_confirmar: false })], error: null };
+    tela = await abrir();
+    expect(tela).toContain("O estorno ainda espera a confirmação, e confirmar é da gerência da loja da venda.");
+    for (const ausente of ["Confirmar o estorno", "Guardar como a prova", "Foi contestação"]) expect(tela, ausente).not.toContain(ausente);
+    cenario.respostas.extrato_sugestoes_de_estorno = { data: [sugestao({ na_loja_do_turno: false, loja: "Loja de teste 2" })], error: null };
+    tela = await abrir();
+    expect(tela).toContain("Para confirmar, entre na Loja de teste 2 (a loja da venda) e abra este extrato de novo.");
+    expect(tela).not.toContain("Confirmar o estorno");
+
+    // Sem estorno do valor: a tela diz o caminho do chargeback (cancelar a venda primeiro) e o da tarifa.
+    cenario.respostas.extrato_sugestoes_de_estorno = { data: [], error: null };
+    tela = await abrir();
+    expect(tela).toContain("Nenhum estorno deste valor para ligar aqui (nesta loja e nestes meios). Se é o estorno ou o chargeback de uma venda, cancele a venda primeiro, na tela dela: o estorno aparece aqui para confirmar. Se é tarifa ou saída, tire da conta, com o motivo.");
+
+    // A sugestão fora da forma esperada é falha da tela, não meia sugestão.
+    cenario.respostas.extrato_sugestoes_de_estorno = { data: [sugestao({ estorno_id: "x" })], error: null };
+    await expect(abrir()).rejects.toThrow();
+    cenario.respostas.extrato_sugestoes_de_estorno = { data: null, error: { code: "57014" } };
+    await expect(abrir()).rejects.toThrow();
+  });
+
+  it("a tela: a linha de estorno diz de qual venda é; a que confirmou não oferece soltar, a que só guardou a prova oferece; o filtro e a lista contam", async () => {
+    const doEstorno = { numero: 3, venda: { id: VENDA, numero: 21 } };
+    cenario.tabelas = { extratos: [extratoDaLoja], unidades: [{ nome: "Santa Cândida (teste)" }], venda_pagamentos: [],
+      extrato_linhas: [debito({ situacao: "estorno", confirmou_o_estorno: true, chargeback: true, estorno: doEstorno })] };
+    cenario.respostas.extrato_resumo = { data: resumo({ pendentes: 0, estornos: 1 }), error: null };
+    let tela = await abrir("estorno");
+    for (const trecho of ["De estorno", "estorno de venda", "chargeback", "Contestação do cliente no banco: é o débito do estorno nº 3", "da venda nº 21",
+      "Foi este débito que confirmou o estorno: ele fica como a prova e não se solta.", "Não foi chargeback", "Desmarcar"]) expect(tela, trecho).toContain(trecho);
+    for (const ausente of ["Soltar do estorno", "Tirar da conta", "Desfazer a conciliação", "Confirmar o estorno"]) expect(tela, ausente).not.toContain(ausente);
+    // Nenhuma sugestão é pedida para a linha que já tem o uso dela.
+    expect(chamadas("extrato_sugestoes_de_estorno")).toEqual([]);
+
+    cenario.tabelas.extrato_linhas = [debito({ situacao: "estorno", confirmou_o_estorno: false, chargeback: false, estorno: doEstorno })];
+    tela = await abrir("estorno");
+    for (const trecho of ["É o débito do estorno nº 3", "da venda nº 21", "O estorno já estava confirmado; este débito ficou como a prova dele.", "Soltar do estorno",
+      "Foi chargeback (o cliente contestou no banco)", "Marcar como chargeback"]) expect(tela, trecho).toContain(trecho);
+    expect(tela).not.toContain("Contestação do cliente");
+    // Quem não lê a venda do estorno (a leitura volta sem ele) vê a linha, sem o número.
+    cenario.tabelas.extrato_linhas = [debito({ situacao: "estorno", confirmou_o_estorno: true, chargeback: false, estorno: null })];
+    tela = await abrir("estorno");
+    expect(tela).toContain("É o débito do estorno de uma venda");
+    expect(tela).not.toContain("estorno nº");
+
+    // As mensagens de depois de ligar.
+    const com = async (ok: string) => limpar(await ExtratoImportado({ params: Promise.resolve({ id: EXTRATO }), searchParams: Promise.resolve({ ver: "estorno", ok }) }));
+    expect(await com("estorno_confirmado")).toContain("Estorno confirmado: este débito ficou como o comprovante dele.");
+    // Na devolução o pagamento da venda não muda (só o reembolso fica confirmado): a mensagem não fala do pagamento.
+    expect(await com("estorno_confirmado")).not.toContain("o pagamento da venda está estornado");
+    expect(await com("estorno_ligado")).toContain("Débito ligado ao estorno, que já estava confirmado: ele ficou como a prova.");
+    expect(await com("ja_ligado")).toContain("Este débito já estava ligado a este estorno.");
+    expect(await com("chargeback_marcado")).toContain("Débito marcado como chargeback; o motivo ficou na auditoria.");
+    expect(await com("chargeback_desmarcado")).toContain("Débito desmarcado como chargeback; o motivo ficou na auditoria.");
+
+    // A lista dos extratos conta os débitos de estorno à parte.
+    cenario.respostas.extratos_recentes = { data: [{ id: EXTRATO, numero: 7, unidade_id: LOJA, loja: "Santa Cândida (teste)", tipo: "maquininha", fonte: "PicPay da loja", arquivo: "extrato.csv",
+      periodo_inicio: "2026-11-20", periodo_fim: "2026-11-20", linhas: 3, importado_em: "2026-11-20T20:00:00Z", pendentes: 0, conciliadas: 2, ignoradas: 0, repasses: 0, estornos: 1 }], error: null };
+    expect(limpar(await Extratos({ searchParams: Promise.resolve({}) }))).toContain("1 de estorno");
   });
 });

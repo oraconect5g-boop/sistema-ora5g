@@ -1,9 +1,9 @@
 // Inventário de autorização (prioridade 1 do diagnóstico de 10/11/2026; ORA-ORG-004 e ORA-QUAL-002).
 // O aviso 0029 do Supabase lista as funções SECURITY DEFINER que qualquer usuário logado pode chamar
-// pela API: 212 em 23/11 (48 + 6 do cadastro de lojas, L2, + 5 do cadastro do catálogo, L3a, + 4 dos preços, L3b,
+// pela API: 215 em 24/11 (48 + 6 do cadastro de lojas, L2, + 5 do cadastro do catálogo, L3a, + 4 dos preços, L3b,
 // + 4 da importação do catálogo, L3c, + 3 da entrada de mercadoria, L4a, + 5 do inventário, L4b, + 6 dos clientes, L5a,
 // + 9 do funil e da agenda, L5b, + 4 da mesclagem e dos segmentos, L5c, + 4 das maquininhas e da conciliação, L7a,
-// + 2 da leitura das entradas, R1, + 1 do nome no ranking, G1, + 2 das metas, G4b, + 3 das financeiras, L7b, + 3 da saída autorizada do caixa, L7c, + 6 das contas a pagar, L8a, + 1 das regras do bônus por meta, L9a, + 2 do fechamento do bônus, L9b, + 1 da correção do repasse das financeiras, B4, + 1 dos dados para emitir a nota, K1b, + 1 dos documentos da nota emitida, L10a, + 2 do envio da nota pelo WhatsApp, K1c, + 1 dos recebíveis por loja e adquirente, L8e, + 5 da ordem de serviço, L12a, + 3 do orçamento da OS, L12b, + 2 da cobrança e da entrega da OS, L12c, + 3 das peças da OS, L12d, + 1 dos relatórios da assistência, L12e, + 2 dos documentos da venda, L5d, + 2 da conciliação fiscal, L10b, + 2 do cancelamento e da correção da nota, L10c, + 1 do valor do estoque a custo, G3b, + 2 dos códigos de outros canais, CAT-009, + 2 das regiões, ORG-009, + 1 da conta ligada à entrada, FIN-004a, + 2 dos documentos da conta, FIN-004b, + 1 da correção do custo, CAT-008b, + 2 da limpeza das fotos, CAT-011b, + 5 do pedido de compra, INV-009a, + 1 da carta de correção, FISC-009b, + 1 do relatório do titular, QUAL-011a, + 2 da vitrine da loja online, ONLINE-a, públicas de propósito, + 5 da reserva do site, ONLINE-b (a de reservar, pública), + 1 da conclusão da limpeza das fotos, INTEG-b, + 1 da situação das rotinas agendadas, ROT-a, + 1 da conferência do destinatário da nota, INTEG-c, + 2 da Saúde da operação e da página /saude, SAUDE-a, + 3 da remessa de transferência, TRF-a, + 6 dos avisos no celular, PWA-b (as duas da fila pedem o segredo do worker), + 7 dos extratos e da conciliação por arquivo, EXT-a, + 1 da importação do custo dos anúncios, META-a, + 1 da importação dos pedidos dos marketplaces, MKTPL-a, + 4 da carga do estoque inicial por loja, REIN-b, + 4 do pedido do site, ONLINE-d, + 1 da resolução da diferença na carga do estoque, REIN-c, + 3 das contas bancárias, CONTAS-a, + 2 dos repasses dos marketplaces, REPASSE-a, + 1 da divergência da transferência, TRF-d, + 1 da conferência do período, FIN-001a, + 1 da conferência do que foi desfeito, FIN-001b, + 3 dos repasses atrasados, FIN-007a; no L8b, a das categorias ganhou o parâmetro "entra no resultado"). Elas rodam com poder total e cada uma confere sessão, loja e permissão por
+// + 2 da leitura das entradas, R1, + 1 do nome no ranking, G1, + 2 das metas, G4b, + 3 das financeiras, L7b, + 3 da saída autorizada do caixa, L7c, + 6 das contas a pagar, L8a, + 1 das regras do bônus por meta, L9a, + 2 do fechamento do bônus, L9b, + 1 da correção do repasse das financeiras, B4, + 1 dos dados para emitir a nota, K1b, + 1 dos documentos da nota emitida, L10a, + 2 do envio da nota pelo WhatsApp, K1c, + 1 dos recebíveis por loja e adquirente, L8e, + 5 da ordem de serviço, L12a, + 3 do orçamento da OS, L12b, + 2 da cobrança e da entrega da OS, L12c, + 3 das peças da OS, L12d, + 1 dos relatórios da assistência, L12e, + 2 dos documentos da venda, L5d, + 2 da conciliação fiscal, L10b, + 2 do cancelamento e da correção da nota, L10c, + 1 do valor do estoque a custo, G3b, + 2 dos códigos de outros canais, CAT-009, + 2 das regiões, ORG-009, + 1 da conta ligada à entrada, FIN-004a, + 2 dos documentos da conta, FIN-004b, + 1 da correção do custo, CAT-008b, + 2 da limpeza das fotos, CAT-011b, + 5 do pedido de compra, INV-009a, + 1 da carta de correção, FISC-009b, + 1 do relatório do titular, QUAL-011a, + 2 da vitrine da loja online, ONLINE-a, públicas de propósito, + 5 da reserva do site, ONLINE-b (a de reservar, pública), + 1 da conclusão da limpeza das fotos, INTEG-b, + 1 da situação das rotinas agendadas, ROT-a, + 1 da conferência do destinatário da nota, INTEG-c, + 2 da Saúde da operação e da página /saude, SAUDE-a, + 3 da remessa de transferência, TRF-a, + 6 dos avisos no celular, PWA-b (as duas da fila pedem o segredo do worker), + 7 dos extratos e da conciliação por arquivo, EXT-a, + 1 da importação do custo dos anúncios, META-a, + 1 da importação dos pedidos dos marketplaces, MKTPL-a, + 4 da carga do estoque inicial por loja, REIN-b, + 4 do pedido do site, ONLINE-d, + 1 da resolução da diferença na carga do estoque, REIN-c, + 3 das contas bancárias, CONTAS-a, + 2 dos repasses dos marketplaces, REPASSE-a, + 1 da divergência da transferência, TRF-d, + 1 da conferência do período, FIN-001a, + 1 da conferência do que foi desfeito, FIN-001b, + 3 dos repasses atrasados, FIN-007a, + 3 do débito do extrato e do estorno da venda, PAY-011a; no L8b, a das categorias ganhou o parâmetro "entra no resultado"). Elas rodam com poder total e cada uma confere sessão, loja e permissão por
 // conta própria. Este teste monta um "mundo" fictício com objetos reais em duas lojas e tenta cada
 // função como 13 tipos de atacante. Recusa = erro, ou resposta vazia numa leitura, e nada muda no
 // banco. O teste lista as funções no próprio banco e falha se aparecer uma nova sem casos aqui.
@@ -706,6 +706,21 @@ const CASOS: Record<string, Caso> = {
     A: () => ["select public.extrato_ignorar($1, 'Tentativa')", [alvo.linhaExtratoA]], B: () => ["select public.extrato_ignorar($1, 'Tentativa')", [alvo.linhaExtratoB]],
     semPermissao: true,
   },
+  // PAY-011a: o débito do extrato e o estorno da venda. As sugestões e ligar são de quem concilia na loja do extrato; o
+  // débito e o estorno de cada loja existem e casam (o mesmo valor e o mesmo meio): a recusa aqui é só a do acesso.
+  "extrato_sugestoes_de_estorno(uuid)": {
+    leitura: true, A: () => ["select * from public.extrato_sugestoes_de_estorno($1)", [alvo.extratoA]],
+    B: () => ["select * from public.extrato_sugestoes_de_estorno($1)", [alvo.extratoB]], semPermissao: true,
+  },
+  "extrato_casar_estorno(uuid,uuid,boolean)": {
+    A: () => ["select public.extrato_casar_estorno($1, $2, false)", [alvo.linhaDebitoA, alvo.estornoA]],
+    B: () => ["select public.extrato_casar_estorno($1, $2, false)", [alvo.linhaDebitoB, alvo.estornoB]], semPermissao: true,
+  },
+  // A marca de chargeback: o débito de cada loja já está ligado a um estorno confirmado (alvo.linhaDeEstorno), sem a marca.
+  "extrato_estorno_chargeback(uuid,boolean,text)": {
+    A: () => ["select public.extrato_estorno_chargeback($1, true, 'Tentativa')", [alvo.linhaDeEstornoA]],
+    B: () => ["select public.extrato_estorno_chargeback($1, true, 'Tentativa')", [alvo.linhaDeEstornoB]], semPermissao: true,
+  },
   // Contas bancárias (CONTAS-a): de quem concilia pela rede inteira (o dono); a gerência da loja e o vendedor, não. O dono
   // de outra rede não cria conta na empresa desta nem acha a conta e o extrato dela.
   "conta_bancaria_criar(uuid,text,text,text,text,bigint,date)": {
@@ -1111,7 +1126,7 @@ beforeAll(async () => {
     // Um extrato da maquininha (EXT-a) com uma linha pendente do valor desse Pix e uma ignorada (gravados pelo banco: só alvo).
     alvo[`extrato${lado}`] = (await db.query<{ id: string }>(
       `insert into public.extratos (organizacao_id, unidade_id, tipo, fonte, meios, arquivo, impressao, periodo_inicio, periodo_fim, linhas, importado_por)
-       values ($1, $2, 'maquininha', 'Extrato do mundo', '{pix_direto}', 'mundo.csv', $3, current_date, current_date, 2, $4) returning id`,
+       values ($1, $2, 'maquininha', 'Extrato do mundo', '{pix_direto}', 'mundo.csv', $3, current_date, current_date, 4, $4) returning id`,
       [ids.organizacao, loja, (lado === "A" ? "a" : "b").repeat(64), ids.dono])).rows[0]?.id ?? "";
     alvo[`linhaExtrato${lado}`] = (await db.query<{ id: string }>(
       "insert into public.extrato_linhas (extrato_id, organizacao_id, numero, data, valor_centavos, referencia) values ($1, $2, 1, current_date, 100, 'MUNDO-PIX') returning id",
@@ -1120,6 +1135,19 @@ beforeAll(async () => {
       `insert into public.extrato_linhas (extrato_id, organizacao_id, numero, data, valor_centavos, situacao, motivo, decidida_por, decidida_em)
        values ($1, $2, 2, current_date, -100, 'ignorada', 'Estorno do mundo', $3, now()) returning id`,
       [alvo[`extrato${lado}`], ids.organizacao, ids.dono])).rows[0]?.id ?? "";
+    // PAY-011a: um débito pendente do valor do estorno a confirmar da loja (alvo.estorno), para a tentativa de ligar os dois.
+    alvo[`linhaDebito${lado}`] = (await db.query<{ id: string }>(
+      "insert into public.extrato_linhas (extrato_id, organizacao_id, numero, data, valor_centavos, descricao) values ($1, $2, 3, current_date, $3, 'Estorno do Pix do mundo') returning id",
+      [alvo[`extrato${lado}`], ids.organizacao, lado === "A" ? -149_900 : -139_900])).rows[0]?.id ?? "";
+    // E um débito já ligado a um estorno confirmado (os dois gravados pelo banco: só alvo), para a tentativa de mexer na marca de chargeback.
+    const estornoConfirmado = (await db.query<{ id: string }>(
+      `insert into public.estornos_externos (organizacao_id, unidade_id, venda_id, pagamento_id, meio, valor_centavos, situacao, solicitado_por, confirmado_por, confirmado_em, comprovante)
+       values ($1, $2, $3, $4, 'pix_direto', 250, 'confirmado', $5, $5, now(), 'MUNDO-ESTORNO') returning id`,
+      [ids.organizacao, loja, alvo[`concluida${lado}`], alvo[`pagamento${lado}`], ids.dono])).rows[0]?.id ?? "";
+    alvo[`linhaDeEstorno${lado}`] = (await db.query<{ id: string }>(
+      `insert into public.extrato_linhas (extrato_id, organizacao_id, numero, data, valor_centavos, situacao, estorno_id, confirmou_o_estorno, chargeback, decidida_por, decidida_em)
+       values ($1, $2, 4, current_date, -250, 'estorno', $3, false, false, $4, now()) returning id`,
+      [alvo[`extrato${lado}`], ids.organizacao, estornoConfirmado, ids.dono])).rows[0]?.id ?? "";
     // Um pedido de saída do caixa (L7c), pendente, do vendedorAB.
     alvo[`saida${lado}`] = (await db.query<{ id: string }>(
       "insert into public.caixa_saidas (organizacao_id, unidade_id, caixa_id, valor_centavos, motivo, chave, pedida_por) values ($1, $2, $3, 100, 'Pedido do mundo', $4, $5) returning id",
@@ -1255,7 +1283,7 @@ describe("inventário: toda função SECURITY DEFINER exposta tem casos de recus
     const expostas = rows.map((r) => r.f);
     expect(expostas.filter((f) => !(f in CASOS)), "função nova exposta sem casos de recusa: acrescente ao CASOS").toEqual([]);
     expect(Object.keys(CASOS).filter((f) => !expostas.includes(f)), "caso de função que não existe mais").toEqual([]);
-    expect(expostas).toHaveLength(212);
+    expect(expostas).toHaveLength(215);
   });
 
   it("visitante anônimo executa só a vitrine, a reserva e o pedido da loja online (ONLINE-a, ONLINE-b e ONLINE-d), a leitura leve do banco da página /saude (SAUDE-a) e a fila dos avisos, que pede o segredo (PWA-b); no privado, a conferência da foto do site e um gatilho, que não roda sozinho", async () => {

@@ -46,7 +46,7 @@
 1. **As parcelas.** O extrato com uma linha por parcela (a agenda de recebíveis) não casa com o pagamento: use o relatório de vendas, com uma linha por venda. A regra das parcelas depende dos prazos e das taxas do contrato de cada maquininha (E2).
 2. **O depósito agrupado no banco** (um crédito para vários pagamentos): por enquanto, sai da conta com o motivo, e a conciliação é feita pelo extrato da maquininha.
 3. **As contas bancárias de cada empresa, com o saldo** (a parte multiempresa do ORA-FIN-006).
-4. **O chargeback ligado ao estorno da venda** (ORA-PAY-011): hoje a linha sai da conta com o motivo.
+4. **O chargeback ligado ao estorno da venda** (ORA-PAY-011): feito em 24/11, no lote PAY-011a (ver a atualização de 24/11, abaixo). O débito de valor diferente do estorno continua saindo da conta com o motivo.
 5. **A busca do extrato pela API do provedor** (ORA-PAY-013): sem contrato verificado.
 
 ## Atualização de 18/11/2026: as contas bancárias (lote CONTAS-a)
@@ -67,6 +67,19 @@
 - **Desfazer libera a linha,** dos dois lados, com o motivo na auditoria.
 - **Fica de fora o rateio:** um crédito dividido entre várias obrigações (parte de uma venda, parte de um repasse) pede um modelo próprio, com a soma das partes limitada ao valor da linha. Só quando houver o caso de verdade.
 - **Reverter:** a reversão da migration `20261123121828_linha_do_extrato_um_uso` volta as funções à versão anterior e tira os gatilhos; as linhas de repasse voltam a pendentes.
+
+## Atualização de 24/11/2026: o débito do extrato confirma o estorno da venda (lote PAY-011a, ORA-PAY-011)
+
+- **O defeito de antes:** o débito do extrato (o estorno ou o chargeback que a maquininha ou o banco tirou) só saía da conta com o motivo, e o estorno da venda (`public.estornos_externos`) só se confirmava digitando o código do comprovante. O mesmo débito podia servir de prova a dois estornos, e a venda não mostrava que o dinheiro saiu.
+- **Um débito, um estorno:** a linha ganha o uso "estorno", com o estorno que ela prova. Uma linha por estorno e um estorno por linha (índice único). O uso é o mesmo da regra do AUD-c: o débito ligado não sai da conta nem concilia uma venda.
+- **As sugestões:** para cada débito pendente, os estornos da mesma loja (ou da rede, no extrato do banco), com o mesmo valor, de um meio do extrato, ainda sem débito, pedidos até 60 dias antes ou depois da data da linha (o chargeback aparece no extrato antes de a loja cancelar a venda; o estorno comum, depois).
+- **Ligar:** o estorno que espera é confirmado pela confirmação de sempre, com a referência da linha como comprovante (ou "EXTRATO-nº-Llinha"); confirmar continua sendo da gerência da loja da venda (venda.cancelar), na loja do turno. O estorno já confirmado à mão só ganha a prova. O mesmo pedido de novo não grava outra vez.
+- **Desfazer:** a prova de um estorno já confirmado se solta, com o motivo. O débito que confirmou o estorno não se solta (OR047): a confirmação não se desfaz (o registro é fixo desde os lotes de integridade), e a linha solta confirmaria outro estorno com o mesmo dinheiro.
+- **O chargeback:** a marca diz que o débito foi contestação do cliente no banco; ela se corrige com o motivo. O chargeback de uma venda ainda concluída passa antes pelo cancelamento de sempre (o estorno a confirmar, a saída da comissão uma vez só e o retorno do aparelho, que pode fechar como "não voltou"). O débito não vira uma saída à parte: nada é lançado duas vezes.
+- **As travas:** a linha, depois a venda e o estorno (a ordem de `public.confirmar_estorno_externo`). Nenhum caminho toma a venda ou o estorno e depois espera um débito do extrato.
+- **A regra está na tabela:** um gatilho só aceita como estorno o débito de um estorno confirmado, do mesmo valor e da mesma rede, e não deixa soltar a linha que confirmou.
+- **Fica de fora:** o débito de valor diferente do estorno (o chargeback de parte da venda, ou com a tarifa junta) e a antecipação como operação própria, que dependem do arquivo real de cada maquininha (E3).
+- **Reverter:** a reversão da migration `20261124082944_debito_do_extrato_confirma_o_estorno` solta os débitos ligados e volta as funções do AUD-c. O estorno que um débito confirmou continua confirmado, com a referência da linha no comprovante e na observação.
 
 ## Consequências
 
