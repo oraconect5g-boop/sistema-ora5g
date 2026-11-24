@@ -1,10 +1,12 @@
 # Fila integral pela ordem do prompt de 23/11/2026
 
-> **Estado em 24/11/2026, depois do lote TRF-f (a transferência em andamento não some da tela; os achados F24-01 a F24-04 do Codex), do ONLINE-i (a vitrine mais rápida), do PAY-014b (o pedido pago pelo site no balcão), do ONLINE-h (o endereço do cadastro na loja online), do ONLINE-g (a cara de loja, a pedido do proprietário), do ONLINE-f (a vitrine de 60 em 60), do PAY-014a (a Asaas) e da carga do catálogo e do estoque de verdade (B1, a seção 4).** Este arquivo põe o que falta na ordem do prompt que o proprietário entregou em 23/11 (escrito pelo Codex): a seção 4 (cadastros e estoque da loja piloto), as áreas A a R da seção 5 e a revisão da seção 6. Em 23/11 à noite o proprietário pediu para seguir esse planejamento. A fonte do estado de cada requisito continua sendo `status-requisitos.json`; o que depende do proprietário está, inteiro, em `docs/PENDENCIAS_DO_PROPRIETARIO.md`. Aqui fica só a ordem de trabalho.
+> **Estado em 24/11/2026, depois do lote AUD-e (a lista única conciliada e os aceites por jornada; o F24-05 do Codex), do TRF-f (a transferência em andamento não some da tela; os achados F24-01 a F24-04 do Codex), do ONLINE-i (a vitrine mais rápida), do PAY-014b (o pedido pago pelo site no balcão), do ONLINE-h (o endereço do cadastro na loja online), do ONLINE-g (a cara de loja, a pedido do proprietário), do ONLINE-f (a vitrine de 60 em 60), do PAY-014a (a Asaas) e da carga do catálogo e do estoque de verdade (B1, a seção 4).** Este arquivo põe o que falta na ordem do prompt que o proprietário entregou em 23/11 (escrito pelo Codex): a seção 4 (cadastros e estoque da loja piloto), as áreas A a R da seção 5 e a revisão da seção 6. Em 23/11 à noite o proprietário pediu para seguir esse planejamento. A fonte do estado de cada requisito continua sendo `status-requisitos.json`; o que depende do proprietário está, inteiro, em `docs/PENDENCIAS_DO_PROPRIETARIO.md`. Aqui fica só a ordem de trabalho.
 
 ## Placar
 
-Dos 179 requisitos: **72 testados**, 78 parciais, 14 não iniciados, 13 bloqueados e 2 restrições respeitadas. Nenhum homologado: o aceite do proprietário e a revisão do Codex vêm depois de cada lote. Parcial não conta como pronto.
+<!-- placar: gerado por scripts/gerar-rastreabilidade.mjs a partir de status-requisitos.json; não editar à mão -->
+Dos 179 requisitos: **73 testados**, 78 parciais, 14 não iniciados, 12 bloqueados e 2 restrições respeitadas. Nenhum homologado: o aceite do proprietário e a revisão do Codex vêm depois de cada lote. Parcial não conta como pronto.
+<!-- fim do placar -->
 
 ## O que já saiu do prompt
 
@@ -16,15 +18,15 @@ Dos 179 requisitos: **72 testados**, 78 parciais, 14 não iniciados, 13 bloquead
 
 ## Seção 4: cadastros e estoque da loja piloto
 
-Vem antes das áreas, e hoje espera o proprietário:
+Feita em 24/11 (D-053 e o lote B1), menos a posição do dia da virada e os dados das lojas:
 
 | Passo | O que falta | Quem resolve |
 |---|---|---|
-| 3. Confirmar o mapeamento das colunas | A tabela de preço da loja (são três no relatório), o tipo de cada família (só CELULARES sai como aparelho) e o código do produto (a coluna "Código" ou a coluna "SKU") | O proprietário. Em 23/11 recebeu um resumo privado, feito do relatório, para responder (fora do GitHub) |
-| 4. Apresentar a prévia e as inconsistências | Gerar a prévia no sistema, com a conta de administrador de teste | Eu, com as três respostas e o sim do proprietário |
-| 5 a 8. Reconciliar e aprovar a carga | Conferir e aplicar a prévia (quem gera não aplica) | O proprietário |
+| 3. Confirmar o mapeamento das colunas | **Feito em 24/11** (D-053): a TABELA NORMAL, a coluna Código, CELULARES com IMEI e o resto por quantidade | — |
+| 4. Apresentar a prévia e as inconsistências | **Feito em 24/11** (o lote B1) | — |
+| 5 a 8. Reconciliar e aprovar a carga | **Feito em 24/11**: o catálogo (2.271 produtos) e o estoque das 12 lojas no banco do site, com a posição de 10/11 | — |
 | 9 a 11. Estoque de cada loja | Um relatório novo, do dia da virada (o de 10/11 não é a posição de hoje) | O proprietário, no dia da virada |
-| Lojas, pessoas e fotos | CNPJ, endereço, telefone e horário de cada loja; as pessoas de verdade; as fotos dos produtos | O proprietário |
+| Lojas, pessoas e fotos | CNPJ, endereço, telefone e horário de cada loja (três já têm endereço e horário); as pessoas de verdade; as fotos só do que falta (2.269 dos 2.277 produtos ativos já têm) | O proprietário (a raiz de teste do CNPJ da empresa é do Claude Code) |
 
 ## Seção 5: as áreas, na ordem do prompt
 
@@ -62,6 +64,26 @@ Vem antes das áreas, e hoje espera o proprietário:
 7. ~~**QUAL-006 e QUAL-013** (área R): o aviso no celular quando o servidor erra.~~ Feito em 24/11 (lote QUAL-006a; o servidor inteiro fora do ar e o tempo de resposta esperam o monitoramento de fora).
 
 Depois deles, o que resta depende de resposta do proprietário, de contrato ou de terceiro. A seção 4 (o catálogo e o estoque de verdade) foi feita em 24/11 com as respostas do proprietário (D-053); falta um relatório novo da Rein, o dos IMEIs e o CNPJ das lojas.
+
+## O teste das telas de 24/11: a triagem
+
+O relatório (`docs/analises/teste-de-telas-2026-11-24/RELATORIO.md`) testou o site no ar só lendo, com a conta Dono de teste. Cada ponto, pelo que ele é:
+
+| Ponto | O que é | Onde entra |
+|---|---|---|
+| A1, A2 (erro e 5 a 25 s com várias telas juntas) | Capacidade do banco Micro e páginas pesadas: sozinhos, os painéis levam de 9 a 460 ms no banco | Código: aliviar as telas mais pesadas (Início, Produtos, Financeiro, Relatórios); a produção com banco próprio é a decisão H |
+| M1, M2 (Produtos com 2,35 MB, Catálogo com 1,1 MB e só 200 produtos) | Código | Lote próprio: páginas e o formulário de edição só ao abrir |
+| M3 (o texto do Novo cliente) | Código | **Feito no AUD-e** (o nome e o WhatsApp; o CPF/CNPJ e o e-mail opcionais) |
+| M4 (cabeçalhos de segurança) | Código | Lote próprio, antes da produção: começar pelo HSTS e os que não quebram nada |
+| M5, M7 (as lojas de teste na vitrine; tudo "Sem estoque") | Dado: só as lojas de teste têm CNPJ | Some com o CNPJ das lojas de verdade (B2); nessa hora, tirar as lojas de teste da vitrine; o texto "Sem estoque" é o F24-06 |
+| M6, B6 (indexação e a versão na tela de entrada) | Esperado na homologação | Lista da produção |
+| M8 (a exportação da auditoria em 12 a 16 s) | Código | Lote próprio (por período ou em segundo plano) |
+| M9 (as lojas sem CNPJ e dados) | Dado | B2 da lista única |
+| B1 a B5, B7 (o menu lateral, a lista de lojas dos filtros, os títulos, os rótulos, as áreas de toque, o SKU repetido) | Código, acabamento | Lote de acabamento |
+| V1, V2, V5 (o Adicionar com 0 livre, o motivo das metas, o primeiro clique na loja do turno) | Conferir no código e nos testes | Próximo lote de código |
+| V3 | Fechado: o repositório é público | — |
+| V4 (a venda nº 4 aberta desde 17/11) | Dado de teste | Conferir de quem é antes de mexer (gravar pede o sim do proprietário) |
+| O CNPJ recusado em Lojas da rede (a raiz de teste da empresa) e a mensagem fora da vista | Código | O próximo lote de código: a raiz da matriz que o proprietário mandou e a mensagem perto do formulário; a D-055 é dele |
 
 ## Seção 6: revisão de código
 
