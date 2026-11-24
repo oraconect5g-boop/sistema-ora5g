@@ -1,0 +1,146 @@
+{
+  "corte": "003421d83985f68b04db200c4a168e2872ebd836",
+  "arquivos_origem_verificados": 1582,
+  "arquivos": [
+    {
+      "arquivo": "COMPOSICAO_VISUAL_E_NAVEGACAO.md",
+      "sha256": "a13f4a33a94d260c0f11ffd663ef8d2cbfaa6b4af6dae7b9b20bd082f75c7ac6",
+      "bytes": 8261
+    },
+    {
+      "arquivo": "FLUXOS_E_ACEITE.md",
+      "sha256": "04e4481a9155315d0a17cb30f1791206a9893dd325ca690c41575c5246987daf",
+      "bytes": 6782
+    },
+    {
+      "arquivo": "MAPA_DE_TELAS.md",
+      "sha256": "ca4941b5bb65e45d57bb87d9778d8bf25c73ea6b114988d9492858767b8e16d4",
+      "bytes": 22235
+    },
+    {
+      "arquivo": "PLANO_5_DIAS.md",
+      "sha256": "7162f5d62ee10c670725989180287e3176690d36884bc74cc9a56a0d4ebd250e",
+      "bytes": 6271
+    },
+    {
+      "arquivo": "PROMPT_CLAUDE.md",
+      "sha256": "48d95aeb712d7e380b7f25898bfaf86ba9a2dc228fd992346670d4b232cd9279",
+      "bytes": 5218
+    },
+    {
+      "arquivo": "README.md",
+      "sha256": "1f400b3ed3a51f74d9e5f39f564f16851b367f04fd0911d295a3dde5e2bfb375",
+      "bytes": 3613
+    },
+    {
+      "arquivo": "RELATORIO.md",
+      "sha256": "8495014c3647361c47bf56d23d91ffe0fb83d20aa4eb0a07f4657629d9af600d",
+      "bytes": 10184
+    },
+    {
+      "arquivo": "SKILLS_PARA_O_PRAZO.md",
+      "sha256": "7471dfe57a3ba20dff59181ebee782a955c73310a654aae67c03e57cce63f127",
+      "bytes": 6763
+    },
+    {
+      "arquivo": "SOLUCOES_PARA_AVALIACAO.md",
+      "sha256": "9e35453c0af9f20ff7a7af9be5e6c37aadce022245239fe0e0888d55d3ed64f6",
+      "bytes": 4226
+    },
+    {
+      "arquivo": "evidencias/F24-01-transferencia-pendente.test.ts.txt",
+      "sha256": "334d0c7d6099b9dc1651d55957f1489b0807f3defff3ee73a3e7b0c0b30cd3ef",
+      "bytes": 1697
+    },
+    {
+      "arquivo": "evidencias/LEIA-ME.md",
+      "sha256": "a5cd612e818413741fff1bf0a12965a7b20c44cbf454322746efe9f956899a1b",
+      "bytes": 1509
+    },
+    {
+      "arquivo": "evidencias/banco-verificado.json",
+      "sha256": "5cc591b20f617c526635bee47bf5bbe7afc5d59efacf4633b3febc2cb30bd556",
+      "bytes": 2725
+    },
+    {
+      "arquivo": "evidencias/ci-resumo.txt",
+      "sha256": "a15122c539a9ee785fc1ac42b00ff3a2a28b65f884ec3acf6b900752b60efb55",
+      "bytes": 812
+    },
+    {
+      "arquivo": "evidencias/ci-verificado.json",
+      "sha256": "c755c7910c88722ac8c2e971697a4b622a315c7e9b71f5b3aa498178864ddb9c",
+      "bytes": 491
+    },
+    {
+      "arquivo": "evidencias/delta-desde-primeiro-corte.json",
+      "sha256": "722f0d8b75990c8254cc63b3bb8578fbf24e1c6c50cb415b78713adb1502a2b8",
+      "bytes": 14313
+    },
+    {
+      "arquivo": "evidencias/dominio-atual.json",
+      "sha256": "b7364af9aa40fd324a192d95aaf15ad4b82868d4c53951b2750d9cf6994ffeac",
+      "bytes": 148
+    },
+    {
+      "arquivo": "evidencias/estoque-fixture-360.png",
+      "sha256": "1ef59b4825e2199f23582d86814ee264d012fe8e42bfeb28f175b02cb559c47c",
+      "bytes": 78529
+    },
+    {
+      "arquivo": "evidencias/financeiro-fixture-1440.png",
+      "sha256": "8d0833a06740e36418bf21e50465084b12ecdd0d1b394e6ffc0248146ecf311d",
+      "bytes": 128878
+    },
+    {
+      "arquivo": "evidencias/loja-publica-360.png",
+      "sha256": "c542ca2a16ea4aae75c48f236b0ece206527bef901b9d10c33db1d46916b7080",
+      "bytes": 151572
+    },
+    {
+      "arquivo": "evidencias/medidas.json",
+      "sha256": "98ac5f0ec122e9cc64d935954290c8a81470abcb787bcdca68d008aa9f4ac189",
+      "bytes": 11373
+    },
+    {
+      "arquivo": "evidencias/menus.json",
+      "sha256": "25496a0d2b55c737c4b69fa100f0b6d5cd3595a1aed56f40cd5a2c9c804bb665",
+      "bytes": 5773
+    },
+    {
+      "arquivo": "evidencias/publico-atual.json",
+      "sha256": "7e9072867c1e93150991475c50fd591f7da59fc7bf39050a9cf5935718d66ad6",
+      "bytes": 3573
+    },
+    {
+      "arquivo": "evidencias/testes-banco-atual.log",
+      "sha256": "decb9200d940ed9585592532d87836f35938d6861d22259cbd706cdf93335162",
+      "bytes": 1963
+    },
+    {
+      "arquivo": "evidencias/testes-plataforma-atual.log",
+      "sha256": "2df894406b62af4385f2696ae01aefb0c6c2a5f64d331c8aa4c09edb671c6f6c",
+      "bytes": 791
+    },
+    {
+      "arquivo": "indice-documentos.txt",
+      "sha256": "20744fe5618a980791270850efc22029a8323d9a5f8f11d73962ff2d00935852",
+      "bytes": 9323
+    },
+    {
+      "arquivo": "inventario-telas.csv",
+      "sha256": "f4bd4e9fb96d6b649b88b4e351cd32d669e06c49fc0198334ea531a9b5d85149",
+      "bytes": 38445
+    },
+    {
+      "arquivo": "inventario-telas.json",
+      "sha256": "cdc306fa00ce1c72186e0685ee6d57197df47f4e947d1d02fdadd88527577192",
+      "bytes": 57113
+    },
+    {
+      "arquivo": "requisitos-179.csv",
+      "sha256": "b0bd48348b5010571c87a778f280fa201df60a266a49d334c3099d4aa820a37e",
+      "bytes": 389734
+    }
+  ]
+}

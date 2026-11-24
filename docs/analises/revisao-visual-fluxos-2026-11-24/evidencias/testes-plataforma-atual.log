@@ -1,0 +1,21 @@
+> @ora5g/plataforma@0.1.0 test
+> vitest run
+
+
+ RUN  v5.1.0 [workspace-auditoria]/atual/apps/plataforma
+
+
+ Test Files  208 passed | 1 skipped (209)
+      Tests  1984 passed | 2 skipped (1986)
+   Start at  18:56:38
+   Duration  158.81s (tests 43%, import 37%, transform 19%, worker 2%)
+
+     Import  639 modules were evaluated 3065 times · 44.42s total, 37% of tracked time
+             ~35.16s faster with isolate: false — shared modules are evaluated once per worker instead of once per file
+             learn more: https://vitest.dev/guide/improving-performance#test-isolation
+
+npm notice
+npm notice New major version of npm available! 11.9.0 -> 12.2.3
+npm notice Changelog: https://github.com/npm/cli/releases/tag/v12.2.3
+npm notice To update run: npm install -g npm@12.2.3
+npm notice

@@ -1,0 +1,16 @@
+[
+  {
+    "name": "Supabase Preview",
+    "conclusion": "success",
+    "status": "completed",
+    "url": "https://github.com/oraconect5g-boop/sistema-ora5g/runs/138642812042",
+    "sha": "003421d83985f68b04db200c4a168e2872ebd836"
+  },
+  {
+    "name": "Verificações",
+    "conclusion": "success",
+    "status": "completed",
+    "url": "https://github.com/oraconect5g-boop/sistema-ora5g/actions/runs/45449526212/job/138642445257",
+    "sha": "003421d83985f68b04db200c4a168e2872ebd836"
+  }
+]

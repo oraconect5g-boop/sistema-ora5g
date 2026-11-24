@@ -1,0 +1,206 @@
+[
+  {
+    "path": "/",
+    "viewport": {
+      "width": 360,
+      "height": 800
+    },
+    "status": 200,
+    "url": "https://ora5g.com.br/",
+    "headings": [
+      "Plataforma de gestão integrada"
+    ],
+    "overflow": {
+      "inner": 360,
+      "scroll": 360
+    },
+    "errors": []
+  },
+  {
+    "path": "/loja",
+    "viewport": {
+      "width": 360,
+      "height": 800
+    },
+    "status": 200,
+    "url": "https://ora5g.com.br/loja",
+    "headings": [
+      "Celulares e acessórios, com retirada na loja"
+    ],
+    "overflow": {
+      "inner": 360,
+      "scroll": 360
+    },
+    "errors": []
+  },
+  {
+    "path": "/entrar",
+    "viewport": {
+      "width": 360,
+      "height": 800
+    },
+    "status": 200,
+    "url": "https://ora5g.com.br/entrar",
+    "headings": [
+      "Bem-vindo à Ora"
+    ],
+    "overflow": {
+      "inner": 360,
+      "scroll": 360
+    },
+    "errors": []
+  },
+  {
+    "path": "/financeiro",
+    "viewport": {
+      "width": 360,
+      "height": 800
+    },
+    "status": 200,
+    "url": "https://ora5g.com.br/entrar",
+    "headings": [
+      "Bem-vindo à Ora"
+    ],
+    "overflow": {
+      "inner": 360,
+      "scroll": 360
+    },
+    "errors": []
+  },
+  {
+    "path": "/estoque",
+    "viewport": {
+      "width": 360,
+      "height": 800
+    },
+    "status": 200,
+    "url": "https://ora5g.com.br/entrar",
+    "headings": [
+      "Bem-vindo à Ora"
+    ],
+    "overflow": {
+      "inner": 360,
+      "scroll": 360
+    },
+    "errors": []
+  },
+  {
+    "path": "/vender",
+    "viewport": {
+      "width": 360,
+      "height": 800
+    },
+    "status": 200,
+    "url": "https://ora5g.com.br/entrar",
+    "headings": [
+      "Bem-vindo à Ora"
+    ],
+    "overflow": {
+      "inner": 360,
+      "scroll": 360
+    },
+    "errors": []
+  },
+  {
+    "path": "/",
+    "viewport": {
+      "width": 1440,
+      "height": 1000
+    },
+    "status": 200,
+    "url": "https://ora5g.com.br/",
+    "headings": [
+      "Plataforma de gestão integrada"
+    ],
+    "overflow": {
+      "inner": 1440,
+      "scroll": 1440
+    },
+    "errors": []
+  },
+  {
+    "path": "/loja",
+    "viewport": {
+      "width": 1440,
+      "height": 1000
+    },
+    "status": 200,
+    "url": "https://ora5g.com.br/loja",
+    "headings": [
+      "Celulares e acessórios, com retirada na loja"
+    ],
+    "overflow": {
+      "inner": 1440,
+      "scroll": 1440
+    },
+    "errors": []
+  },
+  {
+    "path": "/entrar",
+    "viewport": {
+      "width": 1440,
+      "height": 1000
+    },
+    "status": 200,
+    "url": "https://ora5g.com.br/entrar",
+    "headings": [
+      "Bem-vindo à Ora"
+    ],
+    "overflow": {
+      "inner": 1440,
+      "scroll": 1440
+    },
+    "errors": []
+  },
+  {
+    "path": "/financeiro",
+    "viewport": {
+      "width": 1440,
+      "height": 1000
+    },
+    "status": 200,
+    "url": "https://ora5g.com.br/entrar",
+    "headings": [
+      "Bem-vindo à Ora"
+    ],
+    "overflow": {
+      "inner": 1440,
+      "scroll": 1440
+    },
+    "errors": []
+  },
+  {
+    "path": "/estoque",
+    "viewport": {
+      "width": 1440,
+      "height": 1000
+    },
+    "status": 200,
+    "url": "https://ora5g.com.br/entrar",
+    "headings": [
+      "Bem-vindo à Ora"
+    ],
+    "overflow": {
+      "inner": 1440,
+      "scroll": 1440
+    },
+    "errors": []
+  },
+  {
+    "path": "/vender",
+    "viewport": {
+      "width": 1440,
+      "height": 1000
+    },
+    "status": 200,
+    "url": "https://ora5g.com.br/entrar",
+    "headings": [
+      "Bem-vindo à Ora"
+    ],
+    "overflow": {
+      "inner": 1440,
+      "scroll": 1440
+    },
+    "errors": []
+  }
+]
