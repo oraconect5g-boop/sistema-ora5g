@@ -1213,6 +1213,17 @@
         "ORA-INV-007"
       ],
       "entrega": "a tela de Transferências com as em andamento sempre visíveis, o histórico em páginas e a busca pelo número; o estoque com \"reservado\", o produto aberto sem perder a busca e o botão \"Pedir a transferência\"",
+      "commit": "71bf338",
+      "publicado_em": "2026-11-24",
+      "pedido_em": "2026-11-24",
+      "resposta": null,
+      "respondido_em": null
+    },
+    {
+      "lote": "AUD-e",
+      "roteiro": "docs/aceite/AUD-e.md",
+      "requisitos": [],
+      "entrega": "a lista única conciliada (só o que falta, com o que cada resposta bloqueia), os placares de uma fonte só e os roteiros de aceite por jornada (J01 a J15)",
       "commit": null,
       "publicado_em": null,
       "pedido_em": "2026-11-24",
