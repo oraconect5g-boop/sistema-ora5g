@@ -1200,6 +1200,19 @@
         "ORA-QUAL-010"
       ],
       "entrega": "a vitrine da loja online de 7 a 8 vezes mais rápida no banco, com as mesmas ofertas",
+      "commit": "14fe77d",
+      "publicado_em": "2026-11-24",
+      "pedido_em": "2026-11-24",
+      "resposta": null,
+      "respondido_em": null
+    },
+    {
+      "lote": "TRF-f",
+      "roteiro": "docs/aceite/TRF-f.md",
+      "requisitos": [
+        "ORA-INV-007"
+      ],
+      "entrega": "a tela de Transferências com as em andamento sempre visíveis, o histórico em páginas e a busca pelo número; o estoque com \"reservado\", o produto aberto sem perder a busca e o botão \"Pedir a transferência\"",
       "commit": null,
       "publicado_em": null,
       "pedido_em": "2026-11-24",

@@ -50,6 +50,28 @@ describe("a leitura da resposta", () => {
     expect(() => lerTelaDasTransferencias({ ...RESPOSTA, resolucoes: "nenhuma" })).toThrow();
   });
 
+  // TRF-f (o achado F24-01 do Codex, 24/11): as em andamento e o histórico, cada parte com as suas páginas.
+  it("lê se cada uma está em andamento e as contas das duas partes; o banco de antes do TRF-f, pela mesma regra e numa página só", () => {
+    const comContas = lerTelaDasTransferencias({
+      ...RESPOSTA, transferencias: [{ ...RESPOSTA.transferencias[0], aberta: true }],
+      abertas: 51, historico: 120, pagina_abertas: 2, paginas_abertas: 2, pagina: 3, paginas: 3,
+    });
+    expect(comContas.transferencias[0]?.aberta).toBe(true);
+    expect(comContas.contas).toEqual({ abertas: 51, historico: 120, paginaAbertas: 2, paginasAbertas: 2, pagina: 3, paginas: 3 });
+    // Sem os campos (o banco de antes): a regra é a mesma do banco, e tudo cabe numa página.
+    const deAntes = lerTelaDasTransferencias({ ...RESPOSTA, transferencias: [
+      { ...RESPOSTA.transferencias[0] },
+      { ...RESPOSTA.transferencias[0], id: "t2", numero: 6, situacao: "cancelada" },
+      { ...RESPOSTA.transferencias[0], id: "t3", numero: 5, situacao: "recebida_com_divergencia", divergencia_resolvida_em: null },
+      { ...RESPOSTA.transferencias[0], id: "t4", numero: 4, situacao: "recebida_com_divergencia", divergencia_resolvida_em: "2026-11-23T14:00:00+00:00" },
+    ] });
+    expect(deAntes.transferencias.map((x) => x.aberta)).toEqual([true, false, true, false]);
+    expect(deAntes.contas).toEqual({ abertas: 2, historico: 2, paginaAbertas: 1, paginasAbertas: 1, pagina: 1, paginas: 1 });
+    // Fora da forma é erro: a marca que não é sim/não e a conta que falta.
+    expect(() => lerTelaDasTransferencias({ ...RESPOSTA, transferencias: [{ ...RESPOSTA.transferencias[0], aberta: "sim" }] })).toThrow();
+    expect(() => lerTelaDasTransferencias({ ...RESPOSTA, abertas: 1, historico: 0 })).toThrow();
+  });
+
   it("forma inesperada é erro, nunca a tela vazia", () => {
     for (const ruim of [null, [], { ...RESPOSTA, transferencias: undefined }, { ...RESPOSTA, saldos: [{ unidade_id: "a", variante_id: "v", quantidade: 1.5, reservado: 0 }] },
       { ...RESPOSTA, itens: [{ transferencia_id: T, item_serializado_id: "i", recebido: "sim" }] }, { ...RESPOSTA, variantes: [{ id: "v" }] }]) {
@@ -63,6 +85,7 @@ describe("o que a tela faz com a resposta do banco", () => {
     const chamadas: string[] = [];
     const argumentos: unknown[] = [];
     const tabela = { select: () => tabela, or: () => tabela, order: () => tabela, limit: () => tabela, in: () => tabela, eq: () => tabela,
+      filter: () => tabela, not: () => tabela,
       then: (r: (x: unknown) => unknown) => Promise.resolve({ data: [], error: null }).then(r) };
     const supabase = {
       rpc: async (nome: string, args: unknown) => { chamadas.push(nome); argumentos.push(args); return resposta; },
@@ -71,18 +94,24 @@ describe("o que a tela faz com a resposta do banco", () => {
     return { supabase: supabase as never, chamadas, argumentos };
   };
 
-  it("com a função: uma ida só, com o limite da lista", async () => {
+  it("com a função: uma ida só, com o limite da lista; a tela pede a página de cada parte e o número procurado", async () => {
     const { supabase, chamadas, argumentos } = banco({ data: RESPOSTA, error: null });
     expect((await consultarTelaDasTransferencias(supabase, "a")).transferencias).toHaveLength(1);
     expect(chamadas).toEqual(["transferencias_tela"]);
-    expect(argumentos).toEqual([{ p_limite: LIMITE_DA_LISTA }]);
+    expect(argumentos).toEqual([{ p_limite: LIMITE_DA_LISTA, p_pagina: 1, p_pagina_abertas: 1 }]);
+    const outra = banco({ data: RESPOSTA, error: null });
+    await consultarTelaDasTransferencias(outra.supabase, "a", { pagina: 3, paginaAbertas: 2, numero: 17 });
+    expect(outra.argumentos).toEqual([{ p_limite: LIMITE_DA_LISTA, p_pagina: 3, p_pagina_abertas: 2, p_numero: 17 }]);
   });
 
   it("o banco sem a função (PGRST202 ou 42883): as leituras de antes", async () => {
     for (const code of ["PGRST202", "42883"]) {
       const { supabase, chamadas } = banco({ data: null, error: { code } });
-      expect(await consultarTelaDasTransferencias(supabase, "a")).toEqual({ transferencias: [], variantes: [], unidades: [], itens: [], remessas: [], saldos: [], disponiveis: [], resolucoes: [] });
-      expect(chamadas).toEqual(["transferencias_tela", "transferencias"]);
+      expect(await consultarTelaDasTransferencias(supabase, "a")).toEqual({
+        transferencias: [], contas: { abertas: 0, historico: 0, paginaAbertas: 1, paginasAbertas: 1, pagina: 1, paginas: 1 },
+        variantes: [], unidades: [], itens: [], remessas: [], saldos: [], disponiveis: [], resolucoes: [] });
+      // TRF-f: as em andamento e o histórico em leituras separadas (a pedida antiga não some atrás das canceladas).
+      expect(chamadas).toEqual(["transferencias_tela", "transferencias", "transferencias"]);
     }
   });
 

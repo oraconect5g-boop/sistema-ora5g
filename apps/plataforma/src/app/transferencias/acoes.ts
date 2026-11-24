@@ -27,7 +27,17 @@ export async function solicitarTransferencia(dados: FormData) {
   const variante = dados.get("variante");
   const quantidade = lerQuantidade(dados.get("quantidade"));
   const motivo = texto(dados, "motivo");
-  const comErro = (codigo: string) => (ehUuid(variante) ? `/estoque?variante=${variante}&erro_transferencia=${codigo}` : `/estoque?erro_transferencia=${codigo}`);
+  // F24-03: o erro volta para a mesma busca e a mesma página da lista do estoque (só o que a tela manda, conferido).
+  const comErro = (codigo: string) => {
+    const p = new URLSearchParams();
+    const q = dados.get("q");
+    if (typeof q === "string" && q.trim()) p.set("q", q.trim().slice(0, 40));
+    const pagina = dados.get("pagina");
+    if (typeof pagina === "string" && /^[1-9]\d{0,3}$/.test(pagina)) p.set("pagina", pagina);
+    if (ehUuid(variante)) p.set("variante", variante);
+    p.set("erro_transferencia", codigo);
+    return `/estoque?${p}`;
+  };
   if (!ehUuid(origem) || !ehUuid(destino) || !ehUuid(variante) || quantidade === null) redirect(comErro("dados"));
   if (motivo.length < 3) redirect(comErro("motivo"));
   const { supabase } = await obterSessao({ exigirLoja: true });

@@ -9373,7 +9373,15 @@ export type Database = {
         }
         Returns: Json
       }
-      transferencias_tela: { Args: { p_limite?: number }; Returns: Json }
+      transferencias_tela: {
+        Args: {
+          p_limite?: number
+          p_numero?: number
+          p_pagina?: number
+          p_pagina_abertas?: number
+        }
+        Returns: Json
+      }
       unidade_atual: { Args: never; Returns: string }
       venda_anexar_documento: {
         Args: {
