@@ -47,6 +47,19 @@ describe("VEL-c — as pendências numa ida só", () => {
     expect(montarPendencias({}, null, LOJA)).toEqual([]);
   });
 
+  it("FIN-007b: o repasse atrasado e a cobrança a retomar são alertas de quem concilia; zero ou sem a chave, não aparecem", () => {
+    const lista = montarPendencias({ repasses_atrasados: 2, cobrancas_a_retomar: 1 }, null, LOJA);
+    expect(lista).toEqual([
+      { rotulo: "Repasses atrasados", detalhe: "financeiras que passaram do prazo", href: "/pagamentos/financeiras", icone: "repasse_atrasado", quantidade: 2, alerta: true },
+      { rotulo: "Cobranças a retomar", detalhe: "chegou o dia de voltar à financeira", href: "/pagamentos/financeiras", icone: "cobranca_a_retomar", quantidade: 1, alerta: true },
+    ]);
+    expect(montarPendencias({ repasses_atrasados: 0, cobrancas_a_retomar: 0 }, null, LOJA)).toEqual([]);
+    expect(montarPendencias({ repasses_atrasados: 3 }, null, LOJA).map((p) => p.rotulo)).toEqual(["Repasses atrasados"]);
+    // A resposta do banco com as duas chaves é lida como as outras; fora da forma, é falha.
+    expect(lerContagens({ repasses_atrasados: 1, cobrancas_a_retomar: 0 })).toEqual({ repasses_atrasados: 1, cobrancas_a_retomar: 0 });
+    expect(() => lerContagens({ repasses_atrasados: -1 })).toThrow();
+  });
+
   it("com a função no banco: uma ida para as contagens, nenhuma contagem separada", async () => {
     const { supabase, chamadas } = clienteSimulado({ data: { aprovacoes: 2, caixas: 1, saidas: 0 }, error: null });
     const lista = await lerPendencias(supabase, { usuario: EU, unidade: LOJA, permissoes: new Set(["desconto.aprovar", "caixa.conferir"]) });

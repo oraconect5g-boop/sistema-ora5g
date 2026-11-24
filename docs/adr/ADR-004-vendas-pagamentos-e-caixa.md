@@ -112,3 +112,16 @@ Migration `20261123230314_repasses_atrasados` (aplicada no `ora5g-dev`, com o md
 5. **Quem lê:** quem tem `pagamento.conciliar`, nas lojas dele: o gerente, a loja; o dono, todas, com o resumo loja a loja. As duas tabelas têm RLS com a mesma regra.
 6. **Na tela:** falha de leitura nunca vira "nada atrasado"; a resposta em que o estado, o vencimento e o atraso não concordam, ou em que os totais não são a soma das contas, é tratada como falha.
 7. **Fica de fora:** o aviso no Início e no sino quando um repasse atrasa ou quando chega o dia de voltar ao assunto; a previsão de caixa com o vencimento (hoje ela mostra o que as financeiras devem "sem data"); e a inadimplência do cliente final, que não existe enquanto a loja não vende a prazo próprio (D-013, em aberto) e cuja mensagem depende do WhatsApp oficial (ORA-WHATS-001) e do consentimento.
+
+## Adendo de 23/11/2026 (4) — O aviso do repasse atrasado e a previsão com o vencimento (lote FIN-007b; ORA-FIN-007 e ORA-FIN-010)
+
+Migration `20261124021740_aviso_do_repasse_e_previsao_com_vencimento` (aplicada no `ora5g-dev`, com o md5 conferido; com reversão). Testes: `packages/banco/src/aviso-do-repasse-e-previsao.test.ts`, `apps/plataforma/src/lib/inicio/pendencias.test.ts` e `apps/plataforma/src/app/previsao/previsao.test.ts`. Fecha os dois primeiros pontos do item 7 do adendo anterior.
+
+1. **O aviso é uma contagem, na mesma ida das outras pendências.** `pendencias_da_loja` conta, para quem concilia na loja do turno, os repasses que passaram do prazo e as cobranças a retomar. A conta do vencimento é escrita de novo ali (o dia da venda mais o prazo em vigor), e não pela chamada de `repasses_atrasados`: a função das pendências roda a cada tela e não precisa montar a lista. Os testes comparam as duas.
+2. **São alertas:** só aparecem com número maior que zero, como o caixa com diferença e a nota parada. Sem prazo gravado, não há atraso.
+3. **A cobrança a retomar vale pela cobrança mais recente da conta.** A data combinada de voltar ao assunto, em hoje ou antes, acende o lembrete; registrar outra cobrança o apaga (com outra data, ou sem data).
+4. **A previsão conta o que vence no período, na semana do vencimento,** como fato com data, pelo valor a receber. A taxa da financeira só se conhece quando o repasse cai, e não é estimada. A simulação segue mexendo só na estimativa das vendas.
+5. **O atrasado fica fora da previsão.** A conta a pagar vencida entra na primeira semana porque a loja ainda vai pagá-la; o repasse atrasado não tem data nova, e contar com ele seria otimismo. A tela mostra o valor à parte, com o que vence depois do período e o que não tem prazo.
+6. **A leitura é estrita.** As quatro partes somam o total em aberto, e as semanas somam o que vence no período; se não fecham, a tela diz que não leu. A resposta sem as partes é a de um banco sem a migration: a tela segue como antes.
+7. **A previsão exige também `pagamento.conciliar`,** a permissão que lê o prazo de repasse. Só o dono tem `previsao.ver`, e o dono concilia pela rede.
+8. **Fica de fora:** a inadimplência do cliente final, que não existe enquanto a loja não vende a prazo próprio (D-013, em aberto) e cuja mensagem depende do WhatsApp oficial (ORA-WHATS-001) e do consentimento.

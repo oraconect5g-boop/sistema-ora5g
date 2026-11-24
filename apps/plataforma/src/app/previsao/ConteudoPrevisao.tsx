@@ -63,15 +63,36 @@ function Painel({ p, onde }: { p: Previsao; onde: string }) {
     <>
       <Simulador
         semanas={p.semanas} vencidas={p.vencidas} estimativa={est} onde={onde} hoje={p.hoje}
-        fatos={{ estornosAConfirmar: p.estornosAConfirmar, financeiras: p.financeiras, aConciliar: p.aConciliar, gavetas: p.gavetas }}
+        fatos={{ estornosAConfirmar: p.estornosAConfirmar, financeiras: p.financeiras, financeirasPorVencimento: p.financeirasPorVencimento, aConciliar: p.aConciliar, gavetas: p.gavetas }}
       />
       <div className="grid gap-4 xl:grid-cols-2 xl:items-start">
         <Fatos p={p} naRede={naRede} />
         <Base p={p} />
       </div>
-      <Premissas est={est} naRede={naRede} />
+      <Premissas est={est} naRede={naRede} comFinanceiras={financeirasNaPrevisao(p)} />
     </>
   );
+}
+
+/** FIN-007b: há repasse de financeira com data dentro do período (com o prazo de repasse gravado)? */
+const financeirasNaPrevisao = (p: Previsao) => (p.financeirasPorVencimento?.noPeriodo.quantidade ?? 0) > 0;
+
+/** FIN-007b: o que as financeiras devem, dito pelo vencimento: o que entra na previsão e o que fica fora. */
+function detalheDasFinanceiras(p: Previsao): string {
+  const f = p.financeiras;
+  const pv = p.financeirasPorVencimento;
+  if (f.quantidade === 0) return "Nada em aberto";
+  const vendas = plural(f.quantidade, "venda", "vendas");
+  // Banco sem a migration do FIN-007b: como antes.
+  if (!pv) return `${vendas}, sem data: falta o prazo da PayJoy e da Aiva`;
+  if (pv.semPrazo.quantidade === f.quantidade) return `${vendas}, sem data: grave o prazo de repasse de cada financeira em A receber das financeiras`;
+  const partes = [
+    pv.noPeriodo.quantidade > 0 ? `${brl(pv.noPeriodo.valor)} vencem no período e entram na previsão` : null,
+    pv.atrasadas.quantidade > 0 ? `${brl(pv.atrasadas.valor)} já passaram do prazo e não entram` : null,
+    pv.depois.quantidade > 0 ? `${brl(pv.depois.valor)} vencem depois do período` : null,
+    pv.semPrazo.quantidade > 0 ? `${brl(pv.semPrazo.valor)} sem prazo gravado, sem data` : null,
+  ].filter((x): x is string => x !== null);
+  return `${vendas}: ${partes.join("; ")}`;
 }
 
 function Fatos({ p, naRede }: { p: Previsao; naRede: boolean }) {
@@ -91,13 +112,16 @@ function Fatos({ p, naRede }: { p: Previsao; naRede: boolean }) {
         {p.estornosAConfirmar && linha("Estornos de Pix e cartão a confirmar", brl(p.estornosAConfirmar.valor), p.estornosAConfirmar.quantidade === 0
           ? "Nenhum pedido de estorno aberto"
           : `${plural(p.estornosAConfirmar.quantidade, "pedido", "pedidos")} de estorno ainda sem comprovante: devem sair do banco, mas ainda não saíram`)}
-        {linha("A receber das financeiras", brl(p.financeiras.valor), p.financeiras.quantidade === 0 ? "Nada em aberto" : `${plural(p.financeiras.quantidade, "venda", "vendas")}, sem data: falta o prazo da PayJoy e da Aiva`)}
+        {linha("A receber das financeiras", brl(p.financeiras.valor), detalheDasFinanceiras(p))}
         {linha("Cartão e Pix a conciliar", brl(p.aConciliar.valor), p.aConciliar.quantidade === 0 ? "Nada dos últimos 60 dias" : `${plural(p.aConciliar.quantidade, "pagamento", "pagamentos")} dos últimos 60 dias: parte pode já estar no banco`)}
         {linha("Dinheiro nas gavetas agora", brl(p.gavetas.valor), p.gavetas.caixas === 0 ? "Nenhum caixa aberto" : plural(p.gavetas.caixas, "caixa aberto", "caixas abertos"))}
       </ul>
       <p className="mt-3 text-xs text-suave">
-        {p.estornosAConfirmar ? "Os quatro últimos" : "Os três últimos"} não entram na previsão: some ou tire do saldo de hoje o que você quiser contar.{" "}
+        {financeirasNaPrevisao(p)
+          ? `Das financeiras, entra na previsão só o que vence no período, na semana do vencimento. ${p.estornosAConfirmar ? "Os estornos a confirmar, o" : "O"} cartão e Pix a conciliar e o dinheiro das gavetas não entram: some ou tire do saldo de hoje o que você quiser contar.`
+          : `${p.estornosAConfirmar ? "Os quatro últimos" : "Os três últimos"} não entram na previsão: some ou tire do saldo de hoje o que você quiser contar.`}{" "}
         <Link href="/contas-a-pagar" className="font-semibold text-acao hover:underline">Ver as contas a pagar</Link>
+        {p.financeiras.quantidade > 0 && <>{" · "}<Link href="/pagamentos/financeiras" className="font-semibold text-acao hover:underline">Ver o que as financeiras devem</Link></>}
       </p>
     </Cartao>
   );
@@ -128,7 +152,7 @@ function Base({ p }: { p: Previsao }) {
   );
 }
 
-function Premissas({ est, naRede }: { est: ReturnType<typeof estimativa>; naRede: boolean }) {
+function Premissas({ est, naRede, comFinanceiras }: { est: ReturnType<typeof estimativa>; naRede: boolean; comFinanceiras: boolean }) {
   return (
     <Cartao titulo="Premissas" icone={Info} subtitulo="O que é estimativa e o que é fato nesta previsão.">
       <ul className="list-disc space-y-1.5 pl-5 text-sm text-suave">
@@ -139,9 +163,12 @@ function Premissas({ est, naRede }: { est: ReturnType<typeof estimativa>; naRede
         </li>
         <li>Simulação: muda só a estimativa das vendas, de 30% a menos a 30% a mais. As contas não mudam.</li>
         <li>{`Contas (fato): as contas a pagar em aberto, pelo vencimento${naRede ? ", das lojas e da rede" : ", só as da loja (as da rede aparecem na rede inteira)"}; as já vencidas entram na primeira semana.`}</li>
+        {comFinanceiras && (
+          <li>Financeiras (fato com data): o que cada financeira deve entra na semana do vencimento, que é o dia da venda mais o prazo de repasse que você gravou. Entra pelo valor a receber, sem a taxa da financeira, que só se conhece quando o repasse cai. A simulação não mexe nele.</li>
+        )}
         <li>Saldo de partida: o que você digitar, só no seu navegador. O sistema não sabe o saldo do banco.</li>
         <li>Devoluções pagas: o dinheiro devolvido entra no dia em que saiu do caixa; o estorno de Pix e de cartão só quando confirmado com o comprovante, no dia da confirmação. Venda cancelada depois continua recebida na semana em que o dinheiro entrou.</li>
-        <li>Não entram: os estornos de Pix e cartão ainda a confirmar (saem quando confirmados), o que as financeiras devem (sem data), o cartão e Pix a conciliar (pode já estar no banco) e o dinheiro das gavetas.</li>
+        <li>{`Não entram: os estornos de Pix e cartão ainda a confirmar (saem quando confirmados), ${comFinanceiras ? "o que as financeiras devem e já passou do prazo, vence depois do período ou não tem prazo gravado" : "o que as financeiras devem (sem data)"}, o cartão e Pix a conciliar (pode já estar no banco) e o dinheiro das gavetas.`}</li>
       </ul>
     </Cartao>
   );

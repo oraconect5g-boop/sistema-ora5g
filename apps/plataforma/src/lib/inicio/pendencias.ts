@@ -25,6 +25,8 @@ export type Pendencia = { rotulo: string; detalhe: string; href: string; icone: 
 export const CHAVES_DAS_CONTAGENS = [
   "aprovacoes", "notas", "notas_paradas", "caixas", "saidas", "caixas_com_diferenca", "contas_a_pagar", "fechamentos", "transferencias",
   "connect", "ativacoes_com_falha", "estornos", "retornos", "os_atrasadas", "os_prontas", "os_do_tecnico",
+  // FIN-007b: só pela função (o caminho uma a uma, de banco antigo, não as traz: a pendência não aparece).
+  "repasses_atrasados", "cobrancas_a_retomar",
 ] as const;
 export type ChaveDaContagem = (typeof CHAVES_DAS_CONTAGENS)[number];
 /** Ausente: sem a permissão da fila (ou, no caminho antigo, sem a tabela no banco): a pendência não aparece. */
@@ -98,6 +100,9 @@ export function montarPendencias(c: Contagens, divergenciasDasNotas: number | nu
     alerta("caixas_com_diferenca", "Caixas com diferença", "fechados nos últimos 7 dias", "/caixa", "caixa_com_diferenca"),
     alerta("notas_paradas", "Notas paradas", "na fila há mais de um dia", "/notas", "nota_parada"),
     alerta("ativacoes_com_falha", "Ativações com falha", "recusadas ou com erro, em 7 dias", "/connect", "ativacao_com_falha"),
+    // FIN-007b: para quem concilia na loja. Sem prazo de repasse gravado, o banco não conta atraso nenhum.
+    alerta("repasses_atrasados", "Repasses atrasados", "financeiras que passaram do prazo", "/pagamentos/financeiras", "repasse_atrasado"),
+    alerta("cobrancas_a_retomar", "Cobranças a retomar", "chegou o dia de voltar à financeira", "/pagamentos/financeiras", "cobranca_a_retomar"),
     divergenciasDasNotas !== null && divergenciasDasNotas > 0
       ? { rotulo: "Notas com divergência", detalhe: "a conferir, em 90 dias", href: enderecoDaConciliacao("noventa_dias", unidade), icone: "nota_com_divergencia", quantidade: divergenciasDasNotas, alerta: true } satisfies Pendencia
       : null,
@@ -159,6 +164,9 @@ async function contagensUmaAUma(supabase: Cliente, { usuario, unidade, permissoe
     aprovacoes, notas, notas_paradas: notasParadas, caixas, saidas, caixas_com_diferenca: caixasComDiferenca, contas_a_pagar: contasAPagar,
     fechamentos, transferencias, connect, ativacoes_com_falha: ativacoesComFalha, estornos, retornos, os_atrasadas: semAssistencia(atrasadasDoBanco),
     os_prontas: semAssistencia(prontasDoBanco), os_do_tecnico: semAssistencia(doTecnicoDoBanco),
+    // FIN-007b: o atraso do repasse depende do prazo em vigor (não é uma contagem simples de tabela): só a função conta.
+    // Num banco sem ela, as duas pendências não aparecem (nunca zero inventado).
+    repasses_atrasados: null, cobrancas_a_retomar: null,
   };
   if (Object.values(lidas).some((r) => r?.error)) throw new FalhaDoServico("inicio_pendencias");
   const contagens: Contagens = {};

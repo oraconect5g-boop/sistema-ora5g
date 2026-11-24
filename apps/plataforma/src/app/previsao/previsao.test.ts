@@ -319,3 +319,143 @@ describe("estimativa, simulação e saldo previsto (L8c)", () => {
     expect(html).toContain("nao-imprimir");
   });
 });
+
+// ---------------------------------------------------------------------------------------------
+// FIN-007b: as contas a receber das financeiras pelo vencimento (o dia da venda mais o prazo de repasse em vigor). O banco
+// manda o que vence em cada semana e as quatro partes do total; a previsão conta o que vence no período, como fato com data.
+// As respostas de cima (sem as partes) são as de um banco sem a migration: tudo segue como antes, e é o que elas provam.
+// ---------------------------------------------------------------------------------------------
+describe("/previsao: as financeiras pelo vencimento (FIN-007b)", () => {
+  const comFinanceiras = (valores: number[]) => semanasFuturas([800_000, 300_000, 1_500_000, 0, 400_000, 0, 200_000, 0])
+    .map((s, i) => ({ ...s, financeiras: valores[i] ?? 0, financeiras_quantidade: (valores[i] ?? 0) === 0 ? 0 : 1 }));
+  // Quatro vendas: uma vence na primeira semana, outra na sexta, uma já passou do prazo e uma é de financeira sem prazo gravado.
+  const COM_PRAZO = {
+    ...REDE, semanas: comFinanceiras([1_299_000, 0, 0, 0, 0, 599_000, 0, 0]),
+    financeiras: {
+      valor: 2_598_000, quantidade: 4, atrasadas: { valor: 400_000, quantidade: 1 }, no_periodo: { valor: 1_898_000, quantidade: 2 },
+      depois: { valor: 0, quantidade: 0 }, sem_prazo: { valor: 300_000, quantidade: 1 },
+    },
+  };
+  const nada = { valor: 0, quantidade: 0 };
+
+  it("com o prazo gravado: a tela diz o que entra na previsão e o que fica fora, e o simulador recebe o que vence em cada semana", async () => {
+    cenario.rede = copia(COM_PRAZO);
+    const tela = await pagina();
+    const t = visivel(tela);
+    expect(t).toContain("A receber das financeiras 4 vendas: R$ 18.980,00 vencem no período e entram na previsão; R$ 4.000,00 já passaram do prazo e não entram; R$ 3.000,00 sem prazo gravado, sem data R$ 25.980,00");
+    expect(t).toContain("Das financeiras, entra na previsão só o que vence no período, na semana do vencimento. O cartão e Pix a conciliar e o dinheiro das gavetas não entram");
+    expect(t).not.toContain("Os três últimos não entram na previsão");
+    expect(t).toContain("Ver o que as financeiras devem");
+    expect(t).toContain("Financeiras (fato com data): o que cada financeira deve entra na semana do vencimento, que é o dia da venda mais o prazo de repasse que você gravou.");
+    expect(t).toContain("o que as financeiras devem e já passou do prazo, vence depois do período ou não tem prazo gravado");
+    const [simulador] = doTipo(tela, "Simulador");
+    expect((simulador?.semanas as { financeiras: number; financeirasQuantidade: number }[]).map((s) => [s.financeiras, s.financeirasQuantidade]))
+      .toEqual([[1_299_000, 1], [0, 0], [0, 0], [0, 0], [0, 0], [599_000, 1], [0, 0], [0, 0]]);
+    expect(simulador).toMatchObject({ fatos: { financeiras: { valor: 2_598_000, quantidade: 4 }, financeirasPorVencimento: { atrasadas: { valor: 400_000, quantidade: 1 }, noPeriodo: { valor: 1_898_000, quantidade: 2 }, depois: nada, semPrazo: { valor: 300_000, quantidade: 1 } } } });
+    // Com os estornos a confirmar no banco, a frase os cita.
+    (cenario.rede as Record<string, unknown>).estornos_a_confirmar = { valor: 12_900, quantidade: 2 };
+    expect(visivel(await pagina())).toContain("Os estornos a confirmar, o cartão e Pix a conciliar e o dinheiro das gavetas não entram");
+  });
+
+  it("sem prazo gravado, nada entra: a tela manda gravar o prazo, e a conta segue como antes; vencendo só depois do período, também não entra", async () => {
+    cenario.rede = { ...copia(REDE), semanas: comFinanceiras([]), financeiras: { valor: 2_598_000, quantidade: 2, atrasadas: nada, no_periodo: nada, depois: nada, sem_prazo: { valor: 2_598_000, quantidade: 2 } } };
+    const tela = await pagina();
+    const t = visivel(tela);
+    expect(t).toContain("A receber das financeiras 2 vendas, sem data: grave o prazo de repasse de cada financeira em A receber das financeiras R$ 25.980,00");
+    expect(t).toContain("Os três últimos não entram na previsão");
+    expect(t).toContain("o que as financeiras devem (sem data)");
+    expect(t).not.toContain("Financeiras (fato com data)");
+    expect((doTipo(tela, "Simulador")[0]?.semanas as { financeiras: number }[]).every((s) => s.financeiras === 0)).toBe(true);
+    cenario.rede = { ...copia(REDE), semanas: comFinanceiras([]), financeiras: { valor: 2_598_000, quantidade: 2, atrasadas: nada, no_periodo: nada, depois: { valor: 2_598_000, quantidade: 2 }, sem_prazo: nada } };
+    const depois = visivel(await pagina());
+    expect(depois).toContain("A receber das financeiras 2 vendas: R$ 25.980,00 vencem depois do período R$ 25.980,00");
+    expect(depois).toContain("Os três últimos não entram na previsão");
+    cenario.rede = { ...copia(REDE), semanas: comFinanceiras([]), financeiras: { valor: 0, quantidade: 0, atrasadas: nada, no_periodo: nada, depois: nada, sem_prazo: nada } };
+    expect(visivel(await pagina())).toContain("A receber das financeiras Nada em aberto R$ 0,00");
+  });
+
+  it("a leitura é estrita: as quatro partes somam o total e as semanas somam o que vence no período; senão é falha, nunca número", async () => {
+    const pedido = { semanas: 8, unidade: null };
+    const lida = lerPrevisao(copia(COM_PRAZO), pedido);
+    expect(lida.financeirasPorVencimento).toEqual({ atrasadas: { valor: 400_000, quantidade: 1 }, noPeriodo: { valor: 1_898_000, quantidade: 2 }, depois: nada, semPrazo: { valor: 300_000, quantidade: 1 } });
+    // A resposta de um banco sem a migration (sem as partes): o total, sem data, e nenhuma semana com financeira.
+    const antiga = lerPrevisao(copia(REDE), pedido);
+    expect(antiga.financeirasPorVencimento).toBeNull();
+    expect(antiga.semanas.every((s) => s.financeiras === 0 && s.financeirasQuantidade === 0)).toBe(true);
+    const quebras: [string, (r: typeof COM_PRAZO) => void][] = [
+      ["as partes não somam o total", (r) => { r.financeiras.atrasadas.valor = 400_001; }],
+      ["as quantidades não somam o total", (r) => { r.financeiras.quantidade = 5; }],
+      ["as semanas não somam o que vence no período", (r) => { r.semanas[0]!.financeiras = 1_299_001; }],
+      ["semana com valor e sem contagem", (r) => { r.semanas[5]!.financeiras_quantidade = 0; }],
+      ["semana negativa", (r) => { r.semanas[1]!.financeiras = -1; r.semanas[1]!.financeiras_quantidade = 1; }],
+      ["parte negativa", (r) => { r.financeiras.depois = { valor: -1, quantidade: 1 }; }],
+      ["parte sem contagem", (r) => { r.financeiras.sem_prazo.quantidade = 0; }],
+      ["falta uma parte", (r) => { delete (r.financeiras as Partial<typeof r.financeiras>).depois; }],
+      ["falta a semana", (r) => { delete (r.semanas[2] as Partial<(typeof r.semanas)[number]>).financeiras; }],
+    ];
+    for (const [nome, quebrar] of quebras) {
+      const r = copia(COM_PRAZO);
+      quebrar(r);
+      expect(() => lerPrevisao(r, pedido), nome).toThrow();
+    }
+    cenario.rede = copia(COM_PRAZO);
+    (cenario.rede as typeof COM_PRAZO).financeiras.atrasadas.valor = 1;
+    const tela = await pagina();
+    expect(visivel(tela)).toContain("Não foi possível ler agora");
+    expect(doTipo(tela, "Simulador")).toEqual([]);
+  });
+
+  it("a projeção soma o repasse na semana do vencimento; a simulação mexe só na estimativa", () => {
+    const semanas = [
+      { inicio: HOJE, fim: somarDias(HOJE, 6), contas: 50_000, quantidade: 1, financeiras: 0, financeirasQuantidade: 0 },
+      { inicio: somarDias(HOJE, 7), fim: somarDias(HOJE, 13), contas: 300_000, quantidade: 1, financeiras: 129_900, financeirasQuantidade: 1 },
+    ];
+    expect(projetar(semanas, 20_000, 100_000, 0, 10_000).map((l) => [l.entra, l.financeiras, l.sai, l.diferenca, l.saldo])).toEqual([
+      [100_000, 0, 70_000, 30_000, 40_000], [100_000, 129_900, 300_000, -70_100, -30_100],
+    ]);
+    expect(projetar(semanas, 0, 100_000, -0.3, null).map((l) => [l.entra, l.financeiras, l.diferenca])).toEqual([[70_000, 0, 20_000], [70_000, 129_900, -100_100]]);
+    // Sem estimativa (loja nova), o repasse com data ainda entra.
+    expect(projetar(semanas, 0, null, 0, 0).map((l) => [l.entra, l.financeiras, l.saldo])).toEqual([[0, 0, -50_000], [0, 129_900, -220_100]]);
+  });
+
+  it("o simulador mostra o repasse com data: no indicador, na semana apertada e na tabela; a planilha leva a coluna e as partes", () => {
+    const semanas = [
+      { inicio: HOJE, fim: somarDias(HOJE, 6), contas: 50_000, quantidade: 1, financeiras: 0, financeirasQuantidade: 0 },
+      { inicio: somarDias(HOJE, 7), fim: somarDias(HOJE, 13), contas: 300_000, quantidade: 1, financeiras: 129_900, financeirasQuantidade: 1 },
+    ];
+    const fatos = {
+      estornosAConfirmar: null, financeiras: { valor: 369_800, quantidade: 4 }, aConciliar: nada, gavetas: { valor: 0, caixas: 0 },
+      financeirasPorVencimento: { atrasadas: { valor: 100_000, quantidade: 1 }, noPeriodo: { valor: 129_900, quantidade: 1 }, depois: { valor: 79_900, quantidade: 1 }, semPrazo: { valor: 60_000, quantidade: 1 } },
+    };
+    const estimativaDaTela = { media: 100_000, semanas: 8, de: somarDias(HOJE, -56), ate: somarDias(HOJE, -1) };
+    const t = texto(renderToStaticMarkup(createElement(Simulador, { semanas, vencidas: { valor: 20_000, quantidade: 1 }, estimativa: estimativaDaTela, onde: "Rede inteira", hoje: HOJE, fatos })));
+    expect(t).toContain("Entrada estimada por semana R$ 1.000,00 Média de 8 semanas · mais R$ 1.299,00 das financeiras no período");
+    // (1.000 − 700) + (1.000 + 1.299 − 3.000) = −401,00.
+    expect(t).toContain("Diferença no período −R$ 401,00 Entrada estimada e financeiras, menos as contas");
+    expect(t).toContain("Na semana de 20/11 a 26/11, as contas passam o que deve entrar em R$ 701,00.");
+    expect(t).toContain("Para cima, a entrada estimada e o que as financeiras devem, na semana do vencimento");
+    expect(t).toContain("Financeiras (pelo prazo)");
+
+    const linhas = projetar(semanas, 20_000, 100_000, 0, 150_000);
+    const p = planilhaDaPrevisao({ onde: "Rede inteira", linhas, estimativa: estimativaDaTela, ajuste: 0, comSaldo: true, fatos, gerado: "13/11/2026 12:00" });
+    const todas = (s: readonly SecaoCsv[]) => s.flatMap((x) => [...(x.colunas ? [x.colunas] : []), ...x.linhas]).map((l) => l.map(textoDaCelula));
+    expect(p[0]?.colunas).toEqual(["Semana", "De", "Até", "Entrada estimada", "Financeiras (pelo prazo de repasse)", "Contas (fato)", "Vencidas incluídas", "Diferença", "Saldo previsto"]);
+    expect(p[0]?.linhas.map((l) => l.map(textoDaCelula))).toEqual([
+      [1, "13/11/2026", "19/11/2026", "1000,00", "0,00", "700,00", "200,00", "300,00", "1800,00"],
+      [2, "20/11/2026", "26/11/2026", "1000,00", "1299,00", "3000,00", "0,00", "-701,00", "1099,00"],
+    ]);
+    expect(todas(p)).toContainEqual(["A receber das financeiras no período (já na conta, pelo prazo de repasse)", "1299,00", "1 venda"]);
+    expect(todas(p)).toContainEqual(["A receber das financeiras: já passou do prazo (fora da conta)", "1000,00", "1 venda"]);
+    expect(todas(p)).toContainEqual(["A receber das financeiras: vence depois do período (fora da conta)", "799,00", "1 venda"]);
+    expect(todas(p)).toContainEqual(["A receber das financeiras (sem data: sem prazo de repasse gravado)", "600,00", "1 venda"]);
+    expect(todas(p).some((l) => l[0] === "A receber das financeiras (sem data)")).toBe(false);
+    expect(todas(p).some((l) => l[0] === "Financeiras" && String(l[1]).startsWith("o que cada financeira deve entra na semana do vencimento"))).toBe(true);
+    // Tudo sem prazo: a planilha fica como antes (uma linha "sem data" e nenhuma coluna a mais).
+    const semPrazo = planilhaDaPrevisao({
+      onde: "x", linhas: projetar(semanas.map((s) => ({ ...s, financeiras: 0, financeirasQuantidade: 0 })), 0, 100_000, 0, null), estimativa: estimativaDaTela, ajuste: 0, comSaldo: false, gerado: "x",
+      fatos: { ...fatos, financeirasPorVencimento: { atrasadas: nada, noPeriodo: nada, depois: nada, semPrazo: { valor: 369_800, quantidade: 4 } } },
+    });
+    expect(semPrazo[0]?.colunas).toEqual(["Semana", "De", "Até", "Entrada estimada", "Contas (fato)", "Vencidas incluídas", "Diferença", "Saldo previsto"]);
+    expect(todas(semPrazo)).toContainEqual(["A receber das financeiras (sem data)", "3698,00", "4 vendas"]);
+  });
+});
