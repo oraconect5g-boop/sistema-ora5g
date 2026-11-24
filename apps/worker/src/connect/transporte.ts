@@ -3,6 +3,7 @@
 // pede em 25 consultas; o cliente só usa isso depois da confirmação da Nogle (pergunta 2).
 // "enviada" diz se o pedido pode ter chegado à Nogle: sem conexão (DNS, recusa, tempo antes de
 // conectar, TLS) nada saiu e o pedido volta para a fila sem risco de duplicar.
+// PAY-014a (24/11): o mesmo transporte serve à Asaas (o nome nas mensagens, os cabeçalhos dela e o PUT do link).
 import { request as pedirHttp, type ClientRequest, type IncomingMessage, type RequestOptions } from "node:http";
 import { request as pedirHttps } from "node:https";
 import type { Socket } from "node:net";
@@ -11,16 +12,20 @@ export type RespostaHttp =
   | { tipo: "resposta"; status: number; corpo: unknown }
   | { tipo: "falha"; enviada: boolean; motivo: string };
 
-export type PedidoHttp = { metodo: "GET" | "POST"; caminho: string; corpo?: unknown; token?: string };
+export type PedidoHttp = {
+  metodo: "GET" | "POST" | "PUT"; caminho: string; corpo?: unknown; token?: string;
+  /** Cabeçalhos do serviço (a Asaas pede o access_token e o User-Agent). Nunca vão para o log. */
+  cabecalhos?: Readonly<Record<string, string>>;
+};
 export type Transporte = (pedido: PedidoHttp) => Promise<RespostaHttp>;
 
 const LIMITE_DA_RESPOSTA = 5_000_000;
 
-export function transporteHttp(base: string, tempoLimiteMs = 20_000): Transporte {
+export function transporteHttp(base: string, tempoLimiteMs = 20_000, servico = "Nogle"): Transporte {
   const url = new URL(base);
   const seguro = url.protocol === "https:";
   if (!seguro && !(url.protocol === "http:" && url.hostname === "127.0.0.1")) {
-    throw new Error("o endereço da Nogle precisa ser https");
+    throw new Error(`o endereço da ${servico} precisa ser https`);
   }
   const pedir: (opcoes: RequestOptions, aoResponder: (r: IncomingMessage) => void) => ClientRequest = seguro ? pedirHttps : pedirHttp;
   const prefixo = url.pathname.replace(/\/+$/, "");
@@ -47,6 +52,7 @@ export function transporteHttp(base: string, tempoLimiteMs = 20_000): Transporte
         Accept: "application/json",
         ...(corpo !== undefined ? { "Content-Type": "application/json", "Content-Length": Buffer.byteLength(corpo) } : {}),
         ...(pedido.token ? { Authorization: `Bearer ${pedido.token}` } : {}),
+        ...(pedido.cabecalhos ?? {}),
       },
     }, (resposta) => {
       const partes: Buffer[] = [];
@@ -77,8 +83,8 @@ export function transporteHttp(base: string, tempoLimiteMs = 20_000): Transporte
     });
     requisicao.on("timeout", () => requisicao.destroy(new Error("tempo esgotado")));
     requisicao.on("error", (erro: NodeJS.ErrnoException) => fim(conectou
-      ? { tipo: "falha", enviada: true, motivo: "sem resposta da Nogle depois do envio" }
-      : { tipo: "falha", enviada: false, motivo: `sem conexão com a Nogle (${erro.code ?? "rede"})` }));
+      ? { tipo: "falha", enviada: true, motivo: `sem resposta da ${servico} depois do envio` }
+      : { tipo: "falha", enviada: false, motivo: `sem conexão com a ${servico} (${erro.code ?? "rede"})` }));
     if (corpo !== undefined) requisicao.write(corpo);
     requisicao.end();
   });
