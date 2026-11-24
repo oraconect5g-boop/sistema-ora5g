@@ -1,6 +1,7 @@
 import { createClient, type SupabaseClient } from "@supabase/supabase-js";
 
 import type { BancoDoRelato } from "./avisos/erros-do-site.ts";
+import type { AvisoAProcessar, BancoDosPagamentos, ConfiguracaoDoPagamento, PagamentoACriar } from "./pagamentos/processar.ts";
 import type { AvisoParaEnviar, BancoDosAvisos, ResultadoDoAviso } from "./avisos/processar.ts";
 import type { BancoConnect } from "./connect/processar.ts";
 import type { BancoWhatsApp, EnvioParaFazer, ResultadoDoEnvio } from "./whatsapp/processar.ts";
@@ -43,6 +44,29 @@ export function bancoDoRelato(cliente: SupabaseClient, segredo: string): BancoDo
       if (typeof alertas !== "number" || !Number.isInteger(alertas) || alertas < 0) throw new Error("o banco respondeu o relato fora da forma");
       return { alertas };
     },
+  };
+}
+
+// O pagamento pelo site (PAY-014a; ADR-025): as funções do worker dos pagamentos, só com a chave secreta do servidor.
+export function bancoDosPagamentos(cliente: SupabaseClient): BancoDosPagamentos {
+  const rpc = async <T>(nome: string, argumentos?: Record<string, unknown>): Promise<T> => {
+    const { data, error } = await cliente.rpc(nome, argumentos);
+    if (error) throw error;
+    return data as T;
+  };
+  return {
+    configuracao: () => rpc<ConfiguracaoDoPagamento>("pagamento_configuracao"),
+    async ligar(ambiente, webhookId, impressao) {
+      await rpc("pagamento_ligar", { p_ambiente: ambiente, p_webhook_id: webhookId, p_impressao: impressao });
+    },
+    aCriar: (limite) => rpc<PagamentoACriar[]>("pagamentos_a_criar", { p_limite: limite }),
+    linkRegistrado: (pagamento, linkId, url) => rpc<string>("pagamento_link_registrar", { p_pagamento: pagamento, p_link_id: linkId, p_link_url: url }),
+    criacaoFalhou: (pagamento, motivo, definitiva) => rpc<string>("pagamento_criacao_falhou", { p_pagamento: pagamento, p_motivo: motivo, p_definitiva: definitiva }),
+    avisosAProcessar: (limite) => rpc<AvisoAProcessar[]>("pagamento_avisos_a_processar", { p_limite: limite }),
+    avisoConcluir: (aviso, resultado) => rpc<boolean>("pagamento_aviso_concluir", { p_aviso: aviso, p_resultado: resultado }),
+    consultaAplicar: (aviso, consulta) => rpc<string>("pagamento_consulta_aplicar", { p_aviso: aviso, p_consulta: consulta }),
+    aDesativar: (limite) => rpc<{ id: string; link: string }[]>("pagamentos_a_desativar", { p_limite: limite }),
+    linkDesativado: (pagamento) => rpc<boolean>("pagamento_link_desativado", { p_pagamento: pagamento }),
   };
 }
 

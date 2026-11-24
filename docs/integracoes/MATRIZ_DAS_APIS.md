@@ -14,7 +14,7 @@
 | **Nogle: Ora Connect (chips, ativação, recarga, portabilidade, carteira)** | bloqueio externo | O tipo da chave (P9) e, se ele pedir, a segunda chave (a de acesso está no servidor desde 18/11, só no worker); quais operações ligar; as respostas às perguntas 6, 7, 11 e 12 e, da 10, o nome do uuid e a liberação de /consultaPagamento; uma linha e um chip de teste autorizados. Comissões e bonificações: a Nogle respondeu que não há na API; a fonte oficial (relatório ou extrato da Nogle) precisa ser indicada (D-016, #54) | A Nogle (chaves, respostas, linha de teste e a fonte das comissões), pelo proprietário | Feito no CONNECT-c: a conciliação com os relatórios, provada com os exemplos oficiais; a conferência real espera a Nogle ligada |
 | **Emissor fiscal (NFC-e, NF-e, NFS-e)** | bloqueio externo | O contador (o regime e o documento de cada operação por filial; CFOP, CST, CSOSN e NCM); o emissor contratado; o certificado A1 de cada CNPJ; os CNPJs das 11 filiais | O contador e o proprietário | A preparação por filial na tela (sem inventar CNPJ) e a fila, que já existe; a emissão espera o emissor |
 | **WhatsApp Business Platform (Cloud API)** | bloqueio externo | A verificação da empresa na Meta, o número habilitado, o token de usuário do sistema, o segredo do app e um modelo de utilidade aprovado | O proprietário, no Meta for Developers | A caixa de entrada e o atendimento no sistema (histórico, etiquetas, distribuição), sem envio real; o e-mail continua opcional |
-| **Link de pagamento e Pix online (PicPay ou PagBank)** | bloqueio externo | A escolha do provedor (E1) e a credencial do escolhido | O proprietário | A tabela das cobranças e a tela da conciliação, sem provedor; o checkout pago espera a escolha |
+| **Link de pagamento e Pix online (Asaas)** | parcial | A conta da Asaas com a chave de teste (sandbox), gravada pelo comando da lista única, o e-mail dos avisos e o sim para agendar o worker | O proprietário | O PAY-014b (o balcão) e a conciliação com o extrato, sem a chave; o ensaio no sandbox espera a chave de teste |
 | **PayJoy (financiamento do aparelho)** | bloqueio externo | O contrato e a documentação da conta da Ora; o valor e o prazo do repasse (P8) | A PayJoy, pelo proprietário | O modelo por capacidade (em preparação, aguardando contrato, em homologação, ativo), sem nenhum botão de aprovar que só grave sucesso local |
 | **Aiva (financiamento do aparelho)** | bloqueio externo | A documentação e a parceria pelo canal oficial; o valor e o prazo do repasse (P8) | A Aiva, pelo proprietário | O mesmo modelo por capacidade da PayJoy |
 | **QI Tech (crédito; extensão futura)** | não iniciado | O produto e a parceria da Ora, o acesso provisionado e os requisitos de produção | A QI Tech, pelo proprietário | Nada específico até a parceria |
@@ -124,26 +124,26 @@
 | Publicação | O worker não está ligado; o botão que abre a conversa está no ar |
 | Homologação | Não homologado |
 
-### Link de pagamento e Pix online (PicPay ou PagBank)
+### Link de pagamento e Pix online (Asaas)
 
-**Situação:** bloqueio externo · **Requisitos:** ORA-PAY-008, ORA-PAY-013, ORA-PAY-014, ORA-POS-009 e o pagamento do ORA-ONLINE-002
+**Situação:** parcial · **Requisitos:** ORA-PAY-008, ORA-PAY-013, ORA-PAY-014, ORA-POS-009 e o pagamento do ORA-ONLINE-002
 
 | Coluna | Detalhe |
 |---|---|
-| Documentação oficial e revisão | Oficial, parcial: PicPay Link de Pagamento (introdução, autenticação e aviso) e PagBank (token e criação de checkout), conferidas em 06/11; o formato e a assinatura do aviso a confirmar ao gerar a credencial |
-| Operações necessárias | Criar a cobrança, consultar (a reconsulta), receber o aviso, cancelar, estornar e conciliar com o extrato do provedor |
-| O que já existe | O meio "link" é recusado no PDV e na Ora Connect da loja (D-050, decisão do proprietário de 18/11: o link é só da compra online); no worker (cobranca/cobranca.ts): a interface, o formato comum do aviso e da reconsulta e as regras do PAY-b: o aviso nunca confirma, só a reconsulta, conferindo a cobrança, o valor, a moeda e a ordem; o tempo esgotado não cobra duas vezes |
-| Código que falta | O adaptador oficial do provedor escolhido, a rota do aviso, a tabela das cobranças com a fila, o checkout pago da loja online e a conciliação com o extrato do provedor |
-| Acesso ou contrato que falta | A escolha do provedor (E1) e a credencial do escolhido |
-| Variáveis (só os nomes) | `PICPAY_CLIENT_ID`, `PICPAY_CLIENT_SECRET`, `PICPAY_WEBHOOK_SECRET`, `PAGBANK_ENVIRONMENT`, `PAGBANK_API_TOKEN` |
-| Ambiente de teste | O sandbox do PagBank; o do PicPay a confirmar no painel |
-| Autenticação | PicPay: o identificador e o segredo do cliente; PagBank: o token (conforme as páginas oficiais de autenticação) |
-| Limites | A confirmar na documentação do escolhido |
-| Idempotência | O nosso identificador em toda tentativa; o resultado desconhecido consulta antes de criar de novo |
-| Aviso (webhook) ou reconsulta | O aviso assinado só leva à reconsulta; só a reconsulta confirma (PAY-b) |
-| Conciliação | O que não fecha (pago depois de cancelado, estorno sem pagamento, outro valor ou moeda) vai para a conciliação; o extrato do provedor fecha o dia |
-| Testes | apps/worker/src/cobranca/cobranca.test.ts |
-| Publicação | Nada ligado: o pedido do site é retirar e pagar na loja |
+| Documentação oficial e revisão | Oficial: a documentação da Asaas (docs.asaas.com), lida em 24/11: a autenticação (access_token e User-Agent), o sandbox e a produção, os links de pagamento, as cobranças, os avisos (o cabeçalho asaas-access-token, o id do evento único, a entrega pelo menos uma vez e a fila que para depois de 15 falhas) e os limites. O que ela não diz está na ADR-025 |
+| Operações necessárias | Criar o link de pagamento (Pix, uma venda só), procurar pelo nosso identificador, desativar, consultar a cobrança (a reconsulta), registrar e receber o aviso; o estorno é feito no painel da Asaas e volta pelo aviso |
+| O que já existe | PAY-014a: o cliente da Asaas no worker (o transporte de verdade, provado contra um servidor local no papel da Asaas), o worker dos pagamentos (cria o link, confere o aviso com a Asaas e desativa o link que não serve mais), a rota do aviso no site (/api/pagamentos/asaas, que só repassa ao banco), as tabelas e as regras no banco (o pago fica guardado 7 dias e não se cancela pelo sistema) e o Pix no pedido e na tela da loja. O meio "link" segue recusado no PDV (D-050). Desligado até a chave e o PAY-014b |
+| Código que falta | O PAY-014b (no balcão, a venda do pedido pago registra o "pago pelo site" sem cobrar de novo) e a conciliação com o extrato da Asaas |
+| Acesso ou contrato que falta | A conta da Asaas com a chave de teste (sandbox), gravada pelo comando da lista única, o e-mail dos avisos e o sim para agendar o worker |
+| Variáveis (só os nomes) | `ASAAS_AMBIENTE`, `ASAAS_API_KEY`, `ASAAS_EMAIL_DOS_AVISOS` |
+| Ambiente de teste | O sandbox da Asaas (api-sandbox.asaas.com), com a chave de teste: lá se confirma um pagamento sem dinheiro de verdade |
+| Autenticação | A chave da API no cabeçalho access_token (a de teste começa com $aact_hmlg_) e o User-Agent; o aviso traz no cabeçalho asaas-access-token o token que o worker gerou |
+| Limites | 25 mil pedidos a cada 12 horas; o 429 sem prazo para tentar de novo (o worker espera a próxima rodada); a fila de avisos para depois de 15 falhas seguidas |
+| Idempotência | O nosso identificador (externalReference) em todo link; o resultado desconhecido procura o link antes de criar outro; o aviso é guardado uma vez só, pelo id do evento |
+| Aviso (webhook) ou reconsulta | O aviso (com o token conferido pelo banco) só leva à reconsulta da cobrança; só a reconsulta confirma (PAY-b), conferindo o link, o valor e a passagem da situação |
+| Conciliação | O que não fecha (pago depois de cancelado, estorno sem pagamento, outro valor) vira divergência para a conciliação; o extrato da Asaas fecha o dia (a fazer) |
+| Testes | apps/worker/src/pagamentos/ (asaas, processar e ponta-a-ponta); packages/banco/src/pagamento-pelo-site.test.ts; apps/plataforma/src/app/api/pagamentos/asaas/route.test.ts; apps/worker/src/cobranca/cobranca.test.ts |
+| Publicação | No ar e desligado: o pedido do site segue para pagar na loja até a chave e o PAY-014b |
 | Homologação | Não homologado |
 
 ### PayJoy (financiamento do aparelho)

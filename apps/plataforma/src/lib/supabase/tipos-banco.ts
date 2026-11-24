@@ -3859,6 +3859,87 @@ export type Database = {
           },
         ]
       }
+      loja_pagamentos: {
+        Row: {
+          atualizado_em: string
+          criado_em: string
+          divergencia: string | null
+          estornado_em: string | null
+          id: string
+          id_no_provedor: string | null
+          link_desativado_em: string | null
+          link_id: string | null
+          link_url: string | null
+          organizacao_id: string
+          pago_em: string | null
+          pedido_id: string
+          provedor: string
+          reservado_ate: string | null
+          situacao: string
+          tentativas: number
+          ultima_falha: string | null
+          unidade_id: string
+          valor_centavos: number
+        }
+        Insert: {
+          atualizado_em?: string
+          criado_em?: string
+          divergencia?: string | null
+          estornado_em?: string | null
+          id?: string
+          id_no_provedor?: string | null
+          link_desativado_em?: string | null
+          link_id?: string | null
+          link_url?: string | null
+          organizacao_id: string
+          pago_em?: string | null
+          pedido_id: string
+          provedor?: string
+          reservado_ate?: string | null
+          situacao?: string
+          tentativas?: number
+          ultima_falha?: string | null
+          unidade_id: string
+          valor_centavos: number
+        }
+        Update: {
+          atualizado_em?: string
+          criado_em?: string
+          divergencia?: string | null
+          estornado_em?: string | null
+          id?: string
+          id_no_provedor?: string | null
+          link_desativado_em?: string | null
+          link_id?: string | null
+          link_url?: string | null
+          organizacao_id?: string
+          pago_em?: string | null
+          pedido_id?: string
+          provedor?: string
+          reservado_ate?: string | null
+          situacao?: string
+          tentativas?: number
+          ultima_falha?: string | null
+          unidade_id?: string
+          valor_centavos?: number
+        }
+        Relationships: [
+          {
+            foreignKeyName: "loja_pagamentos_pedido_id_fkey"
+            columns: ["pedido_id"]
+            isOneToOne: true
+            referencedRelation: "loja_pedidos"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "loja_pagamentos_unidade_id_organizacao_id_fkey"
+            columns: ["unidade_id", "organizacao_id"]
+            isOneToOne: false
+            referencedRelation: "unidades"
+            referencedColumns: ["id", "organizacao_id"]
+          },
+        ]
+      }
       loja_pedidos: {
         Row: {
           atendido_em: string | null
@@ -8610,6 +8691,11 @@ export type Database = {
           vigente_desde: string
         }[]
       }
+      loja_pagamento_disponivel: { Args: never; Returns: boolean }
+      loja_pagamento_pedir: {
+        Args: { p_codigo: string; p_organizacao: string; p_whatsapp: string }
+        Returns: Json
+      }
       loja_pedido_atender: {
         Args: { p_chave: string; p_pedido: string }
         Returns: Json
@@ -8942,6 +9028,18 @@ export type Database = {
         }
         Returns: Json
       }
+      pagamento_aviso_concluir: {
+        Args: { p_aviso: string; p_resultado: string }
+        Returns: boolean
+      }
+      pagamento_aviso_receber: {
+        Args: { p_aviso: Json; p_token: string }
+        Returns: string
+      }
+      pagamento_avisos_a_processar: {
+        Args: { p_limite?: number }
+        Returns: Json
+      }
       pagamento_conciliar: {
         Args: {
           p_liquidado_em: string
@@ -8951,10 +9049,33 @@ export type Database = {
         }
         Returns: boolean
       }
+      pagamento_configuracao: { Args: never; Returns: Json }
+      pagamento_consulta_aplicar: {
+        Args: { p_aviso: string; p_consulta: Json }
+        Returns: string
+      }
+      pagamento_criacao_falhou: {
+        Args: { p_definitiva: boolean; p_motivo: string; p_pagamento: string }
+        Returns: string
+      }
       pagamento_desconciliar: {
         Args: { p_motivo: string; p_pagamento: string }
         Returns: boolean
       }
+      pagamento_ligar: {
+        Args: { p_ambiente: string; p_impressao: string; p_webhook_id: string }
+        Returns: boolean
+      }
+      pagamento_link_desativado: {
+        Args: { p_pagamento: string }
+        Returns: boolean
+      }
+      pagamento_link_registrar: {
+        Args: { p_link_id: string; p_link_url: string; p_pagamento: string }
+        Returns: string
+      }
+      pagamentos_a_criar: { Args: { p_limite?: number }; Returns: Json }
+      pagamentos_a_desativar: { Args: { p_limite?: number }; Returns: Json }
       pagamentos_do_periodo: {
         Args: { p_fim: string; p_inicio: string }
         Returns: Json

@@ -11,15 +11,18 @@
 // navegador (a página de "obrigado") não confirma nada. Criar a cobrança com resultado desconhecido (tempo esgotado, queda)
 // nunca cria outra às cegas: consulta-se antes pelo identificador, que é o mesmo em toda tentativa.
 
-export const PROVEDORES_DE_COBRANCA = ["picpay", "pagbank"] as const;
+// PAY-014a (24/11): o proprietário escolheu a Asaas (ADR-025); o adaptador dela está em pagamentos/asaas.ts, com o
+// contrato da documentação oficial, e usa as regras daqui (o aviso nunca confirma; a reconsulta decide).
+export const PROVEDORES_DE_COBRANCA = ["picpay", "pagbank", "asaas"] as const;
 export type ProvedorDeCobranca = (typeof PROVEDORES_DE_COBRANCA)[number];
 
-/** O adaptador oficial de cada provedor, com o contrato verificado. Nenhum está pronto. */
-export const ADAPTADOR_PRONTO: Readonly<Record<ProvedorDeCobranca, boolean>> = { picpay: false, pagbank: false };
+/** O adaptador oficial de cada provedor, com o contrato verificado. Só o da Asaas está pronto (PAY-014a). */
+export const ADAPTADOR_PRONTO: Readonly<Record<ProvedorDeCobranca, boolean>> = { picpay: false, pagbank: false, asaas: true };
 
 const VARIAVEIS: Readonly<Record<ProvedorDeCobranca, readonly string[]>> = {
   picpay: ["PICPAY_CLIENT_ID", "PICPAY_CLIENT_SECRET", "PICPAY_WEBHOOK_SECRET"],
   pagbank: ["PAGBANK_ENVIRONMENT", "PAGBANK_API_TOKEN"],
+  asaas: ["ASAAS_AMBIENTE", "ASAAS_API_KEY", "ASAAS_EMAIL_DOS_AVISOS"],
 };
 
 /** O que falta para ligar o provedor, na ordem em que se resolve; vazio = pode ligar. Só nomes: valores nunca aparecem. */

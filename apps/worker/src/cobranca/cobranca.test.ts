@@ -17,14 +17,18 @@ const consulta = (mudar: Partial<ConsultaDaCobranca> = {}): ConsultaDaCobranca =
 const pedido: PedidoDeCobranca = { identificador: "COB-1", valor: 7_900, moeda: "BRL", descricao: "Capa (teste)", vencimento: "2026-11-20" };
 
 describe("o link de pagamento", () => {
-  it("nenhum provedor pronto: mesmo com as variáveis, falta o adaptador oficial", () => {
-    for (const p of PROVEDORES_DE_COBRANCA) expect(ADAPTADOR_PRONTO[p], p).toBe(false);
+  it("só o adaptador da Asaas está pronto (PAY-014a): o PicPay e o PagBank, mesmo com as variáveis, esperam o adaptador oficial", () => {
+    expect(PROVEDORES_DE_COBRANCA.filter((p) => ADAPTADOR_PRONTO[p])).toEqual(["asaas"]);
     expect(oQueFaltaParaACobranca("picpay", ambiente({}))).toEqual([
       "NEXT_PUBLIC_SUPABASE_URL", "SUPABASE_SECRET_KEY", "PICPAY_CLIENT_ID", "PICPAY_CLIENT_SECRET", "PICPAY_WEBHOOK_SECRET",
       "o adaptador oficial do provedor (espera a escolha do provedor, o contrato e o formato do aviso confirmado)",
     ]);
     const tudo = ambiente(Object.fromEntries(["NEXT_PUBLIC_SUPABASE_URL", "SUPABASE_SECRET_KEY", "PAGBANK_ENVIRONMENT", "PAGBANK_API_TOKEN"].map((n) => [n, "x"])));
     expect(oQueFaltaParaACobranca("pagbank", tudo)).toEqual(["o adaptador oficial do provedor (espera a escolha do provedor, o contrato e o formato do aviso confirmado)"]);
+    // A Asaas: o adaptador existe (pagamentos/asaas.ts); faltam só as variáveis, até a chave ser gravada.
+    const DA_ASAAS = ["NEXT_PUBLIC_SUPABASE_URL", "SUPABASE_SECRET_KEY", "ASAAS_AMBIENTE", "ASAAS_API_KEY", "ASAAS_EMAIL_DOS_AVISOS"];
+    expect(oQueFaltaParaACobranca("asaas", ambiente({}))).toEqual(DA_ASAAS);
+    expect(oQueFaltaParaACobranca("asaas", ambiente(Object.fromEntries(DA_ASAAS.map((n) => [n, "x"]))))).toEqual([]);
   });
 });
 

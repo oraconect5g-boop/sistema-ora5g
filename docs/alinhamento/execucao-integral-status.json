@@ -2,7 +2,7 @@
   "_leia": "Checkpoint do programa de execução integral (PR #67). Carregar ao retomar e seguir para o próximo item executável da fila; não reiniciar o projeto. Estados vêm de status-requisitos.json (fonte da rastreabilidade); este arquivo acrescenta lote, bloqueio externo e revisão. Desde 16/11/2026 a medida de avanço é o requisito homologado pelo proprietário: a chave aceites guarda a resposta dele a cada roteiro de aceite (docs/aceite/); um requisito só recebe homologado: true com todos os lotes dele aceitos e sem nada em FALTA na nota de status-requisitos.json.",
   "atualizado_em": "2026-11-24",
   "base": {
-    "main": "8ac0e78",
+    "main": "b2d275b",
     "pacote": {
       "pr": 67,
       "branch": "docs/execucao-integral-20261110",
@@ -1158,19 +1158,34 @@
         "ORA-ONLINE-002"
       ],
       "entrega": "a compra com um botão só (o \"Pôr no carrinho\", só nas lojas com estoque) e o número de itens no Carrinho do topo da loja online; sem foto, um espaço baixo; o topo numa linha só no celular",
+      "commit": "b2d275b",
+      "publicado_em": "2026-11-24",
+      "pedido_em": "2026-11-24",
+      "resposta": null,
+      "respondido_em": null,
+      "nota": "no ar em b2d275b (build 24/11 11:13; copiado do registro das publicações, a branch registro/publicacoes); a prova de leitura passou no site em 24/11 às 11:13, de primeira; sem migration; os dois requisitos seguem parciais"
+    },
+    "PAY-014a": {
+      "roteiro": "docs/aceite/PAY-014a.md",
+      "requisitos": [
+        "ORA-PAY-014",
+        "ORA-ONLINE-002",
+        "ORA-PAY-008"
+      ],
+      "entrega": "o pagamento pelo site com Pix, pela Asaas: o \"Pagar agora com Pix\" no pedido, o link criado pelo worker, o aviso repassado pelo site, a confirmação só pela reconsulta e o \"Pago pelo site\" para o cliente e na loja; desligado até a chave e o PAY-014b",
       "commit": null,
       "publicado_em": null,
       "pedido_em": "2026-11-24",
       "resposta": null,
       "respondido_em": null,
-      "nota": "pedido do proprietário de 24/11 (\"Sim, simplificar\"); o commit e a publicação ficam no registro (a branch registro/publicacoes); sem migration; os dois requisitos seguem parciais (os produtos de verdade, o pagamento pelo site e a entrega)"
+      "nota": "a escolha do proprietário de 24/11 (D-052); o commit e a publicação ficam no registro (a branch registro/publicacoes); migration 20261124155208_pagamento_pelo_site; o ORA-PAY-014 passa a parcial"
     }
   },
   "contagem_dos_estados": {
     "nao_iniciado": 14,
     "parcial": 78,
-    "testado": 72,
-    "bloqueado": 13,
+    "testado": 73,
+    "bloqueado": 12,
     "respeitado": 2
   },
   "requisitos": {
@@ -1276,8 +1291,8 @@
     "ORA-CAT-002": {
       "titulo": "Importar produtos e preços da Rein somente por CSV/XLSX",
       "prioridade": "P0",
-      "estado": "parcial",
-      "lote": "L3c importação; R2 correções do importador; CAT-002b (15/11): a planilha do Excel (.xlsx) direto; INTEG-b (16/11): #95, a importação de 2.000 linhas no orçamento; registro do #95 (16/11): aplicada pela integração GitHub × Supabase no merge; REIN-a (17/11): a planilha inteira (a observação longa, as partes de até 2.000 linhas e a linha de total de fora); AUD-a (18/11): o rodapé de totais sem rótulo fica de fora (F01); REIN-b (18/11): a carga do estoque por loja pelo relatório, com prévia, aprovação e o livro (ADR-021); AUD-c (23/11): o rodapé da Rein escrito com vírgula reconhecido (F21-01); REIN-d (23/11): o relatório de verdade da Rein lido de ponta a ponta (o rodapé com os totais deslocados, as sugestões, o arredondamento com aviso, o SEM GTIN e o tipo de cada categoria)",
+      "estado": "testado",
+      "lote": "L3c importação; R2 correções do importador; CAT-002b (15/11): a planilha do Excel (.xlsx) direto; INTEG-b (16/11): #95, a importação de 2.000 linhas no orçamento; registro do #95 (16/11): aplicada pela integração GitHub × Supabase no merge; REIN-a (17/11): a planilha inteira (a observação longa, as partes de até 2.000 linhas e a linha de total de fora); AUD-a (18/11): o rodapé de totais sem rótulo fica de fora (F01); REIN-b (18/11): a carga do estoque por loja pelo relatório, com prévia, aprovação e o livro (ADR-021); AUD-c (23/11): o rodapé da Rein escrito com vírgula reconhecido (F21-01); REIN-d (23/11): o relatório de verdade da Rein lido de ponta a ponta (o rodapé com os totais deslocados, as sugestões, o arredondamento com aviso, o SEM GTIN e o tipo de cada categoria); B1 (24/11): o catálogo de verdade no banco do site",
       "bloqueio_externo": "B1: arquivo real da Rein para testar o mapeamento (o importador não supõe o formato)",
       "revisado_codex": false,
       "homologado": false
@@ -1394,7 +1409,7 @@
       "titulo": "Receber estoque inicial validado por contagem real",
       "prioridade": "P0",
       "estado": "parcial",
-      "lote": "L4a entrada de mercadoria; R1 correções do recebimento; B2 correção #80 (14/11); R4 (14/11): revisão do estado; REIN-b (18/11): a carga do estoque por loja pelo relatório, com prévia, aprovação e o livro (ADR-021); J3-d (21/11): o estoque de ponta a ponta, com três pessoas, na loja de teste; AUD-c (23/11): a quantidade escrita com vírgula lida pelo texto na carga (F21-01); REIN-d (23/11): a carga do estoque com o relatório de verdade (o rodapé de fora e as colunas de cada loja sugeridas)",
+      "lote": "L4a entrada de mercadoria; R1 correções do recebimento; B2 correção #80 (14/11); R4 (14/11): revisão do estado; REIN-b (18/11): a carga do estoque por loja pelo relatório, com prévia, aprovação e o livro (ADR-021); J3-d (21/11): o estoque de ponta a ponta, com três pessoas, na loja de teste; AUD-c (23/11): a quantidade escrita com vírgula lida pelo texto na carga (F21-01); REIN-d (23/11): a carga do estoque com o relatório de verdade (o rodapé de fora e as colunas de cada loja sugeridas); B1 (24/11): o estoque das 12 lojas com a posição de 10/11",
       "bloqueio_externo": null,
       "revisado_codex": false,
       "homologado": false
@@ -1772,7 +1787,7 @@
       "titulo": "Evitar confirmação duplicada via webhook/retry",
       "prioridade": "P0",
       "estado": "parcial",
-      "lote": "L7 pagamentos/caixa; R4 (14/11): revisão do estado",
+      "lote": "L7 pagamentos/caixa; R4 (14/11): revisão do estado; PAY-014a (24/11): o aviso da Asaas guardado uma vez só",
       "bloqueio_externo": null,
       "revisado_codex": false,
       "homologado": false
@@ -1825,8 +1840,8 @@
     "ORA-PAY-014": {
       "titulo": "Pix/checkout web e links por provedores validados",
       "prioridade": "P2",
-      "estado": "bloqueado",
-      "lote": "L7 pagamentos/caixa; ADAPT-a (17/11): bloqueado com o que falta (ADR-020)",
+      "estado": "parcial",
+      "lote": "L7 pagamentos/caixa; ADAPT-a (17/11): bloqueado com o que falta (ADR-020); PAY-014a (24/11): o Pix pela Asaas, pronto e desligado",
       "bloqueio_externo": "E1: a escolha do provedor do link (PicPay, PagBank ou os dois), a credencial e o formato do aviso confirmado",
       "revisado_codex": false,
       "homologado": false
@@ -2213,7 +2228,7 @@
       "titulo": "Carrinho/checkout online e pedido com status",
       "prioridade": "P1",
       "estado": "parcial",
-      "lote": "L13 loja online; ONLINE-e (24/11): o carrinho como o único caminho oferecido, com o número no topo",
+      "lote": "L13 loja online; ONLINE-e (24/11): o carrinho como o único caminho oferecido, com o número no topo; PAY-014a (24/11): o Pix no pedido do site",
       "bloqueio_externo": null,
       "revisado_codex": false,
       "homologado": false
@@ -2786,5 +2801,5 @@
       "homologado": false
     }
   },
-  "proximo_passo": "Seguir a ordem de 23/11 (o prompt entregue pelo proprietário, escrito pelo Codex, com a auditoria integral de 21/11, PR #105; a leitura está em docs/alinhamento/LEITURA_AUDITORIA_2026-11-21.md). Em 23/11 à noite o proprietário pediu para seguir o planejamento do prompt: a fila, seção por seção, está em docs/alinhamento/FILA_INTEGRAL_2026-11-23.md. (1) Publicar o ONLINE-e depois do merge, rodar no site a prova (apps/plataforma/e2e/loja-um-botao-real.spec.ts, que não grava nada) e registrar a publicação (deploy/homologacao/registrar-publicacao.sh; a branch registro/publicacoes); os lotes de 23/11, do AUD-c (5617351) ao FIN-007b (a1100f7), e os de 24/11, do CRM-009a (7db5c6c) ao QUAL-006a (8ac0e78), estão no ar. (2) A fila do que não depende de ninguém acabou com o QUAL-006a; o que resta depende de resposta do proprietário, de contrato ou de terceiro (docs/PENDENCIAS_DO_PROPRIETARIO.md, a lista única). (3) A seção 4 do prompt passa à frente de tudo quando o proprietário responder as três perguntas do catálogo (a tabela de preço da loja, o tipo de cada família e o código do produto: a coluna Código ou a coluna SKU; ele recebeu em 23/11 um resumo privado do relatório para responder) e der o sim: aí se gera a prévia do catálogo de verdade com a conta de administrador de teste, e ele confere e aplica; o estoque de cada loja se carrega com um relatório do dia da virada. A narrativa anterior deste campo fica no histórico do Git e em docs/alinhamento/EXECUCAO_INTEGRAL_STATUS.md."
+  "proximo_passo": "Seguir a ordem de 23/11 (o prompt entregue pelo proprietário, escrito pelo Codex, com a auditoria integral de 21/11, PR #105; a leitura está em docs/alinhamento/LEITURA_AUDITORIA_2026-11-21.md). Em 23/11 à noite o proprietário pediu para seguir o planejamento do prompt: a fila, seção por seção, está em docs/alinhamento/FILA_INTEGRAL_2026-11-23.md. (1) Publicar o PAY-014a depois do merge, rodar no site a prova (apps/plataforma/e2e/pagamento-pelo-site-real.spec.ts, que não grava nada) e registrar a publicação (deploy/homologacao/registrar-publicacao.sh; a branch registro/publicacoes); os lotes de 23/11 e 24/11 até o ONLINE-e (b2d275b) estão no ar. (2) O PAY-014b (no balcão, a venda do pedido pago registra o \"pago pelo site\" sem cobrar de novo) vem antes de ligar o pagamento pelo site; depois, o ONLINE-f (a vitrine com o \"ver mais\" e os disponíveis primeiro). (3) A seção 4 do prompt (o catálogo e o estoque de verdade) foi feita em 24/11 com as respostas do proprietário (D-053): falta um relatório novo da Rein (a posição carregada é a de 10/11), o dos IMEIs dos celulares e o CNPJ das lojas (sem ele, a loja online não vende nada de verdade). O que resta depende do proprietário, de contrato ou de terceiro (docs/PENDENCIAS_DO_PROPRIETARIO.md, a lista única). A narrativa anterior deste campo fica no histórico do Git e em docs/alinhamento/EXECUCAO_INTEGRAL_STATUS.md."
 }
