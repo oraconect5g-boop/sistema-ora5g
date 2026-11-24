@@ -1,0 +1,37 @@
+{
+  "_leia": "AUD-e (24/11/2026; o achado F24-05 da revisão do Codex de 24/11): os roteiros de aceite agrupados por jornada operacional (a matriz J01 a J15 de docs/analises/revisao-visual-fluxos-2026-11-24/FLUXOS_E_ACEITE.md, na branch docs/revisao-visual-fluxos-20261124). Cada lote com roteiro (execucao-integral-status.json, aceites) entra em uma ou mais jornadas; scripts/gerar-rastreabilidade.mjs monta docs/aceite/JORNADAS.md daqui e reprova o lote novo sem jornada.",
+  "jornadas": {
+    "J01": { "nome": "Acesso e loja", "caminho": "Entrar → vínculo ativo → escolher a loja → turno → o menu do seu papel → sair" },
+    "J02": { "nome": "Catálogo e fotos", "caminho": "Importar ou editar → prévia → conferir código, preço e tipo → aplicar → achar o produto no PDV, no estoque e no site → foto e variação" },
+    "J03": { "nome": "Estoque inicial e inventário", "caminho": "Arquivo com o corte → reconciliação → aprovação → livro do estoque → saldo por loja → contagem → ajuste aprovado" },
+    "J04": { "nome": "Transferência", "caminho": "Escolher a origem e o destino → pedir (reserva) → separar → enviar → receber → saldo e auditoria" },
+    "J05": { "nome": "Venda presencial", "caminho": "Abrir o caixa → buscar o produto → reservar o item ou o IMEI → cliente → desconto autorizado → pagamentos → concluir → comprovante" },
+    "J06": { "nome": "Cliente e fiscal", "caminho": "Cadastro rápido com nome e WhatsApp → reaproveitar o cliente → completar os dados para a nota → pedido de nota → emissor → XML e PDF → envio" },
+    "J07": { "nome": "Devolução e troca", "caminho": "Achar a venda → escolher os itens → retorno ou avaria → vale ou estorno → confirmar o estorno de fora → livro e caixa" },
+    "J08": { "nome": "Caixa e financeiro", "caminho": "Abrir o caixa → receber → sangria e suprimento → fechar → conferir → conciliar recebíveis e extrato → resultado e previsão" },
+    "J09": { "nome": "Site e retirada na loja", "caminho": "Vitrine → carrinho por loja → nome e WhatsApp → reserva → pedido que se acha de novo → Pix (quando ligado) → confirmação pela reconsulta → retirada no PDV" },
+    "J10": { "nome": "Ora Connect", "caminho": "Elegibilidade, chip e cliente → operação → fila do worker → Nogle → confirmação ou reconsulta → produção → repasse oficial" },
+    "J11": { "nome": "Financeiras (PayJoy e Aiva)", "caminho": "Cliente → aprovação na financeira → entrada mais financiado → venda → a receber → prazo → repasse e taxa → resultado" },
+    "J12": { "nome": "Marketplaces e Meta", "caminho": "Conta ligada → produto e estoque → pedido → reserva e baixa → entrega → tarifa e repasse → conciliação; anúncios → custo e atribuição" },
+    "J13": { "nome": "Assistência", "caminho": "Cliente e aparelho → OS e fotos → orçamento → aprovação → serviço e peça → recebimento → entrega e garantia" },
+    "J14": { "nome": "Metas e bônus", "caminho": "Regra e faixas → eventos de venda, telecom e OS → estornos → apuração → revisão → fechamento" },
+    "J15": { "nome": "Operação e publicação", "caminho": "Commit → CI → migration compatível → publicação → domínio e SHA → conferência → monitoramento → recuperação" }
+  },
+  "lotes": {
+    "VEL-a": ["J05"], "ONLINE-c": ["J09"], "ROT-a": ["J03", "J09"], "INTEG-c": ["J05", "J06"], "BANCO-a": ["J01", "J15"],
+    "ENTREGAS-a": ["J09"], "WHATS-a": ["J06"], "SAUDE-a": ["J15"], "GIT-a": ["J15"], "ORG-a": ["J01"], "PWA-a": ["J01"],
+    "TRF-a": ["J04"], "REIN-a": ["J02"], "MKT-a": ["J09", "J12"], "DEP-a": ["J15"], "PWA-b": ["J15"], "QUAL-a": ["J15"],
+    "EXT-a": ["J08"], "META-a": ["J12"], "MKTPL-a": ["J12"], "CANAIS-a": ["J08", "J12"], "ADAPT-a": ["J15"],
+    "AUD-a": ["J02", "J12"], "REIN-b": ["J03"], "DEMO-a": ["J15"], "TRF-b": ["J04"], "ONLINE-d": ["J09"], "VEL-b": ["J05"],
+    "AUD-b": ["J02", "J03"], "REIN-c": ["J03"], "TRF-c": ["J04"], "PAY-b": ["J09"], "INTEG-d": ["J15"], "CONNECT-c": ["J10"],
+    "PDV-c": ["J05", "J11"], "GRAF-a": ["J08"], "DEMO-b": ["J15"], "VEL-c": ["J01"], "PERF-a": ["J14"], "CD-a": ["J03", "J05"],
+    "OBS-a": ["J15"], "CONTAS-a": ["J08"], "REPASSE-a": ["J12"], "J1-a": ["J01"], "VEL-d": ["J02", "J03"], "VEL-e": ["J01"],
+    "VEL-f": ["J15"], "J1-b": ["J05"], "J1-c": ["J04"], "J1-d": ["J04"], "VEL-g": ["J04"], "J2-a": ["J03", "J08"],
+    "J2-b": ["J01"], "VND-a": ["J05"], "VEL-h": ["J01"], "VEL-i": ["J05"], "ROB-a": ["J15"], "J3-a": ["J08"], "J3-b": ["J05"],
+    "J3-c": ["J07"], "J3-d": ["J03"], "J3-e": ["J06", "J13", "J14"], "J3-f": ["J08", "J11"], "AUD-c": ["J03", "J08", "J12"],
+    "TRF-d": ["J04"], "AUD-d": ["J04"], "TRF-e": ["J04"], "FIN-001a": ["J08"], "REIN-d": ["J02", "J03"], "FIN-001b": ["J08"],
+    "FIN-007a": ["J11"], "FIN-007b": ["J11"], "CRM-009a": ["J06", "J09"], "POS-015a": ["J05"], "PAY-011a": ["J07", "J08"],
+    "FIN-002a": ["J08", "J11"], "FIN-006a": ["J08"], "QUAL-006a": ["J15"], "ONLINE-e": ["J09"], "PAY-014a": ["J09"],
+    "ONLINE-f": ["J09"], "ONLINE-g": ["J09"], "ONLINE-h": ["J09"], "PAY-014b": ["J09", "J05"], "ONLINE-i": ["J09"], "TRF-f": ["J03", "J04"], "AUD-e": ["J15"]
+  }
+}

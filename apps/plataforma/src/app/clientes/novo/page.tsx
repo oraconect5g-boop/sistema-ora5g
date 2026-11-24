@@ -20,7 +20,7 @@ export default async function NovoCliente() {
   return (
     <MoldeReal sessao={sessao}>
       <Link href="/clientes" className="inline-flex min-h-10 items-center gap-1 text-sm font-semibold text-acao"><ArrowLeft aria-hidden className="size-4" /> Clientes</Link>
-      <TituloPagina titulo="Novo cliente" subtitulo="Só o necessário: nome e CPF/CNPJ ou telefone. Cada finalidade marcada pede o que precisa; nada além disso fica guardado." />
+      <TituloPagina titulo="Novo cliente" subtitulo="Só o necessário: o nome completo e o WhatsApp com DDD; o CPF/CNPJ e o e-mail são opcionais. Cada finalidade marcada pede o que precisa; nada além disso fica guardado." />
       {pode
         ? <Cartao className="mt-4" titulo="Dados do cliente" icone={UserPlus}><FormularioCliente chave={`form:${randomUUID()}`} /></Cartao>
         : <Aviso tom="aviso" className="mt-4">Seu papel não cadastra clientes.</Aviso>}
