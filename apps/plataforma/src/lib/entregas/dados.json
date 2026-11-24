@@ -1186,6 +1186,20 @@
         "ORA-ONLINE-002"
       ],
       "entrega": "no balcão, a venda do pedido pago pelo site registra o pago (pelo preço pago) sem cobrar de novo",
+      "commit": "5fc91b6",
+      "publicado_em": "2026-11-24",
+      "pedido_em": "2026-11-24",
+      "resposta": null,
+      "respondido_em": null
+    },
+    {
+      "lote": "ONLINE-i",
+      "roteiro": "docs/aceite/ONLINE-i.md",
+      "requisitos": [
+        "ORA-ONLINE-001",
+        "ORA-QUAL-010"
+      ],
+      "entrega": "a vitrine da loja online de 7 a 8 vezes mais rápida no banco, com as mesmas ofertas",
       "commit": null,
       "publicado_em": null,
       "pedido_em": "2026-11-24",

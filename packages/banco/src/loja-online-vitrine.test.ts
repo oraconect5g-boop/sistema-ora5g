@@ -189,3 +189,64 @@ describe("a vitrine da loja online (ONLINE-a)", () => {
     expect(logado).toEqual(await vitrine());
   });
 });
+
+describe("as ofertas de vários produtos de uma vez (ONLINE-i, a vitrine mais rápida)", () => {
+  // A regra de antes (privado.ofertas_da_vitrine do lote de 17/11), escrita aqui à parte, para todos os produtos.
+  const REGRA_DE_ANTES = `
+    select p.id as produto_id, v.id as variante_id, u.id as unidade_id, privado.preco_do_balcao(v.id, u.id) as preco_centavos,
+           greatest(coalesce(s.quantidade - s.reservado, 0) + coalesce((
+             select sum(r.quantidade)::int from public.estoque_reservas r
+             where r.unidade_id = u.id and r.variante_id = v.id and r.situacao = 'ativa' and r.expira_em <= now()), 0), 0) as disponivel
+    from public.produtos p
+    join public.variantes v on v.produto_id = p.id and v.ativa
+    join public.unidades u on u.organizacao_id = p.organizacao_id and u.tipo = 'loja_fisica' and u.status = 'ativa' and u.cnpj is not null
+    left join public.estoque_saldos s on s.unidade_id = u.id and s.variante_id = v.id
+    where p.organizacao_id = $1 and p.publicar_online and p.ativo and p.tipo in ('aparelho', 'acessorio')
+      and privado.preco_do_balcao(v.id, u.id) is not null
+    order by 1, 2, 3`;
+  const DE_UMA_VEZ = `select o.produto_id, o.variante_id, o.unidade_id, o.preco_centavos, o.disponivel
+    from privado.ofertas_dos_produtos($1, (select array_agg(p.id) from public.produtos p where p.organizacao_id = $1)) o order by 1, 2, 3`;
+  const UM_POR_UM = `select p.id as produto_id, o.variante_id, o.unidade_id, o.preco_centavos, o.disponivel
+    from public.produtos p cross join lateral privado.ofertas_da_vitrine($1, p.id) o where p.organizacao_id = $1 order by 1, 2, 3`;
+  type Oferta = { produto_id: string; variante_id: string; unidade_id: string; preco_centavos: number | string; disponivel: number };
+  const ler = async (sql: string) => (await db.query<Oferta>(sql, [ids.organizacao])).rows;
+
+  it("dão o mesmo que a regra de antes, de uma vez e produto por produto: o preço de cada loja, a loja sem CNPJ, a variação inativa, o chip fora e a reserva vencida de volta", async () => {
+    await publicar([cat.produtoAparelho, cat.produtoCapa, cat.produtoChip]);
+    // A capa com preço próprio na Loja B; a Loja C sem CNPJ; uma variação inativa da capa, com preço; 3 capas da Loja A
+    // numa reserva que venceu e ainda não foi solta (o disponível conta com elas de volta).
+    await db.query("insert into public.precos (organizacao_id, variante_id, unidade_id, valor_centavos, inicio, origem) values ($1, $2, $3, 8900, now(), 'manual')",
+      [ids.organizacao, cat.capa, ids.lojaB]);
+    await db.query("update public.unidades set cnpj = null where id = $1", [ids.lojaC]);
+    const inativa = (await db.query<{ id: string }>("insert into public.variantes (organizacao_id, produto_id, sku, nome, ativa) values ($1, $2, 'ACE-0099', 'Capa antiga', false) returning id",
+      [ids.organizacao, cat.produtoCapa])).rows[0]?.id;
+    await db.query("insert into public.precos (organizacao_id, variante_id, valor_centavos, inicio, origem) values ($1, $2, 5000, now(), 'manual')", [ids.organizacao, inativa]);
+    const reserva = (await db.query<{ id: string }>(`insert into public.estoque_reservas (organizacao_id, unidade_id, variante_id, quantidade, origem, chave_idempotencia, expira_em)
+      values ($1, $2, $3, 3, 'pdv', 'online-i:vencida', now() + interval '1 hour') returning id`, [ids.organizacao, ids.lojaA, cat.capa])).rows[0]?.id;
+    await db.query("update public.estoque_reservas set expira_em = now() - interval '1 minute' where id = $1", [reserva]);
+
+    const antes = await ler(REGRA_DE_ANTES);
+    expect(new Set(antes.map((o) => o.produto_id))).toEqual(new Set([cat.produtoAparelho, cat.produtoCapa]));
+    expect(antes.some((o) => o.unidade_id === ids.lojaC || o.variante_id === inativa)).toBe(false);
+    const capaNa = (loja: string) => antes.find((o) => o.variante_id === cat.capa && o.unidade_id === loja);
+    expect(Number(capaNa(ids.lojaB)?.preco_centavos)).toBe(8_900);
+    const saldoA = (await db.query<{ livre: number }>("select (quantidade - reservado)::int as livre from public.estoque_saldos where unidade_id = $1 and variante_id = $2",
+      [ids.lojaA, cat.capa])).rows[0]?.livre ?? 0;
+    expect(capaNa(ids.lojaA)?.disponivel).toBe(saldoA + 3);
+    expect(await ler(DE_UMA_VEZ)).toEqual(antes);
+    expect(await ler(UM_POR_UM)).toEqual(antes);
+  });
+
+  it("só os produtos pedidos; a lista vazia ou nula não traz nada; o visitante não chama a função; a vitrine segue igual", async () => {
+    await publicar([cat.produtoAparelho, cat.produtoCapa]);
+    const produtos = async (lista: string[] | null) =>
+      (await db.query<{ produto_id: string }>("select distinct produto_id from privado.ofertas_dos_produtos($1, $2)", [ids.organizacao, lista])).rows.map((r) => r.produto_id);
+    expect(await produtos([cat.produtoCapa])).toEqual([cat.produtoCapa]);
+    expect(await produtos([])).toEqual([]);
+    expect(await produtos(null)).toEqual([]);
+    expect(await erroDoVisitante("select * from privado.ofertas_dos_produtos($1, $2)", [ids.organizacao, [cat.produtoCapa]])).toBe("42501");
+    const v = await vitrine();
+    expect(v.produtos.map((p) => p.id).sort()).toEqual([cat.produtoAparelho, cat.produtoCapa].sort());
+    expect(v.total).toBe(2);
+  });
+});

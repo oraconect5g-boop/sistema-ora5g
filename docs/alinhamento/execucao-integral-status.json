@@ -2,7 +2,7 @@
   "_leia": "Checkpoint do programa de execução integral (PR #67). Carregar ao retomar e seguir para o próximo item executável da fila; não reiniciar o projeto. Estados vêm de status-requisitos.json (fonte da rastreabilidade); este arquivo acrescenta lote, bloqueio externo e revisão. Desde 16/11/2026 a medida de avanço é o requisito homologado pelo proprietário: a chave aceites guarda a resposta dele a cada roteiro de aceite (docs/aceite/); um requisito só recebe homologado: true com todos os lotes dele aceitos e sem nada em FALTA na nota de status-requisitos.json.",
   "atualizado_em": "2026-11-24",
   "base": {
-    "main": "09d5a55",
+    "main": "5fc91b6",
     "pacote": {
       "pr": 67,
       "branch": "docs/execucao-integral-20261110",
@@ -1227,12 +1227,26 @@
         "ORA-ONLINE-002"
       ],
       "entrega": "no balcão, a venda do pedido pago pelo site registra o pago (pelo preço pago) sem cobrar de novo",
+      "commit": "5fc91b6",
+      "publicado_em": "2026-11-24",
+      "pedido_em": "2026-11-24",
+      "resposta": null,
+      "respondido_em": null,
+      "nota": "no ar, desligado, em 5fc91b6 (build 24/11 18:57; copiado do registro das publicações, a branch registro/publicacoes); a prova desfeita no banco do site passou; migration 20261124213514_pedido_pago_no_balcao; o aceite depende de ligar o pagamento pelo site; os dois requisitos seguem parciais"
+    },
+    "ONLINE-i": {
+      "roteiro": "docs/aceite/ONLINE-i.md",
+      "requisitos": [
+        "ORA-ONLINE-001",
+        "ORA-QUAL-010"
+      ],
+      "entrega": "a vitrine da loja online de 7 a 8 vezes mais rápida no banco, com as mesmas ofertas",
       "commit": null,
       "publicado_em": null,
       "pedido_em": "2026-11-24",
       "resposta": null,
       "respondido_em": null,
-      "nota": "o item 9 do ADR-025; o commit e a publicação ficam no registro (a branch registro/publicacoes); migration 20261124213514_pedido_pago_no_balcao; o aceite depende de ligar o pagamento pelo site (a chave de teste da Asaas e o sim para o worker); os dois requisitos seguem parciais"
+      "nota": "o commit e a publicação ficam no registro (a branch registro/publicacoes); migration 20261124220512_vitrine_mais_rapida; o ORA-ONLINE-001 segue parcial"
     }
   },
   "contagem_dos_estados": {
@@ -2273,7 +2287,7 @@
       "titulo": "Site de aparelhos, acessórios e planos Ora Connect",
       "prioridade": "P1",
       "estado": "parcial",
-      "lote": "L13 loja online; ONLINE-a (15/11): a vitrine pública (\"reserve no site e retire na loja\", ADR-009); migration do ONLINE-a aplicada no ora5g-dev e a loja online ligada na homologação em 15/11; ONLINE-c (17/11): o produto fora do site responde vazio, sem erro de servidor (ADR-009, decisão 15), migration aplicada no ora5g-dev em 17/11; ENTREGAS-a (17/11): o botão Comprar no topo do site, separado do Entrar (A01 do adendo do Codex de 16/11); ONLINE-e (24/11): a compra com um botão só e o número no Carrinho; ONLINE-f (24/11): a vitrine de 60 em 60, com os disponíveis primeiro; ONLINE-g (24/11): a cara de loja; ONLINE-h (24/11): o endereço do cadastro na página do produto",
+      "lote": "L13 loja online; ONLINE-a (15/11): a vitrine pública (\"reserve no site e retire na loja\", ADR-009); migration do ONLINE-a aplicada no ora5g-dev e a loja online ligada na homologação em 15/11; ONLINE-c (17/11): o produto fora do site responde vazio, sem erro de servidor (ADR-009, decisão 15), migration aplicada no ora5g-dev em 17/11; ENTREGAS-a (17/11): o botão Comprar no topo do site, separado do Entrar (A01 do adendo do Codex de 16/11); ONLINE-e (24/11): a compra com um botão só e o número no Carrinho; ONLINE-f (24/11): a vitrine de 60 em 60, com os disponíveis primeiro; ONLINE-g (24/11): a cara de loja; ONLINE-h (24/11): o endereço do cadastro na página do produto; ONLINE-i (24/11): a vitrine mais rápida",
       "bloqueio_externo": "o endereço definitivo (D-024); os planos da Ora Connect dependem da Nogle",
       "revisado_codex": false,
       "homologado": false
@@ -2759,7 +2773,7 @@
       "titulo": "Performance mobile e testes em dispositivos/internet reais",
       "prioridade": "P1",
       "estado": "parcial",
-      "lote": "transversal; QUAL-010a (15/11): o orçamento de cada tela no CI e a medida num celular simulado; QUAL-010b (15/11): o cliente do Supabase sob demanda; VEL-a (16/11): a sessão e o molde numa ida ao banco, o PDV numa leitura, a conexão mantida entre as telas, o retorno imediato em todo botão de envio e o esqueleto em toda tela do menu (ADR-010); migration do VEL-a aplicada no ora5g-dev em 16/11; PWA-a (17/11): o site instalável na tela inicial do celular; VEL-b e VEL-c (18/11): as permissões pelo molde e o sino e o Início numa ida; VEL-d (19/11): o Catálogo e a lista do Estoque numa ida, medidos antes e depois com login (migration aplicada no ora5g-dev em 19/11); VEL-e (19/11): as permissões da sessão numa conta só (migration aplicada no ora5g-dev em 19/11); VEL-f (19/11): as conexões com o banco aquecidas (sem migration); J1-b (19/11): a venda de ponta a ponta no celular, contra o site no ar; VEL-g (19/11): a tela de Transferências numa ida (migration aplicada no ora5g-dev em 19/11); VEL-h (19/11): a pré-carga mais leve e a barra de baixo à vista no celular; VEL-i (19/11): o comprovante da venda em três rodadas",
+      "lote": "transversal; QUAL-010a (15/11): o orçamento de cada tela no CI e a medida num celular simulado; QUAL-010b (15/11): o cliente do Supabase sob demanda; VEL-a (16/11): a sessão e o molde numa ida ao banco, o PDV numa leitura, a conexão mantida entre as telas, o retorno imediato em todo botão de envio e o esqueleto em toda tela do menu (ADR-010); migration do VEL-a aplicada no ora5g-dev em 16/11; PWA-a (17/11): o site instalável na tela inicial do celular; VEL-b e VEL-c (18/11): as permissões pelo molde e o sino e o Início numa ida; VEL-d (19/11): o Catálogo e a lista do Estoque numa ida, medidos antes e depois com login (migration aplicada no ora5g-dev em 19/11); VEL-e (19/11): as permissões da sessão numa conta só (migration aplicada no ora5g-dev em 19/11); VEL-f (19/11): as conexões com o banco aquecidas (sem migration); J1-b (19/11): a venda de ponta a ponta no celular, contra o site no ar; VEL-g (19/11): a tela de Transferências numa ida (migration aplicada no ora5g-dev em 19/11); VEL-h (19/11): a pré-carga mais leve e a barra de baixo à vista no celular; VEL-i (19/11): o comprovante da venda em três rodadas; ONLINE-i (24/11): a vitrine mais rápida",
       "bloqueio_externo": "as metas pedem a aprovação do proprietário (D-047), agora também as das telas com login; o aceite do VEL-a (docs/aceite/VEL-a.md); a medida por script com login roda desde 19/11 (scripts/medir-com-login.mjs, com as contas de teste); o E2E no celular que adiciona, tira e conclui uma venda roda desde 19/11 (e2e/venda-real.spec.ts, J1-b, contra o site no ar, na loja de teste); o teste no celular e na internet da loja é da piloto",
       "revisado_codex": false,
       "homologado": false
@@ -2855,5 +2869,5 @@
       "homologado": false
     }
   },
-  "proximo_passo": "Seguir a ordem de 23/11 (o prompt entregue pelo proprietário, escrito pelo Codex, com a auditoria integral de 21/11, PR #105; a leitura está em docs/alinhamento/LEITURA_AUDITORIA_2026-11-21.md). Em 23/11 à noite o proprietário pediu para seguir o planejamento do prompt: a fila, seção por seção, está em docs/alinhamento/FILA_INTEGRAL_2026-11-23.md. (1) Publicar o PAY-014b depois do merge (sem prova de leitura no domínio: o pagamento pelo site segue desligado; a prova é a desfeita no banco do site) e registrar a publicação (deploy/homologacao/registrar-publicacao.sh; a branch registro/publicacoes); os lotes de 23/11 e 24/11 até o ONLINE-h (09d5a55) estão no ar. (2) Com o PAY-014b, o pagamento pelo site fica pronto para ligar: falta a chave de teste da Asaas, o e-mail dos avisos e o sim do proprietário para o worker; depois, a vitrine mais rápida. (3) A seção 4 do prompt (o catálogo e o estoque de verdade) foi feita em 24/11 com as respostas do proprietário (D-053; as peças de ASSISTÊNCIA fora da loja online): falta um relatório novo da Rein (a posição carregada é a de 10/11), o dos IMEIs dos celulares e o CNPJ das lojas (sem ele, a loja online não vende nada de verdade). O que resta depende do proprietário, de contrato ou de terceiro (docs/PENDENCIAS_DO_PROPRIETARIO.md, a lista única). A narrativa anterior deste campo fica no histórico do Git e em docs/alinhamento/EXECUCAO_INTEGRAL_STATUS.md."
+  "proximo_passo": "Seguir a ordem de 23/11 (o prompt entregue pelo proprietário, escrito pelo Codex, com a auditoria integral de 21/11, PR #105; a leitura está em docs/alinhamento/LEITURA_AUDITORIA_2026-11-21.md). Em 23/11 à noite o proprietário pediu para seguir o planejamento do prompt: a fila, seção por seção, está em docs/alinhamento/FILA_INTEGRAL_2026-11-23.md. (1) Publicar o ONLINE-i depois do merge, rodar no site as provas de leitura da vitrine (e2e/vitrine-paginas-real.spec.ts e e2e/vitrine-cara-de-loja-real.spec.ts, uma de cada vez) e registrar a publicação (deploy/homologacao/registrar-publicacao.sh; a branch registro/publicacoes); os lotes de 23/11 e 24/11 até o PAY-014b (5fc91b6) estão no ar. (2) A seguir, num lote próprio: os painéis do Início e do Financeiro com o catálogo de verdade (achado de 24/11 à noite: sozinhos, abaixo de 1 s; com várias páginas abertas juntas no banco pequeno, o de estoque chegou a 20 s e houve 31 erros de tempo esgotado entre 18:46 e 18:50; nenhum era função dos lotes do dia). (3) O pagamento pelo site está pronto para ligar: falta a chave de teste da Asaas, o e-mail dos avisos e o sim do proprietário para o worker. (3) A seção 4 do prompt (o catálogo e o estoque de verdade) foi feita em 24/11 com as respostas do proprietário (D-053; as peças de ASSISTÊNCIA fora da loja online): falta um relatório novo da Rein (a posição carregada é a de 10/11), o dos IMEIs dos celulares e o CNPJ das lojas (sem ele, a loja online não vende nada de verdade). O que resta depende do proprietário, de contrato ou de terceiro (docs/PENDENCIAS_DO_PROPRIETARIO.md, a lista única). A narrativa anterior deste campo fica no histórico do Git e em docs/alinhamento/EXECUCAO_INTEGRAL_STATUS.md."
 }
