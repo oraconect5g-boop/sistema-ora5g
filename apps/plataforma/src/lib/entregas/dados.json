@@ -5,8 +5,8 @@
   "homologados": 0,
   "contagem": {
     "nao_iniciado": 14,
-    "parcial": 79,
-    "testado": 71,
+    "parcial": 78,
+    "testado": 72,
     "bloqueado": 13,
     "respeitado": 2
   },
@@ -1037,6 +1037,19 @@
         "ORA-CRM-009"
       ],
       "entrega": "a venda que atendeu um pedido ou uma reserva do site diz de onde veio: o selo \"veio do site\" e a frase na tela da venda, e o pedido do site na lista de compras da ficha do cliente; a venda continua sendo do balcão, e a origem fica guardada no pedido",
+      "commit": "7db5c6c",
+      "publicado_em": "2026-11-24",
+      "pedido_em": "2026-11-24",
+      "resposta": null,
+      "respondido_em": null
+    },
+    {
+      "lote": "POS-015a",
+      "roteiro": "docs/aceite/POS-015a.md",
+      "requisitos": [
+        "ORA-POS-015"
+      ],
+      "entrega": "a prova, com a sessão aberta e no site de verdade, de que nada é presumido nem gravado quando a internet cai: a faixa avisa, o envio é segurado no aparelho, a navegação mostra \"Sem internet agora\" e, na volta, nada mudou. Nenhuma tela mudou; o roteiro é para repetir num celular da loja, sem gravar nada",
       "commit": null,
       "publicado_em": null,
       "pedido_em": "2026-11-24",

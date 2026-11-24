@@ -2,7 +2,7 @@
   "_leia": "Checkpoint do programa de execução integral (PR #67). Carregar ao retomar e seguir para o próximo item executável da fila; não reiniciar o projeto. Estados vêm de status-requisitos.json (fonte da rastreabilidade); este arquivo acrescenta lote, bloqueio externo e revisão. Desde 16/11/2026 a medida de avanço é o requisito homologado pelo proprietário: a chave aceites guarda a resposta dele a cada roteiro de aceite (docs/aceite/); um requisito só recebe homologado: true com todos os lotes dele aceitos e sem nada em FALTA na nota de status-requisitos.json.",
   "atualizado_em": "2026-11-23",
   "base": {
-    "main": "a1100f7",
+    "main": "7db5c6c",
     "pacote": {
       "pr": 67,
       "branch": "docs/execucao-integral-20261110",
@@ -1078,18 +1078,31 @@
         "ORA-CRM-009"
       ],
       "entrega": "a venda que atendeu um pedido ou uma reserva do site diz de onde veio: o selo \"veio do site\" e a frase na tela da venda, e o pedido do site na lista de compras da ficha do cliente; a venda continua sendo do balcão, e a origem fica guardada no pedido",
+      "commit": "7db5c6c",
+      "publicado_em": "2026-11-24",
+      "pedido_em": "2026-11-24",
+      "resposta": null,
+      "respondido_em": null,
+      "nota": "no ar em 7db5c6c (build 24/11 00:25; copiado do registro das publicações, a branch registro/publicacoes); a prova de leitura passou no site em 24/11 à 00:26, de primeira; sem migration; o ORA-CRM-009 segue parcial; ver a frase no site pede um pedido feito e atendido na loja de teste, que grava e espera o sim do proprietário"
+    },
+    "POS-015a": {
+      "roteiro": "docs/aceite/POS-015a.md",
+      "requisitos": [
+        "ORA-POS-015"
+      ],
+      "entrega": "a prova, com a sessão aberta e no site de verdade, de que nada é presumido nem gravado quando a internet cai: a faixa avisa, o envio é segurado no aparelho, a navegação mostra \"Sem internet agora\" e, na volta, nada mudou. Nenhuma tela mudou; o roteiro é para repetir num celular da loja, sem gravar nada",
       "commit": null,
       "publicado_em": null,
       "pedido_em": "2026-11-24",
       "resposta": null,
       "respondido_em": null,
-      "nota": "o commit, a publicação e a prova de leitura ficam no registro (a branch registro/publicacoes); sem migration; o ORA-CRM-009 segue parcial (faltam os marketplaces e os pedidos do site que não viraram venda); ver a frase no site pede um pedido feito e atendido na loja de teste, que grava e espera o sim do proprietário"
+      "nota": "o commit e a publicação ficam no registro (a branch registro/publicacoes); a prova passou no site em 24/11 à 00:31, antes do merge (o comportamento já estava no ar); com este lote o ORA-POS-015 passa a testado"
     }
   },
   "contagem_dos_estados": {
     "nao_iniciado": 14,
-    "parcial": 79,
-    "testado": 71,
+    "parcial": 78,
+    "testado": 72,
     "bloqueado": 13,
     "respeitado": 2
   },
@@ -1610,8 +1623,8 @@
     "ORA-POS-015": {
       "titulo": "Atalhos para supervisor e estados offline/sem rede",
       "prioridade": "P1",
-      "estado": "parcial",
-      "lote": "L6a PDV; PWA-a (17/11): a página sem internet do site instalável, sem nada guardado",
+      "estado": "testado",
+      "lote": "L6a PDV; PWA-a (17/11): a página sem internet do site instalável, sem nada guardado; POS-015a (24/11): a prova com login e a rede desligada, no site",
       "bloqueio_externo": null,
       "revisado_codex": false,
       "homologado": false
@@ -2706,5 +2719,5 @@
       "homologado": false
     }
   },
-  "proximo_passo": "Seguir a ordem de 23/11 (o prompt entregue pelo proprietário, escrito pelo Codex, com a auditoria integral de 21/11, PR #105; a leitura está em docs/alinhamento/LEITURA_AUDITORIA_2026-11-21.md). Em 23/11 à noite o proprietário pediu para seguir o planejamento do prompt: a fila, seção por seção, está em docs/alinhamento/FILA_INTEGRAL_2026-11-23.md (o que não depende de ninguém, na ordem das áreas, e o que espera alguém). (1) Publicar o CRM-009a depois do merge, rodar no site a prova de leitura (apps/plataforma/e2e/venda-do-site-real.spec.ts) e registrar a publicação (deploy/homologacao/registrar-publicacao.sh; a branch registro/publicacoes); os lotes de 23/11, do AUD-c (5617351) ao FIN-007b (a1100f7), estão no ar. (2) A seção 4 do prompt passa à frente de tudo quando o proprietário responder as três perguntas do catálogo (a tabela de preço da loja, o tipo de cada família e o código do produto: a coluna Código ou a coluna SKU; ele recebeu em 23/11 um resumo privado do relatório para responder) e der o sim: aí se gera a prévia do catálogo de verdade com a conta de administrador de teste, e ele confere e aplica; o estoque de cada loja se carrega com um relatório do dia da virada. (3) Enquanto isso, os lotes que não dependem de ninguém, na ordem das áreas: POS-015 (a prova com login e a rede desligada), PAY-011 (o chargeback ligado ao estorno da venda), FIN-002 (a taxa das financeiras no resultado do mês), FIN-006 (o depósito agrupado da maquininha), as notas da jornada com login de REPORT-001, 003 e 006, e QUAL-006 e 013 (o aviso no celular quando o servidor erra). Um lote por vez, com teste, publicação, prova no domínio, roteiro de aceite e relato. O que depende do proprietário está em docs/PENDENCIAS_DO_PROPRIETARIO.md (a lista única). A narrativa anterior deste campo fica no histórico do Git e em docs/alinhamento/EXECUCAO_INTEGRAL_STATUS.md."
+  "proximo_passo": "Seguir a ordem de 23/11 (o prompt entregue pelo proprietário, escrito pelo Codex, com a auditoria integral de 21/11, PR #105; a leitura está em docs/alinhamento/LEITURA_AUDITORIA_2026-11-21.md). Em 23/11 à noite o proprietário pediu para seguir o planejamento do prompt: a fila, seção por seção, está em docs/alinhamento/FILA_INTEGRAL_2026-11-23.md (o que não depende de ninguém, na ordem das áreas, e o que espera alguém). (1) Publicar o POS-015a depois do merge, rodar no site a prova (apps/plataforma/e2e/sem-rede-com-login-real.spec.ts, que não grava nada) e registrar a publicação (deploy/homologacao/registrar-publicacao.sh; a branch registro/publicacoes); os lotes de 23/11, do AUD-c (5617351) ao FIN-007b (a1100f7), e o CRM-009a (7db5c6c), de 24/11, estão no ar. (2) A seção 4 do prompt passa à frente de tudo quando o proprietário responder as três perguntas do catálogo (a tabela de preço da loja, o tipo de cada família e o código do produto: a coluna Código ou a coluna SKU; ele recebeu em 23/11 um resumo privado do relatório para responder) e der o sim: aí se gera a prévia do catálogo de verdade com a conta de administrador de teste, e ele confere e aplica; o estoque de cada loja se carrega com um relatório do dia da virada. (3) Enquanto isso, os lotes que não dependem de ninguém, na ordem das áreas: PAY-011 (o chargeback ligado ao estorno da venda), FIN-002 (a taxa das financeiras no resultado do mês), FIN-006 (o depósito agrupado da maquininha), as notas da jornada com login de REPORT-001, 003 e 006, e QUAL-006 e 013 (o aviso no celular quando o servidor erra). Um lote por vez, com teste, publicação, prova no domínio, roteiro de aceite e relato. O que depende do proprietário está em docs/PENDENCIAS_DO_PROPRIETARIO.md (a lista única). A narrativa anterior deste campo fica no histórico do Git e em docs/alinhamento/EXECUCAO_INTEGRAL_STATUS.md."
 }

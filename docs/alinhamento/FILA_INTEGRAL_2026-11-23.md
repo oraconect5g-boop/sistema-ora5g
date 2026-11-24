@@ -1,10 +1,10 @@
 # Fila integral pela ordem do prompt de 23/11/2026
 
-> **Estado em 24/11/2026, depois do lote CRM-009a.** Este arquivo põe o que falta na ordem do prompt que o proprietário entregou em 23/11 (escrito pelo Codex): a seção 4 (cadastros e estoque da loja piloto), as áreas A a R da seção 5 e a revisão da seção 6. Em 23/11 à noite o proprietário pediu para seguir esse planejamento. A fonte do estado de cada requisito continua sendo `status-requisitos.json`; o que depende do proprietário está, inteiro, em `docs/PENDENCIAS_DO_PROPRIETARIO.md`. Aqui fica só a ordem de trabalho.
+> **Estado em 24/11/2026, depois do lote POS-015a.** Este arquivo põe o que falta na ordem do prompt que o proprietário entregou em 23/11 (escrito pelo Codex): a seção 4 (cadastros e estoque da loja piloto), as áreas A a R da seção 5 e a revisão da seção 6. Em 23/11 à noite o proprietário pediu para seguir esse planejamento. A fonte do estado de cada requisito continua sendo `status-requisitos.json`; o que depende do proprietário está, inteiro, em `docs/PENDENCIAS_DO_PROPRIETARIO.md`. Aqui fica só a ordem de trabalho.
 
 ## Placar
 
-Dos 179 requisitos: **71 testados**, 79 parciais, 14 não iniciados, 13 bloqueados e 2 restrições respeitadas. Nenhum homologado: o aceite do proprietário e a revisão do Codex vêm depois de cada lote. Parcial não conta como pronto.
+Dos 179 requisitos: **72 testados**, 78 parciais, 14 não iniciados, 13 bloqueados e 2 restrições respeitadas. Nenhum homologado: o aceite do proprietário e a revisão do Codex vêm depois de cada lote. Parcial não conta como pronto.
 
 ## O que já saiu do prompt
 
@@ -36,7 +36,7 @@ Vem antes das áreas, e hoje espera o proprietário:
 | B. Catálogo, fotos e preços | 2 parciais | Nada | Proprietário: as três respostas do catálogo (CAT-002) e as fotos de verdade (CAT-011) |
 | C. Estoque, compras e transferências | 4 parciais | Nada | Proprietário: aceites e a decisão D-043 (INV-012). Nogle: o ICCID na ativação (INV-011) |
 | D. Clientes e CRM | 4 parciais | Nada (o **CRM-009a**, de 24/11, pôs o pedido do site na tela da venda e na ficha do cliente) | Nogle (CRM-002), WhatsApp oficial (CRM-007), decisão D-045 (CRM-008). No CRM-009: o contrato de cada marketplace e a decisão de privacidade sobre os pedidos do site que não viraram venda |
-| E. PDV e vendas | 9 parciais | **POS-015:** a prova com login e a rede desligada no site (só leitura) | Proprietário: aceites, o celular de verdade da loja (POS-016), D-035 (POS-014). Nogle (POS-003). Provedor do link de pagamento (POS-009). Contrato das financeiras (POS-013) |
+| E. PDV e vendas | 8 parciais | Nada (o **POS-015a**, de 24/11, provou no site, com login, que nada é gravado sem rede: o ORA-POS-015 passou a testado) | Proprietário: aceites, o celular de verdade da loja (POS-015 e POS-016), D-035 (POS-014). Nogle (POS-003). Provedor do link de pagamento (POS-009). Contrato das financeiras (POS-013) |
 | F. Pagamentos e caixa | 7 parciais e 2 bloqueados | **PAY-011:** ligar o chargeback da maquininha ao estorno da venda; a antecipação como operação própria | Proprietário: aceites. Contrato e arquivo real de cada maquininha (PAY-010). Provedor de pagamento (PAY-008, 013 e 014) |
 | G. Financeiro | 3 parciais | **FIN-002:** a taxa observada das financeiras no resultado do mês. **FIN-006:** o depósito agrupado da maquininha no extrato do banco | Proprietário: a decisão D-013 (FIN-007: vender a prazo próprio), o arquivo OFX de verdade (FIN-006). Contador: o imposto (FIN-002). WhatsApp oficial (FIN-007) |
 | H. Gráficos e relatórios | 5 parciais | Conferir se as provas de leitura com login (J2-a e J2-b) já fecham a "jornada com login" de REPORT-001, 003 e 006, e acertar as notas | Proprietário: o ranking (P3), a regra da comissão, o arquivo real de cada maquininha (REPORT-005), o sim para a prova do aviso no celular (REPORT-002) |
@@ -54,7 +54,7 @@ Vem antes das áreas, e hoje espera o proprietário:
 ## A ordem dos próximos lotes que não dependem de ninguém
 
 1. ~~**CRM-009** (área D): o pedido do site no histórico do cliente.~~ Feito em 24/11 (lote CRM-009a).
-2. **POS-015** (área E): a prova com login e a rede desligada.
+2. ~~**POS-015** (área E): a prova com login e a rede desligada.~~ Feito em 24/11 (lote POS-015a).
 3. **PAY-011** (área F): o chargeback ligado ao estorno da venda.
 4. **FIN-002** (área G): a taxa das financeiras no resultado do mês.
 5. **FIN-006** (área G): o depósito agrupado da maquininha.
