@@ -1024,9 +1024,22 @@
         "ORA-FIN-010"
       ],
       "entrega": "o Início e o sino avisam quem concilia quando um repasse de financeira passa do prazo e quando chega o dia combinado de voltar ao assunto; a previsão de caixa conta o que cada financeira deve na semana do vencimento, e diz o que fica de fora (o atrasado, o que vence depois e o que não tem prazo)",
+      "commit": "a1100f7",
+      "publicado_em": "2026-11-23",
+      "pedido_em": "2026-11-24",
+      "resposta": null,
+      "respondido_em": null
+    },
+    {
+      "lote": "CRM-009a",
+      "roteiro": "docs/aceite/CRM-009a.md",
+      "requisitos": [
+        "ORA-CRM-009"
+      ],
+      "entrega": "a venda que atendeu um pedido ou uma reserva do site diz de onde veio: o selo \"veio do site\" e a frase na tela da venda, e o pedido do site na lista de compras da ficha do cliente; a venda continua sendo do balcão, e a origem fica guardada no pedido",
       "commit": null,
       "publicado_em": null,
-      "pedido_em": "2026-11-23",
+      "pedido_em": "2026-11-24",
       "resposta": null,
       "respondido_em": null
     }
