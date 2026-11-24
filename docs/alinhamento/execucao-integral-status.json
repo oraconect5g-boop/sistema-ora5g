@@ -2,7 +2,7 @@
   "_leia": "Checkpoint do programa de execução integral (PR #67). Carregar ao retomar e seguir para o próximo item executável da fila; não reiniciar o projeto. Estados vêm de status-requisitos.json (fonte da rastreabilidade); este arquivo acrescenta lote, bloqueio externo e revisão. Desde 16/11/2026 a medida de avanço é o requisito homologado pelo proprietário: a chave aceites guarda a resposta dele a cada roteiro de aceite (docs/aceite/); um requisito só recebe homologado: true com todos os lotes dele aceitos e sem nada em FALTA na nota de status-requisitos.json.",
   "atualizado_em": "2026-11-24",
   "base": {
-    "main": "b2d275b",
+    "main": "7626f14",
     "pacote": {
       "pr": 67,
       "branch": "docs/execucao-integral-20261110",
@@ -1173,12 +1173,25 @@
         "ORA-PAY-008"
       ],
       "entrega": "o pagamento pelo site com Pix, pela Asaas: o \"Pagar agora com Pix\" no pedido, o link criado pelo worker, o aviso repassado pelo site, a confirmação só pela reconsulta e o \"Pago pelo site\" para o cliente e na loja; desligado até a chave e o PAY-014b",
+      "commit": "7626f14",
+      "publicado_em": "2026-11-24",
+      "pedido_em": "2026-11-24",
+      "resposta": null,
+      "respondido_em": null,
+      "nota": "no ar, desligado, em 7626f14 (build 24/11 13:35; copiado do registro das publicações, a branch registro/publicacoes); a prova de leitura passou no site em 24/11 às 13:36, de primeira; migration 20261124155208_pagamento_pelo_site; o ORA-PAY-014 passou a parcial; desligado até a chave de teste da Asaas, o sim para agendar o worker e o PAY-014b"
+    },
+    "ONLINE-f": {
+      "roteiro": "docs/aceite/ONLINE-f.md",
+      "requisitos": [
+        "ORA-ONLINE-001"
+      ],
+      "entrega": "a vitrine com o catálogo inteiro: quantos são, de 60 em 60 com \"Anteriores\" e \"Próximos\" (guardando a busca e a categoria) e os disponíveis primeiro",
       "commit": null,
       "publicado_em": null,
       "pedido_em": "2026-11-24",
       "resposta": null,
       "respondido_em": null,
-      "nota": "a escolha do proprietário de 24/11 (D-052); o commit e a publicação ficam no registro (a branch registro/publicacoes); migration 20261124155208_pagamento_pelo_site; o ORA-PAY-014 passa a parcial"
+      "nota": "da fila (área M), depois do catálogo de verdade no site; o commit e a publicação ficam no registro (a branch registro/publicacoes); migration 20261124171542_vitrine_com_paginas; o ORA-ONLINE-001 segue parcial"
     }
   },
   "contagem_dos_estados": {
@@ -2219,7 +2232,7 @@
       "titulo": "Site de aparelhos, acessórios e planos Ora Connect",
       "prioridade": "P1",
       "estado": "parcial",
-      "lote": "L13 loja online; ONLINE-a (15/11): a vitrine pública (\"reserve no site e retire na loja\", ADR-009); migration do ONLINE-a aplicada no ora5g-dev e a loja online ligada na homologação em 15/11; ONLINE-c (17/11): o produto fora do site responde vazio, sem erro de servidor (ADR-009, decisão 15), migration aplicada no ora5g-dev em 17/11; ENTREGAS-a (17/11): o botão Comprar no topo do site, separado do Entrar (A01 do adendo do Codex de 16/11); ONLINE-e (24/11): a compra com um botão só e o número no Carrinho",
+      "lote": "L13 loja online; ONLINE-a (15/11): a vitrine pública (\"reserve no site e retire na loja\", ADR-009); migration do ONLINE-a aplicada no ora5g-dev e a loja online ligada na homologação em 15/11; ONLINE-c (17/11): o produto fora do site responde vazio, sem erro de servidor (ADR-009, decisão 15), migration aplicada no ora5g-dev em 17/11; ENTREGAS-a (17/11): o botão Comprar no topo do site, separado do Entrar (A01 do adendo do Codex de 16/11); ONLINE-e (24/11): a compra com um botão só e o número no Carrinho; ONLINE-f (24/11): a vitrine de 60 em 60, com os disponíveis primeiro",
       "bloqueio_externo": "o endereço definitivo (D-024); os planos da Ora Connect dependem da Nogle",
       "revisado_codex": false,
       "homologado": false
@@ -2801,5 +2814,5 @@
       "homologado": false
     }
   },
-  "proximo_passo": "Seguir a ordem de 23/11 (o prompt entregue pelo proprietário, escrito pelo Codex, com a auditoria integral de 21/11, PR #105; a leitura está em docs/alinhamento/LEITURA_AUDITORIA_2026-11-21.md). Em 23/11 à noite o proprietário pediu para seguir o planejamento do prompt: a fila, seção por seção, está em docs/alinhamento/FILA_INTEGRAL_2026-11-23.md. (1) Publicar o PAY-014a depois do merge, rodar no site a prova (apps/plataforma/e2e/pagamento-pelo-site-real.spec.ts, que não grava nada) e registrar a publicação (deploy/homologacao/registrar-publicacao.sh; a branch registro/publicacoes); os lotes de 23/11 e 24/11 até o ONLINE-e (b2d275b) estão no ar. (2) O PAY-014b (no balcão, a venda do pedido pago registra o \"pago pelo site\" sem cobrar de novo) vem antes de ligar o pagamento pelo site; depois, o ONLINE-f (a vitrine com o \"ver mais\" e os disponíveis primeiro). (3) A seção 4 do prompt (o catálogo e o estoque de verdade) foi feita em 24/11 com as respostas do proprietário (D-053): falta um relatório novo da Rein (a posição carregada é a de 10/11), o dos IMEIs dos celulares e o CNPJ das lojas (sem ele, a loja online não vende nada de verdade). O que resta depende do proprietário, de contrato ou de terceiro (docs/PENDENCIAS_DO_PROPRIETARIO.md, a lista única). A narrativa anterior deste campo fica no histórico do Git e em docs/alinhamento/EXECUCAO_INTEGRAL_STATUS.md."
+  "proximo_passo": "Seguir a ordem de 23/11 (o prompt entregue pelo proprietário, escrito pelo Codex, com a auditoria integral de 21/11, PR #105; a leitura está em docs/alinhamento/LEITURA_AUDITORIA_2026-11-21.md). Em 23/11 à noite o proprietário pediu para seguir o planejamento do prompt: a fila, seção por seção, está em docs/alinhamento/FILA_INTEGRAL_2026-11-23.md. (1) Publicar o ONLINE-f depois do merge, rodar no site a prova (apps/plataforma/e2e/vitrine-paginas-real.spec.ts, que não grava nada) e registrar a publicação (deploy/homologacao/registrar-publicacao.sh; a branch registro/publicacoes); os lotes de 23/11 e 24/11 até o PAY-014a (7626f14) estão no ar. (2) O PAY-014b (no balcão, a venda do pedido pago registra o \"pago pelo site\" sem cobrar de novo) vem antes de ligar o pagamento pelo site. (3) A seção 4 do prompt (o catálogo e o estoque de verdade) foi feita em 24/11 com as respostas do proprietário (D-053; as peças de ASSISTÊNCIA fora da loja online): falta um relatório novo da Rein (a posição carregada é a de 10/11), o dos IMEIs dos celulares e o CNPJ das lojas (sem ele, a loja online não vende nada de verdade). O que resta depende do proprietário, de contrato ou de terceiro (docs/PENDENCIAS_DO_PROPRIETARIO.md, a lista única). A narrativa anterior deste campo fica no histórico do Git e em docs/alinhamento/EXECUCAO_INTEGRAL_STATUS.md."
 }
