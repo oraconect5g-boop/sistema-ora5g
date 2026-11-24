@@ -1103,6 +1103,20 @@
         "ORA-QUAL-013"
       ],
       "entrega": "o aviso no celular quando o servidor dá erro: o erro de uma tela vira o alerta \"Erro no servidor do site\" no celular do dono e do administrador (no máximo um por hora), o site sem responder por 5 minutos vira \"O site não responde\" e, na volta, \"O site voltou\"; os pedidos estranhos (robôs) ficam fora da conta; a Saúde da operação mostra se o aviso está ligado",
+      "commit": "8ac0e78",
+      "publicado_em": "2026-11-24",
+      "pedido_em": "2026-11-24",
+      "resposta": null,
+      "respondido_em": null
+    },
+    {
+      "lote": "ONLINE-e",
+      "roteiro": "docs/aceite/ONLINE-e.md",
+      "requisitos": [
+        "ORA-ONLINE-001",
+        "ORA-ONLINE-002"
+      ],
+      "entrega": "a compra com um botão só (o \"Pôr no carrinho\", só nas lojas com estoque) e o número de itens no Carrinho do topo da loja online; sem foto, um espaço baixo; o topo numa linha só no celular",
       "commit": null,
       "publicado_em": null,
       "pedido_em": "2026-11-24",

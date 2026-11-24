@@ -9,6 +9,9 @@ import { adicionarAoCarrinho } from "../carrinho/acoes";
 export type ImagemDaLoja = DetalheDoProduto["fotos"][number] & { url: string };
 
 // O desenho do produto (ONLINE-a): as fotos, a descrição e, em cada variação, o preço do balcão e o estoque de cada loja.
+// ONLINE-e (24/11, a pedido do proprietário): um caminho só para comprar, o carrinho (que reserva tudo de uma vez); a página
+// de reservar um item continua no ar para os links antigos, mas não é mais oferecida aqui. Sem foto, um espaço baixo, para o
+// preço e as lojas aparecerem logo.
 export function DetalheDaLoja({ produto, imagens }: { produto: DetalheDoProduto; imagens: ImagemDaLoja[] }) {
   const p = produto;
   const comEstoque = p.variantes.some((v) => v.lojas.some((l) => l.disponibilidade !== "sem_estoque"));
@@ -18,12 +21,16 @@ export function DetalheDaLoja({ produto, imagens }: { produto: DetalheDoProduto;
       <Link href="/loja" className="inline-flex min-h-10 items-center gap-1 text-sm font-semibold text-acao"><ArrowLeft aria-hidden className="size-4" /> Voltar à loja</Link>
       <div className="grid gap-6 lg:grid-cols-[minmax(0,1fr)_minmax(0,1fr)]">
         <section aria-label="Fotos" className="space-y-3">
-          <div className="grid aspect-square place-items-center overflow-hidden rounded-cartao border border-borda bg-white">
-            {imagens[0]
-              // eslint-disable-next-line @next/next/no-img-element -- link temporário do armazenamento, não passa pelo otimizador
-              ? <img src={imagens[0].url} alt={p.nome} className="size-full object-contain p-4" />
-              : <PackageSearch aria-hidden className="size-14 text-slate-300" />}
-          </div>
+          {imagens[0] ? (
+            <div className="grid aspect-square place-items-center overflow-hidden rounded-cartao border border-borda bg-white">
+              {/* eslint-disable-next-line @next/next/no-img-element -- link temporário do armazenamento, não passa pelo otimizador */}
+              <img src={imagens[0].url} alt={p.nome} className="size-full object-contain p-4" />
+            </div>
+          ) : (
+            <div className="flex h-24 items-center justify-center gap-2 rounded-cartao border border-dashed border-borda bg-white text-sm text-suave">
+              <PackageSearch aria-hidden className="size-7 text-slate-300" />Sem foto por enquanto
+            </div>
+          )}
           {imagens.length > 1 && (
             <ul className="flex gap-2 overflow-x-auto">
               {imagens.slice(1).map((f) => (
@@ -47,7 +54,7 @@ export function DetalheDaLoja({ produto, imagens }: { produto: DetalheDoProduto;
           <div className="rounded-cartao border border-acao/20 bg-acao-clara p-4 text-sm">
             <p className="font-semibold">Como comprar</p>
             <p className="mt-1">{comEstoque
-              ? "Escolha uma loja com estoque e toque em \"Reservar\" (uma unidade) ou \"Pôr no carrinho\" (até 3 unidades da mesma loja, reservadas de uma vez): fica guardado por 24 horas, e você paga e retira na loja. O preço é o do balcão de cada loja."
+              ? "Escolha a loja e toque em \"Pôr no carrinho\". No carrinho, você reserva tudo de uma vez por 24 horas (até 3 unidades da mesma loja) e paga e retira na loja. O preço é o do balcão de cada loja."
               : "No momento, nenhuma loja tem este produto em estoque. Volte em breve ou fale com a loja mais perto de você."}</p>
           </div>
 
@@ -67,12 +74,9 @@ export function DetalheDaLoja({ produto, imagens }: { produto: DetalheDoProduto;
                         <Selo tom={DISPONIBILIDADES[l.disponibilidade]?.tom ?? "neutro"} ponto={l.disponibilidade !== "sem_estoque"}>{DISPONIBILIDADES[l.disponibilidade]?.nome ?? l.disponibilidade}</Selo>
                         <span className="numeros text-base font-bold">{brl(l.preco_centavos)}</span>
                         {l.disponibilidade !== "sem_estoque" && (
-                          <Link href={`/loja/${p.id}/reservar?variante=${v.id}&loja=${l.id}`} className="inline-flex min-h-9 items-center rounded-botao bg-acao px-3 text-sm font-semibold text-white hover:bg-acao-escura">Reservar</Link>
-                        )}
-                        {l.disponibilidade !== "sem_estoque" && (
                           <form action={adicionarAoCarrinho}>
                             <input type="hidden" name="produto" value={p.id} /><input type="hidden" name="variante" value={v.id} /><input type="hidden" name="loja" value={l.id} />
-                            <Botao type="submit" tamanho="sm" variante="secundario" enquanto="Pondo…">Pôr no carrinho</Botao>
+                            <Botao type="submit" tamanho="sm" enquanto="Pondo…">Pôr no carrinho</Botao>
                           </form>
                         )}
                       </span>

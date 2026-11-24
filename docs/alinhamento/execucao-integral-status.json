@@ -2,7 +2,7 @@
   "_leia": "Checkpoint do programa de execução integral (PR #67). Carregar ao retomar e seguir para o próximo item executável da fila; não reiniciar o projeto. Estados vêm de status-requisitos.json (fonte da rastreabilidade); este arquivo acrescenta lote, bloqueio externo e revisão. Desde 16/11/2026 a medida de avanço é o requisito homologado pelo proprietário: a chave aceites guarda a resposta dele a cada roteiro de aceite (docs/aceite/); um requisito só recebe homologado: true com todos os lotes dele aceitos e sem nada em FALTA na nota de status-requisitos.json.",
   "atualizado_em": "2026-11-24",
   "base": {
-    "main": "f3f1abc",
+    "main": "8ac0e78",
     "pacote": {
       "pr": 67,
       "branch": "docs/execucao-integral-20261110",
@@ -1144,12 +1144,26 @@
         "ORA-QUAL-013"
       ],
       "entrega": "o aviso no celular quando o servidor dá erro: o erro de uma tela vira o alerta \"Erro no servidor do site\" no celular do dono e do administrador (no máximo um por hora), o site sem responder por 5 minutos vira \"O site não responde\" e, na volta, \"O site voltou\"; os pedidos estranhos (robôs) ficam fora da conta; a Saúde da operação mostra se o aviso está ligado",
+      "commit": "8ac0e78",
+      "publicado_em": "2026-11-24",
+      "pedido_em": "2026-11-24",
+      "resposta": null,
+      "respondido_em": null,
+      "nota": "no ar em 8ac0e78 (build 24/11 09:39; copiado do registro das publicações, a branch registro/publicacoes); a prova de leitura passou no site em 24/11 às 09:41, de primeira; o worker dos avisos relata a cada minuto desde a publicação; migration 20261124121856_aviso_do_erro_do_servidor; os dois requisitos seguem parciais (o monitoramento de fora e a D-042)"
+    },
+    "ONLINE-e": {
+      "roteiro": "docs/aceite/ONLINE-e.md",
+      "requisitos": [
+        "ORA-ONLINE-001",
+        "ORA-ONLINE-002"
+      ],
+      "entrega": "a compra com um botão só (o \"Pôr no carrinho\", só nas lojas com estoque) e o número de itens no Carrinho do topo da loja online; sem foto, um espaço baixo; o topo numa linha só no celular",
       "commit": null,
       "publicado_em": null,
       "pedido_em": "2026-11-24",
       "resposta": null,
       "respondido_em": null,
-      "nota": "o commit e a publicação ficam no registro (a branch registro/publicacoes); migration 20261124121856_aviso_do_erro_do_servidor, aplicada no ora5g-dev em 24/11; provado no banco do site numa operação desfeita no fim; os dois requisitos seguem parciais (o servidor inteiro fora do ar e o tempo de resposta pedem um monitoramento de fora; a D-042)"
+      "nota": "pedido do proprietário de 24/11 (\"Sim, simplificar\"); o commit e a publicação ficam no registro (a branch registro/publicacoes); sem migration; os dois requisitos seguem parciais (os produtos de verdade, o pagamento pelo site e a entrega)"
     }
   },
   "contagem_dos_estados": {
@@ -2190,7 +2204,7 @@
       "titulo": "Site de aparelhos, acessórios e planos Ora Connect",
       "prioridade": "P1",
       "estado": "parcial",
-      "lote": "L13 loja online; ONLINE-a (15/11): a vitrine pública (\"reserve no site e retire na loja\", ADR-009); migration do ONLINE-a aplicada no ora5g-dev e a loja online ligada na homologação em 15/11; ONLINE-c (17/11): o produto fora do site responde vazio, sem erro de servidor (ADR-009, decisão 15), migration aplicada no ora5g-dev em 17/11; ENTREGAS-a (17/11): o botão Comprar no topo do site, separado do Entrar (A01 do adendo do Codex de 16/11)",
+      "lote": "L13 loja online; ONLINE-a (15/11): a vitrine pública (\"reserve no site e retire na loja\", ADR-009); migration do ONLINE-a aplicada no ora5g-dev e a loja online ligada na homologação em 15/11; ONLINE-c (17/11): o produto fora do site responde vazio, sem erro de servidor (ADR-009, decisão 15), migration aplicada no ora5g-dev em 17/11; ENTREGAS-a (17/11): o botão Comprar no topo do site, separado do Entrar (A01 do adendo do Codex de 16/11); ONLINE-e (24/11): a compra com um botão só e o número no Carrinho",
       "bloqueio_externo": "o endereço definitivo (D-024); os planos da Ora Connect dependem da Nogle",
       "revisado_codex": false,
       "homologado": false
@@ -2199,7 +2213,7 @@
       "titulo": "Carrinho/checkout online e pedido com status",
       "prioridade": "P1",
       "estado": "parcial",
-      "lote": "L13 loja online",
+      "lote": "L13 loja online; ONLINE-e (24/11): o carrinho como o único caminho oferecido, com o número no topo",
       "bloqueio_externo": null,
       "revisado_codex": false,
       "homologado": false
@@ -2772,5 +2786,5 @@
       "homologado": false
     }
   },
-  "proximo_passo": "Seguir a ordem de 23/11 (o prompt entregue pelo proprietário, escrito pelo Codex, com a auditoria integral de 21/11, PR #105; a leitura está em docs/alinhamento/LEITURA_AUDITORIA_2026-11-21.md). Em 23/11 à noite o proprietário pediu para seguir o planejamento do prompt: a fila, seção por seção, está em docs/alinhamento/FILA_INTEGRAL_2026-11-23.md. (1) Publicar o QUAL-006a depois do merge, conferir que o worker dos avisos relata a cada minuto (a Saúde da operação diz \"Aviso no celular ligado\"), rodar no site a prova (apps/plataforma/e2e/aviso-do-erro-do-servidor-real.spec.ts, que não grava nada) e registrar a publicação (deploy/homologacao/registrar-publicacao.sh; a branch registro/publicacoes); os lotes de 23/11, do AUD-c (5617351) ao FIN-007b (a1100f7), e os de 24/11, do CRM-009a (7db5c6c) ao FIN-006a (f3f1abc), estão no ar. (2) Com o QUAL-006a, a fila do que não depende de ninguém acabou: o que resta depende de resposta do proprietário, de contrato ou de terceiro (docs/PENDENCIAS_DO_PROPRIETARIO.md, a lista única). (3) A seção 4 do prompt passa à frente de tudo quando o proprietário responder as três perguntas do catálogo (a tabela de preço da loja, o tipo de cada família e o código do produto: a coluna Código ou a coluna SKU; ele recebeu em 23/11 um resumo privado do relatório para responder) e der o sim: aí se gera a prévia do catálogo de verdade com a conta de administrador de teste, e ele confere e aplica; o estoque de cada loja se carrega com um relatório do dia da virada. A narrativa anterior deste campo fica no histórico do Git e em docs/alinhamento/EXECUCAO_INTEGRAL_STATUS.md."
+  "proximo_passo": "Seguir a ordem de 23/11 (o prompt entregue pelo proprietário, escrito pelo Codex, com a auditoria integral de 21/11, PR #105; a leitura está em docs/alinhamento/LEITURA_AUDITORIA_2026-11-21.md). Em 23/11 à noite o proprietário pediu para seguir o planejamento do prompt: a fila, seção por seção, está em docs/alinhamento/FILA_INTEGRAL_2026-11-23.md. (1) Publicar o ONLINE-e depois do merge, rodar no site a prova (apps/plataforma/e2e/loja-um-botao-real.spec.ts, que não grava nada) e registrar a publicação (deploy/homologacao/registrar-publicacao.sh; a branch registro/publicacoes); os lotes de 23/11, do AUD-c (5617351) ao FIN-007b (a1100f7), e os de 24/11, do CRM-009a (7db5c6c) ao QUAL-006a (8ac0e78), estão no ar. (2) A fila do que não depende de ninguém acabou com o QUAL-006a; o que resta depende de resposta do proprietário, de contrato ou de terceiro (docs/PENDENCIAS_DO_PROPRIETARIO.md, a lista única). (3) A seção 4 do prompt passa à frente de tudo quando o proprietário responder as três perguntas do catálogo (a tabela de preço da loja, o tipo de cada família e o código do produto: a coluna Código ou a coluna SKU; ele recebeu em 23/11 um resumo privado do relatório para responder) e der o sim: aí se gera a prévia do catálogo de verdade com a conta de administrador de teste, e ele confere e aplica; o estoque de cada loja se carrega com um relatório do dia da virada. A narrativa anterior deste campo fica no histórico do Git e em docs/alinhamento/EXECUCAO_INTEGRAL_STATUS.md."
 }

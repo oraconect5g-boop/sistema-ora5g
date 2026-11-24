@@ -60,3 +60,13 @@ Sem migration. Testes: `packages/banco/src/venda-do-site-no-historico.test.ts`, 
 3. **Com as regras de leitura de quem abre a tela,** como os outros blocos da ficha. Quem vende na loja do pedido e o dono leem. O administrador vê a venda e não lê as reservas do site: a anotação não aparece para ele. Abrir essa leitura a quem só vê vendas seria mudar acesso, e não foi feito.
 4. **Falha é falha:** a leitura que não funciona é dita na tela, nunca tratada como "não veio do site". Num banco sem as tabelas, o bloco some.
 5. **Fica de fora:** as compras dos marketplaces no histórico do cliente (o pedido de cada canal chega por arquivo, sem a identidade do comprador, e não vira venda: depende do contrato de cada canal e da decisão do proprietário sobre a baixa do estoque pelo pedido do canal) e os pedidos do site que não viraram venda (o site guarda só o WhatsApp do visitante, à parte; juntá-lo ao cadastro do cliente é uma decisão de privacidade, D-048).
+
+## Adendo de 24/11/2026 (2) — Um caminho só para comprar (lote ONLINE-e; ORA-ONLINE-001 e ORA-ONLINE-002)
+
+Pedido do proprietário de 24/11 ("Sim, simplificar"), depois de ver as telas da loja com produtos de mentira.
+
+1. **O carrinho é o único caminho oferecido.** Na página do produto, cada loja com estoque tem só o "Pôr no carrinho" (o botão principal). O carrinho reserva tudo de uma vez (até 3 unidades de uma loja), como antes.
+2. **A reserva de um item continua no ar** (`/loja/[produto]/reservar` e `public.loja_reservar`), sem link na loja: um link antigo que exista ainda funciona. Tirá-la é outra decisão, com a conferência de quem a usa.
+3. **O topo mostra quantos itens o carrinho tem,** lidos do cookie do carrinho com a mesma leitura estrita (`lerCarrinho`): sem ir ao banco e sem dado pessoal. Cookie estranho conta como vazio. A ação do carrinho grava o cookie, e o Next monta o layout de novo: o número acompanha o pôr e o tirar.
+4. **Sem foto, um espaço baixo,** para o preço e as lojas aparecerem logo. O topo fica numa linha só a partir de 320 px: o número fica sobre o canto da palavra, e abaixo de 360 px o selo "Loja online" some.
+
