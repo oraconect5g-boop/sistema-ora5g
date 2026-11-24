@@ -1158,6 +1158,20 @@
         "ORA-ONLINE-001"
       ],
       "entrega": "a cara de loja da loja online: o topo com gradiente e os atalhos das categorias, as vantagens, as categorias em blocos com ícone, o título da seção e o rodapé com \"Como comprar\"",
+      "commit": "e86db02",
+      "publicado_em": "2026-11-24",
+      "pedido_em": "2026-11-24",
+      "resposta": null,
+      "respondido_em": null
+    },
+    {
+      "lote": "ONLINE-h",
+      "roteiro": "docs/aceite/ONLINE-h.md",
+      "requisitos": [
+        "ORA-ONLINE-001",
+        "ORA-ONLINE-002"
+      ],
+      "entrega": "o endereço do cadastro da loja (a configuração em vigor da tela Lojas da rede) na página do produto, na reserva e no pedido do site",
       "commit": null,
       "publicado_em": null,
       "pedido_em": "2026-11-24",

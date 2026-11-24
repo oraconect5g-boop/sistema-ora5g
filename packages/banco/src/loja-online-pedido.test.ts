@@ -112,6 +112,17 @@ describe("o pedido pelo visitante (ONLINE-d)", () => {
   });
 });
 
+describe("o endereço da loja no pedido (ONLINE-h)", () => {
+  it("o pedido e a consulta trazem o endereço da configuração em vigor da loja (a tela Lojas da rede grava assim)", async () => {
+    await publicar();
+    const p = await pedir([cat.capa]);
+    expect(p.loja).toMatchObject({ nome: "Loja A", endereco: null });
+    await db.query(`insert into public.unidade_configuracoes (organizacao_id, unidade_id, vigente_desde, logradouro, numero, complemento, bairro, cep, motivo, criado_por)
+      values ($1, $2, now() - interval '1 hour', 'Av. Exemplo', '100', 'Quiosque 2', 'Centro', '80000000', 'Teste do endereço', $3)`, [ids.organizacao, ids.lojaA, ids.dono]);
+    expect(await consultar(p.codigo, "41987650001")).toMatchObject({ loja: { nome: "Loja A", endereco: "Av. Exemplo, 100 - Quiosque 2 - Centro" } });
+  });
+});
+
 describe("o pedido na loja (ONLINE-d)", () => {
   it("atende numa venda só, com todas as unidades; o total anunciado e o de hoje; repetir devolve a mesma venda; o pedido sai como atendido", async () => {
     await publicar();
