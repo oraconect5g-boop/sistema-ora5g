@@ -14,6 +14,7 @@ import { permite } from "../../../lib/acesso/molde";
 import { FalhaDoServico, obterSessao } from "../../../lib/acesso/sessao";
 import { SERVICOS, SITUACOES as SITUACOES_DA_OS, ehServico } from "../../../lib/assistencia/regras";
 import { lerHistoricoDoCliente, type Bloco } from "../../../lib/clientes/historico";
+import { nomeDaVendaDoSite, lerVendasDoSite } from "../../../lib/loja/vendas-do-site";
 import { CAMPOS_REVELAVEIS, CANAIS, ERROS_DO_CLIENTE, FINALIDADES, FINALIDADES_DE_CONTATO, FONTES, SEGMENTOS, ehFinalidade, ehSegmento } from "../../../lib/clientes/regras";
 import { ETAPAS, ETAPAS_ABERTAS, ehEtapa, TIPOS_DE_ATIVIDADE } from "../../../lib/crm/regras";
 import { centavosDoBanco } from "../../../lib/dinheiro";
@@ -80,7 +81,9 @@ export default async function FichaDoCliente({ params, searchParams }: { params:
   ]);
   if (compras.error || acessos?.error) throw new FalhaDoServico("cliente_historico");
   // L5e (CRM-002): as OS, o funil e a agenda e o Ora Connect das compras que a pessoa vê, cada um à parte.
-  const historico = await lerHistoricoDoCliente(supabase, id, compras.data.map((c) => c.id));
+  // CRM-009a: junto, as compras que nasceram de um pedido ou de uma reserva do site (a venda é do balcão; a origem, do site).
+  const [historico, doSite] = await Promise.all([lerHistoricoDoCliente(supabase, id, compras.data.map((c) => c.id)), lerVendasDoSite(supabase, compras.data.map((c) => c.id))]);
+  const origemNoSite = new Map((doSite.estado === "ok" ? doSite.itens : []).map((x) => [x.vendaId, x]));
   const pessoas = acessos?.data?.length
     ? await supabase.from("perfis_usuario").select("id, nome").in("id", [...new Set(acessos.data.map((a) => a.usuario_id).filter((x): x is string => Boolean(x)))])
     : null;
@@ -124,15 +127,21 @@ export default async function FichaDoCliente({ params, searchParams }: { params:
 
         <Cartao titulo="Compras" subtitulo={`${f.compras.total} compra(s) concluída(s) na rede${f.compras.ultima ? `, a última em ${quando(f.compras.ultima)}` : ""}. Abaixo, as que você pode ver.`} icone={ShoppingBag}>
           <ul className="divide-y divide-borda text-sm">
-            {compras.data.map((c) => (
-              <li key={c.id} className="flex flex-wrap items-center justify-between gap-2 py-2">
-                <Link href={`/vendas/${c.id}`} className="font-semibold text-acao">Venda nº {c.numero}</Link>
-                <span className="numeros text-xs text-suave">{quando(c.concluida_em)} · {brl(centavosDoBanco(c.total_centavos))}{c.canal === "online" ? " · loja online" : ""}{c.situacao !== "concluida" ? ` · ${c.situacao}` : ""}</span>
-              </li>
-            ))}
+            {compras.data.map((c) => {
+              // CRM-009a: a compra que o cliente reservou no site e retirou na loja (a venda segue do balcão).
+              const doSiteDaVenda = origemNoSite.get(c.id);
+              return (
+                <li key={c.id} className="flex flex-wrap items-center justify-between gap-2 py-2">
+                  <Link href={`/vendas/${c.id}`} className="font-semibold text-acao">Venda nº {c.numero}</Link>
+                  <span className="numeros text-xs text-suave">{quando(c.concluida_em)} · {brl(centavosDoBanco(c.total_centavos))}{c.canal === "online" ? " · loja online" : ""}{c.situacao !== "concluida" ? ` · ${c.situacao}` : ""}
+                    {doSiteDaVenda ? ` · ${nomeDaVendaDoSite(doSiteDaVenda)}, de ${quando(doSiteDaVenda.feitoEm)}` : ""}</span>
+                </li>
+              );
+            })}
             {compras.data.length === 0 && <li className="py-2 text-suave">{f.compras.total > 0 ? "As compras deste cliente são de vendas que você não acompanha." : "Nenhuma compra ligada a este cadastro."}</li>}
           </ul>
           {visiveis < f.compras.total && compras.data.length > 0 && <p className="mt-2 text-xs text-suave">Outras {f.compras.total - visiveis} são de vendas que você não acompanha.</p>}
+          {doSite.estado === "falha" && compras.data.length > 0 && <p className="mt-2 text-xs text-aviso">Não deu para ler agora quais destas compras vieram de um pedido do site.</p>}
         </Cartao>
       </div>
 
