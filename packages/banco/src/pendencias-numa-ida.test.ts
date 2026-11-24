@@ -49,6 +49,16 @@ const CONTAGENS: Record<string, { permissoes: string[]; sql: string }> = {
   os_atrasadas: { permissoes: ["os.abrir", "os.gerir"], sql: `select count(*) from public.ordens_servico where situacao = 'aberta' and prazo < ${HOJE}` },
   os_prontas: { permissoes: ["os.abrir", "os.gerir"], sql: "select count(*) from public.ordens_servico where situacao = 'aberta' and local = 'loja' and servico = 'concluido'" },
   os_do_tecnico: { permissoes: ["os.orcar"], sql: "select count(*) from public.ordens_servico where situacao = 'aberta' and local = 'com_tecnico' and servico in ('aguardando_orcamento', 'aprovado')" },
+  // FIN-007b: para quem concilia na loja, os repasses das financeiras que passaram do prazo em vigor e as cobranças cuja
+  // volta ao assunto chegou (vale a cobrança mais recente de cada conta). Escritas de outro jeito que o da função; os
+  // casos com conta atrasada de verdade estão em aviso-do-repasse-e-previsao.test.ts.
+  repasses_atrasados: { permissoes: ["pagamento.conciliar"], sql: `select count(*) from public.contas_a_receber c join public.vendas v on v.id = c.venda_id
+    left join lateral (select p.dias from public.prazos_de_repasse p where p.organizacao_id = c.organizacao_id and p.devedor = c.devedor order by p.criado_em desc, p.id desc limit 1) pz on true
+    where c.situacao = 'aberta' and v.unidade_id = $1 and pz.dias is not null and (v.concluida_em at time zone 'America/Sao_Paulo')::date + pz.dias < ${HOJE}` },
+  cobrancas_a_retomar: { permissoes: ["pagamento.conciliar"], sql: `select count(*) from public.contas_a_receber c join public.vendas v on v.id = c.venda_id
+    where c.situacao = 'aberta' and v.unidade_id = $1 and exists (
+      select 1 from public.cobrancas_de_repasse k where k.conta_id = c.id and k.retornar_em <= ${HOJE}
+        and not exists (select 1 from public.cobrancas_de_repasse k2 where k2.conta_id = c.id and (k2.criado_em, k2.id) > (k.criado_em, k.id)))` },
 };
 
 /** O que a função devolve e o que as contagens separadas dariam, para a mesma pessoa na mesma loja. */

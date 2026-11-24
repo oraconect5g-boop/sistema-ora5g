@@ -129,6 +129,7 @@
     { "versao": "20261123174000", "nome": "pendencia_da_falta_na_transferencia", "md5": "5e1aa5bc970537c981c14a4ed73f4988", "aplicada_em": "2026-11-23" },
     { "versao": "20261123182645", "nome": "financeiro_conferencia", "md5": "cfe0b85611d370fa81a6ae35c7b657a3", "aplicada_em": "2026-11-23" },
     { "versao": "20261123221242", "nome": "financeiro_conferencia_do_desfeito", "md5": "f799a2f41ca73ace59cc1b81d2bdcfa8", "aplicada_em": "2026-11-23" },
-    { "versao": "20261123230314", "nome": "repasses_atrasados", "md5": "eae87b1636914525cab2e5fd15433ca3", "aplicada_em": "2026-11-23" }
+    { "versao": "20261123230314", "nome": "repasses_atrasados", "md5": "eae87b1636914525cab2e5fd15433ca3", "aplicada_em": "2026-11-23" },
+    { "versao": "20261124021740", "nome": "aviso_do_repasse_e_previsao_com_vencimento", "md5": "0aa8234e9afee930979db32ce7346ad0", "aplicada_em": "2026-11-23" }
   ]
 }

@@ -194,7 +194,8 @@ describe("previsão de caixa: quem vê (L8c)", () => {
   });
 
   it("sem uma das permissões das partes, nem o dono vê; horizonte fora de 1 a 13 semanas é recusado", async () => {
-    for (const permissao of ["previsao.ver", "venda.ver_todas", "conta_pagar.gerir", "caixa.conferir"]) {
+    // FIN-007b: a permissão de conciliar entra na lista (é ela que lê o prazo de repasse das financeiras).
+    for (const permissao of ["previsao.ver", "venda.ver_todas", "conta_pagar.gerir", "caixa.conferir", "pagamento.conciliar"]) {
       await db.exec("savepoint sem_permissao");
       await db.query("select set_config('ora.motivo', 'Teste da previsão sem uma das permissões', true)");
       await db.query("delete from public.papel_permissoes where papel = 'dono' and permissao = $1", [permissao]);
@@ -247,12 +248,14 @@ describe("previsão de caixa: os fatos (L8c)", () => {
   it("o que as financeiras devem, cartão e Pix a conciliar dos últimos 60 dias e o dinheiro nas gavetas dos caixas abertos", async () => {
     const { dono } = await semanasDaRede();
     const rede = await previsao(dono);
-    expect(n(rede.financeiras)).toEqual({ valor: 129_900, quantidade: 1 });
+    // FIN-007b: o total em aberto é o mesmo; sem prazo de repasse gravado, ele está inteiro em "sem prazo".
+    const nada = { valor: 0, quantidade: 0 };
+    expect(n(rede.financeiras)).toEqual({ valor: 129_900, quantidade: 1, atrasadas: nada, no_periodo: nada, depois: nada, sem_prazo: { valor: 129_900, quantidade: 1 } });
     // S3 (Pix PicPay, há 30 dias); S4 está conciliada e S5 tem mais de 60 dias.
     expect(n(rede.a_conciliar)).toEqual({ valor: 7_900, quantidade: 1 });
     expect(n(rede.gavetas)).toEqual({ valor: await dinheiroNasGavetas(null), caixas: 3 });
     const b = await previsao(dono, 8, ids.lojaB);
-    expect(n(b.financeiras)).toEqual({ valor: 0, quantidade: 0 });
+    expect(n(b.financeiras)).toEqual({ valor: 0, quantidade: 0, atrasadas: nada, no_periodo: nada, depois: nada, sem_prazo: nada });
     expect(n(b.a_conciliar)).toEqual({ valor: 0, quantidade: 0 });
     expect(n(b.gavetas)).toEqual({ valor: await dinheiroNasGavetas(ids.lojaB), caixas: 1 });
     expect(Number(b.gavetas.valor)).toBe(149_900);
