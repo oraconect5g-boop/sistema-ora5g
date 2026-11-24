@@ -55,7 +55,7 @@ export function ConteudoResultado({ leitura, mes, mesAtual, filtro, regioes = nu
       ) : (
         <Painel r={leitura.dados} mesAtual={mesAtual} regioes={regioes} />
       )}
-      <ComoLer />
+      <ComoLer comFinanceiras={leitura.estado !== "ok" || leitura.dados.linhas.financeiras !== null} />
     </>
   );
 }
@@ -95,6 +95,7 @@ function Painel({ r, mesAtual, regioes }: { r: ResultadoDoMes; mesAtual: string;
     return texto ? [`Parte da receita|${texto}`] : [];
   };
   const custosEDespesas = l.taxas + l.despesas + l.saidasCaixa + l.rede;
+  const f = l.financeiras;
   const margem = daReceitaTexto(l.margemBruta);
   const final = daReceitaTexto(l.resultado);
 
@@ -115,9 +116,16 @@ function Painel({ r, mesAtual, regioes }: { r: ResultadoDoMes; mesAtual: string;
     },
     { rotulo: "Margem bruta", valor: l.margemBruta, total: true, detalhe: margem ? `${margem} da receita` : undefined },
     {
-      rotulo: "Taxas de cartão e Pix", valor: -l.taxas, dica: parte(l.taxas),
+      rotulo: "Taxas de cartão e Pix", valor: -(f?.cartaoPix ?? l.taxas), dica: parte(f?.cartaoPix ?? l.taxas),
       detalhe: l.aConciliar > 0 ? `${plural(l.aConciliar, "pagamento", "pagamentos")} ainda sem conciliação` : `${plural(l.pagamentosConciliados, "pagamento conciliado", "pagamentos conciliados")}`,
     },
+    // FIN-002a: a taxa da PayJoy e da Aiva, observada no repasse (o banco de antes da migration não manda a parte).
+    ...(f ? [{
+      rotulo: "Taxas da PayJoy e da Aiva", valor: -f.taxas, dica: parte(f.taxas),
+      detalhe: f.aReceber > 0
+        ? `${plural(f.recebidas, "repasse registrado", "repasses registrados")} · ${plural(f.aReceber, "conta", "contas")} ainda sem repasse`
+        : plural(f.recebidas, "repasse registrado", "repasses registrados"),
+    }] : []),
     {
       rotulo: naRede ? "Contas das lojas" : "Contas da loja", valor: -l.despesas, dica: parte(l.despesas),
       detalhe: l.despesasEmAberto > 0 ? `Pelo vencimento · ${brl(l.despesasEmAberto)} ainda em aberto` : "Pelo vencimento",
@@ -140,7 +148,7 @@ function Painel({ r, mesAtual, regioes }: { r: ResultadoDoMes; mesAtual: string;
 
   return (
     <>
-      {(l.vendidoSemCusto > 0 || l.aConciliar > 0 || (naRede && l.naoDividido > 0)) && (
+      {(l.vendidoSemCusto > 0 || l.aConciliar > 0 || (f !== null && f.aReceber > 0) || (naRede && l.naoDividido > 0)) && (
         <div className="space-y-2">
           {l.vendidoSemCusto > 0 && (
             <Aviso tom="aviso" titulo="Custo faltando">
@@ -151,6 +159,12 @@ function Painel({ r, mesAtual, regioes }: { r: ResultadoDoMes; mesAtual: string;
             <Aviso tom="info" titulo="Taxas a conferir">
               {`${plural(l.aConciliar, "pagamento", "pagamentos")} de cartão e Pix (${brl(l.aConciliarValor)}) ainda sem conciliação: a taxa deles só entra depois de conciliar. `}
               <Link href="/pagamentos/conciliacao" className="font-semibold underline">Conciliar</Link>
+            </Aviso>
+          )}
+          {f !== null && f.aReceber > 0 && (
+            <Aviso tom="info" titulo="Repasses das financeiras a registrar">
+              {`${plural(f.aReceber, "conta", "contas")} da PayJoy e da Aiva (${brl(f.aReceberValor)}) ainda sem repasse registrado: a taxa delas só entra quando o repasse for registrado. `}
+              <Link href="/pagamentos/financeiras" className="font-semibold underline">Registrar o repasse</Link>
             </Aviso>
           )}
           {naRede && l.naoDividido > 0 && (
@@ -299,7 +313,7 @@ function PorRegiao({ r, regioes }: { r: ResultadoDoMes; regioes: RegioesDoPainel
   );
 }
 
-function ComoLer() {
+function ComoLer({ comFinanceiras }: { comFinanceiras: boolean }) {
   return (
     <Cartao titulo="Como ler este resultado" icone={Info}>
       <details data-imprimir="" className="group">
@@ -310,7 +324,10 @@ function ComoLer() {
           <li>Não é a contabilidade: é o resultado gerencial com o que está lançado no sistema. O contador fecha o oficial.</li>
           <li>Vendas, devoluções e cancelamentos entram no mês em que aconteceram, na loja da venda.</li>
           <li>Custo das mercadorias: o custo gravado em cada item quando ele foi vendido. Custo novo não muda venda antiga.</li>
-          <li>Taxas de cartão e Pix: a diferença entre o valor e o que caiu na conta, nos pagamentos já conciliados. A taxa da PayJoy e da Aiva ainda não entra (falta o contrato).</li>
+          <li>Taxas de cartão e Pix: a diferença entre o valor e o que caiu na conta, nos pagamentos já conciliados.</li>
+          {comFinanceiras
+            ? <li>Taxas da PayJoy e da Aiva: a diferença entre o valor financiado e o que a financeira repassou, nas contas com o repasse registrado (em Gestão → A receber das financeiras), no mês da venda. A conta ainda sem repasse não entra e aparece no aviso. Venda cancelada sai, como no cartão e no Pix.</li>
+            : <li>A taxa da PayJoy e da Aiva ainda não entra.</li>}
           <li>Contas a pagar entram no mês do vencimento, pagas ou não; a conta paga, pelo valor pago (com juros ou desconto). Compra de mercadoria fica fora: o custo entra quando o item é vendido.</li>
           <li>As contas da rede (central) são divididas entre as lojas pela receita líquida de cada uma no mês.</li>
           <li>Imposto sobre a venda e comissão só entram quando forem lançados nas contas a pagar.</li>

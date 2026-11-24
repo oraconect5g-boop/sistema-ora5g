@@ -206,8 +206,9 @@ describe("resultado do mês: as linhas (L8b)", () => {
 
     // Divisão dos R$ 1.000,00 da rede pela receita (A 323.450, B 139.900 de 463.350):
     // A 69.806,84 e B 30.193,15 em centavos; o centavo que sobra vai para A (maior fração).
-    const lojaA = { receita_liquida: 323_450, cmv: 225_400, margem_bruta: 98_050, taxas: 500, despesas: 320_500, saidas_caixa: 2_500, rede: 69_807 };
-    const lojaB = { receita_liquida: 139_900, cmv: 110_000, margem_bruta: 29_900, taxas: 0, despesas: 10_000, saidas_caixa: 0, rede: 30_193 };
+    // FIN-002a: as taxas da loja são as de cartão e Pix mais as das financeiras (a PayJoy da V3 ainda não repassou: 0).
+    const lojaA = { receita_liquida: 323_450, cmv: 225_400, margem_bruta: 98_050, taxas: 500, taxas_cartao_pix: 500, taxas_financeiras: 0, despesas: 320_500, saidas_caixa: 2_500, rede: 69_807 };
+    const lojaB = { receita_liquida: 139_900, cmv: 110_000, margem_bruta: 29_900, taxas: 0, taxas_cartao_pix: 0, taxas_financeiras: 0, despesas: 10_000, saidas_caixa: 0, rede: 30_193 };
     const resultadoA = 98_050 - 500 - 320_500 - 2_500 - 69_807;
     const resultadoB = 29_900 - 10_000 - 30_193;
 
@@ -219,6 +220,9 @@ describe("resultado do mês: as linhas (L8b)", () => {
       vendido_com_custo: 479_100, vendido_sem_custo: 0, itens_sem_custo: 0,
       // V4 foi cancelada: o Pix dela está em estorno e não conta. Sem conciliação: Pix PicPay da V2 e Pix direto da V5.
       taxas: 500, pagamentos_conciliados: 1, a_conciliar: 2, a_conciliar_valor: 63_500,
+      // FIN-002a: a PayJoy da V3 (R$ 1.499,00 com R$ 200,00 de entrada) ainda não repassou os R$ 1.299,00: a taxa dela
+      // não se conhece e a conta é contada à parte.
+      taxas_cartao_pix: 500, taxas_financeiras: 0, financeiras_recebidas: 0, financeiras_a_receber: 1, financeiras_a_receber_valor: 129_900,
       despesas: 330_500, despesas_em_aberto: 310_000, saidas_quantidade: 1, saidas_caixa: 2_500,
       rede: 100_000, rede_em_aberto: 100_000, nao_dividido: 0, peso: 463_350, peso_da_rede: 463_350,
       resultado: 127_950 - 500 - 330_500 - 2_500 - 100_000,
@@ -308,6 +312,68 @@ describe("resultado do mês: as linhas (L8b)", () => {
     const todos = ["dinheiro", "pix_direto", "pix_picpay", "cartao_picpay", "cartao_pagseguro", "link_pagamento", "payjoy", "aiva", "vale_troca"];
     const liquidaveis = (await db.query<{ m: string }>("select m from unnest($1::text[]) as m where privado.meio_liquidavel(m) order by m", [todos])).rows.map((r) => r.m);
     expect(lista).toEqual(liquidaveis);
+  });
+});
+
+describe("a taxa das financeiras no resultado (FIN-002a)", () => {
+  it("a diferença entre o financiado e o repasse entra nas taxas, no mês da venda; a conta sem repasse é contada à parte; a venda cancelada sai", async () => {
+    const [atual, anterior] = [await mes(), await mes(-1)];
+    const dia = await hoje();
+    const ana = await naLoja(ids.vendedorA, ids.lojaA);
+    await abrirCaixa(ana);
+    // Loja A: o aparelho a1 na PayJoy (R$ 1.499,00, com R$ 200,00 de entrada em dinheiro: financiados R$ 1.299,00) e o a2
+    // na Aiva (R$ 1.199,00 financiados e R$ 300,00 de entrada em dinheiro, em pagamento separado). Custo do aparelho: R$ 1.100,00.
+    const v1 = await novaVenda(ana);
+    await adicionar(ana, v1, cat.aparelho, itens.a1);
+    await concluir(ana, v1, [{ meio: "payjoy", valor: 149_900, entrada: 20_000, meio_entrada: "dinheiro", parcelas: 12 }], { nome: "Cliente Teste", email: "cliente@teste.invalid" });
+    const v2 = await novaVenda(ana);
+    await adicionar(ana, v2, cat.aparelho, itens.a2);
+    await concluir(ana, v2, [{ meio: "aiva", valor: 119_900, parcelas: 10 }, { meio: "dinheiro", valor: 30_000, entrada_do_financiamento: true }],
+      { nome: "Cliente Teste", email: "cliente@teste.invalid" });
+    const contaDaVenda = async (venda: string) =>
+      (await db.query<{ id: string; valor: string }>("select id, valor_centavos as valor from public.contas_a_receber where venda_id = $1", [venda])).rows[0];
+    const [c1, c2] = [await contaDaVenda(v1), await contaDaVenda(v2)];
+    expect([Number(c1?.valor), Number(c2?.valor)]).toEqual([129_900, 119_900]);
+    const dono = await naLoja(ids.dono, ids.lojaA);
+    const receita = 2 * 149_900;
+    const margem = receita - 2 * 110_000;
+
+    // Antes de qualquer repasse: nenhuma taxa de financeira, as duas contas contadas à parte.
+    let r = await resultado(dono, atual, ids.lojaA);
+    expect(numeros(r.linhas)).toMatchObject({
+      receita_liquida: receita, margem_bruta: margem, taxas: 0, taxas_cartao_pix: 0, taxas_financeiras: 0,
+      financeiras_recebidas: 0, financeiras_a_receber: 2, financeiras_a_receber_valor: 129_900 + 119_900, resultado: margem,
+    });
+
+    // A PayJoy repassa R$ 1.250,00 dos R$ 1.299,00: R$ 49,00 de taxa observada, no mês da venda.
+    expect(await valor(dono, "select public.financeira_receber($1, $2, $3, $4::date) as v", [c1?.id, "REPASSE-FICTICIO-FIN002", 125_000, dia])).toBeTruthy();
+    r = await resultado(dono, atual, ids.lojaA);
+    expect(numeros(r.linhas)).toMatchObject({
+      taxas: 4_900, taxas_cartao_pix: 0, taxas_financeiras: 4_900, financeiras_recebidas: 1, financeiras_a_receber: 1,
+      financeiras_a_receber_valor: 119_900, resultado: margem - 4_900,
+    });
+    // Na rede, a mesma taxa, na loja A e na série dos meses; a conta das linhas continua fechando com a chave "taxas".
+    const rede = await resultado(dono, atual, null, 2);
+    expect(numeros(rede.linhas)).toMatchObject({ taxas: 4_900, taxas_cartao_pix: 0, taxas_financeiras: 4_900, financeiras_recebidas: 1, financeiras_a_receber: 1 });
+    expect(Number(rede.linhas.resultado)).toBe(Number(rede.linhas.margem_bruta) - 4_900 - Number(rede.linhas.despesas) - Number(rede.linhas.saidas_caixa) - Number(rede.linhas.rede));
+    expect(rede.por_loja.map((l) => [l.nome, Number(l.taxas), Number(l.taxas_cartao_pix), Number(l.taxas_financeiras), Number(l.resultado)]))
+      .toEqual([["Loja A", 4_900, 0, 4_900, margem - 4_900]]);
+    expect(rede.meses.map((m) => [m.mes, Number(m.taxas)])).toEqual([[anterior, 0], [atual, 4_900]]);
+
+    // A venda da Aiva foi do mês passado: a conta aberta dela conta lá, não aqui.
+    await db.query("update public.vendas set concluida_em = ($2::date + interval '10 days 12 hours') at time zone 'America/Sao_Paulo' where id = $1", [v2, anterior]);
+    expect(numeros((await resultado(dono, atual, ids.lojaA)).linhas)).toMatchObject({ financeiras_a_receber: 0, financeiras_a_receber_valor: 0, taxas_financeiras: 4_900 });
+    expect(numeros((await resultado(dono, anterior, ids.lojaA)).linhas)).toMatchObject({ financeiras_a_receber: 1, financeiras_a_receber_valor: 119_900, taxas_financeiras: 0 });
+
+    // A venda da PayJoy é cancelada depois do repasse: a conta continua recebida (o acerto com a financeira fica no
+    // estorno), o pagamento sai de "confirmado" e a taxa dela sai do resultado, como a de cartão e Pix.
+    await abrirCaixa(dono, 50_000);
+    await cancelarVenda(dono, v1);
+    expect((await db.query("select r.situacao, p.situacao as pagamento from public.contas_a_receber r join public.venda_pagamentos p on p.id = r.pagamento_id where r.venda_id = $1", [v1])).rows)
+      .toEqual([{ situacao: "recebida", pagamento: "estorno_pendente" }]);
+    expect(numeros((await resultado(dono, atual, ids.lojaA)).linhas)).toMatchObject({
+      taxas: 0, taxas_financeiras: 0, financeiras_recebidas: 0, financeiras_a_receber: 0, cancelado: 149_900,
+    });
   });
 });
 

@@ -12,11 +12,28 @@ import { somarMeses } from "../metas/painel";
 type Cliente = Awaited<ReturnType<typeof obterSessao>>["supabase"];
 const FUNCAO_AUSENTE = new Set(["PGRST202", "42883"]);
 
+/**
+ * FIN-002a: as taxas das financeiras (PayJoy, Aiva) observadas no repasse, e a outra parte das "taxas" (cartão e Pix).
+ * As "taxas" do resultado são a soma das duas. Nulo: o banco de antes da migration não manda (lá as taxas eram só as de
+ * cartão e Pix).
+ */
+export type FinanceirasDoResultado = {
+  /** As taxas de cartão e Pix, observadas na conciliação. */
+  cartaoPix: number;
+  /** O valor financiado menos o que a financeira repassou, nas contas com o repasse registrado. */
+  taxas: number;
+  /** As contas com o repasse registrado. */
+  recebidas: number;
+  /** As contas ainda sem repasse registrado (a taxa delas ainda não se conhece), e o valor delas. */
+  aReceber: number; aReceberValor: number;
+};
 export type LinhasDoResultado = {
   vendas: number; bruto: number; descontos: number; vendido: number; devolvido: number; cancelado: number; receitaLiquida: number;
   custoVendido: number; custoDevolvido: number; custoCancelado: number; cmv: number; margemBruta: number;
   vendidoComCusto: number; vendidoSemCusto: number; itensSemCusto: number;
+  /** As taxas que entram no resultado: as de cartão e Pix e (FIN-002a) as das financeiras. */
   taxas: number; pagamentosConciliados: number; aConciliar: number; aConciliarValor: number;
+  financeiras: FinanceirasDoResultado | null;
   despesas: number; despesasEmAberto: number; saidasQuantidade: number; saidasCaixa: number;
   /** Na rede, as contas da rede; na loja, a parte dela. */
   rede: number; redeEmAberto: number; naoDividido: number;
@@ -27,6 +44,8 @@ export type LinhasDoResultado = {
 export type MesDoResultado = { mes: string; receitaLiquida: number; cmv: number; taxas: number; despesas: number; saidasCaixa: number; rede: number; resultado: number };
 export type LojaDoResultado = {
   unidade: string; nome: string | null; receitaLiquida: number; cmv: number; margemBruta: number; taxas: number; despesas: number; saidasCaixa: number; rede: number; resultado: number;
+  /** FIN-002a: as duas partes das taxas da loja; nulas no banco de antes da migration. */
+  taxasCartaoPix: number | null; taxasFinanceiras: number | null;
 };
 export type ResultadoDoMes = {
   mes: string; hoje: string; emAndamento: boolean; unidade: string | null;
@@ -53,6 +72,24 @@ const uuid = (l: Linha, campo: string) => {
 };
 const somar = <T>(itens: readonly T[], valor: (i: T) => number) => itens.reduce((s, i) => s + valor(i), 0);
 
+// FIN-002a: as chaves novas vêm todas juntas, ou nenhuma (o banco de antes da migration); metade delas é falha.
+const CHAVES_DAS_FINANCEIRAS = ["taxas_cartao_pix", "taxas_financeiras", "financeiras_recebidas", "financeiras_a_receber", "financeiras_a_receber_valor"];
+function lerFinanceiras(l: Linha): FinanceirasDoResultado | null {
+  const presentes = CHAVES_DAS_FINANCEIRAS.filter((c) => Object.hasOwn(l, c)).length;
+  if (presentes === 0) return null;
+  if (presentes !== CHAVES_DAS_FINANCEIRAS.length) throw new RespostaInesperada("financeiras");
+  return {
+    cartaoPix: n(l, "taxas_cartao_pix"), taxas: n(l, "taxas_financeiras"), recebidas: n(l, "financeiras_recebidas"),
+    aReceber: n(l, "financeiras_a_receber"), aReceberValor: n(l, "financeiras_a_receber_valor"),
+  };
+}
+function lerTaxasDaLoja(l: Linha): { taxasCartaoPix: number | null; taxasFinanceiras: number | null } {
+  const presentes = ["taxas_cartao_pix", "taxas_financeiras"].filter((c) => Object.hasOwn(l, c)).length;
+  if (presentes === 0) return { taxasCartaoPix: null, taxasFinanceiras: null };
+  if (presentes !== 2) throw new RespostaInesperada("taxas_financeiras");
+  return { taxasCartaoPix: n(l, "taxas_cartao_pix"), taxasFinanceiras: n(l, "taxas_financeiras") };
+}
+
 function lerLinhas(l: Linha): LinhasDoResultado {
   return {
     vendas: n(l, "vendas"), bruto: n(l, "bruto"), descontos: n(l, "descontos"), vendido: n(l, "vendido"), devolvido: n(l, "devolvido"),
@@ -60,6 +97,7 @@ function lerLinhas(l: Linha): LinhasDoResultado {
     custoCancelado: n(l, "custo_cancelado"), cmv: n(l, "cmv"), margemBruta: n(l, "margem_bruta"), vendidoComCusto: n(l, "vendido_com_custo"),
     vendidoSemCusto: n(l, "vendido_sem_custo"), itensSemCusto: n(l, "itens_sem_custo"), taxas: n(l, "taxas"),
     pagamentosConciliados: n(l, "pagamentos_conciliados"), aConciliar: n(l, "a_conciliar"), aConciliarValor: n(l, "a_conciliar_valor"),
+    financeiras: lerFinanceiras(l),
     despesas: n(l, "despesas"), despesasEmAberto: n(l, "despesas_em_aberto"), saidasQuantidade: n(l, "saidas_quantidade"), saidasCaixa: n(l, "saidas_caixa"),
     rede: n(l, "rede"), redeEmAberto: n(l, "rede_em_aberto"), naoDividido: n(l, "nao_dividido"), peso: n(l, "peso"), pesoDaRede: n(l, "peso_da_rede"),
     resultado: n(l, "resultado"),
@@ -73,7 +111,11 @@ function linhasFecham(l: LinhasDoResultado): boolean {
     l.vendidoComCusto, l.vendidoSemCusto, l.itensSemCusto, l.taxas, l.pagamentosConciliados, l.aConciliar, l.aConciliarValor,
     l.despesas, l.despesasEmAberto, l.saidasQuantidade, l.saidasCaixa, l.rede, l.redeEmAberto, l.naoDividido, l.peso, l.pesoDaRede,
   ];
-  return naoNegativos.every((v) => v >= 0)
+  const f = l.financeiras;
+  // FIN-002a: as taxas são as de cartão e Pix mais as das financeiras; a conta sem repasse tem valor, e o valor tem conta.
+  const financeirasFecham = f === null || ([f.cartaoPix, f.taxas, f.recebidas, f.aReceber, f.aReceberValor].every((v) => v >= 0)
+    && l.taxas === f.cartaoPix + f.taxas && (f.aReceber === 0) === (f.aReceberValor === 0));
+  return naoNegativos.every((v) => v >= 0) && financeirasFecham
     && l.vendido === l.bruto - l.descontos
     && l.receitaLiquida === l.vendido - l.devolvido - l.cancelado
     && l.cmv === l.custoVendido - l.custoDevolvido - l.custoCancelado
@@ -105,6 +147,7 @@ export function lerResultadoDoMes(dado: unknown, pedido: { mes: string; unidade:
     porLoja: lista(dado, "por_loja").map((l) => ({
       unidade: uuid(l, "unidade"), nome: textoOuNulo(l, "nome"), receitaLiquida: n(l, "receita_liquida"), cmv: n(l, "cmv"), margemBruta: n(l, "margem_bruta"),
       taxas: n(l, "taxas"), despesas: n(l, "despesas"), saidasCaixa: n(l, "saidas_caixa"), rede: n(l, "rede"), resultado: n(l, "resultado"),
+      ...lerTaxasDaLoja(l),
     })),
     lojas: lista(dado, "lojas").map((l) => ({ id: uuid(l, "id"), nome: t(l, "nome") })),
   };
@@ -123,7 +166,12 @@ export function lerResultadoDoMes(dado: unknown, pedido: { mes: string; unidade:
       && somar(r.porLoja, (x) => x.rede) === l.rede - l.naoDividido
       && somar(r.porLoja, (x) => x.despesas) === l.despesas
       && r.porLoja.every((x) => x.margemBruta === x.receitaLiquida - x.cmv && x.rede >= 0 && x.taxas >= 0 && x.despesas >= 0 && x.saidasCaixa >= 0
-        && x.resultado === x.margemBruta - x.taxas - x.despesas - x.saidasCaixa - x.rede)
+        && x.resultado === x.margemBruta - x.taxas - x.despesas - x.saidasCaixa - x.rede
+        // FIN-002a: com as chaves novas nas linhas, cada loja também as traz, e as duas partes somam as taxas dela.
+        && (l.financeiras === null ? x.taxasFinanceiras === null
+          : x.taxasCartaoPix !== null && x.taxasFinanceiras !== null && x.taxasCartaoPix >= 0 && x.taxasFinanceiras >= 0
+            && x.taxas === x.taxasCartaoPix + x.taxasFinanceiras))
+      && (l.financeiras === null || somar(r.porLoja, (x) => x.taxasFinanceiras ?? 0) === l.financeiras.taxas)
       && l.peso === l.pesoDaRede
     : r.porLoja.length === 0 && l.naoDividido === 0 && l.redeEmAberto === 0;
   const categoriasFecham = somar(r.porCategoria, (c) => c.valor) === l.despesas + (naRede ? l.rede : 0)

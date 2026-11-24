@@ -11,6 +11,7 @@ const v = (centavos: number): Celula => ({ centavos });
 
 export function planilhaDoResultado(r: ResultadoDoMes, onde: string, gerado: string): SecaoCsv[] {
   const l = r.linhas;
+  const f = l.financeiras;
   const naRede = r.unidade === null;
   const lojas = [...r.porLoja].sort((a, b) => (a.nome ?? "~").localeCompare(b.nome ?? "~", "pt-BR"));
   const daLoja = (f: (x: LojaDoResultado) => number) => (naRede ? lojas.map((x) => v(f(x))) : []);
@@ -26,7 +27,11 @@ export function planilhaDoResultado(r: ResultadoDoMes, onde: string, gerado: str
       ["Receita líquida", v(l.receitaLiquida), ...daLoja((x) => x.receitaLiquida)],
       ["Custo das mercadorias", v(l.cmv), ...daLoja((x) => x.cmv)],
       ["Margem bruta", v(l.margemBruta), ...daLoja((x) => x.margemBruta)],
-      ["Taxas de cartão e Pix", v(l.taxas), ...daLoja((x) => x.taxas)],
+      // FIN-002a: com a parte das financeiras, as duas linhas; sem ela (banco de antes), a linha de sempre.
+      ...(f
+        ? [["Taxas de cartão e Pix", v(f.cartaoPix), ...daLoja((x) => x.taxasCartaoPix ?? x.taxas)],
+          ["Taxas da PayJoy e da Aiva (observadas no repasse)", v(f.taxas), ...daLoja((x) => x.taxasFinanceiras ?? 0)]]
+        : [["Taxas de cartão e Pix", v(l.taxas), ...daLoja((x) => x.taxas)]]),
       [naRede ? "Contas das lojas" : "Contas da loja", v(l.despesas), ...daLoja((x) => x.despesas)],
       ["Dinheiro do caixa (saídas autorizadas)", v(l.saidasCaixa), ...daLoja((x) => x.saidasCaixa)],
       [naRede ? "Contas da rede (nas lojas, a parte de cada uma)" : "Parte das contas da rede", v(l.rede), ...daLoja((x) => x.rede)],
@@ -38,7 +43,10 @@ export function planilhaDoResultado(r: ResultadoDoMes, onde: string, gerado: str
     ...(l.vendidoSemCusto > 0 ? [["Vendido sem custo cadastrado: o custo não entra e o resultado aparece maior", v(l.vendidoSemCusto), `${l.itensSemCusto} ${l.itensSemCusto === 1 ? "item" : "itens"}`]] : []),
     ...(l.aConciliar > 0 ? [["Cartão e Pix ainda sem conciliação: a taxa deles não entra", v(l.aConciliarValor), `${l.aConciliar} ${l.aConciliar === 1 ? "pagamento" : "pagamentos"}`]] : []),
     ...(!naRede && l.pesoDaRede > 0 ? [["Parte da loja na receita líquida da rede (divide as contas da rede)", `${((l.peso / l.pesoDaRede) * 100).toFixed(1).replace(".", ",")}%`]] : []),
-    ["Taxa da PayJoy e da Aiva", "não entra", "falta o contrato (prazo e taxa)"],
+    ...(f !== null && f.aReceber > 0 ? [["PayJoy e Aiva ainda sem repasse registrado: a taxa delas não entra", v(f.aReceberValor), `${f.aReceber} ${f.aReceber === 1 ? "conta" : "contas"}`]] : []),
+    f !== null
+      ? ["Taxa da PayJoy e da Aiva", "a observada no repasse", "o valor financiado menos o repassado, no mês da venda (a conta sem repasse registrado não entra)"]
+      : ["Taxa da PayJoy e da Aiva", "não entra", "falta o contrato (prazo e taxa)"],
     ["Imposto sobre a venda e comissão", "só os lançados nas contas a pagar"],
     ["Contas a pagar", "pelo mês do vencimento", "a paga pelo valor pago; a cancelada não entra"],
   ];
