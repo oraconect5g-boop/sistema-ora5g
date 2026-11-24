@@ -32,7 +32,7 @@ Tudo o que não está aqui o Claude Code faz sozinho: programação, testes, mig
 | F3 | Meta Ads: o acesso à conta de anúncios | O gasto dos anúncios automático e o aviso das vendas à Meta (ORA-META-001, ORA-META-005) | Você: o mesmo cadastro da Meta | Nada | O acesso | O gasto por arquivo e o painel de CPL, CPA e ROAS já funcionam |
 | G | As decisões da seção 3 | Cada uma destrava a regra dela | Você | As de 18 a 21/11 (seção 3) | As que estão marcadas como abertas | O sistema usa o padrão reversível escrito em cada uma |
 | H | Produção: o servidor perto do banco, o banco com processador próprio e backup, e o plano do banco de teste | A operação comercial, com backup e restauração ensaiados (ORA-QUAL-005, ORA-QUAL-012), e o fim das travadas do banco de teste | Você: decisão de custo | Nada | A decisão | Tudo segue na homologação |
-| I | Os aceites: "aceito" ou "não aceito" em cada roteiro de `docs/aceite/` | Fechar cada lote: só o seu "aceito" faz um requisito virar homologado | Você: seguir o roteiro e responder na conversa (a tela **Entregas do projeto** mostra a lista e o que cada lote entregou) | 1 aceito (PWA-b) | 77 roteiros sem resposta | Nenhum lote para por falta de aceite |
+| I | Os aceites: "aceito" ou "não aceito" em cada roteiro de `docs/aceite/` | Fechar cada lote: só o seu "aceito" faz um requisito virar homologado | Você: seguir o roteiro e responder na conversa (a tela **Entregas do projeto** mostra a lista e o que cada lote entregou) | 1 aceito (PWA-b) | 78 roteiros sem resposta | Nenhum lote para por falta de aceite |
 
 **Não é pendência:** as 11 lojas e DEFEITOS (decididas), Supabase e PostgreSQL (decididos), a publicação na homologação ao fim de cada lote (autorizada), as contas de teste (criadas) e a chave secreta do Supabase (gravada).
 
@@ -40,7 +40,7 @@ Tudo o que não está aqui o Claude Code faz sozinho: programação, testes, mig
 
 | Ordem | O quê | Por quê |
 |---|---|---|
-| 1 | Copiar a planilha da Rein para `~/entrada/rein/` (B1) | É o que falta para provar a leitura com o arquivo original e pôr o catálogo de verdade |
+| 1 | Responder as três perguntas do catálogo e dar o sim para a prévia (B1; a planilha da Rein já chegou, em 23/11) | É o que falta para pôr o catálogo de verdade e, com ele, os produtos na loja online |
 | 2 | Mandar o CNPJ e o endereço das lojas (B2) | Sem o CNPJ a loja de verdade não vende |
 | 3 | Responder as decisões rápidas da seção 3 marcadas com **agora** | São respostas de uma linha |
 | 4 | Ligar o SMTP no painel do Supabase (A2) | Para convidar a equipe da piloto por e-mail |

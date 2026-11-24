@@ -1,6 +1,6 @@
 # Fila integral pela ordem do prompt de 23/11/2026
 
-> **Estado em 24/11/2026, depois do lote QUAL-006a.** Este arquivo põe o que falta na ordem do prompt que o proprietário entregou em 23/11 (escrito pelo Codex): a seção 4 (cadastros e estoque da loja piloto), as áreas A a R da seção 5 e a revisão da seção 6. Em 23/11 à noite o proprietário pediu para seguir esse planejamento. A fonte do estado de cada requisito continua sendo `status-requisitos.json`; o que depende do proprietário está, inteiro, em `docs/PENDENCIAS_DO_PROPRIETARIO.md`. Aqui fica só a ordem de trabalho.
+> **Estado em 24/11/2026, depois do lote ONLINE-e (um pedido do proprietário, fora da fila).** Este arquivo põe o que falta na ordem do prompt que o proprietário entregou em 23/11 (escrito pelo Codex): a seção 4 (cadastros e estoque da loja piloto), as áreas A a R da seção 5 e a revisão da seção 6. Em 23/11 à noite o proprietário pediu para seguir esse planejamento. A fonte do estado de cada requisito continua sendo `status-requisitos.json`; o que depende do proprietário está, inteiro, em `docs/PENDENCIAS_DO_PROPRIETARIO.md`. Aqui fica só a ordem de trabalho.
 
 ## Placar
 
@@ -44,7 +44,7 @@ Vem antes das áreas, e hoje espera o proprietário:
 | J. Fiscal | 4 parciais e 4 bloqueados | Nada | Contador e emissor fiscal |
 | K. Ora Connect / Nogle | 5 parciais | Nada | Nogle: o tipo da chave, as respostas e o contrato de cada operação |
 | L. PayJoy e Aiva | (em POS-013 e PAY-002) | Nada | Contrato e documentação de cada financeira. O prazo de repasse já se grava na tela (FIN-007a) |
-| M. Loja online | 4 parciais, 1 não iniciado e 2 bloqueados | Nada | Proprietário: marcar os produtos do site, D-024, D-025 e a transportadora. Provedor de pagamento |
+| M. Loja online | 4 parciais, 1 não iniciado e 2 bloqueados | Nada (o **ONLINE-e**, de 24/11, a pedido do proprietário, deixou a compra com um botão só, o carrinho, e o número de itens no topo) | Proprietário: marcar os produtos do site, D-024, D-025 e a transportadora. Provedor de pagamento |
 | N. Marketplaces | 5 parciais e 3 bloqueados | Nada | Contrato e autorização de cada canal |
 | O. WhatsApp | 1 parcial, 6 não iniciados e 1 bloqueado | Nada | Meta: a conta, o número e o modelo de mensagem aprovado |
 | P. Meta | 2 parciais e 1 bloqueado | Nada | Proprietário: a conta de anúncios e a decisão D-022 |
