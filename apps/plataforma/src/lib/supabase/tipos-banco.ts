@@ -1691,6 +1691,73 @@ export type Database = {
           },
         ]
       }
+      cobrancas_de_repasse: {
+        Row: {
+          canal: string
+          chave: string
+          conta_id: string
+          conteudo: string
+          criado_em: string
+          id: string
+          organizacao_id: string
+          protocolo: string | null
+          registrado_por: string
+          resumo: string
+          retornar_em: string | null
+          unidade_id: string
+        }
+        Insert: {
+          canal: string
+          chave: string
+          conta_id: string
+          conteudo: string
+          criado_em?: string
+          id?: string
+          organizacao_id: string
+          protocolo?: string | null
+          registrado_por: string
+          resumo: string
+          retornar_em?: string | null
+          unidade_id: string
+        }
+        Update: {
+          canal?: string
+          chave?: string
+          conta_id?: string
+          conteudo?: string
+          criado_em?: string
+          id?: string
+          organizacao_id?: string
+          protocolo?: string | null
+          registrado_por?: string
+          resumo?: string
+          retornar_em?: string | null
+          unidade_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "cobrancas_de_repasse_conta_id_fkey"
+            columns: ["conta_id"]
+            isOneToOne: false
+            referencedRelation: "contas_a_receber"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "cobrancas_de_repasse_registrado_por_fkey"
+            columns: ["registrado_por"]
+            isOneToOne: false
+            referencedRelation: "perfis_usuario"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "cobrancas_de_repasse_unidade_id_organizacao_id_fkey"
+            columns: ["unidade_id", "organizacao_id"]
+            isOneToOne: false
+            referencedRelation: "unidades"
+            referencedColumns: ["id", "organizacao_id"]
+          },
+        ]
+      }
       conta_pagar_anexos: {
         Row: {
           bytes: number
@@ -5642,6 +5709,51 @@ export type Database = {
         }
         Relationships: []
       }
+      prazos_de_repasse: {
+        Row: {
+          criado_em: string
+          definido_por: string
+          devedor: string
+          dias: number | null
+          id: string
+          motivo: string
+          organizacao_id: string
+        }
+        Insert: {
+          criado_em?: string
+          definido_por: string
+          devedor: string
+          dias?: number | null
+          id?: string
+          motivo: string
+          organizacao_id: string
+        }
+        Update: {
+          criado_em?: string
+          definido_por?: string
+          devedor?: string
+          dias?: number | null
+          id?: string
+          motivo?: string
+          organizacao_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "prazos_de_repasse_definido_por_fkey"
+            columns: ["definido_por"]
+            isOneToOne: false
+            referencedRelation: "perfis_usuario"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "prazos_de_repasse_organizacao_id_fkey"
+            columns: ["organizacao_id"]
+            isOneToOne: false
+            referencedRelation: "organizacoes"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       precos: {
         Row: {
           canal: string
@@ -7740,6 +7852,17 @@ export type Database = {
         Returns: Json
       }
       clientes_segmentos: { Args: never; Returns: Json }
+      cobranca_de_repasse_registrar: {
+        Args: {
+          p_canal: string
+          p_chave: string
+          p_conta: string
+          p_protocolo: string
+          p_resumo: string
+          p_retornar_em: string
+        }
+        Returns: Json
+      }
       concluir_venda: {
         Args: {
           p_chave: string
@@ -8789,6 +8912,10 @@ export type Database = {
         }
         Returns: number
       }
+      prazo_de_repasse_definir: {
+        Args: { p_devedor: string; p_dias: number; p_motivo: string }
+        Returns: Json
+      }
       precos_por_loja: {
         Args: { p_canal?: string; p_variante: string }
         Returns: {
@@ -8846,6 +8973,7 @@ export type Database = {
       }
       remover_item: { Args: { p_item: string }; Returns: boolean }
       repetir_convite: { Args: { p_convite: string }; Returns: boolean }
+      repasses_atrasados: { Args: { p_unidade?: string }; Returns: Json }
       reservar_estoque: {
         Args: {
           p_chave: string

@@ -4,6 +4,7 @@ import { MoldeReal } from "../../../componentes/MoldeReal";
 import { Aviso, TituloPagina } from "../../../componentes/ui";
 import { permite } from "../../../lib/acesso/molde";
 import { obterSessao } from "../../../lib/acesso/sessao";
+import { consultarRepassesAtrasados, ERROS_DOS_ATRASADOS } from "../../../lib/pagamentos/atrasados";
 import { consultarFinanceiras, ERROS_DAS_FINANCEIRAS } from "../../../lib/pagamentos/financeiras";
 import { chaveDoCatalogo, type ValorDeParametro } from "../../../lib/parametros";
 import { ConteudoFinanceiras } from "./ConteudoFinanceiras";
@@ -17,7 +18,12 @@ const OK = {
   desfeito_cancelada: "Registro desfeito. A venda foi cancelada, então a conta ficou cancelada: não volta a ser cobrada da financeira. O motivo ficou na auditoria.",
   corrigido: "Repasse corrigido; ele continua registrado e o motivo ficou na auditoria.",
   sem_mudanca: "Nada mudou: os dados já eram esses.",
+  // FIN-007a: o prazo de repasse e a cobrança.
+  prazo_definido: "Prazo gravado. O que passou dele aparece como atrasado; o motivo ficou na auditoria.",
+  prazo_retirado: "Prazo retirado. As contas dessa financeira voltam a ficar sem prazo; o motivo ficou na auditoria.",
+  cobranca_registrada: "Cobrança registrada na conta, com a data e quem fez.",
 } as const;
+const ERROS = { ...ERROS_DAS_FINANCEIRAS, ...ERROS_DOS_ATRASADOS } as const;
 
 // Valores a receber das financeiras (lote L7b: ORA-PAY-003 e ORA-PAY-011, em parte). A venda financiada pela
 // PayJoy ou pela Aiva gera o valor a receber da financeira; aqui a gerência da loja vê o que cada uma ainda
@@ -26,13 +32,16 @@ const OK = {
 export default async function Financeiras({ searchParams }: { searchParams: Promise<{ ok?: ValorDeParametro; erro?: ValorDeParametro }> }) {
   const parametros = await searchParams;
   const ok = chaveDoCatalogo(OK, parametros.ok);
-  const erro = chaveDoCatalogo(ERROS_DAS_FINANCEIRAS, parametros.erro);
+  const erro = chaveDoCatalogo(ERROS, parametros.erro);
   const hoje = new Intl.DateTimeFormat("en-CA", { timeZone: "America/Sao_Paulo" }).format(new Date());
   const sessao = await obterSessao({ exigirLoja: true });
   const { supabase, situacao } = sessao;
   const pode = permite(sessao, "pagamento.conciliar");
   if (!pode) return <MoldeReal sessao={sessao}><Aviso tom="aviso" className="mt-6">Os valores a receber das financeiras são da gerência da loja.</Aviso></MoldeReal>;
-  const leitura = await consultarFinanceiras(supabase);
+  // FIN-007a: junto com as contas, o que está atrasado na loja do turno (o prazo, o vencimento e as cobranças).
+  const [leitura, atrasados] = await Promise.all([consultarFinanceiras(supabase), consultarRepassesAtrasados(supabase, situacao.unidade_id as string)]);
+  // Quem define o prazo concilia pela rede inteira: vê também o resumo de todas as lojas.
+  const daRede = atrasados?.estado === "ok" && atrasados.dados.podeDefinirPrazo ? await consultarRepassesAtrasados(supabase, null) : null;
 
   return (
     <MoldeReal sessao={sessao} largura="max-w-5xl">
@@ -42,9 +51,9 @@ export default async function Financeiras({ searchParams }: { searchParams: Prom
         subtitulo="Vendas financiadas pela PayJoy e pela Aiva: o que cada financeira ainda deve à loja e o que já caiu. Sem integração com as financeiras, o repasse é registrado à mão, conferindo o extrato."
       />
       {ok && <Aviso tom="sucesso" className="mt-4">{OK[ok]}</Aviso>}
-      {erro && <Aviso tom="perigo" className="mt-4">{ERROS_DAS_FINANCEIRAS[erro]}</Aviso>}
+      {erro && <Aviso tom="perigo" className="mt-4">{ERROS[erro]}</Aviso>}
 
-      <ConteudoFinanceiras leitura={leitura} hoje={hoje} />
+      <ConteudoFinanceiras leitura={leitura} hoje={hoje} atrasados={atrasados} daRede={daRede} />
     </MoldeReal>
   );
 }

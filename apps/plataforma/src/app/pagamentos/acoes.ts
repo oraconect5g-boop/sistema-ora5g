@@ -4,6 +4,7 @@ import { redirect } from "next/navigation";
 
 import { ehUuid } from "../../lib/acesso/regras";
 import { obterSessao } from "../../lib/acesso/sessao";
+import { erroDaCobranca, erroDoPrazo, lerCobranca, lerPrazo } from "../../lib/pagamentos/atrasados";
 import { erroDasFinanceiras, lerRepasse } from "../../lib/pagamentos/financeiras";
 import { erroDosPagamentos, lerConciliacao, lerMaquininha, type ErroDosPagamentos } from "../../lib/pagamentos/regras";
 
@@ -115,4 +116,28 @@ export async function corrigirRecebimento(dados: FormData) {
   });
   if (error) voltar("/pagamentos/financeiras", { erro: erroDasFinanceiras(error) });
   voltar("/pagamentos/financeiras", { ok: data === false ? "sem_mudanca" : "corrigido" });
+}
+
+// FIN-007a: o prazo de repasse de cada financeira (do dono, pela rede inteira) e a cobrança feita à financeira por uma
+// conta em aberto (de quem concilia na loja). O banco confere de novo quem pode e grava a trilha.
+export async function definirPrazoDeRepasse(dados: FormData) {
+  const lido = lerPrazo(dados);
+  if (!lido.ok) voltar("/pagamentos/financeiras", { erro: lido.erro });
+  const { supabase } = await obterSessao({ exigirLoja: true });
+  const { data, error } = await supabase.rpc("prazo_de_repasse_definir", { p_devedor: lido.devedor, p_dias: lido.dias as number, p_motivo: lido.motivo });
+  if (error) voltar("/pagamentos/financeiras", { erro: erroDoPrazo(error) });
+  const repetida = typeof data === "object" && data !== null && !Array.isArray(data) && data.repetida === true;
+  voltar("/pagamentos/financeiras", { ok: repetida ? "sem_mudanca" : lido.dias === null ? "prazo_retirado" : "prazo_definido" });
+}
+
+export async function registrarCobrancaDeRepasse(dados: FormData) {
+  const hoje = new Intl.DateTimeFormat("en-CA", { timeZone: "America/Sao_Paulo" }).format(new Date());
+  const lido = lerCobranca(dados, hoje);
+  if (!lido.ok) voltar("/pagamentos/financeiras", { erro: lido.erro });
+  const { supabase } = await obterSessao({ exigirLoja: true });
+  const { error } = await supabase.rpc("cobranca_de_repasse_registrar", {
+    p_conta: lido.conta, p_canal: lido.canal, p_resumo: lido.resumo, p_protocolo: lido.protocolo as string, p_retornar_em: lido.retornarEm as string, p_chave: lido.chave,
+  });
+  if (error) voltar("/pagamentos/financeiras", { erro: erroDaCobranca(error) });
+  voltar("/pagamentos/financeiras", { ok: "cobranca_registrada" });
 }

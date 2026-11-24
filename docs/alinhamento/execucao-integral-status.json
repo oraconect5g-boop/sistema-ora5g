@@ -2,7 +2,7 @@
   "_leia": "Checkpoint do programa de execução integral (PR #67). Carregar ao retomar e seguir para o próximo item executável da fila; não reiniciar o projeto. Estados vêm de status-requisitos.json (fonte da rastreabilidade); este arquivo acrescenta lote, bloqueio externo e revisão. Desde 16/11/2026 a medida de avanço é o requisito homologado pelo proprietário: a chave aceites guarda a resposta dele a cada roteiro de aceite (docs/aceite/); um requisito só recebe homologado: true com todos os lotes dele aceitos e sem nada em FALTA na nota de status-requisitos.json.",
   "atualizado_em": "2026-11-23",
   "base": {
-    "main": "329e736",
+    "main": "2a1f6ce",
     "pacote": {
       "pr": 67,
       "branch": "docs/execucao-integral-20261110",
@@ -1037,18 +1037,32 @@
         "ORA-FIN-001"
       ],
       "entrega": "a parte \"O que foi desfeito no período\" no cartão \"A conta do período\" do Financeiro: cada cancelamento e cada devolução conferidos com o destino do valor, o livro do caixa e o livro do estoque; o que espera alguém (o estorno a confirmar, o item a conferir) aparece à parte, com o atalho",
+      "commit": "2a1f6ce",
+      "publicado_em": "2026-11-23",
+      "pedido_em": "2026-11-23",
+      "resposta": null,
+      "respondido_em": null,
+      "nota": "no ar em 2a1f6ce (build 23/11 19:40; copiado do registro das publicações, a branch registro/publicacoes); a prova de leitura passou no site em 23/11 às 19:41, de primeira (na loja de teste, 2 cancelamentos e 2 devoluções, R$ 316,00, fechando); com este lote o ORA-FIN-001 passou a testado"
+    },
+    "FIN-007a": {
+      "roteiro": "docs/aceite/FIN-007a.md",
+      "requisitos": [
+        "ORA-FIN-007",
+        "ORA-FIN-003"
+      ],
+      "entrega": "o cartão \"O que está atrasado\" na tela \"A receber das financeiras\": o dono grava o prazo de repasse de cada financeira, e a tela diz o que venceu, há quantos dias e em que loja; em cada conta em aberto, a gerência registra a cobrança feita à financeira, com o histórico. Sem prazo gravado, nada é chamado de atrasado",
       "commit": null,
       "publicado_em": null,
       "pedido_em": "2026-11-23",
       "resposta": null,
       "respondido_em": null,
-      "nota": "o commit, a publicação e a prova de leitura ficam no registro (a branch registro/publicacoes); com este lote o ORA-FIN-001 passa a testado"
+      "nota": "o commit, a publicação e a prova de leitura ficam no registro (a branch registro/publicacoes); o ORA-FIN-007 passa de não iniciado a parcial, e o ORA-FIN-003 passa a testado; ver uma conta atrasada no site pede uma venda financiada em aberto na loja de teste, que grava e espera o sim do proprietário"
     }
   },
   "contagem_dos_estados": {
-    "nao_iniciado": 15,
+    "nao_iniciado": 14,
     "parcial": 79,
-    "testado": 70,
+    "testado": 71,
     "bloqueado": 13,
     "respeitado": 2
   },
@@ -1731,8 +1745,8 @@
     "ORA-FIN-003": {
       "titulo": "Contas a receber ligadas a venda, vencimento e meio",
       "prioridade": "P0",
-      "estado": "parcial",
-      "lote": "L8 financeiro; J3-f (21/11): o financeiro da loja de teste: contas a pagar, conciliação e repasse da financeira",
+      "estado": "testado",
+      "lote": "L8 financeiro; J3-f (21/11): o financeiro da loja de teste: contas a pagar, conciliação e repasse da financeira; L7b (13/11): o registro do repasse (a baixa); FIN-007a (23/11): o vencimento pelo prazo de repasse e a idade do atraso",
       "bloqueio_externo": null,
       "revisado_codex": false,
       "homologado": false
@@ -1767,8 +1781,8 @@
     "ORA-FIN-007": {
       "titulo": "Gestão de inadimplência e cobranças autorizadas",
       "prioridade": "P1",
-      "estado": "nao_iniciado",
-      "lote": "L8 financeiro",
+      "estado": "parcial",
+      "lote": "L8 financeiro; FIN-007a (23/11): o prazo de repasse de cada financeira, o que está atrasado e as cobranças feitas",
       "bloqueio_externo": null,
       "revisado_codex": false,
       "homologado": false
@@ -2665,5 +2679,5 @@
       "homologado": false
     }
   },
-  "proximo_passo": "Seguir a ordem de 23/11 (a continuação pedida pelo proprietário com a auditoria integral do Codex de 21/11, PR #105; a leitura está em docs/alinhamento/LEITURA_AUDITORIA_2026-11-21.md): (1) publicar o FIN-001b depois do merge, rodar no site a prova de leitura da conta do período, agora com o desfeito (apps/plataforma/e2e/conta-do-periodo-real.spec.ts), e registrar a publicação (deploy/homologacao/registrar-publicacao.sh; a branch registro/publicacoes); o AUD-c (5617351), o TRF-d (4131453), o AUD-d (363f844), o TRF-e (d2a6e4f), o FIN-001a (d2a4b75) e o REIN-d (329e736) estão no ar desde 23/11; (2) com as decisões do proprietário (qual das três tabelas de preço vale na loja, o tipo das outras famílias e o código do produto) e o sim dele, gerar a prévia do catálogo de verdade com a conta de administrador de teste; ele confere e aplica; o estoque de cada loja se carrega com um relatório do dia da virada; (3) a inadimplência (ORA-FIN-007: a lista do que está atrasado, sem a mensagem ao cliente, que depende do WhatsApp oficial); (4) seguir a fila integral pelas áreas que faltam funcionar, um lote por vez, com teste, publicação, prova no domínio, roteiro de aceite e relato. O que depende do proprietário está em docs/PENDENCIAS_DO_PROPRIETARIO.md (a lista única). A narrativa anterior deste campo (os passos de 17 a 21/11) fica no histórico do Git e em docs/alinhamento/EXECUCAO_INTEGRAL_STATUS.md."
+  "proximo_passo": "Seguir a ordem de 23/11 (a continuação pedida pelo proprietário com a auditoria integral do Codex de 21/11, PR #105; a leitura está em docs/alinhamento/LEITURA_AUDITORIA_2026-11-21.md): (1) publicar o FIN-007a depois do merge, rodar no site a prova de leitura dos repasses atrasados (apps/plataforma/e2e/repasses-atrasados-real.spec.ts) e registrar a publicação (deploy/homologacao/registrar-publicacao.sh; a branch registro/publicacoes); o AUD-c (5617351), o TRF-d (4131453), o AUD-d (363f844), o TRF-e (d2a6e4f), o FIN-001a (d2a4b75), o REIN-d (329e736) e o FIN-001b (2a1f6ce) estão no ar desde 23/11; (2) com as decisões do proprietário (qual das três tabelas de preço vale na loja, o tipo das outras famílias e o código do produto) e o sim dele, gerar a prévia do catálogo de verdade com a conta de administrador de teste; ele confere e aplica; o estoque de cada loja se carrega com um relatório do dia da virada; (3) o que falta no ORA-FIN-007: o aviso do repasse atrasado no Início e no sino e a previsão de caixa com o vencimento; (4) seguir a fila integral pelas áreas que faltam funcionar, um lote por vez, com teste, publicação, prova no domínio, roteiro de aceite e relato. O que depende do proprietário está em docs/PENDENCIAS_DO_PROPRIETARIO.md (a lista única). A narrativa anterior deste campo (os passos de 17 a 21/11) fica no histórico do Git e em docs/alinhamento/EXECUCAO_INTEGRAL_STATUS.md."
 }
