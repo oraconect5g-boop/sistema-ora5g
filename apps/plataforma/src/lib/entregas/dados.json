@@ -1063,6 +1063,19 @@
         "ORA-PAY-011"
       ],
       "entrega": "o débito do extrato é a prova do estorno da venda, um débito por estorno: na tela do extrato, o débito confirma o estorno que esperava (pela gerência, na loja da venda) ou guarda a prova do que já estava confirmado; o chargeback fica marcado; a venda mostra qual débito confirmou o estorno. Nada é lançado duas vezes",
+      "commit": "947a391",
+      "publicado_em": "2026-11-24",
+      "pedido_em": "2026-11-24",
+      "resposta": null,
+      "respondido_em": null
+    },
+    {
+      "lote": "FIN-002a",
+      "roteiro": "docs/aceite/FIN-002a.md",
+      "requisitos": [
+        "ORA-FIN-002"
+      ],
+      "entrega": "a taxa da PayJoy e da Aiva no resultado do mês: a observada no repasse (o valor financiado menos o repassado), no mês da venda, numa linha própria do demonstrativo e da planilha; a conta sem repasse registrado fica num aviso, com o atalho para registrar",
       "commit": null,
       "publicado_em": null,
       "pedido_em": "2026-11-24",

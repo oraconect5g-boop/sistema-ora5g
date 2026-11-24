@@ -125,3 +125,14 @@ Migration `20261124021740_aviso_do_repasse_e_previsao_com_vencimento` (aplicada 
 6. **A leitura é estrita.** As quatro partes somam o total em aberto, e as semanas somam o que vence no período; se não fecham, a tela diz que não leu. A resposta sem as partes é a de um banco sem a migration: a tela segue como antes.
 7. **A previsão exige também `pagamento.conciliar`,** a permissão que lê o prazo de repasse. Só o dono tem `previsao.ver`, e o dono concilia pela rede.
 8. **Fica de fora:** a inadimplência do cliente final, que não existe enquanto a loja não vende a prazo próprio (D-013, em aberto) e cuja mensagem depende do WhatsApp oficial (ORA-WHATS-001) e do consentimento.
+
+## Adendo de 24/11/2026 — A taxa das financeiras no resultado do mês (lote FIN-002a; ORA-FIN-002)
+
+Migration `20261124103408_taxa_das_financeiras_no_resultado` (aplicada no `ora5g-dev`, com o md5 conferido; com reversão). Testes: `packages/banco/src/resultado-do-mes.test.ts` e `apps/plataforma/src/app/resultado/resultado.test.ts`. Roteiro: `docs/aceite/FIN-002a.md`.
+
+1. **A taxa é a observada no repasse:** o valor financiado (a conta a receber) menos o que a financeira repassou, nas contas com o repasse registrado. É o que de fato aconteceu, como a taxa de cartão e Pix observada na conciliação; não depende do contrato (que segue esperado para o prazo e a taxa combinada, P8).
+2. **No mês da venda,** como a de cartão e Pix. O repasse registrado em outro mês não muda o mês.
+3. **A conta sem repasse registrado não entra** (a taxa dela ainda não se conhece): é contada à parte e aparece num aviso, com o atalho para registrar.
+4. **A venda cancelada sai,** como no cartão e no Pix: o pagamento dela não está mais "confirmado", e o acerto com a financeira fica no estorno da venda.
+5. **As "taxas" do resultado são a soma das duas partes** (cartão e Pix; financeiras), e a conta das linhas não mudou: a tela de antes continuou fechando entre a migration e a publicação, e a nova separa as duas linhas.
+6. **Fica de fora:** o imposto sobre a venda calculado (o contador e o emissor fiscal) e a comissão (D-014).
