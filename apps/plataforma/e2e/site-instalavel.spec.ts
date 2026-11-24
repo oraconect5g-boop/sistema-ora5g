@@ -26,10 +26,20 @@ test("sem internet, a navegação mostra a página 'Sem internet agora' em vez d
   await page.evaluate(async () => { await navigator.serviceWorker.ready; });
   await page.reload();
   await expect.poll(() => page.evaluate(() => navigator.serviceWorker.controller !== null)).toBe(true);
+  // O "sem internet" do teste é ligado alvo a alvo (a página e o service worker), e o do service worker pode passar a valer
+  // alguns milissegundos depois de o setOffline voltar. Medido em 23/11/2026, na build de produção: em 1 de 4.000 repetições
+  // o service worker ainda tinha rede (por 7 ms). Nesse instante ele buscava a página no servidor, e a página, já sem rede,
+  // não carregava os scripts e mostrava "Algo deu errado nesta tela": 1 falha em 1.951 repetições, e uma no CI do lote
+  // FIN-007a. Num aparelho sem internet de verdade ninguém tem rede; por isso a prova espera o service worker ficar sem
+  // rede (um pedido feito de dentro dele falha) antes de navegar, e voltar a ter rede antes do "Tentar de novo".
+  const servico = context.serviceWorkers()[0] ?? await context.waitForEvent("serviceworker");
+  const redeDoServico = () => servico.evaluate(() => fetch("/saude", { cache: "no-store" }).then(() => "com rede", () => "sem rede"));
   await context.setOffline(true);
+  await expect.poll(redeDoServico, { message: "o service worker sem rede" }).toBe("sem rede");
   await page.goto("/entrar");
   await expect(page.getByRole("heading", { name: "Sem internet agora" })).toBeVisible();
   await context.setOffline(false);
+  await expect.poll(redeDoServico, { message: "o service worker com rede de novo" }).toBe("com rede");
   await page.getByRole("button", { name: "Tentar de novo" }).click();
   await expect(page.getByRole("heading", { name: "Sem internet agora" })).toHaveCount(0);
 });
