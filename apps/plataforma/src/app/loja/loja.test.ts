@@ -136,4 +136,21 @@ describe("a página do produto (ONLINE-a)", () => {
     cenario.respostas.loja_produto = { data: null, error: { code: "57014" } };
     expect(texto(await produto())).toContain("A loja online está fora do ar agora");
   });
+
+  it("ONLINE-e: um caminho só para comprar, o carrinho, só nas lojas com estoque, sem o link de reservar um item; sem foto, um espaço baixo", async () => {
+    const arvore = await produto();
+    const t = texto(arvore);
+    expect(t).toContain("Escolha a loja e toque em \"Pôr no carrinho\". No carrinho, você reserva tudo de uma vez por 24 horas (até 3 unidades da mesma loja) e paga e retira na loja.");
+    expect(t).not.toMatch(/Reservar/);
+    expect(elementos(arvore, (p) => typeof p.href === "string" && p.href.includes("/reservar"))).toEqual([]);
+    // O botão do carrinho: na Loja B (últimas unidades), não na Loja C (sem estoque).
+    expect(elementos(arvore, (p) => typeof p.action === "function")).toHaveLength(1);
+    expect(elementos(arvore, (p) => p.name === "loja").map((p) => p.value)).toEqual(["l1"]);
+    expect(t).toContain("Pôr no carrinho");
+    expect(t).not.toContain("Sem foto por enquanto");
+    cenario.respostas.loja_produto = { data: { ...DETALHE, fotos: [] }, error: null };
+    const semFoto = await produto();
+    expect(texto(semFoto)).toContain("Sem foto por enquanto");
+    expect(elementos(semFoto, (p) => typeof p.src === "string")).toEqual([]);
+  });
 });
