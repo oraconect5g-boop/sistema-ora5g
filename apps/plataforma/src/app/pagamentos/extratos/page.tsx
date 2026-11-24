@@ -18,6 +18,8 @@ type Extrato = {
   periodo_fim: string; linhas: number; importado_em: string; pendentes: number; conciliadas: number; ignoradas: number;
   /** AUD-c: as linhas que são o recebimento de um repasse de marketplace (o banco de antes da migration não manda). */
   repasses?: number;
+  /** PAY-011a: os débitos que são o estorno de uma venda (o banco de antes da migration também não manda). */
+  estornos?: number;
 };
 
 // Os extratos importados (lote EXT-a: ORA-PAY-009, ORA-PAY-010 e ORA-FIN-006; ADR-016): os das lojas em que a pessoa
@@ -62,6 +64,7 @@ export default async function Extratos({ searchParams }: { searchParams: Promise
                   {e.pendentes > 0 && <Selo tom="aviso">{e.pendentes} a conferir</Selo>}
                   {e.conciliadas > 0 && <Selo tom="sucesso">{e.conciliadas} conciliadas</Selo>}
                   {(e.repasses ?? 0) > 0 && <Selo tom="info">{e.repasses} de repasse</Selo>}
+                  {(e.estornos ?? 0) > 0 && <Selo tom="info">{e.estornos} de estorno</Selo>}
                   {e.ignoradas > 0 && <Selo tom="neutro">{e.ignoradas} fora da conta</Selo>}
                 </span>
               </li>

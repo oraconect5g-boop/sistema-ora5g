@@ -163,6 +163,41 @@ describe("o comprovante em poucas rodadas (VEL-i)", () => {
     expect(rodadas()).toBe(2);
   });
 
+  it("PAY-011a: o estorno confirmado pelo débito do extrato diz qual débito foi, sem rodada a mais; sem estorno confirmado, nada é lido", async () => {
+    // A venda comum não tem estorno: o extrato nem é consultado.
+    await comprovante();
+    expect(cenario.relogio.pedidos.some((p) => p.onde === "extrato_linhas")).toBe(false);
+    cenario.relogio.rodada = 0;
+    cenario.relogio.pedidos = [];
+    // A venda cancelada com dois estornos: um confirmado (pelo débito do extrato, marcado como chargeback) e um a confirmar.
+    const CONFIRMADO = "00000000-0000-4000-8000-00000000c001";
+    const PENDENTE = "00000000-0000-4000-8000-00000000c002";
+    const EXTRATO = "00000000-0000-4000-8000-00000000c003";
+    cenario.tabelas.vendas = [venda({ situacao: "cancelada", cancelada_em: "2026-11-20T15:00:00Z", motivo_cancelamento: "Chargeback: o cliente contestou a compra" })];
+    cenario.tabelas.estornos_externos = [
+      { id: CONFIRMADO, numero: 3, venda_id: VENDA, meio: "cartao_picpay", valor_centavos: 5_000, situacao: "confirmado", devolucao_id: null, comprovante: "CBK-80", confirmado_em: "2026-11-21T12:00:00Z" },
+      { id: PENDENTE, numero: 4, venda_id: VENDA, meio: "pix_picpay", valor_centavos: 2_900, situacao: "pendente", devolucao_id: null, comprovante: null, confirmado_em: null },
+    ];
+    cenario.tabelas.extrato_linhas = [{ estorno_id: CONFIRMADO, numero: 12, data: "2026-11-20", chargeback: true, confirmou_o_estorno: true, extrato: { id: EXTRATO, numero: 7, fonte: "PicPay da loja" } }];
+    const comDebito = await comprovante();
+    expect(comDebito).toContain("comprovante CBK-80");
+    expect(comDebito).toContain("chargeback");
+    expect(comDebito).toContain("Confirmado pelo débito do extrato nº 7 (PicPay da loja), linha 12, de 20/11/2026 : o cliente contestou a compra no banco.");
+    // A leitura sai na segunda rodada, junto dos detalhes da venda, e só pelo estorno confirmado.
+    expect(cenario.relogio.pedidos.filter((p) => p.onde === "extrato_linhas").map((p) => p.rodada)).toEqual([2]);
+    expect(rodadas()).toBe(2);
+    // O débito que só guardou a prova de um estorno confirmado à mão: "comprovado", sem chargeback.
+    cenario.tabelas.extrato_linhas = [{ estorno_id: CONFIRMADO, numero: 12, data: "2026-11-20", chargeback: false, confirmou_o_estorno: false, extrato: { id: EXTRATO, numero: 7, fonte: "PicPay da loja" } }];
+    const soProva = await comprovante();
+    expect(soProva).toContain("Comprovado pelo débito do extrato nº 7 (PicPay da loja), linha 12, de 20/11/2026 .");
+    expect(soProva).not.toContain("chargeback");
+    // Quem não concilia não vê o extrato (a leitura volta vazia): o estorno aparece confirmado, sem a anotação.
+    cenario.tabelas.extrato_linhas = [];
+    const semExtrato = await comprovante();
+    expect(semExtrato).toContain("comprovante CBK-80");
+    expect(semExtrato).not.toContain("débito do extrato nº");
+  });
+
   it("com um aparelho, também 2 (eram 7): o produto e o IMEI saem juntos", async () => {
     cenario.tabelas.venda_itens = [daCapa, doCelular];
     expect(await comprovante()).toContain("352099001800032");
