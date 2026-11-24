@@ -94,7 +94,7 @@ describe("a página da vitrine (ONLINE-a)", () => {
   it("mostra os produtos com o preço \"a partir de\", o estoque e a foto assinada; passa a busca e a categoria ao banco", async () => {
     const arvore = await vitrine({ busca: "  galaxy ", categoria: "00000000-0000-4000-8000-0000000000c2" });
     const t = texto(arvore);
-    for (const trecho of ["Celulares e acessórios, com retirada na loja", "Capa de proteção", "R$ 79,00", "Galaxy A15", "R$ 1.399,00", "Disponível", "Sem estoque", "Acessórios", "Celulares"]) {
+    for (const trecho of ["Tudo para o seu celular, com retirada na loja", "Capa de proteção", "R$ 79,00", "Galaxy A15", "R$ 1.399,00", "Disponível", "Sem estoque", "Acessórios", "Celulares"]) {
       expect(t, trecho).toContain(trecho);
     }
     expect(cenario.chamadas).toEqual([{ nome: "loja_vitrine", argumentos: { p_organizacao: ORGANIZACAO, p_busca: "galaxy", p_categoria: "00000000-0000-4000-8000-0000000000c2", p_pagina: 1 } }]);
@@ -116,6 +116,25 @@ describe("a página da vitrine (ONLINE-a)", () => {
     expect(texto(await vitrine({ busca: "iphone" }))).toContain("Nenhum produto com \"iphone\"");
     cenario.respostas.loja_vitrine = { data: null, error: { code: "PGRST202" } };
     expect(texto(await vitrine())).toContain("A loja online está fora do ar agora");
+  });
+});
+
+describe("a cara de loja (ONLINE-g)", () => {
+  it("a vitrine principal: as vantagens, os atalhos das categorias e \"Todos os produtos\"; a busca e a categoria vão direto aos produtos, com o título delas", async () => {
+    const principal = texto(await vitrine());
+    for (const trecho of ["Retire na loja", "Reserva por 24 horas", "Pague na retirada", "Dinheiro, Pix ou cartão no balcão.", "Todos os produtos", "2 produtos"]) {
+      expect(principal, trecho).toContain(trecho);
+    }
+    const arvore = await vitrine();
+    expect(elementos(arvore, (p) => p["aria-label"] === "Atalhos das categorias")).toHaveLength(1);
+    // As categorias em blocos: "Tudo" e cada uma, com a escolhida marcada.
+    expect(elementos(arvore, (p) => p["aria-current"] === "page" && p.href === "/loja")).toHaveLength(1);
+    const daCategoria = await vitrine({ categoria: "00000000-0000-4000-8000-0000000000c2" });
+    expect(texto(daCategoria)).toContain("Celulares");
+    expect(texto(daCategoria)).not.toContain("Reserva por 24 horas");
+    expect(elementos(daCategoria, (p) => p["aria-label"] === "Atalhos das categorias")).toHaveLength(0);
+    expect(elementos(daCategoria, (p) => p["aria-current"] === "page" && p.href === "/loja?categoria=00000000-0000-4000-8000-0000000000c2")).toHaveLength(1);
+    expect(texto(await vitrine({ busca: "capa" }))).toContain("Resultados para \"capa\"");
   });
 });
 

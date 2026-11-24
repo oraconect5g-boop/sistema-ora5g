@@ -36,10 +36,34 @@ export default async function LayoutDaLoja({ children }: { children: ReactNode }
         </div>
       </header>
       <main className="mx-auto w-full max-w-6xl flex-1 px-4 py-6">{children}</main>
-      <footer className="border-t border-borda bg-white">
-        <div className="mx-auto max-w-6xl space-y-1 px-4 py-5 text-xs text-suave">
-          <p>Os preços são os do balcão de cada loja hoje e podem mudar. A retirada é feita na loja.</p>
-          <p>Imagens ilustrativas. Ora 5G.</p>
+      {/* ONLINE-g: o rodapé de loja: a marca, como comprar e o pedido; embaixo, o aviso dos preços e das imagens. */}
+      <footer className="mt-6 bg-navegacao text-white/75">
+        <div className="mx-auto grid max-w-6xl gap-8 px-4 py-10 sm:grid-cols-3">
+          <div>
+            <Marca claro tamanho="text-2xl" />
+            <p className="mt-2 max-w-xs text-sm">Celulares e acessórios com retirada nas lojas Ora 5G.</p>
+          </div>
+          <div>
+            <p className="text-sm font-semibold text-white">Como comprar</p>
+            <ol className="mt-2 list-decimal space-y-1 pl-4 text-sm">
+              <li>Escolha os produtos e a loja</li>
+              <li>Reserve com o seu nome e o WhatsApp</li>
+              <li>Retire e pague na loja</li>
+            </ol>
+          </div>
+          <div>
+            <p className="text-sm font-semibold text-white">Seu pedido</p>
+            <ul className="mt-2 space-y-1 text-sm">
+              <li><Link href="/loja/pedido" className="underline-offset-2 hover:text-white hover:underline">Acompanhar o pedido</Link></li>
+              <li><Link href="/loja/carrinho" className="underline-offset-2 hover:text-white hover:underline">Ver o carrinho</Link></li>
+            </ul>
+          </div>
+        </div>
+        <div className="border-t border-white/10">
+          <div className="mx-auto max-w-6xl space-y-1 px-4 py-4 text-xs text-white/55">
+            <p>Os preços são os do balcão de cada loja hoje e podem mudar. A retirada é feita na loja.</p>
+            <p>Imagens ilustrativas. Ora 5G.</p>
+          </div>
         </div>
       </footer>
     </div>

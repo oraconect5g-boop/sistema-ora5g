@@ -1145,6 +1145,19 @@
         "ORA-ONLINE-001"
       ],
       "entrega": "a vitrine com o catálogo inteiro: quantos são, de 60 em 60 com \"Anteriores\" e \"Próximos\" (guardando a busca e a categoria) e os disponíveis primeiro",
+      "commit": "003421d",
+      "publicado_em": "2026-11-24",
+      "pedido_em": "2026-11-24",
+      "resposta": null,
+      "respondido_em": null
+    },
+    {
+      "lote": "ONLINE-g",
+      "roteiro": "docs/aceite/ONLINE-g.md",
+      "requisitos": [
+        "ORA-ONLINE-001"
+      ],
+      "entrega": "a cara de loja da loja online: o topo com gradiente e os atalhos das categorias, as vantagens, as categorias em blocos com ícone, o título da seção e o rodapé com \"Como comprar\"",
       "commit": null,
       "publicado_em": null,
       "pedido_em": "2026-11-24",
