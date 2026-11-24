@@ -44,7 +44,9 @@ describe("a reserva do site: o formulário e as mensagens (ONLINE-b)", () => {
     // ONLINE-d: o pedido do site traz o total; a diferença vira desconto na venda.
     expect(avisoDaReservaAtendida("15800", "17800", true).texto.replace(/\s/g, " ")).toBe(
       "Venda do pedido do site aberta com as unidades reservadas. O total anunciado foi R$ 158,00 e o de hoje é R$ 178,00: a oferta vale, dê R$ 20,00 de desconto na venda.");
-    expect(avisoDaReservaAtendida("15800", "15800", true)).toEqual({ tom: "sucesso", texto: "Venda do pedido do site aberta com as unidades reservadas. Confira o cliente, o pagamento e conclua." });
+    expect(avisoDaReservaAtendida("15800", "15800", true)).toEqual({ tom: "sucesso", texto: "Venda do pedido do site aberta com as unidades reservadas. Confira o cliente, o pagamento e conclua." });    // PAY-014b: o pedido pago pelo site sai pelo preço pago, mesmo com o preço de hoje maior: nada de desconto a dar.
+    expect(avisoDaReservaAtendida("15800", "17800", true, true)).toEqual({ tom: "sucesso", texto: "Venda do pedido pago pelo site aberta com as unidades reservadas, pelo preço pago: não há nada a cobrar delas. Confira o cliente e conclua." });
+    expect(avisoDaReservaAtendida("15800", "17800", false, true).tom).toBe("aviso");
   });
 
   it("o limite por endereço: 5 por hora, cada endereço o seu; depois da hora, libera; o endereço é o que o servidor de entrada acrescenta", () => {

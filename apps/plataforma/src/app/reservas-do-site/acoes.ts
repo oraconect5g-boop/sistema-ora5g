@@ -50,8 +50,10 @@ export async function atenderPedido(dados: FormData) {
   const { supabase } = await obterSessao({ exigirLoja: true });
   const { data, error } = await supabase.rpc("loja_pedido_atender", { p_pedido: pedido, p_chave: randomUUID() });
   if (error || !data) redirect(`/reservas-do-site?erro=${erroDaLoja(error)}`);
-  const r = data as unknown as { total_reservado_centavos: number; total_atual_centavos: number | null };
-  redirect(`/vender?reserva=atendida&pedido=sim&anunciado=${r.total_reservado_centavos}&atual=${r.total_atual_centavos ?? r.total_reservado_centavos}`);
+  const r = data as unknown as { total_reservado_centavos: number; total_atual_centavos: number | null; pago_pelo_site_centavos?: number | null };
+  // PAY-014b: o pedido pago pelo site abre a venda pelo preço pago; o aviso do PDV diz que não há nada a cobrar dele.
+  const pago = typeof r.pago_pelo_site_centavos === "number" && r.pago_pelo_site_centavos > 0 ? "&pago=sim" : "";
+  redirect(`/vender?reserva=atendida&pedido=sim&anunciado=${r.total_reservado_centavos}&atual=${r.total_atual_centavos ?? r.total_reservado_centavos}${pago}`);
 }
 
 export async function cancelarPedido(dados: FormData) {

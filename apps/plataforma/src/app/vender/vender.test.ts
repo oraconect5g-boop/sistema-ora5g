@@ -217,7 +217,8 @@ const UUID = /^[0-9a-f]{8}-[0-9a-f]{4}-4[0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{1
 /** Um item do carrinho como public.pdv_tela devolve: todos os campos do combinado. */
 const item = (mudar: Linha = {}): Linha => ({
   id: ITEM_CAPA, variante_id: V_CAPA, item_serializado_id: null, tipo: "acessorio", quantidade: 2, preco_unitario_centavos: 6_900, desconto_centavos: 0,
-  preco_id: null, os_id: null, variante: { sku: "ACE-0001", nome: "Capa Galaxy A15 transparente" }, serial: null, preco: null, os: null, aprovacao: null, ...mudar,
+  preco_id: null, os_id: null, variante: { sku: "ACE-0001", nome: "Capa Galaxy A15 transparente" }, serial: null, preco: null, os: null, aprovacao: null,
+  loja_reserva_id: null, ...mudar,
 });
 const aparelho = (mudar: Linha = {}) => item({
   id: ITEM_APARELHO, variante_id: V_AZUL, item_serializado_id: S_LIVRE, tipo: "aparelho", quantidade: 1, preco_unitario_centavos: 129_900, desconto_centavos: 5_000,
@@ -231,7 +232,7 @@ const CARRINHO = [
 /** A resposta de public.pdv_tela: caixa aberto e venda nº 43 em andamento, salvo o que o teste mudar. */
 const tela = (mudar: Linha = {}) => ({
   caixa: { id: CAIXA, aberto_em: "2026-11-16T12:00:00+00:00" },
-  venda: { id: VENDA, numero: 43, situacao: "rascunho" },
+  venda: { id: VENDA, numero: 43, situacao: "rascunho", pago_pelo_site_centavos: null },
   itens: [] as Linha[],
   terminais: [] as Linha[],
   ...mudar,
@@ -451,6 +452,22 @@ describe("o que o PDV mostra", () => {
       { id: MAQUININHA, provedor: "picpay", rotulo: "Balcão · PicPay PP-0001" }, { id: id("702"), provedor: "pagbank", rotulo: "Vitrine · PagBank PB-0002" }]);
   });
 
+  it("PAY-014b: a venda do pedido pago pelo site mostra o pago, cobra só o resto, o item pago fica sem desconto e sem tirar, e a venda não se cancela por aqui", async () => {
+    const paga = item({ quantidade: 1, loja_reserva_id: id("c501") });
+    const aMais = item({ id: id("a009"), quantidade: 1 });
+    cenario.pdv = tela({ itens: [paga, aMais], venda: { id: VENDA, numero: 43, situacao: "rascunho", pago_pelo_site_centavos: 6_900 } });
+    const arvore = await abrir();
+    const t = texto(arvore);
+    expect(t).toContain("pago pelo site");
+    expect(t).toContain("Pago pelo site: sai pelo preço pago, sem desconto, e não sai da venda.");
+    expect(t).toContain("Pedido pago pelo site: esta venda não se cancela por aqui.");
+    expect(formularios(arvore, removerItem).map((f) => f.escondidos)).toEqual([{ item: id("a009") }]);
+    expect(formularios(arvore, aplicarDesconto).map((f) => f.escondidos)).toEqual([{ item: id("a009") }]);
+    expect(formularios(arvore, cancelarVenda)).toEqual([]);
+    const formas = elementos(arvore).find((e) => e.type === FormasDePagamento);
+    expect(formas?.props).toMatchObject({ total: 6_900, pagoPeloSite: 6_900 });
+  });
+
   it("sem maquininha ativa na loja: o botão das formas recebe a lista vazia", async () => {
     cenario.pdv = tela({ itens: CARRINHO });
     const formas = elementos(await abrir()).find((e) => e.type === FormasDePagamento);
@@ -491,7 +508,7 @@ describe("o que o PDV mostra", () => {
     const semCaixa = await concluir();
     expect(semCaixa.travado).toBe(true);
     expect(semCaixa.t).toContain("Abra o caixa para concluir.");
-    cenario.pdv = tela({ itens: CARRINHO, venda: { id: VENDA, numero: 43, situacao: "aguardando_aprovacao" } });
+    cenario.pdv = tela({ itens: CARRINHO, venda: { id: VENDA, numero: 43, situacao: "aguardando_aprovacao", pago_pelo_site_centavos: null } });
     const aguardando = await concluir();
     expect(aguardando.travado).toBe(true);
     expect(aguardando.t).toContain("Venda nº 43 Aguardando aprovação de desconto");

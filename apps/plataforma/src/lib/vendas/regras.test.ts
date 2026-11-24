@@ -37,6 +37,13 @@ describe("formulário de pagamento", () => {
     expect(lerPagamentos(formulario({ pagamento_1_meio: "dinheiro", pagamento_1_valor: "dez reais" }))).toEqual({ ok: false, erro: "valor" });
     expect(lerPagamentos(formulario({}))).toEqual({ ok: false, erro: "pagamento" });
   });
+
+  it("PAY-014b: a venda do pedido pago pelo site pode ir sem outra forma (o banco confere); o link nunca vem da tela", () => {
+    expect(lerPagamentos(formulario({}), 8, true)).toEqual({ ok: true, pagamentos: [] });
+    expect(lerPagamentos(formulario({ pagamento_1_meio: "dinheiro", pagamento_1_valor: "10" }), 8, true)).toEqual({ ok: true, pagamentos: [{ meio: "dinheiro", valor: 1_000 }] });
+    expect(lerPagamentos(formulario({ pagamento_1_meio: "link_pagamento", pagamento_1_valor: "79,00" }))).toEqual({ ok: false, erro: "pagamento" });
+    expect(lerPagamentos(formulario({ pagamento_1_meio: "link_pagamento", pagamento_1_valor: "79,00" }), 8, true)).toEqual({ ok: false, erro: "pagamento" });
+  });
 });
 
 describe("erros e busca", () => {
@@ -49,6 +56,10 @@ describe("erros e busca", () => {
     expect(erroDaVenda({ code: "OR043" })).toBe("deposito");
     expect(ERROS_DA_VENDA.deposito).toContain("Trocar de loja");
     expect(erroDaVenda({ code: "toString" })).toBe("falha");
+    // PAY-014b: o item pago pelo site não sai e a venda aberta do pedido pago não se cancela; o desconto abaixo do pago.
+    expect(erroDaVenda({ code: "OR048" })).toBe("pago_pelo_site");
+    expect(erroDoPagamento("O pedido foi pago pelo site pelo preço anunciado: tire o desconto dos itens dele")).toBe("pago_pelo_site");
+    expect(ERROS_DA_VENDA.pago_pelo_site).toContain("painel da Asaas");
   });
   it("INV-006: IMEI/ICCID reservado, vendido ou de outra loja vira mensagem clara na tela, nunca falha genérica", () => {
     expect(erroDaVenda({ code: "OR002" })).toBe("indisponivel");

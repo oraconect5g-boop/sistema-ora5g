@@ -95,10 +95,10 @@ const comprovante = async () => texto(await Venda({ params: Promise.resolve({ id
 const carrinho = async (parametros: Record<string, string> = {}, os: Linha | null = { id: OS, numero: 7, situacao: "aberta" }) => {
   cenario.pdv = {
     caixa: { id: CAIXA, aberto_em: "2026-11-14T12:00:00+00:00" },
-    venda: { id: VENDA, numero: 43, situacao: "rascunho" },
+    venda: { id: VENDA, numero: 43, situacao: "rascunho", pago_pelo_site_centavos: null },
     itens: [{
       id: ITEM, variante_id: CONSERTO, item_serializado_id: null, tipo: "servico", quantidade: 1, preco_unitario_centavos: 33_000, desconto_centavos: 0,
-      preco_id: null, os_id: OS, variante: { sku: "OS-CONSERTO", nome: "Conserto genérico" }, serial: null, preco: null, os, aprovacao: null,
+      preco_id: null, os_id: OS, variante: { sku: "OS-CONSERTO", nome: "Conserto genérico" }, serial: null, preco: null, os, aprovacao: null, loja_reserva_id: null,
     }],
     terminais: [],
   };

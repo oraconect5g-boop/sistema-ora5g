@@ -31,13 +31,16 @@ export type ItemDoCarrinho = {
   os: OsDoItem | null;
   /** A situação do pedido de aprovação de desconto mais recente do item; nulo quando não há pedido. */
   aprovacao: string | null;
+  /** PAY-014b: o item é de um pedido pago pelo site (vale o preço pago e não sai da venda). */
+  pago_pelo_site: boolean;
 };
 
 export type TelaDoPdv = {
   /** O caixa aberto de quem pede, nesta loja. */
   caixa: { id: string; aberto_em: string } | null;
-  /** A venda em andamento (rascunho ou aguardando aprovação) de quem pede, nesta loja. */
-  venda: { id: string; numero: number; situacao: string } | null;
+  /** A venda em andamento (rascunho ou aguardando aprovação) de quem pede, nesta loja. PAY-014b: o que o pedido do site
+   *  desta venda já pagou (nulo quando a venda não atende um pedido pago). */
+  venda: { id: string; numero: number; situacao: string; pago_pelo_site_centavos: number | null } | null;
   itens: ItemDoCarrinho[];
   /** As maquininhas ativas da loja (L7a). */
   terminais: { id: string; provedor: string; apelido: string; identificador: string }[];
@@ -50,6 +53,8 @@ const identificador = (l: Linha, campo: string) => {
 };
 /** Identificador que o banco pode mandar nulo. Campo ausente continua sendo erro. */
 const identificadorOuNulo = (l: Linha, campo: string) => (l[campo] === null ? null : identificador(l, campo));
+/** Valor em centavos (número do JSON) que o banco pode mandar nulo. Campo ausente, texto ou fração continua sendo erro. */
+const centavosOuNulo = (l: Linha, campo: string) => (l[campo] === null ? null : contagem(l, campo));
 /** Objeto que o banco pode mandar nulo. Campo ausente continua sendo erro. */
 const objetoOuNulo = (l: Linha, campo: string): Linha | null => {
   const v = l[campo];
@@ -85,6 +90,7 @@ function lerItem(l: Linha): ItemDoCarrinho {
     regra: regraDoItem(precoId, precoId && linhaDePreco ? new Map([[precoId, linhaDePreco]]) : null),
     os: osId ? { os: osId, numero: ordem?.numero ?? null, situacao: ordem?.situacao ?? null } : null,
     aprovacao: textoOuNulo(l, "aprovacao"),
+    pago_pelo_site: identificadorOuNulo(l, "loja_reserva_id") !== null,
   };
 }
 
@@ -98,7 +104,10 @@ export function lerTelaDoPdv(dado: unknown): TelaDoPdv {
   if (!venda && itens.length > 0) throw new RespostaInesperada("itens");
   return {
     caixa: caixa && { id: identificador(caixa, "id"), aberto_em: texto(caixa, "aberto_em") },
-    venda: venda && { id: identificador(venda, "id"), numero: contagem(venda, "numero"), situacao: texto(venda, "situacao") },
+    venda: venda && {
+      id: identificador(venda, "id"), numero: contagem(venda, "numero"), situacao: texto(venda, "situacao"),
+      pago_pelo_site_centavos: centavosOuNulo(venda, "pago_pelo_site_centavos"),
+    },
     itens,
     terminais: lista(dado, "terminais").map((t) => ({
       id: identificador(t, "id"), provedor: texto(t, "provedor"), apelido: texto(t, "apelido"), identificador: texto(t, "identificador"),

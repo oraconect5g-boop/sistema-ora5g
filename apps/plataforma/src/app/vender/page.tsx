@@ -45,7 +45,7 @@ const OPCOES_DE_PAGAMENTO: OpcaoDeMeio[] = MEIOS_DA_LOJA.map((m) => ({
 // VEL-a (ORA-QUAL-010, ORA-POS-002): a tela abre com duas idas ao banco: a sessão, que já traz as permissões
 // (public.molde_da_sessao), e a tela inteira (public.pdv_tela: caixa, venda, carrinho e maquininhas). Antes eram até
 // nove idas seguidas. Só a busca de produto faz mais idas, e só quando há venda aberta e algo digitado.
-export default async function Vender({ searchParams }: { searchParams: Promise<{ q?: ValorDeParametro; erro?: ValorDeParametro; desconto?: ValorDeParametro; cancelada?: ValorDeParametro; os?: ValorDeParametro; reserva?: ValorDeParametro; anunciado?: ValorDeParametro; atual?: ValorDeParametro; pedido?: ValorDeParametro }> }) {
+export default async function Vender({ searchParams }: { searchParams: Promise<{ q?: ValorDeParametro; erro?: ValorDeParametro; desconto?: ValorDeParametro; cancelada?: ValorDeParametro; os?: ValorDeParametro; reserva?: ValorDeParametro; anunciado?: ValorDeParametro; atual?: ValorDeParametro; pedido?: ValorDeParametro; pago?: ValorDeParametro }> }) {
   const parametros = await searchParams;
   const erro = chaveDoCatalogo(ERROS_DA_VENDA, parametros.erro);
   const busca = termoDaBusca(textoDoParametro(parametros.q)).slice(0, 40);
@@ -121,8 +121,11 @@ export default async function Vender({ searchParams }: { searchParams: Promise<{
   // O carrinho veio inteiro da leitura única, com os valores já conferidos (lib/vendas/pdv-tela.ts).
   const subtotal = itens.reduce((t, i) => t + i.preco_unitario_centavos * i.quantidade, 0);
   const descontos = itens.reduce((t, i) => t + i.desconto_centavos, 0);
-  // PDV-c: o que a PayJoy e a Aiva podem financiar (os celulares, com o desconto); o resto é pago à parte.
-  const valorDosCelulares = itens.filter((i) => i.tipo === "aparelho").reduce((t, i) => t + i.preco_unitario_centavos * i.quantidade - i.desconto_centavos, 0);
+  // PDV-c: o que a PayJoy e a Aiva podem financiar (os celulares, com o desconto); o resto é pago à parte. PAY-014b: o
+  // celular já pago pelo site não entra.
+  const valorDosCelulares = itens.filter((i) => i.tipo === "aparelho" && !i.pago_pelo_site).reduce((t, i) => t + i.preco_unitario_centavos * i.quantidade - i.desconto_centavos, 0);
+  // PAY-014b: o que o pedido do site desta venda já pagou; o caixa cobra só o resto (o banco grava a linha do pago).
+  const pagoPeloSite = venda?.pago_pelo_site_centavos ?? 0;
 
   return (
     <MoldeReal sessao={sessao}>
@@ -132,7 +135,8 @@ export default async function Vender({ searchParams }: { searchParams: Promise<{
       {textoDoParametro(parametros.cancelada) === "1" && <Aviso tom="info">Venda cancelada. Os itens voltaram para o estoque da loja.</Aviso>}
       {/* ONLINE-b: a reserva do site atendida abre a venda com a unidade reservada; a oferta anunciada obriga. */}
       {textoDoParametro(parametros.reserva) === "atendida" && (() => {
-        const aviso = avisoDaReservaAtendida(textoDoParametro(parametros.anunciado), textoDoParametro(parametros.atual), textoDoParametro(parametros.pedido) === "sim");
+        const aviso = avisoDaReservaAtendida(textoDoParametro(parametros.anunciado), textoDoParametro(parametros.atual), textoDoParametro(parametros.pedido) === "sim",
+          textoDoParametro(parametros.pago) === "sim");
         return <Aviso tom={aviso.tom}>{aviso.texto}</Aviso>;
       })()}
       {textoDoParametro(parametros.os) === "no_carrinho" && <Aviso tom="sucesso">O conserto da OS entrou no carrinho pelo valor do orçamento aprovado. Conclua a venda; depois registre a entrega na OS.</Aviso>}
@@ -215,9 +219,13 @@ export default async function Vender({ searchParams }: { searchParams: Promise<{
                       <div className="flex justify-between gap-2">
                         <span><strong>{os ? `Conserto da OS nº ${os.numero ?? "—"}` : (v?.nome ?? "Item")}</strong>
                           {os && <span className="block text-xs text-suave">valor do orçamento aprovado · <Link href={`/assistencia/${os.os}`} className="font-semibold text-acao">ver a OS</Link></span>}<span className="numeros block text-xs text-suave">{v?.sku} {serial ? `· ${final(serial.imei ?? serial.iccid)}` : ""} · {i.quantidade} × {brl(i.preco_unitario_centavos)}</span>
-                          {regra.campanha && <span className="block text-xs font-semibold text-acao">{regra.texto}</span>}</span>
+                          {regra.campanha && <span className="block text-xs font-semibold text-acao">{regra.texto}</span>}
+                          {i.pago_pelo_site && <span className="mt-1 block"><Selo tom="sucesso" ponto>pago pelo site</Selo></span>}</span>
                         <span className="numeros text-right font-semibold">{brl(linha - desconto)}{desconto > 0 && <span className="block text-xs font-normal text-suave">desconto {brl(desconto)}</span>}</span>
                       </div>
+                      {i.pago_pelo_site ? (
+                        <p className="text-xs text-suave">Pago pelo site: sai pelo preço pago, sem desconto, e não sai da venda.</p>
+                      ) : (
                       <div className="flex flex-wrap items-end gap-2">
                         <form action={aplicarDesconto} className="flex items-end gap-2">
                           <input type="hidden" name="item" value={i.id} />
@@ -229,6 +237,7 @@ export default async function Vender({ searchParams }: { searchParams: Promise<{
                         {aprovacao === "aprovada" && <Selo tom="sucesso" ponto>desconto aprovado</Selo>}
                         {aprovacao === "negada" && <Selo tom="perigo" ponto>desconto negado</Selo>}
                       </div>
+                      )}
                       {desconto > 0 && aprovacao !== "pendente" && aprovacao !== "aprovada" && (
                         <details><summary className="cursor-pointer text-xs font-semibold text-acao">Pedir aprovação deste desconto</summary>
                           <form action={pedirAprovacao} className="mt-2 flex flex-wrap items-end gap-2">
@@ -247,6 +256,10 @@ export default async function Vender({ searchParams }: { searchParams: Promise<{
               <dt>Subtotal</dt><dd className="text-right">{brl(subtotal)}</dd>
               <dt>Descontos</dt><dd className="text-right">− {brl(descontos)}</dd>
               <dt className="font-semibold">Total</dt><dd className="text-right text-lg font-bold">{brl(subtotal - descontos)}</dd>
+              {pagoPeloSite > 0 && <>
+                <dt className="text-sucesso">Pago pelo site</dt><dd className="text-right text-sucesso">− {brl(pagoPeloSite)}</dd>
+                <dt className="font-semibold">A cobrar</dt><dd className="text-right font-semibold">{brl(Math.max(subtotal - descontos - pagoPeloSite, 0))}</dd>
+              </>}
             </dl>
           </Cartao>
 
@@ -254,7 +267,7 @@ export default async function Vender({ searchParams }: { searchParams: Promise<{
             <Cartao titulo="Pagamento" subtitulo="Toque em “Adicionar forma de pagamento” para cada forma que o cliente usar. PayJoy e Aiva: o valor financiado (só o do celular) e as parcelas; a entrada é outra forma, marcada como entrada. Cartão: as parcelas e o comprovante. Troco só sai do dinheiro.">
               <form action={concluirVenda} className="space-y-3">
                 <input type="hidden" name="venda" value={venda.id} /><input type="hidden" name="chave" value={randomUUID()} />
-                <FormasDePagamento total={subtotal - descontos} valorDosCelulares={valorDosCelulares} opcoes={OPCOES_DE_PAGAMENTO}
+                <FormasDePagamento total={Math.max(subtotal - descontos - pagoPeloSite, 0)} pagoPeloSite={pagoPeloSite} valorDosCelulares={valorDosCelulares} opcoes={OPCOES_DE_PAGAMENTO}
                   terminais={terminais.map((m) => ({ id: m.id, provedor: m.provedor === "picpay" ? "picpay" as const : "pagbank" as const, rotulo: `${m.apelido} · ${m.provedor === "picpay" ? "PicPay" : "PagBank"} ${m.identificador}` }))} />
                 {permissoes.has("cliente.buscar") && (
                   <div className="space-y-1 rounded-xl border border-borda p-2">
@@ -272,6 +285,9 @@ export default async function Vender({ searchParams }: { searchParams: Promise<{
             </Cartao>
           )}
 
+          {pagoPeloSite > 0 ? (
+            <p className="text-xs text-suave">Pedido pago pelo site: esta venda não se cancela por aqui. Se o cliente desistir, o estorno é pelo painel da Asaas; depois do estorno, a venda pode ser cancelada.</p>
+          ) : (
           <details className="text-sm"><summary className="cursor-pointer font-semibold text-perigo">Cancelar esta venda</summary>
             <form action={cancelarVenda} className="mt-2 flex flex-wrap items-end gap-2">
               <input type="hidden" name="venda" value={venda.id} />
@@ -279,6 +295,7 @@ export default async function Vender({ searchParams }: { searchParams: Promise<{
               <Botao type="submit" tamanho="sm" variante="perigo" enquanto="Cancelando…">Cancelar venda</Botao>
             </form>
           </details>
+          )}
         </>
       )}
     </MoldeReal>
