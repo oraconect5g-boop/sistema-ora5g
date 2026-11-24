@@ -1089,6 +1089,20 @@
         "ORA-FIN-006"
       ],
       "entrega": "a tela Depósitos das maquininhas: o depósito agrupado da PicPay e da PagBank (os pagamentos com o dinheiro para o mesmo dia, pelo líquido) conferido com a linha de crédito do extrato do banco da rede; a diferença e o desfazer com o motivo; a linha com um uso só",
+      "commit": "f3f1abc",
+      "publicado_em": "2026-11-24",
+      "pedido_em": "2026-11-24",
+      "resposta": null,
+      "respondido_em": null
+    },
+    {
+      "lote": "QUAL-006a",
+      "roteiro": "docs/aceite/QUAL-006a.md",
+      "requisitos": [
+        "ORA-QUAL-006",
+        "ORA-QUAL-013"
+      ],
+      "entrega": "o aviso no celular quando o servidor dá erro: o erro de uma tela vira o alerta \"Erro no servidor do site\" no celular do dono e do administrador (no máximo um por hora), o site sem responder por 5 minutos vira \"O site não responde\" e, na volta, \"O site voltou\"; os pedidos estranhos (robôs) ficam fora da conta; a Saúde da operação mostra se o aviso está ligado",
       "commit": null,
       "publicado_em": null,
       "pedido_em": "2026-11-24",

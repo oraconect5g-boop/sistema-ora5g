@@ -2,7 +2,7 @@
   "_leia": "Checkpoint do programa de execução integral (PR #67). Carregar ao retomar e seguir para o próximo item executável da fila; não reiniciar o projeto. Estados vêm de status-requisitos.json (fonte da rastreabilidade); este arquivo acrescenta lote, bloqueio externo e revisão. Desde 16/11/2026 a medida de avanço é o requisito homologado pelo proprietário: a chave aceites guarda a resposta dele a cada roteiro de aceite (docs/aceite/); um requisito só recebe homologado: true com todos os lotes dele aceitos e sem nada em FALTA na nota de status-requisitos.json.",
   "atualizado_em": "2026-11-24",
   "base": {
-    "main": "7594a52",
+    "main": "f3f1abc",
     "pacote": {
       "pr": 67,
       "branch": "docs/execucao-integral-20261110",
@@ -1130,12 +1130,26 @@
         "ORA-FIN-006"
       ],
       "entrega": "a tela Depósitos das maquininhas: o depósito agrupado da PicPay e da PagBank (os pagamentos com o dinheiro para o mesmo dia, pelo líquido) conferido com a linha de crédito do extrato do banco da rede; a diferença e o desfazer com o motivo; a linha com um uso só",
+      "commit": "f3f1abc",
+      "publicado_em": "2026-11-24",
+      "pedido_em": "2026-11-24",
+      "resposta": null,
+      "respondido_em": null,
+      "nota": "no ar em f3f1abc (build 24/11 08:36; copiado do registro das publicações, a branch registro/publicacoes); a prova de leitura passou no site em 24/11 às 08:36, de primeira; migration 20261124111725_deposito_da_maquininha_no_banco; o ORA-FIN-006 segue parcial (o saldo final do OFX real; a regra de um depósito por dia espera a resposta do proprietário)"
+    },
+    "QUAL-006a": {
+      "roteiro": "docs/aceite/QUAL-006a.md",
+      "requisitos": [
+        "ORA-QUAL-006",
+        "ORA-QUAL-013"
+      ],
+      "entrega": "o aviso no celular quando o servidor dá erro: o erro de uma tela vira o alerta \"Erro no servidor do site\" no celular do dono e do administrador (no máximo um por hora), o site sem responder por 5 minutos vira \"O site não responde\" e, na volta, \"O site voltou\"; os pedidos estranhos (robôs) ficam fora da conta; a Saúde da operação mostra se o aviso está ligado",
       "commit": null,
       "publicado_em": null,
       "pedido_em": "2026-11-24",
       "resposta": null,
       "respondido_em": null,
-      "nota": "o commit e a publicação ficam no registro (a branch registro/publicacoes); migration 20261124111725_deposito_da_maquininha_no_banco, aplicada no ora5g-dev em 24/11; provado no banco do site numa operação desfeita no fim; o ORA-FIN-006 segue parcial (o saldo final do OFX real; a regra de um depósito por dia espera a resposta do proprietário)"
+      "nota": "o commit e a publicação ficam no registro (a branch registro/publicacoes); migration 20261124121856_aviso_do_erro_do_servidor, aplicada no ora5g-dev em 24/11; provado no banco do site numa operação desfeita no fim; os dois requisitos seguem parciais (o servidor inteiro fora do ar e o tempo de resposta pedem um monitoramento de fora; a D-042)"
     }
   },
   "contagem_dos_estados": {
@@ -2527,7 +2541,7 @@
       "titulo": "Dashboard vendedor mobile: produção do dia, metas e atalhos",
       "prioridade": "P0",
       "estado": "parcial",
-      "lote": "L8 financeiro/relatórios; G1 Início e G4 metas; ROB-a (21/11): a varredura de todas as telas e o Início que não cai",
+      "lote": "L8 financeiro/relatórios; G1 Início e G4 metas; ROB-a (21/11): a varredura de todas as telas e o Início que não cai; J2-a (19/11): a jornada com login no site no ar (a nota acertada no QUAL-006a, 24/11)",
       "bloqueio_externo": null,
       "revisado_codex": false,
       "homologado": false
@@ -2554,7 +2568,7 @@
       "titulo": "Relatórios de margem, vendedor e ranking configurável",
       "prioridade": "P1",
       "estado": "parcial",
-      "lote": "L8 financeiro/relatórios; G2 financeiro e relatórios (G2a entregue em 13/11)",
+      "lote": "L8 financeiro/relatórios; G2 financeiro e relatórios (G2a entregue em 13/11); J2-a (19/11): a jornada com login no site no ar (a nota acertada no QUAL-006a, 24/11)",
       "bloqueio_externo": null,
       "revisado_codex": false,
       "homologado": false
@@ -2626,7 +2640,7 @@
       "titulo": "Observabilidade de erros, latência, filas e conciliação",
       "prioridade": "P0",
       "estado": "parcial",
-      "lote": "transversal; ROT-a (17/11): as rotinas automáticas do banco na Saúde da operação, com o aviso de falha ou atraso; SAUDE-a (17/11): a venda sem o pedido da nota como fila, o estoque abaixo do mínimo como aviso à parte e a leitura leve do banco na /saude (ADR-012); PWA-b (17/11): o canal do aviso fora da tela (o aviso no celular), ainda sem a regra de fila acima do limite (ADR-014); QUAL-a (17/11): o alerta de fila acima do limite e de rotina com problema, migration 20261117221322_alertas_das_filas aplicada no ora5g-dev em 17/11 (ADR-015); TRF-e (23/11): a fila \"Transferências com falta\" na Saúde da operação",
+      "lote": "transversal; ROT-a (17/11): as rotinas automáticas do banco na Saúde da operação, com o aviso de falha ou atraso; SAUDE-a (17/11): a venda sem o pedido da nota como fila, o estoque abaixo do mínimo como aviso à parte e a leitura leve do banco na /saude (ADR-012); PWA-b (17/11): o canal do aviso fora da tela (o aviso no celular), ainda sem a regra de fila acima do limite (ADR-014); QUAL-a (17/11): o alerta de fila acima do limite e de rotina com problema, migration 20261117221322_alertas_das_filas aplicada no ora5g-dev em 17/11 (ADR-015); TRF-e (23/11): a fila \"Transferências com falta\" na Saúde da operação; QUAL-006a (24/11): o aviso no celular quando o servidor dá erro",
       "bloqueio_externo": null,
       "revisado_codex": false,
       "homologado": false
@@ -2689,7 +2703,7 @@
       "titulo": "Processo de resposta a incidentes e suporte às lojas",
       "prioridade": "P1",
       "estado": "parcial",
-      "lote": "transversal",
+      "lote": "transversal; Q2 (14/11): o playbook de incidentes; QUAL-006a (24/11): o aviso no celular quando o servidor dá erro",
       "bloqueio_externo": null,
       "revisado_codex": false,
       "homologado": false
@@ -2758,5 +2772,5 @@
       "homologado": false
     }
   },
-  "proximo_passo": "Seguir a ordem de 23/11 (o prompt entregue pelo proprietário, escrito pelo Codex, com a auditoria integral de 21/11, PR #105; a leitura está em docs/alinhamento/LEITURA_AUDITORIA_2026-11-21.md). Em 23/11 à noite o proprietário pediu para seguir o planejamento do prompt: a fila, seção por seção, está em docs/alinhamento/FILA_INTEGRAL_2026-11-23.md (o que não depende de ninguém, na ordem das áreas, e o que espera alguém). (1) Publicar o FIN-006a depois do merge, rodar no site a prova (apps/plataforma/e2e/depositos-das-maquininhas-real.spec.ts, que não grava nada) e registrar a publicação (deploy/homologacao/registrar-publicacao.sh; a branch registro/publicacoes); os lotes de 23/11, do AUD-c (5617351) ao FIN-007b (a1100f7), e os de 24/11, o CRM-009a (7db5c6c), o POS-015a (19ac570), o PAY-011a (947a391) e o FIN-002a (7594a52), estão no ar. (2) A seção 4 do prompt passa à frente de tudo quando o proprietário responder as três perguntas do catálogo (a tabela de preço da loja, o tipo de cada família e o código do produto: a coluna Código ou a coluna SKU; ele recebeu em 23/11 um resumo privado do relatório para responder) e der o sim: aí se gera a prévia do catálogo de verdade com a conta de administrador de teste, e ele confere e aplica; o estoque de cada loja se carrega com um relatório do dia da virada. (3) Enquanto isso, os lotes que não dependem de ninguém, na ordem das áreas: as notas da jornada com login de REPORT-001, 003 e 006, e QUAL-006 e 013 (o aviso no celular quando o servidor erra). Um lote por vez, com teste, publicação, prova no domínio, roteiro de aceite e relato. O que depende do proprietário está em docs/PENDENCIAS_DO_PROPRIETARIO.md (a lista única). A narrativa anterior deste campo fica no histórico do Git e em docs/alinhamento/EXECUCAO_INTEGRAL_STATUS.md."
+  "proximo_passo": "Seguir a ordem de 23/11 (o prompt entregue pelo proprietário, escrito pelo Codex, com a auditoria integral de 21/11, PR #105; a leitura está em docs/alinhamento/LEITURA_AUDITORIA_2026-11-21.md). Em 23/11 à noite o proprietário pediu para seguir o planejamento do prompt: a fila, seção por seção, está em docs/alinhamento/FILA_INTEGRAL_2026-11-23.md. (1) Publicar o QUAL-006a depois do merge, conferir que o worker dos avisos relata a cada minuto (a Saúde da operação diz \"Aviso no celular ligado\"), rodar no site a prova (apps/plataforma/e2e/aviso-do-erro-do-servidor-real.spec.ts, que não grava nada) e registrar a publicação (deploy/homologacao/registrar-publicacao.sh; a branch registro/publicacoes); os lotes de 23/11, do AUD-c (5617351) ao FIN-007b (a1100f7), e os de 24/11, do CRM-009a (7db5c6c) ao FIN-006a (f3f1abc), estão no ar. (2) Com o QUAL-006a, a fila do que não depende de ninguém acabou: o que resta depende de resposta do proprietário, de contrato ou de terceiro (docs/PENDENCIAS_DO_PROPRIETARIO.md, a lista única). (3) A seção 4 do prompt passa à frente de tudo quando o proprietário responder as três perguntas do catálogo (a tabela de preço da loja, o tipo de cada família e o código do produto: a coluna Código ou a coluna SKU; ele recebeu em 23/11 um resumo privado do relatório para responder) e der o sim: aí se gera a prévia do catálogo de verdade com a conta de administrador de teste, e ele confere e aplica; o estoque de cada loja se carrega com um relatório do dia da virada. A narrativa anterior deste campo fica no histórico do Git e em docs/alinhamento/EXECUCAO_INTEGRAL_STATUS.md."
 }

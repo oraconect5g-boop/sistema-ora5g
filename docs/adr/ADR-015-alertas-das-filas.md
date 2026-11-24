@@ -38,8 +38,19 @@
 
 ## O que fica de fora
 
-1. **Os erros e o tempo de resposta do servidor.** Pedem um serviço de monitoramento ou a leitura dos registros do servidor: fica para um lote seguinte.
+1. **Os erros e o tempo de resposta do servidor.** Os erros: feitos em 24/11, no lote QUAL-006a (ver o adendo de 24/11, abaixo). O tempo de resposta e o servidor inteiro fora do ar pedem um monitoramento de fora, a escolher.
 2. **Uma tela para mudar os limites.** Por enquanto, o proprietário pede, e o limite muda por `update`.
+
+## Adendo de 24/11/2026: o erro do servidor (lote QUAL-006a, ORA-QUAL-006 e ORA-QUAL-013)
+
+- **De onde vem:** o site já conta os erros do servidor desde o OBS-a (a lista do processo, sem o texto do erro). A cada minuto, o worker dos avisos, que roda no mesmo servidor e já tem o segredo dos avisos, lê a conta no próprio site, em `/saude/erros`, e a relata ao banco (`public.erros_do_servidor_relatar`). Nenhum segredo novo, e o web continua sem segredo nenhum (REV-052).
+- **Só dentro do servidor:** o Next preenche os `x-forwarded-*` que faltam com os do próprio pedido; o Apache põe os dele (o IP de quem pediu, depois do que a pessoa mandou, o domínio, o https e o nome do servidor). O endereço só responde ao pedido com o IP de dentro, o host local, http e nenhum desses do Apache; pelo domínio, 404.
+- **O pedido estranho** (para `/_not-found/page`, ou com o cabeçalho de navegação malformado, que o próprio site nunca manda) sai da conta e não avisa: são robôs (11 dos 13 erros de 18 a 24/11). O texto do erro do Next só decide isso; se ele mudar, o erro volta a avisar.
+- **Quem decide é o banco:** os erros novos viram o alerta da rede, no máximo um a cada hora (os desse meio vão no seguinte, mesmo depois de uma publicação); o site sem responder por 5 minutos vira "O site não responde" (de novo a cada hora enquanto durar) e, na volta, "O site voltou". As duas regras ficam na linha do relato e mudam com um `update`, como os limites das filas.
+- **Quem recebe:** quem gere as lojas pela rede inteira (`unidades.gerir`: o dono e o administrador), que é quem vê os erros na Saúde da operação; para cada rede ativa, como o alerta da rotina do banco (o site é um só).
+- **A Saúde da operação** mostra se o aviso está ligado (a última conferência do worker e o último alerta) ou parado (o worker sem conferir há mais de 5 minutos).
+- **Fica de fora:** o servidor inteiro fora do ar (o worker que avisa roda nele) e o tempo de resposta: pedem um monitoramento de fora.
+- **Reverter:** a reversão da migration `20261124121856_aviso_do_erro_do_servidor` tira as duas funções, a tabela e os alertas do servidor da fila, e volta a permissão do alerta à de antes; o worker de uma versão anterior não relata, e o site de uma versão anterior não tem o endereço (o worker diz "nada relatado").
 
 ## Consequências
 
