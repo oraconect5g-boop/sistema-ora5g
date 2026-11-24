@@ -117,6 +117,16 @@ export function situacaoDoRepasse(c: Pick<RepasseEmAberto, "estado" | "atraso" |
   return c.vencimento === hoje ? { rotulo: "vence hoje", tom: "aviso" } : { rotulo: `vence em ${dataCurta(c.vencimento)}`, tom: "info" };
 }
 
+/**
+ * FIN-007b: o dia combinado para voltar ao assunto, quando ele já chegou. Vale a cobrança mais recente da conta (a
+ * primeira do histórico): registrar outra cobrança tira o lembrete da anterior. É a mesma regra da contagem do banco
+ * (public.pendencias_da_loja, cobrancas_a_retomar). Nulo: nada a retomar hoje.
+ */
+export function cobrancaARetomar(conta: Pick<RepasseEmAberto, "historico">, hoje: string): string | null {
+  const dia = conta.historico[0]?.retornarEm ?? null;
+  return dia !== null && dia <= hoje ? dia : null;
+}
+
 /** As faixas da idade do atraso (até quantos dias de atraso entram em cada uma; a última não tem teto). */
 export const FAIXAS_DO_ATRASO = [{ ate: 7, rotulo: "até 7 dias" }, { ate: 30, rotulo: "de 8 a 30 dias" }, { ate: null, rotulo: "mais de 30 dias" }] as const;
 export type FaixaDoAtraso = { rotulo: string; contas: number; valor: number };

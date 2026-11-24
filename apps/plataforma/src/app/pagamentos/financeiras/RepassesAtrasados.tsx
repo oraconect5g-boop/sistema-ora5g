@@ -4,7 +4,7 @@ import { NOTA } from "../../../componentes/paineis-de-vendas";
 import { Aviso, Botao, Cartao, Selo } from "../../../componentes/ui";
 import { brl, numero } from "../../../lib/formato";
 import type { Leitura } from "../../../lib/leitura-do-banco";
-import { CANAIS_DA_COBRANCA, faixasDoAtraso, type RepasseEmAberto, type RepassesAtrasados } from "../../../lib/pagamentos/atrasados";
+import { CANAIS_DA_COBRANCA, cobrancaARetomar, faixasDoAtraso, type RepasseEmAberto, type RepassesAtrasados } from "../../../lib/pagamentos/atrasados";
 import { FINANCEIRAS } from "../../../lib/pagamentos/financeiras";
 import { definirPrazoDeRepasse, registrarCobrancaDeRepasse } from "../acoes";
 
@@ -43,12 +43,19 @@ export function PainelDosAtrasados({ leitura, daRede = null }: {
   const d = leitura.dados;
   const resumo = resumoDosAtrasados(d);
   const semPrazoComOutras = d.totais.semPrazo > 0 && (d.totais.atrasadas > 0 || d.totais.noPrazo > 0);
+  // FIN-007b: as contas com o dia de voltar ao assunto já chegado (a mesma conta do alerta do Início e do sino).
+  const aRetomar = d.contas.filter((c) => cobrancaARetomar(c, d.hoje) !== null).length;
   return (
     <Cartao className="mt-4" titulo="O que está atrasado" subtitulo="As contas em aberto que passaram do prazo de repasse de cada financeira" icone={AlarmClock}>
       {d.totais.atrasadas > 0 && <p className="numeros text-2xl font-bold tracking-tight text-perigo">{brl(d.totais.valorAtrasado)}</p>}
       <p className={`text-sm ${resumo.tom === "perigo" ? "font-semibold text-perigo" : resumo.tom === "sucesso" ? "font-semibold text-sucesso" : resumo.tom === "aviso" ? "text-aviso" : "text-suave"}`}>{resumo.texto}</p>
       {d.totais.atrasadas > 0 && d.totais.noPrazo > 0 && <p className={`mt-1 ${NOTA}`}>{`No prazo: ${contas(d.totais.noPrazo)} (${brl(d.totais.valorNoPrazo)}).`}</p>}
       {semPrazoComOutras && <p className={`mt-1 ${NOTA}`}>{`Sem prazo definido: ${contas(d.totais.semPrazo)} (${brl(d.totais.valorSemPrazo)}).`}</p>}
+      {aRetomar > 0 && (
+        <p className="mt-2 rounded-lg bg-aviso/10 px-3 py-2 text-sm text-aviso">
+          {`${aRetomar === 1 ? "1 cobrança para retomar" : `${numero(aRetomar)} cobranças para retomar`}: chegou o dia combinado para voltar à financeira. ${aRetomar === 1 ? "A conta está marcada" : "As contas estão marcadas"} na lista abaixo.`}
+        </p>
+      )}
       {d.totais.atrasadas > 0 && (
         <div className="mt-3">
           <h3 className="text-sm font-semibold">Há quanto tempo está atrasado</h3>

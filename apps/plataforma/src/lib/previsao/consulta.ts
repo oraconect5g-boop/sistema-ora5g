@@ -13,6 +13,12 @@ type Cliente = Awaited<ReturnType<typeof obterSessao>>["supabase"];
 const FUNCAO_AUSENTE = new Set(["PGRST202", "42883"]);
 
 export type Contagem = { valor: number; quantidade: number };
+/**
+ * FIN-007b: o que as financeiras devem, pelo vencimento (o dia da venda mais o prazo de repasse em vigor): o que já
+ * passou do prazo, o que vence dentro das semanas pedidas (e entra na previsão), o que vence depois e o que não tem
+ * prazo gravado (sem data). As quatro partes somam o total.
+ */
+export type FinanceirasPorVencimento = { atrasadas: Contagem; noPeriodo: Contagem; depois: Contagem; semPrazo: Contagem };
 export type Previsao = {
   hoje: string; unidade: string | null;
   semanas: SemanaFutura[];
@@ -22,6 +28,8 @@ export type Previsao = {
   /** Pedidos de estorno de Pix e cartão sem comprovante (correção #82): devem sair, ainda não saíram. Nulo: banco sem a correção. */
   estornosAConfirmar: Contagem | null;
   financeiras: Contagem;
+  /** Nulo: banco sem o FIN-007b (as financeiras seguem só com o total, sem data). */
+  financeirasPorVencimento: FinanceirasPorVencimento | null;
   aConciliar: Contagem;
   gavetas: { valor: number; caixas: number };
   lojas: { id: string; nome: string }[];
@@ -45,14 +53,23 @@ export function lerPrevisao(dado: unknown, pedido: { semanas: number; unidade: s
   if (!ehObjeto(dado)) throw new RespostaInesperada("previsao_de_caixa");
   if (dado.unidade !== null && !ehUuid(dado.unidade)) throw new RespostaInesperada("unidade");
   const gavetas = objeto(dado, "gavetas");
+  // FIN-007b: as partes das financeiras pelo vencimento vêm juntas, ou nenhuma (banco sem a migration).
+  const dasFinanceiras = objeto(dado, "financeiras");
+  const porVencimento: FinanceirasPorVencimento | null = "sem_prazo" in dasFinanceiras
+    ? { atrasadas: contagem(dasFinanceiras, "atrasadas"), noPeriodo: contagem(dasFinanceiras, "no_periodo"), depois: contagem(dasFinanceiras, "depois"), semPrazo: contagem(dasFinanceiras, "sem_prazo") }
+    : null;
   const p: Previsao = {
     hoje: dia(dado, "hoje"),
     unidade: dado.unidade as string | null,
-    semanas: lista(dado, "semanas").map((s) => ({ inicio: dia(s, "inicio"), fim: dia(s, "fim"), contas: n(s, "contas"), quantidade: n(s, "quantidade") })),
+    semanas: lista(dado, "semanas").map((s) => ({
+      inicio: dia(s, "inicio"), fim: dia(s, "fim"), contas: n(s, "contas"), quantidade: n(s, "quantidade"),
+      financeiras: porVencimento ? n(s, "financeiras") : 0, financeirasQuantidade: porVencimento ? n(s, "financeiras_quantidade") : 0,
+    })),
     vencidas: contagem(dado, "vencidas"),
     base: lista(dado, "base").map((b) => ({ inicio: dia(b, "inicio"), fim: dia(b, "fim"), recebido: n(b, "recebido"), devolvido: n(b, "devolvido"), saidasCaixa: n(b, "saidas_caixa") })),
     estornosAConfirmar: "estornos_a_confirmar" in dado ? contagem(dado, "estornos_a_confirmar") : null,
     financeiras: contagem(dado, "financeiras"),
+    financeirasPorVencimento: porVencimento,
     aConciliar: contagem(dado, "a_conciliar"),
     gavetas: { valor: n(gavetas, "valor"), caixas: n(gavetas, "caixas") },
     lojas: lista(dado, "lojas").map((l) => {
@@ -70,6 +87,17 @@ export function lerPrevisao(dado: unknown, pedido: { semanas: number; unidade: s
       && b.recebido >= 0 && b.devolvido >= 0 && b.saidasCaixa >= 0)
     && p.gavetas.caixas >= 0 && (p.gavetas.caixas > 0 || p.gavetas.valor === 0);
   if (!fecha) throw new RespostaInesperada("previsao_de_caixa");
+  // FIN-007b: as quatro partes somam o total em aberto, e as semanas somam o que vence no período: se não fecham, a
+  // leitura não vale (nada some nem entra duas vezes na previsão).
+  if (porVencimento) {
+    const partes = [porVencimento.atrasadas, porVencimento.noPeriodo, porVencimento.depois, porVencimento.semPrazo];
+    const semanasFecham = p.semanas.every((s) => (s.financeiras ?? 0) >= 0 && (s.financeirasQuantidade ?? 0) >= 0 && ((s.financeiras ?? 0) === 0) === ((s.financeirasQuantidade ?? 0) === 0))
+      && p.semanas.reduce((t, s) => t + (s.financeiras ?? 0), 0) === porVencimento.noPeriodo.valor
+      && p.semanas.reduce((t, s) => t + (s.financeirasQuantidade ?? 0), 0) === porVencimento.noPeriodo.quantidade;
+    if (!semanasFecham || partes.reduce((t, x) => t + x.valor, 0) !== p.financeiras.valor || partes.reduce((t, x) => t + x.quantidade, 0) !== p.financeiras.quantidade) {
+      throw new RespostaInesperada("financeiras");
+    }
+  }
   return p;
 }
 

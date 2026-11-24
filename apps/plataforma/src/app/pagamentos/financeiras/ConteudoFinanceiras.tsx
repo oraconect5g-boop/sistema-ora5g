@@ -7,7 +7,7 @@ import { EstadoDoPainel, NOTA } from "../../../componentes/paineis-de-vendas";
 import { Botao, Cartao, EstadoVazio, Selo } from "../../../componentes/ui";
 import { brl, numero } from "../../../lib/formato";
 import type { Leitura } from "../../../lib/leitura-do-banco";
-import { situacaoDoRepasse, type RepassesAtrasados } from "../../../lib/pagamentos/atrasados";
+import { cobrancaARetomar, situacaoDoRepasse, type RepassesAtrasados } from "../../../lib/pagamentos/atrasados";
 import { FINANCEIRAS, idadeDaConta, type FinanceirasAReceber } from "../../../lib/pagamentos/financeiras";
 import { corrigirRecebimento, desfazerRecebimento, receberDaFinanceira } from "../acoes";
 import { CobrancasDaConta, PainelDosAtrasados } from "./RepassesAtrasados";
@@ -69,6 +69,8 @@ export function ConteudoFinanceiras({ leitura, hoje, atrasados = null, daRede = 
                 const idade = idadeDaConta(c.dias);
                 const repasse = c.situacao === "aberta" ? emAberto.get(c.id) : undefined;
                 const prazo = repasse ? situacaoDoRepasse(repasse, hojeDoBanco) : null;
+                // FIN-007b: o dia combinado na última cobrança para voltar ao assunto, quando já chegou.
+                const retomar = repasse ? cobrancaARetomar(repasse, hojeDoBanco) : null;
                 return (
                   <li key={c.id} className="space-y-2 py-3">
                     <p className="flex flex-wrap items-center gap-2">
@@ -76,6 +78,8 @@ export function ConteudoFinanceiras({ leitura, hoje, atrasados = null, daRede = 
                       <span className="numeros text-xs text-suave">{`${quando(c.concluidaEm)} · ${FINANCEIRAS[c.devedor]} · a receber ${brl(c.valor)}`}</span>
                       {c.situacao === "aberta" ? <Selo tom={idade.tom}>{idade.rotulo}</Selo> : <Selo tom="sucesso" ponto>recebida</Selo>}
                       {prazo && <Selo tom={prazo.tom}>{prazo.rotulo}</Selo>}
+                      {/* Curto, para caber inteiro no celular: o dia combinado, sem o ano (a data inteira está no histórico da conta). */}
+                      {retomar && <Selo tom="aviso">{retomar === hojeDoBanco ? "retomar a cobrança hoje" : `retomar a cobrança (desde ${retomar.slice(8, 10)}/${retomar.slice(5, 7)})`}</Selo>}
                       {c.vendaCancelada && <Selo tom="aviso">venda cancelada</Selo>}
                     </p>
                     {c.situacao === "recebida" ? (

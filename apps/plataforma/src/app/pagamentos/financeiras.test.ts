@@ -212,6 +212,8 @@ describe("/pagamentos/financeiras: os repasses atrasados (FIN-007a)", () => {
       "Há quanto tempo está atrasado", "até 7 dias R$ 1.299,00 1 conta", "de 8 a 30 dias — nenhuma conta", "mais de 30 dias — nenhuma conta",
       "O prazo de repasse de cada financeira", "Aiva 30 dias corridos", "PayJoy sem prazo definido", "Quem define o prazo é quem concilia pela rede inteira (o dono).",
       "atrasada há 5 dias", "Cobranças feitas à financeira (1)",
+      // FIN-007b: a última cobrança combinou voltar ao assunto hoje (13/11): o cartão avisa e a conta fica marcada.
+      "1 cobrança para retomar: chegou o dia combinado para voltar à financeira. A conta está marcada na lista abaixo.", "retomar a cobrança hoje",
       "· Telefone · Falei com o atendimento: repasse previsto para sexta · protocolo PROT-123 · voltar ao assunto em 13/11/2026 · por Gerente (teste)",
     ]) expect(t, trecho).toContain(trecho);
     expect(t).not.toContain("Na rede inteira");
@@ -248,6 +250,28 @@ describe("/pagamentos/financeiras: os repasses atrasados (FIN-007a)", () => {
     for (const trecho of ["1 conta passou do prazo; a mais atrasada, há 5 dias.", "Na rede inteira", "Não deu para ler as outras lojas agora."]) expect(semRede, trecho).toContain(trecho);
     expect(semRede).not.toContain("Nenhuma loja da rede tem conta em aberto");
     expect(semRede).not.toContain("Nada atrasado nas");
+  });
+
+  it("FIN-007b: a cobrança a retomar segue a última cobrança: dia passado diz qual; dia futuro, ou outra cobrança depois, não marca", async () => {
+    const com = (historico: unknown[]) => comAtrasados({ ...ATRASADOS, contas: [conta({ cobrancas: historico.length, historico })] });
+    com([{ ...COBRANCA, retornar_em: "2026-11-11" }]);
+    const passado = visivel(await pagina());
+    expect(passado).toContain("1 cobrança para retomar");
+    expect(passado).toContain("retomar a cobrança (desde 11/11)");
+    com([{ ...COBRANCA, retornar_em: "2026-11-20" }]);
+    const futuro = visivel(await pagina());
+    expect(futuro).not.toContain("para retomar");
+    expect(futuro).not.toContain("retomar a cobrança");
+    // Uma cobrança mais nova, sem data de volta, tira o lembrete da anterior.
+    com([{ ...COBRANCA, id: "00000000-0000-4000-9000-0000000000c2", quando: "2026-11-12T10:00:00Z", retornar_em: null }, { ...COBRANCA, retornar_em: "2026-11-11" }]);
+    expect(visivel(await pagina())).not.toContain("retomar a cobrança");
+    // Duas contas com o dia chegado: o plural.
+    comAtrasados({
+      ...ATRASADOS, totais: { ...ATRASADOS.totais, atrasadas: 2, valor_atrasado: 259_800 },
+      por_loja: [{ unidade_id: LOJA, nome: "Santa Cândida (teste)", abertas: 2, atrasadas: 2, valor_atrasado: 259_800 }],
+      contas: [conta(), conta({ id: "00000000-0000-4000-9000-0000000000a2", venda_numero: 43 })],
+    });
+    expect(visivel(await pagina())).toContain("2 cobranças para retomar: chegou o dia combinado para voltar à financeira. As contas estão marcadas na lista abaixo.");
   });
 
   it("sem prazo definido, nada é chamado de atrasado: a tela diz que falta o prazo; no prazo, diz quando vence", async () => {

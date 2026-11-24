@@ -5,7 +5,7 @@ import { describe, expect, it, vi } from "vitest";
 
 vi.mock("../acesso/sessao", () => ({ FalhaDoServico: class FalhaDoServico extends Error {} }));
 
-import { consultarRepassesAtrasados, erroDaCobranca, erroDoPrazo, faixasDoAtraso, lerCobranca, lerPrazo, lerRepassesAtrasados, situacaoDoRepasse } from "./atrasados";
+import { cobrancaARetomar, consultarRepassesAtrasados, erroDaCobranca, erroDoPrazo, faixasDoAtraso, lerCobranca, lerPrazo, lerRepassesAtrasados, situacaoDoRepasse } from "./atrasados";
 
 const CONTA = "00000000-0000-4000-9000-0000000000a1";
 const VENDA = "00000000-0000-4000-9000-0000000000b1";
@@ -79,6 +79,17 @@ describe("a leitura da resposta", () => {
     expect(faixas.reduce((s, f) => s + f.contas, 0)).toBe(d.totais.atrasadas);
     expect(faixas.reduce((s, f) => s + f.valor, 0)).toBe(d.totais.valorAtrasado);
     expect(faixasDoAtraso([]).every((f) => f.contas === 0 && f.valor === 0)).toBe(true);
+  });
+
+  it("FIN-007b: a cobrança a retomar é a mais recente da conta, com a data combinada em hoje ou antes", () => {
+    const cobranca = (retornarEm: string | null) => ({ id: "c", quando: "2026-11-10T14:30:00Z", canal: "telefone" as const, resumo: "Combinado", protocolo: null, retornarEm, por: null });
+    expect(cobrancaARetomar({ historico: [] }, "2026-11-13")).toBeNull();
+    expect(cobrancaARetomar({ historico: [cobranca("2026-11-13")] }, "2026-11-13")).toBe("2026-11-13");
+    expect(cobrancaARetomar({ historico: [cobranca("2026-11-10")] }, "2026-11-13")).toBe("2026-11-10");
+    expect(cobrancaARetomar({ historico: [cobranca("2026-11-14")] }, "2026-11-13")).toBeNull();
+    // A mais recente manda (o histórico vem da mais nova para a mais antiga): sem data, ou com data futura, tira o lembrete da anterior.
+    expect(cobrancaARetomar({ historico: [cobranca(null), cobranca("2026-11-10")] }, "2026-11-13")).toBeNull();
+    expect(cobrancaARetomar({ historico: [cobranca("2026-11-20"), cobranca("2026-11-10")] }, "2026-11-13")).toBeNull();
   });
 });
 

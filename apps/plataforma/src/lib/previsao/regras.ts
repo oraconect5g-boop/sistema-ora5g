@@ -15,7 +15,11 @@ export const horizonteDoEndereco = (valor: unknown): Horizonte => {
 export const AJUSTES = [-0.3, -0.2, -0.1, 0, 0.1, 0.2, 0.3] as const;
 
 export type SemanaBase = { inicio: string; fim: string; recebido: number; devolvido: number; saidasCaixa: number };
-export type SemanaFutura = { inicio: string; fim: string; contas: number; quantidade: number };
+export type SemanaFutura = {
+  inicio: string; fim: string; contas: number; quantidade: number;
+  /** FIN-007b: o que as financeiras devem e vence na semana, pelo prazo de repasse (ausente: nada com data). */
+  financeiras?: number; financeirasQuantidade?: number;
+};
 
 /** O que uma semana passada deixou de dinheiro: o recebido menos as devoluções pagas e as saídas do caixa. */
 export const liquidoDaSemana = (b: SemanaBase) => b.recebido - b.devolvido - b.saidasCaixa;
@@ -33,11 +37,17 @@ export function estimativa(base: readonly SemanaBase[]): Estimativa | null {
   return { media: Math.round(total / consideradas.length) + 0, semanas: consideradas.length, de: consideradas[0]?.inicio ?? "", ate: consideradas.at(-1)?.fim ?? "" };
 }
 
-export type LinhaProjetada = { inicio: string; fim: string; entra: number; sai: number; vencidas: number; diferenca: number; saldo: number | null };
+export type LinhaProjetada = {
+  inicio: string; fim: string; entra: number;
+  /** FIN-007b: o repasse das financeiras que vence na semana (fato com data; zero sem prazo de repasse gravado). */
+  financeiras: number;
+  sai: number; vencidas: number; diferenca: number; saldo: number | null;
+};
 /**
- * A projeção semana a semana: a entrada estimada (com a simulação) igual em toda semana; as contas que
- * vencem em cada uma, com as já vencidas na primeira; o saldo acumulado a partir do saldo de partida
- * (sem saldo, só a diferença de cada semana).
+ * A projeção semana a semana: a entrada estimada (com a simulação) igual em toda semana; o que as financeiras
+ * devem, na semana do vencimento (FIN-007b; a simulação não mexe nele); as contas que vencem em cada uma, com
+ * as já vencidas na primeira; o saldo acumulado a partir do saldo de partida (sem saldo, só a diferença de
+ * cada semana).
  */
 export function projetar(semanas: readonly SemanaFutura[], vencidas: number, media: number | null, ajuste: number, saldo: number | null): LinhaProjetada[] {
   const entra = media === null ? 0 : Math.round(media * (1 + ajuste)) + 0;
@@ -45,9 +55,10 @@ export function projetar(semanas: readonly SemanaFutura[], vencidas: number, med
   return semanas.map((s, i) => {
     const vencidasAqui = i === 0 ? vencidas : 0;
     const sai = s.contas + vencidasAqui;
-    const diferenca = entra - sai;
+    const financeiras = s.financeiras ?? 0;
+    const diferenca = entra + financeiras - sai;
     acumulado = acumulado === null ? null : acumulado + diferenca;
-    return { inicio: s.inicio, fim: s.fim, entra, sai, vencidas: vencidasAqui, diferenca, saldo: acumulado };
+    return { inicio: s.inicio, fim: s.fim, entra, financeiras, sai, vencidas: vencidasAqui, diferenca, saldo: acumulado };
   });
 }
 

@@ -37,6 +37,9 @@ export function Simulador({ semanas, vencidas, estimativa, onde, hoje, fatos }: 
   const contas = linhas.reduce((s, l) => s + l.sai, 0);
   const quantidade = semanas.reduce((s, x) => s + x.quantidade, 0) + vencidas.quantidade;
   const diferenca = linhas.reduce((s, l) => s + l.diferenca, 0);
+  // FIN-007b: o que as financeiras devem e vence no período, pelo prazo de repasse (zero sem prazo gravado: tudo como antes).
+  const repasses = linhas.reduce((s, l) => s + l.financeiras, 0);
+  const comFinanceiras = repasses > 0;
   const ultimo = linhas.at(-1);
   const negativa = linhas.find((l) => l.saldo !== null && l.saldo < 0);
   const apertada = linhas.find((l) => l.diferenca < 0);
@@ -96,12 +99,13 @@ export function Simulador({ semanas, vencidas, estimativa, onde, hoje, fatos }: 
         />
         <Indicador
           rotulo="Entrada estimada por semana" icone={TrendingUp} valor={estimativa === null ? "—" : brlCompactoComSinal(linhas[0]?.entra ?? 0)}
-          detalhe={estimativa === null ? "Sem vendas nas 8 semanas anteriores" : `Média de ${estimativa.semanas} ${estimativa.semanas === 1 ? "semana" : "semanas"}${ajuste === 0 ? "" : ` · simulação ${rotuloDoAjuste(ajuste)}`}`}
+          detalhe={`${estimativa === null ? "Sem vendas nas 8 semanas anteriores" : `Média de ${estimativa.semanas} ${estimativa.semanas === 1 ? "semana" : "semanas"}${ajuste === 0 ? "" : ` · simulação ${rotuloDoAjuste(ajuste)}`}`}${
+            comFinanceiras ? ` · mais ${brl(repasses)} das financeiras no período` : ""}`}
         />
         <Indicador
           rotulo="Diferença no período" icone={Scale} valor={brlCompactoComSinal(diferenca)}
           tom={diferenca < 0 ? "ruim" : "neutro"}
-          detalhe="Entrada estimada menos as contas"
+          detalhe={comFinanceiras ? "Entrada estimada e financeiras, menos as contas" : "Entrada estimada menos as contas"}
         />
         <Indicador
           rotulo="Saldo previsto ao fim" icone={Wallet}
@@ -117,20 +121,22 @@ export function Simulador({ semanas, vencidas, estimativa, onde, hoje, fatos }: 
         </Aviso>
       ) : !comSaldo && apertada ? (
         <Aviso tom="aviso" titulo="Semana apertada">
-          {`Na semana de ${diaCurto(apertada.inicio)} a ${diaCurto(apertada.fim)}, as contas passam a entrada estimada em ${brl(-apertada.diferenca)}. Digite o saldo de hoje para ver se ele cobre.`}
+          {`Na semana de ${diaCurto(apertada.inicio)} a ${diaCurto(apertada.fim)}, as contas passam ${comFinanceiras ? "o que deve entrar" : "a entrada estimada"} em ${brl(-apertada.diferenca)}. Digite o saldo de hoje para ver se ele cobre.`}
         </Aviso>
       ) : null}
 
       <Cartao
         titulo="Semana a semana"
         icone={CalendarRange}
-        subtitulo={estimativa === null ? "Só as contas: sem vendas nas 8 semanas anteriores, não há estimativa." : "Para cima, a entrada estimada; para baixo, as contas que vencem (as já vencidas na primeira semana)."}
+        subtitulo={comFinanceiras
+          ? "Para cima, a entrada estimada e o que as financeiras devem, na semana do vencimento; para baixo, as contas que vencem (as já vencidas na primeira semana)."
+          : estimativa === null ? "Só as contas: sem vendas nas 8 semanas anteriores, não há estimativa." : "Para cima, a entrada estimada; para baixo, as contas que vencem (as já vencidas na primeira semana)."}
       >
         <ColunasDivergentes
-          dados={linhas.map((l) => ({ rotulo: diaCurto(l.inicio), entrada: Math.max(0, l.entra), saida: l.sai + Math.max(0, -l.entra) }))}
+          dados={linhas.map((l) => ({ rotulo: diaCurto(l.inicio), entrada: Math.max(0, l.entra) + l.financeiras, saida: l.sai + Math.max(0, -l.entra) }))}
           formatar={brl}
           formatarEixo={brlEixo}
-          nomes={["Entrada estimada", "Contas"]}
+          nomes={[comFinanceiras ? "Entrada (estimativa e financeiras)" : "Entrada estimada", "Contas"]}
           rotuloSaldo="Diferença da semana"
           cadaRotulo={linhas.length > 8 ? 2 : 1}
         />
@@ -149,9 +155,10 @@ export function Simulador({ semanas, vencidas, estimativa, onde, hoje, fatos }: 
           </div>
         )}
         <TabelaDoGrafico
-          colunas={["Semana", "Entrada estimada", "Contas", "Diferença", ...(comSaldo ? ["Saldo previsto"] : [])]}
+          colunas={["Semana", "Entrada estimada", ...(comFinanceiras ? ["Financeiras (pelo prazo)"] : []), "Contas", "Diferença", ...(comSaldo ? ["Saldo previsto"] : [])]}
           linhas={linhas.map((l) => [
-            `${diaCurto(l.inicio)} a ${diaCurto(l.fim)}`, brlComSinal(l.entra), `${brl(l.sai)}${l.vencidas > 0 ? ` (${brl(l.vencidas)} vencidas)` : ""}`, brlComSinal(l.diferenca),
+            `${diaCurto(l.inicio)} a ${diaCurto(l.fim)}`, brlComSinal(l.entra), ...(comFinanceiras ? [brl(l.financeiras)] : []),
+            `${brl(l.sai)}${l.vencidas > 0 ? ` (${brl(l.vencidas)} vencidas)` : ""}`, brlComSinal(l.diferenca),
             ...(comSaldo ? [brlComSinal(l.saldo ?? 0)] : []),
           ])}
         />
