@@ -18,7 +18,8 @@
 // sem-rede-com-login-real.spec.ts); e a que só lê os extratos e a venda cancelada com estorno (PAY-011a,
 // debito-do-extrato-real.spec.ts); e a que só lê a taxa das financeiras no resultado do mês (FIN-002a,
 // taxa-das-financeiras-real.spec.ts); e a que só lê os depósitos das maquininhas (FIN-006a,
-// depositos-das-maquininhas-real.spec.ts). Só no servidor: ORA_E2E_URL (o site, por
+// depositos-das-maquininhas-real.spec.ts); e a que só lê o aviso do erro do servidor (QUAL-006a,
+// aviso-do-erro-do-servidor-real.spec.ts). Só no servidor: ORA_E2E_URL (o site, por
 // exemplo https://ora5g.com.br) e ORA_E2E_CONTAS (o arquivo protegido das contas, ~/homologacao/contas-de-teste.txt). No CI os
 // dois ficam vazios e as provas são puladas. A senha nunca vai para o log: o Playwright só mostra o nome do passo.
 import { readFileSync } from "node:fs";

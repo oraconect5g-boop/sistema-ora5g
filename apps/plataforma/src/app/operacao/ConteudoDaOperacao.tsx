@@ -1,15 +1,16 @@
-import { Activity, CalendarClock, Hourglass, Layers, PackageMinus, ServerCrash } from "lucide-react";
+import { Activity, BellRing, CalendarClock, Hourglass, Layers, PackageMinus, ServerCrash } from "lucide-react";
 import Link from "next/link";
 
 import { BarrasHorizontais } from "../../componentes/graficos";
 import { Aviso, Cartao, EstadoVazio, Indicador, Selo, TituloPagina } from "../../componentes/ui";
-import { horaEmSaoPaulo, minutosEmSaoPaulo, numero } from "../../lib/formato";
+import { diaMes, horaEmSaoPaulo, minutosEmSaoPaulo, numero } from "../../lib/formato";
 import type { AlertaDoEstoque } from "../../lib/inicio/alerta-do-estoque";
 import { ICONES_DAS_PENDENCIAS } from "../../lib/inicio/icones-das-pendencias";
 import { haQuanto } from "../../lib/notas/regras";
 import { diasDesde, type LeituraDaFila } from "../../lib/operacao/filas";
 import { minutosDesde, rotinasComProblema, SITUACOES_DA_ROTINA, type LeituraDasRotinas, type Rotina } from "../../lib/operacao/rotinas";
 import type { ResumoDosErros, TipoDoErro } from "../../lib/saude/erros-do-servidor";
+import { PARADO_APOS_MINUTOS, type LeituraDoVigia } from "../../lib/saude/vigia-dos-erros";
 
 const haDias = (dias: number) => (dias === 0 ? "desde hoje" : dias === 1 ? "há 1 dia" : `há ${dias} dias`);
 const tomDaIdade = (dias: number | null) => (dias === null ? "neutro" : dias >= 3 ? "perigo" : dias >= 1 ? "aviso" : "neutro");
@@ -32,13 +33,49 @@ const haPouco = (instante: number, agora: number) => {
   const minutos = Math.max(0, Math.floor((agora - instante) / 60_000));
   return minutos < 1 ? "agora há pouco" : haQuanto(minutos);
 };
+const aCada = (minutos: number) => (minutos % 60 === 0 ? (minutos === 60 ? "hora" : `${minutos / 60} horas`) : `${minutos} minutos`);
 
-// O conteúdo da saúde da operação (lote Q1; as rotinas, ROT-a; o aviso do estoque, SAUDE-a; os erros do servidor, OBS-a),
-// à parte da página: recebe as filas, as rotinas, o estoque e os erros já lidos. O estoque é nulo para quem não consulta o
-// estoque (ou banco sem o painel); os erros, para quem não gere a rede.
-export function ConteudoDaOperacao({ filas, hoje, rotinas, agora, estoque = null, erros = null }: {
+/**
+ * O aviso no celular dos erros do servidor (QUAL-006a): se o worker dos avisos está conferindo o site e quando saiu o
+ * último alerta. Nulo (quem não recebe o alerta, ou o banco sem a função): nada.
+ */
+function avisoNoCelular(vigia: LeituraDoVigia, agora: number) {
+  if (vigia === null) return null;
+  if (vigia === "falha") return <Aviso tom="aviso" className="mt-4">Não deu para ler agora a situação do aviso no celular dos erros do servidor.</Aviso>;
+  if (vigia.conferidoEm === null) {
+    return <Aviso tom="aviso" className="mt-4" titulo="O aviso no celular dos erros ainda não começou">O worker dos avisos ainda não conferiu o site. Depois da publicação, ele confere a cada minuto.</Aviso>;
+  }
+  if (agora - vigia.conferidoEm > PARADO_APOS_MINUTOS * 60_000) {
+    return (
+      <Aviso tom="perigo" className="mt-4" titulo="O aviso no celular dos erros está parado">
+        {`O worker dos avisos conferiu o site pela última vez às ${horaMinuto(vigia.conferidoEm)} de ${diaMes(new Date(vigia.conferidoEm))} (${haPouco(vigia.conferidoEm, agora)}). Enquanto ele não voltar, nenhum alerta de erro sai.`}
+      </Aviso>
+    );
+  }
+  if (vigia.semRespostaDesde !== null) {
+    return (
+      <Aviso tom="aviso" className="mt-4" titulo="O worker não consegue ler os erros do site">
+        {`Desde as ${horaMinuto(vigia.semRespostaDesde)}. Se durar ${vigia.foraAposMinutos} minutos, sai o alerta "O site não responde".`}
+      </Aviso>
+    );
+  }
+  const ultimo = vigia.alertaDeErrosEm === null ? "ainda não saiu nenhum alerta de erro"
+    : `o último alerta de erro saiu às ${horaMinuto(vigia.alertaDeErrosEm)} de ${diaMes(new Date(vigia.alertaDeErrosEm))}`;
+  return (
+    <p className="mt-4 flex items-start gap-2 text-xs text-suave">
+      <BellRing className="mt-0.5 size-4 shrink-0 text-acao" aria-hidden />
+      {`Aviso no celular ligado: o worker dos avisos confere o site a cada minuto (a última vez ${haPouco(vigia.conferidoEm, agora)}), e ${ultimo}. No máximo um alerta a cada ${aCada(vigia.alertaACadaMinutos)}; os erros desse meio vão no seguinte${vigia.pendentes > 0 ? ` (${dosErros(vigia.pendentes)} esperando)` : ""}. Vai para o dono e o administrador da rede, nos celulares com os avisos ligados.`}
+    </p>
+  );
+}
+
+// O conteúdo da saúde da operação (lote Q1; as rotinas, ROT-a; o aviso do estoque, SAUDE-a; os erros do servidor, OBS-a;
+// o aviso no celular deles, QUAL-006a), à parte da página: recebe as filas, as rotinas, o estoque, os erros e o aviso já
+// lidos. O estoque é nulo para quem não consulta o estoque (ou banco sem o painel); os erros, para quem não gere a rede;
+// o aviso, para quem não o recebe.
+export function ConteudoDaOperacao({ filas, hoje, rotinas, agora, estoque = null, erros = null, vigia = null }: {
   filas: readonly LeituraDaFila[]; hoje: string; rotinas: LeituraDasRotinas; agora: number; estoque?: AlertaDoEstoque | null;
-  erros?: ResumoDosErros | null;
+  erros?: ResumoDosErros | null; vigia?: LeituraDoVigia;
 }) {
   const problemas = rotinas.estado === "ok" ? rotinasComProblema(rotinas.rotinas) : [];
   const lidas = filas.flatMap((f) => (f.estado === "ok" ? [{ ...f, dias: f.desde ? diasDesde(f.desde, hoje) : null }] : []));
@@ -168,6 +205,12 @@ export function ConteudoDaOperacao({ filas, hoje, rotinas, agora, estoque = null
               </details>
             </>
           )}
+          {erros.estranhos > 0 && (
+            <p className="mt-3 text-xs text-suave">
+              {`Fora da conta: ${numero(erros.estranhos)} ${erros.estranhos === 1 ? "pedido estranho" : "pedidos estranhos"} desde que o servidor subiu (malformados ou para um endereço que não existe: são robôs que testam o site). Não são falha do Ora e não avisam no celular.`}
+            </p>
+          )}
+          {avisoNoCelular(vigia, agora)}
         </Cartao>
       )}
       <Aviso tom="info" className="mt-4">O tempo de resposta do servidor ainda não aparece aqui: depende do monitoramento do servidor, a escolher.</Aviso>
