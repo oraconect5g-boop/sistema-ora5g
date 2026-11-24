@@ -8747,7 +8747,12 @@ export type Database = {
       }
       loja_reservas_liberar_vencidas: { Args: never; Returns: number }
       loja_vitrine: {
-        Args: { p_busca?: string; p_categoria?: string; p_organizacao: string }
+        Args: {
+          p_busca?: string
+          p_categoria?: string
+          p_organizacao: string
+          p_pagina?: number
+        }
         Returns: Json
       }
       lojas_da_rede: {

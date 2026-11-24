@@ -32,7 +32,11 @@ async function erroDe(acao: () => Promise<unknown>): Promise<string | null> {
     return (e as { code?: string }).code ?? "sem-codigo";
   }
 }
-type Vitrine = { categorias: { id: string; nome: string }[]; produtos: { id: string; nome: string; marca: string | null; categoria: string; preco_a_partir_centavos: number; disponivel: boolean; foto: string | null }[] };
+type Vitrine = {
+  categorias: { id: string; nome: string }[];
+  produtos: { id: string; nome: string; marca: string | null; categoria: string; preco_a_partir_centavos: number; disponivel: boolean; foto: string | null }[];
+  total: number; pagina: number; paginas: number;
+};
 type Loja = { id: string; nome: string; preco_centavos: number; disponibilidade: string };
 type Detalhe = { id: string; nome: string; marca: string | null; categoria: string; fotos: { caminho: string }[]; variantes: { id: string; nome: string; lojas: Loja[] }[] };
 const VITRINE = "select public.loja_vitrine($1, $2, $3) as v";
@@ -41,6 +45,7 @@ const DETALHE = "select public.loja_produto($1, $2) as v";
 const visitante = <T>(sql: string, params: unknown[]) => comoUsuario(db, null, async () => (await db.query<{ v: T }>(sql, params)).rows[0]?.v as T);
 const vitrine = (busca: string | null = null, categoria: string | null = null) => visitante<Vitrine>(VITRINE, [ids.organizacao, busca, categoria]);
 const detalhe = (produto: string) => visitante<Detalhe>(DETALHE, [ids.organizacao, produto]);
+const naPagina = (pagina: number | null) => visitante<Vitrine>("select public.loja_vitrine($1, null, null, $2) as v", [ids.organizacao, pagina]);
 // A recusa ao visitante: o savepoint dentro do papel anon (fora dele, o erro real vira "transação abortada").
 const erroDoVisitante = (sql: string, params: unknown[]) => comoUsuario(db, null, () => erroDe(() => db.query(sql, params)));
 const publicar = (produtos: string[]) => db.query("update public.produtos set publicar_online = true where id = any($1)", [produtos]);
@@ -49,9 +54,41 @@ const foto = (produto: string, variante: string | null, nome: string) =>
     values ($1, $2, $3, $4, 800, 800, 50000, 'image/webp') returning caminho`,
   [ids.organizacao, produto, variante, `${ids.organizacao}/${produto}/${variante ?? "produto"}/${nome}.webp`]).then((r) => r.rows[0]?.caminho as string);
 
+describe("a vitrine com o catálogo inteiro (ONLINE-f)", () => {
+  // Acessórios fictícios marcados para o site, com o preço da rede e sem estoque ("Acessório 001" em diante).
+  const copias = (n: number) => db.query(`
+    with novos as (
+      insert into public.produtos (organizacao_id, tipo, nome, categoria_id, publicar_online)
+      select $1, 'acessorio', 'Acessório ' || lpad(g::text, 3, '0'), $2, true from generate_series(1, $3) g
+      returning id, nome),
+    vars as (
+      insert into public.variantes (organizacao_id, produto_id, sku, nome)
+      select $1, n.id, 'ACS-' || right(n.nome, 3), n.nome from novos n
+      returning id)
+    insert into public.precos (organizacao_id, variante_id, unidade_id, valor_centavos, inicio, origem)
+    select $1, v.id, null, 1000, now() - interval '1 day', 'manual' from vars v`, [ids.organizacao, cat.acessorios, n]);
+
+  it("os disponíveis primeiro e de 60 em 60, com o total e as páginas; página fora do que existe vale a primeira ou a última", async () => {
+    await publicar([cat.produtoAparelho, cat.produtoCapa]);
+    await copias(61);
+    const primeira = await naPagina(1);
+    expect(primeira).toMatchObject({ total: 63, pagina: 1, paginas: 2 });
+    expect(primeira.produtos).toHaveLength(60);
+    // Pelo nome, os 61 "Acessório" viriam antes; os dois com estoque passam à frente.
+    expect(primeira.produtos.slice(0, 3).map((p) => [p.nome, p.disponivel])).toEqual([["Capa de proteção", true], ["Galaxy A15", true], ["Acessório 001", false]]);
+    const segunda = await naPagina(2);
+    expect(segunda).toMatchObject({ total: 63, pagina: 2, paginas: 2 });
+    expect(segunda.produtos.map((p) => p.nome)).toEqual(["Acessório 059", "Acessório 060", "Acessório 061"]);
+    expect([(await naPagina(99)).pagina, (await naPagina(0)).pagina, (await naPagina(-5)).pagina, (await naPagina(null)).pagina]).toEqual([2, 1, 1, 1]);
+    // A busca e a categoria contam só o que filtram; as categorias do filtro seguem todas.
+    expect(await vitrine("galaxy")).toMatchObject({ total: 1, pagina: 1, paginas: 1 });
+    expect((await vitrine(null, cat.celulares)).categorias.map((c) => c.nome)).toEqual(["Acessórios", "Celulares"]);
+  });
+});
+
 describe("a vitrine da loja online (ONLINE-a)", () => {
   it("sem produto marcado, nada aparece; marcados, só aparelhos e acessórios ativos, com o preço do balcão e o estoque", async () => {
-    expect(await vitrine()).toEqual({ categorias: [], produtos: [] });
+    expect(await vitrine()).toEqual({ categorias: [], produtos: [], total: 0, pagina: 1, paginas: 0 });
     await publicar([cat.produtoAparelho, cat.produtoCapa, cat.produtoChip, cat.produtoRecarga]);
     const v = await vitrine();
     // Chip e recarga ficam fora; a capa (R$ 79,00) e o Galaxy (a partir de R$ 1.399,00, o preço da loja B, que tem estoque).
@@ -67,7 +104,7 @@ describe("a vitrine da loja online (ONLINE-a)", () => {
     // Produto inativo sai; a outra empresa não vê nada desta (e esta não vê a dela).
     await db.query("update public.produtos set ativo = false where id = $1", [cat.produtoCapa]);
     expect((await vitrine()).produtos.map((p) => p.nome)).toEqual(["Galaxy A15"]);
-    expect(await visitante<Vitrine>(VITRINE, [ids.outraOrganizacao, null, null])).toEqual({ categorias: [], produtos: [] });
+    expect(await visitante<Vitrine>(VITRINE, [ids.outraOrganizacao, null, null])).toEqual({ categorias: [], produtos: [], total: 0, pagina: 1, paginas: 0 });
   });
 
   it("o detalhe: cada variação ativa, nas lojas físicas ativas com preço, disponível, últimas unidades ou sem estoque; nada interno", async () => {

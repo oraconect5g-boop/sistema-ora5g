@@ -319,7 +319,8 @@ const CASOS: Record<string, Caso> = {
     const v = linhas[0]?.v as Record<string, unknown> | undefined;
     return linhas.length === 1 && v !== undefined && Object.keys(v).sort().join(",") === "hora,migracao";
   } },
-  "loja_vitrine(uuid,text,uuid)": { A: () => ["select public.loja_vitrine($1, null, null) as v", [ids.organizacao]], publica: async (linhas) => {
+  // ONLINE-f: a vitrine ganhou a página (p_pagina); o que ela devolve segue só o que é do site.
+  "loja_vitrine(uuid,text,uuid,integer)": { A: () => ["select public.loja_vitrine($1, null, null, 2) as v", [ids.organizacao]], publica: async (linhas) => {
     const produtos = ((linhas[0]?.v as { produtos?: { id: string }[] } | undefined)?.produtos ?? []).map((p) => p.id);
     const doSite = (await db.query<{ id: string }>("select id from public.produtos where publicar_online and ativo")).rows.map((r) => r.id);
     return produtos.every((id) => doSite.includes(id));
@@ -1322,7 +1323,7 @@ describe("inventário: toda função SECURITY DEFINER exposta tem casos de recus
       { f: "erros_do_servidor_relatar(text,jsonb)", gatilho: false },
       { f: "loja_pagamento_disponivel()", gatilho: false }, { f: "loja_pagamento_pedir(uuid,text,text)", gatilho: false },
       { f: "loja_pedido_consultar(uuid,text,text)", gatilho: false }, { f: "loja_pedir(uuid,uuid,jsonb,text,text,text,jsonb)", gatilho: false },
-      { f: "loja_produto(uuid,uuid)", gatilho: false }, { f: "loja_reservar(uuid,uuid,uuid,text,text,text,jsonb)", gatilho: false }, { f: "loja_vitrine(uuid,text,uuid)", gatilho: false },
+      { f: "loja_produto(uuid,uuid)", gatilho: false }, { f: "loja_reservar(uuid,uuid,uuid,text,text,text,jsonb)", gatilho: false }, { f: "loja_vitrine(uuid,text,uuid,integer)", gatilho: false },
       { f: "pagamento_aviso_receber(text,jsonb)", gatilho: false },
       { f: "privado.auditoria_completar_organizacao()", gatilho: true }, { f: "privado.foto_na_vitrine(text)", gatilho: false },
       { f: "saude_do_banco(text)", gatilho: false },

@@ -11,7 +11,25 @@ export function organizacaoDaLoja(ambiente: Record<string, string | undefined> =
 export type ProdutoDaVitrine = {
   id: string; nome: string; marca: string | null; categoria: string; preco_a_partir_centavos: number; disponivel: boolean; foto: string | null;
 };
-export type Vitrine = { categorias: { id: string; nome: string }[]; produtos: ProdutoDaVitrine[] };
+export type Vitrine = {
+  categorias: { id: string; nome: string }[]; produtos: ProdutoDaVitrine[];
+  /** ONLINE-f: o total do que a busca e a categoria filtram, a página devolvida e quantas há (de 60 em 60). */
+  total?: number; pagina?: number; paginas?: number;
+};
+export const POR_PAGINA_NA_VITRINE = 60;
+/** ONLINE-f: a página pedida (?pagina=), de 1 a 1.000; outra coisa é a primeira (o banco ajusta a que passar do fim). */
+export function paginaDaVitrine(valor: unknown): number {
+  if (typeof valor !== "string" || !/^\d{1,4}$/.test(valor.trim())) return 1;
+  const n = Number(valor.trim());
+  return n >= 1 && n <= 1000 ? n : 1;
+}
+/** ONLINE-f: as páginas pelo que o banco disse; sem as chaves (o banco de antes da migration), uma página só. */
+export function paginasDaVitrine(v: Vitrine): { total: number; pagina: number; paginas: number } {
+  const inteiro = (x: unknown) => (Number.isSafeInteger(x) && (x as number) >= 0 ? x as number : null);
+  const total = inteiro(v.total) ?? v.produtos.length;
+  const paginas = inteiro(v.paginas) ?? (total > 0 ? 1 : 0);
+  return { total, pagina: Math.max(1, Math.min(inteiro(v.pagina) ?? 1, Math.max(paginas, 1))), paginas };
+}
 export type Disponibilidade = "disponivel" | "ultimas_unidades" | "sem_estoque";
 export type LojaDaOferta = { id: string; nome: string; cidade: string | null; endereco: string | null; preco_centavos: number; disponibilidade: Disponibilidade };
 export type DetalheDoProduto = {

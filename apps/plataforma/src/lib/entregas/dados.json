@@ -1132,6 +1132,19 @@
         "ORA-PAY-008"
       ],
       "entrega": "o pagamento pelo site com Pix, pela Asaas: o \"Pagar agora com Pix\" no pedido, o link criado pelo worker, o aviso repassado pelo site, a confirmação só pela reconsulta e o \"Pago pelo site\" para o cliente e na loja; desligado até a chave e o PAY-014b",
+      "commit": "7626f14",
+      "publicado_em": "2026-11-24",
+      "pedido_em": "2026-11-24",
+      "resposta": null,
+      "respondido_em": null
+    },
+    {
+      "lote": "ONLINE-f",
+      "roteiro": "docs/aceite/ONLINE-f.md",
+      "requisitos": [
+        "ORA-ONLINE-001"
+      ],
+      "entrega": "a vitrine com o catálogo inteiro: quantos são, de 60 em 60 com \"Anteriores\" e \"Próximos\" (guardando a busca e a categoria) e os disponíveis primeiro",
       "commit": null,
       "publicado_em": null,
       "pedido_em": "2026-11-24",

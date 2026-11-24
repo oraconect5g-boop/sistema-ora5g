@@ -1,13 +1,15 @@
-import { PackageSearch, Search, Store } from "lucide-react";
+import { ChevronLeft, ChevronRight, PackageSearch, Search, Store } from "lucide-react";
 import Link from "next/link";
 
 import { EstadoVazio, Selo } from "../../componentes/ui";
 import { brl } from "../../lib/formato";
-import type { Vitrine } from "../../lib/loja/vitrine";
+import { paginasDaVitrine, POR_PAGINA_NA_VITRINE, type Vitrine } from "../../lib/loja/vitrine";
 
+const botaoDePagina = "inline-flex min-h-11 items-center gap-1 rounded-botao border border-borda bg-white px-4 text-sm font-semibold text-acao";
 const campo = "min-h-12 w-full rounded-botao border border-borda bg-white pl-10 pr-3 text-[15px] outline-none focus:border-acao focus:ring-2 focus:ring-acao/20";
 
 // O desenho da vitrine (ONLINE-a): a busca, as categorias e a grade dos produtos, com o preço "a partir de" e o estoque.
+// ONLINE-f: quantos são, de 60 em 60, e as páginas ("Anteriores" e "Próximos"), guardando a busca e a categoria.
 export function VitrineDaLoja({ vitrine, fotos, busca, categoria }: { vitrine: Vitrine; fotos: Map<string, string>; busca: string | null; categoria: string | null }) {
   const endereco = (extra: Record<string, string | null>) => {
     const p = new URLSearchParams();
@@ -15,6 +17,9 @@ export function VitrineDaLoja({ vitrine, fotos, busca, categoria }: { vitrine: V
     const texto = p.toString();
     return texto ? `/loja?${texto}` : "/loja";
   };
+  const { total, pagina, paginas } = paginasDaVitrine(vitrine);
+  const inicio = (pagina - 1) * POR_PAGINA_NA_VITRINE + 1;
+  const contagem = paginas > 1 ? `Mostrando ${inicio}–${inicio + vitrine.produtos.length - 1} de ${total} produtos` : `${total} ${total === 1 ? "produto" : "produtos"}`;
 
   return (
     <div className="space-y-6">
@@ -44,6 +49,8 @@ export function VitrineDaLoja({ vitrine, fotos, busca, categoria }: { vitrine: V
           ? <EstadoVazio titulo="Nada encontrado" icone={PackageSearch}>{busca ? `Nenhum produto com "${busca}". ` : ""}Tente outra busca ou veja tudo.</EstadoVazio>
           : <EstadoVazio titulo="Em breve" icone={Store}>Os produtos da loja online aparecem aqui assim que forem publicados.</EstadoVazio>
       ) : (
+        <>
+        <p className="numeros text-sm text-suave">{contagem}</p>
         <ul className="grid grid-cols-2 gap-3 sm:grid-cols-3 sm:gap-4 lg:grid-cols-4">
           {vitrine.produtos.map((p) => {
             const foto = p.foto ? fotos.get(p.foto) : undefined;
@@ -68,6 +75,20 @@ export function VitrineDaLoja({ vitrine, fotos, busca, categoria }: { vitrine: V
             );
           })}
         </ul>
+        {paginas > 1 && (
+          <nav aria-label="Páginas" className="space-y-2">
+            <p className="numeros text-center text-sm text-suave">{`Página ${pagina} de ${paginas}`}</p>
+            <div className="flex items-center justify-between gap-3">
+              {pagina > 1
+                ? <Link href={endereco({ pagina: pagina > 2 ? String(pagina - 1) : null })} rel="prev" className={botaoDePagina}><ChevronLeft aria-hidden className="size-4" /> Anteriores</Link>
+                : <span />}
+              {pagina < paginas
+                ? <Link href={endereco({ pagina: String(pagina + 1) })} rel="next" className={botaoDePagina}>Próximos <ChevronRight aria-hidden className="size-4" /></Link>
+                : <span />}
+            </div>
+          </nav>
+        )}
+        </>
       )}
     </div>
   );

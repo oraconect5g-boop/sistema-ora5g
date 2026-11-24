@@ -135,6 +135,7 @@
     { "versao": "20261124103408", "nome": "taxa_das_financeiras_no_resultado", "md5": "64f282af7e6f0effdd3614cd96de3353", "aplicada_em": "2026-11-24" },
     { "versao": "20261124111725", "nome": "deposito_da_maquininha_no_banco", "md5": "926148a842f77a9879a5b83c14611ff1", "aplicada_em": "2026-11-24" },
     { "versao": "20261124121856", "nome": "aviso_do_erro_do_servidor", "md5": "1562ec50797a66358772da57fe795ccc", "aplicada_em": "2026-11-24" },
-    { "versao": "20261124155208", "nome": "pagamento_pelo_site", "md5": "8fdd6291b391598629d3c43a14c478c7", "aplicada_em": "2026-11-24" }
+    { "versao": "20261124155208", "nome": "pagamento_pelo_site", "md5": "8fdd6291b391598629d3c43a14c478c7", "aplicada_em": "2026-11-24" },
+    { "versao": "20261124171542", "nome": "vitrine_com_paginas", "md5": "8a22cff9d2e6111086a136667232eccc", "aplicada_em": "2026-11-24" }
   ]
 }
