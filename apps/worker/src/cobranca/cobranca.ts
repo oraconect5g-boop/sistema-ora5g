@@ -16,7 +16,7 @@
 export const PROVEDORES_DE_COBRANCA = ["picpay", "pagbank", "asaas"] as const;
 export type ProvedorDeCobranca = (typeof PROVEDORES_DE_COBRANCA)[number];
 
-/** O adaptador oficial de cada provedor, com o contrato verificado. Nenhum está pronto. */
+/** O adaptador oficial de cada provedor, com o contrato verificado. Só o da Asaas está pronto (PAY-014a). */
 export const ADAPTADOR_PRONTO: Readonly<Record<ProvedorDeCobranca, boolean>> = { picpay: false, pagbank: false, asaas: true };
 
 const VARIAVEIS: Readonly<Record<ProvedorDeCobranca, readonly string[]>> = {
