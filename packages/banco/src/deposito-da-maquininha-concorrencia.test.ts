@@ -68,7 +68,9 @@ let casos = 0;
 let arquivos = 0;
 const impressao = () => `b${String(++arquivos).padStart(63, "0")}`;
 const EXTRATO = "select public.extrato_importar(null, 'banco', 'Banco Fictício', array['pix_direto']::text[], 'extrato.ofx', $1, $2::jsonb, '{\"data\": 0}'::jsonb) as v";
-const CASAR = "select public.maquininha_deposito_casar($1, current_date, $2, $3) as v";
+// O dia do depósito é o de Brasília, o mesmo da conciliação do cenário: o `current_date` é o do fuso do servidor, e no
+// GitHub (UTC), das 21h à meia-noite de Brasília, ele já é o dia seguinte (a falha do CI de 24/11 às 23:29).
+const CASAR = "select public.maquininha_deposito_casar($1, (now() at time zone 'America/Sao_Paulo')::date, $2, $3) as v";
 const CONCILIAR = "select public.extrato_conciliar($1, $2) as v";
 // Os casos se somam no mesmo dia (o depósito de hoje cresce a cada caso): casar vai sempre com o motivo da diferença.
 const MOTIVO = "Disputa do teste";
