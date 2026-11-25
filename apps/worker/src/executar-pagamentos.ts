@@ -2,6 +2,8 @@
 //   node apps/worker/src/executar-pagamentos.ts
 // O pagamento pelo site pela Asaas (lote PAY-014a; ADR-025): registra o aviso na Asaas (uma vez, ou quando o ambiente
 // muda), cria os links dos pagamentos pedidos, confere os avisos com a Asaas e desativa os links que não servem mais.
+// PAY-015a: o Pix pela Asaas no caixa: confere a chave Pix da conta, cria os QR pedidos no caixa, confere o pagamento a
+// cada rodada (sem depender do aviso) e exclui os QR cancelados e vencidos. Sem o aviso registrado, o caixa segue.
 // Roda por uns 50 segundos, com uma rodada a cada 3 segundos, para o link sair logo depois de o cliente pedir. Lê o
 // .env.local da pasta do worker (ORA_PASTA_AMBIENTE muda a pasta). Sem alguma chave, fica desligado: diz o que falta,
 // sem erro. Log só com contagens: nada de link, valor, token ou chave.
@@ -13,6 +15,7 @@ import { transporteHttp } from "./connect/transporte.ts";
 import { mensagemSegura } from "./identidade.ts";
 import { ClienteAsaas, ENDERECOS_DA_ASAAS, type AmbienteDaAsaas } from "./pagamentos/asaas.ts";
 import { oQueFaltaParaOsPagamentos } from "./pagamentos/configuracao.ts";
+import { conferirChavePix, rodadaDoCaixa, RESUMO_DO_CAIXA_VAZIO, type ResumoDoCaixa } from "./pagamentos/caixa.ts";
 import { ligarSeFaltar, rodada, RESUMO_VAZIO, type ResumoDosPagamentos } from "./pagamentos/processar.ts";
 import { bancoDosPagamentos, clienteAdministrativo } from "./supabase.ts";
 
@@ -42,22 +45,33 @@ try {
   const banco = bancoDosPagamentos(clienteAdministrativo(ler("NEXT_PUBLIC_SUPABASE_URL"), ler("SUPABASE_SECRET_KEY")));
   const asaas = new ClienteAsaas(transporteHttp(ENDERECOS_DA_ASAAS[ambiente], 20_000, "Asaas"), ler("ASAAS_API_KEY"));
   const ligado = await ligarSeFaltar(banco, asaas, { ambiente, urlDoAviso: `${site}/api/pagamentos/asaas`, email: ler("ASAAS_EMAIL_DOS_AVISOS") });
-  if (typeof ligado === "object") {
-    console.error(`${agora()} pagamentos: não deu para registrar o aviso na Asaas (${ligado.falha})`);
-    process.exit(1);
-  }
+  // Sem o aviso registrado, o pagamento pelo site espera (ele depende do aviso); o Pix do caixa segue (ele confere sozinho).
+  const siteLigado = typeof ligado !== "object";
+  if (!siteLigado) console.error(`${agora()} pagamentos: não deu para registrar o aviso na Asaas (${ligado.falha})`);
   if (ligado === "ligado") console.log(`${agora()} pagamentos: aviso registrado na Asaas (${ambiente})`);
+  // PAY-015a: a chave Pix da conta, uma vez por execução (o banco desliga o Pix no caixa sem ela).
+  const chavePix = await conferirChavePix(banco, asaas);
   const total: ResumoDosPagamentos = { ...RESUMO_VAZIO };
+  const doCaixa: ResumoDoCaixa = { ...RESUMO_DO_CAIXA_VAZIO };
   const fim = Date.now() + DURACAO_MS;
   while (Date.now() < fim) {
-    const r = await rodada(banco, asaas, site);
-    for (const k of Object.keys(total) as (keyof ResumoDosPagamentos)[]) total[k] += r[k];
+    if (siteLigado) {
+      const r = await rodada(banco, asaas, site);
+      for (const k of Object.keys(total) as (keyof ResumoDosPagamentos)[]) total[k] += r[k];
+    }
+    if (chavePix) {
+      const c = await rodadaDoCaixa(banco, asaas, chavePix);
+      for (const k of Object.keys(doCaixa) as (keyof ResumoDoCaixa)[]) doCaixa[k] += c[k];
+    }
     await esperar(INTERVALO_MS);
   }
   if (Object.values(total).some((n) => n > 0)) {
     console.log(`${agora()} pagamentos: ${total.criados} links criados, ${total.achados} achados de novo, ${total.recusados} recusados, ${total.falhas} falhas, ${total.avisos} avisos, ${total.confirmados} confirmados, ${total.desativados} desativados`);
   }
-  process.exit(0);
+  if (doCaixa.qr_criados + doCaixa.qr_falhas + doCaixa.qr_pagos + doCaixa.qr_excluidos > 0) {
+    console.log(`${agora()} Pix do caixa: ${doCaixa.qr_criados} QR criados, ${doCaixa.qr_falhas} falhas, ${doCaixa.qr_pagos} pagos, ${doCaixa.qr_excluidos} excluídos`);
+  }
+  process.exit(siteLigado ? 0 : 1);
 } catch (erro) {
   console.error(`${agora()} worker dos pagamentos falhou: ${mensagemSegura(erro)}`);
   process.exit(1);

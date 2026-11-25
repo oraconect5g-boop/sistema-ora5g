@@ -47,6 +47,8 @@ const cenario = vi.hoisted(() => ({
   /** A resposta de public.pdv_tela, ou a falha dela. */
   pdv: null as unknown,
   erroDoPdv: null as { code: string } | null,
+  /** PAY-015a: o que public.caixa_pix_da_venda responde (o Pix pela Asaas da venda aberta). */
+  pix: { data: null, error: null } as { data: unknown; error: { code: string } | null },
   /** O que public.loja_reservas_liberar_vencidas responde. */
   soltura: { data: 0, error: null } as { data: number | null; error: { code: string } | null },
   /** O preço vigente de cada variação nesta loja, em centavos; "falha": a leitura dos preços falha; ausente: sem preço. */
@@ -122,6 +124,7 @@ const supabase = {
     registrar(`funcao:${nome}`);
     if (nome === "pdv_tela") return responder(cenario.erroDoPdv ? { data: null, error: cenario.erroDoPdv } : { data: cenario.pdv, error: null });
     if (nome === "loja_reservas_liberar_vencidas") return responder(cenario.soltura);
+    if (nome === "caixa_pix_da_venda") return responder(cenario.pix);
     // VEL-b: o preço de todos os resultados num pedido só; perguntar um a um quebra o teste.
     if (nome === "preco_vigente") throw new Error("a busca do PDV perguntou o preço de um resultado por vez");
     if (nome === "precos_vigentes") {
@@ -172,7 +175,7 @@ vi.mock("../../lib/acesso/sessao", () => ({
 import { BotaoConfirmar } from "../../componentes/BotaoConfirmar";
 import { FotoAmpliavel } from "../catalogo/FotoAmpliavel";
 import { BuscaDeCliente } from "../clientes/BuscaDeCliente";
-import { abrirCaixa, adicionarItem, aplicarDesconto, cancelarVenda, concluirVenda, novaVenda, pedirAprovacao, removerItem } from "./acoes";
+import { abrirCaixa, adicionarItem, aplicarDesconto, cancelarPixAsaas, cancelarVenda, concluirVenda, novaVenda, pedirAprovacao, pedirPixAsaas, removerItem } from "./acoes";
 import { FormasDePagamento } from "./FormasDePagamento";
 import Vender from "./page";
 
@@ -246,6 +249,7 @@ beforeEach(() => {
   cenario.pdv = tela();
   cenario.erroDoPdv = null;
   cenario.soltura = { data: 0, error: null };
+  cenario.pix = { data: { ligado: false, venda: null, pix: [] }, error: null };
   cenario.precos = { [V_AZUL]: 129_900, [V_CAPA]: 6_900, [V_CHIP]: 1_000 };
   cenario.assinaturas = [];
   cenario.idas = [];
@@ -287,7 +291,8 @@ afterEach(async () => {
   vi.restoreAllMocks();
 });
 
-const PRIMEIRA_IDA = ["funcao:loja_reservas_liberar_vencidas", "funcao:pdv_tela"];
+// PAY-015a: o Pix pela Asaas da venda aberta vai junto na mesma rodada (o banco acha a mesma venda da tela).
+const PRIMEIRA_IDA = ["funcao:caixa_pix_da_venda", "funcao:loja_reservas_liberar_vencidas", "funcao:pdv_tela"];
 /** A primeira etapa da busca do catálogo (lib/catalogo/busca.ts), que sai junto com a tela. */
 const CATALOGO = ["tabela:marcas", "tabela:produtos", "tabela:variante_codigos_externos", "tabela:variantes", "tabela:variantes"];
 
@@ -670,3 +675,59 @@ describe("falhas: a tela mostra erro, nunca caixa fechado nem carrinho vazio", (
     await expect(abrir({ q: busca })).rejects.toThrow(`Falha ao consultar o serviço (${etapa})`);
   });
 });
+
+// PAY-015a (25/11/2026; a D-062): o Pix pela Asaas no caixa: o cartão com o QR Code, o que já foi pago entra no total e a
+// conclusão espera o QR que ainda não foi pago. As regras do banco estão em packages/banco/src/pix-da-asaas-no-caixa.test.ts.
+describe("PAY-015a: o Pix pela Asaas no caixa", () => {
+  const PIX_ESPERA = id("9a01");
+  const PIX_PAGO = id("9a02");
+  const IMAGEM = "iVBORw0KGgo".padEnd(200, "A");
+  const COPIA = "00020126580014br.gov.bcb.pix-ficticio-0001";
+  const pix = (mudar: Linha) => ({ id: PIX_ESPERA, numero: 1, valor_centavos: 2_000, situacao: "aguardando", copia_e_cola: COPIA, imagem: IMAGEM,
+    expira_em: "2026-11-25T18:30:00Z", pago_em: null, ultima_falha: null, divergencia: null, ...mudar });
+
+  it("ligado: o QR que espera mostra a imagem, o copia e cola e o cancelar; o pedido de outro QR sugere o que falta; concluir fica travado; numa rodada só", async () => {
+    cenario.pdv = tela({ itens: [item({ quantidade: 1 })] });
+    cenario.pix = { data: { ligado: true, venda: VENDA, pix: [pix({})] }, error: null };
+    const arvore = await abrir();
+    const t = texto(arvore);
+    expect(rodadas()).toEqual([PRIMEIRA_IDA]);
+    expect(t).toContain("Pix pela Asaas");
+    expect(t).toContain("Esperando o pagamento");
+    expect(elementos(arvore).find((e) => e.type === "img")?.props.src).toBe(`data:image/png;base64,${IMAGEM}`);
+    expect(elementos(arvore).find((e) => e.type === "textarea")?.props.defaultValue).toBe(COPIA);
+    expect(formularios(arvore, cancelarPixAsaas).map((f) => f.escondidos)).toEqual([{ pix: PIX_ESPERA }]);
+    const [pedir] = formularios(arvore, pedirPixAsaas);
+    expect(pedir?.escondidos.venda).toBe(VENDA);
+    expect(String(pedir?.escondidos.chave)).toMatch(UUID);
+    // 69,00 da capa menos os 20,00 do QR que espera: o novo QR sugere 49,00.
+    expect(pedir?.elementos.find((e) => e.type === "input" && e.props.name === "valor")?.props.defaultValue).toBe("49,00");
+    expect(elementos(arvore).find((e) => e.type === BotaoConfirmar)?.props.disabled).toBe(true);
+    expect(t).toContain("Há um Pix pela Asaas esperando: espere o pagamento ou cancele o QR Code para concluir.");
+  });
+
+  it("pago: o total desconta o Pix, as formas recebem só o resto e o pago, e a venda não se cancela por aqui", async () => {
+    cenario.pdv = tela({ itens: [item({ quantidade: 1 })] });
+    cenario.pix = { data: { ligado: true, venda: VENDA, pix: [pix({ id: PIX_PAGO, valor_centavos: 5_000, situacao: "pago", copia_e_cola: null, imagem: null, pago_em: "2026-11-25T17:05:00Z" })] }, error: null };
+    const arvore = await abrir();
+    const t = texto(arvore);
+    expect(t).toContain("Pago no Pix pela Asaas");
+    expect(t).toContain("Venda com Pix pela Asaas pago: esta venda não se cancela por aqui.");
+    expect(formularios(arvore, cancelarVenda)).toEqual([]);
+    expect(formularios(arvore, cancelarPixAsaas)).toEqual([]);
+    expect(elementos(arvore).find((e) => e.type === FormasDePagamento)?.props).toMatchObject({ total: 1_900, pagoNoPix: 5_000 });
+    expect(elementos(arvore).find((e) => e.type === BotaoConfirmar)?.props.disabled).toBe(false);
+  });
+
+  it("desligado e sem Pix: o cartão não aparece; a leitura que falha: o aviso; o Pix lido de outra venda não entra", async () => {
+    cenario.pdv = tela({ itens: [item({ quantidade: 1 })] });
+    expect(formularios(await abrir(), pedirPixAsaas)).toEqual([]);
+    cenario.pix = { data: null, error: { code: "57014" } };
+    expect(texto(await abrir())).toContain("Não deu para ler o Pix da Asaas agora.");
+    cenario.pix = { data: { ligado: true, venda: id("d999"), pix: [pix({ id: PIX_PAGO, situacao: "pago", valor_centavos: 5_000 })] }, error: null };
+    const outra = await abrir();
+    expect(texto(outra)).not.toContain("Pago no Pix pela Asaas");
+    expect(elementos(outra).find((e) => e.type === FormasDePagamento)?.props).toMatchObject({ total: 6_900, pagoNoPix: 0 });
+  });
+});
+

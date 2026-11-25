@@ -15,13 +15,15 @@ const MAXIMO_DE_FORMAS = 8;
 // celular) e as parcelas; a entrada é outra forma (dinheiro, Pix ou cartão), marcada como a entrada. O servidor e o banco
 // conferem tudo de novo; os nomes dos campos são os que lib/vendas/regras.ts lê (pagamento_1_meio, pagamento_1_valor...).
 // PAY-014b: na venda do pedido pago pelo site, o pago aparece como uma linha fixa (o banco grava a linha dele na
-// conclusão) e `total` é só o que falta cobrar além dele (um item a mais no balcão).
-export function FormasDePagamento({ total, valorDosCelulares, opcoes, terminais, pagoPeloSite = 0 }: {
+// conclusão) e `total` é só o que falta cobrar além dele (um item a mais no balcão). PAY-015a: o Pix pela Asaas já pago no
+// caixa entra do mesmo jeito (o banco grava a linha de cada QR pago).
+export function FormasDePagamento({ total, valorDosCelulares, opcoes, terminais, pagoPeloSite = 0, pagoNoPix = 0 }: {
   total: number;
   valorDosCelulares: number;
   opcoes: OpcaoDeMeio[];
   terminais: { id: string; rotulo: string; provedor: "picpay" | "pagbank" }[];
   pagoPeloSite?: number;
+  pagoNoPix?: number;
 }) {
   const [linhas, setLinhas] = useState<LinhaNaTela[]>([]);
   const [escolhendo, setEscolhendo] = useState(false);
@@ -44,18 +46,22 @@ export function FormasDePagamento({ total, valorDosCelulares, opcoes, terminais,
 
   return (
     <div className="space-y-3">
+      {/* O que já foi pago entra sozinho na conclusão: a venda pode concluir sem outra forma. */}
+      {pagoPeloSite + pagoNoPix > 0 && <input type="hidden" name="pago_pelo_site" value="sim" />}
       {pagoPeloSite > 0 && (
-        <>
-          <input type="hidden" name="pago_pelo_site" value="sim" />
-          <p className="numeros flex items-center justify-between gap-2 rounded-xl bg-sucesso-clara p-3 text-sm font-semibold text-sucesso">
-            <span>Já pago pelo site (Pix)</span><span>{brl(pagoPeloSite)}</span>
-          </p>
-        </>
+        <p className="numeros flex items-center justify-between gap-2 rounded-xl bg-sucesso-clara p-3 text-sm font-semibold text-sucesso">
+          <span>Já pago pelo site (Pix)</span><span>{brl(pagoPeloSite)}</span>
+        </p>
       )}
-      {linhas.length === 0 && (pagoPeloSite > 0 ? (
+      {pagoNoPix > 0 && (
+        <p className="numeros flex items-center justify-between gap-2 rounded-xl bg-sucesso-clara p-3 text-sm font-semibold text-sucesso">
+          <span>Já pago no Pix pela Asaas</span><span>{brl(pagoNoPix)}</span>
+        </p>
+      )}
+      {linhas.length === 0 && (pagoPeloSite + pagoNoPix > 0 ? (
         <p className="text-sm text-suave">{total === 0
-          ? "Nada a cobrar: o pedido foi pago pelo site. Confira os itens e o cliente e conclua."
-          : "Falta só o que entrou a mais no balcão: toque em \"Adicionar forma de pagamento\" e escolha como o cliente paga."}</p>
+          ? "Nada a cobrar: já está pago. Confira os itens e o cliente e conclua."
+          : "Falta só o resto: toque em \"Adicionar forma de pagamento\" e escolha como o cliente paga."}</p>
       ) : (
         <p className="text-sm text-suave">Nenhuma forma de pagamento ainda. Toque em &quot;Adicionar forma de pagamento&quot; e escolha como o cliente paga.</p>
       ))}
@@ -127,7 +133,7 @@ export function FormasDePagamento({ total, valorDosCelulares, opcoes, terminais,
         </button>
       ))}
       <dl className="numeros grid grid-cols-2 gap-1 text-sm" aria-live="polite">
-        <dt>{pagoPeloSite > 0 ? "A cobrar além do pago pelo site" : "Total da venda"}</dt><dd className="text-right">{brl(total)}</dd>
+        <dt>{pagoPeloSite + pagoNoPix > 0 ? "A cobrar além do já pago" : "Total da venda"}</dt><dd className="text-right">{brl(total)}</dd>
         <dt>Lançado</dt><dd className="text-right">{brl(resumo.lancado)}</dd>
         {resumo.falta > 0 && <><dt className="font-semibold text-aviso">Falta</dt><dd className="text-right font-semibold text-aviso">{brl(resumo.falta)}</dd></>}
         {resumo.troco > 0 && <><dt>Troco (do dinheiro)</dt><dd className="text-right">{brl(resumo.troco)}</dd></>}

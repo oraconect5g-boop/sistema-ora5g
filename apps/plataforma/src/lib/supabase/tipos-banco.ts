@@ -708,6 +708,116 @@ export type Database = {
           },
         ]
       }
+      caixa_pix: {
+        Row: {
+          atualizado_em: string
+          cancelado_em: string | null
+          chave: string
+          conferido_em: string | null
+          copia_e_cola: string | null
+          criado_em: string
+          divergencia: string | null
+          estornado_em: string | null
+          expira_em: string | null
+          id: string
+          id_no_provedor: string | null
+          numero: number
+          organizacao_id: string
+          pago_em: string | null
+          pedido_por: string
+          qr_excluido_em: string | null
+          qr_id: string | null
+          reservado_ate: string | null
+          situacao: string
+          tentativas: number
+          ultima_falha: string | null
+          unidade_id: string
+          valor_centavos: number
+          venda_id: string
+        }
+        Insert: {
+          atualizado_em?: string
+          cancelado_em?: string | null
+          chave: string
+          conferido_em?: string | null
+          copia_e_cola?: string | null
+          criado_em?: string
+          divergencia?: string | null
+          estornado_em?: string | null
+          expira_em?: string | null
+          id?: string
+          id_no_provedor?: string | null
+          numero?: never
+          organizacao_id: string
+          pago_em?: string | null
+          pedido_por: string
+          qr_excluido_em?: string | null
+          qr_id?: string | null
+          reservado_ate?: string | null
+          situacao?: string
+          tentativas?: number
+          ultima_falha?: string | null
+          unidade_id: string
+          valor_centavos: number
+          venda_id: string
+        }
+        Update: {
+          atualizado_em?: string
+          cancelado_em?: string | null
+          chave?: string
+          conferido_em?: string | null
+          copia_e_cola?: string | null
+          criado_em?: string
+          divergencia?: string | null
+          estornado_em?: string | null
+          expira_em?: string | null
+          id?: string
+          id_no_provedor?: string | null
+          numero?: never
+          organizacao_id?: string
+          pago_em?: string | null
+          pedido_por?: string
+          qr_excluido_em?: string | null
+          qr_id?: string | null
+          reservado_ate?: string | null
+          situacao?: string
+          tentativas?: number
+          ultima_falha?: string | null
+          unidade_id?: string
+          valor_centavos?: number
+          venda_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "caixa_pix_organizacao_id_fkey"
+            columns: ["organizacao_id"]
+            isOneToOne: false
+            referencedRelation: "organizacoes"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "caixa_pix_pedido_por_fkey"
+            columns: ["pedido_por"]
+            isOneToOne: false
+            referencedRelation: "perfis_usuario"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "caixa_pix_unidade_id_organizacao_id_fkey"
+            columns: ["unidade_id", "organizacao_id"]
+            isOneToOne: false
+            referencedRelation: "unidades"
+            referencedColumns: ["id", "organizacao_id"]
+          },
+          {
+            foreignKeyName: "caixa_pix_venda_id_fkey"
+            columns: ["venda_id"]
+            isOneToOne: false
+            referencedRelation: "vendas"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       caixa_saidas: {
         Row: {
           caixa_id: string
@@ -7620,6 +7730,7 @@ export type Database = {
       }
       venda_pagamentos: {
         Row: {
+          caixa_pix_id: string | null
           comprovante: string | null
           conciliado_em: string | null
           conciliado_por: string | null
@@ -7645,6 +7756,7 @@ export type Database = {
           venda_id: string
         }
         Insert: {
+          caixa_pix_id?: string | null
           comprovante?: string | null
           conciliado_em?: string | null
           conciliado_por?: string | null
@@ -7670,6 +7782,7 @@ export type Database = {
           venda_id: string
         }
         Update: {
+          caixa_pix_id?: string | null
           comprovante?: string | null
           conciliado_em?: string | null
           conciliado_por?: string | null
@@ -7695,6 +7808,13 @@ export type Database = {
           venda_id?: string
         }
         Relationships: [
+          {
+            foreignKeyName: "venda_pagamentos_caixa_pix_id_fkey"
+            columns: ["caixa_pix_id"]
+            isOneToOne: true
+            referencedRelation: "caixa_pix"
+            referencedColumns: ["id"]
+          },
           {
             foreignKeyName: "venda_pagamentos_conciliado_por_fkey"
             columns: ["conciliado_por"]
@@ -8282,6 +8402,38 @@ export type Database = {
       caixa_pedir_saida: {
         Args: { p_chave: string; p_motivo: string; p_valor: number }
         Returns: string
+      }
+      caixa_pix_a_conferir: { Args: { p_limite?: number }; Returns: Json }
+      caixa_pix_a_criar: { Args: { p_limite?: number }; Returns: Json }
+      caixa_pix_a_excluir: { Args: { p_limite?: number }; Returns: Json }
+      caixa_pix_cancelar: { Args: { p_pix: string }; Returns: string }
+      caixa_pix_consulta_aplicar: {
+        Args: { p_consulta: Json; p_pix: string }
+        Returns: string
+      }
+      caixa_pix_criacao_falhou: {
+        Args: { p_definitiva: boolean; p_motivo: string; p_pix: string }
+        Returns: string
+      }
+      caixa_pix_da_venda: { Args: { p_venda?: string }; Returns: Json }
+      caixa_pix_pedir: {
+        Args: { p_chave: string; p_valor_centavos: number; p_venda: string }
+        Returns: Json
+      }
+      caixa_pix_qr_excluido: { Args: { p_pix: string }; Returns: string }
+      caixa_pix_qr_registrar: {
+        Args: {
+          p_copia_e_cola: string
+          p_expira_em: string
+          p_imagem: string
+          p_pix: string
+          p_qr_id: string
+        }
+        Returns: string
+      }
+      caixa_pix_situacao: {
+        Args: { p_motivo: string; p_pronto: boolean }
+        Returns: boolean
       }
       cancelar_convite: {
         Args: { p_convite: string; p_motivo: string }

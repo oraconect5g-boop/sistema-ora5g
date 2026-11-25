@@ -2,6 +2,7 @@ import { createClient, type SupabaseClient } from "@supabase/supabase-js";
 
 import type { BancoDoRelato } from "./avisos/erros-do-site.ts";
 import type { AvisoAProcessar, BancoDosPagamentos, ConfiguracaoDoPagamento, PagamentoACriar } from "./pagamentos/processar.ts";
+import type { BancoDoCaixa, QrAConferir, QrACriar } from "./pagamentos/caixa.ts";
 import type { AvisoParaEnviar, BancoDosAvisos, ResultadoDoAviso } from "./avisos/processar.ts";
 import type { BancoConnect } from "./connect/processar.ts";
 import type { BancoWhatsApp, EnvioParaFazer, ResultadoDoEnvio } from "./whatsapp/processar.ts";
@@ -48,7 +49,7 @@ export function bancoDoRelato(cliente: SupabaseClient, segredo: string): BancoDo
 }
 
 // O pagamento pelo site (PAY-014a; ADR-025): as funções do worker dos pagamentos, só com a chave secreta do servidor.
-export function bancoDosPagamentos(cliente: SupabaseClient): BancoDosPagamentos {
+export function bancoDosPagamentos(cliente: SupabaseClient): BancoDosPagamentos & BancoDoCaixa {
   const rpc = async <T>(nome: string, argumentos?: Record<string, unknown>): Promise<T> => {
     const { data, error } = await cliente.rpc(nome, argumentos);
     if (error) throw error;
@@ -67,6 +68,16 @@ export function bancoDosPagamentos(cliente: SupabaseClient): BancoDosPagamentos 
     consultaAplicar: (aviso, consulta) => rpc<string>("pagamento_consulta_aplicar", { p_aviso: aviso, p_consulta: consulta }),
     aDesativar: (limite) => rpc<{ id: string; link: string }[]>("pagamentos_a_desativar", { p_limite: limite }),
     linkDesativado: (pagamento) => rpc<boolean>("pagamento_link_desativado", { p_pagamento: pagamento }),
+    // PAY-015a: o Pix pela Asaas no caixa.
+    caixaSituacao: (pronto, motivo) => rpc<boolean>("caixa_pix_situacao", { p_pronto: pronto, p_motivo: motivo }),
+    caixaACriar: (limite) => rpc<QrACriar[]>("caixa_pix_a_criar", { p_limite: limite }),
+    caixaQrRegistrar: (pix, qrId, copiaECola, imagem, expiraEm) =>
+      rpc<string>("caixa_pix_qr_registrar", { p_pix: pix, p_qr_id: qrId, p_copia_e_cola: copiaECola, p_imagem: imagem, p_expira_em: expiraEm }),
+    caixaCriacaoFalhou: (pix, motivo, definitiva) => rpc<string>("caixa_pix_criacao_falhou", { p_pix: pix, p_motivo: motivo, p_definitiva: definitiva }),
+    caixaAConferir: (limite) => rpc<QrAConferir[]>("caixa_pix_a_conferir", { p_limite: limite }),
+    caixaConsultaAplicar: (pix, consulta) => rpc<string>("caixa_pix_consulta_aplicar", { p_pix: pix, p_consulta: consulta }),
+    caixaAExcluir: (limite) => rpc<{ id: string; qr_id: string }[]>("caixa_pix_a_excluir", { p_limite: limite }),
+    caixaQrExcluido: (pix) => rpc<string>("caixa_pix_qr_excluido", { p_pix: pix }),
   };
 }
 

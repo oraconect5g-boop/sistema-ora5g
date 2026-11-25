@@ -1,7 +1,9 @@
 // O cliente da Asaas (lote PAY-014a; ADR-025). Só o que a documentação oficial (docs.asaas.com, lida em 24/11) diz: os
 // endereços do sandbox e da produção, o cabeçalho access_token e o User-Agent, o link de pagamento (criar, procurar pelo
-// externalReference e desativar), o pagamento (consultar pelo id) e o webhook (registrar). Valores em reais com centavos
-// na Asaas; em centavos inteiros aqui. A chave nunca vai para o log nem para mensagem de erro.
+// externalReference e desativar), o pagamento (consultar pelo id) e o webhook (registrar). PAY-015a (lida em 25/11): a
+// chave Pix ativa da conta (GET /pix/addressKeys), o QR Code estático com valor (POST /pix/qrCodes/static), as cobranças
+// que a Asaas cria ao receber pelo QR (GET /payments?pixQrCodeId=) e a exclusão do QR (DELETE /pix/qrCodes/static/{id}).
+// Valores em reais com centavos na Asaas; em centavos inteiros aqui. A chave nunca vai para o log nem para mensagem de erro.
 import type { RespostaHttp, Transporte } from "../connect/transporte.ts";
 
 export const ENDERECOS_DA_ASAAS = { sandbox: "https://api-sandbox.asaas.com/v3", producao: "https://api.asaas.com/v3" } as const;
@@ -54,6 +56,24 @@ export type ResultadoDoLink =
   | { tipo: "desconhecido"; motivo: string };
 export type ConsultaDaAsaas = { id_no_provedor: string; link: string; valor_centavos: number; situacao: SituacaoDaConsulta };
 
+/** PAY-015a: o QR Code estático criado (o id, o copia e cola e a imagem em base64). */
+export type QrDaAsaas = { id: string; copiaECola: string; imagem: string };
+export type ResultadoDoQr =
+  | { tipo: "criado"; qr: QrDaAsaas }
+  | { tipo: "recusado"; motivo: string }
+  | { tipo: "falha"; motivo: string }
+  | { tipo: "desconhecido"; motivo: string };
+/**
+ * PAY-015a: as cobranças que a Asaas criou ao receber pelo QR, no formato que o banco confere. Pago: RECEIVED ou CONFIRMED;
+ * estornado: REFUNDED; nenhum: sem cobrança (ou só pendente). Mais de uma cobrança paga ou estornada, ou outra situação
+ * (estorno em andamento, chargeback...): desconhecida, para alguém olhar (o QR é de um pagamento só).
+ */
+export type ConsultaDoQr =
+  | { situacao: "pago" | "estornado"; id_no_provedor: string; valor_centavos: number }
+  | { situacao: "nenhum" | "desconhecida" };
+const COPIA_E_COLA = /^[ -~]{20,600}$/;
+const BASE64 = /^[A-Za-z0-9+/=]+$/;
+
 const motivoHttp = (status: number) => `a Asaas respondeu ${status}`;
 const corpoDe = (r: RespostaHttp) => (r.tipo === "resposta" && r.corpo && typeof r.corpo === "object" ? (r.corpo as Record<string, unknown>) : null);
 
@@ -66,7 +86,7 @@ export class ClienteAsaas {
     this.chave = chave;
   }
 
-  private pedir(metodo: "GET" | "POST" | "PUT", caminho: string, corpo?: unknown) {
+  private pedir(metodo: "GET" | "POST" | "PUT" | "DELETE", caminho: string, corpo?: unknown) {
     return this.transporte({ metodo, caminho, corpo, cabecalhos: { access_token: this.chave, "User-Agent": AGENTE } });
   }
 
@@ -115,6 +135,61 @@ export class ClienteAsaas {
     const valor = centavosDe(c.value);
     if (c.id !== id || typeof c.status !== "string" || valor === null || typeof c.paymentLink !== "string" || !ID.test(c.paymentLink)) return "falha";
     return { id_no_provedor: id, link: c.paymentLink, valor_centavos: valor, situacao: situacaoDaAsaas(c.status, c.deleted === true) };
+  }
+
+  /** PAY-015a: a chave Pix ativa da conta (a primeira), que recebe os pagamentos do QR. Nulo: a conta não tem chave ativa. */
+  async chavePixAtiva(): Promise<string | null | "falha"> {
+    const r = await this.pedir("GET", "/pix/addressKeys?status=ACTIVE&limit=10");
+    const c = corpoDe(r);
+    if (r.tipo !== "resposta" || r.status !== 200 || !c || !Array.isArray(c.data)) return "falha";
+    for (const item of c.data as Record<string, unknown>[]) {
+      if (item && item.status === "ACTIVE" && typeof item.key === "string" && /^[^\s]{1,120}$/.test(item.key)) return item.key;
+    }
+    return null;
+  }
+
+  /**
+   * PAY-015a: o QR Code estático do caixa: com o valor, um pagamento só, a validade em segundos e o NOSSO identificador. Sem
+   * resposta clara (tempo esgotado, 5xx): desconhecido; o worker pede outro (o QR sem resposta ninguém viu, e ele vence).
+   */
+  async criarQrEstatico(p: { referencia: string; chavePix: string; valorCentavos: number; descricao: string; validadeSegundos: number }): Promise<ResultadoDoQr> {
+    const r = await this.pedir("POST", "/pix/qrCodes/static", {
+      addressKey: p.chavePix, description: p.descricao, value: p.valorCentavos / 100, format: "ALL",
+      expirationSeconds: p.validadeSegundos, allowsMultiplePayments: false, externalReference: p.referencia,
+    });
+    if (r.tipo === "falha") return r.enviada ? { tipo: "desconhecido", motivo: r.motivo } : { tipo: "falha", motivo: r.motivo };
+    if (r.status === 429) return { tipo: "falha", motivo: motivoHttp(429) };
+    if (r.status >= 400 && r.status < 500) return { tipo: "recusado", motivo: motivoHttp(r.status) };
+    const c = corpoDe(r);
+    if (r.status !== 200 || !c || typeof c.id !== "string" || !ID.test(c.id) || typeof c.payload !== "string" || !COPIA_E_COLA.test(c.payload)
+      || typeof c.encodedImage !== "string" || c.encodedImage.length < 100 || c.encodedImage.length > 60_000 || !BASE64.test(c.encodedImage)) {
+      return { tipo: "desconhecido", motivo: r.status === 200 ? "resposta da Asaas fora da forma" : motivoHttp(r.status) };
+    }
+    return { tipo: "criado", qr: { id: c.id, copiaECola: c.payload, imagem: c.encodedImage } };
+  }
+
+  /** PAY-015a: as cobranças criadas pelo pagamento do QR (o filtro pixQrCodeId), no formato que o banco confere. */
+  async cobrancasDoQr(qrId: string): Promise<ConsultaDoQr | "falha"> {
+    if (!ID.test(qrId)) return "falha";
+    const r = await this.pedir("GET", `/payments?pixQrCodeId=${encodeURIComponent(qrId)}&limit=10`);
+    const c = corpoDe(r);
+    if (r.tipo !== "resposta" || r.status !== 200 || !c || !Array.isArray(c.data)) return "falha";
+    const cobrancas = (c.data as Record<string, unknown>[]).filter((x) => x && x.pixQrCodeId === qrId && x.deleted !== true);
+    const contam = cobrancas.map((x) => ({ x, situacao: typeof x.status === "string" ? situacaoDaAsaas(x.status, false) : "desconhecida" as const }))
+      .filter((y) => y.situacao !== "pendente");
+    if (contam.length === 0) return { situacao: "nenhum" };
+    const [unica] = contam;
+    if (contam.length > 1 || !unica || (unica.situacao !== "pago" && unica.situacao !== "estornado")) return { situacao: "desconhecida" };
+    const valor = centavosDe(unica.x.value);
+    if (typeof unica.x.id !== "string" || !ID.test(unica.x.id) || valor === null) return { situacao: "desconhecida" };
+    return { situacao: unica.situacao, id_no_provedor: unica.x.id, valor_centavos: valor };
+  }
+
+  /** PAY-015a: exclui o QR (o cancelado e o vencido). O QR que a Asaas não acha conta como excluído. */
+  async excluirQr(qrId: string): Promise<boolean> {
+    if (!ID.test(qrId)) return false;
+    const r = await this.pedir("DELETE", `/pix/qrCodes/static/${qrId}`);
+    return r.tipo === "resposta" && (r.status === 200 || r.status === 404);
   }
 
   /** Registra o aviso (webhook) com o token que o worker gerou; a Asaas o manda no cabeçalho asaas-access-token. */
