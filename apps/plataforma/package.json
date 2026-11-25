@@ -16,8 +16,8 @@
     "@ora5g/config": "0.1.0",
     "@ora5g/dominio": "0.1.0",
     "@supabase/ssr": "0.12.7",
-    "@supabase/supabase-js": "2.119.0",
-    "lucide-react": "1.73.0",
+    "@supabase/supabase-js": "2.119.2",
+    "lucide-react": "1.77.0",
     "next": "16.4.6",
     "react": "19.3.1",
     "react-dom": "19.3.1",
@@ -33,6 +33,6 @@
     "postcss": "8.5.33",
     "tailwindcss": "4.3.5",
     "typescript": "6.0.3",
-    "vitest": "5.1.0"
+    "vitest": "5.1.1"
   }
 }
