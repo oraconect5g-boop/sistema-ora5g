@@ -124,3 +124,10 @@ Migrations `20261109150526_correcoes_acesso_lote1` (#56) e `20261109190400_conne
 
 - **Quem consulta o quê:** a loja (quem opera a Ora Connect), o titular da linha, o CNPJ, o CEP, o rastreio da compra, o pagamento de uma solicitação e as informações da Nogle; a gerência (o dono e os gerentes), também o custo da logística e o CPF (que devolve o nome e o nascimento); quem gere a rede, o extrato e as recargas programadas da carteira, as portabilidades e as listas de linhas e de clientes. O banco confere cada uma.
 - **O que fica guardado:** só os campos que a tela mostra; o documento mascarado (também dentro do apelido); a lista até ~90 KB, com o aviso do que não coube; tudo apagado em 24 horas, com o CPF e o CNPJ do parâmetro.
+
+## Adendo de 25/11/2026: o Pix da Nogle na loja (lote CONNECT-l)
+
+- **A decisão:** a D-062 do proprietário ("não com o crédito da Nogle"; a carteira estava com R$ 0,00). A loja passa a usar o `LINK` documentado (o link de pagamento que a Nogle devolve na resposta da ativação e da recarga, `link_pagamento`, que o sistema já guardava) como o padrão; o `SALDO` continua como a outra escolha, só com o serviço pago no caixa.
+- **Quem paga:** com o serviço recebido no caixa, a loja (o cliente já pagou; a tela avisa para não mostrar o QR a ele); sem ele, o cliente, direto à Nogle. A trava do REV-054 (#57: o link com o serviço pago cobraria o cliente de novo) sai do banco; o mesmo serviço pago continua valendo uma operação só (OR013).
+- **O QR Code:** desenhado no servidor a partir do link (a biblioteca `uqr`, MIT, sem dependências), só de link https; a confirmação continua a mesma (a reconsulta do worker; o pagamento do link não é aviso de nada).
+- **Para quem gere:** a lista do Pix da Nogle que a loja ainda paga, em todas as lojas que a pessoa gere (o RLS escolhe).

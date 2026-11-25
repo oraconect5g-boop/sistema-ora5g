@@ -1,6 +1,6 @@
 import { describe, expect, it } from "vitest";
 
-import { erroDoConnect, inicioDaJanela, lerPedido } from "./regras";
+import { erroDoConnect, inicioDaJanela, lerPedido, linkDePagamento, quemPagaOPix } from "./regras";
 
 const formulario = (campos: Record<string, string>) => ({ get: (nome: string) => campos[nome] ?? null });
 const ATIVACAO = {
@@ -25,19 +25,23 @@ describe("pedido da Ora Connect lido do formulário", () => {
     expect(empresa.ok && empresa.pedido.cliente).toMatchObject({ cnpj: "11222333000181" });
   });
 
-  it("recarga e portabilidade: linha com 11 dígitos; forma de pagamento só SALDO na loja, com o serviço pago; serviço pago é um id", () => {
+  it("recarga e portabilidade: linha com 11 dígitos; o Pix da Nogle (LINK) com ou sem o serviço pago, o SALDO só com ele; serviço pago é um id", () => {
     expect(lerPedido("recarga", formulario({ metodo: "SALDO", plano: "99999", linha: "(51) 98888-7777", venda_item: "0b1c2d3e-0000-4000-8000-000000000001" })))
       .toEqual({ ok: true, pedido: { metodo: "SALDO", plano: 99999, linha: "51988887777", venda_item: "0b1c2d3e-0000-4000-8000-000000000001" } });
     expect(lerPedido("recarga", formulario({ metodo: "PIX", plano: "99999", linha: "51988887777" }))).toEqual({ ok: false, erro: "dados" });
     expect(lerPedido("recarga", formulario({ metodo: "SALDO", plano: "99999", linha: "5198888777", venda_item: "0b1c2d3e-0000-4000-8000-000000000001" }))).toEqual({ ok: false, erro: "linha" });
     expect(lerPedido("recarga", formulario({ metodo: "SALDO", plano: "99999", linha: "51988887777", venda_item: "x" }))).toEqual({ ok: false, erro: "dados" });
-    // PDV-c (o proprietário, 18/11): na loja não se gera link de pagamento; o SALDO pede o serviço pago no caixa.
-    expect(lerPedido("recarga", formulario({ metodo: "LINK", plano: "99999", linha: "51988887777" }))).toEqual({ ok: false, erro: "link_so_online" });
-    expect(lerPedido("ativacao", formulario({ ...ATIVACAO, metodo: "LINK", venda_item: "" }))).toEqual({ ok: false, erro: "link_so_online" });
-    expect(lerPedido("recarga", formulario({ metodo: "SALDO", plano: "99999", linha: "51988887777" }))).toEqual({ ok: false, erro: "sem_servico_pago" });
-    // Serviço já pago no caixa não vai pelo LINK (#57); controle: o mesmo serviço pelo SALDO, acima.
+    // D-062 (o proprietário, 25/11: "não com o crédito da Nogle"; CONNECT-l): o Pix da Nogle sem o serviço pago (o
+    // cliente paga direto à Nogle) e com ele (a loja paga o link); o SALDO (a carteira) segue pedindo o serviço pago.
+    expect(lerPedido("recarga", formulario({ metodo: "LINK", plano: "99999", linha: "51988887777" })))
+      .toEqual({ ok: true, pedido: { metodo: "LINK", plano: 99999, linha: "51988887777" } });
     expect(lerPedido("recarga", formulario({ metodo: "LINK", plano: "99999", linha: "51988887777", venda_item: "0b1c2d3e-0000-4000-8000-000000000001" })))
-      .toEqual({ ok: false, erro: "link_pago" });
+      .toEqual({ ok: true, pedido: { metodo: "LINK", plano: 99999, linha: "51988887777", venda_item: "0b1c2d3e-0000-4000-8000-000000000001" } });
+    const ativacaoPeloPix = lerPedido("ativacao", formulario({ ...ATIVACAO, metodo: "LINK", venda_item: "" }));
+    expect(ativacaoPeloPix.ok && ativacaoPeloPix.pedido).toMatchObject({ metodo: "LINK", iccid: "8955100000000000013" });
+    expect(ativacaoPeloPix.ok && "venda_item" in ativacaoPeloPix.pedido).toBe(false);
+    expect(lerPedido("recarga", formulario({ metodo: "SALDO", plano: "99999", linha: "51988887777" }))).toEqual({ ok: false, erro: "sem_servico_pago" });
+    expect(lerPedido("ativacao", formulario({ ...ATIVACAO, venda_item: "" }))).toEqual({ ok: false, erro: "sem_servico_pago" });
     expect(lerPedido("portabilidade", formulario({ linha: "51900000001", linha_doadora: "51911112222", operadora: "41" })))
       .toEqual({ ok: true, pedido: { linha: "51900000001", linha_doadora: "51911112222", operadora: 41 } });
   });
@@ -54,5 +58,13 @@ describe("pedido da Ora Connect lido do formulário", () => {
     expect(erroDoConnect({ code: "OR055" })).toBe("outro_plano");
     expect(erroDoConnect({ code: "XX000" })).toBe("falha");
     expect(erroDoConnect(null)).toBe("falha");
+  });
+
+  it("o link do Pix da Nogle que a tela mostra: só https, sem espaço nem aspas, até 500 caracteres; quem paga", () => {
+    expect(linkDePagamento("https://pagamento.invalid/ora/123?x=1")).toBe("https://pagamento.invalid/ora/123?x=1");
+    for (const ruim of ["http://pagamento.invalid/x", "javascript:alert(1)", "https://pag amento.invalid", 'https://x.invalid/"><b>', "", null, undefined,
+      `https://pagamento.invalid/${"a".repeat(480)}`]) expect(linkDePagamento(ruim)).toBeNull();
+    expect(quemPagaOPix("0b1c2d3e-0000-4000-8000-000000000001")).toBe("loja");
+    expect(quemPagaOPix(null)).toBe("cliente");
   });
 });

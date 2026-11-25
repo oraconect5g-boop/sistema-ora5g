@@ -15,7 +15,7 @@ A leitura de 06/11 (`docs/etapa-0/ETAPA_0_DECISOES_2026-11-06.md` §3) tinha vis
 | Endereço | `https://api.conteltelecom.com.br`, sempre HTTPS; REST com JSON |
 | Autenticação | `POST /auth/token` devolve um token temporário (Bearer). Quando expira, pede-se outro. O tempo de validade não é informado |
 | Tipos de chave | **Franquia:** `chave_acesso` + `chave_acesso_franquia`. **Marca/MVNO:** só `chave_acesso`. **PDV:** `chave_acesso` + `chave_acesso_pdv`. A documentação não diz o que cada tipo pode usar (decisão **P9**) |
-| Pagamento | Ativação, recarga e compra aceitam `LINK` (link ao cliente) ou `SALDO` (carteira pré-paga da Ora na Nogle; a margem da Ora fica retida). As respostas também trazem campos de Pix, boleto e cartão |
+| Pagamento | Ativação, recarga e compra aceitam `LINK` (link ao cliente) ou `SALDO` (carteira pré-paga da Ora na Nogle; a margem da Ora fica retida). As respostas também trazem campos de Pix, boleto e cartão. Na loja, desde 25/11 (a D-062, lote CONNECT-l), o padrão é o `LINK`, com o QR Code do `link_pagamento` na tela |
 | Suporte | ti@conteltelecom.com.br, resposta em até 12 horas úteis |
 | Não documentado | ambiente de testes (sandbox), proteção contra pedido repetido (idempotência), avisos automáticos (webhooks), limites de uso, validade do token |
 
