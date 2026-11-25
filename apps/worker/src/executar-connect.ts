@@ -3,6 +3,8 @@
 //   node apps/worker/src/executar-connect.ts --listas   → atualiza planos, DDDs, operadoras e cidades (CONNECT_UFS)
 //   node apps/worker/src/executar-connect.ts --estoque  → lê o estoque de chips da Nogle (os PDVs, a MVNO e cada PDV), SÓ
 //        LEITURA (CONNECT-d; o sim do proprietário de 24/11); pede o GET com corpo (NOGLE_GET_COM_CORPO=documentado)
+//   node apps/worker/src/executar-connect.ts --transferencias → envia os pedidos de transferência de chips do dono, UMA vez
+//        cada, e confirma pelo estoque do PDV (CONNECT-e); só com NOGLE_TRANSFERENCIAS=habilitada; depois, lê o estoque de novo
 //   node apps/worker/src/executar-connect.ts --conciliar [--de AAAA-MM-DD --ate AAAA-MM-DD]
 //        → concilia a produção com os relatórios oficiais de ativações e recargas (CONNECT-c; ORA-CONNECT-009); sem o
 //          período, os 7 dias até ontem, no horário de Brasília. Pede o GET com corpo (NOGLE_GET_COM_CORPO=documentado)
@@ -15,7 +17,9 @@ import { fileURLToPath } from "node:url";
 import { ehTipoOperacao, type TipoOperacao } from "@ora5g/dominio/nogle";
 
 import { ClienteNogle, ehTipoDeChave } from "./connect/cliente-nogle.ts";
-import { conciliarRelatorios, consultarPendentes, enviarPendentes, lerEstoqueDeChips, mensagemSegura, sincronizarReferencias } from "./connect/processar.ts";
+import {
+  conciliarRelatorios, consultarPendentes, enviarPendentes, enviarTransferencias, lerEstoqueDeChips, mensagemSegura, sincronizarReferencias,
+} from "./connect/processar.ts";
 import { transporteHttp } from "./connect/transporte.ts";
 import { bancoConnect, clienteAdministrativo } from "./supabase.ts";
 
@@ -31,6 +35,7 @@ const agora = new Date().toISOString();
 const listas = process.argv.includes("--listas");
 const conciliar = process.argv.includes("--conciliar");
 const estoque = process.argv.includes("--estoque");
+const transferencias = process.argv.includes("--transferencias");
 const argumento = (nome: string) => { const i = process.argv.indexOf(nome); return i > 0 ? process.argv[i + 1] ?? "" : ""; };
 /** O dia em Brasília, deslocado em dias (AAAA-MM-DD). */
 const diaEmBrasilia = (dias: number) => new Intl.DateTimeFormat("en-CA", { timeZone: "America/Sao_Paulo" }).format(new Date(Date.now() + dias * 86_400_000));
@@ -44,9 +49,13 @@ const faltando = [
   !ehTipoDeChave(tipoDaChave) && "NOGLE_AUTH_KEY_TYPE",
   !ler("NOGLE_ACCESS_KEY") && "NOGLE_ACCESS_KEY",
   tipoDaChave !== "marca" && !ler("NOGLE_SECONDARY_KEY") && "NOGLE_SECONDARY_KEY",
-  !listas && !conciliar && !estoque && tipos.length === 0 && "NOGLE_OPERACOES_HABILITADAS",
+  !listas && !conciliar && !estoque && !transferencias && tipos.length === 0 && "NOGLE_OPERACOES_HABILITADAS",
 ].filter(Boolean);
 
+if (transferencias && ler("NOGLE_TRANSFERENCIAS") !== "habilitada") {
+  console.log(`${agora} transferências de chips desligadas (NOGLE_TRANSFERENCIAS)`);
+  process.exit(0);
+}
 if (faltando.length > 0) {
   console.log(`${agora} worker da Ora Connect desligado: falta ${faltando.join(", ")}`);
   process.exit(0);
@@ -77,6 +86,17 @@ try {
     const falhas = r.detalhes.filter((d) => d.falha).map((d) => `; ${d.relatorio}: ${d.falha}`).join("");
     console.log(`${agora} conciliação com a Nogle de ${de} a ${ate}: ${r.conciliadas} relatórios, ${r.linhas} linhas, ${r.falhas} falhas${falhas}`);
     process.exit(r.falhas > 0 ? 1 : 0);
+  }
+  if (transferencias) {
+    const t = await enviarTransferencias(banco, nogle);
+    if (t.enviadas + t.devolvidas + t.recusadas === 0) process.exit(0);
+    console.log(`${agora} transferências de chips: ${t.enviadas} enviadas (${t.confirmadas} confirmadas, ${t.parciais} parciais, ${t.desconhecidas} desconhecidas), ${t.recusadas} recusadas, ${t.devolvidas} de volta à fila`);
+    // Depois de enviar, o estoque lido de novo: a tela mostra os chips no PDV novo.
+    if (t.enviadas > 0) {
+      const e = await lerEstoqueDeChips(banco, nogle);
+      console.log(e.gravada ? `${agora} estoque de chips relido: leitura nº ${e.leitura.numero}, ${e.leitura.falhas} falhas` : `${agora} estoque de chips: nada gravado (${e.motivo})`);
+    }
+    process.exit(t.desconhecidas + t.devolvidas > 0 ? 1 : 0);
   }
   if (estoque) {
     const r = await lerEstoqueDeChips(banco, nogle);

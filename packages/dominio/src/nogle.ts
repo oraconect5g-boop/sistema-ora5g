@@ -607,3 +607,86 @@ export function lerChips(corpo: unknown): ChipsLidos | null {
   }
   return { chips, ignorados };
 }
+
+// -----------------------------------------------------------------------------------------------------------------------
+// A transferência de chips pela Nogle (lote CONNECT-e; ORA-INV-011). Só o dono pede (connect_transferir_chips); o worker
+// envia UMA vez e confirma pelo estoque do PDV lido antes e depois, porque a resposta só diz "Sucesso." (a primeira de
+// verdade, 25/11: 1 eSIM para a Santa Cândida, HTTP 200 {"message": "Sucesso."}). Os pedidos e os exemplos de resposta são
+// os da coleção oficial de 07/11; no lote, o ICCID vai sem o último dígito (o verificador), como a Nogle respondeu em 10/11.
+// -----------------------------------------------------------------------------------------------------------------------
+export type TipoDeTransferencia = "esim" | "unidade" | "lote";
+export type TransferenciaParaEnviar = {
+  transferencia_id: string; tipo: TipoDeTransferencia; pdv_id: number; iccid: string | null; iccid_final: string | null; quantidade: number;
+};
+export type RespostaDaTransferencia = {
+  envio: "aceita" | "recusada" | "desconhecida"; mensagem: string; transferidos: number | null; nao_transferidos: number | null;
+};
+export type ConferenciaDaTransferencia = { confirmacao: "confirmada" | "parcial" | "nao_confirmada"; novos: string[] };
+
+/** O pedido da transferência; null quando o pedido do banco está fora da forma (nada é enviado). */
+export function pedidoDaTransferencia(t: TransferenciaParaEnviar): PedidoNogle | null {
+  if (!Number.isInteger(t.pdv_id) || t.pdv_id <= 0) return null;
+  const valido = (i: string | null): i is string => typeof i === "string" && /^89\d{17,18}$/.test(i);
+  if (t.tipo === "esim") {
+    return Number.isInteger(t.quantidade) && t.quantidade >= 1 && t.quantidade <= 500
+      ? { metodo: "POST", caminho: "/pdv/transferir-chip-esim", corpo: { id: t.pdv_id, quantidade: t.quantidade } } : null;
+  }
+  if (t.tipo === "unidade") {
+    return valido(t.iccid) ? { metodo: "POST", caminho: "/pdv/transferir-chip-fisico-unidade", corpo: { id: t.pdv_id, iccid: t.iccid } } : null;
+  }
+  if (t.tipo === "lote" && valido(t.iccid) && valido(t.iccid_final) && t.iccid.length === t.iccid_final.length && t.iccid <= t.iccid_final) {
+    return {
+      metodo: "POST", caminho: "/pdv/transferir-chip-fisico-lote",
+      corpo: { id: t.pdv_id, iccid_inicial: t.iccid.slice(0, -1), iccid_final: t.iccid_final.slice(0, -1) },
+    };
+  }
+  return null;
+}
+
+const contagemOuNada = (v: unknown) => (typeof v === "number" && Number.isInteger(v) && v >= 0 ? v : null);
+
+/**
+ * A resposta do envio. HTTP 200 com a mensagem de sucesso ("Sucesso!", "Sucesso." ou "Processamento Concluído.") é aceita (no
+ * lote, com as contagens de transferidos e não transferidos); 4xx é recusa da Nogle (nada foi feito); 5xx, a falta de resposta
+ * ou um 200 sem a mensagem esperada é resultado desconhecido: confere-se pelo estoque, nunca se reenvia.
+ */
+export function lerRespostaDaTransferencia(statusHttp: number, corpo: unknown): RespostaDaTransferencia {
+  const o = objeto(corpo);
+  // Só a mensagem que a Nogle mandou (message, mensagem, erro ou o primeiro erro de campo); sem ela, a explicação de cada caso.
+  const mensagem = (textoOuNada(o?.message) ?? textoOuNada(o?.mensagem) ?? textoOuNada(o?.erro)
+    ?? (o && ehObjeto(o.errors) ? normalizarResposta(statusHttp, corpo).mensagem : undefined) ?? "").slice(0, 200);
+  const transferidos = contagemOuNada(o?.transferidos);
+  const nao = contagemOuNada(o?.nao_transferidos);
+  if (statusHttp >= 200 && statusHttp < 300) {
+    return /sucesso|processamento conclu/i.test(mensagem)
+      ? { envio: "aceita", mensagem, transferidos, nao_transferidos: nao }
+      : { envio: "desconhecida", mensagem: mensagem || "A Nogle respondeu sem a mensagem de sucesso.", transferidos, nao_transferidos: nao };
+  }
+  if (statusHttp >= 400 && statusHttp < 500) {
+    return { envio: "recusada", mensagem: mensagem || `A Nogle recusou (HTTP ${statusHttp}).`, transferidos: null, nao_transferidos: null };
+  }
+  return { envio: "desconhecida", mensagem: mensagem || `A Nogle não respondeu com clareza (HTTP ${statusHttp}).`, transferidos: null, nao_transferidos: null };
+}
+
+/**
+ * A conferência pelo estoque do PDV de destino, lido antes e depois do envio: os chips que chegaram (os do pedido, no
+ * físico; qualquer eSIM novo, no eSIM). Todos: confirmada; alguns: parcial; nenhum: nao_confirmada.
+ */
+export function conferirTransferencia(t: TransferenciaParaEnviar, antes: readonly ChipDaNogle[], depois: readonly ChipDaNogle[]): ConferenciaDaTransferencia {
+  const ja = new Set(antes.map((c) => c.iccid));
+  const chegaram = depois.filter((c) => !ja.has(c.iccid));
+  let novos: string[];
+  if (t.tipo === "esim") {
+    novos = chegaram.filter((c) => c.tipo === "esim").map((c) => c.iccid);
+  } else if (t.tipo === "unidade") {
+    novos = chegaram.filter((c) => c.iccid === t.iccid).map((c) => c.iccid);
+  } else {
+    const inicio = (t.iccid ?? "").slice(0, -1);
+    const fim = (t.iccid_final ?? "").slice(0, -1);
+    novos = chegaram.filter((c) => c.tipo === "fisico" && c.iccid.length === (t.iccid ?? "").length
+      && c.iccid.slice(0, -1) >= inicio && c.iccid.slice(0, -1) <= fim).map((c) => c.iccid);
+  }
+  novos = novos.slice(0, 500);
+  const confirmacao = novos.length >= t.quantidade ? "confirmada" : novos.length > 0 ? "parcial" : "nao_confirmada";
+  return { confirmacao, novos };
+}

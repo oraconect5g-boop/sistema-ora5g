@@ -8,7 +8,8 @@ import { describe, expect, it } from "vitest";
 import {
   centavosDeValorNogle, diaDoRelatorio, interpretarConsulta, interpretarConsultaPagamento, interpretarEnvio, lerChips, lerPdvs, lerReferencias, lerRelatorio,
   montarConsulta, montarPedido, montarPedidoDoRelatorio, PEDIDO_DO_ESTOQUE_DA_MVNO, PEDIDO_DOS_PDVS, pedidoDoEstoqueDoPdv, tipoDeChip,
-  type OperacaoParaConsultar, type OperacaoParaEnviar,
+  conferirTransferencia, lerRespostaDaTransferencia, pedidoDaTransferencia,
+  type ChipDaNogle, type OperacaoParaConsultar, type OperacaoParaEnviar, type TransferenciaParaEnviar,
 } from "./nogle";
 
 type Resposta = { name?: string; code?: number; body?: string };
@@ -336,5 +337,58 @@ describe("o estoque de chips da Nogle (CONNECT-d)", () => {
   it("o tipo do chip, com ou sem acento", () => {
     expect(["físico", "fisico", "FÍSICO", " eSIM ", "esim"].map(tipoDeChip)).toEqual(["fisico", "fisico", "fisico", "esim", "esim"]);
     expect(["chip", "", null, 1].map(tipoDeChip)).toEqual([null, null, null, null]);
+  });
+});
+
+// CONNECT-e (25/11/2026): a transferência de chips. Os exemplos de resposta são os da coleção oficial; a primeira de verdade
+// (1 eSIM para a Santa Cândida, 25/11) respondeu como o exemplo do eSIM. ICCIDs FICTÍCIOS.
+describe("a transferência de chips pela Nogle (CONNECT-e)", () => {
+  const I = (n: number) => `895517011000000${String(n).padStart(3, "0")}1`;
+  const base = { transferencia_id: "t", pdv_id: 5233, iccid: null, iccid_final: null } as const;
+  const esim: TransferenciaParaEnviar = { ...base, tipo: "esim", quantidade: 2 };
+  const unidade: TransferenciaParaEnviar = { ...base, tipo: "unidade", iccid: I(101), quantidade: 1 };
+  const lote: TransferenciaParaEnviar = { ...base, tipo: "lote", iccid: I(101), iccid_final: I(104), quantidade: 4 };
+
+  it("o pedido de cada tipo, só com os campos documentados; no lote, o ICCID sem o dígito verificador", () => {
+    expect(pedidoDaTransferencia(esim)).toEqual({ metodo: "POST", caminho: "/pdv/transferir-chip-esim", corpo: { id: 5233, quantidade: 2 } });
+    expect(pedidoDaTransferencia(unidade)).toEqual({ metodo: "POST", caminho: "/pdv/transferir-chip-fisico-unidade", corpo: { id: 5233, iccid: I(101) } });
+    expect(pedidoDaTransferencia(lote)).toEqual({
+      metodo: "POST", caminho: "/pdv/transferir-chip-fisico-lote", corpo: { id: 5233, iccid_inicial: I(101).slice(0, -1), iccid_final: I(104).slice(0, -1) },
+    });
+    for (const pedido of [pedidoDaTransferencia(esim), pedidoDaTransferencia(unidade), pedidoDaTransferencia(lote)]) {
+      const documentados = camposDocumentados(pedido?.caminho ?? "");
+      expect(Object.keys(pedido?.corpo ?? {}).filter((campo) => !documentados.has(campo)), pedido?.caminho).toEqual([]);
+    }
+    // Fora da forma: nada é enviado.
+    expect(pedidoDaTransferencia({ ...esim, quantidade: 0 })).toBeNull();
+    expect(pedidoDaTransferencia({ ...unidade, iccid: "123" })).toBeNull();
+    expect(pedidoDaTransferencia({ ...lote, iccid: I(105) })).toBeNull();
+    expect(pedidoDaTransferencia({ ...lote, iccid_final: `${I(104)}0` })).toBeNull();
+    expect(pedidoDaTransferencia({ ...esim, pdv_id: 0 })).toBeNull();
+  });
+
+  it("a resposta: o sucesso dos exemplos oficiais é aceito (o lote com as contagens); 4xx é recusa; o resto, desconhecido", () => {
+    expect(lerRespostaDaTransferencia(200, exemplo("/pdv/transferir-chip-esim"))).toEqual({ envio: "aceita", mensagem: "Sucesso.", transferidos: null, nao_transferidos: null });
+    expect(lerRespostaDaTransferencia(200, exemplo("/pdv/transferir-chip-fisico-unidade"))).toMatchObject({ envio: "aceita", mensagem: "Sucesso!" });
+    expect(lerRespostaDaTransferencia(200, exemplo("/pdv/transferir-chip-fisico-lote")))
+      .toEqual({ envio: "aceita", mensagem: "Processamento Concluído.", transferidos: 5, nao_transferidos: 0 });
+    expect(lerRespostaDaTransferencia(422, { message: "Chip não encontrado." })).toEqual({ envio: "recusada", mensagem: "Chip não encontrado.", transferidos: null, nao_transferidos: null });
+    expect(lerRespostaDaTransferencia(400, null)).toMatchObject({ envio: "recusada", mensagem: "A Nogle recusou (HTTP 400)." });
+    expect(lerRespostaDaTransferencia(500, {})).toMatchObject({ envio: "desconhecida" });
+    expect(lerRespostaDaTransferencia(200, { message: "Recebido" })).toMatchObject({ envio: "desconhecida", mensagem: "Recebido" });
+    expect(lerRespostaDaTransferencia(200, null)).toMatchObject({ envio: "desconhecida" });
+  });
+
+  it("a conferência pelo estoque do PDV: os chips do pedido que chegaram; todos, alguns ou nenhum", () => {
+    const chip = (iccid: string, tipo: "fisico" | "esim"): ChipDaNogle => ({ iccid, tipo, repassado_em: null });
+    const antes = [chip(I(1), "esim"), chip(I(2), "fisico")];
+    expect(conferirTransferencia(esim, antes, [...antes, chip(I(3), "esim"), chip(I(4), "esim")])).toEqual({ confirmacao: "confirmada", novos: [I(3), I(4)] });
+    expect(conferirTransferencia(esim, antes, [...antes, chip(I(3), "esim"), chip(I(5), "fisico")])).toEqual({ confirmacao: "parcial", novos: [I(3)] });
+    expect(conferirTransferencia(esim, antes, antes)).toEqual({ confirmacao: "nao_confirmada", novos: [] });
+    expect(conferirTransferencia(unidade, antes, [...antes, chip(I(101), "fisico")])).toEqual({ confirmacao: "confirmada", novos: [I(101)] });
+    expect(conferirTransferencia(unidade, antes, [...antes, chip(I(102), "fisico")])).toEqual({ confirmacao: "nao_confirmada", novos: [] });
+    expect(conferirTransferencia(lote, antes, [...antes, chip(I(101), "fisico"), chip(I(103), "fisico"), chip(I(200), "fisico")]))
+      .toEqual({ confirmacao: "parcial", novos: [I(101), I(103)] });
+    expect(conferirTransferencia(lote, antes, [...antes, ...[101, 102, 103, 104].map((n) => chip(I(n), "fisico"))]).confirmacao).toBe("confirmada");
   });
 });

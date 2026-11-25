@@ -120,6 +120,8 @@ export function bancoConnect(cliente: SupabaseClient, organizacao: string): Banc
     registrarConciliacao: (relatorio, de, ate, linhas) => rpc("connect_worker_registrar_conciliacao",
       { p_organizacao: organizacao, p_relatorio: relatorio, p_de: de, p_ate: ate, p_linhas: linhas }),
     gravarEstoque: (leitura) => rpc("connect_worker_gravar_estoque", { p_organizacao: organizacao, p_leitura: leitura }),
+    transferenciasAEnviar: (limite) => rpc("connect_worker_transferencias_a_enviar", { p_organizacao: organizacao, p_limite: limite }),
+    registrarTransferencia: (transferencia, resultado) => rpc("connect_worker_registrar_transferencia", { p_transferencia: transferencia, p_resultado: resultado }),
   };
 }
 

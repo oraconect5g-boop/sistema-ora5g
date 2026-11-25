@@ -90,3 +90,9 @@ Migrations `20261109150526_correcoes_acesso_lote1` (#56) e `20261109190400_conne
 - **Leitura e ligação:** o dono vê a rede toda; o administrador, os PDVs e as contagens; quem opera a Ora Connect numa loja, o PDV e os chips dela (RLS). Ligar o PDV à loja é do dono ou do administrador (`connect_ligar_pdv`), uma loja por PDV, na auditoria.
 - **Fica de fora:** a transferência de chips pela API (`POST /pdv/transferir-chip-*`), que muda o estoque na Nogle e espera o sim do proprietário a cada operação, e a entrada dos chips da Nogle no livro de estoque da Ora.
 - **A primeira transferência de verdade:** em 25/11/2026 às 06:04, com o sim do proprietário ("Sim, 1 eSIM"), `POST /pdv/transferir-chip-esim` com `{"id": 5233, "quantidade": 1}` respondeu HTTP 200 com `{"message": "Sucesso."}` em 0,5 s; o PDV da Santa Cândida passou de 3 para 4 eSIM (o novo termina em 431415, escolhido pela Nogle) e a leitura seguinte do sistema (nº 4) mostrou 154 eSIM sem PDV (eram 155). A resposta não diz qual eSIM foi: a transferência pelo sistema, quando vier, confirma pelo estoque do PDV lido de novo, e uma resposta que não chega vira resultado desconhecido (não se repete).
+
+## Adendo de 25/11/2026: a transferência de chips pelo sistema (lote CONNECT-e)
+
+- **Quem pede:** só o dono (a D-057); a função do banco confere, e cada pedido é o sim daquela operação.
+- **O envio:** o worker (`--transferencias`, a cada minuto, só com `NOGLE_TRANSFERENCIAS=habilitada`) lê o estoque do PDV, envia uma vez e lê de novo. A mesma regra das operações: o que não saiu (sem conexão, sem a leitura de antes) volta para a fila; o que saiu sem resposta clara é resultado desconhecido e nunca se reenvia; o envio parado em 10 minutos também.
+- **A confirmação:** pelo estoque do PDV (a resposta só diz "Sucesso."): confirmada, em parte ou, sem os chips no estoque depois do "Sucesso.", resultado desconhecido (conferir no painel da Nogle).

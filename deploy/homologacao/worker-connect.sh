@@ -8,6 +8,8 @@
 # a cada 30 minutos, das 7h às 22h:
 #   */30 7-21 * * * bash $HOME/homologacao/plataforma/deploy/homologacao/worker-connect.sh --estoque
 #   0 22 * * * bash $HOME/homologacao/plataforma/deploy/homologacao/worker-connect.sh --estoque
+# A TRANSFERÊNCIA de chips pedida pelo dono (CONNECT-e; D-057), a cada minuto, só com NOGLE_TRANSFERENCIAS=habilitada:
+#   * * * * * bash $HOME/homologacao/plataforma/deploy/homologacao/worker-connect.sh --transferencias
 # Usa a versão no ar e a cópia COMPLETA do ambiente que só o worker recebe (apps/worker/.env.local).
 # Uma execução por vez; ambiente limpo; log só com contagens (nada de CPF, linha, chave ou token).
 set -euo pipefail

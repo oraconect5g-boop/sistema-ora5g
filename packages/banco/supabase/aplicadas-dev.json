@@ -142,6 +142,7 @@
     { "versao": "20261124220512", "nome": "vitrine_mais_rapida", "md5": "bcc799ea0f6c824c27af54faca13313e", "aplicada_em": "2026-11-24" },
     { "versao": "20261124230046", "nome": "transferencias_abertas_e_historico", "md5": "c7eb9f8f92f32dadf18d34ef9f5e5ceb", "aplicada_em": "2026-11-24" },
     { "versao": "20261125015559", "nome": "estoque_de_chips_da_nogle", "md5": "eacc5106870381ca536524b4bb34a272", "aplicada_em": "2026-11-24" },
-    { "versao": "20261125022938", "nome": "estoque_de_chips_sem_pdv", "md5": "85432bc346e27a2c13fc9ff09e3abfcc", "aplicada_em": "2026-11-24" }
+    { "versao": "20261125022938", "nome": "estoque_de_chips_sem_pdv", "md5": "85432bc346e27a2c13fc9ff09e3abfcc", "aplicada_em": "2026-11-24" },
+    { "versao": "20261125124255", "nome": "transferencia_de_chips", "md5": "0df6964e5d6b8fc4afad6ebc9dbab027", "aplicada_em": "2026-11-25" }
   ]
 }

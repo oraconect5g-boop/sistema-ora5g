@@ -90,3 +90,104 @@ export function separarPdvs<T extends PdvDaTela>(pdvs: readonly T[], nomeDaLoja:
 /** A soma dos chips de uma lista de PDVs. */
 export const somar = (pdvs: readonly Pick<PdvDaTela, "fisicos" | "esims">[]) =>
   pdvs.reduce((t, p) => ({ fisicos: t.fisicos + p.fisicos, esims: t.esims + p.esims }), { fisicos: 0, esims: 0 });
+
+// -----------------------------------------------------------------------------------------------------------------------
+// A transferência de chips pela Nogle (lote CONNECT-e): só o dono pede (o banco confere); o servidor envia uma vez e confirma
+// pelo estoque do PDV de destino. A tela não chama a Nogle.
+// -----------------------------------------------------------------------------------------------------------------------
+export type TipoDeTransferencia = "esim" | "unidade" | "lote";
+export type TransferenciaDaTela = {
+  id: string;
+  numero: number;
+  tipo: string;
+  pdv_id: number;
+  iccid: string | null;
+  iccid_final: string | null;
+  quantidade: number;
+  motivo: string | null;
+  situacao: string;
+  pedida_em: string;
+  concluida_em: string | null;
+  mensagem: string | null;
+  resultado: unknown;
+};
+
+export const NOMES_DOS_TIPOS_DE_TRANSFERENCIA: Record<TipoDeTransferencia, string> = {
+  esim: "eSIM por quantidade", unidade: "Um chip físico (pelo ICCID)", lote: "Lote de chips físicos (do primeiro ao último ICCID)",
+};
+export const ehTipoDeTransferencia = (v: unknown): v is TipoDeTransferencia => v === "esim" || v === "unidade" || v === "lote";
+
+export const SITUACOES_DA_TRANSFERENCIA: Record<string, { rotulo: string; tom: "info" | "sucesso" | "aviso" | "perigo" | "neutro" }> = {
+  registrada: { rotulo: "Na fila", tom: "info" },
+  enviando: { rotulo: "Enviando", tom: "info" },
+  confirmada: { rotulo: "Confirmada", tom: "sucesso" },
+  parcial: { rotulo: "Em parte", tom: "aviso" },
+  recusada: { rotulo: "Recusada pela Nogle", tom: "perigo" },
+  resultado_desconhecido: { rotulo: "Resultado desconhecido", tom: "perigo" },
+  cancelada: { rotulo: "Cancelada", tom: "neutro" },
+};
+
+export const ERROS_DA_TRANSFERENCIA = {
+  sem_estoque: "Não há chips livres bastantes no estoque geral da Ora na última leitura (ou o chip já está num PDV).",
+  em_andamento: "Algum desses chips já está num pedido em andamento.",
+  ja_saiu: "Esse pedido já saiu para a Nogle: não dá mais para cancelar.",
+  chave: "Esse pedido já foi feito com outro conteúdo. Recarregue a tela.",
+  sem_permissao: "Só o dono pede ou cancela uma transferência de chips.",
+  dados: "Confira o tipo, o destino e os chips do pedido.",
+  motivo: "Informe o motivo do cancelamento (pelo menos 3 letras).",
+  falha: "Não foi possível concluir agora. Tente de novo em instantes.",
+} as const;
+export type ErroDaTransferencia = keyof typeof ERROS_DA_TRANSFERENCIA;
+export const ehErroDaTransferencia = (v: unknown): v is ErroDaTransferencia => typeof v === "string" && Object.hasOwn(ERROS_DA_TRANSFERENCIA, v);
+
+/** O erro do banco no pedido ou no cancelamento (connect_transferir_chips, connect_cancelar_transferencia). */
+export function erroDaTransferencia(erro: { code?: string } | null | undefined): ErroDaTransferencia {
+  const codigo = erro?.code;
+  if (codigo === "OR052") return "sem_estoque";
+  if (codigo === "OR053") return "em_andamento";
+  if (codigo === "OR054") return "ja_saiu";
+  if (codigo === "OR004") return "chave";
+  if (codigo === "42501") return "sem_permissao";
+  if (codigo === "22023") return "dados";
+  return "falha";
+}
+
+export type PedidoDeTransferencia = {
+  tipo: TipoDeTransferencia; pdv: number; iccid: string | null; iccidFinal: string | null; quantidade: number | null; motivo: string | null; chave: string;
+};
+type Formulario = { get: (nome: string) => unknown };
+const textoDo = (dados: Formulario, nome: string) => {
+  const v = dados.get(nome);
+  return typeof v === "string" ? v.trim() : "";
+};
+
+/**
+ * O pedido do formulário: o tipo, o PDV de destino e, conforme o tipo, a quantidade (eSIM), o ICCID (um chip) ou o primeiro
+ * e o último ICCID (lote). Os campos do outro tipo são ignorados (o formulário mostra todos). O banco confere de novo.
+ */
+export function lerPedidoDeTransferencia(dados: Formulario): { ok: true; pedido: PedidoDeTransferencia } | { ok: false; erro: ErroDaTransferencia } {
+  const tipo = textoDo(dados, "tipo");
+  const pdv = textoDo(dados, "pdv");
+  const chave = textoDo(dados, "chave");
+  const motivo = textoDo(dados, "motivo").slice(0, 200) || null;
+  if (!ehTipoDeTransferencia(tipo) || !/^[1-9]\d{0,8}$/.test(pdv) || !/^[0-9a-f-]{36}$/.test(chave)) return { ok: false, erro: "dados" };
+  const digitos = (nome: string) => textoDo(dados, nome).replace(/\D/g, "") || null;
+  const iccidValido = (i: string | null): i is string => i !== null && /^89\d{17,18}$/.test(i);
+  if (tipo === "esim") {
+    const quantidade = textoDo(dados, "quantidade");
+    if (!/^\d{1,3}$/.test(quantidade) || Number(quantidade) < 1 || Number(quantidade) > 500) return { ok: false, erro: "dados" };
+    return { ok: true, pedido: { tipo, pdv: Number(pdv), iccid: null, iccidFinal: null, quantidade: Number(quantidade), motivo, chave } };
+  }
+  const iccid = digitos("iccid");
+  if (!iccidValido(iccid)) return { ok: false, erro: "dados" };
+  if (tipo === "unidade") return { ok: true, pedido: { tipo, pdv: Number(pdv), iccid, iccidFinal: null, quantidade: null, motivo, chave } };
+  const iccidFinal = digitos("iccid_final");
+  if (!iccidValido(iccidFinal) || iccidFinal.length !== iccid.length || iccidFinal < iccid) return { ok: false, erro: "dados" };
+  return { ok: true, pedido: { tipo, pdv: Number(pdv), iccid, iccidFinal, quantidade: null, motivo, chave } };
+}
+
+/** Os ICCIDs que chegaram, guardados no resultado do envio (só o fim de cada um, para a lista). */
+export function chipsQueChegaram(resultado: unknown): string[] {
+  const novos = resultado && typeof resultado === "object" ? (resultado as { novos?: unknown }).novos : undefined;
+  return Array.isArray(novos) ? novos.filter((n): n is string => typeof n === "string") : [];
+}

@@ -44,7 +44,7 @@ vi.mock("../../../lib/acesso/sessao", () => ({
   obterSessao: async () => sessaoFicticia,
 }));
 
-import { ligarPdv } from "./acoes";
+import { cancelarTransferencia, ligarPdv, pedirTransferencia } from "./acoes";
 import ChipsDaNogle from "./page";
 
 function texto(v: unknown): string {
@@ -82,6 +82,7 @@ beforeEach(() => {
     connect_leituras_nogle: [LEITURA],
     connect_chips_nogle: CHIPS,
     unidades: [{ id: LOJA_1, nome: "Água Verde", tipo: "loja_fisica" }, { id: LOJA_2, nome: "Butiatuvinha", tipo: "loja_fisica" }, { id: "x", nome: "Loja Online", tipo: "online" }],
+    connect_transferencias_chips: [],
   };
 });
 
@@ -89,7 +90,7 @@ describe("a tela dos chips na Nogle (CONNECT-d)", () => {
   it("o dono: a hora da leitura, o resumo, as lojas (abaixo do mínimo), os outros PDVs e a MVNO; só leitura", async () => {
     const t = await abrir();
     expect(t).toContain("Última leitura da Nogle:");
-    expect(t).toContain("Só leitura: nada aqui transfere, ativa ou reserva chip");
+    expect(t).toContain("A leitura não muda nada na Nogle: só o pedido de transferência do dono move chips");
     emOrdem(t, "Nas lojas", "8", "3 físicos · 5 eSIM · 2 lojas ligadas");
     emOrdem(t, "Estoque geral da Ora", "693", "470 físicos · 223 eSIM");
     emOrdem(t, "Abaixo do mínimo", "2", "text-aviso", "lojas abaixo do estoque mínimo");
@@ -169,5 +170,72 @@ describe("a ligação do PDV com a loja (CONNECT-d)", () => {
     await expect(enviar({ pdv: "abc", unidade: LOJA_1 })).rejects.toThrow("redirecionou para /connect/chips?erro=dados");
     await expect(enviar({ pdv: "5250", unidade: "loja" })).rejects.toThrow("redirecionou para /connect/chips?pdv=5250&erro=dados");
     expect(cenario.rpc).toEqual([]);
+  });
+});
+
+describe("a transferência de chips na tela (CONNECT-e)", () => {
+  const T1 = "00000000-0000-4000-9000-0000000000d1";
+  const T2 = "00000000-0000-4000-9000-0000000000d2";
+  const PEDIDOS = [
+    { id: T1, numero: 7, tipo: "esim", pdv_id: 5221, iccid: null, iccid_final: null, quantidade: 1, motivo: "Reposição", situacao: "confirmada",
+      pedida_em: haMinutos(30), concluida_em: haMinutos(29), mensagem: "Sucesso.", resultado: { novos: [I3] } },
+    { id: T2, numero: 8, tipo: "unidade", pdv_id: 5231, iccid: I1, iccid_final: null, quantidade: 1, motivo: null, situacao: "registrada",
+      pedida_em: haMinutos(1), concluida_em: null, mensagem: null, resultado: {} },
+  ];
+
+  it("o dono vê o formulário, com as lojas e os PDVs ativos como destino, e os pedidos com a situação e o que chegou", async () => {
+    cenario.tabelas = { ...cenario.tabelas, connect_transferencias_chips: PEDIDOS };
+    const t = await abrir();
+    emOrdem(t, "Transferir chips", "Livres no estoque geral (última leitura): 470 físicos · 223 eSIM", "Pedir a transferência");
+    emOrdem(t, "Água Verde (PDV 5231)", "Butiatuvinha (PDV 5221)", "Revenda (fictícia) (PDV 5250)");
+    emOrdem(t, "Nº 7", "Confirmada", "1 × eSIM por quantidade → Butiatuvinha (PDV 5221)", "Sucesso.", "Chegaram no PDV: …000037");
+    emOrdem(t, "Nº 8", "Na fila", "1 × Um chip físico → Água Verde (PDV 5231)", "Cancelar o pedido");
+    expect(t.match(/Cancelar o pedido/g)).toHaveLength(1);
+  });
+
+  it("o administrador vê os pedidos, sem o formulário nem o cancelamento; quem só opera, nada disso", async () => {
+    cenario.tabelas = { ...cenario.tabelas, connect_transferencias_chips: PEDIDOS };
+    cenario.permissoes = new Set(["integracoes.gerir"]);
+    const adm = await abrir();
+    expect(adm).toContain("Transferências pedidas");
+    expect(adm).not.toContain("Pedir a transferência");
+    expect(adm).not.toContain("Cancelar o pedido");
+    cenario.permissoes = new Set(["connect.operar", "connect.gerir"]);
+    cenario.tabelas = { ...cenario.tabelas, connect_leituras_nogle: [], connect_transferencias_chips: [] };
+    const gerente = await abrir();
+    expect(gerente).not.toContain("Transferir chips");
+    expect(gerente).not.toContain("Transferências pedidas");
+  });
+
+  it("os avisos do pedido e do cancelamento", async () => {
+    expect(await abrir({ ok: "transferencia", numero: "9" })).toContain("Pedido nº 9 registrado: o servidor envia à Nogle em até 1 minuto");
+    expect(await abrir({ ok: "cancelada" })).toContain("Pedido cancelado: fica na auditoria.");
+    expect(await abrir({ erro_transferencia: "sem_estoque" })).toContain("Não há chips livres bastantes no estoque geral da Ora");
+    expect(await abrir({ erro_transferencia: "qualquer" })).toContain("Não foi possível concluir agora.");
+  });
+
+  it("as ações: cada tipo vai ao banco só com os seus campos; o erro vira a mensagem; o cancelamento pede o motivo", async () => {
+    const enviar = (acao: (d: FormData) => Promise<unknown>, campos: Record<string, string>) => {
+      const dados = new FormData();
+      for (const [k, v] of Object.entries(campos)) dados.set(k, v);
+      return acao(dados);
+    };
+    const CHAVE = "00000000-0000-4000-9000-0000000000c1";
+    cenario.rpc = [];
+    await expect(enviar(pedirTransferencia, { tipo: "esim", pdv: "5221", quantidade: "2", iccid: I1, chave: CHAVE })).rejects.toThrow("redirecionou para /connect/chips?ok=transferencia");
+    await expect(enviar(pedirTransferencia, { tipo: "lote", pdv: "5250", iccid: I1, iccid_final: I2, motivo: "Revenda", chave: CHAVE })).rejects.toThrow("ok=transferencia");
+    expect(cenario.rpc).toEqual([
+      { nome: "connect_transferir_chips", argumentos: { p_tipo: "esim", p_pdv: 5221, p_chave: CHAVE, p_quantidade: 2 } },
+      { nome: "connect_transferir_chips", argumentos: { p_tipo: "lote", p_pdv: 5250, p_chave: CHAVE, p_iccid: I1, p_iccid_final: I2, p_motivo: "Revenda" } },
+    ]);
+    cenario.erroDaRpc = { code: "OR052" };
+    await expect(enviar(pedirTransferencia, { tipo: "esim", pdv: "5221", quantidade: "500", chave: CHAVE })).rejects.toThrow("redirecionou para /connect/chips?erro_transferencia=sem_estoque");
+    cenario.erroDaRpc = null;
+    cenario.rpc = [];
+    await expect(enviar(pedirTransferencia, { tipo: "esim", pdv: "5221", quantidade: "0", chave: CHAVE })).rejects.toThrow("erro_transferencia=dados");
+    await expect(enviar(cancelarTransferencia, { transferencia: T2, motivo: "x" })).rejects.toThrow("erro_transferencia=motivo");
+    expect(cenario.rpc).toEqual([]);
+    await expect(enviar(cancelarTransferencia, { transferencia: T2, motivo: " Pedido errado " })).rejects.toThrow("redirecionou para /connect/chips?ok=cancelada");
+    expect(cenario.rpc).toEqual([{ nome: "connect_cancelar_transferencia", argumentos: { p_transferencia: T2, p_motivo: "Pedido errado" } }]);
   });
 });
