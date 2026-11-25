@@ -1427,6 +1427,21 @@
       "pedido_em": "2026-11-25",
       "resposta": null,
       "respondido_em": null
+    },
+    {
+      "lote": "CONNECT-o",
+      "roteiro": "docs/aceite/CONNECT-o.md",
+      "requisitos": [
+        "ORA-CONNECT-006",
+        "ORA-CONNECT-007",
+        "ORA-CONNECT-009"
+      ],
+      "entrega": "em Ora Connect → Carteira e relatórios, a aba da demonstração: o saldo, as saídas, as entradas e as recargas programadas em cartões, o extrato, as portabilidades, as listas da rede, a produção por vendedor e a conciliação",
+      "commit": null,
+      "publicado_em": null,
+      "pedido_em": "2026-11-25",
+      "resposta": null,
+      "respondido_em": null
     }
   ]
 }

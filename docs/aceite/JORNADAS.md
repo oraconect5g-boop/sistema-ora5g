@@ -15,7 +15,7 @@ Em vez de responder roteiro por roteiro, percorra **uma jornada por vez**: o cam
 | [J07 — Devolução e troca](#j07) | 2 | 0 | 2 | 4 (1 / 3 / 0) |
 | [J08 — Caixa e financeiro](#j08) | 14 | 0 | 14 | 25 (10 / 15 / 0) |
 | [J09 — Site e retirada na loja](#j09) | 14 | 0 | 14 | 11 (2 / 9 / 0) |
-| [J10 — Ora Connect](#j10) | 12 | 0 | 12 | 9 (3 / 6 / 0) |
+| [J10 — Ora Connect](#j10) | 13 | 0 | 13 | 9 (3 / 6 / 0) |
 | [J11 — Financeiras (PayJoy e Aiva)](#j11) | 5 | 0 | 5 | 10 (5 / 5 / 0) |
 | [J12 — Marketplaces e Meta](#j12) | 7 | 0 | 7 | 19 (7 / 9 / 3) |
 | [J13 — Assistência](#j13) | 1 | 0 | 1 | 15 (12 / 3 / 0) |
@@ -205,6 +205,7 @@ Em vez de responder roteiro por roteiro, percorra **uma jornada por vez**: o cam
 | CONNECT-l | na Ora Connect, o Pix da Nogle como o padrão da ativação e da recarga, com o QR Code na tela: a loja paga quando o cliente já pagou no caixa, ou o cliente paga direto à Nogle | [CONNECT-l.md](CONNECT-l.md) | a publicar | — |
 | CONNECT-m | a Ora Connect no formato da demonstração: as 9 abas no topo, a Operações do dia com os cartões e os filtros, o Ativar chip em passos com os planos em cartões, a Recarga, a Portabilidade e a Integração Nogle em abas próprias | [CONNECT-m.md](CONNECT-m.md) | a publicar | — |
 | CONNECT-n | em Ora Connect → Ativar chip, o assistente da demonstração: o chip, o cliente, o plano e o DDD, o pagamento à Nogle e a conferência antes de registrar, um passo por vez | [CONNECT-n.md](CONNECT-n.md) | a publicar | — |
+| CONNECT-o | em Ora Connect → Carteira e relatórios, a aba da demonstração: o saldo, as saídas, as entradas e as recargas programadas em cartões, o extrato, as portabilidades, as listas da rede, a produção por vendedor e a conciliação | [CONNECT-o.md](CONNECT-o.md) | a publicar | — |
 
 ## J11
 
