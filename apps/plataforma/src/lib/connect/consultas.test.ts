@@ -75,3 +75,28 @@ describe("cada resposta em português (CONNECT-g)", () => {
     expect(bytes(1536 * 1024 * 1024)).toBe("1,5 GB");
   });
 });
+
+describe("as consultas novas em português (CONNECT-h)", () => {
+  it("as cobranças em aberto, as ligações, os SMS, a existência, o plano pago e a situação do chip", () => {
+    expect(linhasDaResposta(respondida("linha_cobrancas", { cobrancas: [{ quando: "2026-11-20 10:00", valor_centavos: 5490, forma: "LINK" }] }))).toEqual([
+      "20/11/2026 às 10:00 · R$ 54,90 · LINK", "Cobrança em aberto não obriga o cliente a pagar: é o link que ele pediu e não pagou.",
+    ]);
+    expect(linhasDaResposta(respondida("linha_cobrancas", { cobrancas: [] }))).toEqual(["Nenhuma cobrança de recarga em aberto."]);
+    expect(linhasDaResposta(respondida("linha_consumo_voz", { total: 600, dias: [{ dia: "2026-11-01", quantidade: 600 }], unidade: "segundos" })))
+      .toEqual(["No mês: 10 min", "01/11/2026: 10 min"]);
+    expect(linhasDaResposta(respondida("linha_consumo_sms", { total: 0, dias: [], unidade: "sms" }))).toEqual(["Nenhum SMS neste mês."]);
+    expect(linhasDaResposta(respondida("linha_existe", { existe: false, explicacao: "Linha não encontrada." }))).toEqual(["Não: Linha não encontrada."]);
+    expect(linhasDaResposta(respondida("linha_existe", { existe: true, explicacao: null }))).toEqual(["Sim: o número existe na Nogle."]);
+    expect(linhasDaResposta(respondida("iccid_plano_pago", { plano_pago: "1718" }), (c) => (c === "1718" ? "10 GB" : undefined)))
+      .toEqual(["O chip já tem plano pago: 10 GB."]);
+    expect(linhasDaResposta(respondida("iccid_plano_pago", { plano_pago: null }))).toEqual(["O chip não tem plano pago."]);
+    expect(linhasDaResposta(respondida("iccid_situacao", { codigo: 11, situacao: "Chip já ativo", orientacao: "Já tem linha: consulte a linha em vez de ativar de novo.", linha: "41999998888" })))
+      .toEqual(["Chip já ativo · linha (41) 99999-8888", "Já tem linha: consulte a linha em vez de ativar de novo."]);
+  });
+
+  it("o formulário do relatório do cliente pede um CPF ou CNPJ válido", () => {
+    expect(lerPedidoDeConsulta(formulario({ tipo: "cliente_completo", parametro: "123.456.789-09", chave: "k" })))
+      .toEqual({ ok: true, pedido: { tipo: "cliente_completo", parametro: "12345678909", chave: "k" } });
+    expect(lerPedidoDeConsulta(formulario({ tipo: "cliente_completo", parametro: "41999998888", chave: "k" }))).toEqual({ ok: false, erro: "documento" });
+  });
+});

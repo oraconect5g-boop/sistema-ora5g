@@ -83,3 +83,82 @@ describe("as consultas que só leem, no worker (CONNECT-g)", () => {
     expect(s.pedidos).toEqual([]);
   });
 });
+
+// CONNECT-h (25/11/2026): os relatórios do número e do cliente, montados em partes pelo worker.
+describe("os relatórios do número e do cliente, no worker (CONNECT-h)", () => {
+  const ICCID_DA_LINHA = "8955170110000000016";
+  const DETALHES = ok({ retorno: true, mensagem: "", detalhes: {
+    linha: LINHA, iccid: ICCID_DA_LINHA, titular: "Cliente Fictício", documento_titular: "12345678909", status: "ATIVO", plano: "7 GB",
+    portin: "SIM", portabilidade_linha_doadora: "51911112222", esim_pdf: "https://pdf.invalid/x", bloqueada: "NÃO",
+  } });
+
+  it("o número: os detalhes primeiro, depois cada parte; a parte que falha fica marcada sem derrubar o relatório", async () => {
+    const s = simulados([[{ consulta_id: "r1", tipo: "linha_completa", parametro: LINHA }]], {
+      "/linhas/detalhes": DETALHES,
+      "/linhas/saldo": ok({ retorno: true, mensagem: "", data: { restante_dados: 100, restante_minutos: 10, restante_sms: 5 } }),
+      "/linhas/historico": ok({ retorno: true, mensagem: "", historico: [] }),
+      "/linhas/cobrancasGeradas": { tipo: "resposta", status: 502, corpo: null },
+      "/linhas/consumo/dados": ok({ retorno: true, mensagem: "", data: [] }),
+      "/linhas/consumo/voz": ok({ retorno: true, mensagem: "", data: [{ qtUsado: 60, dtConsumo: "2026-11-01T03:00:00.000Z" }] }),
+      "/linhas/consumo/sms": ok({ retorno: true, mensagem: "", data: [] }),
+      "/portabilidade/status": ok({ retorno: true, mensagem: "", status: { status: "Sucesso", data_sucesso: "2026-11-10" } }),
+      "/ativacao/detalhar": ok({ retorno: true, mensagem: "", info: { data_ativacao: "2026-11-01 10:00:00.000", plano_nome: "7 GB", numero_ativado: LINHA, forma_pagamento: "SALDO" } }),
+      "/relatorios/transacoes": ok({ data: [{ data_ativacao: "2026-11-01 10:00:00.000", tipo_transacao: "ATIVAÇÃO", plano_atual: "7 GB", plano_valor: "44.90", forma_pagto: "SALDO" }] }),
+    });
+    expect(await responderConsultas(s.banco, s.nogle, { ...s.opcoes, agora: () => new Date("2026-11-25T15:00:00Z") })).toEqual({ respondidas: 1, nao_encontradas: 0, falhas: 0 });
+    expect(s.pedidos.map((p) => `${p.metodo} ${p.caminho}`)).toEqual([
+      "GET /linhas/detalhes", "GET /linhas/saldo", "GET /linhas/historico", "GET /linhas/cobrancasGeradas", "GET /linhas/consumo/dados",
+      "GET /linhas/consumo/voz", "GET /linhas/consumo/sms", "GET /portabilidade/status", "GET /ativacao/detalhar", "GET /relatorios/transacoes",
+    ]);
+    expect(s.pedidos.find((p) => p.caminho === "/portabilidade/status")?.corpo).toEqual({ linha: LINHA, linha_doadora: "51911112222" });
+    const [id, r] = s.gravadas[0] ?? [];
+    expect(id).toBe("r1");
+    const partes = (r?.resposta as { partes: Record<string, RespostaDaConsulta> }).partes;
+    expect(Object.fromEntries(Object.entries(partes).map(([k, v]) => [k, v.situacao]))).toEqual({
+      detalhes: "respondida", linha_saldo: "respondida", linha_historico: "respondida", linha_cobrancas: "falhou", linha_consumo: "respondida",
+      linha_consumo_voz: "respondida", linha_consumo_sms: "respondida", portabilidade: "respondida", ativacao: "respondida", transacoes: "respondida",
+    });
+    expect(partes.detalhes?.resposta).toMatchObject({ titular: "Cliente Fictício", documento: "•••.•••.789-09", portada: true });
+    expect(JSON.stringify(r)).not.toMatch(/12345678909|pdf\.invalid/);
+  });
+
+  it("o número que a Nogle não acha: o relatório para nos detalhes, com o aviso dela", async () => {
+    const s = simulados([[{ consulta_id: "r2", tipo: "linha_completa", parametro: LINHA }]], {
+      "/linhas/detalhes": ok({ retorno: false, mensagem: "Linha não encontrada.", detalhes: [] }),
+    });
+    expect(await responderConsultas(s.banco, s.nogle, s.opcoes)).toEqual({ respondidas: 0, nao_encontradas: 1, falhas: 0 });
+    expect(s.pedidos).toHaveLength(1);
+    expect(s.gravadas).toEqual([["r2", { situacao: "nao_encontrada", mensagem: "Linha não encontrada." }]]);
+  });
+
+  it("o cliente: o cadastro, as linhas e a situação de cada uma (as ativas primeiro); sem o cadastro, para aí", async () => {
+    const CPF = "12345678909";
+    const s = simulados([[{ consulta_id: "c1", tipo: "cliente_completo", parametro: CPF }, { consulta_id: "c2", tipo: "cliente_completo", parametro: "11122233344" }]], {
+      "/cliente/buscar": { tipo: "resposta", status: 200, corpo: null },
+      "/cliente/linhas": ok({ retorno: true, mensagem: "", linhas: [{ linha: "51988887777", iccid: "8955", status: "CANCELADA" }, { linha: LINHA, iccid: "8955", status: "ATIVA" },
+        { linha: "51011111111", iccid: "8955", status: "ATIVA" }] }),
+      "/linhas/detalhes": DETALHES,
+    });
+    let consulta = 0;
+    const nogle = {
+      chamar: async (p: PedidoNogle) => {
+        if (p.caminho === "/cliente/buscar") {
+          consulta += 1;
+          // O primeiro cliente existe; o segundo, não.
+          return consulta === 1
+            ? ok({ retorno: true, mensagem: "", cliente: { nome: "Cliente Fictício", cpf: CPF, endereco: { rua: "Rua Fictícia", municipio: "Curitiba", uf: "PR" } } })
+            : ok({ retorno: false, mensagem: "Cliente não encontrado", cliente: [] });
+        }
+        return s.nogle.chamar(p);
+      },
+    };
+    expect(await responderConsultas(s.banco, nogle, s.opcoes)).toEqual({ respondidas: 1, nao_encontradas: 1, falhas: 0 });
+    // A linha ativa é consultada primeiro; a cancelada também entra; o número fora da forma de celular (o do exemplo oficial) não.
+    expect(s.pedidos.filter((p) => p.caminho === "/linhas/detalhes").map((p) => p.corpo.numero)).toEqual([LINHA, "51988887777"]);
+    const partes = (s.gravadas[0]?.[1].resposta as { partes: Record<string, unknown> }).partes;
+    expect(partes.cliente).toMatchObject({ situacao: "respondida", resposta: { nome: "Cliente Fictício", documento: "•••.•••.789-09", cidade: "Curitiba" } });
+    expect(Object.keys(partes.situacoes as object)).toEqual([LINHA, "51988887777"]);
+    expect(JSON.stringify(s.gravadas[0])).not.toMatch(/Rua Fictícia|12345678909/);
+    expect(s.gravadas[1]).toEqual(["c2", { situacao: "nao_encontrada", mensagem: "Cliente não encontrado" }]);
+  });
+});

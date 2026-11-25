@@ -109,3 +109,8 @@ Migrations `20261109150526_correcoes_acesso_lote1` (#56) e `20261109190400_conne
 - **O tempo:** o `--consultas` roda a cada minuto por uns 50 segundos, olhando a fila a cada 2 segundos, com a trava própria (não segura a leitura do estoque, as transferências nem as operações); a tela se atualiza sozinha enquanto espera.
 - **Os dados pessoais:** o worker guarda só os campos que a tela mostra (o documento do titular mascarado; nunca o PDF do eSIM); só quem pediu vê a resposta, que é apagada depois de 24 horas (fica o registro de quem consultou o quê e quando).
 - **A falha:** a consulta que a Nogle não respondeu falha com o aviso, e a pessoa pede de novo (só lê: repetir não faz mal, mas não se repete sozinha).
+
+## Adendo de 25/11/2026: os relatórios do número e do cliente (lote CONNECT-h)
+
+- **Em partes:** o worker monta cada relatório chamando as consultas simples (e o relatório oficial de transações filtrado pela linha); os detalhes da linha, ou o cadastro do cliente, vêm primeiro e, sem eles, o relatório para aí. A parte que falha fica marcada, sem derrubar as outras.
+- **Os dados pessoais:** como no CONNECT-g (só quem pediu vê, a resposta sai em 24 horas), e o CPF ou o CNPJ do relatório do cliente sai junto (fica o mascarado, para a tela). Nada de link ou código de pagamento, termo, rua, documento inteiro ou custo na tela da loja.

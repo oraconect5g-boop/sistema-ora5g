@@ -10,6 +10,7 @@ import {
   montarConsulta, montarPedido, montarPedidoDoRelatorio, PEDIDO_DO_ESTOQUE_DA_MVNO, PEDIDO_DOS_PDVS, pedidoDoEstoqueDoPdv, tipoDeChip,
   conferirTransferencia, lerRespostaDaTransferencia, pedidoDaTransferencia,
   documentoMascarado, lerRespostaDaConsulta, pedidoDaConsulta, TIPOS_DE_CONSULTA,
+  ehConsultaComposta, lerParteDoRelatorio, PARAMETRO_DA_CONSULTA, pedidoDaPortabilidade, pedidoDasLinhasDoCliente, pedidoDasTransacoesDaLinha, pedidoDoCliente,
   type ChipDaNogle, type OperacaoParaConsultar, type OperacaoParaEnviar, type TransferenciaParaEnviar,
 } from "./nogle";
 
@@ -402,11 +403,16 @@ describe("as consultas da Nogle que só leem (CONNECT-g)", () => {
 
   it("cada consulta pede a rota e os campos da coleção oficial (GET com o corpo); fora da forma, nada", () => {
     for (const tipo of TIPOS_DE_CONSULTA) {
-      const parametro = tipo.startsWith("linha_") ? LINHA : tipo.startsWith("iccid_") ? ICCID : null;
+      const pede = PARAMETRO_DA_CONSULTA[tipo];
+      const parametro = pede === "linha" ? LINHA : pede === "iccid" ? ICCID : pede === "documento" ? "12345678909" : null;
       const pedido = pedidoDaConsulta(tipo, parametro, AGORA);
-      expect(pedido?.metodo, tipo).toBe("GET");
+      // Os relatórios (CONNECT-h) não têm um pedido só: o worker monta em partes.
+      if (ehConsultaComposta(tipo)) {
+        expect(pedido, tipo).toBeNull();
+        continue;
+      }
       const documentada = rota(pedido?.caminho ?? "");
-      expect(documentada.request.method, tipo).toBe("GET");
+      expect(pedido?.metodo, tipo).toBe(documentada.request.method);
       const chaves = Object.keys(JSON.parse(documentada.request.body?.raw?.trim() || "{}") as object);
       expect(Object.keys(pedido?.corpo ?? {}).every((k) => chaves.includes(k)), `${tipo}: ${Object.keys(pedido?.corpo ?? {}).join(",")}`).toBe(true);
     }
@@ -428,14 +434,17 @@ describe("as consultas da Nogle que só leem (CONNECT-g)", () => {
       portada: false, recarga_automatica: false,
     } });
     const guardado = JSON.stringify(detalhes.resposta);
-    for (const fora of ["esim_pdf", "00000000000", "titular_apelido", "cor_app", "emoji", "id_linha", "Escritório"]) expect(guardado).not.toContain(fora);
+    for (const fora of ["esim_pdf", "00000000000", "titular_apelido", "cor_app", "emoji", "id_linha"]) expect(guardado).not.toContain(fora);
+    // CONNECT-h: o apelido que a Ora dá à linha (linha_apelido) entra no relatório do número.
+    expect(detalhes.resposta?.linha_apelido).toBe("Escritório");
     expect(lerRespostaDaConsulta("linha_detalhes", 200, exemplo("/linhas/detalhes", 1))).toEqual({ situacao: "nao_encontrada", mensagem: "Linha não encontrada." });
 
     expect(lerRespostaDaConsulta("linha_saldo", 200, exemplo("/linhas/saldo")).resposta)
       .toEqual({ dados_mb: 2395.226721, minutos: 60, minutos_ilimitados: false, sms: 60 });
     const historico = lerRespostaDaConsulta("linha_historico", 200, exemplo("/linhas/historico"));
+    // CONNECT-h: o valor é o "valor" (o pago); o "valor_pago" é o que a Ora pagou à Nogle, e fica fora (o primeiro exemplo só traz ele).
     expect(historico.resposta).toEqual({ recargas: [
-      { quando: "2022-06-15 11:59", plano: "7 GB", valor_centavos: 4490, forma: "LINK" },
+      { quando: "2022-06-15 11:59", plano: "7 GB", valor_centavos: null, forma: "LINK" },
       { quando: "2022-05-12 19:21", plano: "7 GB", valor_centavos: 4490, forma: "LINK" },
     ] });
     expect(JSON.stringify(historico)).not.toContain("solicitado_por");
@@ -463,5 +472,62 @@ describe("as consultas da Nogle que só leem (CONNECT-g)", () => {
     expect(documentoMascarado("12345678909")).toBe("•••.•••.789-09");
     expect(documentoMascarado("11222333000181")).toBe("••.•••.•••/0001-81");
     expect(documentoMascarado("123")).toBeNull();
+  });
+});
+
+// CONNECT-h (25/11/2026): as consultas que faltavam e as partes dos relatórios do número e do cliente, com os exemplos oficiais.
+describe("a consulta completa: as consultas novas e as partes dos relatórios (CONNECT-h)", () => {
+  const AGORA = new Date("2026-11-25T15:00:00Z");
+  const LINHA = "51900000000";
+  const chavesDocumentadas = (caminho: string) => Object.keys(JSON.parse(rota(caminho).request.body?.raw?.trim() || "{}") as object);
+
+  it("as consultas novas leem os exemplos oficiais, sem os links de pagamento", () => {
+    const cobrancas = lerRespostaDaConsulta("linha_cobrancas", 200, exemplo("/linhas/cobrancasGeradas"));
+    expect(cobrancas.resposta).toEqual({ cobrancas: [{ quando: "2024-01-10 11:08", valor_centavos: 3990, forma: "LINK" }] });
+    expect(JSON.stringify(cobrancas)).not.toContain("link_url");
+    expect(lerRespostaDaConsulta("linha_consumo_voz", 200, exemplo("/linhas/consumo/voz")).resposta).toEqual({
+      dias: [{ dia: "2022-01-01", quantidade: 30 }, { dia: "2022-01-02", quantidade: 10 }], total: 40, unidade: "segundos",
+    });
+    expect(lerRespostaDaConsulta("linha_consumo_sms", 200, exemplo("/linhas/consumo/sms")).resposta).toMatchObject({ total: 1, unidade: "sms" });
+    // A existência vem com "retorno": false quando a linha não existe: mesmo assim é uma resposta.
+    expect(lerRespostaDaConsulta("linha_existe", 200, exemplo("/linhas/verificaExistencia")))
+      .toEqual({ situacao: "respondida", mensagem: "", resposta: { existe: false, explicacao: "Linha não encontrada." } });
+    expect(lerRespostaDaConsulta("iccid_plano_pago", 200, exemplo("/ativacao/verificaPlanoPago")).resposta).toEqual({ plano_pago: "99999" });
+    expect(lerRespostaDaConsulta("iccid_plano_pago", 200, { retorno: true, mensagem: "", plano: null }).resposta).toEqual({ plano_pago: null });
+    expect(lerRespostaDaConsulta("iccid_situacao", 200, exemplo("/ativacao/validaIccid")).resposta)
+      .toEqual({ codigo: 88, situacao: "Chip virgem", orientacao: "Pode ativar.", linha: null });
+  });
+
+  it("as partes do relatório do número: a portabilidade (sem o termo) e as transações da linha (sem o cliente)", () => {
+    expect(pedidoDaPortabilidade(LINHA, "51911111111")).toEqual({ metodo: "GET", caminho: "/portabilidade/status", corpo: { linha: LINHA, linha_doadora: "51911111111" } });
+    expect(Object.keys(pedidoDaPortabilidade(LINHA, "51911111111").corpo).every((k) => chavesDocumentadas("/portabilidade/status").includes(k))).toBe(true);
+    const transacoes = pedidoDasTransacoesDaLinha(LINHA, AGORA);
+    expect(transacoes).toEqual({ metodo: "GET", caminho: "/relatorios/transacoes", corpo: { data_de: "2025-11-25", data_ate: "2026-11-25", page: 1, linha: LINHA } });
+    expect(Object.keys(transacoes.corpo).every((k) => chavesDocumentadas("/relatorios/transacoes").includes(k))).toBe(true);
+    // O exemplo oficial do status tem JSON quebrado (faltam os dois-pontos no termo): o corpo aqui é o mesmo, consertado.
+    const portabilidade = lerParteDoRelatorio("portabilidade", 200, { retorno: true, mensagem: "", status: {
+      status: "Sucesso", data_aceite: "2022-06-02 15:49:08.520", data_sucesso: "2022-06-08", data_agendamento: "2022-06-07 22:00:00.000",
+      termo: "link_do_termo", termo_assinado: "link_do_termo_assinado_pelo_cliente" } });
+    expect(portabilidade.resposta).toEqual({ status: "Sucesso", data_aceite: "2022-06-02 15:49", data_agendamento: "2022-06-07 22:00", data_sucesso: "2022-06-08" });
+    expect(JSON.stringify(portabilidade)).not.toContain("termo");
+    const lidas = lerParteDoRelatorio("transacoes", 200, exemplo("/relatorios/transacoes"));
+    expect(lidas.resposta).toEqual({ transacoes: [{ quando: "2023-05-30 15:20", tipo: null, plano: "7 GB", valor_centavos: 4490, forma: "PIX" }] });
+    expect(JSON.stringify(lidas)).not.toContain("Nome do Cliente");
+  });
+
+  it("as partes do relatório do cliente: o cadastro (o documento mascarado, sem a rua) e as linhas dele", () => {
+    expect(pedidoDoCliente("12345678909")).toEqual({ metodo: "GET", caminho: "/cliente/buscar", corpo: { documento: "12345678909" } });
+    expect(pedidoDasLinhasDoCliente("12345678909")).toEqual({ metodo: "GET", caminho: "/cliente/linhas", corpo: { documento: "12345678909" } });
+    const cliente = lerParteDoRelatorio("cliente", 200, exemplo("/cliente/buscar"));
+    expect(cliente.resposta).toEqual({
+      nome: "Fulano da Silva", apelido: null, documento: "•••.•••.000-00", nascimento: "1990-10-10", email: "fulano@email.com",
+      telefone: "51999999999", cidade: "São Paulo", uf: "SP", cliente_desde: "2022-01-01",
+    });
+    expect(JSON.stringify(cliente)).not.toMatch(/Rua Exemplo|00000000000/);
+    expect(lerParteDoRelatorio("cliente", 200, exemplo("/cliente/buscar", 1))).toEqual({ situacao: "nao_encontrada", mensagem: "Cliente não encontrado" });
+    expect(lerParteDoRelatorio("linhas_do_cliente", 200, exemplo("/cliente/linhas")).resposta).toEqual({ linhas: [
+      { linha: "51900000000", iccid: "8955", status: "ATIVA" }, { linha: "51011111111", iccid: "8955", status: "CANCELADA" },
+    ] });
+    expect(lerParteDoRelatorio("linhas_do_cliente", 502, null)).toMatchObject({ situacao: "falhou" });
   });
 });

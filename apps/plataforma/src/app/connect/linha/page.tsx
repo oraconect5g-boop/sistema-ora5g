@@ -1,6 +1,6 @@
 import { randomUUID } from "node:crypto";
 
-import { ArrowLeft, History, Search, Wallet } from "lucide-react";
+import { ArrowLeft, FileText, History, Search, Wallet } from "lucide-react";
 import type { Metadata } from "next";
 import Link from "next/link";
 
@@ -9,8 +9,10 @@ import { MoldeReal } from "../../../componentes/MoldeReal";
 import { Aviso, Botao, Cartao, Selo, TituloPagina } from "../../../componentes/ui";
 import { permite } from "../../../lib/acesso/molde";
 import { FalhaDoServico, obterSessao } from "../../../lib/acesso/sessao";
+import { ehConsultaComposta, ehTipoDeConsulta, PARAMETRO_DA_CONSULTA } from "@ora5g/dominio/nogle";
+
 import {
-  CONSULTAS_DA_LOJA, ehErroDaConsulta, ERROS_DA_CONSULTA, esperandoResposta, linhasDaResposta, NOMES_DAS_CONSULTAS, SITUACOES_DA_CONSULTA,
+  CONSULTAS_DA_LOJA, ehErroDaConsulta, ERROS_DA_CONSULTA, esperandoResposta, linhasDaResposta, NOMES_DAS_CONSULTAS, PEDE_O_QUE, SITUACOES_DA_CONSULTA,
   tituloDaConsulta, type ConsultaDaTela,
 } from "../../../lib/connect/consultas";
 import { textoDoParametro, type ValorDeParametro } from "../../../lib/parametros";
@@ -36,17 +38,23 @@ export default async function ConsultarLinha({ searchParams }: { searchParams: P
   if (!opera && !gere) {
     return <MoldeReal sessao={sessao}>{voltar}<Aviso tom="aviso" className="mt-4">Consultar linha é de quem opera a Ora Connect.</Aviso></MoldeReal>;
   }
-  const lidas = await sessao.supabase.from("connect_consultas")
-    .select("id, tipo, parametro, situacao, resposta, mensagem, pedida_em, respondida_em, resposta_apagada_em")
-    .order("pedida_em", { ascending: false }).limit(15);
+  const [lidas, planos] = await Promise.all([
+    sessao.supabase.from("connect_consultas")
+      .select("id, tipo, parametro, parametro_mascarado, situacao, resposta, mensagem, pedida_em, respondida_em, resposta_apagada_em")
+      .order("pedida_em", { ascending: false }).limit(15),
+    // O nome de cada plano da lista oficial (o plano pago do chip vem só com o código).
+    sessao.supabase.from("connect_referencias").select("codigo, nome").eq("tipo", "plano").limit(200),
+  ]);
   if (lidas.error) throw new FalhaDoServico("connect_consultas");
+  if (planos.error) throw new FalhaDoServico("connect_referencias");
   const consultas = lidas.data as unknown as ConsultaDaTela[];
+  const nomeDoPlano = (codigo: string) => planos.data.find((p) => p.codigo === codigo)?.nome;
   const erro = textoDoParametro(parametros.erro);
 
   return (
     <MoldeReal sessao={sessao}>
       {voltar}
-      <TituloPagina titulo="Consultar linha" subtitulo="Na Nogle, pelo número com DDD ou pelo ICCID do chip; a resposta chega em poucos segundos" />
+      <TituloPagina titulo="Consultar linha" subtitulo="Na Nogle, pelo número com DDD, pelo ICCID do chip ou pelo CPF/CNPJ do cliente; a resposta chega em poucos segundos" />
       {erro && <Aviso tom="perigo" className="mt-4">{ehErroDaConsulta(erro) ? ERROS_DA_CONSULTA[erro] : ERROS_DA_CONSULTA.falha}</Aviso>}
       {consultas.some(esperandoResposta) && <AtualizarEnquantoEspera aviso="Consultando a Nogle…" />}
 
@@ -54,13 +62,13 @@ export default async function ConsultarLinha({ searchParams }: { searchParams: P
         <Cartao className="mt-4" titulo="O que consultar" icone={Search}>
           <form action={consultar} className="grid gap-3 sm:grid-cols-2">
             <input type="hidden" name="chave" value={randomUUID()} />
-            <label className="text-sm font-medium">Número com DDD ou ICCID do chip
+            <label className="text-sm font-medium">Número com DDD, ICCID do chip ou CPF/CNPJ do cliente
               <input name="parametro" inputMode="numeric" autoComplete="off" required maxLength={30} className={campo} />
             </label>
             <label className="text-sm font-medium">Consulta
-              <select name="tipo" defaultValue="linha_detalhes" className={campo}>
+              <select name="tipo" defaultValue="linha_completa" className={campo}>
                 {CONSULTAS_DA_LOJA.map((tipo) => (
-                  <option key={tipo} value={tipo}>{`${NOMES_DAS_CONSULTAS[tipo]} (${tipo.startsWith("iccid_") ? "pelo ICCID" : "pelo número"})`}</option>
+                  <option key={tipo} value={tipo}>{`${NOMES_DAS_CONSULTAS[tipo]} (${PEDE_O_QUE[PARAMETRO_DA_CONSULTA[tipo] ?? "linha"]})`}</option>
                 ))}
               </select>
             </label>
@@ -90,7 +98,8 @@ export default async function ConsultarLinha({ searchParams }: { searchParams: P
           <ul className="divide-y divide-borda text-sm" aria-label="Minhas consultas">
             {consultas.map((c) => {
               const s = SITUACOES_DA_CONSULTA[c.situacao] ?? { rotulo: c.situacao, tom: "neutro" as const };
-              const linhas = linhasDaResposta(c);
+              const linhas = linhasDaResposta(c, nomeDoPlano);
+              const relatorio = ehTipoDeConsulta(c.tipo) && ehConsultaComposta(c.tipo) && c.situacao === "respondida" && c.resposta !== null;
               return (
                 <li key={c.id} className="py-3">
                   <p className="flex flex-wrap items-center gap-2">
@@ -103,6 +112,11 @@ export default async function ConsultarLinha({ searchParams }: { searchParams: P
                     <ul className="mt-1 space-y-0.5 text-sm" aria-label="Resposta">
                       {linhas.map((l, i) => <li key={i} className="numeros">{l}</li>)}
                     </ul>
+                  )}
+                  {relatorio && (
+                    <Link href={`/connect/linha/${c.id}`} className="mt-1 inline-flex min-h-11 items-center gap-1 text-sm font-semibold text-acao">
+                      <FileText className="size-4" aria-hidden />Abrir o relatório
+                    </Link>
                   )}
                 </li>
               );

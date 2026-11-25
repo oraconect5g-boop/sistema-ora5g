@@ -7,6 +7,7 @@ import { beforeEach, describe, expect, it, vi } from "vitest";
 const cenario = vi.hoisted(() => ({
   permissoes: new Set<string>(),
   consultas: [] as Record<string, unknown>[],
+  planos: [] as Record<string, unknown>[],
   rpc: [] as { nome: string; argumentos: unknown }[],
   erroDaRpc: null as null | { code: string },
 }));
@@ -21,6 +22,8 @@ class Consulta {
   select() { return this; }
   order() { return this; }
   limit(n: number) { this.linhas = this.linhas.slice(0, n); return this; }
+  eq(campo: string, valor: unknown) { this.linhas = this.linhas.filter((l) => l[campo] === undefined || l[campo] === valor); return this; }
+  async maybeSingle() { return { data: this.linhas[0] ?? null, error: null }; }
   then(resolver: (r: { data: unknown; error: null }) => unknown) { return Promise.resolve({ data: this.linhas, error: null }).then(resolver); }
 }
 const sessaoFicticia = {
@@ -28,7 +31,7 @@ const sessaoFicticia = {
   situacao: { usuario_ativo: true, sessao_no_turno: true, unidade_id: "loja", unidade_nome: "Santa Cândida (fictícia)", turno_termina_em: "2026-11-26T03:00:00Z" },
   get molde() { return { permissoes: cenario.permissoes, nome: "Pessoa (fictícia)", vinculos: [], pendencias: { aprovacoes: 0, notas: 0 } }; },
   supabase: {
-    from: () => new Consulta(cenario.consultas),
+    from: (tabela: string) => new Consulta(tabela === "connect_referencias" ? cenario.planos : cenario.consultas),
     rpc: async (nome: string, argumentos: unknown) => { cenario.rpc.push({ nome, argumentos }); return { data: null, error: cenario.erroDaRpc }; },
   },
 };
@@ -37,6 +40,7 @@ vi.mock("../../../lib/acesso/sessao", () => ({
   obterSessao: async () => sessaoFicticia,
 }));
 
+import RelatorioDaConsulta from "./[id]/page";
 import { consultar } from "./acoes";
 import ConsultarLinha from "./page";
 
@@ -59,6 +63,7 @@ const CONSULTA = { mensagem: null, pedida_em: "2026-11-25T13:00:00Z", respondida
 beforeEach(() => {
   cenario.permissoes = new Set(["connect.operar"]);
   cenario.consultas = [];
+  cenario.planos = [{ codigo: "1718", nome: "10 GB", tipo: "plano" }];
   cenario.rpc = [];
   cenario.erroDaRpc = null;
 });
@@ -66,8 +71,11 @@ beforeEach(() => {
 describe("a tela Consultar linha (CONNECT-g)", () => {
   it("quem opera a loja: o formulário com as consultas da loja, sem a carteira; a lista diz que não há nada", async () => {
     const t = await abrir();
-    emOrdem(t, "Consultar linha", "O que consultar", "Número com DDD ou ICCID do chip", "Situação da linha (pelo número)", "Saldo da linha (pelo número)",
-      "Recargas da linha (pelo número)", "Consumo de internet no mês (pelo número)", "Número do chip (pelo ICCID)", "Ativação do chip (pelo ICCID)", "Consultar");
+    emOrdem(t, "Consultar linha", "O que consultar", "Número com DDD, ICCID do chip ou CPF/CNPJ do cliente", "Relatório completo do número (pelo número)",
+      "Situação da linha (pelo número)", "Saldo da linha (pelo número)", "Recargas da linha (pelo número)", "Cobranças em aberto da linha (pelo número)",
+      "Consumo de internet no mês (pelo número)", "Ligações no mês (pelo número)", "SMS no mês (pelo número)", "O número existe na Nogle? (pelo número)",
+      "Situação do chip (pelo ICCID)", "Número do chip (pelo ICCID)", "Ativação do chip (pelo ICCID)", "Plano pago do chip (pelo ICCID)",
+      "Relatório do cliente (pelo CPF ou CNPJ)", "Consultar");
     expect(t).toContain("Só consulta: nada muda na linha nem no chip.");
     expect(t).not.toContain("Carteira da Ora na Nogle");
     expect(t).toContain("Nenhuma consulta ainda.");
@@ -119,5 +127,59 @@ describe("a tela Consultar linha (CONNECT-g)", () => {
     expect(cenario.rpc).toEqual([]);
     cenario.erroDaRpc = { code: "OR056" };
     await expect(enviar({ tipo: "linha_saldo", parametro: "41999998888", chave: "k4" })).rejects.toThrow("redirecionou para /connect/linha?erro=limite");
+  });
+});
+
+// CONNECT-h (25/11/2026): os relatórios do número e do cliente na lista e na página do relatório.
+describe("os relatórios do número e do cliente (CONNECT-h)", () => {
+  const RELATORIO = { ...CONSULTA, id: "00000000-0000-4000-9000-0000000000e1", tipo: "linha_completa", parametro: "41999998888", situacao: "respondida",
+    resposta: { partes: {
+      detalhes: { situacao: "respondida", resposta: { linha: "41999998888", status: "ATIVO", plano: "10 GB", titular: "Cliente Fictício", documento: "•••.•••.789-09",
+        data_ativacao: "2026-11-01", data_fim_plano: "2026-12-01", bloqueada: false } },
+      linha_saldo: { situacao: "respondida", resposta: { dados_mb: 2048, minutos: 1000, minutos_ilimitados: true, sms: 50 } },
+      linha_cobrancas: { situacao: "falhou", mensagem: "A Nogle não respondeu agora: tente de novo em instantes." },
+      transacoes: { situacao: "respondida", resposta: { transacoes: [{ quando: "2026-11-01 10:00", tipo: "ATIVAÇÃO", plano: "10 GB", valor_centavos: 5490, forma: "SALDO" }] } },
+    } } };
+  const abrirRelatorio = async (id: string) => texto(await RelatorioDaConsulta({ params: Promise.resolve({ id }) } as never)).replace(/\s+/g, " ");
+
+  it("na lista: o resumo e o link do relatório; o do cliente aparece com o CPF mascarado", async () => {
+    cenario.consultas = [RELATORIO, { ...CONSULTA, id: "c9", tipo: "cliente_completo", parametro: "12345678909", parametro_mascarado: "•••.•••.789-09",
+      situacao: "respondida", resposta: { partes: { cliente: { situacao: "respondida", resposta: { nome: "Cliente Fictício" } },
+        linhas: { situacao: "respondida", resposta: { linhas: [{ linha: "41999998888", status: "ATIVA" }] } } } } }];
+    const t = await abrir();
+    emOrdem(t, "Relatório completo do número · (41) 99999-8888", "Respondida", "Linha (41) 99999-8888 · ATIVO · Plano 10 GB", "Abrir o relatório");
+    emOrdem(t, "Relatório do cliente · •••.•••.789-09", "Cliente: Cliente Fictício · 1 linha", "Abrir o relatório");
+    expect(t).not.toContain("12345678909");
+  });
+
+  it("a página do relatório: cada parte numa seção, a parte que falhou com o aviso; só de quem pediu", async () => {
+    cenario.consultas = [RELATORIO];
+    const t = await abrirRelatorio(RELATORIO.id);
+    emOrdem(t, "Relatório completo do número · (41) 99999-8888", "Respondida", "Imprimir ou salvar em PDF");
+    emOrdem(t, "Situação da linha", "Linha (41) 99999-8888 · ATIVO", "Titular: Cliente Fictício (•••.•••.789-09)", "Ativada em 01/11/2026, o plano vai até 01/12/2026.");
+    emOrdem(t, "Saldo", "Internet: 2 GB", "Minutos: ilimitados", "SMS: 50");
+    emOrdem(t, "Cobranças em aberto", "A Nogle não respondeu agora: tente de novo em instantes.");
+    emOrdem(t, "Transações dos últimos 12 meses", "01/11/2026 às 10:00 · ATIVAÇÃO · 10 GB · R$ 54,90 · SALDO");
+    cenario.consultas = [];
+    expect(await abrirRelatorio(RELATORIO.id)).toContain("Relatório não encontrado: só quem pediu a consulta vê o relatório.");
+    expect(await abrirRelatorio("qualquer-coisa")).toContain("Relatório não encontrado");
+  });
+
+  it("enquanto consulta, a página avisa e se atualiza sozinha; depois de 24 horas, diz que a resposta foi apagada", async () => {
+    cenario.consultas = [{ ...RELATORIO, situacao: "na_fila", resposta: null }];
+    emOrdem(await abrirRelatorio(RELATORIO.id), "Na fila", "Consultando a Nogle…", "o relatório aparece aqui em alguns segundos");
+    cenario.consultas = [{ ...RELATORIO, resposta: null, resposta_apagada_em: "2026-11-26T13:00:00Z" }];
+    expect(await abrirRelatorio(RELATORIO.id)).toContain("A resposta foi apagada depois de 24 horas");
+  });
+
+  it("a ação: o relatório do cliente pede um CPF ou CNPJ válido", async () => {
+    const dados = new FormData();
+    dados.set("tipo", "cliente_completo");
+    dados.set("parametro", "123.456.789-00");
+    dados.set("chave", "k-cpf");
+    await expect(consultar(dados)).rejects.toThrow("redirecionou para /connect/linha?erro=documento");
+    dados.set("parametro", "123.456.789-09");
+    await expect(consultar(dados)).rejects.toThrow("redirecionou para /connect/linha");
+    expect(cenario.rpc).toEqual([{ nome: "connect_consultar", argumentos: { p_tipo: "cliente_completo", p_chave: "k-cpf", p_parametro: "12345678909" } }]);
   });
 });
