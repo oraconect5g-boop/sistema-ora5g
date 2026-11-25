@@ -1,6 +1,6 @@
 {
-  "atualizado_em": "2026-11-23",
-  "lote": "INTEG-d; AUD-c (23/11: o Supabase, a Nogle e os extratos do banco, conferidos no servidor só pelos nomes)",
+  "atualizado_em": "2026-11-25",
+  "lote": "PAY-015a",
   "origem": "a orientação do proprietário de 18/11 (seção 4) e a reanálise do Codex de 18/11; os fatos vêm de docs/integracoes/APIS_E_HABILITACOES_NECESSARIAS.md, docs/integracoes/NOGLE_API_REFERENCIA.md, docs/adr/ADR-020-integracoes-que-esperam-contrato.md, do código do worker e da PR #97 (PRIORIDADES_BASE_REAL_E_APIS_FINANCEIRAS_2026-11-14.md)",
   "situacoes": [
     "não iniciado",
@@ -150,11 +150,11 @@
       "id": "pagamento_online",
       "api": "Link de pagamento e Pix online (Asaas)",
       "requisitos": "ORA-PAY-008, ORA-PAY-013, ORA-PAY-014, ORA-POS-009 e o pagamento do ORA-ONLINE-002",
-      "documentacao": "Oficial: a documentação da Asaas (docs.asaas.com), lida em 24/11: a autenticação (access_token e User-Agent), o sandbox e a produção, os links de pagamento, as cobranças, os avisos (o cabeçalho asaas-access-token, o id do evento único, a entrega pelo menos uma vez e a fila que para depois de 15 falhas) e os limites. O que ela não diz está na ADR-025",
-      "operacoes": "Criar o link de pagamento (Pix, uma venda só), procurar pelo nosso identificador, desativar, consultar a cobrança (a reconsulta), registrar e receber o aviso; o estorno é feito no painel da Asaas e volta pelo aviso",
-      "implementado": "PAY-014a: o cliente da Asaas no worker (o transporte de verdade, provado contra um servidor local no papel da Asaas), o worker dos pagamentos (cria o link, confere o aviso com a Asaas e desativa o link que não serve mais), a rota do aviso no site (/api/pagamentos/asaas, que só repassa ao banco), as tabelas e as regras no banco (o pago fica guardado 7 dias e não se cancela pelo sistema) e o Pix no pedido e na tela da loja. O meio \"link\" segue recusado no PDV (D-050). Desligado até a chave e o PAY-014b",
-      "falta_codigo": "O PAY-014b (no balcão, a venda do pedido pago registra o \"pago pelo site\" sem cobrar de novo) e a conciliação com o extrato da Asaas",
-      "falta_acesso": "A conta da Asaas com a chave de teste (sandbox), gravada pelo comando da lista única, o e-mail dos avisos e o sim para agendar o worker",
+      "documentacao": "Oficial: a documentação da Asaas (docs.asaas.com), lida em 24/11: a autenticação (access_token e User-Agent), o sandbox e a produção, os links de pagamento, as cobranças, os avisos (o cabeçalho asaas-access-token, o id do evento único, a entrega pelo menos uma vez e a fila que para depois de 15 falhas) e os limites. O que ela não diz está na ADR-025; lida de novo em 25/11 para o caixa (PAY-015a): as chaves Pix da conta, o QR Code estático, a cobrança criada ao receber pelo QR (pixQrCodeId), a exclusão do QR e o teste do pagamento de QR no sandbox",
+      "operacoes": "Criar o link de pagamento (Pix, uma venda só), procurar pelo nosso identificador, desativar, consultar a cobrança (a reconsulta), registrar e receber o aviso; o estorno é feito no painel da Asaas e volta pelo aviso; no caixa (PAY-015a): conferir a chave Pix ativa, criar o QR estático com valor, consultar as cobranças do QR e excluir o QR cancelado ou vencido",
+      "implementado": "PAY-014a: o cliente da Asaas no worker (o transporte de verdade, provado contra um servidor local no papel da Asaas), o worker dos pagamentos (cria o link, confere o aviso com a Asaas e desativa o link que não serve mais), a rota do aviso no site (/api/pagamentos/asaas, que só repassa ao banco), as tabelas e as regras no banco (o pago fica guardado 7 dias e não se cancela pelo sistema) e o Pix no pedido e na tela da loja. O meio \"link\" segue recusado no PDV (D-050). PAY-014b (24/11): o balcão do pedido pago. PAY-015a (25/11; a D-062): o Pix pela Asaas no caixa, com o QR Code na tela, confirmado pela consulta das cobranças do QR, e a linha do Pix posta pelo banco na conclusão. Desligado até a conta de teste",
+      "falta_codigo": "A conciliação com o extrato da Asaas; os próximos lotes da D-062: o cartão pela Asaas (o link com o QR, parcelado), o Pix da Nogle registrado no caixa e a assinatura no cartão (a recorrência)",
+      "falta_acesso": "A conta de teste da Asaas com uma chave Pix aleatória, a chave de API de teste e o e-mail dos avisos, gravados pelo comando da lista única (o sim para o teste veio em 25/11)",
       "quem_fornece": "O proprietário",
       "variaveis": [
         "ASAAS_AMBIENTE",
@@ -167,10 +167,10 @@
       "idempotencia": "O nosso identificador (externalReference) em todo link; o resultado desconhecido procura o link antes de criar outro; o aviso é guardado uma vez só, pelo id do evento",
       "aviso_ou_reconsulta": "O aviso (com o token conferido pelo banco) só leva à reconsulta da cobrança; só a reconsulta confirma (PAY-b), conferindo o link, o valor e a passagem da situação",
       "conciliacao": "O que não fecha (pago depois de cancelado, estorno sem pagamento, outro valor) vira divergência para a conciliação; o extrato da Asaas fecha o dia (a fazer)",
-      "testes": "apps/worker/src/pagamentos/ (asaas, processar e ponta-a-ponta); packages/banco/src/pagamento-pelo-site.test.ts; apps/plataforma/src/app/api/pagamentos/asaas/route.test.ts; apps/worker/src/cobranca/cobranca.test.ts",
-      "publicacao": "No ar e desligado: o pedido do site segue para pagar na loja até a chave e o PAY-014b",
+      "testes": "apps/worker/src/pagamentos/ (asaas, processar e ponta-a-ponta); packages/banco/src/pagamento-pelo-site.test.ts; apps/plataforma/src/app/api/pagamentos/asaas/route.test.ts; apps/worker/src/cobranca/cobranca.test.ts; packages/banco/src/pix-da-asaas-no-caixa.test.ts; apps/worker/src/pagamentos/caixa.test.ts; apps/plataforma/src/app/vender",
+      "publicacao": "No ar e desligado: o site e o caixa seguem sem o Pix da Asaas até a conta de teste",
       "homologacao": "Não homologado",
-      "pode_prosseguir": "O PAY-014b (o balcão) e a conciliação com o extrato, sem a chave; o ensaio no sandbox espera a chave de teste",
+      "pode_prosseguir": "O cartão pela Asaas, o Pix da Nogle no caixa e a assinatura, sem a chave; o ensaio no sandbox espera a conta de teste",
       "situacao": "parcial"
     },
     {

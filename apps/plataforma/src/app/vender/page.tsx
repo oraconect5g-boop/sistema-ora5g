@@ -1,12 +1,13 @@
 import { randomUUID } from "node:crypto";
 
-import { ScanLine, ShoppingCart, Wallet } from "lucide-react";
+import { QrCode, ScanLine, ShoppingCart, Wallet } from "lucide-react";
 import type { Metadata } from "next";
 import Form from "next/form";
 import Link from "next/link";
 
-import { MEIOS } from "@ora5g/dominio";
+import { MEIOS, MEIOS_SO_DO_BANCO } from "@ora5g/dominio";
 
+import { AtualizarEnquantoEspera } from "../../componentes/AtualizarEnquantoEspera";
 import { BotaoConfirmar } from "../../componentes/BotaoConfirmar";
 import { LerCodigo } from "../../componentes/LerCodigo";
 import { MoldeReal } from "../../componentes/MoldeReal";
@@ -19,11 +20,12 @@ import { avisoDaReservaAtendida } from "../../lib/loja/reserva";
 import { soltarReservasDoSiteVencidas } from "../../lib/loja/reservas-vencidas";
 import { buscarNoCatalogo, filtroDoIdentificador, identificadorDigitado, termoDaBusca } from "../../lib/catalogo/busca";
 import { consultarTelaDoPdv } from "../../lib/vendas/pdv-tela";
+import { horaDe, lerPixDaVenda, pixEspera, SITUACOES_DO_PIX, somasDoPix } from "../../lib/vendas/pix-asaas";
 import type { OpcaoDeMeio } from "../../lib/vendas/formas-de-pagamento";
 import { ERROS_DA_VENDA, MAXIMO_DE_PARCELAS, PROVEDOR_DO_MEIO, ehMeioDaEntrada } from "../../lib/vendas/regras";
 import { FotoAmpliavel } from "../catalogo/FotoAmpliavel";
 import { BuscaDeCliente } from "../clientes/BuscaDeCliente";
-import { abrirCaixa, adicionarItem, aplicarDesconto, cancelarVenda, concluirVenda, novaVenda, pedirAprovacao, removerItem } from "./acoes";
+import { abrirCaixa, adicionarItem, aplicarDesconto, cancelarPixAsaas, cancelarVenda, concluirVenda, novaVenda, pedirAprovacao, pedirPixAsaas, removerItem } from "./acoes";
 import { FormasDePagamento } from "./FormasDePagamento";
 
 export const metadata: Metadata = { title: "Vender" };
@@ -32,8 +34,9 @@ export const dynamic = "force-dynamic";
 const campo = "mt-1 min-h-11 w-full rounded-botao border border-borda bg-white px-3 text-sm outline-none focus:border-acao focus:ring-2 focus:ring-acao/20";
 const FISICOS = new Set(["aparelho", "chip", "acessorio"]);
 const final = (texto: string | null) => (texto ? `•••• ${texto.slice(-6)}` : "");
-// O link de pagamento não existe no PDV: "a compra online é que tem link de pagamento" (o proprietário, 18/11).
-const MEIOS_DA_LOJA = (Object.keys(MEIOS) as (keyof typeof MEIOS)[]).filter((m) => m !== "link_pagamento");
+// O link de pagamento não existe no PDV: "a compra online é que tem link de pagamento" (o proprietário, 18/11). PAY-015a: o
+// Pix pela Asaas também não se declara: o banco põe a linha de cada QR pago (o cartão "Pix pela Asaas", abaixo do carrinho).
+const MEIOS_DA_LOJA = (Object.keys(MEIOS) as (keyof typeof MEIOS)[]).filter((m) => !MEIOS_SO_DO_BANCO.includes(m));
 // PDV-c: as formas que o botão "Adicionar forma de pagamento" oferece, com o que cada uma pede.
 const OPCOES_DE_PAGAMENTO: OpcaoDeMeio[] = MEIOS_DA_LOJA.map((m) => ({
   meio: m, nome: MEIOS[m].nome, financeira: MEIOS[m].financeira, comprovante: MEIOS[m].comprovante, maximoDeParcelas: MAXIMO_DE_PARCELAS[m] ?? null,
@@ -66,10 +69,12 @@ export default async function Vender({ searchParams }: { searchParams: Promise<{
   // 1ª ida: a tela inteira numa leitura (lib/vendas/pdv-tela.ts). Junto, o que não depende dela: soltar as reservas
   // do site vencidas (ONLINE-b: o aparelho volta livre antes de a tela ler o estoque, mais abaixo) e achar no
   // catálogo o que foi digitado (a busca do catálogo olha o que está em estoque, que a reserva não muda).
-  const [tela, , achados] = await Promise.all([
+  // PAY-015a: junto, o Pix pela Asaas da venda aberta (o banco acha a mesma venda da tela: a mais nova da pessoa na loja).
+  const [tela, , achados, pixLido] = await Promise.all([
     consultarTelaDoPdv(supabase),
     soltarReservasDoSiteVencidas(supabase),
     busca && !numero ? buscarNoCatalogo(supabase, busca, { limite: 40 }) : Promise.resolve(null),
+    (async () => await supabase.rpc("caixa_pix_da_venda", {}))(),
   ]);
   const { caixa, venda, itens, terminais } = tela;
 
@@ -84,6 +89,11 @@ export default async function Vender({ searchParams }: { searchParams: Promise<{
     ? await supabase.from("variantes").select("id, sku, nome, produto_id, produtos(nome, tipo)").in("id", achados.variantes).order("sku").limit(8)
     : { data: [], error: null };
   if (porNumero.error || porNome.error) throw new FalhaDoServico("busca");
+  // Sem a leitura do Pix, o caixa segue sem ele (a conclusão no banco põe o pago de qualquer jeito); a venda lida tem de ser a
+  // da tela (no meio, outra pode ter sido aberta).
+  const pixIndisponivel = venda !== null && Boolean(pixLido.error);
+  const lidoDoPix = pixLido.error ? null : lerPixDaVenda(pixLido.data);
+  const pixDaVenda = lidoDoPix && venda && lidoDoPix.venda === venda.id ? lidoDoPix : { ligado: lidoDoPix?.ligado ?? false, venda: null, pix: [] };
 
   // As variações dos resultados (a do aparelho achado pelo número vem nula quando quem pede não a lê).
   const variantes = [...porNome.data, ...porNumero.data.flatMap((i) => (i.variantes ? [i.variantes] : []))];
@@ -126,6 +136,11 @@ export default async function Vender({ searchParams }: { searchParams: Promise<{
   const valorDosCelulares = itens.filter((i) => i.tipo === "aparelho" && !i.pago_pelo_site).reduce((t, i) => t + i.preco_unitario_centavos * i.quantidade - i.desconto_centavos, 0);
   // PAY-014b: o que o pedido do site desta venda já pagou; o caixa cobra só o resto (o banco grava a linha do pago).
   const pagoPeloSite = venda?.pago_pelo_site_centavos ?? 0;
+  // PAY-015a: o que o Pix pela Asaas já pagou (entra sozinho) e se algum QR ainda espera (o banco não conclui com ele).
+  const pix = somasDoPix(pixDaVenda.pix);
+  const pixPendente = pixDaVenda.pix.some(pixEspera);
+  const aCobrar = Math.max(subtotal - descontos - pagoPeloSite - pix.pago, 0);
+  const faltaParaOPix = Math.max(aCobrar - pix.esperando, 0);
 
   return (
     <MoldeReal sessao={sessao}>
@@ -256,18 +271,70 @@ export default async function Vender({ searchParams }: { searchParams: Promise<{
               <dt>Subtotal</dt><dd className="text-right">{brl(subtotal)}</dd>
               <dt>Descontos</dt><dd className="text-right">− {brl(descontos)}</dd>
               <dt className="font-semibold">Total</dt><dd className="text-right text-lg font-bold">{brl(subtotal - descontos)}</dd>
-              {pagoPeloSite > 0 && <>
-                <dt className="text-sucesso">Pago pelo site</dt><dd className="text-right text-sucesso">− {brl(pagoPeloSite)}</dd>
-                <dt className="font-semibold">A cobrar</dt><dd className="text-right font-semibold">{brl(Math.max(subtotal - descontos - pagoPeloSite, 0))}</dd>
-              </>}
+              {pagoPeloSite > 0 && <><dt className="text-sucesso">Pago pelo site</dt><dd className="text-right text-sucesso">− {brl(pagoPeloSite)}</dd></>}
+              {pix.pago > 0 && <><dt className="text-sucesso">Pago no Pix pela Asaas</dt><dd className="text-right text-sucesso">− {brl(pix.pago)}</dd></>}
+              {pagoPeloSite + pix.pago > 0 && <><dt className="font-semibold">A cobrar</dt><dd className="text-right font-semibold">{brl(aCobrar)}</dd></>}
             </dl>
           </Cartao>
+
+          {/* PAY-015a (a D-062: "pagamento oficial da loja será a asaas"): o QR Code do Pix gerado pelo sistema. O worker cria o QR
+              na Asaas e confere o pagamento a cada poucos segundos; a tela se atualiza sozinha enquanto um QR espera. */}
+          {itens.length > 0 && (pixDaVenda.ligado || pixDaVenda.pix.length > 0 || pixIndisponivel) && (
+            <Cartao titulo="Pix pela Asaas" icone={QrCode} subtitulo="O QR Code aparece aqui com o valor; o cliente paga no app do banco e o pago entra sozinho na venda, sem comprovante digitado.">
+              {pixIndisponivel && <Aviso tom="aviso">Não deu para ler o Pix da Asaas agora. Recarregue a tela em instantes.</Aviso>}
+              {pixPendente && <AtualizarEnquantoEspera aviso="Esperando o Pix…" />}
+              {pixDaVenda.pix.length > 0 && (
+                <ul className="space-y-3" aria-label="Pix desta venda">
+                  {pixDaVenda.pix.map((p) => {
+                    const s = SITUACOES_DO_PIX[p.situacao];
+                    return (
+                      <li key={p.id} className="rounded-xl border border-borda p-3 text-sm">
+                        <p className="flex flex-wrap items-center gap-2">
+                          <span className="numeros font-semibold">{brl(p.valor_centavos)}</span>
+                          <Selo tom={s.tom} ponto>{s.rotulo}</Selo>
+                          {p.situacao === "pago" && horaDe(p.pago_em) && <span className="text-xs text-suave">às {horaDe(p.pago_em)}</span>}
+                        </p>
+                        {p.situacao === "aguardando" && p.imagem && p.copia_e_cola && (
+                          <div className="mt-2 flex flex-wrap items-start gap-3">
+                            {/* eslint-disable-next-line @next/next/no-img-element -- o QR Code que a Asaas gerou (PNG em base64), só enquanto espera */}
+                            <img src={`data:image/png;base64,${p.imagem}`} alt={`QR Code do Pix de ${brl(p.valor_centavos)}`} className="size-52 rounded-lg border border-borda bg-white p-1" />
+                            <div className="min-w-0 flex-1 space-y-2">
+                              <p className="text-xs text-suave">O cliente lê o QR Code no app do banco{horaDe(p.expira_em) ? ` (vale até ${horaDe(p.expira_em)})` : ""}. Ou copia o código:</p>
+                              <textarea readOnly defaultValue={p.copia_e_cola} aria-label="Pix copia e cola" className="numeros h-20 w-full rounded-botao border border-borda bg-white p-2 text-xs" />
+                            </div>
+                          </div>
+                        )}
+                        {p.situacao === "criando" && <p className="mt-1 text-xs text-suave">O servidor está gerando o QR Code na Asaas: ele aparece aqui em alguns segundos.</p>}
+                        {p.situacao === "falhou" && p.ultima_falha && <p className="mt-1 text-xs">{p.ultima_falha}</p>}
+                        {p.divergencia && <p className="mt-1 text-xs text-perigo">{p.divergencia}</p>}
+                        {(p.situacao === "criando" || p.situacao === "aguardando") && (
+                          <form action={cancelarPixAsaas} className="mt-2">
+                            <input type="hidden" name="pix" value={p.id} />
+                            <Botao type="submit" tamanho="sm" variante="fantasma" enquanto="Cancelando…">Cancelar este QR Code</Botao>
+                          </form>
+                        )}
+                      </li>
+                    );
+                  })}
+                </ul>
+              )}
+              {pixDaVenda.ligado ? faltaParaOPix > 0 && (
+                <form action={pedirPixAsaas} className="mt-3 flex flex-wrap items-end gap-2">
+                  <input type="hidden" name="venda" value={venda.id} /><input type="hidden" name="chave" value={randomUUID()} />
+                  <label className="text-sm font-medium">Valor no Pix (R$)<input name="valor" inputMode="decimal" required defaultValue={(faltaParaOPix / 100).toFixed(2).replace(".", ",")} className={`${campo} w-36`} /></label>
+                  <Botao type="submit" enquanto="Pedindo o QR Code…"><QrCode aria-hidden className="size-4" /> Gerar QR Code do Pix</Botao>
+                </form>
+              ) : !pixIndisponivel && (
+                <p className="mt-2 text-xs text-suave">O Pix pela Asaas está desligado agora (o servidor confere a conta da Asaas a cada minuto). Use o Pix direto ou a maquininha.</p>
+              )}
+            </Cartao>
+          )}
 
           {itens.length > 0 && (
             <Cartao titulo="Pagamento" subtitulo="Toque em “Adicionar forma de pagamento” para cada forma que o cliente usar. PayJoy e Aiva: o valor financiado (só o do celular) e as parcelas; a entrada é outra forma, marcada como entrada. Cartão: as parcelas e o comprovante. Troco só sai do dinheiro.">
               <form action={concluirVenda} className="space-y-3">
                 <input type="hidden" name="venda" value={venda.id} /><input type="hidden" name="chave" value={randomUUID()} />
-                <FormasDePagamento total={Math.max(subtotal - descontos - pagoPeloSite, 0)} pagoPeloSite={pagoPeloSite} valorDosCelulares={valorDosCelulares} opcoes={OPCOES_DE_PAGAMENTO}
+                <FormasDePagamento total={aCobrar} pagoPeloSite={pagoPeloSite} pagoNoPix={pix.pago} valorDosCelulares={valorDosCelulares} opcoes={OPCOES_DE_PAGAMENTO}
                   terminais={terminais.map((m) => ({ id: m.id, provedor: m.provedor === "picpay" ? "picpay" as const : "pagbank" as const, rotulo: `${m.apelido} · ${m.provedor === "picpay" ? "PicPay" : "PagBank"} ${m.identificador}` }))} />
                 {permissoes.has("cliente.buscar") && (
                   <div className="space-y-1 rounded-xl border border-borda p-2">
@@ -279,14 +346,15 @@ export default async function Vender({ searchParams }: { searchParams: Promise<{
                   <label className="text-xs font-medium">Nome do cliente (opcional)<input name="cliente_nome" className={campo} /></label>
                   <label className="text-xs font-medium">E-mail do cliente (opcional)<input name="cliente_email" type="email" className={campo} /></label>
                 </div>
-                <BotaoConfirmar className="w-full" enquanto="Confirmando a venda no sistema…" disabled={!caixa || venda.situacao === "aguardando_aprovacao"}>Concluir venda</BotaoConfirmar>
+                <BotaoConfirmar className="w-full" enquanto="Confirmando a venda no sistema…" disabled={!caixa || venda.situacao === "aguardando_aprovacao" || pixPendente}>Concluir venda</BotaoConfirmar>
                 {!caixa && <p className="text-xs text-aviso">Abra o caixa para concluir.</p>}
+                {pixPendente && <p className="text-xs text-aviso">Há um Pix pela Asaas esperando: espere o pagamento ou cancele o QR Code para concluir.</p>}
               </form>
             </Cartao>
           )}
 
-          {pagoPeloSite > 0 ? (
-            <p className="text-xs text-suave">Pedido pago pelo site: esta venda não se cancela por aqui. Se o cliente desistir, o estorno é pelo painel da Asaas; depois do estorno, a venda pode ser cancelada.</p>
+          {pagoPeloSite > 0 || pix.pago > 0 ? (
+            <p className="text-xs text-suave">{`${pagoPeloSite > 0 ? "Pedido pago pelo site" : "Venda com Pix pela Asaas pago"}: esta venda não se cancela por aqui. Se o cliente desistir, o estorno é pelo painel da Asaas; depois do estorno, a venda pode ser cancelada.`}</p>
           ) : (
           <details className="text-sm"><summary className="cursor-pointer font-semibold text-perigo">Cancelar esta venda</summary>
             <form action={cancelarVenda} className="mt-2 flex flex-wrap items-end gap-2">

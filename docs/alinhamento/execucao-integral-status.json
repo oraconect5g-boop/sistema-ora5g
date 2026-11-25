@@ -2,7 +2,7 @@
   "_leia": "Checkpoint do programa de execução integral (PR #67). Carregar ao retomar e seguir para o próximo item executável da fila; não reiniciar o projeto. Estados vêm de status-requisitos.json (fonte da rastreabilidade); este arquivo acrescenta lote, bloqueio externo e revisão. Desde 16/11/2026 a medida de avanço é o requisito homologado pelo proprietário: a chave aceites guarda a resposta dele a cada roteiro de aceite (docs/aceite/); um requisito só recebe homologado: true com todos os lotes dele aceitos e sem nada em FALTA na nota de status-requisitos.json.",
   "atualizado_em": "2026-11-24",
   "base": {
-    "main": "3f4d904",
+    "main": "0e82715",
     "pacote": {
       "pr": 67,
       "branch": "docs/execucao-integral-20261110",
@@ -1381,6 +1381,21 @@
       "resposta": null,
       "respondido_em": null,
       "nota": "só consultas (a D-056); migration 20261125180630_outras_consultas_da_nogle; o commit e a publicação ficam no registro (a branch registro/publicacoes)"
+    },
+    "PAY-015a": {
+      "roteiro": "docs/aceite/PAY-015a.md",
+      "requisitos": [
+        "ORA-PAY-001",
+        "ORA-PAY-008",
+        "ORA-PAY-014"
+      ],
+      "entrega": "no Vender, o cartão Pix pela Asaas: o QR Code gerado com o valor, na tela, confirmado na própria Asaas, e o pago entra sozinho na venda (o pagamento misto)",
+      "commit": null,
+      "publicado_em": null,
+      "pedido_em": "2026-11-25",
+      "resposta": null,
+      "respondido_em": null,
+      "nota": "a decisão D-062; o ensaio espera a conta de teste da Asaas (a chave Pix, a chave de API e o e-mail dos avisos); migration 20261125192529_pix_da_asaas_no_caixa; o commit e a publicação ficam no registro (a branch registro/publicacoes)"
     }
   },
   "contagem_dos_estados": {
@@ -1926,7 +1941,7 @@
       "titulo": "Registrar dinheiro, Pix direto, Pix PicPay POS e cartões",
       "prioridade": "P0",
       "estado": "parcial",
-      "lote": "L7a pagamentos; J3-b (21/11): a venda com desconto aprovado e pagamento misto, na loja de teste",
+      "lote": "L7a pagamentos; J3-b (21/11): a venda com desconto aprovado e pagamento misto, na loja de teste; PAY-015a (25/11): o Pix pela Asaas no caixa (a D-062)",
       "bloqueio_externo": null,
       "revisado_codex": false,
       "homologado": false
@@ -1989,7 +2004,7 @@
       "titulo": "Evitar confirmação duplicada via webhook/retry",
       "prioridade": "P0",
       "estado": "parcial",
-      "lote": "L7 pagamentos/caixa; R4 (14/11): revisão do estado; PAY-014a (24/11): o aviso da Asaas guardado uma vez só",
+      "lote": "L7 pagamentos/caixa; R4 (14/11): revisão do estado; PAY-014a (24/11): o aviso da Asaas guardado uma vez só; PAY-015a (25/11): o Pix pela Asaas no caixa (a D-062)",
       "bloqueio_externo": null,
       "revisado_codex": false,
       "homologado": false
@@ -2043,7 +2058,7 @@
       "titulo": "Pix/checkout web e links por provedores validados",
       "prioridade": "P2",
       "estado": "parcial",
-      "lote": "L7 pagamentos/caixa; ADAPT-a (17/11): bloqueado com o que falta (ADR-020); PAY-014a (24/11): o Pix pela Asaas, pronto e desligado; PAY-014b (24/11): o pago pelo site no balcão, sem cobrar de novo",
+      "lote": "L7 pagamentos/caixa; ADAPT-a (17/11): bloqueado com o que falta (ADR-020); PAY-014a (24/11): o Pix pela Asaas, pronto e desligado; PAY-014b (24/11): o pago pelo site no balcão, sem cobrar de novo; PAY-015a (25/11): o Pix pela Asaas no caixa (a D-062)",
       "bloqueio_externo": "E1: a escolha foi a Asaas (24/11); faltam a chave de teste (sandbox), o e-mail dos avisos e o sim do proprietário para ligar o worker dos pagamentos",
       "revisado_codex": false,
       "homologado": false
@@ -3003,5 +3018,5 @@
       "homologado": false
     }
   },
-  "proximo_passo": "Seguir a ordem de 23/11 (o prompt entregue pelo proprietário, escrito pelo Codex, com a auditoria integral de 21/11, PR #105; a leitura está em docs/alinhamento/LEITURA_AUDITORIA_2026-11-21.md). Em 23/11 à noite o proprietário pediu para seguir o planejamento do prompt: a fila, seção por seção, está em docs/alinhamento/FILA_INTEGRAL_2026-11-23.md. (1) O pedido do proprietário de 25/11 (\"todas as funções da Nogle, consulta completa, relatório individual\"; a D-060 e a D-061): o CONNECT-h, o CONNECT-k e o CONNECT-j estão no ar (as ações na Nogle ligadas com NOGLE_ACOES=habilitada e o worker --acoes a cada minuto); o CONNECT-i (as outras consultas, as 16 rotas que faltavam) entra com este texto: com ele, o sistema usa as 62 funções da coleção oficial da Nogle. Os aceites do CONNECT-g, h, k, j e i esperam o proprietário. A carteira da Ora na Nogle estava com R$ 0,00 em 25/11: sem crédito, a ativação, a recarga, a recarga programada e a compra pela carteira serão recusadas. (2) O próximo lote de código: a raiz de teste do CNPJ da empresa (a da matriz que o proprietário mandou), a mensagem de Lojas da rede perto do formulário, o F24-06 (a disponibilidade comercial explicada) e os pontos V1, V2 e V5 do teste das telas; depois, as telas mais pesadas (M1, M2 e A1/A2), os cabeçalhos de segurança (M4), a exportação da auditoria (M8) e o acabamento (B1 a B5, B7). (3) O pagamento pelo site está pronto para ligar: falta a chave de teste da Asaas, o e-mail dos avisos e o sim do proprietário para o worker. (4) A seção 4 do prompt (o catálogo e o estoque de verdade) foi feita em 24/11 com as respostas do proprietário (D-053; as peças de ASSISTÊNCIA fora da loja online): falta um relatório novo da Rein (a posição carregada é a de 10/11), o dos IMEIs dos celulares e o CNPJ das lojas (sem ele, a loja online não vende nada de verdade). O que resta depende do proprietário, de contrato ou de terceiro (docs/PENDENCIAS_DO_PROPRIETARIO.md, a lista única). A narrativa anterior deste campo fica no histórico do Git e em docs/alinhamento/EXECUCAO_INTEGRAL_STATUS.md."
+  "proximo_passo": "Seguir a ordem de 23/11 (o prompt entregue pelo proprietário, escrito pelo Codex, com a auditoria integral de 21/11, PR #105; a leitura está em docs/alinhamento/LEITURA_AUDITORIA_2026-11-21.md). Em 23/11 à noite o proprietário pediu para seguir o planejamento do prompt: a fila, seção por seção, está em docs/alinhamento/FILA_INTEGRAL_2026-11-23.md. (1) O pedido do proprietário de 25/11 (\"todas as funções da Nogle, consulta completa, relatório individual\"; a D-060 e a D-061): o CONNECT-h, o CONNECT-k e o CONNECT-j estão no ar (as ações na Nogle ligadas com NOGLE_ACOES=habilitada e o worker --acoes a cada minuto); o CONNECT-i (as outras consultas, as 16 rotas que faltavam) entra com este texto: com ele, o sistema usa as 62 funções da coleção oficial da Nogle. Os aceites do CONNECT-g, h, k, j e i esperam o proprietário. A carteira da Ora na Nogle estava com R$ 0,00 em 25/11: sem crédito, a ativação, a recarga, a recarga programada e a compra pela carteira serão recusadas. (1b) O pedido seguinte do proprietário, de 25/11, as formas de pagamento (a D-062: \"pagamento oficial da loja será a asaas\"), em lotes: o PAY-015a (o Pix pela Asaas no caixa, com o QR Code na tela) entra com este texto; depois, o cartão pela Asaas (o link com o QR, parcelado), o Pix da Nogle registrado no caixa (a recarga e a ativação pagas direto à Nogle, e o QR para a loja pagar quando recebeu em dinheiro) e a assinatura no cartão (a recorrência). Tudo começa no ambiente de teste da Asaas: falta a conta de teste com a chave Pix, a chave de API de teste e o e-mail dos avisos, gravados pelo comando. (2) O próximo lote de código: a raiz de teste do CNPJ da empresa (a da matriz que o proprietário mandou), a mensagem de Lojas da rede perto do formulário, o F24-06 (a disponibilidade comercial explicada) e os pontos V1, V2 e V5 do teste das telas; depois, as telas mais pesadas (M1, M2 e A1/A2), os cabeçalhos de segurança (M4), a exportação da auditoria (M8) e o acabamento (B1 a B5, B7). (3) O pagamento pelo site está pronto para ligar: falta a chave de teste da Asaas, o e-mail dos avisos e o sim do proprietário para o worker. (4) A seção 4 do prompt (o catálogo e o estoque de verdade) foi feita em 24/11 com as respostas do proprietário (D-053; as peças de ASSISTÊNCIA fora da loja online): falta um relatório novo da Rein (a posição carregada é a de 10/11), o dos IMEIs dos celulares e o CNPJ das lojas (sem ele, a loja online não vende nada de verdade). O que resta depende do proprietário, de contrato ou de terceiro (docs/PENDENCIAS_DO_PROPRIETARIO.md, a lista única). A narrativa anterior deste campo fica no histórico do Git e em docs/alinhamento/EXECUCAO_INTEGRAL_STATUS.md."
 }

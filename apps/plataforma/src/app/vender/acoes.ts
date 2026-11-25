@@ -119,7 +119,31 @@ export async function cancelarVenda(dados: FormData) {
   if (typeof motivo !== "string" || motivo.trim().length < 3) redirect(`${voltarPara}?erro=motivo`);
   const { supabase } = await obterSessao({ exigirLoja: true });
   const { error }: Resultado = await supabase.rpc("cancelar_venda", { p_venda: venda, p_motivo: motivo.trim() });
+  // PAY-015a: a venda aberta com Pix pela Asaas pago não se cancela (OR048, como o pedido pago pelo site).
+  if (error?.code === "OR048" && /Pix pela Asaas/i.test((error as { message?: string }).message ?? "")) redirect(`${voltarPara}?erro=pix_pago`);
   voltar(voltarPara === "/vender" ? "/vender?cancelada=1" : `${voltarPara}?cancelada=1`, error);
+}
+
+// PAY-015a (a D-062): o Pix pela Asaas no caixa. Pedir o QR Code (o valor, para a venda aberta da vendedora) e cancelar o QR
+// que ainda não foi pago. O worker do servidor cria o QR na Asaas e confere o pagamento; a tela se atualiza sozinha.
+export async function pedirPixAsaas(dados: FormData) {
+  const venda = dados.get("venda");
+  const valor = lerValor(dados.get("valor"));
+  if (!ehUuid(venda)) redirect("/vender?erro=dados");
+  if (valor === null || valor <= 0) redirect("/vender?erro=valor");
+  const { supabase } = await obterSessao({ exigirLoja: true });
+  const { error }: Resultado = await supabase.rpc("caixa_pix_pedir", { p_venda: venda, p_valor_centavos: valor, p_chave: chaveDe(dados) });
+  if (error?.code === "OR009") redirect("/vender?erro=pix_passa");
+  voltar("/vender", error);
+}
+
+export async function cancelarPixAsaas(dados: FormData) {
+  const pix = dados.get("pix");
+  if (!ehUuid(pix)) redirect("/vender?erro=dados");
+  const { supabase } = await obterSessao({ exigirLoja: true });
+  const { error }: Resultado = await supabase.rpc("caixa_pix_cancelar", { p_pix: pix });
+  if (error?.code === "OR048") redirect("/vender?erro=pix_pago");
+  voltar("/vender", error);
 }
 
 // Devolução parcial e troca (adendo do ADR-004): o banco confere permissão, quantidades, valores,

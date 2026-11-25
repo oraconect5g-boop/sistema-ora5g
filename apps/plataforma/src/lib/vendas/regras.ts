@@ -1,6 +1,6 @@
 // Regras puras das telas de venda e caixa (ADR-004). O banco decide tudo de novo; aqui só se lê
 // o formulário e se escolhe a mensagem. Mensagem só por código de catálogo (o endereço não injeta texto).
-import { MAXIMO_DE_PARCELAS, MEIOS, ehMeioDaEntrada, type MeioPagamento, lerReais } from "@ora5g/dominio";
+import { MAXIMO_DE_PARCELAS, MEIOS, MEIOS_SO_DO_BANCO, ehMeioDaEntrada, type MeioPagamento, lerReais } from "@ora5g/dominio";
 
 export const ERROS_DA_VENDA = {
   sem_estoque: "Não há quantidade suficiente nesta loja.",
@@ -40,6 +40,12 @@ export const ERROS_DA_VENDA = {
   loja_sem_cnpj: "Esta loja ainda não está liberada para vender: falta o CNPJ da filial no cadastro da loja (Gestão → Lojas).",
   deposito: "O depósito não vende: ele guarda o estoque e abastece as lojas. Para vender, troque para uma loja (Trocar de loja).",
   pago_pelo_site: "Este pedido foi pago pelo site: os itens dele saem pelo preço pago, sem desconto, e não saem da venda. Conclua a venda; se o cliente desistir, o estorno é pelo painel da Asaas.",
+  // PAY-015a: o Pix pela Asaas no caixa.
+  pix_desligado: "O Pix pela Asaas está desligado agora: use o Pix direto ou a maquininha. Ele volta quando o servidor confere a conta da Asaas.",
+  pix_passa: "O Pix passa do que falta pagar nesta venda: gere o QR Code com o valor que falta.",
+  pix_esperando: "Há um Pix pela Asaas esperando: espere o pagamento (a tela se atualiza sozinha) ou cancele o QR Code.",
+  pix_pago: "Esta venda tem Pix pela Asaas pago: conclua a venda. Se o cliente desistir, o estorno é pelo painel da Asaas.",
+  pix_passa_do_total: "O Pix pela Asaas pago passa do total da venda: devolva a diferença pela Asaas ou ponha o item de volta.",
   falha: "Não foi possível concluir agora. Tente de novo em instantes.",
 } as const;
 export type ErroDaVenda = keyof typeof ERROS_DA_VENDA;
@@ -48,7 +54,7 @@ const DO_BANCO: Record<string, ErroDaVenda> = {
   OR001: "sem_estoque", OR002: "indisponivel", OR003: "outra_loja", OR004: "chave", OR005: "indisponivel", OR007: "preco_mudou",
   OR008: "sem_caixa", OR009: "pagamento", OR010: "aprovacao", "42501": "sem_permissao", P0002: "nao_encontrado",
   "22023": "dados", "23505": "ja_aberto", "23514": "limite", OR013: "connect", OR015: "nota_emitida", OR016: "financiada", OR017: "com_devolucao", OR018: "vale",
-  OR032: "os_cobrada", OR038: "loja_sem_cnpj", OR043: "deposito", OR048: "pago_pelo_site",
+  OR032: "os_cobrada", OR038: "loja_sem_cnpj", OR043: "deposito", OR048: "pago_pelo_site", OR058: "pix_desligado", OR059: "pix_esperando",
 };
 export function erroDaVenda(erro: { code?: string } | null | undefined): ErroDaVenda {
   const codigo = erro?.code;
@@ -89,7 +95,8 @@ export function lerPagamentos(dados: { get: (nome: string) => unknown }, linhas 
     if (typeof bruto !== "string" || bruto.trim() === "") continue;
     const meio = dados.get(`pagamento_${i}_meio`);
     const valor = lerValor(bruto);
-    if (!ehMeio(meio) || meio === "link_pagamento" || valor === null || valor <= 0) return { ok: false, erro: valor === null ? "valor" : "pagamento" };
+    // O pago pelo site e o Pix pela Asaas só o banco grava (na conclusão): a tela não os declara.
+    if (!ehMeio(meio) || MEIOS_SO_DO_BANCO.includes(meio) || valor === null || valor <= 0) return { ok: false, erro: valor === null ? "valor" : "pagamento" };
     const linha: LinhaDePagamento = { meio, valor };
     const comprovante = dados.get(`pagamento_${i}_comprovante`);
     if (typeof comprovante === "string" && comprovante.trim()) linha.comprovante = comprovante.trim().slice(0, 60);
@@ -147,6 +154,9 @@ export function erroDoPagamento(mensagem: string): ErroDaVenda | null {
   if (/financiam só/i.test(mensagem)) return "so_celular";
   if (/entrada/i.test(mensagem)) return "entrada";
   if (/pago pelo site/i.test(mensagem)) return "pago_pelo_site";
+  if (/Pix pela Asaas pago passa/i.test(mensagem)) return "pix_passa_do_total";
+  if (/Pix passa do que falta/i.test(mensagem)) return "pix_passa";
+  if (/Pix pela Asaas pago|tem Pix pela Asaas/i.test(mensagem)) return "pix_pago";
   return null;
 }
 

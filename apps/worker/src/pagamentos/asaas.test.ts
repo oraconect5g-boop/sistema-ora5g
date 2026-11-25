@@ -146,3 +146,70 @@ describe("o pagamento e o aviso (PAY-014a)", () => {
     expect(await cliente().registrarAviso({ url: "https://ora5g.com.br/api/pagamentos/asaas", token, email: "x@exemplo.invalid" })).toEqual({ falha: "a Asaas respondeu 400" });
   });
 });
+
+// PAY-015a (25/11/2026): o Pix pela Asaas no caixa: a chave Pix ativa, o QR estático com valor, as cobranças do QR e a
+// exclusão, como a documentação oficial descreve (lida em 25/11). QR e cobranças FICTÍCIOS.
+describe("o Pix do caixa na Asaas (PAY-015a)", () => {
+  const IMAGEM = "iVBORw0KGgo".padEnd(400, "A");
+  const COPIA = "00020126580014br.gov.bcb.pix0136ficticio-0000-4000-8000-0000000000005204000053039865802BR5925ORA5G6009CURITIBA6304ABCD";
+  const QR = { referencia: "00000000-0000-4000-8000-0000000000q1", chavePix: "b6295ee1-f054-47d1-9e90-ee57b74f60d9", valorCentavos: 7_990,
+    descricao: "Venda nº 12 na Ora 5G", validadeSegundos: 1_800 };
+
+  it("a chave Pix ativa da conta: a primeira ACTIVE; sem nenhuma, nulo; sem resposta, falha", async () => {
+    responder = json(200, { data: [{ id: "k1", key: "b6295ee1-f054-47d1-9e90-ee57b74f60d9", type: "EVP", status: "ACTIVE", canBeDeleted: true }] });
+    expect(await cliente().chavePixAtiva()).toBe("b6295ee1-f054-47d1-9e90-ee57b74f60d9");
+    expect(recebidos[0]).toMatchObject({ metodo: "GET", caminho: "/v3/pix/addressKeys?status=ACTIVE&limit=10" });
+    expect(recebidos[0]?.cabecalhos.access_token).toBe(CHAVE);
+    responder = json(200, { data: [{ id: "k2", key: "x", type: "EVP", status: "AWAITING_ACTIVATION" }] });
+    expect(await cliente().chavePixAtiva()).toBeNull();
+    responder = json(500, {});
+    expect(await cliente().chavePixAtiva()).toBe("falha");
+  });
+
+  it("o QR estático: o valor em reais, um pagamento só, a validade e o nosso identificador; cada resposta no seu tipo", async () => {
+    responder = json(200, { id: "9bea9bcd126b45c7939960f577be84d6", encodedImage: IMAGEM, payload: COPIA, allowsMultiplePayments: false,
+      expirationDate: "2026-11-25 14:20:50", externalReference: QR.referencia, description: QR.descricao });
+    expect(await cliente().criarQrEstatico(QR)).toEqual({ tipo: "criado", qr: { id: "9bea9bcd126b45c7939960f577be84d6", copiaECola: COPIA, imagem: IMAGEM } });
+    expect(recebidos[0]).toMatchObject({ metodo: "POST", caminho: "/v3/pix/qrCodes/static", corpo: {
+      addressKey: QR.chavePix, description: QR.descricao, value: 79.9, format: "ALL", expirationSeconds: 1_800, allowsMultiplePayments: false,
+      externalReference: QR.referencia } });
+    responder = json(400, { errors: [{ code: "invalid_value", description: "Valor inválido" }] });
+    expect(await cliente().criarQrEstatico(QR)).toEqual({ tipo: "recusado", motivo: "a Asaas respondeu 400" });
+    responder = json(429, {});
+    expect(await cliente().criarQrEstatico(QR)).toEqual({ tipo: "falha", motivo: "a Asaas respondeu 429" });
+    responder = json(502, {});
+    expect(await cliente().criarQrEstatico(QR)).toEqual({ tipo: "desconhecido", motivo: "a Asaas respondeu 502" });
+    responder = json(200, { id: "qr com espaço", encodedImage: IMAGEM, payload: COPIA });
+    expect(await cliente().criarQrEstatico(QR)).toEqual({ tipo: "desconhecido", motivo: "resposta da Asaas fora da forma" });
+  });
+
+  it("as cobranças do QR (o filtro pixQrCodeId): paga, estornada, nenhuma (ou só pendente), e o fora do normal como desconhecida", async () => {
+    const cobranca = (id: string, status: string, value = 79.9) => ({ object: "payment", id, status, value, billingType: "PIX", pixQrCodeId: "qr1", deleted: false });
+    responder = json(200, { object: "list", hasMore: false, totalCount: 1, data: [cobranca("pay_1", "RECEIVED")] });
+    expect(await cliente().cobrancasDoQr("qr1")).toEqual({ situacao: "pago", id_no_provedor: "pay_1", valor_centavos: 7_990 });
+    expect(recebidos[0]).toMatchObject({ metodo: "GET", caminho: "/v3/payments?pixQrCodeId=qr1&limit=10" });
+    responder = json(200, { data: [cobranca("pay_1", "REFUNDED")] });
+    expect(await cliente().cobrancasDoQr("qr1")).toEqual({ situacao: "estornado", id_no_provedor: "pay_1", valor_centavos: 7_990 });
+    responder = json(200, { data: [] });
+    expect(await cliente().cobrancasDoQr("qr1")).toEqual({ situacao: "nenhum" });
+    responder = json(200, { data: [cobranca("pay_1", "PENDING"), { ...cobranca("pay_9", "RECEIVED"), pixQrCodeId: "outro" }] });
+    expect(await cliente().cobrancasDoQr("qr1")).toEqual({ situacao: "nenhum" });
+    responder = json(200, { data: [cobranca("pay_1", "RECEIVED"), cobranca("pay_2", "RECEIVED")] });
+    expect(await cliente().cobrancasDoQr("qr1")).toEqual({ situacao: "desconhecida" });
+    responder = json(200, { data: [cobranca("pay_1", "CHARGEBACK_REQUESTED")] });
+    expect(await cliente().cobrancasDoQr("qr1")).toEqual({ situacao: "desconhecida" });
+    responder = json(503, {});
+    expect(await cliente().cobrancasDoQr("qr1")).toBe("falha");
+  });
+
+  it("excluir o QR: o DELETE; o que a Asaas não acha conta como excluído", async () => {
+    responder = json(200, { id: "9bea9bcd126b45c7939960f577be84d6", deleted: true });
+    expect(await cliente().excluirQr("9bea9bcd126b45c7939960f577be84d6")).toBe(true);
+    expect(recebidos[0]).toMatchObject({ metodo: "DELETE", caminho: "/v3/pix/qrCodes/static/9bea9bcd126b45c7939960f577be84d6" });
+    responder = json(404, {});
+    expect(await cliente().excluirQr("qr2")).toBe(true);
+    responder = json(500, {});
+    expect(await cliente().excluirQr("qr3")).toBe(false);
+    expect(await cliente().excluirQr("qr com espaço")).toBe(false);
+  });
+});

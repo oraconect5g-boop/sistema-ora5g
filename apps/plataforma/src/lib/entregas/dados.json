@@ -1339,6 +1339,21 @@
       "pedido_em": "2026-11-25",
       "resposta": null,
       "respondido_em": null
+    },
+    {
+      "lote": "PAY-015a",
+      "roteiro": "docs/aceite/PAY-015a.md",
+      "requisitos": [
+        "ORA-PAY-001",
+        "ORA-PAY-008",
+        "ORA-PAY-014"
+      ],
+      "entrega": "no Vender, o cartão Pix pela Asaas: o QR Code gerado com o valor, na tela, confirmado na própria Asaas, e o pago entra sozinho na venda (o pagamento misto)",
+      "commit": null,
+      "publicado_em": null,
+      "pedido_em": "2026-11-25",
+      "resposta": null,
+      "respondido_em": null
     }
   ]
 }
