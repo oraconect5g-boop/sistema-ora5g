@@ -11,11 +11,13 @@ import type { PGlite } from "@electric-sql/pglite";
 import { comoUsuario, criarBanco, type Sessao } from "@ora5g/banco/src/banco-de-teste.ts";
 import { ids, montarCenario } from "@ora5g/banco/src/cenario.ts";
 import { cat, itens, montarCatalogo } from "@ora5g/banco/src/cenario-catalogo.ts";
-import type { OperacaoParaConsultar, OperacaoParaEnviar, TipoOperacao } from "@ora5g/dominio/nogle";
+import type { OperacaoParaConsultar, OperacaoParaEnviar, TipoOperacao, TransferenciaParaEnviar } from "@ora5g/dominio/nogle";
 import { afterAll, beforeAll, describe, expect, it } from "vitest";
 
 import { ClienteNogle } from "./cliente-nogle.ts";
-import { conciliarRelatorios, consultarPendentes, enviarPendentes, lerEstoqueDeChips, sincronizarReferencias, type BancoConnect } from "./processar.ts";
+import {
+  conciliarRelatorios, consultarPendentes, enviarPendentes, enviarTransferencias, lerEstoqueDeChips, sincronizarReferencias, type BancoConnect,
+} from "./processar.ts";
 import { transporteHttp } from "./transporte.ts";
 
 type Funcao = { request: { method: string; url: string | { raw?: string } }; response?: { body?: string }[] };
@@ -31,6 +33,10 @@ const TIPOS: TipoOperacao[] = ["ativacao", "recarga", "portabilidade"];
 // CONNECT-d: chips FICTÍCIOS, na forma conferida na API de verdade em 24/11.
 const CHIP_LOJA = "8955170110000000011";
 const CHIP_MVNO = "8955170110000000037";
+// CONNECT-e: o estoque do PDV 5216 no servidor simulado muda com a transferência (o eSIM da MVNO chega nele).
+const estoqueDaLoja: { id: string; iccid: string; data_repasse: string | null; tipo: string }[] = [
+  { id: "2", iccid: CHIP_LOJA, data_repasse: "2022-03-21 22:31:23.580", tipo: "físico" },
+];
 let db: PGlite;
 let servidor: Server;
 let base = "";
@@ -86,7 +92,14 @@ beforeAll(async () => {
       }
       if (caminho === "/pdv/estoque") {
         const id = (JSON.parse(corpo || "{}") as { id?: number }).id;
-        return json(200, id === 5216 ? { total: 1, data: [{ id: "2", iccid: CHIP_LOJA, data_repasse: "2022-03-21 22:31:23.580", tipo: "físico" }] } : { total: 0, data: [] });
+        return json(200, id === 5216 ? { total: estoqueDaLoja.length, data: estoqueDaLoja } : { total: 0, data: [] });
+      }
+      // CONNECT-e: a transferência de 1 eSIM para o PDV 5216 responde como o exemplo oficial e muda o estoque dele.
+      if (caminho === "/pdv/transferir-chip-esim") {
+        const pedido = JSON.parse(corpo || "{}") as { id?: number; quantidade?: number };
+        if (pedido.id !== 5216 || pedido.quantidade !== 1) return json(422, { message: "Pedido inesperado no teste." });
+        estoqueDaLoja.push({ id: "3", iccid: CHIP_MVNO, data_repasse: null, tipo: "eSIM" });
+        return json(200, exemplo("/pdv/transferir-chip-esim"));
       }
       return json(404, { erro: "Endpoint inexistente ou recurso não encontrato." });
     });
@@ -125,6 +138,10 @@ const banco: BancoConnect = {
     if (!v) throw new Error("o banco não respondeu a leitura");
     return v;
   }),
+  transferenciasAEnviar: (limite) => comoServico(async () => (await db.query<TransferenciaParaEnviar>(
+    "select * from public.connect_worker_transferencias_a_enviar($1, $2)", [ids.organizacao, limite])).rows),
+  registrarTransferencia: (transferencia, resultado) => comoServico(async () => (await db.query<{ v: string }>(
+    "select public.connect_worker_registrar_transferencia($1, $2::jsonb) as v", [transferencia, JSON.stringify(resultado)])).rows[0]?.v ?? ""),
 };
 
 let sessoes = 0;
@@ -262,5 +279,30 @@ describe("o estoque de chips da Nogle (CONNECT-d), só leitura", () => {
     ]);
     expect((await db.query("select mvno_fisicos, mvno_esims, pdvs_lidos, falhas from public.connect_leituras_nogle")).rows)
       .toEqual([{ mvno_fisicos: 0, mvno_esims: 1, pdvs_lidos: 1, falhas: 0 }]);
+  });
+});
+
+describe("a transferência de chips pela Nogle (CONNECT-e)", () => {
+  it("o dono pede 1 eSIM; o worker lê o PDV, envia uma vez pelo transporte de verdade e confirma pelo estoque de depois", async () => {
+    // O estoque lido no teste anterior (CONNECT-d): o eSIM da MVNO livre, sem PDV.
+    const dono = await naLoja(ids.dono, ids.lojaA);
+    const pedido = await valor<{ id: string; situacao: string }>(dono,
+      "select public.connect_transferir_chips(p_tipo => 'esim', p_pdv => 5216, p_quantidade => 1, p_motivo => 'Teste de ponta a ponta', p_chave => 'pp:transferencia:1') as v");
+    expect(pedido.situacao).toBe("registrada");
+    const nogle = new ClienteNogle({ tipo: "marca", chaveAcesso: "chave-ficticia" }, transporteHttp(base, 500), { getComCorpo: true });
+    const antes = recebidos.length;
+    expect(await enviarTransferencias(banco, nogle)).toMatchObject({ enviadas: 1, confirmadas: 1 });
+    expect(recebidos.slice(antes).filter((p) => p.caminho !== "/auth/token")).toEqual([
+      { metodo: "GET", caminho: "/pdv/estoque", corpo: JSON.stringify({ id: 5216 }) },
+      { metodo: "POST", caminho: "/pdv/transferir-chip-esim", corpo: JSON.stringify({ id: 5216, quantidade: 1 }) },
+      { metodo: "GET", caminho: "/pdv/estoque", corpo: JSON.stringify({ id: 5216 }) },
+    ]);
+    expect((await db.query("select situacao, mensagem, resultado from public.connect_transferencias_chips where id = $1", [pedido.id])).rows).toEqual([{
+      situacao: "confirmada", mensagem: "Sucesso.", resultado: { antes: { fisicos: 1, esims: 0 }, depois: { fisicos: 1, esims: 1 }, novos: [CHIP_MVNO] },
+    }]);
+    // Nada mais na fila: rodar de novo não chama a Nogle.
+    const depois = recebidos.length;
+    expect(await enviarTransferencias(banco, nogle)).toMatchObject({ enviadas: 0, devolvidas: 0 });
+    expect(recebidos.length).toBe(depois);
   });
 });

@@ -1840,6 +1840,94 @@ export type Database = {
           },
         ]
       }
+      connect_transferencias_chips: {
+        Row: {
+          chave: string
+          concluida_em: string | null
+          conteudo: string
+          enviada_em: string | null
+          enviando_desde: string | null
+          iccid: string | null
+          iccid_final: string | null
+          id: string
+          mensagem: string | null
+          motivo: string | null
+          numero: number
+          organizacao_id: string
+          pdv_id: number
+          pedida_em: string
+          pedida_por: string
+          quantidade: number
+          resultado: Json
+          situacao: string
+          tipo: string
+        }
+        Insert: {
+          chave: string
+          concluida_em?: string | null
+          conteudo: string
+          enviada_em?: string | null
+          enviando_desde?: string | null
+          iccid?: string | null
+          iccid_final?: string | null
+          id?: string
+          mensagem?: string | null
+          motivo?: string | null
+          numero?: never
+          organizacao_id: string
+          pdv_id: number
+          pedida_em?: string
+          pedida_por: string
+          quantidade: number
+          resultado?: Json
+          situacao?: string
+          tipo: string
+        }
+        Update: {
+          chave?: string
+          concluida_em?: string | null
+          conteudo?: string
+          enviada_em?: string | null
+          enviando_desde?: string | null
+          iccid?: string | null
+          iccid_final?: string | null
+          id?: string
+          mensagem?: string | null
+          motivo?: string | null
+          numero?: never
+          organizacao_id?: string
+          pdv_id?: number
+          pedida_em?: string
+          pedida_por?: string
+          quantidade?: number
+          resultado?: Json
+          situacao?: string
+          tipo?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "connect_transferencias_chips_organizacao_id_fkey"
+            columns: ["organizacao_id"]
+            isOneToOne: false
+            referencedRelation: "organizacoes"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "connect_transferencias_chips_organizacao_id_pdv_id_fkey"
+            columns: ["organizacao_id", "pdv_id"]
+            isOneToOne: false
+            referencedRelation: "connect_pdvs"
+            referencedColumns: ["organizacao_id", "pdv_id"]
+          },
+          {
+            foreignKeyName: "connect_transferencias_chips_pedida_por_fkey"
+            columns: ["pedida_por"]
+            isOneToOne: false
+            referencedRelation: "perfis_usuario"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       cobrancas_de_repasse: {
         Row: {
           canal: string
@@ -8225,6 +8313,10 @@ export type Database = {
         Args: { p_motivo: string; p_operacao: string }
         Returns: boolean
       }
+      connect_cancelar_transferencia: {
+        Args: { p_motivo: string; p_transferencia: string }
+        Returns: string
+      }
       connect_habilitar: {
         Args: { p_evidencia: string; p_habilitar: boolean; p_tipo: string }
         Returns: boolean
@@ -8249,6 +8341,18 @@ export type Database = {
       connect_resolver: {
         Args: { p_motivo: string; p_operacao: string; p_resultado: string }
         Returns: string
+      }
+      connect_transferir_chips: {
+        Args: {
+          p_chave: string
+          p_iccid?: string
+          p_iccid_final?: string
+          p_motivo?: string
+          p_pdv: number
+          p_quantidade?: number
+          p_tipo: string
+        }
+        Returns: Json
       }
       connect_worker_atualizar_referencias: {
         Args: { p_itens: Json; p_organizacao: string; p_tipo: string }
@@ -8293,6 +8397,10 @@ export type Database = {
         Args: { p_operacao: string; p_resultado: Json }
         Returns: string
       }
+      connect_worker_registrar_transferencia: {
+        Args: { p_resultado: Json; p_transferencia: string }
+        Returns: string
+      }
       connect_worker_reivindicar_envios: {
         Args: { p_limite: number; p_organizacao: string; p_tipos: string[] }
         Returns: {
@@ -8307,6 +8415,17 @@ export type Database = {
           operadora_doadora_id: number
           plano_id: number
           tipo: string
+        }[]
+      }
+      connect_worker_transferencias_a_enviar: {
+        Args: { p_limite: number; p_organizacao: string }
+        Returns: {
+          iccid: string
+          iccid_final: string
+          pdv_id: number
+          quantidade: number
+          tipo: string
+          transferencia_id: string
         }[]
       }
       conta_bancaria_atualizar: {

@@ -1,7 +1,10 @@
 // As regras da tela do estoque de chips da Nogle (lote CONNECT-d; ORA-INV-011). ICCIDs FICTÍCIOS.
 import { describe, expect, it } from "vitest";
 
-import { abaixoDoMinimo, buscaDeIccid, erroDosChips, iccidEmBlocos, separarPdvs, situacaoDaLeitura, somar, type PdvDaTela } from "./chips";
+import {
+  abaixoDoMinimo, buscaDeIccid, chipsQueChegaram, erroDaTransferencia, erroDosChips, iccidEmBlocos, lerPedidoDeTransferencia, separarPdvs,
+  situacaoDaLeitura, somar, type PdvDaTela,
+} from "./chips";
 
 const pdv = (campos: Partial<PdvDaTela>): PdvDaTela => ({
   pdv_id: 1, nome: "PDV", cidade: null, uf: null, estoque_minimo: null, unidade_id: null, ativo: true, estoque_lido_em: null, fisicos: 0, esims: 0, ...campos,
@@ -49,5 +52,41 @@ describe("o estoque de chips da Nogle na tela (CONNECT-d)", () => {
     expect(comLoja.map((p) => [p.pdv_id, p.loja])).toEqual([[1, "Água Verde"], [2, "Butiatuvinha"]]);
     expect(outros.map((p) => p.pdv_id)).toEqual([8, 9]);
     expect(somar(comLoja)).toEqual({ fisicos: 26, esims: 5 });
+  });
+});
+
+describe("o pedido de transferência de chips na tela (CONNECT-e)", () => {
+  const CHAVE = "00000000-0000-4000-9000-0000000000c1";
+  const I = (n: number) => `895517011000000${String(n).padStart(3, "0")}1`;
+  const form = (campos: Record<string, string>) => ({ get: (nome: string) => campos[nome] ?? null });
+
+  it("lê o pedido de cada tipo e ignora os campos do outro tipo", () => {
+    expect(lerPedidoDeTransferencia(form({ tipo: "esim", pdv: "5233", quantidade: "2", iccid: I(1), chave: CHAVE, motivo: " Reposição " })))
+      .toEqual({ ok: true, pedido: { tipo: "esim", pdv: 5233, iccid: null, iccidFinal: null, quantidade: 2, motivo: "Reposição", chave: CHAVE } });
+    expect(lerPedidoDeTransferencia(form({ tipo: "unidade", pdv: "5233", iccid: `${I(1).slice(0, 4)} ${I(1).slice(4)}`, quantidade: "9", chave: CHAVE })))
+      .toEqual({ ok: true, pedido: { tipo: "unidade", pdv: 5233, iccid: I(1), iccidFinal: null, quantidade: null, motivo: null, chave: CHAVE } });
+    expect(lerPedidoDeTransferencia(form({ tipo: "lote", pdv: "5233", iccid: I(1), iccid_final: I(4), chave: CHAVE })))
+      .toMatchObject({ ok: true, pedido: { tipo: "lote", iccid: I(1), iccidFinal: I(4) } });
+  });
+
+  it("recusa o pedido fora da forma antes de ir ao banco", () => {
+    const casos: Record<string, string>[] = [
+      { tipo: "chip", pdv: "5233", quantidade: "1", chave: CHAVE },
+      { tipo: "esim", pdv: "x", quantidade: "1", chave: CHAVE },
+      { tipo: "esim", pdv: "5233", quantidade: "0", chave: CHAVE },
+      { tipo: "esim", pdv: "5233", quantidade: "501", chave: CHAVE },
+      { tipo: "esim", pdv: "5233", quantidade: "1", chave: "outra" },
+      { tipo: "unidade", pdv: "5233", iccid: "123", chave: CHAVE },
+      { tipo: "lote", pdv: "5233", iccid: I(4), iccid_final: I(1), chave: CHAVE },
+      { tipo: "lote", pdv: "5233", iccid: I(1), iccid_final: `${I(4)}0`, chave: CHAVE },
+    ];
+    for (const campos of casos) expect(lerPedidoDeTransferencia(form(campos)), JSON.stringify(campos)).toEqual({ ok: false, erro: "dados" });
+  });
+
+  it("os erros do banco viram mensagens; os chips que chegaram saem do resultado", () => {
+    expect([{ code: "OR052" }, { code: "OR053" }, { code: "OR054" }, { code: "OR004" }, { code: "42501" }, { code: "22023" }, { code: "X" }].map(erroDaTransferencia))
+      .toEqual(["sem_estoque", "em_andamento", "ja_saiu", "chave", "sem_permissao", "dados", "falha"]);
+    expect(chipsQueChegaram({ novos: [I(1), 2, I(3)] })).toEqual([I(1), I(3)]);
+    expect(chipsQueChegaram(null)).toEqual([]);
   });
 });

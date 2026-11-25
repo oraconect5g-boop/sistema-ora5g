@@ -5,8 +5,9 @@
 // - saiu e não voltou resposta clara → resultado desconhecido: NUNCA reenvia; consulta e a gerência decide;
 // - log só com contagens: nada de CPF, nome, linha, token ou chave.
 import {
-  PEDIDO_DO_ESTOQUE_DA_MVNO, PEDIDO_DOS_PDVS, RELATORIOS_DA_CONCILIACAO, interpretarConsulta, interpretarConsultaPagamento, interpretarEnvio, lerChips,
-  lerPdvs, lerReferencias, lerRelatorio, montarConsulta, montarPedido, montarPedidoDoRelatorio, pedidoDoEstoqueDoPdv, type ChipDaNogle, type Evidencia,
+  PEDIDO_DO_ESTOQUE_DA_MVNO, PEDIDO_DOS_PDVS, RELATORIOS_DA_CONCILIACAO, conferirTransferencia, interpretarConsulta, interpretarConsultaPagamento,
+  interpretarEnvio, lerChips, lerPdvs, lerReferencias, lerRelatorio, lerRespostaDaTransferencia, montarConsulta, montarPedido, montarPedidoDoRelatorio,
+  pedidoDaTransferencia, pedidoDoEstoqueDoPdv, type ChipDaNogle, type Evidencia, type TransferenciaParaEnviar,
   type ItemDeReferencia, type LinhaDoRelatorio, type OperacaoParaConsultar, type OperacaoParaEnviar, type PdvDaNogle, type PedidoNogle,
   type RelatorioDaConciliacao, type ResultadoEnvio, type TipoDeChip, type TipoDeReferencia, type TipoOperacao,
 } from "@ora5g/dominio/nogle";
@@ -21,7 +22,21 @@ export interface BancoConnect {
   atualizarReferencias(tipo: TipoDeReferencia, itens: ItemDeReferencia[]): Promise<number>;
   registrarConciliacao(relatorio: RelatorioDaConciliacao, de: string, ate: string, linhas: LinhaDoRelatorio[]): Promise<{ numero: number; totais: Record<string, number> }>;
   gravarEstoque(leitura: LeituraDoEstoque): Promise<EstoqueGravado>;
+  transferenciasAEnviar(limite: number): Promise<TransferenciaParaEnviar[]>;
+  registrarTransferencia(transferencia: string, resultado: ResultadoDaTransferencia): Promise<string>;
 }
+
+/** O que o worker grava depois de cada envio de transferência (connect_worker_registrar_transferencia). */
+export type ResultadoDaTransferencia = {
+  envio: "nao_enviada" | "recusada" | "desconhecida" | "aceita";
+  mensagem: string;
+  confirmacao?: "confirmada" | "parcial" | "nao_confirmada";
+  antes?: { fisicos: number; esims: number };
+  depois?: { fisicos: number; esims: number };
+  novos?: string[];
+  transferidos?: number | null;
+  nao_transferidos?: number | null;
+};
 
 /** O que o worker entrega ao banco a cada leitura do estoque de chips (CONNECT-d; connect_worker_gravar_estoque). */
 export type LeituraDoEstoque = {
@@ -207,4 +222,69 @@ export async function lerEstoqueDeChips(banco: BancoConnect, nogle: Nogle):
   }
   const leitura = await banco.gravarEstoque({ pdvs, mvno: mvno ? mvno.chips.map(({ iccid, tipo }) => ({ iccid, tipo })) : null, estoques, falhas });
   return { gravada: true, leitura, ignorados };
+}
+
+const contar = (chips: readonly ChipDaNogle[]) => ({
+  fisicos: chips.filter((c) => c.tipo === "fisico").length, esims: chips.filter((c) => c.tipo === "esim").length,
+});
+
+/**
+ * A transferência de chips (CONNECT-e): cada pedido do dono sai UMA vez. Antes, o estoque do PDV de destino (sem essa
+ * leitura nada é enviado e o pedido volta para a fila); depois do envio aceito, o estoque de novo, e a conferência diz se
+ * os chips chegaram. Sem conexão antes de enviar: volta para a fila. Enviado sem resposta clara: resultado desconhecido,
+ * nunca reenviado. Devolve as contagens e se algum pedido saiu (para atualizar o estoque lido).
+ */
+export async function enviarTransferencias(banco: BancoConnect, nogle: Nogle, limite = 5) {
+  const resumo = { confirmadas: 0, parciais: 0, recusadas: 0, desconhecidas: 0, devolvidas: 0, enviadas: 0 };
+  let parar: string | null = null;
+  for (const t of await banco.transferenciasAEnviar(limite)) {
+    const devolver = async (mensagem: string) => {
+      await banco.registrarTransferencia(t.transferencia_id, { envio: "nao_enviada", mensagem });
+      resumo.devolvidas++;
+    };
+    const pedido = pedidoDaTransferencia(t);
+    if (parar) { await devolver(parar); continue; }
+    if (!pedido) {
+      await banco.registrarTransferencia(t.transferencia_id, { envio: "recusada", mensagem: "Pedido fora da forma: nada foi enviado. Peça de novo." });
+      resumo.recusadas++;
+      continue;
+    }
+    const a = await nogle.chamar(pedidoDoEstoqueDoPdv(t.pdv_id));
+    const antes = a.tipo === "resposta" && a.status === 200 ? lerChips(a.corpo) : null;
+    if (!antes) {
+      // Sem a leitura de antes não há como conferir: nada é enviado. Sem conexão ou sem acesso, os demais também voltam.
+      if (a.tipo !== "resposta") parar = `Sem conexão com a Nogle (${a.motivo}): nada foi enviado; o pedido volta para a fila.`;
+      await devolver(`Sem a leitura do estoque do PDV antes do envio (${a.tipo === "resposta" ? `HTTP ${a.status}` : a.motivo}): nada foi enviado; o pedido volta para a fila.`);
+      continue;
+    }
+    const r = await nogle.chamar(pedido);
+    if (r.tipo !== "resposta" && !(r.tipo === "falha" && r.enviada)) {
+      // Nada saiu (sem conexão, sem login, consulta bloqueada): volta para a fila, e os demais também.
+      parar = `Nada foi enviado (${r.motivo}); o pedido volta para a fila.`;
+      await devolver(parar);
+      continue;
+    }
+    resumo.enviadas++;
+    const lida = r.tipo === "resposta"
+      ? lerRespostaDaTransferencia(r.status, r.corpo)
+      : { envio: "desconhecida" as const, mensagem: `${r.motivo}: a Nogle pode ter recebido; confira no painel da Nogle (o pedido não é reenviado).`, transferidos: null, nao_transferidos: null };
+    if (lida.envio !== "aceita") {
+      await banco.registrarTransferencia(t.transferencia_id, { envio: lida.envio, mensagem: lida.mensagem, antes: contar(antes.chips) });
+      if (lida.envio === "recusada") resumo.recusadas++;
+      else resumo.desconhecidas++;
+      continue;
+    }
+    const d = await nogle.chamar(pedidoDoEstoqueDoPdv(t.pdv_id));
+    const depois = d.tipo === "resposta" && d.status === 200 ? lerChips(d.corpo) : null;
+    const conferencia = depois ? conferirTransferencia(t, antes.chips, depois.chips) : { confirmacao: "nao_confirmada" as const, novos: [] };
+    const situacao = await banco.registrarTransferencia(t.transferencia_id, {
+      envio: "aceita", mensagem: lida.mensagem, confirmacao: conferencia.confirmacao, antes: contar(antes.chips),
+      ...(depois ? { depois: contar(depois.chips) } : {}), novos: conferencia.novos,
+      transferidos: lida.transferidos, nao_transferidos: lida.nao_transferidos,
+    });
+    if (situacao === "confirmada") resumo.confirmadas++;
+    else if (situacao === "parcial") resumo.parciais++;
+    else resumo.desconhecidas++;
+  }
+  return resumo;
 }

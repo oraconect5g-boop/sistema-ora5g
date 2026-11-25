@@ -1,4 +1,6 @@
-import { ArrowLeft, Cpu, Search, Store } from "lucide-react";
+import { randomUUID } from "node:crypto";
+
+import { ArrowLeft, ArrowRightLeft, Cpu, Search, Store } from "lucide-react";
 import type { Metadata } from "next";
 import Form from "next/form";
 import Link from "next/link";
@@ -8,12 +10,13 @@ import { Aviso, Botao, Cartao, Indicador, Selo, TituloPagina } from "../../../co
 import { permite } from "../../../lib/acesso/molde";
 import { FalhaDoServico, obterSessao } from "../../../lib/acesso/sessao";
 import {
-  abaixoDoMinimo, buscaDeIccid, ehErroDosChips, ERROS_DOS_CHIPS, iccidEmBlocos, NOME_DO_TIPO, separarPdvs, situacaoDaLeitura, somar,
-  type ChipDaTela, type LeituraDaTela, type PdvDaTela,
+  abaixoDoMinimo, buscaDeIccid, chipsQueChegaram, ehErroDaTransferencia, ehErroDosChips, ERROS_DA_TRANSFERENCIA, ERROS_DOS_CHIPS, iccidEmBlocos,
+  NOME_DO_TIPO, NOMES_DOS_TIPOS_DE_TRANSFERENCIA, separarPdvs, SITUACOES_DA_TRANSFERENCIA, situacaoDaLeitura, somar, type ChipDaTela,
+  type LeituraDaTela, type PdvDaTela, type TipoDeTransferencia, type TransferenciaDaTela,
 } from "../../../lib/connect/chips";
 import { agora, numero } from "../../../lib/formato";
 import { textoDoParametro, type ValorDeParametro } from "../../../lib/parametros";
-import { ligarPdv } from "./acoes";
+import { cancelarTransferencia, ligarPdv, pedirTransferencia } from "./acoes";
 
 export const metadata: Metadata = { title: "Chips na Nogle" };
 export const dynamic = "force-dynamic";
@@ -26,7 +29,10 @@ const quando = (iso: string) =>
 const diaDoRepasse = (texto: string | null) => (texto && /^\d{4}-\d{2}-\d{2}/.test(texto) ? texto.slice(0, 10).split("-").reverse().join("/") : null);
 const chips = (fisicos: number, esims: number) => `${numero(fisicos)} ${fisicos === 1 ? "físico" : "físicos"} · ${numero(esims)} eSIM`;
 
-type Parametros = { pdv?: ValorDeParametro; iccid?: ValorDeParametro; erro?: ValorDeParametro; ok?: ValorDeParametro };
+type Parametros = {
+  pdv?: ValorDeParametro; iccid?: ValorDeParametro; erro?: ValorDeParametro; ok?: ValorDeParametro; numero?: ValorDeParametro;
+  erro_transferencia?: ValorDeParametro;
+};
 
 // O estoque de chips da Nogle (lote CONNECT-d; ORA-INV-011), SÓ LEITURA. O worker do servidor lê a Nogle a cada 30 minutos,
 // das 7h às 22h, e grava no banco; aqui cada um vê pela RLS: o dono, a rede inteira; o administrador, os PDVs e as contagens
@@ -40,19 +46,26 @@ export default async function ChipsDaNogle({ searchParams }: { searchParams: Pro
     return <MoldeReal sessao={sessao}>{voltar}<Aviso tom="aviso" className="mt-4">O estoque de chips da Nogle é de quem opera ou gere a Ora Connect.</Aviso></MoldeReal>;
   }
   const { supabase } = sessao;
-  const [pdvsLidos, leiturasLidas, lojasLidas] = await Promise.all([
+  const [pdvsLidos, leiturasLidas, lojasLidas, transferenciasLidas] = await Promise.all([
     supabase.from("connect_pdvs").select("pdv_id, nome, cidade, uf, estoque_minimo, unidade_id, ativo, estoque_lido_em, fisicos, esims").order("nome").limit(500),
     supabase.from("connect_leituras_nogle").select("numero, lida_em, pdvs, pdvs_lidos, mvno_fisicos, mvno_esims, falhas").order("lida_em", { ascending: false }).limit(48),
     supabase.from("unidades").select("id, nome, tipo").order("nome").limit(300),
+    // CONNECT-e: os pedidos de transferência (a RLS mostra ao dono e ao administrador).
+    supabase.from("connect_transferencias_chips")
+      .select("id, numero, tipo, pdv_id, iccid, iccid_final, quantidade, motivo, situacao, pedida_em, concluida_em, mensagem, resultado")
+      .order("pedida_em", { ascending: false }).limit(20),
   ]);
   if (pdvsLidos.error) throw new FalhaDoServico("connect_pdvs");
   if (leiturasLidas.error) throw new FalhaDoServico("connect_leituras_nogle");
   if (lojasLidas.error) throw new FalhaDoServico("unidades");
+  if (transferenciasLidas.error) throw new FalhaDoServico("connect_transferencias_chips");
+  const transferencias = transferenciasLidas.data as unknown as TransferenciaDaTela[];
   const pdvs = pdvsLidos.data as unknown as PdvDaTela[];
   const leituras = leiturasLidas.data as unknown as LeituraDaTela[];
   const lojas = lojasLidas.data as { id: string; nome: string; tipo: string }[];
   const nomeDaLoja = (id: string) => lojas.find((l) => l.id === id)?.nome;
   const { comLoja, outros } = separarPdvs(pdvs, nomeDaLoja);
+  const comLojaAtivos = () => comLoja.filter((p) => p.ativo);
   const ultima = leituras[0];
   const mvno = leituras.find((l) => l.mvno_fisicos !== null && l.mvno_esims !== null);
   const lidaEm = ultima?.lida_em ?? pdvs.map((p) => p.estoque_lido_em).filter((d): d is string => d !== null).sort().at(-1) ?? null;
@@ -86,6 +99,16 @@ export default async function ChipsDaNogle({ searchParams }: { searchParams: Pro
 
   const erro = textoDoParametro(parametros.erro);
   const ok = textoDoParametro(parametros.ok);
+  const erroDaTransferencia = textoDoParametro(parametros.erro_transferencia);
+  const numeroPedido = textoDoParametro(parametros.numero);
+  // Só o dono pede (o banco confere): quem gere a Ora Connect e vê as leituras da rede.
+  const pedeTransferencia = permite(sessao, "connect.gerir") && ultima !== undefined;
+  const destinos = [...comLojaAtivos(), ...outros.filter((p) => p.ativo)];
+  const nomeDoDestino = (pdv: number) => {
+    const p = pdvs.find((x) => x.pdv_id === pdv);
+    const loja = p?.unidade_id ? nomeDaLoja(p.unidade_id) : undefined;
+    return loja ? `${loja} (PDV ${pdv})` : `${p?.nome ?? "PDV"} (PDV ${pdv})`;
+  };
   const nasLojas = somar(comLoja);
   const nosOutros = somar(outros);
   const abaixo = comLoja.filter(abaixoDoMinimo);
@@ -109,6 +132,15 @@ export default async function ChipsDaNogle({ searchParams }: { searchParams: Pro
       {voltar}
       <TituloPagina titulo="Chips na Nogle" subtitulo="O estoque virgem de chips na Nogle, lido pelo servidor a cada 30 minutos, das 7h às 22h" />
       {ok === "ligacao" && <Aviso tom="sucesso" className="mt-4">Ligação salva: fica na auditoria.</Aviso>}
+      {ok === "transferencia" && (
+        <Aviso tom="sucesso" className="mt-4">
+          {`Pedido ${numeroPedido && /^\d+$/.test(numeroPedido) ? `nº ${numeroPedido} ` : ""}registrado: o servidor envia à Nogle em até 1 minuto, uma vez, e confirma pelo estoque do PDV.`}
+        </Aviso>
+      )}
+      {ok === "cancelada" && <Aviso tom="sucesso" className="mt-4">Pedido cancelado: fica na auditoria.</Aviso>}
+      {erroDaTransferencia && (
+        <Aviso tom="perigo" className="mt-4">{ehErroDaTransferencia(erroDaTransferencia) ? ERROS_DA_TRANSFERENCIA[erroDaTransferencia] : ERROS_DA_TRANSFERENCIA.falha}</Aviso>
+      )}
       {erro && <Aviso tom="perigo" className="mt-4">{ehErroDosChips(erro) ? ERROS_DOS_CHIPS[erro] : ERROS_DOS_CHIPS.falha}</Aviso>}
       <Aviso tom={situacao === "em_dia" ? "info" : "aviso"} className="mt-4">
         {situacao === "sem_leitura" || !lidaEm
@@ -117,7 +149,7 @@ export default async function ChipsDaNogle({ searchParams }: { searchParams: Pro
             ? `Última leitura da Nogle: ${quando(lidaEm)}.`
             : `A última leitura da Nogle foi ${quando(lidaEm)}: o servidor não conseguiu ler depois disso, e o que aparece aqui pode estar desatualizado.`}
         {ultima && ultima.falhas > 0 && ` Na última leitura, ${numero(ultima.falhas)} ${ultima.falhas === 1 ? "parte não respondeu" : "partes não responderam"}: ${ultima.falhas === 1 ? "ela mostra" : "elas mostram"} o que foi lido antes.`}
-        {" "}Só leitura: nada aqui transfere, ativa ou reserva chip, e o livro de estoque da Ora não muda.
+        {" "}A leitura não muda nada na Nogle: só o pedido de transferência do dono move chips, uma vez cada, e o livro de estoque da Ora não muda.
       </Aviso>
 
       {ultima && (
@@ -192,6 +224,80 @@ export default async function ChipsDaNogle({ searchParams }: { searchParams: Pro
               <Botao type="submit" variante="secundario">Salvar a ligação</Botao>
             </form>
           )}
+        </Cartao>
+      )}
+
+      {pedeTransferencia && (
+        <Cartao className="mt-4" id="transferir" titulo="Transferir chips" icone={ArrowRightLeft}
+          subtitulo="Do estoque geral da Ora na Nogle para uma loja ou PDV; o servidor envia uma vez e confirma pelo estoque do PDV">
+          <p className="text-sm text-suave">
+            {mvno ? `Livres no estoque geral (última leitura): ${chips(mvno.mvno_fisicos ?? 0, mvno.mvno_esims ?? 0)}. ` : ""}
+            Para eSIM, só a quantidade; para um chip, o ICCID; para um lote, o primeiro e o último ICCID (o sistema conta os chips livres no intervalo).
+          </p>
+          <form action={pedirTransferencia} className="mt-3 grid gap-3 sm:grid-cols-2">
+            <input type="hidden" name="chave" value={randomUUID()} />
+            <label className="text-sm font-medium">O que transferir
+              <select name="tipo" defaultValue="esim" className={campo}>
+                {(Object.keys(NOMES_DOS_TIPOS_DE_TRANSFERENCIA) as TipoDeTransferencia[]).map((tipo) => (
+                  <option key={tipo} value={tipo}>{NOMES_DOS_TIPOS_DE_TRANSFERENCIA[tipo]}</option>
+                ))}
+              </select>
+            </label>
+            <label className="text-sm font-medium">Para onde
+              <select name="pdv" required defaultValue="" className={campo}>
+                <option value="" disabled>Escolha a loja ou o PDV</option>
+                {destinos.map((p) => <option key={p.pdv_id} value={p.pdv_id}>{nomeDoDestino(p.pdv_id)}</option>)}
+              </select>
+            </label>
+            <label className="text-sm font-medium">Quantidade de eSIM
+              <input name="quantidade" type="number" min={1} max={500} inputMode="numeric" className={campo} />
+            </label>
+            <label className="text-sm font-medium">ICCID (um chip, ou o primeiro do lote)
+              <input name="iccid" inputMode="numeric" autoComplete="off" className={campo} />
+            </label>
+            <label className="text-sm font-medium">Último ICCID do lote
+              <input name="iccid_final" inputMode="numeric" autoComplete="off" className={campo} />
+            </label>
+            <label className="text-sm font-medium">Motivo (opcional)
+              <input name="motivo" maxLength={200} autoComplete="off" className={campo} />
+            </label>
+            <div className="sm:col-span-2"><Botao type="submit">Pedir a transferência</Botao></div>
+          </form>
+        </Cartao>
+      )}
+
+      {transferencias.length > 0 && (
+        <Cartao className="mt-4" titulo="Transferências pedidas" subtitulo="As 20 mais recentes, com o que a Nogle respondeu e o que chegou no PDV">
+          <ul className="divide-y divide-borda text-sm" aria-label="Transferências">
+            {transferencias.map((tr) => {
+              const s = SITUACOES_DA_TRANSFERENCIA[tr.situacao] ?? { rotulo: tr.situacao, tom: "neutro" as const };
+              const chegaram = chipsQueChegaram(tr.resultado);
+              const nome = NOMES_DOS_TIPOS_DE_TRANSFERENCIA[tr.tipo as TipoDeTransferencia] ?? tr.tipo;
+              return (
+                <li key={tr.id} className="py-3">
+                  <p className="flex flex-wrap items-center gap-2">
+                    <span className="font-semibold">{`Nº ${tr.numero}`}</span>
+                    <Selo tom={s.tom}>{s.rotulo}</Selo>
+                    <span>{`${tr.quantidade} × ${nome.split(" (")[0]} → ${nomeDoDestino(tr.pdv_id)}`}</span>
+                  </p>
+                  <p className="mt-1 text-xs text-suave">
+                    {`Pedida ${quando(tr.pedida_em)}${tr.iccid ? ` · ICCID ${iccidEmBlocos(tr.iccid)}${tr.iccid_final ? ` até ${iccidEmBlocos(tr.iccid_final)}` : ""}` : ""}${tr.motivo ? ` · ${tr.motivo}` : ""}`}
+                  </p>
+                  {tr.mensagem && <p className="mt-1 text-xs">{tr.mensagem}</p>}
+                  {chegaram.length > 0 && <p className="mt-1 text-xs text-suave">{`Chegaram no PDV: ${chegaram.map((c) => `…${c.slice(-6)}`).join(", ")}`}</p>}
+                  {tr.situacao === "registrada" && pedeTransferencia && (
+                    <form action={cancelarTransferencia} className="mt-2 flex flex-wrap items-end gap-2">
+                      <input type="hidden" name="transferencia" value={tr.id} />
+                      <label className="text-xs font-medium">Motivo do cancelamento
+                        <input name="motivo" required minLength={3} maxLength={200} autoComplete="off" className={campo} />
+                      </label>
+                      <Botao type="submit" tamanho="sm" variante="perigo">Cancelar o pedido</Botao>
+                    </form>
+                  )}
+                </li>
+              );
+            })}
+          </ul>
         </Cartao>
       )}
 

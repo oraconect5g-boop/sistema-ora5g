@@ -5,6 +5,8 @@
 //   busca pelo fim do ICCID, que diz onde o chip está;
 // - o Administrador (teste): os PDVs e as contagens, mas não a lista dos chips (a RLS do banco);
 // - o Gerente (teste), na Santa Cândida (teste), que não tem PDV na Nogle: nada da rede.
+// CONNECT-e: o formulário "Transferir chips" aparece só para o dono; a prova NÃO pede transferência (moveria chips de verdade
+// na Nogle: cada uma pede o sim do proprietário).
 // Só no servidor: ORA_E2E_URL e ORA_E2E_CONTAS (e2e/contas-de-teste.ts); no CI, fica pulado.
 import { expect, test, type Page } from "@playwright/test";
 
@@ -38,16 +40,22 @@ test.describe("os chips na Nogle, no site no ar (CONNECT-d)", () => {
       await dono.getByLabel("Fim do ICCID (4 dígitos ou mais)").fill(iccid.slice(-6));
       await dono.getByRole("button", { name: "Buscar" }).click();
       await expect(dono.getByRole("list", { name: "Chips achados" }).getByRole("listitem").filter({ hasText: /na loja Santa Cândida \(PDV \d+\)/ })).toHaveCount(1);
+      // O formulário da transferência, com as lojas como destino (sem enviar nada).
+      const transferir = secao(dono, "Transferir chips");
+      await expect(transferir.getByRole("button", { name: "Pedir a transferência" })).toBeVisible();
+      await expect(transferir.getByLabel("Para onde").locator("option", { hasText: /^Santa Cândida \(PDV \d+\)$/ })).toHaveCount(1);
 
       const administrador = pessoas[ADMINISTRADOR] as Page;
       await administrador.goto("/connect/chips?pdv=mvno");
       await expect(secao(administrador, "Lojas").getByRole("link", { name: "Ver os chips" })).toHaveCount(11);
       await expect(administrador.getByText("A lista dos chips é de quem gere a Ora Connect na rede ou opera esta loja.")).toBeVisible();
+      await expect(administrador.getByRole("heading", { level: 2, name: "Transferir chips" })).toHaveCount(0);
 
       const gerente = pessoas[GERENTE_A] as Page;
       await gerente.goto("/connect/chips");
       await expect(gerente.getByRole("heading", { level: 2, name: "Nenhum PDV da Nogle para mostrar" })).toBeVisible();
       await expect(gerente.getByText("Estoque geral da Ora", { exact: true })).toHaveCount(0);
+      await expect(gerente.getByRole("heading", { level: 2, name: "Transferir chips" })).toHaveCount(0);
     });
   });
 });

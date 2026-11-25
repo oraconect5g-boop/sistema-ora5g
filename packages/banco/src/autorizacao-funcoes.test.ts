@@ -1,9 +1,9 @@
 // Inventário de autorização (prioridade 1 do diagnóstico de 10/11/2026; ORA-ORG-004 e ORA-QUAL-002).
 // O aviso 0029 do Supabase lista as funções SECURITY DEFINER que qualquer usuário logado pode chamar
-// pela API: 223 em 24/11 (48 + 6 do cadastro de lojas, L2, + 5 do cadastro do catálogo, L3a, + 4 dos preços, L3b,
+// pela API: 225 em 25/11 (48 + 6 do cadastro de lojas, L2, + 5 do cadastro do catálogo, L3a, + 4 dos preços, L3b,
 // + 4 da importação do catálogo, L3c, + 3 da entrada de mercadoria, L4a, + 5 do inventário, L4b, + 6 dos clientes, L5a,
 // + 9 do funil e da agenda, L5b, + 4 da mesclagem e dos segmentos, L5c, + 4 das maquininhas e da conciliação, L7a,
-// + 2 da leitura das entradas, R1, + 1 do nome no ranking, G1, + 2 das metas, G4b, + 3 das financeiras, L7b, + 3 da saída autorizada do caixa, L7c, + 6 das contas a pagar, L8a, + 1 das regras do bônus por meta, L9a, + 2 do fechamento do bônus, L9b, + 1 da correção do repasse das financeiras, B4, + 1 dos dados para emitir a nota, K1b, + 1 dos documentos da nota emitida, L10a, + 2 do envio da nota pelo WhatsApp, K1c, + 1 dos recebíveis por loja e adquirente, L8e, + 5 da ordem de serviço, L12a, + 3 do orçamento da OS, L12b, + 2 da cobrança e da entrega da OS, L12c, + 3 das peças da OS, L12d, + 1 dos relatórios da assistência, L12e, + 2 dos documentos da venda, L5d, + 2 da conciliação fiscal, L10b, + 2 do cancelamento e da correção da nota, L10c, + 1 do valor do estoque a custo, G3b, + 2 dos códigos de outros canais, CAT-009, + 2 das regiões, ORG-009, + 1 da conta ligada à entrada, FIN-004a, + 1 da ligação do PDV da Nogle à loja, CONNECT-d, + 2 dos documentos da conta, FIN-004b, + 1 da correção do custo, CAT-008b, + 2 da limpeza das fotos, CAT-011b, + 5 do pedido de compra, INV-009a, + 1 da carta de correção, FISC-009b, + 1 do relatório do titular, QUAL-011a, + 2 da vitrine da loja online, ONLINE-a, públicas de propósito, + 5 da reserva do site, ONLINE-b (a de reservar, pública), + 1 da conclusão da limpeza das fotos, INTEG-b, + 1 da situação das rotinas agendadas, ROT-a, + 1 da conferência do destinatário da nota, INTEG-c, + 2 da Saúde da operação e da página /saude, SAUDE-a, + 3 da remessa de transferência, TRF-a, + 6 dos avisos no celular, PWA-b (as duas da fila pedem o segredo do worker), + 7 dos extratos e da conciliação por arquivo, EXT-a, + 1 da importação do custo dos anúncios, META-a, + 1 da importação dos pedidos dos marketplaces, MKTPL-a, + 4 da carga do estoque inicial por loja, REIN-b, + 4 do pedido do site, ONLINE-d, + 1 da resolução da diferença na carga do estoque, REIN-c, + 3 das contas bancárias, CONTAS-a, + 2 dos repasses dos marketplaces, REPASSE-a, + 1 da divergência da transferência, TRF-d, + 1 da conferência do período, FIN-001a, + 1 da conferência do que foi desfeito, FIN-001b, + 3 dos repasses atrasados, FIN-007a, + 3 do débito do extrato e do estorno da venda, PAY-011a, + 2 do depósito da maquininha, FIN-006a, + 2 do aviso do erro do servidor, QUAL-006a, + 2 do pagamento pelo site, PAY-014a; no L8b, a das categorias ganhou o parâmetro "entra no resultado"). Elas rodam com poder total e cada uma confere sessão, loja e permissão por
+// + 2 da leitura das entradas, R1, + 1 do nome no ranking, G1, + 2 das metas, G4b, + 3 das financeiras, L7b, + 3 da saída autorizada do caixa, L7c, + 6 das contas a pagar, L8a, + 1 das regras do bônus por meta, L9a, + 2 do fechamento do bônus, L9b, + 1 da correção do repasse das financeiras, B4, + 1 dos dados para emitir a nota, K1b, + 1 dos documentos da nota emitida, L10a, + 2 do envio da nota pelo WhatsApp, K1c, + 1 dos recebíveis por loja e adquirente, L8e, + 5 da ordem de serviço, L12a, + 3 do orçamento da OS, L12b, + 2 da cobrança e da entrega da OS, L12c, + 3 das peças da OS, L12d, + 1 dos relatórios da assistência, L12e, + 2 dos documentos da venda, L5d, + 2 da conciliação fiscal, L10b, + 2 do cancelamento e da correção da nota, L10c, + 1 do valor do estoque a custo, G3b, + 2 dos códigos de outros canais, CAT-009, + 2 das regiões, ORG-009, + 1 da conta ligada à entrada, FIN-004a, + 1 da ligação do PDV da Nogle à loja, CONNECT-d, + 2 da transferência de chips, CONNECT-e, + 2 dos documentos da conta, FIN-004b, + 1 da correção do custo, CAT-008b, + 2 da limpeza das fotos, CAT-011b, + 5 do pedido de compra, INV-009a, + 1 da carta de correção, FISC-009b, + 1 do relatório do titular, QUAL-011a, + 2 da vitrine da loja online, ONLINE-a, públicas de propósito, + 5 da reserva do site, ONLINE-b (a de reservar, pública), + 1 da conclusão da limpeza das fotos, INTEG-b, + 1 da situação das rotinas agendadas, ROT-a, + 1 da conferência do destinatário da nota, INTEG-c, + 2 da Saúde da operação e da página /saude, SAUDE-a, + 3 da remessa de transferência, TRF-a, + 6 dos avisos no celular, PWA-b (as duas da fila pedem o segredo do worker), + 7 dos extratos e da conciliação por arquivo, EXT-a, + 1 da importação do custo dos anúncios, META-a, + 1 da importação dos pedidos dos marketplaces, MKTPL-a, + 4 da carga do estoque inicial por loja, REIN-b, + 4 do pedido do site, ONLINE-d, + 1 da resolução da diferença na carga do estoque, REIN-c, + 3 das contas bancárias, CONTAS-a, + 2 dos repasses dos marketplaces, REPASSE-a, + 1 da divergência da transferência, TRF-d, + 1 da conferência do período, FIN-001a, + 1 da conferência do que foi desfeito, FIN-001b, + 3 dos repasses atrasados, FIN-007a, + 3 do débito do extrato e do estorno da venda, PAY-011a, + 2 do depósito da maquininha, FIN-006a, + 2 do aviso do erro do servidor, QUAL-006a, + 2 do pagamento pelo site, PAY-014a; no L8b, a das categorias ganhou o parâmetro "entra no resultado"). Elas rodam com poder total e cada uma confere sessão, loja e permissão por
 // conta própria. Este teste monta um "mundo" fictício com objetos reais em duas lojas e tenta cada
 // função como 13 tipos de atacante. Recusa = erro, ou resposta vazia numa leitura, e nada muda no
 // banco. O teste lista as funções no próprio banco e falha se aparecer uma nova sem casos aqui.
@@ -83,7 +83,12 @@ async function montarMundo() {
     [ids.organizacao, JSON.stringify([{ codigo: "99999", nome: "7 GB", valor_centavos: 4490 }])]));
   // CONNECT-d: um PDV da Nogle (fictício), lido pelo worker e sem loja ligada; ligar é do dono ou do administrador.
   await servico(() => db.query("select public.connect_worker_gravar_estoque($1, $2::jsonb)",
-    [ids.organizacao, JSON.stringify({ pdvs: [{ id: 7001, nome: "PDV do mundo (fictício)" }], mvno: null, estoques: [], falhas: 0 })]));
+    [ids.organizacao, JSON.stringify({ pdvs: [{ id: 7001, nome: "PDV do mundo (fictício)" }],
+      mvno: [{ iccid: comDigitoLuhn("895517011000009001"), tipo: "esim" }], estoques: [], falhas: 0 })]));
+  // CONNECT-e: um pedido de transferência do dono (1 eSIM para o PDV do mundo), ainda na fila.
+  const donoDoMundo = await naLoja(ids.dono, ids.lojaA);
+  alvo.transferenciaA = (await valor<{ id: string }>(donoDoMundo,
+    "select public.connect_transferir_chips(p_tipo => 'esim', p_pdv => 7001, p_quantidade => 1, p_chave => 'mundo:transferencia') as v"))?.id ?? "";
 
   // Mais estoque: capas na loja B e dois aparelhos em cada loja para as vendas canceladas.
   await db.query("select privado.lancar_movimento($1, $2, 10, 'entrada_importacao', null, null, null, null, 'mundo:capaB')", [ids.lojaB, cat.capa]);
@@ -413,8 +418,14 @@ const CASOS: Record<string, Caso> = {
   "connect_cancelar(uuid,text)": {
     A: () => ["select public.connect_cancelar($1, 'Tentativa')", [alvo.operacaoA]], B: () => ["select public.connect_cancelar($1, 'Tentativa')", [alvo.operacaoB]], outroVendedor: true,
   },
+  "connect_cancelar_transferencia(uuid,text)": {
+    A: () => ["select public.connect_cancelar_transferencia($1, 'Tentativa de cancelar')", [alvo.transferenciaA]], semPermissao: true,
+  },
   "connect_habilitar(text,boolean,text)": { A: () => ["select public.connect_habilitar('recarga', false, 'Tentativa de desligar')", []], outraOrganizacao: false, semPermissao: true },
   "connect_ligar_pdv(integer,uuid)": { A: () => ["select public.connect_ligar_pdv(7001, $1)", [ids.lojaA]], semPermissao: true },
+  "connect_transferir_chips(text,integer,text,text,text,integer,text)": {
+    A: () => ["select public.connect_transferir_chips(p_tipo => 'esim', p_pdv => 7001, p_quantidade => 1, p_chave => $1)", [chave("ataque")]], semPermissao: true,
+  },
   "connect_registrar(text,jsonb,text)": {
     A: () => ["select public.connect_registrar('recarga', $1::jsonb, $2)", [JSON.stringify({ linha: "51966665555", plano: 99999, metodo: "LINK" }), chave("ataque")]], outraOrganizacao: false,
   },
@@ -1315,7 +1326,7 @@ describe("inventário: toda função SECURITY DEFINER exposta tem casos de recus
     const expostas = rows.map((r) => r.f);
     expect(expostas.filter((f) => !(f in CASOS)), "função nova exposta sem casos de recusa: acrescente ao CASOS").toEqual([]);
     expect(Object.keys(CASOS).filter((f) => !expostas.includes(f)), "caso de função que não existe mais").toEqual([]);
-    expect(expostas).toHaveLength(223);
+    expect(expostas).toHaveLength(225);
   });
 
   it("visitante anônimo executa só a vitrine, a reserva e o pedido da loja online (ONLINE-a, ONLINE-b e ONLINE-d), a leitura leve do banco da página /saude (SAUDE-a), a fila dos avisos, que pede o segredo (PWA-b), o relato dos erros do site, que pede o mesmo segredo (QUAL-006a), e o pagamento pelo site: saber se está ligado, pedir para pagar o pedido (com o código e o WhatsApp) e o aviso da Asaas, que pede o token (PAY-014a); no privado, a conferência da foto do site e um gatilho, que não roda sozinho", async () => {
