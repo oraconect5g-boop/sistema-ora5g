@@ -1,6 +1,6 @@
 # A matriz das APIs: uma linha por integração
 
-**Atualizada em:** 25/11/2026 (lote PAY-015a: a linha da Asaas, com o Pix no caixa; antes, 23/11, lote REIN-d) · **Por:** Claude Code · **Revisor:** Codex · **Para:** o proprietário
+**Atualizada em:** 25/11/2026 (lote CONNECT-l: a linha da Nogle, com o Pix da Nogle na loja; antes, o PAY-015a: a linha da Asaas, com o Pix no caixa; antes, 23/11, lote REIN-d) · **Por:** Claude Code · **Revisor:** Codex · **Para:** o proprietário
 
 **A fonte é o arquivo [`MATRIZ_DAS_APIS.json`](MATRIZ_DAS_APIS.json):** um teste confere que cada linha tem todas as colunas, que a situação é uma das sete da orientação de 18/11 e que cada variável existe no `.env.example`. Aqui aparecem só os **nomes** das variáveis, nunca os valores. Os fatos vêm da [lista de APIs](APIS_E_HABILITACOES_NECESSARIAS.md), da [referência da Nogle](NOGLE_API_REFERENCIA.md), do [ADR-020](../adr/ADR-020-integracoes-que-esperam-contrato.md), do código do worker e da PR #97. O que não se sabe fica "a confirmar", com quem confirma.
 
@@ -65,8 +65,8 @@
 | Coluna | Detalhe |
 |---|---|
 | Documentação oficial e revisão | Oficial: docs.nogle.tech, lida por inteiro em 07/11 (62 funções; cópia com SHA-256 no repositório e o catálogo conferido no CI). Respostas da Nogle de 10/11 aos itens 5 a 7 (docs/integracoes/NOGLE_API_REFERENCIA.md, 3.1) |
-| Operações necessárias | Ativação de chip físico e eSIM, recarga, portabilidade, consulta de linha, plano e saldo; estoque de chips do PDV e da MVNO; transferência de chips entre PDVs; o extrato do saldo (GET /saldo/extrato) e os relatórios de ativações, recargas e transações (GET /relatorios/*); a consulta do pagamento pelo uuid, prometida pela Nogle e fora da coleção oficial |
-| O que já existe | As regras em packages/dominio/src/nogle.ts (só campos documentados; resposta, evidência e listas oficiais); o worker em apps/worker/src/connect (token, envio, consulta e listas; resultado desconhecido nunca é reenviado); as operações persistentes no banco (ADR-005); as telas /connect e /demo/connect; desde o CONNECT-c (18/11), a conciliação com os relatórios oficiais de ativações e de recargas (o comando --conciliar do worker e a tela /connect/conciliacao) |
+| Operações necessárias | Ativação de chip físico e eSIM, recarga, portabilidade, consulta de linha, plano e saldo; estoque de chips do PDV e da MVNO; transferência de chips entre PDVs; o extrato do saldo (GET /saldo/extrato) e os relatórios de ativações, recargas e transações (GET /relatorios/*); a consulta do pagamento pelo uuid, prometida pela Nogle e fora da coleção oficial; o pagamento da operação da loja pelo Pix da Nogle (o LINK, com o QR Code do link na tela; CONNECT-l) |
+| O que já existe | As regras em packages/dominio/src/nogle.ts (só campos documentados; resposta, evidência e listas oficiais); o worker em apps/worker/src/connect (token, envio, consulta e listas; resultado desconhecido nunca é reenviado); as operações persistentes no banco (ADR-005); as telas /connect e /demo/connect; desde o CONNECT-c (18/11), a conciliação com os relatórios oficiais de ativações e de recargas (o comando --conciliar do worker e a tela /connect/conciliacao); CONNECT-f a CONNECT-i (25/11): as operações ligadas, as consultas, os relatórios e as ações, as 62 funções em uso; CONNECT-l (25/11; a D-062): o Pix da Nogle como o padrão da loja |
 | Código que falta | O extrato do saldo na conciliação (espera a primeira resposta real, porque o exemplo oficial não traz os campos); a compra com entrega, o bloqueio, o consumo e a transferência de chips no PDV da Nogle; o agendamento do worker (com autorização) |
 | Acesso ou contrato que falta | O tipo da chave (P9) e, se ele pedir, a segunda chave (a de acesso está no servidor desde 18/11, só no worker); quais operações ligar; as respostas às perguntas 6, 7, 11 e 12 e, da 10, o nome do uuid e a liberação de /consultaPagamento; uma linha e um chip de teste autorizados. Comissões e bonificações: a Nogle respondeu que não há na API; a fonte oficial (relatório ou extrato da Nogle) precisa ser indicada (D-016, #54) |
 | Variáveis (só os nomes) | `NOGLE_API_BASE_URL`, `NOGLE_AUTH_KEY_TYPE`, `NOGLE_ACCESS_KEY`, `NOGLE_SECONDARY_KEY`, `NOGLE_OPERACOES_HABILITADAS`, `NOGLE_GET_COM_CORPO`, `NOGLE_CONSULTA_PAGAMENTO` |
@@ -77,7 +77,7 @@
 | Aviso (webhook) ou reconsulta | Nenhum aviso documentado; o worker reconsulta o estado (ativação, recarga, portabilidade) |
 | Conciliação | Os relatórios oficiais de ativações e de recargas, ligados à operação confirmada (CONNECT-c: conferida, valor diferente, só na Nogle, só na Ora); o extrato do saldo e o custo da carteira por linha (#56) esperam a primeira resposta real; as comissões não têm fonte na API |
 | Testes | packages/dominio/src/nogle.test.ts; apps/worker/src/connect/*.test.ts (ponta a ponta contra um servidor local com os exemplos oficiais, inclusive a conciliação); packages/banco/src/connect-conciliacao.test.ts; o catálogo das 62 funções no CI |
-| Publicação | As telas estão no ar; o worker da Ora Connect não está agendado e falta o tipo da chave (a de acesso está gravada desde 18/11): nenhuma operação real |
+| Publicação | No ar: as telas e o worker (as operações, as consultas, as ações e as transferências a cada minuto; o estoque de chips a cada 30 minutos; as listas uma vez por dia), ligados pelo proprietário em 25/11 (a D-058 e a D-061) |
 | Homologação | Não homologado |
 
 ### Emissor fiscal (NFC-e, NF-e, NFS-e)

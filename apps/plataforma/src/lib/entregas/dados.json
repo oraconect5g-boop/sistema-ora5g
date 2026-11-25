@@ -1354,6 +1354,20 @@
       "pedido_em": "2026-11-25",
       "resposta": null,
       "respondido_em": null
+    },
+    {
+      "lote": "CONNECT-l",
+      "roteiro": "docs/aceite/CONNECT-l.md",
+      "requisitos": [
+        "ORA-CONNECT-001",
+        "ORA-CONNECT-003"
+      ],
+      "entrega": "na Ora Connect, o Pix da Nogle como o padrão da ativação e da recarga, com o QR Code na tela: a loja paga quando o cliente já pagou no caixa, ou o cliente paga direto à Nogle",
+      "commit": null,
+      "publicado_em": null,
+      "pedido_em": "2026-11-25",
+      "resposta": null,
+      "respondido_em": null
     }
   ]
 }
