@@ -13,7 +13,7 @@ export type RespostaHttp =
   | { tipo: "falha"; enviada: boolean; motivo: string };
 
 export type PedidoHttp = {
-  metodo: "GET" | "POST" | "PUT"; caminho: string; corpo?: unknown; token?: string;
+  metodo: "GET" | "POST" | "PUT" | "DELETE"; caminho: string; corpo?: unknown; token?: string;
   /** Cabeçalhos do serviço (a Asaas pede o access_token e o User-Agent). Nunca vão para o log. */
   cabecalhos?: Readonly<Record<string, string>>;
 };

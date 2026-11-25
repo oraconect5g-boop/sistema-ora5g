@@ -1139,6 +1139,88 @@ export type Database = {
           },
         ]
       }
+      connect_acoes: {
+        Row: {
+          alvo: string | null
+          chave: string
+          concluida_em: string | null
+          conteudo: string
+          enviando_desde: string | null
+          id: string
+          mensagem: string | null
+          motivo: string
+          numero: number
+          organizacao_id: string
+          parametros: Json
+          pedida_em: string
+          pedida_por: string
+          resultado: Json
+          situacao: string
+          tipo: string
+          unidade_id: string
+        }
+        Insert: {
+          alvo?: string | null
+          chave: string
+          concluida_em?: string | null
+          conteudo: string
+          enviando_desde?: string | null
+          id?: string
+          mensagem?: string | null
+          motivo: string
+          numero?: never
+          organizacao_id: string
+          parametros?: Json
+          pedida_em?: string
+          pedida_por: string
+          resultado?: Json
+          situacao?: string
+          tipo: string
+          unidade_id: string
+        }
+        Update: {
+          alvo?: string | null
+          chave?: string
+          concluida_em?: string | null
+          conteudo?: string
+          enviando_desde?: string | null
+          id?: string
+          mensagem?: string | null
+          motivo?: string
+          numero?: never
+          organizacao_id?: string
+          parametros?: Json
+          pedida_em?: string
+          pedida_por?: string
+          resultado?: Json
+          situacao?: string
+          tipo?: string
+          unidade_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "connect_acoes_organizacao_id_fkey"
+            columns: ["organizacao_id"]
+            isOneToOne: false
+            referencedRelation: "organizacoes"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "connect_acoes_pedida_por_fkey"
+            columns: ["pedida_por"]
+            isOneToOne: false
+            referencedRelation: "perfis_usuario"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "connect_acoes_unidade_id_organizacao_id_fkey"
+            columns: ["unidade_id", "organizacao_id"]
+            isOneToOne: false
+            referencedRelation: "unidades"
+            referencedColumns: ["id", "organizacao_id"]
+          },
+        ]
+      }
       connect_chips_nogle: {
         Row: {
           iccid: string
@@ -8389,6 +8471,10 @@ export type Database = {
         Args: { p_motivo: string; p_operacao: string }
         Returns: boolean
       }
+      connect_cancelar_acao: {
+        Args: { p_acao: string; p_motivo: string }
+        Returns: string
+      }
       connect_cancelar_transferencia: {
         Args: { p_motivo: string; p_transferencia: string }
         Returns: string
@@ -8422,6 +8508,16 @@ export type Database = {
         }
         Returns: Json
       }
+      connect_pedir_acao: {
+        Args: {
+          p_chave: string
+          p_dados?: Json
+          p_motivo: string
+          p_parametros?: Json
+          p_tipo: string
+        }
+        Returns: Json
+      }
       connect_registrar: {
         Args: { p_chave: string; p_pedido: Json; p_tipo: string }
         Returns: string
@@ -8441,6 +8537,15 @@ export type Database = {
           p_tipo: string
         }
         Returns: Json
+      }
+      connect_worker_acoes_a_enviar: {
+        Args: { p_limite: number; p_organizacao: string }
+        Returns: {
+          acao_id: string
+          dados: Json
+          parametros: Json
+          tipo: string
+        }[]
       }
       connect_worker_atualizar_referencias: {
         Args: { p_itens: Json; p_organizacao: string; p_tipo: string }
@@ -8486,6 +8591,10 @@ export type Database = {
       connect_worker_planos_no_caixa: {
         Args: { p_organizacao: string }
         Returns: Json
+      }
+      connect_worker_registrar_acao: {
+        Args: { p_acao: string; p_resultado: Json }
+        Returns: string
       }
       connect_worker_registrar_conciliacao: {
         Args: {

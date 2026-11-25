@@ -12,6 +12,9 @@
 # As listas oficiais (planos, DDDs, operadoras e cidades), uma vez por dia; com os planos em dia, o caixa vende cada plano
 # pelo valor de face (CONNECT-f):
 #   0 6 * * * bash $HOME/homologacao/plataforma/deploy/homologacao/worker-connect.sh --listas
+# As AÇÕES que mudam algo na Nogle, pedidas pelo dono e pelos gerentes (CONNECT-j; a D-061), a cada minuto, só com
+# NOGLE_ACOES=habilitada; cada uma sai uma vez:
+#   * * * * * bash $HOME/homologacao/plataforma/deploy/homologacao/worker-connect.sh --acoes
 # As CONSULTAS que só leem, pedidas na tela (a linha, o chip e a carteira; CONNECT-g, a D-056), uns 50 segundos a cada
 # minuto, com a trava própria (não seguram as outras rotinas):
 #   * * * * * bash $HOME/homologacao/plataforma/deploy/homologacao/worker-connect.sh --consultas

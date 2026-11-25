@@ -147,6 +147,7 @@
     { "versao": "20261125130939", "nome": "planos_e_chips_da_nogle_nas_lojas", "md5": "6695b16a6a3312f4f48a27002282b496", "aplicada_em": "2026-11-25" },
     { "versao": "20261125131555", "nome": "servico_do_mesmo_plano", "md5": "29c3d0db7d0824ab13f064d6580773e0", "aplicada_em": "2026-11-25" },
     { "versao": "20261125141320", "nome": "consultas_da_nogle", "md5": "cf3353e7101bc5ada2e9a757af8ccc28", "aplicada_em": "2026-11-25" },
-    { "versao": "20261125164116", "nome": "consulta_completa_da_nogle", "md5": "5f42d7b0252ecd39adcc3d1dc95ae96d", "aplicada_em": "2026-11-25" }
+    { "versao": "20261125164116", "nome": "consulta_completa_da_nogle", "md5": "5f42d7b0252ecd39adcc3d1dc95ae96d", "aplicada_em": "2026-11-25" },
+    { "versao": "20261125172755", "nome": "acoes_na_nogle", "md5": "e884650ee77f829934a21db88aa19457", "aplicada_em": "2026-11-25" }
   ]
 }

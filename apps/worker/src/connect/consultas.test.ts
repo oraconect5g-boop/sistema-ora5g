@@ -1,11 +1,11 @@
 // CONNECT-g (25/11/2026; ORA-CONNECT-007): as consultas que só leem, no worker, com a Nogle e o banco SIMULADOS e o relógio
 // de mentira. O caminho de verdade (o transporte HTTP, o GET com corpo e o banco com as migrations) está em
 // ponta-a-ponta.test.ts. Linhas e ICCIDs FICTÍCIOS.
-import type { PedidoNogle, RespostaDaConsulta } from "@ora5g/dominio/nogle";
+import type { AcaoParaEnviar, PedidoNogle, RespostaDaConsulta, ResultadoDaAcao } from "@ora5g/dominio/nogle";
 import { describe, expect, it } from "vitest";
 
 import type { ResultadoChamada } from "./cliente-nogle.ts";
-import { responderConsultas, type BancoConnect, type ConsultaParaFazer } from "./processar.ts";
+import { enviarAcoes, responderConsultas, type BancoConnect, type ConsultaParaFazer } from "./processar.ts";
 
 const LINHA = "51900000000";
 const ICCID = "8955170110000000016";
@@ -160,5 +160,49 @@ describe("os relatórios do número e do cliente, no worker (CONNECT-h)", () => 
     expect(Object.keys(partes.situacoes as object)).toEqual([LINHA, "51988887777"]);
     expect(JSON.stringify(s.gravadas[0])).not.toMatch(/Rua Fictícia|12345678909/);
     expect(s.gravadas[1]).toEqual(["c2", { situacao: "nao_encontrada", mensagem: "Cliente não encontrado" }]);
+  });
+});
+
+// CONNECT-j (25/11/2026; a D-061): as ações que mudam algo na Nogle, enviadas uma vez pelo worker.
+
+describe("as ações que mudam algo na Nogle, no worker (CONNECT-j)", () => {
+  function comAcoes(fila: AcaoParaEnviar[], respostas: Record<string, ResultadoChamada>) {
+    const gravadas: [string, ResultadoDaAcao | { envio: "nao_enviada"; mensagem: string }][] = [];
+    const pedidos: PedidoNogle[] = [];
+    const banco = {
+      acoesAEnviar: async () => fila,
+      registrarAcao: async (id: string, r: ResultadoDaAcao | { envio: "nao_enviada"; mensagem: string }) => { gravadas.push([id, r]); return r.envio; },
+    } as unknown as BancoConnect;
+    const nogle = { chamar: async (p: PedidoNogle) => { pedidos.push(p); return respostas[p.caminho] ?? { tipo: "resposta" as const, status: 404, corpo: { erro: "Endpoint inexistente" } }; } };
+    return { banco, nogle, gravadas, pedidos };
+  }
+  const acao = (acao_id: string, tipo: string, parametros: Record<string, unknown>, dados: Record<string, unknown> | null = null): AcaoParaEnviar => ({ acao_id, tipo, parametros, dados });
+
+  it("cada ação sai uma vez: feita, recusada ou desconhecida; a fora da forma nem sai", async () => {
+    const s = comAcoes([
+      acao("a1", "linha_bloquear", { linha: LINHA, motivo_bloqueio: "ROUBO" }),
+      acao("a2", "linha_desbloquear", { linha: LINHA }),
+      acao("a3", "pdv_inativar", { pdv: 7101 }),
+      acao("a4", "linha_bloquear", { linha: LINHA }),
+    ], {
+      "/atendimento/bloqueio": ok({ status: true, mensagem: "Bloqueio realizado com sucesso.", data: "2026-11-25 14:00:00" }),
+      "/atendimento/desbloqueio": ok({ status: false, mensagem: "Linha não encontrada", data: null }),
+      "/pdv/inativar": { tipo: "resposta", status: 502, corpo: null },
+    });
+    expect(await enviarAcoes(s.banco, s.nogle)).toEqual({ feitas: 1, recusadas: 2, desconhecidas: 1, devolvidas: 0 });
+    expect(s.pedidos.map((p) => `${p.metodo} ${p.caminho}`)).toEqual(["POST /atendimento/bloqueio", "POST /atendimento/desbloqueio", "DELETE /pdv/inativar"]);
+    expect(s.gravadas.map(([id, r]) => [id, r.envio])).toEqual([["a1", "feita"], ["a2", "recusada"], ["a3", "desconhecida"], ["a4", "recusada"]]);
+  });
+
+  it("sem conexão: volta para a fila e o ciclo para; enviada sem resposta: desconhecida, nunca reenviada", async () => {
+    const s = comAcoes([acao("b1", "linha_apelido", { linha: LINHA, apelido: "Casa" }), acao("b2", "linha_desbloquear", { linha: LINHA })], {
+      "/linhas/atualizar": { tipo: "falha", enviada: true, motivo: "tempo esgotado depois do envio" },
+      "/atendimento/desbloqueio": { tipo: "falha", enviada: false, motivo: "sem conexão com a Nogle (ENOTFOUND)" },
+    });
+    expect(await enviarAcoes(s.banco, s.nogle)).toEqual({ feitas: 0, recusadas: 0, desconhecidas: 1, devolvidas: 1 });
+    expect(s.gravadas).toEqual([
+      ["b1", { envio: "desconhecida", mensagem: "A Nogle não respondeu depois do envio: confira no painel da Nogle antes de pedir de novo." }],
+      ["b2", { envio: "nao_enviada", mensagem: "Sem conexão com a Nogle: o pedido volta para a fila." }],
+    ]);
   });
 });

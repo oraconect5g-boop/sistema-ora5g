@@ -16,7 +16,8 @@ test.describe("o relatório do vendedor e da loja, no site no ar (CONNECT-k)", (
       const dono = pessoas[DONO] as Page;
       await dono.goto("/connect/relatorio?periodo=30");
       await expect(dono.getByRole("heading", { level: 1, name: "Relatório da Ora Connect" })).toBeVisible();
-      await expect(dono.getByText(`${LOJA_A} · 30 dias`, { exact: false })).toBeVisible();
+      // O subtítulo inteiro: o cabeçalho da impressão (escondido na tela) também diz "<loja> · 30 dias".
+      await expect(dono.getByText(`${LOJA_A} · 30 dias · as operações registradas no período`, { exact: true })).toBeVisible();
       await expect(dono.getByLabel("Loja")).toBeVisible();
       await expect(dono.getByLabel("Vendedor")).toBeVisible();
       await expect(dono.getByText("Ativações confirmadas", { exact: true })).toBeVisible();

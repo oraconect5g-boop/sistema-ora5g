@@ -129,6 +129,7 @@ export default async function Connect({ searchParams }: { searchParams: Promise<
         <p className="mt-3 flex flex-wrap gap-x-4 gap-y-1 text-sm">
           {(opera || gere) && <Link href="/connect/linha" className="font-semibold text-acao">Consultar linha</Link>}
           {(opera || gere) && <Link href="/connect/relatorio" className="font-semibold text-acao">Relatório do vendedor e da loja</Link>}
+          {gere && <Link href="/connect/acoes-na-nogle" className="font-semibold text-acao">Ações na Nogle</Link>}
           {(opera || gere || integra) && <Link href="/connect/chips" className="font-semibold text-acao">Chips na Nogle</Link>}
           {gere && <Link href="/connect/conciliacao" className="font-semibold text-acao">Conciliação com os relatórios da Nogle</Link>}
         </p>
