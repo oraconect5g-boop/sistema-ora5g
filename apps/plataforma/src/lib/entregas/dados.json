@@ -1310,6 +1310,21 @@
       "pedido_em": "2026-11-25",
       "resposta": null,
       "respondido_em": null
+    },
+    {
+      "lote": "CONNECT-j",
+      "roteiro": "docs/aceite/CONNECT-j.md",
+      "requisitos": [
+        "ORA-CONNECT-007",
+        "ORA-CONNECT-008",
+        "ORA-CONNECT-011"
+      ],
+      "entrega": "em Ora Connect → Ações na Nogle, para o dono e os gerentes: bloquear e desbloquear a linha, a recarga automática, o apelido, a recarga programada, o reenvio do SMS da portabilidade, o cliente na Nogle, a compra de chip com entrega e os PDVs",
+      "commit": null,
+      "publicado_em": null,
+      "pedido_em": "2026-11-25",
+      "resposta": null,
+      "respondido_em": null
     }
   ]
 }

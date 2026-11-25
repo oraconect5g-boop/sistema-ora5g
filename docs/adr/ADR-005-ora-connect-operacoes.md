@@ -114,3 +114,8 @@ Migrations `20261109150526_correcoes_acesso_lote1` (#56) e `20261109190400_conne
 
 - **Em partes:** o worker monta cada relatório chamando as consultas simples (e o relatório oficial de transações filtrado pela linha); os detalhes da linha, ou o cadastro do cliente, vêm primeiro e, sem eles, o relatório para aí. A parte que falha fica marcada, sem derrubar as outras.
 - **Os dados pessoais:** como no CONNECT-g (só quem pediu vê, a resposta sai em 24 horas), e o CPF ou o CNPJ do relatório do cliente sai junto (fica o mascarado, para a tela). Nada de link ou código de pagamento, termo, rua, documento inteiro ou custo na tela da loja.
+
+## Adendo de 25/11/2026: as funções que mudam algo na Nogle (lote CONNECT-j)
+
+- **Quem pede:** o dono e os gerentes (a D-061), na loja do turno; o PDV que já existe, só o da loja de quem pede (o dono, em todos). Cada pedido fica com quem pediu, o motivo e a auditoria.
+- **O envio:** o mesmo das transferências: o worker (`--acoes`, a cada minuto, só com `NOGLE_ACOES=habilitada`) envia UMA vez; sem conexão, volta para a fila; enviado sem resposta clara, ou parado em 10 minutos, é resultado desconhecido e nunca se reenvia. O sensível (o CPF, o endereço, a senha do usuário do PDV) fica em `privado.connect_acoes_dados` só até o envio.
