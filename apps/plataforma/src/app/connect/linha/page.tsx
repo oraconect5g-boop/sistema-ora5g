@@ -1,12 +1,12 @@
 import { randomUUID } from "node:crypto";
 
-import { ArrowLeft, BookOpen, CreditCard, FileText, Globe, History, Search, Truck, UserCheck, Wallet } from "lucide-react";
+import { BookOpen, CreditCard, FileText, Globe, History, Search, Truck, UserCheck, Wallet } from "lucide-react";
 import type { Metadata } from "next";
 import Link from "next/link";
 
 import { AtualizarEnquantoEspera } from "../../../componentes/AtualizarEnquantoEspera";
 import { MoldeReal } from "../../../componentes/MoldeReal";
-import { Aviso, Botao, Cartao, Selo, TituloPagina } from "../../../componentes/ui";
+import { Aviso, Botao, Cartao, Selo } from "../../../componentes/ui";
 import { permite } from "../../../lib/acesso/molde";
 import { FalhaDoServico, obterSessao } from "../../../lib/acesso/sessao";
 import { PARAMETRO_DA_CONSULTA } from "@ora5g/dominio/nogle";
@@ -18,6 +18,7 @@ import {
 } from "../../../lib/connect/consultas";
 import { textoDoParametro, type ValorDeParametro } from "../../../lib/parametros";
 import { consultar } from "./acoes";
+import { CabecalhoConnect, LARGURA_DA_CONNECT } from "../CabecalhoConnect";
 
 export const metadata: Metadata = { title: "Consultar linha" };
 export const dynamic = "force-dynamic";
@@ -46,13 +47,12 @@ function PedirSemNumero({ tipo, rotulo }: { tipo: string; rotulo: string }) {
 export default async function ConsultarLinha({ searchParams }: { searchParams: Promise<{ erro?: ValorDeParametro }> }) {
   const parametros = await searchParams;
   const sessao = await obterSessao({ exigirLoja: true });
-  const voltar = <Link href="/connect" className="inline-flex min-h-11 items-center gap-1 text-sm font-semibold text-acao"><ArrowLeft className="size-4" aria-hidden />Ora Connect</Link>;
   const opera = permite(sessao, "connect.operar");
   const gere = permite(sessao, "connect.gerir");
   // A carteira e os relatórios da rede são de quem gere a Ora Connect na rede (o banco confere de novo).
   const gereARede = gere && sessao.molde.vinculos.some((v) => v.escopo === "organizacao");
   if (!opera && !gere) {
-    return <MoldeReal sessao={sessao}>{voltar}<Aviso tom="aviso" className="mt-4">Consultar linha é de quem opera a Ora Connect.</Aviso></MoldeReal>;
+    return <MoldeReal sessao={sessao} largura={LARGURA_DA_CONNECT}><CabecalhoConnect sessao={sessao} aba="linha" /><Aviso tom="aviso" className="mt-4">Consultar linha é de quem opera a Ora Connect.</Aviso></MoldeReal>;
   }
   const [lidas, planos] = await Promise.all([
     sessao.supabase.from("connect_consultas")
@@ -68,9 +68,8 @@ export default async function ConsultarLinha({ searchParams }: { searchParams: P
   const erro = textoDoParametro(parametros.erro);
 
   return (
-    <MoldeReal sessao={sessao}>
-      {voltar}
-      <TituloPagina titulo="Consultar linha" subtitulo="Na Nogle, pelo número com DDD, pelo ICCID do chip ou pelo CPF/CNPJ do cliente; a resposta chega em poucos segundos" />
+    <MoldeReal sessao={sessao} largura={LARGURA_DA_CONNECT}>
+      <CabecalhoConnect sessao={sessao} aba="linha" titulo="Consultar linha" subtitulo="Na Nogle, pelo número com DDD, pelo ICCID do chip ou pelo CPF/CNPJ do cliente; a resposta chega em poucos segundos" />
       {erro && <Aviso tom="perigo" className="mt-4">{ehErroDaConsulta(erro) ? ERROS_DA_CONSULTA[erro] : ERROS_DA_CONSULTA.falha}</Aviso>}
       {consultas.some(esperandoResposta) && <AtualizarEnquantoEspera aviso="Consultando a Nogle…" />}
 
@@ -156,7 +155,7 @@ export default async function ConsultarLinha({ searchParams }: { searchParams: P
       )}
 
       {gereARede && (
-        <Cartao className="mt-4" titulo="Carteira da Ora na Nogle" icone={Wallet}
+        <Cartao className="mt-4 scroll-mt-20" id="carteira" titulo="Carteira da Ora na Nogle" icone={Wallet}
           subtitulo="O saldo pré-pago que paga, na Nogle, as ativações e as recargas feitas nas lojas (SALDO)">
           <PedirSemNumero tipo="carteira_saldo" rotulo="Consultar o saldo" />
           <form action={consultar} className="mt-3 grid gap-3 sm:grid-cols-2">
@@ -188,7 +187,7 @@ export default async function ConsultarLinha({ searchParams }: { searchParams: P
       )}
 
       {gereARede && (
-        <Cartao className="mt-4" titulo="Relatórios da rede na Nogle" icone={Globe}
+        <Cartao className="mt-4 scroll-mt-20" id="relatorios-da-rede" titulo="Relatórios da rede na Nogle" icone={Globe}
           subtitulo="As portabilidades e as listas de linhas e de clientes da Ora na Nogle (o documento aparece mascarado)">
           <form action={consultar} className="grid gap-3 sm:grid-cols-2">
             <input type="hidden" name="chave" value={randomUUID()} />

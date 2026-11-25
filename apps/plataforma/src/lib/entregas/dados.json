@@ -1398,6 +1398,21 @@
       "pedido_em": "2026-11-25",
       "resposta": null,
       "respondido_em": null
+    },
+    {
+      "lote": "CONNECT-m",
+      "roteiro": "docs/aceite/CONNECT-m.md",
+      "requisitos": [
+        "ORA-CONNECT-002",
+        "ORA-CONNECT-003",
+        "ORA-CONNECT-006"
+      ],
+      "entrega": "a Ora Connect no formato da demonstração: as 9 abas no topo, a Operações do dia com os cartões e os filtros, o Ativar chip em passos com os planos em cartões, a Recarga, a Portabilidade e a Integração Nogle em abas próprias",
+      "commit": null,
+      "publicado_em": null,
+      "pedido_em": "2026-11-25",
+      "resposta": null,
+      "respondido_em": null
     }
   ]
 }

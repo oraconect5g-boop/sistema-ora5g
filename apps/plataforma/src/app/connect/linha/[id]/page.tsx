@@ -1,14 +1,14 @@
-import { ArrowLeft, FileText } from "lucide-react";
+import { FileText } from "lucide-react";
 import type { Metadata } from "next";
-import Link from "next/link";
 
 import { AtualizarEnquantoEspera } from "../../../../componentes/AtualizarEnquantoEspera";
 import { BotaoImprimir, CarimboDaImpressao } from "../../../../componentes/BotaoImprimir";
 import { MoldeReal } from "../../../../componentes/MoldeReal";
-import { Aviso, Cartao, Selo, TituloPagina } from "../../../../componentes/ui";
+import { Aviso, Cartao, Selo } from "../../../../componentes/ui";
 import { permite } from "../../../../lib/acesso/molde";
 import { FalhaDoServico, obterSessao } from "../../../../lib/acesso/sessao";
 import { esperandoResposta, secoesDoRelatorio, SITUACOES_DA_CONSULTA, tituloDaConsulta, type ConsultaDaTela } from "../../../../lib/connect/consultas";
+import { CabecalhoConnect, LARGURA_DA_CONNECT } from "../../CabecalhoConnect";
 
 export const metadata: Metadata = { title: "Relatório da consulta" };
 export const dynamic = "force-dynamic";
@@ -22,9 +22,8 @@ const ehUuid = (v: string) => /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-
 export default async function RelatorioDaConsulta({ params }: { params: Promise<{ id: string }> }) {
   const { id } = await params;
   const sessao = await obterSessao({ exigirLoja: true });
-  const voltar = <Link href="/connect/linha" className="nao-imprimir inline-flex min-h-11 items-center gap-1 text-sm font-semibold text-acao"><ArrowLeft className="size-4" aria-hidden />Consultar linha</Link>;
   if (!permite(sessao, "connect.operar") && !permite(sessao, "connect.gerir")) {
-    return <MoldeReal sessao={sessao}>{voltar}<Aviso tom="aviso" className="mt-4">Consultar linha é de quem opera a Ora Connect.</Aviso></MoldeReal>;
+    return <MoldeReal sessao={sessao} largura={LARGURA_DA_CONNECT}><CabecalhoConnect sessao={sessao} aba="linha" /><Aviso tom="aviso" className="mt-4">Consultar linha é de quem opera a Ora Connect.</Aviso></MoldeReal>;
   }
   const [lida, planos] = await Promise.all([
     ehUuid(id)
@@ -39,8 +38,8 @@ export default async function RelatorioDaConsulta({ params }: { params: Promise<
   const c = lida.data as unknown as ConsultaDaTela | null;
   if (!c) {
     return (
-      <MoldeReal sessao={sessao}>
-        {voltar}
+      <MoldeReal sessao={sessao} largura={LARGURA_DA_CONNECT}>
+        <CabecalhoConnect sessao={sessao} aba="linha" />
         <Aviso tom="aviso" className="mt-4">Relatório não encontrado: só quem pediu a consulta vê o relatório.</Aviso>
       </MoldeReal>
     );
@@ -50,9 +49,8 @@ export default async function RelatorioDaConsulta({ params }: { params: Promise<
   const secoes = c.situacao === "respondida" && c.resposta ? secoesDoRelatorio(c, nomeDoPlano) : [];
 
   return (
-    <MoldeReal sessao={sessao}>
-      {voltar}
-      <TituloPagina titulo={tituloDaConsulta(c)} subtitulo={`Consultado na Nogle em ${quando(c.pedida_em)}; só você vê, e a resposta é apagada em 24 horas`} />
+    <MoldeReal sessao={sessao} largura={LARGURA_DA_CONNECT}>
+      <CabecalhoConnect sessao={sessao} aba="linha" titulo={tituloDaConsulta(c)} subtitulo={`Consultado na Nogle em ${quando(c.pedida_em)}; só você vê, e a resposta é apagada em 24 horas`} />
       <p className="mt-2 flex flex-wrap items-center gap-2">
         <Selo tom={s.tom}>{s.rotulo}</Selo>
         {secoes.length > 0 && <BotaoImprimir />}

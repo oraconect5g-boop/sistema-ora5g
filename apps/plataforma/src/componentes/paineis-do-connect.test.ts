@@ -4,7 +4,7 @@ import { describe, expect, it } from "vitest";
 
 import { lerProducao } from "../lib/connect/producao";
 import { janelasDoPeriodo } from "../lib/financeiro/painel";
-import { indicadorDoConnect, PainelDaProducao, PainelDaProducaoPorDia } from "./paineis-do-connect";
+import { IndicadoresDoConnect, indicadorDoConnect, OperacoesPorTipo, PainelDaProducaoPorDia } from "./paineis-do-connect";
 
 type Linha = Record<string, unknown>;
 // Lê a árvore: os textos e as propriedades de cada elemento (os componentes ficam como elementos).
@@ -56,25 +56,46 @@ describe("cartão por dia (Relatórios)", () => {
   });
 });
 
-describe("cartão do período (Ora Connect)", () => {
-  const filtro = "filtro";
-  it("por tipo e por origem; o débito na carteira só para quem vê o custo, e com as lojas que ficaram fora", () => {
-    let l = ler(PainelDaProducao({ producao: ok(), veCusto: true, aqui: "/connect", filtro }));
-    expect(l.doTipo("BarraSegmentada")[0]).toMatchObject({ partes: [{ nome: "Ativações", valor: 2, serie: 2 }, { nome: "Portabilidades", valor: 0, serie: 3 }, { nome: "Recargas", valor: 1, serie: 4 }] });
-    expect(l.doTipo("ListaDados")[0]?.itens).toEqual([
-      ["Chips vendidos (venda; ativar é outra operação)", "1"], ["Confirmadas pela operadora", "2"], ["Confirmadas pela revisão da gerência", "1"],
-      ["Em andamento (registradas, enviando ou aguardando)", "1"], ["Sem resultado (precisam de decisão)", "1"], ["Valor de face das recargas (não é receita)", "R$ 20,00"],
-      ["Débito registrado na carteira", "R$ 33,00"],
+describe("aba Operações do dia (Ora Connect, CONNECT-m)", () => {
+  it("os 4 cartões: chips, ativações (com o que falta confirmar), portabilidades e recargas (com o valor de face)", () => {
+    const l = ler(IndicadoresDoConnect({ producao: ok(), aqui: "/connect" }));
+    expect(l.doTipo("Indicador").map((i) => [i.rotulo, i.valor, i.detalhe, i.tom])).toEqual([
+      ["Chips vendidos", "1", "no caixa (ativar é outra operação)", undefined],
+      ["Ativações confirmadas", "2", "2 operações ainda sem confirmação", "atencao"],
+      ["Portabilidades", "0", "confirmadas", undefined],
+      ["Recargas", "1", expect.stringMatching(/^R\$\s20,00 em valor de face \(não é receita\)$/), undefined],
     ]);
-    l = ler(PainelDaProducao({ producao: ok({ ...TOTAIS, lojas_sem_custo: 2 }), veCusto: true, aqui: "/connect", filtro }));
-    expect(l.doTipo("ListaDados")[0]?.itens).toContainEqual(["Débito registrado na carteira", "R$ 33,00 (sem 2 lojas)"]);
-    l = ler(PainelDaProducao({ producao: ok(), veCusto: false, aqui: "/connect", filtro }));
+    const tudoConfirmado = ler(IndicadoresDoConnect({ producao: ok({ ...TOTAIS, em_andamento: 0, sem_resultado: 0 }), aqui: "/connect" }));
+    expect(tudoConfirmado.doTipo("Indicador")[1]).toMatchObject({ detalhe: "nenhuma esperando a operadora", tom: "neutro" });
+  });
+
+  it("sem leitura, nenhum número: o motivo e o tentar de novo", () => {
+    const falha = ler(IndicadoresDoConnect({ producao: { estado: "falha" }, aqui: "/connect?periodo=7" }));
+    expect(falha.doTipo("EstadoDoPainel")[0]).toMatchObject({ estado: "falha", fonte: "connect", tentarDeNovo: "/connect?periodo=7" });
+    expect(falha.doTipo("Indicador")).toEqual([]);
+    expect(OperacoesPorTipo({ producao: { estado: "indisponivel" }, veCusto: true, rotuloDoPeriodo: "hoje" })).toBeNull();
+  });
+
+  it("por tipo (cada série com a sua cor) e por origem; o débito na carteira só para quem vê o custo, e com as lojas que ficaram fora", () => {
+    let l = ler(OperacoesPorTipo({ producao: ok(), veCusto: true, rotuloDoPeriodo: "7 dias" }));
+    expect(l.texto).toContain("Chips vendidos e operações confirmadas (7 dias)");
+    expect(l.doTipo("BarraSegmentada")[0]).toMatchObject({ partes: [
+      { nome: "Chips vendidos", valor: 1, serie: 1 }, { nome: "Ativações", valor: 2, serie: 2 }, { nome: "Portabilidades", valor: 0, serie: 3 }, { nome: "Recargas", valor: 1, serie: 4 },
+    ] });
+    expect(l.doTipo("ListaDados")[0]?.itens).toEqual([
+      ["Confirmadas pela operadora", "2"], ["Confirmadas pela revisão da gerência", "1"],
+      ["Em andamento (registradas, enviando ou aguardando)", "1"], ["Sem resultado (precisam de decisão)", "1"],
+      ["Débito registrado na carteira", expect.stringMatching(/^R\$\s33,00$/)],
+    ]);
+    l = ler(OperacoesPorTipo({ producao: ok({ ...TOTAIS, lojas_sem_custo: 2 }), veCusto: true, rotuloDoPeriodo: "hoje" }));
+    expect(l.doTipo("ListaDados")[0]?.itens).toContainEqual(["Débito registrado na carteira", expect.stringMatching(/^R\$\s33,00 \(sem 2 lojas\)$/)]);
+    l = ler(OperacoesPorTipo({ producao: ok(), veCusto: false, rotuloDoPeriodo: "hoje" }));
     expect(l.texto).not.toContain("Débito");
   });
 
-  it("nada confirmado: o vazio é explicado; sem leitura, o motivo", () => {
-    expect(ler(PainelDaProducao({ producao: ok(SEM_PRODUCAO, []), veCusto: false, aqui: "/connect", filtro })).texto).toContain("Nenhuma operação confirmada no período");
-    const falha = ler(PainelDaProducao({ producao: { estado: "falha" }, veCusto: false, aqui: "/connect?periodo=7", filtro }));
-    expect(falha.doTipo("EstadoDoPainel")[0]).toMatchObject({ estado: "falha", fonte: "connect", tentarDeNovo: "/connect?periodo=7" });
+  it("nem chip nem confirmada: o vazio é explicado, sem a barra", () => {
+    const l = ler(OperacoesPorTipo({ producao: ok(SEM_PRODUCAO, []), veCusto: false, rotuloDoPeriodo: "hoje" }));
+    expect(l.texto).toContain("Nenhum chip vendido nem operação confirmada no período");
+    expect(l.doTipo("BarraSegmentada")).toEqual([]);
   });
 });

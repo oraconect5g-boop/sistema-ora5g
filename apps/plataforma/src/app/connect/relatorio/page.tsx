@@ -1,4 +1,4 @@
-import { ArrowLeft, ListChecks, Store, Users } from "lucide-react";
+import { ListChecks, Store, Users } from "lucide-react";
 import type { Metadata } from "next";
 import Form from "next/form";
 import Link from "next/link";
@@ -6,7 +6,7 @@ import Link from "next/link";
 import { BotaoImprimir, CarimboDaImpressao } from "../../../componentes/BotaoImprimir";
 import { ExportarCsv } from "../../../componentes/ExportarCsv";
 import { MoldeReal } from "../../../componentes/MoldeReal";
-import { Aviso, Botao, Cartao, FiltroSegmentado, Indicador, Selo, TituloPagina } from "../../../componentes/ui";
+import { Aviso, Botao, Cartao, FiltroSegmentado, Indicador, Selo } from "../../../componentes/ui";
 import { permite } from "../../../lib/acesso/molde";
 import { FalhaDoServico, obterSessao } from "../../../lib/acesso/sessao";
 import {
@@ -15,6 +15,7 @@ import {
 import { janelasDoPeriodo, ORDEM_DOS_PERIODOS, PERIODOS_FINANCEIROS, periodoFinanceiro } from "../../../lib/financeiro/painel";
 import { agora, brl, numero } from "../../../lib/formato";
 import { textoDoParametro, type ValorDeParametro } from "../../../lib/parametros";
+import { CabecalhoConnect, LARGURA_DA_CONNECT } from "../CabecalhoConnect";
 
 export const metadata: Metadata = { title: "Relatório da Ora Connect" };
 export const dynamic = "force-dynamic";
@@ -35,10 +36,11 @@ type Parametros = { periodo?: ValorDeParametro; loja?: ValorDeParametro; vendedo
 export default async function RelatorioDaConnect({ searchParams }: { searchParams: Promise<Parametros> }) {
   const parametros = await searchParams;
   const sessao = await obterSessao({ exigirLoja: true });
-  const voltar = <Link href="/connect" className="nao-imprimir inline-flex min-h-11 items-center gap-1 text-sm font-semibold text-acao"><ArrowLeft className="size-4" aria-hidden />Ora Connect</Link>;
   const gere = permite(sessao, "connect.gerir");
+  // A carteira e os relatórios da rede são de quem gere a Ora Connect na rede (como em Consultar linha; o banco confere de novo).
+  const gereARede = gere && sessao.molde.vinculos.some((v) => v.escopo === "organizacao");
   if (!gere && !permite(sessao, "connect.operar")) {
-    return <MoldeReal sessao={sessao}>{voltar}<Aviso tom="aviso" className="mt-4">O relatório da Ora Connect é de quem opera ou gere a Ora Connect.</Aviso></MoldeReal>;
+    return <MoldeReal sessao={sessao} largura={LARGURA_DA_CONNECT}><CabecalhoConnect sessao={sessao} aba="carteira" /><Aviso tom="aviso" className="mt-4">O relatório da Ora Connect é de quem opera ou gere a Ora Connect.</Aviso></MoldeReal>;
   }
   const periodo = periodoFinanceiro(textoDoParametro(parametros.periodo));
   const janela = janelasDoPeriodo(periodo, agora()).atual;
@@ -104,9 +106,8 @@ export default async function RelatorioDaConnect({ searchParams }: { searchParam
   );
 
   return (
-    <MoldeReal sessao={sessao} largura="max-w-5xl">
-      {voltar}
-      <TituloPagina titulo="Relatório da Ora Connect" subtitulo={`${deQuem} · ${PERIODOS_FINANCEIROS[periodo].rotulo} · as operações registradas no período`} />
+    <MoldeReal sessao={sessao} largura={LARGURA_DA_CONNECT}>
+      <CabecalhoConnect sessao={sessao} aba="carteira" titulo="Relatório da Ora Connect" subtitulo={`${deQuem} · ${PERIODOS_FINANCEIROS[periodo].rotulo} · as operações registradas no período`} />
       <CarimboDaImpressao texto={`Ora Connect · relatório de ${deQuem} · ${PERIODOS_FINANCEIROS[periodo].rotulo} · tirado em ${quando(agora().toISOString())}`} />
       <div className="nao-imprimir mt-4 flex flex-wrap items-end gap-3">
         <FiltroSegmentado rotulo="Período" opcoes={ORDEM_DOS_PERIODOS.map((p) => ({ href: endereco({ periodo: p === "hoje" ? null : p }), rotulo: PERIODOS_FINANCEIROS[p].rotulo, ativo: p === periodo }))} />
@@ -129,6 +130,16 @@ export default async function RelatorioDaConnect({ searchParams }: { searchParam
           </Form>
         )}
       </div>
+
+      {gere && (
+        // CONNECT-m: a aba Carteira e relatórios, como na demonstração: daqui, o saldo e o extrato da carteira e os relatórios
+        // oficiais da rede na Nogle (pedidos ao servidor em Consultar linha, por quem gere a rede) e a conciliação.
+        <nav aria-label="Carteira e relatórios da Nogle" className="nao-imprimir mt-3 flex flex-wrap gap-x-4 gap-y-1 text-sm">
+          {gereARede && <Link href="/connect/linha#carteira" className="font-semibold text-acao">Saldo da carteira da Ora na Nogle</Link>}
+          {gereARede && <Link href="/connect/linha#relatorios-da-rede" className="font-semibold text-acao">Relatórios da rede na Nogle</Link>}
+          <Link href="/connect/conciliacao" className="font-semibold text-acao">Conciliação com os relatórios da Nogle</Link>
+        </nav>
+      )}
 
       <section aria-label="Resumo do período" className="mt-4 grid grid-cols-2 gap-3 lg:grid-cols-4">
         <Indicador rotulo="Ativações confirmadas" valor={numero(somas.confirmadas.ativacao)} />

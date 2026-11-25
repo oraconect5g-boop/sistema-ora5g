@@ -1,9 +1,9 @@
-import { ArrowLeft, Scale } from "lucide-react";
+import { Scale } from "lucide-react";
 import type { Metadata } from "next";
 import Link from "next/link";
 
 import { MoldeReal } from "../../../componentes/MoldeReal";
-import { Aviso, Cartao, Indicador, Selo, TituloPagina } from "../../../componentes/ui";
+import { Aviso, Cartao, Indicador, Selo } from "../../../componentes/ui";
 import { ehUuid } from "../../../lib/acesso/regras";
 import { permite } from "../../../lib/acesso/molde";
 import { FalhaDoServico, obterSessao } from "../../../lib/acesso/sessao";
@@ -13,6 +13,7 @@ import {
 import { centavosDoBanco } from "../../../lib/dinheiro";
 import { brl, numero } from "../../../lib/formato";
 import { textoDoParametro, type ValorDeParametro } from "../../../lib/parametros";
+import { CabecalhoConnect, LARGURA_DA_CONNECT } from "../CabecalhoConnect";
 
 export const metadata: Metadata = { title: "Conciliação com a Nogle" };
 export const dynamic = "force-dynamic";
@@ -28,9 +29,8 @@ type SoAqui = { operacao_id: string; connect_operacoes: { numero: number; tipo: 
 export default async function ConciliacaoDaNogle({ searchParams }: { searchParams: Promise<{ id?: ValorDeParametro }> }) {
   const parametros = await searchParams;
   const sessao = await obterSessao({ exigirLoja: true });
-  const voltar = <Link href="/connect" className="inline-flex min-h-11 items-center gap-1 text-sm font-semibold text-acao"><ArrowLeft className="size-4" aria-hidden />Ora Connect</Link>;
   if (!permite(sessao, "connect.gerir")) {
-    return <MoldeReal sessao={sessao}>{voltar}<Aviso tom="aviso" className="mt-4">A conciliação com a Nogle é de quem gere a Ora Connect.</Aviso></MoldeReal>;
+    return <MoldeReal sessao={sessao} largura={LARGURA_DA_CONNECT}><CabecalhoConnect sessao={sessao} aba="carteira" /><Aviso tom="aviso" className="mt-4">A conciliação com a Nogle é de quem gere a Ora Connect.</Aviso></MoldeReal>;
   }
   const { supabase } = sessao;
   const lidas = await supabase.from("connect_conciliacoes").select("id, numero, relatorio, de, ate, recebida_em, totais").order("recebida_em", { ascending: false }).limit(20);
@@ -56,9 +56,8 @@ export default async function ConciliacaoDaNogle({ searchParams }: { searchParam
   const t = totaisDaConciliacao(aberta?.totais);
 
   return (
-    <MoldeReal sessao={sessao} largura="max-w-5xl">
-      {voltar}
-      <TituloPagina titulo="Conciliação com a Nogle" subtitulo="As ativações e as recargas da Ora conferidas com os relatórios oficiais da Nogle (ORA-CONNECT-009)" />
+    <MoldeReal sessao={sessao} largura={LARGURA_DA_CONNECT}>
+      <CabecalhoConnect sessao={sessao} aba="carteira" titulo="Conciliação com a Nogle" subtitulo="As ativações e as recargas da Ora conferidas com os relatórios oficiais da Nogle (ORA-CONNECT-009)" />
       <Aviso tom="info" className="mt-4">
         Ficam de fora, por enquanto: o extrato do saldo (o exemplo oficial da Nogle não traz os campos da resposta) e as comissões e
         bonificações (a Nogle respondeu que não há na API; a fonte oficial precisa ser indicada). Nada aqui muda uma operação: a

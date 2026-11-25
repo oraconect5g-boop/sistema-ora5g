@@ -24,7 +24,7 @@ test.describe("os chips na Nogle, no site no ar (CONNECT-d)", () => {
     await comPessoas(browser, [[DONO, LOJA_A], [ADMINISTRADOR, LOJA_A], [GERENTE_A]], async (pessoas) => {
       const dono = pessoas[DONO] as Page;
       await dono.goto("/connect/chips");
-      await expect(dono.getByRole("heading", { level: 1, name: "Chips na Nogle" })).toBeVisible();
+      await expect(dono.getByRole("heading", { level: 2, name: "Chips na Nogle", exact: true })).toBeVisible();
       await expect(dono.getByText(/Última leitura da Nogle: \d{2}\/\d{2}\/\d{4} às \d{2}:\d{2}\./)).toBeVisible();
       await expect(dono.getByText("Estoque geral da Ora", { exact: true })).toBeVisible();
       const lojas = secao(dono, "Lojas");

@@ -15,7 +15,7 @@ Em vez de responder roteiro por roteiro, percorra **uma jornada por vez**: o cam
 | [J07 — Devolução e troca](#j07) | 2 | 0 | 2 | 4 (1 / 3 / 0) |
 | [J08 — Caixa e financeiro](#j08) | 14 | 0 | 14 | 25 (10 / 15 / 0) |
 | [J09 — Site e retirada na loja](#j09) | 14 | 0 | 14 | 11 (2 / 9 / 0) |
-| [J10 — Ora Connect](#j10) | 10 | 0 | 10 | 8 (2 / 6 / 0) |
+| [J10 — Ora Connect](#j10) | 11 | 0 | 11 | 9 (3 / 6 / 0) |
 | [J11 — Financeiras (PayJoy e Aiva)](#j11) | 5 | 0 | 5 | 10 (5 / 5 / 0) |
 | [J12 — Marketplaces e Meta](#j12) | 7 | 0 | 7 | 19 (7 / 9 / 3) |
 | [J13 — Assistência](#j13) | 1 | 0 | 1 | 15 (12 / 3 / 0) |
@@ -189,7 +189,7 @@ Em vez de responder roteiro por roteiro, percorra **uma jornada por vez**: o cam
 
 **Ora Connect.** O caminho: Elegibilidade, chip e cliente → operação → fila do worker → Nogle → confirmação ou reconsulta → produção → repasse oficial.
 
-**Os requisitos que os roteiros cobrem:** ORA-CONNECT-001 (🧪 testado), ORA-CONNECT-003 (🟡 parcial), ORA-CONNECT-006 (🧪 testado), ORA-CONNECT-007 (🟡 parcial), ORA-CONNECT-008 (🟡 parcial), ORA-CONNECT-009 (🟡 parcial), ORA-CONNECT-011 (🟡 parcial), ORA-INV-011 (🟡 parcial).
+**Os requisitos que os roteiros cobrem:** ORA-CONNECT-001 (🧪 testado), ORA-CONNECT-002 (🧪 testado), ORA-CONNECT-003 (🟡 parcial), ORA-CONNECT-006 (🧪 testado), ORA-CONNECT-007 (🟡 parcial), ORA-CONNECT-008 (🟡 parcial), ORA-CONNECT-009 (🟡 parcial), ORA-CONNECT-011 (🟡 parcial), ORA-INV-011 (🟡 parcial).
 
 | Lote | O que entrega | Roteiro | No ar | Resposta |
 |---|---|---|---|---|
@@ -203,6 +203,7 @@ Em vez de responder roteiro por roteiro, percorra **uma jornada por vez**: o cam
 | CONNECT-j | em Ora Connect → Ações na Nogle, para o dono e os gerentes: bloquear e desbloquear a linha, a recarga automática, o apelido, a recarga programada, o reenvio do SMS da portabilidade, o cliente na Nogle, a compra de chip com entrega e os PDVs | [CONNECT-j.md](CONNECT-j.md) | a publicar | — |
 | CONNECT-i | em Ora Connect → Consultar linha, as 16 rotas da coleção oficial que faltavam: o titular da linha, o CNPJ, o CEP, o rastreio, o pagamento de uma solicitação e as informações da Nogle (a loja); a logística e o CPF (a gerência); o extrato e as recargas programadas da carteira, as portabilidades e as listas de linhas e de clientes (a rede) | [CONNECT-i.md](CONNECT-i.md) | a publicar | — |
 | CONNECT-l | na Ora Connect, o Pix da Nogle como o padrão da ativação e da recarga, com o QR Code na tela: a loja paga quando o cliente já pagou no caixa, ou o cliente paga direto à Nogle | [CONNECT-l.md](CONNECT-l.md) | a publicar | — |
+| CONNECT-m | a Ora Connect no formato da demonstração: as 9 abas no topo, a Operações do dia com os cartões e os filtros, o Ativar chip em passos com os planos em cartões, a Recarga, a Portabilidade e a Integração Nogle em abas próprias | [CONNECT-m.md](CONNECT-m.md) | a publicar | — |
 
 ## J11
 

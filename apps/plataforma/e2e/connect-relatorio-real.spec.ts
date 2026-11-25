@@ -15,7 +15,7 @@ test.describe("o relatório do vendedor e da loja, no site no ar (CONNECT-k)", (
     await comPessoas(browser, [[DONO, LOJA_A], [VENDEDOR]], async (pessoas) => {
       const dono = pessoas[DONO] as Page;
       await dono.goto("/connect/relatorio?periodo=30");
-      await expect(dono.getByRole("heading", { level: 1, name: "Relatório da Ora Connect" })).toBeVisible();
+      await expect(dono.getByRole("heading", { level: 2, name: "Relatório da Ora Connect", exact: true })).toBeVisible();
       // O subtítulo inteiro: o cabeçalho da impressão (escondido na tela) também diz "<loja> · 30 dias".
       await expect(dono.getByText(`${LOJA_A} · 30 dias · as operações registradas no período`, { exact: true })).toBeVisible();
       await expect(dono.getByLabel("Loja")).toBeVisible();
@@ -24,7 +24,7 @@ test.describe("o relatório do vendedor e da loja, no site no ar (CONNECT-k)", (
 
       const vendedor = pessoas[VENDEDOR] as Page;
       await vendedor.goto("/connect/relatorio");
-      await expect(vendedor.getByRole("heading", { level: 1, name: "Relatório da Ora Connect" })).toBeVisible();
+      await expect(vendedor.getByRole("heading", { level: 2, name: "Relatório da Ora Connect", exact: true })).toBeVisible();
       await expect(vendedor.getByLabel("Loja")).toHaveCount(0);
       await expect(vendedor.getByText("Recargas confirmadas", { exact: true })).toBeVisible();
     });

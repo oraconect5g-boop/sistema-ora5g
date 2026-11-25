@@ -2,7 +2,7 @@
   "_leia": "Checkpoint do programa de execução integral (PR #67). Carregar ao retomar e seguir para o próximo item executável da fila; não reiniciar o projeto. Estados vêm de status-requisitos.json (fonte da rastreabilidade); este arquivo acrescenta lote, bloqueio externo e revisão. Desde 16/11/2026 a medida de avanço é o requisito homologado pelo proprietário: a chave aceites guarda a resposta dele a cada roteiro de aceite (docs/aceite/); um requisito só recebe homologado: true com todos os lotes dele aceitos e sem nada em FALTA na nota de status-requisitos.json.",
   "atualizado_em": "2026-11-24",
   "base": {
-    "main": "728a7a4",
+    "main": "c92dc36",
     "pacote": {
       "pr": 67,
       "branch": "docs/execucao-integral-20261110",
@@ -1440,6 +1440,21 @@
       "resposta": null,
       "respondido_em": null,
       "nota": "a decisão D-062; a recarga automática é a D-063 (pendente); o ensaio espera a conta de teste da Asaas; migration 20261125211142_assinatura_no_cartao; o commit e a publicação ficam no registro (a branch registro/publicacoes)"
+    },
+    "CONNECT-m": {
+      "roteiro": "docs/aceite/CONNECT-m.md",
+      "requisitos": [
+        "ORA-CONNECT-002",
+        "ORA-CONNECT-003",
+        "ORA-CONNECT-006"
+      ],
+      "entrega": "a Ora Connect no formato da demonstração: as 9 abas no topo, a Operações do dia com os cartões e os filtros, o Ativar chip em passos com os planos em cartões, a Recarga, a Portabilidade e a Integração Nogle em abas próprias",
+      "commit": null,
+      "publicado_em": null,
+      "pedido_em": "2026-11-25",
+      "resposta": null,
+      "respondido_em": null,
+      "nota": "o pedido do proprietário de 25/11 (\"as telas do ora connect da demo\"); sem migration; o commit e a publicação ficam no registro (a branch registro/publicacoes)"
     }
   },
   "contagem_dos_estados": {
@@ -2390,7 +2405,7 @@
       "titulo": "Separar evento de venda de chip do evento de ativação",
       "prioridade": "P0",
       "estado": "testado",
-      "lote": "L11 Ora Connect",
+      "lote": "L11 Ora Connect; CONNECT-m (25/11): as telas no formato da demonstração",
       "bloqueio_externo": null,
       "revisado_codex": false,
       "homologado": false
@@ -2399,7 +2414,7 @@
       "titulo": "Separar recarga como operação telecom com status próprio",
       "prioridade": "P0",
       "estado": "parcial",
-      "lote": "L11 Ora Connect; CONNECT-f (25/11): a Ora Connect pronta para operar nas lojas (os planos no caixa, os chips no estoque); CONNECT-l (25/11): o Pix da Nogle na loja (a D-062)",
+      "lote": "L11 Ora Connect; CONNECT-f (25/11): a Ora Connect pronta para operar nas lojas (os planos no caixa, os chips no estoque); CONNECT-l (25/11): o Pix da Nogle na loja (a D-062); CONNECT-m (25/11): as telas no formato da demonstração",
       "bloqueio_externo": null,
       "revisado_codex": false,
       "homologado": false
@@ -2426,7 +2441,7 @@
       "titulo": "Atribuir performance de ativação/recarga ao vendedor de origem",
       "prioridade": "P0",
       "estado": "testado",
-      "lote": "L11 Ora Connect; CONNECT-k (25/11): o relatório do vendedor e da loja",
+      "lote": "L11 Ora Connect; CONNECT-k (25/11): o relatório do vendedor e da loja; CONNECT-m (25/11): as telas no formato da demonstração",
       "bloqueio_externo": null,
       "revisado_codex": false,
       "homologado": false
@@ -3062,5 +3077,5 @@
       "homologado": false
     }
   },
-  "proximo_passo": "Seguir a ordem de 23/11 (o prompt entregue pelo proprietário, escrito pelo Codex, com a auditoria integral de 21/11, PR #105; a leitura está em docs/alinhamento/LEITURA_AUDITORIA_2026-11-21.md). Em 23/11 à noite o proprietário pediu para seguir o planejamento do prompt: a fila, seção por seção, está em docs/alinhamento/FILA_INTEGRAL_2026-11-23.md. (1) O pedido do proprietário de 25/11 (\"todas as funções da Nogle, consulta completa, relatório individual\"; a D-060 e a D-061): o CONNECT-h, o CONNECT-k e o CONNECT-j estão no ar (as ações na Nogle ligadas com NOGLE_ACOES=habilitada e o worker --acoes a cada minuto); o CONNECT-i (as outras consultas, as 16 rotas que faltavam) entra com este texto: com ele, o sistema usa as 62 funções da coleção oficial da Nogle. Os aceites do CONNECT-g, h, k, j e i esperam o proprietário. A carteira da Ora na Nogle estava com R$ 0,00 em 25/11: sem crédito, a ativação, a recarga, a recarga programada e a compra pela carteira serão recusadas. (1b) O pedido seguinte do proprietário, de 25/11, as formas de pagamento (a D-062: \"pagamento oficial da loja será a asaas\"), em lotes: o PAY-015a (o Pix pela Asaas no caixa, com o QR Code na tela) está no ar, desligado até a conta de teste da Asaas; o CONNECT-l (o Pix da Nogle na loja: o padrão da ativação e da recarga, com o QR Code; a loja paga quando o cliente já pagou no caixa, ou o cliente paga direto à Nogle) está no ar; o PAY-015b (o cartão pela Asaas no caixa, à vista, confirmado pela leitura das cobranças de cartão) está no ar; o PAY-015c (a assinatura no cartão, na ficha do cliente: o link recorrente da Asaas, a assinatura e as cobranças acompanhadas e o cancelamento) entra com este texto: com ele, os lotes da D-062 acabaram. Falta a D-063 (a recarga automática da linha quando a cobrança da assinatura é paga: o crédito na carteira da Nogle ou a loja pagando o Pix da Nogle). Tudo começa no ambiente de teste da Asaas: falta a conta de teste com a chave Pix, a chave de API de teste e o e-mail dos avisos, gravados pelo comando. (2) O próximo lote de código: a raiz de teste do CNPJ da empresa (a da matriz que o proprietário mandou), a mensagem de Lojas da rede perto do formulário, o F24-06 (a disponibilidade comercial explicada) e os pontos V1, V2 e V5 do teste das telas; depois, as telas mais pesadas (M1, M2 e A1/A2), os cabeçalhos de segurança (M4), a exportação da auditoria (M8) e o acabamento (B1 a B5, B7). (3) O pagamento pelo site está pronto para ligar: falta a chave de teste da Asaas, o e-mail dos avisos e o sim do proprietário para o worker. (4) A seção 4 do prompt (o catálogo e o estoque de verdade) foi feita em 24/11 com as respostas do proprietário (D-053; as peças de ASSISTÊNCIA fora da loja online): falta um relatório novo da Rein (a posição carregada é a de 10/11), o dos IMEIs dos celulares e o CNPJ das lojas (sem ele, a loja online não vende nada de verdade). O que resta depende do proprietário, de contrato ou de terceiro (docs/PENDENCIAS_DO_PROPRIETARIO.md, a lista única). A narrativa anterior deste campo fica no histórico do Git e em docs/alinhamento/EXECUCAO_INTEGRAL_STATUS.md."
+  "proximo_passo": "Seguir a ordem de 23/11 (o prompt entregue pelo proprietário, escrito pelo Codex, com a auditoria integral de 21/11, PR #105; a leitura está em docs/alinhamento/LEITURA_AUDITORIA_2026-11-21.md). Em 23/11 à noite o proprietário pediu para seguir o planejamento do prompt: a fila, seção por seção, está em docs/alinhamento/FILA_INTEGRAL_2026-11-23.md. (1) O pedido do proprietário de 25/11 (\"todas as funções da Nogle, consulta completa, relatório individual\"; a D-060 e a D-061): o CONNECT-h, o CONNECT-k e o CONNECT-j estão no ar (as ações na Nogle ligadas com NOGLE_ACOES=habilitada e o worker --acoes a cada minuto); o CONNECT-i (as outras consultas, as 16 rotas que faltavam) entra com este texto: com ele, o sistema usa as 62 funções da coleção oficial da Nogle. Os aceites do CONNECT-g, h, k, j e i esperam o proprietário. A carteira da Ora na Nogle estava com R$ 0,00 em 25/11: sem crédito, a ativação, a recarga, a recarga programada e a compra pela carteira serão recusadas. (1b) O pedido seguinte do proprietário, de 25/11, as formas de pagamento (a D-062: \"pagamento oficial da loja será a asaas\"), em lotes: o PAY-015a (o Pix pela Asaas no caixa, com o QR Code na tela) está no ar, desligado até a conta de teste da Asaas; o CONNECT-l (o Pix da Nogle na loja: o padrão da ativação e da recarga, com o QR Code; a loja paga quando o cliente já pagou no caixa, ou o cliente paga direto à Nogle) está no ar; o PAY-015b (o cartão pela Asaas no caixa, à vista, confirmado pela leitura das cobranças de cartão) está no ar; o PAY-015c (a assinatura no cartão, na ficha do cliente: o link recorrente da Asaas, a assinatura e as cobranças acompanhadas e o cancelamento) está no ar: os lotes da D-062 acabaram. Antes de o proprietário gravar as chaves, o pedido dele de rever as telas da Ora Connect da demonstração: o CONNECT-m (as 9 abas no topo, a Operações do dia, o Ativar chip em passos, a Recarga, a Portabilidade e a Integração Nogle em abas próprias) entra com este texto; depois, o CONNECT-n (o assistente de ativação da demonstração, um passo por vez). Falta a D-063 (a recarga automática da linha quando a cobrança da assinatura é paga: o crédito na carteira da Nogle ou a loja pagando o Pix da Nogle). Tudo começa no ambiente de teste da Asaas: falta a conta de teste com a chave Pix, a chave de API de teste e o e-mail dos avisos, gravados pelo comando. (2) O próximo lote de código: a raiz de teste do CNPJ da empresa (a da matriz que o proprietário mandou), a mensagem de Lojas da rede perto do formulário, o F24-06 (a disponibilidade comercial explicada) e os pontos V1, V2 e V5 do teste das telas; depois, as telas mais pesadas (M1, M2 e A1/A2), os cabeçalhos de segurança (M4), a exportação da auditoria (M8) e o acabamento (B1 a B5, B7). (3) O pagamento pelo site está pronto para ligar: falta a chave de teste da Asaas, o e-mail dos avisos e o sim do proprietário para o worker. (4) A seção 4 do prompt (o catálogo e o estoque de verdade) foi feita em 24/11 com as respostas do proprietário (D-053; as peças de ASSISTÊNCIA fora da loja online): falta um relatório novo da Rein (a posição carregada é a de 10/11), o dos IMEIs dos celulares e o CNPJ das lojas (sem ele, a loja online não vende nada de verdade). O que resta depende do proprietário, de contrato ou de terceiro (docs/PENDENCIAS_DO_PROPRIETARIO.md, a lista única). A narrativa anterior deste campo fica no histórico do Git e em docs/alinhamento/EXECUCAO_INTEGRAL_STATUS.md."
 }

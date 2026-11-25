@@ -1,12 +1,11 @@
 import { randomUUID } from "node:crypto";
 
-import { ArrowLeft, Building2, ListChecks, Package, Smartphone, UserRound } from "lucide-react";
+import { Building2, ListChecks, Package, Smartphone, UserRound } from "lucide-react";
 import type { Metadata } from "next";
-import Link from "next/link";
 import type { ReactNode } from "react";
 
 import { MoldeReal } from "../../../componentes/MoldeReal";
-import { Aviso, Botao, Cartao, Selo, TituloPagina } from "../../../componentes/ui";
+import { Aviso, Botao, Cartao, Selo } from "../../../componentes/ui";
 import { permite } from "../../../lib/acesso/molde";
 import { FalhaDoServico, obterSessao } from "../../../lib/acesso/sessao";
 import {
@@ -15,6 +14,7 @@ import {
 import { brl } from "../../../lib/formato";
 import { textoDoParametro, type ValorDeParametro } from "../../../lib/parametros";
 import { cancelarAcao, pedirAcao } from "./acoes";
+import { CabecalhoConnect, LARGURA_DA_CONNECT } from "../CabecalhoConnect";
 
 export const metadata: Metadata = { title: "Ações na Nogle" };
 export const dynamic = "force-dynamic";
@@ -33,9 +33,8 @@ type Parametros = { erro?: ValorDeParametro; ok?: ValorDeParametro; numero?: Val
 export default async function AcoesNaNogle({ searchParams }: { searchParams: Promise<Parametros> }) {
   const parametros = await searchParams;
   const sessao = await obterSessao({ exigirLoja: true });
-  const voltar = <Link href="/connect" className="inline-flex min-h-11 items-center gap-1 text-sm font-semibold text-acao"><ArrowLeft className="size-4" aria-hidden />Ora Connect</Link>;
   if (!permite(sessao, "connect.gerir")) {
-    return <MoldeReal sessao={sessao}>{voltar}<Aviso tom="aviso" className="mt-4">As ações na Nogle são do dono e dos gerentes.</Aviso></MoldeReal>;
+    return <MoldeReal sessao={sessao} largura={LARGURA_DA_CONNECT}><CabecalhoConnect sessao={sessao} aba="atendimento" /><Aviso tom="aviso" className="mt-4">As ações na Nogle são do dono e dos gerentes.</Aviso></MoldeReal>;
   }
   const { supabase } = sessao;
   const [acoesLidas, referencias, pdvsLidos, lojasLidas] = await Promise.all([
@@ -113,9 +112,8 @@ export default async function AcoesNaNogle({ searchParams }: { searchParams: Pro
   );
 
   return (
-    <MoldeReal sessao={sessao} largura="max-w-5xl">
-      {voltar}
-      <TituloPagina titulo="Ações na Nogle" subtitulo="O que muda algo na Nogle: o servidor envia cada pedido uma vez, em até 1 minuto, e mostra o que a Nogle respondeu" />
+    <MoldeReal sessao={sessao} largura={LARGURA_DA_CONNECT}>
+      <CabecalhoConnect sessao={sessao} aba="atendimento" titulo="Ações na Nogle" subtitulo="O que muda algo na Nogle: o servidor envia cada pedido uma vez, em até 1 minuto, e mostra o que a Nogle respondeu" />
       {ok === "pedido" && <Aviso tom="sucesso" className="mt-4">{`Pedido ${numero && /^\d+$/.test(numero) ? `nº ${numero} ` : ""}registrado: o servidor envia à Nogle em até 1 minuto, uma vez.`}</Aviso>}
       {ok === "cancelada" && <Aviso tom="sucesso" className="mt-4">Pedido cancelado: fica na auditoria.</Aviso>}
       {erro && <Aviso tom="perigo" className="mt-4">{ehErroDaAcao(erro) ? ERROS_DA_ACAO[erro] : ERROS_DA_ACAO.falha}</Aviso>}
