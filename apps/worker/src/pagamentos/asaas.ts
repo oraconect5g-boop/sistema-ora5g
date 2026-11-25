@@ -71,6 +71,17 @@ export type ResultadoDoQr =
 export type ConsultaDoQr =
   | { situacao: "pago" | "estornado"; id_no_provedor: string; valor_centavos: number }
   | { situacao: "nenhum" | "desconhecida" };
+/**
+ * PAY-015b: uma cobrança de cartão com o link que a gerou. Do cartão, só os 4 últimos dígitos e a bandeira
+ * (creditCard.creditCardNumber e creditCardBrand): o número inteiro nunca passa pelo sistema.
+ */
+export type CobrancaDeCartao = { id: string; link: string; situacao: SituacaoDaConsulta; valor_centavos: number | null; final: string | null; bandeira: string | null };
+/** PAY-015b: o que as cobranças de um link dizem, no formato que o banco confere (como ConsultaDoQr). */
+export type ConsultaDoCartao =
+  | { situacao: "pago" | "estornado"; id_no_provedor: string; valor_centavos: number; cartao_final: string | null; cartao_bandeira: string | null }
+  | { situacao: "nenhum" | "desconhecida" };
+/** PAY-015b: até 5 páginas de 100 cobranças de cartão por leitura; passou disso, a leitura falha (pela metade esconderia o pago). */
+export const PAGINAS_DE_COBRANCAS = 5;
 const COPIA_E_COLA = /^[ -~]{20,600}$/;
 const BASE64 = /^[A-Za-z0-9+/=]+$/;
 
@@ -92,10 +103,25 @@ export class ClienteAsaas {
 
   /** O link de pagamento de um pedido: Pix, uma venda só, até o dia do vencimento, com o NOSSO identificador. */
   async criarLink(p: { referencia: string; nome: string; valorCentavos: number; venceEm: string; retorno: string }): Promise<ResultadoDoLink> {
-    const r = await this.pedir("POST", "/paymentLinks", {
+    return this.criarLinkCom({
       name: p.nome, billingType: "PIX", chargeType: "DETACHED", value: p.valorCentavos / 100, endDate: p.venceEm,
       externalReference: p.referencia, limit: 1, notificationEnabled: false, callback: { successUrl: p.retorno, autoRedirect: false },
     });
+  }
+
+  /**
+   * PAY-015b: o link de pagamento no cartão do caixa: avulso (DETACHED), uma venda só (limit 1), sem aviso ao cliente e com o
+   * NOSSO identificador. O endDate é um dia: a validade de verdade é a do caixa (o worker desativa o link vencido).
+   */
+  async criarLinkDoCartao(p: { referencia: string; nome: string; valorCentavos: number; venceEm: string }): Promise<ResultadoDoLink> {
+    return this.criarLinkCom({
+      name: p.nome, billingType: "CREDIT_CARD", chargeType: "DETACHED", value: p.valorCentavos / 100, endDate: p.venceEm,
+      externalReference: p.referencia, limit: 1, notificationEnabled: false,
+    });
+  }
+
+  private async criarLinkCom(corpo: Record<string, unknown>): Promise<ResultadoDoLink> {
+    const r = await this.pedir("POST", "/paymentLinks", corpo);
     if (r.tipo === "falha") return r.enviada ? { tipo: "desconhecido", motivo: r.motivo } : { tipo: "falha", motivo: r.motivo };
     if (r.status === 429) return { tipo: "falha", motivo: motivoHttp(429) };
     if (r.status >= 400 && r.status < 500) return { tipo: "recusado", motivo: motivoHttp(r.status) };
@@ -183,6 +209,33 @@ export class ClienteAsaas {
     const valor = centavosDe(unica.x.value);
     if (typeof unica.x.id !== "string" || !ID.test(unica.x.id) || valor === null) return { situacao: "desconhecida" };
     return { situacao: unica.situacao, id_no_provedor: unica.x.id, valor_centavos: valor };
+  }
+
+  /**
+   * PAY-015b: as cobranças de cartão criadas desde o dia (GET /payments com billingType=CREDIT_CARD e dateCreated[ge]), página
+   * por página, só as que vieram de um link (a Asaas não tem a consulta das cobranças de um link: o caixa acha a do link pelo
+   * paymentLink). A cobrança removida não conta. O dia no formato das datas da Asaas (AAAA-MM-DD; a confirmar no sandbox).
+   */
+  async cobrancasDeCartaoDesde(dia: string): Promise<CobrancaDeCartao[] | "falha"> {
+    if (!/^\d{4}-\d{2}-\d{2}$/.test(dia)) return "falha";
+    const todas: CobrancaDeCartao[] = [];
+    for (let pagina = 0; pagina < PAGINAS_DE_COBRANCAS; pagina++) {
+      const r = await this.pedir("GET", `/payments?billingType=CREDIT_CARD&dateCreated%5Bge%5D=${dia}&limit=100&offset=${pagina * 100}`);
+      const c = corpoDe(r);
+      if (r.tipo !== "resposta" || r.status !== 200 || !c || !Array.isArray(c.data)) return "falha";
+      for (const x of c.data as Record<string, unknown>[]) {
+        if (!x || x.deleted === true || typeof x.id !== "string" || !ID.test(x.id) || typeof x.paymentLink !== "string" || !ID.test(x.paymentLink)) continue;
+        const cartao = x.creditCard && typeof x.creditCard === "object" ? (x.creditCard as Record<string, unknown>) : {};
+        todas.push({
+          id: x.id, link: x.paymentLink, situacao: typeof x.status === "string" ? situacaoDaAsaas(x.status, false) : "desconhecida",
+          valor_centavos: centavosDe(x.value),
+          final: typeof cartao.creditCardNumber === "string" && /^\d{4}$/.test(cartao.creditCardNumber) ? cartao.creditCardNumber : null,
+          bandeira: typeof cartao.creditCardBrand === "string" && /^[A-Z]{2,20}$/.test(cartao.creditCardBrand) ? cartao.creditCardBrand : null,
+        });
+      }
+      if (c.hasMore !== true) return todas;
+    }
+    return "falha";
   }
 
   /** PAY-015a: exclui o QR (o cancelado e o vencido). O QR que a Asaas não acha conta como excluído. */

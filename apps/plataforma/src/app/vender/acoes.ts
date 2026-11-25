@@ -105,6 +105,8 @@ export async function concluirVenda(dados: FormData) {
   if (error?.code === "22023" && /cliente/i.test((error as { message?: string }).message ?? "")) redirect("/vender?erro=cliente");
   // PDV-c: a regra do pagamento que o banco recusou (a maquininha, as parcelas, o financiamento só do celular, a entrada).
   const doPagamento = error?.code === "OR009" ? erroDoPagamento((error as { message?: string }).message ?? "") : null;
+  // PAY-015b: o link do cartão esperando também segura a conclusão (OR059, como o QR do Pix).
+  if (error?.code === "OR059" && /cartão/i.test((error as { message?: string }).message ?? "")) redirect("/vender?erro=cartao_esperando");
   if (doPagamento) redirect(`/vender?erro=${doPagamento}`);
   if (error) voltar("/vender", error);
   const resultado = data as { venda?: string } | null;
@@ -121,6 +123,8 @@ export async function cancelarVenda(dados: FormData) {
   const { error }: Resultado = await supabase.rpc("cancelar_venda", { p_venda: venda, p_motivo: motivo.trim() });
   // PAY-015a: a venda aberta com Pix pela Asaas pago não se cancela (OR048, como o pedido pago pelo site).
   if (error?.code === "OR048" && /Pix pela Asaas/i.test((error as { message?: string }).message ?? "")) redirect(`${voltarPara}?erro=pix_pago`);
+  // PAY-015b: e com cartão pela Asaas pago.
+  if (error?.code === "OR048" && /cartão pela Asaas/i.test((error as { message?: string }).message ?? "")) redirect(`${voltarPara}?erro=cartao_pago`);
   voltar(voltarPara === "/vender" ? "/vender?cancelada=1" : `${voltarPara}?cancelada=1`, error);
 }
 
@@ -143,6 +147,29 @@ export async function cancelarPixAsaas(dados: FormData) {
   const { supabase } = await obterSessao({ exigirLoja: true });
   const { error }: Resultado = await supabase.rpc("caixa_pix_cancelar", { p_pix: pix });
   if (error?.code === "OR048") redirect("/vender?erro=pix_pago");
+  voltar("/vender", error);
+}
+
+// PAY-015b (a D-062): o link de pagamento no cartão da Asaas, com o QR Code na tela. O banco confere quem pede e até quanto
+// (contando o Pix pedido ou pago); o worker cria o link e confere as cobranças de cartão.
+export async function pedirCartaoAsaas(dados: FormData) {
+  const venda = dados.get("venda");
+  const valor = lerValor(dados.get("valor"));
+  if (!ehUuid(venda)) redirect("/vender?erro=dados");
+  if (valor === null || valor <= 0) redirect("/vender?erro=valor");
+  const { supabase } = await obterSessao({ exigirLoja: true });
+  const { error }: Resultado = await supabase.rpc("caixa_cartao_pedir", { p_venda: venda, p_valor_centavos: valor, p_chave: chaveDe(dados) });
+  if (error?.code === "OR009") redirect("/vender?erro=cartao_passa");
+  if (error?.code === "OR058") redirect("/vender?erro=cartao_desligado");
+  voltar("/vender", error);
+}
+
+export async function cancelarCartaoAsaas(dados: FormData) {
+  const cartao = dados.get("cartao");
+  if (!ehUuid(cartao)) redirect("/vender?erro=dados");
+  const { supabase } = await obterSessao({ exigirLoja: true });
+  const { error }: Resultado = await supabase.rpc("caixa_cartao_cancelar", { p_cartao: cartao });
+  if (error?.code === "OR048") redirect("/vender?erro=cartao_pago");
   voltar("/vender", error);
 }
 

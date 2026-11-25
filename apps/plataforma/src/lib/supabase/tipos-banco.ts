@@ -708,6 +708,122 @@ export type Database = {
           },
         ]
       }
+      caixa_cartao: {
+        Row: {
+          atualizado_em: string
+          cancelado_em: string | null
+          cartao_bandeira: string | null
+          cartao_final: string | null
+          chave: string
+          conferido_em: string | null
+          criado_em: string
+          divergencia: string | null
+          estornado_em: string | null
+          expira_em: string | null
+          id: string
+          id_no_provedor: string | null
+          link_desativado_em: string | null
+          link_id: string | null
+          link_url: string | null
+          numero: number
+          organizacao_id: string
+          pago_em: string | null
+          pedido_por: string
+          reservado_ate: string | null
+          situacao: string
+          tentativas: number
+          ultima_falha: string | null
+          unidade_id: string
+          valor_centavos: number
+          venda_id: string
+        }
+        Insert: {
+          atualizado_em?: string
+          cancelado_em?: string | null
+          cartao_bandeira?: string | null
+          cartao_final?: string | null
+          chave: string
+          conferido_em?: string | null
+          criado_em?: string
+          divergencia?: string | null
+          estornado_em?: string | null
+          expira_em?: string | null
+          id?: string
+          id_no_provedor?: string | null
+          link_desativado_em?: string | null
+          link_id?: string | null
+          link_url?: string | null
+          numero?: never
+          organizacao_id: string
+          pago_em?: string | null
+          pedido_por: string
+          reservado_ate?: string | null
+          situacao?: string
+          tentativas?: number
+          ultima_falha?: string | null
+          unidade_id: string
+          valor_centavos: number
+          venda_id: string
+        }
+        Update: {
+          atualizado_em?: string
+          cancelado_em?: string | null
+          cartao_bandeira?: string | null
+          cartao_final?: string | null
+          chave?: string
+          conferido_em?: string | null
+          criado_em?: string
+          divergencia?: string | null
+          estornado_em?: string | null
+          expira_em?: string | null
+          id?: string
+          id_no_provedor?: string | null
+          link_desativado_em?: string | null
+          link_id?: string | null
+          link_url?: string | null
+          numero?: never
+          organizacao_id?: string
+          pago_em?: string | null
+          pedido_por?: string
+          reservado_ate?: string | null
+          situacao?: string
+          tentativas?: number
+          ultima_falha?: string | null
+          unidade_id?: string
+          valor_centavos?: number
+          venda_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "caixa_cartao_organizacao_id_fkey"
+            columns: ["organizacao_id"]
+            isOneToOne: false
+            referencedRelation: "organizacoes"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "caixa_cartao_pedido_por_fkey"
+            columns: ["pedido_por"]
+            isOneToOne: false
+            referencedRelation: "perfis_usuario"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "caixa_cartao_unidade_id_organizacao_id_fkey"
+            columns: ["unidade_id", "organizacao_id"]
+            isOneToOne: false
+            referencedRelation: "unidades"
+            referencedColumns: ["id", "organizacao_id"]
+          },
+          {
+            foreignKeyName: "caixa_cartao_venda_id_fkey"
+            columns: ["venda_id"]
+            isOneToOne: false
+            referencedRelation: "vendas"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       caixa_pix: {
         Row: {
           atualizado_em: string
@@ -7730,6 +7846,7 @@ export type Database = {
       }
       venda_pagamentos: {
         Row: {
+          caixa_cartao_id: string | null
           caixa_pix_id: string | null
           comprovante: string | null
           conciliado_em: string | null
@@ -7756,6 +7873,7 @@ export type Database = {
           venda_id: string
         }
         Insert: {
+          caixa_cartao_id?: string | null
           caixa_pix_id?: string | null
           comprovante?: string | null
           conciliado_em?: string | null
@@ -7782,6 +7900,7 @@ export type Database = {
           venda_id: string
         }
         Update: {
+          caixa_cartao_id?: string | null
           caixa_pix_id?: string | null
           comprovante?: string | null
           conciliado_em?: string | null
@@ -7808,6 +7927,13 @@ export type Database = {
           venda_id?: string
         }
         Relationships: [
+          {
+            foreignKeyName: "venda_pagamentos_caixa_cartao_id_fkey"
+            columns: ["caixa_cartao_id"]
+            isOneToOne: true
+            referencedRelation: "caixa_cartao"
+            referencedColumns: ["id"]
+          },
           {
             foreignKeyName: "venda_pagamentos_caixa_pix_id_fkey"
             columns: ["caixa_pix_id"]
@@ -8398,6 +8524,37 @@ export type Database = {
       caixa_decidir_saida: {
         Args: { p_autorizar: boolean; p_motivo: string; p_saida: string }
         Returns: string
+      }
+      caixa_cartao_a_conferir: { Args: { p_limite?: number }; Returns: Json }
+      caixa_cartao_a_criar: { Args: { p_limite?: number }; Returns: Json }
+      caixa_cartao_a_desativar: { Args: { p_limite?: number }; Returns: Json }
+      caixa_cartao_cancelar: { Args: { p_cartao: string }; Returns: string }
+      caixa_cartao_consulta_aplicar: {
+        Args: { p_cartao: string; p_consulta: Json }
+        Returns: string
+      }
+      caixa_cartao_criacao_falhou: {
+        Args: { p_cartao: string; p_definitiva: boolean; p_motivo: string }
+        Returns: string
+      }
+      caixa_cartao_da_venda: { Args: { p_venda?: string }; Returns: Json }
+      caixa_cartao_link_desativado: { Args: { p_cartao: string }; Returns: string }
+      caixa_cartao_link_registrar: {
+        Args: {
+          p_cartao: string
+          p_expira_em: string
+          p_link_id: string
+          p_link_url: string
+        }
+        Returns: string
+      }
+      caixa_cartao_pedir: {
+        Args: { p_chave: string; p_valor_centavos: number; p_venda: string }
+        Returns: Json
+      }
+      caixa_cartao_situacao: {
+        Args: { p_motivo: string; p_pronto: boolean }
+        Returns: boolean
       }
       caixa_pedir_saida: {
         Args: { p_chave: string; p_motivo: string; p_valor: number }

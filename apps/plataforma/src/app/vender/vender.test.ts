@@ -49,6 +49,8 @@ const cenario = vi.hoisted(() => ({
   erroDoPdv: null as { code: string } | null,
   /** PAY-015a: o que public.caixa_pix_da_venda responde (o Pix pela Asaas da venda aberta). */
   pix: { data: null, error: null } as { data: unknown; error: { code: string } | null },
+  /** PAY-015b: o que public.caixa_cartao_da_venda responde (o cartão pela Asaas da venda aberta). */
+  cartao: { data: null, error: null } as { data: unknown; error: { code: string } | null },
   /** O que public.loja_reservas_liberar_vencidas responde. */
   soltura: { data: 0, error: null } as { data: number | null; error: { code: string } | null },
   /** O preço vigente de cada variação nesta loja, em centavos; "falha": a leitura dos preços falha; ausente: sem preço. */
@@ -125,6 +127,7 @@ const supabase = {
     if (nome === "pdv_tela") return responder(cenario.erroDoPdv ? { data: null, error: cenario.erroDoPdv } : { data: cenario.pdv, error: null });
     if (nome === "loja_reservas_liberar_vencidas") return responder(cenario.soltura);
     if (nome === "caixa_pix_da_venda") return responder(cenario.pix);
+    if (nome === "caixa_cartao_da_venda") return responder(cenario.cartao);
     // VEL-b: o preço de todos os resultados num pedido só; perguntar um a um quebra o teste.
     if (nome === "preco_vigente") throw new Error("a busca do PDV perguntou o preço de um resultado por vez");
     if (nome === "precos_vigentes") {
@@ -173,9 +176,11 @@ vi.mock("../../lib/acesso/sessao", () => ({
 }));
 
 import { BotaoConfirmar } from "../../componentes/BotaoConfirmar";
+import { QrCode } from "../../componentes/QrCode";
 import { FotoAmpliavel } from "../catalogo/FotoAmpliavel";
 import { BuscaDeCliente } from "../clientes/BuscaDeCliente";
-import { abrirCaixa, adicionarItem, aplicarDesconto, cancelarPixAsaas, cancelarVenda, concluirVenda, novaVenda, pedirAprovacao, pedirPixAsaas, removerItem } from "./acoes";
+import { abrirCaixa, adicionarItem, aplicarDesconto, cancelarCartaoAsaas, cancelarPixAsaas, cancelarVenda, concluirVenda, novaVenda, pedirAprovacao, pedirCartaoAsaas,
+  pedirPixAsaas, removerItem } from "./acoes";
 import { FormasDePagamento } from "./FormasDePagamento";
 import Vender from "./page";
 
@@ -250,6 +255,7 @@ beforeEach(() => {
   cenario.erroDoPdv = null;
   cenario.soltura = { data: 0, error: null };
   cenario.pix = { data: { ligado: false, venda: null, pix: [] }, error: null };
+  cenario.cartao = { data: { ligado: false, venda: null, cartoes: [] }, error: null };
   cenario.precos = { [V_AZUL]: 129_900, [V_CAPA]: 6_900, [V_CHIP]: 1_000 };
   cenario.assinaturas = [];
   cenario.idas = [];
@@ -291,8 +297,9 @@ afterEach(async () => {
   vi.restoreAllMocks();
 });
 
-// PAY-015a: o Pix pela Asaas da venda aberta vai junto na mesma rodada (o banco acha a mesma venda da tela).
-const PRIMEIRA_IDA = ["funcao:caixa_pix_da_venda", "funcao:loja_reservas_liberar_vencidas", "funcao:pdv_tela"];
+// PAY-015a: o Pix pela Asaas da venda aberta vai junto na mesma rodada (o banco acha a mesma venda da tela); PAY-015b: e o
+// cartão pela Asaas.
+const PRIMEIRA_IDA = ["funcao:caixa_cartao_da_venda", "funcao:caixa_pix_da_venda", "funcao:loja_reservas_liberar_vencidas", "funcao:pdv_tela"];
 /** A primeira etapa da busca do catálogo (lib/catalogo/busca.ts), que sai junto com a tela. */
 const CATALOGO = ["tabela:marcas", "tabela:produtos", "tabela:variante_codigos_externos", "tabela:variantes", "tabela:variantes"];
 
@@ -728,6 +735,66 @@ describe("PAY-015a: o Pix pela Asaas no caixa", () => {
     const outra = await abrir();
     expect(texto(outra)).not.toContain("Pago no Pix pela Asaas");
     expect(elementos(outra).find((e) => e.type === FormasDePagamento)?.props).toMatchObject({ total: 6_900, pagoNoPix: 0 });
+  });
+});
+
+// PAY-015b (25/11/2026; a D-062): o cartão pela Asaas no caixa: o cartão com o QR Code do link, o pago entra no total e a
+// conclusão espera o link que ainda não foi pago. As regras do banco estão em packages/banco/src/cartao-da-asaas-no-caixa.test.ts.
+describe("PAY-015b: o cartão pela Asaas no caixa", () => {
+  const CARTAO_ESPERA = id("9b01");
+  const CARTAO_PAGO = id("9b02");
+  const LINK = "https://sandbox.asaas.invalid/c/lnk_ficticio_1";
+  const cartao = (mudar: Linha) => ({ id: CARTAO_ESPERA, numero: 1, valor_centavos: 2_000, situacao: "aguardando", link_url: LINK,
+    expira_em: "2026-11-25T18:30:00Z", pago_em: null, cartao_final: null, cartao_bandeira: null, ultima_falha: null, divergencia: null, ...mudar });
+
+  it("ligado: o link que espera mostra o QR Code do link, o botão de abrir e o cancelar; o novo pedido desconta o Pix e o cartão que esperam; concluir fica travado", async () => {
+    cenario.pdv = tela({ itens: [item({ quantidade: 1 })] });
+    cenario.cartao = { data: { ligado: true, venda: VENDA, cartoes: [cartao({})] }, error: null };
+    cenario.pix = { data: { ligado: true, venda: VENDA, pix: [{ id: id("9a01"), numero: 1, valor_centavos: 1_000, situacao: "criando", copia_e_cola: null, imagem: null,
+      expira_em: null, pago_em: null, ultima_falha: null, divergencia: null }] }, error: null };
+    const arvore = await abrir();
+    const t = texto(arvore);
+    expect(rodadas()).toEqual([PRIMEIRA_IDA]);
+    expect(t).toContain("Cartão pela Asaas");
+    expect(elementos(arvore).find((e) => e.type === QrCode)?.props).toMatchObject({ texto: LINK, rotulo: expect.stringMatching(/^QR Code do pagamento no cartão de R\$\s20,00$/) });
+    expect(elementos(arvore).find((e) => e.type === "a" && e.props.href === LINK)?.props).toMatchObject({ target: "_blank", rel: "noreferrer noopener" });
+    expect(formularios(arvore, cancelarCartaoAsaas).map((f) => f.escondidos)).toEqual([{ cartao: CARTAO_ESPERA }]);
+    const [pedir] = formularios(arvore, pedirCartaoAsaas);
+    expect(pedir?.escondidos.venda).toBe(VENDA);
+    // 69,00 da capa menos os 20,00 do link e os 10,00 do QR que esperam: o novo pedido sugere 39,00 (nos dois).
+    expect(pedir?.elementos.find((e) => e.type === "input" && e.props.name === "valor")?.props.defaultValue).toBe("39,00");
+    expect(formularios(arvore, pedirPixAsaas)[0]?.elementos.find((e) => e.type === "input" && e.props.name === "valor")?.props.defaultValue).toBe("39,00");
+    expect(elementos(arvore).find((e) => e.type === BotaoConfirmar)?.props.disabled).toBe(true);
+    expect(t).toContain("Há um cartão pela Asaas esperando: espere o pagamento ou cancele o link para concluir.");
+  });
+
+  it("pago: o total desconta o cartão (com a bandeira e o final), as formas recebem só o resto e o pago, e a venda não se cancela por aqui", async () => {
+    cenario.pdv = tela({ itens: [item({ quantidade: 1 })] });
+    cenario.cartao = { data: { ligado: true, venda: VENDA, cartoes: [cartao({ id: CARTAO_PAGO, valor_centavos: 5_000, situacao: "pago", link_url: null,
+      pago_em: "2026-11-25T17:05:00Z", cartao_final: "8829", cartao_bandeira: "VISA" })] }, error: null };
+    const arvore = await abrir();
+    const t = texto(arvore);
+    expect(t).toContain("Pago no cartão pela Asaas");
+    expect(t).toContain("VISA final 8829");
+    expect(t).toContain("Venda com cartão pela Asaas pago: esta venda não se cancela por aqui.");
+    expect(formularios(arvore, cancelarVenda)).toEqual([]);
+    expect(formularios(arvore, cancelarCartaoAsaas)).toEqual([]);
+    expect(elementos(arvore).find((e) => e.type === QrCode)).toBeUndefined();
+    expect(elementos(arvore).find((e) => e.type === FormasDePagamento)?.props).toMatchObject({ total: 1_900, pagoNoCartao: 5_000, pagoNoPix: 0 });
+    expect(elementos(arvore).find((e) => e.type === BotaoConfirmar)?.props.disabled).toBe(false);
+  });
+
+  it("desligado e sem cartão: o cartão não aparece; a leitura que falha: o aviso; o link de outra venda não entra; o link fora da forma não vira QR", async () => {
+    cenario.pdv = tela({ itens: [item({ quantidade: 1 })] });
+    expect(formularios(await abrir(), pedirCartaoAsaas)).toEqual([]);
+    cenario.cartao = { data: null, error: { code: "57014" } };
+    expect(texto(await abrir())).toContain("Não deu para ler o cartão da Asaas agora.");
+    cenario.cartao = { data: { ligado: true, venda: id("d999"), cartoes: [cartao({ id: CARTAO_PAGO, situacao: "pago", valor_centavos: 5_000 })] }, error: null };
+    const outra = await abrir();
+    expect(texto(outra)).not.toContain("Pago no cartão pela Asaas");
+    expect(elementos(outra).find((e) => e.type === FormasDePagamento)?.props).toMatchObject({ total: 6_900, pagoNoCartao: 0 });
+    cenario.cartao = { data: { ligado: true, venda: VENDA, cartoes: [cartao({ link_url: "javascript:alert(1)" })] }, error: null };
+    expect(elementos(await abrir()).find((e) => e.type === QrCode)).toBeUndefined();
   });
 });
 

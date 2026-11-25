@@ -46,6 +46,12 @@ export const ERROS_DA_VENDA = {
   pix_esperando: "Há um Pix pela Asaas esperando: espere o pagamento (a tela se atualiza sozinha) ou cancele o QR Code.",
   pix_pago: "Esta venda tem Pix pela Asaas pago: conclua a venda. Se o cliente desistir, o estorno é pelo painel da Asaas.",
   pix_passa_do_total: "O Pix pela Asaas pago passa do total da venda: devolva a diferença pela Asaas ou ponha o item de volta.",
+  // PAY-015b: o cartão pela Asaas no caixa.
+  cartao_desligado: "O cartão pela Asaas está desligado agora: use a maquininha. Ele volta quando o servidor fala com a Asaas.",
+  cartao_passa: "O cartão passa do que falta pagar nesta venda: gere o link com o valor que falta.",
+  cartao_esperando: "Há um cartão pela Asaas esperando: espere o pagamento (a tela se atualiza sozinha) ou cancele o link.",
+  cartao_pago: "Esta venda tem cartão pela Asaas pago: conclua a venda. Se o cliente desistir, o estorno é pelo painel da Asaas.",
+  cartao_passa_do_total: "O cartão pela Asaas pago passa do total da venda: devolva a diferença pela Asaas ou ponha o item de volta.",
   falha: "Não foi possível concluir agora. Tente de novo em instantes.",
 } as const;
 export type ErroDaVenda = keyof typeof ERROS_DA_VENDA;
@@ -154,6 +160,8 @@ export function erroDoPagamento(mensagem: string): ErroDaVenda | null {
   if (/financiam só/i.test(mensagem)) return "so_celular";
   if (/entrada/i.test(mensagem)) return "entrada";
   if (/pago pelo site/i.test(mensagem)) return "pago_pelo_site";
+  if (/cartão pela Asaas pago passa/i.test(mensagem)) return "cartao_passa_do_total";
+  if (/cartão pela Asaas pago|tem cartão pela Asaas/i.test(mensagem)) return "cartao_pago";
   if (/Pix pela Asaas pago passa/i.test(mensagem)) return "pix_passa_do_total";
   if (/Pix passa do que falta/i.test(mensagem)) return "pix_passa";
   if (/Pix pela Asaas pago|tem Pix pela Asaas/i.test(mensagem)) return "pix_pago";

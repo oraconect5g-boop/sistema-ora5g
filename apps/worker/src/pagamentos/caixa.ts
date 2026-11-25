@@ -27,7 +27,11 @@ export const RESUMO_DO_CAIXA_VAZIO: ResumoDoCaixa = { qr_criados: 0, qr_falhas: 
 
 /** Passo 1. A chave Pix ativa da conta (para criar os QR) ou nulo; o banco fica sabendo se o Pix no caixa está pronto. */
 export async function conferirChavePix(banco: BancoDoCaixa, asaas: AsaasDoCaixa): Promise<string | null> {
-  const chave = await asaas.chavePixAtiva();
+  return situacaoDoPix(banco, await asaas.chavePixAtiva());
+}
+
+/** O passo 1 com a resposta já lida (PAY-015b: a mesma resposta diz ao cartão no caixa se a Asaas está respondendo). */
+export async function situacaoDoPix(banco: BancoDoCaixa, chave: string | null | "falha"): Promise<string | null> {
   if (chave === "falha") {
     await banco.caixaSituacao(false, "a Asaas não respondeu a conferência da chave Pix");
     return null;

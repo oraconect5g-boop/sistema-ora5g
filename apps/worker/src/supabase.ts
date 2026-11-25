@@ -3,6 +3,7 @@ import { createClient, type SupabaseClient } from "@supabase/supabase-js";
 import type { BancoDoRelato } from "./avisos/erros-do-site.ts";
 import type { AvisoAProcessar, BancoDosPagamentos, ConfiguracaoDoPagamento, PagamentoACriar } from "./pagamentos/processar.ts";
 import type { BancoDoCaixa, QrAConferir, QrACriar } from "./pagamentos/caixa.ts";
+import type { BancoDoCartao, LinkDoCartaoAConferir, LinkDoCartaoACriar } from "./pagamentos/cartao.ts";
 import type { AvisoParaEnviar, BancoDosAvisos, ResultadoDoAviso } from "./avisos/processar.ts";
 import type { BancoConnect } from "./connect/processar.ts";
 import type { BancoWhatsApp, EnvioParaFazer, ResultadoDoEnvio } from "./whatsapp/processar.ts";
@@ -49,7 +50,7 @@ export function bancoDoRelato(cliente: SupabaseClient, segredo: string): BancoDo
 }
 
 // O pagamento pelo site (PAY-014a; ADR-025): as funções do worker dos pagamentos, só com a chave secreta do servidor.
-export function bancoDosPagamentos(cliente: SupabaseClient): BancoDosPagamentos & BancoDoCaixa {
+export function bancoDosPagamentos(cliente: SupabaseClient): BancoDosPagamentos & BancoDoCaixa & BancoDoCartao {
   const rpc = async <T>(nome: string, argumentos?: Record<string, unknown>): Promise<T> => {
     const { data, error } = await cliente.rpc(nome, argumentos);
     if (error) throw error;
@@ -78,6 +79,16 @@ export function bancoDosPagamentos(cliente: SupabaseClient): BancoDosPagamentos 
     caixaConsultaAplicar: (pix, consulta) => rpc<string>("caixa_pix_consulta_aplicar", { p_pix: pix, p_consulta: consulta }),
     caixaAExcluir: (limite) => rpc<{ id: string; qr_id: string }[]>("caixa_pix_a_excluir", { p_limite: limite }),
     caixaQrExcluido: (pix) => rpc<string>("caixa_pix_qr_excluido", { p_pix: pix }),
+    // PAY-015b: o cartão pela Asaas no caixa.
+    cartaoSituacao: (pronto, motivo) => rpc<boolean>("caixa_cartao_situacao", { p_pronto: pronto, p_motivo: motivo }),
+    cartaoACriar: (limite) => rpc<LinkDoCartaoACriar[]>("caixa_cartao_a_criar", { p_limite: limite }),
+    cartaoLinkRegistrar: (cartao, linkId, url, expiraEm) =>
+      rpc<string>("caixa_cartao_link_registrar", { p_cartao: cartao, p_link_id: linkId, p_link_url: url, p_expira_em: expiraEm }),
+    cartaoCriacaoFalhou: (cartao, motivo, definitiva) => rpc<string>("caixa_cartao_criacao_falhou", { p_cartao: cartao, p_motivo: motivo, p_definitiva: definitiva }),
+    cartaoAConferir: (limite) => rpc<LinkDoCartaoAConferir[]>("caixa_cartao_a_conferir", { p_limite: limite }),
+    cartaoConsultaAplicar: (cartao, consulta) => rpc<string>("caixa_cartao_consulta_aplicar", { p_cartao: cartao, p_consulta: consulta }),
+    cartaoADesativar: (limite) => rpc<{ id: string; link_id: string }[]>("caixa_cartao_a_desativar", { p_limite: limite }),
+    cartaoLinkDesativado: (cartao) => rpc<string>("caixa_cartao_link_desativado", { p_cartao: cartao }),
   };
 }
 

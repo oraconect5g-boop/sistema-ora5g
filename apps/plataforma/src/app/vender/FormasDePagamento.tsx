@@ -16,14 +16,15 @@ const MAXIMO_DE_FORMAS = 8;
 // conferem tudo de novo; os nomes dos campos são os que lib/vendas/regras.ts lê (pagamento_1_meio, pagamento_1_valor...).
 // PAY-014b: na venda do pedido pago pelo site, o pago aparece como uma linha fixa (o banco grava a linha dele na
 // conclusão) e `total` é só o que falta cobrar além dele (um item a mais no balcão). PAY-015a: o Pix pela Asaas já pago no
-// caixa entra do mesmo jeito (o banco grava a linha de cada QR pago).
-export function FormasDePagamento({ total, valorDosCelulares, opcoes, terminais, pagoPeloSite = 0, pagoNoPix = 0 }: {
+// caixa entra do mesmo jeito (o banco grava a linha de cada QR pago); PAY-015b: o cartão pela Asaas também.
+export function FormasDePagamento({ total, valorDosCelulares, opcoes, terminais, pagoPeloSite = 0, pagoNoPix = 0, pagoNoCartao = 0 }: {
   total: number;
   valorDosCelulares: number;
   opcoes: OpcaoDeMeio[];
   terminais: { id: string; rotulo: string; provedor: "picpay" | "pagbank" }[];
   pagoPeloSite?: number;
   pagoNoPix?: number;
+  pagoNoCartao?: number;
 }) {
   const [linhas, setLinhas] = useState<LinhaNaTela[]>([]);
   const [escolhendo, setEscolhendo] = useState(false);
@@ -31,6 +32,7 @@ export function FormasDePagamento({ total, valorDosCelulares, opcoes, terminais,
   const opcaoDe = (meio: string) => opcoes.find((o) => o.meio === meio);
   const temFinanceira = linhas.some((l) => opcaoDe(l.meio)?.financeira);
   const resumo = resumoDosPagamentos(total, linhas, opcoes);
+  const jaPago = pagoPeloSite + pagoNoPix + pagoNoCartao;
 
   function acrescentar(opcao: OpcaoDeMeio) {
     const valor = valorSugerido(opcao, total, valorDosCelulares, linhas, opcoes);
@@ -47,7 +49,7 @@ export function FormasDePagamento({ total, valorDosCelulares, opcoes, terminais,
   return (
     <div className="space-y-3">
       {/* O que já foi pago entra sozinho na conclusão: a venda pode concluir sem outra forma. */}
-      {pagoPeloSite + pagoNoPix > 0 && <input type="hidden" name="pago_pelo_site" value="sim" />}
+      {jaPago > 0 && <input type="hidden" name="pago_pelo_site" value="sim" />}
       {pagoPeloSite > 0 && (
         <p className="numeros flex items-center justify-between gap-2 rounded-xl bg-sucesso-clara p-3 text-sm font-semibold text-sucesso">
           <span>Já pago pelo site (Pix)</span><span>{brl(pagoPeloSite)}</span>
@@ -58,7 +60,12 @@ export function FormasDePagamento({ total, valorDosCelulares, opcoes, terminais,
           <span>Já pago no Pix pela Asaas</span><span>{brl(pagoNoPix)}</span>
         </p>
       )}
-      {linhas.length === 0 && (pagoPeloSite + pagoNoPix > 0 ? (
+      {pagoNoCartao > 0 && (
+        <p className="numeros flex items-center justify-between gap-2 rounded-xl bg-sucesso-clara p-3 text-sm font-semibold text-sucesso">
+          <span>Já pago no cartão pela Asaas</span><span>{brl(pagoNoCartao)}</span>
+        </p>
+      )}
+      {linhas.length === 0 && (jaPago > 0 ? (
         <p className="text-sm text-suave">{total === 0
           ? "Nada a cobrar: já está pago. Confira os itens e o cliente e conclua."
           : "Falta só o resto: toque em \"Adicionar forma de pagamento\" e escolha como o cliente paga."}</p>
@@ -133,7 +140,7 @@ export function FormasDePagamento({ total, valorDosCelulares, opcoes, terminais,
         </button>
       ))}
       <dl className="numeros grid grid-cols-2 gap-1 text-sm" aria-live="polite">
-        <dt>{pagoPeloSite + pagoNoPix > 0 ? "A cobrar além do já pago" : "Total da venda"}</dt><dd className="text-right">{brl(total)}</dd>
+        <dt>{jaPago > 0 ? "A cobrar além do já pago" : "Total da venda"}</dt><dd className="text-right">{brl(total)}</dd>
         <dt>Lançado</dt><dd className="text-right">{brl(resumo.lancado)}</dd>
         {resumo.falta > 0 && <><dt className="font-semibold text-aviso">Falta</dt><dd className="text-right font-semibold text-aviso">{brl(resumo.falta)}</dd></>}
         {resumo.troco > 0 && <><dt>Troco (do dinheiro)</dt><dd className="text-right">{brl(resumo.troco)}</dd></>}

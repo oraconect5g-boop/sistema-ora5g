@@ -21,6 +21,9 @@ export const MEIOS = {
   // PAY-015a (a D-062: "pagamento oficial da loja será a asaas"): o QR Code do Pix gerado no caixa. A tela não declara este
   // meio: o banco põe a linha de cada QR pago na conclusão (o comprovante é a cobrança da Asaas).
   pix_asaas: { nome: "Pix pela Asaas (QR Code)", aceitaTroco: false, financeira: false, comprovante: false },
+  // PAY-015b: o cartão pela Asaas no caixa (o link de pagamento no cartão, com o QR Code); como o Pix pela Asaas, só o banco
+  // grava a linha, na conclusão, depois de a consulta do worker confirmar.
+  cartao_asaas: { nome: "Cartão pela Asaas (link)", aceitaTroco: false, financeira: false, comprovante: false },
 } as const;
 
 export type MeioPagamento = keyof typeof MEIOS;
@@ -39,9 +42,9 @@ export type Pagamento = {
 export const MAXIMO_DE_PARCELAS: Partial<Record<MeioPagamento, number>> = { payjoy: 48, aiva: 48, cartao_picpay: 24, cartao_pagseguro: 24 };
 
 /** PDV-c: a entrada da PayJoy e da Aiva é paga num destes meios (dinheiro, Pix ou cartão). */
-export const ehMeioDaEntrada = (m: MeioPagamento) => !MEIOS[m].financeira && m !== "vale_troca" && m !== "link_pagamento" && m !== "pix_asaas";
+export const ehMeioDaEntrada = (m: MeioPagamento) => !MEIOS[m].financeira && m !== "vale_troca" && m !== "link_pagamento" && m !== "pix_asaas" && m !== "cartao_asaas";
 /** Os meios que só o banco grava (na conclusão): o pago pelo site e o Pix pela Asaas do caixa. A tela não os declara. */
-export const MEIOS_SO_DO_BANCO: readonly MeioPagamento[] = ["link_pagamento", "pix_asaas"];
+export const MEIOS_SO_DO_BANCO: readonly MeioPagamento[] = ["link_pagamento", "pix_asaas", "cartao_asaas"];
 
 /**
  * PDV-c (o proprietário, 18/11): o nome do pagamento na tela e no comprovante. A PayJoy e a Aiva aparecem como o

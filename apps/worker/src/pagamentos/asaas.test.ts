@@ -213,3 +213,50 @@ describe("o Pix do caixa na Asaas (PAY-015a)", () => {
     expect(await cliente().excluirQr("qr com espaço")).toBe(false);
   });
 });
+
+describe("o cartão do caixa na Asaas (PAY-015b)", () => {
+  it("o link no cartão: avulso, uma venda só, sem aviso ao cliente e com o nosso identificador; a resposta fora da forma é desconhecida", async () => {
+    responder = json(200, { id: "lnk_cartao_1", url: "https://sandbox.asaas.com/c/lnk_cartao_1", active: true });
+    expect(await cliente().criarLinkDoCartao({ referencia: "00000000-0000-4000-8000-0000000000c1", nome: "Venda nº 12 na Ora 5G", valorCentavos: 7_990, venceEm: "2026-11-26" }))
+      .toEqual({ tipo: "criado", link: { id: "lnk_cartao_1", url: "https://sandbox.asaas.com/c/lnk_cartao_1" } });
+    expect(recebidos[0]).toMatchObject({ metodo: "POST", caminho: "/v3/paymentLinks", corpo: {
+      name: "Venda nº 12 na Ora 5G", billingType: "CREDIT_CARD", chargeType: "DETACHED", value: 79.9, endDate: "2026-11-26",
+      externalReference: "00000000-0000-4000-8000-0000000000c1", limit: 1, notificationEnabled: false } });
+    expect((recebidos[0]?.corpo as Record<string, unknown>).callback).toBeUndefined();
+    responder = json(200, { id: "lnk_cartao_2", url: "http://sem-https.invalid/x" });
+    expect((await cliente().criarLinkDoCartao({ referencia: "r", nome: "n", valorCentavos: 100, venceEm: "2026-11-26" })).tipo).toBe("desconhecido");
+    responder = json(400, { errors: [{ code: "invalid_value" }] });
+    expect((await cliente().criarLinkDoCartao({ referencia: "r", nome: "n", valorCentavos: 100, venceEm: "2026-11-26" })).tipo).toBe("recusado");
+  });
+
+  it("as cobranças de cartão desde o dia: página por página, só as de link, sem as removidas; do cartão, só o final e a bandeira", async () => {
+    let paginas = 0;
+    responder = (req, res) => {
+      paginas += 1;
+      const primeira = /offset=0$/.test(req.url ?? "");
+      json(200, { object: "list", hasMore: primeira, data: primeira
+        ? [{ id: "pay_1", status: "CONFIRMED", value: 79.9, paymentLink: "lnk_1", creditCard: { creditCardNumber: "8829", creditCardBrand: "VISA", creditCardToken: "tok" } },
+          { id: "pay_2", status: "PENDING", value: 10, paymentLink: null },
+          { id: "pay_3", status: "RECEIVED", value: 10, paymentLink: "lnk_3", deleted: true }]
+        : [{ id: "pay_4", status: "REFUNDED", value: 5, paymentLink: "lnk_4", creditCard: { creditCardNumber: "12345", creditCardBrand: "visa" } }] })(req, res);
+    };
+    expect(await cliente().cobrancasDeCartaoDesde("2026-11-25")).toEqual([
+      { id: "pay_1", link: "lnk_1", situacao: "pago", valor_centavos: 7_990, final: "8829", bandeira: "VISA" },
+      { id: "pay_4", link: "lnk_4", situacao: "estornado", valor_centavos: 500, final: null, bandeira: null },
+    ]);
+    expect(paginas).toBe(2);
+    expect(recebidos.map((r) => r.caminho)).toEqual([
+      "/v3/payments?billingType=CREDIT_CARD&dateCreated%5Bge%5D=2026-11-25&limit=100&offset=0",
+      "/v3/payments?billingType=CREDIT_CARD&dateCreated%5Bge%5D=2026-11-25&limit=100&offset=100",
+    ]);
+    // Mais de 5 páginas: falha (pela metade esconderia o pago); o dia fora da forma nem pergunta.
+    responder = json(200, { object: "list", hasMore: true, data: [] });
+    expect(await cliente().cobrancasDeCartaoDesde("2026-11-25")).toBe("falha");
+    recebidos.length = 0;
+    expect(await cliente().cobrancasDeCartaoDesde("25/11/2026")).toBe("falha");
+    expect(recebidos).toEqual([]);
+    responder = json(500, {});
+    expect(await cliente().cobrancasDeCartaoDesde("2026-11-25")).toBe("falha");
+  });
+});
+
