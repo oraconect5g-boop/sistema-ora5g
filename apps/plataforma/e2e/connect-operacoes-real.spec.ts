@@ -1,7 +1,7 @@
 // Lote CONNECT-f (25/11/2026): a Ora Connect liberada no site no ar, SÓ LEITURA. Desde o CONNECT-m, nas abas da demonstração:
 // o Dono (teste) vê, na aba Integração Nogle, as três operações liberadas, as listas oficiais carregadas e as funções da Nogle;
-// o Vendedor (teste) vê as suas abas, o formulário de cada operação (só aparece liberado) e os planos da lista oficial da
-// Nogle, com o valor de face. Nada é vendido, registrado ou enviado à Nogle (cada operação de verdade é do proprietário, pelo
+// o Vendedor (teste) vê as suas abas, o formulário de cada operação (só aparece liberado; a ativação é o assistente do
+// CONNECT-n, percorrido em e2e/connect-assistente-real.spec.ts) e os planos da lista oficial da Nogle, com o valor de face. Nada é vendido, registrado ou enviado à Nogle (cada operação de verdade é do proprietário, pelo
 // roteiro docs/aceite/CONNECT-f.md).
 // Só no servidor: ORA_E2E_URL e ORA_E2E_CONTAS (e2e/contas-de-teste.ts); no CI, fica pulado.
 import { expect, test, type Page } from "@playwright/test";
@@ -38,12 +38,12 @@ test.describe("a Ora Connect liberada, no site no ar (CONNECT-f e CONNECT-m)", (
       await abas(vendedor).getByRole("link", { name: "Ativar chip", exact: true }).click();
       await expect(vendedor.getByRole("heading", { level: 2, name: "Ativar chip na operadora" })).toBeVisible();
       await expect(vendedor.getByText(/ainda não foi liberada/)).toHaveCount(0);
+      await expect(vendedor.getByText("Etapa 1 de 5: Chip", { exact: true })).toBeVisible();
+      await abas(vendedor).getByRole("link", { name: "Recarga", exact: true }).click();
       // Os planos da lista oficial, em cartões (o valor vem da Nogle, nunca da tela).
       const planos = vendedor.getByRole("group", { name: "Plano (lista da Nogle)" });
       await expect(planos.getByRole("radio", { name: /^10 GB\s*R\$\s54,90$/ })).toHaveCount(1);
       await expect(planos.getByRole("radio", { name: /^45 GB\s*R\$\s94,90$/ })).toHaveCount(1);
-      await expect(vendedor.getByRole("button", { name: "Registrar ativação" })).toBeVisible();
-      await abas(vendedor).getByRole("link", { name: "Recarga", exact: true }).click();
       await expect(vendedor.getByRole("button", { name: "Solicitar recarga" })).toBeVisible();
       await abas(vendedor).getByRole("link", { name: "Portabilidade", exact: true }).click();
       await expect(vendedor.getByRole("button", { name: "Solicitar portabilidade" })).toBeVisible();

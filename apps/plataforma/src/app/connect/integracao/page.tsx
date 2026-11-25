@@ -12,7 +12,7 @@ import { FUNCOES_NOGLE } from "../../../integracoes/nogle/catalogo";
 import { chaveDoCatalogo, type ValorDeParametro } from "../../../lib/parametros";
 import { habilitarOperacao } from "../acoes";
 import { ABAS_DA_CONNECT, CabecalhoConnect, LARGURA_DA_CONNECT, permissoesDaConnect } from "../CabecalhoConnect";
-import { campo, rotulo } from "../formularios";
+import { campo, rotulo } from "../campos";
 import { quando } from "../lista";
 
 export const metadata: Metadata = { title: "Integração Nogle · Ora Connect" };
