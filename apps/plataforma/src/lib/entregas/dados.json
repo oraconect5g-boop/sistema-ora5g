@@ -1297,6 +1297,19 @@
       "pedido_em": "2026-11-25",
       "resposta": null,
       "respondido_em": null
+    },
+    {
+      "lote": "CONNECT-k",
+      "roteiro": "docs/aceite/CONNECT-k.md",
+      "requisitos": [
+        "ORA-CONNECT-006"
+      ],
+      "entrega": "em Ora Connect → Relatório do vendedor e da loja, as operações do período por vendedor e por loja, para imprimir e exportar; o vendedor vê só o próprio",
+      "commit": null,
+      "publicado_em": null,
+      "pedido_em": "2026-11-25",
+      "resposta": null,
+      "respondido_em": null
     }
   ]
 }
