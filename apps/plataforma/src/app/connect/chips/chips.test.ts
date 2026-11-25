@@ -15,6 +15,7 @@ const cenario = vi.hoisted(() => ({
   tabelas: {} as Record<string, Record<string, unknown>[]>,
   rpc: [] as { nome: string; argumentos: unknown }[],
   erroDaRpc: null as null | { code: string },
+  respostas: {} as Record<string, unknown>,
 }));
 vi.mock("next/headers", () => ({ cookies: async () => ({ getAll: () => [], set: () => undefined }) }));
 vi.mock("next/navigation", () => ({ redirect: (destino: string) => { throw new Error(`redirecionou para ${destino}`); } }));
@@ -36,7 +37,10 @@ const sessaoFicticia = {
   get molde() { return { permissoes: cenario.permissoes, nome: "Pessoa (fictícia)", vinculos: [], pendencias: { aprovacoes: 0, notas: 0 } }; },
   supabase: {
     from: (nome: string) => new Consulta(cenario.tabelas[nome] ?? []),
-    rpc: async (nome: string, argumentos: unknown) => { cenario.rpc.push({ nome, argumentos }); return { data: null, error: cenario.erroDaRpc }; },
+    rpc: async (nome: string, argumentos: unknown) => {
+      cenario.rpc.push({ nome, argumentos });
+      return { data: cenario.respostas[nome] ?? null, error: cenario.erroDaRpc };
+    },
   },
 };
 vi.mock("../../../lib/acesso/sessao", () => ({
@@ -77,6 +81,7 @@ beforeEach(() => {
   cenario.permissoes = new Set(["connect.gerir", "connect.operar"]);
   cenario.rpc = [];
   cenario.erroDaRpc = null;
+  cenario.respostas = {};
   cenario.tabelas = {
     connect_pdvs: [PDV_1, PDV_2, REVENDA],
     connect_leituras_nogle: [LEITURA],
@@ -91,6 +96,7 @@ describe("a tela dos chips na Nogle (CONNECT-d)", () => {
     const t = await abrir();
     expect(t).toContain("Última leitura da Nogle:");
     expect(t).toContain("A leitura não muda nada na Nogle: só o pedido de transferência do dono move chips");
+    expect(t).toContain("Os chips físicos do PDV de cada loja ligada entram no estoque da loja pelo ICCID, uma vez só");
     emOrdem(t, "Nas lojas", "8", "3 físicos · 5 eSIM · 2 lojas ligadas");
     emOrdem(t, "Estoque geral da Ora", "693", "470 físicos · 223 eSIM");
     emOrdem(t, "Abaixo do mínimo", "2", "text-aviso", "lojas abaixo do estoque mínimo");
@@ -148,6 +154,34 @@ describe("a tela dos chips na Nogle (CONNECT-d)", () => {
     expect(await abrir({ pdv: "5250", erro: "ja_ligada" })).toContain("Essa loja já está ligada a outro PDV da Nogle");
     expect(await abrir({ pdv: "5250", ok: "ligacao" })).toContain("Ligação salva: fica na auditoria.");
     expect(await abrir({ pdv: "5250" })).toContain("Salvar a ligação");
+  });
+});
+
+describe("os chips para conferir (CONNECT-f)", () => {
+  it("o dono vê os chips disponíveis numa loja e fora do PDV dela na Nogle; sem nenhum, a tela diz", async () => {
+    cenario.respostas = { connect_chips_divergentes: [
+      { unidade_id: LOJA_1, iccid: I2, onde_na_nogle: "fora dos PDVs e do estoque geral da Nogle" },
+      { unidade_id: LOJA_2, iccid: I1, onde_na_nogle: "no PDV 5231 da Nogle" },
+    ] };
+    const t = await abrir();
+    emOrdem(t, "Chips para conferir", "2 ", "chips. ", "Nada é apagado: confira na loja.");
+    emOrdem(t, "8955 1701 1000 0000 029 · Água Verde · fora dos PDVs e do estoque geral da Nogle");
+    emOrdem(t, "8955 1701 1000 0000 011 · Butiatuvinha · no PDV 5231 da Nogle");
+    expect(cenario.rpc).toEqual([{ nome: "connect_chips_divergentes", argumentos: undefined }]);
+    cenario.respostas = { connect_chips_divergentes: [] };
+    expect(await abrir()).toContain("Nenhum na última leitura: cada chip disponível nas lojas ligadas está no PDV delas na Nogle.");
+  });
+
+  it("quem só opera a loja e o administrador não veem, e a tela nem pergunta ao banco; o erro do banco não passa calado", async () => {
+    for (const permissoes of [["connect.operar"], ["integracoes.gerir"]]) {
+      cenario.permissoes = new Set(permissoes);
+      cenario.rpc = [];
+      expect(await abrir()).not.toContain("Chips para conferir");
+      expect(cenario.rpc).toEqual([]);
+    }
+    cenario.permissoes = new Set(["connect.gerir"]);
+    cenario.erroDaRpc = { code: "42501" };
+    await expect(abrir()).rejects.toThrow("falha: connect_chips_divergentes");
   });
 });
 

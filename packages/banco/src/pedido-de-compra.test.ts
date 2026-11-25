@@ -110,7 +110,7 @@ describe("pedido de compra (INV-009a)", () => {
     for (const [linhas, mensagem] of [
       ["[]", "O pedido precisa ter de 1 a 200 linhas"],
       [itens({ variante: cat.capa, quantidade: 1 }, { variante: cat.capa, quantidade: 2 }), "Linha 2 (ACE-0001): a variação já está em outra linha do pedido"],
-      [itens({ variante: cat.recarga, quantidade: 1 }), "Linha 1 (REC-0001): este tipo de item não tem estoque"],
+      [itens({ variante: cat.recarga, quantidade: 1 }), "Linha 1 (REC-99999): este tipo de item não tem estoque"],
       [itens({ variante: cat.capa, quantidade: 0 }), "Linha 1 (ACE-0001): quantidade inválida (1 a 10.000)"],
       [itens({ variante: cat.capa, quantidade: 1, custo: -5 }), "Linha 1: custo inválido"],
       [itens({ variante: "x", quantidade: 1 }), "Linha 1: variação inválida"],

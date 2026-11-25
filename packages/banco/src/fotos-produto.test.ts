@@ -105,12 +105,12 @@ describe("fotos dos produtos (ORA-CAT-011)", () => {
   it("pendências: produto sem foto aparece; recarga aceita ilustração; produto com duas cores pede foto de cada cor", async () => {
     const dono = await naLoja(ids.dono, null);
     const pendentes = async () => (await como<{ sku: string; motivo: string }>(dono, "select sku, motivo from public.pendencias_de_foto()")).map((p) => `${p.sku}:${p.motivo}`);
-    expect(await pendentes()).toEqual(expect.arrayContaining(["APA-0001:produto sem foto", "REC-0001:produto sem foto"]));
+    expect(await pendentes()).toEqual(expect.arrayContaining(["APA-0001:produto sem foto", "REC-99999:produto sem foto"]));
 
     await enviarERegistrar(dono, cat.produtoAparelho);
     await enviarERegistrar(dono, cat.produtoRecarga, null, true);
     expect(await pendentes()).not.toContain("APA-0001:produto sem foto");
-    expect(await pendentes()).not.toContain("REC-0001:produto sem foto");
+    expect(await pendentes()).not.toContain("REC-99999:produto sem foto");
 
     await db.query(`insert into public.variantes (organizacao_id, produto_id, sku, nome, cor) values
       ($1, $2, 'ACE-0101', 'Capa preta', 'Preta'), ($1, $2, 'ACE-0102', 'Capa azul', 'Azul')`, [ids.organizacao, cat.produtoCapa]);

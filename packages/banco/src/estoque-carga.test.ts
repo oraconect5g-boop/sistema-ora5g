@@ -64,7 +64,7 @@ describe("a prévia da carga de uma loja (REIN-b)", () => {
       { numero: 3, sku: "APA-0001", fisico: 2, disponivel: 2 },
       { numero: 4, sku: "CHI-0001", fisico: 5, disponivel: null },
       { numero: 5, sku: "XYZ-9999", fisico: 1, disponivel: 1 },
-      { numero: 6, sku: "REC-0001", fisico: 3, disponivel: 3 },
+      { numero: 6, sku: "REC-99999", fisico: 3, disponivel: 3 },
       { numero: 7, sku: "ACE-0001", fisico: 1, disponivel: 1 },
       { numero: 8, sku: "", fisico: 4, disponivel: 4 },
       { numero: 9, sku: "OUT-1", fisico: null, disponivel: 1, problema: 'Quantidade que não é número inteiro: "1,5"' },
@@ -79,7 +79,7 @@ describe("a prévia da carga de uma loja (REIN-b)", () => {
       { numero: 3, sku: "APA-0001", acao: "serializado", motivo: "Entra pela Entrada de estoque, com o IMEI ou o ICCID de cada unidade", saldo_no_corte: 0 },
       { numero: 4, sku: "CHI-0001", acao: "serializado", motivo: "Entra pela Entrada de estoque, com o IMEI ou o ICCID de cada unidade", saldo_no_corte: 0 },
       { numero: 5, sku: "XYZ-9999", acao: "sem_produto", motivo: "O código não está no catálogo: importe o catálogo antes", saldo_no_corte: 0 },
-      { numero: 6, sku: "REC-0001", acao: "conferir", motivo: "Este tipo de item não tem estoque", saldo_no_corte: 0 },
+      { numero: 6, sku: "REC-99999", acao: "conferir", motivo: "Este tipo de item não tem estoque", saldo_no_corte: 0 },
       { numero: 7, sku: "ACE-0001", acao: "conferir", motivo: "Código repetido no arquivo (já na linha 2)", saldo_no_corte: 0 },
       { numero: 8, sku: "", acao: "conferir", motivo: "Linha sem o código do produto", saldo_no_corte: 0 },
       { numero: 9, sku: "OUT-1", acao: "conferir", motivo: 'Quantidade que não é número inteiro: "1,5"', saldo_no_corte: 0 },
@@ -98,7 +98,7 @@ describe("a prévia da carga de uma loja (REIN-b)", () => {
       { numero: 2, sku: "ACE-0001", fisico: 4, disponivel: 4 },
       { numero: 3, sku: "APA-0001", fisico: -1, disponivel: 0 },
       { numero: 4, sku: "CHI-0001", fisico: 1, disponivel: 3 },
-      { numero: 5, sku: "REC-0001", fisico: 0, disponivel: 0 },
+      { numero: 5, sku: "REC-99999", fisico: 0, disponivel: 0 },
     ]);
     expect((await linhasDa(p.id)).map((l) => [l.numero, l.acao, l.motivo, l.saldo_no_corte])).toEqual([
       [2, "conferir", "A loja já tinha 10 no sistema na data de corte: confira antes de lançar", 10],

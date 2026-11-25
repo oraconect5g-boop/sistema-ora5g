@@ -15,6 +15,10 @@ export type PdvDaTela = {
   esims: number;
 };
 export type ChipDaTela = { iccid: string; pdv_id: number | null; tipo: string; repassado_em: string | null; lido_em: string };
+/** Um chip disponível no estoque de uma loja ligada que não está no PDV dela na Nogle (CONNECT-f; connect_chips_divergentes). */
+export type DivergenciaDaTela = { unidade_id: string; iccid: string; onde_na_nogle: string };
+/** O máximo que a função do banco devolve; a tela mostra os primeiros. */
+export const MAXIMO_DAS_DIVERGENCIAS = 500;
 export type LeituraDaTela = {
   numero: number;
   lida_em: string;

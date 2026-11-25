@@ -185,6 +185,8 @@ describe("F — recarga: SALDO só com serviço pago na loja; valor de face da l
     const servicoPago = await adicionar(ana, venda, cat.recarga, null);
     expect(await errou(ana, REGISTRAR, ["recarga", JSON.stringify({ ...linha, metodo: "SALDO", venda_item: servicoPago }), chave("op")])).toBe("P0002");
     await concluir(ana, venda, 4990);
+    // CONNECT-f: o serviço pago é a recarga do plano 99999 (REC-99999); com ele, pedir o plano 12345 é recusado (OR055).
+    expect(await errou(ana, REGISTRAR, ["recarga", JSON.stringify({ ...linha, plano: 12345, metodo: "SALDO", venda_item: servicoPago }), chave("op")])).toBe("OR055");
     const op = await registrar(ana, "recarga", { ...linha, metodo: "SALDO", venda_item: servicoPago });
     expect(await operacao(op)).toMatchObject({ situacao: "registrada", valor_face_centavos: 4490, recebido_na_loja_centavos: 4990 });
     expect(await dadosDeEnvio(op)).toBe(0);

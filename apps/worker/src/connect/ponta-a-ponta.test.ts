@@ -17,6 +17,7 @@ import { afterAll, beforeAll, describe, expect, it } from "vitest";
 import { ClienteNogle } from "./cliente-nogle.ts";
 import {
   conciliarRelatorios, consultarPendentes, enviarPendentes, enviarTransferencias, lerEstoqueDeChips, sincronizarReferencias, type BancoConnect,
+  type ChipsNoEstoque, type PlanosNoCaixa,
 } from "./processar.ts";
 import { transporteHttp } from "./transporte.ts";
 
@@ -30,8 +31,9 @@ const exemplo = (caminho: string, indice = 0) => {
 };
 
 const TIPOS: TipoOperacao[] = ["ativacao", "recarga", "portabilidade"];
-// CONNECT-d: chips FICTÍCIOS, na forma conferida na API de verdade em 24/11.
-const CHIP_LOJA = "8955170110000000011";
+// CONNECT-d: chips FICTÍCIOS, na forma conferida na API de verdade em 24/11 (o físico com o dígito verificador certo: ele
+// entra no estoque da loja no CONNECT-f).
+const CHIP_LOJA = "8955170110000000016";
 const CHIP_MVNO = "8955170110000000037";
 // CONNECT-e: o estoque do PDV 5216 no servidor simulado muda com a transferência (o eSIM da MVNO chega nele).
 const estoqueDaLoja: { id: string; iccid: string; data_repasse: string | null; tipo: string }[] = [
@@ -142,7 +144,15 @@ const banco: BancoConnect = {
     "select * from public.connect_worker_transferencias_a_enviar($1, $2)", [ids.organizacao, limite])).rows),
   registrarTransferencia: (transferencia, resultado) => comoServico(async () => (await db.query<{ v: string }>(
     "select public.connect_worker_registrar_transferencia($1, $2::jsonb) as v", [transferencia, JSON.stringify(resultado)])).rows[0]?.v ?? ""),
+  planosNoCaixa: () => comoServico(async () => umValor((await db.query<{ v: PlanosNoCaixa }>(
+    "select public.connect_worker_planos_no_caixa($1) as v", [ids.organizacao])).rows[0]?.v)),
+  chipsNoEstoque: () => comoServico(async () => umValor((await db.query<{ v: ChipsNoEstoque }>(
+    "select public.connect_worker_chips_no_estoque($1) as v", [ids.organizacao])).rows[0]?.v)),
 };
+function umValor<T>(v: T | undefined): T {
+  if (v === undefined) throw new Error("o banco não respondeu");
+  return v;
+}
 
 let sessoes = 0;
 const naLoja = async (usuario: string, unidade: string): Promise<Sessao> => {
@@ -163,21 +173,25 @@ describe("Ora Connect de ponta a ponta com o formato oficial (sem credencial rea
     for (const tipo of TIPOS) await valor(admin, "select public.connect_habilitar($1, true, 'Homologação simulada com o formato oficial') as v", [tipo]);
     const nogle = new ClienteNogle({ tipo: "marca", chaveAcesso: "chave-ficticia" }, transporteHttp(base, 500), { getComCorpo: false });
 
-    // Listas oficiais pelo worker: o plano e o valor de face vêm da Nogle, não da tela.
+    // Listas oficiais pelo worker: o plano e o valor de face vêm da Nogle, não da tela. Com os planos em dia, o caixa vende
+    // cada um pelo valor de face (CONNECT-f): a recarga do cenário já é a do plano 99999 (REC-99999) e ganha o preço; a
+    // ativação do plano (ATV-99999) é criada.
     const listas = await sincronizarReferencias(banco, nogle, ["RS"]);
-    expect(listas).toMatchObject({ listas: 4, falhas: 0 });
+    expect(listas).toMatchObject({ listas: 4, falhas: 0, caixa: { criadas: 1, precos: 2, desativadas: 0 } });
     expect((await db.query("select codigo, nome, valor_centavos from public.connect_referencias where tipo = 'plano'")).rows)
       .toEqual([{ codigo: "99999", nome: "7 GB", valor_centavos: 4490 }]);
+    const recargaDoPlano = (await db.query<{ id: string }>(
+      "select id from public.variantes where organizacao_id = $1 and sku = 'REC-99999' and ativa", [ids.organizacao])).rows[0]?.id;
 
-    // A loja vende o chip e a recarga (SALDO = cliente paga na loja) e registra as operações.
+    // A loja vende o chip e a recarga do plano, pelo valor de face (SALDO = cliente paga na loja), e registra as operações.
     await db.query(`insert into public.precos (organizacao_id, variante_id, unidade_id, valor_centavos, inicio, origem)
-      values ($1, $2, null, 1000, now() - interval '1 day', 'manual'), ($1, $3, null, 4990, now() - interval '1 day', 'manual')`, [ids.organizacao, cat.chip, cat.recarga]);
+      values ($1, $2, null, 1000, now() - interval '1 day', 'manual')`, [ids.organizacao, cat.chip]);
     const ana = await naLoja(ids.vendedorA, ids.lojaA);
     await valor(ana, "select public.abrir_caixa(10000, 'e2e:caixa') as v");
     const venda = await valor<string>(ana, "select public.criar_venda('e2e:venda') as v");
     await valor(ana, "select public.adicionar_item($1, $2, $3, 1, 'e2e:chip') as v", [venda, cat.chip, itens.chipA]);
-    const servicoPago = await valor<string>(ana, "select public.adicionar_item($1, $2, null, 1, 'e2e:recarga') as v", [venda, cat.recarga]);
-    await valor(ana, "select public.concluir_venda($1, '[{\"meio\":\"dinheiro\",\"valor\":5990}]'::jsonb, '{}'::jsonb, 'e2e:concluir') as v", [venda]);
+    const servicoPago = await valor<string>(ana, "select public.adicionar_item($1, $2, null, 1, 'e2e:recarga') as v", [venda, recargaDoPlano]);
+    await valor(ana, "select public.concluir_venda($1, '[{\"meio\":\"dinheiro\",\"valor\":5490}]'::jsonb, '{}'::jsonb, 'e2e:concluir') as v", [venda]);
     const registrar = (tipo: string, pedido: object, k: string) => valor<string>(ana, "select public.connect_registrar($1, $2::jsonb, $3) as v", [tipo, JSON.stringify(pedido), k]);
     const ativacao = await registrar("ativacao", {
       metodo: "LINK", iccid: cat.iccid1, ddd: 51, plano: 99999,
@@ -265,7 +279,8 @@ describe("o estoque de chips da Nogle (CONNECT-d), só leitura", () => {
     const nogle = new ClienteNogle({ tipo: "marca", chaveAcesso: "chave-ficticia" }, transporteHttp(base, 500), { getComCorpo: true });
     const antes = recebidos.length;
     const r = await lerEstoqueDeChips(banco, nogle);
-    expect(r).toMatchObject({ gravada: true, ignorados: 0, leitura: { pdvs: 1, pdvs_lidos: 1, chips: 2, falhas: 0 } });
+    // O PDV ainda sem loja ligada: nenhum chip entra no estoque.
+    expect(r).toMatchObject({ gravada: true, ignorados: 0, leitura: { pdvs: 1, pdvs_lidos: 1, chips: 2, falhas: 0 }, noEstoque: { entraram: 0, divergentes: 0 } });
     expect(recebidos.slice(antes).filter((p) => p.caminho !== "/auth/token")).toEqual([
       { metodo: "GET", caminho: "/pdv/listar", corpo: "" },
       { metodo: "GET", caminho: "/linhas/estoque", corpo: "" },
@@ -279,6 +294,17 @@ describe("o estoque de chips da Nogle (CONNECT-d), só leitura", () => {
     ]);
     expect((await db.query("select mvno_fisicos, mvno_esims, pdvs_lidos, falhas from public.connect_leituras_nogle")).rows)
       .toEqual([{ mvno_fisicos: 0, mvno_esims: 1, pdvs_lidos: 1, falhas: 0 }]);
+  });
+
+  it("com o PDV ligado à loja, o chip físico dele entra no estoque da loja pelo ICCID, uma vez só (CONNECT-f)", async () => {
+    const dono = await naLoja(ids.dono, ids.lojaA);
+    await valor(dono, "select public.connect_ligar_pdv(5216, $1) as v", [ids.lojaA]);
+    const nogle = new ClienteNogle({ tipo: "marca", chaveAcesso: "chave-ficticia" }, transporteHttp(base, 500), { getComCorpo: true });
+    // O chip vendido no primeiro teste não é divergência: só o disponível que sumiu do PDV da loja.
+    expect(await lerEstoqueDeChips(banco, nogle)).toMatchObject({ gravada: true, noEstoque: { entraram: 1, fora_da_forma: 0, divergentes: 0 } });
+    expect((await db.query("select unidade_id, variante_id, situacao from public.itens_serializados where iccid = $1", [CHIP_LOJA])).rows)
+      .toEqual([{ unidade_id: ids.lojaA, variante_id: cat.chip, situacao: "disponivel" }]);
+    expect(await lerEstoqueDeChips(banco, nogle)).toMatchObject({ noEstoque: { entraram: 0, divergentes: 0 } });
   });
 });
 

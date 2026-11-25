@@ -24,6 +24,8 @@ export interface BancoConnect {
   gravarEstoque(leitura: LeituraDoEstoque): Promise<EstoqueGravado>;
   transferenciasAEnviar(limite: number): Promise<TransferenciaParaEnviar[]>;
   registrarTransferencia(transferencia: string, resultado: ResultadoDaTransferencia): Promise<string>;
+  planosNoCaixa(): Promise<PlanosNoCaixa>;
+  chipsNoEstoque(): Promise<ChipsNoEstoque>;
 }
 
 /** O que o worker grava depois de cada envio de transferência (connect_worker_registrar_transferencia). */
@@ -48,6 +50,10 @@ export type LeituraDoEstoque = {
   falhas: number;
 };
 export type EstoqueGravado = { numero: number; pdvs: number; pdvs_lidos: number; chips: number; falhas: number };
+/** Os planos da Nogle como serviços do caixa, pelo valor de face (CONNECT-f; connect_worker_planos_no_caixa). */
+export type PlanosNoCaixa = { criadas: number; precos: number; desativadas: number };
+/** Os chips físicos do PDV de cada loja ligada no estoque dela, pelo ICCID (CONNECT-f; connect_worker_chips_no_estoque). */
+export type ChipsNoEstoque = { entraram: number; fora_da_forma: number; divergentes: number };
 
 export interface Nogle {
   chamar(pedido: PedidoNogle): Promise<ResultadoChamada>;
@@ -120,7 +126,8 @@ const LISTAS: [TipoDeReferencia, string][] = [
 ];
 
 export async function sincronizarReferencias(banco: BancoConnect, nogle: Nogle, ufs: string[]) {
-  const resumo = { listas: 0, itens: 0, falhas: 0 };
+  const resumo: { listas: number; itens: number; falhas: number; caixa: PlanosNoCaixa | null } = { listas: 0, itens: 0, falhas: 0, caixa: null };
+  let planos = false;
   const pedidos: [TipoDeReferencia, string][] = [
     ...LISTAS,
     ...ufs.filter((uf) => /^[A-Z]{2}$/.test(uf)).map((uf): [TipoDeReferencia, string] => ["cidade", `/cidades/${uf}`]),
@@ -135,7 +142,10 @@ export async function sincronizarReferencias(banco: BancoConnect, nogle: Nogle, 
     }
     resumo.itens += await banco.atualizarReferencias(tipo, itens);
     resumo.listas++;
+    if (tipo === "plano") planos = true;
   }
+  // CONNECT-f: com a lista dos planos em dia, o caixa vende cada plano (a recarga e a ativação) pelo valor de face.
+  if (planos) resumo.caixa = await banco.planosNoCaixa();
   return resumo;
 }
 
@@ -195,11 +205,12 @@ const motivoDaLeitura = (r: ResultadoChamada, oQue: string) =>
 /**
  * A leitura do estoque de chips (CONNECT-d; ORA-INV-011), SÓ LEITURA: a lista dos PDVs, o estoque geral da MVNO e o de
  * cada PDV (GET com o id no corpo). Sem a lista dos PDVs nada é gravado; a MVNO ou o PDV que falhou conta como falha e
- * fica como estava no banco. Nenhuma rota que muda algo na Nogle é chamada. O resumo só tem contagens (nada de ICCID,
+ * fica como estava no banco. Nenhuma rota que muda algo na Nogle é chamada. Depois de gravar, os chips físicos do PDV de
+ * cada loja ligada entram no estoque dela pelo ICCID, uma vez só (CONNECT-f). O resumo só tem contagens (nada de ICCID,
  * nome ou token).
  */
 export async function lerEstoqueDeChips(banco: BancoConnect, nogle: Nogle):
-  Promise<{ gravada: true; leitura: EstoqueGravado; ignorados: number } | { gravada: false; motivo: string }> {
+  Promise<{ gravada: true; leitura: EstoqueGravado; ignorados: number; noEstoque: ChipsNoEstoque } | { gravada: false; motivo: string }> {
   const lista = await nogle.chamar(PEDIDO_DOS_PDVS);
   const pdvs = lista.tipo === "resposta" && lista.status === 200 ? lerPdvs(lista.corpo) : null;
   if (!pdvs || pdvs.length === 0) return { gravada: false, motivo: motivoDaLeitura(lista, "a lista dos PDVs") };
@@ -221,7 +232,7 @@ export async function lerEstoqueDeChips(banco: BancoConnect, nogle: Nogle):
     estoques.push({ pdv: pdv.id, chips: lido.chips });
   }
   const leitura = await banco.gravarEstoque({ pdvs, mvno: mvno ? mvno.chips.map(({ iccid, tipo }) => ({ iccid, tipo })) : null, estoques, falhas });
-  return { gravada: true, leitura, ignorados };
+  return { gravada: true, leitura, ignorados, noEstoque: await banco.chipsNoEstoque() };
 }
 
 const contar = (chips: readonly ChipDaNogle[]) => ({

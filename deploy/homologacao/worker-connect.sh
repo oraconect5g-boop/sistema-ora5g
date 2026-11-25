@@ -1,24 +1,28 @@
 #!/usr/bin/env bash
-# Worker da Ora Connect (ADR-005). NÃO está agendado: só entra na rotina depois das credenciais da
-# Nogle no ambiente do worker, da resposta da P9 e da homologação com linha de teste da Nogle,
-# com a autorização do proprietário. Quando autorizado:
+# Worker da Ora Connect (ADR-005). As OPERAÇÕES (ativação, recarga e portabilidade) foram ligadas pelo proprietário em
+# 25/11/2026 ("Sim, ligue"; a primeira de cada uma acompanhada), com NOGLE_OPERACOES_HABILITADAS e a habilitação de cada
+# tipo no banco; a cada minuto:
 #   * * * * * bash $HOME/homologacao/plataforma/deploy/homologacao/worker-connect.sh
-#   15 6 * * * bash $HOME/homologacao/plataforma/deploy/homologacao/worker-connect.sh --listas
 # A LEITURA do estoque de chips (CONNECT-d; só leitura, com o sim do proprietário de 24/11/2026: D-056) já está agendada,
 # a cada 30 minutos, das 7h às 22h:
 #   */30 7-21 * * * bash $HOME/homologacao/plataforma/deploy/homologacao/worker-connect.sh --estoque
 #   0 22 * * * bash $HOME/homologacao/plataforma/deploy/homologacao/worker-connect.sh --estoque
 # A TRANSFERÊNCIA de chips pedida pelo dono (CONNECT-e; D-057), a cada minuto, só com NOGLE_TRANSFERENCIAS=habilitada:
 #   * * * * * bash $HOME/homologacao/plataforma/deploy/homologacao/worker-connect.sh --transferencias
+# As listas oficiais (planos, DDDs, operadoras e cidades), uma vez por dia; com os planos em dia, o caixa vende cada plano
+# pelo valor de face (CONNECT-f):
+#   0 6 * * * bash $HOME/homologacao/plataforma/deploy/homologacao/worker-connect.sh --listas
 # Usa a versão no ar e a cópia COMPLETA do ambiente que só o worker recebe (apps/worker/.env.local).
-# Uma execução por vez; ambiente limpo; log só com contagens (nada de CPF, linha, chave ou token).
+# Uma execução por vez: a seguinte ESPERA a anterior terminar (até 50 s) em vez de desistir; antes (até 25/11), a leitura
+# do estoque das :00 e :30 se perdia quando a fila das transferências, que roda a cada minuto, pegava a trava primeiro.
+# Ambiente limpo; log só com contagens (nada de CPF, linha, chave ou token).
 set -euo pipefail
 BASE="${ORA_HML_BASE:-$HOME/homologacao}"
 VERSAO="$BASE/plataforma"
 LOGS="$BASE/logs"
 mkdir -p "$LOGS"
 exec 9>"$BASE/.trava-worker-connect"
-flock -n 9 || exit 0
+flock -w 50 9 || exit 0
 [ -f "$VERSAO/apps/worker/src/executar-connect.ts" ] || exit 0
 cd "$VERSAO"
 env -i HOME="$HOME" PATH="$HOME/.local/bin:$PATH" NODE_OPTIONS="--dns-result-order=ipv4first" \

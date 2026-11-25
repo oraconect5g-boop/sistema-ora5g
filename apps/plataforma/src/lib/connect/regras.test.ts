@@ -50,6 +50,8 @@ describe("pedido da Ora Connect lido do formulário", () => {
     expect(erroDoConnect({ code: "OR011" })).toBe("chip_no_estoque");
     expect(erroDoConnect({ code: "OR012" })).toBe("nao_habilitada");
     expect(erroDoConnect({ code: "OR013" })).toBe("em_andamento");
+    // CONNECT-f: o serviço pago no caixa é de outro plano.
+    expect(erroDoConnect({ code: "OR055" })).toBe("outro_plano");
     expect(erroDoConnect({ code: "XX000" })).toBe("falha");
     expect(erroDoConnect(null)).toBe("falha");
   });

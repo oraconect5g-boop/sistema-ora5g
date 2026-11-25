@@ -8317,6 +8317,14 @@ export type Database = {
         Args: { p_motivo: string; p_transferencia: string }
         Returns: string
       }
+      connect_chips_divergentes: {
+        Args: never
+        Returns: {
+          iccid: string
+          onde_na_nogle: string
+          unidade_id: string
+        }[]
+      }
       connect_habilitar: {
         Args: { p_evidencia: string; p_habilitar: boolean; p_tipo: string }
         Returns: boolean
@@ -8358,6 +8366,10 @@ export type Database = {
         Args: { p_itens: Json; p_organizacao: string; p_tipo: string }
         Returns: number
       }
+      connect_worker_chips_no_estoque: {
+        Args: { p_organizacao: string }
+        Returns: Json
+      }
       connect_worker_gravar_estoque: {
         Args: { p_leitura: Json; p_organizacao: string }
         Returns: Json
@@ -8378,6 +8390,10 @@ export type Database = {
           tipo: string
           uuid_externo: string
         }[]
+      }
+      connect_worker_planos_no_caixa: {
+        Args: { p_organizacao: string }
+        Returns: Json
       }
       connect_worker_registrar_conciliacao: {
         Args: {
