@@ -1158,7 +1158,10 @@ describe("repasse da financeira e cancelamento da venda ao mesmo tempo no Postgr
   const RECEBER = "select public.financeira_receber($1, $2, $3, $4::date) as v";
   const DESFAZER = "select public.financeira_desfazer_recebimento($1, $2) as v";
   const CANCELAR = "select public.cancelar_venda($1, 'Cliente desistiu') as v";
-  const hoje = new Intl.DateTimeFormat("en-CA", { timeZone: "America/Sao_Paulo" }).format(new Date());
+  // O dia de Brasília na hora de cada chamada: calculado uma vez só, ao carregar o arquivo, ele ficava no dia anterior
+  // quando o teste passava da meia-noite (o CI do GitHub do merge 48c5e00, às 00:0x de 25/11: a venda do dia novo e o
+  // repasse com a data velha, "A data do repasse vai do dia da venda até hoje").
+  const hoje = () => new Intl.DateTimeFormat("en-CA", { timeZone: "America/Sao_Paulo" }).format(new Date());
   let ana: Sessao;
   let dono: Sessao;
   let n = 0;
@@ -1185,32 +1188,32 @@ describe("repasse da financeira e cancelamento da venda ao mesmo tempo no Postgr
   it("desfazer o repasse e cancelar a venda ao mesmo tempo, nas duas ordens: a conta termina cancelada e não recebe outro repasse", async () => {
     // 1) O cancelamento segura a venda; o desfazer espera, vê a venda cancelada e deixa a conta cancelada.
     const f1 = await financiada();
-    await confirmada(dono, RECEBER, [f1.conta, "REPASSE-83-1", 125_000, hoje]);
+    await confirmada(dono, RECEBER, [f1.conta, "REPASSE-83-1", 125_000, hoje()]);
     await comoDono(a);
     const r1 = await disputa(() => valor(a, CANCELAR, [f1.venda]), async () => { await comoDono(b); return valor<boolean>(b, DESFAZER, [f1.conta, "Referência errada"]); });
     expect(r1).toEqual({ ok: true });
     expect(await situacao(f1.conta)).toBe("cancelada");
     // 2) O desfazer segura; o cancelamento espera e cancela a conta que tinha voltado a ficar aberta.
     const f2 = await financiada();
-    await confirmada(dono, RECEBER, [f2.conta, "REPASSE-83-2", 125_000, hoje]);
+    await confirmada(dono, RECEBER, [f2.conta, "REPASSE-83-2", 125_000, hoje()]);
     await comoDono(a);
     const r2 = await disputa(() => valor(a, DESFAZER, [f2.conta, "Referência errada"]), async () => { await comoDono(b); return valor<boolean>(b, CANCELAR, [f2.venda]); });
     expect(r2).toEqual({ ok: true });
     expect(await situacao(f2.conta)).toBe("cancelada");
     for (const f of [f1, f2]) {
-      await expect(confirmada(dono, RECEBER, [f.conta, "REPASSE-83-NOVO", 124_000, hoje])).rejects.toMatchObject({ code: "22023" });
+      await expect(confirmada(dono, RECEBER, [f.conta, "REPASSE-83-NOVO", 124_000, hoje()])).rejects.toMatchObject({ code: "22023" });
     }
   });
 
   it("registrar o repasse e cancelar a venda ao mesmo tempo, nas duas ordens: depois do cancelamento é recusado; antes, fica recebido e o desfazer cancela", async () => {
     const f1 = await financiada();
     await comoDono(a);
-    const r1 = await disputa(() => valor(a, CANCELAR, [f1.venda]), async () => { await comoDono(b); return valor<boolean>(b, RECEBER, [f1.conta, "REPASSE-83-3", 125_000, hoje]); });
+    const r1 = await disputa(() => valor(a, CANCELAR, [f1.venda]), async () => { await comoDono(b); return valor<boolean>(b, RECEBER, [f1.conta, "REPASSE-83-3", 125_000, hoje()]); });
     expect(r1).toEqual({ erro: "22023" });
     expect(await situacao(f1.conta)).toBe("cancelada");
     const f2 = await financiada();
     await comoDono(a);
-    const r2 = await disputa(() => valor(a, RECEBER, [f2.conta, "REPASSE-83-4", 125_000, hoje]), async () => { await comoDono(b); return valor<boolean>(b, CANCELAR, [f2.venda]); });
+    const r2 = await disputa(() => valor(a, RECEBER, [f2.conta, "REPASSE-83-4", 125_000, hoje()]), async () => { await comoDono(b); return valor<boolean>(b, CANCELAR, [f2.venda]); });
     expect(r2).toEqual({ ok: true });
     // A financeira pagou antes do cancelamento: a conta continua recebida (o acerto do contrato fica no estorno a confirmar).
     expect(await situacao(f2.conta)).toBe("recebida");
