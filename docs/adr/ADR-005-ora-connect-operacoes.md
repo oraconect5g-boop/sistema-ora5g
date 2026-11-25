@@ -119,3 +119,8 @@ Migrations `20261109150526_correcoes_acesso_lote1` (#56) e `20261109190400_conne
 
 - **Quem pede:** o dono e os gerentes (a D-061), na loja do turno; o PDV que já existe, só o da loja de quem pede (o dono, em todos). Cada pedido fica com quem pediu, o motivo e a auditoria.
 - **O envio:** o mesmo das transferências: o worker (`--acoes`, a cada minuto, só com `NOGLE_ACOES=habilitada`) envia UMA vez; sem conexão, volta para a fila; enviado sem resposta clara, ou parado em 10 minutos, é resultado desconhecido e nunca se reenvia. O sensível (o CPF, o endereço, a senha do usuário do PDV) fica em `privado.connect_acoes_dados` só até o envio.
+
+## Adendo de 25/11/2026: as outras consultas (lote CONNECT-i)
+
+- **Quem consulta o quê:** a loja (quem opera a Ora Connect), o titular da linha, o CNPJ, o CEP, o rastreio da compra, o pagamento de uma solicitação e as informações da Nogle; a gerência (o dono e os gerentes), também o custo da logística e o CPF (que devolve o nome e o nascimento); quem gere a rede, o extrato e as recargas programadas da carteira, as portabilidades e as listas de linhas e de clientes. O banco confere cada uma.
+- **O que fica guardado:** só os campos que a tela mostra; o documento mascarado (também dentro do apelido); a lista até ~90 KB, com o aviso do que não coube; tudo apagado em 24 horas, com o CPF e o CNPJ do parâmetro.

@@ -1325,6 +1325,20 @@
       "pedido_em": "2026-11-25",
       "resposta": null,
       "respondido_em": null
+    },
+    {
+      "lote": "CONNECT-i",
+      "roteiro": "docs/aceite/CONNECT-i.md",
+      "requisitos": [
+        "ORA-CONNECT-007",
+        "ORA-CONNECT-009"
+      ],
+      "entrega": "em Ora Connect → Consultar linha, as 16 rotas da coleção oficial que faltavam: o titular da linha, o CNPJ, o CEP, o rastreio, o pagamento de uma solicitação e as informações da Nogle (a loja); a logística e o CPF (a gerência); o extrato e as recargas programadas da carteira, as portabilidades e as listas de linhas e de clientes (a rede)",
+      "commit": null,
+      "publicado_em": null,
+      "pedido_em": "2026-11-25",
+      "resposta": null,
+      "respondido_em": null
     }
   ]
 }
