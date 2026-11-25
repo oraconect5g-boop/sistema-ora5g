@@ -7,6 +7,8 @@
 //        chips físicos do PDV de cada loja ligada entram no estoque dela pelo ICCID (CONNECT-f; o sim de 25/11)
 //   node apps/worker/src/executar-connect.ts --transferencias → envia os pedidos de transferência de chips do dono, UMA vez
 //        cada, e confirma pelo estoque do PDV (CONNECT-e); só com NOGLE_TRANSFERENCIAS=habilitada; depois, lê o estoque de novo
+//   node apps/worker/src/executar-connect.ts --acoes    → as funções que mudam algo na Nogle, pedidas pelo dono e pelos gerentes
+//        (CONNECT-j; a D-061): cada uma sai UMA vez; só com NOGLE_ACOES=habilitada
 //   node apps/worker/src/executar-connect.ts --consultas → as consultas que só leem, pedidas na tela (a linha, o chip e a
 //        carteira; CONNECT-g, a D-056), durante uns 50 segundos: a rotina roda a cada minuto, com a trava própria; pede o
 //        GET com corpo (NOGLE_GET_COM_CORPO=documentado)
@@ -23,7 +25,7 @@ import { ehTipoOperacao, type TipoOperacao } from "@ora5g/dominio/nogle";
 
 import { ClienteNogle, ehTipoDeChave } from "./connect/cliente-nogle.ts";
 import {
-  conciliarRelatorios, consultarPendentes, enviarPendentes, enviarTransferencias, lerEstoqueDeChips, mensagemSegura, responderConsultas,
+  conciliarRelatorios, consultarPendentes, enviarAcoes, enviarPendentes, enviarTransferencias, lerEstoqueDeChips, mensagemSegura, responderConsultas,
   sincronizarReferencias,
 } from "./connect/processar.ts";
 import { transporteHttp } from "./connect/transporte.ts";
@@ -43,6 +45,7 @@ const conciliar = process.argv.includes("--conciliar");
 const estoque = process.argv.includes("--estoque");
 const transferencias = process.argv.includes("--transferencias");
 const consultas = process.argv.includes("--consultas");
+const acoes = process.argv.includes("--acoes");
 const argumento = (nome: string) => { const i = process.argv.indexOf(nome); return i > 0 ? process.argv[i + 1] ?? "" : ""; };
 /** O dia em Brasília, deslocado em dias (AAAA-MM-DD). */
 const diaEmBrasilia = (dias: number) => new Intl.DateTimeFormat("en-CA", { timeZone: "America/Sao_Paulo" }).format(new Date(Date.now() + dias * 86_400_000));
@@ -56,9 +59,13 @@ const faltando = [
   !ehTipoDeChave(tipoDaChave) && "NOGLE_AUTH_KEY_TYPE",
   !ler("NOGLE_ACCESS_KEY") && "NOGLE_ACCESS_KEY",
   tipoDaChave !== "marca" && !ler("NOGLE_SECONDARY_KEY") && "NOGLE_SECONDARY_KEY",
-  !listas && !conciliar && !estoque && !transferencias && !consultas && tipos.length === 0 && "NOGLE_OPERACOES_HABILITADAS",
+  !listas && !conciliar && !estoque && !transferencias && !consultas && !acoes && tipos.length === 0 && "NOGLE_OPERACOES_HABILITADAS",
 ].filter(Boolean);
 
+if (acoes && ler("NOGLE_ACOES") !== "habilitada") {
+  console.log(`${agora} ações na Nogle desligadas (NOGLE_ACOES)`);
+  process.exit(0);
+}
 if (transferencias && ler("NOGLE_TRANSFERENCIAS") !== "habilitada") {
   console.log(`${agora} transferências de chips desligadas (NOGLE_TRANSFERENCIAS)`);
   process.exit(0);
@@ -81,6 +88,14 @@ try {
     // levam o corpo). Liga com "documentado" no ambiente do worker.
     { getComCorpo: ler("NOGLE_GET_COM_CORPO") === "documentado" },
   );
+  if (acoes) {
+    // As ações que mudam algo na Nogle (CONNECT-j): cada uma sai uma vez; o log só quando algo aconteceu.
+    const r = await enviarAcoes(banco, nogle);
+    if (r.feitas + r.recusadas + r.desconhecidas + r.devolvidas > 0) {
+      console.log(`${agora} ações na Nogle: ${r.feitas} feitas, ${r.recusadas} recusadas, ${r.desconhecidas} desconhecidas, ${r.devolvidas} de volta à fila`);
+    }
+    process.exit(r.desconhecidas + r.devolvidas > 0 ? 1 : 0);
+  }
   if (consultas) {
     // As consultas que só leem (CONNECT-g): vence o que parou, apaga a resposta de mais de 24 horas e responde a fila.
     const limpeza = await banco.limparConsultas();

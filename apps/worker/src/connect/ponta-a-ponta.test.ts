@@ -11,12 +11,12 @@ import type { PGlite } from "@electric-sql/pglite";
 import { comoUsuario, criarBanco, type Sessao } from "@ora5g/banco/src/banco-de-teste.ts";
 import { ids, montarCenario } from "@ora5g/banco/src/cenario.ts";
 import { cat, itens, montarCatalogo } from "@ora5g/banco/src/cenario-catalogo.ts";
-import type { OperacaoParaConsultar, OperacaoParaEnviar, TipoOperacao, TransferenciaParaEnviar } from "@ora5g/dominio/nogle";
+import type { AcaoParaEnviar, OperacaoParaConsultar, OperacaoParaEnviar, TipoOperacao, TransferenciaParaEnviar } from "@ora5g/dominio/nogle";
 import { afterAll, beforeAll, describe, expect, it } from "vitest";
 
 import { ClienteNogle } from "./cliente-nogle.ts";
 import {
-  conciliarRelatorios, consultarPendentes, enviarPendentes, enviarTransferencias, lerEstoqueDeChips, responderConsultas, sincronizarReferencias,
+  conciliarRelatorios, consultarPendentes, enviarAcoes, enviarPendentes, enviarTransferencias, lerEstoqueDeChips, responderConsultas, sincronizarReferencias,
   type BancoConnect, type ChipsNoEstoque, type ConsultaParaFazer, type PlanosNoCaixa,
 } from "./processar.ts";
 import { transporteHttp } from "./transporte.ts";
@@ -75,6 +75,8 @@ beforeAll(async () => {
       if (["/linhas/detalhes", "/linhas/cobrancasGeradas", "/linhas/consumo/dados", "/linhas/consumo/voz", "/linhas/consumo/sms", "/ativacao/detalhar",
         "/relatorios/transacoes"].includes(caminho)) return json(200, exemplo(caminho));
       if (caminho === "/saldo/saldo") return json(200, exemplo("/saldo/saldo"));
+      // CONNECT-j: o bloqueio da linha, com o exemplo oficial.
+      if (caminho === "/atendimento/bloqueio") return json(200, exemplo("/atendimento/bloqueio"));
       if (caminho === "/portabilidade/status") return json(200, { retorno: true, mensagem: "", status: { status: "Sucesso", data_sucesso: "2022-06-08" } });
       if (caminho === "/planos") return json(200, exemplo("/planos"));
       if (caminho === "/ddds") return json(200, exemplo("/ddds"));
@@ -156,6 +158,10 @@ const banco: BancoConnect = {
     "select public.connect_worker_registrar_resposta_da_consulta($1, $2::jsonb) as v", [consulta, JSON.stringify(resposta)])).rows[0]?.v ?? ""),
   limparConsultas: () => comoServico(async () => umValor((await db.query<{ v: { vencidas: number; apagadas: number } }>(
     "select public.connect_worker_limpar_consultas($1) as v", [ids.organizacao])).rows[0]?.v)),
+  acoesAEnviar: (limite) => comoServico(async () => (await db.query<AcaoParaEnviar>(
+    "select * from public.connect_worker_acoes_a_enviar($1, $2)", [ids.organizacao, limite])).rows),
+  registrarAcao: (acao, resultado) => comoServico(async () => (await db.query<{ v: string }>(
+    "select public.connect_worker_registrar_acao($1, $2::jsonb) as v", [acao, JSON.stringify(resultado)])).rows[0]?.v ?? ""),
   planosNoCaixa: () => comoServico(async () => umValor((await db.query<{ v: PlanosNoCaixa }>(
     "select public.connect_worker_planos_no_caixa($1) as v", [ids.organizacao])).rows[0]?.v)),
   chipsNoEstoque: () => comoServico(async () => umValor((await db.query<{ v: ChipsNoEstoque }>(
@@ -388,5 +394,25 @@ describe("o relatório do número (CONNECT-h)", () => {
     expect(gravada?.situacao).toBe("respondida");
     expect(Object.values(gravada?.resposta.partes ?? {}).every((p) => p.situacao === "respondida")).toBe(true);
     expect(JSON.stringify(gravada)).not.toMatch(/esim_pdf|00000000000|link_url/);
+  });
+});
+
+describe("as ações que mudam algo na Nogle (CONNECT-j)", () => {
+  it("o dono pede o bloqueio da linha; o worker envia uma vez pelo transporte de verdade e grava o resultado", async () => {
+    const dono = await naLoja(ids.dono, ids.lojaA);
+    const pedido = await valor<{ id: string }>(dono, `select public.connect_pedir_acao(p_tipo => 'linha_bloquear', p_chave => 'pp:acao:1',
+      p_motivo => 'O cliente perdeu o celular (teste)', p_parametros => '{"linha":"51900000000","motivo_bloqueio":"PERDA"}'::jsonb) as v`);
+    const nogle = new ClienteNogle({ tipo: "marca", chaveAcesso: "chave-ficticia" }, transporteHttp(base, 500), { getComCorpo: true });
+    const antes = recebidos.length;
+    expect(await enviarAcoes(banco, nogle)).toEqual({ feitas: 1, recusadas: 0, desconhecidas: 0, devolvidas: 0 });
+    expect(recebidos.slice(antes).filter((p) => p.caminho !== "/auth/token")).toEqual([
+      { metodo: "POST", caminho: "/atendimento/bloqueio", corpo: JSON.stringify({ numero: "51900000000", motivo: "PERDA", observacoes: "Pedido no sistema Ora 5G" }) },
+    ]);
+    expect((await db.query("select situacao, mensagem, resultado from public.connect_acoes where id = $1", [pedido.id])).rows)
+      .toEqual([{ situacao: "feita", mensagem: "Bloqueio realizado com sucesso.", resultado: { quando: "2023-06-04 20:01" } }]);
+    // Nada mais na fila: rodar de novo não chama a Nogle.
+    const depois = recebidos.length;
+    expect(await enviarAcoes(banco, nogle)).toEqual({ feitas: 0, recusadas: 0, desconhecidas: 0, devolvidas: 0 });
+    expect(recebidos.length).toBe(depois);
   });
 });

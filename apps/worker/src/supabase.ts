@@ -127,6 +127,8 @@ export function bancoConnect(cliente: SupabaseClient, organizacao: string): Banc
     consultasAFazer: (limite) => rpc("connect_worker_consultas_a_fazer", { p_organizacao: organizacao, p_limite: limite }),
     registrarRespostaDaConsulta: (consulta, resposta) => rpc("connect_worker_registrar_resposta_da_consulta", { p_consulta: consulta, p_resultado: resposta }),
     limparConsultas: () => rpc("connect_worker_limpar_consultas", { p_organizacao: organizacao }),
+    acoesAEnviar: (limite) => rpc("connect_worker_acoes_a_enviar", { p_organizacao: organizacao, p_limite: limite }),
+    registrarAcao: (acao, resultado) => rpc("connect_worker_registrar_acao", { p_acao: acao, p_resultado: resultado }),
   };
 }
 

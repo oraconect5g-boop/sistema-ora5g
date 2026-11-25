@@ -150,7 +150,7 @@ export type OperacaoParaEnviar = {
   dados: Record<string, unknown> | null;
 };
 
-export type PedidoNogle = { metodo: "GET" | "POST"; caminho: string; corpo: Record<string, unknown> };
+export type PedidoNogle = { metodo: "GET" | "POST" | "PUT" | "DELETE"; caminho: string; corpo: Record<string, unknown> };
 
 /** Nome do sistema no campo livre "sistema_origem" (documentado na recarga e na portabilidade). */
 export const SISTEMA_ORIGEM = "Ora 5G";
@@ -985,3 +985,175 @@ export function lerParteDoRelatorio(parte: ParteDoRelatorio, statusHttp: number,
   const resposta = o ? camposDaParte(parte, o) : null;
   return resposta ? { situacao: "respondida", mensagem: n.mensagem.slice(0, 200), resposta } : { situacao: "falhou", mensagem: "A resposta da Nogle veio fora da forma documentada." };
 }
+
+// -----------------------------------------------------------------------------
+// CONNECT-j — as funções que mudam algo na Nogle (a D-061: o dono e os gerentes). O banco confere e guarda o pedido; o worker
+// monta o pedido como a coleção oficial manda, envia UMA vez e lê a resposta.
+// -----------------------------------------------------------------------------
+
+export const TIPOS_DE_ACAO = [
+  "linha_bloquear", "linha_desbloquear", "recarga_automatica_bloquear", "recarga_automatica_desbloquear", "linha_apelido",
+  "portabilidade_reenviar_sms", "recarga_programar", "compra_chip", "cliente_cadastrar", "cliente_atualizar", "pdv_cadastrar",
+  "pdv_atualizar", "pdv_inativar", "pdv_usuario",
+] as const;
+export type TipoDeAcao = (typeof TIPOS_DE_ACAO)[number];
+export const ehTipoDeAcao = (v: unknown): v is TipoDeAcao => typeof v === "string" && (TIPOS_DE_ACAO as readonly string[]).includes(v);
+
+export const NOMES_DAS_ACOES: Record<TipoDeAcao, string> = {
+  linha_bloquear: "Bloquear a linha",
+  linha_desbloquear: "Desbloquear a linha",
+  recarga_automatica_bloquear: "Bloquear a recarga automática",
+  recarga_automatica_desbloquear: "Desbloquear a recarga automática",
+  linha_apelido: "Mudar o apelido da linha",
+  portabilidade_reenviar_sms: "Reenviar o SMS da portabilidade",
+  recarga_programar: "Programar recarga pelo saldo",
+  compra_chip: "Comprar chip com entrega",
+  cliente_cadastrar: "Cadastrar o cliente na Nogle",
+  cliente_atualizar: "Atualizar o cliente na Nogle",
+  pdv_cadastrar: "Criar um PDV na Nogle",
+  pdv_atualizar: "Atualizar um PDV",
+  pdv_inativar: "Inativar um PDV (e os usuários dele)",
+  pdv_usuario: "Criar um usuário no PDV",
+};
+
+/** A ação como o worker recebe do banco (connect_worker_acoes_a_enviar). */
+export type AcaoParaEnviar = { acao_id: string; tipo: string; parametros: Record<string, unknown>; dados: Record<string, unknown> | null };
+
+const textoDaAcao = (v: unknown) => (typeof v === "string" && v.trim() ? v.trim() : undefined);
+const inteiroDaAcao = (v: unknown) => (typeof v === "number" && Number.isInteger(v) ? v : typeof v === "string" && /^\d{1,9}$/.test(v) ? Number(v) : undefined);
+/** O cliente e o endereço como a Nogle pede (o endereço num objeto, como nos exemplos de cliente e de compra). */
+function clienteDaAcao(d: Record<string, unknown>) {
+  const e = objeto(d.endereco) ?? {};
+  const limpo = (o: Record<string, unknown>) => Object.fromEntries(Object.entries(o).filter(([, v]) => v !== undefined && v !== null && v !== ""));
+  return limpo({
+    nome: textoDaAcao(d.nome), apelido: textoDaAcao(d.apelido), cpf: textoDaAcao(d.cpf), cnpj: textoDaAcao(d.cnpj), email: textoDaAcao(d.email),
+    telefone: textoDaAcao(d.telefone), data_nascimento: textoDaAcao(d.data_nascimento),
+    endereco: limpo({ rua: textoDaAcao(e.rua), numero: textoDaAcao(e.numero), complemento: textoDaAcao(e.complemento), bairro: textoDaAcao(e.bairro),
+      cep: textoDaAcao(e.cep), id_cidade: inteiroDaAcao(e.id_cidade) }),
+  });
+}
+
+/**
+ * O pedido de cada ação, como a coleção oficial manda. Null quando falta o que a rota pede (o banco já recusa antes). Onde a
+ * documentação diverge, a escolha está escrita: no reenvio do SMS, vão os nomes da tabela e os do exemplo; no PDV novo, o
+ * endereço e o usuário vão em listas (o exemplo oficial).
+ */
+export function pedidoDaAcao(a: AcaoParaEnviar): PedidoNogle | null {
+  const p = a.parametros;
+  const d = a.dados ?? {};
+  const linha = textoDaAcao(p.linha);
+  const pdv = inteiroDaAcao(p.pdv);
+  switch (a.tipo) {
+    case "linha_bloquear":
+      return linha && textoDaAcao(p.motivo_bloqueio)
+        ? { metodo: "POST", caminho: "/atendimento/bloqueio", corpo: { numero: linha, motivo: p.motivo_bloqueio, observacoes: `Pedido no sistema ${SISTEMA_ORIGEM}` } } : null;
+    case "linha_desbloquear":
+      return linha ? { metodo: "POST", caminho: "/atendimento/desbloqueio", corpo: { numero: linha } } : null;
+    case "recarga_automatica_bloquear": case "recarga_automatica_desbloquear":
+      return linha ? { metodo: "POST", caminho: "/recarga/alterarStatusRecargaAutomatica", corpo: {
+        linha, operacao: a.tipo === "recarga_automatica_bloquear" ? "bloqueio" : "desbloqueio", origem: SISTEMA_ORIGEM, motivo: "Pedido no sistema Ora 5G" } } : null;
+    case "linha_apelido":
+      return linha && textoDaAcao(p.apelido) ? { metodo: "POST", caminho: "/linhas/atualizar", corpo: { linha, linha_apelido: textoDaAcao(p.apelido) } } : null;
+    case "portabilidade_reenviar_sms": {
+      const doadora = textoDaAcao(p.linha_doadora);
+      return linha && doadora ? { metodo: "POST", caminho: "/portabilidade/reenviarsms",
+        corpo: { linha, linha_doadora: doadora, numero_contel: linha, doador_numero: doadora } } : null;
+    }
+    case "recarga_programar": {
+      const plano = inteiroDaAcao(p.plano);
+      const quantidade = inteiroDaAcao(p.quantidade);
+      return linha && plano ? { metodo: "POST", caminho: "/recarga/saldo/adicionar",
+        corpo: { linha, plano, ...(quantidade ? { quantidade_recargas: quantidade } : {}) } } : null;
+    }
+    case "compra_chip": {
+      const plano = inteiroDaAcao(p.plano);
+      const metodo = textoDaAcao(p.metodo);
+      if (!plano || !metodo || !a.dados) return null;
+      // A compra não tem apelido na documentação.
+      const cliente = Object.fromEntries(Object.entries(clienteDaAcao(d)).filter(([campo]) => campo !== "apelido"));
+      return { metodo: "POST", caminho: "/compra/solicitar", corpo: {
+        metodo_pagamento: metodo, id_plano: plano, quantidade: inteiroDaAcao(p.quantidade) ?? 1, ...cliente, sistema_origem: SISTEMA_ORIGEM } };
+    }
+    case "cliente_cadastrar":
+      return a.dados ? { metodo: "POST", caminho: "/cliente/criar", corpo: clienteDaAcao(d) } : null;
+    case "cliente_atualizar":
+      return a.dados ? { metodo: "PUT", caminho: "/cliente/atualizar", corpo: clienteDaAcao(d) } : null;
+    case "pdv_cadastrar": {
+      const nome = textoDaAcao(p.nome);
+      if (!nome || !textoDaAcao(p.uf) || !textoDaAcao(p.cidade)) return null;
+      const e = objeto(d.endereco) ?? {};
+      const u = objeto(d.usuario);
+      return { metodo: "POST", caminho: "/pdv/cadastrar", corpo: {
+        nome, ...(textoDaAcao(d.razao_social) ? { razao_social: d.razao_social } : {}), ...(textoDaAcao(d.cnpj) ? { cnpj: d.cnpj } : {}),
+        ...(textoDaAcao(d.cpf) ? { cpf: d.cpf } : {}), ...(textoDaAcao(d.contato_email) ? { contato_email: d.contato_email } : {}),
+        ...(textoDaAcao(d.contato_celular) ? { contato_celular: d.contato_celular } : {}),
+        endereco: [{ uf: p.uf, cidade: p.cidade, ...Object.fromEntries(["rua", "numero", "cep", "bairro", "complemento"].flatMap((k) => (textoDaAcao(e[k]) ? [[k, e[k]]] : []))) }],
+        ...(u ? { usuario: [{ nome: u.nome, email: u.email, senha: u.senha }] } : {}),
+      } };
+    }
+    case "pdv_atualizar":
+      return pdv ? { metodo: "PUT", caminho: "/pdv/atualizar", corpo: { id: pdv, ...Object.fromEntries(Object.entries(d).filter(([k]) => k !== "usuario")) } } : null;
+    case "pdv_inativar":
+      return pdv ? { metodo: "DELETE", caminho: "/pdv/inativar", corpo: { id: pdv } } : null;
+    case "pdv_usuario":
+      return pdv && textoDaAcao(d.email) && textoDaAcao(d.senha)
+        ? { metodo: "POST", caminho: "/pdv/usuario", corpo: { id: pdv, nome: d.nome, email: d.email, senha: d.senha } } : null;
+    default:
+      return null;
+  }
+}
+
+export type ResultadoDaAcao = { envio: "feita" | "recusada" | "desconhecida"; mensagem: string; resultado?: Record<string, unknown> };
+
+/**
+ * A resposta de uma ação. 2xx com o sucesso de cada rota (retorno/status true, o id criado ou a mensagem de sucesso): feita,
+ * com o que a tela mostra (o pedido e o link da compra, a próxima recarga, o PDV ou o usuário criado). 2xx com
+ * retorno/status false, ou 4xx: recusada (nada foi feito), com a mensagem da Nogle. 5xx, ou um 2xx sem o sucesso esperado:
+ * resultado desconhecido (confere-se no painel da Nogle; nunca se reenvia).
+ */
+export function lerRespostaDaAcao(tipo: string, statusHttp: number, corpo: unknown): ResultadoDaAcao {
+  const o = objeto(corpo);
+  const n = normalizarResposta(statusHttp, corpo);
+  const mensagem = (n.mensagem || textoOuNada(o?.message) || "").slice(0, 200);
+  if (statusHttp >= 500 || statusHttp === 0) return { envio: "desconhecida", mensagem: mensagem || "A Nogle não respondeu com clareza: confira no painel da Nogle antes de pedir de novo." };
+  if (statusHttp >= 400) return { envio: "recusada", mensagem: mensagem || `A Nogle recusou (HTTP ${statusHttp}).` };
+  const recusou = o?.retorno === false || o?.status === false;
+  if (recusou) return { envio: "recusada", mensagem: mensagem || "A Nogle recusou o pedido." };
+  const sucesso = (texto: unknown) => typeof texto === "string" && /sucesso/i.test(texto);
+  switch (tipo) {
+    case "linha_bloquear": case "linha_desbloquear":
+      return o?.status === true ? { envio: "feita", mensagem, resultado: { quando: momentoOuNada(o.data) } } : desconhecida(mensagem);
+    case "recarga_automatica_bloquear": case "recarga_automatica_desbloquear": case "portabilidade_reenviar_sms":
+      return o?.retorno === true ? { envio: "feita", mensagem } : desconhecida(mensagem);
+    case "linha_apelido":
+      return sucesso(o?.mensagem) ? { envio: "feita", mensagem } : desconhecida(mensagem);
+    case "recarga_programar":
+      return o?.retorno === true ? { envio: "feita", mensagem, resultado: { proxima_recarga: diaOuNada(o.proxima_recarga) } } : desconhecida(mensagem);
+    case "compra_chip": {
+      const pedido = inteiroOuNada(o?.id);
+      // O exemplo oficial do plano que não existe vem com "retorno": true e a mensagem, sem o id: nada foi comprado.
+      if (pedido === null) return o?.retorno === true && mensagem ? { envio: "recusada", mensagem } : desconhecida(mensagem);
+      return { envio: "feita", mensagem, resultado: { pedido, link_pagamento: textoOuNada(o?.link_pagamento) ?? null } };
+    }
+    case "cliente_cadastrar": case "cliente_atualizar": {
+      const cliente = objeto(o?.cliente);
+      return o?.retorno === true && cliente ? { envio: "feita", mensagem, resultado: { cliente: inteiroOuNada(cliente.id) } } : desconhecida(mensagem);
+    }
+    case "pdv_cadastrar": {
+      const novo = inteiroOuNada(o?.pdv);
+      return novo !== null ? { envio: "feita", mensagem, resultado: { pdv: novo } } : desconhecida(mensagem);
+    }
+    case "pdv_usuario": {
+      const usuario = inteiroOuNada(o?.usuario);
+      return usuario !== null || sucesso(o?.message) ? { envio: "feita", mensagem, resultado: { usuario } } : desconhecida(mensagem);
+    }
+    case "pdv_inativar":
+      return sucesso(o?.message) ? { envio: "feita", mensagem } : desconhecida(mensagem);
+    case "pdv_atualizar":
+      return sucesso(o?.message) ? { envio: "feita", mensagem, resultado: { campos: Object.keys(objeto(o?.dados_atualizados) ?? {}).slice(0, 20) } } : desconhecida(mensagem);
+    default:
+      return desconhecida(mensagem);
+  }
+}
+const desconhecida = (mensagem: string): ResultadoDaAcao =>
+  ({ envio: "desconhecida", mensagem: mensagem || "A Nogle respondeu sem o sucesso esperado: confira no painel da Nogle antes de pedir de novo." });

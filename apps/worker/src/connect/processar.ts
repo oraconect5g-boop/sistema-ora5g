@@ -8,6 +8,7 @@ import {
   PEDIDO_DO_ESTOQUE_DA_MVNO, PEDIDO_DOS_PDVS, RELATORIOS_DA_CONCILIACAO, conferirTransferencia, ehTipoDeConsulta, iccidNoFormatoNogle, interpretarConsulta,
   interpretarConsultaPagamento, lerParteDoRelatorio, lerRespostaDaConsulta, linhaValida, pedidoDaConsulta, pedidoDaPortabilidade, pedidoDasLinhasDoCliente,
   pedidoDasTransacoesDaLinha, pedidoDoCliente, type ParteDoRelatorio, type RespostaDaConsulta, type TipoDeConsulta,
+  lerRespostaDaAcao, pedidoDaAcao, type AcaoParaEnviar, type ResultadoDaAcao,
   interpretarEnvio, lerChips, lerPdvs, lerReferencias, lerRelatorio, lerRespostaDaTransferencia, montarConsulta, montarPedido, montarPedidoDoRelatorio,
   pedidoDaTransferencia, pedidoDoEstoqueDoPdv, type ChipDaNogle, type Evidencia, type TransferenciaParaEnviar,
   type ItemDeReferencia, type LinhaDoRelatorio, type OperacaoParaConsultar, type OperacaoParaEnviar, type PdvDaNogle, type PedidoNogle,
@@ -31,6 +32,8 @@ export interface BancoConnect {
   consultasAFazer(limite: number): Promise<ConsultaParaFazer[]>;
   registrarRespostaDaConsulta(consulta: string, resposta: RespostaDaConsulta): Promise<string>;
   limparConsultas(): Promise<{ vencidas: number; apagadas: number }>;
+  acoesAEnviar(limite: number): Promise<AcaoParaEnviar[]>;
+  registrarAcao(acao: string, resultado: ResultadoDaAcao | { envio: "nao_enviada"; mensagem: string }): Promise<string>;
 }
 
 /** Uma consulta que só lê, pedida na tela (CONNECT-g; connect_worker_consultas_a_fazer). */
@@ -398,6 +401,42 @@ export async function responderConsultas(banco: BancoConnect, nogle: Nogle, opco
       else if (resposta.situacao === "nao_encontrada") resumo.nao_encontradas++;
       else resumo.falhas++;
     }
+  }
+  return resumo;
+}
+
+/**
+ * As funções que mudam algo na Nogle (CONNECT-j; a D-061): cada pedido sai UMA vez. Sem conexão antes de enviar (ou com o login
+ * recusado): volta para a fila e o ciclo para. Enviado sem resposta clara: resultado desconhecido, nunca reenviado (a gerência
+ * confere no painel da Nogle). O pedido fora da forma não sai (recusado aqui). O resumo só tem contagens.
+ */
+export async function enviarAcoes(banco: BancoConnect, nogle: Nogle, limite = 5) {
+  const resumo = { feitas: 0, recusadas: 0, desconhecidas: 0, devolvidas: 0 };
+  for (const a of await banco.acoesAEnviar(limite)) {
+    const pedido = pedidoDaAcao(a);
+    if (!pedido) {
+      await banco.registrarAcao(a.acao_id, { envio: "recusada", mensagem: "Pedido fora da forma: não foi enviado à Nogle." });
+      resumo.recusadas++;
+      continue;
+    }
+    const r = await nogle.chamar(pedido);
+    if (r.tipo === "resposta") {
+      const lido = lerRespostaDaAcao(a.tipo, r.status, r.corpo);
+      await banco.registrarAcao(a.acao_id, lido);
+      if (lido.envio === "feita") resumo.feitas++;
+      else if (lido.envio === "recusada") resumo.recusadas++;
+      else resumo.desconhecidas++;
+      continue;
+    }
+    if (r.tipo === "falha" && r.enviada) {
+      await banco.registrarAcao(a.acao_id, { envio: "desconhecida", mensagem: "A Nogle não respondeu depois do envio: confira no painel da Nogle antes de pedir de novo." });
+      resumo.desconhecidas++;
+      continue;
+    }
+    // Nada saiu (sem conexão, login recusado): este volta para a fila e os outros esperam o próximo ciclo.
+    await banco.registrarAcao(a.acao_id, { envio: "nao_enviada", mensagem: r.tipo === "falha" ? "Sem conexão com a Nogle: o pedido volta para a fila." : r.motivo });
+    resumo.devolvidas++;
+    break;
   }
   return resumo;
 }

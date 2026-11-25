@@ -10,7 +10,7 @@ import {
   montarConsulta, montarPedido, montarPedidoDoRelatorio, PEDIDO_DO_ESTOQUE_DA_MVNO, PEDIDO_DOS_PDVS, pedidoDoEstoqueDoPdv, tipoDeChip,
   conferirTransferencia, lerRespostaDaTransferencia, pedidoDaTransferencia,
   documentoMascarado, lerRespostaDaConsulta, pedidoDaConsulta, TIPOS_DE_CONSULTA,
-  ehConsultaComposta, lerParteDoRelatorio, PARAMETRO_DA_CONSULTA, pedidoDaPortabilidade, pedidoDasLinhasDoCliente, pedidoDasTransacoesDaLinha, pedidoDoCliente,
+  ehConsultaComposta, lerParteDoRelatorio, PARAMETRO_DA_CONSULTA, lerRespostaDaAcao, pedidoDaAcao, TIPOS_DE_ACAO, type AcaoParaEnviar, pedidoDaPortabilidade, pedidoDasLinhasDoCliente, pedidoDasTransacoesDaLinha, pedidoDoCliente,
   type ChipDaNogle, type OperacaoParaConsultar, type OperacaoParaEnviar, type TransferenciaParaEnviar,
 } from "./nogle";
 
@@ -529,5 +529,91 @@ describe("a consulta completa: as consultas novas e as partes dos relatórios (C
       { linha: "51900000000", iccid: "8955", status: "ATIVA" }, { linha: "51011111111", iccid: "8955", status: "CANCELADA" },
     ] });
     expect(lerParteDoRelatorio("linhas_do_cliente", 502, null)).toMatchObject({ situacao: "falhou" });
+  });
+});
+
+// CONNECT-j (25/11/2026; a D-061): as funções que mudam algo na Nogle, com os pedidos e as respostas da coleção oficial.
+describe("as funções que mudam algo na Nogle (CONNECT-j)", () => {
+  const LINHA = "41999998888";
+  const CLIENTE = { nome: "Cliente Fictício", cpf: "12345678909", email: "cliente@teste.invalid", telefone: "41999990000", data_nascimento: "1990-05-20",
+    apelido: "Cli", endereco: { rua: "Rua Fictícia", numero: "123", bairro: "Centro", cep: "80000000", id_cidade: 7703 } };
+  const acao = (tipo: string, parametros: Record<string, unknown>, dados: Record<string, unknown> | null = null): AcaoParaEnviar => ({ acao_id: "a1", tipo, parametros, dados });
+  const EXEMPLOS: Record<string, AcaoParaEnviar> = {
+    linha_bloquear: acao("linha_bloquear", { linha: LINHA, motivo_bloqueio: "ROUBO" }),
+    linha_desbloquear: acao("linha_desbloquear", { linha: LINHA }),
+    recarga_automatica_bloquear: acao("recarga_automatica_bloquear", { linha: LINHA }),
+    recarga_automatica_desbloquear: acao("recarga_automatica_desbloquear", { linha: LINHA }),
+    linha_apelido: acao("linha_apelido", { linha: LINHA, apelido: "Trabalho" }),
+    portabilidade_reenviar_sms: acao("portabilidade_reenviar_sms", { linha: LINHA, linha_doadora: "41911112222" }),
+    recarga_programar: acao("recarga_programar", { linha: LINHA, plano: "1718", quantidade: 12 }),
+    compra_chip: acao("compra_chip", { plano: "88888", quantidade: 2, metodo: "LINK" }, CLIENTE),
+    cliente_cadastrar: acao("cliente_cadastrar", {}, CLIENTE),
+    cliente_atualizar: acao("cliente_atualizar", {}, CLIENTE),
+    pdv_cadastrar: acao("pdv_cadastrar", { nome: "Loja nova (fictícia)", uf: "PR", cidade: "Curitiba" },
+      { contato_celular: "41999990000", endereco: { rua: "Rua Fictícia", cep: "80000000" }, usuario: { nome: "Gerente (fictício)", email: "g@teste.invalid", senha: "senha-1234" } }),
+    pdv_atualizar: acao("pdv_atualizar", { pdv: 7101 }, { nome: "PDV novo nome (fictício)", contato_email: "pdv@teste.invalid" }),
+    pdv_inativar: acao("pdv_inativar", { pdv: 7101 }),
+    pdv_usuario: acao("pdv_usuario", { pdv: 7101 }, { nome: "Pessoa (fictícia)", email: "p@teste.invalid", senha: "senha-1234" }),
+  };
+  // Os campos que a coleção oficial documenta em cada rota: as chaves do exemplo e as linhas da tabela de envio.
+  const documentados = (caminho: string) => {
+    const f = rota(caminho);
+    const tabela = (typeof f.request.description === "string" ? f.request.description : f.request.description?.content ?? "");
+    const linhas = [...tabela.matchAll(/<td>([a-z_]+)(?:\.[a-z_]+)?<\/td>/gi)].map((m) => m[1] ?? "");
+    return new Set([...Object.keys(JSON.parse(f.request.body?.raw?.trim() || "{}") as object), ...linhas]);
+  };
+
+  it("cada ação vai à rota e com o método da coleção oficial, só com campos documentados", () => {
+    expect(Object.keys(EXEMPLOS).sort()).toEqual([...TIPOS_DE_ACAO].sort());
+    for (const [tipo, a] of Object.entries(EXEMPLOS)) {
+      const pedido = pedidoDaAcao(a);
+      expect(pedido, tipo).not.toBeNull();
+      const f = rota(pedido?.caminho ?? "");
+      expect(pedido?.metodo, tipo).toBe(f.request.method);
+      const aceitos = documentados(pedido?.caminho ?? "");
+      expect(Object.keys(pedido?.corpo ?? {}).filter((k) => !aceitos.has(k)), tipo).toEqual([]);
+    }
+    expect(pedidoDaAcao(EXEMPLOS.linha_bloquear as AcaoParaEnviar)?.corpo).toEqual({ numero: LINHA, motivo: "ROUBO", observacoes: "Pedido no sistema Ora 5G" });
+    expect(pedidoDaAcao(EXEMPLOS.portabilidade_reenviar_sms as AcaoParaEnviar)?.corpo)
+      .toEqual({ linha: LINHA, linha_doadora: "41911112222", numero_contel: LINHA, doador_numero: "41911112222" });
+    expect(pedidoDaAcao(EXEMPLOS.recarga_programar as AcaoParaEnviar)?.corpo).toEqual({ linha: LINHA, plano: 1718, quantidade_recargas: 12 });
+    const compra = pedidoDaAcao(EXEMPLOS.compra_chip as AcaoParaEnviar)?.corpo ?? {};
+    expect(compra).toMatchObject({ metodo_pagamento: "LINK", id_plano: 88888, quantidade: 2, cpf: "12345678909", endereco: { cep: "80000000", id_cidade: 7703 } });
+    expect(compra).not.toHaveProperty("apelido");
+    expect(pedidoDaAcao(EXEMPLOS.pdv_cadastrar as AcaoParaEnviar)?.corpo).toMatchObject({
+      nome: "Loja nova (fictícia)", endereco: [{ uf: "PR", cidade: "Curitiba", rua: "Rua Fictícia", cep: "80000000" }],
+      usuario: [{ nome: "Gerente (fictício)", email: "g@teste.invalid", senha: "senha-1234" }],
+    });
+    expect(pedidoDaAcao(EXEMPLOS.pdv_inativar as AcaoParaEnviar)).toEqual({ metodo: "DELETE", caminho: "/pdv/inativar", corpo: { id: 7101 } });
+    expect(pedidoDaAcao(acao("linha_bloquear", { linha: LINHA }))).toBeNull();
+    expect(pedidoDaAcao(acao("compra_chip", { plano: "1718", metodo: "LINK" }))).toBeNull();
+    expect(pedidoDaAcao(acao("qualquer_coisa", {}))).toBeNull();
+  });
+
+  it("lê as respostas oficiais: feita, recusada (nada foi feito) ou resultado desconhecido (nunca reenviado)", () => {
+    expect(lerRespostaDaAcao("linha_bloquear", 200, exemplo("/atendimento/bloqueio")))
+      .toEqual({ envio: "feita", mensagem: "Bloqueio realizado com sucesso.", resultado: { quando: "2023-06-04 20:01" } });
+    expect(lerRespostaDaAcao("linha_bloquear", 200, exemplo("/atendimento/bloqueio", 1))).toEqual({ envio: "recusada", mensagem: "Motivo de bloqueio não encontrado" });
+    expect(lerRespostaDaAcao("linha_desbloquear", 200, exemplo("/atendimento/desbloqueio", 1))).toEqual({ envio: "recusada", mensagem: "Linha não encontrada" });
+    expect(lerRespostaDaAcao("linha_apelido", 200, exemplo("/linhas/atualizar"))).toEqual({ envio: "feita", mensagem: "Linha atualizada com sucesso." });
+    expect(lerRespostaDaAcao("compra_chip", 200, exemplo("/compra/solicitar")))
+      .toEqual({ envio: "feita", mensagem: "", resultado: { pedido: 9172, link_pagamento: "link de pagamento" } });
+    // O plano que não existe vem com "retorno": true e a mensagem, sem o id: nada foi comprado.
+    expect(lerRespostaDaAcao("compra_chip", 200, exemplo("/compra/solicitar", 1))).toEqual({ envio: "recusada", mensagem: "Plano não encontrado." });
+    expect(lerRespostaDaAcao("cliente_cadastrar", 200, exemplo("/cliente/criar"))).toEqual({ envio: "feita", mensagem: "", resultado: { cliente: 99999 } });
+    expect(lerRespostaDaAcao("cliente_cadastrar", 422, exemplo("/cliente/criar", 1))).toEqual({ envio: "recusada", mensagem: "Já existe uma conta utilizando este CPF." });
+    expect(lerRespostaDaAcao("pdv_cadastrar", 200, exemplo("/pdv/cadastrar"))).toEqual({ envio: "feita", mensagem: "Sucesso!", resultado: { pdv: 3968 } });
+    expect(lerRespostaDaAcao("pdv_inativar", 200, exemplo("/pdv/inativar"))).toEqual({ envio: "feita", mensagem: "Sucesso." });
+    expect(lerRespostaDaAcao("pdv_atualizar", 200, exemplo("/pdv/atualizar"))).toEqual({ envio: "feita", mensagem: "Sucesso.", resultado: { campos: ["nome"] } });
+    // As rotas sem exemplo de resposta na coleção: a forma da tabela.
+    expect(lerRespostaDaAcao("recarga_programar", 200, { retorno: true, mensagem: "", proxima_recarga: "2026-12-25" }))
+      .toEqual({ envio: "feita", mensagem: "", resultado: { proxima_recarga: "2026-12-25" } });
+    expect(lerRespostaDaAcao("recarga_automatica_bloquear", 200, { retorno: true, mensagem: "" })).toEqual({ envio: "feita", mensagem: "" });
+    expect(lerRespostaDaAcao("pdv_usuario", 200, { message: "Sucesso!", usuario: 55 })).toEqual({ envio: "feita", mensagem: "Sucesso!", resultado: { usuario: 55 } });
+    // Sem clareza: resultado desconhecido.
+    expect(lerRespostaDaAcao("linha_apelido", 200, { mensagem: "Processando." })).toMatchObject({ envio: "desconhecida" });
+    expect(lerRespostaDaAcao("pdv_inativar", 502, null)).toMatchObject({ envio: "desconhecida" });
+    expect(lerRespostaDaAcao("linha_desbloquear", 404, { erro: "Endpoint inexistente ou recurso não encontrato." }))
+      .toEqual({ envio: "recusada", mensagem: "Endpoint inexistente ou recurso não encontrato." });
   });
 });
