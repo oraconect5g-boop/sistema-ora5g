@@ -69,3 +69,13 @@ A mesma decisão (a D-062), na parte do cartão de crédito. A documentação of
 5. **Cancelar e vencer:** como o QR do Pix; o link que está na Asaas é desativado depois da conferência (o pago no meio tempo vale).
 6. **A venda:** a linha "Cartão pela Asaas" de cada link pago, depois das do Pix (o meio `cartao_asaas`, que a tela não declara); o QR e o link não passam do que falta, somando o que a venda tem pedido ou pago nos dois.
 7. **Reverter:** a reversão tira a tabela e as funções novas e volta as funções da venda e do Pix ao texto do PAY-015a; ela se recusa quando já há venda paga com o meio `cartao_asaas`.
+
+## Adendo do lote PAY-015c (25/11/2026): a assinatura no cartão pela Asaas
+
+A decisão do proprietário (a D-062): "espaço para cadastrar os cartões, caso a pessoa queira adicionar recorrência", com o cartão guardado na Asaas. A documentação oficial lida em 25/11: o link recorrente (`POST /v3/paymentLinks` com `chargeType` RECURRENT e `subscriptionCycle`: preenchido, ele cria a assinatura), a cobrança com o `subscription`, a assinatura (`GET /v3/subscriptions/{id}`: `status` ACTIVE, INACTIVE ou EXPIRED, `nextDueDate`, `value`, `cycle`, `paymentLink` e `deleted`), as cobranças dela (`GET /v3/subscriptions/{id}/payments`) e a remoção (`DELETE /v3/subscriptions/{id}`: para as cobranças futuras e apaga as pendentes).
+
+1. **O cartão fica na Asaas:** o cliente cadastra o cartão na página da Asaas, pelo QR Code do link recorrente (vale 3 dias); o sistema nunca vê o número, só a bandeira e os 4 últimos dígitos de cada cobrança. A tokenização direta (o cartão digitado no sistema) fica de fora: ela exigiria o número do cartão no servidor.
+2. **O achado da assinatura:** pela primeira cobrança do link (o `subscription`), na mesma leitura das cobranças de cartão do caixa; o banco confere que a assinatura veio deste link, com o valor e o ciclo pedidos.
+3. **O acompanhamento:** a assinatura e as cobranças a cada 30 minutos; ativa, pausada (INACTIVE) e encerrada (EXPIRED) vêm da Asaas; a removida no painel da Asaas fica cancelada aqui, com o motivo.
+4. **O cancelamento:** quem criou, ou quem cancela vendas na loja dela, com o motivo; o worker remove a assinatura na Asaas (ou desativa o link, se ninguém cadastrou o cartão). A assinatura achada depois do cancelamento também é removida.
+5. **A recarga automática** da linha quando a cobrança é paga não entra: é a D-063 (o crédito na carteira da Nogle ou a loja pagando o Pix da Nogle).
