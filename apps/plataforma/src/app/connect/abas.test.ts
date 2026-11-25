@@ -158,7 +158,7 @@ describe("as abas no topo (CONNECT-m)", () => {
     let cabecalho = CabecalhoConnect({ sessao: sessaoFicticia as never, aba: "recarga", titulo: "Recarga do plano" });
     const abas = elementos(cabecalho, "FiltroSegmentado")[0]?.opcoes as { href: string; rotulo: string; ativo: boolean }[];
     expect(abas.filter((a) => a.ativo).map((a) => a.rotulo)).toEqual(["Recarga"]);
-    expect(abas.map((a) => a.href)).toEqual(["/connect", "/connect/ativar", "/connect/linha", "/connect/recarga", "/connect/portabilidade", "/connect/chips", "/connect/relatorio"]);
+    expect(abas.map((a) => a.href)).toEqual(["/connect", "/connect/ativar", "/connect/linha", "/connect/recarga", "/connect/portabilidade", "/connect/chips", "/connect/carteira"]);
     expect(elementos(cabecalho, "BotaoLink")[0]).toMatchObject({ href: "/vender?q=chip" });
     emOrdem(limpo(texto(cabecalho)), "Santa Cândida (fictícia)", "Ora Connect", "Vender chip", "Recarga do plano");
     cenario.permissoes = new Set(["connect.operar"]);

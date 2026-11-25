@@ -84,10 +84,12 @@ describe("a tela Consultar linha (CONNECT-g)", () => {
     expect(t).not.toContain("Consultando a Nogle…");
   });
 
-  it("o dono: também a carteira; quem não opera nem gere a Ora Connect só vê o aviso", async () => {
+  it("o dono: o aviso de que a carteira e a rede ficam na aba Carteira e relatórios (CONNECT-o); quem não opera nem gere a Ora Connect só vê o aviso", async () => {
     cenario.permissoes = new Set(["connect.operar", "connect.gerir"]);
     cenario.vinculos = [{ papel: "dono", escopo: "organizacao", unidade_id: null }];
-    emOrdem(await abrir(), "O que consultar", "Carteira da Ora na Nogle", "Consultar o saldo");
+    const dono = await abrir();
+    emOrdem(dono, "O que consultar", "A carteira da Ora na Nogle, as recargas programadas, as portabilidades e as listas da rede ficam na aba", "Carteira e relatórios");
+    expect(dono).not.toContain("Consultar o saldo");
     cenario.permissoes = new Set(["venda.registrar"]);
     const sem = await abrir();
     expect(sem).toContain("Consultar linha é de quem opera a Ora Connect.");
@@ -207,10 +209,10 @@ describe("as outras consultas da Nogle (CONNECT-i)", () => {
     emOrdem(gerente, "Da gerência", "Custo do chip e do frete", "CPF do cliente", "Conferir o CPF", "a consulta fica registrada com o seu nome");
     for (const fora of ["Carteira da Ora na Nogle", "Relatórios da rede na Nogle"]) expect(gerente).not.toContain(fora);
     cenario.vinculos = [{ papel: "dono", escopo: "organizacao", unidade_id: null }];
-    emOrdem(await abrir(), "Da gerência", "Carteira da Ora na Nogle", "Consultar o saldo", "Recargas programadas pela carteira", "Nos próximos 7 dias",
-      "Nos próximos 90 dias", "Ver as programadas", "Extrato da carteira", "Saídas (ativações, recargas e compras)", "Entradas (o crédito posto)",
-      "Ver o extrato", "Relatórios da rede na Nogle", "Portabilidades", "Nos últimos 7 dias", "No último ano",
-      "Ver as portabilidades", "Linhas da Ora na Nogle: a página", "Ver as linhas", "Clientes da Ora na Nogle: a página", "Ver os clientes");
+    // CONNECT-o: a carteira e os relatórios da rede foram para a aba Carteira e relatórios (carteira/carteira.test.ts).
+    const dono = await abrir();
+    emOrdem(dono, "Da gerência", "ficam na aba", "Carteira e relatórios");
+    for (const fora of ["Consultar o saldo", "Ver as programadas", "Ver o extrato", "Ver as portabilidades", "Ver as linhas", "Ver os clientes"]) expect(dono).not.toContain(fora);
   });
 
   it("na lista: as categorias das dúvidas viram botões, o documento aparece mascarado e as listas levam à página do relatório", async () => {

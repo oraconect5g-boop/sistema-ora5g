@@ -1,7 +1,8 @@
 // Lote CONNECT-i (25/11/2026): as outras consultas da Nogle, no site no ar. O Dono (teste) pede as dúvidas frequentes (uma
 // consulta de verdade, SÓ LEITURA, pela decisão D-056: "só consultas"; sem dado de cliente nenhum) e a resposta chega em
-// segundos; vê a gerência, a carteira e os relatórios da rede. O Vendedor (teste) vê o titular da linha e as informações da
-// Nogle, sem a gerência, a carteira nem os relatórios da rede. Nenhuma linha, CPF ou cliente é consultado aqui.
+// segundos; vê a gerência e, desde o CONNECT-o, a carteira e os relatórios da rede na aba Carteira e relatórios. O Vendedor
+// (teste) vê o titular da linha e as informações da Nogle, sem a gerência, a carteira nem os relatórios da rede. Nenhuma linha,
+// CPF ou cliente é consultado aqui.
 // Só no servidor: ORA_E2E_URL e ORA_E2E_CONTAS (e2e/contas-de-teste.ts); no CI, fica pulado.
 import { expect, test, type Page } from "@playwright/test";
 
@@ -18,10 +19,10 @@ test.describe("as outras consultas da Nogle, no site no ar (CONNECT-i)", () => {
       const dono = pessoas[DONO] as Page;
       await dono.goto("/connect/linha");
       await expect(dono.getByRole("heading", { level: 2, name: "Consultar linha", exact: true })).toBeVisible();
-      for (const secao of ["O titular da linha", "Pagamento de uma solicitação", "Informações da Nogle", "Da gerência", "Carteira da Ora na Nogle",
-        "Relatórios da rede na Nogle"]) {
+      for (const secao of ["O titular da linha", "Pagamento de uma solicitação", "Informações da Nogle", "Da gerência"]) {
         await expect(dono.getByRole("heading", { level: 2, name: secao, exact: true })).toBeVisible();
       }
+      await expect(dono.getByRole("link", { name: "Carteira e relatórios", exact: true }).last()).toHaveAttribute("href", "/connect/carteira");
       await dono.getByRole("button", { name: "Dúvidas frequentes", exact: true }).click();
       const consulta = dono.getByRole("list", { name: "Minhas consultas" }).getByRole("listitem").first();
       await expect(consulta).toContainText("Dúvidas frequentes");

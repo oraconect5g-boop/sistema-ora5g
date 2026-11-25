@@ -1,6 +1,6 @@
 import { randomUUID } from "node:crypto";
 
-import { BookOpen, CreditCard, FileText, Globe, History, Search, Truck, UserCheck, Wallet } from "lucide-react";
+import { BookOpen, CreditCard, FileText, History, Search, Truck, UserCheck } from "lucide-react";
 import type { Metadata } from "next";
 import Link from "next/link";
 
@@ -12,7 +12,7 @@ import { FalhaDoServico, obterSessao } from "../../../lib/acesso/sessao";
 import { PARAMETRO_DA_CONSULTA } from "@ora5g/dominio/nogle";
 
 import {
-  abreEmPaginaPropria, CONSULTAS_DA_LOJA, DIAS_DAS_PORTABILIDADES, DIAS_DAS_PROGRAMADAS, ehErroDaConsulta, ERROS_DA_CONSULTA, esperandoResposta,
+  abreEmPaginaPropria, CONSULTAS_DA_LOJA, ehErroDaConsulta, ERROS_DA_CONSULTA, esperandoResposta,
   INFORMACOES_DA_NOGLE, linhasDaResposta, NOMES_DAS_CONSULTAS, PEDE_O_QUE, SITUACOES_DA_CONSULTA, TIPOS_DE_SOLICITACAO, tituloDaConsulta,
   type ConsultaDaTela,
 } from "../../../lib/connect/consultas";
@@ -155,61 +155,12 @@ export default async function ConsultarLinha({ searchParams }: { searchParams: P
       )}
 
       {gereARede && (
-        <Cartao className="mt-4 scroll-mt-20" id="carteira" titulo="Carteira da Ora na Nogle" icone={Wallet}
-          subtitulo="O saldo pré-pago que paga, na Nogle, as ativações e as recargas feitas nas lojas (SALDO)">
-          <PedirSemNumero tipo="carteira_saldo" rotulo="Consultar o saldo" />
-          <form action={consultar} className="mt-3 grid gap-3 sm:grid-cols-2">
-            <input type="hidden" name="chave" value={randomUUID()} />
-            <input type="hidden" name="tipo" value="carteira_programadas" />
-            <label className="text-sm font-medium">Recargas programadas pela carteira
-              <select name="parametro" defaultValue="30" className={campo}>
-                {DIAS_DAS_PROGRAMADAS.map((dias) => <option key={dias} value={dias}>{`Nos próximos ${dias} dias`}</option>)}
-              </select>
-            </label>
-            <div className="flex items-end"><Botao type="submit" variante="secundario">Ver as programadas</Botao></div>
-          </form>
-          <form action={consultar} className="mt-3 grid gap-3 sm:grid-cols-3">
-            <input type="hidden" name="chave" value={randomUUID()} />
-            <label className="text-sm font-medium">Extrato da carteira
-              <select name="tipo" defaultValue="carteira_extrato_saidas" className={campo}>
-                <option value="carteira_extrato_saidas">Saídas (ativações, recargas e compras)</option>
-                <option value="carteira_extrato_entradas">Entradas (o crédito posto)</option>
-              </select>
-            </label>
-            <label className="text-sm font-medium">Período
-              <select name="parametro" defaultValue="30" className={campo}>
-                {DIAS_DAS_PORTABILIDADES.map((dias) => <option key={dias} value={dias}>{dias === 366 ? "No último ano" : `Nos últimos ${dias} dias`}</option>)}
-              </select>
-            </label>
-            <div className="flex items-end"><Botao type="submit" variante="secundario">Ver o extrato</Botao></div>
-          </form>
-        </Cartao>
-      )}
-
-      {gereARede && (
-        <Cartao className="mt-4 scroll-mt-20" id="relatorios-da-rede" titulo="Relatórios da rede na Nogle" icone={Globe}
-          subtitulo="As portabilidades e as listas de linhas e de clientes da Ora na Nogle (o documento aparece mascarado)">
-          <form action={consultar} className="grid gap-3 sm:grid-cols-2">
-            <input type="hidden" name="chave" value={randomUUID()} />
-            <input type="hidden" name="tipo" value="relatorio_portabilidades" />
-            <label className="text-sm font-medium">Portabilidades
-              <select name="parametro" defaultValue="30" className={campo}>
-                {DIAS_DAS_PORTABILIDADES.map((dias) => <option key={dias} value={dias}>{dias === 366 ? "No último ano" : `Nos últimos ${dias} dias`}</option>)}
-              </select>
-            </label>
-            <div className="flex items-end"><Botao type="submit" variante="secundario">Ver as portabilidades</Botao></div>
-          </form>
-          {(["lista_de_linhas", "lista_de_clientes"] as const).map((tipo) => (
-            <form key={tipo} action={consultar} className="mt-3 grid gap-3 sm:grid-cols-2">
-              <input type="hidden" name="chave" value={randomUUID()} />
-              <input type="hidden" name="tipo" value={tipo} />
-              <label className="text-sm font-medium">{`${NOMES_DAS_CONSULTAS[tipo]}: a página`}
-                <input name="parametro" type="number" min={1} max={9999} defaultValue={1} required className={campo} />
-              </label>
-              <div className="flex items-end"><Botao type="submit" variante="secundario">{tipo === "lista_de_linhas" ? "Ver as linhas" : "Ver os clientes"}</Botao></div>
-            </form>
-          ))}
-        </Cartao>
+        // CONNECT-o: a carteira (o saldo, o extrato e as recargas programadas) e os relatórios da rede (as portabilidades e as
+        // listas de linhas e de clientes) ficam na aba Carteira e relatórios, no formato da demonstração.
+        <Aviso tom="info" className="mt-4">
+          A carteira da Ora na Nogle, as recargas programadas, as portabilidades e as listas da rede ficam na aba{" "}
+          <Link href="/connect/carteira" className="font-semibold underline">Carteira e relatórios</Link>.
+        </Aviso>
       )}
 
       <Cartao className="mt-4" titulo="Minhas consultas" subtitulo="As 15 mais recentes, de quem está usando esta tela" icone={History}>
