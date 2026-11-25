@@ -1,7 +1,7 @@
 # ADR-005 — Ora Connect: operações telecom persistentes e adaptador Nogle no servidor
 
 **Data:** 08/11/2026 · **Autor:** Claude Code · **Revisor:** Codex · **Aceite:** proprietário
-**Status:** **proposto**. Aplicado só no **desenvolvimento** (dados fictícios). **Nenhuma chamada real à Nogle foi feita**: faltam as credenciais no servidor, o tipo da chave (P9) e a homologação com linha de teste. Pode mudar por migration nova.
+**Status:** **proposto**. Aplicado só no **desenvolvimento** (dados fictícios). **Nenhuma operação real foi feita**: em 24/11/2026, com o sim do proprietário, só as primeiras consultas de verdade (o login e o estoque de chips; o adendo do fim): a chave é do tipo marca (a P9 respondida). Falta a homologação das operações com linha de teste. Pode mudar por migration nova.
 **Requisitos:** ORA-CONNECT-001 a 010 (011, eSIM e entrega, só no que a Nogle suportar). Depende de ADR-002 (acesso), ADR-003 (estoque com ICCID) e ADR-004 (venda e caixa). Fonte do contrato: [NOGLE_API_REFERENCIA.md](../integracoes/NOGLE_API_REFERENCIA.md) e a cópia oficial em `docs/integracoes/nogle/`.
 
 ## Resumo para o proprietário (o que você aceita)
@@ -80,3 +80,11 @@ Migrations `20261109150526_correcoes_acesso_lote1` (#56) e `20261109190400_conne
 
 - **O extrato do saldo** (`GET /saldo/extrato`): o exemplo oficial da resposta é só o eco do pedido. Os campos que a Nogle descreveu em 10/11 entram quando a primeira resposta real os confirmar.
 - **As comissões e as bonificações (os repasses):** a Nogle respondeu em 10/11 que não há na API. A fonte oficial (um relatório ou um extrato da Nogle, com o formato) precisa ser indicada pela Nogle ou pelo proprietário (D-016, #54). Nenhum valor é calculado aqui e apresentado como repasse oficial.
+
+## Adendo de 24/11/2026: o estoque de chips da Nogle (lote CONNECT-d), só leitura
+
+- **A primeira chamada de verdade**, autorizada pelo proprietário só para consultar: o login com a chave de acesso sozinha funcionou (`NOGLE_AUTH_KEY_TYPE=marca`), e `GET /pdv/listar`, `GET /pdv/estoque` (com o id no corpo) e `GET /linhas/estoque` responderam como os exemplos da coleção oficial ([NOGLE_API_REFERENCIA.md](../integracoes/NOGLE_API_REFERENCIA.md), seção 3.2).
+- **O worker ganhou o modo `--estoque`**, agendado a cada 30 minutos, das 7h às 22h (D-056): lê a lista dos PDVs, o estoque da MVNO e o de cada PDV e entrega ao banco de uma vez (`connect_worker_gravar_estoque`). Sem a lista, nada grava; a MVNO ou o PDV que falhou fica como estava. O modo das operações (o envio, a consulta e as listas) continua fora do agendamento.
+- **Minimização:** do PDV, só o id, o nome, a cidade, a UF e o estoque mínimo; do chip, só o ICCID, o tipo e a data do repasse. A lista da MVNO traz o código de ativação, o QR e o PDF de cada eSIM: o domínio os descarta antes de qualquer gravação.
+- **Leitura e ligação:** o dono vê a rede toda; o administrador, os PDVs e as contagens; quem opera a Ora Connect numa loja, o PDV e os chips dela (RLS). Ligar o PDV à loja é do dono ou do administrador (`connect_ligar_pdv`), uma loja por PDV, na auditoria.
+- **Fica de fora:** a transferência de chips pela API (`POST /pdv/transferir-chip-*`), que muda o estoque na Nogle e espera o sim do proprietário a cada operação, e a entrada dos chips da Nogle no livro de estoque da Ora.

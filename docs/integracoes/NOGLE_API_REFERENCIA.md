@@ -204,14 +204,28 @@ Chegaram as respostas dos itens 5, 6 e 7 de uma lista enviada pelo proprietário
 | Resultado e nova tentativa | A resposta de cada chamada diz se deu certo; a Nogle valida duplicidade de pagamentos | — | Responde em parte a pergunta 4 |
 | Consulta por `uuid` | Toda ativação ou recarga devolve um `uuid`; `GET /consultaPagamento` com `{"tipo": "ATIVREC", "uuid": "…"}` devolve `status`, `data_pagamento` (**preenchida só se a ativação ou recarga deu certo**) e, no eSIM, `esim`, `activation_code_esim` e `qr_code_esim`. A Nogle diz que pode **disponibilizar** a rota | **Não**: nem a rota nem o campo `uuid` estão na coleção; os exemplos oficiais de resposta trazem só `id` e `data_cadastro` | Resolve a pergunta 10 (recarga sem id no histórico) e o #59: a confirmação passa a ser pela operação exata. **Falta confirmar** o nome e o lugar do `uuid` na resposta e a liberação da rota para a conta da Ora. Implementado desligado (`NOGLE_CONSULTA_PAGAMENTO`) até a primeira resposta real em homologação |
 
+## 3.2 Conferido na API de verdade em 24/11/2026 (só leitura, com o sim do proprietário; lote CONNECT-d)
+
+A primeira chamada real à Nogle, autorizada pelo proprietário só para consultas (entrar, listar os PDVs e ler o estoque de chips). Nada que muda algo na Nogle foi chamado. A chave nunca aparece em log, documento ou resposta.
+
+| Rota | O que respondeu | Efeito na Ora |
+|---|---|---|
+| `POST /auth/token` com `{ chave_acesso }` sozinha | HTTP 200 com `{ retorno, mensagem, token }` | **A chave é do tipo marca** (a pergunta 1, a P9, respondida sem a Nogle): `NOGLE_AUTH_KEY_TYPE=marca`, sem chave secundária |
+| `GET /pdv/listar` | `{ pdvs: [...] }` com 18 PDVs, cada um com `id`, `nome`, `razao_social`, `cnpj`, `cpf`, os contatos, o endereço, `estoque_minimo_chips`, `total_ativo` e os `usuarios` do PDV | A Ora guarda só o id, o nome, a cidade, a UF e o estoque mínimo (minimização); as 11 lojas têm o seu PDV, com o nome "SUPERCELL …" (D-056) |
+| `GET /pdv/estoque` com `{ id }` no corpo | `{ total, data: [{ id, iccid, data_repasse, tipo }] }`, igual ao exemplo oficial; o tipo vem "físico" ou "eSIM" | Confirma de novo o GET com corpo; a Ora guarda o ICCID, o tipo e a data do repasse |
+| `GET /linhas/estoque` | `{ retorno, mensagem, total, data: [{ id, iccid, tipo, pdf_esim, activation_code_esim, qr_code_esim }] }` | **O código de ativação, o QR e o PDF do eSIM vêm na lista**: bastam para instalar o eSIM, e a Ora não os guarda |
+| O filtro do estoque da MVNO | `?tipo=esim` filtra; `?tipo=fisico` (sem acento) filtra; `?tipo=físico` (com acento, como a resposta de 10/11 escreveu) devolve tudo; o mesmo filtro no corpo do GET só funcionou com `esim` | A Ora pede o estoque inteiro, sem filtro, e separa pelo tipo de cada chip |
+
+Os tempos: o login e cada consulta levaram de 0,2 a 1,2 s; a leitura inteira (a lista, a MVNO e os 18 PDVs) leva uns 10 segundos.
+
 ## 4. O que já está pronto e o que falta
 
 | Pronto (testado, sem chamada real) | Falta |
 |---|---|
-| Catálogo das 62 funções gerado da cópia oficial e conferido no CI | Credenciais no ambiente do worker e resposta da P9 (itens 1 a 4 da lista do proprietário não chegaram) |
+| Catálogo das 62 funções gerado da cópia oficial e conferido no CI | ~~Credenciais no ambiente do worker e resposta da P9~~: gravadas, e a P9 respondida em 24/11 (marca; a seção 3.2) |
 | Regras em `packages/dominio/src/nogle.ts`: normalização, pedido só com campos documentados, leitura da resposta e da evidência, listas oficiais (testadas com os exemplos oficiais) | Respostas da Nogle às perguntas 6, 7, 11 e 12; da 10, o nome e o lugar do `uuid` na resposta e a liberação de `/consultaPagamento` |
 | ADR-005: operações persistentes no banco (ativação, recarga, portabilidade), eventos, produção única, resultado desconhecido com a gerência | Homologação com linha/chip de teste autorizados pela Nogle |
-| Worker no servidor (`apps/worker/src/connect/`): token, envio, consulta e listas; ponta a ponta contra servidor local com os exemplos oficiais | Compra com entrega, bloqueio, consumo, carteira/extrato e transferência de chips (fora do ADR-005) |
-| Tela Ora Connect da demonstração (18 testes E2E) e tela real `/connect` | Agendar o worker no servidor (só com a autorização do proprietário) |
+| Worker no servidor (`apps/worker/src/connect/`): token, envio, consulta e listas; ponta a ponta contra servidor local com os exemplos oficiais | Compra com entrega, bloqueio, consumo, carteira/extrato e a transferência de chips (fora do ADR-005; a leitura do estoque de chips entrou no CONNECT-d, em 24/11) |
+| Tela Ora Connect da demonstração (18 testes E2E) e tela real `/connect` | Agendar o worker das operações no servidor (só com a autorização do proprietário; a leitura do estoque de chips já está agendada desde 24/11, com o sim dele) |
 
 **Nunca** colocar chaves no código, no chat ou no navegador: `NOGLE_API_BASE_URL`, `NOGLE_AUTH_KEY_TYPE`, `NOGLE_ACCESS_KEY` e `NOGLE_SECONDARY_KEY` estão no catálogo de variáveis (`docs/integracoes/VARIAVEIS_DE_AMBIENTE.md`) e só o worker as lê. As chaves de controle do ADR-005 (`NOGLE_OPERACOES_HABILITADAS`, `NOGLE_GET_COM_CORPO`, `ORA_ORGANIZACAO_ID`, `CONNECT_UFS`) não são segredo.

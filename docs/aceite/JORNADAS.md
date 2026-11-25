@@ -15,7 +15,7 @@ Em vez de responder roteiro por roteiro, percorra **uma jornada por vez**: o cam
 | [J07 — Devolução e troca](#j07) | 2 | 0 | 2 | 4 (1 / 3 / 0) |
 | [J08 — Caixa e financeiro](#j08) | 13 | 0 | 13 | 22 (10 / 12 / 0) |
 | [J09 — Site e retirada na loja](#j09) | 14 | 0 | 14 | 11 (2 / 9 / 0) |
-| [J10 — Ora Connect](#j10) | 1 | 0 | 1 | 1 (0 / 1 / 0) |
+| [J10 — Ora Connect](#j10) | 2 | 0 | 2 | 2 (0 / 2 / 0) |
 | [J11 — Financeiras (PayJoy e Aiva)](#j11) | 5 | 0 | 5 | 10 (5 / 5 / 0) |
 | [J12 — Marketplaces e Meta](#j12) | 7 | 0 | 7 | 19 (7 / 9 / 3) |
 | [J13 — Assistência](#j13) | 1 | 0 | 1 | 15 (12 / 3 / 0) |
@@ -185,11 +185,12 @@ Em vez de responder roteiro por roteiro, percorra **uma jornada por vez**: o cam
 
 **Ora Connect.** O caminho: Elegibilidade, chip e cliente → operação → fila do worker → Nogle → confirmação ou reconsulta → produção → repasse oficial.
 
-**Os requisitos que os roteiros cobrem:** ORA-CONNECT-009 (🟡 parcial).
+**Os requisitos que os roteiros cobrem:** ORA-CONNECT-009 (🟡 parcial), ORA-INV-011 (🟡 parcial).
 
 | Lote | O que entrega | Roteiro | No ar | Resposta |
 |---|---|---|---|---|
 | CONNECT-c | a conciliação da produção da Ora Connect com os relatórios oficiais de ativações e de recargas da Nogle: o que confere, o valor diferente, o que só a Nogle tem e o que só a Ora tem | [CONNECT-c.md](CONNECT-c.md) | `2efe8cc` (2026-11-18) | — |
+| CONNECT-d | a tela Ora Connect → Chips na Nogle: o estoque virgem de chips de cada loja e o geral da MVNO na Nogle, lido pelo servidor a cada 30 minutos, das 7h às 22h; só leitura | [CONNECT-d.md](CONNECT-d.md) | a publicar | — |
 
 ## J11
 
@@ -264,4 +265,4 @@ Em vez de responder roteiro por roteiro, percorra **uma jornada por vez**: o cam
 | VEL-f | as conexões com o banco aquecidas | [VEL-f.md](VEL-f.md) | `ce8b5db` (2026-11-19) | — |
 | ROB-a | a varredura de todas as telas e o Início que não cai | [ROB-a.md](ROB-a.md) | `069d614` (2026-11-21) | — |
 | QUAL-006a | o aviso no celular quando o servidor dá erro: o erro de uma tela vira o alerta "Erro no servidor do site" no celular do dono e do administrador (no máximo um por hora), o site sem responder por 5 minutos vira "O site não responde" e, na volta, "O site voltou"; os pedidos estranhos (robôs) ficam fora da conta; a Saúde da operação mostra se o aviso está ligado | [QUAL-006a.md](QUAL-006a.md) | `8ac0e78` (2026-11-24) | — |
-| AUD-e | a lista única conciliada (só o que falta, com o que cada resposta bloqueia), os placares de uma fonte só e os roteiros de aceite por jornada (J01 a J15) | [AUD-e.md](AUD-e.md) | a publicar | — |
+| AUD-e | a lista única conciliada (só o que falta, com o que cada resposta bloqueia), os placares de uma fonte só e os roteiros de aceite por jornada (J01 a J15) | [AUD-e.md](AUD-e.md) | `3244734` (2026-11-24) | — |
