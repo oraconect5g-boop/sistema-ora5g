@@ -1284,6 +1284,19 @@
       "pedido_em": "2026-11-25",
       "resposta": null,
       "respondido_em": null
+    },
+    {
+      "lote": "CONNECT-h",
+      "roteiro": "docs/aceite/CONNECT-h.md",
+      "requisitos": [
+        "ORA-CONNECT-007"
+      ],
+      "entrega": "em Ora Connect → Consultar linha, o relatório completo do número e o do cliente (pelo CPF/CNPJ), numa página que dá para imprimir, e as consultas que faltavam",
+      "commit": null,
+      "publicado_em": null,
+      "pedido_em": "2026-11-25",
+      "resposta": null,
+      "respondido_em": null
     }
   ]
 }

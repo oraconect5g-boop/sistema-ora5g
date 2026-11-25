@@ -5,8 +5,9 @@
 // - saiu e não voltou resposta clara → resultado desconhecido: NUNCA reenvia; consulta e a gerência decide;
 // - log só com contagens: nada de CPF, nome, linha, token ou chave.
 import {
-  PEDIDO_DO_ESTOQUE_DA_MVNO, PEDIDO_DOS_PDVS, RELATORIOS_DA_CONCILIACAO, conferirTransferencia, ehTipoDeConsulta, interpretarConsulta,
-  interpretarConsultaPagamento, lerRespostaDaConsulta, pedidoDaConsulta, type RespostaDaConsulta,
+  PEDIDO_DO_ESTOQUE_DA_MVNO, PEDIDO_DOS_PDVS, RELATORIOS_DA_CONCILIACAO, conferirTransferencia, ehTipoDeConsulta, iccidNoFormatoNogle, interpretarConsulta,
+  interpretarConsultaPagamento, lerParteDoRelatorio, lerRespostaDaConsulta, linhaValida, pedidoDaConsulta, pedidoDaPortabilidade, pedidoDasLinhasDoCliente,
+  pedidoDasTransacoesDaLinha, pedidoDoCliente, type ParteDoRelatorio, type RespostaDaConsulta, type TipoDeConsulta,
   interpretarEnvio, lerChips, lerPdvs, lerReferencias, lerRelatorio, lerRespostaDaTransferencia, montarConsulta, montarPedido, montarPedidoDoRelatorio,
   pedidoDaTransferencia, pedidoDoEstoqueDoPdv, type ChipDaNogle, type Evidencia, type TransferenciaParaEnviar,
   type ItemDeReferencia, type LinhaDoRelatorio, type OperacaoParaConsultar, type OperacaoParaEnviar, type PdvDaNogle, type PedidoNogle,
@@ -308,6 +309,53 @@ export async function enviarTransferencias(banco: BancoConnect, nogle: Nogle, li
 }
 
 const esperarDeVerdade = (ms: number) => new Promise<void>((pronto) => { setTimeout(pronto, ms); });
+const FORA_DA_FORMA: RespostaDaConsulta = { situacao: "falhou", mensagem: "Consulta fora da forma." };
+
+async function chamarConsulta(nogle: Nogle, pedido: PedidoNogle | null, ler: (status: number, corpo: unknown) => RespostaDaConsulta): Promise<RespostaDaConsulta> {
+  if (!pedido) return FORA_DA_FORMA;
+  const r = await nogle.chamar(pedido);
+  return r.tipo === "resposta" ? ler(r.status, r.corpo) : { situacao: "falhou", mensagem: motivoDaConsulta(r) };
+}
+const consultaSimples = (nogle: Nogle, tipo: TipoDeConsulta, parametro: string | null, agora: Date) =>
+  chamarConsulta(nogle, pedidoDaConsulta(tipo, parametro, agora), (s, c) => lerRespostaDaConsulta(tipo, s, c));
+const parteDoRelatorio = (nogle: Nogle, parte: ParteDoRelatorio, pedido: PedidoNogle) =>
+  chamarConsulta(nogle, pedido, (s, c) => lerParteDoRelatorio(parte, s, c));
+
+/**
+ * O relatório do número (CONNECT-h; a D-060): os detalhes primeiro (a Nogle não achou ou não respondeu: o relatório para aí,
+ * com o aviso); depois o saldo, as recargas, as cobranças em aberto, o consumo do mês (internet, ligações e SMS), a
+ * portabilidade (quando a linha veio de outra operadora), a ativação do chip e as transações dos últimos 12 meses. A parte que
+ * falha fica marcada no relatório, sem derrubar as outras. Tudo GET (ou o POST que só lê): nada muda na Nogle.
+ */
+async function relatorioDoNumero(nogle: Nogle, linha: string, agora: Date): Promise<RespostaDaConsulta> {
+  const detalhes = await consultaSimples(nogle, "linha_detalhes", linha, agora);
+  if (detalhes.situacao !== "respondida") return detalhes;
+  const partes: Record<string, RespostaDaConsulta> = { detalhes };
+  for (const tipo of ["linha_saldo", "linha_historico", "linha_cobrancas", "linha_consumo", "linha_consumo_voz", "linha_consumo_sms"] as const) {
+    partes[tipo] = await consultaSimples(nogle, tipo, linha, agora);
+  }
+  const d = detalhes.resposta ?? {};
+  const doadora = typeof d.portabilidade_linha_doadora === "string" ? d.portabilidade_linha_doadora : "";
+  if (linhaValida(doadora)) partes.portabilidade = await parteDoRelatorio(nogle, "portabilidade", pedidoDaPortabilidade(linha, doadora));
+  const iccid = typeof d.iccid === "string" ? d.iccid : "";
+  if (iccidNoFormatoNogle(iccid)) partes.ativacao = await consultaSimples(nogle, "iccid_ativacao", iccid, agora);
+  partes.transacoes = await parteDoRelatorio(nogle, "transacoes", pedidoDasTransacoesDaLinha(linha, agora));
+  return { situacao: "respondida", mensagem: "", resposta: { partes } };
+}
+
+/** O relatório do cliente (CONNECT-h): o cadastro (sem ele, para aí), as linhas dele e a situação de cada uma (as ativas primeiro, até 10). */
+async function relatorioDoCliente(nogle: Nogle, documento: string, agora: Date): Promise<RespostaDaConsulta> {
+  const cliente = await parteDoRelatorio(nogle, "cliente", pedidoDoCliente(documento));
+  if (cliente.situacao !== "respondida") return cliente;
+  const linhas = await parteDoRelatorio(nogle, "linhas_do_cliente", pedidoDasLinhasDoCliente(documento));
+  const lista = linhas.situacao === "respondida" && Array.isArray(linhas.resposta?.linhas)
+    ? (linhas.resposta.linhas as { linha: string | null; status: string | null }[]) : [];
+  const situacoes: Record<string, RespostaDaConsulta> = {};
+  const escolhidas = lista.filter((l): l is { linha: string; status: string | null } => typeof l.linha === "string" && linhaValida(l.linha))
+    .sort((a, b) => Number(b.status === "ATIVA") - Number(a.status === "ATIVA")).slice(0, 10);
+  for (const l of escolhidas) situacoes[l.linha] = await consultaSimples(nogle, "linha_detalhes", l.linha, agora);
+  return { situacao: "respondida", mensagem: "", resposta: { partes: { cliente, linhas, situacoes } } };
+}
 const motivoDaConsulta = (r: Exclude<ResultadoChamada, { tipo: "resposta" }>) =>
   r.tipo === "falha" ? "Sem conexão com a Nogle agora: tente de novo em instantes."
     : r.tipo === "bloqueada" ? "A consulta com corpo está desligada neste servidor (NOGLE_GET_COM_CORPO)."
@@ -334,13 +382,16 @@ export async function responderConsultas(banco: BancoConnect, nogle: Nogle, opco
       continue;
     }
     for (const c of fila) {
-      const pedido = ehTipoDeConsulta(c.tipo) ? pedidoDaConsulta(c.tipo, c.parametro, agora()) : null;
+      const p = (c.parametro ?? "").replace(/\D/g, "");
       let resposta: RespostaDaConsulta;
-      if (!pedido || !ehTipoDeConsulta(c.tipo)) {
-        resposta = { situacao: "falhou", mensagem: "Consulta fora da forma." };
+      if (!ehTipoDeConsulta(c.tipo)) {
+        resposta = FORA_DA_FORMA;
+      } else if (c.tipo === "linha_completa") {
+        resposta = linhaValida(p) ? await relatorioDoNumero(nogle, p, agora()) : FORA_DA_FORMA;
+      } else if (c.tipo === "cliente_completo") {
+        resposta = /^(\d{11}|\d{14})$/.test(p) ? await relatorioDoCliente(nogle, p, agora()) : FORA_DA_FORMA;
       } else {
-        const r = await nogle.chamar(pedido);
-        resposta = r.tipo === "resposta" ? lerRespostaDaConsulta(c.tipo, r.status, r.corpo) : { situacao: "falhou", mensagem: motivoDaConsulta(r) };
+        resposta = await consultaSimples(nogle, c.tipo, c.parametro, agora());
       }
       await banco.registrarRespostaDaConsulta(c.consulta_id, resposta);
       if (resposta.situacao === "respondida") resumo.respondidas++;

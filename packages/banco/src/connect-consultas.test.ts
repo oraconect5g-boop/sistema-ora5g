@@ -5,7 +5,7 @@
 import type { PGlite } from "@electric-sql/pglite";
 import { afterAll, afterEach, beforeAll, beforeEach, describe, expect, it } from "vitest";
 
-import { comDigitoLuhn, comoUsuario, criarBanco, type Sessao } from "./banco-de-teste";
+import { cnpj, comDigitoLuhn, comoUsuario, cpf, criarBanco, type Sessao } from "./banco-de-teste";
 import { ids, montarCenario } from "./cenario";
 
 let db: PGlite;
@@ -45,7 +45,7 @@ const consultar = (s: Sessao, tipo: string, parametro: string | null, chave: str
 const erroAoConsultar = (s: Sessao | null, tipo: string, parametro: string | null, chave: string) =>
   erroComo(s, "select public.connect_consultar(p_tipo => $1, p_parametro => $2, p_chave => $3)", [tipo, parametro, chave]);
 const consulta = async (id: string) => (await db.query<Record<string, unknown>>(
-  "select tipo, parametro, situacao, unidade_id, pedida_por, resposta, mensagem, resposta_apagada_em from public.connect_consultas where id = $1",
+  "select tipo, parametro, parametro_mascarado, situacao, unidade_id, pedida_por, resposta, mensagem, resposta_apagada_em from public.connect_consultas where id = $1",
   [id])).rows[0];
 const aFazer = (limite = 5) => comoServico(async () => (await db.query<{ consulta_id: string; tipo: string; parametro: string | null }>(
   "select * from public.connect_worker_consultas_a_fazer($1, $2) order by consulta_id", [ids.organizacao, limite])).rows);
@@ -138,5 +138,51 @@ describe("as consultas da Nogle (CONNECT-g)", () => {
     const desconhecida = "00000000-0000-4000-8000-000000009999";
     expect(await comoServico(() => erroDe(() => db.query("select * from public.connect_worker_consultas_a_fazer($1, 5)", [desconhecida])))).toBe("22023");
     expect(await comoServico(() => erroDe(() => db.query("select public.connect_worker_limpar_consultas($1)", [desconhecida])))).toBe("22023");
+  });
+});
+
+// CONNECT-h (25/11/2026): a consulta completa, com os relatórios individuais do número e do cliente (pelo CPF/CNPJ).
+describe("a consulta completa: o relatório do número e o do cliente (CONNECT-h)", () => {
+  const CPF = cpf("246813579");
+  const CNPJ = cnpj("11222333", "0001");
+
+  it("a loja pede o relatório do número, o do cliente (pelo CPF ou CNPJ válido) e as consultas novas; o CPF fica mascarado", async () => {
+    const vendedor = await naLoja(ids.vendedorA, ids.lojaA);
+    for (const [tipo, parametro] of [["linha_completa", LINHA], ["linha_cobrancas", LINHA], ["linha_consumo_voz", LINHA], ["linha_consumo_sms", LINHA],
+      ["linha_existe", LINHA], ["iccid_plano_pago", ICCID], ["iccid_situacao", ICCID], ["cliente_completo", CNPJ]] as const) {
+      expect(await consultar(vendedor, tipo, parametro, `h:${tipo}`), tipo).toMatch(/^[0-9a-f-]{36}$/);
+    }
+    const doCliente = await consulta(await consultar(vendedor, "cliente_completo", CPF, "h:cpf"));
+    expect(doCliente).toMatchObject({ tipo: "cliente_completo", parametro: CPF, parametro_mascarado: `•••.•••.${CPF.slice(6, 9)}-${CPF.slice(9)}` });
+    expect((await consulta(await consultar(vendedor, "cliente_completo", CNPJ, "h:cnpj2")))?.parametro_mascarado).toBe(`••.•••.•••/${CNPJ.slice(8, 12)}-${CNPJ.slice(12)}`);
+    // CPF ou CNPJ inválido, ou uma linha no lugar do documento: recusado.
+    expect(await erroAoConsultar(vendedor, "cliente_completo", `${CPF.slice(0, -1)}${(Number(CPF.slice(-1)) + 1) % 10}`, "h:x1")).toBe("22023");
+    expect(await erroAoConsultar(vendedor, "cliente_completo", LINHA, "h:x2")).toBe("22023");
+    expect(await erroAoConsultar(vendedor, "linha_completa", ICCID, "h:x3")).toBe("22023");
+    expect(await erroAoConsultar(vendedor, "iccid_situacao", LINHA, "h:x4")).toBe("22023");
+    // O técnico, sem a Ora Connect, não pede nem o relatório.
+    expect(await erroAoConsultar(await naLoja(ids.tecnico, ids.assistencia), "linha_completa", LINHA, "h:x5")).toBe("42501");
+  });
+
+  it("o relatório grande cabe (até 100 KB); depois de 24 horas, o CPF sai com a resposta e fica o mascarado", async () => {
+    const vendedor = await naLoja(ids.vendedorA, ids.lojaA);
+    const relatorio = await consultar(vendedor, "linha_completa", LINHA, "h:grande");
+    const cliente = await consultar(vendedor, "cliente_completo", CPF, "h:cliente");
+    const semResposta = await consultar(vendedor, "cliente_completo", CNPJ, "h:falhou");
+    expect((await aFazer()).length).toBe(3);
+    const grande = { partes: { detalhes: { situacao: "respondida", resposta: { texto: "x".repeat(60_000) } } } };
+    expect(await registrar(relatorio, { situacao: "respondida", resposta: grande })).toBe("respondida");
+    expect(await comoServico(() => erroDe(() => db.query("select public.connect_worker_registrar_resposta_da_consulta($1, $2::jsonb)",
+      [cliente, JSON.stringify({ situacao: "respondida", resposta: { texto: "x".repeat(110_000) } })])))).toBe("22023");
+    expect(await registrar(cliente, { situacao: "respondida", resposta: { partes: { cliente: { situacao: "respondida", resposta: { nome: "Cliente Fictício" } } } } })).toBe("respondida");
+    expect(await registrar(semResposta, { situacao: "nao_encontrada", mensagem: "Cliente não encontrado" })).toBe("nao_encontrada");
+    await db.query("update public.connect_consultas set pedida_em = now() - interval '25 hours', respondida_em = now() - interval '25 hours' where id = any($1::uuid[])",
+      [[relatorio, cliente, semResposta]]);
+    expect(await limpar()).toEqual({ vencidas: 0, apagadas: 3 });
+    expect(await consulta(cliente)).toMatchObject({ parametro: null, resposta: null, parametro_mascarado: `•••.•••.${CPF.slice(6, 9)}-${CPF.slice(9)}` });
+    expect(await consulta(semResposta)).toMatchObject({ parametro: null, situacao: "nao_encontrada" });
+    // A linha do relatório do número fica (só a resposta sai).
+    expect(await consulta(relatorio)).toMatchObject({ parametro: LINHA, resposta: null });
+    expect(await limpar()).toEqual({ vencidas: 0, apagadas: 0 });
   });
 });

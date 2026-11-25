@@ -1317,6 +1317,7 @@ export type Database = {
           mensagem: string | null
           organizacao_id: string
           parametro: string | null
+          parametro_mascarado: string | null
           pedida_em: string
           pedida_por: string
           respondida_em: string | null
@@ -1333,6 +1334,7 @@ export type Database = {
           mensagem?: string | null
           organizacao_id: string
           parametro?: string | null
+          parametro_mascarado?: string | null
           pedida_em?: string
           pedida_por: string
           respondida_em?: string | null
@@ -1349,6 +1351,7 @@ export type Database = {
           mensagem?: string | null
           organizacao_id?: string
           parametro?: string | null
+          parametro_mascarado?: string | null
           pedida_em?: string
           pedida_por?: string
           respondida_em?: string | null

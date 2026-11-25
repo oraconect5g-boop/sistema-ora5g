@@ -697,15 +697,23 @@ export function conferirTransferencia(t: TransferenciaParaEnviar, antes: readonl
 
 export const TIPOS_DE_CONSULTA = [
   "linha_detalhes", "linha_saldo", "linha_historico", "linha_consumo", "iccid_numero", "iccid_ativacao", "carteira_saldo",
+  // CONNECT-h: os relatórios (do número e do cliente) e as consultas que faltavam.
+  "linha_completa", "cliente_completo", "linha_cobrancas", "linha_consumo_voz", "linha_consumo_sms", "linha_existe", "iccid_plano_pago",
+  "iccid_situacao",
 ] as const;
 export type TipoDeConsulta = (typeof TIPOS_DE_CONSULTA)[number];
 export const ehTipoDeConsulta = (v: unknown): v is TipoDeConsulta => typeof v === "string" && (TIPOS_DE_CONSULTA as readonly string[]).includes(v);
 
-/** O que cada consulta pede: o número da linha, o ICCID do chip ou nada (a carteira). */
-export const PARAMETRO_DA_CONSULTA: Record<TipoDeConsulta, "linha" | "iccid" | null> = {
+/** O que cada consulta pede: o número da linha, o ICCID do chip, o CPF/CNPJ do cliente ou nada (a carteira). */
+export const PARAMETRO_DA_CONSULTA: Record<TipoDeConsulta, "linha" | "iccid" | "documento" | null> = {
   linha_detalhes: "linha", linha_saldo: "linha", linha_historico: "linha", linha_consumo: "linha",
   iccid_numero: "iccid", iccid_ativacao: "iccid", carteira_saldo: null,
+  linha_completa: "linha", cliente_completo: "documento", linha_cobrancas: "linha", linha_consumo_voz: "linha", linha_consumo_sms: "linha",
+  linha_existe: "linha", iccid_plano_pago: "iccid", iccid_situacao: "iccid",
 };
+/** As consultas que o worker faz em partes (várias chamadas) e mostra num relatório. */
+export const CONSULTAS_COMPOSTAS = ["linha_completa", "cliente_completo"] as const satisfies readonly TipoDeConsulta[];
+export const ehConsultaComposta = (t: TipoDeConsulta) => (CONSULTAS_COMPOSTAS as readonly string[]).includes(t);
 
 export const NOMES_DAS_CONSULTAS: Record<TipoDeConsulta, string> = {
   linha_detalhes: "Situação da linha",
@@ -715,6 +723,14 @@ export const NOMES_DAS_CONSULTAS: Record<TipoDeConsulta, string> = {
   iccid_numero: "Número do chip",
   iccid_ativacao: "Ativação do chip",
   carteira_saldo: "Saldo da carteira da Ora",
+  linha_completa: "Relatório completo do número",
+  cliente_completo: "Relatório do cliente",
+  linha_cobrancas: "Cobranças em aberto da linha",
+  linha_consumo_voz: "Ligações no mês",
+  linha_consumo_sms: "SMS no mês",
+  linha_existe: "O número existe na Nogle?",
+  iccid_plano_pago: "Plano pago do chip",
+  iccid_situacao: "Situação do chip",
 };
 
 /** O mês corrente em Brasília (MM e AAAA). */
@@ -741,6 +757,15 @@ export function pedidoDaConsulta(tipo: TipoDeConsulta, parametro: string | null,
     case "iccid_numero": return iccid ? { metodo: "GET", caminho: "/linhas/numeroPeloIccid", corpo: { iccid: p } } : null;
     case "iccid_ativacao": return iccid ? { metodo: "GET", caminho: "/ativacao/detalhar", corpo: { iccid: p } } : null;
     case "carteira_saldo": return { metodo: "GET", caminho: "/saldo/saldo", corpo: {} };
+    case "linha_cobrancas": return linha ? { metodo: "GET", caminho: "/linhas/cobrancasGeradas", corpo: { numero: p } } : null;
+    case "linha_consumo_voz": return linha ? { metodo: "GET", caminho: "/linhas/consumo/voz", corpo: { linha: p, ...mesEmBrasilia(agora) } } : null;
+    case "linha_consumo_sms": return linha ? { metodo: "GET", caminho: "/linhas/consumo/sms", corpo: { linha: p, ...mesEmBrasilia(agora) } } : null;
+    case "linha_existe": return linha ? { metodo: "GET", caminho: "/linhas/verificaExistencia", corpo: { numero: p } } : null;
+    case "iccid_plano_pago": return iccid ? { metodo: "GET", caminho: "/ativacao/verificaPlanoPago", corpo: { iccid: p } } : null;
+    // validaIccid é POST na documentação, mas só lê (a situação do chip).
+    case "iccid_situacao": return iccid ? { metodo: "POST", caminho: "/ativacao/validaIccid", corpo: { iccid: p } } : null;
+    // Os relatórios são feitos em partes pelo worker (pedidosDoRelatorio*).
+    case "linha_completa": case "cliente_completo": return null;
   }
 }
 
@@ -787,6 +812,10 @@ function camposDaConsulta(tipo: TipoDeConsulta, corpo: Record<string, unknown>):
         motivo_cancelamento: curto(d.motivo_cancelamento_linha, 40), bloqueada: simOuNao(d.bloqueada), esim: simOuNao(d.esim),
         portada: simOuNao(d.portin), recarga_automatica: ativaOuNao(d.recarga_automatica),
         recarga_automatica_plano: curto(d.recarga_automatica_plano, 80), portabilidade_status: curto(d.portabilidade_status, 80),
+        // CONNECT-h: o resto que o relatório do número mostra (o apelido que a Ora deu, o cartão e a portabilidade).
+        linha_apelido: curto(d.linha_apelido, 80), data_inicio_plano: diaOuNada(d.data_inicio_plano), recarga_cartao: ativaOuNao(d.recorrencia_cartao),
+        portabilidade_linha_doadora: digitosOuNada(d.portabilidade_linha_doadora), portabilidade_data_agendamento: momentoOuNada(d.portabilidade_data_agendamento),
+        portabilidade_data_sucesso: diaOuNada(d.portabilidade_data_sucesso),
       };
     }
     case "linha_saldo": {
@@ -802,7 +831,8 @@ function camposDaConsulta(tipo: TipoDeConsulta, corpo: Record<string, unknown>):
       // Fora de propósito: "solicitado_por" (o nome ou o login de quem pediu).
       const recargas = corpo.historico.filter(ehObjeto).slice(0, 12).map((r) => ({
         quando: momentoOuNada(r.data_recarga) ?? momentoOuNada(r.data_cadastro), plano: curto(r.plano, 80),
-        valor_centavos: centavosDeValorNogle(r.valor_pago ?? r.valor), forma: curto(r.formaPagto, 20),
+        // "valor" é o valor pago; "valor_pago" é o que a Ora pagou à Nogle (o custo, fora da tela da loja: a documentação).
+        valor_centavos: centavosDeValorNogle(r.valor), forma: curto(r.formaPagto, 20),
       }));
       return { recargas };
     }
@@ -830,6 +860,39 @@ function camposDaConsulta(tipo: TipoDeConsulta, corpo: Record<string, unknown>):
       const saldo = centavosDeValorNogle(corpo.saldo);
       return saldo === null ? null : { saldo_centavos: saldo };
     }
+    case "linha_cobrancas": {
+      if (!Array.isArray(corpo.data)) return null;
+      // Só quando, quanto e como; os links, o boleto e o Pix (o meio de pagar do cliente) ficam fora.
+      const cobrancas = corpo.data.filter(ehObjeto).slice(0, 20).map((c) => ({
+        quando: momentoOuNada(c.data_solicitacao), valor_centavos: centavosDeValorNogle(c.valor),
+        forma: textoOuNada(c.link) ? "LINK" : textoOuNada(c.boleto_link) ? "BOLETO" : textoOuNada(c.pix_copia_cola) || textoOuNada(c.pix_QRCode) ? "PIX"
+          : textoOuNada(c.cartao_de_credito) ? "CARTÃO" : null,
+      }));
+      return { cobrancas };
+    }
+    case "linha_consumo_voz": case "linha_consumo_sms": {
+      if (!Array.isArray(corpo.data)) return null;
+      const dias = corpo.data.filter(ehObjeto).slice(0, 31)
+        .map((d) => ({ dia: diaOuNada(d.dtConsumo), quantidade: inteiroOuNada(d.qtUsado) }))
+        .filter((d): d is { dia: string; quantidade: number } => d.dia !== null && d.quantidade !== null);
+      // Ligações: segundos por dia; SMS: quantos por dia.
+      return { dias, total: dias.reduce((soma, d) => soma + d.quantidade, 0), unidade: tipo === "linha_consumo_voz" ? "segundos" : "sms" };
+    }
+    case "iccid_plano_pago": {
+      if (!("plano" in corpo)) return null;
+      const plano = textoOuNada(corpo.plano);
+      return { plano_pago: plano && /^\d{1,9}$/.test(plano) ? plano : null };
+    }
+    case "iccid_situacao": {
+      const s = situacaoDoIccid(corpo.codigo);
+      if (s.codigo === null) return null;
+      const linha = digitosOuNada(corpo.linha);
+      return { codigo: s.codigo, situacao: s.nome, orientacao: s.orientacao, linha: linha && linhaValida(linha) ? linha : null };
+    }
+    case "linha_existe":
+    case "linha_completa":
+    case "cliente_completo":
+      return null;
   }
 }
 
@@ -841,10 +904,84 @@ function camposDaConsulta(tipo: TipoDeConsulta, corpo: Record<string, unknown>):
 export function lerRespostaDaConsulta(tipo: TipoDeConsulta, statusHttp: number, corpo: unknown): RespostaDaConsulta {
   if (statusHttp >= 500 || statusHttp === 0) return { situacao: "falhou", mensagem: "A Nogle não respondeu agora: tente de novo em instantes." };
   if (statusHttp === 401 || statusHttp === 403) return { situacao: "falhou", mensagem: `A Nogle recusou o acesso (HTTP ${statusHttp}).` };
+  // A existência vem com "retorno": false quando a linha não existe, e a resposta é a própria existência (o exemplo oficial).
+  const existencia = tipo === "linha_existe" && statusHttp >= 200 && statusHttp < 300 ? objeto(objeto(corpo)?.existencia) : undefined;
+  if (existencia && typeof existencia.existe === "boolean") {
+    return { situacao: "respondida", mensagem: "", resposta: { existe: existencia.existe, explicacao: curto(existencia.existe_msg, 120) } };
+  }
   const n = normalizarResposta(statusHttp, corpo);
   const mensagem = n.mensagem.slice(0, 200);
   if (!n.ok) return { situacao: "nao_encontrada", mensagem: mensagem || `A Nogle não achou (HTTP ${statusHttp}).` };
   const o = objeto(corpo);
   const resposta = o ? camposDaConsulta(tipo, o) : null;
   return resposta ? { situacao: "respondida", mensagem, resposta } : { situacao: "falhou", mensagem: "A resposta da Nogle veio fora da forma documentada." };
+}
+
+// -----------------------------------------------------------------------------
+// CONNECT-h — as partes dos relatórios: do número (a portabilidade e as transações da linha) e do cliente (o cadastro e as
+// linhas dele). O worker monta cada relatório chamando as consultas simples e estas.
+// -----------------------------------------------------------------------------
+
+/** O dia em Brasília (AAAA-MM-DD). */
+const diaEmBrasilia = (instante: Date) => new Intl.DateTimeFormat("en-CA", { timeZone: "America/Sao_Paulo" }).format(instante);
+
+/** O último status da portabilidade da linha (a linha doadora vem nos detalhes da linha). */
+export const pedidoDaPortabilidade = (linha: string, doadora: string): PedidoNogle =>
+  ({ metodo: "GET", caminho: "/portabilidade/status", corpo: { linha, linha_doadora: doadora } });
+
+/** As transações da linha (a ativação e as recargas) nos últimos 12 meses: o relatório oficial, filtrado pela linha. */
+export function pedidoDasTransacoesDaLinha(linha: string, agora: Date): PedidoNogle {
+  return { metodo: "GET", caminho: "/relatorios/transacoes",
+    corpo: { data_de: diaEmBrasilia(new Date(agora.getTime() - 365 * 86_400_000)), data_ate: diaEmBrasilia(agora), page: 1, linha } };
+}
+export const pedidoDoCliente = (documento: string): PedidoNogle => ({ metodo: "GET", caminho: "/cliente/buscar", corpo: { documento } });
+export const pedidoDasLinhasDoCliente = (documento: string): PedidoNogle => ({ metodo: "GET", caminho: "/cliente/linhas", corpo: { documento } });
+
+export type ParteDoRelatorio = "portabilidade" | "transacoes" | "cliente" | "linhas_do_cliente";
+
+function camposDaParte(parte: ParteDoRelatorio, corpo: Record<string, unknown>): Record<string, unknown> | null {
+  switch (parte) {
+    case "portabilidade": {
+      const s = objeto(corpo.status);
+      // Fora de propósito: o link do termo e o do termo assinado (com os dados do cliente).
+      return s ? { status: curto(s.status, 60), data_aceite: momentoOuNada(s.data_aceite), data_agendamento: momentoOuNada(s.data_agendamento),
+        data_sucesso: diaOuNada(s.data_sucesso) } : null;
+    }
+    case "transacoes": {
+      if (!Array.isArray(corpo.data)) return null;
+      // O nome e o documento do cliente ficam fora (já estão nos detalhes da linha, mascarados).
+      return { transacoes: corpo.data.filter(ehObjeto).slice(0, 50).map((x) => ({
+        quando: momentoOuNada(x.data_ativacao), tipo: curto(x.tipo_transacao, 20), plano: curto(x.plano_atual ?? x.plano_ativacao, 80),
+        valor_centavos: centavosDeValorNogle(x.plano_valor), forma: curto(x.forma_pagto, 20),
+      })) };
+    }
+    case "cliente": {
+      const c = objeto(corpo.cliente);
+      if (!c) return null;
+      const e = objeto(c.endereco);
+      // Fora de propósito: a rua, o número e o CEP (a tela mostra a cidade).
+      return {
+        nome: curto(c.nome), apelido: curto(c.apelido, 80), documento: documentoMascarado(textoOuNada(c.cpf) ?? textoOuNada(c.cnpj)),
+        nascimento: diaOuNada(c.nascimento), email: curto(c.email, 120), telefone: digitosOuNada(c.telefone), cidade: curto(e?.municipio, 80),
+        uf: curto(e?.uf, 2), cliente_desde: diaOuNada(c.data_cadastro),
+      };
+    }
+    case "linhas_do_cliente": {
+      if (!Array.isArray(corpo.linhas)) return null;
+      return { linhas: corpo.linhas.filter(ehObjeto).slice(0, 30).map((l) => ({
+        linha: digitosOuNada(l.linha), iccid: digitosOuNada(l.iccid), status: curto(l.status, 40),
+      })) };
+    }
+  }
+}
+
+/** A resposta de uma parte de relatório, com as mesmas regras de lerRespostaDaConsulta. */
+export function lerParteDoRelatorio(parte: ParteDoRelatorio, statusHttp: number, corpo: unknown): RespostaDaConsulta {
+  if (statusHttp >= 500 || statusHttp === 0) return { situacao: "falhou", mensagem: "A Nogle não respondeu agora: tente de novo em instantes." };
+  if (statusHttp === 401 || statusHttp === 403) return { situacao: "falhou", mensagem: `A Nogle recusou o acesso (HTTP ${statusHttp}).` };
+  const n = normalizarResposta(statusHttp, corpo);
+  if (!n.ok) return { situacao: "nao_encontrada", mensagem: n.mensagem.slice(0, 200) || `A Nogle não achou (HTTP ${statusHttp}).` };
+  const o = objeto(corpo);
+  const resposta = o ? camposDaParte(parte, o) : null;
+  return resposta ? { situacao: "respondida", mensagem: n.mensagem.slice(0, 200), resposta } : { situacao: "falhou", mensagem: "A resposta da Nogle veio fora da forma documentada." };
 }

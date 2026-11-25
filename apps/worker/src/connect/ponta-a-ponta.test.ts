@@ -71,6 +71,9 @@ beforeAll(async () => {
       if (caminho === "/linhas/historico") return json(200, exemplo("/linhas/historico"));
       // CONNECT-g: as consultas que só leem, com os exemplos oficiais (o saldo da linha e o da carteira).
       if (caminho === "/linhas/saldo") return json(200, exemplo("/linhas/saldo"));
+      // CONNECT-h: as partes do relatório do número, com os exemplos oficiais.
+      if (["/linhas/detalhes", "/linhas/cobrancasGeradas", "/linhas/consumo/dados", "/linhas/consumo/voz", "/linhas/consumo/sms", "/ativacao/detalhar",
+        "/relatorios/transacoes"].includes(caminho)) return json(200, exemplo(caminho));
       if (caminho === "/saldo/saldo") return json(200, exemplo("/saldo/saldo"));
       if (caminho === "/portabilidade/status") return json(200, { retorno: true, mensagem: "", status: { status: "Sucesso", data_sucesso: "2022-06-08" } });
       if (caminho === "/planos") return json(200, exemplo("/planos"));
@@ -363,5 +366,27 @@ describe("as consultas que só leem (CONNECT-g)", () => {
     expect(await lida(carteira)).toEqual({ situacao: "respondida", resposta: { saldo_centavos: 50000 } });
     // Cada um vê só a sua.
     expect((await comoUsuario(db, ana, () => db.query("select id from public.connect_consultas"))).rows).toEqual([{ id: saldoDaLinha }]);
+  });
+});
+
+describe("o relatório do número (CONNECT-h)", () => {
+  it("a loja pede o relatório; o worker faz cada parte pelo transporte de verdade (GET com corpo) e grava o relatório limpo", async () => {
+    const ana = await naLoja(ids.vendedorA, ids.lojaA);
+    const id = await valor<string>(ana, "select public.connect_consultar(p_tipo => 'linha_completa', p_parametro => '51900000000', p_chave => 'pp:relatorio') as v");
+    const nogle = new ClienteNogle({ tipo: "marca", chaveAcesso: "chave-ficticia" }, transporteHttp(base, 500), { getComCorpo: true });
+    const antes = recebidos.length;
+    let relogio = 0;
+    expect(await responderConsultas(banco, nogle, { duracaoMs: 3, esperaMs: 2, relogio: () => relogio, esperar: async (ms) => { relogio += ms; } }))
+      .toEqual({ respondidas: 1, nao_encontradas: 0, falhas: 0 });
+    // O exemplo oficial dos detalhes não tem portabilidade, e o ICCID dele vem cortado ("895517011..."): essas duas partes não são pedidas.
+    expect(recebidos.slice(antes).filter((p) => p.caminho !== "/auth/token").map((p) => p.caminho)).toEqual([
+      "/linhas/detalhes", "/linhas/saldo", "/linhas/historico", "/linhas/cobrancasGeradas", "/linhas/consumo/dados", "/linhas/consumo/voz",
+      "/linhas/consumo/sms", "/relatorios/transacoes",
+    ]);
+    const gravada = (await db.query<{ situacao: string; resposta: { partes: Record<string, { situacao: string }> } }>(
+      "select situacao, resposta from public.connect_consultas where id = $1", [id])).rows[0];
+    expect(gravada?.situacao).toBe("respondida");
+    expect(Object.values(gravada?.resposta.partes ?? {}).every((p) => p.situacao === "respondida")).toBe(true);
+    expect(JSON.stringify(gravada)).not.toMatch(/esim_pdf|00000000000|link_url/);
   });
 });
