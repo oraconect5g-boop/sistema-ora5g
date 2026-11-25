@@ -218,6 +218,14 @@ A primeira chamada real à Nogle, autorizada pelo proprietário só para consult
 
 Os tempos: o login e cada consulta levaram de 0,2 a 1,2 s; a leitura inteira (a lista, a MVNO e os 18 PDVs) leva uns 10 segundos.
 
+## 3.3 A primeira transferência de verdade (25/11/2026, com o sim do proprietário)
+
+Uma operação só, enviada uma vez, sem nova tentativa automática (a regra do ADR-005 para o resultado desconhecido), com o estoque do PDV lido antes e depois:
+
+| Rota | O que respondeu | Efeito na Ora |
+|---|---|---|
+| `POST /pdv/transferir-chip-esim` com `{"id": 5233, "quantidade": 1}` (o PDV da Santa Cândida) | HTTP 200, `{"message": "Sucesso."}`, em 0,5 s, igual ao exemplo oficial; a resposta **não diz qual eSIM** foi | O PDV passou de 3 para 4 eSIM (o novo termina em 431415, escolhido pela Nogle); o estoque sem PDV, de 155 para 154 eSIM. A transferência pelo sistema, quando vier, confirma pelo estoque do PDV lido de novo (a resposta só diz "Sucesso.") |
+
 ## 4. O que já está pronto e o que falta
 
 | Pronto (testado, sem chamada real) | Falta |
