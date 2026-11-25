@@ -1,6 +1,6 @@
 import { randomUUID } from "node:crypto";
 
-import { ArrowLeft, ArrowRightLeft, Cpu, Search, Store } from "lucide-react";
+import { ArrowLeft, ArrowRightLeft, Cpu, Search, Store, TriangleAlert } from "lucide-react";
 import type { Metadata } from "next";
 import Form from "next/form";
 import Link from "next/link";
@@ -11,8 +11,8 @@ import { permite } from "../../../lib/acesso/molde";
 import { FalhaDoServico, obterSessao } from "../../../lib/acesso/sessao";
 import {
   abaixoDoMinimo, buscaDeIccid, chipsQueChegaram, ehErroDaTransferencia, ehErroDosChips, ERROS_DA_TRANSFERENCIA, ERROS_DOS_CHIPS, iccidEmBlocos,
-  NOME_DO_TIPO, NOMES_DOS_TIPOS_DE_TRANSFERENCIA, separarPdvs, SITUACOES_DA_TRANSFERENCIA, situacaoDaLeitura, somar, type ChipDaTela,
-  type LeituraDaTela, type PdvDaTela, type TipoDeTransferencia, type TransferenciaDaTela,
+  MAXIMO_DAS_DIVERGENCIAS, NOME_DO_TIPO, NOMES_DOS_TIPOS_DE_TRANSFERENCIA, separarPdvs, SITUACOES_DA_TRANSFERENCIA, situacaoDaLeitura, somar,
+  type ChipDaTela, type DivergenciaDaTela, type LeituraDaTela, type PdvDaTela, type TipoDeTransferencia, type TransferenciaDaTela,
 } from "../../../lib/connect/chips";
 import { agora, numero } from "../../../lib/formato";
 import { textoDoParametro, type ValorDeParametro } from "../../../lib/parametros";
@@ -23,6 +23,8 @@ export const dynamic = "force-dynamic";
 
 /** Quantos chips a lista de um PDV mostra; acima disso, a busca pelo ICCID. */
 const LIMITE_DA_LISTA = 300;
+/** Quantos chips para conferir a tela lista (CONNECT-f). */
+const LIMITE_DAS_DIVERGENCIAS = 100;
 const campo = "mt-1 min-h-11 w-full rounded-botao border border-borda bg-white px-3 text-sm outline-none focus:border-acao focus:ring-2 focus:ring-acao/20";
 const quando = (iso: string) =>
   new Intl.DateTimeFormat("pt-BR", { timeZone: "America/Sao_Paulo", dateStyle: "short", timeStyle: "short" }).format(new Date(iso)).replace(",", " às");
@@ -37,6 +39,8 @@ type Parametros = {
 // O estoque de chips da Nogle (lote CONNECT-d; ORA-INV-011), SÓ LEITURA. O worker do servidor lê a Nogle a cada 30 minutos,
 // das 7h às 22h, e grava no banco; aqui cada um vê pela RLS: o dono, a rede inteira; o administrador, os PDVs e as contagens
 // (para ligar cada PDV à loja); quem opera a Ora Connect numa loja, o PDV e os chips dela. A tela não chama a Nogle.
+// CONNECT-f: depois de cada leitura, os chips físicos do PDV de cada loja ligada entram no estoque dela pelo ICCID; o dono vê
+// aqui os "chips para conferir" (disponíveis no estoque de uma loja e fora do PDV dela na Nogle).
 export default async function ChipsDaNogle({ searchParams }: { searchParams: Promise<Parametros> }) {
   const parametros = await searchParams;
   const sessao = await obterSessao({ exigirLoja: true });
@@ -46,7 +50,8 @@ export default async function ChipsDaNogle({ searchParams }: { searchParams: Pro
     return <MoldeReal sessao={sessao}>{voltar}<Aviso tom="aviso" className="mt-4">O estoque de chips da Nogle é de quem opera ou gere a Ora Connect.</Aviso></MoldeReal>;
   }
   const { supabase } = sessao;
-  const [pdvsLidos, leiturasLidas, lojasLidas, transferenciasLidas] = await Promise.all([
+  const gereARede = permite(sessao, "connect.gerir");
+  const [pdvsLidos, leiturasLidas, lojasLidas, transferenciasLidas, divergenciasLidas] = await Promise.all([
     supabase.from("connect_pdvs").select("pdv_id, nome, cidade, uf, estoque_minimo, unidade_id, ativo, estoque_lido_em, fisicos, esims").order("nome").limit(500),
     supabase.from("connect_leituras_nogle").select("numero, lida_em, pdvs, pdvs_lidos, mvno_fisicos, mvno_esims, falhas").order("lida_em", { ascending: false }).limit(48),
     supabase.from("unidades").select("id, nome, tipo").order("nome").limit(300),
@@ -54,11 +59,15 @@ export default async function ChipsDaNogle({ searchParams }: { searchParams: Pro
     supabase.from("connect_transferencias_chips")
       .select("id, numero, tipo, pdv_id, iccid, iccid_final, quantidade, motivo, situacao, pedida_em, concluida_em, mensagem, resultado")
       .order("pedida_em", { ascending: false }).limit(20),
+    // CONNECT-f: os chips para conferir, só para quem gere a Ora Connect na rede (o banco confere de novo).
+    gereARede ? supabase.rpc("connect_chips_divergentes") : Promise.resolve({ data: [] as DivergenciaDaTela[], error: null }),
   ]);
   if (pdvsLidos.error) throw new FalhaDoServico("connect_pdvs");
   if (leiturasLidas.error) throw new FalhaDoServico("connect_leituras_nogle");
   if (lojasLidas.error) throw new FalhaDoServico("unidades");
   if (transferenciasLidas.error) throw new FalhaDoServico("connect_transferencias_chips");
+  if (divergenciasLidas.error) throw new FalhaDoServico("connect_chips_divergentes");
+  const divergencias = (divergenciasLidas.data ?? []) as DivergenciaDaTela[];
   const transferencias = transferenciasLidas.data as unknown as TransferenciaDaTela[];
   const pdvs = pdvsLidos.data as unknown as PdvDaTela[];
   const leituras = leiturasLidas.data as unknown as LeituraDaTela[];
@@ -102,7 +111,7 @@ export default async function ChipsDaNogle({ searchParams }: { searchParams: Pro
   const erroDaTransferencia = textoDoParametro(parametros.erro_transferencia);
   const numeroPedido = textoDoParametro(parametros.numero);
   // Só o dono pede (o banco confere): quem gere a Ora Connect e vê as leituras da rede.
-  const pedeTransferencia = permite(sessao, "connect.gerir") && ultima !== undefined;
+  const pedeTransferencia = gereARede && ultima !== undefined;
   const destinos = [...comLojaAtivos(), ...outros.filter((p) => p.ativo)];
   const nomeDoDestino = (pdv: number) => {
     const p = pdvs.find((x) => x.pdv_id === pdv);
@@ -149,7 +158,8 @@ export default async function ChipsDaNogle({ searchParams }: { searchParams: Pro
             ? `Última leitura da Nogle: ${quando(lidaEm)}.`
             : `A última leitura da Nogle foi ${quando(lidaEm)}: o servidor não conseguiu ler depois disso, e o que aparece aqui pode estar desatualizado.`}
         {ultima && ultima.falhas > 0 && ` Na última leitura, ${numero(ultima.falhas)} ${ultima.falhas === 1 ? "parte não respondeu" : "partes não responderam"}: ${ultima.falhas === 1 ? "ela mostra" : "elas mostram"} o que foi lido antes.`}
-        {" "}A leitura não muda nada na Nogle: só o pedido de transferência do dono move chips, uma vez cada, e o livro de estoque da Ora não muda.
+        {" "}A leitura não muda nada na Nogle: só o pedido de transferência do dono move chips, uma vez cada. Os chips físicos do PDV de cada loja
+        ligada entram no estoque da loja pelo ICCID, uma vez só, para o vendedor vender o chip certo.
       </Aviso>
 
       {ultima && (
@@ -185,6 +195,34 @@ export default async function ChipsDaNogle({ searchParams }: { searchParams: Pro
             </p>
           )}
         </>
+      )}
+
+      {gereARede && ultima && comLoja.length > 0 && (
+        <Cartao className="mt-4" id="conferir" titulo="Chips para conferir" icone={TriangleAlert}
+          subtitulo="Disponíveis no estoque de uma loja e fora do PDV dela na Nogle: vendidos ou ativados por fora, ou levados para outro PDV">
+          {divergencias.length === 0 ? (
+            <p className="text-sm text-suave">Nenhum na última leitura: cada chip disponível nas lojas ligadas está no PDV delas na Nogle.</p>
+          ) : (
+            <>
+              <p className="text-sm text-suave">
+                {`${divergencias.length >= MAXIMO_DAS_DIVERGENCIAS ? `${numero(MAXIMO_DAS_DIVERGENCIAS)} ou mais` : numero(divergencias.length)} `}
+                {divergencias.length === 1 ? "chip. " : "chips. "}
+                Nada é apagado: confira na loja. O chip que saiu sem passar pelo caixa sai do estoque pelo inventário da loja; o que foi para
+                outra loja, pela transferência.
+              </p>
+              <ul className="mt-2 divide-y divide-borda text-sm" aria-label="Chips para conferir">
+                {divergencias.slice(0, LIMITE_DAS_DIVERGENCIAS).map((d) => (
+                  <li key={`${d.unidade_id}:${d.iccid}`} className="py-2">
+                    <span className="numeros font-medium">{iccidEmBlocos(d.iccid)}</span>{` · ${nomeDaLoja(d.unidade_id) ?? "loja"} · ${d.onde_na_nogle}`}
+                  </li>
+                ))}
+              </ul>
+              {divergencias.length > LIMITE_DAS_DIVERGENCIAS && (
+                <p className="mt-2 text-xs text-suave">{`Mostrando ${numero(LIMITE_DAS_DIVERGENCIAS)} de ${numero(divergencias.length)}.`}</p>
+              )}
+            </>
+          )}
+        </Cartao>
       )}
 
       {aberto && (

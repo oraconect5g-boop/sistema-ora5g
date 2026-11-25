@@ -1,4 +1,5 @@
-// CONNECT-d (24/11/2026; ORA-INV-011): a leitura do estoque de chips no worker, com a Nogle e o banco SIMULADOS. O caminho
+// CONNECT-d (24/11/2026; ORA-INV-011): a leitura do estoque de chips no worker, com a Nogle e o banco SIMULADOS; depois de
+// gravar, os chips físicos dos PDVs ligados às lojas entram no estoque delas (CONNECT-f, 25/11). O caminho
 // de verdade (o transporte HTTP com o GET com corpo, o token e o banco com as migrations) está em ponta-a-ponta.test.ts.
 // Os ICCIDs são FICTÍCIOS.
 import type { PedidoNogle } from "@ora5g/dominio/nogle";
@@ -17,10 +18,17 @@ const MVNO = ok({ retorno: true, mensagem: "", total: 1, data: [{ id: "1", iccid
 function simulados(respostas: Record<string, ResultadoChamada | ((p: PedidoNogle) => ResultadoChamada)>) {
   const pedidos: PedidoNogle[] = [];
   const gravadas: LeituraDoEstoque[] = [];
+  let noEstoque = 0;
   const banco = {
     gravarEstoque: async (leitura: LeituraDoEstoque) => {
       gravadas.push(leitura);
       return { numero: gravadas.length, pdvs: leitura.pdvs.length, pdvs_lidos: leitura.estoques.length, chips: 0, falhas: leitura.falhas };
+    },
+    // CONNECT-f: o banco decide quais chips entram (o físico de PDV ligado a loja, com ICCID válido, que ainda não está lá).
+    chipsNoEstoque: async () => {
+      noEstoque++;
+      if (gravadas.length !== noEstoque) throw new Error("os chips entram no estoque só depois de gravar a leitura");
+      return { entraram: 1, fora_da_forma: 0, divergentes: 2 };
     },
   } as unknown as BancoConnect;
   const nogle = {
@@ -31,7 +39,7 @@ function simulados(respostas: Record<string, ResultadoChamada | ((p: PedidoNogle
       return typeof r === "function" ? r(p) : r;
     },
   };
-  return { banco, nogle, pedidos, gravadas };
+  return { banco, nogle, pedidos, gravadas, vezesNoEstoque: () => noEstoque };
 }
 
 describe("a leitura do estoque de chips no worker (CONNECT-d)", () => {
@@ -44,7 +52,10 @@ describe("a leitura do estoque de chips no worker (CONNECT-d)", () => {
         : { tipo: "resposta", status: 500, corpo: {} }),
     });
     const r = await lerEstoqueDeChips(s.banco, s.nogle);
-    expect(r).toMatchObject({ gravada: true, ignorados: 1, leitura: { numero: 1, pdvs: 2, pdvs_lidos: 1, falhas: 1 } });
+    expect(r).toMatchObject({
+      gravada: true, ignorados: 1, leitura: { numero: 1, pdvs: 2, pdvs_lidos: 1, falhas: 1 }, noEstoque: { entraram: 1, fora_da_forma: 0, divergentes: 2 },
+    });
+    expect(s.vezesNoEstoque()).toBe(1);
     expect(s.pedidos).toEqual([
       { metodo: "GET", caminho: "/pdv/listar", corpo: {} },
       { metodo: "GET", caminho: "/linhas/estoque", corpo: {} },
@@ -75,6 +86,7 @@ describe("a leitura do estoque de chips no worker (CONNECT-d)", () => {
       expect(await lerEstoqueDeChips(s.banco, s.nogle)).toEqual({ gravada: false, motivo });
       expect(s.pedidos).toHaveLength(1);
       expect(s.gravadas).toEqual([]);
+      expect(s.vezesNoEstoque()).toBe(0);
     }
     // A MVNO fora da forma e o GET com corpo desligado no worker: grava os PDVs, sem MVNO e sem estoque de PDV.
     const s = simulados({

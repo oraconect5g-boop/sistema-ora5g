@@ -1,8 +1,10 @@
 // Uso (no servidor, pela rotina agendada):
 //   node apps/worker/src/executar-connect.ts            → envia as operações registradas e consulta as pendentes
-//   node apps/worker/src/executar-connect.ts --listas   → atualiza planos, DDDs, operadoras e cidades (CONNECT_UFS)
+//   node apps/worker/src/executar-connect.ts --listas   → atualiza planos, DDDs, operadoras e cidades (CONNECT_UFS); com os
+//        planos em dia, o caixa vende cada plano (recarga e ativação) pelo valor de face (CONNECT-f)
 //   node apps/worker/src/executar-connect.ts --estoque  → lê o estoque de chips da Nogle (os PDVs, a MVNO e cada PDV), SÓ
-//        LEITURA (CONNECT-d; o sim do proprietário de 24/11); pede o GET com corpo (NOGLE_GET_COM_CORPO=documentado)
+//        LEITURA (CONNECT-d; o sim do proprietário de 24/11); pede o GET com corpo (NOGLE_GET_COM_CORPO=documentado); os
+//        chips físicos do PDV de cada loja ligada entram no estoque dela pelo ICCID (CONNECT-f; o sim de 25/11)
 //   node apps/worker/src/executar-connect.ts --transferencias → envia os pedidos de transferência de chips do dono, UMA vez
 //        cada, e confirma pelo estoque do PDV (CONNECT-e); só com NOGLE_TRANSFERENCIAS=habilitada; depois, lê o estoque de novo
 //   node apps/worker/src/executar-connect.ts --conciliar [--de AAAA-MM-DD --ate AAAA-MM-DD]
@@ -76,7 +78,9 @@ try {
   );
   if (listas) {
     const r = await sincronizarReferencias(banco, nogle, ler("CONNECT_UFS").split(",").map((u) => u.trim().toUpperCase()).filter(Boolean));
-    console.log(`${agora} listas da Nogle: ${r.listas} atualizadas, ${r.itens} itens, ${r.falhas} falhas`);
+    const c = r.caixa;
+    console.log(`${agora} listas da Nogle: ${r.listas} atualizadas, ${r.itens} itens, ${r.falhas} falhas` +
+      (c ? `; no caixa: ${c.criadas} serviços novos, ${c.precos} preços novos, ${c.desativadas} desativados` : ""));
     process.exit(r.falhas > 0 ? 1 : 0);
   }
   if (conciliar) {
@@ -94,7 +98,9 @@ try {
     // Depois de enviar, o estoque lido de novo: a tela mostra os chips no PDV novo.
     if (t.enviadas > 0) {
       const e = await lerEstoqueDeChips(banco, nogle);
-      console.log(e.gravada ? `${agora} estoque de chips relido: leitura nº ${e.leitura.numero}, ${e.leitura.falhas} falhas` : `${agora} estoque de chips: nada gravado (${e.motivo})`);
+      console.log(e.gravada
+        ? `${agora} estoque de chips relido: leitura nº ${e.leitura.numero}, ${e.leitura.falhas} falhas, ${e.noEstoque.entraram} chips entraram no estoque das lojas`
+        : `${agora} estoque de chips: nada gravado (${e.motivo})`);
     }
     process.exit(t.desconhecidas + t.devolvidas > 0 ? 1 : 0);
   }
@@ -105,7 +111,9 @@ try {
       process.exit(1);
     }
     const l = r.leitura;
-    console.log(`${agora} estoque de chips da Nogle: leitura nº ${l.numero}, ${l.pdvs} PDVs (${l.pdvs_lidos} lidos), ${l.chips} chips, ${l.falhas} falhas, ${r.ignorados} fora da forma`);
+    const n = r.noEstoque;
+    console.log(`${agora} estoque de chips da Nogle: leitura nº ${l.numero}, ${l.pdvs} PDVs (${l.pdvs_lidos} lidos), ${l.chips} chips, ${l.falhas} falhas, ${r.ignorados} fora da forma; ` +
+      `no estoque das lojas: ${n.entraram} chips entraram, ${n.fora_da_forma} com o ICCID fora da forma, ${n.divergentes} divergências`);
     process.exit(l.falhas > 0 ? 1 : 0);
   }
   const envio = await enviarPendentes(banco, nogle, tipos);

@@ -59,7 +59,8 @@ export default async function Connect({ searchParams }: { searchParams: Promise<
     supabase.from("connect_referencias").select("tipo, codigo, nome, uf, valor_centavos").eq("ativo", true).order("nome").limit(3000),
     supabase.from("connect_operacoes").select("id, numero, tipo, situacao, vendedor_id, metodo_pagamento, iccid, esim, linha, linha_doadora, plano_nome, valor_face_centavos, recebido_na_loja_centavos, venda_item_id, cliente_nome, documento_mascarado, link_pagamento, link_esim, numero_ativado, mensagem_operadora, evidencia, motivo_resolucao, criado_em")
       .eq("unidade_id", unidade).order("criado_em", { ascending: false }).limit(30),
-    supabase.from("venda_itens").select("id, tipo, preco_unitario_centavos, quantidade, desconto_centavos, vendas!inner(numero, situacao, unidade_id, concluida_em)")
+    // CONNECT-f: o nome da variação é o do plano (REC-<plano>, ATV-<plano>): a pessoa vê qual plano foi pago.
+    supabase.from("venda_itens").select("id, tipo, preco_unitario_centavos, quantidade, desconto_centavos, variantes(nome), vendas!inner(numero, situacao, unidade_id, concluida_em)")
       .in("tipo", ["ativacao", "recarga", "portabilidade"]).eq("vendas.situacao", "concluida").eq("vendas.unidade_id", unidade).gte("vendas.concluida_em", seteDias).limit(50),
   ]);
   if (habilitacoes.error || referencias.error || operacoes.error || pagos.error) throw new FalhaDoServico("connect");
@@ -82,14 +83,14 @@ export default async function Connect({ searchParams }: { searchParams: Promise<
   const ocupados = new Set(operacoes.data.filter((o) => o.venda_item_id && VIVAS.has(o.situacao)).map((o) => o.venda_item_id));
   const pagosLivres = (tipo: TipoOperacao) => pagos.data.filter((p) => p.tipo === tipo && !ocupados.has(p.id));
   const opcaoDePago = (p: (typeof pagos.data)[number]) => (
-    <option key={p.id} value={p.id}>Venda nº {p.vendas.numero} · {brl(centavosDoBanco(p.preco_unitario_centavos) * p.quantidade - centavosDoBanco(p.desconto_centavos))}</option>
+    <option key={p.id} value={p.id}>Venda nº {p.vendas.numero}{p.variantes?.nome ? ` · ${p.variantes.nome}` : ""} · {brl(centavosDoBanco(p.preco_unitario_centavos) * p.quantidade - centavosDoBanco(p.desconto_centavos))}</option>
   );
   const formaDePagamento = (tipo: TipoOperacao) => (
     <fieldset className="space-y-2">
       <legend className="text-sm font-medium">Pagamento</legend>
       {/* PDV-c (o proprietário, 18/11): na loja não se gera link de pagamento; o cliente paga no caixa e a operação usa o SALDO. */}
       <input type="hidden" name="metodo" value="SALDO" />
-      <p className="text-xs text-suave">O cliente paga no caixa (venda a ativação ou a recarga no PDV) e a operação usa o SALDO da Ora. Na loja não se gera link de pagamento: o link é só da compra online.</p>
+      <p className="text-xs text-suave">O cliente paga no caixa (venda a ativação ou a recarga do plano no PDV) e a operação usa o SALDO da Ora. A venda escolhida tem de ser do mesmo plano da operação. Na loja não se gera link de pagamento: o link é só da compra online.</p>
       <label className={rotulo}>Serviço pago no caixa
         <select name="venda_item" required className={campo} defaultValue=""><option value="" disabled>Escolha a venda</option>{pagosLivres(tipo).map(opcaoDePago)}</select>
       </label>

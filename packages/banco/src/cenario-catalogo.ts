@@ -43,7 +43,7 @@ export async function montarCatalogo(db: ExecutorSql) {
       ('${c.aparelho}', '${o}', '${c.produtoAparelho}', 'APA-0001', 'Galaxy A15 128 GB Azul', '7890000000011'),
       ('${c.capa}', '${o}', '${c.produtoCapa}', 'ACE-0001', 'Capa de proteção', '7890000000028'),
       ('${c.chip}', '${o}', '${c.produtoChip}', 'CHI-0001', 'Chip pré-pago', null),
-      ('${c.recarga}', '${o}', '${c.produtoRecarga}', 'REC-0001', 'Recarga', null);
+      ('${c.recarga}', '${o}', '${c.produtoRecarga}', 'REC-99999', 'Recarga', null);
     insert into public.precos (organizacao_id, variante_id, unidade_id, valor_centavos, inicio, origem) values
       ('${o}', '${c.aparelho}', null, 149900, now() - interval '30 days', 'importacao'),
       ('${o}', '${c.aparelho}', '${ids.lojaB}', 139900, now() - interval '30 days', 'manual'),

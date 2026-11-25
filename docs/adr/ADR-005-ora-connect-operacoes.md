@@ -96,3 +96,9 @@ Migrations `20261109150526_correcoes_acesso_lote1` (#56) e `20261109190400_conne
 - **Quem pede:** só o dono (a D-057); a função do banco confere, e cada pedido é o sim daquela operação.
 - **O envio:** o worker (`--transferencias`, a cada minuto, só com `NOGLE_TRANSFERENCIAS=habilitada`) lê o estoque do PDV, envia uma vez e lê de novo. A mesma regra das operações: o que não saiu (sem conexão, sem a leitura de antes) volta para a fila; o que saiu sem resposta clara é resultado desconhecido e nunca se reenvia; o envio parado em 10 minutos também.
 - **A confirmação:** pelo estoque do PDV (a resposta só diz "Sucesso."): confirmada, em parte ou, sem os chips no estoque depois do "Sucesso.", resultado desconhecido (conferir no painel da Nogle).
+
+## Adendo de 25/11/2026: as operações ligadas, os planos no caixa e os chips no estoque (lote CONNECT-f)
+
+- **As operações:** ligadas pelo proprietário (a D-058), com a habilitação de cada tipo no banco e `NOGLE_OPERACOES_HABILITADAS`; o worker roda a cada minuto. As regras do envio e da consulta não mudam.
+- **O serviço do caixa é o plano:** cada plano da lista oficial tem a sua recarga (REC-<plano>) e a sua ativação (ATV-<plano>), com o preço da rede igual ao valor de face, mantidas pelo worker depois das listas. A operação só aceita o serviço pago do mesmo plano (OR055): a carteira da Ora paga à Nogle o valor de face do plano da operação.
+- **Os chips no estoque:** os chips físicos do PDV de cada loja ligada entram no estoque da loja pelo ICCID depois de cada leitura (a D-059); a ativação de chip físico continua pedindo o chip vendido (OR011). O chip disponível no estoque e fora do PDV da loja na Nogle é divergência, para o dono conferir; nada é apagado sozinho.

@@ -1255,6 +1255,21 @@
       "pedido_em": "2026-11-25",
       "resposta": null,
       "respondido_em": null
+    },
+    {
+      "lote": "CONNECT-f",
+      "roteiro": "docs/aceite/CONNECT-f.md",
+      "requisitos": [
+        "ORA-CONNECT-001",
+        "ORA-CONNECT-003",
+        "ORA-INV-011"
+      ],
+      "entrega": "os planos da Nogle no caixa (a recarga e a ativação de cada plano, pelo valor de face), os chips da Nogle no estoque das lojas pelo ICCID, os chips para conferir (para o dono), a trava do plano na operação e as operações ligadas",
+      "commit": null,
+      "publicado_em": null,
+      "pedido_em": "2026-11-25",
+      "resposta": null,
+      "respondido_em": null
     }
   ]
 }

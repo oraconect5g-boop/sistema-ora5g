@@ -18,12 +18,13 @@ export const ERROS_DO_CONNECT = {
   link_pago: "Este serviço já foi pago no caixa: escolha SALDO. O LINK cobraria o cliente de novo.",
   link_so_online: "Na loja não se gera link de pagamento: o cliente paga no caixa e a operação usa o SALDO da Ora. O link é só da compra online.",
   sem_servico_pago: "Escolha o serviço pago no caixa: venda a ativação ou a recarga no PDV antes de registrar a operação.",
+  outro_plano: "O serviço pago no caixa é de outro plano: escolha a venda do plano pedido, ou venda no caixa o serviço do plano certo.",
   falha: "Não foi possível concluir agora. Tente de novo em instantes.",
 } as const;
 export type ErroDoConnect = keyof typeof ERROS_DO_CONNECT;
 
 const DO_BANCO: Record<string, ErroDoConnect> = {
-  OR004: "chave", OR011: "chip_no_estoque", OR012: "nao_habilitada", OR013: "em_andamento",
+  OR004: "chave", OR011: "chip_no_estoque", OR012: "nao_habilitada", OR013: "em_andamento", OR055: "outro_plano",
   "42501": "sem_permissao", P0002: "nao_encontrado", "22023": "dados",
 };
 export function erroDoConnect(erro: { code?: string } | null | undefined): ErroDoConnect {
