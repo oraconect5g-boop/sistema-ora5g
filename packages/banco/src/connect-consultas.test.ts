@@ -186,3 +186,83 @@ describe("a consulta completa: o relatório do número e o do cliente (CONNECT-h
     expect(await limpar()).toEqual({ vencidas: 0, apagadas: 0 });
   });
 });
+
+// CONNECT-i (25/11/2026): as consultas que faltavam (as 14 rotas da coleção oficial que o sistema ainda não usava). Quem pede
+// cada uma (a loja, a gestão da loja ou a rede), a forma de cada parâmetro e o CPF ou o CNPJ mascarado, que sai em 24 horas.
+describe("as outras consultas da Nogle (CONNECT-i)", () => {
+  const CPF = cpf("135792468");
+  const CNPJ = cnpj("44555666", "0001");
+
+  it("a loja pede as dela; a gestão da loja, a logística e o CPF; a rede, a carteira, os relatórios e as listas", async () => {
+    const vendedor = await naLoja(ids.vendedorA, ids.lojaA);
+    const daLoja = [["faq_categorias", null], ["faq_perguntas", "6"], ["planos_campanhas", null], ["estados", null], ["validar_cep", "80010-000"],
+      ["validar_cnpj", CNPJ], ["compra_rastreio", "12345"], ["titularidade_da_linha", `${LINHA}${CPF}`], ["pagamento_da_solicitacao", "212345"]] as const;
+    for (const [tipo, parametro] of daLoja) expect(await consultar(vendedor, tipo, parametro, `i:${tipo}`), tipo).toMatch(/^[0-9a-f-]{36}$/);
+    // O vendedor não pede a da gestão nem a da rede.
+    for (const [tipo, parametro] of [["logistica", null], ["validar_cpf", CPF], ["carteira_programadas", "30"], ["relatorio_portabilidades", "30"],
+      ["lista_de_linhas", "1"], ["lista_de_clientes", "1"], ["carteira_extrato_saidas", "30"], ["carteira_extrato_entradas", "30"]] as const) {
+      expect(await erroAoConsultar(vendedor, tipo, parametro, `i:v:${tipo}`), tipo).toBe("42501");
+    }
+    // O gerente (da loja B) pede a da gestão da loja dele, mas não a da rede.
+    const gerente = await naLoja(ids.gerenteB, ids.lojaB);
+    expect(await consultar(gerente, "logistica", null, "i:g1")).toMatch(/^[0-9a-f-]{36}$/);
+    expect(await consultar(gerente, "validar_cpf", CPF, "i:g2")).toMatch(/^[0-9a-f-]{36}$/);
+    expect(await erroAoConsultar(gerente, "relatorio_portabilidades", "30", "i:g3")).toBe("42501");
+    expect(await erroAoConsultar(gerente, "lista_de_clientes", "1", "i:g4")).toBe("42501");
+    expect(await erroAoConsultar(gerente, "carteira_extrato_saidas", "30", "i:g5")).toBe("42501");
+    // O dono pede todas.
+    const dono = await naLoja(ids.dono, ids.lojaA);
+    for (const [tipo, parametro] of [["carteira_programadas", "30"], ["relatorio_portabilidades", "366"], ["lista_de_linhas", "2"], ["lista_de_clientes", "9999"],
+      ["logistica", null], ["faq_categorias", null], ["carteira_extrato_saidas", "366"], ["carteira_extrato_entradas", "1"], ["pagamento_da_solicitacao", "3987"]] as const) {
+      expect(await consultar(dono, tipo, parametro, `i:d:${tipo}`), tipo).toMatch(/^[0-9a-f-]{36}$/);
+    }
+    // O técnico, sem a Ora Connect, nem as dúvidas frequentes.
+    expect(await erroAoConsultar(await naLoja(ids.tecnico, ids.assistencia), "faq_categorias", null, "i:t")).toBe("42501");
+  });
+
+  it("a forma de cada parâmetro: nada nas sem número, o CEP, o CPF e o CNPJ válidos, a linha com o documento, os dias e a página", async () => {
+    const dono = await naLoja(ids.dono, ids.lojaA);
+    const recusadas = [["faq_categorias", "6"], ["planos_campanhas", LINHA], ["logistica", "1"], ["faq_perguntas", null], ["faq_perguntas", "1234567890"],
+      ["validar_cep", "8001000"], ["validar_cpf", `${CPF.slice(0, -1)}${(Number(CPF.slice(-1)) + 1) % 10}`], ["validar_cpf", CNPJ], ["validar_cnpj", CPF],
+      ["compra_rastreio", null], ["compra_rastreio", "1234567890123"], ["titularidade_da_linha", LINHA], ["titularidade_da_linha", `5108888777${CPF}`],
+      ["titularidade_da_linha", `${LINHA}${CPF.slice(0, -1)}${(Number(CPF.slice(-1)) + 1) % 10}`], ["carteira_programadas", "0"], ["carteira_programadas", "91"],
+      ["relatorio_portabilidades", "367"], ["lista_de_linhas", "0"], ["lista_de_clientes", "10000"], ["lista_de_linhas", null],
+      ["pagamento_da_solicitacao", "412345"], ["pagamento_da_solicitacao", "2"], ["pagamento_da_solicitacao", null], ["carteira_extrato_saidas", "367"],
+      ["carteira_extrato_entradas", "0"]] as const;
+    for (const [tipo, parametro] of recusadas) expect(await erroAoConsultar(dono, tipo, parametro, `f:${tipo}:${parametro}`), `${tipo} ${parametro}`).toBe("22023");
+    // A titularidade aceita o CNPJ; os dias e a página nos limites passam.
+    expect(await consultar(dono, "titularidade_da_linha", `${LINHA}${CNPJ}`, "f:ok1")).toMatch(/^[0-9a-f-]{36}$/);
+    expect(await consultar(dono, "carteira_programadas", "90", "f:ok2")).toMatch(/^[0-9a-f-]{36}$/);
+    expect(await consultar(dono, "relatorio_portabilidades", "1", "f:ok3")).toMatch(/^[0-9a-f-]{36}$/);
+    // A regra da tabela: as sem número não guardam número; as outras guardam.
+    expect(await erroDe(() => db.query(
+      "insert into public.connect_consultas (organizacao_id, unidade_id, pedida_por, chave, tipo, parametro) values ($1, $2, $3, 'direto', 'estados', '1')",
+      [ids.organizacao, ids.lojaA, ids.dono]))).toBe("23514");
+    expect(await erroDe(() => db.query(
+      "insert into public.connect_consultas (organizacao_id, unidade_id, pedida_por, chave, tipo, parametro) values ($1, $2, $3, 'direto2', 'validar_cep', null)",
+      [ids.organizacao, ids.lojaA, ids.dono]))).toBe("23514");
+  });
+
+  it("o CPF e o CNPJ ficam mascarados para a tela e saem com a resposta depois de 24 horas; o resto do parâmetro fica", async () => {
+    const vendedor = await naLoja(ids.vendedorA, ids.lojaA);
+    const gerente = await naLoja(ids.gerenteB, ids.lojaB);
+    const titular = await consultar(vendedor, "titularidade_da_linha", `(51) 98888-7777 ${CPF}`, "m1");
+    const doCnpj = await consultar(vendedor, "validar_cnpj", CNPJ, "m2");
+    const doCep = await consultar(vendedor, "validar_cep", "80010000", "m3");
+    const doCpf = await consultar(gerente, "validar_cpf", CPF, "m4");
+    const mascaraCpf = `•••.•••.${CPF.slice(6, 9)}-${CPF.slice(9)}`;
+    expect(await consulta(titular)).toMatchObject({ parametro: `${LINHA}${CPF}`, parametro_mascarado: `(51) 98888-7777 · ${mascaraCpf}` });
+    expect(await consulta(doCnpj)).toMatchObject({ parametro: CNPJ, parametro_mascarado: `••.•••.•••/${CNPJ.slice(8, 12)}-${CNPJ.slice(12)}` });
+    expect(await consulta(doCep)).toMatchObject({ parametro: "80010000", parametro_mascarado: null });
+    expect(await consulta(doCpf)).toMatchObject({ parametro: CPF, parametro_mascarado: mascaraCpf });
+    expect((await aFazer(10)).length).toBe(4);
+    for (const id of [titular, doCnpj, doCep, doCpf]) expect(await registrar(id, { situacao: "respondida", resposta: { valido: true } })).toBe("respondida");
+    await db.query("update public.connect_consultas set respondida_em = now() - interval '25 hours' where id = any($1::uuid[])", [[titular, doCnpj, doCep, doCpf]]);
+    expect(await limpar()).toEqual({ vencidas: 0, apagadas: 4 });
+    expect(await consulta(titular)).toMatchObject({ parametro: null, resposta: null, parametro_mascarado: `(51) 98888-7777 · ${mascaraCpf}` });
+    expect(await consulta(doCnpj)).toMatchObject({ parametro: null, resposta: null });
+    expect(await consulta(doCpf)).toMatchObject({ parametro: null, resposta: null, parametro_mascarado: mascaraCpf });
+    // O CEP não é documento de ninguém: fica.
+    expect(await consulta(doCep)).toMatchObject({ parametro: "80010000", resposta: null });
+  });
+});

@@ -206,3 +206,39 @@ describe("as ações que mudam algo na Nogle, no worker (CONNECT-j)", () => {
     ]);
   });
 });
+
+// CONNECT-i (25/11/2026): as consultas que faltavam passam pelo mesmo caminho (um pedido, a resposta limpa), com o método da
+// coleção oficial: GET com corpo, o POST que só lê (a validação do CEP) e a categoria das dúvidas no caminho.
+describe("as outras consultas, no worker (CONNECT-i)", () => {
+  it("as dúvidas (a lista solta), a titularidade (a linha e o documento), o CEP (POST que só lê) e as portabilidades (as datas de Brasília)", async () => {
+    const s = simulados([[
+      { consulta_id: "i1", tipo: "faq_categorias", parametro: null },
+      { consulta_id: "i2", tipo: "faq_perguntas", parametro: "7" },
+      { consulta_id: "i3", tipo: "titularidade_da_linha", parametro: `${LINHA}12345678909` },
+      { consulta_id: "i4", tipo: "validar_cep", parametro: "80010000" },
+      { consulta_id: "i5", tipo: "relatorio_portabilidades", parametro: "7" },
+    ]], {
+      "/faq/categorias": ok([{ id: 7, descricao: "Portabilidade" }]),
+      "/faq/categoria/7": ok([{ id: "1", pergunta: "Quanto tempo leva?", resposta: "Até 3 dias úteis." }]),
+      "/linhas/validaTitularidade": ok({ retorno: true, mensagem: "", titular_linha: "N", operadora: "CONTEL" }),
+      "/validar/cep": ok({ valido: true, cidade: "Curitiba", bairro: "Centro", rua: "Rua Fictícia", numero: "", uf: "PR" }),
+      "/portabilidade/listar": ok({ retorno: true, mensagem: "", data: [] }),
+    });
+    const agora = () => new Date("2026-11-25T15:00:00Z");
+    expect(await responderConsultas(s.banco, s.nogle, { ...s.opcoes, agora })).toEqual({ respondidas: 5, nao_encontradas: 0, falhas: 0 });
+    expect(s.pedidos).toEqual([
+      { metodo: "GET", caminho: "/faq/categorias", corpo: {} },
+      { metodo: "GET", caminho: "/faq/categoria/7", corpo: {} },
+      { metodo: "GET", caminho: "/linhas/validaTitularidade", corpo: { linha: LINHA, documento: "12345678909" } },
+      { metodo: "POST", caminho: "/validar/cep", corpo: { cep: "80010000" } },
+      { metodo: "GET", caminho: "/portabilidade/listar", corpo: { data_cadastro_inicio: "18/11/2026", data_cadastro_fim: "25/11/2026" } },
+    ]);
+    expect(s.gravadas.map(([id, r]) => [id, r.resposta])).toEqual([
+      ["i1", { categorias: [{ id: 7, nome: "Portabilidade" }] }],
+      ["i2", { perguntas: [{ pergunta: "Quanto tempo leva?", resposta: "Até 3 dias úteis." }], fora: 0 }],
+      ["i3", { titular: false, operadora: "CONTEL" }],
+      ["i4", { valido: true, rua: "Rua Fictícia", numero: null, bairro: "Centro", cidade: "Curitiba", uf: "PR" }],
+      ["i5", { portabilidades: [], fora: 0, total: 0, por_status: {} }],
+    ]);
+  });
+});

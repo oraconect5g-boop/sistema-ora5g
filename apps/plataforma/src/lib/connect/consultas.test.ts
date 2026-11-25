@@ -100,3 +100,85 @@ describe("as consultas novas em português (CONNECT-h)", () => {
     expect(lerPedidoDeConsulta(formulario({ tipo: "cliente_completo", parametro: "41999998888", chave: "k" }))).toEqual({ ok: false, erro: "documento" });
   });
 });
+
+// CONNECT-i (25/11/2026): as consultas que faltavam, em português: o resumo na lista e a lista inteira na página do relatório.
+describe("as outras consultas em português (CONNECT-i)", () => {
+  it("o formulário confere cada parâmetro novo e junta a linha com o documento na titularidade", () => {
+    expect(lerPedidoDeConsulta(formulario({ tipo: "titularidade_da_linha", parametro: "(41) 99999-8888", documento: "11.222.333/0001-81", chave: "k" })))
+      .toEqual({ ok: true, pedido: { tipo: "titularidade_da_linha", parametro: "4199999888811222333000181", chave: "k" } });
+    expect(lerPedidoDeConsulta(formulario({ tipo: "estados", parametro: "123", chave: "k" }))).toEqual({ ok: true, pedido: { tipo: "estados", parametro: null, chave: "k" } });
+    expect(lerPedidoDeConsulta(formulario({ tipo: "validar_cep", parametro: "80010-000", chave: "k" }))).toMatchObject({ ok: true, pedido: { parametro: "80010000" } });
+    expect(lerPedidoDeConsulta(formulario({ tipo: "faq_perguntas", parametro: "", chave: "k" }))).toEqual({ ok: false, erro: "categoria" });
+    expect(lerPedidoDeConsulta(formulario({ tipo: "carteira_programadas", parametro: "91", chave: "k" }))).toEqual({ ok: false, erro: "dias" });
+    expect(lerPedidoDeConsulta(formulario({ tipo: "lista_de_clientes", parametro: "10000", chave: "k" }))).toEqual({ ok: false, erro: "pagina" });
+  });
+
+  it("as informações da Nogle, a logística e as validações", () => {
+    expect(linhasDaResposta(respondida("planos_campanhas", { planos: [{ codigo: "99999", nome: "7 GB", valor_centavos: 4490, internet: "6 GB + 1 GB",
+      ligacoes: "ligações ilimitadas", sms: "100 SMS" }] }))).toEqual(["7 GB · R$ 44,90 · 6 GB + 1 GB · ligações ilimitadas · 100 SMS · código 99999"]);
+    expect(linhasDaResposta(respondida("estados", { estados: [{ uf: "PR", nome: "Paraná" }, { uf: "SC", nome: "Santa Catarina" }] }))).toEqual(["2 estados: PR, SC"]);
+    expect(linhasDaResposta(respondida("logistica", { frete_centavos: 490, chip_centavos: 1000 })))
+      .toEqual(["Chip: R$ 10,00 · Frete: R$ 4,90", "O custo da Nogle para a Ora (não é o preço de venda)."]);
+    expect(linhasDaResposta(respondida("validar_cep", { valido: true, rua: "Avenida Independência", numero: "2293", bairro: "Universitário", cidade: "Santa Cruz do Sul", uf: "RS" })))
+      .toEqual(["CEP válido: Avenida Independência, 2293 · Universitário · Santa Cruz do Sul-RS"]);
+    expect(linhasDaResposta(respondida("validar_cep", { valido: false }))).toEqual(["CEP não encontrado."]);
+    expect(linhasDaResposta(respondida("validar_cpf", { valido: true, titular: "Cliente Fictício", nascimento: "2002-01-01", idade: 24 })))
+      .toEqual(["CPF válido: Cliente Fictício", "Nascimento: 01/01/2002 (24 anos)"]);
+    expect(linhasDaResposta(respondida("validar_cnpj", { valido: true, razao_social: "Empresa Fictícia LTDA", nome_fantasia: "Fictícia" })))
+      .toEqual(["CNPJ válido: Empresa Fictícia LTDA", "Nome fantasia: Fictícia"]);
+    expect(linhasDaResposta(respondida("compra_rastreio", { pedido: 9172, data_pedido: "2026-11-20 10:00", cliente: null,
+      eventos: [{ quando: "2026-11-21 08:30", status: "EM ROTA" }] }))).toEqual(["Pedido nº 9172 · feito em 20/11/2026 às 10:00", "21/11/2026 às 08:30 · EM ROTA"]);
+    expect(linhasDaResposta(respondida("compra_rastreio", { pedido: 9172, data_pedido: null, cliente: null, eventos: [] }))).toEqual(["Pedido nº 9172", "Ainda sem rastreio."]);
+    expect(linhasDaResposta(respondida("titularidade_da_linha", { titular: true, operadora: null }))).toEqual(["Sim: o CPF/CNPJ é o do titular da linha."]);
+  });
+
+  it("as dúvidas e as listas: o resumo na lista, cada item na página do relatório, e o aviso do que não coube", () => {
+    const perguntas = respondida("faq_perguntas", { perguntas: [{ pergunta: "Quanto tempo leva?", resposta: "Até 3 dias úteis." }], fora: 0 });
+    expect(linhasDaResposta(perguntas)).toEqual(["1 pergunta com a resposta.", "Abra a página para ver tudo."]);
+    expect(linhasDaResposta(perguntas, undefined, { completo: true })).toEqual(["P: Quanto tempo leva?", "R: Até 3 dias úteis."]);
+    const linhas = respondida("lista_de_linhas", { linhas: [{ linha: "41999998888", apelido: "Loja", status: "ATIVO", plano: "10 GB", titular: "Cliente Fictício",
+      documento: "•••.•••.789-09", fim_do_plano: "2026-12-10", bloqueada: true, esim: true, portada: false }], fora: 5, total: 6 });
+    expect(linhasDaResposta(linhas)).toEqual(["6 linhas nesta página.", "Abra a página para ver tudo."]);
+    expect(linhasDaResposta(linhas, undefined, { completo: true })).toEqual([
+      "(41) 99999-8888 (Loja) · ATIVO · BLOQUEADA · 10 GB · Cliente Fictício •••.•••.789-09 · plano até 10/12/2026 · eSIM",
+      "E mais 5 que não couberam aqui (a Nogle tem a lista inteira).",
+    ]);
+    expect(linhasDaResposta(respondida("lista_de_clientes", { clientes: [{ nome: "Cliente Fictício", apelido: null, tipo: "PF", documento: "•••.•••.789-09",
+      cidade: "Curitiba", uf: "PR" }], fora: 0, total: 1 }), undefined, { completo: true })).toEqual(["Cliente Fictício · PF •••.•••.789-09 · Curitiba-PR"]);
+    expect(linhasDaResposta(respondida("relatorio_portabilidades", { portabilidades: [{ quando: "2026-11-20 09:00", linha: "41999998888", linha_doadora: "41988887777",
+      operadora: "TIM", status: "Portabilidade em andamento", cliente: "Cliente Fictício", documento: "•••.•••.789-09", agendada: "2026-11-23 22:00", sucesso: null }],
+    fora: 0, total: 1, por_status: { "Portabilidade em andamento": 1 } }), undefined, { completo: true })).toEqual([
+      "1 portabilidade: 1 Portabilidade em andamento",
+      "20/11/2026 às 09:00 · (41) 99999-8888 ← (41) 98888-7777 (TIM) · Portabilidade em andamento · Cliente Fictício •••.•••.789-09 · agendada para 23/11/2026 às 22:00",
+    ]);
+    expect(linhasDaResposta(respondida("carteira_programadas", { recargas: [], fora: 0, total: 0, soma_centavos: 0 }))).toEqual(["Nenhuma recarga programada no período."]);
+  });
+
+  it("o título de cada uma: o documento sempre mascarado (também depois de 24 horas), o CEP, o pedido, os dias e a página", () => {
+    expect(tituloDaConsulta({ tipo: "validar_cpf", parametro: null, parametro_mascarado: "•••.•••.789-09" })).toBe("Conferir o CPF · •••.•••.789-09");
+    expect(tituloDaConsulta({ tipo: "titularidade_da_linha", parametro: "4199999888812345678909", parametro_mascarado: "(41) 99999-8888 · •••.•••.789-09" }))
+      .toBe("O titular da linha · (41) 99999-8888 · •••.•••.789-09");
+    expect(tituloDaConsulta({ tipo: "validar_cep", parametro: "80010000" })).toBe("Conferir o CEP · 80010-000");
+    expect(tituloDaConsulta({ tipo: "compra_rastreio", parametro: "9172" })).toBe("Rastreio da compra de chip · pedido nº 9172");
+    expect(tituloDaConsulta({ tipo: "faq_perguntas", parametro: "6" })).toBe("Perguntas e respostas · categoria 6");
+    expect(tituloDaConsulta({ tipo: "relatorio_portabilidades", parametro: "366" })).toBe("Portabilidades da rede · últimos 366 dias");
+    expect(tituloDaConsulta({ tipo: "lista_de_clientes", parametro: "2" })).toBe("Clientes da Ora na Nogle · página 2");
+    expect(tituloDaConsulta({ tipo: "faq_categorias", parametro: null })).toBe("Dúvidas frequentes");
+  });
+
+  it("o pagamento de uma solicitação (os meios de pagar, para reenviar ao cliente) e o extrato da carteira", () => {
+    expect(linhasDaResposta(respondida("pagamento_da_solicitacao", { quando: "2026-11-20 10:00", valor_centavos: 5490, cliente: "Cliente Fictício", operadora: "CONTEL",
+      iccid: null, linha: "41999998888", link_pagamento: "https://pagamento.invalid/x", boleto_link: null, boleto_codigo_barras: null, pix_copia_cola: "000201PIX" })))
+      .toEqual(["R$ 54,90 · pedido em 20/11/2026 às 10:00 · CONTEL", "Cliente: Cliente Fictício · linha (41) 99999-8888",
+        "Link para o cliente pagar: https://pagamento.invalid/x", "Pix copia e cola: 000201PIX"]);
+    const extrato = respondida("carteira_extrato_saidas", { movimentos: [{ quando: "2026-11-20 10:15", tipo: "SAÍDA", valor_centavos: 3550, cliente: "Cliente Fictício",
+      linha: "41999998888", iccid: null, plano: "10 GB", plano_valor_centavos: 5490 }], fora: 0, total: 1, soma_centavos: 3550 });
+    expect(linhasDaResposta(extrato)).toEqual(["1 movimento · R$ 35,50", "Abra a página para ver tudo."]);
+    expect(linhasDaResposta(extrato, undefined, { completo: true }))
+      .toEqual(["1 movimento · R$ 35,50", "20/11/2026 às 10:15 · SAÍDA · R$ 35,50 · 10 GB (R$ 54,90) · (41) 99999-8888 · Cliente Fictício"]);
+    expect(tituloDaConsulta({ tipo: "pagamento_da_solicitacao", parametro: "39172" })).toBe("Pagamento de uma solicitação · compra nº 9172");
+    expect(tituloDaConsulta({ tipo: "carteira_extrato_entradas", parametro: "90" })).toBe("Extrato da carteira: entradas · últimos 90 dias");
+    expect(lerPedidoDeConsulta(formulario({ tipo: "pagamento_da_solicitacao", solicitacao: "1", parametro: "123", chave: "k" })))
+      .toEqual({ ok: true, pedido: { tipo: "pagamento_da_solicitacao", parametro: "1123", chave: "k" } });
+  });
+});

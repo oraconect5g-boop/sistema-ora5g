@@ -11,7 +11,7 @@ import {
   conferirTransferencia, lerRespostaDaTransferencia, pedidoDaTransferencia,
   documentoMascarado, lerRespostaDaConsulta, pedidoDaConsulta, TIPOS_DE_CONSULTA,
   ehConsultaComposta, lerParteDoRelatorio, PARAMETRO_DA_CONSULTA, lerRespostaDaAcao, pedidoDaAcao, TIPOS_DE_ACAO, type AcaoParaEnviar, pedidoDaPortabilidade, pedidoDasLinhasDoCliente, pedidoDasTransacoesDaLinha, pedidoDoCliente,
-  type ChipDaNogle, type OperacaoParaConsultar, type OperacaoParaEnviar, type TransferenciaParaEnviar,
+  type ChipDaNogle, type OperacaoParaConsultar, type OperacaoParaEnviar, type ParametroDaConsulta, type TransferenciaParaEnviar,
 } from "./nogle";
 
 type Resposta = { name?: string; code?: number; body?: string };
@@ -400,18 +400,24 @@ describe("as consultas da Nogle que só leem (CONNECT-g)", () => {
   const AGORA = new Date("2026-11-25T15:00:00Z");
   const LINHA = "51900000000";
   const ICCID = "8955170110000000016";
+  // Um exemplo de cada parâmetro (CONNECT-i: o CPF, o CNPJ, o CEP, a categoria, o pedido, a linha com o documento, os dias e a página).
+  const EXEMPLO_DO_PARAMETRO: Record<ParametroDaConsulta, string> = {
+    linha: LINHA, iccid: ICCID, documento: "12345678909", cpf: "12345678909", cnpj: "11222333000181", cep: "96815900", categoria: "6", pedido: "12345",
+    linha_e_documento: `${LINHA}12345678909`, dias_a_frente: "30", dias_para_tras: "30", pagina: "1", solicitacao: "212345",
+  };
 
   it("cada consulta pede a rota e os campos da coleção oficial (GET com o corpo); fora da forma, nada", () => {
     for (const tipo of TIPOS_DE_CONSULTA) {
       const pede = PARAMETRO_DA_CONSULTA[tipo];
-      const parametro = pede === "linha" ? LINHA : pede === "iccid" ? ICCID : pede === "documento" ? "12345678909" : null;
+      const parametro = pede ? EXEMPLO_DO_PARAMETRO[pede] : null;
       const pedido = pedidoDaConsulta(tipo, parametro, AGORA);
       // Os relatórios (CONNECT-h) não têm um pedido só: o worker monta em partes.
       if (ehConsultaComposta(tipo)) {
         expect(pedido, tipo).toBeNull();
         continue;
       }
-      const documentada = rota(pedido?.caminho ?? "");
+      // A categoria das dúvidas vai no caminho (a coleção escreve /faq/categoria/X).
+      const documentada = rota((pedido?.caminho ?? "").replace(/^\/faq\/categoria\/\d+$/, "/faq/categoria/X"));
       expect(pedido?.metodo, tipo).toBe(documentada.request.method);
       const chaves = Object.keys(JSON.parse(documentada.request.body?.raw?.trim() || "{}") as object);
       expect(Object.keys(pedido?.corpo ?? {}).every((k) => chaves.includes(k)), `${tipo}: ${Object.keys(pedido?.corpo ?? {}).join(",")}`).toBe(true);
@@ -615,5 +621,154 @@ describe("as funções que mudam algo na Nogle (CONNECT-j)", () => {
     expect(lerRespostaDaAcao("pdv_inativar", 502, null)).toMatchObject({ envio: "desconhecida" });
     expect(lerRespostaDaAcao("linha_desbloquear", 404, { erro: "Endpoint inexistente ou recurso não encontrato." }))
       .toEqual({ envio: "recusada", mensagem: "Endpoint inexistente ou recurso não encontrato." });
+  });
+});
+
+// CONNECT-i (25/11/2026): as consultas que faltavam (as 14 rotas da coleção oficial que o sistema ainda não usava), com os
+// pedidos e as respostas da própria coleção. Onde a documentação não traz o exemplo (a lista de clientes), só os campos da tabela.
+describe("as outras consultas da Nogle (CONNECT-i)", () => {
+  const AGORA = new Date("2026-11-25T15:00:00Z");
+  const LINHA = "51900000000";
+  const chavesDocumentadas = (caminho: string) => Object.keys(JSON.parse(rota(caminho).request.body?.raw?.trim() || "{}") as object);
+  const NOVAS = [
+    ["faq_categorias", null, "/faq/categorias", "GET", {}],
+    ["faq_perguntas", "6", "/faq/categoria/X", "GET", {}],
+    ["planos_campanhas", null, "/planosCampanhas", "GET", {}],
+    ["estados", null, "/estados", "GET", {}],
+    ["logistica", null, "/logistica", "GET", {}],
+    ["validar_cep", "96815900", "/validar/cep", "POST", { cep: "96815900" }],
+    ["validar_cpf", "12345678909", "/validar/cpf", "POST", { cpf: "12345678909" }],
+    ["validar_cnpj", "11222333000181", "/validar/cnpj", "POST", { cnpj: "11222333000181" }],
+    ["compra_rastreio", "12345", "/compra/rastrear", "POST", { id: 12345 }],
+    ["titularidade_da_linha", `${LINHA}12345678909`, "/linhas/validaTitularidade", "GET", { linha: LINHA, documento: "12345678909" }],
+    ["carteira_programadas", "30", "/saldo/programado", "GET", { data_renovacao_de: "25/11/2026", data_renovacao_ate: "25/12/2026" }],
+    ["relatorio_portabilidades", "30", "/portabilidade/listar", "GET", { data_cadastro_inicio: "26/10/2026", data_cadastro_fim: "25/11/2026" }],
+    ["lista_de_linhas", "2", "/linhas/listar", "GET", { page: 2 }],
+    ["lista_de_clientes", "1", "/cliente/listar", "GET", { page: 1 }],
+    ["pagamento_da_solicitacao", "212345", "/pagamento", "POST", { tipo: "R", id: "12345" }],
+    ["carteira_extrato_saidas", "30", "/saldo/extrato", "GET", { data_inicio: "2026-10-26", data_fim: "2026-11-25", tipo: "S" }],
+    ["carteira_extrato_entradas", "7", "/saldo/extrato", "GET", { data_inicio: "2026-11-18", data_fim: "2026-11-25", tipo: "E" }],
+  ] as const;
+
+  it("cada consulta nova vai pela rota, pelo método e com os campos da coleção oficial; o parâmetro fora da forma não sai", () => {
+    expect(NOVAS.map(([tipo]) => tipo).every((t) => (TIPOS_DE_CONSULTA as readonly string[]).includes(t))).toBe(true);
+    for (const [tipo, parametro, caminho, metodo, corpo] of NOVAS) {
+      const pedido = pedidoDaConsulta(tipo, parametro, AGORA);
+      expect(pedido, tipo).toEqual({ metodo, caminho: tipo === "faq_perguntas" ? "/faq/categoria/6" : caminho, corpo });
+      expect(rota(caminho).request.method, tipo).toBe(metodo);
+      expect(Object.keys(corpo).every((k) => chavesDocumentadas(caminho).includes(k)), tipo).toBe(true);
+      expect(PARAMETRO_DA_CONSULTA[tipo] === null, tipo).toBe(parametro === null);
+    }
+    // A carteira e as portabilidades: o dia é o de Brasília (às 23h de 30/11 ainda é 30/11).
+    expect(pedidoDaConsulta("relatorio_portabilidades", "7", new Date("2026-12-01T02:00:00Z"))?.corpo)
+      .toEqual({ data_cadastro_inicio: "23/11/2026", data_cadastro_fim: "30/11/2026" });
+    for (const [tipo, parametro] of [["faq_perguntas", "1234567890"], ["validar_cep", "9681590"], ["validar_cpf", "1234567890"], ["validar_cnpj", "1122233300018"],
+      ["compra_rastreio", ""], ["titularidade_da_linha", LINHA], ["titularidade_da_linha", `5100000000012345678909`], ["carteira_programadas", "91"],
+      ["relatorio_portabilidades", "0"], ["lista_de_linhas", "0"], ["lista_de_clientes", "10000"], ["pagamento_da_solicitacao", "412345"],
+      ["pagamento_da_solicitacao", "2"], ["carteira_extrato_entradas", "367"]] as const) {
+      expect(pedidoDaConsulta(tipo, parametro, AGORA), `${tipo} ${parametro}`).toBeNull();
+    }
+  });
+
+  it("as dúvidas frequentes, os planos de campanha, os estados, a logística e as validações leem os exemplos oficiais", () => {
+    expect(lerRespostaDaConsulta("faq_categorias", 200, exemplo("/faq/categorias")))
+      .toEqual({ situacao: "respondida", mensagem: "", resposta: { categorias: [{ id: 6, nome: "Atendimento" }, { id: 7, nome: "Portabilidade" }] } });
+    // O exemplo das perguntas vem com os textos vazios: a mesma forma, com texto (e o HTML que a página pode trazer).
+    const perguntas = (exemplo("/faq/categoria/X") as { id: string }[]).map((p, i) => ({ ...p, pergunta: `<p>Pergunta ${i + 1}?</p>`, resposta: "<b>Resposta</b>&nbsp;curta." }));
+    expect(lerRespostaDaConsulta("faq_perguntas", 200, perguntas).resposta).toEqual({
+      perguntas: [{ pergunta: "Pergunta 1?", resposta: "Resposta curta." }, { pergunta: "Pergunta 2?", resposta: "Resposta curta." }], fora: 0,
+    });
+    expect(lerRespostaDaConsulta("faq_perguntas", 200, exemplo("/faq/categoria/X")).resposta).toEqual({ perguntas: [], fora: 0 });
+    expect(lerRespostaDaConsulta("planos_campanhas", 200, exemplo("/planosCampanhas")).resposta).toEqual({ planos: [{
+      codigo: "99999", nome: "7 GB", valor_centavos: 4490, ligacoes: "ligações ilimitadas", sms: "100 SMS", internet: "6 GB + 1 GB", internet_padrao: "6 GB",
+      detalhe: "1 GB de recorrência",
+    }] });
+    const estados = lerRespostaDaConsulta("estados", 200, exemplo("/estados")).resposta as { estados: { uf: string; nome: string }[] };
+    expect(estados.estados).toHaveLength(27);
+    expect(estados.estados).toContainEqual({ uf: "PR", nome: "Paraná" });
+    expect(lerRespostaDaConsulta("logistica", 200, exemplo("/logistica")).resposta).toEqual({ frete_centavos: 490, chip_centavos: 1000 });
+    expect(lerRespostaDaConsulta("validar_cep", 200, exemplo("/validar/cep")).resposta).toEqual({
+      valido: true, rua: "Avenida Independência", numero: "2293", bairro: "Universitário", cidade: "Santa Cruz do Sul", uf: "RS",
+    });
+    expect(lerRespostaDaConsulta("validar_cpf", 200, exemplo("/validar/cpf")).resposta).toEqual({ valido: true, titular: "Nome do Cliente", nascimento: "2002-01-01", idade: 21 });
+    expect(lerRespostaDaConsulta("validar_cpf", 200, { valido: false }).resposta).toEqual({ valido: false, titular: null, nascimento: null, idade: null });
+    expect(lerRespostaDaConsulta("validar_cnpj", 200, exemplo("/validar/cnpj")).resposta).toEqual({ valido: true, razao_social: "Razão Social LTDA", nome_fantasia: "Nome Fantasia" });
+    expect(lerRespostaDaConsulta("compra_rastreio", 200, exemplo("/compra/rastrear")).resposta).toEqual({
+      pedido: 12345, data_pedido: "2023-05-10 07:48", cliente: null,
+      eventos: [{ quando: "2023-05-11 07:48", status: "EM ROTA" }, { quando: "2023-05-12 07:48", status: "EM ROTA" }],
+    });
+    expect(lerRespostaDaConsulta("titularidade_da_linha", 200, exemplo("/linhas/validaTitularidade")).resposta).toEqual({ titular: true, operadora: null });
+    expect(lerRespostaDaConsulta("titularidade_da_linha", 200, { retorno: false, mensagem: "Linha não encontrada." }))
+      .toEqual({ situacao: "nao_encontrada", mensagem: "Linha não encontrada." });
+  });
+
+  it("as recargas programadas, as portabilidades e as listas: o documento mascarado, também dentro do apelido; sem o login nem o ICCID", () => {
+    const programadas = lerRespostaDaConsulta("carteira_programadas", 200, exemplo("/saldo/programado"));
+    expect(programadas.resposta).toMatchObject({ total: 2, fora: 0, soma_centavos: 9980 });
+    expect((programadas.resposta as { recargas: unknown[] }).recargas[1]).toEqual({
+      linha: "11900000000", apelido: "Bruna Souza da Silva, •••.•••.040-84, Bruna", cliente: "Nome Cliente 2", documento: "•••.•••.111-11",
+      plano: "7 GB", valor_centavos: 4490, renovacao: "2023-06-10", cadastrada_em: "2023-05-11 10:33", cadastrada_por: "Quem cadastrou a recarga programada",
+    });
+    expect(JSON.stringify(programadas)).not.toMatch(/00285204084|11111111111|Login do sistema/);
+    const portabilidades = lerRespostaDaConsulta("relatorio_portabilidades", 200, exemplo("/portabilidade/listar"));
+    expect(portabilidades.resposta).toEqual({ portabilidades: [{
+      quando: "2022-10-24 20:43", cliente: "FULANO DA SILVA", documento: "•••.•••.000-00", linha: "51900000000", linha_doadora: "51911111111", operadora: "TIM",
+      status: "Sucesso", aceite: "2022-10-24 20:47", agendada: "2022-10-27 22:00", sucesso: "2022-10-28",
+    }], fora: 0, total: 1, por_status: { Sucesso: 1 } });
+    const linhas = lerRespostaDaConsulta("lista_de_linhas", 200, exemplo("/linhas/listar"));
+    expect(linhas.resposta).toEqual({ linhas: [{
+      linha: "51900000000", apelido: "Escritório", status: "ATIVO", plano: "7 GB", titular: "Contel Telecom", documento: "•••.•••.000-00", tipo_linha: "PRÉ PAGO",
+      ativada: "2023-05-30", fim_do_plano: "2023-06-30", perde_em: "2023-09-13", esim: false, portada: false, bloqueada: false, recarga_automatica: false,
+    }], fora: 0, total: 1 });
+    expect(JSON.stringify(linhas)).not.toMatch(/895517011|😀/);
+    // A lista de clientes não tem exemplo na documentação: só os campos da tabela oficial.
+    const cliente = { tipo: "PF", nome: "Cliente Fictício", cpf: "12345678909", cnpj: "", nascimento: "1990-01-01", endereco_rua: "Rua Fictícia",
+      endereco_numero: "10", endereco_bairro: "Centro", endereco_cep: "80000000", endereco_complemento: "", endereco_cidade: "Curitiba", endereco_uf: "PR",
+      fone_contato: "41999998888", email_contato: "ficticio@exemplo.com", apelido: "Fic" };
+    expect(Object.keys(cliente).every((k) => camposDocumentados("/cliente/listar").has(k))).toBe(true);
+    const clientes = lerRespostaDaConsulta("lista_de_clientes", 200, { retorno: true, mensagem: "", data: [cliente] });
+    expect(clientes.resposta).toEqual({ clientes: [{ nome: "Cliente Fictício", apelido: "Fic", tipo: "PF", documento: "•••.•••.789-09", cidade: "Curitiba", uf: "PR" }], fora: 0, total: 1 });
+    expect(JSON.stringify(clientes)).not.toMatch(/Rua Fictícia|41999998888|ficticio@|12345678909|1990-01-01/);
+    expect(lerRespostaDaConsulta("lista_de_clientes", 200, [cliente]).resposta).toMatchObject({ total: 1 });
+  });
+
+  it("a lista grande cabe na resposta guardada (o resto conta como fora); fora da forma e sem resposta, falha", () => {
+    const uma = (exemplo("/portabilidade/listar") as { data: Record<string, unknown>[] }).data[0];
+    const grande = lerRespostaDaConsulta("relatorio_portabilidades", 200, { retorno: true, mensagem: "", data: Array.from({ length: 2000 }, () => uma) });
+    const r = grande.resposta as { portabilidades: unknown[]; fora: number; total: number; por_status: Record<string, number> };
+    expect(r.total).toBe(2000);
+    expect(r.por_status).toEqual({ Sucesso: 2000 });
+    expect(r.portabilidades.length + r.fora).toBe(2000);
+    expect(r.portabilidades.length).toBeLessThanOrEqual(400);
+    expect(JSON.stringify(grande.resposta).length).toBeLessThan(100_000);
+    expect(lerRespostaDaConsulta("faq_categorias", 200, { data: "x" })).toMatchObject({ situacao: "falhou" });
+    expect(lerRespostaDaConsulta("logistica", 200, {})).toMatchObject({ situacao: "falhou" });
+    expect(lerRespostaDaConsulta("estados", 502, null)).toMatchObject({ situacao: "falhou" });
+    expect(lerRespostaDaConsulta("validar_cep", 200, { cidade: "X" })).toMatchObject({ situacao: "falhou" });
+  });
+
+  it("o pagamento de uma solicitação (o exemplo oficial, sem o QR Code nem a marca) e o extrato da carteira (os campos da tabela)", () => {
+    expect(pedidoDaConsulta("pagamento_da_solicitacao", "112345", AGORA)?.corpo).toEqual({ tipo: "A", id: "12345" });
+    expect(pedidoDaConsulta("pagamento_da_solicitacao", "3987", AGORA)?.corpo).toEqual({ tipo: "C", id: "987" });
+    const pagamento = lerRespostaDaConsulta("pagamento_da_solicitacao", 200, exemplo("/pagamento"));
+    expect(pagamento.resposta).toEqual({
+      quando: "2023-06-05 08:46", valor_centavos: 3990, cliente: "Nome do Cliente", operadora: "CONTEL", iccid: "8955", linha: null,
+      link_pagamento: "link de pagamento", boleto_link: null, boleto_codigo_barras: null, pix_copia_cola: null,
+    });
+    expect(JSON.stringify(pagamento)).not.toMatch(/#144ACE|pix_QRCode|suporte/);
+    expect(lerRespostaDaConsulta("pagamento_da_solicitacao", 200, { status: false, mensagem: "Solicitação não encontrada" }))
+      .toEqual({ situacao: "nao_encontrada", mensagem: "Solicitação não encontrada" });
+    // O extrato: o exemplo da resposta repete o pedido; só os campos da tabela oficial.
+    expect(lerRespostaDaConsulta("carteira_extrato_saidas", 200, exemplo("/saldo/extrato"))).toMatchObject({ situacao: "falhou" });
+    const movimento = { tipo: "SAÍDA", data: "2026-11-20 10:15:00.000", valor: "35.50", descricao_cliente: "Cliente Fictício 123.456.789-09", linha: "41999998888",
+      iccid: "", plano_nome: "10 GB", plano_valor: "54.90" };
+    expect(Object.keys(movimento).every((k) => camposDocumentados("/saldo/extrato").has(k))).toBe(true);
+    const extrato = lerRespostaDaConsulta("carteira_extrato_saidas", 200, { retorno: true, mensagem: "", data: [movimento, { ...movimento, valor: "10" }] });
+    expect(extrato.resposta).toEqual({ movimentos: [
+      { quando: "2026-11-20 10:15", tipo: "SAÍDA", valor_centavos: 3550, cliente: "Cliente Fictício •••.•••.789-09", linha: "41999998888", iccid: null, plano: "10 GB",
+        plano_valor_centavos: 5490 },
+      { quando: "2026-11-20 10:15", tipo: "SAÍDA", valor_centavos: 1000, cliente: "Cliente Fictício •••.•••.789-09", linha: "41999998888", iccid: null, plano: "10 GB",
+        plano_valor_centavos: 5490 },
+    ], fora: 0, total: 2, soma_centavos: 4550 });
   });
 });

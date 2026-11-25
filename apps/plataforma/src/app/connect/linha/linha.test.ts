@@ -6,6 +6,7 @@ import { beforeEach, describe, expect, it, vi } from "vitest";
 
 const cenario = vi.hoisted(() => ({
   permissoes: new Set<string>(),
+  vinculos: [] as { papel: string; escopo: string; unidade_id: string | null }[],
   consultas: [] as Record<string, unknown>[],
   planos: [] as Record<string, unknown>[],
   rpc: [] as { nome: string; argumentos: unknown }[],
@@ -29,7 +30,7 @@ class Consulta {
 const sessaoFicticia = {
   usuario: { id: "eu" },
   situacao: { usuario_ativo: true, sessao_no_turno: true, unidade_id: "loja", unidade_nome: "Santa Cândida (fictícia)", turno_termina_em: "2026-11-26T03:00:00Z" },
-  get molde() { return { permissoes: cenario.permissoes, nome: "Pessoa (fictícia)", vinculos: [], pendencias: { aprovacoes: 0, notas: 0 } }; },
+  get molde() { return { permissoes: cenario.permissoes, nome: "Pessoa (fictícia)", vinculos: cenario.vinculos, pendencias: { aprovacoes: 0, notas: 0 } }; },
   supabase: {
     from: (tabela: string) => new Consulta(tabela === "connect_referencias" ? cenario.planos : cenario.consultas),
     rpc: async (nome: string, argumentos: unknown) => { cenario.rpc.push({ nome, argumentos }); return { data: null, error: cenario.erroDaRpc }; },
@@ -62,6 +63,7 @@ const CONSULTA = { mensagem: null, pedida_em: "2026-11-25T13:00:00Z", respondida
 
 beforeEach(() => {
   cenario.permissoes = new Set(["connect.operar"]);
+  cenario.vinculos = [{ papel: "vendedor", escopo: "unidade", unidade_id: "loja" }];
   cenario.consultas = [];
   cenario.planos = [{ codigo: "1718", nome: "10 GB", tipo: "plano" }];
   cenario.rpc = [];
@@ -71,11 +73,11 @@ beforeEach(() => {
 describe("a tela Consultar linha (CONNECT-g)", () => {
   it("quem opera a loja: o formulário com as consultas da loja, sem a carteira; a lista diz que não há nada", async () => {
     const t = await abrir();
-    emOrdem(t, "Consultar linha", "O que consultar", "Número com DDD, ICCID do chip ou CPF/CNPJ do cliente", "Relatório completo do número (pelo número)",
+    emOrdem(t, "Consultar linha", "O que consultar", "Número com DDD, ICCID do chip, CPF/CNPJ, CEP ou nº do pedido", "Relatório completo do número (pelo número)",
       "Situação da linha (pelo número)", "Saldo da linha (pelo número)", "Recargas da linha (pelo número)", "Cobranças em aberto da linha (pelo número)",
       "Consumo de internet no mês (pelo número)", "Ligações no mês (pelo número)", "SMS no mês (pelo número)", "O número existe na Nogle? (pelo número)",
       "Situação do chip (pelo ICCID)", "Número do chip (pelo ICCID)", "Ativação do chip (pelo ICCID)", "Plano pago do chip (pelo ICCID)",
-      "Relatório do cliente (pelo CPF ou CNPJ)", "Consultar");
+      "Relatório do cliente (pelo CPF ou CNPJ)", "Conferir o CNPJ (pelo CNPJ)", "Conferir o CEP (pelo CEP)", "Rastreio da compra de chip (pelo nº do pedido)", "Consultar");
     expect(t).toContain("Só consulta: nada muda na linha nem no chip.");
     expect(t).not.toContain("Carteira da Ora na Nogle");
     expect(t).toContain("Nenhuma consulta ainda.");
@@ -84,6 +86,7 @@ describe("a tela Consultar linha (CONNECT-g)", () => {
 
   it("o dono: também a carteira; quem não opera nem gere a Ora Connect só vê o aviso", async () => {
     cenario.permissoes = new Set(["connect.operar", "connect.gerir"]);
+    cenario.vinculos = [{ papel: "dono", escopo: "organizacao", unidade_id: null }];
     emOrdem(await abrir(), "O que consultar", "Carteira da Ora na Nogle", "Consultar o saldo");
     cenario.permissoes = new Set(["venda.registrar"]);
     const sem = await abrir();
@@ -181,5 +184,86 @@ describe("os relatórios do número e do cliente (CONNECT-h)", () => {
     dados.set("parametro", "123.456.789-09");
     await expect(consultar(dados)).rejects.toThrow("redirecionou para /connect/linha");
     expect(cenario.rpc).toEqual([{ nome: "connect_consultar", argumentos: { p_tipo: "cliente_completo", p_chave: "k-cpf", p_parametro: "12345678909" } }]);
+  });
+});
+
+// CONNECT-i (25/11/2026): as consultas que faltavam, na tela: o titular da linha e as informações da Nogle (a loja), a
+// logística e o CPF (a gerência), as recargas programadas, as portabilidades e as listas (a rede).
+describe("as outras consultas da Nogle (CONNECT-i)", () => {
+  const enviar = (campos: Record<string, string>) => {
+    const dados = new FormData();
+    for (const [k, v] of Object.entries(campos)) dados.set(k, v);
+    return consultar(dados);
+  };
+
+  it("cada papel vê o que pode pedir: a loja, o titular e as informações; o gerente, também a gerência; o dono, a carteira e a rede", async () => {
+    const loja = await abrir();
+    emOrdem(loja, "O titular da linha", "Linha com DDD", "CPF ou CNPJ do titular", "Conferir o titular", "Pagamento de uma solicitação", "Ativação", "Recarga",
+      "Compra", "Número da solicitação", "Ver o pagamento", "Informações da Nogle", "Dúvidas frequentes", "Planos de campanha", "Estados da Nogle");
+    for (const fora of ["Da gerência", "Carteira da Ora na Nogle", "Relatórios da rede na Nogle"]) expect(loja).not.toContain(fora);
+    cenario.permissoes = new Set(["connect.operar", "connect.gerir"]);
+    cenario.vinculos = [{ papel: "gerente", escopo: "unidade", unidade_id: "loja" }];
+    const gerente = await abrir();
+    emOrdem(gerente, "Da gerência", "Custo do chip e do frete", "CPF do cliente", "Conferir o CPF", "a consulta fica registrada com o seu nome");
+    for (const fora of ["Carteira da Ora na Nogle", "Relatórios da rede na Nogle"]) expect(gerente).not.toContain(fora);
+    cenario.vinculos = [{ papel: "dono", escopo: "organizacao", unidade_id: null }];
+    emOrdem(await abrir(), "Da gerência", "Carteira da Ora na Nogle", "Consultar o saldo", "Recargas programadas pela carteira", "Nos próximos 7 dias",
+      "Nos próximos 90 dias", "Ver as programadas", "Extrato da carteira", "Saídas (ativações, recargas e compras)", "Entradas (o crédito posto)",
+      "Ver o extrato", "Relatórios da rede na Nogle", "Portabilidades", "Nos últimos 7 dias", "No último ano",
+      "Ver as portabilidades", "Linhas da Ora na Nogle: a página", "Ver as linhas", "Clientes da Ora na Nogle: a página", "Ver os clientes");
+  });
+
+  it("na lista: as categorias das dúvidas viram botões, o documento aparece mascarado e as listas levam à página do relatório", async () => {
+    cenario.consultas = [
+      { ...CONSULTA, id: "i1", tipo: "faq_categorias", parametro: null, situacao: "respondida", resposta: { categorias: [{ id: 6, nome: "Atendimento" }, { id: 7, nome: "Portabilidade" }] } },
+      { ...CONSULTA, id: "i2", tipo: "titularidade_da_linha", parametro: "4199999888812345678909", parametro_mascarado: "(41) 99999-8888 · •••.•••.789-09",
+        situacao: "respondida", resposta: { titular: false, operadora: "CLARO" } },
+      { ...CONSULTA, id: "i3", tipo: "relatorio_portabilidades", parametro: "30", situacao: "respondida",
+        resposta: { portabilidades: [], fora: 0, total: 3, por_status: { Sucesso: 2, "Portabilidade negada": 1 } } },
+      { ...CONSULTA, id: "i4", tipo: "validar_cep", parametro: "80010000", situacao: "na_fila", resposta: null, respondida_em: null },
+    ];
+    const t = await abrir();
+    emOrdem(t, "Dúvidas frequentes", "2 categorias: escolha uma abaixo para ver as perguntas.", "Atendimento", "Portabilidade");
+    emOrdem(t, "O titular da linha · (41) 99999-8888 · •••.•••.789-09", "Não: o CPF/CNPJ não é o do titular da linha.", "Operadora da linha: CLARO");
+    expect(t).not.toContain("12345678909");
+    emOrdem(t, "Portabilidades da rede · últimos 30 dias", "3 portabilidades: 2 Sucesso, 1 Portabilidade negada", "Abra a página para ver tudo.", "Abrir o relatório");
+    emOrdem(t, "Conferir o CEP · 80010-000", "Na fila");
+    expect(t.match(/Abrir o relatório/g)).toHaveLength(1);
+  });
+
+  it("a página do relatório mostra a lista inteira (as recargas programadas, com o documento mascarado)", async () => {
+    cenario.consultas = [{ ...CONSULTA, id: "00000000-0000-4000-9000-0000000000a9", tipo: "carteira_programadas", parametro: "30", situacao: "respondida", resposta: {
+      recargas: [{ linha: "41999998888", apelido: "Loja", cliente: "Cliente Fictício", documento: "•••.•••.789-09", plano: "10 GB", valor_centavos: 5490,
+        renovacao: "2026-12-10", cadastrada_em: "2026-11-10 10:00", cadastrada_por: "Gerente Fictício" }], fora: 2, total: 3, soma_centavos: 16470 } }];
+    const t = texto(await RelatorioDaConsulta({ params: Promise.resolve({ id: "00000000-0000-4000-9000-0000000000a9" }) } as never)).replace(/\s+/g, " ");
+    emOrdem(t, "Recargas programadas pela carteira · próximos 30 dias", "3 recargas programadas · R$ 164,70",
+      "10/12/2026 · (41) 99999-8888 (Loja) · Cliente Fictício •••.•••.789-09 · 10 GB · R$ 54,90 · por Gerente Fictício",
+      "E mais 2 que não couberam aqui (a Nogle tem a lista inteira).");
+  });
+
+  it("a ação: a titularidade junta a linha e o documento; cada parâmetro novo é conferido antes do banco", async () => {
+    await expect(enviar({ tipo: "titularidade_da_linha", parametro: "(41) 99999-8888", documento: "123.456.789-09", chave: "t1" })).rejects.toThrow("redirecionou para /connect/linha");
+    await expect(enviar({ tipo: "faq_categorias", chave: "t2" })).rejects.toThrow("redirecionou para /connect/linha");
+    await expect(enviar({ tipo: "carteira_programadas", parametro: "30", chave: "t3" })).rejects.toThrow("redirecionou para /connect/linha");
+    await expect(enviar({ tipo: "pagamento_da_solicitacao", solicitacao: "3", parametro: "9172", chave: "t4" })).rejects.toThrow("redirecionou para /connect/linha");
+    await expect(enviar({ tipo: "carteira_extrato_entradas", parametro: "90", chave: "t5" })).rejects.toThrow("redirecionou para /connect/linha");
+    expect(cenario.rpc).toEqual([
+      { nome: "connect_consultar", argumentos: { p_tipo: "titularidade_da_linha", p_chave: "t1", p_parametro: "4199999888812345678909" } },
+      { nome: "connect_consultar", argumentos: { p_tipo: "faq_categorias", p_chave: "t2" } },
+      { nome: "connect_consultar", argumentos: { p_tipo: "carteira_programadas", p_chave: "t3", p_parametro: "30" } },
+      { nome: "connect_consultar", argumentos: { p_tipo: "pagamento_da_solicitacao", p_chave: "t4", p_parametro: "39172" } },
+      { nome: "connect_consultar", argumentos: { p_tipo: "carteira_extrato_entradas", p_chave: "t5", p_parametro: "90" } },
+    ]);
+    cenario.rpc = [];
+    for (const [campos, erro] of [
+      [{ tipo: "titularidade_da_linha", parametro: "41999998888", documento: "12345678900" }, "titular"],
+      [{ tipo: "validar_cpf", parametro: "12345678900" }, "cpf"], [{ tipo: "validar_cnpj", parametro: "12345678909" }, "cnpj"],
+      [{ tipo: "validar_cep", parametro: "8001000" }, "cep"], [{ tipo: "compra_rastreio", parametro: "abc" }, "pedido"],
+      [{ tipo: "lista_de_linhas", parametro: "0" }, "pagina"], [{ tipo: "relatorio_portabilidades", parametro: "367" }, "dias"],
+      [{ tipo: "pagamento_da_solicitacao", solicitacao: "4", parametro: "9172" }, "solicitacao"], [{ tipo: "pagamento_da_solicitacao", solicitacao: "1", parametro: "" }, "solicitacao"],
+    ] as const) {
+      await expect(enviar({ ...campos, chave: `x:${campos.tipo}` }), campos.tipo).rejects.toThrow(`redirecionou para /connect/linha?erro=${erro}`);
+    }
+    expect(cenario.rpc).toEqual([]);
   });
 });
