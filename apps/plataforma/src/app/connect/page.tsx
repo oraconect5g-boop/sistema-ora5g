@@ -1,6 +1,6 @@
 import { randomUUID } from "node:crypto";
 
-import { ArrowLeftRight, RadioTower, ShieldCheck, Smartphone, Zap } from "lucide-react";
+import { ArrowLeftRight, QrCode as IconeQr, RadioTower, ShieldCheck, Smartphone, Zap } from "lucide-react";
 import type { Metadata } from "next";
 import Link from "next/link";
 
@@ -8,11 +8,12 @@ import { NOMES_DAS_OPERACOES, SITUACOES_OPERACAO, TIPOS_OPERACAO, type SituacaoO
 
 import { MoldeReal } from "../../componentes/MoldeReal";
 import { PainelDaProducao } from "../../componentes/paineis-do-connect";
+import { QrCode } from "../../componentes/QrCode";
 import { Aviso, Botao, Cartao, FiltroSegmentado, Selo, TituloPagina, type Tom } from "../../componentes/ui";
 import { permite } from "../../lib/acesso/molde";
 import { FalhaDoServico, obterSessao } from "../../lib/acesso/sessao";
 import { consultarProducao } from "../../lib/connect/consulta-producao";
-import { ERROS_DO_CONNECT, inicioDaJanela } from "../../lib/connect/regras";
+import { ERROS_DO_CONNECT, inicioDaJanela, linkDePagamento, quemPagaOPix } from "../../lib/connect/regras";
 import { centavosDoBanco } from "../../lib/dinheiro";
 import { janelasDoPeriodo, ORDEM_DOS_PERIODOS, PERIODOS_FINANCEIROS, periodoFinanceiro } from "../../lib/financeiro/painel";
 import { brl } from "../../lib/formato";
@@ -54,7 +55,14 @@ export default async function Connect({ searchParams }: { searchParams: Promise<
   const gere = permite(sessao, "connect.gerir");
   const integra = permite(sessao, "integracoes.gerir");
   const veCusto = permite(sessao, "custo.ver");
-  const [habilitacoes, referencias, operacoes, pagos] = await Promise.all([
+  // CONNECT-l (D-062): para quem gere, o Pix da Nogle que a loja paga (o cliente já pagou no caixa), em todas as lojas
+  // que a pessoa gere (o RLS escolhe), para o dono pagar de onde estiver.
+  const aPagar = gere
+    ? supabase.from("connect_operacoes").select("id, numero, tipo, plano_nome, valor_face_centavos, recebido_na_loja_centavos, link_pagamento, criado_em, unidades(nome)")
+      .eq("metodo_pagamento", "LINK").eq("situacao", "aguardando_operadora").not("venda_item_id", "is", null).not("link_pagamento", "is", null)
+      .order("criado_em", { ascending: false }).limit(20)
+    : null;
+  const [habilitacoes, referencias, operacoes, pagos, pixAPagar] = await Promise.all([
     supabase.from("connect_habilitacoes").select("tipo, habilitada, evidencia, alterado_em"),
     supabase.from("connect_referencias").select("tipo, codigo, nome, uf, valor_centavos").eq("ativo", true).order("nome").limit(3000),
     supabase.from("connect_operacoes").select("id, numero, tipo, situacao, vendedor_id, metodo_pagamento, iccid, esim, linha, linha_doadora, plano_nome, valor_face_centavos, recebido_na_loja_centavos, venda_item_id, cliente_nome, documento_mascarado, link_pagamento, link_esim, numero_ativado, mensagem_operadora, evidencia, motivo_resolucao, criado_em")
@@ -62,8 +70,13 @@ export default async function Connect({ searchParams }: { searchParams: Promise<
     // CONNECT-f: o nome da variação é o do plano (REC-<plano>, ATV-<plano>): a pessoa vê qual plano foi pago.
     supabase.from("venda_itens").select("id, tipo, preco_unitario_centavos, quantidade, desconto_centavos, variantes(nome), vendas!inner(numero, situacao, unidade_id, concluida_em)")
       .in("tipo", ["ativacao", "recarga", "portabilidade"]).eq("vendas.situacao", "concluida").eq("vendas.unidade_id", unidade).gte("vendas.concluida_em", seteDias).limit(50),
+    aPagar,
   ]);
-  if (habilitacoes.error || referencias.error || operacoes.error || pagos.error) throw new FalhaDoServico("connect");
+  if (habilitacoes.error || referencias.error || operacoes.error || pagos.error || pixAPagar?.error) throw new FalhaDoServico("connect");
+  const pixDaLojaAPagar = (pixAPagar?.data ?? []).flatMap((o) => {
+    const link = linkDePagamento(o.link_pagamento);
+    return link ? [{ ...o, link }] : [];
+  });
   // Débito da carteira é custo (#56): só para quem tem custo.ver, lido da tabela própria (o RLS também barra).
   const custos = veCusto && operacoes.data.length
     ? await supabase.from("connect_operacoes_custos").select("operacao_id, valor_debitado_centavos").in("operacao_id", operacoes.data.map((o) => o.id))
@@ -85,15 +98,23 @@ export default async function Connect({ searchParams }: { searchParams: Promise<
   const opcaoDePago = (p: (typeof pagos.data)[number]) => (
     <option key={p.id} value={p.id}>Venda nº {p.vendas.numero}{p.variantes?.nome ? ` · ${p.variantes.nome}` : ""} · {brl(centavosDoBanco(p.preco_unitario_centavos) * p.quantidade - centavosDoBanco(p.desconto_centavos))}</option>
   );
+  // CONNECT-l (D-062, o proprietário em 25/11: "não com o crédito da Nogle"): o Pix da Nogle é o padrão. Com o serviço
+  // recebido no caixa, quem paga o link é a loja (o cliente já pagou); sem ele, o cliente paga direto à Nogle, na hora.
   const formaDePagamento = (tipo: TipoOperacao) => (
     <fieldset className="space-y-2">
-      <legend className="text-sm font-medium">Pagamento</legend>
-      {/* PDV-c (o proprietário, 18/11): na loja não se gera link de pagamento; o cliente paga no caixa e a operação usa o SALDO. */}
-      <input type="hidden" name="metodo" value="SALDO" />
-      <p className="text-xs text-suave">O cliente paga no caixa (venda a ativação ou a recarga do plano no PDV) e a operação usa o SALDO da Ora. A venda escolhida tem de ser do mesmo plano da operação. Na loja não se gera link de pagamento: o link é só da compra online.</p>
-      <label className={rotulo}>Serviço pago no caixa
-        <select name="venda_item" required className={campo} defaultValue=""><option value="" disabled>Escolha a venda</option>{pagosLivres(tipo).map(opcaoDePago)}</select>
+      <legend className="text-sm font-medium">Pagamento à Nogle</legend>
+      <label className="flex items-start gap-2 text-sm">
+        <input type="radio" name="metodo" value="LINK" defaultChecked className="mt-1 size-4" />
+        <span><span className="font-semibold">Pix da Nogle</span> (o padrão): a Nogle devolve o pagamento, que aparece aqui com o QR Code. Com o serviço recebido no caixa, a loja paga com o dinheiro do cliente; sem ele, o cliente paga direto à Nogle, na hora.</span>
       </label>
+      <label className="flex items-start gap-2 text-sm">
+        <input type="radio" name="metodo" value="SALDO" className="mt-1 size-4" />
+        <span><span className="font-semibold">Crédito da carteira da Ora na Nogle</span>: só com o serviço pago no caixa e com crédito na carteira.</span>
+      </label>
+      <label className={rotulo}>Serviço pago no caixa
+        <select name="venda_item" className={campo} defaultValue=""><option value="">Nenhum: o cliente paga o Pix da Nogle direto</option>{pagosLivres(tipo).map(opcaoDePago)}</select>
+      </label>
+      <p className="text-xs text-suave">A venda escolhida tem de ser do mesmo plano da operação e vale uma operação só.</p>
     </fieldset>
   );
   const seletorDePlano = (
@@ -116,6 +137,21 @@ export default async function Connect({ searchParams }: { searchParams: Promise<
           producao={producao} veCusto={veCusto} aqui={enderecoDoPeriodo(periodo)}
           filtro={<FiltroSegmentado rotulo="Período" opcoes={ORDEM_DOS_PERIODOS.map((p) => ({ href: enderecoDoPeriodo(p), rotulo: PERIODOS_FINANCEIROS[p].rotulo, ativo: p === periodo }))} />}
         />
+      )}
+
+      {pixDaLojaAPagar.length > 0 && (
+        <Cartao titulo="Pix da Nogle para a loja pagar" subtitulo="O cliente já pagou no caixa: pague o Pix da Nogle com o dinheiro recebido. A operação segue sozinha quando a Nogle confirmar." icone={IconeQr}>
+          <ul className="divide-y divide-borda">
+            {pixDaLojaAPagar.map((o) => (
+              <li key={o.id} className="flex flex-wrap items-center justify-between gap-2 py-2 text-sm">
+                <span>Nº {o.numero} · {NOMES_DAS_OPERACOES[o.tipo as TipoOperacao] ?? o.tipo}{o.plano_nome ? ` · ${o.plano_nome}` : ""}{o.unidades?.nome ? ` · ${o.unidades.nome}` : ""}
+                  <span className="numeros block text-xs text-suave">{quando(o.criado_em)}{o.valor_face_centavos !== null ? ` · valor de face ${brl(centavosDoBanco(o.valor_face_centavos))}` : ""}{o.recebido_na_loja_centavos !== null ? ` · recebido na loja ${brl(centavosDoBanco(o.recebido_na_loja_centavos))}` : ""}</span>
+                </span>
+                <a className="font-semibold text-acao underline" href={o.link} rel="noreferrer noopener" target="_blank">Abrir o pagamento da Nogle</a>
+              </li>
+            ))}
+          </ul>
+        </Cartao>
       )}
 
       <Cartao titulo="Situação da integração" icone={RadioTower}>
@@ -218,7 +254,7 @@ export default async function Connect({ searchParams }: { searchParams: Promise<
                     {quando(o.criado_em)}
                     {o.iccid ? ` · ICCID ${o.iccid}` : o.esim ? " · eSIM" : ""}
                     {o.linha ? ` · linha ${o.linha}` : ""}{o.linha_doadora ? ` ← ${o.linha_doadora}` : ""}
-                    {o.plano_nome ? ` · ${o.plano_nome}` : ""}{o.metodo_pagamento ? ` · ${o.metodo_pagamento}` : ""}
+                    {o.plano_nome ? ` · ${o.plano_nome}` : ""}{o.metodo_pagamento === "LINK" ? " · Pix da Nogle" : o.metodo_pagamento === "SALDO" ? " · crédito da carteira" : ""}
                     {o.cliente_nome ? ` · ${o.cliente_nome} (${o.documento_mascarado ?? ""})` : ""}
                   </p>
                   <p className="text-xs">{SITUACOES_OPERACAO[s].explicacao}</p>
@@ -228,7 +264,9 @@ export default async function Connect({ searchParams }: { searchParams: Promise<
                       {debitoDe(o.id) !== null ? ` · debitado da carteira ${brl(centavosDoBanco(debitoDe(o.id) ?? 0))}` : ""}</p>
                   )}
                   {o.numero_ativado && <p className="numeros text-xs">Número ativado: {o.numero_ativado}</p>}
-                  {o.link_pagamento && s === "aguardando_operadora" && <p className="break-all text-xs">Link para o cliente pagar: <a className="text-acao underline" href={o.link_pagamento} rel="noreferrer noopener" target="_blank">{o.link_pagamento}</a></p>}
+                  {s === "aguardando_operadora" && linkDePagamento(o.link_pagamento) && (
+                    <PixDaNogle numero={o.numero} link={linkDePagamento(o.link_pagamento) ?? ""} quemPaga={quemPagaOPix(o.venda_item_id)} />
+                  )}
                   {o.link_esim && <p className="break-all text-xs">eSIM: <a className="text-acao underline" href={o.link_esim} rel="noreferrer noopener" target="_blank">abrir QR Code</a></p>}
                   {o.mensagem_operadora && <p className="text-xs text-suave">Nogle: {o.mensagem_operadora}</p>}
                   {evidencia?.mensagem && <p className="text-xs text-suave">Última consulta{evidencia.consultado_em ? ` (${quando(evidencia.consultado_em)})` : ""}: {evidencia.mensagem}</p>}
@@ -276,5 +314,22 @@ export default async function Connect({ searchParams }: { searchParams: Promise<
         </Cartao>
       )}
     </MoldeReal>
+  );
+}
+
+// CONNECT-l (D-062): o Pix da Nogle da operação, com o QR Code desenhado no servidor e o botão para abrir na página da
+// Nogle. Quem paga muda o texto: a loja (o cliente já pagou no caixa: o QR não é para ele) ou o cliente, na hora.
+function PixDaNogle({ numero, link, quemPaga }: { numero: number; link: string; quemPaga: "loja" | "cliente" }) {
+  return (
+    <div className="mt-2 flex flex-wrap items-start gap-3 rounded-botao border border-borda p-3">
+      <QrCode texto={link} rotulo={`QR Code do Pix da Nogle da operação nº ${numero}`} className="size-40 shrink-0 rounded-botao bg-white" />
+      <div className="min-w-0 flex-1 space-y-1 text-xs">
+        <p className="text-sm font-semibold">{quemPaga === "loja" ? "Pix da Nogle: a loja paga" : "Pix da Nogle: o cliente paga agora"}</p>
+        <p className="text-suave">{quemPaga === "loja"
+          ? "O cliente já pagou no caixa: não mostre este QR Code a ele. O dono ou o gerente paga com o dinheiro recebido, pelo celular."
+          : "O cliente aponta a câmera do celular para o QR Code e paga na página da Nogle."} A operação segue sozinha quando a Nogle confirmar.</p>
+        <a className="inline-block font-semibold text-acao underline" href={link} rel="noreferrer noopener" target="_blank">Abrir o pagamento da Nogle</a>
+      </div>
+    </div>
   );
 }

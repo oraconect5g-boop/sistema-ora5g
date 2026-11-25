@@ -93,13 +93,19 @@ describe("#58 — a chave da ativação confere o titular, com privacidade", () 
   });
 });
 
-describe("#57 — LINK não cobra de novo um serviço pago no caixa", () => {
-  it("LINK com o serviço pago é recusado; controle: o mesmo serviço vai pelo SALDO", async () => {
+describe("#57 e D-062 — o serviço pago no caixa vai pelo Pix da Nogle (a loja paga), uma operação só", () => {
+  it("LINK com o serviço pago é aceito (CONNECT-l: quem paga o link é a loja); o mesmo serviço não vale outra operação", async () => {
     const s = await usuario();
     const item = await servicoPago(s);
-    expect(await errouRegistrar(s, { metodo: "LINK", linha: "51999990000", plano: 99999, venda_item: item }, chave())).toBe("22023");
-    const id = await registrar(s, { metodo: "SALDO", linha: "51999990000", plano: 99999, venda_item: item });
+    const id = await registrar(s, { metodo: "LINK", linha: "51999990000", plano: 99999, venda_item: item });
     expect(await situacao(id)).toBe("registrada");
+    const guardada = (await db.query<{ metodo_pagamento: string; venda_item_id: string; recebido_na_loja_centavos: number }>(
+      "select metodo_pagamento, venda_item_id, recebido_na_loja_centavos from public.connect_operacoes where id = $1", [id])).rows[0];
+    expect(guardada).toEqual({ metodo_pagamento: "LINK", venda_item_id: item, recebido_na_loja_centavos: 4490 });
+    // O mesmo serviço pago, em outra linha e pelo SALDO: recusado (o pago vale uma operação só).
+    expect(await errouRegistrar(s, { metodo: "SALDO", linha: "51977770000", plano: 99999, venda_item: item }, chave())).toBe("OR013");
+    // Controle: o SALDO continua pedindo o serviço pago no caixa.
+    expect(await errouRegistrar(s, { metodo: "SALDO", linha: "51977770000", plano: 99999 }, chave())).toBe("22023");
   });
 });
 

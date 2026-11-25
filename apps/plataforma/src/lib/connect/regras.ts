@@ -15,9 +15,7 @@ export const ERROS_DO_CONNECT = {
   linha: "Linha com DDD: 11 dígitos (ex.: 51 99999-9999).",
   motivo: "Informe o motivo (fica na auditoria).",
   evidencia: "Descreva a evidência com pelo menos 10 caracteres (fica na auditoria).",
-  link_pago: "Este serviço já foi pago no caixa: escolha SALDO. O LINK cobraria o cliente de novo.",
-  link_so_online: "Na loja não se gera link de pagamento: o cliente paga no caixa e a operação usa o SALDO da Ora. O link é só da compra online.",
-  sem_servico_pago: "Escolha o serviço pago no caixa: venda a ativação ou a recarga no PDV antes de registrar a operação.",
+  sem_servico_pago: "O crédito da carteira (SALDO) pede o serviço pago no caixa: venda a ativação ou a recarga no PDV antes, ou escolha o Pix da Nogle.",
   outro_plano: "O serviço pago no caixa é de outro plano: escolha a venda do plano pedido, ou venda no caixa o serviço do plano certo.",
   falha: "Não foi possível concluir agora. Tente de novo em instantes.",
 } as const;
@@ -44,7 +42,8 @@ export type Pedido = Record<string, unknown>;
 
 /**
  * Pedido no formato de connect_registrar. Plano, DDD, cidade e operadora são códigos das listas
- * oficiais (o valor nunca vem da tela). O serviço pago (SALDO) é o item da venda concluída.
+ * oficiais (o valor nunca vem da tela). O serviço pago no caixa é o item da venda concluída (obrigatório no SALDO;
+ * no Pix da Nogle, diz que quem paga o link é a loja).
  */
 export function lerPedido(tipo: TipoOperacao, dados: Formulario): { ok: true; pedido: Pedido } | { ok: false; erro: ErroDoConnect } {
   const vendaItem = texto(dados, "venda_item", 36);
@@ -61,10 +60,10 @@ export function lerPedido(tipo: TipoOperacao, dados: Formulario): { ok: true; pe
   const metodo = texto(dados, "metodo", 5);
   const plano = texto(dados, "plano", 9);
   if ((metodo !== "LINK" && metodo !== "SALDO") || !/^\d{1,9}$/.test(plano)) return { ok: false, erro: "dados" };
-  // Serviço já recebido no caixa não vai pelo LINK (REV-054, #57): o banco recusa também. PDV-c (o proprietário, 18/11):
-  // na loja não se gera link de pagamento nenhum; o link é só da compra online. A loja usa o SALDO, com o serviço pago.
-  if (metodo === "LINK") return { ok: false, erro: vendaItem ? "link_pago" : "link_so_online" };
-  if (!vendaItem) return { ok: false, erro: "sem_servico_pago" };
+  // D-062 (o proprietário, 25/11: "não com o crédito da Nogle"): o Pix da Nogle (LINK) é o padrão, com o serviço recebido
+  // no caixa (quem paga o link é a loja, com o dinheiro do cliente) ou sem ele (o cliente paga direto à Nogle, na hora).
+  // O crédito da carteira (SALDO) segue pedindo o serviço pago no caixa; o banco confere tudo de novo.
+  if (metodo === "SALDO" && !vendaItem) return { ok: false, erro: "sem_servico_pago" };
   if (tipo === "recarga") {
     const linha = digitos(texto(dados, "linha"));
     if (!linhaValida(linha)) return { ok: false, erro: "linha" };
@@ -93,3 +92,13 @@ export function lerPedido(tipo: TipoOperacao, dados: Formulario): { ok: true; pe
 
 /** Início de uma janela de N dias até agora (ISO), para filtrar os serviços pagos recentes. */
 export const inicioDaJanela = (dias: number, agora: Date = new Date()) => new Date(agora.getTime() - dias * 86_400_000).toISOString();
+
+/**
+ * O link de pagamento da Nogle (o Pix da Nogle; CONNECT-l) que a tela mostra no QR Code e no botão: só https, sem
+ * espaço nem aspas, até 500 caracteres (o tamanho que o banco guarda). Fora disso, a tela não mostra.
+ */
+export const linkDePagamento = (link: string | null | undefined): string | null =>
+  typeof link === "string" && link.length <= 500 && /^https:\/\/[^\s"'<>\\]+$/.test(link) ? link : null;
+
+/** Quem paga o Pix da Nogle: com o serviço recebido no caixa, a loja (o cliente já pagou); sem ele, o cliente. */
+export const quemPagaOPix = (vendaItem: string | null | undefined): "loja" | "cliente" => (vendaItem ? "loja" : "cliente");
