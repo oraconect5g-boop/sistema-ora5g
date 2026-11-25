@@ -1,12 +1,12 @@
 import { randomUUID } from "node:crypto";
 
-import { ArrowLeft, ArrowRightLeft, Cpu, Search, Store, TriangleAlert } from "lucide-react";
+import { ArrowRightLeft, Cpu, Search, Store, TriangleAlert } from "lucide-react";
 import type { Metadata } from "next";
 import Form from "next/form";
 import Link from "next/link";
 
 import { MoldeReal } from "../../../componentes/MoldeReal";
-import { Aviso, Botao, Cartao, Indicador, Selo, TituloPagina } from "../../../componentes/ui";
+import { Aviso, Botao, Cartao, Indicador, Selo } from "../../../componentes/ui";
 import { permite } from "../../../lib/acesso/molde";
 import { FalhaDoServico, obterSessao } from "../../../lib/acesso/sessao";
 import {
@@ -17,6 +17,7 @@ import {
 import { agora, numero } from "../../../lib/formato";
 import { textoDoParametro, type ValorDeParametro } from "../../../lib/parametros";
 import { cancelarTransferencia, ligarPdv, pedirTransferencia } from "./acoes";
+import { CabecalhoConnect, LARGURA_DA_CONNECT } from "../CabecalhoConnect";
 
 export const metadata: Metadata = { title: "Chips na Nogle" };
 export const dynamic = "force-dynamic";
@@ -44,10 +45,9 @@ type Parametros = {
 export default async function ChipsDaNogle({ searchParams }: { searchParams: Promise<Parametros> }) {
   const parametros = await searchParams;
   const sessao = await obterSessao({ exigirLoja: true });
-  const voltar = <Link href="/connect" className="inline-flex min-h-11 items-center gap-1 text-sm font-semibold text-acao"><ArrowLeft className="size-4" aria-hidden />Ora Connect</Link>;
   const liga = permite(sessao, "connect.gerir") || permite(sessao, "integracoes.gerir");
   if (!liga && !permite(sessao, "connect.operar")) {
-    return <MoldeReal sessao={sessao}>{voltar}<Aviso tom="aviso" className="mt-4">O estoque de chips da Nogle é de quem opera ou gere a Ora Connect.</Aviso></MoldeReal>;
+    return <MoldeReal sessao={sessao} largura={LARGURA_DA_CONNECT}><CabecalhoConnect sessao={sessao} aba="chips" /><Aviso tom="aviso" className="mt-4">O estoque de chips da Nogle é de quem opera ou gere a Ora Connect.</Aviso></MoldeReal>;
   }
   const { supabase } = sessao;
   const gereARede = permite(sessao, "connect.gerir");
@@ -137,9 +137,8 @@ export default async function ChipsDaNogle({ searchParams }: { searchParams: Pro
   );
 
   return (
-    <MoldeReal sessao={sessao} largura="max-w-5xl">
-      {voltar}
-      <TituloPagina titulo="Chips na Nogle" subtitulo="O estoque virgem de chips na Nogle, lido pelo servidor a cada 30 minutos, das 7h às 22h" />
+    <MoldeReal sessao={sessao} largura={LARGURA_DA_CONNECT}>
+      <CabecalhoConnect sessao={sessao} aba="chips" titulo="Chips na Nogle" subtitulo="O estoque virgem de chips na Nogle, lido pelo servidor a cada 30 minutos, das 7h às 22h" />
       {ok === "ligacao" && <Aviso tom="sucesso" className="mt-4">Ligação salva: fica na auditoria.</Aviso>}
       {ok === "transferencia" && (
         <Aviso tom="sucesso" className="mt-4">

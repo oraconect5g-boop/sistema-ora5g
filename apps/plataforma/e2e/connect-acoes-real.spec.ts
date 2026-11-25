@@ -16,8 +16,9 @@ test.describe("as ações na Nogle, no site no ar (CONNECT-j)", () => {
     await comPessoas(browser, [[DONO, LOJA_A], [VENDEDOR]], async (pessoas) => {
       const dono = pessoas[DONO] as Page;
       await dono.goto("/connect");
-      await dono.getByRole("link", { name: "Ações na Nogle", exact: true }).click();
-      await expect(dono.getByRole("heading", { level: 1, name: "Ações na Nogle" })).toBeVisible();
+      // CONNECT-m: as ações ficam na aba "Bloqueio e atendimento" (as abas da demonstração).
+      await dono.getByRole("navigation", { name: "Funções da Ora Connect" }).getByRole("link", { name: "Bloqueio e atendimento", exact: true }).click();
+      await expect(dono.getByRole("heading", { level: 2, name: "Ações na Nogle", exact: true })).toBeVisible();
       for (const secao of ["Linha do cliente", "Cliente na Nogle", "Compra de chip com entrega", "PDVs da Nogle", "Pedidos"]) {
         await expect(dono.getByRole("heading", { level: 2, name: secao, exact: true })).toBeVisible();
       }

@@ -17,7 +17,7 @@ test.describe("as consultas da Nogle, no site no ar (CONNECT-g)", () => {
     await comPessoas(browser, [[DONO, LOJA_A], [VENDEDOR]], async (pessoas) => {
       const dono = pessoas[DONO] as Page;
       await dono.goto("/connect/linha");
-      await expect(dono.getByRole("heading", { level: 1, name: "Consultar linha" })).toBeVisible();
+      await expect(dono.getByRole("heading", { level: 2, name: "Consultar linha", exact: true })).toBeVisible();
       await dono.getByRole("button", { name: "Consultar o saldo" }).click();
       const consulta = dono.getByRole("list", { name: "Minhas consultas" }).getByRole("listitem").first();
       await expect(consulta).toContainText("Saldo da carteira da Ora");

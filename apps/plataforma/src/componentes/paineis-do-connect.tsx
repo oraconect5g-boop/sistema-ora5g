@@ -1,5 +1,4 @@
-import { Signal } from "lucide-react";
-import type { ReactNode } from "react";
+import { ArrowLeftRight, CircleCheck, RefreshCw, Signal } from "lucide-react";
 
 import type { Janela } from "../lib/financeiro/painel";
 import { brl, numero } from "../lib/formato";
@@ -7,12 +6,12 @@ import { confirmadas, diasDaProducao, SERIES_DA_PRODUCAO, type ProducaoDoBanco }
 import type { Leitura } from "../lib/leitura-do-banco";
 import { BarraSegmentada, Linhas, TabelaDoGrafico } from "./graficos";
 import { cadaRotulo, EstadoDoPainel, NOTA, NUMERO_PRINCIPAL, plural, SEM_LEITURA, type ItemDoResumo } from "./paineis-de-vendas";
-import { Cartao, EstadoVazio, ListaDados } from "./ui";
+import { Cartao, EstadoVazio, Indicador, ListaDados } from "./ui";
 
-// Produção do Ora Connect (lote G4a), do mesmo jeito no Início, nos Relatórios e no /connect: chips
-// vendidos (T1) e operações confirmadas (T2), uma por operação, cada uma no dia da confirmação. O que
-// está em andamento ou sem resultado aparece à parte e nunca soma na produção. Só apresentação: os
-// números chegam lidos por lib/connect/consulta-producao, com o estado da leitura.
+// Produção do Ora Connect (lote G4a), do mesmo jeito no Início, nos Relatórios e no /connect (desde o CONNECT-m, os cartões e
+// as operações por tipo da aba Operações do dia): chips vendidos (T1) e operações confirmadas (T2), uma por operação, cada uma
+// no dia da confirmação. O que está em andamento ou sem resultado aparece à parte e nunca soma na produção. Só apresentação:
+// os números chegam lidos por lib/connect/consulta-producao, com o estado da leitura.
 
 const ROTULO = "Ora Connect confirmado";
 
@@ -63,41 +62,49 @@ export function PainelDaProducaoPorDia({ producao, janela, aqui }: { producao: L
   );
 }
 
-/** A produção do período no /connect: por tipo, por origem, o que falta confirmar e, com custo.ver, o débito na carteira. */
-export function PainelDaProducao({ producao, veCusto, aqui, filtro }: {
+/** Os 4 cartões da aba Operações do dia (lote CONNECT-m, como na demonstração): chips vendidos e confirmadas por tipo, no período. */
+export function IndicadoresDoConnect({ producao, aqui }: { producao: Leitura<ProducaoDoBanco>; aqui: string }) {
+  if (producao.estado !== "ok") return <EstadoDoPainel estado={producao.estado} fonte="connect" tentarDeNovo={aqui} />;
+  const t = producao.dados.totais;
+  const pendentes = t.emAndamento + t.semResultado;
+  return (
+    <div className="grid grid-cols-2 gap-3 sm:gap-4 xl:grid-cols-4">
+      <Indicador rotulo="Chips vendidos" valor={numero(t.chips)} icone={Signal} detalhe="no caixa (ativar é outra operação)" />
+      <Indicador rotulo="Ativações confirmadas" valor={numero(t.ativacoes)} icone={CircleCheck} tom={t.semResultado > 0 ? "atencao" : "neutro"}
+        detalhe={pendentes > 0 ? plural(pendentes, "operação ainda sem confirmação", "operações ainda sem confirmação") : "nenhuma esperando a operadora"} />
+      <Indicador rotulo="Portabilidades" valor={numero(t.portabilidades)} icone={ArrowLeftRight} detalhe="confirmadas" />
+      <Indicador rotulo="Recargas" valor={numero(t.recargas)} icone={RefreshCw} detalhe={`${brl(t.valorFaceRecargas)} em valor de face (não é receita)`} />
+    </div>
+  );
+}
+
+/**
+ * As operações por tipo do período (a aba Operações do dia): os chips vendidos e as confirmadas, cada série com a cor fixa do
+ * que conta, por origem, o que falta confirmar e, com custo.ver, o débito na carteira. Sem leitura, nada (os cartões de cima
+ * já explicam o motivo).
+ */
+export function OperacoesPorTipo({ producao, veCusto, rotuloDoPeriodo }: {
   producao: Leitura<ProducaoDoBanco>;
   /** Tem custo.ver na loja do turno: o débito registrado na carteira aparece. */
   veCusto: boolean;
-  aqui: string;
-  filtro: ReactNode;
+  rotuloDoPeriodo: string;
 }) {
-  const cartao = { titulo: "Produção do período", subtitulo: "Operações confirmadas pela operadora ou pela revisão da gerência; registrada não é produção" };
-  if (producao.estado !== "ok") return <Cartao {...cartao}>{filtro}<div className="mt-3"><EstadoDoPainel estado={producao.estado} fonte="connect" tentarDeNovo={aqui} /></div></Cartao>;
+  if (producao.estado !== "ok") return null;
   const t = producao.dados.totais;
-  const partes = SERIES_DA_PRODUCAO.filter((s) => s.chave !== "chips").map((s) => ({ nome: s.nome, valor: t[s.chave], serie: s.serie }));
   const lista = [
-    ["Chips vendidos (venda; ativar é outra operação)", numero(t.chips)] as const,
     ["Confirmadas pela operadora", numero(t.porEvidencia)] as const,
     ["Confirmadas pela revisão da gerência", numero(t.porRevisao)] as const,
     ["Em andamento (registradas, enviando ou aguardando)", numero(t.emAndamento)] as const,
     ["Sem resultado (precisam de decisão)", numero(t.semResultado)] as const,
-    ["Valor de face das recargas (não é receita)", brl(t.valorFaceRecargas)] as const,
     ...(veCusto ? [["Débito registrado na carteira", t.lojasSemCusto > 0 ? `${brl(t.debito)} (sem ${plural(t.lojasSemCusto, "loja", "lojas")})` : brl(t.debito)] as const] : []),
   ];
   return (
-    <Cartao {...cartao}>
-      {filtro}
-      <div className="mt-4">
-        {confirmadas(t) === 0 ? (
-          <EstadoVazio titulo="Nenhuma operação confirmada no período" icone={Signal}>A leitura está funcionando; operação registrada só conta depois de confirmada.</EstadoVazio>
-        ) : (
-          <>
-            <p className={NUMERO_PRINCIPAL}>{numero(confirmadas(t))}</p>
-            <p className={`mb-4 ${NOTA}`}>{plural(confirmadas(t), "operação confirmada", "operações confirmadas")} no período</p>
-            <BarraSegmentada rotulo="Confirmadas" formatar={numero} partes={partes} />
-          </>
-        )}
-      </div>
+    <Cartao titulo="Operações por tipo" subtitulo={`Chips vendidos e operações confirmadas (${rotuloDoPeriodo})`}>
+      {confirmadas(t) === 0 && t.chips === 0 ? (
+        <EstadoVazio titulo="Nenhum chip vendido nem operação confirmada no período" icone={Signal}>A leitura está funcionando; operação registrada só conta depois de confirmada.</EstadoVazio>
+      ) : (
+        <BarraSegmentada rotulo="Operações" formatar={numero} partes={SERIES_DA_PRODUCAO.map((s) => ({ nome: s.nome, valor: t[s.chave], serie: s.serie }))} />
+      )}
       <ListaDados className="mt-4 border-t border-borda pt-3" itens={lista} />
     </Cartao>
   );
