@@ -1,6 +1,6 @@
 import { randomUUID } from "node:crypto";
 
-import { ArrowLeft, CalendarClock, Eye, MessageSquareHeart, PencilLine, RadioTower, ShieldCheck, ShoppingBag, Wrench } from "lucide-react";
+import { ArrowLeft, CalendarClock, CreditCard, Eye, MessageSquareHeart, PencilLine, RadioTower, ShieldCheck, ShoppingBag, Wrench } from "lucide-react";
 import type { Metadata } from "next";
 import Link from "next/link";
 import { notFound } from "next/navigation";
@@ -8,11 +8,13 @@ import { notFound } from "next/navigation";
 import { NOMES_DAS_OPERACOES, SITUACOES_OPERACAO, ehTipoOperacao, type SituacaoOperacao } from "@ora5g/dominio/nogle";
 
 import { MoldeReal } from "../../../componentes/MoldeReal";
+import { QrCode } from "../../../componentes/QrCode";
 import { Aviso, Botao, BotaoLink, Cartao, ListaDados, Selo, TituloPagina } from "../../../componentes/ui";
 import { ehUuid } from "../../../lib/acesso/regras";
 import { permite } from "../../../lib/acesso/molde";
 import { FalhaDoServico, obterSessao } from "../../../lib/acesso/sessao";
 import { SERVICOS, SITUACOES as SITUACOES_DA_OS, ehServico } from "../../../lib/assistencia/regras";
+import { CICLOS, diaDe, lerAssinaturasDoCliente, SITUACOES_DA_ASSINATURA, SITUACOES_DA_COBRANCA, type AssinaturasDoCliente } from "../../../lib/clientes/assinaturas";
 import { lerHistoricoDoCliente, type Bloco } from "../../../lib/clientes/historico";
 import { nomeDaVendaDoSite, lerVendasDoSite } from "../../../lib/loja/vendas-do-site";
 import { CAMPOS_REVELAVEIS, CANAIS, ERROS_DO_CLIENTE, FINALIDADES, FINALIDADES_DE_CONTATO, FONTES, SEGMENTOS, ehFinalidade, ehSegmento } from "../../../lib/clientes/regras";
@@ -20,7 +22,7 @@ import { ETAPAS, ETAPAS_ABERTAS, ehEtapa, TIPOS_DE_ATIVIDADE } from "../../../li
 import { centavosDoBanco } from "../../../lib/dinheiro";
 import { brl } from "../../../lib/formato";
 import { chaveDoCatalogo, type ValorDeParametro } from "../../../lib/parametros";
-import { registrarConsentimento } from "../acoes";
+import { cancelarAssinatura, pedirAssinatura, registrarConsentimento } from "../acoes";
 import { FormularioCliente } from "../FormularioCliente";
 import { Revelar } from "../Revelar";
 
@@ -34,6 +36,8 @@ const OK = {
   consentimento: "Consentimento registrado.",
   consentimento_igual: "O consentimento já estava assim.",
   mesclado: "Cadastros mesclados: este ficou com os dados e o histórico do outro.",
+  assinatura_pedida: "Assinatura pedida: o QR Code para o cliente cadastrar o cartão aparece em alguns segundos.",
+  assinatura_cancelada: "Assinatura cancelada: o servidor avisa a Asaas, que para de cobrar.",
 } as const;
 const ACESSOS: Record<string, string> = {
   "cliente.criado": "cadastrou", "cliente.alterado": "corrigiu", "cliente.busca": "encontrou na busca", "cliente.ficha": "abriu a ficha", "cliente.revelado": "viu",
@@ -73,13 +77,16 @@ export default async function FichaDoCliente({ params, searchParams }: { params:
   if (ficha.error?.code === "P0002") notFound();
   if (ficha.error) throw new FalhaDoServico("cliente_ficha");
   const f = ficha.data as unknown as Ficha;
-  const [compras, acessos] = await Promise.all([
+  // PAY-015c: junto, as assinaturas no cartão do cliente (a falha dessa leitura não derruba a ficha).
+  const [compras, acessos, assinaturasLidas] = await Promise.all([
     supabase.from("vendas").select("id, numero, concluida_em, total_centavos, situacao, canal").eq("cliente_id", id).order("concluida_em", { ascending: false }).limit(20),
     auditoria
       ? supabase.from("auditoria").select("id, ocorrido_em, acao, usuario_id, depois").eq("alvo_tipo", "cliente").eq("alvo_id", id).order("ocorrido_em", { ascending: false }).limit(20)
       : Promise.resolve(null),
+    (async () => await supabase.rpc("assinaturas_do_cliente", { p_cliente: id }))(),
   ]);
   if (compras.error || acessos?.error) throw new FalhaDoServico("cliente_historico");
+  const assinaturas = assinaturasLidas.error ? null : lerAssinaturasDoCliente(assinaturasLidas.data);
   // L5e (CRM-002): as OS, o funil e a agenda e o Ora Connect das compras que a pessoa vê, cada um à parte.
   // CRM-009a: junto, as compras que nasceram de um pedido ou de uma reserva do site (a venda é do balcão; a origem, do site).
   const [historico, doSite] = await Promise.all([lerHistoricoDoCliente(supabase, id, compras.data.map((c) => c.id)), lerVendasDoSite(supabase, compras.data.map((c) => c.id))]);
@@ -146,6 +153,8 @@ export default async function FichaDoCliente({ params, searchParams }: { params:
       </div>
 
       <HistoricoDaFicha historico={historico} podeAbrirOs={Boolean(abreOs) && ativo && !f.mesclado_em} cliente={f.id} />
+
+      <AssinaturasNoCartao cliente={f.id} lidas={assinaturas} podeCriar={ativo && !f.mesclado_em} />
 
       <Cartao className="mt-4" titulo="Contato e consentimento" subtitulo="Ofertas e pós-venda só com consentimento; retirar vale na hora para as mensagens automáticas. Avisos do próprio serviço (nota, assistência) não dependem disto." icone={MessageSquareHeart}>
         <ul className="divide-y divide-borda text-sm">
@@ -278,3 +287,86 @@ function HistoricoDaFicha({ historico, podeAbrirOs, cliente }: { historico: Awai
     </div>
   );
 }
+
+// PAY-015c (a D-062: "espaço para cadastrar os cartões, caso a pessoa queira adicionar recorrência", com o cartão guardado na
+// Asaas): as assinaturas no cartão do cliente. O cliente cadastra o cartão no celular dele, pelo QR Code do link recorrente
+// da Asaas; o sistema só vê a bandeira e os 4 últimos dígitos. Sem a Asaas ligada e sem assinatura, a seção não aparece.
+function AssinaturasNoCartao({ cliente, lidas, podeCriar }: { cliente: string; lidas: AssinaturasDoCliente | null; podeCriar: boolean }) {
+  if (lidas === null) return <Aviso tom="aviso" className="mt-4">Não deu para ler as assinaturas no cartão agora. Recarregue a tela em instantes.</Aviso>;
+  const cria = lidas.ligado && lidas.podeCriar && podeCriar;
+  if (!cria && lidas.assinaturas.length === 0) return null;
+  return (
+    <Cartao id="assinaturas" className="mt-4" titulo="Cartão e recorrência" icone={CreditCard}
+      subtitulo="A assinatura no cartão pela Asaas: o cliente cadastra o cartão no celular dele, pelo QR Code, e a Asaas cobra sozinha a cada ciclo. O número do cartão fica na Asaas: aqui, só a bandeira e o final.">
+      {lidas.assinaturas.length > 0 && (
+        <ul className="divide-y divide-borda" aria-label="Assinaturas no cartão">
+          {lidas.assinaturas.map((a) => {
+            const s = SITUACOES_DA_ASSINATURA[a.situacao];
+            return (
+              <li key={a.id} className="space-y-2 py-3 text-sm">
+                <p className="flex flex-wrap items-center gap-2">
+                  <span className="font-semibold">{a.descricao}</span>
+                  <span className="numeros">{`${brl(centavosDoBanco(a.valor_centavos))} · ${CICLOS[a.ciclo].toLowerCase()}`}</span>
+                  <Selo tom={s.tom} ponto>{s.rotulo}</Selo>
+                </p>
+                <p className="numeros text-xs text-suave">
+                  {`Nº ${a.numero}${a.linha ? ` · linha ${a.linha}` : ""}${a.cartao_final ? ` · ${a.cartao_bandeira ?? "cartão"} final ${a.cartao_final}` : ""}${diaDe(a.proxima_cobranca) ? ` · próxima cobrança em ${diaDe(a.proxima_cobranca)}` : ""}`}
+                </p>
+                {a.situacao === "aguardando_cartao" && a.link_url && (
+                  <div className="flex flex-wrap items-start gap-3">
+                    <QrCode texto={a.link_url} rotulo={`QR Code para cadastrar o cartão da assinatura nº ${a.numero}`} className="size-44 rounded-lg border border-borda bg-white p-1" />
+                    <div className="min-w-0 flex-1 space-y-2 text-xs text-suave">
+                      <p>{`O cliente aponta a câmera do celular para o QR Code e cadastra o cartão na página da Asaas${a.link_expira_em ? ` (vale até ${quando(a.link_expira_em, true)})` : ""}. A primeira cobrança sai na hora.`}</p>
+                      <a href={a.link_url} target="_blank" rel="noreferrer noopener" className="font-semibold text-acao underline">Abrir a página da assinatura</a>
+                    </div>
+                  </div>
+                )}
+                {a.situacao === "criando" && <p className="text-xs text-suave">O servidor está gerando o link na Asaas: o QR Code aparece aqui em alguns segundos (recarregue a tela).</p>}
+                {a.situacao === "falhou" && a.ultima_falha && <p className="text-xs">{a.ultima_falha}</p>}
+                {a.divergencia && <p className="text-xs text-perigo">{a.divergencia}</p>}
+                {a.cobrancas.length > 0 && (
+                  <ul className="numeros space-y-1 text-xs" aria-label={`Cobranças da assinatura nº ${a.numero}`}>
+                    {a.cobrancas.map((c, i) => (
+                      <li key={`${a.id}-${c.vencimento ?? i}-${i}`} className="flex flex-wrap items-center gap-2">
+                        <span>{diaDe(c.vencimento) ?? "—"}</span><span>{brl(centavosDoBanco(c.valor_centavos))}</span>
+                        <Selo tom={SITUACOES_DA_COBRANCA[c.situacao].tom}>{SITUACOES_DA_COBRANCA[c.situacao].rotulo}</Selo>
+                        {c.pago_em && <span className="text-suave">{`paga em ${diaDe(c.pago_em)}`}</span>}
+                      </li>
+                    ))}
+                  </ul>
+                )}
+                {a.pode_cancelar && (
+                  <details className="text-xs">
+                    <summary className="cursor-pointer font-semibold text-perigo">Cancelar esta assinatura</summary>
+                    <form action={cancelarAssinatura} className="mt-2 flex flex-wrap items-end gap-2">
+                      <input type="hidden" name="cliente" value={cliente} /><input type="hidden" name="assinatura" value={a.id} />
+                      <label className="min-w-0 flex-1 font-medium">Motivo<input name="motivo" required minLength={3} maxLength={200} className={campo} /></label>
+                      <Botao type="submit" tamanho="sm" variante="perigo" enquanto="Cancelando…">Cancelar a assinatura</Botao>
+                    </form>
+                  </details>
+                )}
+              </li>
+            );
+          })}
+        </ul>
+      )}
+      {cria ? (
+        <form action={pedirAssinatura} className="mt-3 grid gap-2 sm:grid-cols-2">
+          <input type="hidden" name="cliente" value={cliente} /><input type="hidden" name="chave" value={randomUUID()} />
+          <label className="text-xs font-medium sm:col-span-2">O que é cobrado<input name="descricao" required minLength={3} maxLength={60} placeholder="Ex.: Plano 10 GB da linha" className={campo} /></label>
+          <label className="text-xs font-medium">Valor de cada cobrança (R$)<input name="valor" required inputMode="decimal" className={campo} /></label>
+          <label className="text-xs font-medium">Ciclo
+            <select name="ciclo" defaultValue="MONTHLY" className={campo}>
+              {(Object.keys(CICLOS) as (keyof typeof CICLOS)[]).map((c) => <option key={c} value={c}>{CICLOS[c]}</option>)}
+            </select>
+          </label>
+          <label className="text-xs font-medium sm:col-span-2">Linha da Ora Connect (opcional)<input name="linha" inputMode="tel" placeholder="(41) 99999-9999" className={campo} /></label>
+          <div className="sm:col-span-2"><Botao type="submit" enquanto="Pedindo o link…"><CreditCard aria-hidden className="size-4" /> Gerar QR Code do cartão</Botao></div>
+        </form>
+      ) : lidas.assinaturas.length > 0 && !lidas.ligado && (
+        <p className="mt-2 text-xs text-suave">A assinatura no cartão pela Asaas está desligada agora: as assinaturas seguem na Asaas, e o acompanhamento volta quando o servidor falar com ela.</p>
+      )}
+    </Cartao>
+  );
+}
+

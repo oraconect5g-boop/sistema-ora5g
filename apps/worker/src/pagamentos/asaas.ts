@@ -75,7 +75,40 @@ export type ConsultaDoQr =
  * PAY-015b: uma cobrança de cartão com o link que a gerou. Do cartão, só os 4 últimos dígitos e a bandeira
  * (creditCard.creditCardNumber e creditCardBrand): o número inteiro nunca passa pelo sistema.
  */
-export type CobrancaDeCartao = { id: string; link: string; situacao: SituacaoDaConsulta; valor_centavos: number | null; final: string | null; bandeira: string | null };
+export type CobrancaDeCartao = {
+  id: string; link: string; situacao: SituacaoDaConsulta; valor_centavos: number | null; final: string | null; bandeira: string | null;
+  /** PAY-015c: a assinatura que a cobrança é (o subscription), quando o link era recorrente. */
+  assinatura: string | null;
+};
+/** PAY-015c: os ciclos da assinatura (subscriptionCycle). */
+export const CICLOS_DA_ASSINATURA = ["WEEKLY", "BIWEEKLY", "MONTHLY", "BIMONTHLY", "QUARTERLY", "SEMIANNUALLY", "YEARLY"] as const;
+export type CicloDaAssinatura = (typeof CICLOS_DA_ASSINATURA)[number];
+/** PAY-015c: a assinatura na Asaas, no formato que o banco confere. */
+export type AssinaturaDaAsaas = {
+  id: string; status: "ACTIVE" | "INACTIVE" | "EXPIRED"; removida: boolean; valor_centavos: number | null; ciclo: string | null;
+  proxima_cobranca: string | null; link: string | null;
+};
+/** PAY-015c: uma cobrança da assinatura (pago, pendente, vencido, estornado ou desconhecida), com o cartão dela. */
+export type CobrancaDaAssinatura = {
+  id: string; situacao: "pago" | "pendente" | "vencido" | "estornado" | "desconhecida"; valor_centavos: number; vencimento: string | null;
+  pago_em: string | null; final: string | null; bandeira: string | null;
+};
+const DIA = /^\d{4}-\d{2}-\d{2}$/;
+/** PAY-015c: a situação de uma cobrança da assinatura (o vencido conta à parte, para a loja ver). */
+export function situacaoDaCobranca(status: string): CobrancaDaAssinatura["situacao"] {
+  if (status === "RECEIVED" || status === "CONFIRMED") return "pago";
+  if (status === "PENDING" || status === "AWAITING_RISK_ANALYSIS") return "pendente";
+  if (status === "OVERDUE") return "vencido";
+  if (status === "REFUNDED") return "estornado";
+  return "desconhecida";
+}
+const cartaoDe = (x: Record<string, unknown>) => {
+  const c = x.creditCard && typeof x.creditCard === "object" ? (x.creditCard as Record<string, unknown>) : {};
+  return {
+    final: typeof c.creditCardNumber === "string" && /^\d{4}$/.test(c.creditCardNumber) ? c.creditCardNumber : null,
+    bandeira: typeof c.creditCardBrand === "string" && /^[A-Z]{2,20}$/.test(c.creditCardBrand) ? c.creditCardBrand : null,
+  };
+};
 /** PAY-015b: o que as cobranças de um link dizem, no formato que o banco confere (como ConsultaDoQr). */
 export type ConsultaDoCartao =
   | { situacao: "pago" | "estornado"; id_no_provedor: string; valor_centavos: number; cartao_final: string | null; cartao_bandeira: string | null }
@@ -225,17 +258,71 @@ export class ClienteAsaas {
       if (r.tipo !== "resposta" || r.status !== 200 || !c || !Array.isArray(c.data)) return "falha";
       for (const x of c.data as Record<string, unknown>[]) {
         if (!x || x.deleted === true || typeof x.id !== "string" || !ID.test(x.id) || typeof x.paymentLink !== "string" || !ID.test(x.paymentLink)) continue;
-        const cartao = x.creditCard && typeof x.creditCard === "object" ? (x.creditCard as Record<string, unknown>) : {};
         todas.push({
           id: x.id, link: x.paymentLink, situacao: typeof x.status === "string" ? situacaoDaAsaas(x.status, false) : "desconhecida",
-          valor_centavos: centavosDe(x.value),
-          final: typeof cartao.creditCardNumber === "string" && /^\d{4}$/.test(cartao.creditCardNumber) ? cartao.creditCardNumber : null,
-          bandeira: typeof cartao.creditCardBrand === "string" && /^[A-Z]{2,20}$/.test(cartao.creditCardBrand) ? cartao.creditCardBrand : null,
+          valor_centavos: centavosDe(x.value), ...cartaoDe(x),
+          assinatura: typeof x.subscription === "string" && ID.test(x.subscription) ? x.subscription : null,
         });
       }
       if (c.hasMore !== true) return todas;
     }
     return "falha";
+  }
+
+  /**
+   * PAY-015c: o link recorrente da assinatura no cartão: preenchido, ele cria a assinatura (chargeType RECURRENT, com o ciclo);
+   * uma assinatura só (limit 1), sem aviso ao cliente e com o NOSSO identificador.
+   */
+  async criarLinkRecorrente(p: { referencia: string; nome: string; valorCentavos: number; ciclo: CicloDaAssinatura; venceEm: string }): Promise<ResultadoDoLink> {
+    return this.criarLinkCom({
+      name: p.nome, billingType: "CREDIT_CARD", chargeType: "RECURRENT", subscriptionCycle: p.ciclo, value: p.valorCentavos / 100,
+      endDate: p.venceEm, externalReference: p.referencia, limit: 1, notificationEnabled: false,
+    });
+  }
+
+  /** PAY-015c: a assinatura (GET /subscriptions/{id}). Nulo: a Asaas não conhece (404). "falha": tente de novo depois. */
+  async assinatura(id: string): Promise<AssinaturaDaAsaas | null | "falha"> {
+    if (!ID.test(id)) return null;
+    const r = await this.pedir("GET", `/subscriptions/${id}`);
+    if (r.tipo === "resposta" && r.status === 404) return null;
+    const c = corpoDe(r);
+    if (r.tipo !== "resposta" || r.status !== 200 || !c || c.id !== id) return "falha";
+    if (c.status !== "ACTIVE" && c.status !== "INACTIVE" && c.status !== "EXPIRED") return "falha";
+    return {
+      id, status: c.status, removida: c.deleted === true, valor_centavos: centavosDe(c.value), ciclo: typeof c.cycle === "string" ? c.cycle : null,
+      proxima_cobranca: typeof c.nextDueDate === "string" && DIA.test(c.nextDueDate) ? c.nextDueDate : null,
+      link: typeof c.paymentLink === "string" && ID.test(c.paymentLink) ? c.paymentLink : null,
+    };
+  }
+
+  /** PAY-015c: as cobranças que a assinatura já gerou (GET /subscriptions/{id}/payments), página por página (até 5). */
+  async cobrancasDaAssinatura(id: string): Promise<CobrancaDaAssinatura[] | "falha"> {
+    if (!ID.test(id)) return "falha";
+    const todas: CobrancaDaAssinatura[] = [];
+    for (let pagina = 0; pagina < PAGINAS_DE_COBRANCAS; pagina++) {
+      const r = await this.pedir("GET", `/subscriptions/${id}/payments${pagina ? `?offset=${pagina * 10}` : ""}`);
+      const c = corpoDe(r);
+      if (r.tipo !== "resposta" || r.status !== 200 || !c || !Array.isArray(c.data)) return "falha";
+      for (const x of c.data as Record<string, unknown>[]) {
+        const valor = x ? centavosDe(x.value) : null;
+        if (!x || x.deleted === true || typeof x.id !== "string" || !ID.test(x.id) || valor === null) continue;
+        const pago = typeof x.clientPaymentDate === "string" && DIA.test(x.clientPaymentDate) ? x.clientPaymentDate
+          : typeof x.paymentDate === "string" && DIA.test(x.paymentDate) ? x.paymentDate : null;
+        todas.push({
+          id: x.id, situacao: typeof x.status === "string" ? situacaoDaCobranca(x.status) : "desconhecida", valor_centavos: valor,
+          vencimento: typeof x.dueDate === "string" && DIA.test(x.dueDate) ? x.dueDate : null, pago_em: pago, ...cartaoDe(x),
+        });
+      }
+      if (c.hasMore !== true) return todas;
+    }
+    return todas;
+  }
+
+  /** PAY-015c: remove a assinatura (as cobranças futuras param). A que a Asaas não acha conta como removida. */
+  async removerAssinatura(id: string): Promise<boolean> {
+    if (!ID.test(id)) return false;
+    const r = await this.pedir("DELETE", `/subscriptions/${id}`);
+    return r.tipo === "resposta" && (r.status === 200 || r.status === 404);
   }
 
   /** PAY-015a: exclui o QR (o cancelado e o vencido). O QR que a Asaas não acha conta como excluído. */

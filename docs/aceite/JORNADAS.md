@@ -11,9 +11,9 @@ Em vez de responder roteiro por roteiro, percorra **uma jornada por vez**: o cam
 | [J03 — Estoque inicial e inventário](#j03) | 11 | 0 | 11 | 18 (7 / 11 / 0) |
 | [J04 — Transferência](#j04) | 10 | 0 | 10 | 3 (1 / 2 / 0) |
 | [J05 — Venda presencial](#j05) | 13 | 0 | 13 | 16 (6 / 10 / 0) |
-| [J06 — Cliente e fiscal](#j06) | 4 | 0 | 4 | 20 (13 / 6 / 1) |
+| [J06 — Cliente e fiscal](#j06) | 5 | 0 | 5 | 23 (13 / 9 / 1) |
 | [J07 — Devolução e troca](#j07) | 2 | 0 | 2 | 4 (1 / 3 / 0) |
-| [J08 — Caixa e financeiro](#j08) | 13 | 0 | 13 | 22 (10 / 12 / 0) |
+| [J08 — Caixa e financeiro](#j08) | 14 | 0 | 14 | 25 (10 / 15 / 0) |
 | [J09 — Site e retirada na loja](#j09) | 14 | 0 | 14 | 11 (2 / 9 / 0) |
 | [J10 — Ora Connect](#j10) | 10 | 0 | 10 | 8 (2 / 6 / 0) |
 | [J11 — Financeiras (PayJoy e Aiva)](#j11) | 5 | 0 | 5 | 10 (5 / 5 / 0) |
@@ -118,7 +118,7 @@ Em vez de responder roteiro por roteiro, percorra **uma jornada por vez**: o cam
 
 **Cliente e fiscal.** O caminho: Cadastro rápido com nome e WhatsApp → reaproveitar o cliente → completar os dados para a nota → pedido de nota → emissor → XML e PDF → envio.
 
-**Os requisitos que os roteiros cobrem:** ORA-CRM-001 (🧪 testado), ORA-CRM-003 (🧪 testado), ORA-CRM-004 (🧪 testado), ORA-CRM-005 (🧪 testado), ORA-CRM-009 (🟡 parcial), ORA-FISC-001 (🧪 testado), ORA-FISC-002 (🧪 testado), ORA-ONLINE-006 (🟡 parcial), ORA-OS-001 (🧪 testado), ORA-OS-002 (🟡 parcial), ORA-OS-003 (🧪 testado), ORA-OS-004 (🧪 testado), ORA-OS-006 (🧪 testado), ORA-PERF-003 (🧪 testado), ORA-PERF-004 (🟡 parcial), ORA-PERF-005 (🟡 parcial), ORA-POS-008 (🧪 testado), ORA-POS-011 (🧪 testado), ORA-WHATS-001 (⛔ bloqueado), ORA-WHATS-006 (🟡 parcial).
+**Os requisitos que os roteiros cobrem:** ORA-CRM-001 (🧪 testado), ORA-CRM-002 (🟡 parcial), ORA-CRM-003 (🧪 testado), ORA-CRM-004 (🧪 testado), ORA-CRM-005 (🧪 testado), ORA-CRM-009 (🟡 parcial), ORA-FISC-001 (🧪 testado), ORA-FISC-002 (🧪 testado), ORA-ONLINE-006 (🟡 parcial), ORA-OS-001 (🧪 testado), ORA-OS-002 (🟡 parcial), ORA-OS-003 (🧪 testado), ORA-OS-004 (🧪 testado), ORA-OS-006 (🧪 testado), ORA-PAY-001 (🟡 parcial), ORA-PAY-014 (🟡 parcial), ORA-PERF-003 (🧪 testado), ORA-PERF-004 (🟡 parcial), ORA-PERF-005 (🟡 parcial), ORA-POS-008 (🧪 testado), ORA-POS-011 (🧪 testado), ORA-WHATS-001 (⛔ bloqueado), ORA-WHATS-006 (🟡 parcial).
 
 | Lote | O que entrega | Roteiro | No ar | Resposta |
 |---|---|---|---|---|
@@ -126,6 +126,7 @@ Em vez de responder roteiro por roteiro, percorra **uma jornada por vez**: o cam
 | WHATS-a | o executável do worker do WhatsApp, ligado à fila do banco e desligado sem a Meta (Onda 0.4); o estado dos dois requisitos não muda | [WHATS-a.md](WHATS-a.md) | `69bfab6` (2026-11-17) | — |
 | J3-e | o cliente, o funil, a ordem de serviço, o pedido de nota sem emitir e as metas, na loja de teste | [J3-e.md](J3-e.md) | `b061e86` (2026-11-21) | — |
 | CRM-009a | a venda que atendeu um pedido ou uma reserva do site diz de onde veio: o selo "veio do site" e a frase na tela da venda, e o pedido do site na lista de compras da ficha do cliente; a venda continua sendo do balcão, e a origem fica guardada no pedido | [CRM-009a.md](CRM-009a.md) | `7db5c6c` (2026-11-24) | — |
+| PAY-015c | na ficha do cliente, o Cartão e recorrência: a assinatura no cartão pela Asaas, com o QR Code do link recorrente, o cartão guardado na Asaas, a assinatura e as cobranças acompanhadas e o cancelamento | [PAY-015c.md](PAY-015c.md) | a publicar | — |
 
 ## J07
 
@@ -142,7 +143,7 @@ Em vez de responder roteiro por roteiro, percorra **uma jornada por vez**: o cam
 
 **Caixa e financeiro.** O caminho: Abrir o caixa → receber → sangria e suprimento → fechar → conferir → conciliar recebíveis e extrato → resultado e previsão.
 
-**Os requisitos que os roteiros cobrem:** ORA-CAT-002 (🧪 testado), ORA-FIN-001 (🧪 testado), ORA-FIN-002 (🟡 parcial), ORA-FIN-003 (🧪 testado), ORA-FIN-004 (🧪 testado), ORA-FIN-005 (🧪 testado), ORA-FIN-006 (🟡 parcial), ORA-INV-001 (🟡 parcial), ORA-INV-004 (🟡 parcial), ORA-MKTPL-005 (🟡 parcial), ORA-PAY-002 (🟡 parcial), ORA-PAY-004 (🧪 testado), ORA-PAY-005 (🧪 testado), ORA-PAY-006 (🧪 testado), ORA-PAY-007 (🟡 parcial), ORA-PAY-009 (🧪 testado), ORA-PAY-010 (🟡 parcial), ORA-PAY-011 (🟡 parcial), ORA-REPORT-001 (🟡 parcial), ORA-REPORT-002 (🟡 parcial), ORA-REPORT-005 (🟡 parcial), ORA-REPORT-008 (🧪 testado).
+**Os requisitos que os roteiros cobrem:** ORA-CAT-002 (🧪 testado), ORA-CRM-002 (🟡 parcial), ORA-FIN-001 (🧪 testado), ORA-FIN-002 (🟡 parcial), ORA-FIN-003 (🧪 testado), ORA-FIN-004 (🧪 testado), ORA-FIN-005 (🧪 testado), ORA-FIN-006 (🟡 parcial), ORA-INV-001 (🟡 parcial), ORA-INV-004 (🟡 parcial), ORA-MKTPL-005 (🟡 parcial), ORA-PAY-001 (🟡 parcial), ORA-PAY-002 (🟡 parcial), ORA-PAY-004 (🧪 testado), ORA-PAY-005 (🧪 testado), ORA-PAY-006 (🧪 testado), ORA-PAY-007 (🟡 parcial), ORA-PAY-009 (🧪 testado), ORA-PAY-010 (🟡 parcial), ORA-PAY-011 (🟡 parcial), ORA-PAY-014 (🟡 parcial), ORA-REPORT-001 (🟡 parcial), ORA-REPORT-002 (🟡 parcial), ORA-REPORT-005 (🟡 parcial), ORA-REPORT-008 (🧪 testado).
 
 | Lote | O que entrega | Roteiro | No ar | Resposta |
 |---|---|---|---|---|
@@ -159,6 +160,7 @@ Em vez de responder roteiro por roteiro, percorra **uma jornada por vez**: o cam
 | PAY-011a | o débito do extrato é a prova do estorno da venda, um débito por estorno: na tela do extrato, o débito confirma o estorno que esperava (pela gerência, na loja da venda) ou guarda a prova do que já estava confirmado; o chargeback fica marcado; a venda mostra qual débito confirmou o estorno. Nada é lançado duas vezes | [PAY-011a.md](PAY-011a.md) | `947a391` (2026-11-24) | — |
 | FIN-002a | a taxa da PayJoy e da Aiva no resultado do mês: a observada no repasse (o valor financiado menos o repassado), no mês da venda, numa linha própria do demonstrativo e da planilha; a conta sem repasse registrado fica num aviso, com o atalho para registrar | [FIN-002a.md](FIN-002a.md) | `7594a52` (2026-11-24) | — |
 | FIN-006a | a tela Depósitos das maquininhas: o depósito agrupado da PicPay e da PagBank (os pagamentos com o dinheiro para o mesmo dia, pelo líquido) conferido com a linha de crédito do extrato do banco da rede; a diferença e o desfazer com o motivo; a linha com um uso só | [FIN-006a.md](FIN-006a.md) | `f3f1abc` (2026-11-24) | — |
+| PAY-015c | na ficha do cliente, o Cartão e recorrência: a assinatura no cartão pela Asaas, com o QR Code do link recorrente, o cartão guardado na Asaas, a assinatura e as cobranças acompanhadas e o cancelamento | [PAY-015c.md](PAY-015c.md) | a publicar | — |
 
 ## J09
 

@@ -53,6 +53,10 @@ export const ERROS_DO_CLIENTE = {
   chave: "Este formulário já foi usado com outros dados. Recarregue a tela.",
   documentos_diferentes: "Os documentos são diferentes: são pessoas diferentes. Marque \"não são a mesma pessoa\".",
   mesclado: "Este cadastro foi mesclado em outro: use o cliente que ficou.",
+  // PAY-015c: a assinatura no cartão pela Asaas.
+  assinatura_dados: "Confira a assinatura: a descrição (de 3 a 60 letras), o valor (de R$ 1,00 a R$ 100.000,00), o ciclo e a linha com DDD.",
+  assinatura_desligada: "A assinatura no cartão pela Asaas está desligada agora: ela liga quando o servidor fala com a Asaas.",
+  assinatura_nao_encontrada: "Assinatura não encontrada (ou ela já mudou). Recarregue a tela.",
   falha: "Não deu para gravar agora. Tente de novo em instantes.",
 } as const;
 export type ErroDoCliente = keyof typeof ERROS_DO_CLIENTE;

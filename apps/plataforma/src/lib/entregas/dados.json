@@ -1383,6 +1383,21 @@
       "pedido_em": "2026-11-25",
       "resposta": null,
       "respondido_em": null
+    },
+    {
+      "lote": "PAY-015c",
+      "roteiro": "docs/aceite/PAY-015c.md",
+      "requisitos": [
+        "ORA-PAY-001",
+        "ORA-PAY-014",
+        "ORA-CRM-002"
+      ],
+      "entrega": "na ficha do cliente, o Cartão e recorrência: a assinatura no cartão pela Asaas, com o QR Code do link recorrente, o cartão guardado na Asaas, a assinatura e as cobranças acompanhadas e o cancelamento",
+      "commit": null,
+      "publicado_em": null,
+      "pedido_em": "2026-11-25",
+      "resposta": null,
+      "respondido_em": null
     }
   ]
 }
