@@ -5,9 +5,10 @@
 // - saiu e não voltou resposta clara → resultado desconhecido: NUNCA reenvia; consulta e a gerência decide;
 // - log só com contagens: nada de CPF, nome, linha, token ou chave.
 import {
-  RELATORIOS_DA_CONCILIACAO, interpretarConsulta, interpretarConsultaPagamento, interpretarEnvio, lerReferencias, lerRelatorio, montarConsulta,
-  montarPedido, montarPedidoDoRelatorio, type Evidencia, type ItemDeReferencia, type LinhaDoRelatorio, type OperacaoParaConsultar,
-  type OperacaoParaEnviar, type PedidoNogle, type RelatorioDaConciliacao, type ResultadoEnvio, type TipoDeReferencia, type TipoOperacao,
+  PEDIDO_DO_ESTOQUE_DA_MVNO, PEDIDO_DOS_PDVS, RELATORIOS_DA_CONCILIACAO, interpretarConsulta, interpretarConsultaPagamento, interpretarEnvio, lerChips,
+  lerPdvs, lerReferencias, lerRelatorio, montarConsulta, montarPedido, montarPedidoDoRelatorio, pedidoDoEstoqueDoPdv, type ChipDaNogle, type Evidencia,
+  type ItemDeReferencia, type LinhaDoRelatorio, type OperacaoParaConsultar, type OperacaoParaEnviar, type PdvDaNogle, type PedidoNogle,
+  type RelatorioDaConciliacao, type ResultadoEnvio, type TipoDeChip, type TipoDeReferencia, type TipoOperacao,
 } from "@ora5g/dominio/nogle";
 
 import type { ResultadoChamada } from "./cliente-nogle.ts";
@@ -19,7 +20,19 @@ export interface BancoConnect {
   registrarConsulta(operacao: string, evidencia: Evidencia): Promise<string>;
   atualizarReferencias(tipo: TipoDeReferencia, itens: ItemDeReferencia[]): Promise<number>;
   registrarConciliacao(relatorio: RelatorioDaConciliacao, de: string, ate: string, linhas: LinhaDoRelatorio[]): Promise<{ numero: number; totais: Record<string, number> }>;
+  gravarEstoque(leitura: LeituraDoEstoque): Promise<EstoqueGravado>;
 }
+
+/** O que o worker entrega ao banco a cada leitura do estoque de chips (CONNECT-d; connect_worker_gravar_estoque). */
+export type LeituraDoEstoque = {
+  pdvs: PdvDaNogle[];
+  /** Null: a MVNO não foi lida e o estoque dela fica como estava. */
+  mvno: { iccid: string; tipo: TipoDeChip }[] | null;
+  /** Só os PDVs que responderam; o que falhou fica como estava. */
+  estoques: { pdv: number; chips: ChipDaNogle[] }[];
+  falhas: number;
+};
+export type EstoqueGravado = { numero: number; pdvs: number; pdvs_lidos: number; chips: number; falhas: number };
 
 export interface Nogle {
   chamar(pedido: PedidoNogle): Promise<ResultadoChamada>;
@@ -158,3 +171,40 @@ export async function conciliarRelatorios(banco: BancoConnect, nogle: Nogle, de:
   return resumo;
 }
 
+
+const motivoDaLeitura = (r: ResultadoChamada, oQue: string) =>
+  r.tipo === "resposta"
+    ? r.status === 200 ? `${oQue} veio fora da forma` : `${oQue}: a Nogle respondeu HTTP ${r.status}`
+    : r.tipo === "falha" ? `${oQue}: sem resposta da Nogle` : `${oQue}: ${r.motivo}`;
+
+/**
+ * A leitura do estoque de chips (CONNECT-d; ORA-INV-011), SÓ LEITURA: a lista dos PDVs, o estoque geral da MVNO e o de
+ * cada PDV (GET com o id no corpo). Sem a lista dos PDVs nada é gravado; a MVNO ou o PDV que falhou conta como falha e
+ * fica como estava no banco. Nenhuma rota que muda algo na Nogle é chamada. O resumo só tem contagens (nada de ICCID,
+ * nome ou token).
+ */
+export async function lerEstoqueDeChips(banco: BancoConnect, nogle: Nogle):
+  Promise<{ gravada: true; leitura: EstoqueGravado; ignorados: number } | { gravada: false; motivo: string }> {
+  const lista = await nogle.chamar(PEDIDO_DOS_PDVS);
+  const pdvs = lista.tipo === "resposta" && lista.status === 200 ? lerPdvs(lista.corpo) : null;
+  if (!pdvs || pdvs.length === 0) return { gravada: false, motivo: motivoDaLeitura(lista, "a lista dos PDVs") };
+  let falhas = 0;
+  let ignorados = 0;
+  const geral = await nogle.chamar(PEDIDO_DO_ESTOQUE_DA_MVNO);
+  const mvno = geral.tipo === "resposta" && geral.status === 200 ? lerChips(geral.corpo) : null;
+  if (mvno) ignorados += mvno.ignorados;
+  else falhas++;
+  const estoques: LeituraDoEstoque["estoques"] = [];
+  for (const pdv of pdvs) {
+    const r = await nogle.chamar(pedidoDoEstoqueDoPdv(pdv.id));
+    const lido = r.tipo === "resposta" && r.status === 200 ? lerChips(r.corpo) : null;
+    if (!lido) {
+      falhas++;
+      continue;
+    }
+    ignorados += lido.ignorados;
+    estoques.push({ pdv: pdv.id, chips: lido.chips });
+  }
+  const leitura = await banco.gravarEstoque({ pdvs, mvno: mvno ? mvno.chips.map(({ iccid, tipo }) => ({ iccid, tipo })) : null, estoques, falhas });
+  return { gravada: true, leitura, ignorados };
+}

@@ -511,3 +511,99 @@ export function lerRelatorio(corpo: unknown, primeira = 1): { linhas: LinhaDoRel
   });
   return { linhas, problema: null };
 }
+
+// -----------------------------------------------------------------------------------------------------------------------
+// O estoque de chips (lote CONNECT-d; ORA-INV-011), SÓ LEITURA. Conferido na API de verdade em 24/11/2026, com o "sim, só
+// consultas" do proprietário (o login com a chave de acesso sozinha funcionou: a chave é do tipo "marca", a pergunta P9),
+// igual aos exemplos da coleção oficial de 07/11:
+//   GET /pdv/listar                      → { pdvs: [{ id, nome, cidade, uf, estoque_minimo_chips, ... }] }
+//   GET /pdv/estoque com { id } no corpo → { total, data: [{ id, iccid, data_repasse, tipo: "físico" | "eSIM" }] }
+//   GET /linhas/estoque                  → { retorno, mensagem, total, data: [{ id, iccid, tipo, ... }] }
+// Só o necessário passa daqui (minimização, LGPD): do PDV, nunca o CPF, o CNPJ, o contato, o endereço ou os usuários; do
+// chip, nunca o código de ativação, o QR ou o PDF do eSIM, que a lista da MVNO traz e que bastam para instalar o eSIM.
+// O filtro ?tipo= da Nogle só filtra com "fisico" sem acento (com acento devolve tudo, ao contrário do que ela respondeu
+// em 10/11): a leitura pede o estoque inteiro e separa pelo tipo de cada chip.
+// -----------------------------------------------------------------------------------------------------------------------
+export type PdvDaNogle = { id: number; nome: string; cidade: string | null; uf: string | null; estoque_minimo: number | null };
+export type TipoDeChip = "fisico" | "esim";
+export type ChipDaNogle = { iccid: string; tipo: TipoDeChip; repassado_em: string | null };
+export type ChipsLidos = { chips: ChipDaNogle[]; ignorados: number };
+
+export const PEDIDO_DOS_PDVS: PedidoNogle = { metodo: "GET", caminho: "/pdv/listar", corpo: {} };
+export const PEDIDO_DO_ESTOQUE_DA_MVNO: PedidoNogle = { metodo: "GET", caminho: "/linhas/estoque", corpo: {} };
+/** O estoque de um PDV: GET com o id no corpo (confirmado pela Nogle em 10/11; o worker só manda com NOGLE_GET_COM_CORPO). */
+export const pedidoDoEstoqueDoPdv = (pdv: number): PedidoNogle => ({ metodo: "GET", caminho: "/pdv/estoque", corpo: { id: pdv } });
+
+/** "físico", "fisico", "FÍSICO" → fisico; "eSIM", "esim" → esim; o resto, null. */
+export function tipoDeChip(v: unknown): TipoDeChip | null {
+  const t = typeof v === "string" ? v.normalize("NFD").replace(/[̀-ͯ]/g, "").trim().toLowerCase() : "";
+  return t === "fisico" ? "fisico" : t === "esim" ? "esim" : null;
+}
+
+/**
+ * GET /pdv/listar: só o id, o nome, a cidade, a UF e o estoque mínimo de cada PDV. Null quando a resposta não traz a lista
+ * (a leitura então não grava nada); o PDV sem id, sem nome ou repetido fica de fora.
+ */
+export function lerPdvs(corpo: unknown): PdvDaNogle[] | null {
+  const lista = objeto(corpo)?.pdvs;
+  if (!Array.isArray(lista)) return null;
+  const pdvs: PdvDaNogle[] = [];
+  const vistos = new Set<number>();
+  for (const bruto of lista) {
+    const p = objeto(bruto);
+    const id = textoOuNada(p?.id);
+    const nome = textoOuNada(p?.nome)?.replace(/\s+/g, " ").slice(0, 120);
+    if (!p || !id || !/^[1-9]\d{0,8}$/.test(id) || !nome || vistos.has(Number(id))) continue;
+    vistos.add(Number(id));
+    const uf = textoOuNada(p.uf)?.toUpperCase();
+    const minimo = textoOuNada(p.estoque_minimo_chips);
+    pdvs.push({
+      id: Number(id),
+      nome,
+      cidade: textoOuNada(p.cidade)?.slice(0, 80) ?? null,
+      uf: uf && /^[A-Z]{2}$/.test(uf) ? uf : null,
+      estoque_minimo: minimo && /^\d{1,5}$/.test(minimo) ? Number(minimo) : null,
+    });
+  }
+  return pdvs;
+}
+
+/** A data do repasse como a Nogle manda ("2022-03-21 22:31:23.580"), conferida; o fuso não é documentado. */
+function dataDoRepasse(v: unknown): string | null {
+  const t = textoOuNada(v);
+  const m = t ? /^(\d{4})-(\d{2})-(\d{2})[ T](\d{2}):(\d{2}):(\d{2})(\.\d{1,6})?$/.exec(t) : null;
+  if (!t || !m) return null;
+  const [a, me, d, h, mi, s] = [m[1], m[2], m[3], m[4], m[5], m[6]].map(Number) as [number, number, number, number, number, number];
+  const data = new Date(Date.UTC(a, me - 1, d, h, mi, s));
+  const confere = data.getUTCFullYear() === a && data.getUTCMonth() === me - 1 && data.getUTCDate() === d
+    && data.getUTCHours() === h && data.getUTCMinutes() === mi && data.getUTCSeconds() === s;
+  return confere ? t.replace("T", " ") : null;
+}
+
+/**
+ * GET /pdv/estoque e GET /linhas/estoque: os chips, só o ICCID, o tipo e a data do repasse. Null quando a resposta não traz
+ * a lista, diz que falhou (retorno false) ou traz um total que não bate com a lista (pode faltar página): a leitura então
+ * não substitui a anterior. O chip fora da forma (ICCID que não é texto de 19 ou 20 dígitos, tipo desconhecido, repetido)
+ * fica de fora e é contado.
+ */
+export function lerChips(corpo: unknown): ChipsLidos | null {
+  const o = objeto(corpo);
+  if (!o || !Array.isArray(o.data) || o.retorno === false) return null;
+  if (o.total !== undefined && o.total !== null && Number(o.total) !== o.data.length) return null;
+  const chips: ChipDaNogle[] = [];
+  const vistos = new Set<string>();
+  let ignorados = 0;
+  for (const bruto of o.data) {
+    const c = objeto(bruto);
+    // O ICCID só como texto: como número de 19 dígitos ele já chegaria arredondado.
+    const iccid = typeof c?.iccid === "string" ? c.iccid.replace(/\D/g, "") : "";
+    const tipo = tipoDeChip(c?.tipo);
+    if (!c || !/^89\d{17,18}$/.test(iccid) || !tipo || vistos.has(iccid)) {
+      ignorados++;
+      continue;
+    }
+    vistos.add(iccid);
+    chips.push({ iccid, tipo, repassado_em: dataDoRepasse(c.data_repasse) });
+  }
+  return { chips, ignorados };
+}
