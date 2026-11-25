@@ -9,6 +9,7 @@ import {
   centavosDeValorNogle, diaDoRelatorio, interpretarConsulta, interpretarConsultaPagamento, interpretarEnvio, lerChips, lerPdvs, lerReferencias, lerRelatorio,
   montarConsulta, montarPedido, montarPedidoDoRelatorio, PEDIDO_DO_ESTOQUE_DA_MVNO, PEDIDO_DOS_PDVS, pedidoDoEstoqueDoPdv, tipoDeChip,
   conferirTransferencia, lerRespostaDaTransferencia, pedidoDaTransferencia,
+  documentoMascarado, lerRespostaDaConsulta, pedidoDaConsulta, TIPOS_DE_CONSULTA,
   type ChipDaNogle, type OperacaoParaConsultar, type OperacaoParaEnviar, type TransferenciaParaEnviar,
 } from "./nogle";
 
@@ -390,5 +391,77 @@ describe("a transferência de chips pela Nogle (CONNECT-e)", () => {
     expect(conferirTransferencia(lote, antes, [...antes, chip(I(101), "fisico"), chip(I(103), "fisico"), chip(I(200), "fisico")]))
       .toEqual({ confirmacao: "parcial", novos: [I(101), I(103)] });
     expect(conferirTransferencia(lote, antes, [...antes, ...[101, 102, 103, 104].map((n) => chip(I(n), "fisico"))]).confirmacao).toBe("confirmada");
+  });
+});
+
+// CONNECT-g (25/11/2026): as consultas que só leem, com os pedidos e as respostas da coleção oficial.
+describe("as consultas da Nogle que só leem (CONNECT-g)", () => {
+  const AGORA = new Date("2026-11-25T15:00:00Z");
+  const LINHA = "51900000000";
+  const ICCID = "8955170110000000016";
+
+  it("cada consulta pede a rota e os campos da coleção oficial (GET com o corpo); fora da forma, nada", () => {
+    for (const tipo of TIPOS_DE_CONSULTA) {
+      const parametro = tipo.startsWith("linha_") ? LINHA : tipo.startsWith("iccid_") ? ICCID : null;
+      const pedido = pedidoDaConsulta(tipo, parametro, AGORA);
+      expect(pedido?.metodo, tipo).toBe("GET");
+      const documentada = rota(pedido?.caminho ?? "");
+      expect(documentada.request.method, tipo).toBe("GET");
+      const chaves = Object.keys(JSON.parse(documentada.request.body?.raw?.trim() || "{}") as object);
+      expect(Object.keys(pedido?.corpo ?? {}).every((k) => chaves.includes(k)), `${tipo}: ${Object.keys(pedido?.corpo ?? {}).join(",")}`).toBe(true);
+    }
+    expect(pedidoDaConsulta("linha_detalhes", "(51) 90000-0000", AGORA)).toEqual({ metodo: "GET", caminho: "/linhas/detalhes", corpo: { numero: LINHA } });
+    expect(pedidoDaConsulta("linha_saldo", LINHA, AGORA)?.corpo).toEqual({ linha: LINHA });
+    // O consumo vai com o mês corrente em Brasília (às 23h de 30/11 ainda é novembro lá).
+    expect(pedidoDaConsulta("linha_consumo", LINHA, new Date("2026-12-01T02:00:00Z"))?.corpo).toEqual({ linha: LINHA, mes: "11", ano: "2026" });
+    expect(pedidoDaConsulta("iccid_ativacao", ICCID, AGORA)).toEqual({ metodo: "GET", caminho: "/ativacao/detalhar", corpo: { iccid: ICCID } });
+    expect(pedidoDaConsulta("carteira_saldo", null, AGORA)).toEqual({ metodo: "GET", caminho: "/saldo/saldo", corpo: {} });
+    expect(pedidoDaConsulta("linha_saldo", "5190000", AGORA)).toBeNull();
+    expect(pedidoDaConsulta("iccid_numero", "123", AGORA)).toBeNull();
+  });
+
+  it("lê as respostas oficiais e guarda só o que a tela mostra (nada do PDF do eSIM, do documento inteiro nem de quem pediu)", () => {
+    const detalhes = lerRespostaDaConsulta("linha_detalhes", 200, exemplo("/linhas/detalhes"));
+    expect(detalhes).toMatchObject({ situacao: "respondida", resposta: {
+      linha: LINHA, status: "ATIVO", tipo_linha: "PRÉ PAGO", plano: "7 GB", titular: "Contel Telecom", documento: "•••.•••.000-00",
+      data_ativacao: "2023-05-30", data_fim_plano: "2023-06-30", data_perda_numero: "2023-09-13", bloqueada: false, esim: false,
+      portada: false, recarga_automatica: false,
+    } });
+    const guardado = JSON.stringify(detalhes.resposta);
+    for (const fora of ["esim_pdf", "00000000000", "titular_apelido", "cor_app", "emoji", "id_linha", "Escritório"]) expect(guardado).not.toContain(fora);
+    expect(lerRespostaDaConsulta("linha_detalhes", 200, exemplo("/linhas/detalhes", 1))).toEqual({ situacao: "nao_encontrada", mensagem: "Linha não encontrada." });
+
+    expect(lerRespostaDaConsulta("linha_saldo", 200, exemplo("/linhas/saldo")).resposta)
+      .toEqual({ dados_mb: 2395.226721, minutos: 60, minutos_ilimitados: false, sms: 60 });
+    const historico = lerRespostaDaConsulta("linha_historico", 200, exemplo("/linhas/historico"));
+    expect(historico.resposta).toEqual({ recargas: [
+      { quando: "2022-06-15 11:59", plano: "7 GB", valor_centavos: 4490, forma: "LINK" },
+      { quando: "2022-05-12 19:21", plano: "7 GB", valor_centavos: 4490, forma: "LINK" },
+    ] });
+    expect(JSON.stringify(historico)).not.toContain("solicitado_por");
+    const consumo = lerRespostaDaConsulta("linha_consumo", 200, exemplo("/linhas/consumo/dados"));
+    const dias = (consumo.resposta?.dias ?? []) as { dia: string; bytes: number }[];
+    expect(dias[0]).toEqual({ dia: "2022-06-01", bytes: 129598970 });
+    expect(consumo.resposta?.total_bytes).toBe(dias.reduce((s, d) => s + d.bytes, 0));
+    expect(lerRespostaDaConsulta("iccid_numero", 200, exemplo("/linhas/numeroPeloIccid")).resposta).toEqual({ numero: LINHA });
+    expect(lerRespostaDaConsulta("iccid_ativacao", 200, exemplo("/ativacao/detalhar")).resposta).toEqual({
+      cliente: "Fulano da Silva", plano: "4 GB", numero_ativado: "11000000000", numero_portado: null, forma_pagamento: "LINK",
+      data_solicitacao: "2021-12-03 14:36", data_ativacao: "2021-12-03 14:36",
+    });
+    expect(lerRespostaDaConsulta("iccid_ativacao", 422, exemplo("/ativacao/detalhar", 1))).toEqual({ situacao: "nao_encontrada", mensagem: "ICCID informado não existe." });
+    expect(lerRespostaDaConsulta("carteira_saldo", 200, exemplo("/saldo/saldo"))).toEqual({ situacao: "respondida", mensagem: "", resposta: { saldo_centavos: 50000 } });
+  });
+
+  it("a falta de resposta, o acesso recusado e a resposta fora da forma falham, sem inventar nada", () => {
+    expect(lerRespostaDaConsulta("linha_saldo", 502, null)).toMatchObject({ situacao: "falhou" });
+    expect(lerRespostaDaConsulta("linha_saldo", 401, { message: "Unauthenticated." })).toEqual({ situacao: "falhou", mensagem: "A Nogle recusou o acesso (HTTP 401)." });
+    expect(lerRespostaDaConsulta("linha_saldo", 200, { retorno: true, mensagem: "", data: {} })).toEqual({ situacao: "falhou", mensagem: "A resposta da Nogle veio fora da forma documentada." });
+    expect(lerRespostaDaConsulta("carteira_saldo", 200, { saldo: "muito" })).toMatchObject({ situacao: "falhou" });
+    expect(lerRespostaDaConsulta("iccid_numero", 200, { retorno: true, mensagem: "", numero: "123" })).toMatchObject({ situacao: "falhou" });
+    expect(lerRespostaDaConsulta("linha_historico", 404, { erro: "Endpoint inexistente ou recurso não encontrato." }))
+      .toEqual({ situacao: "nao_encontrada", mensagem: "Endpoint inexistente ou recurso não encontrato." });
+    expect(documentoMascarado("12345678909")).toBe("•••.•••.789-09");
+    expect(documentoMascarado("11222333000181")).toBe("••.•••.•••/0001-81");
+    expect(documentoMascarado("123")).toBeNull();
   });
 });

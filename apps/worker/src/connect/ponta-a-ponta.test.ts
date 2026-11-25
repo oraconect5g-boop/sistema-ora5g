@@ -16,8 +16,8 @@ import { afterAll, beforeAll, describe, expect, it } from "vitest";
 
 import { ClienteNogle } from "./cliente-nogle.ts";
 import {
-  conciliarRelatorios, consultarPendentes, enviarPendentes, enviarTransferencias, lerEstoqueDeChips, sincronizarReferencias, type BancoConnect,
-  type ChipsNoEstoque, type PlanosNoCaixa,
+  conciliarRelatorios, consultarPendentes, enviarPendentes, enviarTransferencias, lerEstoqueDeChips, responderConsultas, sincronizarReferencias,
+  type BancoConnect, type ChipsNoEstoque, type ConsultaParaFazer, type PlanosNoCaixa,
 } from "./processar.ts";
 import { transporteHttp } from "./transporte.ts";
 
@@ -69,6 +69,9 @@ beforeAll(async () => {
       if (caminho === "/portabilidade/solicitar") return; // não responde: tempo esgotado depois do envio
       if (caminho === "/ativacao/validaIccid") return json(200, { ...exemplo("/ativacao/validaIccid"), codigo: 11, info: "ICCID ativo.", linha: "51900000000" });
       if (caminho === "/linhas/historico") return json(200, exemplo("/linhas/historico"));
+      // CONNECT-g: as consultas que só leem, com os exemplos oficiais (o saldo da linha e o da carteira).
+      if (caminho === "/linhas/saldo") return json(200, exemplo("/linhas/saldo"));
+      if (caminho === "/saldo/saldo") return json(200, exemplo("/saldo/saldo"));
       if (caminho === "/portabilidade/status") return json(200, { retorno: true, mensagem: "", status: { status: "Sucesso", data_sucesso: "2022-06-08" } });
       if (caminho === "/planos") return json(200, exemplo("/planos"));
       if (caminho === "/ddds") return json(200, exemplo("/ddds"));
@@ -144,6 +147,12 @@ const banco: BancoConnect = {
     "select * from public.connect_worker_transferencias_a_enviar($1, $2)", [ids.organizacao, limite])).rows),
   registrarTransferencia: (transferencia, resultado) => comoServico(async () => (await db.query<{ v: string }>(
     "select public.connect_worker_registrar_transferencia($1, $2::jsonb) as v", [transferencia, JSON.stringify(resultado)])).rows[0]?.v ?? ""),
+  consultasAFazer: (limite) => comoServico(async () => (await db.query<ConsultaParaFazer>(
+    "select * from public.connect_worker_consultas_a_fazer($1, $2)", [ids.organizacao, limite])).rows),
+  registrarRespostaDaConsulta: (consulta, resposta) => comoServico(async () => (await db.query<{ v: string }>(
+    "select public.connect_worker_registrar_resposta_da_consulta($1, $2::jsonb) as v", [consulta, JSON.stringify(resposta)])).rows[0]?.v ?? ""),
+  limparConsultas: () => comoServico(async () => umValor((await db.query<{ v: { vencidas: number; apagadas: number } }>(
+    "select public.connect_worker_limpar_consultas($1) as v", [ids.organizacao])).rows[0]?.v)),
   planosNoCaixa: () => comoServico(async () => umValor((await db.query<{ v: PlanosNoCaixa }>(
     "select public.connect_worker_planos_no_caixa($1) as v", [ids.organizacao])).rows[0]?.v)),
   chipsNoEstoque: () => comoServico(async () => umValor((await db.query<{ v: ChipsNoEstoque }>(
@@ -330,5 +339,29 @@ describe("a transferência de chips pela Nogle (CONNECT-e)", () => {
     const depois = recebidos.length;
     expect(await enviarTransferencias(banco, nogle)).toMatchObject({ enviadas: 0, devolvidas: 0 });
     expect(recebidos.length).toBe(depois);
+  });
+});
+
+describe("as consultas que só leem (CONNECT-g)", () => {
+  it("a loja pede o saldo da linha e o dono, o da carteira; o worker consulta pelo transporte de verdade e grava a resposta limpa", async () => {
+    const ana = await naLoja(ids.vendedorA, ids.lojaA);
+    const saldoDaLinha = await valor<string>(ana, "select public.connect_consultar(p_tipo => 'linha_saldo', p_parametro => '51900000000', p_chave => 'pp:consulta:1') as v");
+    const dono = await naLoja(ids.dono, ids.lojaA);
+    const carteira = await valor<string>(dono, "select public.connect_consultar(p_tipo => 'carteira_saldo', p_chave => 'pp:consulta:2') as v");
+    const nogle = new ClienteNogle({ tipo: "marca", chaveAcesso: "chave-ficticia" }, transporteHttp(base, 500), { getComCorpo: true });
+    const antes = recebidos.length;
+    let relogio = 0;
+    const r = await responderConsultas(banco, nogle, { duracaoMs: 3, esperaMs: 2, relogio: () => relogio, esperar: async (ms) => { relogio += ms; } });
+    expect(r).toEqual({ respondidas: 2, nao_encontradas: 0, falhas: 0 });
+    expect(recebidos.slice(antes).filter((p) => p.caminho !== "/auth/token")).toEqual([
+      { metodo: "GET", caminho: "/linhas/saldo", corpo: JSON.stringify({ linha: "51900000000" }) },
+      { metodo: "GET", caminho: "/saldo/saldo", corpo: "" },
+    ]);
+    const lida = async (id: string) => (await db.query<{ situacao: string; resposta: unknown }>(
+      "select situacao, resposta from public.connect_consultas where id = $1", [id])).rows[0];
+    expect(await lida(saldoDaLinha)).toEqual({ situacao: "respondida", resposta: { dados_mb: 2395.226721, minutos: 60, minutos_ilimitados: false, sms: 60 } });
+    expect(await lida(carteira)).toEqual({ situacao: "respondida", resposta: { saldo_centavos: 50000 } });
+    // Cada um vê só a sua.
+    expect((await comoUsuario(db, ana, () => db.query("select id from public.connect_consultas"))).rows).toEqual([{ id: saldoDaLinha }]);
   });
 });

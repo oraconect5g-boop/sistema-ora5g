@@ -15,7 +15,7 @@ Em vez de responder roteiro por roteiro, percorra **uma jornada por vez**: o cam
 | [J07 — Devolução e troca](#j07) | 2 | 0 | 2 | 4 (1 / 3 / 0) |
 | [J08 — Caixa e financeiro](#j08) | 13 | 0 | 13 | 22 (10 / 12 / 0) |
 | [J09 — Site e retirada na loja](#j09) | 14 | 0 | 14 | 11 (2 / 9 / 0) |
-| [J10 — Ora Connect](#j10) | 4 | 0 | 4 | 4 (1 / 3 / 0) |
+| [J10 — Ora Connect](#j10) | 5 | 0 | 5 | 5 (1 / 4 / 0) |
 | [J11 — Financeiras (PayJoy e Aiva)](#j11) | 5 | 0 | 5 | 10 (5 / 5 / 0) |
 | [J12 — Marketplaces e Meta](#j12) | 7 | 0 | 7 | 19 (7 / 9 / 3) |
 | [J13 — Assistência](#j13) | 1 | 0 | 1 | 15 (12 / 3 / 0) |
@@ -185,7 +185,7 @@ Em vez de responder roteiro por roteiro, percorra **uma jornada por vez**: o cam
 
 **Ora Connect.** O caminho: Elegibilidade, chip e cliente → operação → fila do worker → Nogle → confirmação ou reconsulta → produção → repasse oficial.
 
-**Os requisitos que os roteiros cobrem:** ORA-CONNECT-001 (🧪 testado), ORA-CONNECT-003 (🟡 parcial), ORA-CONNECT-009 (🟡 parcial), ORA-INV-011 (🟡 parcial).
+**Os requisitos que os roteiros cobrem:** ORA-CONNECT-001 (🧪 testado), ORA-CONNECT-003 (🟡 parcial), ORA-CONNECT-007 (🟡 parcial), ORA-CONNECT-009 (🟡 parcial), ORA-INV-011 (🟡 parcial).
 
 | Lote | O que entrega | Roteiro | No ar | Resposta |
 |---|---|---|---|---|
@@ -193,6 +193,7 @@ Em vez de responder roteiro por roteiro, percorra **uma jornada por vez**: o cam
 | CONNECT-d | a tela Ora Connect → Chips na Nogle: o estoque virgem de chips de cada loja e o geral da MVNO na Nogle, lido pelo servidor a cada 30 minutos, das 7h às 22h; só leitura | [CONNECT-d.md](CONNECT-d.md) | `4070a8b` (2026-11-24) | — |
 | CONNECT-e | em Ora Connect → Chips na Nogle, o cartão Transferir chips (eSIM por quantidade, um chip ou um lote), só para o dono, com a lista dos pedidos e o cancelamento; o servidor envia uma vez e confirma pelo estoque do PDV | [CONNECT-e.md](CONNECT-e.md) | a publicar | — |
 | CONNECT-f | os planos da Nogle no caixa (a recarga e a ativação de cada plano, pelo valor de face), os chips da Nogle no estoque das lojas pelo ICCID, os chips para conferir (para o dono), a trava do plano na operação e as operações ligadas | [CONNECT-f.md](CONNECT-f.md) | a publicar | — |
+| CONNECT-g | em Ora Connect → Consultar linha, as consultas da Nogle que só leem: a situação, o saldo, as recargas e o consumo da linha, o número e a ativação do chip e, para o dono, o saldo da carteira | [CONNECT-g.md](CONNECT-g.md) | a publicar | — |
 
 ## J11
 

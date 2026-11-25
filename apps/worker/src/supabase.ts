@@ -124,6 +124,9 @@ export function bancoConnect(cliente: SupabaseClient, organizacao: string): Banc
     registrarTransferencia: (transferencia, resultado) => rpc("connect_worker_registrar_transferencia", { p_transferencia: transferencia, p_resultado: resultado }),
     planosNoCaixa: () => rpc("connect_worker_planos_no_caixa", { p_organizacao: organizacao }),
     chipsNoEstoque: () => rpc("connect_worker_chips_no_estoque", { p_organizacao: organizacao }),
+    consultasAFazer: (limite) => rpc("connect_worker_consultas_a_fazer", { p_organizacao: organizacao, p_limite: limite }),
+    registrarRespostaDaConsulta: (consulta, resposta) => rpc("connect_worker_registrar_resposta_da_consulta", { p_consulta: consulta, p_resultado: resposta }),
+    limparConsultas: () => rpc("connect_worker_limpar_consultas", { p_organizacao: organizacao }),
   };
 }
 

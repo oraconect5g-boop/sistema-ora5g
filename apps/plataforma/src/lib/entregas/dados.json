@@ -1270,6 +1270,20 @@
       "pedido_em": "2026-11-25",
       "resposta": null,
       "respondido_em": null
+    },
+    {
+      "lote": "CONNECT-g",
+      "roteiro": "docs/aceite/CONNECT-g.md",
+      "requisitos": [
+        "ORA-CONNECT-007",
+        "ORA-CONNECT-009"
+      ],
+      "entrega": "em Ora Connect → Consultar linha, as consultas da Nogle que só leem: a situação, o saldo, as recargas e o consumo da linha, o número e a ativação do chip e, para o dono, o saldo da carteira",
+      "commit": null,
+      "publicado_em": null,
+      "pedido_em": "2026-11-25",
+      "resposta": null,
+      "respondido_em": null
     }
   ]
 }

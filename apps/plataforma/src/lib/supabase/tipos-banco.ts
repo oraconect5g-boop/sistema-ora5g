@@ -1309,6 +1309,79 @@ export type Database = {
           },
         ]
       }
+      connect_consultas: {
+        Row: {
+          chave: string
+          consultando_desde: string | null
+          id: string
+          mensagem: string | null
+          organizacao_id: string
+          parametro: string | null
+          pedida_em: string
+          pedida_por: string
+          respondida_em: string | null
+          resposta: Json | null
+          resposta_apagada_em: string | null
+          situacao: string
+          tipo: string
+          unidade_id: string
+        }
+        Insert: {
+          chave: string
+          consultando_desde?: string | null
+          id?: string
+          mensagem?: string | null
+          organizacao_id: string
+          parametro?: string | null
+          pedida_em?: string
+          pedida_por: string
+          respondida_em?: string | null
+          resposta?: Json | null
+          resposta_apagada_em?: string | null
+          situacao?: string
+          tipo: string
+          unidade_id: string
+        }
+        Update: {
+          chave?: string
+          consultando_desde?: string | null
+          id?: string
+          mensagem?: string | null
+          organizacao_id?: string
+          parametro?: string | null
+          pedida_em?: string
+          pedida_por?: string
+          respondida_em?: string | null
+          resposta?: Json | null
+          resposta_apagada_em?: string | null
+          situacao?: string
+          tipo?: string
+          unidade_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "connect_consultas_organizacao_id_fkey"
+            columns: ["organizacao_id"]
+            isOneToOne: false
+            referencedRelation: "organizacoes"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "connect_consultas_pedida_por_fkey"
+            columns: ["pedida_por"]
+            isOneToOne: false
+            referencedRelation: "perfis_usuario"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "connect_consultas_unidade_id_organizacao_id_fkey"
+            columns: ["unidade_id", "organizacao_id"]
+            isOneToOne: false
+            referencedRelation: "unidades"
+            referencedColumns: ["id", "organizacao_id"]
+          },
+        ]
+      }
       connect_eventos: {
         Row: {
           dados: Json | null
@@ -8325,6 +8398,10 @@ export type Database = {
           unidade_id: string
         }[]
       }
+      connect_consultar: {
+        Args: { p_chave: string; p_parametro?: string; p_tipo: string }
+        Returns: string
+      }
       connect_habilitar: {
         Args: { p_evidencia: string; p_habilitar: boolean; p_tipo: string }
         Returns: boolean
@@ -8370,8 +8447,20 @@ export type Database = {
         Args: { p_organizacao: string }
         Returns: Json
       }
+      connect_worker_consultas_a_fazer: {
+        Args: { p_limite: number; p_organizacao: string }
+        Returns: {
+          consulta_id: string
+          parametro: string
+          tipo: string
+        }[]
+      }
       connect_worker_gravar_estoque: {
         Args: { p_leitura: Json; p_organizacao: string }
+        Returns: Json
+      }
+      connect_worker_limpar_consultas: {
+        Args: { p_organizacao: string }
         Returns: Json
       }
       connect_worker_operacoes_a_consultar: {
@@ -8411,6 +8500,10 @@ export type Database = {
       }
       connect_worker_registrar_envio: {
         Args: { p_operacao: string; p_resultado: Json }
+        Returns: string
+      }
+      connect_worker_registrar_resposta_da_consulta: {
+        Args: { p_consulta: string; p_resultado: Json }
         Returns: string
       }
       connect_worker_registrar_transferencia: {

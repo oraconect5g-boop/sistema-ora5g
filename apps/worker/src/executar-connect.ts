@@ -7,6 +7,9 @@
 //        chips físicos do PDV de cada loja ligada entram no estoque dela pelo ICCID (CONNECT-f; o sim de 25/11)
 //   node apps/worker/src/executar-connect.ts --transferencias → envia os pedidos de transferência de chips do dono, UMA vez
 //        cada, e confirma pelo estoque do PDV (CONNECT-e); só com NOGLE_TRANSFERENCIAS=habilitada; depois, lê o estoque de novo
+//   node apps/worker/src/executar-connect.ts --consultas → as consultas que só leem, pedidas na tela (a linha, o chip e a
+//        carteira; CONNECT-g, a D-056), durante uns 50 segundos: a rotina roda a cada minuto, com a trava própria; pede o
+//        GET com corpo (NOGLE_GET_COM_CORPO=documentado)
 //   node apps/worker/src/executar-connect.ts --conciliar [--de AAAA-MM-DD --ate AAAA-MM-DD]
 //        → concilia a produção com os relatórios oficiais de ativações e recargas (CONNECT-c; ORA-CONNECT-009); sem o
 //          período, os 7 dias até ontem, no horário de Brasília. Pede o GET com corpo (NOGLE_GET_COM_CORPO=documentado)
@@ -20,7 +23,8 @@ import { ehTipoOperacao, type TipoOperacao } from "@ora5g/dominio/nogle";
 
 import { ClienteNogle, ehTipoDeChave } from "./connect/cliente-nogle.ts";
 import {
-  conciliarRelatorios, consultarPendentes, enviarPendentes, enviarTransferencias, lerEstoqueDeChips, mensagemSegura, sincronizarReferencias,
+  conciliarRelatorios, consultarPendentes, enviarPendentes, enviarTransferencias, lerEstoqueDeChips, mensagemSegura, responderConsultas,
+  sincronizarReferencias,
 } from "./connect/processar.ts";
 import { transporteHttp } from "./connect/transporte.ts";
 import { bancoConnect, clienteAdministrativo } from "./supabase.ts";
@@ -38,6 +42,7 @@ const listas = process.argv.includes("--listas");
 const conciliar = process.argv.includes("--conciliar");
 const estoque = process.argv.includes("--estoque");
 const transferencias = process.argv.includes("--transferencias");
+const consultas = process.argv.includes("--consultas");
 const argumento = (nome: string) => { const i = process.argv.indexOf(nome); return i > 0 ? process.argv[i + 1] ?? "" : ""; };
 /** O dia em Brasília, deslocado em dias (AAAA-MM-DD). */
 const diaEmBrasilia = (dias: number) => new Intl.DateTimeFormat("en-CA", { timeZone: "America/Sao_Paulo" }).format(new Date(Date.now() + dias * 86_400_000));
@@ -51,7 +56,7 @@ const faltando = [
   !ehTipoDeChave(tipoDaChave) && "NOGLE_AUTH_KEY_TYPE",
   !ler("NOGLE_ACCESS_KEY") && "NOGLE_ACCESS_KEY",
   tipoDaChave !== "marca" && !ler("NOGLE_SECONDARY_KEY") && "NOGLE_SECONDARY_KEY",
-  !listas && !conciliar && !estoque && !transferencias && tipos.length === 0 && "NOGLE_OPERACOES_HABILITADAS",
+  !listas && !conciliar && !estoque && !transferencias && !consultas && tipos.length === 0 && "NOGLE_OPERACOES_HABILITADAS",
 ].filter(Boolean);
 
 if (transferencias && ler("NOGLE_TRANSFERENCIAS") !== "habilitada") {
@@ -76,6 +81,16 @@ try {
     // levam o corpo). Liga com "documentado" no ambiente do worker.
     { getComCorpo: ler("NOGLE_GET_COM_CORPO") === "documentado" },
   );
+  if (consultas) {
+    // As consultas que só leem (CONNECT-g): vence o que parou, apaga a resposta de mais de 24 horas e responde a fila.
+    const limpeza = await banco.limparConsultas();
+    const r = await responderConsultas(banco, nogle);
+    if (r.respondidas + r.nao_encontradas + r.falhas + limpeza.vencidas + limpeza.apagadas > 0) {
+      console.log(`${agora} consultas da Nogle: ${r.respondidas} respondidas, ${r.nao_encontradas} não encontradas, ${r.falhas} falhas; `
+        + `${limpeza.vencidas} vencidas, ${limpeza.apagadas} respostas apagadas (24 h)`);
+    }
+    process.exit(0);
+  }
   if (listas) {
     const r = await sincronizarReferencias(banco, nogle, ler("CONNECT_UFS").split(",").map((u) => u.trim().toUpperCase()).filter(Boolean));
     const c = r.caixa;
@@ -119,6 +134,8 @@ try {
   const envio = await enviarPendentes(banco, nogle, tipos);
   // Consulta pelo uuid (GET /consultaPagamento): só depois de ver a primeira resposta real com uuid.
   const consulta = await consultarPendentes(banco, nogle, tipos, 10, { consultaPagamento: ler("NOGLE_CONSULTA_PAGAMENTO") === "habilitada" });
+  // Roda a cada minuto: a linha do log só quando algo aconteceu (CONNECT-g; antes, uma linha por minuto mesmo sem nada).
+  if (envio.aceitas + envio.recusadas + envio.desconhecidas + envio.devolvidas + consulta.consultadas === 0) process.exit(0);
   console.log(`${agora} envio: ${envio.aceitas} aceitas, ${envio.recusadas} recusadas, ${envio.desconhecidas} desconhecidas, ${envio.devolvidas} de volta à fila; ` +
     `consulta: ${consulta.consultadas} consultadas, ${consulta.confirmadas} confirmadas, ${consulta.bloqueadas} bloqueadas, ${consulta.falhas} falhas`);
   process.exit(envio.devolvidas + envio.desconhecidas + consulta.falhas > 0 ? 1 : 0);
