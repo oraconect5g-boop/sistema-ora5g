@@ -70,10 +70,12 @@ const pdv = async (id: number) => (await db.query<{ ativo: boolean; fisicos: num
 
 describe("o estoque de chips da Nogle (CONNECT-d; ORA-INV-011)", () => {
   it("grava os PDVs, a MVNO e o estoque de cada PDV; a leitura seguinte troca só o que respondeu", async () => {
+    // A lista da MVNO traz o estoque virgem INTEIRO, inclusive o que já está nos PDVs (como a Nogle de verdade respondeu
+    // na primeira leitura, 24/11): "sem PDV" é só o que não está em nenhum PDV.
     const [c1, c2, c3, m1, m2] = [1, 2, 3, 4, 5].map(iccid) as [string, string, string, string, string];
     const r1 = await gravar({
       pdvs: [LOJA, REVENDA],
-      mvno: [{ iccid: m1, tipo: "fisico" }, { iccid: m2, tipo: "esim" }],
+      mvno: [{ iccid: m1, tipo: "fisico" }, { iccid: m2, tipo: "esim" }, { iccid: c1, tipo: "fisico" }, { iccid: c2, tipo: "esim" }, { iccid: c3, tipo: "fisico" }],
       estoques: [
         { pdv: 5216, chips: [{ iccid: c1, tipo: "fisico", repassado_em: "2022-03-21 22:31:23.580" }, { iccid: c2, tipo: "esim", repassado_em: null }] },
         { pdv: 5250, chips: [{ iccid: c3, tipo: "fisico" }] },
@@ -102,10 +104,33 @@ describe("o estoque de chips da Nogle (CONNECT-d; ORA-INV-011)", () => {
     ]);
 
     // A terceira: o eSIM m2 saiu da MVNO para a loja; a revenda sumiu da lista da Nogle (inativa, com o estoque de antes).
-    await gravar({ pdvs: [LOJA], mvno: [{ iccid: m1, tipo: "fisico" }], estoques: [{ pdv: 5216, chips: [{ iccid: c1, tipo: "fisico" }, { iccid: m2, tipo: "esim" }] }] });
+    await gravar({
+      pdvs: [LOJA], mvno: [{ iccid: m1, tipo: "fisico" }, { iccid: m2, tipo: "esim" }, { iccid: c1, tipo: "fisico" }],
+      estoques: [{ pdv: 5216, chips: [{ iccid: c1, tipo: "fisico" }, { iccid: m2, tipo: "esim" }] }],
+    });
     expect(await pdv(5216)).toMatchObject({ fisicos: 1, esims: 1 });
     expect((await chipsDe(null)).map((c) => c.iccid)).toEqual([m1]);
     expect(await pdv(5250)).toMatchObject({ ativo: false, fisicos: 1 });
+
+    // A quarta: a revenda volta à lista, mas a leitura do estoque dela falha. A lista da MVNO traz o c3 (que está nela):
+    // ele fica na revenda, como estava, e não vira "sem PDV".
+    await gravar({
+      pdvs: [LOJA, REVENDA], mvno: [{ iccid: m1, tipo: "fisico" }, { iccid: m2, tipo: "esim" }, { iccid: c1, tipo: "fisico" }, { iccid: c3, tipo: "fisico" }],
+      estoques: [{ pdv: 5216, chips: [{ iccid: c1, tipo: "fisico" }, { iccid: m2, tipo: "esim" }] }], falhas: 1,
+    });
+    expect(await pdv(5250)).toMatchObject({ ativo: true, fisicos: 1, esims: 0 });
+    expect((await chipsDe(5250)).map((c) => c.iccid)).toEqual([c3]);
+    expect((await chipsDe(null)).map((c) => c.iccid)).toEqual([m1]);
+    // A quinta: o eSIM m2 voltou da loja para o estoque da Ora; a revenda responde de novo.
+    await gravar({
+      pdvs: [LOJA, REVENDA], mvno: [{ iccid: m1, tipo: "fisico" }, { iccid: m2, tipo: "esim" }, { iccid: c1, tipo: "fisico" }, { iccid: c3, tipo: "fisico" }],
+      estoques: [{ pdv: 5216, chips: [{ iccid: c1, tipo: "fisico" }] }, { pdv: 5250, chips: [{ iccid: c3, tipo: "fisico" }] }],
+    });
+    expect(await pdv(5216)).toMatchObject({ fisicos: 1, esims: 0 });
+    expect((await chipsDe(null)).map((c) => c.iccid)).toEqual([m1, m2]);
+    const ultimas = (await db.query<{ mvno_fisicos: number | null; mvno_esims: number | null }>(
+      "select mvno_fisicos, mvno_esims from public.connect_leituras_nogle where organizacao_id = $1 order by numero desc limit 2", [ids.organizacao])).rows;
+    expect(ultimas).toEqual([{ mvno_fisicos: 1, mvno_esims: 1 }, { mvno_fisicos: 1, mvno_esims: 0 }]);
     // Outra rede não se mistura.
     expect((await db.query("select 1 from public.connect_pdvs where organizacao_id = $1", [ids.outraOrganizacao])).rows).toEqual([]);
   });

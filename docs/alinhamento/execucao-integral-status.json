@@ -2,7 +2,7 @@
   "_leia": "Checkpoint do programa de execução integral (PR #67). Carregar ao retomar e seguir para o próximo item executável da fila; não reiniciar o projeto. Estados vêm de status-requisitos.json (fonte da rastreabilidade); este arquivo acrescenta lote, bloqueio externo e revisão. Desde 16/11/2026 a medida de avanço é o requisito homologado pelo proprietário: a chave aceites guarda a resposta dele a cada roteiro de aceite (docs/aceite/); um requisito só recebe homologado: true com todos os lotes dele aceitos e sem nada em FALTA na nota de status-requisitos.json.",
   "atualizado_em": "2026-11-24",
   "base": {
-    "main": "3244734",
+    "main": "4070a8b",
     "pacote": {
       "pr": 67,
       "branch": "docs/execucao-integral-20261110",
@@ -1278,12 +1278,12 @@
         "ORA-INV-011"
       ],
       "entrega": "a tela Ora Connect → Chips na Nogle: o estoque virgem de chips de cada loja e o geral da MVNO na Nogle, lido pelo servidor a cada 30 minutos, das 7h às 22h; só leitura",
-      "commit": null,
-      "publicado_em": null,
+      "commit": "4070a8b",
+      "publicado_em": "2026-11-24",
       "pedido_em": "2026-11-24",
       "resposta": null,
       "respondido_em": null,
-      "nota": "a primeira chamada de verdade à Nogle, com o sim do proprietário para só consultar (24/11); a chave é do tipo marca; migration 20261125015559_estoque_de_chips_da_nogle; o commit e a publicação ficam no registro (a branch registro/publicacoes)"
+      "nota": "no ar em 4070a8b (build 24/11 23:16; copiado do registro das publicações, a branch registro/publicacoes); a primeira leitura de verdade às 23:17 (18 PDVs, 0 falhas), os 11 PDVs ligados (D-056) e a prova de leitura no site às 23:20; migration 20261125015559_estoque_de_chips_da_nogle; a correção do estoque sem PDV (20261125022938_estoque_de_chips_sem_pdv) vem no lote seguinte, com o mesmo roteiro"
     }
   },
   "contagem_dos_estados": {
@@ -2906,5 +2906,5 @@
       "homologado": false
     }
   },
-  "proximo_passo": "Seguir a ordem de 23/11 (o prompt entregue pelo proprietário, escrito pelo Codex, com a auditoria integral de 21/11, PR #105; a leitura está em docs/alinhamento/LEITURA_AUDITORIA_2026-11-21.md). Em 23/11 à noite o proprietário pediu para seguir o planejamento do prompt: a fila, seção por seção, está em docs/alinhamento/FILA_INTEGRAL_2026-11-23.md. (1) Publicar o CONNECT-d depois do merge, rodar a primeira leitura do estoque de chips pelo worker (deploy/homologacao/worker-connect.sh --estoque), ligar os 11 PDVs \"SUPERCELL …\" às lojas de mesmo nome (D-056), agendar a leitura a cada 30 minutos, das 7h às 22h, rodar a prova de leitura no site (e2e/connect-chips-real.spec.ts) e registrar a publicação (deploy/homologacao/registrar-publicacao.sh; a branch registro/publicacoes); os lotes de 23/11 e 24/11 até o AUD-e (3244734) estão no ar. (2) O próximo lote de código: a raiz de teste do CNPJ da empresa (a da matriz que o proprietário mandou), a mensagem de Lojas da rede perto do formulário, o F24-06 (a disponibilidade comercial explicada) e os pontos V1, V2 e V5 do teste das telas; depois, as telas mais pesadas (M1, M2 e A1/A2), os cabeçalhos de segurança (M4), a exportação da auditoria (M8) e o acabamento (B1 a B5, B7). (3) O pagamento pelo site está pronto para ligar: falta a chave de teste da Asaas, o e-mail dos avisos e o sim do proprietário para o worker. (4) A seção 4 do prompt (o catálogo e o estoque de verdade) foi feita em 24/11 com as respostas do proprietário (D-053; as peças de ASSISTÊNCIA fora da loja online): falta um relatório novo da Rein (a posição carregada é a de 10/11), o dos IMEIs dos celulares e o CNPJ das lojas (sem ele, a loja online não vende nada de verdade). O que resta depende do proprietário, de contrato ou de terceiro (docs/PENDENCIAS_DO_PROPRIETARIO.md, a lista única). A narrativa anterior deste campo fica no histórico do Git e em docs/alinhamento/EXECUCAO_INTEGRAL_STATUS.md."
+  "proximo_passo": "Seguir a ordem de 23/11 (o prompt entregue pelo proprietário, escrito pelo Codex, com a auditoria integral de 21/11, PR #105; a leitura está em docs/alinhamento/LEITURA_AUDITORIA_2026-11-21.md). Em 23/11 à noite o proprietário pediu para seguir o planejamento do prompt: a fila, seção por seção, está em docs/alinhamento/FILA_INTEGRAL_2026-11-23.md. (1) A correção do CONNECT-d (o estoque sem PDV): depois do merge, publicar, rodar a leitura de verdade de novo (deploy/homologacao/worker-connect.sh --estoque), agendar a leitura a cada 30 minutos, das 7h às 22h (D-056), rodar a prova de leitura no site (e2e/connect-chips-real.spec.ts) e registrar a publicação (a branch registro/publicacoes); os lotes de 23/11 e 24/11 até o CONNECT-d (4070a8b) estão no ar, e os 11 PDVs estão ligados às lojas. (2) O próximo lote de código: a raiz de teste do CNPJ da empresa (a da matriz que o proprietário mandou), a mensagem de Lojas da rede perto do formulário, o F24-06 (a disponibilidade comercial explicada) e os pontos V1, V2 e V5 do teste das telas; depois, as telas mais pesadas (M1, M2 e A1/A2), os cabeçalhos de segurança (M4), a exportação da auditoria (M8) e o acabamento (B1 a B5, B7). (3) O pagamento pelo site está pronto para ligar: falta a chave de teste da Asaas, o e-mail dos avisos e o sim do proprietário para o worker. (4) A seção 4 do prompt (o catálogo e o estoque de verdade) foi feita em 24/11 com as respostas do proprietário (D-053; as peças de ASSISTÊNCIA fora da loja online): falta um relatório novo da Rein (a posição carregada é a de 10/11), o dos IMEIs dos celulares e o CNPJ das lojas (sem ele, a loja online não vende nada de verdade). O que resta depende do proprietário, de contrato ou de terceiro (docs/PENDENCIAS_DO_PROPRIETARIO.md, a lista única). A narrativa anterior deste campo fica no histórico do Git e em docs/alinhamento/EXECUCAO_INTEGRAL_STATUS.md."
 }

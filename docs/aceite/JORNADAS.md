@@ -190,7 +190,7 @@ Em vez de responder roteiro por roteiro, percorra **uma jornada por vez**: o cam
 | Lote | O que entrega | Roteiro | No ar | Resposta |
 |---|---|---|---|---|
 | CONNECT-c | a conciliação da produção da Ora Connect com os relatórios oficiais de ativações e de recargas da Nogle: o que confere, o valor diferente, o que só a Nogle tem e o que só a Ora tem | [CONNECT-c.md](CONNECT-c.md) | `2efe8cc` (2026-11-18) | — |
-| CONNECT-d | a tela Ora Connect → Chips na Nogle: o estoque virgem de chips de cada loja e o geral da MVNO na Nogle, lido pelo servidor a cada 30 minutos, das 7h às 22h; só leitura | [CONNECT-d.md](CONNECT-d.md) | a publicar | — |
+| CONNECT-d | a tela Ora Connect → Chips na Nogle: o estoque virgem de chips de cada loja e o geral da MVNO na Nogle, lido pelo servidor a cada 30 minutos, das 7h às 22h; só leitura | [CONNECT-d.md](CONNECT-d.md) | `4070a8b` (2026-11-24) | — |
 
 ## J11
 

@@ -19,7 +19,7 @@ test.describe("os chips na Nogle, no site no ar (CONNECT-d)", () => {
   test("o dono vê as lojas, os chips e onde está um chip; o administrador, só as contagens; o gerente da loja de teste, nada", async ({ browser }) => {
     test.skip(test.info().project.name !== "celular-360", "basta uma vez, no celular");
     test.setTimeout(180_000);
-    await comPessoas(browser, [[DONO, LOJA_A], [ADMINISTRADOR], [GERENTE_A]], async (pessoas) => {
+    await comPessoas(browser, [[DONO, LOJA_A], [ADMINISTRADOR, LOJA_A], [GERENTE_A]], async (pessoas) => {
       const dono = pessoas[DONO] as Page;
       await dono.goto("/connect/chips");
       await expect(dono.getByRole("heading", { level: 1, name: "Chips na Nogle" })).toBeVisible();
