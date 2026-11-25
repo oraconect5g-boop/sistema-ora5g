@@ -4,6 +4,7 @@ import type { BancoDoRelato } from "./avisos/erros-do-site.ts";
 import type { AvisoAProcessar, BancoDosPagamentos, ConfiguracaoDoPagamento, PagamentoACriar } from "./pagamentos/processar.ts";
 import type { BancoDoCaixa, QrAConferir, QrACriar } from "./pagamentos/caixa.ts";
 import type { BancoDoCartao, LinkDoCartaoAConferir, LinkDoCartaoACriar } from "./pagamentos/cartao.ts";
+import type { AssinaturaAConferir, AssinaturaACriar, BancoDasAssinaturas } from "./pagamentos/assinaturas.ts";
 import type { AvisoParaEnviar, BancoDosAvisos, ResultadoDoAviso } from "./avisos/processar.ts";
 import type { BancoConnect } from "./connect/processar.ts";
 import type { BancoWhatsApp, EnvioParaFazer, ResultadoDoEnvio } from "./whatsapp/processar.ts";
@@ -50,7 +51,7 @@ export function bancoDoRelato(cliente: SupabaseClient, segredo: string): BancoDo
 }
 
 // O pagamento pelo site (PAY-014a; ADR-025): as funções do worker dos pagamentos, só com a chave secreta do servidor.
-export function bancoDosPagamentos(cliente: SupabaseClient): BancoDosPagamentos & BancoDoCaixa & BancoDoCartao {
+export function bancoDosPagamentos(cliente: SupabaseClient): BancoDosPagamentos & BancoDoCaixa & BancoDoCartao & BancoDasAssinaturas {
   const rpc = async <T>(nome: string, argumentos?: Record<string, unknown>): Promise<T> => {
     const { data, error } = await cliente.rpc(nome, argumentos);
     if (error) throw error;
@@ -89,6 +90,15 @@ export function bancoDosPagamentos(cliente: SupabaseClient): BancoDosPagamentos 
     cartaoConsultaAplicar: (cartao, consulta) => rpc<string>("caixa_cartao_consulta_aplicar", { p_cartao: cartao, p_consulta: consulta }),
     cartaoADesativar: (limite) => rpc<{ id: string; link_id: string }[]>("caixa_cartao_a_desativar", { p_limite: limite }),
     cartaoLinkDesativado: (cartao) => rpc<string>("caixa_cartao_link_desativado", { p_cartao: cartao }),
+    // PAY-015c: a assinatura no cartão.
+    assinaturasACriar: (limite) => rpc<AssinaturaACriar[]>("assinaturas_a_criar", { p_limite: limite }),
+    assinaturaLinkRegistrar: (assinatura, linkId, url, expiraEm) =>
+      rpc<string>("assinatura_link_registrar", { p_assinatura: assinatura, p_link_id: linkId, p_link_url: url, p_expira_em: expiraEm }),
+    assinaturaCriacaoFalhou: (assinatura, motivo, definitiva) => rpc<string>("assinatura_criacao_falhou", { p_assinatura: assinatura, p_motivo: motivo, p_definitiva: definitiva }),
+    assinaturasAConferir: (limite) => rpc<AssinaturaAConferir[]>("assinaturas_a_conferir", { p_limite: limite }),
+    assinaturaConsultaAplicar: (assinatura, consulta) => rpc<string>("assinatura_consulta_aplicar", { p_assinatura: assinatura, p_consulta: consulta }),
+    assinaturasACancelar: (limite) => rpc<{ id: string; assinatura_id: string | null; link_id: string | null }[]>("assinaturas_a_cancelar", { p_limite: limite }),
+    assinaturaCanceladaNaAsaas: (assinatura) => rpc<string>("assinatura_cancelada_na_asaas", { p_assinatura: assinatura }),
   };
 }
 

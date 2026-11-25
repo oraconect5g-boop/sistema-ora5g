@@ -241,8 +241,8 @@ describe("o cartão do caixa na Asaas (PAY-015b)", () => {
         : [{ id: "pay_4", status: "REFUNDED", value: 5, paymentLink: "lnk_4", creditCard: { creditCardNumber: "12345", creditCardBrand: "visa" } }] })(req, res);
     };
     expect(await cliente().cobrancasDeCartaoDesde("2026-11-25")).toEqual([
-      { id: "pay_1", link: "lnk_1", situacao: "pago", valor_centavos: 7_990, final: "8829", bandeira: "VISA" },
-      { id: "pay_4", link: "lnk_4", situacao: "estornado", valor_centavos: 500, final: null, bandeira: null },
+      { id: "pay_1", link: "lnk_1", situacao: "pago", valor_centavos: 7_990, final: "8829", bandeira: "VISA", assinatura: null },
+      { id: "pay_4", link: "lnk_4", situacao: "estornado", valor_centavos: 500, final: null, bandeira: null, assinatura: null },
     ]);
     expect(paginas).toBe(2);
     expect(recebidos.map((r) => r.caminho)).toEqual([
@@ -257,6 +257,47 @@ describe("o cartão do caixa na Asaas (PAY-015b)", () => {
     expect(recebidos).toEqual([]);
     responder = json(500, {});
     expect(await cliente().cobrancasDeCartaoDesde("2026-11-25")).toBe("falha");
+  });
+});
+
+describe("a assinatura no cartão na Asaas (PAY-015c)", () => {
+  it("o link recorrente: só no cartão, com o ciclo, uma assinatura só, sem aviso ao cliente e com o nosso identificador", async () => {
+    responder = json(200, { id: "lnk_rec_1", url: "https://sandbox.asaas.com/c/lnk_rec_1", active: true });
+    expect(await cliente().criarLinkRecorrente({ referencia: "00000000-0000-4000-8000-0000000000a1", nome: "Plano 10 GB (assinatura nº 3 na Ora 5G)",
+      valorCentavos: 5_490, ciclo: "MONTHLY", venceEm: "2026-11-29" })).toEqual({ tipo: "criado", link: { id: "lnk_rec_1", url: "https://sandbox.asaas.com/c/lnk_rec_1" } });
+    expect(recebidos[0]).toMatchObject({ metodo: "POST", caminho: "/v3/paymentLinks", corpo: {
+      billingType: "CREDIT_CARD", chargeType: "RECURRENT", subscriptionCycle: "MONTHLY", value: 54.9, endDate: "2026-11-29",
+      externalReference: "00000000-0000-4000-8000-0000000000a1", limit: 1, notificationEnabled: false } });
+  });
+
+  it("a assinatura: a situação, o valor, o ciclo, a próxima cobrança e o link; 404 é nulo; fora da forma é falha", async () => {
+    responder = json(200, { object: "subscription", id: "sub_1", status: "ACTIVE", value: 54.9, cycle: "MONTHLY", nextDueDate: "2026-12-25",
+      paymentLink: "lnk_rec_1", deleted: false });
+    expect(await cliente().assinatura("sub_1")).toEqual({ id: "sub_1", status: "ACTIVE", removida: false, valor_centavos: 5_490, ciclo: "MONTHLY",
+      proxima_cobranca: "2026-12-25", link: "lnk_rec_1" });
+    expect(recebidos.at(-1)).toMatchObject({ metodo: "GET", caminho: "/v3/subscriptions/sub_1" });
+    responder = json(404, {});
+    expect(await cliente().assinatura("sub_1")).toBeNull();
+    responder = json(200, { id: "sub_1", status: "PAUSED" });
+    expect(await cliente().assinatura("sub_1")).toBe("falha");
+    expect(await cliente().assinatura("sub com espaço")).toBeNull();
+  });
+
+  it("as cobranças da assinatura, página por página: a situação (o vencido à parte), o vencimento, o dia pago e o cartão; remover a assinatura", async () => {
+    responder = (req, res) => json(200, { object: "list", hasMore: !(req.url ?? "").includes("offset"), data: (req.url ?? "").includes("offset")
+      ? [{ id: "pay_2", status: "OVERDUE", value: 54.9, dueDate: "2026-12-25" }]
+      : [{ id: "pay_1", status: "CONFIRMED", value: 54.9, dueDate: "2026-11-25", clientPaymentDate: "2026-11-25",
+        creditCard: { creditCardNumber: "8829", creditCardBrand: "VISA" } }, { id: "pay_x", status: "PENDING", value: 54.9, deleted: true }] })(req, res);
+    expect(await cliente().cobrancasDaAssinatura("sub_1")).toEqual([
+      { id: "pay_1", situacao: "pago", valor_centavos: 5_490, vencimento: "2026-11-25", pago_em: "2026-11-25", final: "8829", bandeira: "VISA" },
+      { id: "pay_2", situacao: "vencido", valor_centavos: 5_490, vencimento: "2026-12-25", pago_em: null, final: null, bandeira: null },
+    ]);
+    expect(recebidos.map((r) => r.caminho)).toEqual(["/v3/subscriptions/sub_1/payments", "/v3/subscriptions/sub_1/payments?offset=10"]);
+    responder = json(200, {});
+    expect(await cliente().removerAssinatura("sub_1")).toBe(true);
+    expect(recebidos.at(-1)).toMatchObject({ metodo: "DELETE", caminho: "/v3/subscriptions/sub_1" });
+    responder = json(500, {});
+    expect(await cliente().removerAssinatura("sub_1")).toBe(false);
   });
 });
 

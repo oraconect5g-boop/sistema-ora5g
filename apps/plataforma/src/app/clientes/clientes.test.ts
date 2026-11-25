@@ -58,7 +58,9 @@ vi.mock("../../lib/acesso/sessao", () => ({ FalhaDoServico: class extends Error 
 
 import { concluirVenda } from "../vender/acoes";
 import FichaDoCliente from "./[id]/page";
-import { buscarClientes, marcarDiferentes, mesclarClientes, registrarConsentimento, revelarDado, salvarCliente, vincularClienteNaVenda } from "./acoes";
+import { QrCode } from "../../componentes/QrCode";
+import { buscarClientes, cancelarAssinatura, marcarDiferentes, mesclarClientes, pedirAssinatura, registrarConsentimento, revelarDado, salvarCliente,
+  vincularClienteNaVenda } from "./acoes";
 import Duplicados from "./duplicados/page";
 import NovoCliente from "./novo/page";
 import Clientes from "./page";
@@ -68,7 +70,7 @@ function texto(v: unknown): string {
   if (Array.isArray(v)) return v.map(texto).join(" ");
   if (typeof v === "string" || typeof v === "number") return String(v);
   // L5e: os blocos do histórico da ficha são montados à parte; o teste os executa para ler o que a tela mostra.
-  if (isValidElement<Record<string, unknown>>(v) && typeof v.type === "function" && v.type.name === "HistoricoDaFicha") {
+  if (isValidElement<Record<string, unknown>>(v) && typeof v.type === "function" && (v.type.name === "HistoricoDaFicha" || v.type.name === "AssinaturasNoCartao")) {
     return texto((v.type as (p: unknown) => unknown)(v.props));
   }
   if (isValidElement<Record<string, unknown>>(v)) return Object.values(v.props).map(texto).join(" ");
@@ -143,7 +145,8 @@ describe("/clientes/[id]", () => {
       expect(t).toContain(trecho);
     }
     expect(t).not.toContain(CPF);
-    expect(cenario.chamadas).toEqual([{ nome: "cliente_ficha", argumentos: { p_cliente: CLIENTE } }]);
+    // PAY-015c: junto, as assinaturas no cartão do cliente.
+    expect(cenario.chamadas).toEqual([{ nome: "cliente_ficha", argumentos: { p_cliente: CLIENTE } }, { nome: "assinaturas_do_cliente", argumentos: { p_cliente: CLIENTE } }]);
   });
 
   it("CRM-009a: a compra que nasceu de um pedido do site diz de onde veio; a falha dessa leitura aparece; sem a tabela, a lista segue", async () => {
@@ -357,3 +360,81 @@ describe("mesclagem e segmentos (L5c)", () => {
     expect(cenario.chamadas.at(-1)).toEqual({ nome: "clientes_marcar_diferentes", argumentos: { p_a: CLIENTE, p_b: OUTRO, p_motivo: "Mãe e filha" } });
   });
 });
+
+// PAY-015c (25/11/2026; a D-062): a assinatura no cartão pela Asaas na ficha. As regras do banco estão em
+// packages/banco/src/assinatura-no-cartao.test.ts.
+describe("PAY-015c: o cartão e a recorrência na ficha do cliente", () => {
+  const abrir = (busca: Record<string, string> = {}) => FichaDoCliente({ params: Promise.resolve({ id: CLIENTE }), searchParams: Promise.resolve(busca) });
+  const ASSINATURA = "00000000-0000-4000-8000-0000000000a5";
+  const LINK = "https://sandbox.asaas.invalid/c/lnkrec_1";
+  // Os elementos da tela, com a seção das assinaturas executada (ela é montada à parte).
+  function elementos(v: unknown, todos: { type: unknown; props: Record<string, unknown> }[] = []) {
+    if (Array.isArray(v)) v.forEach((x) => elementos(x, todos));
+    else if (isValidElement<Record<string, unknown>>(v)) {
+      if (typeof v.type === "function" && v.type.name === "AssinaturasNoCartao") return elementos((v.type as (p: unknown) => unknown)(v.props), todos);
+      todos.push({ type: v.type, props: v.props });
+      Object.values(v.props).forEach((x) => elementos(x, todos));
+    }
+    return todos;
+  }
+  const assinatura = (mudar: Record<string, unknown> = {}) => ({
+    id: ASSINATURA, numero: 5, descricao: "Plano 10 GB da linha", valor_centavos: 5_490, ciclo: "MONTHLY", linha: "41987650001", situacao: "aguardando_cartao",
+    link_url: LINK, link_expira_em: "2026-11-28T15:00:00Z", cartao_final: null, cartao_bandeira: null, proxima_cobranca: null, ultima_falha: null, divergencia: null,
+    pode_cancelar: true, cobrancas: [], ...mudar });
+
+  it("ligada: a assinatura que espera o cartão mostra o QR Code do link e o cancelar; o pedido de outra traz o ciclo mensal; a ativa mostra o cartão e as cobranças", async () => {
+    cenario.permissoes = new Set(["cliente.buscar"]);
+    cenario.respostas.cliente_ficha = { data: ficha(), error: null };
+    cenario.respostas.assinaturas_do_cliente = { data: { ligado: true, pode_criar: true, assinaturas: [assinatura(), assinatura({
+      id: "00000000-0000-4000-8000-0000000000a6", numero: 4, situacao: "ativa", link_url: null, cartao_final: "8829", cartao_bandeira: "VISA", proxima_cobranca: "2026-12-25",
+      pode_cancelar: false, cobrancas: [{ valor_centavos: 5_490, situacao: "pago", vencimento: "2026-11-25", pago_em: "2026-11-25" }] })] }, error: null };
+    const arvore = await abrir({ ok: "assinatura_pedida" });
+    const t = limpar(arvore);
+    for (const trecho of ["Assinatura pedida: o QR Code", "Cartão e recorrência", "Plano 10 GB da linha", "Esperando o cartão", "Abrir a página da assinatura",
+      "VISA final 8829", "próxima cobrança em 25/12/2026", "Paga", "paga em 25/11/2026", "Gerar QR Code do cartão"]) {
+      expect(t).toContain(trecho);
+    }
+    const tudo = elementos(arvore);
+    expect(tudo.filter((e) => e.type === QrCode).map((e) => e.props.texto)).toEqual([LINK]);
+    const formularios = tudo.filter((e) => e.type === "form");
+    expect(formularios.filter((f) => f.props.action === cancelarAssinatura)).toHaveLength(1);
+    expect(formularios.filter((f) => f.props.action === pedirAssinatura)).toHaveLength(1);
+    expect(tudo.find((e) => e.type === "select" && e.props.name === "ciclo")?.props.defaultValue).toBe("MONTHLY");
+  });
+
+  it("desligada e sem assinatura: a seção não aparece; a leitura que falha avisa; o link fora da forma não vira QR", async () => {
+    cenario.permissoes = new Set(["cliente.buscar"]);
+    cenario.respostas.cliente_ficha = { data: ficha(), error: null };
+    cenario.respostas.assinaturas_do_cliente = { data: { ligado: false, pode_criar: true, assinaturas: [] }, error: null };
+    expect(limpar(await abrir())).not.toContain("Cartão e recorrência");
+    cenario.respostas.assinaturas_do_cliente = { data: null, error: { code: "57014" } };
+    expect(limpar(await abrir())).toContain("Não deu para ler as assinaturas no cartão agora.");
+    cenario.respostas.assinaturas_do_cliente = { data: { ligado: true, pode_criar: false, assinaturas: [assinatura({ link_url: "javascript:alert(1)" })] }, error: null };
+    const arvore = await abrir();
+    expect(elementos(arvore).filter((e) => e.type === QrCode)).toEqual([]);
+    expect(elementos(arvore).filter((e) => e.type === "form" && e.props.action === pedirAssinatura)).toEqual([]);
+  });
+
+  it("as ações: o pedido fora da forma nem vai ao banco; o válido vai com o valor em centavos e a linha só com os dígitos; desligada e não encontrada voltam com a mensagem", async () => {
+    expect(await destinoDe(pedirAssinatura(formulario({ cliente: CLIENTE, descricao: "ab", valor: "54,90", ciclo: "MONTHLY", chave: "chave-da-assinatura-1" }))))
+      .toBe(`/clientes/${CLIENTE}?erro=assinatura_dados`);
+    expect(await destinoDe(pedirAssinatura(formulario({ cliente: CLIENTE, descricao: "Plano 10 GB", valor: "54,90", ciclo: "DAILY", chave: "chave-da-assinatura-1" }))))
+      .toBe(`/clientes/${CLIENTE}?erro=assinatura_dados`);
+    expect(cenario.chamadas).toEqual([]);
+    expect(await destinoDe(pedirAssinatura(formulario({ cliente: CLIENTE, descricao: "Plano 10 GB", valor: "54,90", ciclo: "MONTHLY", linha: "(41) 98765-0001",
+      chave: "chave-da-assinatura-1" })))).toBe(`/clientes/${CLIENTE}?ok=assinatura_pedida#assinaturas`);
+    expect(cenario.chamadas).toEqual([{ nome: "assinatura_pedir", argumentos: { p_cliente: CLIENTE, p_descricao: "Plano 10 GB", p_valor_centavos: 5_490,
+      p_ciclo: "MONTHLY", p_linha: "41987650001", p_chave: "chave-da-assinatura-1" } }]);
+    cenario.respostas.assinatura_pedir = { data: null, error: { code: "OR058" } };
+    expect(await destinoDe(pedirAssinatura(formulario({ cliente: CLIENTE, descricao: "Plano 10 GB", valor: "54,90", ciclo: "MONTHLY", chave: "chave-da-assinatura-2" }))))
+      .toBe(`/clientes/${CLIENTE}?erro=assinatura_desligada`);
+    expect(await destinoDe(cancelarAssinatura(formulario({ cliente: CLIENTE, assinatura: ASSINATURA, motivo: "x" })))).toBe(`/clientes/${CLIENTE}?erro=motivo`);
+    cenario.respostas.assinatura_cancelar = { data: null, error: { code: "P0002" } };
+    expect(await destinoDe(cancelarAssinatura(formulario({ cliente: CLIENTE, assinatura: ASSINATURA, motivo: "Cliente pediu" }))))
+      .toBe(`/clientes/${CLIENTE}?erro=assinatura_nao_encontrada`);
+    cenario.respostas.assinatura_cancelar = { data: "cancelando", error: null };
+    expect(await destinoDe(cancelarAssinatura(formulario({ cliente: CLIENTE, assinatura: ASSINATURA, motivo: "Cliente pediu" }))))
+      .toBe(`/clientes/${CLIENTE}?ok=assinatura_cancelada#assinaturas`);
+  });
+});
+

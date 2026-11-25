@@ -5,7 +5,8 @@
 // PAY-015a: o Pix pela Asaas no caixa: confere a chave Pix da conta, cria os QR pedidos no caixa, confere o pagamento a
 // cada rodada (sem depender do aviso) e exclui os QR cancelados e vencidos. Sem o aviso registrado, o caixa segue.
 // PAY-015b: o cartão pela Asaas no caixa: cria os links no cartão pedidos no caixa, confere as cobranças de cartão a cada
-// rodada (pelo paymentLink; sem depender do aviso) e desativa os links cancelados e vencidos.
+// rodada (pelo paymentLink; sem depender do aviso) e desativa os links cancelados e vencidos. PAY-015c: a assinatura no
+// cartão: cria os links recorrentes, acha a assinatura que o cliente criou, acompanha as cobranças e cancela na Asaas.
 // Roda por uns 50 segundos, com uma rodada a cada 3 segundos, para o link sair logo depois de o cliente pedir. Lê o
 // .env.local da pasta do worker (ORA_PASTA_AMBIENTE muda a pasta). Sem alguma chave, fica desligado: diz o que falta,
 // sem erro. Log só com contagens: nada de link, valor, token ou chave.
@@ -19,6 +20,7 @@ import { ClienteAsaas, ENDERECOS_DA_ASAAS, type AmbienteDaAsaas } from "./pagame
 import { oQueFaltaParaOsPagamentos } from "./pagamentos/configuracao.ts";
 import { rodadaDoCaixa, RESUMO_DO_CAIXA_VAZIO, situacaoDoPix, type ResumoDoCaixa } from "./pagamentos/caixa.ts";
 import { rodadaDoCartao, RESUMO_DO_CARTAO_VAZIO, situacaoDoCartao, type ResumoDoCartao } from "./pagamentos/cartao.ts";
+import { rodadaDasAssinaturas, RESUMO_DAS_ASSINATURAS_VAZIO, type ResumoDasAssinaturas } from "./pagamentos/assinaturas.ts";
 import { ligarSeFaltar, rodada, RESUMO_VAZIO, type ResumoDosPagamentos } from "./pagamentos/processar.ts";
 import { bancoDosPagamentos, clienteAdministrativo } from "./supabase.ts";
 
@@ -60,6 +62,7 @@ try {
   const total: ResumoDosPagamentos = { ...RESUMO_VAZIO };
   const doCaixa: ResumoDoCaixa = { ...RESUMO_DO_CAIXA_VAZIO };
   const doCartao: ResumoDoCartao = { ...RESUMO_DO_CARTAO_VAZIO };
+  const dasAssinaturas: ResumoDasAssinaturas = { ...RESUMO_DAS_ASSINATURAS_VAZIO };
   const fim = Date.now() + DURACAO_MS;
   while (Date.now() < fim) {
     if (siteLigado) {
@@ -73,6 +76,8 @@ try {
     if (cartaoPronto) {
       const k = await rodadaDoCartao(banco, asaas);
       for (const campo of Object.keys(doCartao) as (keyof ResumoDoCartao)[]) doCartao[campo] += k[campo];
+      const a = await rodadaDasAssinaturas(banco, asaas);
+      for (const campo of Object.keys(dasAssinaturas) as (keyof ResumoDasAssinaturas)[]) dasAssinaturas[campo] += a[campo];
     }
     await esperar(INTERVALO_MS);
   }
@@ -84,6 +89,9 @@ try {
   }
   if (doCartao.links_criados + doCartao.links_falhas + doCartao.links_pagos + doCartao.links_desativados > 0) {
     console.log(`${agora()} cartão do caixa: ${doCartao.links_criados} links criados, ${doCartao.links_falhas} falhas, ${doCartao.links_pagos} pagos, ${doCartao.links_desativados} desativados`);
+  }
+  if (dasAssinaturas.links_criados + dasAssinaturas.falhas + dasAssinaturas.ativadas + dasAssinaturas.canceladas > 0) {
+    console.log(`${agora()} assinaturas: ${dasAssinaturas.links_criados} links criados, ${dasAssinaturas.falhas} falhas, ${dasAssinaturas.ativadas} ativadas, ${dasAssinaturas.canceladas} canceladas`);
   }
   process.exit(siteLigado ? 0 : 1);
 } catch (erro) {

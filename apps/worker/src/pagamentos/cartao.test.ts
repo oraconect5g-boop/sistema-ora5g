@@ -28,7 +28,7 @@ function simulados(p: { aCriar?: LinkDoCartaoACriar[]; achado?: (LinkDaAsaas | n
   };
   return { banco, asaas, chamadas };
 }
-const PAGA: CobrancaDeCartao = { id: "pay_1", link: "lnk_1", situacao: "pago", valor_centavos: 7_900, final: "8829", bandeira: "VISA" };
+const PAGA: CobrancaDeCartao = { id: "pay_1", link: "lnk_1", situacao: "pago", valor_centavos: 7_900, final: "8829", bandeira: "VISA", assinatura: null };
 
 describe("o cartão do caixa no worker (PAY-015b)", () => {
   it("as cobranças do link: nenhuma (ou só pendente); uma paga ou estornada; duas, ou outra situação, ou sem valor: desconhecida", () => {

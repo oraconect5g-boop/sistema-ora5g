@@ -239,6 +239,195 @@ export type Database = {
           },
         ]
       }
+      assinatura_cobrancas: {
+        Row: {
+          assinatura_id: string
+          atualizado_em: string
+          criado_em: string
+          id: string
+          id_no_provedor: string
+          organizacao_id: string
+          pago_em: string | null
+          situacao: string
+          valor_centavos: number
+          vencimento: string | null
+        }
+        Insert: {
+          assinatura_id: string
+          atualizado_em?: string
+          criado_em?: string
+          id?: string
+          id_no_provedor: string
+          organizacao_id: string
+          pago_em?: string | null
+          situacao: string
+          valor_centavos: number
+          vencimento?: string | null
+        }
+        Update: {
+          assinatura_id?: string
+          atualizado_em?: string
+          criado_em?: string
+          id?: string
+          id_no_provedor?: string
+          organizacao_id?: string
+          pago_em?: string | null
+          situacao?: string
+          valor_centavos?: number
+          vencimento?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "assinatura_cobrancas_assinatura_id_fkey"
+            columns: ["assinatura_id"]
+            isOneToOne: false
+            referencedRelation: "assinaturas"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "assinatura_cobrancas_organizacao_id_fkey"
+            columns: ["organizacao_id"]
+            isOneToOne: false
+            referencedRelation: "organizacoes"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      assinaturas: {
+        Row: {
+          assinatura_id: string | null
+          atualizado_em: string
+          cancelada_em: string | null
+          cancelada_por: string | null
+          cartao_bandeira: string | null
+          cartao_final: string | null
+          chave: string
+          ciclo: string
+          cliente_id: string
+          conferido_em: string | null
+          criada_por: string
+          criado_em: string
+          descricao: string
+          divergencia: string | null
+          id: string
+          linha: string | null
+          link_desativado_em: string | null
+          link_expira_em: string | null
+          link_id: string | null
+          link_url: string | null
+          motivo_cancelamento: string | null
+          numero: number
+          organizacao_id: string
+          proxima_cobranca: string | null
+          reservado_ate: string | null
+          situacao: string
+          tentativas: number
+          ultima_falha: string | null
+          unidade_id: string
+          valor_centavos: number
+        }
+        Insert: {
+          assinatura_id?: string | null
+          atualizado_em?: string
+          cancelada_em?: string | null
+          cancelada_por?: string | null
+          cartao_bandeira?: string | null
+          cartao_final?: string | null
+          chave: string
+          ciclo: string
+          cliente_id: string
+          conferido_em?: string | null
+          criada_por: string
+          criado_em?: string
+          descricao: string
+          divergencia?: string | null
+          id?: string
+          linha?: string | null
+          link_desativado_em?: string | null
+          link_expira_em?: string | null
+          link_id?: string | null
+          link_url?: string | null
+          motivo_cancelamento?: string | null
+          numero?: number
+          organizacao_id: string
+          proxima_cobranca?: string | null
+          reservado_ate?: string | null
+          situacao?: string
+          tentativas?: number
+          ultima_falha?: string | null
+          unidade_id: string
+          valor_centavos: number
+        }
+        Update: {
+          assinatura_id?: string | null
+          atualizado_em?: string
+          cancelada_em?: string | null
+          cancelada_por?: string | null
+          cartao_bandeira?: string | null
+          cartao_final?: string | null
+          chave?: string
+          ciclo?: string
+          cliente_id?: string
+          conferido_em?: string | null
+          criada_por?: string
+          criado_em?: string
+          descricao?: string
+          divergencia?: string | null
+          id?: string
+          linha?: string | null
+          link_desativado_em?: string | null
+          link_expira_em?: string | null
+          link_id?: string | null
+          link_url?: string | null
+          motivo_cancelamento?: string | null
+          numero?: number
+          organizacao_id?: string
+          proxima_cobranca?: string | null
+          reservado_ate?: string | null
+          situacao?: string
+          tentativas?: number
+          ultima_falha?: string | null
+          unidade_id?: string
+          valor_centavos?: number
+        }
+        Relationships: [
+          {
+            foreignKeyName: "assinaturas_cancelada_por_fkey"
+            columns: ["cancelada_por"]
+            isOneToOne: false
+            referencedRelation: "perfis_usuario"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "assinaturas_cliente_id_fkey"
+            columns: ["cliente_id"]
+            isOneToOne: false
+            referencedRelation: "clientes"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "assinaturas_criada_por_fkey"
+            columns: ["criada_por"]
+            isOneToOne: false
+            referencedRelation: "perfis_usuario"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "assinaturas_organizacao_id_fkey"
+            columns: ["organizacao_id"]
+            isOneToOne: false
+            referencedRelation: "organizacoes"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "assinaturas_unidade_id_organizacao_id_fkey"
+            columns: ["unidade_id", "organizacao_id"]
+            isOneToOne: false
+            referencedRelation: "unidades"
+            referencedColumns: ["id", "organizacao_id"]
+          },
+        ]
+      }
       atividades: {
         Row: {
           chave: string
@@ -8467,6 +8656,46 @@ export type Database = {
         Args: { p_desconto: number; p_item: string }
         Returns: string
       }
+      assinatura_cancelada_na_asaas: {
+        Args: { p_assinatura: string }
+        Returns: string
+      }
+      assinatura_cancelar: {
+        Args: { p_assinatura: string; p_motivo: string }
+        Returns: string
+      }
+      assinatura_consulta_aplicar: {
+        Args: { p_assinatura: string; p_consulta: Json }
+        Returns: string
+      }
+      assinatura_criacao_falhou: {
+        Args: { p_assinatura: string; p_definitiva: boolean; p_motivo: string }
+        Returns: string
+      }
+      assinatura_link_registrar: {
+        Args: {
+          p_assinatura: string
+          p_expira_em: string
+          p_link_id: string
+          p_link_url: string
+        }
+        Returns: string
+      }
+      assinatura_pedir: {
+        Args: {
+          p_chave: string
+          p_ciclo: string
+          p_cliente: string
+          p_descricao: string
+          p_linha?: string
+          p_valor_centavos: number
+        }
+        Returns: Json
+      }
+      assinaturas_a_cancelar: { Args: { p_limite?: number }; Returns: Json }
+      assinaturas_a_conferir: { Args: { p_limite?: number }; Returns: Json }
+      assinaturas_a_criar: { Args: { p_limite?: number }; Returns: Json }
+      assinaturas_do_cliente: { Args: { p_cliente: string }; Returns: Json }
       atividade_criar: {
         Args: { p_chave: string; p_dados: Json }
         Returns: Json

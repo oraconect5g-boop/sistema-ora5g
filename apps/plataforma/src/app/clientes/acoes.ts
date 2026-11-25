@@ -10,6 +10,7 @@ import {
   CAMPOS_REVELAVEIS, CANAIS, erroDoCliente, FINALIDADES_DE_CONTATO, FONTES, lerCliente, valorDaBusca,
   type CampoRevelavel, type DadosDoCliente, type ErroDoCliente,
 } from "../../lib/clientes/regras";
+import { lerPedidoDeAssinatura } from "../../lib/clientes/assinaturas";
 import type { Json } from "../../lib/supabase/tipos-banco";
 
 // Clientes (lote L5a). Cada ação chama UMA função do banco como a pessoa logada: o banco confere
@@ -133,3 +134,36 @@ export async function marcarDiferentes(dados: FormData) {
   if (error) redirect(`/clientes/duplicados?erro=${erroDoCliente(error)}`);
   redirect("/clientes/duplicados?ok=diferentes");
 }
+
+// PAY-015c (a D-062): a assinatura no cartão pela Asaas, na ficha do cliente. O banco confere quem pede (quem vende na loja
+// do turno), o cliente, o valor e o ciclo; o worker cria o link recorrente e acompanha a assinatura.
+export async function pedirAssinatura(dados: FormData) {
+  const cliente = dados.get("cliente");
+  if (!ehUuid(cliente)) redirect("/clientes");
+  const pedido = lerPedidoDeAssinatura(dados);
+  const chave = dados.get("chave");
+  if (!pedido || typeof chave !== "string" || chave.length < 8 || chave.length > 120) redirect(`/clientes/${cliente}?erro=assinatura_dados`);
+  const { supabase } = await obterSessao({ exigirLoja: true });
+  const { error } = await supabase.rpc("assinatura_pedir", {
+    p_cliente: cliente, p_descricao: pedido.descricao, p_valor_centavos: pedido.valor_centavos, p_ciclo: pedido.ciclo, p_linha: pedido.linha ?? undefined, p_chave: chave,
+  });
+  if (error?.code === "OR058") redirect(`/clientes/${cliente}?erro=assinatura_desligada`);
+  if (error?.code === "22023") redirect(`/clientes/${cliente}?erro=assinatura_dados`);
+  if (error) redirect(`/clientes/${cliente}?erro=${erroDoCliente(error)}`);
+  redirect(`/clientes/${cliente}?ok=assinatura_pedida#assinaturas`);
+}
+
+export async function cancelarAssinatura(dados: FormData) {
+  const cliente = dados.get("cliente");
+  const assinatura = dados.get("assinatura");
+  const motivo = dados.get("motivo");
+  if (!ehUuid(cliente)) redirect("/clientes");
+  if (!ehUuid(assinatura)) redirect(`/clientes/${cliente}?erro=dados`);
+  if (typeof motivo !== "string" || motivo.trim().length < 3 || motivo.trim().length > 200) redirect(`/clientes/${cliente}?erro=motivo`);
+  const { supabase } = await obterSessao({ exigirLoja: true });
+  const { error } = await supabase.rpc("assinatura_cancelar", { p_assinatura: assinatura, p_motivo: motivo.trim() });
+  if (error?.code === "P0002") redirect(`/clientes/${cliente}?erro=assinatura_nao_encontrada`);
+  if (error) redirect(`/clientes/${cliente}?erro=${erroDoCliente(error)}`);
+  redirect(`/clientes/${cliente}?ok=assinatura_cancelada#assinaturas`);
+}
+
