@@ -1413,6 +1413,20 @@
       "pedido_em": "2026-11-25",
       "resposta": null,
       "respondido_em": null
+    },
+    {
+      "lote": "CONNECT-n",
+      "roteiro": "docs/aceite/CONNECT-n.md",
+      "requisitos": [
+        "ORA-CONNECT-002",
+        "ORA-CONNECT-011"
+      ],
+      "entrega": "em Ora Connect → Ativar chip, o assistente da demonstração: o chip, o cliente, o plano e o DDD, o pagamento à Nogle e a conferência antes de registrar, um passo por vez",
+      "commit": null,
+      "publicado_em": null,
+      "pedido_em": "2026-11-25",
+      "resposta": null,
+      "respondido_em": null
     }
   ]
 }
