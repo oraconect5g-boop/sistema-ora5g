@@ -78,7 +78,11 @@ beforeAll(async () => {
           usuarios: [{ id: "1", nome: "Pessoa (teste)", email: "pessoa@teste.invalid" }] }] });
       }
       if (caminho === "/linhas/estoque") {
-        return json(200, { retorno: true, mensagem: "", total: 1, data: [{ id: "1", iccid: CHIP_MVNO, tipo: "eSIM", activation_code_esim: "LPA:1$teste.invalid$X" }] });
+        // Como a Nogle de verdade: a lista da MVNO traz o estoque virgem inteiro, inclusive o chip que já está no PDV.
+        return json(200, { retorno: true, mensagem: "", total: 2, data: [
+          { id: "1", iccid: CHIP_MVNO, tipo: "eSIM", activation_code_esim: "LPA:1$teste.invalid$X" },
+          { id: "2", iccid: CHIP_LOJA, tipo: "físico", activation_code_esim: "" },
+        ] });
       }
       if (caminho === "/pdv/estoque") {
         const id = (JSON.parse(corpo || "{}") as { id?: number }).id;
