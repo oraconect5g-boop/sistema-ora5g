@@ -2,7 +2,7 @@
   "_leia": "Checkpoint do programa de execução integral (PR #67). Carregar ao retomar e seguir para o próximo item executável da fila; não reiniciar o projeto. Estados vêm de status-requisitos.json (fonte da rastreabilidade); este arquivo acrescenta lote, bloqueio externo e revisão. Desde 16/11/2026 a medida de avanço é o requisito homologado pelo proprietário: a chave aceites guarda a resposta dele a cada roteiro de aceite (docs/aceite/); um requisito só recebe homologado: true com todos os lotes dele aceitos e sem nada em FALTA na nota de status-requisitos.json.",
   "atualizado_em": "2026-11-24",
   "base": {
-    "main": "8b60d89",
+    "main": "3f4d904",
     "pacote": {
       "pr": 67,
       "branch": "docs/execucao-integral-20261110",
@@ -1367,6 +1367,20 @@
       "resposta": null,
       "respondido_em": null,
       "nota": "a decisão D-061 (\"Sim, todas para dono e gerentes\"); o aceite muda algo de verdade na Nogle; migration 20261125172755_acoes_na_nogle; o commit e a publicação ficam no registro (a branch registro/publicacoes)"
+    },
+    "CONNECT-i": {
+      "roteiro": "docs/aceite/CONNECT-i.md",
+      "requisitos": [
+        "ORA-CONNECT-007",
+        "ORA-CONNECT-009"
+      ],
+      "entrega": "em Ora Connect → Consultar linha, as 16 rotas da coleção oficial que faltavam: o titular da linha, o CNPJ, o CEP, o rastreio, o pagamento de uma solicitação e as informações da Nogle (a loja); a logística e o CPF (a gerência); o extrato e as recargas programadas da carteira, as portabilidades e as listas de linhas e de clientes (a rede)",
+      "commit": null,
+      "publicado_em": null,
+      "pedido_em": "2026-11-25",
+      "resposta": null,
+      "respondido_em": null,
+      "nota": "só consultas (a D-056); migration 20261125180630_outras_consultas_da_nogle; o commit e a publicação ficam no registro (a branch registro/publicacoes)"
     }
   },
   "contagem_dos_estados": {
@@ -2362,7 +2376,7 @@
       "titulo": "Consulta/atualização de linha e plano conforme API disponível",
       "prioridade": "P1",
       "estado": "parcial",
-      "lote": "L11 Ora Connect; CONNECT-g (25/11): as consultas da Nogle que só leem (Consultar linha e a Carteira); CONNECT-h (25/11): a consulta completa (o relatório do número e o do cliente); CONNECT-j (25/11): as funções que mudam algo na Nogle (o dono e os gerentes)",
+      "lote": "L11 Ora Connect; CONNECT-g (25/11): as consultas da Nogle que só leem (Consultar linha e a Carteira); CONNECT-h (25/11): a consulta completa (o relatório do número e o do cliente); CONNECT-j (25/11): as funções que mudam algo na Nogle (o dono e os gerentes); CONNECT-i (25/11): as outras consultas da Nogle (as 16 rotas que faltavam)",
       "bloqueio_externo": "C1/C2 (Nogle)",
       "revisado_codex": false,
       "homologado": false
@@ -2380,7 +2394,7 @@
       "titulo": "Reconciliar repasses/bonificações Nogle e operação local",
       "prioridade": "P1",
       "estado": "parcial",
-      "lote": "L11 Ora Connect; CONNECT-g (25/11): as consultas da Nogle que só leem (Consultar linha e a Carteira)",
+      "lote": "L11 Ora Connect; CONNECT-g (25/11): as consultas da Nogle que só leem (Consultar linha e a Carteira); CONNECT-i (25/11): as outras consultas da Nogle (as 16 rotas que faltavam)",
       "bloqueio_externo": "C2 (repasses Nogle)",
       "revisado_codex": false,
       "homologado": false
@@ -2989,5 +3003,5 @@
       "homologado": false
     }
   },
-  "proximo_passo": "Seguir a ordem de 23/11 (o prompt entregue pelo proprietário, escrito pelo Codex, com a auditoria integral de 21/11, PR #105; a leitura está em docs/alinhamento/LEITURA_AUDITORIA_2026-11-21.md). Em 23/11 à noite o proprietário pediu para seguir o planejamento do prompt: a fila, seção por seção, está em docs/alinhamento/FILA_INTEGRAL_2026-11-23.md. (1) O pedido do proprietário de 25/11 (\"todas as funções da Nogle, consulta completa, relatório individual\"; a D-060 e a D-061), em lotes: o CONNECT-h (os relatórios do número e do cliente) está no ar; o CONNECT-k (o relatório do vendedor e da loja) e o CONNECT-j (as funções que mudam algo na Nogle, para o dono e os gerentes) entram com este texto; depois da publicação do CONNECT-j: gravar NOGLE_ACOES=habilitada, publicar de novo e pôr no crontab `* * * * * worker-connect.sh --acoes`. Depois, o CONNECT-i (as outras consultas: as dúvidas frequentes, os relatórios de portabilidades e transações, o extrato e as recargas programadas da carteira, a validação de CPF, CNPJ e CEP e o rastreio da compra). A carteira da Ora na Nogle estava com R$ 0,00 em 25/11: sem crédito, a ativação, a recarga, a recarga programada e a compra pela carteira serão recusadas. (2) O próximo lote de código: a raiz de teste do CNPJ da empresa (a da matriz que o proprietário mandou), a mensagem de Lojas da rede perto do formulário, o F24-06 (a disponibilidade comercial explicada) e os pontos V1, V2 e V5 do teste das telas; depois, as telas mais pesadas (M1, M2 e A1/A2), os cabeçalhos de segurança (M4), a exportação da auditoria (M8) e o acabamento (B1 a B5, B7). (3) O pagamento pelo site está pronto para ligar: falta a chave de teste da Asaas, o e-mail dos avisos e o sim do proprietário para o worker. (4) A seção 4 do prompt (o catálogo e o estoque de verdade) foi feita em 24/11 com as respostas do proprietário (D-053; as peças de ASSISTÊNCIA fora da loja online): falta um relatório novo da Rein (a posição carregada é a de 10/11), o dos IMEIs dos celulares e o CNPJ das lojas (sem ele, a loja online não vende nada de verdade). O que resta depende do proprietário, de contrato ou de terceiro (docs/PENDENCIAS_DO_PROPRIETARIO.md, a lista única). A narrativa anterior deste campo fica no histórico do Git e em docs/alinhamento/EXECUCAO_INTEGRAL_STATUS.md."
+  "proximo_passo": "Seguir a ordem de 23/11 (o prompt entregue pelo proprietário, escrito pelo Codex, com a auditoria integral de 21/11, PR #105; a leitura está em docs/alinhamento/LEITURA_AUDITORIA_2026-11-21.md). Em 23/11 à noite o proprietário pediu para seguir o planejamento do prompt: a fila, seção por seção, está em docs/alinhamento/FILA_INTEGRAL_2026-11-23.md. (1) O pedido do proprietário de 25/11 (\"todas as funções da Nogle, consulta completa, relatório individual\"; a D-060 e a D-061): o CONNECT-h, o CONNECT-k e o CONNECT-j estão no ar (as ações na Nogle ligadas com NOGLE_ACOES=habilitada e o worker --acoes a cada minuto); o CONNECT-i (as outras consultas, as 16 rotas que faltavam) entra com este texto: com ele, o sistema usa as 62 funções da coleção oficial da Nogle. Os aceites do CONNECT-g, h, k, j e i esperam o proprietário. A carteira da Ora na Nogle estava com R$ 0,00 em 25/11: sem crédito, a ativação, a recarga, a recarga programada e a compra pela carteira serão recusadas. (2) O próximo lote de código: a raiz de teste do CNPJ da empresa (a da matriz que o proprietário mandou), a mensagem de Lojas da rede perto do formulário, o F24-06 (a disponibilidade comercial explicada) e os pontos V1, V2 e V5 do teste das telas; depois, as telas mais pesadas (M1, M2 e A1/A2), os cabeçalhos de segurança (M4), a exportação da auditoria (M8) e o acabamento (B1 a B5, B7). (3) O pagamento pelo site está pronto para ligar: falta a chave de teste da Asaas, o e-mail dos avisos e o sim do proprietário para o worker. (4) A seção 4 do prompt (o catálogo e o estoque de verdade) foi feita em 24/11 com as respostas do proprietário (D-053; as peças de ASSISTÊNCIA fora da loja online): falta um relatório novo da Rein (a posição carregada é a de 10/11), o dos IMEIs dos celulares e o CNPJ das lojas (sem ele, a loja online não vende nada de verdade). O que resta depende do proprietário, de contrato ou de terceiro (docs/PENDENCIAS_DO_PROPRIETARIO.md, a lista única). A narrativa anterior deste campo fica no histórico do Git e em docs/alinhamento/EXECUCAO_INTEGRAL_STATUS.md."
 }

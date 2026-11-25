@@ -21,9 +21,9 @@ test.describe("as ações na Nogle, no site no ar (CONNECT-j)", () => {
       for (const secao of ["Linha do cliente", "Cliente na Nogle", "Compra de chip com entrega", "PDVs da Nogle", "Pedidos"]) {
         await expect(dono.getByRole("heading", { level: 2, name: secao, exact: true })).toBeVisible();
       }
-      // As ações ficam fechadas até o toque; nada é enviado aqui.
-      await expect(dono.getByText("Bloquear a linha", { exact: true })).toBeVisible();
-      await expect(dono.getByText("Inativar um PDV (e os usuários dele)", { exact: true })).toBeVisible();
+      // As ações ficam fechadas até o toque (o título de cada uma; o botão de dentro repete o nome); nada é enviado aqui.
+      await expect(dono.locator("summary").filter({ hasText: /^Bloquear a linha$/ })).toBeVisible();
+      await expect(dono.locator("summary").filter({ hasText: /^Inativar um PDV \(e os usuários dele\)$/ })).toBeVisible();
 
       const vendedor = pessoas[VENDEDOR] as Page;
       await vendedor.goto("/connect/acoes-na-nogle");

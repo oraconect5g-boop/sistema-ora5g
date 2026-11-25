@@ -148,6 +148,7 @@
     { "versao": "20261125131555", "nome": "servico_do_mesmo_plano", "md5": "29c3d0db7d0824ab13f064d6580773e0", "aplicada_em": "2026-11-25" },
     { "versao": "20261125141320", "nome": "consultas_da_nogle", "md5": "cf3353e7101bc5ada2e9a757af8ccc28", "aplicada_em": "2026-11-25" },
     { "versao": "20261125164116", "nome": "consulta_completa_da_nogle", "md5": "5f42d7b0252ecd39adcc3d1dc95ae96d", "aplicada_em": "2026-11-25" },
-    { "versao": "20261125172755", "nome": "acoes_na_nogle", "md5": "e884650ee77f829934a21db88aa19457", "aplicada_em": "2026-11-25" }
+    { "versao": "20261125172755", "nome": "acoes_na_nogle", "md5": "e884650ee77f829934a21db88aa19457", "aplicada_em": "2026-11-25" },
+    { "versao": "20261125180630", "nome": "outras_consultas_da_nogle", "md5": "65df4aaa5b872b639e0bc147e4d28cd0", "aplicada_em": "2026-11-25" }
   ]
 }

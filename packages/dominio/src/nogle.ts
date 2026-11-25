@@ -444,7 +444,8 @@ export function lerReferencias(tipo: TipoDeReferencia, corpo: unknown): ItemDeRe
 // plano_fim, plano_valor, tipo_linha, forma_pagto }] }. O nome e o apelido do cliente NÃO são guardados (minimização,
 // LGPD): a conciliação liga a linha da Nogle à operação local pela linha, pelo ICCID, pelo dia e pelo valor. O fuso de
 // data_ativacao e o tamanho da página não são documentados: fica o dia como veio, e a leitura para na página vazia.
-// O extrato do saldo (GET /saldo/extrato) fica de fora: o exemplo oficial não traz os campos da resposta.
+// O extrato do saldo (GET /saldo/extrato) é uma consulta desde o CONNECT-i: os campos vêm da tabela oficial (o exemplo da
+// resposta repete o pedido).
 // -----------------------------------------------------------------------------------------------------------------------
 
 export const RELATORIOS_DA_CONCILIACAO = ["ativacoes", "recargas"] as const;
@@ -700,16 +701,33 @@ export const TIPOS_DE_CONSULTA = [
   // CONNECT-h: os relatórios (do número e do cliente) e as consultas que faltavam.
   "linha_completa", "cliente_completo", "linha_cobrancas", "linha_consumo_voz", "linha_consumo_sms", "linha_existe", "iccid_plano_pago",
   "iccid_situacao",
+  // CONNECT-i: as 16 rotas da coleção oficial que o sistema ainda não usava (todas só leem).
+  "faq_categorias", "faq_perguntas", "planos_campanhas", "estados", "validar_cep", "validar_cnpj", "compra_rastreio", "titularidade_da_linha",
+  "logistica", "validar_cpf", "carteira_programadas", "relatorio_portabilidades", "lista_de_linhas", "lista_de_clientes",
+  "pagamento_da_solicitacao", "carteira_extrato_saidas", "carteira_extrato_entradas",
 ] as const;
 export type TipoDeConsulta = (typeof TIPOS_DE_CONSULTA)[number];
 export const ehTipoDeConsulta = (v: unknown): v is TipoDeConsulta => typeof v === "string" && (TIPOS_DE_CONSULTA as readonly string[]).includes(v);
 
-/** O que cada consulta pede: o número da linha, o ICCID do chip, o CPF/CNPJ do cliente ou nada (a carteira). */
-export const PARAMETRO_DA_CONSULTA: Record<TipoDeConsulta, "linha" | "iccid" | "documento" | null> = {
+/**
+ * O que a consulta pede (só dígitos). A titularidade leva a linha e o CPF/CNPJ do titular juntos (11 + 11 ou 14 dígitos); a
+ * solicitação, o tipo num dígito (1 = ativação, 2 = recarga, 3 = compra) e o número dela.
+ */
+export type ParametroDaConsulta =
+  | "linha" | "iccid" | "documento" | "cpf" | "cnpj" | "cep" | "categoria" | "pedido" | "linha_e_documento" | "dias_a_frente" | "dias_para_tras" | "pagina"
+  | "solicitacao";
+/** O primeiro dígito do parâmetro da solicitação: o tipo que a rota /pagamento pede. */
+export const TIPOS_DE_SOLICITACAO = { 1: { codigo: "A", nome: "ativação" }, 2: { codigo: "R", nome: "recarga" }, 3: { codigo: "C", nome: "compra" } } as const;
+/** O que cada consulta pede: o número da linha, o ICCID do chip, o CPF/CNPJ do cliente, ... ou nada (a carteira, as listas fixas). */
+export const PARAMETRO_DA_CONSULTA: Record<TipoDeConsulta, ParametroDaConsulta | null> = {
   linha_detalhes: "linha", linha_saldo: "linha", linha_historico: "linha", linha_consumo: "linha",
   iccid_numero: "iccid", iccid_ativacao: "iccid", carteira_saldo: null,
   linha_completa: "linha", cliente_completo: "documento", linha_cobrancas: "linha", linha_consumo_voz: "linha", linha_consumo_sms: "linha",
   linha_existe: "linha", iccid_plano_pago: "iccid", iccid_situacao: "iccid",
+  faq_categorias: null, faq_perguntas: "categoria", planos_campanhas: null, estados: null, validar_cep: "cep", validar_cnpj: "cnpj",
+  compra_rastreio: "pedido", titularidade_da_linha: "linha_e_documento", logistica: null, validar_cpf: "cpf", carteira_programadas: "dias_a_frente",
+  relatorio_portabilidades: "dias_para_tras", lista_de_linhas: "pagina", lista_de_clientes: "pagina",
+  pagamento_da_solicitacao: "solicitacao", carteira_extrato_saidas: "dias_para_tras", carteira_extrato_entradas: "dias_para_tras",
 };
 /** As consultas que o worker faz em partes (várias chamadas) e mostra num relatório. */
 export const CONSULTAS_COMPOSTAS = ["linha_completa", "cliente_completo"] as const satisfies readonly TipoDeConsulta[];
@@ -731,7 +749,33 @@ export const NOMES_DAS_CONSULTAS: Record<TipoDeConsulta, string> = {
   linha_existe: "O número existe na Nogle?",
   iccid_plano_pago: "Plano pago do chip",
   iccid_situacao: "Situação do chip",
+  faq_categorias: "Dúvidas frequentes",
+  faq_perguntas: "Perguntas e respostas",
+  planos_campanhas: "Planos de campanha",
+  estados: "Estados da Nogle",
+  validar_cep: "Conferir o CEP",
+  validar_cnpj: "Conferir o CNPJ",
+  compra_rastreio: "Rastreio da compra de chip",
+  titularidade_da_linha: "O titular da linha",
+  logistica: "Custo do chip e do frete",
+  validar_cpf: "Conferir o CPF",
+  carteira_programadas: "Recargas programadas pela carteira",
+  relatorio_portabilidades: "Portabilidades da rede",
+  lista_de_linhas: "Linhas da Ora na Nogle",
+  lista_de_clientes: "Clientes da Ora na Nogle",
+  pagamento_da_solicitacao: "Pagamento de uma solicitação",
+  carteira_extrato_saidas: "Extrato da carteira: saídas",
+  carteira_extrato_entradas: "Extrato da carteira: entradas",
 };
+
+/** O dia em Brasília (AAAA-MM-DD), `dias` depois (ou antes, se negativo) de `agora`. */
+const diaComTracos = (agora: Date, dias = 0) =>
+  new Intl.DateTimeFormat("en-CA", { timeZone: "America/Sao_Paulo" }).format(new Date(agora.getTime() + dias * 86_400_000));
+/** O dia em Brasília como a Nogle pede nos filtros de data (DD/MM/AAAA), `dias` depois (ou antes, se negativo) de `agora`. */
+function diaComBarras(agora: Date, dias = 0): string {
+  const [ano = "1970", mes = "01", dia = "01"] = diaComTracos(agora, dias).split("-");
+  return `${dia}/${mes}/${ano}`;
+}
 
 /** O mês corrente em Brasília (MM e AAAA). */
 function mesEmBrasilia(agora: Date): { mes: string; ano: string } {
@@ -766,6 +810,49 @@ export function pedidoDaConsulta(tipo: TipoDeConsulta, parametro: string | null,
     case "iccid_situacao": return iccid ? { metodo: "POST", caminho: "/ativacao/validaIccid", corpo: { iccid: p } } : null;
     // Os relatórios são feitos em partes pelo worker (pedidosDoRelatorio*).
     case "linha_completa": case "cliente_completo": return null;
+    // CONNECT-i: as que faltavam, como a coleção oficial manda (as POST de validação e de rastreio só leem).
+    case "faq_categorias": return { metodo: "GET", caminho: "/faq/categorias", corpo: {} };
+    case "faq_perguntas": return /^\d{1,9}$/.test(p) ? { metodo: "GET", caminho: `/faq/categoria/${Number(p)}`, corpo: {} } : null;
+    case "planos_campanhas": return { metodo: "GET", caminho: "/planosCampanhas", corpo: {} };
+    case "estados": return { metodo: "GET", caminho: "/estados", corpo: {} };
+    case "logistica": return { metodo: "GET", caminho: "/logistica", corpo: {} };
+    case "validar_cep": return /^\d{8}$/.test(p) ? { metodo: "POST", caminho: "/validar/cep", corpo: { cep: p } } : null;
+    case "validar_cpf": return /^\d{11}$/.test(p) ? { metodo: "POST", caminho: "/validar/cpf", corpo: { cpf: p } } : null;
+    case "validar_cnpj": return /^\d{14}$/.test(p) ? { metodo: "POST", caminho: "/validar/cnpj", corpo: { cnpj: p } } : null;
+    case "compra_rastreio": return /^\d{1,12}$/.test(p) ? { metodo: "POST", caminho: "/compra/rastrear", corpo: { id: Number(p) } } : null;
+    case "titularidade_da_linha": {
+      const [numero, documento] = [p.slice(0, 11), p.slice(11)];
+      return linhaValida(numero) && (documento.length === 11 || documento.length === 14)
+        ? { metodo: "GET", caminho: "/linhas/validaTitularidade", corpo: { linha: numero, documento } } : null;
+    }
+    case "carteira_programadas": {
+      const dias = Number(p);
+      return /^\d{1,2}$/.test(p) && dias >= 1 && dias <= 90
+        ? { metodo: "GET", caminho: "/saldo/programado", corpo: { data_renovacao_de: diaComBarras(agora), data_renovacao_ate: diaComBarras(agora, dias) } } : null;
+    }
+    case "relatorio_portabilidades": {
+      // Todos os filtros são opcionais (a documentação): vão só as datas de cadastro.
+      const dias = Number(p);
+      return /^\d{1,3}$/.test(p) && dias >= 1 && dias <= 366
+        ? { metodo: "GET", caminho: "/portabilidade/listar", corpo: { data_cadastro_inicio: diaComBarras(agora, -dias), data_cadastro_fim: diaComBarras(agora) } } : null;
+    }
+    case "lista_de_linhas": case "lista_de_clientes": {
+      const pagina = Number(p);
+      return /^\d{1,4}$/.test(p) && pagina >= 1
+        ? { metodo: "GET", caminho: tipo === "lista_de_linhas" ? "/linhas/listar" : "/cliente/listar", corpo: { page: pagina } } : null;
+    }
+    // O pagamento de uma solicitação (POST que só lê): o tipo (A, R ou C) e o número, como texto (o exemplo oficial).
+    case "pagamento_da_solicitacao": {
+      const solicitacao = TIPOS_DE_SOLICITACAO[Number(p.slice(0, 1)) as 1 | 2 | 3];
+      return /^[123]\d{1,12}$/.test(p) && solicitacao ? { metodo: "POST", caminho: "/pagamento", corpo: { tipo: solicitacao.codigo, id: p.slice(1) } } : null;
+    }
+    // O extrato da carteira: as datas como no exemplo oficial (AAAA-MM-DD); S = saídas, E = entradas.
+    case "carteira_extrato_saidas": case "carteira_extrato_entradas": {
+      const dias = Number(p);
+      return /^\d{1,3}$/.test(p) && dias >= 1 && dias <= 366
+        ? { metodo: "GET", caminho: "/saldo/extrato", corpo: { data_inicio: diaComTracos(agora, -dias), data_fim: diaComTracos(agora), tipo: tipo === "carteira_extrato_saidas" ? "S" : "E" } }
+        : null;
+    }
   }
 }
 
@@ -796,6 +883,33 @@ const momentoOuNada = (v: unknown) => { const t = textoOuNada(v) ?? ""; return /
 const numeroOuNada = (v: unknown) =>
   typeof v === "number" && Number.isFinite(v) ? v : typeof v === "string" && /^-?\d+(\.\d+)?$/.test(v.trim()) ? Number(v) : null;
 const inteiroOuNada = (v: unknown) => { const n = numeroOuNada(v); return n !== null && Number.isInteger(n) && n >= 0 ? n : null; };
+
+/**
+ * O texto livre sem CPF nem CNPJ à mostra (CONNECT-i): o apelido da linha pode trazer o documento do cliente (o exemplo oficial
+ * traz "nome, CPF, apelido"). 11 ou 14 dígitos seguidos, ou na forma 000.000.000-00 / 00.000.000/0000-00, viram a forma mascarada.
+ */
+function semDocumentos(v: unknown, maximo = 120): string | null {
+  const t = curto(v, maximo);
+  if (t === null) return null;
+  return t.replace(/\d{2}\.?\d{3}\.?\d{3}\/?\d{4}-?\d{2}|\d{3}\.?\d{3}\.?\d{3}-?\d{2}/g, (achado) => documentoMascarado(achado) ?? achado);
+}
+/** O texto das dúvidas frequentes sem as marcas de HTML, em uma linha, até `maximo` letras. */
+const textoSemHtml = (v: unknown, maximo: number) => {
+  const t = (typeof v === "string" ? v : "").replace(/<[^>]*>/g, " ").replace(/&nbsp;/g, " ").replace(/\s+/g, " ").trim();
+  return t ? t.slice(0, maximo) : null;
+};
+/** A lista que cabe na resposta guardada (até ~90 KB): os primeiros itens, e quantos ficaram de fora. */
+function ateCaber<T>(itens: readonly T[], maximoDeItens: number, maximoDeBytes = 90_000): { itens: T[]; fora: number } {
+  const cabem: T[] = [];
+  let bytes = 0;
+  for (const item of itens.slice(0, maximoDeItens)) {
+    bytes += JSON.stringify(item).length + 1;
+    if (bytes > maximoDeBytes) break;
+    cabem.push(item);
+  }
+  return { itens: cabem, fora: itens.length - cabem.length };
+}
+const listaDe = (v: unknown) => (Array.isArray(v) ? v.filter(ehObjeto) : null);
 
 /** Só os campos que a tela mostra, de cada resposta documentada. Fora da forma: null (a consulta falha com o aviso). */
 function camposDaConsulta(tipo: TipoDeConsulta, corpo: Record<string, unknown>): Record<string, unknown> | null {
@@ -889,6 +1003,134 @@ function camposDaConsulta(tipo: TipoDeConsulta, corpo: Record<string, unknown>):
       const linha = digitosOuNada(corpo.linha);
       return { codigo: s.codigo, situacao: s.nome, orientacao: s.orientacao, linha: linha && linhaValida(linha) ? linha : null };
     }
+    // CONNECT-i: as que faltavam, pelos exemplos oficiais.
+    case "faq_categorias": {
+      const lista = listaDe(corpo.lista);
+      if (!lista) return null;
+      return { categorias: lista.slice(0, 100).map((c) => ({ id: inteiroOuNada(c.id), nome: curto(c.descricao, 80) }))
+        .filter((c) => c.id !== null && c.nome !== null) };
+    }
+    case "faq_perguntas": {
+      const lista = listaDe(corpo.lista);
+      if (!lista) return null;
+      const { itens, fora } = ateCaber(lista.map((x) => ({ pergunta: textoSemHtml(x.pergunta, 300), resposta: textoSemHtml(x.resposta, 1500) }))
+        .filter((x) => x.pergunta !== null), 60);
+      return { perguntas: itens, fora };
+    }
+    case "planos_campanhas": {
+      const lista = listaDe(corpo.data);
+      if (!lista) return null;
+      return { planos: lista.slice(0, 60).map((x) => ({
+        codigo: inteiroOuNada(x.id) === null ? null : String(inteiroOuNada(x.id)), nome: curto(x.nome_plano ?? x.plano, 80),
+        valor_centavos: centavosDeValorNogle(x.valor), ligacoes: curto(x.ligacoes, 60), sms: curto(x.sms, 40), internet: curto(x.detalhamento, 60),
+        internet_padrao: curto(x.internet_padrao, 40), detalhe: curto(x.descricao_detalhamento, 120),
+      })) };
+    }
+    case "estados": {
+      const lista = listaDe(corpo.data);
+      if (!lista) return null;
+      return { estados: lista.slice(0, 40).map((x) => ({ uf: curto(x.uf, 2), nome: curto(x.estado, 40) }))
+        .filter((x) => x.uf !== null && /^[A-Z]{2}$/.test(x.uf) && x.nome !== null) };
+    }
+    case "logistica": {
+      const frete = centavosDeValorNogle(corpo.valor_frete);
+      const chip = centavosDeValorNogle(corpo.valor_chip);
+      return frete === null && chip === null ? null : { frete_centavos: frete, chip_centavos: chip };
+    }
+    case "validar_cep":
+      return typeof corpo.valido === "boolean" ? { valido: corpo.valido, rua: curto(corpo.rua, 120), numero: curto(corpo.numero, 10),
+        bairro: curto(corpo.bairro, 80), cidade: curto(corpo.cidade, 80), uf: curto(corpo.uf, 2) } : null;
+    case "validar_cpf": {
+      if (typeof corpo.valido !== "boolean") return null;
+      const d = objeto(corpo.data);
+      return { valido: corpo.valido, titular: curto(d?.titular), nascimento: diaOuNada(d?.nascimento), idade: inteiroOuNada(d?.idade) };
+    }
+    case "validar_cnpj": {
+      if (typeof corpo.valido !== "boolean") return null;
+      const d = objeto(corpo.data);
+      return { valido: corpo.valido, razao_social: curto(d?.razao_social), nome_fantasia: curto(d?.nome_fantasia) };
+    }
+    case "compra_rastreio": {
+      const eventos = listaDe(corpo.rastreio);
+      if (!eventos && !("pedido" in corpo)) return null;
+      return { pedido: inteiroOuNada(corpo.pedido) ?? digitosOuNada(corpo.pedido), data_pedido: momentoOuNada(corpo.data_pedido), cliente: curto(corpo.cliente),
+        eventos: (eventos ?? []).slice(0, 40).map((e) => ({ quando: momentoOuNada(e.data), status: curto(e.status, 80) })) };
+    }
+    case "titularidade_da_linha":
+      return corpo.titular_linha === "S" || corpo.titular_linha === "N"
+        ? { titular: corpo.titular_linha === "S", operadora: curto(corpo.operadora, 40) } : null;
+    case "carteira_programadas": {
+      const lista = listaDe(corpo.data);
+      if (!lista) return null;
+      // Fora de propósito: o login de quem cadastrou (fica o nome).
+      const todas = lista.map((x) => ({
+        linha: digitosOuNada(x.linha), apelido: semDocumentos(x.linha_apelido, 80), cliente: semDocumentos(x.cliente_nome),
+        documento: documentoMascarado(x.cliente_documento), plano: curto(x.plano, 80), valor_centavos: centavosDeValorNogle(x.plano_valor),
+        renovacao: diaOuNada(x.data_renovacao), cadastrada_em: momentoOuNada(x.data_cadastro), cadastrada_por: curto(x.pessoa_cadastro, 80),
+      }));
+      const { itens, fora } = ateCaber(todas, 400);
+      return { recargas: itens, fora, total: todas.length, soma_centavos: todas.reduce((s, x) => s + (x.valor_centavos ?? 0), 0) };
+    }
+    case "relatorio_portabilidades": {
+      const lista = listaDe(corpo.data);
+      if (!lista) return null;
+      const todas = lista.map((x) => ({
+        quando: momentoOuNada(x.data_cadastro), cliente: semDocumentos(x.cliente), documento: documentoMascarado(textoOuNada(x.cliente_cpf) ?? textoOuNada(x.cliente_cnpj)),
+        linha: digitosOuNada(x.linha), linha_doadora: digitosOuNada(x.linha_doadora), operadora: curto(x.operadora_doadora, 30), status: curto(x.status, 60),
+        aceite: momentoOuNada(x.data_aceite), agendada: momentoOuNada(x.data_agendamento), sucesso: diaOuNada(x.data_sucesso),
+      }));
+      const porStatus: Record<string, number> = {};
+      for (const x of todas) porStatus[x.status ?? "sem status"] = (porStatus[x.status ?? "sem status"] ?? 0) + 1;
+      const { itens, fora } = ateCaber(todas, 400);
+      return { portabilidades: itens, fora, total: todas.length, por_status: porStatus };
+    }
+    case "lista_de_linhas": {
+      const lista = listaDe(corpo.data);
+      if (!lista) return null;
+      // Fora de propósito: o ICCID, o emoji e o nome que o cliente deu no aplicativo.
+      const todas = lista.map((x) => ({
+        linha: digitosOuNada(x.linha), apelido: semDocumentos(x.linha_apelido, 80), status: curto(x.status, 20), plano: curto(x.plano, 80),
+        titular: semDocumentos(x.titular), documento: documentoMascarado(x.documento_titular), tipo_linha: curto(x.tipo_linha, 20),
+        ativada: diaOuNada(x.data_ativacao), fim_do_plano: diaOuNada(x.data_fim_plano), perde_em: diaOuNada(x.data_perda_numero_falta_recarga),
+        esim: simOuNao(x.esim), portada: simOuNao(x.portin), bloqueada: simOuNao(x.bloqueada), recarga_automatica: ativaOuNao(x.recarga_automatica),
+      }));
+      const { itens, fora } = ateCaber(todas, 400);
+      return { linhas: itens, fora, total: todas.length };
+    }
+    case "lista_de_clientes": {
+      // A documentação lista os campos de cada cliente sem o exemplo da resposta: vale a lista em "data" (como na lista das
+      // linhas) ou a lista solta; a primeira resposta de verdade confirma. Só o nome, o tipo, o documento mascarado e a cidade.
+      const lista = listaDe(corpo.data) ?? listaDe(corpo.lista);
+      if (!lista) return null;
+      const todas = lista.map((x) => ({
+        nome: semDocumentos(x.nome), apelido: semDocumentos(x.apelido, 80), tipo: curto(x.tipo, 2),
+        documento: documentoMascarado(textoOuNada(x.cpf) ?? textoOuNada(x.cnpj)), cidade: curto(x.endereco_cidade, 80), uf: curto(x.endereco_uf, 2),
+      }));
+      const { itens, fora } = ateCaber(todas, 400);
+      return { clientes: itens, fora, total: todas.length };
+    }
+    case "pagamento_da_solicitacao": {
+      // A resposta oficial vem numa lista em "data" (um item). Fora de propósito: o QR Code (a imagem), a cor, o logo e o suporte.
+      const p = listaDe(corpo.data)?.[0] ?? objeto(corpo.data);
+      if (!p) return null;
+      return {
+        quando: momentoOuNada(p.data_cadastro), valor_centavos: centavosDeValorNogle(p.valor), cliente: semDocumentos(p.nome), operadora: curto(p.operadora, 40),
+        iccid: digitosOuNada(p.iccid), linha: digitosOuNada(p.linha), link_pagamento: curto(p.link_pagamento, 300), boleto_link: curto(p.boleto_link, 300),
+        boleto_codigo_barras: curto(p.boleto_codigo_barras, 80), pix_copia_cola: curto(p.pix_copia_cola, 600),
+      };
+    }
+    case "carteira_extrato_saidas": case "carteira_extrato_entradas": {
+      // A documentação lista os campos de cada movimento (o exemplo da resposta repete o pedido): vale a lista em "data" (como nas
+      // recargas programadas) ou a lista solta; a primeira resposta de verdade confirma. O valor é o cobrado da Ora (o líquido).
+      const lista = listaDe(corpo.data) ?? listaDe(corpo.lista);
+      if (!lista) return null;
+      const todos = lista.map((x) => ({
+        quando: momentoOuNada(x.data), tipo: curto(x.tipo, 10), valor_centavos: centavosDeValorNogle(x.valor), cliente: semDocumentos(x.descricao_cliente),
+        linha: digitosOuNada(x.linha), iccid: digitosOuNada(x.iccid), plano: curto(x.plano_nome, 80), plano_valor_centavos: centavosDeValorNogle(x.plano_valor),
+      }));
+      const { itens, fora } = ateCaber(todos, 400);
+      return { movimentos: itens, fora, total: todos.length, soma_centavos: todos.reduce((s, x) => s + (x.valor_centavos ?? 0), 0) };
+    }
     case "linha_existe":
     case "linha_completa":
     case "cliente_completo":
@@ -912,7 +1154,8 @@ export function lerRespostaDaConsulta(tipo: TipoDeConsulta, statusHttp: number, 
   const n = normalizarResposta(statusHttp, corpo);
   const mensagem = n.mensagem.slice(0, 200);
   if (!n.ok) return { situacao: "nao_encontrada", mensagem: mensagem || `A Nogle não achou (HTTP ${statusHttp}).` };
-  const o = objeto(corpo);
+  // As dúvidas frequentes vêm numa lista solta (os exemplos oficiais), sem envelope.
+  const o = Array.isArray(corpo) ? { lista: corpo } : objeto(corpo);
   const resposta = o ? camposDaConsulta(tipo, o) : null;
   return resposta ? { situacao: "respondida", mensagem, resposta } : { situacao: "falhou", mensagem: "A resposta da Nogle veio fora da forma documentada." };
 }
