@@ -1242,6 +1242,19 @@
       "pedido_em": "2026-11-24",
       "resposta": null,
       "respondido_em": null
+    },
+    {
+      "lote": "CONNECT-e",
+      "roteiro": "docs/aceite/CONNECT-e.md",
+      "requisitos": [
+        "ORA-INV-011"
+      ],
+      "entrega": "em Ora Connect → Chips na Nogle, o cartão Transferir chips (eSIM por quantidade, um chip ou um lote), só para o dono, com a lista dos pedidos e o cancelamento; o servidor envia uma vez e confirma pelo estoque do PDV",
+      "commit": null,
+      "publicado_em": null,
+      "pedido_em": "2026-11-25",
+      "resposta": null,
+      "respondido_em": null
     }
   ]
 }

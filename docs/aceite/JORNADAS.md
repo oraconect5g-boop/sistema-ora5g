@@ -15,7 +15,7 @@ Em vez de responder roteiro por roteiro, percorra **uma jornada por vez**: o cam
 | [J07 — Devolução e troca](#j07) | 2 | 0 | 2 | 4 (1 / 3 / 0) |
 | [J08 — Caixa e financeiro](#j08) | 13 | 0 | 13 | 22 (10 / 12 / 0) |
 | [J09 — Site e retirada na loja](#j09) | 14 | 0 | 14 | 11 (2 / 9 / 0) |
-| [J10 — Ora Connect](#j10) | 2 | 0 | 2 | 2 (0 / 2 / 0) |
+| [J10 — Ora Connect](#j10) | 3 | 0 | 3 | 2 (0 / 2 / 0) |
 | [J11 — Financeiras (PayJoy e Aiva)](#j11) | 5 | 0 | 5 | 10 (5 / 5 / 0) |
 | [J12 — Marketplaces e Meta](#j12) | 7 | 0 | 7 | 19 (7 / 9 / 3) |
 | [J13 — Assistência](#j13) | 1 | 0 | 1 | 15 (12 / 3 / 0) |
@@ -191,6 +191,7 @@ Em vez de responder roteiro por roteiro, percorra **uma jornada por vez**: o cam
 |---|---|---|---|---|
 | CONNECT-c | a conciliação da produção da Ora Connect com os relatórios oficiais de ativações e de recargas da Nogle: o que confere, o valor diferente, o que só a Nogle tem e o que só a Ora tem | [CONNECT-c.md](CONNECT-c.md) | `2efe8cc` (2026-11-18) | — |
 | CONNECT-d | a tela Ora Connect → Chips na Nogle: o estoque virgem de chips de cada loja e o geral da MVNO na Nogle, lido pelo servidor a cada 30 minutos, das 7h às 22h; só leitura | [CONNECT-d.md](CONNECT-d.md) | `4070a8b` (2026-11-24) | — |
+| CONNECT-e | em Ora Connect → Chips na Nogle, o cartão Transferir chips (eSIM por quantidade, um chip ou um lote), só para o dono, com a lista dos pedidos e o cancelamento; o servidor envia uma vez e confirma pelo estoque do PDV | [CONNECT-e.md](CONNECT-e.md) | a publicar | — |
 
 ## J11
 
