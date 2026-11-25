@@ -2,7 +2,7 @@
 
 - **Quem faz:** o proprietário.
 - **Quando:** depois da publicação, uns 5 minutos, no celular ou no computador.
-- **O que o lote entrega:** a tela **Ora Connect → Chips na Nogle**, com o estoque de chips virgens que a Nogle tem em cada loja e o estoque geral da Ora na Nogle (a MVNO), lido pelo servidor a cada 30 minutos, das 7h às 22h (a sua escolha de 24/11). **Só leitura:** nada aqui transfere, ativa ou reserva chip, e o livro de estoque da Ora não muda.
+- **O que o lote entrega:** a tela **Ora Connect → Chips na Nogle**, com o estoque de chips virgens que a Nogle tem em cada loja e os chips da Ora na Nogle que ainda não estão em nenhum PDV (o estoque geral; a Nogle chama de MVNO), lido pelo servidor a cada 30 minutos, das 7h às 22h (a sua escolha de 24/11). **Só leitura:** nada aqui transfere, ativa ou reserva chip, e o livro de estoque da Ora não muda.
   - A primeira chamada de verdade à Nogle foi feita em 24/11, com o seu "sim, só consultas": a chave entra como **marca** (a pergunta P9 ficou respondida sem precisar da Nogle). Há 18 PDVs na Nogle; cada uma das 11 lojas tem o seu, ligado pelo nome, como você decidiu (o Santa Felicidade é o 5218). O PDV 5407 é o cadastro da matriz na Nogle; ele e as 6 revendas aparecem como "outros PDVs".
   - O sistema guarda só o necessário: do PDV, o número, o nome, a cidade e o estoque mínimo; do chip, o ICCID, o tipo e a data do repasse. Não guarda CPF, CNPJ, contato, endereço nem as pessoas do PDV, nem o código de ativação do eSIM, que a Nogle manda junto e que bastaria para instalar o chip.
   - A tela avisa a loja que está abaixo do estoque mínimo que a própria Nogle tem para ela (10 chips nas lojas) e acha um chip pelo fim do ICCID ("Onde está o chip?").
@@ -22,5 +22,6 @@
 - O servidor lê a Nogle com o worker da Ora Connect (que continua desligado para ativar, recarregar ou portar): a lista dos PDVs, o estoque geral e o de cada PDV, e grava tudo de uma vez; o PDV que não respondeu fica como estava, com a hora da leitura antiga.
 - Quem vê o quê é o banco que decide (RLS): o dono vê a rede toda; o administrador vê os PDVs e as contagens (para ligar o PDV à loja), sem a lista dos chips; quem opera a Ora Connect numa loja (o gerente e o vendedor) vê só o PDV e os chips da loja dele.
 - A ligação de um PDV a uma loja fica na auditoria, com quem fez e o motivo.
+- Achado e corrigido na primeira leitura de verdade (24/11): a lista geral da Nogle traz o estoque virgem inteiro, inclusive os chips que já estão nos PDVs (eram 693: 370 nos PDVs e 323 sem PDV). O sistema conta como "sem PDV" só o que não está em nenhum PDV, e a loja cuja leitura falhar fica com os chips da leitura anterior.
 - Achado na primeira consulta: o filtro de tipo da Nogle funciona com "fisico" sem acento; com acento, como a Nogle escreveu em 10/11, ele devolve tudo. A leitura pede o estoque inteiro e separa pelo tipo de cada chip, então não depende disso.
 - A transferência de chips pela API (um chip, um lote ou eSIM por quantidade) está documentada, mas não foi ligada: ela muda o estoque na Nogle e espera o seu sim, operação por operação.

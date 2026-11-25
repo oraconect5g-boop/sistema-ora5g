@@ -1237,8 +1237,8 @@
         "ORA-INV-011"
       ],
       "entrega": "a tela Ora Connect → Chips na Nogle: o estoque virgem de chips de cada loja e o geral da MVNO na Nogle, lido pelo servidor a cada 30 minutos, das 7h às 22h; só leitura",
-      "commit": null,
-      "publicado_em": null,
+      "commit": "4070a8b",
+      "publicado_em": "2026-11-24",
       "pedido_em": "2026-11-24",
       "resposta": null,
       "respondido_em": null
