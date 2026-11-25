@@ -25,7 +25,8 @@ test.describe("o Pix da Nogle na loja, no site no ar (CONNECT-l)", () => {
         const pagamento = bloco.getByRole("group", { name: "Pagamento à Nogle" });
         await expect(pagamento.getByRole("radio", { name: /^Pix da Nogle/ })).toBeChecked();
         await expect(pagamento.getByRole("radio", { name: /^Crédito da carteira/ })).not.toBeChecked();
-        const servico = pagamento.getByLabel("Serviço pago no caixa");
+        // A lista do serviço pago (o texto da opção da carteira também fala do "serviço pago no caixa": pelo papel, não pelo rótulo).
+        const servico = pagamento.getByRole("combobox");
         await expect(servico).toHaveValue("");
         await expect(servico.locator("option").first()).toHaveText("Nenhum: o cliente paga o Pix da Nogle direto");
       }
