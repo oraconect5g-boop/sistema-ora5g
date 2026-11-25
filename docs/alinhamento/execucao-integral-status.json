@@ -2,7 +2,7 @@
   "_leia": "Checkpoint do programa de execução integral (PR #67). Carregar ao retomar e seguir para o próximo item executável da fila; não reiniciar o projeto. Estados vêm de status-requisitos.json (fonte da rastreabilidade); este arquivo acrescenta lote, bloqueio externo e revisão. Desde 16/11/2026 a medida de avanço é o requisito homologado pelo proprietário: a chave aceites guarda a resposta dele a cada roteiro de aceite (docs/aceite/); um requisito só recebe homologado: true com todos os lotes dele aceitos e sem nada em FALTA na nota de status-requisitos.json.",
   "atualizado_em": "2026-11-24",
   "base": {
-    "main": "a458b05",
+    "main": "4ba10ab",
     "pacote": {
       "pr": 67,
       "branch": "docs/execucao-integral-20261110",
@@ -1312,6 +1312,20 @@
       "resposta": null,
       "respondido_em": null,
       "nota": "as decisões D-058 (\"Sim, ligue\") e D-059 (\"Sim, pelo número\"); o aceite faz operações de verdade na Nogle; migrations 20261125130939_planos_e_chips_da_nogle_nas_lojas e 20261125131555_servico_do_mesmo_plano; o commit e a publicação ficam no registro (a branch registro/publicacoes)"
+    },
+    "CONNECT-g": {
+      "roteiro": "docs/aceite/CONNECT-g.md",
+      "requisitos": [
+        "ORA-CONNECT-007",
+        "ORA-CONNECT-009"
+      ],
+      "entrega": "em Ora Connect → Consultar linha, as consultas da Nogle que só leem: a situação, o saldo, as recargas e o consumo da linha, o número e a ativação do chip e, para o dono, o saldo da carteira",
+      "commit": null,
+      "publicado_em": null,
+      "pedido_em": "2026-11-25",
+      "resposta": null,
+      "respondido_em": null,
+      "nota": "a decisão D-056 (\"só consultas\"); nada muda na Nogle; migration 20261125141320_consultas_da_nogle; o commit e a publicação ficam no registro (a branch registro/publicacoes)"
     }
   },
   "contagem_dos_estados": {
@@ -2307,7 +2321,7 @@
       "titulo": "Consulta/atualização de linha e plano conforme API disponível",
       "prioridade": "P1",
       "estado": "parcial",
-      "lote": "L11 Ora Connect",
+      "lote": "L11 Ora Connect; CONNECT-g (25/11): as consultas da Nogle que só leem (Consultar linha e a Carteira)",
       "bloqueio_externo": "C1/C2 (Nogle)",
       "revisado_codex": false,
       "homologado": false
@@ -2325,7 +2339,7 @@
       "titulo": "Reconciliar repasses/bonificações Nogle e operação local",
       "prioridade": "P1",
       "estado": "parcial",
-      "lote": "L11 Ora Connect",
+      "lote": "L11 Ora Connect; CONNECT-g (25/11): as consultas da Nogle que só leem (Consultar linha e a Carteira)",
       "bloqueio_externo": "C2 (repasses Nogle)",
       "revisado_codex": false,
       "homologado": false
@@ -2934,5 +2948,5 @@
       "homologado": false
     }
   },
-  "proximo_passo": "Seguir a ordem de 23/11 (o prompt entregue pelo proprietário, escrito pelo Codex, com a auditoria integral de 21/11, PR #105; a leitura está em docs/alinhamento/LEITURA_AUDITORIA_2026-11-21.md). Em 23/11 à noite o proprietário pediu para seguir o planejamento do prompt: a fila, seção por seção, está em docs/alinhamento/FILA_INTEGRAL_2026-11-23.md. (1) O CONNECT-f (a Ora Connect pronta para operar nas lojas; D-058 e D-059): depois do merge, publicar, rodar as listas (--listas, que põem os planos no caixa) e a leitura do estoque (--estoque, que põe os chips nas lojas), pôr o preço do Chip Ora Connect em R$ 25,00 (o do CHIP ORA da Rein), ligar as operações (as habilitações no banco, NOGLE_OPERACOES_HABILITADAS e o worker a cada minuto no crontab), registrar a publicação e acompanhar a primeira ativação, a primeira recarga e a primeira portabilidade (a consulta pelo uuid, NOGLE_CONSULTA_PAGAMENTO, só depois de ver a primeira resposta com o uuid). O aceite é o roteiro docs/aceite/CONNECT-f.md. O CONNECT-e (a transferência de chips pelo sistema, só o dono pede) está no ar desde 25/11; o aceite dele é a primeira transferência pelo sistema, feita pelo proprietário. (2) O próximo lote de código: a raiz de teste do CNPJ da empresa (a da matriz que o proprietário mandou), a mensagem de Lojas da rede perto do formulário, o F24-06 (a disponibilidade comercial explicada) e os pontos V1, V2 e V5 do teste das telas; depois, as telas mais pesadas (M1, M2 e A1/A2), os cabeçalhos de segurança (M4), a exportação da auditoria (M8) e o acabamento (B1 a B5, B7). (3) O pagamento pelo site está pronto para ligar: falta a chave de teste da Asaas, o e-mail dos avisos e o sim do proprietário para o worker. (4) A seção 4 do prompt (o catálogo e o estoque de verdade) foi feita em 24/11 com as respostas do proprietário (D-053; as peças de ASSISTÊNCIA fora da loja online): falta um relatório novo da Rein (a posição carregada é a de 10/11), o dos IMEIs dos celulares e o CNPJ das lojas (sem ele, a loja online não vende nada de verdade). O que resta depende do proprietário, de contrato ou de terceiro (docs/PENDENCIAS_DO_PROPRIETARIO.md, a lista única). A narrativa anterior deste campo fica no histórico do Git e em docs/alinhamento/EXECUCAO_INTEGRAL_STATUS.md."
+  "proximo_passo": "Seguir a ordem de 23/11 (o prompt entregue pelo proprietário, escrito pelo Codex, com a auditoria integral de 21/11, PR #105; a leitura está em docs/alinhamento/LEITURA_AUDITORIA_2026-11-21.md). Em 23/11 à noite o proprietário pediu para seguir o planejamento do prompt: a fila, seção por seção, está em docs/alinhamento/FILA_INTEGRAL_2026-11-23.md. (1) A Ora Connect está no ar desde 25/11 com as operações ligadas (CONNECT-f, 4ba10ab: os planos no caixa, 265 chips nas lojas pelo ICCID, o Chip Ora Connect a R$ 25,00, a trava do plano e o worker das operações a cada minuto); falta o proprietário fazer a primeira ativação, recarga e portabilidade (o roteiro docs/aceite/CONNECT-f.md) e a primeira transferência pelo sistema (docs/aceite/CONNECT-e.md); a consulta pelo uuid (NOGLE_CONSULTA_PAGAMENTO) só depois de ver a primeira resposta com o uuid. O CONNECT-g (as consultas que só leem): depois do merge, publicar, pôr no crontab `* * * * * worker-connect.sh --consultas`, rodar a prova no site e registrar; o aceite é o roteiro docs/aceite/CONNECT-g.md. (2) O próximo lote de código: a raiz de teste do CNPJ da empresa (a da matriz que o proprietário mandou), a mensagem de Lojas da rede perto do formulário, o F24-06 (a disponibilidade comercial explicada) e os pontos V1, V2 e V5 do teste das telas; depois, as telas mais pesadas (M1, M2 e A1/A2), os cabeçalhos de segurança (M4), a exportação da auditoria (M8) e o acabamento (B1 a B5, B7). (3) O pagamento pelo site está pronto para ligar: falta a chave de teste da Asaas, o e-mail dos avisos e o sim do proprietário para o worker. (4) A seção 4 do prompt (o catálogo e o estoque de verdade) foi feita em 24/11 com as respostas do proprietário (D-053; as peças de ASSISTÊNCIA fora da loja online): falta um relatório novo da Rein (a posição carregada é a de 10/11), o dos IMEIs dos celulares e o CNPJ das lojas (sem ele, a loja online não vende nada de verdade). O que resta depende do proprietário, de contrato ou de terceiro (docs/PENDENCIAS_DO_PROPRIETARIO.md, a lista única). A narrativa anterior deste campo fica no histórico do Git e em docs/alinhamento/EXECUCAO_INTEGRAL_STATUS.md."
 }

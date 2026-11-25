@@ -102,3 +102,10 @@ Migrations `20261109150526_correcoes_acesso_lote1` (#56) e `20261109190400_conne
 - **As operações:** ligadas pelo proprietário (a D-058), com a habilitação de cada tipo no banco e `NOGLE_OPERACOES_HABILITADAS`; o worker roda a cada minuto. As regras do envio e da consulta não mudam.
 - **O serviço do caixa é o plano:** cada plano da lista oficial tem a sua recarga (REC-<plano>) e a sua ativação (ATV-<plano>), com o preço da rede igual ao valor de face, mantidas pelo worker depois das listas. A operação só aceita o serviço pago do mesmo plano (OR055): a carteira da Ora paga à Nogle o valor de face do plano da operação.
 - **Os chips no estoque:** os chips físicos do PDV de cada loja ligada entram no estoque da loja pelo ICCID depois de cada leitura (a D-059); a ativação de chip físico continua pedindo o chip vendido (OR011). O chip disponível no estoque e fora do PDV da loja na Nogle é divergência, para o dono conferir; nada é apagado sozinho.
+
+## Adendo de 25/11/2026: as consultas que só leem (lote CONNECT-g)
+
+- **O caminho:** o mesmo das operações: a tela grava o pedido no banco (`connect_consultar`, que confere quem pode) e o worker consulta a Nogle. O site continua sem a chave da Nogle.
+- **O tempo:** o `--consultas` roda a cada minuto por uns 50 segundos, olhando a fila a cada 2 segundos, com a trava própria (não segura a leitura do estoque, as transferências nem as operações); a tela se atualiza sozinha enquanto espera.
+- **Os dados pessoais:** o worker guarda só os campos que a tela mostra (o documento do titular mascarado; nunca o PDF do eSIM); só quem pediu vê a resposta, que é apagada depois de 24 horas (fica o registro de quem consultou o quê e quando).
+- **A falha:** a consulta que a Nogle não respondeu falha com o aviso, e a pessoa pede de novo (só lê: repetir não faz mal, mas não se repete sozinha).

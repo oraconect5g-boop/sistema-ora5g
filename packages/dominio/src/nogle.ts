@@ -690,3 +690,161 @@ export function conferirTransferencia(t: TransferenciaParaEnviar, antes: readonl
   const confirmacao = novos.length >= t.quantidade ? "confirmada" : novos.length > 0 ? "parcial" : "nao_confirmada";
   return { confirmacao, novos };
 }
+
+// -----------------------------------------------------------------------------
+// CONNECT-g — as consultas que só leem (a D-056, "só consultas"): a tela pede, o worker consulta e grava a resposta limpa
+// -----------------------------------------------------------------------------
+
+export const TIPOS_DE_CONSULTA = [
+  "linha_detalhes", "linha_saldo", "linha_historico", "linha_consumo", "iccid_numero", "iccid_ativacao", "carteira_saldo",
+] as const;
+export type TipoDeConsulta = (typeof TIPOS_DE_CONSULTA)[number];
+export const ehTipoDeConsulta = (v: unknown): v is TipoDeConsulta => typeof v === "string" && (TIPOS_DE_CONSULTA as readonly string[]).includes(v);
+
+/** O que cada consulta pede: o número da linha, o ICCID do chip ou nada (a carteira). */
+export const PARAMETRO_DA_CONSULTA: Record<TipoDeConsulta, "linha" | "iccid" | null> = {
+  linha_detalhes: "linha", linha_saldo: "linha", linha_historico: "linha", linha_consumo: "linha",
+  iccid_numero: "iccid", iccid_ativacao: "iccid", carteira_saldo: null,
+};
+
+export const NOMES_DAS_CONSULTAS: Record<TipoDeConsulta, string> = {
+  linha_detalhes: "Situação da linha",
+  linha_saldo: "Saldo da linha",
+  linha_historico: "Recargas da linha",
+  linha_consumo: "Consumo de internet no mês",
+  iccid_numero: "Número do chip",
+  iccid_ativacao: "Ativação do chip",
+  carteira_saldo: "Saldo da carteira da Ora",
+};
+
+/** O mês corrente em Brasília (MM e AAAA). */
+function mesEmBrasilia(agora: Date): { mes: string; ano: string } {
+  const [ano = "1970", mes = "01"] = new Intl.DateTimeFormat("en-CA", { timeZone: "America/Sao_Paulo", year: "numeric", month: "2-digit" })
+    .format(agora).split("-");
+  return { mes, ano };
+}
+
+/**
+ * O pedido de cada consulta, como a coleção oficial manda (GET com o corpo). Null quando o número ou o ICCID está fora da
+ * forma (o banco já recusa antes). O consumo vai com o mês corrente em Brasília: o exemplo oficial manda "mes": "01" e
+ * "ano": "2022" (a tabela da documentação fala em MM/YYYY; vale o exemplo, e a resposta da Nogle diz se não for).
+ */
+export function pedidoDaConsulta(tipo: TipoDeConsulta, parametro: string | null, agora: Date): PedidoNogle | null {
+  const p = (parametro ?? "").replace(/\D/g, "");
+  const linha = linhaValida(p);
+  const iccid = iccidNoFormatoNogle(p);
+  switch (tipo) {
+    case "linha_detalhes": return linha ? { metodo: "GET", caminho: "/linhas/detalhes", corpo: { numero: p } } : null;
+    case "linha_saldo": return linha ? { metodo: "GET", caminho: "/linhas/saldo", corpo: { linha: p } } : null;
+    case "linha_historico": return linha ? { metodo: "GET", caminho: "/linhas/historico", corpo: { numero: p } } : null;
+    case "linha_consumo": return linha ? { metodo: "GET", caminho: "/linhas/consumo/dados", corpo: { linha: p, ...mesEmBrasilia(agora) } } : null;
+    case "iccid_numero": return iccid ? { metodo: "GET", caminho: "/linhas/numeroPeloIccid", corpo: { iccid: p } } : null;
+    case "iccid_ativacao": return iccid ? { metodo: "GET", caminho: "/ativacao/detalhar", corpo: { iccid: p } } : null;
+    case "carteira_saldo": return { metodo: "GET", caminho: "/saldo/saldo", corpo: {} };
+  }
+}
+
+export type SituacaoDaConsulta = "respondida" | "nao_encontrada" | "falhou";
+export type RespostaDaConsulta = { situacao: SituacaoDaConsulta; mensagem: string; resposta?: Record<string, unknown> };
+
+/** O documento do titular só com o fim à mostra, como na operação registrada (•••.•••.123-45). */
+export function documentoMascarado(v: unknown): string | null {
+  const d = (typeof v === "string" ? v : "").replace(/\D/g, "");
+  if (d.length === 11) return `•••.•••.${d.slice(6, 9)}-${d.slice(9)}`;
+  if (d.length === 14) return `••.•••.•••/${d.slice(8, 12)}-${d.slice(12)}`;
+  return null;
+}
+
+const simOuNao = (v: unknown) => (v === "SIM" ? true : v === "NÃO" || v === "NAO" ? false : null);
+const ativaOuNao = (v: unknown) => (v === "ATIVA" ? true : v === "INATIVA" ? false : null);
+const curto = (v: unknown, maximo = 120) => textoOuNada(v)?.slice(0, maximo) ?? null;
+const digitosOuNada = (v: unknown) => { const d = (textoOuNada(v) ?? "").replace(/\D/g, ""); return d || null; };
+/** A data da Nogle ("2023-05-30", "2022-06-15 11:59:35.000" ou "13/09/2023") como AAAA-MM-DD; o resto, nada. */
+function diaOuNada(v: unknown): string | null {
+  const t = textoOuNada(v) ?? "";
+  if (/^\d{4}-\d{2}-\d{2}/.test(t)) return t.slice(0, 10);
+  const m = /^(\d{2})\/(\d{2})\/(\d{4})$/.exec(t);
+  return m ? `${m[3]}-${m[2]}-${m[1]}` : null;
+}
+/** Data e hora da Nogle ("2022-06-15 11:59:35.000") como AAAA-MM-DD HH:MM; só a data, se vier só ela. */
+const momentoOuNada = (v: unknown) => { const t = textoOuNada(v) ?? ""; return /^\d{4}-\d{2}-\d{2}[ T]\d{2}:\d{2}/.test(t) ? t.slice(0, 16).replace("T", " ") : diaOuNada(t); };
+const numeroOuNada = (v: unknown) =>
+  typeof v === "number" && Number.isFinite(v) ? v : typeof v === "string" && /^-?\d+(\.\d+)?$/.test(v.trim()) ? Number(v) : null;
+const inteiroOuNada = (v: unknown) => { const n = numeroOuNada(v); return n !== null && Number.isInteger(n) && n >= 0 ? n : null; };
+
+/** Só os campos que a tela mostra, de cada resposta documentada. Fora da forma: null (a consulta falha com o aviso). */
+function camposDaConsulta(tipo: TipoDeConsulta, corpo: Record<string, unknown>): Record<string, unknown> | null {
+  switch (tipo) {
+    case "linha_detalhes": {
+      const d = objeto(corpo.detalhes);
+      if (!d) return null;
+      // Fora de propósito: o PDF de instalação do eSIM (esim_pdf), os ids internos, o apelido e a cor do aplicativo.
+      return {
+        linha: digitosOuNada(d.linha), iccid: digitosOuNada(d.iccid), status: curto(d.status, 40), tipo_linha: curto(d.tipo_linha, 40),
+        plano: curto(d.plano, 80), titular: curto(d.titular), documento: documentoMascarado(d.documento_titular),
+        data_ativacao: diaOuNada(d.data_ativacao), data_fim_plano: diaOuNada(d.data_fim_plano), data_renovacao: diaOuNada(d.data_renovacao),
+        data_perda_numero: diaOuNada(d.data_perda_numero_falta_recarga), data_cancelamento: diaOuNada(d.data_cancelamento_linha),
+        motivo_cancelamento: curto(d.motivo_cancelamento_linha, 40), bloqueada: simOuNao(d.bloqueada), esim: simOuNao(d.esim),
+        portada: simOuNao(d.portin), recarga_automatica: ativaOuNao(d.recarga_automatica),
+        recarga_automatica_plano: curto(d.recarga_automatica_plano, 80), portabilidade_status: curto(d.portabilidade_status, 80),
+      };
+    }
+    case "linha_saldo": {
+      const d = objeto(corpo.data);
+      const dados = numeroOuNada(d?.restante_dados);
+      const minutos = inteiroOuNada(d?.restante_minutos);
+      const sms = inteiroOuNada(d?.restante_sms);
+      if (dados === null && minutos === null && sms === null) return null;
+      return { dados_mb: dados, minutos, minutos_ilimitados: minutos !== null && minutosIlimitados(minutos), sms };
+    }
+    case "linha_historico": {
+      if (!Array.isArray(corpo.historico)) return null;
+      // Fora de propósito: "solicitado_por" (o nome ou o login de quem pediu).
+      const recargas = corpo.historico.filter(ehObjeto).slice(0, 12).map((r) => ({
+        quando: momentoOuNada(r.data_recarga) ?? momentoOuNada(r.data_cadastro), plano: curto(r.plano, 80),
+        valor_centavos: centavosDeValorNogle(r.valor_pago ?? r.valor), forma: curto(r.formaPagto, 20),
+      }));
+      return { recargas };
+    }
+    case "linha_consumo": {
+      if (!Array.isArray(corpo.data)) return null;
+      const dias = corpo.data.filter(ehObjeto).slice(0, 31)
+        .map((d) => ({ dia: diaOuNada(d.dtConsumo), bytes: inteiroOuNada(d.totalConsumo) }))
+        .filter((d): d is { dia: string; bytes: number } => d.dia !== null && d.bytes !== null);
+      return { dias, total_bytes: dias.reduce((soma, d) => soma + d.bytes, 0) };
+    }
+    case "iccid_numero": {
+      const numero = digitosOuNada(corpo.numero);
+      return numero && linhaValida(numero) ? { numero } : null;
+    }
+    case "iccid_ativacao": {
+      const i = objeto(corpo.info);
+      if (!i) return null;
+      return {
+        cliente: curto(i.cliente), plano: curto(i.plano_nome ?? i.plano, 80), numero_ativado: digitosOuNada(i.numero_ativado),
+        numero_portado: digitosOuNada(i.numero_portado), forma_pagamento: curto(i.forma_pagamento, 20),
+        data_solicitacao: momentoOuNada(i.data_solicitacao), data_ativacao: momentoOuNada(i.data_ativacao),
+      };
+    }
+    case "carteira_saldo": {
+      const saldo = centavosDeValorNogle(corpo.saldo);
+      return saldo === null ? null : { saldo_centavos: saldo };
+    }
+  }
+}
+
+/**
+ * A resposta de uma consulta. 5xx ou sem corpo: falhou (tente de novo). 401/403: falhou (o acesso). Outro 4xx ou
+ * retorno=false: não encontrada, com a mensagem da Nogle (ex.: "Linha não encontrada.", "ICCID informado não existe.").
+ * 200 no formato documentado: respondida, só com os campos que a tela mostra; fora da forma: falhou.
+ */
+export function lerRespostaDaConsulta(tipo: TipoDeConsulta, statusHttp: number, corpo: unknown): RespostaDaConsulta {
+  if (statusHttp >= 500 || statusHttp === 0) return { situacao: "falhou", mensagem: "A Nogle não respondeu agora: tente de novo em instantes." };
+  if (statusHttp === 401 || statusHttp === 403) return { situacao: "falhou", mensagem: `A Nogle recusou o acesso (HTTP ${statusHttp}).` };
+  const n = normalizarResposta(statusHttp, corpo);
+  const mensagem = n.mensagem.slice(0, 200);
+  if (!n.ok) return { situacao: "nao_encontrada", mensagem: mensagem || `A Nogle não achou (HTTP ${statusHttp}).` };
+  const o = objeto(corpo);
+  const resposta = o ? camposDaConsulta(tipo, o) : null;
+  return resposta ? { situacao: "respondida", mensagem, resposta } : { situacao: "falhou", mensagem: "A resposta da Nogle veio fora da forma documentada." };
+}

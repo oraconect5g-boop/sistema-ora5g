@@ -5,7 +5,8 @@
 // - saiu e não voltou resposta clara → resultado desconhecido: NUNCA reenvia; consulta e a gerência decide;
 // - log só com contagens: nada de CPF, nome, linha, token ou chave.
 import {
-  PEDIDO_DO_ESTOQUE_DA_MVNO, PEDIDO_DOS_PDVS, RELATORIOS_DA_CONCILIACAO, conferirTransferencia, interpretarConsulta, interpretarConsultaPagamento,
+  PEDIDO_DO_ESTOQUE_DA_MVNO, PEDIDO_DOS_PDVS, RELATORIOS_DA_CONCILIACAO, conferirTransferencia, ehTipoDeConsulta, interpretarConsulta,
+  interpretarConsultaPagamento, lerRespostaDaConsulta, pedidoDaConsulta, type RespostaDaConsulta,
   interpretarEnvio, lerChips, lerPdvs, lerReferencias, lerRelatorio, lerRespostaDaTransferencia, montarConsulta, montarPedido, montarPedidoDoRelatorio,
   pedidoDaTransferencia, pedidoDoEstoqueDoPdv, type ChipDaNogle, type Evidencia, type TransferenciaParaEnviar,
   type ItemDeReferencia, type LinhaDoRelatorio, type OperacaoParaConsultar, type OperacaoParaEnviar, type PdvDaNogle, type PedidoNogle,
@@ -26,7 +27,13 @@ export interface BancoConnect {
   registrarTransferencia(transferencia: string, resultado: ResultadoDaTransferencia): Promise<string>;
   planosNoCaixa(): Promise<PlanosNoCaixa>;
   chipsNoEstoque(): Promise<ChipsNoEstoque>;
+  consultasAFazer(limite: number): Promise<ConsultaParaFazer[]>;
+  registrarRespostaDaConsulta(consulta: string, resposta: RespostaDaConsulta): Promise<string>;
+  limparConsultas(): Promise<{ vencidas: number; apagadas: number }>;
 }
+
+/** Uma consulta que só lê, pedida na tela (CONNECT-g; connect_worker_consultas_a_fazer). */
+export type ConsultaParaFazer = { consulta_id: string; tipo: string; parametro: string | null };
 
 /** O que o worker grava depois de cada envio de transferência (connect_worker_registrar_transferencia). */
 export type ResultadoDaTransferencia = {
@@ -296,6 +303,50 @@ export async function enviarTransferencias(banco: BancoConnect, nogle: Nogle, li
     if (situacao === "confirmada") resumo.confirmadas++;
     else if (situacao === "parcial") resumo.parciais++;
     else resumo.desconhecidas++;
+  }
+  return resumo;
+}
+
+const esperarDeVerdade = (ms: number) => new Promise<void>((pronto) => { setTimeout(pronto, ms); });
+const motivoDaConsulta = (r: Exclude<ResultadoChamada, { tipo: "resposta" }>) =>
+  r.tipo === "falha" ? "Sem conexão com a Nogle agora: tente de novo em instantes."
+    : r.tipo === "bloqueada" ? "A consulta com corpo está desligada neste servidor (NOGLE_GET_COM_CORPO)."
+      : "O login na Nogle foi recusado: avise o administrador.";
+
+/**
+ * As consultas que só leem (CONNECT-g; a D-056): durante até `duracaoMs`, pega a fila (até `limite` por vez), consulta a
+ * Nogle e grava a resposta já limpa (só os campos que a tela mostra); sem nada na fila, espera `esperaMs` e olha de novo.
+ * Nada aqui muda algo na Nogle. Sem conexão, a consulta falha com o aviso (a pessoa pede de novo): a consulta não se repete
+ * sozinha. O resumo só tem contagens.
+ */
+export async function responderConsultas(banco: BancoConnect, nogle: Nogle, opcoes: {
+  duracaoMs?: number; esperaMs?: number; limite?: number; agora?: () => Date; relogio?: () => number; esperar?: (ms: number) => Promise<void>;
+} = {}) {
+  const relogio = opcoes.relogio ?? (() => Date.now());
+  const esperar = opcoes.esperar ?? esperarDeVerdade;
+  const agora = opcoes.agora ?? (() => new Date());
+  const fim = relogio() + (opcoes.duracaoMs ?? 50_000);
+  const resumo = { respondidas: 0, nao_encontradas: 0, falhas: 0 };
+  while (relogio() < fim) {
+    const fila = await banco.consultasAFazer(opcoes.limite ?? 5);
+    if (fila.length === 0) {
+      await esperar(opcoes.esperaMs ?? 2_000);
+      continue;
+    }
+    for (const c of fila) {
+      const pedido = ehTipoDeConsulta(c.tipo) ? pedidoDaConsulta(c.tipo, c.parametro, agora()) : null;
+      let resposta: RespostaDaConsulta;
+      if (!pedido || !ehTipoDeConsulta(c.tipo)) {
+        resposta = { situacao: "falhou", mensagem: "Consulta fora da forma." };
+      } else {
+        const r = await nogle.chamar(pedido);
+        resposta = r.tipo === "resposta" ? lerRespostaDaConsulta(c.tipo, r.status, r.corpo) : { situacao: "falhou", mensagem: motivoDaConsulta(r) };
+      }
+      await banco.registrarRespostaDaConsulta(c.consulta_id, resposta);
+      if (resposta.situacao === "respondida") resumo.respondidas++;
+      else if (resposta.situacao === "nao_encontrada") resumo.nao_encontradas++;
+      else resumo.falhas++;
+    }
   }
   return resumo;
 }
