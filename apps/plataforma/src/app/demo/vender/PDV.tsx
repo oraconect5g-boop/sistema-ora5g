@@ -19,7 +19,7 @@ import { assinaturaDoCarrinho, lerParcelas, lerSeguro, reaisParaTexto, type Apro
 
 const ICONE_MEIO: Record<MeioPagamento, typeof QrCode> = {
   pix_picpay: QrCode, pix_direto: QrCode, cartao_picpay: CreditCard, cartao_pagseguro: CreditCard, dinheiro: Banknote, link_pagamento: Link2, payjoy: HandCoins, aiva: HandCoins,
-  vale_troca: Banknote, pix_asaas: QrCode,
+  vale_troca: Banknote, pix_asaas: QrCode, cartao_asaas: CreditCard,
 };
 // PDV-c (o proprietário, 18/11): na loja não se gera link de pagamento; o link é só da compra online.
 const ORDEM_MEIOS: MeioPagamento[] = ["pix_picpay", "cartao_picpay", "dinheiro", "pix_direto", "cartao_pagseguro", "payjoy", "aiva"];

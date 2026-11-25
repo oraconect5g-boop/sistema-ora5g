@@ -35,6 +35,7 @@ export const TAXA_DO_MEIO: Readonly<Record<MeioPagamento, number>> = {
   aiva: pb(0),
   vale_troca: 0,
   pix_asaas: pb(0.99),
+  cartao_asaas: pb(3.49),
 };
 
 // ---------- Ora Connect (derivado dos itens telecom das vendas) ----------
@@ -139,6 +140,7 @@ export const CONCILIACAO: Readonly<Record<MeioPagamento, { situacao: string; tom
   aiva: { situacao: "Entrada recebida · restante a receber", tom: "info" },
   vale_troca: { situacao: "Crédito da loja (devolução)", tom: "info" },
   pix_asaas: { situacao: "Pago · a conciliar", tom: "aviso" },
+  cartao_asaas: { situacao: "Pago · a conciliar", tom: "aviso" },
 };
 
 /** Caixa físico da loja (dinheiro): abertura + vendas em dinheiro − sangrias = previsto; contado na conferência. */

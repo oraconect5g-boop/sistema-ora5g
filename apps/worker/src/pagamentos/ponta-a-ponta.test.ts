@@ -15,15 +15,19 @@ import { afterAll, beforeAll, describe, expect, it } from "vitest";
 import { transporteHttp } from "../connect/transporte.ts";
 import { ClienteAsaas, type ConsultaDaAsaas } from "./asaas.ts";
 import { conferirChavePix, rodadaDoCaixa, type BancoDoCaixa } from "./caixa.ts";
+import { rodadaDoCartao, situacaoDoCartao, type BancoDoCartao } from "./cartao.ts";
 import { ligarSeFaltar, rodada, type BancoDosPagamentos } from "./processar.ts";
 
 let db: PGlite;
 let servidor: Server;
 let base = "";
 // O que a "Asaas" guardou: o token do aviso, os links e os pagamentos; PAY-015a: os QR do caixa e as cobranças de cada um.
-const asaas = { token: "", links: new Map<string, { externalReference: string; value: number; active: boolean }>(), pagamentos: new Map<string, { status: string; value: number; paymentLink: string }>(),
+const asaas = { token: "", links: new Map<string, { externalReference: string; value: number; active: boolean; billingType?: string; limit?: number }>(), pagamentos: new Map<string, { status: string; value: number; paymentLink: string }>(),
   qrs: new Map<string, { externalReference: string; value: number; allowsMultiplePayments: boolean; expirationSeconds: number; excluido: boolean }>(),
-  cobrancasDoQr: new Map<string, { id: string; status: string; value: number }[]>() };
+  cobrancasDoQr: new Map<string, { id: string; status: string; value: number }[]>(),
+  // PAY-015b: as cobranças de cartão (com o link que as gerou) e o dia pedido na última leitura.
+  cobrancasDeCartao: [] as { id: string; status: string; value: number; paymentLink: string; creditCard: { creditCardNumber: string; creditCardBrand: string } }[],
+  diaLido: "" };
 const IMAGEM_DO_QR = "iVBORw0KGgo".padEnd(400, "A");
 
 beforeAll(async () => {
@@ -45,7 +49,8 @@ beforeAll(async () => {
       }
       if (req.method === "POST" && caminho === "/v3/paymentLinks") {
         const id = `lnk${asaas.links.size + 1}`;
-        asaas.links.set(id, { externalReference: String(corpo.externalReference), value: Number(corpo.value), active: true });
+        asaas.links.set(id, { externalReference: String(corpo.externalReference), value: Number(corpo.value), active: true, billingType: String(corpo.billingType),
+          limit: Number(corpo.limit) });
         return json(200, { id, url: `https://sandbox.asaas.com/c/${id}`, active: true });
       }
       if (req.method === "GET" && caminho === "/v3/pix/addressKeys?status=ACTIVE&limit=10") {
@@ -68,6 +73,19 @@ beforeAll(async () => {
         if (!qr) return json(404, {});
         qr.excluido = true;
         return json(200, { id: excluir[1], deleted: true });
+      }
+      const doCartao = /^\/v3\/payments\?billingType=CREDIT_CARD&dateCreated%5Bge%5D=(\d{4}-\d{2}-\d{2})&limit=100&offset=0$/.exec(caminho);
+      if (req.method === "GET" && doCartao) {
+        asaas.diaLido = doCartao[1] as string;
+        return json(200, { object: "list", hasMore: false, totalCount: asaas.cobrancasDeCartao.length, limit: 100, offset: 0,
+          data: asaas.cobrancasDeCartao.map((x) => ({ object: "payment", billingType: "CREDIT_CARD", deleted: false, ...x })) });
+      }
+      const linkAlterado = /^\/v3\/paymentLinks\/([A-Za-z0-9_]+)$/.exec(caminho);
+      if (req.method === "PUT" && linkAlterado) {
+        const l = asaas.links.get(linkAlterado[1] as string);
+        if (!l) return json(404, {});
+        l.active = corpo.active !== false;
+        return json(200, { id: linkAlterado[1], active: l.active });
       }
       const pagamento = /^\/v3\/payments\/([A-Za-z0-9_]+)$/.exec(caminho);
       if (req.method === "GET" && pagamento) {
@@ -187,5 +205,55 @@ describe("de ponta a ponta, com o banco de teste e uma Asaas de mentira (PAY-014
     expect(await rodadaDoCaixa(doCaixa, cliente, "chave-ficticia-evp")).toMatchObject({ qr_excluidos: 1 });
     expect(asaas.qrs.get("qrcaixa2")?.excluido).toBe(true);
     expect((await db.query<{ situacao: string }>("select situacao from public.caixa_pix where id = $1", [segundo.id])).rows[0]?.situacao).toBe("cancelado");
+  });
+
+  it("o cartão do caixa (PAY-015b): a vendedora pede o link, o worker cria na Asaas, o cliente paga no cartão, o worker acha a cobrança pelo link e a venda conclui; o desistido é desativado", async () => {
+    const cliente = new ClienteAsaas(transporteHttp(base, 2_000, "Asaas"), "$aact_hmlg_000000000000ChaveFicticiaDoTeste");
+    const doCartao: BancoDoCartao = {
+      cartaoSituacao: (pronto, motivo) => servico("select public.caixa_cartao_situacao($1, $2) as v", [pronto, motivo]),
+      cartaoACriar: (limite) => servico("select public.caixa_cartao_a_criar($1) as v", [limite]),
+      cartaoLinkRegistrar: (cartao, link, url, expira) => servico("select public.caixa_cartao_link_registrar($1, $2, $3, $4) as v", [cartao, link, url, expira]),
+      cartaoCriacaoFalhou: (cartao, motivo, definitiva) => servico("select public.caixa_cartao_criacao_falhou($1, $2, $3) as v", [cartao, motivo, definitiva]),
+      cartaoAConferir: (limite) => servico("select public.caixa_cartao_a_conferir($1) as v", [limite]),
+      cartaoConsultaAplicar: (cartao, consulta) => servico("select public.caixa_cartao_consulta_aplicar($1, $2::jsonb) as v", [cartao, JSON.stringify(consulta)]),
+      cartaoADesativar: (limite) => servico("select public.caixa_cartao_a_desativar($1) as v", [limite]),
+      cartaoLinkDesativado: (cartao) => servico("select public.caixa_cartao_link_desativado($1) as v", [cartao]),
+    };
+    const ana = { usuario: ids.vendedorA, sessao: "4e600000-0000-4000-8000-000000000002" };
+    await comoUsuario(db, ana, () => db.query("select public.selecionar_unidade($1)", [ids.lojaA]));
+    const comoAna = <T>(sql: string, params: unknown[] = []) => comoUsuario(db, ana, async () => (await db.query<{ v: T }>(sql, params)).rows[0]?.v as T, { criarSessao: false });
+    const venda = await comoAna<string>("select public.criar_venda('ponta:cartao:venda:1') as v");
+    await comoAna("select public.adicionar_item($1, $2, null, 1, 'ponta:cartao:item:1') as v", [venda, cat.capa]);
+
+    expect(await situacaoDoCartao(doCartao, true)).toBe(true);
+    const { id } = await comoAna<{ id: string }>("select public.caixa_cartao_pedir($1, 7900, 'ponta:cartao:1') as v", [venda]);
+    expect(await rodadaDoCartao(doCartao, cliente)).toMatchObject({ links_criados: 1, links_conferidos: 1, links_pagos: 0 });
+    const [linkId, link] = [...asaas.links.entries()].find(([, l]) => l.externalReference === id) ?? [];
+    expect(link).toMatchObject({ value: 79, active: true, billingType: "CREDIT_CARD", limit: 1 });
+    expect(asaas.diaLido).toMatch(/^\d{4}-\d{2}-\d{2}$/);
+    const tela = await comoAna<{ cartoes: { situacao: string; link_url: string }[] }>("select public.caixa_cartao_da_venda($1) as v", [venda]);
+    expect(tela.cartoes).toMatchObject([{ situacao: "aguardando", link_url: `https://sandbox.asaas.com/c/${linkId}` }]);
+
+    // O cliente paga no cartão: a "Asaas" cria a cobrança com o link; na rodada seguinte, o worker acha e confirma.
+    asaas.cobrancasDeCartao.push({ id: "pay_cartao_1", status: "CONFIRMED", value: 79, paymentLink: linkId as string,
+      creditCard: { creditCardNumber: "8829", creditCardBrand: "VISA" } });
+    await db.query("update public.caixa_cartao set conferido_em = now() - interval '6 seconds' where id = $1", [id]);
+    expect(await rodadaDoCartao(doCartao, cliente)).toMatchObject({ links_pagos: 1 });
+    expect((await db.query<{ cartao_final: string; cartao_bandeira: string }>("select cartao_final, cartao_bandeira from public.caixa_cartao where id = $1", [id])).rows[0])
+      .toEqual({ cartao_final: "8829", cartao_bandeira: "VISA" });
+    expect(await comoAna<{ pago_no_cartao: number; total: number }>("select public.concluir_venda($1, '[]'::jsonb, '{}'::jsonb, 'ponta:cartao:concluir:1') as v", [venda]))
+      .toMatchObject({ total: 7_900, pago_no_cartao: 7_900 });
+
+    // A vendedora desiste de outro link: o worker confere que ninguém pagou e desativa o link na Asaas.
+    const outra = await comoAna<string>("select public.criar_venda('ponta:cartao:venda:2') as v");
+    await comoAna("select public.adicionar_item($1, $2, null, 1, 'ponta:cartao:item:2') as v", [outra, cat.capa]);
+    const segundo = await comoAna<{ id: string }>("select public.caixa_cartao_pedir($1, 7900, 'ponta:cartao:2') as v", [outra]);
+    await rodadaDoCartao(doCartao, cliente);
+    expect(await comoAna("select public.caixa_cartao_cancelar($1) as v", [segundo.id])).toBe("cancelando");
+    await db.query("update public.caixa_cartao set conferido_em = now() - interval '6 seconds' where id = $1", [segundo.id]);
+    expect(await rodadaDoCartao(doCartao, cliente)).toMatchObject({ links_desativados: 1 });
+    const [, segundoLink] = [...asaas.links.entries()].find(([, l]) => l.externalReference === segundo.id) ?? [];
+    expect(segundoLink?.active).toBe(false);
+    expect((await db.query<{ situacao: string }>("select situacao from public.caixa_cartao where id = $1", [segundo.id])).rows[0]?.situacao).toBe("cancelado");
   });
 });

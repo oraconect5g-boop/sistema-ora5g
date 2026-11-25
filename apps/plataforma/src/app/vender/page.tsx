@@ -1,6 +1,6 @@
 import { randomUUID } from "node:crypto";
 
-import { QrCode, ScanLine, ShoppingCart, Wallet } from "lucide-react";
+import { CreditCard, QrCode, ScanLine, ShoppingCart, Wallet } from "lucide-react";
 import type { Metadata } from "next";
 import Form from "next/form";
 import Link from "next/link";
@@ -11,6 +11,7 @@ import { AtualizarEnquantoEspera } from "../../componentes/AtualizarEnquantoEspe
 import { BotaoConfirmar } from "../../componentes/BotaoConfirmar";
 import { LerCodigo } from "../../componentes/LerCodigo";
 import { MoldeReal } from "../../componentes/MoldeReal";
+import { QrCode as QrCodeDoLink } from "../../componentes/QrCode";
 import { Aviso, Botao, Cartao, Selo, TituloPagina } from "../../componentes/ui";
 import { FalhaDoServico, obterSessao } from "../../lib/acesso/sessao";
 import { centavosDoBanco } from "../../lib/dinheiro";
@@ -20,12 +21,14 @@ import { avisoDaReservaAtendida } from "../../lib/loja/reserva";
 import { soltarReservasDoSiteVencidas } from "../../lib/loja/reservas-vencidas";
 import { buscarNoCatalogo, filtroDoIdentificador, identificadorDigitado, termoDaBusca } from "../../lib/catalogo/busca";
 import { consultarTelaDoPdv } from "../../lib/vendas/pdv-tela";
+import { cartaoEspera, lerCartaoDaVenda, SITUACOES_DO_CARTAO, somasDoCartao } from "../../lib/vendas/cartao-asaas";
 import { horaDe, lerPixDaVenda, pixEspera, SITUACOES_DO_PIX, somasDoPix } from "../../lib/vendas/pix-asaas";
 import type { OpcaoDeMeio } from "../../lib/vendas/formas-de-pagamento";
 import { ERROS_DA_VENDA, MAXIMO_DE_PARCELAS, PROVEDOR_DO_MEIO, ehMeioDaEntrada } from "../../lib/vendas/regras";
 import { FotoAmpliavel } from "../catalogo/FotoAmpliavel";
 import { BuscaDeCliente } from "../clientes/BuscaDeCliente";
-import { abrirCaixa, adicionarItem, aplicarDesconto, cancelarPixAsaas, cancelarVenda, concluirVenda, novaVenda, pedirAprovacao, pedirPixAsaas, removerItem } from "./acoes";
+import { abrirCaixa, adicionarItem, aplicarDesconto, cancelarCartaoAsaas, cancelarPixAsaas, cancelarVenda, concluirVenda, novaVenda, pedirAprovacao, pedirCartaoAsaas,
+  pedirPixAsaas, removerItem } from "./acoes";
 import { FormasDePagamento } from "./FormasDePagamento";
 
 export const metadata: Metadata = { title: "Vender" };
@@ -70,11 +73,13 @@ export default async function Vender({ searchParams }: { searchParams: Promise<{
   // do site vencidas (ONLINE-b: o aparelho volta livre antes de a tela ler o estoque, mais abaixo) e achar no
   // catálogo o que foi digitado (a busca do catálogo olha o que está em estoque, que a reserva não muda).
   // PAY-015a: junto, o Pix pela Asaas da venda aberta (o banco acha a mesma venda da tela: a mais nova da pessoa na loja).
-  const [tela, , achados, pixLido] = await Promise.all([
+  // PAY-015b: e o cartão pela Asaas, do mesmo jeito (em paralelo: a ida continua uma só).
+  const [tela, , achados, pixLido, cartaoLido] = await Promise.all([
     consultarTelaDoPdv(supabase),
     soltarReservasDoSiteVencidas(supabase),
     busca && !numero ? buscarNoCatalogo(supabase, busca, { limite: 40 }) : Promise.resolve(null),
     (async () => await supabase.rpc("caixa_pix_da_venda", {}))(),
+    (async () => await supabase.rpc("caixa_cartao_da_venda", {}))(),
   ]);
   const { caixa, venda, itens, terminais } = tela;
 
@@ -94,6 +99,9 @@ export default async function Vender({ searchParams }: { searchParams: Promise<{
   const pixIndisponivel = venda !== null && Boolean(pixLido.error);
   const lidoDoPix = pixLido.error ? null : lerPixDaVenda(pixLido.data);
   const pixDaVenda = lidoDoPix && venda && lidoDoPix.venda === venda.id ? lidoDoPix : { ligado: lidoDoPix?.ligado ?? false, venda: null, pix: [] };
+  const cartaoIndisponivel = venda !== null && Boolean(cartaoLido.error);
+  const lidoDoCartao = cartaoLido.error ? null : lerCartaoDaVenda(cartaoLido.data);
+  const cartaoDaVenda = lidoDoCartao && venda && lidoDoCartao.venda === venda.id ? lidoDoCartao : { ligado: lidoDoCartao?.ligado ?? false, venda: null, cartoes: [] };
 
   // As variações dos resultados (a do aparelho achado pelo número vem nula quando quem pede não a lê).
   const variantes = [...porNome.data, ...porNumero.data.flatMap((i) => (i.variantes ? [i.variantes] : []))];
@@ -139,8 +147,12 @@ export default async function Vender({ searchParams }: { searchParams: Promise<{
   // PAY-015a: o que o Pix pela Asaas já pagou (entra sozinho) e se algum QR ainda espera (o banco não conclui com ele).
   const pix = somasDoPix(pixDaVenda.pix);
   const pixPendente = pixDaVenda.pix.some(pixEspera);
-  const aCobrar = Math.max(subtotal - descontos - pagoPeloSite - pix.pago, 0);
-  const faltaParaOPix = Math.max(aCobrar - pix.esperando, 0);
+  // PAY-015b: o mesmo para o cartão pela Asaas. O que falta para um QR ou um link novo desconta o que os dois esperam.
+  const cartao = somasDoCartao(cartaoDaVenda.cartoes);
+  const cartaoPendente = cartaoDaVenda.cartoes.some(cartaoEspera);
+  const aCobrar = Math.max(subtotal - descontos - pagoPeloSite - pix.pago - cartao.pago, 0);
+  const faltaNaAsaas = Math.max(aCobrar - pix.esperando - cartao.esperando, 0);
+  const valorSugerido = (faltaNaAsaas / 100).toFixed(2).replace(".", ",");
 
   return (
     <MoldeReal sessao={sessao}>
@@ -273,7 +285,8 @@ export default async function Vender({ searchParams }: { searchParams: Promise<{
               <dt className="font-semibold">Total</dt><dd className="text-right text-lg font-bold">{brl(subtotal - descontos)}</dd>
               {pagoPeloSite > 0 && <><dt className="text-sucesso">Pago pelo site</dt><dd className="text-right text-sucesso">− {brl(pagoPeloSite)}</dd></>}
               {pix.pago > 0 && <><dt className="text-sucesso">Pago no Pix pela Asaas</dt><dd className="text-right text-sucesso">− {brl(pix.pago)}</dd></>}
-              {pagoPeloSite + pix.pago > 0 && <><dt className="font-semibold">A cobrar</dt><dd className="text-right font-semibold">{brl(aCobrar)}</dd></>}
+              {cartao.pago > 0 && <><dt className="text-sucesso">Pago no cartão pela Asaas</dt><dd className="text-right text-sucesso">− {brl(cartao.pago)}</dd></>}
+              {pagoPeloSite + pix.pago + cartao.pago > 0 && <><dt className="font-semibold">A cobrar</dt><dd className="text-right font-semibold">{brl(aCobrar)}</dd></>}
             </dl>
           </Cartao>
 
@@ -318,10 +331,10 @@ export default async function Vender({ searchParams }: { searchParams: Promise<{
                   })}
                 </ul>
               )}
-              {pixDaVenda.ligado ? faltaParaOPix > 0 && (
+              {pixDaVenda.ligado ? faltaNaAsaas > 0 && (
                 <form action={pedirPixAsaas} className="mt-3 flex flex-wrap items-end gap-2">
                   <input type="hidden" name="venda" value={venda.id} /><input type="hidden" name="chave" value={randomUUID()} />
-                  <label className="text-sm font-medium">Valor no Pix (R$)<input name="valor" inputMode="decimal" required defaultValue={(faltaParaOPix / 100).toFixed(2).replace(".", ",")} className={`${campo} w-36`} /></label>
+                  <label className="text-sm font-medium">Valor no Pix (R$)<input name="valor" inputMode="decimal" required defaultValue={valorSugerido} className={`${campo} w-36`} /></label>
                   <Botao type="submit" enquanto="Pedindo o QR Code…"><QrCode aria-hidden className="size-4" /> Gerar QR Code do Pix</Botao>
                 </form>
               ) : !pixIndisponivel && (
@@ -330,11 +343,64 @@ export default async function Vender({ searchParams }: { searchParams: Promise<{
             </Cartao>
           )}
 
+          {/* PAY-015b (a D-062): o cartão pela Asaas. O worker cria o link de pagamento só no cartão e confere as cobranças; o
+              cliente paga no celular dele, na página da Asaas (o número do cartão não passa pelo sistema). */}
+          {itens.length > 0 && (cartaoDaVenda.ligado || cartaoDaVenda.cartoes.length > 0 || cartaoIndisponivel) && (
+            <Cartao titulo="Cartão pela Asaas" icone={CreditCard} subtitulo="O cliente aponta a câmera para o QR Code e paga no cartão, no celular dele; o pago entra sozinho na venda. O número do cartão não passa pelo sistema.">
+              {cartaoIndisponivel && <Aviso tom="aviso">Não deu para ler o cartão da Asaas agora. Recarregue a tela em instantes.</Aviso>}
+              {cartaoPendente && !pixPendente && <AtualizarEnquantoEspera aviso="Esperando o cartão…" />}
+              {cartaoDaVenda.cartoes.length > 0 && (
+                <ul className="space-y-3" aria-label="Cartões desta venda">
+                  {cartaoDaVenda.cartoes.map((c) => {
+                    const s = SITUACOES_DO_CARTAO[c.situacao];
+                    return (
+                      <li key={c.id} className="rounded-xl border border-borda p-3 text-sm">
+                        <p className="flex flex-wrap items-center gap-2">
+                          <span className="numeros font-semibold">{brl(c.valor_centavos)}</span>
+                          <Selo tom={s.tom} ponto>{s.rotulo}</Selo>
+                          {c.situacao === "pago" && c.cartao_final && <span className="text-xs text-suave">{`${c.cartao_bandeira ?? "Cartão"} final ${c.cartao_final}`}</span>}
+                          {c.situacao === "pago" && horaDe(c.pago_em) && <span className="text-xs text-suave">às {horaDe(c.pago_em)}</span>}
+                        </p>
+                        {c.situacao === "aguardando" && c.link_url && (
+                          <div className="mt-2 flex flex-wrap items-start gap-3">
+                            <QrCodeDoLink texto={c.link_url} rotulo={`QR Code do pagamento no cartão de ${brl(c.valor_centavos)}`} className="size-52 rounded-lg border border-borda bg-white p-1" />
+                            <div className="min-w-0 flex-1 space-y-2">
+                              <p className="text-xs text-suave">{`O cliente aponta a câmera do celular para o QR Code e paga no cartão${horaDe(c.expira_em) ? ` (vale até ${horaDe(c.expira_em)})` : ""}. Ou abra o pagamento no celular dele:`}</p>
+                              <a href={c.link_url} target="_blank" rel="noreferrer noopener" className="text-xs font-semibold text-acao underline">Abrir o pagamento no cartão</a>
+                            </div>
+                          </div>
+                        )}
+                        {c.situacao === "criando" && <p className="mt-1 text-xs text-suave">O servidor está gerando o link na Asaas: o QR Code aparece aqui em alguns segundos.</p>}
+                        {c.situacao === "falhou" && c.ultima_falha && <p className="mt-1 text-xs">{c.ultima_falha}</p>}
+                        {c.divergencia && <p className="mt-1 text-xs text-perigo">{c.divergencia}</p>}
+                        {(c.situacao === "criando" || c.situacao === "aguardando") && (
+                          <form action={cancelarCartaoAsaas} className="mt-2">
+                            <input type="hidden" name="cartao" value={c.id} />
+                            <Botao type="submit" tamanho="sm" variante="fantasma" enquanto="Cancelando…">Cancelar este link</Botao>
+                          </form>
+                        )}
+                      </li>
+                    );
+                  })}
+                </ul>
+              )}
+              {cartaoDaVenda.ligado ? faltaNaAsaas > 0 && (
+                <form action={pedirCartaoAsaas} className="mt-3 flex flex-wrap items-end gap-2">
+                  <input type="hidden" name="venda" value={venda.id} /><input type="hidden" name="chave" value={randomUUID()} />
+                  <label className="text-sm font-medium">Valor no cartão (R$)<input name="valor" inputMode="decimal" required defaultValue={valorSugerido} className={`${campo} w-36`} /></label>
+                  <Botao type="submit" enquanto="Pedindo o link…"><CreditCard aria-hidden className="size-4" /> Gerar QR Code do cartão</Botao>
+                </form>
+              ) : !cartaoIndisponivel && (
+                <p className="mt-2 text-xs text-suave">O cartão pela Asaas está desligado agora (o servidor fala com a Asaas a cada minuto). Use a maquininha.</p>
+              )}
+            </Cartao>
+          )}
+
           {itens.length > 0 && (
             <Cartao titulo="Pagamento" subtitulo="Toque em “Adicionar forma de pagamento” para cada forma que o cliente usar. PayJoy e Aiva: o valor financiado (só o do celular) e as parcelas; a entrada é outra forma, marcada como entrada. Cartão: as parcelas e o comprovante. Troco só sai do dinheiro.">
               <form action={concluirVenda} className="space-y-3">
                 <input type="hidden" name="venda" value={venda.id} /><input type="hidden" name="chave" value={randomUUID()} />
-                <FormasDePagamento total={aCobrar} pagoPeloSite={pagoPeloSite} pagoNoPix={pix.pago} valorDosCelulares={valorDosCelulares} opcoes={OPCOES_DE_PAGAMENTO}
+                <FormasDePagamento total={aCobrar} pagoPeloSite={pagoPeloSite} pagoNoPix={pix.pago} pagoNoCartao={cartao.pago} valorDosCelulares={valorDosCelulares} opcoes={OPCOES_DE_PAGAMENTO}
                   terminais={terminais.map((m) => ({ id: m.id, provedor: m.provedor === "picpay" ? "picpay" as const : "pagbank" as const, rotulo: `${m.apelido} · ${m.provedor === "picpay" ? "PicPay" : "PagBank"} ${m.identificador}` }))} />
                 {permissoes.has("cliente.buscar") && (
                   <div className="space-y-1 rounded-xl border border-borda p-2">
@@ -346,15 +412,16 @@ export default async function Vender({ searchParams }: { searchParams: Promise<{
                   <label className="text-xs font-medium">Nome do cliente (opcional)<input name="cliente_nome" className={campo} /></label>
                   <label className="text-xs font-medium">E-mail do cliente (opcional)<input name="cliente_email" type="email" className={campo} /></label>
                 </div>
-                <BotaoConfirmar className="w-full" enquanto="Confirmando a venda no sistema…" disabled={!caixa || venda.situacao === "aguardando_aprovacao" || pixPendente}>Concluir venda</BotaoConfirmar>
+                <BotaoConfirmar className="w-full" enquanto="Confirmando a venda no sistema…" disabled={!caixa || venda.situacao === "aguardando_aprovacao" || pixPendente || cartaoPendente}>Concluir venda</BotaoConfirmar>
                 {!caixa && <p className="text-xs text-aviso">Abra o caixa para concluir.</p>}
                 {pixPendente && <p className="text-xs text-aviso">Há um Pix pela Asaas esperando: espere o pagamento ou cancele o QR Code para concluir.</p>}
+                {cartaoPendente && <p className="text-xs text-aviso">Há um cartão pela Asaas esperando: espere o pagamento ou cancele o link para concluir.</p>}
               </form>
             </Cartao>
           )}
 
-          {pagoPeloSite > 0 || pix.pago > 0 ? (
-            <p className="text-xs text-suave">{`${pagoPeloSite > 0 ? "Pedido pago pelo site" : "Venda com Pix pela Asaas pago"}: esta venda não se cancela por aqui. Se o cliente desistir, o estorno é pelo painel da Asaas; depois do estorno, a venda pode ser cancelada.`}</p>
+          {pagoPeloSite > 0 || pix.pago > 0 || cartao.pago > 0 ? (
+            <p className="text-xs text-suave">{`${pagoPeloSite > 0 ? "Pedido pago pelo site" : pix.pago > 0 ? "Venda com Pix pela Asaas pago" : "Venda com cartão pela Asaas pago"}: esta venda não se cancela por aqui. Se o cliente desistir, o estorno é pelo painel da Asaas; depois do estorno, a venda pode ser cancelada.`}</p>
           ) : (
           <details className="text-sm"><summary className="cursor-pointer font-semibold text-perigo">Cancelar esta venda</summary>
             <form action={cancelarVenda} className="mt-2 flex flex-wrap items-end gap-2">

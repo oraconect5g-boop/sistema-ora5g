@@ -1,9 +1,9 @@
 // Inventário de autorização (prioridade 1 do diagnóstico de 10/11/2026; ORA-ORG-004 e ORA-QUAL-002).
 // O aviso 0029 do Supabase lista as funções SECURITY DEFINER que qualquer usuário logado pode chamar
-// pela API: 232 em 25/11 (48 + 6 do cadastro de lojas, L2, + 5 do cadastro do catálogo, L3a, + 4 dos preços, L3b,
+// pela API: 235 em 25/11 (48 + 6 do cadastro de lojas, L2, + 5 do cadastro do catálogo, L3a, + 4 dos preços, L3b,
 // + 4 da importação do catálogo, L3c, + 3 da entrada de mercadoria, L4a, + 5 do inventário, L4b, + 6 dos clientes, L5a,
 // + 9 do funil e da agenda, L5b, + 4 da mesclagem e dos segmentos, L5c, + 4 das maquininhas e da conciliação, L7a,
-// + 2 da leitura das entradas, R1, + 1 do nome no ranking, G1, + 2 das metas, G4b, + 3 das financeiras, L7b, + 3 da saída autorizada do caixa, L7c, + 6 das contas a pagar, L8a, + 1 das regras do bônus por meta, L9a, + 2 do fechamento do bônus, L9b, + 1 da correção do repasse das financeiras, B4, + 1 dos dados para emitir a nota, K1b, + 1 dos documentos da nota emitida, L10a, + 2 do envio da nota pelo WhatsApp, K1c, + 1 dos recebíveis por loja e adquirente, L8e, + 5 da ordem de serviço, L12a, + 3 do orçamento da OS, L12b, + 2 da cobrança e da entrega da OS, L12c, + 3 das peças da OS, L12d, + 1 dos relatórios da assistência, L12e, + 2 dos documentos da venda, L5d, + 2 da conciliação fiscal, L10b, + 2 do cancelamento e da correção da nota, L10c, + 1 do valor do estoque a custo, G3b, + 2 dos códigos de outros canais, CAT-009, + 2 das regiões, ORG-009, + 1 da conta ligada à entrada, FIN-004a, + 1 da ligação do PDV da Nogle à loja, CONNECT-d, + 2 da transferência de chips, CONNECT-e, + 1 das divergências dos chips da Nogle, CONNECT-f, + 1 das consultas da Nogle, CONNECT-g, + 2 das ações na Nogle, CONNECT-j, + 2 dos documentos da conta, FIN-004b, + 1 da correção do custo, CAT-008b, + 2 da limpeza das fotos, CAT-011b, + 5 do pedido de compra, INV-009a, + 1 da carta de correção, FISC-009b, + 1 do relatório do titular, QUAL-011a, + 2 da vitrine da loja online, ONLINE-a, públicas de propósito, + 5 da reserva do site, ONLINE-b (a de reservar, pública), + 1 da conclusão da limpeza das fotos, INTEG-b, + 1 da situação das rotinas agendadas, ROT-a, + 1 da conferência do destinatário da nota, INTEG-c, + 2 da Saúde da operação e da página /saude, SAUDE-a, + 3 da remessa de transferência, TRF-a, + 6 dos avisos no celular, PWA-b (as duas da fila pedem o segredo do worker), + 7 dos extratos e da conciliação por arquivo, EXT-a, + 1 da importação do custo dos anúncios, META-a, + 1 da importação dos pedidos dos marketplaces, MKTPL-a, + 4 da carga do estoque inicial por loja, REIN-b, + 4 do pedido do site, ONLINE-d, + 1 da resolução da diferença na carga do estoque, REIN-c, + 3 das contas bancárias, CONTAS-a, + 2 dos repasses dos marketplaces, REPASSE-a, + 1 da divergência da transferência, TRF-d, + 1 da conferência do período, FIN-001a, + 1 da conferência do que foi desfeito, FIN-001b, + 3 dos repasses atrasados, FIN-007a, + 3 do débito do extrato e do estorno da venda, PAY-011a, + 2 do depósito da maquininha, FIN-006a, + 2 do aviso do erro do servidor, QUAL-006a, + 2 do pagamento pelo site, PAY-014a, + 3 do Pix pela Asaas no caixa, PAY-015a; no L8b, a das categorias ganhou o parâmetro "entra no resultado"). Elas rodam com poder total e cada uma confere sessão, loja e permissão por
+// + 2 da leitura das entradas, R1, + 1 do nome no ranking, G1, + 2 das metas, G4b, + 3 das financeiras, L7b, + 3 da saída autorizada do caixa, L7c, + 6 das contas a pagar, L8a, + 1 das regras do bônus por meta, L9a, + 2 do fechamento do bônus, L9b, + 1 da correção do repasse das financeiras, B4, + 1 dos dados para emitir a nota, K1b, + 1 dos documentos da nota emitida, L10a, + 2 do envio da nota pelo WhatsApp, K1c, + 1 dos recebíveis por loja e adquirente, L8e, + 5 da ordem de serviço, L12a, + 3 do orçamento da OS, L12b, + 2 da cobrança e da entrega da OS, L12c, + 3 das peças da OS, L12d, + 1 dos relatórios da assistência, L12e, + 2 dos documentos da venda, L5d, + 2 da conciliação fiscal, L10b, + 2 do cancelamento e da correção da nota, L10c, + 1 do valor do estoque a custo, G3b, + 2 dos códigos de outros canais, CAT-009, + 2 das regiões, ORG-009, + 1 da conta ligada à entrada, FIN-004a, + 1 da ligação do PDV da Nogle à loja, CONNECT-d, + 2 da transferência de chips, CONNECT-e, + 1 das divergências dos chips da Nogle, CONNECT-f, + 1 das consultas da Nogle, CONNECT-g, + 2 das ações na Nogle, CONNECT-j, + 2 dos documentos da conta, FIN-004b, + 1 da correção do custo, CAT-008b, + 2 da limpeza das fotos, CAT-011b, + 5 do pedido de compra, INV-009a, + 1 da carta de correção, FISC-009b, + 1 do relatório do titular, QUAL-011a, + 2 da vitrine da loja online, ONLINE-a, públicas de propósito, + 5 da reserva do site, ONLINE-b (a de reservar, pública), + 1 da conclusão da limpeza das fotos, INTEG-b, + 1 da situação das rotinas agendadas, ROT-a, + 1 da conferência do destinatário da nota, INTEG-c, + 2 da Saúde da operação e da página /saude, SAUDE-a, + 3 da remessa de transferência, TRF-a, + 6 dos avisos no celular, PWA-b (as duas da fila pedem o segredo do worker), + 7 dos extratos e da conciliação por arquivo, EXT-a, + 1 da importação do custo dos anúncios, META-a, + 1 da importação dos pedidos dos marketplaces, MKTPL-a, + 4 da carga do estoque inicial por loja, REIN-b, + 4 do pedido do site, ONLINE-d, + 1 da resolução da diferença na carga do estoque, REIN-c, + 3 das contas bancárias, CONTAS-a, + 2 dos repasses dos marketplaces, REPASSE-a, + 1 da divergência da transferência, TRF-d, + 1 da conferência do período, FIN-001a, + 1 da conferência do que foi desfeito, FIN-001b, + 3 dos repasses atrasados, FIN-007a, + 3 do débito do extrato e do estorno da venda, PAY-011a, + 2 do depósito da maquininha, FIN-006a, + 2 do aviso do erro do servidor, QUAL-006a, + 2 do pagamento pelo site, PAY-014a, + 3 do Pix pela Asaas no caixa, PAY-015a, + 3 do cartão pela Asaas no caixa, PAY-015b; no L8b, a das categorias ganhou o parâmetro "entra no resultado"). Elas rodam com poder total e cada uma confere sessão, loja e permissão por
 // conta própria. Este teste monta um "mundo" fictício com objetos reais em duas lojas e tenta cada
 // função como 13 tipos de atacante. Recusa = erro, ou resposta vazia numa leitura, e nada muda no
 // banco. O teste lista as funções no próprio banco e falha se aparecer uma nova sem casos aqui.
@@ -121,6 +121,8 @@ async function montarMundo() {
   for (const s of [donoA, gerB]) await valor(s, "select public.abrir_caixa(50000, $1) as v", [chave("caixa")]);
   // PAY-015a: o Pix pela Asaas ligado no caixa (o worker conferiu a chave Pix), para a recusa vir do acesso.
   await servico(() => db.query("select public.caixa_pix_situacao(true, null)"));
+  // PAY-015b: o cartão pela Asaas ligado no caixa (o worker falou com a Asaas).
+  await servico(() => db.query("select public.caixa_cartao_situacao(true, null)"));
 
   for (const [lado, s, aparelhoDaLoja, quemCancela] of [["A", vabA, aparelhoA, donoA], ["B", vabB, aparelhoB, gerB]] as const) {
     alvo[`caixa${lado}`] = await valor<string>(s, "select public.abrir_caixa(50000, $1) as v", [chave("caixa")]);
@@ -129,6 +131,8 @@ async function montarMundo() {
     alvo[`itemVenda${lado}`] = await valor<string>(s, "select public.adicionar_item($1, $2, null, 1, $3) as v", [alvo[`venda${lado}`], cat.capa, chave("item")]);
     // PAY-015a: um QR do Pix pela Asaas pedido para essa venda (esperando o worker).
     alvo[`pix${lado}`] = (await valor<{ id: string }>(s, "select public.caixa_pix_pedir($1, 1000, $2) as v", [alvo[`venda${lado}`], chave("pix")]))?.id ?? "";
+    // PAY-015b: um link do cartão pela Asaas pedido para essa venda (esperando o worker).
+    alvo[`cartao${lado}`] = (await valor<{ id: string }>(s, "select public.caixa_cartao_pedir($1, 1000, $2) as v", [alvo[`venda${lado}`], chave("cartao")]))?.id ?? "";
     // Rascunho com pedido de aprovação de desconto.
     const vendaAprovacao = await valor<string>(s, "select public.criar_venda($1) as v", [chave("venda")]);
     const itemAprovacao = await valor<string>(s, "select public.adicionar_item($1, $2, null, 1, $3) as v", [vendaAprovacao, cat.capa, chave("item")]);
@@ -427,6 +431,17 @@ const CASOS: Record<string, Caso> = {
   },
   "caixa_pix_da_venda(uuid)": {
     A: () => ["select public.caixa_pix_da_venda($1)", [alvo.vendaA]], B: () => ["select public.caixa_pix_da_venda($1)", [alvo.vendaB]], outroVendedor: true,
+  },
+  // PAY-015b: o cartão pela Asaas no caixa (o link da venda aberta do vendedorAB).
+  "caixa_cartao_pedir(uuid,bigint,text)": {
+    A: () => ["select public.caixa_cartao_pedir($1, 100, $2)", [alvo.vendaA, chave("ataque")]],
+    B: () => ["select public.caixa_cartao_pedir($1, 100, $2)", [alvo.vendaB, chave("ataque")]], outroVendedor: true,
+  },
+  "caixa_cartao_cancelar(uuid)": {
+    A: () => ["select public.caixa_cartao_cancelar($1)", [alvo.cartaoA]], B: () => ["select public.caixa_cartao_cancelar($1)", [alvo.cartaoB]], outroVendedor: true,
+  },
+  "caixa_cartao_da_venda(uuid)": {
+    A: () => ["select public.caixa_cartao_da_venda($1)", [alvo.vendaA]], B: () => ["select public.caixa_cartao_da_venda($1)", [alvo.vendaB]], outroVendedor: true,
   },
   // Funil e agenda (L5b): quem atende conduz o que é seu na loja do turno; a gerência, a loja. Ler o próprio
   // funil ou a própria agenda (vazios) é legítimo para quem é de outra rede.
@@ -1370,7 +1385,7 @@ describe("inventário: toda função SECURITY DEFINER exposta tem casos de recus
     const expostas = rows.map((r) => r.f);
     expect(expostas.filter((f) => !(f in CASOS)), "função nova exposta sem casos de recusa: acrescente ao CASOS").toEqual([]);
     expect(Object.keys(CASOS).filter((f) => !expostas.includes(f)), "caso de função que não existe mais").toEqual([]);
-    expect(expostas).toHaveLength(232);
+    expect(expostas).toHaveLength(235);
   });
 
   it("visitante anônimo executa só a vitrine, a reserva e o pedido da loja online (ONLINE-a, ONLINE-b e ONLINE-d), a leitura leve do banco da página /saude (SAUDE-a), a fila dos avisos, que pede o segredo (PWA-b), o relato dos erros do site, que pede o mesmo segredo (QUAL-006a), e o pagamento pelo site: saber se está ligado, pedir para pagar o pedido (com o código e o WhatsApp) e o aviso da Asaas, que pede o token (PAY-014a); no privado, a conferência da foto do site e um gatilho, que não roda sozinho", async () => {

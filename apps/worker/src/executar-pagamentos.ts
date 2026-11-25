@@ -4,6 +4,8 @@
 // muda), cria os links dos pagamentos pedidos, confere os avisos com a Asaas e desativa os links que não servem mais.
 // PAY-015a: o Pix pela Asaas no caixa: confere a chave Pix da conta, cria os QR pedidos no caixa, confere o pagamento a
 // cada rodada (sem depender do aviso) e exclui os QR cancelados e vencidos. Sem o aviso registrado, o caixa segue.
+// PAY-015b: o cartão pela Asaas no caixa: cria os links no cartão pedidos no caixa, confere as cobranças de cartão a cada
+// rodada (pelo paymentLink; sem depender do aviso) e desativa os links cancelados e vencidos.
 // Roda por uns 50 segundos, com uma rodada a cada 3 segundos, para o link sair logo depois de o cliente pedir. Lê o
 // .env.local da pasta do worker (ORA_PASTA_AMBIENTE muda a pasta). Sem alguma chave, fica desligado: diz o que falta,
 // sem erro. Log só com contagens: nada de link, valor, token ou chave.
@@ -15,7 +17,8 @@ import { transporteHttp } from "./connect/transporte.ts";
 import { mensagemSegura } from "./identidade.ts";
 import { ClienteAsaas, ENDERECOS_DA_ASAAS, type AmbienteDaAsaas } from "./pagamentos/asaas.ts";
 import { oQueFaltaParaOsPagamentos } from "./pagamentos/configuracao.ts";
-import { conferirChavePix, rodadaDoCaixa, RESUMO_DO_CAIXA_VAZIO, type ResumoDoCaixa } from "./pagamentos/caixa.ts";
+import { rodadaDoCaixa, RESUMO_DO_CAIXA_VAZIO, situacaoDoPix, type ResumoDoCaixa } from "./pagamentos/caixa.ts";
+import { rodadaDoCartao, RESUMO_DO_CARTAO_VAZIO, situacaoDoCartao, type ResumoDoCartao } from "./pagamentos/cartao.ts";
 import { ligarSeFaltar, rodada, RESUMO_VAZIO, type ResumoDosPagamentos } from "./pagamentos/processar.ts";
 import { bancoDosPagamentos, clienteAdministrativo } from "./supabase.ts";
 
@@ -49,10 +52,14 @@ try {
   const siteLigado = typeof ligado !== "object";
   if (!siteLigado) console.error(`${agora()} pagamentos: não deu para registrar o aviso na Asaas (${ligado.falha})`);
   if (ligado === "ligado") console.log(`${agora()} pagamentos: aviso registrado na Asaas (${ambiente})`);
-  // PAY-015a: a chave Pix da conta, uma vez por execução (o banco desliga o Pix no caixa sem ela).
-  const chavePix = await conferirChavePix(banco, asaas);
+  // PAY-015a: a chave Pix da conta, uma vez por execução (o banco desliga o Pix no caixa sem ela). PAY-015b: a mesma resposta
+  // diz se a Asaas está respondendo (o cartão no caixa, que não precisa da chave Pix).
+  const respostaDaChave = await asaas.chavePixAtiva();
+  const chavePix = await situacaoDoPix(banco, respostaDaChave);
+  const cartaoPronto = await situacaoDoCartao(banco, respostaDaChave !== "falha");
   const total: ResumoDosPagamentos = { ...RESUMO_VAZIO };
   const doCaixa: ResumoDoCaixa = { ...RESUMO_DO_CAIXA_VAZIO };
+  const doCartao: ResumoDoCartao = { ...RESUMO_DO_CARTAO_VAZIO };
   const fim = Date.now() + DURACAO_MS;
   while (Date.now() < fim) {
     if (siteLigado) {
@@ -63,6 +70,10 @@ try {
       const c = await rodadaDoCaixa(banco, asaas, chavePix);
       for (const k of Object.keys(doCaixa) as (keyof ResumoDoCaixa)[]) doCaixa[k] += c[k];
     }
+    if (cartaoPronto) {
+      const k = await rodadaDoCartao(banco, asaas);
+      for (const campo of Object.keys(doCartao) as (keyof ResumoDoCartao)[]) doCartao[campo] += k[campo];
+    }
     await esperar(INTERVALO_MS);
   }
   if (Object.values(total).some((n) => n > 0)) {
@@ -70,6 +81,9 @@ try {
   }
   if (doCaixa.qr_criados + doCaixa.qr_falhas + doCaixa.qr_pagos + doCaixa.qr_excluidos > 0) {
     console.log(`${agora()} Pix do caixa: ${doCaixa.qr_criados} QR criados, ${doCaixa.qr_falhas} falhas, ${doCaixa.qr_pagos} pagos, ${doCaixa.qr_excluidos} excluídos`);
+  }
+  if (doCartao.links_criados + doCartao.links_falhas + doCartao.links_pagos + doCartao.links_desativados > 0) {
+    console.log(`${agora()} cartão do caixa: ${doCartao.links_criados} links criados, ${doCartao.links_falhas} falhas, ${doCartao.links_pagos} pagos, ${doCartao.links_desativados} desativados`);
   }
   process.exit(siteLigado ? 0 : 1);
 } catch (erro) {
