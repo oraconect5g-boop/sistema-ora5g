@@ -122,10 +122,13 @@ export default async function Connect({ searchParams }: { searchParams: Promise<
           {TIPOS_OPERACAO.map((t) => <li key={t}><Selo tom={habilitada.has(t) ? "sucesso" : "aviso"} ponto>{NOMES_DAS_OPERACOES[t]}: {habilitada.has(t) ? "liberada" : "aguardando homologação"}</Selo></li>)}
         </ul>
         {habilitada.size === 0 && (
-          <p className="mt-3 text-sm text-suave">A Nogle ainda não foi ligada: faltam as credenciais no servidor, o tipo da chave (P9) e o teste com uma linha autorizada. Até lá nada é enviado e nada aparece como feito.</p>
+          <p className="mt-3 text-sm text-suave">As operações ainda não foram liberadas: falta o teste com uma linha autorizada pela Nogle. Até lá nada é enviado e nada aparece como feito. As consultas já funcionam: o estoque de chips na Nogle é lido a cada 30 minutos.</p>
         )}
         {habilitada.size > 0 && semListas && <p className="mt-3 text-sm text-suave">Os planos da Nogle ainda não foram carregados pelo servidor.</p>}
-        {gere && <p className="mt-3 text-sm"><Link href="/connect/conciliacao" className="font-semibold text-acao">Conciliação com os relatórios da Nogle</Link></p>}
+        <p className="mt-3 flex flex-wrap gap-x-4 gap-y-1 text-sm">
+          {(opera || gere || integra) && <Link href="/connect/chips" className="font-semibold text-acao">Chips na Nogle</Link>}
+          {gere && <Link href="/connect/conciliacao" className="font-semibold text-acao">Conciliação com os relatórios da Nogle</Link>}
+        </p>
       </Cartao>
 
       {!opera && <Aviso tom="aviso">Seu papel não registra operações da Ora Connect nesta loja.</Aviso>}

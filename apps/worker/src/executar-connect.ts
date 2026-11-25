@@ -1,6 +1,8 @@
 // Uso (no servidor, pela rotina agendada):
 //   node apps/worker/src/executar-connect.ts            → envia as operações registradas e consulta as pendentes
 //   node apps/worker/src/executar-connect.ts --listas   → atualiza planos, DDDs, operadoras e cidades (CONNECT_UFS)
+//   node apps/worker/src/executar-connect.ts --estoque  → lê o estoque de chips da Nogle (os PDVs, a MVNO e cada PDV), SÓ
+//        LEITURA (CONNECT-d; o sim do proprietário de 24/11); pede o GET com corpo (NOGLE_GET_COM_CORPO=documentado)
 //   node apps/worker/src/executar-connect.ts --conciliar [--de AAAA-MM-DD --ate AAAA-MM-DD]
 //        → concilia a produção com os relatórios oficiais de ativações e recargas (CONNECT-c; ORA-CONNECT-009); sem o
 //          período, os 7 dias até ontem, no horário de Brasília. Pede o GET com corpo (NOGLE_GET_COM_CORPO=documentado)
@@ -13,7 +15,7 @@ import { fileURLToPath } from "node:url";
 import { ehTipoOperacao, type TipoOperacao } from "@ora5g/dominio/nogle";
 
 import { ClienteNogle, ehTipoDeChave } from "./connect/cliente-nogle.ts";
-import { conciliarRelatorios, consultarPendentes, enviarPendentes, mensagemSegura, sincronizarReferencias } from "./connect/processar.ts";
+import { conciliarRelatorios, consultarPendentes, enviarPendentes, lerEstoqueDeChips, mensagemSegura, sincronizarReferencias } from "./connect/processar.ts";
 import { transporteHttp } from "./connect/transporte.ts";
 import { bancoConnect, clienteAdministrativo } from "./supabase.ts";
 
@@ -28,6 +30,7 @@ const ler = (nome: string) => process.env[nome]?.trim() ?? "";
 const agora = new Date().toISOString();
 const listas = process.argv.includes("--listas");
 const conciliar = process.argv.includes("--conciliar");
+const estoque = process.argv.includes("--estoque");
 const argumento = (nome: string) => { const i = process.argv.indexOf(nome); return i > 0 ? process.argv[i + 1] ?? "" : ""; };
 /** O dia em Brasília, deslocado em dias (AAAA-MM-DD). */
 const diaEmBrasilia = (dias: number) => new Intl.DateTimeFormat("en-CA", { timeZone: "America/Sao_Paulo" }).format(new Date(Date.now() + dias * 86_400_000));
@@ -41,7 +44,7 @@ const faltando = [
   !ehTipoDeChave(tipoDaChave) && "NOGLE_AUTH_KEY_TYPE",
   !ler("NOGLE_ACCESS_KEY") && "NOGLE_ACCESS_KEY",
   tipoDaChave !== "marca" && !ler("NOGLE_SECONDARY_KEY") && "NOGLE_SECONDARY_KEY",
-  !listas && !conciliar && tipos.length === 0 && "NOGLE_OPERACOES_HABILITADAS",
+  !listas && !conciliar && !estoque && tipos.length === 0 && "NOGLE_OPERACOES_HABILITADAS",
 ].filter(Boolean);
 
 if (faltando.length > 0) {
@@ -74,6 +77,16 @@ try {
     const falhas = r.detalhes.filter((d) => d.falha).map((d) => `; ${d.relatorio}: ${d.falha}`).join("");
     console.log(`${agora} conciliação com a Nogle de ${de} a ${ate}: ${r.conciliadas} relatórios, ${r.linhas} linhas, ${r.falhas} falhas${falhas}`);
     process.exit(r.falhas > 0 ? 1 : 0);
+  }
+  if (estoque) {
+    const r = await lerEstoqueDeChips(banco, nogle);
+    if (!r.gravada) {
+      console.log(`${agora} estoque de chips da Nogle: nada gravado (${r.motivo})`);
+      process.exit(1);
+    }
+    const l = r.leitura;
+    console.log(`${agora} estoque de chips da Nogle: leitura nº ${l.numero}, ${l.pdvs} PDVs (${l.pdvs_lidos} lidos), ${l.chips} chips, ${l.falhas} falhas, ${r.ignorados} fora da forma`);
+    process.exit(l.falhas > 0 ? 1 : 0);
   }
   const envio = await enviarPendentes(banco, nogle, tipos);
   // Consulta pelo uuid (GET /consultaPagamento): só depois de ver a primeira resposta real com uuid.

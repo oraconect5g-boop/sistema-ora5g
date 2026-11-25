@@ -1139,6 +1139,48 @@ export type Database = {
           },
         ]
       }
+      connect_chips_nogle: {
+        Row: {
+          iccid: string
+          lido_em: string
+          organizacao_id: string
+          pdv_id: number | null
+          repassado_em: string | null
+          tipo: string
+        }
+        Insert: {
+          iccid: string
+          lido_em?: string
+          organizacao_id: string
+          pdv_id?: number | null
+          repassado_em?: string | null
+          tipo: string
+        }
+        Update: {
+          iccid?: string
+          lido_em?: string
+          organizacao_id?: string
+          pdv_id?: number | null
+          repassado_em?: string | null
+          tipo?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "connect_chips_nogle_organizacao_id_fkey"
+            columns: ["organizacao_id"]
+            isOneToOne: false
+            referencedRelation: "organizacoes"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "connect_chips_nogle_organizacao_id_pdv_id_fkey"
+            columns: ["organizacao_id", "pdv_id"]
+            isOneToOne: false
+            referencedRelation: "connect_pdvs"
+            referencedColumns: ["organizacao_id", "pdv_id"]
+          },
+        ]
+      }
       connect_conciliacao_linhas: {
         Row: {
           conciliacao_id: string
@@ -1369,6 +1411,50 @@ export type Database = {
           },
         ]
       }
+      connect_leituras_nogle: {
+        Row: {
+          falhas: number
+          id: string
+          lida_em: string
+          mvno_esims: number | null
+          mvno_fisicos: number | null
+          numero: number
+          organizacao_id: string
+          pdvs: number
+          pdvs_lidos: number
+        }
+        Insert: {
+          falhas?: number
+          id?: string
+          lida_em?: string
+          mvno_esims?: number | null
+          mvno_fisicos?: number | null
+          numero?: never
+          organizacao_id: string
+          pdvs: number
+          pdvs_lidos: number
+        }
+        Update: {
+          falhas?: number
+          id?: string
+          lida_em?: string
+          mvno_esims?: number | null
+          mvno_fisicos?: number | null
+          numero?: never
+          organizacao_id?: string
+          pdvs?: number
+          pdvs_lidos?: number
+        }
+        Relationships: [
+          {
+            foreignKeyName: "connect_leituras_nogle_organizacao_id_fkey"
+            columns: ["organizacao_id"]
+            isOneToOne: false
+            referencedRelation: "organizacoes"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       connect_operacoes: {
         Row: {
           atualizado_em: string
@@ -1582,6 +1668,69 @@ export type Database = {
           },
           {
             foreignKeyName: "connect_operacoes_custos_unidade_id_organizacao_id_fkey"
+            columns: ["unidade_id", "organizacao_id"]
+            isOneToOne: false
+            referencedRelation: "unidades"
+            referencedColumns: ["id", "organizacao_id"]
+          },
+        ]
+      }
+      connect_pdvs: {
+        Row: {
+          ativo: boolean
+          cidade: string | null
+          esims: number
+          estoque_lido_em: string | null
+          estoque_minimo: number | null
+          fisicos: number
+          id: string
+          nome: string
+          organizacao_id: string
+          pdv_id: number
+          uf: string | null
+          unidade_id: string | null
+          visto_em: string
+        }
+        Insert: {
+          ativo?: boolean
+          cidade?: string | null
+          esims?: number
+          estoque_lido_em?: string | null
+          estoque_minimo?: number | null
+          fisicos?: number
+          id?: string
+          nome: string
+          organizacao_id: string
+          pdv_id: number
+          uf?: string | null
+          unidade_id?: string | null
+          visto_em?: string
+        }
+        Update: {
+          ativo?: boolean
+          cidade?: string | null
+          esims?: number
+          estoque_lido_em?: string | null
+          estoque_minimo?: number | null
+          fisicos?: number
+          id?: string
+          nome?: string
+          organizacao_id?: string
+          pdv_id?: number
+          uf?: string | null
+          unidade_id?: string | null
+          visto_em?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "connect_pdvs_organizacao_id_fkey"
+            columns: ["organizacao_id"]
+            isOneToOne: false
+            referencedRelation: "organizacoes"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "connect_pdvs_unidade_id_organizacao_id_fkey"
             columns: ["unidade_id", "organizacao_id"]
             isOneToOne: false
             referencedRelation: "unidades"
@@ -8080,6 +8229,10 @@ export type Database = {
         Args: { p_evidencia: string; p_habilitar: boolean; p_tipo: string }
         Returns: boolean
       }
+      connect_ligar_pdv: {
+        Args: { p_pdv: number; p_unidade?: string }
+        Returns: Json
+      }
       connect_painel: {
         Args: {
           p_fim: string
@@ -8100,6 +8253,10 @@ export type Database = {
       connect_worker_atualizar_referencias: {
         Args: { p_itens: Json; p_organizacao: string; p_tipo: string }
         Returns: number
+      }
+      connect_worker_gravar_estoque: {
+        Args: { p_leitura: Json; p_organizacao: string }
+        Returns: Json
       }
       connect_worker_operacoes_a_consultar: {
         Args: { p_limite: number; p_organizacao: string; p_tipos: string[] }

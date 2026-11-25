@@ -15,7 +15,7 @@ import type { OperacaoParaConsultar, OperacaoParaEnviar, TipoOperacao } from "@o
 import { afterAll, beforeAll, describe, expect, it } from "vitest";
 
 import { ClienteNogle } from "./cliente-nogle.ts";
-import { conciliarRelatorios, consultarPendentes, enviarPendentes, sincronizarReferencias, type BancoConnect } from "./processar.ts";
+import { conciliarRelatorios, consultarPendentes, enviarPendentes, lerEstoqueDeChips, sincronizarReferencias, type BancoConnect } from "./processar.ts";
 import { transporteHttp } from "./transporte.ts";
 
 type Funcao = { request: { method: string; url: string | { raw?: string } }; response?: { body?: string }[] };
@@ -28,6 +28,9 @@ const exemplo = (caminho: string, indice = 0) => {
 };
 
 const TIPOS: TipoOperacao[] = ["ativacao", "recarga", "portabilidade"];
+// CONNECT-d: chips FICTÍCIOS, na forma conferida na API de verdade em 24/11.
+const CHIP_LOJA = "8955170110000000011";
+const CHIP_MVNO = "8955170110000000037";
 let db: PGlite;
 let servidor: Server;
 let base = "";
@@ -68,6 +71,19 @@ beforeAll(async () => {
         const pagina = (JSON.parse(corpo || "{}") as { page?: number }).page;
         return json(200, pagina === 1 ? exemplo(caminho) : { data: [] });
       }
+      // CONNECT-d: o estoque de chips na forma conferida na API de verdade em 24/11 (valores fictícios, com os campos que o
+      // worker precisa deixar de fora: o CPF, os usuários do PDV e o código de ativação do eSIM).
+      if (caminho === "/pdv/listar") {
+        return json(200, { pdvs: [{ id: "5216", nome: "LOJA A (teste)", cidade: "Curitiba", uf: "PR        ", estoque_minimo_chips: "10", cpf: "00000000191",
+          usuarios: [{ id: "1", nome: "Pessoa (teste)", email: "pessoa@teste.invalid" }] }] });
+      }
+      if (caminho === "/linhas/estoque") {
+        return json(200, { retorno: true, mensagem: "", total: 1, data: [{ id: "1", iccid: CHIP_MVNO, tipo: "eSIM", activation_code_esim: "LPA:1$teste.invalid$X" }] });
+      }
+      if (caminho === "/pdv/estoque") {
+        const id = (JSON.parse(corpo || "{}") as { id?: number }).id;
+        return json(200, id === 5216 ? { total: 1, data: [{ id: "2", iccid: CHIP_LOJA, data_repasse: "2022-03-21 22:31:23.580", tipo: "físico" }] } : { total: 0, data: [] });
+      }
       return json(404, { erro: "Endpoint inexistente ou recurso não encontrato." });
     });
   });
@@ -99,6 +115,12 @@ const banco: BancoConnect = {
   registrarConciliacao: (relatorio, de, ate, linhas) => comoServico(async () => (await db.query<{ v: { numero: number; totais: Record<string, number> } }>(
     "select public.connect_worker_registrar_conciliacao($1, $2, $3, $4, $5::jsonb) as v", [ids.organizacao, relatorio, de, ate, JSON.stringify(linhas)])).rows[0]?.v
     ?? { numero: 0, totais: {} }),
+  gravarEstoque: (leitura) => comoServico(async () => {
+    const v = (await db.query<{ v: Awaited<ReturnType<BancoConnect["gravarEstoque"]>> }>(
+      "select public.connect_worker_gravar_estoque($1, $2::jsonb) as v", [ids.organizacao, JSON.stringify(leitura)])).rows[0]?.v;
+    if (!v) throw new Error("o banco não respondeu a leitura");
+    return v;
+  }),
 };
 
 let sessoes = 0;
@@ -216,3 +238,25 @@ describe("a conciliação com os relatórios oficiais da Nogle (CONNECT-c)", () 
   });
 });
 
+
+describe("o estoque de chips da Nogle (CONNECT-d), só leitura", () => {
+  it("lê os PDVs, a MVNO e o PDV (GET com o id no corpo) e grava no banco só o ICCID, o tipo e a data do repasse", async () => {
+    const nogle = new ClienteNogle({ tipo: "marca", chaveAcesso: "chave-ficticia" }, transporteHttp(base, 500), { getComCorpo: true });
+    const antes = recebidos.length;
+    const r = await lerEstoqueDeChips(banco, nogle);
+    expect(r).toMatchObject({ gravada: true, ignorados: 0, leitura: { pdvs: 1, pdvs_lidos: 1, chips: 2, falhas: 0 } });
+    expect(recebidos.slice(antes).filter((p) => p.caminho !== "/auth/token")).toEqual([
+      { metodo: "GET", caminho: "/pdv/listar", corpo: "" },
+      { metodo: "GET", caminho: "/linhas/estoque", corpo: "" },
+      { metodo: "GET", caminho: "/pdv/estoque", corpo: JSON.stringify({ id: 5216 }) },
+    ]);
+    expect((await db.query("select pdv_id, nome, cidade, uf, estoque_minimo, fisicos, esims from public.connect_pdvs")).rows)
+      .toEqual([{ pdv_id: 5216, nome: "LOJA A (teste)", cidade: "Curitiba", uf: "PR", estoque_minimo: 10, fisicos: 1, esims: 0 }]);
+    expect((await db.query("select iccid, pdv_id, tipo, repassado_em::text from public.connect_chips_nogle order by iccid")).rows).toEqual([
+      { iccid: CHIP_LOJA, pdv_id: 5216, tipo: "fisico", repassado_em: "2022-03-21 22:31:23.58" },
+      { iccid: CHIP_MVNO, pdv_id: null, tipo: "esim", repassado_em: null },
+    ]);
+    expect((await db.query("select mvno_fisicos, mvno_esims, pdvs_lidos, falhas from public.connect_leituras_nogle")).rows)
+      .toEqual([{ mvno_fisicos: 0, mvno_esims: 1, pdvs_lidos: 1, falhas: 0 }]);
+  });
+});

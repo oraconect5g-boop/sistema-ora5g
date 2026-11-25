@@ -6,8 +6,9 @@ import { fileURLToPath } from "node:url";
 import { describe, expect, it } from "vitest";
 
 import {
-  centavosDeValorNogle, diaDoRelatorio, interpretarConsulta, interpretarConsultaPagamento, interpretarEnvio, lerReferencias, lerRelatorio, montarConsulta,
-  montarPedido, montarPedidoDoRelatorio, type OperacaoParaConsultar, type OperacaoParaEnviar,
+  centavosDeValorNogle, diaDoRelatorio, interpretarConsulta, interpretarConsultaPagamento, interpretarEnvio, lerChips, lerPdvs, lerReferencias, lerRelatorio,
+  montarConsulta, montarPedido, montarPedidoDoRelatorio, PEDIDO_DO_ESTOQUE_DA_MVNO, PEDIDO_DOS_PDVS, pedidoDoEstoqueDoPdv, tipoDeChip,
+  type OperacaoParaConsultar, type OperacaoParaEnviar,
 } from "./nogle";
 
 type Resposta = { name?: string; code?: number; body?: string };
@@ -257,5 +258,83 @@ describe("os relatórios da Nogle para a conciliação", () => {
     expect(diaDoRelatorio("30/05/2023")).toBeNull();
     const { linhas } = lerRelatorio({ data: [{ linha: "(41) 99999-0000", iccid: "8955 0000 0000 0000 001", data_ativacao: "2026-11-10 10:00:00", plano_valor: "abc" }] });
     expect(linhas[0]).toMatchObject({ linha: "41999990000", iccid: "8955000000000000001", dia: "2026-11-10", valor_centavos: null, plano: null });
+  });
+});
+
+// CONNECT-d (24/11/2026): o estoque de chips, só leitura. Os exemplos oficiais trazem o ICCID cortado ("895517011...."); a
+// forma de verdade (conferida na API em 24/11, com o sim do proprietário) vai aqui com valores FICTÍCIOS.
+describe("o estoque de chips da Nogle (CONNECT-d)", () => {
+  const I1 = "8955170110000000011";
+  const I2 = "8955170110000000029";
+  const I3 = "8955170110000000037";
+  const I4 = "8955170110000000045";
+
+  it("os pedidos: a lista dos PDVs e o estoque da MVNO sem corpo; o do PDV com o id no corpo, campo documentado", () => {
+    expect(PEDIDO_DOS_PDVS).toEqual({ metodo: "GET", caminho: "/pdv/listar", corpo: {} });
+    expect(PEDIDO_DO_ESTOQUE_DA_MVNO).toEqual({ metodo: "GET", caminho: "/linhas/estoque", corpo: {} });
+    expect(pedidoDoEstoqueDoPdv(5216)).toEqual({ metodo: "GET", caminho: "/pdv/estoque", corpo: { id: 5216 } });
+    expect(camposDocumentados("/pdv/estoque").has("id")).toBe(true);
+  });
+
+  it("a lista dos PDVs: só o id, o nome, a cidade, a UF e o estoque mínimo", () => {
+    expect(lerPdvs(exemplo("/pdv/listar"))).toEqual([
+      { id: 12345, nome: "Nome do PDV", cidade: "Santa Cruz do sul", uf: "RS", estoque_minimo: null },
+      { id: 99999, nome: "PDV Teste", cidade: "São Paulo", uf: "SP", estoque_minimo: null },
+    ]);
+    const real = {
+      pdvs: [
+        {
+          id: "5216", nome: "LOJA  (teste)", razao_social: "Empresa (teste)", cnpj: "00000000000191", cpf: "00000000191",
+          contato_email: "loja@teste.invalid", contato_celular: "41900000000", estoque_minimo_chips: "10", uf: "PR        ",
+          cidade: "Curitiba", rua: "Rua (teste)", bairro: "Centro", numero: "1", cep: "80000000", complemento: "", total_ativo: 0,
+          usuarios: [{ id: "1", nome: "Pessoa (teste)", email: "pessoa@teste.invalid", data_cadastro: "2025-01-01 10:00:00" }],
+        },
+        { id: "5216", nome: "repetido" }, { id: "0", nome: "zero" }, { nome: "sem id" }, { id: "7", nome: "   " }, "lixo",
+      ],
+    };
+    const lidos = lerPdvs(real);
+    expect(lidos).toEqual([{ id: 5216, nome: "LOJA (teste)", cidade: "Curitiba", uf: "PR", estoque_minimo: 10 }]);
+    // Nada do que identifica pessoa ou empresa passa adiante.
+    expect(JSON.stringify(lidos)).not.toMatch(/cnpj|cpf|email|celular|usuarios|Rua|Pessoa|00000000191/i);
+    expect(lerPdvs({ mensagem: "erro" })).toBeNull();
+    expect(lerPdvs([])).toBeNull();
+    expect(lerPdvs({ pdvs: [] })).toEqual([]);
+  });
+
+  it("o estoque de um PDV e o da MVNO: só o ICCID, o tipo e a data do repasse; o código do eSIM fica de fora", () => {
+    // Os exemplos oficiais: a forma se entende; os ICCIDs cortados ficam de fora e são contados.
+    expect(lerChips(exemplo("/pdv/estoque"))).toEqual({ chips: [], ignorados: 2 });
+    expect(lerChips(exemplo("/linhas/estoque"))).toEqual({ chips: [], ignorados: 2 });
+    expect(lerChips({
+      total: 4,
+      data: [
+        { id: "1", iccid: I1, data_repasse: "2022-03-21 22:31:23.580", tipo: "físico" },
+        { id: "2", iccid: I2, data_repasse: "2022-02-30 10:00:00", tipo: "eSIM" },
+        { id: "3", iccid: I1, data_repasse: null, tipo: "físico" },
+        { id: "4", iccid: 8955170110000000000, tipo: "físico" },
+      ],
+    })).toEqual({
+      chips: [{ iccid: I1, tipo: "fisico", repassado_em: "2022-03-21 22:31:23.580" }, { iccid: I2, tipo: "esim", repassado_em: null }],
+      ignorados: 2,
+    });
+    const mvno = lerChips({
+      retorno: true, mensagem: "", total: 2,
+      data: [
+        { id: "9", iccid: I3, tipo: "eSIM", pdf_esim: "JVBERi0xLjQK", activation_code_esim: "LPA:1$teste.invalid$CODIGO", qr_code_esim: "data:image/png;base64,iVBOR" },
+        { id: "10", iccid: I4, tipo: "físico", pdf_esim: "", activation_code_esim: "", qr_code_esim: "" },
+      ],
+    });
+    expect(mvno).toEqual({ chips: [{ iccid: I3, tipo: "esim", repassado_em: null }, { iccid: I4, tipo: "fisico", repassado_em: null }], ignorados: 0 });
+    expect(JSON.stringify(mvno)).not.toMatch(/LPA|JVBER|base64|CODIGO/);
+    // Sem a lista, com falha declarada ou com o total diferente da lista: não se entende (a anterior fica).
+    expect(lerChips({ retorno: true, mensagem: "" })).toBeNull();
+    expect(lerChips({ retorno: false, mensagem: "erro", data: [] })).toBeNull();
+    expect(lerChips({ total: 3, data: [{ iccid: I1, tipo: "físico" }] })).toBeNull();
+    expect(lerChips({ total: 0, data: [] })).toEqual({ chips: [], ignorados: 0 });
+  });
+
+  it("o tipo do chip, com ou sem acento", () => {
+    expect(["físico", "fisico", "FÍSICO", " eSIM ", "esim"].map(tipoDeChip)).toEqual(["fisico", "fisico", "fisico", "esim", "esim"]);
+    expect(["chip", "", null, 1].map(tipoDeChip)).toEqual([null, null, null, null]);
   });
 });
