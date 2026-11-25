@@ -11,7 +11,8 @@ import { ERROS_DO_CONNECT } from "../../../lib/connect/regras";
 import { chaveDoCatalogo, type ValorDeParametro } from "../../../lib/parametros";
 import { registrarOperacao } from "../acoes";
 import { CabecalhoConnect, LARGURA_DA_CONNECT, permissoesDaConnect } from "../CabecalhoConnect";
-import { campo, lerFormulario, PagamentoANogle, PlanosEmCartoes, rotulo } from "../formularios";
+import { campo, PagamentoANogle, PlanosEmCartoes, rotulo } from "../campos";
+import { lerFormulario } from "../formularios";
 
 export const metadata: Metadata = { title: "Recarga · Ora Connect" };
 export const dynamic = "force-dynamic";

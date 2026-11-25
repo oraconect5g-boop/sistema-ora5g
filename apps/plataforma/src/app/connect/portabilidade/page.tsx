@@ -13,7 +13,8 @@ import { ERROS_DO_CONNECT } from "../../../lib/connect/regras";
 import { chaveDoCatalogo, textoDoParametro, type ValorDeParametro } from "../../../lib/parametros";
 import { registrarOperacao } from "../acoes";
 import { CabecalhoConnect, LARGURA_DA_CONNECT, permissoesDaConnect } from "../CabecalhoConnect";
-import { campo, lerFormulario, rotulo, ServicoPagoOpcional } from "../formularios";
+import { campo, rotulo, ServicoPagoOpcional } from "../campos";
+import { lerFormulario } from "../formularios";
 import { FILTROS_DA_LISTA, filtroDaLista, naLista, quando, TOM_DA_SITUACAO } from "../lista";
 
 export const metadata: Metadata = { title: "Portabilidade · Ora Connect" };

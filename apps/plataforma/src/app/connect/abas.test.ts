@@ -232,10 +232,26 @@ describe("a aba Operações do dia", () => {
 });
 
 describe("as abas dos formulários", () => {
-  it("Ativar chip: os passos, os planos em cartões com o valor da Nogle, o DDD e o pagamento; sem liberação, o aviso", async () => {
-    const t = await pagina(AtivarChip);
-    emOrdem(t, "Ativar chip na operadora", "1. O chip", "ICCID", "eSIM", "2. O plano e o DDD", "Plano (lista da Nogle)", "10 GB", "R$ 20,00", "20 GB", "R$ 30,00",
-      "41 (PR)", "3. O cliente", "CPF ou CNPJ", "Curitiba (PR)", "4. O pagamento à Nogle", "Pix da Nogle", "Registrar ativação", "Como a ativação funciona");
+  it("Ativar chip (CONNECT-n): o assistente recebe as listas da Nogle, os serviços pagos livres e os chips vendidos sem operação; sem liberação, o aviso", async () => {
+    // Um serviço pago no caixa (o item da ativação) e dois chips vendidos na loja, um deles já com operação viva.
+    cenario.tabelas.venda_itens = [
+      { id: "vi9", tipo: "ativacao", preco_unitario_centavos: 2_000, quantidade: 1, desconto_centavos: 0, variantes: { nome: "ATV-10 GB" }, itens_serializados: { iccid: null },
+        vendas: { numero: 12, situacao: "concluida", unidade_id: "loja", concluida_em: "2026-11-25T12:00:00Z" } },
+      { id: "vc1", tipo: "produto", preco_unitario_centavos: 1_000, quantidade: 1, desconto_centavos: 0, variantes: null, itens_serializados: { iccid: "8955170110000000099" },
+        vendas: { numero: 13, situacao: "concluida", unidade_id: "loja", concluida_em: "2026-11-25T13:00:00Z" } },
+      { id: "vc2", tipo: "produto", preco_unitario_centavos: 1_000, quantidade: 1, desconto_centavos: 0, variantes: null, itens_serializados: { iccid: "8955170110000000016" },
+        vendas: { numero: 11, situacao: "concluida", unidade_id: "loja", concluida_em: "2026-11-24T13:00:00Z" } },
+    ];
+    const arvore = await AtivarChip({ searchParams: Promise.resolve({}) } as never);
+    const assistente = elementos(arvore, "AssistenteDeAtivacao")[0];
+    expect(assistente).toMatchObject({
+      planos: [{ codigo: "1718", nome: "10 GB", valor_centavos: 2_000 }, { codigo: "1719", nome: "20 GB", valor_centavos: 3_000 }],
+      ddds: [{ codigo: "41", uf: "PR" }], cidades: [{ codigo: "4106902", nome: "Curitiba", uf: "PR" }],
+      pagos: [{ id: "vi9", rotulo: expect.stringMatching(/^Venda nº 12 · ATV-10 GB · R\$\s20,00$/) }],
+      chips: [{ iccid: "8955170110000000099", venda: 13 }],
+    });
+    expect(assistente?.chave).toMatch(/^[0-9a-f-]{36}$/);
+    emOrdem(await pagina(AtivarChip), "Ativar chip na operadora", "Como a ativação funciona", "O chip:", "O cliente:", "O plano e o DDD", "O pagamento à Nogle:", "Conferir e registrar:");
     cenario.tabelas.connect_habilitacoes = [];
     expect(await pagina(AtivarChip)).toContain("A ativação ainda não foi liberada nesta rede");
     cenario.permissoes = new Set(["connect.gerir"]);

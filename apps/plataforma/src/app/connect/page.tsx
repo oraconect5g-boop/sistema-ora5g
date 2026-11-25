@@ -23,7 +23,7 @@ import { agora, brl, numero } from "../../lib/formato";
 import { chaveDoCatalogo, textoDoParametro, type ValorDeParametro } from "../../lib/parametros";
 import { cancelarOperacao, resolverOperacao } from "./acoes";
 import { CabecalhoConnect, LARGURA_DA_CONNECT, permissoesDaConnect } from "./CabecalhoConnect";
-import { campo } from "./formularios";
+import { campo } from "./campos";
 import { ABERTAS, FILTROS_DA_LISTA, filtroDaLista, horaOuDia, naLista, quando, TOM_DA_SITUACAO, type FiltroDaLista } from "./lista";
 
 export const metadata: Metadata = { title: "Ora Connect" };
