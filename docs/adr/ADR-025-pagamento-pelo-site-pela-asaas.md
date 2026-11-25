@@ -57,3 +57,15 @@ A decisão do proprietário de 25/11 (a D-062): "pagamento oficial da loja será
 5. **Cancelar e vencer:** o QR que o worker ainda não pediu sai na hora; o que está na Asaas o worker confere antes de excluir (o pago no meio tempo vale); o vencido (2 minutos de folga depois da validade) sai da Asaas.
 6. **A venda:** a conclusão põe a linha "Pix pela Asaas" de cada QR pago (o meio `pix_asaas`, que a tela não declara, como o pago pelo site); o QR esperando segura a conclusão (OR059); o pago que passa do total é recusado (volta pela Asaas); a venda aberta com Pix pago não se cancela (OR048); concluída, o cancelamento põe o Pix como estorno externo a confirmar.
 7. **Reverter:** a reversão tira as tabelas e as funções novas e volta a conclusão e o cancelamento ao texto do PAY-014b; ela se recusa quando já há venda paga com o meio `pix_asaas`.
+
+## Adendo do lote PAY-015b (25/11/2026): o cartão pela Asaas no caixa
+
+A mesma decisão (a D-062), na parte do cartão de crédito. A documentação oficial lida em 25/11: o link de pagamento (`POST /v3/paymentLinks`, com `billingType` CREDIT_CARD, `chargeType` DETACHED e `limit`, o máximo de vendas do link), a alteração do link (`PUT /v3/paymentLinks/{id}` com `active` falso), a lista das cobranças (`GET /v3/payments`, com os filtros `billingType` e `dateCreated[ge]`; cada cobrança traz o `paymentLink` e, do cartão, só `creditCardNumber`, os 4 últimos dígitos, e `creditCardBrand`) e o teste de cartão no sandbox (números fictícios aprovam; dois números próprios simulam a recusa). A lista das cobranças não tem filtro pelo link, e não há rota das cobranças de um link.
+
+1. **O link só no cartão, à vista**, uma venda só (`limit` 1), sem aviso ao cliente e com o NOSSO identificador. O cliente digita o cartão na página da Asaas: o número do cartão nunca passa pelo sistema. O parcelamento (`INSTALLMENT`) fica para depois do ensaio: o pago chega em parcelas, e a forma do total precisa ser vista no sandbox.
+2. **A confirmação sem depender do aviso:** a cada rodada, uma leitura das cobranças de cartão desde o dia do link mais antigo que espera (até 5 páginas de 100; passou disso, a leitura falha e nada muda) e a cobrança de cada link achada pelo `paymentLink`. Pago: RECEIVED ou CONFIRMED; uma cobrança só. O banco confere de novo o link, o valor e a passagem.
+3. **O cartão ligado** enquanto a Asaas responde (a mesma conferência da chave Pix, uma vez por execução); sem resposta por 5 minutos, desligado.
+4. **A criação sem resposta clara** procura o link pelo nosso identificador antes de criar de novo.
+5. **Cancelar e vencer:** como o QR do Pix; o link que está na Asaas é desativado depois da conferência (o pago no meio tempo vale).
+6. **A venda:** a linha "Cartão pela Asaas" de cada link pago, depois das do Pix (o meio `cartao_asaas`, que a tela não declara); o QR e o link não passam do que falta, somando o que a venda tem pedido ou pago nos dois.
+7. **Reverter:** a reversão tira a tabela e as funções novas e volta as funções da venda e do Pix ao texto do PAY-015a; ela se recusa quando já há venda paga com o meio `cartao_asaas`.

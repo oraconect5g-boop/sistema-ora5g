@@ -32,6 +32,6 @@
     "TRF-d": ["J04"], "AUD-d": ["J04"], "TRF-e": ["J04"], "FIN-001a": ["J08"], "REIN-d": ["J02", "J03"], "FIN-001b": ["J08"],
     "FIN-007a": ["J11"], "FIN-007b": ["J11"], "CRM-009a": ["J06", "J09"], "POS-015a": ["J05"], "PAY-011a": ["J07", "J08"],
     "FIN-002a": ["J08", "J11"], "FIN-006a": ["J08"], "QUAL-006a": ["J15"], "ONLINE-e": ["J09"], "PAY-014a": ["J09"],
-    "ONLINE-f": ["J09"], "ONLINE-g": ["J09"], "ONLINE-h": ["J09"], "PAY-014b": ["J09", "J05"], "ONLINE-i": ["J09"], "TRF-f": ["J03", "J04"], "AUD-e": ["J15"], "CONNECT-d": ["J10"], "CONNECT-e": ["J10"], "CONNECT-f": ["J10"], "CONNECT-g": ["J10"], "CONNECT-h": ["J10"], "CONNECT-k": ["J10"], "CONNECT-j": ["J10"], "CONNECT-i": ["J10"], "PAY-015a": ["J05"], "CONNECT-l": ["J10"]
+    "ONLINE-f": ["J09"], "ONLINE-g": ["J09"], "ONLINE-h": ["J09"], "PAY-014b": ["J09", "J05"], "ONLINE-i": ["J09"], "TRF-f": ["J03", "J04"], "AUD-e": ["J15"], "CONNECT-d": ["J10"], "CONNECT-e": ["J10"], "CONNECT-f": ["J10"], "CONNECT-g": ["J10"], "CONNECT-h": ["J10"], "CONNECT-k": ["J10"], "CONNECT-j": ["J10"], "CONNECT-i": ["J10"], "PAY-015a": ["J05"], "CONNECT-l": ["J10"], "PAY-015b": ["J05"]
   }
 }

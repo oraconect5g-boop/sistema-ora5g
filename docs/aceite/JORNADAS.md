@@ -10,7 +10,7 @@ Em vez de responder roteiro por roteiro, percorra **uma jornada por vez**: o cam
 | [J02 — Catálogo e fotos](#j02) | 5 | 0 | 5 | 8 (4 / 4 / 0) |
 | [J03 — Estoque inicial e inventário](#j03) | 11 | 0 | 11 | 18 (7 / 11 / 0) |
 | [J04 — Transferência](#j04) | 10 | 0 | 10 | 3 (1 / 2 / 0) |
-| [J05 — Venda presencial](#j05) | 12 | 0 | 12 | 16 (6 / 10 / 0) |
+| [J05 — Venda presencial](#j05) | 13 | 0 | 13 | 16 (6 / 10 / 0) |
 | [J06 — Cliente e fiscal](#j06) | 4 | 0 | 4 | 20 (13 / 6 / 1) |
 | [J07 — Devolução e troca](#j07) | 2 | 0 | 2 | 4 (1 / 3 / 0) |
 | [J08 — Caixa e financeiro](#j08) | 13 | 0 | 13 | 22 (10 / 12 / 0) |
@@ -112,6 +112,7 @@ Em vez de responder roteiro por roteiro, percorra **uma jornada por vez**: o cam
 | POS-015a | a prova, com a sessão aberta e no site de verdade, de que nada é presumido nem gravado quando a internet cai: a faixa avisa, o envio é segurado no aparelho, a navegação mostra "Sem internet agora" e, na volta, nada mudou. Nenhuma tela mudou; o roteiro é para repetir num celular da loja, sem gravar nada | [POS-015a.md](POS-015a.md) | `19ac570` (2026-11-24) | — |
 | PAY-014b | no balcão, a venda do pedido pago pelo site registra o pago (pelo preço pago) sem cobrar de novo | [PAY-014b.md](PAY-014b.md) | `5fc91b6` (2026-11-24) | — |
 | PAY-015a | no Vender, o cartão Pix pela Asaas: o QR Code gerado com o valor, na tela, confirmado na própria Asaas, e o pago entra sozinho na venda (o pagamento misto) | [PAY-015a.md](PAY-015a.md) | a publicar | — |
+| PAY-015b | no Vender, o cartão Cartão pela Asaas: o QR Code do link de pagamento no cartão, na tela, confirmado na própria Asaas (com a bandeira e o final), e o pago entra sozinho na venda (o pagamento misto) | [PAY-015b.md](PAY-015b.md) | a publicar | — |
 
 ## J06
 
