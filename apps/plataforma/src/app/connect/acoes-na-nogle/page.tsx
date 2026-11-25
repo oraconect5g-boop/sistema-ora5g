@@ -11,10 +11,10 @@ import { permite } from "../../../lib/acesso/molde";
 import { FalhaDoServico, obterSessao } from "../../../lib/acesso/sessao";
 import {
   descricaoDaAcao, ehErroDaAcao, ERROS_DA_ACAO, MOTIVOS_BLOQUEIO, NOMES_DAS_ACOES, resultadoDaAcao, SITUACOES_DA_ACAO, type AcaoDaTela,
-} from "../../../lib/connect/acoes";
+} from "../../../lib/connect/acoes-na-nogle";
 import { brl } from "../../../lib/formato";
 import { textoDoParametro, type ValorDeParametro } from "../../../lib/parametros";
-import { cancelarAcao, pedirAcao } from "./servidor";
+import { cancelarAcao, pedirAcao } from "./acoes";
 
 export const metadata: Metadata = { title: "Ações na Nogle" };
 export const dynamic = "force-dynamic";

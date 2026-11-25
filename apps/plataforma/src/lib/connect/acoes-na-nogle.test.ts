@@ -2,7 +2,7 @@
 // do resultado. Dados FICTÍCIOS.
 import { describe, expect, it } from "vitest";
 
-import { descricaoDaAcao, erroDaAcao, lerPedidoDeAcao, resultadoDaAcao } from "./acoes";
+import { descricaoDaAcao, erroDaAcao, lerPedidoDeAcao, resultadoDaAcao } from "./acoes-na-nogle";
 
 const formulario = (campos: Record<string, string>) => ({ get: (nome: string) => campos[nome] ?? null });
 const base = { chave: "k", motivo: "Pedido do cliente (teste)" };

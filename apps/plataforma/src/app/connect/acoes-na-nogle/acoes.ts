@@ -6,7 +6,7 @@ import { redirect } from "next/navigation";
 
 import { ehUuid } from "../../../lib/acesso/regras";
 import { obterSessao } from "../../../lib/acesso/sessao";
-import { erroDaAcao, lerPedidoDeAcao } from "../../../lib/connect/acoes";
+import { erroDaAcao, lerPedidoDeAcao } from "../../../lib/connect/acoes-na-nogle";
 import type { Json } from "../../../lib/supabase/tipos-banco";
 
 export async function pedirAcao(dados: FormData) {

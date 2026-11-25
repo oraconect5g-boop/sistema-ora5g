@@ -47,7 +47,7 @@ vi.mock("../../../lib/acesso/sessao", () => ({
 }));
 
 import AcoesNaNogle from "./page";
-import { cancelarAcao, pedirAcao } from "./servidor";
+import { cancelarAcao, pedirAcao } from "./acoes";
 
 function texto(v: unknown): string {
   if (Array.isArray(v)) return v.map(texto).join(" ");
