@@ -12,7 +12,7 @@ import { BotaoConfirmar } from "../../componentes/BotaoConfirmar";
 import { LerCodigo } from "../../componentes/LerCodigo";
 import { MoldeReal } from "../../componentes/MoldeReal";
 import { QrCode as QrCodeDoLink } from "../../componentes/QrCode";
-import { Aviso, Botao, Cartao, Selo, TituloPagina } from "../../componentes/ui";
+import { Aviso, Botao, Cartao, classeBotao, Selo, TituloPagina } from "../../componentes/ui";
 import { FalhaDoServico, obterSessao } from "../../lib/acesso/sessao";
 import { centavosDoBanco } from "../../lib/dinheiro";
 import { brl } from "../../lib/formato";
@@ -81,12 +81,18 @@ export default async function Vender({ searchParams }: { searchParams: Promise<{
   // catálogo o que foi digitado (a busca do catálogo olha o que está em estoque, que a reserva não muda).
   // PAY-015a: junto, o Pix pela Asaas da venda aberta (o banco acha a mesma venda da tela: a mais nova da pessoa na loja).
   // PAY-015b: e o cartão pela Asaas, do mesmo jeito (em paralelo: a ida continua uma só).
-  const [tela, , achados, pixLido, cartaoLido] = await Promise.all([
+  // A coluna Código da REIN entra como SKU de quatro dígitos. O acerto exato não pode sumir no limite das
+  // correspondências parciais; a leitura exata sai na mesma rodada e mantém o código como texto (inclusive zeros).
+  const colunasDaVariante = "id, sku, nome, produto_id, produtos(nome, tipo)";
+  const [tela, , achados, pixLido, cartaoLido, porCodigoExato] = await Promise.all([
     consultarTelaDoPdv(supabase),
     soltarReservasDoSiteVencidas(supabase),
     busca && !numero ? buscarNoCatalogo(supabase, busca, { limite: 40 }) : Promise.resolve(null),
     (async () => await supabase.rpc("caixa_pix_da_venda", {}))(),
     (async () => await supabase.rpc("caixa_cartao_da_venda", {}))(),
+    /^\d{4}$/.test(busca)
+      ? supabase.from("variantes").select(colunasDaVariante).eq("ativa", true).eq("sku", busca).limit(8)
+      : Promise.resolve({ data: [], error: null }),
   ]);
   const { caixa, venda, itens, terminais } = tela;
 
@@ -98,9 +104,9 @@ export default async function Vender({ searchParams }: { searchParams: Promise<{
     ? await supabase.from("itens_serializados").select("id, variante_id, imei, iccid, situacao, variantes(id, sku, nome, produto_id, produtos(nome, tipo))").or(filtroDoIdentificador(numero)).eq("unidade_id", unidade).limit(1)
     : { data: [], error: null };
   const porNome = procurar && achados?.variantes.length
-    ? await supabase.from("variantes").select("id, sku, nome, produto_id, produtos(nome, tipo)").in("id", achados.variantes).order("sku").limit(8)
+    ? await supabase.from("variantes").select(colunasDaVariante).in("id", achados.variantes).order("sku").limit(8)
     : { data: [], error: null };
-  if (porNumero.error || porNome.error) throw new FalhaDoServico("busca");
+  if (porNumero.error || porNome.error || porCodigoExato.error) throw new FalhaDoServico("busca");
   // Sem a leitura do Pix, o caixa segue sem ele (a conclusão no banco põe o pago de qualquer jeito); a venda lida tem de ser a
   // da tela (no meio, outra pode ter sido aberta).
   const pixIndisponivel = venda !== null && Boolean(pixLido.error);
@@ -111,15 +117,16 @@ export default async function Vender({ searchParams }: { searchParams: Promise<{
   const cartaoDaVenda = lidoDoCartao && venda && lidoDoCartao.venda === venda.id ? lidoDoCartao : { ligado: lidoDoCartao?.ligado ?? false, venda: null, cartoes: [] };
 
   // As variações dos resultados (a do aparelho achado pelo número vem nula quando quem pede não a lê).
-  const variantes = [...porNome.data, ...porNumero.data.flatMap((i) => (i.variantes ? [i.variantes] : []))];
-  const resultados = [...porNome.data.map((v) => v.id), ...porNumero.data.map((i) => i.variante_id)];
+  const variantesDoCatalogo = [...new Map((procurar ? [...porCodigoExato.data, ...porNome.data] : []).map((v) => [v.id, v])).values()].slice(0, 8);
+  const variantes = [...variantesDoCatalogo, ...porNumero.data.flatMap((i) => (i.variantes ? [i.variantes] : []))];
+  const resultados = [...variantesDoCatalogo.map((v) => v.id), ...porNumero.data.map((i) => i.variante_id)];
   const produtoIds = [...new Set(variantes.map((v) => v.produto_id))];
   // 3ª ida, só com resultado: o saldo livre, os aparelhos disponíveis, as fotos e o preço vigente, em paralelo. O preço de
   // todos os resultados vem num pedido só (VEL-b: public.precos_vigentes, a mesma regra de preco_vigente); a variação sem
   // preço nesta loja não volta.
   const [saldos, disponiveis, fotos, precosLidos] = await Promise.all([
     resultados.length ? supabase.from("estoque_saldos").select("variante_id, quantidade, reservado").eq("unidade_id", unidade).in("variante_id", resultados) : Promise.resolve({ data: [], error: null }),
-    porNome.data.length ? supabase.from("itens_serializados").select("id, variante_id, imei, iccid").eq("unidade_id", unidade).eq("situacao", "disponivel").eq("em_estoque", true).in("variante_id", porNome.data.map((v) => v.id)).limit(40) : Promise.resolve({ data: [], error: null }),
+    variantesDoCatalogo.length ? supabase.from("itens_serializados").select("id, variante_id, imei, iccid").eq("unidade_id", unidade).eq("situacao", "disponivel").eq("em_estoque", true).in("variante_id", variantesDoCatalogo.map((v) => v.id)).limit(40) : Promise.resolve({ data: [], error: null }),
     produtoIds.length ? supabase.from("fotos_produto").select("produto_id, variante_id, caminho, ilustracao").in("produto_id", produtoIds).is("substituida_em", null) : Promise.resolve({ data: [], error: null }),
     resultados.length ? supabase.rpc("precos_vigentes", { p_variantes: resultados, p_unidade: unidade }) : Promise.resolve({ data: [], error: null }),
   ]);
@@ -146,6 +153,7 @@ export default async function Vender({ searchParams }: { searchParams: Promise<{
   // O carrinho veio inteiro da leitura única, com os valores já conferidos (lib/vendas/pdv-tela.ts).
   const subtotal = itens.reduce((t, i) => t + i.preco_unitario_centavos * i.quantidade, 0);
   const descontos = itens.reduce((t, i) => t + i.desconto_centavos, 0);
+  const quantidadeNoCarrinho = itens.reduce((t, i) => t + i.quantidade, 0);
   // PDV-c: o que a PayJoy e a Aiva podem financiar (os celulares, com o desconto); o resto é pago à parte. PAY-014b: o
   // celular já pago pelo site não entra.
   const valorDosCelulares = itens.filter((i) => i.tipo === "aparelho" && !i.pago_pelo_site).reduce((t, i) => t + i.preco_unitario_centavos * i.quantidade - i.desconto_centavos, 0);
@@ -225,10 +233,12 @@ export default async function Vender({ searchParams }: { searchParams: Promise<{
                             ))}
                           </div>
                         ) : <p className="mt-1 text-xs text-aviso">Nenhum disponível nesta loja.</p>
+                      ) : tipo === "acessorio" && livre(id) <= 0 ? (
+                        <p className="mt-1 text-xs text-aviso">Nenhum disponível nesta loja.</p>
                       ) : (
                         <form action={adicionarItem} className="mt-2 flex items-end gap-2">
                           <input type="hidden" name="venda" value={venda.id} /><input type="hidden" name="variante" value={id} /><input type="hidden" name="chave" value={randomUUID()} />
-                          <label className="text-xs font-medium">Qtd.<input name="quantidade" type="number" min={1} max={99} defaultValue={1} className={`${campo} w-20`} /></label>
+                          <label className="text-xs font-medium">Qtd.<input name="quantidade" type="number" min={1} max={tipo === "acessorio" ? Math.min(99, livre(id)) : 99} defaultValue={1} className={`${campo} w-20`} /></label>
                           <Botao type="submit" tamanho="sm" enquanto="Adicionando…">Adicionar</Botao>
                         </form>
                       ))}
@@ -297,6 +307,7 @@ export default async function Vender({ searchParams }: { searchParams: Promise<{
             </dl>
           </Cartao>
 
+          {itens.length > 0 && <div id="pagamento-pdv" className="scroll-mt-24" tabIndex={-1} />}
           {/* PAY-015a (a D-062: "pagamento oficial da loja será a asaas"): o QR Code do Pix gerado pelo sistema. O worker cria o QR
               na Asaas e confere o pagamento a cada poucos segundos; a tela se atualiza sozinha enquanto um QR espera. */}
           {itens.length > 0 && (pixDaVenda.ligado || pixDaVenda.pix.length > 0 || pixIndisponivel) && (
@@ -437,6 +448,21 @@ export default async function Vender({ searchParams }: { searchParams: Promise<{
               <Botao type="submit" tamanho="sm" variante="perigo" enquanto="Cancelando…">Cancelar venda</Botao>
             </form>
           </details>
+          )}
+          {itens.length > 0 && (
+            <>
+              <div aria-hidden="true" className="h-[calc(4rem+env(safe-area-inset-bottom))] lg:hidden" />
+              {/* NavegacaoCelular ocupa 68 px + a folga de 12 px; este resumo fica acima dos dois. */}
+              <aside aria-label="Resumo da venda" className="nao-imprimir fixed inset-x-0 bottom-[calc(5.5rem+env(safe-area-inset-bottom))] z-20 border-t border-borda bg-white/95 px-4 py-2 backdrop-blur lg:hidden">
+                <div className="mx-auto flex max-w-xl items-center justify-between gap-3">
+                  <div className="min-w-0 text-sm">
+                    <p className="text-xs text-suave">{`${quantidadeNoCarrinho} ${quantidadeNoCarrinho === 1 ? "item" : "itens"} · total`}</p>
+                    <strong className="numeros text-lg">{brl(subtotal - descontos)}</strong>
+                  </div>
+                  <Link href="#pagamento-pdv" className={classeBotao("primario", "md")}>Pagamento</Link>
+                </div>
+              </aside>
+            </>
           )}
         </>
       )}
