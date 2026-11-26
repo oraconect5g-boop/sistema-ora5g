@@ -7,7 +7,7 @@ import { Fragment } from "react";
 import { MEIOS } from "@ora5g/dominio";
 
 import { MoldeReal } from "../../componentes/MoldeReal";
-import { Aviso, Botao, Cartao, Selo, TituloPagina } from "../../componentes/ui";
+import { Aviso, Botao, BotaoLink, Cartao, Selo, TituloPagina } from "../../componentes/ui";
 import { permite } from "../../lib/acesso/molde";
 import { FalhaDoServico, obterSessao } from "../../lib/acesso/sessao";
 import { ERROS_DA_SAIDA, lerNomes, lerSaidas, OK_DA_SAIDA } from "../../lib/caixa/saidas";
@@ -58,6 +58,7 @@ export default async function Caixa({ searchParams }: { searchParams: Promise<Pa
   if (movimentos.error) throw new FalhaDoServico("caixa_detalhes");
   const porMeio = new Map<string, number>();
   for (const m of movimentos.data) porMeio.set(m.meio, (porMeio.get(m.meio) ?? 0) + centavosDoBanco(m.valor_centavos));
+  const naGaveta = porMeio.get("dinheiro");
   const meusPendentes = minhas?.estado === "ok" ? minhas.dados.filter((s) => s.situacao === "pendente").length : 0;
   // Alguém espera no balcão: o quadro de autorizar sobe para o topo.
   const urgente = paraAutorizar?.estado === "ok" && paraAutorizar.dados.some((s) => s.pedidaPor !== usuario.id);
@@ -65,7 +66,8 @@ export default async function Caixa({ searchParams }: { searchParams: Promise<Pa
 
   return (
     <MoldeReal sessao={sessao}>
-      <TituloPagina sobretitulo={situacao.unidade_nome} titulo="Caixa" />
+      <TituloPagina sobretitulo={situacao.unidade_nome} titulo="Caixa"
+        acao={permite(sessao, "venda.registrar") && <BotaoLink href="/vender" prefetch={false} tamanho="sm" variante="secundario">Voltar ao PDV</BotaoLink>} />
       {erro && <Aviso tom="perigo">{ERROS_DA_VENDA[erro]}</Aviso>}
       {ok && <Aviso tom="sucesso">{OK[ok]}</Aviso>}
       {erroSaida && <Aviso tom="perigo">{ERROS_DA_SAIDA[erroSaida]}</Aviso>}
@@ -83,11 +85,13 @@ export default async function Caixa({ searchParams }: { searchParams: Promise<Pa
       ) : (
         <>
           <Cartao titulo="Meu caixa aberto" icone={Wallet}>
-            <dl className="numeros grid grid-cols-2 gap-1 text-sm">
-              {[...porMeio].map(([meio, valor]) => <Fragment key={meio}><dt>{nomeDoMeio(meio)}</dt><dd className="text-right">{brl(valor)}</dd></Fragment>)}
-              {porMeio.size === 0 && <dt className="text-suave">Sem lançamentos.</dt>}
+            <dl className="numeros grid grid-cols-2 items-baseline gap-1 text-sm">
+              <dt className="font-semibold">Dinheiro esperado na gaveta</dt>
+              <dd className="text-right text-lg font-semibold">{naGaveta !== undefined ? brl(naGaveta) : "Sem lançamento"}</dd>
+              {[...porMeio].filter(([meio]) => meio !== "dinheiro").map(([meio, valor]) => <Fragment key={meio}><dt>{nomeDoMeio(meio)}</dt><dd className="text-right">{brl(valor)}</dd></Fragment>)}
+
             </dl>
-            <p className="mt-2 text-xs text-suave">&ldquo;Dinheiro&rdquo; é o que deve estar na gaveta (fundo + recebido − troco + suprimento − sangria − estornos − saídas autorizadas).</p>
+            <p className="mt-2 text-xs text-suave">A gaveta inclui só dinheiro: fundo + recebido − troco + suprimento − sangria − estornos − saídas autorizadas. Pix, cartão e outras formas ficam separados.</p>
           </Cartao>
           <Cartao titulo="Suprimento ou sangria">
             <form action={movimentarCaixa} className="grid gap-2 sm:grid-cols-4">

@@ -680,6 +680,19 @@ describe("atalho móvel de pagamento", () => {
     expect(elementos(arvore).some((e) => e.props.id === "pagamento-pdv")).toBe(true);
   });
 
+  it("mantém Pix, cartão e cliente atrás da escolha; erro ou cobrança já iniciada abre o respectivo bloco", async () => {
+    cenario.pdv = tela({ itens: [item()] });
+    cenario.pix = { data: { ligado: true, venda: VENDA, pix: [] }, error: null };
+    cenario.cartao = { data: { ligado: true, venda: VENDA, cartoes: [] }, error: null };
+    const blocos = (arvore: unknown) => elementos(arvore).filter((e) => e.type === "details" && /pela Asaas/.test(texto(e)));
+    const inicio = await abrir();
+    expect(blocos(inicio).map((x) => x.props.open)).toEqual([false, false]);
+    expect(elementos(inicio).some((e) => typeof e.type === "function" && e.type.name === "IdentificarCliente")).toBe(true);
+    expect(elementos(elementos(inicio).find((e) => e.props.titulo === "Vender")?.props.acao).some((e) => e.props.href === "/reservas-do-site" && e.props.prefetch === false)).toBe(true);
+    cenario.cartao = { data: null, error: { code: "57014" } };
+    expect(blocos(await abrir()).map((x) => x.props.open)).toEqual([false, true]);
+  });
+
   it("não mostra o atalho se o carrinho estiver vazio", async () => {
     expect(elementos(await abrir()).some((e) => e.props.href === "#pagamento-pdv")).toBe(false);
   });

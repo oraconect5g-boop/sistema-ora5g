@@ -11,9 +11,10 @@ import { chaveEmGrupos, MODELOS_DE_NOTA, SITUACOES_DA_NOTA, type SituacaoDaNota 
 
 import { FormularioDeArquivo } from "../../../componentes/FormularioDeArquivo";
 import { MoldeReal } from "../../../componentes/MoldeReal";
-import { Aviso, Botao, Cartao, Selo } from "../../../componentes/ui";
+import { Aviso, Botao, BotaoLink, Cartao, Selo } from "../../../componentes/ui";
 import { ehUuid } from "../../../lib/acesso/regras";
 import { permite } from "../../../lib/acesso/molde";
+import { PAGINAS_REAIS } from "../../../lib/acesso/menu";
 import { FalhaDoServico, obterSessao } from "../../../lib/acesso/sessao";
 import { centavosDoBanco } from "../../../lib/dinheiro";
 import { brl } from "../../../lib/formato";
@@ -171,6 +172,9 @@ export default async function Comprovante({ params, searchParams }: { params: Pr
   const nomeDoItem = (itemId: string) => variantes.data.find((x) => x.id === itens.data.find((i) => i.id === itemId)?.variante_id)?.nome ?? "Item";
   const quando = v.concluida_em ? new Intl.DateTimeFormat("pt-BR", { timeZone: "America/Sao_Paulo", dateStyle: "short", timeStyle: "short" }).format(new Date(v.concluida_em)) : null;
   // L10c: o histórico das notas desta venda canceladas no fisco (no bloco da nota e, na venda cancelada, sozinho).
+  const lojaDoTurno = v.unidade_id === situacao.unidade_id;
+  const meuCaixa = lojaDoTurno && v.vendedor_id === usuario.id && PAGINAS_REAIS.caixa.liberada(sessao.molde.permissoes);
+  const proximaVenda = lojaDoTurno && permite(sessao, "venda.registrar");
   const historicoDoFisco = canceladasNoFisco.length > 0 ? (
     <ul className="space-y-1 text-xs text-suave">
       {canceladasNoFisco.map((c) => (
@@ -182,6 +186,11 @@ export default async function Comprovante({ params, searchParams }: { params: Pr
   return (
     <MoldeReal sessao={sessao} largura="max-w-lg">
       {textoDoParametro(parametros.concluida) === "1" && v.situacao === "concluida" && <Aviso tom="sucesso" titulo="Venda concluída"><CheckCircle2 aria-hidden className="inline size-4" /> Estoque baixado e pagamento registrado no seu caixa.</Aviso>}
+      <nav aria-label="Continuar depois do comprovante" className="nao-imprimir flex flex-wrap gap-2">
+        <BotaoLink href="/vendas" tamanho="sm" variante="secundario" prefetch={false}>Ver vendas</BotaoLink>
+        {meuCaixa && <BotaoLink href="/caixa" tamanho="sm" variante="secundario" prefetch={false}>Ver meu caixa</BotaoLink>}
+        {proximaVenda && <BotaoLink href="/vender" tamanho="sm" prefetch={false}>Voltar ao PDV</BotaoLink>}
+      </nav>
       {textoDoParametro(parametros.cancelada) === "1" && <Aviso tom="info">Venda cancelada. O dinheiro saiu do seu caixa; cartão, Pix e financeira ficam como estorno a confirmar com o comprovante; os itens só voltam ao estoque quando forem recebidos e conferidos.</Aviso>}
       {textoDoParametro(parametros.estorno) === "confirmado" && <Aviso tom="sucesso">Estorno confirmado com o comprovante.</Aviso>}
       {textoDoParametro(parametros.retorno) === "recebido" && <Aviso tom="sucesso">Item conferido e de volta ao estoque.</Aviso>}
