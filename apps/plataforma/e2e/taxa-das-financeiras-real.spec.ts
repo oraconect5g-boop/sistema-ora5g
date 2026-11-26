@@ -49,7 +49,7 @@ test.describe("a taxa das financeiras no resultado do mês, no site no ar, só l
         await expect(dono.getByText(LOJA_A, { exact: true }).first()).toBeVisible();
         const linha = degrau(dono, LINHA);
         await expect(linha).toContainText("−R$ 49,00");
-        await expect(linha).toContainText("1 repasse registrado");
+        await expect(linha).toContainText("1 conta liquidada");
       });
 
       await test.step("a planilha (CSV) do mesmo mês e da mesma loja traz a mesma linha", async () => {
@@ -57,8 +57,8 @@ test.describe("a taxa das financeiras no resultado do mês, no site no ar, só l
         const resposta = await dono.request.get(`/resultado/exportar?mes=2026-11&loja=${loja}&formato=csv`);
         expect(resposta.status()).toBe(200);
         const csv = await resposta.text();
-        expect(csv).toContain("Taxas da PayJoy e da Aiva (observadas no repasse);49,00");
-        expect(csv).toContain("Taxa da PayJoy e da Aiva;a observada no repasse;");
+        expect(csv).toContain("Taxas da PayJoy e da Aiva (após a liquidação final);49,00");
+        expect(csv).toContain("Taxa da PayJoy e da Aiva;a apurada na liquidação final;");
         expect(csv).not.toContain("falta o contrato");
       });
 

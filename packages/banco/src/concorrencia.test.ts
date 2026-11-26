@@ -1155,7 +1155,7 @@ describe("painel de vendas lido enquanto uma venda é concluída no PostgreSQL 1
 // O registro e o desfazer do repasse travam a venda antes da conta, como o cancelamento: um espera o outro e
 // a conta nunca fica aberta (crédito exigível) numa venda cancelada.
 describe("repasse da financeira e cancelamento da venda ao mesmo tempo no PostgreSQL 17 (#83)", () => {
-  const RECEBER = "select public.financeira_receber($1, $2, $3, $4::date) as v";
+  const RECEBER = "select public.financeira_registrar_repasse($1::uuid, $2::text, $3::bigint, $4::date, 4900, md5($1::uuid::text || regexp_replace(trim($2::text), '\\s+', ' ', 'g'))::uuid) as v";
   const DESFAZER = "select public.financeira_desfazer_recebimento($1, $2) as v";
   const CANCELAR = "select public.cancelar_venda($1, 'Cliente desistiu') as v";
   // O dia de Brasília na hora de cada chamada: calculado uma vez só, ao carregar o arquivo, ele ficava no dia anterior

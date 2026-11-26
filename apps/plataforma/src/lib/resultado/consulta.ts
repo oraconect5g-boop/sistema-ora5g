@@ -20,11 +20,11 @@ const FUNCAO_AUSENTE = new Set(["PGRST202", "42883"]);
 export type FinanceirasDoResultado = {
   /** As taxas de cartão e Pix, observadas na conciliação. */
   cartaoPix: number;
-  /** O valor financiado menos o que a financeira repassou, nas contas com o repasse registrado. */
+  /** O valor financiado menos o que a financeira repassou, nas contas liquidadas. */
   taxas: number;
-  /** As contas com o repasse registrado. */
+  /** As contas liquidadas. */
   recebidas: number;
-  /** As contas ainda sem repasse registrado (a taxa delas ainda não se conhece), e o valor delas. */
+  /** As contas ainda com saldo em aberto (a taxa delas ainda não se conhece), e o saldo restante. */
   aReceber: number; aReceberValor: number;
 };
 export type LinhasDoResultado = {
@@ -112,7 +112,7 @@ function linhasFecham(l: LinhasDoResultado): boolean {
     l.despesas, l.despesasEmAberto, l.saidasQuantidade, l.saidasCaixa, l.rede, l.redeEmAberto, l.naoDividido, l.peso, l.pesoDaRede,
   ];
   const f = l.financeiras;
-  // FIN-002a: as taxas são as de cartão e Pix mais as das financeiras; a conta sem repasse tem valor, e o valor tem conta.
+  // FIN-002a: as taxas são as de cartão e Pix mais as das financeiras; a conta em aberto tem saldo positivo, e o valor tem conta.
   const financeirasFecham = f === null || ([f.cartaoPix, f.taxas, f.recebidas, f.aReceber, f.aReceberValor].every((v) => v >= 0)
     && l.taxas === f.cartaoPix + f.taxas && (f.aReceber === 0) === (f.aReceberValor === 0));
   return naoNegativos.every((v) => v >= 0) && financeirasFecham

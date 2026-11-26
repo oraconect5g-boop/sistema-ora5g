@@ -1,0 +1,19 @@
+# Aceite: repasses parciais da PayJoy e da Aiva
+ORA-PAY-003, ORA-PAY-011, ORA-FIN-002/003/005/007 (conciliação gerencial manual).
+
+1. No caixa de homologação, registre uma venda fictícia com R$ 1.299,00 financiados, mantendo a entrada do cliente em seu meio de pagamento.
+2. Em **A receber das financeiras**, registre R$ 400,00 de repasse parcial com a linha do extrato. Repita o envio: há um registro só. Registre mais R$ 200,00 com outra referência: saldo em aberto de R$ 699,00, com os dois recebimentos por data nos recebíveis. Nenhuma taxa no resultado.
+3. Verifique se a previsão, os atrasados, o painel e os recebíveis usam o saldo em aberto, e não o total original. A previsão só coloca o saldo na semana se o prazo da financeira estiver configurado e cair na janela.
+4. A liquidação final de R$ 650,00 exige tarifa informada de R$ 49,00 (comprovada fora do sistema); qualquer diferença é recusada, inclusive a tarifa em branco. Agora o contrato tem saldo zero, bruto total de R$ 1.299,00, líquido total de R$ 1.250,00 e R$ 49,00 no resultado gerencial do mês da venda. Um repasse parcial não zera o saldo: se não houver mais nada a receber e não houver tarifa, use liquidação final e declare tarifa zero.
+5. Desfaça uma liquidação lançada com erro, com motivo: os parciais continuam registrados e o saldo original da liquidação volta a ficar aberto se a venda estiver ativa. Desfaça um parcial apenas se o lançamento estiver incorreto; repassar/desfazer no Ora não movimenta dinheiro. Um contrato que foi cancelado não reabre crédito: o que caiu de verdade continua no histórico e o acerto se confirma na financeira ou no extrato. A correção de referência e data da liquidação mantém o mesmo valor; para corrigir valor/tarifa, desfaça a liquidação e relance na venda ativa.
+6. Um gerente de outra loja, vendedor sem permissão e visitante não registram ou desfazem repasses da loja. É necessária a permissão `pagamento.conciliar`; o lançamento traz referência, data, ator e trilha de auditoria.
+
+Não são feitas chamadas aos provedores nem pagamentos. A informação de tarifa e referência é manual, sem vínculo automático com a linha importada do banco. Repasses e taxas gravados antes da migração permanecem no modelo histórico (não é possível deduzir se foram parciais); mudanças de históricos exigem conferência de extratos. O resultado é gerencial, não um lançamento contábil formal. A data prevista do saldo continua na regra de prazo já existente; a previsão não passa a fazer conciliação bancária. O script de reversão só roda antes de existirem lançamentos no formato novo; depois disso, preserve a trilha e corrija para frente.
+
+## Plano de contingência (registrado em 26/11/2026, pedido ORA-ESTAVEL-26NOV)
+
+- **Voltar o banco (SQL de reversão `20261126223000`):** só enquanto a tabela `privado.repasses_das_financeiras` estiver vazia. A reversão se recusa com qualquer lançamento no formato novo, inclusive um lançado e depois desfeito (o desfeito continua na trilha). Conferido em 26/11, antes do merge (`b5d0b60`): a reversão devolve exatamente as 9 funções que estavam em vigor no banco da homologação (o md5 de cada uma), e a tabela seguia vazia depois da publicação.
+- **Depois do primeiro lançamento novo:** não reverter. Corrigir para frente (migration nova), preservando a trilha e a auditoria.
+- **Se voltar só o site** (a versão anterior da tela, com o banco novo): a chamada antiga (`financeira_receber`) vira uma liquidação final com tarifa zero, que exige o valor igual ao saldo; ela não registra parcial. Nesse caso: bloquear os lançamentos de repasse na tela antiga (avisar o Financeiro), manter as referências e os comprovantes no controle restrito do Financeiro e lançar depois, na versão nova, corrigindo para frente.
+- Nada disso move dinheiro: o repasse é a anotação do que o extrato mostra. Não houve repasse real na publicação; a prova que grava foi feita em banco isolado.
+
