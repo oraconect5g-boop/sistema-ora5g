@@ -38,7 +38,8 @@ test.describe("o assistente de ativação, no site no ar (CONNECT-n)", () => {
       await v.getByLabel("Rua").fill("Rua Fictícia");
       await v.getByLabel("Número", { exact: true }).fill("100");
       await v.getByLabel("Bairro").fill("Centro");
-      await continuar.click();
+      // AUD-f: pelo teclado, o Enter num campo é o "Continuar" do passo (nunca registra: o registro só pelo botão, depois da revisão).
+      await v.getByLabel("Bairro").press("Enter");
 
       await passo("Etapa 3 de 5: Plano e DDD");
       await v.getByRole("group", { name: "Plano (lista da Nogle)" }).getByRole("radio", { name: /^10 GB\s*R\$\s54,90$/ }).check({ force: true });
