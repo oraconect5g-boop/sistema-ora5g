@@ -2,7 +2,7 @@
   "_leia": "Checkpoint do programa de execução integral (PR #67). Carregar ao retomar e seguir para o próximo item executável da fila; não reiniciar o projeto. Estados vêm de status-requisitos.json (fonte da rastreabilidade); este arquivo acrescenta lote, bloqueio externo e revisão. Desde 16/11/2026 a medida de avanço é o requisito homologado pelo proprietário: a chave aceites guarda a resposta dele a cada roteiro de aceite (docs/aceite/); um requisito só recebe homologado: true com todos os lotes dele aceitos e sem nada em FALTA na nota de status-requisitos.json.",
   "atualizado_em": "2026-11-24",
   "base": {
-    "main": "e07a8ce",
+    "main": "4d1f4f1",
     "pacote": {
       "pr": 67,
       "branch": "docs/execucao-integral-20261110",
@@ -1484,6 +1484,25 @@
       "resposta": null,
       "respondido_em": null,
       "nota": "o pedido do proprietário de 25/11 (\"as telas do ora connect da demo\"); sem migration; o commit e a publicação ficam no registro (a branch registro/publicacoes)"
+    },
+    "AUD-f": {
+      "roteiro": "docs/aceite/AUD-f.md",
+      "requisitos": [
+        "ORA-CONNECT-005",
+        "ORA-CONNECT-006",
+        "ORA-CONNECT-007",
+        "ORA-CONNECT-009",
+        "ORA-CONNECT-010",
+        "ORA-CONNECT-011",
+        "ORA-PAY-014"
+      ],
+      "entrega": "a busca do cadastro na Nogle pelo CPF para preencher, o pago que não é a linha ativa, o link, o Pix copia e cola e o eSIM separados, os totais somados no banco, as listas da Nogle inteiras, a conciliação paginada e os estornos e contestações da Asaas com o motivo",
+      "commit": null,
+      "publicado_em": null,
+      "pedido_em": null,
+      "resposta": null,
+      "respondido_em": null,
+      "nota": "a autorização do proprietário de 26/11 (um lote consolidado depois da auditoria de e7f55b2); em revisão no PR, sem merge e sem publicação; 4 migrations não aplicadas (20261126230100 a 20261126230400)"
     }
   },
   "contagem_dos_estados": {
@@ -2146,7 +2165,7 @@
       "titulo": "Pix/checkout web e links por provedores validados",
       "prioridade": "P2",
       "estado": "parcial",
-      "lote": "L7 pagamentos/caixa; ADAPT-a (17/11): bloqueado com o que falta (ADR-020); PAY-014a (24/11): o Pix pela Asaas, pronto e desligado; PAY-014b (24/11): o pago pelo site no balcão, sem cobrar de novo; PAY-015a (25/11): o Pix pela Asaas no caixa (a D-062); PAY-015b (25/11): o cartão pela Asaas no caixa (a D-062); PAY-015c (25/11): a assinatura no cartão pela Asaas (a D-062)",
+      "lote": "L7 pagamentos/caixa; ADAPT-a (17/11): bloqueado com o que falta (ADR-020); PAY-014a (24/11): o Pix pela Asaas, pronto e desligado; PAY-014b (24/11): o pago pelo site no balcão, sem cobrar de novo; PAY-015a (25/11): o Pix pela Asaas no caixa (a D-062); PAY-015b (25/11): o cartão pela Asaas no caixa (a D-062); PAY-015c (25/11): a assinatura no cartão pela Asaas (a D-062); AUD-f (26/11, em revisão): as correções da auditoria de e7f55b2",
       "bloqueio_externo": "E1: a escolha foi a Asaas (24/11); faltam a chave de teste (sandbox), o e-mail dos avisos e o sim do proprietário para ligar o worker dos pagamentos",
       "revisado_codex": false,
       "homologado": false
@@ -2461,7 +2480,7 @@
       "titulo": "Refletir ativação somente após resposta verificada da Nogle",
       "prioridade": "P0",
       "estado": "testado",
-      "lote": "L11 Ora Connect",
+      "lote": "L11 Ora Connect; AUD-f (26/11, em revisão): as correções da auditoria de e7f55b2",
       "bloqueio_externo": null,
       "revisado_codex": false,
       "homologado": false
@@ -2470,7 +2489,7 @@
       "titulo": "Atribuir performance de ativação/recarga ao vendedor de origem",
       "prioridade": "P0",
       "estado": "testado",
-      "lote": "L11 Ora Connect; CONNECT-k (25/11): o relatório do vendedor e da loja; CONNECT-m (25/11): as telas no formato da demonstração; CONNECT-o (25/11): a aba Carteira e relatórios da demonstração",
+      "lote": "L11 Ora Connect; CONNECT-k (25/11): o relatório do vendedor e da loja; CONNECT-m (25/11): as telas no formato da demonstração; CONNECT-o (25/11): a aba Carteira e relatórios da demonstração; AUD-f (26/11, em revisão): as correções da auditoria de e7f55b2",
       "bloqueio_externo": null,
       "revisado_codex": false,
       "homologado": false
@@ -2479,7 +2498,7 @@
       "titulo": "Consulta/atualização de linha e plano conforme API disponível",
       "prioridade": "P1",
       "estado": "parcial",
-      "lote": "L11 Ora Connect; CONNECT-g (25/11): as consultas da Nogle que só leem (Consultar linha e a Carteira); CONNECT-h (25/11): a consulta completa (o relatório do número e o do cliente); CONNECT-j (25/11): as funções que mudam algo na Nogle (o dono e os gerentes); CONNECT-i (25/11): as outras consultas da Nogle (as 16 rotas que faltavam); CONNECT-o (25/11): a aba Carteira e relatórios da demonstração",
+      "lote": "L11 Ora Connect; CONNECT-g (25/11): as consultas da Nogle que só leem (Consultar linha e a Carteira); CONNECT-h (25/11): a consulta completa (o relatório do número e o do cliente); CONNECT-j (25/11): as funções que mudam algo na Nogle (o dono e os gerentes); CONNECT-i (25/11): as outras consultas da Nogle (as 16 rotas que faltavam); CONNECT-o (25/11): a aba Carteira e relatórios da demonstração; AUD-f (26/11, em revisão): as correções da auditoria de e7f55b2",
       "bloqueio_externo": "C1/C2 (Nogle)",
       "revisado_codex": false,
       "homologado": false
@@ -2497,7 +2516,7 @@
       "titulo": "Reconciliar repasses/bonificações Nogle e operação local",
       "prioridade": "P1",
       "estado": "parcial",
-      "lote": "L11 Ora Connect; CONNECT-g (25/11): as consultas da Nogle que só leem (Consultar linha e a Carteira); CONNECT-i (25/11): as outras consultas da Nogle (as 16 rotas que faltavam); CONNECT-o (25/11): a aba Carteira e relatórios da demonstração",
+      "lote": "L11 Ora Connect; CONNECT-g (25/11): as consultas da Nogle que só leem (Consultar linha e a Carteira); CONNECT-i (25/11): as outras consultas da Nogle (as 16 rotas que faltavam); CONNECT-o (25/11): a aba Carteira e relatórios da demonstração; AUD-f (26/11, em revisão): as correções da auditoria de e7f55b2",
       "bloqueio_externo": "C2 (repasses Nogle)",
       "revisado_codex": false,
       "homologado": false
@@ -2506,7 +2525,7 @@
       "titulo": "Recuperar falha de rede com reconsulta sem reativação duplicada",
       "prioridade": "P1",
       "estado": "testado",
-      "lote": "L11 Ora Connect",
+      "lote": "L11 Ora Connect; AUD-f (26/11, em revisão): as correções da auditoria de e7f55b2",
       "bloqueio_externo": null,
       "revisado_codex": false,
       "homologado": false
@@ -2515,7 +2534,7 @@
       "titulo": "eSIM, contratação digital e entrega de chip nacional",
       "prioridade": "P2",
       "estado": "parcial",
-      "lote": "L11 Ora Connect; CONNECT-j (25/11): as funções que mudam algo na Nogle (o dono e os gerentes); CONNECT-n (25/11): o assistente de ativação da demonstração",
+      "lote": "L11 Ora Connect; CONNECT-j (25/11): as funções que mudam algo na Nogle (o dono e os gerentes); CONNECT-n (25/11): o assistente de ativação da demonstração; AUD-f (26/11, em revisão): as correções da auditoria de e7f55b2",
       "bloqueio_externo": "C1/C2 (eSIM, se a Nogle suportar)",
       "revisado_codex": false,
       "homologado": false
