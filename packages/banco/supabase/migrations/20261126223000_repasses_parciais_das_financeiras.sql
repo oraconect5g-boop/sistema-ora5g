@@ -26,7 +26,10 @@ create unique index repasses_das_financeiras_referencia_ativa
   on privado.repasses_das_financeiras (conta_id, referencia, recebido_em) where desfeito_em is null;
 create unique index repasses_das_financeiras_final_ativo
   on privado.repasses_das_financeiras (conta_id) where desfeito_em is null and tarifa_centavos is not null;
-comment on table privado.repasses_das_financeiras is 'Livro dos repasses: acesso somente pelas funções autorizadas, não pela API de tabelas.';
+-- As chaves de quem registrou e de quem desfez, cada uma com o seu índice (a higiene do esquema, lote BANCO-a).
+create index repasses_das_financeiras_registrado_por on privado.repasses_das_financeiras (registrado_por);
+create index repasses_das_financeiras_desfeito_por on privado.repasses_das_financeiras (desfeito_por);
+comment on table privado.repasses_das_financeiras is 'Livro dos repasses: acesso só pelas funções autorizadas, não pela API de tabelas.';
 alter table privado.repasses_das_financeiras enable row level security;
 revoke all on privado.repasses_das_financeiras from public, anon, authenticated;
 create trigger repasses_das_financeiras_auditar after insert or update on privado.repasses_das_financeiras
