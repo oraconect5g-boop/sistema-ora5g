@@ -130,7 +130,7 @@ describe("as formas de pagamento do PDV-c", () => {
     ] });
   });
 
-  it("as parcelas: obrigatórias na financeira (1 a 48); no cartão, de 1 a 24; nos outros meios, só 1 ou nada", () => {
+  it("as parcelas: obrigatórias na financeira (1 a 48); no cartão, de 1 a 18; nos outros meios, só 1 ou nada", () => {
     const um = (campos: Record<string, string>) => lerPagamentos(formulario({ pagamento_1_valor: "100", ...campos }));
     expect(um({ pagamento_1_meio: "payjoy" })).toEqual({ ok: false, erro: "parcelas" });
     expect(um({ pagamento_1_meio: "aiva", pagamento_1_parcelas: "0" })).toEqual({ ok: false, erro: "parcelas" });
@@ -156,7 +156,7 @@ describe("as formas de pagamento do PDV-c", () => {
 
   it("a recusa do banco vira a mensagem da regra; o resto, nada", () => {
     expect(erroDoPagamento("Informe em quantas parcelas a PayJoy financiou (de 1 a 48)")).toBe("parcelas");
-    expect(erroDoPagamento("O cartão parcela de 1 a 24 vezes")).toBe("parcelas");
+    expect(erroDoPagamento("Quantidade de parcelas fora do limite do cartão")).toBe("parcelas");
     expect(erroDoPagamento("A PayJoy e a Aiva financiam só o valor do celular: o chip, os acessórios e os serviços são pagos à parte")).toBe("so_celular");
     expect(erroDoPagamento("A entrada só existe numa venda com a PayJoy ou a Aiva")).toBe("entrada");
     expect(erroDoPagamento("Escolha a maquininha da loja")).toBe("maquininha");

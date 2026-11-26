@@ -1,5 +1,6 @@
 // Regras puras das telas de venda e caixa (ADR-004). O banco decide tudo de novo; aqui só se lê
 // o formulário e se escolhe a mensagem. Mensagem só por código de catálogo (o endereço não injeta texto).
+import { CARTAO_POR_PROVEDOR, ehBandeira, politicaDoCartao, type Bandeira, type Modalidade, type ProvedorManual } from "./cartao-manual";
 import { MAXIMO_DE_PARCELAS, MEIOS, MEIOS_SO_DO_BANCO, ehMeioDaEntrada, type MeioPagamento, lerReais } from "@ora5g/dominio";
 
 export const ERROS_DA_VENDA = {
@@ -10,7 +11,7 @@ export const ERROS_DA_VENDA = {
   preco_mudou: "O preço de um item mudou. Tire e coloque o item de novo para ver o preço novo.",
   sem_caixa: "Abra o seu caixa antes de concluir a venda.",
   pagamento: "O pagamento não confere: some os valores e informe o comprovante de cartão e Pix.",
-  parcelas: "Informe as parcelas: na PayJoy e na Aiva, de 1 a 48; no cartão, de 1 a 24 (1 é à vista). Dinheiro, Pix e vale-troca não têm parcelas.",
+  parcelas: "Informe as parcelas: na PayJoy e na Aiva, de 1 a 48; no crédito, até 18; Simp, até 6 no Mercado Pago (1 é à vista). Dinheiro, Pix e vale-troca não têm parcelas.",
   so_celular: "A PayJoy e a Aiva financiam só o valor do celular: o chip, os acessórios e os serviços entram na mesma venda e são pagos à parte.",
   entrada: "A entrada da PayJoy ou da Aiva é um pagamento à parte, em dinheiro, Pix ou cartão, numa venda com o financiamento.",
   aprovacao: "Há desconto sem aprovação válida. Peça a aprovação ou tire o desconto.",
@@ -33,6 +34,8 @@ export const ERROS_DA_VENDA = {
   reembolso: "O reembolso precisa somar o valor devolvido, só nos meios que a venda usou e até o que cada um pagou.",
   sem_item: "Escolha a quantidade de pelo menos um item para devolver.",
   condicao: "Escolha a condição de cada item devolvido (novo, seminovo ou avariado): nada volta ao estoque como novo sem alguém decidir.",
+  bandeira: "Selecione a bandeira. Simp só passa no crédito Mercado Pago.",
+  acrescimo: "Confira o total informado pela maquininha. No crédito comum, só informe acréscimo de 13x a 18x.",
   maquininha: "Escolha a maquininha usada (da loja e do mesmo provedor do pagamento).",
   cliente: "Cliente não encontrado nesta rede (ou inativo): busque de novo pelo CPF ou telefone.",
   os_cobrada: "Esta ordem de serviço já foi cobrada em outra venda: tire o conserto do carrinho.",
@@ -80,8 +83,11 @@ export function lerValor(texto: unknown): number | null {
 
 export type LinhaDePagamento = {
   meio: MeioPagamento; valor: number; entrada?: number; meio_entrada?: MeioPagamento; comprovante?: string; terminal?: string;
-  /** PDV-c: em quantas parcelas (a PayJoy e a Aiva, de 1 a 48; o cartão, de 1 a 24). */
+  /** PDV-c: em quantas parcelas (a PayJoy e a Aiva, de 1 a 48; o cartão, de 1 a 18). */
   parcelas?: number;
+  modalidade_cartao?: Modalidade;
+  bandeira_cartao?: Bandeira;
+  acrescimo_cliente_centavos?: number;
   /** PDV-c: este pagamento (dinheiro, Pix ou cartão) é a entrada da PayJoy ou da Aiva da mesma venda. */
   entrada_do_financiamento?: true;
 };
@@ -89,7 +95,7 @@ export type LinhaDePagamento = {
 /** PDV-c: o máximo de parcelas e os meios da entrada do financiamento vêm do domínio (a mesma regra da tela e do banco). */
 export { MAXIMO_DE_PARCELAS, ehMeioDaEntrada };
 /** Meios que passam por maquininha (o provedor decide quais maquininhas servem: L7a). */
-export const PROVEDOR_DO_MEIO: Partial<Record<MeioPagamento, "picpay" | "pagbank">> = { pix_picpay: "picpay", cartao_picpay: "picpay", cartao_pagseguro: "pagbank" };
+export const PROVEDOR_DO_MEIO: Partial<Record<MeioPagamento, ProvedorManual>> = { pix_picpay: "picpay", cartao_picpay: "picpay", cartao_pagseguro: "pagbank", pix_mercado_pago: "mercado_pago", cartao_mercado_pago: "mercado_pago" };
 
 // Lê até N linhas do formulário (pagamento_1_meio, pagamento_1_valor...); linha sem valor é ignorada.
 /** PAY-014b: `pagoPeloSite` (a venda atende um pedido pago pelo site) deixa a lista vazia passar: o banco confere se o pago
@@ -126,6 +132,32 @@ export function lerPagamentos(dados: { get: (nome: string) => unknown }, linhas 
     } else if (MEIOS[meio].financeira) {
       return { ok: false, erro: "parcelas" };
     }
+    const provedor = PROVEDOR_DO_MEIO[meio];
+    const cartao = provedor !== undefined && CARTAO_POR_PROVEDOR[provedor] === meio;
+    const modalidade = dados.get(`pagamento_${i}_modalidade_cartao`);
+    const bandeira = dados.get(`pagamento_${i}_bandeira_cartao`);
+    const brutoTerminal = dados.get(`pagamento_${i}_total_maquininha`);
+    const informouTotal = typeof brutoTerminal === "string" && brutoTerminal.trim() !== "";
+    const terminalGerenciado = dados.get(`pagamento_${i}_maquininha_manual`) === "sim" || meio === "cartao_mercado_pago" || meio === "pix_mercado_pago";
+    if (terminalGerenciado && (!provedor || !linha.terminal)) return { ok: false, erro: "maquininha" };
+    if (cartao) {
+      if (modalidade !== null && modalidade !== undefined && modalidade !== "credito" && modalidade !== "debito") return { ok: false, erro: "bandeira" };
+      if ((terminalGerenciado || bandeira != null) && (!ehBandeira(bandeira) || modalidade == null)) return { ok: false, erro: "bandeira" };
+      const regra = politicaDoCartao(provedor, modalidade ?? "credito", ehBandeira(bandeira) ? bandeira : undefined);
+      const parcelas = linha.parcelas ?? 1;
+      if (regra.maximo === 0) return { ok: false, erro: "bandeira" };
+      if (parcelas > regra.maximo) return { ok: false, erro: "parcelas" };
+      const totalNaMaquininha = informouTotal ? lerValor(brutoTerminal) : valor;
+      if (totalNaMaquininha === null || totalNaMaquininha < valor) return { ok: false, erro: "acrescimo" };
+      const acrescimo = totalNaMaquininha - valor;
+      const exigeAcrescimo = regra.jurosApartirDe !== null && parcelas >= regra.jurosApartirDe;
+      if (exigeAcrescimo ? acrescimo === 0 : bandeira !== "simp" && acrescimo !== 0) return { ok: false, erro: "acrescimo" };
+      if (modalidade) linha.modalidade_cartao = modalidade;
+      if (ehBandeira(bandeira)) linha.bandeira_cartao = bandeira;
+      if (acrescimo > 0) linha.acrescimo_cliente_centavos = acrescimo;
+    } else if (modalidade != null || bandeira != null || informouTotal) {
+      return { ok: false, erro: "bandeira" };
+    }
     // PDV-c: a entrada da PayJoy e da Aiva é um lançamento à parte, em dinheiro, Pix ou cartão.
     if (dados.get(`pagamento_${i}_entrada_do_financiamento`) === "sim") {
       if (!ehMeioDaEntrada(meio)) return { ok: false, erro: "entrada" };
@@ -155,6 +187,8 @@ export function lerPagamentos(dados: { get: (nome: string) => unknown }, linhas 
 
 /** PDV-c: a recusa do banco na conclusão (OR009) vira a mensagem da regra que falhou; o texto do banco não vai à tela. */
 export function erroDoPagamento(mensagem: string): ErroDaVenda | null {
+  if (/bandeira/i.test(mensagem)) return "bandeira";
+  if (/acréscimo/i.test(mensagem)) return "acrescimo";
   if (/maquininha/i.test(mensagem)) return "maquininha";
   if (/parcela/i.test(mensagem)) return "parcelas";
   if (/financiam só/i.test(mensagem)) return "so_celular";

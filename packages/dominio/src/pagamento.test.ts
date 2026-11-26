@@ -71,10 +71,10 @@ describe("venda financiada (DEC-U38)", () => {
 // PDV-c (pedido do proprietário de 18/11): as parcelas, a entrada à parte e o financiamento só do celular (a mesma regra
 // da concluir_venda).
 describe("PDV-c — as parcelas, a entrada à parte e o financiamento só do celular", () => {
-  it("as parcelas: obrigatórias na PayJoy e na Aiva (1 a 48); no cartão, de 1 a 24; nos outros meios, nenhuma", () => {
+  it("as parcelas: obrigatórias na PayJoy e na Aiva (1 a 48); no cartão, de 1 a 18; nos outros meios, nenhuma", () => {
     expect(conferirPagamentos(100_000, [{ meio: "payjoy", valor: 100_000 }]).erros).toEqual(["Financiamento PayJoy: informe as parcelas (de 1 a 48)"]);
     expect(conferirPagamentos(100_000, [{ meio: "aiva", valor: 100_000, parcelas: 49 }]).valido).toBe(false);
-    expect(conferirPagamentos(100_000, [{ meio: "cartao_picpay", valor: 100_000, parcelas: 25 }]).erros).toEqual(["Cartão na maquininha PicPay: de 1 a 24 parcelas"]);
+    expect(conferirPagamentos(100_000, [{ meio: "cartao_picpay", valor: 100_000, parcelas: 25 }]).erros).toEqual(["Cartão na maquininha PicPay: de 1 a 18 parcelas"]);
     expect(conferirPagamentos(100_000, [{ meio: "cartao_picpay", valor: 100_000, parcelas: 12 }]).valido).toBe(true);
     expect(conferirPagamentos(100_000, [{ meio: "dinheiro", valor: 100_000, parcelas: 2 }]).erros).toEqual(["Dinheiro não tem parcelas"]);
   });

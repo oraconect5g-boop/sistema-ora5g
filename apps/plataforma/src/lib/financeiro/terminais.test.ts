@@ -14,6 +14,8 @@ const linha = () => ({
 describe("leitura estrita dos pagamentos por maquininha", () => {
   it("lê cada maquininha com os nomes da tela", () => {
     expect(lerPagamentosPorTerminal({ unidade: null, terminais: [linha()] })).toEqual([{ ...linha(), provedor: "picpay" }]);
+    const mp = { ...linha(), provedor: "mercado_pago", apelido: "Mercado Pago" };
+    expect(lerPagamentosPorTerminal({ unidade: null, terminais: [mp] })).toEqual([mp]);
     expect(lerPagamentosPorTerminal({ unidade: L, terminais: [] })).toEqual([]);
   });
 

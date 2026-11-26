@@ -1,3 +1,4 @@
+import { ehProvedorManual, type ProvedorManual } from "../vendas/cartao-manual";
 // Pagamentos por maquininha (lote REPORT-005b: ORA-REPORT-005, o terminal de cada pagamento no relatório por meio).
 // Leitura estrita de public.pagamentos_por_terminal, que roda com as permissões de quem chama (o RLS decide o recorte)
 // e soma tudo no banco (packages/banco/src/pagamentos-por-terminal.test.ts). Sem a função no banco (migration ainda
@@ -10,7 +11,7 @@ import { RespostaInesperada, type Janela } from "./painel";
 type Cliente = Awaited<ReturnType<typeof obterSessao>>["supabase"];
 
 export type PagamentosDoTerminal = {
-  terminal: string; unidade: string; provedor: "picpay" | "pagbank"; identificador: string; apelido: string; ativo: boolean;
+  terminal: string; unidade: string; provedor: ProvedorManual; identificador: string; apelido: string; ativo: boolean;
   quantidade: number; valor: number; conciliados: number; conciliado: number; liquido: number; estornados: number; estornado: number;
 };
 
@@ -22,9 +23,9 @@ export function lerPagamentosPorTerminal(dado: unknown): PagamentosDoTerminal[] 
     const terminal = t(l, "terminal");
     const unidade = t(l, "unidade");
     const provedor = t(l, "provedor");
-    if (!ehUuid(terminal) || !ehUuid(unidade) || (provedor !== "picpay" && provedor !== "pagbank") || typeof l.ativo !== "boolean") falha("terminal");
+    if (!ehUuid(terminal) || !ehUuid(unidade) || !ehProvedorManual(provedor) || typeof l.ativo !== "boolean") falha("terminal");
     const x = {
-      terminal, unidade, provedor: provedor as "picpay" | "pagbank", identificador: t(l, "identificador"), apelido: t(l, "apelido"), ativo: l.ativo as boolean,
+      terminal, unidade, provedor, identificador: t(l, "identificador"), apelido: t(l, "apelido"), ativo: l.ativo as boolean,
       quantidade: n(l, "quantidade"), valor: n(l, "valor"), conciliados: n(l, "conciliados"), conciliado: n(l, "conciliado"), liquido: n(l, "liquido"),
       estornados: n(l, "estornados"), estornado: n(l, "estornado"),
     };
