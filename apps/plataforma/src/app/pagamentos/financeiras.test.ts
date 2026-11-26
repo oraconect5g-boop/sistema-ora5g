@@ -31,7 +31,7 @@ const sessaoFicticia = {
 };
 vi.mock("../../lib/acesso/sessao", () => ({ FalhaDoServico: class extends Error {}, obterSessao: async () => sessaoFicticia }));
 
-import { corrigirRecebimento, definirPrazoDeRepasse, desfazerRecebimento, receberDaFinanceira, registrarCobrancaDeRepasse } from "./acoes";
+import { corrigirRecebimento, definirPrazoDeRepasse, desfazerRecebimento, desfazerRepasseParcial, receberDaFinanceira, registrarCobrancaDeRepasse } from "./acoes";
 import Financeiras from "./financeiras/page";
 
 type Linha = Record<string, unknown>;
@@ -72,9 +72,9 @@ const LISTA = {
     { devedor: "payjoy", abertas: 0, valor_aberto: 0, mais_antiga_dias: null, recebidas: 1, valor_recebido: 125_000, taxa_observada: 4_900 },
   ],
   contas: [
-    { id: CONTA, venda_id: VENDA, venda_numero: 42, concluida_em: "2026-10-09T15:00:00Z", devedor: "aiva", valor: 129_900, situacao: "aberta", dias: 35, recebido_em: null, valor_recebido: null, referencia: null },
+    { id: CONTA, venda_id: VENDA, venda_numero: 42, concluida_em: "2026-10-09T15:00:00Z", devedor: "aiva", valor: 129_900, saldo: 129_900, parcial: 0, final_registrado: false, repasses_parciais: [], situacao: "aberta", dias: 35, recebido_em: null, valor_recebido: null, referencia: null },
     { id: VENDA, venda_id: CONTA, venda_numero: 40, concluida_em: "2026-11-01T15:00:00Z", devedor: "payjoy", valor: 129_900, situacao: "recebida", dias: 12, recebido_em: "2026-11-12", valor_recebido: 125_000, referencia: "PJ-1" },
-  ],
+  ] as const,
 };
 const destinoDe = async (acao: Promise<unknown>) => {
   try { await acao; } catch (e) { return (e as Error).message.replace("redirecionou para ", ""); }
@@ -109,6 +109,32 @@ describe("/pagamentos/financeiras (L7b)", () => {
     expect(t).not.toContain("venda cancelada"); // banco sem a correção #83: não diz, e a tela não inventa
   });
 
+  it("parcial deixa o saldo em aberto, tarifa final é explícita e a tela anterior não oferece baixa", async () => {
+    const parcial = { id: VENDA, valor: 40_000, data: "2026-11-12", referencia: "EXTRATO-P1" };
+    cenario.respostas.financeiras_a_receber = { error: null, data: { ...LISTA, contas: [
+      { ...LISTA.contas[0], saldo: 89_900, parcial: 40_000, repasses_parciais: [parcial] },
+    ] } };
+    const tela = await pagina();
+    expect(visivel(tela)).toContain("Recebido em parciais: R$ 400,00 · saldo em aberto: R$ 899,00");
+    expect(visivel(tela)).toContain("No parcial, deixe a tarifa em branco");
+    expect(formularios(tela).map((f) => (f.action as { name: string }).name)).toEqual(["desfazerRepasseParcial", "receberDaFinanceira"]);
+    const campos = { conta: CONTA, chave: VENDA, referencia: "EXTRATO-P2", recebido: "300,00", data: "2026-11-12" };
+    cenario.respostas.financeira_registrar_repasse = { data: true, error: null };
+    const antes = cenario.chamadas.length;
+    expect(await destinoDe(receberDaFinanceira(formulario({ ...campos, tipo: "final" })))).toBe("/pagamentos/financeiras?erro=tarifa");
+    expect(await destinoDe(receberDaFinanceira(formulario({ ...campos, tipo: "parcial", tarifa: "50,00" })))).toBe("/pagamentos/financeiras?erro=tarifa");
+    expect(cenario.chamadas).toHaveLength(antes);
+    expect(await destinoDe(receberDaFinanceira(formulario({ ...campos, tipo: "parcial" })))).toBe("/pagamentos/financeiras?ok=parcial");
+    expect(cenario.chamadas.at(-1)).toMatchObject({ nome: "financeira_registrar_repasse", argumentos: { p_tarifa: null, p_valor_recebido: 30_000 } });
+    cenario.respostas.financeira_desfazer_repasse_parcial = { data: true, error: null };
+    expect(await destinoDe(desfazerRepasseParcial(formulario({ conta: CONTA, repasse: VENDA, motivo: "Linha errada" })))).toBe("/pagamentos/financeiras?ok=parcial_desfeito");
+    const contaAntiga = Object.fromEntries(Object.entries(LISTA.contas[0]).filter(([k]) => !["saldo", "parcial", "final_registrado", "repasses_parciais"].includes(k)));
+    cenario.respostas.financeiras_a_receber = { error: null, data: { ...LISTA, contas: [contaAntiga] } };
+    const telaAntiga = await pagina();
+    expect(visivel(telaAntiga)).toContain("Registro pausado até a atualização da versão do financeiro.");
+    expect(formularios(telaAntiga)).toHaveLength(0);
+  });
+
   it("sem a função no banco, em falha ou sem nada: o cartão diz por quê, sem número inventado", async () => {
     cenario.respostas = {};
     expect(visivel(await pagina())).toContain("Indisponível neste ambiente");
@@ -129,16 +155,16 @@ describe("/pagamentos/financeiras (L7b)", () => {
   });
 
   it("as ações: o repasse vai ao banco em centavos; formulário errado volta antes; o erro do banco vira a mensagem; desfazer pede motivo", async () => {
-    cenario.respostas.financeira_receber = { data: true, error: null };
-    expect(await destinoDe(receberDaFinanceira(formulario({ conta: CONTA, referencia: "AV lote 7", recebido: "1.250,00", data: "2026-11-12" })))).toBe("/pagamentos/financeiras?ok=recebido");
-    expect(cenario.chamadas.at(-1)).toEqual({ nome: "financeira_receber", argumentos: { p_conta: CONTA, p_referencia: "AV lote 7", p_valor_recebido: 125_000, p_recebido_em: "2026-11-12" } });
-    cenario.respostas.financeira_receber = { data: false, error: null };
-    expect(await destinoDe(receberDaFinanceira(formulario({ conta: CONTA, referencia: "AV lote 7", recebido: "1.250,00", data: "2026-11-12" })))).toBe("/pagamentos/financeiras?ok=sem_mudanca");
+    cenario.respostas.financeira_registrar_repasse = { data: true, error: null };
+    expect(await destinoDe(receberDaFinanceira(formulario({ tipo: "final", chave: VENDA, tarifa: "49,00", conta: CONTA, referencia: "AV lote 7", recebido: "1.250,00", data: "2026-11-12" })))).toBe("/pagamentos/financeiras?ok=recebido");
+    expect(cenario.chamadas.at(-1)).toEqual({ nome: "financeira_registrar_repasse", argumentos: { p_conta: CONTA, p_referencia: "AV lote 7", p_valor_recebido: 125_000, p_recebido_em: "2026-11-12", p_tarifa: 4_900, p_chave: VENDA } });
+    cenario.respostas.financeira_registrar_repasse = { data: false, error: null };
+    expect(await destinoDe(receberDaFinanceira(formulario({ tipo: "final", chave: VENDA, tarifa: "49,00", conta: CONTA, referencia: "AV lote 7", recebido: "1.250,00", data: "2026-11-12" })))).toBe("/pagamentos/financeiras?ok=sem_mudanca");
     const antes = cenario.chamadas.length;
-    expect(await destinoDe(receberDaFinanceira(formulario({ conta: CONTA, referencia: "x", recebido: "1", data: "2026-11-12" })))).toBe("/pagamentos/financeiras?erro=referencia");
+    expect(await destinoDe(receberDaFinanceira(formulario({ tipo: "final", chave: VENDA, tarifa: "49,00", conta: CONTA, referencia: "x", recebido: "1", data: "2026-11-12" })))).toBe("/pagamentos/financeiras?erro=referencia");
     expect(cenario.chamadas).toHaveLength(antes);
-    cenario.respostas.financeira_receber = { data: null, error: { code: "OR030", message: "Recebimento já registrado" } };
-    expect(await destinoDe(receberDaFinanceira(formulario({ conta: CONTA, referencia: "AV lote 8", recebido: "1", data: "2026-11-12" })))).toBe("/pagamentos/financeiras?erro=ja_recebido");
+    cenario.respostas.financeira_registrar_repasse = { data: null, error: { code: "OR030", message: "Recebimento já registrado" } };
+    expect(await destinoDe(receberDaFinanceira(formulario({ tipo: "final", chave: VENDA, tarifa: "49,00", conta: CONTA, referencia: "AV lote 8", recebido: "1", data: "2026-11-12" })))).toBe("/pagamentos/financeiras?erro=ja_recebido");
     expect(await destinoDe(desfazerRecebimento(formulario({ conta: CONTA, motivo: "ok" })))).toBe("/pagamentos/financeiras?erro=motivo");
     cenario.respostas.financeira_desfazer_recebimento = { data: true, error: null };
     expect(await destinoDe(desfazerRecebimento(formulario({ conta: CONTA, motivo: "Valor digitado errado" })))).toBe("/pagamentos/financeiras?ok=desfeito");
@@ -178,8 +204,8 @@ describe("/pagamentos/financeiras: venda cancelada e correção do repasse (#83)
     expect(await destinoDe(corrigirRecebimento(formulario({ ...campos, motivo: "Corrigindo" })))).toBe("/pagamentos/financeiras?erro=so_registrado");
     cenario.respostas.financeira_desfazer_recebimento = { data: true, error: null };
     expect(await destinoDe(desfazerRecebimento(formulario({ conta: CONTA, motivo: "O repasse não caiu", cancelada: "sim" })))).toBe("/pagamentos/financeiras?ok=desfeito_cancelada");
-    cenario.respostas.financeira_receber = { data: null, error: { code: "22023", message: "Venda cancelada: não há o que receber da financeira" } };
-    expect(await destinoDe(receberDaFinanceira(formulario(campos)))).toBe("/pagamentos/financeiras?erro=venda_cancelada");
+    cenario.respostas.financeira_registrar_repasse = { data: null, error: { code: "22023", message: "Venda cancelada: não há o que receber da financeira" } };
+    expect(await destinoDe(receberDaFinanceira(formulario({ ...campos, tipo: "parcial", chave: VENDA })))).toBe("/pagamentos/financeiras?erro=venda_cancelada");
     const t = visivel(await pagina({ erro: "venda_cancelada", ok: "desfeito_cancelada" }));
     expect(t).toContain("Venda cancelada: não há o que receber da financeira.");
     expect(t).toContain("a conta ficou cancelada: não volta a ser cobrada da financeira");
