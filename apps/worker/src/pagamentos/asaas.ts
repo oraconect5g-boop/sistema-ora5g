@@ -30,12 +30,44 @@ export type SituacaoDaConsulta = "pago" | "pendente" | "cancelado" | "estornado"
  * removido conta como cancelado. Todo o resto (estorno em andamento, chargeback, recebido em dinheiro, cobrança) é
  * desconhecida: vira divergência para alguém olhar, nunca confirma.
  */
-export function situacaoDaAsaas(status: string, removido: boolean): SituacaoDaConsulta {
-  if (removido) return "cancelado";
-  if (status === "RECEIVED" || status === "CONFIRMED") return "pago";
-  if (status === "PENDING" || status === "OVERDUE" || status === "AWAITING_RISK_ANALYSIS") return "pendente";
-  if (status === "REFUNDED") return "estornado";
-  return "desconhecida";
+export function situacaoDaAsaas(status: string, removido: boolean, cobranca: Record<string, unknown> = {}): SituacaoDaConsulta {
+  return lerPagamentoDaAsaas({ ...cobranca, status, deleted: removido }).situacao;
+}
+
+/**
+ * AUD-f (auditoria de e7f55b2): o motivo de cada situação que não é pago, pendente, cancelado nem estornado (a documentação da
+ * Asaas, lida em 26/11: os status do pagamento, os estornos em "refunds" e a contestação em "chargeback"). Nenhum confirma.
+ */
+export type MotivoDaAsaas = "estorno_parcial" | "estorno_em_andamento" | "contestacao" | "recebido_em_dinheiro" | "negativacao";
+export type LeituraDaAsaas = { situacao: SituacaoDaConsulta; motivo?: MotivoDaAsaas; status?: string; liquido_centavos?: number; estornado_centavos: number };
+const ESTORNO_PENDENTE = new Set(["PENDING", "AWAITING_CRITICAL_ACTION_AUTHORIZATION", "AWAITING_CUSTOMER_EXTERNAL_AUTHORIZATION"]);
+const CONTESTACAO = new Set(["CHARGEBACK_REQUESTED", "CHARGEBACK_DISPUTE", "AWAITING_CHARGEBACK_REVERSAL"]);
+const ehObjeto = (v: unknown): v is Record<string, unknown> => typeof v === "object" && v !== null && !Array.isArray(v);
+
+/**
+ * O pagamento da Asaas lido inteiro: a situação, o motivo, a situação na Asaas, o líquido (netValue: o bruto menos a taxa) e a
+ * soma dos estornos concluídos. Pago (RECEIVED ou CONFIRMED) com estorno concluído é o estorno PARCIAL (o REFUNDED é o total):
+ * não passa como pago. O estorno pedido ou em andamento e a contestação aberta (a que não foi revertida) também não; o pagamento
+ * removido conta como cancelado. Tudo o que não for conhecido é desconhecida, sem motivo.
+ */
+export function lerPagamentoDaAsaas(c: Record<string, unknown>): LeituraDaAsaas {
+  const status = typeof c.status === "string" && /^[A-Z_]{1,40}$/.test(c.status) ? c.status : undefined;
+  const estornos = Array.isArray(c.refunds) ? c.refunds.filter(ehObjeto) : [];
+  const estornado = estornos.filter((e) => e.status === "DONE").reduce((soma, e) => soma + (centavosDe(e.value) ?? 0), 0);
+  const estornoPendente = estornos.some((e) => typeof e.status === "string" && ESTORNO_PENDENTE.has(e.status));
+  const contestacaoAberta = ehObjeto(c.chargeback) && c.chargeback.status !== "REVERSED";
+  const liquido = centavosDe(c.netValue);
+  const base = { estornado_centavos: estornado, ...(status ? { status } : {}), ...(liquido !== null ? { liquido_centavos: liquido } : {}) };
+  const motivo = (m: MotivoDaAsaas): LeituraDaAsaas => ({ ...base, situacao: "desconhecida", motivo: m });
+  if (c.deleted === true) return { ...base, situacao: "cancelado" };
+  if ((status && CONTESTACAO.has(status)) || contestacaoAberta) return motivo("contestacao");
+  if (status === "REFUNDED") return { ...base, situacao: "estornado" };
+  if (status === "REFUND_REQUESTED" || status === "REFUND_IN_PROGRESS" || estornoPendente) return motivo("estorno_em_andamento");
+  if (status === "RECEIVED" || status === "CONFIRMED") return estornado > 0 ? motivo("estorno_parcial") : { ...base, situacao: "pago" };
+  if (status === "RECEIVED_IN_CASH") return motivo("recebido_em_dinheiro");
+  if (status === "DUNNING_REQUESTED" || status === "DUNNING_RECEIVED") return motivo("negativacao");
+  if (status === "PENDING" || status === "OVERDUE" || status === "AWAITING_RISK_ANALYSIS") return { ...base, situacao: "pendente" };
+  return { ...base, situacao: "desconhecida" };
 }
 
 /** Reais com centavos (o número da Asaas) em centavos inteiros; fora disso, nulo. */
@@ -54,7 +86,7 @@ export type ResultadoDoLink =
   | { tipo: "falha"; motivo: string }
   /** Pode ter sido criado (tempo esgotado, 5xx, resposta fora da forma): antes de criar de novo, procurar. */
   | { tipo: "desconhecido"; motivo: string };
-export type ConsultaDaAsaas = { id_no_provedor: string; link: string; valor_centavos: number; situacao: SituacaoDaConsulta };
+export type ConsultaDaAsaas = { id_no_provedor: string; link: string; valor_centavos: number } & LeituraDaAsaas;
 
 /** PAY-015a: o QR Code estático criado (o id, o copia e cola e a imagem em base64). */
 export type QrDaAsaas = { id: string; copiaECola: string; imagem: string };
@@ -193,7 +225,11 @@ export class ClienteAsaas {
     if (r.tipo !== "resposta" || r.status !== 200 || !c) return "falha";
     const valor = centavosDe(c.value);
     if (c.id !== id || typeof c.status !== "string" || valor === null || typeof c.paymentLink !== "string" || !ID.test(c.paymentLink)) return "falha";
-    return { id_no_provedor: id, link: c.paymentLink, valor_centavos: valor, situacao: situacaoDaAsaas(c.status, c.deleted === true) };
+    // AUD-f: a leitura inteira (o motivo, o líquido e o estornado, para a conciliação). O estorno maior que o pagamento é
+    // desconhecido (sem o número, que o banco recusaria).
+    const leitura = lerPagamentoDaAsaas(c);
+    if (leitura.estornado_centavos > valor) return { id_no_provedor: id, link: c.paymentLink, valor_centavos: valor, situacao: "desconhecida", estornado_centavos: 0 };
+    return { id_no_provedor: id, link: c.paymentLink, valor_centavos: valor, ...leitura };
   }
 
   /** PAY-015a: a chave Pix ativa da conta (a primeira), que recebe os pagamentos do QR. Nulo: a conta não tem chave ativa. */
@@ -234,7 +270,7 @@ export class ClienteAsaas {
     const c = corpoDe(r);
     if (r.tipo !== "resposta" || r.status !== 200 || !c || !Array.isArray(c.data)) return "falha";
     const cobrancas = (c.data as Record<string, unknown>[]).filter((x) => x && x.pixQrCodeId === qrId && x.deleted !== true);
-    const contam = cobrancas.map((x) => ({ x, situacao: typeof x.status === "string" ? situacaoDaAsaas(x.status, false) : "desconhecida" as const }))
+    const contam = cobrancas.map((x) => ({ x, situacao: typeof x.status === "string" ? situacaoDaAsaas(x.status, false, x) : "desconhecida" as const }))
       .filter((y) => y.situacao !== "pendente");
     if (contam.length === 0) return { situacao: "nenhum" };
     const [unica] = contam;
@@ -259,7 +295,7 @@ export class ClienteAsaas {
       for (const x of c.data as Record<string, unknown>[]) {
         if (!x || x.deleted === true || typeof x.id !== "string" || !ID.test(x.id) || typeof x.paymentLink !== "string" || !ID.test(x.paymentLink)) continue;
         todas.push({
-          id: x.id, link: x.paymentLink, situacao: typeof x.status === "string" ? situacaoDaAsaas(x.status, false) : "desconhecida",
+          id: x.id, link: x.paymentLink, situacao: typeof x.status === "string" ? situacaoDaAsaas(x.status, false, x) : "desconhecida",
           valor_centavos: centavosDe(x.value), ...cartaoDe(x),
           assinatura: typeof x.subscription === "string" && ID.test(x.subscription) ? x.subscription : null,
         });

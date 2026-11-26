@@ -4684,8 +4684,10 @@ export type Database = {
       loja_pagamentos: {
         Row: {
           atualizado_em: string
+          conferido_em: string | null
           criado_em: string
           divergencia: string | null
+          estornado_centavos: number
           estornado_em: string | null
           id: string
           id_no_provedor: string | null
@@ -4698,15 +4700,19 @@ export type Database = {
           provedor: string
           reservado_ate: string | null
           situacao: string
+          situacao_no_provedor: string | null
           tentativas: number
           ultima_falha: string | null
           unidade_id: string
           valor_centavos: number
+          valor_liquido_centavos: number | null
         }
         Insert: {
           atualizado_em?: string
+          conferido_em?: string | null
           criado_em?: string
           divergencia?: string | null
+          estornado_centavos?: number
           estornado_em?: string | null
           id?: string
           id_no_provedor?: string | null
@@ -4719,15 +4725,19 @@ export type Database = {
           provedor?: string
           reservado_ate?: string | null
           situacao?: string
+          situacao_no_provedor?: string | null
           tentativas?: number
           ultima_falha?: string | null
           unidade_id: string
           valor_centavos: number
+          valor_liquido_centavos?: number | null
         }
         Update: {
           atualizado_em?: string
+          conferido_em?: string | null
           criado_em?: string
           divergencia?: string | null
+          estornado_centavos?: number
           estornado_em?: string | null
           id?: string
           id_no_provedor?: string | null
@@ -4740,10 +4750,12 @@ export type Database = {
           provedor?: string
           reservado_ate?: string | null
           situacao?: string
+          situacao_no_provedor?: string | null
           tentativas?: number
           ultima_falha?: string | null
           unidade_id?: string
           valor_centavos?: number
+          valor_liquido_centavos?: number | null
         }
         Relationships: [
           {

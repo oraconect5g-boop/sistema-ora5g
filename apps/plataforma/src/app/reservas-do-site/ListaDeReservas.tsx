@@ -1,6 +1,6 @@
 import { CalendarClock, Globe, ShoppingCart } from "lucide-react";
 
-import { Botao, Cartao, EstadoVazio, Selo } from "../../componentes/ui";
+import { Aviso, Botao, Cartao, EstadoVazio, Selo } from "../../componentes/ui";
 import { brl } from "../../lib/formato";
 import { textoDaOrigem } from "../../lib/loja/origem";
 import { tempoAteVencer } from "../../lib/loja/reserva";
@@ -21,7 +21,9 @@ export type PedidoDaLoja = {
   expira_em: string; criado_em: string; motivo_cancelamento: string | null;
 };
 /** PAY-014a (ADR-025): o Pix do pedido, pelo id do pedido (sem linha: o cliente não pediu para pagar pelo site). */
-export type PagamentoNaLoja = { situacao: string; pago_em: string | null };
+/** AUD-f: a divergência (com o motivo) e a conciliação do pagamento pelo site, quando o banco já tem as colunas. */
+export type ConciliacaoDoPagamento = { bruto: number; liquido: number | null; estornado: number; naAsaas: string | null; conferidoEm: string | null };
+export type PagamentoNaLoja = { situacao: string; pago_em: string | null; divergencia?: string | null; conciliacao?: ConciliacaoDoPagamento };
 
 const campo = "mt-1 min-h-10 w-full rounded-botao border border-borda bg-white px-3 text-sm outline-none focus:border-acao focus:ring-2 focus:ring-acao/20";
 const dataHora = (iso: string) => new Intl.DateTimeFormat("pt-BR", { timeZone: "America/Sao_Paulo", dateStyle: "short", timeStyle: "short" }).format(new Date(iso));
@@ -50,6 +52,14 @@ export function ListaDeReservas({ reservas, pedidos = [], pagamentos = {}, produ
     : g.situacao === "criando" ? <Selo tom="info">Preparando o Pix</Selo>
     : g.situacao === "estornado" ? <Selo tom="neutro">Pagamento devolvido</Selo>
     : <Selo tom="neutro">Pix sem efeito: cobre na loja</Selo>;
+  // AUD-f: a conciliação do pagamento: o bruto, o líquido (o que a Asaas deposita; a diferença é a taxa dela) e o estornado.
+  const conciliacao = (g: PagamentoNaLoja | undefined) => {
+    const c = g?.conciliacao;
+    if (!c || (g.situacao !== "pago" && g.situacao !== "estornado" && c.estornado === 0)) return null;
+    const partes = [`bruto ${brl(c.bruto)}`, ...(c.liquido !== null ? [`líquido ${brl(c.liquido)} (taxa da Asaas ${brl(Math.max(c.bruto - c.liquido, 0))})`] : []),
+      ...(c.estornado > 0 ? [`estornado ${brl(c.estornado)}`] : []), ...(c.naAsaas ? [`na Asaas: ${c.naAsaas}`] : [])];
+    return <p className="numeros text-xs text-suave">{`Conciliação: ${partes.join(" · ")}${c.conferidoEm ? ` (conferido em ${dataHora(c.conferidoEm)})` : ""}`}</p>;
+  };
   const rotulo = (r: ReservaDaLoja) => r.situacao === "cancelada" ? <Selo tom="neutro">Cancelada</Selo> : r.situacao === "atendida" ? <Selo tom="sucesso">Atendida</Selo> : <Selo tom="aviso">Vencida</Selo>;
   return (
     <div className="mt-4 space-y-4">
@@ -68,7 +78,13 @@ export function ListaDeReservas({ reservas, pedidos = [], pagamentos = {}, produ
                 })}</ul>
               </dd></div>
               <div><dt className="text-suave">{pagamentos[p.id]?.situacao === "pago" ? "Total pago pelo site" : "Total anunciado"}</dt><dd className="numeros font-bold">{brl(p.total_centavos)}</dd></div>
-              {pagamentos[p.id] && <div className="sm:col-span-2"><dt className="text-suave">Pagamento pelo site</dt><dd>{seloDoPix(pagamentos[p.id])}</dd></div>}
+              {pagamentos[p.id] && (
+                <div className="sm:col-span-2"><dt className="text-suave">Pagamento pelo site</dt><dd className="space-y-1">
+                  {seloDoPix(pagamentos[p.id])}
+                  {pagamentos[p.id]?.divergencia && <Aviso tom="aviso">{`Confira antes de entregar ou cancelar: ${pagamentos[p.id]?.divergencia}`}</Aviso>}
+                  {conciliacao(pagamentos[p.id])}
+                </dd></div>
+              )}
               {unidades[0] && <div><dt className="text-suave">Veio de</dt><dd>{textoDaOrigem(unidades[0])}</dd></div>}
             </dl>
             <div className="mt-3 flex flex-wrap items-start gap-x-4 gap-y-1">

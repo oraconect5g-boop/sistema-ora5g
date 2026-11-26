@@ -7,7 +7,7 @@ import type { AddressInfo } from "node:net";
 import { afterAll, beforeAll, beforeEach, describe, expect, it } from "vitest";
 
 import { transporteHttp } from "../connect/transporte.ts";
-import { centavosDe, chaveDoAmbiente, ClienteAsaas, EVENTOS_DO_AVISO, situacaoDaAsaas } from "./asaas.ts";
+import { centavosDe, chaveDoAmbiente, ClienteAsaas, EVENTOS_DO_AVISO, lerPagamentoDaAsaas, situacaoDaAsaas } from "./asaas.ts";
 
 const CHAVE = "$aact_hmlg_000000000000ChaveFicticiaDoTeste";
 type Pedido = { metodo: string; caminho: string; cabecalhos: IncomingMessage["headers"]; corpo: unknown };
@@ -44,6 +44,27 @@ describe("o formato da Asaas (PAY-014a)", () => {
     expect(situacaoDaAsaas("REFUNDED", false)).toBe("estornado");
     expect(situacaoDaAsaas("RECEIVED", true)).toBe("cancelado");
     for (const s of ["REFUND_IN_PROGRESS", "CHARGEBACK_REQUESTED", "RECEIVED_IN_CASH", "DUNNING_REQUESTED", "QUALQUER"]) expect(situacaoDaAsaas(s, false), s).toBe("desconhecida");
+  });
+
+  // AUD-f (auditoria de e7f55b2): cada situação com o seu motivo; o estorno parcial não passa como pago. Pagamentos FICTÍCIOS
+  // na forma da documentação da Asaas (lida em 26/11): status, value, netValue, refunds e chargeback.
+  it("AUD-f: o pagamento lido inteiro: o estorno parcial, o estorno em andamento, a contestação, o recebido em dinheiro e a negativação não pagam", () => {
+    const pago = { status: "RECEIVED", value: 79.9, netValue: 78.91 };
+    expect(lerPagamentoDaAsaas(pago)).toEqual({ situacao: "pago", status: "RECEIVED", liquido_centavos: 7_891, estornado_centavos: 0 });
+    expect(lerPagamentoDaAsaas({ ...pago, refunds: [{ status: "DONE", value: 20 }, { status: "CANCELLED", value: 5 }] }))
+      .toEqual({ situacao: "desconhecida", motivo: "estorno_parcial", status: "RECEIVED", liquido_centavos: 7_891, estornado_centavos: 2_000 });
+    expect(lerPagamentoDaAsaas({ ...pago, status: "CONFIRMED", refunds: [{ status: "AWAITING_CUSTOMER_EXTERNAL_AUTHORIZATION", value: 79.9 }] }))
+      .toMatchObject({ situacao: "desconhecida", motivo: "estorno_em_andamento" });
+    for (const status of ["REFUND_REQUESTED", "REFUND_IN_PROGRESS"]) expect(lerPagamentoDaAsaas({ ...pago, status }), status).toMatchObject({ motivo: "estorno_em_andamento" });
+    for (const status of ["CHARGEBACK_REQUESTED", "CHARGEBACK_DISPUTE", "AWAITING_CHARGEBACK_REVERSAL"]) expect(lerPagamentoDaAsaas({ ...pago, status }), status).toMatchObject({ motivo: "contestacao" });
+    expect(lerPagamentoDaAsaas({ ...pago, chargeback: { status: "IN_DISPUTE", value: 79.9 } })).toMatchObject({ situacao: "desconhecida", motivo: "contestacao" });
+    expect(lerPagamentoDaAsaas({ ...pago, chargeback: { status: "REVERSED", value: 79.9 } })).toMatchObject({ situacao: "pago" });
+    expect(lerPagamentoDaAsaas({ ...pago, status: "RECEIVED_IN_CASH" })).toMatchObject({ motivo: "recebido_em_dinheiro" });
+    for (const status of ["DUNNING_REQUESTED", "DUNNING_RECEIVED"]) expect(lerPagamentoDaAsaas({ ...pago, status })).toMatchObject({ motivo: "negativacao" });
+    expect(lerPagamentoDaAsaas({ ...pago, status: "REFUNDED", refunds: [{ status: "DONE", value: 79.9 }] })).toEqual({ situacao: "estornado", status: "REFUNDED", liquido_centavos: 7_891, estornado_centavos: 7_990 });
+    expect(lerPagamentoDaAsaas({ status: "status fora do padrão" })).toEqual({ situacao: "desconhecida", estornado_centavos: 0 });
+    // O caixa (o Pix e o cartão pela Asaas) usa a mesma leitura: o pago com estorno parcial não paga lá também.
+    expect(situacaoDaAsaas("RECEIVED", false, { refunds: [{ status: "DONE", value: 1 }] })).toBe("desconhecida");
   });
 
   it("os centavos: reais com até dois decimais; o resto é nulo", () => {
@@ -118,7 +139,15 @@ describe("o link de pagamento (PAY-014a)", () => {
 describe("o pagamento e o aviso (PAY-014a)", () => {
   it("consulta o pagamento pelo id do aviso, no formato comum; 404 é nulo; outra resposta é falha", async () => {
     responder = json(200, { object: "payment", id: "pay_1", status: "RECEIVED", value: 79.9, paymentLink: "lnk_291089675759", deleted: false });
-    expect(await cliente().consultarPagamento("pay_1")).toEqual({ id_no_provedor: "pay_1", link: "lnk_291089675759", valor_centavos: 7_990, situacao: "pago" });
+    expect(await cliente().consultarPagamento("pay_1")).toEqual({ id_no_provedor: "pay_1", link: "lnk_291089675759", valor_centavos: 7_990, situacao: "pago",
+      status: "RECEIVED", estornado_centavos: 0 });
+    // AUD-f: o líquido e o estorno parcial vão para a conciliação; o estorno maior que o pagamento é desconhecido.
+    responder = json(200, { object: "payment", id: "pay_1", status: "RECEIVED", value: 79.9, netValue: 78.91, paymentLink: "lnk_291089675759", deleted: false,
+      refunds: [{ status: "DONE", value: 10 }] });
+    expect(await cliente().consultarPagamento("pay_1")).toEqual({ id_no_provedor: "pay_1", link: "lnk_291089675759", valor_centavos: 7_990, situacao: "desconhecida",
+      motivo: "estorno_parcial", status: "RECEIVED", liquido_centavos: 7_891, estornado_centavos: 1_000 });
+    responder = json(200, { object: "payment", id: "pay_1", status: "RECEIVED", value: 79.9, paymentLink: "lnk_291089675759", refunds: [{ status: "DONE", value: 90 }] });
+    expect(await cliente().consultarPagamento("pay_1")).toMatchObject({ situacao: "desconhecida", estornado_centavos: 0 });
     expect(recebidos[0]).toMatchObject({ metodo: "GET", caminho: "/v3/payments/pay_1" });
     responder = json(200, { object: "payment", id: "pay_1", status: "PENDING", value: 79.9, paymentLink: "lnk_291089675759", deleted: true });
     expect((await cliente().consultarPagamento("pay_1"))).toMatchObject({ situacao: "cancelado" });

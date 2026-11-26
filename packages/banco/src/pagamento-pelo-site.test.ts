@@ -298,3 +298,79 @@ describe("quem pode o quê (PAY-014a)", () => {
     expect(p.codigo).toMatch(/^[A-HJ-NP-Z2-9]{6}$/);
   });
 });
+
+// AUD-f (auditoria de e7f55b2), item 4: cada situação da Asaas com o seu motivo (o estorno parcial, o estorno em andamento, a
+// contestação, o recebido em dinheiro) e a conciliação do pagamento (o líquido, o estornado, a situação na Asaas). Valores e
+// ids FICTÍCIOS.
+describe("AUD-f: estornos, contestações e a conciliação do pagamento pelo site", () => {
+  const aplicarMais = (aviso: string, consulta: Record<string, unknown>) =>
+    servico<string>("select public.pagamento_consulta_aplicar($1, $2::jsonb) as v", [aviso, JSON.stringify(consulta)]);
+  const PAGO = (link: string, id: string) => ({ situacao: "pago", valor_centavos: 7_900, link, id_no_provedor: id, status: "RECEIVED", liquido_centavos: 7_801, estornado_centavos: 0 });
+
+  it("a compra: o pedido reserva por 24 horas; pago, o pedido fica guardado 7 dias e a conciliação guarda o bruto, o líquido (a taxa é a diferença) e a situação na Asaas", async () => {
+    await ligar();
+    const p = await aguardando("lnk_conc");
+    expect((await db.query<{ v: boolean }>("select expira_em between now() + interval '24 hours' - interval '1 minute' and now() + interval '24 hours' as v from public.loja_pedidos where codigo = $1",
+      [p.codigo])).rows[0]?.v).toBe(true);
+    await receber(avisoDe("evt_c1", "lnk_conc"));
+    expect(await aplicarMais("evt_c1", PAGO("lnk_conc", "pay_c1"))).toBe("confirmado");
+    expect(await pagamentoDo(p.codigo)).toMatchObject({ situacao: "pago", valor_centavos: 7_900, valor_liquido_centavos: 7_801, estornado_centavos: 0, situacao_no_provedor: "RECEIVED", divergencia: null });
+    expect((await pagamentoDo(p.codigo))?.conferido_em).not.toBeNull();
+    expect((await db.query<{ v: boolean }>("select expira_em > now() + interval '6 days' as v from public.loja_pedidos where codigo = $1", [p.codigo])).rows[0]?.v).toBe(true);
+  });
+
+  it("o estorno parcial não passa como pago: fica pago, com a divergência e o valor devolvido; o pedido pago segue sem cancelar", async () => {
+    await ligar();
+    const p = await aguardando("lnk_parc");
+    await receber(avisoDe("evt_p1", "lnk_parc"));
+    expect(await aplicarMais("evt_p1", PAGO("lnk_parc", "pay_p1"))).toBe("confirmado");
+    await receber(avisoDe("evt_p2", "lnk_parc", "PAYMENT_PARTIALLY_REFUNDED"));
+    expect(await aplicarMais("evt_p2", { ...PAGO("lnk_parc", "pay_p1"), situacao: "desconhecida", motivo: "estorno_parcial", estornado_centavos: 2_000 })).toBe("situacao_desconhecida");
+    expect(await pagamentoDo(p.codigo)).toMatchObject({ situacao: "pago", estornado_centavos: 2_000, divergencia: "estorno parcial na Asaas: confira o valor devolvido e o pedido" });
+    const dono = await naLoja(ids.dono, ids.lojaA);
+    const pedidoId = await idDoPedido(p.codigo);
+    expect(await comoUsuario(db, dono, () => erroDe(() => db.query("select public.loja_pedido_cancelar($1, 'Tentativa')", [pedidoId])), { criarSessao: false })).toBe("OR048");
+  });
+
+  it("o estorno em andamento e a contestação não mudam o pagamento; o estorno concluído (REFUNDED) é o que estorna", async () => {
+    await ligar();
+    const p = await aguardando("lnk_est");
+    await receber(avisoDe("evt_e1", "lnk_est"));
+    await aplicarMais("evt_e1", PAGO("lnk_est", "pay_e1"));
+    await receber(avisoDe("evt_e2", "lnk_est", "PAYMENT_REFUND_IN_PROGRESS"));
+    expect(await aplicarMais("evt_e2", { ...PAGO("lnk_est", "pay_e1"), situacao: "desconhecida", motivo: "estorno_em_andamento", status: "REFUND_IN_PROGRESS" })).toBe("situacao_desconhecida");
+    expect(await pagamentoDo(p.codigo)).toMatchObject({ situacao: "pago", situacao_no_provedor: "REFUND_IN_PROGRESS", divergencia: "estorno pedido ou em andamento na Asaas: o pagamento só muda quando ele terminar" });
+    await receber(avisoDe("evt_e3", "lnk_est", "PAYMENT_REFUNDED"));
+    expect(await aplicarMais("evt_e3", { ...PAGO("lnk_est", "pay_e1"), situacao: "estornado", status: "REFUNDED", estornado_centavos: 7_900 })).toBe("estorno_registrado");
+    expect(await pagamentoDo(p.codigo)).toMatchObject({ situacao: "estornado", estornado_centavos: 7_900, situacao_no_provedor: "REFUNDED" });
+
+    const c = await aguardando("lnk_cb");
+    await receber(avisoDe("evt_cb1", "lnk_cb"));
+    await aplicarMais("evt_cb1", PAGO("lnk_cb", "pay_cb1"));
+    await receber(avisoDe("evt_cb2", "lnk_cb", "PAYMENT_CHARGEBACK_REQUESTED"));
+    expect(await aplicarMais("evt_cb2", { ...PAGO("lnk_cb", "pay_cb1"), situacao: "desconhecida", motivo: "contestacao", status: "CHARGEBACK_REQUESTED" })).toBe("situacao_desconhecida");
+    expect(await pagamentoDo(c.codigo)).toMatchObject({ situacao: "pago", divergencia: "contestação (chargeback) aberta na Asaas: não entregue nem cancele sem conferir" });
+  });
+
+  it("o recebido em dinheiro na Asaas e o pagamento que chega já com estorno parcial não confirmam sozinhos", async () => {
+    await ligar();
+    const p = await aguardando("lnk_din");
+    await receber(avisoDe("evt_d1", "lnk_din"));
+    expect(await aplicarMais("evt_d1", { ...PAGO("lnk_din", "pay_d1"), situacao: "desconhecida", motivo: "recebido_em_dinheiro", status: "RECEIVED_IN_CASH" })).toBe("situacao_desconhecida");
+    expect(await pagamentoDo(p.codigo)).toMatchObject({ situacao: "aguardando", divergencia: "a Asaas marcou o pagamento como recebido em dinheiro: confira" });
+    const q = await aguardando("lnk_pp");
+    await receber(avisoDe("evt_pp1", "lnk_pp"));
+    expect(await aplicarMais("evt_pp1", { ...PAGO("lnk_pp", "pay_pp1"), situacao: "desconhecida", motivo: "estorno_parcial", estornado_centavos: 1_000 })).toBe("situacao_desconhecida");
+    expect(await pagamentoDo(q.codigo)).toMatchObject({ situacao: "aguardando", estornado_centavos: 1_000 });
+  });
+
+  it("fora da forma: o motivo que não existe, o estorno maior que o pagamento, o líquido negativo e a situação fora do padrão são recusados", async () => {
+    await ligar();
+    await aguardando("lnk_ruim");
+    await receber(avisoDe("evt_r1", "lnk_ruim"));
+    for (const extra of [{ motivo: "qualquer" }, { estornado_centavos: 8_000 }, { liquido_centavos: -1 }, { status: "received; drop" }, { liquido_centavos: "7801" }]) {
+      expect(await recusaAoServico("select public.pagamento_consulta_aplicar($1, $2::jsonb)", ["evt_r1", JSON.stringify({ ...PAGO("lnk_ruim", "pay_r1"), ...extra })]), JSON.stringify(extra))
+        .toBe("22023");
+    }
+  });
+});

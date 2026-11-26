@@ -22,6 +22,21 @@ const OK = {
 
 // ONLINE-b (ORA-ONLINE-006; ADR-009): as reservas do site na loja do turno, para quem vende nela. Atender abre a venda
 // no PDV com a unidade reservada; cancelar devolve a unidade ao estoque; o WhatsApp só aparece quando se pede.
+// AUD-f (auditoria de e7f55b2): o pagamento do pedido com a divergência (o motivo: o estorno parcial, a contestação...) e a
+// conciliação (o bruto, o líquido e o estornado que a Asaas informou). Banco sem as colunas da conciliação (a migration ainda
+// não aplicada, 42703): as colunas de antes, sem a conciliação.
+type Cliente = Awaited<ReturnType<typeof obterSessao>>["supabase"];
+type LidoDoPagamento = {
+  pedido_id: string; situacao: string; pago_em: string | null; divergencia?: string | null; valor_centavos?: number; valor_liquido_centavos?: number | null;
+  estornado_centavos?: number; situacao_no_provedor?: string | null; conferido_em?: string | null;
+};
+async function lerPagamentos(supabase: Cliente, pedidos: string[]): Promise<{ data: LidoDoPagamento[] | null; error: { code?: string } | null }> {
+  const completo = await supabase.from("loja_pagamentos")
+    .select("pedido_id, situacao, pago_em, divergencia, valor_centavos, valor_liquido_centavos, estornado_centavos, situacao_no_provedor, conferido_em").in("pedido_id", pedidos);
+  if (completo.error?.code !== "42703") return completo;
+  return supabase.from("loja_pagamentos").select("pedido_id, situacao, pago_em, divergencia").in("pedido_id", pedidos);
+}
+
 export default async function ReservasDoSite({ searchParams }: { searchParams: Promise<{ ok?: ValorDeParametro; erro?: ValorDeParametro }> }) {
   const parametros = await searchParams;
   const ok = chaveDoCatalogo(OK, parametros.ok);
@@ -55,11 +70,17 @@ export default async function ReservasDoSite({ searchParams }: { searchParams: P
     reservas.some((r) => r.item_serializado_id)
       ? supabase.from("itens_serializados").select("id, imei").in("id", reservas.flatMap((r) => (r.item_serializado_id ? [r.item_serializado_id] : [])))
       : Promise.resolve({ data: [], error: null }),
-    pedidos.length ? supabase.from("loja_pagamentos").select("pedido_id, situacao, pago_em").in("pedido_id", pedidos.map((p) => p.id)) : Promise.resolve({ data: [], error: null }),
+    pedidos.length ? lerPagamentos(supabase, pedidos.map((p) => p.id)) : Promise.resolve({ data: [], error: null }),
   ]);
   if (pagamentosLidos.error && !reservasAusentes(pagamentosLidos.error)) throw new FalhaDoServico("loja_pagamentos");
   const pagamentos: Record<string, PagamentoNaLoja> = Object.fromEntries(((pagamentosLidos.error ? [] : pagamentosLidos.data) ?? [])
-    .map((g) => [g.pedido_id, { situacao: g.situacao, pago_em: g.pago_em }]));
+    .map((g: LidoDoPagamento) => [g.pedido_id, {
+      situacao: g.situacao, pago_em: g.pago_em, divergencia: g.divergencia ?? null,
+      ...(typeof g.estornado_centavos === "number" ? {
+        conciliacao: { bruto: g.valor_centavos ?? 0, liquido: g.valor_liquido_centavos ?? null, estornado: g.estornado_centavos, naAsaas: g.situacao_no_provedor ?? null,
+          conferidoEm: g.conferido_em ?? null },
+      } : {}),
+    }]));
   // Sem o nome ou o IMEI (falha passageira ou sem leitura), a reserva aparece mesmo assim: "Produto" e sem o IMEI.
   const produtos: Record<string, string> = Object.fromEntries((variantes.data ?? []).map((v) => [v.id, v.nome]));
   const imeis: Record<string, string> = Object.fromEntries((aparelhos.data ?? []).flatMap((a) => (a.imei ? [[a.id, a.imei]] : [])));
