@@ -8035,6 +8035,8 @@ export type Database = {
       }
       venda_pagamentos: {
         Row: {
+          acrescimo_cliente_centavos: number | null
+          bandeira_cartao: string | null
           caixa_cartao_id: string | null
           caixa_pix_id: string | null
           comprovante: string | null
@@ -8051,6 +8053,7 @@ export type Database = {
           loja_pagamento_id: string | null
           meio: string
           meio_entrada: string | null
+          modalidade_cartao: string | null
           ordem: number
           organizacao_id: string
           parcelas: number | null
@@ -8062,6 +8065,8 @@ export type Database = {
           venda_id: string
         }
         Insert: {
+          acrescimo_cliente_centavos?: number | null
+          bandeira_cartao?: string | null
           caixa_cartao_id?: string | null
           caixa_pix_id?: string | null
           comprovante?: string | null
@@ -8078,6 +8083,7 @@ export type Database = {
           loja_pagamento_id?: string | null
           meio: string
           meio_entrada?: string | null
+          modalidade_cartao?: string | null
           ordem: number
           organizacao_id: string
           parcelas?: number | null
@@ -8089,6 +8095,8 @@ export type Database = {
           venda_id: string
         }
         Update: {
+          acrescimo_cliente_centavos?: number | null
+          bandeira_cartao?: string | null
           caixa_cartao_id?: string | null
           caixa_pix_id?: string | null
           comprovante?: string | null
@@ -8105,6 +8113,7 @@ export type Database = {
           loja_pagamento_id?: string | null
           meio?: string
           meio_entrada?: string | null
+          modalidade_cartao?: string | null
           ordem?: number
           organizacao_id?: string
           parcelas?: number | null

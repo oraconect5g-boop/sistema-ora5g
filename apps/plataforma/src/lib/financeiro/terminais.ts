@@ -23,9 +23,9 @@ export function lerPagamentosPorTerminal(dado: unknown): PagamentosDoTerminal[] 
     const terminal = t(l, "terminal");
     const unidade = t(l, "unidade");
     const provedor = t(l, "provedor");
-    if (!ehUuid(terminal) || !ehUuid(unidade) || !ehProvedorManual(provedor) || typeof l.ativo !== "boolean") falha("terminal");
+    if (!ehUuid(terminal) || !ehUuid(unidade) || !ehProvedorManual(provedor) || typeof l.ativo !== "boolean") return falha("terminal");
     const x = {
-      terminal, unidade, provedor, identificador: t(l, "identificador"), apelido: t(l, "apelido"), ativo: l.ativo as boolean,
+      terminal, unidade, provedor, identificador: t(l, "identificador"), apelido: t(l, "apelido"), ativo: l.ativo,
       quantidade: n(l, "quantidade"), valor: n(l, "valor"), conciliados: n(l, "conciliados"), conciliado: n(l, "conciliado"), liquido: n(l, "liquido"),
       estornados: n(l, "estornados"), estornado: n(l, "estornado"),
     };
