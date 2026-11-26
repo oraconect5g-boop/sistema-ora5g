@@ -20,39 +20,71 @@ export const dynamic = "force-dynamic";
 
 const dia = (iso: string | null) => (iso && /^\d{4}-\d{2}-\d{2}/.test(iso) ? iso.slice(0, 10).split("-").reverse().join("/") : "—");
 const quando = (iso: string) => new Intl.DateTimeFormat("pt-BR", { timeZone: "America/Sao_Paulo", dateStyle: "short", timeStyle: "short" }).format(new Date(iso)).replace(",", "");
+/** AUD-f: as conciliações de 20 em 20 e o que não fecha de 200 em 200 (cada lista com o total), em ordem estável. */
+const CONCILIACOES_POR_PAGINA = 20;
+const DETALHES_POR_PAGINA = 200;
+const paginaDe = (v: ValorDeParametro | undefined) => Math.min(Math.max(Number.parseInt(textoDoParametro(v) ?? "", 10) || 1, 1), 1_000);
 type Conciliacao = { id: string; numero: number; relatorio: string; de: string; ate: string; recebida_em: string; totais: unknown };
 type Linha = { ordem: number; linha: string | null; iccid: string | null; dia: string | null; plano: string | null; valor_centavos: number | string | null; resultado: string; operacao_id: string | null };
 type SoAqui = { operacao_id: string; connect_operacoes: { numero: number; tipo: string; linha: string | null; numero_ativado: string | null; iccid: string | null; concluida_em: string | null; valor_face_centavos: number | string | null } | null };
 
 // A conciliação da produção com os relatórios oficiais da Nogle (lote CONNECT-c; ORA-CONNECT-009). O worker grava; aqui
 // quem gere a Ora Connect lê, pela RLS (connect.gerir na rede). A tela não chama a Nogle nem vê credencial.
-export default async function ConciliacaoDaNogle({ searchParams }: { searchParams: Promise<{ id?: ValorDeParametro }> }) {
+export default async function ConciliacaoDaNogle({ searchParams }: { searchParams: Promise<{ id?: ValorDeParametro; lista?: ValorDeParametro; pagina?: ValorDeParametro }> }) {
   const parametros = await searchParams;
   const sessao = await obterSessao({ exigirLoja: true });
   if (!permite(sessao, "connect.gerir")) {
     return <MoldeReal sessao={sessao} largura={LARGURA_DA_CONNECT}><CabecalhoConnect sessao={sessao} aba="carteira" /><Aviso tom="aviso" className="mt-4">A conciliação com a Nogle é de quem gere a Ora Connect.</Aviso></MoldeReal>;
   }
   const { supabase } = sessao;
-  const lidas = await supabase.from("connect_conciliacoes").select("id, numero, relatorio, de, ate, recebida_em, totais").order("recebida_em", { ascending: false }).limit(20);
+  const paginaDaLista = paginaDe(parametros.lista);
+  const paginaDosDetalhes = paginaDe(parametros.pagina);
+  const lidas = await supabase.from("connect_conciliacoes").select("id, numero, relatorio, de, ate, recebida_em, totais", { count: "exact" })
+    .order("recebida_em", { ascending: false }).order("id", { ascending: false })
+    .range((paginaDaLista - 1) * CONCILIACOES_POR_PAGINA, paginaDaLista * CONCILIACOES_POR_PAGINA - 1);
   if (lidas.error) throw new FalhaDoServico("connect_conciliacoes");
   const conciliacoes = lidas.data as unknown as Conciliacao[];
+  const totalDeConciliacoes = lidas.count ?? conciliacoes.length;
   const pedida = textoDoParametro(parametros.id);
-  const aberta = conciliacoes.find((c) => c.id === pedida) ?? (pedida === undefined ? conciliacoes[0] : undefined);
+  let aberta = conciliacoes.find((c) => c.id === pedida) ?? (pedida === undefined ? conciliacoes[0] : undefined);
+  // A pedida de uma página mais antiga da lista também abre (o endereço vale para qualquer conciliação que a pessoa vê).
+  if (!aberta && ehUuid(pedida)) {
+    const uma = await supabase.from("connect_conciliacoes").select("id, numero, relatorio, de, ate, recebida_em, totais").eq("id", pedida).limit(1);
+    if (uma.error) throw new FalhaDoServico("connect_conciliacoes");
+    aberta = (uma.data as unknown as Conciliacao[])[0];
+  }
 
   let linhas: Linha[] = [];
   let soAqui: SoAqui[] = [];
+  let totalDeLinhas = 0;
+  let totalSoAqui = 0;
+  const de = (paginaDosDetalhes - 1) * DETALHES_POR_PAGINA;
   if (aberta && ehUuid(aberta.id)) {
     const [l, s] = await Promise.all([
-      supabase.from("connect_conciliacao_linhas").select("ordem, linha, iccid, dia, plano, valor_centavos, resultado, operacao_id")
-        .eq("conciliacao_id", aberta.id).neq("resultado", "conferida").order("ordem").limit(200),
-      supabase.from("connect_conciliacao_so_aqui").select("operacao_id, connect_operacoes(numero, tipo, linha, numero_ativado, iccid, concluida_em, valor_face_centavos)")
-        .eq("conciliacao_id", aberta.id).limit(200),
+      supabase.from("connect_conciliacao_linhas").select("ordem, linha, iccid, dia, plano, valor_centavos, resultado, operacao_id", { count: "exact" })
+        .eq("conciliacao_id", aberta.id).neq("resultado", "conferida").order("ordem").range(de, de + DETALHES_POR_PAGINA - 1),
+      supabase.from("connect_conciliacao_so_aqui").select("operacao_id, connect_operacoes(numero, tipo, linha, numero_ativado, iccid, concluida_em, valor_face_centavos)", { count: "exact" })
+        .eq("conciliacao_id", aberta.id).order("operacao_id").range(de, de + DETALHES_POR_PAGINA - 1),
     ]);
     if (l.error) throw new FalhaDoServico("connect_conciliacao_linhas");
     if (s.error) throw new FalhaDoServico("connect_conciliacao_so_aqui");
     linhas = l.data as unknown as Linha[];
     soAqui = s.data as unknown as SoAqui[];
+    totalDeLinhas = l.count ?? linhas.length;
+    totalSoAqui = s.count ?? soAqui.length;
   }
+  const paginasDosDetalhes = Math.max(1, Math.ceil(Math.max(totalDeLinhas, totalSoAqui) / DETALHES_POR_PAGINA));
+  const enderecoDaConciliacao = (mudanca: { id?: string; lista?: number; pagina?: number }) => {
+    const p = new URLSearchParams();
+    const id = mudanca.id ?? aberta?.id;
+    if (id) p.set("id", id);
+    const lista = mudanca.lista ?? paginaDaLista;
+    if (lista > 1) p.set("lista", String(lista));
+    if ((mudanca.pagina ?? 1) > 1) p.set("pagina", String(mudanca.pagina));
+    return `/connect/conciliacao?${p}`;
+  };
+  const faixa = (total: number) => (total === 0 ? "nenhuma"
+    : `${numero(Math.min(de + 1, total))}–${numero(Math.min(de + DETALHES_POR_PAGINA, total))} de ${numero(total)}`);
   const t = totaisDaConciliacao(aberta?.totais);
 
   return (
@@ -74,11 +106,15 @@ export default async function ConciliacaoDaNogle({ searchParams }: { searchParam
         <>
           <nav aria-label="Conciliações" className="mt-4 flex flex-wrap gap-2 text-sm">
             {conciliacoes.map((c) => (
-              <Link key={c.id} href={`/connect/conciliacao?id=${c.id}`} aria-current={c.id === aberta?.id ? "page" : undefined}
+              <Link key={c.id} href={enderecoDaConciliacao({ id: c.id })} aria-current={c.id === aberta?.id ? "page" : undefined}
                 className={`rounded-botao px-3 py-2 font-semibold ${c.id === aberta?.id ? "bg-acao text-white" : "bg-white text-acao ring-1 ring-borda"}`}>
                 {`Nº ${c.numero} · ${NOMES_DOS_RELATORIOS[c.relatorio] ?? c.relatorio} · ${dia(c.de)} a ${dia(c.ate)}`}
               </Link>
             ))}
+            {paginaDaLista > 1 && <Link href={enderecoDaConciliacao({ lista: paginaDaLista - 1 })} className="px-1 py-2 text-xs font-semibold text-acao">As mais recentes</Link>}
+            {paginaDaLista * CONCILIACOES_POR_PAGINA < totalDeConciliacoes && (
+              <Link href={enderecoDaConciliacao({ lista: paginaDaLista + 1 })} className="px-1 py-2 text-xs font-semibold text-acao">{`As mais antigas (${numero(totalDeConciliacoes)} ao todo)`}</Link>
+            )}
           </nav>
           {aberta ? (
             <>
@@ -90,7 +126,8 @@ export default async function ConciliacaoDaNogle({ searchParams }: { searchParam
                 <Indicador rotulo={SO_NA_ORA.rotulo} valor={numero(t.so_aqui)} detalhe={SO_NA_ORA.detalhe} />
                 <Indicador rotulo={RESULTADOS_DA_CONCILIACAO.sem_identificacao.rotulo} valor={numero(t.sem_identificacao)} detalhe={RESULTADOS_DA_CONCILIACAO.sem_identificacao.detalhe} />
               </section>
-              <Cartao className="mt-4" titulo="O que não fecha" subtitulo="As linhas da Nogle que não conferiram e as operações da Ora que a Nogle não trouxe (até 200 de cada)">
+              <Cartao className="mt-4" titulo="O que não fecha"
+                subtitulo={`As linhas da Nogle que não conferiram (${faixa(totalDeLinhas)}) e as operações da Ora que a Nogle não trouxe (${faixa(totalSoAqui)}), de ${numero(DETALHES_POR_PAGINA)} em ${numero(DETALHES_POR_PAGINA)}`}>
                 {linhas.length === 0 && soAqui.length === 0 ? (
                   <p className="text-sm text-suave">Tudo conferido nesta conciliação.</p>
                 ) : (
@@ -114,6 +151,12 @@ export default async function ConciliacaoDaNogle({ searchParams }: { searchParam
                       </li>
                     ))}
                   </ul>
+                )}
+                {paginasDosDetalhes > 1 && (
+                  <nav aria-label="Páginas do que não fecha" className="mt-3 flex flex-wrap gap-3 border-t border-borda pt-3 text-xs">
+                    {paginaDosDetalhes > 1 && <Link href={enderecoDaConciliacao({ pagina: paginaDosDetalhes - 1 })} className="font-semibold text-acao">Os anteriores</Link>}
+                    {paginaDosDetalhes < paginasDosDetalhes && <Link href={enderecoDaConciliacao({ pagina: paginaDosDetalhes + 1 })} className="font-semibold text-acao">Os seguintes</Link>}
+                  </nav>
                 )}
               </Cartao>
             </>

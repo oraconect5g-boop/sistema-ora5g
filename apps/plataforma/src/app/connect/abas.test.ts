@@ -54,6 +54,30 @@ class Consulta {
     return Promise.resolve({ data: this.linhas, error: null, ...(this.contar ? { count: this.total ?? this.linhas.length } : {}) }).then(resolver);
   }
 }
+// AUD-f: a soma do banco (connect_somas_por) de mentira, pelas operações do cenário, com o mesmo RLS de mentira (quem não gere
+// soma só as próprias) e as mesmas categorias da função do banco.
+function somasFalsas(argumentos: Record<string, unknown>) {
+  const dentro = (l: Linha) => new Date(String(l.criado_em)) >= new Date(String(argumentos.p_inicio)) && new Date(String(l.criado_em)) <= new Date(String(argumentos.p_fim));
+  const visiveis = (cenario.tabelas.connect_operacoes ?? []).filter((l) => (cenario.permissoes.has("connect.gerir") || l.vendedor_id === "eu") && dentro(l)
+    && (!argumentos.p_unidade || l.unidade_id === argumentos.p_unidade) && (!argumentos.p_vendedor || l.vendedor_id === argumentos.p_vendedor));
+  const grupos = new Map<string, Record<string, number | string>>();
+  for (const l of visiveis) {
+    const chave = `${String(l.vendedor_id)}|${String(l.unidade_id)}`;
+    const g = grupos.get(chave) ?? { vendedor_id: String(l.vendedor_id), unidade_id: String(l.unidade_id), operacoes: 0, ativacoes: 0, recargas: 0, portabilidades: 0,
+      em_andamento: 0, sem_resultado: 0, nao_feitas: 0, valor_de_face_centavos: 0, recebido_centavos: 0 };
+    const mais = (campo: string, v = 1) => { g[campo] = Number(g[campo]) + v; };
+    mais("operacoes");
+    if (l.situacao === "confirmada") {
+      mais(l.tipo === "ativacao" ? "ativacoes" : l.tipo === "recarga" ? "recargas" : "portabilidades");
+      if (l.tipo !== "portabilidade") mais("valor_de_face_centavos", Number(l.valor_face_centavos ?? 0));
+      mais("recebido_centavos", Number(l.recebido_na_loja_centavos ?? 0));
+    } else if (["registrada", "enviando", "aguardando_operadora"].includes(String(l.situacao))) mais("em_andamento");
+    else if (["resultado_desconhecido", "erro_operadora"].includes(String(l.situacao))) mais("sem_resultado");
+    else if (["recusada", "negada", "nao_recebida", "cancelada"].includes(String(l.situacao))) mais("nao_feitas");
+    grupos.set(chave, g);
+  }
+  return [...grupos.values()];
+}
 const sessaoFicticia = {
   usuario: { id: "eu" },
   situacao: { usuario_ativo: true, sessao_no_turno: true, unidade_id: "loja", unidade_nome: "Santa Cândida (fictícia)", turno_termina_em: "2026-11-26T03:00:00Z" },
@@ -63,6 +87,7 @@ const sessaoFicticia = {
     from: (tabela: string) => new Consulta((cenario.tabelas[tabela] ?? []).filter((l) => tabela !== "connect_operacoes" || cenario.permissoes.has("connect.gerir") || l.vendedor_id === "eu")),
     rpc: async (nome: string, argumentos: Record<string, unknown>) => {
       cenario.rpc.push({ nome, argumentos });
+      if (nome === "connect_somas_por") return { data: somasFalsas(argumentos), error: null };
       return nome === "connect_painel" ? { data: cenario.painel, error: null } : { data: null, error: cenario.erroDaRpc };
     },
   },

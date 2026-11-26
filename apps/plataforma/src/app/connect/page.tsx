@@ -15,7 +15,8 @@ import { FalhaDoServico, obterSessao } from "../../lib/acesso/sessao";
 import { consultarProducao } from "../../lib/connect/consulta-producao";
 import { linhaFormatada } from "../../lib/connect/consultas";
 import { ERROS_DO_CONNECT, materialDoEsimNaTela, pagamentoNaNogle, podeVerMaterialDoEsim } from "../../lib/connect/regras";
-import { somasPor, totalConfirmadas } from "../../lib/connect/relatorio";
+import { totalConfirmadas } from "../../lib/connect/relatorio";
+import { consultarSomas, somasDasLinhas } from "../../lib/connect/somas-do-banco";
 import { centavosDoBanco } from "../../lib/dinheiro";
 import { janelasDoPeriodo, ORDEM_DOS_PERIODOS, PERIODOS_FINANCEIROS, periodoFinanceiro, type PeriodoFinanceiro } from "../../lib/financeiro/painel";
 import { agora, brl, numero } from "../../lib/formato";
@@ -77,13 +78,15 @@ export default async function Connect({ searchParams }: { searchParams: Promise<
   // As operações da loja (quem só opera vê as suas: o RLS escolhe): as do período e as abertas de antes. A lista não tem fim
   // de janela: a operação recém-registrada aparece mesmo com o relógio do banco um pouco à frente do da tela. A produção do
   // período (lote G4a) vem somada do banco, a da loja para quem gere e a própria para quem opera.
-  const [doPeriodo, deAntes, pixAPagar, producao] = await Promise.all([
+  const [doPeriodo, deAntes, pixAPagar, producao, somasLidas] = await Promise.all([
     supabase.from("connect_operacoes").select(COLUNAS).eq("unidade_id", unidade)
       .gte("criado_em", janela.inicio.toISOString()).order("criado_em", { ascending: false }).limit(LIMITE_DO_PERIODO),
     supabase.from("connect_operacoes").select(COLUNAS).eq("unidade_id", unidade)
       .in("situacao", [...ABERTAS]).lt("criado_em", janela.inicio.toISOString()).order("criado_em", { ascending: false }).limit(50),
     aPagar,
     opera || gere ? consultarProducao(supabase, janela, { unidade, vendedor: gere ? null : usuario.id }) : Promise.resolve(null),
+    // AUD-f: a produção por vendedor somada no banco (do período inteiro), não só das operações que a lista lê.
+    gere ? consultarSomas(supabase, janela, { unidade, vendedor: null }) : Promise.resolve(null),
   ]);
   if (doPeriodo.error || deAntes.error || pixAPagar?.error) throw new FalhaDoServico("connect");
   const operacoes = [...doPeriodo.data, ...deAntes.data].sort((a, b) => new Date(b.criado_em).getTime() - new Date(a.criado_em).getTime());
@@ -95,7 +98,8 @@ export default async function Connect({ searchParams }: { searchParams: Promise<
   const comMaterial = lista.filter((o) => podeVerMaterialDoEsim(o, usuario.id, gere)).map((o) => o.id);
   // Débito da carteira é custo (#56): só para quem tem custo.ver, lido da tabela própria (o RLS também barra). Os nomes de
   // quem fez cada operação, só para quem gere (quem opera vê só as suas).
-  const vendedores = [...new Set(operacoes.map((o) => o.vendedor_id))];
+  const linhasDasSomas = somasLidas?.estado === "ok" ? somasLidas.dados : [];
+  const vendedores = [...new Set([...operacoes.map((o) => o.vendedor_id), ...linhasDasSomas.map((l) => l.vendedor_id)])];
   const [custos, pessoas, materiais] = await Promise.all([
     veCusto && operacoes.length
       ? supabase.from("connect_operacoes_custos").select("operacao_id, valor_debitado_centavos").in("operacao_id", operacoes.map((o) => o.id))
@@ -112,7 +116,7 @@ export default async function Connect({ searchParams }: { searchParams: Promise<
   };
   const debitoDe = (id: string) => custos.data.find((c) => c.operacao_id === id)?.valor_debitado_centavos ?? null;
   const nomeDe = (id: string) => pessoas.data.find((p) => p.id === id)?.nome ?? "Pessoa sem nome";
-  const porVendedor = gere ? somasPor(doPeriodo.data, "vendedor_id", nomeDe).filter((v) => totalConfirmadas(v) > 0).slice(0, 8) : [];
+  const porVendedor = gere ? somasDasLinhas(linhasDasSomas, "vendedor_id", nomeDe).filter((v) => totalConfirmadas(v) > 0).slice(0, 8) : [];
 
   const enderecoDe = (p: { periodo?: PeriodoFinanceiro; filtro?: FiltroDaLista; pix?: number }) => {
     const busca = new URLSearchParams();
@@ -260,7 +264,8 @@ export default async function Connect({ searchParams }: { searchParams: Promise<
           {producao && <OperacoesPorTipo producao={producao} veCusto={veCusto} rotuloDoPeriodo={PERIODOS_FINANCEIROS[periodo].rotulo.toLowerCase()} />}
           {gere && (
             <Cartao titulo="Produção por vendedor" subtitulo="Confirmadas entre as operações do período, como no relatório" icone={Users}>
-              {porVendedor.length === 0 ? <p className="text-sm text-suave">Nenhuma operação confirmada no período.</p> : (
+              {somasLidas && somasLidas.estado !== "ok" ? <p className="text-sm text-suave">Não foi possível somar a produção por vendedor agora: o relatório completo também mostra.</p>
+                : porVendedor.length === 0 ? <p className="text-sm text-suave">Nenhuma operação confirmada no período.</p> : (
                 <BarrasHorizontais nomeSerie="Confirmadas" formatar={numero} dados={porVendedor.map((v) => ({ rotulo: v.nome, valor: totalConfirmadas(v) }))} />
               )}
               <p className="mt-4 text-sm"><Link href={periodo === "hoje" ? "/connect/relatorio" : `/connect/relatorio?periodo=${periodo}`} className="font-semibold text-acao">Ver o relatório completo</Link></p>

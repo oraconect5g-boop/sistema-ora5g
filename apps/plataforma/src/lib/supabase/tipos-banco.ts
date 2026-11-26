@@ -9096,6 +9096,22 @@ export type Database = {
         }
         Returns: Json
       }
+      connect_somas_por: {
+        Args: { p_fim: string; p_inicio: string; p_unidade?: string; p_vendedor?: string }
+        Returns: {
+          ativacoes: number
+          em_andamento: number
+          nao_feitas: number
+          operacoes: number
+          portabilidades: number
+          recargas: number
+          recebido_centavos: number
+          sem_resultado: number
+          unidade_id: string
+          valor_de_face_centavos: number
+          vendedor_id: string
+        }[]
+      }
       connect_worker_acoes_a_enviar: {
         Args: { p_limite: number; p_organizacao: string }
         Returns: {

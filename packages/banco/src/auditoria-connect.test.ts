@@ -275,3 +275,48 @@ describe("AUD-f — o cadastro do cliente na Nogle para preencher (parte B)", ()
     expect(await linha(saldo)).toMatchObject({ apagada: false, parametro: "51988887777" });
   });
 });
+
+describe("AUD-f — as somas da produção no banco (parte C)", () => {
+  const naLoja = async (id: string, loja: string): Promise<Sessao> => {
+    const s = { usuario: id, sessao: `4f000000-0000-4000-8000-${String(++n).padStart(12, "0")}` };
+    await comoUsuario(db, s, () => db.query("select public.selecionar_unidade($1)", [loja]));
+    return s;
+  };
+  const enviar = async (id: string, resultado: object) => {
+    await rpcServico("select count(*) as v from public.connect_worker_reivindicar_envios($1, ARRAY['ativacao'], 5)", [ids.organizacao]);
+    return rpcServico<string>("select public.connect_worker_registrar_envio($1, $2::jsonb) as v", [id, JSON.stringify(resultado)]);
+  };
+  const somas = (s: Sessao, unidade: string | null = null, vendedor: string | null = null) => comoUsuario(db, s, async () => (await db.query<Record<string, unknown>>(
+    `select vendedor_id, unidade_id, operacoes::int, ativacoes::int, recargas::int, portabilidades::int, em_andamento::int, sem_resultado::int, nao_feitas::int,
+            valor_de_face_centavos::int, recebido_centavos::int
+     from public.connect_somas_por(now() - interval '1 day', now() + interval '1 day', $1, $2) order by vendedor_id, unidade_id`, [unidade, vendedor])).rows);
+  const zero = { ativacoes: 0, recargas: 0, portabilidades: 0, em_andamento: 0, sem_resultado: 0, nao_feitas: 0, valor_de_face_centavos: 0, recebido_centavos: 0 };
+
+  it("soma cada categoria por vendedor e loja, com as regras de leitura de quem pede (quem só opera, as próprias; quem gere, as das lojas dele)", async () => {
+    const ana = await usuario();
+    const confirmada = await registrarAtivacao(ana, false);
+    await aceitar(confirmada);
+    expect(await consultar(confirmada, { evidencia: "confirmada", mensagem: "ICCID ativo na Nogle (11).", numero: "51988887777", dados: { codigo: 11 } })).toBe("confirmada");
+    const recusada = await registrarAtivacao(ana, false);
+    expect(await enviar(recusada, { resultado: "recusada", status_http: 422, mensagem: "Plano informado não existe." })).toBe("recusada");
+    await registrarAtivacao(ana, false); // fica registrada (em andamento)
+    const ab = await usuario(ids.vendedorAB);
+    const desconhecida = await registrarAtivacao(ab, false);
+    expect(await enviar(desconhecida, { resultado: "desconhecida", mensagem: "Sem resposta da Nogle." })).toBe("resultado_desconhecido");
+    await registrarAtivacao(await naLoja(ids.vendedorAB, ids.lojaB), false); // na loja B, registrada
+
+    const daAnaNaLojaA = { vendedor_id: ids.vendedorA, unidade_id: ids.lojaA, operacoes: 3, ...zero, ativacoes: 1, em_andamento: 1, nao_feitas: 1, valor_de_face_centavos: 4490 };
+    const doAbNaLojaA = { vendedor_id: ids.vendedorAB, unidade_id: ids.lojaA, operacoes: 1, ...zero, sem_resultado: 1 };
+    const doAbNaLojaB = { vendedor_id: ids.vendedorAB, unidade_id: ids.lojaB, operacoes: 1, ...zero, em_andamento: 1 };
+    const dono = await usuario(ids.dono);
+    expect(await somas(dono)).toEqual([daAnaNaLojaA, doAbNaLojaA, doAbNaLojaB].sort((a, b) => a.vendedor_id.localeCompare(b.vendedor_id) || a.unidade_id.localeCompare(b.unidade_id)));
+    expect(await somas(dono, ids.lojaA)).toEqual([daAnaNaLojaA, doAbNaLojaA].sort((a, b) => a.vendedor_id.localeCompare(b.vendedor_id)));
+    expect(await somas(dono, null, ids.vendedorAB)).toEqual([doAbNaLojaA, doAbNaLojaB].sort((a, b) => a.unidade_id.localeCompare(b.unidade_id)));
+    // Quem só opera: só as próprias (o mesmo RLS de connect_operacoes), mesmo pedindo a loja inteira.
+    expect(await somas(ana, ids.lojaA)).toEqual([daAnaNaLojaA]);
+    // O gerente da loja B: só a loja B.
+    expect(await somas(await naLoja(ids.gerenteB, ids.lojaB))).toEqual([doAbNaLojaB]);
+    // O visitante sem login não executa.
+    expect(await comoUsuario(db, null, () => erroDe(() => db.query("select * from public.connect_somas_por(now(), now())")))).toBe("42501");
+  });
+});

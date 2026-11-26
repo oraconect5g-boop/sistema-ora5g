@@ -12,6 +12,7 @@ import {
   descricaoDaAcao, ehErroDaAcao, ERROS_DA_ACAO, MOTIVOS_BLOQUEIO, NOMES_DAS_ACOES, resultadoDaAcao, SITUACOES_DA_ACAO, type AcaoDaTela,
 } from "../../../lib/connect/acoes-na-nogle";
 import { CAMPOS_DAS_ACOES } from "../../../lib/connect/cadastro-da-nogle";
+import { lerReferenciasDaNogle } from "../../../lib/connect/referencias";
 import { brl } from "../../../lib/formato";
 import { textoDoParametro, type ValorDeParametro } from "../../../lib/parametros";
 import { cancelarAcao, pedirAcao } from "./acoes";
@@ -42,17 +43,18 @@ export default async function AcoesNaNogle({ searchParams }: { searchParams: Pro
   const [acoesLidas, referencias, pdvsLidos, lojasLidas] = await Promise.all([
     supabase.from("connect_acoes").select("id, numero, tipo, alvo, parametros, motivo, situacao, mensagem, resultado, pedida_em, concluida_em")
       .order("pedida_em", { ascending: false }).limit(30),
-    supabase.from("connect_referencias").select("tipo, codigo, nome, uf, valor_centavos").in("tipo", ["plano", "cidade"]).eq("ativo", true).order("nome").limit(3000),
+    // AUD-f: os planos e as cidades por tipo e inteiros (páginas de 1.000), sem uma lista esconder a outra.
+    lerReferenciasDaNogle(supabase, ["plano", "cidade"]),
     supabase.from("connect_pdvs").select("pdv_id, nome, unidade_id, ativo").order("nome").limit(500),
     supabase.from("unidades").select("id, nome").limit(300),
   ]);
   if (acoesLidas.error) throw new FalhaDoServico("connect_acoes");
-  if (referencias.error) throw new FalhaDoServico("connect_referencias");
+  if (!referencias) throw new FalhaDoServico("connect_referencias");
   if (pdvsLidos.error) throw new FalhaDoServico("connect_pdvs");
   if (lojasLidas.error) throw new FalhaDoServico("unidades");
   const acoes = acoesLidas.data as unknown as AcaoDaTela[];
-  const planos = referencias.data.filter((r) => r.tipo === "plano");
-  const cidades = referencias.data.filter((r) => r.tipo === "cidade");
+  const planos = referencias.plano;
+  const cidades = referencias.cidade;
   const pdvs = (pdvsLidos.data as { pdv_id: number; nome: string; unidade_id: string | null; ativo: boolean }[]).filter((p) => p.ativo);
   const nomeDaLoja = (id: string | null) => (id ? (lojasLidas.data as { id: string; nome: string }[]).find((l) => l.id === id)?.nome : undefined);
   const erro = textoDoParametro(parametros.erro);
