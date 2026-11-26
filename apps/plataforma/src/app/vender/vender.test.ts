@@ -584,6 +584,14 @@ describe("a busca de produto dentro da venda", () => {
     expect(cenario.assinaturas).toEqual([]);
   });
 
+  it("IMEI secundário inteiro encontra o mesmo aparelho e adiciona a mesma unidade", async () => {
+    const item = cenario.tabelas.itens_serializados?.find((i) => i.id === S_LIVRE);
+    if (!item) throw new Error("Aparelho fictício ausente");
+    item.imei2 = "352099001761499";
+    const arvore = await abrir({ q: "352099001761499" });
+    expect(formularios(arvore, adicionarItem).map((f) => f.escondidos.item)).toEqual([S_LIVRE]);
+  });
+
   it("IMEI inteiro de aparelho reservado: aparece, mas sem botão", async () => {
     const arvore = await abrir({ q: "352099001700028" });
     const t = texto(arvore);

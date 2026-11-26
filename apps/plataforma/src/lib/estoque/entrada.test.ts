@@ -1,7 +1,7 @@
 import { completarComDigitoVerificador } from "@ora5g/dominio";
 import { describe, expect, it } from "vitest";
 
-import { ERROS_DA_ENTRADA, detalheDoEndereco, detalheDoErro, erroDaEntrada, separarIdentificadores, validarEntrada, type ErroDaEntrada } from "./entrada";
+import { ERROS_DA_ENTRADA, contarAparelhosNaEntrada, detalheDoEndereco, detalheDoErro, erroDaEntrada, separarIdentificadores, validarEntrada, type ErroDaEntrada } from "./entrada";
 
 // IMEIs e ICCIDs FICTÍCIOS com dígito verificador válido.
 const IMEI_1 = completarComDigitoVerificador("35209900180001");
@@ -53,6 +53,18 @@ describe("entrada de mercadoria", () => {
 
   it("separa identificadores digitados de qualquer jeito", () => {
     expect(separarIdentificadores(" 3520-9900 ; 123,456\n\n789 ")).toEqual(["35209900", "123", "456", "789"]);
+  });
+
+  it("preserva a associação de dois IMEIs sem duplicar o aparelho", () => {
+    const terceiro = completarComDigitoVerificador("35209900180003");
+    const texto = `${IMEI_1} / ${IMEI_2}\n${terceiro}`;
+    expect(contarAparelhosNaEntrada(texto)).toBe(2);
+    expect(validarEntrada(base([{ variante: APARELHO, tipo: "aparelho", identificadores: texto }]))).toMatchObject({
+      ok: true, dados: { itens: [{ identificadores: [{ imei: IMEI_1, imei2: IMEI_2 }, terceiro] }] },
+    });
+    for (const errado of [`${IMEI_1}/`, `${IMEI_1}/${IMEI_1}`, `${IMEI_1}/${IMEI_2}\n${IMEI_2}`, `${IMEI_1}/${IMEI_2}/${terceiro}`]) {
+      expect(validarEntrada(base([{ variante: APARELHO, tipo: "aparelho", identificadores: errado }]))).toEqual({ ok: false, erro: "identificador" });
+    }
   });
 
   it("erros do banco viram mensagens do catálogo", () => {

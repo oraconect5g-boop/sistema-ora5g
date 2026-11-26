@@ -505,6 +505,17 @@ describe("ações da entrada", () => {
     expect(await destinoDe(registrarEntrada(formulario(campos)))).toBe(`/estoque/entrada?ok=repetida&entrada=${ENTRADA}`);
   });
 
+  it("envia o par como uma unidade ao RPC da entrada", async () => {
+    cenario.respostas.estoque_registrar_entrada = { data: { id: ENTRADA, numero: 12, repetida: false, reentradas: 0 }, error: null };
+    const itens = JSON.stringify([{ variante: APARELHO, tipo: "aparelho", identificadores: `${IMEI}/${IMEI_2}` }]);
+    expect(await destinoDe(registrarEntrada(formulario({
+      unidade: LOJA, tipo: "carga_inicial", chave: "form:abc12345", motivo: "Contagem fictícia", itens,
+    })))).toBe(`/estoque/entrada?ok=registrada&entrada=${ENTRADA}`);
+    expect(cenario.chamadas[0]?.argumentos.p_itens).toEqual([
+      { variante: APARELHO, identificadores: [{ imei: IMEI, imei2: IMEI_2 }], condicao: "novo" },
+    ]);
+  });
+
   it("erros do formulário não chamam o banco; estorno repetido não é erro", async () => {
     expect(await destinoDe(registrarEntrada(formulario({ unidade: LOJA, tipo: "carga_inicial", chave: "form:abc12345", motivo: "Contagem", itens: JSON.stringify([{ variante: APARELHO, tipo: "aparelho", identificadores: "123" }]) }))))
       .toBe("/estoque/entrada?erro=identificador");
