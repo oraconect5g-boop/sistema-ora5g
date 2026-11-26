@@ -309,7 +309,10 @@ describe("resultado do mês: as linhas (L8b)", () => {
   it("os meios que entram nas taxas são exatamente os que se conciliam (privado.meio_liquidavel)", async () => {
     const texto = (await db.query<{ v: string }>("select pg_get_functiondef('public.resultado_do_mes(date,uuid,integer)'::regprocedure) as v")).rows[0]?.v ?? "";
     const lista = /p\.meio in \(([^)]*)\)/.exec(texto)?.[1]?.split(",").map((m) => m.trim().replace(/'/g, "")).sort();
-    const todos = ["dinheiro", "pix_direto", "pix_picpay", "cartao_picpay", "cartao_pagseguro", "link_pagamento", "payjoy", "aiva", "vale_troca"];
+    // Todos os meios válidos (privado.meio_valido), inclusive os da Mercado Pago e da Asaas: a lista escrita na função não
+    // pode esquecer um meio que a regra concilia (a revisão do #112 achou a previsão e o resultado sem a Mercado Pago).
+    const todos = ["dinheiro", "pix_direto", "pix_picpay", "cartao_picpay", "cartao_pagseguro", "pix_mercado_pago", "cartao_mercado_pago",
+      "link_pagamento", "payjoy", "aiva", "vale_troca", "pix_asaas", "cartao_asaas"];
     const liquidaveis = (await db.query<{ m: string }>("select m from unnest($1::text[]) as m where privado.meio_liquidavel(m) order by m", [todos])).rows.map((r) => r.m);
     expect(lista).toEqual(liquidaveis);
   });
