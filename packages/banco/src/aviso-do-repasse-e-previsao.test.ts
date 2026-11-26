@@ -142,7 +142,7 @@ describe("as pendências da loja: o repasse atrasado e a cobrança a retomar (FI
     await valor(dono, PRAZO, ["aiva", 5, "Contrato"]);
     expect((await pendencias(dono)).repasses_atrasados).toBe(2);
     // O repasse da PayJoy cai: a conta deixa de estar em aberto.
-    expect(await valor(dono, "select public.financeira_receber($1, $2, $3, $4::date) as v", [a1.conta, "REPASSE-FICTICIO-1", 125_000, hoje()])).toBeTruthy();
+    expect(await valor(dono, "select public.financeira_registrar_repasse($1::uuid, $2::text, $3::bigint, $4::date, 4900, md5($1::uuid::text || regexp_replace(trim($2::text), '\\s+', ' ', 'g'))::uuid) as v", [a1.conta, "REPASSE-FICTICIO-1", 125_000, hoje()])).toBeTruthy();
     expect((await pendencias(dono)).repasses_atrasados).toBe(1);
     // A venda da Aiva é cancelada (quem cancela devolve a entrada em dinheiro do próprio caixa): a conta fica cancelada,
     // e não é mais devida.
@@ -180,7 +180,7 @@ describe("as pendências da loja: o repasse atrasado e a cobrança a retomar (FI
     // A conta recebida não pede mais nada, mesmo com a volta marcada para hoje.
     await valor(dono, COBRAR, [a1.conta, "whatsapp", "Voltar a falar hoje", null, hoje(), chave("cob")]);
     await confere(dono, ids.lojaA, 1);
-    await valor(dono, "select public.financeira_receber($1, $2, $3, $4::date) as v", [a1.conta, "REPASSE-FICTICIO-2", 125_000, hoje()]);
+    await valor(dono, "select public.financeira_registrar_repasse($1::uuid, $2::text, $3::bigint, $4::date, 4900, md5($1::uuid::text || regexp_replace(trim($2::text), '\\s+', ' ', 'g'))::uuid) as v", [a1.conta, "REPASSE-FICTICIO-2", 125_000, hoje()]);
     expect((await pendencias(dono)).cobrancas_a_retomar).toBe(0);
   });
 });
@@ -254,7 +254,7 @@ describe("a previsão de caixa com o vencimento das financeiras (FIN-007b)", () 
     expect(Number(p.financeiras.no_periodo.valor) + Number(p.financeiras.depois.valor)).toBe(lista.totais.valor_no_prazo);
     expect(Number(p.financeiras.sem_prazo.valor)).toBe(lista.totais.valor_sem_prazo);
     // A conta recebida sai de tudo.
-    await valor(dono, "select public.financeira_receber($1, $2, $3, $4::date) as v", [(await cenarioContas()).a1, "REPASSE-FICTICIO-3", 125_000, hoje()]);
+    await valor(dono, "select public.financeira_registrar_repasse($1::uuid, $2::text, $3::bigint, $4::date, 4900, md5($1::uuid::text || regexp_replace(trim($2::text), '\\s+', ' ', 'g'))::uuid) as v", [(await cenarioContas()).a1, "REPASSE-FICTICIO-3", 125_000, hoje()]);
     const depois = await previsao(dono);
     expect(partes(depois)).toEqual({ total: [A2 + B1, 2], atrasadas: ZERO, no_periodo: [A2 + B1, 2], depois: ZERO, sem_prazo: ZERO });
     fecha(depois);

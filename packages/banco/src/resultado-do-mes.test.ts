@@ -346,7 +346,7 @@ describe("a taxa das financeiras no resultado (FIN-002a)", () => {
     });
 
     // A PayJoy repassa R$ 1.250,00 dos R$ 1.299,00: R$ 49,00 de taxa observada, no mês da venda.
-    expect(await valor(dono, "select public.financeira_receber($1, $2, $3, $4::date) as v", [c1?.id, "REPASSE-FICTICIO-FIN002", 125_000, dia])).toBeTruthy();
+    expect(await valor(dono, "select public.financeira_registrar_repasse($1::uuid, $2::text, $3::bigint, $4::date, 4900, md5($1::uuid::text || regexp_replace(trim($2::text), '\\s+', ' ', 'g'))::uuid) as v", [c1?.id, "REPASSE-FICTICIO-FIN002", 125_000, dia])).toBeTruthy();
     r = await resultado(dono, atual, ids.lojaA);
     expect(numeros(r.linhas)).toMatchObject({
       taxas: 4_900, taxas_cartao_pix: 0, taxas_financeiras: 4_900, financeiras_recebidas: 1, financeiras_a_receber: 1,

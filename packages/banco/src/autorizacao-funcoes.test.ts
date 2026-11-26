@@ -858,9 +858,17 @@ const CASOS: Record<string, Caso> = {
     semPermissao: true,
   },
   // Financeiras (L7b): registrar e desfazer o repasse e a lista são da gerência da loja (pagamento.conciliar).
-  "financeira_receber(uuid,text,bigint,date)": {
-    A: () => ["select public.financeira_receber($1, 'ATAQUE', 100, current_date)", [alvo.contaReceberA]],
-    B: () => ["select public.financeira_receber($1, 'ATAQUE', 100, current_date)", [alvo.contaReceberB]], semPermissao: true,
+  "financeira_registrar_repasse(uuid,text,bigint,date,bigint,uuid)": {
+    A: () => ["select public.financeira_registrar_repasse($1, 'Teste de autorização', 100, current_date, null, gen_random_uuid())", [alvo.contaReceberA]],
+    B: () => ["select public.financeira_registrar_repasse($1, 'Teste de autorização', 100, current_date, null, gen_random_uuid())", [alvo.contaReceberB]], semPermissao: true,
+  },
+  "financeira_desfazer_repasse_final(uuid,uuid,text)": {
+    A: () => ["select public.financeira_desfazer_repasse_final($1, gen_random_uuid(), 'Tentativa')", [alvo.contaReceberA]],
+    B: () => ["select public.financeira_desfazer_repasse_final($1, gen_random_uuid(), 'Tentativa')", [alvo.contaReceberB]], semPermissao: true,
+  },
+  "financeira_desfazer_repasse_parcial(uuid,uuid,text)": {
+    A: () => ["select public.financeira_desfazer_repasse_parcial($1, gen_random_uuid(), 'Tentativa')", [alvo.contaReceberA]],
+    B: () => ["select public.financeira_desfazer_repasse_parcial($1, gen_random_uuid(), 'Tentativa')", [alvo.contaReceberB]], semPermissao: true,
   },
   "financeira_desfazer_recebimento(uuid,text)": {
     A: () => ["select public.financeira_desfazer_recebimento($1, 'Tentativa')", [alvo.contaReceberA]],
@@ -1399,7 +1407,7 @@ describe("inventário: toda função SECURITY DEFINER exposta tem casos de recus
     const expostas = rows.map((r) => r.f);
     expect(expostas.filter((f) => !(f in CASOS)), "função nova exposta sem casos de recusa: acrescente ao CASOS").toEqual([]);
     expect(Object.keys(CASOS).filter((f) => !expostas.includes(f)), "caso de função que não existe mais").toEqual([]);
-    expect(expostas).toHaveLength(238);
+    expect(expostas).toHaveLength(240);
   });
 
   it("visitante anônimo executa só a vitrine, a reserva e o pedido da loja online (ONLINE-a, ONLINE-b e ONLINE-d), a leitura leve do banco da página /saude (SAUDE-a), a fila dos avisos, que pede o segredo (PWA-b), o relato dos erros do site, que pede o mesmo segredo (QUAL-006a), e o pagamento pelo site: saber se está ligado, pedir para pagar o pedido (com o código e o WhatsApp) e o aviso da Asaas, que pede o token (PAY-014a); no privado, a conferência da foto do site e um gatilho, que não roda sozinho", async () => {
