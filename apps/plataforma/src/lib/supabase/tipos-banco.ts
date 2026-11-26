@@ -2810,6 +2810,7 @@ export type Database = {
           id: string
           organizacao_id: string
           pagamento_id: string
+          parcial_centavos: number
           recebido_em: string | null
           referencia_recebimento: string | null
           registrado_por: string | null
@@ -2827,6 +2828,7 @@ export type Database = {
           id?: string
           organizacao_id: string
           pagamento_id: string
+          parcial_centavos?: number
           recebido_em?: string | null
           referencia_recebimento?: string | null
           registrado_por?: string | null
@@ -2844,6 +2846,7 @@ export type Database = {
           id?: string
           organizacao_id?: string
           pagamento_id?: string
+          parcial_centavos?: number
           recebido_em?: string | null
           referencia_recebimento?: string | null
           registrado_por?: string | null
@@ -9534,6 +9537,14 @@ export type Database = {
         }
         Returns: boolean
       }
+      financeira_desfazer_repasse_final: {
+        Args: { p_conta: string; p_motivo: string; p_repasse: string }
+        Returns: boolean
+      }
+      financeira_desfazer_repasse_parcial: {
+        Args: { p_conta: string; p_motivo: string; p_repasse: string }
+        Returns: boolean
+      }
       financeira_desfazer_recebimento: {
         Args: { p_conta: string; p_motivo: string }
         Returns: boolean
@@ -9543,6 +9554,17 @@ export type Database = {
           p_conta: string
           p_recebido_em: string
           p_referencia: string
+          p_valor_recebido: number
+        }
+        Returns: boolean
+      }
+      financeira_registrar_repasse: {
+        Args: {
+          p_chave: string
+          p_conta: string
+          p_recebido_em: string
+          p_referencia: string
+          p_tarifa: number | null
           p_valor_recebido: number
         }
         Returns: boolean

@@ -15,9 +15,14 @@ const ehFinanceira = (v: unknown): v is Financeira => typeof v === "string" && O
 
 export type ContaDaFinanceira = {
   id: string; vendaId: string; vendaNumero: number; concluidaEm: string; devedor: Financeira; valor: number;
-  situacao: "aberta" | "recebida"; dias: number; recebidoEm: string | null; valorRecebido: number | null; referencia: string | null;
+  situacao: "aberta" | "recebida" | "cancelada"; dias: number; recebidoEm: string | null; valorRecebido: number | null; referencia: string | null;
   /** A venda foi cancelada (correção #83). Nulo: banco sem a correção, que não diz. */
   vendaCancelada: boolean | null;
+  saldo?: number;
+  parcial?: number;
+  finalRegistrado?: boolean;
+  finalId?: string | null;
+  repassesParciais?: { id: string; valor: number; data: string; referencia: string }[];
 };
 export type ResumoDaFinanceira = { devedor: Financeira; abertas: number; valorAberto: number; maisAntigaDias: number | null; recebidas: number; valorRecebido: number; taxaObservada: number };
 export type FinanceirasAReceber = { porDevedor: ResumoDaFinanceira[]; contas: ContaDaFinanceira[] };
@@ -44,7 +49,7 @@ export function lerFinanceirasAReceber(dado: unknown): FinanceirasAReceber {
   });
   const contas = lista(dado, "contas").map((l): ContaDaFinanceira => {
     const situacao = l.situacao;
-    if (situacao !== "aberta" && situacao !== "recebida") throw new RespostaInesperada("situacao");
+    if (situacao !== "aberta" && situacao !== "recebida" && situacao !== "cancelada") throw new RespostaInesperada("situacao");
     const id = t(l, "id");
     const vendaId = t(l, "venda_id");
     if (!ehUuid(id) || !ehUuid(vendaId)) throw new RespostaInesperada("id");
@@ -63,7 +68,26 @@ export function lerFinanceirasAReceber(dado: unknown): FinanceirasAReceber {
       if (typeof l.venda_cancelada !== "boolean") throw new RespostaInesperada("venda_cancelada");
       vendaCancelada = l.venda_cancelada;
     }
-    return { id, vendaId, vendaNumero: n(l, "venda_numero"), concluidaEm: t(l, "concluida_em"), devedor: devedor(l), valor, situacao, dias: n(l, "dias"), recebidoEm, valorRecebido, referencia, vendaCancelada };
+    let repasses: Pick<ContaDaFinanceira, "saldo" | "parcial" | "finalRegistrado" | "finalId" | "repassesParciais"> = {};
+    if ("saldo" in l) {
+      const saldo = n(l, "saldo");
+      const parcial = n(l, "parcial");
+      const finalRegistrado = l.final_registrado;
+      const finalId = l.final_id;
+      const repassesParciais = lista(l, "repasses_parciais").map((r) => {
+        const id = t(r, "id");
+        const valor = n(r, "valor");
+        const data = t(r, "data");
+        if (!ehUuid(id) || valor <= 0 || !DIA.test(data)) throw new RespostaInesperada("repasses_parciais");
+        return { id, valor, data, referencia: t(r, "referencia") };
+      });
+      if (parcial < 0 || parcial >= valor || saldo !== (situacao === "aberta" ? valor - parcial : 0)
+          || typeof finalRegistrado !== "boolean" || (finalRegistrado ? !ehUuid(finalId) || situacao !== "recebida" || (valorRecebido ?? 0) <= parcial : finalId != null)
+          || repassesParciais.reduce((s, r) => s + r.valor, 0) !== parcial) throw new RespostaInesperada("repasses_parciais");
+      repasses = { saldo, parcial, finalRegistrado, finalId: ehUuid(finalId) ? finalId : null, repassesParciais };
+    }
+    if (situacao === "cancelada" && (!(repasses.parcial && repasses.parcial > 0) || vendaCancelada !== true)) throw new RespostaInesperada("situacao");
+    return { ...repasses, id, vendaId, vendaNumero: n(l, "venda_numero"), concluidaEm: t(l, "concluida_em"), devedor: devedor(l), valor, situacao, dias: n(l, "dias"), recebidoEm, valorRecebido, referencia, vendaCancelada };
   });
   return { porDevedor, contas };
 }
@@ -78,7 +102,13 @@ export function idadeDaConta(dias: number): { rotulo: string; tom: "neutro" | "i
 export const ERROS_DAS_FINANCEIRAS = {
   dados: "Confira os dados digitados.",
   referencia: "Informe a referência do repasse (de 3 a 80 letras): código, lote ou linha do extrato.",
-  recebido: "Valor recebido entre zero e o valor a receber.",
+  recebido: "Confira o valor recebido em relação ao saldo.",
+  limite_parcial: "O valor completa o saldo. Registre uma liquidação final com tarifa zero.",
+  tarifa: "Na liquidação final, some o valor recebido e a tarifa comprovada. A soma precisa ser igual ao saldo em aberto.",
+  data_final: "A data da liquidação final não pode ser anterior a um repasse parcial registrado.",
+  conciliacao_anterior: "Esta tela precisa estar na versão que distingue repasse parcial de liquidação final. Nenhum repasse foi gravado.",
+  parcial_liquidada: "Desfaça a liquidação final antes de desfazer um repasse parcial.",
+  correcao_final: "Para corrigir a liquidação, desfaça e registre de novo com a taxa confirmada.",
   data: "A data do repasse vai do dia da venda até hoje.",
   ja_recebido: "Recebimento já registrado: desfaça antes de mudar.",
   cancelada: "Conta cancelada com a venda: não há o que receber.",
@@ -94,9 +124,15 @@ export function erroDasFinanceiras(erro: { code?: string; message?: string } | n
   const codigo = erro?.code ?? "";
   const m = (erro?.message ?? "").toLowerCase();
   if (codigo === "P0002" || codigo === "42501") return "nao_encontrada";
-  if (codigo === "OR030") return "ja_recebido";
+  if (FUNCAO_AUSENTE.has(codigo)) return "conciliacao_anterior";
+  if (codigo === "OR030") {
+    if (m.includes("desfaça primeiro")) return "parcial_liquidada";
+    if (m.includes("para corrigir")) return "correcao_final";
+    return "ja_recebido";
+  }
   if (codigo !== "22023") return "falha";
   const regras: [string, ErroDasFinanceiras][] = [
+    ["completa o saldo", "limite_parcial"], ["data do repasse final", "data_final"], ["tarifa", "tarifa"],
     ["referência", "referencia"], ["valor recebido", "recebido"], ["data do repasse", "data"], ["venda cancelada", "venda_cancelada"],
     ["cancelada", "cancelada"], ["só se corrige", "so_registrado"], ["motivo", "motivo"],
   ];
@@ -122,6 +158,27 @@ export function lerRepasse(dados: Formulario): { ok: true; conta: string; refere
   const data = textoDo(dados.get("data"));
   if (!DIA.test(data) || Number.isNaN(new Date(`${data}T12:00:00Z`).getTime())) return { ok: false, erro: "data" };
   return { ok: true, conta, referencia, recebido, data };
+}
+
+/** Novo registro sempre distingue parcial de final e nunca deduz a taxa por diferença. */
+export function lerNovoRepasse(dados: Formulario) {
+  const repasse = lerRepasse(dados);
+  if (!repasse.ok) return repasse;
+  const chave = dados.get("chave");
+  const tipo = dados.get("tipo");
+  if (!ehUuid(chave) || (tipo !== "parcial" && tipo !== "final")) return { ok: false, erro: "dados" } as const;
+  if (repasse.recebido <= 0) return { ok: false, erro: "recebido" } as const;
+  const informada = textoDo(dados.get("tarifa"));
+  if (tipo === "parcial") {
+    if (informada) return { ok: false, erro: "tarifa" } as const;
+    return { ...repasse, chave, tarifa: null };
+  }
+  if (!informada) return { ok: false, erro: "tarifa" } as const;
+  try {
+    return { ...repasse, chave, tarifa: lerReais(informada) };
+  } catch {
+    return { ok: false, erro: "tarifa" } as const;
+  }
 }
 
 // ---------------------------------------------------------------------------------------------

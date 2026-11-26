@@ -470,8 +470,8 @@ describe("a taxa das financeiras no resultado (FIN-002a)", () => {
     ]);
     // A cascata fecha: do zero ao resultado, passo a passo.
     expect(degraus.filter((d) => !d.total).reduce((s, d) => s + d.valor, 0) + 479_100).toBe(-310_450);
-    expect(degraus[6]?.detalhe).toBe("1 repasse registrado · 1 conta ainda sem repasse");
-    expect(t).toContain("Repasses das financeiras a registrar 1 conta da PayJoy e da Aiva (R$ 1.199,00) ainda sem repasse registrado: a taxa delas só entra quando o repasse for registrado.");
+    expect(degraus[6]?.detalhe).toBe("1 conta liquidada · 1 conta com saldo em aberto");
+    expect(t).toContain("Saldos em aberto das financeiras 1 conta da PayJoy e da Aiva (R$ 1.199,00) ainda com saldo em aberto: a taxa só entra após a liquidação final.");
     expect(enderecos(tela).length).toBeGreaterThan(0);
     expect(elementos(tela).some((e) => e.props.href === "/pagamentos/financeiras")).toBe(true);
     expect(t).toContain("Taxas da PayJoy e da Aiva: a diferença entre o valor financiado e o que a financeira repassou");
@@ -514,10 +514,10 @@ describe("a taxa das financeiras no resultado (FIN-002a)", () => {
     const csv = await (await exportar(new Request("http://localhost/resultado/exportar?mes=2026-11"))).text();
     for (const linha of [
       "Taxas de cartão e Pix;5,00;5,00;0,00",
-      "Taxas da PayJoy e da Aiva (observadas no repasse);49,00;49,00;0,00",
+      "Taxas da PayJoy e da Aiva (após a liquidação final);49,00;49,00;0,00",
       "Resultado do mês;-3104,50;-3001,57;-102,93",
-      "PayJoy e Aiva ainda sem repasse registrado: a taxa delas não entra;1199,00;1 conta",
-      "Taxa da PayJoy e da Aiva;a observada no repasse;o valor financiado menos o repassado, no mês da venda (a conta sem repasse registrado não entra)",
+      "PayJoy e Aiva com saldo em aberto: a taxa só entra após a liquidação final;1199,00;1 conta",
+      "Taxa da PayJoy e da Aiva;a apurada na liquidação final;o valor financiado menos o total repassado após liquidar, no mês da venda (conta com saldo em aberto não entra)",
     ]) expect(csv, linha).toContain(linha);
     expect(csv).not.toContain("falta o contrato");
     // O banco de antes: a linha de sempre e a observação de antes.

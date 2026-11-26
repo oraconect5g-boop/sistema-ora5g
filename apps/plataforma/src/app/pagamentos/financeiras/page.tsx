@@ -13,7 +13,9 @@ export const metadata: Metadata = { title: "A receber das financeiras" };
 export const dynamic = "force-dynamic";
 
 const OK = {
-  recebido: "Repasse registrado. A diferença para o valor a receber fica como a taxa da financeira.",
+  recebido: "Liquidação final registrada com a tarifa informada. Não há mais saldo a receber nesse contrato.",
+  parcial: "Repasse parcial registrado. O saldo continua em aberto e nenhuma tarifa foi registrada.",
+  parcial_desfeito: "Lançamento parcial desfeito. O motivo ficou na auditoria. Se a venda foi cancelada, a conta continua cancelada.",
   desfeito: "Registro desfeito; o motivo ficou na auditoria.",
   desfeito_cancelada: "Registro desfeito. A venda foi cancelada, então a conta ficou cancelada: não volta a ser cobrada da financeira. O motivo ficou na auditoria.",
   corrigido: "Repasse corrigido; ele continua registrado e o motivo ficou na auditoria.",

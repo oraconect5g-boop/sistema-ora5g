@@ -219,7 +219,7 @@ describe("as cobranças feitas à financeira (FIN-007a)", () => {
     ]) expect(await codigo(dono, COBRAR, [a1.conta, canal, texto, protocolo, retornar, chave("c")]), JSON.stringify([canal, String(texto).slice(0, 10), retornar])).toBe("22023");
     expect(await codigo(dono, COBRAR, [a1.conta, "telefone", "Texto", null, null, "   "])).toBe("22023");
     // A conta recebida e a da venda cancelada não se cobram.
-    await valor(dono, "select public.financeira_receber($1, $2, $3, $4::date) as v", [a1.conta, "REPASSE-1", 125_000, hoje()]);
+    await valor(dono, "select public.financeira_registrar_repasse($1::uuid, $2::text, $3::bigint, $4::date, 4900, md5($1::uuid::text || regexp_replace(trim($2::text), '\\s+', ' ', 'g'))::uuid) as v", [a1.conta, "REPASSE-1", 125_000, hoje()]);
     expect(await codigo(dono, COBRAR, [a1.conta, "telefone", "Tentativa", null, null, chave("c")])).toBe("22023");
     await valor(dono, "select public.abrir_caixa(100000, $1) as v", [chave("caixa")]);
     await valor(dono, "select public.cancelar_venda($1, 'Cliente desistiu do financiamento') as v", [a2.venda]);

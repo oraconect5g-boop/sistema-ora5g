@@ -56,7 +56,7 @@ const somarDias = (dia: string, n: number) => new Date(new Date(`${dia}T12:00:00
 const PAINEL = "select public.recebiveis_painel($1, $2) as v";
 const TERMINAL = "select public.terminal_salvar(null, $1, $2, $3, $4, null, 'Cadastro do teste') as v";
 const CONCILIAR = "select public.pagamento_conciliar($1, $2, $3, $4::date) as v";
-const RECEBER = "select public.financeira_receber($1, $2, $3, $4::date) as v";
+const RECEBER = "select public.financeira_registrar_repasse($1::uuid, $2::text, $3::bigint, $4::date, 4900, md5($1::uuid::text || regexp_replace(trim($2::text), '\\s+', ' ', 'g'))::uuid) as v";
 
 /** Venda de uma capa (R$ 79,00) paga num meio só. */
 async function capa(s: Sessao, meio: string, extra: object = {}) {

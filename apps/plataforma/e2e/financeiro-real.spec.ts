@@ -137,13 +137,15 @@ test.describe("o financeiro da loja de teste (J3-f)", () => {
       await test.step("o gerente registra o repasse fictício da PayJoy", async () => {
         await g.goto("/pagamentos/financeiras");
         const conta = () => cartao(g, "Contas").getByRole("listitem").filter({ has: g.getByRole("link", { name: `Venda nº ${venda.numero}`, exact: true }) });
-        await expect(conta()).toContainText("a receber R$ 1.099,00");
+        await expect(conta()).toContainText("Saldo: R$ 1.099,00");
+        await conta().getByLabel("O que consta no extrato?").selectOption("final");
+        await conta().getByLabel("Tarifa comprovada").fill("49,00");
         await conta().getByLabel("Referência do repasse").fill(`REPASSE-TESTE-${numero}`);
         await conta().getByLabel("Valor que caiu (R$)").fill("1.050,00");
         await conta().getByLabel("Caiu em").fill(hoje());
         await conta().getByRole("button", { name: "Registrar repasse" }).click();
-        await expect(g.getByText("Repasse registrado. A diferença para o valor a receber fica como a taxa da financeira.")).toBeVisible();
-        await expect(conta()).toContainText("recebido R$ 1.050,00");
+        await expect(g.getByText("Liquidação final registrada com a tarifa informada. Não há mais saldo a receber nesse contrato.")).toBeVisible();
+        await expect(conta()).toContainText("repasse final R$ 1.050,00");
         await expect(conta()).toContainText("taxa R$ 49,00");
       });
     });
