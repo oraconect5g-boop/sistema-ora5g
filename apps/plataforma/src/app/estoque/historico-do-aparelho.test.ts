@@ -67,7 +67,7 @@ function texto(v: unknown): string {
   if (v && typeof v === "object") return Object.values(v).map(texto).join(" ");
   return "";
 }
-const tela = async () => texto(await Estoque({ searchParams: Promise.resolve({ q: IMEI }) }) as ReactElement).replace(/\s+/g, " ");
+const tela = async (q = IMEI) => texto(await Estoque({ searchParams: Promise.resolve({ q }) }) as ReactElement).replace(/\s+/g, " ");
 
 beforeEach(() => {
   vi.spyOn(console, "error").mockImplementation(() => undefined);
@@ -94,6 +94,13 @@ describe("histórico do aparelho no estoque (L5e)", () => {
       expect(t, trecho).toContain(trecho);
     }
     expect(cenario.pedidos.find((p) => p.tabela === "ordens_servico")?.filtros).toEqual([["in", "imei", [IMEI, IMEI2]]]);
+  });
+
+  it("aceita o IMEI secundário na busca exata e preserva o vínculo com o histórico", async () => {
+    const t = await tela(IMEI2);
+    expect(t).toContain("Cliente desistiu");
+    expect(cenario.pedidos.find((p) => p.tabela === "itens_serializados")?.filtros)
+      .toContainEqual(["or", `imei.eq.${IMEI2},imei2.eq.${IMEI2},iccid.eq.${IMEI2}`]);
   });
 
   it("sem OS do aparelho a parte não aparece; banco sem a OS também não; outra falha diz que não leu", async () => {

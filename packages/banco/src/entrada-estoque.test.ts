@@ -509,3 +509,65 @@ describe("correções do recebimento (R1)", () => {
     expect(await saldo(ids.lojaC, cat.capa)).toMatchObject({ quantidade: 1 });
   });
 });
+
+describe("entrada com dois IMEIs por aparelho", () => {
+  const argumentos = (identificadores: unknown[], chave: string, tipo = "aparelho") => [
+    ids.lojaA, "carga_inicial", null, null,
+    JSON.stringify([{ variante: tipo === "aparelho" ? cat.aparelho : cat.chip, identificadores, custo: 1000 }]),
+    chave, "Contagem fictícia",
+  ];
+
+  it("grava um movimento, um custo e uma unidade; ambos os IMEIs identificam o mesmo aparelho", async () => {
+    const dono = await naLoja(ids.dono, ids.lojaA);
+    const par = { imei: imei(991), imei2: imei(992) };
+    const antes = await saldo(ids.lojaA, cat.aparelho);
+    const args = argumentos([par], "imei-duplo:1");
+    const r = await valor<Entrada>(dono, ENTRADA, args);
+    const d = await valor<Detalhe>(dono, DETALHE, [ids.lojaA, r.id, null]);
+    expect(d).toMatchObject({ total_unidades: 1, total_custo: 1000, itens: [{ quantidade: 1, identificadores: [{ identificador: par.imei, imei2: par.imei2 }] }] });
+    expect((await saldo(ids.lojaA, cat.aparelho)).quantidade).toBe(antes.quantidade + 1);
+    const achados = (await db.query<{ campo: string; item_serializado_id: string }>(
+      "select campo, item_serializado_id from privado.identificadores_itens where organizacao_id = $1 and identificador in ($2, $3) order by campo",
+      [ids.organizacao, par.imei, par.imei2],
+    )).rows;
+    expect(achados.map((i) => i.campo)).toEqual(["imei", "imei2"]);
+    expect(achados[0]?.item_serializado_id).toBe(achados[1]?.item_serializado_id);
+    expect(await valor<Entrada>(dono, ENTRADA, args)).toMatchObject({ id: r.id, repetida: true });
+    await valor(dono, ESTORNO, [r.id, "Estorno fictício"]);
+    const volta = await valor<Entrada>(dono, ENTRADA, argumentos([par], "imei-duplo:2"));
+    expect(volta.reentradas).toBe(1);
+    const d2 = await valor<Detalhe>(dono, DETALHE, [ids.lojaA, volta.id, null]);
+    expect(d2.itens[0]?.identificadores).toMatchObject([{ identificador: par.imei, imei2: par.imei2, reentrada: true }]);
+  });
+
+  it("registra dez aparelhos pareados como dez unidades e vinte identificadores", async () => {
+    const dono = await naLoja(ids.dono, ids.lojaA);
+    const pares = Array.from({ length: 10 }, (_, i) => ({ imei: imei(950 + 2 * i), imei2: imei(951 + 2 * i) }));
+    const antes = await saldo(ids.lojaA, cat.aparelho);
+    const r = await valor<Entrada>(dono, ENTRADA, argumentos(pares, "imei-duplo:lote"));
+    const d = await valor<Detalhe>(dono, DETALHE, [ids.lojaA, r.id, null]);
+    expect(d).toMatchObject({ total_unidades: 10, total_custo: 10_000, itens: [{ quantidade: 10 }] });
+    expect(d.itens[0]?.identificadores).toHaveLength(10);
+    expect((await saldo(ids.lojaA, cat.aparelho)).quantidade).toBe(antes.quantidade + 10);
+    const encontrados = (await db.query<{ total: number; aparelhos: number }>(
+      "select count(*)::int as total, count(distinct item_serializado_id)::int as aparelhos from privado.identificadores_itens where organizacao_id = $1 and identificador = any ($2::text[])",
+      [ids.organizacao, pares.flatMap(({ imei, imei2 }) => [imei, imei2])],
+    )).rows[0];
+    expect(encontrados).toEqual({ total: 20, aparelhos: 10 });
+  });
+
+  it("recusa repetição cruzada na mesma carga ou no estoque e não aceita par para chip", async () => {
+    const dono = await naLoja(ids.dono, ids.lojaA);
+    const par = { imei: imei(991), imei2: imei(992) };
+    const antes = await saldo(ids.lojaA, cat.aparelho);
+    expect(await codigo(dono, ENTRADA, argumentos([par, par.imei2], "imei-duplo:3"))).toBe("22023");
+    expect(await codigo(dono, ENTRADA, argumentos([{ ...par, imei2: par.imei }], "imei-duplo:4"))).toBe("22023");
+    expect(await codigo(dono, ENTRADA, argumentos([{ ...par, imei2: "123" }], "imei-duplo:5"))).toBe("22023");
+    expect(await codigo(dono, ENTRADA, argumentos([par], "imei-duplo:6", "chip"))).toBe("22023");
+    expect(await saldo(ids.lojaA, cat.aparelho)).toEqual(antes);
+    await valor(dono, ENTRADA, argumentos([par], "imei-duplo:7"));
+    expect(await codigo(dono, ENTRADA, argumentos([{ imei: imei(993), imei2: par.imei }], "imei-duplo:8"))).toBe("23505");
+    expect(await codigo(dono, ENTRADA, argumentos([par.imei2], "imei-duplo:9"))).toBe("23505");
+    expect(await saldo(ids.lojaA, cat.aparelho)).toEqual({ ...antes, quantidade: antes.quantidade + 1 });
+  });
+});

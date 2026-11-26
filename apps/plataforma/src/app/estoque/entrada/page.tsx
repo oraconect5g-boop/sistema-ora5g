@@ -117,15 +117,16 @@ function linhaDoDetalhe(l: LinhaDaEntrada, veCusto: boolean, estornada: boolean,
       <p className="font-semibold">{`${l.linha}. ${l.nome}`}</p>
       <p className="text-xs text-suave">{`SKU ${l.sku} · ${numero(l.quantidade)} unidade(s) · ${condicaoDaLinha(l.condicao)}${custo}${l.reentradas > 0 ? ` · ${l.reentradas} reentrada(s)` : ""}`}</p>
       {ids.length > 0 && (
-        <details open={ids.length <= IDS_ABERTOS || (destaque !== null && ids.some((i) => i.identificador === destaque))}>
+        <details open={ids.length <= IDS_ABERTOS || (destaque !== null && ids.some((i) => (i.identificador === destaque || i.imei2 === destaque)))}>
           <summary className="flex min-h-9 cursor-pointer items-center text-xs font-semibold text-acao">{`${ids.length} IMEI/ICCID · hoje: ${resumoDasPosicoes(ids)}`}</summary>
           <ul className="mt-1 grid gap-1.5 sm:grid-cols-2">
             {ids.map((i) => (
-              <li key={i.identificador} className={`flex flex-wrap items-center gap-1.5 rounded-botao border px-2.5 py-1.5 ${i.identificador === destaque ? "border-perigo bg-perigo-clara" : "border-borda"}`}>
+              <li key={i.identificador} className={`flex flex-wrap items-center gap-1.5 rounded-botao border px-2.5 py-1.5 ${(i.identificador === destaque || i.imei2 === destaque) ? "border-perigo bg-perigo-clara" : "border-borda"}`}>
                 <span className="numeros break-all text-xs font-semibold">{i.identificador}</span>
+                {i.imei2 && <span className="numeros break-all text-xs">IMEI 2: {i.imei2}</span>}
                 <Selo tom={estornada ? "neutro" : i.livre ? "sucesso" : "aviso"}>{posicaoDoItem(i.situacao)}</Selo>
                 {i.reentrada && <Selo tom="info">reentrada</Selo>}
-                {i.identificador === destaque && <Selo tom="perigo">recusado</Selo>}
+                {(i.identificador === destaque || i.imei2 === destaque) && <Selo tom="perigo">recusado</Selo>}
               </li>
             ))}
           </ul>

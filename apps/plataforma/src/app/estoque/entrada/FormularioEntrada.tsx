@@ -4,7 +4,7 @@ import { Plus, Search, Trash2 } from "lucide-react";
 import { useId, useState, useTransition } from "react";
 
 import { BotaoDeEnvio } from "../../../componentes/BotaoDeEnvio";
-import { CONDICOES, separarIdentificadores, TIPOS_DE_ENTRADA } from "../../../lib/estoque/entrada";
+import { CONDICOES, contarAparelhosNaEntrada, separarIdentificadores, TIPOS_DE_ENTRADA } from "../../../lib/estoque/entrada";
 import type { PedidoParaReceber } from "../../../lib/estoque/receber-do-pedido";
 import { buscarItensParaEntrada, registrarEntrada, type ItemParaEntrada } from "./acoes";
 
@@ -121,9 +121,10 @@ export function FormularioEntrada({ unidade, chave, fornecedores, pedido = null 
                     {l.falta !== undefined && <span className="text-xs text-suave">{`faltam ${l.falta} do pedido`}</span>}
                   </label>
                 ) : (
-                  <label className="block text-sm font-medium sm:col-span-2">{l.item.tipo === "aparelho" ? "IMEI" : "ICCID"} de cada unidade (um por linha)
-                    <textarea rows={4} value={l.identificadores} onChange={(e) => mudar(l.chave, { identificadores: e.target.value })} required inputMode="numeric" className={`${campo} py-2 font-mono`} />
-                    <span className="text-xs text-suave">{separarIdentificadores(l.identificadores).length} unidade(s){l.falta !== undefined ? ` · faltam ${l.falta} do pedido` : ""}</span>
+                  <label className="block text-sm font-medium sm:col-span-2">{l.item.tipo === "aparelho" ? "IMEI de cada unidade (um aparelho por linha)" : "ICCID de cada unidade (um por linha)"}
+                    <textarea rows={4} value={l.identificadores} onChange={(e) => mudar(l.chave, { identificadores: e.target.value })} required inputMode={l.item.tipo === "aparelho" ? "text" : "numeric"} className={`${campo} py-2 font-mono`} />
+                    {l.item.tipo === "aparelho" && <span className="block text-xs text-suave">Se o aparelho tiver dois IMEIs, use IMEI 1/IMEI 2 na mesma linha. Isso conta uma unidade.</span>}
+                    <span className="text-xs text-suave">{(l.item.tipo === "aparelho" ? contarAparelhosNaEntrada(l.identificadores) : separarIdentificadores(l.identificadores).length)} unidade(s){l.falta !== undefined ? ` · faltam ${l.falta} do pedido` : ""}</span>
                   </label>
                 )}
                 <label className="block text-sm font-medium">Custo por unidade (R$, opcional)<input inputMode="decimal" value={l.custo} onChange={(e) => mudar(l.chave, { custo: e.target.value })} placeholder="1.050,00" className={campo} /></label>
@@ -134,7 +135,7 @@ export function FormularioEntrada({ unidade, chave, fornecedores, pedido = null 
                     </select>
                   </label>
                 )}
-                <button type="button" onClick={() => mudar(l.chave, { item: null })} className="self-end text-left text-sm font-semibold text-acao">Trocar o item</button>
+                <button type="button" onClick={() => mudar(l.chave, { item: null, identificadores: "" })} className="self-end text-left text-sm font-semibold text-acao">Trocar o item</button>
               </div>
             )}
           </li>

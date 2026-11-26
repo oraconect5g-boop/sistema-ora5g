@@ -18,7 +18,7 @@ export const POSICOES_DO_ITEM = {
 export const posicaoDoItem = (situacao: string) =>
   Object.hasOwn(POSICOES_DO_ITEM, situacao) ? POSICOES_DO_ITEM[situacao as keyof typeof POSICOES_DO_ITEM] : situacao;
 
-export type IdentificadorDaEntrada = { identificador: string; situacao: string; livre: boolean; reentrada: boolean };
+export type IdentificadorDaEntrada = { identificador: string; imei2?: string; situacao: string; livre: boolean; reentrada: boolean };
 
 export type LinhaDaEntrada = {
   linha: number;
@@ -106,7 +106,7 @@ function linhaDaEntrada(v: unknown): LinhaDaEntrada {
     saldoLivre: inteiroOuNulo(l.saldo_livre),
     identificadores: l.identificadores === null || l.identificadores === undefined ? null : lista(l.identificadores).map((x) => {
       const i = objeto(x);
-      return { identificador: texto(i.identificador), situacao: texto(i.situacao), livre: logico(i.livre), reentrada: logico(i.reentrada) };
+      return { identificador: texto(i.identificador), ...(i.imei2 == null ? {} : { imei2: texto(i.imei2) }), situacao: texto(i.situacao), livre: logico(i.livre), reentrada: logico(i.reentrada) };
     }),
   };
 }

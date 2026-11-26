@@ -131,11 +131,33 @@ export function detalheDoEndereco(valores: { linha?: string | undefined; id?: st
 }
 
 export type LinhaDoFormulario = { variante: string; tipo: string; quantidade?: string; identificadores?: string; custo?: string; condicao?: string };
-export type LinhaParaOBanco = { variante: string; quantidade?: number; identificadores?: string[]; custo?: number; condicao: Condicao };
+type IdentificadorParaOBanco = string | { imei: string; imei2: string };
+export type LinhaParaOBanco = { variante: string; quantidade?: number; identificadores?: IdentificadorParaOBanco[]; custo?: number; condicao: Condicao };
 
 /** IMEIs/ICCIDs digitados: um por linha (ou separados por espaço, vírgula ou ponto e vírgula), só dígitos. */
 export const separarIdentificadores = (texto: string) =>
   texto.split(/[\s,;]+/).map((x) => x.replace(/\D/g, "")).filter((x) => x.length > 0);
+
+/** O separador / liga dois IMEIs ao mesmo aparelho; espaço, vírgula, ; e nova linha separam unidades. */
+const separarAparelhos = (texto: string) => texto.replace(/[^\S\r\n]*\/[^\S\r\n]*/g, "/").split(/[\s,;]+/).filter(Boolean);
+export const contarAparelhosNaEntrada = (texto: string) => separarAparelhos(texto).length;
+
+function lerIdentificadores(texto: string, aparelho: boolean): IdentificadorParaOBanco[] | null {
+  if (!aparelho) return separarIdentificadores(texto);
+  const itens: IdentificadorParaOBanco[] = [];
+  for (const token of separarAparelhos(texto)) {
+    const partes = token.split("/");
+    if (partes.length === 1) {
+      const id = token.replace(/\D/g, "");
+      if (id) itens.push(id);
+    } else {
+      const [imei, imei2] = partes;
+      if (partes.length !== 2 || !imei || !imei2 || !imeiValido(imei) || !imeiValido(imei2)) return null;
+      itens.push({ imei: imei.replace(/\D/g, ""), imei2: imei2.replace(/\D/g, "") });
+    }
+  }
+  return itens;
+}
 
 export function validarEntrada(campo: (n: string) => unknown):
   | { ok: true; dados: { unidade: string; tipo: TipoDeEntrada; fornecedor: string | null; documento: string | null; itens: LinhaParaOBanco[]; chave: string; motivo: string } }
@@ -167,6 +189,7 @@ export function validarEntrada(campo: (n: string) => unknown):
     if (!l || typeof l !== "object" || !ehUuid(l.variante) || typeof l.tipo !== "string") return { ok: false, erro: "linhas" };
     const condicao = (l.condicao && Object.hasOwn(CONDICOES, l.condicao) ? l.condicao : "novo") as Condicao;
     let custo: number | undefined;
+    if (l.custo !== undefined && typeof l.custo !== "string") return { ok: false, erro: "custo" };
     if (l.custo && l.custo.trim() !== "") {
       try {
         custo = lerReais(l.custo);
@@ -176,9 +199,10 @@ export function validarEntrada(campo: (n: string) => unknown):
       if (custo > 100_000_000) return { ok: false, erro: "custo" };
     }
     if (l.tipo === "aparelho" || l.tipo === "chip") {
-      const ids = separarIdentificadores(l.identificadores ?? "");
-      if (ids.length === 0) return { ok: false, erro: "identificador" };
-      for (const id of ids) {
+      if (typeof l.identificadores !== "string") return { ok: false, erro: "identificador" };
+      const ids = lerIdentificadores(l.identificadores, l.tipo === "aparelho");
+      if (!ids?.length) return { ok: false, erro: "identificador" };
+      for (const id of ids.flatMap((item) => typeof item === "string" ? [item] : [item.imei, item.imei2])) {
         const valido = l.tipo === "aparelho" ? imeiValido(id) : iccidValido(id);
         if (!valido || vistos.has(id)) return { ok: false, erro: "identificador" };
         vistos.add(id);
