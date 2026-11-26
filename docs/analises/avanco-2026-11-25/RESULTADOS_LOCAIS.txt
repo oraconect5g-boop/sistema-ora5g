@@ -1,0 +1,86 @@
+ARQUIVO test-plataforma.log
+Test Files  1 failed | 226 passed | 1 skipped (228)
+      Tests  1 failed | 2117 passed | 2 skipped (2120)
+   Start at  01:54:54
+   Duration  163.72s (tests 42%, import 42%, transform 15%, worker 1%)
+
+     Import  692 modules were evaluated 3383 times · 51.80s total, 42% of tracked time
+             ~41.20s faster with isolate: false — shared modules are evaluated once per worker instead of once p
+
+ARQUIVO test-plataforma-reteste.log
+Test Files  1 passed (1)
+      Tests  71 passed (71)
+   Start at  01:58:39
+   Duration  4.41s (tests 88%, import 8%, transform 4%)
+
+npm notice
+npm notice New major version of npm available! 11.9.0 -> 12.2.3
+npm notice Changelog: https://github.com/npm/cli/releases/tag/v12.2.3
+npm notice To update run: npm install -g npm@12.2.3
+npm notice
+
+
+ARQUIVO test-worker.log
+Test Files  1 failed | 21 passed (22)
+      Tests  113 passed | 4 skipped (117)
+   Start at  01:54:54
+   Duration  45.03s (tests 93%, import 4%, transform 3%)
+
+    Isolate  22 workers spawned · ~267ms startup each (spawn + environment, per file)
+             at least ~5.60s faster with isolate: false — reuses workers across files instead of one per file
+
+npm error Lifecycle script `test` failed wi
+
+ARQUIVO test-worker-reteste.log
+Test Files  1 failed (1)
+      Tests  4 skipped (4)
+   Start at  01:57:22
+   Duration  10.97s (tests 96%, transform 2%, import 2%)
+
+npm error Lifecycle script `test` failed with error:
+npm error code 1
+npm error path /workspace/work/avanco-20261125/snapshot/apps/worker
+npm error workspace @ora5g/worker@0.1.0
+npm error location /workspace/work/avanco-20261125/snapshot/apps/worker
+npm error command 
+
+ARQUIVO test-worker-timeout60.log
+Test Files  1 passed (1)
+      Tests  4 passed (4)
+   Start at  01:58:24
+   Duration  6.93s (tests 96%, transform 2%, import 2%)
+
+npm notice
+npm notice New major version of npm available! 11.9.0 -> 12.2.3
+npm notice Changelog: https://github.com/npm/cli/releases/tag/v12.2.3
+npm notice To update run: npm install -g npm@12.2.3
+npm notice
+
+
+ARQUIVO test-banco.log
+Test Files  6 passed (6)
+      Tests  40 passed (40)
+   Start at  01:54:54
+   Duration  76.51s (tests 99%, transform 1%, import 1%)
+
+npm notice
+npm notice New major version of npm available! 11.9.0 -> 12.2.3
+npm notice Changelog: https://github.com/npm/cli/releases/tag/v12.2.3
+npm notice To update run: npm install -g npm@12.2.3
+npm notice
+
+
+ARQUIVO test-regressoes.log
+Test Files  1 failed | 1 passed (2)
+      Tests  1 failed | 1 passed (2)
+   Start at  01:57:11
+   Duration  17.93s (tests 99%, transform 1%, import 1%)
+
+npm error Lifecycle script `test` failed with error:
+npm error code 1
+npm error path /workspace/work/avanco-20261125/snapshot/packages/banco
+npm error workspace @ora5g/banco@0.1.0
+npm error location /workspace/work/avanco-20261125/snapshot/package
+
+ARQUIVO rastreabilidade.log
+Rastreabilidade em dia.
