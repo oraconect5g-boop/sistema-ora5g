@@ -152,6 +152,8 @@ const momento = (v: unknown) => {
   const d = dia(v);
   return d && /^\d{4}-\d{2}-\d{2} \d{2}:\d{2}/.test(v) ? `${d} às ${v.slice(11, 16)}` : d;
 };
+/** CONNECT-o: o dia e o momento como a Nogle manda ("AAAA-MM-DD" e "AAAA-MM-DD HH:MM"), em dd/mm/aaaa, para a aba Carteira. */
+export { dia as diaDaNogle, momento as momentoDaNogle };
 /** Megabytes como a Nogle informa o saldo; de 1.024 MB para cima, em GB. */
 export const megabytes = (mb: number) => (mb >= 1024 ? `${decimal.format(mb / 1024)} GB` : `${decimal.format(mb)} MB`);
 /** Bytes como a Nogle informa o consumo, em MB ou GB. */

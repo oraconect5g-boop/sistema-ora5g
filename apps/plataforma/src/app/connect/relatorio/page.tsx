@@ -1,7 +1,6 @@
 import { ListChecks, Store, Users } from "lucide-react";
 import type { Metadata } from "next";
 import Form from "next/form";
-import Link from "next/link";
 
 import { BotaoImprimir, CarimboDaImpressao } from "../../../componentes/BotaoImprimir";
 import { ExportarCsv } from "../../../componentes/ExportarCsv";
@@ -37,8 +36,6 @@ export default async function RelatorioDaConnect({ searchParams }: { searchParam
   const parametros = await searchParams;
   const sessao = await obterSessao({ exigirLoja: true });
   const gere = permite(sessao, "connect.gerir");
-  // A carteira e os relatórios da rede são de quem gere a Ora Connect na rede (como em Consultar linha; o banco confere de novo).
-  const gereARede = gere && sessao.molde.vinculos.some((v) => v.escopo === "organizacao");
   if (!gere && !permite(sessao, "connect.operar")) {
     return <MoldeReal sessao={sessao} largura={LARGURA_DA_CONNECT}><CabecalhoConnect sessao={sessao} aba="carteira" /><Aviso tom="aviso" className="mt-4">O relatório da Ora Connect é de quem opera ou gere a Ora Connect.</Aviso></MoldeReal>;
   }
@@ -130,16 +127,6 @@ export default async function RelatorioDaConnect({ searchParams }: { searchParam
           </Form>
         )}
       </div>
-
-      {gere && (
-        // CONNECT-m: a aba Carteira e relatórios, como na demonstração: daqui, o saldo e o extrato da carteira e os relatórios
-        // oficiais da rede na Nogle (pedidos ao servidor em Consultar linha, por quem gere a rede) e a conciliação.
-        <nav aria-label="Carteira e relatórios da Nogle" className="nao-imprimir mt-3 flex flex-wrap gap-x-4 gap-y-1 text-sm">
-          {gereARede && <Link href="/connect/linha#carteira" className="font-semibold text-acao">Saldo da carteira da Ora na Nogle</Link>}
-          {gereARede && <Link href="/connect/linha#relatorios-da-rede" className="font-semibold text-acao">Relatórios da rede na Nogle</Link>}
-          <Link href="/connect/conciliacao" className="font-semibold text-acao">Conciliação com os relatórios da Nogle</Link>
-        </nav>
-      )}
 
       <section aria-label="Resumo do período" className="mt-4 grid grid-cols-2 gap-3 lg:grid-cols-4">
         <Indicador rotulo="Ativações confirmadas" valor={numero(somas.confirmadas.ativacao)} />

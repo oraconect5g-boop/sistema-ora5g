@@ -16,7 +16,7 @@
 2. Digite o número de uma linha (com DDD), escolha **Situação da linha** e toque em **Consultar**. Em poucos segundos a resposta aparece em **Minhas consultas**. Confira se bate com o que você sabe da linha.
 3. Repita com **Saldo da linha**, **Recargas da linha** e **Consumo de internet no mês**.
 4. Digite o ICCID impresso num chip (19 dígitos, começa com 8955) e escolha **Número do chip** ou **Ativação do chip**.
-5. No cartão **Carteira da Ora na Nogle**, toque em **Consultar o saldo** e confira com o painel da Nogle.
+5. Na aba **Carteira e relatórios** (desde o CONNECT-o, 25/11; antes ficava aqui), toque em **Consultar o saldo**, no cartão Consultar na Nogle, e confira o cartão **Saldo na Nogle** com o painel da Nogle.
 6. Responda **"aceito"** ou **"não aceito"**.
 
 ## O que você não vê (feito pelo Claude Code)

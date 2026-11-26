@@ -14,7 +14,7 @@
 1. Entre com a sua conta e abra **Ora Connect → Consultar linha**.
 2. Em **Informações da Nogle**, toque em **Dúvidas frequentes**: em alguns segundos aparecem as categorias; toque numa delas e abra o relatório com as perguntas e as respostas.
 3. Em **O titular da linha**, digite uma linha sua e o seu CPF: a resposta diz se você é o titular.
-4. Em **Carteira da Ora na Nogle**, peça o **extrato** das entradas dos últimos 90 dias e toque em **Ver as programadas**; em **Relatórios da rede na Nogle**, peça as portabilidades dos últimos 30 dias e a primeira página das linhas. Abra cada relatório.
+4. Na aba **Carteira e relatórios** (desde o CONNECT-o, 25/11; antes ficava em Consultar linha), peça o **extrato** das entradas dos últimos 90 dias e toque em **Ver as programadas**; em **Portabilidades**, peça as dos últimos 30 dias; em **Linhas e clientes da Ora na Nogle**, a primeira página das linhas. Abra cada relatório.
 5. Se quiser, entre com um vendedor: ele vê o titular, o CNPJ, o CEP, o rastreio, o pagamento e as informações, mas não a gerência, a carteira nem os relatórios da rede.
 6. Responda **"aceito"** ou **"não aceito"**.
 
