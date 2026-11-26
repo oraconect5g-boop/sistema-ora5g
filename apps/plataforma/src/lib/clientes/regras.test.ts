@@ -1,7 +1,7 @@
 // Regras do formulário de cliente (L5a): a mesma régua do banco para não ir até ele com o que já está errado.
 import { describe, expect, it } from "vitest";
 
-import { erroDoCliente, formatarRevelado, lerCliente, valorDaBusca } from "./regras";
+import { chaveDaBusca, erroDoCliente, formatarRevelado, lerCliente, respostaDaBuscaVale, valorDaBusca } from "./regras";
 
 // CPF e CNPJ fictícios com dígitos válidos.
 const CPF = "52998224725";
@@ -104,5 +104,26 @@ describe("busca e mensagens", () => {
     expect(formatarRevelado("endereco", { cep: "80000000", logradouro: "Rua A", numero: "10", bairro: "Centro", cidade: "Curitiba", uf: "PR" }))
       .toBe("Rua A, 10 · Centro · Curitiba/PR · CEP 80000-000");
     expect(formatarRevelado("email", null)).toBe("não informado");
+  });
+});
+
+// AUD-f (auditoria de e7f55b2): o seletor de cliente não mostra o resultado de uma busca velha nem aceita resposta fora de ordem.
+describe("a busca de cliente na tela (AUD-f)", () => {
+  it("a chave é a do valor como o servidor lê: o mesmo CPF ou telefone com outra formatação é a mesma busca", () => {
+    expect(chaveDaBusca("documento", "529.982.247-25")).toBe(chaveDaBusca("documento", "52998224725"));
+    expect(chaveDaBusca("telefone", "(41) 9 8765-4321")).toBe(chaveDaBusca("telefone", "41987654321"));
+    expect(chaveDaBusca("documento", "52998224725")).not.toBe(chaveDaBusca("documento", "11144477735"));
+    expect(chaveDaBusca("documento", "52998224725")).not.toBe(chaveDaBusca("telefone", "52998224725"));
+    // Incompleto ou inválido: a chave é o texto (ainda assim muda a cada letra).
+    expect(chaveDaBusca("documento", "5299")).not.toBe(chaveDaBusca("documento", "52998"));
+  });
+
+  it("a resposta entra só se for a do último pedido e da busca que está na tela", () => {
+    const chave = chaveDaBusca("documento", "52998224725");
+    expect(respostaDaBuscaVale({ pedido: 2, chave }, { ultimoPedido: 2, chave })).toBe(true);
+    // A primeira busca responde depois da segunda: fora de ordem, sai.
+    expect(respostaDaBuscaVale({ pedido: 1, chave }, { ultimoPedido: 2, chave })).toBe(false);
+    // O CPF mudou enquanto a busca estava no servidor: sai (o resultado era de outro CPF).
+    expect(respostaDaBuscaVale({ pedido: 3, chave }, { ultimoPedido: 3, chave: chaveDaBusca("documento", "11144477735") })).toBe(false);
   });
 });
