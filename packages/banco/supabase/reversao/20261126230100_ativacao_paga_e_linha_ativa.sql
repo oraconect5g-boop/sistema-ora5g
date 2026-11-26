@@ -1,4 +1,4 @@
--- Reversão de 20261126200000_ativacao_paga_e_linha_ativa (lote AUD-f, parte A): a consulta, a lista das operações a consultar e o
+-- Reversão de 20261126230100_ativacao_paga_e_linha_ativa (lote AUD-f, parte A): a consulta, a lista das operações a consultar e o
 -- envio voltam ao texto anterior, inteiros (20261110124824_connect_consulta_por_uuid); saem o pagamento confirmado, o Pix copia e
 -- cola, o material do eSIM e os dois tipos de evento novos. Ela se recusa se o lote já gravou algum deles (a reversão os
 -- apagaria, e o evento é a trilha da auditoria): confira e registre antes.

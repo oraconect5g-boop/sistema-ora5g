@@ -1,4 +1,4 @@
--- Reversão de 20261126230000_estornos_e_contestacoes_da_asaas (lote AUD-f, parte D): a reconsulta volta ao texto anterior,
+-- Reversão de 20261126230400_estornos_e_contestacoes_da_asaas (lote AUD-f, parte D): a reconsulta volta ao texto anterior,
 -- inteira (20261124155208_pagamento_pelo_site), e saem as colunas da conciliação (o líquido, o estornado, a situação na Asaas e
 -- a hora da reconsulta: a Asaas continua com tudo, e a próxima reconsulta não as grava).
 create or replace function public.pagamento_consulta_aplicar(p_aviso text, p_consulta jsonb)

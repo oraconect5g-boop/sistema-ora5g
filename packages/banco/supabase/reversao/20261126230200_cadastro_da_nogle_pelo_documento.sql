@@ -1,4 +1,4 @@
--- Reversão de 20261126210000_cadastro_da_nogle_pelo_documento (lote AUD-f, parte B): sai o cadastro do cliente para preencher.
+-- Reversão de 20261126230200_cadastro_da_nogle_pelo_documento (lote AUD-f, parte B): sai o cadastro do cliente para preencher.
 -- As buscas desse tipo saem junto (duram 15 minutos e não são trilha de auditoria); a consulta e a limpeza voltam ao texto
 -- anterior, inteiras (20261125180630_outras_consultas_da_nogle), e a política de leitura volta a ser a de antes.
 drop function public.connect_cadastro_da_nogle_descartar(uuid);
