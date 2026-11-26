@@ -1,7 +1,7 @@
 import type { TipoOperacao } from "@ora5g/dominio/nogle";
 
 import { FalhaDoServico, type obterSessao } from "../../lib/acesso/sessao";
-import { inicioDaJanela } from "../../lib/connect/regras";
+import { inicioDaJanela, planoDoServico } from "../../lib/connect/regras";
 import { centavosDoBanco } from "../../lib/dinheiro";
 import { brl } from "../../lib/formato";
 import type { OpcaoDePago } from "./campos";
@@ -25,7 +25,7 @@ export async function lerFormulario(sessao: Sessao, tipo: TipoOperacao) {
     supabase.from("connect_operacoes").select("venda_item_id, situacao").eq("unidade_id", unidade).not("venda_item_id", "is", null)
       .order("criado_em", { ascending: false }).limit(200),
     // CONNECT-f: o nome da variação é o do plano (REC-<plano>, ATV-<plano>): a pessoa vê qual plano foi pago.
-    supabase.from("venda_itens").select("id, tipo, preco_unitario_centavos, quantidade, desconto_centavos, variantes(nome), vendas!inner(numero, situacao, unidade_id, concluida_em)")
+    supabase.from("venda_itens").select("id, tipo, preco_unitario_centavos, quantidade, desconto_centavos, variantes(nome, sku), vendas!inner(numero, situacao, unidade_id, concluida_em)")
       .eq("tipo", tipo).eq("vendas.situacao", "concluida").eq("vendas.unidade_id", unidade).gte("vendas.concluida_em", inicioDaJanela(7)).limit(50),
   ]);
   if (habilitacoes.error || referencias.error || usados.error || pagos.error) throw new FalhaDoServico("connect_formulario");
@@ -33,8 +33,10 @@ export async function lerFormulario(sessao: Sessao, tipo: TipoOperacao) {
   return {
     liberada: habilitacoes.data.some((h) => h.tipo === tipo && h.habilitada),
     lista: (t: string) => referencias.data.filter((r) => r.tipo === t),
+    // AUD-f: cada serviço pago com o plano dele (o código do produto), para a tela oferecer só os do plano escolhido.
     pagosLivres: pagos.data.filter((p) => !ocupados.has(p.id)).map((p): OpcaoDePago => ({
       id: p.id,
+      plano: planoDoServico(tipo, p.variantes?.sku),
       rotulo: `Venda nº ${p.vendas.numero}${p.variantes?.nome ? ` · ${p.variantes.nome}` : ""} · ${brl(centavosDoBanco(p.preco_unitario_centavos) * p.quantidade - centavosDoBanco(p.desconto_centavos))}`,
     })),
   };

@@ -1,6 +1,6 @@
 import { describe, expect, it } from "vitest";
 
-import { erroDoConnect, inicioDaJanela, lerPedido, linkDePagamento, quemPagaOPix } from "./regras";
+import { erroDoConnect, inicioDaJanela, lerPedido, linkDePagamento, planoDoServico, quemPagaOPix } from "./regras";
 
 const formulario = (campos: Record<string, string>) => ({ get: (nome: string) => campos[nome] ?? null });
 const ATIVACAO = {
@@ -66,5 +66,17 @@ describe("pedido da Ora Connect lido do formulário", () => {
       `https://pagamento.invalid/${"a".repeat(480)}`]) expect(linkDePagamento(ruim)).toBeNull();
     expect(quemPagaOPix("0b1c2d3e-0000-4000-8000-000000000001")).toBe("loja");
     expect(quemPagaOPix(null)).toBe("cliente");
+  });
+});
+
+// AUD-f (auditoria de e7f55b2): o serviço pago no caixa só serve à operação do mesmo plano (a regra do banco, OR055).
+describe("o plano do serviço pago no caixa (AUD-f)", () => {
+  it("a ativação é ATV-<plano> e a recarga, REC-<plano>; o resto não tem plano", () => {
+    expect(planoDoServico("ativacao", "ATV-1718")).toBe("1718");
+    expect(planoDoServico("recarga", "REC-1719")).toBe("1719");
+    expect(planoDoServico("ativacao", "REC-1718")).toBeNull();
+    expect(planoDoServico("recarga", "ATV-1718")).toBeNull();
+    expect(planoDoServico("portabilidade", "ATV-1718")).toBeNull();
+    for (const sku of ["ATV-", "ATV-17a8", "ATV-1234567890", "atv-1718", null, undefined]) expect(planoDoServico("ativacao", sku)).toBeNull();
   });
 });

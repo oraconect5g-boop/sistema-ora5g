@@ -235,7 +235,7 @@ describe("as abas dos formulários", () => {
   it("Ativar chip (CONNECT-n): o assistente recebe as listas da Nogle, os serviços pagos livres e os chips vendidos sem operação; sem liberação, o aviso", async () => {
     // Um serviço pago no caixa (o item da ativação) e dois chips vendidos na loja, um deles já com operação viva.
     cenario.tabelas.venda_itens = [
-      { id: "vi9", tipo: "ativacao", preco_unitario_centavos: 2_000, quantidade: 1, desconto_centavos: 0, variantes: { nome: "ATV-10 GB" }, itens_serializados: { iccid: null },
+      { id: "vi9", tipo: "ativacao", preco_unitario_centavos: 2_000, quantidade: 1, desconto_centavos: 0, variantes: { nome: "ATV-10 GB", sku: "ATV-1718" }, itens_serializados: { iccid: null },
         vendas: { numero: 12, situacao: "concluida", unidade_id: "loja", concluida_em: "2026-11-25T12:00:00Z" } },
       { id: "vc1", tipo: "produto", preco_unitario_centavos: 1_000, quantidade: 1, desconto_centavos: 0, variantes: null, itens_serializados: { iccid: "8955170110000000099" },
         vendas: { numero: 13, situacao: "concluida", unidade_id: "loja", concluida_em: "2026-11-25T13:00:00Z" } },
@@ -247,7 +247,7 @@ describe("as abas dos formulários", () => {
     expect(assistente).toMatchObject({
       planos: [{ codigo: "1718", nome: "10 GB", valor_centavos: 2_000 }, { codigo: "1719", nome: "20 GB", valor_centavos: 3_000 }],
       ddds: [{ codigo: "41", uf: "PR" }], cidades: [{ codigo: "4106902", nome: "Curitiba", uf: "PR" }],
-      pagos: [{ id: "vi9", rotulo: expect.stringMatching(/^Venda nº 12 · ATV-10 GB · R\$\s20,00$/) }],
+      pagos: [{ id: "vi9", rotulo: expect.stringMatching(/^Venda nº 12 · ATV-10 GB · R\$\s20,00$/), plano: "1718" }],
       chips: [{ iccid: "8955170110000000099", venda: 13 }],
     });
     expect(assistente?.chave).toMatch(/^[0-9a-f-]{36}$/);

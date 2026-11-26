@@ -24,7 +24,7 @@ const COMPLETO = { iccid: ICCID, ...CLIENTE, plano: "1718", ddd: "41", metodo: "
 const LISTAS = {
   planos: [{ codigo: "1718", nome: "10 GB", valor_centavos: 5_490 }],
   cidades: [{ codigo: "4106902", nome: "Curitiba", uf: "PR" }],
-  pagos: [{ id: "00000000-0000-4000-8000-000000000001", rotulo: "Venda nº 12 · ATV-10 GB · R$ 54,90" }],
+  pagos: [{ id: "00000000-0000-4000-8000-000000000001", rotulo: "Venda nº 12 · ATV-10 GB · R$ 54,90", plano: "1718" }],
 };
 
 describe("os passos do assistente", () => {

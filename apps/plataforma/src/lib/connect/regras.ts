@@ -102,3 +102,15 @@ export const linkDePagamento = (link: string | null | undefined): string | null 
 
 /** Quem paga o Pix da Nogle: com o serviço recebido no caixa, a loja (o cliente já pagou); sem ele, o cliente. */
 export const quemPagaOPix = (vendaItem: string | null | undefined): "loja" | "cliente" => (vendaItem ? "loja" : "cliente");
+
+/**
+ * AUD-f (auditoria de e7f55b2): o plano de um serviço pago no caixa, pelo código do produto, com a mesma regra do banco (o
+ * connect_registrar recusa com OR055 a venda de outro plano): a ativação é ATV-<plano> e a recarga é REC-<plano>. Outro tipo
+ * (a portabilidade não tem plano) ou outro código: nenhum plano.
+ */
+export function planoDoServico(tipo: TipoOperacao, sku: string | null | undefined): string | null {
+  const prefixo = tipo === "ativacao" ? "ATV-" : tipo === "recarga" ? "REC-" : null;
+  if (!prefixo || typeof sku !== "string" || !sku.startsWith(prefixo)) return null;
+  const codigo = sku.slice(prefixo.length);
+  return /^\d{1,9}$/.test(codigo) ? codigo : null;
+}
