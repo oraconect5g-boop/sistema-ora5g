@@ -9,7 +9,7 @@ import {
   centavosDeValorNogle, diaDoRelatorio, interpretarConsulta, interpretarConsultaPagamento, interpretarEnvio, lerChips, lerPdvs, lerReferencias, materialDoEsim, pixCopiaECola, lerRelatorio,
   montarConsulta, montarPedido, montarPedidoDoRelatorio, PEDIDO_DO_ESTOQUE_DA_MVNO, PEDIDO_DOS_PDVS, pedidoDoEstoqueDoPdv, tipoDeChip,
   conferirTransferencia, lerRespostaDaTransferencia, pedidoDaTransferencia,
-  documentoMascarado, lerRespostaDaConsulta, pedidoDaConsulta, TIPOS_DE_CONSULTA,
+  documentoMascarado, lerCadastroParaPreencher, lerRespostaDaConsulta, pedidoDaConsulta, TIPOS_DE_CONSULTA,
   ehConsultaComposta, lerParteDoRelatorio, PARAMETRO_DA_CONSULTA, lerRespostaDaAcao, pedidoDaAcao, TIPOS_DE_ACAO, type AcaoParaEnviar, pedidoDaPortabilidade, pedidoDasLinhasDoCliente, pedidoDasTransacoesDaLinha, pedidoDoCliente,
   type ChipDaNogle, type OperacaoParaConsultar, type OperacaoParaEnviar, type ParametroDaConsulta, type TransferenciaParaEnviar,
 } from "./nogle";
@@ -823,5 +823,63 @@ describe("as outras consultas da Nogle (CONNECT-i)", () => {
       { quando: "2026-11-20 10:15", tipo: "SAÍDA", valor_centavos: 1000, cliente: "Cliente Fictício •••.•••.789-09", linha: "41999998888", iccid: null, plano: "10 GB",
         plano_valor_centavos: 5490 },
     ], fora: 0, total: 2, soma_centavos: 4550 });
+  });
+});
+
+// AUD-f (auditoria de e7f55b2): o cadastro do cliente para preencher, com os exemplos oficiais da /cliente/buscar.
+describe("o cadastro do cliente na Nogle para preencher (AUD-f)", () => {
+  const HOJE = new Date("2026-11-26T12:00:00Z");
+  const achado = exemplo("/cliente/buscar", 0) as Record<string, unknown>;
+  const cliente = achado.cliente as Record<string, unknown>;
+  const comCliente = (mudanca: Record<string, unknown>, endereco: Record<string, unknown> = {}) =>
+    ({ ...achado, cliente: { ...cliente, ...mudanca, endereco: { ...(cliente.endereco as object), ...endereco } } });
+
+  it("pede só a /cliente/buscar pelo documento (sem o histórico nem as linhas)", () => {
+    expect(pedidoDaConsulta("cliente_cadastro", "00000000000", HOJE)).toEqual({ metodo: "GET", caminho: "/cliente/buscar", corpo: { documento: "00000000000" } });
+    expect(pedidoDaConsulta("cliente_cadastro", "123", HOJE)).toBeNull();
+    expect(PARAMETRO_DA_CONSULTA.cliente_cadastro).toBe("documento");
+  });
+
+  it("o exemplo oficial: só os campos do formulário, a cidade só como referência e nada do resto (o id, o apelido, a data do cadastro)", () => {
+    const r = lerCadastroParaPreencher("00000000000", 200, achado, HOJE);
+    expect(r).toEqual({ situacao: "respondida", mensagem: "", resposta: {
+      nome: "Fulano da Silva", nascimento: "1990-10-10", email: "fulano@email.com", telefone: "51999999999", cep: "00000000", rua: "Rua Exemplo",
+      numero: "123", bairro: "Bairro", cidade_na_nogle: "São Paulo", uf_na_nogle: "SP",
+    } });
+    expect(Object.keys(r.resposta ?? {})).not.toContain("complemento"); // veio vazio: fica de fora
+  });
+
+  it("não encontrado (o exemplo oficial), a falha e o acesso recusado: nada para preencher", () => {
+    expect(lerCadastroParaPreencher("00000000000", 200, exemplo("/cliente/buscar", 1), HOJE)).toEqual({ situacao: "nao_encontrada", mensagem: "Cliente não encontrado" });
+    expect(lerCadastroParaPreencher("00000000000", 502, null, HOJE)).toMatchObject({ situacao: "falhou" });
+    expect(lerCadastroParaPreencher("00000000000", 401, { message: "Unauthenticated." }, HOJE)).toMatchObject({ situacao: "falhou" });
+    expect(lerCadastroParaPreencher("00000000000", 200, { retorno: true, mensagem: "" }, HOJE)).toMatchObject({ situacao: "falhou" });
+  });
+
+  it("o cadastro de outro documento (ou o CNPJ pedido e o CPF devolvido) não preenche nada", () => {
+    expect(lerCadastroParaPreencher("12345678909", 200, achado, HOJE)).toEqual({ situacao: "falhou", mensagem: "A Nogle devolveu o cadastro de outro documento: nada foi preenchido." });
+    expect(lerCadastroParaPreencher("11222333000181", 200, comCliente({ cpf: "", cnpj: "11.222.333/0001-81" }), HOJE)).toMatchObject({ situacao: "respondida" });
+    expect(lerCadastroParaPreencher("11222333000181", 200, comCliente({ cnpj: "" }), HOJE)).toMatchObject({ situacao: "falhou" });
+  });
+
+  it("nada é deduzido: a data que não é data, o telefone sem DDD, o CEP curto, o e-mail fora da forma e o texto comprido ficam de fora", () => {
+    const r = lerCadastroParaPreencher("00000000000", 200, comCliente(
+      { nascimento: "0000-00-00", telefone: "999999999", email: "sem-arroba", nome: "N".repeat(121) },
+      { cep: "1234", rua: "R".repeat(121), numero: 123, uf: "São Paulo" },
+    ), HOJE);
+    expect(r.resposta).toEqual({ numero: "123", bairro: "Bairro", cidade_na_nogle: "São Paulo" });
+    for (const nascimento of ["2026-11-27", "1899-12-31", "1990-02-30", "10/10/1990"]) {
+      const lido = lerCadastroParaPreencher("00000000000", 200, comCliente({ nascimento }), HOJE).resposta;
+      expect(lido?.nascimento, nascimento).toBe(nascimento === "10/10/1990" ? "1990-10-10" : undefined);
+    }
+    // O nascimento só para o CPF; o CNPJ não tem.
+    expect(lerCadastroParaPreencher("11222333000181", 200, comCliente({ cpf: "", cnpj: "11222333000181" }), HOJE).resposta?.nascimento).toBeUndefined();
+    // Quebra de linha no meio do texto não entra.
+    expect(lerCadastroParaPreencher("00000000000", 200, comCliente({ nome: "Fulano\nda Silva" }), HOJE).resposta?.nome).toBeUndefined();
+  });
+
+  it("a resposta parcial: só o que veio", () => {
+    const r = lerCadastroParaPreencher("00000000000", 200, { retorno: true, mensagem: "", cliente: { cpf: "00000000000", nome: "Fulano da Silva" } }, HOJE);
+    expect(r).toEqual({ situacao: "respondida", mensagem: "", resposta: { nome: "Fulano da Silva" } });
   });
 });

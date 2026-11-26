@@ -749,6 +749,8 @@ export const TIPOS_DE_CONSULTA = [
   "faq_categorias", "faq_perguntas", "planos_campanhas", "estados", "validar_cep", "validar_cnpj", "compra_rastreio", "titularidade_da_linha",
   "logistica", "validar_cpf", "carteira_programadas", "relatorio_portabilidades", "lista_de_linhas", "lista_de_clientes",
   "pagamento_da_solicitacao", "carteira_extrato_saidas", "carteira_extrato_entradas",
+  // AUD-f: o cadastro do cliente, só para preencher o formulário (a GET /cliente/buscar, sem o histórico nem as linhas).
+  "cliente_cadastro",
 ] as const;
 export type TipoDeConsulta = (typeof TIPOS_DE_CONSULTA)[number];
 export const ehTipoDeConsulta = (v: unknown): v is TipoDeConsulta => typeof v === "string" && (TIPOS_DE_CONSULTA as readonly string[]).includes(v);
@@ -772,6 +774,7 @@ export const PARAMETRO_DA_CONSULTA: Record<TipoDeConsulta, ParametroDaConsulta |
   compra_rastreio: "pedido", titularidade_da_linha: "linha_e_documento", logistica: null, validar_cpf: "cpf", carteira_programadas: "dias_a_frente",
   relatorio_portabilidades: "dias_para_tras", lista_de_linhas: "pagina", lista_de_clientes: "pagina",
   pagamento_da_solicitacao: "solicitacao", carteira_extrato_saidas: "dias_para_tras", carteira_extrato_entradas: "dias_para_tras",
+  cliente_cadastro: "documento",
 };
 /** As consultas que o worker faz em partes (várias chamadas) e mostra num relatório. */
 export const CONSULTAS_COMPOSTAS = ["linha_completa", "cliente_completo"] as const satisfies readonly TipoDeConsulta[];
@@ -787,6 +790,7 @@ export const NOMES_DAS_CONSULTAS: Record<TipoDeConsulta, string> = {
   carteira_saldo: "Saldo da carteira da Ora",
   linha_completa: "Relatório completo do número",
   cliente_completo: "Relatório do cliente",
+  cliente_cadastro: "Cadastro do cliente na Nogle (para preencher)",
   linha_cobrancas: "Cobranças em aberto da linha",
   linha_consumo_voz: "Ligações no mês",
   linha_consumo_sms: "SMS no mês",
@@ -854,6 +858,8 @@ export function pedidoDaConsulta(tipo: TipoDeConsulta, parametro: string | null,
     case "iccid_situacao": return iccid ? { metodo: "POST", caminho: "/ativacao/validaIccid", corpo: { iccid: p } } : null;
     // Os relatórios são feitos em partes pelo worker (pedidosDoRelatorio*).
     case "linha_completa": case "cliente_completo": return null;
+    // AUD-f: o cadastro para preencher, só a /cliente/buscar (a leitura é a lerCadastroParaPreencher, que confere o documento).
+    case "cliente_cadastro": return /^(\d{11}|\d{14})$/.test(p) ? pedidoDoCliente(p) : null;
     // CONNECT-i: as que faltavam, como a coleção oficial manda (as POST de validação e de rastreio só leem).
     case "faq_categorias": return { metodo: "GET", caminho: "/faq/categorias", corpo: {} };
     case "faq_perguntas": return /^\d{1,9}$/.test(p) ? { metodo: "GET", caminho: `/faq/categoria/${Number(p)}`, corpo: {} } : null;
@@ -1178,6 +1184,7 @@ function camposDaConsulta(tipo: TipoDeConsulta, corpo: Record<string, unknown>):
     case "linha_existe":
     case "linha_completa":
     case "cliente_completo":
+    case "cliente_cadastro":
       return null;
   }
 }
@@ -1271,6 +1278,57 @@ export function lerParteDoRelatorio(parte: ParteDoRelatorio, statusHttp: number,
   const o = objeto(corpo);
   const resposta = o ? camposDaParte(parte, o) : null;
   return resposta ? { situacao: "respondida", mensagem: n.mensagem.slice(0, 200), resposta } : { situacao: "falhou", mensagem: "A resposta da Nogle veio fora da forma documentada." };
+}
+
+// -----------------------------------------------------------------------------
+// AUD-f (auditoria de e7f55b2) — o cadastro do cliente na Nogle, para PREENCHER um formulário (a ativação, a atualização do
+// cadastro, a compra de chip com entrega) ou avisar que ele já existe (o cadastro novo). Só a GET /cliente/buscar (sem o
+// histórico nem as linhas do cliente), só os campos que os formulários usam e só se a Nogle devolveu o cadastro do MESMO
+// documento pedido. Nada é deduzido: a data que não é uma data, o telefone sem DDD, o CEP sem 8 dígitos, o e-mail fora da
+// forma e o texto comprido demais ficam de fora (sem cortar); a cidade da Nogle vem só como referência (a resposta não traz o
+// código da cidade da lista oficial), e o nascimento só para o CPF.
+// -----------------------------------------------------------------------------
+
+export const CAMPOS_DO_CADASTRO = ["nome", "nascimento", "email", "telefone", "cep", "rua", "numero", "complemento", "bairro"] as const;
+export type CampoDoCadastro = (typeof CAMPOS_DO_CADASTRO)[number];
+export type CadastroParaPreencher = Partial<Record<CampoDoCadastro, string>> & { cidade_na_nogle?: string; uf_na_nogle?: string };
+
+/** A data de nascimento como veio, só se for uma data de verdade (de 1900 até hoje). */
+function nascimentoDeVerdade(v: unknown, hoje: Date): string | undefined {
+  const d = diaOuNada(v);
+  const m = d ? /^(\d{4})-(\d{2})-(\d{2})$/.exec(d) : null;
+  if (!m) return undefined;
+  const [ano, mes, dia] = [Number(m[1]), Number(m[2]), Number(m[3])];
+  const data = new Date(Date.UTC(ano, mes - 1, dia));
+  return ano >= 1900 && data.getUTCMonth() === mes - 1 && data.getUTCDate() === dia && data.getTime() <= hoje.getTime() ? d ?? undefined : undefined;
+}
+const textoQueCabe = (v: unknown, maximo: number) => { const t = textoOuNada(v); return t && t.length <= maximo && !/[\u0000-\u001f\u007f]/.test(t) ? t : undefined; };
+
+/** A resposta da /cliente/buscar para preencher (as mesmas regras de falha das consultas; o documento tem de ser o pedido). */
+export function lerCadastroParaPreencher(documento: string, statusHttp: number, corpo: unknown, hoje: Date): RespostaDaConsulta {
+  if (statusHttp >= 500 || statusHttp === 0) return { situacao: "falhou", mensagem: "A Nogle não respondeu agora: tente de novo em instantes." };
+  if (statusHttp === 401 || statusHttp === 403) return { situacao: "falhou", mensagem: `A Nogle recusou o acesso (HTTP ${statusHttp}).` };
+  const n = normalizarResposta(statusHttp, corpo);
+  if (!n.ok) return { situacao: "nao_encontrada", mensagem: n.mensagem.slice(0, 200) || "A Nogle não tem cadastro com este documento." };
+  const c = objeto(objeto(corpo)?.cliente);
+  if (!c) return { situacao: "falhou", mensagem: "A resposta da Nogle veio fora da forma documentada." };
+  const doDocumento = documento.length === 11 ? digitosOuNada(c.cpf) : digitosOuNada(c.cnpj);
+  if (doDocumento !== documento) return { situacao: "falhou", mensagem: "A Nogle devolveu o cadastro de outro documento: nada foi preenchido." };
+  const e = objeto(c.endereco);
+  const email = textoQueCabe(c.email, 120);
+  const telefone = digitosOuNada(c.telefone);
+  const cep = digitosOuNada(e?.cep);
+  const uf = textoOuNada(e?.uf)?.toUpperCase();
+  const campos = limpar({
+    nome: textoQueCabe(c.nome, 120),
+    nascimento: documento.length === 11 ? nascimentoDeVerdade(c.nascimento, hoje) : undefined,
+    email: email && /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email) ? email : undefined,
+    telefone: telefone && /^[1-9]{2}(9\d{8}|[2-8]\d{7})$/.test(telefone) ? telefone : undefined,
+    cep: cep && /^\d{8}$/.test(cep) ? cep : undefined,
+    rua: textoQueCabe(e?.rua, 120), numero: textoQueCabe(e?.numero, 20), complemento: textoQueCabe(e?.complemento, 120), bairro: textoQueCabe(e?.bairro, 120),
+    cidade_na_nogle: textoQueCabe(e?.municipio, 80), uf_na_nogle: uf && /^[A-Z]{2}$/.test(uf) ? uf : undefined,
+  }) as CadastroParaPreencher;
+  return { situacao: "respondida", mensagem: "", resposta: campos };
 }
 
 // -----------------------------------------------------------------------------
