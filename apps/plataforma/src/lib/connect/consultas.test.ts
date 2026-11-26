@@ -18,6 +18,8 @@ describe("o formulário das consultas (CONNECT-g)", () => {
     expect(lerPedidoDeConsulta(formulario({ tipo: "linha_detalhes", parametro: "8955170110000000016", chave: "k" }))).toEqual({ ok: false, erro: "linha" });
     expect(lerPedidoDeConsulta(formulario({ tipo: "iccid_ativacao", parametro: "41999998888", chave: "k" }))).toEqual({ ok: false, erro: "iccid" });
     expect(lerPedidoDeConsulta(formulario({ tipo: "bloquear_linha", parametro: "41999998888", chave: "k" }))).toEqual({ ok: false, erro: "tipo" });
+    // AUD-f: o cadastro para preencher só pela busca da tela (que lê a resposta), não por este formulário.
+    expect(lerPedidoDeConsulta(formulario({ tipo: "cliente_cadastro", parametro: "529.982.247-25", chave: "k" }))).toEqual({ ok: false, erro: "tipo" });
     expect(lerPedidoDeConsulta(formulario({ tipo: "linha_saldo", parametro: "41999998888" }))).toEqual({ ok: false, erro: "falha" });
   });
 

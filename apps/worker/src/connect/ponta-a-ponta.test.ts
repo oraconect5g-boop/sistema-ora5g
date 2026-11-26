@@ -80,6 +80,13 @@ beforeAll(async () => {
       if (["/linhas/detalhes", "/linhas/cobrancasGeradas", "/linhas/consumo/dados", "/linhas/consumo/voz", "/linhas/consumo/sms", "/ativacao/detalhar",
         "/relatorios/transacoes"].includes(caminho)) return json(200, exemplo(caminho));
       if (caminho === "/saldo/saldo") return json(200, exemplo("/saldo/saldo"));
+      // AUD-f: o cadastro do cliente: o exemplo oficial com o documento do pedido (o CPF de exemplo); outro documento, o exemplo
+      // oficial do "não encontrado".
+      if (caminho === "/cliente/buscar") {
+        const documento = (JSON.parse(corpo || "{}") as { documento?: string }).documento;
+        const achado = exemplo("/cliente/buscar", 0);
+        return json(200, documento === "12345678909" ? { ...achado, cliente: { ...(achado.cliente as object), cpf: documento } } : exemplo("/cliente/buscar", 1));
+      }
       // CONNECT-j: o bloqueio da linha, com o exemplo oficial.
       if (caminho === "/atendimento/bloqueio") return json(200, exemplo("/atendimento/bloqueio"));
       if (caminho === "/portabilidade/status") return json(200, { retorno: true, mensagem: "", status: { status: "Sucesso", data_sucesso: "2022-06-08" } });
@@ -487,5 +494,35 @@ describe("AUD-f: o pagamento confirmado da ativação não é a linha ativa (con
     expect(await consultarPendentes(banco, nogle, ["ativacao"])).toMatchObject({ consultadas: 1, confirmadas: 0 });
     expect(await situacaoEPagamento(semConsulta)).toMatchObject({ situacao: "resultado_desconhecido", pago: false });
     respostaDaAtivacao = null;
+  });
+});
+
+describe("AUD-f: o cadastro do cliente na Nogle para preencher", () => {
+  it("a loja busca pelo documento; o worker faz só a /cliente/buscar e grava só os campos do formulário; só quem pediu, na sessão, lê", async () => {
+    const ana = await naLoja(ids.vendedorA, ids.lojaA);
+    const achado = await valor<string>(ana, "select public.connect_consultar('cliente_cadastro', 'aud-f:cadastro:1', '123.456.789-09') as v");
+    const semCadastro = await valor<string>(ana, "select public.connect_consultar('cliente_cadastro', 'aud-f:cadastro:2', '529.982.247-25') as v");
+    const nogle = new ClienteNogle({ tipo: "marca", chaveAcesso: "chave-ficticia" }, transporteHttp(base, 500), { getComCorpo: true });
+    const antes = recebidos.length;
+    let relogio = 0;
+    const r = await responderConsultas(banco, nogle, { duracaoMs: 3, esperaMs: 2, relogio: () => relogio, esperar: async (ms) => { relogio += ms; } });
+    expect(r).toEqual({ respondidas: 1, nao_encontradas: 1, falhas: 0 });
+    // Só a /cliente/buscar (nada do histórico nem das linhas do cliente).
+    expect(recebidos.slice(antes).filter((p) => p.caminho !== "/auth/token")).toEqual([
+      { metodo: "GET", caminho: "/cliente/buscar", corpo: JSON.stringify({ documento: "12345678909" }) },
+      { metodo: "GET", caminho: "/cliente/buscar", corpo: JSON.stringify({ documento: "52998224725" }) },
+    ]);
+    expect(await valor(ana, "select public.connect_cadastro_da_nogle($1, '12345678909') as v", [achado])).toEqual({
+      situacao: "respondida", mensagem: null, resposta: {
+        nome: "Fulano da Silva", nascimento: "1990-10-10", email: "fulano@email.com", telefone: "51999999999", cep: "00000000", rua: "Rua Exemplo",
+        numero: "123", bairro: "Bairro", cidade_na_nogle: "São Paulo", uf_na_nogle: "SP",
+      },
+    });
+    expect(await valor(ana, "select public.connect_cadastro_da_nogle($1, '52998224725') as v", [semCadastro]))
+      .toEqual({ situacao: "nao_encontrada", mensagem: "Cliente não encontrado", resposta: null });
+    // A resposta gravada não leva o documento; outra sessão da mesma pessoa não lê; a tabela não mostra este tipo.
+    expect((await db.query("select 1 from public.connect_consultas where id = $1 and resposta::text like '%12345678909%'", [achado])).rows).toEqual([]);
+    expect(await valor(await naLoja(ids.vendedorA, ids.lojaA), "select public.connect_cadastro_da_nogle($1, '12345678909') as v", [achado])).toBeNull();
+    expect((await comoUsuario(db, ana, () => db.query("select id from public.connect_consultas where tipo = 'cliente_cadastro'"))).rows).toEqual([]);
   });
 });

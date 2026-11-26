@@ -1,10 +1,12 @@
 "use client";
 
 import { ArrowLeft, ArrowRight, CircleCheck, QrCode, Smartphone } from "lucide-react";
-import { useEffect, useRef, useState, type MouseEvent } from "react";
+import { useEffect, useRef, useState, type KeyboardEvent, type MouseEvent } from "react";
 
 import { Aviso, Botao, Etapas } from "../../../componentes/ui";
+import { CAMPOS_DA_ATIVACAO } from "../../../lib/connect/cadastro-da-nogle";
 import { registrarOperacao } from "../acoes";
+import { BuscaNoCadastroDaNogle } from "../BuscaNoCadastroDaNogle";
 import { campo, PagamentoANogle, PlanosEmCartoes, rotulo, type OpcaoDePago, type PlanoDaNogle } from "../campos";
 import { ETAPAS, faltaNaEtapa, primeiraEtapaIncompleta, resumoDaAtivacao } from "./etapas";
 
@@ -13,7 +15,8 @@ import { ETAPAS, faltaNaEtapa, primeiraEtapaIncompleta, resumoDaAtivacao } from 
 // pagamento à Nogle) e a conferência antes de registrar. É um formulário só: os passos escondidos continuam nele, e o toque
 // em "Registrar ativação" confere todos de novo (volta ao passo que falta, sem enviar). O formulário não tem onSubmit (a regra
 // de retorno-imediato.test.ts: o botão de envio enxerga o envio do React). O servidor e o banco conferem tudo outra vez; nada
-// aqui fala com a Nogle.
+// aqui fala com a Nogle. AUD-f: no passo do cliente, a busca do cadastro na Nogle pelo CPF ou CNPJ preenche o que veio (só o
+// campo vazio que a pessoa não mexeu); e o Enter num campo passa para o próximo passo, nunca registra sem a revisão.
 
 export type DddDaNogle = { codigo: string; uf: string | null };
 export type CidadeDaNogle = { codigo: string; nome: string; uf: string | null };
@@ -56,6 +59,13 @@ export function AssistenteDeAtivacao({ chave, planos, ddds, cidades, pagos, chip
     if (falta) setErro(falta);
     else ir(etapa + 1);
   };
+  // AUD-f: o Enter num campo é o "Continuar" do passo (que confere o passo); no último passo, nada. O registro é só pelo botão,
+  // depois da revisão (sem o Enter, o navegador também não enviaria: o botão de envio só existe no último passo).
+  const aoTeclar = (evento: KeyboardEvent<HTMLFormElement>) => {
+    if (evento.key !== "Enter" || !(evento.target instanceof HTMLInputElement)) return;
+    evento.preventDefault();
+    if (etapa < ultima) continuar();
+  };
   // O toque em Registrar confere todos os passos: com algo faltando, não envia e volta ao passo.
   const conferirAntesDeEnviar = (evento: MouseEvent<HTMLButtonElement>) => {
     const incompleta = formulario.current ? primeiraEtapaIncompleta(new FormData(formulario.current)) : null;
@@ -67,7 +77,7 @@ export function AssistenteDeAtivacao({ chave, planos, ddds, cidades, pagos, chip
   };
 
   return (
-    <form ref={formulario} action={registrarOperacao} noValidate className="space-y-4">
+    <form ref={formulario} action={registrarOperacao} noValidate onKeyDown={aoTeclar} className="space-y-4">
       <input type="hidden" name="tipo" value="ativacao" />
       <input type="hidden" name="chave" value={chave} />
       {tipo === "esim" && <input type="hidden" name="esim" value="on" />}
@@ -114,8 +124,10 @@ export function AssistenteDeAtivacao({ chave, planos, ddds, cidades, pagos, chip
       </div>
 
       <div hidden={etapa !== 1} className="grid gap-4 sm:grid-cols-2">
-        <label className={`${rotulo} sm:col-span-2`}>Nome completo do cliente<input name="nome" maxLength={120} autoComplete="off" className={campo} /></label>
         <label className={rotulo}>CPF ou CNPJ<input name="documento" inputMode="numeric" autoComplete="off" className={`${campo} numeros`} /></label>
+        <p className="self-end text-xs text-suave">Comece pelo documento: a Nogle pode preencher o resto, e você confere com o cliente.</p>
+        <BuscaNoCadastroDaNogle campos={CAMPOS_DA_ATIVACAO} modo="preencher" />
+        <label className={`${rotulo} sm:col-span-2`}>Nome completo do cliente<input name="nome" maxLength={120} autoComplete="off" className={campo} /></label>
         <label className={rotulo}>Nascimento (pessoa física)<input name="data_nascimento" type="date" className={campo} /></label>
         <label className={rotulo}>E-mail (se houver)<input name="email" type="email" autoComplete="off" className={campo} /></label>
         <label className={rotulo}>Telefone com DDD (se houver)<input name="telefone" inputMode="tel" autoComplete="off" className={campo} /></label>

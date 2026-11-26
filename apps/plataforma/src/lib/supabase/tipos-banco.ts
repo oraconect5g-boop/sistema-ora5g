@@ -1820,6 +1820,7 @@ export type Database = {
           respondida_em: string | null
           resposta: Json | null
           resposta_apagada_em: string | null
+          sessao_id: string | null
           situacao: string
           tipo: string
           unidade_id: string
@@ -1837,6 +1838,7 @@ export type Database = {
           respondida_em?: string | null
           resposta?: Json | null
           resposta_apagada_em?: string | null
+          sessao_id?: string | null
           situacao?: string
           tipo: string
           unidade_id: string
@@ -1854,6 +1856,7 @@ export type Database = {
           respondida_em?: string | null
           resposta?: Json | null
           resposta_apagada_em?: string | null
+          sessao_id?: string | null
           situacao?: string
           tipo?: string
           unidade_id?: string
@@ -9033,6 +9036,14 @@ export type Database = {
           onde_na_nogle: string
           unidade_id: string
         }[]
+      }
+      connect_cadastro_da_nogle: {
+        Args: { p_consulta: string; p_documento: string }
+        Returns: Json
+      }
+      connect_cadastro_da_nogle_descartar: {
+        Args: { p_consulta: string }
+        Returns: boolean
       }
       connect_consultar: {
         Args: { p_chave: string; p_parametro?: string; p_tipo: string }

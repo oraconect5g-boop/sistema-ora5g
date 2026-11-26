@@ -11,9 +11,11 @@ import { FalhaDoServico, obterSessao } from "../../../lib/acesso/sessao";
 import {
   descricaoDaAcao, ehErroDaAcao, ERROS_DA_ACAO, MOTIVOS_BLOQUEIO, NOMES_DAS_ACOES, resultadoDaAcao, SITUACOES_DA_ACAO, type AcaoDaTela,
 } from "../../../lib/connect/acoes-na-nogle";
+import { CAMPOS_DAS_ACOES } from "../../../lib/connect/cadastro-da-nogle";
 import { brl } from "../../../lib/formato";
 import { textoDoParametro, type ValorDeParametro } from "../../../lib/parametros";
 import { cancelarAcao, pedirAcao } from "./acoes";
+import { BuscaNoCadastroDaNogle } from "../BuscaNoCadastroDaNogle";
 import { CabecalhoConnect, LARGURA_DA_CONNECT } from "../CabecalhoConnect";
 
 export const metadata: Metadata = { title: "Ações na Nogle" };
@@ -90,10 +92,14 @@ export default async function AcoesNaNogle({ searchParams }: { searchParams: Pro
       </select>
     </label>
   );
-  const camposDoCliente = (comNascimentoObrigatorio: boolean) => (
+  // AUD-f: o documento primeiro, com a busca do cadastro na Nogle: preenche o que veio (a atualização e a compra de chip) ou
+  // avisa se o cadastro já existe (o cadastro novo). O que a pessoa digitou não é trocado.
+  const camposDoCliente = (comNascimentoObrigatorio: boolean, busca: "preencher" | "avisar") => (
     <>
-      <label className={rotulo}>Nome completo<input name="nome" required maxLength={120} autoComplete="off" className={campo} /></label>
       <label className={rotulo}>CPF ou CNPJ<input name="documento" required inputMode="numeric" autoComplete="off" className={campo} /></label>
+      <span className="hidden sm:block" />
+      <BuscaNoCadastroDaNogle campos={CAMPOS_DAS_ACOES} modo={busca} />
+      <label className={rotulo}>Nome completo<input name="nome" required maxLength={120} autoComplete="off" className={campo} /></label>
       <label className={rotulo}>{`Nascimento${comNascimentoObrigatorio ? " (pessoa física)" : " (opcional)"}`}<input name="data_nascimento" type="date" className={campo} /></label>
       <label className={rotulo}>Celular com DDD (opcional)<input name="telefone" inputMode="numeric" autoComplete="off" className={campo} /></label>
       <label className={rotulo}>E-mail (opcional)<input name="email" type="email" autoComplete="off" className={campo} /></label>
@@ -146,8 +152,8 @@ export default async function AcoesNaNogle({ searchParams }: { searchParams: Pro
 
       <Cartao className="mt-4" titulo="Cliente na Nogle" icone={UserRound} subtitulo="O cadastro do cliente na Nogle (o do sistema não muda)">
         <div className="space-y-2">
-          {formulario("cliente_cadastrar", camposDoCliente(true), "Cadastrar na Nogle")}
-          {formulario("cliente_atualizar", camposDoCliente(false), "Atualizar na Nogle")}
+          {formulario("cliente_cadastrar", camposDoCliente(true, "avisar"), "Cadastrar na Nogle")}
+          {formulario("cliente_atualizar", camposDoCliente(false, "preencher"), "Atualizar na Nogle")}
         </div>
       </Cartao>
 
@@ -162,7 +168,7 @@ export default async function AcoesNaNogle({ searchParams }: { searchParams: Pro
             </select>
           </label>
           <span className="hidden sm:block" />
-          {camposDoCliente(false)}
+          {camposDoCliente(false, "preencher")}
         </>, "Pedir a compra")}
       </Cartao>
 

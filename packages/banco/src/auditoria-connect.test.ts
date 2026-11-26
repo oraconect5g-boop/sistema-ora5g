@@ -170,3 +170,108 @@ describe("AUD-f — o material do eSIM e o Pix copia e cola, à parte", () => {
       .toBe("42501");
   });
 });
+
+describe("AUD-f — o cadastro do cliente na Nogle para preencher (parte B)", () => {
+  const CPF = "12345678909";
+  const naLoja = async (id: string, loja: string): Promise<Sessao> => {
+    const s = { usuario: id, sessao: `4f000000-0000-4000-8000-${String(++n).padStart(12, "0")}` };
+    await comoUsuario(db, s, () => db.query("select public.selecionar_unidade($1)", [loja]));
+    return s;
+  };
+  const pedir = (s: Sessao, documento: string) => valor<string>(s, "select public.connect_consultar('cliente_cadastro', $1, $2) as v", [chave(), documento]);
+  const erroAoPedir = (s: Sessao, documento: string) =>
+    comoUsuario(db, s, () => erroDe(() => db.query("select public.connect_consultar('cliente_cadastro', $1, $2)", [chave(), documento])));
+  const ler = (s: Sessao, consulta: string, documento: string) =>
+    valor<Record<string, unknown> | null>(s, "select public.connect_cadastro_da_nogle($1, $2) as v", [consulta, documento]);
+  const descartar = (s: Sessao, consulta: string) => valor<boolean>(s, "select public.connect_cadastro_da_nogle_descartar($1) as v", [consulta]);
+  const RESPOSTA = { situacao: "respondida", mensagem: "", resposta: { nome: "Cliente Ficticio", cep: "90000000" } };
+  const pegarFila = () => servico(async () => (await db.query<{ consulta_id: string; tipo: string; parametro: string }>(
+    "select * from public.connect_worker_consultas_a_fazer($1, 5)", [ids.organizacao])).rows);
+  const gravar = (consulta: string, resultado: object = RESPOSTA) =>
+    rpcServico<string>("select public.connect_worker_registrar_resposta_da_consulta($1, $2::jsonb) as v", [consulta, JSON.stringify(resultado)]);
+  async function responder(resultado: object = RESPOSTA) {
+    const fila = await pegarFila();
+    for (const c of fila) await gravar(c.consulta_id, resultado);
+    return fila;
+  }
+  const linha = async (id: string) => (await db.query<Record<string, unknown>>(
+    "select tipo, parametro, parametro_mascarado, resposta, resposta_apagada_em is not null as apagada, sessao_id, situacao from public.connect_consultas where id = $1",
+    [id])).rows[0];
+
+  it("quem opera ou gere pede pelo CPF ou CNPJ válido; o worker recebe só o documento; o documento fica mascarado e a sessão anotada", async () => {
+    const s = await usuario();
+    const id = await pedir(s, "123.456.789-09");
+    expect(await linha(id)).toMatchObject({ tipo: "cliente_cadastro", parametro: CPF, parametro_mascarado: "•••.•••.789-09", sessao_id: s.sessao, situacao: "na_fila" });
+    expect(await responder()).toEqual([{ consulta_id: id, tipo: "cliente_cadastro", parametro: CPF }]);
+    for (const errado of ["123.456.789-00", "1234", ""]) expect(await erroAoPedir(s, errado), errado).toBe("22023");
+    expect(await pedir(await usuario(ids.dono), "11.222.333/0001-81")).toBeTruthy();
+    // O técnico da assistência (sem a Ora Connect) não pede.
+    expect(await erroAoPedir(await naLoja(ids.tecnico, ids.assistencia), CPF)).toBe("42501");
+  });
+
+  it("o limite próprio: 10 buscas por pessoa e 40 por loja por hora (as outras consultas seguem)", async () => {
+    const s = await usuario();
+    for (let i = 0; i < 10; i++) await pedir(s, CPF);
+    expect(await erroAoPedir(s, CPF)).toBe("OR056");
+    expect(await valor<string>(s, "select public.connect_consultar('linha_saldo', $1, '51988887777') as v", [chave()])).toBeTruthy();
+    // A loja: 10 da pessoa + 30 de outra = 40 na última hora; quem ainda não pediu também espera.
+    await db.query(`insert into public.connect_consultas (organizacao_id, unidade_id, pedida_por, chave, tipo, parametro, parametro_mascarado, sessao_id)
+      select $1, $2, $3, 'loja:' || g, 'cliente_cadastro', $4, 'x', gen_random_uuid() from generate_series(1, 30) g`, [ids.organizacao, ids.lojaA, ids.vendedorAB, CPF]);
+    expect(await erroAoPedir(await usuario(ids.dono), CPF)).toBe("OR056");
+    // Na outra loja, a mesma pessoa (que não passou do limite dela) pede.
+    expect(await pedir(await naLoja(ids.dono, ids.lojaB), CPF)).toBeTruthy();
+  });
+
+  it("a resposta só sai para quem pediu, na loja e na sessão do pedido, para o mesmo documento e por 15 minutos; a tabela não a mostra", async () => {
+    const s = await usuario(ids.vendedorAB);
+    const id = await pedir(s, CPF);
+    expect(await ler(s, id, CPF)).toEqual({ situacao: "na_fila", mensagem: null, resposta: null });
+    await responder();
+    const respondida = { situacao: "respondida", mensagem: null, resposta: RESPOSTA.resposta };
+    expect(await ler(s, id, "123.456.789-09")).toEqual(respondida);
+    expect(await ler(s, id, "11222333000181")).toBeNull();
+    expect(await ler(await usuario(ids.vendedorAB), id, CPF)).toBeNull(); // outra sessão da mesma pessoa
+    expect(await ler(await usuario(ids.vendedorA), id, CPF)).toBeNull(); // outra pessoa
+    expect(await valor<number>(s, "select count(*)::int as v from public.connect_consultas where id = $1", [id])).toBe(0);
+    // Outra loja na mesma sessão: nada; de volta à loja do pedido, a resposta.
+    await comoUsuario(db, s, () => db.query("select public.selecionar_unidade($1)", [ids.lojaB]));
+    expect(await ler(s, id, CPF)).toBeNull();
+    await comoUsuario(db, s, () => db.query("select public.selecionar_unidade($1)", [ids.lojaA]));
+    expect(await ler(s, id, CPF)).toEqual(respondida);
+    // Depois de 15 minutos, nada (mesmo antes da limpeza do worker).
+    await db.query("update public.connect_consultas set pedida_em = now() - interval '16 minutes' where id = $1", [id]);
+    expect(await ler(s, id, CPF)).toBeNull();
+    // Sem sessão válida, nem a leitura nem o descarte.
+    expect(await comoUsuario(db, { usuario: ids.vendedorAB, sessao: null } as unknown as Sessao, () => erroDe(() => db.query("select public.connect_cadastro_da_nogle($1, $2)", [id, CPF]))))
+      .toBe("42501");
+  });
+
+  it("quem pediu descarta (saem a resposta e o documento; fica o mascarado); outra pessoa não; a limpeza apaga em 15 minutos", async () => {
+    const s = await usuario(ids.vendedorAB);
+    const id = await pedir(s, CPF);
+    await responder();
+    expect(await comoUsuario(db, await usuario(ids.vendedorA), () => erroDe(() => db.query("select public.connect_cadastro_da_nogle_descartar($1)", [id])))).toBe("P0002");
+    expect(await descartar(s, id)).toBe(true);
+    expect(await linha(id)).toMatchObject({ parametro: null, resposta: null, apagada: true, parametro_mascarado: "•••.•••.789-09" });
+    expect(await ler(s, id, CPF)).toBeNull();
+    // Descartada na fila, o worker não pega; descartada enquanto consulta, a resposta que chega é ignorada.
+    const naFila = await pedir(s, CPF);
+    await descartar(s, naFila);
+    expect(await pegarFila()).toEqual([]);
+    const consultando = await pedir(s, CPF);
+    expect(await pegarFila()).toHaveLength(1);
+    await descartar(s, consultando);
+    expect(await gravar(consultando)).toBe("ignorada");
+    expect(await linha(consultando)).toMatchObject({ resposta: null, parametro: null, situacao: "falhou" });
+    // A limpeza do worker: o cadastro sai em 15 minutos; as outras consultas, em 24 horas.
+    const velha = await pedir(s, CPF);
+    await responder();
+    const saldo = await valor<string>(s, "select public.connect_consultar('linha_saldo', $1, '51988887777') as v", [chave()]);
+    await responder({ situacao: "respondida", mensagem: "", resposta: { saldo_centavos: 100 } });
+    await db.query("update public.connect_consultas set pedida_em = now() - interval '20 minutes', respondida_em = now() - interval '20 minutes' where id = any($1::uuid[])",
+      [[velha, saldo]]);
+    expect(await rpcServico("select public.connect_worker_limpar_consultas($1) as v", [ids.organizacao])).toMatchObject({ apagadas: 1 });
+    expect(await linha(velha)).toMatchObject({ resposta: null, parametro: null, apagada: true });
+    expect(await linha(saldo)).toMatchObject({ apagada: false, parametro: "51988887777" });
+  });
+});

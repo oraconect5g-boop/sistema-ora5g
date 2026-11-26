@@ -8,6 +8,7 @@ import { ehTipoOperacao, type TipoOperacao } from "@ora5g/dominio/nogle";
 
 import { ehUuid } from "../../lib/acesso/regras";
 import { obterSessao } from "../../lib/acesso/sessao";
+import { documentoParaBuscar, erroDoCadastro, lerRespostaDoCadastro, type ErroDoCadastro, type EstadoDoCadastro } from "../../lib/connect/cadastro-da-nogle";
 import { erroDoConnect, lerPedido } from "../../lib/connect/regras";
 import type { Json } from "../../lib/supabase/tipos-banco";
 
@@ -63,4 +64,34 @@ export async function habilitarOperacao(dados: FormData) {
   const { supabase } = await obterSessao({ exigirLoja: true });
   const { error } = await supabase.rpc("connect_habilitar", { p_tipo: tipo, p_habilitar: habilitar === "sim", p_evidencia: evidencia.trim() });
   voltar(error, "habilitacao", "/connect/integracao", "/connect/integracao");
+}
+
+// AUD-f (auditoria de e7f55b2), item 1: a busca do cadastro do cliente na Nogle para preencher, chamada pelo componente da tela
+// (BuscaNoCadastroDaNogle), não por formulário. O banco confere tudo (quem pede, a loja e a sessão do turno, o documento, o
+// limite) e só devolve a resposta a quem pediu, na mesma loja e sessão, para o mesmo documento e por 15 minutos; o worker do
+// servidor é quem fala com a Nogle. Nada aqui grava no cadastro de clientes do sistema.
+export async function pedirCadastroDaNogle(documento: string, chave: string): Promise<{ ok: true; consulta: string } | { ok: false; erro: ErroDoCadastro }> {
+  const d = documentoParaBuscar(documento);
+  if (!d) return { ok: false, erro: "documento" };
+  if (!ehUuid(String(chave))) return { ok: false, erro: "falha" };
+  const { supabase } = await obterSessao({ exigirLoja: true });
+  const { data, error } = await supabase.rpc("connect_consultar", { p_tipo: "cliente_cadastro", p_chave: chave, p_parametro: d });
+  if (error || typeof data !== "string") return { ok: false, erro: erroDoCadastro(error) };
+  return { ok: true, consulta: data };
+}
+
+export async function lerCadastroDaNogle(consulta: string, documento: string): Promise<EstadoDoCadastro> {
+  const d = documentoParaBuscar(documento);
+  if (!ehUuid(String(consulta)) || !d) return { estado: "descartada" };
+  const { supabase } = await obterSessao({ exigirLoja: true });
+  const { data, error } = await supabase.rpc("connect_cadastro_da_nogle", { p_consulta: consulta, p_documento: d });
+  if (error) return { estado: "falhou", mensagem: "Não foi possível ler a busca agora: tente de novo." };
+  return lerRespostaDoCadastro(data);
+}
+
+// Descarta a resposta e o documento no banco (ao usar a resposta, ao mudar o documento ou ao sair da tela). Sem resposta útil.
+export async function descartarCadastroDaNogle(consulta: string): Promise<void> {
+  if (!ehUuid(String(consulta))) return;
+  const { supabase } = await obterSessao({ exigirLoja: true });
+  await supabase.rpc("connect_cadastro_da_nogle_descartar", { p_consulta: consulta });
 }

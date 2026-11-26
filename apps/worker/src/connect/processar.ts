@@ -6,7 +6,7 @@
 // - log só com contagens: nada de CPF, nome, linha, token ou chave.
 import {
   PEDIDO_DO_ESTOQUE_DA_MVNO, PEDIDO_DOS_PDVS, RELATORIOS_DA_CONCILIACAO, conferirTransferencia, ehTipoDeConsulta, iccidNoFormatoNogle, interpretarConsulta,
-  interpretarConsultaPagamento, lerParteDoRelatorio, lerRespostaDaConsulta, linhaValida, pedidoDaConsulta, pedidoDaPortabilidade, pedidoDasLinhasDoCliente,
+  interpretarConsultaPagamento, lerCadastroParaPreencher, lerParteDoRelatorio, lerRespostaDaConsulta, linhaValida, pedidoDaConsulta, pedidoDaPortabilidade, pedidoDasLinhasDoCliente,
   pedidoDasTransacoesDaLinha, pedidoDoCliente, type ParteDoRelatorio, type RespostaDaConsulta, type TipoDeConsulta,
   lerRespostaDaAcao, pedidoDaAcao, type AcaoParaEnviar, type ResultadoDaAcao,
   interpretarEnvio, lerChips, lerPdvs, lerReferencias, lerRelatorio, lerRespostaDaTransferencia, montarConsulta, montarPedido, montarPedidoDoRelatorio,
@@ -402,6 +402,9 @@ export async function responderConsultas(banco: BancoConnect, nogle: Nogle, opco
         resposta = linhaValida(p) ? await relatorioDoNumero(nogle, p, agora()) : FORA_DA_FORMA;
       } else if (c.tipo === "cliente_completo") {
         resposta = /^(\d{11}|\d{14})$/.test(p) ? await relatorioDoCliente(nogle, p, agora()) : FORA_DA_FORMA;
+      } else if (c.tipo === "cliente_cadastro") {
+        // AUD-f: só a /cliente/buscar, para preencher; a leitura confere que o cadastro é do mesmo documento.
+        resposta = /^(\d{11}|\d{14})$/.test(p) ? await chamarConsulta(nogle, pedidoDoCliente(p), (s, corpo) => lerCadastroParaPreencher(p, s, corpo, agora())) : FORA_DA_FORMA;
       } else {
         resposta = await consultaSimples(nogle, c.tipo, c.parametro, agora());
       }
