@@ -1,6 +1,8 @@
 import { describe, expect, it } from "vitest";
 
-import { erroDoConnect, inicioDaJanela, lerPedido, linkDePagamento, planoDoServico, quemPagaOPix } from "./regras";
+import {
+  erroDoConnect, inicioDaJanela, lerPedido, linkDePagamento, materialDoEsimNaTela, pagamentoNaNogle, planoDoServico, podeVerMaterialDoEsim, quemPagaOPix,
+} from "./regras";
 
 const formulario = (campos: Record<string, string>) => ({ get: (nome: string) => campos[nome] ?? null });
 const ATIVACAO = {
@@ -78,5 +80,60 @@ describe("o plano do serviço pago no caixa (AUD-f)", () => {
     expect(planoDoServico("recarga", "ATV-1718")).toBeNull();
     expect(planoDoServico("portabilidade", "ATV-1718")).toBeNull();
     for (const sku of ["ATV-", "ATV-17a8", "ATV-1234567890", "atv-1718", null, undefined]) expect(planoDoServico("ativacao", sku)).toBeNull();
+  });
+});
+
+describe("o pagamento da Nogle na tela (AUD-f)", () => {
+  // Código EMV FICTÍCIO, no formato do Pix.
+  const EMV = "00020126580014BR.GOV.BCB.PIX0136a629532e-7693-4846-852d-1bbff817b5a85204000053039865802BR5913ORA TESTE6008CURITIBA62070503***6304ABCD";
+  const base = { metodo_pagamento: "LINK", situacao: "aguardando_operadora", venda_item_id: null, link_pagamento: "https://pagar.exemplo/x", pix_copia_cola: null,
+    pagamento_confirmado_em: null, id_externo: "99" };
+
+  it("só o LINK tem pagamento na Nogle; o crédito da carteira e a portabilidade, não", () => {
+    expect(pagamentoNaNogle({ ...base, metodo_pagamento: "SALDO" })).toBeNull();
+    expect(pagamentoNaNogle({ ...base, metodo_pagamento: null })).toBeNull();
+  });
+
+  it("a pagar: quem paga (a loja, com o plano pago no caixa; senão o cliente), o link https e o Pix copia e cola, cada um no seu campo", () => {
+    expect(pagamentoNaNogle(base)).toEqual({ estado: "a_pagar", quemPaga: "cliente", link: "https://pagar.exemplo/x", pix: null });
+    expect(pagamentoNaNogle({ ...base, venda_item_id: "vi1", pix_copia_cola: EMV })).toEqual({ estado: "a_pagar", quemPaga: "loja", link: "https://pagar.exemplo/x", pix: EMV });
+    // O link no lugar do Pix (ou o Pix com quebra de linha no meio) não é Pix copia e cola; o link que não é https não é link.
+    expect(pagamentoNaNogle({ ...base, pix_copia_cola: "https://pagar.exemplo/x" })).toMatchObject({ pix: null });
+    expect(pagamentoNaNogle({ ...base, pix_copia_cola: EMV + "\n" })).toMatchObject({ pix: EMV });
+    expect(pagamentoNaNogle({ ...base, pix_copia_cola: EMV.slice(0, 40) + "\n" + EMV.slice(40) })).toMatchObject({ pix: null });
+    expect(pagamentoNaNogle({ ...base, link_pagamento: "http://pagar.exemplo/x", pix_copia_cola: EMV })).toMatchObject({ link: null, pix: EMV });
+  });
+
+  it("sem link nem Pix: o aviso com o número da Nogle (sem prazo inventado); depois do envio, só enquanto espera a Nogle", () => {
+    expect(pagamentoNaNogle({ ...base, link_pagamento: null })).toEqual({ estado: "sem_meio", quemPaga: "cliente", idNaNogle: "99" });
+    expect(pagamentoNaNogle({ ...base, link_pagamento: "javascript:alert(1)", id_externo: null })).toEqual({ estado: "sem_meio", quemPaga: "cliente", idNaNogle: null });
+    for (const situacao of ["registrada", "enviando", "resultado_desconhecido", "confirmada", "recusada", "cancelada"]) expect(pagamentoNaNogle({ ...base, situacao })).toBeNull();
+  });
+
+  it("o pago na Nogle não é a linha ativa: \"confirmado\" enquanto espera a prova da linha ou a gerência; depois, nada", () => {
+    const pago = { ...base, pagamento_confirmado_em: "2026-11-26T13:00:00Z" };
+    expect(pagamentoNaNogle(pago)).toEqual({ estado: "confirmado", em: "2026-11-26T13:00:00Z" });
+    expect(pagamentoNaNogle({ ...pago, situacao: "resultado_desconhecido" })).toEqual({ estado: "confirmado", em: "2026-11-26T13:00:00Z" });
+    expect(pagamentoNaNogle({ ...pago, situacao: "confirmada" })).toBeNull();
+  });
+});
+
+describe("o material de instalação do eSIM na tela (AUD-f)", () => {
+  const op = { tipo: "ativacao", esim: true, situacao: "aguardando_operadora", vendedor_id: "eu" };
+  it("só para quem registrou e quem gere, só no eSIM e só da ativação viva ou feita", () => {
+    expect(podeVerMaterialDoEsim(op, "eu", false)).toBe(true);
+    expect(podeVerMaterialDoEsim(op, "outra", false)).toBe(false);
+    expect(podeVerMaterialDoEsim(op, "outra", true)).toBe(true);
+    expect(podeVerMaterialDoEsim({ ...op, esim: false }, "eu", true)).toBe(false);
+    expect(podeVerMaterialDoEsim({ ...op, tipo: "recarga" }, "eu", true)).toBe(false);
+    expect(["resultado_desconhecido", "confirmada"].every((situacao) => podeVerMaterialDoEsim({ ...op, situacao }, "eu", false))).toBe(true);
+    expect(["registrada", "cancelada", "recusada", "nao_recebida", "negada"].some((situacao) => podeVerMaterialDoEsim({ ...op, situacao }, "eu", true))).toBe(false);
+  });
+  it("só o link https e o código LPA no formato", () => {
+    const codigo = "LPA:1$smdp.exemplo$AB-12";
+    expect(materialDoEsimNaTela({ link_esim: "https://esim.exemplo/qr", esim_codigo: codigo })).toEqual({ link: "https://esim.exemplo/qr", codigo });
+    expect(materialDoEsimNaTela({ link_esim: "javascript:alert(1)", esim_codigo: codigo })).toEqual({ link: null, codigo });
+    expect(materialDoEsimNaTela({ link_esim: null, esim_codigo: "LPA:1$sem-o-codigo" })).toBeNull();
+    expect(materialDoEsimNaTela({ link_esim: null, esim_codigo: codigo + "A".repeat(300) })).toBeNull();
   });
 });

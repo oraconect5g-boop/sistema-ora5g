@@ -2042,6 +2042,7 @@ export type Database = {
           enviado_em: string | null
           enviando_desde: string | null
           esim: boolean
+          esim_codigo: string | null
           evidencia: Json | null
           evidencia_chave: string | null
           iccid: string | null
@@ -2059,6 +2060,8 @@ export type Database = {
           numero_ativado: string | null
           operadora_doadora_id: number | null
           organizacao_id: string
+          pagamento_confirmado_em: string | null
+          pix_copia_cola: string | null
           plano_id: number | null
           plano_nome: string | null
           proxima_consulta_em: string | null
@@ -2087,6 +2090,7 @@ export type Database = {
           enviado_em?: string | null
           enviando_desde?: string | null
           esim?: boolean
+          esim_codigo?: string | null
           evidencia?: Json | null
           evidencia_chave?: string | null
           iccid?: string | null
@@ -2104,6 +2108,8 @@ export type Database = {
           numero_ativado?: string | null
           operadora_doadora_id?: number | null
           organizacao_id: string
+          pagamento_confirmado_em: string | null
+          pix_copia_cola: string | null
           plano_id?: number | null
           plano_nome?: string | null
           proxima_consulta_em?: string | null
@@ -2132,6 +2138,7 @@ export type Database = {
           enviado_em?: string | null
           enviando_desde?: string | null
           esim?: boolean
+          esim_codigo?: string | null
           evidencia?: Json | null
           evidencia_chave?: string | null
           iccid?: string | null
@@ -2149,6 +2156,8 @@ export type Database = {
           numero_ativado?: string | null
           operadora_doadora_id?: number | null
           organizacao_id?: string
+          pagamento_confirmado_em?: string | null
+          pix_copia_cola?: string | null
           plano_id?: number | null
           plano_nome?: string | null
           proxima_consulta_em?: string | null
@@ -9114,12 +9123,14 @@ export type Database = {
         Returns: {
           data_cadastro_externa: string
           enviado_em: string
+          esim: boolean
           iccid: string
           id_externo: string
           linha: string
           linha_doadora: string
           metodo_pagamento: string
           operacao_id: string
+          pagamento_confirmado_em: string
           situacao: string
           tentativas_consulta: number
           tipo: string
@@ -9147,6 +9158,10 @@ export type Database = {
       connect_worker_registrar_consulta: {
         Args: { p_evidencia: Json; p_operacao: string }
         Returns: string
+      }
+      connect_worker_registrar_material_esim: {
+        Args: { p_material: Json; p_operacao: string }
+        Returns: boolean
       }
       connect_worker_registrar_envio: {
         Args: { p_operacao: string; p_resultado: Json }

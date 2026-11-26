@@ -206,6 +206,8 @@ export type ResultadoEnvio = {
   data_cadastro?: string;
   link_pagamento?: string;
   link_esim?: string;
+  /** AUD-f: o Pix copia e cola (o código EMV), quando a resposta oficial do envio traz (pix_copia_cola); não é o link. */
+  pix_copia_cola?: string;
   iccid?: string;
   /** uuid da ativação ou recarga, para GET /consultaPagamento (resposta da Nogle de 10/11/2026). */
   uuid?: string;
@@ -214,6 +216,32 @@ export type ResultadoEnvio = {
 };
 
 const FORMATO_UUID = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
+
+/**
+ * AUD-f (auditoria de e7f55b2): o Pix copia e cola é o código EMV do Pix (começa com 000201 e traz o identificador do Pix,
+ * BR.GOV.BCB.PIX; pode ter espaço no nome de quem recebe, nunca caractere de controle); o link de pagamento é uma página (https). São coisas diferentes: o QR Code do link só abre a página. Fora
+ * desse formato, ou vazio (os exemplos oficiais do LINK trazem vazio), não há Pix copia e cola.
+ */
+export function pixCopiaECola(v: unknown): string | undefined {
+  const t = typeof v === "string" ? v.trim() : "";
+  // O nome e a cidade de quem recebe podem ter espaço; quebra de linha e outro caractere de controle, não.
+  return t.length >= 20 && t.length <= 512 && /^000201/.test(t) && t.toUpperCase().includes("BR.GOV.BCB.PIX") && !/[\u0000-\u001f\u007f]/.test(t) ? t : undefined;
+}
+
+/**
+ * AUD-f: o material de instalação do eSIM (o link e o código de ativação), que pode vir só depois do pagamento. A rota que o
+ * traz (GET /consultaPagamento, com esim, activation_code_esim e qr_code_esim) veio da resposta da Nogle de 10/11/2026 e NÃO está
+ * na coleção oficial: só é lida com a rota ligada (NOGLE_CONSULTA_PAGAMENTO, depois da primeira resposta real em homologação).
+ * Só o link https e o código no padrão LPA (LPA:1$servidor$código); o resto (imagem, PDF) fica de fora. Nunca vai para a
+ * evidência nem para os eventos: a linha se instala com ele.
+ */
+export type MaterialDoEsim = { link?: string; codigo?: string };
+export function materialDoEsim(corpo: Record<string, unknown>): MaterialDoEsim | undefined {
+  const link = [corpo.qr_code_esim, corpo.esim].map((v) => (typeof v === "string" ? v.trim() : "")).find((v) => /^https:\/\/[^\s]{1,490}$/.test(v));
+  const codigo = typeof corpo.activation_code_esim === "string" ? corpo.activation_code_esim.trim() : "";
+  const material = { ...(link ? { link } : {}), ...(/^LPA:1\$[^\s$]+\$[^\s]+$/.test(codigo) && codigo.length <= 300 ? { codigo } : {}) };
+  return Object.keys(material).length > 0 ? material : undefined;
+}
 /**
  * uuid devolvido na ativação ou recarga. A Nogle respondeu em 10/11/2026 que toda ativação e
  * recarga devolve um uuid, mas o campo NÃO está na coleção oficial: o nome e o lugar exatos ficam a
@@ -253,6 +281,7 @@ export function interpretarEnvio(tipo: TipoOperacao, statusHttp: number, corpo: 
       return {
         ...base, resultado: "aceita", mensagem: textoOuNada(c.mensagem) ?? "", id_externo: id,
         data_cadastro: textoOuNada(info?.data_cadastro), link_pagamento: textoOuNada(c.link_pagamento), link_esim: textoOuNada(c.link_esim),
+        ...(pixCopiaECola(c.pix_copia_cola) ? { pix_copia_cola: pixCopiaECola(c.pix_copia_cola) } : {}),
         iccid: textoOuNada(objeto(chips[0])?.iccid), ...(uuid ? { uuid } : {}),
         dados: limpar({ id, id_cliente: textoOuNada(info?.id_cliente), data_cadastro: textoOuNada(info?.data_cadastro) }),
       };
@@ -304,13 +333,18 @@ export type OperacaoParaConsultar = {
   metodo_pagamento: MetodoPagamentoNogle | null;
   /** uuid devolvido no envio (ativação e recarga), quando houver. */
   uuid_externo?: string | null;
+  /** AUD-f: o pagamento da ativação já confirmado na Nogle (falta a prova da linha). */
+  pagamento_confirmado_em?: string | null;
+  esim?: boolean;
 };
 
 /** Consulta documentada que serve de evidência para cada tipo (null: não há como consultar ainda). */
 export function montarConsulta(op: OperacaoParaConsultar, opcoes: { consultaPagamento?: boolean } = {}): PedidoNogle | null {
   // Com o uuid do envio e a rota liberada para a conta (NOGLE_CONSULTA_PAGAMENTO), a consulta é da
   // operação exata: não depende da data de cadastro no histórico (pergunta 10, #59).
-  if (opcoes.consultaPagamento && op.uuid_externo && (op.tipo === "ativacao" || op.tipo === "recarga")) {
+  // AUD-f: a ativação já paga não consulta o pagamento de novo: falta a prova da linha (o ICCID ativo, abaixo).
+  const ativacaoPaga = op.tipo === "ativacao" && Boolean(op.pagamento_confirmado_em);
+  if (opcoes.consultaPagamento && op.uuid_externo && !ativacaoPaga && (op.tipo === "ativacao" || op.tipo === "recarga")) {
     return { metodo: "GET", caminho: "/consultaPagamento", corpo: { tipo: "ATIVREC", uuid: op.uuid_externo } };
   }
   if (op.tipo === "ativacao") return op.iccid ? { metodo: "POST", caminho: "/ativacao/validaIccid", corpo: { iccid: op.iccid } } : null;
@@ -320,11 +354,16 @@ export function montarConsulta(op: OperacaoParaConsultar, opcoes: { consultaPaga
 
 export type Evidencia = {
   // "ambigua": a resposta não diz qual recarga é desta operação (#59): a gerência confere.
-  evidencia: "confirmada" | "negada" | "em_andamento" | "erro_operadora" | "sem_evidencia" | "consulta_bloqueada" | "falha_consulta" | "ambigua";
+  // AUD-f: "pago" (a ativação paga na Nogle, falta a prova da linha), "pago_sem_prova_da_linha" (paga, mas sem ICCID para
+  // provar a linha: a gerência confere) e "sem_prova_da_linha" (sem ICCID e sem a consulta do pagamento: a gerência confere).
+  evidencia: "confirmada" | "negada" | "em_andamento" | "erro_operadora" | "sem_evidencia" | "consulta_bloqueada" | "falha_consulta" | "ambigua"
+    | "pago" | "pago_sem_prova_da_linha" | "sem_prova_da_linha";
   mensagem: string;
   numero?: string;
   valor_debitado_centavos?: number;
   dados?: Record<string, unknown>;
+  /** AUD-f: o material de instalação do eSIM, gravado à parte (nunca na evidência nem nos eventos). */
+  material_esim?: MaterialDoEsim;
 };
 
 /**
@@ -381,10 +420,12 @@ export function interpretarConsulta(op: OperacaoParaConsultar, statusHttp: numbe
 }
 
 /**
- * GET /consultaPagamento (resposta da Nogle de 10/11/2026): {status, data_pagamento e, no eSIM,
- * links e código de instalação}. data_pagamento só vem preenchida se a ativação ou a recarga
- * deu certo: aí confirma, com o uuid como chave da evidência (uma evidência, uma operação). Sem a
- * data, ainda não aconteceu. status false ou HTTP de erro não confirmam nada.
+ * GET /consultaPagamento (resposta da Nogle de 10/11/2026): {status, data_pagamento e, no eSIM, links e código de instalação}.
+ * data_pagamento só vem preenchida se o pagamento deu certo. AUD-f (auditoria de e7f55b2): para a ATIVAÇÃO, o pagamento
+ * confirmado NÃO prova a linha ativa: vira "pago" (o servidor passa a consultar o ICCID, a prova oficial da linha) ou, sem
+ * ICCID (o eSIM que não trouxe o ICCID no envio), "pago_sem_prova_da_linha" (a gerência confere e registra o desfecho). O
+ * material de instalação do eSIM sai à parte (material_esim). Para a RECARGA, a Nogle disse que a data só vem com a recarga
+ * feita: segue confirmando, com o uuid como chave da evidência. status false ou HTTP de erro não provam nada.
  */
 export function interpretarConsultaPagamento(op: OperacaoParaConsultar, statusHttp: number, corpo: unknown): Evidencia {
   const c = objeto(corpo);
@@ -392,12 +433,15 @@ export function interpretarConsultaPagamento(op: OperacaoParaConsultar, statusHt
   if (c.status !== true) return { evidencia: "sem_evidencia", mensagem: textoOuNada(c.mensagem) ?? "A Nogle não encontrou o pagamento desta operação." };
   const pago = textoOuNada(c.data_pagamento);
   if (!pago) return { evidencia: "em_andamento", mensagem: "Ativação ou recarga ainda sem pagamento confirmado na Nogle.", dados: limpar({ uuid: op.uuid_externo }) };
-  return {
-    evidencia: "confirmada",
-    mensagem: op.tipo === "ativacao" ? "Ativação paga e feita (consulta pelo uuid)." : "Recarga paga e feita (consulta pelo uuid).",
-    // QR, código e PDF do eSIM instalam a linha: não entram na evidência (que vai para os eventos).
-    dados: limpar({ uuid: op.uuid_externo, data_pagamento: pago }),
-  };
+  const dados = limpar({ uuid: op.uuid_externo, data_pagamento: pago });
+  if (op.tipo === "ativacao") {
+    const material = op.esim ? materialDoEsim(c) : undefined;
+    return op.iccid
+      ? { evidencia: "pago", mensagem: "Ativação paga na Nogle; falta a prova da linha (o ICCID ativo).", dados, ...(material ? { material_esim: material } : {}) }
+      : { evidencia: "pago_sem_prova_da_linha", mensagem: "Ativação paga na Nogle, sem ICCID para provar a linha: a gerência confere na Nogle e registra o desfecho.",
+        dados, ...(material ? { material_esim: material } : {}) };
+  }
+  return { evidencia: "confirmada", mensagem: "Recarga paga e feita (consulta pelo uuid).", dados };
 }
 
 export type ItemDeReferencia = { codigo: string; nome: string; uf?: string; valor_centavos?: number; dados?: Record<string, unknown> };

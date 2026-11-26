@@ -6,7 +6,7 @@ import { fileURLToPath } from "node:url";
 import { describe, expect, it } from "vitest";
 
 import {
-  centavosDeValorNogle, diaDoRelatorio, interpretarConsulta, interpretarConsultaPagamento, interpretarEnvio, lerChips, lerPdvs, lerReferencias, lerRelatorio,
+  centavosDeValorNogle, diaDoRelatorio, interpretarConsulta, interpretarConsultaPagamento, interpretarEnvio, lerChips, lerPdvs, lerReferencias, materialDoEsim, pixCopiaECola, lerRelatorio,
   montarConsulta, montarPedido, montarPedidoDoRelatorio, PEDIDO_DO_ESTOQUE_DA_MVNO, PEDIDO_DOS_PDVS, pedidoDoEstoqueDoPdv, tipoDeChip,
   conferirTransferencia, lerRespostaDaTransferencia, pedidoDaTransferencia,
   documentoMascarado, lerRespostaDaConsulta, pedidoDaConsulta, TIPOS_DE_CONSULTA,
@@ -223,6 +223,59 @@ describe("consulta pelo uuid (resposta da Nogle de 10/11/2026)", () => {
     expect(interpretarConsultaPagamento(recarga, 200, { status: true, data_pagamento: "" }).evidencia).toBe("em_andamento");
     expect(interpretarConsultaPagamento(recarga, 200, { status: false }).evidencia).toBe("sem_evidencia");
     expect(interpretarConsultaPagamento(recarga, 500, null).evidencia).toBe("falha_consulta");
+  });
+
+  // AUD-f (auditoria de e7f55b2): o pagamento confirmado da ATIVAÇÃO não é a linha ativa. Dados FICTÍCIOS (ICCID com o dígito
+  // verificador, código LPA e links inventados).
+  const ativacao = { ...recarga, tipo: "ativacao" as const, iccid: "8955170110000000016", linha: null, esim: false };
+  const esimSemIccid = { ...ativacao, iccid: null, esim: true };
+  const MATERIAL = { esim: "https://exemplo.invalido/esim.pdf", activation_code_esim: "LPA:1$smdp.exemplo.invalido$ABC-123", qr_code_esim: "https://exemplo.invalido/qr" };
+
+  it("a ativação paga vira \"pago\" (não confirma): o chip com ICCID espera a prova da linha; o eSIM sem ICCID vai para a gerência", () => {
+    const fisico = interpretarConsultaPagamento(ativacao, 200, { status: true, data_pagamento: "2026-11-26" });
+    expect(fisico).toEqual({ evidencia: "pago", mensagem: "Ativação paga na Nogle; falta a prova da linha (o ICCID ativo).", dados: { uuid, data_pagamento: "2026-11-26" } });
+    expect(fisico).not.toHaveProperty("numero");
+    const esim = interpretarConsultaPagamento(esimSemIccid, 200, { status: true, data_pagamento: "2026-11-26", ...MATERIAL });
+    expect(esim).toMatchObject({ evidencia: "pago_sem_prova_da_linha", dados: { uuid, data_pagamento: "2026-11-26" } });
+    // O material do eSIM sai à parte: o link https e o código LPA; nada dele nos dados (que vão para a evidência e os eventos).
+    expect(esim.material_esim).toEqual({ link: "https://exemplo.invalido/qr", codigo: "LPA:1$smdp.exemplo.invalido$ABC-123" });
+    expect(JSON.stringify(esim.dados)).not.toContain("LPA:");
+    // O chip físico não lê material de eSIM; sem data de pagamento, continua esperando.
+    expect(interpretarConsultaPagamento(ativacao, 200, { status: true, data_pagamento: "2026-11-26", ...MATERIAL }).material_esim).toBeUndefined();
+    expect(interpretarConsultaPagamento(ativacao, 200, { status: true, data_pagamento: null }).evidencia).toBe("em_andamento");
+  });
+
+  it("depois do pagamento, a próxima consulta da ativação é a prova da linha (o ICCID), não o pagamento de novo", () => {
+    expect(montarConsulta(ativacao, { consultaPagamento: true })).toMatchObject({ caminho: "/consultaPagamento" });
+    const paga = { ...ativacao, pagamento_confirmado_em: "2026-11-26T12:00:00Z" };
+    expect(montarConsulta(paga, { consultaPagamento: true })).toEqual({ metodo: "POST", caminho: "/ativacao/validaIccid", corpo: { iccid: ativacao.iccid } });
+    // O eSIM sem ICCID e já pago não tem consulta que prove a linha.
+    expect(montarConsulta({ ...esimSemIccid, pagamento_confirmado_em: "2026-11-26T12:00:00Z" }, { consultaPagamento: true })).toBeNull();
+    // A recarga paga continua pela consulta do pagamento.
+    expect(montarConsulta({ ...recarga, pagamento_confirmado_em: "2026-11-26T12:00:00Z" }, { consultaPagamento: true })).toMatchObject({ caminho: "/consultaPagamento" });
+  });
+
+  it("o material do eSIM: só o link https e o código LPA; o resto fica de fora", () => {
+    expect(materialDoEsim({ esim: "https://exemplo.invalido/pdf" })).toEqual({ link: "https://exemplo.invalido/pdf" });
+    expect(materialDoEsim({ qr_code_esim: "data:image/png;base64,AAAA", esim: "S", activation_code_esim: "LPA:1$x" })).toBeUndefined();
+    expect(materialDoEsim({ activation_code_esim: "LPA:1$smdp.exemplo.invalido$ABC" })).toEqual({ codigo: "LPA:1$smdp.exemplo.invalido$ABC" });
+    expect(materialDoEsim({ qr_code_esim: "http://sem-https.invalido" })).toBeUndefined();
+  });
+});
+
+// AUD-f: o link de pagamento (uma página) não é o Pix copia e cola (o código EMV).
+describe("o Pix copia e cola da resposta oficial do envio (AUD-f)", () => {
+  const EMV = "00020126580014BR.GOV.BCB.PIX0136a629532e-7693-4846-852d-1bbff817b5a85204000053039865802BR5913ORA TESTE6008CURITIBA62070503***6304ABCD";
+  it("lê o código EMV quando vem; o link https, o vazio dos exemplos oficiais e o fora do formato não viram Pix copia e cola", () => {
+    expect(pixCopiaECola(EMV)).toBe(EMV);
+    for (const ruim of ["", "link de pagamento", "https://pagar.exemplo.invalido/abc", `${EMV.slice(0, 40)}\n${EMV.slice(40)}`, "0002010000BR.GOV.BCB", null, 123]) expect(pixCopiaECola(ruim)).toBeUndefined();
+    const aceita = { retorno: true, mensagem: "", info: { id: 99999, data_cadastro: "2022-09-09 16:53:38.753", chips: [{ iccid: "8955170110000000016" }] },
+      link_pagamento: "https://pagar.exemplo.invalido/abc", link_esim: "", pix_copia_cola: "" };
+    expect(interpretarEnvio("ativacao", 200, aceita)).not.toHaveProperty("pix_copia_cola");
+    const comPix = interpretarEnvio("ativacao", 200, { ...aceita, pix_copia_cola: EMV });
+    expect(comPix).toMatchObject({ resultado: "aceita", link_pagamento: "https://pagar.exemplo.invalido/abc", pix_copia_cola: EMV });
+    // Os dados (que vão para os eventos) não levam o Pix nem os links.
+    expect(JSON.stringify(comPix.dados)).not.toMatch(/000201|https/);
   });
 });
 

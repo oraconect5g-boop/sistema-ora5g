@@ -9,13 +9,12 @@ import { BarrasHorizontais } from "../../componentes/graficos";
 import { MoldeReal } from "../../componentes/MoldeReal";
 import { plural } from "../../componentes/paineis-de-vendas";
 import { IndicadoresDoConnect, OperacoesPorTipo } from "../../componentes/paineis-do-connect";
-import { QrCode } from "../../componentes/QrCode";
 import { Aviso, Botao, Cartao, EstadoVazio, FiltroSegmentado, Selo } from "../../componentes/ui";
 import { permite } from "../../lib/acesso/molde";
 import { FalhaDoServico, obterSessao } from "../../lib/acesso/sessao";
 import { consultarProducao } from "../../lib/connect/consulta-producao";
 import { linhaFormatada } from "../../lib/connect/consultas";
-import { ERROS_DO_CONNECT, linkDePagamento, quemPagaOPix } from "../../lib/connect/regras";
+import { ERROS_DO_CONNECT, materialDoEsimNaTela, pagamentoNaNogle, podeVerMaterialDoEsim } from "../../lib/connect/regras";
 import { somasPor, totalConfirmadas } from "../../lib/connect/relatorio";
 import { centavosDoBanco } from "../../lib/dinheiro";
 import { janelasDoPeriodo, ORDEM_DOS_PERIODOS, PERIODOS_FINANCEIROS, periodoFinanceiro, type PeriodoFinanceiro } from "../../lib/financeiro/painel";
@@ -25,6 +24,7 @@ import { cancelarOperacao, resolverOperacao } from "./acoes";
 import { CabecalhoConnect, LARGURA_DA_CONNECT, permissoesDaConnect } from "./CabecalhoConnect";
 import { campo } from "./campos";
 import { ABERTAS, FILTROS_DA_LISTA, filtroDaLista, horaOuDia, naLista, quando, TOM_DA_SITUACAO, type FiltroDaLista } from "./lista";
+import { MaterialDoEsim, PagamentoDaNogle } from "./PagamentoDaNogle";
 
 export const metadata: Metadata = { title: "Ora Connect" };
 export const dynamic = "force-dynamic";
@@ -36,10 +36,12 @@ const OK = {
 } as const;
 const ICONES: Record<TipoOperacao, typeof Zap> = { ativacao: Smartphone, recarga: Zap, portabilidade: ArrowLeftRight };
 const TITULOS: Record<PeriodoFinanceiro, string> = { hoje: "Operações de hoje", "7": "Operações dos últimos 7 dias", "30": "Operações dos últimos 30 dias" };
-const COLUNAS = "id, numero, tipo, situacao, vendedor_id, unidade_id, metodo_pagamento, iccid, esim, linha, linha_doadora, plano_nome, valor_face_centavos, recebido_na_loja_centavos, venda_item_id, cliente_nome, documento_mascarado, link_pagamento, link_esim, numero_ativado, mensagem_operadora, evidencia, motivo_resolucao, criado_em";
+const COLUNAS = "id, numero, tipo, situacao, vendedor_id, unidade_id, metodo_pagamento, iccid, esim, linha, linha_doadora, plano_nome, valor_face_centavos, recebido_na_loja_centavos, venda_item_id, cliente_nome, documento_mascarado, id_externo, link_pagamento, pix_copia_cola, pagamento_confirmado_em, numero_ativado, mensagem_operadora, evidencia, motivo_resolucao, criado_em";
 /** As do período que a tela lê (a soma por vendedor sai delas); a lista mostra as primeiras. O relatório tem todas. */
 const LIMITE_DO_PERIODO = 500;
 const LIMITE_DA_LISTA = 100;
+/** AUD-f: a fila do Pix que a loja paga, de 20 em 20, das mais antigas (quem espera há mais tempo) para as mais novas. */
+const PIX_POR_PAGINA = 20;
 const ehSituacao = (s: string): s is SituacaoOperacao => Object.hasOwn(SITUACOES_OPERACAO, s);
 
 // Ora Connect real (ADR-005): a loja registra; o worker do servidor fala com a Nogle; só a evidência da operadora confirma.
@@ -47,11 +49,12 @@ const ehSituacao = (s: string): s is SituacaoOperacao => Object.hasOwn(SITUACOES
 // "Operações do dia" da demonstração, com os números reais: os 4 cartões da produção do período, as operações do período
 // (e as ainda abertas de antes, que esperam a Nogle ou a decisão da gerência) com os filtros, as operações por tipo, a
 // produção por vendedor e, para quem gere, o Pix da Nogle que a loja ainda paga. As outras funções ficam nas abas do topo.
-export default async function Connect({ searchParams }: { searchParams: Promise<{ erro?: ValorDeParametro; ok?: ValorDeParametro; periodo?: ValorDeParametro; filtro?: ValorDeParametro }> }) {
+export default async function Connect({ searchParams }: { searchParams: Promise<{ erro?: ValorDeParametro; ok?: ValorDeParametro; periodo?: ValorDeParametro; filtro?: ValorDeParametro; pix?: ValorDeParametro }> }) {
   const parametros = await searchParams;
   const erro = chaveDoCatalogo(ERROS_DO_CONNECT, parametros.erro);
   const ok = chaveDoCatalogo(OK, parametros.ok);
   const filtro = filtroDaLista(textoDoParametro(parametros.filtro));
+  const paginaDoPix = Math.min(Math.max(Number.parseInt(textoDoParametro(parametros.pix) ?? "", 10) || 1, 1), 500);
   const periodo = periodoFinanceiro(textoDoParametro(parametros.periodo));
   const sessao = await obterSessao({ exigirLoja: true });
   const { supabase, usuario, situacao } = sessao;
@@ -62,11 +65,14 @@ export default async function Connect({ searchParams }: { searchParams: Promise<
   const janela = janelasDoPeriodo(periodo, momento).atual;
 
   // CONNECT-l (D-062): para quem gere, o Pix da Nogle que a loja paga (o cliente já pagou no caixa), em todas as lojas que a
-  // pessoa gere (o RLS escolhe), para o dono pagar de onde estiver.
+  // pessoa gere (o RLS escolhe), para o dono pagar de onde estiver. AUD-f: a fila inteira, de 20 em 20 (com o total), das mais
+  // antigas para as mais novas, em ordem estável; o que a Nogle já deu como pago sai (ninguém paga duas vezes); a operação sem
+  // link nem Pix copia e cola também aparece, com o aviso para conferir na Nogle.
   const aPagar = gere
-    ? supabase.from("connect_operacoes").select("id, numero, tipo, plano_nome, valor_face_centavos, recebido_na_loja_centavos, link_pagamento, criado_em, unidades(nome)")
-      .eq("metodo_pagamento", "LINK").eq("situacao", "aguardando_operadora").not("venda_item_id", "is", null).not("link_pagamento", "is", null)
-      .order("criado_em", { ascending: false }).limit(20)
+    ? supabase.from("connect_operacoes").select("id, numero, tipo, situacao, metodo_pagamento, venda_item_id, plano_nome, valor_face_centavos, recebido_na_loja_centavos, id_externo, link_pagamento, pix_copia_cola, pagamento_confirmado_em, criado_em, unidades(nome)", { count: "exact" })
+      .eq("metodo_pagamento", "LINK").eq("situacao", "aguardando_operadora").not("venda_item_id", "is", null).is("pagamento_confirmado_em", null)
+      .order("criado_em", { ascending: true }).order("id", { ascending: true })
+      .range((paginaDoPix - 1) * PIX_POR_PAGINA, paginaDoPix * PIX_POR_PAGINA - 1)
     : null;
   // As operações da loja (quem só opera vê as suas: o RLS escolhe): as do período e as abertas de antes. A lista não tem fim
   // de janela: a operação recém-registrada aparece mesmo com o relógio do banco um pouco à frente do da tela. A produção do
@@ -81,35 +87,44 @@ export default async function Connect({ searchParams }: { searchParams: Promise<
   ]);
   if (doPeriodo.error || deAntes.error || pixAPagar?.error) throw new FalhaDoServico("connect");
   const operacoes = [...doPeriodo.data, ...deAntes.data].sort((a, b) => new Date(b.criado_em).getTime() - new Date(a.criado_em).getTime());
-  const pixDaLojaAPagar = (pixAPagar?.data ?? []).flatMap((o) => {
-    const link = linkDePagamento(o.link_pagamento);
-    return link ? [{ ...o, link }] : [];
-  });
+  const filaDoPix = (pixAPagar?.data ?? []).map((o) => ({ ...o, pagamento: pagamentoNaNogle(o) }));
+  const totalDoPix = pixAPagar?.count ?? 0;
+  const filtradas = operacoes.filter((o) => naLista(filtro, o.situacao));
+  const lista = filtradas.slice(0, LIMITE_DA_LISTA);
+  // AUD-f: o material de instalação do eSIM, lido à parte e só das ativações que a pessoa pode ver (podeVerMaterialDoEsim).
+  const comMaterial = lista.filter((o) => podeVerMaterialDoEsim(o, usuario.id, gere)).map((o) => o.id);
   // Débito da carteira é custo (#56): só para quem tem custo.ver, lido da tabela própria (o RLS também barra). Os nomes de
   // quem fez cada operação, só para quem gere (quem opera vê só as suas).
   const vendedores = [...new Set(operacoes.map((o) => o.vendedor_id))];
-  const [custos, pessoas] = await Promise.all([
+  const [custos, pessoas, materiais] = await Promise.all([
     veCusto && operacoes.length
       ? supabase.from("connect_operacoes_custos").select("operacao_id, valor_debitado_centavos").in("operacao_id", operacoes.map((o) => o.id))
       : Promise.resolve({ data: [], error: null }),
     gere && vendedores.length ? supabase.from("perfis_usuario").select("id, nome").in("id", vendedores) : Promise.resolve({ data: [], error: null }),
+    comMaterial.length ? supabase.from("connect_operacoes").select("id, link_esim, esim_codigo").in("id", comMaterial) : Promise.resolve({ data: [], error: null }),
   ]);
   if (custos.error) throw new FalhaDoServico("connect_custos");
   if (pessoas.error) throw new FalhaDoServico("perfis_usuario");
+  if (materiais.error) throw new FalhaDoServico("connect_material_esim");
+  const materialDe = (id: string) => {
+    const m = materiais.data.find((x) => x.id === id);
+    return m ? materialDoEsimNaTela(m) : null;
+  };
   const debitoDe = (id: string) => custos.data.find((c) => c.operacao_id === id)?.valor_debitado_centavos ?? null;
   const nomeDe = (id: string) => pessoas.data.find((p) => p.id === id)?.nome ?? "Pessoa sem nome";
   const porVendedor = gere ? somasPor(doPeriodo.data, "vendedor_id", nomeDe).filter((v) => totalConfirmadas(v) > 0).slice(0, 8) : [];
 
-  const enderecoDe = (p: { periodo?: PeriodoFinanceiro; filtro?: FiltroDaLista }) => {
+  const enderecoDe = (p: { periodo?: PeriodoFinanceiro; filtro?: FiltroDaLista; pix?: number }) => {
     const busca = new URLSearchParams();
     const per = p.periodo ?? periodo;
     const fil = p.filtro ?? filtro;
+    const pag = p.pix ?? paginaDoPix;
     if (per !== "hoje") busca.set("periodo", per);
     if (fil !== "todas") busca.set("filtro", fil);
+    if (pag > 1) busca.set("pix", String(pag));
     return busca.size ? `/connect?${busca}` : "/connect";
   };
-  const filtradas = operacoes.filter((o) => naLista(filtro, o.situacao));
-  const lista = filtradas.slice(0, LIMITE_DA_LISTA);
+  const primeiraDoPix = (paginaDoPix - 1) * PIX_POR_PAGINA + 1;
 
   return (
     <MoldeReal sessao={sessao} largura={LARGURA_DA_CONNECT}>
@@ -127,18 +142,28 @@ export default async function Connect({ searchParams }: { searchParams: Promise<
         {producao && <IndicadoresDoConnect producao={producao} aqui={enderecoDe({})} />}
       </div>
 
-      {pixDaLojaAPagar.length > 0 && (
-        <Cartao className="mt-4" titulo="Pix da Nogle para a loja pagar" subtitulo="O cliente já pagou no caixa: pague o Pix da Nogle com o dinheiro recebido. A operação segue sozinha quando a Nogle confirmar." icone={IconeQr}>
-          <ul className="divide-y divide-borda">
-            {pixDaLojaAPagar.map((o) => (
-              <li key={o.id} className="flex flex-wrap items-center justify-between gap-2 py-2 text-sm">
-                <span>Nº {o.numero} · {NOMES_DAS_OPERACOES[o.tipo as TipoOperacao] ?? o.tipo}{o.plano_nome ? ` · ${o.plano_nome}` : ""}{o.unidades?.nome ? ` · ${o.unidades.nome}` : ""}
-                  <span className="numeros block text-xs text-suave">{quando(o.criado_em)}{o.valor_face_centavos !== null ? ` · valor de face ${brl(centavosDoBanco(o.valor_face_centavos))}` : ""}{o.recebido_na_loja_centavos !== null ? ` · recebido na loja ${brl(centavosDoBanco(o.recebido_na_loja_centavos))}` : ""}</span>
-                </span>
-                <a className="font-semibold text-acao underline" href={o.link} rel="noreferrer noopener" target="_blank">Abrir o pagamento da Nogle</a>
-              </li>
-            ))}
-          </ul>
+      {totalDoPix > 0 && (
+        <Cartao className="mt-4" titulo="Pix da Nogle para a loja pagar" icone={IconeQr}
+          subtitulo={`O cliente já pagou o plano no caixa: pague o Pix da Nogle com o dinheiro recebido. ${plural(totalDoPix, "operação espera", "operações esperam")}, das mais antigas para as mais novas; cada uma sai daqui quando a Nogle confirmar o pagamento.`}>
+          {filaDoPix.length === 0 ? <p className="text-sm text-suave">Nada nesta página. <Link href={enderecoDe({ pix: 1 })} className="font-semibold text-acao">Voltar ao começo da fila</Link>.</p> : (
+            <ul className="divide-y divide-borda">
+              {filaDoPix.map((o) => (
+                <li key={o.id} className="space-y-1 py-2 text-sm">
+                  <p>Nº {o.numero} · {NOMES_DAS_OPERACOES[o.tipo as TipoOperacao] ?? o.tipo}{o.plano_nome ? ` · ${o.plano_nome}` : ""}{o.unidades?.nome ? ` · ${o.unidades.nome}` : ""}
+                    <span className="numeros block text-xs text-suave">{quando(o.criado_em)}{o.valor_face_centavos !== null ? ` · valor de face ${brl(centavosDoBanco(o.valor_face_centavos))}` : ""}{o.recebido_na_loja_centavos !== null ? ` · recebido na loja ${brl(centavosDoBanco(o.recebido_na_loja_centavos))}` : ""}</span>
+                  </p>
+                  {o.pagamento && <PagamentoDaNogle numero={o.numero} pagamento={o.pagamento} compacto />}
+                </li>
+              ))}
+            </ul>
+          )}
+          {totalDoPix > PIX_POR_PAGINA && (
+            <nav aria-label="Páginas da fila do Pix" className="mt-3 flex flex-wrap items-center gap-3 border-t border-borda pt-3 text-xs">
+              <span className="numeros text-suave">{filaDoPix.length ? `${numero(primeiraDoPix)}–${numero(primeiraDoPix + filaDoPix.length - 1)} de ${numero(totalDoPix)}` : `${numero(totalDoPix)} na fila`}</span>
+              {paginaDoPix > 1 && <Link href={enderecoDe({ pix: paginaDoPix - 1 })} className="font-semibold text-acao">As anteriores (mais antigas)</Link>}
+              {paginaDoPix * PIX_POR_PAGINA < totalDoPix && <Link href={enderecoDe({ pix: paginaDoPix + 1 })} className="font-semibold text-acao">As seguintes (mais novas)</Link>}
+            </nav>
+          )}
         </Cartao>
       )}
 
@@ -157,7 +182,8 @@ export default async function Connect({ searchParams }: { searchParams: Promise<
                 const Icone = ICONES[o.tipo as TipoOperacao] ?? Zap;
                 const evidencia = o.evidencia as { mensagem?: string; consultado_em?: string } | null;
                 const decide = gere && o.vendedor_id !== usuario.id && (s === "resultado_desconhecido" || s === "erro_operadora");
-                const link = linkDePagamento(o.link_pagamento);
+                const pagamento = pagamentoNaNogle(o);
+                const material = materialDe(o.id);
                 const debito = debitoDe(o.id);
                 const resumo = [`Nº ${o.numero}`, ...(gere ? [nomeDe(o.vendedor_id)] : []), ...(o.plano_nome ? [o.plano_nome] : []),
                   ...(o.valor_face_centavos ? [brl(centavosDoBanco(o.valor_face_centavos))] : [])].join(" · ");
@@ -190,8 +216,8 @@ export default async function Connect({ searchParams }: { searchParams: Promise<
                             {debito !== null ? ` · debitado da carteira ${brl(centavosDoBanco(debito))}` : ""}</p>
                         )}
                         {o.numero_ativado && <p className="numeros text-xs">Número ativado: {linhaFormatada(o.numero_ativado)}</p>}
-                        {s === "aguardando_operadora" && link && <PixDaNogle numero={o.numero} link={link} quemPaga={quemPagaOPix(o.venda_item_id)} />}
-                        {o.link_esim && <p className="break-all text-xs">eSIM: <a className="text-acao underline" href={o.link_esim} rel="noreferrer noopener" target="_blank">abrir QR Code</a></p>}
+                        {pagamento && <PagamentoDaNogle numero={o.numero} pagamento={pagamento} />}
+                        {material && <MaterialDoEsim numero={o.numero} material={material} />}
                         {o.mensagem_operadora && <p className="text-xs text-suave">Nogle: {o.mensagem_operadora}</p>}
                         {evidencia?.mensagem && <p className="text-xs text-suave">Última consulta{evidencia.consultado_em ? ` (${quando(evidencia.consultado_em)})` : ""}: {evidencia.mensagem}</p>}
                         {o.motivo_resolucao && <p className="text-xs text-suave">Motivo registrado: {o.motivo_resolucao}</p>}
@@ -243,22 +269,5 @@ export default async function Connect({ searchParams }: { searchParams: Promise<
         </div>
       </div>
     </MoldeReal>
-  );
-}
-
-// CONNECT-l (D-062): o Pix da Nogle da operação, com o QR Code desenhado no servidor e o botão para abrir na página da
-// Nogle. Quem paga muda o texto: a loja (o cliente já pagou no caixa: o QR não é para ele) ou o cliente, na hora.
-function PixDaNogle({ numero: numeroDaOperacao, link, quemPaga }: { numero: number; link: string; quemPaga: "loja" | "cliente" }) {
-  return (
-    <div className="mt-2 flex flex-wrap items-start gap-3 rounded-botao border border-borda p-3">
-      <QrCode texto={link} rotulo={`QR Code do Pix da Nogle da operação nº ${numeroDaOperacao}`} className="size-40 shrink-0 rounded-botao bg-white" />
-      <div className="min-w-0 flex-1 space-y-1 text-xs">
-        <p className="text-sm font-semibold">{quemPaga === "loja" ? "Pix da Nogle: a loja paga" : "Pix da Nogle: o cliente paga agora"}</p>
-        <p className="text-suave">{quemPaga === "loja"
-          ? "O cliente já pagou no caixa: não mostre este QR Code a ele. O dono ou o gerente paga com o dinheiro recebido, pelo celular."
-          : "O cliente aponta a câmera do celular para o QR Code e paga na página da Nogle."} A operação segue sozinha quando a Nogle confirmar.</p>
-        <a className="inline-block font-semibold text-acao underline" href={link} rel="noreferrer noopener" target="_blank">Abrir o pagamento da Nogle</a>
-      </div>
-    </div>
   );
 }

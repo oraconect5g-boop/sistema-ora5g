@@ -8,7 +8,7 @@ import type { AddressInfo } from "node:net";
 import { fileURLToPath } from "node:url";
 
 import type { PGlite } from "@electric-sql/pglite";
-import { comoUsuario, criarBanco, type Sessao } from "@ora5g/banco/src/banco-de-teste.ts";
+import { comDigitoLuhn, comoUsuario, criarBanco, type Sessao } from "@ora5g/banco/src/banco-de-teste.ts";
 import { ids, montarCenario } from "@ora5g/banco/src/cenario.ts";
 import { cat, itens, montarCatalogo } from "@ora5g/banco/src/cenario-catalogo.ts";
 import type { AcaoParaEnviar, OperacaoParaConsultar, OperacaoParaEnviar, TipoOperacao, TransferenciaParaEnviar } from "@ora5g/dominio/nogle";
@@ -44,6 +44,10 @@ let servidor: Server;
 let base = "";
 let logins = 0;
 let expirouUmaVez = false;
+// AUD-f: a resposta do envio da ativação no cenário do eSIM (sem ICCID nem link no envio, com o uuid) e a da consulta do
+// pagamento (GET /consultaPagamento, formato da resposta da Nogle de 10/11/2026, fora da coleção oficial). Valores FICTÍCIOS.
+let respostaDaAtivacao: Record<string, unknown> | null = null;
+let respostaDoPagamento: Record<string, unknown> = { status: true, data_pagamento: "" };
 const recebidos: { metodo: string; caminho: string; corpo: string }[] = [];
 
 beforeAll(async () => {
@@ -60,7 +64,8 @@ beforeAll(async () => {
       if (caminho === "/auth/token") return json(200, { retorno: true, mensagem: "", token: `tk-${++logins}` });
       if (!req.headers.authorization?.startsWith("Bearer tk-")) return json(401, { message: "Unauthenticated." });
       if (caminho === "/ativacao/solicitar" && !expirouUmaVez) { expirouUmaVez = true; return json(401, { message: "Token expirado." }); }
-      if (caminho === "/ativacao/solicitar") return json(200, exemplo("/ativacao/solicitar"));
+      if (caminho === "/ativacao/solicitar") return json(200, respostaDaAtivacao ?? exemplo("/ativacao/solicitar"));
+      if (caminho === "/consultaPagamento") return json(200, respostaDoPagamento);
       // Exemplo oficial da recarga, com a data de cadastro do exemplo oficial do histórico (para casar).
       if (caminho === "/recarga/solicitar") {
         const r = exemplo("/recarga/solicitar");
@@ -137,6 +142,9 @@ const banco: BancoConnect = {
     "select * from public.connect_worker_operacoes_a_consultar($1, $2::text[], $3)", [ids.organizacao, `{${tipos.join(",")}}`, limite])).rows),
   registrarConsulta: (op, e) => comoServico(async () => (await db.query<{ v: string }>(
     "select public.connect_worker_registrar_consulta($1, $2::jsonb) as v", [op, JSON.stringify(e)])).rows[0]?.v ?? ""),
+  registrarMaterialEsim: (op, m) => comoServico(async () => {
+    await db.query("select public.connect_worker_registrar_material_esim($1, $2::jsonb)", [op, JSON.stringify(m)]);
+  }),
   atualizarReferencias: (tipo, lista) => comoServico(async () => (await db.query<{ v: number }>(
     "select public.connect_worker_atualizar_referencias($1, $2, $3::jsonb) as v", [ids.organizacao, tipo, JSON.stringify(lista)])).rows[0]?.v ?? 0),
   registrarConciliacao: (relatorio, de, ate, linhas) => comoServico(async () => (await db.query<{ v: { numero: number; totais: Record<string, number> } }>(
@@ -414,5 +422,70 @@ describe("as ações que mudam algo na Nogle (CONNECT-j)", () => {
     const depois = recebidos.length;
     expect(await enviarAcoes(banco, nogle)).toEqual({ feitas: 0, recusadas: 0, desconhecidas: 0, devolvidas: 0 });
     expect(recebidos.length).toBe(depois);
+  });
+});
+
+describe("AUD-f: o pagamento confirmado da ativação não é a linha ativa (consulta do pagamento simulada)", () => {
+  const UUID_FISICO = "184d26de-ba03-4abd-870c-000000000001";
+  const UUID_ESIM = "184d26de-ba03-4abd-870c-000000000002";
+  const MATERIAL = { esim: "https://exemplo.invalido/esim-instalar", qr_code_esim: "https://exemplo.invalido/esim-qr", activation_code_esim: "LPA:1$smdp.exemplo.invalido$AB-12" };
+  const cliente = { nome: "Cliente Fictício da Silva", cpf: "12345678909", data_nascimento: "1990-05-20",
+    endereco: { rua: "Rua Exemplo", numero: "123", bairro: "Centro", cep: "90000000", id_cidade: 7703 } };
+  const situacaoEPagamento = async (id: string) => (await db.query<Record<string, unknown>>(
+    "select situacao, pagamento_confirmado_em is not null as pago, numero_ativado, link_esim, esim_codigo from public.connect_operacoes where id = $1", [id])).rows[0];
+  const envio = (id: string, uuid: string, chip: Record<string, unknown>) => {
+    const r = exemplo("/ativacao/solicitar");
+    return { ...r, uuid, info: { ...(r.info as object), id, chips: [{ id, ativacao: { id_plano: "99999", ddd: "51" }, ...chip }] } };
+  };
+
+  it("o físico pago segue esperando a prova da linha (o ICCID ativo) e só ela conta a ativação; o eSIM sem ICCID vai para a gerência", async () => {
+    const admin = await naLoja(ids.administrador, ids.lojaA);
+    await valor(admin, "select public.connect_habilitar('ativacao', true, 'Homologação simulada com o formato oficial') as v");
+    const ana = await naLoja(ids.vendedorA, ids.lojaA);
+    const registrar = (pedido: object, k: string) => valor<string>(ana, "select public.connect_registrar('ativacao', $1::jsonb, $2) as v", [JSON.stringify(pedido), k]);
+    const nogle = new ClienteNogle({ tipo: "marca", chaveAcesso: "chave-ficticia" }, transporteHttp(base, 500), { getComCorpo: true });
+    const contadas = async () => (await db.query("select 1 from public.connect_producao where tipo = 'ativacao'")).rows.length;
+    const antes = await contadas();
+
+    // O físico: enviado com o uuid; a consulta do pagamento diz pago, mas a linha só conta com o ICCID ativo.
+    const iccid = comDigitoLuhn("895510000000000077");
+    const fisico = await registrar({ metodo: "LINK", iccid, ddd: 51, plano: 99999, cliente }, "aud-f:fisico");
+    respostaDaAtivacao = envio("99991", UUID_FISICO, { iccid, esim: "N" });
+    expect(await enviarPendentes(banco, nogle, ["ativacao"])).toEqual({ aceitas: 1, recusadas: 0, desconhecidas: 0, devolvidas: 0 });
+    respostaDoPagamento = { status: true, data_pagamento: "2026-11-26 10:05:00" };
+    await vencerEspera();
+    expect(await consultarPendentes(banco, nogle, ["ativacao"], 10, { consultaPagamento: true })).toMatchObject({ consultadas: 1, confirmadas: 0 });
+    expect(await situacaoEPagamento(fisico)).toMatchObject({ situacao: "aguardando_operadora", pago: true, numero_ativado: null });
+    expect(await contadas()).toBe(antes);
+    // A próxima consulta já não pergunta o pagamento: pede a prova da linha (POST /ativacao/validaIccid), que confirma.
+    const validacoes = recebidos.filter((r) => r.caminho === "/ativacao/validaIccid").length;
+    await vencerEspera();
+    expect(await consultarPendentes(banco, nogle, ["ativacao"], 10, { consultaPagamento: true })).toMatchObject({ consultadas: 1, confirmadas: 1 });
+    expect(recebidos.filter((r) => r.caminho === "/ativacao/validaIccid")).toHaveLength(validacoes + 1);
+    expect(await situacaoEPagamento(fisico)).toMatchObject({ situacao: "confirmada", pago: true, numero_ativado: "51900000000" });
+    expect(await contadas()).toBe(antes + 1);
+
+    // O eSIM sem ICCID nem link no envio: pago, o material de instalação chega pela consulta e fica à parte (fora dos eventos);
+    // sem o ICCID, nada prova a linha: a gerência confere na Nogle e registra o desfecho.
+    const esim = await registrar({ metodo: "LINK", esim: true, ddd: 51, plano: 99999, cliente }, "aud-f:esim");
+    respostaDaAtivacao = envio("99992", UUID_ESIM, { iccid: "", esim: "S" });
+    expect(await enviarPendentes(banco, nogle, ["ativacao"])).toEqual({ aceitas: 1, recusadas: 0, desconhecidas: 0, devolvidas: 0 });
+    respostaDoPagamento = { status: true, data_pagamento: "2026-11-26 10:06:00", ...MATERIAL };
+    await vencerEspera();
+    expect(await consultarPendentes(banco, nogle, ["ativacao"], 10, { consultaPagamento: true })).toMatchObject({ consultadas: 1, confirmadas: 0 });
+    expect(await situacaoEPagamento(esim)).toMatchObject({
+      situacao: "resultado_desconhecido", pago: true, link_esim: MATERIAL.qr_code_esim, esim_codigo: MATERIAL.activation_code_esim,
+    });
+    expect(await contadas()).toBe(antes + 1);
+    expect((await db.query("select 1 from public.connect_eventos where coalesce(dados::text, '') || coalesce(mensagem, '') like '%LPA:%'")).rows).toEqual([]);
+
+    // Sem a consulta do pagamento (a rota não liberada), o eSIM sem ICCID também não fica esperando para sempre.
+    const semConsulta = await registrar({ metodo: "LINK", esim: true, ddd: 51, plano: 99999, cliente }, "aud-f:esim-2");
+    respostaDaAtivacao = envio("99993", "184d26de-ba03-4abd-870c-000000000003", { iccid: "", esim: "S" });
+    await enviarPendentes(banco, nogle, ["ativacao"]);
+    await vencerEspera();
+    expect(await consultarPendentes(banco, nogle, ["ativacao"])).toMatchObject({ consultadas: 1, confirmadas: 0 });
+    expect(await situacaoEPagamento(semConsulta)).toMatchObject({ situacao: "resultado_desconhecido", pago: false });
+    respostaDaAtivacao = null;
   });
 });
