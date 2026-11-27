@@ -80,8 +80,12 @@ describe("o Pix e o cartão da maquininha Mercado Pago nos relatórios, como os 
         conciliados: num(depois.resultado.linhas.pagamentos_conciliados) })
         .toEqual({ vendido: 7_900, a_conciliar: 0, taxas_cartao_pix: 320, taxas: 320, conciliados: 2 });
       expect(num(depois.resultado.linhas.resultado)).toBe(num(antes.resultado.linhas.resultado) - 320);
-      // Os R$ 9,00 de juros do cliente não aparecem como venda, a receber, recebido nem tarifa.
-      expect(JSON.stringify([antes, depois])).not.toMatch(/(^|[^0-9])(8800|8_800|880)([^0-9]|$)/);
+      // Os R$ 9,00 de juros do cliente não inflam a receita: confira os campos monetários, não IDs ou datas.
+      // A previsão, o recebido e as tarifas sem esse acréscimo já foram conferidos acima.
+      for (const relatorio of [antes, depois]) {
+        expect({ bruto: num(relatorio.resultado.linhas.bruto), receita_liquida: num(relatorio.resultado.linhas.receita_liquida) })
+          .toEqual({ bruto: 7_900, receita_liquida: 7_900 });
+      }
     });
   }
 });
