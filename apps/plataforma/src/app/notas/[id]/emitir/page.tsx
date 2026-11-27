@@ -1,4 +1,4 @@
-import { ArrowLeft, ShieldCheck } from "lucide-react";
+import { ArrowLeft, ClipboardList, ReceiptText, ShieldCheck, Store } from "lucide-react";
 import type { Metadata } from "next";
 import Link from "next/link";
 import { notFound } from "next/navigation";
@@ -9,7 +9,9 @@ import { ehUuid } from "../../../../lib/acesso/regras";
 import { obterSessao } from "../../../../lib/acesso/sessao";
 import { formatarRevelado } from "../../../../lib/clientes/regras";
 import { RespostaInesperada } from "../../../../lib/financeiro/painel";
+import { agora, brl } from "../../../../lib/formato";
 import { lerDadosParaEmitir, type DadosParaEmitir } from "../../../../lib/notas/dados-para-emitir";
+import { cnpjDoEmitente, lerFatosParaEmitir, textoParaCopiar, type FatosParaEmitir } from "../../../../lib/notas/fatos-para-emitir";
 import { ERROS_DAS_NOTAS, erroDasNotas } from "../../../../lib/notas/regras";
 
 export const metadata: Metadata = { title: "Dados para emitir a nota" };
@@ -18,6 +20,39 @@ export const dynamic = "force-dynamic";
 const FUNCAO_AUSENTE = new Set(["PGRST202", "42883"]);
 const quando = (iso: string) => new Intl.DateTimeFormat("pt-BR", { timeZone: "America/Sao_Paulo", dateStyle: "short", timeStyle: "short" }).format(new Date(iso));
 
+type Supabase = Awaited<ReturnType<typeof obterSessao>>["supabase"];
+
+// NF-e 55 no fluxo interno (pedido do proprietário de 27/11/2026): a loja que emite e os fatos da venda na MESMA tela,
+// para não trocar de tela para copiar. Só leitura, com a sessão de quem abre (o RLS de cada tabela decide), das mesmas
+// tabelas que o comprovante já lê; nada novo no banco. Qualquer falha aqui vira um aviso e não esconde o destinatário.
+async function lerFatos(supabase: Supabase, pedido: { venda_id: string; unidade_id: string }): Promise<FatosParaEmitir | null> {
+  const [venda, itens, pagamentos, loja] = await Promise.all([
+    supabase.from("vendas").select("numero, concluida_em, subtotal_centavos, desconto_centavos, total_centavos").eq("id", pedido.venda_id).maybeSingle(),
+    supabase.from("venda_itens").select("variante_id, quantidade, preco_unitario_centavos, desconto_centavos").eq("venda_id", pedido.venda_id).order("criado_em"),
+    supabase.from("venda_pagamentos").select("meio, valor_centavos, parcelas, entrada_do_financiamento").eq("venda_id", pedido.venda_id).order("ordem"),
+    supabase.from("unidades").select("nome, cnpj, cidade, uf, unidade_emissora_id").eq("id", pedido.unidade_id).maybeSingle(),
+  ]);
+  if (venda.error || itens.error || pagamentos.error || loja.error || !venda.data || !loja.data) return null;
+  // A loja sem CNPJ emite pela emissora dela: a mesma regra com que o banco confere a chave (notas_registrar_emissao).
+  const emissora = loja.data.cnpj ? null : loja.data.unidade_emissora_id;
+  const [variantes, daEmissora, configuracao] = await Promise.all([
+    itens.data.length ? supabase.from("variantes").select("id, sku, nome").in("id", itens.data.map((i) => i.variante_id)) : Promise.resolve({ data: [], error: null }),
+    emissora ? supabase.from("unidades").select("nome, cnpj, cidade, uf, unidade_emissora_id").eq("id", emissora).maybeSingle() : Promise.resolve({ data: null, error: null }),
+    supabase.from("unidade_configuracoes").select("cep, logradouro, numero, complemento, bairro, inscricao_estadual, inscricao_municipal")
+      .eq("unidade_id", emissora ?? pedido.unidade_id).lte("vigente_desde", agora().toISOString())
+      .order("vigente_desde", { ascending: false }).order("id", { ascending: false }).limit(1).maybeSingle(),
+  ]);
+  if (variantes.error || daEmissora.error || configuracao.error) return null;
+  try {
+    return lerFatosParaEmitir({
+      venda: venda.data, itens: itens.data, variantes: variantes.data, pagamentos: pagamentos.data, loja: loja.data, emissora: daEmissora.data, configuracao: configuracao.data,
+    });
+  } catch (erro) {
+    if (erro instanceof RespostaInesperada) return null;
+    throw erro;
+  }
+}
+
 // Lote K1b (#76): quem aprova a nota na loja vê, enquanto ela espera a emissão, o nome, o CPF/CNPJ e o endereço
 // guardados no pedido, para digitar no emissor (o sistema ainda não emite: ADR-006). O banco confere a loja e a
 // permissão e registra cada abertura na auditoria, sem os valores; nada vai para o endereço da página.
@@ -25,7 +60,10 @@ export default async function DadosParaEmitirANota({ params }: { params: Promise
   const { id } = await params;
   if (!ehUuid(id)) notFound();
   const sessao = await obterSessao({ exigirLoja: true });
-  const r = await sessao.supabase.rpc("notas_dados_para_emitir", { p_pedido: id });
+  const [r, pedido] = await Promise.all([
+    sessao.supabase.rpc("notas_dados_para_emitir", { p_pedido: id }),
+    sessao.supabase.from("notas_pedidos").select("venda_id, unidade_id").eq("id", id).maybeSingle(),
+  ]);
   if (r.error?.code === "P0002") notFound();
   let dados: DadosParaEmitir | null = null;
   let aviso: string | null = null;
@@ -39,6 +77,9 @@ export default async function DadosParaEmitirANota({ params }: { params: Promise
       aviso = ERROS_DAS_NOTAS.falha;
     }
   }
+  // Os fatos só depois de o banco liberar os dados para emitir (a permissão, a loja e a auditoria da abertura).
+  const fatos = dados && !pedido.error && pedido.data ? await lerFatos(sessao.supabase, pedido.data) : null;
+  const documento = dados?.documento ? `${dados.documento.length === 14 ? "CNPJ" : "CPF"} ${formatarRevelado("documento", dados.documento)}` : null;
 
   return (
     <MoldeReal sessao={sessao}>
@@ -58,6 +99,43 @@ export default async function DadosParaEmitirANota({ params }: { params: Promise
             </dl>
           )}
         </Cartao>
+      )}
+      {dados && !fatos && <Aviso tom="aviso" className="mt-4">Não deu para ler agora a venda e a loja deste pedido: confira os itens no comprovante da venda.</Aviso>}
+      {dados && fatos && (
+        <>
+          <Cartao className="mt-4" titulo="Quem emite" icone={Store}
+            subtitulo={fatos.emitente.porOutraLoja ? "A loja da venda não tem CNPJ: emite pelo da loja emissora dela." : "A loja da venda, como está no cadastro em Lojas."}>
+            <dl className="grid gap-2 text-sm sm:grid-cols-[10rem_1fr]">
+              <dt className="text-suave">Loja</dt><dd className="font-medium">{fatos.emitente.nome}</dd>
+              <dt className="text-suave">CNPJ</dt><dd className="numeros font-medium">{cnpjDoEmitente(fatos.emitente)}</dd>
+              <dt className="text-suave">Inscrição estadual</dt><dd className="numeros">{fatos.emitente.inscricaoEstadual ?? "não configurada"}</dd>
+              {fatos.emitente.inscricaoMunicipal && <><dt className="text-suave">Inscrição municipal</dt><dd className="numeros">{fatos.emitente.inscricaoMunicipal}</dd></>}
+              <dt className="text-suave">Endereço</dt><dd>{fatos.emitente.endereco ?? "não configurado"}</dd>
+            </dl>
+          </Cartao>
+          <Cartao className="mt-4" titulo={`Venda nº ${fatos.venda.numero}`} icone={ReceiptText}
+            subtitulo={`Os itens, os totais e os pagamentos como foram gravados${fatos.venda.concluidaEm ? ` (concluída em ${quando(fatos.venda.concluidaEm)})` : ""}.`}>
+            <ul className="divide-y divide-borda text-sm">
+              {fatos.itens.map((i, n) => (
+                <li key={`${n}-${i.sku}`} className="flex justify-between gap-2 py-2">
+                  <span>{i.descricao}<span className="numeros block text-xs text-suave">{i.sku} · {i.quantidade} × {brl(i.unitario)}{i.desconto ? ` − desconto ${brl(i.desconto)}` : ""}</span></span>
+                  <span className="numeros font-semibold">{brl(i.total)}</span>
+                </li>
+              ))}
+            </ul>
+            <dl className="numeros mt-2 grid grid-cols-2 gap-1 border-t border-borda pt-2 text-sm">
+              <dt>Subtotal</dt><dd className="text-right">{brl(fatos.venda.subtotal)}</dd>
+              <dt>Descontos</dt><dd className="text-right">− {brl(fatos.venda.desconto)}</dd>
+              <dt className="font-semibold">Total</dt><dd className="text-right font-bold">{brl(fatos.venda.total)}</dd>
+            </dl>
+            <ul className="mt-2 space-y-1 text-xs">{fatos.pagamentos.map((p, n) => <li key={`${n}-${p.nome}`} className="numeros">{`${p.nome}: ${brl(p.valor)}`}</li>)}</ul>
+            <p className="mt-3 text-xs text-suave">NCM, CFOP e tributos não estão no cadastro dos produtos: o contador e o emissor definem, como o modelo da nota (NF-e 55 ou NFC-e 65).</p>
+          </Cartao>
+          <Cartao className="mt-4" titulo="Tudo para copiar" icone={ClipboardList} subtitulo="Toque no quadro, selecione tudo e copie para o emissor. Depois de emitir, registre a chave na fila de Notas.">
+            <textarea readOnly rows={10} aria-label="Dados da nota para copiar" className="numeros w-full rounded-botao border border-borda bg-white p-2 text-xs"
+              defaultValue={textoParaCopiar(fatos, dados.numero, { nome: dados.nome, documento, endereco: dados.endereco ? formatarRevelado("endereco", dados.endereco) : null })} />
+          </Cartao>
+        </>
       )}
     </MoldeReal>
   );
