@@ -39,7 +39,9 @@ describe("vendas fictícias seguem as regras do domínio", () => {
       const p = item && produto(item.sku);
       const meio = a.venda.pagamentos[0]?.meio;
       if (!item || !p || !meio) throw new Error(`pedido sem desconto: ${a.venda.numero}`);
-      const avaliacao = avaliarDesconto({ preco: item.precoUnitario, custo: item.custoUnitario, taxaMeioPagamento: TAXA_DO_MEIO[meio], politica: POLITICAS[p.categoria] }, item.desconto);
+      const taxa = TAXA_DO_MEIO[meio];
+      if (taxa === undefined) throw new Error(`taxa da fixture ausente para ${meio}`);
+      const avaliacao = avaliarDesconto({ preco: item.precoUnitario, custo: item.custoUnitario, taxaMeioPagamento: taxa, politica: POLITICAS[p.categoria] }, item.desconto);
       expect(["precisa_aprovacao", "abaixo_do_custo"], a.venda.numero).toContain(avaliacao.situacao);
     }
   });

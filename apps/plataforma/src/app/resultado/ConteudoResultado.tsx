@@ -123,8 +123,8 @@ function Painel({ r, mesAtual, regioes }: { r: ResultadoDoMes; mesAtual: string;
     ...(f ? [{
       rotulo: "Taxas da PayJoy e da Aiva", valor: -f.taxas, dica: parte(f.taxas),
       detalhe: f.aReceber > 0
-        ? `${plural(f.recebidas, "repasse registrado", "repasses registrados")} · ${plural(f.aReceber, "conta", "contas")} ainda sem repasse`
-        : plural(f.recebidas, "repasse registrado", "repasses registrados"),
+        ? `${plural(f.recebidas, "conta liquidada", "contas liquidadas")} · ${plural(f.aReceber, "conta", "contas")} com saldo em aberto`
+        : plural(f.recebidas, "conta liquidada", "contas liquidadas"),
     }] : []),
     {
       rotulo: naRede ? "Contas das lojas" : "Contas da loja", valor: -l.despesas, dica: parte(l.despesas),
@@ -162,9 +162,9 @@ function Painel({ r, mesAtual, regioes }: { r: ResultadoDoMes; mesAtual: string;
             </Aviso>
           )}
           {f !== null && f.aReceber > 0 && (
-            <Aviso tom="info" titulo="Repasses das financeiras a registrar">
-              {`${plural(f.aReceber, "conta", "contas")} da PayJoy e da Aiva (${brl(f.aReceberValor)}) ainda sem repasse registrado: a taxa delas só entra quando o repasse for registrado. `}
-              <Link href="/pagamentos/financeiras" className="font-semibold underline">Registrar o repasse</Link>
+            <Aviso tom="info" titulo="Saldos em aberto das financeiras">
+              {`${plural(f.aReceber, "conta", "contas")} da PayJoy e da Aiva (${brl(f.aReceberValor)}) ainda com saldo em aberto: a taxa só entra após a liquidação final. `}
+              <Link href="/pagamentos/financeiras" className="font-semibold underline">Conferir os repasses</Link>
             </Aviso>
           )}
           {naRede && l.naoDividido > 0 && (
@@ -326,7 +326,7 @@ function ComoLer({ comFinanceiras }: { comFinanceiras: boolean }) {
           <li>Custo das mercadorias: o custo gravado em cada item quando ele foi vendido. Custo novo não muda venda antiga.</li>
           <li>Taxas de cartão e Pix: a diferença entre o valor e o que caiu na conta, nos pagamentos já conciliados.</li>
           {comFinanceiras
-            ? <li>Taxas da PayJoy e da Aiva: a diferença entre o valor financiado e o que a financeira repassou, nas contas com o repasse registrado (em Gestão → A receber das financeiras), no mês da venda. A conta ainda sem repasse não entra e aparece no aviso. Venda cancelada sai, como no cartão e no Pix.</li>
+            ? <li>Taxas da PayJoy e da Aiva: a diferença entre o valor financiado e o que a financeira repassou, nas contas liquidadas (em Gestão → A receber das financeiras), no mês da venda. A conta com saldo em aberto não tem tarifa confirmada e aparece no aviso. Venda cancelada sai, como no cartão e no Pix.</li>
             : <li>A taxa da PayJoy e da Aiva ainda não entra.</li>}
           <li>Contas a pagar entram no mês do vencimento, pagas ou não; a conta paga, pelo valor pago (com juros ou desconto). Compra de mercadoria fica fora: o custo entra quando o item é vendido.</li>
           <li>As contas da rede (central) são divididas entre as lojas pela receita líquida de cada uma no mês.</li>

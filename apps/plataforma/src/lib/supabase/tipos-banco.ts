@@ -2822,6 +2822,7 @@ export type Database = {
           id: string
           organizacao_id: string
           pagamento_id: string
+          parcial_centavos: number
           recebido_em: string | null
           referencia_recebimento: string | null
           registrado_por: string | null
@@ -2839,6 +2840,7 @@ export type Database = {
           id?: string
           organizacao_id: string
           pagamento_id: string
+          parcial_centavos?: number
           recebido_em?: string | null
           referencia_recebimento?: string | null
           registrado_por?: string | null
@@ -2856,6 +2858,7 @@ export type Database = {
           id?: string
           organizacao_id?: string
           pagamento_id?: string
+          parcial_centavos?: number
           recebido_em?: string | null
           referencia_recebimento?: string | null
           registrado_por?: string | null
@@ -8059,6 +8062,8 @@ export type Database = {
       }
       venda_pagamentos: {
         Row: {
+          acrescimo_cliente_centavos: number | null
+          bandeira_cartao: string | null
           caixa_cartao_id: string | null
           caixa_pix_id: string | null
           comprovante: string | null
@@ -8075,6 +8080,7 @@ export type Database = {
           loja_pagamento_id: string | null
           meio: string
           meio_entrada: string | null
+          modalidade_cartao: string | null
           ordem: number
           organizacao_id: string
           parcelas: number | null
@@ -8086,6 +8092,8 @@ export type Database = {
           venda_id: string
         }
         Insert: {
+          acrescimo_cliente_centavos?: number | null
+          bandeira_cartao?: string | null
           caixa_cartao_id?: string | null
           caixa_pix_id?: string | null
           comprovante?: string | null
@@ -8102,6 +8110,7 @@ export type Database = {
           loja_pagamento_id?: string | null
           meio: string
           meio_entrada?: string | null
+          modalidade_cartao?: string | null
           ordem: number
           organizacao_id: string
           parcelas?: number | null
@@ -8113,6 +8122,8 @@ export type Database = {
           venda_id: string
         }
         Update: {
+          acrescimo_cliente_centavos?: number | null
+          bandeira_cartao?: string | null
           caixa_cartao_id?: string | null
           caixa_pix_id?: string | null
           comprovante?: string | null
@@ -8129,6 +8140,7 @@ export type Database = {
           loja_pagamento_id?: string | null
           meio?: string
           meio_entrada?: string | null
+          modalidade_cartao?: string | null
           ordem?: number
           organizacao_id?: string
           parcelas?: number | null
@@ -9588,6 +9600,14 @@ export type Database = {
         }
         Returns: boolean
       }
+      financeira_desfazer_repasse_final: {
+        Args: { p_conta: string; p_motivo: string; p_repasse: string }
+        Returns: boolean
+      }
+      financeira_desfazer_repasse_parcial: {
+        Args: { p_conta: string; p_motivo: string; p_repasse: string }
+        Returns: boolean
+      }
       financeira_desfazer_recebimento: {
         Args: { p_conta: string; p_motivo: string }
         Returns: boolean
@@ -9597,6 +9617,17 @@ export type Database = {
           p_conta: string
           p_recebido_em: string
           p_referencia: string
+          p_valor_recebido: number
+        }
+        Returns: boolean
+      }
+      financeira_registrar_repasse: {
+        Args: {
+          p_chave: string
+          p_conta: string
+          p_recebido_em: string
+          p_referencia: string
+          p_tarifa: number | null
           p_valor_recebido: number
         }
         Returns: boolean

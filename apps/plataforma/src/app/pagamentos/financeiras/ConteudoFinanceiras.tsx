@@ -9,7 +9,7 @@ import { brl, numero } from "../../../lib/formato";
 import type { Leitura } from "../../../lib/leitura-do-banco";
 import { cobrancaARetomar, situacaoDoRepasse, type RepassesAtrasados } from "../../../lib/pagamentos/atrasados";
 import { FINANCEIRAS, idadeDaConta, type FinanceirasAReceber } from "../../../lib/pagamentos/financeiras";
-import { corrigirRecebimento, desfazerRecebimento, receberDaFinanceira } from "../acoes";
+import { corrigirRecebimento, desfazerRecebimento, desfazerRepasseParcial, receberDaFinanceira } from "../acoes";
 import { CobrancasDaConta, PainelDosAtrasados } from "./RepassesAtrasados";
 
 // Valores a receber das financeiras (lote L7b). Só apresentação: a lista chega lida por
@@ -46,7 +46,7 @@ export function ConteudoFinanceiras({ leitura, hoje, atrasados = null, daRede = 
         </Cartao>
       ) : (
         <>
-          <Cartao className="mt-4" titulo="Por financeira" subtitulo="Em aberto agora; recebido e taxa observada nos últimos 60 dias" icone={HandCoins}>
+          <Cartao className="mt-4" titulo="Por financeira" subtitulo="Em aberto agora; contratos liquidados e taxa observada nas liquidações dos últimos 60 dias" icone={HandCoins}>
             <ul className="grid gap-3 sm:grid-cols-2">
               {leitura.dados.porDevedor.map((d) => (
                 <li key={d.devedor} className="rounded-xl border border-borda px-4 py-3 text-sm">
@@ -63,7 +63,7 @@ export function ConteudoFinanceiras({ leitura, hoje, atrasados = null, daRede = 
             </ul>
           </Cartao>
 
-          <Cartao className="mt-4" titulo="Contas" subtitulo="Todas as abertas e as recebidas nos últimos 60 dias, da mais antiga para a mais nova" icone={Landmark}>
+          <Cartao className="mt-4" titulo="Contas" subtitulo="Abertas, liquidadas nos últimos 60 dias e canceladas com repasse parcial" icone={Landmark}>
             <ul className="divide-y divide-borda text-sm">
               {leitura.dados.contas.map((c) => {
                 const idade = idadeDaConta(c.dias);
@@ -75,16 +75,38 @@ export function ConteudoFinanceiras({ leitura, hoje, atrasados = null, daRede = 
                   <li key={c.id} className="space-y-2 py-3">
                     <p className="flex flex-wrap items-center gap-2">
                       <Link href={`/vendas/${c.vendaId}`} className="font-semibold text-acao">Venda nº {c.vendaNumero}</Link>
-                      <span className="numeros text-xs text-suave">{`${quando(c.concluidaEm)} · ${FINANCEIRAS[c.devedor]} · a receber ${brl(c.valor)}`}</span>
-                      {c.situacao === "aberta" ? <Selo tom={idade.tom}>{idade.rotulo}</Selo> : <Selo tom="sucesso" ponto>recebida</Selo>}
+                      <span className="numeros text-xs text-suave">{`${quando(c.concluidaEm)} · ${FINANCEIRAS[c.devedor]} · bruto ${brl(c.valor)}`}</span>
+                      {c.situacao === "aberta" ? <Selo tom={idade.tom}>{idade.rotulo}</Selo> : c.situacao === "recebida" ? <Selo tom="sucesso" ponto>recebida</Selo> : <Selo tom="aviso">conta cancelada</Selo>}
                       {prazo && <Selo tom={prazo.tom}>{prazo.rotulo}</Selo>}
                       {/* Curto, para caber inteiro no celular: o dia combinado, sem o ano (a data inteira está no histórico da conta). */}
                       {retomar && <Selo tom="aviso">{retomar === hojeDoBanco ? "retomar a cobrança hoje" : `retomar a cobrança (desde ${retomar.slice(8, 10)}/${retomar.slice(5, 7)})`}</Selo>}
                       {c.vendaCancelada && <Selo tom="aviso">venda cancelada</Selo>}
                     </p>
+                    {!!c.repassesParciais?.length && (
+                      <div className="space-y-2">
+                        <p className="numeros text-xs text-suave">Recebido em parciais: {brl(c.parcial ?? 0)}{c.situacao === "aberta" && <> · saldo em aberto: {brl(c.saldo ?? c.valor)}</>}</p>
+                        {c.situacao === "cancelada" && <p className="text-xs text-aviso">A venda foi cancelada depois de um repasse. O dinheiro registrado não volta sozinho; combine o acerto com a financeira.</p>}
+                        <ul className="space-y-2">
+                          {c.repassesParciais.map((r) => (
+                            <li key={r.id} className="rounded-lg border border-borda px-3 py-2 text-xs">
+                              <p className="numeros text-suave">{dataCurta(r.data)} · {brl(r.valor)} · {r.referencia}</p>
+                              {c.situacao !== "recebida" && <details className="mt-2">
+                                <summary className="cursor-pointer font-semibold text-acao">Desfazer repasse parcial lançado por engano</summary>
+                                <form action={desfazerRepasseParcial} className="mt-2 flex flex-wrap items-end gap-2">
+                                  <input type="hidden" name="conta" value={c.id} />
+                                  <input type="hidden" name="repasse" value={r.id} />
+                                  <label className="font-medium">Motivo<input name="motivo" required minLength={3} maxLength={200} className={campo} /></label>
+                                  <Botao type="submit" tamanho="sm" variante="fantasma">Desfazer parcial</Botao>
+                                </form>
+                              </details>}
+                            </li>
+                          ))}
+                        </ul>
+                      </div>
+                    )}
                     {c.situacao === "recebida" ? (
                       <div className="space-y-2">
-                        <p className="numeros text-xs text-suave">{`Caiu em ${c.recebidoEm ? dataCurta(c.recebidoEm) : "—"} · recebido ${brl(c.valorRecebido ?? 0)} · taxa ${brl(c.valor - (c.valorRecebido ?? 0))} · ${c.referencia ?? ""}`}</p>
+                        <p className="numeros text-xs text-suave">{`Caiu em ${c.recebidoEm ? dataCurta(c.recebidoEm) : "—"} · ${c.finalRegistrado ? "repasse final" : "recebido"} ${brl((c.valorRecebido ?? 0) - (c.parcial ?? 0))} · taxa ${brl(c.valor - (c.valorRecebido ?? 0))} · ${c.referencia ?? ""}`}</p>
                         {c.vendaCancelada && (
                           <p className="rounded-lg bg-aviso/10 px-3 py-2 text-xs text-aviso">
                             A venda foi cancelada depois do repasse: combine com a {FINANCEIRAS[c.devedor]} a devolução ou o desconto desse valor (o protocolo do cancelamento do contrato fica no estorno a confirmar da venda). Desfaça só se o repasse não caiu de verdade: a conta fica cancelada e não volta a ser cobrada.
@@ -92,11 +114,11 @@ export function ConteudoFinanceiras({ leitura, hoje, atrasados = null, daRede = 
                         )}
                         <div className="flex flex-wrap items-end justify-between gap-2">
                           <details className="min-w-0 flex-1">
-                            <summary className="cursor-pointer text-xs font-semibold text-acao">Corrigir o repasse (referência, valor ou data)</summary>
+                            <summary className="cursor-pointer text-xs font-semibold text-acao">{c.finalRegistrado ? "Corrigir referência ou data" : "Corrigir o repasse (referência, valor ou data)"}</summary>
                             <form action={corrigirRecebimento} className="mt-2 grid gap-2 sm:grid-cols-5">
                               <input type="hidden" name="conta" value={c.id} />
                               <label className="text-xs font-medium">Referência<input name="referencia" required minLength={3} maxLength={80} defaultValue={c.referencia ?? ""} className={campo} /></label>
-                              <label className="text-xs font-medium">Valor que caiu (R$)<input name="recebido" required inputMode="decimal" defaultValue={((c.valorRecebido ?? 0) / 100).toFixed(2).replace(".", ",")} className={campo} /></label>
+                              <label className="text-xs font-medium">{c.finalRegistrado ? "Total recebido (R$)" : "Valor que caiu (R$)"}<input name="recebido" required readOnly={c.finalRegistrado} inputMode="decimal" defaultValue={((c.valorRecebido ?? 0) / 100).toFixed(2).replace(".", ",")} className={campo} /></label>
                               <label className="text-xs font-medium">Caiu em<input name="data" type="date" required max={hoje} defaultValue={c.recebidoEm ?? ""} className={campo} /></label>
                               <label className="text-xs font-medium">Motivo<input name="motivo" required minLength={3} maxLength={200} className={campo} /></label>
                               <Botao type="submit" tamanho="sm" variante="secundario" className="self-end">Corrigir</Botao>
@@ -104,21 +126,32 @@ export function ConteudoFinanceiras({ leitura, hoje, atrasados = null, daRede = 
                           </details>
                           <form action={desfazerRecebimento} className="flex flex-wrap items-end gap-2">
                             <input type="hidden" name="conta" value={c.id} />
+                            {c.finalId && <input type="hidden" name="repasse" value={c.finalId} />}
                             {c.vendaCancelada && <input type="hidden" name="cancelada" value="sim" />}
                             <label className="text-xs font-medium">{c.vendaCancelada ? "Motivo (o repasse não caiu)" : "Motivo para desfazer"}<input name="motivo" required minLength={3} maxLength={200} className={campo} /></label>
                             <Botao type="submit" tamanho="sm" variante="fantasma">Desfazer</Botao>
                           </form>
                         </div>
                       </div>
-                    ) : (
+                    ) : c.situacao === "aberta" && c.saldo !== undefined ? (
                       <form action={receberDaFinanceira} className="grid gap-2 sm:grid-cols-4">
+                        <input type="hidden" name="chave" value={randomUUID()} />
+                        <label className="text-xs font-medium">O que consta no extrato?
+                          <select name="tipo" required defaultValue="" className={campo}>
+                            <option value="" disabled>Selecione</option>
+                            <option value="parcial">Repasse parcial</option>
+                            <option value="final">Liquidação final</option>
+                          </select>
+                        </label>
                         <input type="hidden" name="conta" value={c.id} />
                         <label className="text-xs font-medium">Referência do repasse<input name="referencia" required minLength={3} maxLength={80} placeholder="Código ou lote" className={campo} /></label>
-                        <label className="text-xs font-medium">Valor que caiu (R$)<input name="recebido" required inputMode="decimal" placeholder={(c.valor / 100).toFixed(2).replace(".", ",")} className={campo} /></label>
+                        <label className="text-xs font-medium">Valor que caiu (R$)<input name="recebido" required inputMode="decimal" placeholder={(c.saldo / 100).toFixed(2).replace(".", ",")} className={campo} /></label>
                         <label className="text-xs font-medium">Caiu em<input name="data" type="date" required max={hoje} className={campo} /></label>
+                        <label className="text-xs font-medium">Tarifa comprovada (só na liquidação)<input name="tarifa" inputMode="decimal" placeholder="0,00 se não houve tarifa" className={campo} /></label>
+                        <p className="text-xs text-suave sm:col-span-3">Saldo: {brl(c.saldo)}. No parcial, deixe a tarifa em branco. Na liquidação, preencha a tarifa do extrato: repasse + tarifa devem fechar o saldo.</p>
                         <Botao type="submit" tamanho="sm" className="self-end">Registrar repasse</Botao>
                       </form>
-                    )}
+                    ) : c.situacao === "aberta" ? <p className="text-xs text-aviso">Registro pausado até a atualização da versão do financeiro.</p> : null}
                     {repasse && <CobrancasDaConta conta={repasse} hoje={hojeDoBanco} chave={randomUUID()} />}
                   </li>
                 );

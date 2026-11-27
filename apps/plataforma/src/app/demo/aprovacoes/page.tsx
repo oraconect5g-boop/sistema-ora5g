@@ -35,7 +35,7 @@ export default async function Aprovacoes() {
     const p = aparelho ? produto(aparelho.sku) : undefined;
     const pagamento = v.pagamentos[0];
     if (a.tipo !== "desconto" || !aparelho || !p || !pagamento) return base;
-    const avaliacao = avaliarDesconto({ preco: aparelho.precoUnitario, custo: aparelho.custoUnitario, taxaMeioPagamento: TAXA_DO_MEIO[pagamento.meio], politica: POLITICAS[p.categoria] }, aparelho.desconto);
+    const avaliacao = avaliarDesconto({ preco: aparelho.precoUnitario, custo: aparelho.custoUnitario, taxaMeioPagamento: TAXA_DO_MEIO[pagamento.meio] ?? 0, politica: POLITICAS[p.categoria] }, aparelho.desconto);
     return {
       ...base,
       desconto: {

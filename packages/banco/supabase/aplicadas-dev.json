@@ -154,6 +154,9 @@
     { "versao": "20261125195945", "nome": "pix_da_nogle_na_loja", "md5": "c26003037515902dd7bc2d50137d9477", "aplicada_em": "2026-11-25" },
     { "versao": "20261125204032", "nome": "cartao_da_asaas_no_caixa", "md5": "42899dd427c54da750b9b4072f2dacfb", "aplicada_em": "2026-11-25" },
     { "versao": "20261125211142", "nome": "assinatura_no_cartao", "md5": "53e5ce2bae8d1174097f8f53eb2d076d", "aplicada_em": "2026-11-25" },
-    { "versao": "20261126220000", "nome": "entrada_imei_duplo", "md5": "2e56121e929c645d7106b086e68728ec", "aplicada_em": "2026-11-26" }
+    { "versao": "20261126220000", "nome": "entrada_imei_duplo", "md5": "2e56121e929c645d7106b086e68728ec", "aplicada_em": "2026-11-26" },
+    { "versao": "20261126223000", "nome": "repasses_parciais_das_financeiras", "md5": "cfa423c2916d16e51a2ff90d1376f323", "aplicada_em": "2026-11-26" },
+    { "versao": "20261126224000", "nome": "cartao_manual_pdv", "md5": "d64879fb83cfa7d620d09d8012d31163", "aplicada_em": "2026-11-26" },
+    { "versao": "20261126224500", "nome": "mercado_pago_na_previsao_e_no_resultado", "md5": "d72b9ad913a078f9b614b690747fc72a", "aplicada_em": "2026-11-26" }
   ]
 }

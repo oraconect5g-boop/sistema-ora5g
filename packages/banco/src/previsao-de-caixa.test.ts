@@ -267,7 +267,10 @@ describe("previsão de caixa: os fatos (L8c)", () => {
     const listas = [...texto.matchAll(/p\.meio in \(([^)]*)\)/g)].map(lista);
     // Correção #82: os estornos da financeira ficam fora do devolvido e dos estornos a confirmar.
     const foraDoEstorno = [...texto.matchAll(/e\.meio not in \(([^)]*)\)/g)].map(lista);
-    const todos = ["dinheiro", "pix_direto", "pix_picpay", "cartao_picpay", "cartao_pagseguro", "link_pagamento", "payjoy", "aiva", "vale_troca"];
+    // Todos os meios válidos (privado.meio_valido), inclusive os da Mercado Pago e da Asaas: a lista escrita na função não
+    // pode esquecer um meio que a regra concilia (a revisão do #112 achou a previsão e o resultado sem a Mercado Pago).
+    const todos = ["dinheiro", "pix_direto", "pix_picpay", "cartao_picpay", "cartao_pagseguro", "pix_mercado_pago", "cartao_mercado_pago",
+      "link_pagamento", "payjoy", "aiva", "vale_troca", "pix_asaas", "cartao_asaas"];
     const comRegra = async (regra: string) => (await db.query<{ m: string }>(`select m from unnest($1::text[]) as m where privado.${regra}(m) order by m`, [todos])).rows.map((r) => r.m);
     expect(listas).toEqual([await comRegra("meio_financeira"), await comRegra("meio_liquidavel")]);
     expect(foraDoEstorno).toEqual([await comRegra("meio_financeira"), await comRegra("meio_financeira")]);

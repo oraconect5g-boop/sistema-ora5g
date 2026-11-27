@@ -7,7 +7,7 @@ import type { PagamentosDoTerminal } from "../../lib/financeiro/terminais";
 import { brl, numero } from "../../lib/formato";
 import type { Leitura } from "../../lib/leitura-do-banco";
 
-const PROVEDORES = { picpay: "PicPay", pagbank: "PagBank" } as const;
+import { PROVEDORES_MANUAIS as PROVEDORES } from "../../lib/vendas/cartao-manual";
 
 // REPORT-005b: cada maquininha com os pagamentos do período (a data do registro, como o resto do financeiro), quanto já
 // foi conciliado com o extrato e o líquido que caiu na conta (a diferença é a observada no extrato, não a taxa do

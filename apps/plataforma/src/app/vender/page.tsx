@@ -23,6 +23,7 @@ import { buscarNoCatalogo, filtroDoIdentificador, identificadorDigitado, termoDa
 import { consultarTelaDoPdv } from "../../lib/vendas/pdv-tela";
 import { cartaoEspera, lerCartaoDaVenda, SITUACOES_DO_CARTAO, somasDoCartao } from "../../lib/vendas/cartao-asaas";
 import { horaDe, lerPixDaVenda, pixEspera, SITUACOES_DO_PIX, somasDoPix } from "../../lib/vendas/pix-asaas";
+import { ehProvedorManual, PROVEDORES_MANUAIS } from "../../lib/vendas/cartao-manual";
 import type { OpcaoDeMeio } from "../../lib/vendas/formas-de-pagamento";
 import { ERROS_DA_VENDA, MAXIMO_DE_PARCELAS, PROVEDOR_DO_MEIO, ehMeioDaEntrada } from "../../lib/vendas/regras";
 import { FotoAmpliavel } from "../catalogo/FotoAmpliavel";
@@ -41,10 +42,16 @@ const final = (texto: string | null) => (texto ? `•••• ${texto.slice(-6)
 // Pix pela Asaas também não se declara: o banco põe a linha de cada QR pago (o cartão "Pix pela Asaas", abaixo do carrinho).
 const MEIOS_DA_LOJA = (Object.keys(MEIOS) as (keyof typeof MEIOS)[]).filter((m) => !MEIOS_SO_DO_BANCO.includes(m));
 // PDV-c: as formas que o botão "Adicionar forma de pagamento" oferece, com o que cada uma pede.
-const OPCOES_DE_PAGAMENTO: OpcaoDeMeio[] = MEIOS_DA_LOJA.map((m) => ({
+const OPCOES_DE_PAGAMENTO: OpcaoDeMeio[] = MEIOS_DA_LOJA.filter((m) => !PROVEDOR_DO_MEIO[m]).map((m) => ({
   meio: m, nome: MEIOS[m].nome, financeira: MEIOS[m].financeira, comprovante: MEIOS[m].comprovante, maximoDeParcelas: MAXIMO_DE_PARCELAS[m] ?? null,
   provedor: PROVEDOR_DO_MEIO[m] ?? null, aceitaTroco: MEIOS[m].aceitaTroco, podeSerEntrada: ehMeioDaEntrada(m),
 }));
+
+OPCOES_DE_PAGAMENTO.splice(2, 0,
+  { meio: "pix_maquininha", nome: "Pix na maquininha", financeira: false, comprovante: true, maximoDeParcelas: null, provedor: null, aceitaTroco: false, podeSerEntrada: true },
+  { meio: "credito_manual", nome: "Crédito na maquininha", financeira: false, comprovante: true, maximoDeParcelas: 18, provedor: null, aceitaTroco: false, podeSerEntrada: true },
+  { meio: "debito_manual", nome: "Débito na maquininha", financeira: false, comprovante: true, maximoDeParcelas: 1, provedor: null, aceitaTroco: false, podeSerEntrada: true },
+);
 
 // PDV real (ADR-004): loja do turno, caixa aberto, carrinho com reserva, desconto com aprovação,
 // pagamento misto e conclusão no banco. O navegador nunca recebe custo nem calcula o total final.
@@ -401,7 +408,7 @@ export default async function Vender({ searchParams }: { searchParams: Promise<{
               <form action={concluirVenda} className="space-y-3">
                 <input type="hidden" name="venda" value={venda.id} /><input type="hidden" name="chave" value={randomUUID()} />
                 <FormasDePagamento total={aCobrar} pagoPeloSite={pagoPeloSite} pagoNoPix={pix.pago} pagoNoCartao={cartao.pago} valorDosCelulares={valorDosCelulares} opcoes={OPCOES_DE_PAGAMENTO}
-                  terminais={terminais.map((m) => ({ id: m.id, provedor: m.provedor === "picpay" ? "picpay" as const : "pagbank" as const, rotulo: `${m.apelido} · ${m.provedor === "picpay" ? "PicPay" : "PagBank"} ${m.identificador}` }))} />
+                  terminais={terminais.flatMap((m) => ehProvedorManual(m.provedor) ? [{ id: m.id, provedor: m.provedor, rotulo: `${m.apelido} · ${PROVEDORES_MANUAIS[m.provedor]} ${m.identificador}` }] : [])} />
                 {permissoes.has("cliente.buscar") && (
                   <div className="space-y-1 rounded-xl border border-borda p-2">
                     <p className="px-1 text-xs font-semibold">Cliente da rede (opcional): CPF ou telefone completos</p>

@@ -24,7 +24,7 @@ export const APROVACOES: readonly Aprovacao[] = VENDAS_HOJE.flatMap((v): Aprovac
 });
 
 /** Taxa do meio de pagamento da venda, usada na margem que sobra (exemplo). */
-export const TAXA_DO_MEIO: Readonly<Record<MeioPagamento, number>> = {
+export const TAXA_DO_MEIO: Readonly<Partial<Record<MeioPagamento, number>>> = {
   dinheiro: 0,
   pix_direto: 0,
   pix_picpay: pb(0),
@@ -134,6 +134,8 @@ export const CONCILIACAO: Readonly<Record<MeioPagamento, { situacao: string; tom
   pix_direto: { situacao: "Conciliado com o extrato", tom: "sucesso" },
   pix_picpay: { situacao: "Liquidado · a conciliar", tom: "aviso" },
   cartao_picpay: { situacao: "Autorizado · liquida em D+1", tom: "info" },
+  pix_mercado_pago: { situacao: "A conciliar", tom: "aviso" },
+  cartao_mercado_pago: { situacao: "A conciliar", tom: "aviso" },
   cartao_pagseguro: { situacao: "Autorizado · liquida em D+1", tom: "info" },
   link_pagamento: { situacao: "Pago · a conciliar", tom: "aviso" },
   payjoy: { situacao: "Entrada recebida · restante a receber", tom: "info" },

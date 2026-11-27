@@ -2,20 +2,22 @@
 // pessoa tocar em "Adicionar forma de pagamento" e escolher; cada uma mostra só os campos dela. Regras puras e sem
 // dependência, usadas pelo componente do navegador; o servidor (lib/vendas/regras.ts) e o banco conferem tudo de novo.
 
+import type { Bandeira, ProvedorManual } from "./cartao-manual";
+
 export type OpcaoDeMeio = {
   meio: string;
   nome: string;
   financeira: boolean;
   comprovante: boolean;
-  /** O máximo de parcelas (a PayJoy e a Aiva, 48; o cartão, 24); nulo no meio que não parcela. */
+  /** O máximo de parcelas (a PayJoy e a Aiva, 48; o cartão, 18); nulo no meio que não parcela. */
   maximoDeParcelas: number | null;
   /** A maquininha do meio (cartão e Pix na maquininha); nulo no meio sem maquininha. */
-  provedor: "picpay" | "pagbank" | null;
+  provedor: ProvedorManual | null;
   aceitaTroco: boolean;
   /** Pode ser a entrada da PayJoy ou da Aiva (dinheiro, Pix e cartão). */
   podeSerEntrada: boolean;
 };
-export type LinhaNaTela = { chave: number; meio: string; valor: string; parcelas: string; comprovante: string; terminal: string; entrada: boolean };
+export type LinhaNaTela = { chave: number; meio: string; valor: string; parcelas: string; comprovante: string; terminal: string; entrada: boolean; bandeira?: Bandeira; totalNaMaquininha?: string };
 
 /** "1.299,90", "1299,9" ou "1299" → centavos; outra forma é nula (a mesma leitura de reais do servidor, sem arredondar). */
 export function centavosDoTexto(texto: string): number | null {

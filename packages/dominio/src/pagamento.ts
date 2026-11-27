@@ -12,6 +12,8 @@ export const MEIOS = {
   pix_direto: { nome: "Pix direto", aceitaTroco: false, financeira: false, comprovante: true },
   pix_picpay: { nome: "Pix na maquininha PicPay", aceitaTroco: false, financeira: false, comprovante: true },
   cartao_picpay: { nome: "Cartão na maquininha PicPay", aceitaTroco: false, financeira: false, comprovante: true },
+  pix_mercado_pago: { nome: "Pix na maquininha Mercado Pago", aceitaTroco: false, financeira: false, comprovante: true },
+  cartao_mercado_pago: { nome: "Cartão na maquininha Mercado Pago", aceitaTroco: false, financeira: false, comprovante: true },
   cartao_pagseguro: { nome: "Cartão na maquininha PagSeguro", aceitaTroco: false, financeira: false, comprovante: true },
   link_pagamento: { nome: "Link de pagamento", aceitaTroco: false, financeira: false, comprovante: false },
   payjoy: { nome: "Financiamento PayJoy", aceitaTroco: false, financeira: true, comprovante: false },
@@ -32,14 +34,14 @@ export type Pagamento = {
   meio: MeioPagamento;
   valor: Centavos;
   entrada?: Centavos;
-  /** PDV-c (o proprietário, 18/11): em quantas parcelas (a PayJoy e a Aiva, 1 a 48; o cartão, 1 a 24). */
+  /** PDV-c (o proprietário, 18/11): em quantas parcelas (a PayJoy e a Aiva, 1 a 48; o cartão, 1 a 18). */
   parcelas?: number;
   /** PDV-c: este pagamento é a entrada da PayJoy ou da Aiva, à parte (dinheiro, Pix ou cartão). */
   entradaDoFinanciamento?: boolean;
 };
 
 /** PDV-c: o máximo de parcelas de cada meio que parcela (a mesma regra da concluir_venda). */
-export const MAXIMO_DE_PARCELAS: Partial<Record<MeioPagamento, number>> = { payjoy: 48, aiva: 48, cartao_picpay: 24, cartao_pagseguro: 24 };
+export const MAXIMO_DE_PARCELAS: Partial<Record<MeioPagamento, number>> = { payjoy: 48, aiva: 48, cartao_picpay: 18, cartao_pagseguro: 18, cartao_mercado_pago: 18 };
 
 /** PDV-c: a entrada da PayJoy e da Aiva é paga num destes meios (dinheiro, Pix ou cartão). */
 export const ehMeioDaEntrada = (m: MeioPagamento) => !MEIOS[m].financeira && m !== "vale_troca" && m !== "link_pagamento" && m !== "pix_asaas" && m !== "cartao_asaas";
