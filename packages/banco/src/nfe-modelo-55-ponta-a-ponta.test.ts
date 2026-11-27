@@ -128,10 +128,17 @@ describe("NF-e modelo 55 no fluxo interno, de ponta a ponta (27/11/2026)", () =>
     expect(await valor<Record<string, unknown>>(dono, "select public.notas_dados_para_emitir($1) as v", [pedido]))
       .toMatchObject({ nome: "Joana Nota Teste", documento: cpf("529982955"), endereco: ENDERECO, cliente: joana });
     // O que a tela "Dados para emitir" lê, com a sessão de quem abre: o dono lê tudo; a gerente da loja B, nada da venda.
+    // (Revisão de 27/11: as mesmas colunas da leitura do comprovante, com o troco, a entrada, o estorno e a devolução.)
     const fatos = (s: Sessao) => comoUsuario(db, s, async () => ({
-      venda: (await db.query("select numero::int, total_centavos::int as total from public.vendas where id = $1", [venda])).rows,
-      itens: (await db.query("select variante_id, quantidade::int, preco_unitario_centavos::int as unitario from public.venda_itens where venda_id = $1", [venda])).rows,
-      pagamentos: (await db.query("select meio, valor_centavos::int as valor, parcelas from public.venda_pagamentos where venda_id = $1", [venda])).rows,
+      venda: (await db.query(
+        "select numero::int, situacao, total_centavos::int as total, troco_centavos::int as troco, a_receber_centavos::int as a_receber, devolvido_centavos::int as devolvido from public.vendas where id = $1",
+        [venda])).rows,
+      itens: (await db.query("select variante_id, tipo, quantidade::int, preco_unitario_centavos::int as unitario from public.venda_itens where venda_id = $1", [venda])).rows,
+      pagamentos: (await db.query(
+        "select meio, valor_centavos::int as valor, entrada_centavos::int as entrada, situacao, parcelas, entrada_do_financiamento, acrescimo_cliente_centavos from public.venda_pagamentos where venda_id = $1",
+        [venda])).rows,
+      devolucoes: (await db.query("select id from public.venda_devolucoes where venda_id = $1", [venda])).rows,
+      estornos: (await db.query("select id from public.estornos_externos where venda_id = $1", [venda])).rows,
       variantes: (await db.query("select sku, nome from public.variantes where id = $1", [cat.capa])).rows,
       loja: (await db.query("select cnpj, unidade_emissora_id from public.unidades where id = $1", [ids.lojaA])).rows,
       configuracao: (await db.query(
@@ -139,10 +146,11 @@ describe("NF-e modelo 55 no fluxo interno, de ponta a ponta (27/11/2026)", () =>
         [ids.lojaA])).rows,
     }));
     expect(await fatos(dono)).toMatchObject({
-      venda: [{ total: 7_900 }], itens: [{ variante_id: cat.capa, quantidade: 1, unitario: 7_900 }], pagamentos: [{ meio: "dinheiro", valor: 7_900, parcelas: null }],
+      venda: [{ situacao: "concluida", total: 7_900, troco: 0, a_receber: 0, devolvido: 0 }], itens: [{ variante_id: cat.capa, tipo: "acessorio", quantidade: 1, unitario: 7_900 }],
+      pagamentos: [{ meio: "dinheiro", valor: 7_900, entrada: 0, situacao: "confirmado", parcelas: null, entrada_do_financiamento: false }], devolucoes: [], estornos: [],
       variantes: [{ sku: "ACE-0001" }], loja: [{ cnpj: cnpjA, unidade_emissora_id: null }], configuracao: [{ inscricao_estadual: "1234567890", logradouro: "Rua do Teste", numero: "100" }],
     });
-    expect(await fatos(await naLoja(ids.gerenteB, ids.lojaB))).toMatchObject({ venda: [], itens: [], pagamentos: [], configuracao: [] });
+    expect(await fatos(await naLoja(ids.gerenteB, ids.lojaB))).toMatchObject({ venda: [], itens: [], pagamentos: [], devolucoes: [], estornos: [], configuracao: [] });
 
     // 5. A emissão externa registrada pela chave: de outro CNPJ, recusada; a do CNPJ da loja vira NF-e 55, série 1, nº 955.
     expect(await tentar(dono, REGISTRAR, [pedido, chaveDaNfe(955, "11444777000161")])).toMatchObject({ codigo: "22023", mensagem: "A chave de acesso não é do CNPJ desta loja" });
