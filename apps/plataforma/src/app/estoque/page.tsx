@@ -6,7 +6,7 @@ import Form from "next/form";
 import Link from "next/link";
 
 import { MoldeReal } from "../../componentes/MoldeReal";
-import { Aviso, Botao, Cartao, FiltroSegmentado, Selo, TituloPagina } from "../../componentes/ui";
+import { Aviso, Botao, BotaoLink, Cartao, FiltroSegmentado, Selo, TituloPagina } from "../../componentes/ui";
 import { ehUuid } from "../../lib/acesso/regras";
 import { permite } from "../../lib/acesso/molde";
 import { FalhaDoServico, obterSessao } from "../../lib/acesso/sessao";
@@ -291,7 +291,8 @@ export default async function Estoque({ searchParams }: { searchParams: Promise<
 
   return (
     <MoldeReal sessao={sessao}>
-      <TituloPagina sobretitulo={situacao.unidade_nome} titulo="Estoque" />
+      <TituloPagina sobretitulo={situacao.unidade_nome} titulo="Estoque"
+        acao={permite(sessao, "venda.registrar") && <BotaoLink href="/reservas-do-site" prefetch={false} tamanho="sm" variante="secundario">Reservas do site</BotaoLink>} />
       {abas}
       {/* next/form: a busca troca só o endereço, sem recarregar; a tela fica até o resultado chegar. */}
       <Form action="/estoque" prefetch={false} className="flex flex-wrap items-end gap-2" role="search">

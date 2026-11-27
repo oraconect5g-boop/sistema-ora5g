@@ -145,6 +145,18 @@ describe("o comprovante em poucas rodadas (VEL-i)", () => {
     expect(primeira).toEqual(expect.arrayContaining(["vendas", "venda_itens", "venda_pagamentos", "notas_pedidos", "venda_devolucoes", "estornos_externos", "venda_retornos"]));
   });
 
+  it("mostra atalhos do comprovante para o PDV e o meu caixa, sem sugerir o caixa de colega", async () => {
+    cenario.permissoes.add("caixa.abrir");
+    const meu = await comprovante();
+    expect(meu).toContain("Ver vendas Ver meu caixa Voltar ao PDV");
+    cenario.tabelas.vendas = [venda({ vendedor_id: COLEGA })];
+    const colega = await comprovante();
+    expect(colega).toContain("Ver vendas Voltar ao PDV");
+    expect(colega).not.toContain("Ver meu caixa");
+    cenario.permissoes.delete("venda.registrar");
+    expect(await comprovante()).not.toContain("Voltar ao PDV");
+  });
+
   it("CRM-009a: a venda que atendeu um pedido do site diz de onde veio, sem rodada a mais; a venda comum não diz nada", async () => {
     const comum = await comprovante();
     expect(comum).not.toContain("veio do site");

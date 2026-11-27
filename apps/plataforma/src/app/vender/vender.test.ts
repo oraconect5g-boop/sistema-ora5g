@@ -551,6 +551,27 @@ describe("o que o PDV mostra", () => {
 });
 
 describe("a busca de produto dentro da venda", () => {
+  it("prioriza Código exato da planilha, inclusive zero inicial, antes de recortar os oito resultados", async () => {
+    const codigo = "0123";
+    const [exato] = (cenario.tabelas.variantes ?? []).filter((v) => v.id === V_CAPA);
+    const parciais = Array.from({ length: 41 }, (_, i) => ({
+      ...exato, id: id(String(8000 + i)), sku: `0${String(i).padStart(3, "0")}-0123`, nome: `Correspondência parcial ${i}`,
+    }));
+    cenario.tabelas.variantes = [...parciais, { ...exato, sku: codigo, nome: "Exato da planilha" }];
+    const arvore = await abrir({ q: codigo });
+    const encontrados = elementos(arvore).filter((e) => e.type === FotoAmpliavel).map((e) => e.props.rotulo);
+    expect(encontrados).toHaveLength(8);
+    expect(encontrados[0]).toBe("Exato da planilha (0123)");
+    expect(formularios(arvore, adicionarItem)[0]?.escondidos.variante).toBe(V_CAPA);
+  });
+
+  it("não oferece adicionar um acessório sem quantidade livre na loja do turno", async () => {
+    cenario.tabelas.estoque_saldos = [{ variante_id: V_CAPA, unidade_id: LOJA, quantidade: 2, reservado: 2 }];
+    const arvore = await abrir({ q: "capa" });
+    expect(texto(arvore)).toContain("Nenhum disponível nesta loja.");
+    expect(formularios(arvore, adicionarItem)).toEqual([]);
+  });
+
   it("por nome: acessório com quantidade, aparelho com os IMEIs livres desta loja, preço, saldo livre e foto", async () => {
     const arvore = await abrir({ q: "galaxy" });
     const t = texto(arvore);
@@ -643,6 +664,37 @@ describe("a busca de produto dentro da venda", () => {
     const campo = elementos(arvore).find((e) => e.props.name === "q");
     expect(campo?.props.defaultValue).toBe("galaxy a15");
     expect(texto(arvore)).toContain("128 GB Azul APA-0001");
+  });
+});
+
+describe("atalho móvel de pagamento", () => {
+  it("mostra os itens, o total e o link para pagamento sem submeter uma venda", async () => {
+    cenario.pdv = tela({ itens: [item()] });
+    const arvore = await abrir();
+    const atalhos = elementos(arvore).filter((e) => e.props.href === "#pagamento-pdv");
+    expect(atalhos).toHaveLength(1);
+    expect(texto(atalhos[0])).toContain("Pagamento");
+    const barra = elementos(arvore).find((e) => e.props["aria-label"] === "Resumo da venda");
+    expect(texto(barra)).toContain("2 itens · total");
+    expect(texto(barra)).toContain("R$ 138,00");
+    expect(elementos(arvore).some((e) => e.props.id === "pagamento-pdv")).toBe(true);
+  });
+
+  it("mantém Pix, cartão e cliente atrás da escolha; erro ou cobrança já iniciada abre o respectivo bloco", async () => {
+    cenario.pdv = tela({ itens: [item()] });
+    cenario.pix = { data: { ligado: true, venda: VENDA, pix: [] }, error: null };
+    cenario.cartao = { data: { ligado: true, venda: VENDA, cartoes: [] }, error: null };
+    const blocos = (arvore: unknown) => elementos(arvore).filter((e) => e.type === "details" && /pela Asaas/.test(texto(e)));
+    const inicio = await abrir();
+    expect(blocos(inicio).map((x) => x.props.open)).toEqual([false, false]);
+    expect(elementos(inicio).some((e) => typeof e.type === "function" && e.type.name === "IdentificarCliente")).toBe(true);
+    expect(elementos(elementos(inicio).find((e) => e.props.titulo === "Vender")?.props.acao).some((e) => e.props.href === "/reservas-do-site" && e.props.prefetch === false)).toBe(true);
+    cenario.cartao = { data: null, error: { code: "57014" } };
+    expect(blocos(await abrir()).map((x) => x.props.open)).toEqual([false, true]);
+  });
+
+  it("não mostra o atalho se o carrinho estiver vazio", async () => {
+    expect(elementos(await abrir()).some((e) => e.props.href === "#pagamento-pdv")).toBe(false);
   });
 });
 
