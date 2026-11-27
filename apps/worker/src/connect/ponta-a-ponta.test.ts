@@ -451,6 +451,8 @@ describe("AUD-f: o pagamento confirmado da ativação não é a linha ativa (con
     const ana = await naLoja(ids.vendedorA, ids.lojaA);
     const registrar = (pedido: object, k: string) => valor<string>(ana, "select public.connect_registrar('ativacao', $1::jsonb, $2) as v", [JSON.stringify(pedido), k]);
     const nogle = new ClienteNogle({ tipo: "marca", chaveAcesso: "chave-ficticia" }, transporteHttp(base, 500), { getComCorpo: true });
+    // As listas oficiais (o plano 99999) pelo worker, como no primeiro teste: este também roda sozinho (o aceite isolado).
+    await sincronizarReferencias(banco, nogle, ["RS"]);
     const contadas = async () => (await db.query("select 1 from public.connect_producao where tipo = 'ativacao'")).rows.length;
     const antes = await contadas();
 

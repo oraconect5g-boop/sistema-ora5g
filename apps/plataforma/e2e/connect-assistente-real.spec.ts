@@ -2,6 +2,10 @@
 // (teste) percorre os 5 passos com um eSIM e um cliente FICTÍCIO (o CPF de exemplo, com o dígito verificador), confere o resumo
 // e PARA antes de "Registrar ativação": nada é registrado nem enviado à Nogle (cada ativação de verdade é do proprietário).
 // Também confere o aviso de cada passo e o Pix da Nogle como o padrão do pagamento (a D-062).
+// AUD-f (o aceite isolado do PR #113): antes de começar, confere que o plano e o DDD que a prova usa estão na lista da Nogle
+// desta rede (sem eles, para com o motivo, antes de qualquer passo); o Enter num campo é o "Continuar". Esta prova NÃO passa
+// pela busca do cadastro na Nogle (o preenchimento pelo CPF): os campos são digitados à mão; o preenchimento e a troca do
+// documento são provados em apps/plataforma/src/lib/connect/busca-do-cadastro.test.ts, com duas identidades sintéticas.
 // Só no servidor: ORA_E2E_URL e ORA_E2E_CONTAS (e2e/contas-de-teste.ts); no CI, fica pulado.
 import { expect, test, type Page } from "@playwright/test";
 
@@ -19,6 +23,10 @@ test.describe("o assistente de ativação, no site no ar (CONNECT-n)", () => {
       const continuar = v.getByRole("button", { name: "Continuar" });
       const passo = (texto: string) => expect(v.getByText(texto, { exact: true })).toBeVisible();
       await v.goto("/connect/ativar");
+      // Antes de qualquer passo: o plano e o DDD da prova estão na lista da Nogle (os passos escondidos ficam no formulário).
+      expect(await v.getByRole("radio", { name: /^10 GB\s*R\$\s54,90$/, includeHidden: true }).count(),
+        "o plano 10 GB de R$ 54,90 não está na lista da Nogle desta rede: a prova não segue (troque o plano da prova)").toBe(1);
+      expect(await v.locator('select[name="ddd"] option[value="41"]').count(), "o DDD 41 não está na lista da Nogle desta rede: a prova não segue").toBe(1);
       await passo("Etapa 1 de 5: Chip");
       // Sem o chip, o aviso, e o passo não muda.
       await continuar.click();
