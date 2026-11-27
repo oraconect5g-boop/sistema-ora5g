@@ -116,11 +116,25 @@ export async function novaVenda(p: Page): Promise<Locator> {
   return carrinho;
 }
 
-/** Acha o produto pelo SKU na busca do PDV e põe no carrinho a quantidade dada (um, se nada for dito). */
+/**
+ * A caixa de busca do PDV: o único campo de texto visível do formulário de busca (role="search"). O rótulo mudou no lote B
+ * (#114: "Produto, código ou IMEI/ICCID"; antes, "Produto, marca, SKU, código de barras ou IMEI/ICCID"): a prova não depende dele.
+ */
+export const buscaDoPdv = (p: Page) => p.getByRole("search").getByRole("textbox").filter({ visible: true });
+const escaparRegex = (t: string) => t.replace(/[.*+?^${}()|[\]\\]/g, "\\$&");
+
+/** Acha o produto pelo SKU EXATO na busca do PDV e põe no carrinho a quantidade dada (um, se nada for dito). */
 export async function porNoCarrinho(p: Page, produto: { sku: string; preco: string }, quantidade = 1) {
-  await p.getByLabel(/Produto, marca, SKU/).fill(produto.sku);
-  await p.getByRole("button", { name: "Buscar" }).click();
-  const resultado = p.getByRole("listitem").filter({ hasText: produto.sku }).filter({ hasText: "livre(s) aqui" });
+  const busca = buscaDoPdv(p);
+  await expect(busca).toHaveCount(1);
+  await busca.fill(produto.sku);
+  await expect(busca).toHaveValue(produto.sku); // o SKU numérico da planilha guarda os zeros ("0042")
+  await p.getByRole("search").getByRole("button", { name: "Buscar" }).click();
+  // O SKU exato no começo da linha "SKU · preço" do resultado: "0042" não é "00420" nem "10042".
+  const resultado = p.getByRole("listitem")
+    .filter({ has: p.locator("p", { hasText: new RegExp(`^${escaparRegex(produto.sku)} · `) }) })
+    .filter({ hasText: "livre(s) aqui" });
+  await expect(resultado).toHaveCount(1);
   await expect(resultado).toContainText(produto.preco);
   if (quantidade !== 1) await resultado.getByLabel("Qtd.").fill(String(quantidade));
   await resultado.getByRole("button", { name: "Adicionar" }).click();
