@@ -9,3 +9,11 @@ ORA-PAY-003, ORA-PAY-011, ORA-FIN-002/003/005/007 (conciliação gerencial manua
 6. Um gerente de outra loja, vendedor sem permissão e visitante não registram ou desfazem repasses da loja. É necessária a permissão `pagamento.conciliar`; o lançamento traz referência, data, ator e trilha de auditoria.
 
 Não são feitas chamadas aos provedores nem pagamentos. A informação de tarifa e referência é manual, sem vínculo automático com a linha importada do banco. Repasses e taxas gravados antes da migração permanecem no modelo histórico (não é possível deduzir se foram parciais); mudanças de históricos exigem conferência de extratos. O resultado é gerencial, não um lançamento contábil formal. A data prevista do saldo continua na regra de prazo já existente; a previsão não passa a fazer conciliação bancária. O script de reversão só roda antes de existirem lançamentos no formato novo; depois disso, preserve a trilha e corrija para frente.
+
+## Plano de contingência (registrado em 26/11/2026, pedido ORA-ESTAVEL-26NOV)
+
+- **Voltar o banco (SQL de reversão `20261126223000`):** só enquanto a tabela `privado.repasses_das_financeiras` estiver vazia. A reversão se recusa com qualquer lançamento no formato novo, inclusive um lançado e depois desfeito (o desfeito continua na trilha). Conferido em 26/11, antes do merge (`b5d0b60`): a reversão devolve exatamente as 9 funções que estavam em vigor no banco da homologação (o md5 de cada uma), e a tabela seguia vazia depois da publicação.
+- **Depois do primeiro lançamento novo:** não reverter. Corrigir para frente (migration nova), preservando a trilha e a auditoria.
+- **Se voltar só o site** (a versão anterior da tela, com o banco novo): a chamada antiga (`financeira_receber`) vira uma liquidação final com tarifa zero, que exige o valor igual ao saldo; ela não registra parcial. Nesse caso: bloquear os lançamentos de repasse na tela antiga (avisar o Financeiro), manter as referências e os comprovantes no controle restrito do Financeiro e lançar depois, na versão nova, corrigindo para frente.
+- Nada disso move dinheiro: o repasse é a anotação do que o extrato mostra. Não houve repasse real na publicação; a prova que grava foi feita em banco isolado.
+

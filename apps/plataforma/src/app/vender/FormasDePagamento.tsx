@@ -6,6 +6,8 @@ import { useState } from "react";
 
 import { centavosDoTexto, resumoDosPagamentos, textoDosCentavos, valorSugerido, type LinhaNaTela, type OpcaoDeMeio } from "../../lib/vendas/formas-de-pagamento";
 
+import { BANDEIRAS, CARTAO_POR_PROVEDOR, PIX_POR_PROVEDOR, ehBandeira, politicaDoCartao, type ProvedorManual } from "../../lib/vendas/cartao-manual";
+
 const campo = "mt-1 min-h-11 w-full rounded-botao border border-borda bg-white px-3 text-sm outline-none focus:border-acao focus:ring-2 focus:ring-acao/20";
 const brl = (centavos: number) => new Intl.NumberFormat("pt-BR", { style: "currency", currency: "BRL" }).format(centavos / 100);
 const MAXIMO_DE_FORMAS = 8;
@@ -21,7 +23,7 @@ export function FormasDePagamento({ total, valorDosCelulares, opcoes, terminais,
   total: number;
   valorDosCelulares: number;
   opcoes: OpcaoDeMeio[];
-  terminais: { id: string; rotulo: string; provedor: "picpay" | "pagbank" }[];
+  terminais: { id: string; rotulo: string; provedor: ProvedorManual }[];
   pagoPeloSite?: number;
   pagoNoPix?: number;
   pagoNoCartao?: number;
@@ -76,40 +78,78 @@ export function FormasDePagamento({ total, valorDosCelulares, opcoes, terminais,
         const n = i + 1;
         const opcao = opcaoDe(l.meio);
         if (!opcao) return null;
-        const doProvedor = opcao.provedor ? terminais.filter((t) => t.provedor === opcao.provedor) : [];
+        const modalidade = l.meio === "credito_manual" ? "credito" : l.meio === "debito_manual" ? "debito" : null;
+        const pixTerminal = l.meio === "pix_maquininha";
+        const manual = modalidade !== null || pixTerminal;
+        const doProvedor = manual
+          ? terminais.filter((t) => !pixTerminal || t.provedor !== "pagbank")
+          : opcao.provedor ? terminais.filter((t) => t.provedor === opcao.provedor) : [];
+        const provedor = doProvedor.find((t) => t.id === l.terminal)?.provedor;
+        const meioReal = manual
+          ? (provedor ? pixTerminal ? (provedor === "pagbank" ? "" : PIX_POR_PROVEDOR[provedor]) : CARTAO_POR_PROVEDOR[provedor] : "")
+          : l.meio;
+        const politica = modalidade ? politicaDoCartao(provedor, modalidade, l.bandeira) : null;
+        const maximo = politica?.maximo ?? opcao.maximoDeParcelas;
+        const juros = politica?.jurosApartirDe != null && Number(l.parcelas) >= politica.jurosApartirDe;
+        const totalMaquininha = centavosDoTexto(l.totalNaMaquininha ?? "");
         const valorLido = centavosDoTexto(l.valor);
         return (
           <fieldset key={l.chave} className="grid gap-2 rounded-xl border border-borda p-2 sm:grid-cols-3">
-            <legend className="px-1 text-xs font-semibold">{`Pagamento ${n} · ${nomeDoPagamento({ meio: l.meio, entradaDoFinanciamento: temFinanceira && opcao.podeSerEntrada && l.entrada })}`}</legend>
-            <input type="hidden" name={`pagamento_${n}_meio`} value={l.meio} />
-            <label className="text-xs font-medium">{opcao.financeira ? "Valor financiado (R$)" : "Valor (R$)"}
+            <legend className="px-1 text-xs font-semibold">{`Pagamento ${n} · ${manual ? opcao.nome : nomeDoPagamento({ meio: l.meio, entradaDoFinanciamento: temFinanceira && opcao.podeSerEntrada && l.entrada })}`}</legend>
+            <input type="hidden" name={`pagamento_${n}_meio`} value={meioReal} />
+            {manual && <input type="hidden" name={`pagamento_${n}_maquininha_manual`} value="sim" />}
+            {modalidade && <input type="hidden" name={`pagamento_${n}_modalidade_cartao`} value={modalidade} />}
+            <label className="text-xs font-medium">{opcao.financeira ? "Valor financiado (R$)" : modalidade ? "Valor da venda nesta forma (R$)" : "Valor (R$)"}
               <input name={`pagamento_${n}_valor`} inputMode="decimal" required value={l.valor} onChange={(e) => mudar(l.chave, { valor: e.target.value })}
                 aria-invalid={l.valor !== "" && valorLido === null} className={campo} />
             </label>
-            {opcao.maximoDeParcelas !== null && (opcao.financeira ? (
+            {(manual || doProvedor.length > 0) && (
+              <label className="text-xs font-medium">Maquininha
+                <select name={`pagamento_${n}_terminal`} required={manual} value={l.terminal} onChange={(e) => mudar(l.chave, {
+                  terminal: e.target.value, ...(modalidade ? { bandeira: undefined, parcelas: "1", totalNaMaquininha: "" } : {}),
+                })} className={campo}>
+                  <option value="">{manual ? "Escolha a maquininha" : "nenhuma"}</option>
+                  {doProvedor.map((t) => <option key={t.id} value={t.id}>{t.rotulo}</option>)}
+                </select>
+                {manual && doProvedor.length === 0 && <span className="text-perigo">Não há maquininha ativa para esta forma na loja.</span>}
+              </label>
+            )}
+            {modalidade && (
+              <label className="text-xs font-medium">Bandeira
+                <select name={`pagamento_${n}_bandeira_cartao`} required value={l.bandeira ?? ""} onChange={(e) => mudar(l.chave, {
+                  bandeira: ehBandeira(e.target.value) ? e.target.value : undefined, parcelas: "1", totalNaMaquininha: "",
+                })} className={campo}>
+                  <option value="">Escolha a bandeira</option>
+                  {Object.entries(BANDEIRAS).filter(([b]) => b !== "simp" || (provedor === "mercado_pago" && modalidade === "credito"))
+                    .map(([b, nome]) => <option key={b} value={b}>{nome}</option>)}
+                </select>
+              </label>
+            )}
+            {maximo !== null && (opcao.financeira ? (
               <label className="text-xs font-medium">{`Parcelas (1 a ${opcao.maximoDeParcelas})`}
                 <input name={`pagamento_${n}_parcelas`} inputMode="numeric" pattern="[0-9]{1,2}" required value={l.parcelas}
                   onChange={(e) => mudar(l.chave, { parcelas: e.target.value })} className={campo} />
               </label>
             ) : (
               <label className="text-xs font-medium">Parcelas no cartão
-                <select name={`pagamento_${n}_parcelas`} value={l.parcelas} onChange={(e) => mudar(l.chave, { parcelas: e.target.value })} className={campo}>
-                  {Array.from({ length: opcao.maximoDeParcelas }, (_, k) => k + 1).map((p) => <option key={p} value={String(p)}>{p === 1 ? "1x (à vista)" : `${p}x`}</option>)}
+                <select name={`pagamento_${n}_parcelas`} value={l.parcelas} onChange={(e) => mudar(l.chave, { parcelas: e.target.value, totalNaMaquininha: "" })} className={campo}>
+                  {Array.from({ length: maximo ?? 0 }, (_, k) => k + 1).map((p) => <option key={p} value={String(p)}>{p === 1 ? "1x (à vista)" : `${p}x${politica?.jurosApartirDe != null ? p >= politica.jurosApartirDe ? " com juros" : " sem juros" : ""}`}</option>)}
                 </select>
               </label>
             ))}
-            {(opcao.comprovante || opcao.financeira) && (
-              <label className="text-xs font-medium">{l.meio === "vale_troca" ? "Nº do vale" : opcao.financeira ? "Nº do contrato (opcional)" : "Comprovante (código da maquininha ou do Pix)"}
-                <input name={`pagamento_${n}_comprovante`} autoComplete="off" required={opcao.comprovante} value={l.comprovante}
-                  onChange={(e) => mudar(l.chave, { comprovante: e.target.value })} className={campo} />
+            {modalidade === "credito" && (juros || l.bandeira === "simp") && (
+              <label className="text-xs font-medium">Total cobrado na maquininha {l.bandeira === "simp" ? "(se diferente)" : "(com juros do cliente)"}
+                <input name={`pagamento_${n}_total_maquininha`} required={juros} inputMode="decimal" value={l.totalNaMaquininha ?? ""}
+                  onChange={(e) => mudar(l.chave, { totalNaMaquininha: e.target.value })} className={campo} />
+                <span className="block text-suave">{valorLido !== null && totalMaquininha !== null && totalMaquininha >= valorLido
+                  ? `Acréscimo do cliente: ${brl(totalMaquininha - valorLido)} (não altera a venda)`
+                  : "Use só o total que aparece no terminal. Não inclua a taxa da loja."}</span>
               </label>
             )}
-            {doProvedor.length > 0 && (
-              <label className="text-xs font-medium">Maquininha
-                <select name={`pagamento_${n}_terminal`} value={l.terminal} onChange={(e) => mudar(l.chave, { terminal: e.target.value })} className={campo}>
-                  <option value="">nenhuma</option>
-                  {doProvedor.map((t) => <option key={t.id} value={t.id}>{t.rotulo}</option>)}
-                </select>
+            {(opcao.comprovante || opcao.financeira) && (
+              <label className="text-xs font-medium">{l.meio === "vale_troca" ? "Nº do vale" : opcao.financeira ? "Nº do contrato (opcional)" : manual ? "NSU ou código do comprovante" : "Comprovante (código do Pix)"}
+                <input name={`pagamento_${n}_comprovante`} autoComplete="off" minLength={manual ? 4 : undefined} maxLength={60} required={opcao.comprovante} value={l.comprovante}
+                  onChange={(e) => mudar(l.chave, { comprovante: e.target.value })} className={campo} />
               </label>
             )}
             {temFinanceira && opcao.podeSerEntrada && (

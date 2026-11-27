@@ -1,3 +1,4 @@
+import { BANDEIRAS, ehBandeira } from "../../../lib/vendas/cartao-manual";
 import { randomUUID } from "node:crypto";
 
 import { CheckCircle2, FileText, PackageCheck, Paperclip, Receipt, RotateCcw, Undo2, UserRound } from "lucide-react";
@@ -63,7 +64,7 @@ export default async function Comprovante({ params, searchParams }: { params: Pr
   const [venda, itens, pagamentos, nota, devolucoes, notasDeDevolucao, estornos, retornos] = await Promise.all([
     supabase.from("vendas").select("id, numero, situacao, unidade_id, vendedor_id, cliente_nome, cliente_id, total_centavos, subtotal_centavos, desconto_centavos, troco_centavos, recebido_centavos, a_receber_centavos, devolvido_centavos, concluida_em, cancelada_em, motivo_cancelamento").eq("id", id).maybeSingle(),
     supabase.from("venda_itens").select("id, variante_id, item_serializado_id, tipo, quantidade, preco_unitario_centavos, desconto_centavos").eq("venda_id", id).order("criado_em"),
-    supabase.from("venda_pagamentos").select("ordem, meio, valor_centavos, entrada_centavos, comprovante, situacao, parcelas, entrada_do_financiamento").eq("venda_id", id).order("ordem"),
+    supabase.from("venda_pagamentos").select("ordem, meio, valor_centavos, entrada_centavos, comprovante, situacao, parcelas, entrada_do_financiamento, bandeira_cartao, modalidade_cartao, acrescimo_cliente_centavos").eq("venda_id", id).order("ordem"),
     supabase.from("notas_pedidos").select("id, situacao, solicitado_por, destinatario_nome, destinatario_mascarado, observacao, chave_acesso, modelo, serie, numero_documento, cliente_id")
       .eq("venda_id", id).eq("tipo", "venda").neq("situacao", "cancelada").maybeSingle(),
     supabase.from("venda_devolucoes").select("id, numero, valor_centavos, motivo, criado_em, venda_devolucao_itens(venda_item_id, quantidade, valor_centavos, condicao), venda_devolucao_reembolsos(meio, valor_centavos), vales_troca(numero, saldo_centavos)")
@@ -250,7 +251,7 @@ export default async function Comprovante({ params, searchParams }: { params: Pr
         </dl>
         <ul className="mt-2 space-y-1 text-xs">
           {pagamentos.data.map((p) => (
-            <li key={p.ordem} className="numeros">{nomeDoPagamento({ meio: p.meio, entradaDoFinanciamento: p.entrada_do_financiamento })}: {brl(centavosDoBanco(p.valor_centavos))}{textoDasParcelas(p.meio, p.parcelas)}{centavosDoBanco(p.entrada_centavos) > 0 ? ` (entrada ${brl(centavosDoBanco(p.entrada_centavos))})` : ""}{p.comprovante ? ` · comprovante ${p.comprovante}` : ""}{p.situacao === "estornado" ? " · estornado" : p.situacao === "estorno_pendente" ? " · estorno a confirmar" : ""}</li>
+            <li key={p.ordem} className="numeros">{nomeDoPagamento({ meio: p.meio, entradaDoFinanciamento: p.entrada_do_financiamento })}: {brl(centavosDoBanco(p.valor_centavos))}{textoDasParcelas(p.meio, p.parcelas)}{p.modalidade_cartao === "debito" ? " · débito" : p.modalidade_cartao === "credito" ? " · crédito" : ""}{ehBandeira(p.bandeira_cartao) ? ` · ${BANDEIRAS[p.bandeira_cartao]}` : ""}{centavosDoBanco(p.acrescimo_cliente_centavos ?? 0) > 0 ? ` · acréscimo na maquininha: ${brl(centavosDoBanco(p.acrescimo_cliente_centavos))}` : ""}{centavosDoBanco(p.entrada_centavos) > 0 ? ` (entrada ${brl(centavosDoBanco(p.entrada_centavos))})` : ""}{p.comprovante ? ` · comprovante ${p.comprovante}` : ""}{p.situacao === "estornado" ? " · estornado" : p.situacao === "estorno_pendente" ? " · estorno a confirmar" : ""}</li>
           ))}
         </ul>
         <p className="mt-3 text-xs text-suave">Comprovante interno, sem valor fiscal. A nota fiscal é pedida abaixo e segue o fluxo combinado com o contador.</p>

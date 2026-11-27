@@ -2,7 +2,7 @@
 // formulários e mensagens. O banco decide de novo; aqui só se evita ir até ele com o que já se sabe errado.
 import { lerReais } from "@ora5g/dominio";
 
-export const PROVEDORES = { picpay: "PicPay", pagbank: "PagBank" } as const;
+export const PROVEDORES = { picpay: "PicPay", pagbank: "PagBank", mercado_pago: "Mercado Pago" } as const;
 export type Provedor = keyof typeof PROVEDORES;
 
 /** Situação do dinheiro de cada pagamento: venda não é dinheiro recebido (PAY-003). */

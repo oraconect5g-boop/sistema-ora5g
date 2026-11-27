@@ -458,8 +458,8 @@ describe("o que o PDV mostra", () => {
     expect(formas?.props.valorDosCelulares).toBe(124_900);
     const opcoes = formas?.props.opcoes as { meio: string; maximoDeParcelas: number | null; podeSerEntrada: boolean }[];
     expect(opcoes.map((o) => o.meio)).not.toContain("link_pagamento");
-    expect(Object.fromEntries(opcoes.map((o) => [o.meio, o.maximoDeParcelas]))).toMatchObject({ payjoy: 48, aiva: 48, cartao_picpay: 24, cartao_pagseguro: 24, dinheiro: null, pix_direto: null });
-    expect(opcoes.filter((o) => o.podeSerEntrada).map((o) => o.meio)).toEqual(["dinheiro", "pix_direto", "pix_picpay", "cartao_picpay", "cartao_pagseguro"]);
+    expect(Object.fromEntries(opcoes.map((o) => [o.meio, o.maximoDeParcelas]))).toMatchObject({ payjoy: 48, aiva: 48, credito_manual: 18, debito_manual: 1, pix_maquininha: null, dinheiro: null, pix_direto: null });
+    expect(opcoes.filter((o) => o.podeSerEntrada).map((o) => o.meio)).toEqual(["dinheiro", "pix_direto", "pix_maquininha", "credito_manual", "debito_manual"]);
     expect(formas?.props.terminais).toEqual([
       { id: MAQUININHA, provedor: "picpay", rotulo: "Balcão · PicPay PP-0001" }, { id: id("702"), provedor: "pagbank", rotulo: "Vitrine · PagBank PB-0002" }]);
   });
