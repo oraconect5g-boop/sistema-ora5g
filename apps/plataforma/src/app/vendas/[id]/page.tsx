@@ -1,4 +1,4 @@
-import { BANDEIRAS, ehBandeira } from "../../../lib/vendas/cartao-manual";
+import { textoDoPagamento, totaisDaVenda } from "../../../lib/vendas/comprovante";
 import { randomUUID } from "node:crypto";
 
 import { CheckCircle2, FileText, PackageCheck, Paperclip, Receipt, RotateCcw, Undo2, UserRound } from "lucide-react";
@@ -6,7 +6,7 @@ import type { Metadata } from "next";
 import Link from "next/link";
 import { notFound } from "next/navigation";
 
-import { MEIOS, nomeDoPagamento, textoDasParcelas } from "@ora5g/dominio";
+import { MEIOS } from "@ora5g/dominio";
 import { chaveEmGrupos, MODELOS_DE_NOTA, SITUACOES_DA_NOTA, type SituacaoDaNota } from "@ora5g/dominio/fiscal";
 
 import { FormularioDeArquivo } from "../../../componentes/FormularioDeArquivo";
@@ -163,6 +163,8 @@ export default async function Comprovante({ params, searchParams }: { params: Pr
   const linkDoAnexo = (caminho: string) => (linksDosAnexos.error ? null : linksDosAnexos.data?.find((l) => l.path === caminho && !l.error)?.signedUrl ?? null);
   const dataHora = (iso: string) => new Intl.DateTimeFormat("pt-BR", { timeZone: "America/Sao_Paulo", dateStyle: "short", timeStyle: "short" }).format(new Date(iso));
   const v = venda.data;
+  // Os totais e pagamentos usam a leitura compartilhada com “Dados para emitir”.
+  const totais = totaisDaVenda(v);
   // Devolução (adendo do ADR-004): o que resta de cada item e os meios em que dá para reembolsar.
   const devolvido = new Map<string, number>();
   for (const d of devolucoes.data) for (const i of d.venda_devolucao_itens) devolvido.set(i.venda_item_id, (devolvido.get(i.venda_item_id) ?? 0) + i.quantidade);
@@ -251,16 +253,16 @@ export default async function Comprovante({ params, searchParams }: { params: Pr
           })}
         </ul>
         <dl className="numeros mt-2 grid grid-cols-2 gap-1 border-t border-borda pt-2 text-sm">
-          <dt>Subtotal</dt><dd className="text-right">{brl(centavosDoBanco(v.subtotal_centavos ?? 0))}</dd>
-          <dt>Descontos</dt><dd className="text-right">− {brl(centavosDoBanco(v.desconto_centavos ?? 0))}</dd>
-          <dt className="font-semibold">Total</dt><dd className="text-right font-bold">{brl(centavosDoBanco(v.total_centavos ?? 0))}</dd>
-          {centavosDoBanco(v.troco_centavos ?? 0) > 0 && <><dt>Troco</dt><dd className="text-right">{brl(centavosDoBanco(v.troco_centavos ?? 0))}</dd></>}
-          {centavosDoBanco(v.a_receber_centavos ?? 0) > 0 && <><dt>A receber da financeira</dt><dd className="text-right">{brl(centavosDoBanco(v.a_receber_centavos ?? 0))}</dd></>}
-          {centavosDoBanco(v.devolvido_centavos) > 0 && <><dt>Devolvido</dt><dd className="text-right">− {brl(centavosDoBanco(v.devolvido_centavos))}</dd></>}
+          <dt>Subtotal</dt><dd className="text-right">{brl(totais.subtotal)}</dd>
+          <dt>Descontos</dt><dd className="text-right">− {brl(totais.desconto)}</dd>
+          <dt className="font-semibold">Total</dt><dd className="text-right font-bold">{brl(totais.total)}</dd>
+          {totais.troco > 0 && <><dt>Troco</dt><dd className="text-right">{brl(totais.troco)}</dd></>}
+          {totais.aReceber > 0 && <><dt>A receber da financeira</dt><dd className="text-right">{brl(totais.aReceber)}</dd></>}
+          {totais.devolvido > 0 && <><dt>Devolvido</dt><dd className="text-right">− {brl(totais.devolvido)}</dd></>}
         </dl>
         <ul className="mt-2 space-y-1 text-xs">
           {pagamentos.data.map((p) => (
-            <li key={p.ordem} className="numeros">{nomeDoPagamento({ meio: p.meio, entradaDoFinanciamento: p.entrada_do_financiamento })}: {brl(centavosDoBanco(p.valor_centavos))}{textoDasParcelas(p.meio, p.parcelas)}{p.modalidade_cartao === "debito" ? " · débito" : p.modalidade_cartao === "credito" ? " · crédito" : ""}{ehBandeira(p.bandeira_cartao) ? ` · ${BANDEIRAS[p.bandeira_cartao]}` : ""}{centavosDoBanco(p.acrescimo_cliente_centavos ?? 0) > 0 ? ` · acréscimo na maquininha: ${brl(centavosDoBanco(p.acrescimo_cliente_centavos))}` : ""}{centavosDoBanco(p.entrada_centavos) > 0 ? ` (entrada ${brl(centavosDoBanco(p.entrada_centavos))})` : ""}{p.comprovante ? ` · comprovante ${p.comprovante}` : ""}{p.situacao === "estornado" ? " · estornado" : p.situacao === "estorno_pendente" ? " · estorno a confirmar" : ""}</li>
+            <li key={p.ordem} className="numeros">{textoDoPagamento(p)}</li>
           ))}
         </ul>
         <p className="mt-3 text-xs text-suave">Comprovante interno, sem valor fiscal. A nota fiscal é pedida abaixo e segue o fluxo combinado com o contador.</p>
