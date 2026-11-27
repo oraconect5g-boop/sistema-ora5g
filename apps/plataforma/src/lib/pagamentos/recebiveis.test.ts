@@ -3,8 +3,9 @@
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 
 import {
-  consultarRecebiveis, enderecoDosRecebiveis, fracaoDaDiferenca, idadeDoRecebivel, lerFiltro, lerRecebiveis, porAdquirente, somar,
+  ADQUIRENTES, consultarRecebiveis, DO_EXTRATO, enderecoDosRecebiveis, fracaoDaDiferenca, idadeDoRecebivel, lerFiltro, lerRecebiveis, porAdquirente, somar,
 } from "./recebiveis";
+import { PROVEDORES } from "./regras";
 
 const A = "00000000-0000-4000-8000-0000000000a1";
 const B = "00000000-0000-4000-8000-0000000000b1";
@@ -93,6 +94,26 @@ describe("leitura estrita dos recebíveis (L8e)", () => {
     expect(lerFiltro({ loja: [A, B], dias: ["7", "90"] })).toEqual({ loja: null, dias: 30 });
     expect(enderecoDosRecebiveis({ loja: null, dias: 30 })).toBe("/pagamentos/recebiveis");
     expect(enderecoDosRecebiveis({ loja: A, dias: 7 })).toBe(`/pagamentos/recebiveis?loja=${A}&dias=7`);
+  });
+});
+
+describe("a Mercado Pago nos recebíveis (regressão do #112)", () => {
+  it("toda maquininha que o site conhece é adquirente dos recebíveis e se concilia pelo extrato", () => {
+    for (const provedor of Object.keys(PROVEDORES)) {
+      expect(Object.keys(ADQUIRENTES), provedor).toContain(provedor);
+      expect(DO_EXTRATO, provedor).toContain(provedor);
+    }
+  });
+
+  it("a linha e o mais antigo da Mercado Pago são lidos como os da PicPay (a primeira venda na maquininha não derruba a tela)", () => {
+    const r = resposta();
+    r.linhas.push(linha({ adquirente: "mercado_pago", a_receber: 2, valor_a_receber: 5_900, ate_7_dias: 5_900, mais_antiga_dias: 0 }));
+    r.total_a_receber = { quantidade: 6, valor: 159_500 };
+    r.mais_antigos.push({ tipo: "pagamento", id: "00000000-0000-4000-9000-000000000004", venda_id: VENDA, venda_numero: 29, unidade: A,
+      adquirente: "mercado_pago", valor: 3_900, dias: 0, terminal: "Mercado Pago (teste)" });
+    const lido = lerRecebiveis(r);
+    expect(lido.linhas.find((l) => l.adquirente === "mercado_pago")).toMatchObject({ unidade: A, aReceber: 2, valorAReceber: 5_900, ate7Dias: 5_900 });
+    expect(lido.maisAntigos.find((m) => m.adquirente === "mercado_pago")).toMatchObject({ vendaNumero: 29, valor: 3_900, terminal: "Mercado Pago (teste)" });
   });
 });
 
