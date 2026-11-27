@@ -12,7 +12,7 @@ Conferido no código e nos testes da `main` em `d90e184`:
 
 | Passo do pedido | Onde já está | Prova que já existia |
 |---|---|---|
-| Venda sem cliente (a identificação não é exigida em toda venda) | o Vender e o comprovante da venda | `packages/banco/src/pdv-l6.test.ts` |
+| Venda sem cliente (a identificação não é exigida em toda venda) | o Vender e o comprovante da venda | `packages/banco/src/vendas.test.ts` (vendas concluídas com o cliente vazio) |
 | Cadastro rápido: nome completo + WhatsApp; CPF e endereço só quando a nota no nome pede | `cliente_salvar` (#76, K1a); a tela em `/clientes/novo` | `packages/banco/src/clientes.test.ts` |
 | Ligar o cliente à venda concluída, com motivo | o comprovante, "Ligar a venda a um cliente da rede" (`venda_vincular_cliente`) | `packages/banco/src/crm.test.ts` |
 | Pedir a nota no nome do cliente, sem digitar o CPF | o comprovante, "Pedir nota fiscal" (`notas_solicitar` com o cliente) | `packages/banco/src/destinatario-fiscal.test.ts` |
