@@ -168,4 +168,35 @@ describe("NF-e modelo 55 no fluxo interno, de ponta a ponta (27/11/2026)", () =>
       .map((e) => `${e.situacao}/${e.origem}`)).toEqual(["na_fila/pedido"]);
     expect((await db.query("select telefone from privado.whatsapp_destinos where envio_id = $1", [envio])).rows).toEqual([{ telefone: "41987650955" }]);
   });
+
+  // NFE55-b: o que a tela da venda manda (cadastrarClienteNaVenda e completarClienteEPedirNota, em
+  // apps/plataforma/src/app/notas/acoes.ts), com as mesmas formas, contra as
+  // regras de verdade: o cadastro rápido com a lista de finalidades vazia, a ficha lida por quem vende e, numa gravação só,
+  // o CPF, o endereço e as finalidades que o cliente já tinha mais a nota fiscal (a lista vai inteira e não perde nenhuma).
+  it("NFE55-b: o cadastro rápido e o completar numa gravação só, como a tela manda, valem no banco e não perdem finalidade", async () => {
+    const ana = await naLoja(ids.vendedorA, ids.lojaA);
+    await valor(ana, "select public.abrir_caixa(10000, $1) as v", [chave("caixa")]);
+    const venda = await valor<string>(ana, "select public.criar_venda($1) as v", [chave("venda")]);
+    await valor(ana, "select public.adicionar_item($1, $2, null, 1, $3) as v", [venda, cat.capa, chave("item")]);
+    await valor(ana, "select public.concluir_venda($1, $2::jsonb, '{}'::jsonb, $3) as v", [venda, JSON.stringify([{ meio: "dinheiro", valor: 7_900 }]), chave("concluir")]);
+    // O cadastro rápido da tela: tipo, nome, WhatsApp e a lista vazia; a mesma chave do formulário devolve o mesmo cliente.
+    const rapido = JSON.stringify({ tipo: "pessoa_fisica", nome: "Bruno Nota Teste", telefone: "41987650956", finalidades: [] });
+    const chaveDoFormulario = "form:00000000-0000-4000-8000-00000000b001";
+    const bruno = (await valor<{ id: string }>(ana, SALVAR, [null, rapido, null, chaveDoFormulario])).id;
+    expect((await valor<{ id: string; repetida: boolean }>(ana, SALVAR, [null, rapido, null, chaveDoFormulario]))).toMatchObject({ id: bruno, repetida: true });
+    await valor(ana, "select public.venda_vincular_cliente($1, $2, 'Cliente cadastrado no comprovante da venda (cadastro rápido)') as v", [venda, bruno]);
+    expect(await valor<boolean>(ana, "select public.venda_vincular_cliente($1, $2, 'Cliente cadastrado no comprovante da venda (cadastro rápido)') as v", [venda, bruno])).toBe(false);
+    // O cliente ganha outra finalidade antes da nota (a assistência, por exemplo), pelo caminho de sempre.
+    await valor(ana, SALVAR, [bruno, JSON.stringify({ finalidades: ["assistencia"] }), "Cliente deixou um aparelho na assistência", null]);
+    const NO_NOME = JSON.stringify({ cliente: bruno });
+    expect(await tentar(ana, SOLICITAR, [venda, NO_NOME, chave("nota")])).toMatchObject({ codigo: "22023", mensagem: expect.stringContaining("não tem CPF/CNPJ no cadastro") });
+    // Quem vende lê a ficha (as finalidades e se há endereço, sem o endereço) e grava tudo de uma vez, como a ação.
+    expect(await valor<Record<string, unknown>>(ana, "select public.cliente_ficha($1) as v", [bruno])).toMatchObject({ finalidades: ["assistencia"], endereco_informado: false });
+    await valor(ana, SALVAR, [bruno, JSON.stringify({ documento: cpf("529982956"), endereco: ENDERECO, finalidades: ["assistencia", "nota_fiscal"] }),
+      "Dados para a nota fiscal da venda nº 1, pedidos no comprovante", null]);
+    expect((await db.query("select finalidades, endereco_informado from public.clientes where id = $1", [bruno])).rows[0])
+      .toEqual({ finalidades: ["assistencia", "nota_fiscal"], endereco_informado: true });
+    const pedido = await valor<string>(ana, SOLICITAR, [venda, NO_NOME, chave("nota")]);
+    expect((await db.query("select documento from privado.notas_destinatarios where pedido_id = $1", [pedido])).rows).toEqual([{ documento: cpf("529982956") }]);
+  });
 });

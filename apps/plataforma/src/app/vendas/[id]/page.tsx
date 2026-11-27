@@ -26,7 +26,12 @@ import { osDosItens, type OsDoItem } from "../../../lib/vendas/os-dos-itens";
 import { CONDICOES_DE_RETORNO, ERROS_DA_VENDA } from "../../../lib/vendas/regras";
 import { vincularClienteNaVenda } from "../../clientes/acoes";
 import { BuscaDeCliente } from "../../clientes/BuscaDeCliente";
-import { conferirEnvioDesconhecido, confirmarDestinatarioDaNota, corrigirChaveDaNota, corrigirNota, enviarNotaPeloWhatsApp, pedirNota, registrarCancelamentoNoFisco } from "../../notas/acoes";
+import {
+  cadastrarClienteNaVenda, completarClienteEPedirNota, conferirEnvioDesconhecido, confirmarDestinatarioDaNota, corrigirChaveDaNota, corrigirNota, enviarNotaPeloWhatsApp, pedirNota,
+  registrarCancelamentoNoFisco,
+} from "../../notas/acoes";
+import { ERROS_DO_CLIENTE } from "../../../lib/clientes/regras";
+import { ehFaltaDaNota, enderecoInformado, faltaParaANota, notaNaVendaLigada } from "../../../lib/notas/nota-na-venda";
 import { cancelarVenda, conferirRetorno, confirmarEstorno, devolverItens, retirarAnexo } from "../../vender/acoes";
 import { regraNaTela, regrasDosItens } from "../../../lib/vendas/regra-de-preco";
 import { fraseDaVendaDoSite, lerVendasDoSite } from "../../../lib/loja/vendas-do-site";
@@ -42,13 +47,16 @@ const FISICOS = new Set(["aparelho", "chip", "acessorio"]);
 
 // Comprovante digital (as lojas não têm impressora, DEC-U22). Lido pelo RLS: o vendedor vê as
 // próprias vendas; a gerência vê as da loja. A gerência cancela com estorno (ADR-004).
-export default async function Comprovante({ params, searchParams }: { params: Promise<{ id: string }>; searchParams: Promise<{ concluida?: ValorDeParametro; cancelada?: ValorDeParametro; erro?: ValorDeParametro; nota?: ValorDeParametro; erro_nota?: ValorDeParametro; devolvida?: ValorDeParametro; vale?: ValorDeParametro; estorno?: ValorDeParametro; retorno?: ValorDeParametro; cliente?: ValorDeParametro; anexo?: ValorDeParametro; erro_anexo?: ValorDeParametro }> }) {
+export default async function Comprovante({ params, searchParams }: { params: Promise<{ id: string }>; searchParams: Promise<{ concluida?: ValorDeParametro; cancelada?: ValorDeParametro; erro?: ValorDeParametro; nota?: ValorDeParametro; erro_nota?: ValorDeParametro; devolvida?: ValorDeParametro; vale?: ValorDeParametro; estorno?: ValorDeParametro; retorno?: ValorDeParametro; cliente?: ValorDeParametro; anexo?: ValorDeParametro; erro_anexo?: ValorDeParametro; erro_cliente?: ValorDeParametro }> }) {
   const { id } = await params;
   if (!ehUuid(id)) notFound();
   const parametros = await searchParams;
   const erro = chaveDoCatalogo(ERROS_DA_VENDA, parametros.erro);
   const erroNota = chaveDoCatalogo(ERROS_DAS_NOTAS, parametros.erro_nota);
   const erroAnexo = chaveDoCatalogo(ERROS_DOS_ANEXOS, parametros.erro_anexo);
+  const erroCliente = chaveDoCatalogo(ERROS_DO_CLIENTE, parametros.erro_cliente);
+  // NFE55-b: o cadastro rápido e o completar para a nota aqui mesmo, só com ORA_NOTA_NA_VENDA=1 (desligado por padrão).
+  const naVenda = notaNaVendaLigada();
   const sessao = await obterSessao({ exigirLoja: true });
   const { supabase, usuario, situacao } = sessao;
   // VEL-i (19/11): as leituras em 3 rodadas, contando a sessão, em vez de 7 a 8 em fila (o toque numa venda levava 1,86 s
@@ -93,7 +101,7 @@ export default async function Comprovante({ params, searchParams }: { params: Pr
   // confirmado, nada é lido.
   const leituraDosDebitos = lerDebitosDosEstornos(supabase, estornos.data.filter((e) => e.situacao === "confirmado").map((e) => e.id));
   const [loja, vendedor, nomesDoVendedor, podeCancelar, podePedirNota, aprovaNota, variantes, serializados, documentosDaNota, protocoloDaNota, origemDaNota,
-    enviosDaNota, cartasDaNota, daOs, canceladasDoBanco, anexosLidos, regras] = await Promise.all([
+    enviosDaNota, cartasDaNota, daOs, canceladasDoBanco, anexosLidos, regras, fichaDoCliente] = await Promise.all([
     supabase.from("unidades").select("nome, cnpj").eq("id", venda.data.unidade_id).maybeSingle(),
     supabase.from("perfis_usuario").select("nome").eq("id", venda.data.vendedor_id).maybeSingle(),
     comRanking ? nomesDoRanking(supabase, [venda.data.vendedor_id]) : Promise.resolve(null),
@@ -129,6 +137,10 @@ export default async function Comprovante({ params, searchParams }: { params: Pr
     // Documentos da venda (L5d), lidos à parte: num banco sem a migration (sem a tabela), o bloco não aparece.
     fechada ? supabase.from("venda_anexos").select("id, tipo, descricao, caminho, formato, bytes, enviado_em, retirado_em, motivo_retirada").eq("venda_id", id).order("enviado_em") : Promise.resolve(null),
     regrasEmCurso,
+    // NFE55-b: sem o CPF/CNPJ para a nota no nome do cliente, a ficha diz se o endereço já está guardado (sem mostrá-lo). Só
+    // nesse caso, na mesma rodada; a leitura fica na auditoria do cliente, e a falha dela não derruba o comprovante.
+    naVenda && erroNota === "cliente_sem_documento" && venda.data.cliente_id && venda.data.situacao === "concluida" && !nota.data && buscaCliente && permite(sessao, "cliente.cadastrar")
+      ? supabase.rpc("cliente_ficha", { p_cliente: venda.data.cliente_id }) : Promise.resolve(null),
   ]);
   const doSite = await leituraDoSite;
   const debitosLidos = await leituraDosDebitos;
@@ -163,6 +175,10 @@ export default async function Comprovante({ params, searchParams }: { params: Pr
   const linkDoAnexo = (caminho: string) => (linksDosAnexos.error ? null : linksDosAnexos.data?.find((l) => l.path === caminho && !l.error)?.signedUrl ?? null);
   const dataHora = (iso: string) => new Intl.DateTimeFormat("pt-BR", { timeZone: "America/Sao_Paulo", dateStyle: "short", timeStyle: "short" }).format(new Date(iso));
   const v = venda.data;
+  // NFE55-b: a nota no nome do cliente recusada por falta do CPF/CNPJ ou do endereço se completa aqui, no MESMO cadastro.
+  const cadastraCliente = naVenda && buscaCliente && permite(sessao, "cliente.cadastrar");
+  const faltaDaNota = cadastraCliente && v.cliente_id && v.situacao === "concluida" && !nota.data && podePedirNota.data && ehFaltaDaNota(erroNota) ? erroNota : null;
+  const falta = faltaDaNota ? faltaParaANota(faltaDaNota, fichaDoCliente && !fichaDoCliente.error ? enderecoInformado(fichaDoCliente.data) : null) : null;
   // Devolução (adendo do ADR-004): o que resta de cada item e os meios em que dá para reembolsar.
   const devolvido = new Map<string, number>();
   for (const d of devolucoes.data) for (const i of d.venda_devolucao_itens) devolvido.set(i.venda_item_id, (devolvido.get(i.venda_item_id) ?? 0) + i.quantidade);
@@ -204,12 +220,14 @@ export default async function Comprovante({ params, searchParams }: { params: Pr
       {erroNota && (
         <Aviso tom="perigo">
           {ERROS_DAS_NOTAS[erroNota]}
-          {/* K1b (#76): completa-se o MESMO cadastro do cliente e pede-se a nota de novo. */}
-          {(erroNota === "cliente_sem_endereco" || erroNota === "cliente_sem_documento") && v.cliente_id && (
-            <> <Link href={`/clientes/${v.cliente_id}`} className="font-semibold underline">Completar o cadastro do cliente</Link></>
+          {/* K1b (#76): completa-se o MESMO cadastro do cliente e pede-se a nota de novo; com o NFE55-b ligado, aqui mesmo. */}
+          {(erroNota === "cliente_sem_endereco" || erroNota === "cliente_sem_documento") && v.cliente_id && (falta
+            ? <> Complete abaixo, no bloco “Nota fiscal”, ou na <Link href={`/clientes/${v.cliente_id}`} className="font-semibold underline">ficha do cliente</Link>.</>
+            : <> <Link href={`/clientes/${v.cliente_id}`} className="font-semibold underline">Completar o cadastro do cliente</Link></>
           )}
         </Aviso>
       )}
+      {erroCliente && <Aviso tom="perigo">{ERROS_DO_CLIENTE[erroCliente]}</Aviso>}
       {textoDoParametro(parametros.devolvida) && <Aviso tom="sucesso">Devolução nº {textoDoParametro(parametros.devolvida)} registrada: estoque e caixa atualizados.{textoDoParametro(parametros.vale) ? ` Vale-troca nº ${textoDoParametro(parametros.vale)} criado: informe esse número no pagamento da nova venda.` : ""}</Aviso>}
       {textoDoParametro(parametros.nota) === "pedida" && <Aviso tom="sucesso">Nota pedida: aparece na fila do dono e do gerente.</Aviso>}
       {textoDoParametro(parametros.nota) === "corrigida" && <Aviso tom="sucesso">Correção enviada: o pedido voltou para a fila.</Aviso>}
@@ -267,8 +285,8 @@ export default async function Comprovante({ params, searchParams }: { params: Pr
       </Cartao>
       {textoDoParametro(parametros.cliente) === "1" && <Aviso tom="sucesso">Cliente da venda atualizado; o motivo ficou na auditoria.</Aviso>}
       {v.situacao === "concluida" && buscaCliente && (
-        <details className="rounded-xl border border-borda bg-white px-3 py-2">
-          <summary className="flex min-h-10 cursor-pointer items-center gap-2 text-sm font-semibold text-acao"><UserRound aria-hidden className="size-4" /> {v.cliente_id ? "Trocar ou tirar o cliente da venda" : "Ligar a venda a um cliente da rede"}</summary>
+        <details className="rounded-xl border border-borda bg-white px-3 py-2" open={cadastraCliente && !v.cliente_id && Boolean(erroCliente) && !falta}>
+          <summary className="flex min-h-10 cursor-pointer items-center gap-2 text-sm font-semibold text-acao"><UserRound aria-hidden className="size-4" /> {v.cliente_id ? "Trocar ou tirar o cliente da venda" : cadastraCliente ? "Ligar ou cadastrar o cliente da venda" : "Ligar a venda a um cliente da rede"}</summary>
           <form action={vincularClienteNaVenda} className="mt-2 space-y-2">
             <input type="hidden" name="venda" value={v.id} />
             <BuscaDeCliente modo="escolher" />
@@ -276,6 +294,24 @@ export default async function Comprovante({ params, searchParams }: { params: Pr
             <label className="block text-sm font-medium">Motivo (fica na auditoria)<input name="motivo" required minLength={3} maxLength={200} placeholder="Cliente esqueceu o CPF na hora" className={campo} /></label>
             <Botao type="submit" tamanho="sm">Gravar</Botao>
           </form>
+          {/* NFE55-b: o cadastro rápido (nome completo + WhatsApp, #76) sem abrir outra aba; o cliente já fica ligado à venda. */}
+          {cadastraCliente && !v.cliente_id && (
+            <form action={cadastrarClienteNaVenda} className="mt-3 space-y-2 border-t border-borda pt-3">
+              <input type="hidden" name="venda" value={v.id} /><input type="hidden" name="chave" value={randomUUID()} />
+              <p className="text-sm font-semibold">Não achou? Cadastre aqui mesmo</p>
+              <p className="text-xs text-suave">Só o nome completo e o WhatsApp: o CPF e o endereço ficam para quando a nota no nome do cliente pedir. O cadastro já fica ligado a esta venda.</p>
+              <div className="flex flex-wrap gap-4 text-sm">
+                <label className="flex min-h-10 items-center gap-2"><input type="radio" name="tipo" value="pessoa_fisica" defaultChecked className="size-4 accent-acao" /> Pessoa física</label>
+                <label className="flex min-h-10 items-center gap-2"><input type="radio" name="tipo" value="pessoa_juridica" className="size-4 accent-acao" /> Empresa</label>
+              </div>
+              <label className="block text-sm font-medium">Nome completo (ou a razão social da empresa)<input name="nome" required minLength={2} maxLength={120} autoComplete="off" placeholder="Nome e sobrenome" className={campo} /></label>
+              <label className="block text-sm font-medium">WhatsApp com DDD<input name="telefone" required inputMode="tel" maxLength={20} autoComplete="off" placeholder="(41) 9 0000-0000" className={campo} /></label>
+              {erroCliente === "telefone_repetido" && (
+                <label className="flex min-h-10 items-center gap-2 text-sm"><input type="checkbox" name="telefone_compartilhado" value="sim" className="size-4 accent-acao" /> O número é de outra pessoa já cadastrada (da família, por exemplo)</label>
+              )}
+              <Botao type="submit" tamanho="sm" variante="secundario">Cadastrar e ligar à venda</Botao>
+            </form>
+          )}
         </details>
       )}
       {v.situacao === "concluida" && (nota.data || podePedirNota.data || historicoDoFisco) && (
@@ -401,6 +437,30 @@ export default async function Comprovante({ params, searchParams }: { params: Pr
               )}
             </div>
           ) : podePedirNota.data ? (
+            <>
+            {/* NFE55-b: o que a nota no nome do cliente pediu, no MESMO cadastro, e a nota pedida no mesmo toque. */}
+            {falta && v.cliente_id && (
+              <form action={completarClienteEPedirNota} className="mb-3 grid gap-2 rounded-xl border border-borda p-3 sm:grid-cols-6">
+                <input type="hidden" name="venda" value={v.id} /><input type="hidden" name="cliente" value={v.cliente_id} />
+                <input type="hidden" name="numero" value={String(v.numero)} /><input type="hidden" name="falta" value={faltaDaNota ?? ""} />
+                <input type="hidden" name="chave" value={randomUUID()} />
+                <p className="text-sm font-semibold sm:col-span-6">Completar o cliente para a nota no nome dele</p>
+                {falta.documento && <label className="text-xs font-medium sm:col-span-6">CPF ou CNPJ do cliente<input name="documento" required inputMode="numeric" maxLength={18} autoComplete="off" className={campo} /></label>}
+                {falta.endereco && (
+                  <>
+                    <label className="text-xs font-medium sm:col-span-2">CEP<input name="endereco_cep" required inputMode="numeric" maxLength={9} autoComplete="off" className={campo} /></label>
+                    <label className="text-xs font-medium sm:col-span-4">Rua<input name="endereco_logradouro" required minLength={3} maxLength={120} autoComplete="off" className={campo} /></label>
+                    <label className="text-xs font-medium sm:col-span-2">Número<input name="endereco_numero" required maxLength={10} autoComplete="off" className={campo} /></label>
+                    <label className="text-xs font-medium sm:col-span-4">Complemento<input name="endereco_complemento" maxLength={60} autoComplete="off" className={campo} /></label>
+                    <label className="text-xs font-medium sm:col-span-3">Bairro<input name="endereco_bairro" required minLength={2} maxLength={60} autoComplete="off" className={campo} /></label>
+                    <label className="text-xs font-medium sm:col-span-2">Cidade<input name="endereco_cidade" required minLength={2} maxLength={60} autoComplete="off" className={campo} /></label>
+                    <label className="text-xs font-medium sm:col-span-1">UF<input name="endereco_uf" required minLength={2} maxLength={2} autoComplete="off" className={`${campo} uppercase`} /></label>
+                  </>
+                )}
+                <p className="text-xs text-suave sm:col-span-6">Entra no MESMO cadastro do cliente, com a finalidade “nota fiscal” e o motivo na auditoria, e a nota é pedida no nome dele.</p>
+                <div className="sm:col-span-6"><Botao type="submit" tamanho="sm">Completar e pedir a nota</Botao></div>
+              </form>
+            )}
             <form action={pedirNota} className="grid gap-2 sm:grid-cols-2">
               <input type="hidden" name="venda" value={v.id} /><input type="hidden" name="chave" value={randomUUID()} />
               {v.cliente_id && buscaCliente && (
@@ -412,6 +472,7 @@ export default async function Comprovante({ params, searchParams }: { params: Pr
               <p className="text-xs text-suave sm:col-span-2">O pedido vai para a fila do dono e do gerente; o CPF e o endereço ficam guardados só até a emissão.</p>
               <div><Botao type="submit" tamanho="sm">Pedir nota fiscal</Botao></div>
             </form>
+            </>
           ) : null}
         </Cartao>
       )}

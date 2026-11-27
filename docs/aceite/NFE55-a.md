@@ -66,7 +66,7 @@ O que faltava era pouco: (1) quem emite precisava trocar de tela para copiar os 
 
 ## O que falta (os próximos passos, sem inventar)
 
-- **NFE55-b, completar o cliente na própria tela da venda.** Hoje, quando a nota no nome pede o CPF ou o endereço, o comprovante leva à ficha do cliente. E "Cadastrar cliente" abre `/clientes/novo` numa aba nova. O passo seguinte é completar ali mesmo e pedir a nota. A prova deste lote achou uma regra que ele precisa seguir: as finalidades do cadastro vão inteiras a cada gravação, então quem completa manda as que o cliente já tem mais "nota fiscal".
+- **NFE55-b, completar o cliente na própria tela da venda** (feito na mesma branch, desligado por padrão: [NFE55-b.md](NFE55-b.md)). Hoje, quando a nota no nome pede o CPF ou o endereço, o comprovante leva à ficha do cliente. E "Cadastrar cliente" abre `/clientes/novo` numa aba nova. O passo seguinte é completar ali mesmo e pedir a nota. A prova deste lote achou uma regra que ele precisa seguir: as finalidades do cadastro vão inteiras a cada gravação, então quem completa manda as que o cliente já tem mais "nota fiscal".
 - **Os dados fiscais dos produtos** (NCM, CEST, CFOP, origem) não existem no cadastro e dependem da matriz do contador (ORA-FISC-003 e ORA-FISC-007).
 - **O emissor fiscal:** o provedor fiscal da REIN ainda não foi identificado, e a emissão integrada segue bloqueada (ORA-FISC-004). Enquanto isso vale a emissão externa registrada pela chave.
 - **A Meta** não está configurada, e o envio pelo WhatsApp fica na fila (lote WHATS-a).
