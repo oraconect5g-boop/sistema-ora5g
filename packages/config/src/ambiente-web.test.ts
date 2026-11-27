@@ -47,6 +47,10 @@ describe("configuração do aplicativo web na publicação (#55)", () => {
     expect(modo).toBe(0o600);
   });
 
+  it("o interruptor do NFE55-b (ORA_NOTA_NA_VENDA) não chega ao web até a etapa B2 (revisão de 27/11/2026)", () => {
+    expect(filtrar("APP_ENV=homologacao\nORA_NOTA_NA_VENDA=1\nexport ORA_NOTA_NA_VENDA=1\n").web).toBe("APP_ENV=homologacao\n");
+  });
+
   it("arquivo só com segredos gera o web vazio, sem erro", () => {
     expect(filtrar("SUPABASE_SECRET_KEY=ficticia\nNOGLE_ACCESS_KEY=ficticia\n").web).toBe("");
   });

@@ -173,9 +173,10 @@ describe("o comprovante com a PayJoy, a entrada à parte e as parcelas (PDV-c)",
       { venda_id: VENDA, ordem: 3, meio: "cartao_picpay", valor_centavos: 1_000, entrada_centavos: 0, comprovante: "NSU-1", situacao: "confirmado", parcelas: 3, entrada_do_financiamento: false },
     ];
     const t = await comprovante();
-    expect(t).toContain("Recebimento via PayJoy : R$ 1.199,00 em 12x");
-    expect(t).toContain("Entrada do financiamento (Dinheiro) : R$ 300,00");
-    expect(t).toContain("Cartão na maquininha PicPay : R$ 10,00 em 3x");
+    // Cada linha numa peça só (lib/vendas/comprovante.ts, a mesma leitura de "Dados para emitir"): o texto é o da tela.
+    expect(t).toContain("Recebimento via PayJoy: R$ 1.199,00 em 12x");
+    expect(t).toContain("Entrada do financiamento (Dinheiro): R$ 300,00");
+    expect(t).toContain("Cartão na maquininha PicPay: R$ 10,00 em 3x");
   });
 });
 

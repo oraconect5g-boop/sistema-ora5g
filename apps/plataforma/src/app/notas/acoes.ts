@@ -7,8 +7,12 @@ import { redirect } from "next/navigation";
 import { ehUuid } from "../../lib/acesso/regras";
 import { enderecoDaConfirmacao, precisaConfirmar } from "../../lib/acesso/confirmacao";
 import { obterSessao } from "../../lib/acesso/sessao";
+import { erroDoCliente, lerCliente } from "../../lib/clientes/regras";
+import { RespostaInesperada } from "../../lib/financeiro/painel";
 import { ehPeriodo, ehTipoDeDivergencia, enderecoDaConciliacao, erroDaConciliacao } from "../../lib/notas/conciliacao";
+import { ehFaltaDaNota, finalidadesComANota, motivoDaNota, notaNaVendaLigada } from "../../lib/notas/nota-na-venda";
 import { erroDasNotas } from "../../lib/notas/regras";
+import type { Json } from "../../lib/supabase/tipos-banco";
 
 // Fila fiscal (ADR-006): cada ação chama UMA função do banco como a pessoa logada. Nada é emitido
 // pelo sistema (sem emissor contratado): a emissão é registrada pela chave de acesso.
@@ -185,4 +189,68 @@ export async function conferirDivergencia(dados: FormData) {
   const { supabase } = await obterSessao({ exigirLoja: true });
   const { error } = await supabase.rpc("notas_conferir_divergencia", { p_pedido: pedido, p_tipo: tipo, p_observacao: observacao });
   redirect(error ? `${volta}&erro=${erroDaConciliacao(error)}` : `${volta}&ok=conferida`);
+}
+
+// NFE55-b (27/11/2026): o cliente e a nota no nome dele sem sair da tela da venda. Cada ação chama as funções do banco que
+// já existem, como a pessoa logada: o banco confere de novo a loja, a permissão, os dados mínimos e a idempotência, e
+// guarda a auditoria. Nada de dado pessoal no endereço da página: o erro volta só como um código. Desligadas por padrão
+// (só com ORA_NOTA_NA_VENDA=1).
+
+/** O cadastro rápido na venda concluída sem cliente (nome completo ou razão social + WhatsApp) e a ligação à venda. */
+export async function cadastrarClienteNaVenda(dados: FormData) {
+  const venda = dados.get("venda");
+  if (!ehUuid(venda)) redirect("/vendas?erro=dados");
+  if (!notaNaVendaLigada()) redirect(`/vendas/${venda}?erro_nota=na_venda_desligada`);
+  const lido = lerCliente(dados, false);
+  if (!lido.ok) redirect(`/vendas/${venda}?erro_cliente=${lido.erro}`);
+  const { supabase } = await obterSessao({ exigirLoja: true });
+  // A mesma chave do formulário devolve o mesmo cliente (o toque repetido não cadastra dois).
+  const criado = await supabase.rpc("cliente_salvar", {
+    p_cliente: null as unknown as string, p_dados: lido.dados as unknown as Json, p_motivo: null as unknown as string, p_chave: `form:${chaveDe(dados)}`,
+  });
+  if (criado.error) redirect(`/vendas/${venda}?erro_cliente=${erroDoCliente(criado.error)}`);
+  const cliente = (criado.data as { id?: unknown } | null)?.id;
+  if (!ehUuid(cliente)) redirect(`/vendas/${venda}?erro_cliente=falha`);
+  // Ligar de novo o mesmo cliente não muda nada (o banco devolve "sem mudança").
+  const { error } = await supabase.rpc("venda_vincular_cliente", { p_venda: venda, p_cliente: cliente, p_motivo: "Cliente cadastrado no comprovante da venda (cadastro rápido)" });
+  if (error) redirect(`/vendas/${venda}?erro=${error.code === "P0002" ? "cliente" : error.code === "22023" ? "dados" : "falha"}`);
+  redirect(`/vendas/${venda}?cliente=1`);
+}
+
+/**
+ * A nota no nome do cliente recusada por falta do CPF/CNPJ ou do endereço: completa o MESMO cadastro (com o motivo na
+ * auditoria e as finalidades que ele já tinha, mais a nota fiscal) e pede a nota no nome dele.
+ */
+export async function completarClienteEPedirNota(dados: FormData) {
+  const venda = dados.get("venda");
+  const cliente = dados.get("cliente");
+  if (!ehUuid(venda) || !ehUuid(cliente)) redirect("/vendas?erro=dados");
+  if (!notaNaVendaLigada()) redirect(`/vendas/${venda}?erro_nota=na_venda_desligada`);
+  const falta = dados.get("falta");
+  // Com erro, volta para a mesma tela com o formulário aberto (o que faltava) e o motivo do erro; o que foi digitado não
+  // vai na URL. O tipo explícito (never) é o que deixa o TypeScript seguir o fluxo depois de cada volta.
+  const voltar: (erroDoClienteOuDaNota: string) => never = (erroDoClienteOuDaNota) =>
+    redirect(`/vendas/${venda}?erro_nota=${ehFaltaDaNota(falta) ? falta : "cliente_sem_documento"}&erro_cliente=${erroDoClienteOuDaNota}`);
+  const lido = lerCliente(dados, true);
+  if (!lido.ok) voltar(lido.erro);
+  if (!lido.dados.documento && !lido.dados.endereco) voltar("dados");
+  const { supabase } = await obterSessao({ exigirLoja: true });
+  // As finalidades que o cliente já tem, lidas na hora (a ficha fica na auditoria): a lista vai inteira, com a nota fiscal.
+  const ficha = await supabase.rpc("cliente_ficha", { p_cliente: cliente });
+  if (ficha.error) voltar(erroDoCliente(ficha.error));
+  const finalidades = (() => {
+    try {
+      return finalidadesComANota(ficha.data);
+    } catch (erro) {
+      if (erro instanceof RespostaInesperada) return null;
+      throw erro;
+    }
+  })();
+  if (!finalidades) voltar("falha");
+  const salvo = await supabase.rpc("cliente_salvar", {
+    p_cliente: cliente, p_dados: { ...lido.dados, finalidades } as unknown as Json, p_motivo: motivoDaNota(dados.get("numero")), p_chave: null as unknown as string,
+  });
+  if (salvo.error) voltar(erroDoCliente(salvo.error));
+  const { error } = await supabase.rpc("notas_solicitar", { p_venda: venda, p_destinatario: { cliente }, p_chave: chaveDe(dados) });
+  redirect(error ? `/vendas/${venda}?erro_nota=${erroDasNotas(error)}` : `/vendas/${venda}?nota=pedida`);
 }

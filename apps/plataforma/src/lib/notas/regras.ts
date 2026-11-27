@@ -49,6 +49,8 @@ export const ERROS_DAS_NOTAS = {
   carta_protocolo_repetido: "Este protocolo já está registrado em outra carta de correção: confira no portal.",
   carta_nfce: "A carta de correção é só da NF-e. A NFC-e não tem: para corrigir, cancele a nota no fisco e peça outra.",
   carta_nao_emitida: "Só a nota emitida (autorizada e não cancelada) tem carta de correção: recarregue a venda.",
+  // NFE55-b: o cadastro rápido e o completar para a nota na tela da venda, desligados por padrão (ORA_NOTA_NA_VENDA).
+  na_venda_desligada: "Cadastrar ou completar o cliente na tela da venda está desligado neste ambiente: use a ficha do cliente.",
   falha: "Não foi possível concluir agora. Tente de novo em instantes.",
 } as const;
 export type ErroDasNotas = keyof typeof ERROS_DAS_NOTAS;
