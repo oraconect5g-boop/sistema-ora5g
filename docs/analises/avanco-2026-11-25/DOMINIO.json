@@ -1,0 +1,253 @@
+{
+  "versao": {
+    "commit": "e7f55b2f0a4f8beaef4109307ab3a7ad40019131",
+    "versao": "0.1.0",
+    "build": "2026-11-26T00:07:34.382Z",
+    "ambiente": "homologacao"
+  },
+  "browser_tls": "Chromium deste ambiente não confiou na cadeia; inspeção visual repetida com ignoreHTTPSErrors. Não é uma validação TLS independente.",
+  "paginas": [
+    {
+      "path": "/loja",
+      "width": 360,
+      "status": 200,
+      "url": "https://ora5g.com.br/loja",
+      "headers": {
+        "cache-control": "private, no-cache, no-store, max-age=0, must-revalidate",
+        "content-encoding": "gzip",
+        "content-type": "text/html; charset=utf-8",
+        "date": "Thu, 26 Nov 2026 01:57:42 GMT",
+        "link": "</_next/static/media/d8aeca813a9ab546-s.p.18rizl4rsrl42.woff2>; rel=preload; as=\"font\"; crossorigin=\"\"; type=\"font/woff2\", </_next/static/chunks/350xv6dvcev_4.css>; rel=preload; as=\"style\"",
+        "server": "envoy",
+        "vary": "rsc,next-router-state-tree,next-router-prefetch,next-router-segment-prefetch,Accept-Encoding",
+        "x-envoy-upstream-service-time": "1571"
+      },
+      "headings": [
+        "Tudo para o seu celular, com retirada na loja",
+        "Todos os produtos"
+      ],
+      "overflow": {
+        "inner": 360,
+        "scroll": 360
+      },
+      "errors": []
+    },
+    {
+      "path": "/entrar",
+      "width": 360,
+      "status": 200,
+      "url": "https://ora5g.com.br/entrar",
+      "headers": {
+        "cache-control": "private, no-cache, no-store, max-age=0, must-revalidate",
+        "content-encoding": "gzip",
+        "content-type": "text/html; charset=utf-8",
+        "date": "Thu, 26 Nov 2026 01:57:47 GMT",
+        "link": "</_next/static/media/d8aeca813a9ab546-s.p.18rizl4rsrl42.woff2>; rel=preload; as=\"font\"; crossorigin=\"\"; type=\"font/woff2\"",
+        "server": "envoy",
+        "vary": "rsc,next-router-state-tree,next-router-prefetch,next-router-segment-prefetch,Accept-Encoding",
+        "x-envoy-upstream-service-time": "166"
+      },
+      "headings": [
+        "Bem-vindo à Ora"
+      ],
+      "overflow": {
+        "inner": 360,
+        "scroll": 360
+      },
+      "errors": []
+    },
+    {
+      "path": "/connect",
+      "width": 360,
+      "status": 200,
+      "url": "https://ora5g.com.br/entrar",
+      "headers": {
+        "cache-control": "private, no-cache, no-store, max-age=0, must-revalidate",
+        "content-encoding": "gzip",
+        "content-type": "text/html; charset=utf-8",
+        "date": "Thu, 26 Nov 2026 01:57:49 GMT",
+        "link": "</_next/static/media/d8aeca813a9ab546-s.p.18rizl4rsrl42.woff2>; rel=preload; as=\"font\"; crossorigin=\"\"; type=\"font/woff2\"",
+        "server": "envoy",
+        "vary": "rsc,next-router-state-tree,next-router-prefetch,next-router-segment-prefetch,Accept-Encoding",
+        "x-envoy-upstream-service-time": "158"
+      },
+      "headings": [
+        "Bem-vindo à Ora"
+      ],
+      "overflow": {
+        "inner": 360,
+        "scroll": 360
+      },
+      "errors": []
+    },
+    {
+      "path": "/financeiro",
+      "width": 360,
+      "status": 200,
+      "url": "https://ora5g.com.br/entrar",
+      "headers": {
+        "cache-control": "private, no-cache, no-store, max-age=0, must-revalidate",
+        "content-encoding": "gzip",
+        "content-type": "text/html; charset=utf-8",
+        "date": "Thu, 26 Nov 2026 01:57:52 GMT",
+        "link": "</_next/static/media/d8aeca813a9ab546-s.p.18rizl4rsrl42.woff2>; rel=preload; as=\"font\"; crossorigin=\"\"; type=\"font/woff2\"",
+        "server": "envoy",
+        "vary": "rsc,next-router-state-tree,next-router-prefetch,next-router-segment-prefetch,Accept-Encoding",
+        "x-envoy-upstream-service-time": "159"
+      },
+      "headings": [
+        "Bem-vindo à Ora"
+      ],
+      "overflow": {
+        "inner": 360,
+        "scroll": 360
+      },
+      "errors": []
+    },
+    {
+      "path": "/demo",
+      "width": 360,
+      "status": 404,
+      "url": "https://ora5g.com.br/demo",
+      "headers": {
+        "cache-control": "private, no-cache, no-store, max-age=0, must-revalidate",
+        "content-encoding": "gzip",
+        "content-type": "text/html; charset=utf-8",
+        "date": "Thu, 26 Nov 2026 01:57:54 GMT",
+        "link": "</_next/static/media/d8aeca813a9ab546-s.p.18rizl4rsrl42.woff2>; rel=preload; as=\"font\"; crossorigin=\"\"; type=\"font/woff2\", </_next/static/chunks/350xv6dvcev_4.css>; rel=preload; as=\"style\"",
+        "server": "envoy",
+        "vary": "rsc,next-router-state-tree,next-router-prefetch,next-router-segment-prefetch,Accept-Encoding",
+        "x-envoy-upstream-service-time": "191"
+      },
+      "headings": [
+        "Página não encontrada"
+      ],
+      "overflow": {
+        "inner": 360,
+        "scroll": 360
+      },
+      "errors": []
+    },
+    {
+      "path": "/loja",
+      "width": 1440,
+      "status": 200,
+      "url": "https://ora5g.com.br/loja",
+      "headers": {
+        "cache-control": "private, no-cache, no-store, max-age=0, must-revalidate",
+        "content-encoding": "gzip",
+        "content-type": "text/html; charset=utf-8",
+        "date": "Thu, 26 Nov 2026 01:57:57 GMT",
+        "link": "</_next/static/media/d8aeca813a9ab546-s.p.18rizl4rsrl42.woff2>; rel=preload; as=\"font\"; crossorigin=\"\"; type=\"font/woff2\", </_next/static/chunks/350xv6dvcev_4.css>; rel=preload; as=\"style\"",
+        "server": "envoy",
+        "vary": "rsc,next-router-state-tree,next-router-prefetch,next-router-segment-prefetch,Accept-Encoding",
+        "x-envoy-upstream-service-time": "580"
+      },
+      "headings": [
+        "Tudo para o seu celular, com retirada na loja",
+        "Todos os produtos"
+      ],
+      "overflow": {
+        "inner": 1440,
+        "scroll": 1440
+      },
+      "errors": []
+    },
+    {
+      "path": "/entrar",
+      "width": 1440,
+      "status": 200,
+      "url": "https://ora5g.com.br/entrar",
+      "headers": {
+        "cache-control": "private, no-cache, no-store, max-age=0, must-revalidate",
+        "content-encoding": "gzip",
+        "content-type": "text/html; charset=utf-8",
+        "date": "Thu, 26 Nov 2026 01:58:00 GMT",
+        "link": "</_next/static/media/d8aeca813a9ab546-s.p.18rizl4rsrl42.woff2>; rel=preload; as=\"font\"; crossorigin=\"\"; type=\"font/woff2\"",
+        "server": "envoy",
+        "vary": "rsc,next-router-state-tree,next-router-prefetch,next-router-segment-prefetch,Accept-Encoding",
+        "x-envoy-upstream-service-time": "167"
+      },
+      "headings": [
+        "Bem-vindo à Ora"
+      ],
+      "overflow": {
+        "inner": 1440,
+        "scroll": 1440
+      },
+      "errors": []
+    },
+    {
+      "path": "/connect",
+      "width": 1440,
+      "status": 200,
+      "url": "https://ora5g.com.br/entrar",
+      "headers": {
+        "cache-control": "private, no-cache, no-store, max-age=0, must-revalidate",
+        "content-encoding": "gzip",
+        "content-type": "text/html; charset=utf-8",
+        "date": "Thu, 26 Nov 2026 01:58:03 GMT",
+        "link": "</_next/static/media/d8aeca813a9ab546-s.p.18rizl4rsrl42.woff2>; rel=preload; as=\"font\"; crossorigin=\"\"; type=\"font/woff2\"",
+        "server": "envoy",
+        "vary": "rsc,next-router-state-tree,next-router-prefetch,next-router-segment-prefetch,Accept-Encoding",
+        "x-envoy-upstream-service-time": "162"
+      },
+      "headings": [
+        "Bem-vindo à Ora"
+      ],
+      "overflow": {
+        "inner": 1440,
+        "scroll": 1440
+      },
+      "errors": []
+    },
+    {
+      "path": "/financeiro",
+      "width": 1440,
+      "status": 200,
+      "url": "https://ora5g.com.br/entrar",
+      "headers": {
+        "cache-control": "private, no-cache, no-store, max-age=0, must-revalidate",
+        "content-encoding": "gzip",
+        "content-type": "text/html; charset=utf-8",
+        "date": "Thu, 26 Nov 2026 01:58:05 GMT",
+        "link": "</_next/static/media/d8aeca813a9ab546-s.p.18rizl4rsrl42.woff2>; rel=preload; as=\"font\"; crossorigin=\"\"; type=\"font/woff2\"",
+        "server": "envoy",
+        "vary": "rsc,next-router-state-tree,next-router-prefetch,next-router-segment-prefetch,Accept-Encoding",
+        "x-envoy-upstream-service-time": "166"
+      },
+      "headings": [
+        "Bem-vindo à Ora"
+      ],
+      "overflow": {
+        "inner": 1440,
+        "scroll": 1440
+      },
+      "errors": []
+    },
+    {
+      "path": "/demo",
+      "width": 1440,
+      "status": 404,
+      "url": "https://ora5g.com.br/demo",
+      "headers": {
+        "cache-control": "private, no-cache, no-store, max-age=0, must-revalidate",
+        "content-encoding": "gzip",
+        "content-type": "text/html; charset=utf-8",
+        "date": "Thu, 26 Nov 2026 01:58:07 GMT",
+        "link": "</_next/static/media/d8aeca813a9ab546-s.p.18rizl4rsrl42.woff2>; rel=preload; as=\"font\"; crossorigin=\"\"; type=\"font/woff2\", </_next/static/chunks/350xv6dvcev_4.css>; rel=preload; as=\"style\"",
+        "server": "envoy",
+        "vary": "rsc,next-router-state-tree,next-router-prefetch,next-router-segment-prefetch,Accept-Encoding",
+        "x-envoy-upstream-service-time": "186"
+      },
+      "headings": [
+        "Página não encontrada"
+      ],
+      "overflow": {
+        "inner": 1440,
+        "scroll": 1440
+      },
+      "errors": []
+    }
+  ]
+}

@@ -1,0 +1,642 @@
+{
+  "database": [
+    {
+      "resumo": {
+        "fotos": {
+          "ativas": 2269,
+          "ilustracoes": 0
+        },
+        "cargas": [
+          {
+            "corte": "2026-11-10T16:12:00+00:00",
+            "situacao": "aplicada",
+            "quantidade": 12
+          }
+        ],
+        "catalogo": {
+          "ativos": 2278,
+          "online": 634,
+          "produtos": 2278,
+          "ativos_sem_foto": 9,
+          "online_sem_foto": 3
+        },
+        "unidades": [
+          {
+            "nome": "Água Verde",
+            "tipo": "loja_fisica",
+            "status": "ativa",
+            "cnpj_preenchido": false
+          },
+          {
+            "nome": "Almirante Tamandaré",
+            "tipo": "loja_fisica",
+            "status": "ativa",
+            "cnpj_preenchido": false
+          },
+          {
+            "nome": "Assistência (teste)",
+            "tipo": "assistencia",
+            "status": "ativa",
+            "cnpj_preenchido": false
+          },
+          {
+            "nome": "Balneário",
+            "tipo": "loja_fisica",
+            "status": "ativa",
+            "cnpj_preenchido": false
+          },
+          {
+            "nome": "Butiatuvinha",
+            "tipo": "loja_fisica",
+            "status": "ativa",
+            "cnpj_preenchido": false
+          },
+          {
+            "nome": "Colombo",
+            "tipo": "loja_fisica",
+            "status": "ativa",
+            "cnpj_preenchido": false
+          },
+          {
+            "nome": "Colônia",
+            "tipo": "loja_fisica",
+            "status": "ativa",
+            "cnpj_preenchido": false
+          },
+          {
+            "nome": "DEFEITOS",
+            "tipo": "excecao",
+            "status": "ativa",
+            "cnpj_preenchido": false
+          },
+          {
+            "nome": "Dubai",
+            "tipo": "loja_fisica",
+            "status": "ativa",
+            "cnpj_preenchido": false
+          },
+          {
+            "nome": "Loja de teste 2",
+            "tipo": "loja_fisica",
+            "status": "ativa",
+            "cnpj_preenchido": true
+          },
+          {
+            "nome": "Muffato Santa",
+            "tipo": "loja_fisica",
+            "status": "ativa",
+            "cnpj_preenchido": false
+          },
+          {
+            "nome": "Santa Cândida",
+            "tipo": "loja_fisica",
+            "status": "ativa",
+            "cnpj_preenchido": false
+          },
+          {
+            "nome": "Santa Cândida (teste)",
+            "tipo": "loja_fisica",
+            "status": "ativa",
+            "cnpj_preenchido": true
+          },
+          {
+            "nome": "Santa Felicidade",
+            "tipo": "loja_fisica",
+            "status": "ativa",
+            "cnpj_preenchido": false
+          },
+          {
+            "nome": "Ventania",
+            "tipo": "loja_fisica",
+            "status": "ativa",
+            "cnpj_preenchido": false
+          }
+        ]
+      }
+    }
+  ],
+  "connect": [
+    {
+      "resumo": {
+        "acoes": 0,
+        "consultas": [
+          {
+            "tipo": "carteira_extrato_saidas",
+            "situacao": "respondida",
+            "quantidade": 2
+          },
+          {
+            "tipo": "planos_campanhas",
+            "situacao": "nao_encontrada",
+            "quantidade": 1
+          },
+          {
+            "tipo": "linha_historico",
+            "situacao": "respondida",
+            "quantidade": 1
+          },
+          {
+            "tipo": "relatorio_portabilidades",
+            "situacao": "respondida",
+            "quantidade": 2
+          },
+          {
+            "tipo": "faq_categorias",
+            "situacao": "respondida",
+            "quantidade": 5
+          },
+          {
+            "tipo": "carteira_saldo",
+            "situacao": "respondida",
+            "quantidade": 6
+          },
+          {
+            "tipo": "titularidade_da_linha",
+            "situacao": "respondida",
+            "quantidade": 1
+          },
+          {
+            "tipo": "carteira_programadas",
+            "situacao": "respondida",
+            "quantidade": 2
+          }
+        ],
+        "operacoes": 0,
+        "pix_caixa": 0,
+        "assinaturas": 0,
+        "cartao_caixa": 0,
+        "connect_pdvs": {
+          "esims": 69,
+          "total": 18,
+          "fisicos": 298,
+          "vinculados": 11
+        },
+        "transferencias": 0,
+        "connect_leituras": [
+          {
+            "pdvs": 18,
+            "falhas": 0,
+            "lida_em": "2026-11-26T01:00:17.361717+00:00",
+            "pdvs_lidos": 18
+          },
+          {
+            "pdvs": 18,
+            "falhas": 0,
+            "lida_em": "2026-11-26T00:30:16.555042+00:00",
+            "pdvs_lidos": 18
+          },
+          {
+            "pdvs": 18,
+            "falhas": 0,
+            "lida_em": "2026-11-26T00:00:17.454023+00:00",
+            "pdvs_lidos": 18
+          }
+        ],
+        "lojas_com_endereco": [
+          {
+            "nome": "Água Verde",
+            "endereco_disponivel": true
+          },
+          {
+            "nome": "Almirante Tamandaré",
+            "endereco_disponivel": true
+          },
+          {
+            "nome": "Balneário",
+            "endereco_disponivel": false
+          },
+          {
+            "nome": "Butiatuvinha",
+            "endereco_disponivel": true
+          },
+          {
+            "nome": "Colombo",
+            "endereco_disponivel": false
+          },
+          {
+            "nome": "Colônia",
+            "endereco_disponivel": false
+          },
+          {
+            "nome": "DEFEITOS",
+            "endereco_disponivel": false
+          },
+          {
+            "nome": "Dubai",
+            "endereco_disponivel": false
+          },
+          {
+            "nome": "Muffato Santa",
+            "endereco_disponivel": false
+          },
+          {
+            "nome": "Santa Cândida",
+            "endereco_disponivel": false
+          },
+          {
+            "nome": "Santa Felicidade",
+            "endereco_disponivel": false
+          },
+          {
+            "nome": "Ventania",
+            "endereco_disponivel": false
+          }
+        ],
+        "empresa_com_raiz_do_cenario_teste": 1
+      }
+    }
+  ],
+  "logsAfterPublish": {
+    "result": [
+      {
+        "quantidade": 5054,
+        "status": "200"
+      },
+      {
+        "quantidade": 8,
+        "status": "204"
+      }
+    ]
+  },
+  "logsFinancialError": {
+    "result": [
+      {
+        "caminho": "/rest/v1/rpc/financeiro_painel",
+        "quantidade": 1,
+        "status": "500"
+      }
+    ]
+  },
+  "publications": [
+    {
+      "registrado_em": "2026-11-24T20:10:13.609Z",
+      "lote": "ONLINE-g",
+      "commit": "e86db023efd967173d82f139f2b251a0c0702005",
+      "build": "2026-11-24T20:08:59.137Z",
+      "ambiente": "homologacao",
+      "dominio": "https://ora5g.com.br",
+      "ci_local": "ca33f7e",
+      "migrations": [],
+      "prova": "Só leitura (e2e/vitrine-cara-de-loja-real.spec.ts, em 24/11 às 17:09, de primeira): num celular de 360 px, o topo com o título \"Tudo para o seu celular, com retirada na loja\", as três vantagens (retire na loja, reserva por 24 horas, pague na retirada), as categorias em blocos com \"Tudo\" marcado, \"Todos os produtos\" com \"Mostrando 1–60 de 634 produtos\" e o rodapé com \"Como comprar\", sem rolagem para o lado; a busca \"fone\" com \"Resultados para \"fone\"\" e sem as vantagens; num computador de 1280 px, os atalhos ilustrados das categorias no topo, e o primeiro levou à categoria; as entregas do projeto (Dono (teste)) mostram o ONLINE-g. Conferido pelo banco do site depois da prova: 0 pedidos do site e 0 reservas nos últimos 30 minutos; 0 erros do servidor desde a publicação (o worker dos avisos relatou às 17:09). Sem migration.",
+      "checks_do_github": "https://github.com/oraconect5g-boop/sistema-ora5g/commit/e86db023efd967173d82f139f2b251a0c0702005/checks"
+    },
+    {
+      "registrado_em": "2026-11-24T21:14:58.461Z",
+      "lote": "ONLINE-h",
+      "commit": "09d5a55b6ee80c46015c117cfe07bf9f12ce48c0",
+      "build": "2026-11-24T21:13:05.539Z",
+      "ambiente": "homologacao",
+      "dominio": "https://ora5g.com.br",
+      "ci_local": "dba0c83",
+      "migrations": [
+        "20261124205119_endereco_da_loja_no_site"
+      ],
+      "prova": "prova desfeita no banco do site logo depois de aplicar a migration às 17:51 (com um endereço de teste na Santa Cândida (teste), a página do produto, o pedido e a reserva mostraram o endereço; nada gravado) e, depois de publicar, a vitrine e a página de um produto respondendo 200 no domínio; as 104 chamadas ao banco desde a migration, todas 200",
+      "checks_do_github": "https://github.com/oraconect5g-boop/sistema-ora5g/commit/09d5a55b6ee80c46015c117cfe07bf9f12ce48c0/checks"
+    },
+    {
+      "registrado_em": "2026-11-24T22:01:44.240Z",
+      "lote": "PAY-014b",
+      "commit": "5fc91b60ebff4602c1297619d868ae55e048195f",
+      "build": "2026-11-24T21:57:57.093Z",
+      "ambiente": "homologacao",
+      "dominio": "https://ora5g.com.br",
+      "ci_local": "da5f9a6",
+      "migrations": [
+        "20261124213514_pedido_pago_no_balcao"
+      ],
+      "prova": "sem prova de leitura no domínio (o pagamento pelo site segue desligado); prova desfeita no banco do site logo depois da migration (com uma capa posta na Santa Cândida (teste) e um pedido pago, o Vendedor (teste) atendeu pelo preço pago e concluiu sem outra forma, com a linha do link e o recebimento no caixa; nada gravado); depois da migration, as 7 aberturas da tela do caixa (pdv_tela) e a vitrine responderam 200",
+      "checks_do_github": "https://github.com/oraconect5g-boop/sistema-ora5g/commit/5fc91b60ebff4602c1297619d868ae55e048195f/checks"
+    },
+    {
+      "registrado_em": "2026-11-24T22:27:33.015Z",
+      "lote": "ONLINE-i",
+      "commit": "14fe77d7060d7e401308db473550672f35ba0ae0",
+      "build": "2026-11-24T22:25:41.524Z",
+      "ambiente": "homologacao",
+      "dominio": "https://ora5g.com.br",
+      "ci_local": "b97caac",
+      "migrations": [
+        "20261124220512_vitrine_mais_rapida"
+      ],
+      "prova": "a prova de leitura da vitrine passou no domínio às 19:26, de primeira (e2e/vitrine-paginas-real.spec.ts, 8,6 s, e e2e/vitrine-cara-de-loja-real.spec.ts, 7,7 s, uma de cada vez); no banco do site, a vitrine de 341/288/272 ms para 64/36/36 ms e as mesmas 1.268 ofertas da regra de antes; vista pelo site, a chamada da vitrine de 574 ms para 98 ms na mediana, sem erro",
+      "checks_do_github": "https://github.com/oraconect5g-boop/sistema-ora5g/commit/14fe77d7060d7e401308db473550672f35ba0ae0/checks"
+    },
+    {
+      "registrado_em": "2026-11-24T23:24:34.953Z",
+      "lote": "TRF-f",
+      "commit": "71bf3387f9f29eba7bc5ca696d7f87f45b744ea8",
+      "build": "2026-11-24T23:22:26.459Z",
+      "ambiente": "homologacao",
+      "dominio": "https://ora5g.com.br",
+      "ci_local": "65c5125",
+      "migrations": [
+        "20261124230046_transferencias_abertas_e_historico"
+      ],
+      "prova": "as provas de leitura passaram no domínio, de primeira, uma de cada vez: e2e/transferencias-abertas-real.spec.ts às 20:23 (as duas partes com a contagem, a busca pelo número 1, o estoque abrindo o produto e voltando à lista, as entregas com o lote; 29,9 s) e e2e/transferencias-leitura-real.spec.ts às 20:24 (23,7 s); prova desfeita no banco do site (0 em andamento e 21 no histórico na Santa Cândida (teste); a busca pelo nº 1 só ela); desde as 20:00, nenhum erro 500",
+      "checks_do_github": "https://github.com/oraconect5g-boop/sistema-ora5g/commit/71bf3387f9f29eba7bc5ca696d7f87f45b744ea8/checks"
+    },
+    {
+      "registrado_em": "2026-11-24T23:47:23.650Z",
+      "lote": "AUD-e",
+      "commit": "3244734675fa14fc466ddd4e97f5243608933ea2",
+      "build": "2026-11-24T23:42:28.179Z",
+      "ambiente": "homologacao",
+      "dominio": "https://ora5g.com.br",
+      "ci_local": "418e08e",
+      "migrations": [],
+      "prova": "as provas de leitura passaram no domínio, de primeira, uma de cada vez: e2e/transferencias-abertas-real.spec.ts às 20:43 (12,0 s; o TRF-f segue igual depois da publicação) e uma conferência avulsa do Novo cliente às 20:47 (o texto novo: o nome e o WhatsApp; o CPF/CNPJ e o e-mail opcionais; só leitura, sem salvar; 4,4 s); sem migration; desde as 20:20, nenhum erro 500 (210 chamadas ao banco, todas 200)",
+      "checks_do_github": "https://github.com/oraconect5g-boop/sistema-ora5g/commit/3244734675fa14fc466ddd4e97f5243608933ea2/checks"
+    },
+    {
+      "registrado_em": "2026-11-25T02:20:30.685Z",
+      "lote": "CONNECT-d",
+      "commit": "4070a8bd8ba0328f2767dc4ae98bd6ddae7aed73",
+      "build": "2026-11-25T02:16:37.387Z",
+      "ambiente": "homologacao",
+      "dominio": "https://ora5g.com.br",
+      "ci_local": "746247f",
+      "migrations": [
+        "20261125015559_estoque_de_chips_da_nogle"
+      ],
+      "prova": "a primeira leitura de verdade do estoque de chips pelo worker às 23:17 (18 PDVs, os 18 lidos, 0 falhas, 0 fora da forma); os 11 PDVs SUPERCELL ligados às lojas de mesmo nome (D-056, na auditoria); a prova de leitura e2e/connect-chips-real.spec.ts passou no domínio às 23:20 (14,1 s; o Dono (teste), o Administrador (teste) e o Gerente (teste); a entrada do Administrador na prova foi corrigida e entra no lote seguinte); desde a publicação, nenhum erro 500 (202 chamadas, 200 e 204). Achado na primeira leitura: a lista geral da Nogle traz o estoque virgem inteiro, inclusive o dos PDVs (693 = 370 nos PDVs + 323 sem PDV): o número 'sem PDV' da leitura saiu como o total e o PDV que falhar perderia os chips para o 'sem PDV'; a correção vem no lote seguinte, antes de agendar a leitura",
+      "checks_do_github": "https://github.com/oraconect5g-boop/sistema-ora5g/commit/4070a8bd8ba0328f2767dc4ae98bd6ddae7aed73/checks"
+    },
+    {
+      "registrado_em": "2026-11-25T02:58:45.122Z",
+      "lote": "CONNECT-d (correção)",
+      "commit": "48c5e009904fbb061f633032e71fc24d04ec3133",
+      "build": "2026-11-25T02:57:25.370Z",
+      "ambiente": "homologacao",
+      "dominio": "https://ora5g.com.br",
+      "ci_local": "f50a951",
+      "migrations": [
+        "20261125022938_estoque_de_chips_sem_pdv"
+      ],
+      "prova": "a migration 20261125022938_estoque_de_chips_sem_pdv aplicada no ora5g-dev (md5 igual ao do arquivo; o corpo de antes conferido) e a leitura de verdade de novo às 23:29: 323 chips sem PDV (168 físicos e 155 eSIM) e 370 nos PDVs, 0 falhas; a leitura agendada a cada 30 minutos, das 7h às 22h (D-056), no crontab desde as 23:32; a prova de leitura e2e/connect-chips-real.spec.ts passou no domínio às 23:58 (16,8 s; o Dono (teste), o Administrador (teste) e o Gerente (teste)); desde a publicação, nenhum erro 500 (111 chamadas, todas 200); o teste do FIN-006a corrigido para o GitHub (UTC), que falhou no merge 4070a8b",
+      "checks_do_github": "https://github.com/oraconect5g-boop/sistema-ora5g/commit/48c5e009904fbb061f633032e71fc24d04ec3133/checks"
+    },
+    {
+      "registrado_em": "2026-11-25T03:32:09.844Z",
+      "lote": "Testes da meia-noite",
+      "commit": "c494425ffe7d61e45933e0c52e52fbc492d46299",
+      "build": "2026-11-25T03:30:58.173Z",
+      "ambiente": "homologacao",
+      "dominio": "https://ora5g.com.br",
+      "ci_local": "d8b13bb",
+      "migrations": [],
+      "prova": "só testes e documentos (o dia de Brasília na hora da chamada no teste do repasse da financeira; o site não muda); a prova de leitura e2e/connect-chips-real.spec.ts passou no domínio às 00:31 (15,5 s), de primeira",
+      "checks_do_github": "https://github.com/oraconect5g-boop/sistema-ora5g/commit/c494425ffe7d61e45933e0c52e52fbc492d46299/checks"
+    },
+    {
+      "registrado_em": "2026-11-25T09:23:59.990Z",
+      "lote": "Nogle: a primeira transferência (documentos)",
+      "commit": "75e2e86f14e81c5b3adf3d9ef3c090beb7e6fc53",
+      "build": "2026-11-25T09:22:54.919Z",
+      "ambiente": "homologacao",
+      "dominio": "https://ora5g.com.br",
+      "ci_local": "435d82e",
+      "migrations": [],
+      "prova": "só documentos (a primeira transferência de verdade: 1 eSIM do estoque geral para a Santa Cândida às 06:04, HTTP 200 'Sucesso.', de 3 para 4 eSIM; a leitura nº 4 do sistema com 154 eSIM sem PDV); a prova de leitura e2e/connect-chips-real.spec.ts passou no domínio às 06:23 (15,4 s), de primeira",
+      "checks_do_github": "https://github.com/oraconect5g-boop/sistema-ora5g/commit/75e2e86f14e81c5b3adf3d9ef3c090beb7e6fc53/checks"
+    },
+    {
+      "registrado_em": "2026-11-25T13:01:39.982Z",
+      "lote": "CONNECT-e (a transferência de chips pela Nogle, pelo sistema; só o dono pede)",
+      "commit": "a458b0559bc13cac1edfa20c749842f2acbf02cc",
+      "build": "2026-11-25T12:59:03.807Z",
+      "ambiente": "homologacao",
+      "dominio": "https://ora5g.com.br",
+      "ci_local": "eb7c8fa",
+      "migrations": [
+        "20261125124255_transferencia_de_chips"
+      ],
+      "prova": "connect-chips-real.spec.ts no celular-360 (dono vê o cartão Transferir chips; administrador e gerente não), sem pedir transferência; listas oficiais da Nogle carregadas pelo worker (5 listas, 780 itens, 0 falhas); fila das transferências agendada a cada minuto fora dos minutos 0 e 30",
+      "checks_do_github": "https://github.com/oraconect5g-boop/sistema-ora5g/commit/a458b0559bc13cac1edfa20c749842f2acbf02cc/checks"
+    },
+    {
+      "registrado_em": "2026-11-25T13:38:06.434Z",
+      "lote": "CONNECT-f (a Ora Connect pronta para operar nas lojas: os planos no caixa, os chips no estoque pelo ICCID, a trava do plano e as operações ligadas)",
+      "commit": "4ba10ab7305fde180188f933e838c36605b20148",
+      "build": "2026-11-25T13:35:04.343Z",
+      "ambiente": "homologacao",
+      "dominio": "https://ora5g.com.br",
+      "ci_local": "3965ae2",
+      "migrations": [
+        "20261125130939_planos_e_chips_da_nogle_nas_lojas",
+        "20261125131555_servico_do_mesmo_plano"
+      ],
+      "prova": "connect-chips-real.spec.ts no celular-360 (o dono vê Chips para conferir; administrador e gerente não); worker: --listas (10 serviços no caixa, 10 preços, 1 desativado) e --estoque (265 chips entraram nas 11 lojas, 0 divergências); Chip Ora Connect a R$ 25,00 e as 3 habilitações gravadas com o motivo (D-058, D-059); o worker das operações a cada minuto rodou sem erro",
+      "checks_do_github": "https://github.com/oraconect5g-boop/sistema-ora5g/commit/4ba10ab7305fde180188f933e838c36605b20148/checks"
+    },
+    {
+      "registrado_em": "2026-11-25T14:31:18.455Z",
+      "lote": "CONNECT-g (as consultas da Nogle que só leem: Consultar linha e a Carteira)",
+      "commit": "2864c0aed388529352ace630065547d36b33153a",
+      "build": "2026-11-25T14:27:42.149Z",
+      "ambiente": "homologacao",
+      "dominio": "https://ora5g.com.br",
+      "ci_local": "5b3d564",
+      "migrations": [
+        "20261125141320_consultas_da_nogle"
+      ],
+      "prova": "connect-consultas-real.spec.ts (o Dono (teste) consultou o saldo da carteira de verdade: respondida em segundos; o vendedor sem a carteira e sem ver a consulta do dono), connect-operacoes-real.spec.ts e connect-chips-real.spec.ts no celular-360 (esta falhou uma vez na busca do ICCID, no minuto da leitura do estoque das 11:30, e passou na repetição); crontab do --consultas a cada minuto",
+      "checks_do_github": "https://github.com/oraconect5g-boop/sistema-ora5g/commit/2864c0aed388529352ace630065547d36b33153a/checks"
+    },
+    {
+      "registrado_em": "2026-11-25T16:58:58.636Z",
+      "lote": "CONNECT-h (a consulta completa da Nogle: o relatório do número e o do cliente)",
+      "commit": "8b60d897e38950bafdee25845ac29ed1762e496c",
+      "build": "2026-11-25T16:56:52.734Z",
+      "ambiente": "homologacao",
+      "dominio": "https://ora5g.com.br",
+      "ci_local": "10784dc",
+      "migrations": [
+        "20261125164116_consulta_completa_da_nogle"
+      ],
+      "prova": "connect-consultas-real.spec.ts e connect-operacoes-real.spec.ts no celular-360; connect-chips-real.spec.ts passou rodando sozinha (em sequência com outra prova do Dono (teste), o sair do fim da anterior encerra as sessões da conta e derruba a seguinte: a causa da falha das 11:30 também)",
+      "checks_do_github": "https://github.com/oraconect5g-boop/sistema-ora5g/commit/8b60d897e38950bafdee25845ac29ed1762e496c/checks"
+    },
+    {
+      "registrado_em": "2026-11-25T17:25:42.865Z",
+      "lote": "CONNECT-k (o relatório do vendedor e da loja da Ora Connect)",
+      "commit": "37588230ebc1f3380bd3053f041794e0f4b016a0",
+      "build": "2026-11-25T17:23:38.322Z",
+      "ambiente": "homologacao",
+      "dominio": "https://ora5g.com.br",
+      "ci_local": "b5bfca9",
+      "migrations": [],
+      "prova": "e2e/connect-relatorio-real.spec.ts no domínio (celular-360, 1 passou): o dono escolhe a loja e o vendedor; o vendedor vê só o próprio relatório; o seletor do subtítulo foi corrigido (o cabeçalho da impressão repetia o texto) e a correção entra com o CONNECT-j",
+      "checks_do_github": "https://github.com/oraconect5g-boop/sistema-ora5g/commit/37588230ebc1f3380bd3053f041794e0f4b016a0/checks"
+    },
+    {
+      "registrado_em": "2026-11-25T18:02:26.165Z",
+      "lote": "CONNECT-j (as funções que mudam algo na Nogle, para o dono e os gerentes)",
+      "commit": "3f4d904e66cac1c93727cfb9c82f505fc6809493",
+      "build": "2026-11-25T18:00:39.496Z",
+      "ambiente": "homologacao",
+      "dominio": "https://ora5g.com.br",
+      "ci_local": "b4dfbfd",
+      "migrations": [
+        "20261125172755_acoes_na_nogle"
+      ],
+      "prova": "e2e/connect-acoes-real.spec.ts no domínio (celular-360, 1 passou; só leitura, nenhuma ação pedida): o dono abre Ações na Nogle com a linha, o cliente, a compra de chip, os PDVs e os pedidos; o vendedor vê só o aviso; o seletor dos títulos foi corrigido (o botão de dentro repete o nome) e a correção entra com o CONNECT-i",
+      "checks_do_github": "https://github.com/oraconect5g-boop/sistema-ora5g/commit/3f4d904e66cac1c93727cfb9c82f505fc6809493/checks"
+    },
+    {
+      "registrado_em": "2026-11-25T18:23:39.426Z",
+      "lote": "CONNECT-i (as outras consultas da Nogle: as 62 funções da coleção oficial em uso)",
+      "commit": "0e82715e921358b358c619c40fa8756e37fc0ce1",
+      "build": "2026-11-25T18:22:30.757Z",
+      "ambiente": "homologacao",
+      "dominio": "https://ora5g.com.br",
+      "ci_local": "970bf7a",
+      "migrations": [
+        "20261125180630_outras_consultas_da_nogle"
+      ],
+      "prova": "e2e/connect-outras-consultas-real.spec.ts no domínio (celular-360, 1 passou): o dono pediu as dúvidas frequentes à Nogle (uma consulta de verdade, só leitura, sem dado de cliente) e a resposta chegou com as categorias; o dono vê o titular, o pagamento, as informações, a gerência, a carteira e os relatórios da rede; o vendedor vê o titular, o pagamento e as informações, sem a gerência, a carteira nem a rede",
+      "checks_do_github": "https://github.com/oraconect5g-boop/sistema-ora5g/commit/0e82715e921358b358c619c40fa8756e37fc0ce1/checks"
+    },
+    {
+      "registrado_em": "2026-11-25T19:58:39.027Z",
+      "lote": "PAY-015a",
+      "commit": "be8bf3ce40ba9c1c092f5e57a4cd9071757e80aa",
+      "build": "2026-11-25T19:55:09.267Z",
+      "ambiente": "homologacao",
+      "dominio": "https://ora5g.com.br",
+      "ci_local": "86176b3",
+      "migrations": [
+        "20261125192529_pix_da_asaas_no_caixa"
+      ],
+      "prova": "e2e/navegacao-real.spec.ts no domínio (2 passaram: as telas principais, com o Vender, no celular, só lendo); edge_logs desde a publicação: rpc/caixa_pix_da_venda 3x HTTP 200 e nenhum 5xx; o Pix pela Asaas fica desligado até a conta de teste da Asaas",
+      "checks_do_github": "https://github.com/oraconect5g-boop/sistema-ora5g/commit/be8bf3ce40ba9c1c092f5e57a4cd9071757e80aa/checks"
+    },
+    {
+      "registrado_em": "2026-11-25T20:20:59.818Z",
+      "lote": "CONNECT-l",
+      "commit": "053cdc4cdff6e8f3dc0b23cde9b8ca5fcb199e2b",
+      "build": "2026-11-25T20:19:26.493Z",
+      "ambiente": "homologacao",
+      "dominio": "https://ora5g.com.br",
+      "ci_local": "16821f1",
+      "migrations": [
+        "20261125195945_pix_da_nogle_na_loja"
+      ],
+      "prova": "e2e/connect-pix-da-nogle-real.spec.ts no domínio (passou, só lendo: o vendedor vê o Pix da Nogle marcado na ativação e na recarga, a carteira como a outra escolha e o serviço pago em Nenhum; o seletor da lista corrigido no lote seguinte); edge_logs desde a publicação: nenhum 5xx; nenhuma operação enviada à Nogle",
+      "checks_do_github": "https://github.com/oraconect5g-boop/sistema-ora5g/commit/053cdc4cdff6e8f3dc0b23cde9b8ca5fcb199e2b/checks"
+    },
+    {
+      "registrado_em": "2026-11-25T21:06:29.763Z",
+      "lote": "PAY-015b",
+      "commit": "728a7a4ecf00c49ef9a6361667920b3b471ef4cb",
+      "build": "2026-11-25T21:01:58.036Z",
+      "ambiente": "homologacao",
+      "dominio": "https://ora5g.com.br",
+      "ci_local": "a236c44",
+      "migrations": [
+        "20261125204032_cartao_da_asaas_no_caixa"
+      ],
+      "prova": "e2e/navegacao-real.spec.ts no domínio (2 passaram: as telas principais, com o Vender, no celular, só lendo); edge_logs desde a publicação: rpc/caixa_cartao_da_venda 3x HTTP 200 e nenhum 5xx; o cartão pela Asaas fica desligado até a conta de teste da Asaas",
+      "checks_do_github": "https://github.com/oraconect5g-boop/sistema-ora5g/commit/728a7a4ecf00c49ef9a6361667920b3b471ef4cb/checks"
+    },
+    {
+      "registrado_em": "2026-11-25T21:39:11.388Z",
+      "lote": "PAY-015c",
+      "commit": "c92dc368fb2b6cf7f38cbc36f847848021586f50",
+      "build": "2026-11-25T21:32:46.942Z",
+      "ambiente": "homologacao",
+      "dominio": "https://ora5g.com.br",
+      "ci_local": "319c0c4",
+      "migrations": [
+        "20261125211142_assinatura_no_cartao"
+      ],
+      "prova": "e2e/navegacao-real.spec.ts no domínio: a 1a execução, logo depois da publicação, não passou num dos 2 testes (o painel financeiro passou do tempo do banco: 1 HTTP 500 por statement timeout em rpc/financeiro_painel às 21:35 UTC, função que este lote não mudou; ela leva de 1,3 a 4,3 s); a repetição passou (2 de 2, só lendo); a assinatura no cartão fica desligada até a conta de teste da Asaas",
+      "checks_do_github": "https://github.com/oraconect5g-boop/sistema-ora5g/commit/c92dc368fb2b6cf7f38cbc36f847848021586f50/checks"
+    },
+    {
+      "registrado_em": "2026-11-25T23:15:15.160Z",
+      "lote": "CONNECT-m",
+      "commit": "f4c806a2289d22f52e5fa3868e32bddb7008ea76",
+      "build": "2026-11-25T23:12:22.208Z",
+      "ambiente": "homologacao",
+      "dominio": "https://ora5g.com.br",
+      "ci_local": "4390826",
+      "migrations": [],
+      "prova": "e2e no domínio, só lendo, 7 de 7: connect-operacoes-real (o dono com as 9 abas e a aba Integração Nogle com as 3 operações liberadas e as 62 funções; o vendedor com as 7 abas, a Ativar chip com os planos em cartões, a Recarga e a Portabilidade), connect-pix-da-nogle-real, connect-acoes-real (pela aba Bloqueio e atendimento), connect-chips-real, connect-relatorio-real, connect-consultas-real e connect-outras-consultas-real; nos registros do Supabase, 618 pedidos sem nenhum 5xx nem 4xx e sem erro no banco; nada registrado nem enviado à Nogle além das consultas de leitura das provas",
+      "checks_do_github": "https://github.com/oraconect5g-boop/sistema-ora5g/commit/f4c806a2289d22f52e5fa3868e32bddb7008ea76/checks"
+    },
+    {
+      "registrado_em": "2026-11-25T23:33:37.792Z",
+      "lote": "CONNECT-n",
+      "commit": "e07a8ceaceeaaf68aba6b805423f447735416e0f",
+      "build": "2026-11-25T23:31:52.719Z",
+      "ambiente": "homologacao",
+      "dominio": "https://ora5g.com.br",
+      "ci_local": "b4a7815",
+      "migrations": [],
+      "prova": "e2e no domínio, só lendo, 3 de 3: connect-assistente-real (o vendedor percorre os 5 passos do assistente com um eSIM e um cliente fictício, vê os avisos do que falta, confere o resumo e PARA antes de Registrar), connect-operacoes-real (as abas do dono e do vendedor, a Integração Nogle, os planos em cartões na Recarga) e connect-pix-da-nogle-real (o Pix da Nogle como padrão); no banco, nenhuma operação da Ora Connect registrada (a tabela segue vazia); nos registros do Supabase, 219 pedidos sem nenhum 5xx nem 4xx e sem erro no banco",
+      "checks_do_github": "https://github.com/oraconect5g-boop/sistema-ora5g/commit/e07a8ceaceeaaf68aba6b805423f447735416e0f/checks"
+    },
+    {
+      "registrado_em": "2026-11-26T00:11:36.817Z",
+      "lote": "CONNECT-o",
+      "commit": "e7f55b2f0a4f8beaef4109307ab3a7ad40019131",
+      "build": "2026-11-26T00:07:34.382Z",
+      "ambiente": "homologacao",
+      "dominio": "https://ora5g.com.br",
+      "ci_local": "0155997",
+      "migrations": [],
+      "prova": "e2e no domínio, só lendo, 4 de 4: connect-consultas-real (o dono consulta o saldo na aba nova Carteira e relatórios e o cartão Saldo na Nogle mostra o valor com a hora da consulta; o vendedor vê só as próprias ativações e recargas, sem a carteira), connect-outras-consultas-real (as dúvidas frequentes respondidas; Consultar linha aponta para a aba Carteira e relatórios), connect-operacoes-real (as abas) e connect-relatorio-real; o registro do worker mostra as 2 consultas das provas respondidas, 0 falhas; os registros do Supabase não puderam ser lidos na hora (a ferramenta do aplicativo não respondeu): conferir depois",
+      "checks_do_github": "https://github.com/oraconect5g-boop/sistema-ora5g/commit/e7f55b2f0a4f8beaef4109307ab3a7ad40019131/checks"
+    }
+  ],
+  "corte": {
+    "data_local": "2026-11-25",
+    "fuso": "America/Sao_Paulo",
+    "base": "003421d83985f68b04db200c4a168e2872ebd836",
+    "head": "e7f55b2f0a4f8beaef4109307ab3a7ad40019131",
+    "integridade": {
+      "blobs_verificados": 1718,
+      "divergencias": 0
+    },
+    "migrations": {
+      "github": 151,
+      "supabase": 151,
+      "versoes_ausentes": []
+    },
+    "checks": [
+      {
+        "name": "Supabase Preview",
+        "status": "completed",
+        "conclusion": "success",
+        "html_url": "https://github.com/oraconect5g-boop/sistema-ora5g/runs/139597574477"
+      },
+      {
+        "name": "Verificações",
+        "status": "completed",
+        "conclusion": "success",
+        "html_url": "https://github.com/oraconect5g-boop/sistema-ora5g/actions/runs/45726420946/job/139597320877"
+      }
+    ]
+  },
+  "ci": {
+    "unitarios_integracao_passaram": 3758,
+    "unitarios_pulados": 2,
+    "todo": 1,
+    "e2e_passaram": 331,
+    "e2e_pulados": 107,
+    "sha": "e7f55b2f0a4f8beaef4109307ab3a7ad40019131"
+  },
+  "configuracao_observada": {
+    "pagamento_site": {
+      "provedor": "asaas",
+      "ligado": false,
+      "ambiente": null
+    },
+    "connect_habilitacoes": {
+      "ativacao": true,
+      "recarga": true,
+      "portabilidade": true
+    }
+  }
+}

@@ -1,0 +1,115 @@
+// Lote PAY-015c (25/11/2026; ORA-PAY-001, ORA-PAY-014 e ORA-CRM-002; a decisão D-062): a assinatura no cartão pela Asaas.
+// A loja pede a assinatura para um cliente da rede; o worker cria o link recorrente, acha a assinatura que o cliente criou
+// ao cadastrar o cartão e acompanha as cobranças; só a consulta muda a situação; o cancelamento remove a assinatura na
+// Asaas. Clientes, links, assinaturas e cobranças FICTÍCIOS; cada teste numa transação desfeita.
+import type { PGlite } from "@electric-sql/pglite";
+import { afterAll, afterEach, beforeAll, beforeEach, describe, expect, it } from "vitest";
+
+import { comoUsuario, criarBanco, type Sessao } from "./banco-de-teste";
+import { ids, montarCenario } from "./cenario";
+import { montarCatalogo } from "./cenario-catalogo";
+
+let db: PGlite;
+beforeAll(async () => {
+  db = await criarBanco();
+  await montarCenario(db);
+  await montarCatalogo(db);
+});
+beforeEach(async () => { await db.exec("begin"); });
+afterEach(async () => { await db.exec("rollback"); });
+afterAll(async () => { await db.close(); });
+
+let sessoes = 0;
+let chaves = 0;
+let links = 0;
+const chave = (p: string) => `${p}:assinatura:${String(++chaves).padStart(5, "0")}`;
+async function erroDe(acao: () => Promise<unknown>): Promise<string | null> {
+  await db.exec("savepoint tentativa");
+  try {
+    await acao();
+    await db.exec("release savepoint tentativa");
+    return null;
+  } catch (e) {
+    await db.exec("rollback to savepoint tentativa");
+    await db.exec("release savepoint tentativa");
+    return (e as { code?: string }).code ?? "sem-codigo";
+  }
+}
+async function naLoja(usuario: string, unidade: string): Promise<Sessao> {
+  const s = { usuario, sessao: `4e700000-0000-4000-8000-${String(++sessoes).padStart(12, "0")}` };
+  await comoUsuario(db, s, () => db.query("select public.selecionar_unidade($1)", [unidade]));
+  return s;
+}
+const comoLoja = <T>(s: Sessao, sql: string, params: unknown[] = []) =>
+  comoUsuario(db, s, async () => (await db.query<{ v: T }>(sql, params)).rows[0]?.v as T, { criarSessao: false });
+const recusaALoja = (s: Sessao, sql: string, params: unknown[] = []) => comoUsuario(db, s, () => erroDe(() => db.query(sql, params)), { criarSessao: false });
+async function servico<T>(sql: string, params: unknown[] = []): Promise<T> {
+  await db.exec("set role service_role");
+  try { return (await db.query<{ v: T }>(sql, params)).rows[0]?.v as T; } finally { await db.exec("reset role"); }
+}
+async function recusaAoServico(sql: string, params: unknown[] = []): Promise<string | null> {
+  await db.exec("savepoint servico");
+  await db.exec("set role service_role");
+  try {
+    await db.query(sql, params);
+    return null;
+  } catch (e) {
+    return (e as { code?: string }).code ?? "sem-codigo";
+  } finally {
+    await db.exec("rollback to savepoint servico");
+    await db.exec("release savepoint servico");
+    await db.exec("reset role");
+  }
+}
+
+const ligar = () => servico("select public.caixa_cartao_situacao(true, null) as v");
+const PEDIR = "select public.assinatura_pedir($1, $2, $3, $4, $5, $6) as v";
+type Pedida = { id: string; numero: number; situacao: string; repetida?: boolean };
+const pedir = (s: Sessao, cliente: string, p: { descricao?: string; valor?: number; ciclo?: string; linha?: string | null } = {}, k = chave("pedir")) =>
+  comoLoja<Pedida>(s, PEDIR, [cliente, p.descricao ?? "Plano 10 GB da linha", p.valor ?? 5_490, p.ciclo ?? "MONTHLY", p.linha ?? null, k]);
+const recusaAoPedir = (s: Sessao, cliente: string, p: { descricao?: string; valor?: number; ciclo?: string; linha?: string | null } = {}, k = chave("pedir")) =>
+  recusaALoja(s, PEDIR, [cliente, p.descricao ?? "Plano 10 GB da linha", p.valor ?? 5_490, p.ciclo ?? "MONTHLY", p.linha ?? null, k]);
+const aCriar = () => servico<{ id: string; valor_centavos: number; ciclo: string; tentativa: number; validade_segundos: number; descricao: string }[]>(
+  "select public.assinaturas_a_criar(10) as v");
+const registrar = (id: string, link = `lnkrec${++links}`, expira = "now() + interval '3 days'") =>
+  servico<string>(`select public.assinatura_link_registrar($1, $2, $3, ${expira}) as v`, [id, link, `https://sandbox.asaas.invalid/c/${link}`]);
+const aConferir = () => servico<{ id: string; link_id: string; assinatura_id: string | null; situacao: string; desde: string }[]>("select public.assinaturas_a_conferir(20) as v");
+const aplicar = (id: string, consulta: object) => servico<string>("select public.assinatura_consulta_aplicar($1, $2::jsonb) as v", [id, JSON.stringify(consulta)]);
+const assinatura = async (id: string) => (await db.query<{ situacao: string; assinatura_id: string | null; cartao_final: string | null; proxima_cobranca: string | null;
+  divergencia: string | null; link_desativado_em: string | null; motivo_cancelamento: string | null }>(
+  "select situacao, assinatura_id, cartao_final, proxima_cobranca::text, divergencia, link_desativado_em, motivo_cancelamento from public.assinaturas where id = $1", [id])).rows[0];
+const cobrancas = async (id: string) => (await db.query<{ id_no_provedor: string; situacao: string; valor_centavos: number; vencimento: string | null }>(
+  "select id_no_provedor, situacao, valor_centavos::int, vencimento::text from public.assinatura_cobrancas where assinatura_id = $1 order by vencimento", [id])).rows;
+/** A resposta da Asaas sobre a assinatura criada pelo link, no formato que o banco confere. */
+const daAsaas = (link: string, mudar: Record<string, unknown> = {}) => ({
+  link_id: link, situacao: "assinatura", assinatura_id: `sub_${link}`, link_da_assinatura: link, status: "ACTIVE", valor_centavos: 5_490, ciclo: "MONTHLY",
+  proxima_cobranca: "2026-12-25", cartao_final: "8829", cartao_bandeira: "VISA",
+  cobrancas: [{ id: `pay_${link}_1`, situacao: "pago", valor_centavos: 5_490, vencimento: "2026-11-25", pago_em: "2026-11-25" }], ...mudar });
+
+async function clienteDaRede(s: Sessao, nome = "Cliente Fictício da Assinatura") {
+  return (await comoLoja<{ id: string }>(s, "select public.cliente_salvar(null, $1::jsonb, null, $2) as v",
+    [JSON.stringify({ tipo: "pessoa_fisica", nome, telefone: "41987650177" }), chave("cliente")])).id;
+}
+/** Uma assinatura pedida, com o link criado pelo worker, esperando o cartão. */
+async function esperandoCartao(s: Sessao, cliente: string) {
+  const { id } = await pedir(s, cliente);
+  expect((await aCriar()).map((x) => x.id)).toContain(id);
+  const link = `lnkrec${++links}`;
+  expect(await registrar(id, link)).toBe("registrado");
+  return { id, link };
+}
+
+// Regressão da auditoria: só PGlite local, sem chamadas a provedores.
+it('reconcilia cancelamento que pode ter coincidido com cadastro do cartão na Asaas',async()=>{
+ await ligar();
+ const sessao=await naLoja(ids.vendedorA,ids.lojaA);
+ const cliente=await clienteDaRede(sessao);
+ const {id,link}=await esperandoCartao(sessao,cliente);
+ await comoLoja(sessao, "select public.assinatura_cancelar($1, $2) as v", [id,"Cancelamento solicitado no teste"]);
+ // O GET de cobranças ainda não viu a assinatura; a criação externa pode concluir antes da desativação do link.
+ expect(await aplicar(id,{link_id:link,situacao:"sem_cadastro"})).toBe("pode_desativar");
+ // Depois de desativar o link, o worker confirma o cancelamento local.
+ expect(await servico("select public.assinatura_cancelada_na_asaas($1) as v",[id])).toBe("cancelada");
+ // Deve haver reconciliação posterior; hoje ambas as filas abandonam o registro.
+ expect((await aConferir()).map(x=>x.id)).toContain(id);
+});
