@@ -2,7 +2,11 @@
 // verdade), com o cadastro FICTÍCIO no formato que o worker grava (lerCadastroParaPreencher) e o CPF de exemplo com o dígito.
 import { describe, expect, it } from "vitest";
 
-import { criarBuscaDoCadastro, DESCARTADA_NO_BANCO, DESCARTADA_PELO_DOCUMENTO, SEM_RESPOSTA, type AvisoDaBusca, type DependenciasDaBusca } from "./busca-do-cadastro";
+import { faltaNaEtapa, resumoDaAtivacao } from "../../app/connect/ativar/etapas";
+import {
+  criarBuscaDoCadastro, DADOS_DO_ANTERIOR_APAGADOS, DADOS_DO_ANTERIOR_EDITADOS, DESCARTADA_NO_BANCO, DESCARTADA_PELO_DOCUMENTO, SEM_RESPOSTA, type AvisoDaBusca,
+  type DependenciasDaBusca,
+} from "./busca-do-cadastro";
 import {
   CAMPOS_DA_ATIVACAO, CAMPOS_DAS_ACOES, documentoParaBuscar, erroDoCadastro, lerRespostaDoCadastro, planoDePreenchimento, type CampoNaTela,
   type EstadoDoCadastro,
@@ -187,5 +191,104 @@ describe("o andamento da busca do cadastro (AUD-f)", () => {
     await busca.buscar(CPF);
     expect(registro.lidas).toEqual([]);
     expect(ultimo(registro)).toEqual({ tom: "perigo", linhas: ["Muitas buscas de cadastro na última hora: espere um pouco ou preencha à mão."] });
+  });
+});
+
+// AUD-f (antes de liberar o PR #113): depois da busca concluída, o documento que muda não deixa no formulário (nem na revisão)
+// o que veio da busca anterior. Só duas identidades SINTÉTICAS (CPFs de exemplo, com o dígito verificador; nenhuma de cliente),
+// sem provedor: as respostas são de mentira.
+describe("o documento muda depois da busca concluída (AUD-f)", () => {
+  const A = { cpf: "123.456.789-09", cadastro: { nome: "Cliente Fictício A", nascimento: "1991-01-01", email: "a@exemplo.invalid", telefone: "41999990001",
+    cep: "80000001", rua: "Rua Fictícia A", numero: "11", bairro: "Bairro A" } };
+  const B = { cpf: "529.982.247-25", cadastro: { nome: "Cliente Fictício B", nascimento: "1992-02-02", email: "b@exemplo.invalid", telefone: "41999990002",
+    cep: "80000002", rua: "Rua Fictícia B", numero: "22", bairro: "Bairro B" } };
+  const LISTAS = { planos: [], cidades: [{ codigo: "4106902", nome: "Cidade Fictícia", uf: "PR" }], pagos: [] };
+  /** O formulário do assistente como o navegador mandaria: os campos da tela, o documento digitado e a cidade escolhida. */
+  const formulario = (tela: Record<string, CampoNaTela>, documento: string) => {
+    const d = new FormData();
+    for (const [nome, c] of Object.entries(tela)) d.set(nome, c.valor);
+    d.set("documento", documento);
+    d.set("id_cidade", "4106902");
+    d.set("esim", "on");
+    return d;
+  };
+  const deA = (t: string) => Object.values(A.cadastro).some((v) => t.includes(v));
+
+  it("as identidades de teste valem (o dígito verificador)", () => {
+    expect([A.cpf, B.cpf].map(documentoParaBuscar)).toEqual(["12345678909", "52998224725"]);
+  });
+
+  it("de A para B: sai o que veio de A e ninguém mexeu, o editado fica, a revisão não leva A; a nova busca de B preenche o que ficou vazio", async () => {
+    const { tela, registro, busca } = montar({ respostas: [{ estado: "achado", cadastro: A.cadastro }, { estado: "achado", cadastro: B.cadastro }] });
+    await busca.buscar(A.cpf);
+    expect(tela.nome?.valor).toBe("Cliente Fictício A");
+    // A pessoa corrige o CEP à mão (o componente marca o campo como mexido).
+    tela.cep = { valor: "80000999", maximo: -1, mexido: true };
+    busca.mudouODocumento(B.cpf);
+    expect(Object.fromEntries(Object.entries(tela).map(([k, c]) => [k, c.valor]))).toEqual({
+      nome: "", data_nascimento: "", email: "", telefone: "", cep: "80000999", rua: "", numero_endereco: "", complemento: "", bairro: "",
+    });
+    expect(ultimo(registro)).toEqual({ tom: "aviso", linhas: [DADOS_DO_ANTERIOR_APAGADOS("nome, nascimento, e-mail, telefone, rua, número e bairro")] });
+    // A revisão: sem o nome de A, o passo do cliente não passa; o resumo não traz nada de A.
+    expect(faltaNaEtapa(1, formulario(tela, B.cpf))).toBe("Informe o nome completo do cliente, como no documento.");
+    expect(deA(JSON.stringify(resumoDaAtivacao(formulario(tela, B.cpf), LISTAS)))).toBe(false);
+    // A nova busca, de B: preenche o que ficou vazio; o CEP editado fica.
+    await busca.buscar(B.cpf);
+    expect(tela).toMatchObject({ nome: { valor: "Cliente Fictício B" }, rua: { valor: "Rua Fictícia B" }, cep: { valor: "80000999" } });
+    expect(faltaNaEtapa(1, formulario(tela, B.cpf))).toBeNull();
+    const resumo = resumoDaAtivacao(formulario(tela, B.cpf), LISTAS);
+    expect(resumo).toContainEqual(["Titular", "Cliente Fictício B · •••.•••.247-25"]);
+    expect(deA(JSON.stringify(resumo))).toBe(false);
+    expect(registro.pedidos).toEqual(["12345678909", "52998224725"]);
+  });
+
+  it("a formatação do mesmo documento não apaga nada; mudar um dígito apaga", async () => {
+    const { tela, registro, busca } = montar({ respostas: [{ estado: "achado", cadastro: A.cadastro }] });
+    await busca.buscar(A.cpf);
+    const avisos = registro.avisos.length;
+    busca.mudouODocumento("12345678909");
+    busca.mudouODocumento(" 123.456.789-09 ");
+    expect(tela.nome?.valor).toBe("Cliente Fictício A");
+    expect(registro.avisos).toHaveLength(avisos);
+    busca.mudouODocumento("123.456.789-0"); // apagou o último dígito
+    expect(tela.nome?.valor).toBe("");
+    expect(Object.values(tela).every((c) => c.valor === "")).toBe(true);
+  });
+
+  it("o que a pessoa digitou enquanto a busca de A corria fica, na busca e na troca do documento; com tudo editado, só o aviso", async () => {
+    const { tela, registro, deps } = montar();
+    const leitura = adiada<EstadoDoCadastro>();
+    const busca = criarBuscaDoCadastro("preencher", CAMPOS_DA_ATIVACAO, { ...deps, ler: () => leitura.promessa }, { intervaloMs: 0, tentativas: 3 });
+    const andamento = busca.buscar(A.cpf);
+    await new Promise((r) => setTimeout(r, 0));
+    tela.nome = { valor: "Nome Digitado", maximo: -1, mexido: true };
+    leitura.resolver({ estado: "achado", cadastro: { nome: A.cadastro.nome, rua: A.cadastro.rua } });
+    await andamento;
+    expect(tela).toMatchObject({ nome: { valor: "Nome Digitado" }, rua: { valor: "Rua Fictícia A" } });
+    // A rua que veio de A é editada também: ao trocar o documento, nada de A sobra e nada do que foi digitado sai.
+    tela.rua = { valor: "Rua Editada", maximo: -1, mexido: true };
+    busca.mudouODocumento(B.cpf);
+    expect(tela).toMatchObject({ nome: { valor: "Nome Digitado" }, rua: { valor: "Rua Editada" } });
+    expect(ultimo(registro)).toEqual({ tom: "aviso", linhas: [DADOS_DO_ANTERIOR_EDITADOS] });
+  });
+
+  it("a busca de B em trânsito ainda é descartada quando o documento volta para A, e a resposta atrasada não preenche nada", async () => {
+    const { tela, registro, deps } = montar({ respostas: [{ estado: "achado", cadastro: A.cadastro }] });
+    const leituraDeB = adiada<EstadoDoCadastro>();
+    let leituras = 0;
+    const busca = criarBuscaDoCadastro("preencher", CAMPOS_DA_ATIVACAO, {
+      ...deps, ler: (consulta, documento) => (++leituras === 1 ? deps.ler(consulta, documento) : leituraDeB.promessa),
+    }, { intervaloMs: 0, tentativas: 3 });
+    await busca.buscar(A.cpf);
+    busca.mudouODocumento(B.cpf);
+    expect(tela.nome?.valor).toBe("");
+    const andamento = busca.buscar(B.cpf);
+    await new Promise((r) => setTimeout(r, 0));
+    busca.mudouODocumento(A.cpf);
+    expect(ultimo(registro)).toEqual({ tom: "aviso", linhas: [DESCARTADA_PELO_DOCUMENTO] });
+    leituraDeB.resolver({ estado: "achado", cadastro: B.cadastro });
+    await andamento;
+    expect(Object.values(tela).every((c) => c.valor === "")).toBe(true);
+    expect(registro.descartadas).toEqual(["c1", "c2"]);
   });
 });

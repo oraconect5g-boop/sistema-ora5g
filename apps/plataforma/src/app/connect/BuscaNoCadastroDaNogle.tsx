@@ -63,8 +63,11 @@ export function BuscaNoCadastroDaNogle({ campos, modo, campoDoDocumento = "docum
   const buscar = () => {
     const formulario = raiz.current?.closest("form");
     const documento = formulario?.elements.namedItem(campoDoDocumento);
+    // O motor apaga o que a busca anterior (de outro documento) preencheu ainda antes de pedir, com as edições de até agora; só
+    // depois a lista do que a pessoa mexeu recomeça (para a busca nova não trocar o que ela digitar enquanto espera).
+    const andamento = busca.current?.buscar(documento instanceof HTMLInputElement ? documento.value : "");
     mexidos.current = new Set();
-    void busca.current?.buscar(documento instanceof HTMLInputElement ? documento.value : "");
+    void andamento;
   };
 
   return (

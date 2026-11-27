@@ -17,7 +17,7 @@
 ## Os passos (só leitura, menos o passo 2, que só consulta a Nogle)
 
 1. Entre com a sua conta e abra **Ora Connect → Ativar chip**. No passo **Cliente**, confira que o CPF/CNPJ vem primeiro e que, sem documento válido, a busca avisa e não consulta.
-2. Digite um CPF de teste que já tenha cadastro na Nogle (ou o seu, se quiser) e toque em **Buscar o cadastro na Nogle**: em alguns segundos, os campos vazios se preenchem e o aviso diz o que veio, o que foi mantido e a cidade da Nogle. Mude um dígito do documento no meio da busca: a busca é descartada. **Não registre a ativação** (feche a tela ou volte).
+2. Digite um CPF de teste que já tenha cadastro na Nogle (ou o seu, se quiser) e toque em **Buscar o cadastro na Nogle**: em alguns segundos, os campos vazios se preenchem e o aviso diz o que veio, o que foi mantido e a cidade da Nogle. Mude um dígito do documento no meio da busca: a busca é descartada. Depois de uma busca concluída, mude o documento: o que veio da Nogle sai dos campos (o que você digitou ou editou fica; só reescrever com pontos e traço não apaga nada), e a revisão não mostra os dados do documento anterior. **Não registre a ativação** (feche a tela ou volte).
 3. Em **Operações do dia**, confira os cartões, a **Produção por vendedor** e, se houver, a lista **Pix da Nogle para a loja pagar** (com o total e as páginas).
 4. Em **Carteira e relatórios → relatório completo**, troque o período para 30 dias e confira que os totais batem com a lista (e, com muitas operações, o aviso do recorte da planilha).
 5. Em **Conciliação**, abra a mais recente e, se houver mais de 200 linhas que não fecham, as páginas seguintes.
