@@ -8,11 +8,14 @@ import { ehObjeto, inteiro as n, inteiroOuNulo, lista, objeto, texto as t, texto
 import { textoDoParametro, type ValorDeParametro } from "../parametros";
 
 /** Quem deve: as maquininhas (pelo provedor), o Pix direto na conta da loja e as financeiras. */
-export const ADQUIRENTES = { picpay: "PicPay", pagbank: "PagBank", conta: "Pix direto na conta", payjoy: "PayJoy", aiva: "Aiva" } as const;
+// A Mercado Pago (o #112, maquininha da loja) entra como as outras: sem ela, a primeira venda na maquininha Mercado Pago
+// derrubava a tela inteira (a leitura estrita recusa adquirente desconhecida). O teste confere que toda maquininha que o
+// site conhece (PROVEDORES) está aqui.
+export const ADQUIRENTES = { picpay: "PicPay", pagbank: "PagBank", mercado_pago: "Mercado Pago", conta: "Pix direto na conta", payjoy: "PayJoy", aiva: "Aiva" } as const;
 export type Adquirente = keyof typeof ADQUIRENTES;
 const ehAdquirente = (v: unknown): v is Adquirente => typeof v === "string" && Object.hasOwn(ADQUIRENTES, v);
 /** Os que se conciliam com o extrato (cartão e Pix) e os que pagam por repasse (financeiras). */
-export const DO_EXTRATO: readonly Adquirente[] = ["picpay", "pagbank", "conta"];
+export const DO_EXTRATO: readonly Adquirente[] = ["picpay", "pagbank", "mercado_pago", "conta"];
 export const DAS_FINANCEIRAS: readonly Adquirente[] = ["payjoy", "aiva"];
 
 /** Janelas do recebido, em dias (o banco aceita de 7 a 90). */
