@@ -174,6 +174,16 @@ export default async function Vender({ searchParams }: { searchParams: Promise<{
     <MoldeReal sessao={sessao}>
       <TituloPagina sobretitulo={situacao.unidade_nome} titulo="Vender"
         acao={permissoes.has("venda.registrar") && <BotaoLink href="/reservas-do-site" prefetch={false} tamanho="sm" variante="secundario">Reservas do site</BotaoLink>} />
+      {permissoes.has("connect.operar") && (
+        <details className="nao-imprimir rounded-xl border border-borda bg-white px-3 lg:hidden">
+          <summary className="min-h-11 cursor-pointer py-3 text-sm font-semibold text-acao">Ora Connect: Ativar/Portar</summary>
+          <nav aria-label="Atalhos da Ora Connect" className="flex flex-wrap gap-2 pb-2">
+            <BotaoLink href="/connect/ativar" prefetch={false} target="_blank" rel="noopener noreferrer" tamanho="sm" variante="secundario">Ativar chip</BotaoLink>
+            <BotaoLink href="/connect/portabilidade" prefetch={false} target="_blank" rel="noopener noreferrer" tamanho="sm" variante="secundario">Portar número</BotaoLink>
+          </nav>
+          <p className="pb-3 text-xs text-suave">Abre em outra aba. Para continuar a venda, volte a esta aba.</p>
+        </details>
+      )}
       {erro && <Aviso tom="perigo">{ERROS_DA_VENDA[erro]}</Aviso>}
       {textoDoParametro(parametros.desconto) === "pedir" && <Aviso tom="aviso">Esse desconto passa do limite: peça a aprovação do gerente ou do dono.</Aviso>}
       {textoDoParametro(parametros.cancelada) === "1" && <Aviso tom="info">Venda cancelada. Os itens voltaram para o estoque da loja.</Aviso>}

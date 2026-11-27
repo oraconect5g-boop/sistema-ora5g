@@ -698,6 +698,35 @@ describe("atalho móvel de pagamento", () => {
   });
 });
 
+describe("atalho móvel Ora Connect", () => {
+  it("abre só as telas da Connect sem navegar esta aba da venda, enviar dados ou consultar a integração no PDV", async () => {
+    cenario.permissoes.add("connect.operar");
+    cenario.pdv = tela({ itens: [item()] });
+    const arvore = await abrir();
+    const elementosDaTela = elementos(arvore);
+    const atalho = elementosDaTela.find((e) => e.type === "details" && texto(e).includes("Ora Connect: Ativar/Portar"));
+    expect(atalho?.props.className).toContain("lg:hidden");
+    expect(atalho?.props.open).toBeUndefined();
+    expect(texto(atalho)).toContain("volte a esta aba");
+    const links = elementos(atalho).filter((e) => typeof e.props.href === "string");
+    expect(links.map((e) => ({ href: e.props.href, target: e.props.target, rel: e.props.rel, prefetch: e.props.prefetch }))).toEqual([
+      { href: "/connect/ativar", target: "_blank", rel: "noopener noreferrer", prefetch: false },
+      { href: "/connect/portabilidade", target: "_blank", rel: "noopener noreferrer", prefetch: false },
+    ]);
+    expect(elementos(atalho).some((e) => e.type === "form")).toBe(false);
+    expect(texto(arvore)).toContain("2 itens · total");
+    expect(formularios(arvore, concluirVenda)).toHaveLength(1);
+    expect(rodadas()).toEqual([PRIMEIRA_IDA]);
+  });
+
+  it("não mostra atalhos operacionais sem connect.operar, mesmo para quem só gerencia a Connect", async () => {
+    cenario.permissoes.add("connect.gerir");
+    const arvore = await abrir();
+    expect(texto(arvore)).not.toContain("Ora Connect: Ativar/Portar");
+    expect(elementos(arvore).filter((e) => typeof e.props.href === "string" && e.props.href.startsWith("/connect/"))).toEqual([]);
+  });
+});
+
 describe("falhas: a tela mostra erro, nunca caixa fechado nem carrinho vazio", () => {
   it("a leitura da tela falha: página de erro (não o botão de nova venda por cima de uma venda aberta)", async () => {
     cenario.erroDoPdv = { code: "57014" };
