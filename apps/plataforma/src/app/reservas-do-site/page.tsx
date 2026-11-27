@@ -1,7 +1,7 @@
 import type { Metadata } from "next";
 
 import { MoldeReal } from "../../componentes/MoldeReal";
-import { Aviso, TituloPagina } from "../../componentes/ui";
+import { Aviso, BotaoLink, TituloPagina } from "../../componentes/ui";
 import { permite } from "../../lib/acesso/molde";
 import { FalhaDoServico, obterSessao } from "../../lib/acesso/sessao";
 import { agora as agoraDoServidor } from "../../lib/formato";
@@ -87,7 +87,11 @@ export default async function ReservasDoSite({ searchParams }: { searchParams: P
 
   return (
     <MoldeReal sessao={sessao}>
-      <TituloPagina titulo="Reservas do site" subtitulo="Clientes que reservaram na loja online para retirar aqui. A reserva vale 24 horas." />
+      <TituloPagina titulo="Reservas do site" subtitulo="Clientes que reservaram na loja online para retirar aqui. A reserva vale 24 horas."
+        acao={<div className="flex flex-wrap gap-2">
+          {permite(sessao, "estoque.consultar") && <BotaoLink href="/estoque" prefetch={false} tamanho="sm" variante="secundario">Consultar estoque</BotaoLink>}
+          <BotaoLink href="/vender" prefetch={false} tamanho="sm" variante="secundario">Voltar ao PDV</BotaoLink>
+        </div>} />
       {ok && <Aviso tom="sucesso" className="mt-4">{OK[ok]}</Aviso>}
       {erro && <Aviso tom="perigo" className="mt-4">{ERROS_DA_LOJA[erro]}</Aviso>}
       <ListaDeReservas reservas={reservas} pedidos={pedidos} pagamentos={pagamentos} produtos={produtos} imeis={imeis} instante={instante} />

@@ -170,6 +170,13 @@ beforeEach(() => {
 afterEach(() => { vi.restoreAllMocks(); });
 
 describe("/caixa: quem está com o caixa aberto pede a saída (L7c)", () => {
+  it("separa a gaveta do cartão ao conferir a venda", async () => {
+    (cenario.tabelas.caixa_movimentos ??= []).push({ caixa_id: CAIXA_DA_ANA, tipo: "recebimento", meio: "cartao_picpay", valor_centavos: 5_000 });
+    const t = visivel(await pagina());
+    expect(t).toContain("Dinheiro esperado na gaveta R$ 80,00");
+    expect(t).toContain("Cartão na maquininha PicPay R$ 50,00");
+  });
+
   it("pede com valor e motivo e acompanha os pedidos deste caixa: o pendente pode ser cancelado, o negado mostra o motivo", async () => {
     const tela = await pagina();
     const t = visivel(tela);
@@ -178,8 +185,8 @@ describe("/caixa: quem está com o caixa aberto pede a saída (L7c)", () => {
     expect(t).toContain("Retire o dinheiro da gaveta só depois de autorizado");
     expect(t).toContain("R$ 30,00 · Pagar o motoboy aguardando autorização Cancelar");
     expect(t).toContain("R$ 15,00 · Lanche da equipe Motivo de negar: Não é despesa da loja negada");
-    // A gaveta já desconta a saída autorizada.
-    expect(t).toContain("Dinheiro R$ 80,00");
+    // A gaveta já desconta a saída autorizada e não soma cartão.
+    expect(t).toContain("Dinheiro esperado na gaveta R$ 80,00");
     expect(t).toContain("− saídas autorizadas");
     // O pedido pendente avisa no fechamento.
     expect(t).toContain("Há 1 pedido de saída aguardando autorização: depois de fechar o caixa, ele não pode mais ser autorizado.");

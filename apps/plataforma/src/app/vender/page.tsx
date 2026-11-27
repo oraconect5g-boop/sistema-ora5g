@@ -12,7 +12,7 @@ import { BotaoConfirmar } from "../../componentes/BotaoConfirmar";
 import { LerCodigo } from "../../componentes/LerCodigo";
 import { MoldeReal } from "../../componentes/MoldeReal";
 import { QrCode as QrCodeDoLink } from "../../componentes/QrCode";
-import { Aviso, Botao, Cartao, Selo, TituloPagina } from "../../componentes/ui";
+import { Aviso, Botao, BotaoLink, Cartao, classeBotao, Selo, TituloPagina } from "../../componentes/ui";
 import { FalhaDoServico, obterSessao } from "../../lib/acesso/sessao";
 import { centavosDoBanco } from "../../lib/dinheiro";
 import { brl } from "../../lib/formato";
@@ -30,6 +30,7 @@ import { FotoAmpliavel } from "../catalogo/FotoAmpliavel";
 import { BuscaDeCliente } from "../clientes/BuscaDeCliente";
 import { abrirCaixa, adicionarItem, aplicarDesconto, cancelarCartaoAsaas, cancelarPixAsaas, cancelarVenda, concluirVenda, novaVenda, pedirAprovacao, pedirCartaoAsaas,
   pedirPixAsaas, removerItem } from "./acoes";
+import { IdentificarCliente } from "./IdentificarCliente";
 import { FormasDePagamento } from "./FormasDePagamento";
 
 export const metadata: Metadata = { title: "Vender" };
@@ -81,12 +82,18 @@ export default async function Vender({ searchParams }: { searchParams: Promise<{
   // catálogo o que foi digitado (a busca do catálogo olha o que está em estoque, que a reserva não muda).
   // PAY-015a: junto, o Pix pela Asaas da venda aberta (o banco acha a mesma venda da tela: a mais nova da pessoa na loja).
   // PAY-015b: e o cartão pela Asaas, do mesmo jeito (em paralelo: a ida continua uma só).
-  const [tela, , achados, pixLido, cartaoLido] = await Promise.all([
+  // A coluna Código da REIN entra como SKU de quatro dígitos. O acerto exato não pode sumir no limite das
+  // correspondências parciais; a leitura exata sai na mesma rodada e mantém o código como texto (inclusive zeros).
+  const colunasDaVariante = "id, sku, nome, produto_id, produtos(nome, tipo)";
+  const [tela, , achados, pixLido, cartaoLido, porCodigoExato] = await Promise.all([
     consultarTelaDoPdv(supabase),
     soltarReservasDoSiteVencidas(supabase),
     busca && !numero ? buscarNoCatalogo(supabase, busca, { limite: 40 }) : Promise.resolve(null),
     (async () => await supabase.rpc("caixa_pix_da_venda", {}))(),
     (async () => await supabase.rpc("caixa_cartao_da_venda", {}))(),
+    /^\d{4}$/.test(busca)
+      ? supabase.from("variantes").select(colunasDaVariante).eq("ativa", true).eq("sku", busca).limit(8)
+      : Promise.resolve({ data: [], error: null }),
   ]);
   const { caixa, venda, itens, terminais } = tela;
 
@@ -98,9 +105,9 @@ export default async function Vender({ searchParams }: { searchParams: Promise<{
     ? await supabase.from("itens_serializados").select("id, variante_id, imei, iccid, situacao, variantes(id, sku, nome, produto_id, produtos(nome, tipo))").or(filtroDoIdentificador(numero)).eq("unidade_id", unidade).limit(1)
     : { data: [], error: null };
   const porNome = procurar && achados?.variantes.length
-    ? await supabase.from("variantes").select("id, sku, nome, produto_id, produtos(nome, tipo)").in("id", achados.variantes).order("sku").limit(8)
+    ? await supabase.from("variantes").select(colunasDaVariante).in("id", achados.variantes).order("sku").limit(8)
     : { data: [], error: null };
-  if (porNumero.error || porNome.error) throw new FalhaDoServico("busca");
+  if (porNumero.error || porNome.error || (procurar && porCodigoExato.error)) throw new FalhaDoServico("busca");
   // Sem a leitura do Pix, o caixa segue sem ele (a conclusão no banco põe o pago de qualquer jeito); a venda lida tem de ser a
   // da tela (no meio, outra pode ter sido aberta).
   const pixIndisponivel = venda !== null && Boolean(pixLido.error);
@@ -111,15 +118,16 @@ export default async function Vender({ searchParams }: { searchParams: Promise<{
   const cartaoDaVenda = lidoDoCartao && venda && lidoDoCartao.venda === venda.id ? lidoDoCartao : { ligado: lidoDoCartao?.ligado ?? false, venda: null, cartoes: [] };
 
   // As variações dos resultados (a do aparelho achado pelo número vem nula quando quem pede não a lê).
-  const variantes = [...porNome.data, ...porNumero.data.flatMap((i) => (i.variantes ? [i.variantes] : []))];
-  const resultados = [...porNome.data.map((v) => v.id), ...porNumero.data.map((i) => i.variante_id)];
+  const variantesDoCatalogo = [...new Map((procurar ? [...(porCodigoExato.data ?? []), ...porNome.data] : []).map((v) => [v.id, v])).values()].slice(0, 8);
+  const variantes = [...variantesDoCatalogo, ...porNumero.data.flatMap((i) => (i.variantes ? [i.variantes] : []))];
+  const resultados = [...variantesDoCatalogo.map((v) => v.id), ...porNumero.data.map((i) => i.variante_id)];
   const produtoIds = [...new Set(variantes.map((v) => v.produto_id))];
   // 3ª ida, só com resultado: o saldo livre, os aparelhos disponíveis, as fotos e o preço vigente, em paralelo. O preço de
   // todos os resultados vem num pedido só (VEL-b: public.precos_vigentes, a mesma regra de preco_vigente); a variação sem
   // preço nesta loja não volta.
   const [saldos, disponiveis, fotos, precosLidos] = await Promise.all([
     resultados.length ? supabase.from("estoque_saldos").select("variante_id, quantidade, reservado").eq("unidade_id", unidade).in("variante_id", resultados) : Promise.resolve({ data: [], error: null }),
-    porNome.data.length ? supabase.from("itens_serializados").select("id, variante_id, imei, iccid").eq("unidade_id", unidade).eq("situacao", "disponivel").eq("em_estoque", true).in("variante_id", porNome.data.map((v) => v.id)).limit(40) : Promise.resolve({ data: [], error: null }),
+    variantesDoCatalogo.length ? supabase.from("itens_serializados").select("id, variante_id, imei, iccid").eq("unidade_id", unidade).eq("situacao", "disponivel").eq("em_estoque", true).in("variante_id", variantesDoCatalogo.map((v) => v.id)).limit(40) : Promise.resolve({ data: [], error: null }),
     produtoIds.length ? supabase.from("fotos_produto").select("produto_id, variante_id, caminho, ilustracao").in("produto_id", produtoIds).is("substituida_em", null) : Promise.resolve({ data: [], error: null }),
     resultados.length ? supabase.rpc("precos_vigentes", { p_variantes: resultados, p_unidade: unidade }) : Promise.resolve({ data: [], error: null }),
   ]);
@@ -146,6 +154,7 @@ export default async function Vender({ searchParams }: { searchParams: Promise<{
   // O carrinho veio inteiro da leitura única, com os valores já conferidos (lib/vendas/pdv-tela.ts).
   const subtotal = itens.reduce((t, i) => t + i.preco_unitario_centavos * i.quantidade, 0);
   const descontos = itens.reduce((t, i) => t + i.desconto_centavos, 0);
+  const quantidadeNoCarrinho = itens.reduce((t, i) => t + i.quantidade, 0);
   // PDV-c: o que a PayJoy e a Aiva podem financiar (os celulares, com o desconto); o resto é pago à parte. PAY-014b: o
   // celular já pago pelo site não entra.
   const valorDosCelulares = itens.filter((i) => i.tipo === "aparelho" && !i.pago_pelo_site).reduce((t, i) => t + i.preco_unitario_centavos * i.quantidade - i.desconto_centavos, 0);
@@ -163,7 +172,8 @@ export default async function Vender({ searchParams }: { searchParams: Promise<{
 
   return (
     <MoldeReal sessao={sessao}>
-      <TituloPagina sobretitulo={situacao.unidade_nome} titulo="Vender" />
+      <TituloPagina sobretitulo={situacao.unidade_nome} titulo="Vender"
+        acao={permissoes.has("venda.registrar") && <BotaoLink href="/reservas-do-site" prefetch={false} tamanho="sm" variante="secundario">Reservas do site</BotaoLink>} />
       {erro && <Aviso tom="perigo">{ERROS_DA_VENDA[erro]}</Aviso>}
       {textoDoParametro(parametros.desconto) === "pedir" && <Aviso tom="aviso">Esse desconto passa do limite: peça a aprovação do gerente ou do dono.</Aviso>}
       {textoDoParametro(parametros.cancelada) === "1" && <Aviso tom="info">Venda cancelada. Os itens voltaram para o estoque da loja.</Aviso>}
@@ -194,7 +204,7 @@ export default async function Vender({ searchParams }: { searchParams: Promise<{
                 resultados chegam e o botão avisa que está buscando. A chave do campo devolve a ele o termo que o servidor
                 usou: depois de pôr um item a tela volta sem busca e o campo volta vazio, pronto para o próximo produto. */}
             <Form action="/vender" prefetch={false} className="flex flex-wrap items-end gap-2" role="search">
-              <label className="min-w-0 flex-1 text-sm font-medium">Produto, marca, SKU, código de barras ou IMEI/ICCID<input key={busca} id="busca-pdv" name="q" defaultValue={busca} className={campo} autoComplete="off" placeholder="Ex.: galaxy, APA-0002 ou o final do IMEI" /></label>
+              <label className="min-w-0 flex-1 text-sm font-medium">Produto, código ou IMEI/ICCID<input key={busca} id="busca-pdv" name="q" defaultValue={busca} className={campo} autoComplete="off" placeholder="Ex.: Galaxy, 0042, código de barras ou IMEI completo" /></label>
               <LerCodigo alvo="busca-pdv" />
               <Botao type="submit" enquanto="Buscando…"><ScanLine aria-hidden className="size-4" /> Buscar</Botao>
             </Form>
@@ -225,10 +235,12 @@ export default async function Vender({ searchParams }: { searchParams: Promise<{
                             ))}
                           </div>
                         ) : <p className="mt-1 text-xs text-aviso">Nenhum disponível nesta loja.</p>
+                      ) : tipo === "acessorio" && livre(id) <= 0 ? (
+                        <p className="mt-1 text-xs text-aviso">Nenhum disponível nesta loja.</p>
                       ) : (
                         <form action={adicionarItem} className="mt-2 flex items-end gap-2">
                           <input type="hidden" name="venda" value={venda.id} /><input type="hidden" name="variante" value={id} /><input type="hidden" name="chave" value={randomUUID()} />
-                          <label className="text-xs font-medium">Qtd.<input name="quantidade" type="number" min={1} max={99} defaultValue={1} className={`${campo} w-20`} /></label>
+                          <label className="text-xs font-medium">Qtd.<input name="quantidade" type="number" min={1} max={tipo === "acessorio" ? Math.min(99, livre(id)) : 99} defaultValue={1} className={`${campo} w-20`} /></label>
                           <Botao type="submit" tamanho="sm" enquanto="Adicionando…">Adicionar</Botao>
                         </form>
                       ))}
@@ -297,128 +309,139 @@ export default async function Vender({ searchParams }: { searchParams: Promise<{
             </dl>
           </Cartao>
 
+          {itens.length > 0 && <h2 id="pagamento-pdv" className="scroll-mt-24 text-lg font-semibold" tabIndex={-1}>Pagamento</h2>}
           {/* PAY-015a (a D-062: "pagamento oficial da loja será a asaas"): o QR Code do Pix gerado pelo sistema. O worker cria o QR
               na Asaas e confere o pagamento a cada poucos segundos; a tela se atualiza sozinha enquanto um QR espera. */}
           {itens.length > 0 && (pixDaVenda.ligado || pixDaVenda.pix.length > 0 || pixIndisponivel) && (
-            <Cartao titulo="Pix pela Asaas" icone={QrCode} subtitulo="O QR Code aparece aqui com o valor; o cliente paga no app do banco e o pago entra sozinho na venda, sem comprovante digitado.">
-              {pixIndisponivel && <Aviso tom="aviso">Não deu para ler o Pix da Asaas agora. Recarregue a tela em instantes.</Aviso>}
-              {pixPendente && <AtualizarEnquantoEspera aviso="Esperando o Pix…" />}
-              {pixDaVenda.pix.length > 0 && (
-                <ul className="space-y-3" aria-label="Pix desta venda">
-                  {pixDaVenda.pix.map((p) => {
-                    const s = SITUACOES_DO_PIX[p.situacao];
-                    return (
-                      <li key={p.id} className="rounded-xl border border-borda p-3 text-sm">
-                        <p className="flex flex-wrap items-center gap-2">
-                          <span className="numeros font-semibold">{brl(p.valor_centavos)}</span>
-                          <Selo tom={s.tom} ponto>{s.rotulo}</Selo>
-                          {p.situacao === "pago" && horaDe(p.pago_em) && <span className="text-xs text-suave">às {horaDe(p.pago_em)}</span>}
-                        </p>
-                        {p.situacao === "aguardando" && p.imagem && p.copia_e_cola && (
-                          <div className="mt-2 flex flex-wrap items-start gap-3">
-                            {/* eslint-disable-next-line @next/next/no-img-element -- o QR Code que a Asaas gerou (PNG em base64), só enquanto espera */}
-                            <img src={`data:image/png;base64,${p.imagem}`} alt={`QR Code do Pix de ${brl(p.valor_centavos)}`} className="size-52 rounded-lg border border-borda bg-white p-1" />
-                            <div className="min-w-0 flex-1 space-y-2">
-                              <p className="text-xs text-suave">O cliente lê o QR Code no app do banco{horaDe(p.expira_em) ? ` (vale até ${horaDe(p.expira_em)})` : ""}. Ou copia o código:</p>
-                              <textarea readOnly defaultValue={p.copia_e_cola} aria-label="Pix copia e cola" className="numeros h-20 w-full rounded-botao border border-borda bg-white p-2 text-xs" />
+            <details open={pixDaVenda.pix.length > 0 || pixIndisponivel} className="rounded-cartao border border-borda bg-white">
+              <summary className="min-h-11 cursor-pointer px-4 py-3 text-sm font-semibold text-acao">Pix pela Asaas</summary>
+              <div className="space-y-2 px-4 pb-4">
+                <p className="text-xs text-suave">QR Code para o cliente pagar no app do banco. O pagamento confirmado entra sozinho na venda.</p>
+                {pixIndisponivel && <Aviso tom="aviso">Não deu para ler o Pix da Asaas agora. Recarregue a tela em instantes.</Aviso>}
+                {pixPendente && <AtualizarEnquantoEspera aviso="Esperando o Pix…" />}
+                {pixDaVenda.pix.length > 0 && (
+                  <ul className="space-y-3" aria-label="Pix desta venda">
+                    {pixDaVenda.pix.map((p) => {
+                      const s = SITUACOES_DO_PIX[p.situacao];
+                      return (
+                        <li key={p.id} className="rounded-xl border border-borda p-3 text-sm">
+                          <p className="flex flex-wrap items-center gap-2">
+                            <span className="numeros font-semibold">{brl(p.valor_centavos)}</span>
+                            <Selo tom={s.tom} ponto>{s.rotulo}</Selo>
+                            {p.situacao === "pago" && horaDe(p.pago_em) && <span className="text-xs text-suave">às {horaDe(p.pago_em)}</span>}
+                          </p>
+                          {p.situacao === "aguardando" && p.imagem && p.copia_e_cola && (
+                            <div className="mt-2 flex flex-wrap items-start gap-3">
+                              {/* eslint-disable-next-line @next/next/no-img-element -- o QR Code que a Asaas gerou (PNG em base64), só enquanto espera */}
+                              <img src={`data:image/png;base64,${p.imagem}`} alt={`QR Code do Pix de ${brl(p.valor_centavos)}`} className="size-52 rounded-lg border border-borda bg-white p-1" />
+                              <div className="min-w-0 flex-1 space-y-2">
+                                <p className="text-xs text-suave">O cliente lê o QR Code no app do banco{horaDe(p.expira_em) ? ` (vale até ${horaDe(p.expira_em)})` : ""}. Ou copia o código:</p>
+                                <textarea readOnly defaultValue={p.copia_e_cola} aria-label="Pix copia e cola" className="numeros h-20 w-full rounded-botao border border-borda bg-white p-2 text-xs" />
+                              </div>
                             </div>
-                          </div>
-                        )}
-                        {p.situacao === "criando" && <p className="mt-1 text-xs text-suave">O servidor está gerando o QR Code na Asaas: ele aparece aqui em alguns segundos.</p>}
-                        {p.situacao === "falhou" && p.ultima_falha && <p className="mt-1 text-xs">{p.ultima_falha}</p>}
-                        {p.divergencia && <p className="mt-1 text-xs text-perigo">{p.divergencia}</p>}
-                        {(p.situacao === "criando" || p.situacao === "aguardando") && (
-                          <form action={cancelarPixAsaas} className="mt-2">
-                            <input type="hidden" name="pix" value={p.id} />
-                            <Botao type="submit" tamanho="sm" variante="fantasma" enquanto="Cancelando…">Cancelar este QR Code</Botao>
-                          </form>
-                        )}
-                      </li>
-                    );
-                  })}
-                </ul>
-              )}
-              {pixDaVenda.ligado ? faltaNaAsaas > 0 && (
-                <form action={pedirPixAsaas} className="mt-3 flex flex-wrap items-end gap-2">
-                  <input type="hidden" name="venda" value={venda.id} /><input type="hidden" name="chave" value={randomUUID()} />
-                  <label className="text-sm font-medium">Valor no Pix (R$)<input name="valor" inputMode="decimal" required defaultValue={valorSugerido} className={`${campo} w-36`} /></label>
-                  <Botao type="submit" enquanto="Pedindo o QR Code…"><QrCode aria-hidden className="size-4" /> Gerar QR Code do Pix</Botao>
-                </form>
-              ) : !pixIndisponivel && (
-                <p className="mt-2 text-xs text-suave">O Pix pela Asaas está desligado agora (o servidor confere a conta da Asaas a cada minuto). Use o Pix direto ou a maquininha.</p>
-              )}
-            </Cartao>
+                          )}
+                          {p.situacao === "criando" && <p className="mt-1 text-xs text-suave">O servidor está gerando o QR Code na Asaas: ele aparece aqui em alguns segundos.</p>}
+                          {p.situacao === "falhou" && p.ultima_falha && <p className="mt-1 text-xs">{p.ultima_falha}</p>}
+                          {p.divergencia && <p className="mt-1 text-xs text-perigo">{p.divergencia}</p>}
+                          {(p.situacao === "criando" || p.situacao === "aguardando") && (
+                            <form action={cancelarPixAsaas} className="mt-2">
+                              <input type="hidden" name="pix" value={p.id} />
+                              <Botao type="submit" tamanho="sm" variante="fantasma" enquanto="Cancelando…">Cancelar este QR Code</Botao>
+                            </form>
+                          )}
+                        </li>
+                      );
+                    })}
+                  </ul>
+                )}
+                {pixDaVenda.ligado ? faltaNaAsaas > 0 && (
+                  <form action={pedirPixAsaas} className="mt-3 flex flex-wrap items-end gap-2">
+                    <input type="hidden" name="venda" value={venda.id} /><input type="hidden" name="chave" value={randomUUID()} />
+                    <label className="text-sm font-medium">Valor no Pix (R$)<input name="valor" inputMode="decimal" required defaultValue={valorSugerido} className={`${campo} w-36`} /></label>
+                    <Botao type="submit" enquanto="Pedindo o QR Code…"><QrCode aria-hidden className="size-4" /> Gerar QR Code do Pix</Botao>
+                  </form>
+                ) : !pixIndisponivel && (
+                  <p className="mt-2 text-xs text-suave">O Pix pela Asaas está desligado agora (o servidor confere a conta da Asaas a cada minuto). Use o Pix direto ou a maquininha.</p>
+                )}
+              </div>
+            </details>
           )}
 
           {/* PAY-015b (a D-062): o cartão pela Asaas. O worker cria o link de pagamento só no cartão e confere as cobranças; o
               cliente paga no celular dele, na página da Asaas (o número do cartão não passa pelo sistema). */}
           {itens.length > 0 && (cartaoDaVenda.ligado || cartaoDaVenda.cartoes.length > 0 || cartaoIndisponivel) && (
-            <Cartao titulo="Cartão pela Asaas" icone={CreditCard} subtitulo="O cliente aponta a câmera para o QR Code e paga no cartão, no celular dele; o pago entra sozinho na venda. O número do cartão não passa pelo sistema.">
-              {cartaoIndisponivel && <Aviso tom="aviso">Não deu para ler o cartão da Asaas agora. Recarregue a tela em instantes.</Aviso>}
-              {cartaoPendente && !pixPendente && <AtualizarEnquantoEspera aviso="Esperando o cartão…" />}
-              {cartaoDaVenda.cartoes.length > 0 && (
-                <ul className="space-y-3" aria-label="Cartões desta venda">
-                  {cartaoDaVenda.cartoes.map((c) => {
-                    const s = SITUACOES_DO_CARTAO[c.situacao];
-                    return (
-                      <li key={c.id} className="rounded-xl border border-borda p-3 text-sm">
-                        <p className="flex flex-wrap items-center gap-2">
-                          <span className="numeros font-semibold">{brl(c.valor_centavos)}</span>
-                          <Selo tom={s.tom} ponto>{s.rotulo}</Selo>
-                          {c.situacao === "pago" && c.cartao_final && <span className="text-xs text-suave">{`${c.cartao_bandeira ?? "Cartão"} final ${c.cartao_final}`}</span>}
-                          {c.situacao === "pago" && horaDe(c.pago_em) && <span className="text-xs text-suave">às {horaDe(c.pago_em)}</span>}
-                        </p>
-                        {c.situacao === "aguardando" && c.link_url && (
-                          <div className="mt-2 flex flex-wrap items-start gap-3">
-                            <QrCodeDoLink texto={c.link_url} rotulo={`QR Code do pagamento no cartão de ${brl(c.valor_centavos)}`} className="size-52 rounded-lg border border-borda bg-white p-1" />
-                            <div className="min-w-0 flex-1 space-y-2">
-                              <p className="text-xs text-suave">{`O cliente aponta a câmera do celular para o QR Code e paga no cartão${horaDe(c.expira_em) ? ` (vale até ${horaDe(c.expira_em)})` : ""}. Ou abra o pagamento no celular dele:`}</p>
-                              <a href={c.link_url} target="_blank" rel="noreferrer noopener" className="text-xs font-semibold text-acao underline">Abrir o pagamento no cartão</a>
+            <details open={cartaoDaVenda.cartoes.length > 0 || cartaoIndisponivel} className="rounded-cartao border border-borda bg-white">
+              <summary className="min-h-11 cursor-pointer px-4 py-3 text-sm font-semibold text-acao">Cartão pela Asaas</summary>
+              <div className="space-y-2 px-4 pb-4">
+                <p className="text-xs text-suave">Link para o cliente pagar no cartão pelo celular. O número do cartão não passa pelo PDV.</p>
+                {cartaoIndisponivel && <Aviso tom="aviso">Não deu para ler o cartão da Asaas agora. Recarregue a tela em instantes.</Aviso>}
+                {cartaoPendente && !pixPendente && <AtualizarEnquantoEspera aviso="Esperando o cartão…" />}
+                {cartaoDaVenda.cartoes.length > 0 && (
+                  <ul className="space-y-3" aria-label="Cartões desta venda">
+                    {cartaoDaVenda.cartoes.map((c) => {
+                      const s = SITUACOES_DO_CARTAO[c.situacao];
+                      return (
+                        <li key={c.id} className="rounded-xl border border-borda p-3 text-sm">
+                          <p className="flex flex-wrap items-center gap-2">
+                            <span className="numeros font-semibold">{brl(c.valor_centavos)}</span>
+                            <Selo tom={s.tom} ponto>{s.rotulo}</Selo>
+                            {c.situacao === "pago" && c.cartao_final && <span className="text-xs text-suave">{`${c.cartao_bandeira ?? "Cartão"} final ${c.cartao_final}`}</span>}
+                            {c.situacao === "pago" && horaDe(c.pago_em) && <span className="text-xs text-suave">às {horaDe(c.pago_em)}</span>}
+                          </p>
+                          {c.situacao === "aguardando" && c.link_url && (
+                            <div className="mt-2 flex flex-wrap items-start gap-3">
+                              <QrCodeDoLink texto={c.link_url} rotulo={`QR Code do pagamento no cartão de ${brl(c.valor_centavos)}`} className="size-52 rounded-lg border border-borda bg-white p-1" />
+                              <div className="min-w-0 flex-1 space-y-2">
+                                <p className="text-xs text-suave">{`O cliente aponta a câmera do celular para o QR Code e paga no cartão${horaDe(c.expira_em) ? ` (vale até ${horaDe(c.expira_em)})` : ""}. Ou abra o pagamento no celular dele:`}</p>
+                                <a href={c.link_url} target="_blank" rel="noreferrer noopener" className="text-xs font-semibold text-acao underline">Abrir o pagamento no cartão</a>
+                              </div>
                             </div>
-                          </div>
-                        )}
-                        {c.situacao === "criando" && <p className="mt-1 text-xs text-suave">O servidor está gerando o link na Asaas: o QR Code aparece aqui em alguns segundos.</p>}
-                        {c.situacao === "falhou" && c.ultima_falha && <p className="mt-1 text-xs">{c.ultima_falha}</p>}
-                        {c.divergencia && <p className="mt-1 text-xs text-perigo">{c.divergencia}</p>}
-                        {(c.situacao === "criando" || c.situacao === "aguardando") && (
-                          <form action={cancelarCartaoAsaas} className="mt-2">
-                            <input type="hidden" name="cartao" value={c.id} />
-                            <Botao type="submit" tamanho="sm" variante="fantasma" enquanto="Cancelando…">Cancelar este link</Botao>
-                          </form>
-                        )}
-                      </li>
-                    );
-                  })}
-                </ul>
-              )}
-              {cartaoDaVenda.ligado ? faltaNaAsaas > 0 && (
-                <form action={pedirCartaoAsaas} className="mt-3 flex flex-wrap items-end gap-2">
-                  <input type="hidden" name="venda" value={venda.id} /><input type="hidden" name="chave" value={randomUUID()} />
-                  <label className="text-sm font-medium">Valor no cartão (R$)<input name="valor" inputMode="decimal" required defaultValue={valorSugerido} className={`${campo} w-36`} /></label>
-                  <Botao type="submit" enquanto="Pedindo o link…"><CreditCard aria-hidden className="size-4" /> Gerar QR Code do cartão</Botao>
-                </form>
-              ) : !cartaoIndisponivel && (
-                <p className="mt-2 text-xs text-suave">O cartão pela Asaas está desligado agora (o servidor fala com a Asaas a cada minuto). Use a maquininha.</p>
-              )}
-            </Cartao>
+                          )}
+                          {c.situacao === "criando" && <p className="mt-1 text-xs text-suave">O servidor está gerando o link na Asaas: o QR Code aparece aqui em alguns segundos.</p>}
+                          {c.situacao === "falhou" && c.ultima_falha && <p className="mt-1 text-xs">{c.ultima_falha}</p>}
+                          {c.divergencia && <p className="mt-1 text-xs text-perigo">{c.divergencia}</p>}
+                          {(c.situacao === "criando" || c.situacao === "aguardando") && (
+                            <form action={cancelarCartaoAsaas} className="mt-2">
+                              <input type="hidden" name="cartao" value={c.id} />
+                              <Botao type="submit" tamanho="sm" variante="fantasma" enquanto="Cancelando…">Cancelar este link</Botao>
+                            </form>
+                          )}
+                        </li>
+                      );
+                    })}
+                  </ul>
+                )}
+                {cartaoDaVenda.ligado ? faltaNaAsaas > 0 && (
+                  <form action={pedirCartaoAsaas} className="mt-3 flex flex-wrap items-end gap-2">
+                    <input type="hidden" name="venda" value={venda.id} /><input type="hidden" name="chave" value={randomUUID()} />
+                    <label className="text-sm font-medium">Valor no cartão (R$)<input name="valor" inputMode="decimal" required defaultValue={valorSugerido} className={`${campo} w-36`} /></label>
+                    <Botao type="submit" enquanto="Pedindo o link…"><CreditCard aria-hidden className="size-4" /> Gerar QR Code do cartão</Botao>
+                  </form>
+                ) : !cartaoIndisponivel && (
+                  <p className="mt-2 text-xs text-suave">O cartão pela Asaas está desligado agora (o servidor fala com a Asaas a cada minuto). Use a maquininha.</p>
+                )}
+              </div>
+            </details>
           )}
 
           {itens.length > 0 && (
-            <Cartao titulo="Pagamento" subtitulo="Toque em “Adicionar forma de pagamento” para cada forma que o cliente usar. PayJoy e Aiva: o valor financiado (só o do celular) e as parcelas; a entrada é outra forma, marcada como entrada. Cartão: as parcelas e o comprovante. Troco só sai do dinheiro.">
+            <Cartao titulo="Registrar e concluir" subtitulo="Adicione cada forma usada pelo cliente. Os pagamentos confirmados pela Asaas já entram na venda.">
               <form action={concluirVenda} className="space-y-3">
                 <input type="hidden" name="venda" value={venda.id} /><input type="hidden" name="chave" value={randomUUID()} />
                 <FormasDePagamento total={aCobrar} pagoPeloSite={pagoPeloSite} pagoNoPix={pix.pago} pagoNoCartao={cartao.pago} valorDosCelulares={valorDosCelulares} opcoes={OPCOES_DE_PAGAMENTO}
                   terminais={terminais.flatMap((m) => ehProvedorManual(m.provedor) ? [{ id: m.id, provedor: m.provedor, rotulo: `${m.apelido} · ${PROVEDORES_MANUAIS[m.provedor]} ${m.identificador}` }] : [])} />
-                {permissoes.has("cliente.buscar") && (
-                  <div className="space-y-1 rounded-xl border border-borda p-2">
-                    <p className="px-1 text-xs font-semibold">Cliente da rede (opcional): CPF ou telefone completos</p>
-                    <BuscaDeCliente modo="escolher" />
+                <IdentificarCliente>
+                  {permissoes.has("cliente.buscar") && (
+                    <div>
+                      <p className="mb-1 text-xs font-semibold">Cliente da rede: CPF ou telefone completos</p>
+                      <BuscaDeCliente modo="escolher" />
+                    </div>
+                  )}
+                  <div className="grid gap-2 sm:grid-cols-2">
+                    <label className="text-xs font-medium">Nome do cliente (opcional)<input name="cliente_nome" className={campo} /></label>
+                    <label className="text-xs font-medium">E-mail do cliente (opcional)<input name="cliente_email" type="email" className={campo} /></label>
                   </div>
-                )}
-                <div className="grid gap-2 sm:grid-cols-2">
-                  <label className="text-xs font-medium">Nome do cliente (opcional)<input name="cliente_nome" className={campo} /></label>
-                  <label className="text-xs font-medium">E-mail do cliente (opcional)<input name="cliente_email" type="email" className={campo} /></label>
-                </div>
+                </IdentificarCliente>
                 <BotaoConfirmar className="w-full" enquanto="Confirmando a venda no sistema…" disabled={!caixa || venda.situacao === "aguardando_aprovacao" || pixPendente || cartaoPendente}>Concluir venda</BotaoConfirmar>
                 {!caixa && <p className="text-xs text-aviso">Abra o caixa para concluir.</p>}
                 {pixPendente && <p className="text-xs text-aviso">Há um Pix pela Asaas esperando: espere o pagamento ou cancele o QR Code para concluir.</p>}
@@ -437,6 +460,21 @@ export default async function Vender({ searchParams }: { searchParams: Promise<{
               <Botao type="submit" tamanho="sm" variante="perigo" enquanto="Cancelando…">Cancelar venda</Botao>
             </form>
           </details>
+          )}
+          {itens.length > 0 && (
+            <>
+              <div aria-hidden="true" className="h-[calc(4rem+env(safe-area-inset-bottom))] lg:hidden" />
+              {/* NavegacaoCelular ocupa 68 px + a folga de 12 px; este resumo fica acima dos dois. */}
+              <aside aria-label="Resumo da venda" className="nao-imprimir fixed inset-x-0 bottom-[calc(5.5rem+env(safe-area-inset-bottom))] z-20 border-t border-borda bg-white/95 px-4 py-2 backdrop-blur lg:hidden">
+                <div className="mx-auto flex max-w-xl items-center justify-between gap-3">
+                  <div className="min-w-0 text-sm">
+                    <p className="text-xs text-suave">{`${quantidadeNoCarrinho} ${quantidadeNoCarrinho === 1 ? "item" : "itens"} · total`}</p>
+                    <strong className="numeros text-lg">{brl(subtotal - descontos)}</strong>
+                  </div>
+                  <Link href="#pagamento-pdv" className={classeBotao("primario", "md")}>Pagamento</Link>
+                </div>
+              </aside>
+            </>
           )}
         </>
       )}
