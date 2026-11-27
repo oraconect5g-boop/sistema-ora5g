@@ -29,10 +29,14 @@ export async function abrirTelaDoCaixa(p: Page) {
   await expect(p.getByRole("heading", { level: 2, name: /^(Abrir caixa|Meu caixa aberto)$/ })).toBeVisible();
 }
 
-/** O dinheiro que deve estar na gaveta, como o caixa aberto mostra ("Dinheiro"), em reais com vírgula. */
+/**
+ * O dinheiro que deve estar na gaveta, como o caixa aberto mostra, em reais com vírgula. O rótulo é "Dinheiro esperado na
+ * gaveta" (lote B, #114); a versão anterior da tela dizia só "Dinheiro". Aceita somente esses dois rótulos exatos, visíveis,
+ * e exige exatamente um: rótulo repetido ou ausente é falha da prova, não um valor escolhido ao acaso.
+ */
 export async function dinheiroNaGaveta(p: Page): Promise<string> {
-  const linha = cartao(p, "Meu caixa aberto").locator("dt", { hasText: /^Dinheiro$/ });
-  await expect(linha).toBeVisible();
+  const linha = cartao(p, "Meu caixa aberto").locator("dt").filter({ hasText: /^(Dinheiro esperado na gaveta|Dinheiro)$/ }).filter({ visible: true });
+  await expect(linha).toHaveCount(1);
   const valor = (await linha.locator("xpath=following-sibling::dd[1]").innerText()).trim();
   const achado = /R\$\s*([\d.]+,\d{2})/.exec(valor);
   if (!achado) throw new Error(`o caixa não mostrou o dinheiro da gaveta: "${valor}"`);
