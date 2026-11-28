@@ -19,13 +19,17 @@ class Consulta {
   linhas: Record<string, unknown>[];
   nome: string;
   constructor(nome: string, linhas: Record<string, unknown>[]) { this.nome = nome; this.linhas = [...linhas]; }
-  select() { return this; }
+  contar = false;
+  total: number | null = null;
+  select(_colunas?: string, opcoes?: { count?: string }) { this.contar = opcoes?.count === "exact"; return this; }
   order() { return this; }
   limit() { return this; }
+  range(de: number, ate: number) { this.total = this.linhas.length; this.linhas = this.linhas.slice(de, ate + 1); return this; }
   eq(campo: string, valor: unknown) { this.linhas = this.linhas.filter((l) => !(campo in l) || l[campo] === valor); return this; }
   neq(campo: string, valor: unknown) { this.linhas = this.linhas.filter((l) => l[campo] !== valor); return this; }
   then(resolver: (r: Resposta) => unknown) {
-    return Promise.resolve(cenario.falha === this.nome ? { data: null, error: { code: "PGRST000" } } : { data: this.linhas, error: null }).then(resolver);
+    return Promise.resolve(cenario.falha === this.nome ? { data: null, error: { code: "PGRST000" } }
+      : { data: this.linhas, error: null, ...(this.contar ? { count: this.total ?? this.linhas.length } : {}) }).then(resolver);
   }
 }
 const sessaoFicticia = {
@@ -105,5 +109,35 @@ describe("a conciliação com a Nogle (CONNECT-c)", () => {
     cenario.permissoes = new Set(["connect.gerir"]);
     cenario.falha = "connect_conciliacoes";
     await expect(abrir()).rejects.toThrow("falha: connect_conciliacoes");
+  });
+});
+
+describe("AUD-f: o que não fecha e as conciliações antigas, em páginas", () => {
+  it("o que não fecha de 200 em 200, com o total; as páginas seguintes e anteriores mantêm a conciliação aberta", async () => {
+    cenario.tabelas.connect_conciliacao_linhas = Array.from({ length: 450 }, (_, i) => ({ conciliacao_id: C2, ordem: i + 1, linha: `519555${String(i).padStart(5, "0")}`, iccid: null,
+      dia: "2026-11-15", plano: "7 GB", valor_centavos: 2990, resultado: "so_na_nogle", operacao_id: null }));
+    let tela = await abrir();
+    expect(tela).toContain("As linhas da Nogle que não conferiram (1–200 de 450) e as operações da Ora que a Nogle não trouxe (1–1 de 1)");
+    expect(tela).toContain("Linha 200 do relatório");
+    expect(tela).not.toContain("Linha 201 do relatório");
+    expect(tela).toContain("Os seguintes");
+    tela = await abrir({ id: C2, pagina: "3" });
+    expect(tela).toContain("(401–450 de 450)");
+    expect(tela).toContain("Linha 450 do relatório");
+    expect(tela).toContain("Os anteriores");
+  });
+
+  it("as conciliações de 20 em 20, das mais recentes; a de uma página antiga abre pelo endereço", async () => {
+    const antigas = Array.from({ length: 25 }, (_, i) => ({ id: `00000000-0000-4000-9000-0000000d${String(i).padStart(4, "0")}`, numero: 100 - i, relatorio: "ativacoes",
+      de: "2026-10-01", ate: "2026-10-07", recebida_em: new Date(Date.UTC(2026, 9, 30 - i)).toISOString(), totais: { linhas: 0 } }));
+    cenario.tabelas.connect_conciliacoes = antigas;
+    cenario.tabelas.connect_conciliacao_linhas = [];
+    cenario.tabelas.connect_conciliacao_so_aqui = [];
+    const tela = await abrir();
+    expect(tela).toContain("As mais antigas (25 ao todo)");
+    expect(tela).toContain("Nº 81 ·");
+    expect(tela).not.toContain("Nº 80 ·");
+    expect(await abrir({ lista: "2" })).toContain("Nº 76 ·");
+    expect(await abrir({ id: antigas[24]?.id ?? "" })).toContain("Tudo conferido nesta conciliação.");
   });
 });

@@ -104,7 +104,8 @@ export type PedidoDeConsulta = { tipo: TipoDeConsulta; parametro: string | null;
 export function lerPedidoDeConsulta(dados: Formulario): { ok: true; pedido: PedidoDeConsulta } | { ok: false; erro: ErroDaConsulta } {
   const tipo = texto(dados, "tipo", 40);
   const chave = texto(dados, "chave", 120);
-  if (!ehTipoDeConsulta(tipo)) return { ok: false, erro: "tipo" };
+  // AUD-f: o cadastro do cliente para preencher não é pedido por este formulário (só pela busca da tela, que lê a resposta).
+  if (!ehTipoDeConsulta(tipo) || tipo === "cliente_cadastro") return { ok: false, erro: "tipo" };
   if (!chave) return { ok: false, erro: "falha" };
   const digitos = texto(dados, "parametro", 40).replace(/\D/g, "");
   const pede = PARAMETRO_DA_CONSULTA[tipo];

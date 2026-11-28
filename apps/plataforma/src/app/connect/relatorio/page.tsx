@@ -1,6 +1,7 @@
 import { ListChecks, Store, Users } from "lucide-react";
 import type { Metadata } from "next";
 import Form from "next/form";
+import Link from "next/link";
 
 import { BotaoImprimir, CarimboDaImpressao } from "../../../componentes/BotaoImprimir";
 import { ExportarCsv } from "../../../componentes/ExportarCsv";
@@ -11,6 +12,7 @@ import { FalhaDoServico, obterSessao } from "../../../lib/acesso/sessao";
 import {
   COLUNAS_DO_CSV, linhasDoCsv, nomeDaSituacao, nomeDoTipo, somasDoRelatorio, somasPor, totalConfirmadas, type OperacaoDoRelatorio, type Somas,
 } from "../../../lib/connect/relatorio";
+import { consultarSomas, somasDasLinhas, totalDasSomas } from "../../../lib/connect/somas-do-banco";
 import { janelasDoPeriodo, ORDEM_DOS_PERIODOS, PERIODOS_FINANCEIROS, periodoFinanceiro } from "../../../lib/financeiro/painel";
 import { agora, brl, numero } from "../../../lib/formato";
 import { textoDoParametro, type ValorDeParametro } from "../../../lib/parametros";
@@ -23,10 +25,14 @@ const campo = "mt-1 min-h-11 w-full rounded-botao border border-borda bg-white p
 const quando = (iso: string) =>
   new Intl.DateTimeFormat("pt-BR", { timeZone: "America/Sao_Paulo", dateStyle: "short", timeStyle: "short" }).format(new Date(iso)).replace(",", " às");
 const ehUuid = (v: string | undefined): v is string => typeof v === "string" && /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/.test(v);
-/** Quantas operações a lista mostra; a planilha (CSV) leva todas as do período. */
+/** Quantas operações cada página da lista mostra. */
 const LIMITE_DA_LISTA = 200;
+/** AUD-f: a API devolve até 1.000 linhas por leitura: as operações vêm em páginas de 1.000, em ordem estável, até 5.000 (a
+ * planilha); os totais vêm somados do banco (connect_somas_por), sempre do período inteiro. */
+const PAGINA_DO_BANCO = 1_000;
+const MAXIMO_DA_PLANILHA = 5_000;
 
-type Parametros = { periodo?: ValorDeParametro; loja?: ValorDeParametro; vendedor?: ValorDeParametro };
+type Parametros = { periodo?: ValorDeParametro; loja?: ValorDeParametro; vendedor?: ValorDeParametro; pagina?: ValorDeParametro };
 
 // O relatório do vendedor e da loja da Ora Connect (lote CONNECT-k; a D-060 do proprietário, 25/11): as operações do período,
 // com a situação, o plano, o valor de face e o que a loja recebeu, somadas por vendedor e por loja, para imprimir ou exportar.
@@ -48,30 +54,46 @@ export default async function RelatorioDaConnect({ searchParams }: { searchParam
   const vendedor = gere ? (ehUuid(vendedorPedido) ? vendedorPedido : null) : sessao.usuario.id;
 
   const { supabase } = sessao;
-  let consulta = supabase.from("connect_operacoes")
-    .select("id, numero, tipo, situacao, vendedor_id, unidade_id, plano_nome, valor_face_centavos, recebido_na_loja_centavos, linha, criado_em")
-    .gte("criado_em", janela.inicio.toISOString()).lte("criado_em", janela.fim.toISOString())
-    .order("criado_em", { ascending: false }).limit(2000);
-  if (unidade) consulta = consulta.eq("unidade_id", unidade);
-  if (vendedor) consulta = consulta.eq("vendedor_id", vendedor);
-  const [lidas, lojasLidas] = await Promise.all([consulta, supabase.from("unidades").select("id, nome, tipo").order("nome").limit(300)]);
-  if (lidas.error) throw new FalhaDoServico("connect_operacoes");
+  // As operações do período em ordem estável (a mais nova primeiro; o id desempata), em páginas de 1.000, com o total.
+  const leitura = (de: number) => {
+    let c = supabase.from("connect_operacoes")
+      .select("id, numero, tipo, situacao, vendedor_id, unidade_id, plano_nome, valor_face_centavos, recebido_na_loja_centavos, linha, criado_em", { count: "exact" })
+      .gte("criado_em", janela.inicio.toISOString()).lte("criado_em", janela.fim.toISOString())
+      .order("criado_em", { ascending: false }).order("id", { ascending: false });
+    if (unidade) c = c.eq("unidade_id", unidade);
+    if (vendedor) c = c.eq("vendedor_id", vendedor);
+    return c.range(de, de + PAGINA_DO_BANCO - 1);
+  };
+  const [primeira, lojasLidas, somasLidas] = await Promise.all([
+    leitura(0), supabase.from("unidades").select("id, nome, tipo").order("nome").limit(300), consultarSomas(supabase, janela, { unidade, vendedor }),
+  ]);
+  if (primeira.error) throw new FalhaDoServico("connect_operacoes");
   if (lojasLidas.error) throw new FalhaDoServico("unidades");
-  const operacoes = lidas.data as unknown as OperacaoDoRelatorio[];
+  const totalDoPeriodo = primeira.count ?? primeira.data.length;
+  const demais = await Promise.all(Array.from({ length: Math.ceil(Math.min(totalDoPeriodo, MAXIMO_DA_PLANILHA) / PAGINA_DO_BANCO) - 1 }, (_, i) => leitura((i + 1) * PAGINA_DO_BANCO)));
+  if (demais.some((d) => d.error)) throw new FalhaDoServico("connect_operacoes");
+  const operacoes = [primeira, ...demais].flatMap((d) => d.data ?? []).slice(0, MAXIMO_DA_PLANILHA) as unknown as OperacaoDoRelatorio[];
   const lojas = lojasLidas.data as { id: string; nome: string; tipo: string }[];
-  const ids = [...new Set([...operacoes.map((o) => o.vendedor_id), ...(vendedor ? [vendedor] : [])])];
+  const linhasDasSomas = somasLidas.estado === "ok" ? somasLidas.dados : null;
+  const ids = [...new Set([...operacoes.map((o) => o.vendedor_id), ...(linhasDasSomas ?? []).map((l) => l.vendedor_id), ...(vendedor ? [vendedor] : [])])];
   const pessoas = ids.length > 0 ? await supabase.from("perfis_usuario").select("id, nome").in("id", ids) : { data: [], error: null };
   if (pessoas.error) throw new FalhaDoServico("perfis_usuario");
   const nomeDoVendedor = (id: string) => (pessoas.data as { id: string; nome: string }[]).find((p) => p.id === id)?.nome ?? "Pessoa sem nome";
   const nomeDaLoja = (id: string) => lojas.find((l) => l.id === id)?.nome ?? "Loja";
 
-  const somas = somasDoRelatorio(operacoes);
-  const porVendedor = !vendedor ? somasPor(operacoes, "vendedor_id", nomeDoVendedor) : [];
-  const porLoja = gere && !unidade ? somasPor(operacoes, "unidade_id", nomeDaLoja) : [];
+  // Os totais: do banco, do período inteiro. Sem a soma do banco (falha ou o banco sem a função), os das operações lidas, e a
+  // tela diz quando isso é só um recorte.
+  const somas = linhasDasSomas ? totalDasSomas(linhasDasSomas) : somasDoRelatorio(operacoes);
+  const porVendedor = !vendedor ? (linhasDasSomas ? somasDasLinhas(linhasDasSomas, "vendedor_id", nomeDoVendedor) : somasPor(operacoes, "vendedor_id", nomeDoVendedor)) : [];
+  const porLoja = gere && !unidade ? (linhasDasSomas ? somasDasLinhas(linhasDasSomas, "unidade_id", nomeDaLoja) : somasPor(operacoes, "unidade_id", nomeDaLoja)) : [];
+  const recorte = !linhasDasSomas && operacoes.length < totalDoPeriodo;
+  const paginas = Math.max(1, Math.ceil(operacoes.length / LIMITE_DA_LISTA));
+  const pagina = Math.min(Math.max(Number.parseInt(textoDoParametro(parametros.pagina) ?? "", 10) || 1, 1), paginas);
+  const daPagina = operacoes.slice((pagina - 1) * LIMITE_DA_LISTA, pagina * LIMITE_DA_LISTA);
   const deQuem = vendedor ? nomeDoVendedor(vendedor) : unidade ? nomeDaLoja(unidade) : "Toda a rede";
   const endereco = (mudanca: Record<string, string | null>) => {
     const p = new URLSearchParams();
-    const atual: Record<string, string | null> = { periodo: periodo === "hoje" ? null : periodo, loja: lojaPedida ?? null, vendedor: vendedorPedido ?? null, ...mudanca };
+    const atual: Record<string, string | null> = { periodo: periodo === "hoje" ? null : periodo, loja: lojaPedida ?? null, vendedor: vendedorPedido ?? null, pagina: null, ...mudanca };
     for (const [k, v] of Object.entries(atual)) if (v) p.set(k, v);
     const q = p.toString();
     return q ? `/connect/relatorio?${q}` : "/connect/relatorio";
@@ -128,6 +150,11 @@ export default async function RelatorioDaConnect({ searchParams }: { searchParam
         )}
       </div>
 
+      {recorte && (
+        <Aviso tom="aviso" className="mt-4">
+          {`Não foi possível somar o período no banco agora: os números abaixo são só das ${numero(operacoes.length)} operações mais recentes de ${numero(totalDoPeriodo)} (um recorte, não o total).`}
+        </Aviso>
+      )}
       <section aria-label="Resumo do período" className="mt-4 grid grid-cols-2 gap-3 lg:grid-cols-4">
         <Indicador rotulo="Ativações confirmadas" valor={numero(somas.confirmadas.ativacao)} />
         <Indicador rotulo="Recargas confirmadas" valor={numero(somas.confirmadas.recarga)} />
@@ -142,7 +169,9 @@ export default async function RelatorioDaConnect({ searchParams }: { searchParam
       {porLoja.length > 1 && <Cartao className="mt-4" titulo="Por loja" icone={Store}>{tabela("Loja", porLoja)}</Cartao>}
 
       <Cartao className="mt-4" titulo="Operações" icone={ListChecks}
-        subtitulo={operacoes.length > LIMITE_DA_LISTA ? `As ${numero(LIMITE_DA_LISTA)} mais recentes de ${numero(operacoes.length)}; a planilha leva todas` : `${numero(operacoes.length)} no período`}
+        subtitulo={totalDoPeriodo > LIMITE_DA_LISTA || operacoes.length < totalDoPeriodo
+          ? `${numero((pagina - 1) * LIMITE_DA_LISTA + 1)}–${numero((pagina - 1) * LIMITE_DA_LISTA + daPagina.length)} de ${numero(totalDoPeriodo)}, da mais recente para a mais antiga${operacoes.length < totalDoPeriodo ? `; a planilha leva as ${numero(operacoes.length)} mais recentes` : "; a planilha leva todas"}`
+          : `${numero(totalDoPeriodo)} no período`}
         acao={operacoes.length > 0 ? (
           <span className="nao-imprimir flex flex-wrap gap-2">
             <ExportarCsv nomeArquivo={`relatorio-${periodo}`} prefixo="ora5g-connect" colunas={COLUNAS_DO_CSV} linhas={linhasDoCsv(operacoes, nomeDoVendedor, nomeDaLoja, quando)} />
@@ -153,7 +182,7 @@ export default async function RelatorioDaConnect({ searchParams }: { searchParam
           <p className="text-sm text-suave">Nenhuma operação no período.</p>
         ) : (
           <ul className="divide-y divide-borda text-sm" aria-label="Operações do período">
-            {operacoes.slice(0, LIMITE_DA_LISTA).map((o) => (
+            {daPagina.map((o) => (
               <li key={o.id} className="flex flex-wrap items-center gap-2 py-2">
                 <span className="text-xs text-suave">{quando(o.criado_em)}</span>
                 <span className="font-semibold">{`Nº ${o.numero} · ${nomeDoTipo(o.tipo)}`}</span>
@@ -163,6 +192,12 @@ export default async function RelatorioDaConnect({ searchParams }: { searchParam
               </li>
             ))}
           </ul>
+        )}
+        {paginas > 1 && (
+          <nav aria-label="Páginas das operações" className="nao-imprimir mt-3 flex flex-wrap gap-3 border-t border-borda pt-3 text-xs">
+            {pagina > 1 && <Link href={endereco({ pagina: pagina - 1 === 1 ? null : String(pagina - 1) })} className="font-semibold text-acao">As mais recentes</Link>}
+            {pagina < paginas && <Link href={endereco({ pagina: String(pagina + 1) })} className="font-semibold text-acao">As mais antigas</Link>}
+          </nav>
         )}
       </Cartao>
       {totalConfirmadas(somas) === 0 && operacoes.length > 0 && (

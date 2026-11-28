@@ -1442,6 +1442,25 @@
       "pedido_em": "2026-11-25",
       "resposta": null,
       "respondido_em": null
+    },
+    {
+      "lote": "AUD-f",
+      "roteiro": "docs/aceite/AUD-f.md",
+      "requisitos": [
+        "ORA-CONNECT-005",
+        "ORA-CONNECT-006",
+        "ORA-CONNECT-007",
+        "ORA-CONNECT-009",
+        "ORA-CONNECT-010",
+        "ORA-CONNECT-011",
+        "ORA-PAY-014"
+      ],
+      "entrega": "a busca do cadastro na Nogle pelo CPF para preencher, o pago que não é a linha ativa, o link, o Pix copia e cola e o eSIM separados, os totais somados no banco, as listas da Nogle inteiras, a conciliação paginada e os estornos e contestações da Asaas com o motivo",
+      "commit": null,
+      "publicado_em": null,
+      "pedido_em": null,
+      "resposta": null,
+      "respondido_em": null
     }
   ]
 }

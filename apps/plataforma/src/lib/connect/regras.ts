@@ -1,7 +1,7 @@
 // Regras puras da tela da Ora Connect (ADR-005): ler o formulário e escolher a mensagem. O banco
 // valida tudo de novo; o servidor web nunca fala com a Nogle (só o worker do servidor).
 import { cpfValido } from "@ora5g/dominio";
-import { linhaValida, type TipoOperacao } from "@ora5g/dominio/nogle";
+import { linhaValida, pixCopiaECola, type TipoOperacao } from "@ora5g/dominio/nogle";
 
 export const ERROS_DO_CONNECT = {
   nao_habilitada: "Esta operação ainda não foi liberada: falta a homologação com a Nogle.",
@@ -102,3 +102,58 @@ export const linkDePagamento = (link: string | null | undefined): string | null 
 
 /** Quem paga o Pix da Nogle: com o serviço recebido no caixa, a loja (o cliente já pagou); sem ele, o cliente. */
 export const quemPagaOPix = (vendaItem: string | null | undefined): "loja" | "cliente" => (vendaItem ? "loja" : "cliente");
+
+/**
+ * AUD-f (auditoria de e7f55b2): o que a tela mostra do pagamento de uma operação pelo Pix da Nogle (o método LINK).
+ * - O link de pagamento é uma PÁGINA https da Nogle: o QR Code dele abre a página (não é o Pix copia e cola).
+ * - O Pix copia e cola é o código EMV (000201…), quando a Nogle o devolve no envio (o campo oficial pix_copia_cola).
+ * - O pagamento confirmado na Nogle NÃO é a linha ativa: a tela diz que está pago, a operação sai da fila "a loja paga" (para
+ *   ninguém pagar duas vezes) e a linha espera a prova oficial (o ICCID ativo) ou a conferência da gerência.
+ * - Sem link nem código, a tela avisa e manda conferir na Nogle pelo número da Nogle: nada é reenviado sozinho, e nenhum prazo
+ *   de vencimento é inventado (a Nogle não informa um).
+ */
+export type PagamentoNaNogle =
+  | { estado: "confirmado"; em: string }
+  | { estado: "a_pagar"; quemPaga: "loja" | "cliente"; link: string | null; pix: string | null }
+  | { estado: "sem_meio"; quemPaga: "loja" | "cliente"; idNaNogle: string | null };
+
+export function pagamentoNaNogle(o: {
+  metodo_pagamento: string | null; situacao: string; venda_item_id: string | null; link_pagamento: string | null;
+  pix_copia_cola: string | null; pagamento_confirmado_em: string | null; id_externo: string | null;
+}): PagamentoNaNogle | null {
+  if (o.metodo_pagamento !== "LINK") return null;
+  if (o.pagamento_confirmado_em) return o.situacao === "aguardando_operadora" || o.situacao === "resultado_desconhecido" ? { estado: "confirmado", em: o.pagamento_confirmado_em } : null;
+  if (o.situacao !== "aguardando_operadora") return null;
+  const link = linkDePagamento(o.link_pagamento);
+  const pix = pixCopiaECola(o.pix_copia_cola) ?? null;
+  const quemPaga = quemPagaOPix(o.venda_item_id);
+  return link || pix ? { estado: "a_pagar", quemPaga, link, pix } : { estado: "sem_meio", quemPaga, idNaNogle: o.id_externo };
+}
+
+/**
+ * AUD-f: o material de instalação do eSIM (o link do QR Code da Nogle e o código de ativação LPA) é só para quem registrou a
+ * ativação e para quem gere a loja (o RLS das operações já é esse), e só enquanto a ativação está viva ou feita: some depois
+ * de cancelada, recusada ou não recebida. Nunca vai para a planilha nem para os eventos.
+ */
+export function podeVerMaterialDoEsim(o: { tipo: string; esim: boolean; situacao: string; vendedor_id: string }, usuario: string, gere: boolean): boolean {
+  return o.tipo === "ativacao" && o.esim && (o.vendedor_id === usuario || gere)
+    && (o.situacao === "aguardando_operadora" || o.situacao === "resultado_desconhecido" || o.situacao === "confirmada");
+}
+export type MaterialDoEsimNaTela = { link: string | null; codigo: string | null };
+export function materialDoEsimNaTela(o: { link_esim: string | null; esim_codigo: string | null }): MaterialDoEsimNaTela | null {
+  const link = linkDePagamento(o.link_esim);
+  const codigo = typeof o.esim_codigo === "string" && o.esim_codigo.length <= 300 && /^LPA:1\$[^\s$]+\$\S+$/.test(o.esim_codigo) ? o.esim_codigo : null;
+  return link || codigo ? { link, codigo } : null;
+}
+
+/**
+ * AUD-f (auditoria de e7f55b2): o plano de um serviço pago no caixa, pelo código do produto, com a mesma regra do banco (o
+ * connect_registrar recusa com OR055 a venda de outro plano): a ativação é ATV-<plano> e a recarga é REC-<plano>. Outro tipo
+ * (a portabilidade não tem plano) ou outro código: nenhum plano.
+ */
+export function planoDoServico(tipo: TipoOperacao, sku: string | null | undefined): string | null {
+  const prefixo = tipo === "ativacao" ? "ATV-" : tipo === "recarga" ? "REC-" : null;
+  if (!prefixo || typeof sku !== "string" || !sku.startsWith(prefixo)) return null;
+  const codigo = sku.slice(prefixo.length);
+  return /^\d{1,9}$/.test(codigo) ? codigo : null;
+}

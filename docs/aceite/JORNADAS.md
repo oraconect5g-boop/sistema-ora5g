@@ -14,8 +14,8 @@ Em vez de responder roteiro por roteiro, percorra **uma jornada por vez**: o cam
 | [J06 — Cliente e fiscal](#j06) | 5 | 0 | 5 | 23 (13 / 9 / 1) |
 | [J07 — Devolução e troca](#j07) | 2 | 0 | 2 | 4 (1 / 3 / 0) |
 | [J08 — Caixa e financeiro](#j08) | 14 | 0 | 14 | 25 (10 / 15 / 0) |
-| [J09 — Site e retirada na loja](#j09) | 14 | 0 | 14 | 11 (2 / 9 / 0) |
-| [J10 — Ora Connect](#j10) | 13 | 0 | 13 | 9 (3 / 6 / 0) |
+| [J09 — Site e retirada na loja](#j09) | 15 | 0 | 15 | 17 (5 / 12 / 0) |
+| [J10 — Ora Connect](#j10) | 14 | 0 | 14 | 12 (5 / 7 / 0) |
 | [J11 — Financeiras (PayJoy e Aiva)](#j11) | 5 | 0 | 5 | 10 (5 / 5 / 0) |
 | [J12 — Marketplaces e Meta](#j12) | 7 | 0 | 7 | 19 (7 / 9 / 3) |
 | [J13 — Assistência](#j13) | 1 | 0 | 1 | 15 (12 / 3 / 0) |
@@ -166,7 +166,7 @@ Em vez de responder roteiro por roteiro, percorra **uma jornada por vez**: o cam
 
 **Site e retirada na loja.** O caminho: Vitrine → carrinho por loja → nome e WhatsApp → reserva → pedido que se acha de novo → Pix (quando ligado) → confirmação pela reconsulta → retirada no PDV.
 
-**Os requisitos que os roteiros cobrem:** ORA-CRM-009 (🟡 parcial), ORA-INV-005 (🧪 testado), ORA-META-002 (🟡 parcial), ORA-ONLINE-001 (🟡 parcial), ORA-ONLINE-002 (🟡 parcial), ORA-ONLINE-003 (🧪 testado), ORA-ONLINE-006 (🟡 parcial), ORA-PAY-008 (🟡 parcial), ORA-PAY-014 (🟡 parcial), ORA-QUAL-006 (🟡 parcial), ORA-QUAL-010 (🟡 parcial).
+**Os requisitos que os roteiros cobrem:** ORA-CONNECT-005 (🧪 testado), ORA-CONNECT-006 (🧪 testado), ORA-CONNECT-007 (🟡 parcial), ORA-CONNECT-009 (🟡 parcial), ORA-CONNECT-010 (🧪 testado), ORA-CONNECT-011 (🟡 parcial), ORA-CRM-009 (🟡 parcial), ORA-INV-005 (🧪 testado), ORA-META-002 (🟡 parcial), ORA-ONLINE-001 (🟡 parcial), ORA-ONLINE-002 (🟡 parcial), ORA-ONLINE-003 (🧪 testado), ORA-ONLINE-006 (🟡 parcial), ORA-PAY-008 (🟡 parcial), ORA-PAY-014 (🟡 parcial), ORA-QUAL-006 (🟡 parcial), ORA-QUAL-010 (🟡 parcial).
 
 | Lote | O que entrega | Roteiro | No ar | Resposta |
 |---|---|---|---|---|
@@ -184,12 +184,13 @@ Em vez de responder roteiro por roteiro, percorra **uma jornada por vez**: o cam
 | ONLINE-h | o endereço do cadastro da loja (a configuração em vigor da tela Lojas da rede) na página do produto, na reserva e no pedido do site | [ONLINE-h.md](ONLINE-h.md) | `09d5a55` (2026-11-24) | — |
 | PAY-014b | no balcão, a venda do pedido pago pelo site registra o pago (pelo preço pago) sem cobrar de novo | [PAY-014b.md](PAY-014b.md) | `5fc91b6` (2026-11-24) | — |
 | ONLINE-i | a vitrine da loja online de 7 a 8 vezes mais rápida no banco, com as mesmas ofertas | [ONLINE-i.md](ONLINE-i.md) | `14fe77d` (2026-11-24) | — |
+| AUD-f | a busca do cadastro na Nogle pelo CPF para preencher, o pago que não é a linha ativa, o link, o Pix copia e cola e o eSIM separados, os totais somados no banco, as listas da Nogle inteiras, a conciliação paginada e os estornos e contestações da Asaas com o motivo | [AUD-f.md](AUD-f.md) | a publicar | — |
 
 ## J10
 
 **Ora Connect.** O caminho: Elegibilidade, chip e cliente → operação → fila do worker → Nogle → confirmação ou reconsulta → produção → repasse oficial.
 
-**Os requisitos que os roteiros cobrem:** ORA-CONNECT-001 (🧪 testado), ORA-CONNECT-002 (🧪 testado), ORA-CONNECT-003 (🟡 parcial), ORA-CONNECT-006 (🧪 testado), ORA-CONNECT-007 (🟡 parcial), ORA-CONNECT-008 (🟡 parcial), ORA-CONNECT-009 (🟡 parcial), ORA-CONNECT-011 (🟡 parcial), ORA-INV-011 (🟡 parcial).
+**Os requisitos que os roteiros cobrem:** ORA-CONNECT-001 (🧪 testado), ORA-CONNECT-002 (🧪 testado), ORA-CONNECT-003 (🟡 parcial), ORA-CONNECT-005 (🧪 testado), ORA-CONNECT-006 (🧪 testado), ORA-CONNECT-007 (🟡 parcial), ORA-CONNECT-008 (🟡 parcial), ORA-CONNECT-009 (🟡 parcial), ORA-CONNECT-010 (🧪 testado), ORA-CONNECT-011 (🟡 parcial), ORA-INV-011 (🟡 parcial), ORA-PAY-014 (🟡 parcial).
 
 | Lote | O que entrega | Roteiro | No ar | Resposta |
 |---|---|---|---|---|
@@ -206,6 +207,7 @@ Em vez de responder roteiro por roteiro, percorra **uma jornada por vez**: o cam
 | CONNECT-m | a Ora Connect no formato da demonstração: as 9 abas no topo, a Operações do dia com os cartões e os filtros, o Ativar chip em passos com os planos em cartões, a Recarga, a Portabilidade e a Integração Nogle em abas próprias | [CONNECT-m.md](CONNECT-m.md) | a publicar | — |
 | CONNECT-n | em Ora Connect → Ativar chip, o assistente da demonstração: o chip, o cliente, o plano e o DDD, o pagamento à Nogle e a conferência antes de registrar, um passo por vez | [CONNECT-n.md](CONNECT-n.md) | a publicar | — |
 | CONNECT-o | em Ora Connect → Carteira e relatórios, a aba da demonstração: o saldo, as saídas, as entradas e as recargas programadas em cartões, o extrato, as portabilidades, as listas da rede, a produção por vendedor e a conciliação | [CONNECT-o.md](CONNECT-o.md) | a publicar | — |
+| AUD-f | a busca do cadastro na Nogle pelo CPF para preencher, o pago que não é a linha ativa, o link, o Pix copia e cola e o eSIM separados, os totais somados no banco, as listas da Nogle inteiras, a conciliação paginada e os estornos e contestações da Asaas com o motivo | [AUD-f.md](AUD-f.md) | a publicar | — |
 
 ## J11
 

@@ -1,7 +1,8 @@
 import type { TipoOperacao } from "@ora5g/dominio/nogle";
 
 import { FalhaDoServico, type obterSessao } from "../../lib/acesso/sessao";
-import { inicioDaJanela } from "../../lib/connect/regras";
+import { lerReferenciasDaNogle } from "../../lib/connect/referencias";
+import { inicioDaJanela, planoDoServico } from "../../lib/connect/regras";
 import { centavosDoBanco } from "../../lib/dinheiro";
 import { brl } from "../../lib/formato";
 import type { OpcaoDePago } from "./campos";
@@ -19,22 +20,30 @@ const VIVAS = ["registrada", "enviando", "aguardando_operadora", "resultado_desc
 export async function lerFormulario(sessao: Sessao, tipo: TipoOperacao) {
   const { supabase, situacao } = sessao;
   const unidade = situacao.unidade_id as string;
-  const [habilitacoes, referencias, usados, pagos] = await Promise.all([
+  // AUD-f: as listas oficiais por tipo e inteiras (páginas de 1.000: a leitura única de antes cortava em 1.000 itens, e uma
+  // lista grande podia esconder outra); os serviços pagos dos últimos 7 dias, os mais novos primeiro (até 200); e quais deles já
+  // têm operação viva, pelos próprios serviços (não pelas 200 operações mais recentes da loja).
+  const [habilitacoes, referencias, pagos] = await Promise.all([
     supabase.from("connect_habilitacoes").select("tipo, habilitada"),
-    supabase.from("connect_referencias").select("tipo, codigo, nome, uf, valor_centavos").eq("ativo", true).order("nome").limit(3000),
-    supabase.from("connect_operacoes").select("venda_item_id, situacao").eq("unidade_id", unidade).not("venda_item_id", "is", null)
-      .order("criado_em", { ascending: false }).limit(200),
+    lerReferenciasDaNogle(supabase, ["plano", "cidade", "ddd", "operadora"]),
     // CONNECT-f: o nome da variação é o do plano (REC-<plano>, ATV-<plano>): a pessoa vê qual plano foi pago.
-    supabase.from("venda_itens").select("id, tipo, preco_unitario_centavos, quantidade, desconto_centavos, variantes(nome), vendas!inner(numero, situacao, unidade_id, concluida_em)")
-      .eq("tipo", tipo).eq("vendas.situacao", "concluida").eq("vendas.unidade_id", unidade).gte("vendas.concluida_em", inicioDaJanela(7)).limit(50),
+    supabase.from("venda_itens").select("id, tipo, preco_unitario_centavos, quantidade, desconto_centavos, variantes(nome, sku), vendas!inner(numero, situacao, unidade_id, concluida_em)")
+      .eq("tipo", tipo).eq("vendas.situacao", "concluida").eq("vendas.unidade_id", unidade).gte("vendas.concluida_em", inicioDaJanela(7))
+      .order("criado_em", { ascending: false }).order("id", { ascending: false }).limit(200),
   ]);
-  if (habilitacoes.error || referencias.error || usados.error || pagos.error) throw new FalhaDoServico("connect_formulario");
+  if (habilitacoes.error || !referencias || pagos.error) throw new FalhaDoServico("connect_formulario");
+  const usados = pagos.data.length > 0
+    ? await supabase.from("connect_operacoes").select("venda_item_id, situacao").eq("unidade_id", unidade).in("venda_item_id", pagos.data.map((p) => p.id))
+    : { data: [], error: null };
+  if (usados.error) throw new FalhaDoServico("connect_formulario");
   const ocupados = new Set(usados.data.filter((o) => VIVAS.includes(o.situacao)).map((o) => o.venda_item_id));
   return {
     liberada: habilitacoes.data.some((h) => h.tipo === tipo && h.habilitada),
-    lista: (t: string) => referencias.data.filter((r) => r.tipo === t),
+    lista: (t: string) => (Object.hasOwn(referencias, t) ? referencias[t as keyof typeof referencias] : []),
+    // AUD-f: cada serviço pago com o plano dele (o código do produto), para a tela oferecer só os do plano escolhido.
     pagosLivres: pagos.data.filter((p) => !ocupados.has(p.id)).map((p): OpcaoDePago => ({
       id: p.id,
+      plano: planoDoServico(tipo, p.variantes?.sku),
       rotulo: `Venda nº ${p.vendas.numero}${p.variantes?.nome ? ` · ${p.variantes.nome}` : ""} · ${brl(centavosDoBanco(p.preco_unitario_centavos) * p.quantidade - centavosDoBanco(p.desconto_centavos))}`,
     })),
   };
@@ -48,14 +57,16 @@ export async function lerFormulario(sessao: Sessao, tipo: TipoOperacao) {
 export async function lerChipsParaAtivar(sessao: Sessao) {
   const { supabase, situacao } = sessao;
   const unidade = situacao.unidade_id as string;
-  const [vendidos, usados] = await Promise.all([
-    supabase.from("venda_itens").select("id, itens_serializados!inner(iccid), vendas!inner(numero, situacao, unidade_id, concluida_em)")
-      .not("itens_serializados.iccid", "is", null).eq("vendas.situacao", "concluida").eq("vendas.unidade_id", unidade)
-      .gte("vendas.concluida_em", inicioDaJanela(7)).limit(100),
-    supabase.from("connect_operacoes").select("iccid, situacao").eq("unidade_id", unidade).not("iccid", "is", null)
-      .order("criado_em", { ascending: false }).limit(500),
-  ]);
-  if (vendidos.error || usados.error) throw new FalhaDoServico("connect_chips_para_ativar");
+  // AUD-f: os chips com operação viva, pelos próprios ICCIDs vendidos (não pelas 500 operações mais recentes da loja).
+  const vendidos = await supabase.from("venda_itens").select("id, itens_serializados!inner(iccid), vendas!inner(numero, situacao, unidade_id, concluida_em)")
+    .not("itens_serializados.iccid", "is", null).eq("vendas.situacao", "concluida").eq("vendas.unidade_id", unidade)
+    .gte("vendas.concluida_em", inicioDaJanela(7)).order("criado_em", { ascending: false }).order("id", { ascending: false }).limit(100);
+  if (vendidos.error) throw new FalhaDoServico("connect_chips_para_ativar");
+  const iccids = [...new Set(vendidos.data.flatMap((v) => (v.itens_serializados.iccid ? [v.itens_serializados.iccid] : [])))];
+  const usados = iccids.length > 0
+    ? await supabase.from("connect_operacoes").select("iccid, situacao").in("iccid", iccids)
+    : { data: [], error: null };
+  if (usados.error) throw new FalhaDoServico("connect_chips_para_ativar");
   const comOperacao = new Set(usados.data.filter((o) => VIVAS.includes(o.situacao)).map((o) => o.iccid));
   const vistos = new Set<string>();
   return vendidos.data

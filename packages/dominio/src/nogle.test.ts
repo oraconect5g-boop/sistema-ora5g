@@ -6,10 +6,10 @@ import { fileURLToPath } from "node:url";
 import { describe, expect, it } from "vitest";
 
 import {
-  centavosDeValorNogle, diaDoRelatorio, interpretarConsulta, interpretarConsultaPagamento, interpretarEnvio, lerChips, lerPdvs, lerReferencias, lerRelatorio,
+  centavosDeValorNogle, diaDoRelatorio, interpretarConsulta, interpretarConsultaPagamento, interpretarEnvio, lerChips, lerPdvs, lerReferencias, materialDoEsim, pixCopiaECola, lerRelatorio,
   montarConsulta, montarPedido, montarPedidoDoRelatorio, PEDIDO_DO_ESTOQUE_DA_MVNO, PEDIDO_DOS_PDVS, pedidoDoEstoqueDoPdv, tipoDeChip,
   conferirTransferencia, lerRespostaDaTransferencia, pedidoDaTransferencia,
-  documentoMascarado, lerRespostaDaConsulta, pedidoDaConsulta, TIPOS_DE_CONSULTA,
+  documentoMascarado, lerCadastroParaPreencher, lerRespostaDaConsulta, pedidoDaConsulta, TIPOS_DE_CONSULTA,
   ehConsultaComposta, lerParteDoRelatorio, PARAMETRO_DA_CONSULTA, lerRespostaDaAcao, pedidoDaAcao, TIPOS_DE_ACAO, type AcaoParaEnviar, pedidoDaPortabilidade, pedidoDasLinhasDoCliente, pedidoDasTransacoesDaLinha, pedidoDoCliente,
   type ChipDaNogle, type OperacaoParaConsultar, type OperacaoParaEnviar, type ParametroDaConsulta, type TransferenciaParaEnviar,
 } from "./nogle";
@@ -223,6 +223,59 @@ describe("consulta pelo uuid (resposta da Nogle de 10/11/2026)", () => {
     expect(interpretarConsultaPagamento(recarga, 200, { status: true, data_pagamento: "" }).evidencia).toBe("em_andamento");
     expect(interpretarConsultaPagamento(recarga, 200, { status: false }).evidencia).toBe("sem_evidencia");
     expect(interpretarConsultaPagamento(recarga, 500, null).evidencia).toBe("falha_consulta");
+  });
+
+  // AUD-f (auditoria de e7f55b2): o pagamento confirmado da ATIVAÇÃO não é a linha ativa. Dados FICTÍCIOS (ICCID com o dígito
+  // verificador, código LPA e links inventados).
+  const ativacao = { ...recarga, tipo: "ativacao" as const, iccid: "8955170110000000016", linha: null, esim: false };
+  const esimSemIccid = { ...ativacao, iccid: null, esim: true };
+  const MATERIAL = { esim: "https://exemplo.invalido/esim.pdf", activation_code_esim: "LPA:1$smdp.exemplo.invalido$ABC-123", qr_code_esim: "https://exemplo.invalido/qr" };
+
+  it("a ativação paga vira \"pago\" (não confirma): o chip com ICCID espera a prova da linha; o eSIM sem ICCID vai para a gerência", () => {
+    const fisico = interpretarConsultaPagamento(ativacao, 200, { status: true, data_pagamento: "2026-11-26" });
+    expect(fisico).toEqual({ evidencia: "pago", mensagem: "Ativação paga na Nogle; falta a prova da linha (o ICCID ativo).", dados: { uuid, data_pagamento: "2026-11-26" } });
+    expect(fisico).not.toHaveProperty("numero");
+    const esim = interpretarConsultaPagamento(esimSemIccid, 200, { status: true, data_pagamento: "2026-11-26", ...MATERIAL });
+    expect(esim).toMatchObject({ evidencia: "pago_sem_prova_da_linha", dados: { uuid, data_pagamento: "2026-11-26" } });
+    // O material do eSIM sai à parte: o link https e o código LPA; nada dele nos dados (que vão para a evidência e os eventos).
+    expect(esim.material_esim).toEqual({ link: "https://exemplo.invalido/qr", codigo: "LPA:1$smdp.exemplo.invalido$ABC-123" });
+    expect(JSON.stringify(esim.dados)).not.toContain("LPA:");
+    // O chip físico não lê material de eSIM; sem data de pagamento, continua esperando.
+    expect(interpretarConsultaPagamento(ativacao, 200, { status: true, data_pagamento: "2026-11-26", ...MATERIAL }).material_esim).toBeUndefined();
+    expect(interpretarConsultaPagamento(ativacao, 200, { status: true, data_pagamento: null }).evidencia).toBe("em_andamento");
+  });
+
+  it("depois do pagamento, a próxima consulta da ativação é a prova da linha (o ICCID), não o pagamento de novo", () => {
+    expect(montarConsulta(ativacao, { consultaPagamento: true })).toMatchObject({ caminho: "/consultaPagamento" });
+    const paga = { ...ativacao, pagamento_confirmado_em: "2026-11-26T12:00:00Z" };
+    expect(montarConsulta(paga, { consultaPagamento: true })).toEqual({ metodo: "POST", caminho: "/ativacao/validaIccid", corpo: { iccid: ativacao.iccid } });
+    // O eSIM sem ICCID e já pago não tem consulta que prove a linha.
+    expect(montarConsulta({ ...esimSemIccid, pagamento_confirmado_em: "2026-11-26T12:00:00Z" }, { consultaPagamento: true })).toBeNull();
+    // A recarga paga continua pela consulta do pagamento.
+    expect(montarConsulta({ ...recarga, pagamento_confirmado_em: "2026-11-26T12:00:00Z" }, { consultaPagamento: true })).toMatchObject({ caminho: "/consultaPagamento" });
+  });
+
+  it("o material do eSIM: só o link https e o código LPA; o resto fica de fora", () => {
+    expect(materialDoEsim({ esim: "https://exemplo.invalido/pdf" })).toEqual({ link: "https://exemplo.invalido/pdf" });
+    expect(materialDoEsim({ qr_code_esim: "data:image/png;base64,AAAA", esim: "S", activation_code_esim: "LPA:1$x" })).toBeUndefined();
+    expect(materialDoEsim({ activation_code_esim: "LPA:1$smdp.exemplo.invalido$ABC" })).toEqual({ codigo: "LPA:1$smdp.exemplo.invalido$ABC" });
+    expect(materialDoEsim({ qr_code_esim: "http://sem-https.invalido" })).toBeUndefined();
+  });
+});
+
+// AUD-f: o link de pagamento (uma página) não é o Pix copia e cola (o código EMV).
+describe("o Pix copia e cola da resposta oficial do envio (AUD-f)", () => {
+  const EMV = "00020126580014BR.GOV.BCB.PIX0136a629532e-7693-4846-852d-1bbff817b5a85204000053039865802BR5913ORA TESTE6008CURITIBA62070503***6304ABCD";
+  it("lê o código EMV quando vem; o link https, o vazio dos exemplos oficiais e o fora do formato não viram Pix copia e cola", () => {
+    expect(pixCopiaECola(EMV)).toBe(EMV);
+    for (const ruim of ["", "link de pagamento", "https://pagar.exemplo.invalido/abc", `${EMV.slice(0, 40)}\n${EMV.slice(40)}`, "0002010000BR.GOV.BCB", null, 123]) expect(pixCopiaECola(ruim)).toBeUndefined();
+    const aceita = { retorno: true, mensagem: "", info: { id: 99999, data_cadastro: "2022-09-09 16:53:38.753", chips: [{ iccid: "8955170110000000016" }] },
+      link_pagamento: "https://pagar.exemplo.invalido/abc", link_esim: "", pix_copia_cola: "" };
+    expect(interpretarEnvio("ativacao", 200, aceita)).not.toHaveProperty("pix_copia_cola");
+    const comPix = interpretarEnvio("ativacao", 200, { ...aceita, pix_copia_cola: EMV });
+    expect(comPix).toMatchObject({ resultado: "aceita", link_pagamento: "https://pagar.exemplo.invalido/abc", pix_copia_cola: EMV });
+    // Os dados (que vão para os eventos) não levam o Pix nem os links.
+    expect(JSON.stringify(comPix.dados)).not.toMatch(/000201|https/);
   });
 });
 
@@ -770,5 +823,63 @@ describe("as outras consultas da Nogle (CONNECT-i)", () => {
       { quando: "2026-11-20 10:15", tipo: "SAÍDA", valor_centavos: 1000, cliente: "Cliente Fictício •••.•••.789-09", linha: "41999998888", iccid: null, plano: "10 GB",
         plano_valor_centavos: 5490 },
     ], fora: 0, total: 2, soma_centavos: 4550 });
+  });
+});
+
+// AUD-f (auditoria de e7f55b2): o cadastro do cliente para preencher, com os exemplos oficiais da /cliente/buscar.
+describe("o cadastro do cliente na Nogle para preencher (AUD-f)", () => {
+  const HOJE = new Date("2026-11-26T12:00:00Z");
+  const achado = exemplo("/cliente/buscar", 0) as Record<string, unknown>;
+  const cliente = achado.cliente as Record<string, unknown>;
+  const comCliente = (mudanca: Record<string, unknown>, endereco: Record<string, unknown> = {}) =>
+    ({ ...achado, cliente: { ...cliente, ...mudanca, endereco: { ...(cliente.endereco as object), ...endereco } } });
+
+  it("pede só a /cliente/buscar pelo documento (sem o histórico nem as linhas)", () => {
+    expect(pedidoDaConsulta("cliente_cadastro", "00000000000", HOJE)).toEqual({ metodo: "GET", caminho: "/cliente/buscar", corpo: { documento: "00000000000" } });
+    expect(pedidoDaConsulta("cliente_cadastro", "123", HOJE)).toBeNull();
+    expect(PARAMETRO_DA_CONSULTA.cliente_cadastro).toBe("documento");
+  });
+
+  it("o exemplo oficial: só os campos do formulário, a cidade só como referência e nada do resto (o id, o apelido, a data do cadastro)", () => {
+    const r = lerCadastroParaPreencher("00000000000", 200, achado, HOJE);
+    expect(r).toEqual({ situacao: "respondida", mensagem: "", resposta: {
+      nome: "Fulano da Silva", nascimento: "1990-10-10", email: "fulano@email.com", telefone: "51999999999", cep: "00000000", rua: "Rua Exemplo",
+      numero: "123", bairro: "Bairro", cidade_na_nogle: "São Paulo", uf_na_nogle: "SP",
+    } });
+    expect(Object.keys(r.resposta ?? {})).not.toContain("complemento"); // veio vazio: fica de fora
+  });
+
+  it("não encontrado (o exemplo oficial), a falha e o acesso recusado: nada para preencher", () => {
+    expect(lerCadastroParaPreencher("00000000000", 200, exemplo("/cliente/buscar", 1), HOJE)).toEqual({ situacao: "nao_encontrada", mensagem: "Cliente não encontrado" });
+    expect(lerCadastroParaPreencher("00000000000", 502, null, HOJE)).toMatchObject({ situacao: "falhou" });
+    expect(lerCadastroParaPreencher("00000000000", 401, { message: "Unauthenticated." }, HOJE)).toMatchObject({ situacao: "falhou" });
+    expect(lerCadastroParaPreencher("00000000000", 200, { retorno: true, mensagem: "" }, HOJE)).toMatchObject({ situacao: "falhou" });
+  });
+
+  it("o cadastro de outro documento (ou o CNPJ pedido e o CPF devolvido) não preenche nada", () => {
+    expect(lerCadastroParaPreencher("12345678909", 200, achado, HOJE)).toEqual({ situacao: "falhou", mensagem: "A Nogle devolveu o cadastro de outro documento: nada foi preenchido." });
+    expect(lerCadastroParaPreencher("11222333000181", 200, comCliente({ cpf: "", cnpj: "11.222.333/0001-81" }), HOJE)).toMatchObject({ situacao: "respondida" });
+    expect(lerCadastroParaPreencher("11222333000181", 200, comCliente({ cnpj: "" }), HOJE)).toMatchObject({ situacao: "falhou" });
+  });
+
+  it("nada é deduzido: a data que não é data, o telefone sem DDD, o CEP curto, o e-mail fora da forma e o texto comprido ficam de fora", () => {
+    const r = lerCadastroParaPreencher("00000000000", 200, comCliente(
+      { nascimento: "0000-00-00", telefone: "999999999", email: "sem-arroba", nome: "N".repeat(121) },
+      { cep: "1234", rua: "R".repeat(121), numero: 123, uf: "São Paulo" },
+    ), HOJE);
+    expect(r.resposta).toEqual({ numero: "123", bairro: "Bairro", cidade_na_nogle: "São Paulo" });
+    for (const nascimento of ["2026-11-27", "1899-12-31", "1990-02-30", "10/10/1990"]) {
+      const lido = lerCadastroParaPreencher("00000000000", 200, comCliente({ nascimento }), HOJE).resposta;
+      expect(lido?.nascimento, nascimento).toBe(nascimento === "10/10/1990" ? "1990-10-10" : undefined);
+    }
+    // O nascimento só para o CPF; o CNPJ não tem.
+    expect(lerCadastroParaPreencher("11222333000181", 200, comCliente({ cpf: "", cnpj: "11222333000181" }), HOJE).resposta?.nascimento).toBeUndefined();
+    // Quebra de linha no meio do texto não entra.
+    expect(lerCadastroParaPreencher("00000000000", 200, comCliente({ nome: "Fulano\nda Silva" }), HOJE).resposta?.nome).toBeUndefined();
+  });
+
+  it("a resposta parcial: só o que veio", () => {
+    const r = lerCadastroParaPreencher("00000000000", 200, { retorno: true, mensagem: "", cliente: { cpf: "00000000000", nome: "Fulano da Silva" } }, HOJE);
+    expect(r).toEqual({ situacao: "respondida", mensagem: "", resposta: { nome: "Fulano da Silva" } });
   });
 });

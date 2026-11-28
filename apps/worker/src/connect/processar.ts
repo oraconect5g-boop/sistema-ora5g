@@ -6,11 +6,11 @@
 // - log só com contagens: nada de CPF, nome, linha, token ou chave.
 import {
   PEDIDO_DO_ESTOQUE_DA_MVNO, PEDIDO_DOS_PDVS, RELATORIOS_DA_CONCILIACAO, conferirTransferencia, ehTipoDeConsulta, iccidNoFormatoNogle, interpretarConsulta,
-  interpretarConsultaPagamento, lerParteDoRelatorio, lerRespostaDaConsulta, linhaValida, pedidoDaConsulta, pedidoDaPortabilidade, pedidoDasLinhasDoCliente,
+  interpretarConsultaPagamento, lerCadastroParaPreencher, lerParteDoRelatorio, lerRespostaDaConsulta, linhaValida, pedidoDaConsulta, pedidoDaPortabilidade, pedidoDasLinhasDoCliente,
   pedidoDasTransacoesDaLinha, pedidoDoCliente, type ParteDoRelatorio, type RespostaDaConsulta, type TipoDeConsulta,
   lerRespostaDaAcao, pedidoDaAcao, type AcaoParaEnviar, type ResultadoDaAcao,
   interpretarEnvio, lerChips, lerPdvs, lerReferencias, lerRelatorio, lerRespostaDaTransferencia, montarConsulta, montarPedido, montarPedidoDoRelatorio,
-  pedidoDaTransferencia, pedidoDoEstoqueDoPdv, type ChipDaNogle, type Evidencia, type TransferenciaParaEnviar,
+  pedidoDaTransferencia, pedidoDoEstoqueDoPdv, type ChipDaNogle, type Evidencia, type MaterialDoEsim, type TransferenciaParaEnviar,
   type ItemDeReferencia, type LinhaDoRelatorio, type OperacaoParaConsultar, type OperacaoParaEnviar, type PdvDaNogle, type PedidoNogle,
   type RelatorioDaConciliacao, type ResultadoEnvio, type TipoDeChip, type TipoDeReferencia, type TipoOperacao,
 } from "@ora5g/dominio/nogle";
@@ -22,6 +22,8 @@ export interface BancoConnect {
   registrarEnvio(operacao: string, resultado: ResultadoEnvio): Promise<string>;
   operacoesAConsultar(tipos: TipoOperacao[], limite: number): Promise<OperacaoParaConsultar[]>;
   registrarConsulta(operacao: string, evidencia: Evidencia): Promise<string>;
+  /** AUD-f: o material de instalação do eSIM (o link e o código), gravado à parte: nunca na evidência nem nos eventos. */
+  registrarMaterialEsim(operacao: string, material: MaterialDoEsim): Promise<void>;
   atualizarReferencias(tipo: TipoDeReferencia, itens: ItemDeReferencia[]): Promise<number>;
   registrarConciliacao(relatorio: RelatorioDaConciliacao, de: string, ate: string, linhas: LinhaDoRelatorio[]): Promise<{ numero: number; totais: Record<string, number> }>;
   gravarEstoque(leitura: LeituraDoEstoque): Promise<EstoqueGravado>;
@@ -115,7 +117,11 @@ export async function consultarPendentes(banco: BancoConnect, nogle: Nogle, tipo
     const pedido = montarConsulta(op, opcoes);
     let evidencia: Evidencia;
     if (!pedido) {
-      evidencia = { evidencia: "sem_evidencia", mensagem: "Sem dado para consultar (ex.: eSIM sem ICCID na resposta)." };
+      // AUD-f: a ativação sem como provar a linha (o eSIM sem ICCID, sem a consulta do pagamento) não fica esperando para
+      // sempre: vai para a gerência conferir na Nogle e registrar o desfecho.
+      evidencia = op.tipo === "ativacao"
+        ? { evidencia: "sem_prova_da_linha", mensagem: "Sem ICCID para o servidor provar a linha (eSIM): a gerência confere na Nogle e registra o desfecho." }
+        : { evidencia: "sem_evidencia", mensagem: "Sem dado para consultar." };
     } else {
       const r = await nogle.chamar(pedido);
       evidencia = r.tipo === "resposta"
@@ -123,7 +129,10 @@ export async function consultarPendentes(banco: BancoConnect, nogle: Nogle, tipo
         : r.tipo === "bloqueada" ? { evidencia: "consulta_bloqueada", mensagem: r.motivo }
         : { evidencia: "falha_consulta", mensagem: r.motivo };
     }
-    const situacao = await banco.registrarConsulta(op.operacao_id, evidencia);
+    // O material do eSIM vai por um caminho próprio, antes, e sai da evidência (que vai para os eventos).
+    const { material_esim: material, ...semMaterial } = evidencia;
+    if (material) await banco.registrarMaterialEsim(op.operacao_id, material);
+    const situacao = await banco.registrarConsulta(op.operacao_id, semMaterial);
     resumo.consultadas++;
     if (situacao === "confirmada") resumo.confirmadas++;
     if (evidencia.evidencia === "consulta_bloqueada") resumo.bloqueadas++;
@@ -393,6 +402,9 @@ export async function responderConsultas(banco: BancoConnect, nogle: Nogle, opco
         resposta = linhaValida(p) ? await relatorioDoNumero(nogle, p, agora()) : FORA_DA_FORMA;
       } else if (c.tipo === "cliente_completo") {
         resposta = /^(\d{11}|\d{14})$/.test(p) ? await relatorioDoCliente(nogle, p, agora()) : FORA_DA_FORMA;
+      } else if (c.tipo === "cliente_cadastro") {
+        // AUD-f: só a /cliente/buscar, para preencher; a leitura confere que o cadastro é do mesmo documento.
+        resposta = /^(\d{11}|\d{14})$/.test(p) ? await chamarConsulta(nogle, pedidoDoCliente(p), (s, corpo) => lerCadastroParaPreencher(p, s, corpo, agora())) : FORA_DA_FORMA;
       } else {
         resposta = await consultaSimples(nogle, c.tipo, c.parametro, agora());
       }

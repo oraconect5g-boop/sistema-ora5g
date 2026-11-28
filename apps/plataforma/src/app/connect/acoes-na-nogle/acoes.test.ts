@@ -19,6 +19,7 @@ class Consulta {
   select() { return this; }
   order() { return this; }
   limit() { return this; }
+  range(de: number, ate: number) { this.linhas = this.linhas.slice(de, ate + 1); return this; }
   eq() { return this; }
   in(campo: string, valores: unknown[]) { this.linhas = this.linhas.filter((l) => valores.includes(l[campo])); return this; }
   then(resolver: (r: { data: unknown; error: null }) => unknown) { return Promise.resolve({ data: this.linhas, error: null }).then(resolver); }

@@ -21,10 +21,28 @@ vi.mock("next/navigation", () => ({
 // Os filtros do PostgREST que as telas usam; campo de tabela ligada ("vendas.situacao") não filtra aqui.
 class Consulta {
   linhas: Linha[];
+  contar = false;
+  total: number | null = null;
+  ordens: { campo: string; crescente: boolean }[] = [];
   constructor(linhas: Linha[]) { this.linhas = [...linhas]; }
   private filtrar(campo: string, passa: (v: unknown) => boolean) { this.linhas = this.linhas.filter((l) => !(campo in l) || passa(l[campo])); return this; }
-  select() { return this; }
-  order() { return this; }
+  select(_colunas?: string, opcoes?: { count?: string }) { this.contar = opcoes?.count === "exact"; return this; }
+  // A ordem só vale com o range (a fila do Pix, AUD-f); sem ele, a tela já ordena o que lê.
+  order(campo: string, opcoes?: { ascending?: boolean }) { this.ordens.push({ campo, crescente: opcoes?.ascending !== false }); return this; }
+  range(de: number, ate: number) {
+    this.total = this.linhas.length;
+    const chave = (l: Linha) => this.ordens.map((o) => String(l[o.campo] ?? ""));
+    this.linhas.sort((a, b) => {
+      for (const [i, o] of this.ordens.entries()) {
+        const [x, y] = [chave(a)[i] ?? "", chave(b)[i] ?? ""];
+        if (x !== y) return (x < y ? -1 : 1) * (o.crescente ? 1 : -1);
+      }
+      return 0;
+    });
+    this.linhas = this.linhas.slice(de, ate + 1);
+    return this;
+  }
+  is(campo: string, valor: unknown) { return this.filtrar(campo, (v) => v === valor); }
   limit(n: number) { this.linhas = this.linhas.slice(0, n); return this; }
   eq(campo: string, valor: unknown) { return this.filtrar(campo, (v) => v === valor); }
   in(campo: string, valores: unknown[]) { return this.filtrar(campo, (v) => valores.includes(v)); }
@@ -32,7 +50,33 @@ class Consulta {
   gte(campo: string, valor: string) { return this.filtrar(campo, (v) => new Date(String(v)) >= new Date(valor)); }
   lte(campo: string, valor: string) { return this.filtrar(campo, (v) => new Date(String(v)) <= new Date(valor)); }
   lt(campo: string, valor: string) { return this.filtrar(campo, (v) => new Date(String(v)) < new Date(valor)); }
-  then(resolver: (r: { data: unknown; error: null }) => unknown) { return Promise.resolve({ data: this.linhas, error: null }).then(resolver); }
+  then(resolver: (r: { data: unknown; error: null; count?: number | null }) => unknown) {
+    return Promise.resolve({ data: this.linhas, error: null, ...(this.contar ? { count: this.total ?? this.linhas.length } : {}) }).then(resolver);
+  }
+}
+// AUD-f: a soma do banco (connect_somas_por) de mentira, pelas operações do cenário, com o mesmo RLS de mentira (quem não gere
+// soma só as próprias) e as mesmas categorias da função do banco.
+function somasFalsas(argumentos: Record<string, unknown>) {
+  const dentro = (l: Linha) => new Date(String(l.criado_em)) >= new Date(String(argumentos.p_inicio)) && new Date(String(l.criado_em)) <= new Date(String(argumentos.p_fim));
+  const visiveis = (cenario.tabelas.connect_operacoes ?? []).filter((l) => (cenario.permissoes.has("connect.gerir") || l.vendedor_id === "eu") && dentro(l)
+    && (!argumentos.p_unidade || l.unidade_id === argumentos.p_unidade) && (!argumentos.p_vendedor || l.vendedor_id === argumentos.p_vendedor));
+  const grupos = new Map<string, Record<string, number | string>>();
+  for (const l of visiveis) {
+    const chave = `${String(l.vendedor_id)}|${String(l.unidade_id)}`;
+    const g = grupos.get(chave) ?? { vendedor_id: String(l.vendedor_id), unidade_id: String(l.unidade_id), operacoes: 0, ativacoes: 0, recargas: 0, portabilidades: 0,
+      em_andamento: 0, sem_resultado: 0, nao_feitas: 0, valor_de_face_centavos: 0, recebido_centavos: 0 };
+    const mais = (campo: string, v = 1) => { g[campo] = Number(g[campo]) + v; };
+    mais("operacoes");
+    if (l.situacao === "confirmada") {
+      mais(l.tipo === "ativacao" ? "ativacoes" : l.tipo === "recarga" ? "recargas" : "portabilidades");
+      if (l.tipo !== "portabilidade") mais("valor_de_face_centavos", Number(l.valor_face_centavos ?? 0));
+      mais("recebido_centavos", Number(l.recebido_na_loja_centavos ?? 0));
+    } else if (["registrada", "enviando", "aguardando_operadora"].includes(String(l.situacao))) mais("em_andamento");
+    else if (["resultado_desconhecido", "erro_operadora"].includes(String(l.situacao))) mais("sem_resultado");
+    else if (["recusada", "negada", "nao_recebida", "cancelada"].includes(String(l.situacao))) mais("nao_feitas");
+    grupos.set(chave, g);
+  }
+  return [...grupos.values()];
 }
 const sessaoFicticia = {
   usuario: { id: "eu" },
@@ -43,6 +87,7 @@ const sessaoFicticia = {
     from: (tabela: string) => new Consulta((cenario.tabelas[tabela] ?? []).filter((l) => tabela !== "connect_operacoes" || cenario.permissoes.has("connect.gerir") || l.vendedor_id === "eu")),
     rpc: async (nome: string, argumentos: Record<string, unknown>) => {
       cenario.rpc.push({ nome, argumentos });
+      if (nome === "connect_somas_por") return { data: somasFalsas(argumentos), error: null };
       return nome === "connect_painel" ? { data: cenario.painel, error: null } : { data: null, error: cenario.erroDaRpc };
     },
   },
@@ -100,6 +145,7 @@ const AGORA = new Date("2026-11-25T15:00:00Z"); // 12h em Brasília
 const OPERACAO = {
   unidade_id: "loja", iccid: null, esim: false, linha_doadora: null, recebido_na_loja_centavos: null, venda_item_id: null, cliente_nome: null,
   documento_mascarado: null, link_pagamento: null, link_esim: null, numero_ativado: null, mensagem_operadora: null, evidencia: null, motivo_resolucao: null,
+  id_externo: null, pix_copia_cola: null, pagamento_confirmado_em: null, esim_codigo: null,
 };
 const OPERACOES = [
   { ...OPERACAO, id: "op1", numero: 1, tipo: "recarga", situacao: "confirmada", vendedor_id: "v1", metodo_pagamento: "LINK", linha: "41999998888", plano_nome: "10 GB",
@@ -189,13 +235,13 @@ describe("a aba Operações do dia", () => {
   it("quem gere: os 4 cartões, o Pix que a loja paga, as operações de hoje com as abertas de antes, os filtros e a produção por vendedor", async () => {
     const t = await pagina(Connect);
     emOrdem(t, "Chips vendidos", "3", "Ativações confirmadas", "0", "3 operações ainda sem confirmação", "Portabilidades", "Recargas", "1", "R$ 20,00 em valor de face (não é receita)");
-    emOrdem(t, "Pix da Nogle para a loja pagar", "Nº 5 · Recarga · 20 GB · Santa Cândida (fictícia)", "recebido na loja R$ 30,00", "Abrir o pagamento da Nogle");
+    emOrdem(t, "Pix da Nogle para a loja pagar", "Nº 5 · Recarga · 20 GB · Santa Cândida (fictícia)", "recebido na loja R$ 30,00", "Abrir a página de pagamento da Nogle");
     emOrdem(t, "Operações de hoje", "com 1 aberta de antes");
     expect(contagens(await Connect({ searchParams: Promise.resolve({}) } as never))).toEqual({ Todas: 4, Aguardando: 3, Confirmadas: 1, Falharam: 0 });
     // A mais nova primeiro; a aberta de antes no fim, com o dia; a de ontem já terminada fica de fora.
     emOrdem(t, "11:30", "Recarga · (41) 99999-8888", "Nº 1 · Vendedora (fictícia) · 10 GB · R$ 20,00", "Confirmada", "debitado da carteira R$ 19,00",
-      "11:00", "Recarga · (41) 99999-6666", "Nº 5 · Vendedora (fictícia)", "Aceita pela Nogle", "Pix da Nogle: a loja paga",
-      "10:00", "Ativação de chip · eSIM", "Nº 2 · Gerente (fictícia)", "Pix da Nogle: o cliente paga agora",
+      "11:00", "Recarga · (41) 99999-6666", "Nº 5 · Vendedora (fictícia)", "Aceita pela Nogle", "Pagamento da Nogle: a loja paga",
+      "10:00", "Ativação de chip · eSIM", "Nº 2 · Gerente (fictícia)", "Pagamento da Nogle: o cliente paga agora",
       "20/11", "Ativação de chip", "Nº 3 · Vendedora (fictícia)", "Resultado desconhecido", "ICCID 8955170110000000016", "Registrar decisão");
     expect(t).not.toContain("Nº 4");
     emOrdem(t, "Operações por tipo", "Chips vendidos e operações confirmadas (hoje)", "Confirmadas pela operadora", "Débito registrado na carteira", "R$ 19,00");
@@ -231,11 +277,96 @@ describe("a aba Operações do dia", () => {
   });
 });
 
+describe("AUD-f: o pagamento da Nogle, a fila do Pix e o material do eSIM", () => {
+  // Código EMV e código LPA FICTÍCIOS, no formato documentado.
+  const EMV = "00020126580014BR.GOV.BCB.PIX0136a629532e-7693-4846-852d-1bbff817b5a85204000053039865802BR5913ORA TESTE6008CURITIBA62070503***6304ABCD";
+  const LPA = "LPA:1$smdp.exemplo.invalido$AB-12";
+  const naFila = (n: number, extra: Linha = {}): Linha => ({ ...OPERACAO, id: `f${n}`, numero: 100 + n, tipo: "ativacao", situacao: "aguardando_operadora", vendedor_id: "v1",
+    metodo_pagamento: "LINK", linha: null, iccid: null, plano_nome: "10 GB", valor_face_centavos: 2_000, recebido_na_loja_centavos: 2_000, venda_item_id: `vf${n}`,
+    link_pagamento: `https://pagamento.exemplo/f${n}`, criado_em: new Date(Date.UTC(2026, 10, 20, 12, n)).toISOString(), unidades: { nome: "Santa Cândida (fictícia)" }, ...extra });
+  const cartao = (arvore: unknown, titulo: string) => limpo(texto(elementos(arvore, "Cartao").find((c) => c.titulo === titulo) ?? null));
+  // Os endereços dos links da árvore (o Link do Next não é achado pelo nome: as propriedades href, de qualquer elemento).
+  const enderecos = (v: unknown): string[] => {
+    const achados: string[] = [];
+    const andar = (x: unknown): void => {
+      if (Array.isArray(x)) x.forEach(andar);
+      else if (isValidElement<Linha>(x)) {
+        if (typeof x.props.href === "string") achados.push(x.props.href);
+        Object.values(x.props).forEach(andar);
+      } else if (x && typeof x === "object" && !("$$typeof" in x)) Object.values(x).forEach(andar);
+    };
+    andar(v);
+    return achados;
+  };
+
+  it("a fila do Pix que a loja paga: inteira, de 20 em 20, das mais antigas para as mais novas, com o total e as páginas", async () => {
+    cenario.tabelas.connect_operacoes = Array.from({ length: 25 }, (_, i) => naFila(i + 1)).reverse();
+    let arvore = await Connect({ searchParams: Promise.resolve({}) } as never);
+    let fila = cartao(arvore, "Pix da Nogle para a loja pagar");
+    emOrdem(fila, "25 operações esperam, das mais antigas para as mais novas", "Nº 101 ·", "Nº 120 ·", "1–20 de 25", "As seguintes (mais novas)");
+    expect(fila).not.toContain("Nº 121 ·");
+    expect(enderecos(elementos(arvore, "Cartao").find((c) => c.titulo === "Pix da Nogle para a loja pagar"))).toContain("/connect?pix=2");
+    arvore = await Connect({ searchParams: Promise.resolve({ pix: "2", periodo: "7" }) } as never);
+    fila = cartao(arvore, "Pix da Nogle para a loja pagar");
+    emOrdem(fila, "Nº 121 ·", "Nº 125 ·", "21–25 de 25", "As anteriores (mais antigas)");
+    expect(fila).not.toContain("Nº 120 ·");
+    expect(enderecos(elementos(arvore, "Cartao").find((c) => c.titulo === "Pix da Nogle para a loja pagar"))).toContain("/connect?periodo=7");
+    for (const lixo of ["abc", "-3", "0"]) expect(cartao(await Connect({ searchParams: Promise.resolve({ pix: lixo }) } as never), "Pix da Nogle para a loja pagar")).toContain("1–20 de 25");
+    // Página além do fim (a fila andou): o aviso e a volta ao começo.
+    expect(cartao(await Connect({ searchParams: Promise.resolve({ pix: "9" }) } as never), "Pix da Nogle para a loja pagar")).toContain("Voltar ao começo da fila");
+  });
+
+  it("o pago na Nogle sai da fila e não é a linha ativa; sem link nem Pix, o aviso (sem prazo inventado); o link e o Pix copia e cola separados", async () => {
+    cenario.tabelas.connect_operacoes = [
+      naFila(1, { pagamento_confirmado_em: "2026-11-25T13:10:00Z", id_externo: "4320" }),
+      naFila(2, { link_pagamento: null, id_externo: "4321" }),
+      naFila(3, { pix_copia_cola: EMV }),
+      naFila(4, { link_pagamento: "javascript:alert(1)", pix_copia_cola: "https://nao-e-pix.exemplo" }),
+    ];
+    const arvore = await Connect({ searchParams: Promise.resolve({}) } as never);
+    const fila = cartao(arvore, "Pix da Nogle para a loja pagar");
+    expect(fila).toContain("3 operações esperam");
+    expect(fila).not.toContain("Nº 101 ·");
+    emOrdem(fila, "Nº 102 ·", "A Nogle não devolveu o link de pagamento nem o Pix copia e cola", "ativação nº 4321 na Nogle", "Não registre outra operação",
+      "Nº 103 ·", "Abrir a página de pagamento da Nogle", EMV, "Nº 104 ·", "A Nogle não devolveu o link de pagamento nem o Pix copia e cola");
+    expect(fila).not.toMatch(/vence|validade|expira/i);
+    expect(fila).not.toContain("javascript:");
+    // Na lista: o pago diz que está pago (não pague de novo) e que a linha ainda não está provada; o link e o Pix, cada um o seu.
+    const t = limpo(texto(arvore));
+    emOrdem(t, "Pagamento confirmado na Nogle", "não pague de novo", "A linha ainda não está provada");
+    emOrdem(t, "Pix copia e cola", "QR Code do Pix copia e cola da operação nº 103", "Link de pagamento da Nogle", "QR Code do link de pagamento da operação nº 103",
+      "Este QR Code abre a página de pagamento da Nogle (não é o Pix copia e cola)");
+    expect(t).not.toContain("QR Code do link de pagamento da operação nº 101");
+  });
+
+  it("o material do eSIM: fechado, só para quem registrou e para quem gere, só da ativação viva ou feita, e nunca na planilha", async () => {
+    const material = { link_esim: "https://esim.exemplo/qr-1", esim_codigo: LPA };
+    cenario.tabelas.connect_operacoes = [
+      { ...naFila(1, { esim: true, vendedor_id: "eu", venda_item_id: null, ...material }), criado_em: "2026-11-25T13:00:00Z" },
+      { ...naFila(2, { esim: true, vendedor_id: "eu", situacao: "cancelada", ...material, esim_codigo: "LPA:1$smdp.exemplo.invalido$CANCELADA" }), criado_em: "2026-11-25T12:00:00Z" },
+      { ...naFila(3, { esim: true, vendedor_id: "v1", situacao: "confirmada", ...material, esim_codigo: "LPA:1$smdp.exemplo.invalido$DA-V1" }), criado_em: "2026-11-25T11:00:00Z" },
+    ];
+    let arvore = await Connect({ searchParams: Promise.resolve({ filtro: "todas" }) } as never);
+    let t = limpo(texto(arvore));
+    emOrdem(t, "Instalar o eSIM (mostre só ao cliente desta ativação)", "QR Code de instalação do eSIM da operação nº 101", LPA, "Abrir o QR Code de instalação da Nogle");
+    expect(t).toContain("QR Code de instalação do eSIM da operação nº 103"); // quem gere vê a da vendedora
+    expect(t).not.toContain("CANCELADA");
+    expect(elementos(arvore, "MaterialDoEsim").every((m) => m.material !== null)).toBe(true);
+    expect(JSON.stringify(elementos(arvore, "ExportarCsv")[0]?.linhas)).not.toMatch(/LPA:|esim\.exemplo/);
+    // Quem só opera vê a própria (o RLS já não mostra a dos outros).
+    cenario.permissoes = new Set(VENDEDOR);
+    arvore = await Connect({ searchParams: Promise.resolve({}) } as never);
+    t = limpo(texto(arvore));
+    expect(t).toContain("QR Code de instalação do eSIM da operação nº 101");
+    expect(t).not.toContain("DA-V1");
+  });
+});
+
 describe("as abas dos formulários", () => {
   it("Ativar chip (CONNECT-n): o assistente recebe as listas da Nogle, os serviços pagos livres e os chips vendidos sem operação; sem liberação, o aviso", async () => {
     // Um serviço pago no caixa (o item da ativação) e dois chips vendidos na loja, um deles já com operação viva.
     cenario.tabelas.venda_itens = [
-      { id: "vi9", tipo: "ativacao", preco_unitario_centavos: 2_000, quantidade: 1, desconto_centavos: 0, variantes: { nome: "ATV-10 GB" }, itens_serializados: { iccid: null },
+      { id: "vi9", tipo: "ativacao", preco_unitario_centavos: 2_000, quantidade: 1, desconto_centavos: 0, variantes: { nome: "ATV-10 GB", sku: "ATV-1718" }, itens_serializados: { iccid: null },
         vendas: { numero: 12, situacao: "concluida", unidade_id: "loja", concluida_em: "2026-11-25T12:00:00Z" } },
       { id: "vc1", tipo: "produto", preco_unitario_centavos: 1_000, quantidade: 1, desconto_centavos: 0, variantes: null, itens_serializados: { iccid: "8955170110000000099" },
         vendas: { numero: 13, situacao: "concluida", unidade_id: "loja", concluida_em: "2026-11-25T13:00:00Z" } },
@@ -247,7 +378,7 @@ describe("as abas dos formulários", () => {
     expect(assistente).toMatchObject({
       planos: [{ codigo: "1718", nome: "10 GB", valor_centavos: 2_000 }, { codigo: "1719", nome: "20 GB", valor_centavos: 3_000 }],
       ddds: [{ codigo: "41", uf: "PR" }], cidades: [{ codigo: "4106902", nome: "Curitiba", uf: "PR" }],
-      pagos: [{ id: "vi9", rotulo: expect.stringMatching(/^Venda nº 12 · ATV-10 GB · R\$\s20,00$/) }],
+      pagos: [{ id: "vi9", rotulo: expect.stringMatching(/^Venda nº 12 · ATV-10 GB · R\$\s20,00$/), plano: "1718" }],
       chips: [{ iccid: "8955170110000000099", venda: 13 }],
     });
     expect(assistente?.chave).toMatch(/^[0-9a-f-]{36}$/);

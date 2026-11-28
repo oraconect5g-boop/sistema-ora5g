@@ -206,6 +206,8 @@ export type ResultadoEnvio = {
   data_cadastro?: string;
   link_pagamento?: string;
   link_esim?: string;
+  /** AUD-f: o Pix copia e cola (o código EMV), quando a resposta oficial do envio traz (pix_copia_cola); não é o link. */
+  pix_copia_cola?: string;
   iccid?: string;
   /** uuid da ativação ou recarga, para GET /consultaPagamento (resposta da Nogle de 10/11/2026). */
   uuid?: string;
@@ -214,6 +216,32 @@ export type ResultadoEnvio = {
 };
 
 const FORMATO_UUID = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
+
+/**
+ * AUD-f (auditoria de e7f55b2): o Pix copia e cola é o código EMV do Pix (começa com 000201 e traz o identificador do Pix,
+ * BR.GOV.BCB.PIX; pode ter espaço no nome de quem recebe, nunca caractere de controle); o link de pagamento é uma página (https). São coisas diferentes: o QR Code do link só abre a página. Fora
+ * desse formato, ou vazio (os exemplos oficiais do LINK trazem vazio), não há Pix copia e cola.
+ */
+export function pixCopiaECola(v: unknown): string | undefined {
+  const t = typeof v === "string" ? v.trim() : "";
+  // O nome e a cidade de quem recebe podem ter espaço; quebra de linha e outro caractere de controle, não.
+  return t.length >= 20 && t.length <= 512 && /^000201/.test(t) && t.toUpperCase().includes("BR.GOV.BCB.PIX") && !/[\u0000-\u001f\u007f]/.test(t) ? t : undefined;
+}
+
+/**
+ * AUD-f: o material de instalação do eSIM (o link e o código de ativação), que pode vir só depois do pagamento. A rota que o
+ * traz (GET /consultaPagamento, com esim, activation_code_esim e qr_code_esim) veio da resposta da Nogle de 10/11/2026 e NÃO está
+ * na coleção oficial: só é lida com a rota ligada (NOGLE_CONSULTA_PAGAMENTO, depois da primeira resposta real em homologação).
+ * Só o link https e o código no padrão LPA (LPA:1$servidor$código); o resto (imagem, PDF) fica de fora. Nunca vai para a
+ * evidência nem para os eventos: a linha se instala com ele.
+ */
+export type MaterialDoEsim = { link?: string; codigo?: string };
+export function materialDoEsim(corpo: Record<string, unknown>): MaterialDoEsim | undefined {
+  const link = [corpo.qr_code_esim, corpo.esim].map((v) => (typeof v === "string" ? v.trim() : "")).find((v) => /^https:\/\/[^\s]{1,490}$/.test(v));
+  const codigo = typeof corpo.activation_code_esim === "string" ? corpo.activation_code_esim.trim() : "";
+  const material = { ...(link ? { link } : {}), ...(/^LPA:1\$[^\s$]+\$[^\s]+$/.test(codigo) && codigo.length <= 300 ? { codigo } : {}) };
+  return Object.keys(material).length > 0 ? material : undefined;
+}
 /**
  * uuid devolvido na ativação ou recarga. A Nogle respondeu em 10/11/2026 que toda ativação e
  * recarga devolve um uuid, mas o campo NÃO está na coleção oficial: o nome e o lugar exatos ficam a
@@ -253,6 +281,7 @@ export function interpretarEnvio(tipo: TipoOperacao, statusHttp: number, corpo: 
       return {
         ...base, resultado: "aceita", mensagem: textoOuNada(c.mensagem) ?? "", id_externo: id,
         data_cadastro: textoOuNada(info?.data_cadastro), link_pagamento: textoOuNada(c.link_pagamento), link_esim: textoOuNada(c.link_esim),
+        ...(pixCopiaECola(c.pix_copia_cola) ? { pix_copia_cola: pixCopiaECola(c.pix_copia_cola) } : {}),
         iccid: textoOuNada(objeto(chips[0])?.iccid), ...(uuid ? { uuid } : {}),
         dados: limpar({ id, id_cliente: textoOuNada(info?.id_cliente), data_cadastro: textoOuNada(info?.data_cadastro) }),
       };
@@ -304,13 +333,18 @@ export type OperacaoParaConsultar = {
   metodo_pagamento: MetodoPagamentoNogle | null;
   /** uuid devolvido no envio (ativação e recarga), quando houver. */
   uuid_externo?: string | null;
+  /** AUD-f: o pagamento da ativação já confirmado na Nogle (falta a prova da linha). */
+  pagamento_confirmado_em?: string | null;
+  esim?: boolean;
 };
 
 /** Consulta documentada que serve de evidência para cada tipo (null: não há como consultar ainda). */
 export function montarConsulta(op: OperacaoParaConsultar, opcoes: { consultaPagamento?: boolean } = {}): PedidoNogle | null {
   // Com o uuid do envio e a rota liberada para a conta (NOGLE_CONSULTA_PAGAMENTO), a consulta é da
   // operação exata: não depende da data de cadastro no histórico (pergunta 10, #59).
-  if (opcoes.consultaPagamento && op.uuid_externo && (op.tipo === "ativacao" || op.tipo === "recarga")) {
+  // AUD-f: a ativação já paga não consulta o pagamento de novo: falta a prova da linha (o ICCID ativo, abaixo).
+  const ativacaoPaga = op.tipo === "ativacao" && Boolean(op.pagamento_confirmado_em);
+  if (opcoes.consultaPagamento && op.uuid_externo && !ativacaoPaga && (op.tipo === "ativacao" || op.tipo === "recarga")) {
     return { metodo: "GET", caminho: "/consultaPagamento", corpo: { tipo: "ATIVREC", uuid: op.uuid_externo } };
   }
   if (op.tipo === "ativacao") return op.iccid ? { metodo: "POST", caminho: "/ativacao/validaIccid", corpo: { iccid: op.iccid } } : null;
@@ -320,11 +354,16 @@ export function montarConsulta(op: OperacaoParaConsultar, opcoes: { consultaPaga
 
 export type Evidencia = {
   // "ambigua": a resposta não diz qual recarga é desta operação (#59): a gerência confere.
-  evidencia: "confirmada" | "negada" | "em_andamento" | "erro_operadora" | "sem_evidencia" | "consulta_bloqueada" | "falha_consulta" | "ambigua";
+  // AUD-f: "pago" (a ativação paga na Nogle, falta a prova da linha), "pago_sem_prova_da_linha" (paga, mas sem ICCID para
+  // provar a linha: a gerência confere) e "sem_prova_da_linha" (sem ICCID e sem a consulta do pagamento: a gerência confere).
+  evidencia: "confirmada" | "negada" | "em_andamento" | "erro_operadora" | "sem_evidencia" | "consulta_bloqueada" | "falha_consulta" | "ambigua"
+    | "pago" | "pago_sem_prova_da_linha" | "sem_prova_da_linha";
   mensagem: string;
   numero?: string;
   valor_debitado_centavos?: number;
   dados?: Record<string, unknown>;
+  /** AUD-f: o material de instalação do eSIM, gravado à parte (nunca na evidência nem nos eventos). */
+  material_esim?: MaterialDoEsim;
 };
 
 /**
@@ -381,10 +420,12 @@ export function interpretarConsulta(op: OperacaoParaConsultar, statusHttp: numbe
 }
 
 /**
- * GET /consultaPagamento (resposta da Nogle de 10/11/2026): {status, data_pagamento e, no eSIM,
- * links e código de instalação}. data_pagamento só vem preenchida se a ativação ou a recarga
- * deu certo: aí confirma, com o uuid como chave da evidência (uma evidência, uma operação). Sem a
- * data, ainda não aconteceu. status false ou HTTP de erro não confirmam nada.
+ * GET /consultaPagamento (resposta da Nogle de 10/11/2026): {status, data_pagamento e, no eSIM, links e código de instalação}.
+ * data_pagamento só vem preenchida se o pagamento deu certo. AUD-f (auditoria de e7f55b2): para a ATIVAÇÃO, o pagamento
+ * confirmado NÃO prova a linha ativa: vira "pago" (o servidor passa a consultar o ICCID, a prova oficial da linha) ou, sem
+ * ICCID (o eSIM que não trouxe o ICCID no envio), "pago_sem_prova_da_linha" (a gerência confere e registra o desfecho). O
+ * material de instalação do eSIM sai à parte (material_esim). Para a RECARGA, a Nogle disse que a data só vem com a recarga
+ * feita: segue confirmando, com o uuid como chave da evidência. status false ou HTTP de erro não provam nada.
  */
 export function interpretarConsultaPagamento(op: OperacaoParaConsultar, statusHttp: number, corpo: unknown): Evidencia {
   const c = objeto(corpo);
@@ -392,12 +433,15 @@ export function interpretarConsultaPagamento(op: OperacaoParaConsultar, statusHt
   if (c.status !== true) return { evidencia: "sem_evidencia", mensagem: textoOuNada(c.mensagem) ?? "A Nogle não encontrou o pagamento desta operação." };
   const pago = textoOuNada(c.data_pagamento);
   if (!pago) return { evidencia: "em_andamento", mensagem: "Ativação ou recarga ainda sem pagamento confirmado na Nogle.", dados: limpar({ uuid: op.uuid_externo }) };
-  return {
-    evidencia: "confirmada",
-    mensagem: op.tipo === "ativacao" ? "Ativação paga e feita (consulta pelo uuid)." : "Recarga paga e feita (consulta pelo uuid).",
-    // QR, código e PDF do eSIM instalam a linha: não entram na evidência (que vai para os eventos).
-    dados: limpar({ uuid: op.uuid_externo, data_pagamento: pago }),
-  };
+  const dados = limpar({ uuid: op.uuid_externo, data_pagamento: pago });
+  if (op.tipo === "ativacao") {
+    const material = op.esim ? materialDoEsim(c) : undefined;
+    return op.iccid
+      ? { evidencia: "pago", mensagem: "Ativação paga na Nogle; falta a prova da linha (o ICCID ativo).", dados, ...(material ? { material_esim: material } : {}) }
+      : { evidencia: "pago_sem_prova_da_linha", mensagem: "Ativação paga na Nogle, sem ICCID para provar a linha: a gerência confere na Nogle e registra o desfecho.",
+        dados, ...(material ? { material_esim: material } : {}) };
+  }
+  return { evidencia: "confirmada", mensagem: "Recarga paga e feita (consulta pelo uuid).", dados };
 }
 
 export type ItemDeReferencia = { codigo: string; nome: string; uf?: string; valor_centavos?: number; dados?: Record<string, unknown> };
@@ -705,6 +749,8 @@ export const TIPOS_DE_CONSULTA = [
   "faq_categorias", "faq_perguntas", "planos_campanhas", "estados", "validar_cep", "validar_cnpj", "compra_rastreio", "titularidade_da_linha",
   "logistica", "validar_cpf", "carteira_programadas", "relatorio_portabilidades", "lista_de_linhas", "lista_de_clientes",
   "pagamento_da_solicitacao", "carteira_extrato_saidas", "carteira_extrato_entradas",
+  // AUD-f: o cadastro do cliente, só para preencher o formulário (a GET /cliente/buscar, sem o histórico nem as linhas).
+  "cliente_cadastro",
 ] as const;
 export type TipoDeConsulta = (typeof TIPOS_DE_CONSULTA)[number];
 export const ehTipoDeConsulta = (v: unknown): v is TipoDeConsulta => typeof v === "string" && (TIPOS_DE_CONSULTA as readonly string[]).includes(v);
@@ -728,6 +774,7 @@ export const PARAMETRO_DA_CONSULTA: Record<TipoDeConsulta, ParametroDaConsulta |
   compra_rastreio: "pedido", titularidade_da_linha: "linha_e_documento", logistica: null, validar_cpf: "cpf", carteira_programadas: "dias_a_frente",
   relatorio_portabilidades: "dias_para_tras", lista_de_linhas: "pagina", lista_de_clientes: "pagina",
   pagamento_da_solicitacao: "solicitacao", carteira_extrato_saidas: "dias_para_tras", carteira_extrato_entradas: "dias_para_tras",
+  cliente_cadastro: "documento",
 };
 /** As consultas que o worker faz em partes (várias chamadas) e mostra num relatório. */
 export const CONSULTAS_COMPOSTAS = ["linha_completa", "cliente_completo"] as const satisfies readonly TipoDeConsulta[];
@@ -743,6 +790,7 @@ export const NOMES_DAS_CONSULTAS: Record<TipoDeConsulta, string> = {
   carteira_saldo: "Saldo da carteira da Ora",
   linha_completa: "Relatório completo do número",
   cliente_completo: "Relatório do cliente",
+  cliente_cadastro: "Cadastro do cliente na Nogle (para preencher)",
   linha_cobrancas: "Cobranças em aberto da linha",
   linha_consumo_voz: "Ligações no mês",
   linha_consumo_sms: "SMS no mês",
@@ -810,6 +858,8 @@ export function pedidoDaConsulta(tipo: TipoDeConsulta, parametro: string | null,
     case "iccid_situacao": return iccid ? { metodo: "POST", caminho: "/ativacao/validaIccid", corpo: { iccid: p } } : null;
     // Os relatórios são feitos em partes pelo worker (pedidosDoRelatorio*).
     case "linha_completa": case "cliente_completo": return null;
+    // AUD-f: o cadastro para preencher, só a /cliente/buscar (a leitura é a lerCadastroParaPreencher, que confere o documento).
+    case "cliente_cadastro": return /^(\d{11}|\d{14})$/.test(p) ? pedidoDoCliente(p) : null;
     // CONNECT-i: as que faltavam, como a coleção oficial manda (as POST de validação e de rastreio só leem).
     case "faq_categorias": return { metodo: "GET", caminho: "/faq/categorias", corpo: {} };
     case "faq_perguntas": return /^\d{1,9}$/.test(p) ? { metodo: "GET", caminho: `/faq/categoria/${Number(p)}`, corpo: {} } : null;
@@ -1134,6 +1184,7 @@ function camposDaConsulta(tipo: TipoDeConsulta, corpo: Record<string, unknown>):
     case "linha_existe":
     case "linha_completa":
     case "cliente_completo":
+    case "cliente_cadastro":
       return null;
   }
 }
@@ -1227,6 +1278,57 @@ export function lerParteDoRelatorio(parte: ParteDoRelatorio, statusHttp: number,
   const o = objeto(corpo);
   const resposta = o ? camposDaParte(parte, o) : null;
   return resposta ? { situacao: "respondida", mensagem: n.mensagem.slice(0, 200), resposta } : { situacao: "falhou", mensagem: "A resposta da Nogle veio fora da forma documentada." };
+}
+
+// -----------------------------------------------------------------------------
+// AUD-f (auditoria de e7f55b2) — o cadastro do cliente na Nogle, para PREENCHER um formulário (a ativação, a atualização do
+// cadastro, a compra de chip com entrega) ou avisar que ele já existe (o cadastro novo). Só a GET /cliente/buscar (sem o
+// histórico nem as linhas do cliente), só os campos que os formulários usam e só se a Nogle devolveu o cadastro do MESMO
+// documento pedido. Nada é deduzido: a data que não é uma data, o telefone sem DDD, o CEP sem 8 dígitos, o e-mail fora da
+// forma e o texto comprido demais ficam de fora (sem cortar); a cidade da Nogle vem só como referência (a resposta não traz o
+// código da cidade da lista oficial), e o nascimento só para o CPF.
+// -----------------------------------------------------------------------------
+
+export const CAMPOS_DO_CADASTRO = ["nome", "nascimento", "email", "telefone", "cep", "rua", "numero", "complemento", "bairro"] as const;
+export type CampoDoCadastro = (typeof CAMPOS_DO_CADASTRO)[number];
+export type CadastroParaPreencher = Partial<Record<CampoDoCadastro, string>> & { cidade_na_nogle?: string; uf_na_nogle?: string };
+
+/** A data de nascimento como veio, só se for uma data de verdade (de 1900 até hoje). */
+function nascimentoDeVerdade(v: unknown, hoje: Date): string | undefined {
+  const d = diaOuNada(v);
+  const m = d ? /^(\d{4})-(\d{2})-(\d{2})$/.exec(d) : null;
+  if (!m) return undefined;
+  const [ano, mes, dia] = [Number(m[1]), Number(m[2]), Number(m[3])];
+  const data = new Date(Date.UTC(ano, mes - 1, dia));
+  return ano >= 1900 && data.getUTCMonth() === mes - 1 && data.getUTCDate() === dia && data.getTime() <= hoje.getTime() ? d ?? undefined : undefined;
+}
+const textoQueCabe = (v: unknown, maximo: number) => { const t = textoOuNada(v); return t && t.length <= maximo && !/[\u0000-\u001f\u007f]/.test(t) ? t : undefined; };
+
+/** A resposta da /cliente/buscar para preencher (as mesmas regras de falha das consultas; o documento tem de ser o pedido). */
+export function lerCadastroParaPreencher(documento: string, statusHttp: number, corpo: unknown, hoje: Date): RespostaDaConsulta {
+  if (statusHttp >= 500 || statusHttp === 0) return { situacao: "falhou", mensagem: "A Nogle não respondeu agora: tente de novo em instantes." };
+  if (statusHttp === 401 || statusHttp === 403) return { situacao: "falhou", mensagem: `A Nogle recusou o acesso (HTTP ${statusHttp}).` };
+  const n = normalizarResposta(statusHttp, corpo);
+  if (!n.ok) return { situacao: "nao_encontrada", mensagem: n.mensagem.slice(0, 200) || "A Nogle não tem cadastro com este documento." };
+  const c = objeto(objeto(corpo)?.cliente);
+  if (!c) return { situacao: "falhou", mensagem: "A resposta da Nogle veio fora da forma documentada." };
+  const doDocumento = documento.length === 11 ? digitosOuNada(c.cpf) : digitosOuNada(c.cnpj);
+  if (doDocumento !== documento) return { situacao: "falhou", mensagem: "A Nogle devolveu o cadastro de outro documento: nada foi preenchido." };
+  const e = objeto(c.endereco);
+  const email = textoQueCabe(c.email, 120);
+  const telefone = digitosOuNada(c.telefone);
+  const cep = digitosOuNada(e?.cep);
+  const uf = textoOuNada(e?.uf)?.toUpperCase();
+  const campos = limpar({
+    nome: textoQueCabe(c.nome, 120),
+    nascimento: documento.length === 11 ? nascimentoDeVerdade(c.nascimento, hoje) : undefined,
+    email: email && /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email) ? email : undefined,
+    telefone: telefone && /^[1-9]{2}(9\d{8}|[2-8]\d{7})$/.test(telefone) ? telefone : undefined,
+    cep: cep && /^\d{8}$/.test(cep) ? cep : undefined,
+    rua: textoQueCabe(e?.rua, 120), numero: textoQueCabe(e?.numero, 20), complemento: textoQueCabe(e?.complemento, 120), bairro: textoQueCabe(e?.bairro, 120),
+    cidade_na_nogle: textoQueCabe(e?.municipio, 80), uf_na_nogle: uf && /^[A-Z]{2}$/.test(uf) ? uf : undefined,
+  }) as CadastroParaPreencher;
+  return { situacao: "respondida", mensagem: "", resposta: campos };
 }
 
 // -----------------------------------------------------------------------------

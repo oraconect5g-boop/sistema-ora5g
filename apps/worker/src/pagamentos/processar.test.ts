@@ -100,7 +100,7 @@ describe("criar os links (PAY-014a)", () => {
 describe("os avisos e os links a desativar (PAY-014a)", () => {
   const AVISO: AvisoAProcessar = { aviso: "evt_1", evento: "PAYMENT_RECEIVED", id_no_provedor: "pay_1", link: "lnk_1", valor_centavos: 7_990,
     pagamento: { id: ITEM.id, valor_centavos: 7_990, situacao: "aguardando", link: "lnk_1" } };
-  const CONSULTA: ConsultaDaAsaas = { id_no_provedor: "pay_1", link: "lnk_1", valor_centavos: 7_990, situacao: "pago" };
+  const CONSULTA: ConsultaDaAsaas = { id_no_provedor: "pay_1", link: "lnk_1", valor_centavos: 7_990, situacao: "pago", estornado_centavos: 0 };
 
   it("o aviso só faz perguntar: com a resposta, o banco aplica; sem resposta, o aviso fica para depois; sem pagamento nosso, sem link ou sem id, é concluído", async () => {
     let s = simulados({ avisos: [AVISO], consultar: CONSULTA });

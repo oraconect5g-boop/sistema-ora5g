@@ -7,7 +7,10 @@ import { describe, expect, it, vi } from "vitest";
 
 import { completarComDigitoVerificador, cpfValido } from "@ora5g/dominio";
 
-vi.mock("../acoes", () => ({ registrarOperacao: async () => undefined }));
+vi.mock("../acoes", () => ({
+  registrarOperacao: async () => undefined, pedirCadastroDaNogle: async () => ({ ok: false, erro: "falha" }),
+  lerCadastroDaNogle: async () => ({ estado: "descartada" }), descartarCadastroDaNogle: async () => undefined,
+}));
 
 import { AssistenteDeAtivacao } from "./AssistenteDeAtivacao";
 import { documentoMascarado, ETAPAS, faltaNaEtapa, primeiraEtapaIncompleta, resumoDaAtivacao } from "./etapas";
@@ -24,7 +27,7 @@ const COMPLETO = { iccid: ICCID, ...CLIENTE, plano: "1718", ddd: "41", metodo: "
 const LISTAS = {
   planos: [{ codigo: "1718", nome: "10 GB", valor_centavos: 5_490 }],
   cidades: [{ codigo: "4106902", nome: "Curitiba", uf: "PR" }],
-  pagos: [{ id: "00000000-0000-4000-8000-000000000001", rotulo: "Venda nº 12 · ATV-10 GB · R$ 54,90" }],
+  pagos: [{ id: "00000000-0000-4000-8000-000000000001", rotulo: "Venda nº 12 · ATV-10 GB · R$ 54,90", plano: "1718" }],
 };
 
 describe("os passos do assistente", () => {
@@ -109,7 +112,16 @@ describe("o desenho inicial", () => {
     expect(blocos.length).toBeGreaterThanOrEqual(3);
     expect(html).toMatch(/<div class="space-y-4"><fieldset><legend class="sr-only">Tipo de chip<\/legend>/);
     for (const campo of ["nome", "documento", "cep", "id_cidade", "plano", "ddd", "metodo", "venda_item"]) expect(html).toContain(`name="${campo}"`);
-    expect(html).toMatch(/<div hidden="" class="grid gap-4 sm:grid-cols-2"><label class="block text-sm font-medium sm:col-span-2">Nome completo do cliente/);
+    // AUD-f: o passo do cliente começa pelo documento, com a busca do cadastro na Nogle logo abaixo.
+    expect(html).toMatch(/<div hidden="" class="grid gap-4 sm:grid-cols-2"><label class="block text-sm font-medium">CPF ou CNPJ<input [^>]*name="documento"/);
+  });
+
+  it("AUD-f: a busca do cadastro na Nogle é um botão comum (o toque e o Enter nele não registram) e só depois do documento vêm os outros campos", () => {
+    const passo = html.slice(html.indexOf('name="documento"'), html.indexOf('name="nome"'));
+    expect(passo).toMatch(/<button type="button"[^>]*>.*Buscar o cadastro na Nogle<\/button>/);
+    expect(passo).toContain("Comece pelo documento: a Nogle pode preencher o resto, e você confere com o cliente.");
+    expect(passo).toContain('aria-live="polite"');
+    expect(html).not.toContain('type="submit"');
   });
 
   it("os chips vendidos na loja, para tocar, só pelo fim do ICCID", () => {

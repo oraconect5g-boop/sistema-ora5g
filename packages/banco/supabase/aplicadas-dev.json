@@ -1,7 +1,7 @@
 {
   "projeto": "ora5g-dev (qgnbeuugklzzcevdzrvg)",
   "regra": "REV-018 / #17: o nome do arquivo usa a versão que o Supabase gravou no histórico (supabase_migrations.schema_migrations). Migration aplicada não muda mais: o teste src/migrations.test.ts compara o md5 do arquivo com o registrado aqui. Correção = migration nova.",
-  "conferido_em": "2026-11-23",
+  "conferido_em": "2026-11-26",
   "migrations": [
     { "versao": "20261107140352", "nome": "fundacao_acesso", "md5": "a8f160b848c860269fed9b3dced6aae5", "aplicada_em": "2026-11-07" },
     { "versao": "20261107140448", "nome": "indices_chaves_estrangeiras", "md5": "04fa57c5f31bc5cb8beb99ebfac7297e", "aplicada_em": "2026-11-07" },
@@ -153,6 +153,10 @@
     { "versao": "20261125192529", "nome": "pix_da_asaas_no_caixa", "md5": "444d762bc3da757651287fac4589d160", "aplicada_em": "2026-11-25" },
     { "versao": "20261125195945", "nome": "pix_da_nogle_na_loja", "md5": "c26003037515902dd7bc2d50137d9477", "aplicada_em": "2026-11-25" },
     { "versao": "20261125204032", "nome": "cartao_da_asaas_no_caixa", "md5": "42899dd427c54da750b9b4072f2dacfb", "aplicada_em": "2026-11-25" },
-    { "versao": "20261125211142", "nome": "assinatura_no_cartao", "md5": "53e5ce2bae8d1174097f8f53eb2d076d", "aplicada_em": "2026-11-25" }
+    { "versao": "20261125211142", "nome": "assinatura_no_cartao", "md5": "53e5ce2bae8d1174097f8f53eb2d076d", "aplicada_em": "2026-11-25" },
+    { "versao": "20261126220000", "nome": "entrada_imei_duplo", "md5": "2e56121e929c645d7106b086e68728ec", "aplicada_em": "2026-11-26" },
+    { "versao": "20261126223000", "nome": "repasses_parciais_das_financeiras", "md5": "cfa423c2916d16e51a2ff90d1376f323", "aplicada_em": "2026-11-26" },
+    { "versao": "20261126224000", "nome": "cartao_manual_pdv", "md5": "d64879fb83cfa7d620d09d8012d31163", "aplicada_em": "2026-11-26" },
+    { "versao": "20261126224500", "nome": "mercado_pago_na_previsao_e_no_resultado", "md5": "d72b9ad913a078f9b614b690747fc72a", "aplicada_em": "2026-11-26" }
   ]
 }

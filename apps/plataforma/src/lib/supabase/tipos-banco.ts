@@ -1820,6 +1820,7 @@ export type Database = {
           respondida_em: string | null
           resposta: Json | null
           resposta_apagada_em: string | null
+          sessao_id: string | null
           situacao: string
           tipo: string
           unidade_id: string
@@ -1837,6 +1838,7 @@ export type Database = {
           respondida_em?: string | null
           resposta?: Json | null
           resposta_apagada_em?: string | null
+          sessao_id?: string | null
           situacao?: string
           tipo: string
           unidade_id: string
@@ -1854,6 +1856,7 @@ export type Database = {
           respondida_em?: string | null
           resposta?: Json | null
           resposta_apagada_em?: string | null
+          sessao_id?: string | null
           situacao?: string
           tipo?: string
           unidade_id?: string
@@ -2042,6 +2045,7 @@ export type Database = {
           enviado_em: string | null
           enviando_desde: string | null
           esim: boolean
+          esim_codigo: string | null
           evidencia: Json | null
           evidencia_chave: string | null
           iccid: string | null
@@ -2059,6 +2063,8 @@ export type Database = {
           numero_ativado: string | null
           operadora_doadora_id: number | null
           organizacao_id: string
+          pagamento_confirmado_em: string | null
+          pix_copia_cola: string | null
           plano_id: number | null
           plano_nome: string | null
           proxima_consulta_em: string | null
@@ -2087,6 +2093,7 @@ export type Database = {
           enviado_em?: string | null
           enviando_desde?: string | null
           esim?: boolean
+          esim_codigo?: string | null
           evidencia?: Json | null
           evidencia_chave?: string | null
           iccid?: string | null
@@ -2104,6 +2111,8 @@ export type Database = {
           numero_ativado?: string | null
           operadora_doadora_id?: number | null
           organizacao_id: string
+          pagamento_confirmado_em: string | null
+          pix_copia_cola: string | null
           plano_id?: number | null
           plano_nome?: string | null
           proxima_consulta_em?: string | null
@@ -2132,6 +2141,7 @@ export type Database = {
           enviado_em?: string | null
           enviando_desde?: string | null
           esim?: boolean
+          esim_codigo?: string | null
           evidencia?: Json | null
           evidencia_chave?: string | null
           iccid?: string | null
@@ -2149,6 +2159,8 @@ export type Database = {
           numero_ativado?: string | null
           operadora_doadora_id?: number | null
           organizacao_id?: string
+          pagamento_confirmado_em?: string | null
+          pix_copia_cola?: string | null
           plano_id?: number | null
           plano_nome?: string | null
           proxima_consulta_em?: string | null
@@ -4675,8 +4687,10 @@ export type Database = {
       loja_pagamentos: {
         Row: {
           atualizado_em: string
+          conferido_em: string | null
           criado_em: string
           divergencia: string | null
+          estornado_centavos: number
           estornado_em: string | null
           id: string
           id_no_provedor: string | null
@@ -4689,15 +4703,19 @@ export type Database = {
           provedor: string
           reservado_ate: string | null
           situacao: string
+          situacao_no_provedor: string | null
           tentativas: number
           ultima_falha: string | null
           unidade_id: string
           valor_centavos: number
+          valor_liquido_centavos: number | null
         }
         Insert: {
           atualizado_em?: string
+          conferido_em?: string | null
           criado_em?: string
           divergencia?: string | null
+          estornado_centavos?: number
           estornado_em?: string | null
           id?: string
           id_no_provedor?: string | null
@@ -4710,15 +4728,19 @@ export type Database = {
           provedor?: string
           reservado_ate?: string | null
           situacao?: string
+          situacao_no_provedor?: string | null
           tentativas?: number
           ultima_falha?: string | null
           unidade_id: string
           valor_centavos: number
+          valor_liquido_centavos?: number | null
         }
         Update: {
           atualizado_em?: string
+          conferido_em?: string | null
           criado_em?: string
           divergencia?: string | null
+          estornado_centavos?: number
           estornado_em?: string | null
           id?: string
           id_no_provedor?: string | null
@@ -4731,10 +4753,12 @@ export type Database = {
           provedor?: string
           reservado_ate?: string | null
           situacao?: string
+          situacao_no_provedor?: string | null
           tentativas?: number
           ultima_falha?: string | null
           unidade_id?: string
           valor_centavos?: number
+          valor_liquido_centavos?: number | null
         }
         Relationships: [
           {
@@ -9037,6 +9061,14 @@ export type Database = {
           unidade_id: string
         }[]
       }
+      connect_cadastro_da_nogle: {
+        Args: { p_consulta: string; p_documento: string }
+        Returns: Json
+      }
+      connect_cadastro_da_nogle_descartar: {
+        Args: { p_consulta: string }
+        Returns: boolean
+      }
       connect_consultar: {
         Args: { p_chave: string; p_parametro?: string; p_tipo: string }
         Returns: string
@@ -9088,6 +9120,22 @@ export type Database = {
         }
         Returns: Json
       }
+      connect_somas_por: {
+        Args: { p_fim: string; p_inicio: string; p_unidade?: string; p_vendedor?: string }
+        Returns: {
+          ativacoes: number
+          em_andamento: number
+          nao_feitas: number
+          operacoes: number
+          portabilidades: number
+          recargas: number
+          recebido_centavos: number
+          sem_resultado: number
+          unidade_id: string
+          valor_de_face_centavos: number
+          vendedor_id: string
+        }[]
+      }
       connect_worker_acoes_a_enviar: {
         Args: { p_limite: number; p_organizacao: string }
         Returns: {
@@ -9126,12 +9174,14 @@ export type Database = {
         Returns: {
           data_cadastro_externa: string
           enviado_em: string
+          esim: boolean
           iccid: string
           id_externo: string
           linha: string
           linha_doadora: string
           metodo_pagamento: string
           operacao_id: string
+          pagamento_confirmado_em: string
           situacao: string
           tentativas_consulta: number
           tipo: string
@@ -9159,6 +9209,10 @@ export type Database = {
       connect_worker_registrar_consulta: {
         Args: { p_evidencia: Json; p_operacao: string }
         Returns: string
+      }
+      connect_worker_registrar_material_esim: {
+        Args: { p_material: Json; p_operacao: string }
+        Returns: boolean
       }
       connect_worker_registrar_envio: {
         Args: { p_operacao: string; p_resultado: Json }

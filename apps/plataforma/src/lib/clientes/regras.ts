@@ -174,6 +174,19 @@ export function valorDaBusca(criterio: string, valor: string): { ok: true; crite
   return { ok: false };
 }
 
+/**
+ * AUD-f (auditoria de e7f55b2): a chave de uma busca, com o valor como o servidor lê (o CPF e o telefone só pelos dígitos). O
+ * resultado vale só para a busca que o pediu: mudou o CPF, o telefone ou o critério, o resultado anterior sai da tela.
+ */
+export function chaveDaBusca(criterio: string, valor: string): string {
+  const lido = valorDaBusca(criterio, valor);
+  return `${criterio}:${lido.ok ? lido.valor : valor.trim().slice(0, 80).toLowerCase()}`;
+}
+
+/** A resposta de uma busca só entra se for a do último pedido e da busca que está na tela (as fora de ordem saem). */
+export const respostaDaBuscaVale = (resposta: { pedido: number; chave: string }, atual: { ultimoPedido: number; chave: string }) =>
+  resposta.pedido === atual.ultimoPedido && resposta.chave === atual.chave;
+
 /** CPF 123.456.789-09, CNPJ 11.222.333/0001-81, telefone (41) 98765-4321 (dado revelado, só para exibir). */
 export function formatarRevelado(campo: CampoRevelavel, valor: unknown): string {
   if (valor === null || valor === undefined || valor === "") return "não informado";

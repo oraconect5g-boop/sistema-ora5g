@@ -17,7 +17,8 @@ import {
   DIAS_DAS_PORTABILIDADES, DIAS_DAS_PROGRAMADAS, diaDaNogle, ehErroDaConsulta, ERROS_DA_CONSULTA, linhaFormatada, momentoDaNogle, NOMES_DAS_CONSULTAS,
   type ConsultaDaTela,
 } from "../../../lib/connect/consultas";
-import { somasPor, totalConfirmadas } from "../../../lib/connect/relatorio";
+import { totalConfirmadas } from "../../../lib/connect/relatorio";
+import { consultarSomas, somasDasLinhas } from "../../../lib/connect/somas-do-banco";
 import { janelasDoPeriodo, ORDEM_DOS_PERIODOS, PERIODOS_FINANCEIROS, periodoFinanceiro } from "../../../lib/financeiro/painel";
 import { agora, brl, numero } from "../../../lib/formato";
 import { textoDoParametro, type ValorDeParametro } from "../../../lib/parametros";
@@ -82,10 +83,10 @@ export default async function CarteiraDaConnect({ searchParams }: { searchParams
   const { supabase } = sessao;
   const unidade = sessao.situacao.unidade_id as string;
 
-  const [operacoes, consultasLidas, conciliacoes] = await Promise.all([
-    // As operações do período na loja do turno (quem só opera vê as suas: o RLS escolhe), como no relatório.
-    supabase.from("connect_operacoes").select("id, numero, tipo, situacao, vendedor_id, unidade_id, plano_nome, valor_face_centavos, recebido_na_loja_centavos, linha, criado_em")
-      .eq("unidade_id", unidade).gte("criado_em", janela.inicio.toISOString()).order("criado_em", { ascending: false }).limit(2000),
+  const [somasLidas, consultasLidas, conciliacoes] = await Promise.all([
+    // AUD-f: a produção do período na loja do turno, somada no banco por vendedor (quem só opera soma as suas: o mesmo RLS),
+    // como no relatório; antes, a tela somava só as operações que cabiam numa leitura.
+    consultarSomas(supabase, janela, { unidade, vendedor: null }),
     gereARede
       ? supabase.from("connect_consultas").select("id, tipo, parametro, situacao, resposta, mensagem, pedida_em, respondida_em, resposta_apagada_em")
         .in("tipo", [...CONSULTAS_DA_CARTEIRA]).order("pedida_em", { ascending: false }).limit(60)
@@ -94,14 +95,15 @@ export default async function CarteiraDaConnect({ searchParams }: { searchParams
       ? supabase.from("connect_conciliacoes").select("id, numero, relatorio, de, ate, recebida_em, totais").order("recebida_em", { ascending: false }).limit(1)
       : Promise.resolve({ data: [], error: null }),
   ]);
-  if (operacoes.error) throw new FalhaDoServico("connect_operacoes");
   if (consultasLidas.error) throw new FalhaDoServico("connect_consultas");
   if (conciliacoes.error) throw new FalhaDoServico("connect_conciliacoes");
-  const vendedores = [...new Set(operacoes.data.map((o) => o.vendedor_id))];
+  const linhasDasSomas = somasLidas.estado === "ok" ? somasLidas.dados : [];
+  const vendedores = [...new Set(linhasDasSomas.map((l) => l.vendedor_id))];
   const pessoas = vendedores.length > 0 ? await supabase.from("perfis_usuario").select("id, nome").in("id", vendedores) : { data: [], error: null };
   if (pessoas.error) throw new FalhaDoServico("perfis_usuario");
   const nomeDe = (id: string) => (pessoas.data as { id: string; nome: string }[]).find((p) => p.id === id)?.nome ?? "Pessoa sem nome";
-  const porVendedor = somasPor(operacoes.data, "vendedor_id", nomeDe);
+  const porVendedor = somasDasLinhas(linhasDasSomas, "vendedor_id", nomeDe);
+  const VENDEDORES_NA_TABELA = 20;
 
   const consultas = consultasLidas.data as unknown as ConsultaDaTela[];
   const saldo = estadoDa(ultimaDe(consultas, "carteira_saldo"), lerSaldo);
@@ -264,9 +266,10 @@ export default async function CarteiraDaConnect({ searchParams }: { searchParams
       <Cartao className="mt-4" titulo={gere ? "Ativações e recargas por vendedor" : "Minhas ativações e recargas"} icone={Users} corpo="px-4 pb-4 sm:px-5"
         subtitulo={`${sessao.situacao.unidade_nome} · confirmadas entre as operações registradas no período (como no relatório)`}>
         <div className="mb-3"><FiltroSegmentado rotulo="Período do relatório" opcoes={ORDEM_DOS_PERIODOS.map((p) => ({ href: enderecoDoPeriodo(p), rotulo: PERIODOS_FINANCEIROS[p].rotulo, ativo: p === periodo }))} /></div>
-        {porVendedor.length === 0 ? <p className="text-sm text-suave">Nenhuma operação no período.</p> : (
+        {somasLidas.estado !== "ok" ? <Aviso tom="aviso">Não foi possível somar a produção do período agora: tente de novo em instantes (o relatório completo também mostra).</Aviso>
+          : porVendedor.length === 0 ? <p className="text-sm text-suave">Nenhuma operação no período.</p> : (
           <Tabela colunas={["Vendedor", "Ativações", "Recargas", "Portabilidades", "Pendentes", "Recebido na loja"]} legenda="Ativações e recargas por vendedor" alinharDireita={[1, 2, 3, 4, 5]} minimo="min-w-[38rem]">
-            {porVendedor.slice(0, 20).map((v) => (
+            {porVendedor.slice(0, VENDEDORES_NA_TABELA).map((v) => (
               <tr key={v.id} className="border-b border-borda last:border-b-0">
                 <Celula className="font-medium">{v.nome}</Celula>
                 <Celula className="numeros text-right">{numero(v.confirmadas.ativacao)}</Celula>
@@ -277,6 +280,9 @@ export default async function CarteiraDaConnect({ searchParams }: { searchParams
               </tr>
             ))}
           </Tabela>
+        )}
+        {porVendedor.length > VENDEDORES_NA_TABELA && (
+          <p className="mt-2 text-xs text-suave">{`Os ${numero(VENDEDORES_NA_TABELA)} com mais confirmadas, de ${numero(porVendedor.length)}; o relatório completo tem todos.`}</p>
         )}
         <p className="mt-3 text-sm">
           <Link href={periodo === "hoje" ? "/connect/relatorio" : `/connect/relatorio?periodo=${periodo}`} className="font-semibold text-acao">

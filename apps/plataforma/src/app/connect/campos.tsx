@@ -11,8 +11,8 @@ export const rotulo = "block text-sm font-medium";
 
 /** Um plano da lista oficial da Nogle (o valor de face vem da Nogle, nunca da tela). */
 export type PlanoDaNogle = { codigo: string; nome: string; valor_centavos: number | null };
-/** Um serviço pago no caixa (o item da venda concluída, ainda livre), com o texto da opção. */
-export type OpcaoDePago = { id: string; rotulo: string };
+/** Um serviço pago no caixa (o item da venda concluída, ainda livre), com o texto da opção e o plano (AUD-f; null: sem plano). */
+export type OpcaoDePago = { id: string; rotulo: string; plano: string | null };
 
 /** Os planos da lista oficial da Nogle em cartões (como na demonstração). */
 export function PlanosEmCartoes({ planos }: { planos: readonly PlanoDaNogle[] }) {
@@ -32,27 +32,8 @@ export function PlanosEmCartoes({ planos }: { planos: readonly PlanoDaNogle[] })
   );
 }
 
-// CONNECT-l (D-062, o proprietário em 25/11: "não com o crédito da Nogle"): o Pix da Nogle é o padrão. Com o serviço
-// recebido no caixa, quem paga o link é a loja (o cliente já pagou); sem ele, o cliente paga direto à Nogle, na hora.
-export function PagamentoANogle({ pagos }: { pagos: readonly OpcaoDePago[] }) {
-  return (
-    <fieldset className="space-y-2">
-      <legend className="text-sm font-medium">Pagamento à Nogle</legend>
-      <label className="flex items-start gap-2 rounded-xl border border-borda p-3 text-sm has-[:checked]:border-acao has-[:checked]:bg-acao/5">
-        <input type="radio" name="metodo" value="LINK" defaultChecked className="mt-1 size-4" />
-        <span><span className="font-semibold">Pix da Nogle</span> (o padrão): a Nogle devolve o pagamento, que aparece aqui com o QR Code. Com o serviço recebido no caixa, a loja paga com o dinheiro do cliente; sem ele, o cliente paga direto à Nogle, na hora.</span>
-      </label>
-      <label className="flex items-start gap-2 rounded-xl border border-borda p-3 text-sm has-[:checked]:border-acao has-[:checked]:bg-acao/5">
-        <input type="radio" name="metodo" value="SALDO" className="mt-1 size-4" />
-        <span><span className="font-semibold">Crédito da carteira da Ora na Nogle</span>: só com o serviço pago no caixa e com crédito na carteira.</span>
-      </label>
-      <label className={rotulo}>Serviço pago no caixa
-        <select name="venda_item" className={campo} defaultValue=""><option value="">Nenhum: o cliente paga o Pix da Nogle direto</option>{pagos.map((p) => <option key={p.id} value={p.id}>{p.rotulo}</option>)}</select>
-      </label>
-      <p className="text-xs text-suave">A venda escolhida tem de ser do mesmo plano da operação e vale uma operação só.</p>
-    </fieldset>
-  );
-}
+// O pagamento à Nogle (o Pix da Nogle ou a carteira) fica em PagamentoANogle.tsx: desde o AUD-f ele acompanha o plano escolhido.
+export { PagamentoANogle } from "./PagamentoANogle";
 
 /** O serviço pago no caixa da portabilidade (opcional: a portabilidade não tem pagamento à Nogle). */
 export function ServicoPagoOpcional({ pagos }: { pagos: readonly OpcaoDePago[] }) {
