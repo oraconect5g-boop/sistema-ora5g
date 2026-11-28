@@ -82,11 +82,13 @@ export default async function Notas({ searchParams }: { searchParams: Promise<{ 
                     <Selo tom={p.situacao === "aprovada" ? "sucesso" : p.situacao === "correcao_solicitada" ? "aviso" : "info"} ponto>{ehSituacao(p.situacao) ? SITUACOES_DA_NOTA[p.situacao] : p.situacao}</Selo>
                   </span>
                 </div>
-                {(p.destinatario_nome || p.destinatario_mascarado) && (
-                  <p className="text-xs text-suave">Na nota: {[p.destinatario_nome, p.destinatario_mascarado].filter(Boolean).join(" · ")}
-                    {/* K1b (#76): os dados completos para digitar no emissor, com registro na auditoria. */}
-                    {p.destinatario_mascarado && <> · <Link href={`/notas/${p.id}/emitir`} className="font-semibold text-acao">dados para emitir</Link></>}</p>
-                )}
+                <div className="flex flex-wrap items-center gap-x-3 gap-y-1 text-xs text-suave">
+                  {(p.destinatario_nome || p.destinatario_mascarado) && (
+                    <p>Na nota: {[p.destinatario_nome, p.destinatario_mascarado].filter(Boolean).join(" · ")}</p>
+                  )}
+                  {/* Conferir a venda também sem destinatário. A abertura deliberada, não a pré-carga, fica na auditoria. */}
+                  <Link href={`/notas/${p.id}/emitir`} prefetch={false} className="font-semibold text-acao">Dados para emitir</Link>
+                </div>
                 {p.observacao && <p className="text-xs text-suave">Observação: {p.observacao}</p>}
                 {p.situacao === "aguardando_aprovacao" && (
                   <form action={decidirNota} className="flex flex-wrap items-end gap-2">
