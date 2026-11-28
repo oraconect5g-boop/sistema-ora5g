@@ -16,6 +16,7 @@ const cenario = vi.hoisted(() => ({
   consultas: [] as { tabela: string; filtros: unknown[][] }[],
   respostas: {} as Record<string, { data: unknown; error: null | { code: string; message?: string } }>,
   chamadas: [] as { nome: string; argumentos: Record<string, unknown> }[],
+  depoisDaConsulta: null as null | ((tabela: string, filtros: unknown[][]) => void),
 }));
 vi.mock("next/navigation", () => ({ redirect: (destino: string) => { throw new Error(`redirecionou para ${destino}`); } }));
 const supabase = {
@@ -30,10 +31,42 @@ const supabase = {
     const consulta: Record<string, unknown> = {
       then: (resolver: (v: unknown) => unknown, rejeitar: (e: unknown) => unknown) => {
         cenario.consultas.push({ tabela, filtros });
-        return Promise.resolve(cenario.tabelas[tabela] ?? { data: [], error: null }).then(resolver, rejeitar);
+        const resposta = cenario.tabelas[tabela] ?? { data: [], error: null };
+        if (resposta.error || !Array.isArray(resposta.data)) return Promise.resolve(resposta).then(resolver, rejeitar);
+        let data = (resposta.data as Record<string, unknown>[]).map((l) => ({ unidade_id: LOJA, pedido_id: null, ...l }) as Record<string, unknown>);
+        const valor = (l: Record<string, unknown>, campo: unknown) => l[String(campo)];
+        const comparar = (esq: unknown, dir: unknown) => {
+          const a = String(esq), b = String(dir);
+          const x = Date.parse(a), y = Date.parse(b);
+          return a.includes("T") && b.includes("T") && Number.isFinite(x) && Number.isFinite(y) ? x - y : a.localeCompare(b);
+        };
+        for (const [metodo, campo, esperado] of filtros) {
+          if (metodo === "eq" || metodo === "is") data = data.filter((l) => valor(l, campo) === esperado);
+          if (metodo === "gte") data = data.filter((l) => comparar(valor(l, campo), esperado) >= 0);
+          if (metodo === "gt") data = data.filter((l) => comparar(valor(l, campo), esperado) > 0);
+          if (metodo === "in") data = data.filter((l) => (esperado as unknown[]).includes(valor(l, campo)));
+          if (metodo === "or") data = data.filter((l) => String(campo).split(",").some((f) => {
+            const [coluna, operador, ...arg] = f.split(".");
+            if (operador === "neq") return String(valor(l, coluna)) !== arg.join(".");
+            if (operador === "lte") return comparar(valor(l, coluna), arg.join(".")) <= 0;
+            throw new Error(`Filtro não simulado: ${f}`);
+          }));
+        }
+        const ordenacoes = filtros.filter(([metodo]) => metodo === "order");
+        if (ordenacoes.length) data.sort((a, b) => {
+          for (const [, campo, opcoes] of ordenacoes) {
+            const ordem = comparar(valor(a, campo), valor(b, campo));
+            if (ordem) return (opcoes as { ascending?: boolean } | undefined)?.ascending === false ? -ordem : ordem;
+          }
+          return 0;
+        });
+        const limite = filtros.find(([metodo]) => metodo === "limit");
+        if (limite) data = data.slice(0, Number(limite[1]));
+        cenario.depoisDaConsulta?.(tabela, filtros);
+        return Promise.resolve({ ...resposta, data }).then(resolver, rejeitar);
       },
     };
-    for (const metodo of ["select", "eq", "gte", "order", "limit", "in"]) consulta[metodo] = (...argumentos: unknown[]) => { filtros.push([metodo, ...argumentos]); return consulta; };
+    for (const metodo of ["select", "eq", "is", "gte", "gt", "or", "order", "limit", "in"]) consulta[metodo] = (...argumentos: unknown[]) => { filtros.push([metodo, ...argumentos]); return consulta; };
     return consulta;
   },
 };
@@ -93,6 +126,7 @@ beforeEach(() => {
   cenario.consultas = [];
   cenario.respostas = {};
   cenario.chamadas = [];
+  cenario.depoisDaConsulta = null;
 });
 afterEach(() => vi.useRealTimers());
 
@@ -123,7 +157,7 @@ describe("a tela Reservas do site (ONLINE-b)", () => {
   it("sem reservas, avisa; quem não vende na loja não vê a lista; os avisos de volta das ações aparecem", async () => {
     cenario.tabelas.loja_reservas = { data: [], error: null };
     expect(texto(await tela())).toContain("Nenhuma reserva esperando");
-    expect(cenario.consultas.map((c) => c.tabela)).toEqual(["loja_reservas", "loja_pedidos"]);
+    expect(cenario.consultas.map((c) => c.tabela)).toEqual(["loja_reservas", "loja_pedidos", "loja_pedidos"]);
     cenario.vende = false;
     cenario.consultas = [];
     expect(texto(await tela())).toContain("Só quem vende nesta loja atende as reservas do site.");
@@ -208,6 +242,62 @@ describe("as ações da loja (ONLINE-b)", () => {
     expect(cenario.consultas.find((c) => c.tabela === "loja_pagamentos")?.filtros).toContainEqual(["in", "pedido_id", [PAGO, AGUARDANDO]]);
     cenario.respostas.loja_pedido_cancelar = { data: null, error: { code: "OR048", message: "Este pedido foi pago pelo site" } };
     await expect(cancelarPedido(formulario({ pedido: PAGO, motivo: "Cliente desistiu" }))).rejects.toThrow("redirecionou para /reservas-do-site?erro=pago_pelo_site");
+  });
+
+  it("PAY-014: o pedido pago do quarto dia mantém itens e retirada, mesmo depois da primeira página; histórico e outra loja não ocupam a fila", async () => {
+    const id = (n: number) => `00000000-0000-4000-8000-${String(n).padStart(12, "0")}`;
+    const PAGO = id(99);
+    const OUTRA_LOJA = id(200);
+    const pedido = (n: number, codigo: string, outros: Record<string, unknown> = {}) => ({
+      id: id(n), codigo, nome: "Cliente do pedido", unidade_id: LOJA, whatsapp_mascarado: "(41) 9****-0002",
+      total_centavos: 23_700, unidades: 3, situacao: "reservado", expira_em: "2026-11-16T16:00:00Z",
+      criado_em: "2026-11-15T14:00:00Z", motivo_cancelamento: null, ...outros,
+    });
+    const pedidosDoBanco = [
+      ...Array.from({ length: 50 }, (_, i) => pedido(i + 1, `AT${i}`)),
+      ...Array.from({ length: 52 }, (_, i) => pedido(i + 100, `HIST-${i}`, { situacao: "atendido" })),
+      pedido(99, "PAGO4D", { criado_em: "2026-11-11T10:00:00Z", expira_em: "2026-11-18T10:00:00Z" }),
+      pedido(60, "ANTIGO", { situacao: "cancelado", criado_em: "2026-11-10T10:00:00Z" }),
+      pedido(61, "ALIMITE", { expira_em: "2026-11-15T15:00:00.000Z" }),
+      pedido(62, "DEOUTRA", { unidade_id: OUTRA_LOJA }),
+    ];
+    cenario.tabelas.loja_pedidos = { data: pedidosDoBanco, error: null };
+    // Um pedido da primeira página é atendido antes da segunda consulta.
+    // OFFSET 50 agora ultrapassaria PAGO4D, que segue ativo, mas o cursor pelo ID não o perde.
+    cenario.depoisDaConsulta = (tabela, filtros) => {
+      if (tabela === "loja_pedidos" && filtros.some(([m, c]) => m === "gt" && c === "expira_em")
+        && !filtros.some(([m, c]) => m === "gt" && c === "id")) {
+        const primeiro = pedidosDoBanco[0];
+        if (primeiro) primeiro.situacao = "atendido";
+      }
+    };
+    cenario.tabelas.loja_reservas = { data: [
+      ...Array.from({ length: 3 }, (_, i) => reserva(id(i + 300), {
+        pedido_id: PAGO, preco_centavos: 7_900, criada_em: "2026-11-11T10:00:00Z", expira_em: "2026-11-18T10:00:00Z",
+      })),
+      reserva(id(310), { pedido_id: PAGO, unidade_id: OUTRA_LOJA, preco_centavos: 88_888 }),
+    ], error: null };
+    cenario.tabelas.loja_pagamentos = { data: [
+      { pedido_id: PAGO, situacao: "pago", pago_em: "2026-11-11T14:00:00Z" },
+    ], error: null };
+    const arvore = await tela();
+    const cartao = texto(elementos(arvore, (p) => p.titulo === "Pedido PAGO4D").map((p) => p.children));
+    expect(cartao.match(/Galaxy A15 128 GB Azul · R\$ 79,00/g)).toHaveLength(3);
+    expect(cartao).toContain("Total pago pelo site");
+    expect(cartao).toContain("Já pago pelo site: não cobre de novo");
+    expect(cartao).toContain("Atender o pedido no PDV");
+    expect(cartao).not.toMatch(/Cancelar o pedido|888,88/);
+    const t = texto(arvore);
+    expect(t).not.toMatch(/ANTIGO|DEOUTRA|Pedido ALIMITE|Pedido AT0\b/);
+    const historico = texto(elementos(arvore, (p) => p.titulo === "Pedidos dos últimos 3 dias").map((p) => p.children));
+    expect(historico).toContain("ALIMITE");
+    expect(historico).toContain("AT0");
+    expect(historico.match(/(?:HIST-\d+|ALIMITE|AT0)/g)).toHaveLength(50);
+    expect(cenario.consultas.filter((c) => c.tabela === "loja_pedidos" && c.filtros.some(([m, k]) => m === "gt" && k === "expira_em"))
+      .map((c) => c.filtros.find(([m, k]) => m === "gt" && k === "id") ?? null)).toEqual([null, ["gt", "id", id(50)]]);
+    expect(cenario.consultas.filter((c) => c.tabela === "loja_reservas" && c.filtros.some(([m, c]) => m === "in" && c === "pedido_id")).map((c) =>
+      c.filtros.filter(([m]) => m === "eq" || m === "in").map(([m, k, v]) => [m, k, Array.isArray(v) ? v.length : v])))
+      .toEqual([[["eq", "unidade_id", LOJA], ["in", "pedido_id", 50]], [["eq", "unidade_id", LOJA], ["in", "pedido_id", 1]]]);
   });
 
   it("atender e cancelar o pedido: uma venda só, com o total anunciado; o cancelamento devolve as unidades", async () => {

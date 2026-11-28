@@ -20,6 +20,19 @@ const OK = {
   pedido_ja_cancelado: "Nada mudou: este pedido já estava cancelado.",
 } as const;
 
+const CAMPOS_RESERVA = "id, codigo, nome, whatsapp_mascarado, preco_centavos, situacao, expira_em, criada_em, variante_id, item_serializado_id, cancelada_em, motivo_cancelamento, atendida_em, origem, utm_source, utm_campaign, pedido_id";
+const CAMPOS_PEDIDO = "id, codigo, nome, whatsapp_mascarado, total_centavos, unidades, situacao, expira_em, criado_em, motivo_cancelamento";
+const TAMANHO_LOTE = 50;
+
+type Leitura<T> = PromiseLike<{ data: T[] | null; error: { code?: string } | null }>;
+
+async function lerEmLotes<T>(ids: string[], ler: (lote: string[]) => Leitura<T>) {
+  const unicos = [...new Set(ids)];
+  const respostas = await Promise.all(Array.from({ length: Math.ceil(unicos.length / TAMANHO_LOTE) }, (_, i) =>
+    ler(unicos.slice(i * TAMANHO_LOTE, (i + 1) * TAMANHO_LOTE))));
+  return { data: respostas.flatMap((r) => r.data ?? []), erros: respostas.flatMap((r) => r.error ? [r.error] : []) };
+}
+
 // ONLINE-b (ORA-ONLINE-006; ADR-009): as reservas do site na loja do turno, para quem vende nela. Atender abre a venda
 // no PDV com a unidade reservada; cancelar devolve a unidade ao estoque; o WhatsApp só aparece quando se pede.
 export default async function ReservasDoSite({ searchParams }: { searchParams: Promise<{ ok?: ValorDeParametro; erro?: ValorDeParametro }> }) {
@@ -34,31 +47,58 @@ export default async function ReservasDoSite({ searchParams }: { searchParams: P
   // As vencidas desta loja saem de vez do estoque reservado (continuam na lista, como "Vencida").
   await soltarReservasDoSiteVencidas(supabase);
   const instante = agoraDoServidor().getTime();
+  const agora = new Date(instante).toISOString();
   const desde = new Date(instante - 3 * 86_400_000).toISOString();
+  // As reservas avulsas mantêm o histórico curto. Itens de pedido são lidos pelos pedidos ativos abaixo, sem essa data.
   const lidas = await supabase.from("loja_reservas")
-    .select("id, codigo, nome, whatsapp_mascarado, preco_centavos, situacao, expira_em, criada_em, variante_id, item_serializado_id, cancelada_em, motivo_cancelamento, atendida_em, origem, utm_source, utm_campaign, pedido_id")
-    .eq("unidade_id", unidade).gte("criada_em", desde).order("expira_em").limit(100);
+    .select(CAMPOS_RESERVA)
+    .eq("unidade_id", unidade).is("pedido_id", null).gte("criada_em", desde).order("expira_em").limit(100);
   if (lidas.error) {
     if (!reservasAusentes(lidas.error)) throw new FalhaDoServico("loja_reservas");
     return <MoldeReal sessao={sessao}><TituloPagina titulo="Reservas do site" /><Aviso tom="info" className="mt-4">As reservas do site ainda não estão disponíveis neste ambiente.</Aviso></MoldeReal>;
   }
-  const reservas = lidas.data as unknown as ReservaDaLoja[];
-  // ONLINE-d: os pedidos do site desta loja (o carrinho reservado de uma vez). Banco sem a migration: sem pedidos.
-  const pedidosLidos = await supabase.from("loja_pedidos")
-    .select("id, codigo, nome, whatsapp_mascarado, total_centavos, unidades, situacao, expira_em, criado_em, motivo_cancelamento")
-    .eq("unidade_id", unidade).gte("criado_em", desde).order("expira_em").limit(50);
-  if (pedidosLidos.error && !reservasAusentes(pedidosLidos.error)) throw new FalhaDoServico("loja_pedidos");
-  const pedidos = (pedidosLidos.error ? [] : pedidosLidos.data) as unknown as PedidoDaLoja[];
+  // O Pix pode estender a retirada a sete dias (PAY-014). O corte de três dias só vale para o histórico.
+  const lerPedidos = () => supabase.from("loja_pedidos").select(CAMPOS_PEDIDO).eq("unidade_id", unidade);
+  const ativos = new Map<string, PedidoDaLoja>();
+  // O ID não muda quando um pedido é atendido, cancelado ou prorrogado entre duas leituras.
+  let ultimoId: string | undefined;
+  for (;;) {
+    const consulta = lerPedidos().eq("situacao", "reservado").gt("expira_em", agora).order("id").limit(TAMANHO_LOTE);
+    const pagina = await (ultimoId ? consulta.gt("id", ultimoId) : consulta);
+    if (pagina.error) {
+      if (!reservasAusentes(pagina.error)) throw new FalhaDoServico("loja_pedidos");
+      break; // Banco sem a migração do pedido: as reservas avulsas continuam disponíveis.
+    }
+    const itens = (pagina.data ?? []) as unknown as PedidoDaLoja[];
+    for (const pedido of itens) ativos.set(pedido.id, pedido);
+    if (itens.length < TAMANHO_LOTE) break;
+    ultimoId = itens[itens.length - 1]?.id;
+    if (!ultimoId) break;
+  }
+  const [historico, itensDosPedidos] = await Promise.all([
+    lerPedidos().gte("criado_em", desde).or(`situacao.neq.reservado,expira_em.lte.${agora}`)
+      .order("criado_em", { ascending: false }).order("id").limit(50),
+    // Um pedido tem no máximo três itens. Mesmo no lote cheio, a leitura fica abaixo do limite padrão de linhas.
+    lerEmLotes([...ativos.keys()], (lote) => supabase.from("loja_reservas").select(CAMPOS_RESERVA)
+      .eq("unidade_id", unidade).in("pedido_id", lote).order("id")),
+  ]);
+  if (historico.error && !reservasAusentes(historico.error)) throw new FalhaDoServico("loja_pedidos");
+  if (itensDosPedidos.erros.length) throw new FalhaDoServico("loja_reservas");
+  const fechados = (historico.data ?? []) as unknown as PedidoDaLoja[];
+  // Se a leitura posterior já viu o pedido fechado, não mostre também o cartão de retirada.
+  for (const pedido of fechados) ativos.delete(pedido.id);
+  const porVencimento = [...ativos.values()].sort((a, b) => Date.parse(a.expira_em) - Date.parse(b.expira_em) || a.id.localeCompare(b.id));
+  const pedidos = [...porVencimento, ...fechados];
+  const reservas = [...(lidas.data ?? []), ...itensDosPedidos.data] as unknown as ReservaDaLoja[];
   // PAY-014a: o Pix dos pedidos (a loja vê "pago pelo site" antes de o cliente chegar). Banco sem a migration: sem pagamentos.
   const [variantes, aparelhos, pagamentosLidos] = await Promise.all([
-    reservas.length ? supabase.from("variantes").select("id, nome").in("id", [...new Set(reservas.map((r) => r.variante_id))]) : Promise.resolve({ data: [], error: null }),
-    reservas.some((r) => r.item_serializado_id)
-      ? supabase.from("itens_serializados").select("id, imei").in("id", reservas.flatMap((r) => (r.item_serializado_id ? [r.item_serializado_id] : [])))
-      : Promise.resolve({ data: [], error: null }),
-    pedidos.length ? supabase.from("loja_pagamentos").select("pedido_id, situacao, pago_em").in("pedido_id", pedidos.map((p) => p.id)) : Promise.resolve({ data: [], error: null }),
+    lerEmLotes(reservas.map((r) => r.variante_id), (lote) => supabase.from("variantes").select("id, nome").in("id", lote)),
+    lerEmLotes(reservas.flatMap((r) => r.item_serializado_id ? [r.item_serializado_id] : []),
+      (lote) => supabase.from("itens_serializados").select("id, imei").in("id", lote)),
+    lerEmLotes(pedidos.map((p) => p.id), (lote) => supabase.from("loja_pagamentos").select("pedido_id, situacao, pago_em").in("pedido_id", lote)),
   ]);
-  if (pagamentosLidos.error && !reservasAusentes(pagamentosLidos.error)) throw new FalhaDoServico("loja_pagamentos");
-  const pagamentos: Record<string, PagamentoNaLoja> = Object.fromEntries(((pagamentosLidos.error ? [] : pagamentosLidos.data) ?? [])
+  if (pagamentosLidos.erros.some((erro) => !reservasAusentes(erro))) throw new FalhaDoServico("loja_pagamentos");
+  const pagamentos: Record<string, PagamentoNaLoja> = Object.fromEntries(pagamentosLidos.data
     .map((g) => [g.pedido_id, { situacao: g.situacao, pago_em: g.pago_em }]));
   // Sem o nome ou o IMEI (falha passageira ou sem leitura), a reserva aparece mesmo assim: "Produto" e sem o IMEI.
   const produtos: Record<string, string> = Object.fromEntries((variantes.data ?? []).map((v) => [v.id, v.nome]));
@@ -66,7 +106,7 @@ export default async function ReservasDoSite({ searchParams }: { searchParams: P
 
   return (
     <MoldeReal sessao={sessao}>
-      <TituloPagina titulo="Reservas do site" subtitulo="Clientes que reservaram na loja online para retirar aqui. A reserva vale 24 horas."
+      <TituloPagina titulo="Reservas do site" subtitulo="Pedidos da loja online para retirar aqui. Sem pagamento, a reserva vale 24 horas. Pedidos pagos seguem o prazo informado."
         acao={<div className="flex flex-wrap gap-2">
           {permite(sessao, "estoque.consultar") && <BotaoLink href="/estoque" prefetch={false} tamanho="sm" variante="secundario">Consultar estoque</BotaoLink>}
           <BotaoLink href="/vender" prefetch={false} tamanho="sm" variante="secundario">Voltar ao PDV</BotaoLink>
